@@ -1,0 +1,466 @@
+RvFACTS Catalog Export — 2026-08-09T04:24:18Z
+Makes: 50  Models: 363  Powertrain bands: 400
+
+## ATC (5 models)
+  - Game Changer: Toy Hauler | — | — | floors=5 | 2014-2026
+  - Game Changer Pro: Toy Hauler | — | — | floors=4 | 2018-2026
+  - Quest: Toy Hauler | — | — | floors=4 | 2016-2026
+  - Toy Hauler 8.5: Toy Hauler | — | — | floors=4 | 2015-2026
+  - TrailBoss: Toy Hauler | — | — | floors=3 | 2012-2026
+
+## Airstream (11 models)
+  - Atlas: Class B | Mercedes-Benz diesel (Sprinter) | 188HP | floors=4 | 2018-2026
+  - Bambi: Travel Trailer | — | — | floors=4 | 1961-2026
+  - Basecamp: Travel Trailer | — | — | floors=5 | 2016-2026
+  - Caravel: Travel Trailer | — | — | floors=4 | 2017-2026
+  - Classic: Travel Trailer | — | — | floors=4 | 2000-2026
+  - Flying Cloud: Travel Trailer | — | — | floors=9 | 2000-2026
+  - Globetrotter: Travel Trailer | — | — | floors=4 | 2016-2026
+  - International: Travel Trailer | — | — | floors=5 | 2000-2026
+  - Interstate: Class B | Mercedes-Benz diesel (Sprinter) | 188HP | floors=7 | 2005-2026
+  - Rangeline: Class B | Ford Transit / Mercedes (by year) | 188HP | floors=2 | 2022-2026
+  - Trade Wind: Travel Trailer | — | — | floors=3 | 2021-2026
+
+## Alliance RV (6 models)
+  - Avenue: Fifth Wheel | — | — | floors=7 | 2020-2026
+  - Benchmark: Travel Trailer | — | — | floors=4 | 2023-2026
+  - Delta: Fifth Wheel | — | — | floors=4 | 2022-2026
+  - Paradigm: Fifth Wheel | — | — | floors=9 | 2020-2026
+  - Valor: Toy Hauler | — | — | floors=6 | 2021-2026
+  - Valor V-Series: Toy Hauler | — | — | floors=3 | 2022-2026
+
+## American Coach (3 models)
+  - American Dream: Class A Diesel | Cummins L9 / X15 (by option) | 450HP | floors=3 | 2000-2026
+  - American Eagle: Class A Diesel | Cummins L9 / X15 (by option) | 450HP | floors=3 | 2000-2026
+  - American Tradition: Class A Diesel | Cummins L9 450HP | 450HP | floors=5 | 2000-2026
+
+## Beaver Coach (2 models)
+  - Marquis: Class A Diesel | Cummins ISL 400HP | 400HP | floors=3 | 1994-2009
+  - Patriot: Class A Diesel | Cummins ISL 380HP | 380HP | floors=3 | 1993-2009
+
+## Brinkley (6 models)
+  - Model G: Toy Hauler | — | — | floors=8 | 2023-2026
+  - Model T: Toy Hauler | — | — | floors=8 | 2021-2026
+  - Model T Air: Toy Hauler | — | — | floors=3 | 2023-2026
+  - Model Z: Fifth Wheel | — | — | floors=4 | 2020-2026
+  - Model Z Air: Fifth Wheel | — | — | floors=4 | 2022-2026
+  - Model Z Expand: Fifth Wheel | — | — | floors=3 | 2023-2026
+
+## Coach House (2 models)
+  - Platinum: Class B+ | Mercedes-Benz turbodiesel (Sprinter) | 188HP | floors=4 | 2010-2026
+  - Platinum II: Class B+ | Mercedes-Benz 2.0L I4 turbodiesel ~211HP | 188HP | floors=7 | 2015-2026
+
+## Coachmen (19 models)
+  - Adrenaline: Toy Hauler | — | — | floors=3 | 2014-2026
+  - Apex: Travel Trailer | — | — | floors=5 | 2010-2026
+  - Beyond: Class B | Ford Transit 3.5L EcoBoost | 310HP | floors=3 | 2018-2026
+  - Brookstone: Fifth Wheel | — | — | floors=3 | 2012-2026
+  - Catalina: Travel Trailer | — | — | floors=11 | 2010-2026
+  - Chaparral: Fifth Wheel | — | — | floors=4 | 2008-2026
+  - Concord: Class C | Ford 7.3L V8 | 350HP | floors=5 | 2010-2026
+  - Encore: Class A Gas | Ford 7.3L Godzilla / V10 (by year) | 350HP | floors=4 | 2010-2026
+  - Freedom Express: Travel Trailer | — | — | floors=10 | 2012-2026
+  - Freelander: Class C | Ford 7.3L / 6.2L (by year) | 350HP | floors=9 | 2005-2026
+  - Freelander LE: Class C | Ford 7.3L / 6.2L | 350HP | floors=6 | 2015-2026
+  - Galleria: Class B | Mercedes-Benz diesel | 188HP | floors=4 | 2016-2026
+  - Leprechaun: Class C | Ford 7.3L / Chevy 6.6L (by chassis) | 350HP | floors=11 | 2000-2026
+  - Leprechaun Premier: Class C | Ford 7.3L V8 | 350HP | floors=6 | 2016-2026
+  - Mirada: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=4 | 2007-2026
+  - Prism: Class C | Mercedes-Benz 3.0L V6 / 2.0L I4 (by year) | 211HP | floors=6 | 2013-2026
+  - Pursuit: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=4 | 2006-2026
+  - Sportscoach: Class A Diesel | Cummins ISB / B6.7 ~340HP | 340HP | floors=4 | 2010-2026
+  - Sportscoach SRS Super C: Super C | Ford Power Stroke 6.7L Diesel | 330HP | floors=4 | 2018-2026
+
+## Country Coach (3 models)
+  - Allure: Class A Diesel | Cummins ISL 450HP | 450HP | floors=3 | 1997-2009
+  - Inspire: Class A Diesel | Cummins ISX 600HP | 600HP | floors=4 | 1998-2009
+  - Intrigue: Class A Diesel | Cummins X15 605HP | 605HP | floors=4 | 1999-2009
+
+## Crossroads (6 models)
+  - Cameo: Fifth Wheel | — | — | floors=3 | 2005-2026
+  - Cruiser Aire: Fifth Wheel | — | — | floors=3 | 2010-2026
+  - Redwood: Fifth Wheel | — | — | floors=3 | 2012-2026
+  - Sunset Trail: Travel Trailer | — | — | floors=3 | 2005-2026
+  - Volante: Fifth Wheel | — | — | floors=3 | 2014-2026
+  - Zinger TH: Toy Hauler | — | — | floors=3 | 2013-2026
+
+## DRV (4 models)
+  - Elite Suites: Fifth Wheel | — | — | floors=3 | 2012-2026
+  - Full House: Toy Hauler | — | — | floors=3 | 2010-2026
+  - Mobile Suites: Fifth Wheel | — | — | floors=4 | 2008-2026
+  - Tradition: Fifth Wheel | — | — | floors=3 | 2008-2026
+
+## Damon Motor Coach (2 models)
+  - Daybreak: Class A Gas | Ford V10 6.8L | 320HP | floors=3 | 1997-2009
+  - Ultrasport: Class A Gas | Ford V10 6.8L | 320HP | floors=4 | 1999-2009
+
+## Dutchmen (10 models)
+  - Aerolite: Travel Trailer | — | — | floors=5 | 2005-2026
+  - Aspen Trail: Travel Trailer | — | — | floors=7 | 2012-2026
+  - Aspen Trail FW: Fifth Wheel | — | — | floors=5 | 2012-2026
+  - Astoria: Fifth Wheel | — | — | floors=4 | 2012-2026
+  - Coleman: Travel Trailer | — | — | floors=10 | 2006-2026
+  - Infinity: Fifth Wheel | — | — | floors=4 | 2015-2026
+  - Kodiak: Travel Trailer | — | — | floors=10 | 2006-2026
+  - Voltage: Toy Hauler | — | — | floors=6 | 2010-2026
+  - Voltage V-Series: Toy Hauler | — | — | floors=4 | 2014-2026
+  - Yukon: Fifth Wheel | — | — | floors=5 | 2008-2026
+
+## Dynamax (8 models)
+  - DX3: Super C | Ford 6.7L Power Stroke Diesel | 330HP | floors=3 | 2015-2026
+  - DynaQuest: Super C | Ford 6.7L Power Stroke Diesel | 330HP | floors=4 | 2008-2026
+  - Europa: Super C | Ford 6.7L Power Stroke Diesel | 330HP | floors=4 | 2010-2026
+  - Force: Super C | Ford 6.7L Power Stroke Diesel | 330HP | floors=5 | 2012-2026
+  - Grand Sport: Super C | Cummins / Ford Super C diesel (era) | 300HP | floors=3 | 2005-2016
+  - Isata 3: Class C | Ford Transit 3.5L EcoBoost V6 | 310HP | floors=5 | 2016-2026
+  - Isata 4: Class C | Mercedes-Benz Sprinter turbodiesel | 188HP | floors=5 | 2019-2026
+  - Isata 5: Class C | Mercedes-Benz Sprinter turbodiesel | 188HP | floors=6 | 2014-2026
+
+## Entegra Coach (12 models)
+  - Accolade: Super C | Cummins Super C diesel ~340HP | 340HP | floors=3 | 2015-2026
+  - Accolade XL: Super C | Cummins Super C diesel | 340HP | floors=2 | 2018-2026
+  - Anthem: Class A Diesel | Cummins L9 / X12 450–500HP | 450HP | floors=4 | 2014-2026
+  - Aspire: Class A Diesel | Cummins L9 450HP | 450HP | floors=3 | 2015-2026
+  - Cornerstone: Class A Diesel | Cummins X15 605HP | 605HP | floors=5 | 2014-2026
+  - Esteem: Class C | Ford 7.3L V8 | 350HP | floors=3 | 2014-2026
+  - Expanse: Class C | Ford Transit gas | 310HP | floors=2 | 2018-2026
+  - Qwest: Class C | Mercedes-Benz Sprinter turbodiesel | 188HP | floors=2 | 2015-2026
+  - Reatta: Class A Diesel | Cummins B6.7 360HP | 360HP | floors=3 | 2016-2026
+  - Reatta XL: Class A Diesel | Cummins B6.7 360HP | 360HP | floors=3 | 2018-2026
+  - Vision: Class A Gas | Ford 7.3L Godzilla / V10 (by year) | 350HP | floors=4 | 2014-2026
+  - Vision XL: Class A Gas | Ford 7.3L V8 Godzilla | 350HP | floors=3 | 2019-2026
+
+## Fleetwood (12 models)
+  - Bounder: Class A Gas | Ford 7.3L Godzilla / V10 (by year) | 350HP | floors=4 | 1985-2026
+  - Bounder Classic: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=2 | 2010-2022
+  - Discovery: Class A Diesel | Cummins B6.7 (ISB) 360HP | 360HP | floors=7 | 2000-2026
+  - Discovery LXE: Class A Diesel | Cummins L9 / ISX (by year/option) | 450HP | floors=4 | 2012-2026
+  - Flair: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=3 | 2008-2026
+  - Jamboree: Class C | Ford 7.3L V8 / 6.2L (by year) | 350HP | floors=4 | 2000-2026
+  - Pace Arrow: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=3 | 2000-2026
+  - Pulse: Class C | Mercedes-Benz Sprinter turbodiesel | 188HP | floors=3 | 2014-2026
+  - Storm: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=3 | 2005-2026
+  - Tioga: Class C | Ford 7.3L V8 | 350HP | floors=3 | 2000-2026
+  - Tioga Ranger: Class C | Ford 6.2L / 7.3L | 305HP | floors=2 | 2010-2024
+  - Xcursion: Class B | Mercedes-Benz / RAM (by chassis year) | 208HP | floors=2 | 2024-2026
+
+## Fleetwood Classic (2 models)
+  - American Heritage: Class A Diesel | Cummins ISL 380HP | 380HP | floors=3 | 1996-2005
+  - Providence: Class A Diesel | Cummins ISX 600HP | 600HP | floors=3 | 1999-2006
+
+## Forest River (32 models)
+  - Berkshire: Class A Diesel | Cummins B6.7 / L9 340–450HP | 340HP | floors=4 | 2010-2026
+  - Cardinal: Fifth Wheel | — | — | floors=4 | 2010-2026
+  - Cedar Creek: Fifth Wheel | — | — | floors=4 | 2010-2026
+  - Cherokee Arctic Wolf: Fifth Wheel | — | — | floors=16 | 2010-2026
+  - Cherokee Grey Wolf: Travel Trailer | — | — | floors=20 | 2012-2026
+  - Cherokee Wolf Pack: Toy Hauler | — | — | floors=4 | 2011-2026
+  - Cherokee Wolf Pup: Travel Trailer | — | — | floors=7 | 2013-2026
+  - Columbus: Fifth Wheel | — | — | floors=4 | 2010-2026
+  - Dynamax Isata (FR): Class C | Mercedes-Benz Sprinter turbodiesel | 188HP | floors=3 | 2018-2026
+  - Flagstaff Micro Lite: Travel Trailer | — | — | floors=7 | 2010-2026
+  - Forester: Class C | Ford 7.3L / 6.2L (by year) | 350HP | floors=4 | 2005-2026
+  - Forester LE: Class C | Ford 7.3L / 6.2L (by year) | 350HP | floors=3 | 2013-2026
+  - FR3: Class A Gas | Ford 7.3L V8 Godzilla | 335HP | floors=8 | 2015-2026
+  - Georgetown: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=3 | 2005-2026
+  - Georgetown 5 Series: Class A Gas | Ford 7.3L Godzilla / V10 (by year) | 350HP | floors=4 | 2014-2026
+  - Georgetown XL: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=3 | 2012-2026
+  - r-Pod: Travel Trailer | — | — | floors=8 | 2009-2026
+  - Rockwood Mini Lite: Travel Trailer | — | — | floors=9 | 2010-2026
+  - Rockwood Signature: Fifth Wheel | — | — | floors=4 | 2010-2026
+  - Rockwood Ultra Lite: Travel Trailer | — | — | floors=7 | 2012-2026
+  - Sabre: Fifth Wheel | — | — | floors=3 | 2010-2026
+  - Salem Cruise Lite: Travel Trailer | — | — | floors=12 | 2010-2026
+  - Salem Hemisphere: Travel Trailer | — | — | floors=8 | 2012-2026
+  - Sandstorm: Toy Hauler | — | — | floors=4 | 2011-2026
+  - Solera: Class C | Mercedes-Benz Sprinter turbodiesel | 188HP | floors=3 | 2017-2026
+  - Sunseeker: Class C | Ford 7.3L / 6.2L (by year) | 350HP | floors=4 | 2005-2026
+  - Sunseeker Classic: Class C | Ford 7.3L / 6.2L (by year) | 350HP | floors=2 | 2008-2026
+  - Sunseeker LE: Class C | Ford 7.3L / 6.2L (by year) | 350HP | floors=3 | 2012-2026
+  - Wildwood: Travel Trailer | — | — | floors=10 | 2008-2026
+  - XLR Hyper Lite: Toy Hauler | — | — | floors=4 | 2011-2026
+  - XLR Nitro: Toy Hauler | — | — | floors=4 | 2011-2026
+  - XLR Thunderbolt: Toy Hauler | — | — | floors=3 | 2011-2026
+
+## Genesis Supreme (5 models)
+  - G-Force: Toy Hauler | — | — | floors=4 | 2010-2026
+  - Prizm: Toy Hauler | — | — | floors=3 | 2015-2026
+  - Stealth: Toy Hauler | — | — | floors=3 | 2016-2026
+  - Vortex: Toy Hauler | — | — | floors=4 | 2012-2026
+  - Vortex Pro: Toy Hauler | — | — | floors=3 | 2018-2026
+
+## Georgie Boy (2 models)
+  - Cruise Master: Class A Gas | Ford V10 6.8L | 320HP | floors=3 | 1997-2007
+  - Pursuit: Class A Gas | Ford V10 6.8L | 320HP | floors=2 | 1999-2007
+
+## Grand Design (11 models)
+  - Imagine: Travel Trailer | — | — | floors=5 | 2014-2026
+  - Imagine XLS: Travel Trailer | — | — | floors=4 | 2015-2026
+  - Momentum: Toy Hauler | — | — | floors=4 | 2014-2026
+  - Momentum G-Class: Toy Hauler | — | — | floors=3 | 2018-2026
+  - Momentum M-Class: Toy Hauler | — | — | floors=4 | 2015-2026
+  - Momentum MAV: Toy Hauler | — | — | floors=2 | 2022-2026
+  - Reflection: Fifth Wheel | — | — | floors=5 | 2013-2026
+  - Reflection 150 Series: Fifth Wheel | — | — | floors=3 | 2015-2026
+  - Solitude: Fifth Wheel | — | — | floors=5 | 2015-2026
+  - Solitude S-Class: Fifth Wheel | — | — | floors=3 | 2019-2026
+  - Transcend: Travel Trailer | — | — | floors=4 | 2018-2026
+
+## Gulf Stream Coach (4 models)
+  - BT Cruiser: Class C | Ford V8 6.2L | 385HP | floors=6 | 2008-2026
+  - Conquest: Class A Gas | Ford V10 6.8L | 320HP | floors=4 | 1998-2012
+  - Crescendo: Class A Diesel | Cummins ISL 340HP | 340HP | floors=3 | 2000-2010
+  - Yellowstone: Class C | Ford V8 7.3L | 350HP | floors=5 | 2012-2026
+
+## Heartland (9 models)
+  - Big Country: Fifth Wheel | — | — | floors=5 | 2005-2026
+  - Bighorn: Fifth Wheel | — | — | floors=8 | 2003-2026
+  - Cyclone: Toy Hauler | — | — | floors=6 | 2007-2026
+  - Gravity: Fifth Wheel | — | — | floors=4 | 2016-2026
+  - Landmark: Fifth Wheel | — | — | floors=6 | 2008-2026
+  - Prowler: Travel Trailer | — | — | floors=6 | 2003-2026
+  - Road Warrior: Toy Hauler | — | — | floors=4 | 2012-2026
+  - Sundance: Fifth Wheel | — | — | floors=6 | 2003-2026
+  - Torque: Toy Hauler | — | — | floors=4 | 2011-2026
+
+## Highland Ridge (5 models)
+  - Light Range TH: Toy Hauler | — | — | floors=3 | 2017-2026
+  - Mesa Ridge: Toy Hauler | — | — | floors=3 | 2016-2026
+  - Open Range: Toy Hauler | — | — | floors=3 | 2014-2026
+  - Open Range 3X: Fifth Wheel | — | — | floors=3 | 2013-2026
+  - Roamer: Fifth Wheel | — | — | floors=3 | 2015-2026
+
+## Holiday Rambler (7 models)
+  - Ambassador: Class A Diesel | Cummins B6.7 / L9 / ISL (by year) | 380HP | floors=3 | 2000-2026
+  - Armada: Class A Diesel | Cummins B6.7 / L9 360–450HP | 360HP | floors=3 | 2019-2026
+  - Augusta: Class C | Ford 7.3L V8 | 350HP | floors=3 | 2010-2026
+  - Invicta: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=3 | 2010-2026
+  - Navigator: Class A Diesel | Cummins B6.7 / L9 360–450HP | 360HP | floors=4 | 2005-2026
+  - Vacationer: Class A Gas | Ford 7.3L Godzilla / V10 (by year) | 350HP | floors=3 | 2000-2026
+  - Xpedition: Class B | Mercedes-Benz / RAM (by package) | 208HP | floors=2 | 2024-2026
+
+## Jayco (16 models)
+  - Alante: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=3 | 2015-2026
+  - Eagle: Fifth Wheel | — | — | floors=4 | 2000-2026
+  - Eagle HT: Fifth Wheel | — | — | floors=3 | 2012-2026
+  - Embark: Class A Diesel | Cummins B6.7 / L9 360–450HP | 360HP | floors=4 | 2015-2026
+  - Greyhawk: Class C | Ford 7.3L V8 Godzilla / 6.2L (by year) | 350HP | floors=5 | 2008-2026
+  - Jay Feather: Travel Trailer | — | — | floors=4 | 2005-2026
+  - Melbourne: Class C | Mercedes-Benz Sprinter turbodiesel | 188HP | floors=3 | 2012-2026
+  - Melbourne Prestige: Class C | Mercedes-Benz Sprinter turbodiesel | 188HP | floors=2 | 2014-2026
+  - North Point: Fifth Wheel | — | — | floors=4 | 2013-2026
+  - Octane: Toy Hauler | — | — | floors=3 | 2014-2026
+  - Pinnacle: Fifth Wheel | — | — | floors=3 | 2014-2026
+  - Precept: Class A Gas | Ford 7.3L Godzilla / V10 (by year) | 350HP | floors=5 | 2014-2026
+  - Redhawk: Class C | Ford 7.3L / 6.2L (by year) | 350HP | floors=4 | 2010-2026
+  - Seismic: Toy Hauler | — | — | floors=3 | 2013-2026
+  - Seneca Super C: Super C | Ford Power Stroke 6.7L / Cummins Super C (by chassis year) | 330HP | floors=3 | 2014-2026
+  - Talon: Toy Hauler | — | — | floors=4 | 2012-2026
+
+## KZ RV (6 models)
+  - Connect: Fifth Wheel | — | — | floors=3 | 2014-2026
+  - Durango: Fifth Wheel | — | — | floors=3 | 2010-2026
+  - Sportsmen Sportster: Toy Hauler | — | — | floors=4 | 2010-2026
+  - Sportster: Toy Hauler | — | — | floors=3 | 2008-2026
+  - Sportster Destination: Toy Hauler | — | — | floors=3 | 2015-2026
+  - Venom: Toy Hauler | — | — | floors=3 | 2012-2026
+
+## Keystone (15 models)
+  - Alpine: Fifth Wheel | — | — | floors=6 | 2008-2026
+  - Arcadia: Fifth Wheel | — | — | floors=4 | 2018-2026
+  - Avalanche: Fifth Wheel | — | — | floors=5 | 2010-2025
+  - Bullet: Travel Trailer | — | — | floors=13 | 2010-2027
+  - Cougar: Travel Trailer | — | — | floors=14 | 1999-2027
+  - Cougar 5th Wheel: Fifth Wheel | — | — | floors=15 | 2004-2027
+  - Cougar Half-Ton: Fifth Wheel | — | — | floors=16 | 2012-2027
+  - Fuzion: Toy Hauler | — | — | floors=11 | 2012-2027
+  - Laredo: Travel Trailer | — | — | floors=5 | 2000-2022
+  - Montana: Fifth Wheel | — | — | floors=24 | 1996-2027
+  - Montana High Country: Fifth Wheel | — | — | floors=11 | 2014-2027
+  - Passport: Travel Trailer | — | — | floors=12 | 2000-2027
+  - Raptor: Toy Hauler | — | — | floors=8 | 2011-2027
+  - Springdale: Travel Trailer | — | — | floors=14 | 2005-2027
+  - Sprinter: Fifth Wheel | — | — | floors=5 | 2000-2024
+
+## Lance (3 models)
+  - Lance 1172: Truck Camper | — | — | floors=1 | 2005-2026
+  - Lance 2375: Travel Trailer | — | — | floors=1 | 2008-2026
+  - Lance 2465: Travel Trailer | — | — | floors=1 | 2010-2026
+
+## Leisure Travel Vans (5 models)
+  - Free: Class B | Mercedes-Benz diesel / Ford Transit (by year) | 188HP | floors=2 | 2018-2026
+  - Serenity: Class B | Mercedes-Benz diesel (Sprinter) | 188HP | floors=2 | 2010-2026
+  - Unity: Class B+ | Mercedes-Benz diesel (Sprinter) | 188HP | floors=8 | 1993-2026
+  - Wonder: Class B+ | Mercedes-Benz diesel / Ford Transit (select) | 188HP | floors=6 | 2015-2026
+  - Wonder XL: Class B+ | Mercedes-Benz diesel (Sprinter 170 EXT) | 188HP | floors=5 | 2018-2026
+
+## Midwest Automotive Designs (3 models)
+  - Passage: Class B | Mercedes-Benz turbodiesel / Ford Transit (MD2F) | 188HP | floors=5 | 2016-2026
+  - Passage Daycruiser: Class B | Mercedes-Benz turbodiesel (Sprinter) | 188HP | floors=2 | 2018-2026
+  - Weekender: Class B | Mercedes-Benz turbodiesel (Sprinter) | 188HP | floors=3 | 2000-2026
+
+## Monaco Coach (3 models)
+  - Camelot: Class A Diesel | Cummins B6.7 / L9 360–450HP | 360HP | floors=2 | 2005-2026
+  - Dynasty: Class A Diesel | Cummins L9 / ISL / ISX (by year) | 450HP | floors=3 | 2000-2026
+  - Knight: Class A Diesel | Cummins ISL / L9 class | 380HP | floors=2 | 2008-2023
+
+## Monaco Coach Classic (2 models)
+  - Signature: Class A Diesel | Cummins ISX 600HP | 600HP | floors=3 | 1997-2009
+  - Windsor: Class A Diesel | Cummins ISL 400HP | 400HP | floors=2 | 1998-2009
+
+## National RV (2 models)
+  - Sea Breeze: Class A Gas | Ford V10 6.8L | 320HP | floors=3 | 1998-2009
+  - Tropi-Cal: Class A Diesel | Cummins ISL 340HP | 340HP | floors=3 | 2001-2009
+
+## Newmar (11 models)
+  - Bay Star: Class A Gas | Ford 7.3L Godzilla / V10 6.8L (by year) | 350HP | floors=6 | 2005-2026
+  - Bay Star Sport: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=4 | 2010-2026
+  - Canyon Star: Super C | Ford Power Stroke 6.7L / Cummins (by chassis year) | 330HP | floors=5 | 2010-2026
+  - Dutch Star: Class A Diesel | Cummins L9 450HP | 450HP | floors=8 | 2000-2026
+  - Essex: Class A Diesel | Cummins X15 605HP | 605HP | floors=5 | 2012-2026
+  - King Aire: Class A Diesel | Cummins X15 605HP | 605HP | floors=6 | 2005-2026
+  - Kountry Star: Class A Diesel | Cummins B6.7 360HP | 360HP | floors=8 | 2000-2026
+  - London Aire: Class A Diesel | Cummins ISX 600HP | 600HP | floors=3 | 2000-2018
+  - Mountain Aire: Class A Diesel | Cummins L9 450HP / X12 500HP (by year/option) | 450HP | floors=8 | 2008-2026
+  - New Aire: Class A Diesel | Cummins B6.7 / L9 360–450HP | 360HP | floors=6 | 2014-2026
+  - Ventana: Class A Diesel | Cummins B6.7 / L9 360–450HP | 360HP | floors=6 | 2006-2026
+
+## Newmar Classic (2 models)
+  - London Aire: Class A Diesel | Cummins ISX 600HP | 600HP | floors=3 | 1991-2008
+  - Scottsdale: Class A Gas | Ford V10 6.8L | 320HP | floors=3 | 1997-2005
+
+## Nexus RV (5 models)
+  - Ghost: Class C | Ford 7.3L V8 Godzilla | 350HP | floors=5 | 2014-2026
+  - Phantom: Class C | Ford 7.3L / 6.2L (by year) | 300HP | floors=5 | 2010-2026
+  - Rebel Super C: Super C | Ford Power Stroke 6.7L Diesel | 330HP | floors=5 | 2016-2026
+  - Triumph: Super C | Ford Power Stroke 6.7L Diesel | 330HP | floors=6 | 2014-2026
+  - Viper: Class C | Ford 7.3L / 6.2L (by year) | 300HP | floors=5 | 2010-2026
+
+## Northwood Manufacturing (3 models)
+  - Arctic Fox: Travel Trailer | — | — | floors=6 | 2005-2026
+  - Nash: Travel Trailer | — | — | floors=5 | 2005-2026
+  - Wolf Creek: Truck Camper | — | — | floors=3 | 2005-2026
+
+## Oliver Travel Trailers (2 models)
+  - Legacy Elite: Travel Trailer | — | — | floors=2 | 2008-2026
+  - Legacy Elite II: Travel Trailer | — | — | floors=2 | 2012-2026
+
+## Outdoors RV (3 models)
+  - Back Country: Travel Trailer | — | — | floors=4 | 2010-2026
+  - Timber Ridge: Travel Trailer | — | — | floors=5 | 2010-2026
+  - Wind River: Travel Trailer | — | — | floors=4 | 2010-2026
+
+## Palomino (8 models)
+  - Columbus: Fifth Wheel | — | — | floors=7 | 2012-2026
+  - Columbus Compass: Fifth Wheel | — | — | floors=4 | 2012-2026
+  - Puma: Travel Trailer | — | — | floors=9 | 2005-2026
+  - Puma Unleashed: Toy Hauler | — | — | floors=3 | 2014-2026
+  - Real-Lite: Travel Trailer | — | — | floors=6 | 2006-2026
+  - Real-Lite FW: Fifth Wheel | — | — | floors=4 | 2012-2026
+  - Sabre: Fifth Wheel | — | — | floors=3 | 2011-2026
+  - SolAire: Travel Trailer | — | — | floors=6 | 2014-2026
+
+## Pleasure-Way (6 models)
+  - Ascent: Class B | Mercedes-Benz diesel (Sprinter) | 188HP | floors=3 | 2018-2026
+  - Lexor: Class B | Ram 3.6L V6 gas | 280HP | floors=3 | 2014-2026
+  - Ontour: Class B | Ford Transit EcoBoost / diesel (by year) | 310HP | floors=4 | 2016-2026
+  - Ontour 2.0: Class B | Ford Transit 3.5L EcoBoost | 310HP | floors=1 | 2016-2026
+  - Plateau: Class B | Mercedes-Benz diesel (Sprinter) | 188HP | floors=8 | 2005-2026
+  - Plateau TS: Class B | Mercedes-Benz diesel (Sprinter) | 188HP | floors=3 | 2005-2026
+
+## Regency (1 models)
+  - Ultra Brougham: Class B | Mercedes-Benz 3.0L V6 | 188HP | floors=4 | 2015-2026
+
+## Renegade RV (8 models)
+  - Classic Super C: Super C | Cummins Super C diesel | 360HP | floors=3 | 2010-2026
+  - Ikon: Super C | Ford Power Stroke 6.7L / Super C diesel | 330HP | floors=2 | 2018-2026
+  - Valencia: Super C | Cummins ISB / B6.7 Super C diesel | 340HP | floors=3 | 2014-2026
+  - Verona: Super C | Cummins Super C diesel 340–360HP | 360HP | floors=3 | 2012-2026
+  - Verona LE: Super C | Cummins Super C diesel | 340HP | floors=2 | 2018-2026
+  - Vienna: Super C | Cummins / Ford Super C diesel | 330HP | floors=2 | 2020-2026
+  - Villager: Class C | Ford 7.3L V8 | 350HP | floors=2 | 2012-2026
+  - Villagio: Class A Diesel | Mercedes-Benz Sprinter turbodiesel | 188HP | floors=2 | 2014-2024
+
+## Roadtrek (7 models)
+  - Chase: Class B | Ram 3.6L V6 / Mercedes diesel (by year) | 188HP | floors=2 | 2016-2026
+  - CS Adventurous: Class B | Mercedes-Benz diesel (Sprinter) | 188HP | floors=2 | 2008-2026
+  - Play: Class B | Ram 3.6L V6 gas | 280HP | floors=2 | 2018-2026
+  - Popular: Class B | Ram / Mercedes / Chevy (by era) | 188HP | floors=4 | 2005-2026
+  - SS Agile: Class B | Ram 3.6L V6 gas | 280HP | floors=2 | 2020-2026
+  - Zion: Class B | Ram 3.6L V6 gas | 280HP | floors=4 | 2015-2026
+  - Zion Slumber: Class B | Ram 3.6L V6 gas | 280HP | floors=1 | 2015-2026
+
+## Storyteller Overland (3 models)
+  - Beast MODE: Class B | Mercedes-Benz turbodiesel AWD/4x4 | 188HP | floors=3 | 2019-2026
+  - Classic MODE: Class B | Mercedes-Benz turbodiesel (Sprinter) | 188HP | floors=2 | 2021-2026
+  - MODE: Class B | Mercedes-Benz turbodiesel (Sprinter) | 188HP | floors=4 | 2018-2026
+
+## Thor (20 models)
+  - ACE: Class A Gas | Ford 7.3L Godzilla / V10 (by year) | 350HP | floors=8 | 2010-2026
+  - Aria: Class A Diesel | Cummins B6.7 / L9 340–450HP | 340HP | floors=4 | 2014-2026
+  - Challenger: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=3 | 2005-2026
+  - Chateau: Class C | Ford 7.3L V8 Godzilla / 6.2L (by year) | 350HP | floors=15 | 2005-2026
+  - Four Winds: Class C | Ford 7.3L V8 Godzilla / 6.2L (by year) | 350HP | floors=15 | 2000-2026
+  - Four Winds Siesta: Class C | Mercedes-Benz Sprinter turbodiesel | 188HP | floors=3 | 2016-2026
+  - Gemini: Class B+ | Ford Transit / cutaway gas (by year) | 310HP | floors=3 | 2014-2026
+  - Geneva: Class C | Ford 7.3L / 6.2L (by year) | 350HP | floors=3 | 2018-2026
+  - Magnitude: Super C | Ford Power Stroke 6.7L Diesel | 330HP | floors=3 | 2014-2026
+  - Magnitude XG: Super C | Ford Power Stroke 6.7L Diesel | 330HP | floors=3 | 2020-2026
+  - Outlaw: Class C | Ford 7.3L V8 | 350HP | floors=3 | 2012-2026
+  - Palazzo: Class A Diesel | Cummins B6.7 / L9 340–450HP | 340HP | floors=7 | 2012-2026
+  - Quantum: Class C | Ford 7.3L V8 Godzilla / Mercedes Sprinter (by floorplan) | 350HP | floors=6 | 2014-2026
+  - Rize: Toy Hauler | — | — | floors=3 | 2018-2026
+  - Rize Plus: Toy Hauler | — | — | floors=3 | 2020-2026
+  - Sanctuary: Class B | Mercedes-Benz Sprinter turbodiesel | 188HP | floors=3 | 2015-2026
+  - Seneca: Super C | Ford Power Stroke 6.7L / Cummins Super C (by year) | 330HP | floors=3 | 2012-2026
+  - Sequence: Class B | Mercedes-Benz 2.0L I4 turbo diesel | 208HP | floors=4 | 2021-2026
+  - Tuscany: Class A Diesel | Cummins L9 / ISX (by year) | 450HP | floors=4 | 2005-2026
+  - Windsport: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=5 | 2008-2026
+
+## Tiffin (13 models)
+  - Allegro: Class A Gas | Ford 7.3L / V10 (by year) | 350HP | floors=3 | 2000-2022
+  - Allegro Breeze: Class A Diesel | Cummins ISB / B6.7 340HP | 340HP | floors=3 | 2008-2020
+  - Allegro Bus: Class A Diesel | Cummins L9 450HP (X12/X15 options by year) | 450HP | floors=8 | 2000-2026
+  - Allegro Bus 45OPP: Class A Diesel | Cummins L9 450HP (X12 optional) | 450HP | floors=1 | 2012-2026
+  - Allegro Red: Class A Diesel | Cummins ISB 6.7L 360HP | 360HP | floors=3 | 2005-2017
+  - Allegro Red 340: Class A Diesel | Cummins B6.7 360HP | 360HP | floors=8 | 2014-2026
+  - Allegro Red 360: Class A Diesel | Cummins L9 380–450HP | 380HP | floors=4 | 2018-2026
+  - Cahaba: Class C | Mercedes-Benz 2.0L turbodiesel | 208HP | floors=2 | 2023-2026
+  - Open Road: Class A Gas | Ford 7.3L Godzilla / V10 (by year) | 350HP | floors=4 | 2010-2026
+  - Phaeton: Class A Diesel | Cummins L9 450HP | 450HP | floors=6 | 2000-2026
+  - Wayfarer: Class C | Mercedes-Benz turbodiesel (Sprinter) | 188HP | floors=5 | 2016-2026
+  - Wayfarer 25: Class C | Mercedes-Benz turbodiesel | 188HP | floors=4 | 2018-2026
+  - Zephyr: Class A Diesel | Cummins X12 / X15 500–605HP | 500HP | floors=5 | 2000-2026
+
+## Winnebago (26 models)
+  - Access Super C: Super C | Ford Power Stroke 6.7L Diesel | 330HP | floors=4 | 2021-2026
+  - Adventurer: Class A Gas | Ford Triton V10 6.8L / 7.3L (by year) | 320HP | floors=5 | 2000-2021
+  - Boldt: Class B | Mercedes-Benz 2.0L I4 turbodiesel | 208HP | floors=2 | 2020-2026
+  - EKKO: Class C | Ford / Mercedes (by floorplan) | 208HP | floors=2 | 2021-2026
+  - Era: Class B | Mercedes-Benz turbodiesel | 188HP | floors=2 | 2010-2022
+  - Forza: Class A Diesel | Cummins B6.7 340HP | 340HP | floors=5 | 2016-2026
+  - Grand Tour: Class A Diesel | Cummins ISX / L9 (by year) | 450HP | floors=3 | 2005-2019
+  - Horizon: Class A Diesel | Cummins L9 450HP | 450HP | floors=3 | 2018-2026
+  - Intent: Class A Gas | Ford 7.3L V8 Godzilla | 350HP | floors=4 | 2019-2026
+  - Itasca Sunstar: Class A Gas | Ford Triton V10 6.8L | 320HP | floors=4 | 2005-2019
+  - Journey: Class A Diesel | Cummins B6.7 340HP | 340HP | floors=6 | 2002-2022
+  - Micro Minnie: Travel Trailer | — | — | floors=6 | 2014-2026
+  - Minnie: Travel Trailer | — | — | floors=4 | 2010-2026
+  - Minnie Winnie: Class C | Ford 7.3L V8 Godzilla | 350HP | floors=8 | 2000-2026
+  - Navion: Class C | Mercedes-Benz 2.0L I4 turbodiesel | 208HP | floors=6 | 2006-2026
+  - Outlook: Class C | Ford 7.3L V8 | 350HP | floors=4 | 2014-2022
+  - Porto: Class C | Mercedes-Benz turbodiesel | 188HP | floors=3 | 2019-2023
+  - Revel: Class B | Mercedes-Benz 2.0L I4 turbodiesel | 208HP | floors=1 | 2018-2026
+  - Solis: Class B | RAM 3.6L V6 gas | 276HP | floors=3 | 2019-2026
+  - Spirit: Class C | Ford 7.3L V8 Godzilla | 350HP | floors=7 | 2005-2026
+  - Sunstar: Class A Gas | Ford 7.3L V8 Godzilla | 350HP | floors=5 | 2010-2026
+  - Travato: Class B | RAM 3.6L V6 gas | 276HP | floors=3 | 2014-2026
+  - Via: Class A Diesel | Mercedes-Benz 3.0L turbodiesel | 188HP | floors=2 | 2013-2021
+  - View: Class C | Mercedes-Benz 2.0L I4 turbodiesel | 208HP | floors=7 | 2006-2026
+  - Vista: Class A Gas | Ford 7.3L V8 Godzilla | 350HP | floors=7 | 2010-2026
+  - Vita: Class C | Mercedes-Benz turbodiesel | 188HP | floors=3 | 2018-2022
+
+## Winnebago Classic (2 models)
+  - Chieftain: Class A Gas | Ford V10 6.8L | 320HP | floors=4 | 1966-2006
+  - Ultimate Freedom: Class A Diesel | Cummins ISL 340HP | 340HP | floors=3 | 2000-2007
+

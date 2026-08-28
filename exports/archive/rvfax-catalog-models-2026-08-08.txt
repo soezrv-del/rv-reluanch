@@ -1,0 +1,71 @@
+RvFACTS 2000–2005 powertrain pass — 2026-08-08T04:44:36Z
+Makes 50 · Models 362
+
+Motorized 2000–2005 engine/HP:
+- Airstream Interstate: Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3) | HP=154 | modern=Mercedes-Benz diesel (Sprinter) / 188
+- American Coach American Dream: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins L9 / X15 (by option) / 450
+- American Coach American Eagle: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins L9 / X15 (by option) / 450
+- American Coach American Tradition: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins L9 450HP / 450
+- Beaver Coach Marquis: Cummins ISL 400–450HP class | HP=400 | modern=Cummins ISL 400HP / 400
+- Beaver Coach Patriot: Cummins ISB / ISL mid-diesel (era) | HP=340 | modern=Cummins ISL 380HP / 380
+- Coachmen Freelander: Ford Triton V10 6.8L | HP=305 | modern=Ford 7.3L / 6.2L (by year) / 350
+- Coachmen Leprechaun: Ford Triton V10 6.8L | HP=305 | modern=Ford 7.3L / Chevy 6.6L (by chassis) / 350
+- Country Coach Allure: Cummins ISL 400–450HP class | HP=400 | modern=Cummins ISL 450HP / 450
+- Country Coach Inspire: Cummins ISX 600HP class | HP=600 | modern=Cummins ISX 600HP / 600
+- Country Coach Intrigue: Cummins ISX 600HP class | HP=600 | modern=Cummins X15 605HP / 605
+- Damon Motor Coach Daybreak: Ford Triton V10 6.8L | HP=320 | modern=Ford V10 6.8L / 320
+- Damon Motor Coach Ultrasport: Ford Triton V10 6.8L | HP=320 | modern=Ford V10 6.8L / 320
+- Dynamax Grand Sport: Cummins or Ford Super C diesel (by chassis year) | HP=300 | modern=Cummins / Ford Super C diesel (era) / 300
+- Fleetwood Bounder: Ford Triton V10 6.8L ~305–362HP | HP=320 | modern=Ford 7.3L Godzilla / V10 (by year) / 350
+- Fleetwood Discovery: Cummins ISB 6.7 300–340HP (by year) | HP=320 | modern=Cummins B6.7 (ISB) 360HP / 360
+- Fleetwood Jamboree: Ford V10 / 6.8L or 6.0L (by year) | HP=305 | modern=Ford 7.3L V8 / 6.2L (by year) / 350
+- Fleetwood Pace Arrow: Ford Triton V10 6.8L ~305–362HP | HP=320 | modern=Ford 7.3L / V10 (by year) / 350
+- Fleetwood Storm: Ford Triton V10 6.8L ~305–362HP | HP=320 | modern=Ford 7.3L / V10 (by year) / 350
+- Fleetwood Tioga: Ford V10 / 6.8L or 6.0L (by year) | HP=305 | modern=Ford 7.3L V8 / 350
+- Fleetwood Classic American Heritage: Cummins ISB / ISC mid-diesel (era) | HP=300 | modern=Cummins ISL 380HP / 380
+- Fleetwood Classic Providence: Cummins ISX 600HP | HP=600 | modern=Cummins ISX 600HP / 600
+- Forest River Forester: Ford V10 / 6.8L or 6.0L (by year) | HP=305 | modern=Ford 7.3L / 6.2L (by year) / 350
+- Forest River Georgetown: Ford Triton V10 6.8L ~305–362HP | HP=320 | modern=Ford 7.3L / V10 (by year) / 350
+- Forest River Sunseeker: Ford V10 / 6.8L or 6.0L (by year) | HP=305 | modern=Ford 7.3L / 6.2L (by year) / 350
+- Georgie Boy Cruise Master: Ford Triton V10 6.8L | HP=320 | modern=Ford V10 6.8L / 320
+- Georgie Boy Pursuit: Ford Triton V10 6.8L | HP=320 | modern=Ford V10 6.8L / 320
+- Gulf Stream Coach Conquest: Ford Triton V10 6.8L | HP=320 | modern=Ford V10 6.8L / 320
+- Gulf Stream Coach Crescendo: Cummins ISB / ISL mid-diesel (era) | HP=340 | modern=Cummins ISL 340HP / 340
+- Holiday Rambler Ambassador: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins B6.7 / L9 / ISL (by year) / 380
+- Holiday Rambler Navigator: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins B6.7 / L9 360–450HP / 360
+- Holiday Rambler Vacationer: Ford Triton V10 6.8L ~305–362HP | HP=320 | modern=Ford 7.3L Godzilla / V10 (by year) / 350
+- Leisure Travel Vans Unity: Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3) | HP=154 | modern=Mercedes-Benz diesel (Sprinter) / 188
+- Midwest Automotive Designs Weekender: Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3) | HP=154 | modern=Mercedes-Benz turbodiesel (Sprinter) / 188
+- Monaco Coach Camelot: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins B6.7 / L9 360–450HP / 360
+- Monaco Coach Dynasty: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins L9 / ISL / ISX (by year) / 450
+- Monaco Coach Classic Signature: Cummins ISX 600HP class | HP=600 | modern=Cummins ISX 600HP / 600
+- Monaco Coach Classic Windsor: Cummins ISL 400–450HP class | HP=400 | modern=Cummins ISL 400HP / 400
+- National RV Sea Breeze: Ford Triton V10 6.8L | HP=320 | modern=Ford V10 6.8L / 320
+- National RV Tropi-Cal: Cummins ISB / ISL mid-diesel (era) | HP=340 | modern=Cummins ISL 340HP / 340
+- Newmar Bay Star: Ford Triton V10 6.8L ~305–362HP | HP=320 | modern=Ford 7.3L Godzilla / V10 6.8L (by year) / 350
+- Newmar Dutch Star: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins L9 450HP / 450
+- Newmar King Aire: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins X15 605HP / 605
+- Newmar Kountry Star: Cummins ISB / Cat turbodiesel (by build) | HP=300 | modern=Cummins B6.7 360HP / 360
+- Newmar London Aire: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins ISX 600HP / 600
+- Newmar Classic London Aire: Cummins ISX 600HP class | HP=600 | modern=Cummins ISX 600HP / 600
+- Newmar Classic Scottsdale: Ford Triton V10 6.8L | HP=310 | modern=Ford V10 6.8L / 320
+- Pleasure-Way Plateau: Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3) | HP=154 | modern=Mercedes-Benz diesel (Sprinter) / 188
+- Pleasure-Way Plateau TS: Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3) | HP=154 | modern=Mercedes-Benz diesel (Sprinter) / 188
+- Roadtrek Popular: Gas or diesel chassis by build (2000–2005) | HP=300 | modern=Ram / Mercedes / Chevy (by era) / 188
+- Thor Challenger: Ford Triton V10 6.8L ~305–362HP | HP=320 | modern=Ford 7.3L / V10 (by year) / 350
+- Thor Chateau: Ford V10 / 6.8L or 6.0L (by year) | HP=305 | modern=Ford 7.3L V8 Godzilla / 6.2L (by year) / 350
+- Thor Four Winds: Ford V10 / 6.8L or 6.0L (by year) | HP=305 | modern=Ford 7.3L V8 Godzilla / 6.2L (by year) / 350
+- Thor Tuscany: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins L9 / ISX (by year) / 450
+- Tiffin Allegro: Ford Triton V10 6.8L ~305–362HP | HP=320 | modern=Ford 7.3L / V10 (by year) / 350
+- Tiffin Allegro Bus: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins L9 450HP (X12/X15 options by year) / 450
+- Tiffin Allegro Red: Cummins ISB 6.7L 340HP | HP=340 | modern=Cummins ISB 6.7L 360HP / 360
+- Tiffin Phaeton: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins L9 450HP / 450
+- Tiffin Zephyr: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins X12 / X15 500–605HP / 500
+- Winnebago Adventurer: Ford Triton V10 6.8L | HP=320 | modern=Ford Triton V10 6.8L / 7.3L (by year) / 320
+- Winnebago Grand Tour: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins ISX / L9 (by year) / 450
+- Winnebago Itasca Sunstar: Ford Triton V10 6.8L ~305–362HP | HP=320 | modern=Ford Triton V10 6.8L / 320
+- Winnebago Journey: Cummins ISL / ISB diesel (era) | HP=350 | modern=Cummins B6.7 340HP / 340
+- Winnebago Minnie Winnie: Ford V10 / V8 (by year) | HP=305 | modern=Ford 7.3L V8 Godzilla / 350
+- Winnebago Spirit: Ford 6.8L V10 / 6.2L V8 (by year) | HP=305 | modern=Ford 7.3L V8 Godzilla / 350
+- Winnebago Classic Chieftain: Ford Triton V10 6.8L | HP=320 | modern=Ford V10 6.8L / 320
+- Winnebago Classic Ultimate Freedom: Cummins ISL / ISB 300–450HP (era) | HP=380 | modern=Cummins ISL 340HP / 340

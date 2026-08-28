@@ -1,0 +1,211 @@
+make,model,type,fuelType,engine,topHorsepower,hasYearBands,bandCount,gaps,status
+Newmar,Essex,Class A Diesel,Diesel,Cummins X15 605HP,605,True,2,,ok
+Newmar,King Aire,Class A Diesel,Diesel,Cummins X15 605HP,605,True,4,,ok
+Newmar,Mountain Aire,Class A Diesel,Diesel,Cummins L9 450HP / X12 500HP (by year/option),450,True,4,,ok
+Newmar,Dutch Star,Class A Diesel,Diesel,Cummins L9 450HP,450,True,4,,ok
+Newmar,New Aire,Class A Diesel,Diesel,Cummins B6.7 / L9 360–450HP,360,True,2,,ok
+Newmar,Ventana,Class A Diesel,Diesel,Cummins B6.7 / L9 360–450HP,360,True,4,,ok
+Newmar,Canyon Star,Super C,Diesel,Ford Power Stroke 6.7L / Cummins (by chassis year),330,True,3,,ok
+Newmar,London Aire,Class A Diesel,Diesel,Cummins ISX 600HP,600,True,3,,ok
+Newmar,Kountry Star,Class A Diesel,Diesel,Cummins B6.7 360HP,360,True,3,,ok
+Newmar,Bay Star,Class A Gas,Gas,Ford 7.3L Godzilla / V10 6.8L (by year),350,True,3,,ok
+Newmar,Bay Star Sport,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,3,,ok
+Tiffin,Zephyr,Class A Diesel,Diesel,Cummins X12 / X15 500–605HP,500,True,4,,ok
+Tiffin,Allegro Bus,Class A Diesel,Diesel,Cummins L9 450HP (X12/X15 options by year),450,True,4,,ok
+Tiffin,Allegro Bus 45OPP,Class A Diesel,Diesel,Cummins L9 450HP (X12 optional),450,True,2,,ok
+Tiffin,Phaeton,Class A Diesel,Diesel,Cummins L9 380HP,380,True,6,,ok
+Tiffin,Allegro Red 340,Class A Diesel,Diesel,Cummins B6.7 360HP,360,True,2,,ok
+Tiffin,Allegro Red 360,Class A Diesel,Diesel,Cummins L9 380–450HP,380,True,1,,ok
+Tiffin,Allegro Red,Class A Diesel,Diesel,Cummins ISB 6.7L 360HP,360,True,2,,ok
+Tiffin,Allegro Breeze,Class A Diesel,Diesel,Cummins ISB / B6.7 340HP,340,True,3,,ok
+Tiffin,Open Road,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,True,3,,ok
+Tiffin,Wayfarer,Class C,Diesel,Mercedes-Benz turbodiesel (Sprinter),188,True,2,,ok
+Tiffin,Wayfarer 25,Class C,Diesel,Mercedes-Benz turbodiesel,188,True,1,,ok
+Tiffin,Cahaba,Class C,Diesel,Mercedes-Benz 2.0L turbodiesel,208,True,1,,ok
+Tiffin,Allegro,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,3,,ok
+Thor,Tuscany,Class A Diesel,Diesel,Cummins L9 / ISX (by year),450,True,4,,ok
+Thor,Palazzo,Class A Diesel,Diesel,Cummins B6.7 / L9 340–450HP,340,True,3,,ok
+Thor,Aria,Class A Diesel,Diesel,Cummins B6.7 / L9 340–450HP,340,True,2,,ok
+Thor,ACE,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,True,3,,ok
+Thor,Windsport,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,3,,ok
+Thor,Challenger,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,3,,ok
+Thor,Magnitude,Super C,Diesel,Ford Power Stroke 6.7L Diesel,330,True,2,,ok
+Thor,Magnitude XG,Super C,Diesel,Ford Power Stroke 6.7L Diesel,330,True,1,,ok
+Thor,Seneca,Super C,Diesel,Ford Power Stroke 6.7L / Cummins Super C (by year),330,True,2,,ok
+Thor,Four Winds,Class C,Gas,Ford 7.3L V8 Godzilla / 6.2L (by year),350,True,4,,ok
+Thor,Chateau,Class C,Gas,Ford 7.3L V8 Godzilla / 6.2L (by year),350,True,4,,ok
+Thor,Quantum,Class C,Gas / Diesel (by plan),Ford 7.3L V8 Godzilla / Mercedes Sprinter (select),350,True,1,,ok
+Thor,Four Winds Siesta,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,True,2,,ok
+Thor,Geneva,Class C,Gas,Ford 7.3L / 6.2L (by year),350,True,2,,ok
+Thor,Outlaw,Class C,Gas,Ford 7.3L V8,350,True,3,,ok
+Thor,Sequence,Class B,Diesel,Mercedes-Benz 2.0L I4 turbo diesel,208,True,1,,ok
+Thor,Sanctuary,Class B,Diesel,Mercedes-Benz Sprinter turbodiesel,188,True,3,,ok
+Thor,Gemini,Class B+,Gas,Ford Transit / cutaway gas (by year),310,True,2,,ok
+Coachmen,Encore,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,True,1,,ok
+Coachmen,Sportscoach,Class A Diesel,Diesel,Cummins ISB / B6.7 ~340HP,340,True,1,,ok
+Coachmen,Freelander,Class C,Gas,Ford 7.3L / 6.2L (by year),350,True,2,,ok
+Coachmen,Mirada,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,1,,ok
+Coachmen,Leprechaun,Class C,Gas,Ford 7.3L / Chevy 6.6L (by chassis),350,True,2,,ok
+Coachmen,Prism,Class C,Diesel,Mercedes-Benz 3.0L V6 / 2.0L I4 (by year),211,True,1,,ok
+Coachmen,Galleria,Class B,Diesel,Mercedes-Benz diesel,188,True,2,,ok
+Coachmen,Beyond,Class B,Gas,Ford Transit 3.5L EcoBoost,310,True,1,,ok
+Coachmen,Pursuit,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,1,,ok
+Coachmen,Freelander LE,Class C,Gas,Ford 7.3L / 6.2L,350,True,1,,ok
+Coachmen,Concord,Class C,Gas,Ford 7.3L V8,350,True,1,,ok
+Coachmen,Leprechaun Premier,Class C,Gas,Ford 7.3L V8,350,True,1,,ok
+Coachmen,Sportscoach SRS Super C,Super C,Diesel,Ford Power Stroke 6.7L Diesel,330,True,1,,ok
+Winnebago,Forza,Class A Diesel,Diesel,Cummins B6.7 340HP,340,True,1,,ok
+Winnebago,Journey,Class A Diesel,Diesel,Cummins B6.7 340HP,340,True,3,,ok
+Winnebago,Horizon,Class A Diesel,Diesel,Cummins L9 450HP,450,True,1,,ok
+Winnebago,Grand Tour,Class A Diesel,Diesel,Cummins ISX / L9 (by year),450,True,2,,ok
+Winnebago,Via,Class A Diesel,Diesel,Mercedes-Benz 3.0L turbodiesel,188,True,1,,ok
+Winnebago,Vista,Class A Gas,Gas,Ford 7.3L V8 Godzilla,350,True,2,,ok
+Winnebago,Sunstar,Class A Gas,Gas,Ford 7.3L V8 Godzilla,350,True,2,,ok
+Winnebago,Intent,Class A Gas,Gas,Ford 7.3L V8 Godzilla,350,True,2,,ok
+Winnebago,Adventurer,Class A Gas,Gas,Ford Triton V10 6.8L / 7.3L (by year),320,True,2,,ok
+Winnebago,Itasca Sunstar,Class A Gas,Gas,Ford Triton V10 6.8L,320,True,1,,ok
+Winnebago,Revel,Class B,Diesel,Mercedes-Benz 2.0L I4 turbodiesel,208,True,2,,ok
+Winnebago,Travato,Class B,Gas,RAM 3.6L V6 gas,276,True,1,,ok
+Winnebago,Solis,Class B,Gas,RAM 3.6L V6 gas,276,True,1,,ok
+Winnebago,Boldt,Class B,Diesel,Mercedes-Benz 2.0L I4 turbodiesel,208,True,1,,ok
+Winnebago,Era,Class B,Diesel,Mercedes-Benz turbodiesel,188,True,1,,ok
+Winnebago,View,Class C,Diesel,Mercedes-Benz 2.0L I4 turbodiesel,208,True,3,,ok
+Winnebago,Navion,Class C,Diesel,Mercedes-Benz 2.0L I4 turbodiesel,208,True,3,,ok
+Winnebago,Porto,Class C,Diesel,Mercedes-Benz turbodiesel,188,True,1,,ok
+Winnebago,Vita,Class C,Diesel,Mercedes-Benz turbodiesel,188,True,1,,ok
+Winnebago,EKKO,Class C,Gas / Diesel,Ford / Mercedes (by floorplan),208,True,1,,ok
+Winnebago,Spirit,Class C,Gas,Ford 7.3L V8 Godzilla,350,True,2,,ok
+Winnebago,Minnie Winnie,Class C,Gas,Ford 7.3L V8 Godzilla,350,True,2,,ok
+Winnebago,Outlook,Class C,Gas,Ford 7.3L V8,350,True,1,,ok
+Winnebago,Access Super C,Super C,Diesel,Ford Power Stroke 6.7L Diesel,330,True,1,,ok
+Forest River,Georgetown 5 Series,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,True,3,,ok
+Forest River,Georgetown XL,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,3,,ok
+Forest River,Georgetown,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,3,,ok
+Forest River,FR3,Class A Gas,Gas,Ford 7.3L V8 Godzilla,335,True,2,,ok
+Forest River,Berkshire,Class A Diesel,Diesel,Cummins ISB 6.7L 360HP / ISL 380-450HP (by trim),360,True,3,,ok
+Forest River,Sunseeker,Class C,Gas,Ford 7.3L / 6.2L (by year),350,True,4,,ok
+Forest River,Sunseeker LE,Class C,Gas,Ford 7.3L / 6.2L (by year),350,True,3,,ok
+Forest River,Sunseeker Classic,Class C,Gas,Ford 7.3L / 6.2L (by year),350,True,4,,ok
+Forest River,Forester,Class C,Gas,Ford 7.3L / 6.2L (by year),350,True,4,,ok
+Forest River,Forester LE,Class C,Gas,Ford 7.3L / 6.2L (by year),350,True,3,,ok
+Forest River,Solera,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,True,2,,ok
+Forest River,Dynamax Isata (FR),Class C,Diesel,Mercedes-Benz 2.0L I4 turbodiesel (by series),211,True,2,,ok
+Airstream,Interstate,Class B,Diesel,Mercedes-Benz diesel (Sprinter),208,True,2,,ok
+Airstream,Atlas,Class B+,Diesel,Mercedes-Benz 2.0L turbo 4-cyl diesel (Sprinter 4500),208,True,2,,ok
+Airstream,Rangeline,Class B,Gas,3.6L Pentastar V6,276,True,1,,ok
+Fleetwood,Discovery,Class A Diesel,Diesel,Cummins B6.7 (ISB) 360HP,360,True,3,,ok
+Fleetwood,Discovery LXE,Class A Diesel,Diesel,Cummins L9 / ISX (by year/option),450,True,3,,ok
+Fleetwood,Bounder,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,True,3,,ok
+Fleetwood,Bounder Classic,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,3,,ok
+Fleetwood,Pace Arrow,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,3,,ok
+Fleetwood,Storm,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,3,,ok
+Fleetwood,Flair,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,3,,ok
+Fleetwood,Jamboree,Class C,Gas,Ford 7.3L V8 / 6.2L (by year),350,True,4,,ok
+Fleetwood,Tioga,Class C,Gas,Ford 7.3L V8,350,True,4,,ok
+Fleetwood,Tioga Ranger,Class C,Gas,Ford 6.2L / 7.3L,305,True,4,,ok
+Fleetwood,Pulse,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,True,3,,ok
+Fleetwood,Xcursion,Class B,Diesel / Gas,Mercedes-Benz / RAM (by chassis year),208,True,1,,ok
+Jayco,Precept,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,True,3,,ok
+Jayco,Alante,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,3,,ok
+Jayco,Embark,Class A Diesel,Diesel,Cummins B6.7 / L9 360–450HP,360,True,3,,ok
+Jayco,Seneca Super C,Super C,Diesel,Ford Power Stroke 6.7L / Cummins Super C (by chassis year),330,True,2,,ok
+Jayco,Greyhawk,Class C,Gas,Ford 7.3L V8 Godzilla / 6.2L (by year),350,True,4,,ok
+Jayco,Redhawk,Class C,Gas,Ford 7.3L / 6.2L (by year),350,True,4,,ok
+Jayco,Melbourne,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,True,3,,ok
+Jayco,Melbourne Prestige,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,True,3,,ok
+American Coach,American Tradition,Class A Diesel,Diesel,Cummins L9 450HP,450,True,4,,ok
+American Coach,American Eagle,Class A Diesel,Diesel,Cummins L9 / X15 (by option),450,True,4,,ok
+American Coach,American Dream,Class A Diesel,Diesel,Cummins L9 / X15 (by option),450,True,4,,ok
+Entegra Coach,Cornerstone,Class A Diesel,Diesel,Cummins X15 605HP,605,True,3,,ok
+Entegra Coach,Anthem,Class A Diesel,Diesel,Cummins L9 / X12 450–500HP,450,True,3,,ok
+Entegra Coach,Aspire,Class A Diesel,Diesel,Cummins L9 450HP,450,True,2,,ok
+Entegra Coach,Reatta,Class A Diesel,Diesel,Cummins B6.7 360HP,360,True,1,,ok
+Entegra Coach,Reatta XL,Class A Diesel,Diesel,Cummins B6.7 360HP,360,True,1,,ok
+Entegra Coach,Vision,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,True,3,,ok
+Entegra Coach,Vision XL,Class A Gas,Gas,Ford 7.3L V8 Godzilla,350,True,2,,ok
+Entegra Coach,Accolade,Super C,Diesel,Cummins Super C diesel ~340HP,340,True,1,,ok
+Entegra Coach,Accolade XL,Super C,Diesel,Cummins Super C diesel,340,True,1,,ok
+Entegra Coach,Expanse,Class C,Gas,Ford Transit gas,310,True,1,,ok
+Entegra Coach,Esteem,Class C,Gas,Ford 7.3L V8,350,True,3,,ok
+Entegra Coach,Qwest,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,True,3,,ok
+Monaco Coach,Dynasty,Class A Diesel,Diesel,Cummins L9 / ISL / ISX (by year),450,True,4,,ok
+Monaco Coach,Camelot,Class A Diesel,Diesel,Cummins B6.7 / L9 360–450HP,360,True,3,,ok
+Monaco Coach,Knight,Class A Diesel,Diesel,Cummins ISL / L9 class,380,True,3,,ok
+Holiday Rambler,Navigator,Class A Diesel,Diesel,Cummins B6.7 / L9 360–450HP,360,True,4,,ok
+Holiday Rambler,Ambassador,Class A Diesel,Diesel,Cummins B6.7 / L9 / ISL (by year),380,True,4,,ok
+Holiday Rambler,Armada,Class A Diesel,Diesel,Cummins B6.7 / L9 360–450HP,360,True,1,,ok
+Holiday Rambler,Vacationer,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,True,3,,ok
+Holiday Rambler,Invicta,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,True,3,,ok
+Holiday Rambler,Augusta,Class C,Gas,Ford 7.3L V8,350,True,4,,ok
+Holiday Rambler,Xpedition,Class B,Diesel / Gas,Mercedes-Benz / RAM (by package),208,True,1,,ok
+Pleasure-Way,Plateau,Class B,Diesel,Mercedes-Benz diesel (Sprinter),188,True,3,,ok
+Pleasure-Way,Plateau TS,Class B,Diesel,Mercedes-Benz diesel (Sprinter),188,True,2,,ok
+Pleasure-Way,Ascent,Class B,Diesel,Mercedes-Benz diesel (Sprinter),211,True,2,,ok
+Pleasure-Way,Lexor,Class B,Gas,Ram 3.6L V6 gas,280,True,1,,ok
+Pleasure-Way,Ontour,Class B,Gas / Diesel,Ford Transit EcoBoost / diesel (by year),310,True,1,,ok
+Pleasure-Way,Ontour 2.0,Class B,Gas,Ford Transit 3.5L EcoBoost,310,True,1,,ok
+Roadtrek,Zion,Class B,Gas,Ram 3.6L V6 gas,280,True,1,,ok
+Roadtrek,Zion Slumber,Class B,Gas,Ram 3.6L V6 gas,280,True,1,,ok
+Roadtrek,Play,Class B,Gas,Ram 3.6L V6 gas,280,True,1,,ok
+Roadtrek,SS Agile,Class B,Gas,Ram 3.6L V6 gas,280,True,1,,ok
+Roadtrek,Chase,Class B,Gas / Diesel,Ram 3.6L V6 / Mercedes diesel (by year),188,True,2,,ok
+Roadtrek,CS Adventurous,Class B,Diesel,Mercedes-Benz diesel (Sprinter),188,True,1,,ok
+Roadtrek,Popular,Class B,Gas / Diesel,Ram / Mercedes / Chevy (by era),188,True,2,,ok
+Nexus RV,Viper,Class C,Gas,Ford 7.3L / 6.2L (by year),300,True,2,,ok
+Nexus RV,Phantom,Class C,Gas,Ford 7.3L / 6.2L (by year),300,True,2,,ok
+Nexus RV,Ghost,Class C,Gas,Ford 7.3L V8 Godzilla,350,True,1,,ok
+Nexus RV,Triumph,Super C,Diesel,Ford Power Stroke 6.7L Diesel,330,True,1,,ok
+Nexus RV,Rebel Super C,Super C,Diesel,Ford Power Stroke 6.7L Diesel,330,True,1,,ok
+Leisure Travel Vans,Unity,Class B+,Diesel,Mercedes-Benz diesel (Sprinter),188,True,3,,ok
+Leisure Travel Vans,Wonder,Class B+,Diesel / Gas (by chassis),Mercedes-Benz diesel / Ford Transit (select),188,True,1,,ok
+Leisure Travel Vans,Wonder XL,Class B+,Diesel,Mercedes-Benz diesel (Sprinter 170 EXT),188,True,2,,ok
+Leisure Travel Vans,Serenity,Class B,Diesel,Mercedes-Benz diesel (Sprinter),188,True,1,,ok
+Leisure Travel Vans,Free,Class B,Diesel / Gas,Mercedes-Benz diesel / Ford Transit (by year),188,True,2,,ok
+Renegade RV,Valencia,Super C,Diesel,Cummins ISB / B6.7 Super C diesel,340,True,2,,ok
+Renegade RV,Verona,Super C,Diesel,Cummins Super C diesel 340–360HP,360,True,2,,ok
+Renegade RV,Verona LE,Super C,Diesel,Cummins Super C diesel,340,True,1,,ok
+Renegade RV,Classic Super C,Super C,Diesel,Cummins Super C diesel,360,True,2,,ok
+Renegade RV,Ikon,Super C,Diesel,Ford Power Stroke 6.7L / Super C diesel,330,True,1,,ok
+Renegade RV,Villagio,Class A Diesel,Diesel,Mercedes-Benz Sprinter turbodiesel,188,True,3,,ok
+Renegade RV,Villager,Class C,Gas,Ford 7.3L V8,350,True,3,,ok
+Renegade RV,Vienna,Super C,Diesel,Cummins / Ford Super C diesel,330,True,1,,ok
+Dynamax,Isata 3,Class C,Diesel,Mercedes-Benz 2.0L I4 turbodiesel,211,True,2,,ok
+Dynamax,Isata 4,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,True,2,,ok
+Dynamax,Isata 5,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,True,2,,ok
+Dynamax,Europa,Super C,Diesel,Ford 6.7L Power Stroke Diesel,330,True,2,,ok
+Dynamax,Force,Super C,Diesel,Ford 6.7L Power Stroke Diesel,330,True,2,,ok
+Dynamax,DynaQuest,Super C,Diesel,Ford 6.7L Power Stroke Diesel,330,True,2,,ok
+Dynamax,DX3,Super C,Diesel,Cummins L9 360HP,360,True,1,,ok
+Dynamax,Grand Sport,Super C,Diesel,Cummins / Ford Super C diesel (era),300,True,1,,ok
+Storyteller Overland,MODE,Class B,Diesel,Mercedes-Benz turbodiesel (Sprinter),188,True,1,,ok
+Storyteller Overland,Beast MODE,Class B,Diesel,Mercedes-Benz turbodiesel AWD/4x4,211,True,1,,ok
+Storyteller Overland,Classic MODE,Class B,Diesel,Mercedes-Benz turbodiesel (Sprinter),188,True,1,,ok
+Coach House,Platinum II,Class B+,Diesel,Mercedes-Benz 2.0L I4 turbodiesel ~211HP,188,True,2,,ok
+Coach House,Platinum,Class B+,Diesel,Mercedes-Benz turbodiesel (Sprinter),188,True,1,,ok
+Midwest Automotive Designs,Passage,Class B,Diesel / Gas,Mercedes-Benz turbodiesel / Ford Transit (MD2F),188,True,1,,ok
+Midwest Automotive Designs,Weekender,Class B,Diesel,Mercedes-Benz turbodiesel (Sprinter),188,True,2,,ok
+Midwest Automotive Designs,Passage Daycruiser,Class B,Diesel,Mercedes-Benz turbodiesel (Sprinter),188,True,2,,ok
+Regency,Ultra Brougham,Class B,Diesel,Mercedes-Benz 3.0L V6,188,True,1,,ok
+Country Coach,Inspire,Class A Diesel,Diesel,Cummins ISX 600HP,600,True,1,,ok
+Country Coach,Intrigue,Class A Diesel,Diesel,Cummins X15 605HP,605,True,1,,ok
+Country Coach,Allure,Class A Diesel,Diesel,Cummins ISL 450HP,450,True,1,,ok
+Beaver Coach,Marquis,Class A Diesel,Diesel,Cummins ISL 400HP,400,True,1,,ok
+Beaver Coach,Patriot,Class A Diesel,Diesel,Cummins ISL 380HP,380,True,1,,ok
+National RV,Sea Breeze,Class A Gas,Gas,Ford V10 6.8L,320,True,1,,ok
+National RV,Tropi-Cal,Class A Diesel,Diesel,Cummins ISL 340HP,340,True,1,,ok
+Gulf Stream Coach,Conquest,Class A Gas,Gas,Ford V10 6.8L,320,True,1,,ok
+Gulf Stream Coach,Crescendo,Class A Diesel,Diesel,Cummins ISL 340HP,340,True,1,,ok
+Gulf Stream Coach,BT Cruiser,Class C,Gas,Ford V8 6.2L,385,True,1,,ok
+Gulf Stream Coach,Yellowstone,Class C,Gas,Ford V8 7.3L,350,True,1,,ok
+Damon Motor Coach,Ultrasport,Class A Gas,Gas,Ford V10 6.8L,320,True,1,,ok
+Damon Motor Coach,Daybreak,Class A Gas,Gas,Ford V10 6.8L,320,True,1,,ok
+Georgie Boy,Cruise Master,Class A Gas,Gas,Ford V10 6.8L,320,True,1,,ok
+Georgie Boy,Pursuit,Class A Gas,Gas,Ford V10 6.8L,320,True,1,,ok
+Monaco Coach Classic,Signature,Class A Diesel,Diesel,Cummins ISX 600HP,600,True,1,,ok
+Monaco Coach Classic,Windsor,Class A Diesel,Diesel,Cummins ISL 400HP,400,True,1,,ok
+Fleetwood Classic,American Heritage,Class A Diesel,Diesel,Cummins ISL 380HP,380,True,1,,ok
+Fleetwood Classic,Providence,Class A Diesel,Diesel,Cummins ISX 600HP,600,True,1,,ok
+Winnebago Classic,Chieftain,Class A Gas,Gas,Ford V10 6.8L,320,True,1,,ok
+Winnebago Classic,Ultimate Freedom,Class A Diesel,Diesel,Cummins ISL 340HP,340,True,1,,ok
+Newmar Classic,London Aire,Class A Diesel,Diesel,Cummins ISX 600HP,600,True,1,,ok
+Newmar Classic,Scottsdale,Class A Gas,Gas,Ford V10 6.8L,320,True,1,,ok

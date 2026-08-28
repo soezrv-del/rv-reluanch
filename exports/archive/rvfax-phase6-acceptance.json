@@ -1,0 +1,43 @@
+{
+  "generatedAt": "2026-08-10T04:55:55.576Z",
+  "passed": 6,
+  "failed": 0,
+  "cases": [
+    {
+      "id": "A",
+      "name": "2021 Newmar Kountry Star → Cummins ~360, not 7.3/450 invent",
+      "ok": true,
+      "detail": "Cummins B6.7 360HP | HP=360 | band=2020-2026"
+    },
+    {
+      "id": "B",
+      "name": "2010 Newmar Kountry Star → Cummins ISB/Cat class, not Godzilla",
+      "ok": true,
+      "detail": "Cummins ISB / Cat turbodiesel (by build) | HP=300 | band=2005-2011"
+    },
+    {
+      "id": "C",
+      "name": "2024 Forest River FR3 → Godzilla 335 HP, gas F53",
+      "ok": true,
+      "detail": "Ford 7.3L V8 Godzilla | HP=335 | chassis=Ford F53 | band=2020-2026"
+    },
+    {
+      "id": "D",
+      "name": "2016 gas Class A Bay Star → Triton V10, not diesel L9",
+      "ok": true,
+      "detail": "Ford Triton V10 6.8L | HP=320 | band=2016-2019"
+    },
+    {
+      "id": "E",
+      "name": "Live offline/timeout → year-band still correct; no fake HP",
+      "ok": true,
+      "detail": "catalog stays: Cummins ISB / B6.7 diesel ~300–360HP | HP=340 (live=null)"
+    },
+    {
+      "id": "F",
+      "name": "Known pin after bad Live → pin wins; cache doesn’t re-poison",
+      "ok": true,
+      "detail": "reject=gas on diesel;kountry gas;pin diesel vs live gas;invent 450 gas;flagship hp on mid stomp=false cached=Cummins B6.7 360HP HP=360"
+    }
+  ]
+}

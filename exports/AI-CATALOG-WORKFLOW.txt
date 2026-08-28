@@ -1,0 +1,37 @@
+RVFAX — AI catalog homework (scale path)
+========================================
+
+You should NOT paste brochures for every coach. AI researches; validators gate; you only review exceptions.
+
+1) Instant report path (already live)
+   - Year + make + model + floorplan → year-band + pin + Live soft fields
+   - Hard powertrain locked; Live cannot invent 450 / wrong sibling
+
+2) AI catalog research (new)
+   Per coach in the report UI:
+     [AI research catalog]  → calls /api/rvfax/catalog-research
+     [Export AI patches]    → rvfax-proposed-catalog-patches.json
+
+   Batch (dev server must be up on :8080):
+     node scripts/ai-catalog-research.mjs --make Tiffin --model Phaeton
+     node scripts/ai-catalog-research.mjs --motorized --limit 10
+
+   Output:
+     exports/proposed-catalog-patches.json
+     exports/proposed-catalog-pins.ts.txt   (high-confidence only)
+
+3) What gets accepted automatically later
+   - confidence=high AND validation.ok
+   - fuel vs engine match
+   - floorplan-specific (37BH never steals 44OH 450)
+   - sources present
+
+4) Your job (minutes, not lifetime)
+   - Spot-check highOk samples
+   - Reject/fix medium/low
+   - Merge accepted pins into powertrainCorrections / year bands
+   - Re-run acceptance: node scripts/acceptance-phase6.mjs
+
+5) Never
+   - Auto-write unvalidated Live JSON into rvData as truth
+   - Model-wide 450 when only some floorplans offered it

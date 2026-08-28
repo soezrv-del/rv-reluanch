@@ -1,0 +1,16 @@
+{
+  "importedFrom": "/workspace/attachments/rvfax-catalog-models-corrected.json",
+  "modelCountInFile": 362,
+  "blocksUpdated": 11,
+  "notInRvData": [
+    "Forest River | FR3"
+  ],
+  "notInRvDataCount": 1,
+  "forcedOverrides": [
+    "Newmar Kountry Star",
+    "Tiffin Phaeton",
+    "Forest River FR3"
+  ],
+  "note": "High-confidence fixes applied from team verification against manufacturer sites/brochures (Airstream Atlas/Rangeline, Dynamax DX3/Isata 3, selected HP fills, Berkshire HP). Floorplans remain representative. Full audit partial; see team notes for details.",
+  "lastVerified": "2026-08-09"
+}

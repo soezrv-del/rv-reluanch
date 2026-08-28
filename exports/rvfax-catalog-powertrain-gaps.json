@@ -1,0 +1,5567 @@
+{
+  "generatedAt": "2026-08-10T04:47:00.429788+00:00",
+  "motorizedTotal": 210,
+  "gapCount": 0,
+  "okCount": 210,
+  "missingYearBands": 0,
+  "nullHorsepower": 0,
+  "models": [
+    {
+      "make": "Newmar",
+      "model": "Essex",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins X15 605HP",
+      "topHorsepower": 605,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2018,
+          "engine": "Cummins ISX 600HP",
+          "horsepower": 600
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Cummins X15 605HP",
+          "horsepower": 605
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Newmar",
+      "model": "King Aire",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins X15 605HP",
+      "topHorsepower": 605,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2018,
+          "engine": "Cummins ISX 600HP",
+          "horsepower": 600
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Cummins X15 605HP",
+          "horsepower": 605
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Newmar",
+      "model": "Mountain Aire",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 450HP / X12 500HP (by year/option)",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2008,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins L9 450HP",
+          "horsepower": 450
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins L9 450HP / X12 500HP option",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Newmar",
+      "model": "Dutch Star",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 450HP",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2018,
+          "engine": "Cummins ISL / L9 450HP",
+          "horsepower": 450
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Cummins L9 450HP",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Newmar",
+      "model": "New Aire",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 / L9 360\u2013450HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2019,
+          "engine": "Cummins B6.7 360HP",
+          "horsepower": 360
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins B6.7 / L9 360\u2013450HP",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Newmar",
+      "model": "Ventana",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 / L9 360\u2013450HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2006,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins ISB / B6.7 360HP",
+          "horsepower": 360
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins B6.7 / L9 360\u2013450HP",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Newmar",
+      "model": "Canyon Star",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford Power Stroke 6.7L / Cummins (by chassis year)",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins / Ford Super C diesel (era)",
+          "horsepower": 300
+        },
+        {
+          "from": 2016,
+          "to": 2020,
+          "engine": "Cummins ISB-class / Super C diesel",
+          "horsepower": 340
+        },
+        {
+          "from": 2021,
+          "to": 2026,
+          "engine": "Ford Power Stroke 6.7L or Cummins Super C diesel",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Newmar",
+      "model": "London Aire",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISX 600HP",
+      "topHorsepower": 600,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2018,
+          "engine": "Cummins ISX 600HP",
+          "horsepower": 600
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Newmar",
+      "model": "Kountry Star",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 360HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2011,
+          "engine": "Cummins ISB / Cat turbodiesel (by build)",
+          "horsepower": 300
+        },
+        {
+          "from": 2012,
+          "to": 2019,
+          "engine": "Cummins ISB / B6.7 diesel ~300\u2013360HP",
+          "horsepower": 340
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins B6.7 360HP",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Newmar",
+      "model": "Bay Star",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L Godzilla / V10 6.8L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Newmar",
+      "model": "Bay Star Sport",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Zephyr",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins X12 / X15 500\u2013605HP",
+      "topHorsepower": 500,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins ISX / X15 600HP class",
+          "horsepower": 600
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins X12 / X15 500\u2013605HP",
+          "horsepower": 500
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Allegro Bus",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 450HP (X12/X15 options by year)",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2018,
+          "engine": "Cummins ISL / L9 450HP",
+          "horsepower": 450
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Cummins L9 450HP (X12 optional)",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Allegro Bus 45OPP",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 450HP (X12 optional)",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Cummins L9 450HP",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Phaeton",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 380HP",
+      "topHorsepower": 380,
+      "hasYearBands": true,
+      "bandCount": 6,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL diesel (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Cummins L9 380HP",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Cummins L9 380HP (450 optional on tag axle)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2018,
+          "engine": "Cummins L9 380HP",
+          "horsepower": 380
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Cummins L9 380HP",
+          "horsepower": 380
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Allegro Red 340",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 360HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2017,
+          "engine": "Cummins ISB / B6.7 360HP",
+          "horsepower": 360
+        },
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Cummins B6.7 360HP",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Allegro Red 360",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 380\u2013450HP",
+      "topHorsepower": 380,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Cummins L9 380\u2013450HP",
+          "horsepower": 380
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Allegro Red",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISB 6.7L 360HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2013,
+          "engine": "Cummins ISB 6.7L 340HP",
+          "horsepower": 340
+        },
+        {
+          "from": 2014,
+          "to": 2017,
+          "engine": "Cummins ISB / B6.7 360HP",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Allegro Breeze",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISB / B6.7 340HP",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2008,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2020,
+          "engine": "Cummins ISB / B6.7 340HP",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Open Road",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L Godzilla / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Wayfarer",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2016,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Wayfarer 25",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Mercedes-Benz Sprinter turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Cahaba",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 2.0L turbodiesel",
+      "topHorsepower": 208,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2023,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Tiffin",
+      "model": "Allegro",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2022,
+          "engine": "Ford 7.3L V8",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Tuscany",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 / ISX (by year)",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins ISL / ISX class",
+          "horsepower": 450
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins L9 450HP class",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Palazzo",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 / L9 340\u2013450HP",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins ISB / B6.7 340HP",
+          "horsepower": 340
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins B6.7 / L9 340\u2013450HP",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Aria",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 / L9 340\u2013450HP",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Cummins B6.7 / L9 class",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "ACE",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L Godzilla / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Windsport",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2008,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Challenger",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Magnitude",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford Power Stroke 6.7L Diesel",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Cummins / Ford Super C diesel (era)",
+          "horsepower": 300
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Ford Power Stroke 6.7L Diesel",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Magnitude XG",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford Power Stroke 6.7L Diesel",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford Power Stroke 6.7L Diesel",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Seneca",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford Power Stroke 6.7L / Cummins Super C (by year)",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2015,
+          "engine": "Cummins / Ford Super C diesel (era)",
+          "horsepower": 300
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Super C diesel (Ford 6.7 / Cummins by chassis)",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Four Winds",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8 Godzilla / 6.2L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2010,
+          "engine": "Ford V10 / 6.8L or 6.0L (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L / 6.8L V10 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Chateau",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8 Godzilla / 6.2L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2010,
+          "engine": "Ford V10 / 6.8L or 6.0L (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L / V10",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Quantum",
+      "type": "Class C",
+      "fuelType": "Gas / Diesel (by plan)",
+      "engine": "Ford 7.3L V8 Godzilla / Mercedes Sprinter (select)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L / Mercedes Sprinter diesel (by plan)",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Four Winds Siesta",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz Sprinter turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2016,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Geneva",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / 6.2L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2019,
+          "engine": "Ford 6.2L V8",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Outlaw",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L / V10",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Sequence",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 2.0L I4 turbo diesel",
+      "topHorsepower": 208,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2021,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbo diesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Sanctuary",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz Sprinter turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2015,
+          "to": 2015,
+          "engine": "Mercedes-Benz Sprinter turbodiesel",
+          "horsepower": 180
+        },
+        {
+          "from": 2016,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Thor",
+      "model": "Gemini",
+      "type": "Class B+",
+      "fuelType": "Gas",
+      "engine": "Ford Transit / cutaway gas (by year)",
+      "topHorsepower": 310,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Ford Transit / cutaway gas (by year)",
+          "horsepower": 180
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Ford Transit / cutaway V6/V8 gas",
+          "horsepower": 310
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Encore",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L Godzilla / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Sportscoach",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISB / B6.7 ~340HP",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2015,
+          "engine": "Cummins ISB / ISL mid-diesel (era)",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Freelander",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / 6.2L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L (E-450 / F-53 cutaway era)",
+          "horsepower": 305
+        },
+        {
+          "from": 2005,
+          "to": 2005,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 305
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Mirada",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Leprechaun",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / Chevy 6.6L (by chassis)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L (E-450 / F-53 cutaway era)",
+          "horsepower": 305
+        },
+        {
+          "from": 2000,
+          "to": 2005,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 305
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Prism",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 3.0L V6 / 2.0L I4 (by year)",
+      "topHorsepower": 211,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2013,
+          "to": 2015,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel (Sprinter)",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Galleria",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz diesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2016,
+          "to": 2018,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Beyond",
+      "type": "Class B",
+      "fuelType": "Gas",
+      "engine": "Ford Transit 3.5L EcoBoost",
+      "topHorsepower": 310,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Ford Transit 3.5L EcoBoost",
+          "horsepower": 310
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Pursuit",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Freelander LE",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / 6.2L",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2015,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Concord",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L (E-450 / F-53 cutaway era)",
+          "horsepower": 305
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Leprechaun Premier",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Ford 7.3L V8",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coachmen",
+      "model": "Sportscoach SRS Super C",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford Power Stroke 6.7L Diesel",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Ford Power Stroke 6.7L Diesel",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Forza",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 340HP",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Cummins B6.7 (ISB) 340HP",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Journey",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 340HP",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2014,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2015,
+          "to": 2022,
+          "engine": "Cummins B6.7 / ISB 340HP",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Horizon",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 450HP",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Cummins L9 450HP",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Grand Tour",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISX / L9 (by year)",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Via",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 3.0L turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Vista",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8 Godzilla",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Sunstar",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8 Godzilla",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Intent",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8 Godzilla",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2019,
+          "to": 2020,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2021,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Adventurer",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford Triton V10 6.8L / 7.3L (by year)",
+      "topHorsepower": 320,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2021,
+          "engine": "Ford 7.3L V8",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Itasca Sunstar",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford Triton V10 6.8L",
+      "topHorsepower": 320,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Revel",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+      "topHorsepower": 208,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Travato",
+      "type": "Class B",
+      "fuelType": "Gas",
+      "engine": "RAM 3.6L V6 gas",
+      "topHorsepower": 276,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "RAM 3.6L V6 gas",
+          "horsepower": 180
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Solis",
+      "type": "Class B",
+      "fuelType": "Gas",
+      "engine": "RAM 3.6L V6 gas",
+      "topHorsepower": 276,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "RAM 3.6L V6 gas",
+          "horsepower": 276
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Boldt",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+      "topHorsepower": 208,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Era",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Mercedes-Benz turbodiesel",
+          "horsepower": 180
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "View",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+      "topHorsepower": 208,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2006,
+          "to": 2015,
+          "engine": "Mercedes-Benz Sprinter 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2014,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Navion",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+      "topHorsepower": 208,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2006,
+          "to": 2015,
+          "engine": "Mercedes-Benz Sprinter 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2014,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Porto",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2019,
+          "to": 2023,
+          "engine": "Mercedes-Benz turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Vita",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2022,
+          "engine": "Mercedes-Benz turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "EKKO",
+      "type": "Class C",
+      "fuelType": "Gas / Diesel",
+      "engine": "Ford / Mercedes (by floorplan)",
+      "topHorsepower": 208,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2021,
+          "to": 2026,
+          "engine": "22A: Ford 3.5L EcoBoost \u00b7 23B: Mercedes turbodiesel",
+          "horsepower": 310
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Spirit",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8 Godzilla",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2019,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Minnie Winnie",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8 Godzilla",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2019,
+          "engine": "Ford V10 / V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Outlook",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago",
+      "model": "Access Super C",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford Power Stroke 6.7L Diesel",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2021,
+          "to": 2026,
+          "engine": "Ford Power Stroke 6.7L Diesel",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Forest River",
+      "model": "Georgetown 5 Series",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L Godzilla / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Forest River",
+      "model": "Georgetown XL",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Forest River",
+      "model": "Georgetown",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Forest River",
+      "model": "FR3",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8 Godzilla",
+      "topHorsepower": 335,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2015,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 335
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Forest River",
+      "model": "Berkshire",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISB 6.7L 360HP / ISL 380-450HP (by trim)",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins ISB / B6.7 340HP",
+          "horsepower": 340
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins B6.7 / L9 340\u2013450HP",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Forest River",
+      "model": "Sunseeker",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / 6.2L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2010,
+          "engine": "Ford V10 / 6.8L or 6.0L (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L V8",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Forest River",
+      "model": "Sunseeker LE",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / 6.2L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L V8",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Forest River",
+      "model": "Sunseeker Classic",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / 6.2L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2008,
+          "to": 2010,
+          "engine": "Ford V10 / 6.8L or 6.0L (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L V8",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Forest River",
+      "model": "Forester",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / 6.2L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2010,
+          "engine": "Ford V10 / 6.8L or 6.0L (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L V8",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Forest River",
+      "model": "Forester LE",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / 6.2L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L V8",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Forest River",
+      "model": "Solera",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz Sprinter turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2017,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Forest River",
+      "model": "Dynamax Isata (FR)",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 2.0L I4 turbodiesel (by series)",
+      "topHorsepower": 211,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Airstream",
+      "model": "Interstate",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz diesel (Sprinter)",
+      "topHorsepower": 208,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        },
+        {
+          "from": 2005,
+          "to": 2005,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter / early T1N\u2013NCV3)",
+          "horsepower": 154
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Airstream",
+      "model": "Atlas",
+      "type": "Class B+",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 2.0L turbo 4-cyl diesel (Sprinter 4500)",
+      "topHorsepower": 208,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2018,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Airstream",
+      "model": "Rangeline",
+      "type": "Class B",
+      "fuelType": "Gas",
+      "engine": "3.6L Pentastar V6",
+      "topHorsepower": 276,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood",
+      "model": "Discovery",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 (ISB) 360HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2010,
+          "engine": "Cummins ISB 6.7 300\u2013340HP (by year)",
+          "horsepower": 320
+        },
+        {
+          "from": 2011,
+          "to": 2016,
+          "engine": "Cummins ISB 6.7 ~340\u2013360HP",
+          "horsepower": 340
+        },
+        {
+          "from": 2017,
+          "to": 2026,
+          "engine": "Cummins B6.7 (ISB) 360HP",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood",
+      "model": "Discovery LXE",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 / ISX (by year/option)",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2018,
+          "engine": "Cummins ISL / L9 450HP",
+          "horsepower": 450
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Cummins L9 450HP (higher options by build)",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood",
+      "model": "Bounder",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L Godzilla / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood",
+      "model": "Bounder Classic",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2022,
+          "engine": "Ford 7.3L V8",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood",
+      "model": "Pace Arrow",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood",
+      "model": "Storm",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood",
+      "model": "Flair",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2008,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood",
+      "model": "Jamboree",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8 / 6.2L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2010,
+          "engine": "Ford V10 / 6.8L or 6.0L (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L / V10",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood",
+      "model": "Tioga",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2010,
+          "engine": "Ford V10 / 6.8L or 6.0L (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L / V10",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood",
+      "model": "Tioga Ranger",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 6.2L / 7.3L",
+      "topHorsepower": 305,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2010,
+          "engine": "Ford V10 / 6.8L or 6.0L (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L V8",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2024,
+          "engine": "Ford 7.3L V8",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood",
+      "model": "Pulse",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz Sprinter turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Mercedes-Benz Sprinter 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2016,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood",
+      "model": "Xcursion",
+      "type": "Class B",
+      "fuelType": "Diesel / Gas",
+      "engine": "Mercedes-Benz / RAM (by chassis year)",
+      "topHorsepower": 208,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2024,
+          "to": 2026,
+          "engine": "Sprinter turbodiesel or ProMaster gas",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Jayco",
+      "model": "Precept",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L Godzilla / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Jayco",
+      "model": "Alante",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2015,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Jayco",
+      "model": "Embark",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 / L9 360\u2013450HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins ISB / B6.7 360HP",
+          "horsepower": 360
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins B6.7 / L9 360\u2013450HP",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Jayco",
+      "model": "Seneca Super C",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford Power Stroke 6.7L / Cummins Super C (by chassis year)",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Cummins / Ford Super C diesel (era)",
+          "horsepower": 300
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Super C diesel (Ford 6.7 Power Stroke or Cummins by chassis)",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Jayco",
+      "model": "Greyhawk",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8 Godzilla / 6.2L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2008,
+          "to": 2010,
+          "engine": "Ford V10 / 6.8L or 6.0L (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L / V10 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Jayco",
+      "model": "Redhawk",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / 6.2L (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2010,
+          "engine": "Ford V10 / 6.8L or 6.0L (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L V8",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Jayco",
+      "model": "Melbourne",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz Sprinter turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2015,
+          "engine": "Mercedes-Benz Sprinter 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2016,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Jayco",
+      "model": "Melbourne Prestige",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz Sprinter turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Mercedes-Benz Sprinter 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2016,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "American Coach",
+      "model": "American Tradition",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 450HP",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2018,
+          "engine": "Cummins ISL / L9 450HP",
+          "horsepower": 450
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Cummins L9 450HP",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "American Coach",
+      "model": "American Eagle",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 / X15 (by option)",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins ISX / L9 class",
+          "horsepower": 450
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins L9 / X15 (by option)",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "American Coach",
+      "model": "American Dream",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 / X15 (by option)",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins L9 / ISX class",
+          "horsepower": 450
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins L9 450 std / X15 605 opt",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Entegra Coach",
+      "model": "Cornerstone",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins X15 605HP",
+      "topHorsepower": 605,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2018,
+          "engine": "Cummins ISX 600HP class",
+          "horsepower": 600
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Cummins X15 605HP",
+          "horsepower": 605
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Entegra Coach",
+      "model": "Anthem",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 / X12 450\u2013500HP",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins L9 450HP",
+          "horsepower": 450
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins L9 / X12 450\u2013500HP",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Entegra Coach",
+      "model": "Aspire",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 450HP",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Cummins L9 450HP",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Entegra Coach",
+      "model": "Reatta",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 360HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Cummins B6.7 360HP",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Entegra Coach",
+      "model": "Reatta XL",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 360HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Cummins B6.7 360HP",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Entegra Coach",
+      "model": "Vision",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L Godzilla / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Entegra Coach",
+      "model": "Vision XL",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8 Godzilla",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2019,
+          "to": 2019,
+          "engine": "Ford Triton V10 / 7.3L transition",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Entegra Coach",
+      "model": "Accolade",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Cummins Super C diesel ~340HP",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2015,
+          "to": 2026,
+          "engine": "Cummins Super C diesel ~340HP",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Entegra Coach",
+      "model": "Accolade XL",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Cummins Super C diesel",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Cummins Super C diesel",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Entegra Coach",
+      "model": "Expanse",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford Transit gas",
+      "topHorsepower": 310,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Ford Transit gas",
+          "horsepower": 310
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Entegra Coach",
+      "model": "Esteem",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L / V10",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Entegra Coach",
+      "model": "Qwest",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz Sprinter turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2015,
+          "to": 2015,
+          "engine": "Mercedes-Benz Sprinter 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2016,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Monaco Coach",
+      "model": "Dynasty",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 / ISL / ISX (by year)",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins ISL / L9 class",
+          "horsepower": 400
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins L9 450HP class",
+          "horsepower": 450
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Monaco Coach",
+      "model": "Camelot",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 / L9 360\u2013450HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Cummins B6.7 / L9 class",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Monaco Coach",
+      "model": "Knight",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISL / L9 class",
+      "topHorsepower": 380,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2008,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2023,
+          "engine": "Cummins ISL / L9 class",
+          "horsepower": 380
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Holiday Rambler",
+      "model": "Navigator",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 / L9 360\u2013450HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins ISB / B6.7 360HP",
+          "horsepower": 360
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins B6.7 / L9 360\u2013450HP",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Holiday Rambler",
+      "model": "Ambassador",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 / L9 / ISL (by year)",
+      "topHorsepower": 380,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2009,
+          "engine": "Cummins ISL / ISB diesel (era)",
+          "horsepower": 350
+        },
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Cummins ISL 380HP class",
+          "horsepower": 380
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Cummins L9 / B6.7 class",
+          "horsepower": 380
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Holiday Rambler",
+      "model": "Armada",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins B6.7 / L9 360\u2013450HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Cummins B6.7 / L9 360\u2013450HP",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Holiday Rambler",
+      "model": "Vacationer",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L Godzilla / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Holiday Rambler",
+      "model": "Invicta",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / V10 (by year)",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L ~305\u2013362HP",
+          "horsepower": 320
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Holiday Rambler",
+      "model": "Augusta",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 4,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2010,
+          "engine": "Ford V10 / 6.8L or 6.0L (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L / V10",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Holiday Rambler",
+      "model": "Xpedition",
+      "type": "Class B",
+      "fuelType": "Diesel / Gas",
+      "engine": "Mercedes-Benz / RAM (by package)",
+      "topHorsepower": 208,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2024,
+          "to": 2026,
+          "engine": "Sprinter turbodiesel or ProMaster gas",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Pleasure-Way",
+      "model": "Plateau",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz diesel (Sprinter)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2018,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel ~188HP",
+          "horsepower": 188
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Mercedes-Benz turbodiesel (I4/V6 by year)",
+          "horsepower": 188
+        },
+        {
+          "from": 2005,
+          "to": 2005,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter / early T1N\u2013NCV3)",
+          "horsepower": 154
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Pleasure-Way",
+      "model": "Plateau TS",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz diesel (Sprinter)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2015,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        },
+        {
+          "from": 2005,
+          "to": 2005,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter / early T1N\u2013NCV3)",
+          "horsepower": 154
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Pleasure-Way",
+      "model": "Ascent",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz diesel (Sprinter)",
+      "topHorsepower": 211,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2018,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Pleasure-Way",
+      "model": "Lexor",
+      "type": "Class B",
+      "fuelType": "Gas",
+      "engine": "Ram 3.6L V6 gas",
+      "topHorsepower": 280,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Ram / Dodge 3.6L V6 gas (or earlier 3.6/3.0 by year)",
+          "horsepower": 280
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Pleasure-Way",
+      "model": "Ontour",
+      "type": "Class B",
+      "fuelType": "Gas / Diesel",
+      "engine": "Ford Transit EcoBoost / diesel (by year)",
+      "topHorsepower": 310,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Ford Transit EcoBoost / diesel (by year)",
+          "horsepower": 310
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Pleasure-Way",
+      "model": "Ontour 2.0",
+      "type": "Class B",
+      "fuelType": "Gas",
+      "engine": "Ford Transit 3.5L EcoBoost",
+      "topHorsepower": 310,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Ford Transit 3.5L EcoBoost",
+          "horsepower": 310
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Roadtrek",
+      "model": "Zion",
+      "type": "Class B",
+      "fuelType": "Gas",
+      "engine": "Ram 3.6L V6 gas",
+      "topHorsepower": 280,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2015,
+          "to": 2015,
+          "engine": "Ram / Dodge 3.6L V6 gas (or earlier 3.6/3.0 by year)",
+          "horsepower": 280
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Roadtrek",
+      "model": "Zion Slumber",
+      "type": "Class B",
+      "fuelType": "Gas",
+      "engine": "Ram 3.6L V6 gas",
+      "topHorsepower": 280,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2015,
+          "to": 2015,
+          "engine": "Ram / Dodge 3.6L V6 gas (or earlier 3.6/3.0 by year)",
+          "horsepower": 280
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Roadtrek",
+      "model": "Play",
+      "type": "Class B",
+      "fuelType": "Gas",
+      "engine": "Ram 3.6L V6 gas",
+      "topHorsepower": 280,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Ram 3.6L V6 gas",
+          "horsepower": 280
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Roadtrek",
+      "model": "SS Agile",
+      "type": "Class B",
+      "fuelType": "Gas",
+      "engine": "Ram 3.6L V6 gas",
+      "topHorsepower": 280,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ram 3.6L V6 gas",
+          "horsepower": 280
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Roadtrek",
+      "model": "Chase",
+      "type": "Class B",
+      "fuelType": "Gas / Diesel",
+      "engine": "Ram 3.6L V6 / Mercedes diesel (by year)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2016,
+          "to": 2018,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Roadtrek",
+      "model": "CS Adventurous",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz diesel (Sprinter)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Roadtrek",
+      "model": "Popular",
+      "type": "Class B",
+      "fuelType": "Gas / Diesel",
+      "engine": "Ram / Mercedes / Chevy (by era)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Gas or diesel chassis by build (era)",
+          "horsepower": 300
+        },
+        {
+          "from": 2005,
+          "to": 2005,
+          "engine": "Gas or diesel chassis by build (2000\u20132005)",
+          "horsepower": 300
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Nexus RV",
+      "model": "Viper",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / 6.2L (by year)",
+      "topHorsepower": 300,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2019,
+          "engine": "Ford 6.2L V8 / 6.8L V10 (by year)",
+          "horsepower": 300
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Nexus RV",
+      "model": "Phantom",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L / 6.2L (by year)",
+      "topHorsepower": 300,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2019,
+          "engine": "Ford 6.2L V8",
+          "horsepower": 300
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla 350HP",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Nexus RV",
+      "model": "Ghost",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8 Godzilla",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L (E-450 / F-53 cutaway era)",
+          "horsepower": 305
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Nexus RV",
+      "model": "Triumph",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford Power Stroke 6.7L Diesel",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Cummins / Ford Super C diesel (era)",
+          "horsepower": 300
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Nexus RV",
+      "model": "Rebel Super C",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford Power Stroke 6.7L Diesel",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Ford Power Stroke 6.7L Diesel",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Leisure Travel Vans",
+      "model": "Unity",
+      "type": "Class B+",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz diesel (Sprinter)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2018,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel ~188HP",
+          "horsepower": 188
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Mercedes-Benz 3.0L V6 / 2.0L I4 turbodiesel (by year)",
+          "horsepower": 188
+        },
+        {
+          "from": 2000,
+          "to": 2005,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter / early T1N\u2013NCV3)",
+          "horsepower": 154
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Leisure Travel Vans",
+      "model": "Wonder",
+      "type": "Class B+",
+      "fuelType": "Diesel / Gas (by chassis)",
+      "engine": "Mercedes-Benz diesel / Ford Transit (select)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2015,
+          "to": 2015,
+          "engine": "Gas or diesel chassis by build (era)",
+          "horsepower": 300
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Leisure Travel Vans",
+      "model": "Wonder XL",
+      "type": "Class B+",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz diesel (Sprinter 170 EXT)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2018,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Leisure Travel Vans",
+      "model": "Serenity",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz diesel (Sprinter)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2015,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Leisure Travel Vans",
+      "model": "Free",
+      "type": "Class B",
+      "fuelType": "Diesel / Gas",
+      "engine": "Mercedes-Benz diesel / Ford Transit (by year)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2018,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Renegade RV",
+      "model": "Valencia",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISB / B6.7 Super C diesel",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2015,
+          "engine": "Cummins / Ford Super C diesel (era)",
+          "horsepower": 300
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Cummins ISB / B6.7 Super C diesel",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Renegade RV",
+      "model": "Verona",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Cummins Super C diesel 340\u2013360HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2015,
+          "engine": "Cummins / Ford Super C diesel (era)",
+          "horsepower": 300
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Cummins Super C diesel 340\u2013360HP",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Renegade RV",
+      "model": "Verona LE",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Cummins Super C diesel",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Cummins Super C diesel",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Renegade RV",
+      "model": "Classic Super C",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Cummins Super C diesel",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins / Ford Super C diesel (era)",
+          "horsepower": 300
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Cummins Super C diesel",
+          "horsepower": 360
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Renegade RV",
+      "model": "Ikon",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford Power Stroke 6.7L / Super C diesel",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Super C diesel (Ford 6.7 or Cummins by chassis)",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Renegade RV",
+      "model": "Villagio",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz Sprinter turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        },
+        {
+          "from": 2016,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2024,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Renegade RV",
+      "model": "Villager",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford 7.3L V8",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 3,
+      "bands": [
+        {
+          "from": 2011,
+          "to": 2015,
+          "engine": "Ford 6.8L V10 / 6.2L V8 (by year)",
+          "horsepower": 305
+        },
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford 6.2L / V10",
+          "horsepower": 305
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford 7.3L V8 Godzilla",
+          "horsepower": 350
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Renegade RV",
+      "model": "Vienna",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Cummins / Ford Super C diesel",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Super C diesel",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Dynamax",
+      "model": "Isata 3",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+      "topHorsepower": 211,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2016,
+          "to": 2019,
+          "engine": "Ford Transit 3.5L EcoBoost V6",
+          "horsepower": 310
+        },
+        {
+          "from": 2020,
+          "to": 2026,
+          "engine": "Ford Transit 3.5L EcoBoost V6 ~310HP",
+          "horsepower": 310
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Dynamax",
+      "model": "Isata 4",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz Sprinter turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2019,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel ~208HP",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Dynamax",
+      "model": "Isata 5",
+      "type": "Class C",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz Sprinter turbodiesel",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2014,
+          "to": 2021,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel",
+          "horsepower": 188
+        },
+        {
+          "from": 2022,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel ~208HP",
+          "horsepower": 208
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Dynamax",
+      "model": "Europa",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford 6.7L Power Stroke Diesel",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Ford 6.7L Power Stroke Diesel",
+          "horsepower": 300
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Ford 6.7L Power Stroke Diesel ~330HP",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Dynamax",
+      "model": "Force",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford 6.7L Power Stroke Diesel",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2016,
+          "engine": "Ford 6.7L Power Stroke Diesel",
+          "horsepower": 300
+        },
+        {
+          "from": 2017,
+          "to": 2026,
+          "engine": "Ford 6.7L Power Stroke Diesel ~330HP",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Dynamax",
+      "model": "DynaQuest",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Ford 6.7L Power Stroke Diesel",
+      "topHorsepower": 330,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2008,
+          "to": 2015,
+          "engine": "Ford 6.7L Power Stroke / Super C diesel (era)",
+          "horsepower": 300
+        },
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Ford 6.7L Power Stroke Diesel ~330HP",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Dynamax",
+      "model": "DX3",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Cummins L9 360HP",
+      "topHorsepower": 360,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2015,
+          "to": 2026,
+          "engine": "Ford 6.7L Power Stroke Diesel",
+          "horsepower": 330
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Dynamax",
+      "model": "Grand Sport",
+      "type": "Super C",
+      "fuelType": "Diesel",
+      "engine": "Cummins / Ford Super C diesel (era)",
+      "topHorsepower": 300,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2005,
+          "to": 2016,
+          "engine": "Cummins or Ford Super C diesel (by chassis year)",
+          "horsepower": 300
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Storyteller Overland",
+      "model": "MODE",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2026,
+          "engine": "Mercedes-Benz turbodiesel (I4/V6 by year)",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Storyteller Overland",
+      "model": "Beast MODE",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz turbodiesel AWD/4x4",
+      "topHorsepower": 211,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Storyteller Overland",
+      "model": "Classic MODE",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2021,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coach House",
+      "model": "Platinum II",
+      "type": "Class B+",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 2.0L I4 turbodiesel ~211HP",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2015,
+          "to": 2018,
+          "engine": "Mercedes-Benz 3.0L V6 turbodiesel ~188HP",
+          "horsepower": 188
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel ~211HP",
+          "horsepower": 211
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Coach House",
+      "model": "Platinum",
+      "type": "Class B+",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2015,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Midwest Automotive Designs",
+      "model": "Passage",
+      "type": "Class B",
+      "fuelType": "Diesel / Gas",
+      "engine": "Mercedes-Benz turbodiesel / Ford Transit (MD2F)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2016,
+          "to": 2026,
+          "engine": "Mercedes turbodiesel (Sprinter) or Ford EcoBoost (MD2F)",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Midwest Automotive Designs",
+      "model": "Weekender",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2010,
+          "to": 2015,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        },
+        {
+          "from": 2000,
+          "to": 2005,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter / early T1N\u2013NCV3)",
+          "horsepower": 154
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Midwest Automotive Designs",
+      "model": "Passage Daycruiser",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 2,
+      "bands": [
+        {
+          "from": 2018,
+          "to": 2018,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        },
+        {
+          "from": 2019,
+          "to": 2026,
+          "engine": "Mercedes-Benz 2.0L I4 turbodiesel",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Regency",
+      "model": "Ultra Brougham",
+      "type": "Class B",
+      "fuelType": "Diesel",
+      "engine": "Mercedes-Benz 3.0L V6",
+      "topHorsepower": 188,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2015,
+          "to": 2015,
+          "engine": "Mercedes-Benz turbodiesel (Sprinter)",
+          "horsepower": 188
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Country Coach",
+      "model": "Inspire",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISX 600HP",
+      "topHorsepower": 600,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2008,
+          "engine": "Cummins ISX 600HP class",
+          "horsepower": 600
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Country Coach",
+      "model": "Intrigue",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins X15 605HP",
+      "topHorsepower": 605,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2008,
+          "engine": "Cummins ISX 600HP class",
+          "horsepower": 600
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Country Coach",
+      "model": "Allure",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISL 450HP",
+      "topHorsepower": 450,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2008,
+          "engine": "Cummins ISL 400\u2013450HP class",
+          "horsepower": 400
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Beaver Coach",
+      "model": "Marquis",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISL 400HP",
+      "topHorsepower": 400,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2009,
+          "engine": "Cummins ISL 400\u2013450HP class",
+          "horsepower": 400
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Beaver Coach",
+      "model": "Patriot",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISL 380HP",
+      "topHorsepower": 380,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2009,
+          "engine": "Cummins ISB / ISL mid-diesel (era)",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "National RV",
+      "model": "Sea Breeze",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford V10 6.8L",
+      "topHorsepower": 320,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2007,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "National RV",
+      "model": "Tropi-Cal",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISL 340HP",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2007,
+          "engine": "Cummins ISB / ISL mid-diesel (era)",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Gulf Stream Coach",
+      "model": "Conquest",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford V10 6.8L",
+      "topHorsepower": 320,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2012,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Gulf Stream Coach",
+      "model": "Crescendo",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISL 340HP",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2010,
+          "engine": "Cummins ISB / ISL mid-diesel (era)",
+          "horsepower": 340
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Gulf Stream Coach",
+      "model": "BT Cruiser",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford V8 6.2L",
+      "topHorsepower": 385,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2008,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L (E-450 / F-53 cutaway era)",
+          "horsepower": 305
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Gulf Stream Coach",
+      "model": "Yellowstone",
+      "type": "Class C",
+      "fuelType": "Gas",
+      "engine": "Ford V8 7.3L",
+      "topHorsepower": 350,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2012,
+          "to": 2015,
+          "engine": "Ford Triton V10 6.8L (E-450 / F-53 cutaway era)",
+          "horsepower": 305
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Damon Motor Coach",
+      "model": "Ultrasport",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford V10 6.8L",
+      "topHorsepower": 320,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2009,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Damon Motor Coach",
+      "model": "Daybreak",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford V10 6.8L",
+      "topHorsepower": 320,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2009,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Georgie Boy",
+      "model": "Cruise Master",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford V10 6.8L",
+      "topHorsepower": 320,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2007,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Georgie Boy",
+      "model": "Pursuit",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford V10 6.8L",
+      "topHorsepower": 320,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2007,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Monaco Coach Classic",
+      "model": "Signature",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISX 600HP",
+      "topHorsepower": 600,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2009,
+          "engine": "Cummins ISX 600HP class",
+          "horsepower": 600
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Monaco Coach Classic",
+      "model": "Windsor",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISL 400HP",
+      "topHorsepower": 400,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2009,
+          "engine": "Cummins ISL 400\u2013450HP class",
+          "horsepower": 400
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood Classic",
+      "model": "American Heritage",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISL 380HP",
+      "topHorsepower": 380,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2005,
+          "engine": "Cummins ISB / ISC mid-diesel (era)",
+          "horsepower": 300
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Fleetwood Classic",
+      "model": "Providence",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISX 600HP",
+      "topHorsepower": 600,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2006,
+          "engine": "Cummins ISX 600HP",
+          "horsepower": 600
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago Classic",
+      "model": "Chieftain",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford V10 6.8L",
+      "topHorsepower": 320,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2006,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 320
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Winnebago Classic",
+      "model": "Ultimate Freedom",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISL 340HP",
+      "topHorsepower": 340,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2006,
+          "engine": "Cummins ISL / ISB 300\u2013450HP (era)",
+          "horsepower": 380
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Newmar Classic",
+      "model": "London Aire",
+      "type": "Class A Diesel",
+      "fuelType": "Diesel",
+      "engine": "Cummins ISX 600HP",
+      "topHorsepower": 600,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2008,
+          "engine": "Cummins ISX 600HP class",
+          "horsepower": 600
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    },
+    {
+      "make": "Newmar Classic",
+      "model": "Scottsdale",
+      "type": "Class A Gas",
+      "fuelType": "Gas",
+      "engine": "Ford V10 6.8L",
+      "topHorsepower": 320,
+      "hasYearBands": true,
+      "bandCount": 1,
+      "bands": [
+        {
+          "from": 2000,
+          "to": 2005,
+          "engine": "Ford Triton V10 6.8L",
+          "horsepower": 310
+        }
+      ],
+      "gaps": [],
+      "status": "ok"
+    }
+  ],
+  "gapsOnly": []
+}

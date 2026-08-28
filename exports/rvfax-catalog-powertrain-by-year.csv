@@ -1,0 +1,401 @@
+make,model,type,fuelType,from,to,engine,horsepower,torqueLbFt,chassis,notes
+Airstream,Interstate,Class B,Diesel,2010,2015,Mercedes-Benz turbodiesel (Sprinter),188,,Mercedes-Benz Sprinter,Sprinter OM642 / era diesel ~188 HP class
+Airstream,Interstate,Class B,Diesel,2005,2005,Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3),154,,Mercedes-Benz Sprinter,Early Sprinter era — ~154–188 HP by year
+American Coach,American Dream,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Spartan K3 (typical high-line),2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+American Coach,American Dream,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Spartan K3 (typical high-line),2010–2015 mid/high diesel Class A
+American Coach,American Dream,Class A Diesel,Diesel,2016,2019,Cummins L9 / ISX class,450,,Spartan K3,
+American Coach,American Dream,Class A Diesel,Diesel,2020,2026,Cummins L9 450 std / X15 605 opt,450,,Spartan K3,
+American Coach,American Eagle,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Spartan / Freightliner high-line,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+American Coach,American Eagle,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Spartan / Freightliner high-line,2010–2015 mid/high diesel Class A
+American Coach,American Eagle,Class A Diesel,Diesel,2016,2019,Cummins ISX / L9 class,450,,Spartan / Freightliner,
+American Coach,American Eagle,Class A Diesel,Diesel,2020,2026,Cummins L9 / X15 (by option),450,,Spartan / Freightliner high-line,
+American Coach,American Tradition,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Freightliner Liberty Bridge / modular,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+American Coach,American Tradition,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner Liberty Bridge / modular,2010–2015 mid/high diesel Class A
+American Coach,American Tradition,Class A Diesel,Diesel,2016,2018,Cummins ISL / L9 450HP,450,,Freightliner modular,
+American Coach,American Tradition,Class A Diesel,Diesel,2019,2026,Cummins L9 450HP,450,1250,Freightliner Liberty Bridge,
+Beaver Coach,Marquis,Class A Diesel,Diesel,2000,2009,Cummins ISL 400–450HP class,400,,Freightliner / Spartan (by option),High-line diesel 2006–2015 — ISL class (not Ford gas)
+Beaver Coach,Patriot,Class A Diesel,Diesel,2000,2009,Cummins ISB / ISL mid-diesel (era),340,,Freightliner XC,"Mid diesel pusher 2006–2015 — not F53 gas, not modern L9 default"
+Coach House,Platinum,Class B+,Diesel,2012,2015,Mercedes-Benz turbodiesel (Sprinter),188,,Mercedes-Benz Sprinter,Sprinter OM642 / era diesel ~188 HP class
+Coach House,Platinum II,Class B+,Diesel,2015,2018,Mercedes-Benz 3.0L V6 turbodiesel ~188HP,188,,Mercedes Sprinter 3500,
+Coach House,Platinum II,Class B+,Diesel,2019,2026,Mercedes-Benz 2.0L I4 turbodiesel ~211HP,211,,Mercedes Sprinter 3500,
+Coachmen,Concord,Class C,Gas,2010,2015,Ford Triton V10 6.8L (E-450 / F-53 cutaway era),305,,Ford E-450,Pre-Godzilla Class C — Triton V10 era (7.3 gas arrives ~2020)
+Coachmen,Encore,Class A Gas,Gas,2012,2015,Ford Triton V10 6.8L,320,,Ford F53,2006–2015 gas Class A — Triton V10 (not 7.3 Godzilla)
+Coachmen,Freelander,Class C,Gas,2010,2015,Ford Triton V10 6.8L (E-450 / F-53 cutaway era),305,,Ford E-450,Pre-Godzilla Class C — Triton V10 era (7.3 gas arrives ~2020)
+Coachmen,Freelander,Class C,Gas,2005,2005,Ford Triton V10 6.8L,305,,Ford E-450,2000–2005 Class C gas — Triton V10 (not 7.3 Godzilla)
+Coachmen,Freelander LE,Class C,Gas,2015,2015,Ford Triton V10 6.8L,320,,Ford E-450,Pre-Godzilla Class C — Triton V10 era (7.3 gas arrives ~2020)
+Coachmen,Leprechaun,Class C,Gas,2010,2015,Ford Triton V10 6.8L (E-450 / F-53 cutaway era),305,,Ford E-450,Pre-Godzilla Class C — Triton V10 era (7.3 gas arrives ~2020)
+Coachmen,Leprechaun,Class C,Gas,2000,2005,Ford Triton V10 6.8L,305,,Ford E-450,2000–2005 Class C gas — Triton V10 (not 7.3 Godzilla)
+Coachmen,Mirada,Class A Gas,Gas,2010,2015,Ford Triton V10 6.8L,320,,Ford F53,2006–2015 gas Class A — Triton V10 (not 7.3 Godzilla)
+Coachmen,Prism,Class C,Diesel,2013,2015,Mercedes-Benz 3.0L V6 turbodiesel (Sprinter),188,,Mercedes-Benz Sprinter,2006–2015 era powertrain for Coachmen Prism
+Coachmen,Pursuit,Class A Gas,Gas,2010,2015,Ford Triton V10 6.8L,320,,Ford F53,2006–2015 gas Class A — Triton V10 (not 7.3 Godzilla)
+Coachmen,Sportscoach,Class A Diesel,Diesel,2012,2015,Cummins ISB / ISL mid-diesel (era),340,,Freightliner XC,"Mid diesel pusher 2006–2015 — not F53 gas, not modern L9 default"
+Country Coach,Allure,Class A Diesel,Diesel,2000,2008,Cummins ISL 400–450HP class,400,,Freightliner / Spartan (by option),High-line diesel 2006–2015 — ISL class (not Ford gas)
+Country Coach,Inspire,Class A Diesel,Diesel,2000,2008,Cummins ISX 600HP class,600,,Spartan / Freightliner (by model),Flagship diesel era — ISX 600 class (pre-X15 naming)
+Country Coach,Intrigue,Class A Diesel,Diesel,2000,2008,Cummins ISX 600HP class,600,,Spartan / Freightliner (by model),Flagship diesel era — ISX 600 class (pre-X15 naming)
+Damon Motor Coach,Daybreak,Class A Gas,Gas,2000,2009,Ford Triton V10 6.8L,320,,Ford F53,2006–2015 gas Class A — Triton V10 (not 7.3 Godzilla)
+Damon Motor Coach,Ultrasport,Class A Gas,Gas,2000,2009,Ford Triton V10 6.8L,320,,Ford F53,2006–2015 gas Class A — Triton V10 (not 7.3 Godzilla)
+Dynamax,DX3,Super C,Diesel,2015,2026,Ford 6.7L Power Stroke Diesel,330,,Ford F-550 Super C,
+Dynamax,DynaQuest,Super C,Diesel,2008,2015,Ford 6.7L Power Stroke / Super C diesel (era),300,,Ford Super C platform,
+Dynamax,DynaQuest,Super C,Diesel,2016,2026,Ford 6.7L Power Stroke Diesel ~330HP,330,950,Ford F-600 Super C,
+Dynamax,Europa,Super C,Diesel,2010,2015,Ford 6.7L Power Stroke Diesel,300,,Ford F-550,
+Dynamax,Europa,Super C,Diesel,2016,2026,Ford 6.7L Power Stroke Diesel ~330HP,330,950,Ford F-550 Super Duty,
+Dynamax,Force,Super C,Diesel,2012,2016,Ford 6.7L Power Stroke Diesel,300,,Ford F-550/F-600 Super C,
+Dynamax,Force,Super C,Diesel,2017,2026,Ford 6.7L Power Stroke Diesel ~330HP,330,950,Ford F-600 Super Duty,
+Dynamax,Grand Sport,Super C,Diesel,2005,2016,Cummins or Ford Super C diesel (by chassis year),300,,Super C platform,Confirm chassis badge — era Super C varies
+Dynamax,Isata 3,Class C,Gas,2016,2019,Ford Transit 3.5L EcoBoost V6,310,,Ford Transit,
+Dynamax,Isata 3,Class C,Gas,2020,2026,Ford Transit 3.5L EcoBoost V6 ~310HP,310,400,Ford Transit,
+Dynamax,Isata 4,Class C,Diesel,2019,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Dynamax,Isata 4,Class C,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel ~208HP,208,,Mercedes Sprinter,
+Dynamax,Isata 5,Class C,Diesel,2014,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Dynamax,Isata 5,Class C,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel ~208HP,208,,Mercedes Sprinter,
+Entegra Coach,Accolade,Super C,Diesel,2015,2026,Cummins Super C diesel ~340HP,340,,Freightliner Super C,
+Entegra Coach,Accolade XL,Super C,Diesel,2018,2026,Cummins Super C diesel,340,,Freightliner Super C,
+Entegra Coach,Anthem,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Spartan K3,2010–2015 mid/high diesel Class A
+Entegra Coach,Anthem,Class A Diesel,Diesel,2016,2019,Cummins L9 450HP,450,,Spartan K3,
+Entegra Coach,Anthem,Class A Diesel,Diesel,2020,2026,Cummins L9 / X12 450–500HP,450,,Spartan K3,
+Entegra Coach,Aspire,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Spartan K3 / Freightliner (by year),2010–2015 mid/high diesel Class A
+Entegra Coach,Aspire,Class A Diesel,Diesel,2016,2026,Cummins L9 450HP,450,,Spartan / Freightliner,
+Entegra Coach,Cornerstone,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Spartan K3,2010–2015 mid/high diesel Class A
+Entegra Coach,Cornerstone,Class A Diesel,Diesel,2016,2018,Cummins ISX 600HP class,600,,Spartan K3,
+Entegra Coach,Cornerstone,Class A Diesel,Diesel,2019,2026,Cummins X15 605HP,605,1950,Spartan K3,
+Entegra Coach,Esteem,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Entegra Coach,Esteem,Class C,Gas,2016,2019,Ford 6.2L / V10,305,,Ford E-450,
+Entegra Coach,Esteem,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford E-450,
+Entegra Coach,Expanse,Class C,Gas,2018,2026,Ford Transit gas,310,,Ford Transit,
+Entegra Coach,Qwest,Class C,Diesel,2015,2015,Mercedes-Benz Sprinter 3.0L V6 turbodiesel,188,,Mercedes-Benz Sprinter,Sprinter diesel Class C era
+Entegra Coach,Qwest,Class C,Diesel,2016,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Entegra Coach,Qwest,Class C,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Mercedes Sprinter,
+Entegra Coach,Reatta,Class A Diesel,Diesel,2016,2026,Cummins B6.7 360HP,360,800,Spartan K1,Inline-six B6.7 — not ISL 8.9
+Entegra Coach,Reatta XL,Class A Diesel,Diesel,2018,2026,Cummins B6.7 360HP,360,,Spartan K1,
+Entegra Coach,Vision,Class A Gas,Gas,2014,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Entegra Coach,Vision,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Entegra Coach,Vision,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford F53,
+Entegra Coach,Vision XL,Class A Gas,Gas,2019,2019,Ford Triton V10 / 7.3L transition,320,,Ford F53,
+Entegra Coach,Vision XL,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Fleetwood,Bounder,Class A Gas,Gas,2005,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Fleetwood,Bounder,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Fleetwood,Bounder,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford F53,
+Fleetwood,Bounder Classic,Class A Gas,Gas,2010,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Fleetwood,Bounder Classic,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Fleetwood,Bounder Classic,Class A Gas,Gas,2020,2022,Ford 7.3L V8,350,,Ford F53,
+Fleetwood,Discovery,Class A Diesel,Diesel,2005,2010,Cummins ISB 6.7 300–340HP (by year),320,,Freightliner XC,Pre-ISB 360 common packaging
+Fleetwood,Discovery,Class A Diesel,Diesel,2011,2016,Cummins ISB 6.7 ~340–360HP,340,,Freightliner XC-Series,Discovery gas never used 8.9L ISL — diesel ISB family
+Fleetwood,Discovery,Class A Diesel,Diesel,2017,2026,Cummins B6.7 (ISB) 360HP,360,,Freightliner XC-Series,2022 Discovery 38K = B6.7 360HP Freightliner — NOT 8.9L ISL
+Fleetwood,Discovery LXE,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner / Spartan (by option),2010–2015 mid/high diesel Class A
+Fleetwood,Discovery LXE,Class A Diesel,Diesel,2016,2018,Cummins ISL / L9 450HP,450,,Freightliner XC,
+Fleetwood,Discovery LXE,Class A Diesel,Diesel,2019,2026,Cummins L9 450HP (higher options by build),450,,Freightliner / Spartan option,
+Fleetwood,Flair,Class A Gas,Gas,2008,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Fleetwood,Flair,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Fleetwood,Flair,Class A Gas,Gas,2020,2026,Ford 7.3L V8,350,,Ford F53,
+Fleetwood,Jamboree,Class C,Gas,2005,2010,Ford V10 / 6.8L or 6.0L (by year),305,,Ford E-450 / E-350,Pre-6.2/7.3 Ford cutaway Class C
+Fleetwood,Jamboree,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Fleetwood,Jamboree,Class C,Gas,2016,2019,Ford 6.2L / V10,305,,Ford E-450,
+Fleetwood,Jamboree,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Fleetwood,Pace Arrow,Class A Gas,Gas,2005,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Fleetwood,Pace Arrow,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Fleetwood,Pace Arrow,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Fleetwood,Pulse,Class C,Diesel,2014,2015,Mercedes-Benz Sprinter 3.0L V6 turbodiesel,188,,Mercedes-Benz Sprinter,Sprinter diesel Class C era
+Fleetwood,Pulse,Class C,Diesel,2016,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Fleetwood,Pulse,Class C,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Mercedes Sprinter,
+Fleetwood,Storm,Class A Gas,Gas,2005,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Fleetwood,Storm,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Fleetwood,Storm,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Fleetwood,Tioga,Class C,Gas,2005,2010,Ford V10 / 6.8L or 6.0L (by year),305,,Ford E-450 / E-350,Pre-6.2/7.3 Ford cutaway Class C
+Fleetwood,Tioga,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Fleetwood,Tioga,Class C,Gas,2016,2019,Ford 6.2L / V10,305,,Ford E-450,
+Fleetwood,Tioga,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford E-450,
+Fleetwood,Tioga Ranger,Class C,Gas,2010,2010,Ford V10 / 6.8L or 6.0L (by year),305,,Ford E-450 / E-350,Pre-6.2/7.3 Ford cutaway Class C
+Fleetwood,Tioga Ranger,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Fleetwood,Tioga Ranger,Class C,Gas,2016,2019,Ford 6.2L V8,305,,Ford E-450,
+Fleetwood,Tioga Ranger,Class C,Gas,2020,2024,Ford 7.3L V8,350,,Ford E-450,
+Fleetwood,Xcursion,Class B,Diesel / Gas,2024,2026,Sprinter turbodiesel or ProMaster gas,208,,Van chassis by package,
+Fleetwood Classic,American Heritage,Class A Diesel,Diesel,2000,2005,Cummins ISB / ISC mid-diesel (era),300,,Freightliner XC,"Mid diesel pusher 2000–2005 — Cummins diesel, not Ford 7.3 gas"
+Fleetwood Classic,Providence,Class A Diesel,Diesel,2000,2006,Cummins ISX 600HP,600,,Spartan K3,Fleetwood Providence flagship diesel — ISX 600 class (pre-X15 naming)
+Forest River,Berkshire,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XC-Series,2010–2015 mid/high diesel Class A
+Forest River,Berkshire,Class A Diesel,Diesel,2016,2019,Cummins ISB / B6.7 340HP,340,,Freightliner XC,
+Forest River,Berkshire,Class A Diesel,Diesel,2020,2026,Cummins B6.7 / L9 340–450HP,340,,Freightliner XC-Series,
+Forest River,Dynamax Isata (FR),Class C,Diesel,2018,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Forest River,Dynamax Isata (FR),Class C,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Mercedes Sprinter,
+Forest River,Forester,Class C,Gas,2005,2010,Ford V10 / 6.8L or 6.0L (by year),305,,Ford E-450 / E-350,Pre-6.2/7.3 Ford cutaway Class C
+Forest River,Forester,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Forest River,Forester,Class C,Gas,2016,2019,Ford 6.2L V8,305,,Ford E-450,
+Forest River,Forester,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Forest River,Forester LE,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Forest River,Forester LE,Class C,Gas,2016,2019,Ford 6.2L V8,305,,Ford E-450,
+Forest River,Forester LE,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Forest River,FR3,Class A Gas,Gas,2015,2019,Ford Triton V10 6.8L,320,460,Ford F53,Pre-Godzilla FR3 — Triton V10 F53 gas Class A
+Forest River,FR3,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,335,468,Ford F53,OEM FR3 brochure: Ford F53 · 7.3L V8 · 335 HP · 468 lb-ft · TorqShift 6-spd (not diesel)
+Forest River,Georgetown,Class A Gas,Gas,2005,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Forest River,Georgetown,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Forest River,Georgetown,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Forest River,Georgetown 5 Series,Class A Gas,Gas,2014,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Forest River,Georgetown 5 Series,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Forest River,Georgetown 5 Series,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford F53,
+Forest River,Georgetown XL,Class A Gas,Gas,2012,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Forest River,Georgetown XL,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Forest River,Georgetown XL,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Forest River,Solera,Class C,Diesel,2017,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Forest River,Solera,Class C,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Mercedes Sprinter,
+Forest River,Sunseeker,Class C,Gas,2005,2010,Ford V10 / 6.8L or 6.0L (by year),305,,Ford E-450 / E-350,Pre-6.2/7.3 Ford cutaway Class C
+Forest River,Sunseeker,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Forest River,Sunseeker,Class C,Gas,2016,2019,Ford 6.2L V8,305,,Ford E-450,
+Forest River,Sunseeker,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Forest River,Sunseeker Classic,Class C,Gas,2008,2010,Ford V10 / 6.8L or 6.0L (by year),305,,Ford E-450 / E-350,Pre-6.2/7.3 Ford cutaway Class C
+Forest River,Sunseeker Classic,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Forest River,Sunseeker Classic,Class C,Gas,2016,2019,Ford 6.2L V8,305,,Ford E-450,
+Forest River,Sunseeker Classic,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Forest River,Sunseeker LE,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Forest River,Sunseeker LE,Class C,Gas,2016,2019,Ford 6.2L V8,305,,Ford E-450,
+Forest River,Sunseeker LE,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Georgie Boy,Cruise Master,Class A Gas,Gas,2000,2007,Ford Triton V10 6.8L,320,,Ford F53,2006–2015 gas Class A — Triton V10 (not 7.3 Godzilla)
+Georgie Boy,Pursuit,Class A Gas,Gas,2000,2007,Ford Triton V10 6.8L,320,,Ford F53,2006–2015 gas Class A — Triton V10 (not 7.3 Godzilla)
+Gulf Stream Coach,BT Cruiser,Class C,Gas,2008,2015,Ford Triton V10 6.8L (E-450 / F-53 cutaway era),305,,Ford E-450,Pre-Godzilla Class C — Triton V10 era (7.3 gas arrives ~2020)
+Gulf Stream Coach,Conquest,Class A Gas,Gas,2000,2012,Ford Triton V10 6.8L,320,,Ford F53,2006–2015 gas Class A — Triton V10 (not 7.3 Godzilla)
+Gulf Stream Coach,Crescendo,Class A Diesel,Diesel,2000,2010,Cummins ISB / ISL mid-diesel (era),340,,Freightliner XC,"Mid diesel pusher 2006–2015 — not F53 gas, not modern L9 default"
+Gulf Stream Coach,Yellowstone,Class C,Gas,2012,2015,Ford Triton V10 6.8L (E-450 / F-53 cutaway era),305,,Ford E-450,Pre-Godzilla Class C — Triton V10 era (7.3 gas arrives ~2020)
+Holiday Rambler,Ambassador,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Freightliner XCS / XC,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Holiday Rambler,Ambassador,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XCS / XC,2010–2015 mid/high diesel Class A
+Holiday Rambler,Ambassador,Class A Diesel,Diesel,2016,2019,Cummins ISL 380HP class,380,,Freightliner XCS,
+Holiday Rambler,Ambassador,Class A Diesel,Diesel,2020,2026,Cummins L9 / B6.7 class,380,,Freightliner XC,
+Holiday Rambler,Armada,Class A Diesel,Diesel,2019,2026,Cummins B6.7 / L9 360–450HP,360,,Freightliner XC,
+Holiday Rambler,Augusta,Class C,Gas,2010,2010,Ford V10 / 6.8L or 6.0L (by year),305,,Ford E-450 / E-350,Pre-6.2/7.3 Ford cutaway Class C
+Holiday Rambler,Augusta,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Holiday Rambler,Augusta,Class C,Gas,2016,2019,Ford 6.2L / V10,305,,Ford E-450,
+Holiday Rambler,Augusta,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford E-450,
+Holiday Rambler,Invicta,Class A Gas,Gas,2010,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Holiday Rambler,Invicta,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Holiday Rambler,Invicta,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Holiday Rambler,Navigator,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Freightliner XC-Series,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Holiday Rambler,Navigator,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XC-Series,2010–2015 mid/high diesel Class A
+Holiday Rambler,Navigator,Class A Diesel,Diesel,2016,2019,Cummins ISB / B6.7 360HP,360,,Freightliner XC,
+Holiday Rambler,Navigator,Class A Diesel,Diesel,2020,2026,Cummins B6.7 / L9 360–450HP,360,,Freightliner XC-Series,
+Holiday Rambler,Vacationer,Class A Gas,Gas,2005,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Holiday Rambler,Vacationer,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Holiday Rambler,Vacationer,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford F53,
+Holiday Rambler,Xpedition,Class B,Diesel / Gas,2024,2026,Sprinter turbodiesel or ProMaster gas,208,,Van chassis,
+Jayco,Alante,Class A Gas,Gas,2015,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Jayco,Alante,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Jayco,Alante,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Jayco,Embark,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XC-Series,2010–2015 mid/high diesel Class A
+Jayco,Embark,Class A Diesel,Diesel,2016,2019,Cummins ISB / B6.7 360HP,360,,Freightliner XC,
+Jayco,Embark,Class A Diesel,Diesel,2020,2026,Cummins B6.7 / L9 360–450HP,360,,Freightliner XC-Series,
+Jayco,Greyhawk,Class C,Gas,2008,2010,Ford V10 / 6.8L or 6.0L (by year),305,,Ford E-450 / E-350,Pre-6.2/7.3 Ford cutaway Class C
+Jayco,Greyhawk,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Jayco,Greyhawk,Class C,Gas,2016,2019,Ford 6.2L / V10 (by year),305,,Ford E-450,
+Jayco,Greyhawk,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Jayco,Melbourne,Class C,Diesel,2012,2015,Mercedes-Benz Sprinter 3.0L V6 turbodiesel,188,,Mercedes-Benz Sprinter,Sprinter diesel Class C era
+Jayco,Melbourne,Class C,Diesel,2016,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Jayco,Melbourne,Class C,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Mercedes Sprinter,
+Jayco,Melbourne Prestige,Class C,Diesel,2014,2015,Mercedes-Benz Sprinter 3.0L V6 turbodiesel,188,,Mercedes-Benz Sprinter,Sprinter diesel Class C era
+Jayco,Melbourne Prestige,Class C,Diesel,2016,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Jayco,Melbourne Prestige,Class C,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Mercedes Sprinter,
+Jayco,Precept,Class A Gas,Gas,2014,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Jayco,Precept,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Jayco,Precept,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford F53,
+Jayco,Redhawk,Class C,Gas,2010,2010,Ford V10 / 6.8L or 6.0L (by year),305,,Ford E-450 / E-350,Pre-6.2/7.3 Ford cutaway Class C
+Jayco,Redhawk,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Jayco,Redhawk,Class C,Gas,2016,2019,Ford 6.2L V8,305,,Ford E-450,
+Jayco,Redhawk,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford E-450,
+Jayco,Seneca Super C,Super C,Diesel,2014,2015,Cummins / Ford Super C diesel (era),300,,Freightliner / Ford Super C,2005–2015 Super C — verify chassis badge
+Jayco,Seneca Super C,Super C,Diesel,2016,2026,Super C diesel (Ford 6.7 Power Stroke or Cummins by chassis),330,,Super C platform,
+Leisure Travel Vans,Serenity,Class B,Diesel,2012,2015,Mercedes-Benz turbodiesel (Sprinter),188,,Mercedes-Benz Sprinter,Sprinter OM642 / era diesel ~188 HP class
+Leisure Travel Vans,Unity,Class B+,Diesel,2012,2018,Mercedes-Benz 3.0L V6 turbodiesel ~188HP,188,,Mercedes Sprinter 3500,
+Leisure Travel Vans,Unity,Class B+,Diesel,2019,2026,Mercedes-Benz 3.0L V6 / 2.0L I4 turbodiesel (by year),188,,Mercedes Sprinter 3500,Confirm door sticker for I4 vs V6 era
+Leisure Travel Vans,Unity,Class B+,Diesel,2000,2005,Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3),154,,Mercedes-Benz Sprinter,Early Sprinter era — ~154–188 HP by year
+Leisure Travel Vans,Wonder,Class B+,Diesel / Gas (by chassis),2015,2015,Gas or diesel chassis by build (era),300,,,Verify door sticker — dual fuel families in this era
+Midwest Automotive Designs,Passage,Class B,Diesel / Gas,2016,2026,Mercedes turbodiesel (Sprinter) or Ford EcoBoost (MD2F),188,,Sprinter 144/170 or Transit,Confirm chassis badge
+Midwest Automotive Designs,Weekender,Class B,Diesel,2010,2015,Mercedes-Benz turbodiesel (Sprinter),188,,Mercedes-Benz Sprinter,Sprinter OM642 / era diesel ~188 HP class
+Midwest Automotive Designs,Weekender,Class B,Diesel,2000,2005,Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3),154,,Mercedes-Benz Sprinter,Early Sprinter era — ~154–188 HP by year
+Monaco Coach,Camelot,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Freightliner XC-Series,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Monaco Coach,Camelot,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XC-Series,2010–2015 mid/high diesel Class A
+Monaco Coach,Camelot,Class A Diesel,Diesel,2016,2026,Cummins B6.7 / L9 class,360,,Freightliner XC,
+Monaco Coach,Dynasty,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Freightliner / Spartan (by year),2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Monaco Coach,Dynasty,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner / Spartan (by year),2010–2015 mid/high diesel Class A
+Monaco Coach,Dynasty,Class A Diesel,Diesel,2016,2019,Cummins ISL / L9 class,400,,Freightliner / Spartan,
+Monaco Coach,Dynasty,Class A Diesel,Diesel,2020,2026,Cummins L9 450HP class,450,,Freightliner XC,
+Monaco Coach,Knight,Class A Diesel,Diesel,2008,2009,Cummins ISL / ISB diesel (era),350,,Freightliner XC,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Monaco Coach,Knight,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XC,2010–2015 mid/high diesel Class A
+Monaco Coach,Knight,Class A Diesel,Diesel,2016,2023,Cummins ISL / L9 class,380,,Freightliner XC,
+Monaco Coach Classic,Signature,Class A Diesel,Diesel,2000,2009,Cummins ISX 600HP class,600,,Spartan / Freightliner (by model),Flagship diesel era — ISX 600 class (pre-X15 naming)
+Monaco Coach Classic,Windsor,Class A Diesel,Diesel,2000,2009,Cummins ISL 400–450HP class,400,,Freightliner / Spartan (by option),High-line diesel 2006–2015 — ISL class (not Ford gas)
+National RV,Sea Breeze,Class A Gas,Gas,2000,2007,Ford Triton V10 6.8L,320,,Ford F53,2006–2015 gas Class A — Triton V10 (not 7.3 Godzilla)
+National RV,Tropi-Cal,Class A Diesel,Diesel,2000,2007,Cummins ISB / ISL mid-diesel (era),340,,Freightliner XC,"Mid diesel pusher 2006–2015 — not F53 gas, not modern L9 default"
+Newmar,Bay Star,Class A Gas,Gas,2005,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Newmar,Bay Star,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Newmar,Bay Star,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Newmar,Bay Star Sport,Class A Gas,Gas,2010,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Newmar,Bay Star Sport,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Newmar,Bay Star Sport,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Newmar,Canyon Star,Super C,Diesel,2010,2015,Cummins / Ford Super C diesel (era),300,,Freightliner / Ford Super C,2005–2015 Super C — verify chassis badge
+Newmar,Canyon Star,Super C,Diesel,2016,2020,Cummins ISB-class / Super C diesel,340,,Freightliner Super C,
+Newmar,Canyon Star,Super C,Diesel,2021,2026,Ford Power Stroke 6.7L or Cummins Super C diesel,330,,Super C platform,
+Newmar,Dutch Star,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Freightliner XC-Series (Spartan optional some years),2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Newmar,Dutch Star,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XC-Series (Spartan optional some years),2010–2015 mid/high diesel Class A
+Newmar,Dutch Star,Class A Diesel,Diesel,2016,2018,Cummins ISL / L9 450HP,450,,Freightliner XC,
+Newmar,Dutch Star,Class A Diesel,Diesel,2019,2026,Cummins L9 450HP,450,1250,Freightliner XC-Series,
+Newmar,Essex,Class A Diesel,Diesel,2012,2018,Cummins ISX 600HP,600,,Spartan K3,
+Newmar,Essex,Class A Diesel,Diesel,2019,2026,Cummins X15 605HP,605,1950,Spartan K3,
+Newmar,King Aire,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Spartan K3,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Newmar,King Aire,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Spartan K3,2010–2015 mid/high diesel Class A
+Newmar,King Aire,Class A Diesel,Diesel,2016,2018,Cummins ISX 600HP,600,,Spartan K3,
+Newmar,King Aire,Class A Diesel,Diesel,2019,2026,Cummins X15 605HP,605,,Spartan K3,
+Newmar,Kountry Star,Class A Diesel,Diesel,2005,2011,Cummins ISB / Cat turbodiesel (by build),300,,Freightliner / Spartan (by option),Earlier KS diesel pushers; rare gas F53 builds existed in the early 2000s — verify VIN/build sheet
+Newmar,Kountry Star,Class A Diesel,Diesel,2012,2019,Cummins ISB / B6.7 diesel ~300–360HP,340,700,Freightliner XC / XCR,"Mid-diesel pusher era — not L9 450 flagship, not Ford F53 gas"
+Newmar,Kountry Star,Class A Diesel,Diesel,2020,2026,Cummins B6.7 360HP,360,800,Freightliner XCR,OEM brochure: Freightliner XCR + Cummins B6.7 360 HP @ 2600 rpm / 800 lb-ft — not 7.3 Godzilla (Bay Star) and not L9 450 (Dutch Star class)
+Newmar,London Aire,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Spartan K3,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Newmar,London Aire,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Spartan K3,2010–2015 mid/high diesel Class A
+Newmar,London Aire,Class A Diesel,Diesel,2016,2018,Cummins ISX 600HP,600,,Spartan K3,
+Newmar,Mountain Aire,Class A Diesel,Diesel,2008,2009,Cummins ISL / ISB diesel (era),350,,Spartan K3 / Freightliner (by year),2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Newmar,Mountain Aire,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Spartan K3 / Freightliner (by year),2010–2015 mid/high diesel Class A
+Newmar,Mountain Aire,Class A Diesel,Diesel,2016,2019,Cummins L9 450HP,450,,Spartan K3,
+Newmar,Mountain Aire,Class A Diesel,Diesel,2020,2026,Cummins L9 450HP / X12 500HP option,450,,Spartan K3,
+Newmar,New Aire,Class A Diesel,Diesel,2014,2019,Cummins B6.7 360HP,360,,Freightliner XC,
+Newmar,New Aire,Class A Diesel,Diesel,2020,2026,Cummins B6.7 / L9 360–450HP,360,,Freightliner XC-Series,
+Newmar,Ventana,Class A Diesel,Diesel,2006,2009,Cummins ISL / ISB diesel (era),350,,Freightliner XC-Series,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Newmar,Ventana,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XC-Series,2010–2015 mid/high diesel Class A
+Newmar,Ventana,Class A Diesel,Diesel,2016,2019,Cummins ISB / B6.7 360HP,360,,Freightliner XC,
+Newmar,Ventana,Class A Diesel,Diesel,2020,2026,Cummins B6.7 / L9 360–450HP,360,,Freightliner XC-Series,
+Newmar Classic,London Aire,Class A Diesel,Diesel,2000,2008,Cummins ISX 600HP class,600,,Spartan / Freightliner (by model),Flagship diesel era — ISX 600 class (pre-X15 naming)
+Newmar Classic,Scottsdale,Class A Gas,Gas,2000,2005,Ford Triton V10 6.8L,310,,Ford F53,2000–2005 gas Class A — Triton V10 era
+Nexus RV,Ghost,Class C,Gas,2014,2015,Ford Triton V10 6.8L (E-450 / F-53 cutaway era),305,,Ford E-450,Pre-Godzilla Class C — Triton V10 era (7.3 gas arrives ~2020)
+Nexus RV,Phantom,Class C,Gas,2012,2019,Ford 6.2L V8,300,,Ford E-450,
+Nexus RV,Phantom,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Nexus RV,Triumph,Super C,Diesel,2014,2015,Cummins / Ford Super C diesel (era),300,,Freightliner / Ford Super Duty (by build),Pre-modern Power Stroke 330 packaging on many Super Cs
+Nexus RV,Viper,Class C,Gas,2012,2019,Ford 6.2L V8 / 6.8L V10 (by year),300,,Ford E-450,
+Nexus RV,Viper,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Pleasure-Way,Lexor,Class B,Gas,2014,2015,Ram / Dodge 3.6L V6 gas (or earlier 3.6/3.0 by year),280,,Ram ProMaster / earlier van chassis,2006–2015 era powertrain for Pleasure-Way Lexor
+Pleasure-Way,Plateau,Class B,Diesel,2012,2018,Mercedes-Benz 3.0L V6 turbodiesel ~188HP,188,,Mercedes Sprinter,
+Pleasure-Way,Plateau,Class B,Diesel,2019,2026,Mercedes-Benz turbodiesel (I4/V6 by year),188,,Mercedes Sprinter,Confirm engine code on door sticker
+Pleasure-Way,Plateau,Class B,Diesel,2005,2005,Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3),154,,Mercedes-Benz Sprinter,Early Sprinter era — ~154–188 HP by year
+Pleasure-Way,Plateau TS,Class B,Diesel,2012,2015,Mercedes-Benz turbodiesel (Sprinter),188,,Mercedes-Benz Sprinter,Sprinter OM642 / era diesel ~188 HP class
+Pleasure-Way,Plateau TS,Class B,Diesel,2005,2005,Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3),154,,Mercedes-Benz Sprinter,Early Sprinter era — ~154–188 HP by year
+Regency,Ultra Brougham,Class B,Diesel,2015,2015,Mercedes-Benz turbodiesel (Sprinter),188,,Mercedes-Benz Sprinter,Sprinter OM642 / era diesel ~188 HP class
+Renegade RV,Classic Super C,Super C,Diesel,2010,2015,Cummins / Ford Super C diesel (era),300,,Freightliner / Ford Super C,2005–2015 Super C — verify chassis badge
+Renegade RV,Classic Super C,Super C,Diesel,2016,2026,Cummins Super C diesel,360,,Freightliner Super C,
+Renegade RV,Ikon,Super C,Diesel,2018,2026,Super C diesel (Ford 6.7 or Cummins by chassis),330,,Super C platform,
+Renegade RV,Valencia,Super C,Diesel,2014,2015,Cummins / Ford Super C diesel (era),300,,Freightliner / Ford Super C,2005–2015 Super C — verify chassis badge
+Renegade RV,Valencia,Super C,Diesel,2016,2026,Cummins ISB / B6.7 Super C diesel,340,,Freightliner Super C,
+Renegade RV,Verona,Super C,Diesel,2012,2015,Cummins / Ford Super C diesel (era),300,,Freightliner / Ford Super C,2005–2015 Super C — verify chassis badge
+Renegade RV,Verona,Super C,Diesel,2016,2026,Cummins Super C diesel 340–360HP,360,,Freightliner Super C,
+Renegade RV,Verona LE,Super C,Diesel,2018,2026,Cummins Super C diesel,340,,Freightliner Super C,
+Renegade RV,Vienna,Super C,Diesel,2020,2026,Super C diesel,330,,Super C platform,
+Renegade RV,Villager,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Renegade RV,Villager,Class C,Gas,2016,2019,Ford 6.2L / V10,305,,Ford E-450,
+Renegade RV,Villager,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford E-450,
+Renegade RV,Villagio,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Mercedes Sprinter cowl,2010–2015 mid/high diesel Class A
+Renegade RV,Villagio,Class A Diesel,Diesel,2016,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Sprinter cowl,
+Renegade RV,Villagio,Class A Diesel,Diesel,2022,2024,Mercedes-Benz 2.0L I4 turbodiesel,208,,Sprinter cowl,
+Roadtrek,CS Adventurous,Class B,Diesel,2010,2015,Mercedes-Benz turbodiesel (Sprinter),188,,Mercedes-Benz Sprinter,Sprinter OM642 / era diesel ~188 HP class
+Roadtrek,Popular,Class B,Gas / Diesel,2010,2015,Gas or diesel chassis by build (era),300,,,Verify door sticker — dual fuel families in this era
+Roadtrek,Popular,Class B,Gas / Diesel,2005,2005,Gas or diesel chassis by build (2000–2005),300,,,2000–2005 era powertrain for Roadtrek Popular
+Roadtrek,Zion,Class B,Gas,2015,2015,Ram / Dodge 3.6L V6 gas (or earlier 3.6/3.0 by year),280,,Ram ProMaster / earlier van chassis,2006–2015 era powertrain for Roadtrek Zion
+Roadtrek,Zion Slumber,Class B,Gas,2015,2015,Ram / Dodge 3.6L V6 gas (or earlier 3.6/3.0 by year),280,,Ram ProMaster / earlier van chassis,2006–2015 era powertrain for Roadtrek Zion Slumber
+Storyteller Overland,MODE,Class B,Diesel,2018,2026,Mercedes-Benz turbodiesel (I4/V6 by year),188,,Mercedes Sprinter 144 / 170,
+Thor,ACE,Class A Gas,Gas,2010,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Thor,ACE,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Thor,ACE,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford F53,
+Thor,Aria,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XC-Series,2010–2015 mid/high diesel Class A
+Thor,Aria,Class A Diesel,Diesel,2016,2026,Cummins B6.7 / L9 class,340,,Freightliner XC,
+Thor,Challenger,Class A Gas,Gas,2005,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Thor,Challenger,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Thor,Challenger,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Thor,Chateau,Class C,Gas,2005,2010,Ford V10 / 6.8L or 6.0L (by year),305,,Ford E-450 / E-350,Pre-6.2/7.3 Ford cutaway Class C
+Thor,Chateau,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Thor,Chateau,Class C,Gas,2016,2019,Ford 6.2L / V10,305,,Ford E-450,
+Thor,Chateau,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Thor,Four Winds,Class C,Gas,2000,2010,Ford V10 / 6.8L or 6.0L (by year),305,,Ford E-450 / E-350,Pre-6.2/7.3 Ford cutaway Class C
+Thor,Four Winds,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Thor,Four Winds,Class C,Gas,2016,2019,Ford 6.2L / 6.8L V10 (by year),305,,Ford E-450,
+Thor,Four Winds,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Thor,Four Winds Siesta,Class C,Diesel,2016,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Thor,Four Winds Siesta,Class C,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Mercedes Sprinter,
+Thor,Gemini,Class B+,Gas,2014,2015,Ford Transit / cutaway gas (by year),180,,Ford Transit / E-series,2005–2015 Class B — chassis varies by package
+Thor,Gemini,Class B+,Gas,2016,2026,Ford Transit / cutaway V6/V8 gas,310,,Ford Transit / E-series,
+Thor,Geneva,Class C,Gas,2018,2019,Ford 6.2L V8,305,,Ford E-450,
+Thor,Geneva,Class C,Gas,2020,2026,Ford 7.3L V8,350,,Ford E-450,
+Thor,Magnitude,Super C,Diesel,2014,2015,Cummins / Ford Super C diesel (era),300,,Freightliner / Ford Super C,2005–2015 Super C — verify chassis badge
+Thor,Magnitude,Super C,Diesel,2016,2026,Ford Power Stroke 6.7L Diesel,330,950,Ford F-550,
+Thor,Magnitude XG,Super C,Diesel,2020,2026,Ford Power Stroke 6.7L Diesel,330,,Ford F-550,
+Thor,Outlaw,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Thor,Outlaw,Class C,Gas,2016,2019,Ford 6.2L / V10,305,,Ford E-450,
+Thor,Outlaw,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford E-450,
+Thor,Palazzo,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XC-Series,2010–2015 mid/high diesel Class A
+Thor,Palazzo,Class A Diesel,Diesel,2016,2019,Cummins ISB / B6.7 340HP,340,,Freightliner XC,
+Thor,Palazzo,Class A Diesel,Diesel,2020,2026,Cummins B6.7 / L9 340–450HP,340,,Freightliner XC-Series,
+Thor,Quantum,Class C,Gas / Diesel (by plan),2014,2015,Ford Triton V10 6.8L / Mercedes Sprinter diesel (by plan),320,,Ford E-450 / Mercedes Sprinter (by plan),2006–2015 dual-chassis Class C — no 7.3 Godzilla yet
+Thor,Sanctuary,Class B,Diesel,2015,2015,Mercedes-Benz Sprinter turbodiesel,180,,Mercedes-Benz Sprinter,2005–2015 Class B — chassis varies by package
+Thor,Sanctuary,Class B,Diesel,2016,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Thor,Sanctuary,Class B,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Mercedes Sprinter,
+Thor,Seneca,Super C,Diesel,2012,2015,Cummins / Ford Super C diesel (era),300,,Freightliner / Ford Super C,2005–2015 Super C — verify chassis badge
+Thor,Seneca,Super C,Diesel,2016,2026,Super C diesel (Ford 6.7 / Cummins by chassis),330,,Super C platform,
+Thor,Tuscany,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Freightliner XC / Spartan (by year),2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Thor,Tuscany,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XC / Spartan (by year),2010–2015 mid/high diesel Class A
+Thor,Tuscany,Class A Diesel,Diesel,2016,2019,Cummins ISL / ISX class,450,,Freightliner / Spartan,
+Thor,Tuscany,Class A Diesel,Diesel,2020,2026,Cummins L9 450HP class,450,,Freightliner XC,
+Thor,Windsport,Class A Gas,Gas,2008,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Thor,Windsport,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Thor,Windsport,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Tiffin,Allegro,Class A Gas,Gas,2005,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Tiffin,Allegro,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Tiffin,Allegro,Class A Gas,Gas,2020,2022,Ford 7.3L V8,350,,Ford F53,
+Tiffin,Allegro Breeze,Class A Diesel,Diesel,2008,2009,Cummins ISL / ISB diesel (era),350,,Freightliner XC,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Tiffin,Allegro Breeze,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XC,2010–2015 mid/high diesel Class A
+Tiffin,Allegro Breeze,Class A Diesel,Diesel,2016,2020,Cummins ISB / B6.7 340HP,340,,Freightliner XC,
+Tiffin,Allegro Bus,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Tiffin PowerGlide,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Tiffin,Allegro Bus,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Tiffin PowerGlide,2010–2015 mid/high diesel Class A
+Tiffin,Allegro Bus,Class A Diesel,Diesel,2016,2018,Cummins ISL / L9 450HP,450,,Tiffin PowerGlide,
+Tiffin,Allegro Bus,Class A Diesel,Diesel,2019,2026,Cummins L9 450HP (X12 optional),450,1250,Tiffin PowerGlide,
+Tiffin,Allegro Bus 45OPP,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Tiffin PowerGlide,2010–2015 mid/high diesel Class A
+Tiffin,Allegro Bus 45OPP,Class A Diesel,Diesel,2016,2026,Cummins L9 450HP,450,,Tiffin PowerGlide,
+Tiffin,Allegro Red,Class A Diesel,Diesel,2005,2013,Cummins ISB 6.7L 340HP,340,700,Freightliner XC raised-rail,Allegro RED diesel pusher — not Ford F53 gas. Confirm exact HP on door sticker.
+Tiffin,Allegro Red,Class A Diesel,Diesel,2014,2017,Cummins ISB / B6.7 360HP,360,800,Freightliner XC / XCR raised-rail,2014–2017 Allegro RED / RED 340 mid-diesel — not ISL 8.9 / not L9 flagship.
+Tiffin,Allegro Red 340,Class A Diesel,Diesel,2014,2017,Cummins ISB / B6.7 360HP,360,800,Freightliner XC / XCR raised-rail,2014–2017 RED 340 — mid-diesel only
+Tiffin,Allegro Red 340,Class A Diesel,Diesel,2018,2026,Cummins B6.7 360HP,360,800,Freightliner XC-Series,RED 340 mid-diesel — not L9/ISL bus class
+Tiffin,Allegro Red 360,Class A Diesel,Diesel,2018,2026,Cummins L9 380–450HP,380,,Freightliner XC / PowerGlide,
+Tiffin,Cahaba,Class C,Diesel,2023,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Mercedes Sprinter,
+Tiffin,Open Road,Class A Gas,Gas,2010,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Tiffin,Open Road,Class A Gas,Gas,2016,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Tiffin,Open Road,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Tiffin,Phaeton,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Tiffin PowerGlide,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Tiffin,Phaeton,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Tiffin PowerGlide,2010–2015 mid/high diesel Class A
+Tiffin,Phaeton,Class A Diesel,Diesel,2016,2018,Cummins ISL / L9 380–450HP,400,,Tiffin PowerGlide,
+Tiffin,Phaeton,Class A Diesel,Diesel,2019,2026,Cummins L9 450HP,450,1250,Tiffin PowerGlide,
+Tiffin,Wayfarer,Class C,Diesel,2016,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Tiffin,Wayfarer,Class C,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Mercedes Sprinter,
+Tiffin,Wayfarer 25,Class C,Diesel,2018,2026,Mercedes-Benz Sprinter turbodiesel,188,,Mercedes Sprinter,
+Tiffin,Zephyr,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Tiffin PowerGlide,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Tiffin,Zephyr,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Tiffin PowerGlide,2010–2015 mid/high diesel Class A
+Tiffin,Zephyr,Class A Diesel,Diesel,2016,2019,Cummins ISX / X15 600HP class,600,,Tiffin PowerGlide,
+Tiffin,Zephyr,Class A Diesel,Diesel,2020,2026,Cummins X12 / X15 500–605HP,500,,Tiffin PowerGlide,
+Winnebago,Adventurer,Class A Gas,Gas,2005,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Winnebago,Adventurer,Class A Gas,Gas,2020,2021,Ford 7.3L V8,350,,Ford F53,
+Winnebago,EKKO,Class C,Gas / Diesel,2021,2026,22A: Ford 3.5L EcoBoost · 23B: Mercedes turbodiesel,310,,Transit AWD or Sprinter AWD,Floorplan determines chassis
+Winnebago,Era,Class B,Diesel,2010,2015,Mercedes-Benz turbodiesel,180,,Mercedes-Benz Sprinter,2005–2015 Class B — chassis varies by package
+Winnebago,Forza,Class A Diesel,Diesel,2016,2026,Cummins B6.7 (ISB) 340HP,340,700,Freightliner XC-Series,Not ISL 8.9 — B6.7 mid-diesel pusher
+Winnebago,Grand Tour,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Spartan / Freightliner (by year),2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Winnebago,Grand Tour,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Spartan / Freightliner (by year),2010–2015 mid/high diesel Class A
+Winnebago,Itasca Sunstar,Class A Gas,Gas,2005,2015,Ford Triton V10 6.8L ~305–362HP,320,,Ford F53,Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)
+Winnebago,Journey,Class A Diesel,Diesel,2005,2009,Cummins ISL / ISB diesel (era),350,,Freightliner XCS / XC,2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)
+Winnebago,Journey,Class A Diesel,Diesel,2010,2014,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XCS / XC,2010–2015 mid/high diesel Class A
+Winnebago,Journey,Class A Diesel,Diesel,2015,2022,Cummins B6.7 / ISB 340HP,340,700,Freightliner XCS,Corrected from outdated ISL label
+Winnebago,Minnie Winnie,Class C,Gas,2000,2019,Ford V10 / V8 (by year),305,,Ford E-450,
+Winnebago,Minnie Winnie,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Winnebago,Navion,Class C,Diesel,2006,2015,Mercedes-Benz Sprinter 3.0L V6 turbodiesel,188,,Mercedes-Benz Sprinter,Sprinter diesel Class C era
+Winnebago,Navion,Class C,Diesel,2014,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Winnebago,Navion,Class C,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Mercedes Sprinter,
+Winnebago,Outlook,Class C,Gas,2011,2015,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,2011–2015 Ford Class C cutaway
+Winnebago,Revel,Class B,Diesel,2018,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Sprinter 4x4,
+Winnebago,Revel,Class B,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Sprinter 4x4,
+Winnebago,Spirit,Class C,Gas,2005,2019,Ford 6.8L V10 / 6.2L V8 (by year),305,,Ford E-450,
+Winnebago,Spirit,Class C,Gas,2020,2026,Ford 7.3L V8 Godzilla 350HP,350,,Ford E-450,
+Winnebago,Sunstar,Class A Gas,Gas,2010,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Winnebago,Sunstar,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,
+Winnebago,Travato,Class B,Gas,2014,2015,RAM 3.6L V6 gas,180,,RAM ProMaster,2005–2015 Class B — chassis varies by package
+Winnebago,Via,Class A Diesel,Diesel,2010,2015,Cummins ISL / ISB 300–450HP (era),380,,Mercedes-Benz Sprinter cowl,2010–2015 mid/high diesel Class A
+Winnebago,View,Class C,Diesel,2006,2015,Mercedes-Benz Sprinter 3.0L V6 turbodiesel,188,,Mercedes-Benz Sprinter,Sprinter diesel Class C era
+Winnebago,View,Class C,Diesel,2014,2021,Mercedes-Benz 3.0L V6 turbodiesel,188,,Mercedes Sprinter,
+Winnebago,View,Class C,Diesel,2022,2026,Mercedes-Benz 2.0L I4 turbodiesel,208,,Mercedes Sprinter,
+Winnebago,Vista,Class A Gas,Gas,2010,2019,Ford Triton V10 6.8L,320,,Ford F53,
+Winnebago,Vista,Class A Gas,Gas,2020,2026,Ford 7.3L V8 Godzilla,350,,Ford F53,Replaced V10 on F53 gas Class A
+Winnebago Classic,Chieftain,Class A Gas,Gas,2000,2006,Ford Triton V10 6.8L,320,,Ford F53,2006–2015 gas Class A — Triton V10 (not 7.3 Godzilla)
+Winnebago Classic,Ultimate Freedom,Class A Diesel,Diesel,2000,2006,Cummins ISL / ISB 300–450HP (era),380,,Freightliner XC,"Mid diesel pusher 2006–2015 — not F53 gas, not modern L9 default"

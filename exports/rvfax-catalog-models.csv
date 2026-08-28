@@ -1,0 +1,364 @@
+make,model,type,fuelType,engine,horsepower,chassis,yearStart,yearEnd,floorplanCount,lengthMinFt,lengthMaxFt,weightMinLbs,weightMaxLbs,sleeps,slideouts,rating
+Airstream,Atlas,Class B,Diesel,Mercedes-Benz diesel (Sprinter),188,Mercedes-Benz Sprinter,2018,2026,4,24,25,10500,12500,4,0,4.8
+Airstream,Bambi,Travel Trailer,N/A (towable),,,N/A (towable),1961,2026,4,16,22,2800,4500,4,0,4.8
+Airstream,Basecamp,Travel Trailer,N/A (towable),,,N/A (towable),2016,2026,5,16,21,2500,3800,4,0,4.65
+Airstream,Caravel,Travel Trailer,N/A (towable),,,N/A (towable),2017,2026,4,16,22,3000,4800,4,0,4.75
+Airstream,Classic,Travel Trailer,N/A (towable),,,N/A (towable),2000,2026,4,30,33,7500,9000,4,0,4.9
+Airstream,Flying Cloud,Travel Trailer,N/A (towable),,,N/A (towable),2000,2026,9,23,30,5200,7800,6,0,4.8
+Airstream,Globetrotter,Travel Trailer,N/A (towable),,,N/A (towable),2016,2026,4,23,30,5500,8000,4,0,4.85
+Airstream,International,Travel Trailer,N/A (towable),,,N/A (towable),2000,2026,5,23,30,5400,7800,4,0,4.75
+Airstream,Interstate,Class B,Diesel,Mercedes-Benz diesel (Sprinter),188,Mercedes-Benz Sprinter,2005,2026,7,19,25,9000,12000,4,0,4.75
+Airstream,Rangeline,Class B,Gas / Diesel (by chassis),Ford Transit / Mercedes (by year),188,Ford Transit / Mercedes Sprinter,2022,2026,2,18,19,8000,9500,2,0,4.6
+Airstream,Trade Wind,Travel Trailer,N/A (towable),,,N/A (towable),2021,2026,3,25,28,5800,7200,4,0,4.7
+Alliance RV,Avenue,Fifth Wheel,N/A (towable),,,N/A (towable),2020,2026,7,30,42,10000,15500,6,3,4.75
+Alliance RV,Benchmark,Travel Trailer,N/A (towable),,,N/A (towable),2023,2026,4,29,38,7000,11000,8,2,4.6
+Alliance RV,Delta,Fifth Wheel,N/A (towable),,,N/A (towable),2022,2026,4,28,34,7500,11500,8,2,4.65
+Alliance RV,Paradigm,Fifth Wheel,N/A (towable),,,N/A (towable),2020,2026,9,33,42,12000,17000,6,3,4.85
+Alliance RV,Valor,Toy Hauler,N/A (towable),,,N/A (towable),2021,2026,6,37,46,14000,18500,8,3,4.8
+Alliance RV,Valor V-Series,Toy Hauler,N/A (towable),,,N/A (towable),2022,2026,3,36,42,13000,17000,8,3,4.7
+American Coach,American Dream,Class A Diesel,Diesel,Cummins L9 / X15 (by option),450,Spartan K3 (typical high-line),2000,2026,3,42,45,48000,58000,6,4,4.8
+American Coach,American Eagle,Class A Diesel,Diesel,Cummins L9 / X15 (by option),450,Spartan / Freightliner high-line,2000,2026,3,45,45,46000,56000,6,4,4.75
+American Coach,American Tradition,Class A Diesel,Diesel,Cummins L9 450HP,450,Freightliner Liberty Bridge / modular,2000,2026,5,42,45,42000,50000,6,4,4.7
+ATC,Game Changer,Toy Hauler,N/A (towable),,,N/A,2014,2026,5,20,41,5000,12000,6,0,4.6
+ATC,Game Changer Pro,Toy Hauler,N/A (towable),,,N/A,2018,2026,4,28,42,7000,13000,6,0,4.6
+ATC,Quest,Toy Hauler,N/A (towable),,,N/A,2016,2026,4,16,28,3500,7000,4,0,4.5
+ATC,Toy Hauler 8.5,Toy Hauler,N/A (towable),,,N/A,2015,2026,4,20,32,4500,8000,4,0,4.5
+ATC,TrailBoss,Toy Hauler,N/A (towable),,,N/A,2012,2026,3,28,36,7000,11000,6,0,4.5
+Beaver Coach,Marquis,Class A Diesel,Diesel,Cummins ISL 400HP,400,Roadmaster IS,1994,2009,3,40,45,44000,52000,6,4,4.7
+Beaver Coach,Patriot,Class A Diesel,Diesel,Cummins ISL 380HP,380,Roadmaster IS,1993,2009,3,37,40,40000,48000,6,3,4.6
+Brinkley,Model G,Toy Hauler,N/A (towable),,,N/A (towable · triple 7k axles),2023,2026,8,38,46,16900,23000,8,3,4.8
+Brinkley,Model T,Toy Hauler,N/A (towable),,,N/A (towable · triple 7k axles),2021,2026,8,38,46,16900,23000,8,3,4.8
+Brinkley,Model T Air,Toy Hauler,N/A (towable),,,N/A (towable),2023,2026,3,25,32,7000,11000,6,1,4.7
+Brinkley,Model Z,Fifth Wheel,N/A (towable),,,N/A (towable),2020,2026,4,29,40,9000,14000,6,3,4.75
+Brinkley,Model Z Air,Fifth Wheel,N/A (towable),,,N/A (towable),2022,2026,4,25,33,7500,11000,6,2,4.7
+Brinkley,Model Z Expand,Fifth Wheel,N/A (towable),,,N/A (towable),2023,2026,3,31,40,10000,15000,8,3,4.75
+Coach House,Platinum,Class B+,Diesel,Mercedes-Benz turbodiesel (Sprinter),188,Mercedes Sprinter,2010,2026,4,22,25,9500,12000,4,1,4.75
+Coach House,Platinum II,Class B+,Diesel,Mercedes-Benz 2.0L I4 turbodiesel ~211HP,188,Mercedes-Benz Sprinter 3500,2015,2026,7,24,26,10000,12500,4,1,4.8
+Coachmen,Adrenaline,Toy Hauler,N/A (towable),,,N/A (towable),2014,2026,3,26,36,6000,11000,8,1,4.2
+Coachmen,Apex,Travel Trailer,N/A (towable),,,N/A (towable),2010,2026,5,21,30,4000,6500,8,1,4.3
+Coachmen,Beyond,Class B,Gas,Ford Transit 3.5L EcoBoost,310,Ford Transit,2018,2026,3,22,23,9500,11000,4,0,4.3
+Coachmen,Brookstone,Fifth Wheel,N/A (towable),,,N/A (towable),2012,2026,3,38,42,12000,16000,6,3,4.4
+Coachmen,Catalina,Travel Trailer,N/A (towable),,,N/A (towable),2010,2026,11,26,36,5500,8500,8,1,4.2
+Coachmen,Chaparral,Fifth Wheel,N/A (towable),,,N/A (towable),2008,2026,4,34,40,10000,14000,8,3,4.3
+Coachmen,Concord,Class C,Gas,Ford 7.3L V8,350,Ford E-450,2010,2026,5,28,33,13000,15500,7,2,4.3
+Coachmen,Encore,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,Ford F53,2010,2026,4,32,37,24000,30000,6,3,4.4
+Coachmen,Freedom Express,Travel Trailer,N/A (towable),,,N/A (towable),2012,2026,10,20,36,3800,7800,8,1,4.25
+Coachmen,Freelander,Class C,Gas,Ford 7.3L / 6.2L (by year),350,Ford E-450,2005,2026,9,21,32,11000,16000,8,1,4.2
+Coachmen,Freelander LE,Class C,Gas,Ford 7.3L / 6.2L,350,Ford E-450,2015,2026,6,21,28,10000,13000,6,1,4.2
+Coachmen,Galleria,Class B,Diesel,Mercedes-Benz diesel,188,Mercedes Sprinter,2016,2026,4,24,25,10500,12000,4,0,4.5
+Coachmen,Leprechaun,Class C,Gas,Ford 7.3L / Chevy 6.6L (by chassis),350,Ford E-450 / Chevy 4500,2000,2026,11,21,33,10000,15500,9,1,4.3
+Coachmen,Leprechaun Premier,Class C,Gas,Ford 7.3L V8,350,Ford E-450,2016,2026,6,26,32,12500,15000,7,2,4.4
+Coachmen,Mirada,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2007,2026,4,29,35,20000,26000,7,2,4.2
+Coachmen,Prism,Class C,Diesel,Mercedes-Benz 3.0L V6 / 2.0L I4 (by year),211,Mercedes Sprinter,2013,2026,6,22,26,10500,14000,4,0,4.5
+Coachmen,Pursuit,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2006,2026,4,29,33,20000,25000,8,2,4.2
+Coachmen,Sportscoach,Class A Diesel,Diesel,Cummins ISB / B6.7 ~340HP,340,Freightliner,2010,2026,4,36,40,38000,44000,6,3,4.4
+Coachmen,Sportscoach SRS Super C,Super C,Diesel,Ford Power Stroke 6.7L Diesel,330,Ford F-550,2018,2026,4,33,38,24000,30000,6,3,4.5
+Country Coach,Allure,Class A Diesel,Diesel,Cummins ISL 450HP,450,Country Coach Custom,1997,2009,3,40,45,44000,52000,6,3,4.8
+Country Coach,Inspire,Class A Diesel,Diesel,Cummins ISX 600HP,600,Country Coach Custom,1998,2009,4,36,45,50000,58000,4,4,4.9
+Country Coach,Intrigue,Class A Diesel,Diesel,Cummins X15 605HP,605,Country Coach Custom Stainless,1999,2009,4,40,45,52000,60000,4,4,4.9
+Crossroads,Cameo,Fifth Wheel,N/A (towable),,,N/A,2005,2026,3,28,37,11000,16000,6,3,4.3
+Crossroads,Cruiser Aire,Fifth Wheel,N/A (towable),,,N/A,2010,2026,3,28,34,7500,10500,6,2,4.2
+Crossroads,Redwood,Fifth Wheel,N/A (towable),,,N/A,2012,2026,3,35,43,12000,17000,6,3,4.5
+Crossroads,Sunset Trail,Travel Trailer,N/A (towable),,,N/A,2005,2026,3,22,30,5500,8000,8,1,4.2
+Crossroads,Volante,Fifth Wheel,N/A (towable),,,N/A,2014,2026,3,28,35,7000,11000,6,2,4.2
+Crossroads,Zinger TH,Toy Hauler,N/A (towable),,,N/A,2013,2026,3,30,36,7000,10000,8,1,4.1
+Damon Motor Coach,Daybreak,Class A Gas,Gas,Ford V10 6.8L,320,Ford F53,1997,2009,3,32,37,20000,25000,7,2,4.1
+Damon Motor Coach,Ultrasport,Class A Gas,Gas,Ford V10 6.8L,320,Ford F53,1999,2009,4,33,39,22000,27000,7,2,4.2
+DRV,Elite Suites,Fifth Wheel,N/A (towable),,,N/A,2012,2026,3,38,44,16000,21000,4,4,4.7
+DRV,Full House,Toy Hauler,N/A (towable),,,N/A,2010,2026,3,42,46,18000,22000,6,3,4.8
+DRV,Mobile Suites,Fifth Wheel,N/A (towable),,,N/A,2008,2026,4,36,44,18000,22000,4,4,4.8
+DRV,Tradition,Fifth Wheel,N/A (towable),,,N/A,2008,2026,3,35,40,16000,20000,6,3,4.6
+Dutchmen,Aerolite,Travel Trailer,N/A (towable),,,N/A (towable),2005,2026,5,19,30,3500,6500,8,1,4.1
+Dutchmen,Aspen Trail,Travel Trailer,N/A (towable),,,N/A (towable),2012,2026,7,18,34,3500,7500,8,1,4.15
+Dutchmen,Aspen Trail FW,Fifth Wheel,N/A (towable),,,N/A (towable),2012,2026,5,28,35,7500,12000,8,3,4.2
+Dutchmen,Astoria,Fifth Wheel,N/A (towable),,,N/A (towable),2012,2026,4,29,37,9000,14000,6,3,4.3
+Dutchmen,Coleman,Travel Trailer,N/A (towable),,,N/A (towable),2006,2026,10,18,35,3000,8500,10,1,4.1
+Dutchmen,Infinity,Fifth Wheel,N/A (towable),,,N/A (towable),2015,2026,4,33,40,11000,16000,8,3,4.3
+Dutchmen,Kodiak,Travel Trailer,N/A (towable),,,N/A (towable),2006,2026,10,22,36,4500,8500,10,1,4.2
+Dutchmen,Voltage,Toy Hauler,N/A (towable),,,N/A (towable),2010,2026,6,34,44,12000,18000,8,3,4.3
+Dutchmen,Voltage V-Series,Toy Hauler,N/A (towable),,,N/A (towable),2014,2026,4,28,40,9000,15000,8,2,4.25
+Dutchmen,Yukon,Fifth Wheel,N/A (towable),,,N/A (towable),2008,2026,5,34,41,12000,18000,8,4,4.35
+Dynamax,DX3,Super C,Diesel,Ford 6.7L Power Stroke Diesel,330,Ford F-550 Super Duty,2015,2026,3,34,37,24000,32000,6,2,4.55
+Dynamax,DynaQuest,Super C,Diesel,Ford 6.7L Power Stroke Diesel,330,Ford F-600 / Super C platform,2008,2026,4,34,39,28000,36000,6,3,4.75
+Dynamax,Europa,Super C,Diesel,Ford 6.7L Power Stroke Diesel,330,Ford F-550 Super Duty,2010,2026,4,31,34,22000,30000,6,2,4.6
+Dynamax,Force,Super C,Diesel,Ford 6.7L Power Stroke Diesel,330,Ford F-600 Super Duty,2012,2026,5,36,40,26000,36000,8,3,4.7
+Dynamax,Grand Sport,Super C,Diesel,Cummins / Ford Super C diesel (era),300,Freightliner / Ford Super C,2005,2016,3,33,37,22000,32000,6,2,4.4
+Dynamax,Isata 3,Class C,Gas,Ford Transit 3.5L EcoBoost V6,310,Ford Transit,2016,2026,5,24,29,10000,12500,4,0,4.45
+Dynamax,Isata 4,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,Mercedes-Benz Sprinter,2019,2026,5,24,28,10000,12500,4,1,4.55
+Dynamax,Isata 5,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,Mercedes-Benz Sprinter,2014,2026,6,24,30,10000,13000,6,0,4.6
+Entegra Coach,Accolade,Super C,Diesel,Cummins Super C diesel ~340HP,340,Freightliner Super C,2015,2026,3,37,38,26000,34000,6,2,4.55
+Entegra Coach,Accolade XL,Super C,Diesel,Cummins Super C diesel,340,Freightliner Super C,2018,2026,2,37,38,27000,35000,6,2,4.55
+Entegra Coach,Anthem,Class A Diesel,Diesel,Cummins L9 / X12 450–500HP,450,Spartan K3,2014,2026,4,42,45,42000,52000,6,4,4.8
+Entegra Coach,Aspire,Class A Diesel,Diesel,Cummins L9 450HP,450,Spartan K3 / Freightliner (by year),2015,2026,3,38,44,38000,48000,6,2,4.7
+Entegra Coach,Cornerstone,Class A Diesel,Diesel,Cummins X15 605HP,605,Spartan K3,2014,2026,5,45,45,50000,58000,6,4,4.9
+Entegra Coach,Esteem,Class C,Gas,Ford 7.3L V8,350,Ford E-450,2014,2026,3,26,32,11000,14500,6,2,4.3
+Entegra Coach,Expanse,Class C,Gas,Ford Transit gas,310,Ford Transit,2018,2026,2,21,24,9000,12000,6,2,4.35
+Entegra Coach,Qwest,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,Mercedes-Benz Sprinter,2015,2026,2,24,25,10000,12000,6,2,4.45
+Entegra Coach,Reatta,Class A Diesel,Diesel,Cummins B6.7 360HP,360,Spartan K1,2016,2026,3,37,39,30000,38000,6,3,4.55
+Entegra Coach,Reatta XL,Class A Diesel,Diesel,Cummins B6.7 360HP,360,Spartan K1,2018,2026,3,37,39,30000,39000,6,2,4.55
+Entegra Coach,Vision,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,Ford F53,2014,2026,4,27,36,15000,22000,8,2,4.45
+Entegra Coach,Vision XL,Class A Gas,Gas,Ford 7.3L V8 Godzilla,350,Ford F53,2019,2026,3,29,36,16000,23000,6,2,4.45
+Fleetwood,Bounder,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,Ford F53,1985,2026,4,33,36,16000,22000,8,2,4.35
+Fleetwood,Bounder Classic,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2010,2022,2,33,35,16000,21000,6,2,4.3
+Fleetwood,Discovery,Class A Diesel,Diesel,Cummins B6.7 (ISB) 360HP,360,Freightliner XC-Series,2000,2026,7,36,40,30000,38000,6,3,4.5
+Fleetwood,Discovery LXE,Class A Diesel,Diesel,Cummins L9 / ISX (by year/option),450,Freightliner / Spartan (by option),2012,2026,4,40,44,38000,48000,6,4,4.65
+Fleetwood,Flair,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2008,2026,3,28,32,14000,20000,6,2,4.3
+Fleetwood,Jamboree,Class C,Gas,Ford 7.3L V8 / 6.2L (by year),350,Ford E-450,2000,2026,4,25,32,11000,14500,8,1,4.25
+Fleetwood,Pace Arrow,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2000,2026,3,33,36,17000,23000,6,2,4.4
+Fleetwood,Pulse,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,Mercedes-Benz Sprinter,2014,2026,3,24,25,10000,12000,4,0,4.4
+Fleetwood,Storm,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2005,2026,3,28,36,15000,22000,6,2,4.3
+Fleetwood,Tioga,Class C,Gas,Ford 7.3L V8,350,Ford E-450,2000,2026,3,24,32,11000,14500,6,2,4.25
+Fleetwood,Tioga Ranger,Class C,Gas,Ford 6.2L / 7.3L,305,Ford E-450,2010,2024,2,25,31,11000,14000,6,2,4.2
+Fleetwood,Xcursion,Class B,Diesel / Gas,Mercedes-Benz / RAM (by chassis year),208,Sprinter or ProMaster (by package),2024,2026,2,19,25,8500,11000,2,0,4.45
+Fleetwood Classic,American Heritage,Class A Diesel,Diesel,Cummins ISL 380HP,380,Spartan K2,1996,2005,3,40,45,44000,52000,6,3,4.5
+Fleetwood Classic,Providence,Class A Diesel,Diesel,Cummins ISX 600HP,600,Spartan K3,1999,2006,3,39,45,46000,54000,4,4,4.7
+Forest River,Berkshire,Class A Diesel,Diesel,Cummins B6.7 / L9 340–450HP,340,Freightliner XC-Series,2010,2026,4,34,40,28000,38000,6,3,4.45
+Forest River,Cardinal,Fifth Wheel,N/A (towable),,,N/A (towable),2010,2026,4,21,42,4500,15000,8,2,4.35
+Forest River,Cedar Creek,Fifth Wheel,N/A (towable),,,N/A (towable),2010,2026,4,21,42,4500,15000,8,2,4.35
+Forest River,Cherokee Arctic Wolf,Fifth Wheel,N/A (towable),,,N/A (towable),2010,2026,16,30,44,7800,14000,8,3,4.35
+Forest River,Cherokee Grey Wolf,Travel Trailer,N/A (towable),,,N/A (towable),2012,2026,20,24,38,4500,7500,8,1,4.2
+Forest River,Cherokee Wolf Pack,Toy Hauler,N/A (towable),,,N/A (towable),2011,2026,4,21,42,4500,15000,8,1,4.35
+Forest River,Cherokee Wolf Pup,Travel Trailer,N/A (towable),,,N/A (towable),2013,2026,7,16,22,2500,4200,6,0,4.15
+Forest River,Columbus,Fifth Wheel,N/A (towable),,,N/A (towable),2010,2026,4,21,42,4500,15000,8,2,4.35
+Forest River,Dynamax Isata (FR),Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,Mercedes-Benz Sprinter,2018,2026,3,24,30,10000,14000,4,1,4.5
+Forest River,Flagstaff Micro Lite,Travel Trailer,N/A (towable),,,N/A (towable),2010,2026,7,21,29,4200,6500,6,1,4.45
+Forest River,Forester,Class C,Gas,Ford 7.3L / 6.2L (by year),350,Ford E-450,2005,2026,4,22,33,11000,15000,8,1,4.25
+Forest River,Forester LE,Class C,Gas,Ford 7.3L / 6.2L (by year),350,Ford E-450,2013,2026,3,22,33,11000,15000,8,1,4.25
+Forest River,FR3,Class A Gas,Gas,Ford 7.3L V8 Godzilla,335,Ford F53,2015,2026,8,30,36,18000,22000,8,2,4.35
+Forest River,Georgetown,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2005,2026,3,32,37,16000,22000,8,2,4.3
+Forest River,Georgetown 5 Series,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,Ford F53,2014,2026,4,30,36,16000,22000,8,2,4.35
+Forest River,Georgetown XL,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2012,2026,3,36,38,18000,24000,8,3,4.4
+Forest River,r-Pod,Travel Trailer,N/A (towable),,,N/A (towable),2009,2026,8,16,25,2400,4200,4,0,4.3
+Forest River,Rockwood Mini Lite,Travel Trailer,N/A (towable),,,N/A (towable),2010,2026,9,21,29,4200,6200,6,1,4.45
+Forest River,Rockwood Signature,Fifth Wheel,N/A (towable),,,N/A (towable),2010,2026,4,21,42,4500,15000,8,2,4.35
+Forest River,Rockwood Ultra Lite,Travel Trailer,N/A (towable),,,N/A (towable),2012,2026,7,28,34,6000,8500,8,2,4.4
+Forest River,Sabre,Fifth Wheel,N/A (towable),,,N/A (towable),2010,2026,3,21,42,4500,15000,8,2,4.35
+Forest River,Salem Cruise Lite,Travel Trailer,N/A (towable),,,N/A (towable),2010,2026,12,21,34,3800,7500,8,1,4.15
+Forest River,Salem Hemisphere,Travel Trailer,N/A (towable),,,N/A (towable),2012,2026,8,29,38,6500,9500,8,2,4.25
+Forest River,Sandstorm,Toy Hauler,N/A (towable),,,N/A (towable),2011,2026,4,21,42,4500,15000,8,1,4.35
+Forest River,Solera,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,Mercedes-Benz Sprinter,2017,2026,3,24,25,10000,12000,4,0,4.4
+Forest River,Sunseeker,Class C,Gas,Ford 7.3L / 6.2L (by year),350,Ford E-450,2005,2026,4,22,33,11000,15000,8,1,4.25
+Forest River,Sunseeker Classic,Class C,Gas,Ford 7.3L / 6.2L (by year),350,Ford E-450,2008,2026,2,22,33,11000,15000,8,1,4.25
+Forest River,Sunseeker LE,Class C,Gas,Ford 7.3L / 6.2L (by year),350,Ford E-450,2012,2026,3,22,33,11000,15000,8,1,4.25
+Forest River,Wildwood,Travel Trailer,N/A (towable),,,N/A (towable),2008,2026,10,24,38,5000,9500,10,2,4.15
+Forest River,XLR Hyper Lite,Toy Hauler,N/A (towable),,,N/A (towable),2011,2026,4,21,42,4500,15000,8,1,4.35
+Forest River,XLR Nitro,Toy Hauler,N/A (towable),,,N/A (towable),2011,2026,4,21,42,4500,15000,8,1,4.35
+Forest River,XLR Thunderbolt,Toy Hauler,N/A (towable),,,N/A (towable),2011,2026,3,21,42,4500,15000,8,1,4.35
+Genesis Supreme,G-Force,Toy Hauler,N/A (towable),,,N/A,2010,2026,4,28,40,8500,14000,8,1,4.3
+Genesis Supreme,Prizm,Toy Hauler,N/A (towable),,,N/A,2015,2026,3,24,30,6500,9500,6,1,4.2
+Genesis Supreme,Stealth,Toy Hauler,N/A (towable),,,N/A,2016,2026,3,20,30,5000,8500,4,0,4.2
+Genesis Supreme,Vortex,Toy Hauler,N/A (towable),,,N/A,2012,2026,4,28,41,9000,15000,8,2,4.4
+Genesis Supreme,Vortex Pro,Toy Hauler,N/A (towable),,,N/A,2018,2026,3,36,44,12000,16000,8,3,4.4
+Georgie Boy,Cruise Master,Class A Gas,Gas,Ford V10 6.8L,320,Ford F53,1997,2007,3,34,38,22000,27000,7,2,4.1
+Georgie Boy,Pursuit,Class A Gas,Gas,Ford V10 6.8L,320,Ford F53,1999,2007,2,34,37,20000,25000,6,2,4.0
+Grand Design,Imagine,Travel Trailer,N/A (towable),,,N/A (towable),2014,2026,5,21,35,4500,8500,8,1,4.55
+Grand Design,Imagine XLS,Travel Trailer,N/A (towable),,,N/A (towable),2015,2026,4,17,25,3500,6000,6,0,4.5
+Grand Design,Momentum,Toy Hauler,N/A (towable),,,N/A (towable),2014,2026,4,34,42,10000,16000,8,3,4.6
+Grand Design,Momentum G-Class,Toy Hauler,N/A (towable),,,N/A (towable),2018,2026,3,21,32,5000,9000,6,1,4.5
+Grand Design,Momentum M-Class,Toy Hauler,N/A (towable),,,N/A (towable),2015,2026,4,32,40,9000,14000,8,2,4.55
+Grand Design,Momentum MAV,Toy Hauler,N/A (towable),,,N/A (towable),2022,2026,2,22,28,5500,9000,6,1,4.55
+Grand Design,Reflection,Fifth Wheel,N/A (towable),,,N/A (towable),2013,2026,5,28,38,7500,12000,8,3,4.6
+Grand Design,Reflection 150 Series,Fifth Wheel,N/A (towable),,,N/A (towable),2015,2026,3,22,32,5500,9000,6,2,4.55
+Grand Design,Solitude,Fifth Wheel,N/A (towable),,,N/A (towable),2015,2026,5,31,42,10000,16000,6,3,4.7
+Grand Design,Solitude S-Class,Fifth Wheel,N/A (towable),,,N/A (towable),2019,2026,3,29,40,9000,14000,8,3,4.65
+Grand Design,Transcend,Travel Trailer,N/A (towable),,,N/A (towable),2018,2026,4,20,32,4000,7500,8,1,4.45
+Gulf Stream Coach,BT Cruiser,Class C,Gas,Ford V8 6.2L,385,Ford E-450,2008,2026,6,23,30,10000,14000,6,1,4.1
+Gulf Stream Coach,Conquest,Class A Gas,Gas,Ford V10 6.8L,320,Ford F53,1998,2012,4,31,37,22000,27000,7,2,4.2
+Gulf Stream Coach,Crescendo,Class A Diesel,Diesel,Cummins ISL 340HP,340,Spartan K2,2000,2010,3,38,40,40000,48000,6,3,4.3
+Gulf Stream Coach,Yellowstone,Class C,Gas,Ford V8 7.3L,350,Ford E-450,2012,2026,5,30,34,13500,16000,7,2,4.2
+Heartland,Big Country,Fifth Wheel,N/A (towable),,,N/A (towable),2005,2026,5,31,40,10000,16000,8,3,4.35
+Heartland,Bighorn,Fifth Wheel,N/A (towable),,,N/A (towable),2003,2026,8,32,42,12000,19000,8,4,4.45
+Heartland,Cyclone,Toy Hauler,N/A (towable),,,N/A (towable),2007,2026,6,34,44,12000,18000,8,3,4.35
+Heartland,Gravity,Fifth Wheel,N/A (towable),,,N/A (towable),2016,2026,4,31,36,9000,13000,6,3,4.25
+Heartland,Landmark,Fifth Wheel,N/A (towable),,,N/A (towable),2008,2026,6,36,43,14000,19000,6,4,4.5
+Heartland,Prowler,Travel Trailer,N/A (towable),,,N/A (towable),2003,2026,6,18,34,3500,8000,8,1,4.15
+Heartland,Road Warrior,Toy Hauler,N/A (towable),,,N/A (towable),2012,2026,4,38,44,14000,19000,8,3,4.4
+Heartland,Sundance,Fifth Wheel,N/A (towable),,,N/A (towable),2003,2026,6,28,36,8000,13000,8,3,4.3
+Heartland,Torque,Toy Hauler,N/A (towable),,,N/A (towable),2011,2026,4,32,42,11000,16000,8,2,4.3
+Highland Ridge,Light Range TH,Toy Hauler,N/A (towable),,,N/A,2017,2026,3,26,32,6000,9000,6,1,4.2
+Highland Ridge,Mesa Ridge,Toy Hauler,N/A (towable),,,N/A,2016,2026,3,32,39,10000,14000,8,2,4.3
+Highland Ridge,Open Range,Toy Hauler,N/A (towable),,,N/A,2014,2026,3,34,42,11000,15000,8,3,4.4
+Highland Ridge,Open Range 3X,Fifth Wheel,N/A (towable),,,N/A,2013,2026,3,32,40,10000,14000,6,3,4.4
+Highland Ridge,Roamer,Fifth Wheel,N/A (towable),,,N/A,2015,2026,3,29,36,8000,12000,6,2,4.3
+Holiday Rambler,Ambassador,Class A Diesel,Diesel,Cummins B6.7 / L9 / ISL (by year),380,Freightliner XCS / XC,2000,2026,3,38,40,34000,42000,6,3,4.5
+Holiday Rambler,Armada,Class A Diesel,Diesel,Cummins B6.7 / L9 360–450HP,360,Freightliner XC-Series,2019,2026,3,36,40,30000,40000,6,2,4.5
+Holiday Rambler,Augusta,Class C,Gas,Ford 7.3L V8,350,Ford E-450,2010,2026,3,25,32,11000,14500,6,2,4.25
+Holiday Rambler,Invicta,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2010,2026,3,32,36,15000,22000,6,2,4.3
+Holiday Rambler,Navigator,Class A Diesel,Diesel,Cummins B6.7 / L9 360–450HP,360,Freightliner XC-Series,2005,2026,4,38,40,32000,40000,6,3,4.5
+Holiday Rambler,Vacationer,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,Ford F53,2000,2026,3,33,36,16000,22000,6,2,4.35
+Holiday Rambler,Xpedition,Class B,Diesel / Gas,Mercedes-Benz / RAM (by package),208,Sprinter or ProMaster,2024,2026,2,19,25,8500,11000,6,2,4.45
+Jayco,Alante,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2015,2026,3,26,31,14000,20000,6,2,4.35
+Jayco,Eagle,Fifth Wheel,N/A (towable),,,N/A (towable),2000,2026,4,31,38,8000,12000,8,3,4.4
+Jayco,Eagle HT,Fifth Wheel,N/A (towable),,,N/A (towable),2012,2026,3,26,32,6500,10000,6,2,4.35
+Jayco,Embark,Class A Diesel,Diesel,Cummins B6.7 / L9 360–450HP,360,Freightliner XC-Series,2015,2026,4,37,40,30000,40000,6,3,4.5
+Jayco,Greyhawk,Class C,Gas,Ford 7.3L V8 Godzilla / 6.2L (by year),350,Ford E-450,2008,2026,5,29,32,12000,15000,8,1,4.35
+Jayco,Jay Feather,Travel Trailer,N/A (towable),,,N/A (towable),2005,2026,4,16,30,3000,7000,6,1,4.35
+Jayco,Melbourne,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,Mercedes-Benz Sprinter,2012,2026,3,24,25,10000,12000,4,0,4.45
+Jayco,Melbourne Prestige,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,Mercedes-Benz Sprinter,2014,2026,2,24,25,10000,12500,6,2,4.5
+Jayco,North Point,Fifth Wheel,N/A (towable),,,N/A (towable),2013,2026,4,31,42,10000,15000,6,3,4.5
+Jayco,Octane,Toy Hauler,N/A (towable),,,N/A (towable),2014,2026,3,16,28,3500,8000,6,1,4.3
+Jayco,Pinnacle,Fifth Wheel,N/A (towable),,,N/A (towable),2014,2026,3,36,42,11000,16000,6,3,4.55
+Jayco,Precept,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,Ford F53,2014,2026,5,31,36,16000,22000,8,2,4.4
+Jayco,Redhawk,Class C,Gas,Ford 7.3L / 6.2L (by year),350,Ford E-450,2010,2026,4,22,31,11000,14500,8,1,4.3
+Jayco,Seismic,Toy Hauler,N/A (towable),,,N/A (towable),2013,2026,3,35,42,10000,15000,8,3,4.45
+Jayco,Seneca Super C,Super C,Diesel,Ford Power Stroke 6.7L / Cummins Super C (by chassis year),330,Freightliner / Ford Super C,2014,2026,3,37,38,26000,34000,6,2,4.55
+Jayco,Talon,Toy Hauler,N/A (towable),,,N/A (towable),2012,2026,4,31,42,8000,14000,8,2,4.4
+Keystone,Alpine,Fifth Wheel,N/A (towable),,,N/A (towable),2008,2026,6,34,40,13000,17000,6,4,4.45
+Keystone,Arcadia,Fifth Wheel,N/A (towable),,,N/A (towable),2018,2026,4,34,40,11000,15000,6,3,4.4
+Keystone,Avalanche,Fifth Wheel,N/A (towable),,,N/A (towable),2010,2025,5,30,40,10500,15000,8,3,4.3
+Keystone,Bullet,Travel Trailer,N/A (towable),,,N/A (towable),2010,2027,13,18,36,3200,7800,8,1,4.25
+Keystone,Cougar,Travel Trailer,N/A (towable),,,N/A (towable),1999,2027,14,22,35,5500,10000,8,2,4.35
+Keystone,Cougar 5th Wheel,Fifth Wheel,N/A (towable),,,N/A (towable),2004,2027,15,30,39,9500,14000,8,3,4.4
+Keystone,Cougar Half-Ton,Fifth Wheel,N/A (towable),,,N/A (towable · half-ton rated package),2012,2027,16,27,35,7500,10500,6,2,4.4
+Keystone,Fuzion,Toy Hauler,N/A (towable),,,N/A (towable),2012,2027,11,38,47,14000,18500,8,3,4.4
+Keystone,Laredo,Travel Trailer,N/A (towable),,,N/A (towable),2000,2022,5,28,34,7000,10000,8,2,4.25
+Keystone,Montana,Fifth Wheel,N/A (towable),,,N/A (towable),1996,2027,24,32,44,12000,18000,6,3,4.5
+Keystone,Montana High Country,Fifth Wheel,N/A (towable),,,N/A (towable),2014,2027,11,29,41,9000,14500,8,3,4.5
+Keystone,Passport,Travel Trailer,N/A (towable),,,N/A (towable),2000,2027,12,19,33,3800,7200,7,1,4.25
+Keystone,Raptor,Toy Hauler,N/A (towable),,,N/A (towable),2011,2027,8,36,46,13000,18000,8,3,4.35
+Keystone,Springdale,Travel Trailer,N/A (towable),,,N/A (towable),2005,2027,14,18,34,3000,7500,8,1,4.15
+Keystone,Sprinter,Fifth Wheel,N/A (towable),,,N/A (towable),2000,2024,5,27,36,9000,14000,8,3,4.2
+KZ RV,Connect,Fifth Wheel,N/A (towable),,,N/A,2014,2026,3,28,34,7000,10000,6,2,4.2
+KZ RV,Durango,Fifth Wheel,N/A (towable),,,N/A,2010,2026,3,34,41,10000,14000,8,3,4.3
+KZ RV,Sportsmen Sportster,Toy Hauler,N/A (towable),,,N/A,2010,2026,4,30,36,7000,10000,8,1,4.3
+KZ RV,Sportster,Toy Hauler,N/A (towable),,,N/A,2008,2026,3,31,36,7500,10500,8,1,4.3
+KZ RV,Sportster Destination,Toy Hauler,N/A (towable),,,N/A,2015,2026,3,32,38,9000,12000,8,2,4.3
+KZ RV,Venom,Toy Hauler,N/A (towable),,,N/A,2012,2026,3,39,43,14000,18000,8,3,4.3
+Lance,Lance 1172,Truck Camper,N/A (truck camper),,,N/A,2005,2026,1,11,11,3300,3500,4,1,4.6
+Lance,Lance 2375,Travel Trailer,N/A (towable),,,N/A,2008,2026,1,26,26,5200,5600,5,1,4.7
+Lance,Lance 2465,Travel Trailer,N/A (towable),,,N/A,2010,2026,1,27,27,5800,6200,6,1,4.7
+Leisure Travel Vans,Free,Class B,Diesel / Gas,Mercedes-Benz diesel / Ford Transit (by year),188,Mercedes Sprinter / Ford Transit,2018,2026,2,24,26,9500,11500,4,0,4.6
+Leisure Travel Vans,Serenity,Class B,Diesel,Mercedes-Benz diesel (Sprinter),188,Mercedes Sprinter,2010,2026,2,24,25,10000,12000,4,0,4.7
+Leisure Travel Vans,Unity,Class B+,Diesel,Mercedes-Benz diesel (Sprinter),188,Mercedes-Benz Sprinter,1993,2026,8,24,26,11000,14500,4,1,4.85
+Leisure Travel Vans,Wonder,Class B+,Diesel / Gas (by chassis),Mercedes-Benz diesel / Ford Transit (select),188,Mercedes Sprinter / Ford Transit,2015,2026,6,24,25,10500,14000,4,1,4.8
+Leisure Travel Vans,Wonder XL,Class B+,Diesel,Mercedes-Benz diesel (Sprinter 170 EXT),188,Mercedes Sprinter 170 EXT,2018,2026,5,25,27,12000,15500,4,1,4.9
+Midwest Automotive Designs,Passage,Class B,Diesel / Gas,Mercedes-Benz turbodiesel / Ford Transit (MD2F),188,Mercedes Sprinter / Ford Transit,2016,2026,5,19,25,8500,11500,2,0,4.8
+Midwest Automotive Designs,Passage Daycruiser,Class B,Diesel,Mercedes-Benz turbodiesel (Sprinter),188,Mercedes Sprinter,2018,2026,2,19,23,8500,10500,2,0,4.65
+Midwest Automotive Designs,Weekender,Class B,Diesel,Mercedes-Benz turbodiesel (Sprinter),188,Mercedes Sprinter,2000,2026,3,19,24,8000,11000,2,0,4.7
+Monaco Coach,Camelot,Class A Diesel,Diesel,Cummins B6.7 / L9 360–450HP,360,Freightliner XC-Series,2005,2026,2,36,40,30000,40000,6,2,4.45
+Monaco Coach,Dynasty,Class A Diesel,Diesel,Cummins L9 / ISL / ISX (by year),450,Freightliner / Spartan (by year),2000,2026,3,36,42,34000,46000,6,3,4.55
+Monaco Coach,Knight,Class A Diesel,Diesel,Cummins ISL / L9 class,380,Freightliner XC,2008,2023,2,36,40,30000,40000,6,2,4.4
+Monaco Coach Classic,Signature,Class A Diesel,Diesel,Cummins ISX 600HP,600,Roadmaster IS Custom,1997,2009,3,42,45,48000,56000,4,4,4.8
+Monaco Coach Classic,Windsor,Class A Diesel,Diesel,Cummins ISL 400HP,400,Roadmaster IS,1998,2009,2,42,44,46000,52000,6,3,4.7
+National RV,Sea Breeze,Class A Gas,Gas,Ford V10 6.8L,320,Ford F53,1998,2009,3,31,38,22000,28000,6,2,4.2
+National RV,Tropi-Cal,Class A Diesel,Diesel,Cummins ISL 340HP,340,Spartan K2,2001,2009,3,40,43,42000,50000,6,3,4.4
+Newmar,Bay Star,Class A Gas,Gas,Ford 7.3L Godzilla / V10 6.8L (by year),350,Ford F53,2005,2026,6,30,38,16000,24000,6,2,4.35
+Newmar,Bay Star Sport,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2010,2026,4,27,33,14000,20000,6,2,4.3
+Newmar,Canyon Star,Super C,Diesel,Ford Power Stroke 6.7L / Cummins (by chassis year),330,Freightliner / Ford Super Duty Super C platform,2010,2026,5,37,40,26000,34000,6,3,4.55
+Newmar,Dutch Star,Class A Diesel,Diesel,Cummins L9 450HP,450,Freightliner XC-Series (Spartan optional some years),2000,2026,8,37,45,36000,48000,6,3,4.65
+Newmar,Essex,Class A Diesel,Diesel,Cummins X15 605HP,605,Spartan K3,2012,2026,5,45,45,54000,62000,4,5,4.9
+Newmar,King Aire,Class A Diesel,Diesel,Cummins X15 605HP,605,Spartan K3,2005,2026,6,42,45,50000,58000,6,4,4.85
+Newmar,Kountry Star,Class A Diesel,Diesel,Cummins B6.7 360HP,360,Freightliner XCR,2000,2026,8,34,41,28000,40000,6,3,4.5
+Newmar,London Aire,Class A Diesel,Diesel,Cummins ISX 600HP,600,Spartan K3,2000,2018,3,45,45,52000,60000,4,4,4.85
+Newmar,Mountain Aire,Class A Diesel,Diesel,Cummins L9 450HP / X12 500HP (by year/option),450,Spartan K3 / Freightliner (by year),2008,2026,8,41,45,42000,52000,6,4,4.7
+Newmar,New Aire,Class A Diesel,Diesel,Cummins B6.7 / L9 360–450HP,360,Freightliner XC-Series,2014,2026,6,35,40,30000,40000,6,3,4.55
+Newmar,Ventana,Class A Diesel,Diesel,Cummins B6.7 / L9 360–450HP,360,Freightliner XC-Series,2006,2026,6,34,44,30000,42000,6,3,4.5
+Newmar Classic,London Aire,Class A Diesel,Diesel,Cummins ISX 600HP,600,Spartan K3,1991,2008,3,40,45,46000,54000,6,3,4.8
+Newmar Classic,Scottsdale,Class A Gas,Gas,Ford V10 6.8L,320,Ford F53,1997,2005,3,35,39,22000,28000,7,2,4.2
+Nexus RV,Ghost,Class C,Gas,Ford 7.3L V8 Godzilla,350,Ford E-450,2014,2026,5,29,35,14000,17000,6,2,4.4
+Nexus RV,Phantom,Class C,Gas,Ford 7.3L / 6.2L (by year),300,Ford E-450,2010,2026,5,25,31,12000,16000,7,1,4.3
+Nexus RV,Rebel Super C,Super C,Diesel,Ford Power Stroke 6.7L Diesel,330,Ford F-550,2016,2026,5,32,39,22000,30000,6,2,4.5
+Nexus RV,Triumph,Super C,Diesel,Ford Power Stroke 6.7L Diesel,330,Ford F-550,2014,2026,6,29,40,22000,32000,8,2,4.5
+Nexus RV,Viper,Class C,Gas,Ford 7.3L / 6.2L (by year),300,Ford E-450,2010,2026,5,27,34,14000,18000,6,2,4.4
+Northwood Manufacturing,Arctic Fox,Travel Trailer,N/A (towable),,,N/A,2005,2026,6,22,33,6500,10000,7,2,4.8
+Northwood Manufacturing,Nash,Travel Trailer,N/A (towable),,,N/A,2005,2026,5,17,26,3800,6500,7,1,4.5
+Northwood Manufacturing,Wolf Creek,Truck Camper,N/A (truck camper),,,N/A,2005,2026,3,8,11,2200,3200,4,0,4.7
+Oliver Travel Trailers,Legacy Elite,Travel Trailer,N/A (towable),,,N/A,2008,2026,2,23,23,5700,6200,4,0,4.9
+Oliver Travel Trailers,Legacy Elite II,Travel Trailer,N/A (towable),,,N/A,2012,2026,2,24,24,6700,7200,4,0,4.9
+Outdoors RV,Back Country,Travel Trailer,N/A (towable),,,N/A,2010,2026,4,20,26,4800,7000,6,0,4.6
+Outdoors RV,Timber Ridge,Travel Trailer,N/A (towable),,,N/A,2010,2026,5,21,29,6000,8500,7,1,4.7
+Outdoors RV,Wind River,Travel Trailer,N/A (towable),,,N/A,2010,2026,4,23,29,5800,8000,6,1,4.6
+Palomino,Columbus,Fifth Wheel,N/A (towable),,,N/A (towable),2012,2026,7,33,42,11000,16000,6,4,4.35
+Palomino,Columbus Compass,Fifth Wheel,N/A (towable),,,N/A (towable),2012,2026,4,32,40,10000,15000,6,3,4.3
+Palomino,Puma,Travel Trailer,N/A (towable),,,N/A (towable),2005,2026,9,18,40,3200,9000,10,1,4.15
+Palomino,Puma Unleashed,Toy Hauler,N/A (towable),,,N/A (towable),2014,2026,3,34,40,9000,14000,8,2,4.2
+Palomino,Real-Lite,Travel Trailer,N/A (towable),,,N/A (towable),2006,2026,6,16,24,2500,4500,6,0,4.15
+Palomino,Real-Lite FW,Fifth Wheel,N/A (towable),,,N/A (towable),2012,2026,4,20,28,5500,9000,6,1,4.2
+Palomino,Sabre,Fifth Wheel,N/A (towable),,,N/A (towable),2011,2026,3,36,40,11000,15000,8,3,4.25
+Palomino,SolAire,Travel Trailer,N/A (towable),,,N/A (towable),2014,2026,6,22,35,4500,7800,8,1,4.2
+Pleasure-Way,Ascent,Class B,Diesel,Mercedes-Benz diesel (Sprinter),188,Mercedes Sprinter,2018,2026,3,19,23,8500,11000,4,0,4.8
+Pleasure-Way,Lexor,Class B,Gas,Ram 3.6L V6 gas,280,Ram ProMaster,2014,2026,3,20,22,8000,10500,4,0,4.7
+Pleasure-Way,Ontour,Class B,Gas / Diesel,Ford Transit EcoBoost / diesel (by year),310,Ford Transit,2016,2026,4,19,22,7500,10000,2,0,4.65
+Pleasure-Way,Ontour 2.0,Class B,Gas,Ford Transit 3.5L EcoBoost,310,Ford Transit,2016,2026,1,19,20,7800,9000,2,0,4.6
+Pleasure-Way,Plateau,Class B,Diesel,Mercedes-Benz diesel (Sprinter),188,Mercedes-Benz Sprinter,2005,2026,8,22,25,9500,12000,4,0,4.85
+Pleasure-Way,Plateau TS,Class B,Diesel,Mercedes-Benz diesel (Sprinter),188,Mercedes Sprinter,2005,2026,3,22,24,10000,11500,4,0,4.85
+Regency,Ultra Brougham,Class B,Diesel,Mercedes-Benz 3.0L V6,188,Mercedes Sprinter 170 EXT,2015,2026,4,25,29,12500,15500,4,1,4.9
+Renegade RV,Classic Super C,Super C,Diesel,Cummins Super C diesel,360,Freightliner Super C,2010,2026,3,38,40,30000,38000,6,2,4.65
+Renegade RV,Ikon,Super C,Diesel,Ford Power Stroke 6.7L / Super C diesel,330,Ford F-550 or Freightliner Super C (by year),2018,2026,2,28,32,22000,30000,6,2,4.5
+Renegade RV,Valencia,Super C,Diesel,Cummins ISB / B6.7 Super C diesel,340,Freightliner Super C / M2-class,2014,2026,3,35,38,26000,34000,6,2,4.55
+Renegade RV,Verona,Super C,Diesel,Cummins Super C diesel 340–360HP,360,Freightliner Super C,2012,2026,3,36,40,28000,36000,6,2,4.6
+Renegade RV,Verona LE,Super C,Diesel,Cummins Super C diesel,340,Freightliner Super C,2018,2026,2,36,40,27000,35000,6,2,4.55
+Renegade RV,Vienna,Super C,Diesel,Cummins / Ford Super C diesel,330,Super C platform,2020,2026,2,25,28,20000,28000,6,2,4.5
+Renegade RV,Villager,Class C,Gas,Ford 7.3L V8,350,Ford E-450,2012,2026,2,25,28,11000,14500,6,2,4.3
+Renegade RV,Villagio,Class A Diesel,Diesel,Mercedes-Benz Sprinter turbodiesel,188,Mercedes Sprinter cowl,2014,2024,2,24,26,11000,14000,6,2,4.45
+Roadtrek,Chase,Class B,Gas / Diesel,Ram 3.6L V6 / Mercedes diesel (by year),188,Ram ProMaster / Mercedes Sprinter,2016,2026,2,19,22,7000,9500,4,0,4.35
+Roadtrek,CS Adventurous,Class B,Diesel,Mercedes-Benz diesel (Sprinter),188,Mercedes Sprinter,2008,2026,2,22,24,9500,11500,4,0,4.4
+Roadtrek,Play,Class B,Gas,Ram 3.6L V6 gas,280,Ram ProMaster,2018,2026,2,19,21,7500,9500,4,0,4.4
+Roadtrek,Popular,Class B,Gas / Diesel,Ram / Mercedes / Chevy (by era),188,ProMaster / Sprinter / Chevy (by era),2005,2026,4,19,22,7000,10000,4,0,4.3
+Roadtrek,SS Agile,Class B,Gas,Ram 3.6L V6 gas,280,Ram ProMaster,2020,2026,2,19,21,7500,9500,4,0,4.45
+Roadtrek,Zion,Class B,Gas,Ram 3.6L V6 gas,280,Ram ProMaster 3500,2015,2026,4,19,21,7000,9000,4,0,4.35
+Roadtrek,Zion Slumber,Class B,Gas,Ram 3.6L V6 gas,280,Ram ProMaster,2015,2026,1,19,20,7200,8500,2,0,4.3
+Storyteller Overland,Beast MODE,Class B,Diesel,Mercedes-Benz turbodiesel AWD/4x4,188,Mercedes-Benz Sprinter AWD,2019,2026,3,19,23,9000,11500,4,0,4.75
+Storyteller Overland,Classic MODE,Class B,Diesel,Mercedes-Benz turbodiesel (Sprinter),188,Mercedes-Benz Sprinter,2021,2026,2,19,22,8500,10500,2,0,4.65
+Storyteller Overland,MODE,Class B,Diesel,Mercedes-Benz turbodiesel (Sprinter),188,Mercedes-Benz Sprinter,2018,2026,4,19,24,8500,11000,4,0,4.7
+Thor,ACE,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,Ford F53,2010,2026,8,27,33,14000,20000,8,2,4.35
+Thor,Aria,Class A Diesel,Diesel,Cummins B6.7 / L9 340–450HP,340,Freightliner XC-Series,2014,2026,4,34,40,28000,36000,6,3,4.4
+Thor,Challenger,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2005,2026,3,35,37,18000,24000,8,2,4.35
+Thor,Chateau,Class C,Gas,Ford 7.3L V8 Godzilla / 6.2L (by year),350,Ford E-350 / E-450,2005,2026,15,20,33,10000,15500,8,1,4.3
+Thor,Four Winds,Class C,Gas,Ford 7.3L V8 Godzilla / 6.2L (by year),350,Ford E-350 / E-450,2000,2026,15,20,33,10000,15500,8,1,4.25
+Thor,Four Winds Siesta,Class C,Diesel,Mercedes-Benz Sprinter turbodiesel,188,Mercedes-Benz Sprinter,2016,2026,3,24,26,10000,12000,4,0,4.4
+Thor,Gemini,Class B+,Gas,Ford Transit / cutaway gas (by year),310,Ford Transit / E-series,2014,2026,3,22,25,9000,12000,4,0,4.3
+Thor,Geneva,Class C,Gas,Ford 7.3L / 6.2L (by year),350,Ford E-450,2018,2026,3,25,30,11000,14500,6,1,4.3
+Thor,Magnitude,Super C,Diesel,Ford Power Stroke 6.7L Diesel,330,Ford F-550 Super Duty,2014,2026,3,34,40,22000,30000,8,2,4.5
+Thor,Magnitude XG,Super C,Diesel,Ford Power Stroke 6.7L Diesel,330,Ford F-550 Super Duty,2020,2026,3,32,40,22000,30000,8,2,4.55
+Thor,Outlaw,Class C,Gas,Ford 7.3L V8,350,Ford E-450 / Super C variants by year,2012,2026,3,29,38,12000,18000,8,2,4.35
+Thor,Palazzo,Class A Diesel,Diesel,Cummins B6.7 / L9 340–450HP,340,Freightliner XC-Series,2012,2026,7,33,38,28000,36000,6,3,4.4
+Thor,Quantum,Class C,Gas / Diesel (by plan),Ford 7.3L V8 Godzilla / Mercedes Sprinter (by floorplan),350,Ford E-450 / Mercedes Sprinter (by plan),2014,2026,6,24,32,11000,15500,8,1,4.3
+Thor,Rize,Toy Hauler,N/A (towable),,,N/A (towable),2018,2026,3,18,28,4000,8000,6,1,4.3
+Thor,Rize Plus,Toy Hauler,N/A (towable),,,N/A (towable),2020,2026,3,26,32,6000,10000,8,2,4.35
+Thor,Sanctuary,Class B,Diesel,Mercedes-Benz Sprinter turbodiesel,188,Mercedes-Benz Sprinter,2015,2026,3,19,25,9000,11000,2,0,4.4
+Thor,Seneca,Super C,Diesel,Ford Power Stroke 6.7L / Cummins Super C (by year),330,Freightliner / Ford Super C,2012,2026,3,37,38,24000,32000,6,2,4.5
+Thor,Sequence,Class B,Diesel,Mercedes-Benz 2.0L I4 turbo diesel,208,Mercedes-Benz Sprinter 2500,2021,2026,4,20,23,8500,11000,2,0,4.45
+Thor,Tuscany,Class A Diesel,Diesel,Cummins L9 / ISX (by year),450,Freightliner XC / Spartan (by year),2005,2026,4,40,45,36000,48000,6,3,4.5
+Thor,Windsport,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2008,2026,5,27,35,15000,22000,8,2,4.35
+Tiffin,Allegro,Class A Gas,Gas,Ford 7.3L / V10 (by year),350,Ford F53,2000,2022,3,32,36,16000,22000,6,2,4.35
+Tiffin,Allegro Breeze,Class A Diesel,Diesel,Cummins ISB / B6.7 340HP,340,Freightliner XC,2008,2020,3,28,33,24000,30000,4,2,4.45
+Tiffin,Allegro Bus,Class A Diesel,Diesel,Cummins L9 450HP (X12/X15 options by year),450,Tiffin PowerGlide,2000,2026,8,37,45,40000,52000,6,4,4.7
+Tiffin,Allegro Bus 45OPP,Class A Diesel,Diesel,Cummins L9 450HP (X12 optional),450,Tiffin PowerGlide,2012,2026,1,45,45,48000,56000,6,4,4.7
+Tiffin,Allegro Red,Class A Diesel,Diesel,Cummins ISB 6.7L 360HP,360,Freightliner XC raised-rail,2005,2017,3,33,38,26000,34000,6,3,4.4
+Tiffin,Allegro Red 340,Class A Diesel,Diesel,Cummins B6.7 360HP,360,Freightliner XC-Series,2014,2026,8,33,38,28000,36000,6,3,4.5
+Tiffin,Allegro Red 360,Class A Diesel,Diesel,Cummins L9 380–450HP,380,Freightliner XC / PowerGlide (by year),2018,2026,4,33,38,30000,38000,6,3,4.55
+Tiffin,Cahaba,Class C,Diesel,Mercedes-Benz 2.0L turbodiesel,208,Mercedes-Benz Sprinter,2023,2026,2,19,22,9000,11000,2,0,4.5
+Tiffin,Open Road,Class A Gas,Gas,Ford 7.3L Godzilla / V10 (by year),350,Ford F53,2010,2026,4,32,36,16000,22000,6,2,4.35
+Tiffin,Phaeton,Class A Diesel,Diesel,Cummins L9 450HP,450,Tiffin PowerGlide,2000,2026,6,36,45,36000,48000,6,3,4.6
+Tiffin,Wayfarer,Class C,Diesel,Mercedes-Benz turbodiesel (Sprinter),188,Mercedes-Benz Sprinter,2016,2026,5,24,26,10000,12000,4,0,4.55
+Tiffin,Wayfarer 25,Class C,Diesel,Mercedes-Benz turbodiesel,188,Mercedes-Benz Sprinter,2018,2026,4,25,26,10000,12000,4,0,4.55
+Tiffin,Zephyr,Class A Diesel,Diesel,Cummins X12 / X15 500–605HP,500,Tiffin PowerGlide,2000,2026,5,45,45,50000,58000,6,4,4.85
+Winnebago,Access Super C,Super C,Diesel,Ford Power Stroke 6.7L Diesel,330,Ford F-550 Super Duty,2021,2026,4,26,33,20000,28000,6,2,4.5
+Winnebago,Adventurer,Class A Gas,Gas,Ford Triton V10 6.8L / 7.3L (by year),320,Ford F53,2000,2021,5,29,36,18000,24000,7,2,4.4
+Winnebago,Boldt,Class B,Diesel,Mercedes-Benz 2.0L I4 turbodiesel,208,Mercedes-Benz Sprinter,2020,2026,2,22,23,9000,10500,2,0,4.55
+Winnebago,EKKO,Class C,Gas / Diesel,Ford / Mercedes (by floorplan),208,Ford Transit AWD or Mercedes Sprinter AWD,2021,2026,2,22,24,9000,11500,4,0,4.6
+Winnebago,Era,Class B,Diesel,Mercedes-Benz turbodiesel,188,Mercedes-Benz Sprinter,2010,2022,2,24,25,9000,11000,2,0,4.45
+Winnebago,Forza,Class A Diesel,Diesel,Cummins B6.7 340HP,340,Freightliner XC-Series,2016,2026,5,34,39,28000,34000,6,3,4.55
+Winnebago,Grand Tour,Class A Diesel,Diesel,Cummins ISX / L9 (by year),450,Spartan / Freightliner (by year),2005,2019,3,42,45,44000,50000,6,4,4.75
+Winnebago,Horizon,Class A Diesel,Diesel,Cummins L9 450HP,450,Freightliner / Maxum (by year),2018,2026,3,40,43,38000,46000,6,4,4.7
+Winnebago,Intent,Class A Gas,Gas,Ford 7.3L V8 Godzilla,350,Ford F53,2019,2026,4,26,32,14000,18000,6,2,4.35
+Winnebago,Itasca Sunstar,Class A Gas,Gas,Ford Triton V10 6.8L,320,Ford F53,2005,2019,4,27,35,18000,24000,6,2,4.3
+Winnebago,Journey,Class A Diesel,Diesel,Cummins B6.7 340HP,340,Freightliner XCS / XC,2002,2022,6,34,40,30000,38000,6,3,4.45
+Winnebago,Micro Minnie,Travel Trailer,N/A (towable),,,N/A (towable),2014,2026,6,17,26,3000,6500,6,0,4.5
+Winnebago,Minnie,Travel Trailer,N/A (towable),,,N/A (towable),2010,2026,4,22,32,4500,7500,8,1,4.4
+Winnebago,Minnie Winnie,Class C,Gas,Ford 7.3L V8 Godzilla,350,Ford E-450,2000,2026,8,22,32,11000,14500,7,1,4.35
+Winnebago,Navion,Class C,Diesel,Mercedes-Benz 2.0L I4 turbodiesel,208,Mercedes-Benz Sprinter,2006,2026,6,24,26,10000,12500,4,0,4.55
+Winnebago,Outlook,Class C,Gas,Ford 7.3L V8,350,Ford E-450,2014,2022,4,22,31,11000,14500,6,1,4.3
+Winnebago,Porto,Class C,Diesel,Mercedes-Benz turbodiesel,188,Mercedes Sprinter,2019,2023,3,24,25,10000,12000,4,0,4.45
+Winnebago,Revel,Class B,Diesel,Mercedes-Benz 2.0L I4 turbodiesel,208,Mercedes-Benz Sprinter 4x4,2018,2026,1,19,20,9000,11000,2,0,4.65
+Winnebago,Solis,Class B,Gas,RAM 3.6L V6 gas,276,RAM ProMaster,2019,2026,3,19,21,8000,9500,4,0,4.4
+Winnebago,Spirit,Class C,Gas,Ford 7.3L V8 Godzilla,350,Ford E-450,2005,2026,7,22,32,11000,14500,7,1,4.35
+Winnebago,Sunstar,Class A Gas,Gas,Ford 7.3L V8 Godzilla,350,Ford F53,2010,2026,5,27,36,16000,22000,7,2,4.35
+Winnebago,Travato,Class B,Gas,RAM 3.6L V6 gas,276,RAM ProMaster,2014,2026,3,21,21,8500,9500,2,0,4.5
+Winnebago,Via,Class A Diesel,Diesel,Mercedes-Benz 3.0L turbodiesel,188,Mercedes-Benz Sprinter cowl,2013,2021,2,25,26,11000,13000,4,1,4.5
+Winnebago,View,Class C,Diesel,Mercedes-Benz 2.0L I4 turbodiesel,208,Mercedes-Benz Sprinter,2006,2026,7,24,26,10000,12500,4,0,4.6
+Winnebago,Vista,Class A Gas,Gas,Ford 7.3L V8 Godzilla,350,Ford F53,2010,2026,7,27,36,16000,22000,8,2,4.4
+Winnebago,Vita,Class C,Diesel,Mercedes-Benz turbodiesel,188,Mercedes Sprinter,2018,2022,3,24,25,9500,11500,4,0,4.4
+Winnebago Classic,Chieftain,Class A Gas,Gas,Ford V10 6.8L,320,Ford F53,1966,2006,4,30,39,22000,28000,7,2,4.3
+Winnebago Classic,Ultimate Freedom,Class A Diesel,Diesel,Cummins ISL 340HP,340,Freightliner XCS,2000,2007,3,40,43,42000,50000,6,3,4.5

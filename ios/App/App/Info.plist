@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CAPACITOR_DEBUG</key>
+	<string>$(CAPACITOR_DEBUG)</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>RVFAX</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<!-- Launch image ONLY — must NOT be UIMainStoryboardFile -->
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<!-- Main UI is CAPBridgeViewController created in AppDelegate (no Main storyboard entry). -->
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>RV Grok uses the microphone for live voice chat with your RV co-pilot.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>RV Grok can use speech recognition to turn your voice into text.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>RV Grok uses the camera so you can show a coach, panel, label, or problem and get help. VIN scan also uses the camera.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>RV Trips uses your location to sort free dump stations and campgrounds by distance. Your location stays on the phone unless you tap a map link.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose a photo of your RV, a panel, or a problem to show RV Grok.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>RV Grok only reads photos you pick — it does not save to your library.</string>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
+</dict>
+</plist>
