@@ -44,7 +44,6 @@ import {
 import { LENDERS_CATALOG } from "@/lib/rv/lendersCatalog";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
-import { RollPicker } from "@/components/rvcal/RollPicker";
 
 function clampPrice(n: number) {
   if (!Number.isFinite(n) || n < 0) return 0;
@@ -78,6 +77,49 @@ function creditScoreToBand(score: number): CreditBand {
   return "excellent";
 }
 
+type CalSelectOption<T extends string | number> = {
+  value: T;
+  label: string;
+  sublabel?: string;
+};
+
+function NativeCalSelect<T extends string | number>({
+  "aria-label": ariaLabel,
+  value,
+  options,
+  onChange,
+  parse,
+}: {
+  "aria-label": string;
+  value: T;
+  options: CalSelectOption<T>[];
+  onChange: (value: T) => void;
+  parse: (raw: string) => T;
+}) {
+  const hasValue = options.some((o) => o.value === value);
+  const selected = hasValue ? value : options[0]?.value;
+  return (
+    <div className="relative">
+      <select
+        aria-label={ariaLabel}
+        value={selected === undefined ? "" : String(selected)}
+        onChange={(e) => onChange(parse(e.target.value))}
+        className="glass-field min-h-11 w-full cursor-pointer appearance-none rounded-[var(--radius-md)] px-2 py-2.5 pr-7 text-center text-[13px] font-bold tabular-nums text-white outline-none [color-scheme:dark]"
+      >
+        {options.map((o, i) => (
+          <option key={`${String(o.value)}-${i}`} value={String(o.value)}>
+            {o.sublabel ? `${o.label} · ${o.sublabel}` : o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        className="pointer-events-none absolute right-1.5 top-1/2 size-3.5 -translate-y-1/2 text-gold"
+        aria-hidden
+      />
+    </div>
+  );
+}
+
 function clampCreditScore(n: number) {
   if (!Number.isFinite(n)) return 850;
   return Math.min(850, Math.max(300, Math.round(n)));
@@ -104,7 +146,7 @@ export function RvCalApp() {
   const [downPct, setDownPct] = useState(20);
   const [credit, setCredit] = useState<CreditBand>("excellent");
   const [creditScore, setCreditScore] = useState(850);
-  /** roll = swipe drums · manual = text fields seeded from current values */
+  /** select = native dropdowns · manual = text fields seeded from current values */
   const [loanEntryMode, setLoanEntryMode] = useState<"roll" | "manual">("roll");
   const [apr, setApr] = useState(7.5);
   const [aprFocused, setAprFocused] = useState(false);
@@ -734,7 +776,7 @@ export function RvCalApp() {
       <section className="glass-prestige rounded-[var(--radius-xl)] p-3.5">
         <div className="mb-2 flex items-center justify-between gap-2">
           <p className="text-[10px] font-bold tracking-[0.12em] text-gold">
-            {loanEntryMode === "roll" ? "QUICK LOAN · SWIPE TO ROLL" : "QUICK LOAN · MANUAL ENTRY"}
+            {loanEntryMode === "roll" ? "QUICK LOAN · SELECT" : "QUICK LOAN · MANUAL ENTRY"}
           </p>
           <button type="button" onClick={() => {
                     setLoanEntryMode((m) => {
@@ -745,24 +787,30 @@ export function RvCalApp() {
                   setCredit(creditScoreToBand(creditScore));
                   return "roll";
                 });
-                  }} className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold transition", loanEntryMode === "manual" ? "border-blue/50 bg-blue/25 text-white" : "border-white/20 bg-black/30 text-white/85")} aria-label={loanEntryMode === "roll" ? "Switch to manual entry" : "Switch to roll pickers"} title={loanEntryMode === "roll" ? "Manual entry" : "Swipe rollers"}>
+                  }} className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold transition", loanEntryMode === "manual" ? "border-blue/50 bg-blue/25 text-white" : "border-white/20 bg-black/30 text-white/85")} aria-label={loanEntryMode === "roll" ? "Switch to manual entry" : "Switch to dropdowns"} title={loanEntryMode === "roll" ? "Manual entry" : "Dropdowns"}>
             <SlidersHorizontal className="size-3.5" />
-            {loanEntryMode === "manual" ? "Rollers" : "Manual"}
+            {loanEntryMode === "manual" ? "Select" : "Manual"}
           </button>
         </div>
-        {loanEntryMode === "roll" ? <div className="grid grid-cols-4 gap-1.5">
+        {loanEntryMode === "roll" ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
   <div className="min-w-0">
     <p className="mb-1.5 text-center text-[9px] font-bold tracking-[0.1em] text-white">
       CREDIT
     </p>
-    <RollPicker aria-label="Credit score range" value={credit} options={CREDIT_BANDS.map((b) => ({
-                        value: b.id,
-                        label: b.range
-                      }))} onChange={(band) => {
-                        setCredit(band);
-                        setCreditScore(creditBandTopScore(band));
-                        setAprManual(false);
-                      }} itemHeight={36} visible={3} />
+    <NativeCalSelect
+      aria-label="Credit score range"
+      value={credit}
+      options={CREDIT_BANDS.map((b) => ({
+        value: b.id,
+        label: b.range,
+      }))}
+      parse={(raw) => raw as CreditBand}
+      onChange={(band) => {
+        setCredit(band);
+        setCreditScore(creditBandTopScore(band));
+        setAprManual(false);
+      }}
+    />
   </div>
   <div className="min-w-0">
     <div className="mb-1.5 flex items-center justify-center gap-1">
@@ -773,22 +821,40 @@ export function RvCalApp() {
   Auto
 </button> : null}
     </div>
-    <RollPicker aria-label="Interest rate APR" value={APR_PRESETS.reduce((best, a) => Math.abs(a - apr) < Math.abs(best - apr) ? a : best)} options={APR_PRESETS.map((a) => ({
-                        value: a,
-                        label: `${a.toFixed(2)}%`
-                      }))} onChange={(v: number) => setAprFromControl(v)} itemHeight={36} visible={3} />
+    <NativeCalSelect
+      aria-label="Interest rate APR"
+      value={APR_PRESETS.reduce((best, a) => Math.abs(a - apr) < Math.abs(best - apr) ? a : best)}
+      options={APR_PRESETS.map((a) => ({
+        value: a,
+        label: `${a.toFixed(2)}%`,
+      }))}
+      parse={(raw) => Number(raw)}
+      onChange={(v) => setAprFromControl(v)}
+    />
   </div>
   <div className="min-w-0">
     <p className="mb-1.5 text-center text-[9px] font-bold tracking-[0.1em] text-white">
       TERM
     </p>
-    <RollPicker aria-label="Loan term" value={termMonths} options={termRollOptions} onChange={(months: number) => setTermMonths(months)} itemHeight={36} visible={3} />
+    <NativeCalSelect
+      aria-label="Loan term"
+      value={termMonths}
+      options={termRollOptions}
+      parse={(raw) => Number(raw)}
+      onChange={(months) => setTermMonths(months)}
+    />
   </div>
   <div className="min-w-0">
     <p className="mb-1.5 text-center text-[9px] font-bold tracking-[0.1em] text-white">
       DOWN
     </p>
-    <RollPicker aria-label="Down payment percent" value={downPct} options={downRollOptions} onChange={(pct: number) => setDownPct(pct)} itemHeight={36} visible={3} />
+    <NativeCalSelect
+      aria-label="Down payment percent"
+      value={downPct}
+      options={downRollOptions}
+      parse={(raw) => Number(raw)}
+      onChange={(pct) => setDownPct(pct)}
+    />
   </div>
 </div> : <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
   <label className="block min-w-0">
