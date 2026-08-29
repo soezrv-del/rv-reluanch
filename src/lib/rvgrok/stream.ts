@@ -4,6 +4,7 @@ import type { MultimodalMessage, VisionContentPart } from "./vision";
 export type StreamHandlers = {
   onDelta: (text: string) => void;
   onStep: (step: AgentStep) => void;
+  onImage?: (url: string) => void;
   onModel?: (model: string) => void;
   onUpstream?: (upstream: string) => void;
   onError?: (message: string) => void;
@@ -48,6 +49,16 @@ export function processSseLine(
     }
     if (parsed.type === "agent_error") {
       handlers.onError?.(parsed.message ?? "Agent error");
+      return;
+    }
+    if (parsed.type === "image") {
+      const url =
+        typeof parsed.url === "string"
+          ? parsed.url
+          : typeof parsed.b64 === "string"
+            ? `data:${parsed.mime || "image/jpeg"};base64,${String(parsed.b64).replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, "")}`
+            : "";
+      if (url) handlers.onImage?.(url);
       return;
     }
 

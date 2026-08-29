@@ -66,8 +66,7 @@ export function MessageBubble({
   onFeedback?: (messageId: string, payload: GrokFeedbackPayload) => void;
 }) {
   const isUser = message.role === "user";
-  const hasAgentSteps =
-    !isUser && message.isAgentMode && (message.agentSteps?.length ?? 0) > 0;
+  const hasAgentSteps = !isUser && (message.agentSteps?.length ?? 0) > 0;
   const isSpeaking = speakingId === message.id;
   const showFeedback =
     !isUser &&
@@ -116,7 +115,7 @@ export function MessageBubble({
       >
         {hasAgentSteps ? (
           <div className="mb-2">
-            <AgentBadge />
+            {message.isAgentMode ? <AgentBadge /> : null}
             <AgentStepsCard steps={message.agentSteps!} />
           </div>
         ) : null}
@@ -128,6 +127,23 @@ export function MessageBubble({
               alt="Attached photo"
               className="max-h-52 w-full object-cover"
             />
+          </div>
+        ) : null}
+
+        {message.generatedImages?.length ? (
+          <div className="mb-2 space-y-2">
+            {message.generatedImages.map((src, i) => (
+              <div
+                key={`${src.slice(0, 48)}-${i}`}
+                className="overflow-hidden rounded-lg border border-gold/35 bg-black/40"
+              >
+                <img
+                  src={src}
+                  alt="Generated image"
+                  className="max-h-72 w-full object-contain"
+                />
+              </div>
+            ))}
           </div>
         ) : null}
 

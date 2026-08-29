@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   Camera,
+  Compass,
   Droplets,
   FileText,
   Fish,
@@ -14,6 +15,7 @@ import {
   Send,
   Sparkles,
   Square,
+  Sunrise,
   SwitchCamera,
   Truck,
   Users,
@@ -76,6 +78,22 @@ const GROK_STARTERS: {
     Icon: Users,
     prompt:
       "Match me to an RV. Ask only what you still need: budget, who travels (kids/pets), ZIP, nights vs full-time, and whether I already have a truck. Then recommend 2–3 coach CLASSES with one example year/make/model each I can look up in RvFACTS. Do not invent a dealer listing or say a unit is for sale. EST. payment if I gave a price. If I have a truck, say what to check in RvTow.",
+  },
+  {
+    group: "The life",
+    title: "Sell me this life",
+    line: "Why RV — weekends, mornings, vs hotels",
+    Icon: Sunrise,
+    prompt:
+      "Sell me the RV lifestyle. I am curious, not shopping a specific coach yet. Paint the weekends, the 6am coffee, the kids/pets, the freedom versus hotels and a second house. Be vivid and honest — one real friction, then the win. Then ask ONE question so you can match me to 2–3 coach classes with one example year/make/model each for RvFACTS. Do not invent a listing.",
+  },
+  {
+    group: "The life",
+    title: "Full-time or weekends",
+    line: "Retire on the road vs keep the house",
+    Icon: Compass,
+    prompt:
+      "I am considering full-time RV living versus keeping a house and doing weekends or snowbird trips. Sell both lives. Who each path is for, what a Saturday looks like, and the honest tradeoffs. Then recommend which coach CLASSES fit each path with one example year/make/model each I can open in RvFACTS. Point me to RvCal for payment and RvTow if a truck matters. Do not invent inventory.",
   },
   {
     group: "The water",
@@ -154,6 +172,12 @@ const HUB_CHIPS: {
     Icon: Users,
     prompt:
       "Match me to an RV. Ask only what you still need: budget, who travels (kids/pets), ZIP, nights vs full-time, and whether I already have a truck. Then recommend 2–3 coach CLASSES with one example year/make/model each I can look up in RvFACTS. Do not invent a dealer listing or say a unit is for sale. EST. payment if I gave a price. If I have a truck, say what to check in RvTow.",
+  },
+  {
+    label: "The life",
+    Icon: Sunrise,
+    prompt:
+      "Sell me the RV lifestyle. I am curious, not shopping a specific coach yet. Paint the weekends, the 6am coffee, the kids/pets, the freedom versus hotels and a second house. Be vivid and honest — one real friction, then the win. Then ask ONE question so you can match me to 2–3 coach classes with one example year/make/model each for RvFACTS. Do not invent a listing.",
   },
   { label: "Specs", Icon: FileText, tab: "rvfax" },
   {
@@ -510,6 +534,7 @@ export function RvGrokApp({
 
       let fullContent = "";
       const liveSteps: AgentStep[] = [];
+      const liveImages: string[] = [];
       let unverified = false;
 
       const stampUnverified = () => {
@@ -569,6 +594,25 @@ export function RvGrokApp({
                     ? {
                         ...m,
                         agentSteps: [...liveSteps],
+                        generatedImages: [...liveImages],
+                        streaming: true,
+                        unverified: unverified || m.unverified,
+                      }
+                    : m,
+                ),
+              );
+              scrollToBottom();
+            },
+            onImage: (url) => {
+              if (!url || liveImages.includes(url)) return;
+              liveImages.push(url);
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMsgId
+                    ? {
+                        ...m,
+                        generatedImages: [...liveImages],
+                        agentSteps: [...liveSteps],
                         streaming: true,
                         unverified: unverified || m.unverified,
                       }
@@ -592,6 +636,7 @@ export function RvGrokApp({
                         ...m,
                         content: fullContent,
                         agentSteps: [...liveSteps],
+                        generatedImages: [...liveImages],
                         streaming: true,
                         unverified: unverified || m.unverified,
                       }
@@ -623,6 +668,7 @@ export function RvGrokApp({
                   streaming: false,
                   isAgentMode: agentMode,
                   agentSteps: [...liveSteps],
+                  generatedImages: [...liveImages],
                   unverified,
                 }
               : m,
@@ -1416,7 +1462,7 @@ export function RvGrokApp({
                 Ask like you’re on the lot
               </h1>
               <p className="mx-auto mt-2 max-w-sm text-[14px] leading-relaxed text-white">
-                Specs, trade, payment, recalls, tow — tap a prompt or type your own.
+                Specs, lifestyle, trade, payment, recalls, tow — tap a prompt or type your own.
               </p>
             </div>
 
@@ -1466,7 +1512,7 @@ export function RvGrokApp({
             )}
 
             <div className="mt-7 space-y-5">
-              {["The shopper", "The water", "The lot", "The desk", "The road"].map((group) => (
+              {["The shopper", "The life", "The water", "The lot", "The desk", "The road"].map((group) => (
                 <div key={group}>
                   <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-bright">
                     {group}

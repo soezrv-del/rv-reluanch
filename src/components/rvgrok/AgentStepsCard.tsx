@@ -7,6 +7,7 @@ import {
   Search,
   Sparkles,
   TrendingUp,
+  Image,
   Info,
   Wrench,
 } from "lucide-react";
@@ -19,6 +20,7 @@ const ICONS: Record<string, typeof Search> = {
   search_rv_models: Search,
   get_model_details: Info,
   check_market_availability: TrendingUp,
+  generate_image: Image,
 };
 
 export function AgentStepsCard({ steps }: { steps: AgentStep[] }) {

@@ -4,16 +4,22 @@ import { HISTORY_KEY } from "./types";
 /** Drop heavy base64 so localStorage stays under quota */
 function slimMessages(messages: Message[]): Message[] {
   return messages.map((m) => {
-    if (!m.imageDataUrl) return m;
-    const { imageDataUrl: _, ...rest } = m;
-    return {
+    const generatedImages = (m.generatedImages ?? []).filter((u) =>
+      /^https?:\/\//i.test(u),
+    );
+    const { imageDataUrl, generatedImages: _drop, ...rest } = m;
+    const next: Message = {
       ...rest,
-      content: m.content?.includes("[Photo]")
+      ...(generatedImages.length ? { generatedImages } : {}),
+    };
+    if (imageDataUrl) {
+      next.content = m.content?.includes("[Photo]")
         ? m.content
         : m.content
           ? `${m.content}\n[Photo was attached]`
-          : "[Photo was attached]",
-    };
+          : "[Photo was attached]";
+    }
+    return next;
   });
 }
 

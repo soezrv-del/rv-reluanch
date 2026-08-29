@@ -18,6 +18,8 @@ export interface Message {
   isAgentMode?: boolean;
   /** Optional photo attachment (data URL); stripped from history storage. */
   imageDataUrl?: string;
+  /** Images produced by generate_image (URL or data URL). */
+  generatedImages?: string[];
   /** Post-answer thumbs. */
   feedback?: "up" | "down";
   /** Demo / non-xAI fallback — do not treat as catalog truth. */
@@ -75,6 +77,10 @@ export const TOOL_META: Record<string, { label: string; color: string }> = {
   analyze_photo: {
     label: "Analyzing Photo",
     color: "#FF6B9D",
+  },
+  generate_image: {
+    label: "Generating Image",
+    color: "#C9A227",
   },
 };
 

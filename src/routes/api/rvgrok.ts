@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
+import {
+  GENERATE_IMAGE_TOOL,
+  generateImageFromPrompt,
+  parseGenerateImagePromptFromContent,
+  wantsGeneratedImage,
+} from "@/lib/rvgrok/imageGen";
 
 /**
  * POST /api/rvgrok
@@ -108,6 +114,7 @@ function jsonToSseStream(opts: {
   model: string;
   agentMode: boolean;
   upstream: string;
+  prelude?: unknown[];
 }): Response {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -116,7 +123,11 @@ function jsonToSseStream(opts: {
         controller.enqueue(encoder.encode(encodeSse(obj)));
       const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-      if (opts.agentMode) {
+      if (opts.prelude?.length) {
+        for (const ev of opts.prelude) send(ev);
+      }
+
+      if (opts.agentMode && opts.upstream !== "xai-direct") {
         send({ type: "agent_start", model: opts.model });
         const steps = [
           {
@@ -193,6 +204,190 @@ function jsonToSseStream(opts: {
   });
 }
 
+type ToolCall = {
+  id: string;
+  type?: string;
+  function?: { name?: string; arguments?: string };
+};
+
+type ChatCompletionMessage = {
+  role?: string;
+  content?: string | null;
+  tool_calls?: ToolCall[];
+};
+
+async function runXaiWithTools(opts: {
+  apiKey: string;
+  model: string;
+  agentMode: boolean;
+  messages: ChatMessage[];
+  forceImageTool: boolean;
+}): Promise<Response | null> {
+  const working: Array<Record<string, unknown>> = opts.messages.map((m) => ({
+    role: m.role,
+    content: m.content,
+  }));
+  const prelude: unknown[] = [];
+  let stepNo = 0;
+  let lastContent = "";
+  let imageCount = 0;
+
+  for (let round = 0; round < 3; round++) {
+    const resp = await fetch("https://api.x.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${opts.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: opts.model,
+        messages: working,
+        tools: [GENERATE_IMAGE_TOOL],
+        tool_choice:
+          opts.forceImageTool && round === 0 && imageCount === 0
+            ? {
+                type: "function",
+                function: { name: "generate_image" },
+              }
+            : "auto",
+        stream: false,
+        temperature: 0.2,
+      }),
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!resp.ok) {
+      if (round === 0) return null;
+      break;
+    }
+
+    const data = (await resp.json()) as {
+      choices?: Array<{
+        message?: ChatCompletionMessage;
+        finish_reason?: string;
+      }>;
+    };
+    const msg = data.choices?.[0]?.message;
+    if (!msg) {
+      if (round === 0) return null;
+      break;
+    }
+
+    let toolCalls = msg.tool_calls ?? [];
+    if (!toolCalls.length && msg.content) {
+      const synPrompt = parseGenerateImagePromptFromContent(String(msg.content));
+      if (synPrompt) {
+        toolCalls = [
+          {
+            id: `call-synth-${round}`,
+            type: "function",
+            function: {
+              name: "generate_image",
+              arguments: JSON.stringify({ prompt: synPrompt }),
+            },
+          },
+        ];
+      }
+    }
+    if (toolCalls.length) {
+      working.push({
+        role: "assistant",
+        content: msg.content ?? null,
+        tool_calls: toolCalls,
+      });
+      for (const call of toolCalls) {
+        const name = call.function?.name || "";
+        let args: { prompt?: string } = {};
+        try {
+          args = JSON.parse(call.function?.arguments || "{}") as {
+            prompt?: string;
+          };
+        } catch {
+          args = {};
+        }
+        stepNo += 1;
+        if (name === "generate_image") {
+          if (imageCount >= 2) {
+            working.push({
+              role: "tool",
+              tool_call_id: call.id,
+              content: JSON.stringify({
+                ok: false,
+                error: "Image limit reached for this turn (max 2).",
+              }),
+            });
+            continue;
+          }
+          const prompt = String(args.prompt || "").trim();
+          prelude.push({
+            type: "step",
+            step: stepNo,
+            tool: "generate_image",
+            input: { prompt: prompt.slice(0, 180) },
+            status: "running",
+          });
+          const img = await generateImageFromPrompt(opts.apiKey, prompt);
+          prelude.push({
+            type: "step",
+            step: stepNo,
+            tool: "generate_image",
+            input: { prompt: prompt.slice(0, 180) },
+            result: JSON.stringify(
+              img.ok
+                ? { status: "ok", format: img.format }
+                : { status: "error", error: img.error },
+            ),
+            status: "done",
+          });
+          if (img.ok) {
+            imageCount += 1;
+            prelude.push({ type: "image", url: img.url });
+          }
+          working.push({
+            role: "tool",
+            tool_call_id: call.id,
+            content: JSON.stringify(
+              img.ok
+                ? {
+                    ok: true,
+                    url: img.format === "b64"
+                      ? "data-url (already shown to the user)"
+                      : img.url,
+                    format: img.format,
+                  }
+                : img,
+            ),
+          });
+        } else {
+          working.push({
+            role: "tool",
+            tool_call_id: call.id,
+            content: JSON.stringify({
+              ok: false,
+              error: `unknown tool ${name}`,
+            }),
+          });
+        }
+      }
+      continue;
+    }
+
+    lastContent = String(msg.content || "");
+    break;
+  }
+
+  return jsonToSseStream({
+    content:
+      lastContent ||
+      (imageCount
+        ? "Here's the generated image."
+        : "No response content returned from the AI upstream."),
+    model: opts.model,
+    agentMode: opts.agentMode,
+    upstream: "xai-direct",
+    prelude,
+  });
+}
+
 async function tryXaiDirect(
   messages: ChatMessage[],
   agentMode: boolean,
@@ -202,48 +397,38 @@ async function tryXaiDirect(
   if (!apiKey) return null;
 
   const vision = hasVision(messages);
-  // Prefer vision-capable IDs when a photo is attached
+  const lastUser = [...messages].reverse().find((m) => m.role === "user");
+  const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
+  const forceImageTool = wantsGeneratedImage(lastPlain);
   const MODELS = vision
-    ? [
-        "grok-2-vision-1212",
-        "grok-4-latest",
-        "grok-3",
-        "grok-2-1212",
-      ]
-    : ["grok-3", "grok-2-1212", "grok-4-latest"];
+    ? ["grok-4.5", "grok-4-latest", "grok-2-vision-1212", "grok-3"]
+    : ["grok-4.5", "grok-4-latest", "grok-4.6", "grok-3", "grok-2-1212"];
 
   const system = appendFeedback(
     (agentMode ? AGENT_SYSTEM_PROMPT : RV_SYSTEM_PROMPT) +
       (vision
         ? "\n\nA photo is attached. You CAN see it. Describe exactly what is visible (panels, screens, labels, damage, coach exterior). Never claim you cannot see images. Never invent a different scene."
+        : "") +
+      (forceImageTool
+        ? "\n\nThe user asked for a generated image. You MUST call the generate_image tool with a detailed visual prompt. Do not write a JSON tool call in your content."
         : ""),
     feedbackContext,
   );
-  const fullMessages = [{ role: "system", content: system }, ...messages];
+  const fullMessages: ChatMessage[] = [
+    { role: "system", content: system },
+    ...messages,
+  ];
 
   for (const model of MODELS) {
     try {
-      const resp = await fetch("https://api.x.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages: fullMessages,
-          stream: true,
-          temperature: 0.2,
-        }),
+      const result = await runXaiWithTools({
+        apiKey,
+        model,
+        agentMode,
+        messages: fullMessages,
+        forceImageTool,
       });
-      if (!resp.ok || !resp.body) continue;
-
-      return new Response(resp.body, {
-        headers: sseHeaders({
-          "X-Model-Used": agentMode ? `${model} · Agent` : model,
-          "X-Upstream": "xai-direct",
-        }),
-      });
+      if (result) return result;
     } catch {
       /* next model */
     }
@@ -408,38 +593,21 @@ export const Route = createFileRoute("/api/rvgrok")({
         }
 
         const agentMode = Boolean(body.agentMode);
-        const vision = hasVision(messages);
         const feedbackContext = body.feedbackContext;
 
-        // Photos: try vision-capable xAI first (workers often strip images).
-        // Text: worker first (your production path), then xAI.
-        if (vision) {
-          const fromXai = await tryXaiDirect(
-            messages,
-            agentMode,
-            feedbackContext,
-          );
-          if (fromXai) return fromXai;
-          const fromWorker = await tryCloudflareWorker(
-            messages,
-            agentMode,
-            feedbackContext,
-          );
-          if (fromWorker) return fromWorker;
-        } else {
-          const fromWorker = await tryCloudflareWorker(
-            messages,
-            agentMode,
-            feedbackContext,
-          );
-          if (fromWorker) return fromWorker;
-          const fromXai = await tryXaiDirect(
-            messages,
-            agentMode,
-            feedbackContext,
-          );
-          if (fromXai) return fromXai;
-        }
+        // xAI first when the key is present so generate_image (and vision) work.
+        const fromXai = await tryXaiDirect(
+          messages,
+          agentMode,
+          feedbackContext,
+        );
+        if (fromXai) return fromXai;
+        const fromWorker = await tryCloudflareWorker(
+          messages,
+          agentMode,
+          feedbackContext,
+        );
+        if (fromWorker) return fromWorker;
 
         return demoStream(messages, agentMode);
       },
