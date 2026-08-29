@@ -45,8 +45,8 @@ const MoreApp = lazy(() =>
   import("@/components/more/MoreApp").then((m) => ({ default: m.MoreApp })),
 );
 
-const FLOAT_TAB_PAD =
-  "pb-[calc(5.15rem+env(safe-area-inset-bottom,0px))]";
+const TAB_PANE_ON =
+  "absolute inset-0 flex min-h-0 flex-col overflow-hidden";
 
 function SuiteFallback() {
   return (
@@ -90,7 +90,11 @@ class SuiteErrorBoundary extends Component<
         </div>
       );
     }
-    return this.props.children;
+    return (
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
+        {this.props.children}
+      </div>
+    );
   }
 }
 
@@ -219,17 +223,6 @@ export function AppShell() {
         data-page-accent={PAGE_ACCENT[tab] ?? "sapphire"}
         style={{
           overscrollBehavior: "none",
-          // Fill the preview iframe with % height. Only pin to visualViewport
-          // pixels when the keyboard is open (native iOS). Pixel vvHeight on
-          // first paint hydrates as a mismatch and can collapse the shell.
-          height:
-            kb.open && kb.vvHeight > 0 ? `${kb.vvHeight}px` : "100%",
-          maxHeight:
-            kb.open && kb.vvHeight > 0 ? `${kb.vvHeight}px` : "100%",
-          transform:
-            kb.open && kb.vvOffsetTop > 0
-              ? `translateY(${kb.vvOffsetTop}px)`
-              : undefined,
         }}
       >
         {launchOpen ? (
@@ -247,14 +240,12 @@ export function AppShell() {
 
         <main
           ref={mainRef}
-          className={`relative min-h-0 flex-1 overflow-hidden touch-pan-y ${
-            hideDock ? "pb-2" : FLOAT_TAB_PAD
-          }`}
+          className="relative min-h-0 flex-1 overflow-hidden touch-pan-y"
           aria-hidden={launchOpen}
         >
           <Suspense fallback={<SuiteFallback />}>
             {show("rvgrok") ? (
-              <div className={tab === "rvgrok" ? "h-full" : "hidden"}>
+              <div className={tab === "rvgrok" ? TAB_PANE_ON : "hidden"}>
                 <SuiteErrorBoundary name="RvGROK">
                   <RvGrokApp
                     active={tab === "rvgrok" && !launchOpen}
@@ -267,35 +258,35 @@ export function AppShell() {
               </div>
             ) : null}
             {show("rvfax") ? (
-              <div className={tab === "rvfax" ? "h-full" : "hidden"}>
+              <div className={tab === "rvfax" ? TAB_PANE_ON : "hidden"}>
                 <SuiteErrorBoundary name="RvFACTS">
                   <RvFaxApp onOpenGrok={openGrok} />
                 </SuiteErrorBoundary>
               </div>
             ) : null}
             {show("rvcal") ? (
-              <div className={tab === "rvcal" ? "h-full" : "hidden"}>
+              <div className={tab === "rvcal" ? TAB_PANE_ON : "hidden"}>
                 <SuiteErrorBoundary name="RvCAL">
                   <RvCalApp />
                 </SuiteErrorBoundary>
               </div>
             ) : null}
             {show("rvtow") ? (
-              <div className={tab === "rvtow" ? "h-full" : "hidden"}>
+              <div className={tab === "rvtow" ? TAB_PANE_ON : "hidden"}>
                 <SuiteErrorBoundary name="RvTOW">
                   <RvTowApp />
                 </SuiteErrorBoundary>
               </div>
             ) : null}
             {show("rvtrips") ? (
-              <div className={tab === "rvtrips" ? "h-full" : "hidden"}>
+              <div className={tab === "rvtrips" ? TAB_PANE_ON : "hidden"}>
                 <SuiteErrorBoundary name="RvTRIPS">
                   <RvTripsApp />
                 </SuiteErrorBoundary>
               </div>
             ) : null}
             {show("more") ? (
-              <div className={tab === "more" ? "h-full" : "hidden"}>
+              <div className={tab === "more" ? TAB_PANE_ON : "hidden"}>
                 <SuiteErrorBoundary name="More">
                   <MoreApp onNavigate={onTabChange} />
                 </SuiteErrorBoundary>
@@ -305,7 +296,7 @@ export function AppShell() {
         </main>
 
         {!hideDock ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40">
+          <div className="relative z-40 shrink-0">
             <BottomTabs tab={tab} onChange={onTabChange} />
           </div>
         ) : null}

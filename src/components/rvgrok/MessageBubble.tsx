@@ -96,7 +96,7 @@ export function MessageBubble({
       )}
     >
       {!isUser && (
-        <div className="relative mt-1 size-9 shrink-0 overflow-hidden rounded-full border border-ruby-border bg-black shadow-[0_0_16px_rgba(212,37,53,0.35)]">
+        <div className="relative mt-1 size-8 shrink-0 overflow-hidden rounded-full border border-white/15 bg-black">
           <img
             src="/assets/brand/icon-rvgrok.png"
             alt=""
@@ -107,7 +107,7 @@ export function MessageBubble({
 
       <div
         className={cn(
-          "max-w-[min(100%,28rem)] rounded-[var(--radius-lg)] px-3.5 py-3 text-sm",
+          "max-w-[min(100%,28rem)] rounded-[var(--radius-lg)] px-3.5 py-3 text-[14px] leading-relaxed",
           isUser
             ? "rounded-br-sm bg-ruby text-white shadow-[0_4px_20px_rgba(212,37,53,0.35)]"
             : "rounded-bl-sm border border-border-strong bg-surface/90 text-white shadow-[var(--shadow-panel)]",

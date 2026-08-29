@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  AlertTriangle,
   Camera,
   Compass,
-  Droplets,
   FileText,
   Fish,
-  GitCompare,
   History,
   Loader2,
   Mic,
@@ -22,7 +19,6 @@ import {
   Video,
   Volume2,
   Wallet,
-  Wrench,
   X,
 } from "lucide-react";
 import type { AgentStep, ChatSession, Message } from "@/lib/rvgrok/types";
@@ -65,99 +61,52 @@ import { ScrollSuiteHeader } from "@/components/shell/ScrollChrome";
 import { SuiteBackdrop } from "@/components/shell/SuitePage";
 
 const GROK_STARTERS: {
-  group: string;
   title: string;
   line: string;
   prompt: string;
   Icon: typeof Wallet;
 }[] = [
   {
-    group: "The shopper",
     title: "Match me to a coach",
-    line: "Budget, family, ZIP — what should I buy?",
+    line: "Budget, who travels, nights out",
     Icon: Users,
     prompt:
       "Match me to an RV. Ask only what you still need: budget, who travels (kids/pets), ZIP, nights vs full-time, and whether I already have a truck. Then recommend 2–3 coach CLASSES with one example year/make/model each I can look up in RvFACTS. Do not invent a dealer listing or say a unit is for sale. EST. payment if I gave a price. If I have a truck, say what to check in RvTow.",
   },
   {
-    group: "The life",
     title: "Sell me this life",
-    line: "Why RV — weekends, mornings, vs hotels",
+    line: "Weekends, mornings, vs hotels",
     Icon: Sunrise,
     prompt:
       "Sell me the RV lifestyle. I am curious, not shopping a specific coach yet. Paint the weekends, the 6am coffee, the kids/pets, the freedom versus hotels and a second house. Be vivid and honest — one real friction, then the win. Then ask ONE question so you can match me to 2–3 coach classes with one example year/make/model each for RvFACTS. Do not invent a listing.",
   },
   {
-    group: "The life",
     title: "Full-time or weekends",
-    line: "Retire on the road vs keep the house",
+    line: "Road vs keep the house",
     Icon: Compass,
     prompt:
       "I am considering full-time RV living versus keeping a house and doing weekends or snowbird trips. Sell both lives. Who each path is for, what a Saturday looks like, and the honest tradeoffs. Then recommend which coach CLASSES fit each path with one example year/make/model each I can open in RvFACTS. Point me to RvCal for payment and RvTow if a truck matters. Do not invent inventory.",
   },
   {
-    group: "The water",
     title: "Hot fishing spots",
-    line: "Locator based on my ZIP code",
+    line: "Lakes and access near my ZIP",
     Icon: Fish,
     prompt:
       "Hot fishing spot locator based on my ZIP code. Ask me for the ZIP if I have not given it. Rank nearby lakes, rivers, and piers for an RV traveler — access, coach parking if known, and what is typically biting this time of year.",
   },
   {
-    group: "The water",
-    title: "Free dump locator",
-    line: "No-fee RV sewer dumps near my ZIP",
-    Icon: Droplets,
-    prompt:
-      "Free dump locator based on my ZIP code. Ask me for the ZIP if I have not given it. Find no-fee / public RV sewer dumps in that ZIP area and nearby (city sanitation, rest areas, visitor centers, parks). Name, city, hours if known, and whether rinse or potable water is on site. Skip paid campground dumps unless no free option exists. Confirm locally before pulling in.",
-  },
-  {
-    group: "The lot",
     title: "Walk this coach",
-    line: "2025 Phaeton 37BH — what to show, OEM only",
+    line: "Lot talk — OEM only",
     Icon: Sparkles,
     prompt:
       "Lot walkthrough for a 2025 Tiffin Phaeton 37BH. Use OEM brochure language only. Do not guess layout from the letters BH. What should I show a first-time diesel buyer, and what three objections will I hear?",
   },
   {
-    group: "The lot",
-    title: "Two-coach compare",
-    line: "Phaeton 37BH vs Discovery 38K — no letter guessing",
-    Icon: GitCompare,
-    prompt:
-      "Compare a 2025 Tiffin Phaeton 37BH to a 2025 Fleetwood Discovery 38K. Powertrain and weights from OEM. Do not decode floorplan letters. If layout is not in the brochure, say Layout details unconfirmed.",
-  },
-  {
-    group: "The desk",
-    title: "Trade range",
-    line: "2018 Winnebago Via 25P diesel — trade vs retail",
-    Icon: Wallet,
-    prompt:
-      "Fair trade and retail range for a 2018 Winnebago Via 25P diesel with average miles. Separate trade-in vs private vs asking. Do not invent horsepower.",
-  },
-  {
-    group: "The desk",
     title: "Structure the deal",
-    line: "$189k · trade · ZIP 89101 · 20 years",
+    line: "Price, trade, ZIP, payment",
     Icon: Wallet,
     prompt:
       "Payment on a $189,000 coach, $22,000 trade, $6,500 payoff, 20 years, 720 credit, ZIP 89101. Show tax from ZIP, amount financed, and a clean monthly.",
-  },
-  {
-    group: "The road",
-    title: "Open recalls",
-    line: "2024 Fleetwood Bounder — campaigns that apply",
-    Icon: AlertTriangle,
-    prompt:
-      "NHTSA recalls that actually apply to a 2024 Fleetwood Bounder. Campaign number, component, and whether a hitch or exhaust campaign is on this model. No sister-model dump.",
-  },
-  {
-    group: "The road",
-    title: "Tow match",
-    line: "F-350 vs a 38-foot fifth wheel",
-    Icon: Truck,
-    prompt:
-      "Can a 2022 Ford F-350 with a 15,000 lb tow rating pull a 38-foot fifth wheel around 14,000 lb GVWR? Hitch, payload, and what I should still verify on the door sticker.",
   },
 ];
 
@@ -168,32 +117,20 @@ const HUB_CHIPS: {
   prompt?: string;
 }[] = [
   {
-    label: "Match me",
+    label: "Match",
     Icon: Users,
     prompt:
       "Match me to an RV. Ask only what you still need: budget, who travels (kids/pets), ZIP, nights vs full-time, and whether I already have a truck. Then recommend 2–3 coach CLASSES with one example year/make/model each I can look up in RvFACTS. Do not invent a dealer listing or say a unit is for sale. EST. payment if I gave a price. If I have a truck, say what to check in RvTow.",
   },
   {
-    label: "The life",
+    label: "Life",
     Icon: Sunrise,
     prompt:
       "Sell me the RV lifestyle. I am curious, not shopping a specific coach yet. Paint the weekends, the 6am coffee, the kids/pets, the freedom versus hotels and a second house. Be vivid and honest — one real friction, then the win. Then ask ONE question so you can match me to 2–3 coach classes with one example year/make/model each for RvFACTS. Do not invent a listing.",
   },
   { label: "Specs", Icon: FileText, tab: "rvfax" },
-  {
-    label: "Recalls",
-    Icon: AlertTriangle,
-    prompt:
-      "NHTSA recalls. Ask me year, make, and model if I have not given them. Give campaign numbers and what to do. No sister-model dump.",
-  },
-  { label: "Towing", Icon: Truck, tab: "rvtow" },
-  { label: "Financing", Icon: Wallet, tab: "rvcal" },
-  {
-    label: "Accessories",
-    Icon: Wrench,
-    prompt:
-      "Help me pick RV accessories and upgrades. Ask year, make, and model if needed. Practical lot advice — not a shopping dump.",
-  },
+  { label: "Tow", Icon: Truck, tab: "rvtow" },
+  { label: "Pay", Icon: Wallet, tab: "rvcal" },
 ];
 
 export function RvGrokApp({
@@ -1279,15 +1216,15 @@ export function RvGrokApp({
   };
 
   const hubBar = (
-    <div className="flex flex-wrap items-center justify-center gap-1.5">
+    <div className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {HUB_CHIPS.map((chip) => (
         <button
           key={chip.label}
           type="button"
           onClick={() => runHub(chip)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-white/18 bg-black/40 px-3 py-1.5 text-[12px] font-semibold text-white transition hover:border-gold/50 hover:bg-gold/15"
+          className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-black/40 px-3.5 text-[13px] font-semibold text-white transition hover:border-white/30 hover:bg-white/10"
         >
-          <chip.Icon className="size-3.5 text-gold-bright" />
+          <chip.Icon className="size-3.5 text-sky-100" />
           {chip.label}
         </button>
       ))}
@@ -1316,16 +1253,16 @@ export function RvGrokApp({
     !liveActive;
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden text-fg">
+    <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden text-fg">
       <SuiteBackdrop />
-      <ScrollSuiteHeader tab="rvgrok" className="relative z-10" />
+      <ScrollSuiteHeader tab="rvgrok" className="relative z-10 shrink-0" />
 
 
-      <header className="relative z-10 flex items-center gap-2 border-b border-white/10 bg-black/25 px-3 py-2 sm:px-4">
+      <header className="relative z-10 flex shrink-0 items-center gap-2 border-b border-white/10 bg-black/20 px-3 py-1.5 sm:px-4">
         <button
           type="button"
           onClick={() => setHistoryOpen(true)}
-          className="relative flex size-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/40 text-sky-100 transition hover:bg-white/10 sm:size-10"
+          className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white transition hover:bg-white/10"
           aria-label="Chat history"
         >
           <History className="size-5" />
@@ -1336,42 +1273,40 @@ export function RvGrokApp({
           )}
         </button>
 
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <div className="min-w-0">
-            <p className="truncate text-[10px] font-medium text-sky-100/90 sm:text-[11px]">
-              {liveActive
-                ? "Live Voice · hands-free"
-                : isRecording
-                  ? "Listening…"
-                  : activeModel
-                    ? modelLabel
-                    : "AI RV Expert · live"}
-            </p>
-          </div>
-        </div>
+        <p className="min-w-0 flex-1 truncate text-[12px] font-medium text-white/80">
+          {liveActive
+            ? "Live Voice"
+            : isRecording
+              ? "Listening…"
+              : agentMode
+                ? "Agent"
+                : activeModel
+                  ? modelLabel
+                  : "Ready"}
+        </p>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+        <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={toggleAgentMode}
             className={cn(
-              "inline-flex items-center gap-1 rounded-full border px-2 py-1.5 text-[10px] font-bold transition sm:px-2.5 sm:text-[11px]",
+              "inline-flex h-11 items-center gap-1 rounded-full border px-3 text-[12px] font-semibold transition",
               agentMode
-                ? "border-sky-300/45 bg-sky-500/25 text-sky-50 shadow-[0_0_14px_rgba(80,160,255,0.35)]"
-                : "border-white/20 bg-black/40 text-white",
+                ? "border-sky-300/45 bg-sky-500/25 text-sky-50"
+                : "border-white/15 bg-black/40 text-white",
             )}
           >
-            <Sparkles className="size-3" />
+            <Sparkles className="size-3.5" />
             Agent
           </button>
           <button
             type="button"
             onClick={() => setVoicePanelOpen(true)}
             className={cn(
-              "flex size-9 items-center justify-center rounded-full border transition",
+              "flex size-11 items-center justify-center rounded-full border transition",
               liveVoice || voiceMode
                 ? "border-sky-300/45 bg-sky-500/20 text-sky-100"
-                : "border-white/20 bg-black/40 text-white hover:bg-white/10",
+                : "border-white/15 bg-black/40 text-white hover:bg-white/10",
             )}
             aria-label="Voice settings"
             title="Voice settings"
@@ -1382,56 +1317,14 @@ export function RvGrokApp({
             <button
               type="button"
               onClick={startNewChat}
-              className="flex size-9 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white transition hover:bg-white/10"
+              className="flex size-11 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white transition hover:bg-white/10"
               aria-label="New chat"
             >
               <Plus className="size-4" />
             </button>
           )}
-          <button
-            type="button"
-            onClick={handleMicPress}
-            className={cn(
-              "flex size-9 items-center justify-center rounded-full border transition",
-              liveActive
-                ? "border-sky-300 bg-sky-500 text-white shadow-[0_0_16px_rgba(80,160,255,0.55)]"
-                : waitingToResumeLive
-                  ? "border-sky-300/45 bg-sky-500/20 text-sky-100 animate-pulse"
-                  : "border-white/20 bg-black/40 text-white hover:bg-white/10",
-            )}
-            aria-label={
-              liveActive ? "Stop live voice" : "Start live voice"
-            }
-            title={liveActive ? "Stop Live Voice" : "Start Live Voice"}
-          >
-            {liveActive ? (
-              <Radio className="size-4 animate-pulse" />
-            ) : (
-              <Mic className="size-4" />
-            )}
-          </button>
         </div>
       </header>
-
-      {sessionId && messages.length > 0 && (
-        <div className="relative z-10 mx-3 mt-2 flex items-center gap-2 rounded-full border border-border bg-black/45 px-3 py-1.5 text-[11px] text-muted sm:mx-4">
-          <span className="size-1.5 rounded-full bg-sky-500" />
-          <span className="min-w-0 flex-1 truncate">
-            {messages.find((m) => m.role === "user")?.content.slice(0, 50) ??
-              "Current session"}
-          </span>
-          {agentMode && (
-            <span className="inline-flex items-center gap-1 text-sky-100">
-              <Sparkles className="size-2.5" />
-              Agent
-            </span>
-          )}
-        </div>
-      )}
-
-      {messages.length > 0 ? (
-        <div className="relative z-10 mx-3 mt-2 sm:mx-4">{hubBar}</div>
-      ) : null}
 
       <div
         ref={listRef}
@@ -1446,105 +1339,34 @@ export function RvGrokApp({
           label="Release to reset Live Voice & chat · pull down"
         />
         {messages.length === 0 ? (
-          <div className="mx-auto flex max-w-xl flex-col px-1 pb-8 pt-5 sm:pt-7">
-            {agentMode && (
-              <div className="mb-4 self-center inline-flex items-center gap-1.5 rounded-full border border-sky-300/40 bg-sky-500/25 px-3.5 py-1.5 text-[12px] font-semibold text-sky-100">
-                <Sparkles className="size-3.5" />
-                Agent
-              </div>
-            )}
+          <div className="mx-auto flex max-w-xl flex-col px-0.5 pb-4 pt-3">
+            <p className="text-center text-[13px] leading-relaxed text-white/80">
+              Specs, lifestyle, payment, tow — tap a prompt or type below.
+            </p>
 
-            <div className="text-center">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold-bright">
-                RvGrok
-              </p>
-              <h1 className="mt-1.5 text-[26px] font-semibold tracking-tight text-white">
-                Ask like you’re on the lot
-              </h1>
-              <p className="mx-auto mt-2 max-w-sm text-[14px] leading-relaxed text-white">
-                Specs, lifestyle, trade, payment, recalls, tow — tap a prompt or type your own.
-              </p>
-            </div>
+            <div className="mt-3">{hubBar}</div>
 
-            <div className="mt-5">{hubBar}</div>
-
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => setLiveVoiceArmed(true)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-sky-300/40 bg-sky-500 px-3.5 py-2 text-[12px] font-bold text-white shadow-[0_0_18px_rgba(80,160,255,0.35)] transition hover:bg-sky-400"
-              >
-                <Radio className="size-3.5" />
-                Live Voice
-              </button>
-              <button
-                type="button"
-                disabled={imageBusy}
-                onClick={() => void startLiveCamera()}
-                className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/20 px-3.5 py-2 text-[12px] font-bold text-white transition hover:bg-gold/30"
-              >
-                <Video className="size-3.5" />
-                Live camera
-              </button>
-              <button
-                type="button"
-                disabled={imageBusy}
-                onClick={() => cameraInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-white/10"
-              >
-                <Camera className="size-3.5" />
-                Show Grok
-              </button>
-              <button
-                type="button"
-                disabled={imageBusy}
-                onClick={() => libraryInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-white/10"
-              >
-                Photo library
-              </button>
-            </div>
-
-            {waitingToResumeLive && (
-              <p className="mt-3 text-center text-[13px] text-white">
-                Live Voice is armed — tap mic to resume
-              </p>
-            )}
-
-            <div className="mt-7 space-y-5">
-              {["The shopper", "The life", "The water", "The lot", "The desk", "The road"].map((group) => (
-                <div key={group}>
-                  <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-bright">
-                    {group}
-                  </p>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {GROK_STARTERS.filter((s) => s.group === group).map((s) => (
-                      <button
-                        key={s.title}
-                        type="button"
-                        onClick={() => void sendMessage(s.prompt)}
-                        className="glass-prestige flex items-start gap-3 rounded-2xl px-3.5 py-3.5 text-left transition hover:border-white/25"
-                      >
-                        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/35 text-gold-bright">
-                          <s.Icon className="size-4" />
-                        </span>
-                        <span>
-                          <span className="block text-[15px] font-semibold text-white">
-                            {s.title}
-                          </span>
-                          <span className="mt-0.5 block text-[13px] leading-snug text-white">
-                            {s.line}
-                          </span>
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {GROK_STARTERS.map((s) => (
+                <button
+                  key={s.title}
+                  type="button"
+                  onClick={() => void sendMessage(s.prompt)}
+                  className="glass-prestige flex min-h-[4.5rem] flex-col items-start gap-1.5 rounded-2xl px-3 py-3 text-left transition hover:border-white/25"
+                >
+                  <s.Icon className="size-4 text-sky-100" />
+                  <span className="block text-[13px] font-semibold leading-snug text-white">
+                    {s.title}
+                  </span>
+                  <span className="line-clamp-2 text-[11px] leading-snug text-white/70">
+                    {s.line}
+                  </span>
+                </button>
               ))}
             </div>
           </div>
         ) : (
-          <div className="mx-auto flex max-w-2xl flex-col gap-4 pb-4">
+          <div className="mx-auto flex max-w-2xl flex-col gap-3 pb-4 pt-3">
             {messages.map((m) => (
               <MessageBubble
                 key={m.id}
@@ -1557,7 +1379,7 @@ export function RvGrokApp({
         )}
       </div>
 
-      <div className="relative z-10 border-t border-border/60 bg-gradient-to-t from-bg via-bg/95 to-bg/80 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 sm:px-4">
+      <div className="relative z-20 shrink-0 border-t border-white/10 bg-bg px-3 py-2 sm:px-4">
         {(isLoading ||
           messages.some((m) => m.streaming) ||
           isRecording ||
@@ -1724,7 +1546,7 @@ export function RvGrokApp({
 
         <div
           className={cn(
-            "mx-auto flex max-w-2xl items-end gap-1.5 rounded-[var(--radius-xl)] border bg-surface/90 px-2 py-2 shadow-[var(--shadow-panel)] focus-within:border-sky-300/40 sm:gap-2 sm:px-2.5",
+            "relative mx-auto flex max-w-2xl items-end gap-1 rounded-[var(--radius-xl)] border bg-surface/90 px-1.5 py-1.5 shadow-[var(--shadow-panel)] focus-within:border-sky-300/40 sm:gap-1.5 sm:px-2",
             isRecording || liveActive
               ? "border-sky-300/40"
               : "border-border-strong",
@@ -1759,15 +1581,20 @@ export function RvGrokApp({
             type="button"
             disabled={liveActive || imageBusy}
             onClick={() => cameraInputRef.current?.click()}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              if (liveActive || imageBusy) return;
+              libraryInputRef.current?.click();
+            }}
             className={cn(
-              "mb-0.5 flex size-10 shrink-0 items-center justify-center rounded-full transition",
+              "mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-full transition",
               pendingImage
                 ? "bg-sky-500/25 text-sky-100"
                 : "text-white hover:bg-white/5",
               (liveActive || imageBusy) && "opacity-40",
             )}
             aria-label="Take a photo for Grok"
-            title="Take photo"
+            title="Take photo · hold for library"
           >
             {imageBusy ? (
               <Loader2 className="size-5 animate-spin" />
@@ -1782,10 +1609,8 @@ export function RvGrokApp({
               liveCam ? stopLiveCamera() : void startLiveCamera()
             }
             className={cn(
-              "mb-0.5 flex size-10 shrink-0 items-center justify-center rounded-full transition",
-              liveCam
-                ? "bg-ruby/80 text-white"
-                : "text-white hover:bg-white/5",
+              "mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-full transition",
+              liveCam ? "bg-ruby/80 text-white" : "text-white hover:bg-white/5",
             )}
             aria-label={liveCam ? "Close live camera" : "Live camera with Grok"}
             title="Live camera"
@@ -1811,17 +1636,19 @@ export function RvGrokApp({
                       ? "Ask Agent to research anything..."
                       : "Ask RV Grok"
             }
-            className="max-h-28 min-h-[40px] flex-1 resize-none bg-transparent px-1.5 py-2 text-[14px] text-white outline-none placeholder:text-white/55 sm:px-2"
+            className="max-h-28 min-h-11 flex-1 resize-none bg-transparent px-1.5 py-2.5 text-[15px] text-white outline-none placeholder:text-white/50 sm:px-2"
             readOnly={isRecording || liveActive}
           />
           <button
             type="button"
             onClick={handleMicPress}
             className={cn(
-              "mb-0.5 flex size-10 shrink-0 items-center justify-center rounded-full transition",
+              "mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-full transition",
               liveActive
                 ? "bg-sky-500 text-white shadow-[0_0_14px_rgba(80,160,255,0.55)]"
-                : "text-muted hover:bg-white/5 hover:text-fg",
+                : waitingToResumeLive
+                  ? "bg-sky-500/20 text-sky-100"
+                  : "text-white/80 hover:bg-white/5 hover:text-white",
             )}
             aria-label={liveActive ? "Stop live voice" : "Start live voice"}
             title={liveActive ? "Stop Live Voice" : "Start Live Voice"}
@@ -1837,9 +1664,9 @@ export function RvGrokApp({
             disabled={!canSend}
             onClick={() => void sendMessage()}
             className={cn(
-              "mb-0.5 flex size-10 shrink-0 items-center justify-center rounded-full border transition",
+              "mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-full border transition",
               canSend
-                ? "border-sky-300/40 bg-sky-500/15 text-sky-100 hover:bg-sky-500/25"
+                ? "border-sky-300/40 bg-sky-500 text-white hover:bg-sky-400"
                 : "border-border text-dim",
             )}
             aria-label="Send"
@@ -1852,31 +1679,15 @@ export function RvGrokApp({
           </button>
         </div>
 
-        {agentMode && !liveActive && (
-          <div className="mx-auto mt-2 flex max-w-2xl items-center gap-2 rounded-full border border-sky-300/40 bg-sky-500/15 px-3 py-1.5">
-            <Sparkles className="size-3 text-sky-100" />
-            <span className="flex-1 text-[11px] font-medium text-sky-100/90">
-              Agent Mode · Multi-step RV research with Grok 4.5
-            </span>
-            <button
-              type="button"
-              onClick={toggleAgentMode}
-              className="text-[11px] font-bold text-muted transition hover:text-fg"
-            >
-              Off
-            </button>
-          </div>
-        )}
-
-        <p className="mx-auto mt-1.5 max-w-2xl text-center text-[10px] text-dim">
-          {liveActive
-            ? "Hands-free Live Voice · mic tap ends session"
-            : waitingToResumeLive
-              ? "Live Voice on · tap mic to listen continuously"
-              : pendingImage
-                ? "Photo attached · send or add a question"
-                : "Mic = Live Voice · Camera = photo analysis"}
-        </p>
+        {liveActive || waitingToResumeLive || pendingImage ? (
+          <p className="mx-auto mt-1.5 max-w-2xl text-center text-[11px] text-white/60">
+            {liveActive
+              ? "Hands-free · tap mic to end"
+              : waitingToResumeLive
+                ? "Live Voice armed · tap mic"
+                : "Photo attached · send or add a question"}
+          </p>
+        ) : null}
       </div>
 
       <HistoryPanel

@@ -24,18 +24,20 @@ const ICONS: Record<string, typeof Search> = {
 };
 
 export function AgentStepsCard({ steps }: { steps: AgentStep[] }) {
-  const [expanded, setExpanded] = useState(true);
+  const running = steps.some((s) => s.status === "running");
+  const [manual, setManual] = useState<boolean | null>(null);
   if (!steps?.length) return null;
 
   const doneCount = steps.filter((s) => s.status === "done").length;
   const total = steps.length;
   const allDone = doneCount === total && total > 0;
+  const expanded = manual ?? running;
 
   return (
     <div className="mb-3 overflow-hidden rounded-[var(--radius-md)] border border-ruby-border bg-ruby-soft">
       <button
         type="button"
-        onClick={() => setExpanded((p) => !p)}
+        onClick={() => setManual((p) => !(p ?? running))}
         className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left transition-opacity hover:opacity-90"
       >
         <div className="flex min-w-0 items-center gap-2">

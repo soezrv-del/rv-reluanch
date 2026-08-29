@@ -21,29 +21,41 @@ function measure(): KeyboardInset {
   }
   const vv = window.visualViewport;
   const layoutH = window.innerHeight;
-  if (!vv) {
-    return {
-      inset: 0,
-      open: false,
-      vvHeight: layoutH,
-      vvOffsetTop: 0,
-    };
-  }
-  // Covered region below the visual viewport (classic iOS keyboard measure)
-  const covered = Math.max(0, layoutH - vv.height - vv.offsetTop);
-  const inset = covered > THRESHOLD ? Math.round(covered) : 0;
+  const clientH = document.documentElement.clientHeight;
+  const vvHeightRaw = vv?.height ?? layoutH;
+  // The visible frame is the smallest of these. iOS iframes often report
+  // innerHeight/svh as the phone while clientHeight is the preview iframe.
+  const vvHeight = Math.min(
+    ...[vvHeightRaw, layoutH, clientH].filter((n) => n > 80),
+  );
+  const vvOffsetTop = vv?.offsetTop ?? 0;
+  const fieldFocused =
+    typeof document !== "undefined" && isTextField(document.activeElement);
+  // iOS reports innerHeight > visualViewport even with no keyboard (home
+  // indicator / browser chrome). Only treat that gap as a keyboard when a
+  // text field is actually focused.
+  const covered = Math.max(0, layoutH - vvHeight - vvOffsetTop);
+  const inset = fieldFocused && covered > THRESHOLD ? Math.round(covered) : 0;
   return {
     inset,
     open: inset > 0,
-    vvHeight: vv.height,
-    vvOffsetTop: vv.offsetTop,
+    vvHeight,
+    vvOffsetTop,
   };
 }
 
 function applyCssVars(k: KeyboardInset) {
   const root = document.documentElement;
+  const frameH =
+    k.vvHeight > 0
+      ? k.vvHeight
+      : typeof window !== "undefined"
+        ? window.innerHeight
+        : 0;
   root.style.setProperty("--kb-inset", `${k.inset}px`);
-  root.style.setProperty("--vv-height", `${k.vvHeight || window.innerHeight}px`);
+  if (frameH > 0) {
+    root.style.setProperty("--vv-height", `${Math.round(frameH)}px`);
+  }
   root.style.setProperty("--vv-offset-top", `${k.vvOffsetTop}px`);
   root.classList.toggle("kb-open", k.open);
   root.dataset.kbOpen = k.open ? "1" : "0";

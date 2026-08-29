@@ -67,7 +67,9 @@ export function BottomTabs({
       className="bottom-tabs-nav pointer-events-none relative z-50 w-full px-3 pt-1 sm:px-4"
       data-bottom-dock
       data-active-tab={tab}
-      style={{ paddingBottom: "max(0.45rem, env(safe-area-inset-bottom))" }}
+      style={{
+        paddingBottom: "min(10px, max(6px, env(safe-area-inset-bottom, 0px)))",
+      }}
     >
       <div
         className={cn(

@@ -70,14 +70,25 @@
   body,
   #root {
     height: 100%;
-    min-height: 100%;
-    min-height: 100dvh;
+    max-height: 100%;
+    overflow: hidden;
   }
 
-  /* TanStack Start mounts the shell as a direct body child */
-  body > div.app-shell {
-    height: 100%;
-    min-height: 100%;
+  /*
+   * Pin the shell to the visible iframe (visualViewport), not 100dvh.
+   * On iPhone the Grok preview is shorter than the phone; svh/dvh leak
+   * the device height and clip the composer + dock into the black gap.
+   */
+  body > div.app-shell,
+  .app-shell {
+    position: fixed;
+    top: var(--vv-offset-top, 0px);
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: var(--vv-height, 100%);
+    max-height: var(--vv-height, 100%);
+    overflow: hidden;
   }
 
   html {
@@ -89,8 +100,8 @@
 
   body {
     margin: 0;
-    min-height: 100%;
     height: 100%;
+    max-height: 100%;
     background: var(--color-bg);
     color: var(--color-fg);
     font-family: var(--font-sans);
@@ -271,6 +282,37 @@
 @media (orientation: landscape) and (min-width: 740px) and (min-height: 420px) {
   .landscape-content {
     max-width: 56rem !important;
+  }
+}
+
+
+/* Short portrait — phone + Grok preview iframe */
+@media (max-height: 780px) {
+  .sapphire-header {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.35rem !important;
+  }
+  .sapphire-header-inner {
+    padding-top: 0.55rem !important;
+    padding-bottom: 0.55rem !important;
+  }
+  .sapphire-header-badge,
+  .sapphire-header-line {
+    display: none !important;
+  }
+  .sapphire-header-title,
+  .sapphire-title-sheen {
+    font-size: 1.85rem !important;
+    line-height: 1 !important;
+  }
+  .bottom-tabs-nav {
+    padding-top: 0.2rem !important;
+    padding-bottom: 6px !important;
+  }
+  .bottom-tab-btn {
+    min-height: 48px !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
   }
 }
 
