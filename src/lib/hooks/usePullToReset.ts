@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type RefObject } from "react";
  * Pull down at scrollTop≈0 → call onReset (iOS-style refresh).
  * Returns pullHint for sticky banner — pair with `@/components/shell/PullResetHint`.
  *
- * Touches that start inside `[data-no-pull-reset]` (e.g. wizard wheels) are ignored
+ * Touches that start inside `[data-no-pull-reset]` (e.g. picker sheets) are ignored
  * so nested scrollers don't wipe the page.
  */
 export function usePullToReset(
@@ -29,7 +29,7 @@ export function usePullToReset(
       if (!(t instanceof Element)) return false;
       return Boolean(
         t.closest(
-          "[data-no-pull-reset], [data-wizard-wheel], .select-sheet-root, input, textarea",
+          "[data-no-pull-reset], .select-sheet-root, input, textarea",
         ),
       );
     };

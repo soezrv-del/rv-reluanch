@@ -14,13 +14,11 @@ import {
   Bookmark,
   Check,
   ChevronDown,
-  ChevronLeft,
   Filter,
   Fuel,
   GitCompare,
   Heart,
   Loader2,
-  Pencil,
   Ruler,
   ScanLine,
   Search,
@@ -33,10 +31,8 @@ import {
   applyCascadeChange,
   buildCascadeOptions,
   modelPickerMeta,
-  modelYearWindow,
   ratingFor,
   RV_CLASS_TABS,
-  RV_DATA,
   rvClassLabel,
   searchCatalog,
   countModelsForClass,
@@ -54,8 +50,6 @@ import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullResetHint } from "@/components/shell/PullResetHint";
 import { SelectSheet } from "./SelectSheet";
-import { WizardWheel } from "./WizardWheel";
-import { SearchManual } from "./SearchManual";
 
 const RvDetail = lazy(() =>
   import("./RvDetail").then((m) => ({ default: m.RvDetail })),
@@ -79,16 +73,6 @@ const SAVED_KEY = "rvfax_saved_v1";
 const PRESTIGE_BACKDROP = SHARED_PRESTIGE_BACKDROP;
 
 type YearEra = "all" | "classic" | "recent" | "modern" | "newer17";
-type WizardStep = "year" | "type" | "make" | "model" | "floorplan";
-
-const WIZARD_STEP_ORDER: WizardStep[] = [
-  "year",
-  "type",
-  "make",
-  "model",
-  "floorplan",
-];
-const WIZARD_STEP_LABELS = ["Year", "Type", "Make", "Model", "Floorplan"];
 
 const YEAR_ERAS: {
   id: YearEra;
@@ -104,7 +88,7 @@ const YEAR_ERAS: {
   { id: "newer17", label: "17+", sub: "2017–2027", min: 2017, max: 2027 },
 ];
 
-type Sheet = "era" | "rvType" | null;
+type Sheet = CascadeField | "era" | null;
 
 type SearchSel = {
   year: string;
@@ -126,8 +110,6 @@ export function RvFaxApp({
   const [rvType, setRvType] = useState("");
   const [era, setEra] = useState<YearEra>("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [wizardStep, setWizardStep] = useState<WizardStep>("year");
-  const [searchMode, setSearchMode] = useState<"wizard" | "manual">("wizard");
   const [sheet, setSheet] = useState<Sheet>(null);
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<RVResult[]>([]);
@@ -150,8 +132,6 @@ export function RvFaxApp({
     setRvType("");
     setEra("all");
     setFiltersOpen(false);
-    setWizardStep("year");
-    setSearchMode("wizard");
     setSheet(null);
     setSearching(false);
     setResults([]);
@@ -167,8 +147,8 @@ export function RvFaxApp({
       /* */
     }
   }, []);
-  // Pull-to-reset was wiping the wizard when users dragged the picker at
-  // scrollTop≈0. Disable entirely on the search surface — use the Reset control.
+  // Pull-to-reset was wiping search when users dragged a picker at
+  // scrollTop≈0. Disable on the search surface — use the Reset control.
   const pullHint = usePullToReset(scrollRef, resetFax, {
     enabled: false,
   });
@@ -230,7 +210,6 @@ export function RvFaxApp({
         const n = parseInt(year, 10);
         if (n < band.min || n > band.max) {
           applySel({ year: "", make: "", model: "", floorplan: "", rvType });
-          setWizardStep("year");
           setHasSearched(false);
           setResults([]);
         }
@@ -244,11 +223,15 @@ export function RvFaxApp({
       cascade.makes.map((m) => ({
         value: m,
         label: m,
-        meta: year
-          ? `${year} · brand in catalog`
-          : "All years · full brand list",
+        meta: [
+          year || "All years",
+          rvType ? rvClassLabel(rvType) : null,
+          "brand in catalog",
+        ]
+          .filter(Boolean)
+          .join(" · "),
       })),
-    [cascade.makes, year],
+    [cascade.makes, year, rvType],
   );
 
   const modelItems = useMemo(
@@ -302,8 +285,6 @@ export function RvFaxApp({
       })),
     ];
   }, [year]);
-
-  const rvTypeItems = typeItems;
 
   const eraItems = useMemo(
     () =>
@@ -373,28 +354,29 @@ export function RvFaxApp({
     runSearchNow({ year, make, model, floorplan, rvType });
   }, [year, make, model, floorplan, rvType, runSearchNow]);
 
-  const handleManualSearch = useCallback(
-    (sel: { year: string; make: string; model: string; floorplan: string }) => {
-      let y = sel.year.trim();
-      const mk = sel.make.trim();
-      const mdl = sel.model.trim();
-      if (!mk && !mdl) return;
-      if (!y && mk && mdl) {
-        const spec = RV_DATA[mk]?.[mdl];
-        if (spec) y = String(modelYearWindow(spec).end);
-      }
-      if (!y) y = YEARS[0] ?? "2026";
-      const next = {
-        year: y,
-        make: mk,
-        model: mdl,
-        floorplan: sel.floorplan.trim(),
-        rvType,
-      };
+  const onCascadeSelect = useCallback(
+    (field: CascadeField, value: string) => {
+      setSuggestions([]);
+      const next = applyCascadeChange(
+        { year, make, model, floorplan, rvType },
+        field,
+        value,
+      );
       applySel(next);
-      runSearchNow(next);
+      setSheet(null);
+      setHasSearched(false);
+      setResults([]);
+      if (field === "floorplan" && next.year && next.make && next.model) {
+        runSearchNow({
+          year: next.year,
+          make: next.make,
+          model: next.model,
+          floorplan: next.floorplan,
+          rvType: next.rvType,
+        });
+      }
     },
-    [rvType, applySel, runSearchNow],
+    [year, make, model, floorplan, rvType, applySel, runSearchNow],
   );
 
   useEffect(() => {
@@ -424,80 +406,6 @@ export function RvFaxApp({
     saved,
   ]);
 
-  const onWizardPick = useCallback(
-    (field: CascadeField, value: string) => {
-      setSuggestions([]);
-      const next = applyCascadeChange(
-        { year, make, model, floorplan, rvType },
-        field,
-        value,
-      );
-      applySel(next);
-      setHasSearched(false);
-      setResults([]);
-
-      if (field === "year") {
-        setWizardStep("type");
-        return;
-      }
-      if (field === "rvType") {
-        setWizardStep("make");
-        return;
-      }
-      if (field === "make") {
-        setWizardStep("model");
-        return;
-      }
-      if (field === "model") {
-        // Floorplan is always the last step (includes “Any floorplan”)
-        setWizardStep("floorplan");
-        return;
-      }
-      if (field === "floorplan") {
-        // Auto-run search + open report
-        runSearchNow({
-          year: next.year,
-          make: next.make,
-          model: next.model,
-          floorplan: next.floorplan,
-          rvType: next.rvType,
-        });
-      }
-    },
-    [year, make, model, floorplan, rvType, applySel, runSearchNow],
-  );
-
-  const goToWizardStep = useCallback(
-    (step: WizardStep) => {
-      const idx = WIZARD_STEP_ORDER.indexOf(step);
-      if (idx <= 0) {
-        applySel({ year: "", make: "", model: "", floorplan: "", rvType: "" });
-        setWizardStep("year");
-      } else if (step === "type") {
-        applySel({ year, make: "", model: "", floorplan: "", rvType: "" });
-        setWizardStep("type");
-      } else if (step === "make") {
-        applySel({ year, make: "", model: "", floorplan: "", rvType });
-        setWizardStep("make");
-      } else if (step === "model") {
-        applySel({ year, make, model: "", floorplan: "", rvType });
-        setWizardStep("model");
-      } else {
-        setWizardStep("floorplan");
-      }
-      setHasSearched(false);
-      setResults([]);
-      setSuggestions([]);
-    },
-    [year, make, rvType, applySel],
-  );
-
-  const wizardBack = useCallback(() => {
-    const idx = WIZARD_STEP_ORDER.indexOf(wizardStep);
-    if (idx <= 0) return;
-    goToWizardStep(WIZARD_STEP_ORDER[idx - 1]!);
-  }, [wizardStep, goToWizardStep]);
-
   const applySuggestion = useCallback(
     (hit: SuggestHit) => {
       const base = { year, make, model, floorplan, rvType };
@@ -507,7 +415,6 @@ export function RvFaxApp({
       setSuggestions([]);
       setHasSearched(false);
       setResults([]);
-      setWizardStep(hit.model ? "floorplan" : "model");
     },
     [year, make, model, floorplan, rvType, applySel],
   );
@@ -551,27 +458,6 @@ export function RvFaxApp({
   const eraLabel =
     YEAR_ERAS.find((e) => e.id === era)?.label ?? "All Years";
   const eraSub = YEAR_ERAS.find((e) => e.id === era)?.sub ?? "";
-  const classLabel = rvType ? rvClassLabel(rvType) : "All classes";
-  const stepIndex = WIZARD_STEP_ORDER.indexOf(wizardStep);
-
-  const pathChips = useMemo(() => {
-    const chips: { step: WizardStep; label: string; value: string }[] = [];
-    if (year)
-      chips.push({ step: "year", label: "Year", value: year });
-    if (wizardStep !== "year" && wizardStep !== "type")
-      chips.push({
-        step: "type",
-        label: "Type",
-        value: rvType ? rvClassLabel(rvType) : "All",
-      });
-    if (make)
-      chips.push({ step: "make", label: "Make", value: make });
-    if (model)
-      chips.push({ step: "model", label: "Model", value: model });
-    if (floorplan)
-      chips.push({ step: "floorplan", label: "Floorplan", value: floorplan });
-    return chips;
-  }, [year, rvType, make, model, floorplan, wizardStep]);
 
   if (compareOpen && comparePick.length >= 2) {
     return (
@@ -646,19 +532,33 @@ export function RvFaxApp({
         />
 
         <div className="mx-auto w-full max-w-lg space-y-2.5 px-3 pb-28 pt-0 sm:px-4">
-          {/* Step-by-step search wizard — first so the year wheel is on-screen */}
+          {/* Cascading dropdown search */}
           <section className="glass-prestige space-y-2 rounded-[var(--radius-xl)] p-3 sm:p-4">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[16px] font-extrabold tracking-tight text-white">
-                Search Wizard
-              </p>
-              <div className="flex min-w-0 items-center gap-1">
+              <div className="min-w-0">
+                <p className="text-[16px] font-extrabold tracking-tight text-white">
+                  Catalog search
+                </p>
+                <p className="mt-0.5 text-[11px] leading-snug text-white/70">
+                  {year
+                    ? [
+                        year,
+                        rvType ? rvClassLabel(rvType) : "All types",
+                        make || `${cascade.counts.makes} makes`,
+                        model || (make ? `${cascade.counts.models} models` : null),
+                        floorplan || (model ? "Any floorplan" : null),
+                      ]
+                        .filter(Boolean)
+                        .join(" → ")
+                    : "Year → type → make → model → floorplan"}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setFiltersOpen((v) => !v)}
                 className={cn(
-                  "inline-flex items-center gap-1 rounded-full border px-2 py-1.5 text-left transition active:scale-[0.98]",
-                  filtersOpen || rvType || era !== "all"
+                  "inline-flex min-h-[44px] items-center gap-1 rounded-full border px-3 py-1.5 text-left transition active:scale-[0.98]",
+                  filtersOpen || era !== "all"
                     ? "border-sapphire/50 bg-sapphire/20"
                     : "border-white/20 bg-black/30",
                 )}
@@ -668,13 +568,13 @@ export function RvFaxApp({
                 <Filter
                   className={cn(
                     "size-3.5 shrink-0",
-                    filtersOpen || rvType || era !== "all"
+                    filtersOpen || era !== "all"
                       ? "text-blue"
                       : "text-white/80",
                   )}
                 />
-                <span className="hidden min-[360px]:inline text-[10px] font-bold tracking-wide text-white">
-                  Filters
+                <span className="text-[10px] font-bold tracking-wide text-white">
+                  Year range
                 </span>
                 <ChevronDown
                   className={cn(
@@ -683,43 +583,6 @@ export function RvFaxApp({
                   )}
                 />
               </button>
-              <div
-                className="flex gap-1 rounded-full border border-white/10 bg-black/30 p-0.5"
-                role="tablist"
-                aria-label="Search mode"
-              >
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={searchMode === "wizard"}
-                  onClick={() => setSearchMode("wizard")}
-                  className={cn(
-                    "inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] font-bold",
-                    searchMode === "wizard"
-                      ? "border border-blue/45 bg-blue/20 text-blue"
-                      : "text-white/55",
-                  )}
-                >
-                  <Sparkles className="size-3" />
-                  Wizard
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={searchMode === "manual"}
-                  onClick={() => setSearchMode("manual")}
-                  className={cn(
-                    "inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] font-bold",
-                    searchMode === "manual"
-                      ? "border border-[#FF6B35]/50 bg-[#FF6B35]/20 text-[#FF6B35]"
-                      : "text-white/55",
-                  )}
-                >
-                  <Pencil className="size-3" />
-                  Manual
-                </button>
-              </div>
-              </div>
             </div>
 
             {filtersOpen ? (
@@ -729,16 +592,13 @@ export function RvFaxApp({
               >
                 <div className="flex items-center justify-between gap-2 px-0.5">
                   <p className="rvfax-sapphire-label text-[10px] font-bold tracking-[0.12em]">
-                    OPTIONAL FILTERS
+                    YEAR RANGE
                   </p>
                   <div className="flex items-center gap-1">
-                    {rvType || era !== "all" ? (
+                    {era !== "all" ? (
                       <button
                         type="button"
-                        onClick={() => {
-                          setRvType("");
-                          setEra("all");
-                        }}
+                        onClick={() => setEra("all")}
                         className="rounded-full px-2 py-1 text-[10px] font-bold text-white/80 underline-offset-2 hover:text-white hover:underline"
                       >
                         Clear
@@ -755,13 +615,6 @@ export function RvFaxApp({
                   </div>
                 </div>
                 <FieldButton
-                  label="RV Type"
-                  value={rvType ? rvClassLabel(rvType) : "All classes"}
-                  placeholder="All classes (optional)"
-                  onClick={() => setSheet("rvType")}
-                  sapphire
-                />
-                <FieldButton
                   label="Year range"
                   value={`${eraLabel} · ${eraSub}`}
                   placeholder="All years"
@@ -771,189 +624,84 @@ export function RvFaxApp({
               </div>
             ) : null}
 
-            {searchMode === "manual" ? (
-              <SearchManual
-                searching={searching}
-                onSearch={handleManualSearch}
+            <div className="space-y-2.5 border-t border-white/10 pt-3">
+              <p className="rvfax-sapphire-label text-[10px] font-bold tracking-[0.12em]">
+                YEAR · TYPE · MAKE · MODEL · FLOORPLAN
+              </p>
+              <FieldButton
+                label="Year"
+                value={year}
+                placeholder="Required"
+                required
+                onClick={() => setSheet("year")}
+                sapphire
+                hint={`${yearsForEra.length} years`}
               />
-            ) : (
-              <>
-            {/* Path chips — tap earlier step to go back (clears downstream) */}
-            {pathChips.length > 0 ? (
-              <div className="flex flex-wrap items-center gap-1.5 border-t border-white/10 pt-3">
-                {wizardStep !== "year" ? (
-                  <button
-                    type="button"
-                    onClick={wizardBack}
-                    className="inline-flex min-h-[36px] items-center gap-0.5 rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[11px] font-bold text-white active:scale-[0.98]"
-                    aria-label="Back one step"
-                  >
-                    <ChevronLeft className="size-3.5" />
-                    Back
-                  </button>
-                ) : null}
-                {pathChips.map((c) => (
-                  <button
-                    key={c.step}
-                    type="button"
-                    onClick={() => goToWizardStep(c.step)}
-                    className={cn(
-                      "inline-flex max-w-[46%] items-center gap-1 rounded-full border px-2.5 py-1.5 text-left active:scale-[0.98]",
-                      wizardStep === c.step
-                        ? "border-gold-border bg-gold-dim/30"
-                        : "border-white/15 bg-white/5",
-                    )}
-                  >
-                    <span className="text-[9px] font-bold tracking-wide text-white/55">
-                      {c.label}
-                    </span>
-                    <span className="truncate text-[11px] font-bold text-white">
-                      {c.value}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            ) : null}
-
-            {/* Single active wheel — isolated from parent scroll gestures */}
-            <div
-              className="border-t border-white/10 pt-2"
-              data-no-pull-reset
-              data-wizard-wheel
-              onTouchMove={(e) => {
-                // Extra belt: if touch is on the drum track, never let it bubble
-                const t = e.target as Element | null;
-                if (t?.closest?.("[data-wheel-track]")) {
-                  e.stopPropagation();
+              <FieldButton
+                label="RV Type"
+                value={rvType ? rvClassLabel(rvType) : ""}
+                placeholder={year ? "All types · tap to narrow" : "Pick a year first"}
+                disabled={!year}
+                onClick={() => year && setSheet("rvType")}
+                sapphire
+                hint={
+                  year
+                    ? `${Math.max(0, typeItems.length - 1)} classes in ${year}`
+                    : undefined
                 }
-              }}
-            >
-
-              {wizardStep === "year" ? (
-                <WizardWheel
-                  key={`year-${era}`}
-                  title="Select year"
-                  subtitle={`${yearsForEra.length} years · ${eraLabel}`}
-                  items={yearsForEra}
-                  selected={year}
-                  onSelect={(v) => onWizardPick("year", v)}
-                  hideModeTabs
-                  mode="wheel"
-                  allowCustom
-                  customLabel="Use this year"
-                  customPlaceholder="Type year…"
-                  stepIndex={stepIndex}
-                  stepCount={5}
-                  stepLabels={WIZARD_STEP_LABELS}
-                />
-              ) : null}
-
-              {wizardStep === "type" ? (
-                <WizardWheel
-                  key={`type-${year || "all"}`}
-                  title="Select RV type"
-                  subtitle={
-                    year
-                      ? `${typeItems.length - 1} classes in ${year} · pick one to narrow brands`
-                      : "Class A diesel, Class A gas, B, C, Super C, fifth wheel, trailer, toy hauler"
-                  }
-                  items={typeItems}
-                  selected={rvType}
-                  onSelect={(v) => onWizardPick("rvType", v)}
-                  hideModeTabs
-                  mode="wheel"
-                  emptyHint="No classes for this year — pick All types"
-                  stepIndex={stepIndex}
-                  stepCount={5}
-                  stepLabels={WIZARD_STEP_LABELS}
-                />
-              ) : null}
-
-              {wizardStep === "make" ? (
-                <WizardWheel
-                  key={`make-${year}-${rvType || "all"}`}
-                  title="Select make"
-                  subtitle={
-                    year && rvType
-                      ? `${cascade.counts.makes} brand${cascade.counts.makes === 1 ? "" : "s"} · ${year} ${rvClassLabel(rvType)}`
-                      : year
-                        ? `${cascade.counts.makes} brand${cascade.counts.makes === 1 ? "" : "s"} available in ${year}`
-                        : `${cascade.counts.makes} brands · all years`
-                  }
-                  items={makeItems}
-                  selected={make}
-                  onSelect={(v) => onWizardPick("make", v)}
-                  hideModeTabs
-                  mode="wheel"
-                  emptyHint={
-                    year
-                      ? `No brands in catalog for ${year} · try filters or type a make`
-                      : "No brands · type a manufacturer"
-                  }
-                  allowCustom
-                  customLabel="Use this manufacturer"
-                  customPlaceholder="Type manufacturer…"
-                  stepIndex={stepIndex}
-                  stepCount={5}
-                  stepLabels={WIZARD_STEP_LABELS}
-                />
-              ) : null}
-
-              {wizardStep === "model" ? (
-                <WizardWheel
-                  key={`model-${year}-${make}-${rvType || "all"}`}
-                  title="Select model"
-                  subtitle={
-                    year && make
-                      ? `${cascade.counts.models} model${cascade.counts.models === 1 ? "" : "s"} · ${year} ${make}`
-                      : make
-                        ? `${cascade.counts.models} models · ${make} (all years)`
-                        : `${cascade.counts.models} models`
-                  }
-                  items={modelItems}
-                  selected={model}
-                  onSelect={(v) => onWizardPick("model", v)}
-                  hideModeTabs
-                  mode="wheel"
-                  emptyHint={
-                    year && make
-                      ? `No ${make} models for ${year} — type yours`
-                      : "No catalog models — type yours"
-                  }
-                  allowCustom
-                  customLabel="Use this model"
-                  customPlaceholder="Type model name…"
-                  stepIndex={stepIndex}
-                  stepCount={5}
-                  stepLabels={WIZARD_STEP_LABELS}
-                />
-              ) : null}
-
-              {wizardStep === "floorplan" ? (
-                <WizardWheel
-                  key={`fp-${year}-${make}-${model}`}
-                  title="Select floorplan"
-                  subtitle={
-                    year && make && model
-                      ? cascade.counts.floorplans
-                        ? `${cascade.counts.floorplans} layout${cascade.counts.floorplans === 1 ? "" : "s"} · ${year} ${make} ${model}`
-                        : `No ${year} layouts listed · pick Any to open report`
-                      : "Pick a layout or Any"
-                  }
-                  items={floorplanItems}
-                  selected={floorplan}
-                  onSelect={(v) => onWizardPick("floorplan", v)}
-                  hideModeTabs
-                  mode="wheel"
-                  emptyHint="Type a floorplan code or pick Any"
-                  allowCustom
-                  customLabel="Use this floorplan"
-                  customPlaceholder="Type floorplan code…"
-                  stepIndex={stepIndex}
-                  stepCount={5}
-                  stepLabels={WIZARD_STEP_LABELS}
-                />
-              ) : null}
+              />
+              <FieldButton
+                label="Make"
+                value={make}
+                placeholder={
+                  cascade.locks.make || (year ? "Required" : "Pick a year first")
+                }
+                required
+                disabled={!year || Boolean(cascade.locks.make)}
+                custom={cascade.custom.make}
+                onClick={() => year && !cascade.locks.make && setSheet("make")}
+                sapphire
+                hint={
+                  year
+                    ? `${cascade.counts.makes} brand${cascade.counts.makes === 1 ? "" : "s"}${rvType ? ` · ${rvClassLabel(rvType)}` : ""}`
+                    : undefined
+                }
+              />
+              <FieldButton
+                label="Model"
+                value={model}
+                placeholder={cascade.locks.model || "Required"}
+                required
+                disabled={!make || Boolean(cascade.locks.model)}
+                custom={cascade.custom.model}
+                onClick={() => make && !cascade.locks.model && setSheet("model")}
+                sapphire
+                hint={
+                  make
+                    ? `${cascade.counts.models} model${cascade.counts.models === 1 ? "" : "s"}`
+                    : undefined
+                }
+              />
+              <FieldButton
+                label="Floorplan"
+                value={
+                  floorplan || (model && !cascade.locks.floorplan ? "Any floorplan" : "")
+                }
+                placeholder={cascade.locks.floorplan || "Optional"}
+                disabled={!model || Boolean(cascade.locks.floorplan)}
+                custom={cascade.custom.floorplan}
+                onClick={() =>
+                  model && !cascade.locks.floorplan && setSheet("floorplan")
+                }
+                sapphire
+                hint={
+                  model
+                    ? cascade.counts.floorplans
+                      ? `${cascade.counts.floorplans} layout${cascade.counts.floorplans === 1 ? "" : "s"}`
+                      : "Any · no year-specific layouts listed"
+                    : undefined
+                }
+              />
             </div>
 
             {searching ? (
@@ -961,22 +709,20 @@ export function RvFaxApp({
                 <Loader2 className="size-3.5 animate-spin" />
                 Opening report…
               </p>
-            ) : cascade.canSearch && wizardStep === "floorplan" ? (
+            ) : cascade.canSearch ? (
               <button
                 type="button"
                 onClick={runSearch}
-                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-gold-border/50 bg-gold-dim/25 py-2.5 text-[12px] font-bold text-gold-bright active:scale-[0.99]"
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full border border-gold-border/50 bg-gold-dim/25 py-2.5 text-[13px] font-bold text-gold-bright active:scale-[0.99]"
               >
                 <Search className="size-3.5" />
-                Open report without floorplan
+                Open report
               </button>
             ) : (
               <p className="text-center text-[11px] leading-snug text-white/65">
-                One step at a time — year, make, model, then floorplan. Report
-                opens automatically.
+                Pick year, type, make, and model. Each dropdown narrows the
+                next. Report opens on floorplan — or tap Open report.
               </p>
-            )}
-              </>
             )}
           </section>
 
@@ -1131,7 +877,7 @@ export function RvFaxApp({
             </section>
           ) : null}
 
-          {/* VIN last — keeps the year wheel above the fold on first open */}
+          {/* VIN last */}
           <button
             type="button"
             onClick={() => setVinOpen(true)}
@@ -1155,20 +901,69 @@ export function RvFaxApp({
         </div>
       </div>
 
-      {/* Optional filters only — cascade uses inline wizard */}
+      <SelectSheet
+        open={sheet === "year"}
+        title="Select year"
+        subtitle={`${yearsForEra.length} years · ${eraLabel}`}
+        items={yearsForEra}
+        selected={year}
+        onSelect={(v) => onCascadeSelect("year", v)}
+        onClose={() => setSheet(null)}
+        allowCustom
+        customLabel="Use this year"
+        customPlaceholder="Type year…"
+      />
       <SelectSheet
         open={sheet === "rvType"}
         title="RV Type"
-        subtitle="Optional filter · narrows catalog"
-        items={rvTypeItems}
+        subtitle={
+          year
+            ? `${typeItems.length - 1} classes in ${year} · tap All types to skip`
+            : "Narrows makes and models"
+        }
+        items={typeItems}
         selected={rvType}
-        onSelect={(v) => {
-          setRvType(v);
-          setHasSearched(false);
-          setResults([]);
-          // Keep wizard position; options re-filter for current year
-        }}
+        onSelect={(v) => onCascadeSelect("rvType", v)}
         onClose={() => setSheet(null)}
+      />
+      <SelectSheet
+        open={sheet === "make"}
+        title={year ? `Manufacturers · ${year}` : "Manufacturers"}
+        subtitle={`${cascade.counts.makes} brands · or type any make`}
+        items={makeItems}
+        selected={make}
+        onSelect={(v) => onCascadeSelect("make", v)}
+        onClose={() => setSheet(null)}
+        emptyHint="No catalog brands for this filter"
+        allowCustom
+        customLabel="Use this manufacturer"
+        customPlaceholder="Type manufacturer name…"
+      />
+      <SelectSheet
+        open={sheet === "model"}
+        title={make ? `Models · ${make}` : "Models"}
+        subtitle={`${cascade.counts.models} models · or type any model`}
+        items={modelItems}
+        selected={model}
+        onSelect={(v) => onCascadeSelect("model", v)}
+        onClose={() => setSheet(null)}
+        emptyHint="No catalog models — type yours"
+        allowCustom
+        customLabel="Use this model"
+        customPlaceholder="Type model name…"
+      />
+      <SelectSheet
+        open={sheet === "floorplan"}
+        title={model ? `Floorplans · ${model}` : "Floorplans"}
+        subtitle={`${cascade.counts.floorplans} layouts · or Any`}
+        items={floorplanItems}
+        selected={floorplan}
+        onSelect={(v) => onCascadeSelect("floorplan", v)}
+        onClose={() => setSheet(null)}
+        emptyHint="Type a floorplan code or pick Any"
+        allowCustom
+        customLabel="Use this floorplan"
+        customPlaceholder="Type floorplan code…"
       />
       <SelectSheet
         open={sheet === "era"}
@@ -1198,6 +993,7 @@ function FieldButton({
   required,
   custom,
   sapphire,
+  hint,
 }: {
   label: string;
   value: string;
@@ -1207,6 +1003,7 @@ function FieldButton({
   required?: boolean;
   custom?: boolean;
   sapphire?: boolean;
+  hint?: string;
 }) {
   return (
     <div className="w-full">
@@ -1223,6 +1020,7 @@ function FieldButton({
         type="button"
         disabled={disabled}
         onClick={onClick}
+        data-catalog-field={label}
         className={cn(
           "flex min-h-[48px] w-full items-center justify-between gap-2 rounded-[var(--radius-md)] border px-3.5 py-3 text-left text-[14px] font-semibold text-white touch-manipulation active:scale-[0.99] disabled:opacity-100",
           value && !custom && "border-gold-border/60 bg-gold-dim/25",
@@ -1240,6 +1038,8 @@ function FieldButton({
         <span className="mt-1 inline-block rounded-full border border-blue/40 bg-blue/20 px-1.5 py-0.5 text-[9px] font-bold text-blue">
           Custom · live Grok
         </span>
+      ) : hint ? (
+        <p className="mt-1 text-[10px] text-white/60">{hint}</p>
       ) : null}
     </div>
   );

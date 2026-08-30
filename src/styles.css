@@ -152,16 +152,10 @@
   .app-shell [data-picker] .text-white\/40,
   .app-shell [data-picker] .text-white\/45,
   .app-shell [data-picker] .text-white\/50,
-  .app-shell [data-picker] .text-white\/55,
-  .app-shell [data-wizard-wheel] .text-white\/35,
-  .app-shell [data-wizard-wheel] .text-white\/40,
-  .app-shell [data-wizard-wheel] .text-white\/45,
-  .app-shell [data-wizard-wheel] .text-white\/50,
-  .app-shell [data-wizard-wheel] .text-white\/55 {
+  .app-shell [data-picker] .text-white\/55 {
     color: rgb(255 255 255 / 0.42) !important;
   }
-  .app-shell [data-picker] .text-white,
-  .app-shell [data-wizard-wheel] .text-white {
+  .app-shell [data-picker] .text-white {
     color: #ffffff !important;
   }
 
@@ -1179,7 +1173,7 @@
   filter: drop-shadow(0 0 12px rgba(201, 184, 150, 0.35));
 }
 
-/* RvFACTS: pull search wizard up so the year wheel is on-screen */
+/* RvFACTS: keep catalog dropdowns close to the header */
 .rvfax-screen .sapphire-header {
   padding-bottom: 0.15rem;
 }
