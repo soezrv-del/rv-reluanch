@@ -560,29 +560,30 @@ export function RvDetail({
         className="rv-scroll relative z-10 h-full overflow-y-auto overscroll-y-contain"
       >
         <PullResetHint show={pullHint} label="Release to go back" />
+        {/* Sticky under the iPhone clock / Dynamic Island — Back was covered */}
         <div
-          id="rvfax-vehicle-report"
-          className="mx-auto w-full max-w-lg space-y-5 px-4 pb-32 pt-4 sm:px-5"
+          className="sticky top-0 z-30 border-b border-white/10 bg-black/70 backdrop-blur-md"
+          data-no-export
+          style={{
+            paddingTop:
+              "max(0.65rem, calc(env(safe-area-inset-top, 0px) + 0.35rem))",
+          }}
         >
-          {/* Top actions */}
-          <div
-            className="flex flex-wrap items-center justify-between gap-2"
-            data-no-export
-          >
+          <div className="mx-auto flex w-full max-w-lg flex-wrap items-center justify-between gap-2 px-4 pb-2.5 sm:px-5">
             <button
               type="button"
               onClick={onBack}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 text-[12px] font-bold text-white"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3.5 py-2 text-[12px] font-bold text-white"
             >
               <ArrowLeft className="size-3.5" />
               Back
             </button>
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
               <button
                 type="button"
                 onClick={onToggleSave}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-bold",
+                  "inline-flex min-h-[44px] items-center gap-1.5 rounded-full border px-3 py-2 text-[12px] font-bold",
                   saved
                     ? "border-ruby/50 bg-ruby/25 text-white"
                     : "border-white/20 bg-black/40 text-white",
@@ -597,7 +598,7 @@ export function RvDetail({
                   onClick={onToggleCompare}
                   disabled={!comparing && compareFull}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-bold disabled:opacity-40",
+                    "inline-flex min-h-[44px] items-center gap-1.5 rounded-full border px-3 py-2 text-[12px] font-bold disabled:opacity-40",
                     comparing
                       ? "border-sky-400/50 bg-sky-500/20 text-sky-100"
                       : "border-white/20 bg-black/40 text-white",
@@ -615,7 +616,7 @@ export function RvDetail({
                 <button
                   type="button"
                   onClick={onOpenCompare}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-gold/45 bg-gold/15 px-3 py-1.5 text-[12px] font-bold text-gold-bright"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-gold/45 bg-gold/15 px-3 py-2 text-[12px] font-bold text-gold-bright"
                 >
                   Open compare
                 </button>
@@ -629,7 +630,7 @@ export function RvDetail({
                       `${year} ${make} ${model}`,
                     )
                   }
-                  className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/15 px-3 py-1.5 text-[12px] font-bold text-gold-bright"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-gold/40 bg-gold/15 px-3 py-2 text-[12px] font-bold text-gold-bright"
                 >
                   <Calculator className="size-3.5" />
                   Finance
@@ -639,7 +640,7 @@ export function RvDetail({
                 type="button"
                 onClick={() => void exportPdf()}
                 disabled={exportBusy}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 text-[12px] font-bold text-white disabled:opacity-50"
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-2 text-[12px] font-bold text-white disabled:opacity-50"
               >
                 {exportBusy ? (
                   <Loader2 className="size-3.5 animate-spin" />
@@ -651,13 +652,18 @@ export function RvDetail({
               <button
                 type="button"
                 onClick={onAskGrok}
-                className="inline-flex items-center gap-1.5 rounded-full border border-blue/40 bg-blue/25 px-3 py-1.5 text-[12px] font-bold text-white"
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-blue/40 bg-blue/25 px-3 py-2 text-[12px] font-bold text-white"
               >
                 <Sparkles className="size-3.5 text-blue" />
                 Ask Grok
               </button>
             </div>
           </div>
+        </div>
+        <div
+          id="rvfax-vehicle-report"
+          className="mx-auto w-full max-w-lg space-y-5 px-4 pb-32 pt-3 sm:px-5"
+        >
           {exportMsg ? (
             <p className="text-center text-[11px] text-blue" data-no-export>
               {exportMsg}

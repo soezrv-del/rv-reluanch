@@ -242,17 +242,18 @@ export function RvCompare({
         className="rv-scroll relative z-10 h-full overflow-y-auto overscroll-y-contain"
       >
         <div
-          id="rvfax-compare-report"
-          className="mx-auto w-full max-w-2xl space-y-3 px-3 pb-20 pt-3 sm:px-4"
+          className="sticky top-0 z-30 border-b border-white/10 bg-black/70 backdrop-blur-md"
+          data-no-export
+          style={{
+            paddingTop:
+              "max(0.65rem, calc(env(safe-area-inset-top, 0px) + 0.35rem))",
+          }}
         >
-          <div
-            className="flex items-center justify-between gap-2 print:hidden"
-            data-no-export
-          >
+          <div className="mx-auto flex w-full max-w-2xl items-center justify-between gap-2 px-3 pb-2.5 sm:px-4">
             <button
               type="button"
               onClick={onBack}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 text-[12px] font-bold text-white"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3.5 py-2 text-[12px] font-bold text-white"
             >
               <ArrowLeft className="size-3.5" />
               Back
@@ -265,15 +266,23 @@ export function RvCompare({
               onClick={() => void exportPdf()}
               disabled={exportBusy}
               className={cn(
-                "inline-flex touch-manipulation items-center gap-1.5 rounded-full border border-white/25 bg-black/50 px-3 py-2 text-[12px] font-bold text-white active:scale-[0.97]",
+                "inline-flex min-h-[44px] touch-manipulation items-center gap-1.5 rounded-full border border-white/25 bg-black/50 px-3 py-2 text-[12px] font-bold text-white active:scale-[0.97]",
                 exportBusy && "opacity-70",
               )}
             >
-              <Printer className="size-3.5" />
-              {exportBusy ? "…" : "PDF"}
+              {exportBusy ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Printer className="size-3.5" />
+              )}
+              PDF
             </button>
           </div>
-
+        </div>
+        <div
+          id="rvfax-compare-report"
+          className="mx-auto w-full max-w-2xl space-y-3 px-3 pb-20 pt-3 sm:px-4"
+        >
           {exportMsg ? (
             <div
               role="status"
