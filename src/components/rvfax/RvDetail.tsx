@@ -720,7 +720,7 @@ export function RvDetail({
           <section className="glass-prestige overflow-hidden rounded-[1.15rem]">
             <div className="relative aspect-[16/9] w-full overflow-hidden">
               <img
-                src={resolveCardImage(data)}
+                src={resolveCardImage({ ...data, type: displayType })}
                 alt={`${displayType} — ${year} ${make} ${model}`}
                 className="size-full object-cover object-[center_42%]"
                 crossOrigin="anonymous"

@@ -612,6 +612,10 @@ export function buildBrochureSpecs(
   const isTowable =
     /travel trailer|fifth|toy hauler|truck camper/i.test(spec.type) ||
     /towable/i.test(spec.fuelType);
+  const classAGasNoTag =
+    /class\s*a/i.test(spec.type) &&
+    !/diesel/i.test(spec.type) &&
+    (/gas/i.test(spec.type) || /gas/i.test(spec.fuelType));
   const hasGarageData = Boolean(
     oem?.garageLengthFt ||
       spec.garageLengthFt ||
@@ -859,7 +863,9 @@ export function buildBrochureSpecs(
     ]),
     converter: electrical.includes("50") ? "60–80 amp" : "45–55 amp",
 
-    axles: oem?.axles
+    axles: classAGasNoTag
+      ? "Steer + dual rear (no tag)"
+      : oem?.axles
       ? oem.axles
       : isTowable
         ? gvwrMid > 10000
@@ -867,7 +873,9 @@ export function buildBrochureSpecs(
           : "Tandem axle"
         : /class b/i.test(spec.type)
           ? "Single rear"
-          : "Tag axle (when equipped)",
+          : /class c/i.test(spec.type) && !/super/i.test(spec.type)
+            ? "Steer + dual rear (no tag)"
+            : "Tag axle (when equipped)",
     tireSize: oem?.tireSize
       ? oem.tireSize
       : pick(seed, [

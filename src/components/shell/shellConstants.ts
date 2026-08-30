@@ -6,6 +6,7 @@ export const TAB_ORDER = [
   "rvcal",
   "rvtow",
   "rvtrips",
+  "rvshare",
   "rvgrok",
 ] as const satisfies readonly AppTab[];
 
@@ -16,6 +17,7 @@ export const PAGE_ACCENT: Record<AppTab, "sapphire" | "ruby" | "gold"> = {
 
   rvtow: "sapphire",
   rvtrips: "sapphire",
+  rvshare: "sapphire",
   rvgrok: "sapphire",
 
   more: "gold",
@@ -49,6 +51,11 @@ export const PAGE_COPY: Record<
     title: "RvTRIPS",
     line: "RV GPS with campgrounds, dump stations, and more.",
     badge: "LIVE",
+  },
+  rvshare: {
+    title: "RvSHARE",
+    line: "Full brochure specs plus a payment calculator for talking-point strengths.",
+    badge: "SEND",
   },
   more: {
     title: "PREMIUM",

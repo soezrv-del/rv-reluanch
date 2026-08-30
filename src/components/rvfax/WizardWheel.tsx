@@ -160,6 +160,7 @@ export function WizardWheel({
   const pointerIdRef = useRef<number | null>(null);
   const activeTouchId = useRef<number | null>(null);
   const dragStartClientY = useRef(0);
+  const dragStartClientX = useRef(0);
   const dragStartScrollY = useRef(0);
   const movedRef = useRef(false);
   const samplesRef = useRef<{ y: number; t: number }[]>([]);
@@ -376,11 +377,12 @@ export function WizardWheel({
     const el = trackRef.current;
     if (!el) return;
 
-    const begin = (clientY: number, mode: "pointer" | "touch") => {
+    const begin = (clientX: number, clientY: number, mode: "pointer" | "touch") => {
       stopRaf();
       draggingRef.current = true;
       movedRef.current = false;
       inputModeRef.current = mode;
+      dragStartClientX.current = clientX;
       dragStartClientY.current = clientY;
       dragStartScrollY.current = yRef.current;
       samplesRef.current = [{ y: clientY, t: performance.now() }];
@@ -406,6 +408,53 @@ export function WizardWheel({
       }
     };
 
+    const indexFromTap = (clientX: number, clientY: number, len: number) => {
+      const vv = window.visualViewport;
+      const ys = [clientY];
+      const xs = [clientX];
+      if (vv) {
+        if (vv.offsetTop) {
+          ys.push(clientY - vv.offsetTop, clientY + vv.offsetTop);
+        }
+        if (vv.offsetLeft) {
+          xs.push(clientX - vv.offsetLeft, clientX + vv.offsetLeft);
+        }
+        const chrome = window.innerHeight - vv.height - vv.offsetTop;
+        if (Math.abs(chrome) > 8) {
+          ys.push(clientY - chrome, clientY + chrome);
+        }
+      }
+
+      for (const x of xs) {
+        for (const y of ys) {
+          const hit = document.elementFromPoint(x, y);
+          const row = hit?.closest?.("[data-wheel-index]") as HTMLElement | null;
+          const raw = row ? Number(row.dataset.wheelIndex) : NaN;
+          if (Number.isFinite(raw)) return clampIndex(raw, len);
+        }
+      }
+
+      const content = contentRef.current;
+      if (content) {
+        const box = content.getBoundingClientRect();
+        for (const y of ys) {
+          const rel = y - box.top;
+          if (rel >= 0 && rel < len * ROW_H) {
+            return clampIndex(Math.floor(rel / ROW_H), len);
+          }
+        }
+      }
+
+      const trackBox = el.getBoundingClientRect();
+      for (const y of ys) {
+        const rel = y - trackBox.top;
+        if (rel >= PAD - 2 && rel < PAD + ROW_H + 2) {
+          return focusIdxRef.current;
+        }
+      }
+      return focusIdxRef.current;
+    };
+
     const end = (clientY: number) => {
       if (!draggingRef.current) return;
       draggingRef.current = false;
@@ -426,21 +475,17 @@ export function WizardWheel({
       }
       samplesRef.current = [];
 
-      // Clean tap → commit the option under the finger
+      // Clean tap → the row under the finger. Do not use
+      // clientY − getBoundingClientRect().top (iOS visualViewport
+      // is ~one ROW_H low and commits the option below the gold band).
       if (!movedRef.current) {
-        const rect = el.getBoundingClientRect();
-        const rel = clientY - rect.top;
-        const tappedRow = Math.max(
-          0,
-          Math.min(VISIBLE - 1, Math.floor(rel / ROW_H)),
-        );
-        const idx = clampIndex(
-          focusIdxRef.current + (tappedRow - CENTER),
+        const idx = indexFromTap(
+          dragStartClientX.current,
+          dragStartClientY.current,
           len,
         );
         const item = filteredRef.current[idx];
         if (item && !item.disabled) {
-          // Snap visual then commit so the pick feels locked
           focusIdxRef.current = idx;
           setFocusIdx(idx);
           yRef.current = yFromIndex(idx);
@@ -462,7 +507,7 @@ export function WizardWheel({
       if (inputModeRef.current === "pointer") return;
       const t = e.touches[0]!;
       activeTouchId.current = t.identifier;
-      begin(t.clientY, "touch");
+      begin(t.clientX, t.clientY, "touch");
     };
 
     const onTouchMove = (e: TouchEvent) => {
@@ -499,7 +544,7 @@ export function WizardWheel({
       if (e.pointerType === "touch") return;
       if (e.button !== 0) return;
       pointerIdRef.current = e.pointerId;
-      begin(e.clientY, "pointer");
+      begin(e.clientX, e.clientY, "pointer");
       try {
         el.setPointerCapture(e.pointerId);
       } catch {
@@ -867,9 +912,10 @@ export function WizardWheel({
 
               <div
                 ref={trackRef}
-                className="relative min-w-0 flex-1 select-none overflow-hidden rounded-[1.15rem] border border-white/18 bg-black/45"
+                className="relative min-w-0 flex-1 select-none overflow-hidden rounded-[1.15rem] border border-white/18 bg-black/45 [text-size-adjust:100%] [-webkit-text-size-adjust:100%]"
                 style={{
                   height: DRUM_H,
+                  boxSizing: "content-box",
                   touchAction: "none",
                   WebkitUserSelect: "none",
                   userSelect: "none",
@@ -883,8 +929,8 @@ export function WizardWheel({
                 data-wheel-track
               >
                 <div
-                  className="pointer-events-none absolute inset-x-2 top-1/2 z-[2] -translate-y-1/2 rounded-xl border border-gold-border/55 bg-gold-dim/25 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
-                  style={{ height: ROW_H }}
+                  className="pointer-events-none absolute inset-x-2 z-[2] rounded-xl border border-gold-border/55 bg-gold-dim/25 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
+                  style={{ top: PAD, height: ROW_H }}
                   aria-hidden
                 />
                 <div
@@ -927,7 +973,8 @@ export function WizardWheel({
                         role="option"
                         aria-selected={active}
                         data-wheel-value={item.value}
-                        className="flex flex-col items-center justify-center px-3 text-center"
+                        data-wheel-index={i}
+                        className="flex flex-col items-center justify-center overflow-hidden px-3 text-center"
                         style={{
                           height: ROW_H,
                           opacity,

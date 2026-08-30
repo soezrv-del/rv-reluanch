@@ -187,6 +187,7 @@ export function RvFaxApp({
     setSaved(next);
     try {
       localStorage.setItem(SAVED_KEY, JSON.stringify(next));
+      window.dispatchEvent(new Event("rvfax-saved-changed"));
     } catch {
       /* */
     }
@@ -854,7 +855,7 @@ export function RvFaxApp({
                   subtitle={
                     year
                       ? `${typeItems.length - 1} classes in ${year} · pick one to narrow brands`
-                      : "Class A, B, C, Super C, fifth wheel, trailer, toy hauler"
+                      : "Class A diesel, Class A gas, B, C, Super C, fifth wheel, trailer, toy hauler"
                   }
                   items={typeItems}
                   selected={rvType}

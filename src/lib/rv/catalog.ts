@@ -8,6 +8,8 @@ export { MAKES, YEARS, RV_DATA, CLASSIC_BRANDS };
 export type RvClassId =
   | ""
   | "class-a"
+  | "class-a-diesel"
+  | "class-a-gas"
   | "class-b"
   | "class-c"
   | "super-c"
@@ -21,7 +23,8 @@ export const RV_CLASS_TABS: {
   short: string;
 }[] = [
   { id: "", label: "All", short: "All" },
-  { id: "class-a", label: "Class A", short: "A" },
+  { id: "class-a-diesel", label: "Class A Diesel", short: "A-D" },
+  { id: "class-a-gas", label: "Class A Gas", short: "A-G" },
   { id: "class-b", label: "Class B", short: "B" },
   { id: "class-c", label: "Class C", short: "C" },
   { id: "super-c", label: "Super C", short: "SC" },
@@ -30,13 +33,32 @@ export const RV_CLASS_TABS: {
   { id: "toy-hauler", label: "Toy Hauler", short: "Toy" },
 ];
 
+function classAFuel(spec: RVSpec): "diesel" | "gas" | null {
+  const t = (spec.type || "").toLowerCase();
+  const f = (spec.fuelType || "").toLowerCase();
+  if (/super\s*c/.test(t)) return null;
+  const isA =
+    /class\s*a/.test(t) || /diesel\s*pusher/.test(t) || /gas\s*pusher/.test(t);
+  if (!isA) return null;
+  if (/diesel/.test(t) || /diesel\s*pusher/.test(t)) return "diesel";
+  if (/gas/.test(t) || /gas\s*pusher/.test(t)) return "gas";
+  if (/diesel/.test(f)) return "diesel";
+  if (/gas/.test(f)) return "gas";
+  return "diesel";
+}
+
 /** Match catalog type strings to a class tab */
 export function matchesRvClass(spec: RVSpec, classId: string | undefined): boolean {
   if (!classId) return true;
   const t = (spec.type || "").toLowerCase();
+  const fuel = classAFuel(spec);
   switch (classId as RvClassId) {
     case "class-a":
-      return t.includes("class a");
+      return fuel !== null;
+    case "class-a-diesel":
+      return fuel === "diesel";
+    case "class-a-gas":
+      return fuel === "gas";
     case "class-b":
       return t.includes("class b");
     case "class-c":
@@ -112,6 +134,7 @@ export interface CascadeOptions {
 
 function isClassTabId(v: string | undefined): boolean {
   if (!v) return false;
+  if (v === "class-a") return true;
   return RV_CLASS_TABS.some((t) => t.id === v && t.id !== "");
 }
 

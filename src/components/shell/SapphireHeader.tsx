@@ -10,6 +10,7 @@ const VERIFIED_TABS = new Set<AppTab>([
   "rvcal",
   "rvtow",
   "rvtrips",
+  "rvshare",
   "rvgrok",
 ]);
 

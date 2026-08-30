@@ -7,6 +7,7 @@ export type AppTab =
   | "rvcal"
   | "rvtow"
   | "rvtrips"
+  | "rvshare"
   | "more";
 
 /** Dock tabs only — Premium lives in the top-right ⋯ menu */
@@ -41,6 +42,12 @@ const TABS: {
     iconSrc: "/assets/brand/icon-rvtrips.png",
   },
   {
+    id: "rvshare",
+    label: "RvSHARE",
+    short: "Share",
+    iconSrc: "/assets/brand/icon-rvshare.png",
+  },
+  {
     id: "rvgrok",
     label: "RvGROK",
     short: "Grok",
@@ -73,7 +80,7 @@ export function BottomTabs({
     >
       <div
         className={cn(
-          "bottom-tabs-dock pointer-events-auto relative mx-auto grid w-full max-w-md grid-cols-5 items-stretch gap-0 overflow-hidden rounded-[1.7rem] p-1 sm:max-w-lg",
+          "bottom-tabs-dock pointer-events-auto relative mx-auto grid w-full max-w-lg grid-cols-6 items-stretch gap-0 overflow-hidden rounded-[1.7rem] p-1",
           grokActive && "bottom-tabs-dock-ruby",
         )}
       >
@@ -103,7 +110,7 @@ export function BottomTabs({
               : "bottom-tab-indicator-sapphire",
           )}
           style={{
-            width: "calc((100% - 0.5rem) / 5)",
+            width: "calc((100% - 0.5rem) / 6)",
             left: "0.25rem",
             transform: `translateX(${activeIndex * 100}%)`,
           }}
@@ -124,7 +131,7 @@ export function BottomTabs({
               aria-label={label}
               title={label}
               className={cn(
-                "bottom-tab-btn group relative z-[3] flex min-h-[56px] w-full flex-col items-center justify-center gap-0.5 rounded-[1.25rem] px-0.5 py-1.5",
+                "bottom-tab-btn group relative z-[3] flex min-h-[52px] w-full flex-col items-center justify-center gap-0.5 rounded-[1.25rem] px-0 py-1 sm:min-h-[56px]",
                 "transition-[transform,opacity] duration-200 ease-out",
                 "active:scale-[0.94] touch-manipulation select-none",
               )}
@@ -139,7 +146,7 @@ export function BottomTabs({
                   src={iconSrc}
                   alt=""
                   className={cn(
-                    "bottom-tab-icon size-[22px] object-contain sm:size-6",
+                    "bottom-tab-icon size-[20px] object-contain sm:size-6",
                     active && "drop-shadow-[0_0_10px_rgba(160,210,255,0.55)]",
                     isGrok &&
                       active &&
@@ -150,7 +157,7 @@ export function BottomTabs({
               </span>
               <span
                 className={cn(
-                  "bottom-tab-label text-center text-[9.5px] font-semibold uppercase leading-none tracking-[0.14em] sm:text-[10px]",
+                  "bottom-tab-label text-center text-[8.5px] font-semibold uppercase leading-none tracking-[0.1em] sm:text-[10px] sm:tracking-[0.14em]",
                   isGrok
                     ? active
                       ? "text-[#ffd0d6]"

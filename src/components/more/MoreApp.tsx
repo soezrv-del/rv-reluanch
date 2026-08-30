@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Route,
   Search,
+  Share2,
   Shield,
   Sparkles,
   Star,
@@ -225,6 +226,12 @@ export function MoreApp({
                 onClick={() => onNavigate?.("rvcal")}
               />
               <RowLink
+                icon={<Share2 className="size-4 text-sky-200" />}
+                title="RvShare send kit"
+                sub="Saved coach · payment · lifestyle · native share"
+                onClick={() => onNavigate?.("rvshare")}
+              />
+              <RowLink
                 icon={<MapIcon className="size-4 text-amber" />}
                 title="RvTow match"
                 sub="Truck · SUV · VIN decode"
@@ -243,7 +250,7 @@ export function MoreApp({
               Full suite is open
             </p>
             <p className="mt-1 text-[12px] leading-relaxed text-white">
-              Facts, Cal, Tow, Trips, and Grok are unlocked for evaluation. No
+              Facts, Cal, Tow, Trips, Share, and Grok are unlocked for evaluation. No
               in-app purchases in this version.
             </p>
             <div className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full border border-amber/40 bg-amber/15">

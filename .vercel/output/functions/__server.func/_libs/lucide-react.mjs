@@ -418,14 +418,17 @@ var CircleHelp = createLucideIcon("circle-help", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var Compass = createLucideIcon("compass", [["path", {
-	d: "m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z",
-	key: "9ktpf1"
-}], ["circle", {
-	cx: "12",
-	cy: "12",
-	r: "10",
-	key: "1mglay"
+var Copy = createLucideIcon("copy", [["rect", {
+	width: "14",
+	height: "14",
+	x: "8",
+	y: "8",
+	rx: "2",
+	ry: "2",
+	key: "17jyea"
+}], ["path", {
+	d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2",
+	key: "zix9uf"
 }]]);
 /**
 * @license lucide-react v0.510.0 - ISC
@@ -1344,6 +1347,46 @@ var Send = createLucideIcon("send", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Share2 = createLucideIcon("share-2", [
+	["circle", {
+		cx: "18",
+		cy: "5",
+		r: "3",
+		key: "gq8acd"
+	}],
+	["circle", {
+		cx: "6",
+		cy: "12",
+		r: "3",
+		key: "w7nqdw"
+	}],
+	["circle", {
+		cx: "18",
+		cy: "19",
+		r: "3",
+		key: "1xt0gg"
+	}],
+	["line", {
+		x1: "8.59",
+		x2: "15.42",
+		y1: "13.51",
+		y2: "17.49",
+		key: "47mynk"
+	}],
+	["line", {
+		x1: "15.41",
+		x2: "8.59",
+		y1: "6.51",
+		y2: "10.49",
+		key: "1n3mei"
+	}]
+]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Shield = createLucideIcon("shield", [["path", {
 	d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
 	key: "oel41y"
@@ -1471,46 +1514,6 @@ var Star = createLucideIcon("star", [["path", {
 	d: "M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z",
 	key: "r04s7s"
 }]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var Sunrise = createLucideIcon("sunrise", [
-	["path", {
-		d: "M12 2v8",
-		key: "1q4o3n"
-	}],
-	["path", {
-		d: "m4.93 10.93 1.41 1.41",
-		key: "2a7f42"
-	}],
-	["path", {
-		d: "M2 18h2",
-		key: "j10viu"
-	}],
-	["path", {
-		d: "M20 18h2",
-		key: "wocana"
-	}],
-	["path", {
-		d: "m19.07 10.93-1.41 1.41",
-		key: "15zs5n"
-	}],
-	["path", {
-		d: "M22 22H2",
-		key: "19qnx5"
-	}],
-	["path", {
-		d: "m8 6 4-4 4 4",
-		key: "ybng9g"
-	}],
-	["path", {
-		d: "M16 18a4 4 0 0 0-8 0",
-		key: "1lzouq"
-	}]
-]);
 /**
 * @license lucide-react v0.510.0 - ISC
 *
@@ -1806,19 +1809,6 @@ var Volume2 = createLucideIcon("volume-2", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var Wallet = createLucideIcon("wallet", [["path", {
-	d: "M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1",
-	key: "18etb6"
-}], ["path", {
-	d: "M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4",
-	key: "xoc0q4"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
 var Wrench = createLucideIcon("wrench", [["path", {
 	d: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z",
 	key: "cbrjhi"
@@ -1837,4 +1827,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { GitCompare as $, Printer as A, Mail as B, Send as C, Bookmark as Ct, Route as D, ArrowLeftRight as Dt, Ruler as E, ArrowLeft as Et, MessageSquare as F, List as G, LockOpen as H, MessageSquarePlus as I, Keyboard as J, ListChecks as K, MessageCircle as L, Pencil as M, Navigation as N, RefreshCw as O, Mic as P, Heart as Q, Map as R, Shield as S, Building2 as St, ScanLine as T, ArrowUpLeft as Tt, LocateFixed as U, Lock as V, LoaderCircle as W, Image as X, Info as Y, History as Z, Sunrise as _, ChevronDown as _t, Video as a, Eraser as at, Sparkles as b, Camera as bt, Truck as c, Download as ct, TrendingUp as d, CircleHelp as dt, Funnel as et, Trash2 as f, CircleCheck as ft, SwitchCamera as g, ChevronLeft as gt, Tent as h, ChevronRight as ht, Volume2 as i, ExternalLink as it, Plus as j, Radio as k, Trophy as l, DollarSign as lt, ThumbsDown as m, ChevronUp as mt, Wrench as n, Fish as nt, Users as o, Ellipsis as ot, ThumbsUp as p, CircleAlert as pt, Landmark as q, Wallet as r, FileText as rt, User as s, Droplets as st, X as t, Fuel as tt, TriangleAlert as u, Compass as ut, Star as v, Check as vt, Search as w, BedDouble as wt, SlidersHorizontal as x, Calculator as xt, Square as y, Car as yt, MapPin as z };
+export { Funnel as $, Plus as A, Lock as B, Search as C, BedDouble as Ct, RefreshCw as D, Route as E, ArrowLeftRight as Et, MessageSquarePlus as F, ListChecks as G, LocateFixed as H, MessageCircle as I, Info as J, Landmark as K, Map as L, Navigation as M, Mic as N, Radio as O, MessageSquare as P, GitCompare as Q, MapPin as R, Send as S, Bookmark as St, Ruler as T, ArrowLeft as Tt, LoaderCircle as U, LockOpen as V, List as W, History as X, Image as Y, Heart as Z, Square as _, Check as _t, Users as a, Ellipsis as at, Shield as b, Calculator as bt, Trophy as c, DollarSign as ct, Trash2 as d, CircleCheck as dt, Fuel as et, ThumbsUp as f, CircleAlert as ft, Star as g, ChevronDown as gt, SwitchCamera as h, ChevronLeft as ht, Video as i, Eraser as it, Pencil as j, Printer as k, TriangleAlert as l, Copy as lt, Tent as m, ChevronRight as mt, Wrench as n, FileText as nt, User as o, Droplets as ot, ThumbsDown as p, ChevronUp as pt, Keyboard as q, Volume2 as r, ExternalLink as rt, Truck as s, Download as st, X as t, Fish as tt, TrendingUp as u, CircleHelp as ut, Sparkles as v, Car as vt, ScanLine as w, ArrowUpLeft as wt, Share2 as x, Building2 as xt, SlidersHorizontal as y, Camera as yt, Mail as z };

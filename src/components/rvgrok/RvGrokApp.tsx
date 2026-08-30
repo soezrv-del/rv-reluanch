@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Camera,
-  Compass,
-  FileText,
   Fish,
   History,
   Loader2,
@@ -12,13 +10,11 @@ import {
   Send,
   Sparkles,
   Square,
-  Sunrise,
   SwitchCamera,
-  Truck,
   Users,
   Video,
   Volume2,
-  Wallet,
+  Wrench,
   X,
 } from "lucide-react";
 import type { AgentStep, ChatSession, Message } from "@/lib/rvgrok/types";
@@ -64,28 +60,14 @@ const GROK_STARTERS: {
   title: string;
   line: string;
   prompt: string;
-  Icon: typeof Wallet;
+  Icon: typeof Users;
 }[] = [
   {
-    title: "Match me to a coach",
+    title: "Match Me to a Coach",
     line: "Budget, who travels, nights out",
     Icon: Users,
     prompt:
       "Match me to an RV. Ask only what you still need: budget, who travels (kids/pets), ZIP, nights vs full-time, and whether I already have a truck. Then recommend 2–3 coach CLASSES with one example year/make/model each I can look up in RvFACTS. Do not invent a dealer listing or say a unit is for sale. EST. payment if I gave a price. If I have a truck, say what to check in RvTow.",
-  },
-  {
-    title: "Sell me this life",
-    line: "Weekends, mornings, vs hotels",
-    Icon: Sunrise,
-    prompt:
-      "Sell me the RV lifestyle. I am curious, not shopping a specific coach yet. Paint the weekends, the 6am coffee, the kids/pets, the freedom versus hotels and a second house. Be vivid and honest — one real friction, then the win. Then ask ONE question so you can match me to 2–3 coach classes with one example year/make/model each for RvFACTS. Do not invent a listing.",
-  },
-  {
-    title: "Full-time or weekends",
-    line: "Road vs keep the house",
-    Icon: Compass,
-    prompt:
-      "I am considering full-time RV living versus keeping a house and doing weekends or snowbird trips. Sell both lives. Who each path is for, what a Saturday looks like, and the honest tradeoffs. Then recommend which coach CLASSES fit each path with one example year/make/model each I can open in RvFACTS. Point me to RvCal for payment and RvTow if a truck matters. Do not invent inventory.",
   },
   {
     title: "Hot fishing spots",
@@ -95,49 +77,19 @@ const GROK_STARTERS: {
       "Hot fishing spot locator based on my ZIP code. Ask me for the ZIP if I have not given it. Rank nearby lakes, rivers, and piers for an RV traveler — access, coach parking if known, and what is typically biting this time of year.",
   },
   {
-    title: "Walk this coach",
-    line: "Lot talk — OEM only",
-    Icon: Sparkles,
+    title: "Troubleshooting my RV",
+    line: "Symptom first — then a safe next step",
+    Icon: Wrench,
     prompt:
-      "Lot walkthrough for a 2025 Tiffin Phaeton 37BH. Use OEM brochure language only. Do not guess layout from the letters BH. What should I show a first-time diesel buyer, and what three objections will I hear?",
+      "Help me troubleshoot my RV. Ask what is going wrong (symptom, when it started, year/make/model if I know it). If a photo would help, tell me to use the camera. Give a short, safe diagnosis path: likely cause, what to check first, and when to stop and call a tech. Do not guess a recall or invent a parts number. Keep steps I can do at a campsite without specialty tools.",
   },
-  {
-    title: "Structure the deal",
-    line: "Price, trade, ZIP, payment",
-    Icon: Wallet,
-    prompt:
-      "Payment on a $189,000 coach, $22,000 trade, $6,500 payoff, 20 years, 720 credit, ZIP 89101. Show tax from ZIP, amount financed, and a clean monthly.",
-  },
-];
-
-const HUB_CHIPS: {
-  label: string;
-  Icon: typeof FileText;
-  tab?: AppTab;
-  prompt?: string;
-}[] = [
-  {
-    label: "Match",
-    Icon: Users,
-    prompt:
-      "Match me to an RV. Ask only what you still need: budget, who travels (kids/pets), ZIP, nights vs full-time, and whether I already have a truck. Then recommend 2–3 coach CLASSES with one example year/make/model each I can look up in RvFACTS. Do not invent a dealer listing or say a unit is for sale. EST. payment if I gave a price. If I have a truck, say what to check in RvTow.",
-  },
-  {
-    label: "Life",
-    Icon: Sunrise,
-    prompt:
-      "Sell me the RV lifestyle. I am curious, not shopping a specific coach yet. Paint the weekends, the 6am coffee, the kids/pets, the freedom versus hotels and a second house. Be vivid and honest — one real friction, then the win. Then ask ONE question so you can match me to 2–3 coach classes with one example year/make/model each for RvFACTS. Do not invent a listing.",
-  },
-  { label: "Specs", Icon: FileText, tab: "rvfax" },
-  { label: "Tow", Icon: Truck, tab: "rvtow" },
-  { label: "Pay", Icon: Wallet, tab: "rvcal" },
 ];
 
 export function RvGrokApp({
   seedPrompt,
   onSeedConsumed,
   active: _active = true,
-  onNavigate,
+  onNavigate: _onNavigate,
   onSplashPlayingChange: _onSplashPlayingChange,
 }: {
   seedPrompt?: string;
@@ -1207,30 +1159,6 @@ export function RvGrokApp({
     return () => window.clearInterval(id);
   }, [liveCam, keepShowing, realtimeStatus, sendLiveFrame]);
 
-  const runHub = (chip: (typeof HUB_CHIPS)[number]) => {
-    if (chip.tab && onNavigate) {
-      onNavigate(chip.tab);
-      return;
-    }
-    if (chip.prompt) void sendMessageRef.current(chip.prompt);
-  };
-
-  const hubBar = (
-    <div className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {HUB_CHIPS.map((chip) => (
-        <button
-          key={chip.label}
-          type="button"
-          onClick={() => runHub(chip)}
-          className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-black/40 px-3.5 text-[13px] font-semibold text-white transition hover:border-white/30 hover:bg-white/10"
-        >
-          <chip.Icon className="size-3.5 text-sky-100" />
-          {chip.label}
-        </button>
-      ))}
-    </div>
-  );
-
   const modelLabel = activeModel
     ? activeModel.replace(/grok-/gi, "Grok ").replace(/grok /gi, "Grok ")
     : "Grok 4.5";
@@ -1339,27 +1267,27 @@ export function RvGrokApp({
           label="Release to reset Live Voice & chat · pull down"
         />
         {messages.length === 0 ? (
-          <div className="mx-auto flex max-w-xl flex-col px-0.5 pb-4 pt-3">
-            <p className="text-center text-[13px] leading-relaxed text-white/80">
-              Specs, lifestyle, payment, tow — tap a prompt or type below.
+          <div className="mx-auto flex max-w-xl flex-col px-0.5 pb-4 pt-6">
+            <p className="text-center text-[13px] leading-relaxed text-white/75">
+              Tap a prompt or type below.
             </p>
 
-            <div className="mt-3">{hubBar}</div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-4 flex flex-col gap-2.5">
               {GROK_STARTERS.map((s) => (
                 <button
                   key={s.title}
                   type="button"
                   onClick={() => void sendMessage(s.prompt)}
-                  className="glass-prestige flex min-h-[4.5rem] flex-col items-start gap-1.5 rounded-2xl px-3 py-3 text-left transition hover:border-white/25"
+                  className="glass-prestige flex min-h-[4.25rem] items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition hover:border-white/25"
                 >
-                  <s.Icon className="size-4 text-sky-100" />
-                  <span className="block text-[13px] font-semibold leading-snug text-white">
-                    {s.title}
-                  </span>
-                  <span className="line-clamp-2 text-[11px] leading-snug text-white/70">
-                    {s.line}
+                  <s.Icon className="size-5 shrink-0 text-sky-100" />
+                  <span className="min-w-0">
+                    <span className="block text-[15px] font-semibold leading-snug text-white">
+                      {s.title}
+                    </span>
+                    <span className="mt-0.5 block text-[12px] leading-snug text-white/70">
+                      {s.line}
+                    </span>
                   </span>
                 </button>
               ))}

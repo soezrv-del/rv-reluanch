@@ -21,7 +21,7 @@ import {
 } from "@/lib/hooks/useKeyboardInset";
 
 /**
- * Code-split suite tools — iOS cold start was parsing all 6 apps under splash.
+ * Code-split suite tools — iOS cold start was parsing all apps under splash.
  * Launchpad stays eager; tools load only when visited.
  */
 const RvFaxApp = lazy(() =>
@@ -39,6 +39,11 @@ const RvCalApp = lazy(() =>
 const RvTripsApp = lazy(() =>
   import("@/components/rvtrips/RvTripsApp").then((m) => ({
     default: m.RvTripsApp,
+  })),
+);
+const RvShareApp = lazy(() =>
+  import("@/components/rvshare/RvShareApp").then((m) => ({
+    default: m.RvShareApp,
   })),
 );
 const MoreApp = lazy(() =>
@@ -282,6 +287,17 @@ export function AppShell() {
               <div className={tab === "rvtrips" ? TAB_PANE_ON : "hidden"}>
                 <SuiteErrorBoundary name="RvTRIPS">
                   <RvTripsApp />
+                </SuiteErrorBoundary>
+              </div>
+            ) : null}
+            {show("rvshare") ? (
+              <div className={tab === "rvshare" ? TAB_PANE_ON : "hidden"}>
+                <SuiteErrorBoundary name="RvSHARE">
+                  <RvShareApp
+                    active={tab === "rvshare" && !launchOpen}
+                    onNavigate={onTabChange}
+                    onOpenGrok={openGrok}
+                  />
                 </SuiteErrorBoundary>
               </div>
             ) : null}

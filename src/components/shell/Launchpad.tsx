@@ -5,6 +5,7 @@ import {
   FileText,
   MapPin,
   MessageCircle,
+  Share2,
   Shield,
   Truck,
 } from "lucide-react";
@@ -28,6 +29,7 @@ const TOOLS: {
   { id: "rvcal", title: "RvCal", blurb: "ZIP-based calculator with lender comparisons", Icon: Calculator },
   { id: "rvtow", title: "RvTow", blurb: "Tow match", Icon: Truck },
   { id: "rvtrips", title: "RvTrips", blurb: "RV GPS with campgrounds, dump stations, and more", Icon: MapPin },
+  { id: "rvshare", title: "RvShare", blurb: "Send a coach kit — specs, payment, lifestyle, report", Icon: Share2 },
   { id: "rvgrok", title: "RvGrok", blurb: "Your RV expert — from the best fishing spots to troubleshooting your RV", Icon: MessageCircle },
   { id: "more", title: "Premium", blurb: "Settings", Icon: Shield },
 ];
@@ -313,8 +315,8 @@ export function Launchpad({
             <ChevronDown className="size-3.5 text-white/35" strokeWidth={2} />
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col justify-center">
-            <div className="overflow-hidden rounded-[1.5rem] border border-white/22 bg-white/[0.03] p-2 shadow-[0_8px_32px_rgba(0,0,0,0.18)] backdrop-blur-[1.5px]">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-[1.5rem] border border-white/22 bg-white/[0.03] p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.18)] backdrop-blur-[1.5px]">
               {TOOLS.map((item, index) => {
                 const active = index === hi;
                 const Icon = item.Icon;
@@ -324,7 +326,7 @@ export function Launchpad({
                     type="button"
                     onClick={() => pickTool(item.id)}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-[1.15rem] px-3 py-2.5 text-left transition-all duration-300 ease-out touch-manipulation",
+                      "flex w-full items-center gap-3 rounded-[1.15rem] px-3 py-2 text-left transition-all duration-300 ease-out touch-manipulation",
                       active
                         ? "scale-[1.01] bg-gradient-to-r from-sky-500/90 via-blue-500/85 to-blue-600/90 shadow-[0_0_28px_rgba(56,140,255,0.45)]"
                         : "bg-transparent hover:bg-white/[0.07]",
