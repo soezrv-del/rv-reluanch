@@ -96,6 +96,8 @@
     overscroll-behavior: none;
     overscroll-behavior-y: none;
     height: 100%;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   body {

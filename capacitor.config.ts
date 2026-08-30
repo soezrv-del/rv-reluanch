@@ -20,7 +20,10 @@ const config: CapacitorConfig = {
   backgroundColor: "#050508",
   loggingBehavior: "production",
   ios: {
-    contentInset: "automatic",
+    // never: CSS env(safe-area-inset-*) owns the notch. `automatic` insets the
+    // WKWebView scroll view while position:fixed overlays stay full-bleed, so
+    // iPhone taps hit the dropdown row *below* the one you pressed.
+    contentInset: "never",
     preferredContentMode: "mobile",
     scheme: "RVFAX",
     allowsLinkPreview: false,

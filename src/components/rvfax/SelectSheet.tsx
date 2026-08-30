@@ -13,6 +13,10 @@ import {
   scrollFieldIntoVisibleArea,
   useKeyboardInset,
 } from "@/lib/hooks/useKeyboardInset";
+import {
+  isIosNativeWebView,
+  resolveSheetItemValue,
+} from "@/lib/hooks/iosTapPoint";
 
 export type SelectSheetItem =
   | string
@@ -188,6 +192,31 @@ export function SelectSheet({
     }, 50);
     return () => window.clearTimeout(t);
   }, [open, keyboardOn, kb.inset]);
+
+  useEffect(() => {
+    if (!open) return;
+    const list = listRef.current;
+    if (!list) return;
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!isIosNativeWebView()) return;
+      const t = e.changedTouches.item(0);
+      if (!t) return;
+      const start = itemTouchRef.current;
+      if (start) {
+        const moved =
+          Math.abs(t.clientX - start.x) > 12 ||
+          Math.abs(t.clientY - start.y) > 12;
+        itemTouchRef.current = null;
+        if (moved) return;
+      }
+      const value = resolveSheetItemValue(t.clientX, t.clientY, list);
+      if (value == null) return;
+      e.preventDefault();
+      pick(value);
+    };
+    list.addEventListener("touchend", onTouchEnd, { passive: false });
+    return () => list.removeEventListener("touchend", onTouchEnd);
+  }, [open, pick]);
 
   /** Drag only from the handle / header — never from the scroll list */
   const beginHandleDrag = useCallback(
@@ -476,7 +505,39 @@ export function SelectSheet({
         <div
           ref={listRef}
           className="rv-scroll select-sheet-list min-h-0 flex-1 overflow-y-auto overscroll-contain p-2"
+          data-sheet-list=""
           style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
+          onPointerDown={(e) => {
+            if (e.pointerType === "mouse") return;
+            const t = e.target as HTMLElement | null;
+            if (!t?.closest?.("[data-sheet-item]")) return;
+            itemTouchRef.current = {
+              id: e.pointerId,
+              x: e.clientX,
+              y: e.clientY,
+            };
+          }}
+          onPointerUp={(e) => {
+            if (e.pointerType === "mouse") return;
+            const start = itemTouchRef.current;
+            itemTouchRef.current = null;
+            if (!start || start.id !== e.pointerId) return;
+            const moved =
+              Math.abs(e.clientX - start.x) > 12 ||
+              Math.abs(e.clientY - start.y) > 12;
+            if (moved) return;
+            const value = resolveSheetItemValue(
+              e.clientX,
+              e.clientY,
+              listRef.current,
+            );
+            if (value == null) return;
+            e.preventDefault();
+            pick(value);
+          }}
+          onPointerCancel={() => {
+            itemTouchRef.current = null;
+          }}
         >
           {filtered.length === 0 ? (
             <div className="px-3 py-8 text-center">
@@ -492,40 +553,27 @@ export function SelectSheet({
               const active = selected === item.value;
               return (
                 <button
-                  key={item.value}
+                  key={item.value === "" ? "__empty__" : item.value}
                   type="button"
                   data-value={item.value}
+                  data-sheet-item=""
                   disabled={item.disabled}
-                  onPointerDown={(e) => {
-                    if (item.disabled) return;
-                    itemTouchRef.current = {
-                      id: e.pointerId,
-                      x: e.clientX,
-                      y: e.clientY,
-                    };
-                  }}
-                  onPointerUp={(e) => {
-                    if (item.disabled) return;
-                    const start = itemTouchRef.current;
-                    itemTouchRef.current = null;
-                    if (!start || start.id !== e.pointerId) return;
-                    const moved =
-                      Math.abs(e.clientX - start.x) > 12 ||
-                      Math.abs(e.clientY - start.y) > 12;
-                    if (moved) return; // was scrolling
-                    // Touch/pen: select here. Mouse uses onClick.
-                    if (e.pointerType === "touch" || e.pointerType === "pen") {
-                      e.preventDefault();
-                      pick(item.value);
-                    }
-                  }}
-                  onPointerCancel={() => {
-                    itemTouchRef.current = null;
-                  }}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (item.disabled) return;
+                    if (selectedGuard.current) return;
+                    // iOS: pointerup / touchend already resolved the painted
+                    // row. A synthesized click would re-hit the WRONG row.
+                    if (isIosNativeWebView()) {
+                      const value = resolveSheetItemValue(
+                        e.clientX,
+                        e.clientY,
+                        listRef.current,
+                      );
+                      if (value != null) pick(value);
+                      return;
+                    }
                     pick(item.value);
                   }}
                   className={cn(
