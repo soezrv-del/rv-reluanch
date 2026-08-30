@@ -1185,6 +1185,17 @@
   margin-top: 0.35rem;
 }
 
+/* Vehicle History Report chrome — clear iPhone clock / Dynamic Island
+   even when env(safe-area-inset-top) is 0 (in-app preview webview). */
+.rvfax-report-chrome {
+  padding-top: max(4.5rem, calc(env(safe-area-inset-top, 0px) + 1rem));
+}
+@media (min-width: 640px) {
+  .rvfax-report-chrome {
+    padding-top: max(0.65rem, calc(env(safe-area-inset-top, 0px) + 0.35rem));
+  }
+}
+
 /* Gold header variant for RvCAL */
 [data-page-accent="gold"] .sapphire-header-inner {
   box-shadow:

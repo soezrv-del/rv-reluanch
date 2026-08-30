@@ -242,12 +242,8 @@ export function RvCompare({
         className="rv-scroll relative z-10 h-full overflow-y-auto overscroll-y-contain"
       >
         <div
-          className="sticky top-0 z-30 border-b border-white/10 bg-black/70 backdrop-blur-md"
+          className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/10 bg-black/70 backdrop-blur-md"
           data-no-export
-          style={{
-            paddingTop:
-              "max(0.65rem, calc(env(safe-area-inset-top, 0px) + 0.35rem))",
-          }}
         >
           <div className="mx-auto flex w-full max-w-2xl items-center justify-between gap-2 px-3 pb-2.5 sm:px-4">
             <button

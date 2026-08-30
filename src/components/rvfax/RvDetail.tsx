@@ -560,16 +560,12 @@ export function RvDetail({
         className="rv-scroll relative z-10 h-full overflow-y-auto overscroll-y-contain"
       >
         <PullResetHint show={pullHint} label="Release to go back" />
-        {/* Sticky under the iPhone clock / Dynamic Island — Back was covered */}
+        {/* Sticky under the iPhone clock / Dynamic Island */}
         <div
-          className="sticky top-0 z-30 border-b border-white/10 bg-black/70 backdrop-blur-md"
+          className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/10 bg-black/70 backdrop-blur-md"
           data-no-export
-          style={{
-            paddingTop:
-              "max(0.65rem, calc(env(safe-area-inset-top, 0px) + 0.35rem))",
-          }}
         >
-          <div className="mx-auto flex w-full max-w-lg flex-wrap items-center justify-between gap-2 px-4 pb-2.5 sm:px-5">
+          <div className="mx-auto flex w-full max-w-lg flex-col gap-2 px-4 pb-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-5">
             <button
               type="button"
               onClick={onBack}
@@ -578,7 +574,7 @@ export function RvDetail({
               <ArrowLeft className="size-3.5" />
               Back
             </button>
-            <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               <button
                 type="button"
                 onClick={onToggleSave}

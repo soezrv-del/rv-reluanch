@@ -8,7 +8,7 @@ const LIFESTYLE = {
   superC: "/assets/lifestyle/super-c.jpg",
   classB: "/assets/lifestyle/class-b.jpg",
   classADiesel: "/assets/lifestyle/class-a-diesel.jpg",
-  classAGas: "/assets/lifestyle/class-a-gas.jpg",
+  classAGas: "/assets/lifestyle/class-a-gas.jpg?v=f53-busfront",
 } as const;
 
 /** Fallback card media when type unknown */
