@@ -18,6 +18,7 @@ import type { AppTab } from "@/components/shell/BottomTabs";
 import {
   compareSelectionKey,
   getSpec,
+  ratingFor,
   type RVResult,
 } from "@/lib/rv/catalog";
 import {
@@ -32,6 +33,7 @@ import {
   buildCoachKit,
   buildSuitePitch,
   brochureSpecGroups,
+  coachSnapshot,
   coachTitle,
   copyKit,
   DEFAULT_SHARE_INCLUDE,
@@ -88,6 +90,87 @@ function MoneyField({
         onChange={(e) => onChange(parseMoney(e.target.value))}
         className="glass-field min-h-11 w-full rounded-[var(--radius-md)] px-2.5 py-2.5 text-[13px] font-bold tabular-nums text-white outline-none [color-scheme:dark]"
       />
+    </label>
+  );
+}
+
+function DraftNumberField({
+  label,
+  value,
+  onChange,
+  prefix,
+  suffix,
+  min,
+  max,
+  decimals = 2,
+}: {
+  label: string;
+  value: number;
+  onChange: (n: number) => void;
+  prefix?: string;
+  suffix?: string;
+  min?: number;
+  max?: number;
+  decimals?: number;
+}) {
+  const format = (n: number) =>
+    Number.isFinite(n) ? n.toFixed(decimals) : "";
+  const [text, setText] = useState(() => format(value));
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (focused) return;
+    setText(
+      Number.isFinite(value)
+        ? value.toFixed(decimals)
+        : "",
+    );
+  }, [value, focused, decimals]);
+
+  const commit = (raw: string, clamp: boolean) => {
+    const n = Number.parseFloat(raw.replace(/[^\d.]/g, ""));
+    if (!Number.isFinite(n)) return;
+    let next = n;
+    if (clamp) {
+      if (min != null) next = Math.max(min, next);
+      if (max != null) next = Math.min(max, next);
+    }
+    const f = 10 ** decimals;
+    next = Math.round(next * f) / f;
+    onChange(next);
+  };
+
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[9px] font-bold tracking-wide text-white/70">
+        {label}
+      </span>
+      <div className="glass-field flex min-h-11 items-center gap-1 rounded-[var(--radius-md)] px-2.5">
+        {prefix ? (
+          <span className="text-[13px] font-bold text-white/70">{prefix}</span>
+        ) : null}
+        <input
+          aria-label={label}
+          inputMode="decimal"
+          value={text}
+          onFocus={() => setFocused(true)}
+          onBlur={() => {
+            setFocused(false);
+            commit(text, true);
+          }}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/[^\d.]/g, "");
+            setText(raw);
+            commit(raw, false);
+          }}
+          className="w-full bg-transparent py-2.5 text-[13px] font-bold tabular-nums text-white outline-none [color-scheme:dark]"
+        />
+        {suffix ? (
+          <span className="shrink-0 text-[12px] font-bold text-white/60">
+            {suffix}
+          </span>
+        ) : null}
+      </div>
     </label>
   );
 }
@@ -165,6 +248,7 @@ export function RvShareApp({
   const [status, setStatus] = useState<string | null>(null);
   const [strengthDraft, setStrengthDraft] = useState<string[]>([]);
   const [strengthsLocked, setStrengthsLocked] = useState(false);
+  const [ratingEdit, setRatingEdit] = useState<number | null>(null);
 
   const reloadSaved = useCallback(() => {
     setSaved(loadSavedUnits());
@@ -212,14 +296,26 @@ export function RvShareApp({
     setPayment(defaultPaymentFor(selected));
     setMarketEdit(defaultMarketFor(selected));
     setStrengthsLocked(false);
+    setRatingEdit(null);
   }, [selected]);
+
+  const catalogRating = useMemo(
+    () =>
+      selected ? ratingFor(selected.make, selected.model, selected.year) : 0,
+    [selected],
+  );
+  const ratingValue = ratingEdit ?? catalogRating;
 
   useEffect(() => {
     if (!selected || strengthsLocked) return;
     setStrengthDraft(
-      kitStrengths(selected, include.payment ? payment : undefined),
+      kitStrengths(
+        selected,
+        include.payment ? payment : undefined,
+        ratingValue,
+      ),
     );
-  }, [selected, include.payment, payment, strengthsLocked]);
+  }, [selected, include.payment, payment, strengthsLocked, ratingValue]);
 
   const priceOptions = useMemo(() => {
     const mid = Math.round((marketEdit.retailLow + marketEdit.retailHigh) / 2);
@@ -240,10 +336,16 @@ export function RvShareApp({
       payment,
       market: marketEdit,
       strengths: strengthDraft,
+      rating: ratingValue,
     });
-  }, [selected, include, payment, marketEdit, strengthDraft]);
+  }, [selected, include, payment, marketEdit, strengthDraft, ratingValue]);
 
   const loan = useMemo(() => paymentBreakdown(payment), [payment]);
+
+  const snap = useMemo(
+    () => (selected ? coachSnapshot(selected, ratingValue) : null),
+    [selected, ratingValue],
+  );
 
   const specGroups = useMemo(
     () => (selected ? brochureSpecGroups(selected) : []),
@@ -483,6 +585,48 @@ export function RvShareApp({
                   })}
                 </div>
 
+                {snap ? (
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-bold tracking-[0.16em] text-white/70">
+                      COACH — RATING IS EDITABLE
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="rounded-[var(--radius-md)] border border-white/10 bg-black/20 px-2.5 py-2">
+                        <p className="text-[9px] font-bold tracking-wide text-white/55">
+                          TYPE
+                        </p>
+                        <p className="mt-0.5 truncate text-[13px] font-bold text-white">
+                          {snap.type || "—"}
+                        </p>
+                      </div>
+                      <DraftNumberField
+                        label="RATING ★"
+                        value={ratingValue}
+                        onChange={setRatingEdit}
+                        min={1}
+                        max={5}
+                        decimals={1}
+                      />
+                      <div className="rounded-[var(--radius-md)] border border-white/10 bg-black/20 px-2.5 py-2">
+                        <p className="text-[9px] font-bold tracking-wide text-white/55">
+                          SLEEPS
+                        </p>
+                        <p className="mt-0.5 truncate text-[13px] font-bold text-white">
+                          {snap.sleeps || "—"}
+                        </p>
+                      </div>
+                      <div className="rounded-[var(--radius-md)] border border-white/10 bg-black/20 px-2.5 py-2">
+                        <p className="text-[9px] font-bold tracking-wide text-white/55">
+                          LENGTH
+                        </p>
+                        <p className="mt-0.5 truncate text-[13px] font-bold text-white">
+                          {snap.length || "—"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
                 {include.market ? (
                   <div className="space-y-2">
                     <p className="text-[9px] font-bold tracking-[0.16em] text-white/70">
@@ -531,13 +675,24 @@ export function RvShareApp({
                 {include.payment ? (
                   <div className="space-y-2">
                     <p className="text-[9px] font-bold tracking-[0.16em] text-white/70">
-                      PAYMENT — PRICE IS EDITABLE
+                      PAYMENT — PRICE & RATE ARE EDITABLE
                     </p>
-                    <MoneyField
-                      label="PRICE"
-                      value={payment.price}
-                      onChange={(price) => setPayment((p) => ({ ...p, price }))}
-                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <MoneyField
+                        label="PRICE"
+                        value={payment.price}
+                        onChange={(price) => setPayment((p) => ({ ...p, price }))}
+                      />
+                      <DraftNumberField
+                        label="INTEREST RATE"
+                        value={payment.apr}
+                        onChange={(apr) => setPayment((p) => ({ ...p, apr }))}
+                        suffix="%"
+                        min={0}
+                        max={30}
+                        decimals={2}
+                      />
+                    </div>
                     {priceOptions.length ? (
                       <div className="flex flex-wrap gap-1.5">
                         {priceOptions.map((o) => (
@@ -559,7 +714,7 @@ export function RvShareApp({
                         ))}
                       </div>
                     ) : null}
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <div className="grid grid-cols-2 gap-2">
                       <label className="block">
                         <span className="mb-1 block text-[9px] font-bold tracking-wide text-white/70">
                           DOWN
@@ -598,14 +753,14 @@ export function RvShareApp({
                           }
                         />
                       </label>
-                      <div className="flex flex-col justify-end rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-2 py-2 text-center">
-                        <p className="text-[9px] font-bold tracking-wide text-white/70">
-                          EST. / MO
-                        </p>
-                        <p className="text-[15px] font-black tabular-nums text-sky-100">
-                          {formatMoney(loan.monthly)}
-                        </p>
-                      </div>
+                    </div>
+                    <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2.5">
+                      <p className="text-[9px] font-bold tracking-wide text-white/70">
+                        EST. / MO
+                      </p>
+                      <p className="text-[15px] font-black tabular-nums text-sky-100">
+                        {formatMoney(loan.monthly)}
+                      </p>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {[

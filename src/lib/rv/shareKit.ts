@@ -11,6 +11,7 @@ import {
   computeLoan,
   defaultAprForTerm,
   formatMoney,
+  formatPct,
 } from "./rvCal";
 import { resolveShareHost } from "@/lib/og/shareHost";
 import { mediaForRvType } from "@/assets/typeMedia";
@@ -50,6 +51,11 @@ export type ShareMarket = {
   msrpLo: number;
   msrpHi: number;
 };
+
+export const SHARE_KIT_HEADER = "SpaceX AI-Powered RvFOX Report";
+export const SHARE_KIT_TAGLINE = "Know before you buy.";
+export const SHARE_KIT_FOOTER =
+  "Prepared in RvFOX Powered By SpaceX. Confirm door sticker, PPI, and lender.";
 
 export type ShareOutcome = "shared" | "copied" | "cancelled" | "failed";
 
@@ -224,12 +230,20 @@ export function brochureSpecGroups(r: RVResult) {
   ].filter((g) => g.rows.length);
 }
 
-export function kitStrengths(r: RVResult, payment?: SharePayment): string[] {
+export function kitStrengths(
+  r: RVResult,
+  payment?: SharePayment,
+  ratingScore?: number,
+): string[] {
   const b = coachBrochure(r);
   const meta = getRatingMetadata(r.make, r.model, r.year);
   const out: string[] = [];
+  const score =
+    ratingScore != null && Number.isFinite(ratingScore) && ratingScore > 0
+      ? ratingScore
+      : meta.score;
   out.push(
-    `${meta.tierLabel} · ${meta.score.toFixed(1)} / 5.0 · ${meta.confidence} confidence`,
+    `${meta.tierLabel} · ${score.toFixed(1)} / 5.0 · ${meta.confidence} confidence`,
   );
   if (meta.yearNote) out.push(meta.yearNote);
   if (
@@ -288,17 +302,24 @@ export function kitStrengths(r: RVResult, payment?: SharePayment): string[] {
   return out;
 }
 
-export function coachSnapshot(r: RVResult): {
+export function coachSnapshot(
+  r: RVResult,
+  ratingOverride?: number,
+): {
   type: string;
   rating: string;
   sleeps: string;
   length: string;
 } {
   const b = coachBrochure(r);
-  const rating = ratingFor(r.make, r.model, r.year);
+  const catalog = ratingFor(r.make, r.model, r.year);
+  const rating =
+    ratingOverride != null && Number.isFinite(ratingOverride) && ratingOverride > 0
+      ? ratingOverride
+      : catalog;
   return {
     type: r.data.type || "",
-    rating: Number.isFinite(rating) ? `★ ${rating.toFixed(1)}` : "",
+    rating: Number.isFinite(rating) && rating > 0 ? `★ ${rating.toFixed(1)}` : "",
     sleeps: b.sleeps || (r.data.sleeps ? String(r.data.sleeps) : ""),
     length: b.lengthFt || "",
   };
@@ -330,15 +351,16 @@ export function buildCoachKit(opts: {
   payment?: SharePayment;
   market?: ShareMarket;
   strengths?: string[];
+  rating?: number;
 }): string {
   const { result: r, include, payment } = opts;
   const lines: string[] = [];
   const title = coachTitle(r);
   const market = opts.market ?? defaultMarketFor(r);
-  const snap = coachSnapshot(r);
+  const snap = coachSnapshot(r, opts.rating);
 
-  lines.push("SpaceX AI Powered RvFOX Report");
-  lines.push("Know before you buy.");
+  lines.push(SHARE_KIT_HEADER);
+  lines.push(SHARE_KIT_TAGLINE);
   lines.push("");
   lines.push(title);
   if (snap.type) lines.push(`Type: ${snap.type}`);
@@ -359,6 +381,9 @@ export function buildCoachKit(opts: {
     lines.push("");
     lines.push("PAYMENT (estimate)");
     lines.push(`Price ${formatMoney(payment.price)}`);
+    if (Number.isFinite(payment.apr) && payment.apr > 0) {
+      lines.push(`Rate ${formatPct(payment.apr)}`);
+    }
     lines.push(`≈ ${formatMoney(p.monthly)} / mo`);
     lines.push("Not a lender quote — confirm in RvCAL with ZIP tax.");
   }
@@ -371,7 +396,7 @@ export function buildCoachKit(opts: {
   if (include.strengths) {
     const items =
       opts.strengths ??
-      kitStrengths(r, include.payment ? payment : undefined);
+      kitStrengths(r, include.payment ? payment : undefined, opts.rating);
     const clean = items.map((s) => s.trim()).filter(Boolean);
     if (clean.length) {
       lines.push("");
@@ -395,9 +420,7 @@ export function buildCoachKit(opts: {
 
   lines.push("");
   lines.push("—");
-  lines.push(
-    "Prepared in RvFOX Powered By SpaceX. Confirm door sticker, PPI, and lender.",
-  );
+  lines.push(SHARE_KIT_FOOTER);
   return lines.join("\n");
 }
 
