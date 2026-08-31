@@ -15,47 +15,16 @@ const TABS: {
   id: Exclude<AppTab, "more">;
   label: string;
   short: string;
-  iconSrc: string;
 }[] = [
-  {
-    id: "rvfax",
-    label: "RvFACTS",
-    short: "Facts",
-    iconSrc: "/assets/brand/icon-rvfax.png",
-  },
-  {
-    id: "rvcal",
-    label: "RvCAL",
-    short: "Cal",
-    iconSrc: "/assets/brand/icon-rvcal.png",
-  },
-  {
-    id: "rvtow",
-    label: "RvTOW",
-    short: "Tow",
-    iconSrc: "/assets/brand/icon-rvtow.png",
-  },
-  {
-    id: "rvtrips",
-    label: "RvTRIPS",
-    short: "Trips",
-    iconSrc: "/assets/brand/icon-rvtrips.png",
-  },
-  {
-    id: "rvshare",
-    label: "RvSHARE",
-    short: "Share",
-    iconSrc: "/assets/brand/icon-rvshare.png",
-  },
-  {
-    id: "rvgrok",
-    label: "RvGROK",
-    short: "Grok",
-    iconSrc: "/assets/brand/icon-rvgrok.png",
-  },
+  { id: "rvfax", label: "RvFACTS", short: "Facts" },
+  { id: "rvcal", label: "RvCAL", short: "Cal" },
+  { id: "rvtow", label: "RvTOW", short: "Tow" },
+  { id: "rvtrips", label: "RvTRIPS", short: "Trips" },
+  { id: "rvshare", label: "RvSHARE", short: "Share" },
+  { id: "rvgrok", label: "RvGROK", short: "Grok" },
 ];
 
-/** Floating platinum-glass dock — icons + short labels, sliding active capsule */
+/** Floating platinum-glass dock — text labels, sliding active capsule */
 export function BottomTabs({
   tab,
   onChange,
@@ -116,7 +85,7 @@ export function BottomTabs({
           }}
         />
 
-        {TABS.map(({ id, label, short, iconSrc }) => {
+        {TABS.map(({ id, label, short }) => {
           const active = tab === id;
           const isGrok = id === "rvgrok";
           return (
@@ -131,40 +100,21 @@ export function BottomTabs({
               aria-label={label}
               title={label}
               className={cn(
-                "bottom-tab-btn group relative z-[3] flex min-h-[52px] w-full flex-col items-center justify-center gap-0.5 rounded-[1.25rem] px-0 py-1 sm:min-h-[56px]",
+                "bottom-tab-btn group relative z-[3] flex min-h-[48px] w-full items-center justify-center rounded-[1.25rem] px-0.5 py-2 sm:min-h-[52px]",
                 "transition-[transform,opacity] duration-200 ease-out",
                 "active:scale-[0.94] touch-manipulation select-none",
               )}
             >
               <span
                 className={cn(
-                  "relative flex size-7 items-center justify-center sm:size-8",
-                  active ? "opacity-100" : "opacity-[0.62] group-hover:opacity-90",
-                )}
-              >
-                <img
-                  src={iconSrc}
-                  alt=""
-                  className={cn(
-                    "bottom-tab-icon size-[20px] object-contain sm:size-6",
-                    active && "drop-shadow-[0_0_10px_rgba(160,210,255,0.55)]",
-                    isGrok &&
-                      active &&
-                      "drop-shadow-[0_0_10px_rgba(255,90,110,0.55)]",
-                  )}
-                  draggable={false}
-                />
-              </span>
-              <span
-                className={cn(
-                  "bottom-tab-label text-center text-[8.5px] font-semibold uppercase leading-none tracking-[0.1em] sm:text-[10px] sm:tracking-[0.14em]",
+                  "bottom-tab-label text-center text-[12px] font-bold uppercase leading-none tracking-[0.06em] sm:text-[13px] sm:tracking-[0.08em]",
                   isGrok
                     ? active
                       ? "text-[#ffd0d6]"
-                      : "text-white/45"
+                      : "text-white/55"
                     : active
                       ? "text-sky-50"
-                      : "text-white/45",
+                      : "text-white/55",
                 )}
               >
                 {short}
@@ -173,7 +123,7 @@ export function BottomTabs({
                 <span
                   aria-hidden
                   className={cn(
-                    "absolute bottom-1 h-[2px] w-3.5 rounded-full",
+                    "absolute bottom-1.5 h-[2px] w-3.5 rounded-full",
                     isGrok
                       ? "bg-[#ff8a96] shadow-[0_0_8px_rgba(255,90,110,0.8)]"
                       : "bg-sky-200 shadow-[0_0_8px_rgba(140,200,255,0.75)]",
