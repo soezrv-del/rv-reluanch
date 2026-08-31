@@ -15,6 +15,7 @@ import {
 } from "./rvCal";
 import { resolveShareHost } from "@/lib/og/shareHost";
 import { mediaForRvType } from "@/assets/typeMedia";
+import { REPORT_CONTACT_LINE } from "./reportContact";
 
 export const SAVED_UNITS_KEY = "rvfax_saved_v1";
 export const SAVED_UNITS_EVENT = "rvfax-saved-changed";
@@ -56,7 +57,7 @@ export const SHARE_KIT_HEADER = "SpaceX AI-Powered RvFOX Report";
 export const SHARE_KIT_TAGLINE = "Know before you buy.";
 export const SHARE_KIT_FOOTER =
   "Prepared in RvFOX Powered By SpaceX. Confirm door sticker, PPI, and lender.";
-export const SHARE_KIT_CONTACT = "David Hansen 702-266-5918";
+export const SHARE_KIT_CONTACT = REPORT_CONTACT_LINE;
 
 export type ShareOutcome = "shared" | "copied" | "cancelled" | "failed";
 
@@ -422,6 +423,7 @@ export function buildCoachKit(opts: {
   lines.push("");
   lines.push("—");
   lines.push(SHARE_KIT_FOOTER);
+  lines.push("");
   lines.push(SHARE_KIT_CONTACT);
   return lines.join("\n");
 }

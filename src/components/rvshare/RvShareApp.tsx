@@ -50,6 +50,11 @@ import {
   type ShareMarket,
   type SharePayment,
 } from "@/lib/rv/shareKit";
+import {
+  REPORT_CONTACT_NAME,
+  REPORT_CONTACT_PHONE,
+  REPORT_CONTACT_TEL,
+} from "@/lib/rv/reportContact";
 
 function sampleCoach(): RVResult | null {
   const spec = getSpec("Newmar", "Essex");
@@ -876,6 +881,35 @@ export function RvShareApp({
                 <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/10 bg-black/30 p-3 text-[11px] leading-relaxed text-white/85">
                   {kitText}
                 </pre>
+
+                <div
+                  data-report-signature="1"
+                  className="overflow-hidden rounded-[var(--radius-lg)] border border-white/15 bg-[#0b1b33]"
+                >
+                  <div className="border-b border-white/10 px-4 py-3.5">
+                    <p className="text-[9px] font-bold tracking-[0.2em] text-sky-300">
+                      PREPARED BY
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+                      <p className="text-[20px] font-black tracking-tight text-white">
+                        {REPORT_CONTACT_NAME}
+                      </p>
+                      <a
+                        href={`tel:${REPORT_CONTACT_TEL}`}
+                        className="text-[15px] font-bold text-white underline decoration-sky-400 underline-offset-4"
+                      >
+                        {REPORT_CONTACT_PHONE}
+                      </a>
+                    </div>
+                    <p className="mt-2 text-[11px] font-semibold text-white/55">
+                      SpaceX AI-Powered RvFOX Report
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-[10px] font-bold tracking-wide text-white/55">
+                    <span>Confirm door sticker · PPI · lender</span>
+                    <span className="text-sky-300">RvFOX Pro</span>
+                  </div>
+                </div>
 
                 <div className="flex flex-wrap gap-2">
                   <button

@@ -24,5 +24,11 @@ test("kit accepts an editable rating override", () => {
 });
 
 test("kit footer includes David Hansen contact", () => {
-  assert.match(src, /David Hansen 702-266-5918/);
+  assert.match(src, /SHARE_KIT_CONTACT/);
+  const contact = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "reportContact.ts"),
+    "utf8",
+  );
+  assert.match(contact, /David Hansen/);
+  assert.match(contact, /702-266-5918/);
 });
