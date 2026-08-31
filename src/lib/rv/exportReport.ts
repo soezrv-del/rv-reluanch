@@ -668,8 +668,8 @@ function buildStandaloneHtml(opts: {
     </div>
 
     <div class="footer-bar">
+      <span><strong>David Hansen</strong> · 702-266-5918</span>
       <span><strong>RvFOX Pro</strong> · Know Before You Buy</span>
-      <span>Motorcoach intelligence</span>
       <span>Confirm door sticker & PPI</span>
     </div>
   </div>

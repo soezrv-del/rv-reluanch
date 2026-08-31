@@ -22,3 +22,7 @@ test("kit accepts an editable rating override", () => {
   assert.match(src, /rating\?: number/);
   assert.match(src, /coachSnapshot\(r, opts\.rating\)/);
 });
+
+test("kit footer includes David Hansen contact", () => {
+  assert.match(src, /David Hansen 702-266-5918/);
+});

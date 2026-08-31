@@ -56,6 +56,7 @@ export const SHARE_KIT_HEADER = "SpaceX AI-Powered RvFOX Report";
 export const SHARE_KIT_TAGLINE = "Know before you buy.";
 export const SHARE_KIT_FOOTER =
   "Prepared in RvFOX Powered By SpaceX. Confirm door sticker, PPI, and lender.";
+export const SHARE_KIT_CONTACT = "David Hansen 702-266-5918";
 
 export type ShareOutcome = "shared" | "copied" | "cancelled" | "failed";
 
@@ -421,6 +422,7 @@ export function buildCoachKit(opts: {
   lines.push("");
   lines.push("—");
   lines.push(SHARE_KIT_FOOTER);
+  lines.push(SHARE_KIT_CONTACT);
   return lines.join("\n");
 }
 
