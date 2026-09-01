@@ -14,6 +14,12 @@ import { BottomTabs, type AppTab } from "./BottomTabs";
 import { PAGE_ACCENT, TAB_ORDER } from "./shellConstants";
 import { Launchpad } from "./Launchpad";
 import { ShellNavProvider, type CalSeed } from "./ShellNav";
+import {
+  readActiveCoach,
+  writeActiveCoach,
+  type ActiveCoach,
+  type ActiveCoachInput,
+} from "@/lib/rv/activeCoach";
 import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import {
   useFocusScrollIntoView,
@@ -108,6 +114,10 @@ export function AppShell() {
   const [tab, setTab] = useState<AppTab>("rvfax");
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
   const [calSeed, setCalSeed] = useState<CalSeed | null>(null);
+  const [activeCoach, setActiveCoachState] = useState<ActiveCoach | null>(() =>
+    readActiveCoach(),
+  );
+  const [factsPickerToken, setFactsPickerToken] = useState(0);
   const [launchOpen, setLaunchOpen] = useState(true);
   const [launchFading, setLaunchFading] = useState(false);
   const [suiteReady, setSuiteReady] = useState(false);
@@ -179,6 +189,17 @@ export function AppShell() {
 
   const clearCalSeed = useCallback(() => setCalSeed(null), []);
 
+  const setActiveCoach = useCallback((sel: ActiveCoachInput | null) => {
+    const next = writeActiveCoach(sel);
+    setActiveCoachState(next);
+  }, []);
+
+  const openFactsPicker = useCallback(() => {
+    setFactsPickerToken((n) => n + 1);
+    setTab("rvfax");
+    markVisited("rvfax");
+  }, [markVisited]);
+
   const onTabChange = useCallback(
     (next: AppTab) => {
       setTab(next);
@@ -210,6 +231,10 @@ export function AppShell() {
       calSeed,
       openCalWithPrice,
       clearCalSeed,
+      activeCoach,
+      setActiveCoach,
+      openFactsPicker,
+      factsPickerToken,
     }),
     [
       tab,
@@ -219,6 +244,10 @@ export function AppShell() {
       calSeed,
       openCalWithPrice,
       clearCalSeed,
+      activeCoach,
+      setActiveCoach,
+      openFactsPicker,
+      factsPickerToken,
     ],
   );
 

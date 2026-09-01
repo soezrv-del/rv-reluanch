@@ -1,4 +1,5 @@
 import { computeRating } from "./ratingSystem";
+import { clampTradeToRetailLow } from "./marketClamp";
 import {
   CATALOG_INDEX,
   MAKES,
@@ -19,7 +20,7 @@ import {
 } from "./rvTypes";
 
 export type { RVSpec };
-export { MAKES, YEARS, CLASSIC_BRANDS };
+export { MAKES, YEARS, CLASSIC_BRANDS, clampTradeToRetailLow };
 export {
   ensureCatalogLoaded,
   getRVData,
@@ -721,6 +722,8 @@ export type MarketEstimate = {
   msrpHi: number;
   segment: string;
   ageYears: number;
+  /** True when trade-in was lowered so it cannot sit above retail low. */
+  tradeCappedAtRetailLow?: boolean;
 };
 
 export function estimateMarket(
@@ -765,7 +768,10 @@ export function estimateMarket(
   const retain = Math.max(0.38, 0.92 - age * 0.045);
   const retailHigh = Math.round((msrpHi * retain) / 1000) * 1000;
   const retailLow = Math.round((msrpLo * retain * 0.88) / 1000) * 1000;
-  const tradeIn = Math.round((mid * retain * 0.78) / 1000) * 1000;
+  const rawTrade = Math.round((mid * retain * 0.78) / 1000) * 1000;
+  const lo = Math.min(retailLow, retailHigh);
+  const hi = Math.max(retailLow, retailHigh);
+  const trade = clampTradeToRetailLow(rawTrade, lo);
 
   const segment =
     /diesel/i.test(spec.fuelType) || /diesel/i.test(spec.type)
@@ -779,13 +785,14 @@ export function estimateMarket(
             : "Motorhome";
 
   return {
-    tradeIn,
-    retailLow: Math.min(retailLow, retailHigh),
-    retailHigh: Math.max(retailLow, retailHigh),
+    tradeIn: trade.tradeIn,
+    retailLow: lo,
+    retailHigh: hi,
     msrpLo,
     msrpHi,
     segment,
     ageYears: age,
+    tradeCappedAtRetailLow: trade.capped || undefined,
   };
 }
 

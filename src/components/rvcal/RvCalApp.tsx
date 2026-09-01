@@ -44,6 +44,11 @@ import {
 import { LENDERS_CATALOG } from "@/lib/rv/lendersCatalog";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
+import {
+  activeCoachKey,
+  bestCalPrice,
+  formatActiveCoachChip,
+} from "@/lib/rv/activeCoach";
 
 function clampPrice(n: number) {
   if (!Number.isFinite(n) || n < 0) return 0;
@@ -169,6 +174,7 @@ export function RvCalApp() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const lendersSectionRef = useRef<HTMLElement | null>(null);
   const lastSeedToken = useRef(0);
+  const lastCoachKey = useRef("");
   const nav = useShellNavOptional();
   useEffect(() => {
     const v = validateUsZip(zip);
@@ -236,17 +242,40 @@ export function RvCalApp() {
     const seed = nav?.calSeed;
     if (!seed || seed.token === lastSeedToken.current) return;
     lastSeedToken.current = seed.token;
-    if (seed.price > 0) {
-      setPrice(clampPrice(seed.price));
+    const price =
+      seed.price > 0 ? seed.price : bestCalPrice(nav?.activeCoach ?? undefined);
+    if (price > 0) {
+      setPrice(clampPrice(price));
       setPaymentDriven(false);
       setLastTargetPayment(0);
       setFinanceDriven(false);
       setLastTargetFinance(0);
       setPriceMode("purchase");
-      setCoachLabel(seed.label ?? null);
+      setCoachLabel(
+        seed.label ??
+          (nav?.activeCoach ? formatActiveCoachChip(nav.activeCoach) : null),
+      );
     }
+    if (nav?.activeCoach) lastCoachKey.current = activeCoachKey(nav.activeCoach);
     nav?.clearCalSeed();
   }, [nav?.calSeed, nav]);
+
+  useEffect(() => {
+    const coach = nav?.activeCoach;
+    if (!coach || nav?.calSeed) return;
+    const key = activeCoachKey(coach);
+    if (lastCoachKey.current === key) return;
+    const price = bestCalPrice(coach);
+    if (price <= 0) return;
+    lastCoachKey.current = key;
+    setPrice(clampPrice(price));
+    setCoachLabel(formatActiveCoachChip(coach));
+    setPaymentDriven(false);
+    setLastTargetPayment(0);
+    setFinanceDriven(false);
+    setLastTargetFinance(0);
+    setPriceMode("purchase");
+  }, [nav?.activeCoach, nav?.calSeed]);
   const loanOpts = useMemo(() => ({
     apr,
     termMonths,

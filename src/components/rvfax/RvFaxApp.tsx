@@ -51,6 +51,8 @@ import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullResetHint } from "@/components/shell/PullResetHint";
+import { ActiveCoachChip } from "@/components/shell/ActiveCoachChip";
+import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import { SelectSheet } from "./SelectSheet";
 import { writeActiveCoach } from "@/lib/rv/activeCoach";
 
@@ -127,6 +129,7 @@ export function RvFaxApp({
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const adaptiveGlass = useAdaptiveGlass(PRESTIGE_BACKDROP, scrollRef);
   const kb = useKeyboardInset();
+  const nav = useShellNavOptional();
 
   const resetFax = useCallback(() => {
     setYear("");
@@ -197,13 +200,24 @@ export function RvFaxApp({
     if (next.rvType !== undefined) setRvType(next.rvType);
   }, []);
 
+  const setActiveCoach = nav?.setActiveCoach;
+  const factsPickerToken = nav?.factsPickerToken ?? 0;
+
   useEffect(() => {
-    writeActiveCoach(
+    const payload =
       year && make && model
         ? { year, make, model, floorplan, rvType }
-        : null,
-    );
-  }, [year, make, model, floorplan, rvType]);
+        : null;
+    if (setActiveCoach) setActiveCoach(payload);
+    else writeActiveCoach(payload);
+  }, [year, make, model, floorplan, rvType, setActiveCoach]);
+
+  useEffect(() => {
+    if (!factsPickerToken) return;
+    setDetail(null);
+    setCompareOpen(false);
+    setVinOpen(false);
+  }, [factsPickerToken]);
 
   const yearsForEra = useMemo(() => {
     const e = YEAR_ERAS.find((x) => x.id === era) ?? YEAR_ERAS[0]!;
@@ -527,6 +541,7 @@ export function RvFaxApp({
       className="rvfax-screen adaptive-glass relative flex h-full min-h-0 flex-col overflow-hidden text-white"
       style={adaptiveGlass.style}
       data-glass-l={adaptiveGlass.luminance.toFixed(3)}
+      data-readable-cards=""
     >
       <SuiteBackdrop src={PRESTIGE_BACKDROP} />
 
@@ -541,6 +556,7 @@ export function RvFaxApp({
         }}
       >
         <ScrollSuiteHeader tab="rvfax" />
+        <ActiveCoachChip />
         <PullResetHint
           show={pullHint}
           label="Release to reset search · pull down"

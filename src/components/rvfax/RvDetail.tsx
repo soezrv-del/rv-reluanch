@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -10,16 +10,24 @@ import {
   Heart,
   Loader2,
   MapPin,
+  MoreHorizontal,
   Printer,
   Sparkles,
 } from "lucide-react";
 import type { RVResult } from "@/lib/rv/catalog";
 import {
+  clampTradeToRetailLow,
   estimateMarket,
   formatMoney,
   getFloorplansForYear,
   ratingFor,
 } from "@/lib/rv/catalog";
+import {
+  bestCalPrice,
+  formatActiveCoachChip,
+  formatActiveCoachShort,
+  snapshotActiveCoach,
+} from "@/lib/rv/activeCoach";
 import { getRatingMetadata, ratingStars } from "@/lib/rv/ratingSystem";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import {
@@ -165,8 +173,21 @@ export function RvDetail({
   const [invError, setInvError] = useState<string | null>(null);
   const [invListings, setInvListings] = useState<McListingCard[]>([]);
   const [invSearched, setInvSearched] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement | null>(null);
 
   const pullHint = usePullToReset(scrollRef, onBack);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onDoc = (e: MouseEvent | PointerEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onDoc);
+    return () => document.removeEventListener("pointerdown", onDoc);
+  }, [moreOpen]);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -399,21 +420,33 @@ export function RvDetail({
   );
 
   const liveLadder = liveMarketLadder(live?.live ? live : null);
-  const market = useMemo(
-    () =>
-      liveLadder
-        ? {
-            tradeIn: liveLadder.tradeIn,
-            retailLow: liveLadder.retailLow,
-            retailHigh: liveLadder.retailHigh,
-            msrpLo: liveLadder.msrpLo ?? catalogMarket.msrpLo,
-            msrpHi: liveLadder.msrpHi ?? catalogMarket.msrpHi,
-            segment: catalogMarket.segment,
-            ageYears: catalogMarket.ageYears,
-          }
-        : catalogMarket,
-    [liveLadder, catalogMarket],
-  );
+  const market = useMemo(() => {
+    const merged = liveLadder
+      ? {
+          tradeIn:
+            liveLadder.tradeIn > 0 ? liveLadder.tradeIn : catalogMarket.tradeIn,
+          retailLow:
+            liveLadder.retailLow > 0
+              ? liveLadder.retailLow
+              : catalogMarket.retailLow,
+          retailHigh:
+            liveLadder.retailHigh > 0
+              ? liveLadder.retailHigh
+              : catalogMarket.retailHigh,
+          msrpLo: liveLadder.msrpLo ?? catalogMarket.msrpLo,
+          msrpHi: liveLadder.msrpHi ?? catalogMarket.msrpHi,
+          segment: catalogMarket.segment,
+          ageYears: catalogMarket.ageYears,
+        }
+      : catalogMarket;
+    const trade = clampTradeToRetailLow(merged.tradeIn, merged.retailLow);
+    return {
+      ...merged,
+      tradeIn: trade.tradeIn,
+      tradeCappedAtRetailLow:
+        trade.capped || catalogMarket.tradeCappedAtRetailLow,
+    };
+  }, [liveLadder, catalogMarket]);
 
   const displayType =
     (powertrainGuard.hard.fuelType === "Diesel"
@@ -430,6 +463,48 @@ export function RvDetail({
   const displayFuel =
     powertrainGuard.hard.fuelType ||
     data.fuelType;
+
+  const financePrice = bestCalPrice(market);
+  const coachChip = formatActiveCoachChip({
+    year,
+    make,
+    model,
+    floorplan: floorplan || "",
+  });
+  const coachShort = formatActiveCoachShort({
+    year,
+    make,
+    model,
+    floorplan: floorplan || "",
+  });
+
+  const setActiveCoach = shellNav?.setActiveCoach;
+  useEffect(() => {
+    setActiveCoach?.(
+      snapshotActiveCoach({
+        year,
+        make,
+        model,
+        floorplan,
+        rvType: displayType,
+        price: financePrice,
+        gvwr: specs.gvwr,
+        uvw: specs.uvw,
+        towingCapacityLbs: data.towingCapacity,
+      }),
+    );
+  }, [
+    year,
+    make,
+    model,
+    floorplan,
+    displayType,
+    financePrice,
+    specs.gvwr,
+    specs.uvw,
+    data.towingCapacity,
+    setActiveCoach,
+  ]);
 
   const recallCount = recallLoading
     ? data.recalls
@@ -564,7 +639,10 @@ export function RvDetail({
   };
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-bg text-white">
+    <div
+      className="relative flex h-full flex-col overflow-hidden bg-bg text-white"
+      data-readable-cards=""
+    >
       <SuiteBackdrop src={SHARED_PRESTIGE_BACKDROP} />
 
       <div
@@ -576,100 +654,114 @@ export function RvDetail({
         <PullResetHint show={pullHint} label="Release to go back" />
         {/* Sticky under the iPhone clock / Dynamic Island */}
         <div
-          className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/10 bg-black/70 backdrop-blur-md"
+          className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/10 bg-[#070b14]/95 backdrop-blur-md"
           data-no-export
         >
-          <div className="mx-auto flex w-full max-w-lg flex-col gap-2 px-4 pb-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-5">
+          <div className="mx-auto flex w-full max-w-lg items-center gap-1.5 px-3 pb-2 sm:px-5">
             <button
               type="button"
               onClick={onBack}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3.5 py-2 text-[12px] font-bold text-white"
+              className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border border-white/20 bg-black/50 px-3 text-[12px] font-bold text-white"
             >
               <ArrowLeft className="size-3.5" />
               Back
             </button>
-            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <p
+              className="min-w-0 flex-1 truncate text-[12px] font-bold text-white"
+              title={coachChip}
+            >
+              {coachShort}
+            </p>
+            <button
+              type="button"
+              onClick={onAskGrok}
+              className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border border-blue/50 bg-blue/30 px-3 text-[12px] font-bold text-white shadow-[0_0_16px_rgba(80,160,255,0.28)]"
+            >
+              <Sparkles className="size-3.5 text-blue" />
+              Ask Grok
+            </button>
+            <div className="relative shrink-0" ref={moreRef}>
               <button
                 type="button"
-                onClick={onToggleSave}
-                className={cn(
-                  "inline-flex min-h-[44px] items-center gap-1.5 rounded-full border px-3 py-2 text-[12px] font-bold",
-                  saved
-                    ? "border-ruby/50 bg-ruby/25 text-white"
-                    : "border-white/20 bg-black/40 text-white",
-                )}
+                aria-expanded={moreOpen}
+                aria-haspopup="menu"
+                aria-label="More report actions"
+                onClick={() => setMoreOpen((o) => !o)}
+                className="inline-flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white"
               >
-                <Heart className={cn("size-3.5", saved && "fill-current")} />
-                Save
+                <MoreHorizontal className="size-5" />
               </button>
-              {onToggleCompare ? (
-                <button
-                  type="button"
-                  onClick={onToggleCompare}
-                  disabled={!comparing && compareFull}
-                  className={cn(
-                    "inline-flex min-h-[44px] items-center gap-1.5 rounded-full border px-3 py-2 text-[12px] font-bold disabled:opacity-40",
-                    comparing
-                      ? "border-sky-400/50 bg-sky-500/20 text-sky-100"
-                      : "border-white/20 bg-black/40 text-white",
-                  )}
+              {moreOpen ? (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full z-40 mt-1 w-52 overflow-hidden rounded-xl border border-white/15 bg-[#0a1220] py-1 shadow-lg"
                 >
-                  <GitCompare className="size-3.5" />
-                  {comparing
-                    ? `In compare${compareCount ? ` · ${compareCount}` : ""}`
-                    : compareFull
-                      ? "Compare full"
-                      : "Compare"}
-                </button>
+                  <OverflowItem
+                    icon={<Heart className={cn("size-3.5", saved && "fill-current")} />}
+                    label={saved ? "Saved" : "Save"}
+                    onClick={() => {
+                      onToggleSave();
+                      setMoreOpen(false);
+                    }}
+                  />
+                  {onToggleCompare ? (
+                    <OverflowItem
+                      icon={<GitCompare className="size-3.5" />}
+                      label={
+                        comparing
+                          ? `In compare${compareCount ? ` · ${compareCount}` : ""}`
+                          : compareFull
+                            ? "Compare full"
+                            : "Compare"
+                      }
+                      disabled={!comparing && compareFull}
+                      onClick={() => {
+                        onToggleCompare();
+                        setMoreOpen(false);
+                      }}
+                    />
+                  ) : null}
+                  {onOpenCompare && compareCount >= 2 ? (
+                    <OverflowItem
+                      icon={<GitCompare className="size-3.5" />}
+                      label="Open compare"
+                      onClick={() => {
+                        onOpenCompare();
+                        setMoreOpen(false);
+                      }}
+                    />
+                  ) : null}
+                  {shellNav ? (
+                    <OverflowItem
+                      icon={<Calculator className="size-3.5" />}
+                      label="Finance"
+                      onClick={() => {
+                        shellNav.openCalWithPrice(financePrice, coachChip);
+                        setMoreOpen(false);
+                      }}
+                    />
+                  ) : null}
+                  <OverflowItem
+                    icon={
+                      exportBusy ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Printer className="size-3.5" />
+                      )
+                    }
+                    label="PDF"
+                    disabled={exportBusy}
+                    onClick={() => {
+                      void exportPdf();
+                      setMoreOpen(false);
+                    }}
+                  />
+                </div>
               ) : null}
-              {onOpenCompare && compareCount >= 2 ? (
-                <button
-                  type="button"
-                  onClick={onOpenCompare}
-                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-gold/45 bg-gold/15 px-3 py-2 text-[12px] font-bold text-gold-bright"
-                >
-                  Open compare
-                </button>
-              ) : null}
-              {shellNav ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    shellNav.openCalWithPrice(
-                      market.retailLow,
-                      `${year} ${make} ${model}`,
-                    )
-                  }
-                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-gold/40 bg-gold/15 px-3 py-2 text-[12px] font-bold text-gold-bright"
-                >
-                  <Calculator className="size-3.5" />
-                  Finance
-                </button>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => void exportPdf()}
-                disabled={exportBusy}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-2 text-[12px] font-bold text-white disabled:opacity-50"
-              >
-                {exportBusy ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <Printer className="size-3.5" />
-                )}
-                PDF
-              </button>
-              <button
-                type="button"
-                onClick={onAskGrok}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-blue/40 bg-blue/25 px-3 py-2 text-[12px] font-bold text-white"
-              >
-                <Sparkles className="size-3.5 text-blue" />
-                Ask Grok
-              </button>
             </div>
           </div>
         </div>
+        <div className="bg-[#070b14]">
         <div
           id="rvfax-vehicle-report"
           className="mx-auto w-full max-w-lg space-y-5 px-4 pb-32 pt-3 sm:px-5"
@@ -871,7 +963,11 @@ export function RvDetail({
               <MarketTile
                 label="TRADE-IN"
                 value={formatMoney(market.tradeIn)}
-                sub="Dealer trade"
+                sub={
+                  market.tradeCappedAtRetailLow
+                    ? "Capped at retail low"
+                    : "Dealer trade"
+                }
               />
               <MarketTile
                 label="RETAIL LOW"
@@ -884,6 +980,12 @@ export function RvDetail({
                 sub="Dealer asking"
               />
             </div>
+            {market.tradeCappedAtRetailLow ? (
+              <p className="mt-2 text-[11px] leading-snug text-amber">
+                Trade-in capped at retail low — a trade above the retail floor
+                is not a usable lot figure.
+              </p>
+            ) : null}
             {factors.length ? (
               <ul className="mt-2 space-y-1">
                 {factors.map((f) => (
@@ -1381,6 +1483,7 @@ export function RvDetail({
             Confirm brochure, door sticker, and NHTSA before you buy.
           </p>
         </div>
+        </div>
       </div>
 
       {correctOpen ? (
@@ -1481,6 +1584,31 @@ export function RvDetail({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function OverflowItem({
+  icon,
+  label,
+  onClick,
+  disabled,
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      disabled={disabled}
+      onClick={onClick}
+      className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-[13px] font-semibold text-white disabled:opacity-40"
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 
