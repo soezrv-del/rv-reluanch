@@ -175,8 +175,20 @@ export function RvDetail({
   const [invSearched, setInvSearched] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement | null>(null);
+  const [saveFlash, setSaveFlash] = useState<string | null>(null);
+  const wasSavedRef = useRef(saved);
 
   const pullHint = usePullToReset(scrollRef, onBack);
+
+  useEffect(() => {
+    if (saved && !wasSavedRef.current) {
+      setSaveFlash("Saved");
+      const t = window.setTimeout(() => setSaveFlash(null), 1800);
+      wasSavedRef.current = saved;
+      return () => window.clearTimeout(t);
+    }
+    wasSavedRef.current = saved;
+  }, [saved]);
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -674,6 +686,20 @@ export function RvDetail({
             </p>
             <button
               type="button"
+              aria-pressed={saved}
+              aria-label={saved ? "Remove from saved" : "Save this report"}
+              onClick={onToggleSave}
+              className={cn(
+                "inline-flex size-11 shrink-0 items-center justify-center rounded-full border",
+                saved
+                  ? "border-ruby/70 bg-ruby/90 text-white"
+                  : "border-white/20 bg-black/50 text-white",
+              )}
+            >
+              <Heart className={cn("size-4", saved && "fill-current")} />
+            </button>
+            <button
+              type="button"
               onClick={onAskGrok}
               className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border border-blue/50 bg-blue/30 px-3 text-[12px] font-bold text-white shadow-[0_0_16px_rgba(80,160,255,0.28)]"
             >
@@ -698,7 +724,7 @@ export function RvDetail({
                 >
                   <OverflowItem
                     icon={<Heart className={cn("size-3.5", saved && "fill-current")} />}
-                    label={saved ? "Saved" : "Save"}
+                    label={saved ? "Remove from Saved" : "Save to list"}
                     onClick={() => {
                       onToggleSave();
                       setMoreOpen(false);
@@ -766,6 +792,15 @@ export function RvDetail({
           id="rvfax-vehicle-report"
           className="mx-auto w-full max-w-lg space-y-5 px-4 pb-32 pt-3 sm:px-5"
         >
+          {saveFlash ? (
+            <p
+              className="text-center text-[11px] font-semibold text-white/70"
+              data-no-export
+              role="status"
+            >
+              {saveFlash}
+            </p>
+          ) : null}
           {exportMsg ? (
             <p className="text-center text-[11px] text-blue" data-no-export>
               {exportMsg}

@@ -55,6 +55,12 @@ import { ActiveCoachChip } from "@/components/shell/ActiveCoachChip";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import { SelectSheet } from "./SelectSheet";
 import { writeActiveCoach } from "@/lib/rv/activeCoach";
+import {
+  autoSaveFactsUnit,
+  isSavedUnit,
+  SAVED_UNITS_KEY,
+  toggleSavedUnit,
+} from "@/lib/rv/savedUnits";
 
 const RvDetail = lazy(() =>
   import("./RvDetail").then((m) => ({ default: m.RvDetail })),
@@ -74,7 +80,6 @@ function PanelFallback() {
   );
 }
 
-const SAVED_KEY = "rvfax_saved_v1";
 const PRESTIGE_BACKDROP = SHARED_PRESTIGE_BACKDROP;
 
 type YearEra = "all" | "classic" | "recent" | "modern" | "newer17";
@@ -161,9 +166,12 @@ export function RvFaxApp({
   });
 
 
+  const savedRef = useRef(saved);
+  savedRef.current = saved;
+
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(SAVED_KEY);
+      const raw = localStorage.getItem(SAVED_UNITS_KEY);
       if (raw) setSaved(JSON.parse(raw) as RVResult[]);
     } catch {
       /* */
@@ -171,14 +179,21 @@ export function RvFaxApp({
   }, []);
 
   const persistSaved = (next: RVResult[]) => {
+    savedRef.current = next;
     setSaved(next);
     try {
-      localStorage.setItem(SAVED_KEY, JSON.stringify(next));
+      localStorage.setItem(SAVED_UNITS_KEY, JSON.stringify(next));
       window.dispatchEvent(new Event("rvfax-saved-changed"));
     } catch {
       /* */
     }
   };
+
+  useEffect(() => {
+    if (!detail) return;
+    const { next, added } = autoSaveFactsUnit(savedRef.current, detail);
+    if (added) persistSaved(next);
+  }, [detail]);
 
   const cascade = useMemo(
     () =>
@@ -339,10 +354,7 @@ export function RvFaxApp({
           rvType: sel.rvType || undefined,
         }).map((r) => ({
           ...r,
-          saved: saved.some(
-            (s) =>
-              s.make === r.make && s.model === r.model && s.year === r.year,
-          ),
+          saved: isSavedUnit(saved, r),
         }));
         setResults(found);
         setSearching(false);
@@ -417,9 +429,7 @@ export function RvFaxApp({
       rvType: cascade.rvType || undefined,
     }).map((r) => ({
       ...r,
-      saved: saved.some(
-        (s) => s.make === r.make && s.model === r.model && s.year === r.year,
-      ),
+      saved: isSavedUnit(saved, r),
     }));
     setResults(found);
   }, [
@@ -449,28 +459,7 @@ export function RvFaxApp({
   );
 
   const toggleSave = (r: RVResult) => {
-    const exists = saved.some(
-      (s) =>
-        s.year === r.year &&
-        s.make === r.make &&
-        s.model === r.model &&
-        s.floorplan === r.floorplan,
-    );
-    if (exists) {
-      persistSaved(
-        saved.filter(
-          (s) =>
-            !(
-              s.year === r.year &&
-              s.make === r.make &&
-              s.model === r.model &&
-              s.floorplan === r.floorplan
-            ),
-        ),
-      );
-    } else {
-      persistSaved([{ ...r, saved: true }, ...saved].slice(0, 40));
-    }
+    persistSaved(toggleSavedUnit(saved, r));
   };
 
   const toggleCompare = (r: RVResult) => {
@@ -510,13 +499,7 @@ export function RvFaxApp({
           result={detail}
           onBack={() => setDetail(null)}
           onToggleSave={() => toggleSave(detail)}
-          saved={saved.some(
-            (s) =>
-              s.year === detail.year &&
-              s.make === detail.make &&
-              s.model === detail.model &&
-              s.floorplan === detail.floorplan,
-          )}
+          saved={isSavedUnit(saved, detail)}
           comparing={comparePick.some(
             (c) => compareSelectionKey(c) === compareSelectionKey(detail),
           )}
@@ -847,13 +830,7 @@ export function RvFaxApp({
                     <ResultCard
                       key={key}
                       result={r}
-                      saved={saved.some(
-                        (s) =>
-                          s.year === r.year &&
-                          s.make === r.make &&
-                          s.model === r.model &&
-                          s.floorplan === r.floorplan,
-                      )}
+                      saved={isSavedUnit(saved, r)}
                       comparing={comparing}
                       compareFull={comparePick.length >= 3}
                       onOpen={() => setDetail(r)}
@@ -889,22 +866,34 @@ export function RvFaxApp({
                 </button>
               </div>
               {saved.map((r) => (
-                <button
+                <div
                   key={`saved-${compareSelectionKey(r)}`}
-                  type="button"
-                  onClick={() => setDetail(r)}
-                  className="glass-prestige flex min-h-[52px] w-full items-center justify-between gap-2 rounded-xl px-3.5 py-3 text-left active:scale-[0.99]"
+                  className="glass-prestige flex min-h-[52px] w-full items-center gap-1 rounded-xl pr-1"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-[13px] font-bold text-white">
-                      {r.year} {r.make} {r.model}
-                    </p>
-                    <p className="text-[11px] text-white">
-                      {r.floorplan || r.data.type}
-                    </p>
-                  </div>
-                  <ChevronDown className="size-4 -rotate-90 shrink-0 text-white" />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setDetail(r)}
+                    className="flex min-h-[52px] min-w-0 flex-1 items-center justify-between gap-2 px-3.5 py-3 text-left active:scale-[0.99]"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-bold text-white">
+                        {r.year} {r.make} {r.model}
+                      </p>
+                      <p className="text-[11px] text-white">
+                        {r.floorplan || r.data.type}
+                      </p>
+                    </div>
+                    <ChevronDown className="size-4 -rotate-90 shrink-0 text-white" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${r.year} ${r.make} ${r.model} from saved`}
+                    onClick={() => toggleSave(r)}
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
               ))}
             </section>
           ) : null}
