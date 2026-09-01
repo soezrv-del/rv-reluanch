@@ -385,7 +385,7 @@ export function resolveHardPowertrain(opts: {
       hard: {
         engine: pin.engine,
         horsepower: hpVaries ? null : pin.horsepower,
-        torqueLbFt: pin.torqueLbFt ?? base.torqueLbFt,
+        torqueLbFt: hpVaries ? null : (pin.torqueLbFt ?? base.torqueLbFt),
         chassis: pin.chassis ?? base.chassis,
         transmission: pin.transmission ?? base.transmission,
         fuelType: pin.fuelType ?? base.fuelType,

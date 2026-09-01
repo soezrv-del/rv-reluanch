@@ -14363,9 +14363,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         549000,
         899000
       ],
-      engine: "Cummins L9 / X15 (by option)",
-      horsepower: 450,
-      torqueLbFt: 1250,
+      engine: "Cummins L9 450 std / X15 605 opt",
       chassis: "Spartan K3 (typical high-line)",
       transmission: "Allison 3000/4000",
       fuelType: "Diesel",
@@ -14411,8 +14409,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           from: 2020,
           to: 2026,
           engine: "Cummins L9 450 std / X15 605 opt",
-          horsepower: 450,
-          chassis: "Spartan K3"
+          chassis: "Spartan K3",
+          notes: "L9 450 standard / X15 605 optional — HP and torque are option-band, not a locked 450 / 1,250. Confirm door sticker."
         },
         
       ]

@@ -33,7 +33,10 @@ import {
   resolveHardPowertrain,
   type PowertrainTrust,
 } from "@/lib/rv/livePowertrainGuard";
-import { honestHorsepowerLabel } from "@/lib/rv/catalogHonesty";
+import {
+  honestHorsepowerLabel,
+  honestTorqueLabel,
+} from "@/lib/rv/catalogHonesty";
 import {
   findLocalSpecOverride,
   removeLocalSpecOverride,
@@ -336,7 +339,12 @@ export function RvDetail({
       formatHardHorsepower(powertrainGuard.hard.horsepower) ||
       catalogSpecs.horsepower;
     const hardTq =
-      formatHardTorque(powertrainGuard.hard.torqueLbFt) || catalogSpecs.torque;
+      honestTorqueLabel({
+        engine: powertrainGuard.hard.engine || catalogSpecs.engine,
+        torqueLbFt: powertrainGuard.hard.torqueLbFt,
+      }) ||
+      formatHardTorque(powertrainGuard.hard.torqueLbFt) ||
+      catalogSpecs.torque;
 
     const hardOverride = {
       engine: powertrainGuard.hard.engine || catalogSpecs.engine,

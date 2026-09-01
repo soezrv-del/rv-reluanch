@@ -24,6 +24,7 @@ import type { ActiveCoach } from "../rv/activeCoach";
 import {
   honestEngineLabel,
   honestHorsepowerLabel,
+  honestTorqueLabel,
   isAmbiguousCatalogValue,
 } from "../rv/catalogHonesty";
 import { parseCoachFromText } from "./parseCoach";
@@ -314,26 +315,32 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
             trust: snap?.yearTruePowertrain ? "catalog" : "empty",
           },
         );
-  const torque = pickField(
-    {
-      value:
-        local?.torqueLbFt != null && local.torqueLbFt > 0
-          ? `${local.torqueLbFt} lb-ft`
-          : null,
-      trust: "local",
-    },
-    {
-      value: pin?.torqueLbFt != null ? `${pin.torqueLbFt} lb-ft` : null,
-      trust: "pin",
-    },
-    {
-      value:
-        snap?.torqueLbFt != null && snap.torqueLbFt > 0
-          ? `${snap.torqueLbFt} lb-ft`
-          : null,
-      trust: "catalog",
-    },
-  );
+  const tqLabel = local?.torqueLbFt
+    ? `${local.torqueLbFt} lb-ft`
+    : honestTorqueLabel({
+        engine: rawEngine,
+        torqueLbFt:
+          pin?.torqueLbFt != null && pin.torqueLbFt > 0
+            ? pin.torqueLbFt
+            : snap?.torqueLbFt ?? spec?.torqueLbFt ?? null,
+      });
+  const torque = local?.torqueLbFt
+    ? field(`${local.torqueLbFt} lb-ft`, "local")
+    : engineAmbiguous ||
+        (tqLabel && /std|opt|varies|EST|confirm/i.test(tqLabel))
+      ? field(tqLabel, "est")
+      : pickField(
+          {
+            value:
+              pin?.torqueLbFt != null && pin.torqueLbFt > 0 ? tqLabel : null,
+            trust: "pin",
+          },
+          {
+            value:
+              snap?.torqueLbFt != null && snap.torqueLbFt > 0 ? tqLabel : null,
+            trust: "catalog",
+          },
+        );
   const chassis = pickField(
     { value: local?.chassis, trust: "local" },
     { value: pin?.chassis, trust: "pin" },
