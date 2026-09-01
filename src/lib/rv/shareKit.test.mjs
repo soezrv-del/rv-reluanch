@@ -23,8 +23,10 @@ test("kit accepts an editable rating override", () => {
   assert.match(src, /coachSnapshot\(r, opts\.rating\)/);
 });
 
-test("kit footer includes David Hansen contact", () => {
-  assert.match(src, /SHARE_KIT_CONTACT/);
+test("kit footer is a prepared-by signature", () => {
+  assert.match(src, /REPORT_CONTACT_KICKER/);
+  assert.match(src, /REPORT_CONTACT_NAME/);
+  assert.match(src, /REPORT_CONTACT_PHONE/);
   const contact = readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), "reportContact.ts"),
     "utf8",

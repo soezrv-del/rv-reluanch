@@ -8,6 +8,8 @@
 
 import { Capacitor } from "@capacitor/core";
 import {
+  REPORT_CONTACT_KICKER,
+  REPORT_CONTACT_MONOGRAM,
   REPORT_CONTACT_NAME,
   REPORT_CONTACT_PHONE,
   REPORT_CONTACT_TEL,
@@ -548,39 +550,61 @@ function buildStandaloneHtml(opts: {
   .legal p:last-child { margin-bottom: 0; }
 
   .report-foot {
-    margin-top: 18px;
-    background: var(--navy);
-    color: #fff;
+    margin-top: 20px;
+    background: #fff;
   }
-  .foot-sign { padding: 22px 22px 16px; }
+  .foot-cap { height: 6px; background: var(--navy); }
+  .foot-card {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 16px 28px; align-items: center;
+    padding: 20px 22px 18px;
+    background: linear-gradient(180deg, #f8fbfe, #eef4fa);
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 640px) {
+    .foot-card { grid-template-columns: 1fr; padding: 18px 16px 16px; }
+    .foot-brand { text-align: left; }
+  }
+  .foot-who { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .foot-mono {
+    width: 48px; height: 48px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--navy); color: #fff;
+    font-size: 15px; font-weight: 900; letter-spacing: 0.08em;
+    border-radius: 10px;
+  }
   .foot-kicker {
     font-size: 9px; font-weight: 900; letter-spacing: 0.2em;
-    text-transform: uppercase; color: #7ec4ff;
-  }
-  .foot-row {
-    display: flex; justify-content: space-between; align-items: flex-end;
-    gap: 12px; flex-wrap: wrap; margin-top: 8px;
+    text-transform: uppercase; color: var(--blue);
   }
   .foot-name {
-    font-size: 22px; font-weight: 900; letter-spacing: -0.03em;
-    line-height: 1.05; color: #fff;
+    margin-top: 2px;
+    font-size: 24px; font-weight: 900; letter-spacing: -0.03em;
+    line-height: 1.05; color: var(--ink);
   }
   .foot-phone {
-    font-size: 16px; font-weight: 800; color: #fff;
-    text-decoration: none; letter-spacing: 0.02em;
-    border-bottom: 2px solid #3b9eff; padding-bottom: 1px;
+    display: inline-block; margin-top: 6px;
+    font-size: 15px; font-weight: 800; color: var(--blue-deep);
+    text-decoration: none; letter-spacing: 0.01em;
+    border-bottom: 2px solid var(--blue); padding-bottom: 1px;
   }
-  .foot-role {
-    margin-top: 8px; font-size: 11px; font-weight: 700;
-    color: rgba(255,255,255,0.58);
+  .foot-brand { text-align: right; }
+  .foot-word {
+    font-size: 22px; font-weight: 900; letter-spacing: -0.02em;
+    color: var(--ink); line-height: 1;
+  }
+  .foot-word span { color: var(--blue); }
+  .foot-tag {
+    margin-top: 5px; font-size: 10px; font-weight: 900;
+    letter-spacing: 0.14em; color: var(--red); text-transform: uppercase;
   }
   .foot-bar {
     display: flex; justify-content: space-between; align-items: center;
     gap: 10px; flex-wrap: wrap;
     padding: 11px 22px 14px;
-    border-top: 1px solid rgba(255,255,255,0.12);
+    background: var(--navy);
     font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
-    text-transform: uppercase; color: rgba(255,255,255,0.62);
+    text-transform: uppercase; color: rgba(255,255,255,0.7);
   }
   .foot-bar strong {
     color: #7ec4ff; font-weight: 900; letter-spacing: 0.04em;
@@ -706,17 +730,24 @@ function buildStandaloneHtml(opts: {
     </div>
 
     <footer class="report-foot">
-      <div class="foot-sign">
-        <div class="foot-kicker">Prepared by</div>
-        <div class="foot-row">
-          <div class="foot-name">${escapeHtml(REPORT_CONTACT_NAME)}</div>
-          <a class="foot-phone" href="tel:${REPORT_CONTACT_TEL}">${escapeHtml(REPORT_CONTACT_PHONE)}</a>
+      <div class="foot-cap"></div>
+      <div class="foot-card">
+        <div class="foot-who">
+          <div class="foot-mono" aria-hidden="true">${escapeHtml(REPORT_CONTACT_MONOGRAM)}</div>
+          <div>
+            <div class="foot-kicker">${escapeHtml(REPORT_CONTACT_KICKER)}</div>
+            <div class="foot-name">${escapeHtml(REPORT_CONTACT_NAME)}</div>
+            <a class="foot-phone" href="tel:${REPORT_CONTACT_TEL}">${escapeHtml(REPORT_CONTACT_PHONE)}</a>
+          </div>
         </div>
-        <div class="foot-role">SpaceX AI-Powered RvFOX Report</div>
+        <div class="foot-brand">
+          <div class="foot-word">Rv<span>FOX</span> Pro</div>
+          <div class="foot-tag">Know Before You Buy</div>
+        </div>
       </div>
       <div class="foot-bar">
         <span>Confirm door sticker · PPI · lender</span>
-        <span><strong>RvFOX Pro</strong> · Know Before You Buy</span>
+        <span><strong>RvFOX Pro</strong> · SpaceX AI-Powered</span>
       </div>
     </footer>
   </div>

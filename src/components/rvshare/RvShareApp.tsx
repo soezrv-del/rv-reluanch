@@ -52,6 +52,8 @@ import {
   type SharePayment,
 } from "@/lib/rv/shareKit";
 import {
+  REPORT_CONTACT_KICKER,
+  REPORT_CONTACT_MONOGRAM,
   REPORT_CONTACT_NAME,
   REPORT_CONTACT_PHONE,
   REPORT_CONTACT_TEL,
@@ -886,30 +888,44 @@ export function RvShareApp({
 
                 <div
                   data-report-signature="1"
-                  className="overflow-hidden rounded-[var(--radius-lg)] border border-white/15 bg-[#0b1b33]"
+                  className="overflow-hidden rounded-[var(--radius-lg)] border border-white/20 bg-[#f4f8fc]"
                 >
-                  <div className="border-b border-white/10 px-4 py-3.5">
-                    <p className="text-[9px] font-bold tracking-[0.2em] text-sky-300">
-                      PREPARED BY
-                    </p>
-                    <div className="mt-1.5 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-                      <p className="text-[20px] font-black tracking-tight text-white">
-                        {REPORT_CONTACT_NAME}
-                      </p>
-                      <a
-                        href={`tel:${REPORT_CONTACT_TEL}`}
-                        className="text-[15px] font-bold text-white underline decoration-sky-400 underline-offset-4"
+                  <div className="h-1.5 bg-[#0b1b33]" />
+                  <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-4">
+                    <div className="flex min-w-0 items-center gap-3.5">
+                      <div
+                        aria-hidden
+                        className="flex size-12 shrink-0 items-center justify-center rounded-[10px] bg-[#0b1b33] text-[15px] font-black tracking-[0.08em] text-white"
                       >
-                        {REPORT_CONTACT_PHONE}
-                      </a>
+                        {REPORT_CONTACT_MONOGRAM}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold tracking-[0.2em] text-[#1d6fbf]">
+                          {REPORT_CONTACT_KICKER.toUpperCase()}
+                        </p>
+                        <p className="text-[20px] font-black tracking-tight text-[#0b1220]">
+                          {REPORT_CONTACT_NAME}
+                        </p>
+                        <a
+                          href={`tel:${REPORT_CONTACT_TEL}`}
+                          className="mt-1 inline-block min-h-7 text-[14px] font-bold text-[#0e4f8f] underline decoration-[#1d6fbf] underline-offset-4"
+                        >
+                          {REPORT_CONTACT_PHONE}
+                        </a>
+                      </div>
                     </div>
-                    <p className="mt-2 text-[11px] font-semibold text-white/55">
-                      SpaceX AI-Powered RvFOX Report
-                    </p>
+                    <div className="text-left sm:text-right">
+                      <p className="text-[18px] font-black tracking-tight text-[#0b1220]">
+                        Rv<span className="text-[#1d6fbf]">FOX</span> Pro
+                      </p>
+                      <p className="mt-0.5 text-[9px] font-bold tracking-[0.14em] text-[#c81e1e]">
+                        KNOW BEFORE YOU BUY
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-[10px] font-bold tracking-wide text-white/55">
+                  <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0b1b33] px-4 py-2.5 text-[10px] font-bold tracking-wide text-white/70">
                     <span>Confirm door sticker · PPI · lender</span>
-                    <span className="text-sky-300">RvFOX Pro</span>
+                    <span className="text-sky-300">SpaceX AI-Powered</span>
                   </div>
                 </div>
 
