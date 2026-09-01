@@ -18,6 +18,8 @@ export interface PowertrainYearBand {
   sleeps?: number;
   towingCapacity?: number;
   generator?: string;
+  /** Brochure A/C string when OEM-pinned (e.g. "3 × 15,000 BTU heat pump"). */
+  acUnits?: string;
   gvwrLbs?: number;
   exteriorHeightIn?: number;
   exteriorWidthIn?: number;
@@ -57,6 +59,8 @@ export interface RVSpec {
   blackWater?: number;
   fuelCapacityGal?: number;
   generator?: string;
+  /** Brochure A/C string when OEM-pinned. */
+  acUnits?: string;
   awningLength?: number;
   ceilingHeight?: number;
   founded?: number;

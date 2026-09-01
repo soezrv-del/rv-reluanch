@@ -808,3 +808,97 @@ test("Altitude E-450 pin is 325/450 and does not apply to FS550", () => {
   assert.equal(superC!.horsepower, 335);
   assert.match(superC!.chassis || "", /F-550/);
 });
+
+test("Newmar 2025–2027 OEM DigiBrochure floorplans + yearEnds", () => {
+  const nm = CATALOG_INDEX.Newmar;
+  assert.ok(nm);
+
+  assert.equal(nm["Ventana LE"]?.yearEnd, 2019);
+  assert.equal(nm["Ventana LE"]?.years?.includes(2025), false);
+  assert.equal(nm["Kountry Star"]?.yearEnd, 2024);
+  assert.equal(nm["Kountry Star"]?.years?.includes(2025), false);
+  assert.equal(nm["Kountry Star"]?.years?.includes(2024), true);
+  assert.equal(nm["Northern Star"]?.yearStart, 2025);
+  assert.equal(nm["Northern Star"]?.years?.includes(2025), true);
+  assert.equal(nm["Northern Star"]?.years?.includes(2027), true);
+
+  assert.equal(nm["Dutch Aire"], undefined);
+  assert.equal(nm["All Star"], undefined);
+  assert.equal(CATALOG_INDEX["Newmar Classic"]?.["Dutch Aire"], undefined);
+  assert.equal(CATALOG_INDEX["Newmar Classic"]?.["All Star"], undefined);
+
+  assert.ok(nm["London Aire"]);
+  assert.equal(nm["London Aire"].yearEnd, undefined);
+  assert.equal(nm["London Aire"].years?.includes(2025), true);
+  assert.equal(nm["London Aire"].years?.includes(2027), true);
+  assert.equal(nm["London Aire"].years?.includes(2018), true);
+
+  assert.equal(nm["Freedom Aire"]?.type, "Class C");
+  assert.equal(nm["Super Star"]?.type, "Super C");
+  assert.equal(nm["Summit Aire"]?.type, "Super C");
+  assert.equal(nm["Supreme Aire"]?.type, "Super C");
+  assert.equal(nm["Grand Star"]?.type, "Super C");
+  assert.equal(nm["Bay Star"]?.fuelType, "Gas");
+  assert.equal(nm["Bay Star Sport"]?.fuelType, "Gas");
+  assert.match(nm["Canyon Star"]?.type || "", /Diesel/);
+
+  const block = src("rvData.ts");
+  const n0 = block.indexOf("  Newmar: {");
+  const n1 = block.indexOf("  Tiffin: {");
+  const newmar = block.slice(n0, n1);
+
+  assert.match(newmar, /"2027": \["3836", "4081", "4311", "4325", "4340", "4345", "4369"\]/);
+  assert.match(newmar, /"2027": \["4545", "4551", "4569", "4595"\]/);
+  assert.match(newmar, /"2027": \["4531", "4545", "4596"\]/);
+  assert.match(newmar, /"2027": \["3823", "3825", "4118", "4551"\]/);
+  assert.match(newmar, /"2027": \["3543", "3545", "3547"\]/);
+  assert.match(newmar, /"2027": \["3512","3809","4037","4340","4345","4369"\]/);
+  assert.match(newmar, /"2027": \["4540", "4545", "4551", "4569", "4595"\]/);
+  assert.match(newmar, /"2027": \["3114", "3225", "3609", "3626", "3639", "3640", "3811"\]/);
+  assert.match(newmar, /"2027": \["2813", "3014", "3225"\]/);
+  assert.match(newmar, /"2027": \["3947"\]/);
+  assert.match(newmar, /"2027": \["2515","2512"\]/);
+  assert.match(newmar, /"2027": \["3418","3709","4011","4037"\]/);
+  assert.doesNotMatch(newmar, /"2025": \["3712"/);
+  assert.doesNotMatch(newmar, /"2026": \["3712"/);
+
+  const essex27 = findPowertrainCorrection("2027", "Newmar", "Essex", "4551");
+  assert.equal(essex27!.horsepower, 605);
+  assert.equal(essex27!.torqueLbFt, 1950);
+  const ds27 = findPowertrainCorrection("2027", "Newmar", "Dutch Star", "4081");
+  assert.equal(ds27!.horsepower, 450);
+  assert.equal(ds27!.torqueLbFt, 1250);
+  const ma27 = findPowertrainCorrection("2027", "Newmar", "Mountain Aire", "4551");
+  assert.equal(ma27!.horsepower, 525);
+  assert.equal(ma27!.torqueLbFt, 1695);
+  const vt27 = findPowertrainCorrection("2027", "Newmar", "Ventana", "3512");
+  assert.equal(vt27!.horsepower, 380);
+  assert.match(vt27!.engine, /B6\.7/);
+  const bay27 = findPowertrainCorrection("2027", "Newmar", "Bay Star", "3626");
+  assert.equal(bay27!.horsepower, 335);
+  assert.equal(bay27!.fuelType, "Gas");
+  assert.doesNotMatch(bay27!.engine, /Cummins|L9|diesel/i);
+  const fa26 = findPowertrainCorrection("2026", "Newmar", "Freedom Aire", "2515");
+  assert.equal(fa26!.horsepower, 208);
+  const fa27 = findPowertrainCorrection("2027", "Newmar", "Freedom Aire", "2515");
+  assert.equal(fa27!.horsepower, 211);
+  assert.match(fa27!.chassis || "", /Sprinter/);
+
+  assert.match(newmar, /Onan 12\.5kW Quiet Diesel/);
+  assert.match(newmar, /acUnits: "3 × 15,000 BTU heat pump"/);
+  const kaAc = honestAcUnits({
+    oem: "3 × 15,000 BTU heat pump",
+    type: "Class A Diesel",
+    lengthFt: 45,
+    chassis: "Spartan K3",
+  });
+  assert.match(kaAc, /3\s*[×x]\s*15/);
+  assert.doesNotMatch(kaAc, /typ\./i);
+
+  const ns27 = findPowertrainCorrection("2027", "Newmar", "Northern Star", "3418");
+  assert.equal(ns27!.horsepower, 360);
+  assert.equal(ns27!.torqueLbFt, 800);
+  const cs27 = findPowertrainCorrection("2027", "Newmar", "Canyon Star", "3947");
+  assert.equal(cs27!.horsepower, 340);
+  assert.match(cs27!.chassis || "", /front-engine|FED|Freightliner/i);
+});
