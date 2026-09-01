@@ -516,6 +516,15 @@ export function buildBrochureSpecs(
   const isTowable =
     /travel trailer|fifth|toy hauler|truck camper/i.test(spec.type) ||
     /towable/i.test(spec.fuelType);
+  // Year-first fuel: a 2023 Pace Arrow diesel pin must not inherit F53 "Gas"
+  const resolvedFuel = isTowable
+    ? spec.fuelType
+    : diesel
+      ? "Diesel"
+      : /gas|triton|godzilla|7\.3l/i.test(snap.engine || "") &&
+          !/diesel|cummins|isb|isl|l9/i.test(snap.engine || "")
+        ? "Gas"
+        : spec.fuelType;
   const classAGasNoTag =
     /class\s*a/i.test(spec.type) &&
     !/diesel/i.test(spec.type) &&
@@ -709,7 +718,7 @@ export function buildBrochureSpecs(
           : "Tongue Weight (est.)"
       : "Tow Capacity",
 
-    fuelType: spec.fuelType,
+    fuelType: resolvedFuel,
     engine: engineLabel,
     horsepower: safeHpDisplay,
     torque: isTowable
@@ -769,7 +778,7 @@ export function buildBrochureSpecs(
           : isTowable
             ? "Optional"
             : "See options"),
-      fuelType: spec.fuelType,
+      fuelType: resolvedFuel,
       chassis: snap.chassis ?? spec.chassis,
       engine: snap.engine,
       type: spec.type,

@@ -314,7 +314,7 @@ const OEM_FLOORPLAN_ROWS: Array<{
     makeIncludes: "fleetwood",
     modelIncludes: "discovery",
     yearMin: 2020,
-    yearMax: 2024,
+    yearMax: 2023,
     floorplan: "36Q",
     spec: {
       lengthDisplay: `37' 3"`,
@@ -336,7 +336,7 @@ const OEM_FLOORPLAN_ROWS: Array<{
     makeIncludes: "fleetwood",
     modelIncludes: "discovery",
     yearMin: 2020,
-    yearMax: 2024,
+    yearMax: 2023,
     floorplan: "38K",
     spec: {
       lengthDisplay: `40' 0"`,
