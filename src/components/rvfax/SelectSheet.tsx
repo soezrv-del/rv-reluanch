@@ -91,52 +91,46 @@ export function SelectSheet({
   const suppressItemClickRef = useRef(false);
   const kb = useKeyboardInset();
 
-  const listScrollTop = () => listRef.current?.scrollTop ?? 0;
+  const listScrollTop = useCallback(() => listRef.current?.scrollTop ?? 0, []);
 
-  const startItemGesture = (
-    pointerId: number,
-    x: number,
-    y: number,
-  ) => {
+  const startItemGesture = useCallback((pointerId: number, x: number, y: number) => {
     itemGestureRef.current = beginSheetTap({
       pointerId,
       x,
       y,
-      scrollTop: listScrollTop(),
+      scrollTop: listRef.current?.scrollTop ?? 0,
     });
     suppressItemClickRef.current = false;
-  };
+  }, []);
 
-  const sampleItemGesture = (sample: {
-    x?: number;
-    y?: number;
-    scrollTop?: number;
-  }) => {
-    const g = itemGestureRef.current;
-    if (!g) return;
-    if (
-      noteSheetTapSample(g, {
+  const sampleItemGesture = useCallback(
+    (sample: { x?: number; y?: number; scrollTop?: number }) => {
+      const g = itemGestureRef.current;
+      if (!g) return;
+      if (
+        noteSheetTapSample(g, {
+          ...sample,
+          scrollTop: sample.scrollTop ?? listRef.current?.scrollTop ?? 0,
+        })
+      ) {
+        suppressItemClickRef.current = true;
+      }
+    },
+    [],
+  );
+
+  const consumeItemTap = useCallback(
+    (sample: { x: number; y: number; pointerId?: number }) => {
+      const ok = isSheetTap(itemGestureRef.current, {
         ...sample,
-        scrollTop: sample.scrollTop ?? listScrollTop(),
-      })
-    ) {
-      suppressItemClickRef.current = true;
-    }
-  };
-
-  const consumeItemTap = (sample: {
-    x: number;
-    y: number;
-    pointerId?: number;
-  }) => {
-    const ok = isSheetTap(itemGestureRef.current, {
-      ...sample,
-      scrollTop: listScrollTop(),
-    });
-    if (!ok) suppressItemClickRef.current = true;
-    itemGestureRef.current = null;
-    return ok;
-  };
+        scrollTop: listRef.current?.scrollTop ?? 0,
+      });
+      if (!ok) suppressItemClickRef.current = true;
+      itemGestureRef.current = null;
+      return ok;
+    },
+    [],
+  );
 
   const dragRef = useRef<{
     active: boolean;
@@ -293,7 +287,7 @@ export function SelectSheet({
       list.removeEventListener("touchmove", onTouchMove);
       list.removeEventListener("scroll", onScroll);
     };
-  }, [open, pick]);
+  }, [open, pick, consumeItemTap, sampleItemGesture, startItemGesture]);
 
   /** Drag only from the handle / header — never from the scroll list */
   const beginHandleDrag = useCallback(
@@ -588,6 +582,7 @@ export function SelectSheet({
             if (e.pointerType === "mouse") return;
             const t = e.target as HTMLElement | null;
             if (!t?.closest?.("[data-sheet-item]")) return;
+            if (itemGestureRef.current) return;
             startItemGesture(e.pointerId, e.clientX, e.clientY);
           }}
           onPointerMove={(e) => {
