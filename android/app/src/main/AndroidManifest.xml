@@ -35,7 +35,31 @@
         </provider>
     </application>
 
-    <!-- Permissions -->
+    <!--
+      Permissions — match iOS Info.plist (camera / mic / location) plus
+      WebView getUserMedia + Capacitor 8 network helpers.
+      Runtime prompts are shown by Capacitor's BridgeActivity / WebChromeClient.
+    -->
 
+    <!-- Live HTTPS shell (chat, NHTSA, maps). Keep INTERNET. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- VIN scan + Grok "show this" (navigator.mediaDevices.getUserMedia video) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Grok live voice (getUserMedia audio / WebRTC) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- Trips / nearby dump stations & campgrounds (navigator.geolocation) -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- Optional hardware — do not require, so Play still lists phones without GPS/camera. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 </manifest>

@@ -1,3 +1,6 @@
+// Fresh clone: npm install (resolves :capacitor-android in node_modules),
+// then npm run cap:sync:android (creates capacitor-cordova-android-plugins).
+// Opening this folder in Android Studio before those two steps will fail Gradle sync.
 include ':app'
 include ':capacitor-cordova-android-plugins'
 project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
