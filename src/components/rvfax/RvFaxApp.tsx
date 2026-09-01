@@ -30,14 +30,16 @@ import type { CascadeField, RVResult } from "@/lib/rv/catalog";
 import {
   applyCascadeChange,
   buildCascadeOptions,
+  compareSelectionKey,
+  countModelsForClass,
+  ensureCatalogLoaded,
   modelPickerMeta,
   ratingFor,
   RV_CLASS_TABS,
   rvClassLabel,
   searchCatalog,
-  countModelsForClass,
+  useCatalogReady,
   YEARS,
-  compareSelectionKey,
 } from "@/lib/rv/catalog";
 import { didYouMean, type SuggestHit } from "@/lib/rv/suggest";
 import { cn } from "@/lib/utils";
@@ -118,6 +120,7 @@ export function RvFaxApp({
   const [detail, setDetail] = useState<RVResult | null>(null);
   const [vinOpen, setVinOpen] = useState(false);
   const [comparePick, setComparePick] = useState<RVResult[]>([]);
+  const { ready: catalogReady, gen: catalogGen } = useCatalogReady();
   const [compareOpen, setCompareOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestHit[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -182,7 +185,7 @@ export function RvFaxApp({
         floorplan,
         rvType,
       }),
-    [year, make, model, floorplan, rvType],
+    [year, make, model, floorplan, rvType, catalogGen],
   );
 
   const applySel = useCallback((next: SearchSel) => {
@@ -284,7 +287,7 @@ export function RvFaxApp({
         meta: `${t.n} model${t.n === 1 ? "" : "s"} in ${year || "catalog"}`,
       })),
     ];
-  }, [year]);
+  }, [year, catalogGen]);
 
   const eraItems = useMemo(
     () =>
@@ -302,7 +305,9 @@ export function RvFaxApp({
       setSearching(true);
       setHasSearched(true);
       setSuggestions([]);
-      window.setTimeout(() => {
+      void (async () => {
+        await ensureCatalogLoaded();
+        await new Promise((r) => window.setTimeout(r, 40));
         const found = searchCatalog({
           year: sel.year,
           make: sel.make,
@@ -345,7 +350,7 @@ export function RvFaxApp({
         if (found.length === 1 && !found[0]!.custom) {
           setDetail(found[0]!);
         }
-      }, 200);
+      })();
     },
     [saved],
   );
@@ -404,6 +409,7 @@ export function RvFaxApp({
     hasSearched,
     searching,
     saved,
+    catalogGen,
   ]);
 
   const applySuggestion = useCallback(
@@ -551,6 +557,7 @@ export function RvFaxApp({
                         .filter(Boolean)
                         .join(" → ")
                     : "Year → type → make → model → floorplan"}
+                  {!catalogReady ? " · loading coach library…" : ""}
                 </p>
               </div>
               <button

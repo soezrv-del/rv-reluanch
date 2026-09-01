@@ -1,9 +1,14 @@
-import { MAKES, RV_DATA } from "./rvData";
+import { CATALOG_INDEX, MAKES } from "./rvCatalogIndex";
+import { peekCatalog } from "./catalogLoad";
 import {
   getMakesForYear,
   getModelsForYearMake,
   modelAvailableInYear,
 } from "./catalog";
+
+function specMap() {
+  return peekCatalog()?.RV_DATA ?? CATALOG_INDEX;
+}
 
 export type SuggestHit = {
   kind: "make" | "model" | "combo";
@@ -101,9 +106,10 @@ export function suggestModels(
   if (!query.trim() || !make) return [];
   // Prefer year-scoped models; fall back to all models for that make
   let names = year ? getModelsForYearMake(year, make) : [];
-  if (!names.length && RV_DATA[make]) {
-    names = Object.keys(RV_DATA[make]!).filter((m) => {
-      const sp = RV_DATA[make]![m]!;
+  const data = specMap();
+  if (!names.length && data[make]) {
+    names = Object.keys(data[make]!).filter((m) => {
+      const sp = data[make]![m]!;
       if (!year) return true;
       const y = parseInt(year, 10);
       return modelAvailableInYear(sp, y);
@@ -114,7 +120,7 @@ export function suggestModels(
   if (names.length < 2) {
     const y = parseInt(year, 10);
     for (const mk of MAKES) {
-      const map = RV_DATA[mk];
+      const map = specMap()[mk];
       if (!map) continue;
       for (const [md, sp] of Object.entries(map)) {
         if (year && Number.isFinite(y) && !modelAvailableInYear(sp, y)) continue;
@@ -163,14 +169,15 @@ export function didYouMean(opts: {
   const { year, make, model } = opts;
   const out: SuggestHit[] = [];
 
-  const makeInCatalog = Boolean(RV_DATA[make]);
+  const data = specMap();
+  const makeInCatalog = Boolean(data[make]);
   if (make && !makeInCatalog) {
     out.push(...suggestMakes(make, year, 4));
   }
 
   if (model) {
     if (makeInCatalog) {
-      const models = year ? getModelsForYearMake(year, make) : Object.keys(RV_DATA[make] || {});
+      const models = year ? getModelsForYearMake(year, make) : Object.keys(data[make] || {});
       const exact = models.some((m) => norm(m) === norm(model));
       if (!exact) {
         out.push(...suggestModels(model, year, make, 5));

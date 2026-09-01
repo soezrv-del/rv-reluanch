@@ -51,6 +51,7 @@ import {
   getFloorplansForYear,
   getMakesForYear,
   getModelsForYearMake,
+  useCatalogReady,
 } from "@/lib/rv/catalog";
 import { SelectSheet } from "@/components/rvfax/SelectSheet";
 import {
@@ -132,6 +133,7 @@ export function RvTripsApp() {
   const [model, setModel] = useState("");
   const [floorplan, setFloorplan] = useState("");
   const [sheet, setSheet] = useState<SheetId>(null);
+  const { gen: catalogGen } = useCatalogReady();
 
   const [draft, setDraft] = useState<CoachProfile>(EMPTY_COACH_PROFILE);
   const [locked, setLocked] = useState<CoachProfile | null>(null);
@@ -171,15 +173,15 @@ export function RvTripsApp() {
     }
   }, []);
 
-  const makes = useMemo(() => getMakesForYear(year), [year]);
+  const makes = useMemo(() => getMakesForYear(year), [year, catalogGen]);
   const models = useMemo(
     () => (year && make ? getModelsForYearMake(year, make) : []),
-    [year, make],
+    [year, make, catalogGen],
   );
   const floorplans = useMemo(
     () =>
       year && make && model ? getFloorplansForYear(year, make, model) : [],
-    [year, make, model],
+    [year, make, model, catalogGen],
   );
 
   useEffect(() => {
@@ -220,7 +222,7 @@ export function RvTripsApp() {
       }
       return { ...suggested, locked: false };
     });
-  }, [year, make, model, floorplan]);
+  }, [year, make, model, floorplan, catalogGen]);
 
   const restriction = useMemo(
     () =>

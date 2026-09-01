@@ -1,4 +1,4 @@
-import type { RVSpec } from "./rvData";
+import type { RVSpec } from "./rvTypes";
 import {
   formatFloorplanLength,
   lengthFtFromFloorplan,
