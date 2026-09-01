@@ -761,6 +761,7 @@ export function RvDetail({
             </div>
           </div>
         </div>
+        <div className="bg-[#070b14]">
         <div
           id="rvfax-vehicle-report"
           className="mx-auto w-full max-w-lg space-y-5 px-4 pb-32 pt-3 sm:px-5"
@@ -1481,6 +1482,7 @@ export function RvDetail({
           <p className="px-1 pb-6 text-[12px] text-white">
             Confirm brochure, door sticker, and NHTSA before you buy.
           </p>
+        </div>
         </div>
       </div>
 
