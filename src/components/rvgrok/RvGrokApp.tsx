@@ -26,6 +26,10 @@ import {
 } from "@/lib/rvgrok/history";
 import { streamChat } from "@/lib/rvgrok/stream";
 import { GrokRealtimeSession } from "@/lib/rvgrok/realtime";
+import { buildChatGrounding, buildVoiceGrounding } from "@/lib/rvgrok/grounding";
+import { formatFeedbackContext } from "@/lib/rvgrok/answerFeedback";
+import { readActiveCoach } from "@/lib/rv/activeCoach";
+import { ensureCatalogLoaded } from "@/lib/rv/catalogLoad";
 import type { RealtimeStatus } from "@/lib/rvgrok/realtime";
 import type { GrokVoice } from "@/lib/rvgrok/voice";
 import {
@@ -468,10 +472,35 @@ export function RvGrokApp({
               }))
         );
 
+        const facts = readActiveCoach();
+        const extraText = history
+          .map((m) => (typeof m.content === "string" ? m.content : ""))
+          .join("\n");
+        const preview = buildChatGrounding({
+          query: messageText,
+          facts,
+          extraText,
+        });
+        if (preview.identity) {
+          try {
+            await ensureCatalogLoaded();
+          } catch {
+            /* pin + thin index still ground */
+          }
+        }
+        const grounded = buildChatGrounding({
+          query: messageText,
+          facts,
+          extraText,
+        });
+
         await streamChat({
           messages: history,
           agentMode,
           signal: controller.signal,
+          feedbackContext: formatFeedbackContext(messageText) || undefined,
+          catalogContext: grounded.block || undefined,
+          wantsWebFallback: grounded.needsWeb,
           handlers: {
             onModel: (m) => {
               setActiveModel(m);
@@ -784,6 +813,16 @@ export function RvGrokApp({
 
     const capture = prewarm ?? beginLiveVoiceFromUserGesture();
 
+    const facts = readActiveCoach();
+    if (facts?.year && facts.make && facts.model) {
+      try {
+        await ensureCatalogLoaded();
+      } catch {
+        /* pins still ground Dream / Vision */
+      }
+    }
+    const catalogContext = buildVoiceGrounding({ facts });
+
     // Keep the just-opened mic; a full stop() would kill iOS capture.
     realtimeRef.current?.stop({ keepCapture: true });
     realtimeRef.current = null;
@@ -913,7 +952,7 @@ export function RvGrokApp({
         },
       },
       selectedVoice,
-      { speed: playbackSpeed },
+      { speed: playbackSpeed, catalogContext },
     );
 
     realtimeRef.current = session;

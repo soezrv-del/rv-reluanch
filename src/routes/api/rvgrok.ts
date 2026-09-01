@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
+import { appendGrounding } from "@/lib/rvgrok/grounding";
+import {
+  fetchWebSearchNotes,
+  formatWebSearchInjection,
+} from "@/lib/rvgrok/webSearch";
 import {
   GENERATE_IMAGE_TOOL,
   generateImageFromPrompt,
@@ -33,6 +38,8 @@ type Body = {
   messages?: ChatMessage[];
   agentMode?: boolean;
   feedbackContext?: string;
+  catalogContext?: string;
+  wantsWebFallback?: boolean;
 };
 
 function sseHeaders(extra?: Record<string, string>) {
@@ -52,6 +59,19 @@ function appendFeedback(system: string, ctx?: string) {
   const t = (ctx || "").trim();
   if (!t) return system;
   return `${system}\n\n═══════════════════════════════════════\nUSER-VERIFIED CORRECTIONS (ground truth)\n═══════════════════════════════════════\n${t}\nUse these for that exact year/make/model/floorplan. Do not repeat the old wrong claim.`;
+}
+
+function withGrounding(
+  system: string,
+  opts?: { feedbackContext?: string; catalogContext?: string; webNotes?: string },
+) {
+  let out = appendGrounding(system, opts?.catalogContext);
+  out = appendFeedback(out, opts?.feedbackContext);
+  const web = (opts?.webNotes || "").trim();
+  if (web) {
+    out = `${out}\n\n═══════════════════════════════════════\nWEB RESEARCH\n═══════════════════════════════════════\n${web}`;
+  }
+  return out;
 }
 
 function workerBase() {
@@ -392,6 +412,8 @@ async function tryXaiDirect(
   messages: ChatMessage[],
   agentMode: boolean,
   feedbackContext?: string,
+  catalogContext?: string,
+  webNotes?: string,
 ): Promise<Response | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return null;
@@ -404,7 +426,7 @@ async function tryXaiDirect(
     ? ["grok-4.5", "grok-4-latest", "grok-2-vision-1212", "grok-3"]
     : ["grok-4.5", "grok-4-latest", "grok-4.6", "grok-3", "grok-2-1212"];
 
-  const system = appendFeedback(
+  const system = withGrounding(
     (agentMode ? AGENT_SYSTEM_PROMPT : RV_SYSTEM_PROMPT) +
       (vision
         ? "\n\nA photo is attached. You CAN see it. Describe exactly what is visible (panels, screens, labels, damage, coach exterior). Never claim you cannot see images. Never invent a different scene."
@@ -412,7 +434,7 @@ async function tryXaiDirect(
       (forceImageTool
         ? "\n\nThe user asked for a generated image. You MUST call the generate_image tool with a detailed visual prompt. Do not write a JSON tool call in your content."
         : ""),
-    feedbackContext,
+    { feedbackContext, catalogContext, webNotes },
   );
   const fullMessages: ChatMessage[] = [
     { role: "system", content: system },
@@ -444,6 +466,8 @@ async function tryCloudflareWorker(
   messages: ChatMessage[],
   agentMode: boolean,
   feedbackContext?: string,
+  catalogContext?: string,
+  webNotes?: string,
 ): Promise<Response | null> {
   const base = workerBase();
   const candidates = agentMode
@@ -464,10 +488,10 @@ async function tryCloudflareWorker(
           messages: [
             {
               role: "system",
-              content: appendFeedback(
+              content: withGrounding(
                 (agentMode ? AGENT_SYSTEM_PROMPT : RV_SYSTEM_PROMPT) +
                   systemExtra,
-                feedbackContext,
+                { feedbackContext, catalogContext, webNotes },
               ),
             },
             ...messages,
@@ -594,18 +618,35 @@ export const Route = createFileRoute("/api/rvgrok")({
 
         const agentMode = Boolean(body.agentMode);
         const feedbackContext = body.feedbackContext;
+        const catalogContext = body.catalogContext;
+        const lastUser = [...messages].reverse().find((m) => m.role === "user");
+        const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
+
+        let webNotes: string | undefined;
+        if (body.wantsWebFallback) {
+          const researched = await fetchWebSearchNotes({
+            apiKey: process.env.XAI_API_KEY,
+            query: lastPlain.slice(0, 400),
+            catalogBlock: catalogContext,
+          });
+          webNotes = formatWebSearchInjection(researched);
+        }
 
         // xAI first when the key is present so generate_image (and vision) work.
         const fromXai = await tryXaiDirect(
           messages,
           agentMode,
           feedbackContext,
+          catalogContext,
+          webNotes,
         );
         if (fromXai) return fromXai;
         const fromWorker = await tryCloudflareWorker(
           messages,
           agentMode,
           feedbackContext,
+          catalogContext,
+          webNotes,
         );
         if (fromWorker) return fromWorker;
 

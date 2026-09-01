@@ -38,6 +38,8 @@ export interface ChatRequestBody {
   messages: Array<{ role: MessageRole; content: string }>;
   agentMode?: boolean;
   feedbackContext?: string;
+  catalogContext?: string;
+  wantsWebFallback?: boolean;
 }
 
 /** Agent tool chip labels/colors (AgentStepsCard). */

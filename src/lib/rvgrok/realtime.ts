@@ -61,6 +61,7 @@ export class GrokRealtimeSession {
   private handlers: RealtimeHandlers;
   private voiceId: string;
   private speed: number;
+  private catalogContext: string;
   private rearmTimer: ReturnType<typeof setTimeout> | null = null;
   private earlyPcm: ArrayBuffer[] = [];
   private readonly maxEarlyChunks = 48;
@@ -68,11 +69,12 @@ export class GrokRealtimeSession {
   constructor(
     handlers: RealtimeHandlers,
     voiceId = DEFAULT_VOICE,
-    opts?: { speed?: number },
+    opts?: { speed?: number; catalogContext?: string },
   ) {
     this.handlers = handlers;
     this.voiceId = voiceId;
     this.speed = opts?.speed ?? 1;
+    this.catalogContext = (opts?.catalogContext || "").trim();
   }
 
   get isActive() {
@@ -115,7 +117,36 @@ export class GrokRealtimeSession {
     });
 
     ws.binaryType = "arraybuffer";
-    ws.send(JSON.stringify(buildRealtimeSessionUpdate(this.voiceId, this.speed)));
+    ws.send(
+      JSON.stringify(
+        buildRealtimeSessionUpdate(
+          this.voiceId,
+          this.speed,
+          this.catalogContext,
+        ),
+      ),
+    );
+    if (this.catalogContext) {
+      try {
+        ws.send(
+          JSON.stringify({
+            type: "conversation.item.create",
+            item: {
+              type: "message",
+              role: "user",
+              content: [
+                {
+                  type: "input_text",
+                  text: `VERIFIED CATALOG for this voice session (do not invent against it):\n${this.catalogContext}`,
+                },
+              ],
+            },
+          }),
+        );
+      } catch {
+        /* session can still run without the extra item */
+      }
+    }
     this.flushEarlyAudio();
 
     ws.onmessage = (evt) => this.handleMessage(evt);

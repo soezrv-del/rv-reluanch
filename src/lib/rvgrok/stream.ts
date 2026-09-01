@@ -129,6 +129,8 @@ export async function streamChat(opts: {
   signal?: AbortSignal;
   handlers: StreamHandlers;
   feedbackContext?: string;
+  catalogContext?: string;
+  wantsWebFallback?: boolean;
 }) {
   const response = await fetch("/api/rvgrok", {
     method: "POST",
@@ -137,6 +139,8 @@ export async function streamChat(opts: {
       messages: opts.messages as MultimodalMessage[],
       agentMode: opts.agentMode,
       feedbackContext: opts.feedbackContext || undefined,
+      catalogContext: opts.catalogContext || undefined,
+      wantsWebFallback: opts.wantsWebFallback || undefined,
     }),
     signal: opts.signal,
   });

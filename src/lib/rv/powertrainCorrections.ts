@@ -353,6 +353,20 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     fuelType: "Diesel",
     note: "Reatta diesel — not Aspire/Anthem L9",
   },
+  // American Coach American Dream — option band, not a single invented HP
+  {
+    yearMin: 2020,
+    yearEnd: 2026,
+    makeIncludes: "american coach",
+    modelIncludes: "american dream",
+    engine: "Cummins L9 450 std / X15 605 opt",
+    horsepower: 450,
+    torqueLbFt: 1250,
+    chassis: "Spartan K3",
+    transmission: "Allison 3000/4000",
+    fuelType: "Diesel",
+    note: "2020–2026 American Dream (2023 floorplans 45A / 45B): L9 450 standard, X15 605 optional. Confirm door sticker. Not Tradition Liberty Bridge. Do not invent a single HP.",
+  },
   // Entegra Vision — gas F53 Godzilla only
   {
     yearMin: 2019,

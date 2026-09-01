@@ -13,6 +13,8 @@
  * Models (Grok, Gemini, or demo) NEVER persist engine / HP / chassis /
  * transmission / fuel. Pin stamps brochure truth; otherwise hard fields are
  * stripped on save and on read.
+ * Chat answers must never call saveVerifiedDossier — that path is Live
+ * dossier only (see CHAT_MAY_WRITE_FACTS_CACHE = false).
  */
 
 import type { LiveDossier } from "./liveDossier";

@@ -23,7 +23,7 @@ import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
 const cache = new Map<string, { at: number; data: LiveDossier; model?: string }>();
 const TTL_MS = 6 * 60 * 60 * 1000;
 /** Bump when OEM ground-truth / prompt pipeline / pins change (Phase 4.4) */
-const CACHE_VER = "v22-catalog-hard-lock";
+const CACHE_VER = "v23-catalog-hard-lock-ground";
 
 /** Prefer current Grok; fall through if a slug is unavailable */
 const DOSSIER_MODELS = [
@@ -392,7 +392,7 @@ ${research.text.slice(0, 6000)}
 
 Convert to the required RVFAX dossier JSON only.
 JSON floorplan field must be ${opts.floorplan ? JSON.stringify(opts.floorplan) : "null"}.
-Keep catalog candidate hard powertrain unless research + sources justify a high-confidence override for THIS floorplan.
+Never replace catalog candidate hard powertrain. If research disagrees, note it in overview/sourcesNote only.
 sourcesNote must include real OEM/chassis/listing-style cites from the notes.`;
 
   const extracted = await callGrok(EXTRACT_SYSTEM, extractUser, {
