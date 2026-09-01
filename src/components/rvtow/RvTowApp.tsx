@@ -412,6 +412,35 @@ export function RvTowApp() {
       </div>
 
       <div className="landscape-content mx-auto w-full max-w-lg space-y-3 px-3 pb-8 sm:px-4">
+        {toadMode && prefill.kind === "motorhome" ? (
+          <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
+            <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-sky-200">
+              TOAD MODE
+            </p>
+            <p className="text-[14px] font-bold text-white">
+              {formatActiveCoachChip(prefill.coach)}
+            </p>
+            <p className="mt-2 text-[12px] leading-relaxed text-white/85">
+              This coach is a {prefill.coach.rvType || "motorhome"} — it tows a
+              toad (car), it is not a fifth wheel. Tow stays empty until you
+              pick a truck or match a different trailer.
+            </p>
+            {prefill.coach.towingCapacityLbs ? (
+              <p className="mt-2 text-[11px] font-semibold text-sky-100">
+                Typical coach tow rating ~{" "}
+                {prefill.coach.towingCapacityLbs.toLocaleString()} lbs — confirm
+                the door sticker.
+              </p>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setMatchTrailer(true)}
+              className="mt-3 inline-flex min-h-11 items-center rounded-full border border-white/20 bg-black/40 px-3.5 text-[12px] font-bold text-white"
+            >
+              Match a different trailer instead
+            </button>
+          </section>
+        ) : null}
         <div className="flex gap-1 rounded-full border border-white/15 bg-black/30 p-1">
           {(
             [
@@ -641,35 +670,7 @@ export function RvTowApp() {
           )}
         </section>
 
-        {toadMode && prefill.kind === "motorhome" ? (
-          <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
-            <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-sky-200">
-              TOAD MODE
-            </p>
-            <p className="text-[14px] font-bold text-white">
-              {formatActiveCoachChip(prefill.coach)}
-            </p>
-            <p className="mt-2 text-[12px] leading-relaxed text-white/85">
-              This coach is a {prefill.coach.rvType || "motorhome"} — it tows a
-              toad (car), it is not a fifth wheel. Tow stays empty until you
-              pick a truck or match a different trailer.
-            </p>
-            {prefill.coach.towingCapacityLbs ? (
-              <p className="mt-2 text-[11px] font-semibold text-sky-100">
-                Typical coach tow rating ~{" "}
-                {prefill.coach.towingCapacityLbs.toLocaleString()} lbs — confirm
-                the door sticker.
-              </p>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => setMatchTrailer(true)}
-              className="mt-3 inline-flex min-h-11 items-center rounded-full border border-white/20 bg-black/40 px-3.5 text-[12px] font-bold text-white"
-            >
-              Match a different trailer instead
-            </button>
-          </section>
-        ) : (
+        {toadMode ? null : (
         <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
           <p className="mb-3 text-[10px] font-bold tracking-[0.12em] text-blue">
             RV DETAILS
