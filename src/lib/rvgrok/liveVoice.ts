@@ -150,12 +150,17 @@ export function releaseLiveCapture() {
 export function buildRealtimeSessionUpdate(
   voiceId: string,
   speed = 1,
+  catalogContext?: string,
 ): Record<string, unknown> {
   const clamped = Math.min(1.5, Math.max(0.7, speed));
+  const extra = (catalogContext || "").trim();
+  const instructions = extra
+    ? `${RV_VOICE_INSTRUCTIONS}\n\n${extra}`
+    : `${RV_VOICE_INSTRUCTIONS}\n\nNo verified catalog row is loaded. If they name a year/make/model and you do not have locked numbers, say unknown / EST. — never invent HP, engine, chassis, or fuel.`;
   return {
     type: "session.update",
     session: {
-      instructions: RV_VOICE_INSTRUCTIONS,
+      instructions,
       voice: voiceId,
       turn_detection: {
         type: "server_vad",

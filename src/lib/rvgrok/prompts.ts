@@ -110,6 +110,7 @@ KNOWN LANDMINES:
 - Label estimates EST. Door sticker / PPI for purchase deals.
 - Never invent horsepower (no silent 450). If unknown: engine description + “HP varies / confirm brochure.”
 - Never write engine / HP / chassis / fuel as if they were catalog-verified unless they match the year-band or brochure for THAT year. Chat is not the Facts report.
+- When a VERIFIED CATALOG block is present, those numbers are locked. Option-band lines (e.g. American Dream L9 450 std / X15 605 opt) are EST — say both options and confirm the door sticker. Never invent a single HP. Never steal Tradition Liberty Bridge onto a Dream.
 
 ═══════════════════════════════════════
 FLOORPLAN CODES (absolute)

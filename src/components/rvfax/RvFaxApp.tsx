@@ -52,6 +52,7 @@ import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullResetHint } from "@/components/shell/PullResetHint";
 import { SelectSheet } from "./SelectSheet";
+import { writeActiveCoach } from "@/lib/rv/activeCoach";
 
 const RvDetail = lazy(() =>
   import("./RvDetail").then((m) => ({ default: m.RvDetail })),
@@ -195,6 +196,14 @@ export function RvFaxApp({
     setFloorplan(next.floorplan);
     if (next.rvType !== undefined) setRvType(next.rvType);
   }, []);
+
+  useEffect(() => {
+    writeActiveCoach(
+      year && make && model
+        ? { year, make, model, floorplan, rvType }
+        : null,
+    );
+  }, [year, make, model, floorplan, rvType]);
 
   const yearsForEra = useMemo(() => {
     const e = YEAR_ERAS.find((x) => x.id === era) ?? YEAR_ERAS[0]!;

@@ -16,6 +16,7 @@ import {
   localOverrideAsPin,
 } from "./localSpecOverrides";
 import { engineConflictsWithChassis } from "./powertrainFamily";
+import { isAmbiguousCatalogValue } from "./catalogHonesty";
 
 export type PowertrainTrust =
   | "local"
@@ -94,6 +95,11 @@ const SIBLING_RULES: Array<{
     reject: /\b(cummins|isl|l9|x15|freightliner\s*xc)\b/i,
     reason: "Villagio is Sprinter cowl — rejected Cummins pusher",
   },
+  {
+    modelIncludes: "american dream",
+    reject: /\b(liberty bridge|f-?53|godzilla|triton|v10)\b/i,
+    reason: "American Dream is Spartan diesel — rejected Tradition Liberty Bridge or gas F53",
+  },
 ];
 
 function norm(s: string | null | undefined): string {
@@ -116,14 +122,6 @@ function isEmptyEngine(engine: string | null | undefined): boolean {
   if (/^see chassis/i.test(e)) return true;
   if (/^updating/i.test(e)) return true;
   return e.length < 3;
-}
-
-function isEmptyHp(hp: string | number | null | undefined): boolean {
-  if (hp == null || hp === "" || hp === "—") return true;
-  if (typeof hp === "string" && /varies|confirm brochure|n\/a/i.test(hp))
-    return true;
-  const n = parseHpNum(hp);
-  return n == null || n <= 0;
 }
 
 function fuelLooksDiesel(fuel: string | null | undefined, type?: string): boolean {
@@ -379,12 +377,14 @@ export function resolveHardPowertrain(opts: {
     fuelType: catFuel,
   };
 
-  // Pin always wins hard fields
+  // Pin always wins hard fields. horsepower 0 / option-band engine = not a single HP.
   if (pin) {
+    const hpVaries =
+      pin.horsepower <= 0 || isAmbiguousCatalogValue(pin.engine);
     return {
       hard: {
         engine: pin.engine,
-        horsepower: pin.horsepower > 0 ? pin.horsepower : base.horsepower,
+        horsepower: hpVaries ? null : pin.horsepower,
         torqueLbFt: pin.torqueLbFt ?? base.torqueLbFt,
         chassis: pin.chassis ?? base.chassis,
         transmission: pin.transmission ?? base.transmission,
@@ -397,119 +397,19 @@ export function resolveHardPowertrain(opts: {
     };
   }
 
-  const live = opts.live?.live ? opts.live : null;
-  if (!live) {
-    const trust: PowertrainTrust = base.engine ? "catalog" : "empty";
-    return {
-      hard: base,
-      trust,
-      liveRejectedReasons: [],
-      liveAccepted: false,
-      pin: null,
-    };
-  }
-
-  const reject = validateLivePowertrain({
-    year: opts.year,
-    make: opts.make,
-    model: opts.model,
-    floorplan: opts.floorplan,
-    catalogFuelType: catFuel,
-    catalogType: opts.catalog.type,
-    catalogEngine: catEngine,
-    catalogHp: catalogFamilyBroken ? null : opts.catalog.horsepower,
-    live,
-    pin: null,
-  });
-
-  const liveEngine = live.engine?.trim() || null;
-  const liveHp =
-    live.horsepower != null && live.horsepower > 0 ? live.horsepower : null;
-  const liveOk =
-    reject.length === 0 &&
-    (live.confidence === "high" || live.confidence === "medium");
-
-  // Catalog present → keep unless empty field and Live ok
-  // Catalog empty → fill from Live only if validated
-  // Family-broken catalog (Cummins on Sprinter) is treated as empty
-  const hard: HardPowertrain = { ...base };
-  let usedLive = false;
-
-  const canReplaceCatalog =
-    liveOk && (isEmptyEngine(hard.engine) || catalogFamilyBroken);
-
-  if (canReplaceCatalog && liveEngine) {
-    hard.engine = liveEngine;
-    usedLive = true;
-  }
-
-  if (
-    liveOk &&
-    liveHp != null &&
-    (hard.horsepower == null || hard.horsepower <= 0 || catalogFamilyBroken)
-  ) {
-    hard.horsepower = liveHp;
-    usedLive = true;
-  }
-
-  if (!hard.chassis || hard.chassis === "—") {
-    if (liveOk && live.chassis?.trim()) {
-      hard.chassis = live.chassis.trim();
-      usedLive = true;
-    }
-  }
-
-  if (!hard.transmission || hard.transmission === "—") {
-    if (liveOk && live.transmission?.trim()) {
-      hard.transmission = live.transmission.trim();
-      usedLive = true;
-    }
-  }
-
-  if (!hard.fuelType) {
-    if (liveOk && live.fuelType?.trim()) {
-      hard.fuelType = live.fuelType.trim();
-      usedLive = true;
-    }
-  } else if (!liveOk && live.fuelType) {
-    // keep catalog fuel — ignore live
-  }
-
-  if (live.torqueLbFt != null && live.torqueLbFt > 0) {
-    if (hard.torqueLbFt == null || hard.torqueLbFt <= 0 || catalogFamilyBroken) {
-      if (liveOk) {
-        hard.torqueLbFt = live.torqueLbFt;
-        usedLive = true;
-      }
-    }
-  }
-
-  let trust: PowertrainTrust;
-  if (usedLive && liveOk) {
-    trust =
-      live.confidence === "high" || live.confidence === "medium"
-        ? "live-validated"
-        : "live-unverified";
-    // If we only filled empties with low confidence, still live-unverified
-    if (live.confidence === "low") trust = "live-unverified";
-  } else if (base.engine) {
-    trust = "catalog";
-  } else if (liveEngine && !liveOk) {
-    trust = "empty"; // rejected live, no catalog
-  } else {
-    trust = base.engine ? "catalog" : "empty";
-  }
-
-  // If Live had powertrain but was rejected and we kept catalog
-  if (!liveOk && base.engine) {
-    trust = "catalog";
-  }
-
+  // Hard-field lock: Live Grok never writes engine / HP / chassis / fuel /
+  // transmission. Empty catalog stays empty (unknown / EST) — no invented 450.
+  const trust: PowertrainTrust = base.engine ? "catalog" : "empty";
   return {
-    hard,
+    hard: {
+      ...base,
+      horsepower: isAmbiguousCatalogValue(base.engine) ? null : base.horsepower,
+    },
     trust,
-    liveRejectedReasons: reject,
-    liveAccepted: usedLive && liveOk,
+    liveRejectedReasons: opts.live?.live
+      ? ["Hard powertrain locked to catalog/pin — Live may not write engine/HP/chassis/fuel"]
+      : [],
+    liveAccepted: false,
     pin: null,
   };
 }

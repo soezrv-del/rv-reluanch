@@ -192,7 +192,8 @@ export async function fetchLiveDossier(
         fetchedAt: d.fetchedAt || new Date().toISOString(),
         modelUsed: json.meta?.model || d.modelUsed || null,
       });
-      // Phase 4.1 — save only after pin + validation (handled inside saveVerifiedDossier)
+      // Phase 4.1 — save only after pin + validation (handled inside saveVerifiedDossier).
+      // Chat / RvGROK answers never enter this function.
       saveVerifiedDossier(year, make, model, floorplan, data);
       return { ok: true, data };
     }
