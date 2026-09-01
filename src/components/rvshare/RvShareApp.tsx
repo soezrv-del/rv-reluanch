@@ -19,6 +19,7 @@ import {
   compareSelectionKey,
   getSpec,
   ratingFor,
+  useCatalogReady,
   type RVResult,
 } from "@/lib/rv/catalog";
 import {
@@ -233,6 +234,7 @@ export function RvShareApp({
   onOpenGrok?: (prompt?: string) => void;
 }) {
   const nav = useShellNavOptional();
+  const { ready: catalogReady } = useCatalogReady();
   const [saved, setSaved] = useState<RVResult[]>([]);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [usingSample, setUsingSample] = useState(false);
@@ -276,7 +278,7 @@ export function RvShareApp({
     if (active) reloadSaved();
   }, [active, reloadSaved]);
 
-  const sample = useMemo(() => sampleCoach(), []);
+  const sample = useMemo(() => sampleCoach(), [catalogReady]);
 
   useEffect(() => {
     if (usingSample) return;

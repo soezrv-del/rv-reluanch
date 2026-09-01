@@ -1,4 +1,4 @@
-import type { RVSpec } from "@/lib/rv/rvData";
+import type { RVSpec } from "@/lib/rv/rvTypes";
 import { getSpec, buildCustomSpec } from "@/lib/rv/catalog";
 import type { TripCoach } from "@/lib/trips/tripData";
 

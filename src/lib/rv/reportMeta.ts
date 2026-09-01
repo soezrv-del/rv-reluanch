@@ -1,4 +1,4 @@
-import type { RVSpec } from "./rvData";
+import type { RVSpec } from "./rvTypes";
 import type { MarketEstimate } from "./catalog";
 
 /** Stable-looking report id (not a secret) */

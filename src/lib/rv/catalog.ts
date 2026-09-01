@@ -1,8 +1,36 @@
-import { CLASSIC_BRANDS, MAKES, RV_CARD_IMAGE, RV_DATA, YEARS, type RVSpec } from "./rvData";
 import { computeRating } from "./ratingSystem";
+import {
+  CATALOG_INDEX,
+  MAKES,
+} from "./rvCatalogIndex";
+import {
+  ensureCatalogLoaded,
+  getRVData,
+  isCatalogLoaded,
+  peekCatalog,
+} from "./catalogLoad";
+import { useCatalogReady } from "./useCatalogReady";
+import {
+  CLASSIC_BRANDS,
+  RV_CARD_IMAGE,
+  YEARS,
+  type CatalogIndexSpec,
+  type RVSpec,
+} from "./rvTypes";
 
 export type { RVSpec };
-export { MAKES, YEARS, RV_DATA, CLASSIC_BRANDS };
+export { MAKES, YEARS, CLASSIC_BRANDS };
+export {
+  ensureCatalogLoaded,
+  getRVData,
+  isCatalogLoaded,
+  useCatalogReady,
+};
+
+/** Full live catalog after `ensureCatalogLoaded()`, else the thin wizard index. */
+function catalogMap(): Record<string, Record<string, CatalogIndexSpec>> {
+  return peekCatalog()?.RV_DATA ?? CATALOG_INDEX;
+}
 
 /** Top-of-RvFax class filter tabs */
 export type RvClassId =
@@ -33,7 +61,7 @@ export const RV_CLASS_TABS: {
   { id: "toy-hauler", label: "Toy Hauler", short: "Toy" },
 ];
 
-function classAFuel(spec: RVSpec): "diesel" | "gas" | null {
+function classAFuel(spec: CatalogIndexSpec): "diesel" | "gas" | null {
   const t = (spec.type || "").toLowerCase();
   const f = (spec.fuelType || "").toLowerCase();
   if (/super\s*c/.test(t)) return null;
@@ -48,7 +76,7 @@ function classAFuel(spec: RVSpec): "diesel" | "gas" | null {
 }
 
 /** Match catalog type strings to a class tab */
-export function matchesRvClass(spec: RVSpec, classId: string | undefined): boolean {
+export function matchesRvClass(spec: CatalogIndexSpec, classId: string | undefined): boolean {
   if (!classId) return true;
   const t = (spec.type || "").toLowerCase();
   const fuel = classAFuel(spec);
@@ -139,7 +167,7 @@ function isClassTabId(v: string | undefined): boolean {
 }
 
 export function matchesTypeFilter(
-  spec: RVSpec,
+  spec: CatalogIndexSpec,
   filter: string | undefined,
 ): boolean {
   if (!filter) return true;
@@ -148,7 +176,10 @@ export function matchesTypeFilter(
 }
 
 /** Years listed in floorplansByYear (OEM lineup years), sorted ascending */
-export function yearsFromFloorplansByYear(spec: RVSpec): number[] {
+export function yearsFromFloorplansByYear(spec: CatalogIndexSpec): number[] {
+  if (spec.years?.length) {
+    return [...spec.years].filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
+  }
   const map = spec.floorplansByYear;
   if (!map) return [];
   return Object.keys(map)
@@ -165,7 +196,7 @@ export function yearsFromFloorplansByYear(spec: RVSpec): number[] {
  * 2. Else yearStart / yearEnd window
  * 3. Else treat as available (catalog default window)
  */
-export function modelAvailableInYear(spec: RVSpec, year: number): boolean {
+export function modelAvailableInYear(spec: CatalogIndexSpec, year: number): boolean {
   if (!Number.isFinite(year)) return true;
 
   const fbyYears = yearsFromFloorplansByYear(spec);
@@ -183,7 +214,7 @@ export function modelAvailableInYear(spec: RVSpec, year: number): boolean {
   return true;
 }
 
-export function modelYearWindow(spec: RVSpec): { start: number; end: number } {
+export function modelYearWindow(spec: CatalogIndexSpec): { start: number; end: number } {
   const fbyYears = yearsFromFloorplansByYear(spec);
   if (fbyYears.length > 0) {
     return {
@@ -203,7 +234,7 @@ export function modelYearWindow(spec: RVSpec): { start: number; end: number } {
  * - else full floorplans list when model is available that year
  */
 export function floorplanAvailableInYear(
-  spec: RVSpec,
+  spec: CatalogIndexSpec,
   floorplan: string,
   year: number,
 ): boolean {
@@ -224,7 +255,7 @@ export function getMakesForYear(year: string, rvType?: string): string[] {
   const hasYear = Boolean(year && Number.isFinite(y));
 
   return MAKES.filter((make) => {
-    const models = RV_DATA[make];
+    const models = catalogMap()[make];
     if (!models) return false;
     return Object.values(models).some((spec) => {
       if (!matchesTypeFilter(spec, rvType)) return false;
@@ -250,10 +281,10 @@ export function getModelsForYearMake(
 ): string[] {
   const y = parseInt(year, 10);
   const hasYear = Boolean(year && Number.isFinite(y));
-  const hasMake = Boolean(make && RV_DATA[make]);
+  const hasMake = Boolean(make && catalogMap()[make]);
 
   if (hasMake) {
-    const models = RV_DATA[make]!;
+    const models = catalogMap()[make]!;
     return Object.keys(models)
       .filter((model) => {
         const spec = models[model];
@@ -269,7 +300,7 @@ export function getModelsForYearMake(
   const names: string[] = [];
   const seen = new Set<string>();
   for (const mk of MAKES) {
-    const map = RV_DATA[mk];
+    const map = catalogMap()[mk];
     if (!map) continue;
     for (const [model, spec] of Object.entries(map)) {
       if (!matchesTypeFilter(spec, rvType)) continue;
@@ -295,7 +326,7 @@ export function getFloorplansForYear(
   make: string,
   model: string,
 ): string[] {
-  const spec = RV_DATA[make]?.[model];
+  const spec = catalogMap()[make]?.[model];
   if (!spec) return [];
 
   const y = parseInt(year, 10);
@@ -321,11 +352,11 @@ export function getFloorplansForYear(
 }
 
 export function getFloorplans(make: string, model: string): string[] {
-  return RV_DATA[make]?.[model]?.floorplans ?? [];
+  return catalogMap()[make]?.[model]?.floorplans ?? [];
 }
 
 export function getSpec(make: string, model: string): RVSpec | null {
-  return RV_DATA[make]?.[model] ?? null;
+  return peekCatalog()?.RV_DATA?.[make]?.[model] ?? null;
 }
 
 /** Synthetic brochure card for user-entered coaches not in catalog */
@@ -369,7 +400,7 @@ export function countModelsForClass(year: string, classId: RvClassId): number {
   if (!year) {
     let n = 0;
     for (const make of MAKES) {
-      for (const spec of Object.values(RV_DATA[make] || {})) {
+      for (const spec of Object.values(catalogMap()[make] || {})) {
         if (matchesRvClass(spec, classId)) n++;
       }
     }
@@ -379,7 +410,7 @@ export function countModelsForClass(year: string, classId: RvClassId): number {
   if (!Number.isFinite(y)) return 0;
   let n = 0;
   for (const make of MAKES) {
-    for (const spec of Object.values(RV_DATA[make] || {})) {
+    for (const spec of Object.values(catalogMap()[make] || {})) {
       if (!modelAvailableInYear(spec, y)) continue;
       if (!matchesRvClass(spec, classId)) continue;
       n++;
@@ -394,14 +425,14 @@ export function getRvTypesForFilters(year: string, make?: string): string[] {
 
   const types = new Set<string>();
   const makes =
-    make && RV_DATA[make]
+    make && catalogMap()[make]
       ? [make]
       : hasYear
         ? getMakesForYear(year)
         : [...MAKES];
 
   for (const m of makes) {
-    const map = RV_DATA[m];
+    const map = catalogMap()[m];
     if (!map) continue;
     for (const spec of Object.values(map)) {
       if (hasYear && !modelAvailableInYear(spec, y)) continue;
@@ -580,8 +611,11 @@ export function searchCatalog(sel: Partial<RVSelection>): RVResult[] {
   const y = parseInt(sel.year, 10);
   if (!Number.isFinite(y)) return [];
 
+  const live = peekCatalog()?.RV_DATA;
+  if (!live) return [];
+
   const make = sel.make;
-  const map = RV_DATA[make];
+  const map = live[make];
 
   // Entirely custom make — one synthetic result
   if (!map) {
@@ -773,12 +807,15 @@ export function modelPickerMeta(
   model: string,
   year: string,
 ): string {
-  const spec = getSpec(make, model);
+  const spec = getSpec(make, model) ?? catalogMap()[make]?.[model];
   if (!spec) return "Custom entry";
   const { start, end } = modelYearWindow(spec);
-  const fps = year ? getFloorplansForYear(year, make, model) : getFloorplans(make, model);
   const endLabel =
     end >= 2026 && !spec.yearEnd ? "present" : String(end);
+  const fps = year
+    ? getFloorplansForYear(year, make, model)
+    : getFloorplans(make, model);
+  if (!fps.length) return `${spec.type} · ${start}–${endLabel}`;
   return `${spec.type} · ${start}–${endLabel} · ${fps.length} FP`;
 }
 

@@ -7,7 +7,8 @@
  * 4.3 clearVerifiedDossier / clearAll — user can bust a bad entry
  * 4.4 CACHE_SCHEMA_VERSION bumps invalidate old bad dossiers
  *
- * Static rvData.ts stays as the dropdown index + first paint.
+ * Thin rvCatalogIndex.ts is the dropdown index + first paint; rvData.ts
+ * loads via ensureCatalogLoaded() when Facts / search / compare need specs.
  * This is NOT Grok model training — local "learned brochure" layer only.
  * Models (Grok, Gemini, or demo) NEVER persist engine / HP / chassis /
  * transmission / fuel. Pin stamps brochure truth; otherwise hard fields are

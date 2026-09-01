@@ -38,7 +38,7 @@ import {
   removeLocalSpecOverride,
   saveLocalSpecOverride,
 } from "@/lib/rv/localSpecOverrides";
-import { getMaintenanceSchedule } from "@/lib/rv/rvData";
+import { getMaintenanceSchedule } from "@/lib/rv/rvTypes";
 import { getMockReviews } from "@/lib/rv/rvReviews";
 import {
   fetchLiveDossier,
