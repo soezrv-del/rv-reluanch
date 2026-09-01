@@ -1,7 +1,5 @@
 import { computeRating } from "./ratingSystem";
 import { clampTradeToRetailLow } from "./marketClamp";
-
-export { clampTradeToRetailLow };
 import {
   CATALOG_INDEX,
   MAKES,
@@ -22,7 +20,7 @@ import {
 } from "./rvTypes";
 
 export type { RVSpec };
-export { MAKES, YEARS, CLASSIC_BRANDS };
+export { MAKES, YEARS, CLASSIC_BRANDS, clampTradeToRetailLow };
 export {
   ensureCatalogLoaded,
   getRVData,
