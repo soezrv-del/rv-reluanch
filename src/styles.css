@@ -1286,6 +1286,32 @@
   filter: brightness(1.22) contrast(1.04) saturate(1.1);
 }
 
+/*
+ * Tool / report screens: keep the chrome R on launch + sapphire headers,
+ * but never sit TYPE / LENGTH / ENGINE (or Cal/Tow fields) on that seal.
+ * Launchpad is not [data-readable-cards].
+ */
+[data-readable-cards] .page-backdrop-bright {
+  opacity: 0.04;
+  filter: brightness(1.05) contrast(1) saturate(0.85);
+}
+[data-readable-cards] .page-scrim-soft {
+  background: rgba(4, 8, 16, 0.88);
+}
+[data-readable-cards] .glass-prestige,
+[data-readable-cards] .glass-prestige-deep,
+[data-readable-cards] .glass-prestige-gold,
+[data-readable-cards] .glass-panel,
+[data-readable-cards] .glass-surface {
+  background: linear-gradient(
+    165deg,
+    rgba(10, 16, 32, 0.97) 0%,
+    rgba(6, 10, 22, 0.98) 100%
+  );
+  backdrop-filter: blur(8px) saturate(1.05);
+  -webkit-backdrop-filter: blur(8px) saturate(1.05);
+}
+
 
 /* Live field upgrade flash */
 @keyframes live-field-flash {

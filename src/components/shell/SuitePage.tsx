@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
 import type { AppTab } from "./BottomTabs";
 import { ScrollSuiteHeader } from "./ScrollChrome";
+import { ActiveCoachChip } from "./ActiveCoachChip";
 import { PullResetHint } from "./PullResetHint";
 import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
@@ -115,6 +116,7 @@ export function SuitePage({
         adaptiveGlass && "adaptive-glass",
         className,
       )}
+      data-readable-cards=""
       style={rootStyle}
       data-glass-l={
         adaptiveGlass ? glass.luminance.toFixed(3) : undefined
@@ -137,6 +139,7 @@ export function SuitePage({
         }}
       >
         {tab ? <ScrollSuiteHeader tab={tab} /> : null}
+        {tab === "rvcal" || tab === "rvtow" ? <ActiveCoachChip /> : null}
         {onPullReset ? (
           <PullResetHint show={pullHint} label={pullLabel} />
         ) : null}

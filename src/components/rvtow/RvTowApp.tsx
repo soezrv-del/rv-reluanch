@@ -17,6 +17,12 @@ import {
   type VehicleKind,
 } from "@/lib/tow/towVehicles";
 import { SuitePage } from "@/components/shell/SuitePage";
+import { useShellNavOptional } from "@/components/shell/ShellNavContext";
+import {
+  activeCoachKey,
+  formatActiveCoachChip,
+  towPrefillFromCoach,
+} from "@/lib/rv/activeCoach";
 
 
 const YEARS = Array.from({ length: 22 }, (_, i) => String(2026 - i)); // 2026 → 2005
@@ -61,6 +67,37 @@ export function RvTowApp() {
   const [manualPayload, setManualPayload] = useState("");
   const [manualGcwr, setManualGcwr] = useState("");
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const nav = useShellNavOptional();
+  const lastPrefillKey = useRef("");
+  const [matchTrailer, setMatchTrailer] = useState(false);
+
+  const prefill = useMemo(
+    () => towPrefillFromCoach(nav?.activeCoach ?? null),
+    [nav?.activeCoach],
+  );
+
+  useEffect(() => {
+    const coach = nav?.activeCoach;
+    if (!coach) return;
+    const key = activeCoachKey(coach);
+    if (lastPrefillKey.current === key) return;
+    lastPrefillKey.current = key;
+    setMatchTrailer(false);
+    if (prefill.kind === "motorhome") {
+      setYear("");
+      setMake("");
+      setModel("");
+      setTrim("");
+      setRvType("Travel Trailer");
+      setGvwr("");
+      setPin("");
+    } else if (prefill.kind === "towable") {
+      setRvType(prefill.rvType);
+      if (prefill.gvwrLbs > 0) setGvwr(String(prefill.gvwrLbs));
+    }
+  }, [nav?.activeCoach, prefill]);
+
+  const toadMode = prefill.kind === "motorhome" && !matchTrailer;
 
   const makeList = useMemo(() => makesForKind(kindFilter), [kindFilter]);
 
@@ -242,6 +279,7 @@ export function RvTowApp() {
   };
 
   const resetDefaults = () => {
+    lastPrefillKey.current = "";
     setKindFilter("all");
     setYear("2024");
     setMake("Ford");
@@ -254,6 +292,7 @@ export function RvTowApp() {
     setManualMaxTow("");
     setManualPayload("");
     setManualGcwr("");
+    setMatchTrailer(prefill.kind === "motorhome");
   };
 
   return (
@@ -602,6 +641,35 @@ export function RvTowApp() {
           )}
         </section>
 
+        {toadMode && prefill.kind === "motorhome" ? (
+          <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
+            <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-sky-200">
+              TOAD MODE
+            </p>
+            <p className="text-[14px] font-bold text-white">
+              {formatActiveCoachChip(prefill.coach)}
+            </p>
+            <p className="mt-2 text-[12px] leading-relaxed text-white/85">
+              This coach is a {prefill.coach.rvType || "motorhome"} — it tows a
+              toad (car), it is not a fifth wheel. Tow stays empty until you
+              pick a truck or match a different trailer.
+            </p>
+            {prefill.coach.towingCapacityLbs ? (
+              <p className="mt-2 text-[11px] font-semibold text-sky-100">
+                Typical coach tow rating ~{" "}
+                {prefill.coach.towingCapacityLbs.toLocaleString()} lbs — confirm
+                the door sticker.
+              </p>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setMatchTrailer(true)}
+              className="mt-3 inline-flex min-h-11 items-center rounded-full border border-white/20 bg-black/40 px-3.5 text-[12px] font-bold text-white"
+            >
+              Match a different trailer instead
+            </button>
+          </section>
+        ) : (
         <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
           <p className="mb-3 text-[10px] font-bold tracking-[0.12em] text-blue">
             RV DETAILS
@@ -727,8 +795,9 @@ export function RvTowApp() {
             </p>
           ) : null}
         </section>
+        )}
 
-        {rvType === "Fifth Wheel" && vehicleIsTruck && (
+        {rvType === "Fifth Wheel" && vehicleIsTruck && !toadMode && (
           <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
             <p className="mb-3 text-[13px] font-bold text-blue">
               5th Wheel: Pin Weight & Hitch Guide
