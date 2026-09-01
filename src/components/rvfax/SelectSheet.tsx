@@ -17,6 +17,13 @@ import {
   isIosNativeWebView,
   resolveSheetItemValue,
 } from "@/lib/hooks/iosTapPoint";
+import {
+  beginSheetTap,
+  isSheetTap,
+  noteSheetTapSample,
+  shouldCommitSheetItemClick,
+  type SheetTapGesture,
+} from "@/lib/hooks/sheetTapGesture";
 
 export type SelectSheetItem =
   | string
@@ -43,7 +50,7 @@ function normalize(items: SelectSheetItem[]) {
 /**
  * Floating mobile picker.
  * - Drag handle (top) to dismiss
- * - List scrolls freely — item taps always select (no drag-to-dismiss race)
+ * - List scrolls freely — only a short tap selects; a drag does not
  * - Keyboard OFF by default; tap Type for search / custom entry
  */
 export function SelectSheet({
@@ -80,10 +87,50 @@ export function SelectSheet({
   const listRef = useRef<HTMLDivElement | null>(null);
   const dragYRef = useRef(0);
   const selectedGuard = useRef(false);
-  const itemTouchRef = useRef<{ id: number; y: number; x: number } | null>(
-    null,
-  );
+  const itemGestureRef = useRef<SheetTapGesture | null>(null);
+  const suppressItemClickRef = useRef(false);
   const kb = useKeyboardInset();
+
+  const listScrollTop = useCallback(() => listRef.current?.scrollTop ?? 0, []);
+
+  const startItemGesture = useCallback((pointerId: number, x: number, y: number) => {
+    itemGestureRef.current = beginSheetTap({
+      pointerId,
+      x,
+      y,
+      scrollTop: listRef.current?.scrollTop ?? 0,
+    });
+    suppressItemClickRef.current = false;
+  }, []);
+
+  const sampleItemGesture = useCallback(
+    (sample: { x?: number; y?: number; scrollTop?: number }) => {
+      const g = itemGestureRef.current;
+      if (!g) return;
+      if (
+        noteSheetTapSample(g, {
+          ...sample,
+          scrollTop: sample.scrollTop ?? listRef.current?.scrollTop ?? 0,
+        })
+      ) {
+        suppressItemClickRef.current = true;
+      }
+    },
+    [],
+  );
+
+  const consumeItemTap = useCallback(
+    (sample: { x: number; y: number; pointerId?: number }) => {
+      const ok = isSheetTap(itemGestureRef.current, {
+        ...sample,
+        scrollTop: listRef.current?.scrollTop ?? 0,
+      });
+      if (!ok) suppressItemClickRef.current = true;
+      itemGestureRef.current = null;
+      return ok;
+    },
+    [],
+  );
 
   const dragRef = useRef<{
     active: boolean;
@@ -146,6 +193,8 @@ export function SelectSheet({
     setDragging(false);
     setExiting(false);
     selectedGuard.current = false;
+    itemGestureRef.current = null;
+    suppressItemClickRef.current = false;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -197,26 +246,48 @@ export function SelectSheet({
     if (!open) return;
     const list = listRef.current;
     if (!list) return;
+    const onTouchStart = (e: TouchEvent) => {
+      const t = e.changedTouches.item(0) ?? e.touches.item(0);
+      if (!t) return;
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest?.("[data-sheet-item]")) return;
+      if (!itemGestureRef.current) {
+        startItemGesture(-1, t.clientX, t.clientY);
+      }
+    };
     const onTouchEnd = (e: TouchEvent) => {
       if (!isIosNativeWebView()) return;
       const t = e.changedTouches.item(0);
       if (!t) return;
-      const start = itemTouchRef.current;
-      if (start) {
-        const moved =
-          Math.abs(t.clientX - start.x) > 12 ||
-          Math.abs(t.clientY - start.y) > 12;
-        itemTouchRef.current = null;
-        if (moved) return;
+      if (itemGestureRef.current) {
+        if (!consumeItemTap({ x: t.clientX, y: t.clientY })) return;
+      } else if (suppressItemClickRef.current) {
+        return;
       }
       const value = resolveSheetItemValue(t.clientX, t.clientY, list);
       if (value == null) return;
       e.preventDefault();
       pick(value);
     };
+    const onTouchMove = (e: TouchEvent) => {
+      const t = e.changedTouches.item(0) ?? e.touches.item(0);
+      if (!t) return;
+      sampleItemGesture({ x: t.clientX, y: t.clientY });
+    };
+    const onScroll = () => {
+      sampleItemGesture({ scrollTop: list.scrollTop });
+    };
+    list.addEventListener("touchstart", onTouchStart, { passive: true });
     list.addEventListener("touchend", onTouchEnd, { passive: false });
-    return () => list.removeEventListener("touchend", onTouchEnd);
-  }, [open, pick]);
+    list.addEventListener("touchmove", onTouchMove, { passive: true });
+    list.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      list.removeEventListener("touchstart", onTouchStart);
+      list.removeEventListener("touchend", onTouchEnd);
+      list.removeEventListener("touchmove", onTouchMove);
+      list.removeEventListener("scroll", onScroll);
+    };
+  }, [open, pick, consumeItemTap, sampleItemGesture, startItemGesture]);
 
   /** Drag only from the handle / header — never from the scroll list */
   const beginHandleDrag = useCallback(
@@ -511,21 +582,26 @@ export function SelectSheet({
             if (e.pointerType === "mouse") return;
             const t = e.target as HTMLElement | null;
             if (!t?.closest?.("[data-sheet-item]")) return;
-            itemTouchRef.current = {
-              id: e.pointerId,
-              x: e.clientX,
-              y: e.clientY,
-            };
+            if (itemGestureRef.current) return;
+            startItemGesture(e.pointerId, e.clientX, e.clientY);
+          }}
+          onPointerMove={(e) => {
+            if (e.pointerType === "mouse") return;
+            if (!itemGestureRef.current) return;
+            sampleItemGesture({ x: e.clientX, y: e.clientY });
           }}
           onPointerUp={(e) => {
             if (e.pointerType === "mouse") return;
-            const start = itemTouchRef.current;
-            itemTouchRef.current = null;
-            if (!start || start.id !== e.pointerId) return;
-            const moved =
-              Math.abs(e.clientX - start.x) > 12 ||
-              Math.abs(e.clientY - start.y) > 12;
-            if (moved) return;
+            if (!itemGestureRef.current) return;
+            if (
+              !consumeItemTap({
+                x: e.clientX,
+                y: e.clientY,
+                pointerId: e.pointerId,
+              })
+            ) {
+              return;
+            }
             const value = resolveSheetItemValue(
               e.clientX,
               e.clientY,
@@ -536,7 +612,11 @@ export function SelectSheet({
             pick(value);
           }}
           onPointerCancel={() => {
-            itemTouchRef.current = null;
+            suppressItemClickRef.current = true;
+            itemGestureRef.current = null;
+          }}
+          onScroll={() => {
+            sampleItemGesture({ scrollTop: listScrollTop() });
           }}
         >
           {filtered.length === 0 ? (
@@ -563,6 +643,30 @@ export function SelectSheet({
                     e.stopPropagation();
                     if (item.disabled) return;
                     if (selectedGuard.current) return;
+                    // Keyboard / AT: no pointer gesture — still select.
+                    if (e.detail === 0) {
+                      pick(item.value);
+                      return;
+                    }
+                    if (
+                      !shouldCommitSheetItemClick({
+                        detail: e.detail,
+                        suppressPointerClick: suppressItemClickRef.current,
+                      })
+                    ) {
+                      return;
+                    }
+                    if (
+                      itemGestureRef.current &&
+                      !isSheetTap(itemGestureRef.current, {
+                        x: e.clientX,
+                        y: e.clientY,
+                        scrollTop: listScrollTop(),
+                      })
+                    ) {
+                      suppressItemClickRef.current = true;
+                      return;
+                    }
                     // iOS: pointerup / touchend already resolved the painted
                     // row. A synthesized click would re-hit the WRONG row.
                     if (isIosNativeWebView()) {
