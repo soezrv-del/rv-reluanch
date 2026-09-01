@@ -938,6 +938,82 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "Regular Discovery — not LXE / not ISL 8.9",
   },
   {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "fleetwood",
+    modelIncludes: "altitude",
+    engine: "Ford 7.3L V8 325HP",
+    horsepower: 325,
+    torqueLbFt: 450,
+    chassis: "Ford E-450",
+    transmission: "Electronic 6-speed automatic",
+    fuelType: "Gas",
+    note: "Altitude Class C E-450 brochure: 325 HP / 450 lb-ft — not F53 335/468. Tires LT225/75R16E. Onan 4000W Quiet gas std.",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2026,
+    makeIncludes: "fleetwood",
+    modelIncludes: "insight",
+    engine: "Mercedes-Benz 2.0L 4-cyl turbo diesel 211HP",
+    horsepower: 211,
+    torqueLbFt: 332,
+    chassis: "Mercedes-Benz Sprinter 3500XD",
+    transmission: "9-speed automatic",
+    fuelType: "Diesel",
+    note: "Insight MY26 sales sheet: 211/332 Sprinter 3500XD. Tires LT215/85SR16. 3.6 kW LP gen. Not E-450.",
+  },
+  {
+    yearMin: 2026,
+    yearEnd: 2027,
+    makeIncludes: "fleetwood",
+    modelIncludes: "altitude fs550",
+    engine: "Ford 7.3L V8 335HP",
+    horsepower: 335,
+    torqueLbFt: 468,
+    chassis: "Ford F-550 (4x2 or 4x4)",
+    fuelType: "Gas",
+    note: "Altitude FS550 Super C — F-550 335/468. Not E-450 Altitude.",
+  },
+  {
+    yearMin: 2026,
+    yearEnd: 2027,
+    makeIncludes: "fleetwood",
+    modelIncludes: "altitude fs600d",
+    engine: "Ford 6.7L Power Stroke 330HP",
+    horsepower: 330,
+    torqueLbFt: 950,
+    chassis: "Ford F-600 4x4",
+    transmission: "10-speed automatic",
+    fuelType: "Diesel",
+    note: "Altitude FS600D Super C diesel — F-600 4x4 330/950.",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "fleetwood",
+    modelIncludes: "fortis",
+    engine: "Ford 7.3L V8 335HP",
+    horsepower: 335,
+    torqueLbFt: 468,
+    chassis: "Ford F53",
+    transmission: "Ford 6-speed automatic",
+    fuelType: "Gas",
+    note: "Fortis MY26 sales sheet: F53 7.3 335 HP / 468 lb-ft (not marketing 350).",
+  },
+  {
+    yearMin: 2020,
+    yearEnd: 2026,
+    makeIncludes: "fleetwood",
+    modelIncludes: "bounder",
+    engine: "Ford 7.3L V8 335HP",
+    horsepower: 335,
+    torqueLbFt: 468,
+    chassis: "Ford F53",
+    fuelType: "Gas",
+    note: "Bounder MY26 sales sheet: F53 7.3 335/468. Plans 33C / 35GL / 35K / 36F.",
+  },
+  {
     yearMin: 2013,
     yearEnd: 2021,
     makeIncludes: "winnebago",
@@ -1020,6 +1096,17 @@ export function findPowertrainCorrection(
       c.modelIncludes === "vision" &&
       (md.includes("vision xl") || md.includes("diesel"))
     ) {
+      return false;
+    }
+    // Bare "altitude" is E-450 Class C — not FS550 / FS600D Super C
+    if (
+      c.modelIncludes === "altitude" &&
+      (md.includes("fs550") || md.includes("fs600"))
+    ) {
+      return false;
+    }
+    // Bare "frontier" must not stamp GTX
+    if (c.modelIncludes === "frontier" && md.includes("frontier gtx")) {
       return false;
     }
     return true;

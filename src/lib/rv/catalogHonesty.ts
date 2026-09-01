@@ -244,6 +244,10 @@ const BUS_TIRE_RE = /22\.5|275\/70|255\/70|235\/80R22/;
  * Brochure pin wins. Otherwise type-aware typicals — never a hash pick
  * of Class A / bus rubber for a cutaway Class C.
  */
+function chassisLooksSprinterish(chassis?: string | null): boolean {
+  return /sprinter|mercedes/i.test(chassis || "");
+}
+
 export function honestTireSize(opts: {
   oem?: string | null;
   type?: string | null;
@@ -256,11 +260,16 @@ export function honestTireSize(opts: {
       (kind === "class-c" || isCutawayChassis(opts.chassis)) &&
       BUS_TIRE_RE.test(oem)
     ) {
-      return "LT225/75R16E (typ. Class C cutaway — confirm door sticker)";
+      return chassisLooksSprinterish(opts.chassis)
+        ? "LT215/85SR16 (typ. Sprinter Class C — confirm door sticker)"
+        : "LT225/75R16E (typ. Class C cutaway — confirm door sticker)";
     }
     return oem;
   }
   const kind = coachClassKind(opts.type);
+  if (chassisLooksSprinterish(opts.chassis)) {
+    return "LT215/85SR16 (typ. Sprinter Class C — confirm door sticker)";
+  }
   if (kind === "class-c" || isCutawayChassis(opts.chassis)) {
     return "LT225/75R16E (typ. Class C cutaway — confirm door sticker)";
   }
@@ -286,6 +295,7 @@ export function honestAcUnits(opts: {
   oem?: string | null;
   type?: string | null;
   lengthFt?: number | null;
+  chassis?: string | null;
 }): string {
   const oem = (opts.oem || "").trim();
   const kind = coachClassKind(opts.type);
@@ -297,6 +307,9 @@ export function honestAcUnits(opts: {
         : "1 × 15,000 BTU (typ. — confirm brochure)";
     }
     return oem;
+  }
+  if (chassisLooksSprinterish(opts.chassis) && kind === "class-c") {
+    return "13,500 BTU w/ heat pump (typ. Sprinter — confirm brochure)";
   }
   if (kind === "class-c" || kind === "class-b") {
     if (len > 0 && len <= 24) return "1 × 13,500 BTU (typ. — confirm brochure)";
@@ -413,4 +426,19 @@ export function honestHorsepowerForCoach(opts: {
     }
   }
   return parsed;
+}
+
+/** Class C cutaway is typically 50A; Sprinter / van Class C is typically 30A. Never hash-pick. */
+export function honestElectricalService(opts: {
+  type?: string | null;
+  chassis?: string | null;
+  oem?: string | null;
+}): string {
+  const oem = (opts.oem || "").trim();
+  if (oem && oem !== "—") return oem;
+  const kind = coachClassKind(opts.type);
+  if (kind === "class-a" || kind === "super-c") return "50 amp";
+  if (kind === "class-b" || chassisLooksSprinterish(opts.chassis)) return "30 amp";
+  if (kind === "class-c" || isCutawayChassis(opts.chassis)) return "50 amp";
+  return "Confirm brochure";
 }

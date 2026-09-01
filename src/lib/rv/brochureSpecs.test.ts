@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   honestAcUnits,
+  honestElectricalService,
   honestGenerator,
   honestHorsepowerForCoach,
   honestHorsepowerLabel,
@@ -47,6 +48,7 @@ test("buildBrochureSpecs uses honesty helpers so Facts HP follows the engine opt
   assert.match(spec, /honestHorsepowerForCoach/);
   assert.match(spec, /honestTireSize/);
   assert.match(spec, /honestAcUnits/);
+  assert.match(spec, /honestElectricalService/);
   assert.match(spec, /honestGenerator/);
   assert.match(spec, /from "\.\/catalogHonesty"/);
   assert.match(src("catalogHonesty.ts"), /export function parseHp/);
@@ -172,6 +174,36 @@ test("E-450 7.3 does not present F53 350/468 as certified", () => {
   assert.match(tq, /450|confirm/i);
 });
 
+test("Sprinter Class C does not inherit E-450 tires / 50A / triple AC", () => {
+  const tires = honestTireSize({
+    type: "Class C",
+    chassis: "Mercedes-Benz Sprinter 3500XD",
+  });
+  assert.match(tires, /215\/85/);
+  assert.doesNotMatch(tires, /225\/75|22\.5/);
+  const ac = honestAcUnits({
+    type: "Class C",
+    chassis: "Mercedes-Benz Sprinter 3500XD",
+    lengthFt: 25.5,
+  });
+  assert.match(ac, /13,?500/);
+  assert.doesNotMatch(ac, /3\s*[×x]/);
+  assert.equal(
+    honestElectricalService({
+      type: "Class C",
+      chassis: "Mercedes-Benz Sprinter 3500XD",
+    }),
+    "30 amp",
+  );
+  assert.equal(
+    honestElectricalService({
+      type: "Class C",
+      chassis: "Ford E-450",
+    }),
+    "50 amp",
+  );
+});
+
 test("year cascade: 2025 Fleetwood drops Tioga; 2015 still offers it", () => {
   const tioga = CATALOG_INDEX.Fleetwood?.Tioga;
   assert.ok(tioga, "Tioga remains in catalog for historic years");
@@ -192,4 +224,61 @@ test("year cascade: 2025 Fleetwood drops Tioga; 2015 still offers it", () => {
   assert.doesNotMatch(tiogaSrc, /"2025"/);
   assert.doesNotMatch(tiogaSrc, /25CE|Onan Diesel \/ Gas/);
   assert.doesNotMatch(tiogaSrc, /engine: "Ford 7\.3L/);
+});
+
+test("Fleetwood 2025–2026 live lines: Altitude / Insight / Fortis; Bounder OEM plans", () => {
+  const fw = CATALOG_INDEX.Fleetwood;
+  assert.ok(fw?.Altitude, "Altitude Class C must be in catalog");
+  assert.equal(fw!.Altitude.yearStart, 2025);
+  assert.equal(fw!.Altitude.years?.includes(2025), true);
+  assert.equal(fw!.Altitude.years?.includes(2026), true);
+  assert.ok(fw?.Insight, "Insight Class C diesel must be in catalog");
+  assert.equal(fw!.Insight.yearStart, 2025);
+  assert.equal(fw!.Insight.years?.includes(2025), true);
+  assert.ok(fw?.Fortis, "Fortis live Class A");
+  assert.ok(fw?.["Altitude FS600D"], "Altitude FS600D Super C");
+  assert.equal(fw!["Altitude FS600D"]!.type, "Super C");
+  assert.equal(fw!.Flex?.yearEnd, 2025);
+  assert.equal(fw!["Frontier GTX"]?.yearEnd, 2025);
+  assert.equal(fw!.Storm?.yearEnd, 2018);
+  assert.equal(fw!["Pace Arrow"]?.yearEnd, 2023);
+  assert.equal(fw!["Tioga Ranger"]?.yearEnd, 2016);
+  assert.equal(fw!.Storm?.years?.includes(2025), false);
+  assert.equal(fw!["Pace Arrow"]?.years?.includes(2025), false);
+
+  const block = src("rvData.ts");
+  const a0 = block.indexOf("    Altitude: {");
+  const a1 = block.indexOf("    Insight: {");
+  const alt = block.slice(a0, a1);
+  assert.match(alt, /"2025": \["27U", "29F", "31W"\]/);
+  assert.match(alt, /"2026": \["27U", "29F", "29H", "31W"\]/);
+  assert.match(alt, /horsepower: 325/);
+  assert.match(alt, /torqueLbFt: 450/);
+  assert.match(alt, /Ford E-450/);
+  assert.match(alt, /Onan 4000W Quiet gas/);
+  assert.doesNotMatch(alt, /Onan Diesel \/ Gas/);
+  assert.doesNotMatch(alt, /chassis: "Ford F53"/);
+
+  const b0 = block.indexOf("    Bounder: {");
+  const b1 = block.indexOf('    "Bounder Classic"');
+  const bounder = block.slice(b0, b1);
+  assert.match(bounder, /35GL/);
+  assert.doesNotMatch(bounder, /"33P"/);
+});
+
+test("Altitude E-450 pin is 325/450 and does not apply to FS550", () => {
+  const pin = findPowertrainCorrection("2026", "Fleetwood", "Altitude", "29H");
+  assert.ok(pin);
+  assert.equal(pin!.horsepower, 325);
+  assert.equal(pin!.torqueLbFt, 450);
+  assert.match(pin!.chassis || "", /E-450/);
+  const superC = findPowertrainCorrection(
+    "2026",
+    "Fleetwood",
+    "Altitude FS550",
+    "30SB",
+  );
+  assert.ok(superC);
+  assert.equal(superC!.horsepower, 335);
+  assert.match(superC!.chassis || "", /F-550/);
 });
