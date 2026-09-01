@@ -1507,3 +1507,216 @@ test("Newmar 2019–2020 walk-back: OEM plans, no invented ghosts", () => {
   assert.equal(findPowertrainCorrection("2019", "Newmar", "Northern Star", "3418"), null);
   assert.equal(findPowertrainCorrection("2020", "Newmar", "Ventana LE", "3709"), null);
 });
+
+test("Newmar 2017–2018 walk-back: OEM plans, no invented ghosts", () => {
+  const nm = CATALOG_INDEX.Newmar;
+  assert.ok(nm);
+
+  assert.equal(nm["London Aire"]?.years?.includes(2017), true);
+  assert.equal(nm["London Aire"]?.years?.includes(2018), true);
+  assert.equal(nm["London Aire"]?.yearEnd, undefined);
+  assert.equal(nm["Ventana LE"]?.yearEnd, 2019);
+  assert.equal(nm["Ventana LE"]?.years?.includes(2017), true);
+  assert.equal(nm["Ventana LE"]?.years?.includes(2018), true);
+  assert.equal(nm["Ventana LE"]?.years?.includes(2020), false);
+  assert.equal(nm["New Aire"]?.years?.includes(2017), false);
+  assert.equal(nm["New Aire"]?.years?.includes(2018), true);
+  assert.equal(nm["Super Star"]?.yearStart, 2020);
+  assert.equal(nm["Super Star"]?.years?.includes(2017), false);
+  assert.equal(nm["Super Star"]?.years?.includes(2018), false);
+  assert.equal(nm["Supreme Aire"]?.yearStart, 2020);
+  assert.equal(nm["Supreme Aire"]?.years?.includes(2017), false);
+  assert.equal(nm["Supreme Aire"]?.years?.includes(2018), false);
+  assert.equal(nm["Kountry Star"]?.years?.includes(2017), false);
+  assert.equal(nm["Kountry Star"]?.years?.includes(2018), false);
+  assert.equal(nm["Kountry Star"]?.years?.includes(2020), true);
+  assert.equal(nm["Northern Star"]?.years?.includes(2017), false);
+  assert.equal(nm["Freedom Aire"]?.years?.includes(2018), false);
+  assert.equal(nm["Summit Aire"]?.years?.includes(2018), false);
+  assert.equal(nm["Grand Star"]?.years?.includes(2018), false);
+
+  const block = src("rvData.ts");
+  const n0 = block.indexOf("  Newmar: {");
+  const n1 = block.indexOf("  Tiffin: {");
+  const newmar = block.slice(n0, n1);
+
+  const essex0 = newmar.indexOf("    Essex: {");
+  const essex = newmar.slice(essex0, newmar.indexOf('    "King Aire"'));
+  assert.match(essex, /"2017": \["4513", "4519", "4533", "4553", "4584", "4598"\]/);
+  assert.match(essex, /"2018": \["4531", "4533", "4534", "4536", "4537", "4553", "4598"\]/);
+  assert.doesNotMatch(essex, /"2017": \["4551", "4544"/);
+
+  const ka0 = newmar.indexOf('    "King Aire": {');
+  const ka = newmar.slice(ka0, newmar.indexOf('    "Mountain Aire"'));
+  assert.match(ka, /"2017": \["4513", "4519", "4533", "4553", "4584", "4598"\]/);
+  assert.match(ka, /"2018": \["4531", "4533", "4534", "4536", "4537", "4553", "4598"\]/);
+  assert.doesNotMatch(ka, /"2017": \["45AHQ"/);
+
+  const ma0 = newmar.indexOf('    "Mountain Aire": {');
+  const ma = newmar.slice(ma0, newmar.indexOf('    "Dutch Star"'));
+  assert.match(ma, /"2017": \["4513", "4519", "4525", "4533", "4553", "4584"\]/);
+  assert.match(ma, /"2018": \["4047", "4531", "4533", "4534", "4535", "4536", "4537", "4553"\]/);
+  assert.doesNotMatch(ma, /"2017": \["4526"/);
+
+  const ds0 = newmar.indexOf('    "Dutch Star": {');
+  const ds = newmar.slice(ds0, newmar.indexOf('    "New Aire"'));
+  assert.match(
+    ds,
+    /"2017": \["3724", "3736", "4002", "4018", "4041", "4054", "4310", "4311", "4369", "4381"\]/,
+  );
+  assert.match(
+    ds,
+    /"2018": \["3718", "3736", "4002", "4018", "4052", "4310", "4311", "4326", "4327", "4362", "4369"\]/,
+  );
+  assert.doesNotMatch(ds, /"2017": \["4018", "4081"/);
+
+  const na0 = newmar.indexOf('    "New Aire": {');
+  const na = newmar.slice(na0, newmar.indexOf("    Ventana: {"));
+  assert.match(na, /"2018": \["3341", "3343"\]/);
+  assert.doesNotMatch(na, /"2017"/);
+  assert.doesNotMatch(na, /"2018": \["3543"/);
+
+  const vt0 = newmar.indexOf("    Ventana: {");
+  const vt = newmar.slice(vt0, newmar.indexOf('    "Ventana LE"'));
+  assert.match(
+    vt,
+    /"2017": \["3412","3436","3709","3724","4002","4037","4041","4310","4311","4322","4369"\]/,
+  );
+  assert.match(
+    vt,
+    /"2018": \["3407","3412","3436","3709","3715","4002","4037","4046","4049","4308","4310","4311","4326","4369"\]/,
+  );
+  assert.doesNotMatch(vt, /"2017": \["3436","3717"/);
+
+  const le0 = newmar.indexOf('    "Ventana LE": {');
+  const le = newmar.slice(le0, newmar.indexOf('    "Northern Star"'));
+  assert.match(le, /"2017": \["3412","3436","3709","3724","4002","4037","4042","4044"\]/);
+  assert.match(le, /"2018": \["3412","3413","3436","3709","3713","4002","4037","4042","4048"\]/);
+  assert.match(le, /yearEnd:\s*2019/);
+
+  const la0 = newmar.indexOf('    "London Aire": {');
+  const la = newmar.slice(la0, newmar.indexOf('    "Kountry Star"'));
+  assert.match(la, /"2017": \["4513", "4519", "4525", "4533", "4553", "4584"\]/);
+  assert.match(la, /"2018": \["4531", "4533", "4534", "4535", "4536", "4537", "4553"\]/);
+  assert.doesNotMatch(la, /yearEnd:\s*\d+/);
+
+  const ks0 = newmar.indexOf('    "Kountry Star": {');
+  const ks = newmar.slice(ks0, newmar.indexOf('    "Bay Star": {'));
+  assert.doesNotMatch(ks, /"2017"/);
+  assert.doesNotMatch(ks, /"2018"/);
+  assert.match(ks, /yearEnd:\s*2024/);
+
+  const bs0 = newmar.indexOf('    "Bay Star": {');
+  const bs = newmar.slice(bs0, newmar.indexOf('    "Bay Star Sport"'));
+  assert.match(
+    bs,
+    /"2017": \["3009", "3113", "3124", "3208", "3306", "3333", "3401", "3403", "3516", "3518"\]/,
+  );
+  assert.match(
+    bs,
+    /"2018": \["3009", "3113", "3124", "3333", "3401", "3403", "3406", "3414", "3518", "3532"\]/,
+  );
+  assert.match(bs, /fuelType:\s*"Gas"/);
+
+  const bss0 = newmar.indexOf('    "Bay Star Sport": {');
+  const bss = newmar.slice(bss0);
+  assert.match(bss, /"2017": \["2702", "2812", "2903", "3013", "3208", "3210", "3306"\]/);
+  assert.match(bss, /"2018": \["2702", "2812", "2903", "3113", "3307", "3312"\]/);
+
+  const ss0 = newmar.indexOf('    "Super Star": {');
+  const ss = newmar.slice(ss0, newmar.indexOf('    "Supreme Aire"'));
+  assert.doesNotMatch(ss, /"2017"/);
+  assert.doesNotMatch(ss, /"2018"/);
+  assert.match(ss, /yearStart:\s*2020/);
+
+  const sa0 = newmar.indexOf('    "Supreme Aire": {');
+  const sa = newmar.slice(sa0, newmar.indexOf('    "Summit Aire"'));
+  assert.doesNotMatch(sa, /"2017"/);
+  assert.doesNotMatch(sa, /"2018"/);
+  assert.match(sa, /yearStart:\s*2020/);
+
+  const cs0 = newmar.indexOf('    "Canyon Star": {');
+  const cs = newmar.slice(cs0, newmar.indexOf('    "London Aire"'));
+  assert.match(
+    cs,
+    /"2017": \["3513", "3710", "3902", "3911", "3914", "3921", "3923", "3925", "3953"\]/,
+  );
+  assert.match(
+    cs,
+    /"2018": \["3513", "3710", "3716", "3901", "3911", "3918", "3921", "3923", "3924", "3926", "3928", "3953"\]/,
+  );
+  assert.doesNotMatch(cs.slice(cs.indexOf('"2017"'), cs.indexOf('"2019"')), /"3947"/);
+
+  const essex17 = findPowertrainCorrection("2017", "Newmar", "Essex", "4533");
+  assert.equal(essex17!.horsepower, 600);
+  assert.match(essex17!.engine, /ISX/);
+  const essex18 = findPowertrainCorrection("2018", "Newmar", "Essex", "4533");
+  assert.equal(essex18!.horsepower, 605);
+  assert.match(essex18!.engine, /X15/);
+  const ka17 = findPowertrainCorrection("2017", "Newmar", "King Aire", "4553");
+  assert.equal(ka17!.horsepower, 600);
+  const ka18 = findPowertrainCorrection("2018", "Newmar", "King Aire", "4531");
+  assert.equal(ka18!.horsepower, 605);
+  const la17 = findPowertrainCorrection("2017", "Newmar", "London Aire", "4533");
+  assert.equal(la17!.horsepower, 600);
+  const la18 = findPowertrainCorrection("2018", "Newmar", "London Aire", "4531");
+  assert.equal(la18!.horsepower, 605);
+  const ma17 = findPowertrainCorrection("2017", "Newmar", "Mountain Aire", "4533");
+  assert.equal(ma17!.horsepower, 500);
+  assert.match(ma17!.engine, /ISX/);
+  assert.doesNotMatch(ma17!.engine, /L9|450/);
+  const ma18 = findPowertrainCorrection("2018", "Newmar", "Mountain Aire", "4047");
+  assert.equal(ma18!.horsepower, 500);
+  assert.doesNotMatch(ma18!.engine, /L9|450|525/);
+  const ds17 = findPowertrainCorrection("2017", "Newmar", "Dutch Star", "3736");
+  assert.equal(ds17!.horsepower, 450);
+  assert.match(ds17!.engine, /ISL/);
+  const ds18 = findPowertrainCorrection("2018", "Newmar", "Dutch Star", "3718");
+  assert.equal(ds18!.horsepower, 450);
+  const vt17short = findPowertrainCorrection("2017", "Newmar", "Ventana", "3412");
+  assert.equal(vt17short!.horsepower, 360);
+  const vt17long = findPowertrainCorrection("2017", "Newmar", "Ventana", "4369");
+  assert.equal(vt17long!.horsepower, 400);
+  const vt18short = findPowertrainCorrection("2018", "Newmar", "Ventana", "3407");
+  assert.equal(vt18short!.horsepower, 360);
+  const vt18long = findPowertrainCorrection("2018", "Newmar", "Ventana", "4308");
+  assert.equal(vt18long!.horsepower, 400);
+  const le17short = findPowertrainCorrection("2017", "Newmar", "Ventana LE", "3412");
+  assert.equal(le17short!.horsepower, 340);
+  const le17long = findPowertrainCorrection("2017", "Newmar", "Ventana LE", "4044");
+  assert.equal(le17long!.horsepower, 360);
+  const le18short = findPowertrainCorrection("2018", "Newmar", "Ventana LE", "3713");
+  assert.equal(le18short!.horsepower, 340);
+  const le18long = findPowertrainCorrection("2018", "Newmar", "Ventana LE", "4048");
+  assert.equal(le18long!.horsepower, 360);
+  const na18 = findPowertrainCorrection("2018", "Newmar", "New Aire", "3343");
+  assert.equal(na18!.horsepower, 360);
+  assert.doesNotMatch(na18!.engine, /L9|450/);
+  const bay17 = findPowertrainCorrection("2017", "Newmar", "Bay Star", "3124");
+  assert.equal(bay17!.horsepower, 320);
+  assert.equal(bay17!.fuelType, "Gas");
+  assert.match(bay17!.engine, /V10|Triton/i);
+  const bay18 = findPowertrainCorrection("2018", "Newmar", "Bay Star", "3414");
+  assert.equal(bay18!.horsepower, 320);
+  assert.equal(bay18!.fuelType, "Gas");
+  const sport17 = findPowertrainCorrection("2017", "Newmar", "Bay Star Sport", "2702");
+  assert.equal(sport17!.horsepower, 320);
+  assert.equal(sport17!.fuelType, "Gas");
+  const sport18 = findPowertrainCorrection("2018", "Newmar", "Bay Star Sport", "3307");
+  assert.equal(sport18!.horsepower, 320);
+  assert.equal(sport18!.fuelType, "Gas");
+  const cs17 = findPowertrainCorrection("2017", "Newmar", "Canyon Star", "3911");
+  assert.equal(cs17!.horsepower, 320);
+  assert.equal(cs17!.fuelType, "Gas");
+  assert.match(cs17!.engine, /V10|Triton/i);
+  assert.doesNotMatch(cs17!.engine, /Cummins|B6\.7|FED|diesel/i);
+  const cs18 = findPowertrainCorrection("2018", "Newmar", "Canyon Star", "3513");
+  assert.equal(cs18!.horsepower, 320);
+  assert.equal(cs18!.fuelType, "Gas");
+
+  assert.equal(findPowertrainCorrection("2017", "Newmar", "Super Star", "3746"), null);
+  assert.equal(findPowertrainCorrection("2018", "Newmar", "Supreme Aire", "4573"), null);
+  assert.equal(findPowertrainCorrection("2017", "Newmar", "Kountry Star", "3712"), null);
+  assert.equal(findPowertrainCorrection("2018", "Newmar", "Northern Star", "3418"), null);
+  assert.equal(findPowertrainCorrection("2017", "Newmar", "New Aire", "3341"), null);
+});
