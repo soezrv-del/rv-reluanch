@@ -32,7 +32,7 @@ import { validateLivePowertrain } from "./livePowertrainGuard";
  * Bump when pins, validators, or merge rules change so stale localStorage
  * entries are ignored (Phase 4.4).
  */
-export const VERIFIED_CACHE_SCHEMA = 9;
+export const VERIFIED_CACHE_SCHEMA = 10;
 const STORAGE_KEY = `rvfax.verifiedCatalog.v${VERIFIED_CACHE_SCHEMA}`;
 /** Legacy keys to wipe on load so old bad dossiers cannot resurface */
 const LEGACY_STORAGE_KEYS = [
@@ -44,6 +44,7 @@ const LEGACY_STORAGE_KEYS = [
   "rvfax.verifiedCatalog.v6",
   "rvfax.verifiedCatalog.v7",
   "rvfax.verifiedCatalog.v8",
+  "rvfax.verifiedCatalog.v9",
 ];
 const MAX_ENTRIES = 200;
 /** 14 days — re-verify sooner after rule changes */
@@ -146,8 +147,11 @@ function applyPinFields(
   return {
     ...dossier,
     engine,
-    horsepower: pin.horsepower,
-    torqueLbFt: pin.torqueLbFt ?? dossier.torqueLbFt,
+    horsepower: pin.horsepower > 0 ? pin.horsepower : null,
+    torqueLbFt:
+      pin.horsepower > 0
+        ? (pin.torqueLbFt ?? dossier.torqueLbFt)
+        : null,
     chassis: pin.chassis ?? dossier.chassis,
     transmission: pin.transmission ?? dossier.transmission,
     fuelType:

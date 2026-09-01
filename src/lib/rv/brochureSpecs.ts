@@ -16,6 +16,13 @@ import {
   bandFitsCoach,
   chassisLooksSprinter,
 } from "./powertrainFamily";
+import {
+  honestTorqueLabel,
+  horsepowerIsOptionBand,
+  parseHp,
+} from "./catalogHonesty";
+
+export { parseHp } from "./catalogHonesty";
 
 /** Full brochure-style specification sheet (derived + source fields) */
 export interface BrochureSpecs {
@@ -398,67 +405,30 @@ function economy(
   };
 }
 
-function parseHp(engine?: string, hp?: number): string {
-  // Prefer explicit year-band / catalog numeric HP when present
-  if (hp != null && Number.isFinite(hp) && hp > 0) {
-    return `${Math.round(hp)} HP`;
-  }
-  if (!engine || !engine.trim()) {
-    return "Varies by option / year — confirm brochure";
-  }
-
-  const eng = engine.trim();
-
-  // Multi-option powertrains (e.g. "EcoBoost · Mercedes") — never invent a single HP
-  const hpMentions = [...eng.matchAll(/(\d{2,4})\s*HP/gi)].map((m) => m[1]!);
-  const looksMulti =
-    /[·|]/.test(eng) ||
-    /\bor\b/i.test(eng) ||
-    /by (year|option|chassis|floorplan)/i.test(eng) ||
-    hpMentions.length >= 2;
-
-  if (looksMulti && hpMentions.length >= 2) {
-    const unique = [...new Set(hpMentions)];
-    return `Varies (${unique.join("–")} HP by option)`;
-  }
-  if (looksMulti && hpMentions.length === 0) {
-    return "Varies by option / year — confirm brochure";
-  }
-
-  // Explicit range in the engine string — surface the range, not a single default
-  const range = eng.match(/(\d{2,4})\s*[–—\-to]+\s*(\d{2,4})\s*HP/i);
-  if (range) {
-    return `${range[1]}–${range[2]} HP (by option)`;
-  }
-
-  const m = eng.match(/(\d{2,4})\s*HP/i);
-  if (m) return `${m[1]} HP`;
-
-  // Known gas chassis families — brochure-typical ranges only (never invent 450)
-  if (/V10|Triton/i.test(eng)) return "305–362 HP (by year) — confirm brochure";
-  if (/7\.3L|Godzilla/i.test(eng)) return "335–350 HP (by application) — confirm brochure";
-  if (/EcoBoost/i.test(eng)) return "Varies by option / year — confirm brochure";
-
-  // Diesel / chassis without a numeric HP in catalog — do NOT invent 450 HP
-  if (/Cummins|Power Stroke|Duramax|ISB|B6\.7|L9|ISL|X15|X12|Cat /i.test(eng)) {
-    return "Varies by option / year — confirm brochure";
-  }
-
-  return "Varies by option / year — confirm brochure";
-}
-
 function torqueFor(
   engine?: string,
   diesel?: boolean,
   torqueLbFt?: number,
   hpNum?: number,
 ): string {
-  if (torqueLbFt && torqueLbFt > 0) {
+  const optionBand = horsepowerIsOptionBand(engine, null);
+  if (optionBand) {
+    const honest = honestTorqueLabel({ engine, torqueLbFt });
+    if (honest) return honest;
+  }
+  if (torqueLbFt && torqueLbFt > 0 && !optionBand) {
     return `${torqueLbFt.toLocaleString()} lb-ft`;
   }
   if (!engine) return "—";
 
   // Family tables first — never invent 936 from HP×2.6
+  // L9 + X15 option band: never pick X15-only or L9-only
+  if (/x15/i.test(engine) && /l9/i.test(engine)) {
+    return (
+      honestTorqueLabel({ engine, torqueLbFt }) ||
+      "1,250 lb-ft L9 std / 1,850–1,950 lb-ft X15 opt — confirm door sticker"
+    );
+  }
   if (/x15/i.test(engine)) return "1,850–1,950 lb-ft (X15 class)";
   if (/x12/i.test(engine)) return "1,700 lb-ft (typ. X12)";
   if (/l9/i.test(engine) && /450/i.test(engine)) return "1,250 lb-ft (L9 450)";
@@ -714,13 +684,10 @@ export function buildBrochureSpecs(
     ? "N/A"
     : parseHp(snap.engine, snap.horsepower);
 
-  // Never surface a bare invented 450 from old code paths
+  // Never surface a bare invented 450 — especially when engine is std/opt
   const safeHpDisplay =
-    !isTowable &&
-    /^450\s*HP$/i.test(hpDisplay.trim()) &&
-    !(snap.horsepower === 450) &&
-    !/450\s*HP/i.test(snap.engine || "")
-      ? "Varies by option / year — confirm brochure"
+    !isTowable && /^450\s*HP$/i.test(hpDisplay.trim())
+      ? parseHp(snap.engine, horsepowerIsOptionBand(snap.engine) ? 0 : snap.horsepower)
       : hpDisplay;
 
   const dataSource: BrochureSpecs["dataSource"] = oem

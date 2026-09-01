@@ -13,7 +13,12 @@ export type PowertrainCorrection = {
   /** Optional floorplan substring */
   floorplanIncludes?: string;
   engine: string;
+  /**
+   * Single locked HP. Use 0 when the engine is an option band
+   * (e.g. L9 450 std / X15 605 opt) — never treat 450 as the only rating.
+   */
   horsepower: number;
+  /** Omit when torque is option-band (L9 std vs X15 opt). */
   torqueLbFt?: number;
   chassis?: string;
   transmission?: string;
@@ -360,12 +365,11 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     makeIncludes: "american coach",
     modelIncludes: "american dream",
     engine: "Cummins L9 450 std / X15 605 opt",
-    horsepower: 450,
-    torqueLbFt: 1250,
+    horsepower: 0,
     chassis: "Spartan K3",
     transmission: "Allison 3000/4000",
     fuelType: "Diesel",
-    note: "2020–2026 American Dream (2023 floorplans 45A / 45B): L9 450 standard, X15 605 optional. Confirm door sticker. Not Tradition Liberty Bridge. Do not invent a single HP.",
+    note: "2020–2026 American Dream (2023 floorplans 45A / 45B): L9 450 / 1,250 lb-ft standard, X15 605 / ~1,850–1,950 lb-ft optional. Confirm door sticker. Not Tradition Liberty Bridge. Do not invent a single HP or L9-only torque.",
   },
   // Entegra Vision — gas F53 Godzilla only
   {
@@ -1090,10 +1094,14 @@ export function sanitizeNarrativeForPin(
     eng,
   );
   t = t.replace(/Ford\s+F-?53(?:\s+chassis)?/gi, pin.chassis || "chassis");
-  t = t.replace(/\b450\s*HP\b/gi, `${hp} HP`);
-  t = t.replace(/\b1[,.]?250\s*lb-?ft\b/gi, tq ? `${tq.toLocaleString()} lb-ft` : `${hp} HP class`);
-  t = t.replace(/\b320\s*HP\b/gi, `${hp} HP`);
-  t = t.replace(/\b832\s*lb-?ft\b/gi, tq ? `${tq.toLocaleString()} lb-ft` : "");
+  if (hp > 0) {
+    t = t.replace(/\b450\s*HP\b/gi, `${hp} HP`);
+    t = t.replace(/\b320\s*HP\b/gi, `${hp} HP`);
+  }
+  if (tq && tq > 0) {
+    t = t.replace(/\b1[,.]?250\s*lb-?ft\b/gi, `${tq.toLocaleString()} lb-ft`);
+    t = t.replace(/\b832\s*lb-?ft\b/gi, `${tq.toLocaleString()} lb-ft`);
+  }
 
   // Drop "early gas Red / gas F53" myths when pin is diesel RED
   if (pin.fuelType === "Diesel" || /cummins|isb|b6/i.test(pin.engine)) {

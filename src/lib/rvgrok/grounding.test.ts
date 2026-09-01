@@ -45,10 +45,19 @@ test("2023 American Dream pin is an option band — not a single invented HP", (
   assert.match(pin!.chassis || "", /Spartan/i);
   assert.doesNotMatch(pin!.engine, /Liberty Bridge|F-?53|Godzilla/i);
   assert.equal(isAmbiguousCatalogValue(pin!.engine), true);
+  assert.ok(
+    pin!.horsepower <= 0,
+    "Dream pin must not lock horsepower at 450",
+  );
+  assert.equal(
+    pin!.torqueLbFt == null || pin!.torqueLbFt <= 0,
+    true,
+    "Dream pin must not lock L9-only torque",
+  );
 
   const hp = honestHorsepowerLabel({
     engine: pin!.engine,
-    horsepower: pin!.horsepower,
+    horsepower: 450,
   });
   assert.match(hp || "", /450/);
   assert.match(hp || "", /605|opt/i);
