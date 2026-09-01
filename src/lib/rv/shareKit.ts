@@ -53,7 +53,7 @@ export type ShareMarket = {
   msrpHi: number;
 };
 
-export const SHARE_KIT_HEADER = "SpaceX AI-Powered RvFOX Report";
+export const SHARE_KIT_HEADER = "RvFOX · Powered by Grok";
 export const SHARE_KIT_TAGLINE = "Know before you buy.";
 export const SHARE_KIT_FOOTER =
   "Confirm door sticker, PPI, and lender.";
