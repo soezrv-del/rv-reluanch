@@ -204,6 +204,22 @@
     pointer-events: none !important;
     opacity: 0 !important;
   }
+
+  /*
+   * Android Capacitor WebView: parent pointer-events:none + child auto
+   * + backdrop-filter fails hit-testing. Keep the dock in the event path
+   * and lift it out of the system nav / gesture dead zone.
+   */
+  html.android-native .bottom-tabs-nav,
+  html.android-native .bottom-tabs-dock,
+  html.android-native .bottom-tab-btn {
+    pointer-events: auto;
+    touch-action: manipulation;
+  }
+  html.android-native .bottom-tabs-nav {
+    z-index: 80;
+    padding-bottom: var(--dock-safe-bottom, 48px) !important;
+  }
 }
 
 /* ── iPhone landscape: reclaim vertical space ─────────────────────────── */
@@ -300,6 +316,9 @@
   .bottom-tabs-nav {
     padding-top: 0.2rem !important;
     padding-bottom: 6px !important;
+  }
+  html.android-native .bottom-tabs-nav {
+    padding-bottom: var(--dock-safe-bottom, 48px) !important;
   }
   .bottom-tab-btn {
     min-height: 48px !important;
@@ -706,7 +725,10 @@
 }
 
 /* Dock — obsidian platinum island */
-.bottom-tabs-nav { z-index: 50; }
+.bottom-tabs-nav {
+  z-index: 80;
+  touch-action: manipulation;
+}
 .bottom-tabs-dock {
   background: linear-gradient(
     180deg,
