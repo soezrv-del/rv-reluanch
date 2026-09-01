@@ -55,10 +55,12 @@ npm run cap:open
 ### C) npm scripts reference
 
 ```bash
-npm run cap:prepare   # writes cap-www/ with branding + CAP_SERVER_URL redirect
-npm run cap:sync      # prepare + npx cap sync ios
-npm run cap:copy      # prepare + copy assets only
-npm run cap:open      # open Xcode
+npm run cap:prepare        # writes cap-www/ with branding + CAP_SERVER_URL redirect
+npm run cap:sync           # prepare + npx cap sync ios
+npm run cap:copy           # prepare + copy assets only
+npm run cap:open           # open Xcode (Mac)
+npm run cap:sync:android   # prepare + npx cap sync android
+npm run cap:open:android   # open Android Studio
 ```
 
 ---
@@ -93,18 +95,19 @@ Mic permissions are already in `ios/App/App/Info.plist`.
 @capacitor/core
 @capacitor/cli
 @capacitor/ios
+@capacitor/android
 @capacitor/app
 @capacitor/keyboard
 @capacitor/splash-screen
 @capacitor/status-bar
 ```
 
-Android is optional later:
+Android (`android/` is already in the repo):
 
 ```bash
-npm i @capacitor/android
-npx cap add android
-npx cap sync android
+export CAP_SERVER_URL="https://YOUR-APP.vercel.app"
+npm run cap:sync:android
+npm run cap:open:android
 ```
 
 ---
