@@ -243,6 +243,7 @@ export function resolveYearSnapshot(
   towingCapacity?: number;
   fuelCapacityGal?: number;
   generator?: string;
+  acUnits?: string;
   gvwrLbs?: number;
   exteriorHeightIn?: number;
   exteriorWidthIn?: number;
@@ -287,6 +288,7 @@ export function resolveYearSnapshot(
     towingCapacity: band?.towingCapacity ?? spec.towingCapacity,
     fuelCapacityGal: band?.fuelCapacityGal ?? spec.fuelCapacityGal,
     generator: band?.generator ?? spec.generator,
+    acUnits: band?.acUnits ?? spec.acUnits,
     gvwrLbs: band?.gvwrLbs ?? spec.gvwrLbs,
     exteriorHeightIn: band?.exteriorHeightIn ?? spec.exteriorHeightIn,
     exteriorWidthIn: band?.exteriorWidthIn ?? spec.exteriorWidthIn,
@@ -785,6 +787,7 @@ export function buildBrochureSpecs(
     }),
     electricalService: electrical,
     acUnits: honestAcUnits({
+      oem: snap.acUnits,
       type: spec.type,
       lengthFt: lenMid,
       chassis: snap.chassis ?? spec.chassis,

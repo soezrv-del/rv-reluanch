@@ -71,6 +71,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       blackWater: 58,
       fuelCapacityGal: 150,
       generator: "Onan 12.5kW Quiet Diesel",
+      acUnits: "3 × 15,000 BTU heat pump",
       awningLength: 24,
       ceilingHeight: 86,
       founded: 1968,
@@ -93,7 +94,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           torqueLbFt: 1950,
           chassis: "Freightliner SL Tag / Spartan K3 (by option)",
           transmission: "Allison 4000 MH",
-          notes: "OEM MY25–27 Essex DigiBrochure: X15 605 / 1,950. Chassis is Freightliner SL Tag or Spartan K3 — confirm build sheet."
+          generator: "Onan 12.5kW Quiet Diesel",
+          acUnits: "3 × 15,000 BTU heat pump",
+          notes: "OEM MY25–27 Essex DigiBrochure: X15 605 / 1,950. Chassis is Freightliner SL Tag or Spartan K3 — confirm build sheet. 12.5 kW Onan, 3×15k HP A/C."
         }
       ]
     },
@@ -156,13 +159,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       grayWater: 55,
       blackWater: 52,
       fuelCapacityGal: 150,
-      generator: "Onan 10–12.5kW Quiet Diesel",
+      generator: "Onan 12.5kW Quiet Diesel",
+      acUnits: "3 × 15,000 BTU heat pump",
       awningLength: 18,
       ceilingHeight: 84,
       founded: 1968,
       warrantyYears: 2,
       yearStart: 2005,
-      description: "Newmar King Aire — ultra-luxury diesel under Essex. OEM MY25–27: Spartan K3 Tag + Cummins X15 605 / 1,950; Onan 12.5 kW.",
+      description: "Newmar King Aire — ultra-luxury diesel under Essex. OEM MY25–27: Spartan K3 Tag + Cummins X15 605 / 1,950; Onan 12.5 kW; 3×15k heat-pump A/C.",
       powertrainByYear: [
         {
           from: 2005,
@@ -196,7 +200,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Spartan K3 Tag",
           transmission: "Allison 4000 MH",
           generator: "Onan 12.5kW Quiet Diesel",
-          notes: "OEM MY25–27 King Aire DigiBrochure: Spartan K3 Tag, X15 605 / 1,950"
+          acUnits: "3 × 15,000 BTU heat pump",
+          notes: "OEM MY25–27 King Aire DigiBrochure: Spartan K3 Tag, X15 605 / 1,950; 12.5 kW Onan; three 15k heat-pump A/C."
         },
         
       ]
@@ -299,12 +304,38 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         {
           from: 2025,
           to: 2027,
+          floorplans: ["3823", "3825", "38"],
           engine: "Cummins X12 525HP",
           horsepower: 525,
           torqueLbFt: 1695,
           chassis: "Spartan K3 Tag",
           transmission: "Allison 4000 MH",
-          notes: "OEM MY25–27 Mountain Aire DigiBrochure: X12 525 / 1,695 on Spartan K3 Tag"
+          generator: "Onan 10kW Quiet Diesel",
+          acUnits: "2 × 15,000 BTU heat pump",
+          notes: "OEM MY25–27 MA 38': X12 525 / 1,695; 10 kW Onan; two 15k HP A/C"
+        },
+        {
+          from: 2025,
+          to: 2027,
+          floorplans: ["4118", "4551", "41", "45"],
+          engine: "Cummins X12 525HP",
+          horsepower: 525,
+          torqueLbFt: 1695,
+          chassis: "Spartan K3 Tag",
+          transmission: "Allison 4000 MH",
+          generator: "Onan 12.5kW Quiet Diesel",
+          acUnits: "3 × 15,000 BTU heat pump",
+          notes: "OEM MY25–27 MA 41–45': X12 525 / 1,695; 12.5 kW Onan; three 15k HP A/C"
+        },
+        {
+          from: 2025,
+          to: 2027,
+          engine: "Cummins X12 525HP",
+          horsepower: 525,
+          torqueLbFt: 1695,
+          chassis: "Spartan K3 Tag",
+          transmission: "Allison 4000 MH",
+          notes: "OEM MY25–27 Mountain Aire DigiBrochure: X12 525 / 1,695 on Spartan K3 Tag. 10 kW Onan + 2×15k on 38'; 12.5 kW + 3×15k on 41–45'."
         },
         
       ]
@@ -398,6 +429,45 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Cummins ISL / L9 450HP",
           horsepower: 450,
           chassis: "Freightliner XC"
+        },
+        {
+          from: 2025,
+          to: 2027,
+          floorplans: ["3836", "38"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner XCR",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 8kW Diesel QD",
+          acUnits: "2 × 15,000 BTU heat pump",
+          notes: "OEM MY25–27 DS 38': L9 450 / 1,250; 8 kW Onan; two 15k HP A/C"
+        },
+        {
+          from: 2025,
+          to: 2027,
+          floorplans: ["4081", "40"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner or Spartan K2 tag",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 8kW Diesel QD",
+          acUnits: "3 × 15,000 BTU heat pump",
+          notes: "OEM MY25–27 DS 40': L9 450 / 1,250; 8 kW Onan; three 15k HP A/C"
+        },
+        {
+          from: 2025,
+          to: 2027,
+          floorplans: ["4311", "4325", "4340", "4345", "4369", "43"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner or Spartan K2 tag",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10.0kW Diesel QD",
+          acUnits: "3 × 15,000 BTU heat pump",
+          notes: "OEM MY25–27 DS 43': L9 450 / 1,250; 10 kW Onan; three 15k HP A/C"
         },
         {
           from: 2019,
@@ -660,15 +730,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Freedom Aire": {
       type: "Class C", floorplans: ["2515","2512"],
-      // Brochure 2026-freedom-aire: 2515. MY27FA adds 2512 twin-to-king.
+      // Brochure 2026-freedom-aire: 2515, 208 HP. MY27FA adds 2512 and rates 211 HP.
       floorplansByYear: { "2026": ["2515"], "2027": ["2515","2512"] },
       lengthRange: [25, 25], weightRange: [11000, 12500], slideouts: 1, sleeps: 4, msrpRange: [289000, 360000],
-      engine: "Mercedes-Benz 2.0L turbo diesel 208HP", horsepower: 208, torqueLbFt: 332,
+      engine: "Mercedes-Benz 2.0L turbo diesel 211HP (MY27) / 208HP (MY26)", horsepower: 211, torqueLbFt: 332,
       chassis: "Mercedes-Benz Sprinter 4500", transmission: "9-speed automatic", fuelType: "Diesel",
       recalls: 0, rating: 4.4, image: RV_CARD_IMAGE, towingCapacity: 5000, freshWater: 31, grayWater: 28, blackWater: 16,
-      fuelCapacityGal: 24, generator: "Onan / chassis-dependent", awningLength: 14, ceilingHeight: 80, founded: 1968, warrantyYears: 2, yearStart: 2026,
-      description: "Newmar Freedom Aire — Sprinter 4500 Class C, 208/332, floorplan 2515.",
-      powertrainByYear: [{ from: 2026, to: 2027, engine: "Mercedes-Benz 2.0L turbo diesel 208HP", horsepower: 208, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter 4500" }],
+      fuelCapacityGal: 24, generator: "RVMP 4.0 kW LP", acUnits: "1 × 15,000 BTU heat pump", awningLength: 14, ceilingHeight: 80, founded: 1968, warrantyYears: 2, yearStart: 2026,
+      description: "Newmar Freedom Aire — Sprinter 4500 compact Class C. MY26: 2515, 208/332. MY27: 2515 + 2512, 211/332. RVMP 4.0 kW LP generator.",
+      powertrainByYear: [
+        { from: 2026, to: 2026, engine: "Mercedes-Benz 2.0L turbo diesel 208HP", horsepower: 208, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter 4500", generator: "RVMP 4.0 kW LP", acUnits: "1 × 15,000 BTU heat pump", notes: "OEM 2026-freedom-aire: Sprinter 4500, 208 / 332, plan 2515" },
+        { from: 2027, to: 2027, engine: "Mercedes-Benz 2.0L turbo diesel 211HP", horsepower: 211, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter 4500", generator: "RVMP 4.0 kW LP", acUnits: "1 × 15,000 BTU heat pump", notes: "OEM MY27FA: Sprinter 4500, 211 / 332, plans 2515 + 2512 twin-to-king" },
+      ],
     },
     "Canyon Star": {
       type: "Class A Diesel",
@@ -818,6 +891,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       grayWater: 55,
       blackWater: 50,
       generator: "Onan 12.5kW Quiet Diesel",
+      acUnits: "3 × 15,000 BTU heat pump",
       awningLength: 18,
       ceilingHeight: 84,
       founded: 1968,
@@ -856,7 +930,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           torqueLbFt: 1950,
           chassis: "Freightliner SL Tag / Spartan K3 (by option)",
           transmission: "Allison 4000 MH",
-          notes: "OEM MY25–27 London Aire DigiBrochure: X15 605 / 1,950. Do not yearEnd this line."
+          generator: "Onan 12.5kW Quiet Diesel",
+          acUnits: "3 × 15,000 BTU heat pump",
+          notes: "OEM MY25–27 London Aire DigiBrochure: X15 605 / 1,950. Do not yearEnd this line. 12.5 kW Onan, 3×15k HP A/C."
         },
         
       ]

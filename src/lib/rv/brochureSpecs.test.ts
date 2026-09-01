@@ -822,6 +822,11 @@ test("Newmar 2025–2027 OEM DigiBrochure floorplans + yearEnds", () => {
   assert.equal(nm["Northern Star"]?.years?.includes(2025), true);
   assert.equal(nm["Northern Star"]?.years?.includes(2027), true);
 
+  assert.equal(nm["Dutch Aire"], undefined);
+  assert.equal(nm["All Star"], undefined);
+  assert.equal(CATALOG_INDEX["Newmar Classic"]?.["Dutch Aire"], undefined);
+  assert.equal(CATALOG_INDEX["Newmar Classic"]?.["All Star"], undefined);
+
   assert.ok(nm["London Aire"]);
   assert.equal(nm["London Aire"].yearEnd, undefined);
   assert.equal(nm["London Aire"].years?.includes(2025), true);
@@ -853,6 +858,7 @@ test("Newmar 2025–2027 OEM DigiBrochure floorplans + yearEnds", () => {
   assert.match(newmar, /"2027": \["2813", "3014", "3225"\]/);
   assert.match(newmar, /"2027": \["3947"\]/);
   assert.match(newmar, /"2027": \["2515","2512"\]/);
+  assert.match(newmar, /"2027": \["3418","3709","4011","4037"\]/);
   assert.doesNotMatch(newmar, /"2025": \["3712"/);
   assert.doesNotMatch(newmar, /"2026": \["3712"/);
 
@@ -872,7 +878,27 @@ test("Newmar 2025–2027 OEM DigiBrochure floorplans + yearEnds", () => {
   assert.equal(bay27!.horsepower, 335);
   assert.equal(bay27!.fuelType, "Gas");
   assert.doesNotMatch(bay27!.engine, /Cummins|L9|diesel/i);
+  const fa26 = findPowertrainCorrection("2026", "Newmar", "Freedom Aire", "2515");
+  assert.equal(fa26!.horsepower, 208);
   const fa27 = findPowertrainCorrection("2027", "Newmar", "Freedom Aire", "2515");
-  assert.equal(fa27!.horsepower, 208);
+  assert.equal(fa27!.horsepower, 211);
   assert.match(fa27!.chassis || "", /Sprinter/);
+
+  assert.match(newmar, /Onan 12\.5kW Quiet Diesel/);
+  assert.match(newmar, /acUnits: "3 × 15,000 BTU heat pump"/);
+  const kaAc = honestAcUnits({
+    oem: "3 × 15,000 BTU heat pump",
+    type: "Class A Diesel",
+    lengthFt: 45,
+    chassis: "Spartan K3",
+  });
+  assert.match(kaAc, /3\s*[×x]\s*15/);
+  assert.doesNotMatch(kaAc, /typ\./i);
+
+  const ns27 = findPowertrainCorrection("2027", "Newmar", "Northern Star", "3418");
+  assert.equal(ns27!.horsepower, 360);
+  assert.equal(ns27!.torqueLbFt, 800);
+  const cs27 = findPowertrainCorrection("2027", "Newmar", "Canyon Star", "3947");
+  assert.equal(cs27!.horsepower, 340);
+  assert.match(cs27!.chassis || "", /front-engine|FED|Freightliner/i);
 });

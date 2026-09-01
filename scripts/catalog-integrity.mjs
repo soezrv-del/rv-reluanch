@@ -302,6 +302,15 @@ function main() {
       if (!/fuelType:\s*"Gas"/.test(bs) || /fuelType:\s*"Diesel"/.test(bs)) {
         fail("Newmar|Bay Star must stay Class A Gas — do not stamp diesel pusher defaults");
       }
+      if (/\n    "Dutch Aire": \{/.test(newmar) || /\n    "All Star": \{/.test(newmar)) {
+        fail("Newmar live catalog must not re-list Dutch Aire / All Star (last OEM ~2009)");
+      }
+      const fa0 = newmar.indexOf('    "Freedom Aire": {');
+      const fa1 = newmar.indexOf('    "Canyon Star": {');
+      const fa = fa0 >= 0 && fa1 > fa0 ? newmar.slice(fa0, fa1) : "";
+      if (!/horsepower:\s*211/.test(fa) || !/"2027": \["2515","2512"\]/.test(fa)) {
+        fail("Newmar|Freedom Aire MY27 must be Sprinter 211 HP with 2515 + 2512");
+      }
     }
   }
 

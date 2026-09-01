@@ -153,7 +153,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
   },
   {
     yearMin: 2026,
-    yearEnd: 2027,
+    yearEnd: 2026,
     makeIncludes: "newmar",
     modelIncludes: "freedom aire",
     engine: "Mercedes-Benz 2.0L turbo diesel 208HP",
@@ -161,7 +161,19 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     torqueLbFt: 332,
     chassis: "Mercedes-Benz Sprinter 4500",
     fuelType: "Diesel",
-    note: "Freedom Aire Sprinter 208/332 — not a pusher",
+    note: "OEM 2026-freedom-aire: Sprinter 4500, 208 / 332, plan 2515 — not a pusher",
+  },
+  {
+    yearMin: 2027,
+    yearEnd: 2027,
+    makeIncludes: "newmar",
+    modelIncludes: "freedom aire",
+    engine: "Mercedes-Benz 2.0L turbo diesel 211HP",
+    horsepower: 211,
+    torqueLbFt: 332,
+    chassis: "Mercedes-Benz Sprinter 4500",
+    fuelType: "Diesel",
+    note: "OEM MY27FA: Sprinter 4500, 211 / 332, plans 2515 + 2512 — not a pusher",
   },
   {
     yearMin: 2026,
@@ -1803,7 +1815,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Spartan K3 Tag",
     transmission: "Allison 4000 MH",
     fuelType: "Diesel",
-    note: "OEM MY25–27 King Aire: Spartan K3 Tag, X15 605 / 1,950",
+    note: "OEM MY25–27 King Aire: Spartan K3 Tag, X15 605 / 1,950; 12.5 kW Onan; 3×15k HP A/C",
   },
   {
     yearMin: 2025,
