@@ -344,8 +344,8 @@ function main() {
       if (!/"2023": \["3727","3729","4059","4061","4065"\]/.test(ss)) {
         fail("Newmar|Super Star MY23 OEM plans missing");
       }
-      if (!/yearStart:\s*2021/.test(ss)) {
-        fail("Newmar|Super Star yearStart must be 2021 (OEM brochure exists)");
+      if (!/yearStart:\s*2020/.test(ss)) {
+        fail("Newmar|Super Star yearStart must be 2020 (OEM 2020_Super_Star brochure exists)");
       }
       if (!/"2021": \["3746","4051","4058","4061"\]/.test(ss)) {
         fail("Newmar|Super Star MY21 OEM plans missing");
@@ -370,6 +370,36 @@ function main() {
       }
       if (!/"2022": \["3005", "3014", "3124", "3226", "3401", "3408", "3416", "3609", "3616", "3626", "3811"\]/.test(bs)) {
         fail("Newmar|Bay Star MY22 OEM gas plans missing");
+      }
+      if (!/"2019": \["4533", "4534", "4535", "4543", "4550", "4551", "4576", "4579"\]/.test(la)) {
+        fail("Newmar|London Aire MY19 OEM plans missing");
+      }
+      if (!/"2020": \["4533", "4535", "4543", "4551", "4559", "4569", "4579"\]/.test(la)) {
+        fail("Newmar|London Aire MY20 OEM plans missing");
+      }
+      if (!/"2020": \["3746","4051","4058","4061"\]/.test(ss)) {
+        fail("Newmar|Super Star MY20 OEM plans missing");
+      }
+      const sa0 = newmar.indexOf('    "Supreme Aire": {');
+      const sa1 = newmar.indexOf('    "Summit Aire": {');
+      const sa = sa0 >= 0 && sa1 > sa0 ? newmar.slice(sa0, sa1) : "";
+      if (!/yearStart:\s*2020/.test(sa)) {
+        fail("Newmar|Supreme Aire yearStart must be 2020 (OEM 2020_Supreme_Aire brochure exists)");
+      }
+      if (!/"2020": \["4573","4575","4577"\]/.test(sa)) {
+        fail("Newmar|Supreme Aire MY20 OEM plans missing");
+      }
+      const le0 = newmar.indexOf('    "Ventana LE": {');
+      const le1 = newmar.indexOf('    "Northern Star": {');
+      const le = le0 >= 0 && le1 > le0 ? newmar.slice(le0, le1) : "";
+      if (!/yearEnd:\s*2019/.test(le)) {
+        fail("Newmar|Ventana LE yearEnd must be 2019");
+      }
+      if (!/"2019": \["3412","3426","3709","3717","4002","4037","4045","4048"\]/.test(le)) {
+        fail("Newmar|Ventana LE MY19 final-year OEM plans missing");
+      }
+      if (/"2020"/.test(le)) {
+        fail("Newmar|Ventana LE must not list 2020 (no OEM brochure)");
       }
     }
   }
