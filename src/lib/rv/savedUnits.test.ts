@@ -9,6 +9,7 @@ import {
   isSavedUnit,
   shouldAutoSaveFacts,
   toggleSavedUnit,
+  type SavedUnitLike,
 } from "./savedUnits.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -19,7 +20,7 @@ function unit(
   model: string,
   type: string,
   floorplan = "",
-) {
+): SavedUnitLike {
   return { year, make, model, floorplan, data: { type } };
 }
 
