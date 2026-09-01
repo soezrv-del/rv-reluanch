@@ -13,7 +13,7 @@ import {
   towableRvType,
   writeActiveCoach,
 } from "./activeCoach.ts";
-import { clampTradeToRetailLow } from "./catalog.ts";
+import { clampTradeToRetailLow } from "./marketClamp.ts";
 
 test("bestCalPrice prefers retail low, then high, then MSRP mid", () => {
   assert.equal(bestCalPrice({ retailLow: 379000, retailHigh: 706000 }), 379000);

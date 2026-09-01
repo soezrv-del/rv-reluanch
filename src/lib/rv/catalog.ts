@@ -1,4 +1,7 @@
 import { computeRating } from "./ratingSystem";
+import { clampTradeToRetailLow } from "./marketClamp";
+
+export { clampTradeToRetailLow };
 import {
   CATALOG_INDEX,
   MAKES,
@@ -724,17 +727,6 @@ export type MarketEstimate = {
   /** True when trade-in was lowered so it cannot sit above retail low. */
   tradeCappedAtRetailLow?: boolean;
 };
-
-/** Desk sanity: a trade number above retail low is not a usable lot figure. */
-export function clampTradeToRetailLow(
-  tradeIn: number,
-  retailLow: number,
-): { tradeIn: number; capped: boolean } {
-  if (retailLow > 0 && tradeIn > retailLow) {
-    return { tradeIn: retailLow, capped: true };
-  }
-  return { tradeIn, capped: false };
-}
 
 export function estimateMarket(
   spec: RVSpec,
