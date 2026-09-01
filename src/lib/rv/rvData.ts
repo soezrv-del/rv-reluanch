@@ -12052,8 +12052,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2020": ["36Q", "38K", "38N", "38W"],
         "2021": ["36Q", "38K", "38N", "38W"],
         "2022": ["36Q", "38K", "38N", "38W"],
+        // OEM 2023 Discovery: 36Q | 38K | 38N | 38W (fleetwoodrv.com/models/discovery)
         "2023": ["36Q", "38K", "38N", "38W"],
-        "2024": ["36Q", "38K", "38N"],
+        // Brochure DISCOVERY24F1 / camperreport: MY24 streamlined to 38N | 38W only
+        "2024": ["38N", "38W"],
         // OEM MY25–26 Discovery: 38N | 38W (fleetwoodrv.com/models/2025-discovery, 2026-discovery)
         "2025": ["38N", "38W"],
         "2026": ["38N", "38W"]
@@ -12122,7 +12124,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Discovery LXE": {
       type: "Class A Diesel",
-      floorplans: ["40G", "40M", "44H", "44B"],
+      floorplans: ["36HQ", "40G", "40M", "44H", "44B", "44S"],
       floorplansByYear: {
         "2012": ["40G", "40M", "44H"],
         "2013": ["40G", "40M", "44H"],
@@ -12135,8 +12137,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2020": ["40G", "40M", "44H", "44B"],
         "2021": ["40G", "40M", "44H", "44B"],
         "2022": ["40G", "44H", "44B"],
-        "2023": ["40G", "44H", "44B"],
-        "2024": ["40G", "44H", "44B"],
+        // OEM 2023 LXE: 36HQ | 40G | 40M | 44B | 44S (fleetwoodrv.com/models/2023-discovery-lxe)
+        "2023": ["36HQ", "40G", "40M", "44B", "44S"],
+        // Brochure LXE24F1: 40G | 40M | 44B | 44S — 36HQ dropped, no 44H
+        "2024": ["40G", "40M", "44B", "44S"],
         "2025": ["40G", "44H"],
         // OEM MY26 Discovery LXE: 40G | 40M | 44B | 44S (DiscoveryLXE_SalesSheets_MY26)
         "2026": ["40G", "40M", "44B", "44S"]
@@ -12207,7 +12211,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["34GT", "36SS", "33TL", "37S", "38RT"],
       floorplansByYear: {
-        // OEM MY25: 34GT | 36SS · MY26: 33TL | 37S | 38RT (fleetwoodrv.com)
+        // OEM 2023–25: 34GT | 36SS (fleetwoodrv.com/models/frontier, 2024-frontier)
+        "2023": ["34GT", "36SS"],
+        "2024": ["34GT", "36SS"],
         "2025": ["34GT", "36SS"],
         "2026": ["33TL", "37S", "38RT"]
       },
@@ -12234,16 +12240,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
-      yearStart: 2025,
-      description: "Fleetwood Frontier — live diesel Class A. MY25 34GT/36SS; MY26 33TL/37S/38RT. OEM page: 340 HP / 700 lb-ft, Freightliner XCR, 10,000-lb hitch.",
+      yearStart: 2023,
+      description: "Fleetwood Frontier — diesel Class A. OEM MY23–25: 34GT / 36SS; MY26: 33TL / 37S / 38RT. 340 HP / 700 lb-ft, Freightliner XCR, 10,000-lb hitch.",
       powertrainByYear: [
-        { from: 2025, to: 2026, engine: "Cummins diesel 340HP", horsepower: 340, torqueLbFt: 700, chassis: "Freightliner Custom Chassis XCR", towingCapacity: 10000 }
+        { from: 2023, to: 2026, engine: "Cummins diesel 340HP", horsepower: 340, torqueLbFt: 700, chassis: "Freightliner Custom Chassis XCR", towingCapacity: 10000 }
       ]
     },
     "Frontier GTX": {
       type: "Class A Diesel",
       floorplans: ["37RT", "39TA"],
       floorplansByYear: {
+        // Debut MY23 (37RT / 39TA); GTX24F1 + OEM 2024/2025 pages same two plans
+        "2023": ["37RT", "39TA"],
+        "2024": ["37RT", "39TA"],
         "2025": ["37RT", "39TA"]
       },
       lengthRange: [37, 39],
@@ -12269,11 +12278,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
-      yearStart: 2025,
+      yearStart: 2023,
       yearEnd: 2025,
-      description: "Fleetwood Frontier GTX — MY25 only on OEM (37RT / 39TA). Cummins 6.7 360/800, Allison 3000 MH, Freightliner XCR. No MY26/27 GTX page.",
+      description: "Fleetwood Frontier GTX — OEM MY23–25 (37RT / 39TA). Cummins 6.7 360/800, Allison 3000 MH, Freightliner XCR. No MY26/27 GTX page.",
       powertrainByYear: [
-        { from: 2025, to: 2025, engine: "Cummins B6.7 360HP", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner Custom Chassis XCR", transmission: "Allison 3000 MH 6-speed" }
+        { from: 2023, to: 2025, engine: "Cummins B6.7 360HP", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner Custom Chassis XCR", transmission: "Allison 3000 MH 6-speed" }
       ]
     },
     Palisade: {
@@ -12334,8 +12343,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2020": ["33C", "35K", "36H", "36F"],
         "2021": ["33C", "35K", "36H", "36F"],
         "2022": ["33C", "35K", "36H"],
-        "2023": ["33C", "35K", "36H"],
-        "2024": ["33C", "35K", "36H"],
+        // BOUNDER23F1 / BOUNDER24F1: 33C | 35GL | 35K | 36F — no 36H
+        "2023": ["33C", "35GL", "35K", "36F"],
+        "2024": ["33C", "35GL", "35K", "36F"],
         // OEM MY25–26 Bounder: 33C | 35GL | 35K | 36F — no 33P (Bounder_SalesSheets_MY26)
         "2025": ["33C", "35GL", "35K", "36F"],
         "2026": ["33C", "35GL", "35K", "36F"]
@@ -12372,7 +12382,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1950,
       warrantyYears: 1,
       yearStart: 1985,
-      description: "Fleetwood Bounder — classic gas Class A. MY25–26 OEM: 33C / 35GL / 35K / 36F on F53 7.3 335 HP / 468 lb-ft.",
+      description: "Fleetwood Bounder — classic gas Class A. MY23–26 OEM: 33C / 35GL / 35K / 36F. Ford 7.3 is 350/468 in MY23 (BOUNDER23F1) and 335/468 from MY24 (BOUNDER24F1).",
       powertrainByYear: [
         {
           from: 2005,
@@ -12391,12 +12401,32 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
+          to: 2022,
+          engine: "Ford 7.3L V8 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          notes: "Pre-2023 catalog pin — 2021–2022 walk-back is the next slice"
+        },
+        {
+          from: 2023,
+          to: 2023,
+          engine: "Ford 7.3L V8 350HP",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          generator: "Onan 5.5 kW gas",
+          notes: "BOUNDER23F1 / OEM 2023 Bounder page: 350 HP / 468 lb-ft — not the later 335 recert"
+        },
+        {
+          from: 2024,
           to: 2026,
           engine: "Ford 7.3L V8 335HP",
           horsepower: 335,
           torqueLbFt: 468,
           chassis: "Ford F53",
-          notes: "MY26 Bounder sales sheet: 335 HP / 468 lb-ft F53 — not E-450 325/450"
+          generator: "Onan 5.5 kW gas",
+          notes: "BOUNDER24F1: 335 HP / 468 lb-ft F53 — not E-450 325/450"
         }
       ]
     },
@@ -12487,8 +12517,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       slideouts: 2,
       sleeps: 6,
       msrpRange: [180000, 260000],
-      engine: "Ford 7.3L V8 / V10 (by year)",
-      horsepower: 335,
+      engine: "Ford 7.3L V8 350HP",
+      horsepower: 350,
+      torqueLbFt: 468,
       chassis: "Ford F53",
       fuelType: "Gas",
       recalls: 0,
@@ -12505,9 +12536,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2023,
       yearEnd: 2023,
-      description: "Fleetwood Southwind — last OEM model page is MY2023 (34C / 35K / 36GL / 37F). Earlier historic years not expanded in this pass.",
+      description: "Fleetwood Southwind — last OEM model page is MY2023 (34C / 35K / 36GL / 37F). No 2024 OEM page. Earlier historic years not expanded in this pass.",
       powertrainByYear: [
-        { from: 2023, to: 2023, engine: "Ford 7.3L V8", horsepower: 335, torqueLbFt: 468, chassis: "Ford F53" }
+        { from: 2023, to: 2023, engine: "Ford 7.3L V8 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford F53", notes: "RVUSA 2023 Southwind / sibling MY23 F53 7.3 rating 350/468" }
       ]
     },
     "Pace Arrow": {
@@ -12560,14 +12591,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       freshWater: 80,
       grayWater: 45,
       blackWater: 45,
-      generator: "Onan Diesel / Gas",
+      generator: "Onan gas (confirm kW)",
       awningLength: 16,
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2000,
       yearEnd: 2023,
-      description: "Fleetwood Pace Arrow — gas Class A through the F53 years; last OEM model page is MY2023 (33D / 35BP / 36U).",
+      description: "Fleetwood Pace Arrow — F53 gas through the 2022 catalog years; last OEM model page is MY2023 diesel (33D / 35BP / 36U on Freightliner XCS, Cummins ISB 300/340 by plan). No 2024 page.",
       powertrainByYear: [
         {
           from: 2005,
@@ -12586,11 +12617,23 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2023,
+          to: 2022,
           engine: "Ford 7.3L V8",
           horsepower: 335,
           torqueLbFt: 468,
-          chassis: "Ford F53"
+          chassis: "Ford F53",
+          notes: "F53 gas — 2021–2022 walk-back is the next slice"
+        },
+        {
+          from: 2023,
+          to: 2023,
+          engine: "Cummins ISB 6.7 300HP (33D) / 340HP (35BP, 36U)",
+          horsepower: 0,
+          chassis: "Freightliner XCS",
+          transmission: "Allison 2100 MH 6-speed",
+          generator: "Onan diesel (confirm kW)",
+          towingCapacity: 10000,
+          notes: "PACEARROW23F1 — Class A diesel final year. 33D = 300 HP / 660 lb-ft; 35BP/36U = 340 HP / 700 lb-ft. Not F53 gas."
         }
       ]
     },
@@ -12684,8 +12727,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2020": ["28A", "30U", "32S"],
         "2021": ["28A", "30U", "32S"],
         "2022": ["28A", "30U"],
-        "2023": ["28A", "30U"],
-        "2024": ["28A", "30U"],
+        // OEM 2023 Flair + FLAIR24F1: 28A | 29M | 32N | 33B6 — no 30U
+        "2023": ["28A", "29M", "32N", "33B6"],
+        "2024": ["28A", "29M", "32N", "33B6"],
         // OEM MY25 Flair: 28A | 29M | 32N | 33B6 — MY26 swaps 32N → 32S
         "2025": ["28A", "29M", "32N", "33B6"],
         "2026": ["28A", "29M", "32S", "33B6"]
@@ -12704,24 +12748,25 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         119000,
         189000
       ],
-      engine: "Ford 7.3L / V10 (by year)",
-      horsepower: 350,
+      engine: "Ford 7.3L V8 / Triton V10 (by year)",
+      horsepower: 335,
+      torqueLbFt: 468,
       chassis: "Ford F53",
       fuelType: "Gas",
       recalls: 0,
       rating: 4.3,
       image: RV_CARD_IMAGE,
-      towingCapacity: 10000,
-      freshWater: 80,
-      grayWater: 45,
-      blackWater: 45,
-      generator: "Onan Diesel / Gas",
+      towingCapacity: 8000,
+      freshWater: 50,
+      grayWater: 37,
+      blackWater: 37,
+      generator: "Onan gas (confirm kW)",
       awningLength: 16,
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2008,
-      description: "Fleetwood Flair — shorter gas Class A on F53. MY26 OEM: 28A / 29M / 32S / 33B6, 7.3 335 / 468.",
+      description: "Fleetwood Flair — shorter gas Class A on F53. MY23–25 OEM: 28A / 29M / 32N / 33B6; MY26 swaps 32N → 32S. Ford 7.3 is 350/468 in MY23 and 335/468 from MY24 (FLAIR24F1).",
       powertrainByYear: [
         {
           from: 2008,
@@ -12740,19 +12785,43 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
+          to: 2022,
+          engine: "Ford 7.3L V8 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          notes: "Pre-2023 catalog pin — 2021–2022 walk-back is the next slice"
+        },
+        {
+          from: 2023,
+          to: 2023,
+          engine: "Ford 7.3L V8 350HP",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          notes: "Sibling MY23 F53 7.3 OEM rating 350/468 (Flex23F1 / Fortis 2023 page)"
+        },
+        {
+          from: 2024,
           to: 2026,
           engine: "Ford 7.3L V8 335HP",
           horsepower: 335,
           torqueLbFt: 468,
-          chassis: "Ford F53"
+          chassis: "Ford F53",
+          notes: "FLAIR24F1: 335 HP / 468 lb-ft"
         }
       ]
     },
     Fortis: {
       type: "Class A Gas",
-      floorplans: ["32RW", "33HB", "34MB", "36T", "36Y"],
+      floorplans: ["32RW", "33HB", "34MB", "36DB", "36T", "36Y"],
       floorplansByYear: {
-        "2025": ["32RW", "33HB", "34MB", "36T", "36Y"],
+        // 2023 OEM page has five slots; RVUSA 2023 lists 32RW / 33HB / 34MB / 36DB / 36Y
+        "2023": ["32RW", "33HB", "34MB", "36DB", "36Y"],
+        // FORTIS24F1: 32RW | 33HB | 34MB | 36Y — no 36T, no 36DB
+        "2024": ["32RW", "33HB", "34MB", "36Y"],
+        // FORTIS25F1 (MY25): same four — 36T arrives MY26 (FORTIS26)
+        "2025": ["32RW", "33HB", "34MB", "36Y"],
         "2026": ["32RW", "33HB", "34MB", "36T", "36Y"],
         "2027": ["32RW", "33HB", "34MB", "36T", "36Y"]
       },
@@ -12780,17 +12849,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
-      yearStart: 2025,
+      yearStart: 2023,
       gvwrLbs: 26000,
-      description: "Fleetwood Fortis — live F53 gas Class A. MY25–27 OEM plans 32RW / 33HB / 34MB / 36T / 36Y. Brochure 7.3 335 HP / 468 lb-ft (not marketing 350).",
+      description: "Fleetwood Fortis — F53 gas Class A. MY23: 32RW / 33HB / 34MB / 36DB / 36Y; MY24–25 drop 36DB (no 36T yet); MY26–27 add 36T. Ford 7.3 is 350/468 in MY23 and 335/468 from MY24 (not marketing 350).",
       powertrainByYear: [
-        { from: 2025, to: 2027, engine: "Ford 7.3L V8 335HP", horsepower: 335, torqueLbFt: 468, chassis: "Ford F53", transmission: "Ford 6-speed automatic", towingCapacity: 8000, freshWater: 100, grayWater: 50, blackWater: 50 }
+        { from: 2023, to: 2023, engine: "Ford 7.3L V8 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford F53", transmission: "Ford 6-speed automatic", towingCapacity: 8000, notes: "OEM 2023 Fortis page: 350 HP / 468 lb-ft" },
+        { from: 2024, to: 2027, engine: "Ford 7.3L V8 335HP", horsepower: 335, torqueLbFt: 468, chassis: "Ford F53", transmission: "Ford 6-speed automatic", towingCapacity: 8000, freshWater: 100, grayWater: 50, blackWater: 50, notes: "FORTIS24F1 / MY26 sheet: 335 HP / 468 lb-ft" }
       ]
     },
     Flex: {
       type: "Class A Gas",
       floorplans: ["32S", "34J", "35R"],
       floorplansByYear: {
+        // FLEX23F1 + FLEX24F1 + OEM 2025: 32S | 34J | 35R
+        "2023": ["32S", "34J", "35R"],
+        "2024": ["32S", "34J", "35R"],
         "2025": ["32S", "34J", "35R"]
       },
       lengthRange: [32, 36],
@@ -12815,11 +12888,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
-      yearStart: 2025,
+      yearStart: 2023,
       yearEnd: 2025,
-      description: "Fleetwood Flex — MY25 only on Build & Price / OEM (32S / 34J / 35R). F53 7.3 335 / 468. No MY26/27 Flex page.",
+      description: "Fleetwood Flex — OEM MY23–25 (32S / 34J / 35R). Ford 7.3 is 350/468 in MY23 (FLEX23F1) and 335/468 from MY24 (FLEX24F1). No MY26/27 Flex page.",
       powertrainByYear: [
-        { from: 2025, to: 2025, engine: "Ford 7.3L V8 335HP", horsepower: 335, torqueLbFt: 468, chassis: "Ford F53" }
+        { from: 2023, to: 2023, engine: "Ford 7.3L V8 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford F53", notes: "FLEX23F1: 350 HP @ 3,900 / 468 lb-ft @ 3,000" },
+        { from: 2024, to: 2025, engine: "Ford 7.3L V8 335HP", horsepower: 335, torqueLbFt: 468, chassis: "Ford F53", notes: "FLEX24F1: 335 HP / 468 lb-ft" }
       ]
     },
     Jamboree: {
@@ -13284,11 +13358,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Xcursion: {
       type: "Class B",
-      floorplans: ["19CB", "24CB"],
+      floorplans: ["AL2", "SL2", "SL2E", "SL4E"],
       floorplansByYear: {
-        "2024": ["19CB", "24CB"],
-        "2025": ["19CB", "24CB"],
-        "2026": ["19CB", "24CB"]
+        // OEM / RVUSA 2024 only: AL2 | SL2 | SL2E | SL4E — 19CB/24CB were invented
+        "2024": ["AL2", "SL2", "SL2E", "SL4E"]
       },
       lengthRange: [
         19,
@@ -13296,7 +13369,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       weightRange: [
         8500,
-        11000
+        11030
       ],
       slideouts: 0,
       sleeps: 2,
@@ -13304,31 +13377,39 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         149000,
         209000
       ],
-      engine: "Mercedes-Benz / RAM (by chassis year)",
-      horsepower: 208,
-      chassis: "Sprinter or ProMaster (by package)",
-      fuelType: "Diesel / Gas",
+      engine: "Mercedes-Benz 2.0L I4 turbodiesel 211HP",
+      horsepower: 211,
+      torqueLbFt: 332,
+      chassis: "Mercedes-Benz Sprinter 2500 / 3500",
+      transmission: "9-speed automatic",
+      fuelType: "Diesel",
       recalls: 0,
       rating: 4.45,
       image: RV_CARD_IMAGE,
-      towingCapacity: 10000,
-      freshWater: 80,
-      grayWater: 45,
-      blackWater: 45,
-      generator: "Onan Diesel / Gas",
-      awningLength: 16,
-      ceilingHeight: 82,
+      towingCapacity: 5000,
+      freshWater: 19,
+      grayWater: 22,
+      blackWater: 14,
+      fuelCapacityGal: 24.5,
+      generator: "Optional (confirm brochure)",
+      awningLength: 14,
+      ceilingHeight: 74,
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2024,
-      description: "Fleetwood Xcursion — newer Class B under Fleetwood Family of Brands (REV).",
+      yearEnd: 2024,
+      description: "Fleetwood Xcursion — 2024-only Sprinter Class B (AL2 / SL2 / SL2E / SL4E). Brochure: 211 HP / 332 lb-ft, 9-speed, 30A. 2025 leftover-inventory rebate was still MY24 — no 2025 OEM page.",
       powertrainByYear: [
         {
           from: 2024,
-          to: 2026,
-          engine: "Sprinter turbodiesel or ProMaster gas",
-          horsepower: 208,
-          chassis: "Van chassis by package"
+          to: 2024,
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel 211HP",
+          horsepower: 211,
+          torqueLbFt: 332,
+          chassis: "Mercedes-Benz Sprinter 2500 / 3500",
+          transmission: "9-speed automatic",
+          generator: "Optional (confirm brochure)",
+          notes: "2024 Xcursion brochure — Sprinter diesel, not a gas ProMaster and not invented 19CB/24CB"
         }
       ]
     }
