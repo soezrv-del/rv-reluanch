@@ -12048,8 +12048,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["36G", "38F", "38K", "40G"],
         "2017": ["36G", "38F", "38K", "40G"],
         "2018": ["36G", "38F", "38K", "38N", "40G"],
-        "2019": ["36G", "38F", "38K", "38N", "40G"],
-        "2020": ["36Q", "38K", "38N", "38W"],
+        // Brochure 2019_Fleetwood_Discovery: 38F | 38K | 38N | 38W — no 36G / 40G / 36Q
+        "2019": ["38F", "38K", "38N", "38W"],
+        // Brochure 2020-Fleetwood-Discovery: 38F | 38K | 38N | 38W — 36Q arrives MY21
+        "2020": ["38F", "38K", "38N", "38W"],
         // Brochure 2021-Fleetwood-Discovery: 36Q | 38F | 38K | 38N | 38W
         "2021": ["36Q", "38F", "38K", "38N", "38W"],
         // Brochure 2022-Fleetwood-Discovery / DISCOVERY22: 36Q | 38K | 38N | 38W — 38F dropped
@@ -12135,8 +12137,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["40G", "40M", "44H"],
         "2017": ["40G", "40M", "44H"],
         "2018": ["40G", "40M", "44H"],
-        "2019": ["40G", "40M", "44H", "44B"],
-        "2020": ["40G", "40M", "44H", "44B"],
+        // Brochure 2019_Fleetwood_Discovery LXE: 40D | 40G | 40M | 44B | 44H
+        "2019": ["40D", "40G", "40M", "44B", "44H"],
+        // Brochure 2020-Fleetwood-Discovery-LXE: 40D | 40G | 40M | 44B | 44H
+        "2020": ["40D", "40G", "40M", "44B", "44H"],
         // OEM MY21 LXE (DiscoveryLXE_FleetwoodRV_MY21 / RVUSA 2021 LXE): 36HQ | 40D | 40G | 40M | 44B | 44H | 44S
         "2021": ["36HQ", "40D", "40G", "40M", "44B", "44H", "44S"],
         // OEM MY22 LXE page + salessheet_FW_MY22_DISCOVERY-LXE: 36HQ | 40G | 40M | 44B | 44S — 40D / 44H dropped
@@ -12183,7 +12187,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2012,
-      description: "Fleetwood Discovery LXE — high-line diesel above regular Discovery. MY21: 36HQ / 40D / 40G / 40M / 44B / 44H / 44S; MY22 drops 40D / 44H. L9 380 (36HQ/40D/40G/40M) / 450 (44B/44H/44S) — not a single invented HP.",
+      description: "Fleetwood Discovery LXE — high-line diesel above regular Discovery. MY19–20: 40D / 40G / 40M / 44B / 44H. MY21 adds 36HQ / 44S; MY22 drops 40D / 44H. ISL 9L / L9 380 (40-ft class) / 450 (44-ft) — not a single invented HP.",
       powertrainByYear: [
         {
           from: 2010,
@@ -12203,10 +12207,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         {
           from: 2019,
           to: 2020,
-          engine: "Cummins L9 380HP / 450HP (by floorplan)",
+          engine: "Cummins ISL 9L 380HP (40D/40G/40M) / 450HP (44B/44H)",
           horsepower: 0,
           chassis: "Freightliner Custom Chassis XCM",
-          notes: "2019–2020 walk-back is the next slice — do not invent a single HP"
+          transmission: "Allison 3000 MH 6-Speed",
+          generator: "Onan 8 kW Quiet Diesel",
+          notes: "MY19/MY20 LXE brochures: 40D/40G/40M = ISL 9L 380 / 1,150; 44B/44H = ISL 9L 450 / 1,250. Plans 40D | 40G | 40M | 44B | 44H."
         },
         {
           from: 2021,
@@ -12345,7 +12351,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Bounder: {
       type: "Class A Gas",
-      floorplans: ["33C", "35GL", "35K", "35P", "36H", "36F"],
+      floorplans: ["33C", "35GL", "35K", "35P", "36H", "36F", "36FP"],
       floorplansByYear: {
         "2005": ["33C", "35K", "36H"],
         "2006": ["33C", "35K", "36H"],
@@ -12361,8 +12367,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["33C", "35K", "36H"],
         "2017": ["33C", "35K", "36H"],
         "2018": ["33C", "35K", "36H"],
-        "2019": ["33C", "35K", "36H", "36F"],
-        "2020": ["33C", "35K", "36H", "36F"],
+        // Brochure 2019 Bounder (Empire RV / fleetwoodrv.com 2019-bounder-brochure): 33C | 35K | 35P | 36F | 36FP — no 36H
+        "2019": ["33C", "35K", "35P", "36F", "36FP"],
+        // Brochure 2020-Fleetwood-Bounder: 33C | 35K | 35P | 36F | 36FP — no 36H
+        "2020": ["33C", "35K", "35P", "36F", "36FP"],
         // Brochure 2021-Fleetwood-Bounder / Bounder_FleetwoodRV_MY21: 33C | 35K | 35P | 36F — no 36H
         "2021": ["33C", "35K", "35P", "36F"],
         // Brochure 2022-Fleetwood-Bounder / OEM 2022 Bounder page: 33C | 35GL NEW | 35K | 36F — 35P dropped
@@ -12406,7 +12414,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1950,
       warrantyYears: 1,
       yearStart: 1985,
-      description: "Fleetwood Bounder — classic gas Class A. MY21: 33C / 35K / 35P / 36F; MY22 adds 35GL and drops 35P. Ford 7.3 is 350/468 in MY21–23 (Bounder MY21/22 brochures, BOUNDER23F1) and 335/468 from MY24 (BOUNDER24F1).",
+      description: "Fleetwood Bounder — classic gas Class A. MY19–20: 33C / 35K / 35P / 36F / 36FP on Triton V10 320/460 (not 7.3). MY21: 33C / 35K / 35P / 36F; MY22 adds 35GL and drops 35P. Ford 7.3 is 350/468 in MY21–23 and 335/468 from MY24.",
       powertrainByYear: [
         {
           from: 2005,
@@ -12418,19 +12426,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2019,
-          engine: "Ford Triton V10 6.8L",
-          horsepower: 320,
-          chassis: "Ford F53"
-        },
-        {
-          from: 2020,
           to: 2020,
-          engine: "Ford 7.3L V8 335HP",
-          horsepower: 335,
-          torqueLbFt: 468,
+          engine: "Ford Triton V10 6.8L 320HP",
+          horsepower: 320,
+          torqueLbFt: 460,
           chassis: "Ford F53",
-          notes: "2020 walk-back is the next slice — do not invent MY20 HP"
+          generator: "Onan 5.5 kW gas",
+          notes: "Bounder MY19/MY20 brochures: 6.8L Triton V10 320 HP @ 3,900 / 460 lb-ft @ 3,000. Onan 5.5 kW. Not the later 7.3 Godzilla."
         },
         {
           from: 2021,
@@ -12522,8 +12524,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Southwind: {
       type: "Class A Gas",
-      floorplans: ["34C", "35K", "36P", "36GL", "37F"],
+      floorplans: ["34C", "35K", "36P", "36GL", "37F", "37FP"],
       floorplansByYear: {
+        // Brochure 2019 Southwind (fleetwoodrv.com 1555358752): 34C | 35K | 36P | 37F | 37FP
+        "2019": ["34C", "35K", "36P", "37F", "37FP"],
+        // Brochure 2020-Fleetwood-Southwind: 34C | 35K | 36P | 37F | 37FP
+        "2020": ["34C", "35K", "36P", "37F", "37FP"],
         // Brochure 2021-Fleetwood-Southwind: 34C | 35K | 36P | 37F
         "2021": ["34C", "35K", "36P", "37F"],
         // OEM MY22 Southwind brochure: 34C | 35K | 36GL NEW | 37F — 36P dropped
@@ -12552,16 +12558,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
-      yearStart: 2021,
+      yearStart: 2019,
       yearEnd: 2023,
-      description: "Fleetwood Southwind — MY21: 34C / 35K / 36P / 37F; MY22–23: 34C / 35K / 36GL / 37F. Last OEM page MY2023. Ford 7.3 is 350/468 in MY21–23. No 2024 page. Years before 2021 not expanded in this pass.",
+      description: "Fleetwood Southwind — MY19–20: 34C / 35K / 36P / 37F / 37FP on Triton V10 320/460. MY21: 34C / 35K / 36P / 37F; MY22–23: 34C / 35K / 36GL / 37F. Ford 7.3 is 350/468 in MY21–23. No 2024 page. Years before 2019 not expanded in this pass.",
       powertrainByYear: [
+        { from: 2019, to: 2020, engine: "Ford Triton V10 6.8L 320HP", horsepower: 320, torqueLbFt: 460, chassis: "Ford F53", generator: "Onan 5.5 kW gas", notes: "Southwind MY19/MY20 brochures: 6.8L Triton V10 320/460. Onan 5.5 kW std (7.0 kW opt). Not 7.3." },
         { from: 2021, to: 2023, engine: "Ford 7.3L V8 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford F53", generator: "Onan 5.5 kW gas", notes: "Southwind MY21 brochure: 7.3 350/468, Onan 5.5 kW std (7.0 kW opt). MY22 brochure same 350/468. Sibling MY23 F53 7.3 350/468." }
       ]
     },
     "Pace Arrow": {
       type: "Class A Gas",
-      floorplans: ["33D", "35R", "35QS", "35RB", "35S", "36U", "35BP"],
+      floorplans: ["33D", "35R", "35E", "35QS", "35RB", "35S", "36U", "35BP"],
       floorplansByYear: {
         "2005": ["33D", "35R", "36U"],
         "2006": ["33D", "35R", "36U"],
@@ -12577,8 +12584,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["33D", "35R", "36U"],
         "2017": ["33D", "35R", "36U"],
         "2018": ["33D", "35R", "36U"],
-        "2019": ["33D", "35R", "36U"],
-        "2020": ["33D", "35R", "36U"],
+        // Brochure 2019 Pace Arrow (interactcp 20190424): diesel 33D | 35E | 35QS | 36U — not F53 gas, not 35R
+        "2019": ["33D", "35E", "35QS", "36U"],
+        // Brochure 2020-Fleetwood-Pace-Arrow: diesel 33D | 35QS | 35RB | 35S | 36U — 35E dropped
+        "2020": ["33D", "35QS", "35RB", "35S", "36U"],
         // Brochure 2021-Fleetwood-Pace-Arrow: diesel 33D | 35QS | 35RB | 35S | 36U — not F53 gas, not 35R
         "2021": ["33D", "35QS", "35RB", "35S", "36U"],
         // OEM 2022 Pace Arrow page / PACE ARROW MY22: diesel 33D | 36U only
@@ -12618,7 +12627,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2000,
       yearEnd: 2023,
-      description: "Fleetwood Pace Arrow — F53 gas through the pre-2021 catalog years. MY21–23 are diesel on Freightliner XCS (not F53): MY21 33D / 35QS / 35RB / 35S / 36U; MY22 33D / 36U; MY23 33D / 35BP / 36U. ISB 300 (33D) / 340 (other plans). No 2024 page.",
+      description: "Fleetwood Pace Arrow — F53 gas through MY18 catalog years. MY19–23 are diesel on Freightliner XCS (not F53): MY19 33D / 35E / 35QS / 36U; MY20–21 33D / 35QS / 35RB / 35S / 36U; MY22 33D / 36U; MY23 33D / 35BP / 36U. ISB 300 (33D) / 340 (other plans). No 2024 page.",
       powertrainByYear: [
         {
           from: 2005,
@@ -12630,29 +12639,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2019,
+          to: 2018,
           engine: "Ford Triton V10 6.8L",
           horsepower: 320,
-          chassis: "Ford F53"
-        },
-        {
-          from: 2020,
-          to: 2020,
-          engine: "Ford 7.3L V8",
-          horsepower: 335,
-          torqueLbFt: 468,
           chassis: "Ford F53",
-          notes: "2020 walk-back is the next slice — do not invent MY20 fuel/HP"
+          notes: "Pre-2019 Pace Arrow catalog years are F53 gas — 2017–2018 walk-back is the next slice"
         },
         {
-          from: 2021,
+          from: 2019,
           to: 2022,
-          engine: "Cummins ISB 6.7 300HP (33D) / 340HP (35QS/35RB/35S/36U)",
+          engine: "Cummins ISB 6.7 300HP (33D) / 340HP (other plans)",
           horsepower: 0,
           chassis: "Freightliner XCS",
           generator: "Onan 6.0 kW Quiet Diesel",
           towingCapacity: 10000,
-          notes: "2021-Fleetwood-Pace-Arrow: diesel. 33D = 300/660 Allison 2100; 35QS/35RB/35S/36U = 340/700 Allison 2500. MY22 keeps 33D / 36U only. Not F53 gas."
+          notes: "MY19 Pace Arrow brochure: diesel 33D = 300/660 Allison 2100; 35E/35QS/36U = 340/700 Allison 2500. MY20 adds 35RB/35S, drops 35E. MY21 keeps five diesel plans; MY22 33D / 36U. Not F53 gas."
         },
         {
           from: 2023,
@@ -12753,8 +12754,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["28A", "30U", "32S"],
         "2017": ["28A", "30U", "32S"],
         "2018": ["28A", "30U", "32S"],
-        "2019": ["28A", "30U", "32S"],
-        "2020": ["28A", "30U", "32S"],
+        // Brochure 2019_Fleetwood_Flair: 28A | 29M | 32S | 34J | 35R — no 30U
+        "2019": ["28A", "29M", "32S", "34J", "35R"],
+        // Brochure 2020-Fleetwood-Flair: 28A | 29M | 32S | 34J | 35R — no 30U
+        "2020": ["28A", "29M", "32S", "34J", "35R"],
         // Brochure 2021-Fleetwood-Flair: 28A | 29M | 32S | 34J | 35R — no 30U
         "2021": ["28A", "29M", "32S", "34J", "35R"],
         // OEM MY22 Flair brochure: 28A | 29M | 32S | 34J | 35R (five plans). 34J/35R move to Flex in MY23.
@@ -12798,7 +12801,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2008,
-      description: "Fleetwood Flair — shorter gas Class A on F53. MY21–22 OEM: 28A / 29M / 32S / 34J / 35R; MY23–25: 28A / 29M / 32N / 33B6; MY26 swaps 32N → 32S. Ford 7.3 is 350/468 in MY21–23 and 335/468 from MY24 (FLAIR24F1).",
+      description: "Fleetwood Flair — shorter gas Class A on F53. MY19–22 OEM: 28A / 29M / 32S / 34J / 35R (no 30U). MY19–20 are Triton V10 320/460; MY21–23 Ford 7.3 is 350/468; MY24+ 335/468 (FLAIR24F1). MY23–25: 28A / 29M / 32N / 33B6.",
       powertrainByYear: [
         {
           from: 2008,
@@ -12810,19 +12813,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2019,
-          engine: "Ford Triton V10 6.8L",
-          horsepower: 320,
-          chassis: "Ford F53"
-        },
-        {
-          from: 2020,
           to: 2020,
-          engine: "Ford 7.3L V8 335HP",
-          horsepower: 335,
-          torqueLbFt: 468,
+          engine: "Ford Triton V10 6.8L 320HP",
+          horsepower: 320,
+          torqueLbFt: 460,
           chassis: "Ford F53",
-          notes: "2020 walk-back is the next slice — do not invent MY20 HP"
+          notes: "Flair MY19/MY20 brochures: 6.8L Triton V10 320 HP @ 3,900 / 460 lb-ft. Gen kW varies by plan (4.0 / 5.5) — do not invent a single kW. Not 7.3."
         },
         {
           from: 2021,
@@ -12857,6 +12853,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["32RW", "33HB", "34MB", "36DB", "36T", "36Y"],
       floorplansByYear: {
+        // Brochure 2020_Fleetwood_Fortis / RVUSA 2020 Fortis: 33HB | 34MB only (32RW / 36DB arrive MY21)
+        "2020": ["33HB", "34MB"],
         // Brochure 2021-Fleetwood-Fortis + 2022-Fleetwood-Fortis: 32RW | 33HB | 34MB | 36DB — no 36Y yet
         "2021": ["32RW", "33HB", "34MB", "36DB"],
         "2022": ["32RW", "33HB", "34MB", "36DB"],
@@ -12893,10 +12891,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
-      yearStart: 2021,
+      yearStart: 2020,
       gvwrLbs: 26000,
-      description: "Fleetwood Fortis — F53 gas Class A. OEM MY21–22: 32RW / 33HB / 34MB / 36DB (no 36Y); MY23 adds 36Y; MY24–25 drop 36DB (no 36T yet); MY26–27 add 36T. Ford 7.3 is 350/468 in MY21–23 and 335/468 from MY24 (not marketing 350). No Flex / Altitude in 2021–2022.",
+      description: "Fleetwood Fortis — F53 gas Class A. OEM debut MY20: 33HB / 34MB on Triton V10 320/460 (no 32RW / 36DB yet). MY21–22: 32RW / 33HB / 34MB / 36DB; MY23 adds 36Y; MY24–25 drop 36DB; MY26–27 add 36T. Ford 7.3 is 350/468 in MY21–23 and 335/468 from MY24.",
       powertrainByYear: [
+        { from: 2020, to: 2020, engine: "Ford Triton V10 6.8L 320HP", horsepower: 320, torqueLbFt: 460, chassis: "Ford F53", transmission: "Ford 6-speed automatic", towingCapacity: 8000, generator: "Onan 5.5 kW Quiet gas", notes: "Fortis MY20 brochure: 6.8L Triton V10 320/460, Onan 5.5 kW Quiet. Plans 33HB / 34MB only. Not 7.3." },
         { from: 2021, to: 2023, engine: "Ford 7.3L V8 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford F53", transmission: "Ford 6-speed automatic", towingCapacity: 8000, generator: "Onan 5.5 kW Quiet gas", notes: "Fortis MY21 brochure: 7.3 350/468, Onan 5.5 kW Quiet. MY22 floorplan sheets same 350/468." },
         { from: 2024, to: 2027, engine: "Ford 7.3L V8 335HP", horsepower: 335, torqueLbFt: 468, chassis: "Ford F53", transmission: "Ford 6-speed automatic", towingCapacity: 8000, freshWater: 100, grayWater: 50, blackWater: 50, notes: "FORTIS24F1 / MY26 sheet: 335 HP / 468 lb-ft" }
       ]
@@ -13153,14 +13152,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Pulse: {
       type: "Class C",
-      floorplans: ["24A", "24D", "24L"],
+      floorplans: ["24A", "24B", "24D", "24L"],
       floorplansByYear: {
         "2014": ["24A", "24D"],
         "2015": ["24A", "24D"],
         "2016": ["24A", "24D"],
         "2017": ["24A", "24D"],
         "2018": ["24A", "24D"],
-        "2019": ["24A", "24D", "24L"]
+        // RV Guide 2019 Pulse + RVUSA 2019 Pulse (2 plans): 24A | 24B — do not invent 24D / 24L
+        "2019": ["24A", "24B"]
       },
       lengthRange: [
         24,
@@ -13194,7 +13194,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2014,
       yearEnd: 2019,
-      description: "Fleetwood Pulse — discontinued Sprinter diesel Class C (last catalog year 2019).",
+      description: "Fleetwood Pulse — discontinued Sprinter diesel Class C. Last catalog year 2019 (24A / 24B per RV Guide / RVUSA). No 2020 Pulse page.",
       powertrainByYear: [
         {
           from: 2014,
