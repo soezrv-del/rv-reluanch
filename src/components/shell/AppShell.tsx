@@ -19,6 +19,7 @@ import {
   useFocusScrollIntoView,
   useKeyboardInset,
 } from "@/lib/hooks/useKeyboardInset";
+import { useDockSafeInset } from "@/lib/hooks/nativeWebView";
 
 /**
  * Code-split suite tools — iOS cold start was parsing all apps under splash.
@@ -118,6 +119,7 @@ export function AppShell() {
   const calTokenRef = useRef(0);
   const kb = useKeyboardInset();
   useFocusScrollIntoView(true);
+  useDockSafeInset();
 
   const markVisited = useCallback((id: AppTab) => {
     setVisited((prev) => {
@@ -190,7 +192,9 @@ export function AppShell() {
     order: TAB_ORDER,
     active: tab,
     onChange: onTabChange,
-    targetRef: shellRef,
+    // Suite panes only — never the dock. Ancestor capture listeners on
+    // the shell eat Android WebView clicks on Facts/Cal/Tow/Trips/Share/Grok.
+    targetRef: mainRef,
     threshold: 24,
     enabled: !launchOpen,
   });
@@ -312,7 +316,11 @@ export function AppShell() {
         </main>
 
         {!hideDock ? (
-          <div className="relative z-40 shrink-0">
+          <div
+            className="relative z-[80] shrink-0 isolate pointer-events-auto"
+            data-bottom-dock
+            data-no-swipe
+          >
             <BottomTabs tab={tab} onChange={onTabChange} />
           </div>
         ) : null}

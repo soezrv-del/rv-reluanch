@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isAndroidNativeWebView } from "@/lib/hooks/nativeWebView";
 
 export type KeyboardInset = {
   /** Keyboard height overlapping the layout (px) */
@@ -222,9 +223,17 @@ export function useKeyboardInset(): KeyboardInset {
       try {
         const { Keyboard } = await import("@capacitor/keyboard");
         const applyNative = (h: number) => {
+          // Android IME events can fire with a nav-bar-sized height on
+          // emulator launch. Don't treat that as a keyboard unless a
+          // field is actually focused — otherwise html.kb-open disables
+          // the dock (pointer-events: none).
+          const tall = h > THRESHOLD;
+          const androidGhost =
+            isAndroidNativeWebView() && !isTextField(document.activeElement);
+          const open = tall && !androidGhost;
           const next: KeyboardInset = {
-            inset: h > THRESHOLD ? h : 0,
-            open: h > THRESHOLD,
+            inset: open ? h : 0,
+            open,
             vvHeight: window.visualViewport?.height ?? window.innerHeight,
             vvOffsetTop: window.visualViewport?.offsetTop ?? 0,
           };

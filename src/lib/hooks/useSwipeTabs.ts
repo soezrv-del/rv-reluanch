@@ -1,8 +1,22 @@
 import { useEffect, type RefObject } from "react";
 
 /**
+ * Capture-phase swipe must not claim the bottom dock. Android WebView
+ * often fails to synthesize `click` when an ancestor is tracking the
+ * same touch — even with passive listeners.
+ */
+export const SWIPE_BLOCK_SELECTOR =
+  "input, textarea, select, [contenteditable='true'], [role='dialog'], [data-no-swipe], [data-no-swipe-scroll], [data-bottom-dock], .bottom-tabs-nav, .bottom-tab-btn, .price-slider-wrap, .price-slider, video";
+
+export function isSwipeBlockedTarget(t: EventTarget | null): boolean {
+  if (!(t instanceof Element)) return false;
+  return Boolean(t.closest(SWIPE_BLOCK_SELECTOR));
+}
+
+/**
  * Easy left/right swipe to change tabs.
- * Attaches to shell; ignores form fields and vertical scrolls.
+ * Attach to the suite <main>, not the shell — the dock must stay out of
+ * the gesture target so Android tab taps fire.
  */
 export function useSwipeTabs<T extends string>({
   order,
@@ -33,20 +47,10 @@ export function useSwipeTabs<T extends string>({
     let tracking = false;
     let locked: "h" | "v" | null = null;
 
-    const isBlocked = (t: EventTarget | null) => {
-      if (!(t instanceof Element)) return false;
-      // Only block true form controls / dialogs — allow swipes on cards
-      return Boolean(
-        t.closest(
-          "input, textarea, select, [contenteditable='true'], [role='dialog'], [data-no-swipe], [data-no-swipe-scroll], .price-slider-wrap, .price-slider, video",
-        ),
-      );
-    };
-
     const onStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
       const touch = e.touches[0]!;
-      if (isBlocked(e.target)) {
+      if (isSwipeBlockedTarget(e.target)) {
         tracking = false;
         return;
       }
