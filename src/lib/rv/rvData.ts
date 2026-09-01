@@ -20,15 +20,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Newmar: {
     Essex: {
       type: "Class A Diesel",
-      floorplans: ["4551", "4544", "4534", "4519", "4561", "4553", "4580", "4521", "4533", "4543", "4545", "4550", "4559", "4569", "4576", "4578", "4579", "4583", "4595", "4598"],
+      floorplans: ["4551", "4544", "4534", "4519", "4561", "4553", "4580", "4521", "4533", "4543", "4545", "4550", "4559", "4569", "4576", "4578", "4579", "4583", "4595", "4598", "4513", "4584", "4531", "4536", "4537"],
       floorplansByYear: {
         "2012": ["4551", "4544", "4534"],
         "2013": ["4551", "4544", "4534"],
         "2014": ["4551", "4544", "4534"],
         "2015": ["4551", "4544", "4534"],
         "2016": ["4551", "4544", "4534"],
-        "2017": ["4551", "4544", "4534", "4519"],
-        "2018": ["4551", "4544", "4534", "4519"],
+        // Brochure 2017_Essex: 4513 | 4519 | 4533 | 4553 | 4584 | 4598 — Freightliner SL / Spartan K3 ISX 600
+        "2017": ["4513", "4519", "4533", "4553", "4584", "4598"],
+        // Brochure 2018_Essex: 4531 | 4533 | 4534 | 4536 | 4537 | 4553 | 4598 — X15 605
+        "2018": ["4531", "4533", "4534", "4536", "4537", "4553", "4598"],
         // Brochure 2019_Essex: 4533 | 4534 | 4543 | 4550 | 4551 | 4576 | 4579 | 4598 — Freightliner SL / Spartan K3 605
         "2019": ["4533", "4534", "4543", "4550", "4551", "4576", "4579", "4598"],
         // Brochure 2020_Essex: 4533 | 4543 | 4551 | 4559 | 4569 | 4579 — Spartan K3 Tag 605
@@ -87,13 +89,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2012,
-          to: 2018,
+          to: 2017,
           engine: "Cummins ISX 600HP",
           horsepower: 600,
-          chassis: "Spartan K3"
+          chassis: "Freightliner SL Tag / Spartan K3 (by option)",
+          notes: "OEM 2017_Essex: Freightliner SL or Spartan K3 Passive Steer tag, ISX 600. Do not copy MY18+ X15 605 onto 2017."
         },
         {
-          from: 2019,
+          from: 2018,
           to: 2027,
           engine: "Cummins X15 605HP",
           horsepower: 605,
@@ -102,13 +105,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           transmission: "Allison 4000 MH",
           generator: "Onan 12.5kW Quiet Diesel",
           acUnits: "3 × 15,000 BTU heat pump",
-          notes: "OEM MY19–27 Essex: X15 605. MY19 Freightliner SL or Spartan K3; MY20–23 chassis tables Spartan K3 Tag; later years Freightliner SL or Spartan K3 — confirm build sheet. Do not copy MY21+ plans onto 2019–2020."
+          notes: "OEM MY18 Essex: X15 605 (not ISX 600). MY19 Freightliner SL or Spartan K3; MY20–23 chassis tables Spartan K3 Tag; later years Freightliner SL or Spartan K3 — confirm build sheet."
         }
       ]
     },
     "King Aire": {
       type: "Class A Diesel",
-      floorplans: ["45AHQ", "45IQH", "4531", "45RBQ", "4553", "42AQHP", "45AQHP", "45KQ", "4521", "4533", "4534", "4540", "4545", "4546", "4549", "4550", "4558", "4559", "4569", "4578", "4596", "4598"],
+      floorplans: ["45AHQ", "45IQH", "4531", "45RBQ", "4553", "42AQHP", "45AQHP", "45KQ", "4521", "4533", "4534", "4540", "4545", "4546", "4549", "4550", "4558", "4559", "4569", "4578", "4596", "4598", "4513", "4519", "4584", "4536", "4537"],
       floorplansByYear: {
         "2005": ["45AHQ", "45IQH", "4531"],
         "2006": ["45AHQ", "45IQH", "4531"],
@@ -122,8 +125,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["45AHQ", "45IQH", "4531"],
         "2015": ["45AHQ", "45IQH", "4531"],
         "2016": ["45AHQ", "45IQH", "4531"],
-        "2017": ["45AHQ", "45IQH", "45RBQ", "4531"],
-        "2018": ["45AHQ", "45IQH", "45RBQ", "4531", "4553"],
+        // Brochure 2017_King_Aire: 4513 | 4519 | 4533 | 4553 | 4584 | 4598 — Spartan K3 ISX 600
+        "2017": ["4513", "4519", "4533", "4553", "4584", "4598"],
+        // Brochure 2018_King_Aire: 4531 | 4533 | 4534 | 4536 | 4537 | 4553 | 4598 — Spartan K3 Tag X15 605
+        "2018": ["4531", "4533", "4534", "4536", "4537", "4553", "4598"],
         // Brochure 2019_King_Aire: 4531 | 4533 | 4534 | 4546 | 4549 | 4550 | 4553 | 4598 — Spartan K3 Tag 605
         "2019": ["4531", "4533", "4534", "4546", "4549", "4550", "4553", "4598"],
         // Brochure 2020_King_Aire: 4531 | 4533 | 4549 | 4553 | 4559 | 4569 — Spartan K3 Tag 605
@@ -197,13 +202,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2018,
+          to: 2017,
           engine: "Cummins ISX 600HP",
           horsepower: 600,
-          chassis: "Spartan K3"
+          chassis: "Spartan K3",
+          notes: "OEM 2017_King_Aire: Spartan K3 tag ISX 600. Do not copy MY18+ X15 605 onto 2017."
         },
         {
-          from: 2019,
+          from: 2018,
           to: 2027,
           engine: "Cummins X15 605HP",
           horsepower: 605,
@@ -212,14 +218,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           transmission: "Allison 4000 MH",
           generator: "Onan 12.5kW Quiet Diesel",
           acUnits: "3 × 15,000 BTU heat pump",
-          notes: "OEM MY19–27 King Aire: Spartan K3 Tag 605 HP. Do not copy MY21+ plans onto 2019–2020."
+          notes: "OEM MY18 King Aire: Spartan K3 Tag X15 605 (not ISX 600). Do not copy MY21+ plans onto 2018–2020."
         },
         
       ]
     },
     "Mountain Aire": {
       type: "Class A Diesel",
-      floorplans: ["4536", "4553", "4304", "4526", "4118", "4546", "4574", "4536PBD", "4528", "4544", "3823", "3825", "4002", "4018", "4102", "4521", "4533", "4534", "4535", "4543", "4550", "4551", "4569", "4576", "4579", "4583", "4586", "4589", "4591", "4595"],
+      floorplans: ["4536", "4553", "4304", "4526", "4118", "4546", "4574", "4536PBD", "4528", "4544", "3823", "3825", "4002", "4018", "4102", "4521", "4533", "4534", "4535", "4543", "4550", "4551", "4569", "4576", "4579", "4583", "4586", "4589", "4591", "4595", "4513", "4519", "4525", "4584", "4531", "4537", "4047"],
       floorplansByYear: {
         "2008": ["4536", "4553", "4304"],
         "2009": ["4536", "4553", "4304"],
@@ -230,8 +236,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["4536", "4553", "4304"],
         "2015": ["4536", "4553", "4304"],
         "2016": ["4536", "4553", "4304"],
-        "2017": ["4526", "4553", "4304", "4118"],
-        "2018": ["4526", "4553", "4546", "4304"],
+        // Brochure 2017_Mountain_Aire: 4513 | 4519 | 4525 | 4533 | 4553 | 4584 — ISX 500
+        "2017": ["4513", "4519", "4525", "4533", "4553", "4584"],
+        // Brochure 2018_Mountain_Aire: 4047 | 4531 | 4533 | 4534 | 4535 | 4536 | 4537 | 4553 — Cummins 500
+        "2018": ["4047", "4531", "4533", "4534", "4535", "4536", "4537", "4553"],
         // Brochure 2019_Mountain_Aire: 4018 | 4533 | 4534 | 4535 | 4543 | 4550 | 4551 | 4576 | 4579 — X12 500
         "2019": ["4018", "4533", "4534", "4535", "4543", "4550", "4551", "4576", "4579"],
         // Brochure 2020_Mountain_Aire: 4002 | 4018 | 4533 | 4535 | 4543 | 4551 | 4569 | 4579 — X12 500
@@ -305,10 +313,26 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2018,
+          to: 2016,
           engine: "Cummins L9 450HP",
           horsepower: 450,
           chassis: "Spartan K3"
+        },
+        {
+          from: 2017,
+          to: 2017,
+          engine: "Cummins ISX 500HP",
+          horsepower: 500,
+          chassis: "Freightliner SL Tag / Spartan K3 (by option)",
+          notes: "OEM 2017_Mountain_Aire: Freightliner SL or Spartan K3 Passive Steer tag, ISX 500 — not L9 450, not the later 525."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Cummins diesel 500HP",
+          horsepower: 500,
+          chassis: "Freightliner Tag / Spartan K3 Tag (by option)",
+          notes: "OEM 2018_Mountain_Aire: 500 HP on Freightliner or Spartan K3 tag. Brochure does not name ISX vs X12 — not L9 450, not the later 525."
         },
         {
           from: 2019,
@@ -382,7 +406,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Dutch Star": {
       type: "Class A Diesel",
-      floorplans: ["4002", "4018", "4054", "4081", "4369", "4311", "4052", "3709", "3717", "3736", "3817", "4020", "4326", "4543", "3737", "4009", "4047", "4058", "4231", "4381", "4553", "3836", "4071", "4310", "4325", "4328", "4340", "4345", "4354", "4362", "4363", "4370"],
+      floorplans: ["4002", "4018", "4054", "4081", "4369", "4311", "4052", "3709", "3717", "3736", "3817", "4020", "4326", "4543", "3737", "4009", "4047", "4058", "4231", "4381", "4553", "3836", "4071", "4310", "4325", "4328", "4340", "4345", "4354", "4362", "4363", "4370", "3724", "4041", "3718", "4327"],
       floorplansByYear: {
         "2005": ["4018", "4081", "4369"],
         "2006": ["4018", "4081", "4369"],
@@ -396,8 +420,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["4018", "4081", "4369", "4311"],
         "2015": ["4018", "4081", "4369", "4311"],
         "2016": ["4018", "4081", "4369", "4311"],
-        "2017": ["4018", "4081", "4369", "4311", "4052"],
-        "2018": ["4081", "4369", "4311", "4052", "3717"],
+        // Brochure 2017_Dutch_Star: 3724 | 3736 | 4002 | 4018 | 4041 | 4054 | 4310 | 4311 | 4369 | 4381 — ISL 450
+        "2017": ["3724", "3736", "4002", "4018", "4041", "4054", "4310", "4311", "4369", "4381"],
+        // Brochure 2018_Dutch_Star: 3718 | 3736 | 4002 | 4018 | 4052 | 4310 | 4311 | 4326 | 4327 | 4362 | 4369 — L 450
+        "2018": ["3718", "3736", "4002", "4018", "4052", "4310", "4311", "4326", "4327", "4362", "4369"],
         // Brochure 2019_Dutch_Star: 3717 | 3736 | 4002 | 4018 | 4054 | 4310 | 4311 | 4326 | 4328 | 4362 | 4363 | 4369 — 450
         "2019": ["3717", "3736", "4002", "4018", "4054", "4310", "4311", "4326", "4328", "4362", "4363", "4369"],
         // Brochure 2020_Dutch_Star: 3709 | 3717 | 3736 | 4020 | 4054 | 4081 | 4310 | 4311 | 4326 | 4328 | 4362 | 4363 | 4369 — 450
@@ -471,10 +497,26 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2018,
+          to: 2016,
           engine: "Cummins ISL / L9 450HP",
           horsepower: 450,
           chassis: "Freightliner XC"
+        },
+        {
+          from: 2017,
+          to: 2017,
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          chassis: "Freightliner (37') / Freightliner or Spartan tag (40'+)",
+          notes: "OEM 2017_Dutch_Star: ISL 450. Freightliner on 37'; Freightliner/Spartan tag on 40'+."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Cummins L 450HP",
+          horsepower: 450,
+          chassis: "Freightliner XCR (37') / Freightliner or Spartan tag (40'+)",
+          notes: "OEM 2018_Dutch_Star: Cummins L 450. Freightliner XCR on 37'; Freightliner/Spartan tag on 40'+."
         },
         {
           from: 2025,
@@ -535,8 +577,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["3543", "3545", "3831"],
         "2015": ["3543", "3545", "3831"],
         "2016": ["3543", "3545", "3831"],
-        "2017": ["3543", "3545", "3831", "3836"],
-        "2018": ["3543", "3545", "3831", "3836", "3843"],
+        // No 2017 OEM New Aire brochure — omit key (modern intro is MY18).
+        // Brochure 2018_New_Aire: 3341 | 3343 — Freightliner XCS Cummins 360 only
+        "2018": ["3341", "3343"],
         // Brochure 2019_New_Aire: 3341 | 3343 | 3345 — Freightliner XCS B6.7 360 only (no 35')
         "2019": ["3341", "3343", "3345"],
         // Brochure 2020_New_Aire: 3341 | 3343 | 3345 (360) / 3541 | 3543 | 3545 (450)
@@ -594,13 +637,23 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2014,
-          to: 2018,
+          to: 2016,
           engine: "Cummins B6.7 / ISB 360HP",
           horsepower: 360,
           torqueLbFt: 800,
           chassis: "Freightliner XCS (side radiator era)",
           transmission: "Allison 3000 MH",
-          notes: "Launch New Aire — ISB/B6.7 360/800",
+          notes: "Pre-modern New Aire keys left for later slices. No OEM MY17 brochure.",
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Cummins B6.7 / ISB 360HP",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Freightliner XCS",
+          transmission: "Allison 3000 MH",
+          notes: "OEM 2018_New_Aire: 3341/3343 Freightliner XCS 360 only — no 35'. Do not copy MY19+ 33' trio or MY20 35' onto 2018.",
         },
         {
           from: 2019,
@@ -691,13 +744,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Ventana: {
       type: "Class A Diesel",
-      floorplans: ["3407", "3412", "3426", "3436", "3709", "3717", "3512", "3809", "3817", "4002", "4037", "4041", "4054", "4068", "4310", "4311", "4326", "4328", "4329", "4334", "4340", "4345", "4348", "4354", "4362", "4369", "3437", "3710", "3711", "3716", "3507"],
+      floorplans: ["3407", "3412", "3426", "3436", "3709", "3717", "3512", "3809", "3817", "4002", "4037", "4041", "4054", "4068", "4310", "4311", "4326", "4328", "4329", "4334", "4340", "4345", "4348", "4354", "4362", "4369", "3437", "3710", "3711", "3716", "3507", "3724", "4322", "3715", "4046", "4049", "4308"],
       floorplansByYear: {
         "2006": ["3436","3717","4037"],"2007": ["3436","3717","4037"],"2008": ["3436","3717","4037"],
         "2009": ["3436","3717","4037"],"2010": ["3436","3717","4037"],"2011": ["3436","3717","4037"],
         "2012": ["3436","3717","4037"],"2013": ["3436","3717","4037"],"2014": ["3436","3717","4037"],
-        "2015": ["3436","3717","4037"],"2016": ["3436","3717","4037"],"2017": ["3436","3717","4037","4041"],
-        "2018": ["3436","3717","4037","4041","4369"],
+        "2015": ["3436","3717","4037"],"2016": ["3436","3717","4037"],
+        // Brochure 2017_Ventana: 3412 | 3436 | 3709 | 3724 (ISB 360) / 4002 | 4037 | 4041 | 4310 | 4311 | 4322 | 4369 (ISL 400)
+        "2017": ["3412","3436","3709","3724","4002","4037","4041","4310","4311","4322","4369"],
+        // Brochure 2018_Ventana: 3407 | 3412 | 3436 | 3709 | 3715 (B 360) / 4002 | 4037 | 4046 | 4049 | 4308 | 4310 | 4311 | 4326 | 4369 (L 400)
+        "2018": ["3407","3412","3436","3709","3715","4002","4037","4046","4049","4308","4310","4311","4326","4369"],
         // Brochure 2019_Ventana: 3407 | 3412 | 3426 | 3709 | 3717 (ISB 360) / 4002 | 4037 | 4054 | 4310 | 4311 | 4326 | 4348 | 4369 (ISL 400)
         "2019": ["3407","3412","3426","3709","3717","4002","4037","4054","4310","4311","4326","4348","4369"],
         // Brochure 2020_Ventana: 3407 | 3412 | 3426 | 3709 | 3717 (360) / 4002 | 4037 | 4054 | 4311 | 4326 | 4348 | 4362 | 4369 (400) — no 4310
@@ -730,7 +786,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         { from: 2006, to: 2009, engine: "Cummins ISL / ISB diesel (era)", horsepower: 350, torqueLbFt: 1000, chassis: "Freightliner XC-Series", transmission: "Allison 3000 MH" },
         { from: 2010, to: 2015, engine: "Cummins ISB / ISL diesel (era)", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XC-Series", transmission: "Allison 3000 MH" },
-        { from: 2016, to: 2018, engine: "Cummins B6.7 360HP (longer plans may differ)", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XC / Spartan (by option)", transmission: "Allison 3000 MH" },
+        { from: 2016, to: 2016, engine: "Cummins B6.7 360HP (longer plans may differ)", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XC / Spartan (by option)", transmission: "Allison 3000 MH" },
+        { from: 2017, to: 2017, floorplans: ["3412","3436","3709","3724","34","37"], engine: "Cummins ISB 360HP", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", notes: "OEM 2017_Ventana 34–37': ISB 360 — not ISL 400" },
+        { from: 2017, to: 2017, floorplans: ["4002","4037","4041","4310","4311","4322","4369","40","43"], engine: "Cummins ISL 400HP", horsepower: 400, torqueLbFt: 1250, chassis: "Freightliner XCR Tag", transmission: "Allison 3000 MH", notes: "OEM 2017_Ventana 40–43': ISL 400 — not ISB 360" },
+        { from: 2017, to: 2017, engine: "Cummins ISB 360HP (34–37') or ISL 400HP (40–43')", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH" },
+        { from: 2018, to: 2018, floorplans: ["3407","3412","3436","3709","3715","34","37"], engine: "Cummins B 360HP", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", notes: "OEM 2018_Ventana 34–37': Cummins B 360 — not L 400" },
+        { from: 2018, to: 2018, floorplans: ["4002","4037","4046","4049","4308","4310","4311","4326","4369","40","43"], engine: "Cummins L 400HP", horsepower: 400, torqueLbFt: 1250, chassis: "Freightliner XCR Tag", transmission: "Allison 3000 MH", notes: "OEM 2018_Ventana 40–43': Cummins L 400 — not B 360" },
+        { from: 2018, to: 2018, engine: "Cummins B 360HP (34–37') or L 400HP (40–43')", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH" },
         { from: 2019, to: 2019, floorplans: ["3407","3412","3426","3709","3717","34","37"], engine: "Cummins ISB 360HP", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", notes: "OEM 2019_Ventana 34–37': ISB 360 — not ISL 400" },
         { from: 2019, to: 2019, floorplans: ["4002","4037","4054","4310","4311","4326","4348","4369","40","43"], engine: "Cummins ISL 400HP", horsepower: 400, torqueLbFt: 1250, chassis: "Freightliner XCR Tag / Spartan K2 Tag", transmission: "Allison 3000 MH", notes: "OEM 2019_Ventana 40–43': ISL 400 — not ISB 360" },
         { from: 2019, to: 2019, engine: "Cummins ISB 360HP (34–37') or ISL 400HP (40–43')", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XCR / Spartan K2", transmission: "Allison 3000 MH" },
@@ -747,12 +809,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Ventana LE": {
       type: "Class A Diesel",
-      floorplans: ["3412","3426","3436","3709","3717","3850","4002","4037","4045","4048"],
+      floorplans: ["3412","3426","3436","3709","3717","3850","4002","4037","4045","4048","3724","4042","4044","3413","3713"],
       floorplansByYear: {
         "2012": ["3436","3709","3850"],"2013": ["3436","3709","3850","4037"],
         "2014": ["3436","3709","3850","4037"],"2015": ["3436","3709","3850","4002","4037"],
-        "2016": ["3436","3709","4002","4037"],"2017": ["3436","3709","4002","4037"],
-        "2018": ["3436","3709","4002","4037"],
+        "2016": ["3436","3709","4002","4037"],
+        // Brochure 2017_Ventana_LE: 3412 | 3436 | 3709 | 3724 (340) / 4002 | 4037 | 4042 | 4044 (360)
+        "2017": ["3412","3436","3709","3724","4002","4037","4042","4044"],
+        // Brochure 2018_Ventana_LE: 3412 | 3413 | 3436 | 3709 | 3713 (340) / 4002 | 4037 | 4042 | 4048 (360)
+        "2018": ["3412","3413","3436","3709","3713","4002","4037","4042","4048"],
         // Brochure 2019_Ventana_LE final year: 3412 | 3426 (340) / 3709 | 3717 | 4002 | 4037 | 4045 | 4048 (360)
         "2019": ["3412","3426","3709","3717","4002","4037","4045","4048"]
       },
@@ -766,8 +831,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968, warrantyYears: 2, yearStart: 2012, yearEnd: 2019,
       description: "Newmar Ventana LE (2012–2019). OEM MY19 final year: ISB 340 on 34' / 360 on 37–40'. Freightliner XCR. Not L9 400. No 2020 brochure.",
       powertrainByYear: [
-        { from: 2012, to: 2018, floorplans: ["3412","3436","3709","3850","34","35","36","37","38"], engine: "Cummins ISB 6.7L 340HP", horsepower: 340, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", towingCapacity: 5000 },
-        { from: 2012, to: 2018, floorplans: ["4002","4037","40"], engine: "Cummins ISB 6.7L 360HP", horsepower: 360, torqueLbFt: 1000, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", towingCapacity: 5000 },
+        { from: 2012, to: 2018, floorplans: ["3412","3413","3436","3709","3713","3724","3850","34","35","36","37","38"], engine: "Cummins ISB 6.7L 340HP", horsepower: 340, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", towingCapacity: 5000, notes: "OEM MY17–18 Ventana LE 34–37': ISB 340 — not 360" },
+        { from: 2012, to: 2018, floorplans: ["4002","4037","4042","4044","4048","40"], engine: "Cummins ISB 6.7L 360HP", horsepower: 360, torqueLbFt: 1000, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", towingCapacity: 5000, notes: "OEM MY17–18 Ventana LE 40': ISB 360 — not 340" },
         { from: 2012, to: 2018, engine: "Cummins ISB 6.7L 340–360HP (by length)", horsepower: 340, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH" },
         { from: 2019, to: 2019, floorplans: ["3412","3426","34"], engine: "Cummins ISB 6.7L 340HP", horsepower: 340, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", towingCapacity: 5000, notes: "OEM 2019_Ventana_LE 34': ISB 340 — not 360" },
         { from: 2019, to: 2019, floorplans: ["3709","3717","4002","4037","4045","4048","37","40"], engine: "Cummins ISB 6.7L 360HP", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", towingCapacity: 5000, notes: "OEM 2019_Ventana_LE 37–40': ISB 360 — not 340" },
@@ -898,7 +963,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Canyon Star": {
       type: "Class A Diesel",
-      floorplans: ["3710", "3927", "3947", "3713", "3921", "3512", "3513", "3608", "3626", "3627", "3646", "3716", "3719", "3722", "3723", "3747", "3911", "3920", "3924", "3929", "3737", "3957"],
+      floorplans: ["3710", "3927", "3947", "3713", "3921", "3512", "3513", "3608", "3626", "3627", "3646", "3716", "3719", "3722", "3723", "3747", "3911", "3920", "3924", "3929", "3737", "3957", "3902", "3914", "3923", "3925", "3953", "3901", "3918", "3926", "3928"],
       floorplansByYear: {
         "2010": ["3710", "3927"],
         "2011": ["3710", "3927"],
@@ -907,8 +972,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["3710", "3927"],
         "2015": ["3710", "3927"],
         "2016": ["3710", "3927"],
-        "2017": ["3710", "3927", "3947"],
-        "2018": ["3710", "3713", "3927", "3947"],
+        // Brochure 2017_Canyon_Star: Gas Motor Coach — F-53 26,000 lb, 320 HP. No 3947.
+        "2017": ["3513", "3710", "3902", "3911", "3914", "3921", "3923", "3925", "3953"],
+        // Brochure 2018_Canyon_Star: Gas Motor Coach — F-53 26,000 lb, 320 HP. No 3947.
+        "2018": ["3513", "3710", "3716", "3901", "3911", "3918", "3921", "3923", "3924", "3926", "3928", "3953"],
         // Brochure 2019_Canyon_Star: Gas Motor Coach — F-53 26,000 lb, 320 HP. No 3947.
         "2019": ["3513", "3608", "3627", "3646", "3710", "3719", "3722", "3723", "3911", "3924", "3927"],
         // Brochure 2020_Canyon_Star: Gas Motor Coach — F-53 26,000 lb, 320 HP. No 3947.
@@ -972,20 +1039,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2018,
+          to: 2016,
           engine: "Cummins ISB-class / Super C diesel",
           horsepower: 340,
           chassis: "Freightliner Super C"
         },
         {
-          from: 2019,
+          from: 2017,
           to: 2020,
           engine: "Ford Triton V10 6.8L 320HP",
           horsepower: 320,
           chassis: "Ford F53",
           transmission: "TorqShift automatic",
           generator: "Onan 5.5kW Gas",
-          notes: "OEM MY19–20 Canyon Star: Gas Motor Coach — F-53 26,000 lb, 320 HP Triton V10. Not FED B6.7 340 diesel (that arrives MY21)."
+          notes: "OEM MY17–20 Canyon Star: Gas Motor Coach — F-53 26,000 lb, 320 HP Triton V10. Not FED B6.7 340 diesel (that arrives MY21). Not Super C."
         },
         {
           from: 2021,
@@ -1011,7 +1078,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "London Aire": {
       type: "Class A Diesel",
-      floorplans: ["4551", "4533", "4534", "4561", "4519", "4527", "4553", "4521", "4535", "4540", "4543", "4545", "4550", "4559", "4569", "4576", "4579", "4583", "4586", "4589", "4595"],
+      floorplans: ["4551", "4533", "4534", "4561", "4519", "4527", "4553", "4521", "4535", "4540", "4543", "4545", "4550", "4559", "4569", "4576", "4579", "4583", "4586", "4589", "4595", "4513", "4525", "4584", "4531", "4536", "4537"],
       floorplansByYear: {
         "2005": ["4551", "4533", "4561"],
         "2006": ["4551", "4533", "4561"],
@@ -1025,8 +1092,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["4551", "4533", "4561"],
         "2015": ["4551", "4533", "4561"],
         "2016": ["4551", "4533", "4561"],
-        "2017": ["4551", "4533", "4561"],
-        "2018": ["4551", "4533", "4519", "4527", "4553"],
+        // Brochure 2017_London_Aire: 4513 | 4519 | 4525 | 4533 | 4553 | 4584 — Freightliner SL / Spartan K3 ISX 600
+        "2017": ["4513", "4519", "4525", "4533", "4553", "4584"],
+        // Brochure 2018_London_Aire: 4531 | 4533 | 4534 | 4535 | 4536 | 4537 | 4553 — X15 605
+        "2018": ["4531", "4533", "4534", "4535", "4536", "4537", "4553"],
         // Brochure 2019_London_Aire: 4533 | 4534 | 4535 | 4543 | 4550 | 4551 | 4576 | 4579 — Freightliner SL / Spartan K3 605
         "2019": ["4533", "4534", "4535", "4543", "4550", "4551", "4576", "4579"],
         // Brochure 2020_London_Aire: 4533 | 4535 | 4543 | 4551 | 4559 | 4569 | 4579 — Freightliner SL / Spartan K3 605
@@ -1100,13 +1169,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2018,
+          to: 2017,
           engine: "Cummins ISX 600HP",
           horsepower: 600,
-          chassis: "Spartan K3"
+          chassis: "Freightliner SL Tag / Spartan K3 (by option)",
+          notes: "OEM 2017_London_Aire: Freightliner SL or Spartan K3 tag, ISX 600. Do not copy MY18+ X15 605 onto 2017."
         },
         {
-          from: 2019,
+          from: 2018,
           to: 2027,
           engine: "Cummins X15 605HP",
           horsepower: 605,
@@ -1115,7 +1185,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           transmission: "Allison 4000 MH",
           generator: "Onan 12.5kW Quiet Diesel",
           acUnits: "3 × 15,000 BTU heat pump",
-          notes: "OEM MY19–27 London Aire: 605 HP on Freightliner SL or Spartan K3 Tag. Do not yearEnd this line. 12.5 kW Onan, 3×15k HP A/C."
+          notes: "OEM MY18 London Aire: X15 605 (not ISX 600). Do not yearEnd this line. 12.5 kW Onan, 3×15k HP A/C."
         },
         
       ]
@@ -1136,8 +1206,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["3712", "3910", "4005"],
         "2015": ["3712", "3910", "4005"],
         "2016": ["3712", "3910", "4005"],
-        "2017": ["3712", "3910", "4005", "3709PK"],
-        "2018": ["3712", "3910", "4005", "3221"],
+        // No 2017–2019 OEM Kountry Star brochure — omit keys (modern reintro MY20).
         // No 2019 OEM Kountry Star brochure and no strong RVUSA MY19 proof — omit key (reintroduced MY20).
         // Brochure 2020_Kountry_Star: 3412 | 3426 | 3709 | 3717 | 4002 | 4037 | 4045 | 4054 — XCR B6.7 360
         "2020": ["3412", "3426", "3709", "3717", "4002", "4037", "4045", "4054"],
@@ -1200,13 +1269,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2012,
-          to: 2018,
+          to: 2016,
           engine: "Cummins ISB / B6.7 diesel ~300–360HP",
           horsepower: 340,
           torqueLbFt: 700,
           chassis: "Freightliner XC / XCR",
           transmission: "Allison 3000 MH",
-          notes: "Mid-diesel pusher era — not L9 450 flagship, not Ford F53 gas. No OEM MY19 brochure."
+          notes: "Mid-diesel pusher era — not L9 450 flagship, not Ford F53 gas. No OEM MY17–MY19 brochure (reintroduced MY20)."
         },
         {
           from: 2020,
@@ -1223,7 +1292,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Bay Star": {
       type: "Class A Gas",
-      floorplans: ["3124", "3401", "3626", "3629", "3005", "3014", "3020", "3116", "3226", "3312", "3408", "3414", "3416", "3419", "3616", "3628", "3811", "3505", "3016", "3114", "3225", "3423", "3609", "3618", "3639", "3640", "3826"],
+      floorplans: ["3124", "3401", "3626", "3629", "3005", "3014", "3020", "3116", "3226", "3312", "3408", "3414", "3416", "3419", "3616", "3628", "3811", "3505", "3016", "3114", "3225", "3423", "3609", "3618", "3639", "3640", "3826", "3009", "3113", "3208", "3306", "3333", "3403", "3516", "3518", "3406", "3532"],
       floorplansByYear: {
         "2005": ["3124", "3401", "3626"],
         "2006": ["3124", "3401", "3626"],
@@ -1237,8 +1306,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["3124", "3401", "3626"],
         "2015": ["3124", "3401", "3626"],
         "2016": ["3124", "3401", "3626"],
-        "2017": ["3124", "3401", "3626", "3629"],
-        "2018": ["3124", "3401", "3626", "3629", "3014"],
+        // Brochure 2017 Bay Star table: 3009 | 3113 | 3124 | 3208 | 3306 | 3333 | 3401 | 3403 | 3516 | 3518 — F53 V10 320 GAS
+        "2017": ["3009", "3113", "3124", "3208", "3306", "3333", "3401", "3403", "3516", "3518"],
+        // Brochure 2018 Bay Star table: 3009 | 3113 | 3124 | 3333 | 3401 | 3403 | 3406 | 3414 | 3518 | 3532 — F53 V10 320 GAS
+        "2018": ["3009", "3113", "3124", "3333", "3401", "3403", "3406", "3414", "3518", "3532"],
         // Brochure 2019 Bay Star table: 3014 | 3124 | 3226 | 3401 | 3408 | 3414 | 3419 | 3609 | 3626 | 3628 — F53 V10 320 GAS (no 3811)
         "2019": ["3014", "3124", "3226", "3401", "3408", "3414", "3419", "3609", "3626", "3628"],
         // Brochure 2020 Bay Star table: 3005 | 3014 | 3124 | 3226 | 3312 | 3401 | 3408 | 3414 | 3609 | 3616 | 3626 — F53 V10 320 GAS (no 3811)
@@ -1309,7 +1380,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 320,
           chassis: "Ford F53",
           transmission: "TorqShift automatic",
-          notes: "OEM MY19–20 Bay Star: F53 Triton V10 320 — gas, not 7.3 Godzilla (MY21+) and not diesel."
+          notes: "OEM MY17–20 Bay Star: F53 Triton V10 320 — gas, not 7.3 Godzilla (MY21+) and not diesel."
         },
         {
           from: 2021,
@@ -1335,7 +1406,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Bay Star Sport": {
       type: "Class A Gas",
-      floorplans: ["2702", "2903", "3014", "3307", "2902", "2720", "2813", "2905", "2912", "2920", "3008", "3016", "3112", "3225", "3226", "3315", "3316"],
+      floorplans: ["2702", "2903", "3014", "3307", "2902", "2720", "2813", "2905", "2912", "2920", "3008", "3016", "3112", "3225", "3226", "3315", "3316", "2812", "3013", "3208", "3210", "3306", "3113", "3312"],
       floorplansByYear: {
         "2010": ["2702", "2903", "3014"],
         "2011": ["2702", "2903", "3014"],
@@ -1344,8 +1415,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["2702", "2903", "3014"],
         "2015": ["2702", "2903", "3014"],
         "2016": ["2702", "2903", "3014"],
-        "2017": ["2702", "2903", "3014", "3307"],
-        "2018": ["2702", "2903", "3014", "3307"],
+        // Brochure 2017 Bay Star Sport table: 2702 | 2812 | 2903 | 3013 | 3208 | 3210 | 3306 — F53 V10 320 GAS
+        "2017": ["2702", "2812", "2903", "3013", "3208", "3210", "3306"],
+        // Brochure 2018 Bay Star Sport table: 2702 | 2812 | 2903 | 3113 | 3307 | 3312 — F53 V10 320 GAS
+        "2018": ["2702", "2812", "2903", "3113", "3307", "3312"],
         // Brochure 2019 Bay Star Sport table: 2702 | 2813 | 3008 | 3014 | 3226 | 3307 — F53 V10 320 GAS
         "2019": ["2702", "2813", "3008", "3014", "3226", "3307"],
         // Brochure 2020 Bay Star Sport table: 2702 | 2813 | 2905 | 3008 | 3014 | 3112 | 3226 | 3315 — F53 V10 320 GAS
@@ -1414,7 +1487,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 320,
           chassis: "Ford F53",
           transmission: "TorqShift automatic",
-          notes: "OEM MY19–20 Bay Star Sport: F53 Triton V10 320 — gas, not 7.3 Godzilla (MY21+) and not diesel."
+          notes: "OEM MY17–20 Bay Star Sport: F53 Triton V10 320 — gas, not 7.3 Godzilla (MY21+) and not diesel."
         },
         {
           from: 2021,
