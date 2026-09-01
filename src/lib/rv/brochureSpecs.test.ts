@@ -272,10 +272,10 @@ test("Fleetwood 2023–2024 walk-back: OEM plans, no invented ghosts", () => {
   assert.equal(fw.Flex?.yearStart, 2023);
   assert.equal(fw.Flex?.years?.includes(2023), true);
   assert.equal(fw.Flex?.years?.includes(2024), true);
-  assert.equal(fw.Fortis?.yearStart, 2023);
+  assert.equal(fw.Fortis?.yearStart, 2021);
   assert.equal(fw.Fortis?.years?.includes(2023), true);
   assert.equal(fw.Fortis?.years?.includes(2024), true);
-  assert.equal(fw.Frontier?.yearStart, 2023);
+  assert.equal(fw.Frontier?.yearStart, 2022);
   assert.equal(fw.Frontier?.years?.includes(2023), true);
   assert.equal(fw.Frontier?.years?.includes(2024), true);
   assert.equal(fw["Frontier GTX"]?.yearStart, 2023);
@@ -356,6 +356,132 @@ test("Fleetwood 2023–2024 walk-back: OEM plans, no invented ghosts", () => {
   const frontier = findPowertrainCorrection("2024", "Fleetwood", "Frontier", "34GT");
   assert.equal(frontier!.horsepower, 340);
   assert.doesNotMatch(frontier!.engine, /360HP/);
+});
+
+test("Fleetwood 2021–2022 walk-back: OEM plans, no invented ghosts", () => {
+  const fw = CATALOG_INDEX.Fleetwood;
+  assert.ok(fw);
+
+  assert.equal(fw.Storm?.years?.includes(2021), false);
+  assert.equal(fw.Storm?.years?.includes(2022), false);
+  assert.equal(fw["Bounder Classic"]?.yearEnd, 2015);
+  assert.equal(fw["Bounder Classic"]?.years?.includes(2021), false);
+  assert.equal(fw["Bounder Classic"]?.years?.includes(2022), false);
+  assert.equal(fw.Flex?.years?.includes(2021), false);
+  assert.equal(fw.Flex?.years?.includes(2022), false);
+  assert.equal(fw.Altitude?.years?.includes(2021), false);
+  assert.equal(fw.Altitude?.years?.includes(2022), false);
+  assert.equal(fw.Insight?.years?.includes(2022), false);
+  assert.equal(fw.Palisade?.years?.includes(2022), false);
+  assert.equal(fw["Frontier GTX"]?.years?.includes(2022), false);
+  assert.equal(fw.Frontier?.yearStart, 2022);
+  assert.equal(fw.Frontier?.years?.includes(2022), true);
+  assert.equal(fw.Frontier?.years?.includes(2021), false);
+  assert.equal(fw.Fortis?.yearStart, 2021);
+  assert.equal(fw.Fortis?.years?.includes(2021), true);
+  assert.equal(fw.Fortis?.years?.includes(2022), true);
+  assert.equal(fw.Southwind?.yearStart, 2021);
+  assert.equal(fw.Southwind?.years?.includes(2021), true);
+  assert.equal(fw.Southwind?.years?.includes(2022), true);
+
+  const block = src("rvData.ts");
+
+  const disc0 = block.indexOf("    Discovery: {");
+  const disc1 = block.indexOf('    "Discovery LXE"');
+  const disc = block.slice(disc0, disc1);
+  assert.match(disc, /"2021": \["36Q", "38F", "38K", "38N", "38W"\]/);
+  assert.match(disc, /"2022": \["36Q", "38K", "38N", "38W"\]/);
+
+  const lxe0 = block.indexOf('    "Discovery LXE": {');
+  const lxe1 = block.indexOf("    Frontier: {");
+  const lxe = block.slice(lxe0, lxe1);
+  assert.match(lxe, /"2021": \["36HQ", "40D", "40G", "40M", "44B", "44H", "44S"\]/);
+  assert.match(lxe, /"2022": \["36HQ", "40G", "40M", "44B", "44S"\]/);
+
+  const b0 = block.indexOf("    Bounder: {");
+  const b1 = block.indexOf('    "Bounder Classic"');
+  const bounder = block.slice(b0, b1);
+  assert.match(bounder, /"2021": \["33C", "35K", "35P", "36F"\]/);
+  assert.match(bounder, /"2022": \["33C", "35GL", "35K", "36F"\]/);
+  assert.doesNotMatch(bounder, /"2021": \["33C", "35K", "36H"/);
+
+  const classic0 = block.indexOf('    "Bounder Classic": {');
+  const classic1 = block.indexOf("    Southwind: {");
+  const classic = block.slice(classic0, classic1);
+  assert.match(classic, /yearEnd:\s*2015/);
+  assert.doesNotMatch(classic, /"2021"|"2022"/);
+  assert.doesNotMatch(classic, /Onan Diesel \/ Gas/);
+
+  const sw0 = block.indexOf("    Southwind: {");
+  const sw1 = block.indexOf('    "Pace Arrow"');
+  const southwind = block.slice(sw0, sw1);
+  assert.match(southwind, /"2021": \["34C", "35K", "36P", "37F"\]/);
+  assert.match(southwind, /"2022": \["34C", "35K", "36GL", "37F"\]/);
+
+  const pa0 = block.indexOf('    "Pace Arrow": {');
+  const pa1 = block.indexOf("    Storm: {");
+  const pace = block.slice(pa0, pa1);
+  assert.match(pace, /"2021": \["33D", "35QS", "35RB", "35S", "36U"\]/);
+  assert.match(pace, /"2022": \["33D", "36U"\]/);
+  assert.doesNotMatch(pace.slice(pace.indexOf('"2021"'), pace.indexOf('"2023"')), /"35R"/);
+
+  const fl0 = block.indexOf("    Flair: {");
+  const fl1 = block.indexOf("    Fortis: {");
+  const flair = block.slice(fl0, fl1);
+  assert.match(flair, /"2021": \["28A", "29M", "32S", "34J", "35R"\]/);
+  assert.match(flair, /"2022": \["28A", "29M", "32S", "34J", "35R"\]/);
+  assert.doesNotMatch(flair, /"2021": \["28A", "30U"/);
+
+  const ft0 = block.indexOf("    Fortis: {");
+  const ft1 = block.indexOf("    Flex: {");
+  const fortis = block.slice(ft0, ft1);
+  assert.match(fortis, /"2021": \["32RW", "33HB", "34MB", "36DB"\]/);
+  assert.match(fortis, /"2022": \["32RW", "33HB", "34MB", "36DB"\]/);
+  assert.doesNotMatch(fortis, /"2021": \[.*"36Y"/);
+
+  const fr0 = block.indexOf("    Frontier: {");
+  const fr1 = block.indexOf('    "Frontier GTX"');
+  const frontierSrc = block.slice(fr0, fr1);
+  assert.match(frontierSrc, /"2022": \["34GT", "36SS"\]/);
+  assert.doesNotMatch(frontierSrc, /"2021"/);
+
+  const bounder21 = findPowertrainCorrection("2021", "Fleetwood", "Bounder", "35K");
+  assert.equal(bounder21!.horsepower, 350);
+  assert.equal(bounder21!.fuelType, "Gas");
+  const bounder22 = findPowertrainCorrection("2022", "Fleetwood", "Bounder", "35GL");
+  assert.equal(bounder22!.horsepower, 350);
+
+  const lxe36 = findPowertrainCorrection("2021", "Fleetwood", "Discovery LXE", "36HQ");
+  assert.equal(lxe36!.horsepower, 380);
+  const lxe44s = findPowertrainCorrection("2022", "Fleetwood", "Discovery LXE", "44S");
+  assert.equal(lxe44s!.horsepower, 450);
+  const lxe40d = findPowertrainCorrection("2022", "Fleetwood", "Discovery LXE", "40D");
+  assert.equal(lxe40d?.horsepower, 0);
+
+  const pace33 = findPowertrainCorrection("2021", "Fleetwood", "Pace Arrow", "33D");
+  assert.ok(pace33);
+  assert.equal(pace33!.fuelType, "Diesel");
+  assert.equal(pace33!.horsepower, 300);
+  const pace35qs = findPowertrainCorrection("2021", "Fleetwood", "Pace Arrow", "35QS");
+  assert.equal(pace35qs!.horsepower, 340);
+  const pace35s = findPowertrainCorrection("2021", "Fleetwood", "Pace Arrow", "35S");
+  assert.equal(pace35s!.horsepower, 340);
+  assert.notEqual(pace35s!.engine, pace33!.engine);
+  const pace22gas = findPowertrainCorrection("2022", "Fleetwood", "Pace Arrow", "33D");
+  assert.equal(pace22gas!.fuelType, "Diesel");
+  const pace22u = findPowertrainCorrection("2022", "Fleetwood", "Pace Arrow", "36U");
+  assert.equal(pace22u!.horsepower, 340);
+
+  const flair21 = findPowertrainCorrection("2021", "Fleetwood", "Flair", "28A");
+  assert.equal(flair21!.horsepower, 350);
+  const fortis21 = findPowertrainCorrection("2021", "Fleetwood", "Fortis", "32RW");
+  assert.equal(fortis21!.horsepower, 350);
+  const frontier22 = findPowertrainCorrection("2022", "Fleetwood", "Frontier", "34GT");
+  assert.equal(frontier22!.horsepower, 340);
+  assert.equal(frontier22!.fuelType, "Diesel");
+  const south21 = findPowertrainCorrection("2021", "Fleetwood", "Southwind", "36P");
+  assert.equal(south21!.horsepower, 350);
+  assert.equal(south21!.fuelType, "Gas");
 });
 
 test("Altitude E-450 pin is 325/450 and does not apply to FS550", () => {
