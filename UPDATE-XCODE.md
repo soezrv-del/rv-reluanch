@@ -1,6 +1,8 @@
 # RVFAX — update Xcode / TestFlight (latest web + Grok)
 
-Your **native launch / splash video is fine — leave AppDelegate, Info.plist, and LaunchScreen alone.**
+Your **native launch / splash video is fine — leave LaunchScreen and Info.plist launch keys alone.**
+
+**This update does change `AppDelegate.swift`** so Live Grok Voice can use the mic and speaker together on a real iPhone. That needs a **new TestFlight build**. Leave the splash storyboard alone.
 
 ## What actually updates the app
 
@@ -30,7 +32,7 @@ Env vars on the host (same as before):
 |----------|---------|
 | `CLOUDFLARE_WORKER_URL` | Live Grok chat + **new** `/api/rvfax/dossier` |
 | `VITE_CLOUDFLARE_WORKER_URL` | Same URL for client hints if used |
-| `XAI_API_KEY` | Optional fallback if worker is down |
+| `XAI_API_KEY` | Live Voice token (preferred) + chat fallback if the worker is down |
 
 **Do not** touch launch screen files for this update.
 
@@ -62,10 +64,11 @@ In Xcode:
 
 ### Skip these (already working for you)
 
-- `AppDelegate.swift`  
 - `Info.plist` launch keys  
 - LaunchScreen / splash storyboard  
 - Video splash assets  
+
+**Do update** `AppDelegate.swift` from this repo (audio session for Live Voice), then bump the **Build** number and Archive.
 
 ---
 
@@ -73,9 +76,9 @@ In Xcode:
 
 If TestFlight already points at `CAP_SERVER_URL` and you only deploy Vercel:
 
-→ **Users get the new Fax + Live Grok on next app open** without a new TestFlight build.
+→ **Users get new screens and most Live Voice web fixes on next app open** without a new TestFlight build.
 
-Ship a new TestFlight build when you want the store binary refreshed or native config changed.
+**Ship a new TestFlight build for this Live Voice update** — the iPhone audio session lives in the native shell (`AppDelegate`). After Vercel + the new build: force-quit, reopen, Grok tab, tap mic, Allow microphone, speak, hear Grok, tap mic to end.
 
 ---
 

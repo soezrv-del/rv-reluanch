@@ -1,13 +1,20 @@
 import {
   DEFAULT_VOICE,
   PCM_SAMPLE_RATE,
-  RV_VOICE_INSTRUCTIONS,
   XAI_REALTIME_URL,
   base64ToArrayBuffer,
   fetchEphemeralToken,
   floatTo16BitPCM,
   resampleFloat32,
 } from "./voice";
+import {
+  beginLiveVoiceFromUserGesture,
+  buildRealtimeSessionUpdate,
+  getRetainedLiveCapture,
+  releaseLiveCapture,
+  retainLiveCapture,
+  type LiveVoicePrewarm,
+} from "./liveVoice";
 
 export type RealtimeStatus =
   | "idle"
@@ -28,10 +35,14 @@ export type RealtimeHandlers = {
 };
 
 /**
- * Browser client for xAI Grok Voice Agent (Realtime WebSocket).
- * Auth: ephemeral token from Cloudflare worker → subprotocol xai-client-secret.<token>
+ * Browser / Capacitor WKWebView client for xAI Grok Voice Agent (Realtime).
  *
- * Continuous hands-free: server VAD + mic muted while Grok is speaking (echo guard).
+ * Auth: ephemeral token → subprotocol `xai-client-secret.<token>`
+ * Hands-free: server VAD + mic muted while Grok is speaking (echo guard).
+ *
+ * iOS: pass a LiveVoicePrewarm from the tap so getUserMedia + AudioContext
+ * start before the token/socket awaits. One shared AudioContext for capture
+ * and playback (two contexts often stay silent on WKWebView).
  */
 export class GrokRealtimeSession {
   private ws: WebSocket | null = null;
@@ -39,7 +50,7 @@ export class GrokRealtimeSession {
   private audioCtx: AudioContext | null = null;
   private processor: ScriptProcessorNode | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
-  private playCtx: AudioContext | null = null;
+  private mute: GainNode | null = null;
   private nextPlayTime = 0;
   private playSources: AudioBufferSourceNode[] = [];
   private assistantText = "";
@@ -49,26 +60,40 @@ export class GrokRealtimeSession {
   private finishedAssistantOnce = false;
   private handlers: RealtimeHandlers;
   private voiceId: string;
+  private speed: number;
   private rearmTimer: ReturnType<typeof setTimeout> | null = null;
+  private earlyPcm: ArrayBuffer[] = [];
+  private readonly maxEarlyChunks = 48;
 
-  constructor(handlers: RealtimeHandlers, voiceId = DEFAULT_VOICE) {
+  constructor(
+    handlers: RealtimeHandlers,
+    voiceId = DEFAULT_VOICE,
+    opts?: { speed?: number },
+  ) {
     this.handlers = handlers;
     this.voiceId = voiceId;
+    this.speed = opts?.speed ?? 1;
   }
 
   get isActive() {
     return Boolean(this.ws && this.ws.readyState === WebSocket.OPEN);
   }
 
-  async start() {
+  async start(prewarm?: LiveVoicePrewarm | null) {
     this.closed = false;
     this.intentionalStop = false;
     this.suppressMic = false;
     this.finishedAssistantOnce = false;
-    this.handlers.onStatus("connecting", "Fetching voice token…");
+    this.earlyPcm = [];
+
+    this.handlers.onStatus("connecting", "Allow microphone if the phone asks…");
+
+    // 1) Capture FIRST (same tap). Token + socket in parallel after.
+    await this.ensureCapture(prewarm ?? beginLiveVoiceFromUserGesture());
+    this.handlers.onStatus("connecting", "Opening Grok Voice…");
 
     const token = await fetchEphemeralToken();
-    this.handlers.onStatus("connecting", "Opening Grok Voice…");
+    if (this.closed || this.intentionalStop) return;
 
     const subprotocol = `xai-client-secret.${token}`;
     const ws = new WebSocket(XAI_REALTIME_URL, [subprotocol]);
@@ -90,41 +115,20 @@ export class GrokRealtimeSession {
     });
 
     ws.binaryType = "arraybuffer";
-
-    const sessionUpdate = {
-      type: "session.update",
-      session: {
-        instructions: RV_VOICE_INSTRUCTIONS,
-        voice: this.voiceId,
-        turn_detection: {
-          type: "server_vad",
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 700,
-        },
-        audio: {
-          input: {
-            format: { type: "audio/pcm", rate: PCM_SAMPLE_RATE },
-          },
-          output: {
-            format: { type: "audio/pcm", rate: PCM_SAMPLE_RATE },
-          },
-        },
-        modalities: ["text", "audio"],
-        input_audio_format: "pcm16",
-        output_audio_format: "pcm16",
-        input_audio_transcription: { model: "whisper-1" },
-      },
-    };
-    ws.send(JSON.stringify(sessionUpdate));
+    ws.send(JSON.stringify(buildRealtimeSessionUpdate(this.voiceId, this.speed)));
+    this.flushEarlyAudio();
 
     ws.onmessage = (evt) => this.handleMessage(evt);
     ws.onclose = (evt) => {
-      this.cleanupMedia(false);
+      this.ws = null;
       if (this.intentionalStop || this.closed) {
+        // stop() already tore down (and may have kept the mic for reconnect)
         this.handlers.onStatus("idle");
         return;
       }
+      // Drop the audio graph so a new session can reconnect. Keep the
+      // MediaStream + AudioContext (retained) so iOS does not need a new tap.
+      this.disconnectGraph();
       const reason = evt.reason || `code ${evt.code}`;
       this.handlers.onStatus("idle");
       this.handlers.onDisconnected?.(reason);
@@ -135,28 +139,64 @@ export class GrokRealtimeSession {
       }
     };
 
-    await this.startMic();
     this.handlers.onStatus(
       "listening",
-      "Listening continuously — speak anytime",
+      "Listening — speak anytime, like Grok Voice",
     );
   }
 
-  private async startMic() {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        channelCount: 1,
-      },
-      video: false,
-    });
-    this.mediaStream = stream;
+  private async ensureCapture(prewarm: LiveVoicePrewarm) {
+    if (prewarm.error && !prewarm.streamPromise) {
+      throw prewarm.error;
+    }
 
-    const ctx = new AudioContext({ sampleRate: PCM_SAMPLE_RATE });
-    this.audioCtx = ctx;
+    const kept = getRetainedLiveCapture();
+    if (kept) {
+      this.audioCtx = kept.ctx;
+      this.mediaStream = kept.stream;
+      if (kept.ctx.state === "suspended") await kept.ctx.resume();
+      this.connectMicGraph();
+      return;
+    }
+
+    let ctx = prewarm.audioCtx;
+    if (!ctx || ctx.state === "closed") {
+      const AC =
+        typeof window !== "undefined"
+          ? window.AudioContext ||
+            (
+              window as unknown as {
+                webkitAudioContext?: typeof AudioContext;
+              }
+            ).webkitAudioContext
+          : undefined;
+      if (!AC) throw new Error("Audio is not available in this WebView.");
+      ctx = new AC();
+    }
     if (ctx.state === "suspended") await ctx.resume();
+    this.audioCtx = ctx;
+
+    const stream = prewarm.streamPromise
+      ? await prewarm.streamPromise
+      : await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1,
+          },
+          video: false,
+        });
+    this.mediaStream = stream;
+    retainLiveCapture(stream, ctx);
+    this.connectMicGraph();
+  }
+
+  private connectMicGraph() {
+    const ctx = this.audioCtx;
+    const stream = this.mediaStream;
+    if (!ctx || !stream) return;
+    if (this.processor) return;
 
     const source = ctx.createMediaStreamSource(stream);
     this.source = source;
@@ -166,35 +206,56 @@ export class GrokRealtimeSession {
     this.processor = processor;
 
     processor.onaudioprocess = (e) => {
-      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+      if (this.closed || this.intentionalStop) return;
       if (this.suppressMic) return;
 
       const input = e.inputBuffer.getChannelData(0);
-      const resampled = resampleFloat32(
-        input,
-        ctx.sampleRate,
-        PCM_SAMPLE_RATE,
-      );
+      const resampled = resampleFloat32(input, ctx.sampleRate, PCM_SAMPLE_RATE);
       const pcm = floatTo16BitPCM(resampled);
 
-      try {
-        const b64 = arrayBufferToBase64Safe(pcm);
-        this.ws.send(
-          JSON.stringify({
-            type: "input_audio_buffer.append",
-            audio: b64,
-          }),
-        );
-      } catch {
-        this.ws.send(pcm);
+      const ws = this.ws;
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        this.earlyPcm.push(pcm);
+        if (this.earlyPcm.length > this.maxEarlyChunks) this.earlyPcm.shift();
+        return;
       }
+
+      this.sendPcm(pcm);
     };
 
     source.connect(processor);
+    // ScriptProcessor only fires if it reaches destination.
     const mute = ctx.createGain();
     mute.gain.value = 0;
+    this.mute = mute;
     processor.connect(mute);
     mute.connect(ctx.destination);
+  }
+
+  private sendPcm(pcm: ArrayBuffer) {
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    try {
+      const b64 = arrayBufferToBase64Safe(pcm);
+      ws.send(
+        JSON.stringify({
+          type: "input_audio_buffer.append",
+          audio: b64,
+        }),
+      );
+    } catch {
+      try {
+        ws.send(pcm);
+      } catch {
+        /* */
+      }
+    }
+  }
+
+  private flushEarlyAudio() {
+    const queued = this.earlyPcm;
+    this.earlyPcm = [];
+    for (const pcm of queued) this.sendPcm(pcm);
   }
 
   private handleMessage(evt: MessageEvent) {
@@ -301,7 +362,6 @@ export class GrokRealtimeSession {
 
       case "response.cancelled":
       case "response.cancel":
-        // Barge-in acknowledged — stay live, listening
         this.interruptPlayback();
         this.suppressMic = false;
         this.handlers.onStatus(
@@ -316,7 +376,6 @@ export class GrokRealtimeSession {
           typeof err === "string"
             ? err
             : err?.message || JSON.stringify(msg).slice(0, 200);
-        // Cancel/interrupt often surfaces as soft errors — don't kill the session
         if (/cancel|interrupt|no active response/i.test(message)) {
           this.suppressMic = false;
           this.handlers.onStatus(
@@ -355,10 +414,10 @@ export class GrokRealtimeSession {
     if (this.rearmTimer) clearTimeout(this.rearmTimer);
 
     const waitMs = (() => {
-      if (!this.playCtx || this.playCtx.state === "closed") return 450;
+      if (!this.audioCtx || this.audioCtx.state === "closed") return 450;
       const remaining = Math.max(
         0,
-        (this.nextPlayTime - this.playCtx.currentTime) * 1000,
+        (this.nextPlayTime - this.audioCtx.currentTime) * 1000,
       );
       return Math.min(Math.max(remaining + 350, 450), 12000);
     })();
@@ -377,11 +436,8 @@ export class GrokRealtimeSession {
 
   private async enqueuePcmPlayback(pcm: ArrayBuffer) {
     try {
-      if (!this.playCtx || this.playCtx.state === "closed") {
-        this.playCtx = new AudioContext({ sampleRate: PCM_SAMPLE_RATE });
-        this.nextPlayTime = 0;
-      }
-      const ctx = this.playCtx;
+      const ctx = this.audioCtx;
+      if (!ctx || ctx.state === "closed") return;
       if (ctx.state === "suspended") await ctx.resume();
 
       const int16 = new Int16Array(pcm);
@@ -391,8 +447,9 @@ export class GrokRealtimeSession {
         float32[i] = (int16[i] ?? 0) / 0x8000;
       }
 
-      const buffer = ctx.createBuffer(1, float32.length, PCM_SAMPLE_RATE);
-      buffer.copyToChannel(float32, 0);
+      const play = resampleFloat32(float32, PCM_SAMPLE_RATE, ctx.sampleRate);
+      const buffer = ctx.createBuffer(1, play.length, ctx.sampleRate);
+      buffer.getChannelData(0).set(play);
 
       const src = ctx.createBufferSource();
       src.buffer = buffer;
@@ -411,7 +468,7 @@ export class GrokRealtimeSession {
     }
   }
 
-  stop() {
+  stop(opts?: { keepCapture?: boolean }) {
     this.intentionalStop = true;
     this.closed = true;
     if (this.rearmTimer) {
@@ -424,7 +481,7 @@ export class GrokRealtimeSession {
       /* ignore */
     }
     this.ws = null;
-    this.cleanupMedia(true);
+    this.teardownCapture(!opts?.keepCapture);
     this.handlers.onStatus("idle");
   }
 
@@ -565,7 +622,6 @@ export class GrokRealtimeSession {
       /* cancel may error if nothing active — fine */
     }
 
-    // Stop audio WITHOUT closing AudioContext (iOS can't easily resume a new one)
     this.interruptPlayback();
     this.suppressMic = false;
     this.finishedAssistantOnce = false;
@@ -604,14 +660,14 @@ export class GrokRealtimeSession {
       }
     }
     this.playSources = [];
-    if (this.playCtx && this.playCtx.state !== "closed") {
-      this.nextPlayTime = this.playCtx.currentTime;
+    if (this.audioCtx && this.audioCtx.state !== "closed") {
+      this.nextPlayTime = this.audioCtx.currentTime;
     } else {
       this.nextPlayTime = 0;
     }
   }
 
-  private cleanupMedia(closePlay: boolean) {
+  private disconnectGraph() {
     try {
       this.processor?.disconnect();
     } catch {
@@ -622,14 +678,19 @@ export class GrokRealtimeSession {
     } catch {
       /* ignore */
     }
+    try {
+      this.mute?.disconnect();
+    } catch {
+      /* ignore */
+    }
     this.processor = null;
     this.source = null;
+    this.mute = null;
+    this.earlyPcm = [];
+  }
 
-    this.mediaStream?.getTracks().forEach((t) => t.stop());
-    this.mediaStream = null;
-
-    void this.audioCtx?.close();
-    this.audioCtx = null;
+  private teardownCapture(release: boolean) {
+    this.disconnectGraph();
 
     for (const src of this.playSources) {
       try {
@@ -639,11 +700,12 @@ export class GrokRealtimeSession {
       }
     }
     this.playSources = [];
+    this.nextPlayTime = 0;
 
-    if (closePlay) {
-      void this.playCtx?.close();
-      this.playCtx = null;
-      this.nextPlayTime = 0;
+    if (release) {
+      this.mediaStream = null;
+      this.audioCtx = null;
+      releaseLiveCapture();
     }
   }
 }

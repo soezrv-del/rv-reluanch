@@ -1,4 +1,5 @@
 import UIKit
+import AVFoundation
 import Capacitor
 
 @UIApplicationMain
@@ -17,6 +18,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window.rootViewController = CAPBridgeViewController()
         window.makeKeyAndVisible()
         self.window = window
+
+        // Live Grok Voice needs mic + speaker at the same time. WKWebView
+        // defaults to playback-only, so getUserMedia succeeds but Grok is
+        // silent or the earpiece is used. playAndRecord + voiceChat is the
+        // closest iOS session to the real Grok app inside a WebView.
+        configureVoiceAudioSession()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioInterruption),
+            name: AVAudioSession.interruptionNotification,
+            object: nil
+        )
         return true
     }
 
@@ -26,7 +39,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationWillEnterForeground(_ application: UIApplication) {}
 
-    func applicationDidBecomeActive(_ application: UIApplication) {}
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        configureVoiceAudioSession()
+    }
 
     func applicationWillTerminate(_ application: UIApplication) {}
 
@@ -48,5 +63,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             continue: userActivity,
             restorationHandler: restorationHandler
         )
+    }
+
+    private func configureVoiceAudioSession() {
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setCategory(
+                .playAndRecord,
+                mode: .voiceChat,
+                options: [.defaultToSpeaker, .allowBluetooth]
+            )
+            try session.setActive(true, options: [])
+        } catch {
+            NSLog("RVFAX AVAudioSession: \(error.localizedDescription)")
+        }
+    }
+
+    @objc private func handleAudioInterruption(_ notification: Notification) {
+        guard
+            let info = notification.userInfo,
+            let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+            let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+        else { return }
+        if type == .ended {
+            configureVoiceAudioSession()
+        }
     }
 }

@@ -115,7 +115,7 @@ export function VoicePanel({
                 Live Grok Voice
               </p>
               <p className="text-[11px] text-white">
-                Mic button starts this · hands-free multi-turn
+                Mic starts a live talk-and-listen call. First tap may ask for Microphone.
               </p>
 
             </div>
