@@ -17,7 +17,11 @@ import {
   chassisLooksSprinter,
 } from "./powertrainFamily";
 import {
-  honestTorqueLabel,
+  honestAcUnits,
+  honestGenerator,
+  honestHorsepowerForCoach,
+  honestTireSize,
+  honestTorqueForCoach,
   horsepowerIsOptionBand,
   parseHp,
 } from "./catalogHonesty";
@@ -405,77 +409,6 @@ function economy(
   };
 }
 
-function torqueFor(
-  engine?: string,
-  diesel?: boolean,
-  torqueLbFt?: number,
-  hpNum?: number,
-): string {
-  const optionBand = horsepowerIsOptionBand(engine, null);
-  if (optionBand) {
-    const honest = honestTorqueLabel({ engine, torqueLbFt });
-    if (honest) return honest;
-  }
-  if (torqueLbFt && torqueLbFt > 0 && !optionBand) {
-    return `${torqueLbFt.toLocaleString()} lb-ft`;
-  }
-  if (!engine) return "—";
-
-  // Family tables first — never invent 936 from HP×2.6
-  // L9 + X15 option band: never pick X15-only or L9-only
-  if (/x15/i.test(engine) && /l9/i.test(engine)) {
-    return (
-      honestTorqueLabel({ engine, torqueLbFt }) ||
-      "1,250 lb-ft L9 std / 1,850–1,950 lb-ft X15 opt — confirm door sticker"
-    );
-  }
-  if (/x15/i.test(engine)) return "1,850–1,950 lb-ft (X15 class)";
-  if (/x12/i.test(engine)) return "1,700 lb-ft (typ. X12)";
-  if (/l9/i.test(engine) && /450/i.test(engine)) return "1,250 lb-ft (L9 450)";
-  if (/l9/i.test(engine) && /380/i.test(engine)) return "1,150 lb-ft (L9 380)";
-  if (/l9/i.test(engine)) return "1,150–1,250 lb-ft (L9 class — confirm option)";
-  if (/isl\s*8|isl\b/i.test(engine) && !/isb/i.test(engine))
-    return "1,050–1,250 lb-ft (ISL class — confirm year)";
-  if (/b6\.7|isb/i.test(engine)) return "800 lb-ft (B6.7 / ISB class)";
-  if (/godzilla|7\.3/i.test(engine)) return "468 lb-ft (typ. 7.3 Godzilla)";
-  if (/v10|triton/i.test(engine)) return "460 lb-ft (typ. V10)";
-  if (/power\s*stroke|6\.7/i.test(engine) && /ford/i.test(engine))
-    return "750–1,050 lb-ft (Power Stroke — confirm)";
-  if (/sprinter|mercedes|2\.0l/i.test(engine)) return "332–350 lb-ft (Sprinter class)";
-
-  // Multi-option engine string without family hit
-  if (
-    /[·|]/.test(engine) ||
-    /\bor\b/i.test(engine) ||
-    /by (year|option)/i.test(engine) ||
-    /\d+\s*[–—\-]\s*\d+\s*HP/i.test(engine)
-  ) {
-    return "Varies by option / year — confirm brochure";
-  }
-
-  const m = engine.match(/(\d{3,4})\s*HP/i);
-  const hp =
-    hpNum != null && hpNum > 0
-      ? hpNum
-      : m
-        ? parseInt(m[1]!, 10)
-        : null;
-  if (hp == null) {
-    return "Varies by option / year — confirm brochure";
-  }
-  if (diesel) {
-    if (hp >= 580) return "1,950 lb-ft (typ. X15 class)";
-    if (hp >= 480) return "1,700 lb-ft (typ. X12 class)";
-    if (hp >= 400) return "1,250 lb-ft (typ. L9 class)";
-    if (hp >= 340 && hp <= 380) return "800 lb-ft (typ. B6.7 / ISB)";
-    // Do NOT invent HP×2.6 (360→936 was a bug)
-    return "Varies by option / year — confirm brochure";
-  }
-  if (/7\.3L|Godzilla/i.test(engine)) return "468 lb-ft (typ.)";
-  if (/V10|Triton/i.test(engine)) return "460 lb-ft (typ. V10)";
-  return "Varies by option / year — confirm brochure";
-}
-
 function transmissionFor(
   spec: RVSpec,
   diesel: boolean,
@@ -682,7 +615,12 @@ export function buildBrochureSpecs(
 
   const hpDisplay = isTowable
     ? "N/A"
-    : parseHp(snap.engine, snap.horsepower);
+    : honestHorsepowerForCoach({
+        engine: snap.engine,
+        horsepower: snap.horsepower,
+        chassis: snap.chassis ?? spec.chassis,
+        type: spec.type,
+      });
 
   // Never surface a bare invented 450 — especially when engine is std/opt
   const safeHpDisplay =
@@ -720,19 +658,25 @@ export function buildBrochureSpecs(
       ? `No year-band powertrain for ${yearLabel} — showing catalog default; confirm brochure for this model year.`
       : null;
 
-  const accuracyNote =
+  const typicalGearNote =
+    "Tire / A/C / generator are class-typical when no brochure pin — confirm door sticker.";
+  const accuracyNote = [
     oem?.note ||
-    snap.notes ||
-    (local
-      ? `Local correction for ${yearLabel}${local.note ? ` · ${local.note}` : ""} · exportable pin.`
-      : null) ||
-    hpMissingNote ||
-    noBandNote ||
-    (dataSource === "estimated"
-      ? "Some fields estimated from class averages — verify against OEM brochure / VIN."
-      : dataSource === "oem-year"
-        ? `Year-true OEM facts for ${yearLabel}${floorplan ? ` · floorplan ${floorplan}` : ""}${correction ? " · verified powertrain patch" : ""}${snap.band ? ` · band ${snap.band.from}–${snap.band.to}` : ""}${oem?.source ? ` · ${oem.source}` : ""}.`
-        : `Catalog brochure fields for ${yearLabel}.`);
+      snap.notes ||
+      (local
+        ? `Local correction for ${yearLabel}${local.note ? ` · ${local.note}` : ""} · exportable pin.`
+        : null) ||
+      hpMissingNote ||
+      noBandNote ||
+      (dataSource === "estimated"
+        ? "Some fields estimated from class averages — verify against OEM brochure / VIN."
+        : dataSource === "oem-year"
+          ? `Year-true OEM facts for ${yearLabel}${floorplan ? ` · floorplan ${floorplan}` : ""}${correction ? " · verified powertrain patch" : ""}${snap.band ? ` · band ${snap.band.from}–${snap.band.to}` : ""}${oem?.source ? ` · ${oem.source}` : ""}.`
+          : `Catalog brochure fields for ${yearLabel}.`),
+    oem?.tireSize ? null : typicalGearNote,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return {
     lengthFt: lengthDisplay,
@@ -768,7 +712,14 @@ export function buildBrochureSpecs(
     horsepower: safeHpDisplay,
     torque: isTowable
       ? "N/A"
-      : torqueFor(snap.engine, diesel, snap.torqueLbFt, snap.horsepower),
+      : honestTorqueForCoach({
+          engine: snap.engine,
+          chassis: snap.chassis ?? spec.chassis,
+          type: spec.type,
+          torqueLbFt: snap.torqueLbFt,
+          diesel,
+          horsepower: snap.horsepower,
+        }),
     transmission: transmissionFor(spec, diesel, snap.transmission),
     chassis:
       snap.chassis ??
@@ -808,26 +759,30 @@ export function buildBrochureSpecs(
       "16 gal gas/electric",
     ]),
 
-    generator:
-      snap.generator ??
-      (isToyHauler
-        ? "Generator prep / optional Onan 4–5.5kW"
-        : isTowable
-          ? "Optional"
-          : "See options"),
+    generator: honestGenerator({
+      generator:
+        snap.generator ??
+        (isToyHauler
+          ? "Generator prep / optional Onan 4–5.5kW"
+          : isTowable
+            ? "Optional"
+            : "See options"),
+      fuelType: spec.fuelType,
+      chassis: snap.chassis ?? spec.chassis,
+      engine: snap.engine,
+      type: spec.type,
+    }),
     electricalService: electrical,
-    acUnits: pick(seed, [
-      "1 × 13,500 BTU",
-      "1 × 15,000 BTU",
-      "2 × 15,000 BTU",
-      "3 × 15,000 BTU",
-    ]),
-    furnaceBtu: pick(seed, [
-      "20,000 BTU",
-      "30,000 BTU",
-      "35,000 BTU",
-      "40,000 BTU",
-    ]),
+    acUnits: honestAcUnits({
+      type: spec.type,
+      lengthFt: lenMid,
+    }),
+    furnaceBtu:
+      /class c/i.test(spec.type) && !/super/i.test(spec.type)
+        ? "30,000 BTU (typ. — confirm brochure)"
+        : /class b/i.test(spec.type)
+          ? "20,000 BTU (typ. — confirm brochure)"
+          : "35,000 BTU (typ. — confirm brochure)",
     converter: electrical.includes("50") ? "60–80 amp" : "45–55 amp",
 
     axles: classAGasNoTag
@@ -843,15 +798,11 @@ export function buildBrochureSpecs(
           : /class c/i.test(spec.type) && !/super/i.test(spec.type)
             ? "Steer + dual rear (no tag)"
             : "Tag axle (when equipped)",
-    tireSize: oem?.tireSize
-      ? oem.tireSize
-      : pick(seed, [
-          "225/75R16",
-          "235/80R22.5",
-          "255/70R22.5",
-          "275/70R22.5",
-          "ST235/80R16",
-        ]),
+    tireSize: honestTireSize({
+      oem: oem?.tireSize,
+      type: spec.type,
+      chassis: snap.chassis ?? spec.chassis,
+    }),
 
     type: spec.type,
     warranty: spec.warrantyYears

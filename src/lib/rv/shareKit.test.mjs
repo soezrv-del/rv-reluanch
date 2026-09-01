@@ -23,6 +23,12 @@ test("kit accepts an editable rating override", () => {
   assert.match(src, /coachSnapshot\(r, opts\.rating\)/);
 });
 
+test("STRENGTHS stay product-only; LIFESTYLE is never an empty header", () => {
+  assert.match(src, /Finance talking points belong in PAYMENT/);
+  assert.match(src, /lifestylePitch\(r\.data\.type\)/);
+  assert.doesNotMatch(src, /Financed \$\{formatMoney/);
+});
+
 test("kit footer is a prepared-by signature", () => {
   assert.match(src, /REPORT_CONTACT_KICKER/);
   assert.match(src, /REPORT_CONTACT_NAME/);

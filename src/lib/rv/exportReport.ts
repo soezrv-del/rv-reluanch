@@ -36,6 +36,9 @@ export type ReportExportMeta = {
   length?: string;
   slideouts?: string;
   sleeps?: string;
+  tradeCappedAtRetailLow?: boolean;
+  strengths?: string[];
+  lifestyle?: string;
 };
 
 function isNative() {
@@ -136,6 +139,9 @@ function buildStandaloneHtml(opts: {
   const tradeIn = meta.tradeIn || "—";
   const retailLow = meta.retailLow || "—";
   const retailHigh = meta.retailHigh || "—";
+  const tradeCapped = Boolean(meta.tradeCappedAtRetailLow);
+  const lifestyle = (meta.lifestyle || "").trim();
+  const strengths = (meta.strengths || []).map((s) => s.trim()).filter(Boolean);
   const rating = meta.rating || "—";
   const reportId = meta.reportId || "RVF-REPORT";
   const preparedFor = meta.preparedFor || "Client";
@@ -657,7 +663,11 @@ function buildStandaloneHtml(opts: {
         <div class="value-kicker">RvFOX Retail Perspective</div>
         <div class="value-amount">${escapeHtml(retailHigh !== "—" ? retailHigh : retailLow)}</div>
         <div class="value-range">Range ${escapeHtml(retailLow)} – ${escapeHtml(retailHigh)}</div>
-        <div class="value-note">Trade-in est. ${escapeHtml(tradeIn)} · Confirm with PPI & door sticker</div>
+        <div class="value-note">${
+          tradeCapped
+            ? `Trade-in ${escapeHtml(tradeIn)} is capped at retail low — not a usable lot figure above the floor`
+            : `Trade-in est. ${escapeHtml(tradeIn)} · Confirm with PPI & door sticker`
+        }</div>
       </div>
       <div class="value-right">
         <h2>History events affecting this coach's value</h2>
@@ -693,9 +703,13 @@ function buildStandaloneHtml(opts: {
     <!-- Market triple (from your preferred report) -->
     <div class="market-grid">
       <div class="m-card trade">
-        <div class="m-label">Trade-In</div>
+        <div class="m-label">${tradeCapped ? "Trade-In · Capped" : "Trade-In"}</div>
         <div class="m-val">${escapeHtml(tradeIn)}</div>
-        <div class="m-sub">Dealer offer estimate</div>
+        <div class="m-sub">${
+          tradeCapped
+            ? "Capped at retail low — desk must not treat trade = retail floor as a real offer"
+            : "Dealer offer estimate"
+        }</div>
       </div>
       <div class="m-card low">
         <div class="m-label">Retail Low</div>
@@ -708,6 +722,23 @@ function buildStandaloneHtml(opts: {
         <div class="m-sub">Dealer asking price</div>
       </div>
     </div>
+
+    ${
+      lifestyle
+        ? `<div class="legal">
+      <h3>Lifestyle</h3>
+      <p>${escapeHtml(lifestyle)}</p>
+    </div>`
+        : ""
+    }
+    ${
+      strengths.length
+        ? `<div class="legal">
+      <h3>Strengths</h3>
+      ${strengths.map((s) => `<p>• ${escapeHtml(s)}</p>`).join("")}
+    </div>`
+        : ""
+    }
 
     <div class="body">
       <div id="report-root">${bodyHtml}</div>
