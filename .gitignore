@@ -4,3 +4,9 @@ node_modules/
 .env
 .env.*
 !.env.example
+
+# Vercel Build Output API artifacts — committing these makes production
+# skip `vite build` and ship stale UI. Keep .vercel/project.json if added.
+.vercel/output/
+.output/
+dist/
