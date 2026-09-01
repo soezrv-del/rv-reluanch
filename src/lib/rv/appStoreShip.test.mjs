@@ -6,6 +6,7 @@ import test from "node:test";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 
+/** @param {string} rel */
 function read(rel) {
   return readFileSync(join(root, rel), "utf8");
 }
