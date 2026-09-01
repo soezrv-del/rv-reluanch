@@ -13,7 +13,6 @@ import {
   Search,
   Share2,
   Shield,
-  Sparkles,
   Star,
   FileText,
   Volume2,
@@ -35,7 +34,7 @@ import {
   stopBrowserTts,
 } from "@/lib/rvgrok/voice";
 
-type SheetId = "help" | "feedback" | "privacy" | "terms" | null;
+type SheetId = "help" | "privacy" | "terms" | null;
 
 const SAVED_KEY = "rvfax_saved_v1";
 const GROK_HIST_KEY = "rvfax_grok_history_v1";
@@ -163,10 +162,6 @@ export function MoreApp({
             ) : (
               <span />
             )}
-            <span className="inline-flex items-center gap-1 rounded-full border border-blue/45 bg-blue/15 px-2.5 py-1 text-[10px] font-bold tracking-wide text-blue">
-              <Sparkles className="size-3" />
-              v2.0 Beta
-            </span>
           </header>
 
           {/* YOUR ACTIVITY — only real app surfaces */}
@@ -241,17 +236,17 @@ export function MoreApp({
             </div>
           </section>
 
-          {/* TestFlight — no IAP prices (Apple 3.1.1) */}
+          {/* No IAP prices (Apple 3.1.1) */}
           <section className="glass-prestige-gold relative overflow-hidden rounded-[1.25rem] p-4">
             <p className="text-[10px] font-bold tracking-[0.16em] text-amber">
-              THIS BUILD
+              FULL SUITE
             </p>
             <p className="mt-1.5 text-[17px] font-bold leading-snug text-white">
-              Full suite is open
+              Everything included
             </p>
             <p className="mt-1 text-[12px] leading-relaxed text-white">
-              Facts, Cal, Tow, Trips, Share, and Grok are unlocked for evaluation. No
-              in-app purchases in this version.
+              No in-app purchases — full suite included. Facts, Cal, Tow, Trips,
+              Share, and Grok are all open.
             </p>
             <div className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full border border-amber/40 bg-amber/15">
               <Star className="size-4 text-amber" />
@@ -269,13 +264,25 @@ export function MoreApp({
                 title="Help & FAQ"
                 sub="Common questions answered"
                 onClick={() => setSheet("help")}
+                last
               />
-              <RowLink
-                icon={<MessageSquare className="size-4 text-ruby" />}
-                title="Send Feedback"
-                sub="Report issues or suggest features"
-                onClick={() => setSheet("feedback")}
-              />
+              <a
+                href="mailto:contact@rvfox.app?subject=RVFAX%20feedback"
+                className="flex w-full items-center gap-3 border-t border-white/10 px-3.5 py-3.5 text-left transition hover:bg-white/5"
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                  <MessageSquare className="size-4 text-ruby" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-bold text-white">
+                    Send Feedback
+                  </span>
+                  <span className="block text-[11px] text-white">
+                    contact@rvfox.app
+                  </span>
+                </span>
+                <Mail className="size-4 shrink-0 text-white" />
+              </a>
               <a
                 href="https://www.nhtsa.gov/recalls"
                 target="_blank"
@@ -376,7 +383,7 @@ export function MoreApp({
             </p>
             <div className="glass-prestige overflow-hidden rounded-[1.25rem]">
               <a
-                href="https://rvfox.app/privacy.html"
+                href="/privacy.html"
                 target="_blank"
                 rel="noreferrer"
                 className="flex w-full items-center gap-3 px-3.5 py-3.5 text-left transition hover:bg-white/5"
@@ -389,13 +396,13 @@ export function MoreApp({
                     Privacy Policy
                   </span>
                   <span className="block text-[11px] text-white">
-                    rvfox.app/privacy.html
+                    How we handle your data
                   </span>
                 </span>
                 <ExternalLink className="size-4 shrink-0 text-white" />
               </a>
               <a
-                href="https://rvfox.app/support.html"
+                href="/support.html"
                 target="_blank"
                 rel="noreferrer"
                 className="flex w-full items-center gap-3 border-t border-white/10 px-3.5 py-3.5 text-left transition hover:bg-white/5"
@@ -408,7 +415,7 @@ export function MoreApp({
                     Support
                   </span>
                   <span className="block text-[11px] text-white">
-                    rvfox.app/support.html
+                    Help and contact
                   </span>
                 </span>
                 <ExternalLink className="size-4 shrink-0 text-white" />
@@ -581,14 +588,6 @@ const SHEETS: Record<
       "RvTow — Truck/SUV catalog + NHTSA VIN decode for tow capacity checks.",
       "RvTrips — Lock your coach profile, enter addresses, route with OSRM, find free sewer dumps, and only see restrictions that match the path.",
       "Swipe left/right between tabs. Scroll up to hide header & footer chrome on iPhone.",
-    ],
-  },
-  feedback: {
-    title: "Send Feedback",
-    body: [
-      "Email contact@rvfox.app with bugs, coach data gaps, or feature ideas.",
-      "Include: device, iOS/Android version, which tab, and what you expected.",
-      "Toy hauler garage specs, Super C models, and highline diesel data improve fastest with real brochure notes from you.",
     ],
   },
   privacy: {

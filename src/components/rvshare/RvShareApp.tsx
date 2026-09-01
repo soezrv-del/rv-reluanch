@@ -925,7 +925,7 @@ export function RvShareApp({
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0b1b33] px-4 py-2.5 text-[10px] font-bold tracking-wide text-white/70">
                     <span>Confirm door sticker · PPI · lender</span>
-                    <span className="text-sky-300">SpaceX AI-Powered</span>
+                    <span className="text-sky-300">RvFOX · Powered by Grok</span>
                   </div>
                 </div>
 

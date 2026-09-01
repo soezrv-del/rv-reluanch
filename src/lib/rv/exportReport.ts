@@ -747,7 +747,7 @@ function buildStandaloneHtml(opts: {
       </div>
       <div class="foot-bar">
         <span>Confirm door sticker · PPI · lender</span>
-        <span><strong>RvFOX Pro</strong> · SpaceX AI-Powered</span>
+        <span><strong>RvFOX Pro</strong> · Powered by Grok</span>
       </div>
     </footer>
   </div>

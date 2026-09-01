@@ -70,6 +70,8 @@ const config: CapacitorConfig = {
           allowNavigation: [
             serverUrl,
             "https://*.vercel.app",
+            "https://rvfox.app",
+            "https://www.rvfox.app",
             "https://*.x.ai",
             "https://api.x.ai",
             "wss://api.x.ai",

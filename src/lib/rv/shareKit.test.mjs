@@ -9,9 +9,9 @@ const src = readFileSync(
   "utf8",
 );
 
-test("kit header is SpaceX AI-Powered RvFOX Report", () => {
-  assert.match(src, /SpaceX AI-Powered RvFOX Report/);
-  assert.equal(src.includes("SpaceX AI Powered RvFOX Report"), false);
+test("kit header is RvFOX Powered by Grok — no SpaceX", () => {
+  assert.match(src, /RvFOX · Powered by Grok/);
+  assert.equal(src.includes("SpaceX"), false);
 });
 
 test("payment block includes the interest rate", () => {
