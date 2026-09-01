@@ -1915,6 +1915,20 @@ export function findOemFloorplanSpec(
       continue;
     }
     if (
+      row.modelIncludes === "altitude" &&
+      (md.includes("fs550") || md.includes("fs600")) &&
+      !row.modelIncludes.includes("fs")
+    ) {
+      continue;
+    }
+    if (
+      row.modelIncludes === "frontier" &&
+      md.includes("gtx") &&
+      !row.modelIncludes.includes("gtx")
+    ) {
+      continue;
+    }
+    if (
       row.modelIncludes === "cougar" &&
       (md.includes("half") || md.includes("5th") || md.includes("fifth")) &&
       row.modelIncludes === "cougar"

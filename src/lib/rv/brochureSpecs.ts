@@ -18,6 +18,7 @@ import {
 } from "./powertrainFamily";
 import {
   honestAcUnits,
+  honestElectricalService,
   honestGenerator,
   honestHorsepowerForCoach,
   honestTireSize,
@@ -566,11 +567,12 @@ export function buildBrochureSpecs(
           ? 178 + (seed % 14)
           : 144 + (seed % 12);
 
-  const electrical = /class a|super c|fifth|toy/i.test(spec.type)
+  const electrical = /fifth|toy/i.test(spec.type)
     ? "50 amp"
-    : /class b/i.test(spec.type)
-      ? "30 amp"
-      : pick(seed, ["30 amp", "50 amp"]);
+    : honestElectricalService({
+        type: spec.type,
+        chassis: snap.chassis ?? spec.chassis,
+      });
 
   const gLen = oem?.garageLengthFt ?? spec.garageLengthFt ?? 0;
   const gWidth = oem?.garageWidthFt ?? spec.garageWidthFt ?? 0;
@@ -776,6 +778,7 @@ export function buildBrochureSpecs(
     acUnits: honestAcUnits({
       type: spec.type,
       lengthFt: lenMid,
+      chassis: snap.chassis ?? spec.chassis,
     }),
     furnaceBtu:
       /class c/i.test(spec.type) && !/super/i.test(spec.type)
