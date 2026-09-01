@@ -311,6 +311,42 @@ function main() {
       if (!/horsepower:\s*211/.test(fa) || !/"2027": \["2515","2512"\]/.test(fa)) {
         fail("Newmar|Freedom Aire MY27 must be Sprinter 211 HP with 2515 + 2512");
       }
+      if (/"2023"/.test(fa) || /"2024"/.test(fa)) {
+        fail("Newmar|Freedom Aire must not list 2023–2024 (OEM from 2026)");
+      }
+      const nsBlock0 = newmar.indexOf('    "Northern Star": {');
+      const nsBlock1 = newmar.indexOf('    "Grand Star": {');
+      const nsBlock = nsBlock0 >= 0 && nsBlock1 > nsBlock0 ? newmar.slice(nsBlock0, nsBlock1) : "";
+      if (/"2023"/.test(nsBlock) || /"2024"/.test(nsBlock)) {
+        fail("Newmar|Northern Star must not list 2023–2024 (OEM from 2025)");
+      }
+      if (!/"2023": \["3412", "3426", "3709", "3717", "4011", "4037", "4068", "4070"\]/.test(ks)) {
+        fail("Newmar|Kountry Star MY23 OEM plans missing");
+      }
+      if (!/"2024": \["3418", "3426", "3709", "3717", "4011", "4037", "4068", "4070"\]/.test(ks)) {
+        fail("Newmar|Kountry Star MY24 OEM plans missing (last year before Northern Star)");
+      }
+      if (!/"2023": \["3709", "3717", "3736", "4071", "4081", "4310", "4311", "4325", "4326", "4328", "4369", "4370"\]/.test(newmar)) {
+        fail("Newmar|Dutch Star MY23 OEM plans missing");
+      }
+      if (!/"2024": \["3817", "3836", "4071", "4081", "4310", "4311", "4325", "4326", "4369", "4370"\]/.test(newmar)) {
+        fail("Newmar|Dutch Star MY24 OEM plans missing");
+      }
+      if (!/"2023": \["3014", "3020", "3124", "3225", "3401", "3408", "3609", "3616", "3626", "3629", "3811"\]/.test(bs)) {
+        fail("Newmar|Bay Star MY23 OEM gas plans missing");
+      }
+      if (!/"2024": \["3014", "3116", "3225", "3423", "3618", "3626", "3629", "3811"\]/.test(bs)) {
+        fail("Newmar|Bay Star MY24 OEM gas plans missing");
+      }
+      const ss0 = newmar.indexOf('    "Super Star": {');
+      const ss1 = newmar.indexOf('    "Supreme Aire": {');
+      const ss = ss0 >= 0 && ss1 > ss0 ? newmar.slice(ss0, ss1) : "";
+      if (!/"2023": \["3727","3729","4059","4061","4065"\]/.test(ss)) {
+        fail("Newmar|Super Star MY23 OEM plans missing");
+      }
+      if (!/yearStart:\s*2023/.test(ss)) {
+        fail("Newmar|Super Star yearStart must be 2023 (OEM brochure exists)");
+      }
     }
   }
 
