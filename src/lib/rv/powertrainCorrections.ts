@@ -1866,6 +1866,19 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
   },
   {
     yearMin: 2014,
+    yearEnd: 2016,
+    makeIncludes: "newmar",
+    modelIncludes: "new aire",
+    engine: "Cummins B6.7 / ISB 360HP",
+    horsepower: 360,
+    torqueLbFt: 800,
+    chassis: "Freightliner XCS",
+    transmission: "Allison 3000 MH",
+    fuelType: "Diesel",
+    note: "Pre-modern New Aire keys left for later slices. No OEM MY17 brochure — do not stamp 2017.",
+  },
+  {
+    yearMin: 2018,
     yearEnd: 2019,
     makeIncludes: "newmar",
     modelIncludes: "new aire",
@@ -1875,7 +1888,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Freightliner XCS",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "Early New Aire — B6.7/ISB 360/800. OEM 2018_New_Aire is 3341/3343 360 only. OEM 2019_New_Aire is 33' 360 only (no 35'). No OEM MY17 brochure.",
+    note: "OEM 2018_New_Aire is 3341/3343 360 only. OEM 2019_New_Aire is 33' 360 only (no 35'). No OEM MY17 brochure.",
   },
   {
     yearMin: 2020,
