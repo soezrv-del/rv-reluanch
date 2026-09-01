@@ -6,6 +6,9 @@ import test from "node:test";
  * dock-inset + tap-slop regressions fail in CI.
  */
 
+/**
+ * @param {{ android: boolean, cssSafe: number, innerH: number, screenH: number }} opts
+ */
 function computeDockSafeBottomPx({ android, cssSafe, innerH, screenH }) {
   if (!android) {
     const safe = Number.isFinite(cssSafe) ? cssSafe : 0;
@@ -17,6 +20,11 @@ function computeDockSafeBottomPx({ android, cssSafe, innerH, screenH }) {
   return 48;
 }
 
+/**
+ * @param {number} dx
+ * @param {number} dy
+ * @param {number} [slop]
+ */
 function isStationaryDockTap(dx, dy, slop = 20) {
   return Math.hypot(dx, dy) <= slop;
 }
