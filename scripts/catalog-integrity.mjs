@@ -52,6 +52,14 @@ const EXPECTED_TYPE = {
   "Fleetwood|Fortis": "gas",
   "Fleetwood|Frontier": "diesel",
   "Fleetwood|Southwind": "gas",
+  "Newmar|Bay Star": "gas",
+  "Newmar|Bay Star Sport": "gas",
+  "Newmar|Freedom Aire": "class c",
+  "Newmar|Super Star": "super c",
+  "Newmar|Summit Aire": "super c",
+  "Newmar|Supreme Aire": "super c",
+  "Newmar|Grand Star": "super c",
+  "Newmar|Canyon Star": "diesel",
 };
 
 /** Phantom / non-OEM series that must not exist. */
@@ -228,6 +236,72 @@ function main() {
     if (!z) fail("Brinkley|Model Z missing");
     else if (z.yearStart !== 2022 && z.yearStart !== 2023) {
       warn(`Brinkley|Model Z yearStart is ${z.yearStart} (expected 2022 or 2023)`);
+    }
+  }
+
+  // Newmar block is unquoted (`Newmar: {`) so the quoted-make parser misses it.
+  // Scan the raw Newmar…Tiffin slice for recent-years OEM gates.
+  {
+    const n0 = src.indexOf("\n  Newmar: {");
+    const n1 = src.indexOf("\n  Tiffin: {");
+    if (n0 < 0 || n1 < n0) {
+      fail("Newmar block not found between Newmar: and Tiffin:");
+    } else {
+      const newmar = src.slice(n0, n1);
+      for (const required of [
+        "Essex",
+        "King Aire",
+        "London Aire",
+        "Mountain Aire",
+        "Dutch Star",
+        "New Aire",
+        "Ventana",
+        "Northern Star",
+        "Bay Star",
+        "Bay Star Sport",
+        "Canyon Star",
+        "Super Star",
+        "Summit Aire",
+        "Supreme Aire",
+        "Grand Star",
+        "Freedom Aire",
+        "Kountry Star",
+      ]) {
+        const hit =
+          newmar.includes(`    ${required}: {`) ||
+          newmar.includes(`    "${required}": {`);
+        if (!hit) fail(`Newmar missing required series: ${required}`);
+      }
+      const ks0 = newmar.indexOf('    "Kountry Star": {');
+      const ks1 = newmar.indexOf('    "Bay Star": {');
+      const ks = ks0 >= 0 && ks1 > ks0 ? newmar.slice(ks0, ks1) : "";
+      if (!/yearEnd:\s*2024/.test(ks)) {
+        fail("Newmar|Kountry Star yearEnd must be 2024 (Northern Star from 2025)");
+      }
+      if (/"2025"/.test(ks) || /"2026"/.test(ks) || /"2027"/.test(ks)) {
+        fail("Newmar|Kountry Star must not list 2025–2027 floorplans");
+      }
+      const la0 = newmar.indexOf('    "London Aire": {');
+      const la1 = newmar.indexOf('    "Kountry Star": {');
+      const la = la0 >= 0 && la1 > la0 ? newmar.slice(la0, la1) : "";
+      if (/yearEnd:\s*\d+/.test(la)) {
+        fail("Newmar|London Aire is an active OEM line — do not yearEnd it");
+      }
+      if (!/"2027": \["4540", "4545", "4551", "4569", "4595"\]/.test(la)) {
+        fail("Newmar|London Aire MY27 OEM plans missing (4540/4545/4551/4569/4595)");
+      }
+      if (!/"2027": \["3836", "4081", "4311", "4325", "4340", "4345", "4369"\]/.test(newmar)) {
+        fail("Newmar|Dutch Star MY27 OEM plans missing");
+      }
+      if (!/"2027": \["4545", "4551", "4569", "4595"\]/.test(newmar)) {
+        fail("Newmar|Essex MY27 OEM plans missing");
+      }
+      const bs0 = newmar.indexOf('    "Bay Star": {');
+      const bs1 = newmar.indexOf('    "Bay Star Sport": {');
+      const bs = bs0 >= 0 && bs1 > bs0 ? newmar.slice(bs0, bs1) : "";
+      if (!/fuelType:\s*"Gas"/.test(bs) || /fuelType:\s*"Diesel"/.test(bs)) {
+        fail("Newmar|Bay Star must stay Class A Gas — do not stamp diesel pusher defaults");
+      }
     }
   }
 

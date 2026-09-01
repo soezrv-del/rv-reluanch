@@ -808,3 +808,71 @@ test("Altitude E-450 pin is 325/450 and does not apply to FS550", () => {
   assert.equal(superC!.horsepower, 335);
   assert.match(superC!.chassis || "", /F-550/);
 });
+
+test("Newmar 2025–2027 OEM DigiBrochure floorplans + yearEnds", () => {
+  const nm = CATALOG_INDEX.Newmar;
+  assert.ok(nm);
+
+  assert.equal(nm["Ventana LE"]?.yearEnd, 2019);
+  assert.equal(nm["Ventana LE"]?.years?.includes(2025), false);
+  assert.equal(nm["Kountry Star"]?.yearEnd, 2024);
+  assert.equal(nm["Kountry Star"]?.years?.includes(2025), false);
+  assert.equal(nm["Kountry Star"]?.years?.includes(2024), true);
+  assert.equal(nm["Northern Star"]?.yearStart, 2025);
+  assert.equal(nm["Northern Star"]?.years?.includes(2025), true);
+  assert.equal(nm["Northern Star"]?.years?.includes(2027), true);
+
+  assert.ok(nm["London Aire"]);
+  assert.equal(nm["London Aire"].yearEnd, undefined);
+  assert.equal(nm["London Aire"].years?.includes(2025), true);
+  assert.equal(nm["London Aire"].years?.includes(2027), true);
+  assert.equal(nm["London Aire"].years?.includes(2018), true);
+
+  assert.equal(nm["Freedom Aire"]?.type, "Class C");
+  assert.equal(nm["Super Star"]?.type, "Super C");
+  assert.equal(nm["Summit Aire"]?.type, "Super C");
+  assert.equal(nm["Supreme Aire"]?.type, "Super C");
+  assert.equal(nm["Grand Star"]?.type, "Super C");
+  assert.equal(nm["Bay Star"]?.fuelType, "Gas");
+  assert.equal(nm["Bay Star Sport"]?.fuelType, "Gas");
+  assert.match(nm["Canyon Star"]?.type || "", /Diesel/);
+
+  const block = src("rvData.ts");
+  const n0 = block.indexOf("  Newmar: {");
+  const n1 = block.indexOf("  Tiffin: {");
+  const newmar = block.slice(n0, n1);
+
+  assert.match(newmar, /"2027": \["3836", "4081", "4311", "4325", "4340", "4345", "4369"\]/);
+  assert.match(newmar, /"2027": \["4545", "4551", "4569", "4595"\]/);
+  assert.match(newmar, /"2027": \["4531", "4545", "4596"\]/);
+  assert.match(newmar, /"2027": \["3823", "3825", "4118", "4551"\]/);
+  assert.match(newmar, /"2027": \["3543", "3545", "3547"\]/);
+  assert.match(newmar, /"2027": \["3512","3809","4037","4340","4345","4369"\]/);
+  assert.match(newmar, /"2027": \["4540", "4545", "4551", "4569", "4595"\]/);
+  assert.match(newmar, /"2027": \["3114", "3225", "3609", "3626", "3639", "3640", "3811"\]/);
+  assert.match(newmar, /"2027": \["2813", "3014", "3225"\]/);
+  assert.match(newmar, /"2027": \["3947"\]/);
+  assert.match(newmar, /"2027": \["2515","2512"\]/);
+  assert.doesNotMatch(newmar, /"2025": \["3712"/);
+  assert.doesNotMatch(newmar, /"2026": \["3712"/);
+
+  const essex27 = findPowertrainCorrection("2027", "Newmar", "Essex", "4551");
+  assert.equal(essex27!.horsepower, 605);
+  assert.equal(essex27!.torqueLbFt, 1950);
+  const ds27 = findPowertrainCorrection("2027", "Newmar", "Dutch Star", "4081");
+  assert.equal(ds27!.horsepower, 450);
+  assert.equal(ds27!.torqueLbFt, 1250);
+  const ma27 = findPowertrainCorrection("2027", "Newmar", "Mountain Aire", "4551");
+  assert.equal(ma27!.horsepower, 525);
+  assert.equal(ma27!.torqueLbFt, 1695);
+  const vt27 = findPowertrainCorrection("2027", "Newmar", "Ventana", "3512");
+  assert.equal(vt27!.horsepower, 380);
+  assert.match(vt27!.engine, /B6\.7/);
+  const bay27 = findPowertrainCorrection("2027", "Newmar", "Bay Star", "3626");
+  assert.equal(bay27!.horsepower, 335);
+  assert.equal(bay27!.fuelType, "Gas");
+  assert.doesNotMatch(bay27!.engine, /Cummins|L9|diesel/i);
+  const fa27 = findPowertrainCorrection("2027", "Newmar", "Freedom Aire", "2515");
+  assert.equal(fa27!.horsepower, 208);
+  assert.match(fa27!.chassis || "", /Sprinter/);
+});
