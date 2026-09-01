@@ -111,7 +111,7 @@ export function workerTokenUrl() {
   return `${base}/get-ephemeral-token`;
 }
 
-function parseTokenPayload(data: {
+export function parseTokenPayload(data: {
   token?: string;
   client_secret?: string | { value?: string };
   value?: string;

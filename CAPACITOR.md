@@ -119,6 +119,7 @@ npm run cap:open:android
 | Blank app / only shell | Set `CAP_SERVER_URL` and re-run `npm run cap:sync` |
 | Chat fails | Deploy worker + app; open the same URL in Safari first |
 | Mic denied | Settings → RVFAX → Microphone ON |
+| Live Voice silent / no talk-back on iPhone | New TestFlight with this `AppDelegate` (play + record). Force-quit, tap mic, Allow Microphone. |
 | Signing error | Pick correct Team; unique Bundle ID |
 | Old UI in TestFlight | Bump **Build** number; re-Archive |
 

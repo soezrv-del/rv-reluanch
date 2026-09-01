@@ -28,6 +28,8 @@ const config: CapacitorConfig = {
     scheme: "RVFAX",
     allowsLinkPreview: false,
     scrollEnabled: true,
+    // Live Voice: do not change contentInset. AVAudioSession playAndRecord
+    // is configured in ios/App/App/AppDelegate.swift (needs a TestFlight rebuild).
   },
   android: {
     allowMixedContent: false,

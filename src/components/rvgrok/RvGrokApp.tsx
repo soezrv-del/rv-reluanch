@@ -29,6 +29,11 @@ import { GrokRealtimeSession } from "@/lib/rvgrok/realtime";
 import type { RealtimeStatus } from "@/lib/rvgrok/realtime";
 import type { GrokVoice } from "@/lib/rvgrok/voice";
 import {
+  beginLiveVoiceFromUserGesture,
+  classifyLiveVoiceError,
+  type LiveVoicePrewarm,
+} from "@/lib/rvgrok/liveVoice";
+import {
   DEFAULT_VOICE,
   LIVE_VOICE_KEY,
   VOICE_MODE_KEY,
@@ -164,7 +169,9 @@ export function RvGrokApp({
       opts?: { fromVoice?: boolean; image?: string; liveFrame?: boolean },
     ) => Promise<void>
   >(async () => {});
-  const startLiveSessionRef = useRef<() => Promise<void>>(async () => {});
+  const startLiveSessionRef = useRef<
+    (prewarm?: LiveVoicePrewarm | null) => Promise<void>
+  >(async () => {});
   const startPushToTalkRef = useRef<() => void>(() => {});
 
   useEffect(() => {
@@ -756,7 +763,7 @@ export function RvGrokApp({
     }
   }, []);
 
-  const startLiveSession = useCallback(async () => {
+  const startLiveSession = useCallback(async (prewarm?: LiveVoicePrewarm | null) => {
     if (startingLiveRef.current) return;
     if (realtimeRef.current?.isActive) return;
 
@@ -775,7 +782,10 @@ export function RvGrokApp({
     setRealtimeStatus("connecting");
     setRealtimeDetail("Starting Live Voice…");
 
-    realtimeRef.current?.stop();
+    const capture = prewarm ?? beginLiveVoiceFromUserGesture();
+
+    // Keep the just-opened mic; a full stop() would kill iOS capture.
+    realtimeRef.current?.stop({ keepCapture: true });
     realtimeRef.current = null;
 
     const session = new GrokRealtimeSession(
@@ -903,26 +913,23 @@ export function RvGrokApp({
         },
       },
       selectedVoice,
+      { speed: playbackSpeed },
     );
 
     realtimeRef.current = session;
     try {
-      await session.start();
+      await session.start(capture);
       setReconnectAttempt(0);
     } catch (e) {
-      const raw = e instanceof Error ? e.message : "Could not start Live Voice";
-      const permission =
-        /403|permission|does not have permission/i.test(raw);
-      const msg = permission
-        ? "Live Voice isn’t enabled on this xAI account. Camera still works — tap Show this and Grok will see the frame over chat."
-        : raw;
-      setVoiceError(msg);
+      const classified = classifyLiveVoiceError(e);
+      setVoiceError(classified.message);
       setRealtimeStatus("error");
-      setRealtimeDetail(msg);
+      setRealtimeDetail(classified.message);
       realtimeRef.current = null;
-      liveVoiceRef.current = false;
-      setLiveVoice(false);
-      if (!permission && liveVoiceRef.current && reconnectAttempt < 2) {
+      if (classified.kind === "permission" || classified.kind === "account") {
+        liveVoiceRef.current = false;
+        setLiveVoice(false);
+      } else if (liveVoiceRef.current && reconnectAttempt < 2) {
         window.setTimeout(() => {
           if (liveVoiceRef.current) void startLiveSessionRef.current();
         }, 1200);
@@ -930,7 +937,7 @@ export function RvGrokApp({
     } finally {
       startingLiveRef.current = false;
     }
-  }, [selectedVoice, scrollToBottom, reconnectAttempt]);
+  }, [selectedVoice, scrollToBottom, reconnectAttempt, playbackSpeed]);
 
   useEffect(() => {
     startLiveSessionRef.current = startLiveSession;
@@ -956,7 +963,8 @@ export function RvGrokApp({
         recognitionRef.current = null;
         setIsRecording(false);
         setVoicePanelOpen(false);
-        void startLiveSessionRef.current();
+        const prewarm = beginLiveVoiceFromUserGesture();
+        void startLiveSessionRef.current(prewarm);
       } else {
         stopLiveSession();
         if (voiceModeRef.current) {
@@ -1093,7 +1101,7 @@ export function RvGrokApp({
       stopPushToTalk({ send: false });
     }
 
-    // Always activate Live Voice from the mic
+    // Always activate Live Voice from the mic — capture starts in this tap.
     setLiveVoiceArmed(true);
   };
 

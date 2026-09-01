@@ -75,13 +75,26 @@ In Xcode still verify:
 3. **Product → Clean Build Folder** (⇧⌘K)
 4. Run again on device
 
-### Microphone (RV Grok voice)
+### Microphone (RV Grok Live Voice)
 
 `Info.plist` includes:
 
 - `NSMicrophoneUsageDescription`
 - `NSSpeechRecognitionUsageDescription`
 - `NSCameraUsageDescription`
+
+`AppDelegate` now sets the iPhone audio session to **play and record** (speaker + mic at the same time). **That native change needs a new TestFlight build.** Web-only Live Voice fixes (mic starts on tap, token, Grok talking back) go live when Vercel deploys — force-quit RVFAX and reopen.
+
+**David — how to check Live Voice after this update**
+
+1. Wait for the website deploy, **or** install the new TestFlight build if you were asked to (see the PR).
+2. Fully close RVFAX (swipe up, swipe it away), then open it again.
+3. Open the **Grok** tab. Tap the **mic**.
+4. If iPhone asks “RVFAX would like to access the Microphone” → **Allow**.
+5. If nothing happens: **Settings → RVFAX → Microphone → On**, then tap the mic again.
+6. Speak a short question (“What’s the hitch rating on a 2018 Jayco Seneca?”). Grok should talk back, then listen again. Tap the mic to end.
+
+This is the same **Grok Voice** engine as grok.com (talk, listen, talk). It is **not** the standalone Grok iPhone app — no lock-screen “Hey Grok,” and it may pause if you leave RVFAX.
 
 ### Run on your iPhone
 
