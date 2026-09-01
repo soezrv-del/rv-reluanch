@@ -288,18 +288,8 @@ export function kitStrengths(
   if (Number.isFinite(fresh) && fresh >= 80) {
     out.push(`${fresh} gal fresh — longer dry camping`);
   }
-  if (payment && payment.price > 0) {
-    const p = paymentBreakdown(payment);
-    out.push(
-      `Est. ${formatMoney(p.monthly)} / mo at ${payment.downPct}% down, ${p.years} yr`,
-    );
-    out.push(`Financed ${formatMoney(p.financed)}`);
-    if (payment.downPct >= 20) {
-      out.push("Strong down payment — lower monthly and less interest");
-    } else if (payment.downPct >= 10) {
-      out.push("10%+ down keeps the note in a typical RV term");
-    }
-  }
+  // Finance talking points belong in PAYMENT — never mix into STRENGTHS.
+  void payment;
   return out;
 }
 
@@ -392,6 +382,7 @@ export function buildCoachKit(opts: {
   if (include.lifestyle) {
     lines.push("");
     lines.push("LIFESTYLE");
+    lines.push(lifestylePitch(r.data.type));
   }
 
   if (include.strengths) {

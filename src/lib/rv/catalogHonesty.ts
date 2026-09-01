@@ -191,3 +191,226 @@ export function honestEngineLabel(engine: string | null | undefined): {
   }
   return { text: e, locked: true };
 }
+
+export type CoachClassKind =
+  | "class-a"
+  | "class-c"
+  | "super-c"
+  | "class-b"
+  | "towable"
+  | "other";
+
+export function coachClassKind(type?: string | null): CoachClassKind {
+  const t = (type || "").toLowerCase();
+  if (/travel trailer|fifth|toy hauler|truck camper|towable/.test(t))
+    return "towable";
+  if (/super\s*c/.test(t)) return "super-c";
+  if (/class\s*c/.test(t)) return "class-c";
+  if (/class\s*b/.test(t)) return "class-b";
+  if (/class\s*a/.test(t)) return "class-a";
+  return "other";
+}
+
+export function isCutawayChassis(chassis?: string | null): boolean {
+  return /E-?350|E-?450|Econoline|cutaway/i.test(chassis || "");
+}
+
+export function isGasCoach(opts: {
+  fuelType?: string | null;
+  engine?: string | null;
+  chassis?: string | null;
+}): boolean {
+  const blob = `${opts.fuelType || ""} ${opts.engine || ""} ${opts.chassis || ""}`;
+  if (/diesel/i.test(opts.fuelType || "")) return false;
+  if (/diesel|cummins|power stroke|duramax|sprinter/i.test(blob) && !/gas/i.test(opts.fuelType || ""))
+    return false;
+  return /gas|gasoline|godzilla|triton|f53|f-53|e-?450|e-?350/i.test(blob);
+}
+
+export function isDieselCoach(opts: {
+  fuelType?: string | null;
+  engine?: string | null;
+}): boolean {
+  const fuel = opts.fuelType || "";
+  const engine = opts.engine || "";
+  if (/diesel/i.test(fuel)) return true;
+  if (/gas/i.test(fuel) && !/diesel/i.test(fuel)) return false;
+  return /diesel|cummins|isl|isb|l9|x15|power stroke|duramax/i.test(engine);
+}
+
+const BUS_TIRE_RE = /22\.5|275\/70|255\/70|235\/80R22/;
+
+/**
+ * Brochure pin wins. Otherwise type-aware typicals — never a hash pick
+ * of Class A / bus rubber for a cutaway Class C.
+ */
+export function honestTireSize(opts: {
+  oem?: string | null;
+  type?: string | null;
+  chassis?: string | null;
+}): string {
+  const oem = (opts.oem || "").trim();
+  if (oem && oem !== "—") {
+    const kind = coachClassKind(opts.type);
+    if (
+      (kind === "class-c" || isCutawayChassis(opts.chassis)) &&
+      BUS_TIRE_RE.test(oem)
+    ) {
+      return "LT225/75R16E (typ. Class C cutaway — confirm door sticker)";
+    }
+    return oem;
+  }
+  const kind = coachClassKind(opts.type);
+  if (kind === "class-c" || isCutawayChassis(opts.chassis)) {
+    return "LT225/75R16E (typ. Class C cutaway — confirm door sticker)";
+  }
+  if (kind === "class-b") {
+    return "Confirm brochure (van chassis tire)";
+  }
+  if (kind === "super-c") {
+    return "Confirm brochure (Super C / truck tire)";
+  }
+  if (kind === "class-a") {
+    return "22.5 commercial (typ. Class A — confirm door sticker)";
+  }
+  if (kind === "towable") {
+    return "ST235/80R16 (typ. towable — confirm door sticker)";
+  }
+  return "Confirm brochure";
+}
+
+/**
+ * Never invent 3×15k on a ~26' Class C. Class-typical only when no OEM pin.
+ */
+export function honestAcUnits(opts: {
+  oem?: string | null;
+  type?: string | null;
+  lengthFt?: number | null;
+}): string {
+  const oem = (opts.oem || "").trim();
+  const kind = coachClassKind(opts.type);
+  const len = opts.lengthFt && opts.lengthFt > 0 ? opts.lengthFt : 0;
+  if (oem && oem !== "—") {
+    if ((kind === "class-c" || kind === "class-b") && /3\s*[×x]/i.test(oem)) {
+      return len > 0 && len <= 24
+        ? "1 × 13,500 BTU (typ. — confirm brochure)"
+        : "1 × 15,000 BTU (typ. — confirm brochure)";
+    }
+    return oem;
+  }
+  if (kind === "class-c" || kind === "class-b") {
+    if (len > 0 && len <= 24) return "1 × 13,500 BTU (typ. — confirm brochure)";
+    return "1 × 15,000 BTU (typ. — confirm brochure)";
+  }
+  if (kind === "super-c" || kind === "class-a") {
+    return "2 × 15,000 BTU (typ. — confirm brochure)";
+  }
+  return "Confirm brochure";
+}
+
+/**
+ * Gas chassis must not show diesel gens as a hard fact (and vice versa).
+ * "Onan Diesel / Gas" is a catalog dump — rewrite to a type-honest typical.
+ */
+export function honestGenerator(opts: {
+  generator?: string | null;
+  fuelType?: string | null;
+  chassis?: string | null;
+  engine?: string | null;
+  type?: string | null;
+}): string {
+  const raw = (opts.generator || "").trim();
+  const gas = isGasCoach(opts);
+  const diesel = isDieselCoach(opts);
+  const mixedLabel = /diesel\s*\/\s*gas|gas\s*\/\s*diesel/i.test(raw);
+  const kind = coachClassKind(opts.type);
+
+  const gasTypical =
+    kind === "class-c"
+      ? "Onan 4.0 kW gas (typ. — confirm options)"
+      : "Onan gas (typ. — confirm kW / options)";
+  const dieselTypical = "Onan diesel (typ. — confirm kW)";
+
+  if (!raw || raw === "—" || /^see options$/i.test(raw)) {
+    if (gas && !diesel) return gasTypical;
+    if (diesel && !gas) return dieselTypical;
+    return "Confirm brochure";
+  }
+
+  if (mixedLabel) {
+    if (gas && !diesel) return gasTypical;
+    if (diesel && !gas) return dieselTypical;
+    return "Onan — confirm fuel and kW on brochure";
+  }
+
+  if (gas && !diesel && /diesel/i.test(raw) && !/gas/i.test(raw)) {
+    return gasTypical;
+  }
+  if (diesel && !gas && /gas/i.test(raw) && !/diesel/i.test(raw)) {
+    return dieselTypical;
+  }
+  return raw;
+}
+
+/**
+ * Do not present F53 468 lb-ft (or a lone catalog number) as certified
+ * when the chassis is an E-450 cutaway / Class C.
+ */
+export function honestTorqueForCoach(opts: {
+  engine?: string | null;
+  chassis?: string | null;
+  type?: string | null;
+  torqueLbFt?: number | null;
+  diesel?: boolean;
+  horsepower?: number | null;
+}): string {
+  const engine = (opts.engine || "").trim();
+  const cutaway =
+    isCutawayChassis(opts.chassis) || coachClassKind(opts.type) === "class-c";
+  const option = honestTorqueLabel({
+    engine,
+    torqueLbFt: opts.torqueLbFt,
+  });
+  if (option && horsepowerIsOptionBand(engine, null)) return option;
+
+  if (/godzilla|7\.3/i.test(engine)) {
+    if (cutaway) {
+      return "450 lb-ft (typ. E-450 7.3 — confirm door sticker)";
+    }
+    return "468 lb-ft (typ. F53 7.3 — confirm door sticker)";
+  }
+  if (/v10|triton/i.test(engine)) {
+    return "420–460 lb-ft (typ. V10 — confirm year)";
+  }
+  if (opts.torqueLbFt && opts.torqueLbFt > 0 && !cutaway) {
+    return `${opts.torqueLbFt.toLocaleString()} lb-ft`;
+  }
+  if (opts.torqueLbFt && opts.torqueLbFt > 0 && cutaway && opts.torqueLbFt >= 468) {
+    return "450 lb-ft (typ. E-450 — confirm door sticker)";
+  }
+  if (opts.torqueLbFt && opts.torqueLbFt > 0) {
+    return `${opts.torqueLbFt.toLocaleString()} lb-ft (typ. — confirm door sticker)`;
+  }
+  return option || "Varies by option / year — confirm brochure";
+}
+
+export function honestHorsepowerForCoach(opts: {
+  engine?: string | null;
+  horsepower?: string | number | null;
+  chassis?: string | null;
+  type?: string | null;
+}): string {
+  const engine = (opts.engine || "").trim();
+  const parsed = parseHp(
+    engine,
+    typeof opts.horsepower === "number" ? opts.horsepower : undefined,
+  );
+  const cutaway =
+    isCutawayChassis(opts.chassis) || coachClassKind(opts.type) === "class-c";
+  if (cutaway && /7\.3|godzilla/i.test(engine)) {
+    if (/^350\s*HP$/i.test(parsed) || opts.horsepower === 350) {
+      return "325–350 HP (E-450 7.3 by year — confirm door sticker)";
+    }
+  }
+  return parsed;
+}

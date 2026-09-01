@@ -12611,7 +12611,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Jamboree: {
       type: "Class C",
-      floorplans: ["25B", "29V", "31M", "31W", "25K", "28A", "30D", "31N"],
+      floorplans: ["25B", "29V", "31M"],
       floorplansByYear: {
         "2005": ["25B", "29V", "31M"],
         "2006": ["25B", "29V", "31M"],
@@ -12624,17 +12624,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2013": ["25B", "29V", "31M"],
         "2014": ["25B", "29V", "31M"],
         "2015": ["25B", "29V", "31M"],
-        "2016": ["25B", "29V", "31M"],
-        "2017": ["25B", "29V", "31M"],
-        "2018": ["25B", "29V", "31M"],
-        "2019": ["25B", "29V", "31M", "31W"],
-        "2020": ["25B", "29V", "31M", "31W"],
-        "2021": ["25B", "29V", "31M", "31W"],
-        "2022": ["25B", "29V", "31M"],
-        "2023": ["25B", "29V", "31M"],
-        "2024": ["25B", "29V", "31M"],
-        "2025": ["25B", "29V", "31M"],
-        "2026": ["25B", "29V", "31M", "25K", "28A", "30D", "31N"]
+        "2016": ["25B", "29V", "31M"]
       },
       lengthRange: [
         25,
@@ -12650,24 +12640,26 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         89000,
         149000
       ],
-      engine: "Ford 7.3L V8 / 6.2L (by year)",
-      horsepower: 350,
+      engine: "Ford Triton V10 6.8L",
+      horsepower: 305,
       chassis: "Ford E-450",
       fuelType: "Gas",
       recalls: 0,
       rating: 4.25,
       image: RV_CARD_IMAGE,
-      towingCapacity: 10000,
-      freshWater: 80,
+      towingCapacity: 5000,
+      freshWater: 50,
       grayWater: 45,
       blackWater: 45,
-      generator: "Onan Diesel / Gas",
+      generator: "Onan 4000W Gas",
       awningLength: 16,
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2000,
-      description: "Fleetwood Jamboree — Ford cutaway Class C.",
+      yearEnd: 2016,
+      gvwrLbs: 14500,
+      description: "Fleetwood Jamboree — discontinued Ford cutaway Class C (last catalog year 2016). Current Fleetwood Class C is Altitude (gas) / Insight (diesel).",
       powertrainByYear: [
         {
           from: 2005,
@@ -12675,35 +12667,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Ford V10 / 6.8L or 6.0L (by year)",
           horsepower: 305,
           chassis: "Ford E-450 / E-350",
-          notes: "Pre-6.2/7.3 Ford cutaway Class C"
+          notes: "Pre-6.2 Ford cutaway Class C"
         },
         {
           from: 2011,
-          to: 2015,
+          to: 2016,
           engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
           horsepower: 305,
           chassis: "Ford E-450",
-          notes: "2011–2015 Ford Class C cutaway"
-        },
-        {
-          from: 2016,
-          to: 2019,
-          engine: "Ford 6.2L / V10",
-          horsepower: 305,
-          chassis: "Ford E-450"
-        },
-        {
-          from: 2020,
-          to: 2026,
-          engine: "Ford 7.3L V8 Godzilla 350HP",
-          horsepower: 350,
-          chassis: "Ford E-450"
+          notes: "Final Jamboree years — Triton / 6.2 cutaway, not Godzilla"
         }
       ]
     },
     Tioga: {
       type: "Class C",
-      floorplans: ["24K", "25G", "31M", "25CE", "27RB", "31F", "31W"],
+      floorplans: ["24K", "25G", "31M"],
       floorplansByYear: {
         "2005": ["24K", "25G", "31M"],
         "2006": ["24K", "25G", "31M"],
@@ -12716,17 +12694,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2013": ["24K", "25G", "31M"],
         "2014": ["24K", "25G", "31M"],
         "2015": ["24K", "25G", "31M"],
-        "2016": ["24K", "25G", "31M"],
-        "2017": ["24K", "25G", "31M"],
-        "2018": ["24K", "25G", "31M"],
-        "2019": ["24K", "25G", "31M"],
-        "2020": ["24K", "25G", "31M"],
-        "2021": ["24K", "25G", "31M"],
-        "2022": ["24K", "25G", "31M"],
-        "2023": ["24K", "25G", "31M"],
-        "2024": ["24K", "25G", "31M"],
-        "2025": ["24K", "25G", "31M"],
-        "2026": ["24K", "25G", "31M", "25CE", "27RB", "31F", "31W"]
+        "2016": ["24K", "25G", "31M"]
       },
       lengthRange: [
         24,
@@ -12742,24 +12710,26 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         89000,
         149000
       ],
-      engine: "Ford 7.3L V8",
-      horsepower: 350,
+      engine: "Ford Triton V10 6.8L",
+      horsepower: 305,
       chassis: "Ford E-450",
       fuelType: "Gas",
       recalls: 0,
       rating: 4.25,
       image: RV_CARD_IMAGE,
-      towingCapacity: 10000,
-      freshWater: 80,
+      towingCapacity: 5000,
+      freshWater: 50,
       grayWater: 45,
       blackWater: 45,
-      generator: "Onan Diesel / Gas",
+      generator: "Onan 4000W Gas",
       awningLength: 16,
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2000,
-      description: "Fleetwood Tioga — Ford Class C (Jamboree sibling branding).",
+      yearEnd: 2016,
+      gvwrLbs: 14500,
+      description: "Fleetwood Tioga — discontinued Ford cutaway Class C (last catalog year 2016). Current Fleetwood Class C is Altitude (gas) / Insight (diesel).",
       powertrainByYear: [
         {
           from: 2005,
@@ -12767,29 +12737,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Ford V10 / 6.8L or 6.0L (by year)",
           horsepower: 305,
           chassis: "Ford E-450 / E-350",
-          notes: "Pre-6.2/7.3 Ford cutaway Class C"
+          notes: "Pre-6.2 Ford cutaway Class C"
         },
         {
           from: 2011,
-          to: 2015,
+          to: 2016,
           engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
           horsepower: 305,
           chassis: "Ford E-450",
-          notes: "2011–2015 Ford Class C cutaway"
-        },
-        {
-          from: 2016,
-          to: 2019,
-          engine: "Ford 6.2L / V10",
-          horsepower: 305,
-          chassis: "Ford E-450"
-        },
-        {
-          from: 2020,
-          to: 2026,
-          engine: "Ford 7.3L V8 Godzilla",
-          horsepower: 350,
-          chassis: "Ford E-450"
+          notes: "Final Tioga years — Triton / 6.2 cutaway, not Godzilla"
         }
       ]
     },
@@ -12838,14 +12794,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       freshWater: 80,
       grayWater: 45,
       blackWater: 45,
-      generator: "Onan Diesel / Gas",
+      generator: "Onan 4000W Gas",
       awningLength: 16,
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2010,
       yearEnd: 2024,
-      description: "Fleetwood Tioga Ranger — value Class C packages.",
+      description: "Fleetwood Tioga Ranger — discontinued value Class C (last catalog year 2024).",
       powertrainByYear: [
         {
           from: 2010,
@@ -12888,14 +12844,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["24A", "24D"],
         "2017": ["24A", "24D"],
         "2018": ["24A", "24D"],
-        "2019": ["24A", "24D", "24L"],
-        "2020": ["24A", "24D", "24L"],
-        "2021": ["24A", "24D", "24L"],
-        "2022": ["24A", "24D"],
-        "2023": ["24A", "24D"],
-        "2024": ["24A", "24D"],
-        "2025": ["24A", "24D"],
-        "2026": ["24A", "24D"]
+        "2019": ["24A", "24D", "24L"]
       },
       lengthRange: [
         24,
@@ -12922,13 +12871,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       freshWater: 80,
       grayWater: 45,
       blackWater: 45,
-      generator: "Onan Diesel / Gas",
+      generator: "Onan diesel (typ. Sprinter — confirm kW)",
       awningLength: 16,
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2014,
-      description: "Fleetwood Pulse — Sprinter diesel Class C.",
+      yearEnd: 2019,
+      description: "Fleetwood Pulse — discontinued Sprinter diesel Class C (last catalog year 2019).",
       powertrainByYear: [
         {
           from: 2014,
@@ -12940,27 +12890,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2021,
+          to: 2019,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
-          chassis: "Mercedes Sprinter"
-        },
-        {
-          from: 2022,
-          to: 2026,
-          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
-          horsepower: 208,
           chassis: "Mercedes Sprinter"
         }
       ]
     },
     Xcursion: {
       type: "Class B",
-      floorplans: ["19CB", "24CB", "32E", "34K"],
+      floorplans: ["19CB", "24CB"],
       floorplansByYear: {
         "2024": ["19CB", "24CB"],
         "2025": ["19CB", "24CB"],
-        "2026": ["19CB", "24CB", "32E", "34K"]
+        "2026": ["19CB", "24CB"]
       },
       lengthRange: [
         19,

@@ -64,6 +64,7 @@ import { fetchRecallsViaApi } from "@/lib/nhtsa/recalls";
 import type { NhtsaComplaint, NhtsaRecall } from "@/lib/nhtsa/recalls";
 import { buildReportId, valueFactors } from "@/lib/rv/reportMeta";
 import { exportVehicleReport } from "@/lib/rv/exportReport";
+import { kitStrengths, lifestylePitch } from "@/lib/rv/shareKit";
 import {
   fetchLocalInventory,
   loadInventoryZip,
@@ -476,6 +477,15 @@ export function RvDetail({
     powertrainGuard.hard.fuelType ||
     data.fuelType;
 
+  const productStrengths = useMemo(
+    () => kitStrengths(result, undefined, displayRating),
+    [result, displayRating],
+  );
+  const lifestyleLine = useMemo(
+    () => lifestylePitch(displayType),
+    [displayType],
+  );
+
   const financePrice = bestCalPrice(market);
   const coachChip = formatActiveCoachChip({
     year,
@@ -633,6 +643,9 @@ export function RvDetail({
           length: specs.lengthFt,
           slideouts: specs.slideouts,
           sleeps: specs.sleeps,
+          tradeCappedAtRetailLow: Boolean(market.tradeCappedAtRetailLow),
+          strengths: productStrengths,
+          lifestyle: lifestyleLine,
         },
       });
       if (!res.ok) setExportMsg(res.error);
@@ -1000,9 +1013,10 @@ export function RvDetail({
                 value={formatMoney(market.tradeIn)}
                 sub={
                   market.tradeCappedAtRetailLow
-                    ? "Capped at retail low"
+                    ? "CAPPED AT RETAIL LOW"
                     : "Dealer trade"
                 }
+                warn={Boolean(market.tradeCappedAtRetailLow)}
               />
               <MarketTile
                 label="RETAIL LOW"
@@ -1016,9 +1030,10 @@ export function RvDetail({
               />
             </div>
             {market.tradeCappedAtRetailLow ? (
-              <p className="mt-2 text-[11px] leading-snug text-amber">
-                Trade-in capped at retail low — a trade above the retail floor
-                is not a usable lot figure.
+              <p className="mt-3 rounded-xl border border-amber-400/45 bg-amber-500/15 px-3 py-2.5 text-[13px] font-semibold leading-snug text-amber-100">
+                Trade equals retail low because the estimate was capped — do
+                not read that as a real lot offer sitting on the retail floor.
+                Confirm comps before you write a number.
               </p>
             ) : null}
             {factors.length ? (
@@ -1167,7 +1182,9 @@ export function RvDetail({
             <SpecRow label="TRANSMISSION" value={specs.transmission} />
             <SpecRow label="CHASSIS" value={specs.chassis} accent />
             <SpecRow label="TOW CAPACITY" value={specs.hitchOrPin} />
-            <SpecRow label="GENERATOR" value={specs.generator} />
+            <SpecRow label="GENERATOR" value={brochure.generator} />
+            <SpecRow label="A/C" value={brochure.acUnits} />
+            <SpecRow label="TIRES" value={brochure.tireSize} />
             <SpecRow
               label="HIGHWAY MPG"
               value={
@@ -1719,20 +1736,41 @@ function MarketTile({
   label,
   value,
   sub,
+  warn,
 }: {
   label: string;
   value: string;
   sub: string;
+  warn?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 px-2.5 py-3 text-center">
-      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-white">
+    <div
+      className={cn(
+        "rounded-2xl border px-2.5 py-3 text-center",
+        warn
+          ? "border-amber-400/50 bg-amber-500/15"
+          : "border-white/10 bg-black/25",
+      )}
+    >
+      <p
+        className={cn(
+          "text-[11px] font-medium uppercase tracking-[0.12em]",
+          warn ? "text-amber-100" : "text-white",
+        )}
+      >
         {label}
       </p>
       <p className="mt-1 text-[15px] font-semibold tabular-nums text-white">
         {value}
       </p>
-      <p className="mt-0.5 text-[11px] text-white">{sub}</p>
+      <p
+        className={cn(
+          "mt-0.5 text-[11px] font-semibold",
+          warn ? "text-amber-100" : "text-white",
+        )}
+      >
+        {sub}
+      </p>
     </div>
   );
 }
