@@ -910,7 +910,7 @@ test("Fleetwood 2015–2016 walk-back: OEM plans, no invented ghosts", () => {
   const southwind = block.slice(sw0, sw1);
   assert.match(southwind, /"2015": \["32VS", "34A", "36L"\]/);
   assert.match(southwind, /"2016": \["32VS", "34A", "36L"\]/);
-  assert.match(southwind, /yearStart:\s*2013/);
+  assert.match(southwind, /yearStart:\s*2010/);
 
   const pa0 = block.indexOf('    "Pace Arrow": {');
   const pa1 = block.indexOf("    Storm: {");
@@ -919,7 +919,9 @@ test("Fleetwood 2015–2016 walk-back: OEM plans, no invented ghosts", () => {
   assert.doesNotMatch(pace, /"2014"/);
   assert.doesNotMatch(pace, /"2015"/);
   assert.doesNotMatch(pace, /"2016"/);
-  assert.match(pace, /"2012": \["33D", "35R", "36U"\]/);
+  assert.doesNotMatch(pace, /"2010"/);
+  assert.doesNotMatch(pace, /"2011"/);
+  assert.doesNotMatch(pace, /"2012"/);
   assert.match(pace, /"2017": \["33D", "35E", "35M", "36U"\]/);
 
   const storm0 = block.indexOf("    Storm: {");
