@@ -62,13 +62,45 @@ export const RV_CLASS_TABS: {
   { id: "toy-hauler", label: "Toy Hauler", short: "Toy" },
 ];
 
-function classAFuel(spec: CatalogIndexSpec): "diesel" | "gas" | null {
-  const t = (spec.type || "").toLowerCase();
-  const f = (spec.fuelType || "").toLowerCase();
+/** Year-true fuel when the series default would mislabel a locked year. */
+export function catalogFuelForYear(
+  spec: CatalogIndexSpec,
+  year?: number,
+): string {
+  if (year != null && Number.isFinite(year)) {
+    const keyed = spec.fuelTypeByYear?.[String(year)];
+    if (keyed) return keyed;
+  }
+  return spec.fuelType;
+}
+
+/** Year-true class when the series default would mislabel a locked year. */
+export function catalogTypeForYear(
+  spec: CatalogIndexSpec,
+  year?: number,
+): string {
+  if (year != null && Number.isFinite(year)) {
+    const keyed = spec.typeByYear?.[String(year)];
+    if (keyed) return keyed;
+  }
+  return spec.type;
+}
+
+function classAFuel(
+  spec: CatalogIndexSpec,
+  year?: number,
+): "diesel" | "gas" | null {
+  const t = (catalogTypeForYear(spec, year) || "").toLowerCase();
+  const f = (catalogFuelForYear(spec, year) || "").toLowerCase();
   if (/super\s*c/.test(t)) return null;
   const isA =
     /class\s*a/.test(t) || /diesel\s*pusher/.test(t) || /gas\s*pusher/.test(t);
   if (!isA) return null;
+  // Year-true fuel wins over a series type suffix (Canyon Star FED default vs MY11–20 Gas)
+  if (year != null) {
+    if (/^gas$/.test(f) || /gas/.test(t)) return "gas";
+    if (/^diesel$/.test(f) || /diesel/.test(t)) return "diesel";
+  }
   if (/diesel/.test(t) || /diesel\s*pusher/.test(t)) return "diesel";
   if (/gas/.test(t) || /gas\s*pusher/.test(t)) return "gas";
   if (/diesel/.test(f)) return "diesel";
@@ -77,10 +109,14 @@ function classAFuel(spec: CatalogIndexSpec): "diesel" | "gas" | null {
 }
 
 /** Match catalog type strings to a class tab */
-export function matchesRvClass(spec: CatalogIndexSpec, classId: string | undefined): boolean {
+export function matchesRvClass(
+  spec: CatalogIndexSpec,
+  classId: string | undefined,
+  year?: number,
+): boolean {
   if (!classId) return true;
-  const t = (spec.type || "").toLowerCase();
-  const fuel = classAFuel(spec);
+  const t = (catalogTypeForYear(spec, year) || "").toLowerCase();
+  const fuel = classAFuel(spec, year);
   switch (classId as RvClassId) {
     case "class-a":
       return fuel !== null;
@@ -170,10 +206,11 @@ function isClassTabId(v: string | undefined): boolean {
 export function matchesTypeFilter(
   spec: CatalogIndexSpec,
   filter: string | undefined,
+  year?: number,
 ): boolean {
   if (!filter) return true;
-  if (isClassTabId(filter)) return matchesRvClass(spec, filter);
-  return spec.type === filter;
+  if (isClassTabId(filter)) return matchesRvClass(spec, filter, year);
+  return catalogTypeForYear(spec, year) === filter;
 }
 
 /** Years listed in floorplansByYear (OEM lineup years), sorted ascending */
@@ -259,7 +296,7 @@ export function getMakesForYear(year: string, rvType?: string): string[] {
     const models = catalogMap()[make];
     if (!models) return false;
     return Object.values(models).some((spec) => {
-      if (!matchesTypeFilter(spec, rvType)) return false;
+      if (!matchesTypeFilter(spec, rvType, hasYear ? y : undefined)) return false;
       if (!hasYear) return true;
       return modelAvailableInYear(spec, y);
     });
@@ -290,7 +327,7 @@ export function getModelsForYearMake(
       .filter((model) => {
         const spec = models[model];
         if (!spec) return false;
-        if (!matchesTypeFilter(spec, rvType)) return false;
+        if (!matchesTypeFilter(spec, rvType, hasYear ? y : undefined)) return false;
         if (hasYear && !modelAvailableInYear(spec, y)) return false;
         return true;
       })
@@ -304,7 +341,7 @@ export function getModelsForYearMake(
     const map = catalogMap()[mk];
     if (!map) continue;
     for (const [model, spec] of Object.entries(map)) {
-      if (!matchesTypeFilter(spec, rvType)) continue;
+      if (!matchesTypeFilter(spec, rvType, hasYear ? y : undefined)) continue;
       if (hasYear && !modelAvailableInYear(spec, y)) continue;
       // Prefer unique model names; if collision, keep first (wizard uses make+model)
       if (seen.has(model)) continue;
@@ -413,7 +450,7 @@ export function countModelsForClass(year: string, classId: RvClassId): number {
   for (const make of MAKES) {
     for (const spec of Object.values(catalogMap()[make] || {})) {
       if (!modelAvailableInYear(spec, y)) continue;
-      if (!matchesRvClass(spec, classId)) continue;
+      if (!matchesRvClass(spec, classId, y)) continue;
       n++;
     }
   }
@@ -437,7 +474,7 @@ export function getRvTypesForFilters(year: string, make?: string): string[] {
     if (!map) continue;
     for (const spec of Object.values(map)) {
       if (hasYear && !modelAvailableInYear(spec, y)) continue;
-      types.add(spec.type);
+      types.add(catalogTypeForYear(spec, hasYear ? y : undefined));
     }
   }
   return [...types].sort((a, b) => a.localeCompare(b));
@@ -659,7 +696,7 @@ export function searchCatalog(sel: Partial<RVSelection>): RVResult[] {
       continue;
     }
     if (!modelAvailableInYear(data, y)) continue;
-    if (!matchesTypeFilter(data, sel.rvType)) continue;
+    if (!matchesTypeFilter(data, sel.rvType, y)) continue;
 
     if (sel.floorplan) {
       const fps = getFloorplansForYear(sel.year, make, model);

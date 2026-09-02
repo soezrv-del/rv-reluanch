@@ -37,6 +37,38 @@ test("thin index covers every live make, model, type, and year window", async ()
       assert.equal(idx.fuelType, live.fuelType, `${make} ${model} fuel`);
       assert.equal(idx.yearStart, live.yearStart, `${make} ${model} yearStart`);
       assert.equal(idx.yearEnd, live.yearEnd, `${make} ${model} yearEnd`);
+      const fuelTypeByYear = {};
+      const typeByYear = {};
+      for (const b of live.powertrainByYear || []) {
+        if (b.from == null || b.to == null) continue;
+        for (let y = b.from; y <= b.to; y++) {
+          if (b.fuelType && fuelTypeByYear[y] == null) {
+            fuelTypeByYear[y] = b.fuelType;
+          }
+          if (b.type && typeByYear[y] == null) typeByYear[y] = b.type;
+        }
+      }
+      const typeDiffers = Object.entries(typeByYear).some(
+        ([, t]) => t !== live.type,
+      );
+      const expectedType = typeDiffers
+        ? Object.fromEntries(Object.entries(typeByYear))
+        : undefined;
+      const expectedFuel =
+        typeDiffers &&
+        Object.entries(fuelTypeByYear).some(([, f]) => f !== live.fuelType)
+          ? Object.fromEntries(Object.entries(fuelTypeByYear))
+          : undefined;
+      assert.deepEqual(
+        idx.fuelTypeByYear,
+        expectedFuel,
+        `${make} ${model} fuelTypeByYear`,
+      );
+      assert.deepEqual(
+        idx.typeByYear,
+        expectedType,
+        `${make} ${model} typeByYear`,
+      );
       const liveYears = live.floorplansByYear
         ? Object.keys(live.floorplansByYear)
             .map((y) => parseInt(y, 10))
