@@ -989,7 +989,7 @@ const OEM_FLOORPLAN_ROWS: Array<{
     makeIncludes: "tiffin",
     modelIncludes: "allegro bus",
     yearMin: 2019,
-    yearMax: 2026,
+    yearMax: 2027,
     floorplan: "45OPP",
     spec: {
       lengthDisplay: `45' 0"`,
