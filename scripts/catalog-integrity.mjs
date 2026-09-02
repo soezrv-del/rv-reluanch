@@ -45,8 +45,30 @@ const FORBIDDEN_FLOORPLANS = {
     reason: "FW codes belong on Reflection, not the travel-trailer twin",
   },
   "Keystone|Cougar": {
-    codes: ["2100ML", "2700BH", "3100BH", "260MLE", "295RDS", "316RLS"],
-    reason: "Cougar Sport / Premium FW codes must not land in the collapsed TT Cougar bucket",
+    codes: [
+      "2100ML",
+      "2700BH",
+      "3100BH",
+      "260MLE",
+      "295RDS",
+      "316RLS",
+      "23MLE",
+      "26RES",
+      "26RKE",
+      "28RLI",
+      "29MBD",
+      "30REP",
+      "29RKS",
+      "21LBK",
+      "22MLS",
+      "25MLE",
+      "26LBW",
+      "28BHS",
+      "29RDS",
+      "29RKE",
+      "29RLP",
+    ],
+    reason: "Cougar Sport / Premium FW / Half-Ton FW+TT codes must not land in the collapsed TT Cougar bucket",
   },
   "Keystone|Alpine": {
     codes: ["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"],
@@ -93,6 +115,7 @@ const EXPECTED_TYPE = {
   "Keystone|Hideout": "travel trailer",
   "Keystone|Cougar": "travel trailer",
   "Keystone|Cougar 5th Wheel": "fifth wheel",
+  "Keystone|Cougar Half-Ton": "fifth wheel",
   "Keystone|Sprinter": "fifth wheel",
   "Grand Design|Lineage Series E": "class c",
   "Grand Design|Lineage Series M": "class c",
@@ -1725,7 +1748,7 @@ function main() {
     }
   }
 
-  // Keystone MY2027 OEM lock (LOT_DESK §6 item 1). Next make is quoted Grand Design.
+  // Keystone MY2027 OEM lock + yearStart hygiene / Half-Ton 2027 follow-on. Next make is quoted Grand Design.
   {
     const k0 = src.indexOf('\n  "Keystone": {');
     const k1 = src.indexOf('\n  "Grand Design": {');
@@ -1746,6 +1769,7 @@ function main() {
         "Cougar",
         "Cougar 5th Wheel",
         "Cougar Sport",
+        "Cougar Half-Ton",
         "Alpine",
         "Alpine Avalanche Edition",
         "Sprinter",
@@ -1821,8 +1845,8 @@ function main() {
       if (!/"2027": \["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"\]/.test(aae)) {
         fail("Keystone|Alpine Avalanche Edition MY27 OEM plans missing");
       }
-      if (!/yearStart:\s*2027/.test(aae) || /"2026":/.test(aae)) {
-        fail("Keystone|Alpine Avalanche Edition must start 2027 (no older-year invent)");
+      if (!/yearStart:\s*2020/.test(aae) || /"2026":/.test(aae)) {
+        fail("Keystone|Alpine Avalanche Edition yearStart must be 2020 (empty older fby — no invent)");
       }
 
       const av = slice("Avalanche", "Laredo");
@@ -1862,8 +1886,19 @@ function main() {
       if (!/"2027": \["2100ML", "2700BH", "3100BH"\]/.test(cst)) {
         fail("Keystone|Cougar Sport MY27 OEM plans missing");
       }
-      if (!/yearStart:\s*2027/.test(cst) || /"2026":/.test(cst)) {
-        fail("Keystone|Cougar Sport must start 2027 (no older-year invent)");
+      if (!/yearStart:\s*2023/.test(cst) || /"2026":/.test(cst)) {
+        fail("Keystone|Cougar Sport yearStart must be 2023 (empty older fby — no invent)");
+      }
+
+      const cht = slice("Cougar Half-Ton", "Bullet");
+      if (!/"2027": \["23MLE", "26RES", "26RKE", "28RLI", "29MBD", "30REP"\]/.test(cht)) {
+        fail("Keystone|Cougar Half-Ton MY27 OEM FW plans missing (23MLE/26RES/26RKE/28RLI/29MBD/30REP)");
+      }
+      if (/"2027": .*"29RKS"/.test(cht)) {
+        fail("Keystone|Cougar Half-Ton must not keep dealer-stock 29RKS on 2027");
+      }
+      if (/"2027": .*"21LBK"/.test(cht) || /"2027": .*"25MLE"/.test(cht) || /"2027": .*"29RLP"/.test(cht)) {
+        fail("Keystone|Cougar Half-Ton FW must not absorb Half-Ton TT codes");
       }
 
       const arc = slice("Arcadia", "Avalanche");
@@ -1878,13 +1913,16 @@ function main() {
       if (!/"2027": \["2080MK", "2220BH", "229BH", "229BHWE", "2340RBK", "2450RK", "2450RKWE", "2590REV", "2670MRB", "2870RL", "2870RLWE", "3100RE"\]/.test(psl)) {
         fail("Keystone|Passport Super Lite MY27 OEM plans missing");
       }
-      if (!/yearStart:\s*2027/.test(psl)) {
-        fail("Keystone|Passport Super Lite yearStart must be 2027");
+      if (!/yearStart:\s*2019/.test(psl) || /"2026":/.test(psl)) {
+        fail("Keystone|Passport Super Lite yearStart must be 2019 (empty older fby — no invent)");
       }
 
       const pcl = slice("Passport Classic", "Springdale");
       if (!/"2027": \["160BHC", "160RBC", "180RBC", "180RBCWE", "190RDC", "210RKC", "210RKCWE", "214BHC", "214BHCWE", "260BHC", "260BHCWE", "284QBC"\]/.test(pcl)) {
         fail("Keystone|Passport Classic MY27 OEM plans missing");
+      }
+      if (!/yearStart:\s*2024/.test(pcl) || /"2026":/.test(pcl)) {
+        fail("Keystone|Passport Classic yearStart must be 2024 (empty older fby — no invent)");
       }
 
       const pass = slice("Passport", "Passport Super Lite");
@@ -1896,6 +1934,9 @@ function main() {
       if (!/"2027": \["208MKS", "222BHS", "2290BH", "2290BHWE", "234RBK", "245RKS", "245RKSWE", "259REV", "267MRB", "287RLS", "287RLSWE", "310RES"\]/.test(bxf)) {
         fail("Keystone|Bullet Crossfire MY27 OEM plans missing");
       }
+      if (!/yearStart:\s*2017/.test(bxf) || /"2026":/.test(bxf)) {
+        fail("Keystone|Bullet Crossfire yearStart must be 2017 (empty older fby — no invent)");
+      }
 
       const bul = slice("Bullet", "Bullet Crossfire");
       if (/"2027":/.test(bul)) {
@@ -1905,6 +1946,9 @@ function main() {
       const hid = slice("Hideout", "Fuzion");
       if (!/"2027": \["210RL", "210RLWE", "212RKS", "212RKSWE", "230BH", "230BHWE", "234MLS", "234MLSWE", "250RBS", "250RBSWE", "262BHS", "262BHSWE"\]/.test(hid)) {
         fail("Keystone|Hideout MY27 OEM plans missing");
+      }
+      if (!/yearStart:\s*2010/.test(hid) || /"2026":/.test(hid)) {
+        fail("Keystone|Hideout yearStart must be 2010 (empty older fby — no invent)");
       }
 
       const sprd = slice("Springdale", "Hideout");
