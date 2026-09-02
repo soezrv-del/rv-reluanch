@@ -3129,8 +3129,8 @@ test("Thor 2023–2024 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(th.Omni?.yearStart, 2019);
   assert.equal(th.Pasadena?.yearStart, 2022);
   assert.equal(th.Inception?.yearStart, 2022);
-  assert.equal(th["Outlaw Class A"]?.yearStart, 2017);
-  assert.equal(th["Outlaw Class C"]?.yearStart, 2017);
+  assert.equal(th["Outlaw Class A"]?.yearStart, 2015);
+  assert.equal(th["Outlaw Class C"]?.yearStart, 2015);
   assert.equal(th.Tranquility?.yearStart, 2022);
   assert.equal(th.Dazzle?.yearStart, 2023);
   assert.equal(th.Twist?.yearStart, 2023);
@@ -3247,13 +3247,13 @@ test("Thor 2021–2022 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(th["Compass AWD"]?.yearStart, 2021);
   assert.equal(th["Four Winds Sprinter"]?.yearStart, 2017);
   assert.equal(th["Chateau Sprinter"]?.yearStart, 2017);
-  assert.equal(th["Outlaw Class A"]?.yearStart, 2017);
-  assert.equal(th["Outlaw Class C"]?.yearStart, 2017);
+  assert.equal(th["Outlaw Class A"]?.yearStart, 2015);
+  assert.equal(th["Outlaw Class C"]?.yearStart, 2015);
   assert.equal(th["Quantum Sprinter"]?.yearStart, 2017);
   assert.equal(th.Sequence?.yearStart, 2020);
-  assert.equal(th.Venetian?.yearStart, 2017);
+  assert.equal(th.Venetian?.yearStart, 2016);
   assert.equal(th.Venetian?.yearEnd, 2022);
-  assert.equal(th.Miramar?.yearStart, 2017);
+  assert.equal(th.Miramar?.yearStart, 2015);
   assert.equal(th.Miramar?.yearEnd, 2022);
   assert.equal(th.Scope?.yearStart, 2022);
   assert.equal(th.Tranquility?.yearStart, 2022);
@@ -3446,13 +3446,13 @@ test("Thor 2019–2020 OEM year-first floorplans + powertrain pins", () => {
   const th = CATALOG_INDEX.Thor;
   assert.ok(th);
 
-  assert.equal(th.Venetian?.yearStart, 2017);
+  assert.equal(th.Venetian?.yearStart, 2016);
   assert.equal(th.Venetian?.yearEnd, 2022);
-  assert.equal(th.Miramar?.yearStart, 2017);
+  assert.equal(th.Miramar?.yearStart, 2015);
   assert.equal(th.Miramar?.yearEnd, 2022);
   assert.equal(th.Omni?.yearStart, 2019);
-  assert.equal(th["Outlaw Class A"]?.yearStart, 2017);
-  assert.equal(th["Outlaw Class C"]?.yearStart, 2017);
+  assert.equal(th["Outlaw Class A"]?.yearStart, 2015);
+  assert.equal(th["Outlaw Class C"]?.yearStart, 2015);
   assert.equal(th["Four Winds Sprinter"]?.yearStart, 2017);
   assert.equal(th["Chateau Sprinter"]?.yearStart, 2017);
   assert.equal(th["Quantum Sprinter"]?.yearStart, 2017);
