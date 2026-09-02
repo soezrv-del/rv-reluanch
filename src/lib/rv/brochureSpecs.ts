@@ -87,18 +87,11 @@ export interface BrochureSpecs {
   garageFits: string;
 }
 
+/** Honest stand-in when a field has no OEM / catalog pin — never hash-invented. */
+export const CONFIRM_BROCHURE = "Confirm brochure";
+
 function mid([a, b]: [number, number]) {
   return (a + b) / 2;
-}
-
-function hashSeed(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-function pick<T>(seed: number, arr: T[]): T {
-  return arr[seed % arr.length]!;
 }
 
 function fmtLbs(n: number) {
@@ -311,19 +304,14 @@ export function resolveYearSnapshot(
 
 function economy(
   spec: RVSpec,
-  seed: number,
-  gvwr: number,
   mpgOverride?: number,
 ): {
   city: number;
   hwy: number;
   combined: number;
   note: string;
-  fuelGal: number;
 } {
   const t = spec.type.toLowerCase();
-  const diesel =
-    /diesel/i.test(spec.fuelType) || /diesel/i.test(spec.engine ?? "");
 
   if (
     t.includes("travel trailer") ||
@@ -337,79 +325,36 @@ function economy(
       hwy: 0,
       combined: 0,
       note: "Tow vehicle dependent — MPG set by tow vehicle + load",
-      fuelGal: 0,
     };
   }
 
-  let city = 8;
-  let hwy = 10;
-  let fuelGal = 80;
-
-  if (t.includes("class b")) {
-    city = diesel ? 16 + (seed % 3) : 14 + (seed % 3);
-    hwy = diesel ? 20 + (seed % 3) : 17 + (seed % 3);
-    fuelGal = diesel ? 24 + (seed % 6) : 25 + (seed % 5);
-  } else if (t.includes("class c") && !t.includes("super")) {
-    city = diesel ? 12 + (seed % 2) : 9 + (seed % 2);
-    hwy = diesel ? 16 + (seed % 2) : 12 + (seed % 2);
-    fuelGal = diesel ? 26 + (seed % 4) : 55 + (seed % 10);
-  } else if (t.includes("super c")) {
-    if (diesel) {
-      if (gvwr > 36000) {
-        city = 7 + (seed % 2);
-        hwy = 9 + (seed % 2);
-        fuelGal = 90 + (seed % 20);
-      } else {
-        city = 8 + (seed % 2);
-        hwy = 11 + (seed % 2);
-        fuelGal = 70 + (seed % 15);
-      }
-    } else {
-      city = 7;
-      hwy = 9;
-      fuelGal = 68 + (seed % 12);
-    }
-  } else if (t.includes("class a")) {
-    if (diesel) {
-      if (gvwr > 52000) {
-        city = 5 + (seed % 2);
-        hwy = 7 + (seed % 2);
-        fuelGal = 140 + (seed % 20);
-      } else if (gvwr > 40000) {
-        city = 6 + (seed % 2);
-        hwy = 8 + (seed % 2);
-        fuelGal = 120 + (seed % 20);
-      } else {
-        city = 7 + (seed % 2);
-        hwy = 9 + (seed % 2);
-        fuelGal = 100 + (seed % 20);
-      }
-    } else {
-      city = 6 + (seed % 2);
-      hwy = 8 + (seed % 2);
-      fuelGal = 80 + (seed % 20);
-    }
-  } else {
-    city = diesel ? 10 : 8;
-    hwy = diesel ? 13 : 10;
-    fuelGal = 60;
-  }
-
+  // Catalog / OEM highway estimate only — never invent class-average MPG or fuel.
   if (mpgOverride && mpgOverride > 0) {
-    hwy = Math.round(mpgOverride);
-    city = Math.max(4, Math.round(mpgOverride * 0.85));
+    const hwy = Math.round(mpgOverride);
+    const city = Math.max(4, Math.round(mpgOverride * 0.85));
+    const combined = Math.round(((city + hwy) / 2) * 10) / 10;
+    const diesel =
+      /diesel/i.test(spec.fuelType) || /diesel/i.test(spec.engine ?? "");
+    return {
+      city,
+      hwy,
+      combined,
+      note: diesel
+        ? "Est. loaded highway MPG — diesel; terrain & load vary"
+        : "Est. loaded highway MPG — gas; terrain & load vary",
+    };
   }
 
-  const combined = Math.round(((city + hwy) / 2) * 10) / 10;
   return {
-    city,
-    hwy,
-    combined,
-    note: diesel
-      ? "Est. loaded highway MPG — diesel; terrain & load vary"
-      : "Est. loaded highway MPG — gas; terrain & load vary",
-    fuelGal,
+    city: 0,
+    hwy: 0,
+    combined: 0,
+    note: CONFIRM_BROCHURE,
   };
+}
+
+function tankOrConfirm(n?: number | null): string {
+  return n != null && n > 0 ? fmtGal(n) : CONFIRM_BROCHURE;
 }
 
 function transmissionFor(
@@ -437,7 +382,6 @@ export function buildBrochureSpecs(
   model = "",
   floorplan = "",
 ): BrochureSpecs {
-  const seed = hashSeed(`${make}|${model}|${year}|${floorplan}|${spec.type}`);
   const snapBase = resolveYearSnapshot(spec, year, floorplan);
   // Local user correction > brochure pin > year-band catalog
   const local = findLocalSpecOverride(year, make, model, floorplan);
@@ -548,35 +492,16 @@ export function buildBrochureSpecs(
       ? gvwrMid * hitchPct
       : towCap;
 
-  const propane = oem?.propaneLbs
-    ? oem.propaneLbs
-    : isTowable
-      ? 40 + (seed % 40)
-      : /class b/i.test(spec.type)
-        ? 16 + (seed % 10)
-        : 40 + (seed % 40);
-
-
-  const eco = economy(spec, seed, gvwrMid, snap.mpgHighwayEst);
-  const fuelGal = isTowable
-    ? 0
-    : snap.fuelCapacityGal && snap.fuelCapacityGal > 0
+  const eco = economy(spec, snap.mpgHighwayEst);
+  const fuelGal =
+    !isTowable && snap.fuelCapacityGal && snap.fuelCapacityGal > 0
       ? snap.fuelCapacityGal
-      : eco.fuelGal || (diesel ? 100 : 80);
+      : 0;
 
   const range =
     eco.combined > 0 && fuelGal > 0
       ? Math.round(eco.combined * fuelGal)
       : 0;
-
-  const wb =
-    lenMid > 40
-      ? 266 + (seed % 20)
-      : lenMid > 32
-        ? 228 + (seed % 16)
-        : lenMid > 24
-          ? 178 + (seed % 14)
-          : 144 + (seed % 12);
 
   const electrical = /fifth|toy/i.test(spec.type)
     ? "50 amp"
@@ -697,7 +622,7 @@ export function buildBrochureSpecs(
     exteriorWidth: fmtInchesAsFtIn(widthIn),
     exteriorHeight: fmtInchesAsFtIn(heightIn),
     interiorHeight: `${intH}" (${fmtFtIn(intH / 12)})`,
-    wheelbase: isTowable ? "N/A (towable)" : `${wb}"`,
+    wheelbase: isTowable ? "N/A (towable)" : CONFIRM_BROCHURE,
 
     gvwr: gvwrDisplay,
     uvw: fmtLbs(uvw),
@@ -738,39 +663,39 @@ export function buildBrochureSpecs(
       snap.chassis ??
       (isTowable ? "Towable frame" : "Manufacturer chassis"),
 
-    mpgCity: eco.city ? `${eco.city}` : "—",
-    mpgHighway: eco.hwy ? `${eco.hwy}` : "—",
-    mpgCombined: eco.combined ? `${eco.combined}` : "Tow vehicle",
+    mpgCity: eco.city ? `${eco.city}` : isTowable ? "—" : CONFIRM_BROCHURE,
+    mpgHighway: eco.hwy ? `${eco.hwy}` : isTowable ? "—" : CONFIRM_BROCHURE,
+    mpgCombined: eco.combined
+      ? `${eco.combined}`
+      : isTowable
+        ? "Tow vehicle"
+        : CONFIRM_BROCHURE,
     mpgNote: eco.note,
-    fuelCapacity: fuelGal ? fmtGal(fuelGal) : "N/A (towable)",
-    rangeMiles: range ? `~${range.toLocaleString()} mi` : "Tow vehicle",
+    fuelCapacity: isTowable
+      ? "N/A (towable)"
+      : fuelGal
+        ? fmtGal(fuelGal)
+        : CONFIRM_BROCHURE,
+    rangeMiles: isTowable
+      ? "Tow vehicle"
+      : range
+        ? `~${range.toLocaleString()} mi`
+        : CONFIRM_BROCHURE,
 
     sleeps: String(oem?.sleeps ?? snap.sleeps ?? spec.sleeps),
     slideouts: String(oem?.slideouts ?? snap.slideouts ?? spec.slideouts),
-    seatBelts: String(
-      Math.min(
-        (snap.sleeps ?? spec.sleeps) + 1,
-        /class b/i.test(spec.type) ? 4 : (snap.sleeps ?? spec.sleeps) + 2,
-      ),
-    ),
+    seatBelts: CONFIRM_BROCHURE,
     awning: spec.awningLength
       ? `${spec.awningLength} ft power awning`
       : `${Math.max(12, Math.round(lenMid * 0.45))} ft (typ.)`,
 
-    freshWater: fmtGal(
-      oem?.freshWater ?? snap.freshWater ?? 40 + (seed % 40),
-    ),
-    grayWater: fmtGal(oem?.grayWater ?? snap.grayWater ?? 30 + (seed % 30)),
-    blackWater: fmtGal(
-      oem?.blackWater ?? snap.blackWater ?? 28 + (seed % 28),
-    ),
-    propane: `${propane} lb`,
-    waterHeater: pick(seed, [
-      "6 gal gas/electric",
-      "10 gal gas/electric",
-      "Tankless on-demand",
-      "16 gal gas/electric",
-    ]),
+    freshWater: tankOrConfirm(oem?.freshWater ?? snap.freshWater),
+    grayWater: tankOrConfirm(oem?.grayWater ?? snap.grayWater),
+    blackWater: tankOrConfirm(oem?.blackWater ?? snap.blackWater),
+    propane: oem?.propaneLbs
+      ? `${oem.propaneLbs} lb`
+      : CONFIRM_BROCHURE,
+    waterHeater: CONFIRM_BROCHURE,
 
     generator: honestGenerator({
       generator:
@@ -798,7 +723,7 @@ export function buildBrochureSpecs(
         : /class b/i.test(spec.type)
           ? "20,000 BTU (typ. — confirm brochure)"
           : "35,000 BTU (typ. — confirm brochure)",
-    converter: electrical.includes("50") ? "60–80 amp" : "45–55 amp",
+    converter: CONFIRM_BROCHURE,
 
     axles: classAGasNoTag
       ? "Steer + dual rear (no tag)"
@@ -822,13 +747,8 @@ export function buildBrochureSpecs(
     type: spec.type,
     warranty: spec.warrantyYears
       ? `${spec.warrantyYears}-yr limited / structural varies`
-      : "1-yr limited · structural per OEM",
-    construction: pick(seed, [
-      "Aluminum frame · laminated walls",
-      "Vacuum-bonded walls · aluminum framing",
-      "Steel cage · composite walls",
-      "Welded aluminum superstructure",
-    ]),
+      : CONFIRM_BROCHURE,
+    construction: CONFIRM_BROCHURE,
     accuracyNote,
     dataSource,
 

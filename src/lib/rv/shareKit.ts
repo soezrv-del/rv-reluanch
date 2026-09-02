@@ -158,10 +158,14 @@ function coachBrochure(r: RVResult): BrochureSpecs {
 
 export function brochureSpecGroups(r: RVResult) {
   const b = coachBrochure(r);
-  const economy =
-    hasVal(b.mpgHighway) && b.mpgHighway !== "—"
+  const confirmMpg = /confirm brochure/i.test(b.mpgHighway || "");
+  const economy = confirmMpg
+    ? b.mpgHighway
+    : hasVal(b.mpgHighway) && b.mpgHighway !== "—"
       ? `${b.mpgHighway} hwy${
-          b.mpgCity && b.mpgCity !== "—" ? ` · ${b.mpgCity} city` : ""
+          b.mpgCity && b.mpgCity !== "—" && !/confirm brochure/i.test(b.mpgCity)
+            ? ` · ${b.mpgCity} city`
+            : ""
         }`
       : undefined;
   return [

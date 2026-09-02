@@ -16,6 +16,11 @@ import {
 } from "./catalogHonesty.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
+import {
+  buildBrochureSpecs,
+  CONFIRM_BROCHURE,
+} from "./brochureSpecs.ts";
+import type { RVSpec } from "./rvTypes.ts";
 
 const DREAM_ENGINE = "Cummins L9 450 std / X15 605 opt";
 const root = dirname(fileURLToPath(import.meta.url));
@@ -124,6 +129,127 @@ test("Class C never hash-picks bus tires or triple 15k A/C", () => {
   assert.doesNotMatch(spec, /"3 × 15,000 BTU"/);
   assert.match(spec, /honestTireSize/);
   assert.match(spec, /honestAcUnits/);
+});
+
+test("brochureSpecs source no longer hash-seeds tanks, MPG, heater, construction, wheelbase, propane", () => {
+  const spec = src("brochureSpecs.ts");
+  assert.doesNotMatch(spec, /function hashSeed/);
+  assert.doesNotMatch(spec, /function pick\s*</);
+  assert.doesNotMatch(spec, /pick\(seed/);
+  assert.doesNotMatch(spec, /40 \+ \(seed % 40\)/);
+  assert.doesNotMatch(spec, /30 \+ \(seed % 30\)/);
+  assert.doesNotMatch(spec, /28 \+ \(seed % 28\)/);
+  assert.doesNotMatch(spec, /266 \+ \(seed % 20\)/);
+  assert.doesNotMatch(spec, /16 \+ \(seed % 10\)/);
+  assert.doesNotMatch(spec, /"6 gal gas\/electric"/);
+  assert.doesNotMatch(spec, /Aluminum frame · laminated walls/);
+  assert.doesNotMatch(spec, /diesel \? 100 : 80/);
+  assert.match(spec, /CONFIRM_BROCHURE/);
+  assert.match(spec, /tankOrConfirm/);
+});
+
+function bareCoach(overrides: Partial<RVSpec> = {}): RVSpec {
+  return {
+    type: "Class A Diesel",
+    floorplans: [],
+    lengthRange: [38, 42],
+    weightRange: [30000, 40000],
+    slideouts: 3,
+    sleeps: 6,
+    msrpRange: [200000, 400000],
+    fuelType: "Diesel",
+    recalls: 0,
+    rating: 4,
+    image: "",
+    ...overrides,
+  };
+}
+
+test("seeded filler is gone: tanks / MPG / fuel / PDF-only fields say Confirm brochure", () => {
+  const b = buildBrochureSpecs(
+    bareCoach(),
+    "2024",
+    "HonestyTestMake",
+    "HonestyTestModel",
+    "40A",
+  );
+  assert.equal(b.freshWater, CONFIRM_BROCHURE);
+  assert.equal(b.grayWater, CONFIRM_BROCHURE);
+  assert.equal(b.blackWater, CONFIRM_BROCHURE);
+  assert.equal(b.mpgCity, CONFIRM_BROCHURE);
+  assert.equal(b.mpgHighway, CONFIRM_BROCHURE);
+  assert.equal(b.mpgCombined, CONFIRM_BROCHURE);
+  assert.equal(b.mpgNote, CONFIRM_BROCHURE);
+  assert.equal(b.fuelCapacity, CONFIRM_BROCHURE);
+  assert.equal(b.rangeMiles, CONFIRM_BROCHURE);
+  assert.equal(b.waterHeater, CONFIRM_BROCHURE);
+  assert.equal(b.construction, CONFIRM_BROCHURE);
+  assert.equal(b.wheelbase, CONFIRM_BROCHURE);
+  assert.equal(b.propane, CONFIRM_BROCHURE);
+  assert.equal(b.converter, CONFIRM_BROCHURE);
+  assert.equal(b.seatBelts, CONFIRM_BROCHURE);
+  assert.equal(b.warranty, CONFIRM_BROCHURE);
+  assert.doesNotMatch(b.freshWater, /\d+\s*gal/);
+  assert.doesNotMatch(b.waterHeater, /\d+\s*gal|tankless/i);
+  assert.doesNotMatch(b.construction, /aluminum|vacuum-bonded|steel cage/i);
+  assert.doesNotMatch(b.wheelbase, /\d+"/);
+  assert.doesNotMatch(b.propane, /\d+\s*lb/);
+  assert.doesNotMatch(b.mpgHighway, /^\d+(\.\d+)?$/);
+  assert.doesNotMatch(b.fuelCapacity, /\d+\s*gal/);
+});
+
+test("catalog / OEM tank and economy pins still surface; no hash invent around them", () => {
+  const b = buildBrochureSpecs(
+    bareCoach({
+      freshWater: 100,
+      grayWater: 70,
+      blackWater: 40,
+      fuelCapacityGal: 90,
+      mpgHighwayEst: 8,
+      warrantyYears: 2,
+    }),
+    "2024",
+    "HonestyTestMake",
+    "HonestyTestModel",
+    "",
+  );
+  assert.equal(b.freshWater, "100 gal");
+  assert.equal(b.grayWater, "70 gal");
+  assert.equal(b.blackWater, "40 gal");
+  assert.equal(b.fuelCapacity, "90 gal");
+  assert.equal(b.mpgHighway, "8");
+  assert.match(b.mpgCity, /^\d+$/);
+  assert.match(b.rangeMiles, /mi/);
+  assert.equal(b.warranty, "2-yr limited / structural varies");
+  // Still no invented PDF-only hardware
+  assert.equal(b.waterHeater, CONFIRM_BROCHURE);
+  assert.equal(b.construction, CONFIRM_BROCHURE);
+  assert.equal(b.wheelbase, CONFIRM_BROCHURE);
+  assert.equal(b.propane, CONFIRM_BROCHURE);
+});
+
+test("towable MPG stays tow-vehicle — never a seeded gallon or MPG number", () => {
+  const b = buildBrochureSpecs(
+    bareCoach({
+      type: "Travel Trailer",
+      fuelType: "Towable",
+      lengthRange: [24, 28],
+      weightRange: [5000, 8000],
+    }),
+    "2024",
+    "HonestyTestMake",
+    "HonestyTestTT",
+    "26BH",
+  );
+  assert.equal(b.mpgCity, "—");
+  assert.equal(b.mpgHighway, "—");
+  assert.equal(b.mpgCombined, "Tow vehicle");
+  assert.match(b.mpgNote, /tow vehicle/i);
+  assert.equal(b.fuelCapacity, "N/A (towable)");
+  assert.equal(b.rangeMiles, "Tow vehicle");
+  assert.equal(b.wheelbase, "N/A (towable)");
+  assert.equal(b.freshWater, CONFIRM_BROCHURE);
+  assert.equal(b.propane, CONFIRM_BROCHURE);
 });
 
 test("gas chassis rewrites Diesel/Gas generator; diesel does not get gas-only", () => {

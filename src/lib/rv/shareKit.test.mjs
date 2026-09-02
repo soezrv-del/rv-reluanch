@@ -29,6 +29,11 @@ test("STRENGTHS stay product-only; LIFESTYLE is never an empty header", () => {
   assert.doesNotMatch(src, /Financed \$\{formatMoney/);
 });
 
+test("PDF economy does not dress Confirm brochure as a hwy number", () => {
+  assert.match(src, /confirmMpg/);
+  assert.match(src, /confirm brochure/i);
+});
+
 test("kit footer is a prepared-by signature", () => {
   assert.match(src, /REPORT_CONTACT_KICKER/);
   assert.match(src, /REPORT_CONTACT_NAME/);
