@@ -16622,10 +16622,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2025": ["38N", "38W"],
         "2026": ["38N", "38W"]
       },
-      lengthRange: [
-        36,
-        40
-      ],
+      // Aggregate covers locked OEM FBY: MY11 42A/42C, MY12–13 42A/42D/42M. MY14 dropped 42' — year-specific, not a reason to leave the series at 40. Do not invent 44' from leftover union 44H (not in regular Discovery FBY).
+      lengthRange: [36, 42],
       weightRange: [
         30000,
         38000
