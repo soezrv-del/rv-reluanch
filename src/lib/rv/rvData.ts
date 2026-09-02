@@ -10156,6 +10156,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["34T", "36G", "38W", "36H", "38R"],
       floorplansByYear: {
+        // No 2010–12 Forza (not on 2010–12 wiring; archive first card 2014). Do not invent leftover 34T/38R onto 2010–12.
         // OEM 2014 Forza + 2014 wiring: 34T | 38R · ISB 6.7 340. Torque unprinted. No 2013 Forza (not on 2013 wiring; archive first card 2014).
         "2014": ["34T", "38R"],
         // OEM 2015 wiring: 34T | 36G | 38R. No 2015 Forza brochure (archive 2014 then 2016) — HP 0. Do not copy leftover 34T/36G-only or invent 38F/38W.
@@ -10324,16 +10325,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Journey: {
       type: "Class A Diesel",
-      floorplans: ["34G", "36M", "40R", "42E", "34H", "39Z", "34N", "36K", "40P", "34B", "40U", "38P"],
+      floorplans: ["34G", "36M", "40R", "42E", "34H", "39Z", "34N", "36K", "40P", "34B", "40U", "38P", "34Y", "39N", "40L", "40T"],
       floorplansByYear: {
         "2005": ["34G", "36M", "40R"],
         "2006": ["34G", "36M", "40R"],
         "2007": ["34G", "36M", "40R"],
         "2008": ["34G", "36M", "40R"],
         "2009": ["34G", "36M", "40R", "42E"],
-        "2010": ["34G", "36M", "40R", "42E"],
-        "2011": ["34G", "36M", "40R", "42E"],
-        "2012": ["34G", "36M", "40R", "42E"],
+        // OEM 2010 Journey + Journey Express + 2010 wiring: Express 34Y | 39N · ISB 340; Journey 40L | 40T · ISC 360. Not leftover 34G/40R/42E.
+        "2010": ["34Y", "39N", "40L", "40T"],
+        // OEM 2011 Journey + Journey Express + 2011 wiring: Express 34Y | 39N · ISB 340; Journey 40L | 40U · ISC 360 / EPA 380 option-band → HP 0 on 40'. Not leftover 34G/40R/42E.
+        "2011": ["34Y", "39N", "40L", "40U"],
+        // OEM 2012 Journey + 2012 wiring: 34Y (ISB 340) | 36M (ISB 360) | 40U (ISC 380) | 42E (ISL 400). Not leftover 34G/40R.
+        "2012": ["34Y", "36M", "40U", "42E"],
         // OEM 2013 Journey + 2013 wiring: 34B | 36M | 40U | 42E. Option-band ISB 340 / ISB XT 360 / ISC 380 / ISL 400 → HP 0. Do not invent leftover 34G/40R.
         "2013": ["34B", "36M", "40U", "42E"],
         // OEM 2014 Journey + 2014 wiring: 34B | 36M | 40U | 42E. Option-band ISB 340 / ISB XT 360 / ISL 380 / ISL 400 → HP 0. Do not invent leftover 34G/40R.
@@ -10407,11 +10411,83 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2010,
+          to: 2010,
+          floorplans: ["34Y", "39N"],
+          engine: "Cummins ISB 6.7L 340HP",
+          horsepower: 340,
+          chassis: "Freightliner XCS",
+          fuelType: "Diesel",
+          notes: "OEM 2010 Journey Express: 34Y | 39N · ISB 6.7 340. Not leftover 34G."
+        },
+        {
+          from: 2010,
+          to: 2010,
+          floorplans: ["40L", "40T"],
+          engine: "Cummins ISC 8.3L 360HP",
+          horsepower: 360,
+          chassis: "Freightliner Maxum / XCL",
+          fuelType: "Diesel",
+          notes: "OEM 2010 Journey: 40L | 40T · ISC 8.3 360. Not leftover 40R/42E."
+        },
+        {
+          from: 2011,
+          to: 2011,
+          floorplans: ["34Y", "39N"],
+          engine: "Cummins ISB 6.7L 340HP",
+          horsepower: 340,
+          chassis: "Freightliner XCS",
+          fuelType: "Diesel",
+          notes: "OEM 2011 Journey Express: 34Y | 39N · ISB 6.7 340."
+        },
+        {
+          from: 2011,
+          to: 2011,
+          floorplans: ["40L", "40U"],
+          engine: "Cummins ISC 8.3L (option-band 360 / EPA 380)",
+          horsepower: 0,
+          chassis: "Freightliner Maxum / XCL",
+          fuelType: "Diesel",
+          notes: "OEM 2011 Journey: 40L | 40U · ISC 360 / 2010-EPA 380 option-band. HP 0. Not leftover 40R/42E."
+        },
+        {
+          from: 2012,
           to: 2012,
-          engine: "Cummins ISL / ISB 300–450HP (era)",
+          floorplans: ["34Y"],
+          engine: "Cummins ISB 6.7L 340HP",
+          horsepower: 340,
+          chassis: "Freightliner XCS",
+          fuelType: "Diesel",
+          notes: "OEM 2012 Journey 34Y · ISB 6.7 340 on XCS."
+        },
+        {
+          from: 2012,
+          to: 2012,
+          floorplans: ["36M"],
+          engine: "Cummins ISB 6.7L 360HP",
+          horsepower: 360,
+          chassis: "Freightliner Maxum",
+          fuelType: "Diesel",
+          notes: "OEM 2012 Journey 36M · ISB 6.7 360 on Maxum."
+        },
+        {
+          from: 2012,
+          to: 2012,
+          floorplans: ["40U"],
+          engine: "Cummins ISC 8.3L 380HP",
           horsepower: 380,
-          chassis: "Freightliner XCS / XC",
-          notes: "2010–2012 leftover mid/high diesel Class A — next slice locks year-true cards."
+          chassis: "Freightliner Maxum",
+          fuelType: "Diesel",
+          notes: "OEM 2012 Journey 40U · ISC 8.3 380 on Maxum."
+        },
+        {
+          from: 2012,
+          to: 2012,
+          floorplans: ["42E"],
+          engine: "Cummins ISL 8.9L 400HP",
+          horsepower: 400,
+          chassis: "Freightliner Maxum",
+          fuelType: "Diesel",
+          notes: "OEM 2012 Journey 42E · ISL 8.9 400 on Maxum. Not leftover B6.7 340."
         },
         {
           from: 2013,
@@ -10457,6 +10533,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["40A", "42Q", "40J"],
       floorplansByYear: {
+        // No 2010–17 Horizon (archive 2018 then 2009; not on 2010–12 wiring). Do not invent leftover 40A/42Q onto 2010–12.
         // OEM 2018 Horizon flyer + 2018 wiring: 40A | 42Q · 450-hp Cummins ISL 8.9L. Torque unprinted. No 2017 Horizon.
         "2018": ["40A", "42Q"],
         // OEM 2019 wiring card: 40A | 40J | 42Q. RVUSA “2019” PDF reprints 2018 captions (40A/42Q only) — use wiring. Do not invent 42G.
@@ -10511,16 +10588,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Grand Tour": {
       type: "Class A Diesel",
-      floorplans: ["42QDP", "45RL", "45QB", "42HL", "42QL", "42GD", "42QD"],
+      floorplans: ["42QDP", "45RL", "45QB", "42HL", "42QL", "42GD", "42QD", "40BD", "40CD", "40WD", "42AD", "42JD"],
       floorplansByYear: {
         "2005": ["42QDP", "45RL"],
         "2006": ["42QDP", "45RL"],
         "2007": ["42QDP", "45RL"],
         "2008": ["42QDP", "45RL"],
         "2009": ["42QDP", "45RL"],
-        "2010": ["42QDP", "45RL"],
-        "2011": ["42QDP", "45RL"],
-        "2012": ["42QDP", "45RL"],
+        // OEM 2010 Tour (Grand Tour lineage) + 2010 wiring: 40BD | 40CD | 40WD | 42AD · ISL 8.9 400. Not leftover 42QDP/45RL.
+        "2010": ["40BD", "40CD", "40WD", "42AD"],
+        // OEM 2011 Tour + 2011 wiring: 40BD | 40CD | 42AD | 42QD · ISL 400 / EPA 450 option-band → HP 0. Not leftover 42QDP/45RL.
+        "2011": ["40BD", "40CD", "42AD", "42QD"],
+        // OEM 2012 Tour + 2012 wiring: 42AD | 42JD | 42QD · ISL 8.9 450. Not leftover 42QDP/45RL.
+        "2012": ["42AD", "42JD", "42QD"],
         // OEM 2013 Tour (Grand Tour lineage) + 2013 wiring: 42GD | 42QD · ISL 8.9 450. Not leftover 42QDP/45RL.
         "2013": ["42GD", "42QD"],
         // OEM 2014 Tour + 2014 wiring: 42GD | 42QD · ISL 8.9 450. Not leftover 42QDP/45RL.
@@ -10578,11 +10658,30 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2010,
+          to: 2010,
+          engine: "Cummins ISL 8.9L 400HP",
+          horsepower: 400,
+          chassis: "Freightliner Maxum",
+          fuelType: "Diesel",
+          notes: "OEM 2010 Tour: 40BD | 40CD | 40WD | 42AD · ISL 8.9 400. Not leftover 42QDP/45RL."
+        },
+        {
+          from: 2011,
+          to: 2011,
+          engine: "Cummins ISL 8.9L (option-band 400 / EPA 450)",
+          horsepower: 0,
+          chassis: "Freightliner Maxum",
+          fuelType: "Diesel",
+          notes: "OEM 2011 Tour: 40BD | 40CD | 42AD | 42QD · ISL 400 / 2010-EPA 450 option-band. HP 0. Not leftover 42QDP/45RL."
+        },
+        {
+          from: 2012,
           to: 2012,
-          engine: "Cummins ISL / ISB 300–450HP (era)",
-          horsepower: 380,
-          chassis: "Spartan / Freightliner (by year)",
-          notes: "2010–2012 leftover mid/high diesel Class A — next slice locks year-true cards."
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          chassis: "Freightliner Maxum",
+          fuelType: "Diesel",
+          notes: "OEM 2012 Tour: 42AD | 42JD | 42QD · ISL 8.9 450. Not leftover 42QDP/45RL."
         },
         {
           from: 2013,
@@ -10638,6 +10737,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["25P", "25T", "25Q", "25R"],
       floorplansByYear: {
+        // OEM 2010 Via + 2010 wiring: 25R | 25T · Sprinter cowl 3.0 154-hp. No 25Q. Do not invent leftover 25P.
+        "2010": ["25R", "25T"],
+        // OEM 2011 Via + 2011 wiring: 25Q | 25R | 25T · Sprinter cowl 3.0 188-hp.
+        "2011": ["25Q", "25R", "25T"],
+        // OEM 2012 Via + 2012 wiring: 25Q | 25R | 25T · Sprinter cowl 3.0 188-hp.
+        "2012": ["25Q", "25R", "25T"],
         // OEM 2013 Via + 2013 wiring: 25Q | 25R | 25T · Sprinter cowl 3.0 188-hp. Do not invent leftover 25P.
         "2013": ["25Q", "25R", "25T"],
         // OEM 2014 Via + 2014 wiring: 25P | 25Q | 25T · Sprinter cowl 3.0 188-hp. No 25R.
@@ -10686,9 +10791,29 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 77,
       founded: 1958,
       warrantyYears: 2,
-      yearStart: 2013,
+      yearStart: 2010,
       yearEnd: 2018,
       powertrainByYear: [
+        {
+          from: 2010,
+          to: 2010,
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel 154HP",
+          horsepower: 154,
+          chassis: "Mercedes-Benz Sprinter 3500 cowl",
+          transmission: "5-speed automatic",
+          fuelType: "Diesel",
+          notes: "OEM 2010 Via: 25R | 25T · Sprinter cowl 3.0 154-hp. Do not invent leftover 188 or 25P/25Q.",
+        },
+        {
+          from: 2011,
+          to: 2012,
+          engine: "Mercedes-Benz OM642 3.0L V6 turbodiesel 188HP",
+          horsepower: 188,
+          chassis: "Mercedes-Benz Sprinter 3500 cowl",
+          transmission: "5-speed automatic",
+          fuelType: "Diesel",
+          notes: "OEM 2011–12 Via: 25Q | 25R | 25T · Sprinter cowl 3.0 188-hp. 25Q new in 2011.",
+        },
         {
           from: 2013,
           to: 2013,
@@ -10743,11 +10868,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Vista: {
       type: "Class A Gas",
-      floorplans: ["26P", "27P", "27PE", "31B", "35F", "29VE", "33W", "32M", "28M", "30T", "31BE", "34PA", "29V", "32Y", "32YE", "33K", "34R", "35U", "26HE", "27N", "31KE", "35B", "36Y"],
+      floorplans: ["26P", "27P", "27PE", "31B", "35F", "29VE", "33W", "32M", "28M", "30T", "31BE", "34PA", "29V", "32Y", "32YE", "33K", "34R", "35U", "26HE", "27N", "31KE", "35B", "36Y", "30W", "32K", "36D"],
       floorplansByYear: {
-        "2010": ["26P", "27P", "31B", "35F"],
-        "2011": ["26P", "27P", "31B", "35F"],
-        "2012": ["26P", "27P", "31B", "35F"],
+        // OEM 2010 Vista + 2010 wiring: 26P | 30W | 32K. Ford F53 std / Workhorse opt on 32K (gas + diesel) → HP 0. Not leftover 27P/31B/35F.
+        "2010": ["26P", "30W", "32K"],
+        // OEM 2011 Vista + 2011 wiring: 26P | 30W | 32K | 35F | 36D · F53 Triton 362. Not leftover 27P/31B.
+        "2011": ["26P", "30W", "32K", "35F", "36D"],
+        // OEM 2012 Vista + 2012 wiring: 26P | 30T | 32K | 35F | 36D · F53 Triton 362. 30W dropped. Not leftover 27P/31B.
+        "2012": ["26P", "30T", "32K", "35F", "36D"],
         // OEM 2013 Vista + 2013 wiring: 26HE | 27N | 30T | 35B | 35F · F53 Triton 362. Do not invent leftover 26P/27P/31B.
         "2013": ["26HE", "27N", "30T", "35B", "35F"],
         // OEM 2014 Vista + 2014 wiring: 26HE | 27N | 30T | 31KE | 35B | 35F · F53 Triton 362. Do not invent leftover 26P/27P/31B.
@@ -10814,11 +10942,30 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2010,
-          to: 2012,
-          engine: "Ford Triton V10 6.8L",
-          horsepower: 320,
+          to: 2010,
+          engine: "Ford F53 / Workhorse (option-band)",
+          horsepower: 0,
+          chassis: "Ford F53 / Workhorse",
+          fuelType: "Gas",
+          notes: "OEM 2010 Vista: 26P | 30W | 32K · Ford F53 std / Workhorse gas+diesel opt on 32K. HP 0. Not leftover 27P/31B/35F. Not Godzilla."
+        },
+        {
+          from: 2011,
+          to: 2011,
+          engine: "Ford Triton V10 6.8L 362HP",
+          horsepower: 362,
           chassis: "Ford F53",
-          notes: "2010–2012 leftover Vista — next slice locks year-true cards."
+          fuelType: "Gas",
+          notes: "OEM 2011 Vista: 26P | 30W | 32K | 35F | 36D · F53 Triton 362. Not leftover 27P/31B. Not Godzilla."
+        },
+        {
+          from: 2012,
+          to: 2012,
+          engine: "Ford Triton V10 6.8L 362HP",
+          horsepower: 362,
+          chassis: "Ford F53",
+          fuelType: "Gas",
+          notes: "OEM 2012 Vista: 26P | 30T | 32K | 35F | 36D · F53 Triton 362. Not leftover 27P/31B. Not Godzilla."
         },
         {
           from: 2013,
@@ -10907,9 +11054,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["27N", "29VE", "30T", "35F", "31B", "27P", "27PE", "31BE", "36BH", "29V", "32Y", "32YE", "33K", "34R", "35U", "26HE", "31KE"],
       floorplansByYear: {
-        "2010": ["27N", "29VE", "30T", "35F"],
-        "2011": ["27N", "29VE", "30T", "35F"],
-        "2012": ["27N", "29VE", "30T", "35F"],
+        // No 2010–12 Winnebago Sunstar card (2010–12 Sunstar is Itasca GoItasca.com — do not collide). Do not invent leftover 27N/29VE/30T/35F.
         // No 2013–14 Winnebago Sunstar card (2013–14 Sunstar is Itasca GoItasca.com — do not collide). Do not invent leftover 27N/29VE/30T/35F.
         // No 2015 Winnebago Sunstar card (2015 Sunstar is Itasca GoItasca.com — do not collide). Do not invent leftover 27N/29VE/30T/35F.
         // OEM 2016 Sunstar (Winnebago-branded Vista twin, not Sunstar LX): 26HE | 31BE | 31KE. Triton V10 — HP unprinted → 0. No 29VE (2017 caption).
@@ -10963,18 +11108,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1958,
       warrantyYears: 1,
-      yearStart: 2010,
+      yearStart: 2016,
       yearEnd: 2025,
       description: "Winnebago Sunstar — gas Class A companion to Vista (Itasca heritage). Ford F53 7.3L on recent years.",
       powertrainByYear: [
-        {
-          from: 2010,
-          to: 2012,
-          engine: "Ford Triton V10 6.8L",
-          horsepower: 320,
-          chassis: "Ford F53",
-          notes: "2010–2012 leftover Winnebago Sunstar — next slice locks year-true cards. 2013–15 Sunstar is Itasca."
-        },
         {
           from: 2016,
           to: 2016,
@@ -11035,6 +11172,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["26M", "29L", "30R", "31P", "26P", "30QE", "28Y"],
       floorplansByYear: {
+        // No 2010–17 Intent (first year-true card 2018; not on 2010–12 wiring). Do not invent leftover 26M/29L onto 2010–12.
         // OEM 2018 Intent flyer + 2018 wiring: 26M | 29L | 30R | 31P. Triton V10 — HP unprinted → 0. No 2017 Intent.
         "2018": ["26M", "29L", "30R", "31P"],
         // OEM 2019 Intent spec + wiring: 26M | 29L | 30R | 31P. Triton V10 — HP unprinted → 0.
@@ -11085,16 +11223,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Adventurer: {
       type: "Class A Gas",
-      floorplans: ["29V", "30T", "32H", "35F", "36Z", "44B", "34W", "27N", "29B", "33C", "32D", "35P", "37F", "38Q"],
+      floorplans: ["29V", "30T", "32H", "35F", "36Z", "44B", "34W", "27N", "29B", "33C", "32D", "35P", "37F", "38Q", "35Z", "38N"],
       floorplansByYear: {
         "2005": ["29V", "30T", "32H"],
         "2006": ["29V", "30T", "32H"],
         "2007": ["29V", "30T", "32H"],
         "2008": ["29V", "30T", "32H"],
         "2009": ["29V", "30T", "32H", "35F"],
-        "2010": ["29V", "30T", "32H", "35F"],
-        "2011": ["29V", "30T", "32H", "35F"],
-        "2012": ["29V", "30T", "32H", "35F"],
+        // OEM 2010 Adventurer + 2010 wiring: 32H | 35P | 35Z | 37F | 38N. Ford 362 / Workhorse 340 / FRED ISB 300 option-band → HP 0. Not leftover 29V/30T/35F.
+        "2010": ["32H", "35P", "35Z", "37F", "38N"],
+        // OEM 2011 Adventurer + 2011 wiring: 32H | 35P | 37F · F53 Triton 362. Not leftover 29V/30T/35F.
+        "2011": ["32H", "35P", "37F"],
+        // OEM 2012 Adventurer + 2012 wiring: 32H | 35P | 37F · F53 Triton 362. Not leftover 29V/30T/35F.
+        "2012": ["32H", "35P", "37F"],
         // OEM 2013 Adventurer + 2013 wiring: 32H | 35P | 37F · F53 Triton 362. Not leftover 29V/30T/35F/36Z. Not Godzilla.
         "2013": ["32H", "35P", "37F"],
         // OEM 2014 Adventurer + 2014 wiring: 32H | 35P | 37F | 38Q · F53 Triton 362. Not leftover 29V/30T/35F/36Z. Not Godzilla.
@@ -11160,11 +11301,29 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2005,
-          to: 2012,
+          to: 2009,
           engine: "Ford Triton V10 6.8L",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "Leftover Adventurer through 2012 — Triton V10 era. Not 7.3 Godzilla. Next slice locks year-true cards."
+          notes: "Leftover Adventurer through 2009 — Triton V10 era. Not 7.3 Godzilla. Do not stamp onto 2010–12."
+        },
+        {
+          from: 2010,
+          to: 2010,
+          engine: "Ford F53 / Workhorse / Freightliner FRED (option-band)",
+          horsepower: 0,
+          chassis: "Ford F53 / Workhorse / Freightliner FRED",
+          fuelType: "Gas",
+          notes: "OEM 2010 Adventurer: 32H | 35P | 35Z | 37F | 38N · Ford Triton 362 / Workhorse 340 / FRED ISB 300 option-band. HP 0. Not leftover 29V/30T/35F. Not Godzilla."
+        },
+        {
+          from: 2011,
+          to: 2012,
+          engine: "Ford Triton V10 6.8L 362HP",
+          horsepower: 362,
+          chassis: "Ford F53",
+          fuelType: "Gas",
+          notes: "OEM 2011–12 Adventurer: 32H | 35P | 37F · F53 Triton 362. Not leftover 29V/30T/35F. Not Godzilla."
         },
         {
           from: 2013,
@@ -11251,16 +11410,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Itasca Sunstar": {
       type: "Class A Gas",
-      floorplans: ["27N", "29VE", "30T", "35F", "26HE", "31KE", "35B", "36Y", "31BE"],
+      floorplans: ["27N", "29VE", "30T", "35F", "26HE", "31KE", "35B", "36Y", "31BE", "26P", "30W", "32K", "36D"],
       floorplansByYear: {
         "2005": ["27N", "29VE", "30T"],
         "2006": ["27N", "29VE", "30T"],
         "2007": ["27N", "29VE", "30T"],
         "2008": ["27N", "29VE", "30T"],
         "2009": ["27N", "29VE", "30T", "35F"],
-        "2010": ["27N", "29VE", "30T", "35F"],
-        "2011": ["27N", "29VE", "30T", "35F"],
-        "2012": ["27N", "29VE", "30T", "35F"],
+        // OEM 2010 Itasca Sunstar (GoItasca.com) + 2010 wiring: 26P | 30W | 32K. Ford 362 / Workhorse 340 / W20 diesel 230 option-band → HP 0. Not leftover 27N/29VE/30T/35F. Not Winnebago Sunstar.
+        "2010": ["26P", "30W", "32K"],
+        // OEM 2011 Itasca Sunstar + 2011 wiring: 26P | 30W | 32K | 35F | 36D · F53 Triton 362. Not Winnebago Sunstar.
+        "2011": ["26P", "30W", "32K", "35F", "36D"],
+        // OEM 2012 Itasca Sunstar + 2012 wiring: 26P | 30T | 32K | 35F | 36D · F53 Triton 362. Not Winnebago Sunstar.
+        "2012": ["26P", "30T", "32K", "35F", "36D"],
         // OEM 2013 Itasca Sunstar (GoItasca.com) + 2013 wiring: 26HE | 27N | 30T | 35B | 35F · F53 Triton 362. Not Winnebago Sunstar.
         "2013": ["26HE", "27N", "30T", "35B", "35F"],
         // OEM 2014 Itasca Sunstar + 2014 wiring: 26HE | 27N | 30T | 31KE | 35B | 35F · F53 Triton 362. Not Winnebago Sunstar.
@@ -11310,11 +11472,29 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2005,
-          to: 2012,
+          to: 2009,
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "Pre-Godzilla gas Class A leftover through 2012 — Triton V10 era. Next slice locks year-true cards."
+          notes: "Pre-Godzilla gas Class A leftover through 2009 — Triton V10 era. Do not stamp onto 2010–12."
+        },
+        {
+          from: 2010,
+          to: 2010,
+          engine: "Ford F53 / Workhorse (option-band)",
+          horsepower: 0,
+          chassis: "Ford F53 / Workhorse",
+          fuelType: "Gas",
+          notes: "OEM 2010 Itasca Sunstar: 26P | 30W | 32K · Ford Triton 362 / Workhorse 340 / W20 diesel 230 option-band. HP 0. Not Winnebago Sunstar. Not Godzilla."
+        },
+        {
+          from: 2011,
+          to: 2012,
+          engine: "Ford Triton V10 6.8L 362HP",
+          horsepower: 362,
+          chassis: "Ford F53",
+          fuelType: "Gas",
+          notes: "OEM 2011 Itasca Sunstar: 26P | 30W | 32K | 35F | 36D. OEM 2012: 26P | 30T | 32K | 35F | 36D · F53 Triton 362. Not Winnebago Sunstar. Not Godzilla."
         },
         {
           from: 2013,
@@ -11368,6 +11548,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["44E"],
       floorplansByYear: {
+        // No 2010–17 Revel (first year-true card 2018). Do not invent leftover 44E onto 2010–12.
         // OEM 2018 Revel flyer + 2018 wiring: 44E · Sprinter 3.0 188-hp / 325 lb-ft 4WD. Not Revel Sport. No 2017 Revel.
         "2018": ["44E"],
         // OEM 2019 Revel wiring + 2019-labeled brochure: 44E · Sprinter 3.0 188-hp 4WD. Not Revel Sport.
@@ -11490,6 +11671,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["59G", "59K", "59KL", "59GL"],
       floorplansByYear: {
+        // No 2010–13 Travato (first year-true card 2014). Do not invent leftover 59G/59K onto 2010–12.
         // OEM 2014 Travato (caption year) + 2014 wiring: 59G only · ProMaster 280-hp 3.6. 62TE is the transmission, not a plan. Do not invent leftover 59K.
         "2014": ["59G"],
         // OEM 2015 wiring: 59G only. No year-true 2015 Travato brochure found — HP 0. Do not invent leftover 59K or leftover 180.
@@ -11752,11 +11934,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Era: {
       type: "Class B",
-      floorplans: ["70A", "70B", "170M", "170X", "70M", "70C", "70X"],
+      floorplans: ["70A", "70B", "170M", "170X", "70M", "70C", "70X", "170R"],
       floorplansByYear: {
-        "2010": ["70A", "70B"],
-        "2011": ["70A", "70B"],
-        "2012": ["70A", "70B"],
+        // OEM 2010 Era + 2010 wiring: 170R | 170X · Sprinter. HP unprinted → 0. Do not invent leftover 70A/70B.
+        "2010": ["170R", "170X"],
+        // No 2011 Era card (not on 2011 wiring; archive 2012 then 2010). Do not invent leftover 70A/70B.
+        // OEM 2012 Era + 2012 wiring (170X): brochure prints 70X · Sprinter 3.0 188-hp. Do not invent leftover 70A/70B.
+        "2012": ["70X"],
         // OEM 2013 Era + 2013 wiring: 70A | 70X · Sprinter 3.0 188-hp. Do not invent leftover 70B.
         "2013": ["70A", "70X"],
         // OEM 2014 Era + 2014 wiring: 70A | 70X. Option-band 188-hp 3.0 / 161-hp 4-cyl → HP 0. Do not invent leftover 70B.
@@ -11812,11 +11996,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2010,
-          to: 2012,
-          engine: "Mercedes-Benz turbodiesel",
-          horsepower: 180,
+          to: 2010,
+          engine: "Mercedes-Benz Sprinter (HP not printed)",
+          horsepower: 0,
           chassis: "Mercedes-Benz Sprinter",
-          notes: "Leftover Era through 2012 — next slice locks year-true cards."
+          fuelType: "Diesel",
+          notes: "OEM 2010 Era: 170R | 170X · Sprinter. HP not printed — do not invent leftover 180/188. No leftover 70A/70B. No 2011 Era card."
+        },
+        {
+          from: 2012,
+          to: 2012,
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel 188HP",
+          horsepower: 188,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "OEM 2012 Era: 70X · Sprinter 3.0 188-hp. Wiring lists 170X. Do not invent leftover 70A/70B."
         },
         {
           from: 2013,
@@ -11895,15 +12089,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     View: {
       type: "Class C",
-      floorplans: ["24G", "24J", "24V", "24H", "24D", "24R", "24T", "24M"],
+      floorplans: ["24G", "24J", "24V", "24H", "24D", "24R", "24T", "24M", "24A", "24K", "24P", "24DL"],
       floorplansByYear: {
         "2006": ["24G", "24J", "24V"],
         "2007": ["24G", "24J", "24V"],
         "2008": ["24G", "24J", "24V"],
         "2009": ["24G", "24J", "24V"],
-        "2010": ["24G", "24J", "24V"],
-        "2011": ["24G", "24J", "24V"],
-        "2012": ["24G", "24J", "24V"],
+        // OEM 2010 View + View Profile + 2010 wiring: 24A | 24J | 24K | 24P | 24DL · Sprinter 3.0 154-hp. Not leftover 24G/24V.
+        "2010": ["24A", "24J", "24K", "24P", "24DL"],
+        // OEM 2011 View + View Profile + 2011 wiring: 24J | 24K | 24G · Sprinter 3.0 188-hp. Include Profile 24G from wiring.
+        "2011": ["24G", "24J", "24K"],
+        // OEM 2012 View + View Profile + 2012 wiring: 24J | 24M | 24G · Sprinter 3.0 188-hp. Include Profile 24G from wiring.
+        "2012": ["24G", "24J", "24M"],
         // OEM 2013 View + View Profile + 2013 wiring: 24G | 24J | 24M | 24V · Sprinter 3.0 188-hp.
         "2013": ["24G", "24J", "24M", "24V"],
         // OEM 2014 View + View Profile + 2014 wiring: 24G | 24J | 24M | 24V. Option-band 188-hp 3.0 / 161-hp 4-cyl → HP 0.
@@ -11971,11 +12168,29 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2006,
-          to: 2012,
+          to: 2009,
           engine: "Mercedes-Benz Sprinter 3.0L V6 turbodiesel",
           horsepower: 188,
           chassis: "Mercedes-Benz Sprinter",
-          notes: "Leftover Sprinter diesel Class C through 2012 — next slice locks year-true cards."
+          notes: "Leftover Sprinter diesel Class C through 2009. Do not stamp leftover 188 onto 2010 (card prints 154)."
+        },
+        {
+          from: 2010,
+          to: 2010,
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel 154HP",
+          horsepower: 154,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "OEM 2010 View + View Profile: 24A | 24J | 24K | 24P | 24DL · Sprinter 3.0 154-hp. Not leftover 24G/24V. Do not invent 188."
+        },
+        {
+          from: 2011,
+          to: 2012,
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel 188HP",
+          horsepower: 188,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "OEM 2011 View: 24G | 24J | 24K. OEM 2012: 24G | 24J | 24M · Sprinter 3.0 188-hp. Include Profile 24G from wiring."
         },
         {
           from: 2013,
@@ -12062,15 +12277,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Navion: {
       type: "Class C",
-      floorplans: ["24G", "24J", "24V", "24H", "24D", "24P", "24T", "24R", "24M"],
+      floorplans: ["24G", "24J", "24V", "24H", "24D", "24P", "24T", "24R", "24M", "24A", "24K", "24DL"],
       floorplansByYear: {
         "2006": ["24G", "24J", "24V"],
         "2007": ["24G", "24J", "24V"],
         "2008": ["24G", "24J", "24V"],
         "2009": ["24G", "24J", "24V"],
-        "2010": ["24G", "24J", "24V"],
-        "2011": ["24G", "24J", "24V"],
-        "2012": ["24G", "24J", "24V"],
+        // OEM 2010 Navion + Navion iQ + 2010 wiring: 24A | 24J | 24K | 24DL · Sprinter 3.0 154-hp. No View-only 24P. Not leftover 24G/24V.
+        "2010": ["24A", "24J", "24K", "24DL"],
+        // OEM 2011 Navion + Navion iQ + 2011 wiring: 24J | 24K | 24G · Sprinter 3.0 188-hp.
+        "2011": ["24G", "24J", "24K"],
+        // OEM 2012 Navion + Navion iQ + 2012 wiring: 24J | 24M | 24G · Sprinter 3.0 188-hp.
+        "2012": ["24G", "24J", "24M"],
         // OEM 2013 Navion + Navion iQ + 2013 wiring (View twin): 24G | 24J | 24M | 24V · Sprinter 3.0 188-hp.
         "2013": ["24G", "24J", "24M", "24V"],
         // OEM 2014 Navion + Navion iQ + 2014 wiring (View twin): 24G | 24J | 24M | 24V. Option-band 188/161 → HP 0.
@@ -12138,11 +12356,29 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2006,
-          to: 2012,
+          to: 2009,
           engine: "Mercedes-Benz Sprinter 3.0L V6 turbodiesel",
           horsepower: 188,
           chassis: "Mercedes-Benz Sprinter",
-          notes: "Leftover Sprinter diesel Class C through 2012 — next slice locks year-true cards."
+          notes: "Leftover Sprinter diesel Class C through 2009. Do not stamp leftover 188 onto 2010 (card prints 154)."
+        },
+        {
+          from: 2010,
+          to: 2010,
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel 154HP",
+          horsepower: 154,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "OEM 2010 Navion + Navion iQ: 24A | 24J | 24K | 24DL · Sprinter 3.0 154-hp. No View-only 24P. Not leftover 24G/24V."
+        },
+        {
+          from: 2011,
+          to: 2012,
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel 188HP",
+          horsepower: 188,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "OEM 2011 Navion: 24G | 24J | 24K. OEM 2012: 24G | 24J | 24M · Sprinter 3.0 188-hp. Include iQ 24G from wiring."
         },
         {
           from: 2013,
@@ -12471,9 +12707,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2007": ["22M", "25B", "26T"],
         "2008": ["22M", "25B", "26T"],
         "2009": ["22M", "25B", "26T", "31H"],
-        "2010": ["22M", "25B", "26T", "31H"],
-        "2011": ["22M", "25B", "26T", "31H"],
-        "2012": ["22M", "25B", "26T", "31H"],
+        // No 2010–12 Spirit card (archive 2014 then 2009; 2010–12 Class C on wiring is Access / Impulse — not this key). Do not invent leftover 22M/25B/26T/31H.
         // No 2013 Spirit card (not on 2013 wiring; archive 2014 then 2009). Do not invent leftover 22M/26T/31G.
         // OEM 2014 Itasca Spirit + 2014 wiring: 22R | 25B | 27Q | 31H | 31K. Option-band E350 255 / E450 305 → HP 0. Not leftover 22M/26T/31G.
         "2014": ["22R", "25B", "27Q", "31H", "31K"],
@@ -12537,11 +12771,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2005,
-          to: 2012,
+          to: 2009,
           engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
           horsepower: 305,
           chassis: "Ford E-450",
-          notes: "Leftover Spirit through 2012 — next slice locks year-true cards. No 2013 Spirit card."
+          notes: "Leftover Spirit through 2009. No 2010–13 Spirit card (2010–12 Class C on wiring is Access / Impulse)."
         },
         {
           from: 2014,
@@ -12636,9 +12870,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2007": ["22M", "25B", "26T"],
         "2008": ["22M", "25B", "26T"],
         "2009": ["22M", "25B", "26T", "31H"],
-        "2010": ["22M", "25B", "26T", "31H"],
-        "2011": ["22M", "25B", "26T", "31H"],
-        "2012": ["22M", "25B", "26T", "31H"],
+        // No 2010–12 Minnie Winnie card (archive 2014 then 2005; 2010–12 Class C on wiring is Access — not this key). Do not invent leftover 22M/25B/26T/31H.
         // No 2013 Minnie Winnie card (not on 2013 wiring; archive 2014 then 2005). Do not invent leftover 22M/26T/31G.
         // OEM 2014 Minnie Winnie + 2014 wiring: 22R | 25B | 27Q | 31H | 31K. Option-band E350 255 / E450 305 → HP 0. Not leftover 22M/26T/31G.
         "2014": ["22R", "25B", "27Q", "31H", "31K"],
@@ -12702,11 +12934,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2000,
-          to: 2012,
+          to: 2009,
           engine: "Ford V10 / V8 (by year)",
           horsepower: 305,
           chassis: "Ford E-450",
-          notes: "Leftover Minnie Winnie through 2012 — next slice locks year-true cards. No 2013 Minnie Winnie card."
+          notes: "Leftover Minnie Winnie through 2009. No 2010–13 Minnie Winnie card (2010–12 Class C on wiring is Access)."
         },
         {
           from: 2014,
@@ -12785,8 +13017,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Outlook: {
       type: "Class C",
-      floorplans: ["22C", "25J", "27D", "31C", "25H", "27N", "22E", "31N", "26M"],
+      floorplans: ["22C", "25J", "27D", "31C", "25H", "27N", "22E", "31N", "26M", "29B"],
       floorplansByYear: {
+        // OEM 2010 Outlook + 2010 wiring: 29B | 31C · E-450 6.8 V10 305. No 2011–18 Outlook card (archive 2010 then 2019).
+        "2010": ["29B", "31C"],
+        // No OEM 2011–12 Outlook card (not on 2011/2012 wiring; archive 2010 then 2019). Do not invent leftover 22C/25J/27D.
         // No OEM 2013–14 Outlook card (brochure archive 2010 then 2019). Do not invent leftover 22C/25J/27D.
         // No OEM 2015–16 Outlook card (brochure archive 2010 then 2019). Do not invent leftover 22C/25J/27D.
         // No OEM 2017–18 Outlook card (not on 2017/2018 wiring; brochure archive 2010 then 2019). Do not invent leftover 22C/25J/27D/31C.
@@ -12828,9 +13063,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1958,
       warrantyYears: 2,
-      yearStart: 2019,
+      yearStart: 2010,
       yearEnd: 2021,
       powertrainByYear: [
+        {
+          from: 2010,
+          to: 2010,
+          engine: "Ford 6.8L SEFI V10 305HP",
+          horsepower: 305,
+          chassis: "Ford E-450",
+          fuelType: "Gas",
+          notes: "OEM 2010 Outlook: 29B | 31C · E-450 6.8 V10 305. No 2011–18 Outlook card. Not leftover 22C/25J/27D."
+        },
         {
           from: 2019,
           to: 2019,
@@ -12865,6 +13109,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Super C",
       floorplans: ["26RP", "28MT", "29MT", "31SR", "31J", "31P"],
       floorplansByYear: {
+        // No 2010–12 Access Super C (2010–12 Access on wiring is Class C — not this Super C key / not Access TT).
         // No OEM 2017–18 Access Super C card (not on 2017/2018 wiring). Do not invent Super C plans.
         // No OEM 2019–20 Access Super C card (not on 2019/2020 wiring). Do not invent 26RP/28MT.
         // No OEM/RVUSA 2021–22 Access Super C card. Leftover 26RP/28MT/29MT/31SR look invented — omit.
@@ -12914,6 +13159,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Travel Trailer",
       floorplans: ["1700BH", "2100BH", "2108DS", "1800BH", "2306BHS", "2500RL", "1720FB", "1808FBS", "1821FB", "2108FBS", "2108TB", "2225RL", "1706FB", "2106DS", "2106FBS", "1705RD"],
       floorplansByYear: {
+        // No 2010–12 Micro Minnie (archive starts 2015). Do not invent leftover 1700BH/2100BH/2108DS onto 2010–12.
         // No year-true 2013–14 Micro Minnie card (archive starts 2015). Do not invent leftover 1700BH/2100BH/2108DS.
         // Copyright-2015 Micro Minnie flyer: 1706FB | 2106DS | 2106FBS. Do not invent leftover 1700BH/2100BH/2108DS.
         "2015": ["1706FB", "2106DS", "2106FBS"],
@@ -12972,9 +13218,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Travel Trailer",
       floorplans: ["2201MB", "2500FL", "2801BHS", "2809DL", "2201DS", "2455BHS", "2516BH", "2301BHS", "2326BH", "2326RB", "2327TB", "2529RG", "2630MLRK", "2730FK", "2832FK", "2401RG", "2500RL", "2606RL", "1801FB", "2101DS", "2101FBS", "2351DKS", "2451BHS"],
       floorplansByYear: {
-        "2010": ["2201MB", "2500FL"],
-        "2011": ["2201MB", "2500FL"],
-        "2012": ["2201MB", "2500FL"],
+        // No 2010–12 Minnie card (archive 2005 then 2013). Do not invent leftover 2201MB/2500FL.
         // 2013 Minnie brochure extract was image/garbled — omit. Do not invent leftover 2201MB/2500FL.
         // OEM/RVUSA 2014 Minnie: 1801FB | 2101DS | 2101FBS | 2201DS | 2351DKS | 2451BHS. Not leftover 2201MB/2500FL. Not Micro.
         "2014": ["1801FB", "2101DS", "2101FBS", "2201DS", "2351DKS", "2451BHS"],
@@ -13023,7 +13267,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1958,
       warrantyYears: 1,
-      yearStart: 2010,
+      yearStart: 2014,
       yearEnd: 2025,
       description: "Winnebago Minnie — midsize travel trailer (not Micro)."
     },

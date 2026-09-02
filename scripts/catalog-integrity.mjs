@@ -656,8 +656,111 @@ function main() {
       if (/"2013":/.test(ol) || /"2014":/.test(ol)) {
         fail("Winnebago|Outlook must not list 2013–2014 (no year-true Outlook card)");
       }
-      if (!/yearStart:\s*2019/.test(ol)) {
-        fail("Winnebago|Outlook yearStart must be 2019 (no 2013–14 Outlook card)");
+      if (!/yearStart:\s*2010/.test(ol)) {
+        fail("Winnebago|Outlook yearStart must be 2010 (OEM 2010 Outlook card; no 2011–18)");
+      }
+      if (!/"2010": \["29B", "31C"\]/.test(ol)) {
+        fail("Winnebago|Outlook MY10 OEM plans missing (29B/31C)");
+      }
+      if (/"2011":/.test(ol) || /"2012":/.test(ol)) {
+        fail("Winnebago|Outlook must not list 2011–2012 (archive 2010 then 2019)");
+      }
+      if (/"2010":/.test(fz)) {
+        fail("Winnebago|Forza must not list 2010–2012 (first year-true card 2014)");
+      }
+      if (/"2011":/.test(fz) || /"2012":/.test(fz)) {
+        fail("Winnebago|Forza must not list 2010–2012 (first year-true card 2014)");
+      }
+      if (/"2010":/.test(hz) || /"2011":/.test(hz) || /"2012":/.test(hz)) {
+        fail("Winnebago|Horizon must not list 2010–2012 (first year-true card 2018)");
+      }
+      if (/"2010":/.test(intent) || /"2011":/.test(intent) || /"2012":/.test(intent)) {
+        fail("Winnebago|Intent must not list 2010–2012 (first year-true card 2018)");
+      }
+      if (/"2010":/.test(ss) || /"2011":/.test(ss) || /"2012":/.test(ss)) {
+        fail("Winnebago|Sunstar must not list 2010–2012 (2010–12 Sunstar is Itasca — do not collide)");
+      }
+      if (/"2010":/.test(vita) || /"2011":/.test(vita) || /"2012":/.test(vita)) {
+        fail("Winnebago|Vita must not list 2010–2012 (first year-true card 2019)");
+      }
+      if (/"2010":/.test(so) || /"2011":/.test(so) || /"2012":/.test(so)) {
+        fail("Winnebago|Solis must not list 2010–2012 (first year-true card 2020)");
+      }
+      if (/"2010":/.test(ac) || /"2011":/.test(ac) || /"2012":/.test(ac)) {
+        fail("Winnebago|Access Super C must not list 2010–2012 (2010–12 Access on wiring is Class C, not Super C)");
+      }
+      if (!/"2010": \["34Y", "39N", "40L", "40T"\]/.test(jy)) {
+        fail("Winnebago|Journey MY10 OEM plans missing (34Y/39N/40L/40T)");
+      }
+      if (!/"2011": \["34Y", "39N", "40L", "40U"\]/.test(jy)) {
+        fail("Winnebago|Journey MY11 OEM plans missing (34Y/39N/40L/40U)");
+      }
+      if (!/"2012": \["34Y", "36M", "40U", "42E"\]/.test(jy)) {
+        fail("Winnebago|Journey MY12 OEM plans missing (34Y/36M/40U/42E)");
+      }
+      if (/"2010": .*"34G"/.test(jy) || /"2011": .*"34G"/.test(jy) || /"2012": .*"34G"/.test(jy)) {
+        fail("Winnebago|Journey must not invent leftover 34G on 2010–12");
+      }
+      if (!/"2010": \["40BD", "40CD", "40WD", "42AD"\]/.test(gt)) {
+        fail("Winnebago|Grand Tour MY10 OEM plans missing (40BD/40CD/40WD/42AD)");
+      }
+      if (!/"2011": \["40BD", "40CD", "42AD", "42QD"\]/.test(gt)) {
+        fail("Winnebago|Grand Tour MY11 OEM plans missing (40BD/40CD/42AD/42QD)");
+      }
+      if (!/"2012": \["42AD", "42JD", "42QD"\]/.test(gt)) {
+        fail("Winnebago|Grand Tour MY12 OEM plans missing (42AD/42JD/42QD)");
+      }
+      if (/"2010": .*"42QDP"/.test(gt) || /"2011": .*"45RL"/.test(gt) || /"2012": .*"42QDP"/.test(gt)) {
+        fail("Winnebago|Grand Tour must not invent leftover 42QDP/45RL on 2010–12");
+      }
+      if (!/yearStart:\s*2010/.test(via)) {
+        fail("Winnebago|Via yearStart must be 2010 (first year-true Via card)");
+      }
+      if (!/"2010": \["25R", "25T"\]/.test(via)) {
+        fail("Winnebago|Via MY10 OEM plans missing (25R/25T)");
+      }
+      if (/"2010":/.test(mm) || /"2011":/.test(mm) || /"2012":/.test(mm)) {
+        fail("Winnebago|Micro Minnie must not list 2010–2012 (archive starts 2015)");
+      }
+      if (/"2010":/.test(mn) || /"2011":/.test(mn) || /"2012":/.test(mn)) {
+        fail("Winnebago|Minnie must not list 2010–2012 (no year-true 2010–12 Minnie card)");
+      }
+      if (!/yearStart:\s*2014/.test(mn)) {
+        fail("Winnebago|Minnie yearStart must be 2014 (no 2010–13 year-true card)");
+      }
+      const sp0 = wgo.indexOf("    Spirit: {");
+      const sp1 = wgo.indexOf('    "Minnie Winnie": {');
+      const sp = sp0 >= 0 && sp1 > sp0 ? wgo.slice(sp0, sp1) : "";
+      const mw0 = wgo.indexOf('    "Minnie Winnie": {');
+      const mw1 = wgo.indexOf("    Outlook: {");
+      const mw = mw0 >= 0 && mw1 > mw0 ? wgo.slice(mw0, mw1) : "";
+      if (/"2010":/.test(sp) || /"2011":/.test(sp) || /"2012":/.test(sp)) {
+        fail("Winnebago|Spirit must not list 2010–2012 (2010–12 Class C on wiring is Access / Impulse)");
+      }
+      if (/"2010":/.test(mw) || /"2011":/.test(mw) || /"2012":/.test(mw)) {
+        fail("Winnebago|Minnie Winnie must not list 2010–2012 (2010–12 Class C on wiring is Access)");
+      }
+      const rv0 = wgo.indexOf("    Revel: {");
+      const rv1 = wgo.indexOf("    Travato: {");
+      const rv = rv0 >= 0 && rv1 > rv0 ? wgo.slice(rv0, rv1) : "";
+      const tr0 = wgo.indexOf("    Travato: {");
+      const tr1 = wgo.indexOf("    Solis: {");
+      const tr = tr0 >= 0 && tr1 > tr0 ? wgo.slice(tr0, tr1) : "";
+      if (/"2010":/.test(rv) || /"2011":/.test(rv) || /"2012":/.test(rv)) {
+        fail("Winnebago|Revel must not list 2010–2012 (first year-true card 2018)");
+      }
+      if (/"2010":/.test(tr) || /"2011":/.test(tr) || /"2012":/.test(tr)) {
+        fail("Winnebago|Travato must not list 2010–2012 (first year-true card 2014)");
+      }
+      const era2011 = era.match(/"2011":/);
+      if (era2011) {
+        fail("Winnebago|Era must not list 2011 (not on 2011 wiring; no 2011 brochure)");
+      }
+      if (!/"2010": \["170R", "170X"\]/.test(era)) {
+        fail("Winnebago|Era MY10 OEM plans missing (170R/170X)");
+      }
+      if (!/"2012": \["70X"\]/.test(era)) {
+        fail("Winnebago|Era MY12 OEM plans missing (70X)");
       }
       if (/"2013":/.test(mm) || /"2014":/.test(mm)) {
         fail("Winnebago|Micro Minnie must not list 2013–2014 (archive starts 2015)");
