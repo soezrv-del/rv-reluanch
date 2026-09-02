@@ -2877,8 +2877,8 @@ test("Thor 2021–2022 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(th["Four Winds Siesta"]?.years?.includes(2022), false);
   assert.equal(th["Rize Plus"]?.years?.includes(2021), false);
   assert.equal(th["Rize Plus"]?.years?.includes(2022), false);
-  assert.equal(th["Magnitude XG"]?.years?.includes(2021), false);
-  assert.equal(th["Magnitude XG"]?.years?.includes(2022), false);
+  assert.ok(!(th["Magnitude XG"]?.years || []).includes(2021));
+  assert.ok(!(th["Magnitude XG"]?.years || []).includes(2022));
   assert.equal(th.Seneca?.years?.includes(2021), false);
   assert.equal(th.Seneca?.years?.includes(2022), false);
   assert.equal(th.Outlaw?.years?.includes(2021), false);
@@ -3076,7 +3076,7 @@ test("Thor 2019–2020 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(th.Outlaw?.years?.includes(2019), false);
   assert.equal(th.Outlaw?.years?.includes(2020), false);
   assert.equal(th["Rize Plus"]?.years?.includes(2020), false);
-  assert.equal(th["Magnitude XG"]?.years?.includes(2020), false);
+  assert.ok(!(th["Magnitude XG"]?.years || []).includes(2020));
   assert.equal(th.Magnitude?.years?.includes(2019), false);
   assert.equal(th.Magnitude?.years?.includes(2020), true);
 

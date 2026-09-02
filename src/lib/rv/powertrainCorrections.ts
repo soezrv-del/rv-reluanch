@@ -1221,34 +1221,8 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
   },
 
   {
-    yearMin: 2020,
-    yearEnd: 2020,
-    makeIncludes: "thor",
-    modelIncludes: "vegas",
-    engine: "Ford 7.3L V8 (Godzilla) 325HP",
-    horsepower: 325,
-    torqueLbFt: 450,
-    chassis: "Ford E-Series cutaway (Class A body)",
-    transmission: "TorqShift automatic",
-    fuelType: "Gas",
-    note: "Leftover Vegas 2020 Godzilla cutaway. MY21–22 OEM reprints chassis, not HP — do not invent 325.",
-  },
-  {
-    yearMin: 2020,
-    yearEnd: 2020,
-    makeIncludes: "thor",
-    modelIncludes: "axis",
-    engine: "Ford 7.3L V8 (Godzilla) 325HP",
-    horsepower: 325,
-    torqueLbFt: 450,
-    chassis: "Ford E-Series cutaway (Class A body)",
-    transmission: "TorqShift automatic",
-    fuelType: "Gas",
-    note: "Leftover Axis 2020 Godzilla cutaway. MY21–22 OEM reprints chassis, not HP — do not invent 325.",
-  },
-  {
     yearMin: 2014,
-    yearEnd: 2019,
+    yearEnd: 2018,
     makeIncludes: "thor",
     modelIncludes: "vegas",
     engine: "Ford Triton V10 6.8L",
@@ -1256,11 +1230,11 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     torqueLbFt: 420,
     chassis: "Ford E-350 / E-450 cutaway",
     fuelType: "Gas",
-    note: "Early Vegas V10 cutaway",
+    note: "Early Vegas V10 cutaway. MY19–20 OEM is still 6.8 305 — leftover Godzilla 325 for 2020 was wrong.",
   },
   {
     yearMin: 2014,
-    yearEnd: 2019,
+    yearEnd: 2018,
     makeIncludes: "thor",
     modelIncludes: "axis",
     engine: "Ford Triton V10 6.8L",
@@ -1268,7 +1242,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     torqueLbFt: 420,
     chassis: "Ford E-350 / E-450 cutaway",
     fuelType: "Gas",
-    note: "Early Axis V10 cutaway",
+    note: "Early Axis V10 cutaway. MY19–20 OEM is still 6.8 305 — leftover Godzilla 325 for 2020 was wrong.",
   },
 
   // Fleetwood Discovery (regular, not LXE) — Cummins ISB / B6.7 class, not 8.9 ISL
@@ -2701,7 +2675,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
   // Thor Palazzo / Hurricane mid bands (common mixups)
   {
     yearMin: 2018,
-    yearEnd: 2020,
+    yearEnd: 2018,
     makeIncludes: "thor",
     modelIncludes: "palazzo",
     engine: "Cummins B6.7 (ISB) 340HP",
@@ -2710,7 +2684,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Freightliner XC-S",
     transmission: "Allison 2100 / 2500 MH",
     fuelType: "Diesel",
-    note: "Palazzo leftover 340 lock ends 2020. MY21–24 OEM is ISB 300/340 option-band. MY25–26 is Palazzo GT; MY27 Palazzo is 300/340 by plan.",
+    note: "Palazzo leftover 340 lock ends 2018. MY19–20 OEM is ISB 300/660 vs 340/700 option-band. MY21–24 OEM is ISB 300/340 option-band. MY25–26 is Palazzo GT; MY27 Palazzo is 300/340 by plan.",
   },
   {
     yearMin: 2016,
