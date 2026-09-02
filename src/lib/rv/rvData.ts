@@ -20,9 +20,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Newmar: {
     Essex: {
       type: "Class A Diesel",
-      floorplans: ["4551", "4544", "4534", "4519", "4561", "4553", "4580", "4521", "4533", "4543", "4545", "4550", "4559", "4569", "4576", "4578", "4579", "4583", "4595", "4598", "4513", "4584", "4531", "4536", "4537", "4501", "4503", "4507", "4518", "4565", "4568", "4599", "4542", "4547", "4548", "4552", "4554", "4557"],
+      floorplans: ["4551", "4544", "4534", "4519", "4561", "4553", "4580", "4521", "4533", "4543", "4545", "4550", "4559", "4569", "4576", "4578", "4579", "4583", "4595", "4598", "4513", "4584", "4531", "4536", "4537", "4501", "4503", "4507", "4518", "4565", "4568", "4599", "4542", "4547", "4548", "4552", "4554", "4557", "4517", "4522", "4524", "4532", "4538", "4540", "4541"],
       floorplansByYear: {
-        "2012": ["4551", "4544", "4534"],
+        // Brochure 2011_Essex_Luxury: 4517 | 4522 | 4524 | 4532 | 4538 — Spartan K2 ISM 500. No 2010 OEM card.
+        "2011": ["4517", "4522", "4524", "4532", "4538"],
+        // Brochure 2012_Essex_Luxury: 4540 | 4541 | 4542 | 4544 | 4545 — Spartan K2 ISX 500
+        "2012": ["4540", "4541", "4542", "4544", "4545"],
         // Brochure 2013_Essex_Luxury: 4542 | 4544 | 4547 | 4548 — Spartan K2 ISX 500
         "2013": ["4542", "4544", "4547", "4548"],
         // Brochure 2014_Essex: 4544 | 4552 | 4553 | 4554 | 4557 — Spartan K2 ISX 500 (DD13 500 opt on 4544/4553)
@@ -88,16 +91,24 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 86,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2012,
+      yearStart: 2011,
       description: "Newmar Essex — limited-production flagship diesel. Recent OEM: Cummins X15 605 / 1,950 on Freightliner SL Tag or Spartan K3 (brochure option). Hand-built residential interiors.",
       powertrainByYear: [
         {
+          from: 2011,
+          to: 2011,
+          engine: "Cummins ISM 500HP",
+          horsepower: 500,
+          chassis: "Spartan K2 Tag",
+          notes: "OEM 2011_Essex_Luxury: Spartan K2 tag ISM 500. Not ISX. No 2010 OEM card."
+        },
+        {
           from: 2012,
           to: 2012,
-          engine: "Cummins ISX diesel (era)",
+          engine: "Cummins ISX 500HP",
           horsepower: 500,
-          chassis: "Spartan K2 / Freightliner (by option)",
-          notes: "2012 leftover — 2010–2012 slice locks OEM. Do not copy 2013–2014 ISX 500 or MY15+ ISX 600."
+          chassis: "Spartan K2 Tag",
+          notes: "OEM 2012_Essex_Luxury: Spartan K2 tag ISX 500. Do not copy 2011 ISM or MY15+ ISX 600."
         },
         {
           from: 2013,
@@ -131,16 +142,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "King Aire": {
       type: "Class A Diesel",
-      floorplans: ["45AHQ", "45IQH", "4531", "45RBQ", "4553", "42AQHP", "45AQHP", "45KQ", "4521", "4533", "4534", "4540", "4545", "4546", "4549", "4550", "4558", "4559", "4569", "4578", "4596", "4598", "4513", "4519", "4584", "4536", "4537", "4501", "4503", "4507", "4518", "4565", "4568", "4599", "4582", "4587", "4588", "4592", "4593", "4594", "4597"],
+      floorplans: ["45AHQ", "45IQH", "4531", "45RBQ", "4553", "42AQHP", "45AQHP", "45KQ", "4521", "4533", "4534", "4540", "4545", "4546", "4549", "4550", "4558", "4559", "4569", "4578", "4596", "4598", "4513", "4519", "4584", "4536", "4537", "4501", "4503", "4507", "4518", "4565", "4568", "4599", "4582", "4587", "4588", "4592", "4593", "4594", "4597", "4567", "4570", "4571", "4572", "4574", "4585", "4580", "4581"],
       floorplansByYear: {
         "2005": ["45AHQ", "45IQH", "4531"],
         "2006": ["45AHQ", "45IQH", "4531"],
         "2007": ["45AHQ", "45IQH", "4531"],
         "2008": ["45AHQ", "45IQH", "4531"],
         "2009": ["45AHQ", "45IQH", "4531"],
-        "2010": ["45AHQ", "45IQH", "4531"],
-        "2011": ["45AHQ", "45IQH", "4531"],
-        "2012": ["45AHQ", "45IQH", "4531"],
+        // No 2010 OEM King Aire brochure (archive jumps 2009 → 2011). Do not invent.
+        // Brochure 2011_King_Aire_Luxury: 4567 | 4570 | 4571 | 4572 | 4574 — Spartan K3 ISX 650
+        "2011": ["4567", "4570", "4571", "4572", "4574"],
+        // Brochure 2012_King_Aire_Luxury: 4585 | 4582 | 4581 | 4580 | 4584 — Spartan K3 ISX 600
+        "2012": ["4585", "4582", "4581", "4580", "4584"],
         // Brochure 2013_King_Aire_Luxury: 4582 | 4584 | 4587 | 4588 — Spartan K3 ISX 600
         "2013": ["4582", "4584", "4587", "4588"],
         // Brochure 2014_King_Aire: 4584 | 4592 | 4593 | 4594 | 4597 | 4599 — Spartan K3 ISX 600
@@ -216,13 +229,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Spartan K3",
           notes: "2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)"
         },
-                {
-          from: 2010,
+        {
+          from: 2011,
+          to: 2011,
+          engine: "Cummins ISX 650HP",
+          horsepower: 650,
+          chassis: "Spartan K3 Tag",
+          notes: "OEM 2011_King_Aire_Luxury: Spartan K3 tag ISX 650. Do not copy 2012–2014 ISX 600. No 2010 OEM card."
+        },
+        {
+          from: 2012,
           to: 2012,
-          engine: "Cummins ISL / ISB 300–450HP (era)",
-          horsepower: 380,
-          chassis: "Spartan K3",
-          notes: "2010–2012 leftover — next slice locks OEM. Do not copy 2013–2014 ISX 600."
+          engine: "Cummins ISX 600HP",
+          horsepower: 600,
+          chassis: "Spartan K3 Tag",
+          notes: "OEM 2012_King_Aire_Luxury: Spartan K3 tag ISX 600. Do not copy 2011 ISX 650."
         },
         {
           from: 2013,
@@ -257,13 +278,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Mountain Aire": {
       type: "Class A Diesel",
-      floorplans: ["4536", "4553", "4304", "4526", "4118", "4546", "4574", "4536PBD", "4528", "4544", "3823", "3825", "4002", "4018", "4102", "4521", "4533", "4534", "4535", "4543", "4550", "4551", "4569", "4576", "4579", "4583", "4586", "4589", "4591", "4595", "4513", "4519", "4525", "4584", "4531", "4537", "4047", "4501", "4503", "4518", "4565", "4568", "4598", "4599", "4038", "4314", "4319", "4336", "4344", "4347", "4361", "4364", "4372", "4374"],
+      floorplans: ["4536", "4553", "4304", "4526", "4118", "4546", "4574", "4536PBD", "4528", "4544", "3823", "3825", "4002", "4018", "4102", "4521", "4533", "4534", "4535", "4543", "4550", "4551", "4569", "4576", "4579", "4583", "4586", "4589", "4591", "4595", "4513", "4519", "4525", "4584", "4531", "4537", "4047", "4501", "4503", "4518", "4565", "4568", "4598", "4599", "4038", "4314", "4319", "4336", "4344", "4347", "4361", "4364", "4372", "4374", "4034", "4085", "4330", "4333"],
       floorplansByYear: {
         "2008": ["4536", "4553", "4304"],
         "2009": ["4536", "4553", "4304"],
-        "2010": ["4536", "4553", "4304"],
-        "2011": ["4536", "4553", "4304"],
-        "2012": ["4536", "4553", "4304"],
+        // No 2010 OEM Mountain Aire brochure (archive jumps 2009 → 2011). Do not invent.
+        // Brochure 2011_Mountain_Aire_Luxury: 4034 | 4085 | 4314 | 4333 | 4336 | 4344 — Cummins 425 (family/chassis unnamed)
+        "2011": ["4034", "4085", "4314", "4333", "4336", "4344"],
+        // Brochure 2012_Mountain_Aire_Luxury: 4314 | 4330 | 4333 | 4336 | 4344 — Freightliner XCR ISL 450
+        "2012": ["4314", "4330", "4333", "4336", "4344"],
         // Brochure 2013_Mountain_Aire_Luxury: 4018 | 4038 | 4314 | 4319 | 4336 | 4344 | 4347 — ISL 450
         "2013": ["4018", "4038", "4314", "4319", "4336", "4344", "4347"],
         // Brochure 2014_Mountain_Aire: 4018 | 4038 | 4360 | 4361 | 4364 | 4369 | 4372 | 4374 — ISL 450
@@ -339,13 +362,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Spartan K3 / Freightliner (by year)",
           notes: "2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)"
         },
-                {
-          from: 2010,
+        {
+          from: 2011,
+          to: 2011,
+          engine: "Cummins diesel 425HP",
+          horsepower: 425,
+          notes: "OEM 2011_Mountain_Aire_Luxury chassis table: 425 on every plan. Brochure does not name ISL/ISB or Freightliner/Spartan — do not invent ISL 450. No 2010 OEM card."
+        },
+        {
+          from: 2012,
           to: 2012,
-          engine: "Cummins ISL / ISB 300–450HP (era)",
-          horsepower: 380,
-          chassis: "Spartan K3 / Freightliner (by year)",
-          notes: "2010–2012 leftover — next slice locks OEM. Do not copy 2013–2014 ISL 450 or MY15+ ISX 500."
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          chassis: "Freightliner XCR Tag",
+          notes: "OEM 2012_Mountain_Aire_Luxury: Freightliner XCR tag ISL 450. Do not copy 2011 unnamed 425."
         },
         {
           from: 2013,
@@ -451,16 +481,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Dutch Star": {
       type: "Class A Diesel",
-      floorplans: ["4002", "4018", "4054", "4081", "4369", "4311", "4052", "3709", "3717", "3736", "3817", "4020", "4326", "4543", "3737", "4009", "4047", "4058", "4231", "4381", "4553", "3836", "4071", "4310", "4325", "4328", "4340", "4345", "4354", "4362", "4363", "4370", "3724", "4041", "3718", "4327", "3726", "3745", "4312", "4313", "4360", "4366", "4372", "4375", "3734", "3735", "3738", "4038", "4318", "4324", "4338", "4344", "4347", "4353", "4364", "4373", "4374"],
+      floorplans: ["4002", "4018", "4054", "4081", "4369", "4311", "4052", "3709", "3717", "3736", "3817", "4020", "4326", "4543", "3737", "4009", "4047", "4058", "4231", "4381", "4553", "3836", "4071", "4310", "4325", "4328", "4340", "4345", "4354", "4362", "4363", "4370", "3724", "4041", "3718", "4327", "3726", "3745", "4312", "4313", "4360", "4366", "4372", "4375", "3734", "3735", "3738", "4038", "4318", "4324", "4338", "4344", "4347", "4353", "4364", "4373", "4374", "4020T", "4034T", "4043T", "4086T", "4062", "4086", "4336", "4342", "4346", "4386"],
       floorplansByYear: {
         "2005": ["4018", "4081", "4369"],
         "2006": ["4018", "4081", "4369"],
         "2007": ["4018", "4081", "4369"],
         "2008": ["4018", "4081", "4369"],
         "2009": ["4018", "4081", "4369", "4311"],
-        "2010": ["4018", "4081", "4369", "4311"],
-        "2011": ["4018", "4081", "4369", "4311"],
-        "2012": ["4018", "4081", "4369", "4311"],
+        // No 2010 OEM Dutch Star brochure (archive jumps 2009 → 2011). Do not invent.
+        // Brochure 2011_Dutch_Star_Diesel: 3734 | 4020T | 4034T | 4043T | 4086T | 4324 | 4336 | 4344 | 4353 | 4386 — ISL 400 all (T suffix printed)
+        "2011": ["3734", "4020T", "4034T", "4043T", "4086T", "4324", "4336", "4344", "4353", "4386"],
+        // Brochure 2012_Dutch_Star_Diesel: 3734 | 3735 (ISL 400) / 4020 | 4062 | 4086 | 4324 | 4342 | 4346 | 4353 (ISL 450)
+        "2012": ["3734", "3735", "4020", "4062", "4086", "4324", "4342", "4346", "4353"],
         // Brochure 2013_Dutch_Star_Diesel: 3734 | 3735 (ISL 400) / 4018 | 4038 | 4318 | 4324 | 4338 | 4344 | 4347 | 4353 (ISL 450)
         "2013": ["3734", "3735", "4018", "4038", "4318", "4324", "4338", "4344", "4347", "4353"],
         // Brochure 2014_Dutch_Star: 3736 | 3738 | 4018 | 4038 | 4360 | 4364 | 4369 | 4372 | 4373 | 4374 — ISL 450 all
@@ -536,13 +568,39 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Freightliner XC-Series (Spartan optional some years)",
           notes: "2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)"
         },
-                {
-          from: 2010,
+        {
+          from: 2011,
+          to: 2011,
+          engine: "Cummins ISL 400HP",
+          horsepower: 400,
+          chassis: "Freightliner",
+          notes: "OEM 2011_Dutch_Star_Diesel: Freightliner + ISL 400 on every plan including 40–43' T-suffix. Do not copy 2012–2013 450. No 2010 OEM card."
+        },
+        {
+          from: 2012,
           to: 2012,
-          engine: "Cummins ISL / ISB 300–450HP (era)",
-          horsepower: 380,
-          chassis: "Freightliner XC-Series (Spartan optional some years)",
-          notes: "2010–2012 leftover — next slice locks OEM. Do not copy 2013 ISL 400/450 or 2014 ISL 450."
+          floorplans: ["3734", "3735", "37"],
+          engine: "Cummins ISL 400HP",
+          horsepower: 400,
+          chassis: "Freightliner",
+          notes: "OEM 2012_Dutch_Star_Diesel 37': ISL 400 — not 450."
+        },
+        {
+          from: 2012,
+          to: 2012,
+          floorplans: ["4020", "4062", "4086", "4324", "4342", "4346", "4353", "40", "43"],
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          chassis: "Freightliner Tag",
+          notes: "OEM 2012_Dutch_Star_Diesel 40–43': ISL 450 — not 400."
+        },
+        {
+          from: 2012,
+          to: 2012,
+          engine: "Cummins ISL 400HP (37') or ISL 450HP (40–43')",
+          horsepower: 400,
+          chassis: "Freightliner",
+          notes: "OEM 2012_Dutch_Star_Diesel: ISL 400 on 37' / ISL 450 on 40–43'. Do not copy 2011 400-all."
         },
         {
           from: 2013,
@@ -817,11 +875,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Ventana: {
       type: "Class A Diesel",
-      floorplans: ["3407", "3412", "3426", "3436", "3709", "3717", "3512", "3809", "3817", "4002", "4037", "4041", "4054", "4068", "4310", "4311", "4326", "4328", "4329", "4334", "4340", "4345", "4348", "4354", "4362", "4369", "3437", "3710", "3711", "3716", "3507", "3724", "4322", "3715", "4046", "4049", "4308", "3427", "3635", "3636", "3725", "4003", "4315", "4316", "4360", "4375", "4381", "3433", "3434", "3634", "4018", "4038", "4324", "4337", "4346", "4036", "4039", "4373", "4377"],
+      floorplans: ["3407", "3412", "3426", "3436", "3709", "3717", "3512", "3809", "3817", "4002", "4037", "4041", "4054", "4068", "4310", "4311", "4326", "4328", "4329", "4334", "4340", "4345", "4348", "4354", "4362", "4369", "3437", "3710", "3711", "3716", "3507", "3724", "4322", "3715", "4046", "4049", "4308", "3427", "3635", "3636", "3725", "4003", "4315", "4316", "4360", "4375", "4381", "3433", "3434", "3634", "4018", "4038", "4324", "4337", "4346", "4036", "4039", "4373", "4377", "3934", "3943", "3962", "4034", "4043", "4062", "4333", "4335", "4386"],
       floorplansByYear: {
         "2006": ["3436","3717","4037"],"2007": ["3436","3717","4037"],"2008": ["3436","3717","4037"],
-        "2009": ["3436","3717","4037"],"2010": ["3436","3717","4037"],"2011": ["3436","3717","4037"],
-        "2012": ["3436","3717","4037"],
+        "2009": ["3436","3717","4037"],
+        // No 2010 OEM Ventana brochure (archive jumps 2009 → 2011). Do not invent.
+        // Brochure 2011_Ventana_Diesel: 3433 | 3434 | 3934 | 3943 | 3962 (ISC 350) / 4333 | 4335 | 4386 (ISB 360)
+        "2011": ["3433","3434","3934","3943","3962","4333","4335","4386"],
+        // Brochure 2012_Ventana_LE combined Ventana table: 3433 | 3434 (ISB 360) / 4034 | 4043 | 4062 | 4324 | 4333 | 4337 | 4346 (ISC 380)
+        "2012": ["3433","3434","4034","4043","4062","4324","4333","4337","4346"],
         // Brochure 2013_Ventana: 3433 | 3434 | 3634 (ISB 360) / 4018 | 4038 | 4324 | 4337 | 4346 (ISC 380)
         "2013": ["3433","3434","3634","4018","4038","4324","4337","4346"],
         // Brochure 2014_Ventana: 3433 | 3436 | 3634 (ISB 360) / 4036 | 4037 | 4039 | 4360 | 4369 | 4373 | 4377 (ISL 400)
@@ -865,7 +927,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       description: "Newmar Ventana — OEM MY25–26: Cummins L 380 (35–38) / 400 tag (40–43). MY27 brochure: Cummins B6.7 380–400 / 1,150–1,250. 4331 is not a real code.",
       powertrainByYear: [
         { from: 2006, to: 2009, engine: "Cummins ISL / ISB diesel (era)", horsepower: 350, torqueLbFt: 1000, chassis: "Freightliner XC-Series", transmission: "Allison 3000 MH" },
-        { from: 2010, to: 2012, engine: "Cummins ISB / ISL diesel (era)", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XC-Series", transmission: "Allison 3000 MH", notes: "2010–2012 leftover — next slice locks OEM." },
+        { from: 2011, to: 2011, floorplans: ["3433","3434","3934","3943","3962","34","39"], engine: "Cummins ISC 350HP", horsepower: 350, chassis: "Freightliner", transmission: "Allison 3000 MH", notes: "OEM 2011_Ventana_Diesel 34–39': ISC 350 — not ISB 360, not LE 340. No 2010 OEM card." },
+        { from: 2011, to: 2011, floorplans: ["4333","4335","4386","43"], engine: "Cummins ISB 360HP", horsepower: 360, chassis: "Freightliner Tag", transmission: "Allison 3000 MH", notes: "OEM 2011_Ventana_Diesel 43': ISB 360 — not ISC 350. Opposite of MY12+ (short=350, 43'=360)." },
+        { from: 2011, to: 2011, engine: "Cummins ISC 350HP (34–39') or ISB 360HP (43')", horsepower: 350, chassis: "Freightliner", transmission: "Allison 3000 MH", notes: "OEM 2011_Ventana_Diesel year-first. Bare ventana must not stamp Ventana LE." },
+        { from: 2012, to: 2012, floorplans: ["3433","3434","34"], engine: "Cummins ISB 360HP", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner", transmission: "Allison 3000 MH", notes: "OEM 2012_Ventana_LE combined Ventana 34': ISB 360 — not ISC 380, not LE 340" },
+        { from: 2012, to: 2012, floorplans: ["4034","4043","4062","4324","4333","4337","4346","40","43"], engine: "Cummins ISC 380HP", horsepower: 380, chassis: "Freightliner Tag", transmission: "Allison 3000 MH", notes: "OEM 2012_Ventana_LE combined Ventana 40–43': ISC 380 — not ISB 360, not MY14+ ISL 400" },
+        { from: 2012, to: 2012, engine: "Cummins ISB 360HP (34') or ISC 380HP (40–43')", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner", transmission: "Allison 3000 MH", notes: "OEM 2012_Ventana combined card year-first. Bare ventana must not stamp Ventana LE." },
         { from: 2013, to: 2013, floorplans: ["3433","3434","3634","34","36"], engine: "Cummins ISB 360HP", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", notes: "OEM 2013_Ventana 34–36': ISB 360 — not ISC 380, not LE 340" },
         { from: 2013, to: 2013, floorplans: ["4018","4038","4324","4337","4346","40","43"], engine: "Cummins ISC 380HP", horsepower: 380, torqueLbFt: 1050, chassis: "Freightliner XCR Tag", transmission: "Allison 3000 MH", notes: "OEM 2013_Ventana 40–43': ISC 380 — not ISB 360, not MY14+ ISL 400" },
         { from: 2013, to: 2013, engine: "Cummins ISB 360HP (34–36') or ISC 380HP (40–43')", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH" },
@@ -902,7 +969,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["3412","3426","3436","3709","3717","3850","4002","4037","4045","4048","3724","4042","4044","3413","3713","3427","3437","3635","3636","3725","3802","3812","3849","4040","3433","3434","3634","3843","3862","3845","3847"],
       floorplansByYear: {
-        "2012": ["3436","3709","3850"],
+        // Brochure 2012_Ventana_LE combined LE table: 3634 | 3843 | 3862 — ISB 340 only (no 40')
+        "2012": ["3634","3843","3862"],
         // Brochure 2013_Ventana combined LE table: 3433 | 3434 | 3634 | 3843 | 3862 — ISB 340 only (no 40')
         "2013": ["3433","3434","3634","3843","3862"],
         // Brochure 2014_Ventana combined LE table: 3433 | 3436 | 3634 | 3845 | 3847 | 3849 | 3850 — ISB 340 only (no 40')
@@ -928,7 +996,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968, warrantyYears: 2, yearStart: 2012, yearEnd: 2019,
       description: "Newmar Ventana LE (2012–2019). OEM MY19 final year: ISB 340 on 34' / 360 on 37–40'. Freightliner XCR. Not L9 400. No 2020 brochure.",
       powertrainByYear: [
-        { from: 2012, to: 2018, floorplans: ["3412","3413","3427","3433","3434","3436","3437","3634","3635","3636","3709","3713","3724","3725","3802","3812","3843","3845","3847","3849","3850","3862","34","35","36","37","38"], engine: "Cummins ISB 6.7L 340HP", horsepower: 340, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", towingCapacity: 5000, notes: "OEM MY13–15 LE all 340 (no 40'); MY16–18 34–37' ISB 340 — not 360" },
+        { from: 2012, to: 2012, engine: "Cummins ISB 6.7L 340HP", horsepower: 340, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", towingCapacity: 5000, notes: "OEM 2012_Ventana_LE: ISB 340 on 3634/3843/3862. No 40'. Not Ventana 360/380." },
+        { from: 2012, to: 2018, floorplans: ["3412","3413","3427","3433","3434","3436","3437","3634","3635","3636","3709","3713","3724","3725","3802","3812","3843","3845","3847","3849","3850","3862","34","35","36","37","38"], engine: "Cummins ISB 6.7L 340HP", horsepower: 340, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", towingCapacity: 5000, notes: "OEM MY12 LE 3634/3843/3862 all 340 (no 40'); MY13–15 LE all 340 (no 40'); MY16–18 34–37' ISB 340 — not 360" },
         { from: 2012, to: 2018, floorplans: ["4002","4037","4040","4042","4044","4048","40"], engine: "Cummins ISB 6.7L 360HP", horsepower: 360, torqueLbFt: 1000, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", towingCapacity: 5000, notes: "OEM MY16–18 Ventana LE 40': ISB 360 — not 340. MY15 LE has no 40'." },
         { from: 2012, to: 2018, engine: "Cummins ISB 6.7L 340–360HP (by length)", horsepower: 340, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH" },
         { from: 2019, to: 2019, floorplans: ["3412","3426","34"], engine: "Cummins ISB 6.7L 340HP", horsepower: 340, torqueLbFt: 800, chassis: "Freightliner XCR", transmission: "Allison 3000 MH", towingCapacity: 5000, notes: "OEM 2019_Ventana_LE 34': ISB 340 — not 360" },
@@ -1060,11 +1129,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Canyon Star": {
       type: "Class A Diesel",
-      floorplans: ["3710", "3927", "3947", "3713", "3921", "3512", "3513", "3608", "3626", "3627", "3646", "3716", "3719", "3722", "3723", "3747", "3911", "3920", "3924", "3929", "3737", "3957", "3902", "3914", "3923", "3925", "3953", "3901", "3918", "3926", "3928", "3424", "3610", "3612", "3650", "3712", "3755", "3903", "3913", "3919", "3922", "3941", "3944", "3313", "3515", "3810", "3856", "3940", "3630", "3910", "3956"],
+      floorplans: ["3710", "3927", "3947", "3713", "3921", "3512", "3513", "3608", "3626", "3627", "3646", "3716", "3719", "3722", "3723", "3747", "3911", "3920", "3924", "3929", "3737", "3957", "3902", "3914", "3923", "3925", "3953", "3901", "3918", "3926", "3928", "3424", "3610", "3612", "3650", "3712", "3755", "3903", "3913", "3919", "3922", "3941", "3944", "3313", "3515", "3810", "3856", "3940", "3630", "3910", "3956", "3411", "3511", "3642", "3714"],
       floorplansByYear: {
-        "2010": ["3710", "3927"],
-        "2011": ["3710", "3927"],
-        "2012": ["3710", "3927"],
+        // No 2010 OEM Canyon Star brochure (archive jumps 2009 → 2011). Do not invent.
+        // Brochure 2011_Bay_Star ≡ 2011_Canyon_Star combined gas card: 3411 | 3642 (Ford 362 / Workhorse 340) / 3810 | 3856 | 3920 (Ford-only)
+        "2011": ["3411", "3642", "3810", "3856", "3920"],
+        // Brochure 2012_Canyon_Star combined Bay+Canyon: 3511 | 3642 | 3714 | 3810 | 3856 | 3911 | 3920 — F-53 362 GAS
+        "2012": ["3511", "3642", "3714", "3810", "3856", "3911", "3920"],
         // Brochure 2013_Canyon_Star: Gas Motor Coach — F-53 Triton V10 362. Floorplan table 3313 (chassis OCR 3315).
         "2013": ["3313", "3515", "3610", "3810", "3856", "3911", "3920", "3940", "3953"],
         // Brochure 2014_Canyon_Star: Gas Motor Coach — F-53 Triton V10 362. No 3947.
@@ -1127,16 +1198,43 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 84,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2010,
+      yearStart: 2011,
       description: "Newmar Canyon Star — front-engine diesel Class A toy hauler (not Super C). OEM MY25–27: Freightliner FED + Cummins B6.7 340 / 700, floorplan 3947.",
       powertrainByYear: [
         {
-          from: 2010,
+          from: 2011,
+          to: 2011,
+          floorplans: ["3411", "3642", "34", "36"],
+          engine: "Ford Triton V10 6.8L 362HP or Workhorse 340HP (by option)",
+          horsepower: 0,
+          chassis: "Ford F53 / Workhorse (by option)",
+          notes: "OEM 2011_Canyon_Star 3411/3642: Ford 362 / Workhorse 340 option-band. HP 0. Not Super C diesel."
+        },
+        {
+          from: 2011,
+          to: 2011,
+          floorplans: ["3810", "3856", "3920", "38", "39"],
+          engine: "Ford Triton V10 6.8L 362HP",
+          horsepower: 362,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          notes: "OEM 2011_Canyon_Star 38–39' Ford-only cards: F-53 362. Not Workhorse, not Super C, not FED 340."
+        },
+        {
+          from: 2011,
+          to: 2011,
+          engine: "Ford Triton V10 6.8L 362HP or Workhorse 340HP (by floorplan)",
+          horsepower: 0,
+          notes: "OEM 2011_Canyon_Star year-first: Ford/Workhorse option-band on 34–36'. HP 0. Gas, not Super C leftover. No 2010 OEM card."
+        },
+        {
+          from: 2012,
           to: 2012,
-          engine: "Cummins / Ford Super C diesel (era)",
-          horsepower: 300,
-          chassis: "Freightliner / Ford Super C",
-          notes: "2010–2012 leftover — next slice locks OEM. Do not copy onto 2013–2016 gas F-53."
+          engine: "Ford Triton V10 6.8L 362HP",
+          horsepower: 362,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          notes: "OEM 2012_Canyon_Star: Gas Motor Coach — F-53 Triton V10 362 on every Canyon plan. Not Super C diesel, not FED 340."
         },
         {
           from: 2013,
@@ -1199,9 +1297,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2007": ["4551", "4533", "4561"],
         "2008": ["4551", "4533", "4561"],
         "2009": ["4551", "4533", "4561"],
-        "2010": ["4551", "4533", "4561"],
-        "2011": ["4551", "4533", "4561"],
-        "2012": ["4551", "4533", "4561"],
+        // No 2010–2012 OEM London Aire brochure (archive gap 2009–2014; modern reintro MY15). Do not invent keys or yearEnd.
         // No 2013–2014 OEM London Aire brochure (archive gap 2009–2014; modern reintro MY15). Do not invent keys or yearEnd.
 
         // Brochure 2015_London_Aire: 4501 | 4503 | 4553 | 4568 | 4599 — Freightliner SL / Spartan K3 ISX 600
@@ -1275,14 +1371,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Spartan K3",
           notes: "2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)"
         },
-                {
-          from: 2010,
-          to: 2012,
-          engine: "Cummins ISL / ISB 300–450HP (era)",
-          horsepower: 380,
-          chassis: "Spartan K3",
-          notes: "2010–2012 leftover — next slice locks OEM. No OEM MY13–14 London Aire brochure."
-        },
+        // No 2010–2014 OEM London Aire brochure — omit leftover 2010–2012 pin. Do not invent.
         {
           from: 2015,
           to: 2017,
@@ -1315,10 +1404,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2007": ["3712", "3910", "4005"],
         "2008": ["3712", "3910", "4005"],
         "2009": ["3712", "3910", "4005"],
-        "2010": ["3712", "3910", "4005"],
-        "2011": ["3712", "3910", "4005"],
-        "2012": ["3712", "3910", "4005"],
-        // No 2013–2014 OEM Kountry Star brochure (archive last pre-gap PDF is 2011). Do not invent keys.
+        // No 2010–2012 OEM Kountry Star Class A brochure (2011 archive PDF is Kountry Star 5th Wheel only). Do not invent Class A keys.
+        // No 2013–2014 OEM Kountry Star brochure (archive last pre-gap PDF is 2011 5th Wheel). Do not invent keys.
         // No 2015–2016 OEM Kountry Star brochure (archive last pre-gap PDF is 2011). Do not invent keys or yearEnd 2016 — modern reintro MY20, yearEnd 2024.
         // No 2017–2019 OEM Kountry Star brochure — omit keys (modern reintro MY20).
         // No 2019 OEM Kountry Star brochure and no strong RVUSA MY19 proof — omit key (reintroduced MY20).
@@ -1373,23 +1460,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2005,
-          to: 2011,
+          to: 2009,
           engine: "Cummins ISB / Cat turbodiesel (by build)",
           horsepower: 300,
           chassis: "Freightliner / Spartan (by option)",
           transmission: "Allison 3000 MH",
           notes:
-            "Earlier KS diesel pushers; rare gas F53 builds existed in the early 2000s — verify VIN/build sheet"
-        },
-        {
-          from: 2012,
-          to: 2012,
-          engine: "Cummins ISB / B6.7 diesel ~300–360HP",
-          horsepower: 340,
-          torqueLbFt: 700,
-          chassis: "Freightliner XC / XCR",
-          transmission: "Allison 3000 MH",
-          notes: "2012 leftover — next slice locks OEM. No OEM MY13–MY19 brochure (reintroduced MY20)."
+            "Earlier KS diesel pushers; rare gas F53 builds existed in the early 2000s — verify VIN/build sheet. No 2010–2012 Class A OEM card (2011 archive PDF is 5th Wheel)."
         },
         {
           from: 2020,
@@ -1406,16 +1483,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Bay Star": {
       type: "Class A Gas",
-      floorplans: ["3124", "3401", "3626", "3629", "3005", "3014", "3020", "3116", "3226", "3312", "3408", "3414", "3416", "3419", "3616", "3628", "3811", "3505", "3016", "3114", "3225", "3423", "3609", "3618", "3639", "3640", "3826", "3009", "3113", "3208", "3306", "3333", "3403", "3516", "3518", "3406", "3532", "2903", "3004", "3103", "3215", "3227", "3308", "3402", "3404", "2901", "3002", "3012", "3209", "3302", "3305", "3309"],
+      floorplans: ["3124", "3401", "3626", "3629", "3005", "3014", "3020", "3116", "3226", "3312", "3408", "3414", "3416", "3419", "3616", "3628", "3811", "3505", "3016", "3114", "3225", "3423", "3609", "3618", "3639", "3640", "3826", "3009", "3113", "3208", "3306", "3333", "3403", "3516", "3518", "3406", "3532", "2903", "3004", "3103", "3215", "3227", "3308", "3402", "3404", "2901", "3002", "3012", "3209", "3302", "3305", "3309", "2702", "2902", "3205", "3310", "3405"],
       floorplansByYear: {
         "2005": ["3124", "3401", "3626"],
         "2006": ["3124", "3401", "3626"],
         "2007": ["3124", "3401", "3626"],
         "2008": ["3124", "3401", "3626"],
         "2009": ["3124", "3401", "3626"],
-        "2010": ["3124", "3401", "3626"],
-        "2011": ["3124", "3401", "3626"],
-        "2012": ["3124", "3401", "3626"],
+        // No 2010 OEM Bay Star brochure (archive jumps 2009 → 2011). Do not invent.
+        // Brochure 2011_Bay_Star combined gas card: 2702 | 2901 | 2902 | 3205 | 3302 | 3405 — F-53 362 GAS
+        "2011": ["2702", "2901", "2902", "3205", "3302", "3405"],
+        // Brochure 2012_Canyon_Star combined Bay Star table: 2702 | 2901 | 3002 | 3302 | 3305 | 3310 — F-53 362 GAS
+        "2012": ["2702", "2901", "3002", "3302", "3305", "3310"],
         // Brochure 2013 Bay Star table: 2901 | 3002 | 3012 | 3209 | 3302 | 3305 — F53 V10 362 GAS
         "2013": ["2901", "3002", "3012", "3209", "3302", "3305"],
         // Brochure 2014 Bay Star table: 2903 | 3103 | 3124 | 3215 | 3308 | 3309 — F53 V10 362 GAS
@@ -1485,11 +1564,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2005,
-          to: 2012,
+          to: 2009,
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "Pre-Godzilla gas Class A leftover — 2010–2012 slice locks OEM HP."
+          notes: "Pre-Godzilla gas Class A leftover through 2009. No 2010 OEM Bay Star card."
+        },
+        {
+          from: 2011,
+          to: 2012,
+          engine: "Ford Triton V10 6.8L 362HP",
+          horsepower: 362,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          notes: "OEM 2011_Bay_Star / 2012_Canyon_Star combined Bay Star table: F53 Triton V10 362 — gas, not diesel. Not Bay Star Sport-only plans."
         },
         {
           from: 2013,
@@ -1542,11 +1630,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Bay Star Sport": {
       type: "Class A Gas",
-      floorplans: ["2702", "2903", "3014", "3307", "2902", "2720", "2813", "2905", "2912", "2920", "3008", "3016", "3112", "3225", "3226", "3315", "3316", "2812", "3013", "3208", "3210", "3306", "3113", "3312", "2705", "2707", "3004", "3022", "3220", "3227", "3309", "3404", "2901", "3209", "3310"],
+      floorplans: ["2702", "2903", "3014", "3307", "2902", "2720", "2813", "2905", "2912", "2920", "3008", "3016", "3112", "3225", "3226", "3315", "3316", "2812", "3013", "3208", "3210", "3306", "3113", "3312", "2705", "2707", "3004", "3022", "3220", "3227", "3309", "3404", "2901", "3209", "3310", "3010"],
       floorplansByYear: {
-        "2010": ["2702", "2903", "3014"],
-        "2011": ["2702", "2903", "3014"],
-        "2012": ["2702", "2903", "3014"],
+        // No 2010–2011 OEM Bay Star Sport brochure (first dedicated card is 2012_Bay_Star_Sport). Do not invent.
+        // Brochure 2012_Bay_Star_Sport: 2702 | 2901 | 3010 | 3310 — F-53 362 GAS
+        "2012": ["2702", "2901", "3010", "3310"],
         // Brochure 2013 Bay Star Sport table: 2702 | 2901 | 3209 | 3310 — F53 V10 362 GAS
         "2013": ["2702", "2901", "3209", "3310"],
         // Brochure 2014 Bay Star Sport table: 2702 | 2903 | 3220 | 3306 — F53 V10 362 GAS
@@ -1609,16 +1697,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 84,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2010,
+      yearStart: 2012,
       description: "Newmar Bay Star Sport — shorter gas Class A on Ford F-53. OEM MY25–27: 7.3L V8 335 / 468. Never a diesel pusher.",
       powertrainByYear: [
         {
-          from: 2010,
+          from: 2012,
           to: 2012,
-          engine: "Ford Triton V10 6.8L ~305–362HP",
-          horsepower: 320,
+          engine: "Ford Triton V10 6.8L 362HP",
+          horsepower: 362,
           chassis: "Ford F53",
-          notes: "Pre-Godzilla gas Class A leftover — 2010–2012 slice locks OEM HP."
+          transmission: "TorqShift automatic",
+          notes: "OEM 2012_Bay_Star_Sport dedicated card: F53 Triton V10 362 — gas, not diesel. No 2010–2011 Sport OEM card."
         },
         {
           from: 2013,
