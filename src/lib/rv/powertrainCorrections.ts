@@ -6518,6 +6518,17 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
   },
   {
     yearMin: 2015,
+    yearEnd: 2015,
+    makeIncludes: "winnebago",
+    modelIncludes: "adventurer",
+    engine: "Confirm brochure (HP not printed)",
+    horsepower: 0,
+    chassis: "Ford F53",
+    fuelType: "Gas",
+    note: "OEM 2015 Adventurer wiring: 32D | 32H | 35P | 37F | 38Q. No 2015 brochure — do not invent leftover Godzilla / 320 or copy 2016 Triton.",
+  },
+  {
+    yearMin: 2016,
     yearEnd: 2016,
     makeIncludes: "winnebago",
     modelIncludes: "adventurer",
@@ -6525,7 +6536,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     horsepower: 0,
     chassis: "Ford F53",
     fuelType: "Gas",
-    note: "OEM 2015 wiring: 32D | 32H | 35P | 37F | 38Q — no 2015 brochure. OEM 2016: 32D | 35P | 37F | 38Q · V10 printed, HP unprinted. Do not invent leftover 320.",
+    note: "OEM 2016 Adventurer: 32D | 35P | 37F | 38Q · F53 6.8L V10 SEFI Triton printed, HP unprinted. Not leftover Godzilla. Do not invent 320.",
   },
   {
     yearMin: 2015,

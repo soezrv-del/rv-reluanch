@@ -5277,6 +5277,7 @@ test("Winnebago 2015–2016 OEM year-first floorplans + powertrain pins", () => 
   assert.match(ad, /"2016": \["32D", "35P", "37F", "38Q"\]/);
   assert.doesNotMatch(ad, /"2015": .*"29V"/);
   assert.doesNotMatch(ad, /"2016": .*"36Z"/);
+  assert.doesNotMatch(ad, /7\.3L Godzilla \(by year\)/);
 
   const itasca = wgo.slice(wgo.indexOf('    "Itasca Sunstar": {'), wgo.indexOf("    Revel: {"));
   assert.match(itasca, /"2015": \["26HE", "27N", "30T", "31KE", "35B", "35F", "36Y"\]/);
@@ -5381,6 +5382,8 @@ test("Winnebago 2015–2016 OEM year-first floorplans + powertrain pins", () => 
   assert.equal(gt15!.horsepower, 0);
   const gt16 = findPowertrainCorrection("2016", "Winnebago", "Grand Tour", "45RL");
   assert.equal(gt16!.horsepower, 450);
+  assert.match(gt16!.engine, /ISL/);
+  assert.doesNotMatch(gt16!.engine, /L9/);
 
   const via15 = findPowertrainCorrection("2015", "Winnebago", "Via", "25Q");
   assert.equal(via15!.horsepower, 188);
@@ -5401,8 +5404,11 @@ test("Winnebago 2015–2016 OEM year-first floorplans + powertrain pins", () => 
 
   const adv15 = findPowertrainCorrection("2015", "Winnebago", "Adventurer", "32D");
   assert.equal(adv15!.horsepower, 0);
+  assert.doesNotMatch(adv15!.engine, /godzilla|7\.3/i);
   const adv16 = findPowertrainCorrection("2016", "Winnebago", "Adventurer", "38Q");
   assert.equal(adv16!.horsepower, 0);
+  assert.match(adv16!.engine, /Triton|6\.8/i);
+  assert.doesNotMatch(adv16!.engine, /godzilla|7\.3/i);
 
   const tr15 = findPowertrainCorrection("2015", "Winnebago", "Travato", "59G");
   assert.equal(tr15!.horsepower, 0);

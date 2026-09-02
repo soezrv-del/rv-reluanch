@@ -11100,16 +11100,26 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           to: 2014,
           engine: "Ford Triton V10 6.8L",
           horsepower: 320,
-          chassis: "Ford F53"
+          chassis: "Ford F53",
+          notes: "Leftover Adventurer through 2014 — Triton V10 era. Not 7.3 Godzilla. Next slice locks year-true cards."
         },
         {
           from: 2015,
+          to: 2015,
+          engine: "Confirm brochure (HP not printed)",
+          horsepower: 0,
+          chassis: "Ford F53",
+          fuelType: "Gas",
+          notes: "OEM 2015 Adventurer wiring: 32D | 32H | 35P | 37F | 38Q. No 2015 brochure — do not invent leftover Godzilla / 320 or copy 2016 Triton."
+        },
+        {
+          from: 2016,
           to: 2016,
           engine: "Ford Triton V10 6.8L (HP not printed)",
           horsepower: 0,
           chassis: "Ford F53",
           fuelType: "Gas",
-          notes: "OEM 2015 wiring: 32D | 32H | 35P | 37F | 38Q — no 2015 brochure. OEM 2016: 32D | 35P | 37F | 38Q · V10 printed, HP unprinted. Do not invent leftover 320 or 29V/30T/35F/36Z."
+          notes: "OEM 2016 Adventurer: 32D | 35P | 37F | 38Q · F53 6.8L V10 SEFI Triton printed, HP unprinted. Not leftover Godzilla. Do not invent 320."
         },
         {
           from: 2017,
