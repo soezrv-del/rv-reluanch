@@ -32,7 +32,10 @@ export async function fetchLocalInventory(opts: {
     make: opts.make,
     model: opts.model,
     zip: opts.zip.trim(),
-    radius: String(opts.radius ?? 250),
+    // Server / personal plans cap radius at 100 mi — never advertise more.
+    radius: String(
+      Math.min(100, Math.max(10, Number(opts.radius) || 100)),
+    ),
     rows: String(opts.rows ?? 8),
   });
   try {
