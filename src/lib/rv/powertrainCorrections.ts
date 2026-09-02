@@ -47,7 +47,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
   },
   {
     yearMin: 2018,
-    yearEnd: 2022,
+    yearEnd: 2020,
     makeIncludes: "entegra",
     modelIncludes: "accolade",
     engine: "Cummins ISB 6.7L 360HP",
@@ -56,7 +56,20 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Freightliner S2RV Plus",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "Pre-MY23 Accolade / Accolade XL pin (not this slice). Not Accolade XT Power Stroke.",
+    note: "Pre-MY21 Accolade / Accolade XL pin (not this slice). Not Accolade XT Power Stroke.",
+  },
+  {
+    yearMin: 2021,
+    yearEnd: 2022,
+    makeIncludes: "entegra",
+    modelIncludes: "accolade",
+    engine: "Cummins ISB 6.7L 360HP",
+    horsepower: 360,
+    torqueLbFt: 800,
+    chassis: "Freightliner S2RV",
+    transmission: "Allison 3000 MH",
+    fuelType: "Diesel",
+    note: "OEM MY21–22 Accolade / Accolade XL: S2RV (not Plus) · ISB 6.7 360/800 · hitch 12k. Not Accolade XT Power Stroke.",
   },
   {
     yearMin: 2023,
@@ -805,7 +818,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "Reatta diesel B6.7 360/800 — not Aspire/Anthem L9 and not Reatta XL",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2025,
     makeIncludes: "entegra",
     modelIncludes: "reatta xl",
@@ -815,7 +828,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Spartan K2",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "OEM MY23–25 Reatta XL brochure: L9 380 / 1,150 · Spartan K2 — not Reatta B6.7 / K1",
+    note: "OEM MY21–25 Reatta XL: L9 380 / 1,150 · Spartan K2 — not Reatta B6.7 / K1. MY21 40Q2; MY22 40Q3.",
   },
   // American Coach American Dream — option band, not a single invented HP
   {
@@ -858,7 +871,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY24–27 Vision: F53 7.3 335 / 468. Not Vision XL / Vision SE.",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "entegra",
     modelIncludes: "vision xl",
@@ -868,7 +881,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Ford F-53",
     transmission: "TorqShift 6-speed automatic",
     fuelType: "Gas",
-    note: "OEM MY23 Vision XL: F53 7.3 350 / 468",
+    note: "OEM MY21–23 Vision XL: F53 7.3 350 / 468",
   },
   {
     yearMin: 2024,
@@ -897,7 +910,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY26–27 Vision SE 27ASE: F53 7.3 335 / 468",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "entegra",
     modelIncludes: "emblem",
@@ -907,7 +920,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Ford F-53",
     transmission: "TorqShift 6-speed automatic",
     fuelType: "Gas",
-    note: "OEM MY23 Emblem: F53 7.3 350 / 468",
+    note: "OEM MY21–23 Emblem: F53 7.3 350 / 468",
   },
   {
     yearMin: 2024,
@@ -923,7 +936,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY24–27 Emblem: F53 7.3 335 / 468",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2024,
     makeIncludes: "entegra",
     modelIncludes: "anthem",
@@ -933,7 +946,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Spartan K2",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "OEM MY23–24 Anthem: L9 450 / 1,250 · Spartan K2 · hitch 15k. Not an L9/X12 band.",
+    note: "OEM MY21–24 Anthem: L9 450 / 1,250 · Spartan K2 · hitch 15k. Not an L9/X12 band.",
   },
   {
     yearMin: 2025,
@@ -949,7 +962,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY25–26 Anthem: L9 450 / 1,250 locked — not an L9/X12 band",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2026,
     makeIncludes: "entegra",
     modelIncludes: "aspire",
@@ -959,10 +972,10 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Spartan K2",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "OEM MY23–26 Aspire: L9 450 / 1,250 · Spartan K2 · hitch 15k (10k on 40P)",
+    note: "OEM MY21–26 Aspire: L9 450 / 1,250 · Spartan K2 · hitch 15k (10k on 38M / 40P)",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2026,
     makeIncludes: "entegra",
     modelIncludes: "cornerstone",
@@ -972,10 +985,10 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Spartan K3",
     transmission: "Allison 4000 MH",
     fuelType: "Diesel",
-    note: "OEM MY23–26 Cornerstone / Reserve: X15 605 / 1,950 · Spartan K3 · hitch 20k. SL is an option.",
+    note: "OEM MY21–26 Cornerstone / Reserve: X15 605 / 1,950 · Spartan K3 · hitch 20k. SL is an option.",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "entegra",
     modelIncludes: "odyssey",
@@ -985,7 +998,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Ford E-450",
     transmission: "TorqShift 6-speed automatic",
     fuelType: "Gas",
-    note: "OEM MY23 Odyssey brochure prints E-450 7.3 350 / 468. Not Odyssey SE.",
+    note: "OEM MY21–23 Odyssey: E-450 7.3 350 / 468 · hitch 7.5k. Not Odyssey SE.",
   },
   {
     yearMin: 2024,
@@ -1036,7 +1049,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM 2027 Odyssey SE prints Ford 325/450 and Chevy 401/464 — option band. Do not invent which plan is Chevy.",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "entegra",
     modelIncludes: "esteem",
@@ -1046,7 +1059,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Ford E-450",
     transmission: "TorqShift 6-speed automatic",
     fuelType: "Gas",
-    note: "OEM MY23 Esteem brochure prints E-450 7.3 350 / 468. Not Esteem XL Super C.",
+    note: "OEM MY21–23 Esteem: E-450 7.3 350 / 468. Not Esteem XL Super C.",
   },
   {
     yearMin: 2024,
@@ -1075,7 +1088,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY26 Esteem: E-450 7.3 325 / 450. Not Esteem XL Super C.",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "entegra",
     modelIncludes: "qwest",
@@ -1085,7 +1098,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Mercedes-Benz 3500",
     transmission: "7-speed automatic",
     fuelType: "Diesel",
-    note: "OEM MY23 Qwest: Mercedes 3500 · V6 Turbo 188 / 325 · 7-speed. Not Qwest SE.",
+    note: "OEM MY21–23 Qwest: Mercedes 3500 · V6 Turbo 188 / 325. MY22 still 188 — not 2.0 208/211. Not Qwest SE.",
   },
   {
     yearMin: 2024,
@@ -1206,7 +1219,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY24 / MY26–27 Expanse: Transit AWD 350HD EcoBoost 310 / 400 gas — not Power Stroke Super C",
   },
   {
-    yearMin: 2023,
+    yearMin: 2022,
     yearEnd: 2023,
     makeIncludes: "entegra",
     modelIncludes: "launch",
@@ -1216,7 +1229,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Mercedes-Benz Sprinter 2500 4x4",
     transmission: "7-speed automatic",
     fuelType: "Diesel",
-    note: "OEM MY23 Launch 19Y: Sprinter 2500 4x4 · 3.0 V6 188 / 325",
+    note: "OEM MY22–23 Launch 19Y: Sprinter 2500 4x4 · 3.0 V6 188 / 325",
   },
   {
     yearMin: 2024,
@@ -1232,7 +1245,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY24 / MY26–27 Launch: Sprinter 2500 AWD 211 / 332",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "entegra",
     modelIncludes: "ethos",
@@ -1241,7 +1254,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "RAM ProMaster 3500",
     transmission: "9-speed automatic 948TE",
     fuelType: "Gas",
-    note: "OEM MY23 Ethos: ProMaster 3500 3.6 V6 — HP not printed on brochure",
+    note: "OEM MY21–23 Ethos: ProMaster 3500 3.6 V6 — HP not printed on brochure / flyer",
   },
   {
     yearMin: 2024,
@@ -4987,6 +5000,10 @@ export function findPowertrainCorrection(
     }
     // Bare "qwest" 25-series / 4500 must not stamp Qwest SE 24-series / 3500
     if (c.modelIncludes === "qwest" && md.includes("qwest se")) {
+      return false;
+    }
+    // Bare "ethos" must not stamp Ethos Li lithium trim
+    if (c.modelIncludes === "ethos" && md.includes("ethos li")) {
       return false;
     }
     // Bare "altitude" is E-450 Class C — not FS550 / FS600D Super C
