@@ -18341,9 +18341,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2019": ["207RB", "245RL", "265BH"],
         "2020": ["207RB", "245RL", "265BH", "297QB"],
         "2021": ["207RB", "245RL", "265BH", "297QB"],
-        "2022": ["245RL", "265BH", "297QB"],
-        "2023": ["245RL", "265BH", "297QB"],
-        // 2024 Transcend brochure is the Xplor card (cover prints TRANSCEND XPLOR). Premium T-suffix line starts MY2025 — omit 2024 leftover.
+        // Mid-gap 2022–2024: premium T-suffix line starts MY2025. 2024 brochure is the Xplor card (cover prints TRANSCEND XPLOR). Do not invent leftover 245RL/265BH/297QB onto those years.
         // OEM 2025-Grand-Design-Transcend premium page (285RKT / 325BHT / 335DQT printed, some specs coming soon)
         "2025": ["245RLT", "265BHT", "285RKT", "295QBT", "305BHT", "315RKT", "325BHT", "335BHT", "335DQT"],
         // OEM Transcend Brochure (2026 MODEL YEAR, REV 2.24.26) — no 335DQT

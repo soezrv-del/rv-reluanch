@@ -1113,8 +1113,8 @@ function main() {
       }
 
       const tr = slice("Transcend", "Transcend One");
-      if (/"2024":/.test(tr)) {
-        fail("Grand Design|Transcend premium must omit 2024 (2024 brochure is the Xplor card; T-suffix line starts MY25)");
+      if (/"2022":/.test(tr) || /"2023":/.test(tr) || /"2024":/.test(tr)) {
+        fail("Grand Design|Transcend premium must omit 2022–2024 (mid-gap; 2024 brochure is the Xplor card; T-suffix line starts MY25)");
       }
       if (!/"2026": \["245RLT", "265BHT", "285RKT", "295QBT", "305BHT", "315RKT", "325BHT", "335BHT"\]/.test(tr)) {
         fail("Grand Design|Transcend MY26 OEM plans missing");

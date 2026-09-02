@@ -11377,6 +11377,12 @@ test("Grand Design 2024–2026 OEM year-first floorplans + yearEnds", () => {
   assert.equal(gd["Transcend One"]?.yearStart, 2025);
   assert.equal(gd["Transcend One"]?.years?.includes(2024), false);
   assert.equal(gd["Lineage Series M"]?.years?.includes(2024), false);
+  assert.equal(gd.Transcend?.yearStart, 2018);
+  assert.equal(gd.Transcend?.years?.includes(2021), true);
+  assert.equal(gd.Transcend?.years?.includes(2022), false);
+  assert.equal(gd.Transcend?.years?.includes(2023), false);
+  assert.equal(gd.Transcend?.years?.includes(2024), false);
+  assert.equal(gd.Transcend?.years?.includes(2025), true);
   assert.equal(gd["Transcend Xplor"]?.yearStart, 2020);
   assert.equal(gd["Solitude S-Class"]?.yearEnd, 2023);
   assert.equal(gd["Solitude S-Class"]?.years?.includes(2023), true);
@@ -11498,6 +11504,9 @@ test("Grand Design 2024–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(tx, /"2025": .*"19BHX"/);
 
   const tr = g.slice(g.indexOf("    Transcend: {"), g.indexOf('    "Transcend One"'));
+  assert.match(tr, /"2025": \["245RLT", "265BHT", "285RKT", "295QBT", "305BHT", "315RKT", "325BHT", "335BHT", "335DQT"\]/);
+  assert.doesNotMatch(tr, /"2022":/);
+  assert.doesNotMatch(tr, /"2023":/);
   assert.doesNotMatch(tr, /"2024":/);
 
   const mav = g.slice(g.indexOf('    "Momentum MAV": {'), g.indexOf('    "Lineage Series E"'));
