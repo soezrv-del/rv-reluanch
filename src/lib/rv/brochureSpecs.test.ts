@@ -1111,12 +1111,18 @@ test("Fleetwood 2013–2014 walk-back: OEM plans, no invented ghosts", () => {
   assert.doesNotMatch(bounder, /"2013": \["33C", "35K", "36H"\]/);
   assert.doesNotMatch(bounder, /"2014": \["33C", "35K", "36H"\]/);
   assert.doesNotMatch(bounder.slice(bounder.indexOf('"2013"'), bounder.indexOf('"2015"')), /"34T"/);
+  // Aggregate covers MY10 38P. Later years max at 36' — year-specific, not a reason to leave series at 33–36.
+  assert.match(bounder, /lengthRange:\s*\[\s*33,\s*38\s*\]/);
+  assert.doesNotMatch(bounder, /lengthRange:\s*\[\s*33,\s*36\s*\]/);
 
   const classic = fleet.slice(fleet.indexOf('    "Bounder Classic": {'), fleet.indexOf("    Southwind: {"));
   assert.match(classic, /"2013": \["30T", "34B", "34M", "36H", "36R"\]/);
   assert.match(classic, /"2014": \["30T", "34B", "34M", "36H", "36R"\]/);
   assert.doesNotMatch(classic, /"2013": \["33C", "35K"\]/);
   assert.doesNotMatch(classic, /"2014": \["33C", "35K"\]/);
+  // Aggregate covers locked 30T–36R. Stale 33–35 missed both ends.
+  assert.match(classic, /lengthRange:\s*\[\s*30,\s*36\s*\]/);
+  assert.doesNotMatch(classic, /lengthRange:\s*\[\s*33,\s*35\s*\]/);
 
   const southwind = fleet.slice(fleet.indexOf("    Southwind: {"), fleet.indexOf('    "Pace Arrow"'));
   assert.match(southwind, /"2013": \["32VS", "36D", "36L", "36S"\]/);
@@ -1322,6 +1328,9 @@ test("Fleetwood 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
   assert.doesNotMatch(bounder, /"2010": \["33C", "35K", "36H"\]/);
   assert.doesNotMatch(bounder, /"2011": \["33C", "35K", "36H"\]/);
   assert.doesNotMatch(bounder.slice(bounder.indexOf('"2010"'), bounder.indexOf('"2013"')), /"36H"/);
+  // Leftover nit: MY10 locks 38P. Aggregate is 33–38, not stale 33–36.
+  assert.match(bounder, /lengthRange:\s*\[\s*33,\s*38\s*\]/);
+  assert.doesNotMatch(bounder, /lengthRange:\s*\[\s*33,\s*36\s*\]/);
 
   const classic = fleet.slice(fleet.indexOf('    "Bounder Classic": {'), fleet.indexOf("    Southwind: {"));
   assert.match(classic, /"2010": \["30T", "34W", "35S"\]/);
@@ -1329,6 +1338,9 @@ test("Fleetwood 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
   assert.match(classic, /"2012": \["30T", "34B", "36R"\]/);
   assert.doesNotMatch(classic, /"2010": \["33C", "35K"\]/);
   assert.doesNotMatch(classic, /"2011": \["33C", "35K"\]/);
+  // Leftover nit: locked plans span 30T–36R. Aggregate is 30–36, not stale 33–35.
+  assert.match(classic, /lengthRange:\s*\[\s*30,\s*36\s*\]/);
+  assert.doesNotMatch(classic, /lengthRange:\s*\[\s*33,\s*35\s*\]/);
 
   const southwind = fleet.slice(fleet.indexOf("    Southwind: {"), fleet.indexOf('    "Pace Arrow"'));
   assert.match(southwind, /"2010": \["32VS", "35A", "35J", "36D"\]/);
