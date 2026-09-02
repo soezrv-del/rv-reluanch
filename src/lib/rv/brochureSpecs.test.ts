@@ -126,6 +126,49 @@ test("Class C never hash-picks bus tires or triple 15k A/C", () => {
   assert.match(spec, /honestAcUnits/);
 });
 
+test("brochureSpecs source no longer hash-seeds tanks, MPG, heater, construction, wheelbase, propane", () => {
+  const spec = src("brochureSpecs.ts");
+  assert.doesNotMatch(spec, /function hashSeed/);
+  assert.doesNotMatch(spec, /function pick\s*</);
+  assert.doesNotMatch(spec, /pick\(seed/);
+  assert.doesNotMatch(spec, /40 \+ \(seed % 40\)/);
+  assert.doesNotMatch(spec, /30 \+ \(seed % 30\)/);
+  assert.doesNotMatch(spec, /28 \+ \(seed % 28\)/);
+  assert.doesNotMatch(spec, /266 \+ \(seed % 20\)/);
+  assert.doesNotMatch(spec, /16 \+ \(seed % 10\)/);
+  assert.doesNotMatch(spec, /"6 gal gas\/electric"/);
+  assert.doesNotMatch(spec, /Aluminum frame · laminated walls/);
+  assert.doesNotMatch(spec, /diesel \? 100 : 80/);
+  assert.doesNotMatch(spec, /const seed = hashSeed/);
+  assert.match(spec, /CONFIRM_BROCHURE/);
+  assert.match(spec, /tankOrConfirm/);
+});
+
+test("seeded filler is gone: tanks / MPG / fuel / PDF-only fields say Confirm brochure", () => {
+  const spec = src("brochureSpecs.ts");
+  assert.match(spec, /freshWater:\s*tankOrConfirm\(oem\?\.freshWater \?\? snap\.freshWater\)/);
+  assert.match(spec, /grayWater:\s*tankOrConfirm\(oem\?\.grayWater \?\? snap\.grayWater\)/);
+  assert.match(spec, /blackWater:\s*tankOrConfirm\(oem\?\.blackWater \?\? snap\.blackWater\)/);
+  assert.match(spec, /waterHeater:\s*CONFIRM_BROCHURE/);
+  assert.match(spec, /construction:\s*CONFIRM_BROCHURE/);
+  assert.match(spec, /wheelbase:\s*isTowable \? "N\/A \(towable\)" : CONFIRM_BROCHURE/);
+  assert.match(spec, /propane:\s*oem\?\.propaneLbs/);
+  assert.match(spec, /: CONFIRM_BROCHURE/);
+  assert.match(spec, /mpgCity:[\s\S]*?CONFIRM_BROCHURE/);
+  assert.match(spec, /mpgHighway:[\s\S]*?CONFIRM_BROCHURE/);
+  assert.match(spec, /mpgCombined:[\s\S]*?CONFIRM_BROCHURE/);
+  assert.match(spec, /fuelCapacity:[\s\S]*?CONFIRM_BROCHURE/);
+  assert.match(spec, /rangeMiles:[\s\S]*?CONFIRM_BROCHURE/);
+  assert.match(spec, /converter:\s*CONFIRM_BROCHURE/);
+  assert.match(spec, /seatBelts:\s*CONFIRM_BROCHURE/);
+  assert.match(spec, /warranty:[\s\S]*?: CONFIRM_BROCHURE/);
+  // Catalog / OEM pins still win when present — no class-average invent
+  assert.match(spec, /snap\.fuelCapacityGal && snap\.fuelCapacityGal > 0/);
+  assert.match(spec, /mpgOverride && mpgOverride > 0/);
+  assert.match(spec, /Tow vehicle dependent/);
+  assert.doesNotMatch(spec, /eco\.fuelGal/);
+});
+
 test("gas chassis rewrites Diesel/Gas generator; diesel does not get gas-only", () => {
   assert.match(
     honestGenerator({

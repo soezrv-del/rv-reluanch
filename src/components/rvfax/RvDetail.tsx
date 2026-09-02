@@ -1187,11 +1187,7 @@ export function RvDetail({
             <SpecRow label="TIRES" value={brochure.tireSize} />
             <SpecRow
               label="HIGHWAY MPG"
-              value={
-                specs.mpgHighway
-                  ? `${specs.mpgHighway}${/est/i.test(specs.mpgHighway) ? "" : " EST."}`
-                  : "—"
-              }
+              value={highwayMpgDisplay(specs.mpgHighway)}
             />
             <SpecRow label="FUEL CAPACITY" value={specs.fuelCapacity} />
 
@@ -1679,6 +1675,15 @@ function Section({
       {children}
     </section>
   );
+}
+
+function highwayMpgDisplay(v?: string | null): string {
+  const t = (v || "").trim();
+  if (!t || t === "—") return "—";
+  if (/confirm brochure/i.test(t) || /est/i.test(t) || /tow vehicle/i.test(t)) {
+    return t;
+  }
+  return `${t} EST.`;
 }
 
 function SpecRow({
