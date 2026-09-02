@@ -614,8 +614,38 @@ function main() {
       const ol0 = wgo.indexOf("    Outlook: {");
       const ol1 = wgo.indexOf('    "Access Super C": {');
       const ol = ol0 >= 0 && ol1 > ol0 ? wgo.slice(ol0, ol1) : "";
+      if (/"2015":/.test(ol) || /"2016":/.test(ol)) {
+        fail("Winnebago|Outlook must not list 2015–2016 (no year-true Outlook card)");
+      }
       if (/"2017":/.test(ol) || /"2018":/.test(ol)) {
         fail("Winnebago|Outlook must not list 2017–2018 (no year-true Outlook card)");
+      }
+      if (!/"2015": \["34T", "36G", "38R"\]/.test(fz) || !/"2016": \["34T", "36G", "38R"\]/.test(fz)) {
+        fail("Winnebago|Forza MY15–16 OEM plans missing (34T/36G/38R)");
+      }
+      if (!/yearStart:\s*2015/.test(fz)) {
+        fail("Winnebago|Forza yearStart must be 2015 (first year-true wiring lock)");
+      }
+      if (/"2015": .*"34G"/.test(jy) || /"2016": .*"34G"/.test(jy)) {
+        fail("Winnebago|Journey must not invent leftover 34G on 2015–16");
+      }
+      if (/"2015":/.test(hz) || /"2016":/.test(hz)) {
+        fail("Winnebago|Horizon must not list 2015–2016 (first year-true card 2018)");
+      }
+      if (/"2015":/.test(intent) || /"2016":/.test(intent)) {
+        fail("Winnebago|Intent must not list 2015–2016 (first year-true card 2018)");
+      }
+      if (/"2015":/.test(ss)) {
+        fail("Winnebago|Sunstar must not list 2015 (2015 Sunstar is Itasca — do not collide)");
+      }
+      if (/"2015":/.test(vita) || /"2016":/.test(vita)) {
+        fail("Winnebago|Vita must not list 2015–2016 (first year-true card 2019)");
+      }
+      if (/"2015":/.test(so) || /"2016":/.test(so)) {
+        fail("Winnebago|Solis must not list 2015–2016 (first year-true card 2020)");
+      }
+      if (/"2015":/.test(ac) || /"2016":/.test(ac)) {
+        fail("Winnebago|Access Super C must not list 2015–2016 (no OEM Super C card)");
       }
       if (/"2022":/.test(ol)) {
         fail("Winnebago|Outlook must not list 2022 (no OEM 2022 card)");
