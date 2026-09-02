@@ -11361,6 +11361,10 @@ test("Grand Design 2020–2026 OEM year-first floorplans + yearEnds", () => {
   assert.ok(gd);
 
   assert.equal(gd.Imagine?.yearStart, 2016);
+  assert.equal(gd.Reflection?.yearStart, 2015);
+  assert.equal(gd.Momentum?.yearStart, 2018);
+  assert.equal(gd["Momentum M-Class"]?.yearStart, 2018);
+  assert.equal(gd["Momentum G-Class"]?.yearStart, 2019);
   assert.equal(gd["Imagine XLS"]?.yearStart, 2019);
   assert.equal(gd["Imagine AIM"]?.yearStart, 2023);
   assert.equal(gd["Reflection 150 Series"]?.yearStart, 2018);
@@ -11395,9 +11399,30 @@ test("Grand Design 2020–2026 OEM year-first floorplans + yearEnds", () => {
   assert.equal(gd["Solitude S-Class"]?.years?.includes(2026), false);
   assert.equal(gd.Imagine?.years?.includes(2014), false);
   assert.equal(gd.Imagine?.years?.includes(2015), false);
+  assert.equal(gd.Imagine?.years?.includes(2016), true);
   assert.equal(gd["Imagine XLS"]?.years?.includes(2015), false);
   assert.equal(gd["Imagine XLS"]?.years?.includes(2018), false);
+  assert.equal(gd["Imagine XLS"]?.years?.includes(2019), true);
   assert.equal(gd["Reflection 150 Series"]?.years?.includes(2015), false);
+  assert.equal(gd.Reflection?.years?.includes(2013), false);
+  assert.equal(gd.Reflection?.years?.includes(2014), false);
+  assert.equal(gd.Reflection?.years?.includes(2015), true);
+  assert.equal(gd.Reflection?.years?.includes(2016), false);
+  assert.equal(gd.Reflection?.years?.includes(2018), false);
+  assert.equal(gd.Reflection?.years?.includes(2019), true);
+  assert.equal(gd.Momentum?.years?.includes(2014), false);
+  assert.equal(gd.Momentum?.years?.includes(2017), false);
+  assert.equal(gd.Momentum?.years?.includes(2018), true);
+  assert.equal(gd["Momentum M-Class"]?.years?.includes(2015), false);
+  assert.equal(gd["Momentum M-Class"]?.years?.includes(2017), false);
+  assert.equal(gd["Momentum M-Class"]?.years?.includes(2018), true);
+  assert.equal(gd["Momentum G-Class"]?.years?.includes(2018), false);
+  assert.equal(gd["Momentum G-Class"]?.years?.includes(2019), true);
+  assert.equal(gd.Solitude?.years?.includes(2016), false);
+  assert.equal(gd.Solitude?.years?.includes(2010), false);
+  assert.equal(gd.Solitude?.years?.includes(2011), false);
+  assert.equal(gd.Solitude?.years?.includes(2012), false);
+  assert.equal(gd["Solitude X-Series"], undefined);
   assert.equal(gd["Momentum MAV"]?.years?.includes(2022), false);
   assert.equal(gd["Momentum MAV"]?.years?.includes(2023), false);
   assert.equal(gd["Lineage Series E"]?.yearStart, 2027);
@@ -11720,4 +11745,73 @@ test("Grand Design 2020–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(g, /"2010":/);
   assert.doesNotMatch(g, /"2011":/);
   assert.doesNotMatch(g, /"2012":/);
+
+  assert.match(imag, /"2016": \["2150RB", "2600RB", "2800BH", "2950RL"\]/);
+  assert.match(imag, /"2017": \["2150RB", "2600RB", "2800BH", "2970RL", "3150BH"\]/);
+  assert.match(imag, /"2018": \["2150RB", "2250RK", "2400BH", "2500RL", "2600RB", "2670MK", "2800BH", "2970RL", "3170BH"\]/);
+  assert.match(imag, /"2019": \["2150RB", "2250RK", "2400BH", "2500RL", "2600RB", "2670MK", "2800BH", "2850MK", "2970RL", "3000QB", "3170BH"\]/);
+  assert.doesNotMatch(imag, /"2016": .*"2500RL"/);
+  assert.doesNotMatch(imag, /"2019": .*"2450RL"/);
+
+  assert.match(xls, /"2019": \["17MKE", "18RBE", "19RLE", "21BHE", "22RBE"\]/);
+  assert.doesNotMatch(xls, /"2019": .*"23LDE"/);
+  assert.doesNotMatch(xls, /"2018":/);
+
+  assert.match(rfw, /yearStart:\s*2015/);
+  assert.match(rfw, /"2015": \["27RL", "29RS", "303RLS", "323BHS", "337RLS", "357BHS"\]/);
+  assert.match(rfw, /"2019": \["28BH", "29RS", "303RLS", "311BHS", "320MKS", "337RLS", "367BHS"\]/);
+  assert.doesNotMatch(rfw, /"2013":/);
+  assert.doesNotMatch(rfw, /"2014":/);
+  assert.doesNotMatch(rfw, /"2016":/);
+  assert.doesNotMatch(rfw, /"2018":/);
+  assert.doesNotMatch(rfw, /"2015": .*"308BHTS"/);
+  assert.doesNotMatch(rfw, /"2019": .*"315RLTS"/);
+
+  assert.match(r150, /"2018": \["220RK", "230RL", "290BH", "295RL"\]/);
+  assert.match(r150, /"2019": \["220RK", "230RL", "290BH", "295RL"\]/);
+  assert.doesNotMatch(r150, /"2018": .*"150 Series"/);
+  assert.doesNotMatch(r150, /"2019": .*"150 Series"/);
+  assert.doesNotMatch(r150, /"2018": .*"260RD"/);
+  assert.doesNotMatch(r150, /"2018": .*"273MK"/);
+  assert.doesNotMatch(r150, /"2019": .*"273MK"/);
+
+  assert.match(sol, /"2015": \["305RE", "365DEN", "366DEN", "375RE", "379FL"\]/);
+  assert.match(sol, /"2017": \["300GK", "310GK", "360RL", "374TH", "375RES", "377MBS", "379FLS", "384GK"\]/);
+  assert.match(sol, /"2018": \["310GK", "344GK", "360RL", "373FB", "374TH", "375RES", "377MBS", "379FLS", "384GK"\]/);
+  assert.match(sol, /"2019": \["310GK", "344GK", "372WB", "373FB", "374TH", "375RES", "377MBS", "379FLS", "384GK"\]/);
+  assert.doesNotMatch(sol, /"2016":/);
+  assert.doesNotMatch(sol, /"2018": .*"380FL"/);
+  assert.doesNotMatch(sol, /"2019": .*"380FL"/);
+
+  assert.match(sc, /"2019": \["3740BH"\]/);
+  assert.doesNotMatch(sc, /"2019": .*"2930RL"/);
+
+  assert.match(tr, /"2018": \["27BHS"\]/);
+  assert.match(tr, /"2019": \["26RLS", "27BHS", "28MKS", "29TBS", "30MKS", "31RLS", "32BHS"\]/);
+  assert.doesNotMatch(tr, /"2018": .*"207RB"/);
+  assert.doesNotMatch(tr, /"2018": .*"245RL"/);
+  assert.doesNotMatch(tr, /"2019": .*"207RB"/);
+  assert.doesNotMatch(tr, /"2019": .*"245RL"/);
+  assert.doesNotMatch(tr, /"2019": .*"30RBS"/);
+
+  assert.match(mom, /yearStart:\s*2018/);
+  assert.match(mom, /"2018": \["376TH", "397TH", "399TH"\]/);
+  assert.match(mom, /"2019": \["376TH", "397TH", "399TH"\]/);
+  assert.doesNotMatch(mom, /"2014":/);
+  assert.doesNotMatch(mom, /"2017":/);
+  assert.doesNotMatch(mom, /"2018": .*"349M"/);
+  assert.doesNotMatch(mom, /"2019": .*"395M"/);
+
+  assert.match(mm, /yearStart:\s*2018/);
+  assert.match(mm, /"2018": \["328M", "349M", "351M", "354M", "381M", "394M", "395M", "398M"\]/);
+  assert.match(mm, /"2019": \["349M", "351M", "381M", "395M", "398M"\]/);
+  assert.doesNotMatch(mm, /"2015":/);
+  assert.doesNotMatch(mm, /"2017":/);
+  assert.doesNotMatch(mm, /"2019": .*"328M"/);
+
+  assert.match(gtt, /yearStart:\s*2019/);
+  assert.match(gtt, /"2019": \["21G", "25G", "28G"\]/);
+  assert.doesNotMatch(gtt, /"2018":/);
+  assert.doesNotMatch(gtt, /"2019": .*"320G"/);
+  assert.doesNotMatch(gtt, /"2019": .*"29G"/);
 });
