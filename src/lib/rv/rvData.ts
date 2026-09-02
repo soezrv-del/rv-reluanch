@@ -16871,9 +16871,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "30RLS",
           "32BHS"
         ],
-        // No generic Cougar TT 2027 OEM card (line is Cougar Half-Ton TT / Western Elevation — GAP).
+        // No generic Cougar TT 2027 OEM card (current TT is Cougar Half-Ton Travel Trailer / Western Elevation).
         // Omit 2027 rather than dump Half-Ton / Sport / Premium FW codes into this collapsed TT bucket.
-        // 25FKD is Half-Ton TT (live OEM luxury-travel-trailers/floorplans) — never a collapsed Cougar TT code.
+        // 25FKD and the rest of the Half-Ton TT OEM set live on Cougar Half-Ton Travel Trailer.
         // MY2026 leftover FBY is not OEM-locked (live compare cards are 2027-only; do not copy 2027 backward).
       },
       lengthRange: [
@@ -17103,7 +17103,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // OEM keystonerv.com/product/cougar-half-ton/premium-fifth-wheels/floorplans (2027 Floorplans):
         // 23MLE | 26RES | 26RKE | 28RLI | 29MBD | 30REP
         // 29RKS is Dealer Stock / Stock Only — omit. Do not dump Half-Ton TT codes here
-        // (21LBK / 22MLS / 25FKD / 25MLE / 26LBW / 28BHS / 29RDS / 29RKE / 29RLP — GAP this slice).
+        // (21LBK / 22MLS / 25FKD / 25MLE / 26LBW / 28BHS / 29RDS / 29RKE / 29RLP live on
+        // Cougar Half-Ton Travel Trailer).
         "2027": ["23MLE", "26RES", "26RKE", "28RLI", "29MBD", "30REP"]
       },
       lengthRange: [
@@ -17138,7 +17139,39 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       uvwLbs: 8200,
       exteriorHeightIn: 151,
       exteriorWidthIn: 96,
-      description: "Cougar Half-Ton fifth wheel — purpose-built for half-ton pickups (many plans GVWR ≤ 9,995–11,500). OEM 2027 FW card is 23MLE / 26RES / 26RKE / 28RLI / 29MBD / 30REP; 29RKS is dealer-stock only. Half-Ton TT stays GAP (own OEM card — do not dump into Cougar TT). Always verify hitch weight vs truck payload."
+      description: "Cougar Half-Ton fifth wheel — purpose-built for half-ton pickups (many plans GVWR ≤ 9,995–11,500). OEM 2027 FW card is 23MLE / 26RES / 26RKE / 28RLI / 29MBD / 30REP; 29RKS is dealer-stock only. Half-Ton TT is the sibling Cougar Half-Ton Travel Trailer key — do not dump TT codes here or into collapsed Cougar TT. Always verify hitch weight vs truck payload."
+    },
+    "Cougar Half-Ton Travel Trailer": {
+      type: "Travel Trailer",
+      floorplans: ["21LBK", "22MLS", "25FKD", "25MLE", "26LBW", "28BHS", "29RDS", "29RKE", "29RLP"],
+      floorplansByYear: {
+        // OEM keystonerv.com/product/cougar-half-ton/luxury-travel-trailers/floorplans (2027 Floorplans):
+        // 21LBK | 22MLS | 25FKD | 25MLE | 26LBW | 28BHS | 29RDS | 29RKE | 29RLP
+        // yearStart 2012 — matches the Half-Ton family era on the FW sibling; omit 2012–2026 fby
+        // (no invent / no copy-forward of 2027 codes). Dealer Stock / Stock Only omitted (none on this card).
+        // Sibling of Cougar Half-Ton FW — do not merge into that FW body or collapsed Cougar TT.
+        "2027": ["21LBK", "22MLS", "25FKD", "25MLE", "26LBW", "28BHS", "29RDS", "29RKE", "29RLP"]
+      },
+      lengthRange: [21, 34],
+      weightRange: [6300, 8500],
+      slideouts: 2,
+      sleeps: 10,
+      msrpRange: [39900, 75000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 54,
+      grayWater: 60,
+      blackWater: 30,
+      awningLength: 16,
+      ceilingHeight: 80,
+      founded: 1996,
+      warrantyYears: 1,
+      yearStart: 2012,
+      description: "Cougar Half-Ton travel trailer — OEM Luxury Travel Trailers, purpose-built for half-ton pickups. yearStart 2012 (Half-Ton family era; older fby empty until walk-back). 2027 card is 21LBK / 22MLS / 25FKD / 25MLE / 26LBW / 28BHS / 29RDS / 29RKE / 29RLP. Sibling of Cougar Half-Ton FW — do not merge with that fifth-wheel body or the collapsed Cougar TT bucket."
     },
     Bullet: {
       type: "Travel Trailer",
