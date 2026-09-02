@@ -20,7 +20,6 @@ import {
   estimateMarket,
   formatMoney,
   getFloorplansForYear,
-  ratingFor,
 } from "@/lib/rv/catalog";
 import {
   bestCalPrice,
@@ -28,7 +27,11 @@ import {
   formatActiveCoachShort,
   snapshotActiveCoach,
 } from "@/lib/rv/activeCoach";
-import { getRatingMetadata, ratingStars } from "@/lib/rv/ratingSystem";
+import {
+  formatRatingAdj,
+  getRatingMetadata,
+  ratingStars,
+} from "@/lib/rv/ratingSystem";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import {
   findPowertrainCorrection,
@@ -111,11 +114,6 @@ export function RvDetail({
 }) {
   const { data, year, make, model, floorplan } = result;
   const catalogMarket = estimateMarket(data, year, floorplan);
-  const rating = ratingFor(make, model, year);
-  const ratingMeta = useMemo(
-    () => getRatingMetadata(make, model, year),
-    [make, model, year],
-  );
   const [correctBump, setCorrectBump] = useState(0);
   const brochure = useMemo(
     () => buildBrochureSpecs(data, year, make, model, floorplan || ""),
@@ -147,6 +145,14 @@ export function RvDetail({
   const [recallSearchNote, setRecallSearchNote] = useState<string | null>(null);
   const [recallLoading, setRecallLoading] = useState(true);
   const [recallError, setRecallError] = useState<string | null>(null);
+  const liveRecallCount = recallLoading ? null : liveRecalls.length;
+  const ratingMeta = useMemo(
+    () =>
+      getRatingMetadata(make, model, year, {
+        recallCount: liveRecallCount,
+      }),
+    [make, model, year, liveRecallCount],
+  );
 
   const [live, setLive] = useState<LiveDossier | null>(null);
   const [liveLoading, setLiveLoading] = useState(true);
@@ -425,7 +431,7 @@ export function RvDetail({
     return merged;
   }, [catalogSpecs, live, brochurePinned, powertrainGuard]);
 
-  const displayRating = rating;
+  const displayRating = ratingMeta.score;
 
   const ownerReviews = useMemo(
     () => getMockReviews(make, model, displayRating),
@@ -1300,9 +1306,38 @@ export function RvDetail({
               label="YEAR"
               value={`${ratingMeta.yearAdj >= 0 ? "+" : ""}${ratingMeta.yearAdj.toFixed(1)}`}
             />
+            <SpecRow
+              label="NHTSA"
+              value={
+                recallLoading
+                  ? "Checking live campaigns…"
+                  : `${liveRecalls.length} campaign${
+                      liveRecalls.length === 1 ? "" : "s"
+                    } · ${formatRatingAdj(ratingMeta.recallAdj)}`
+              }
+            />
             <p className="mt-3 text-[11px] leading-relaxed text-white/55">
-              {ratingMeta.sources[1]}
+              {ratingMeta.sources.slice(1).join(" ")}
             </p>
+            {live?.live &&
+            (live.ratingEstimate || live.ownerSentiment) ? (
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/55">
+                  Research notes — not in the RvFOX score
+                </p>
+                {live.ratingEstimate && live.ratingEstimate > 0 ? (
+                  <p className="mt-1.5 text-[13px] text-white">
+                    Research estimate {live.ratingEstimate.toFixed(1)} / 5.0
+                    (Grok dossier)
+                  </p>
+                ) : null}
+                {live.ownerSentiment ? (
+                  <p className="mt-1.5 text-[13px] italic text-white/85">
+                    {live.ownerSentiment}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
           </Section>
 
           {floorplansShown.length ? (
@@ -1367,8 +1402,9 @@ export function RvDetail({
                 </ul>
               ) : null}
               {live.ownerSentiment ? (
-                <p className="mt-2 text-[14px] italic text-white">
-                  {live.ownerSentiment}
+                <p className="mt-2 text-[12px] text-white/55">
+                  Owner-sentiment research is labeled under Rating — not part of
+                  the RvFOX number.
                 </p>
               ) : null}
             </Section>

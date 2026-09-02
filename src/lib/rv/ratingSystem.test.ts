@@ -10,6 +10,7 @@ import {
   getRatingMetadata,
   getYearAdjustment,
   ratingStars,
+  recallAdjustment,
   resolveModelTier,
 } from "./ratingSystem.ts";
 import { getMockReviews } from "./rvReviews.ts";
@@ -60,7 +61,8 @@ test("unknown make uses default base and Low confidence", () => {
   assert.equal(meta.tier, "standard");
   assert.equal(meta.score, computeRating("Unknown Brand", "Whatever", "2020"));
   assert.match(meta.sources[0]!, /RvFOX model/);
-  assert.doesNotMatch(meta.sources.join(" "), /iRV2|Reddit|NHTSA complaint/);
+  assert.doesNotMatch(meta.sources.join(" "), /iRV2|Reddit|RVInsider|YouTube|Facebook/);
+  assert.match(meta.sources.join(" "), /NHTSA campaigns: not applied/);
 });
 
 test("year bands: 2019 peak vs 2021 COVID vs 2025 recovery", () => {
@@ -82,8 +84,12 @@ test("ratingFor / Facts / share stay wired to computeRating", () => {
   assert.match(catalog, /return computeRating\(make, model, year\)/);
   assert.match(catalog, /rating: computeRating\(make, model, ""\)/);
   const detail = src("../../components/rvfax/RvDetail.tsx");
-  assert.match(detail, /ratingFor\(make, model, year\)/);
-  assert.match(detail, /displayRating = rating/);
+  assert.match(detail, /getRatingMetadata\(make, model, year/);
+  assert.match(detail, /displayRating = ratingMeta.score/);
+  assert.match(detail, /label="NHTSA"/);
+  assert.match(detail, /Research notes — not in the RvFOX score/);
+  const ratingSrc = src("ratingSystem.ts");
+  assert.doesNotMatch(ratingSrc, /"iRV2 Owner Forums"|RVInsider\.com|r\/rving community/);
 });
 
 test("ratingStars tracks nearest half-star", () => {
@@ -104,6 +110,37 @@ test("Compare does not mutate RvFOX scores or prefer live ratingEstimate", () =>
   );
   assert.match(compare, /function ratingBadgeIndexes/);
 });
+
+test("NHTSA recall adj is conservative and capped", () => {
+  assert.equal(recallAdjustment(undefined), 0);
+  assert.equal(recallAdjustment(null), 0);
+  assert.equal(recallAdjustment(0), 0);
+  assert.equal(recallAdjustment(1), -0.05);
+  assert.equal(recallAdjustment(2), -0.10);
+  assert.equal(recallAdjustment(5), -0.25);
+  assert.equal(recallAdjustment(20), -0.25);
+
+  const base = computeRating("Newmar", "King Aire", "2022");
+  const one = computeRating("Newmar", "King Aire", "2022", { recallCount: 1 });
+  const many = computeRating("Newmar", "King Aire", "2022", { recallCount: 12 });
+  assert.equal(one, clamp1(base - 0.05));
+  assert.equal(many, clamp1(base - 0.25));
+  assert.ok(many >= 4.0, "one busy recall year must not nuke a Newmar to the floor");
+  assert.ok(many < base);
+
+  const meta = getRatingMetadata("Newmar", "King Aire", "2022", {
+    recallCount: 3,
+  });
+  assert.equal(meta.recallCount, 3);
+  assert.equal(meta.recallAdj, -0.15);
+  assert.equal(meta.score, computeRating("Newmar", "King Aire", "2022", { recallCount: 3 }));
+  assert.match(meta.sources.join(" "), /NHTSA open campaigns: 3/);
+  assert.doesNotMatch(meta.sources.join(" "), /iRV2|Reddit|RVInsider/);
+});
+
+function clamp1(n: number) {
+  return Math.round(n * 10) / 10;
+}
 
 test("mock reviews are never verified and unknown make has no Winnebago fallback", () => {
   const tiffin = getMockReviews("Tiffin", "Phaeton", 4.4);
