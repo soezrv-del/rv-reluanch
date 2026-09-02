@@ -16581,16 +16581,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Fleetwood: {
     Discovery: {
       type: "Class A Diesel",
-      floorplans: ["36G", "36J", "37R", "38F", "38K", "39F", "39G", "40E", "40G", "40X", "42A", "42D", "42M", "38N", "36Q", "38W", "44H"],
+      floorplans: ["36G", "36J", "37R", "38F", "38K", "39F", "39G", "40E", "40G", "40K", "40X", "42A", "42C", "42D", "42M", "38N", "36Q", "38W", "44H"],
       floorplansByYear: {
         "2005": ["36G", "38F", "38K"],
         "2006": ["36G", "38F", "38K"],
         "2007": ["36G", "38F", "38K"],
         "2008": ["36G", "38F", "38K"],
         "2009": ["36G", "38F", "38K", "40G"],
-        "2010": ["36G", "38F", "38K", "40G"],
-        "2011": ["36G", "38F", "38K", "40G"],
-        "2012": ["36G", "38F", "38K", "40G"],
+        // Brochure 2010_di_pf: 40G | 40K | 40X — Cummins ISB 6.7 350 / 750 (Freightliner XCM / Spartan)
+        "2010": ["40G", "40K", "40X"],
+        // Brochure 2011_di_b (DI10B1): 36J | 40G | 40X | 42A | 42C — Cummins 8.3L ISC 380 / 1,050
+        "2011": ["36J", "40G", "40X", "42A", "42C"],
+        // Brochure 2012_di_f (DI12B1): 36J | 40G | 40X | 42A | 42D | 42M — same ISC 380 / 1,050
+        "2012": ["36J", "40G", "40X", "42A", "42D", "42M"],
         // Brochure 2013_di_f (DIS13F1): 36J | 40E | 40G | 40X | 42A | 42D | 42M — ISC 8.3 380 / 1,050
         "2013": ["36J", "40E", "40G", "40X", "42A", "42D", "42M"],
         // Brochure 2014_di_f / DIS14B1: 36J | 40E | 40G | 40X — ISL 9L 380 / 1,150 (42' dropped)
@@ -16653,23 +16656,37 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2000,
-      description: "Fleetwood Discovery (regular) — not LXE. MY13 OEM (DIS13F1): 36J / 40E / 40G / 40X / 42A / 42D / 42M on Freightliner XCM with Cummins 8.3L ISC 380 / 1,050 (Onan 8.0 kW QD). MY14 (2014_di_f / DIS14B1): 36J / 40E / 40G / 40X on Cummins 9L ISL 380 / 1,150 — 42' dropped, not leftover 36G/38F. MY15–16 OEM (2015_di_b / 2016_di_b): 37R / 40E / 40G / 40X ISL9 380 / 1,150. MY17–18 ISB 360 XC-R lineup (37R / 38K / 39F / 39G). Years before 2013 are leftover copies pending the 2010–2012 walk-back.",
+      description: "Fleetwood Discovery (regular) — not LXE. MY10 OEM (2010_di_pf): 40G / 40K / 40X on Cummins ISB 6.7 350 / 750 (Freightliner XCM / Spartan). MY11 OEM (2011_di_b / DI10B1): 36J / 40G / 40X / 42A / 42C on Cummins 8.3L ISC 380 / 1,050. MY12 OEM (2012_di_f / DI12B1): 36J / 40G / 40X / 42A / 42D / 42M, same 380/1,050 ISC. MY13 OEM (DIS13F1): 36J / 40E / 40G / 40X / 42A / 42D / 42M on Freightliner XCM with Cummins 8.3L ISC 380 / 1,050 (Onan 8.0 kW QD). MY14 (2014_di_f / DIS14B1): 36J / 40E / 40G / 40X on Cummins 9L ISL 380 / 1,150 — 42' dropped, not leftover 36G/38F. MY15–16 OEM (2015_di_b / 2016_di_b): 37R / 40E / 40G / 40X ISL9 380 / 1,150. MY17–18 ISB 360 XC-R lineup (37R / 38K / 39F / 39G).",
       powertrainByYear: [
         {
           from: 2005,
-          to: 2010,
+          to: 2009,
           engine: "Cummins ISB 6.7 300–340HP (by year)",
           horsepower: 320,
           chassis: "Freightliner XC",
-          notes: "Pre-ISB 360 common packaging"
+          notes: "2005–2009 leftover until an earlier walk-back. Do not stamp leftover 36G/38F onto MY10–12."
+        },
+        {
+          from: 2010,
+          to: 2010,
+          engine: "Cummins ISB 6.7 350HP",
+          horsepower: 350,
+          torqueLbFt: 750,
+          chassis: "Freightliner XCM / Spartan",
+          transmission: "Allison 3000 MH",
+          towingCapacity: 10000,
+          notes: "2010_di_pf: Cummins ISB 6.7 350 / 750, Freightliner XCM / Spartan, Allison 3000 MH, hitch 10,000. Plans 40G | 40K | 40X. NOT ISC / NOT LXE."
         },
         {
           from: 2011,
           to: 2012,
-          engine: "Cummins ISB 6.7 ~340–360HP",
-          horsepower: 340,
-          chassis: "Freightliner XC-Series",
-          notes: "2010–2012 leftover until that walk-back. Do not stamp ISB onto MY13 ISC or MY14–16 ISL years."
+          engine: "Cummins 8.3L ISC 380HP",
+          horsepower: 380,
+          torqueLbFt: 1050,
+          chassis: "Freightliner XCM / Spartan (by length)",
+          transmission: "Allison 3000 MH",
+          towingCapacity: 10000,
+          notes: "2011_di_b (DI10B1) / 2012_di_f (DI12B1): Cummins 8.3L ISC 380 / 1,050. MY11 36J/40G/40X/42A/42C; MY12 36J/40G/40X/42A/42D/42M. 36–40' Freightliner XCM; 42' Spartan. NOT ISB / NOT LXE."
         },
         {
           from: 2013,
@@ -16730,9 +16747,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["36HQ", "38K", "39F", "40D", "40E", "40G", "40M", "40X", "44H", "44B", "44S"],
       floorplansByYear: {
-        "2012": ["40G", "40M", "44H"],
-        // No OEM Discovery LXE card for MY13–14 (RVUSA LXE years start 2017; 2013–2014 Discovery cards are regular Discovery)
-        // RVUSA Discovery LXE available years start 2017 — no OEM LXE brochure for MY15–16
+        // No OEM Discovery LXE card for MY10–16 (RVUSA LXE years start 2017). Do not invent leftover 40G/40M/44H or stamp regular Discovery onto LXE.
         // RVUSA 2017 Discovery LXE: 40D | 40E | 40G | 40X — no 40M / 44H this year
         "2017": ["40D", "40E", "40G", "40X"],
         // Brochure DISDISLXE18B1 LXE: 38K | 39F | 40D | 40E | 40G | 40X | 44H — no 40M
@@ -16786,17 +16801,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
-      yearStart: 2012,
-      description: "Fleetwood Discovery LXE — high-line diesel above regular Discovery. No OEM LXE brochure for MY13–16 (RVUSA LXE years start 2017) — those years omitted rather than copying leftover 40G/40M/44H or stamping regular Discovery 36J/40E onto LXE. MY17: 40D / 40E / 40G / 40X (ISL9 380). MY18: 38K / 39F (ISB 360) / 40D / 40E / 40G / 40X (ISL9 380) / 44H (ISL9 450). MY19–20: 40D / 40G / 40M / 44B / 44H. MY21 adds 36HQ / 44S; MY22 drops 40D / 44H. 2012 leftover pending the 2010–2012 walk-back. Not a single invented HP.",
+      yearStart: 2017,
+      description: "Fleetwood Discovery LXE — high-line diesel above regular Discovery. No OEM LXE brochure for MY10–16 (RVUSA LXE years start 2017) — those years omitted rather than copying leftover 40G/40M/44H or stamping regular Discovery 36J/40E onto LXE. MY17: 40D / 40E / 40G / 40X (ISL9 380). MY18: 38K / 39F (ISB 360) / 40D / 40E / 40G / 40X (ISL9 380) / 44H (ISL9 450). MY19–20: 40D / 40G / 40M / 44B / 44H. MY21 adds 36HQ / 44S; MY22 drops 40D / 44H. Not a single invented HP.",
       powertrainByYear: [
-        {
-          from: 2010,
-          to: 2012,
-          engine: "Cummins ISL / ISB 300–450HP (era)",
-          horsepower: 380,
-          chassis: "Freightliner / Spartan (by option)",
-          notes: "2012 leftover until 2010–2012 walk-back. Do not stamp onto omitted MY13–16."
-        },
         {
           from: 2017,
           to: 2018,
@@ -16954,16 +16961,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Bounder: {
       type: "Class A Gas",
-      floorplans: ["33C", "34T", "35GL", "35K", "35P", "36E", "36H", "36F", "36FP"],
+      floorplans: ["33C", "33U", "34T", "35E", "35GL", "35H", "35J", "35K", "35P", "36E", "36H", "36F", "36FP", "38P"],
       floorplansByYear: {
         "2005": ["33C", "35K", "36H"],
         "2006": ["33C", "35K", "36H"],
         "2007": ["33C", "35K", "36H"],
         "2008": ["33C", "35K", "36H"],
         "2009": ["33C", "35K", "36H"],
-        "2010": ["33C", "35K", "36H"],
-        "2011": ["33C", "35K", "36H"],
-        "2012": ["33C", "35K", "36H"],
+        // Brochure 2010_bdr_b: 33U | 35E | 35H | 35J | 38P — Ford 362/457 or Workhorse 340/455
+        "2010": ["33U", "35E", "35H", "35J", "38P"],
+        // Brochure 2011_bdr_f (BND11F1): 33U | 35H — Ford-only Triton 362/457 (Workhorse dropped)
+        "2011": ["33U", "35H"],
+        // Brochure 2012_bdr_f (BBV12B1): 33C | 33U | 35H | 35K — Ford Triton 362/457
+        "2012": ["33C", "33U", "35H", "35K"],
         // Brochure 2013_bdr_f (B13F2): 33C | 35K | 36E — no 36H
         "2013": ["33C", "35K", "36E"],
         // Brochure 2014_bdr_f (B14F1): 33C | 35K | 36E — no 36H
@@ -17023,15 +17033,34 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1950,
       warrantyYears: 1,
       yearStart: 1985,
-      description: "Fleetwood Bounder — classic gas Class A. MY13 OEM (2013_bdr_f / B13F2): 33C / 35K / 36E; MY14 (2014_bdr_f / B14F1): same three — no 36H — on Triton V10 362/457, hitch 5,000 (5.5 kW std / 7.0 kW opt — do not invent a single gen kW). MY15 OEM (2015_bdr_b): 33C / 34T / 35K / 36E; MY16 (16_Bounder_A): 33C / 34T / 35K / 36E / 36H on Triton V10 362/457 (not 7.3; 2016 7.0 kW Onan is anniversary option). MY17: 33C / 34T / 35K / 35P / 36H; MY18: 33C / 35K / 35P / 36H on Triton V10 320/460. MY19–20: 33C / 35K / 35P / 36F / 36FP. MY21: 33C / 35K / 35P / 36F; MY22 adds 35GL and drops 35P. Ford 7.3 is 350/468 in MY21–23 and 335/468 from MY24. 2010–2012 leftover pending that walk-back.",
+      description: "Fleetwood Bounder — classic gas Class A. MY10 OEM (2010_bdr_b): 33U / 35E / 35H / 35J / 38P on Ford F-53 Triton 6.8 V10 (362 hp / 457 lb-ft) or Workhorse W-22 8.1 Vortec (340 hp / 455 lb-ft) — option-band HP 0. MY11 OEM (2011_bdr_f / BND11F1): 33U / 35H, Ford-only 362/457. MY12 OEM (2012_bdr_f / BBV12B1): 33C / 33U / 35H / 35K, Ford 362/457. MY13 OEM (2013_bdr_f / B13F2): 33C / 35K / 36E; MY14 (2014_bdr_f / B14F1): same three — no 36H — on Triton V10 362/457, hitch 5,000 (5.5 kW std / 7.0 kW opt — do not invent a single gen kW). MY15 OEM (2015_bdr_b): 33C / 34T / 35K / 36E; MY16 (16_Bounder_A): 33C / 34T / 35K / 36E / 36H on Triton V10 362/457 (not 7.3; 2016 7.0 kW Onan is anniversary option). MY17: 33C / 34T / 35K / 35P / 36H; MY18: 33C / 35K / 35P / 36H on Triton V10 320/460. MY19–20: 33C / 35K / 35P / 36F / 36FP. MY21: 33C / 35K / 35P / 36F; MY22 adds 35GL and drops 35P. Ford 7.3 is 350/468 in MY21–23 and 335/468 from MY24.",
       powertrainByYear: [
         {
           from: 2005,
-          to: 2012,
+          to: 2009,
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "2010–2012 leftover until that walk-back. Do not stamp 320 onto MY13–16 362/457 years."
+          notes: "2005–2009 leftover until an earlier walk-back. Do not stamp leftover 33C/35K/36H onto MY10–12."
+        },
+        {
+          from: 2010,
+          to: 2010,
+          engine: "Ford Triton V10 6.8L 362HP / Workhorse 8.1 Vortec 340HP (by chassis)",
+          horsepower: 0,
+          chassis: "Ford F53 / Workhorse W-22",
+          towingCapacity: 5000,
+          notes: "2010_bdr_b: Ford F-53 Triton 6.8 362/457 or Workhorse W-22 8.1 Vortec 340/455. Plans 33U | 35E | 35H | 35J | 38P. Hitch 5,000. Option-band HP 0. Not Bounder Classic."
+        },
+        {
+          from: 2011,
+          to: 2012,
+          engine: "Ford Triton V10 6.8L 362HP",
+          horsepower: 362,
+          torqueLbFt: 457,
+          chassis: "Ford F53",
+          towingCapacity: 5000,
+          notes: "2011_bdr_f (BND11F1) / 2012_bdr_f (BBV12B1): Ford-only Triton 362/457 (Workhorse dropped). MY11 33U/35H; MY12 33C/33U/35H/35K. Hitch 5,000. Not 7.3. Not Bounder Classic."
         },
         {
           from: 2013,
@@ -17108,11 +17137,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Bounder Classic": {
       type: "Class A Gas",
-      floorplans: ["30T", "33C", "34B", "34M", "35K", "36H", "36R"],
+      floorplans: ["30T", "33C", "34B", "34M", "34W", "35K", "35S", "36H", "36R"],
       floorplansByYear: {
-        "2010": ["33C", "35K"],
-        "2011": ["33C", "35K"],
-        "2012": ["33C", "35K"],
+        // Brochure 2010_bdrc_f (BNDC10F1): 30T | 34W | 35S — Ford 362/457 or Workhorse 340/455
+        "2010": ["30T", "34W", "35S"],
+        // Brochure 2011_bdrc_f (BNDC11F1): 30T | 34B | 36R — Ford-only Triton 362/457
+        "2011": ["30T", "34B", "36R"],
+        // Brochure 2012_bdrc_f: 30T | 34B | 36R — Ford-only Triton 362/457
+        "2012": ["30T", "34B", "36R"],
         // Brochure 2013_bdrc_f (BC13F2): 30T | 34B | 34M | 36H | 36R — Ford 362/457 all; ISB 6.7 240/560 diesel option on 34B/36R
         "2013": ["30T", "34B", "34M", "36H", "36R"],
         // Brochure 2014_bdrc_f (BC14F1): 30T | 34B | 34M | 36H | 36R — gas-only Triton 362/457 (diesel dropped)
@@ -17152,15 +17184,26 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2010,
       yearEnd: 2015,
-      description: "Fleetwood Bounder Classic — value gas-or-diesel Class A, separate from Bounder. MY13 OEM (2013_bdrc_f / BC13F2): 30T / 34B / 34M / 36H / 36R — Ford Triton 362/457 on all five; Freightliner MC / ISB 6.7 240/560 Allison 1000 MH diesel option on 34B/36R only (line HP 0). MY14 (2014_bdrc_f / BC14F1): same five plans, gas-only Triton 362/457 (diesel dropped). Last OEM brochure is MY2015 (shared Bounder/Classic 2015_bdr_b): 34B / 34M / 36H / 36R on Triton V10 362/457. No 2016 Classic page — yearEnd 2015, not 2022. 2010–2012 leftover 33C/35K pending that walk-back.",
+      description: "Fleetwood Bounder Classic — value gas-or-diesel Class A, separate from Bounder. MY10 OEM (2010_bdrc_f / BNDC10F1): 30T / 34W / 35S on Ford Triton 6.8 (362 hp / 457 lb-ft) or Workhorse 8.1 Vortec (340 hp / 455 lb-ft) — option-band HP 0. MY11–12 OEM (2011_bdrc_f / BNDC11F1, 2012_bdrc_f): 30T / 34B / 36R, Ford-only 362/457. MY13 OEM (2013_bdrc_f / BC13F2): 30T / 34B / 34M / 36H / 36R — Ford Triton 362/457 on all five; Freightliner MC / ISB 6.7 240/560 Allison 1000 MH diesel option on 34B/36R only (line HP 0). MY14 (2014_bdrc_f / BC14F1): same five plans, gas-only Triton 362/457 (diesel dropped). Last OEM brochure is MY2015 (shared Bounder/Classic 2015_bdr_b): 34B / 34M / 36H / 36R on Triton V10 362/457. No 2016 Classic page — yearEnd 2015, not 2022.",
       powertrainByYear: [
         {
           from: 2010,
+          to: 2010,
+          engine: "Ford Triton V10 6.8L 362HP / Workhorse 8.1 Vortec 340HP (by chassis)",
+          horsepower: 0,
+          chassis: "Ford F53 / Workhorse W-22",
+          towingCapacity: 5000,
+          notes: "2010_bdrc_f (BNDC10F1): Ford Triton 362/457 or Workhorse 8.1 Vortec 340/455. Plans 30T | 34W | 35S. Hitch 5,000. Option-band HP 0. Not Bounder."
+        },
+        {
+          from: 2011,
           to: 2012,
-          engine: "Ford Triton V10 6.8L ~305–362HP",
-          horsepower: 320,
+          engine: "Ford Triton V10 6.8L 362HP",
+          horsepower: 362,
+          torqueLbFt: 457,
           chassis: "Ford F53",
-          notes: "2010–2012 leftover until that walk-back. Do not stamp 320 onto MY13 option-band or MY14–15 362/457."
+          towingCapacity: 5000,
+          notes: "2011_bdrc_f (BNDC11F1) / 2012_bdrc_f: gas-only Triton 362/457. Plans 30T | 34B | 36R. Hitch 5,000. Not Bounder."
         },
         {
           from: 2013,
@@ -17198,8 +17241,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Southwind: {
       type: "Class A Gas",
-      floorplans: ["32VS", "34A", "34C", "35K", "36D", "36L", "36P", "36S", "36GL", "37F", "37FP", "37H"],
+      floorplans: ["32VS", "34A", "34C", "35A", "35J", "35K", "36D", "36L", "36P", "36S", "36GL", "37F", "37FP", "37H"],
       floorplansByYear: {
+        // Brochure 2010_sw_b (SW10B1): 32VS | 35A | 35J | 36D — Ford 362/457 or Workhorse 340/455
+        "2010": ["32VS", "35A", "35J", "36D"],
+        // Brochure 2011_sw_f (SW11F1): 32VS | 35J | 36D — Ford-only Triton 362/457
+        "2011": ["32VS", "35J", "36D"],
+        // Brochure 2012_sw_f (SW12B1): 32VS | 35J | 36D | 36S — Ford Triton 362/457
+        "2012": ["32VS", "35J", "36D", "36S"],
         // Brochure 2013_sw_f (SW13F2): 32VS | 36D | 36L | 36S — Triton V10 362/457
         "2013": ["32VS", "36D", "36L", "36S"],
         // Brochure 2014_sw_f: 32VS | 34A | 36D | 36L — 36S dropped
@@ -17244,10 +17293,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 1950,
       warrantyYears: 1,
-      yearStart: 2013,
+      yearStart: 2010,
       yearEnd: 2023,
-      description: "Fleetwood Southwind — MY13 OEM (2013_sw_f / SW13F2): 32VS / 36D / 36L / 36S; MY14 (2014_sw_f): 32VS / 34A / 36D / 36L (36S dropped) on Triton V10 362/457, hitch 5,000. MY15–16 OEM (SW15B1 / SW16B1): 32VS / 34A / 36L on Triton V10 362/457 (same three plans as MY17, independently from those brochures — not a copy-forward). MY17: 32VS / 34A / 36L; MY18: 34C / 35K / 36P / 37H on Triton V10 320/460. MY19–20: 34C / 35K / 36P / 37F / 37FP. MY21: 34C / 35K / 36P / 37F; MY22–23: 34C / 35K / 36GL / 37F. Ford 7.3 is 350/468 in MY21–23. No 2024 page.",
+      description: "Fleetwood Southwind — MY10 OEM (2010_sw_b / SW10B1): 32VS / 35A / 35J / 36D on Ford F-53 Triton 6.8 V10 (362 hp / 457 lb-ft) or Workhorse W-22 8.1 Vortec (340 hp / 455 lb-ft) — option-band HP 0. MY11 OEM (2011_sw_f / SW11F1): 32VS / 35J / 36D, Ford-only 362/457. MY12 OEM (2012_sw_f / SW12B1): 32VS / 35J / 36D / 36S, Ford 362/457. MY13 OEM (2013_sw_f / SW13F2): 32VS / 36D / 36L / 36S; MY14 (2014_sw_f): 32VS / 34A / 36D / 36L (36S dropped) on Triton V10 362/457, hitch 5,000. MY15–16 OEM (SW15B1 / SW16B1): 32VS / 34A / 36L on Triton V10 362/457 (same three plans as MY17, independently from those brochures — not a copy-forward). MY17: 32VS / 34A / 36L; MY18: 34C / 35K / 36P / 37H on Triton V10 320/460. MY19–20: 34C / 35K / 36P / 37F / 37FP. MY21: 34C / 35K / 36P / 37F; MY22–23: 34C / 35K / 36GL / 37F. Ford 7.3 is 350/468 in MY21–23. No 2024 page.",
       powertrainByYear: [
+        { from: 2010, to: 2010, engine: "Ford Triton V10 6.8L 362HP / Workhorse 8.1 Vortec 340HP (by chassis)", horsepower: 0, chassis: "Ford F53 / Workhorse W-22", towingCapacity: 5000, notes: "2010_sw_b (SW10B1): Ford 362/457 or Workhorse 340/455. Plans 32VS | 35A | 35J | 36D. Hitch 5,000. Option-band HP 0. Not 7.3." },
+        { from: 2011, to: 2012, engine: "Ford Triton V10 6.8L 362HP", horsepower: 362, torqueLbFt: 457, chassis: "Ford F53", towingCapacity: 5000, notes: "2011_sw_f (SW11F1) / 2012_sw_f (SW12B1): Ford-only Triton 362/457. MY11 32VS/35J/36D; MY12 32VS/35J/36D/36S. Hitch 5,000. Not 7.3." },
         { from: 2013, to: 2014, engine: "Ford Triton V10 6.8L 362HP", horsepower: 362, torqueLbFt: 457, chassis: "Ford F53", transmission: "Ford 5-speed automatic", towingCapacity: 5000, notes: "2013_sw_f (SW13F2) / 2014_sw_f: 6.8L Triton V10 362 / 457. Hitch 5,000. MY13 32VS/36D/36L/36S; MY14 32VS/34A/36D/36L. Not 7.3. Do not invent a single gen kW." },
         { from: 2015, to: 2016, engine: "Ford Triton V10 6.8L 362HP", horsepower: 362, torqueLbFt: 457, chassis: "Ford F53", transmission: "Ford 5-speed automatic", towingCapacity: 5000, notes: "SW15B1 / SW16B1: 6.8L Triton V10 362 / 457. Hitch 5,000. Plans 32VS | 34A | 36L. Not 7.3. Do not invent a single gen kW." },
         { from: 2017, to: 2018, engine: "Ford Triton V10 6.8L 320HP", horsepower: 320, torqueLbFt: 460, chassis: "Ford F53", notes: "SW17F1 / SW18B1 / RVUSA 2017 Southwind: 6.8L Triton V10 320/460. Not 7.3. Do not invent a single gen kW." },
@@ -17264,9 +17315,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2007": ["33D", "35R", "36U"],
         "2008": ["33D", "35R", "36U"],
         "2009": ["33D", "35R", "36U"],
-        "2010": ["33D", "35R", "36U"],
-        "2011": ["33D", "35R", "36U"],
-        "2012": ["33D", "35R", "36U"],
+        // No OEM Pace Arrow brochure for MY10–16 (RVUSA Pace Arrow index: 2009 then 2017). Do not invent leftover 33D/35R/36U.
         // No OEM gas Pace Arrow brochure for MY13–16 (RVUSA Pace Arrow index: 2009 then 2017).
         // 2016 Pace Arrow LXE diesel 38B/38F/38K is a separate line — not added, not stamped onto Pace Arrow.
         // Brochure PAPALXE17B1: diesel 33D | 35E | 35M | 36U — not F53 gas, not 35R
@@ -17316,15 +17365,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2000,
       yearEnd: 2023,
-      description: "Fleetwood Pace Arrow — no OEM gas Pace Arrow brochure for MY13–16 (RVUSA year index jumps 2009 → 2017); those years omitted rather than copying leftover 33D/35R/36U. 2016 Pace Arrow LXE diesel is a separate line, not added. MY17–23 are diesel on Freightliner XCS (not F53): MY17–18 33D / 35E / 35M / 36U; MY19 33D / 35E / 35QS / 36U; MY20–21 33D / 35QS / 35RB / 35S / 36U; MY22 33D / 36U; MY23 33D / 35BP / 36U. ISB 300 (33D) / 340 (other plans). No 2024 page. 2005–2012 leftover gas keys pending the 2010–2012 walk-back.",
+      description: "Fleetwood Pace Arrow — no OEM Pace Arrow brochure for MY10–16 (RVUSA year index jumps 2009 → 2017); those years omitted rather than copying leftover 33D/35R/36U. 2016 Pace Arrow LXE diesel is a separate line, not added. MY17–23 are diesel on Freightliner XCS (not F53): MY17–18 33D / 35E / 35M / 36U; MY19 33D / 35E / 35QS / 36U; MY20–21 33D / 35QS / 35RB / 35S / 36U; MY22 33D / 36U; MY23 33D / 35BP / 36U. ISB 300 (33D) / 340 (other plans). No 2024 page.",
       powertrainByYear: [
         {
           from: 2005,
-          to: 2012,
+          to: 2009,
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "2010–2012 leftover until that walk-back. Do not invent MY13–16 gas Pace Arrow."
+          notes: "2005–2009 leftover until an earlier walk-back. Do not invent MY10–16 Pace Arrow."
         },
         {
           from: 2017,
@@ -17361,16 +17410,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Storm: {
       type: "Class A Gas",
-      floorplans: ["28F", "28MS", "30L", "32BH", "32H", "32V", "33Q", "35SK", "36F", "32A", "34S", "36D"],
+      floorplans: ["28F", "28MS", "30L", "30SA", "32BH", "32H", "32V", "33Q", "35SK", "36F", "32A", "34S", "36D"],
       floorplansByYear: {
         "2005": ["28F", "32V", "36F"],
         "2006": ["28F", "32V", "36F"],
         "2007": ["28F", "32V", "36F"],
         "2008": ["28F", "32V", "36F"],
         "2009": ["28F", "32V", "36F"],
-        "2010": ["28F", "32V", "36F"],
-        "2011": ["28F", "32V", "36F"],
-        "2012": ["28F", "32V", "36F"],
+        // No OEM Storm card for MY10 (RV Guide 2010 lists Encounter, not Storm — do not invent Encounter).
+        // Brochure 2011_st_f (STO11F1): 28MS | 30SA | 32BH — Triton V10 362/457
+        "2011": ["28MS", "30SA", "32BH"],
+        // Brochure 2012_st_f (ST12F1): 28F | 28MS | 30SA | 32BH | 32V — Triton V10 362/457
+        "2012": ["28F", "28MS", "30SA", "32BH", "32V"],
         // Brochure 2013_st_f (ST13F1): 28F | 28MS | 32BH | 32V | 33Q — no 36F
         "2013": ["28F", "28MS", "32BH", "32V", "33Q"],
         // Brochure 2014_st_f (ST14F2): 28F | 28MS | 32H | 32V | 33Q — 32BH → 32H
@@ -17416,15 +17467,25 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2005,
       yearEnd: 2018,
-      description: "Fleetwood Storm — gas Class A on F53. MY13 OEM (2013_st_f / ST13F1): 28F / 28MS / 32BH / 32V / 33Q; MY14 (2014_st_f / ST14F2): 28F / 28MS / 32H / 32V / 33Q (32BH → 32H) on Triton V10 362/457, hitch 5,000, F53 18k GVWR. MY15 OEM (ST15B1): 28F / 28MS / 30L / 32H / 32V; MY16 (16_Storm_A): 28MS / 30L / 32H / 32V / 35SK on Triton V10 362/457 (35SK is 22k GVWR; others 18k — same 362/457). MY17–18 OEM: 32A / 34S / 36D / 36F on Triton V10 320/460. Last catalog year 2018 (not a current Fleetwood line). 2010–2012 leftover pending that walk-back.",
+      description: "Fleetwood Storm — gas Class A on F53. MY10: no OEM Storm card (omit — do not invent Encounter). MY11 OEM (2011_st_f / STO11F1): 28MS / 30SA / 32BH on Ford F-53 Triton 6.8 V10 (362 hp / 457 lb-ft). MY12 OEM (2012_st_f / ST12F1): 28F / 28MS / 30SA / 32BH / 32V, same 362/457. MY13 OEM (2013_st_f / ST13F1): 28F / 28MS / 32BH / 32V / 33Q; MY14 (2014_st_f / ST14F2): 28F / 28MS / 32H / 32V / 33Q (32BH → 32H) on Triton V10 362/457, hitch 5,000, F53 18k GVWR. MY15 OEM (ST15B1): 28F / 28MS / 30L / 32H / 32V; MY16 (16_Storm_A): 28MS / 30L / 32H / 32V / 35SK on Triton V10 362/457 (35SK is 22k GVWR; others 18k — same 362/457). MY17–18 OEM: 32A / 34S / 36D / 36F on Triton V10 320/460. Last catalog year 2018 (not a current Fleetwood line).",
       powertrainByYear: [
         {
           from: 2005,
-          to: 2012,
+          to: 2009,
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "2010–2012 leftover until that walk-back. Do not stamp 320 onto MY13–16 362/457."
+          notes: "2005–2009 leftover until an earlier walk-back. Do not invent MY10 Storm. Do not stamp leftover 28F/32V/36F onto MY11–12."
+        },
+        {
+          from: 2011,
+          to: 2012,
+          engine: "Ford Triton V10 6.8L 362HP",
+          horsepower: 362,
+          torqueLbFt: 457,
+          chassis: "Ford F53",
+          towingCapacity: 5000,
+          notes: "2011_st_f (STO11F1) / 2012_st_f (ST12F1): 6.8L Triton V10 362 / 457. Hitch 5,000. MY11 28MS/30SA/32BH; MY12 28F/28MS/30SA/32BH/32V. Not 7.3."
         },
         {
           from: 2013,
@@ -17464,9 +17525,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         "2008": ["28A", "30U", "32S"],
         "2009": ["28A", "30U", "32S"],
-        "2010": ["28A", "30U", "32S"],
-        "2011": ["28A", "30U", "32S"],
-        "2012": ["28A", "30U", "32S"],
+        // No OEM Flair brochure for MY10–14 (RVUSA Flair years start 2015). Do not invent leftover 28A/30U/32S.
         // No OEM Flair brochure for MY13–14 (RVUSA Flair years start 2015). Do not invent or copy leftover 28A/30U/32S.
         // Brochure 2015_fl_b (FL15F2): 26D | 26E only — GVWR 16k, Triton V10 362/457
         "2015": ["26D", "26E"],
@@ -17523,15 +17582,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2008,
-      description: "Fleetwood Flair — shorter gas Class A on F53. No OEM Flair brochure for MY13–14 (RVUSA Flair years start 2015) — those years omitted rather than copying leftover 28A/30U/32S. MY15 OEM (FL15F2): 26D / 26E only; MY16 (FL16F1): 26D / 26E / 29T on Triton V10 362/457 (GVWR 16k). Do not copy leftover 28A/30U/32S or MY17 26D/30P/31A/31E onto these years. Flair LXE is a separate OEM trim, not added. MY17: 26D / 30P / 31A / 31E; MY18: 30P / 31A / 31E on Triton V10 320/460. MY19–22: 28A / 29M / 32S / 34J / 35R (no 30U). MY19–20 are Triton V10 320/460; MY21–23 Ford 7.3 is 350/468; MY24+ 335/468 (FLAIR24F1). MY23–25: 28A / 29M / 32N / 33B6. 2008–2012 leftover pending the 2010–2012 walk-back.",
+      description: "Fleetwood Flair — shorter gas Class A on F53. No OEM Flair brochure for MY10–14 (RVUSA Flair years start 2015) — those years omitted rather than copying leftover 28A/30U/32S. MY15 OEM (FL15F2): 26D / 26E only; MY16 (FL16F1): 26D / 26E / 29T on Triton V10 362/457 (GVWR 16k). Do not copy leftover 28A/30U/32S or MY17 26D/30P/31A/31E onto these years. Flair LXE is a separate OEM trim, not added. MY17: 26D / 30P / 31A / 31E; MY18: 30P / 31A / 31E on Triton V10 320/460. MY19–22: 28A / 29M / 32S / 34J / 35R (no 30U). MY19–20 are Triton V10 320/460; MY21–23 Ford 7.3 is 350/468; MY24+ 335/468 (FLAIR24F1). MY23–25: 28A / 29M / 32N / 33B6.",
       powertrainByYear: [
         {
           from: 2008,
-          to: 2012,
+          to: 2009,
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "2010–2012 leftover until that walk-back. Do not invent MY13–14 Flair. Do not stamp 320 onto MY15–16 362/457."
+          notes: "2008–2009 leftover until an earlier walk-back. Do not invent MY10–14 Flair. Do not stamp 320 onto MY15–16 362/457."
         },
         {
           from: 2015,
@@ -17682,16 +17741,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Jamboree: {
       type: "Class C",
-      floorplans: ["25B", "25G", "28Y", "28Z", "29V", "31A", "31D", "31M", "31N", "31W"],
+      floorplans: ["23B", "24L", "25B", "25G", "26Q", "28Y", "28Z", "29V", "31A", "31D", "31M", "31N", "31W"],
       floorplansByYear: {
         "2005": ["25B", "29V", "31M"],
         "2006": ["25B", "29V", "31M"],
         "2007": ["25B", "29V", "31M"],
         "2008": ["25B", "29V", "31M"],
         "2009": ["25B", "29V", "31M"],
-        "2010": ["25B", "29V", "31M"],
-        "2011": ["25B", "29V", "31M"],
-        "2012": ["25B", "29V", "31M"],
+        // Brochure 2010_jas_f (JASP10F1) Jamboree Sport: 23B | 25G | 26Q | 28Y | 31M | 31N | 31W — E-450 Triton V10 305/420
+        "2010": ["23B", "25G", "26Q", "28Y", "31M", "31N", "31W"],
+        // Brochure 2011_jas_f (JAMSP11F1) Jamboree Sport: 24L | 25G | 28Y | 31M | 31N | 31W — E-450 305/420
+        "2011": ["24L", "25G", "28Y", "31M", "31N", "31W"],
+        // Brochure 2012_jas_f (JASPT12F2) Jamboree Sport: 25G | 28Y | 28Z | 31M | 31N | 31W — E-450 305/420
+        "2012": ["25G", "28Y", "28Z", "31M", "31N", "31W"],
         // Brochure 2013_jas_f (JASP13F1) Jamboree Sport: 25G | 28Y | 28Z | 31M | 31N | 31W — E-450 Triton V10 305/420
         "2013": ["25G", "28Y", "28Z", "31M", "31N", "31W"],
         // Brochure 2014_jas_f (JASP_JAS14F1) Jamboree Sport: 25G | 28Z | 31A | 31D | 31M — Searcher 23B/25K/31M is a separate trim, not merged
@@ -17734,23 +17796,25 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2000,
       yearEnd: 2016,
       gvwrLbs: 14500,
-      description: "Fleetwood Jamboree — discontinued Ford cutaway Class C (last catalog year 2016). MY13 OEM Sport (2013_jas_f / JASP13F1): 25G / 28Y / 28Z / 31M / 31N / 31W on E-450 Triton V10 305/420. MY14 OEM Sport (2014_jas_f / JASP_JAS14F1): 25G / 28Z / 31A / 31D / 31M on E-450 305/420. Jamboree Searcher (MY14 card 23B / 25K / 31M, mixed E-350 255/350 / E-450 305/420) is a separate trim, not merged here. MY15–16 this key is Jamboree Sport only (25G / 31A / 31D / 31M on Ford E-450 Triton V10). Current Fleetwood Class C is Altitude (gas) / Insight (diesel). 2010–2012 leftover pending that walk-back.",
+      description: "Fleetwood Jamboree — discontinued Ford cutaway Class C (last catalog year 2016). This catalog key is Jamboree Sport, not Searcher. MY10 OEM Sport (2010_jas_f / JASP10F1): 23B / 25G / 26Q / 28Y / 31M / 31N / 31W on E-450 Triton V10 305/420. MY11 OEM Sport (2011_jas_f / JAMSP11F1): 24L / 25G / 28Y / 31M / 31N / 31W, same 305/420. MY12 OEM Sport (2012_jas_f / JASPT12F2): 25G / 28Y / 28Z / 31M / 31N / 31W. MY13 OEM Sport (2013_jas_f / JASP13F1): 25G / 28Y / 28Z / 31M / 31N / 31W on E-450 Triton V10 305/420. MY14 OEM Sport (2014_jas_f / JASP_JAS14F1): 25G / 28Z / 31A / 31D / 31M on E-450 305/420. Jamboree Searcher (MY14 card 23B / 25K / 31M, mixed E-350 255/350 / E-450 305/420) is a separate trim, not merged here. MY15–16 this key is Jamboree Sport only (25G / 31A / 31D / 31M on Ford E-450 Triton V10). Current Fleetwood Class C is Altitude (gas) / Insight (diesel).",
       powertrainByYear: [
         {
           from: 2005,
-          to: 2010,
+          to: 2009,
           engine: "Ford V10 / 6.8L or 6.0L (by year)",
           horsepower: 305,
           chassis: "Ford E-450 / E-350",
-          notes: "Pre-6.2 Ford cutaway Class C"
+          notes: "2005–2009 leftover until an earlier walk-back. Do not stamp leftover 25B/29V onto MY10–12 Sport. Not Searcher."
         },
         {
-          from: 2011,
+          from: 2010,
           to: 2012,
-          engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
+          engine: "Ford E-450 6.8L Triton V10 305HP",
           horsepower: 305,
+          torqueLbFt: 420,
           chassis: "Ford E-450",
-          notes: "2010–2012 leftover until that walk-back. Do not stamp leftover 25B/29V onto MY13–14 Sport."
+          towingCapacity: 5000,
+          notes: "2010_jas_f (JASP10F1) / 2011_jas_f (JAMSP11F1) / 2012_jas_f (JASPT12F2) Jamboree Sport: E-450 Triton V10 305 / 420, hitch 5,000. MY10 23B/25G/26Q/28Y/31M/31N/31W; MY11 24L/25G/28Y/31M/31N/31W; MY12 25G/28Y/28Z/31M/31N/31W. Not Searcher. Not 7.3."
         },
         {
           from: 2013,
@@ -17775,16 +17839,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Tioga: {
       type: "Class C",
-      floorplans: ["23B", "24K", "25G", "25K", "29A", "31M"],
+      floorplans: ["22C", "23B", "24K", "25G", "25K", "29A", "31M"],
       floorplansByYear: {
         "2005": ["24K", "25G", "31M"],
         "2006": ["24K", "25G", "31M"],
         "2007": ["24K", "25G", "31M"],
         "2008": ["24K", "25G", "31M"],
         "2009": ["24K", "25G", "31M"],
-        "2010": ["24K", "25G", "31M"],
-        "2011": ["24K", "25G", "31M"],
-        "2012": ["24K", "25G", "31M"],
+        // No OEM Tioga Montara card for MY10 (2010_tim_f 403). Do not invent leftover 24K/25G/31M.
+        // Brochure 2011_tim_f (TI11F2) Tioga Montara: 22C | 23B — E-350 5.4 Triton 255/350
+        "2011": ["22C", "23B"],
+        // Brochure 2012_tim_f (TIM12F1) Tioga Montara: 22C | 23B | 25K — mixed E-350 255 / E-450 305
+        "2012": ["22C", "23B", "25K"],
         // Brochure 2013_tim_f (TIM13F1) Tioga Montara: 23B | 25K — mixed E-350 5.4 255/350 / E-450 6.8 305/420
         "2013": ["23B", "25K"],
         // Brochure 2014_tim_f / TIRGR_TIM14F1 Tioga Montara: 23B | 25K | 31M — mixed E-350 / E-450
@@ -17826,23 +17892,34 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2000,
       yearEnd: 2016,
       gvwrLbs: 14500,
-      description: "Fleetwood Tioga — discontinued Ford cutaway Class C (last catalog year 2016). MY13 OEM Montara (2013_tim_f / TIM13F1): 23B / 25K on mixed E-350 5.4 255/350 / E-450 6.8 305/420 (line HP 0). MY14 OEM Montara (2014_tim_f / TIRGR_TIM14F1): 23B / 25K / 31M, same mixed chassis (line HP 0). MY15–16 OEM/RV Guide lists are the Montara rebadge: 23B / 25K / 29A / 31M on mixed Ford E-350 5.4 / E-450 Triton V10 (HP not printed — do not invent). Not Tioga Ranger. Current Fleetwood Class C is Altitude (gas) / Insight (diesel). 2010–2012 leftover pending that walk-back.",
+      description: "Fleetwood Tioga — discontinued Ford cutaway Class C (last catalog year 2016). This catalog key is Montara, not Ranger. MY10: no OEM Montara card (omit — do not invent leftover 24K/25G/31M). MY11 OEM Montara (2011_tim_f / TI11F2): 22C / 23B on Ford E-350 5.4 Triton (255 hp / 350 lb-ft). MY12 OEM Montara (2012_tim_f / TIM12F1): 22C / 23B / 25K — E-350 5.4 255 hp on 22C/23B, E-450 6.8 305 hp on 25K (option-band HP 0). MY13 OEM Montara (2013_tim_f / TIM13F1): 23B / 25K on mixed E-350 5.4 255/350 / E-450 6.8 305/420 (line HP 0). MY14 OEM Montara (2014_tim_f / TIRGR_TIM14F1): 23B / 25K / 31M, same mixed chassis (line HP 0). MY15–16 OEM/RV Guide lists are the Montara rebadge: 23B / 25K / 29A / 31M on mixed Ford E-350 5.4 / E-450 Triton V10 (HP not printed — do not invent). Not Tioga Ranger. Current Fleetwood Class C is Altitude (gas) / Insight (diesel).",
       powertrainByYear: [
         {
           from: 2005,
-          to: 2010,
+          to: 2009,
           engine: "Ford V10 / 6.8L or 6.0L (by year)",
           horsepower: 305,
           chassis: "Ford E-450 / E-350",
-          notes: "Pre-6.2 Ford cutaway Class C"
+          notes: "2005–2009 leftover until an earlier walk-back. Do not invent MY10 Montara. Do not stamp leftover 24K/25G onto MY11–12."
         },
         {
           from: 2011,
+          to: 2011,
+          engine: "Ford E-350 5.4L Triton V8 255HP",
+          horsepower: 255,
+          torqueLbFt: 350,
+          chassis: "Ford E-350",
+          towingCapacity: 5000,
+          notes: "2011_tim_f (TI11F2) Tioga Montara: all E-350 5.4 255 / 350. Plans 22C | 23B. Not Ranger. Not 7.3."
+        },
+        {
+          from: 2012,
           to: 2012,
-          engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
-          horsepower: 305,
-          chassis: "Ford E-450",
-          notes: "2010–2012 leftover until that walk-back. Do not stamp leftover 24K/25G onto MY13–14 Montara."
+          engine: "Ford E-350 5.4L Triton V8 255HP / E-450 6.8L Triton V10 305HP (by floorplan)",
+          horsepower: 0,
+          chassis: "Ford E-350 / E-450",
+          towingCapacity: 5000,
+          notes: "2012_tim_f (TIM12F1) Tioga Montara: 22C/23B = E-350 5.4 255/350; 25K = E-450 6.8 305/420. Line HP 0 — option-band. Not Ranger. Not 7.3."
         },
         {
           from: 2013,
@@ -17866,11 +17943,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Tioga Ranger": {
       type: "Class C",
-      floorplans: ["25G", "25K", "28Y", "28Z", "31A", "31D", "31M", "31N", "31W"],
+      floorplans: ["23B", "24L", "25G", "25K", "26Q", "28Y", "28Z", "31A", "31D", "31M", "31N", "31W"],
       floorplansByYear: {
-        "2010": ["25K", "31N"],
-        "2011": ["25K", "31N"],
-        "2012": ["25K", "31N"],
+        // Brochure 2010_tir_f (TIRA10F1) twins Jamboree Sport: 23B | 25G | 26Q | 28Y | 31M | 31N | 31W
+        "2010": ["23B", "25G", "26Q", "28Y", "31M", "31N", "31W"],
+        // Brochure 2011_tir_f (TR11F1) twins Jamboree Sport: 24L | 25G | 28Y | 31M | 31N | 31W
+        "2011": ["24L", "25G", "28Y", "31M", "31N", "31W"],
+        // Brochure 2012_tir_f (TIRGR12F2) twins Jamboree Sport: 25G | 28Y | 28Z | 31M | 31N | 31W
+        "2012": ["25G", "28Y", "28Z", "31M", "31N", "31W"],
         // Brochure 2013_tir_f (TIRGR13F1) twins Jamboree Sport: 25G | 28Y | 28Z | 31M | 31N | 31W
         "2013": ["25G", "28Y", "28Z", "31M", "31N", "31W"],
         // Brochure 2014_tir_f / TIRGR_TIM14F1 twins Jamboree Sport: 25G | 28Z | 31A | 31D | 31M
@@ -17911,23 +17991,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2010,
       yearEnd: 2016,
-      description: "Fleetwood Tioga Ranger — value Class C, twin of Jamboree Sport (not Montara). MY13 OEM (2013_tir_f / TIRGR13F1): 25G / 28Y / 28Z / 31M / 31N / 31W on E-450 Triton V10 305/420. MY14 OEM (TIRGR_TIM14F1 Ranger table): 25G / 28Z / 31A / 31D / 31M on E-450 305/420. MY15–16 OEM/RV Guide lists twin Jamboree Sport: 25G / 31A / 31D / 31M on Ford E-450 Triton V10 (HP not printed — do not invent 7.3). Last catalog year 2016. 2010–2012 leftover pending that walk-back.",
+      description: "Fleetwood Tioga Ranger — value Class C, twin of Jamboree Sport (not Montara). MY10 OEM (2010_tir_f / TIRA10F1): 23B / 25G / 26Q / 28Y / 31M / 31N / 31W on E-450 Triton V10 305/420. MY11 OEM (2011_tir_f / TR11F1): 24L / 25G / 28Y / 31M / 31N / 31W, same 305/420. MY12 OEM (2012_tir_f / TIRGR12F2): 25G / 28Y / 28Z / 31M / 31N / 31W. MY13 OEM (2013_tir_f / TIRGR13F1): 25G / 28Y / 28Z / 31M / 31N / 31W on E-450 Triton V10 305/420. MY14 OEM (TIRGR_TIM14F1 Ranger table): 25G / 28Z / 31A / 31D / 31M on E-450 305/420. MY15–16 OEM/RV Guide lists twin Jamboree Sport: 25G / 31A / 31D / 31M on Ford E-450 Triton V10 (HP not printed — do not invent 7.3). Last catalog year 2016.",
       powertrainByYear: [
         {
           from: 2010,
-          to: 2010,
-          engine: "Ford V10 / 6.8L or 6.0L (by year)",
-          horsepower: 305,
-          chassis: "Ford E-450 / E-350",
-          notes: "Pre-6.2/7.3 Ford cutaway Class C"
-        },
-        {
-          from: 2011,
           to: 2012,
-          engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
+          engine: "Ford E-450 6.8L Triton V10 305HP",
           horsepower: 305,
+          torqueLbFt: 420,
           chassis: "Ford E-450",
-          notes: "2010–2012 leftover until that walk-back. Do not stamp leftover 25K/31N onto MY13–14 Ranger."
+          towingCapacity: 5000,
+          notes: "2010_tir_f (TIRA10F1) / 2011_tir_f (TR11F1) / 2012_tir_f (TIRGR12F2) Ranger: E-450 Triton V10 305 / 420, hitch 5,000. Twins Sport. MY10 23B/25G/26Q/28Y/31M/31N/31W; MY11 24L/25G/28Y/31M/31N/31W; MY12 25G/28Y/28Z/31M/31N/31W. Not Montara. Not 7.3."
         },
         {
           from: 2013,
