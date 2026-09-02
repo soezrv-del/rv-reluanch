@@ -47,7 +47,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
   },
   {
     yearMin: 2018,
-    yearEnd: 2020,
+    yearEnd: 2018,
     makeIncludes: "entegra",
     modelIncludes: "accolade",
     engine: "Cummins ISB 6.7L 360HP",
@@ -56,7 +56,20 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Freightliner S2RV Plus",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "Pre-MY21 Accolade / Accolade XL pin (not this slice). Not Accolade XT Power Stroke.",
+    note: "Pre-MY20 Accolade / Accolade XL pin — no 2019 OEM Accolade page. Not Accolade XT Power Stroke.",
+  },
+  {
+    yearMin: 2020,
+    yearEnd: 2020,
+    makeIncludes: "entegra",
+    modelIncludes: "accolade",
+    engine: "Cummins ISB 6.7L 360HP",
+    horsepower: 360,
+    torqueLbFt: 800,
+    chassis: "Freightliner S2RV",
+    transmission: "Allison 3000 MH",
+    fuelType: "Diesel",
+    note: "OEM MY20 Accolade year page: ISB 360/800 · S2RV (not Plus) · hitch 12k. Not Accolade XL (no 2020 OEM page) / not Accolade XT.",
   },
   {
     yearMin: 2021,
@@ -818,7 +831,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "Reatta diesel B6.7 360/800 — not Aspire/Anthem L9 and not Reatta XL",
   },
   {
-    yearMin: 2021,
+    yearMin: 2020,
     yearEnd: 2025,
     makeIncludes: "entegra",
     modelIncludes: "reatta xl",
@@ -828,7 +841,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Spartan K2",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "OEM MY21–25 Reatta XL: L9 380 / 1,150 · Spartan K2 — not Reatta B6.7 / K1. MY21 40Q2; MY22 40Q3.",
+    note: "OEM MY20–25 Reatta XL: L9 380 / 1,150 · Spartan K2 — not Reatta B6.7 / K1. MY20–21 40Q2; MY22 40Q3. No 2019 OEM page.",
   },
   // American Coach American Dream — option band, not a single invented HP
   {
@@ -843,9 +856,34 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     fuelType: "Diesel",
     note: "2020–2026 American Dream (2023 floorplans 45A / 45B): L9 450 / 1,250 lb-ft standard, X15 605 / ~1,850–1,950 lb-ft optional. Confirm door sticker. Not Tradition Liberty Bridge. Do not invent a single HP or L9-only torque.",
   },
-  // Entegra Vision — gas F53 Godzilla only. 2019–2023 stay 350; MY24–27 OEM is 335.
+  // Entegra Vision — gas F53. MY19 Triton 320; MY20 option-band; MY21–23 350; MY24–27 335.
   {
     yearMin: 2019,
+    yearEnd: 2019,
+    makeIncludes: "entegra",
+    modelIncludes: "vision",
+    engine: "Ford 6.8L Triton V10 320HP",
+    horsepower: 320,
+    torqueLbFt: 460,
+    chassis: "Ford F-53",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY19 Vision year page: F53 6.8 Triton 320 / 460. Not Vision XL.",
+  },
+  {
+    yearMin: 2020,
+    yearEnd: 2020,
+    makeIncludes: "entegra",
+    modelIncludes: "vision",
+    engine: "Ford 6.8L Triton V10 320HP or 7.3L V8 350HP (by chassis)",
+    horsepower: 0,
+    chassis: "Ford F-53",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY20 Vision year page prints 2019 chassis 6.8 320 / 460 and 2020 chassis 7.3 350 / 468 — option band. Not Vision XL.",
+  },
+  {
+    yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "entegra",
     modelIncludes: "vision",
@@ -855,7 +893,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Ford F-53",
     transmission: "TorqShift 6-speed automatic",
     fuelType: "Gas",
-    note: "Vision gas F-53 350 / 468 through MY23 — never diesel. Not Vision XL / Vision SE.",
+    note: "Vision gas F-53 350 / 468 MY21–23 — never diesel. Not Vision XL / Vision SE.",
   },
   {
     yearMin: 2024,
@@ -869,6 +907,18 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     transmission: "TorqShift 6-speed automatic",
     fuelType: "Gas",
     note: "OEM MY24–27 Vision: F53 7.3 335 / 468. Not Vision XL / Vision SE.",
+  },
+  {
+    yearMin: 2020,
+    yearEnd: 2020,
+    makeIncludes: "entegra",
+    modelIncludes: "vision xl",
+    engine: "Ford 6.8L Triton V10 320HP or 7.3L V8 350HP (by chassis)",
+    horsepower: 0,
+    chassis: "Ford F-53",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY20 Vision XL year page prints 2019 chassis 6.8 320 / 460 and 2020 chassis 7.3 350 / 468 — option band. No 2019 OEM page.",
   },
   {
     yearMin: 2021,
@@ -910,6 +960,31 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY26–27 Vision SE 27ASE: F53 7.3 335 / 468",
   },
   {
+    yearMin: 2019,
+    yearEnd: 2019,
+    makeIncludes: "entegra",
+    modelIncludes: "emblem",
+    engine: "Ford 6.8L Triton V10 320HP",
+    horsepower: 320,
+    torqueLbFt: 460,
+    chassis: "Ford F-53",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY19 Emblem year page: F53 6.8 Triton 320 / 460",
+  },
+  {
+    yearMin: 2020,
+    yearEnd: 2020,
+    makeIncludes: "entegra",
+    modelIncludes: "emblem",
+    engine: "Ford 6.8L Triton V10 320HP or 7.3L V8 350HP (by chassis)",
+    horsepower: 0,
+    chassis: "Ford F-53",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY20 Emblem year page prints 2019 chassis 6.8 320 / 460 and 2020 chassis 7.3 350 / 468 — option band",
+  },
+  {
     yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "entegra",
@@ -936,7 +1011,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY24–27 Emblem: F53 7.3 335 / 468",
   },
   {
-    yearMin: 2021,
+    yearMin: 2019,
     yearEnd: 2024,
     makeIncludes: "entegra",
     modelIncludes: "anthem",
@@ -946,7 +1021,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Spartan K2",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "OEM MY21–24 Anthem: L9 450 / 1,250 · Spartan K2 · hitch 15k. Not an L9/X12 band.",
+    note: "OEM MY19–24 Anthem: L9 450 / 1,250 · Spartan K2 · hitch 15k. Not an L9/X12 band.",
   },
   {
     yearMin: 2025,
@@ -962,7 +1037,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY25–26 Anthem: L9 450 / 1,250 locked — not an L9/X12 band",
   },
   {
-    yearMin: 2021,
+    yearMin: 2019,
     yearEnd: 2026,
     makeIncludes: "entegra",
     modelIncludes: "aspire",
@@ -972,10 +1047,10 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Spartan K2",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "OEM MY21–26 Aspire: L9 450 / 1,250 · Spartan K2 · hitch 15k (10k on 38M / 40P)",
+    note: "OEM MY19–26 Aspire: L9 450 / 1,250 · Spartan K2 · hitch 15k (10k on 38M / 40P)",
   },
   {
-    yearMin: 2021,
+    yearMin: 2019,
     yearEnd: 2026,
     makeIncludes: "entegra",
     modelIncludes: "cornerstone",
@@ -985,7 +1060,32 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Spartan K3",
     transmission: "Allison 4000 MH",
     fuelType: "Diesel",
-    note: "OEM MY21–26 Cornerstone / Reserve: X15 605 / 1,950 · Spartan K3 · hitch 20k. SL is an option.",
+    note: "OEM MY19–26 Cornerstone / Reserve: X15 605 / 1,950 · Spartan K3 · hitch 20k. SL is an option.",
+  },
+  {
+    yearMin: 2019,
+    yearEnd: 2019,
+    makeIncludes: "entegra",
+    modelIncludes: "odyssey",
+    engine: "Ford 6.8L Triton V10 305HP",
+    horsepower: 305,
+    torqueLbFt: 420,
+    chassis: "Ford E-450",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY19 Odyssey year page: E-450 6.8 Triton 305 / 420 · hitch 7.5k. Not Odyssey SE.",
+  },
+  {
+    yearMin: 2020,
+    yearEnd: 2020,
+    makeIncludes: "entegra",
+    modelIncludes: "odyssey",
+    engine: "Ford 6.8L Triton V10 305HP or 7.3L V8 350HP (by chassis)",
+    horsepower: 0,
+    chassis: "Ford E-450",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY20 Odyssey year page prints 2019 chassis 6.8 305 / 420 and 2021 chassis 7.3 350 / 468 — option band. Not Odyssey SE.",
   },
   {
     yearMin: 2021,
@@ -1049,6 +1149,31 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM 2027 Odyssey SE prints Ford 325/450 and Chevy 401/464 — option band. Do not invent which plan is Chevy.",
   },
   {
+    yearMin: 2019,
+    yearEnd: 2019,
+    makeIncludes: "entegra",
+    modelIncludes: "esteem",
+    engine: "Ford 6.8L Triton V10 305HP",
+    horsepower: 305,
+    torqueLbFt: 420,
+    chassis: "Ford E-450",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY19 Esteem year page: E-450 6.8 Triton 305 / 420 · hitch 7.5k. Not Esteem XL Super C.",
+  },
+  {
+    yearMin: 2020,
+    yearEnd: 2020,
+    makeIncludes: "entegra",
+    modelIncludes: "esteem",
+    engine: "Ford 6.8L Triton V10 305HP or 7.3L V8 350HP (by chassis)",
+    horsepower: 0,
+    chassis: "Ford E-450",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY20 Esteem year page prints 2019 chassis 6.8 305 / 420 and 2021 chassis 7.3 350 / 468 — option band. Not Esteem XL Super C.",
+  },
+  {
     yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "entegra",
@@ -1088,7 +1213,20 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY26 Esteem: E-450 7.3 325 / 450. Not Esteem XL Super C.",
   },
   {
-    yearMin: 2021,
+    yearMin: 2019,
+    yearEnd: 2019,
+    makeIncludes: "entegra",
+    modelIncludes: "qwest",
+    engine: "Mercedes-Benz 3.0L V6 Turbo 188HP",
+    horsepower: 188,
+    torqueLbFt: 325,
+    chassis: "Mercedes-Benz 3500",
+    transmission: "5-speed automatic",
+    fuelType: "Diesel",
+    note: "OEM MY19 Qwest year page: Mercedes 3500 · V6 Turbo 188 / 325 · 5-speed. Not Qwest SE.",
+  },
+  {
+    yearMin: 2020,
     yearEnd: 2023,
     makeIncludes: "entegra",
     modelIncludes: "qwest",
@@ -1098,7 +1236,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Mercedes-Benz 3500",
     transmission: "7-speed automatic",
     fuelType: "Diesel",
-    note: "OEM MY21–23 Qwest: Mercedes 3500 · V6 Turbo 188 / 325. MY22 still 188 — not 2.0 208/211. Not Qwest SE.",
+    note: "OEM MY20–23 Qwest: Mercedes 3500 · V6 Turbo 188 / 325 · 7-speed. MY22 still 188 — not 2.0 208/211. Not Qwest SE.",
   },
   {
     yearMin: 2024,
@@ -4982,6 +5120,15 @@ export function findPowertrainCorrection(
     }
     // Bare "accolade" ISB must not stamp Accolade XT Power Stroke
     if (c.modelIncludes === "accolade" && md.includes("accolade xt")) {
+      return false;
+    }
+    // No OEM MY19–20 Accolade XL year page — do not inherit Accolade S2RV pin
+    if (
+      c.modelIncludes === "accolade" &&
+      md.includes("accolade xl") &&
+      y >= 2019 &&
+      y <= 2020
+    ) {
       return false;
     }
     // Bare "esteem" E-450 must not stamp Esteem XL Super C or Odyssey Esteem Edition
