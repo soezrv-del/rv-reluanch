@@ -143,6 +143,55 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "WT — 2.7L Turbo (2023–2026)",
+            "maxTow": 7700,
+            "payload": 1710,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "LT — 2.7L Turbo (2023–2026)",
+            "maxTow": 7700,
+            "payload": 1710,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Z71 — 2.7L Turbo (2023–2026)",
+            "maxTow": 7700,
+            "payload": 1590,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Trail Boss — 2.7L Turbo (2023–2026)",
+            "maxTow": 7700,
+            "payload": 1570,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "ZR2 — 2.7L Turbo (2023–2026)",
+            "maxTow": 6000,
+            "payload": 1310,
+            "gcwr": 11000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "ZR2 Bison — 2.7L Turbo (2024)",
+            "maxTow": 5900,
+            "payload": 1160,
+            "gcwr": 11600,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "ZR2 Bison — 2.7L Turbo (2025–2026)",
+            "maxTow": 5500,
+            "payload": 1160,
+            "gcwr": 11600,
+            "hitch": "Class IV"
+          },
+          {
             "label": "WT — 2.5L I4 (2018–2022)",
             "maxTow": 3500,
             "payload": 1420,
@@ -391,6 +440,97 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 8900,
             "payload": 1460,
             "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "WT — 2.7L Turbo I4 (2022–2023)",
+            "maxTow": 9500,
+            "payload": 2270,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "LT — 5.3L V8 (2022–2023)",
+            "maxTow": 11300,
+            "payload": 2100,
+            "gcwr": 16800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "RST — 6.2L V8 Max Trailering (2022–2023)",
+            "maxTow": 13300,
+            "payload": 2250,
+            "gcwr": 19100,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "LTZ — 6.2L V8 Max Trailering (2022–2023)",
+            "maxTow": 13200,
+            "payload": 2250,
+            "gcwr": 19100,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "High Country — 3.0L Duramax Diesel (2022–2023)",
+            "maxTow": 13300,
+            "payload": 2050,
+            "gcwr": 19000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "ZR2 — 6.2L V8 Off-Road (2022–2023)",
+            "maxTow": 8800,
+            "payload": 1460,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "WT — 2.7L Turbo I4 (2024–2026)",
+            "maxTow": 9500,
+            "payload": 1980,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "LT — 5.3L V8 (2024–2026)",
+            "maxTow": 11400,
+            "payload": 2100,
+            "gcwr": 16800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "RST — 6.2L V8 Max Trailering (2024–2026)",
+            "maxTow": 13200,
+            "payload": 2250,
+            "gcwr": 19100,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "LTZ — 6.2L V8 Max Trailering (2024–2026)",
+            "maxTow": 13200,
+            "payload": 2250,
+            "gcwr": 19100,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "High Country — 3.0L Duramax Diesel (2024–2026)",
+            "maxTow": 13300,
+            "payload": 2050,
+            "gcwr": 19100,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "ZR2 — 6.2L V8 Off-Road (2024–2026)",
+            "maxTow": 8800,
+            "payload": 1460,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "ZR2 — 3.0L Duramax Diesel (2024–2026)",
+            "maxTow": 8700,
+            "payload": 1460,
+            "gcwr": 15000,
             "hitch": "Class IV"
           },
           {
@@ -1299,6 +1439,27 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1500,
             "gcwr": 18000,
             "hitch": "Class IV"
+          },
+          {
+            "label": "WT — Dual Motor AWD (2024–2026)",
+            "maxTow": 10000,
+            "payload": 1500,
+            "gcwr": 18000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "RST — Dual Motor AWD (2024–2026)",
+            "maxTow": 10000,
+            "payload": 1400,
+            "gcwr": 17500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Trail Boss — Dual Motor Off-Road (2025–2026)",
+            "maxTow": 8900,
+            "payload": 1250,
+            "gcwr": 16500,
+            "hitch": "Class IV"
           }
         ]
       },
@@ -1722,6 +1883,48 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "LS — 5.3L V8 (2022–2024)",
+            "maxTow": 7900,
+            "payload": 1720,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "LT — 5.3L V8 Max Trailering (2022–2024)",
+            "maxTow": 8300,
+            "payload": 1800,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "High Country — 6.2L V8 (2022–2024)",
+            "maxTow": 8300,
+            "payload": 1650,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "High Country — 3.0L Duramax Diesel (2022–2024)",
+            "maxTow": 8000,
+            "payload": 1580,
+            "gcwr": 14800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "LT — 5.3L V8 Max Trailering (2025–2026)",
+            "maxTow": 8300,
+            "payload": 1800,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "High Country — 6.2L V8 (2025–2026)",
+            "maxTow": 8300,
+            "payload": 1650,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
             "label": "LS — 5.3L V8 (2015–2020)",
             "maxTow": 8300,
             "payload": 1750,
@@ -1928,6 +2131,55 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 8200,
             "payload": 1550,
             "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "LS — 5.3L V8 (2022–2024)",
+            "maxTow": 7900,
+            "payload": 1720,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "LT — 5.3L V8 Max Trailering (2022–2024)",
+            "maxTow": 8400,
+            "payload": 1800,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "High Country — 6.2L V8 (2022–2024)",
+            "maxTow": 8400,
+            "payload": 1650,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "High Country — 3.0L Duramax Diesel (2022–2024)",
+            "maxTow": 8000,
+            "payload": 1580,
+            "gcwr": 14800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "LS — 5.3L V8 (2025–2026)",
+            "maxTow": 7900,
+            "payload": 1720,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "LT — 5.3L V8 Max Trailering (2025–2026)",
+            "maxTow": 8400,
+            "payload": 1800,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "High Country — 6.2L V8 (2025–2026)",
+            "maxTow": 8400,
+            "payload": 1650,
+            "gcwr": 15000,
             "hitch": "Class IV"
           },
           {
@@ -2603,6 +2855,48 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "Elevation — 2.7L Turbo (2023–2026)",
+            "maxTow": 7700,
+            "payload": 1670,
+            "gcwr": 13250,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "AT4 — 2.7L Turbo (2023–2026)",
+            "maxTow": 7700,
+            "payload": 1620,
+            "gcwr": 13250,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Denali — 2.7L Turbo (2023–2026)",
+            "maxTow": 7700,
+            "payload": 1620,
+            "gcwr": 13250,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "AT4X — 2.7L Turbo (2023–2026)",
+            "maxTow": 6000,
+            "payload": 1320,
+            "gcwr": 11000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "AT4X Edition 1 / Bison — 2.7L Turbo (2024)",
+            "maxTow": 5900,
+            "payload": 1160,
+            "gcwr": 11600,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "AT4X Edition 1 / Bison — 2.7L Turbo (2025–2026)",
+            "maxTow": 5500,
+            "payload": 1160,
+            "gcwr": 11600,
+            "hitch": "Class IV"
+          },
+          {
             "label": "SL — 2.5L I4 (2018–2020)",
             "maxTow": 3500,
             "payload": 1420,
@@ -2871,6 +3165,111 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 13300,
             "payload": 2100,
             "gcwr": 17500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Pro — 2.7L Turbo (2022–2023)",
+            "maxTow": 9500,
+            "payload": 2270,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SLE — 5.3L V8 (2022–2023)",
+            "maxTow": 11300,
+            "payload": 2100,
+            "gcwr": 16800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Elevation — 5.3L V8 (2022–2023)",
+            "maxTow": 11400,
+            "payload": 2050,
+            "gcwr": 16800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SLT — 6.2L V8 Max Trailering (2022–2023)",
+            "maxTow": 13200,
+            "payload": 2250,
+            "gcwr": 19100,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "AT4 — 6.2L V8 (2022–2023)",
+            "maxTow": 8900,
+            "payload": 1600,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "AT4X — 6.2L V8 Off-Road (2022–2023)",
+            "maxTow": 8800,
+            "payload": 1460,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Denali — 3.0L Duramax Diesel (2022–2023)",
+            "maxTow": 13300,
+            "payload": 2050,
+            "gcwr": 19000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Pro — 2.7L Turbo (2024–2026)",
+            "maxTow": 9500,
+            "payload": 1980,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SLE — 5.3L V8 (2024–2026)",
+            "maxTow": 11400,
+            "payload": 2100,
+            "gcwr": 16800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Elevation — 5.3L V8 (2024–2026)",
+            "maxTow": 11400,
+            "payload": 2050,
+            "gcwr": 16800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SLT — 6.2L V8 Max Trailering (2024–2026)",
+            "maxTow": 13200,
+            "payload": 2250,
+            "gcwr": 19100,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "AT4 — 6.2L V8 (2024–2026)",
+            "maxTow": 8900,
+            "payload": 1600,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "AT4X — 6.2L V8 Off-Road (2024–2026)",
+            "maxTow": 8800,
+            "payload": 1460,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Denali — 3.0L Duramax Diesel (2024–2026)",
+            "maxTow": 13300,
+            "payload": 2050,
+            "gcwr": 19100,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Denali Ultimate — 6.2L V8 (2024–2026)",
+            "maxTow": 13200,
+            "payload": 2100,
+            "gcwr": 19100,
             "hitch": "Class IV"
           },
           {
@@ -3730,6 +4129,34 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1250,
             "gcwr": 16500,
             "hitch": "Class IV"
+          },
+          {
+            "label": "Elevation — Dual Motor AWD (2024–2026)",
+            "maxTow": 8900,
+            "payload": 1300,
+            "gcwr": 16500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Denali — Dual Motor AWD (2024–2026)",
+            "maxTow": 10000,
+            "payload": 1400,
+            "gcwr": 17500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Denali Ultimate — Dual Motor Max Range (2024–2026)",
+            "maxTow": 10000,
+            "payload": 1350,
+            "gcwr": 17500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "AT4 — Dual Motor Off-Road (2025–2026)",
+            "maxTow": 8900,
+            "payload": 1250,
+            "gcwr": 16500,
+            "hitch": "Class IV"
           }
         ]
       },
@@ -4196,6 +4623,48 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "SLE — 5.3L V8 (2022–2024)",
+            "maxTow": 7900,
+            "payload": 1720,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SLT — 5.3L V8 Max Trailering (2022–2024)",
+            "maxTow": 8400,
+            "payload": 1800,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Denali — 6.2L V8 (2022–2024)",
+            "maxTow": 8400,
+            "payload": 1650,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Denali — 3.0L Duramax Diesel (2022–2024)",
+            "maxTow": 8000,
+            "payload": 1580,
+            "gcwr": 14800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SLT — 5.3L V8 Max Trailering (2025–2026)",
+            "maxTow": 8400,
+            "payload": 1800,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Denali — 6.2L V8 (2025–2026)",
+            "maxTow": 8400,
+            "payload": 1650,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
             "label": "SLE — 5.3L V8 (2015–2020)",
             "maxTow": 8500,
             "payload": 1700,
@@ -4416,6 +4885,34 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 8000,
             "payload": 1580,
             "gcwr": 14800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SLT — 5.3L V8 Max Trailering (2022–2024)",
+            "maxTow": 8300,
+            "payload": 1800,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Denali — 6.2L V8 (2022–2024)",
+            "maxTow": 8300,
+            "payload": 1650,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SLT — 5.3L V8 Max Trailering (2025–2026)",
+            "maxTow": 8300,
+            "payload": 1800,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Denali — 6.2L V8 (2025–2026)",
+            "maxTow": 8300,
+            "payload": 1650,
+            "gcwr": 15000,
             "hitch": "Class IV"
           },
           {
@@ -4658,6 +5155,174 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 12700,
             "payload": 2120,
             "gcwr": 17200,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XL — 3.3L Ti-VCT V6 (2022–2023)",
+            "maxTow": 8200,
+            "payload": 1965,
+            "gcwr": 13500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — 2.7L EcoBoost V6 (2022–2023)",
+            "maxTow": 10100,
+            "payload": 2480,
+            "gcwr": 15500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — 5.0L V8 (2022–2023)",
+            "maxTow": 13000,
+            "payload": 3325,
+            "gcwr": 18400,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Lariat — 3.5L EcoBoost Max Tow (2022–2023)",
+            "maxTow": 14000,
+            "payload": 3250,
+            "gcwr": 19500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "PowerBoost Hybrid — 3.5L EcoBoost (2022–2023)",
+            "maxTow": 12700,
+            "payload": 2120,
+            "gcwr": 18400,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Raptor — 3.5L EcoBoost HO (2022–2023)",
+            "maxTow": 8200,
+            "payload": 1400,
+            "gcwr": 14575,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Raptor R — 5.2L Supercharged V8 (2023)",
+            "maxTow": 8700,
+            "payload": 1400,
+            "gcwr": 15300,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Tremor — 3.5L EcoBoost Off-Road (2022–2023)",
+            "maxTow": 11000,
+            "payload": 1805,
+            "gcwr": 17100,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XL — 2.7L EcoBoost V6 (2024)",
+            "maxTow": 8400,
+            "payload": 1775,
+            "gcwr": 13300,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — 5.0L V8 (2024)",
+            "maxTow": 12000,
+            "payload": 2230,
+            "gcwr": 18400,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — 3.5L EcoBoost (2024)",
+            "maxTow": 13500,
+            "payload": 2445,
+            "gcwr": 19400,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "PowerBoost Hybrid — 3.5L EcoBoost (2024)",
+            "maxTow": 11200,
+            "payload": 1755,
+            "gcwr": 18400,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Raptor — 3.5L EcoBoost HO (2024)",
+            "maxTow": 8200,
+            "payload": 1405,
+            "gcwr": 14650,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Raptor R — 5.2L Supercharged V8 (2024)",
+            "maxTow": 8700,
+            "payload": 1410,
+            "gcwr": 15300,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Tremor — 3.5L EcoBoost Off-Road (2024)",
+            "maxTow": 10200,
+            "payload": 1805,
+            "gcwr": 17100,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XL — 2.7L EcoBoost V6 (2025)",
+            "maxTow": 8400,
+            "payload": 1775,
+            "gcwr": 13300,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — 5.0L V8 (2025)",
+            "maxTow": 12900,
+            "payload": 2225,
+            "gcwr": 18400,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — 3.5L EcoBoost (2025–2026)",
+            "maxTow": 13500,
+            "payload": 2440,
+            "gcwr": 19400,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "PowerBoost Hybrid — 3.5L EcoBoost (2025)",
+            "maxTow": 11200,
+            "payload": 1815,
+            "gcwr": 18400,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Raptor — 3.5L EcoBoost HO (2025–2026)",
+            "maxTow": 8200,
+            "payload": 1405,
+            "gcwr": 14650,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Raptor R — 5.2L Supercharged V8 (2025–2026)",
+            "maxTow": 8700,
+            "payload": 1410,
+            "gcwr": 15300,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XL — 2.7L EcoBoost V6 (2026)",
+            "maxTow": 8400,
+            "payload": 1775,
+            "gcwr": 13300,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — 5.0L V8 (2026)",
+            "maxTow": 12800,
+            "payload": 2235,
+            "gcwr": 18400,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "PowerBoost Hybrid — 3.5L EcoBoost (2026)",
+            "maxTow": 11600,
+            "payload": 1740,
+            "gcwr": 18400,
             "hitch": "Class IV"
           },
           {
@@ -5109,6 +5774,48 @@ export const TOW_MAKES: TowMake[] = [
           },
           {
             "label": "Flash — Dual Motor Ext. Range",
+            "maxTow": 10000,
+            "payload": 1900,
+            "gcwr": 17500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Pro — Dual Motor Ext. Range (2022–2026)",
+            "maxTow": 10000,
+            "payload": 2235,
+            "gcwr": 17500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — Dual Motor Standard Range (2022–2026)",
+            "maxTow": 7700,
+            "payload": 2000,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — Dual Motor Ext. Range (2022–2026)",
+            "maxTow": 10000,
+            "payload": 2235,
+            "gcwr": 17500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Lariat — Dual Motor Ext. Range (2022–2026)",
+            "maxTow": 10000,
+            "payload": 1800,
+            "gcwr": 17500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Platinum — Dual Motor Ext. Range (2023–2026)",
+            "maxTow": 10000,
+            "payload": 1800,
+            "gcwr": 17500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Flash — Dual Motor Ext. Range (2024–2026)",
             "maxTow": 10000,
             "payload": 1900,
             "gcwr": 17500,
@@ -6144,6 +6851,48 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1400,
             "gcwr": 6000,
             "hitch": "Class III"
+          },
+          {
+            "label": "XL — 2.0L EcoBoost (2022–2026)",
+            "maxTow": 4000,
+            "payload": 1500,
+            "gcwr": 6140,
+            "hitch": "Class III"
+          },
+          {
+            "label": "XLT — 2.0L EcoBoost (2022–2026)",
+            "maxTow": 4000,
+            "payload": 1500,
+            "gcwr": 6140,
+            "hitch": "Class III"
+          },
+          {
+            "label": "Lariat — 2.0L EcoBoost (2022–2026)",
+            "maxTow": 4000,
+            "payload": 1500,
+            "gcwr": 6140,
+            "hitch": "Class III"
+          },
+          {
+            "label": "XL Hybrid — 2.5L Atkinson (2022–2026)",
+            "maxTow": 2000,
+            "payload": 1500,
+            "gcwr": 5320,
+            "hitch": "Class III"
+          },
+          {
+            "label": "XLT Hybrid — 2.5L Atkinson (2022–2026)",
+            "maxTow": 2000,
+            "payload": 1500,
+            "gcwr": 5320,
+            "hitch": "Class III"
+          },
+          {
+            "label": "Lobo — 2.0L EcoBoost Sport (2025–2026)",
+            "maxTow": 4000,
+            "payload": 1400,
+            "gcwr": 6000,
+            "hitch": "Class III"
           }
         ]
       },
@@ -6174,6 +6923,69 @@ export const TOW_MAKES: TowMake[] = [
           },
           {
             "label": "Raptor — 3.0L EcoBoost V6",
+            "maxTow": 5510,
+            "payload": 1410,
+            "gcwr": 10500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XL — 2.3L EcoBoost (2022–2023)",
+            "maxTow": 7500,
+            "payload": 1710,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — 2.3L EcoBoost (2022–2023)",
+            "maxTow": 7500,
+            "payload": 1805,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Lariat — 2.3L EcoBoost (2022–2023)",
+            "maxTow": 7500,
+            "payload": 1710,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XL — 2.3L EcoBoost (2024–2026)",
+            "maxTow": 7500,
+            "payload": 1767,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — 2.3L EcoBoost (2024–2026)",
+            "maxTow": 7500,
+            "payload": 1767,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — 2.7L EcoBoost V6 (2024–2026)",
+            "maxTow": 7500,
+            "payload": 1767,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Lariat — 2.3L EcoBoost (2024–2026)",
+            "maxTow": 7500,
+            "payload": 1710,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Lariat — 2.7L EcoBoost V6 (2024–2026)",
+            "maxTow": 7500,
+            "payload": 1710,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Raptor — 3.0L EcoBoost V6 (2024–2026)",
             "maxTow": 5510,
             "payload": 1410,
             "gcwr": 10500,
@@ -7069,6 +7881,69 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "XLT — 3.5L EcoBoost (2022–2024)",
+            "maxTow": 6000,
+            "payload": 1700,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 3.5L EcoBoost Max Tow (2022–2024)",
+            "maxTow": 9300,
+            "payload": 1900,
+            "gcwr": 15500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "King Ranch — 3.5L EcoBoost (2022–2024)",
+            "maxTow": 9000,
+            "payload": 1750,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Platinum — 3.5L EcoBoost (2022–2024)",
+            "maxTow": 9000,
+            "payload": 1700,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Active — 3.5L EcoBoost (2025–2026)",
+            "maxTow": 6000,
+            "payload": 1700,
+            "gcwr": 12000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 3.5L EcoBoost Max Tow (2025–2026)",
+            "maxTow": 9600,
+            "payload": 1900,
+            "gcwr": 15900,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Tremor — 3.5L EcoBoost HO (2025–2026)",
+            "maxTow": 9300,
+            "payload": 1750,
+            "gcwr": 15600,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "King Ranch — 3.5L EcoBoost (2025–2026)",
+            "maxTow": 9600,
+            "payload": 1750,
+            "gcwr": 15900,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Platinum — 3.5L EcoBoost (2025–2026)",
+            "maxTow": 9600,
+            "payload": 1700,
+            "gcwr": 15900,
+            "hitch": "Class IV"
+          },
+          {
             "label": "XLT — 3.5L EcoBoost (2015–2017)",
             "maxTow": 9200,
             "payload": 1700,
@@ -7289,6 +8164,48 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 9000,
             "payload": 1700,
             "gcwr": 15200,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "XLT — 3.5L EcoBoost (2022–2024)",
+            "maxTow": 6300,
+            "payload": 1750,
+            "gcwr": 13000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 3.5L EcoBoost Max Tow (2022–2024)",
+            "maxTow": 9000,
+            "payload": 1850,
+            "gcwr": 15500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Platinum — 3.5L EcoBoost (2022–2024)",
+            "maxTow": 9000,
+            "payload": 1700,
+            "gcwr": 15200,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Active — 3.5L EcoBoost 4x2 (2025–2026)",
+            "maxTow": 6300,
+            "payload": 1700,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 3.5L EcoBoost Max Tow (2025–2026)",
+            "maxTow": 9000,
+            "payload": 1750,
+            "gcwr": 15900,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "King Ranch — 3.5L EcoBoost 4x4 (2025–2026)",
+            "maxTow": 9000,
+            "payload": 1700,
+            "gcwr": 15900,
             "hitch": "Class IV"
           },
           {
@@ -8039,6 +8956,153 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "Tradesman — 3.6L V6 eTorque (2022–2024)",
+            "maxTow": 7760,
+            "payload": 2300,
+            "gcwr": 13000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Big Horn — 5.7L HEMI eTorque (2022–2024)",
+            "maxTow": 12750,
+            "payload": 1900,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Laramie — 5.7L HEMI eTorque (2022–2024)",
+            "maxTow": 12750,
+            "payload": 1850,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Rebel — 5.7L HEMI V8 (2022–2024)",
+            "maxTow": 10210,
+            "payload": 1600,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 5.7L HEMI eTorque (2022–2024)",
+            "maxTow": 12750,
+            "payload": 1800,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited Longhorn — 5.7L HEMI eTorque (2022–2024)",
+            "maxTow": 12750,
+            "payload": 1800,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "EcoDiesel — 3.0L V6 Diesel (2022–2023)",
+            "maxTow": 12560,
+            "payload": 1800,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "TRX — 6.2L Supercharged Hellcat (2022–2024)",
+            "maxTow": 8100,
+            "payload": 1310,
+            "gcwr": 14000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Tradesman — 3.6L V6 eTorque (2025)",
+            "maxTow": 8110,
+            "payload": 2330,
+            "gcwr": 13000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Big Horn — 3.0L Hurricane Twin-Turbo I6 (2025)",
+            "maxTow": 11550,
+            "payload": 1930,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Laramie — 3.0L Hurricane Twin-Turbo I6 (2025)",
+            "maxTow": 11550,
+            "payload": 1900,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 3.0L Hurricane High Output (2025)",
+            "maxTow": 9920,
+            "payload": 1490,
+            "gcwr": 15500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "RHO — 3.0L Hurricane High Output (2025)",
+            "maxTow": 8350,
+            "payload": 1450,
+            "gcwr": 14000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Tungsten — 3.0L Hurricane Twin-Turbo I6 (2025)",
+            "maxTow": 11550,
+            "payload": 1900,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Tradesman — 3.6L V6 eTorque (2026)",
+            "maxTow": 8130,
+            "payload": 2360,
+            "gcwr": 13000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Big Horn — 3.0L Hurricane Twin-Turbo I6 (2026)",
+            "maxTow": 11610,
+            "payload": 1930,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Laramie — 3.0L Hurricane Twin-Turbo I6 (2026)",
+            "maxTow": 11610,
+            "payload": 1900,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 5.7L HEMI eTorque (2026)",
+            "maxTow": 11320,
+            "payload": 1650,
+            "gcwr": 16500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 3.0L Hurricane High Output (2026)",
+            "maxTow": 10000,
+            "payload": 1490,
+            "gcwr": 15500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "RHO — 3.0L Hurricane High Output (2026)",
+            "maxTow": 8350,
+            "payload": 1450,
+            "gcwr": 14000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Tungsten — 3.0L Hurricane Twin-Turbo I6 (2026)",
+            "maxTow": 11610,
+            "payload": 1900,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
             "label": "Tradesman — 3.6L V6 eTorque (2019–2021)",
             "maxTow": 7700,
             "payload": 1720,
@@ -8395,6 +9459,34 @@ export const TOW_MAKES: TowMake[] = [
         "kind": "truck",
         "trims": [
           {
+            "label": "Tradesman — 3.6L V6 (2022–2024)",
+            "maxTow": 6850,
+            "payload": 1600,
+            "gcwr": 12000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Tradesman — 5.7L HEMI V8 (2022–2024)",
+            "maxTow": 10500,
+            "payload": 1750,
+            "gcwr": 15500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Warlock — 5.7L HEMI V8 (2022–2024)",
+            "maxTow": 10280,
+            "payload": 1700,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SLT — 5.7L HEMI V8 (2022–2024)",
+            "maxTow": 10500,
+            "payload": 1750,
+            "gcwr": 15500,
+            "hitch": "Class IV"
+          },
+          {
             "label": "Tradesman — 3.6L V6 (2019–2021)",
             "maxTow": 6850,
             "payload": 1600,
@@ -8535,6 +9627,34 @@ export const TOW_MAKES: TowMake[] = [
           },
           {
             "label": "Limited — Dual Motor EV Range-Extender",
+            "maxTow": 10000,
+            "payload": 1800,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Tradesman — Dual Motor EV (2025–2026)",
+            "maxTow": 7700,
+            "payload": 1800,
+            "gcwr": 15000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Big Horn — Dual Motor EV (2025–2026)",
+            "maxTow": 10000,
+            "payload": 2000,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Laramie — Dual Motor EV Ext. Range (2025–2026)",
+            "maxTow": 10000,
+            "payload": 1900,
+            "gcwr": 17000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — Dual Motor EV Range-Extender (2026)",
             "maxTow": 10000,
             "payload": 1800,
             "gcwr": 17000,
@@ -9366,6 +10486,69 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "SR — 2.4L Turbo I4 (2024–2026)",
+            "maxTow": 3500,
+            "payload": 1445,
+            "gcwr": 8500,
+            "hitch": "Class III"
+          },
+          {
+            "label": "SR5 — 2.4L Turbo I4 (2024–2026)",
+            "maxTow": 6500,
+            "payload": 1705,
+            "gcwr": 11500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "TRD Sport — 2.4L Turbo I4 (2024–2026)",
+            "maxTow": 6500,
+            "payload": 1495,
+            "gcwr": 11500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "TRD Off-Road — 2.4L Turbo I4 (2024–2026)",
+            "maxTow": 6400,
+            "payload": 1445,
+            "gcwr": 11400,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 2.4L Turbo I4 (2024–2026)",
+            "maxTow": 6500,
+            "payload": 1450,
+            "gcwr": 11500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Trailhunter — 2.4L Hybrid i-FORCE MAX (2024–2026)",
+            "maxTow": 6000,
+            "payload": 1400,
+            "gcwr": 11000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "TRD Pro — 2.4L Hybrid i-FORCE MAX (2024–2026)",
+            "maxTow": 6000,
+            "payload": 1350,
+            "gcwr": 11000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SR5 — 3.5L V6 (2022–2023)",
+            "maxTow": 6800,
+            "payload": 1545,
+            "gcwr": 11500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "TRD Off-Road — 3.5L V6 (2022–2023)",
+            "maxTow": 6400,
+            "payload": 1445,
+            "gcwr": 11200,
+            "hitch": "Class IV"
+          },
+          {
             "label": "SR — 2.7L I4 (2018–2021)",
             "maxTow": 3500,
             "payload": 1445,
@@ -9649,6 +10832,48 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 11265,
             "payload": 1835,
             "gcwr": 16000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SR5 — 3.4L Twin-Turbo Max Tow (2022–2026)",
+            "maxTow": 12000,
+            "payload": 1940,
+            "gcwr": 17250,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 3.4L Twin-Turbo V6 (2022–2026)",
+            "maxTow": 11300,
+            "payload": 1840,
+            "gcwr": 16000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Platinum — 3.4L Twin-Turbo V6 (2022–2026)",
+            "maxTow": 11180,
+            "payload": 1760,
+            "gcwr": 15800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited Hybrid — 3.4L i-FORCE MAX (2022–2026)",
+            "maxTow": 11265,
+            "payload": 1835,
+            "gcwr": 16000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "TRD Pro — 3.4L Hybrid i-FORCE MAX (2022–2026)",
+            "maxTow": 11045,
+            "payload": 1605,
+            "gcwr": 15800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Capstone — 3.4L Hybrid i-FORCE MAX (2022–2026)",
+            "maxTow": 10370,
+            "payload": 1605,
+            "gcwr": 15500,
             "hitch": "Class IV"
           },
           {
@@ -10148,6 +11373,20 @@ export const TOW_MAKES: TowMake[] = [
           },
           {
             "label": "Platinum i-FORCE MAX — Hybrid",
+            "maxTow": 6000,
+            "payload": 1420,
+            "gcwr": 14420,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SR5 i-FORCE MAX — Hybrid (2025–2026)",
+            "maxTow": 6000,
+            "payload": 1500,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Platinum i-FORCE MAX — Hybrid (2025–2026)",
             "maxTow": 6000,
             "payload": 1420,
             "gcwr": 14420,
@@ -10844,6 +12083,20 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class III"
           },
           {
+            "label": "1958 — 2.4L Turbo Hybrid (2024–2026)",
+            "maxTow": 6000,
+            "payload": 1400,
+            "gcwr": 11500,
+            "hitch": "Class III"
+          },
+          {
+            "label": "Land Cruiser — 2.4L Turbo Hybrid (2024–2026)",
+            "maxTow": 6000,
+            "payload": 1350,
+            "gcwr": 11500,
+            "hitch": "Class III"
+          },
+          {
             "label": "Base — 5.7L V8 (2015–2021)",
             "maxTow": 8100,
             "payload": 1450,
@@ -11363,6 +12616,27 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "SR5 — 3.4L Twin-Turbo Hybrid (2023–2026)",
+            "maxTow": 9520,
+            "payload": 1700,
+            "gcwr": 18220,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 3.4L Hybrid (2023–2026)",
+            "maxTow": 9090,
+            "payload": 1600,
+            "gcwr": 17740,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "TRD Pro — 3.4L Hybrid (2023–2026)",
+            "maxTow": 8975,
+            "payload": 1450,
+            "gcwr": 17525,
+            "hitch": "Class IV"
+          },
+          {
             "label": "SR5 — 5.7L V8 (2015–2021)",
             "maxTow": 7400,
             "payload": 1450,
@@ -11521,6 +12795,27 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1500,
             "gcwr": 17465,
             "hitch": "Class IV"
+          },
+          {
+            "label": "SR5 i-FORCE MAX — Hybrid (2023–2026)",
+            "maxTow": 9520,
+            "payload": 1700,
+            "gcwr": 18220,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited i-FORCE MAX — Hybrid (2023–2026)",
+            "maxTow": 9090,
+            "payload": 1650,
+            "gcwr": 17740,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Capstone i-FORCE MAX — Hybrid (2023–2026)",
+            "maxTow": 8965,
+            "payload": 1500,
+            "gcwr": 17465,
+            "hitch": "Class IV"
           }
         ]
       },
@@ -11667,6 +12962,34 @@ export const TOW_MAKES: TowMake[] = [
           },
           {
             "label": "PRO-4X — 3.8L V6",
+            "maxTow": 6290,
+            "payload": 1410,
+            "gcwr": 11000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "S — 3.8L V6 (2022–2026)",
+            "maxTow": 6460,
+            "payload": 1460,
+            "gcwr": 11200,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SV — 3.8L V6 (2022–2026)",
+            "maxTow": 6720,
+            "payload": 1610,
+            "gcwr": 11500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "PRO-X — 3.8L V6 (2022–2026)",
+            "maxTow": 6460,
+            "payload": 1460,
+            "gcwr": 11200,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "PRO-4X — 3.8L V6 (2022–2026)",
             "maxTow": 6290,
             "payload": 1410,
             "gcwr": 11000,
@@ -11869,6 +13192,34 @@ export const TOW_MAKES: TowMake[] = [
           },
           {
             "label": "Platinum Reserve — 5.6L V8",
+            "maxTow": 9210,
+            "payload": 1600,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "S — 5.6L V8 (2022–2024)",
+            "maxTow": 9230,
+            "payload": 1640,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SV — 5.6L V8 (2022–2024)",
+            "maxTow": 9370,
+            "payload": 1640,
+            "gcwr": 14700,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Pro-4X — 5.6L V8 (2022–2024)",
+            "maxTow": 9210,
+            "payload": 1610,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Platinum Reserve — 5.6L V8 (2022–2024)",
             "maxTow": 9210,
             "payload": 1600,
             "gcwr": 14500,
@@ -13484,6 +14835,34 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "Sport — 3.5L V6 AWD (2022–2026)",
+            "maxTow": 5000,
+            "payload": 1584,
+            "gcwr": 8201,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "RTL — 3.5L V6 AWD (2022–2026)",
+            "maxTow": 5000,
+            "payload": 1584,
+            "gcwr": 8201,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "TrailSport — 3.5L V6 AWD (2022–2026)",
+            "maxTow": 5000,
+            "payload": 1499,
+            "gcwr": 8201,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Black Edition — 3.5L V6 AWD (2022–2025)",
+            "maxTow": 5000,
+            "payload": 1499,
+            "gcwr": 8201,
+            "hitch": "Class IV"
+          },
+          {
             "label": "RT — 3.5L V6 AWD (2018–2019)",
             "maxTow": 5000,
             "payload": 1499,
@@ -14213,6 +15592,27 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class III"
           },
           {
+            "label": "Sport — 3.5L V6 (2023–2026)",
+            "maxTow": 3500,
+            "payload": 1500,
+            "gcwr": 7500,
+            "hitch": "Class III"
+          },
+          {
+            "label": "TrailSport — 3.5L V6 (2023–2026)",
+            "maxTow": 5000,
+            "payload": 1580,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Elite — 3.5L V6 (2023–2026)",
+            "maxTow": 5000,
+            "payload": 1500,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
             "label": "LX — 3.5L V6 (2016–2021)",
             "maxTow": 3500,
             "payload": 1600,
@@ -14499,6 +15899,41 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 6000,
             "payload": 1160,
             "gcwr": 10000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Sport S — 3.6L V6 Max Tow (2022–2026)",
+            "maxTow": 7650,
+            "payload": 1700,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Overland — 3.6L V6 (2022–2026)",
+            "maxTow": 6000,
+            "payload": 1160,
+            "gcwr": 10000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Rubicon — 3.6L V6 (2022–2026)",
+            "maxTow": 7000,
+            "payload": 1200,
+            "gcwr": 11000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Mojave — 3.6L V6 (2022–2026)",
+            "maxTow": 6000,
+            "payload": 1200,
+            "gcwr": 10000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Rubicon 392 — 6.4L V8 (2022–2023)",
+            "maxTow": 7000,
+            "payload": 1200,
+            "gcwr": 11000,
             "hitch": "Class IV"
           },
           {
@@ -14974,6 +16409,34 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "Laredo — 3.6L V6 (2022–2026)",
+            "maxTow": 6200,
+            "payload": 1400,
+            "gcwr": 11000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 3.6L V6 (2022–2026)",
+            "maxTow": 6200,
+            "payload": 1400,
+            "gcwr": 11000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Overland — 5.7L V8 / 3.0L Hurricane (2022–2024)",
+            "maxTow": 7200,
+            "payload": 1400,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Summit — 3.0L Hurricane (2025–2026)",
+            "maxTow": 7200,
+            "payload": 1400,
+            "gcwr": 12500,
+            "hitch": "Class IV"
+          },
+          {
             "label": "Laredo — 3.6L V6 (2015–2021)",
             "maxTow": 6200,
             "payload": 1600,
@@ -15301,6 +16764,27 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "Laredo — 3.6L V6 (2022–2026)",
+            "maxTow": 6200,
+            "payload": 1500,
+            "gcwr": 11500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Overland — 5.7L V8 / 3.0L Hurricane (2022–2026)",
+            "maxTow": 7200,
+            "payload": 1450,
+            "gcwr": 13000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Summit — 3.0L Hurricane Max Tow (2022–2026)",
+            "maxTow": 7200,
+            "payload": 1400,
+            "gcwr": 13000,
+            "hitch": "Class IV"
+          },
+          {
             "label": "Laredo — 3.6L V6 (2021)",
             "maxTow": 6200,
             "payload": 1700,
@@ -15382,6 +16866,27 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1350,
             "gcwr": 16200,
             "hitch": "Class IV"
+          },
+          {
+            "label": "Grand Wagoneer — 6.4L V8 (2022)",
+            "maxTow": 9850,
+            "payload": 1450,
+            "gcwr": 16500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Grand Wagoneer — 3.0L Hurricane (2023–2025)",
+            "maxTow": 9900,
+            "payload": 1450,
+            "gcwr": 16500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Grand Wagoneer — 3.0L Hurricane Max Tow (2026)",
+            "maxTow": 10000,
+            "payload": 1470,
+            "gcwr": 16500,
+            "hitch": "Class IV"
           }
         ]
       },
@@ -15401,6 +16906,20 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 9900,
             "payload": 1500,
             "gcwr": 18400,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Series II — 3.0L Hurricane I6 (2023–2025)",
+            "maxTow": 9900,
+            "payload": 1550,
+            "gcwr": 18450,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Series II — 3.0L Hurricane I6 (2026)",
+            "maxTow": 9860,
+            "payload": 1515,
+            "gcwr": 16500,
             "hitch": "Class IV"
           }
         ]
@@ -15706,6 +17225,27 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1400,
             "gcwr": 16500,
             "hitch": "Class IV"
+          },
+          {
+            "label": "Wagoneer — 3.0L Hurricane Max Tow (2023–2025)",
+            "maxTow": 10000,
+            "payload": 1500,
+            "gcwr": 16500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Series II — 3.0L Hurricane (2023–2025)",
+            "maxTow": 10000,
+            "payload": 1450,
+            "gcwr": 16500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Series III — 3.0L Hurricane (2023–2025)",
+            "maxTow": 10000,
+            "payload": 1400,
+            "gcwr": 16500,
+            "hitch": "Class IV"
           }
         ]
       },
@@ -15732,6 +17272,20 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 10000,
             "payload": 1500,
             "gcwr": 18500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Series II — 3.0L Hurricane I6 (2023–2025)",
+            "maxTow": 10000,
+            "payload": 1600,
+            "gcwr": 18600,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Series III — 3.0L Hurricane I6 (2023–2025)",
+            "maxTow": 10000,
+            "payload": 1550,
+            "gcwr": 18550,
             "hitch": "Class IV"
           }
         ]
@@ -18320,6 +19874,55 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "SXT — 3.6L V6 (2022–2024)",
+            "maxTow": 6200,
+            "payload": 1400,
+            "gcwr": 14600,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "R/T — 5.7L HEMI V8 (2022–2024)",
+            "maxTow": 7400,
+            "payload": 1450,
+            "gcwr": 15850,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Citadel — 5.7L HEMI V8 (2022–2024)",
+            "maxTow": 8700,
+            "payload": 1500,
+            "gcwr": 17200,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SRT Hellcat — 6.2L Supercharged (2022–2024)",
+            "maxTow": 8700,
+            "payload": 1400,
+            "gcwr": 17100,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "GT — 3.6L V6 (2025–2026)",
+            "maxTow": 6200,
+            "payload": 1380,
+            "gcwr": 14580,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "R/T — 5.7L HEMI V8 (2025–2026)",
+            "maxTow": 7400,
+            "payload": 1450,
+            "gcwr": 15850,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Citadel — 5.7L HEMI V8 (2025–2026)",
+            "maxTow": 8700,
+            "payload": 1500,
+            "gcwr": 17200,
+            "hitch": "Class IV"
+          },
+          {
             "label": "SXT — 3.6L V6 (2015–2021)",
             "maxTow": 6200,
             "payload": 1600,
@@ -19063,6 +20666,27 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1450,
             "gcwr": 10000,
             "hitch": "Class III"
+          },
+          {
+            "label": "SE — 3.8L V6 (2022–2025)",
+            "maxTow": 5000,
+            "payload": 1650,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Limited — 3.8L V6 (2022–2025)",
+            "maxTow": 5000,
+            "payload": 1600,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SEL — 3.5L V6 (2026)",
+            "maxTow": 5000,
+            "payload": 1600,
+            "gcwr": 8500,
+            "hitch": "Class IV"
           },
           {
             "label": "SE — 3.8L V6 (2020–2021)",
@@ -20847,6 +22471,27 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class III"
           },
           {
+            "label": "LX — 3.8L V6 (2022–2026)",
+            "maxTow": 5000,
+            "payload": 1650,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SX — 3.8L V6 (2022–2026)",
+            "maxTow": 5000,
+            "payload": 1600,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "X-Pro — 3.8L V6 (2023–2026)",
+            "maxTow": 5000,
+            "payload": 1550,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
             "label": "LX — 3.8L V6 (2020–2021)",
             "maxTow": 5000,
             "payload": 1700,
@@ -22293,6 +23938,27 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1300,
             "gcwr": 8500,
             "hitch": "Class III"
+          },
+          {
+            "label": "Select — 3.3L Turbo I6 (2024–2026)",
+            "maxTow": 3500,
+            "payload": 1500,
+            "gcwr": 7500,
+            "hitch": "Class III"
+          },
+          {
+            "label": "Turbo S — 3.3L Turbo I6 (2024–2026)",
+            "maxTow": 5000,
+            "payload": 1450,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "PHEV — 2.5L (2024–2026)",
+            "maxTow": 3500,
+            "payload": 1400,
+            "gcwr": 7500,
+            "hitch": "Class III"
           }
         ]
       },
@@ -22414,6 +24080,34 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1400,
             "gcwr": 10000,
             "hitch": "Class III"
+          },
+          {
+            "label": "SE — 2.0L Turbo (2022–2023)",
+            "maxTow": 2000,
+            "payload": 1200,
+            "gcwr": 5500,
+            "hitch": "Class III"
+          },
+          {
+            "label": "SEL — 3.6L VR6 (2022–2023)",
+            "maxTow": 5000,
+            "payload": 1400,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SE — 2.0L Turbo (2024–2026)",
+            "maxTow": 5000,
+            "payload": 1400,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "SEL — 2.0L Turbo (2024–2026)",
+            "maxTow": 5000,
+            "payload": 1350,
+            "gcwr": 8500,
+            "hitch": "Class IV"
           },
           {
             "label": "S — 2.0L Turbo (2018–2021)",
@@ -26701,6 +28395,20 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "S — 3.0L I6 (2022–2026)",
+            "maxTow": 8201,
+            "payload": 1764,
+            "gcwr": 14550,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "X — P500 V8 (2022–2026)",
+            "maxTow": 8201,
+            "payload": 1650,
+            "gcwr": 14550,
+            "hitch": "Class IV"
+          },
+          {
             "label": "S — 2.0L Turbo (2020–2021)",
             "maxTow": 8201,
             "payload": 1600,
@@ -26774,6 +28482,20 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 7716,
             "payload": 1450,
             "gcwr": 14000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "S — 3.0L I6 (2023–2026)",
+            "maxTow": 8201,
+            "payload": 1764,
+            "gcwr": 14800,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Outbound — 3.0L I6 (2023–2026)",
+            "maxTow": 7716,
+            "payload": 1650,
+            "gcwr": 14500,
             "hitch": "Class IV"
           }
         ]
@@ -27896,6 +29618,27 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "—"
           },
           {
+            "label": "Cayenne — 3.0L V6 (2022–2026)",
+            "maxTow": 7700,
+            "payload": 1600,
+            "gcwr": 13500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Cayenne S — 4.0L V8 (2022–2026)",
+            "maxTow": 7700,
+            "payload": 1550,
+            "gcwr": 13500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Cayenne Turbo E-Hybrid (2024–2026)",
+            "maxTow": 7700,
+            "payload": 1500,
+            "gcwr": 13500,
+            "hitch": "Class IV"
+          },
+          {
             "label": "Cayenne — 3.6L V6 (2015–2017)",
             "maxTow": 7716,
             "payload": 1600,
@@ -28481,6 +30224,27 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1400,
             "gcwr": 16400,
             "hitch": "Class IV"
+          },
+          {
+            "label": "Premium — 3.4L Twin-Turbo V6 (2024–2026)",
+            "maxTow": 8095,
+            "payload": 1545,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Overtrail — 3.4L Twin-Turbo V6 (2024–2026)",
+            "maxTow": 8095,
+            "payload": 1450,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Luxury — 3.4L Twin-Turbo V6 (2024–2026)",
+            "maxTow": 8095,
+            "payload": 1400,
+            "gcwr": 14500,
+            "hitch": "Class IV"
           }
         ]
       },
@@ -28958,6 +30722,27 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1450,
             "gcwr": 10000,
             "hitch": "Class III"
+          },
+          {
+            "label": "TX 350 — 2.4L Turbo (2024–2026)",
+            "maxTow": 5000,
+            "payload": 1500,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "TX 500h — Hybrid (2024–2026)",
+            "maxTow": 5000,
+            "payload": 1450,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "TX 550h+ — PHEV (2024–2026)",
+            "maxTow": 3500,
+            "payload": 1400,
+            "gcwr": 7500,
+            "hitch": "Class III"
           }
         ]
       },
@@ -29072,6 +30857,34 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1380,
             "gcwr": 11880,
             "hitch": "Class III"
+          },
+          {
+            "label": "MDX — 3.5L V6 (2022–2025)",
+            "maxTow": 3500,
+            "payload": 1500,
+            "gcwr": 7500,
+            "hitch": "Class III"
+          },
+          {
+            "label": "MDX Type S — 3.0L Turbo V6 (2022–2025)",
+            "maxTow": 5000,
+            "payload": 1450,
+            "gcwr": 8500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "MDX — 3.5L V6 (2026)",
+            "maxTow": 3500,
+            "payload": 1500,
+            "gcwr": 7500,
+            "hitch": "Class III"
+          },
+          {
+            "label": "MDX Type S — 3.0L Turbo V6 (2026)",
+            "maxTow": 5000,
+            "payload": 1450,
+            "gcwr": 8500,
+            "hitch": "Class IV"
           },
           {
             "label": "Base — 3.5L V6 (2015–2020)",
@@ -31493,6 +33306,27 @@ export const TOW_MAKES: TowMake[] = [
             "payload": 1760,
             "gcwr": 13500,
             "hitch": "Class IV"
+          },
+          {
+            "label": "Dual Motor — AWD (2022–2026)",
+            "maxTow": 11000,
+            "payload": 1760,
+            "gcwr": 16500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Tri Motor — AWD Performance (2022–2026)",
+            "maxTow": 11000,
+            "payload": 1600,
+            "gcwr": 16500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Quad Motor — AWD Max Performance (2022–2025)",
+            "maxTow": 11000,
+            "payload": 1600,
+            "gcwr": 16500,
+            "hitch": "Class IV"
           }
         ]
       },
@@ -31614,6 +33448,27 @@ export const TOW_MAKES: TowMake[] = [
           },
           {
             "label": "Cyberbeast — Tri Motor",
+            "maxTow": 11000,
+            "payload": 2500,
+            "gcwr": 17500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Rear-Wheel Drive — Single Motor (2024–2026)",
+            "maxTow": 7500,
+            "payload": 2500,
+            "gcwr": 14500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "All-Wheel Drive — Dual Motor (2024–2026)",
+            "maxTow": 11000,
+            "payload": 2500,
+            "gcwr": 17500,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Cyberbeast — Tri Motor (2024–2026)",
             "maxTow": 11000,
             "payload": 2500,
             "gcwr": 17500,
