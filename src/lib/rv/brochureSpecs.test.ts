@@ -1926,3 +1926,131 @@ test("Newmar 2015–2016 walk-back: OEM plans, no invented ghosts", () => {
   assert.equal(findPowertrainCorrection("2016", "Newmar", "New Aire", "3341"), null);
   assert.equal(findPowertrainCorrection("2016", "Newmar", "Northern Star", "3418"), null);
 });
+
+test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
+  const tf = CATALOG_INDEX.Tiffin;
+  assert.ok(tf);
+
+  assert.equal(tf["Allegro Red 340"]?.yearEnd, 2023);
+  assert.equal(tf["Allegro Red 340"]?.years?.includes(2024), false);
+  assert.equal(tf["Allegro Red 340"]?.years?.includes(2025), false);
+  assert.equal(tf["Allegro Red 360"]?.yearEnd, 2023);
+  assert.equal(tf["Allegro Red 360"]?.years?.includes(2025), false);
+  assert.equal(tf["Allegro Red"]?.yearEnd, undefined);
+  assert.equal(tf["Allegro Red"]?.years?.includes(2017), true);
+  assert.equal(tf["Allegro Red"]?.years?.includes(2023), false);
+  assert.equal(tf["Allegro Red"]?.years?.includes(2025), true);
+  assert.equal(tf["Allegro Red"]?.years?.includes(2027), true);
+
+  assert.equal(tf["Allegro Breeze"]?.yearEnd, 2026);
+  assert.equal(tf["Allegro Breeze"]?.years?.includes(2026), true);
+  assert.equal(tf["Allegro Breeze"]?.years?.includes(2027), false);
+  assert.equal(tf.Cahaba?.yearEnd, 2024);
+  assert.equal(tf.Cahaba?.years?.includes(2025), false);
+  assert.equal(tf.Allegro?.yearEnd, 2022);
+  assert.equal(tf.Allegro?.years?.includes(2025), false);
+  assert.equal(tf["Wayfarer 25"]?.yearEnd, 2024);
+  assert.equal(tf["Wayfarer 25"]?.years?.includes(2025), false);
+  assert.equal(tf["Allegro Bus 45OPP"]?.yearEnd, 2026);
+  assert.equal(tf["Allegro 45OPP"]?.yearEnd, 2026);
+  assert.equal(tf["Allegro 45OPP"]?.years?.includes(2027), false);
+
+  assert.equal(tf["Allegro Bay"]?.type, "Super C");
+  assert.equal(tf["Allegro Bay"]?.fuelType, "Diesel");
+  assert.equal(tf["Allegro Bay"]?.yearStart, 2022);
+  assert.equal(tf["Allegro Bay"]?.years?.includes(2025), true);
+  assert.equal(tf["Allegro Bay"]?.years?.includes(2027), true);
+  assert.equal(tf["Open Trail"]?.type, "Class C");
+  assert.equal(tf["Open Trail"]?.years?.includes(2027), true);
+  assert.equal(tf["Open Trail"]?.years?.includes(2026), false);
+
+  const block = src("rvData.ts");
+  const t0 = block.indexOf("  Tiffin: {");
+  const t1 = block.indexOf("  Thor: {");
+  const tiffin = block.slice(t0, t1);
+
+  const ze0 = tiffin.indexOf("    Zephyr: {");
+  const ze = tiffin.slice(ze0, tiffin.indexOf('    "Allegro Bus": {'));
+  assert.match(ze, /"2025": \["45FZ", "45PZ"\]/);
+  assert.match(ze, /"2026": \["45FZ", "45PZ"\]/);
+  assert.match(ze, /"2027": \["45FZ", "45PZ"\]/);
+  assert.doesNotMatch(ze, /"2025": \["45NZ"/);
+  assert.doesNotMatch(ze, /"2027": \["45NZ"/);
+
+  const bus0 = tiffin.indexOf('    "Allegro Bus": {');
+  const bus = tiffin.slice(bus0, tiffin.indexOf('    "Allegro Bus 45OPP"'));
+  assert.match(bus, /"2025": \["35CP", "40IP", "45FP", "45OPP", "45BTP"\]/);
+  assert.match(bus, /"2026": \["36AP", "40IP", "45OPP", "45BP"\]/);
+  assert.match(bus, /"2027": \["36AP", "40IP", "45OPP", "45BP"\]/);
+  assert.doesNotMatch(bus, /"2025": \["36AP"/);
+  assert.doesNotMatch(bus, /"2025": \["45BP"/);
+
+  const ph0 = tiffin.indexOf("    Phaeton: {");
+  const ph = tiffin.slice(ph0, tiffin.indexOf('    "Allegro Red 340"'));
+  assert.match(ph, /"2025": \["35CH", "37BH", "40IH", "44OH"\]/);
+  assert.match(ph, /"2026": \["35CH", "37BH", "40IH", "44OH"\]/);
+  assert.match(ph, /"2027": \["35CH", "37BH", "40IH", "44OH"\]/);
+  assert.doesNotMatch(ph, /"2025": \["37BH", "40AH"/);
+
+  const red0 = tiffin.indexOf('    "Allegro Red": {');
+  const red = tiffin.slice(red0, tiffin.indexOf('    "Allegro Breeze"'));
+  assert.match(red, /"2025": \["33AA", "37BA", "38KA"\]/);
+  assert.match(red, /"2027": \["33AA", "37BA", "38KA"\]/);
+
+  const or0 = tiffin.indexOf('    "Open Road": {');
+  const or = tiffin.slice(or0, tiffin.indexOf("    Wayfarer: {"));
+  assert.match(or, /"2025": \["32FA", "32SA", "34PA", "36LA", "36UA"\]/);
+  assert.match(or, /"2026": \["29NA", "32SA", "34PA", "36LA"\]/);
+  assert.match(or, /"2027": \["29NA", "34PA"\]/);
+  assert.doesNotMatch(or, /"2025": \["29NA"/);
+  assert.doesNotMatch(or, /"2027": \["32SA"/);
+
+  const wf0 = tiffin.indexOf("    Wayfarer: {");
+  const wf = tiffin.slice(wf0, tiffin.indexOf('    "Wayfarer 25"'));
+  assert.match(wf, /"2025": \["25XLW", "25XRW"\]/);
+  assert.match(wf, /"2026": \["25XRW", "25XLW", "25XPW", "25RW"\]/);
+  assert.match(wf, /"2027": \["25RW", "25PW", "25XLW"\]/);
+  assert.doesNotMatch(wf, /"2026": \["25RW", "25JW", "24QB"\]/);
+
+  const bay0 = tiffin.indexOf('    "Allegro Bay": {');
+  const bay = tiffin.slice(bay0, tiffin.indexOf('    "Open Trail"'));
+  assert.match(bay, /"2025": \["38AB", "38BB", "38CB"\]/);
+  assert.match(bay, /"2026": \["38AB", "38BB", "34DB"\]/);
+  assert.match(bay, /"2027": \["34DB", "38AB", "38BB", "38EB"\]/);
+  assert.doesNotMatch(bay, /"2025": \["34DB"/);
+  assert.doesNotMatch(bay, /"2026": \["38EB"/);
+
+  const z27 = findPowertrainCorrection("2027", "Tiffin", "Zephyr", "45PZ");
+  assert.equal(z27!.horsepower, 605);
+  assert.equal(z27!.torqueLbFt, 1950);
+  const bus25 = findPowertrainCorrection("2025", "Tiffin", "Allegro Bus", "40IP");
+  assert.equal(bus25!.horsepower, 450);
+  const bus27short = findPowertrainCorrection("2027", "Tiffin", "Allegro Bus", "36AP");
+  assert.equal(bus27short!.horsepower, 450);
+  const bus27opp = findPowertrainCorrection("2027", "Tiffin", "Allegro Bus", "45OPP");
+  assert.equal(bus27opp!.horsepower, 0);
+  assert.match(bus27opp!.engine, /X15/);
+  const ph24 = findPowertrainCorrection("2024", "Tiffin", "Phaeton", "37BH");
+  assert.equal(ph24!.horsepower, 380);
+  const ph27 = findPowertrainCorrection("2027", "Tiffin", "Phaeton", "37BH");
+  assert.equal(ph27!.horsepower, 450);
+  assert.equal(ph27!.torqueLbFt, 1250);
+  const red27 = findPowertrainCorrection("2027", "Tiffin", "Allegro Red", "33AA");
+  assert.equal(red27!.horsepower, 380);
+  assert.equal(red27!.torqueLbFt, 1150);
+  assert.doesNotMatch(red27!.engine, /B6\.7|F53|V10/i);
+  const red340 = findPowertrainCorrection("2023", "Tiffin", "Allegro Red 340", "33AA");
+  assert.equal(red340!.horsepower, 360);
+  assert.equal(findPowertrainCorrection("2025", "Tiffin", "Allegro Red 340", "33AA"), null);
+  const or27 = findPowertrainCorrection("2027", "Tiffin", "Open Road", "34PA");
+  assert.equal(or27!.horsepower, 350);
+  assert.equal(or27!.torqueLbFt, 468);
+  assert.equal(or27!.fuelType, "Gas");
+  const wf27 = findPowertrainCorrection("2027", "Tiffin", "Wayfarer", "25RW");
+  assert.equal(wf27!.horsepower, 208);
+  const bay27 = findPowertrainCorrection("2027", "Tiffin", "Allegro Bay", "38AB");
+  assert.equal(bay27!.horsepower, 360);
+  assert.equal(bay27!.torqueLbFt, 800);
+  const ot27 = findPowertrainCorrection("2027", "Tiffin", "Open Trail", "25CO");
+  assert.equal(ot27!.horsepower, 208);
+});
