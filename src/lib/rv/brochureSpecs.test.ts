@@ -11815,3 +11815,111 @@ test("Grand Design 2020–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(gtt, /"2019": .*"320G"/);
   assert.doesNotMatch(gtt, /"2019": .*"29G"/);
 });
+
+test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
+  const idx = CATALOG_INDEX.Keystone;
+  assert.ok(idx);
+
+  assert.equal(idx.Montana?.years?.includes(2027), true);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2027), true);
+  assert.equal(idx.Alpine?.years?.includes(2027), true);
+  assert.equal(idx["Alpine Avalanche Edition"]?.yearStart, 2027);
+  assert.equal(idx["Alpine Avalanche Edition"]?.type, "Fifth Wheel");
+  assert.equal(idx.Sprinter?.yearEnd, undefined);
+  assert.equal(idx.Sprinter?.years?.includes(2027), true);
+  assert.equal(idx.Sprinter?.years?.includes(2025), false);
+  assert.equal(idx.Sprinter?.years?.includes(2026), false);
+  assert.equal(idx["Cougar Sport"]?.yearStart, 2027);
+  assert.equal(idx["Cougar Sport"]?.type, "Fifth Wheel");
+  assert.equal(idx.Cougar?.type, "Travel Trailer");
+  assert.equal(idx.Cougar?.years?.includes(2027), false);
+  assert.equal(idx["Cougar 5th Wheel"]?.type, "Fifth Wheel");
+  assert.equal(idx["Cougar 5th Wheel"]?.years?.includes(2027), true);
+  assert.equal(idx.Arcadia?.years?.includes(2027), true);
+  assert.equal(idx["Passport Super Lite"]?.yearStart, 2027);
+  assert.equal(idx["Passport Classic"]?.yearStart, 2027);
+  assert.equal(idx.Passport?.years?.includes(2027), false);
+  assert.equal(idx["Bullet Crossfire"]?.yearStart, 2027);
+  assert.equal(idx.Bullet?.years?.includes(2027), false);
+  assert.equal(idx.Hideout?.yearStart, 2027);
+  assert.equal(idx.Springdale?.years?.includes(2027), true);
+  assert.equal(idx.Fuzion?.years?.includes(2027), true);
+  assert.equal(idx.Raptor?.years?.includes(2027), true);
+  assert.equal(idx.Avalanche?.yearEnd, 2025);
+  assert.equal(idx.Avalanche?.years?.includes(2027), false);
+  assert.equal(idx["Cougar Western Elevation"], undefined);
+  assert.equal(idx["Passport Premium"], undefined);
+  assert.equal(idx["Bullet Classic"], undefined);
+
+  const block = src("rvData.ts");
+  const k0 = block.indexOf('\n  "Keystone": {');
+  const k1 = block.indexOf('\n  "Grand Design": {');
+  const k = block.slice(k0, k1);
+
+  const mt = k.slice(k.indexOf("    Montana: {"), k.indexOf('    "Montana High Country"'));
+  assert.match(mt, /"2027": \["3100RL", "3500RD", "3600RO", "3800FL", "3900RK"\]/);
+  assert.doesNotMatch(mt, /"2027": .*"3231CK"/);
+  assert.doesNotMatch(mt, /"2026": .*"3600RO"/);
+
+  const mhc = k.slice(k.indexOf('    "Montana High Country": {'), k.indexOf("    Cougar: {"));
+  assert.match(mhc, /"2027": \["290RL", "300RK", "362BRK", "391TB", "396BH"\]/);
+  assert.doesNotMatch(mhc, /"2027": .*"397FB"/);
+
+  const alp = k.slice(k.indexOf("    Alpine: {"), k.indexOf('    "Alpine Avalanche Edition"'));
+  assert.match(alp, /"2027": \["3100RE", "3303CK", "3710FL", "3800MR", "3820FK", "3910RK"\]/);
+  assert.doesNotMatch(alp, /"2027": .*"3712KB"/);
+  assert.doesNotMatch(alp, /"2027": .*"321RL"/);
+
+  const aae = k.slice(k.indexOf('    "Alpine Avalanche Edition": {'), k.indexOf("    Arcadia: {"));
+  assert.match(aae, /"2027": \["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"\]/);
+  assert.match(aae, /yearStart:\s*2027/);
+
+  const spr = k.slice(k.indexOf("    Sprinter: {"));
+  assert.doesNotMatch(spr, /yearEnd:\s*2024/);
+  assert.match(spr, /"2027": \["3500RDB", "3520RDS", "3640RLP", "3800FLB", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"\]/);
+  assert.doesNotMatch(spr, /"2027": .*"3590LFT"/);
+  assert.doesNotMatch(spr, /"2025":/);
+  assert.doesNotMatch(spr, /"2026":/);
+
+  const ctt = k.slice(k.indexOf("    Cougar: {"), k.indexOf('    "Cougar 5th Wheel"'));
+  assert.doesNotMatch(ctt, /"2027":/);
+  assert.match(ctt, /type: "Travel Trailer"/);
+
+  const cfw = k.slice(k.indexOf('    "Cougar 5th Wheel": {'), k.indexOf('    "Cougar Sport"'));
+  assert.match(cfw, /"2027": \["260MLE", "290RLS", "295RDS", "316RLS", "320RDS", "350LLK", "355FBS", "360MBI", "364BHL"\]/);
+  assert.doesNotMatch(cfw, /"2027": .*"2100ML"/);
+
+  const cst = k.slice(k.indexOf('    "Cougar Sport": {'), k.indexOf('    "Cougar Half-Ton"'));
+  assert.match(cst, /"2027": \["2100ML", "2700BH", "3100BH"\]/);
+  assert.match(cst, /type: "Fifth Wheel"/);
+
+  const arc = k.slice(k.indexOf("    Arcadia: {"), k.indexOf('    "Avalanche": {'));
+  assert.match(arc, /"2027": \["3260RL", "3790RO", "3850RK"\]/);
+
+  const psl = k.slice(k.indexOf('    "Passport Super Lite": {'), k.indexOf('    "Passport Classic"'));
+  assert.match(psl, /"2027": \["2080MK", "2220BH", "229BH", "229BHWE", "2340RBK", "2450RK", "2450RKWE", "2590REV", "2670MRB", "2870RL", "2870RLWE", "3100RE"\]/);
+
+  const pcl = k.slice(k.indexOf('    "Passport Classic": {'), k.indexOf("    Springdale: {"));
+  assert.match(pcl, /"2027": \["160BHC", "160RBC", "180RBC", "180RBCWE", "190RDC", "210RKC", "210RKCWE", "214BHC", "214BHCWE", "260BHC", "260BHCWE", "284QBC"\]/);
+
+  const pass = k.slice(k.indexOf("    Passport: {"), k.indexOf('    "Passport Super Lite"'));
+  assert.doesNotMatch(pass, /"2027":/);
+
+  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf("    Passport: {"));
+  assert.match(bxf, /"2027": \["208MKS", "222BHS", "2290BH", "2290BHWE", "234RBK", "245RKS", "245RKSWE", "259REV", "267MRB", "287RLS", "287RLSWE", "310RES"\]/);
+
+  const bul = k.slice(k.indexOf("    Bullet: {"), k.indexOf('    "Bullet Crossfire"'));
+  assert.doesNotMatch(bul, /"2027":/);
+
+  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf("    Fuzion: {"));
+  assert.match(hid, /"2027": \["210RL", "210RLWE", "212RKS", "212RKSWE", "230BH", "230BHWE", "234MLS", "234MLSWE", "250RBS", "250RBSWE", "262BHS", "262BHSWE"\]/);
+
+  const sprd = k.slice(k.indexOf("    Springdale: {"), k.indexOf("    Hideout: {"));
+  assert.match(sprd, /"2027": \["2100RL", "2100RLWE", "2120RKS", "2120RKSWE", "2300BH", "2300BHWE", "2340MLS", "2340MLSWE", "2500RBS", "2500RBSWE", "2620BHS", "2620BHSWE"\]/);
+
+  const fuz = k.slice(k.indexOf("    Fuzion: {"), k.indexOf("    Raptor: {"));
+  assert.match(fuz, /"2027": \["373", "383", "419", "432", "440", "442"\]/);
+
+  const rap = k.slice(k.indexOf("    Raptor: {"), k.indexOf("    Alpine: {"));
+  assert.match(rap, /"2027": \["352", "415", "430", "433", "441", "444"\]/);
+});
