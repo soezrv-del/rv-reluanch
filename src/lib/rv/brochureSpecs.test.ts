@@ -3992,6 +3992,67 @@ test("Thor 2010–2012 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(findPowertrainCorrection("2012", "Thor", "Outlaw", "29H"), null);
 });
 
+test("Thor leftover honesty: Seneca yearStart + Sereno FBY/flat hygiene", () => {
+  const th = CATALOG_INDEX.Thor;
+  assert.ok(th);
+
+  // Index must match rvData (yearStart 2023 / FBY 2023–24). No 2010–12 ghosts.
+  assert.equal(th.Seneca?.yearStart, 2023);
+  assert.equal(th.Seneca?.yearEnd, 2024);
+  assert.deepEqual(th.Seneca?.years, [2023, 2024]);
+  assert.equal(th.Seneca?.years?.includes(2010), false);
+  assert.equal(th.Seneca?.years?.includes(2011), false);
+  assert.equal(th.Seneca?.years?.includes(2012), false);
+
+  // Sereno locked to last OEM Serrano card (MY12). No leftover 2013–16 window.
+  assert.equal(th.Sereno?.yearStart, 2010);
+  assert.equal(th.Sereno?.yearEnd, 2012);
+  assert.deepEqual(th.Sereno?.years, [2010, 2011, 2012]);
+  assert.equal(th.Sereno?.years?.includes(2013), false);
+  assert.equal(th.Sereno?.years?.includes(2014), false);
+  assert.equal(th.Sereno?.years?.includes(2015), false);
+  assert.equal(th.Sereno?.years?.includes(2016), false);
+
+  const block = src("rvData.ts");
+  const t0 = block.indexOf("  Thor: {");
+  const t1 = block.indexOf("  Coachmen: {");
+  const thor = block.slice(t0, t1);
+
+  const sen = thor.slice(thor.indexOf("    Seneca: {"), thor.indexOf('    "Four Winds": {'));
+  assert.match(sen, /yearStart:\s*2023/);
+  assert.match(sen, /yearEnd:\s*2024/);
+  assert.match(sen, /floorplans: \["37SS", "37HJ", "38DB"\]/);
+  assert.doesNotMatch(sen, /"2010":/);
+  assert.doesNotMatch(sen, /"2011":/);
+  assert.doesNotMatch(sen, /"2012":/);
+
+  const ser = thor.slice(thor.indexOf("    Sereno: {"), thor.indexOf("    Hurricane: {"));
+  assert.match(ser, /floorplans: \["31V", "31X", "31Z", "33A"\]/);
+  assert.doesNotMatch(ser, /floorplans: \[.*"31G"/);
+  assert.doesNotMatch(ser, /floorplans: \[.*"34G"/);
+  assert.doesNotMatch(ser, /floorplans: \[.*"36G"/);
+  assert.doesNotMatch(ser, /floorplans: \[.*"38G"/);
+  assert.doesNotMatch(ser, /floorplans: \[.*"40G"/);
+  assert.match(ser, /"2010": \["31V", "31Z"\]/);
+  assert.match(ser, /"2011": \["31V", "31X", "31Z", "33A"\]/);
+  assert.match(ser, /"2012": \["31V", "31X", "33A"\]/);
+  assert.doesNotMatch(ser, /"2013":/);
+  assert.doesNotMatch(ser, /"2014":/);
+  assert.doesNotMatch(ser, /"2015":/);
+  assert.doesNotMatch(ser, /"2016":/);
+  assert.match(ser, /yearEnd:\s*2012/);
+  assert.doesNotMatch(ser, /yearEnd:\s*2016/);
+  assert.doesNotMatch(ser, /from: 2013,\s*to: 2016/);
+  assert.doesNotMatch(ser, /engine: "Navistar MaxxForce 7 ~300HP/);
+  assert.doesNotMatch(ser, /horsepower: 300/);
+
+  const ser10 = findPowertrainCorrection("2010", "Thor", "Sereno", "31V");
+  assert.equal(ser10!.horsepower, 0);
+  assert.match(ser10!.engine, /Workhorse/);
+  assert.equal(findPowertrainCorrection("2013", "Thor", "Sereno", "31G"), null);
+  assert.equal(findPowertrainCorrection("2016", "Thor", "Sereno", "40G"), null);
+});
+
 test("Thor 2013–2014 OEM year-first floorplans + powertrain pins", () => {
   const th = CATALOG_INDEX.Thor;
   assert.ok(th);
