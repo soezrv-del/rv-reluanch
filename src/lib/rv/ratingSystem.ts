@@ -1,8 +1,13 @@
 // ─── RVFOX COMPUTED RATING SYSTEM ────────────────────────────────────────────
-// Final Score = Manufacturer Base Score + Model Tier Adjustment + Year Build Adjustment
+// Score = manufacturer base + model tier + year band [+ optional NHTSA recall adj]
 //
-// This is a conservative in-app grade, not a live owner survey or store rating.
-// Brand bases and tiers are editorial; year bands apply a shared build-era adj.
+// Real inputs that may change the number:
+//   · Editorial tables in this file (brand base, model tier)
+//   · Year band (shared build-era adj)
+//   · Live NHTSA campaign count when the caller passes it (Facts after fetch)
+//
+// Not inputs: iRV2, Reddit, RVInsider, YouTube, Facebook, App Store stars,
+// Grok ownerSentiment / ratingEstimate (show those labeled separately).
 
 export type RVTier = "flagship" | "upper_mid" | "standard" | "entry";
 
@@ -399,7 +404,7 @@ function normName(s: string): string {
     .trim();
 }
 
-function signedAdj(n: number): string {
+export function formatRatingAdj(n: number): string {
   const abs = Math.abs(n).toFixed(2);
   if (n > 0) return `+${abs}`;
   if (n < 0) return `-${abs}`;
@@ -518,16 +523,44 @@ function manufacturerBase(make: string): number {
   return UNKNOWN_MAKE_BASE;
 }
 
+export type RatingSignals = {
+  /**
+   * Live NHTSA campaign count from the Facts fetch.
+   * Omit / null when unknown — do not pass catalog stub 0 as “proven clean.”
+   */
+  recallCount?: number | null;
+};
+
+/** −0.05 per campaign, floor −0.25. Unknown / 0 → 0. One recall cannot collapse a 4.x coach. */
+export function recallAdjustment(recallCount?: number | null): number {
+  if (recallCount == null || !Number.isFinite(recallCount)) return 0;
+  const n = Math.max(0, Math.floor(recallCount));
+  if (n <= 0) return 0;
+  return Math.round(-Math.min(0.25, 0.05 * n) * 100) / 100;
+}
+
+function clampScore(raw: number): number {
+  return Math.round(Math.min(5.0, Math.max(1.0, raw)) * 10) / 10;
+}
+
 /**
- * Credible RvFOX rating for a specific make/model/year.
- * Score = Manufacturer Base + Tier Adjustment + Year Build Adjustment
- * Clamped to [1.0, 5.0], rounded to 1 decimal.
+ * RvFOX rating. Optional `signals.recallCount` is the only live numeric input.
+ * Cards / Compare call this without signals (editorial base).
  */
-export function computeRating(make: string, model: string, year: string): number {
+export function computeRating(
+  make: string,
+  model: string,
+  year: string,
+  signals?: RatingSignals,
+): number {
   const base = manufacturerBase(make);
   const tier = getModelTier(make, model);
-  const raw = base + TIER_ADJUSTMENTS[tier] + getYearAdjustment(year);
-  return Math.round(Math.min(5.0, Math.max(1.0, raw)) * 10) / 10;
+  const raw =
+    base +
+    TIER_ADJUSTMENTS[tier] +
+    getYearAdjustment(year) +
+    recallAdjustment(signals?.recallCount);
+  return clampScore(raw);
 }
 
 export interface RatingMetadata {
@@ -537,6 +570,8 @@ export interface RatingMetadata {
   base: number;
   tierAdj: number;
   yearAdj: number;
+  recallAdj: number;
+  recallCount: number | null;
   yearNote: string;
   confidence: "High" | "Medium" | "Low";
   knownMake: boolean;
@@ -566,7 +601,7 @@ const LOW_CONF = new Set(["Regency", "Brinkley", "Alliance RV"]);
 function getYearNote(yearStr: string): string {
   const yr = parseInt(yearStr, 10);
   const adj = getYearAdjustment(yearStr);
-  const delta = signedAdj(adj);
+  const delta = formatRatingAdj(adj);
   if (isNaN(yr)) return `Unknown year (${delta})`;
   if (yr >= 2025) return `${yr} — current model, quality recovery (${delta})`;
   if (yr === 2024) return `${yr} — transition year (${delta})`;
@@ -594,6 +629,7 @@ export function getRatingMetadata(
   make: string,
   model: string,
   year: string,
+  signals?: RatingSignals,
 ): RatingMetadata {
   const knownMake = isKnownManufacturer(make);
   const resolved = resolveModelTier(make, model);
@@ -601,7 +637,12 @@ export function getRatingMetadata(
   const tier = resolved.tier;
   const tierAdj = TIER_ADJUSTMENTS[tier];
   const yearAdj = getYearAdjustment(year);
-  const score = Math.round(Math.min(5.0, Math.max(1.0, base + tierAdj + yearAdj)) * 10) / 10;
+  const recallCount =
+    signals && "recallCount" in signals && signals.recallCount != null
+      ? Math.max(0, Math.floor(signals.recallCount))
+      : null;
+  const recallAdj = recallAdjustment(recallCount);
+  const score = clampScore(base + tierAdj + yearAdj + recallAdj);
 
   let confidence: "High" | "Medium" | "Low";
   if (!knownMake) {
@@ -615,8 +656,22 @@ export function getRatingMetadata(
   }
 
   const modelBit = resolved.matchedKey
-    ? `model ${resolved.matchedKey} (${TIER_LABELS[tier]}, ${signedAdj(tierAdj)})`
-    : `model ${model || "unlisted"} (default ${TIER_LABELS[tier]}, ${signedAdj(tierAdj)})`;
+    ? `model ${resolved.matchedKey} (${TIER_LABELS[tier]}, ${formatRatingAdj(tierAdj)})`
+    : `model ${model || "unlisted"} (default ${TIER_LABELS[tier]}, ${formatRatingAdj(tierAdj)})`;
+
+  const sources = [
+    `RvFOX model: manufacturer base ${base.toFixed(1)} + ${modelBit} + year ${formatRatingAdj(yearAdj)}`,
+  ];
+  if (recallCount != null) {
+    sources.push(
+      `NHTSA open campaigns: ${recallCount} (${formatRatingAdj(recallAdj)}; −0.05 each, cap −0.25)`,
+    );
+  } else {
+    sources.push("NHTSA campaigns: not applied — count unknown on this surface");
+  }
+  sources.push(
+    "Brand/tier tables are editorial. Not a live owner survey, forum scrape, or App Store rating.",
+  );
 
   return {
     score,
@@ -625,15 +680,14 @@ export function getRatingMetadata(
     base,
     tierAdj,
     yearAdj,
+    recallAdj,
+    recallCount,
     yearNote: getYearNote(year),
     confidence,
     knownMake,
     tierMatched: Boolean(resolved.matchedKey),
     matchedModelKey: resolved.matchedKey,
-    sources: [
-      `RvFOX model: brand base ${base.toFixed(1)} + ${modelBit} + year ${signedAdj(yearAdj)}`,
-      "Computed grade — not a live owner survey, App Store rating, or fetched forum score",
-    ],
+    sources,
   };
 }
 
