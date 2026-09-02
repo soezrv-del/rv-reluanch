@@ -4018,7 +4018,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Thor: {
     Tuscany: {
       type: "Class A Diesel",
-      floorplans: ["40IX", "42RQ", "45AT", "45NX", "40B", "40MX", "45BX", "45CA", "40RT", "45MX"],
+      floorplans: ["38SQ", "40IX", "42RQ", "42GX", "45AT", "45NX", "40B", "40MX", "45BX", "45CA", "40RT", "45JA", "45MX"],
       floorplansByYear: {
         "2005": ["40IX", "42RQ", "45AT"],
         "2006": ["40IX", "42RQ", "45AT"],
@@ -4034,8 +4034,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["40IX", "42RQ", "45AT"],
         "2017": ["40IX", "42RQ", "45AT"],
         "2018": ["40IX", "42RQ", "45AT"],
-        "2019": ["40IX", "42RQ", "45AT", "45NX"],
-        "2020": ["40IX", "42RQ", "45AT", "45NX"],
+        // OEM MY19 Tuscany MY 04/13/2018: 38SQ | 40RT | 42GX | 45MX · ISL 8.9 450/1250. Do not keep leftover 40IX/42RQ/45AT/45NX.
+        "2019": ["38SQ", "40RT", "42GX", "45MX"],
+        // OEM MY20 Tuscany MY 05/01/2019: 40RT | 45JA | 45MX · ISL 8.9 450/1250. Do not copy 38SQ/42GX or leftover 40IX.
+        "2020": ["40RT", "45JA", "45MX"],
         // OEM MY21 Tuscany OH 03/11/2021: 40RT | 45MX · ISL 8.9 450/1250. Do not keep leftover 40IX/42RQ/45AT/45NX.
         "2021": ["40RT", "45MX"],
         // OEM MY22 Tuscany OH 02/23/2022: 40RT | 45BX | 45MX · ISL 8.9 450/1250.
@@ -4099,18 +4101,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2019,
+          to: 2018,
           engine: "Cummins ISL / ISX class",
           horsepower: 450,
           chassis: "Freightliner / Spartan"
         },
         {
-          from: 2020,
+          from: 2019,
           to: 2020,
-          engine: "Cummins L9 450HP class",
+          engine: "Cummins ISL 8.9L 450HP",
           horsepower: 450,
-          chassis: "Freightliner XC",
-          notes: "Leftover 2020 Tuscany band. MY21–22 OEM prints ISL 8.9 450/1250."
+          torqueLbFt: 1250,
+          chassis: "Freightliner XC-R",
+          fuelType: "Diesel",
+          notes: "OEM MY19–20 Tuscany: ISL 8.9 450 / 1250. Not leftover L9."
         },
         {
           from: 2021,
@@ -4135,8 +4139,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Venetian: {
       type: "Class A Diesel",
-      floorplans: ["L40", "R40", "B42", "F42"],
+      floorplans: ["G36", "M37", "J40", "S40", "L40", "R40", "B42", "F42"],
       floorplansByYear: {
+        // OEM MY19 Venetian MY 04/13/2018: G36 | M37 | J40 | S40 · ISL 8.9 400HP. Do not copy L40/R40 backward.
+        "2019": ["G36", "M37", "J40", "S40"],
+        // OEM MY20 Venetian MY 05/01/2019: L40 | R40 | B42 · ISL 8.9 380/400. F42 not printed this year.
+        "2020": ["L40", "R40", "B42"],
         // OEM MY21 Venetian OH 03/11/2021 / MY22 Venetian OH: L40 | R40 | B42 | F42 · ISL 8.9 380/1150 vs 400/1250.
         "2021": ["L40", "R40", "B42", "F42"],
         "2022": ["L40", "R40", "B42", "F42"],
@@ -4161,10 +4169,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       fuelCapacityGal: 100,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2021,
+      yearStart: 2019,
       yearEnd: 2022,
-      description: "Thor Venetian — diesel Class A pusher. OEM MY21–22: L40 / R40 / B42 / F42, Freightliner XC-R + Cummins ISL 8.9 option-band 380 / 1,150 vs 400 / 1,250 (HP 0). yearEnd 2022 this slice — do not invent 2023+ Venetian. Not Tuscany / Aria / Palazzo.",
+      description: "Thor Venetian — diesel Class A pusher. OEM MY19: G36 / M37 / J40 / S40, ISL 8.9 400. MY20: L40 / R40 / B42, ISL 380 / 400. MY21–22: L40 / R40 / B42 / F42, ISL 380 / 400 option-band (HP 0). yearEnd 2022 — do not invent 2023+ Venetian. Not Tuscany / Aria / Palazzo.",
       powertrainByYear: [
+        { from: 2019, to: 2019, engine: "Cummins ISL 8.9L 400HP", horsepower: 400, chassis: "Freightliner XC-R", fuelType: "Diesel", notes: "OEM MY19 Venetian: ISL 8.9 400. Do not copy 380/400 option-band backward." },
+        { from: 2020, to: 2020, engine: "Cummins ISL 8.9L 380 / 400 (by floorplan)", horsepower: 0, chassis: "Freightliner XC-R", fuelType: "Diesel", notes: "OEM MY20 Venetian: ISL 8.9 380/400 option-band. HP 0." },
         { from: 2021, to: 2022, engine: "Cummins ISL 8.9L 380 / 400 (by floorplan)", horsepower: 0, chassis: "Freightliner XC-R", fuelType: "Diesel", notes: "OEM MY21–22 Venetian: ISL 8.9 380/1150 (L40/R40) or 400/1250 (B42/F42). Option-band HP 0." },
       ],
     },
@@ -4179,8 +4189,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["33.2", "33.3", "36.1"],
         "2017": ["33.2", "33.3", "36.1"],
         "2018": ["33.2", "33.3", "36.1"],
-        "2019": ["33.2", "33.3", "36.1", "37.4"],
-        "2020": ["33.2", "33.3", "36.1", "37.4"],
+        // OEM MY19 Palazzo MY 04/13/2018: 33.2 | 33.3 | 33.5 | 36.1 | 36.3 | 37.4 · ISB 300/660 vs 340/700.
+        "2019": ["33.2", "33.3", "33.5", "36.1", "36.3", "37.4"],
+        // OEM MY20 Palazzo MY 05/01/2019: 33.2 | 33.5 | 36.3 | 37.4 · ISB 300/660 vs 340/700. Do not keep leftover 33.3/36.1.
+        "2020": ["33.2", "33.5", "36.3", "37.4"],
         // OEM MY21 Palazzo OH 03/11/2021 / MY22 Palazzo OH 02/28/2022: 33.5 | 33.6 | 37.4 | 37.5 · ISB 300/660 vs 340/700. Do not keep leftover 33.2/33.3/36.1.
         "2021": ["33.5", "33.6", "37.4", "37.5"],
         "2022": ["33.5", "33.6", "37.4", "37.5"],
@@ -4237,18 +4249,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2019,
+          to: 2018,
           engine: "Cummins ISB / B6.7 340HP",
           horsepower: 340,
           chassis: "Freightliner XC"
         },
         {
-          from: 2020,
+          from: 2019,
           to: 2020,
-          engine: "Cummins B6.7 / L9 340–450HP",
-          horsepower: 340,
-          chassis: "Freightliner XC-Series",
-          notes: "Leftover 340 lock ends 2020. MY21–24 OEM is ISB 300/340 option-band."
+          engine: "Cummins ISB 6.7 300 / 340 (by floorplan)",
+          horsepower: 0,
+          chassis: "Freightliner XC",
+          fuelType: "Diesel",
+          notes: "OEM MY19–20 Palazzo: ISB 300/660 vs 340/700. Option-band HP 0."
         },
         {
           from: 2021,
@@ -4286,15 +4299,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Aria: {
       type: "Class A Diesel",
-      floorplans: ["3401", "3601", "3701", "3702", "3901", "4000", "3801", "4200", "4500"],
+      floorplans: ["3401", "3601", "3701", "3702", "3901", "3902", "4000", "3801", "4200", "4500"],
       floorplansByYear: {
         "2014": ["3401", "3601", "3901"],
         "2015": ["3401", "3601", "3901"],
         "2016": ["3401", "3601", "3901"],
         "2017": ["3401", "3601", "3901"],
         "2018": ["3401", "3601", "3901"],
+        // OEM MY19 Aria MY 04/13/2018: 3401 | 3601 | 3901 | 4000 · ISB-XT 360/800.
         "2019": ["3401", "3601", "3901", "4000"],
-        "2020": ["3401", "3601", "3901", "4000"],
+        // OEM MY20 Aria MY 05/01/2019: 3401 | 3601 | 3901 | 3902 | 4000 · ISB-XT 360/800. Do not copy 3702.
+        "2020": ["3401", "3601", "3901", "3902", "4000"],
         // OEM MY21 Aria OH 03/12/2021 / MY22 Aria OH: 3401 | 3701 | 3901 | 4000 · ISB-XT 360/800. Do not copy leftover 3601 or MY25 3702.
         "2021": ["3401", "3701", "3901", "4000"],
         "2022": ["3401", "3701", "3901", "4000"],
@@ -4352,11 +4367,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2020,
+          to: 2018,
           engine: "Cummins B6.7 / L9 class",
           horsepower: 340,
           chassis: "Freightliner XC",
-          notes: "Leftover 340 lock ends 2020. MY21–27 OEM prints ISB-XT 360 / 800."
+          notes: "Leftover 340 lock through 2018. MY19–20 OEM prints ISB-XT 360 / 800."
+        },
+        {
+          from: 2019,
+          to: 2020,
+          engine: "Cummins ISB-XT 6.7 360HP",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Freightliner XCR",
+          fuelType: "Diesel",
+          notes: "OEM MY19–20 Aria: ISB-XT 6.7 360 / 800."
         },
         {
           from: 2021,
@@ -4404,8 +4429,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["27.1", "29.2", "30.1", "32.1"],
         "2017": ["27.1", "29.2", "30.1", "32.1"],
         "2018": ["27.1", "29.3", "30.2", "32.3"],
-        "2019": ["27.1", "29.3", "30.2", "32.3"],
-        "2020": ["27.1", "29.3", "30.2", "32.3", "33.1"],
+        // OEM MY19 A.C.E. MY 04/13/2018: 27.2 | 29.3 | 30.2 | 30.3 | 30.4 | 32.1 · F-53 6.8 V10 320/460. Do not keep leftover 27.1/32.3.
+        "2019": ["27.2", "29.3", "30.2", "30.3", "30.4", "32.1"],
+        // OEM MY20 A.C.E. MY 05/01/2019: 27.2 | 30.2 | 30.3 | 30.4 | 32.3 | 33.1 · F-53 6.8 V10 320/460. Do not keep leftover 27.1/29.3.
+        "2020": ["27.2", "30.2", "30.3", "30.4", "32.3", "33.1"],
         // OEM MY21 ACE OH 03/12/2021 / MY22 ACE MY 04/30/2021: 27.2 | 29.5 | 30.3 | 32.3 | 33.1. Do not keep leftover 27.1/29.3/30.2.
         "2021": ["27.2", "29.5", "30.3", "32.3", "33.1"],
         "2022": ["27.2", "29.5", "30.3", "32.3", "33.1"],
@@ -4463,18 +4490,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2019,
+          to: 2018,
           engine: "Ford Triton V10 6.8L",
           horsepower: 320,
           chassis: "Ford F53"
         },
         {
-          from: 2020,
+          from: 2019,
           to: 2020,
-          engine: "Ford 7.3L V8 Godzilla 350HP",
-          horsepower: 350,
+          engine: "Ford F-53 6.8L Triton V10 320HP",
+          horsepower: 320,
+          torqueLbFt: 460,
           chassis: "Ford F53",
-          notes: "Leftover 350 lock for ACE 2020. MY21 OEM is V10/7.3 option-band."
+          transmission: "TorqShift automatic",
+          fuelType: "Gas",
+          notes: "OEM MY19–20 A.C.E.: F-53 6.8 V10 320 / 460. Not leftover 7.3 350."
         },
         {
           from: 2021,
@@ -4520,15 +4550,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Vegas: {
       type: "Class A Gas",
-      floorplans: ["24.1", "24.3", "24.4", "25.2", "25.6", "25.7", "26.1", "26.2", "27.7", "28.1"],
+      floorplans: ["24.1", "24.3", "24.4", "25.2", "25.5", "25.6", "25.7", "26.1", "26.2", "27.7", "28.1"],
       floorplansByYear: {
         "2014": ["24.1", "25.2", "25.6"],
         "2015": ["24.1", "25.2", "25.6"],
         "2016": ["24.1", "25.2", "25.6", "27.7"],
         "2017": ["24.1", "25.2", "25.6", "27.7"],
         "2018": ["24.1", "25.2", "25.6", "27.7"],
-        "2019": ["24.1", "25.2", "25.6", "27.7"],
-        "2020": ["24.1", "25.2", "25.6", "27.7"],
+        // OEM MY19 Vegas MY 04/13/2018: 24.1 | 25.2 | 25.5 | 25.6 | 27.7 · E-Series 6.8 V10 305/420.
+        "2019": ["24.1", "25.2", "25.5", "25.6", "27.7"],
+        // OEM MY20 Vegas MY 05/01/2019: 24.1 | 25.6 | 27.7 · E-Series 6.8 V10 305/420. Do not keep leftover 25.2 or copy 26.1/28.1.
+        "2020": ["24.1", "25.6", "27.7"],
         // OEM MY21 Vegas OH 03/11/2021: 24.1 | 24.3 | 25.6 | 27.7. Do not copy leftover 25.2/26.1/26.2/28.1.
         "2021": ["24.1", "24.3", "25.6", "27.7"],
         // OEM MY22 Vegas OH 01/05/2022: 24.1 | 24.3 | 24.4. Do not copy 26.1/26.2/28.1 backward.
@@ -4573,7 +4605,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2014,
-          to: 2019,
+          to: 2018,
           engine: "Ford Triton V10 6.8L",
           horsepower: 305,
           torqueLbFt: 420,
@@ -4584,16 +4616,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           notes: "Launch–pre-Godzilla Vegas — V10 cutaway era",
         },
         {
-          from: 2020,
+          from: 2019,
           to: 2020,
-          engine: "Ford 7.3L V8 (Godzilla) 325HP",
-          horsepower: 325,
-          torqueLbFt: 450,
+          engine: "Ford 6.8L Triton V10 305HP",
+          horsepower: 305,
+          torqueLbFt: 420,
           chassis: "Ford E-Series cutaway (Class A body)",
           transmission: "TorqShift automatic",
+          fuelType: "Gas",
           fuelCapacityGal: 55,
           towingCapacity: 8000,
-          notes: "Leftover Vegas 2020 Godzilla cutaway. MY21–22 OEM reprints chassis, not HP.",
+          notes: "OEM MY19–20 Vegas: E-Series 6.8 V10 305 / 420. Not leftover 7.3.",
         },
         {
           from: 2021,
@@ -4636,15 +4669,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Axis: {
       type: "Class A Gas",
-      floorplans: ["24.1", "24.3", "24.4", "25.2", "25.6", "25.7", "26.1", "26.2", "27.7", "28.1"],
+      floorplans: ["24.1", "24.3", "24.4", "25.2", "25.5", "25.6", "25.7", "26.1", "26.2", "27.7", "28.1"],
       floorplansByYear: {
         "2014": ["24.1", "25.2", "25.6"],
         "2015": ["24.1", "25.2", "25.6"],
         "2016": ["24.1", "25.2", "25.6", "27.7"],
         "2017": ["24.1", "25.2", "25.6", "27.7"],
         "2018": ["24.1", "25.2", "25.6", "27.7"],
-        "2019": ["24.1", "25.2", "25.6", "27.7"],
-        "2020": ["24.1", "25.2", "25.6", "27.7"],
+        // OEM MY19 Axis MY 04/13/2018: 24.1 | 25.2 | 25.5 | 25.6 | 27.7 · E-Series 6.8 V10 305/420.
+        "2019": ["24.1", "25.2", "25.5", "25.6", "27.7"],
+        // OEM MY20 Axis MY 05/01/2019: 24.1 | 25.6 | 27.7 · E-Series 6.8 V10 305/420. Do not keep leftover 25.2 or copy 26.1/28.1.
+        "2020": ["24.1", "25.6", "27.7"],
         // OEM MY21 Axis OH 03/11/2021: 24.1 | 24.3 | 25.6 | 27.7. Do not copy leftover 25.2/26.1/26.2/28.1.
         "2021": ["24.1", "24.3", "25.6", "27.7"],
         // OEM MY22 Axis OH 01/05/2022: 24.1 | 24.3 | 24.4. Do not copy 26.1/26.2/28.1 backward.
@@ -4688,7 +4723,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2014,
-          to: 2019,
+          to: 2018,
           engine: "Ford Triton V10 6.8L",
           horsepower: 305,
           torqueLbFt: 420,
@@ -4699,16 +4734,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           notes: "Launch–pre-Godzilla Axis — V10 cutaway era",
         },
         {
-          from: 2020,
+          from: 2019,
           to: 2020,
-          engine: "Ford 7.3L V8 (Godzilla) 325HP",
-          horsepower: 325,
-          torqueLbFt: 450,
+          engine: "Ford 6.8L Triton V10 305HP",
+          horsepower: 305,
+          torqueLbFt: 420,
           chassis: "Ford E-Series cutaway (Class A body)",
           transmission: "TorqShift automatic",
+          fuelType: "Gas",
           fuelCapacityGal: 55,
           towingCapacity: 8000,
-          notes: "Leftover Axis 2020 Godzilla cutaway. MY21–22 OEM reprints chassis, not HP.",
+          notes: "OEM MY19–20 Axis: E-Series 6.8 V10 305 / 420. Not leftover 7.3.",
         },
         {
           from: 2021,
@@ -4790,8 +4826,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Hurricane: {
       type: "Class A Gas",
-      floorplans: ["29M", "31C", "31S", "32A", "34A", "34F", "34J", "34R", "35M", "35MX", "29L", "35A", "35G", "35J", "35R", "36H"],
+      floorplans: ["27B", "29M", "31C", "31S", "32A", "33X", "34A", "34F", "34J", "34R", "35M", "35MX", "29L", "35A", "35G", "35J", "35R", "36H"],
       floorplansByYear: {
+        // OEM MY19 Hurricane MY 04/13/2018: 27B | 29M | 34J | 34R | 35M · F-53 6.8 V10 320/460. Do not copy 31C/35A.
+        "2019": ["27B", "29M", "34J", "34R", "35M"],
+        // OEM MY20 Hurricane MY 05/01/2019: 29M | 33X | 34J | 34R | 35M · F-53 6.8 V10 320/460. Do not copy 27B/31C.
+        "2020": ["29M", "33X", "34J", "34R", "35M"],
         // OEM MY21 Hurricane OH 03/11/2021 / MY22 Hurricane MY 04/30/2021: 29M | 31C | 34J | 34R | 35M. Do not copy leftover 31S or MY27 35A/36H.
         "2021": ["29M", "31C", "34J", "34R", "35M"],
         "2022": ["29M", "31C", "34J", "34R", "35M"],
@@ -4834,18 +4874,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2000,
-          to: 2019,
+          to: 2018,
           engine: "Ford Triton V10 6.8L",
           horsepower: 305,
           chassis: "Ford F53",
         },
         {
-          from: 2020,
+          from: 2019,
           to: 2020,
-          engine: "Ford 7.3L Godzilla V8",
-          horsepower: 350,
+          engine: "Ford F-53 6.8L Triton V10 320HP",
+          horsepower: 320,
+          torqueLbFt: 460,
           chassis: "Ford F53",
-          notes: "Leftover 350 lock 2020. MY21 OEM is V10/7.3 option-band."
+          transmission: "TorqShift automatic",
+          fuelType: "Gas",
+          notes: "OEM MY19–20 Hurricane: F-53 6.8 V10 320 / 460. Not leftover 7.3 350."
         },
         {
           from: 2021,
@@ -4968,7 +5011,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Windsport: {
       type: "Class A Gas",
-      floorplans: ["27R", "29M", "31C", "31S", "34A", "34J", "34R", "35M", "27BE", "29VX", "31Z", "34P", "29L", "35A", "35G", "35J", "35R", "36H"],
+      floorplans: ["27B", "27R", "29M", "31C", "31S", "33X", "34A", "34J", "34R", "35M", "27BE", "29VX", "31Z", "34P", "29L", "35A", "35G", "35J", "35R", "36H"],
       floorplansByYear: {
         "2008": ["27R", "29M", "31S"],
         "2009": ["27R", "29M", "31S", "34J"],
@@ -4981,8 +5024,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["27R", "29M", "31S", "34J"],
         "2017": ["27R", "29M", "31S", "34J"],
         "2018": ["27R", "29M", "31S", "34J"],
-        "2019": ["27R", "29M", "31S", "34J", "35M"],
-        "2020": ["27R", "29M", "31S", "34J", "35M"],
+        // OEM MY19 Windsport MY 04/13/2018: 27B | 29M | 34J | 34R | 35M · F-53 6.8 V10 320/460. Do not keep leftover 27R/31S.
+        "2019": ["27B", "29M", "34J", "34R", "35M"],
+        // OEM MY20 Windsport MY 05/01/2019: 29M | 33X | 34J | 34R | 35M · F-53 6.8 V10 320/460. Do not keep leftover 27R/31S.
+        "2020": ["29M", "33X", "34J", "34R", "35M"],
         // OEM MY21 Windsport OH 03/11/2021 / MY22 Windsport MY 04/30/2021: 29M | 31C | 34J | 34R | 35M. Do not keep leftover 27R/31S.
         "2021": ["29M", "31C", "34J", "34R", "35M"],
         "2022": ["29M", "31C", "34J", "34R", "35M"],
@@ -5041,18 +5086,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2019,
+          to: 2018,
           engine: "Ford Triton V10 6.8L",
           horsepower: 320,
           chassis: "Ford F53"
         },
         {
-          from: 2020,
+          from: 2019,
           to: 2020,
-          engine: "Ford 7.3L V8 Godzilla",
-          horsepower: 350,
+          engine: "Ford F-53 6.8L Triton V10 320HP",
+          horsepower: 320,
+          torqueLbFt: 460,
           chassis: "Ford F53",
-          notes: "Leftover 350 lock 2020. MY21 OEM is V10/7.3 option-band."
+          transmission: "TorqShift automatic",
+          fuelType: "Gas",
+          notes: "OEM MY19–20 Windsport: F-53 6.8 V10 320 / 460. Twin of Hurricane."
         },
         {
           from: 2021,
@@ -5114,8 +5162,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["35KT", "37FH", "37TB"],
         "2017": ["35KT", "37FH", "37TB"],
         "2018": ["35KT", "37FH", "37TB"],
-        "2019": ["35KT", "37FH", "37TB"],
-        "2020": ["35KT", "37FH", "37TB"],
+        // OEM MY19 Challenger MY 04/13/2018: 37FH | 37KT | 37TB | 37YT · F-53 6.8 V10 320/460. Do not keep leftover 35KT.
+        "2019": ["37FH", "37KT", "37TB", "37YT"],
+        // OEM MY20 Challenger MY 05/01/2019: 35MQ | 37FH | 37TB | 37YT · F-53 6.8 V10 320/460. Do not keep leftover 35KT.
+        "2020": ["35MQ", "37FH", "37TB", "37YT"],
         // OEM MY21 Challenger OH 03/11/2021 / MY22 Challenger MY 03/12/2021: 35MQ | 37DS | 37FH. Do not keep leftover 35KT/37TB.
         "2021": ["35MQ", "37DS", "37FH"],
         "2022": ["35MQ", "37DS", "37FH"],
@@ -5168,18 +5218,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2019,
+          to: 2018,
           engine: "Ford Triton V10 6.8L",
           horsepower: 320,
           chassis: "Ford F53"
         },
         {
-          from: 2020,
+          from: 2019,
           to: 2020,
-          engine: "Ford 7.3L V8 Godzilla",
-          horsepower: 350,
+          engine: "Ford F-53 6.8L Triton V10 320HP",
+          horsepower: 320,
+          torqueLbFt: 460,
           chassis: "Ford F53",
-          notes: "Leftover 350 lock 2020. MY21 OEM is V10/7.3 option-band."
+          transmission: "TorqShift automatic",
+          fuelType: "Gas",
+          notes: "OEM MY19–20 Challenger: F-53 6.8 V10 320 / 460."
         },
         {
           from: 2021,
@@ -5214,8 +5267,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Miramar: {
       type: "Class A Gas",
-      floorplans: ["34.6", "35.2", "35.4", "37.1"],
+      floorplans: ["32.2", "34.2", "34.6", "35.2", "35.3", "35.4", "37.1"],
       floorplansByYear: {
+        // OEM MY19 Miramar MY 08/20/18: 34.2 | 35.2 | 35.3 | 37.1 · F-53 6.8 V10 320/460.
+        "2019": ["34.2", "35.2", "35.3", "37.1"],
+        // OEM MY20 Miramar MY 05/01/2019: 32.2 | 35.2 | 35.3 | 37.1 · F-53 6.8 V10 320/460. Do not copy 34.6.
+        "2020": ["32.2", "35.2", "35.3", "37.1"],
         // OEM MY21 Miramar OH 03/11/2021: 34.6 | 35.2 | 35.4 | 37.1 · V10 320/460 vs 7.3 350/468.
         "2021": ["34.6", "35.2", "35.4", "37.1"],
         // OEM MY22 Miramar MY 03/12/2021: 34.6 | 35.2 | 37.1 · F-53 7.3 350/468. 35.4 dropped.
@@ -5240,25 +5297,27 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       blackWater: 40,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2021,
+      yearStart: 2019,
       yearEnd: 2022,
-      description: "Thor Miramar — Challenger twin gas Class A on Ford F53. OEM MY21: 34.6 / 35.2 / 35.4 / 37.1, V10 320 / 460 vs 7.3 350 / 468 (option-band HP 0). MY22: 34.6 / 35.2 / 37.1, 7.3 350 / 468. yearEnd 2022 this slice — do not invent 2023+ Miramar. Not Hurricane / ACE.",
+      description: "Thor Miramar — Challenger twin gas Class A on Ford F53. OEM MY19: 34.2 / 35.2 / 35.3 / 37.1, V10 320 / 460. MY20: 32.2 / 35.2 / 35.3 / 37.1. MY21: 34.6 / 35.2 / 35.4 / 37.1, V10 / 7.3 option-band. MY22: 34.6 / 35.2 / 37.1, 7.3 350 / 468. yearEnd 2022 — do not invent 2023+ Miramar. Not Hurricane / ACE.",
       powertrainByYear: [
+        { from: 2019, to: 2020, engine: "Ford F-53 6.8L Triton V10 320HP", horsepower: 320, torqueLbFt: 460, chassis: "Ford F53", transmission: "TorqShift automatic", fuelType: "Gas", notes: "OEM MY19–20 Miramar: F-53 6.8 V10 320 / 460." },
         { from: 2021, to: 2021, engine: "Ford F-53 6.8L Triton V10 320HP / 7.3L V8 350HP (option)", horsepower: 0, chassis: "Ford F53", transmission: "TorqShift automatic", notes: "OEM MY21 Miramar: V10 320/460 or 7.3 350/468. Option-band HP 0." },
         { from: 2022, to: 2022, engine: "Ford 7.3L V8 Godzilla 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford F53", transmission: "TorqShift automatic", notes: "OEM MY22 Miramar: F-53 7.3 350 / 468." },
       ],
     },
     Magnitude: {
       type: "Super C",
-      floorplans: ["SV34", "SV38", "SV40", "BH35", "FB34", "RB34", "BT36", "XG32", "AX29", "LV35", "RS36", "Z30", "X32", "L35", "R36"],
+      floorplans: ["SV34", "SV38", "SV40", "BB35", "BH35", "FB34", "RB34", "BT36", "XG32", "AX29", "LV35", "RS36", "Z30", "X32", "L35", "R36"],
       floorplansByYear: {
         "2014": ["SV34", "SV38"],
         "2015": ["SV34", "SV38"],
         "2016": ["SV34", "SV38"],
         "2017": ["SV34", "SV38"],
         "2018": ["SV34", "SV38"],
-        "2019": ["SV34", "SV38", "SV40"],
-        "2020": ["SV34", "SV38", "SV40"],
+        // 2019 Magnitude RVUSA file is an anyflip screenshot — no readable OEM card. Do not invent SV38/SV40.
+        // OEM MY20 Magnitude MY 05/01/2019: SV34 | BB35 | BH35 · F-550 Power Stroke 330/750 4x2 or 4x4. Do not keep leftover SV38/SV40.
+        "2020": ["SV34", "BB35", "BH35"],
         // OEM MY21 Magnitude OH 03/11/2021: XG32 | RB34 | SV34 | BH35 · Power Stroke 330/825. Do not keep leftover SV38/SV40.
         "2021": ["XG32", "RB34", "SV34", "BH35"],
         // OEM MY22 Magnitude OH 02/24/2022: XG32 | SV34 | BT36 | RS36 · Power Stroke 330/825.
@@ -5318,12 +5377,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2020,
+          to: 2018,
           engine: "Ford Power Stroke 6.7L Diesel",
           horsepower: 330,
           torqueLbFt: 950,
           chassis: "Ford F-550",
-          notes: "Leftover Super C 2016–20. MY21–23 OEM prints 330 / 825; MY24 HP not printed."
+          notes: "Leftover Super C 2016–18. No readable OEM MY19 Magnitude card. MY20 OEM prints 330 / 750."
+        },
+        {
+          from: 2020,
+          to: 2020,
+          engine: "Ford 6.7L Power Stroke 4x2 / 4x4 330HP",
+          horsepower: 330,
+          torqueLbFt: 750,
+          chassis: "Ford F-550 Super Duty",
+          fuelType: "Diesel",
+          notes: "OEM MY20 Magnitude: F-550 Power Stroke 330 / 750 4x2 or 4x4. Brochure 750, not leftover 950. Twin of Omni."
         },
         {
           from: 2021,
@@ -5378,7 +5447,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Super C",
       floorplans: ["XG32", "XG36", "XG40", "XG34"],
       floorplansByYear: {
-        "2020": ["XG32", "XG36"],
+        // No OEM Magnitude XG line brochure MY19–20. XG32 is a Magnitude floorplan — do not invent XG36.
         // No OEM Magnitude XG line brochure 2021–2022. XG32 is a Magnitude floorplan — do not invent XG36/XG40.
         // No OEM Magnitude XG line brochure. XG32 is a Magnitude floorplan — do not invent XG36/XG40 for MY23–24.
         // No OEM "Magnitude XG" line brochure any year — XG32 is a Magnitude floorplan. yearEnd 2024.
@@ -5438,8 +5507,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["37SS", "37HJ"],
         "2017": ["37SS", "37HJ"],
         "2018": ["37SS", "37HJ"],
-        "2019": ["37SS", "37HJ", "38DB"],
-        "2020": ["37SS", "37HJ", "38DB"],
+        // No Thor Motor Coach Seneca OEM brochure MY19–20 (Jayco Seneca is a different make). Do not invent 37SS/38DB.
         // No Thor Motor Coach Seneca OEM brochure 2021–2022 (Jayco Seneca is a different make).
         "2023": ["37SS", "37HJ", "38DB"],
         "2024": ["37SS", "37HJ", "38DB"],
@@ -5498,7 +5566,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Four Winds": {
       type: "Class C",
-      floorplans: ["19Z", "21Z", "22B", "22C", "22E", "23U", "24F", "24H", "25M", "25V", "25Z", "26B", "26X", "27A", "27P", "27R", "28A", "28Z", "29G", "29K", "30D", "31B", "31BV", "31E", "31EV", "31M", "31MV", "31W", "31WV", "32A"],
+      floorplans: ["19Z", "21Z", "22B", "22C", "22E", "23U", "24F", "24H", "25M", "25V", "25Z", "26B", "26X", "27A", "27P", "27R", "28A", "28E", "28Z", "29G", "29K", "30D", "31B", "31BV", "31E", "31EV", "31M", "31MV", "31W", "31WV", "31Y", "32A"],
       floorplansByYear: {
         "2010": ["22E", "24F", "28A", "31E"],
         "2011": ["22E", "24F", "28A", "31E"],
@@ -5509,8 +5577,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["22E", "24F", "28A", "31E", "31W", "32A"],
         "2017": ["22E", "24F", "28A", "31E", "31W", "32A"],
         "2018": ["22E", "24F", "25M", "28A", "28Z", "31E", "31W"],
-        "2019": ["22E", "24F", "25M", "28A", "28Z", "31E", "31W"],
-        "2020": ["19Z", "22E", "24F", "25M", "28A", "28Z", "31E", "31W"],
+        // OEM MY19 Four Winds MY 04/13/2018: 22B | 22E | 23U | 24F | 25V | 26B | 28E | 28Z | 30D | 31E | 31W | 31Y · Ford/Chevy. HP not printed. Sprinter 24BL | 24WS live on Four Winds Sprinter. Do not keep leftover 25M/28A/19Z.
+        "2019": ["22B", "22E", "23U", "24F", "25V", "26B", "28E", "28Z", "30D", "31E", "31W", "31Y"],
+        // OEM MY20 Four Winds MY 05/01/2019: same Ford/Chevy lineup + 27R. Sprinter 24BL | 24DS live on Four Winds Sprinter. Do not keep leftover 19Z.
+        "2020": ["22B", "22E", "23U", "24F", "25V", "26B", "27R", "28E", "28Z", "30D", "31E", "31W", "31Y"],
         // OEM MY21 Four Winds OH 03/11/2021 / MY22 Four Winds MY 04/26/2021: 22B | 22E | 24F | 25M | 25V | 26B | 27R | 28A | 28Z + 31B | 31E | 31W | 31BV | 31EV | 31WV. Ford 350/Chevy 323 option-band. No leftover 19Z/21Z/23U.
         "2021": ["22B", "22E", "24F", "25M", "25V", "26B", "27R", "28A", "28Z", "31B", "31E", "31W", "31BV", "31EV", "31WV"],
         "2022": ["22B", "22E", "24F", "25M", "25V", "26B", "27R", "28A", "28Z", "31B", "31E", "31W", "31BV", "31EV", "31WV"],
@@ -5576,18 +5646,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2019,
+          to: 2018,
           engine: "Ford 6.2L / 6.8L V10 (by year)",
           horsepower: 305,
           chassis: "Ford E-450"
         },
         {
-          from: 2020,
+          from: 2019,
           to: 2020,
-          engine: "Ford 7.3L V8 Godzilla 350HP",
-          horsepower: 350,
-          chassis: "Ford E-450",
-          notes: "Leftover 350 lock ends 2020. MY21–22 is Ford 350 / Chevy 323 option-band."
+          engine: "Ford / Chevy cutaway (option)",
+          horsepower: 0,
+          chassis: "Ford E-Series / Chevy cutaway",
+          fuelType: "Gas",
+          notes: "OEM MY19–20 Four Winds: Ford/Chevy chassis. HP not printed — option-band HP 0. Not Four Winds Sprinter."
         },
         {
           from: 2021,
@@ -5620,7 +5691,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Chateau: {
       type: "Class C",
-      floorplans: ["19Z", "21Z", "22B", "22E", "22F", "23U", "24F", "25M", "25V", "25Z", "26BC", "26X", "27A", "27P", "27R", "28A", "28BD", "28Z", "29K", "30D", "30G", "31E", "31EV", "31M", "31MV", "31W", "31WV", "32A", "32E", "33SF", "34F", "35SF"],
+      floorplans: ["19Z", "21Z", "22B", "22E", "22F", "23U", "24F", "25M", "25V", "25Z", "26B", "26BC", "26X", "27A", "27P", "27R", "28A", "28BD", "28E", "28Z", "29K", "30D", "30G", "31E", "31EV", "31M", "31MV", "31W", "31WV", "31Y", "32A", "32E", "33SF", "34F", "35SF"],
       floorplansByYear: {
         "2010": ["22E", "24F", "28A", "31W"],
         "2011": ["22E", "24F", "28A", "31W"],
@@ -5631,8 +5702,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["22E", "24F", "28A", "31W", "32A"],
         "2017": ["22E", "24F", "28A", "31W", "32A"],
         "2018": ["22E", "24F", "25M", "28A", "31W"],
-        "2019": ["22E", "24F", "25M", "28A", "31W", "31E"],
-        "2020": ["19Z", "22E", "24F", "25M", "28A", "31W", "31E"],
+        // OEM MY19 Chateau (same Ford/Chevy card as Four Winds): 22B | 22E | 23U | 24F | 25V | 26B | 28E | 28Z | 30D | 31E | 31W | 31Y. Sprinter 24BL | 24WS live on Chateau Sprinter. Do not keep leftover 25M/28A/19Z.
+        "2019": ["22B", "22E", "23U", "24F", "25V", "26B", "28E", "28Z", "30D", "31E", "31W", "31Y"],
+        // OEM MY20 Chateau (same Ford/Chevy card as Four Winds): same + 27R. Sprinter 24BL | 24DS live on Chateau Sprinter.
+        "2020": ["22B", "22E", "23U", "24F", "25V", "26B", "27R", "28E", "28Z", "30D", "31E", "31W", "31Y"],
         // OEM MY21 Chateau OH 03/11/2021 / MY22 Chateau MY 03/12/2021: same Ford E-Series lineup as Four Winds. Ford 350/Chevy 323 option-band.
         "2021": ["22B", "22E", "24F", "25M", "25V", "26B", "27R", "28A", "28Z", "31B", "31E", "31W", "31BV", "31EV", "31WV"],
         "2022": ["22B", "22E", "24F", "25M", "25V", "26B", "27R", "28A", "28Z", "31B", "31E", "31W", "31BV", "31EV", "31WV"],
@@ -5698,18 +5771,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2019,
+          to: 2018,
           engine: "Ford 6.2L / V10",
           horsepower: 305,
           chassis: "Ford E-450"
         },
         {
-          from: 2020,
+          from: 2019,
           to: 2020,
-          engine: "Ford 7.3L V8 Godzilla 350HP",
-          horsepower: 350,
-          chassis: "Ford E-450",
-          notes: "Leftover 350 lock ends 2020. MY21–22 is Ford 350 / Chevy 323 option-band."
+          engine: "Ford / Chevy cutaway (option)",
+          horsepower: 0,
+          chassis: "Ford E-Series / Chevy cutaway",
+          fuelType: "Gas",
+          notes: "OEM MY19–20 Chateau: Ford/Chevy chassis. HP not printed — option-band HP 0. Not Chateau Sprinter."
         },
         {
           from: 2021,
@@ -5742,15 +5816,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Quantum: {
       type: "Class C",
-      floorplans: ["KW29", "WS31", "LF31", "KM24", "PD31", "RC25", "BC31", "FW29", "KW28", "RD28", "SD27", "SV30", "WS29", "LH26", "GS27", "JM31", "LC22", "LC25", "LC26", "LT27", "LC28", "LP27", "PQ31", "LC19", "LC21", "LZ22", "LZ25"],
+      floorplans: ["GR22", "KW29", "WS31", "LF31", "KM24", "PD31", "RC25", "RS26", "RW28", "BC31", "FW29", "KW28", "RD28", "SD27", "SV30", "WS29", "LH26", "GS27", "JM31", "LC22", "LC25", "LC26", "LT27", "LC28", "LP27", "PQ31", "LC19", "LC21", "LZ22", "LZ25"],
       floorplansByYear: {
         "2014": ["KW29", "WS31"],
         "2015": ["KW29", "WS31"],
         "2016": ["KW29", "WS31"],
         "2017": ["KW29", "WS31"],
         "2018": ["KW29", "WS31", "LF31"],
-        "2019": ["KW29", "WS31", "LF31"],
-        "2020": ["KW29", "WS31", "LF31", "KM24"],
+        // OEM MY19 Quantum MY 04/13/2018: GR22 | RC25 | RS26 | RW28 | LF31 | PD31 | WS31 · Ford/Chevy. HP not printed. KM24 lives on Quantum Sprinter. Do not keep leftover KW29.
+        "2019": ["GR22", "RC25", "RS26", "RW28", "LF31", "PD31", "WS31"],
+        // OEM MY20 Quantum MY 05/01/2019: GR22 | RC25 | RS26 | RW28 | KW29 | LF31 | PD31 | WS31. CR24 | KM24 live on Quantum Sprinter.
+        "2020": ["GR22", "RC25", "RS26", "RW28", "KW29", "LF31", "PD31", "WS31"],
         // OEM MY21 Quantum OH 03/11/2021: RC25 | LH26 | GS27 | KW29 | JM31 | LF31 | WS31 + Quantum LC brochure LC22 | LC25. Ford 350/Chevy 323 option-band. Do not put Sprinter CR24/KM24 on this key.
         "2021": ["LC22", "LC25", "RC25", "LH26", "GS27", "KW29", "JM31", "LF31", "WS31"],
         // OEM MY22 Quantum OH 11/16/2021: LC22 | LC25 | LC26 | LC28 | KW29 | LF31 | WS31. Ford 350/Chevy 323 option-band.
@@ -5807,6 +5883,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           notes: "2006–2015 dual-chassis Class C — no 7.3 Godzilla yet"
         },
         {
+          from: 2019,
+          to: 2020,
+          engine: "Ford / Chevy cutaway (option)",
+          horsepower: 0,
+          chassis: "Ford E-Series / Chevy cutaway",
+          fuelType: "Gas",
+          notes: "OEM MY19–20 Quantum: Ford/Chevy chassis. HP not printed — option-band HP 0. Not Quantum Sprinter."
+        },
+        {
           from: 2021,
           to: 2022,
           engine: "Ford 7.3L V8 350HP / Chevy 6.0L V8 323HP (option)",
@@ -5838,13 +5923,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Four Winds Siesta": {
       type: "Class C",
-      floorplans: ["24SR", "25G", "25M", "24RW", "24SK", "24SS"],
+      floorplans: ["24SR", "24SJ", "24SK", "24SS", "24ST", "24MB", "25G", "25M", "24RW"],
       floorplansByYear: {
         "2016": ["24SR", "25G"],
         "2017": ["24SR", "25G"],
         "2018": ["24SR", "25G"],
-        "2019": ["24SR", "25G", "25M"],
-        "2020": ["24SR", "25G", "25M"],
+        // OEM MY19 Siesta MY 04/13/2018: 24SJ | 24SK | 24SS | 24ST · Sprinter 3.0 V6 188/325. Do not keep leftover 24SR/25G.
+        "2019": ["24SJ", "24SK", "24SS", "24ST"],
+        // OEM MY20 Siesta MY 05/01/2019: 24MB | 24SK | 24SS | 24ST · Sprinter 3.0 V6 188/325.
+        "2020": ["24MB", "24SK", "24SS", "24ST"],
         // No OEM Four Winds Siesta brochure 2021–2022 (Sprinter Class C is inside Four Winds / Chateau PDFs as 24BL | 24DS).
         "2023": ["24SR", "25G"],
         "2024": ["24SR", "25G"],
@@ -5886,11 +5973,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2016,
-          to: 2020,
+          to: 2018,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
           chassis: "Mercedes Sprinter",
-          notes: "Leftover Siesta 2016–20. No OEM Siesta brochure 2021–2022."
+          notes: "Leftover Siesta 2016–18."
+        },
+        {
+          from: 2019,
+          to: 2020,
+          engine: "Mercedes-Benz 3.0L V6 188HP",
+          horsepower: 188,
+          torqueLbFt: 325,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "OEM MY19–20 Four Winds Siesta: Sprinter 3.0 V6 188 / 325."
         },
         {
           from: 2023,
@@ -5906,8 +6003,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplans: ["25VT", "28VT", "30VT", "30GT", "33GT"],
       floorplansByYear: {
         "2018": ["25VT", "28VT"],
-        "2019": ["25VT", "28VT"],
-        "2020": ["25VT", "28VT", "30VT"],
+        // No Thor Geneva OEM brochure MY19–20 — do not keep leftover 25VT/28VT/30VT.
         // No Thor Geneva OEM brochure 2021–2022.
         "2023": ["25VT", "28VT"],
         "2024": ["25VT", "28VT"],
@@ -5949,13 +6045,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2018,
-          to: 2019,
+          to: 2018,
           engine: "Ford 6.2L V8",
           horsepower: 305,
           chassis: "Ford E-450"
         },
         {
-          from: 2020,
+          from: 2023,
           to: 2024,
           engine: "Ford 7.3L V8",
           horsepower: 350,
@@ -5974,8 +6070,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["29H", "38MB"],
         "2017": ["29H", "38MB"],
         "2018": ["29H", "38MB"],
-        "2019": ["29H", "38MB", "38KB"],
-        "2020": ["29H", "38MB", "38KB"],
+        // Mixed leftover. OEM MY19–20 Outlaw PDF splits Class A 37GP/37RB/38MB and Class C 29J/29S — those years live on Outlaw Class A / Outlaw Class C. Do not keep leftover 29H/38KB.
         // Mixed leftover. OEM MY21–22 Outlaw PDF splits Class A 38MB/38KB and Class C 29J — those years live on Outlaw Class A / Outlaw Class C.
         // Mixed leftover Class C key. OEM MY23 Outlaw PDF Class C section / MY24 Outlaw Class C: 29J | 29T. Do not keep 38MB/38KB on this Class C key.
         "2023": ["29J", "29T"],
@@ -6044,6 +6139,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["20A", "20K", "20L", "20U", "20H", "20J", "20Y"],
       floorplansByYear: {
+        // OEM MY20 Sequence MY 05/01/2019: 20L · RAM ProMaster 3500. HP not printed. Onan gas generator. Do not invent 20A/20K.
+        "2020": ["20L"],
         // OEM MY21 Sequence OH 03/11/2021: 20A | 20K | 20L · ProMaster 280/260 gas. Not Sprinter.
         "2021": ["20A", "20K", "20L"],
         // OEM MY22 Sequence OH 01/03/2022: 20A | 20J | 20K | 20L · ProMaster 280/260 gas. Do not copy leftover 20U.
@@ -6075,6 +6172,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       horsepower: 276,
       torqueLbFt: 250,
       powertrainByYear: [
+        { from: 2020, to: 2020, engine: "RAM ProMaster 3500 gas", horsepower: 0, chassis: "RAM ProMaster 3500", fuelType: "Gas", notes: "OEM MY20 Sequence: ProMaster 3500. HP not printed — do not invent 280. Not Sprinter." },
         { from: 2021, to: 2022, engine: "RAM ProMaster 3500 280HP", horsepower: 280, torqueLbFt: 260, chassis: "RAM ProMaster 3500", fuelType: "Gas", notes: "OEM MY21–22 Sequence: ProMaster 3500 280/260 gas. Not Sprinter. Not 20U." },
         { from: 2023, to: 2024, engine: "RAM 3.6L Pentastar V6 276HP", horsepower: 276, torqueLbFt: 250, chassis: "RAM ProMaster 3500 XT", fuelType: "Gas", notes: "OEM MY23–24 Sequence: ProMaster 3500 276/250 gas. Not 20U. Not Sprinter." },
         { from: 2025, to: 2027, engine: "RAM 3.6L Pentastar V6 276HP", horsepower: 276, torqueLbFt: 250, chassis: "RAM ProMaster 3500 XT", fuelType: "Gas", notes: "OEM MY25 Sequence prints 276/250. MY26 brochure HP not reprinted; MY27 20L spec prints 276/250. Twin of Tellaro. Not Sequence Sport. Not Sprinter." },
@@ -6093,9 +6191,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 74,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2021,
+      yearStart: 2020,
       mpgHighwayEst: 16,
-      description: "Thor Sequence — RAM ProMaster 3500 Class B. Twin of Tellaro. OEM MY25: 20H / 20J / 20L, 3.6 276 / 250 gas. MY26–27: 20L / 20U / 20Y. Not Sequence Sport. Not a Sprinter (Sanctuary / Tranquility)."
+      description: "Thor Sequence — RAM ProMaster 3500 Class B. Twin of Tellaro. OEM MY20: 20L (HP not printed). MY21: 20A / 20K / 20L, 280 / 260. OEM MY25: 20H / 20J / 20L, 3.6 276 / 250 gas. MY26–27: 20L / 20U / 20Y. Not Sequence Sport. Not a Sprinter (Sanctuary / Tranquility)."
     },
     Sanctuary: {
       type: "Class B",
@@ -6105,8 +6203,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["19P", "24G"],
         "2017": ["19P", "24G"],
         "2018": ["19P", "24G"],
-        "2019": ["19P", "24G", "33C"],
-        "2020": ["19P", "24G", "33C"],
+        // No OEM Sanctuary brochure MY19–20 — do not keep leftover 19P/24G/33C.
         // No OEM Sanctuary brochure 2021. OEM MY22 Sanctuary MY 06/17/2021: 19L | 19P · Sprinter 4x4. HP not printed. Do not keep leftover 24G/33C.
         "2022": ["19L", "19P"],
         // OEM MY23 Sanctuary OH (Sprinter): 19L | 19P. Do not put Transit 19LT/19PT on this key.
@@ -6164,11 +6261,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2020,
+          to: 2018,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
           chassis: "Mercedes Sprinter",
-          notes: "Leftover Sanctuary 2016–20. No OEM Sanctuary brochure 2021."
+          notes: "Leftover Sanctuary 2016–18. No OEM Sanctuary brochure MY19–21."
         },
         {
           from: 2022,
@@ -6211,15 +6308,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Gemini: {
       type: "Class C",
-      floorplans: ["22TF", "23TR", "24KB", "23BP", "23TE", "23TW", "24JG", "22MT"],
+      floorplans: ["22TF", "23TB", "23TK", "23TR", "24LP", "24TF", "24SX", "24KB", "23BP", "23TE", "23TW", "24JG", "22MT"],
       floorplansByYear: {
         "2014": ["22TF", "23TR"],
         "2015": ["22TF", "23TR"],
         "2016": ["22TF", "23TR"],
         "2017": ["22TF", "23TR"],
         "2018": ["22TF", "23TR"],
-        "2019": ["22TF", "23TR", "24KB"],
-        "2020": ["22TF", "23TR", "24KB"],
+        // OEM MY19 Gemini MY 04/13/2018: Transit 23TB | 23TK | 23TR (3.2 I-5 Power Stroke 185/350) + Sprinter 24LP | 24TF (3.0 V6 188/325). Both diesel — option-band HP 0. Do not keep leftover 22TF/24KB or copy gas AWD.
+        "2019": ["23TB", "23TK", "23TR", "24LP", "24TF"],
+        // OEM MY20 Gemini MY 05/01/2019: Transit 23TW (185/350) + Sprinter 24TF | 24SX (188/325). Both diesel — option-band HP 0.
+        "2020": ["23TW", "24TF", "24SX"],
         // OEM MY21 Gemini OH 03/11/2021 / MY22 Gemini AWD MY 08/05/2021: 23TE | 23TW · Transit AWD EcoBoost 310/400. Do not keep leftover 22TF/23TR/24KB.
         "2021": ["23TE", "23TW"],
         "2022": ["23TE", "23TW"],
@@ -6276,11 +6375,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2020,
+          to: 2018,
           engine: "Ford Transit / cutaway V6/V8 gas",
           horsepower: 310,
           chassis: "Ford Transit / E-series",
-          notes: "Leftover 310 lock ends 2020. MY21–22 OEM prints EcoBoost 310/400."
+          notes: "Leftover 310 lock through 2018. MY19–20 OEM is Transit/Sprinter diesel option-band."
+        },
+        {
+          from: 2019,
+          to: 2020,
+          engine: "Ford Transit 3.2L I-5 Power Stroke 185HP / Mercedes 3.0L V6 188HP (by floorplan)",
+          horsepower: 0,
+          chassis: "Ford Transit / Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "OEM MY19–20 Gemini: Transit diesel 185/350 or Sprinter 188/325. Option-band HP 0. Not leftover gas 310."
         },
         {
           from: 2021,
@@ -6319,8 +6427,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplans: ["18A", "18M", "18T", "24F", "28B", "18G", "18Z"],
       floorplansByYear: {
         "2018": ["18M", "24F"],
-        "2019": ["18M", "24F"],
-        "2020": ["18M", "24F", "28B"],
+        // No OEM Rize brochure MY19–20 — do not keep leftover 18M/24F/28B.
         // No OEM Rize brochure 2021. OEM MY22 Rize MY 03/12/2021: 18M | 18T · ProMaster 280/260. Do not keep leftover towable 24F/28B.
         "2022": ["18M", "18T"],
         // OEM MY23 Rize OH: 18A | 18G | 18M · ProMaster 276/250. OEM MY24 Rize OH: 18G | 18M. Do not keep leftover 24F/28B.
@@ -6406,7 +6513,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Toy Hauler",
       floorplans: ["26B", "29F", "31B", "18M Plus", "21BT Plus"],
       floorplansByYear: {
-        "2020": ["26B", "29F"],
+        // No OEM Rize Plus brochure MY19–20 (current Rize is Class B van). Do not invent 26B/29F.
         // No OEM Rize Plus brochure 2021–2022 (current Rize is Class B van).
         "2023": ["26B", "29F", "31B"],
         "2024": ["26B", "29F", "31B"],
@@ -6444,9 +6551,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       garageCapacityLbs: 3500,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2020,
+      yearStart: 2023,
       yearEnd: 2024,
-      description: "Thor Rize Plus — historic towable alias. No OEM Rize Plus brochure 2025–2027 — yearEnd 2024. Current Rize is a RAM ProMaster Class B (18M / 18Z)."
+      description: "Thor Rize Plus — historic towable alias. No OEM Rize Plus brochure MY19–22. yearEnd 2024. Current Rize is a RAM ProMaster Class B (18M / 18Z)."
     },
     Resonate: {
       type: "Class A Gas",
@@ -6652,8 +6759,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Outlaw Class A": {
       type: "Class A Gas",
-      floorplans: ["38K", "38M", "38KB", "38MB"],
+      floorplans: ["37GP", "37RB", "38K", "38M", "38KB", "38MB"],
       floorplansByYear: {
+        // OEM MY19 Outlaw Class A section: 37GP | 37RB · F-53 6.8 V10 320/460. Do not copy 38MB/38KB backward.
+        "2019": ["37GP", "37RB"],
+        // OEM MY20 Outlaw Class A section: 37RB | 38MB · F-53 6.8 V10 320/460.
+        "2020": ["37RB", "38MB"],
         // OEM MY21 Outlaw PDF Class A section: 38MB | 38KB · V10 320/460 vs 7.3 350/468.
         "2021": ["38MB", "38KB"],
         // OEM MY22 Outlaw Class A: 38MB | 38KB · F-53 7.3 350/468.
@@ -6688,9 +6799,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       fuelCapacityGal: 80,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2021,
-      description: "Thor Outlaw Class A — F53 toy-hauler gas Class A. OEM MY21: 38MB / 38KB, V10/7.3 option-band. MY22: 38MB / 38KB, 7.3 350 / 468. OEM MY23: 38MB / 38KB, 7.3 335 / 468. MY24: 38MB / 38KB, 7.3 350 / 468. OEM MY25: 38MB / 38KB, 335 / 468. No 2026 non-WWE Class A brochure (that year is Outlaw Wild West). OEM MY27: 38K / 38M, 7.3 335 / 468. Not Outlaw Class C / not leftover mixed Outlaw.",
+      yearStart: 2019,
+      description: "Thor Outlaw Class A — F53 toy-hauler gas Class A. OEM MY19: 37GP / 37RB, V10 320 / 460. MY20: 37RB / 38MB. MY21: 38MB / 38KB, V10/7.3 option-band. MY22: 38MB / 38KB, 7.3 350 / 468. OEM MY23: 38MB / 38KB, 7.3 335 / 468. MY24: 38MB / 38KB, 7.3 350 / 468. OEM MY25: 38MB / 38KB, 335 / 468. No 2026 non-WWE Class A brochure (that year is Outlaw Wild West). OEM MY27: 38K / 38M, 7.3 335 / 468. Not Outlaw Class C / not leftover mixed Outlaw.",
       powertrainByYear: [
+        { from: 2019, to: 2020, engine: "Ford F-53 6.8L Triton V10 320HP", horsepower: 320, torqueLbFt: 460, chassis: "Ford F53", transmission: "TorqShift automatic", fuelType: "Gas", notes: "OEM MY19–20 Outlaw Class A: F-53 6.8 V10 320 / 460. Not Class C." },
         { from: 2021, to: 2021, engine: "Ford F-53 6.8L Triton V10 320HP / 7.3L V8 350HP (option)", horsepower: 0, chassis: "Ford F53", notes: "OEM MY21 Outlaw Class A: V10 320/460 or 7.3 350/468. Option-band HP 0. Not Class C." },
         { from: 2022, to: 2022, engine: "Ford 7.3L V8 Godzilla 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford F53", notes: "OEM MY22 Outlaw Class A: F-53 7.3 350 / 468. Not Class C." },
         { from: 2023, to: 2023, engine: "Ford 7.3L V8 Godzilla 335HP", horsepower: 335, torqueLbFt: 468, chassis: "Ford F53", notes: "OEM MY23 Outlaw Class A: F-53 7.3 335 / 468. Not Class C." },
@@ -6701,8 +6813,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Outlaw Class C": {
       type: "Class C",
-      floorplans: ["29J", "29T"],
+      floorplans: ["29J", "29S", "29T"],
       floorplansByYear: {
+        // OEM MY19 Outlaw Class C section: 29J · E-Series 6.8 V10 305/420.
+        "2019": ["29J"],
+        // OEM MY20 Outlaw Class C section: 29J | 29S · E-Series 6.8 V10 305/420. Do not copy 29T backward.
+        "2020": ["29J", "29S"],
         // OEM MY21–22 Outlaw PDF Class C section: 29J only · E-Series 7.3 350/468. Do not copy 29T backward.
         "2021": ["29J"],
         "2022": ["29J"],
@@ -6733,9 +6849,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       blackWater: 30,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2021,
-      description: "Thor Outlaw Class C — Ford E-Series toy-hauler Class C. OEM MY21–22: 29J only, 7.3 350 / 468. OEM MY23–27: 29J / 29T, 7.3 325 / 450. Not Outlaw Class A F53. Ignore broken MY27 29J placeholder spec page.",
+      yearStart: 2019,
+      description: "Thor Outlaw Class C — Ford E-Series toy-hauler Class C. OEM MY19: 29J, V10 305 / 420. MY20: 29J / 29S. MY21–22: 29J only, 7.3 350 / 468. OEM MY23–27: 29J / 29T, 7.3 325 / 450. Not Outlaw Class A F53. Ignore broken MY27 29J placeholder spec page.",
       powertrainByYear: [
+        { from: 2019, to: 2020, engine: "Ford 6.8L Triton V10 305HP", horsepower: 305, torqueLbFt: 420, chassis: "Ford E-Series", transmission: "TorqShift automatic", fuelType: "Gas", notes: "OEM MY19–20 Outlaw Class C: E-Series 6.8 V10 305 / 420. Not F53 Class A." },
         { from: 2021, to: 2022, engine: "Ford 7.3L V8 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford E-Series", fuelType: "Gas", notes: "OEM MY21–22 Outlaw Class C 29J: E-Series 7.3 350 / 468. Not F53 Class A." },
         { from: 2023, to: 2027, engine: "Ford 7.3L V8 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-Series", fuelType: "Gas", notes: "OEM MY23–27 Outlaw Class C: E-Series 7.3 325 / 450. Not F53 Class A." },
       ],
@@ -6822,6 +6939,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["20A", "20AT", "20H", "20J", "20K", "20KT", "20L", "20LT", "20U", "20Y"],
       floorplansByYear: {
+        // OEM MY20 Tellaro MY 05/01/2019: 20AT | 20LT · RAM ProMaster 3500. HP not printed. Onan gas generator.
+        "2020": ["20AT", "20LT"],
         // OEM MY21 Tellaro OH 03/11/2021: 20AT | 20KT | 20LT · ProMaster 280/260 gas.
         "2021": ["20AT", "20KT", "20LT"],
         // OEM MY22 Tellaro OH 01/03/2022: 20A | 20J | 20K | 20L · ProMaster 280/260 gas.
@@ -6853,9 +6972,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       blackWater: 15,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2021,
-      description: "Thor Tellaro — Sequence twin RAM ProMaster 3500 Class B. OEM MY21: 20AT / 20KT / 20LT, 280 / 260. MY22: 20A / 20J / 20K / 20L, 280 / 260. OEM MY23–24: 20A / 20J / 20K / 20L, 276 / 250. OEM MY25: 20A / 20H / 20J / 20L. MY26–27: 20L / 20U / 20Y. Not Tellaro Sport. Not Sprinter.",
+      yearStart: 2020,
+      description: "Thor Tellaro — Sequence twin RAM ProMaster 3500 Class B. OEM MY20: 20AT / 20LT (HP not printed). MY21: 20AT / 20KT / 20LT, 280 / 260. MY22: 20A / 20J / 20K / 20L, 280 / 260. OEM MY23–24: 20A / 20J / 20K / 20L, 276 / 250. OEM MY25: 20A / 20H / 20J / 20L. MY26–27: 20L / 20U / 20Y. Not Tellaro Sport. Not Sprinter.",
       powertrainByYear: [
+        { from: 2020, to: 2020, engine: "RAM ProMaster 3500 gas", horsepower: 0, chassis: "RAM ProMaster 3500", fuelType: "Gas", notes: "OEM MY20 Tellaro: ProMaster 3500. HP not printed — do not invent 280. Twin of Sequence." },
         { from: 2021, to: 2022, engine: "RAM ProMaster 3500 280HP", horsepower: 280, torqueLbFt: 260, chassis: "RAM ProMaster 3500", fuelType: "Gas", notes: "OEM MY21–22 Tellaro: ProMaster 280/260 gas." },
         { from: 2023, to: 2027, engine: "RAM 3.6L Pentastar V6 276HP", horsepower: 276, torqueLbFt: 250, chassis: "RAM ProMaster 3500 XT", fuelType: "Gas", notes: "OEM MY23–25 Tellaro prints 276/250. Twin of Sequence. Not Tellaro Sport." },
       ],
@@ -7016,8 +7136,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Chateau Sprinter": {
       type: "Class C",
-      floorplans: ["24BL", "24DS", "24LT", "24LV", "24LW"],
+      floorplans: ["24BL", "24DS", "24LT", "24LV", "24LW", "24WS"],
       floorplansByYear: {
+        // OEM MY19 Chateau / Four Winds PDF Sprinter section: 24BL | 24WS · 3.0 V6 188/325.
+        "2019": ["24BL", "24WS"],
+        // OEM MY20 Chateau / Four Winds PDF Sprinter section: 24BL | 24DS · 3.0 V6 188/325.
+        "2020": ["24BL", "24DS"],
         // OEM MY21–22 Chateau / Four Winds PDF Sprinter section: 24BL | 24DS · 3.0 V6 188/325.
         "2021": ["24BL", "24DS"],
         "2022": ["24BL", "24DS"],
@@ -7048,10 +7172,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       blackWater: 25,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2021,
-      description: "Thor Chateau Sprinter — Mercedes Sprinter Class C. Twin of Four Winds Sprinter. OEM MY21–22 (inside Chateau PDF): 24BL / 24DS, 3.0 V6 188 / 325. OEM MY23: 24LT / 24LW, 3.0 V6 188 / 325. MY24–27: 24LT / 24LV. MY27 spec prints 2.0 211 / 332. MY24–26 brochure HP not printed. Not Ford Chateau.",
+      yearStart: 2019,
+      description: "Thor Chateau Sprinter — Mercedes Sprinter Class C. Twin of Four Winds Sprinter. OEM MY19: 24BL / 24WS, 3.0 V6 188 / 325. MY20–22: 24BL / 24DS. OEM MY23: 24LT / 24LW, 3.0 V6 188 / 325. MY24–27: 24LT / 24LV. MY27 spec prints 2.0 211 / 332. MY24–26 brochure HP not printed. Not Ford Chateau.",
       powertrainByYear: [
-        { from: 2021, to: 2022, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY21–22 Chateau Sprinter section: 3.0 V6 188 / 325." },
+        { from: 2019, to: 2022, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY19–22 Chateau Sprinter section: 3.0 V6 188 / 325." },
         { from: 2023, to: 2023, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY23 Chateau Sprinter: 3.0 V6 188 / 325." },
         { from: 2024, to: 2026, engine: "Mercedes-Benz Sprinter 2.0L I4 turbodiesel", horsepower: 0, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY24–26 Chateau Sprinter: Mercedes Sprinter. HP not printed — do not invent 211." },
         { from: 2027, to: 2027, engine: "Mercedes-Benz 2.0L I4 211HP", horsepower: 211, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY27 Chateau Sprinter 24LT: 2.0 211 / 332." },
@@ -7059,8 +7183,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Four Winds Sprinter": {
       type: "Class C",
-      floorplans: ["24BL", "24DS", "24LT", "24LV", "24LW"],
+      floorplans: ["24BL", "24DS", "24LT", "24LV", "24LW", "24WS"],
       floorplansByYear: {
+        // OEM MY19 Four Winds / Chateau PDF Sprinter section: 24BL | 24WS · 3.0 V6 188/325.
+        "2019": ["24BL", "24WS"],
+        // OEM MY20 Four Winds / Chateau PDF Sprinter section: 24BL | 24DS · 3.0 V6 188/325.
+        "2020": ["24BL", "24DS"],
         // OEM MY21–22 Four Winds / Chateau PDF Sprinter section: 24BL | 24DS · 3.0 V6 188/325.
         "2021": ["24BL", "24DS"],
         "2022": ["24BL", "24DS"],
@@ -7091,10 +7219,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       blackWater: 25,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2021,
-      description: "Thor Four Winds Sprinter — Chateau Sprinter twin. OEM MY21–22 (inside Four Winds PDF): 24BL / 24DS, 3.0 V6 188 / 325. OEM MY23: 24LT / 24LW, 3.0 V6 188 / 325. MY24–27: 24LT / 24LV. Not Ford Four Winds / Siesta / Majestic.",
+      yearStart: 2019,
+      description: "Thor Four Winds Sprinter — Chateau Sprinter twin. OEM MY19: 24BL / 24WS, 3.0 V6 188 / 325. MY20–22: 24BL / 24DS. OEM MY23: 24LT / 24LW, 3.0 V6 188 / 325. MY24–27: 24LT / 24LV. Not Ford Four Winds / Siesta / Majestic.",
       powertrainByYear: [
-        { from: 2021, to: 2022, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY21–22 Four Winds Sprinter section: 3.0 V6 188 / 325." },
+        { from: 2019, to: 2022, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY19–22 Four Winds Sprinter section: 3.0 V6 188 / 325." },
         { from: 2023, to: 2023, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY23 Four Winds Sprinter: 3.0 V6 188 / 325." },
         { from: 2024, to: 2026, engine: "Mercedes-Benz Sprinter 2.0L I4 turbodiesel", horsepower: 0, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY24–26 Four Winds Sprinter: HP not printed." },
         { from: 2027, to: 2027, engine: "Mercedes-Benz 2.0L I4 211HP", horsepower: 211, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "Twin of Chateau Sprinter MY27 211 / 332." },
@@ -7104,6 +7232,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["24FB", "24RW", "24TT", "24XL"],
       floorplansByYear: {
+        // OEM MY20 Delano MY 05/01/2019: 24FB | 24RW | 24TT · 3.0 V6 188/325. Do not copy 24XL backward.
+        "2020": ["24FB", "24RW", "24TT"],
         // OEM MY21 Delano OH 03/11/2020 / MY22 Delano OH 12/08/2021: 24FB | 24TT | 24RW · 3.0 V6 188/325. Do not copy 24XL backward.
         "2021": ["24FB", "24TT", "24RW"],
         "2022": ["24FB", "24TT", "24RW"],
@@ -7134,10 +7264,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       blackWater: 25,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2021,
-      description: "Thor Delano — Mercedes Sprinter Class C. Twin of Tiburon. OEM MY21–22: 24FB / 24TT / 24RW, 3.0 V6 188 / 325. OEM MY23: 24FB / 24TT / 24RW / 24XL. MY24–27 same plans. MY27 spec block 211 / 332 (standards also list 208 — do not invent which is which beyond the spec block). MY24–26 brochure HP not printed.",
+      yearStart: 2020,
+      description: "Thor Delano — Mercedes Sprinter Class C. Twin of Tiburon. OEM MY20–22: 24FB / 24TT / 24RW, 3.0 V6 188 / 325. OEM MY23: 24FB / 24TT / 24RW / 24XL. MY24–27 same plans. MY27 spec block 211 / 332 (standards also list 208 — do not invent which is which beyond the spec block). MY24–26 brochure HP not printed.",
       powertrainByYear: [
-        { from: 2021, to: 2022, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY21–22 Delano: 3.0 V6 188 / 325." },
+        { from: 2020, to: 2022, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY20–22 Delano: 3.0 V6 188 / 325." },
         { from: 2023, to: 2023, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY23 Delano: 3.0 V6 188 / 325." },
         { from: 2024, to: 2026, engine: "Mercedes-Benz Sprinter 2.0L I4 turbodiesel", horsepower: 0, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY24–26 Delano: Mercedes Sprinter. HP not printed — do not invent 211 / 208." },
         { from: 2027, to: 2027, engine: "Mercedes-Benz 2.0L I4 211HP", horsepower: 211, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY27 Delano spec 211 / 332 (standards also list 208 / 332)." },
@@ -7147,6 +7277,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["24FB", "24RW", "24TT", "24XL"],
       floorplansByYear: {
+        // OEM MY20 Tiburon MY 05/01/2019: 24FB | 24RW | 24TT · 3.0 V6 188/325. Do not copy 24XL backward.
+        "2020": ["24FB", "24RW", "24TT"],
         // OEM MY21 Tiburon OH 03/11/2021 / MY22 Tiburon OH 12/08/2021: 24FB | 24TT | 24RW · 3.0 V6 188/325. Do not copy 24XL backward.
         "2021": ["24FB", "24TT", "24RW"],
         "2022": ["24FB", "24TT", "24RW"],
@@ -7177,13 +7309,47 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       blackWater: 25,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2021,
-      description: "Thor Tiburon — Delano twin Mercedes Sprinter Class C. OEM MY21–22: 24FB / 24TT / 24RW, 188 / 325. Same MY23–27 floorplans. MY23 188 / 325; MY24–26 HP not printed.",
+      yearStart: 2020,
+      description: "Thor Tiburon — Delano twin Mercedes Sprinter Class C. OEM MY20–22: 24FB / 24TT / 24RW, 188 / 325. Same MY23–27 floorplans. MY23 188 / 325; MY24–26 HP not printed.",
       powertrainByYear: [
-        { from: 2021, to: 2022, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY21–22 Tiburon: 3.0 V6 188 / 325." },
+        { from: 2020, to: 2022, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY20–22 Tiburon: 3.0 V6 188 / 325." },
         { from: 2023, to: 2023, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY23 Tiburon: 3.0 V6 188 / 325." },
         { from: 2024, to: 2026, engine: "Mercedes-Benz Sprinter 2.0L I4 turbodiesel", horsepower: 0, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY24–26 Tiburon: HP not printed." },
         { from: 2027, to: 2027, engine: "Mercedes-Benz 2.0L I4 211HP", horsepower: 211, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "Twin of Delano MY27 211 / 332." },
+      ],
+    },
+    Compass: {
+      type: "Class C",
+      floorplans: ["23TB", "23TK", "23TR", "23TW", "24LP", "24TF", "24SX"],
+      floorplansByYear: {
+        // OEM MY19 Compass MY 04/13/2018: Transit 23TB | 23TK | 23TR (3.2 I-5 Power Stroke 185/350) + Sprinter 24LP | 24TF (3.0 V6 188/325). Both diesel — option-band HP 0. Twin of Gemini.
+        "2019": ["23TB", "23TK", "23TR", "24LP", "24TF"],
+        // OEM MY20 Compass MY 05/01/2019: Transit 23TW (185/350) + Sprinter 24TF | 24SX (188/325). Both diesel — option-band HP 0.
+        "2020": ["23TW", "24TF", "24SX"],
+      },
+      lengthRange: [23, 25],
+      weightRange: [9000, 12000],
+      slideouts: 0,
+      sleeps: 4,
+      msrpRange: [99000, 159000],
+      engine: "Ford Transit 3.2L I-5 Power Stroke / Mercedes 3.0L V6 (by floorplan)",
+      horsepower: 0,
+      chassis: "Ford Transit / Mercedes-Benz Sprinter (by floorplan)",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.3,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 5000,
+      freshWater: 30,
+      grayWater: 25,
+      blackWater: 25,
+      founded: 1980,
+      warrantyYears: 1,
+      yearStart: 2019,
+      yearEnd: 2020,
+      description: "Thor Compass — Gemini twin compact Class C. OEM MY19: Transit 23TB / 23TK / 23TR + Sprinter 24LP / 24TF, diesel option-band 185 / 350 vs 188 / 325 (HP 0). MY20: Transit 23TW + Sprinter 24TF / 24SX. yearEnd 2020 — MY21+ is Compass AWD (Transit EcoBoost gas). Not Compass AWD / Compass GO.",
+      powertrainByYear: [
+        { from: 2019, to: 2020, engine: "Ford Transit 3.2L I-5 Power Stroke 185HP / Mercedes 3.0L V6 188HP (by floorplan)", horsepower: 0, chassis: "Ford Transit / Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY19–20 Compass: Transit diesel 185/350 or Sprinter 188/325. Option-band HP 0. Not Compass AWD gas." },
       ],
     },
     "Compass AWD": {
@@ -7296,8 +7462,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Omni: {
       type: "Super C",
-      floorplans: ["AX29", "XG32", "RB34", "SV34", "BH35", "LV35", "BT36", "RS36", "Z30", "X32", "L35", "R36"],
+      floorplans: ["AX29", "XG32", "RB34", "SV34", "BB35", "BH35", "LV35", "BT36", "RS36", "Z30", "X32", "L35", "R36"],
       floorplansByYear: {
+        // OEM MY19 Omni OH 09/07/2018: SV34 | BB35 | BH35 · F-550 Power Stroke 300/750.
+        "2019": ["SV34", "BB35", "BH35"],
+        // OEM MY20 Omni MY 05/01/2019: SV34 | BB35 | BH35 · F-550 Power Stroke 330/750 4x2 or 4x4.
+        "2020": ["SV34", "BB35", "BH35"],
         // OEM MY21 Omni OH 03/11/2021: XG32 | RB34 | SV34 | BH35 · Power Stroke 330/825.
         "2021": ["XG32", "RB34", "SV34", "BH35"],
         // OEM MY22 Omni OH 02/24/2022: XG32 | SV34 | BT36 | RS36 · Power Stroke 330/825.
@@ -7330,9 +7500,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       blackWater: 45,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2021,
-      description: "Thor Omni — Magnitude twin Super C. OEM MY21: XG32 / RB34 / SV34 / BH35, 330 / 825. MY22: XG32 / SV34 / BT36 / RS36. OEM MY23: XG32 / SV34 / LV35 / BT36 / RS36, 330 / 825. MY24–25: AX29 / XG32 / LV35 / RS36 (HP not printed). No 2026 Omni brochure (Omni Trail that year). OEM MY27: Z30 / X32 / L35 / R36; Magnitude twin spec 330 / 950.",
+      yearStart: 2019,
+      description: "Thor Omni — Magnitude twin Super C. OEM MY19: SV34 / BB35 / BH35, Power Stroke 300 / 750. MY20: same plans, 330 / 750 4x2 or 4x4. MY21: XG32 / RB34 / SV34 / BH35, 330 / 825. MY22: XG32 / SV34 / BT36 / RS36. OEM MY23: XG32 / SV34 / LV35 / BT36 / RS36, 330 / 825. MY24–25: AX29 / XG32 / LV35 / RS36 (HP not printed). No 2026 Omni brochure (Omni Trail that year). OEM MY27: Z30 / X32 / L35 / R36; Magnitude twin spec 330 / 950.",
       powertrainByYear: [
+        { from: 2019, to: 2019, engine: "Ford 6.7L Power Stroke V8 300HP", horsepower: 300, torqueLbFt: 750, chassis: "Ford F-550 Super Duty", fuelType: "Diesel", notes: "OEM MY19 Omni OH 09/07/2018: F-550 Power Stroke 300 / 750. Twin of Magnitude." },
+        { from: 2020, to: 2020, engine: "Ford 6.7L Power Stroke 4x2 / 4x4 330HP", horsepower: 330, torqueLbFt: 750, chassis: "Ford F-550 Super Duty", fuelType: "Diesel", notes: "OEM MY20 Omni: F-550 Power Stroke 330 / 750 4x2 or 4x4. Twin of Magnitude." },
         { from: 2021, to: 2022, engine: "Ford 6.7L Power Stroke V8 330HP", horsepower: 330, torqueLbFt: 825, chassis: "Ford F-550 Super Duty", fuelType: "Diesel", notes: "OEM MY21–22 Omni: Power Stroke 6.7 330 / 825. Twin of Magnitude." },
         { from: 2023, to: 2023, engine: "Ford 6.7L Power Stroke V8 330HP", horsepower: 330, torqueLbFt: 825, chassis: "Ford F-550 / F-600 Super Duty", fuelType: "Diesel", notes: "OEM MY23 Omni: Power Stroke 6.7 330 / 825. Twin of Magnitude." },
         { from: 2024, to: 2024, engine: "Ford 6.7L Power Stroke V8 turbodiesel", horsepower: 0, chassis: "Ford F-550 4x4 / F-600 4x4 (by floorplan)", fuelType: "Diesel", notes: "OEM MY24 Omni: HP not printed — do not invent 330. Not Omni Trail." },
@@ -7555,6 +7727,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["CR24", "KM24", "DS24", "GL24", "MB24"],
       floorplansByYear: {
+        // OEM MY19 Quantum Sprinter section: KM24 · 3.0 V6 188/325.
+        "2019": ["KM24"],
+        // OEM MY20 Quantum Sprinter section: CR24 | KM24 · 3.0 V6 188/325.
+        "2020": ["CR24", "KM24"],
         // OEM MY21 Quantum Sprinter section: CR24 | KM24 · 3.0 V6 188/325.
         "2021": ["CR24", "KM24"],
         // OEM MY22 Quantum Sprinter section: DS24 | MB24 · 3.0 V6 188/325.
@@ -7584,11 +7760,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       blackWater: 25,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2021,
+      yearStart: 2019,
       yearEnd: 2026,
-      description: "Thor Quantum Sprinter — Mercedes Sprinter Class C. Twin of Echelon Sprinter. OEM MY21: CR24 / KM24, 3.0 V6 188 / 325. MY22–23: DS24 / MB24. MY24–26: GL24 / MB24 (HP not printed). Not on 2027 hub — yearEnd 2026. Not Ford Quantum.",
+      description: "Thor Quantum Sprinter — Mercedes Sprinter Class C. Twin of Echelon Sprinter. OEM MY19: KM24. MY20–21: CR24 / KM24, 3.0 V6 188 / 325. MY22–23: DS24 / MB24. MY24–26: GL24 / MB24 (HP not printed). Not on 2027 hub — yearEnd 2026. Not Ford Quantum.",
       powertrainByYear: [
-        { from: 2021, to: 2022, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY21–22 Quantum Sprinter: 3.0 V6 188 / 325. Not Ford Quantum." },
+        { from: 2019, to: 2022, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY19–22 Quantum Sprinter: 3.0 V6 188 / 325. Not Ford Quantum." },
         { from: 2023, to: 2023, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY23 Quantum Sprinter: 3.0 V6 188 / 325. Not Ford Quantum." },
         { from: 2024, to: 2026, engine: "Mercedes-Benz Sprinter 2.0L I4 turbodiesel", horsepower: 0, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM MY24–26 Quantum Sprinter: HP not printed. Not Ford Quantum." },
       ],
