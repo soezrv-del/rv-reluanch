@@ -704,26 +704,21 @@ const BRAND_REVIEW_POOLS: Record<string, ReviewTemplate[]> = {
 };
 
 export function getMockReviews(make: string, model: string, rating: number): RVReview[] {
-  // Check for model-specific pool first (e.g. 'Thor Challenger'), then brand pool, then fallback
   const combinedKey = `${make} ${model}`;
-  const pool = BRAND_REVIEW_POOLS[combinedKey] ?? BRAND_REVIEW_POOLS[make] ?? BRAND_REVIEW_POOLS['Winnebago'];
+  const pool = BRAND_REVIEW_POOLS[combinedKey] ?? BRAND_REVIEW_POOLS[make];
+  if (!pool?.length) return [];
 
-  // Deterministically select reviews based on model name hash
-  // so the same model always gets the same reviews, but different models get different sets
   const modelHash = model.split('').reduce((acc, c, i) => acc + c.charCodeAt(0) * (i + 1), 0);
   const selected: ReviewTemplate[] = [];
   const count = Math.min(4, pool.length);
   for (let i = 0; i < count; i++) {
     selected.push(pool[(modelHash + i) % pool.length]);
   }
-  // Pad to 4 if pool is smaller
-  while (selected.length < 4 && pool.length > 0) {
-    selected.push(pool[selected.length % pool.length]);
-  }
 
   return selected.map((r, i) => ({
     ...r,
     id: `${make.replace(/\s/g, '-')}-${model.replace(/\s/g, '-')}-${i}`,
     rating: Math.min(5, Math.max(3, Math.round(rating) - (i === 2 ? 1 : 0))),
+    verified: false,
   }));
 }
