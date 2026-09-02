@@ -10157,8 +10157,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplans: ["34T", "36G", "38W", "36H", "38R"],
       floorplansByYear: {
         "2016": ["34T", "36G"],
+        // OEM 2017 Forza + 2017 wiring: 34T | 36G | 38W · ISB 6.7 340. Torque unprinted.
         "2017": ["34T", "36G", "38W"],
-        "2018": ["34T", "36G", "38W"],
+        // OEM/RVUSA 2018 Forza flyer + 2018 wiring: 34T | 36G | 38F | 38W · 340-hp XCS. Torque unprinted.
+        "2018": ["34T", "36G", "38F", "38W"],
         // OEM/RVUSA 2019 Forza: 34T | 36G | 38F | 38W · ISB 6.7 340. Do not invent 36H.
         "2019": ["34T", "36G", "38F", "38W"],
         // OEM/RVUSA 2020 Forza flyer: 34T | 36H | 38D | 38F | 38W · 340-hp XCS. Torque unprinted. Do not copy 36G.
@@ -10214,13 +10216,31 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2016,
-          to: 2018,
+          to: 2016,
           engine: "Cummins B6.7 (ISB) 340HP",
           horsepower: 340,
           torqueLbFt: 700,
           chassis: "Freightliner XC-Series",
           transmission: "Allison automatic",
-          notes: "Leftover through last pre-2019 year. Not ISL 8.9."
+          notes: "Leftover 2016 only. 2017–18 year-true cards print 340 without torque."
+        },
+        {
+          from: 2017,
+          to: 2017,
+          engine: "Cummins B6.7 (ISB) 340HP",
+          horsepower: 340,
+          chassis: "Freightliner XCS",
+          transmission: "Allison automatic",
+          notes: "OEM 2017 Forza: 34T | 36G | 38W · ISB 6.7 340. Torque unprinted. Do not invent 38F."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Cummins 340HP (XCS)",
+          horsepower: 340,
+          chassis: "Freightliner XCS",
+          transmission: "Allison automatic",
+          notes: "OEM/RVUSA 2018 Forza flyer: 34T | 36G | 38F | 38W · 340-hp XCS. Torque unprinted."
         },
         {
           from: 2019,
@@ -10296,8 +10316,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["34G", "36M", "40R", "42E"],
         "2015": ["34G", "36M", "40R", "42E"],
         "2016": ["34G", "36M", "40R", "42E"],
-        "2017": ["34G", "36M", "40R"],
-        "2018": ["34G", "34H", "36M", "40R"],
+        // OEM 2017 wiring: 36M | 38P | 40J | 40R | 42E. 2017 Journey brochure (3 plans) is option-band 360/400/450 → HP 0. Do not invent leftover 34G.
+        "2017": ["36M", "38P", "40J", "40R", "42E"],
+        // OEM 2018 wiring: 36M | 40J | 42E. No 2018 Journey brochure (archive last 2017). HP 0. Do not invent 34G/34H/40R.
+        "2018": ["36M", "40J", "42E"],
         // No OEM/RVUSA 2019–2020 Journey card (archive 2017 → 2022; not on 2019/2020 wiring lists). Do not invent leftover 34G/34H/36M/39Z/40R.
         // No OEM/RVUSA 2021 Journey card (archive jumps 2017 → 2022). Do not invent 34G/34H/36M/39Z.
 
@@ -10367,12 +10389,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2015,
-          to: 2018,
+          to: 2016,
           engine: "Cummins B6.7 / ISB 340HP",
           horsepower: 340,
           torqueLbFt: 700,
           chassis: "Freightliner XCS",
-          notes: "Leftover through last pre-gap year with plans. No 2019–21 Journey card. Do not stamp onto 2022 L9 34N."
+          notes: "Leftover through 2016. 2017–18 Journey cards are option-band / unprinted — do not stamp 340. No 2019–21 card."
+        },
+        {
+          from: 2017,
+          to: 2018,
+          engine: "Cummins ISB / ISL (option-band)",
+          horsepower: 0,
+          chassis: "Freightliner Maxum",
+          fuelType: "Diesel",
+          notes: "OEM 2017 wiring: 36M | 38P | 40J | 40R | 42E. OEM 2018 wiring: 36M | 40J | 42E. 2017 brochure option-band 360/400/450 — HP 0. No 2018 Journey brochure. Do not invent leftover 34G/34H or stamp B6.7 340."
         },
         {
           from: 2022,
@@ -10391,6 +10422,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["40A", "42Q", "40J"],
       floorplansByYear: {
+        // OEM 2018 Horizon flyer + 2018 wiring: 40A | 42Q · 450-hp Cummins ISL 8.9L. Torque unprinted. No 2017 Horizon.
         "2018": ["40A", "42Q"],
         // OEM 2019 wiring card: 40A | 40J | 42Q. RVUSA “2019” PDF reprints 2018 captions (40A/42Q only) — use wiring. Do not invent 42G.
         "2019": ["40A", "40J", "42Q"],
@@ -10417,7 +10449,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       horsepower: 450,
       powertrainByYear: [
         { from: 2018,
-          to: 2018, engine: "Cummins L9 450HP", horsepower: 450, chassis: "Freightliner / Maxum (by year)", transmission: "Allison 3000 MH", notes: "Leftover 2018. 2019–20 Horizon cards do not print a single HP." },
+          to: 2018, engine: "Cummins ISL 8.9L 450HP", horsepower: 450, chassis: "Freightliner Maxum", transmission: "Allison 3000 MH", fuelType: "Diesel", notes: "OEM 2018 Horizon: 40A | 42Q · 450-hp Cummins ISL 8.9L Maxum. Torque unprinted — do not invent 1,250. No 2017 Horizon." },
         { from: 2019,
           to: 2020, engine: "Confirm brochure (HP not printed)", horsepower: 0, chassis: "Freightliner Maxum", fuelType: "Diesel", notes: "OEM 2019 wiring: 40A | 40J | 42Q. OEM 2020 wiring: 40A | 42Q. No year-true 2019–20 brochure HP — do not invent 400/450. No 42G." },
       ],
@@ -10458,8 +10490,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["42QDP", "45RL"],
         "2015": ["42QDP", "45RL"],
         "2016": ["42QDP", "45RL"],
-        "2017": ["42QDP", "45RL", "45QB"],
-        "2018": ["42QDP", "45RL", "45QB"],
+        // OEM 2017 wiring: 42HL | 42QL | 45RL. 2017 Grand Tour brochure prints ISL 8.9 450. Do not invent leftover 42QDP/45QB.
+        "2017": ["42HL", "42QL", "45RL"],
+        // OEM 2018 wiring: 42HL | 42QL | 45RL. No 2018 Grand Tour brochure (archive last 2017) — HP 0.
+        "2018": ["42HL", "42QL", "45RL"],
         // No OEM/RVUSA 2019 Grand Tour product card (archive last 2017; not on 2019 wiring). Operator manual is not a card. Do not invent 42QDP/45RL.
       },
       lengthRange: [
@@ -10503,7 +10537,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Spartan / Freightliner (by year)",
           notes: "2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)"
         },
-                {
+        {
           from: 2010,
           to: 2015,
           engine: "Cummins ISL / ISB 300–450HP (era)",
@@ -10511,7 +10545,25 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Spartan / Freightliner (by year)",
           notes: "2010–2015 mid/high diesel Class A"
         },
-        
+        {
+          from: 2017,
+          to: 2017,
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          chassis: "Freightliner Maxum",
+          transmission: "Allison 3000 MH",
+          fuelType: "Diesel",
+          notes: "OEM 2017 Grand Tour: 42HL | 42QL | 45RL · ISL 8.9 450. Do not invent leftover 42QDP/45QB."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Confirm brochure (HP not printed)",
+          horsepower: 0,
+          chassis: "Freightliner Maxum",
+          fuelType: "Diesel",
+          notes: "OEM 2018 Grand Tour wiring: 42HL | 42QL | 45RL. No 2018 brochure — do not copy 2017 450. No 2019 card."
+        },
       ],
       description: "Winnebago Grand Tour — discontinued ultra-luxury diesel. Last year-true brochure 2017; no 2019 card."
     },
@@ -10523,7 +10575,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["25P", "25T"],
         "2015": ["25P", "25T"],
         "2016": ["25P", "25T"],
+        // OEM 2017 Via + 2017 wiring: 25P | 25T · Sprinter cowl OM642 188-hp.
         "2017": ["25P", "25T"],
+        // OEM 2018 Via wiring: 25P | 25T. No 2018 Via brochure (archive last 2017) — HP 0.
         "2018": ["25P", "25T"],
         // No OEM/RVUSA 2019–2020 Via card (archive last 2017; not on 2019/2020 wiring). Do not invent 25P/25T/25Q.
         // No OEM/RVUSA 2021 Via card (brochure archive last 2017). Do not invent 25Q.
@@ -10566,7 +10620,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2013,
-          to: 2018,
+          to: 2016,
           engine: "Mercedes-Benz OM642 3.0L V6 turbodiesel",
           horsepower: 188,
           torqueLbFt: 325,
@@ -10577,7 +10631,26 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           gvwrLbs: 11030,
           exteriorWidthIn: 90.5,
           exteriorHeightIn: 132,
-          notes: "Via 25P/25T — Sprinter 3500 cowl · OM642 188 hp / 325 lb-ft · 5-spd. Compact Class A, not a Cummins diesel pusher. No 2019–21 Via card.",
+          notes: "Leftover Via 25P/25T through 2016. Compact Class A, not a Cummins diesel pusher.",
+        },
+        {
+          from: 2017,
+          to: 2017,
+          engine: "Mercedes-Benz OM642 3.0L V6 turbodiesel 188HP",
+          horsepower: 188,
+          chassis: "Mercedes-Benz Sprinter 3500 cowl",
+          transmission: "5-speed automatic",
+          fuelType: "Diesel",
+          notes: "OEM 2017 Via: 25P | 25T · Sprinter cowl 3.0 188-hp. Torque unprinted on this lock.",
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Mercedes-Benz Sprinter cowl (HP not printed)",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter 3500 cowl",
+          fuelType: "Diesel",
+          notes: "OEM 2018 Via wiring: 25P | 25T. No 2018 Via brochure — do not copy 2017 188. No 2019–21 Via card.",
         },
       ],
       description: "Winnebago Via — compact Sprinter-cowl Class A diesel (~25–27 ft). OM642 3.0 V6 188 hp, not a Freightliner/Cummins pusher. Last year-true brochure 2017."
@@ -10593,8 +10666,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["26P", "27P", "31B", "35F"],
         "2015": ["26P", "27P", "31B", "35F"],
         "2016": ["26P", "27P", "31B", "35F"],
-        "2017": ["26P", "27P", "29VE", "31B", "35F"],
-        "2018": ["27P", "29VE", "31B", "33W", "35F"],
+        // OEM 2017 Vista + 2017 wiring: 26HE | 27PE | 29VE | 31BE | 31KE | 32YE. Triton V10 — HP unprinted → 0. Not Vista LX 27N/30T/35B/35F.
+        "2017": ["26HE", "27PE", "29VE", "31BE", "31KE", "32YE"],
+        // OEM 2018 Vista flyer + 2018 wiring: 26HE | 27PE | 29VE | 31BE | 31KE | 32YE. Triton V10 — HP unprinted → 0. Do not invent leftover 27P/33W/35F.
+        "2018": ["26HE", "27PE", "29VE", "31BE", "31KE", "32YE"],
         // OEM/RVUSA 2019 Vista: 27PE | 29VE | 31BE | 32YE. Triton V10 — HP unprinted → 0. Drop leftover 27P/33W/35F.
         "2019": ["27PE", "29VE", "31BE", "32YE"],
         // OEM 2020 Vista // Sunstar twin flyer + wiring: 27P | 29V | 31B | 32Y | 35U. Engine/HP unprinted → 0. Not leftover 29VE/32YE.
@@ -10649,10 +10724,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2010,
-          to: 2018,
+          to: 2016,
           engine: "Ford Triton V10 6.8L",
           horsepower: 320,
           chassis: "Ford F53"
+        },
+        {
+          from: 2017,
+          to: 2018,
+          engine: "Ford Triton V10 6.8L (HP not printed)",
+          horsepower: 0,
+          chassis: "Ford F53",
+          fuelType: "Gas",
+          notes: "OEM 2017–18 Vista: 26HE | 27PE | 29VE | 31BE | 31KE | 32YE · F53 Triton V10. HP not printed — do not invent 320. Not Vista LX."
         },
         {
           from: 2019,
@@ -10703,8 +10787,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["27N", "29VE", "30T", "35F"],
         "2015": ["27N", "29VE", "30T", "35F"],
         "2016": ["27N", "29VE", "30T", "35F"],
-        "2017": ["27N", "29VE", "30T", "35F"],
-        "2018": ["27N", "29VE", "30T", "31B", "35F"],
+        // No 2017 Winnebago Sunstar card (2017 Sunstar is Itasca 70E — do not collide).
+        // OEM/RVUSA 2018 Sunstar flyer + 2018 wiring: 26HE | 27PE | 29VE | 31BE | 31KE | 32YE. Triton V10 — HP unprinted → 0. Not Itasca-only / not Sunstar LX 27N.
+        "2018": ["26HE", "27PE", "29VE", "31BE", "31KE", "32YE"],
         // OEM/RVUSA 2019 Sunstar (Vista twin): 27PE | 29VE | 31BE | 32YE. Triton V10 — HP unprinted → 0. Not Itasca Sunstar / not Sunstar LX 27N.
         "2019": ["27PE", "29VE", "31BE", "32YE"],
         // OEM 2020 Sunstar flyer (Vista twin): 27P | 29V | 31B | 32Y | 35U. Engine/HP unprinted → 0. Not Itasca Sunstar.
@@ -10757,10 +10842,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2010,
-          to: 2018,
+          to: 2016,
           engine: "Ford Triton V10 6.8L",
           horsepower: 320,
           chassis: "Ford F53"
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Ford Triton V10 6.8L (HP not printed)",
+          horsepower: 0,
+          chassis: "Ford F53",
+          fuelType: "Gas",
+          notes: "OEM/RVUSA 2018 Sunstar: 26HE | 27PE | 29VE | 31BE | 31KE | 32YE · F53 Triton V10. HP not printed. No 2017 Winnebago Sunstar card (2017 Sunstar is Itasca). Not Sunstar LX."
         },
         {
           from: 2019,
@@ -10804,6 +10898,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["26M", "29L", "30R", "31P", "26P", "30QE", "28Y"],
       floorplansByYear: {
+        // OEM 2018 Intent flyer + 2018 wiring: 26M | 29L | 30R | 31P. Triton V10 — HP unprinted → 0. No 2017 Intent.
+        "2018": ["26M", "29L", "30R", "31P"],
         // OEM 2019 Intent spec + wiring: 26M | 29L | 30R | 31P. Triton V10 — HP unprinted → 0.
         "2019": ["26M", "29L", "30R", "31P"],
         // OEM/RVUSA 2020 Intent flyer: 28Y | 29L | 30R | 31P. Engine/HP unprinted → 0. Do not copy 26M.
@@ -10828,6 +10924,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       engine: "Ford 7.3L V8 Godzilla",
       horsepower: 350,
       powertrainByYear: [
+        { from: 2018, to: 2018, engine: "Ford Triton V10 6.8L (HP not printed)", horsepower: 0, chassis: "Ford F53", transmission: "TorqShift 6-spd Auto", fuelType: "Gas", notes: "OEM 2018 Intent flyer: 26M | 29L | 30R | 31P · F53 Triton V10. HP not printed — do not invent 320. No 2017 Intent." },
         { from: 2019, to: 2019, engine: "Ford Triton V10 6.8L (HP not printed)", horsepower: 0, chassis: "Ford F53", transmission: "TorqShift 6-spd Auto", fuelType: "Gas", notes: "OEM 2019 Intent spec: 26M | 29L | 30R | 31P · F53 Triton V10. HP not printed — do not invent 320." },
         { from: 2020, to: 2020, engine: "Confirm brochure (HP not printed)", horsepower: 0, chassis: "Ford F53", fuelType: "Gas", notes: "OEM 2020 Intent flyer: 28Y | 29L | 30R | 31P. Engine/HP not printed — do not invent V10 320 or 7.3 350. No 2021–24 Intent card." },
       ],
@@ -10845,9 +10942,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1958,
       warrantyYears: 1,
-      yearStart: 2019,
+      yearStart: 2018,
       yearEnd: 2020,
-      description: "Winnebago Intent — entry/mid gas Class A, Ford F53 7.3L. No OEM 2021–24 card."
+      description: "Winnebago Intent — entry/mid gas Class A, Ford F53. First year-true card 2018. No OEM 2021–24 card."
     },
     Adventurer: {
       type: "Class A Gas",
@@ -10865,8 +10962,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["29V", "30T", "32H", "35F", "36Z"],
         "2015": ["29V", "30T", "32H", "35F", "36Z"],
         "2016": ["29V", "30T", "32H", "35F", "36Z"],
-        "2017": ["29V", "30T", "32H", "35F", "36Z"],
-        "2018": ["29V", "30T", "32H", "35F", "36Z"],
+        // OEM 2017 Adventurer (2017 J35P/J37F/J38Q captions) + 2017 wiring: 32D | 35P | 37F | 38Q. F53 6.8 V10 — HP unprinted → 0. Not leftover Vista LX 29V/30T/35F.
+        "2017": ["32D", "35P", "37F", "38Q"],
+        // OEM 2018 Adventurer wiring: 35P | 37F | 38Q. No 2018 Adventurer brochure (archive 2017 → 2019). HP 0. Do not copy 2019 Vista-LX-renamed 27N/30T.
+        "2018": ["35P", "37F", "38Q"],
         // OEM/RVUSA 2019 Adventurer: 27N | 30T | 33C | 35F | 36Z. Triton V10 — HP unprinted → 0. Drop leftover 29V/32H.
         "2019": ["27N", "30T", "33C", "35F", "36Z"],
         // OEM/RVUSA 2020 Adventurer: 27N | 29B | 30T | 33C | 35F | 36Z · F53 6.8 320 V10. Do not invent 7.3.
@@ -10920,10 +11019,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2005,
-          to: 2018,
+          to: 2016,
           engine: "Ford Triton V10 6.8L",
           horsepower: 320,
           chassis: "Ford F53"
+        },
+        {
+          from: 2017,
+          to: 2018,
+          engine: "Ford Triton V10 6.8L (HP not printed)",
+          horsepower: 0,
+          chassis: "Ford F53",
+          fuelType: "Gas",
+          notes: "OEM 2017 Adventurer: 32D | 35P | 37F | 38Q · F53 6.8 V10. OEM 2018 wiring: 35P | 37F | 38Q. HP not printed — do not invent 320. Not 2019 renamed Vista LX."
         },
         {
           from: 2019,
@@ -10979,8 +11087,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["27N", "29VE", "30T", "35F"],
         "2015": ["27N", "29VE", "30T", "35F"],
         "2016": ["27N", "29VE", "30T", "35F"],
-        "2017": ["27N", "29VE", "30T", "35F"],
-        "2018": ["27N", "29VE", "30T", "35F"],
+        // OEM 2017 Itasca Sunstar wiring + 2017 Sunstar card: 26HE | 27PE | 29VE | 31BE | 31KE | 32YE. Triton V10 — HP unprinted → 0. Not Sunstar LX 27N/30T/35B/35F.
+        "2017": ["26HE", "27PE", "29VE", "31BE", "31KE", "32YE"],
+        // OEM 2018 Sunstar (70E) wiring: 26HE | 27PE | 29VE | 31BE | 31KE | 32YE. HP unprinted → 0. Last Itasca year.
+        "2018": ["26HE", "27PE", "29VE", "31BE", "31KE", "32YE"],
         // No OEM 2019 Itasca Sunstar card (not on 2019 wiring; brochure archive empty). 2019 Sunstar is Winnebago 27PE/29VE/31BE/32YE — do not collide.
       },
       lengthRange: [
@@ -11023,6 +11133,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 320,
           chassis: "Ford F53",
           notes: "Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)"
+        },
+        {
+          from: 2017,
+          to: 2018,
+          engine: "Ford Triton V10 6.8L (HP not printed)",
+          horsepower: 0,
+          chassis: "Ford F53",
+          fuelType: "Gas",
+          notes: "OEM 2017–18 Itasca Sunstar: 26HE | 27PE | 29VE | 31BE | 31KE | 32YE · F53 Triton V10. HP not printed. Not Sunstar LX. No 2019 Itasca card."
         }
       ],
       description: "Itasca Sunstar (legacy) — gas Class A; later continued as Winnebago Sunstar. No 2019 Itasca card — yearEnd 2018."
@@ -11031,6 +11150,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["44E"],
       floorplansByYear: {
+        // OEM 2018 Revel flyer + 2018 wiring: 44E · Sprinter 3.0 188-hp / 325 lb-ft 4WD. Not Revel Sport. No 2017 Revel.
         "2018": ["44E"],
         // OEM 2019 Revel wiring + 2019-labeled brochure: 44E · Sprinter 3.0 188-hp 4WD. Not Revel Sport.
         "2019": ["44E"],
@@ -11087,9 +11207,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         {
           from: 2018,
           to: 2018,
-          engine: "Mercedes-Benz 3.0L V6 turbodiesel",
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel 188HP",
           horsepower: 188,
-          chassis: "Sprinter 4x4"
+          torqueLbFt: 325,
+          chassis: "Mercedes-Benz Sprinter 4x4",
+          fuelType: "Diesel",
+          notes: "OEM 2018 Revel: 44E · Sprinter 3.0 V6 188-hp / 325 lb-ft 4WD. Not Revel Sport."
         },
         {
           from: 2019,
@@ -11152,7 +11275,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["59G", "59K"],
         "2015": ["59G", "59K"],
         "2016": ["59G", "59K"],
+        // OEM 2017 Travato: 59G | 59K · ProMaster 280-hp 3.6.
         "2017": ["59G", "59K"],
+        // OEM 2018 Travato: 59G | 59K · ProMaster 280-hp 3.6. Do not invent 59GL.
         "2018": ["59G", "59K"],
         // OEM/RVUSA 2019 Travato: 59G | 59GL | 59K | 59KL · ProMaster 280-hp 3.6.
         "2019": ["59G", "59GL", "59K", "59KL"],
@@ -11212,6 +11337,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 180,
           chassis: "RAM ProMaster",
           notes: "2005–2015 Class B — chassis varies by package"
+        },
+        {
+          from: 2017,
+          to: 2018,
+          engine: "RAM ProMaster 3.6L V6 280HP",
+          horsepower: 280,
+          chassis: "RAM ProMaster",
+          fuelType: "Gas",
+          notes: "OEM 2017–18 Travato: 59G | 59K · ProMaster 280-hp 3.6. No 59GL on these cards."
         },
         {
           from: 2019,
@@ -11387,8 +11521,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["70A", "70B"],
         "2015": ["70A", "70B"],
         "2016": ["70A", "70B"],
-        "2017": ["70A", "70B"],
-        "2018": ["70A", "70B"],
+        // OEM 2017 Era + 2017 wiring: 70A | 70C | 70M | 70X · Sprinter 3.0 188-hp. Do not invent leftover 70B.
+        "2017": ["70A", "70C", "70M", "70X"],
+        // OEM/RVUSA 2018 Era flyer + 2018 wiring: 70A | 70B | 70M | 70X. HP unprinted → 0. Drop 70C.
+        "2018": ["70A", "70B", "70M", "70X"],
         // OEM 2019 Era wiring: 70A | 70B | 70M | 70X. RVUSA “2019” PDF reprints 2018 captions — use wiring. HP unprinted on year-true 2019 card → 0.
         "2019": ["70A", "70B", "70M", "70X"],
         // OEM/RVUSA 2020 Era flyer: 70A | 70B | 70X. Drop 70M. HP unprinted → 0.
@@ -11439,6 +11575,24 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           notes: "2005–2015 Class B — chassis varies by package"
         },
         {
+          from: 2017,
+          to: 2017,
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel 188HP",
+          horsepower: 188,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "OEM 2017 Era: 70A | 70C | 70M | 70X · Sprinter 3.0 188-hp. No leftover 70B."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Mercedes-Benz Sprinter (HP not printed)",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "OEM/RVUSA 2018 Era flyer: 70A | 70B | 70M | 70X. HP not printed — do not invent 188."
+        },
+        {
           from: 2019,
           to: 2020,
           engine: "Mercedes-Benz Sprinter (HP not printed)",
@@ -11474,7 +11628,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["24G", "24J", "24V"],
         "2015": ["24G", "24J", "24V"],
         "2016": ["24G", "24J", "24V"],
-        "2017": ["24G", "24J", "24V", "24H"],
+        // OEM 2017 View + 2017 wiring: 24G | 24J | 24V · Sprinter 3.0 188-hp. Do not invent leftover 24H.
+        "2017": ["24G", "24J", "24V"],
+        // OEM 2018 View flyer + 2018 wiring: 24D | 24G | 24J | 24V · Sprinter 3.0 188-hp.
         "2018": ["24D", "24G", "24J", "24V"],
         // OEM/RVUSA 2019 View: 24D | 24G | 24J | 24V · Sprinter 3.0 188-hp.
         "2019": ["24D", "24G", "24J", "24V"],
@@ -11539,10 +11695,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2014,
-          to: 2018,
+          to: 2016,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
           chassis: "Mercedes Sprinter"
+        },
+        {
+          from: 2017,
+          to: 2018,
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel 188HP",
+          horsepower: 188,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "OEM 2017 View: 24G | 24J | 24V · Sprinter 3.0 188-hp. OEM 2018 View: 24D | 24G | 24J | 24V · 188-hp. No leftover 24H."
         },
         {
           from: 2019,
@@ -11597,7 +11762,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["24G", "24J", "24V"],
         "2015": ["24G", "24J", "24V"],
         "2016": ["24G", "24J", "24V"],
-        "2017": ["24G", "24J", "24V", "24H"],
+        // OEM 2017 Navion + 2017 wiring: 24G | 24J | 24V · Sprinter 3.0 188-hp. Do not invent leftover 24H.
+        "2017": ["24G", "24J", "24V"],
+        // OEM 2018 Navion flyer + 2018 wiring: 24D | 24G | 24J | 24V · Sprinter 3.0 188-hp.
         "2018": ["24D", "24G", "24J", "24V"],
         // OEM/RVUSA 2019 Navion (View twin): 24D | 24G | 24J | 24V · Sprinter 3.0 188-hp. 24P is Porto — not this key.
         "2019": ["24D", "24G", "24J", "24V"],
@@ -11662,10 +11829,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2014,
-          to: 2018,
+          to: 2016,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
           chassis: "Mercedes Sprinter"
+        },
+        {
+          from: 2017,
+          to: 2018,
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel 188HP",
+          horsepower: 188,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "OEM 2017 Navion: 24G | 24J | 24V · Sprinter 3.0 188-hp. OEM 2018 Navion: 24D | 24G | 24J | 24V · 188-hp. Twin of View. Not Porto 24P."
         },
         {
           from: 2019,
@@ -11768,7 +11944,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["24P", "24J", "24F", "24G"],
       floorplansByYear: {
-        "2018": ["24P", "24J"],
+        // No OEM 2018 Vita card (not on 2018 wiring; archive first 2020 flyer). Do not invent leftover 24P/24J.
         // OEM/RVUSA 2019 Vita: 24F | 24P. HP unprinted → 0. Drop leftover 24J.
         "2019": ["24F", "24P"],
         // OEM/RVUSA 2020 Vita flyer: 24F | 24P. HP unprinted → 0.
@@ -11801,8 +11977,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       engine: "Mercedes-Benz turbodiesel",
       horsepower: 188,
       powertrainByYear: [
-        { from: 2018, to: 2018, engine: "Mercedes-Benz turbodiesel", horsepower: 188, chassis: "Mercedes Sprinter" },
-        { from: 2019, to: 2020, engine: "Mercedes-Benz Sprinter (HP not printed)", horsepower: 0, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM 2019–20 Vita: 24F | 24P. HP not printed — do not invent 188. Not leftover 24J." },
+        { from: 2019, to: 2020, engine: "Mercedes-Benz Sprinter (HP not printed)", horsepower: 0, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM 2019–20 Vita: 24F | 24P. HP not printed — do not invent 188. Not leftover 24J. No 2018 Vita card." },
         { from: 2021, to: 2021, engine: "Mercedes-Benz 3.0L V6 turbodiesel 188HP", horsepower: 188, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM 2021 Vita brochure: 24F | 24P · Sprinter 3.0 188-hp. No 2022 Vita card." },
         { from: 2024, to: 2024, engine: "Mercedes-Benz 3.0L V6 turbodiesel (HP not printed)", horsepower: 0, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM 2024 Vita // Porto twin flyer: 24P · Sprinter 3.0 V6. HP not printed. No 2023 Vita card." },
         { from: 2025, to: 2025, engine: "Mercedes-Benz 2.0L I4 turbodiesel", horsepower: 0, chassis: "Mercedes-Benz Sprinter", fuelType: "Diesel", notes: "OEM 2025 Vita // Porto twin: Sprinter 2.0. HP not printed." },
@@ -11821,9 +11996,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1958,
       warrantyYears: 2,
-      yearStart: 2018,
+      yearStart: 2019,
       yearEnd: 2025,
-      description: "Winnebago Vita — value Sprinter Class C."
+      description: "Winnebago Vita — value Sprinter Class C. First year-true card 2019."
     },
     EKKO: {
       type: "Class C",
@@ -11957,8 +12132,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["22M", "25B", "26T", "31H", "31G"],
         "2015": ["22M", "25B", "26T", "31H", "31G"],
         "2016": ["22M", "25B", "26T", "31H", "31G"],
-        "2017": ["22M", "25B", "26T", "27Q", "31H", "31G"],
-        "2018": ["22M", "25B", "26T", "27Q", "30D", "31H"],
+        // OEM 2017 Itasca Spirit wiring (Winnebago Spirit twin): 22R | 25B | 26A | 27Q | 31D | 31G | 31K · E-350/E-450 305-hp 6.8 V10. No 22M on 2017 wiring.
+        "2017": ["22R", "25B", "26A", "27Q", "31D", "31G", "31K"],
+        // OEM 2018 Spirit flyer + 2018 wiring: 22M | 22R | 25B | 26A | 31D | 31G | 31K · E-350/E-450 305-hp 6.8 V10.
+        "2018": ["22M", "22R", "25B", "26A", "31D", "31G", "31K"],
         // OEM 2019 Spirit wiring + brochure WM: 22M | 22R | 25B | 26A | 31D | 31G | 31K · E-350/E-450 305-hp 6.8 V10.
         "2019": ["22M", "22R", "25B", "26A", "31D", "31G", "31K"],
         // OEM/RVUSA 2020 Spirit flyer: 22M | 22R | 25B | 26T | 31H | 31K · E-350/E-450 option-band HP 0.
@@ -12011,10 +12188,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2005,
-          to: 2018,
+          to: 2016,
           engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
           horsepower: 305,
           chassis: "Ford E-450"
+        },
+        {
+          from: 2017,
+          to: 2018,
+          engine: "Ford 6.8L Triton V10 305HP",
+          horsepower: 305,
+          chassis: "Ford E-350 / E-450",
+          fuelType: "Gas",
+          notes: "OEM 2017 Spirit (Itasca twin of Minnie Winnie): 22R | 25B | 26A | 27Q | 31D | 31G | 31K · 305-hp 6.8 V10. OEM 2018 Spirit: 22M | 22R | 25B | 26A | 31D | 31G | 31K · 305-hp."
         },
         {
           from: 2019,
@@ -12080,8 +12266,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["22M", "25B", "26T", "31H", "31K", "31G"],
         "2015": ["22M", "25B", "26T", "31H", "31K", "31G"],
         "2016": ["22M", "25B", "26T", "31H", "31K", "31G"],
-        "2017": ["22M", "25B", "26T", "27Q", "31H", "31K"],
-        "2018": ["22M", "25B", "26T", "27Q", "30D", "31H", "31K"],
+        // OEM 2017 Minnie Winnie + 2017 wiring: 22R | 25B | 26A | 27Q | 31D | 31G | 31K · E-350/E-450 305-hp 6.8 V10. No 22M on 2017 wiring.
+        "2017": ["22R", "25B", "26A", "27Q", "31D", "31G", "31K"],
+        // OEM 2018 Minnie Winnie wiring (Spirit twin): 22M | 22R | 25B | 26A | 31D | 31G | 31K · E-350/E-450 305-hp 6.8 V10.
+        "2018": ["22M", "22R", "25B", "26A", "31D", "31G", "31K"],
         // OEM 2019 Minnie Winnie (Spirit twin): 22M | 22R | 25B | 26A | 31D | 31G | 31K · E-350/E-450 305-hp 6.8 V10.
         "2019": ["22M", "22R", "25B", "26A", "31D", "31G", "31K"],
         // OEM/RVUSA 2020 Minnie Winnie flyer: 22M | 22R | 25B | 26T | 31H | 31K. Option-band HP 0.
@@ -12134,10 +12322,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2000,
-          to: 2018,
+          to: 2016,
           engine: "Ford V10 / V8 (by year)",
           horsepower: 305,
           chassis: "Ford E-450"
+        },
+        {
+          from: 2017,
+          to: 2018,
+          engine: "Ford 6.8L Triton V10 305HP",
+          horsepower: 305,
+          chassis: "Ford E-350 / E-450",
+          fuelType: "Gas",
+          notes: "OEM 2017 Minnie Winnie: 22R | 25B | 26A | 27Q | 31D | 31G | 31K · 305-hp 6.8 V10. OEM 2018 (Spirit twin): 22M | 22R | 25B | 26A | 31D | 31G | 31K · 305-hp."
         },
         {
           from: 2019,
@@ -12194,8 +12391,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["22C", "25J", "27D"],
         "2015": ["22C", "25J", "27D"],
         "2016": ["22C", "25J", "27D"],
-        "2017": ["22C", "25J", "27D", "31C"],
-        "2018": ["22C", "25J", "27D", "31C"],
+        // No OEM 2017–18 Outlook card (not on 2017/2018 wiring; brochure archive 2010 then 2019). Do not invent leftover 22C/25J/27D/31C.
         // OEM/RVUSA 2019 Outlook: 22C | 22E | 25J | 27D | 31N · E-350/E-450 6.8 V10. HP unprinted → 0.
         "2019": ["22C", "22E", "25J", "27D", "31N"],
         // OEM/RVUSA 2020 Outlook: 22C | 22E | 25J | 26M | 31N. V10 printed, HP unprinted → 0. Drop 27D.
@@ -12279,6 +12475,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Super C",
       floorplans: ["26RP", "28MT", "29MT", "31SR", "31J", "31P"],
       floorplansByYear: {
+        // No OEM 2017–18 Access Super C card (not on 2017/2018 wiring). Do not invent Super C plans.
         // No OEM 2019–20 Access Super C card (not on 2019/2020 wiring). Do not invent 26RP/28MT.
         // No OEM/RVUSA 2021–22 Access Super C card. Leftover 26RP/28MT/29MT/31SR look invented — omit.
         // No OEM/RVUSA 2023–24 Access Super C card. 2024 Access PDFs are travel trailers — not this key.
@@ -12330,8 +12527,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["1700BH", "2100BH", "2108DS"],
         "2015": ["1700BH", "2100BH", "2108DS"],
         "2016": ["1700BH", "2100BH", "2108DS"],
-        "2017": ["1700BH", "1800BH", "2100BH", "2108DS"],
-        "2018": ["1700BH", "1800BH", "2100BH", "2108DS", "2306BHS"],
+        // OEM 2017 Minnie Family brochure (0817v1) Micro column: 1700BH | 1705RD | 1706FB | 1808FBS | 2100BH | 2106DS | 2106FBS | 2108DS. Not Minnie 2500RL / not Drop / not Plus.
+        "2017": ["1700BH", "1705RD", "1706FB", "1808FBS", "2100BH", "2106DS", "2106FBS", "2108DS"],
+        // No year-true 2018 Micro Minnie card (RVUSA “2018” Minnie Family file is the 2017 0817v1 reprint). Do not copy 2017 or 2019.
         // OEM 2019 Minnie Family brochure Micro column: 1700BH | 1706FB | 1808FBS | 2100BH | 2106DS | 2106FBS | 2108DS | 2108FBS | 2108TB | 2306BHS.
         "2019": ["1700BH", "1706FB", "1808FBS", "2100BH", "2106DS", "2106FBS", "2108DS", "2108FBS", "2108TB", "2306BHS"],
         // OEM 2020 Minnie Family brochure Micro column: same ten. 2500RL is Minnie — not this key.
@@ -12389,8 +12587,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["2201MB", "2500FL"],
         "2015": ["2201MB", "2500FL"],
         "2016": ["2201MB", "2500FL"],
-        "2017": ["2201MB", "2500FL", "2801BHS"],
-        "2018": ["2201MB", "2500FL", "2801BHS", "2809DL"],
+        // OEM 2017 Minnie Family brochure Minnie column: 2200SS | 2201DS | 2250DS | 2401RG | 2455BHS | 2500FL | 2500RL | 2606RL. Not Micro / not Plus / not leftover 2201MB/2801BHS.
+        "2017": ["2200SS", "2201DS", "2250DS", "2401RG", "2455BHS", "2500FL", "2500RL", "2606RL"],
+        // No year-true 2018 Minnie card (RVUSA “2018” file reprints 2017 0817v1). Do not copy 2017 or 2019.
         // OEM 2019 Minnie Family brochure Minnie column: 2201DS | 2201MB | 2401RG | 2455BHS | 2500FL | 2500RL | 2606RL. Not Micro / not Plus.
         "2019": ["2201DS", "2201MB", "2401RG", "2455BHS", "2500FL", "2500RL", "2606RL"],
         // OEM 2020 Minnie Family brochure Minnie column: 2201DS | 2201MB | 2401RG | 2455BHS | 2500FL | 2500RL | 2801BHS. Drop 2606RL / leftover 2809DL.
