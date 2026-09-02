@@ -1939,13 +1939,18 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(tf["Allegro Red"]?.yearEnd, undefined);
   assert.equal(tf["Allegro Red"]?.years?.includes(2017), true);
   assert.equal(tf["Allegro Red"]?.years?.includes(2023), false);
+  assert.equal(tf["Allegro Red"]?.years?.includes(2024), true);
   assert.equal(tf["Allegro Red"]?.years?.includes(2025), true);
   assert.equal(tf["Allegro Red"]?.years?.includes(2027), true);
 
   assert.equal(tf["Allegro Breeze"]?.yearEnd, 2026);
+  assert.equal(tf["Allegro Breeze"]?.years?.includes(2023), true);
+  assert.equal(tf["Allegro Breeze"]?.years?.includes(2024), true);
   assert.equal(tf["Allegro Breeze"]?.years?.includes(2026), true);
   assert.equal(tf["Allegro Breeze"]?.years?.includes(2027), false);
-  assert.equal(tf.Cahaba?.yearEnd, 2024);
+  assert.equal(tf.Cahaba?.yearEnd, 2023);
+  assert.equal(tf.Cahaba?.years?.includes(2023), true);
+  assert.equal(tf.Cahaba?.years?.includes(2024), false);
   assert.equal(tf.Cahaba?.years?.includes(2025), false);
   assert.equal(tf.Allegro?.yearEnd, 2022);
   assert.equal(tf.Allegro?.years?.includes(2025), false);
@@ -1958,6 +1963,8 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(tf["Allegro Bay"]?.type, "Super C");
   assert.equal(tf["Allegro Bay"]?.fuelType, "Diesel");
   assert.equal(tf["Allegro Bay"]?.yearStart, 2022);
+  assert.equal(tf["Allegro Bay"]?.years?.includes(2023), true);
+  assert.equal(tf["Allegro Bay"]?.years?.includes(2024), true);
   assert.equal(tf["Allegro Bay"]?.years?.includes(2025), true);
   assert.equal(tf["Allegro Bay"]?.years?.includes(2027), true);
   assert.equal(tf["Open Trail"]?.type, "Class C");
@@ -1977,8 +1984,15 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(ze, /"2025": \["45NZ"/);
   assert.doesNotMatch(ze, /"2027": \["45NZ"/);
 
+  assert.match(ze, /"2023": \["45FZ"\]/);
+  assert.match(ze, /"2024": \["45FZ"\]/);
+  assert.doesNotMatch(ze, /"2023": \["45NZ"/);
+  assert.doesNotMatch(ze, /"2024": \["45NZ"/);
+
   const bus0 = tiffin.indexOf('    "Allegro Bus": {');
   const bus = tiffin.slice(bus0, tiffin.indexOf('    "Allegro Bus 45OPP"'));
+  assert.match(bus, /"2023": \["35CP", "40IP", "45FP", "45OPP"\]/);
+  assert.match(bus, /"2024": \["35CP", "40IP", "45FP", "45OPP"\]/);
   assert.match(bus, /"2025": \["35CP", "40IP", "45FP", "45OPP", "45BTP"\]/);
   assert.match(bus, /"2026": \["36AP", "40IP", "45OPP", "45BP"\]/);
   assert.match(bus, /"2027": \["36AP", "40IP", "45OPP", "45BP"\]/);
@@ -1987,6 +2001,8 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
 
   const ph0 = tiffin.indexOf("    Phaeton: {");
   const ph = tiffin.slice(ph0, tiffin.indexOf('    "Allegro Red 340"'));
+  assert.match(ph, /"2023": \["36SH", "37BH", "40IH", "44OH"\]/);
+  assert.match(ph, /"2024": \["35CH", "37BH", "40IH", "44OH"\]/);
   assert.match(ph, /"2025": \["35CH", "37BH", "40IH", "44OH"\]/);
   assert.match(ph, /"2026": \["35CH", "37BH", "40IH", "44OH"\]/);
   assert.match(ph, /"2027": \["35CH", "37BH", "40IH", "44OH"\]/);
@@ -1994,11 +2010,14 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
 
   const red0 = tiffin.indexOf('    "Allegro Red": {');
   const red = tiffin.slice(red0, tiffin.indexOf('    "Allegro Breeze"'));
+  assert.match(red, /"2024": \["33AA", "37BA", "38KA"\]/);
   assert.match(red, /"2025": \["33AA", "37BA", "38KA"\]/);
   assert.match(red, /"2027": \["33AA", "37BA", "38KA"\]/);
 
   const or0 = tiffin.indexOf('    "Open Road": {');
   const or = tiffin.slice(or0, tiffin.indexOf("    Wayfarer: {"));
+  assert.match(or, /"2023": \["32FA", "32SA", "34PA", "36LA", "36UA"\]/);
+  assert.match(or, /"2024": \["32FA", "32SA", "34PA", "36LA", "36UA"\]/);
   assert.match(or, /"2025": \["32FA", "32SA", "34PA", "36LA", "36UA"\]/);
   assert.match(or, /"2026": \["29NA", "32SA", "34PA", "36LA"\]/);
   assert.match(or, /"2027": \["29NA", "34PA"\]/);
@@ -2007,6 +2026,8 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
 
   const wf0 = tiffin.indexOf("    Wayfarer: {");
   const wf = tiffin.slice(wf0, tiffin.indexOf('    "Wayfarer 25"'));
+  assert.match(wf, /"2023": \["25JW", "25TW", "25LW", "25RW"\]/);
+  assert.match(wf, /"2024": \["25JW", "25LW", "25RLW", "25RW"\]/);
   assert.match(wf, /"2025": \["25XLW", "25XRW"\]/);
   assert.match(wf, /"2026": \["25XRW", "25XLW", "25XPW", "25RW"\]/);
   assert.match(wf, /"2027": \["25RW", "25PW", "25XLW"\]/);
@@ -2014,6 +2035,8 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
 
   const bay0 = tiffin.indexOf('    "Allegro Bay": {');
   const bay = tiffin.slice(bay0, tiffin.indexOf('    "Open Trail"'));
+  assert.match(bay, /"2023": \["38AB", "38BB", "38CB"\]/);
+  assert.match(bay, /"2024": \["38AB", "38BB", "38CB"\]/);
   assert.match(bay, /"2025": \["38AB", "38BB", "38CB"\]/);
   assert.match(bay, /"2026": \["38AB", "38BB", "34DB"\]/);
   assert.match(bay, /"2027": \["34DB", "38AB", "38BB", "38EB"\]/);
@@ -2031,7 +2054,10 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(bus27opp!.horsepower, 0);
   assert.match(bus27opp!.engine, /X15/);
   const ph24 = findPowertrainCorrection("2024", "Tiffin", "Phaeton", "37BH");
-  assert.equal(ph24!.horsepower, 380);
+  assert.equal(ph24!.horsepower, 450);
+  assert.equal(ph24!.torqueLbFt, 1250);
+  const ph23 = findPowertrainCorrection("2023", "Tiffin", "Phaeton", "37BH");
+  assert.equal(ph23!.horsepower, 380);
   const ph27 = findPowertrainCorrection("2027", "Tiffin", "Phaeton", "37BH");
   assert.equal(ph27!.horsepower, 450);
   assert.equal(ph27!.torqueLbFt, 1250);
@@ -2039,8 +2065,9 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(red27!.horsepower, 380);
   assert.equal(red27!.torqueLbFt, 1150);
   assert.doesNotMatch(red27!.engine, /B6\.7|F53|V10/i);
-  const red340 = findPowertrainCorrection("2023", "Tiffin", "Allegro Red 340", "33AA");
-  assert.equal(red340!.horsepower, 360);
+  const red340 = findPowertrainCorrection("2023", "Tiffin", "Allegro Red 340", "38LL");
+  assert.equal(red340!.horsepower, 340);
+  assert.equal(red340!.torqueLbFt, 700);
   assert.equal(findPowertrainCorrection("2025", "Tiffin", "Allegro Red 340", "33AA"), null);
   const or27 = findPowertrainCorrection("2027", "Tiffin", "Open Road", "34PA");
   assert.equal(or27!.horsepower, 350);
@@ -2053,4 +2080,73 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(bay27!.torqueLbFt, 800);
   const ot27 = findPowertrainCorrection("2027", "Tiffin", "Open Trail", "25CO");
   assert.equal(ot27!.horsepower, 208);
+});
+
+test("Tiffin 2023–2024 OEM year-first floorplans + powertrain pins", () => {
+  const tf = CATALOG_INDEX.Tiffin;
+  assert.ok(tf);
+  assert.equal(tf["Allegro Red"]?.years?.includes(2024), true);
+  assert.equal(tf["Allegro Red 340"]?.years?.includes(2024), false);
+  assert.equal(tf["Allegro Red 360"]?.years?.includes(2024), false);
+  assert.equal(tf["Allegro Bay"]?.years?.includes(2023), true);
+  assert.equal(tf["Allegro Bay"]?.years?.includes(2024), true);
+  assert.equal(tf["Allegro Breeze"]?.years?.includes(2023), true);
+  assert.equal(tf["Allegro Breeze"]?.years?.includes(2024), true);
+  assert.equal(tf.Cahaba?.yearEnd, 2023);
+  assert.equal(tf.Cahaba?.type, "Class B");
+
+  const z23 = findPowertrainCorrection("2023", "Tiffin", "Zephyr", "45FZ");
+  assert.equal(z23!.horsepower, 605);
+  assert.equal(z23!.torqueLbFt, 1950);
+  assert.doesNotMatch(z23!.chassis || "", /SL/);
+
+  const bus23short = findPowertrainCorrection("2023", "Tiffin", "Allegro Bus", "35CP");
+  assert.equal(bus23short!.horsepower, 450);
+  const bus24opp = findPowertrainCorrection("2024", "Tiffin", "Allegro Bus", "45OPP");
+  assert.equal(bus24opp!.horsepower, 0);
+  assert.match(bus24opp!.engine, /X15/);
+
+  const ph23_37 = findPowertrainCorrection("2023", "Tiffin", "Phaeton", "37BH");
+  assert.equal(ph23_37!.horsepower, 380);
+  const ph23_44 = findPowertrainCorrection("2023", "Tiffin", "Phaeton", "44OH");
+  assert.equal(ph23_44!.horsepower, 450);
+  const ph24_37 = findPowertrainCorrection("2024", "Tiffin", "Phaeton", "37BH");
+  assert.equal(ph24_37!.horsepower, 450);
+
+  const red24 = findPowertrainCorrection("2024", "Tiffin", "Allegro Red", "33AA");
+  assert.equal(red24!.horsepower, 380);
+  assert.equal(red24!.torqueLbFt, 1150);
+  const red360 = findPowertrainCorrection("2023", "Tiffin", "Allegro Red 360", "38KA");
+  assert.equal(red360!.horsepower, 360);
+  assert.doesNotMatch(red360!.engine, /L9/i);
+
+  const or23 = findPowertrainCorrection("2023", "Tiffin", "Open Road", "32FA");
+  assert.equal(or23!.horsepower, 350);
+  assert.equal(or23!.fuelType, "Gas");
+  const wf23 = findPowertrainCorrection("2023", "Tiffin", "Wayfarer", "25RW");
+  assert.equal(wf23!.horsepower, 188);
+  const breeze24 = findPowertrainCorrection("2024", "Tiffin", "Allegro Breeze", "33BR");
+  assert.equal(breeze24!.horsepower, 340);
+  const bay23 = findPowertrainCorrection("2023", "Tiffin", "Allegro Bay", "38AB");
+  assert.equal(bay23!.horsepower, 360);
+  const cahaba = findPowertrainCorrection("2023", "Tiffin", "Cahaba", "19 SC");
+  assert.equal(cahaba!.horsepower, 188);
+  assert.equal(findPowertrainCorrection("2024", "Tiffin", "Cahaba", "19 SC"), null);
+
+  const block = src("rvData.ts");
+  const t0 = block.indexOf("  Tiffin: {");
+  const t1 = block.indexOf("  Thor: {");
+  const tiffin = block.slice(t0, t1);
+  const red340 = tiffin.slice(
+    tiffin.indexOf('    "Allegro Red 340"'),
+    tiffin.indexOf('    "Allegro Red 360"'),
+  );
+  assert.match(red340, /"2023": \["33AL", "38LL"\]/);
+  assert.doesNotMatch(red340, /"2024":/);
+  const breeze = tiffin.slice(
+    tiffin.indexOf('    "Allegro Breeze"'),
+    tiffin.indexOf('    "Open Road"'),
+  );
+  assert.match(breeze, /"2023": \["33BR"\]/);
+  assert.match(breeze, /"2024": \["33BR"\]/);
 });
