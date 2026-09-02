@@ -404,6 +404,108 @@ function main() {
     }
   }
 
+  // Winnebago recent-years OEM gates (first walk-back slice ~2025–2027)
+  {
+    const w0 = src.indexOf("\n  Winnebago: {");
+    const w1 = src.indexOf('\n  "Forest River": {');
+    if (w0 < 0 || w1 < w0) {
+      fail("Winnebago block not found between Winnebago: and Forest River:");
+    } else {
+      const wgo = src.slice(w0, w1);
+      for (const required of [
+        "Forza",
+        "Journey",
+        "Vista",
+        "Sunstar",
+        "Adventurer",
+        "Revel",
+        "Revel Sport",
+        "Travato",
+        "Solis",
+        "Solis Pocket",
+        "View",
+        "Navion",
+        "EKKO",
+        "Spirit",
+        "Minnie Winnie",
+        "Sunflyer",
+        "Suncruiser",
+        "Elora",
+        "Resa",
+        "ARKA",
+        "Access",
+        "Access Super C",
+        "Thrive",
+        "Voyage",
+        "M-Series",
+        "Micro Minnie",
+        "Minnie",
+      ]) {
+        const hit =
+          wgo.includes(`    ${required}: {`) ||
+          wgo.includes(`    "${required}": {`);
+        if (!hit) fail(`Winnebago missing required series: ${required}`);
+      }
+      const fz0 = wgo.indexOf("    Forza: {");
+      const fz1 = wgo.indexOf("    Journey: {");
+      const fz = fz0 >= 0 && fz1 > fz0 ? wgo.slice(fz0, fz1) : "";
+      if (!/"2025": \["34T", "36H", "38W"\]/.test(fz)) {
+        fail("Winnebago|Forza MY25 OEM plans missing (34T/36H/38W)");
+      }
+      if (/"2026"/.test(fz) || /"2027"/.test(fz)) {
+        fail("Winnebago|Forza must not list 2026–2027 (no OEM card)");
+      }
+      if (!/"2025": \["34N"\]/.test(wgo)) {
+        fail("Winnebago|Journey MY25 OEM 34N missing");
+      }
+      const hz0 = wgo.indexOf("    Horizon: {");
+      const hz1 = wgo.indexOf('    "Grand Tour": {');
+      const hz = hz0 >= 0 && hz1 > hz0 ? wgo.slice(hz0, hz1) : "";
+      if (/"2025"/.test(hz) || /"2026"/.test(hz) || /"2027"/.test(hz)) {
+        fail("Winnebago|Horizon must not list 2025–2027 (last brochure 2019; leftover ends 2024)");
+      }
+      if (!/yearEnd:\s*2024/.test(hz)) {
+        fail("Winnebago|Horizon yearEnd must be 2024");
+      }
+      if (!/"2027": \["24D", "24R", "24T"\]/.test(wgo)) {
+        fail("Winnebago|View/Navion MY27 OEM plans missing (24D/24R/24T)");
+      }
+      const vw0 = wgo.indexOf("    View: {");
+      const vw1 = wgo.indexOf("    Navion: {");
+      const vw = vw0 >= 0 && vw1 > vw0 ? wgo.slice(vw0, vw1) : "";
+      if (/"2026": .*"24D"/.test(vw) || /"2026": \["24D"/.test(vw)) {
+        fail("Winnebago|View MY26 must not copy 24D (OEM 24R/24T only)");
+      }
+      const nv0 = wgo.indexOf("    Navion: {");
+      const nv1 = wgo.indexOf("    Porto: {");
+      const nv = nv0 >= 0 && nv1 > nv0 ? wgo.slice(nv0, nv1) : "";
+      if (/"2025": .*"24D"/.test(nv)) {
+        fail("Winnebago|Navion MY25 must be 24R/24T only (24D is View-only on the 2025 card)");
+      }
+      const ek0 = wgo.indexOf("    EKKO: {");
+      const ek1 = wgo.indexOf("    Spirit: {");
+      const ek = ek0 >= 0 && ek1 > ek0 ? wgo.slice(ek0, ek1) : "";
+      if (/"2025": .*"23B"/.test(ek) || /"2027": .*"23B"/.test(ek)) {
+        fail("Winnebago|EKKO must not copy 23B onto 2025 or 2027");
+      }
+      const ac0 = wgo.indexOf('    "Access Super C": {');
+      const ac1 = wgo.indexOf('    "Micro Minnie": {');
+      const ac = ac0 >= 0 && ac1 > ac0 ? wgo.slice(ac0, ac1) : "";
+      if (/"2025"/.test(ac) || /"2026"/.test(ac)) {
+        fail("Winnebago|Access Super C must not list 2025–2026 (2025 Access PDF is a travel trailer)");
+      }
+      const att0 = wgo.indexOf("    Access: {");
+      const att1 = wgo.indexOf("    Thrive: {");
+      const att = att0 >= 0 && att1 > att0 ? wgo.slice(att0, att1) : "";
+      if (!/type: "Travel Trailer"/.test(att)) {
+        fail("Winnebago|Access current line must stay a travel trailer (not Super C)");
+      }
+      if (/\n    "Grand Design": \{/.test(wgo) || /\n    Keystone: \{/.test(wgo)) {
+        fail("Winnebago block must not absorb other-make keys");
+      }
+    }
+  }
+
   // Fleetwood must include core modern lines (regression gate after prior skip)
   if (makes.has("Fleetwood")) {
     for (const required of ["Fortis", "Frontier", "Southwind", "Discovery", "Bounder", "Altitude", "Insight", "Palisade", "Flex"]) {
