@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import {
   Calculator,
   ChevronDown,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hapticMedium } from "@/lib/haptics";
+import { isStationaryDockTap } from "@/lib/hooks/nativeWebView";
 import type { AppTab } from "./BottomTabs";
 import sealPoster from "@/assets/splash/rvfox-launch-seal-poster.jpg";
 import {
@@ -168,6 +169,13 @@ export function Launchpad({
   const [hi, setHi] = useState(0);
   const [videoPlaying, setVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const pressRef = useRef<{
+    id: AppTab;
+    x: number;
+    y: number;
+    scroll: number;
+  } | null>(null);
   const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(
     () => videoSrc,
   );
@@ -253,6 +261,32 @@ export function Launchpad({
     onSkip();
   };
 
+  const onToolPointerDown = (
+    id: AppTab,
+    index: number,
+    e: ReactPointerEvent<HTMLButtonElement>,
+  ) => {
+    pressRef.current = {
+      id,
+      x: e.clientX,
+      y: e.clientY,
+      scroll: listRef.current?.scrollTop ?? 0,
+    };
+    setHi(index);
+  };
+
+  const onToolPointerUp = (
+    id: AppTab,
+    e: ReactPointerEvent<HTMLButtonElement>,
+  ) => {
+    const p = pressRef.current;
+    pressRef.current = null;
+    if (!p || p.id !== id) return;
+    if (!isStationaryDockTap(e.clientX - p.x, e.clientY - p.y)) return;
+    if (Math.abs((listRef.current?.scrollTop ?? 0) - p.scroll) > 2) return;
+    pickTool(id);
+  };
+
   return (
     <div
       className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[#050508] text-white"
@@ -316,7 +350,11 @@ export function Launchpad({
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-[1.5rem] border border-white/22 bg-white/[0.03] p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.18)] backdrop-blur-[1.5px]">
+            <div
+              ref={listRef}
+              className="pointer-events-auto min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-[1.5rem] border border-white/22 bg-white/[0.03] p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.18)] backdrop-blur-[1.5px]"
+              style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}
+            >
               {TOOLS.map((item, index) => {
                 const active = index === hi;
                 const Icon = item.Icon;
@@ -324,9 +362,15 @@ export function Launchpad({
                   <button
                     key={item.id}
                     type="button"
+                    data-launch-tool={item.id}
+                    onPointerDown={(e) => onToolPointerDown(item.id, index, e)}
+                    onPointerUp={(e) => onToolPointerUp(item.id, e)}
+                    onPointerCancel={() => {
+                      pressRef.current = null;
+                    }}
                     onClick={() => pickTool(item.id)}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-[1.15rem] px-3 py-2 text-left transition-all duration-300 ease-out touch-manipulation",
+                      "pointer-events-auto flex w-full items-center gap-3 rounded-[1.15rem] px-3 py-2 text-left transition-all duration-300 ease-out touch-manipulation select-none",
                       active
                         ? "scale-[1.01] bg-gradient-to-r from-sky-500/90 via-blue-500/85 to-blue-600/90 shadow-[0_0_28px_rgba(56,140,255,0.45)]"
                         : "bg-transparent hover:bg-white/[0.07]",
