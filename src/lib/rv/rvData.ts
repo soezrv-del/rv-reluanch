@@ -5060,7 +5060,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Sereno: {
       type: "Class A Diesel",
-      floorplans: ["31V", "31X", "31Z", "33A", "31G", "34G", "36G", "38G", "40G"],
+      floorplans: ["31V", "31X", "31Z", "33A"],
       floorplansByYear: {
         // OEM MY10 Serrano (2010_Serrano_Class_A_Brochure_LR / Four Winds International): 31V | 31Z · Workhorse 6.4L V8 diesel. HP not printed.
         "2010": ["31V", "31Z"],
@@ -5068,16 +5068,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2011": ["31V", "31X", "31Z", "33A"],
         // OEM MY12 Serrano (2012_Serrano_A): 31V | 31X | 33A · Workhorse 6.4L V8 diesel. HP not printed. 31Z dropped.
         "2012": ["31V", "31X", "33A"],
-        // No MY13–16 Serrano/Sereno OEM card this walk-back — do not invent 31G/34G or copy 2012.
+        // No MY13–16 Serrano/Sereno OEM card this walk-back — do not invent 31G/34G/36G/38G/40G or copy 2012. yearEnd 2012.
       },
-      lengthRange: [31, 40],
+      lengthRange: [31, 33],
       weightRange: [26000, 32000],
       slideouts: 3,
       sleeps: 6,
       msrpRange: [119900, 189000],
-      engine: "Navistar MaxxForce 7 ~300HP (front-engine diesel)",
-      horsepower: 300,
-      chassis: "Thor FED (front-engine diesel)",
+      engine: "Workhorse 6.4L V8 diesel",
+      horsepower: 0,
+      chassis: "Workhorse diesel",
       fuelType: "Diesel",
       recalls: 1,
       rating: 4.2,
@@ -5092,9 +5092,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1980,
       warrantyYears: 1,
       yearStart: 2010,
-      yearEnd: 2016,
+      yearEnd: 2012,
       description:
-        "Thor Sereno (OEM Serrano) — front-engine diesel Class A. OEM MY10: 31V / 31Z · Workhorse 6.4 diesel. OEM MY11: 31V / 31X / 31Z / 33A. OEM MY12: 31V / 31X / 33A. HP not printed. yearEnd 2016 leftover after last OEM card. Not Palazzo/Tuscany pusher.",
+        "Thor Sereno (OEM Serrano) — front-engine diesel Class A. OEM MY10: 31V / 31Z · Workhorse 6.4 diesel. OEM MY11: 31V / 31X / 31Z / 33A. OEM MY12: 31V / 31X / 33A. HP not printed (0). yearEnd 2012 — last OEM card. Do not invent 2013–16 plans or leftover MaxxForce 7 300. Not Palazzo/Tuscany pusher.",
       powertrainByYear: [
         {
           from: 2010,
@@ -5103,15 +5103,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 0,
           chassis: "Workhorse diesel",
           fuelType: "Diesel",
-          notes: "OEM MY10 Serrano brochure / MY11 Serrano Literature / MY12 2012_Serrano_A: Workhorse 6.4L V8 diesel. HP not printed (0). Front-engine diesel — not Cummins pusher / not leftover MaxxForce 7 300.",
-        },
-        {
-          from: 2013,
-          to: 2016,
-          engine: "Navistar MaxxForce 7 ~300HP",
-          horsepower: 300,
-          chassis: "Thor FED (front-engine diesel)",
-          notes: "2013–2016 leftover front-engine diesel — no Serrano OEM card this walk-back. Not Cummins pusher.",
+          notes: "OEM MY10 Serrano brochure / MY11 Serrano Literature / MY12 2012_Serrano_A: Workhorse 6.4L V8 diesel. HP not printed (0). Front-engine diesel — not Cummins pusher / not leftover MaxxForce 7 300. yearEnd 2012 — no 2013–16 invent.",
         },
       ],
     },
@@ -5950,7 +5942,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Seneca: {
       type: "Super C",
-      floorplans: ["37SS", "37HJ", "38DB", "37HB", "37MB", "37RB", "37RD", "40SKT", "45MBX"],
+      floorplans: ["37SS", "37HJ", "38DB"],
       floorplansByYear: {
         // No Thor Motor Coach Seneca OEM brochure MY10–12 (Jayco Seneca is a different make). Do not keep leftover 2012 37SS/37HJ.
         // No Thor Motor Coach Seneca OEM brochure MY13–22 (Jayco Seneca is a different make). Do not keep leftover 2013–2014 37SS/37HJ.
