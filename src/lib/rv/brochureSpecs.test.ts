@@ -3004,7 +3004,7 @@ test("Entegra 2015–2016 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(eg.Cornerstone?.years?.includes(2016), true);
   assert.equal(eg.Anthem?.years?.includes(2015), true);
   assert.equal(eg.Aspire?.years?.includes(2015), true);
-  assert.equal(eg.Aspire?.yearStart, 2013);
+  assert.equal(eg.Aspire?.yearStart, 2010);
   assert.equal(eg.Reatta?.years?.includes(2015), false);
   assert.equal(eg.Reatta?.years?.includes(2016), false);
   assert.equal(eg.Reatta?.yearStart, 2019);
@@ -3162,13 +3162,13 @@ test("Entegra 2013–2014 OEM year-first floorplans + powertrain pins", () => {
   assert.ok(eg);
   assert.equal(eg.Cornerstone?.years?.includes(2013), true);
   assert.equal(eg.Cornerstone?.years?.includes(2014), true);
-  assert.equal(eg.Cornerstone?.yearStart, 2013);
+  assert.equal(eg.Cornerstone?.yearStart, 2010);
   assert.equal(eg.Anthem?.years?.includes(2013), true);
   assert.equal(eg.Anthem?.years?.includes(2014), true);
-  assert.equal(eg.Anthem?.yearStart, 2013);
+  assert.equal(eg.Anthem?.yearStart, 2010);
   assert.equal(eg.Aspire?.years?.includes(2013), true);
   assert.equal(eg.Aspire?.years?.includes(2014), true);
-  assert.equal(eg.Aspire?.yearStart, 2013);
+  assert.equal(eg.Aspire?.yearStart, 2010);
   assert.equal(eg.Reatta?.years?.includes(2013), false);
   assert.equal(eg.Reatta?.years?.includes(2014), false);
   assert.equal(eg.Reatta?.yearStart, 2019);
@@ -3327,6 +3327,215 @@ test("Entegra 2013–2014 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(findPowertrainCorrection("2014", "Entegra Coach", "Esteem", "29V"), null);
   assert.equal(findPowertrainCorrection("2013", "Entegra Coach", "Qwest", "24L"), null);
   assert.equal(findPowertrainCorrection("2014", "Entegra Coach", "Qwest", "24L"), null);
+});
+
+test("Entegra 2010–2012 OEM year-first floorplans + powertrain pins", () => {
+  const eg = CATALOG_INDEX["Entegra Coach"];
+  assert.ok(eg);
+  assert.equal(eg.Cornerstone?.years?.includes(2010), true);
+  assert.equal(eg.Cornerstone?.years?.includes(2011), true);
+  assert.equal(eg.Cornerstone?.years?.includes(2012), true);
+  assert.equal(eg.Cornerstone?.years?.includes(2009), false);
+  assert.equal(eg.Cornerstone?.yearStart, 2010);
+  assert.equal(eg.Anthem?.years?.includes(2010), true);
+  assert.equal(eg.Anthem?.years?.includes(2011), true);
+  assert.equal(eg.Anthem?.years?.includes(2012), true);
+  assert.equal(eg.Anthem?.years?.includes(2009), false);
+  assert.equal(eg.Anthem?.yearStart, 2010);
+  assert.equal(eg.Aspire?.years?.includes(2010), true);
+  assert.equal(eg.Aspire?.years?.includes(2011), true);
+  assert.equal(eg.Aspire?.years?.includes(2012), true);
+  assert.equal(eg.Aspire?.years?.includes(2009), false);
+  assert.equal(eg.Aspire?.yearStart, 2010);
+  assert.equal(eg.Reatta?.yearStart, 2019);
+  assert.equal(eg.Reatta?.years?.includes(2010), false);
+  assert.equal(eg.Reatta?.years?.includes(2011), false);
+  assert.equal(eg.Reatta?.years?.includes(2012), false);
+  assert.equal(eg["Reatta XL"]?.yearStart, 2020);
+  assert.equal(eg["Reatta XL"]?.years?.includes(2010), false);
+  assert.equal(eg.Vision?.yearStart, 2019);
+  assert.equal(eg.Vision?.years?.includes(2010), false);
+  assert.equal(eg.Vision?.years?.includes(2011), false);
+  assert.equal(eg.Vision?.years?.includes(2012), false);
+  assert.equal(eg["Vision XL"]?.yearStart, 2020);
+  assert.equal(eg["Vision XL"]?.years?.includes(2010), false);
+  assert.equal(eg.Emblem?.yearStart, 2019);
+  assert.equal(eg.Emblem?.years?.includes(2010), false);
+  assert.equal(eg.Emblem?.years?.includes(2011), false);
+  assert.equal(eg.Emblem?.years?.includes(2012), false);
+  assert.equal(eg.Accolade?.yearStart, 2020);
+  assert.equal(eg.Accolade?.years?.includes(2010), false);
+  assert.equal(eg.Accolade?.years?.includes(2012), false);
+  assert.equal(eg["Accolade XL"]?.yearStart, 2021);
+  assert.equal(eg.Odyssey?.yearStart, 2018);
+  assert.equal(eg.Odyssey?.years?.includes(2010), false);
+  assert.equal(eg.Odyssey?.years?.includes(2012), false);
+  assert.equal(eg.Esteem?.yearStart, 2018);
+  assert.equal(eg.Esteem?.years?.includes(2010), false);
+  assert.equal(eg.Esteem?.years?.includes(2012), false);
+  assert.equal(eg.Qwest?.yearStart, 2018);
+  assert.equal(eg.Qwest?.years?.includes(2010), false);
+  assert.equal(eg.Qwest?.years?.includes(2012), false);
+  assert.equal(eg.Insignia?.yearStart, 2026);
+  assert.equal(eg.Insignia?.years?.includes(2010), false);
+  assert.equal(eg.Insignia?.years?.includes(2011), false);
+  assert.equal(eg.Insignia?.years?.includes(2012), false);
+
+  const block = src("rvData.ts");
+  const e0 = block.indexOf('  "Entegra Coach": {');
+  const e1 = block.indexOf('  "Monaco Coach": {');
+  const entegra = block.slice(e0, e1);
+  assert.doesNotMatch(entegra, /"2009":/);
+
+  const cs = entegra.slice(entegra.indexOf('    "Cornerstone": {'), entegra.indexOf('    "Anthem": {'));
+  assert.match(cs, /"2010": \["45DL", "45RB", "45SL"\]/);
+  assert.match(cs, /"2011": \["45DLQ", "45RB", "45SL"\]/);
+  assert.match(cs, /"2012": \["45DLQ", "45RBQ"\]/);
+  assert.doesNotMatch(cs, /"2010": .*"45DLQ"/);
+  assert.doesNotMatch(cs, /"2011": .*"45RBQ"/);
+  assert.doesNotMatch(cs, /"2012": .*"45SL"/);
+  assert.doesNotMatch(cs, /"2012": .*"45J"/);
+  assert.doesNotMatch(cs, /"2012": .*"45K"/);
+  assert.doesNotMatch(cs, /"2009":/);
+
+  const an = entegra.slice(entegra.indexOf('    "Anthem": {'), entegra.indexOf('    "Aspire": {'));
+  assert.match(an, /"2010": \["42DL", "42RB", "42SK", "44SL"\]/);
+  assert.match(an, /"2011": \["42DLQ", "42RBQ", "44DLQ"\]/);
+  assert.match(an, /"2012": \["42DLQ", "42RBQ", "44DLQ", "44SL"\]/);
+  assert.doesNotMatch(an, /"2011": .*"44SL"/);
+  assert.doesNotMatch(an, /"2010": .*"42DLQ"/);
+  assert.doesNotMatch(an, /"2010": .*"44DLQ"/);
+  assert.doesNotMatch(an, /"2012": .*"42DEQ"/);
+  assert.doesNotMatch(an, /"2009":/);
+
+  const as = entegra.slice(entegra.indexOf('    "Aspire": {'), entegra.indexOf('    "Reatta": {'));
+  assert.match(as, /"2010": \["40DRQ", "40SKT", "42DL", "42RB", "42SA"\]/);
+  assert.match(as, /"2011": \["40DRQ", "40SKT", "42DLQ", "42RBQ"\]/);
+  assert.match(as, /"2012": \["40DRQ", "40SKT", "42DEQ", "42DLQ", "42RBQ"\]/);
+  assert.doesNotMatch(as, /"2010": .*"42DEQ"/);
+  assert.doesNotMatch(as, /"2010": .*"42DLQ"/);
+  assert.doesNotMatch(as, /"2011": .*"42DEQ"/);
+  assert.doesNotMatch(as, /"2011": .*"42SA"/);
+  assert.match(as, /"2013": \["42DEQ", "42DLQ", "42RBQ"\]/);
+  assert.doesNotMatch(as, /"2009":/);
+
+  const re = entegra.slice(entegra.indexOf('    "Reatta": {'), entegra.indexOf('    "Reatta XL"'));
+  assert.doesNotMatch(re, /"2010":/);
+  assert.doesNotMatch(re, /"2011":/);
+  assert.doesNotMatch(re, /"2012":/);
+
+  const rxl = entegra.slice(entegra.indexOf('    "Reatta XL": {'), entegra.indexOf('    "Vision": {'));
+  assert.doesNotMatch(rxl, /"2010":/);
+  assert.doesNotMatch(rxl, /"2011":/);
+  assert.doesNotMatch(rxl, /"2012":/);
+
+  const vi = entegra.slice(entegra.indexOf('    "Vision": {'), entegra.indexOf('    "Vision XL"'));
+  assert.doesNotMatch(vi, /"2010":/);
+  assert.doesNotMatch(vi, /"2011":/);
+  assert.doesNotMatch(vi, /"2012":/);
+
+  const vxl = entegra.slice(entegra.indexOf('    "Vision XL": {'), entegra.indexOf('    "Accolade": {'));
+  assert.doesNotMatch(vxl, /"2010":/);
+  assert.doesNotMatch(vxl, /"2011":/);
+  assert.doesNotMatch(vxl, /"2012":/);
+
+  const ac = entegra.slice(entegra.indexOf('    "Accolade": {'), entegra.indexOf('    "Accolade XL"'));
+  assert.doesNotMatch(ac, /"2010":/);
+  assert.doesNotMatch(ac, /"2011":/);
+  assert.doesNotMatch(ac, /"2012":/);
+
+  const axl = entegra.slice(entegra.indexOf('    "Accolade XL": {'), entegra.indexOf('    "Centurion": {'));
+  assert.doesNotMatch(axl, /"2010":/);
+  assert.doesNotMatch(axl, /"2011":/);
+  assert.doesNotMatch(axl, /"2012":/);
+
+  const emb = entegra.slice(entegra.indexOf('    "Emblem": {'), entegra.indexOf('    "Vision SE"'));
+  assert.doesNotMatch(emb, /"2010":/);
+  assert.doesNotMatch(emb, /"2011":/);
+  assert.doesNotMatch(emb, /"2012":/);
+
+  const od = entegra.slice(entegra.indexOf('    "Odyssey": {'), entegra.indexOf('    "Esteem": {'));
+  assert.doesNotMatch(od, /"2010":/);
+  assert.doesNotMatch(od, /"2011":/);
+  assert.doesNotMatch(od, /"2012":/);
+
+  const es = entegra.slice(entegra.indexOf('    "Esteem": {'), entegra.indexOf('    "Qwest": {'));
+  assert.doesNotMatch(es, /"2010":/);
+  assert.doesNotMatch(es, /"2011":/);
+  assert.doesNotMatch(es, /"2012":/);
+
+  const qw = entegra.slice(entegra.indexOf('    "Qwest": {'), entegra.indexOf('    "Cornerstone Reserve"'));
+  assert.doesNotMatch(qw, /"2010":/);
+  assert.doesNotMatch(qw, /"2011":/);
+  assert.doesNotMatch(qw, /"2012":/);
+
+  const ins = entegra.slice(entegra.indexOf('    "Insignia": {'), entegra.indexOf('    "Arc": {'));
+  assert.doesNotMatch(ins, /"2010":/);
+  assert.doesNotMatch(ins, /"2011":/);
+  assert.doesNotMatch(ins, /"2012":/);
+  assert.doesNotMatch(ins, /floorplans: \[.*"36CKFL"/);
+  assert.doesNotMatch(ins, /"2026": \[.*"36CKFL"/);
+
+  const cs10 = findPowertrainCorrection("2010", "Entegra Coach", "Cornerstone", "45DL");
+  assert.equal(cs10!.horsepower, 500);
+  assert.equal(cs10!.torqueLbFt, 1550);
+  assert.match(cs10!.engine, /ISM/);
+  assert.doesNotMatch(cs10!.engine, /ISX|X15|600/);
+  assert.match(cs10!.chassis || "", /K2/);
+  assert.doesNotMatch(cs10!.chassis || "", /K3/);
+  const cs11 = findPowertrainCorrection("2011", "Entegra Coach", "Cornerstone", "45DLQ");
+  assert.equal(cs11, null);
+  const cs12 = findPowertrainCorrection("2012", "Entegra Coach", "Cornerstone", "45DLQ");
+  assert.equal(cs12!.horsepower, 500);
+  assert.match(cs12!.chassis || "", /K2/);
+  assert.doesNotMatch(cs12!.engine, /ISX|X15/);
+  assert.doesNotMatch(cs12!.engine, /600/);
+  assert.equal(cs12!.torqueLbFt, undefined);
+
+  const an10 = findPowertrainCorrection("2010", "Entegra Coach", "Anthem", "42DL");
+  assert.equal(an10!.horsepower, 425);
+  assert.equal(an10!.torqueLbFt, 1200);
+  assert.match(an10!.engine, /ISL/);
+  assert.doesNotMatch(an10!.engine, /450|L9/);
+  assert.match(an10!.chassis || "", /Mountain Master/);
+  const an11 = findPowertrainCorrection("2011", "Entegra Coach", "Anthem", "42DLQ");
+  assert.equal(an11, null);
+  const an12 = findPowertrainCorrection("2012", "Entegra Coach", "Anthem", "44SL");
+  assert.equal(an12!.horsepower, 450);
+  assert.equal(an12!.torqueLbFt, 1250);
+  assert.match(an12!.engine, /ISL/);
+  assert.doesNotMatch(an12!.engine, /L9/);
+  assert.match(an12!.chassis || "", /Mountain Master/);
+  assert.doesNotMatch(an12!.chassis || "", /K2/);
+
+  const as10 = findPowertrainCorrection("2010", "Entegra Coach", "Aspire", "40DRQ");
+  assert.equal(as10, null);
+  const as11 = findPowertrainCorrection("2011", "Entegra Coach", "Aspire", "42DLQ");
+  assert.equal(as11!.horsepower, 400);
+  assert.equal(as11!.torqueLbFt, 1250);
+  assert.match(as11!.engine, /ISL/);
+  assert.doesNotMatch(as11!.engine, /450|L9/);
+  assert.match(as11!.chassis || "", /Freightliner XCR/);
+  assert.doesNotMatch(as11!.chassis || "", /Spartan/);
+  const as12 = findPowertrainCorrection("2012", "Entegra Coach", "Aspire", "42DEQ");
+  assert.equal(as12!.horsepower, 450);
+  assert.equal(as12!.torqueLbFt, 1250);
+  assert.match(as12!.engine, /ISL/);
+  assert.doesNotMatch(as12!.engine, /L9/);
+  assert.match(as12!.chassis || "", /Mountain Master/);
+  assert.doesNotMatch(as12!.chassis || "", /Freightliner/);
+
+  assert.equal(findPowertrainCorrection("2009", "Entegra Coach", "Cornerstone", "45DL"), null);
+  assert.equal(findPowertrainCorrection("2009", "Entegra Coach", "Anthem", "42DL"), null);
+  assert.equal(findPowertrainCorrection("2009", "Entegra Coach", "Aspire", "40DRQ"), null);
+  assert.equal(findPowertrainCorrection("2010", "Entegra Coach", "Reatta", "37K"), null);
+  assert.equal(findPowertrainCorrection("2011", "Entegra Coach", "Vision", "27A"), null);
+  assert.equal(findPowertrainCorrection("2012", "Entegra Coach", "Emblem", "36H"), null);
+  assert.equal(findPowertrainCorrection("2011", "Entegra Coach", "Insignia", "36CKFL"), null);
+  assert.equal(findPowertrainCorrection("2010", "Entegra Coach", "Odyssey", "22J"), null);
+  assert.equal(findPowertrainCorrection("2011", "Entegra Coach", "Esteem", "29V"), null);
+  assert.equal(findPowertrainCorrection("2012", "Entegra Coach", "Qwest", "24L"), null);
+  assert.equal(findPowertrainCorrection("2010", "Entegra Coach", "Accolade", "37L"), null);
 });
 
 test("Tiffin 2023–2024 OEM year-first floorplans + powertrain pins", () => {

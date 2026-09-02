@@ -16832,8 +16832,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   "Entegra Coach": {
     "Cornerstone": {
       type: "Class A Diesel",
-      floorplans: ["45A", "45B", "45D", "45F", "45J", "45K", "45R", "45V", "45W", "45X", "45Y", "45Z"],
+      floorplans: ["45A", "45B", "45D", "45DL", "45DLQ", "45F", "45J", "45K", "45R", "45RB", "45RBQ", "45SL", "45V", "45W", "45X", "45Y", "45Z"],
       floorplansByYear: {
+        // OEM MY10 Cornerstone floorplans page (Wayback 2010-05-26 / 2010-12-25) + 2010_Cornerstone_stds PDF: 45DL | 45RB | 45SL · ISM 10.8 500/1550 · K2. ISX 650 / K3 is an option (n/a 45RB).
+        "2010": ["45DL", "45RB", "45SL"],
+        // OEM MY11 Build & Price (Wayback 2011-07-11, homepage titled Entegra 2011): 45DLQ | 45RB | 45SL. 600 HP ISX 15L is a $32,984 option — standard HP not printed.
+        "2011": ["45DLQ", "45RB", "45SL"],
+        // OEM MY12 Build & Price (Wayback 2011-11-14, homepage titled Entegra 2012) + standards PDF (Wayback 2011-11-25): 45DLQ | 45RBQ · 500 HP Cummins std / 600 HP option · K2 std / K3 option.
+        "2012": ["45DLQ", "45RBQ"],
         // OEM MY13 Cornerstone product floorplans (Wayback 2013-03-02 + 2013-09-27): 45J | 45K · ISX 600/1950 · K3. No 45B yet.
         "2013": ["45J", "45K"],
         // OEM MY14 Cornerstone floorplans page titled "2014 Cornerstone Floorplans" (Wayback 2014-07-20): 45B | 45J | 45K · ISX 600/1950 · K3 raised rail
@@ -16896,17 +16902,36 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2013,
+      yearStart: 2010,
       yearEnd: 2026,
       description: "Entegra Cornerstone — flagship diesel on Spartan K3 + Cummins X15 605 / 1,950, Allison 4000 MH, hitch 20k. SL chassis is an option — do not lock one chassis as only. Year-end 2026: no 2027 OEM diesel Class A page.",
       powertrainByYear: [
                 {
           from: 2010,
+          to: 2010,
+          engine: "Cummins ISM 10.8L 500HP",
+          horsepower: 500,
+          torqueLbFt: 1550,
+          chassis: "Spartan K2",
+          transmission: "Allison GEN 4 4000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY10 Cornerstone standards PDF (2010_Cornerstone_stds, Wayback 2010-12-25): ISM 10.8 500 / 1,550 · Spartan K2 tag · Allison GEN 4 4000 MH · hitch 15k · raised rail. Options print Spartan K3 + ISX 650 (14.9L) n/a on 45RB. Do not stamp 2013 ISX 600 / K3-only or later X15 backward."
+        },
+        {
+          from: 2011,
+          to: 2011,
+          engine: "Cummins (standard HP not printed on OEM 2011 Build & Price)",
+          horsepower: 0,
+          chassis: "Spartan (600 HP ISX 15L is a $32,984 option)",
+          notes: "OEM MY11 Build & Price (Wayback 2011-07-11): 45DLQ / 45RB / 45SL. 600 HP ISX 15 liter is an option. Do not stamp 2010 ISM 500 or 2013 ISX 600 as the locked MY11 standard."
+        },
+        {
+          from: 2012,
           to: 2012,
-          engine: "Cummins ISL / ISB 300–450HP (era)",
-          horsepower: 380,
-          chassis: "Spartan K3",
-          notes: "2010–2012 left for the final Entegra walk-back. Do not copy 2013–2014 ISX 600 / hitch 15k backward."
+          engine: "Cummins 500HP",
+          horsepower: 500,
+          chassis: "Spartan K2",
+          notes: "OEM MY12 Cornerstone standards PDF (Wayback 2011-11-25) + Entegra 2012 Build & Price: 500 HP Cummins standard, 600 HP option · Spartan K2 standard, K3 option. Floorplans 45DLQ / 45RBQ. Do not lock ISX 600 / K3 as the only MY12 pin."
         },
         {
           from: 2013,
@@ -17010,8 +17035,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Anthem": {
       type: "Class A Diesel",
-      floorplans: ["37K", "42DEQ", "42DLQ", "42RBQ", "44A", "44B", "44D", "44DLQ", "44F", "44L", "44R", "44SL", "44V", "44W", "44Z"],
+      floorplans: ["37K", "42DEQ", "42DL", "42DLQ", "42RB", "42RBQ", "42SK", "44A", "44B", "44D", "44DLQ", "44F", "44L", "44R", "44SL", "44V", "44W", "44Z"],
       floorplansByYear: {
+        // OEM MY10 Anthem floorplans page (entegracoach.com/products/anthem/floorplans.php, Wayback 2010-05-26)
+        // + 2010_Anthem_stds PDF: 42DL | 42RB | 42SK | 44SL · ISL 425/1200 @ 1300 · Allison GEN 4 3000 MH · Mountain Master · hitch 15k. Not 450 / 1,250.
+        "2010": ["42DL", "42RB", "42SK", "44SL"],
+        // OEM MY11 Build & Price (Wayback 2011-07-11, homepage titled Entegra 2011) product_id=268: 42DLQ | 42RBQ | 44DLQ.
+        // No 44SL this year (44SL returns on the Entegra 2012 Build & Price). 2011 Anthem brochure (filename_91.pdf) is not in Wayback CDX — HP not pinned.
+        "2011": ["42DLQ", "42RBQ", "44DLQ"],
+        // OEM MY12 Build & Price (Wayback 2011-11-14, homepage titled Entegra 2012) product_id=398 + 2012 Anthem brochure (12-ATHM-PL / filename_142.pdf):
+        // 42DLQ | 42RBQ | 44DLQ | 44SL · ISL 450/1250 · Allison GEN 4 3000 MH · Mountain Master · hitch 15k.
+        "2012": ["42DLQ", "42RBQ", "44DLQ", "44SL"],
         // OEM MY13 Anthem product floorplans (Wayback 2013-03-04): 42DEQ | 42DLQ | 42RBQ | 44DLQ | 44SL · ISL 450/1250 · Mountain Master. No 44B yet.
         "2013": ["42DEQ", "42DLQ", "42RBQ", "44DLQ", "44SL"],
         // OEM MY14 Anthem floorplans page titled "2014 Anthem Floorplans" (Wayback 2014-07-20): 42DEQ | 42DLQ | 42RBQ | 44B | 44DLQ | 44SL · ISL 450/1250 · Mountain Master raised rail
@@ -17073,17 +17107,38 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2013,
+      yearStart: 2010, // official 2010 Anthem floorplans page + 2010 Anthem Standards & Options. Do not walk earlier than MY2010.
       yearEnd: 2026,
       description: "Entegra Anthem — Spartan K2 diesel under Cornerstone. OEM MY25–26: L9 450 / 1,250 locked (not an L9/X12 band), Allison 3000 MH, hitch 15k (10k on 37K). Year-end 2026.",
       powertrainByYear: [
                 {
           from: 2010,
+          to: 2010,
+          engine: "Cummins ISL 8.9L 425HP",
+          horsepower: 425,
+          torqueLbFt: 1200,
+          chassis: "Spartan Mountain Master",
+          transmission: "Allison GEN 4 3000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY10 Anthem standards PDF (2010_Anthem_stds, Wayback 2010-12-25): ISL 425 / 1,200 @ 1300 · Allison GEN 4 3000 MH · Spartan Mountain Master tag · hitch 15k · raised rail. Not 450 / 1,250. Do not stamp 2013 ISL 450 / K2 / L9 backward."
+        },
+        {
+          from: 2011,
+          to: 2011,
+          engine: "Cummins (2011 Anthem brochure filename_91.pdf not in Wayback CDX — HP not pinned)",
+          horsepower: 0,
+          notes: "OEM MY11 Build & Price (Wayback 2011-07-11): 42DLQ / 42RBQ / 44DLQ. No 44SL. Brochure not archived — do not stamp 2010 ISL 425 or 2012 ISL 450 as the locked MY11 standard."
+        },
+        {
+          from: 2012,
           to: 2012,
-          engine: "Cummins ISL / ISB 300–450HP (era)",
-          horsepower: 380,
-          chassis: "Spartan K3",
-          notes: "2010–2012 left for the final Entegra walk-back. Do not stamp 2013–2014 ISL 450 / Mountain Master or later K2 / L9 backward."
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan Mountain Master",
+          transmission: "Allison GEN 4 3000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY12 Anthem brochure (12-ATHM-PL / entegracoach.com 2012 Anthem Brochure) + Entegra 2012 Build & Price: ISL 450 / 1,250 @ 1300 · Allison GEN 4 3000 MH · Spartan Mountain Master · hitch 15k. Not L9. Do not stamp K2 backward."
         },
         {
           from: 2013,
@@ -17198,8 +17253,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Aspire": {
       type: "Class A Diesel",
-      floorplans: ["38M", "38R", "39E", "40P", "42D", "42DEQ", "42DLQ", "42RBQ", "44B", "44D", "44F", "44R", "44U", "44V", "44W", "44Z"],
+      floorplans: ["38M", "38R", "39E", "40DRQ", "40P", "40SKT", "42D", "42DEQ", "42DL", "42DLQ", "42RB", "42RBQ", "42SA", "44B", "44D", "44F", "44R", "44U", "44V", "44W", "44Z"],
       floorplansByYear: {
+        // OEM MY10 Aspire floorplans page (entegracoach.com/products/aspire/floorplans.php, Wayback 2010-05-26 / 2010-12-25):
+        // 40DRQ | 40SKT | 42DL | 42RB | 42SA. Linked standards PDF is titled "2009 Aspire Standards & Options" — do not use for MY2010.
+        "2010": ["40DRQ", "40SKT", "42DL", "42RB", "42SA"],
+        // OEM MY11 Aspire brochure (prod_brochure_filename_92.pdf, Wayback 2011-04-09) + Entegra 2011 Build & Price product_id=271:
+        // 40DRQ | 40SKT | 42DLQ | 42RBQ · ISL 400/1250 · Allison 3000 MH · Freightliner XCR · hitch 10k. Not Spartan. Not 450.
+        "2011": ["40DRQ", "40SKT", "42DLQ", "42RBQ"],
+        // OEM MY12 Aspire brochure (prod_brochure_filename_143.pdf, Wayback 2011-11-25) + Entegra 2012 Build & Price product_id=397:
+        // 40DRQ | 40SKT | 42DEQ | 42DLQ | 42RBQ (42DEQ is on official Build & Price; brochure spec table lists the other four).
+        // ISL 450/1250 · Allison 3000 MH · Spartan Mountain Master (chassis switched from Freightliner) · hitch 15k.
+        "2012": ["40DRQ", "40SKT", "42DEQ", "42DLQ", "42RBQ"],
         // OEM MY13 Aspire product floorplans (Wayback 2013-03-04): 42DEQ | 42DLQ | 42RBQ · ISL 450/1250 · Mountain Master. No 39E / 44B / 44U yet.
         "2013": ["42DEQ", "42DLQ", "42RBQ"],
         // OEM MY14 Aspire floorplans page titled "2014 Aspire Floorplans" (Wayback 2014-06-23): 39E | 42DEQ | 42DLQ | 42RBQ | 44B | 44U · ISL 450/1250 · Mountain Master raised rail
@@ -17261,11 +17326,40 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2013,
+      yearStart: 2010, // official 2010 Aspire floorplans page (Wayback 2010-05-26). Do not walk earlier than MY2010 (2009 Aspire PDF is a different year).
       yearEnd: 2026,
       description: "Entegra Aspire — Spartan K2 diesel under Anthem. OEM MY25–26: L9 450 / 1,250, hitch 15k (10k on 40P). Year-end 2026.",
       powertrainByYear: [
                 {
+          from: 2010,
+          to: 2010,
+          engine: "Cummins (2010 Aspire linked standards PDF is titled 2009 — HP not pinned)",
+          horsepower: 0,
+          notes: "OEM MY10 Aspire floorplans page (Wayback 2010-05-26 / 2010-12-25): 40DRQ / 40SKT / 42DL / 42RB / 42SA. Linked standards PDF is titled \"2009 Aspire Standards & Options\" (ISC 360 / Freightliner XCR) — do not use for MY2010. Do not stamp 2011 ISL 400 / Freightliner or 2012 ISL 450 / Spartan backward."
+        },
+        {
+          from: 2011,
+          to: 2011,
+          engine: "Cummins ISL 8.9L 400HP",
+          horsepower: 400,
+          torqueLbFt: 1250,
+          chassis: "Freightliner XCR",
+          transmission: "Allison 3000 MH 6-speed",
+          towingCapacity: 10000,
+          notes: "OEM MY11 Aspire brochure (prod_brochure_filename_92.pdf, Wayback 2011-04-09): ISL 400 / 1,250 · Allison 3000 MH · Freightliner XCR (tag on 42DLQ/42RBQ) · hitch 10k. Not Spartan. Not 450. Do not stamp 2012 Mountain Master / 15k hitch backward."
+        },
+        {
+          from: 2012,
+          to: 2012,
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan Mountain Master",
+          transmission: "Allison 3000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY12 Aspire brochure (prod_brochure_filename_143.pdf, Wayback 2011-11-25): ISL 450 / 1,250 · Allison 3000 MH · Spartan Mountain Master (chassis switched from Freightliner) · hitch 15k. Not L9. Do not stamp K2 backward."
+        },
+        {
           from: 2013,
           to: 2013,
           engine: "Cummins ISL 8.9L 450HP",
@@ -18844,7 +18938,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 75,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2026,
+      yearStart: 2026, // official 2026 Insignia page + 2026 Insignia brochure. 2011 Entegra Build & Price listed a diesel Class A Insignia (36CKFL / 40CKFL / 40FKSA) — different product, not merged into this 2026 Class B Sprinter line. Not listed on 2010 / 2012 / 2025 Entegra year pages.
       description: "Entegra Insignia — Class B on Sprinter 3500 XD AWD. OEM MY26–27: 24B only, 2.0 211 / 332, 9-speed.",
       powertrainByYear: [
         { from: 2026, to: 2027, engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP", horsepower: 211, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter 3500 XD AWD", transmission: "9-speed automatic", notes: "OEM MY26–27 Insignia 24B" },
