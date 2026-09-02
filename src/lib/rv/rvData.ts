@@ -17525,7 +17525,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Vision": {
       type: "Class A Gas",
-      floorplans: ["26X", "27A", "29F", "29S", "31B", "31R", "31V"],
+      floorplans: ["26X", "27A", "29F", "29S", "31R", "31V"],
       floorplansByYear: {
         // No OEM MY13 / MY14 Vision product page (2013–2014 lineup is diesel Class A only: Aspire / Anthem / Cornerstone). Omit 2013–2014.
         // No OEM MY15 / MY16 Vision year page (2015–2016 lineup is diesel Class A only). Omit 2015–2016.
@@ -18095,7 +18095,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Esteem": {
       type: "Class C",
-      floorplans: ["26D", "26U", "27U", "29V", "30X", "31F", "31L", "31W"],
+      floorplans: ["26D", "27U", "29V", "30X", "31F", "31L"],
       floorplansByYear: {
         // No OEM MY13 / MY14 Esteem product page (2013–2014 lineup is diesel Class A only: Aspire / Anthem / Cornerstone). Omit 2013–2014.
         // No OEM MY15 / MY16 Esteem year page (2015–2016 lineup is diesel Class A only). Omit 2015–2016.
