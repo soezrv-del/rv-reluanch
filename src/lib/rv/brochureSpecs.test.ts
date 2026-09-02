@@ -2530,7 +2530,7 @@ test("Thor 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(th.Twist?.yearEnd, 2025);
   assert.equal(th["Inception HD"]?.yearStart, 2026);
   assert.equal(th["Pasadena SV"]?.yearStart, 2026);
-  assert.equal(th.Resonate?.yearStart, 2025);
+  assert.equal(th.Resonate?.yearStart, 2023);
   assert.equal(th.Sequence?.fuelType, "Gas");
   assert.equal(th.Rize?.type, "Class B");
   assert.equal(th.Rize?.fuelType, "Gas");
@@ -2700,6 +2700,134 @@ test("Thor 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(findPowertrainCorrection("2025", "Thor", "Inception HD", "34XG"), null);
   const huPin = findPowertrainCorrection("2027", "Thor", "Hurricane", "35J");
   assert.equal(huPin!.horsepower, 335);
+});
+
+test("Thor 2023–2024 OEM year-first floorplans + powertrain pins", () => {
+  const th = CATALOG_INDEX.Thor;
+  assert.ok(th);
+
+  assert.equal(th.Resonate?.yearStart, 2023);
+  assert.equal(th.Indigo?.yearStart, 2023);
+  assert.equal(th.Luminate?.yearStart, 2023);
+  assert.equal(th.Riviera?.yearStart, 2023);
+  assert.equal(th.Scope?.yearStart, 2023);
+  assert.equal(th.Tellaro?.yearStart, 2023);
+  assert.equal(th.Echelon?.yearStart, 2023);
+  assert.equal(th["Four Winds Sprinter"]?.yearStart, 2023);
+  assert.equal(th["Chateau Sprinter"]?.yearStart, 2023);
+  assert.equal(th["Quantum Sprinter"]?.yearStart, 2023);
+  assert.equal(th["Echelon Sprinter"]?.yearStart, 2023);
+  assert.equal(th.Delano?.yearStart, 2023);
+  assert.equal(th.Tiburon?.yearStart, 2023);
+  assert.equal(th["Compass AWD"]?.yearStart, 2023);
+  assert.equal(th.Omni?.yearStart, 2023);
+  assert.equal(th.Pasadena?.yearStart, 2023);
+  assert.equal(th.Inception?.yearStart, 2023);
+  assert.equal(th["Outlaw Class A"]?.yearStart, 2023);
+  assert.equal(th["Outlaw Class C"]?.yearStart, 2023);
+  assert.equal(th.Tranquility?.yearStart, 2023);
+  assert.equal(th.Dazzle?.yearStart, 2023);
+  assert.equal(th.Twist?.yearStart, 2023);
+  assert.equal(th["Palazzo GT"]?.yearStart, 2024);
+  assert.equal(th.Palladium?.yearStart, 2024);
+  assert.equal(th.Talavera?.yearStart, 2024);
+  assert.equal(th["Outlaw Wild West"]?.yearStart, 2024);
+  assert.equal(th["Inception HD"]?.yearStart, 2026);
+  assert.equal(th["Pasadena SV"]?.yearStart, 2026);
+  assert.equal(th["Gemini TRIP"]?.yearStart, 2025);
+  assert.equal(th["Compass GO"]?.yearStart, 2025);
+
+  assert.equal(th.Hurricane?.years?.includes(2023), true);
+  assert.equal(th.Hurricane?.years?.includes(2024), true);
+  assert.equal(th.Tuscany?.years?.includes(2023), true);
+  assert.equal(th.Tuscany?.years?.includes(2024), false);
+  assert.equal(th.Challenger?.yearEnd, 2024);
+  assert.equal(th.Geneva?.yearEnd, 2024);
+  assert.equal(th["Four Winds Siesta"]?.yearEnd, 2024);
+
+  const block = src("rvData.ts");
+  const t0 = block.indexOf("  Thor: {");
+  const t1 = block.indexOf("  Coachmen: {");
+  const thor = block.slice(t0, t1);
+
+  const ace = thor.slice(thor.indexOf("    ACE: {"), thor.indexOf("    Vegas: {"));
+  assert.match(ace, /"2023": \["29D", "29G", "30C", "32B"\]/);
+  assert.match(ace, /"2024": \["29D", "29G", "30C", "32B"\]/);
+  assert.doesNotMatch(ace, /"2023": \["27.1"/);
+
+  const ax = thor.slice(thor.indexOf("    Axis: {"), thor.indexOf("    Sereno: {"));
+  assert.match(ax, /"2023": \["24.1", "24.3", "24.4", "25.7"\]/);
+  assert.match(ax, /"2024": \["24.1", "25.7", "26.1"\]/);
+  assert.doesNotMatch(ax, /"2023": .*"28.1"/);
+  assert.doesNotMatch(ax, /"2024": .*"28.1"/);
+  assert.doesNotMatch(ax, /"2025": .*"28.1"/);
+  assert.match(ax, /"2026": \["24.1", "26.1", "26.2", "28.1"\]/);
+
+  const vg = thor.slice(thor.indexOf("    Vegas: {"), thor.indexOf("    Axis: {"));
+  assert.match(vg, /"2023": \["24.1", "24.3", "24.4", "25.7"\]/);
+  assert.doesNotMatch(vg, /"2023": .*"28.1"/);
+  assert.doesNotMatch(vg, /"2024": .*"28.1"/);
+
+  const hu = thor.slice(thor.indexOf("    Hurricane: {"), thor.indexOf('    "Four Winds Majestic"'));
+  assert.match(hu, /"2023": \["29M", "34A", "34J", "34R", "35M"\]/);
+  assert.match(hu, /"2024": \["29M", "34A", "34J", "34R", "35M"\]/);
+  assert.doesNotMatch(hu, /"2023": .*"35A"/);
+  assert.doesNotMatch(hu, /"2024": .*"35A"/);
+  assert.doesNotMatch(hu, /"2023": .*"36H"/);
+
+  const seq = thor.slice(thor.indexOf("    Sequence: {"), thor.indexOf("    Sanctuary: {"));
+  assert.match(seq, /"2023": \["20A", "20J", "20K", "20L"\]/);
+  assert.match(seq, /"2024": \["20A", "20J", "20K", "20L"\]/);
+  assert.doesNotMatch(seq, /"2023": .*"20U"/);
+  assert.doesNotMatch(seq, /"2024": .*"20U"/);
+  assert.match(seq, /"2025": \["20H", "20J", "20L"\]/);
+
+  const fw = thor.slice(thor.indexOf('    "Four Winds": {'), thor.indexOf("    Chateau: {"));
+  assert.match(fw, /"2023": \["22B", "22E", "24F", "25M", "25V", "26X", "27R", "28A", "28Z", "31E", "31EV", "31M", "31MV", "31W", "31WV"\]/);
+  assert.match(fw, /"2024": \["22B", "22E", "24F", "25V", "26X", "27P", "28A", "28Z", "31EV", "31MV", "31WV"\]/);
+  assert.doesNotMatch(fw, /"2023": .*"27P"/);
+  assert.doesNotMatch(fw, /"2024": .*"27R"/);
+  assert.doesNotMatch(fw, /"2023": .*"19Z"/);
+  assert.doesNotMatch(fw, /"2024": .*"19Z"/);
+
+  const tu = thor.slice(thor.indexOf("    Tuscany: {"), thor.indexOf("    Palazzo: {"));
+  assert.match(tu, /"2023": \["40RT", "45BX", "45MX"\]/);
+  assert.doesNotMatch(tu, /"2024":/);
+
+  const pa = thor.slice(thor.indexOf("    Palazzo: {"), thor.indexOf("    Aria: {"));
+  assert.match(pa, /"2023": \["33.5", "33.6", "37.4", "37.5", "37.6"\]/);
+  assert.match(pa, /"2024": \["33.5", "33.6", "37.4", "37.5", "37.6"\]/);
+
+  const ace23 = findPowertrainCorrection("2023", "Thor", "ACE", "32B");
+  assert.equal(ace23!.horsepower, 350);
+  assert.equal(ace23!.torqueLbFt, 468);
+  const ace27 = findPowertrainCorrection("2027", "Thor", "ACE", "32B");
+  assert.equal(ace27!.horsepower, 335);
+  const ax23 = findPowertrainCorrection("2023", "Thor", "Axis", "24.1");
+  assert.equal(ax23!.horsepower, 0);
+  const ax27 = findPowertrainCorrection("2027", "Thor", "Axis", "24.1");
+  assert.equal(ax27!.horsepower, 325);
+  const seq23 = findPowertrainCorrection("2023", "Thor", "Sequence", "20A");
+  assert.equal(seq23!.horsepower, 276);
+  assert.equal(seq23!.fuelType, "Gas");
+  const ch24 = findPowertrainCorrection("2024", "Thor", "Challenger", "35MQ");
+  assert.equal(ch24!.horsepower, 335);
+  const mag23 = findPowertrainCorrection("2023", "Thor", "Magnitude", "XG32");
+  assert.equal(mag23!.horsepower, 330);
+  assert.equal(mag23!.torqueLbFt, 825);
+  const mag24 = findPowertrainCorrection("2024", "Thor", "Magnitude", "AX29");
+  assert.equal(mag24!.horsepower, 0);
+  const pal23 = findPowertrainCorrection("2023", "Thor", "Palazzo", "33.5");
+  assert.equal(pal23!.horsepower, 0);
+  const fw23 = findPowertrainCorrection("2023", "Thor", "Four Winds", "28A");
+  assert.equal(fw23!.horsepower, 0);
+  assert.equal(fw23!.fuelType, "Gas");
+  const fws23 = findPowertrainCorrection("2023", "Thor", "Four Winds Sprinter", "24LT");
+  assert.equal(fws23!.horsepower, 188);
+  const fws24 = findPowertrainCorrection("2024", "Thor", "Four Winds Sprinter", "24LT");
+  assert.equal(fws24!.horsepower, 0);
+  assert.equal(findPowertrainCorrection("2023", "Thor", "Inception HD", "34XG"), null);
+  assert.equal(findPowertrainCorrection("2024", "Thor", "Pasadena SV", "34XG"), null);
 });
 
 test("Jayco 2023–2024 OEM year-first floorplans + powertrain pins", () => {
