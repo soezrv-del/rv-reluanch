@@ -11839,7 +11839,9 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(idx["Cougar 5th Wheel"]?.years?.includes(2027), true);
   assert.equal(idx["Cougar Half-Ton"]?.type, "Fifth Wheel");
   assert.equal(idx["Cougar Half-Ton"]?.years?.includes(2027), true);
-  assert.equal(idx["Cougar Half-Ton Travel Trailer"], undefined);
+  assert.equal(idx["Cougar Half-Ton Travel Trailer"]?.type, "Travel Trailer");
+  assert.equal(idx["Cougar Half-Ton Travel Trailer"]?.yearStart, 2012);
+  assert.deepEqual(idx["Cougar Half-Ton Travel Trailer"]?.years, [2027]);
   assert.equal(idx.Arcadia?.years?.includes(2027), true);
   assert.equal(idx["Passport Super Lite"]?.yearStart, 2019);
   assert.deepEqual(idx["Passport Super Lite"]?.years, [2027]);
@@ -11907,12 +11909,20 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
   assert.match(cst, /yearStart:\s*2023/);
   assert.doesNotMatch(cst, /"2026":/);
 
-  const cht = k.slice(k.indexOf('    "Cougar Half-Ton": {'), k.indexOf("    Bullet: {"));
+  const cht = k.slice(k.indexOf('    "Cougar Half-Ton": {'), k.indexOf('    "Cougar Half-Ton Travel Trailer"'));
   assert.match(cht, /"2027": \["23MLE", "26RES", "26RKE", "28RLI", "29MBD", "30REP"\]/);
   assert.doesNotMatch(cht, /"2027": .*"29RKS"/);
   assert.doesNotMatch(cht, /"2027": .*"21LBK"/);
   assert.doesNotMatch(cht, /"2027": .*"25MLE"/);
   assert.match(cht, /type: "Fifth Wheel"/);
+
+  const chtt = k.slice(k.indexOf('    "Cougar Half-Ton Travel Trailer": {'), k.indexOf("    Bullet: {"));
+  assert.match(chtt, /"2027": \["21LBK", "22MLS", "25FKD", "25MLE", "26LBW", "28BHS", "29RDS", "29RKE", "29RLP"\]/);
+  assert.match(chtt, /type: "Travel Trailer"/);
+  assert.match(chtt, /yearStart:\s*2012/);
+  assert.doesNotMatch(chtt, /"2026":/);
+  assert.doesNotMatch(chtt, /"2027": .*"23MLE"/);
+  assert.doesNotMatch(chtt, /"2027": .*"29RKS"/);
 
   const arc = k.slice(k.indexOf("    Arcadia: {"), k.indexOf('    "Avalanche": {'));
   assert.match(arc, /"2027": \["3260RL", "3790RO", "3850RK"\]/);
@@ -11963,15 +11973,20 @@ test("Keystone Cougar TT hygiene: no 25FKD leak; Half-Ton FW 2027 unchanged; no 
   assert.match(ctt, /type: "Travel Trailer"/);
   assert.doesNotMatch(ctt, /"25FKD"/);
   assert.doesNotMatch(ctt, /"2027":/);
-  // Half-Ton TT OEM set must stay off the collapsed TT bucket (GAP own key).
+  // Half-Ton TT OEM set must stay off the collapsed TT bucket (sibling key owns them).
   for (const code of ["21LBK", "22MLS", "25MLE", "26LBW", "28BHS", "29RDS", "29RKE", "29RLP"]) {
     assert.doesNotMatch(ctt, new RegExp(`"${code}"`));
   }
 
-  const cht = k.slice(k.indexOf('    "Cougar Half-Ton": {'), k.indexOf("    Bullet: {"));
+  const cht = k.slice(k.indexOf('    "Cougar Half-Ton": {'), k.indexOf('    "Cougar Half-Ton Travel Trailer"'));
   assert.match(cht, /"2027": \["23MLE", "26RES", "26RKE", "28RLI", "29MBD", "30REP"\]/);
   assert.doesNotMatch(cht, /"2027": .*"29RKS"/);
   assert.doesNotMatch(cht, /"2027": .*"25FKD"/);
+
+  const chtt = k.slice(k.indexOf('    "Cougar Half-Ton Travel Trailer": {'), k.indexOf("    Bullet: {"));
+  assert.match(chtt, /"2027": \["21LBK", "22MLS", "25FKD", "25MLE", "26LBW", "28BHS", "29RDS", "29RKE", "29RLP"\]/);
+  assert.match(chtt, /type: "Travel Trailer"/);
+  assert.doesNotMatch(chtt, /"2026":/);
 
   // Live OEM compare cards are 2027-only — do not invent 2026 by copying 2027.
   const aae = k.slice(k.indexOf('    "Alpine Avalanche Edition": {'), k.indexOf("    Arcadia: {"));

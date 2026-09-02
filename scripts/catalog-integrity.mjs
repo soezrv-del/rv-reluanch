@@ -44,6 +44,21 @@ const FORBIDDEN_FLOORPLANS = {
     codes: ["303RLS", "311BHS", "320MKS", "337RLS"],
     reason: "FW codes belong on Reflection, not the travel-trailer twin",
   },
+  "Keystone|Cougar Half-Ton Travel Trailer": {
+    codes: [
+      "23MLE",
+      "26RES",
+      "26RKE",
+      "28RLI",
+      "29MBD",
+      "30REP",
+      "29RKS",
+      "2100ML",
+      "2700BH",
+      "3100BH",
+    ],
+    reason: "Half-Ton FW / Cougar Sport codes stay off the Half-Ton TT sibling",
+  },
   "Keystone|Cougar": {
     codes: [
       "2100ML",
@@ -61,7 +76,7 @@ const FORBIDDEN_FLOORPLANS = {
       "29RKS",
       // Half-Ton TT OEM set (live keystonerv.com/product/cougar-half-ton/luxury-travel-trailers/floorplans):
       // 21LBK | 22MLS | 25FKD | 25MLE | 26LBW | 28BHS | 29RDS | 29RKE | 29RLP
-      // GAP own key this slice — do not dump into collapsed Cougar TT.
+      // These codes live on Cougar Half-Ton Travel Trailer — do not dump into collapsed Cougar TT.
       "21LBK",
       "22MLS",
       "25FKD",
@@ -120,6 +135,7 @@ const EXPECTED_TYPE = {
   "Keystone|Cougar": "travel trailer",
   "Keystone|Cougar 5th Wheel": "fifth wheel",
   "Keystone|Cougar Half-Ton": "fifth wheel",
+  "Keystone|Cougar Half-Ton Travel Trailer": "travel trailer",
   "Keystone|Sprinter": "fifth wheel",
   "Grand Design|Lineage Series E": "class c",
   "Grand Design|Lineage Series M": "class c",
@@ -1775,6 +1791,7 @@ function main() {
         "Cougar 5th Wheel",
         "Cougar Sport",
         "Cougar Half-Ton",
+        "Cougar Half-Ton Travel Trailer",
         "Alpine",
         "Alpine Avalanche Edition",
         "Sprinter",
@@ -1792,7 +1809,6 @@ function main() {
       }
 
       const banned = [
-        "Cougar Half-Ton Travel Trailer",
         "Cougar Western Elevation",
         "Coleman",
         "Reign",
@@ -1898,7 +1914,7 @@ function main() {
         fail("Keystone|Cougar Sport yearStart must be 2023 (empty older fby — no invent)");
       }
 
-      const cht = slice("Cougar Half-Ton", "Bullet");
+      const cht = slice("Cougar Half-Ton", "Cougar Half-Ton Travel Trailer");
       if (!/"2027": \["23MLE", "26RES", "26RKE", "28RLI", "29MBD", "30REP"\]/.test(cht)) {
         fail("Keystone|Cougar Half-Ton MY27 OEM FW plans missing (23MLE/26RES/26RKE/28RLI/29MBD/30REP)");
       }
@@ -1907,6 +1923,17 @@ function main() {
       }
       if (/"2027": .*"21LBK"/.test(cht) || /"2027": .*"25MLE"/.test(cht) || /"2027": .*"29RLP"/.test(cht)) {
         fail("Keystone|Cougar Half-Ton FW must not absorb Half-Ton TT codes");
+      }
+
+      const chtt = slice("Cougar Half-Ton Travel Trailer", "Bullet");
+      if (!/"2027": \["21LBK", "22MLS", "25FKD", "25MLE", "26LBW", "28BHS", "29RDS", "29RKE", "29RLP"\]/.test(chtt)) {
+        fail("Keystone|Cougar Half-Ton Travel Trailer MY27 OEM plans missing (21LBK/22MLS/25FKD/25MLE/26LBW/28BHS/29RDS/29RKE/29RLP)");
+      }
+      if (!/yearStart:\s*2012/.test(chtt) || /"2026":/.test(chtt)) {
+        fail("Keystone|Cougar Half-Ton Travel Trailer yearStart must be 2012 (empty older fby — no invent)");
+      }
+      if (/"2027": .*"23MLE"/.test(chtt) || /"2027": .*"29RKS"/.test(chtt) || /"2027": .*"2100ML"/.test(chtt)) {
+        fail("Keystone|Cougar Half-Ton Travel Trailer must not absorb Half-Ton FW or Sport codes");
       }
 
       const arc = slice("Arcadia", "Avalanche");
