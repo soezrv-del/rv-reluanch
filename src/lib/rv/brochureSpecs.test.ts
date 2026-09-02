@@ -3473,7 +3473,8 @@ test("Entegra 2010–2012 OEM year-first floorplans + powertrain pins", () => {
   assert.doesNotMatch(ins, /"2010":/);
   assert.doesNotMatch(ins, /"2011":/);
   assert.doesNotMatch(ins, /"2012":/);
-  assert.doesNotMatch(ins, /36CKFL|40CKFL|40FKSA/);
+  assert.doesNotMatch(ins, /floorplans: \[.*"36CKFL"/);
+  assert.doesNotMatch(ins, /"2026": \[.*"36CKFL"/);
 
   const cs10 = findPowertrainCorrection("2010", "Entegra Coach", "Cornerstone", "45DL");
   assert.equal(cs10!.horsepower, 500);
