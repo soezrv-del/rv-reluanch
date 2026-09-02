@@ -1208,6 +1208,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Ford Triton V10 6.8L 362HP or Workhorse 340HP (by option)",
           horsepower: 0,
           chassis: "Ford F53 / Workhorse (by option)",
+          fuelType: "Gas",
+          type: "Class A Gas",
           notes: "OEM 2011_Canyon_Star 3411/3642: Ford 362 / Workhorse 340 option-band. HP 0. Not Super C diesel."
         },
         {
@@ -1218,6 +1220,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 362,
           chassis: "Ford F53",
           transmission: "TorqShift automatic",
+          fuelType: "Gas",
+          type: "Class A Gas",
           notes: "OEM 2011_Canyon_Star 38–39' Ford-only cards: F-53 362. Not Workhorse, not Super C, not FED 340."
         },
         {
@@ -1225,6 +1229,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           to: 2011,
           engine: "Ford Triton V10 6.8L 362HP or Workhorse 340HP (by floorplan)",
           horsepower: 0,
+          fuelType: "Gas",
+          type: "Class A Gas",
           notes: "OEM 2011_Canyon_Star year-first: Ford/Workhorse option-band on 34–36'. HP 0. Gas, not Super C leftover. No 2010 OEM card."
         },
         {
@@ -1234,6 +1240,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 362,
           chassis: "Ford F53",
           transmission: "TorqShift automatic",
+          fuelType: "Gas",
+          type: "Class A Gas",
           notes: "OEM 2012_Canyon_Star: Gas Motor Coach — F-53 Triton V10 362 on every Canyon plan. Not Super C diesel, not FED 340."
         },
         {
@@ -1244,6 +1252,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Ford F53",
           transmission: "TorqShift automatic",
           generator: "Onan 5.5kW Gas",
+          fuelType: "Gas",
+          type: "Class A Gas",
           notes: "OEM 2013_Canyon_Star / 2014_Canyon_Star: Gas Motor Coach — F-53 Triton V10 362. Not Super C diesel, not FED 340. No 3947."
         },
         {
@@ -1254,6 +1264,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Ford F53",
           transmission: "TorqShift automatic",
           generator: "Onan 5.5kW Gas",
+          fuelType: "Gas",
+          type: "Class A Gas",
           notes: "OEM/RVUSA MY15–16 Canyon Star: Gas Motor Coach — F-53 Triton V10 362. Not Super C diesel, not FED 340. No 3947."
         },
         {
@@ -1264,6 +1276,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Ford F53",
           transmission: "TorqShift automatic",
           generator: "Onan 5.5kW Gas",
+          fuelType: "Gas",
+          type: "Class A Gas",
           notes: "OEM MY17–20 Canyon Star: Gas Motor Coach — F-53 26,000 lb, 320 HP Triton V10. Not FED B6.7 340 diesel (that arrives MY21). Not Super C."
         },
         {
@@ -1274,6 +1288,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           torqueLbFt: 700,
           chassis: "Freightliner Custom Chassis front-engine diesel",
           transmission: "Allison",
+          fuelType: "Diesel",
+          type: "Class A Diesel",
           notes: "OEM MY21–24 Canyon Star: FED B6.7 340 / 700. MY21 3513/3710/3719/3722/3747/3911/3927/3929; MY22 3513/3710/3722/3927/3929. Not Super C. 3947 is not a 2021–2022 plan."
         },
         {
@@ -1284,6 +1300,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           torqueLbFt: 700,
           chassis: "Freightliner Custom Chassis front-engine diesel",
           transmission: "Allison",
+          fuelType: "Diesel",
+          type: "Class A Diesel",
           notes: "OEM MY25–27 Canyon Star DigiBrochure: FED B6.7 340 / 700, 3947 toy hauler"
         }
       ]

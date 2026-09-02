@@ -12,6 +12,8 @@ export type PowertrainCorrection = {
   modelIncludes: string;
   /** Optional floorplan substring */
   floorplanIncludes?: string;
+  /** Floorplans this family pin must not stamp (specific pins win). */
+  excludeFloorplans?: string[];
   engine: string;
   /**
    * Single locked HP. Use 0 when the engine is an option band
@@ -6900,22 +6902,24 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     yearEnd: 2011,
     makeIncludes: "newmar",
     modelIncludes: "canyon star",
-    engine: "Ford Triton V10 6.8L 362HP or Workhorse 340HP (by floorplan)",
-    horsepower: 0,
-    fuelType: "Gas",
-    note: "OEM 2011_Canyon_Star year-first: Ford 362 / Workhorse 340 option-band on 3411/3642. HP 0. Gas, not Super C leftover. No 2010 OEM card.",
-  },
-  {
-    yearMin: 2011,
-    yearEnd: 2011,
-    makeIncludes: "newmar",
-    modelIncludes: "canyon star",
     floorplanIncludes: "3411",
     engine: "Ford Triton V10 6.8L 362HP or Workhorse 340HP (by option)",
     horsepower: 0,
     chassis: "Ford F53 / Workhorse (by option)",
     fuelType: "Gas",
     note: "OEM 2011_Canyon_Star 3411: Ford 362 / Workhorse 340 option-band. HP 0.",
+  },
+  {
+    yearMin: 2011,
+    yearEnd: 2011,
+    makeIncludes: "newmar",
+    modelIncludes: "canyon star",
+    floorplanIncludes: "3642",
+    engine: "Ford Triton V10 6.8L 362HP or Workhorse 340HP (by option)",
+    horsepower: 0,
+    chassis: "Ford F53 / Workhorse (by option)",
+    fuelType: "Gas",
+    note: "OEM 2011_Canyon_Star 3642: Ford 362 / Workhorse 340 option-band. HP 0.",
   },
   {
     yearMin: 2011,
@@ -6929,6 +6933,43 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     transmission: "TorqShift automatic",
     fuelType: "Gas",
     note: "OEM 2011_Canyon_Star 38' 3810 Ford-only: F-53 362. Not Workhorse, not Super C, not FED 340.",
+  },
+  {
+    yearMin: 2011,
+    yearEnd: 2011,
+    makeIncludes: "newmar",
+    modelIncludes: "canyon star",
+    floorplanIncludes: "3856",
+    engine: "Ford Triton V10 6.8L 362HP",
+    horsepower: 362,
+    chassis: "Ford F53",
+    transmission: "TorqShift automatic",
+    fuelType: "Gas",
+    note: "OEM 2011_Canyon_Star 38' 3856 Ford-only: F-53 362. Not family HP 0, not Workhorse, not Super C, not FED 340.",
+  },
+  {
+    yearMin: 2011,
+    yearEnd: 2011,
+    makeIncludes: "newmar",
+    modelIncludes: "canyon star",
+    floorplanIncludes: "3920",
+    engine: "Ford Triton V10 6.8L 362HP",
+    horsepower: 362,
+    chassis: "Ford F53",
+    transmission: "TorqShift automatic",
+    fuelType: "Gas",
+    note: "OEM 2011_Canyon_Star 39' 3920 Ford-only: F-53 362. Not family HP 0, not Workhorse, not Super C, not FED 340.",
+  },
+  {
+    yearMin: 2011,
+    yearEnd: 2011,
+    makeIncludes: "newmar",
+    modelIncludes: "canyon star",
+    engine: "Ford Triton V10 6.8L 362HP or Workhorse 340HP (by floorplan)",
+    horsepower: 0,
+    fuelType: "Gas",
+    excludeFloorplans: ["3810", "3856", "3920"],
+    note: "OEM 2011_Canyon_Star year-first: Ford 362 / Workhorse 340 option-band on 3411/3642. HP 0. Must not stamp Ford-only 3810/3856/3920. Gas, not Super C leftover. No 2010 OEM card.",
   },
   {
     yearMin: 2012,
@@ -10056,6 +10097,13 @@ export function findPowertrainCorrection(
       // Exact after normalize — "35S" must not steal "35QS"
       if (!nfp || nfp !== cfp) return false;
     }
+    if (c.excludeFloorplans?.length && fp) {
+      const nfp = fp.replace(/[\s\-_/]/g, "");
+      const excluded = c.excludeFloorplans.some(
+        (x) => x.toLowerCase().replace(/[\s\-_/]/g, "") === nfp,
+      );
+      if (excluded) return false;
+    }
     // Avoid matching "discovery" rule on "discovery lxe" when a more specific exists
     if (c.modelIncludes === "discovery" && md.includes("discovery lxe")) {
       return false;
@@ -10279,6 +10327,7 @@ export function findPowertrainCorrection(
     }
     return true;
   }).sort((a, b) => {
+    // Floorplan-specific pins always beat family / option-band HP 0
     const af = a.floorplanIncludes ? 1 : 0;
     const bf = b.floorplanIncludes ? 1 : 0;
     if (bf !== af) return bf - af;

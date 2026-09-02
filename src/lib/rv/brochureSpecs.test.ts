@@ -2889,6 +2889,11 @@ test("Newmar 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
   assert.equal(nm["Super Star"]?.years?.includes(2012), false);
   assert.equal(nm["Bay Star"]?.fuelType, "Gas");
   assert.equal(nm["Bay Star Sport"]?.fuelType, "Gas");
+  // MY11–12 Canyon Star catalog/index must present Gas (Class A Gas), not FED Diesel.
+  assert.equal(nm["Canyon Star"]?.fuelTypeByYear?.["2011"], "Gas");
+  assert.equal(nm["Canyon Star"]?.fuelTypeByYear?.["2012"], "Gas");
+  assert.equal(nm["Canyon Star"]?.typeByYear?.["2011"], "Class A Gas");
+  assert.equal(nm["Canyon Star"]?.typeByYear?.["2012"], "Class A Gas");
 
   const block = src("rvData.ts");
   const n0 = block.indexOf("  Newmar: {");
@@ -3005,6 +3010,8 @@ test("Newmar 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
   assert.doesNotMatch(cs, /"2011": \["3710", "3927"\]/);
   assert.doesNotMatch(cs.slice(cs.indexOf('"2011"'), cs.indexOf('"2013"')), /"3947"/);
   assert.match(cs, /yearStart:\s*2011/);
+  assert.match(cs, /fuelType:\s*"Gas"/);
+  assert.match(cs, /type:\s*"Class A Gas"/);
 
   const essex11 = findPowertrainCorrection("2011", "Newmar", "Essex", "4517");
   assert.equal(essex11!.horsepower, 500);
@@ -3062,9 +3069,27 @@ test("Newmar 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
   const cs11opt = findPowertrainCorrection("2011", "Newmar", "Canyon Star", "3411");
   assert.equal(cs11opt!.horsepower, 0);
   assert.equal(cs11opt!.fuelType, "Gas");
+  const cs11opt3642 = findPowertrainCorrection(
+    "2011",
+    "Newmar",
+    "Canyon Star",
+    "3642",
+  );
+  assert.equal(cs11opt3642!.horsepower, 0);
+  assert.equal(cs11opt3642!.fuelType, "Gas");
   const cs11ford = findPowertrainCorrection("2011", "Newmar", "Canyon Star", "3810");
   assert.equal(cs11ford!.horsepower, 362);
   assert.equal(cs11ford!.fuelType, "Gas");
+  const cs113856 = findPowertrainCorrection("2011", "Newmar", "Canyon Star", "3856");
+  assert.equal(cs113856!.horsepower, 362);
+  assert.equal(cs113856!.fuelType, "Gas");
+  assert.match(cs113856!.engine, /Ford|V10|Triton/i);
+  assert.doesNotMatch(cs113856!.engine, /Workhorse|Cummins|B6\.7|FED|diesel/i);
+  const cs113920 = findPowertrainCorrection("2011", "Newmar", "Canyon Star", "3920");
+  assert.equal(cs113920!.horsepower, 362);
+  assert.equal(cs113920!.fuelType, "Gas");
+  assert.match(cs113920!.engine, /Ford|V10|Triton/i);
+  assert.doesNotMatch(cs113920!.engine, /Workhorse|Cummins|B6\.7|FED|diesel/i);
   const cs12 = findPowertrainCorrection("2012", "Newmar", "Canyon Star", "3511");
   assert.equal(cs12!.horsepower, 362);
   assert.equal(cs12!.fuelType, "Gas");

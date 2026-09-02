@@ -36,6 +36,29 @@ for (const make of Object.keys(RV_DATA).sort((a, b) => a.localeCompare(b))) {
         .filter((n) => Number.isFinite(n))
         .sort((a, b) => a - b);
     }
+    if (Array.isArray(spec.powertrainByYear)) {
+      const fuelTypeByYear = {};
+      const typeByYear = {};
+      for (const b of spec.powertrainByYear) {
+        if (b.from == null || b.to == null) continue;
+        for (let y = b.from; y <= b.to; y++) {
+          if (b.fuelType && fuelTypeByYear[y] == null) {
+            fuelTypeByYear[y] = b.fuelType;
+          }
+          if (b.type && typeByYear[y] == null) typeByYear[y] = b.type;
+        }
+      }
+      const typeEntries = Object.entries(typeByYear);
+      const fuelEntries = Object.entries(fuelTypeByYear);
+      // Only emit year maps when a band sets `type` (Canyon Star gas/diesel eras).
+      // Do not surface fuel-only band tags on other makes.
+      if (typeEntries.some(([, t]) => t !== spec.type)) {
+        row.typeByYear = Object.fromEntries(typeEntries);
+        if (fuelEntries.some(([, f]) => f !== spec.fuelType)) {
+          row.fuelTypeByYear = Object.fromEntries(fuelEntries);
+        }
+      }
+    }
     index[make][model] = row;
   }
 }

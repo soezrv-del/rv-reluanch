@@ -33,6 +33,10 @@ export interface PowertrainYearBand {
   floorplans?: string[];
   /** Floorplans this band must NOT apply to */
   excludeFloorplans?: string[];
+  /** Year-true fuel when the series default (recent FED / etc.) would mislabel this band. */
+  fuelType?: string;
+  /** Year-true class when the series default would mislabel this band (e.g. Class A Gas vs Diesel). */
+  type?: string;
 }
 
 export interface RVSpec {
@@ -98,6 +102,10 @@ export type CatalogIndexSpec = Pick<
   floorplansByYear?: Record<string, string[]>;
   /** OEM lineup years (thin index). Same role as floorplansByYear keys. */
   years?: number[];
+  /** Year-true fuel when it differs from the series default (e.g. Canyon Star MY11–20 Gas). */
+  fuelTypeByYear?: Record<string, string>;
+  /** Year-true class when it differs from the series default (e.g. Class A Gas vs Diesel). */
+  typeByYear?: Record<string, string>;
 };
 
 export const CLASSIC_BRANDS: string[] = [

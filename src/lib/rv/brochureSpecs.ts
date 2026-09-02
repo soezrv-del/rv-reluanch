@@ -251,6 +251,8 @@ export function resolveYearSnapshot(
   uvwLbs?: number;
   cccLbs?: number;
   notes?: string;
+  fuelType?: string;
+  type?: string;
   band: YearBand | null;
   /** True when engine/HP came from a year band (not bare top-level modern default) */
   yearTruePowertrain: boolean;
@@ -296,6 +298,8 @@ export function resolveYearSnapshot(
     uvwLbs: spec.uvwLbs,
     cccLbs: spec.cccLbs,
     notes: band?.notes,
+    fuelType: band?.fuelType,
+    type: band?.type,
     band,
     yearTruePowertrain,
     resolvedYear,
@@ -399,14 +403,26 @@ export function buildBrochureSpecs(
         torqueLbFt: correction.torqueLbFt ?? snapBase.torqueLbFt,
         chassis: correction.chassis ?? snapBase.chassis,
         transmission: correction.transmission ?? snapBase.transmission,
+        fuelType: correction.fuelType ?? snapBase.fuelType,
         yearTruePowertrain: true,
         notes: correction.note
           ? [snapBase.notes, correction.note].filter(Boolean).join(" · ")
           : snapBase.notes,
       }
     : snapBase;
+  // Year-first fuel: MY11–12 Canyon Star Gas (F-53/Workhorse) must not inherit FED Diesel.
+  // Inverse of Pace Arrow: a diesel year pin must not inherit F53 Gas.
+  const engineBlob = snap.engine || "";
+  const yearFuel = snap.fuelType || "";
+  const engineIsGas =
+    /gas|triton|godzilla|workhorse|f-?53|7\.3l/i.test(engineBlob) &&
+    !/diesel|cummins|isb|isl|l9|b6\.7/i.test(engineBlob);
+  const engineIsDiesel = /diesel|cummins|isb|isl|l9|b6\.7/i.test(engineBlob);
   const diesel =
-    /diesel/i.test(spec.fuelType) || /diesel/i.test(snap.engine ?? "");
+    /^diesel$/i.test(yearFuel) ||
+    (!/^gas$/i.test(yearFuel) &&
+      !engineIsGas &&
+      (engineIsDiesel || /diesel/i.test(spec.fuelType)));
 
   // Brochure-backed OEM floorplan (e.g. Brinkley 3950) beats digit heuristics
   const oem = findOemFloorplanSpec(year, make, model, floorplan);
@@ -462,19 +478,28 @@ export function buildBrochureSpecs(
   const isTowable =
     /travel trailer|fifth|toy hauler|truck camper/i.test(spec.type) ||
     /towable/i.test(spec.fuelType);
-  // Year-first fuel: a 2023 Pace Arrow diesel pin must not inherit F53 "Gas"
+  // Year-first fuel: a 2023 Pace Arrow diesel pin must not inherit F53 "Gas";
+  // MY11–12 Canyon Star Gas must not inherit FED B6.7 Diesel.
   const resolvedFuel = isTowable
     ? spec.fuelType
-    : diesel
-      ? "Diesel"
-      : /gas|triton|godzilla|7\.3l/i.test(snap.engine || "") &&
-          !/diesel|cummins|isb|isl|l9/i.test(snap.engine || "")
-        ? "Gas"
+    : /^gas$/i.test(yearFuel) || engineIsGas
+      ? "Gas"
+      : /^diesel$/i.test(yearFuel) || diesel
+        ? "Diesel"
         : spec.fuelType;
+  const resolvedType =
+    snap.type ||
+    (/class\s*a/i.test(spec.type) && resolvedFuel === "Gas"
+      ? "Class A Gas"
+      : /class\s*a/i.test(spec.type) && resolvedFuel === "Diesel"
+        ? spec.type.includes("Diesel")
+          ? spec.type
+          : "Class A Diesel"
+        : spec.type);
   const classAGasNoTag =
-    /class\s*a/i.test(spec.type) &&
-    !/diesel/i.test(spec.type) &&
-    (/gas/i.test(spec.type) || /gas/i.test(spec.fuelType));
+    /class\s*a/i.test(resolvedType) &&
+    !/diesel/i.test(resolvedType) &&
+    (/gas/i.test(resolvedType) || /gas/i.test(resolvedFuel));
   const hasGarageData = Boolean(
     oem?.garageLengthFt ||
       spec.garageLengthFt ||
@@ -744,7 +769,7 @@ export function buildBrochureSpecs(
       chassis: snap.chassis ?? spec.chassis,
     }),
 
-    type: spec.type,
+    type: resolvedType,
     warranty: spec.warrantyYears
       ? `${spec.warrantyYears}-yr limited / structural varies`
       : CONFIRM_BROCHURE,
