@@ -34,7 +34,7 @@ export type PowertrainCorrection = {
 export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
   {
     yearMin: 2018,
-    yearEnd: 2022,
+    yearEnd: 2020,
     makeIncludes: "jayco",
     modelIncludes: "seneca",
     engine: "Cummins ISB 6.7L 360HP",
@@ -43,10 +43,10 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Freightliner S2RV Plus",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "Jayco Seneca 2018–2022 left for walk-back — do not copy MY23 S2RV (not Plus) backward. Not Seneca XT.",
+    note: "Jayco Seneca 2018–2020 left for walk-back — do not copy MY21 S2RV (not Plus) backward. Not Seneca XT.",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "jayco",
     modelIncludes: "seneca",
@@ -56,7 +56,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Freightliner S2RV",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "OEM MY23 Seneca / Seneca Prestige: S2RV (not Plus) · ISB 6.7 360/800 · hitch 12k — not Seneca XT Power Stroke",
+    note: "OEM MY21–23 Seneca / Seneca Prestige: S2RV (not Plus) · ISB 6.7 360/800 · hitch 12k · GVWR 29k — not Seneca XT Power Stroke",
   },
   {
     yearMin: 2024,
@@ -111,7 +111,20 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY24 Greyhawk XL: 32U F550 330/950. MY25–26 adds 30M/33F. Not gas Greyhawk E-450. No 2023 OEM page.",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
+    yearEnd: 2022,
+    makeIncludes: "jayco",
+    modelIncludes: "greyhawk prestige",
+    engine: "Ford 7.3L V8 350HP",
+    horsepower: 350,
+    torqueLbFt: 468,
+    chassis: "Ford E-450",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY21–22 Greyhawk Prestige flyer: E-450 7.3 350/468 · hitch 7.5k. 29MVP / 30XP / 31FP. yearEnd 2022. Not bare Greyhawk / not Greyhawk XL.",
+  },
+  {
+    yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "jayco",
     modelIncludes: "greyhawk",
@@ -121,7 +134,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Ford E-450",
     transmission: "TorqShift 6-speed automatic",
     fuelType: "Gas",
-    note: "OEM MY23 Greyhawk: E-450 7.3 350/468 · hitch 7.5k · 55 gal. Not Greyhawk XL / not F53 335. Do not copy MY24 325 backward.",
+    note: "OEM MY21–23 Greyhawk: E-450 7.3 350/468 · hitch 7.5k · 55 gal. Not Greyhawk XL / not Greyhawk Prestige / not F53 335. Do not copy MY24 325 backward.",
   },
   {
     yearMin: 2024,
@@ -135,6 +148,32 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     transmission: "TorqShift 6-speed automatic",
     fuelType: "Gas",
     note: "OEM MY24–27 Greyhawk: E-450 7.3 325/450 · hitch 7.5k · 55 gal. Not Greyhawk XL / not F53 335.",
+  },
+  {
+    yearMin: 2021,
+    yearEnd: 2021,
+    makeIncludes: "jayco",
+    modelIncludes: "redhawk se",
+    engine: "Chevy 6.0L Vortec V8 342HP",
+    horsepower: 342,
+    torqueLbFt: 373,
+    chassis: "Chevy 4500",
+    transmission: "Hydra-Matic 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY21 Redhawk SE flyer: Chevy 4500 · 6.0 Vortec 342/373. Chevy only — not Ford option-band. 22A / 22C / 27N.",
+  },
+  {
+    yearMin: 2022,
+    yearEnd: 2022,
+    makeIncludes: "jayco",
+    modelIncludes: "redhawk se",
+    engine: "Chevy 6.6L Vortec V8 401HP",
+    horsepower: 401,
+    torqueLbFt: 464,
+    chassis: "Chevy 4500",
+    transmission: "Hydra-Matic 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY22 Redhawk SE brochure: Chevy 4500 · 6.6 Vortec 401/464. Chevy only — not Ford option-band. 22A / 22C / 27N.",
   },
   {
     yearMin: 2023,
@@ -159,6 +198,19 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY24–27 Redhawk SE prints Ford 325/450 and Chevy 401/464 — option-band HP. MY24 Chevy is 4500. Not bare Redhawk.",
   },
   {
+    yearMin: 2021,
+    yearEnd: 2022,
+    makeIncludes: "jayco",
+    modelIncludes: "redhawk",
+    engine: "Ford 7.3L V8 350HP",
+    horsepower: 350,
+    torqueLbFt: 468,
+    chassis: "Ford E-450",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY21–22 Redhawk: E-450 7.3 350/468 · hitch 7.5k. Not Redhawk SE. Do not copy MY23 325 backward.",
+  },
+  {
     yearMin: 2023,
     yearEnd: 2027,
     makeIncludes: "jayco",
@@ -172,7 +224,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY23–27 Redhawk: E-450 7.3 325/450 · hitch 7.5k. Not Redhawk SE.",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "jayco",
     modelIncludes: "melbourne prestige",
@@ -182,7 +234,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Mercedes-Benz 3500",
     transmission: "7-speed automatic",
     fuelType: "Diesel",
-    note: "OEM MY23 Melbourne Prestige: Mercedes 3500 · V6 188/325 · 7-speed. Not bare Melbourne.",
+    note: "OEM MY21–23 Melbourne Prestige: Mercedes 3500 · V6 188/325 · 7-speed. Not bare Melbourne.",
   },
   {
     yearMin: 2024,
@@ -211,7 +263,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY26–27 Melbourne Prestige (melburne-prestige URL): Mercedes 4500 211/332. Not bare Melbourne.",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "jayco",
     modelIncludes: "melbourne",
@@ -221,7 +273,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Mercedes-Benz 3500",
     transmission: "7-speed automatic",
     fuelType: "Diesel",
-    note: "OEM MY23 Melbourne: Mercedes 3500 · V6 188/325 · 7-speed. Not Melbourne Prestige.",
+    note: "OEM MY21–23 Melbourne: Mercedes 3500 · V6 188/325 · 7-speed. Not Melbourne Prestige.",
   },
   {
     yearMin: 2024,
@@ -304,7 +356,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY23–27 Solstice: Transit AWD 350HD · EcoBoost 310/400. No Solstice Prestige OEM page.",
   },
   {
-    yearMin: 2023,
+    yearMin: 2022,
     yearEnd: 2023,
     makeIncludes: "jayco",
     modelIncludes: "terrain",
@@ -314,7 +366,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Mercedes-Benz Sprinter 2500 4x4",
     transmission: "7-speed automatic",
     fuelType: "Diesel",
-    note: "OEM MY23 Terrain: Sprinter 2500 4x4 · V6 188/325. Do not copy MY24 2.0 211 backward.",
+    note: "OEM MY22–23 Terrain: Sprinter 2500 4x4 · V6 188/325. Do not copy MY24 2.0 211 backward. No 2021 Terrain brochure.",
   },
   {
     yearMin: 2024,
@@ -330,7 +382,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "OEM MY24–27 Terrain: Sprinter 2500 AWD · 211/332",
   },
   {
-    yearMin: 2023,
+    yearMin: 2021,
     yearEnd: 2023,
     makeIncludes: "jayco",
     modelIncludes: "embark",
@@ -340,7 +392,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Spartan K1 Raised Rail",
     transmission: "Allison 3000 MH 6-speed",
     fuelType: "Diesel",
-    note: "OEM MY23 Embark pusher: Spartan K1 · B6.7 360/800 · hitch 10k. 37K / 39BH / 39T2. Not Embark Super C (~2009–2012). YearEnd 2023. No 2024 OEM page.",
+    note: "OEM MY21–23 Embark pusher: Spartan K1 · B6.7 360/800 · hitch 10k. 37K / 39BH / 39T2. Not Embark Super C (~2009–2012). YearEnd 2023. No 2024 OEM page.",
   },
   {
     yearMin: 2020,
@@ -639,6 +691,45 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "Lineage Series VT LVT1 — Transit AWD EcoBoost 310/400.",
   },
   {
+    yearMin: 2021,
+    yearEnd: 2022,
+    makeIncludes: "jayco",
+    modelIncludes: "precept",
+    engine: "Ford 7.3L V8 Godzilla 350HP",
+    horsepower: 350,
+    torqueLbFt: 468,
+    chassis: "Ford F53",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY21–22 Precept: F53 7.3 350/468 · hitch 5k. Do not copy MY23 335 backward. Not Precept Prestige.",
+  },
+  {
+    yearMin: 2022,
+    yearEnd: 2022,
+    makeIncludes: "jayco",
+    modelIncludes: "precept prestige",
+    engine: "Ford 7.3L V8 Godzilla 350HP",
+    horsepower: 350,
+    torqueLbFt: 468,
+    chassis: "Ford F53",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY22 Precept Prestige flyer: F53 7.3 350/468 · hitch 5k. No MY21 Prestige flyer. Do not copy MY23 335 backward.",
+  },
+  {
+    yearMin: 2023,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "precept prestige",
+    engine: "Ford 7.3L V8 Godzilla 335HP",
+    horsepower: 335,
+    torqueLbFt: 468,
+    chassis: "Ford F53",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY23–27 Precept Prestige: F53 7.3 335/468. Not bare Precept.",
+  },
+  {
     yearMin: 2023,
     yearEnd: 2027,
     makeIncludes: "jayco",
@@ -649,7 +740,20 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Ford F53",
     transmission: "TorqShift 6-speed automatic",
     fuelType: "Gas",
-    note: "OEM MY23–27 Precept / Precept Prestige gas F53 335/468 — not diesel X15. 2020–2022 left for walk-back.",
+    note: "OEM MY23–27 Precept gas F53 335/468 — not diesel X15. Not Precept Prestige.",
+  },
+  {
+    yearMin: 2021,
+    yearEnd: 2022,
+    makeIncludes: "jayco",
+    modelIncludes: "alante",
+    engine: "Ford 7.3L V8 Godzilla 350HP",
+    horsepower: 350,
+    torqueLbFt: 468,
+    chassis: "Ford F53",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY21–22 Alante flyer: F53 7.3 350/468 · hitch 5k. Do not copy MY23 335 backward. No Alante SE 2021–22 OEM page.",
   },
   {
     yearMin: 2023,
@@ -5791,8 +5895,12 @@ export function findPowertrainCorrection(
     if (c.modelIncludes === "seneca" && md.includes("seneca xt")) {
       return false;
     }
-    // Bare "greyhawk" E-450 must not stamp Greyhawk XL Super C
-    if (c.modelIncludes === "greyhawk" && md.includes("greyhawk xl")) {
+    // Bare "precept" F53 must not stamp Precept Prestige (no MY21 Prestige flyer)
+    if (c.modelIncludes === "precept" && md.includes("precept prestige")) {
+      return false;
+    }
+    // Bare "greyhawk" E-450 must not stamp Greyhawk XL Super C or Greyhawk Prestige
+    if (c.modelIncludes === "greyhawk" && (md.includes("greyhawk xl") || md.includes("greyhawk prestige"))) {
       return false;
     }
     // Bare "redhawk" E-450 must not stamp Redhawk SE Ford/Chevy option-band
