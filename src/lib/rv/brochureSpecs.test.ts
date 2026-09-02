@@ -3935,8 +3935,8 @@ test("Winnebago 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(wg.Voyage?.yearEnd, 2025);
   assert.equal(wg["M-Series"]?.yearStart, 2024);
   assert.equal(wg["M-Series"]?.yearEnd, 2025);
-  assert.equal(wg["Itasca Sunstar"]?.yearEnd, 2019);
-  assert.equal(wg.Via?.yearEnd, 2020);
+  assert.equal(wg["Itasca Sunstar"]?.yearEnd, 2018);
+  assert.equal(wg.Via?.yearEnd, 2018);
   assert.equal(wg.Outlook?.yearEnd, 2021);
 
   const block = src("rvData.ts");
@@ -4095,8 +4095,7 @@ test("Winnebago 2025–2027 OEM year-first floorplans + yearEnds", () => {
   const jyPin = findPowertrainCorrection("2025", "Winnebago", "Journey", "34N");
   assert.equal(jyPin!.horsepower, 380);
   assert.equal(jyPin!.torqueLbFt, 1150);
-  const jyLeftover = findPowertrainCorrection("2020", "Winnebago", "Journey", "34G");
-  assert.equal(jyLeftover!.horsepower, 340);
+  assert.equal(findPowertrainCorrection("2020", "Winnebago", "Journey", "34G"), null);
   const jy22 = findPowertrainCorrection("2022", "Winnebago", "Journey", "34N");
   assert.equal(jy22!.horsepower, 380);
   assert.equal(jy22!.torqueLbFt, 1150);
@@ -4184,7 +4183,7 @@ test("Winnebago 2023–2024 OEM year-first floorplans + powertrain pins", () => 
   assert.equal(wg.Outlook?.yearEnd, 2021);
   assert.equal(wg["Revel Sport"]?.years?.includes(2023), false);
   assert.equal(wg["Revel Sport"]?.years?.includes(2024), false);
-  assert.equal(wg["Itasca Sunstar"]?.yearEnd, 2019);
+  assert.equal(wg["Itasca Sunstar"]?.yearEnd, 2018);
 
   const block = src("rvData.ts");
   const w0 = block.indexOf("  Winnebago: {");
@@ -4351,7 +4350,9 @@ test("Winnebago 2021–2022 OEM year-first floorplans + powertrain pins", () => 
   assert.equal(wg.Intent?.yearEnd, 2020);
   assert.equal(wg.Intent?.years?.includes(2021) ?? false, false);
   assert.equal(wg.Intent?.years?.includes(2022) ?? false, false);
-  assert.equal(wg.Via?.yearEnd, 2020);
+  assert.equal(wg.Via?.yearEnd, 2018);
+  assert.equal(wg.Via?.years?.includes(2019) ?? false, false);
+  assert.equal(wg.Via?.years?.includes(2020) ?? false, false);
   assert.equal(wg.Via?.years?.includes(2021) ?? false, false);
   assert.equal(wg.Era?.yearEnd, 2021);
   assert.equal(wg.Era?.years?.includes(2022) ?? false, false);
@@ -4366,7 +4367,7 @@ test("Winnebago 2021–2022 OEM year-first floorplans + powertrain pins", () => 
   assert.equal(wg.Access?.yearStart, 2024);
   assert.equal(wg.Voyage?.yearStart, 2023);
   assert.equal(wg["M-Series"]?.yearStart, 2024);
-  assert.equal(wg["Itasca Sunstar"]?.yearEnd, 2019);
+  assert.equal(wg["Itasca Sunstar"]?.yearEnd, 2018);
   assert.equal(wg["Access Super C"]?.yearEnd, 2022);
   assert.equal(wg["Access Super C"]?.years?.includes(2021) ?? false, false);
   assert.equal(wg["Access Super C"]?.years?.includes(2022) ?? false, false);
@@ -4393,8 +4394,10 @@ test("Winnebago 2021–2022 OEM year-first floorplans + powertrain pins", () => 
   assert.match(hz, /yearEnd:\s*2020/);
 
   const via = wgo.slice(wgo.indexOf("    Via: {"), wgo.indexOf("    Vista: {"));
+  assert.doesNotMatch(via, /"2019":/);
+  assert.doesNotMatch(via, /"2020":/);
   assert.doesNotMatch(via, /"2021":/);
-  assert.match(via, /yearEnd:\s*2020/);
+  assert.match(via, /yearEnd:\s*2018/);
 
   const vs = wgo.slice(wgo.indexOf("    Vista: {"), wgo.indexOf("    Sunstar: {"));
   assert.match(vs, /"2021": \["27P", "29V", "31B", "32M", "35U"\]/);
@@ -4589,6 +4592,286 @@ test("Winnebago 2021–2022 OEM year-first floorplans + powertrain pins", () => 
   assert.equal(findPowertrainCorrection("2022", "Winnebago", "Intent", "26M"), null);
   assert.equal(findPowertrainCorrection("2021", "Winnebago", "Access Super C", "26RP"), null);
   assert.equal(findPowertrainCorrection("2022", "Winnebago", "Access Super C", "31SR"), null);
+});
+
+test("Winnebago 2019–2020 OEM year-first floorplans + powertrain pins", () => {
+  const wg = CATALOG_INDEX.Winnebago;
+  assert.ok(wg);
+
+  assert.equal(wg.Horizon?.yearEnd, 2020);
+  assert.equal(wg.Horizon?.years?.includes(2019), true);
+  assert.equal(wg.Horizon?.years?.includes(2020), true);
+  assert.equal(wg.Intent?.yearEnd, 2020);
+  assert.equal(wg.Intent?.years?.includes(2019), true);
+  assert.equal(wg.Intent?.years?.includes(2020), true);
+  assert.equal(wg.Via?.yearEnd, 2018);
+  assert.equal(wg.Via?.years?.includes(2019) ?? false, false);
+  assert.equal(wg.Via?.years?.includes(2020) ?? false, false);
+  assert.equal(wg["Grand Tour"]?.yearEnd, 2018);
+  assert.equal(wg["Grand Tour"]?.years?.includes(2019) ?? false, false);
+  assert.equal(wg["Itasca Sunstar"]?.yearEnd, 2018);
+  assert.equal(wg["Itasca Sunstar"]?.years?.includes(2019) ?? false, false);
+  assert.equal(wg.Era?.yearEnd, 2021);
+  assert.equal(wg.Outlook?.yearEnd, 2021);
+  assert.equal(wg.Solis?.yearStart, 2020);
+  assert.equal(wg.Solis?.years?.includes(2019) ?? false, false);
+  assert.equal(wg.Solis?.years?.includes(2020), true);
+  assert.equal(wg.Boldt?.yearStart, 2020);
+  assert.equal(wg.EKKO?.yearStart, 2022);
+  assert.equal(wg.EKKO?.years?.includes(2019) ?? false, false);
+  assert.equal(wg.EKKO?.years?.includes(2020) ?? false, false);
+  assert.equal(wg["Solis Pocket"]?.yearStart, 2022);
+  assert.equal(wg["Solis Pocket"]?.years?.includes(2019) ?? false, false);
+  assert.equal(wg["Revel Sport"]?.years?.includes(2019) ?? false, false);
+  assert.equal(wg["Revel Sport"]?.years?.includes(2020) ?? false, false);
+  assert.equal(wg.Access?.yearStart, 2024);
+  assert.equal(wg.Voyage?.yearStart, 2023);
+  assert.equal(wg["M-Series"]?.yearStart, 2024);
+  assert.equal(wg["Access Super C"]?.years?.includes(2019) ?? false, false);
+  assert.equal(wg["Access Super C"]?.years?.includes(2020) ?? false, false);
+  assert.equal(wg.Journey?.years?.includes(2019) ?? false, false);
+  assert.equal(wg.Journey?.years?.includes(2020) ?? false, false);
+
+  const block = src("rvData.ts");
+  const w0 = block.indexOf("  Winnebago: {");
+  const w1 = block.indexOf('  "Forest River": {');
+  const wgo = block.slice(w0, w1);
+
+  const fz = wgo.slice(wgo.indexOf("    Forza: {"), wgo.indexOf("    Journey: {"));
+  assert.match(fz, /"2019": \["34T", "36G", "38F", "38W"\]/);
+  assert.match(fz, /"2020": \["34T", "36H", "38D", "38F", "38W"\]/);
+  assert.doesNotMatch(fz, /"2019": .*"36H"/);
+  assert.doesNotMatch(fz, /"2020": .*"36G"/);
+
+  const jy = wgo.slice(wgo.indexOf("    Journey: {"), wgo.indexOf("    Horizon: {"));
+  assert.doesNotMatch(jy, /"2019":/);
+  assert.doesNotMatch(jy, /"2020":/);
+  assert.doesNotMatch(jy, /"2021":/);
+
+  const hz = wgo.slice(wgo.indexOf("    Horizon: {"), wgo.indexOf('    "Grand Tour": {'));
+  assert.match(hz, /"2019": \["40A", "40J", "42Q"\]/);
+  assert.match(hz, /"2020": \["40A", "42Q"\]/);
+  assert.doesNotMatch(hz, /"2019": .*"42G"/);
+  assert.doesNotMatch(hz, /"2020": .*"40J"/);
+  assert.match(hz, /yearEnd:\s*2020/);
+
+  const gt = wgo.slice(wgo.indexOf('    "Grand Tour": {'), wgo.indexOf("    Via: {"));
+  assert.doesNotMatch(gt, /"2019":/);
+  assert.match(gt, /yearEnd:\s*2018/);
+
+  const via = wgo.slice(wgo.indexOf("    Via: {"), wgo.indexOf("    Vista: {"));
+  assert.doesNotMatch(via, /"2019":/);
+  assert.doesNotMatch(via, /"2020":/);
+  assert.match(via, /yearEnd:\s*2018/);
+
+  const vs = wgo.slice(wgo.indexOf("    Vista: {"), wgo.indexOf("    Sunstar: {"));
+  assert.match(vs, /"2019": \["27PE", "29VE", "31BE", "32YE"\]/);
+  assert.match(vs, /"2020": \["27P", "29V", "31B", "32Y", "35U"\]/);
+  assert.doesNotMatch(vs, /"2019": .*"27P"/);
+  assert.doesNotMatch(vs, /"2020": .*"29VE"/);
+
+  const ss = wgo.slice(wgo.indexOf("    Sunstar: {"), wgo.indexOf("    Intent: {"));
+  assert.match(ss, /"2019": \["27PE", "29VE", "31BE", "32YE"\]/);
+  assert.match(ss, /"2020": \["27P", "29V", "31B", "32Y", "35U"\]/);
+  assert.doesNotMatch(ss, /"2019": .*"27N"/);
+
+  const intent = wgo.slice(wgo.indexOf("    Intent: {"), wgo.indexOf("    Adventurer: {"));
+  assert.match(intent, /"2019": \["26M", "29L", "30R", "31P"\]/);
+  assert.match(intent, /"2020": \["28Y", "29L", "30R", "31P"\]/);
+  assert.doesNotMatch(intent, /"2020": .*"26M"/);
+  assert.match(intent, /yearEnd:\s*2020/);
+
+  const ad = wgo.slice(wgo.indexOf("    Adventurer: {"), wgo.indexOf('    "Itasca Sunstar": {'));
+  assert.match(ad, /"2019": \["27N", "30T", "33C", "35F", "36Z"\]/);
+  assert.match(ad, /"2020": \["27N", "29B", "30T", "33C", "35F", "36Z"\]/);
+  assert.doesNotMatch(ad, /"2019": .*"29B"/);
+  assert.doesNotMatch(ad, /"2019": .*"29V"/);
+
+  const itasca = wgo.slice(wgo.indexOf('    "Itasca Sunstar": {'), wgo.indexOf("    Revel: {"));
+  assert.doesNotMatch(itasca, /"2019":/);
+  assert.match(itasca, /yearEnd:\s*2018/);
+
+  const rv = wgo.slice(wgo.indexOf("    Revel: {"), wgo.indexOf("    Travato: {"));
+  assert.match(rv, /"2019": \["44E"\]/);
+  assert.match(rv, /"2020": \["44E"\]/);
+  assert.doesNotMatch(rv, /"2019": .*"44N"/);
+
+  const rsp = wgo.slice(wgo.indexOf('    "Revel Sport": {'), wgo.indexOf('    "Solis Pocket": {'));
+  assert.doesNotMatch(rsp, /"2019":/);
+  assert.doesNotMatch(rsp, /"2020":/);
+
+  const tr = wgo.slice(wgo.indexOf("    Travato: {"), wgo.indexOf("    Solis: {"));
+  assert.match(tr, /"2019": \["59G", "59GL", "59K", "59KL"\]/);
+  assert.match(tr, /"2020": \["59G", "59GL", "59K", "59KL"\]/);
+
+  const so = wgo.slice(wgo.indexOf("    Solis: {"), wgo.indexOf("    Boldt: {"));
+  assert.doesNotMatch(so, /"2019":/);
+  assert.match(so, /"2020": \["59P"\]/);
+  assert.doesNotMatch(so, /"2020": .*"59PX"/);
+  assert.match(so, /yearStart:\s*2020/);
+
+  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Elora: {"));
+  assert.doesNotMatch(pk, /"2019":/);
+  assert.doesNotMatch(pk, /"2020":/);
+  assert.match(pk, /yearStart:\s*2022/);
+
+  const bl = wgo.slice(wgo.indexOf("    Boldt: {"), wgo.indexOf("    Era: {"));
+  assert.match(bl, /"2020": \["70KL", "70BL"\]/);
+  assert.doesNotMatch(bl, /"2019":/);
+
+  const era = wgo.slice(wgo.indexOf("    Era: {"), wgo.indexOf("    View: {"));
+  assert.match(era, /"2019": \["70A", "70B", "70M", "70X"\]/);
+  assert.match(era, /"2020": \["70A", "70B", "70X"\]/);
+  assert.doesNotMatch(era, /"2020": .*"70M"/);
+
+  const vw = wgo.slice(wgo.indexOf("    View: {"), wgo.indexOf("    Navion: {"));
+  assert.match(vw, /"2019": \["24D", "24G", "24J", "24V"\]/);
+  assert.match(vw, /"2020": \["24D", "24J", "24V"\]/);
+  assert.doesNotMatch(vw, /"2020": .*"24G"/);
+
+  const nv = wgo.slice(wgo.indexOf("    Navion: {"), wgo.indexOf("    Porto: {"));
+  assert.match(nv, /"2019": \["24D", "24G", "24J", "24V"\]/);
+  assert.match(nv, /"2020": \["24D", "24J", "24V"\]/);
+  assert.doesNotMatch(nv, /"2019": .*"24P"/);
+
+  const po = wgo.slice(wgo.indexOf("    Porto: {"), wgo.indexOf("    Vita: {"));
+  assert.match(po, /"2019": \["24F", "24P"\]/);
+  assert.match(po, /"2020": \["24F", "24P"\]/);
+  assert.doesNotMatch(po, /"2019": .*"24J"/);
+
+  const vi = wgo.slice(wgo.indexOf("    Vita: {"), wgo.indexOf("    EKKO: {"));
+  assert.match(vi, /"2019": \["24F", "24P"\]/);
+  assert.match(vi, /"2020": \["24F", "24P"\]/);
+  assert.doesNotMatch(vi, /"2019": .*"24J"/);
+
+  const ek = wgo.slice(wgo.indexOf("    EKKO: {"), wgo.indexOf("    Spirit: {"));
+  assert.doesNotMatch(ek, /"2019":/);
+  assert.doesNotMatch(ek, /"2020":/);
+  assert.match(ek, /yearStart:\s*2022/);
+
+  const sp = wgo.slice(wgo.indexOf("    Spirit: {"), wgo.indexOf('    "Minnie Winnie": {'));
+  assert.match(sp, /"2019": \["22M", "22R", "25B", "26A", "31D", "31G", "31K"\]/);
+  assert.match(sp, /"2020": \["22M", "22R", "25B", "26T", "31H", "31K"\]/);
+  assert.doesNotMatch(sp, /"2020": .*"26A"/);
+
+  const mw = wgo.slice(wgo.indexOf('    "Minnie Winnie": {'), wgo.indexOf("    Outlook: {"));
+  assert.match(mw, /"2019": \["22M", "22R", "25B", "26A", "31D", "31G", "31K"\]/);
+  assert.match(mw, /"2020": \["22M", "22R", "25B", "26T", "31H", "31K"\]/);
+
+  const ol = wgo.slice(wgo.indexOf("    Outlook: {"), wgo.indexOf('    "Access Super C": {'));
+  assert.match(ol, /"2019": \["22C", "22E", "25J", "27D", "31N"\]/);
+  assert.match(ol, /"2020": \["22C", "22E", "25J", "26M", "31N"\]/);
+  assert.doesNotMatch(ol, /"2020": .*"27D"/);
+
+  const ac = wgo.slice(wgo.indexOf('    "Access Super C": {'), wgo.indexOf('    "Micro Minnie": {'));
+  assert.doesNotMatch(ac, /"2019":/);
+  assert.doesNotMatch(ac, /"2020":/);
+
+  const mm = wgo.slice(wgo.indexOf('    "Micro Minnie": {'), wgo.indexOf("    Minnie: {"));
+  assert.match(mm, /"2019": \["1700BH", "1706FB", "1808FBS", "2100BH", "2106DS", "2106FBS", "2108DS", "2108FBS", "2108TB", "2306BHS"\]/);
+  assert.match(mm, /"2020": \["1700BH", "1706FB", "1808FBS", "2100BH", "2106DS", "2106FBS", "2108DS", "2108FBS", "2108TB", "2306BHS"\]/);
+  assert.doesNotMatch(mm, /"2019": .*"2500RL"/);
+
+  const mn = wgo.slice(wgo.indexOf("    Minnie: {"), wgo.indexOf('    "Revel Sport": {'));
+  assert.match(mn, /"2019": \["2201DS", "2201MB", "2401RG", "2455BHS", "2500FL", "2500RL", "2606RL"\]/);
+  assert.match(mn, /"2020": \["2201DS", "2201MB", "2401RG", "2455BHS", "2500FL", "2500RL", "2801BHS"\]/);
+  assert.doesNotMatch(mn, /"2019": .*"2801BHS"/);
+  assert.doesNotMatch(mn, /"2020": .*"2606RL"/);
+
+  const forza19 = findPowertrainCorrection("2019", "Winnebago", "Forza", "36G");
+  assert.equal(forza19!.horsepower, 340);
+  assert.equal(forza19!.torqueLbFt, undefined);
+  const forza20 = findPowertrainCorrection("2020", "Winnebago", "Forza", "36H");
+  assert.equal(forza20!.horsepower, 340);
+  assert.equal(forza20!.torqueLbFt, undefined);
+
+  assert.equal(findPowertrainCorrection("2019", "Winnebago", "Journey", "34G"), null);
+  assert.equal(findPowertrainCorrection("2020", "Winnebago", "Journey", "34G"), null);
+
+  const hz19 = findPowertrainCorrection("2019", "Winnebago", "Horizon", "40J");
+  assert.equal(hz19!.horsepower, 0);
+  const hz20 = findPowertrainCorrection("2020", "Winnebago", "Horizon", "40A");
+  assert.equal(hz20!.horsepower, 0);
+
+  const vis19 = findPowertrainCorrection("2019", "Winnebago", "Vista", "27PE");
+  assert.equal(vis19!.horsepower, 0);
+  const vis20 = findPowertrainCorrection("2020", "Winnebago", "Vista", "29V");
+  assert.equal(vis20!.horsepower, 0);
+  const sun19 = findPowertrainCorrection("2019", "Winnebago", "Sunstar", "32YE");
+  assert.equal(sun19!.horsepower, 0);
+  const sun20 = findPowertrainCorrection("2020", "Winnebago", "Sunstar", "35U");
+  assert.equal(sun20!.horsepower, 0);
+  assert.equal(findPowertrainCorrection("2019", "Winnebago", "Itasca Sunstar", "27N"), null);
+  assert.equal(findPowertrainCorrection("2020", "Winnebago", "Itasca Sunstar", "27N"), null);
+
+  const in19 = findPowertrainCorrection("2019", "Winnebago", "Intent", "26M");
+  assert.equal(in19!.horsepower, 0);
+  const in20 = findPowertrainCorrection("2020", "Winnebago", "Intent", "28Y");
+  assert.equal(in20!.horsepower, 0);
+
+  const adv19 = findPowertrainCorrection("2019", "Winnebago", "Adventurer", "27N");
+  assert.equal(adv19!.horsepower, 0);
+  const adv20 = findPowertrainCorrection("2020", "Winnebago", "Adventurer", "29B");
+  assert.equal(adv20!.horsepower, 320);
+
+  const rev19 = findPowertrainCorrection("2019", "Winnebago", "Revel", "44E");
+  assert.equal(rev19!.horsepower, 188);
+  const rev20 = findPowertrainCorrection("2020", "Winnebago", "Revel", "44E");
+  assert.equal(rev20!.horsepower, 0);
+  assert.equal(findPowertrainCorrection("2019", "Winnebago", "Revel Sport", "44N"), null);
+  assert.equal(findPowertrainCorrection("2020", "Winnebago", "Revel Sport", "44N"), null);
+
+  const tr19 = findPowertrainCorrection("2019", "Winnebago", "Travato", "59GL");
+  assert.equal(tr19!.horsepower, 280);
+  const tr20 = findPowertrainCorrection("2020", "Winnebago", "Travato", "59K");
+  assert.equal(tr20!.horsepower, 0);
+
+  assert.equal(findPowertrainCorrection("2019", "Winnebago", "Solis", "59P"), null);
+  const so20 = findPowertrainCorrection("2020", "Winnebago", "Solis", "59P");
+  assert.equal(so20!.horsepower, 0);
+  assert.equal(findPowertrainCorrection("2020", "Winnebago", "Solis Pocket", "36A"), null);
+
+  const bl20 = findPowertrainCorrection("2020", "Winnebago", "Boldt", "70KL");
+  assert.equal(bl20!.horsepower, 0);
+
+  const era19 = findPowertrainCorrection("2019", "Winnebago", "Era", "70M");
+  assert.equal(era19!.horsepower, 0);
+  const era20 = findPowertrainCorrection("2020", "Winnebago", "Era", "70X");
+  assert.equal(era20!.horsepower, 0);
+
+  const vw19 = findPowertrainCorrection("2019", "Winnebago", "View", "24G");
+  assert.equal(vw19!.horsepower, 188);
+  const vw20 = findPowertrainCorrection("2020", "Winnebago", "View", "24D");
+  assert.equal(vw20!.horsepower, 0);
+  const nv19 = findPowertrainCorrection("2019", "Winnebago", "Navion", "24V");
+  assert.equal(nv19!.horsepower, 188);
+  const nv20 = findPowertrainCorrection("2020", "Winnebago", "Navion", "24J");
+  assert.equal(nv20!.horsepower, 0);
+
+  const vi19 = findPowertrainCorrection("2019", "Winnebago", "Vita", "24F");
+  assert.equal(vi19!.horsepower, 0);
+  const po20 = findPowertrainCorrection("2020", "Winnebago", "Porto", "24P");
+  assert.equal(po20!.horsepower, 0);
+
+  const sp19 = findPowertrainCorrection("2019", "Winnebago", "Spirit", "22M");
+  assert.equal(sp19!.horsepower, 305);
+  const sp20 = findPowertrainCorrection("2020", "Winnebago", "Spirit", "26T");
+  assert.equal(sp20!.horsepower, 0);
+  const mw19 = findPowertrainCorrection("2019", "Winnebago", "Minnie Winnie", "31K");
+  assert.equal(mw19!.horsepower, 305);
+  const mw20 = findPowertrainCorrection("2020", "Winnebago", "Minnie Winnie", "31H");
+  assert.equal(mw20!.horsepower, 0);
+
+  const ol19 = findPowertrainCorrection("2019", "Winnebago", "Outlook", "27D");
+  assert.equal(ol19!.horsepower, 0);
+  const ol20 = findPowertrainCorrection("2020", "Winnebago", "Outlook", "26M");
+  assert.equal(ol20!.horsepower, 0);
+
+  assert.equal(findPowertrainCorrection("2019", "Winnebago", "Via", "25P"), null);
+  assert.equal(findPowertrainCorrection("2020", "Winnebago", "Via", "25T"), null);
+  assert.equal(findPowertrainCorrection("2019", "Winnebago", "Access Super C", "26RP"), null);
+  assert.equal(findPowertrainCorrection("2020", "Winnebago", "Access Super C", "31SR"), null);
+  assert.equal(findPowertrainCorrection("2019", "Winnebago", "EKKO", "22A"), null);
 });
 
 test("Thor 2023–2024 OEM year-first floorplans + powertrain pins", () => {

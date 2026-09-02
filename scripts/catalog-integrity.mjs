@@ -476,6 +476,48 @@ function main() {
       if (!/yearEnd:\s*2020/.test(intent)) {
         fail("Winnebago|Intent yearEnd must be 2020 (no OEM 2021–24 card)");
       }
+      const via0 = wgo.indexOf("    Via: {");
+      const via1 = wgo.indexOf("    Vista: {");
+      const via = via0 >= 0 && via1 > via0 ? wgo.slice(via0, via1) : "";
+      if (/"2019":/.test(via) || /"2020":/.test(via) || /"2021":/.test(via)) {
+        fail("Winnebago|Via must not list 2019–2021 (no year-true Via card)");
+      }
+      if (!/yearEnd:\s*2018/.test(via)) {
+        fail("Winnebago|Via yearEnd must be 2018 (no OEM 2019–20 card)");
+      }
+      const gt0 = wgo.indexOf('    "Grand Tour": {');
+      const gt1 = wgo.indexOf("    Via: {");
+      const gt = gt0 >= 0 && gt1 > gt0 ? wgo.slice(gt0, gt1) : "";
+      if (/"2019":/.test(gt)) {
+        fail("Winnebago|Grand Tour must not list 2019 (no year-true card)");
+      }
+      if (!/yearEnd:\s*2018/.test(gt)) {
+        fail("Winnebago|Grand Tour yearEnd must be 2018 (no OEM 2019 card)");
+      }
+      const it0 = wgo.indexOf('    "Itasca Sunstar": {');
+      const it1 = wgo.indexOf("    Revel: {");
+      const itasca = it0 >= 0 && it1 > it0 ? wgo.slice(it0, it1) : "";
+      if (/"2019":/.test(itasca)) {
+        fail("Winnebago|Itasca Sunstar must not list 2019 (2019 Sunstar is Winnebago, not Itasca)");
+      }
+      if (!/yearEnd:\s*2018/.test(itasca)) {
+        fail("Winnebago|Itasca Sunstar yearEnd must be 2018 (no 2019 Itasca card)");
+      }
+      const jy0 = wgo.indexOf("    Journey: {");
+      const jy1 = wgo.indexOf("    Horizon: {");
+      const jy = jy0 >= 0 && jy1 > jy0 ? wgo.slice(jy0, jy1) : "";
+      if (/"2019":/.test(jy) || /"2020":/.test(jy) || /"2021":/.test(jy)) {
+        fail("Winnebago|Journey must not list 2019–2021 (no year-true card; 2022 is L9 34N)");
+      }
+      const so0 = wgo.indexOf("    Solis: {");
+      const so1 = wgo.indexOf("    Boldt: {");
+      const so = so0 >= 0 && so1 > so0 ? wgo.slice(so0, so1) : "";
+      if (/"2019":/.test(so)) {
+        fail("Winnebago|Solis must not list 2019 (first year-true card 2020)");
+      }
+      if (!/yearStart:\s*2020/.test(so)) {
+        fail("Winnebago|Solis yearStart must be 2020 (OEM 2020 flyer 59P)");
+      }
       if (!/"2027": \["24D", "24R", "24T"\]/.test(wgo)) {
         fail("Winnebago|View/Navion MY27 OEM plans missing (24D/24R/24T)");
       }
