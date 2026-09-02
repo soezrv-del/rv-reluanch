@@ -623,8 +623,56 @@ function main() {
       if (!/"2015": \["34T", "36G", "38R"\]/.test(fz) || !/"2016": \["34T", "36G", "38R"\]/.test(fz)) {
         fail("Winnebago|Forza MY15–16 OEM plans missing (34T/36G/38R)");
       }
-      if (!/yearStart:\s*2015/.test(fz)) {
-        fail("Winnebago|Forza yearStart must be 2015 (first year-true wiring lock)");
+      if (!/yearStart:\s*2014/.test(fz)) {
+        fail("Winnebago|Forza yearStart must be 2014 (first year-true Forza card / wiring)");
+      }
+      if (/"2013":/.test(fz)) {
+        fail("Winnebago|Forza must not list 2013 (first year-true card 2014)");
+      }
+      if (!/"2014": \["34T", "38R"\]/.test(fz)) {
+        fail("Winnebago|Forza MY14 OEM plans missing (34T/38R)");
+      }
+      if (/"2013": .*"34G"/.test(jy) || /"2014": .*"34G"/.test(jy)) {
+        fail("Winnebago|Journey must not invent leftover 34G on 2013–14");
+      }
+      if (/"2013":/.test(hz) || /"2014":/.test(hz)) {
+        fail("Winnebago|Horizon must not list 2013–2014 (first year-true card 2018)");
+      }
+      if (/"2013":/.test(intent) || /"2014":/.test(intent)) {
+        fail("Winnebago|Intent must not list 2013–2014 (first year-true card 2018)");
+      }
+      if (/"2013":/.test(ss) || /"2014":/.test(ss)) {
+        fail("Winnebago|Sunstar must not list 2013–2014 (2013–14 Sunstar is Itasca — do not collide)");
+      }
+      if (/"2013":/.test(vita) || /"2014":/.test(vita)) {
+        fail("Winnebago|Vita must not list 2013–2014 (first year-true card 2019)");
+      }
+      if (/"2013":/.test(so) || /"2014":/.test(so)) {
+        fail("Winnebago|Solis must not list 2013–2014 (first year-true card 2020)");
+      }
+      if (/"2013":/.test(ac) || /"2014":/.test(ac)) {
+        fail("Winnebago|Access Super C must not list 2013–2014 (no OEM Super C card)");
+      }
+      if (/"2013":/.test(ol) || /"2014":/.test(ol)) {
+        fail("Winnebago|Outlook must not list 2013–2014 (no year-true Outlook card)");
+      }
+      if (!/yearStart:\s*2019/.test(ol)) {
+        fail("Winnebago|Outlook yearStart must be 2019 (no 2013–14 Outlook card)");
+      }
+      if (/"2013":/.test(mm) || /"2014":/.test(mm)) {
+        fail("Winnebago|Micro Minnie must not list 2013–2014 (archive starts 2015)");
+      }
+      if (!/yearStart:\s*2015/.test(mm)) {
+        fail("Winnebago|Micro Minnie yearStart must be 2015 (no 2013–14 Micro card)");
+      }
+      if (/"2013":/.test(mn)) {
+        fail("Winnebago|Minnie must not list 2013 (no extractable year-true 2013 card)");
+      }
+      if (!/"2014": \["1801FB", "2101DS", "2101FBS", "2201DS", "2351DKS", "2451BHS"\]/.test(mn)) {
+        fail("Winnebago|Minnie MY14 OEM plans missing (1801FB/2101DS/2101FBS/2201DS/2351DKS/2451BHS)");
+      }
+      if (/"2014": .*"2201MB"/.test(mn) || /"2014": .*"2500FL"/.test(mn)) {
+        fail("Winnebago|Minnie MY14 must not invent leftover 2201MB/2500FL");
       }
       if (/"2015": .*"34G"/.test(jy) || /"2016": .*"34G"/.test(jy)) {
         fail("Winnebago|Journey must not invent leftover 34G on 2015–16");
