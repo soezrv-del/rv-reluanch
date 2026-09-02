@@ -2286,6 +2286,210 @@ test("Entegra 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(cen45!.horsepower, 600);
 });
 
+test("Jayco 2025–2027 OEM year-first floorplans + yearEnds", () => {
+  const jc = CATALOG_INDEX.Jayco;
+  assert.ok(jc);
+
+  assert.equal(jc.Embark?.yearEnd, 2023);
+  assert.equal(jc.Embark?.years?.includes(2023), true);
+  assert.equal(jc.Embark?.years?.includes(2024), false);
+  assert.equal(jc.Embark?.years?.includes(2027), false);
+  assert.equal(jc.Embark?.type, "Class A Diesel");
+  assert.equal(jc["Embark Super C"]?.type, "Super C");
+  assert.equal(jc["Embark Super C"]?.yearStart, 2009);
+  assert.equal(jc["Embark Super C"]?.yearEnd, 2012);
+  assert.equal(jc["Embark Super C"]?.years?.includes(2012), true);
+  assert.equal(jc["Embark Super C"]?.years?.includes(2019), false);
+
+  assert.equal(jc.Precept?.years?.includes(2027), true);
+  assert.equal(jc["Precept Prestige"]?.yearStart, 2024);
+  assert.equal(jc["Precept Prestige"]?.years?.includes(2025), true);
+  assert.equal(jc["Precept Prestige"]?.years?.includes(2027), true);
+  assert.equal(jc.Alante?.years?.includes(2027), true);
+  assert.equal(jc["Alante SE"]?.yearStart, 2025);
+  assert.equal(jc["Alante SE"]?.years?.includes(2027), true);
+  assert.equal(jc.Seneca?.years?.includes(2027), true);
+  assert.equal(jc["Seneca Super C"]?.years?.includes(2027), true);
+  assert.equal(jc["Seneca Prestige"]?.type, "Super C");
+  assert.equal(jc["Seneca XT"]?.type, "Super C");
+  assert.equal(jc["Seneca XT"]?.fuelType, "Diesel");
+  assert.equal(jc["Greyhawk XL"]?.type, "Super C");
+  assert.equal(jc["Greyhawk XL"]?.fuelType, "Diesel");
+  assert.equal(jc["Redhawk SE"]?.yearStart, 2024);
+  assert.equal(jc["Granite Ridge"]?.yearStart, 2024);
+  assert.equal(jc["Granite Ridge"]?.type, "Class C");
+  assert.equal(jc.Comet?.type, "Class B");
+  assert.equal(jc.Swift?.type, "Class B");
+  assert.equal(jc.Solstice?.type, "Class B");
+  assert.equal(jc.Terrain?.type, "Class B");
+  assert.equal(jc.Comet?.fuelType, "Gas");
+  assert.equal(jc.Terrain?.fuelType, "Diesel");
+
+  const block = src("rvData.ts");
+  const j0 = block.indexOf("  Jayco: {");
+  const j1 = block.indexOf('  "American Coach": {');
+  const jayco = block.slice(j0, j1);
+
+  const pr0 = jayco.indexOf("    Precept: {");
+  const pr = jayco.slice(pr0, jayco.indexOf("    Alante: {"));
+  assert.match(pr, /"2025": \["31UL", "34B", "34G", "36A", "36C"\]/);
+  assert.match(pr, /"2027": \["31UL", "34B", "34G", "36A", "36C"\]/);
+  assert.doesNotMatch(pr, /"2026": .*"29V"/);
+  assert.doesNotMatch(pr, /"2025": \["31UL", "34G", "36A"\]/);
+
+  const al0 = jayco.indexOf("    Alante: {");
+  const al = jayco.slice(al0, jayco.indexOf("    Embark: {"));
+  assert.match(al, /"2025": \["27A", "29F", "29S"\]/);
+  assert.match(al, /"2027": \["27A", "29F", "29S"\]/);
+  assert.doesNotMatch(al, /"2025": \["26X"/);
+  assert.doesNotMatch(al, /"2026": .*"28H"/);
+
+  const em0 = jayco.indexOf("    Embark: {");
+  const em = jayco.slice(em0, jayco.indexOf("    Seneca: {"));
+  assert.doesNotMatch(em, /"2024":/);
+  assert.doesNotMatch(em, /"2025":/);
+  assert.doesNotMatch(em, /"2026":/);
+  assert.doesNotMatch(em, /"2027":/);
+
+  const se0 = jayco.indexOf("    Seneca: {");
+  const se = jayco.slice(se0, jayco.indexOf('    "Seneca Super C"'));
+  assert.match(se, /"2025": \["37K", "37L", "37M"\]/);
+  assert.match(se, /"2026": \["37K", "37L", "37M"\]/);
+  assert.match(se, /"2027": \["33J", "37K", "37L", "37M"\]/);
+  assert.doesNotMatch(se, /"2026": .*"33J"/);
+
+  const gh0 = jayco.indexOf("    Greyhawk: {");
+  const gh = jayco.slice(gh0, jayco.indexOf("    Redhawk: {"));
+  assert.match(gh, /"2025": \["27U", "29MV", "30Z", "31F"\]/);
+  assert.match(gh, /"2027": \["27U", "29MV", "30Z", "31F"\]/);
+  assert.doesNotMatch(gh, /"2025": .*"30X"/);
+  assert.doesNotMatch(gh, /"2026": .*"26Y"/);
+
+  const rh0 = jayco.indexOf("    Redhawk: {");
+  const rh = jayco.slice(rh0, jayco.indexOf("    Melbourne: {"));
+  assert.match(rh, /"2025": \["24B", "26M", "29XK", "31F"\]/);
+  assert.match(rh, /"2026": \["24B", "26M", "29XK", "31F"\]/);
+  assert.match(rh, /"2027": \["24B", "26M", "27G"\]/);
+  assert.doesNotMatch(rh, /"2027": .*"29XK"/);
+  assert.doesNotMatch(rh, /"2026": .*"27G"/);
+
+  const mb0 = jayco.indexOf("    Melbourne: {");
+  const mb = jayco.slice(mb0, jayco.indexOf('    "Melbourne Prestige"'));
+  assert.match(mb, /"2025": \["24L", "24R"\]/);
+  assert.match(mb, /"2026": \["24L", "24R"\]/);
+  assert.match(mb, /"2027": \["25L", "25R"\]/);
+  assert.doesNotMatch(mb, /"2026": \["25L"/);
+  assert.doesNotMatch(mb, /"2027": \["24L"/);
+  assert.doesNotMatch(mb, /"2025": .*"24K"/);
+
+  const mp0 = jayco.indexOf('    "Melbourne Prestige": {');
+  const mp = jayco.slice(mp0, jayco.indexOf('    "Alante SE"'));
+  assert.match(mp, /"2025": \["24LP", "24RP"\]/);
+  assert.match(mp, /"2026": \["25LP", "25MP", "25RP"\]/);
+  assert.match(mp, /"2027": \["25LP", "25MP", "25RP"\]/);
+  assert.doesNotMatch(mp, /"2025": .*"25LP"/);
+  assert.match(mp, /melburne-prestige/);
+
+  const ase0 = jayco.indexOf('    "Alante SE": {');
+  const ase = jayco.slice(ase0, jayco.indexOf('    "Precept Prestige"'));
+  assert.match(ase, /"2027": \["27ASE"\]/);
+  assert.doesNotMatch(ase, /"2024":/);
+
+  const gxl0 = jayco.indexOf('    "Greyhawk XL": {');
+  const gxl = jayco.slice(gxl0, jayco.indexOf('    "Granite Ridge"'));
+  assert.match(gxl, /"2025": \["30M", "32U", "33F"\]/);
+  assert.match(gxl, /"2027": \["32U", "33F"\]/);
+  assert.doesNotMatch(gxl, /"2027": .*"30M"/);
+
+  const sxt0 = jayco.indexOf('    "Seneca XT": {');
+  const sxt = jayco.slice(sxt0, jayco.indexOf('    "Seneca Prestige"'));
+  assert.match(sxt, /"2025": \["29T", "32U", "35L"\]/);
+  assert.match(sxt, /"2027": \["32U", "35L"\]/);
+  assert.doesNotMatch(sxt, /"2027": .*"29T"/);
+
+  const sw0 = jayco.indexOf("    Swift: {");
+  const sw = jayco.slice(sw0, jayco.indexOf("    Solstice: {"));
+  assert.match(sw, /"2025": \["20A", "20E", "20T", "20Y"\]/);
+  assert.match(sw, /"2026": \["20A", "20E", "20T"\]/);
+  assert.match(sw, /"2027": \["20E", "20T"\]/);
+  assert.doesNotMatch(sw, /"2027": .*"20A"/);
+
+  const so0 = jayco.indexOf("    Solstice: {");
+  const so = jayco.slice(so0, jayco.indexOf("    Terrain: {"));
+  assert.match(so, /"2025": \["21B"\]/);
+  assert.match(so, /"2026": \["21B", "21L", "21T"\]/);
+  assert.match(so, /"2027": \["21L", "21T"\]/);
+  assert.doesNotMatch(so, /"2027": .*"21B"/);
+
+  const co0 = jayco.indexOf("    Comet: {");
+  const co = jayco.slice(co0, jayco.indexOf("    Swift: {"));
+  assert.match(co, /"2025": \["18C"\]/);
+  assert.match(co, /"2027": \["18C", "18L"\]/);
+  assert.doesNotMatch(co, /"2026": .*"18L"/);
+
+  const te0 = jayco.indexOf("    Terrain: {");
+  const te = jayco.slice(te0, jayco.indexOf('    "Jay Feather"'));
+  assert.match(te, /"2025": \["19Y", "19YG"\]/);
+  assert.match(te, /"2027": \["19A", "19AG", "19Y", "19YG"\]/);
+  assert.doesNotMatch(te, /"2025": .*"19A"/);
+
+  const rse0 = jayco.indexOf('    "Redhawk SE": {');
+  const rse = jayco.slice(rse0, jayco.indexOf('    "Greyhawk XL"'));
+  assert.match(rse, /"2025": \["22A", "22AF", "22C", "22CF", "22E", "22EF", "22T", "22TF", "31FF"\]/);
+  assert.doesNotMatch(rse, /"2025": .*"20LF"/);
+  assert.doesNotMatch(rse, /"2026": .*"20SF"/);
+
+  const sen = findPowertrainCorrection("2027", "Jayco", "Seneca", "37K");
+  assert.equal(sen!.horsepower, 360);
+  assert.equal(sen!.torqueLbFt, 800);
+  assert.match(sen!.engine, /ISB/);
+  const sxtPin = findPowertrainCorrection("2027", "Jayco", "Seneca XT", "32U");
+  assert.equal(sxtPin!.horsepower, 330);
+  assert.equal(sxtPin!.torqueLbFt, 950);
+  assert.match(sxtPin!.engine, /Power Stroke/);
+  const gxlPin = findPowertrainCorrection("2027", "Jayco", "Greyhawk XL", "32U");
+  assert.equal(gxlPin!.horsepower, 330);
+  const ghPin = findPowertrainCorrection("2027", "Jayco", "Greyhawk", "27U");
+  assert.equal(ghPin!.horsepower, 325);
+  assert.equal(ghPin!.torqueLbFt, 450);
+  assert.equal(ghPin!.fuelType, "Gas");
+  const rhPin = findPowertrainCorrection("2027", "Jayco", "Redhawk", "24B");
+  assert.equal(rhPin!.horsepower, 325);
+  const rsePin = findPowertrainCorrection("2027", "Jayco", "Redhawk SE", "22AF");
+  assert.equal(rsePin!.horsepower, 0);
+  assert.match(rsePin!.engine, /Chevy|401/);
+  const prPin = findPowertrainCorrection("2027", "Jayco", "Precept", "31UL");
+  assert.equal(prPin!.horsepower, 335);
+  const ppPin = findPowertrainCorrection("2027", "Jayco", "Precept Prestige", "36B");
+  assert.equal(ppPin!.horsepower, 335);
+  const alPin = findPowertrainCorrection("2027", "Jayco", "Alante", "27A");
+  assert.equal(alPin!.horsepower, 335);
+  const asePin = findPowertrainCorrection("2027", "Jayco", "Alante SE", "27ASE");
+  assert.equal(asePin!.horsepower, 335);
+  const mbPin = findPowertrainCorrection("2027", "Jayco", "Melbourne", "25L");
+  assert.equal(mbPin!.horsepower, 211);
+  assert.equal(mbPin!.torqueLbFt, 332);
+  const mpPin = findPowertrainCorrection("2027", "Jayco", "Melbourne Prestige", "25LP");
+  assert.equal(mpPin!.horsepower, 211);
+  const gr22 = findPowertrainCorrection("2027", "Jayco", "Granite Ridge", "22T");
+  assert.equal(gr22!.horsepower, 310);
+  assert.equal(gr22!.fuelType, "Gas");
+  const gr23 = findPowertrainCorrection("2027", "Jayco", "Granite Ridge", "23S");
+  assert.equal(gr23!.horsepower, 211);
+  assert.equal(gr23!.fuelType, "Diesel");
+  const emb23 = findPowertrainCorrection("2023", "Jayco", "Embark", "37K");
+  assert.equal(emb23!.horsepower, 360);
+  assert.match(emb23!.chassis || "", /Spartan K1/);
+  const embSc = findPowertrainCorrection("2012", "Jayco", "Embark Super C", "QX390");
+  assert.equal(embSc, null);
+  const comet = findPowertrainCorrection("2027", "Jayco", "Comet", "18C");
+  assert.equal(comet!.horsepower, 276);
+  assert.equal(comet!.fuelType, "Gas");
+  const terr = findPowertrainCorrection("2027", "Jayco", "Terrain", "19Y");
+  assert.equal(terr!.horsepower, 211);
+  assert.equal(terr!.fuelType, "Diesel");
+});
+
 test("Entegra 2023–2024 OEM year-first floorplans + powertrain pins", () => {
   const eg = CATALOG_INDEX["Entegra Coach"];
   assert.ok(eg);

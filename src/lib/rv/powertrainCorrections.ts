@@ -43,7 +43,189 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Freightliner S2RV Plus",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "Jayco Seneca Super C OEM: ISB 6.7 360/800 · S2RV Plus · Allison 3000 MH · 100 gal · hitch 12k — not Power Stroke F-550 default",
+    note: "Jayco Seneca / Seneca Prestige Super C OEM: ISB 6.7 360/800 · S2RV Plus · Allison 3000 MH · 100 gal · hitch 12k — not Seneca XT Power Stroke",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "seneca xt",
+    engine: "Ford 6.7L Power Stroke 330HP",
+    horsepower: 330,
+    torqueLbFt: 950,
+    chassis: "Ford F550 4x4 / F600 4x4 (by floorplan)",
+    transmission: "10-speed automatic",
+    fuelType: "Diesel",
+    note: "OEM MY25–27 Seneca XT: Power Stroke 330/950 · hitch 12k. 29T F550 (MY25–26 only); 32U/35L F600. Not Seneca ISB.",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "greyhawk xl",
+    engine: "Ford 6.7L Power Stroke 330HP",
+    horsepower: 330,
+    torqueLbFt: 950,
+    chassis: "Ford F550 4x4 / F600 4x4 (by floorplan)",
+    transmission: "10-speed automatic",
+    fuelType: "Diesel",
+    note: "OEM MY25–27 Greyhawk XL Super C: Power Stroke 330/950 · hitch 12k. Not gas Greyhawk E-450.",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "greyhawk",
+    engine: "Ford 7.3L V8 325HP",
+    horsepower: 325,
+    torqueLbFt: 450,
+    chassis: "Ford E-450",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY25–27 Greyhawk: E-450 7.3 325/450 · hitch 7.5k · 55 gal. Not Greyhawk XL / not F53 335.",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "redhawk se",
+    engine: "Ford 7.3L 325HP or Chevy 6.6L Vortec 401HP (by chassis)",
+    horsepower: 0,
+    chassis: "Ford E-350 / E-450 or Chevy 4500 (by floorplan)",
+    fuelType: "Gas",
+    note: "OEM MY25–27 Redhawk SE prints Ford 325/450 and Chevy 401/464 — option-band HP. Not bare Redhawk.",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "redhawk",
+    engine: "Ford 7.3L V8 325HP",
+    horsepower: 325,
+    torqueLbFt: 450,
+    chassis: "Ford E-450",
+    transmission: "TorqShift 6-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY25–27 Redhawk: E-450 7.3 325/450 · hitch 7.5k. Not Redhawk SE.",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "melbourne prestige",
+    engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP",
+    horsepower: 211,
+    torqueLbFt: 332,
+    chassis: "Mercedes-Benz 3500 / 4500 (by year)",
+    transmission: "9-speed automatic",
+    fuelType: "Diesel",
+    note: "OEM Melbourne Prestige: MY25 Mercedes 3500 211/332; MY26–27 Mercedes 4500 211/332 (melburne-prestige URL). Not bare Melbourne.",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "melbourne",
+    engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP",
+    horsepower: 211,
+    torqueLbFt: 332,
+    chassis: "Mercedes-Benz 3500",
+    transmission: "9-speed automatic",
+    fuelType: "Diesel",
+    note: "OEM MY25–27 Melbourne: Mercedes 3500 · 2.0 211/332. Not Melbourne Prestige.",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "granite ridge",
+    floorplanIncludes: "22T",
+    engine: "Ford 3.5L EcoBoost V6 310HP",
+    horsepower: 310,
+    torqueLbFt: 400,
+    chassis: "Ford Transit 350HD AWD",
+    transmission: "10-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY25–27 Granite Ridge 22T: Transit 350HD AWD EcoBoost 310/400. Adventure era — not classic Granite Ridge.",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "granite ridge",
+    floorplanIncludes: "23S",
+    engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP",
+    horsepower: 211,
+    torqueLbFt: 332,
+    chassis: "Mercedes-Benz 3500 AWD",
+    transmission: "9-speed automatic",
+    fuelType: "Diesel",
+    note: "OEM MY25–27 Granite Ridge 23S: Mercedes 3500 AWD 211/332. Gas ≠ diesel.",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "comet",
+    engine: "RAM 3.6L V6 276HP",
+    horsepower: 276,
+    torqueLbFt: 250,
+    chassis: "RAM ProMaster 1500",
+    transmission: "9-speed automatic 948TE",
+    fuelType: "Gas",
+    note: "OEM MY25–27 Comet: ProMaster 1500 · 3.6 276/250 gas",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "swift",
+    engine: "RAM 3.6L V6 276HP",
+    horsepower: 276,
+    torqueLbFt: 250,
+    chassis: "RAM ProMaster 3500",
+    transmission: "9-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY25–27 Swift: ProMaster 3500 · 3.6 276/250 gas",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "solstice",
+    engine: "Ford 3.5L EcoBoost V6 310HP",
+    horsepower: 310,
+    torqueLbFt: 400,
+    chassis: "Ford Transit AWD 350HD",
+    transmission: "10-speed automatic",
+    fuelType: "Gas",
+    note: "OEM MY25–27 Solstice: Transit AWD 350HD · EcoBoost 310/400. No Solstice Prestige OEM page.",
+  },
+  {
+    yearMin: 2025,
+    yearEnd: 2027,
+    makeIncludes: "jayco",
+    modelIncludes: "terrain",
+    engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP",
+    horsepower: 211,
+    torqueLbFt: 332,
+    chassis: "Mercedes-Benz Sprinter 2500 AWD",
+    transmission: "9-speed automatic",
+    fuelType: "Diesel",
+    note: "OEM MY25–27 Terrain: Sprinter 2500 AWD · 211/332",
+  },
+  {
+    yearMin: 2023,
+    yearEnd: 2023,
+    makeIncludes: "jayco",
+    modelIncludes: "embark",
+    engine: "Cummins B6.7 360HP",
+    horsepower: 360,
+    torqueLbFt: 800,
+    chassis: "Spartan K1 Raised Rail",
+    transmission: "Allison 3000 MH 6-speed",
+    fuelType: "Diesel",
+    note: "OEM MY23 Embark pusher: Spartan K1 · B6.7 360/800. Not Embark Super C (~2009–2012). YearEnd 2023.",
   },
   {
     yearMin: 2020,
@@ -343,7 +525,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
   },
   {
     yearMin: 2020,
-    yearEnd: 2026,
+    yearEnd: 2027,
     makeIncludes: "jayco",
     modelIncludes: "precept",
     engine: "Ford 7.3L V8 Godzilla 335HP",
@@ -352,11 +534,11 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Ford F53",
     transmission: "TorqShift 6-speed automatic",
     fuelType: "Gas",
-    note: "Precept is gas F53 335/468 — not diesel X15",
+    note: "Precept / Precept Prestige gas F53 335/468 — not diesel X15",
   },
   {
     yearMin: 2020,
-    yearEnd: 2026,
+    yearEnd: 2027,
     makeIncludes: "jayco",
     modelIncludes: "alante",
     engine: "Ford 7.3L V8 Godzilla 335HP",
@@ -365,7 +547,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Ford F53",
     transmission: "TorqShift 6-speed automatic",
     fuelType: "Gas",
-    note: "Alante gas F53 — not diesel",
+    note: "Alante / Alante SE gas F53 335/468 — not diesel",
   },
 
   {
@@ -5488,6 +5670,26 @@ export function findPowertrainCorrection(
     }
     // Bare "flair" must not stamp Flair LXE
     if (c.modelIncludes === "flair" && md.includes("flair lxe")) {
+      return false;
+    }
+    // Bare "seneca" ISB must not stamp Seneca XT Power Stroke
+    if (c.modelIncludes === "seneca" && md.includes("seneca xt")) {
+      return false;
+    }
+    // Bare "greyhawk" E-450 must not stamp Greyhawk XL Super C
+    if (c.modelIncludes === "greyhawk" && md.includes("greyhawk xl")) {
+      return false;
+    }
+    // Bare "redhawk" E-450 must not stamp Redhawk SE Ford/Chevy option-band
+    if (c.modelIncludes === "redhawk" && md.includes("redhawk se")) {
+      return false;
+    }
+    // Bare "melbourne" 3500 must not stamp Melbourne Prestige 3500/4500-by-year
+    if (c.modelIncludes === "melbourne" && md.includes("melbourne prestige")) {
+      return false;
+    }
+    // Bare "embark" pusher must not stamp Embark Super C (~2009–2012)
+    if (c.modelIncludes === "embark" && md.includes("embark super")) {
       return false;
     }
     return true;
