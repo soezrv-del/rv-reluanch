@@ -1563,7 +1563,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Tiffin: {
     Zephyr: {
       type: "Class A Diesel",
-      floorplans: ["45NZ", "45FZ", "45PZ", "45QZ", "45AZ", "45MZ", "45OZ"],
+      floorplans: ["45NZ", "45FZ", "45PZ", "45QZ", "45AZ", "45MZ", "45OZ", "45DZ", "45TZ"],
       floorplansByYear: {
         "2005": ["45NZ", "45FZ"],
         "2006": ["45NZ", "45FZ"],
@@ -1575,8 +1575,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2012": ["45NZ", "45FZ"],
         "2013": ["45NZ", "45FZ"],
         "2014": ["45NZ", "45FZ"],
-        "2015": ["45NZ", "45FZ"],
-        "2016": ["45NZ", "45FZ"],
+        // Brochure 2015_Zephyr: 45 DZ | 45 TZ — Spartan K2 · Cummins ISX 11.9 500 / 1,645. Not 45 NZ / 45 FZ.
+        "2015": ["45DZ", "45TZ"],
+        // No MY16 Zephyr brochure on the current Tiffin resources index — omit key. Do not copy 2015 or 2017.
         // Brochure 2017_Zephyr: 45 OZ only — Freightliner Cummins ISL 600 / 1950. Do not copy 45NZ/45FZ/45PZ.
         "2017": ["45OZ"],
         // No MY18 Zephyr brochure on the current Tiffin resources index (or craft archive) — omit key.
@@ -1642,19 +1643,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2010,
-          to: 2015,
+          to: 2014,
           engine: "Cummins ISL / ISB 300–450HP (era)",
           horsepower: 380,
           chassis: "Tiffin PowerGlide",
-          notes: "2010–2015 mid/high diesel Class A"
+          notes: "2010–2014 mid/high diesel Class A — 2013–2014 walk-back will lock from OEM brochure."
         },
         {
-          from: 2016,
-          to: 2016,
-          engine: "Cummins ISX / X15 600HP class",
-          horsepower: 600,
-          chassis: "Tiffin PowerGlide",
-          notes: "Pre-MY17 Zephyr — 2015–2016 walk-back will lock from OEM brochure. Do not stamp MY17 Freightliner ISL 600 onto 2016."
+          from: 2015,
+          to: 2015,
+          engine: "Cummins ISX 11.9 500HP",
+          horsepower: 500,
+          torqueLbFt: 1645,
+          chassis: "Spartan K2",
+          transmission: "Allison 4000 MH",
+          generator: "Onan 12.5kW Quiet Diesel",
+          notes: "OEM 2015_Zephyr: Spartan K2 · ISX 11.9 500 / 1,645 · Allison 4000 MH · Onan 12.5 kW · 45 DZ / 45 TZ. Not ISL 600 (MY17) and not X15 605. No MY16 brochure."
         },
         {
           from: 2017,
@@ -1726,7 +1730,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Allegro Bus": {
       type: "Class A Diesel",
-      floorplans: ["37AP", "40AP", "45LP", "45OPP", "45CP", "37TS", "40IP", "45BQ", "35CP", "45FP", "45BTP", "36AP", "45BP", "45MP", "40SP", "45OP"],
+      floorplans: ["37AP", "40AP", "45LP", "45OPP", "45CP", "37TS", "40IP", "45BQ", "35CP", "45FP", "45BTP", "36AP", "45BP", "45MP", "40SP", "45OP", "45UP"],
       floorplansByYear: {
         "2005": ["37AP", "40AP", "45LP"],
         "2006": ["37AP", "40AP", "45LP"],
@@ -1738,8 +1742,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2012": ["37AP", "40AP", "45LP", "45OPP"],
         "2013": ["37AP", "40AP", "45LP", "45OPP"],
         "2014": ["37AP", "40AP", "45LP", "45OPP"],
-        "2015": ["37AP", "40AP", "45LP", "45OPP"],
-        "2016": ["37AP", "40AP", "45LP", "45OPP"],
+        // Brochure 2015_Allegro-Bus: 37 AP | 40 SP | 45 LP — ISL 450 / 1250 PowerGlide. No 40 AP / 45 OPP / 45 OP.
+        "2015": ["37AP", "40SP", "45LP"],
+        // Brochure 2016_Allegro-Bus: 37 AP | 40 AP | 40 SP | 45 LP | 45 OP | 45 UP — ISL 450 / 1250 std; Freightliner ISL 600 / 1950 opt on 45 OP / 45 UP only.
+        "2016": ["37AP", "40AP", "40SP", "45LP", "45OP", "45UP"],
         // Brochure 2017_Allegro-Bus: 37 AP | 40 AP | 40 SP | 45 OP | 45 OPP — ISL 450 / 1250; ISX15 600 opt (not on 45' Freightliner)
         "2017": ["37AP", "40AP", "40SP", "45OP", "45OPP"],
         // Brochure 2018_Allegro-Bus: 37 AP | 40 AP | 40 SP | 45 OP | 45 OPP | 45 MP — ISL9 450 / 1250; X15 605 opt
@@ -1807,19 +1813,57 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2010,
-          to: 2015,
+          to: 2014,
           engine: "Cummins ISL / ISB 300–450HP (era)",
           horsepower: 380,
           chassis: "Tiffin PowerGlide",
-          notes: "2010–2015 mid/high diesel Class A"
+          notes: "2010–2014 mid/high diesel Class A — 2013–2014 walk-back will lock from OEM brochure."
+        },
+        {
+          from: 2015,
+          to: 2015,
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10.0kW Quiet Diesel",
+          notes: "OEM 2015_Allegro-Bus: PowerGlide · ISL 450 / 1,250 · Allison 3000 MH · Onan 10 kW. No Freightliner 600 option on this brochure."
         },
         {
           from: 2016,
           to: 2016,
-          engine: "Cummins ISL / L9 450HP",
+          floorplans: ["45OP", "45 OP", "45UP", "45 UP"],
+          engine: "Cummins ISL 450HP std / ISL 600HP opt",
           horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide (Freightliner if ISL 600)",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10.0kW Quiet Diesel",
+          notes: "OEM 2016_Allegro-Bus 45 OP / 45 UP: PowerGlide ISL 450 / 1,250 std; Freightliner ISL 600 / 1,950 optional."
+        },
+        {
+          from: 2016,
+          to: 2016,
+          floorplans: ["37AP", "37 AP", "40AP", "40 AP", "40SP", "40 SP", "45LP", "45 LP"],
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
           chassis: "Tiffin PowerGlide",
-          notes: "Pre-MY17 Bus — 2015–2016 walk-back will lock from OEM brochure. Do not stamp MY17 ISX15 600 onto 2016."
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10.0kW Quiet Diesel",
+          notes: "OEM 2016_Allegro-Bus 37 AP / 40 AP / 40 SP / 45 LP: PowerGlide ISL 450 / 1,250 only. Freightliner ISL 600 not available."
+        },
+        {
+          from: 2016,
+          to: 2016,
+          engine: "Cummins ISL 450HP (ISL 600 opt on 45 OP / 45 UP)",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10.0kW Quiet Diesel",
+          notes: "OEM 2016_Allegro-Bus default: ISL 450 std; Freightliner ISL 600 only on 45 OP / 45 UP. Do not stamp MY17 ISX15."
         },
         {
           from: 2017,
@@ -2037,8 +2081,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2012": ["45OPP"],
         "2013": ["45OPP"],
         "2014": ["45OPP"],
-        "2015": ["45OPP"],
-        "2016": ["45OPP"],
+        // 45 OPP is not on the OEM 2015_Allegro-Bus (37 AP / 40 SP / 45 LP) or 2016_Allegro-Bus (45 OP / 45 UP) brochures — omit keys.
         "2017": ["45OPP"],
         "2018": ["45OPP"],
         "2019": ["45OPP"],
@@ -2089,14 +2132,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
                 {
           from: 2010,
-          to: 2015,
+          to: 2014,
           engine: "Cummins ISL / ISB 300–450HP (era)",
           horsepower: 380,
           chassis: "Tiffin PowerGlide",
-          notes: "2010–2015 mid/high diesel Class A"
+          notes: "2010–2014 mid/high diesel Class A — 45 OPP not on OEM 2015–2016 Bus brochures."
         },
         {
-          from: 2016,
+          from: 2017,
           to: 2026,
           engine: "Cummins L9 450HP",
           horsepower: 450,
@@ -2115,8 +2158,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2012": ["45OPP"],
         "2013": ["45OPP"],
         "2014": ["45OPP"],
-        "2015": ["45OPP"],
-        "2016": ["45OPP"],
+        // 45 OPP is not on the OEM 2015_Allegro-Bus (37 AP / 40 SP / 45 LP) or 2016_Allegro-Bus (45 OP / 45 UP) brochures — omit keys.
         "2017": ["45OPP"],
         "2018": ["45OPP"],
         "2019": ["45OPP"],
@@ -2158,14 +2200,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2009,
-          to: 2015,
+          to: 2014,
           engine: "Cummins ISL / ISB 300–450HP (era)",
           horsepower: 380,
           chassis: "Tiffin PowerGlide",
-          notes: "2009–2015 mid/high diesel Class A — confirm build sheet"
+          notes: "2009–2014 mid/high diesel Class A — 45 OPP not on OEM 2015–2016 Bus brochures."
         },
         {
-          from: 2016,
+          from: 2017,
           to: 2026,
           engine: "Cummins L9 450HP (X12 optional)",
           horsepower: 450,
@@ -2186,6 +2228,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "40IH",
         "40QBH",
         "40QKH",
+        "42LH",
         "44OH",
         "45OH",
       ],
@@ -2200,8 +2243,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2012": ["36GH", "40AH", "40IH", "44OH"],
         "2013": ["36GH", "40AH", "40IH", "44OH"],
         "2014": ["36GH", "40AH", "40IH", "44OH"],
-        "2015": ["36GH", "40AH", "40IH", "44OH"],
-        "2016": ["36GH", "40AH", "40IH", "44OH"],
+        // Brochure 2015_Phaeton: 36 GH | 40 AH | 40 QBH | 40 QKH | 42 LH — Freightliner ISL 380 / 1050 except 42' ISL 450 / 1250. No 40 IH / 44 OH / 37 BH.
+        "2015": ["36GH", "40AH", "40QBH", "40QKH", "42LH"],
+        // Brochure 2016_Phaeton: 36 GH | 40 AH | 40 QBH | 40 QKH | 42 LH | 44 OH — FL ISL 380 / 1050 on 36–40'; FL ISL 450 on 42 LH; FL 450 std / PowerGlide 450 opt on 44 OH.
+        "2016": ["36GH", "40AH", "40QBH", "40QKH", "42LH", "44OH"],
         // Brochure 2017_Phaeton: 36 GH | 40 AH | 40 QBH | 40 QKH | 44 OH — ISL 380 / 1050 Freightliner; ISL 450 / 1250 PowerGlide. No 37 BH / 40 IH.
         "2017": ["36GH", "40AH", "40QBH", "40QKH", "44OH"],
         // Brochure 2018_Phaeton: 36 GH | 37 BH | 40 AH | 40 IH | 40 QBH | 40 QKH | 44 OH — ISL 380 / 1050; ISL 450 / 1250 PowerGlide
@@ -2273,13 +2318,81 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2010,
-          to: 2015,
+          to: 2014,
           engine: "Cummins ISL diesel (era)",
           horsepower: 380,
           torqueLbFt: 1050,
           chassis: "Freightliner / PowerGlide (by option)",
           transmission: "Allison 3000 MH",
-          notes: "2010–2015 mid/high diesel — confirm HP on build sheet",
+          notes: "2010–2014 mid/high diesel — 2013–2014 walk-back will lock from OEM brochure.",
+        },
+        {
+          from: 2015,
+          to: 2015,
+          floorplans: ["42LH", "42 LH"],
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner",
+          transmission: "Allison 3000 MH 6-speed",
+          fuelCapacityGal: 100,
+          towingCapacity: 10000,
+          generator: "Onan diesel (slide-out)",
+          notes: "OEM 2015_Phaeton 42 LH: Freightliner ISL 450 / 1,250. All other 2015 plans are ISL 380 / 1,050.",
+        },
+        {
+          from: 2015,
+          to: 2015,
+          engine: "Cummins ISL 380HP",
+          horsepower: 380,
+          torqueLbFt: 1050,
+          chassis: "Freightliner",
+          transmission: "Allison 3000 MH 6-speed",
+          fuelCapacityGal: 100,
+          towingCapacity: 10000,
+          generator: "Onan diesel (slide-out)",
+          notes: "OEM 2015_Phaeton 36 GH / 40 AH / 40 QBH / 40 QKH: Freightliner ISL 380 / 1,050. 42' is 450. Not L9. No PowerGlide option on this brochure.",
+        },
+        {
+          from: 2016,
+          to: 2016,
+          floorplans: ["42LH", "42 LH"],
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner",
+          transmission: "Allison 3000 MH 6-speed",
+          fuelCapacityGal: 100,
+          towingCapacity: 10000,
+          generator: "Onan diesel (slide-out)",
+          notes: "OEM 2016_Phaeton 42 LH: Freightliner ISL 450 / 1,250 only (380 and PowerGlide not listed on this plan).",
+        },
+        {
+          from: 2016,
+          to: 2016,
+          floorplans: ["44OH", "44 OH"],
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner / Tiffin PowerGlide (by option)",
+          transmission: "Allison 3000 MH 6-speed",
+          fuelCapacityGal: 100,
+          towingCapacity: 10000,
+          generator: "Onan diesel (slide-out)",
+          notes: "OEM 2016_Phaeton 44 OH: Freightliner ISL 450 / 1,250 std; PowerGlide ISL 450 / 1,250 optional. 380 not listed on this plan.",
+        },
+        {
+          from: 2016,
+          to: 2016,
+          engine: "Cummins ISL 380HP",
+          horsepower: 380,
+          torqueLbFt: 1050,
+          chassis: "Freightliner",
+          transmission: "Allison 3000 MH 6-speed",
+          fuelCapacityGal: 100,
+          towingCapacity: 10000,
+          generator: "Onan diesel (slide-out)",
+          notes: "OEM 2016_Phaeton 36 GH / 40 AH / 40 QBH / 40 QKH: Freightliner ISL 380 / 1,050 only. 42 LH / 44 OH are 450. Not L9 380/1150.",
         },
         // Floorplan-specific L9 bands (must appear before model-wide for same years)
         {
@@ -2453,19 +2566,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           notes: "OEM MY23 Phaeton 44 OH: L9 450 / 1,250 standard (380 not listed).",
         },
         {
-          from: 2016,
-          to: 2016,
-          engine: "Cummins L9 380HP",
-          horsepower: 380,
-          torqueLbFt: 1150,
-          chassis: "Freightliner / Tiffin PowerGlide (by option)",
-          transmission: "Allison 3000 MH 6-speed",
-          fuelCapacityGal: 100,
-          generator: "Onan 10.0 kW diesel",
-          notes:
-            "Pre-MY17 Phaeton default — 2015–2016 walk-back will lock from OEM brochure. Do not stamp MY17–18 ISL 380/450 onto 2016.",
-        },
-        {
           from: 2019,
           to: 2023,
           engine: "Cummins L9 380HP",
@@ -2527,8 +2627,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplans: ["33AA", "37BA", "33AL", "37PA", "38KA", "38LL", "36QSA", "38QBA", "38QRA", "36AR", "38RA"],
       floorplansByYear: {
         "2014": ["33AA", "37BA", "33AL"],
-        "2015": ["33AA", "37BA", "33AL", "36QSA", "37PA", "38QBA", "38QRA"],
-        "2016": ["33AA", "37BA", "33AL"],
+        // No MY15 / MY16 RED 340 brochure — line not split yet (single Allegro RED). Omit keys.
         // No MY17 / MY18 RED 340 brochure — line not split yet (single Allegro RED). Omit keys.
         // Brochure 2019_RED-340-Flyer: 33 AA single model — Cummins B6.7 340 / 700 on Freightliner XC
         "2019": ["33AA"],
@@ -2579,13 +2678,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2014,
-          to: 2016,
+          to: 2014,
           engine: "Cummins ISB / B6.7 360HP",
           horsepower: 360,
           torqueLbFt: 800,
           chassis: "Freightliner XC / XCR raised-rail",
           transmission: "Allison 3000 MH",
-          notes: "Pre-split RED 340 years — 2015–2016 walk-back will lock. No MY17–18 RED 340 brochure (single Allegro RED 360 HP line)."
+          notes: "Pre-split RED 340 — 2014 key left for the 2013–2014 slice. No MY15–MY18 RED 340 brochure (single Allegro RED)."
         },
         {
           from: 2019,
@@ -2711,7 +2810,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Allegro Red": {
       type: "Class A Diesel",
-      floorplans: ["33AA", "37BA", "38QBA", "33AL", "38KA", "37PA", "38QRA"],
+      floorplans: ["33AA", "37BA", "38QBA", "33AL", "38KA", "37PA", "38QRA", "36QSA"],
       floorplansByYear: {
         "2005": ["33AA", "37BA", "38QBA"],
         "2006": ["33AA", "37BA", "38QBA"],
@@ -2723,8 +2822,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2012": ["33AA", "37BA", "38QBA"],
         "2013": ["33AA", "37BA", "38QBA"],
         "2014": ["33AA", "37BA", "38QBA"],
-        "2015": ["33AA", "37BA", "38QBA"],
-        "2016": ["33AA", "37BA", "38QBA"],
+        // Brochure 2015_RED: 33 AA | 36 QSA | 37 PA | 38 QBA | 38 QRA — ISB 6.7 340 / 660 · Allison 2500. Not 37 BA / 33 AL.
+        "2015": ["33AA", "36QSA", "37PA", "38QBA", "38QRA"],
+        // Brochure 2016_RED: 33 AA | 37 PA | 38 QBA | 38 QRA — ISB 6.7 340 / 660 Allison 2500 or 360 / 800 Allison 3000.
+        "2016": ["33AA", "37PA", "38QBA", "38QRA"],
         // Brochure 2017_RED: 33 AA | 37 PA | 38 QBA | 38 QRA — ISB 6.7 360 / 800. Not 33 AL / 37 BA.
         "2017": ["33AA", "37PA", "38QBA", "38QRA"],
         // Brochure 2018_Allegro-RED: 33 AA | 37 BA | 37 PA | 38 QBA | 38 QRA — still a single RED line (360 HP). Also indexed as Red 360.
@@ -2767,7 +2868,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1972,
       warrantyYears: 2,
       yearStart: 2005,
-      description: "Tiffin Allegro RED — diesel Class A pusher (not the gas Allegro Open Road). Legacy through MY18: single Allegro RED, Cummins ISB 6.7 360 / 800 on Freightliner XC. MY19–23: use Allegro Red 340 / 360. OEM MY24–27: 33 AA / 37 BA / 38 KA on Freightliner XCM/XCR, Cummins L9 380 / 1,150, Onan 8 kW. B6.7 360 is no longer available on MY24+.",
+      description: "Tiffin Allegro RED — diesel Class A pusher (not the gas Allegro Open Road). Legacy through MY18: single Allegro RED (MY15 ISB 340 / 660; MY16 340 or 360 option; MY17–18 ISB 360 / 800 on Freightliner XC). MY19–23: use Allegro Red 340 / 360. OEM MY24–27: 33 AA / 37 BA / 38 KA on Freightliner XCM/XCR, Cummins L9 380 / 1,150, Onan 8 kW. B6.7 360 is no longer available on MY24+.",
       powertrainByYear: [
         {
           from: 2005,
@@ -2783,6 +2884,42 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2014,
+          to: 2014,
+          engine: "Cummins ISB / B6.7 360HP",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Freightliner XC / XCR raised-rail",
+          transmission: "Allison 3000 MH",
+          fuelCapacityGal: 100,
+          generator: "Onan 8.0 kW Quiet Diesel",
+          notes: "2014 Allegro RED — 2013–2014 walk-back will lock from OEM brochure. Do not stamp MY15 340 / 660 onto 2014."
+        },
+        {
+          from: 2015,
+          to: 2015,
+          engine: "Cummins ISB 6.7 340HP",
+          horsepower: 340,
+          torqueLbFt: 660,
+          chassis: "Freightliner",
+          transmission: "Allison 2500 MH",
+          fuelCapacityGal: 100,
+          generator: "Onan 8.0 kW Quiet Diesel",
+          notes: "OEM 2015_RED: ISB 6.7 340 / 660 · Freightliner · Allison 2500 MH · Onan 8 kW. Single RED line — not 360 / 800, not L9."
+        },
+        {
+          from: 2016,
+          to: 2016,
+          engine: "Cummins ISB 6.7 340HP / 360HP (chassis option)",
+          horsepower: 340,
+          torqueLbFt: 660,
+          chassis: "Freightliner",
+          transmission: "Allison 2500 MH / 3000 MH (by option)",
+          fuelCapacityGal: 100,
+          generator: "Onan 8.0 kW Quiet Diesel",
+          notes: "OEM 2016_RED: ISB 6.7 340 / 660 · Allison 2500 or ISB 6.7 360 / 800 · Allison 3000. Freightliner. Option-band — do not stamp 360-only."
+        },
+        {
+          from: 2017,
           to: 2018,
           engine: "Cummins ISB / B6.7 360HP",
           horsepower: 360,
@@ -2825,8 +2962,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2012": ["28BR", "31BR", "32BR"],
         "2013": ["28BR", "31BR", "32BR"],
         "2014": ["28BR", "31BR", "32BR"],
-        "2015": ["28BR", "31BR", "32BR"],
-        "2016": ["28BR", "31BR", "32BR"],
+        // Brochure 2015_Allegro-Breeze: 28 BR | 32 BR — Navistar MaxxForce 7 240 / 620 on PowerGlide. Not 31 BR. Not Cummins.
+        "2015": ["28BR", "32BR"],
+        // Brochure 2016_Allegro-Breeze: 32 BR only — Cummins ISV5.0 V8 275 / 560 on PowerGlide. Not 28 BR / 31 BR.
+        "2016": ["32BR"],
         // Brochure 2017_Allegro-Breeze: 31 BR | 32 BR — Cummins ISV5.0 V8 275 / 560 on PowerGlide. Not 28 BR.
         "2017": ["31BR", "32BR"],
         // No MY18 Breeze brochure on the current Tiffin resources index (or craft archive) — omit key.
@@ -2888,19 +3027,30 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
                 {
           from: 2010,
-          to: 2015,
+          to: 2014,
           engine: "Cummins ISL / ISB 300–450HP (era)",
           horsepower: 380,
           chassis: "Freightliner XC",
-          notes: "2010–2015 mid/high diesel Class A"
+          notes: "2010–2014 Breeze — 2013–2014 walk-back will lock from OEM brochure."
+        },
+        {
+          from: 2015,
+          to: 2015,
+          engine: "Navistar MaxxForce 7 240HP",
+          horsepower: 240,
+          torqueLbFt: 620,
+          chassis: "Tiffin PowerGlide",
+          notes: "OEM 2015_Allegro-Breeze: PowerGlide · MaxxForce 7 240 / 620 · Onan 6.0 kW. Not Cummins ISV 275 (MY16+) and not B6.7 340."
         },
         {
           from: 2016,
           to: 2016,
-          engine: "Cummins ISB / B6.7 340HP",
-          horsepower: 340,
-          chassis: "Freightliner XC",
-          notes: "Pre-MY17 Breeze — 2015–2016 walk-back will lock. Do not stamp MY17 ISV5.0 275 onto 2016."
+          engine: "Cummins ISV5.0 V8 275HP",
+          horsepower: 275,
+          torqueLbFt: 560,
+          chassis: "Tiffin PowerGlide",
+          transmission: "Allison 6-speed automatic",
+          notes: "OEM 2016_Allegro-Breeze: PowerGlide · ISV5.0 275 / 560 · Allison 6-speed · 32 BR only. Not MaxxForce 240 and not B6.7 340."
         },
         {
           from: 2017,
@@ -2956,15 +3106,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Open Road": {
       type: "Class A Gas",
-      floorplans: ["32SA", "34PA", "36LA", "34PR", "29NA", "32FA", "36UA", "31MA", "31SA", "35QBA"],
+      floorplans: ["32SA", "34PA", "36LA", "34PR", "29NA", "32FA", "36UA", "31MA", "31SA", "35QBA", "32CA", "34TGA"],
       floorplansByYear: {
         "2010": ["32SA", "34PA", "36LA"],
         "2011": ["32SA", "34PA", "36LA"],
         "2012": ["32SA", "34PA", "36LA"],
         "2013": ["32SA", "34PA", "36LA"],
         "2014": ["32SA", "34PA", "36LA"],
-        "2015": ["32SA", "34PA", "36LA"],
-        "2016": ["32SA", "34PA", "36LA"],
+        // Brochure 2015_Allegro (Open Road): 31 SA | 32 CA | 32 SA | 34 TGA | 35 QBA | 36 LA — Ford 6.8 V10 362 / 457. Not 34 PA / 34 PR.
+        "2015": ["31SA", "32CA", "32SA", "34TGA", "35QBA", "36LA"],
+        // Brochure 2016_Allegro (Open Road): 31 SA | 32 SA | 34 PA | 34 TGA | 35 QBA | 36 LA — Ford 6.8 V10 320 / 460. Not 34 PR / 36 UA.
+        "2016": ["31SA", "32SA", "34PA", "34TGA", "35QBA", "36LA"],
         // Brochure 2017_Allegro (Open Road): 31 MA | 31 SA | 32 SA | 34 PA | 35 QBA | 36 LA | 36 UA — Ford 6.8 V10 320 / 460. Not 34 PR.
         "2017": ["31MA", "31SA", "32SA", "34PA", "35QBA", "36LA", "36UA"],
         // Brochure 2018_Allegro (Open Road): 31 MA | 32 SA | 34 PA | 36 LA | 36 UA — Ford 6.8 V10 320 / 460. 31 SA / 35 QBA dropped.
@@ -3025,19 +3177,32 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2010,
-          to: 2015,
+          to: 2014,
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)"
+          notes: "Pre-Godzilla gas Class A — 2013–2014 walk-back will lock from OEM brochure."
+        },
+        {
+          from: 2015,
+          to: 2015,
+          engine: "Ford 6.8L V10 362HP",
+          horsepower: 362,
+          torqueLbFt: 457,
+          chassis: "Ford 22K (24K on 34'+)",
+          generator: "Onan 5.5kW Quiet Gas (7.0 kW listed)",
+          notes: "OEM 2015_Allegro (Open Road): Ford 6.8 V10 362 / 457. 22K chassis; 24K on 34'+. Gas — not diesel Bus / RED. Not the later 7.3 Godzilla."
         },
         {
           from: 2016,
           to: 2016,
-          engine: "Ford Triton V10 6.8L",
+          engine: "Ford 6.8L V10 320HP",
           horsepower: 320,
-          chassis: "Ford F53",
-          notes: "Pre-MY17 Open Road — 2015–2016 walk-back will lock. Do not copy MY17 plans onto 2016."
+          torqueLbFt: 460,
+          chassis: "Ford",
+          transmission: "TorqShift 5-speed",
+          generator: "Onan 5.5kW Quiet Gas (7.0 kW on 36 LA)",
+          notes: "OEM 2016_Allegro (Open Road): Ford 6.8 V10 320 / 460 · TorqShift 5-speed. 5.5 kW Onan except 36 LA (7.0 kW). Gas — not diesel."
         },
         {
           from: 2017,
@@ -3105,7 +3270,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["24BW", "24FW", "24QW", "25QW", "24TW", "25RW", "25JW", "25TW", "25LW", "25SW", "25RLW", "25PW", "24QB", "25XLW", "25XRW", "25XPW"],
       floorplansByYear: {
-        "2016": ["24BW", "25RW"],
+        // No MY15 / MY16 Wayfarer brochure on the current Tiffin resources index. Family RVing / OEM 2017 literature introduce the line as 24 QW. Omit 2016 — do not invent 24 BW / 25 RW.
         // Archived OEM 2017 Wayfarer literature (RVUSA library of Tiffin brochure): 24 QW. Current Tiffin index has no MY17 PDF — do not copy 24 BW / 25 RW / 25 JW.
         "2017": ["24QW"],
         // Brochure 2018_Wayfarer: 24 BW | 24 QW | 24 TW — Mercedes 3.0 6-cyl 188 / 325, 5-speed Tip Shift. Not 25 RW / 25 JW / 25 TW.
@@ -3160,17 +3325,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 86,
       founded: 1972,
       warrantyYears: 2,
-      yearStart: 2016,
-      description: "Tiffin Wayfarer — Sprinter diesel Class C. OEM MY27: 25 RW / 25 PW / 25 XLW on Mercedes-Benz 4500XD, 2.0 I4 208 HP / 332, RVMP Flex Power LP gen. MY25: 25 XLW / 25 XRW (3500XD). MY26: 25 XRW / 25 XLW / 25 XPW / 25 RW.",
+      yearStart: 2017,
+      description: "Tiffin Wayfarer — Sprinter diesel Class C. OEM intro is MY17 (24 QW). OEM MY27: 25 RW / 25 PW / 25 XLW on Mercedes-Benz 4500XD, 2.0 I4 208 HP / 332, RVMP Flex Power LP gen. MY25: 25 XLW / 25 XRW (3500XD). MY26: 25 XRW / 25 XLW / 25 XPW / 25 RW.",
       powertrainByYear: [
-        {
-          from: 2016,
-          to: 2016,
-          engine: "Mercedes-Benz 3.0L V6 turbodiesel",
-          horsepower: 188,
-          chassis: "Mercedes Sprinter",
-          notes: "Pre-MY17 Wayfarer — 2015–2016 walk-back will lock. Do not copy MY17 24 QW onto 2016."
-        },
         {
           from: 2017,
           to: 2017,
@@ -3488,7 +3645,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Allegro: {
       type: "Class A Gas",
-      floorplans: ["32SA", "34PA", "36LA", "34PR", "32FA", "36UA", "31MA", "31SA", "35QBA"],
+      floorplans: ["32SA", "34PA", "36LA", "34PR", "32FA", "36UA", "31MA", "31SA", "35QBA", "32CA", "34TGA"],
       floorplansByYear: {
         "2005": ["32SA", "34PA", "36LA"],
         "2006": ["32SA", "34PA", "36LA"],
@@ -3500,8 +3657,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2012": ["32SA", "34PA", "36LA"],
         "2013": ["32SA", "34PA", "36LA"],
         "2014": ["32SA", "34PA", "36LA"],
-        "2015": ["32SA", "34PA", "36LA"],
-        "2016": ["32SA", "34PA", "36LA"],
+        // Alias tracks OEM 2015 Allegro (Open Road) brochure
+        "2015": ["31SA", "32CA", "32SA", "34TGA", "35QBA", "36LA"],
+        // Alias tracks OEM 2016 Allegro (Open Road) brochure
+        "2016": ["31SA", "32SA", "34PA", "34TGA", "35QBA", "36LA"],
         // Alias tracks OEM 2017 Allegro (Open Road) brochure
         "2017": ["31MA", "31SA", "32SA", "34PA", "35QBA", "36LA", "36UA"],
         // Alias tracks OEM 2018 Allegro (Open Road) brochure
@@ -3549,19 +3708,30 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2005,
-          to: 2015,
+          to: 2014,
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "Pre-Godzilla gas Class A — Triton V10 era (7.3L arrives ~2020)"
+          notes: "Pre-Godzilla gas Class A — 2013–2014 walk-back will lock from OEM brochure."
+        },
+        {
+          from: 2015,
+          to: 2015,
+          engine: "Ford 6.8L V10 362HP",
+          horsepower: 362,
+          torqueLbFt: 457,
+          chassis: "Ford 22K (24K on 34'+)",
+          notes: "OEM 2015 Allegro brochure: Ford 6.8 V10 362 / 457 gas. Alias of Open Road."
         },
         {
           from: 2016,
           to: 2016,
-          engine: "Ford Triton V10 6.8L",
+          engine: "Ford 6.8L V10 320HP",
           horsepower: 320,
-          chassis: "Ford F53",
-          notes: "Pre-MY17 Allegro gas — 2015–2016 walk-back will lock."
+          torqueLbFt: 460,
+          chassis: "Ford",
+          transmission: "TorqShift 5-speed",
+          notes: "OEM 2016 Allegro brochure: Ford 6.8 V10 320 / 460 · TorqShift 5-speed. Alias of Open Road."
         },
         {
           from: 2017,
