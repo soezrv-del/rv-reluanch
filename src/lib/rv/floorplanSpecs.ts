@@ -1786,7 +1786,7 @@ const OEM_FLOORPLAN_ROWS: Array<{
     makeIncludes: "tiffin",
     modelIncludes: "phaeton",
     yearMin: 2019,
-    yearMax: 2026,
+    yearMax: 2022,
     floorplan: "40AH",
     spec: {
       lengthDisplay: `41' 5"`,
@@ -1830,7 +1830,7 @@ const OEM_FLOORPLAN_ROWS: Array<{
     makeIncludes: "tiffin",
     modelIncludes: "phaeton",
     yearMin: 2019,
-    yearMax: 2026,
+    yearMax: 2022,
     floorplan: "40QBH",
     spec: {
       lengthDisplay: `40' 0"`,
@@ -1852,7 +1852,7 @@ const OEM_FLOORPLAN_ROWS: Array<{
     makeIncludes: "tiffin",
     modelIncludes: "phaeton",
     yearMin: 2019,
-    yearMax: 2026,
+    yearMax: 2022,
     floorplan: "40QKH",
     spec: {
       lengthDisplay: `40' 0"`,

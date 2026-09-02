@@ -1581,8 +1581,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["45NZ", "45FZ", "45PZ", "45QZ"],
         "2019": ["45NZ", "45FZ", "45PZ", "45QZ"],
         "2020": ["45NZ", "45FZ", "45PZ", "45AZ"],
-        "2021": ["45NZ", "45FZ", "45PZ", "45AZ"],
-        "2022": ["45NZ", "45FZ", "45PZ", "45AZ"],
+        // No MY21 Zephyr brochure on the current Tiffin resources index — do not copy MY20 or MY22.
+        // OEM MY22 Zephyr: 45 PZ only. X15 605 / 1,950 · PowerGlide · Allison 4000 · Onan 12.5 kW
+        "2022": ["45PZ"],
         // OEM MY23 / MY24 Zephyr: 45 FZ only (45 PZ is NO LONGER AVAILABLE in MY23 brochure)
         "2023": ["45FZ"],
         "2024": ["45FZ"],
@@ -1653,11 +1654,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2022,
+          to: 2021,
           engine: "Cummins X12 / X15 500–605HP",
           horsepower: 500,
           chassis: "Tiffin PowerGlide",
-          notes: "Pre-MY23 Zephyr — confirm X12 vs X15 on build sheet. Do not stamp MY23+ X15 605 onto 2020–2022 without brochure."
+          notes: "Pre-MY22 Zephyr — confirm X12 vs X15 on build sheet. No MY21 brochure on the current OEM index. Do not stamp MY22 X15 605 onto 2020–2021."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          engine: "Cummins X15 605HP",
+          horsepower: 605,
+          torqueLbFt: 1950,
+          chassis: "Tiffin PowerGlide",
+          transmission: "Allison 4000 MH",
+          generator: "Onan 12.5kW Quiet Diesel",
+          notes: "OEM MY22 Zephyr: X15 605 / 1,950 · PowerGlide · Allison 4000 · Onan 12.5 kW · 45 PZ only. No MY21 brochure on the current OEM index."
         },
         {
           from: 2023,
@@ -1709,8 +1721,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["37TS", "40AP", "40IP", "45LP", "45OPP"],
         "2019": ["37TS", "40AP", "40IP", "45LP", "45OPP", "45CP"],
         "2020": ["37TS", "40AP", "40IP", "45LP", "45OPP", "45BQ"],
-        "2021": ["37TS", "40AP", "40IP", "45LP", "45OPP", "45CP", "45BQ"],
-        "2022": ["37TS", "40AP", "40IP", "45LP", "45OPP", "45CP"],
+        // OEM MY21 Bus: 35 CP | 37 AP | 40 AP | 40 IP | 45 OPP — L9 450; X15 605 opt on 45 OPP
+        "2021": ["35CP", "37AP", "40AP", "40IP", "45OPP"],
+        // OEM MY22 Bus: 35 CP | 37 AP | 40 AP | 40 IP | 45 OPP | 45 FP — L9 450; X15 605 opt on 45'
+        "2022": ["35CP", "37AP", "40AP", "40IP", "45OPP", "45FP"],
         // OEM MY23 / MY24 Bus: 35 CP | 40 IP | 45 FP | 45 OPP (37 AP / 40 AP no longer available)
         "2023": ["35CP", "40IP", "45FP", "45OPP"],
         "2024": ["35CP", "40IP", "45FP", "45OPP"],
@@ -1781,14 +1795,84 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2019,
-          to: 2022,
+          to: 2020,
           engine: "Cummins L9 450HP",
           horsepower: 450,
           torqueLbFt: 1250,
           chassis: "Tiffin PowerGlide XC",
           transmission: "Allison 3000 MH",
           generator: "Onan 10kW Quiet Diesel",
-          notes: "MY19–22 Bus default L9 450. 2023–2024 walk-back locks X15 opt on 45' from OEM brochure."
+          notes: "MY19–20 Bus default L9 450. 2021–2022 walk-back locks X15 opt on 45' from OEM brochure."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["35CP", "35 CP", "37AP", "37 AP", "40AP", "40 AP", "40IP", "40 IP"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSP",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY21 Bus 35 CP / 37 AP / 40 AP / 40 IP — L9 450 / 1,250 only (no X15)."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["45OPP", "45 OPP"],
+          engine: "Cummins L9 450HP std / X15 605HP opt",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSP (Allison 4000 if X15)",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY21 45 OPP: L9 450 / 1,250 std; X15 605 / 1,950 opt."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          engine: "Cummins L9 450HP (X15 605 opt on 45')",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSP",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY21 Bus default: L9 450 std; X15 605 only on 45 OPP."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["35CP", "35 CP", "37AP", "37 AP", "40AP", "40 AP", "40IP", "40 IP"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSP",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY22 Bus 35 CP / 37 AP / 40 AP / 40 IP — L9 450 / 1,250 only (no X15)."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["45OPP", "45 OPP", "45FP", "45 FP"],
+          engine: "Cummins L9 450HP std / X15 605HP opt",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSP (Allison 4000 if X15)",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY22 45 OPP / 45 FP: L9 450 / 1,250 std; X15 605 / 1,950 opt."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          engine: "Cummins L9 450HP (X15 605 opt on 45')",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSP",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY22 Bus default: L9 450 std; X15 605 only on 45 OPP / 45 FP."
         },
         {
           from: 2023,
@@ -2048,8 +2132,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["36GH", "37BH", "40AH", "40IH", "44OH"],
         "2019": ["36GH", "37BH", "40AH", "40IH", "44OH", "45OH"],
         "2020": ["37BH", "40AH", "40IH", "40QBH", "40QKH", "44OH", "45OH"],
-        "2021": ["37BH", "40AH", "40IH", "40QBH", "40QKH", "44OH", "45OH"],
-        "2022": ["37BH", "40AH", "40IH", "40QBH", "40QKH", "44OH"],
+        // OEM MY21 / MY22 Phaeton: 36 SH | 37 BH | 40 AH | 40 IH | 40 QBH | 40 QKH | 44 OH (45 OH not in brochure)
+        "2021": ["36SH", "37BH", "40AH", "40IH", "40QBH", "40QKH", "44OH"],
+        "2022": ["36SH", "37BH", "40AH", "40IH", "40QBH", "40QKH", "44OH"],
         // OEM MY23 Phaeton: 36 SH | 37 BH | 40 IH | 44 OH (40 AH / 40 QBH / 40 QKH no longer available)
         "2023": ["36SH", "37BH", "40IH", "44OH"],
         // OEM MY24 Phaeton: 35 CH | 37 BH | 40 IH | 44 OH — L9 450 standard on all plans
@@ -2136,7 +2221,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2022,
+          to: 2020,
           floorplans: ["44OH", "44 OH"],
           engine: "Cummins L9 380HP (450 optional on tag axle)",
           horsepower: 380,
@@ -2147,7 +2232,91 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           towingCapacity: 10000,
           generator: "Onan 10.0 kW diesel (slide-out)",
           notes:
-            "44OH tag axle through MY22 — 380 standard; 450/1250 may be available. Confirm build sheet.",
+            "44OH tag axle through MY20 — 380 standard; 450/1250 may be available. Confirm build sheet. MY21–22 brochure locks 450 standard.",
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["36SH", "36 SH", "37BH", "37 BH", "40AH", "40 AH", "40QBH", "40 QBH", "40QKH", "40 QKH"],
+          engine: "Cummins L9 380HP",
+          horsepower: 380,
+          torqueLbFt: 1150,
+          chassis: "Freightliner XCM",
+          transmission: "Allison 3000 MH 6-speed",
+          fuelCapacityGal: 100,
+          towingCapacity: 10000,
+          generator: "Onan 10.0 kW diesel (slide-out)",
+          notes: "OEM MY21 Phaeton 36 SH / 37 BH / 40 AH / 40 QBH / 40 QKH: L9 380 / 1,150 only (450 not offered).",
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["40IH", "40 IH"],
+          engine: "Cummins L9 380HP std / L9 450HP opt",
+          horsepower: 380,
+          torqueLbFt: 1150,
+          chassis: "PowerGlide XSH / Freightliner XCR (by option)",
+          transmission: "Allison 3000 MH 6-speed",
+          fuelCapacityGal: 100,
+          towingCapacity: 10000,
+          generator: "Onan 10.0 kW diesel (slide-out)",
+          notes: "OEM MY21 Phaeton 40 IH: PowerGlide XSH L9 380 / 1,150 std; L9 450 / 1,250 optional (FL XCR or PG).",
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["44OH", "44 OH"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSH",
+          transmission: "Allison 3000 MH 6-speed",
+          fuelCapacityGal: 100,
+          towingCapacity: 10000,
+          generator: "Onan 10.0 kW diesel (slide-out)",
+          notes: "OEM MY21 Phaeton 44 OH: PowerGlide XSH L9 450 / 1,250 standard (380 not listed).",
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["36SH", "36 SH", "37BH", "37 BH", "40AH", "40 AH", "40QBH", "40 QBH", "40QKH", "40 QKH"],
+          engine: "Cummins L9 380HP",
+          horsepower: 380,
+          torqueLbFt: 1150,
+          chassis: "Freightliner XCM",
+          transmission: "Allison 3000 MH 6-speed",
+          fuelCapacityGal: 100,
+          towingCapacity: 10000,
+          generator: "Onan 10.0 kW diesel (slide-out)",
+          notes: "OEM MY22 Phaeton 36 SH / 37 BH / 40 AH / 40 QBH / 40 QKH: L9 380 / 1,150 only (450 not offered).",
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["40IH", "40 IH"],
+          engine: "Cummins L9 380HP std / L9 450HP opt",
+          horsepower: 380,
+          torqueLbFt: 1150,
+          chassis: "Freightliner XCR / PowerGlide XSH (by option)",
+          transmission: "Allison 3000 MH 6-speed",
+          fuelCapacityGal: 100,
+          towingCapacity: 10000,
+          generator: "Onan 10.0 kW diesel (slide-out)",
+          notes: "OEM MY22 Phaeton 40 IH: Freightliner XCR L9 380 / 1,150 std; L9 450 / 1,250 optional (FL or PG).",
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["44OH", "44 OH"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner XCR / PowerGlide XSH (by option)",
+          transmission: "Allison 3000 MH 6-speed",
+          fuelCapacityGal: 100,
+          towingCapacity: 10000,
+          generator: "Onan 10.0 kW diesel (slide-out)",
+          notes: "OEM MY22 Phaeton 44 OH: Freightliner XCR L9 450 / 1,250 standard; PowerGlide XSH 450 optional (380 not listed).",
         },
         {
           from: 2023,
@@ -2272,8 +2441,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["33AA", "37BA", "37PA", "38KA"],
         "2019": ["33AA", "37BA", "37PA", "38KA"],
         "2020": ["33AA", "37BA", "37PA", "38KA"],
-        "2021": ["33AA", "37BA", "38KA"],
-        "2022": ["33AA", "37BA", "38KA"],
+        // OEM MY21 / MY22 RED 340: 33 AL | 38 LL — B6.7 340 / 700. Not 33 AA / 37 BA / 38 KA (those are RED 360).
+        "2021": ["33AL", "38LL"],
+        "2022": ["33AL", "38LL"],
         // OEM MY23 RED 340: 33 AL | 38 LL (B6.7 340 / 700 · XCS). Not 33 AA / 37 BA / 38 KA.
         "2023": ["33AL", "38LL"]
       },
@@ -2326,13 +2496,24 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2018,
-          to: 2022,
+          to: 2020,
           engine: "Cummins B6.7 360HP",
           horsepower: 360,
           torqueLbFt: 800,
           chassis: "Freightliner XC-Series",
           transmission: "Allison 3000 MH",
-          notes: "RED 340 mid-diesel through MY22 — not L9/ISL bus class. MY23 brochure is B6.7 340 / 700."
+          notes: "RED 340 mid-diesel through MY20 — not L9/ISL bus class. MY21–23 brochure is B6.7 340 / 700."
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Cummins B6.7 340HP",
+          horsepower: 340,
+          torqueLbFt: 700,
+          chassis: "Freightliner XCS Straight Rail",
+          transmission: "Allison 2500 MH",
+          generator: "Onan 8.0 kW Quiet Diesel",
+          notes: "OEM MY21 / MY22 RED 340: B6.7 340 / 700 · Freightliner XCS · Allison 2500 MH · Onan 8 kW. Not the 360 / L9 RED 360."
         },
         {
           from: 2023,
@@ -2354,8 +2535,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["33AA", "36UA", "37BA"],
         "2019": ["33AA", "36UA", "37BA", "38KA"],
         "2020": ["33AA", "36UA", "37BA", "38KA"],
-        "2021": ["33AA", "36UA", "37BA", "38KA"],
-        "2022": ["33AA", "36UA", "37BA", "38KA"],
+        // OEM MY21 / MY22 RED 360: 33 AA | 37 BA | 37 PA | 38 KA — B6.7 360 / 800. Not L9. 36 UA not in brochure.
+        "2021": ["33AA", "37BA", "37PA", "38KA"],
+        "2022": ["33AA", "37BA", "37PA", "38KA"],
         // OEM MY23 RED 360: 33 AA | 37 BA | 38 KA (37 PA no longer available; 36 UA not in MY23 brochure)
         "2023": ["33AA", "37BA", "38KA"]
       },
@@ -2398,11 +2580,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2018,
-          to: 2022,
+          to: 2020,
           engine: "Cummins L9 380–450HP",
           horsepower: 380,
           chassis: "Freightliner XC / PowerGlide",
-          notes: "Pre-MY23 RED 360 — confirm L9 vs B6.7 on build sheet. MY23 brochure is B6.7 360 / 800."
+          notes: "Pre-MY21 RED 360 — confirm L9 vs B6.7 on build sheet. MY21–23 brochure is B6.7 360 / 800."
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Cummins B6.7 360HP",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Freightliner XCM Modular Rail",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 8.0 kW Quiet Diesel",
+          notes: "OEM MY21 / MY22 RED 360: B6.7 360 / 800 · XCM · Allison 3000 MH · Onan 8 kW. Not L9."
         },
         {
           from: 2023,
@@ -2536,7 +2729,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["28BR", "31BR", "32BR"],
         "2019": ["28BR", "31BR", "32BR"],
         "2020": ["28BR", "31BR", "32BR"],
-        // OEM MY23 / MY24 Breeze: 33 BR only (31 BR no longer available in MY23 brochure). 2021–2022 / 2025 next slices.
+        // OEM MY21 / MY22 Breeze: 31 BR | 33 BR — B6.7 340 / 700 · PowerGlide · Allison 2500 · Onan 6 kW
+        "2021": ["31BR", "33BR"],
+        "2022": ["31BR", "33BR"],
+        // OEM MY23 / MY24 Breeze: 33 BR only (31 BR no longer available in MY23 brochure). 2025 still empty (no MY25 brochure walk in this slice).
         "2023": ["33BR"],
         "2024": ["33BR"],
         // OEM MY26 Allegro Breeze specs: 33 BR only. Not on 2027 year page.
@@ -2575,7 +2771,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 2,
       yearStart: 2008,
       yearEnd: 2026,
-      description: "Tiffin Allegro Breeze — compact diesel Class A. OEM MY23–24 / MY26: 33 BR (PowerGlide, B6.7 340 / 700, Allison 2500 MH, Onan 6 kW). Not listed on the 2027 year page — yearEnd 2026. 2021–2022 and 2025 floorplans walk-back next slices.",
+      description: "Tiffin Allegro Breeze — compact diesel Class A. OEM MY21–22: 31 BR / 33 BR (PowerGlide, B6.7 340 / 700, Allison 2500 MH, Onan 6 kW). OEM MY23–24 / MY26: 33 BR. Not listed on the 2027 year page — yearEnd 2026. 2025 floorplans still unsourced.",
       powertrainByYear: [
         {
           from: 2008,
@@ -2599,6 +2795,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Cummins ISB / B6.7 340HP",
           horsepower: 340,
           chassis: "Freightliner XC"
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Cummins B6.7 340HP",
+          horsepower: 340,
+          torqueLbFt: 700,
+          chassis: "Tiffin PowerGlide",
+          transmission: "Allison 2500 MH",
+          generator: "Onan 6.0kW Quiet Diesel",
+          notes: "OEM MY21 / MY22 Breeze 31 BR / 33 BR: B6.7 340 / 700 · PowerGlide · Allison 2500 MH · Onan 6 kW"
         },
         {
           from: 2023,
@@ -2638,8 +2845,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["32SA", "34PA", "34PR", "36LA"],
         "2019": ["32SA", "34PA", "34PR", "36LA"],
         "2020": ["32SA", "34PA", "34PR", "36LA"],
-        "2021": ["32SA", "34PA", "34PR", "36LA"],
-        "2022": ["32SA", "34PA", "34PR", "36LA"],
+        // OEM MY21 Open Road: 32 SA | 34 PA | 36 LA | 36 UA — Ford 7.3 350 / 468. 32 FA / 34 PR not in brochure.
+        "2021": ["32SA", "34PA", "36LA", "36UA"],
+        // OEM MY22 Open Road: 32 FA | 32 SA | 34 PA | 36 LA | 36 UA — Ford 7.3 350 / 468
+        "2022": ["32FA", "32SA", "34PA", "36LA", "36UA"],
         // OEM MY23 / MY24 Open Road: 32 FA | 32 SA | 34 PA | 36 LA | 36 UA — Ford 7.3 350 / 468
         "2023": ["32FA", "32SA", "34PA", "36LA", "36UA"],
         "2024": ["32FA", "32SA", "34PA", "36LA", "36UA"],
@@ -2703,11 +2912,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2022,
+          to: 2020,
           engine: "Ford 7.3L V8 Godzilla",
           horsepower: 350,
           chassis: "Ford F53",
-          notes: "7.3 gas era — confirm exact HP on door sticker for 2020–2022."
+          notes: "7.3 gas era — confirm exact HP on door sticker for 2020. MY21–22 brochure locks 350 / 468."
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Ford 7.3L V8 350HP",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford F-53",
+          transmission: "TorqShift 6-speed",
+          generator: "Onan 5.5kW Quiet Gas (7.0 kW std on 36')",
+          notes: "OEM MY21 / MY22 Open Road: Ford 7.3 350 / 468 · TorqShift 6-speed. 5.5 kW Onan Quiet Gas std on 32–34'; 7.0 kW std on 36 LA / 36 UA. Gas — not diesel Bus / RED / Bay."
         },
         {
           from: 2023,
@@ -2736,15 +2956,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Wayfarer: {
       type: "Class C",
-      floorplans: ["24BW", "25RW", "25JW", "25TW", "25LW", "25RLW", "25PW", "24QB", "25XLW", "25XRW", "25XPW"],
+      floorplans: ["24BW", "25RW", "25JW", "25TW", "25LW", "25SW", "25RLW", "25PW", "24QB", "25XLW", "25XRW", "25XPW"],
       floorplansByYear: {
         "2016": ["24BW", "25RW"],
         "2017": ["24BW", "25RW", "25JW"],
         "2018": ["24BW", "25RW", "25JW", "25TW"],
         "2019": ["24BW", "25RW", "25JW", "25TW", "25PW"],
         "2020": ["25RW", "25JW", "25TW", "25PW"],
-        "2021": ["25RW", "25JW", "25TW", "25PW"],
-        "2022": ["25RW", "25JW", "25TW", "25PW"],
+        // OEM MY21 / MY22 Wayfarer: 25 TW | 25 RW | 25 LW | 25 SW — 3.0 V6 188 / 325. 25 JW / 25 PW not in brochure.
+        "2021": ["25TW", "25RW", "25LW", "25SW"],
+        "2022": ["25TW", "25RW", "25LW", "25SW"],
         // OEM MY23 Wayfarer: 25 JW | 25 TW | 25 LW | 25 RW (25 SW no longer available)
         "2023": ["25JW", "25TW", "25LW", "25RW"],
         // OEM MY24 Wayfarer: 25 JW | 25 LW | 25 RLW | 25 RW
@@ -2793,18 +3014,32 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2016,
-          to: 2021,
+          to: 2020,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
           chassis: "Mercedes Sprinter"
         },
         {
+          from: 2021,
+          to: 2021,
+          engine: "Mercedes-Benz 3.0L V6 188HP turbodiesel",
+          horsepower: 188,
+          torqueLbFt: 325,
+          chassis: "Mercedes-Benz Sprinter",
+          transmission: "Mercedes-Benz 7G-Tronic",
+          generator: "3.2 kW diesel generator",
+          notes: "OEM MY21 Wayfarer: Sprinter · 3.0 V6 188 / 325 · 7G-Tronic · 3.2 kW diesel generator. Not the later 2.0L 208."
+        },
+        {
           from: 2022,
           to: 2022,
-          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
-          horsepower: 208,
-          chassis: "Mercedes Sprinter",
-          notes: "2022 walk-back next slice — do not stamp MY23–24 3.0L 188 backward without brochure."
+          engine: "Mercedes-Benz 3.0L V6 188HP turbodiesel",
+          horsepower: 188,
+          torqueLbFt: 325,
+          chassis: "Mercedes-Benz 3500XD Dual Rear Wheel",
+          transmission: "Mercedes-Benz 7G-Tronic",
+          generator: "3.2 kW diesel generator",
+          notes: "OEM MY22 Wayfarer: 3500XD · 3.0 V6 188 / 325 · 7G-Tronic · 3.2 kW diesel generator. Not the later 2.0L 208."
         },
         {
           from: 2023,
@@ -2843,13 +3078,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Wayfarer 25": {
       type: "Class C",
-      floorplans: ["25JW", "25RW", "25TW", "25LW", "25RLW", "25PW", "25MB"],
+      floorplans: ["25JW", "25RW", "25TW", "25LW", "25SW", "25RLW", "25PW", "25MB"],
       floorplansByYear: {
         "2018": ["25JW", "25RW"],
         "2019": ["25JW", "25RW", "25TW", "25PW"],
         "2020": ["25JW", "25RW", "25TW", "25PW"],
-        "2021": ["25JW", "25RW", "25TW", "25PW"],
-        "2022": ["25JW", "25RW", "25TW"],
+        // Alias tracks OEM Wayfarer MY21–22: 25 TW | 25 RW | 25 LW | 25 SW
+        "2021": ["25TW", "25RW", "25LW", "25SW"],
+        "2022": ["25TW", "25RW", "25LW", "25SW"],
         "2023": ["25JW", "25TW", "25LW", "25RW"],
         "2024": ["25JW", "25LW", "25RLW", "25RW"]
       },
@@ -2963,6 +3199,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Super C",
       floorplans: ["38AB", "38BB", "38CB", "34DB", "38EB"],
       floorplansByYear: {
+        // OEM MY22 Allegro Bay Super C: 38 AB | 38 BB — S2RV, B6.7 360 / 800. 38 CB is MY23+ (do not copy forward/back).
+        "2022": ["38AB", "38BB"],
         // OEM MY23 / MY24 Allegro Bay Super C: 38 AB | 38 BB | 38 CB — S2RV, B6.7 360 / 800
         "2023": ["38AB", "38BB", "38CB"],
         "2024": ["38AB", "38BB", "38CB"],
@@ -2998,10 +3236,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1972,
       warrantyYears: 2,
       yearStart: 2022,
-      description: "Tiffin Allegro Bay Super C diesel on Freightliner S2RV — not the legacy Allegro Bay Class A gas. OEM MY23–25: 38 AB / 38 BB / 38 CB, B6.7 360 / 800, Allison 3000 MH, Onan 8 kW. MY26 adds 34 DB. MY27 adds 38 EB; transmission listed Allison 2909 MH 9-speed. yearStart 2022; 2022 walk-back next slice.",
+      description: "Tiffin Allegro Bay Super C diesel on Freightliner S2RV — not the legacy Allegro Bay Class A gas. OEM MY22: 38 AB / 38 BB, B6.7 360 / 800, Allison 3000 MH, Onan 8 kW. OEM MY23–25: 38 AB / 38 BB / 38 CB. MY26 adds 34 DB. MY27 adds 38 EB; transmission listed Allison 2909 MH 9-speed. yearStart 2022.",
       powertrainByYear: [
         {
-          from: 2023,
+          from: 2022,
           to: 2026,
           engine: "Cummins B6.7 360HP",
           horsepower: 360,
@@ -3009,7 +3247,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Freightliner S2RV",
           transmission: "Allison 3000 MH",
           generator: "Onan 8kW Quiet Diesel",
-          notes: "OEM MY23–26 Allegro Bay Super C: B6.7 360 / 800 · S2RV · Allison 3000 MH · Onan QD 8 kW"
+          notes: "OEM MY22–26 Allegro Bay Super C: B6.7 360 / 800 · S2RV · Allison 3000 MH · Onan QD 8 kW"
         },
         {
           from: 2027,
@@ -3072,7 +3310,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Allegro: {
       type: "Class A Gas",
-      floorplans: ["32SA", "34PA", "36LA", "34PR"],
+      floorplans: ["32SA", "34PA", "36LA", "34PR", "32FA", "36UA"],
       floorplansByYear: {
         "2005": ["32SA", "34PA", "36LA"],
         "2006": ["32SA", "34PA", "36LA"],
@@ -3090,8 +3328,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["32SA", "34PA", "36LA"],
         "2019": ["32SA", "34PA", "36LA"],
         "2020": ["32SA", "34PA", "36LA"],
-        "2021": ["32SA", "34PA"],
-        "2022": ["32SA", "34PA", "34PR"]
+        // Alias tracks OEM Open Road MY21: 32 SA | 34 PA | 36 LA | 36 UA
+        "2021": ["32SA", "34PA", "36LA", "36UA"],
+        // Alias tracks OEM Open Road MY22: 32 FA | 32 SA | 34 PA | 36 LA | 36 UA
+        "2022": ["32FA", "32SA", "34PA", "36LA", "36UA"]
       },
       lengthRange: [
         32,
@@ -3144,10 +3384,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2022,
+          to: 2020,
           engine: "Ford 7.3L V8",
           horsepower: 350,
           chassis: "Ford F53"
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Ford 7.3L V8 350HP",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford F-53",
+          transmission: "TorqShift 6-speed",
+          notes: "OEM MY21 / MY22 Open Road Allegro gas: Ford 7.3 350 / 468. yearEnd 2022 — current gas line is Open Road."
         }
       ]
     }
