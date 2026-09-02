@@ -518,6 +518,57 @@ function main() {
       if (!/yearStart:\s*2020/.test(so)) {
         fail("Winnebago|Solis yearStart must be 2020 (OEM 2020 flyer 59P)");
       }
+      if (/"2017":/.test(so) || /"2018":/.test(so)) {
+        fail("Winnebago|Solis must not list 2017–2018 (first year-true card 2020)");
+      }
+      if (!/"2017": \["34T", "36G", "38W"\]/.test(fz)) {
+        fail("Winnebago|Forza MY17 OEM plans missing (34T/36G/38W — no 38F)");
+      }
+      if (/"2017": .*"38F"/.test(fz)) {
+        fail("Winnebago|Forza MY17 must not invent 38F (2018+)");
+      }
+      if (!/"2018": \["34T", "36G", "38F", "38W"\]/.test(fz)) {
+        fail("Winnebago|Forza MY18 OEM plans missing (34T/36G/38F/38W)");
+      }
+      if (/"2017": .*"34G"/.test(jy) || /"2018": .*"34G"/.test(jy) || /"2018": .*"34H"/.test(jy)) {
+        fail("Winnebago|Journey must not invent leftover 34G/34H on 2017–18");
+      }
+      if (/"2017":/.test(hz)) {
+        fail("Winnebago|Horizon must not list 2017 (first year-true card 2018)");
+      }
+      if (!/"2018": \["40A", "42Q"\]/.test(hz)) {
+        fail("Winnebago|Horizon MY18 OEM plans missing (40A/42Q)");
+      }
+      if (!/yearStart:\s*2018/.test(intent)) {
+        fail("Winnebago|Intent yearStart must be 2018 (first year-true card)");
+      }
+      if (/"2017":/.test(intent)) {
+        fail("Winnebago|Intent must not list 2017 (first year-true card 2018)");
+      }
+      const ss0 = wgo.indexOf("    Sunstar: {");
+      const ss1 = wgo.indexOf("    Intent: {");
+      const ss = ss0 >= 0 && ss1 > ss0 ? wgo.slice(ss0, ss1) : "";
+      if (/"2017":/.test(ss)) {
+        fail("Winnebago|Sunstar must not list 2017 (2017 Sunstar is Itasca — do not collide)");
+      }
+      const vi0 = wgo.indexOf("    Vita: {");
+      const vi1 = wgo.indexOf("    EKKO: {");
+      const vita = vi0 >= 0 && vi1 > vi0 ? wgo.slice(vi0, vi1) : "";
+      if (/"2017":/.test(vita) || /"2018":/.test(vita)) {
+        fail("Winnebago|Vita must not list 2017–2018 (first year-true card 2019)");
+      }
+      const mm0 = wgo.indexOf('    "Micro Minnie": {');
+      const mm1 = wgo.indexOf("    Minnie: {");
+      const mm = mm0 >= 0 && mm1 > mm0 ? wgo.slice(mm0, mm1) : "";
+      if (/"2018":/.test(mm)) {
+        fail("Winnebago|Micro Minnie must not list 2018 (RVUSA 2018 file reprints 2017)");
+      }
+      const mn0 = wgo.indexOf("    Minnie: {");
+      const mn1 = wgo.indexOf('    "Revel Sport": {');
+      const mn = mn0 >= 0 && mn1 > mn0 ? wgo.slice(mn0, mn1) : "";
+      if (/"2018":/.test(mn)) {
+        fail("Winnebago|Minnie must not list 2018 (RVUSA 2018 file reprints 2017)");
+      }
       if (!/"2027": \["24D", "24R", "24T"\]/.test(wgo)) {
         fail("Winnebago|View/Navion MY27 OEM plans missing (24D/24R/24T)");
       }
@@ -542,6 +593,9 @@ function main() {
       const ac0 = wgo.indexOf('    "Access Super C": {');
       const ac1 = wgo.indexOf('    "Micro Minnie": {');
       const ac = ac0 >= 0 && ac1 > ac0 ? wgo.slice(ac0, ac1) : "";
+      if (/"2017":/.test(ac) || /"2018":/.test(ac)) {
+        fail("Winnebago|Access Super C must not list 2017–2018 (no OEM Super C card)");
+      }
       if (/"2021":/.test(ac) || /"2022":/.test(ac) || /"2023"/.test(ac) || /"2024"/.test(ac) || /"2025"/.test(ac) || /"2026"/.test(ac)) {
         fail("Winnebago|Access Super C must not list 2021–2026 (no OEM Super C card; 2024+ Access PDFs are travel trailers)");
       }
@@ -560,6 +614,9 @@ function main() {
       const ol0 = wgo.indexOf("    Outlook: {");
       const ol1 = wgo.indexOf('    "Access Super C": {');
       const ol = ol0 >= 0 && ol1 > ol0 ? wgo.slice(ol0, ol1) : "";
+      if (/"2017":/.test(ol) || /"2018":/.test(ol)) {
+        fail("Winnebago|Outlook must not list 2017–2018 (no year-true Outlook card)");
+      }
       if (/"2022":/.test(ol)) {
         fail("Winnebago|Outlook must not list 2022 (no OEM 2022 card)");
       }
