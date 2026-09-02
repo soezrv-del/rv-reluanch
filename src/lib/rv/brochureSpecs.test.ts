@@ -423,7 +423,7 @@ test("Fleetwood 2021–2022 walk-back: OEM plans, no invented ghosts", () => {
   assert.equal(fw.Fortis?.yearStart, 2020);
   assert.equal(fw.Fortis?.years?.includes(2021), true);
   assert.equal(fw.Fortis?.years?.includes(2022), true);
-  assert.equal(fw.Southwind?.yearStart, 2013);
+  assert.equal(fw.Southwind?.yearStart, 2010);
   assert.equal(fw.Southwind?.years?.includes(2021), true);
   assert.equal(fw.Southwind?.years?.includes(2022), true);
 
@@ -547,7 +547,7 @@ test("Fleetwood 2019–2020 walk-back: OEM plans, no invented ghosts", () => {
   assert.equal(fw.Fortis?.yearStart, 2020);
   assert.equal(fw.Fortis?.years?.includes(2020), true);
   assert.equal(fw.Fortis?.years?.includes(2019), false);
-  assert.equal(fw.Southwind?.yearStart, 2013);
+  assert.equal(fw.Southwind?.yearStart, 2010);
   assert.equal(fw.Southwind?.years?.includes(2019), true);
   assert.equal(fw.Southwind?.years?.includes(2020), true);
   assert.equal(fw.Pulse?.yearEnd, 2019);
@@ -700,7 +700,7 @@ test("Fleetwood 2017–2018 walk-back: OEM plans, no invented ghosts", () => {
   assert.equal(fw.Tioga?.yearEnd, 2016);
   assert.equal(fw.Tioga?.years?.includes(2017), false);
   assert.equal(fw["Tioga Ranger"]?.yearEnd, 2016);
-  assert.equal(fw.Southwind?.yearStart, 2013);
+  assert.equal(fw.Southwind?.yearStart, 2010);
   assert.equal(fw.Southwind?.years?.includes(2017), true);
   assert.equal(fw.Southwind?.years?.includes(2018), true);
   assert.equal(fw.Pulse?.years?.includes(2017), false);
@@ -839,7 +839,7 @@ test("Fleetwood 2015–2016 walk-back: OEM plans, no invented ghosts", () => {
   const fw = CATALOG_INDEX.Fleetwood;
   assert.ok(fw);
 
-  assert.equal(fw.Southwind?.yearStart, 2013);
+  assert.equal(fw.Southwind?.yearStart, 2010);
   assert.equal(fw.Southwind?.years?.includes(2015), true);
   assert.equal(fw.Southwind?.years?.includes(2016), true);
   assert.equal(fw["Bounder Classic"]?.yearEnd, 2015);
@@ -886,7 +886,7 @@ test("Fleetwood 2015–2016 walk-back: OEM plans, no invented ghosts", () => {
   assert.doesNotMatch(lxe, /"2014"/);
   assert.doesNotMatch(lxe, /"2015"/);
   assert.doesNotMatch(lxe, /"2016"/);
-  assert.match(lxe, /"2012": \["40G", "40M", "44H"\]/);
+  assert.doesNotMatch(lxe, /"2012"/);
   assert.match(lxe, /"2017": \["40D", "40E", "40G", "40X"\]/);
 
   const b0 = block.indexOf("    Bounder: {");
@@ -910,7 +910,7 @@ test("Fleetwood 2015–2016 walk-back: OEM plans, no invented ghosts", () => {
   const southwind = block.slice(sw0, sw1);
   assert.match(southwind, /"2015": \["32VS", "34A", "36L"\]/);
   assert.match(southwind, /"2016": \["32VS", "34A", "36L"\]/);
-  assert.match(southwind, /yearStart:\s*2013/);
+  assert.match(southwind, /yearStart:\s*2010/);
 
   const pa0 = block.indexOf('    "Pace Arrow": {');
   const pa1 = block.indexOf("    Storm: {");
@@ -919,7 +919,9 @@ test("Fleetwood 2015–2016 walk-back: OEM plans, no invented ghosts", () => {
   assert.doesNotMatch(pace, /"2014"/);
   assert.doesNotMatch(pace, /"2015"/);
   assert.doesNotMatch(pace, /"2016"/);
-  assert.match(pace, /"2012": \["33D", "35R", "36U"\]/);
+  assert.doesNotMatch(pace, /"2010"/);
+  assert.doesNotMatch(pace, /"2011"/);
+  assert.doesNotMatch(pace, /"2012"/);
   assert.match(pace, /"2017": \["33D", "35E", "35M", "36U"\]/);
 
   const storm0 = block.indexOf("    Storm: {");
@@ -1046,7 +1048,7 @@ test("Fleetwood 2013–2014 walk-back: OEM plans, no invented ghosts", () => {
   const fw = CATALOG_INDEX.Fleetwood;
   assert.ok(fw);
 
-  assert.equal(fw.Southwind?.yearStart, 2013);
+  assert.equal(fw.Southwind?.yearStart, 2010);
   assert.equal(fw.Southwind?.years?.includes(2013), true);
   assert.equal(fw.Southwind?.years?.includes(2014), true);
   assert.equal(fw.Bounder?.years?.includes(2013), true);
@@ -1098,7 +1100,7 @@ test("Fleetwood 2013–2014 walk-back: OEM plans, no invented ghosts", () => {
   const lxe = fleet.slice(fleet.indexOf('    "Discovery LXE": {'), fleet.indexOf("    Frontier: {"));
   assert.doesNotMatch(lxe, /"2013"/);
   assert.doesNotMatch(lxe, /"2014"/);
-  assert.match(lxe, /"2012": \["40G", "40M", "44H"\]/);
+  assert.doesNotMatch(lxe, /"2012"/);
 
   const bounder = fleet.slice(fleet.indexOf("    Bounder: {"), fleet.indexOf('    "Bounder Classic"'));
   assert.match(bounder, /"2013": \["33C", "35K", "36E"\]/);
@@ -1117,7 +1119,7 @@ test("Fleetwood 2013–2014 walk-back: OEM plans, no invented ghosts", () => {
   assert.match(southwind, /"2013": \["32VS", "36D", "36L", "36S"\]/);
   assert.match(southwind, /"2014": \["32VS", "34A", "36D", "36L"\]/);
   assert.doesNotMatch(southwind, /"2014": .*"36S"/);
-  assert.match(southwind, /yearStart:\s*2013/);
+  assert.match(southwind, /yearStart:\s*2010/);
 
   const pace = fleet.slice(fleet.indexOf('    "Pace Arrow": {'), fleet.indexOf("    Storm: {"));
   assert.doesNotMatch(pace, /"2013"/);
@@ -1133,7 +1135,9 @@ test("Fleetwood 2013–2014 walk-back: OEM plans, no invented ghosts", () => {
   const flair = fleet.slice(fleet.indexOf("    Flair: {"), fleet.indexOf("    Fortis: {"));
   assert.doesNotMatch(flair, /"2013"/);
   assert.doesNotMatch(flair, /"2014"/);
-  assert.match(flair, /"2012": \["28A", "30U", "32S"\]/);
+  assert.doesNotMatch(flair, /"2010"/);
+  assert.doesNotMatch(flair, /"2011"/);
+  assert.doesNotMatch(flair, /"2012"/);
 
   const jamboree = fleet.slice(fleet.indexOf("    Jamboree: {"), fleet.indexOf("    Tioga: {"));
   assert.match(jamboree, /"2013": \["25G", "28Y", "28Z", "31M", "31N", "31W"\]/);
@@ -1185,6 +1189,7 @@ test("Fleetwood 2013–2014 walk-back: OEM plans, no invented ghosts", () => {
   assert.equal(classic13gas!.horsepower, 362);
   const classic13opt = findPowertrainCorrection("2013", "Fleetwood", "Bounder Classic", "34B");
   assert.equal(classic13opt!.horsepower, 0);
+  assert.notEqual(classic13opt!.fuelType, "Gas");
   const classic14 = findPowertrainCorrection("2014", "Fleetwood", "Bounder Classic", "36R");
   assert.equal(classic14!.horsepower, 362);
   assert.equal(classic14!.fuelType, "Gas");
@@ -1227,6 +1232,240 @@ test("Fleetwood 2013–2014 walk-back: OEM plans, no invented ghosts", () => {
   assert.equal(ranger14!.horsepower, 305);
 
   assert.equal(findPowertrainCorrection("2014", "Fleetwood", "Pulse", "24A"), null);
+});
+
+test("Fleetwood 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
+  const fw = CATALOG_INDEX.Fleetwood;
+  assert.ok(fw);
+
+  assert.equal(fw.Southwind?.yearStart, 2010);
+  assert.equal(fw.Southwind?.years?.includes(2010), true);
+  assert.equal(fw.Southwind?.years?.includes(2011), true);
+  assert.equal(fw.Southwind?.years?.includes(2012), true);
+  assert.equal(fw.Bounder?.years?.includes(2010), true);
+  assert.equal(fw.Bounder?.years?.includes(2011), true);
+  assert.equal(fw.Bounder?.years?.includes(2012), true);
+  assert.equal(fw["Bounder Classic"]?.years?.includes(2010), true);
+  assert.equal(fw["Bounder Classic"]?.years?.includes(2011), true);
+  assert.equal(fw["Bounder Classic"]?.years?.includes(2012), true);
+  assert.equal(fw.Storm?.years?.includes(2010), false);
+  assert.equal(fw.Storm?.years?.includes(2011), true);
+  assert.equal(fw.Storm?.years?.includes(2012), true);
+  assert.equal(fw.Discovery?.years?.includes(2010), true);
+  assert.equal(fw.Discovery?.years?.includes(2011), true);
+  assert.equal(fw.Discovery?.years?.includes(2012), true);
+  assert.equal(fw.Jamboree?.years?.includes(2010), true);
+  assert.equal(fw.Jamboree?.years?.includes(2011), true);
+  assert.equal(fw.Jamboree?.years?.includes(2012), true);
+  assert.equal(fw.Tioga?.years?.includes(2010), false);
+  assert.equal(fw.Tioga?.years?.includes(2011), true);
+  assert.equal(fw.Tioga?.years?.includes(2012), true);
+  assert.equal(fw["Tioga Ranger"]?.years?.includes(2010), true);
+  assert.equal(fw["Tioga Ranger"]?.years?.includes(2011), true);
+  assert.equal(fw["Tioga Ranger"]?.years?.includes(2012), true);
+
+  assert.equal(fw["Discovery LXE"]?.yearStart, 2017);
+  assert.equal(fw["Discovery LXE"]?.years?.includes(2010), false);
+  assert.equal(fw["Discovery LXE"]?.years?.includes(2011), false);
+  assert.equal(fw["Discovery LXE"]?.years?.includes(2012), false);
+  assert.equal(fw["Pace Arrow"]?.years?.includes(2010), false);
+  assert.equal(fw["Pace Arrow"]?.years?.includes(2011), false);
+  assert.equal(fw["Pace Arrow"]?.years?.includes(2012), false);
+  assert.equal(fw.Flair?.years?.includes(2010), false);
+  assert.equal(fw.Flair?.years?.includes(2011), false);
+  assert.equal(fw.Flair?.years?.includes(2012), false);
+  assert.equal(fw.Pulse?.years?.includes(2010), false);
+  assert.equal(fw.Pulse?.years?.includes(2011), false);
+  assert.equal(fw.Pulse?.years?.includes(2012), false);
+  assert.equal(fw.Pulse?.yearStart, 2018);
+  assert.equal(fw.Fortis?.years?.includes(2012), false);
+  assert.equal(fw.Flex?.years?.includes(2012), false);
+  assert.equal(fw.Frontier?.years?.includes(2012), false);
+  assert.equal(fw.Altitude?.years?.includes(2012), false);
+  assert.equal(fw.Insight?.years?.includes(2012), false);
+  assert.ok(!fw.Terra);
+  assert.ok(!fw.Expedition);
+  assert.ok(!fw.Encounter);
+  assert.ok(!fw["Jamboree Searcher"]);
+  assert.ok(!fw["Pace Arrow LXE"]);
+  assert.ok(!fw["Bounder Diesel"]);
+
+  const block = src("rvData.ts");
+  const fw0 = block.indexOf("  Fleetwood: {");
+  const fw1 = block.indexOf("  Jayco: {");
+  const fleet = block.slice(fw0, fw1);
+
+  const disc = fleet.slice(fleet.indexOf("    Discovery: {"), fleet.indexOf('    "Discovery LXE"'));
+  assert.match(disc, /"2010": \["40G", "40K", "40X"\]/);
+  assert.match(disc, /"2011": \["36J", "40G", "40X", "42A", "42C"\]/);
+  assert.match(disc, /"2012": \["36J", "40G", "40X", "42A", "42D", "42M"\]/);
+  assert.doesNotMatch(disc, /"2010": \["36G"/);
+  assert.doesNotMatch(disc, /"2011": \["36G"/);
+  assert.doesNotMatch(disc.slice(disc.indexOf('"2010"'), disc.indexOf('"2013"')), /"38F"/);
+
+  const lxe = fleet.slice(fleet.indexOf('    "Discovery LXE": {'), fleet.indexOf("    Frontier: {"));
+  assert.doesNotMatch(lxe, /"2010"/);
+  assert.doesNotMatch(lxe, /"2011"/);
+  assert.doesNotMatch(lxe, /"2012"/);
+  assert.match(lxe, /yearStart:\s*2017/);
+
+  const bounder = fleet.slice(fleet.indexOf("    Bounder: {"), fleet.indexOf('    "Bounder Classic"'));
+  assert.match(bounder, /"2010": \["33U", "35E", "35H", "35J", "38P"\]/);
+  assert.match(bounder, /"2011": \["33U", "35H"\]/);
+  assert.match(bounder, /"2012": \["33C", "33U", "35H", "35K"\]/);
+  assert.doesNotMatch(bounder, /"2010": \["33C", "35K", "36H"\]/);
+  assert.doesNotMatch(bounder, /"2011": \["33C", "35K", "36H"\]/);
+  assert.doesNotMatch(bounder.slice(bounder.indexOf('"2010"'), bounder.indexOf('"2013"')), /"36H"/);
+
+  const classic = fleet.slice(fleet.indexOf('    "Bounder Classic": {'), fleet.indexOf("    Southwind: {"));
+  assert.match(classic, /"2010": \["30T", "34W", "35S"\]/);
+  assert.match(classic, /"2011": \["30T", "34B", "36R"\]/);
+  assert.match(classic, /"2012": \["30T", "34B", "36R"\]/);
+  assert.doesNotMatch(classic, /"2010": \["33C", "35K"\]/);
+  assert.doesNotMatch(classic, /"2011": \["33C", "35K"\]/);
+
+  const southwind = fleet.slice(fleet.indexOf("    Southwind: {"), fleet.indexOf('    "Pace Arrow"'));
+  assert.match(southwind, /"2010": \["32VS", "35A", "35J", "36D"\]/);
+  assert.match(southwind, /"2011": \["32VS", "35J", "36D"\]/);
+  assert.match(southwind, /"2012": \["32VS", "35J", "36D", "36S"\]/);
+  assert.match(southwind, /yearStart:\s*2010/);
+
+  const pace = fleet.slice(fleet.indexOf('    "Pace Arrow": {'), fleet.indexOf("    Storm: {"));
+  assert.doesNotMatch(pace, /"2010"/);
+  assert.doesNotMatch(pace, /"2011"/);
+  assert.doesNotMatch(pace, /"2012"/);
+
+  const storm = fleet.slice(fleet.indexOf("    Storm: {"), fleet.indexOf("    Flair: {"));
+  assert.doesNotMatch(storm, /"2010"/);
+  assert.match(storm, /"2011": \["28MS", "30SA", "32BH"\]/);
+  assert.match(storm, /"2012": \["28F", "28MS", "30SA", "32BH", "32V"\]/);
+  assert.doesNotMatch(storm, /"2011": \["28F", "32V", "36F"\]/);
+  assert.doesNotMatch(storm, /"2012": \["28F", "32V", "36F"\]/);
+
+  const flair = fleet.slice(fleet.indexOf("    Flair: {"), fleet.indexOf("    Fortis: {"));
+  assert.doesNotMatch(flair, /"2010"/);
+  assert.doesNotMatch(flair, /"2011"/);
+  assert.doesNotMatch(flair, /"2012"/);
+
+  const jamboree = fleet.slice(fleet.indexOf("    Jamboree: {"), fleet.indexOf("    Tioga: {"));
+  assert.match(jamboree, /"2010": \["23B", "25G", "26Q", "28Y", "31M", "31N", "31W"\]/);
+  assert.match(jamboree, /"2011": \["24L", "25G", "28Y", "31M", "31N", "31W"\]/);
+  assert.match(jamboree, /"2012": \["25G", "28Y", "28Z", "31M", "31N", "31W"\]/);
+  assert.doesNotMatch(jamboree, /"2010": \["25B"/);
+  assert.doesNotMatch(jamboree.slice(jamboree.indexOf('"2011"'), jamboree.indexOf('"2013"')), /"23B"/);
+
+  const tioga = fleet.slice(fleet.indexOf("    Tioga: {"), fleet.indexOf('    "Tioga Ranger"'));
+  assert.doesNotMatch(tioga, /"2010"/);
+  assert.match(tioga, /"2011": \["22C", "23B"\]/);
+  assert.match(tioga, /"2012": \["22C", "23B", "25K"\]/);
+  assert.doesNotMatch(tioga, /"2011": \["24K"/);
+  assert.doesNotMatch(tioga.slice(tioga.indexOf('"2011"'), tioga.indexOf('"2013"')), /"25G"/);
+
+  const ranger = fleet.slice(fleet.indexOf('    "Tioga Ranger": {'), fleet.indexOf("    Pulse: {"));
+  assert.match(ranger, /"2010": \["23B", "25G", "26Q", "28Y", "31M", "31N", "31W"\]/);
+  assert.match(ranger, /"2011": \["24L", "25G", "28Y", "31M", "31N", "31W"\]/);
+  assert.match(ranger, /"2012": \["25G", "28Y", "28Z", "31M", "31N", "31W"\]/);
+  assert.doesNotMatch(ranger, /"2010": \["25K", "31N"\]/);
+
+  const pulse = fleet.slice(fleet.indexOf("    Pulse: {"), fleet.indexOf("    Altitude: {"));
+  assert.doesNotMatch(pulse, /"2010"/);
+  assert.doesNotMatch(pulse, /"2011"/);
+  assert.doesNotMatch(pulse, /"2012"/);
+  assert.match(pulse, /yearStart:\s*2018/);
+
+  const disc10 = findPowertrainCorrection("2010", "Fleetwood", "Discovery", "40G");
+  assert.equal(disc10!.horsepower, 350);
+  assert.equal(disc10!.torqueLbFt, 750);
+  assert.equal(disc10!.fuelType, "Diesel");
+  assert.match(disc10!.engine, /ISB/);
+  assert.doesNotMatch(disc10!.engine, /ISC|ISL/);
+  const disc11 = findPowertrainCorrection("2011", "Fleetwood", "Discovery", "36J");
+  assert.equal(disc11!.horsepower, 380);
+  assert.equal(disc11!.torqueLbFt, 1050);
+  assert.match(disc11!.engine, /ISC|8\.3/);
+  assert.doesNotMatch(disc11!.engine, /ISB|ISL/);
+  const disc12 = findPowertrainCorrection("2012", "Fleetwood", "Discovery", "42M");
+  assert.equal(disc12!.horsepower, 380);
+  assert.match(disc12!.engine, /ISC|8\.3/);
+
+  assert.equal(findPowertrainCorrection("2010", "Fleetwood", "Discovery LXE", "40G"), null);
+  assert.equal(findPowertrainCorrection("2011", "Fleetwood", "Discovery LXE", "40M"), null);
+  assert.equal(findPowertrainCorrection("2012", "Fleetwood", "Discovery LXE", "44H"), null);
+
+  const bounder10 = findPowertrainCorrection("2010", "Fleetwood", "Bounder", "33U");
+  assert.equal(bounder10!.horsepower, 0);
+  assert.equal(bounder10!.fuelType, "Gas");
+  assert.notEqual(bounder10!.horsepower, 320);
+  const bounder11 = findPowertrainCorrection("2011", "Fleetwood", "Bounder", "35H");
+  assert.equal(bounder11!.horsepower, 362);
+  assert.equal(bounder11!.torqueLbFt, 457);
+  assert.equal(bounder11!.fuelType, "Gas");
+  const bounder12 = findPowertrainCorrection("2012", "Fleetwood", "Bounder", "33C");
+  assert.equal(bounder12!.horsepower, 362);
+  assert.notEqual(bounder12!.horsepower, 320);
+
+  const classic10 = findPowertrainCorrection("2010", "Fleetwood", "Bounder Classic", "30T");
+  assert.equal(classic10!.horsepower, 0);
+  const classic11 = findPowertrainCorrection("2011", "Fleetwood", "Bounder Classic", "34B");
+  assert.equal(classic11!.horsepower, 362);
+  assert.equal(classic11!.fuelType, "Gas");
+  const classic12 = findPowertrainCorrection("2012", "Fleetwood", "Bounder Classic", "36R");
+  assert.equal(classic12!.horsepower, 362);
+
+  const south10 = findPowertrainCorrection("2010", "Fleetwood", "Southwind", "32VS");
+  assert.equal(south10!.horsepower, 0);
+  assert.notEqual(south10!.horsepower, 320);
+  const south11 = findPowertrainCorrection("2011", "Fleetwood", "Southwind", "35J");
+  assert.equal(south11!.horsepower, 362);
+  const south12 = findPowertrainCorrection("2012", "Fleetwood", "Southwind", "36S");
+  assert.equal(south12!.horsepower, 362);
+
+  assert.equal(findPowertrainCorrection("2010", "Fleetwood", "Pace Arrow", "33D"), null);
+  assert.equal(findPowertrainCorrection("2011", "Fleetwood", "Pace Arrow", "35R"), null);
+  assert.equal(findPowertrainCorrection("2012", "Fleetwood", "Pace Arrow", "36U"), null);
+
+  assert.equal(findPowertrainCorrection("2010", "Fleetwood", "Storm", "28F"), null);
+  const storm11 = findPowertrainCorrection("2011", "Fleetwood", "Storm", "28MS");
+  assert.equal(storm11!.horsepower, 362);
+  assert.equal(storm11!.fuelType, "Gas");
+  const storm12 = findPowertrainCorrection("2012", "Fleetwood", "Storm", "32V");
+  assert.equal(storm12!.horsepower, 362);
+
+  assert.equal(findPowertrainCorrection("2010", "Fleetwood", "Flair", "28A"), null);
+  assert.equal(findPowertrainCorrection("2011", "Fleetwood", "Flair", "30U"), null);
+  assert.equal(findPowertrainCorrection("2012", "Fleetwood", "Flair", "32S"), null);
+
+  const jam10 = findPowertrainCorrection("2010", "Fleetwood", "Jamboree", "25G");
+  assert.equal(jam10!.horsepower, 305);
+  assert.equal(jam10!.torqueLbFt, 420);
+  assert.equal(jam10!.fuelType, "Gas");
+  assert.doesNotMatch(jam10!.engine, /7\.3/);
+  const jam11 = findPowertrainCorrection("2011", "Fleetwood", "Jamboree", "24L");
+  assert.equal(jam11!.horsepower, 305);
+  const jam12 = findPowertrainCorrection("2012", "Fleetwood", "Jamboree", "28Z");
+  assert.equal(jam12!.horsepower, 305);
+  assert.equal(findPowertrainCorrection("2010", "Fleetwood", "Jamboree Searcher", "23B"), null);
+  assert.equal(findPowertrainCorrection("2012", "Fleetwood", "Jamboree Searcher", "25G"), null);
+
+  assert.equal(findPowertrainCorrection("2010", "Fleetwood", "Tioga", "22C"), null);
+  const tioga11 = findPowertrainCorrection("2011", "Fleetwood", "Tioga", "22C");
+  assert.equal(tioga11!.horsepower, 255);
+  assert.equal(tioga11!.torqueLbFt, 350);
+  assert.equal(tioga11!.fuelType, "Gas");
+  const tioga12 = findPowertrainCorrection("2012", "Fleetwood", "Tioga", "25K");
+  assert.equal(tioga12!.horsepower, 0);
+  assert.equal(tioga12!.fuelType, "Gas");
+
+  const ranger10 = findPowertrainCorrection("2010", "Fleetwood", "Tioga Ranger", "23B");
+  assert.equal(ranger10!.horsepower, 305);
+  assert.equal(ranger10!.torqueLbFt, 420);
+  const ranger11 = findPowertrainCorrection("2011", "Fleetwood", "Tioga Ranger", "24L");
+  assert.equal(ranger11!.horsepower, 305);
+  const ranger12 = findPowertrainCorrection("2012", "Fleetwood", "Tioga Ranger", "28Z");
+  assert.equal(ranger12!.horsepower, 305);
+
+  assert.equal(findPowertrainCorrection("2010", "Fleetwood", "Pulse", "24A"), null);
+  assert.equal(findPowertrainCorrection("2012", "Fleetwood", "Pulse", "24A"), null);
 });
 
 test("Altitude E-450 pin is 325/450 and does not apply to FS550", () => {
