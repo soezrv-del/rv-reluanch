@@ -4128,7 +4128,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Thor: {
     Tuscany: {
       type: "Class A Diesel",
-      floorplans: ["38SQ", "40IX", "40DX", "42HQ", "42RQ", "42GX", "44MT", "45AT", "45NX", "40B", "40MX", "45BX", "45CA", "40RT", "45JA", "45MX"],
+      floorplans: ["38SQ", "40IX", "40DX", "40KQ", "40RX", "42HQ", "42RQ", "42GX", "42WX", "44MT", "45AT", "45LT", "45NX", "40B", "40MX", "45BX", "45CA", "40RT", "45JA", "45MX"],
       floorplansByYear: {
         "2005": ["40IX", "42RQ", "45AT"],
         "2006": ["40IX", "42RQ", "45AT"],
@@ -4138,8 +4138,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2010": ["40IX", "42RQ", "45AT"],
         "2011": ["40IX", "42RQ", "45AT"],
         "2012": ["40IX", "42RQ", "45AT"],
-        "2013": ["40IX", "42RQ", "45AT"],
-        "2014": ["40IX", "42RQ", "45AT"],
+        // OEM MY13 Tuscany (RVUSA mak6754 / 2013_Tuscany_A): 42RQ | 42WX | 45LT · ISL 450/1250. Do not keep leftover 40IX/45AT.
+        "2013": ["42RQ", "42WX", "45LT"],
+        // OEM MY14 Tuscany (RVUSA mak7695 / 2014_Tuscany): 40KQ | 40RX | 42WX | 44MT | 45LT · ISL 450/1250 · Freightliner XC / XCS.
+        "2014": ["40KQ", "40RX", "42WX", "44MT", "45LT"],
         // OEM MY15 Tuscany © 12/15/14: 40DX | 42HQ | 44MT | 45AT · ISL 450/1250. Do not keep leftover 40IX/42RQ.
         "2015": ["40DX", "42HQ", "44MT", "45AT"],
         // OEM MY16 Tuscany 16_Tuscany_A: 40DX | 42GX | 44MT | 45AT · ISL 450/1250. Do not keep leftover 40IX/42RQ.
@@ -4207,11 +4209,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
                 {
           from: 2010,
-          to: 2014,
+          to: 2012,
           engine: "Cummins ISL / ISB 300–450HP (era)",
           horsepower: 380,
           chassis: "Freightliner XC / Spartan (by year)",
-          notes: "2010–2014 leftover mid/high diesel Class A — 2013–2014 walk-back."
+          notes: "2010–2012 leftover mid/high diesel Class A — next slice locks OEM. Not 2013–2014."
+        },
+        {
+          from: 2013,
+          to: 2014,
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner XC-Series",
+          fuelType: "Diesel",
+          notes: "OEM MY13 Tuscany mak6754 / MY14 mak7695: ISL 450 / 1250. Not leftover 40IX/45AT."
         },
         {
           from: 2015,
@@ -4317,11 +4329,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Palazzo: {
       type: "Class A Diesel",
-      floorplans: ["33.2", "33.3", "33.4", "33.5", "33.6", "35.1", "36.1", "36.2", "36.3", "37.4", "37.5", "37.6", "39.4", "44.1"],
+      floorplans: ["33.1", "33.2", "33.3", "33.4", "33.5", "33.6", "35.1", "36.1", "36.2", "36.3", "37.4", "37.5", "37.6", "39.4", "44.1"],
       floorplansByYear: {
         "2012": ["33.2", "33.3", "36.1"],
-        "2013": ["33.2", "33.3", "36.1"],
-        "2014": ["33.2", "33.3", "36.1"],
+        // OEM MY13 Palazzo (2013_Palazzo_DP + compact flyer): 33.1 | 33.2 | 33.3 | 36.1 · ISB 300/660 (single rating). Do not keep leftover 33.2/33.3/36.1-only set.
+        "2013": ["33.1", "33.2", "33.3", "36.1"],
+        // OEM MY14 Palazzo (14_Palazzo_A / RVUSA mak7710): 33.2 | 33.3 | 35.1 | 36.1 · ISB 300/660. Do not keep leftover 33.1-only set.
+        "2014": ["33.2", "33.3", "35.1", "36.1"],
         // OEM MY15 Palazzo © 12/15/14: 33.2 | 33.3 | 35.1 | 36.1 | 36.2 · ISB 300/660 vs 340/700.
         "2015": ["33.2", "33.3", "35.1", "36.1", "36.2"],
         // OEM MY16 Palazzo 16_Palazzo_A: 33.2 | 33.3 | 33.4 | 35.1 | 36.1 · ISB 300/660 vs 340/700. Do not keep leftover 36.2-only set.
@@ -4382,11 +4396,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
                 {
           from: 2010,
-          to: 2014,
+          to: 2012,
           engine: "Cummins ISL / ISB 300–450HP (era)",
           horsepower: 380,
           chassis: "Freightliner XC-Series",
-          notes: "2010–2014 leftover mid/high diesel Class A — 2013–2014 walk-back."
+          notes: "2010–2012 leftover mid/high diesel Class A — next slice locks OEM. Not 2013–2014."
+        },
+        {
+          from: 2013,
+          to: 2014,
+          engine: "Cummins ISB 6.7 300HP",
+          horsepower: 300,
+          torqueLbFt: 660,
+          chassis: "Freightliner XC-S",
+          fuelType: "Diesel",
+          notes: "OEM MY13 Palazzo flyer / MY14 14_Palazzo_A: ISB 300 / 660 (single rating, not later 300-vs-340 option-band)."
         },
         {
           from: 2015,
@@ -4453,8 +4477,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["3401", "3601", "3701", "3702", "3901", "3902", "4000", "3801", "4200", "4500"],
       floorplansByYear: {
-        "2014": ["3401", "3601", "3901"],
-        // No Thor Aria OEM brochure MY15–16 (first readable OEM card is MY17). Do not keep leftover 3401/3601/3901.
+        // No Thor Aria OEM brochure MY13–16 (first readable OEM card is MY17). Do not keep leftover 2014 3401/3601/3901.
         // OEM MY17 Aria OH 10/01/16 V2: 3601 | 3901 · ISB-XT 360/800. Do not keep leftover 3401.
         "2017": ["3601", "3901"],
         // OEM MY18 Aria: 3401 | 3601 | 3901 | 4000 · ISB-XT 360/800.
@@ -4507,17 +4530,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2014,
-      description: "Thor Aria — diesel Class A on Freightliner XCR. OEM MY25: 3401 / 3702 / 3901 / 4000, ISB-XT 6.7 360 / 800. MY26–27: 3702 / 3901 / 4000 (do not copy 3401 forward). Twin-era companion to Riviera. Not Palazzo / Tuscany.",
+      yearStart: 2017,
+      description: "Thor Aria — diesel Class A on Freightliner XCR. First readable OEM card is MY17. OEM MY25: 3401 / 3702 / 3901 / 4000, ISB-XT 6.7 360 / 800. MY26–27: 3702 / 3901 / 4000 (do not copy 3401 forward). Twin-era companion to Riviera. Not Palazzo / Tuscany.",
       powertrainByYear: [
-                {
-          from: 2010,
-          to: 2014,
-          engine: "Cummins ISL / ISB 300–450HP (era)",
-          horsepower: 380,
-          chassis: "Freightliner XC-Series",
-          notes: "2010–2014 leftover mid/high diesel Class A — 2013–2014 walk-back. No Aria OEM MY15–16."
-        },
         {
           from: 2017,
           to: 2018,
@@ -4578,8 +4593,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2010": ["27.1", "29.2", "30.1", "32.1"],
         "2011": ["27.1", "29.2", "30.1", "32.1"],
         "2012": ["27.1", "29.2", "30.1", "32.1"],
-        "2013": ["27.1", "29.2", "30.1", "32.1"],
-        "2014": ["27.1", "29.2", "30.1", "32.1"],
+        // OEM MY13 A.C.E. (2013ACEClassARVFlyer / RVUSA mak7457): 27.1 | 29.2 | 30.1 · Ford F53. HP not printed. Do not keep leftover 32.1.
+        "2013": ["27.1", "29.2", "30.1"],
+        // OEM MY14 A.C.E. (14_ACE_A): 27.1 | 29.2 | 30.1 | 30.2 · F-53 6.8 V10 362/457. Do not keep leftover 32.1.
+        "2014": ["27.1", "29.2", "30.1", "30.2"],
         // OEM MY15 A.C.E. © 12/15/14: 27.1 | 29.2 | 29.3 | 30.1 | 30.2 · F-53 6.8 V10 362/457. Do not keep leftover 32.1.
         "2015": ["27.1", "29.2", "29.3", "30.1", "30.2"],
         // OEM MY16 A.C.E. 16_ACE_A: 27.1 | 27.2 | 29.2 | 29.3 | 29.4 | 30.1 | 30.2 · F-53 6.8 V10 362/457. Do not keep leftover 32.1.
@@ -4641,11 +4658,31 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2010,
-          to: 2014,
+          to: 2012,
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "Pre-Godzilla leftover through 2014 — 2013–2014 walk-back."
+          notes: "Pre-Godzilla leftover through 2012 — next slice locks OEM. Not 2013–2014."
+        },
+        {
+          from: 2013,
+          to: 2013,
+          engine: "Ford F-53 6.8L Triton V10",
+          horsepower: 0,
+          chassis: "Ford F53",
+          fuelType: "Gas",
+          notes: "OEM MY13 A.C.E. flyer / mak7457: Ford F53. HP not printed (0). Not leftover 32.1. Not Axis/Vegas."
+        },
+        {
+          from: 2014,
+          to: 2014,
+          engine: "Ford F-53 6.8L Triton V10 362HP",
+          horsepower: 362,
+          torqueLbFt: 457,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          fuelType: "Gas",
+          notes: "OEM MY14 A.C.E. 14_ACE_A: F-53 6.8 V10 362 / 457. Not leftover 32.1. Not Axis/Vegas."
         },
         {
           from: 2015,
@@ -4726,7 +4763,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["24.1", "24.2", "24.3", "24.4", "25.1", "25.2", "25.3", "25.4", "25.5", "25.6", "25.7", "26.1", "26.2", "27.7", "28.1"],
       floorplansByYear: {
-        "2014": ["24.1", "25.2", "25.6"],
+        // OEM MY14 Vegas (2014_Vegas_A): 24.1 only · Ford 6.8 Triton V10. HP not printed. Do not keep leftover 25.2/25.6.
+        "2014": ["24.1"],
         // OEM MY15 Vegas RUV © 12/15/14: 24.1 | 24.2 | 25.1 | 25.2 · E-350 6.8 V10 305/420. Do not keep leftover 25.6.
         "2015": ["24.1", "24.2", "25.1", "25.2"],
         // OEM MY16 Vegas 16_Vegas_A: 24.1 | 25.2 | 25.3 | 25.4 · E-Series 6.8 V10 305/420. Do not keep leftover 25.6/27.7.
@@ -4784,14 +4822,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         {
           from: 2014,
           to: 2014,
-          engine: "Ford Triton V10 6.8L",
-          horsepower: 305,
-          torqueLbFt: 420,
-          chassis: "Ford E-350 / E-450 cutaway",
+          engine: "Ford 6.8L Triton V10",
+          horsepower: 0,
+          chassis: "Ford E-Series cutaway",
           transmission: "TorqShift automatic",
+          fuelType: "Gas",
           fuelCapacityGal: 55,
           towingCapacity: 8000,
-          notes: "Leftover 2014 Vegas V10 cutaway — 2013–2014 walk-back.",
+          notes: "OEM MY14 Vegas 2014_Vegas_A: Ford 6.8 Triton V10. HP not printed (0). Not leftover 25.2/25.6. Not F53.",
         },
         {
           from: 2015,
@@ -4871,7 +4909,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["24.1", "24.2", "24.3", "24.4", "25.1", "25.2", "25.3", "25.4", "25.5", "25.6", "25.7", "26.1", "26.2", "27.7", "28.1"],
       floorplansByYear: {
-        "2014": ["24.1", "25.2", "25.6"],
+        // OEM MY14 Axis (RVUSA mak8140): 24.1 only · Ford 6.8 Triton V10. HP not printed. Twin of Vegas. Do not keep leftover 25.2/25.6.
+        "2014": ["24.1"],
         // OEM MY15 Axis RUV © 12/15/14: 24.1 | 24.2 | 25.1 | 25.2 · E-350 6.8 V10 305/420. Do not keep leftover 25.6.
         "2015": ["24.1", "24.2", "25.1", "25.2"],
         // OEM MY16 Axis 16_Axis_A: 24.1 | 25.2 | 25.3 | 25.4 · E-Series 6.8 V10 305/420. Do not keep leftover 25.6/27.7.
@@ -4928,14 +4967,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         {
           from: 2014,
           to: 2014,
-          engine: "Ford Triton V10 6.8L",
-          horsepower: 305,
-          torqueLbFt: 420,
-          chassis: "Ford E-350 / E-450 cutaway",
+          engine: "Ford 6.8L Triton V10",
+          horsepower: 0,
+          chassis: "Ford E-Series cutaway",
           transmission: "TorqShift automatic",
+          fuelType: "Gas",
           fuelCapacityGal: 55,
           towingCapacity: 8000,
-          notes: "Leftover 2014 Axis V10 cutaway — 2013–2014 walk-back.",
+          notes: "OEM MY14 Axis mak8140: Ford 6.8 Triton V10. HP not printed (0). Not leftover 25.2/25.6. Not F53.",
         },
         {
           from: 2015,
@@ -5052,8 +5091,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Hurricane: {
       type: "Class A Gas",
-      floorplans: ["27B", "27K", "29M", "31C", "31S", "31Z", "32A", "32N", "33X", "34A", "34E", "34F", "34J", "34P", "34R", "35C", "35M", "35MX", "29L", "35A", "35G", "35J", "35R", "36H"],
+      floorplans: ["27B", "27K", "29M", "29X", "31C", "31S", "31Z", "32A", "32N", "33G", "33X", "34A", "34E", "34F", "34J", "34P", "34R", "35C", "35M", "35MX", "29L", "35A", "35G", "35J", "35R", "36H"],
       floorplansByYear: {
+        // OEM MY13 Hurricane (RVUSA mak6577): 29X | 32A | 33G | 34E · Ford F53. HP not printed. Do not copy Windsport 34F onto this twin.
+        "2013": ["29X", "32A", "33G", "34E"],
+        // OEM MY14 Hurricane (14_Hurricane_A): 27K | 32N | 34E | 34F | 34J · F-53 6.8 V10 362/457.
+        "2014": ["27K", "32N", "34E", "34F", "34J"],
         // OEM MY15 Hurricane © 12/15/14: 27K | 31S | 32N | 34E | 34F | 34J | 35C · F-53 6.8 V10 362/457.
         "2015": ["27K", "31S", "32N", "34E", "34F", "34J", "35C"],
         // OEM MY16 Hurricane 16_Hurricane_A: 29M | 31S | 34F | 34J | 35C · F-53 6.8 V10 362/457. 29R/32R in brochure text are tank labels, not plans.
@@ -5108,11 +5151,31 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2000,
-          to: 2014,
+          to: 2012,
           engine: "Ford Triton V10 6.8L",
           horsepower: 305,
           chassis: "Ford F53",
-          notes: "Leftover Hurricane V10 through 2014 — 2013–2014 walk-back.",
+          notes: "Leftover Hurricane V10 through 2012 — next slice locks OEM. Not 2013–2014.",
+        },
+        {
+          from: 2013,
+          to: 2013,
+          engine: "Ford F-53 6.8L Triton V10",
+          horsepower: 0,
+          chassis: "Ford F53",
+          fuelType: "Gas",
+          notes: "OEM MY13 Hurricane mak6577: Ford F53. HP not printed (0). Twin of Windsport — do not copy Windsport 34F.",
+        },
+        {
+          from: 2014,
+          to: 2014,
+          engine: "Ford F-53 6.8L Triton V10 362HP",
+          horsepower: 362,
+          torqueLbFt: 457,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          fuelType: "Gas",
+          notes: "OEM MY14 Hurricane 14_Hurricane_A: F-53 6.8 V10 362 / 457. Twin of Windsport.",
         },
         {
           from: 2015,
@@ -5268,15 +5331,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Windsport: {
       type: "Class A Gas",
-      floorplans: ["27B", "27K", "27R", "29M", "31C", "31S", "32N", "33X", "34A", "34E", "34F", "34J", "34R", "35C", "35M", "27BE", "29VX", "31Z", "34P", "29L", "35A", "35G", "35J", "35R", "36H"],
+      floorplans: ["27B", "27K", "27R", "29M", "29X", "31C", "31S", "32A", "32N", "33G", "33X", "34A", "34E", "34F", "34J", "34R", "35C", "35M", "27BE", "29VX", "31Z", "34P", "29L", "35A", "35G", "35J", "35R", "36H"],
       floorplansByYear: {
         "2008": ["27R", "29M", "31S"],
         "2009": ["27R", "29M", "31S", "34J"],
         "2010": ["27R", "29M", "31S", "34J"],
         "2011": ["27R", "29M", "31S", "34J"],
         "2012": ["27R", "29M", "31S", "34J"],
-        "2013": ["27R", "29M", "31S", "34J"],
-        "2014": ["27R", "29M", "31S", "34J"],
+        // OEM MY13 Windsport (RVUSA mak7714 dated 12/10/2012): 29X | 32A | 33G | 34E | 34F · Ford F53. HP not printed. Compact flyer omitted 34F — trust the dated full card. Do not keep leftover 27R/29M/31S/34J.
+        "2013": ["29X", "32A", "33G", "34E", "34F"],
+        // OEM MY14 Windsport (14_Windsport): 27K | 32A | 34E | 34F | 34J · Ford 6.8 Triton V10. HP not printed. Do not copy Hurricane 362 onto this twin.
+        "2014": ["27K", "32A", "34E", "34F", "34J"],
         // OEM MY15 Windsport © 12/15/14: 27K | 31S | 32N | 34E | 34F | 34J | 35C · F-53 6.8 V10 362/457. Do not keep leftover 27R/29M.
         "2015": ["27K", "31S", "32N", "34E", "34F", "34J", "35C"],
         // OEM MY16 Windsport 16_Windsport_A: 29M | 31S | 34F | 34J | 35C · F-53 6.8 V10 362/457. Twin of Hurricane.
@@ -5339,11 +5404,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2008,
-          to: 2014,
+          to: 2012,
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "Pre-Godzilla leftover through 2014 — 2013–2014 walk-back."
+          notes: "Pre-Godzilla leftover through 2012 — next slice locks OEM. Not 2013–2014."
+        },
+        {
+          from: 2013,
+          to: 2014,
+          engine: "Ford F-53 6.8L Triton V10",
+          horsepower: 0,
+          chassis: "Ford F53",
+          fuelType: "Gas",
+          notes: "OEM MY13 Windsport mak7714 / MY14 14_Windsport: Ford 6.8 Triton V10. HP not printed (0). Do not copy Hurricane 362 onto this twin."
         },
         {
           from: 2015,
@@ -5422,7 +5496,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Challenger: {
       type: "Class A Gas",
-      floorplans: ["35HT", "35KT", "36TL", "37FH", "37ND", "37TB", "35MQ", "36FA", "37DS", "37FP", "37GT", "37KT", "37LX", "37YT"],
+      floorplans: ["35HT", "35KT", "36FD", "36TL", "37DT", "37FH", "37ND", "37TB", "35MQ", "36FA", "37DS", "37FP", "37GT", "37KT", "37LX", "37YT"],
       floorplansByYear: {
         "2005": ["35KT", "37FH", "37TB"],
         "2006": ["35KT", "37FH", "37TB"],
@@ -5432,8 +5506,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2010": ["35KT", "37FH", "37TB"],
         "2011": ["35KT", "37FH", "37TB"],
         "2012": ["35KT", "37FH", "37TB"],
-        "2013": ["35KT", "37FH", "37TB"],
-        "2014": ["35KT", "37FH", "37TB"],
+        // OEM MY13 Challenger (2013ChallengerFlyer102012 / RVUSA): 36FD | 37DT | 37GT | 37KT · Ford F53. HP not printed. Do not keep leftover 35KT/37FH/37TB.
+        "2013": ["36FD", "37DT", "37GT", "37KT"],
+        // OEM MY14 Challenger (RVUSA mak7741): 35HT | 37DT | 37GT | 37KT | 37LX · F-53 6.8 V10 362/457. Do not keep leftover 35KT/37FH/37TB.
+        "2014": ["35HT", "37DT", "37GT", "37KT", "37LX"],
         // OEM MY15 Challenger © 12/15/14: 35HT | 37GT | 37KT | 37LX | 37ND | 37TB · F-53 6.8 V10 362/457. Do not keep leftover 35KT/37FH.
         "2015": ["35HT", "37GT", "37KT", "37LX", "37ND", "37TB"],
         // OEM MY16 Challenger 16_Challenger_A: 36TL | 37GT | 37KT | 37LX | 37TB · F-53 6.8 V10 362/457.
@@ -5490,11 +5566,31 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2005,
-          to: 2014,
+          to: 2012,
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "Pre-Godzilla leftover through 2014 — 2013–2014 walk-back."
+          notes: "Pre-Godzilla leftover through 2012 — next slice locks OEM. Not 2013–2014."
+        },
+        {
+          from: 2013,
+          to: 2013,
+          engine: "Ford F-53 6.8L Triton V10",
+          horsepower: 0,
+          chassis: "Ford F53",
+          fuelType: "Gas",
+          notes: "OEM MY13 Challenger flyer 10/2012: Ford F53. HP not printed (0). Do not keep leftover 35KT/37FH/37TB."
+        },
+        {
+          from: 2014,
+          to: 2014,
+          engine: "Ford F-53 6.8L Triton V10 362HP",
+          horsepower: 362,
+          torqueLbFt: 457,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          fuelType: "Gas",
+          notes: "OEM MY14 Challenger mak7741: F-53 6.8 V10 362 / 457."
         },
         {
           from: 2015,
@@ -5614,8 +5710,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Super C",
       floorplans: ["SV34", "SV38", "SV40", "BB35", "BH35", "FB34", "RB34", "BT36", "XG32", "AX29", "LV35", "RS36", "Z30", "X32", "L35", "R36"],
       floorplansByYear: {
-        "2014": ["SV34", "SV38"],
-        // No Thor Magnitude OEM brochure MY15–16. Do not keep leftover SV34/SV38. Four Winds / Chateau Super C 33SW/35SB is a different line, no catalog key this slice.
+        // No Thor Magnitude OEM brochure MY13–19 (first readable OEM card is MY20). Do not keep leftover 2014 SV34/SV38. Four Winds / Chateau Super C 33SW/35SB is a different line, no catalog key this slice.
         // No Thor Magnitude OEM brochure MY17–18 (Four Winds / Chateau Super C 35SB… is a different line, no catalog key this slice). Do not keep leftover SV34/SV38.
         // 2019 Magnitude RVUSA file is an anyflip screenshot — no readable OEM card. Do not invent SV38/SV40.
         // OEM MY20 Magnitude MY 05/01/2019: SV34 | BB35 | BH35 · F-550 Power Stroke 330/750 4x2 or 4x4. Do not keep leftover SV38/SV40.
@@ -5666,17 +5761,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2014,
-      description: "Thor Magnitude — Super C on Ford F-550 / F-600 Power Stroke. OEM MY25: AX29 / XG32 / LV35 / RS36 (HP not printed). No 2026 Magnitude brochure (that year is Magnitude Grand). OEM MY27: Z30 / X32 / L35 / R36, 6.7 330 / 950. Twin of Omni. XG32 is a floorplan, not a Magnitude XG line.",
+      yearStart: 2020,
+      description: "Thor Magnitude — Super C on Ford F-550 / F-600 Power Stroke. First readable OEM card is MY20. OEM MY25: AX29 / XG32 / LV35 / RS36 (HP not printed). No 2026 Magnitude brochure (that year is Magnitude Grand). OEM MY27: Z30 / X32 / L35 / R36, 6.7 330 / 950. Twin of Omni. XG32 is a floorplan, not a Magnitude XG line.",
       powertrainByYear: [
-        {
-          from: 2014,
-          to: 2014,
-          engine: "Cummins / Ford Super C diesel (era)",
-          horsepower: 300,
-          chassis: "Freightliner / Ford Super C",
-          notes: "Leftover 2014 Super C — 2013–2014 walk-back. No Thor Magnitude OEM MY15–19 card."
-        },
         {
           from: 2020,
           to: 2020,
@@ -5794,8 +5881,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplans: ["37SS", "37HJ", "38DB", "37HB", "37MB", "37RB", "37RD", "40SKT", "45MBX"],
       floorplansByYear: {
         "2012": ["37SS", "37HJ"],
-        "2013": ["37SS", "37HJ"],
-        "2014": ["37SS", "37HJ"],
+        // No Thor Motor Coach Seneca OEM brochure MY13–22 (Jayco Seneca is a different make). Do not keep leftover 2013–2014 37SS/37HJ.
         // No Thor Motor Coach Seneca OEM brochure MY15–16 (Jayco Seneca is a different make). Do not invent 37SS/37HJ.
         // No Thor Motor Coach Seneca OEM brochure MY17–18 (Jayco Seneca is a different make). Do not invent 37SS/37HJ.
         // No Thor Motor Coach Seneca OEM brochure MY19–20 (Jayco Seneca is a different make). Do not invent 37SS/38DB.
@@ -5840,11 +5926,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2012,
-          to: 2014,
+          to: 2012,
           engine: "Cummins / Ford Super C diesel (era)",
           horsepower: 300,
           chassis: "Freightliner / Ford Super C",
-          notes: "Leftover Thor Seneca Super C through 2014 — 2013–2014 walk-back. No Thor Seneca OEM MY15–22."
+          notes: "Leftover Thor Seneca Super C 2012 — next slice. No Thor Seneca OEM MY13–22 (Jayco Seneca is a different make)."
         },
         {
           from: 2023,
@@ -5857,13 +5943,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Four Winds": {
       type: "Class C",
-      floorplans: ["19Z", "21Z", "22B", "22C", "22E", "23U", "24C", "24F", "24H", "25M", "25V", "25Z", "26A", "26B", "26X", "27A", "27P", "27R", "28A", "28E", "28F", "28Z", "29G", "29K", "30D", "31B", "31BV", "31E", "31EV", "31L", "31M", "31MV", "31W", "31WV", "31Y", "32A"],
+      floorplans: ["19Z", "21Z", "22B", "22C", "22E", "23U", "24C", "24F", "24H", "25M", "25V", "25Z", "26A", "26B", "26X", "27A", "27P", "27R", "28A", "28E", "28F", "28Z", "29G", "29K", "30D", "31A", "31B", "31BV", "31E", "31EV", "31F", "31L", "31M", "31MV", "31W", "31WV", "31Y", "32A"],
       floorplansByYear: {
         "2010": ["22E", "24F", "28A", "31E"],
         "2011": ["22E", "24F", "28A", "31E"],
         "2012": ["22E", "24F", "28A", "31E", "31W"],
-        "2013": ["22E", "24F", "28A", "31E", "31W"],
-        "2014": ["22E", "24F", "28A", "31E", "31W"],
+        // OEM MY13 Four Winds (RVUSA mak6475 / 2013 flyer): 22E | 23U | 24C | 28A | 28Z | 31A | 31F | 31L · Ford/Chevy. HP not printed. Do not keep leftover 24F/31E/31W.
+        "2013": ["22E", "23U", "24C", "28A", "28Z", "31A", "31F", "31L"],
+        // OEM MY14 Four Winds (14_FourWinds_C): 22E | 23U | 24C | 26A | 28F | 28Z | 31E | 31L | 31W · Ford/Chevy. HP not printed. Super C 33SW/35SK off this key.
+        "2014": ["22E", "23U", "24C", "26A", "28F", "28Z", "31E", "31L", "31W"],
         // OEM MY15 Four Winds Class C (mak8776 / RVUSA © 12/15/14): 22E | 23U | 24C | 26A | 28F | 28Z | 29G | 31E | 31L | 31W · Ford/Chevy. HP not printed. Super C off this key. Do not keep leftover 24F/28A.
         "2015": ["22E", "23U", "24C", "26A", "28F", "28Z", "29G", "31E", "31L", "31W"],
         // OEM MY16 Four Winds Class C card (same Class C codes as Chateau 2016 © 04/01/15): 22B | 22E | 23U | 24C | 26A | 28Z | 29G | 31E | 31L | 31W. Super C 33SW/35SB/35SF/35SK stay off this key.
@@ -5933,11 +6021,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2011,
-          to: 2014,
+          to: 2012,
           engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
           horsepower: 305,
           chassis: "Ford E-450",
-          notes: "2011–2014 leftover Ford Class C cutaway — 2013–2014 walk-back."
+          notes: "2011–2012 leftover Ford Class C cutaway — next slice locks OEM. Not 2013–2014."
+        },
+        {
+          from: 2013,
+          to: 2014,
+          engine: "Ford / Chevy cutaway (option)",
+          horsepower: 0,
+          chassis: "Ford E-Series / Chevy cutaway",
+          fuelType: "Gas",
+          notes: "OEM MY13 Four Winds mak6475 / MY14 14_FourWinds_C: Ford/Chevy. HP not printed (0). Super C off this key. Not Four Winds Sprinter/Siesta."
         },
         {
           from: 2015,
@@ -5997,13 +6094,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Chateau: {
       type: "Class C",
-      floorplans: ["19Z", "21Z", "22B", "22E", "22F", "23U", "24C", "24F", "25M", "25V", "25Z", "26A", "26B", "26BC", "26X", "27A", "27P", "27R", "28A", "28BD", "28E", "28F", "28Z", "29G", "29K", "30D", "30G", "31E", "31EV", "31L", "31M", "31MV", "31W", "31WV", "31Y", "32A", "32E", "33SF", "34F", "35SF"],
+      floorplans: ["19Z", "21Z", "22B", "22E", "22F", "23U", "24C", "24F", "25M", "25V", "25Z", "26A", "26B", "26BC", "26X", "27A", "27P", "27R", "28A", "28BD", "28E", "28F", "28Z", "29G", "29K", "30D", "30G", "31A", "31E", "31EV", "31F", "31L", "31M", "31MV", "31W", "31WV", "31Y", "32A", "32E", "33SF", "34F", "35SF"],
       floorplansByYear: {
         "2010": ["22E", "24F", "28A", "31W"],
         "2011": ["22E", "24F", "28A", "31W"],
         "2012": ["22E", "24F", "28A", "31W"],
-        "2013": ["22E", "24F", "28A", "31W"],
-        "2014": ["22E", "24F", "28A", "31W"],
+        // OEM MY13 Chateau (2013ChateauFlyer102012): 22E | 23U | 24C | 28A | 28Z | 31A | 31F | 31L · Ford/Chevy. HP not printed. Twin of Four Winds 2013.
+        "2013": ["22E", "23U", "24C", "28A", "28Z", "31A", "31F", "31L"],
+        // OEM MY14 Chateau TMC Class C flyer (2014-chateau-motorhomes-flyer-9-30-2013): 22E | 23U | 24C | 26A | 28Z | 31E | 31L | 31W. No 28F on this Class C card (Four Winds 2014 keeps 28F). Super C 33SW/35SK off this key. HP not printed.
+        "2014": ["22E", "23U", "24C", "26A", "28Z", "31E", "31L", "31W"],
         // OEM MY15 Chateau Class C © 12/15/14: 22E | 23U | 24C | 26A | 28F | 28Z | 29G | 31E | 31L | 31W · Ford/Chevy. HP not printed. Super C off this key.
         "2015": ["22E", "23U", "24C", "26A", "28F", "28Z", "29G", "31E", "31L", "31W"],
         // OEM MY16 Chateau cmrvs © 04/01/15: Class C 22B | 22E | 23U | 24C | 26A | 28Z | 29G | 31E | 31L | 31W. Super C 33SW/35SB/35SF/35SK stay off this key. 28F is options leftover — trust spec table.
@@ -6072,11 +6171,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2011,
-          to: 2014,
+          to: 2012,
           engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
           horsepower: 305,
           chassis: "Ford E-450",
-          notes: "2011–2014 leftover Ford Class C cutaway — 2013–2014 walk-back."
+          notes: "2011–2012 leftover Ford Class C cutaway — next slice locks OEM. Not 2013–2014."
+        },
+        {
+          from: 2013,
+          to: 2014,
+          engine: "Ford / Chevy cutaway (option)",
+          horsepower: 0,
+          chassis: "Ford E-Series / Chevy cutaway",
+          fuelType: "Gas",
+          notes: "OEM MY13 Chateau flyer / MY14 TMC Class C flyer: Ford/Chevy. HP not printed (0). Super C off this key. Not Chateau Sprinter."
         },
         {
           from: 2015,
@@ -6147,8 +6255,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["GR22", "KW29", "WS31", "LF31", "KM24", "PD31", "RQ29", "RC25", "RS26", "RW28", "BC31", "FW29", "KW28", "RD28", "SD27", "SV30", "WS29", "LH26", "GS27", "JM31", "LC22", "LC25", "LC26", "LT27", "LC28", "LP27", "PQ31", "LC19", "LC21", "LZ22", "LZ25"],
       floorplansByYear: {
-        "2014": ["KW29", "WS31"],
-        // No Thor Quantum OEM brochure MY15 — do not keep leftover KW29/WS31.
+        // No Thor Quantum OEM brochure MY13–15 (first readable OEM card is MY16). Do not keep leftover 2014 KW29/WS31.
         // OEM MY16 Quantum 16_Quantum_C © 10/01/15: RS26 | PD31 | WS31 · Ford/Chevy. HP not printed.
         "2016": ["RS26", "PD31", "WS31"],
         // OEM MY17 Quantum OH 10/01/16: GR22 | RS26 | RQ29 | LF31 | PD31 | WS31 · Ford/Chevy. KM24 lives on Quantum Sprinter (later 04/14/17 Quantum card). Do not keep leftover KW29.
@@ -6204,16 +6311,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2014,
+      yearStart: 2016,
       powertrainByYear: [
-        {
-          from: 2014,
-          to: 2014,
-          engine: "Ford Triton V10 6.8L / Mercedes Sprinter diesel (by plan)",
-          horsepower: 320,
-          chassis: "Ford E-450 / Mercedes Sprinter (by plan)",
-          notes: "Leftover 2014 Quantum — 2013–2014 walk-back. No MY15 OEM card."
-        },
         {
           from: 2016,
           to: 2016,
@@ -6275,6 +6374,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["24SA", "24SL", "24SR", "24SJ", "24SK", "24SS", "24ST", "24SV", "24MB", "25G", "25M", "24RW"],
       floorplansByYear: {
+        // OEM MY13 Four Winds Siesta (2013SiestaFlyer102012): Sprinter 24SA | 24SR. Ford 29TB/29GB off this key. HP not printed.
+        "2013": ["24SA", "24SR"],
+        // OEM MY14 Four Winds Siesta (2014SiestaMotorhomesLiterature / mak7807): Sprinter 24SA | 24SR | 24ST. Ford 29TB off this key. HP not printed.
+        "2014": ["24SA", "24SR", "24ST"],
         // OEM MY15 Four Winds Siesta Sprinter (mak8781): 24SA | 24SL | 24SR | 24ST · Mercedes Sprinter. HP not printed. Ford 29TB lives on no catalog key this slice.
         "2015": ["24SA", "24SL", "24SR", "24ST"],
         // No 2016 Four Winds Siesta OEM card — do not keep leftover 24SR/25G or copy 2015/2017.
@@ -6321,10 +6424,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2015,
+      yearStart: 2013,
       yearEnd: 2024,
-      description: "Thor Four Winds Siesta — historic Sprinter Class C. OEM MY15: 24SA / 24SL / 24SR / 24ST (HP not printed). No 2016 Siesta OEM card. No OEM Siesta brochure 2021–2022 (Sprinter Class C is Four Winds / Chateau 24BL | 24DS). No 2025–2027 Siesta OEM brochure — yearEnd 2024. Current twin is Four Winds Sprinter / Chateau Sprinter (24LT / 24LV).",
+      description: "Thor Four Winds Siesta — historic Sprinter Class C. OEM MY13: 24SA / 24SR. OEM MY14: 24SA / 24SR / 24ST (Ford 29TB off this key). OEM MY15: 24SA / 24SL / 24SR / 24ST (HP not printed). No 2016 Siesta OEM card. No OEM Siesta brochure 2021–2022 (Sprinter Class C is Four Winds / Chateau 24BL | 24DS). No 2025–2027 Siesta OEM brochure — yearEnd 2024. Current twin is Four Winds Sprinter / Chateau Sprinter (24LT / 24LV).",
       powertrainByYear: [
+        {
+          from: 2013,
+          to: 2014,
+          engine: "Mercedes-Benz Sprinter turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "OEM MY13 Siesta flyer / MY14 Siesta literature: Sprinter 24SA/24SR (+24ST in 2014). HP not printed (0). Ford 29TB/29GB off this key."
+        },
         {
           from: 2015,
           to: 2015,
@@ -6428,8 +6540,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplans: ["29H", "38MB", "38KB", "29J", "29T"],
       floorplansByYear: {
         "2012": ["29H", "38MB"],
-        "2013": ["29H", "38MB"],
-        "2014": ["29H", "38MB"],
+        // Mixed leftover. OEM MY13 Outlaw (mak7087) is Class A 37LS only — lives on Outlaw Class A. Do not keep leftover 29H/38MB here.
+        // Mixed leftover. OEM MY14 Outlaw (mak7742 / 14_Outlaw_TH) splits Class A 37LS/37MD and Super C 35SG — Class A lives on Outlaw Class A. Do not invent Super C / Magnitude. Do not keep leftover 29H/38MB here.
         // Mixed leftover. OEM MY15 Outlaw PDF splits Class A 37LS/37MD/38RE and Class C 29H — those years live on Outlaw Class A / Outlaw Class C. Do not keep leftover 29H/38MB here.
         // No 2016 Outlaw OEM card — do not invent 2016 or copy 2015/2017.
         // Mixed leftover. OEM MY17–18 Outlaw PDF splits Class A 37BG/37RB/38RE and Class C 29H — those years live on Outlaw Class A / Outlaw Class C.
@@ -6476,11 +6588,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2011,
-          to: 2014,
+          to: 2012,
           engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
           horsepower: 305,
           chassis: "Ford E-450",
-          notes: "2011–2014 leftover mixed Outlaw — 2013–2014 walk-back. MY15+ live on Outlaw Class A / Class C."
+          notes: "2011–2012 leftover mixed Outlaw — next slice. MY13+ Class A lives on Outlaw Class A."
         },
         {
           from: 2023,
@@ -6648,8 +6760,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["22TF", "23TB", "23TK", "23TR", "24TX", "24LP", "24TF", "24SX", "24KB", "23BP", "23TE", "23TW", "24JG", "22MT"],
       floorplansByYear: {
-        "2014": ["22TF", "23TR"],
-        // No Thor Gemini OEM brochure MY15 — do not keep leftover 22TF/23TR.
+        // No Thor Gemini OEM brochure MY13–15 (first readable OEM card is MY16). Do not keep leftover 2014 22TF/23TR.
         // OEM MY16 Gemini 16_Gemini_C: 23TR · Transit 3.2 I-5 Power Stroke 185/350 diesel.
         "2016": ["23TR"],
         // OEM MY17 Gemini OH 10/01/16 V2: Transit 23TB | 23TK | 23TR (185/350) + Sprinter 24TX (188/325). Option-band HP 0. Do not keep leftover 22TF.
@@ -6703,17 +6814,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2014,
-      description: "Thor Gemini AWD — Ford Transit AWD Class C compact. Twin of Compass AWD. OEM MY25–27: 23TW / 24JG / 24KB, EcoBoost 310 / 400. 22MT is Gemini TRIP (separate key). Not Sequence / Sanctuary.",
+      yearStart: 2016,
+      description: "Thor Gemini AWD — Ford Transit AWD Class C compact. Twin of Compass AWD. First readable OEM card is MY16. OEM MY25–27: 23TW / 24JG / 24KB, EcoBoost 310 / 400. 22MT is Gemini TRIP (separate key). Not Sequence / Sanctuary.",
       powertrainByYear: [
-        {
-          from: 2014,
-          to: 2014,
-          engine: "Ford Transit / cutaway gas (by year)",
-          horsepower: 180,
-          chassis: "Ford Transit / E-series",
-          notes: "Leftover 2014 Gemini — 2013–2014 walk-back. No MY15 OEM card."
-        },
         {
           from: 2016,
           to: 2016,
@@ -7113,6 +7216,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["37BG", "37GP", "37LS", "37MD", "37RB", "38RE", "38K", "38M", "38KB", "38MB"],
       floorplansByYear: {
+        // OEM MY13 Outlaw (RVUSA mak7087): Class A 37LS only · Ford F53. HP not printed. Do not invent 37MD. Super C not on this key.
+        "2013": ["37LS"],
+        // OEM MY14 Outlaw (mak7742 / 14_Outlaw_TH): Class A 37LS | 37MD · F53 6.8 Triton. HP not printed. Super C 35SG off this key (no Outlaw Super C / Magnitude key).
+        "2014": ["37LS", "37MD"],
         // OEM MY15 Outlaw Class A section © 12/15/14: 37LS | 37MD | 38RE · F-53 6.8 V10 362/457. Class C 29H lives on Outlaw Class C.
         "2015": ["37LS", "37MD", "38RE"],
         // No 2016 Outlaw OEM card — do not invent 2016 or copy 2015/2017.
@@ -7158,9 +7265,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       fuelCapacityGal: 80,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2015,
-      description: "Thor Outlaw Class A — F53 toy-hauler gas Class A. OEM MY15: 37LS / 37MD / 38RE, V10 362 / 457. No 2016 Outlaw OEM card. OEM MY19: 37GP / 37RB, V10 320 / 460. MY20: 37RB / 38MB. MY21: 38MB / 38KB, V10/7.3 option-band. MY22: 38MB / 38KB, 7.3 350 / 468. OEM MY23: 38MB / 38KB, 7.3 335 / 468. MY24: 38MB / 38KB, 7.3 350 / 468. OEM MY25: 38MB / 38KB, 335 / 468. No 2026 non-WWE Class A brochure (that year is Outlaw Wild West). OEM MY27: 38K / 38M, 7.3 335 / 468. Not Outlaw Class C / not leftover mixed Outlaw.",
+      yearStart: 2013,
+      description: "Thor Outlaw Class A — F53 toy-hauler gas Class A. OEM MY13: 37LS (HP not printed). OEM MY14: 37LS / 37MD (HP not printed). OEM MY15: 37LS / 37MD / 38RE, V10 362 / 457. No 2016 Outlaw OEM card. OEM MY19: 37GP / 37RB, V10 320 / 460. MY20: 37RB / 38MB. MY21: 38MB / 38KB, V10/7.3 option-band. MY22: 38MB / 38KB, 7.3 350 / 468. OEM MY23: 38MB / 38KB, 7.3 335 / 468. MY24: 38MB / 38KB, 7.3 350 / 468. OEM MY25: 38MB / 38KB, 335 / 468. No 2026 non-WWE Class A brochure (that year is Outlaw Wild West). OEM MY27: 38K / 38M, 7.3 335 / 468. Not Outlaw Class C / not leftover mixed Outlaw.",
       powertrainByYear: [
+        { from: 2013, to: 2014, engine: "Ford F-53 6.8L Triton V10", horsepower: 0, chassis: "Ford F53", fuelType: "Gas", notes: "OEM MY13 Outlaw mak7087 / MY14 mak7742: F53 6.8 Triton. HP not printed (0). Super C 35SG off this key. Not Class C." },
         { from: 2015, to: 2015, engine: "Ford F-53 6.8L Triton V10 362HP", horsepower: 362, torqueLbFt: 457, chassis: "Ford F53", transmission: "TorqShift automatic", fuelType: "Gas", notes: "OEM MY15 Outlaw Class A: F-53 6.8 V10 362 / 457. No 2016 OEM card. Not Class C." },
         { from: 2017, to: 2020, engine: "Ford F-53 6.8L Triton V10 320HP", horsepower: 320, torqueLbFt: 460, chassis: "Ford F53", transmission: "TorqShift automatic", fuelType: "Gas", notes: "OEM MY17–20 Outlaw Class A: F-53 6.8 V10 320 / 460. Not Class C." },
         { from: 2021, to: 2021, engine: "Ford F-53 6.8L Triton V10 320HP / 7.3L V8 350HP (option)", horsepower: 0, chassis: "Ford F53", notes: "OEM MY21 Outlaw Class A: V10 320/460 or 7.3 350/468. Option-band HP 0. Not Class C." },
