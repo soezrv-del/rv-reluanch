@@ -16834,7 +16834,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["45A", "45B", "45D", "45F", "45J", "45K", "45R", "45V", "45W", "45X", "45Y", "45Z"],
       floorplansByYear: {
-        "2014": ["45B", "45W", "45Z"],
+        // OEM MY13 Cornerstone product floorplans (Wayback 2013-03-02 + 2013-09-27): 45J | 45K · ISX 600/1950 · K3. No 45B yet.
+        "2013": ["45J", "45K"],
+        // OEM MY14 Cornerstone floorplans page titled "2014 Cornerstone Floorplans" (Wayback 2014-07-20): 45B | 45J | 45K · ISX 600/1950 · K3 raised rail
+        "2014": ["45B", "45J", "45K"],
         // OEM MY15 Cornerstone year page (Wayback 2015-09-05): 45B | 45J | 45K · ISX 600/1950 · K3
         "2015": ["45B", "45J", "45K"],
         // OEM MY16 Cornerstone year page (Wayback 2016-05-08): 45A | 45B | 45J | 45K · ISX 600/1950 · K3 raised rail
@@ -16893,17 +16896,39 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2014,
+      yearStart: 2013,
       yearEnd: 2026,
       description: "Entegra Cornerstone — flagship diesel on Spartan K3 + Cummins X15 605 / 1,950, Allison 4000 MH, hitch 20k. SL chassis is an option — do not lock one chassis as only. Year-end 2026: no 2027 OEM diesel Class A page.",
       powertrainByYear: [
                 {
           from: 2010,
-          to: 2014,
+          to: 2012,
           engine: "Cummins ISL / ISB 300–450HP (era)",
           horsepower: 380,
           chassis: "Spartan K3",
-          notes: "2010–2014 mid/high diesel Class A — 2013–2014 left for the next Entegra walk-back"
+          notes: "2010–2012 left for the final Entegra walk-back. Do not copy 2013–2014 ISX 600 / hitch 15k backward."
+        },
+        {
+          from: 2013,
+          to: 2013,
+          engine: "Cummins ISX 15L 600HP",
+          horsepower: 600,
+          torqueLbFt: 1950,
+          chassis: "Spartan K3",
+          transmission: "Allison GEN 4 4000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY13 Cornerstone product standards (Wayback 2013-03-02): ISX 600 / 1,950 · Spartan K3 · Allison GEN 4 4000 MH · hitch 15k. Do not stamp 2015 hitch 20k or later X15 / ISX 605 backward."
+        },
+        {
+          from: 2014,
+          to: 2014,
+          engine: "Cummins ISX 15L 600HP",
+          horsepower: 600,
+          torqueLbFt: 1950,
+          chassis: "Spartan K3 Raised Rail",
+          transmission: "Allison 4000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY14 Cornerstone floorplans page titled 2014 (Wayback 2014-07-20) + standards (Wayback 2014-02-08): ISX 600 / 1,950 · Spartan K3 raised rail · Allison 4000 MH · hitch 15k. Do not stamp 2015 hitch 20k or later X15 / ISX 605 backward."
         },
         {
           from: 2015,
@@ -16987,7 +17012,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["37K", "42DEQ", "42DLQ", "42RBQ", "44A", "44B", "44D", "44DLQ", "44F", "44L", "44R", "44SL", "44V", "44W", "44Z"],
       floorplansByYear: {
-        "2014": ["42DEQ", "44B", "44W"],
+        // OEM MY13 Anthem product floorplans (Wayback 2013-03-04): 42DEQ | 42DLQ | 42RBQ | 44DLQ | 44SL · ISL 450/1250 · Mountain Master. No 44B yet.
+        "2013": ["42DEQ", "42DLQ", "42RBQ", "44DLQ", "44SL"],
+        // OEM MY14 Anthem floorplans page titled "2014 Anthem Floorplans" (Wayback 2014-07-20): 42DEQ | 42DLQ | 42RBQ | 44B | 44DLQ | 44SL · ISL 450/1250 · Mountain Master raised rail
+        "2014": ["42DEQ", "42DLQ", "42RBQ", "44B", "44DLQ", "44SL"],
         // OEM MY15 Anthem year page (Wayback 2015-09-05): 42DEQ | 42DLQ | 42RBQ | 44B | 44DLQ | 44L | 44SL · ISL 450/1250 · Mountain Master. 44F is Dealer Stock Only.
         "2015": ["42DEQ", "42DLQ", "42RBQ", "44B", "44DLQ", "44L", "44SL"],
         // OEM MY16 Anthem year page (Wayback 2016-05-08): 42DEQ | 42RBQ | 44A | 44B | 44DLQ · ISL 450/1250 · Mountain Master raised rail. 44L is Dealer Stock Only.
@@ -17045,17 +17073,39 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2014,
+      yearStart: 2013,
       yearEnd: 2026,
       description: "Entegra Anthem — Spartan K2 diesel under Cornerstone. OEM MY25–26: L9 450 / 1,250 locked (not an L9/X12 band), Allison 3000 MH, hitch 15k (10k on 37K). Year-end 2026.",
       powertrainByYear: [
                 {
           from: 2010,
-          to: 2014,
+          to: 2012,
           engine: "Cummins ISL / ISB 300–450HP (era)",
           horsepower: 380,
           chassis: "Spartan K3",
-          notes: "2010–2014 mid/high diesel Class A — 2013–2014 left for the next Entegra walk-back. Do not stamp K2 / L9 backward."
+          notes: "2010–2012 left for the final Entegra walk-back. Do not stamp 2013–2014 ISL 450 / Mountain Master or later K2 / L9 backward."
+        },
+        {
+          from: 2013,
+          to: 2013,
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan Mountain Master",
+          transmission: "Allison 3000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY13 Anthem product standards (Wayback 2013-03-04): ISL 450 / 1,250 · Spartan Mountain Master · Allison 3000 MH · hitch 15k. Not L9. Do not stamp K2 backward."
+        },
+        {
+          from: 2014,
+          to: 2014,
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan Mountain Master Raised Rail",
+          transmission: "Allison 3000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY14 Anthem floorplans page titled 2014 (Wayback 2014-07-20) + standards (Wayback 2014-02-08): ISL 450 / 1,250 · Spartan Mountain Master raised rail · Allison 3000 MH · hitch 15k. Not L9. Do not stamp K2 backward."
         },
         {
           from: 2015,
@@ -17150,6 +17200,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["38M", "38R", "39E", "40P", "42D", "42DEQ", "42DLQ", "42RBQ", "44B", "44D", "44F", "44R", "44U", "44V", "44W", "44Z"],
       floorplansByYear: {
+        // OEM MY13 Aspire product floorplans (Wayback 2013-03-04): 42DEQ | 42DLQ | 42RBQ · ISL 450/1250 · Mountain Master. No 39E / 44B / 44U yet.
+        "2013": ["42DEQ", "42DLQ", "42RBQ"],
+        // OEM MY14 Aspire floorplans page titled "2014 Aspire Floorplans" (Wayback 2014-06-23): 39E | 42DEQ | 42DLQ | 42RBQ | 44B | 44U · ISL 450/1250 · Mountain Master raised rail
+        "2014": ["39E", "42DEQ", "42DLQ", "42RBQ", "44B", "44U"],
         // OEM MY15 Aspire year page (Wayback 2015-09-05): 39E | 42DEQ | 42DLQ | 42RBQ | 44B | 44U · ISL 450/1250 · Mountain Master
         "2015": ["39E", "42DEQ", "42DLQ", "42RBQ", "44B", "44U"],
         // OEM MY16 Aspire year page (Wayback 2016-05-08): 38M | 40P | 42DEQ | 42RBQ | 44B | 44R | 44U · ISL 450/1250 · Mountain Master raised rail
@@ -17207,11 +17261,33 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2015,
+      yearStart: 2013,
       yearEnd: 2026,
       description: "Entegra Aspire — Spartan K2 diesel under Anthem. OEM MY25–26: L9 450 / 1,250, hitch 15k (10k on 40P). Year-end 2026.",
       powertrainByYear: [
                 {
+          from: 2013,
+          to: 2013,
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan Mountain Master",
+          transmission: "Allison 3000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY13 Aspire product standards (Wayback 2013-03-04): ISL 450 / 1,250 · Spartan Mountain Master · Allison 3000 MH · hitch 15k. Not L9. Do not stamp K2 backward."
+        },
+        {
+          from: 2014,
+          to: 2014,
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan Mountain Master Raised Rail",
+          transmission: "Allison 3000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY14 Aspire floorplans page titled 2014 (Wayback 2014-06-23) + standards (Wayback 2014-02-08): ISL 450 / 1,250 · Spartan Mountain Master raised rail · Allison 3000 MH · hitch 15k. Not L9. Do not stamp K2 backward."
+        },
+        {
           from: 2015,
           to: 2015,
           engine: "Cummins ISL 8.9L 450HP",
@@ -17449,9 +17525,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Vision": {
       type: "Class A Gas",
-      floorplans: ["26X", "27A", "29F", "29S", "31B", "31R", "31V"],
+      floorplans: ["26X", "27A", "29F", "29S", "31R", "31V"],
       floorplansByYear: {
-        "2014": ["27A", "29S", "31B"],
+        // No OEM MY13 / MY14 Vision product page (2013–2014 lineup is diesel Class A only: Aspire / Anthem / Cornerstone). Omit 2013–2014.
         // No OEM MY15 / MY16 Vision year page (2015–2016 lineup is diesel Class A only). Omit 2015–2016.
         // No OEM MY17 / MY18 Vision year page (2017–2018 lineup is diesel Class A + 2018 Class C). Omit 2017–2018.
         // OEM MY19 Vision year page: 26X | 29F | 29S | 31R | 31V · F53 6.8 Triton 320/460 — no 27A
@@ -17503,17 +17579,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2014,
-      description: "Entegra Vision — gas Class A on Ford F53. OEM MY25–27: 27A / 29F / 29S, 7.3L 335 / 468, TorqShift 6. Used pricing must use gas comps, not diesel MSRP math. Not Vision XL / Vision SE.",
+      yearStart: 2019,
+      description: "Entegra Vision — gas Class A on Ford F53. First OEM year page 2019. OEM MY25–27: 27A / 29F / 29S, 7.3L 335 / 468, TorqShift 6. Used pricing must use gas comps, not diesel MSRP math. Not Vision XL / Vision SE.",
       powertrainByYear: [
-        {
-          from: 2014,
-          to: 2014,
-          engine: "Ford Triton V10 6.8L ~305–362HP",
-          horsepower: 320,
-          chassis: "Ford F53",
-          notes: "2014 placeholder until the 2013–2014 Entegra walk-back. No OEM MY15–18 Vision year page — do not invent 2015–2018."
-        },
         {
           from: 2019,
           to: 2019,
@@ -18027,9 +18095,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Esteem": {
       type: "Class C",
-      floorplans: ["26D", "26U", "27U", "29V", "30X", "31F", "31L", "31W"],
+      floorplans: ["26D", "27U", "29V", "30X", "31F", "31L"],
       floorplansByYear: {
-        "2014": ["26U", "29V", "31W"],
+        // No OEM MY13 / MY14 Esteem product page (2013–2014 lineup is diesel Class A only: Aspire / Anthem / Cornerstone). Omit 2013–2014.
         // No OEM MY15 / MY16 Esteem year page (2015–2016 lineup is diesel Class A only). Omit 2015–2016.
         // No OEM MY17 Esteem year page — omit 2017
         // OEM MY18 Esteem year page + 2018 lineup blog: 29V | 30X | 31L · E-450 6.8 305/420. 31L is current (not DSO).
@@ -18082,18 +18150,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2014,
+      yearStart: 2018,
       yearEnd: 2026,
-      description: "Entegra Esteem — Ford E-450 Class C. OEM MY23: 27U / 29V / 31F, brochure 7.3 350 / 468. MY24: same plans, 325 / 450. No sourced MY25 Esteem brochure. OEM MY26: 27U / 29V / 31F, 325 / 450. Year-end 2026: 2027 product is Odyssey Esteem Edition. Not Esteem XL Super C.",
+      description: "Entegra Esteem — Ford E-450 Class C. First OEM year page 2018. OEM MY23: 27U / 29V / 31F, brochure 7.3 350 / 468. MY24: same plans, 325 / 450. No sourced MY25 Esteem brochure. OEM MY26: 27U / 29V / 31F, 325 / 450. Year-end 2026: 2027 product is Odyssey Esteem Edition. Not Esteem XL Super C.",
       powertrainByYear: [
-        {
-          from: 2011,
-          to: 2014,
-          engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
-          horsepower: 305,
-          chassis: "Ford E-450",
-          notes: "2011–2014 Ford Class C cutaway — 2013–2014 left for the next Entegra walk-back. No OEM MY15–17 Esteem year page."
-        },
         {
           from: 2018,
           to: 2018,
