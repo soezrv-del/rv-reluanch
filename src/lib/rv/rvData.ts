@@ -17957,16 +17957,23 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   "Grand Design": {
     Solitude: {
       type: "Fifth Wheel",
-      floorplans: ["310GK", "345GK", "370DV", "373FB", "375RES", "376RD", "377MBS", "378MBS", "380FL", "382WB", "388MBS", "390RK", "391DL", "414LJMJ", "417KB"],
+      floorplans: ["280RK", "310GK", "344GK", "345GK", "346FLS", "370DV", "372WB", "373FB", "375RES", "376RD", "377MBS", "378MBS", "380FL", "382WB", "385GK", "388MBS", "390RK", "391DL", "414LJMJ", "417KB"],
       floorplansByYear: {
         "2015": ["310GK", "375RES", "377MBS"],
         "2016": ["310GK", "375RES", "377MBS"],
         "2017": ["310GK", "375RES", "377MBS"],
         "2018": ["310GK", "375RES", "377MBS", "380FL"],
         "2019": ["310GK", "375RES", "377MBS", "380FL"],
-        "2020": ["310GK", "375RES", "377MBS", "380FL", "390RK"],
-        "2021": ["310GK", "375RES", "377MBS", "380FL", "390RK"],
-        "2022": ["310GK", "375RES", "380FL", "390RK"],
+        // RVUSA 2020 Solitude spec-by-model (m4729-y2020): unique codes only (drop -R twins).
+        // 310GK | 344GK | 372WB | 373FB | 375RES | 377MBS | 380FL | 382WB | 385GK | 390RK
+        // No 345GK / 378MBS (MY21); no 280RK / 346FLS (MY22); no 370DV / 417KB (MY24).
+        "2020": ["310GK", "344GK", "372WB", "373FB", "375RES", "377MBS", "380FL", "382WB", "385GK", "390RK"],
+        // RVUSA 2021 Solitude spec-by-model (m4729-y2021): 310GK | 345GK | 372WB | 373FB | 375RES | 378MBS | 380FL | 382WB | 390RK
+        // Drops 344GK / 377MBS / 385GK. No 280RK / 346FLS (MY22).
+        "2021": ["310GK", "345GK", "372WB", "373FB", "375RES", "378MBS", "380FL", "382WB", "390RK"],
+        // RVUSA 2022 Solitude spec-by-model (m4729-y2022): 280RK | 310GK | 345GK | 346FLS | 372WB | 373FB | 375RES | 378MBS | 380FL | 382WB | 390RK
+        // No leftover-only invent; no 370DV / 417KB (MY24); no 388MBS (MY25); no 414LJMJ (MY26).
+        "2022": ["280RK", "310GK", "345GK", "346FLS", "372WB", "373FB", "375RES", "378MBS", "380FL", "382WB", "390RK"],
         // RVUSA 2023 Solitude spec-by-model (m4729-y2023): 310GK | 345GK | 373FB | 376RD | 378MBS | 380FL | 382WB | 390RK | 391DL
         // No leftover 375RES; no 370DV / 417KB (MY24); no 388MBS (MY25); no 414LJMJ (MY26).
         "2023": ["310GK", "345GK", "373FB", "376RD", "378MBS", "380FL", "382WB", "390RK", "391DL"],
@@ -18002,12 +18009,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Solitude S-Class": {
       type: "Fifth Wheel",
-      floorplans: ["2930RL", "3460FL", "3740BH", "3800FL", "3950BH"],
+      floorplans: ["2930RL", "3330RE", "3460FL", "3540GK", "3550BH", "3740BH", "3800FL", "3950BH"],
       floorplansByYear: {
         "2019": ["2930RL", "3740BH"],
-        "2020": ["2930RL", "3740BH"],
-        "2021": ["2930RL", "3740BH", "3800FL"],
-        "2022": ["2930RL", "3740BH", "3800FL"],
+        // RVUSA 2020 Solitude S-Class spec-by-model (m11705-y2020): unique codes only (drop -R twins).
+        // 2930RL | 3550BH | 3740BH | 3950BH. No leftover 3800FL; no 3540GK (MY21); no 3330RE (MY22).
+        "2020": ["2930RL", "3550BH", "3740BH", "3950BH"],
+        // RVUSA 2021 Solitude S-Class spec-by-model (m11705-y2021): 2930RL | 3540GK | 3550BH | 3740BH | 3950BH
+        // No leftover 3800FL; no 3330RE / 3460FL (MY22 / MY23).
+        "2021": ["2930RL", "3540GK", "3550BH", "3740BH", "3950BH"],
+        // RVUSA 2022 Solitude S-Class spec-by-model (m11705-y2022): 2930RL | 3330RE | 3540GK | 3550BH | 3740BH | 3950BH
+        // No leftover 3800FL; no 3460FL (MY23).
+        "2022": ["2930RL", "3330RE", "3540GK", "3550BH", "3740BH", "3950BH"],
         // RVUSA 2023 Solitude S-Class spec-by-model (m11705-y2023): 2930RL | 3460FL | 3740BH | 3950BH
         // Drops leftover 3800FL. yearEnd 2023 — no 2024–26 card.
         "2023": ["2930RL", "3460FL", "3740BH", "3950BH"]
@@ -18071,7 +18084,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Reflection: {
       type: "Fifth Wheel",
-      floorplans: ["28BH", "303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "341RDS", "360FLS", "362TBS", "367BHS", "370FLS"],
+      floorplans: ["28BH", "29RS", "303RLS", "311BHS", "31MB", "320MKS", "324MBS", "337RLS", "340RDS", "341RDS", "360FLS", "362TBS", "367BHS", "370FLS"],
       floorplansByYear: {
         "2013": ["28BH", "303RLS", "337RLS"],
         "2014": ["28BH", "303RLS", "337RLS"],
@@ -18080,9 +18093,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2017": ["28BH", "303RLS", "337RLS"],
         "2018": ["28BH", "303RLS", "337RLS", "320MKS"],
         "2019": ["28BH", "303RLS", "337RLS", "320MKS"],
-        "2020": ["28BH", "303RLS", "337RLS", "320MKS", "367BHS"],
-        "2021": ["28BH", "303RLS", "337RLS", "320MKS", "367BHS"],
-        "2022": ["303RLS", "337RLS", "320MKS", "367BHS"],
+        // RVUSA 2020 Reflection spec-by-model (m4966-y2020) FW rows only:
+        // 28BH | 29RS | 303RLS | 311BHS | 31MB | 320MKS | 337RLS | 367BHS
+        // TT *TS stay off this key (Reflection Travel Trailer yearStart 2024). No 340RDS (MY21); no 341RDS (MY22).
+        "2020": ["28BH", "29RS", "303RLS", "311BHS", "31MB", "320MKS", "337RLS", "367BHS"],
+        // RVUSA 2021 Reflection spec-by-model (m4966-y2021) FW rows only:
+        // 28BH | 303RLS | 311BHS | 31MB | 320MKS | 337RLS | 340RDS | 367BHS
+        // Drops 29RS. No 341RDS (MY22); no 324MBS / 370FLS (MY23); no 362TBS (MY24).
+        "2021": ["28BH", "303RLS", "311BHS", "31MB", "320MKS", "337RLS", "340RDS", "367BHS"],
+        // RVUSA 2022 Reflection spec-by-model (m4966-y2022) FW rows only:
+        // 28BH | 303RLS | 311BHS | 31MB | 320MKS | 337RLS | 341RDS | 367BHS
+        // 341RDS replaces 340RDS. TT *TS stay off. No 324MBS / 370FLS (MY23).
+        "2022": ["28BH", "303RLS", "311BHS", "31MB", "320MKS", "337RLS", "341RDS", "367BHS"],
         // RVUSA 2023 Reflection spec-by-model (m4966-y2023) FW rows only:
         // 303RLS | 311BHS | 320MKS | 324MBS | 337RLS | 341RDS | 367BHS | 370FLS
         // TT *TS stay on Reflection Travel Trailer. No 362TBS (MY24); no 360FLS (MY25).
@@ -18187,13 +18209,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Reflection 150 Series": {
       type: "Fifth Wheel",
-      floorplans: ["150 Series 220RK", "150 Series 260RD", "150 Series 295RL", "226RK", "250ML", "260RD", "270BN", "278BH", "280RL", "280RS", "295RL", "298BH"],
+      floorplans: ["150 Series 220RK", "150 Series 260RD", "150 Series 295RL", "226RK", "240RL", "250ML", "260RD", "268BH", "270BN", "278BH", "280RL", "280RS", "290BH", "295RL", "298BH"],
       floorplansByYear: {
         "2018": ["150 Series 220RK", "150 Series 260RD"],
         "2019": ["150 Series 220RK", "150 Series 260RD", "150 Series 295RL"],
-        "2020": ["150 Series 220RK", "150 Series 260RD", "150 Series 295RL"],
-        "2021": ["150 Series 220RK", "150 Series 260RD", "150 Series 295RL"],
-        "2022": ["150 Series 260RD", "150 Series 295RL"],
+        // RVUSA 2020 Reflection 150 spec-by-model (m6654-y2020): 240RL | 260RD | 268BH | 290BH | 295RL
+        // Drop leftover "150 Series …" prefixes on the locked year. No 278BH / 280RS (MY21); no 226RK (MY22).
+        "2020": ["240RL", "260RD", "268BH", "290BH", "295RL"],
+        // RVUSA 2021 Reflection 150 spec-by-model (m6654-y2021; 5 plans): 260RD | 268BH | 278BH | 280RS | 295RL
+        // Drops 240RL / 290BH. No 226RK (MY22); no leftover prefixes; no 250ML / 280RL (MY26).
+        "2021": ["260RD", "268BH", "278BH", "280RS", "295RL"],
+        // RVUSA 2022 Reflection 150 spec-by-model (m6654-y2022): 226RK | 260RD | 268BH | 278BH | 280RS | 295RL
+        // No leftover prefixes; no 270BN / 298BH (MY23); no 250ML / 280RL (MY26).
+        "2022": ["226RK", "260RD", "268BH", "278BH", "280RS", "295RL"],
         // RVUSA 2023 Reflection 150 spec-by-model (m6654-y2023): 226RK | 260RD | 270BN | 278BH | 280RS | 295RL | 298BH
         // Drop leftover "150 Series …" prefixes on the locked year. No 250ML / 280RL (MY26).
         "2023": ["226RK", "260RD", "270BN", "278BH", "280RS", "295RL", "298BH"],
@@ -18229,15 +18257,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Imagine: {
       type: "Travel Trailer",
-      floorplans: ["2150RB", "2300MK", "2400BH", "2470BH", "2500RL", "2600RB", "2660BS", "2670MK", "2700BS", "2800BH", "2810BH", "2910BH", "2920BS", "2970RL", "3100RD", "3210BH"],
+      floorplans: ["2150RB", "2250RK", "2300MK", "2400BH", "2450RL", "2470BH", "2500RL", "2600RB", "2660BS", "2670MK", "2700BS", "2800BH", "2810BH", "2910BH", "2920BS", "2970RL", "3000QB", "3100RD", "3210BH", "3250BH"],
       floorplansByYear: {
         "2016": ["2150RB", "2500RL", "2800BH"],
         "2017": ["2150RB", "2500RL", "2800BH"],
         "2018": ["2150RB", "2500RL", "2800BH", "2970RL"],
         "2019": ["2150RB", "2500RL", "2800BH", "2970RL"],
-        "2020": ["2150RB", "2500RL", "2800BH", "2970RL", "3100RD"],
-        "2021": ["2150RB", "2500RL", "2800BH", "2970RL", "3100RD"],
-        "2022": ["2500RL", "2800BH", "2970RL", "3100RD"],
+        // RVUSA 2020 Imagine spec-by-model (m5537-y2020): 2250RK | 2400BH | 2450RL | 2500RL | 2600RB | 2670MK | 2800BH | 2970RL | 3000QB | 3100RD | 3250BH
+        // Drop leftover 2150RB. No 2910BH (MY21); no 2660BS / 2920BS (MY24); no 2300MK / 3210BH (MY23/25).
+        "2020": ["2250RK", "2400BH", "2450RL", "2500RL", "2600RB", "2670MK", "2800BH", "2970RL", "3000QB", "3100RD", "3250BH"],
+        // RVUSA 2021 Imagine spec-by-model (m5537-y2021): 2400BH | 2500RL | 2600RB | 2670MK | 2800BH | 2910BH | 2970RL | 3100RD | 3250BH
+        // Drops 2250RK / 2450RL / 3000QB. No leftover 2150RB; no 3210BH (MY23).
+        "2021": ["2400BH", "2500RL", "2600RB", "2670MK", "2800BH", "2910BH", "2970RL", "3100RD", "3250BH"],
+        // RVUSA 2022 Imagine spec-by-model (m5537-y2022): 2400BH | 2500RL | 2600RB | 2670MK | 2800BH | 2910BH | 2970RL | 3100RD | 3250BH
+        // Same 9 as MY21. No 3210BH (MY23); no 2660BS / 2920BS (MY24).
+        "2022": ["2400BH", "2500RL", "2600RB", "2670MK", "2800BH", "2910BH", "2970RL", "3100RD", "3250BH"],
         // RVUSA 2023 Imagine spec-by-model (m5537-y2023): 2400BH | 2500RL | 2600RB | 2670MK | 2800BH | 2910BH | 2970RL | 3100RD | 3210BH
         // No 2660BS / 2920BS (MY24 NEW); no 2300MK / 2470BH (MY25); no 2700BS / 2810BH (MY26).
         "2023": ["2400BH", "2500RL", "2600RB", "2670MK", "2800BH", "2910BH", "2970RL", "3100RD", "3210BH"],
@@ -18273,12 +18307,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Imagine XLS": {
       type: "Travel Trailer",
-      floorplans: ["17MKE", "21BHE", "21MBE", "22BHE", "22MLE", "22RBE", "23BHE", "23LDE", "24BSE", "25BHE", "25DBE", "25RLE"],
+      floorplans: ["17MKE", "19BWE", "21BHE", "21MBE", "22BHE", "22MLE", "22RBE", "23BHE", "23LDE", "24BSE", "24MPR", "25BHE", "25DBE", "25RLE"],
       floorplansByYear: {
         "2019": ["17MKE", "21BHE", "22RBE", "23LDE"],
-        "2020": ["17MKE", "21BHE", "22RBE", "23LDE"],
-        "2021": ["17MKE", "21BHE", "22RBE", "23LDE"],
-        "2022": ["17MKE", "21BHE", "22RBE"],
+        // RVUSA 2020 Imagine XLS spec-by-model (m6604-y2020): 17MKE | 19BWE | 21BHE | 22MLE | 22RBE | 23BHE | 24MPR
+        // No leftover-only 23LDE on this card; no 22BHE / 24BSE (MY24); no 21MBE / 25RLE (MY26).
+        "2020": ["17MKE", "19BWE", "21BHE", "22MLE", "22RBE", "23BHE", "24MPR"],
+        // RVUSA 2021 Imagine XLS spec-by-model (m6604-y2021): 17MKE | 21BHE | 22MLE | 22RBE | 23BHE
+        // Drops 19BWE / 24MPR. No 23LDE / 25BHE (MY22–23); no 22BHE / 24BSE (MY24).
+        "2021": ["17MKE", "21BHE", "22MLE", "22RBE", "23BHE"],
+        // RVUSA 2022 Imagine XLS spec-by-model (m6604-y2022): 17MKE | 21BHE | 22MLE | 22RBE | 23BHE | 23LDE
+        // 23LDE returns. No 25BHE (MY23); no 22BHE / 24BSE / 25DBE (MY24).
+        "2022": ["17MKE", "21BHE", "22MLE", "22RBE", "23BHE", "23LDE"],
         // RVUSA 2023 Imagine XLS spec-by-model (m6604-y2023; 7 plans): 17MKE | 21BHE | 22MLE | 22RBE | 23BHE | 23LDE | 25BHE
         // No 22BHE / 24BSE / 25DBE (MY24); no 21MBE / 25RLE (MY26); no 24SDE invent.
         "2023": ["17MKE", "21BHE", "22MLE", "22RBE", "23BHE", "23LDE", "25BHE"],
@@ -18350,12 +18390,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Transcend: {
       type: "Travel Trailer",
-      floorplans: ["207RB", "245RL", "245RLT", "265BH", "265BHT", "285RKT", "295QBT", "297QB", "27BHB", "28MKS", "305BHT", "315RKT", "325BHT", "335BHT", "335DQT"],
+      floorplans: ["207RB", "245RL", "245RLT", "265BH", "265BHT", "27BHS", "285RKT", "28MKS", "295QBT", "297QB", "29TBS", "27BHB", "30RBS", "305BHT", "315RKT", "31RLK", "325BHT", "32BHS", "335BHT", "335DQT"],
       floorplansByYear: {
         "2018": ["207RB", "245RL", "265BH"],
         "2019": ["207RB", "245RL", "265BH"],
-        "2020": ["207RB", "245RL", "265BH", "297QB"],
-        "2021": ["207RB", "245RL", "265BH", "297QB"],
+        // RVUSA 2020 Transcend spec-by-model (m6522-y2020): 27BHS | 28MKS | 29TBS | 30RBS | 31RLK | 32BHS
+        // Replaces leftover 207RB / 245RL / 265BH / 297QB (those numeric codes live on Xplor). Mid-gap 2022–2024 stays omitted.
+        "2020": ["27BHS", "28MKS", "29TBS", "30RBS", "31RLK", "32BHS"],
+        // RVUSA 2021 Transcend spec-by-model (m6522-y2021): 30RBS | 31RLK | 32BHS
+        // Drops 27BHS / 28MKS / 29TBS. No leftover Xplor 245RL / 265BH / 297QB. Omit 2022–2024.
+        "2021": ["30RBS", "31RLK", "32BHS"],
         // Mid-gap 2022–2024: premium T-suffix line starts MY2025. 2024 brochure is the Xplor card (cover prints TRANSCEND XPLOR). Do not invent leftover 245RL/265BH/297QB onto those years.
         // OEM 2025-Grand-Design-Transcend premium page (285RKT / 325BHT / 335DQT printed, some specs coming soon)
         "2025": ["245RLT", "265BHT", "285RKT", "295QBT", "305BHT", "315RKT", "325BHT", "335BHT", "335DQT"],
@@ -18417,8 +18461,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Transcend Xplor": {
       type: "Travel Trailer",
-      floorplans: ["19BHX", "20MKX", "200MK", "21RLX", "22RBX", "221RB", "23BHX", "235BH", "24BHX", "240ML", "245RL", "247BH", "25MLX", "251BH", "26BHX", "26RBX", "260RB", "261BH", "265BH", "27DBX", "297QB", "315BH", "321BH", "331BH"],
+      floorplans: ["187MK", "19BHX", "20MKX", "200MK", "21RLX", "22RBX", "221RB", "231RK", "23BHX", "235BH", "24BHX", "240ML", "245RL", "247BH", "25MLX", "251BH", "26BHX", "26RBX", "260RB", "261BH", "265BH", "27DBX", "297QB", "315BH", "321BH", "331BH"],
       floorplansByYear: {
+        // RVUSA 2020 Transcend Xplor spec-by-model (m6849-y2020): 187MK | 221RB | 245RL | 247BH | 260RB | 261BH | 265BH
+        // Do not copy MY25–26 *X suffixes back. No 200MK / 240ML (MY21); no 231RK / 251BH / 297QB / 321BH (MY22).
+        "2020": ["187MK", "221RB", "245RL", "247BH", "260RB", "261BH", "265BH"],
+        // RVUSA 2021 Transcend Xplor spec-by-model (m6849-y2021): 200MK | 221RB | 240ML | 245RL | 247BH | 260RB | 261BH | 265BH
+        // 200MK / 240ML replace 187MK. No 231RK / 251BH / 297QB / 321BH (MY22); no *X.
+        "2021": ["200MK", "221RB", "240ML", "245RL", "247BH", "260RB", "261BH", "265BH"],
+        // RVUSA 2022 Transcend Xplor spec-by-model (m6849-y2022): 200MK | 221RB | 231RK | 240ML | 245RL | 247BH | 251BH | 260RB | 261BH | 265BH | 297QB | 321BH
+        // No 235BH / 315BH / 331BH (MY24); omit 2023 (no complete family extract this slice); no MY25 *X.
+        "2022": ["200MK", "221RB", "231RK", "240ML", "245RL", "247BH", "251BH", "260RB", "261BH", "265BH", "297QB", "321BH"],
         // OEM 2024-Grand-Design-Transcend (cover: TRANSCEND XPLOR): 200MK | 221RB | 235BH | 240ML | 245RL | 247BH | 251BH | 260RB | 261BH | 265BH | 297QB | 315BH | 321BH | 331BH
         // RVUSA 2024 Transcend Xplor spec guide matches (297QB not 2970B). Do not invent 20MKX / 245RLT onto 2024.
         "2024": ["200MK", "221RB", "235BH", "240ML", "245RL", "247BH", "251BH", "260RB", "261BH", "265BH", "297QB", "315BH", "321BH", "331BH"],
@@ -18447,7 +18500,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2012,
       warrantyYears: 2,
       yearStart: 2020,
-      description: "Grand Design Transcend Xplor — mid Transcend. RVUSA from 2020; omit 2020–2023 fby — first locked OEM card is MY2024 (200MK–331BH numeric codes). MY25 switches to *X suffixes — do not copy those back."
+      description: "Grand Design Transcend Xplor — mid Transcend. RVUSA from 2020; lock 2020–2022 numeric cards; omit 2023 fby. First later locked OEM card is MY2024 (200MK–331BH). MY25 switches to *X suffixes — do not copy those back."
     },
     Momentum: {
       type: "Toy Hauler",
@@ -18459,9 +18512,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2017": ["349M", "376TH", "395M"],
         "2018": ["349M", "376TH", "395M", "397TH"],
         "2019": ["349M", "376TH", "395M", "397TH"],
-        "2020": ["349M", "376TH", "395M", "397TH"],
-        "2021": ["349M", "376TH", "395M", "397TH"],
-        "2022": ["376TH", "395M", "397TH"],
+        // RVUSA 2020 Momentum flagship spec-by-model (m4965-y2020): 376THS | 397TH | 399TH
+        // 349M / 351M / 381M / 395M / 398M print on the 2020 M-Class card — not here. No 397THS (MY21); no 410TH (MY23).
+        "2020": ["376THS", "397TH", "399TH"],
+        // RVUSA 2021 Momentum flagship spec-by-model (m4965-y2021): 376THS | 397THS | 399TH
+        // 397THS replaces 397TH. M-Class 349M / 351MS / 395MS stay off flagship. No 410TH (MY23).
+        "2021": ["376THS", "397THS", "399TH"],
+        // RVUSA 2022 Momentum flagship spec-by-model (m4965-y2022): 376THS | 397THS | 399TH
+        // Same three as MY21. No leftover 376TH / 395M; no 410TH (MY23).
+        "2022": ["376THS", "397THS", "399TH"],
         // RVUSA 2023 Momentum flagship spec-by-model (m4965-y2023): 376THS | 397THS | 399TH | 410TH
         // 395M / 336M / 351MS print on the 2023 M-Class card — not here. No 395MS/414M (MY24 M-Class).
         "2023": ["376THS", "397THS", "399TH", "410TH"],
@@ -18503,16 +18562,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Momentum M-Class": {
       type: "Toy Hauler",
-      floorplans: ["328M", "336M", "344M", "349M", "351MS", "381M", "381MS", "392M", "395M", "395MS", "398M", "414M"],
+      floorplans: ["328M", "336M", "344M", "349M", "351M", "351MS", "381M", "381MS", "392M", "395M", "395MS", "398M", "414M"],
       floorplansByYear: {
         "2015": ["328M", "349M", "381M"],
         "2016": ["328M", "349M", "381M"],
         "2017": ["328M", "349M", "381M"],
         "2018": ["328M", "349M", "381M"],
         "2019": ["328M", "349M", "381M", "395M"],
-        "2020": ["328M", "349M", "381M", "395M"],
-        "2021": ["328M", "349M", "381M", "395M"],
-        "2022": ["349M", "381M", "395M"],
+        // RVUSA 2020 Momentum M-Class spec-by-model (m10874-y2020): 349M | 351M | 381M | 395M | 398M
+        // Drop leftover 328M. No 351MS / 381MS / 395MS (MY21); no 336M (MY23); no 414M (MY24).
+        "2020": ["349M", "351M", "381M", "395M", "398M"],
+        // RVUSA 2021 Momentum M-Class spec-by-model (m10874-y2021): 349M | 351MS | 381MS | 395MS | 398M
+        // MS suffixes replace 351M / 381M / 395M. No leftover 328M; no 336M (MY23); no 414M (MY24).
+        "2021": ["349M", "351MS", "381MS", "395MS", "398M"],
+        // RVUSA 2022 Momentum M-Class spec-by-model (m10874-y2022): 349M | 351MS | 381MS | 395MS | 398M
+        // Same five as MY21. No 336M (MY23); no 414M (MY24); no flagship 376THS.
+        "2022": ["349M", "351MS", "381MS", "395MS", "398M"],
         // RVUSA 2023 Momentum M-Class spec-by-model (m10874-y2023): 336M | 349M | 351MS | 381MS | 395MS | 398M
         // No 414M (MY24 NEW); no 344M / 392M (MY25). Do not collapse into flagship.
         "2023": ["336M", "349M", "351MS", "381MS", "395MS", "398M"],
@@ -18556,9 +18621,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         "2018": ["21G", "25G", "29G"],
         "2019": ["21G", "25G", "29G"],
-        "2020": ["21G", "25G", "29G"],
-        "2021": ["21G", "25G", "29G"],
-        "2022": ["21G", "25G", "29G"],
+        // RVUSA 2020 Momentum G-Class spec-by-model (m6791-y2020) TT rows only:
+        // 21G | 25G | 28G | 29G. FW 320G / 328G / 350G / 353G / 393G stay on G-Class Fifth Wheel (first locked FW card MY2024).
+        // Omit ambiguous 29G0/29GO twin. No 23G / 30G / 31G (MY21); no 32G (MY23); no 27G / 29GS (MY25).
+        "2020": ["21G", "25G", "28G", "29G"],
+        // RVUSA 2021 Momentum G-Class spec-by-model (m6791-y2021) TT rows only:
+        // 21G | 23G | 25G | 28G | 29G | 30G | 31G. FW 320G / 350G stay off TT.
+        "2021": ["21G", "23G", "25G", "28G", "29G", "30G", "31G"],
+        // RVUSA 2022 Momentum G-Class spec-by-model (m6791-y2022) TT rows only:
+        // 21G | 23G | 25G | 28G | 29G | 30G | 31G. Same TT seven as MY21. No 32G (MY23); no FW 320G / 350G.
+        "2022": ["21G", "23G", "25G", "28G", "29G", "30G", "31G"],
         // RVUSA 2023 Momentum G-Class spec-by-model (m6791-y2023) TT rows only:
         // 21G | 23G | 25G | 28G | 29G | 30G | 31G | 32G
         // FW 315G / 320G / 350G stay on G-Class Fifth Wheel. No 27G / 29GS (MY25).
@@ -18602,7 +18674,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Toy Hauler",
       floorplans: ["320G", "325G", "350G", "355G", "394G", "415G"],
       floorplansByYear: {
-        // yearStart 2019 — omit 2023 fby (tight slice; FW codes on the mixed 2023 G-Class card stay off TT).
+        // yearStart 2019 — omit 2020–2023 fby (tight slice; FW codes on mixed G-Class cards stay off TT).
         // First locked G-Class FW card is MY2024.
         // OEM 2024-Grand-Design-Momentum G-Class FW page: 320G | 325G | 350G | 355G | 415G (415G NEW)
         // 355G is 2024-only on this card. No 394G (MY26).
