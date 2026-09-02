@@ -17968,7 +17968,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2021": ["310GK", "375RES", "377MBS", "380FL", "390RK"],
         "2022": ["310GK", "375RES", "380FL", "390RK"],
         "2023": ["310GK", "375RES", "380FL", "390RK"],
-        "2024": ["375RES", "380FL", "390RK"],
+        // OEM 2024-Grand-Design-Solitude (library.rvusa.com, REV on card): 310GK | 370DV | 376RD | 378MBS | 380FL | 382WB | 390RK | 391DL | 417KB
+        // RVUSA 2024 Solitude cards match. No 375RES leftover; no 388MBS (MY25); no 414LJMJ (MY26).
+        "2024": ["310GK", "370DV", "376RD", "378MBS", "380FL", "382WB", "390RK", "391DL", "417KB"],
         // OEM 2025-Grand-Design-Solitude: 310GK | 370DV | 376RD | 380FL | 382WB | 388MBS | 390RK | 391DL | 417KB
         "2025": ["310GK", "370DV", "376RD", "380FL", "382WB", "388MBS", "390RK", "391DL", "417KB"],
         // OEM Solitude Brochure (2026 MODEL YEAR, REV 12.4.25): adds 414LJMJ
@@ -18033,6 +18035,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Fifth Wheel",
       floorplans: ["2903RL", "3003RL", "3203GK", "3503GK", "3704BH", "3804DS", "3904BH"],
       floorplansByYear: {
+        // OEM 2024-Grand-Design-Influence (library.rvusa.com, REV 12.5.23): 2903RL | 3503GK | 3704BH — all NEW
+        // RVUSA 2024 Influence spec guide: same three. No 3203GK / 3804DS (MY25); no 3003RL / 3904BH (MY26); no 3803GK invent.
+        "2024": ["2903RL", "3503GK", "3704BH"],
         // OEM 2025-Grand-Design-Influence (REV 11.18.24): 2903RL | 3203GK | 3503GK | 3704BH | 3804DS
         "2025": ["2903RL", "3203GK", "3503GK", "3704BH", "3804DS"],
         // OEM Influence Brochure (2026 MODEL YEAR, REV 11.25.25): drops 3704BH, adds 3003RL + 3904BH
@@ -18058,7 +18063,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2012,
       warrantyYears: 2,
       yearStart: 2024,
-      description: "Grand Design Influence — mid-luxury fifth wheel under Solitude. First locked OEM card is MY2025; RVUSA window starts 2024 (no 2024 invent in this slice)."
+      description: "Grand Design Influence — mid-luxury fifth wheel under Solitude. First OEM/RVUSA card is MY2024 (2903RL / 3503GK / 3704BH). Do not stamp MY25 3203GK/3804DS or MY26 3003RL/3904BH onto 2024."
     },
     Reflection: {
       type: "Fifth Wheel",
@@ -18075,7 +18080,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2021": ["28BH", "303RLS", "337RLS", "320MKS", "367BHS"],
         "2022": ["303RLS", "337RLS", "320MKS", "367BHS"],
         "2023": ["303RLS", "337RLS", "320MKS", "367BHS"],
-        "2024": ["303RLS", "337RLS", "367BHS"],
+        // OEM 2024-Grand-Design-Reflection FW page: 303RLS | 311BHS | 320MKS | 324MBS | 337RLS | 362TBS | 367BHS
+        // 362TBS NEW on the 2024 card. No 360FLS (MY25); no TT *TS codes.
+        "2024": ["303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "362TBS", "367BHS"],
         // OEM 2025-Grand-Design-Reflection FW page: 303RLS | 311BHS | 320MKS | 324MBS | 337RLS | 360FLS | 362TBS | 367BHS
         "2025": ["303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "360FLS", "362TBS", "367BHS"],
         // OEM Reflection Brochure (2026 MODEL YEAR, REV 2.24.26) — same FW codes. TT codes live on Reflection Travel Trailer.
@@ -18107,6 +18114,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Travel Trailer",
       floorplans: ["296RDTS", "297RSTS", "310MKTS", "312BHTS", "315RLTS", "317RSTS", "322FKTS", "342BHTS", "345RLTS"],
       floorplansByYear: {
+        // OEM 2024-Grand-Design-Reflection TRAVEL TRAILERS page: 296RDTS | 297RSTS | 310MKTS | 312BHTS | 315RLTS
+        // OEM proves TT before MY2025 — do not keep yearStart 2025. No 322FKTS / 345RLTS (MY25); no 317RSTS / 342BHTS (MY26).
+        "2024": ["296RDTS", "297RSTS", "310MKTS", "312BHTS", "315RLTS"],
         // OEM 2025-Grand-Design-Reflection TT page
         "2025": ["296RDTS", "297RSTS", "310MKTS", "312BHTS", "315RLTS", "322FKTS", "345RLTS"],
         // OEM Reflection Brochure (2026 MODEL YEAR): 317RSTS | 322FKTS | 342BHTS | 345RLTS
@@ -18131,13 +18141,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 2012,
       warrantyYears: 2,
-      yearStart: 2025,
-      description: "Grand Design Reflection travel trailer — fifth-wheel content in a bumper-pull. Do not collapse into Reflection FW."
+      yearStart: 2024,
+      description: "Grand Design Reflection travel trailer — fifth-wheel content in a bumper-pull. OEM 2024 Reflection brochure prints the TT page — yearStart 2024. Do not collapse into Reflection FW."
     },
     "Reflection 100 Series": {
       type: "Fifth Wheel",
       floorplans: ["22RK", "24RL", "27BH", "28RL", "29RL", "32BH"],
       floorplansByYear: {
+        // OEM 2024-Grand-Design-Reflection 100 Series page: 22RK | 27BH | 28RL (all NEW)
+        // RVUSA 2024 Reflection 100 spec guide: same three. No 24RL (MY25); no 29RL / 32BH (MY26).
+        "2024": ["22RK", "27BH", "28RL"],
         // OEM 2025-Grand-Design-Reflection 100-series rows
         "2025": ["22RK", "24RL", "27BH", "28RL"],
         // OEM Reflection Brochure (2026 MODEL YEAR): 22RK | 24RL | 27BH | 29RL | 32BH
@@ -18163,7 +18176,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2012,
       warrantyYears: 2,
       yearStart: 2024,
-      description: "Grand Design Reflection 100 Series — lighter / simpler Reflection fifth wheel. RVUSA from 2024; first locked OEM card is MY2025."
+      description: "Grand Design Reflection 100 Series — lighter / simpler Reflection fifth wheel. First OEM/RVUSA card is MY2024 (22RK / 27BH / 28RL). Do not stamp MY25 24RL onto 2024."
     },
     "Reflection 150 Series": {
       type: "Fifth Wheel",
@@ -18175,7 +18188,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2021": ["150 Series 220RK", "150 Series 260RD", "150 Series 295RL"],
         "2022": ["150 Series 260RD", "150 Series 295RL"],
         "2023": ["150 Series 260RD", "150 Series 295RL"],
-        "2024": ["150 Series 260RD", "150 Series 295RL"],
+        // OEM 2024-Grand-Design-Reflection 150 Series page: 260RD | 270BN | 295RL | 298BH
+        // Same codes as MY25 — lock year-true, drop leftover "150 Series …" prefixes.
+        "2024": ["260RD", "270BN", "295RL", "298BH"],
         // OEM 2025-Grand-Design-Reflection 150-series rows
         "2025": ["260RD", "270BN", "295RL", "298BH"],
         // OEM Reflection Brochure (2026 MODEL YEAR): 250ML | 260RD | 270BN | 280RL | 298BH
@@ -18205,7 +18220,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Imagine: {
       type: "Travel Trailer",
-      floorplans: ["2150RB", "2300MK", "2470BH", "2500RL", "2600RB", "2670MK", "2700BS", "2800BH", "2810BH", "2920BS", "2970RL", "3100RD", "3210BH"],
+      floorplans: ["2150RB", "2300MK", "2470BH", "2500RL", "2600RB", "2660BS", "2670MK", "2700BS", "2800BH", "2810BH", "2920BS", "2970RL", "3100RD", "3210BH"],
       floorplansByYear: {
         "2016": ["2150RB", "2500RL", "2800BH"],
         "2017": ["2150RB", "2500RL", "2800BH"],
@@ -18215,7 +18230,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2021": ["2150RB", "2500RL", "2800BH", "2970RL", "3100RD"],
         "2022": ["2500RL", "2800BH", "2970RL", "3100RD"],
         "2023": ["2500RL", "2800BH", "2970RL", "3100RD"],
-        "2024": ["2500RL", "2800BH", "2970RL"],
+        // OEM 2024-Grand-Design-Imagine (REV 2.20.24) spec table: 2500RL | 2600RB | 2660BS | 2670MK | 2800BH | 2920BS | 2970RL | 3100RD | 3210BH
+        // 2660BS / 2920BS NEW. No 2300MK / 2470BH (MY25); no 2700BS / 2810BH (MY26).
+        "2024": ["2500RL", "2600RB", "2660BS", "2670MK", "2800BH", "2920BS", "2970RL", "3100RD", "3210BH"],
         // OEM 2025-Grand-Design-Imagine
         "2025": ["2300MK", "2470BH", "2500RL", "2600RB", "2670MK", "2800BH", "2920BS", "2970RL", "3100RD", "3210BH"],
         // OEM Imagine Brochure (2026 MODEL YEAR, REV 02.18.26): adds 2700BS + 2810BH, drops 2920BS
@@ -18252,7 +18269,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2021": ["17MKE", "21BHE", "22RBE", "23LDE"],
         "2022": ["17MKE", "21BHE", "22RBE"],
         "2023": ["17MKE", "21BHE", "22RBE"],
-        "2024": ["17MKE", "21BHE", "22RBE"],
+        // OEM 2024-Grand-Design-Imagine XLS page: 17MKE | 21BHE | 22BHE | 22MLE | 22RBE | 23LDE | 24BSE | 25DBE
+        // RVUSA 2024 Imagine XLS spec guide matches. 22BHE / 24BSE / 25DBE NEW. No 24SDE invent. No MY26 21MBE / 25RLE.
+        "2024": ["17MKE", "21BHE", "22BHE", "22MLE", "22RBE", "23LDE", "24BSE", "25DBE"],
         // OEM 2025-Grand-Design-Imagine XLS page
         "2025": ["17MKE", "21BHE", "22BHE", "22MLE", "22RBE", "23LDE", "24BSE", "25DBE"],
         // OEM Imagine Brochure (2026 MODEL YEAR): 17MKE | 21MBE | 22BHE | 22MLE | 22RBE | 23LDE | 25DBE | 25RLE
@@ -18282,8 +18301,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Imagine AIM": {
       type: "Travel Trailer",
-      floorplans: ["14MS", "15RB", "15RBA", "16BL", "16ML", "16MLA", "19MLA", "20BHA"],
+      floorplans: ["14MS", "15BH", "15RB", "15RBA", "16BL", "16ML", "16MLA", "18BH", "19MLA", "20BHA"],
       floorplansByYear: {
+        // OEM 2024-Grand-Design-Imagine AIM page: 14MS | 15BH | 15RB | 16BL | 16ML | 18BH
+        // RVUSA 2024 Imagine AIM spec guide matches. 16BL / 18BH NEW. No MY25-only drop of 15BH/18BH onto later years.
+        "2024": ["14MS", "15BH", "15RB", "16BL", "16ML", "18BH"],
         // OEM 2025-Grand-Design-Imagine AIM page
         "2025": ["14MS", "15RB", "16BL", "16ML"],
         // OEM Imagine Brochure (2026 MODEL YEAR): 15RBA | 16MLA | 19MLA | 20BHA
@@ -18309,7 +18331,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2012,
       warrantyYears: 2,
       yearStart: 2023,
-      description: "Grand Design Imagine AIM — single-axle Imagine entry (Adventure in Motion). RVUSA from 2023; first locked OEM card is MY2025."
+      description: "Grand Design Imagine AIM — single-axle Imagine entry (Adventure in Motion). RVUSA from 2023; first locked OEM card is MY2024 (14MS / 15BH / 15RB / 16BL / 16ML / 18BH)."
     },
     Transcend: {
       type: "Travel Trailer",
@@ -18319,9 +18341,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2019": ["207RB", "245RL", "265BH"],
         "2020": ["207RB", "245RL", "265BH", "297QB"],
         "2021": ["207RB", "245RL", "265BH", "297QB"],
-        "2022": ["245RL", "265BH", "297QB"],
-        "2023": ["245RL", "265BH", "297QB"],
-        "2024": ["245RL", "265BH", "297QB"],
+        // Mid-gap 2022–2024: premium T-suffix line starts MY2025. 2024 brochure is the Xplor card (cover prints TRANSCEND XPLOR). Do not invent leftover 245RL/265BH/297QB onto those years.
         // OEM 2025-Grand-Design-Transcend premium page (285RKT / 325BHT / 335DQT printed, some specs coming soon)
         "2025": ["245RLT", "265BHT", "285RKT", "295QBT", "305BHT", "315RKT", "325BHT", "335BHT", "335DQT"],
         // OEM Transcend Brochure (2026 MODEL YEAR, REV 2.24.26) — no 335DQT
@@ -18382,8 +18402,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Transcend Xplor": {
       type: "Travel Trailer",
-      floorplans: ["19BHX", "20MKX", "21RLX", "22RBX", "23BHX", "24BHX", "25MLX", "26BHX", "26RBX", "27DBX"],
+      floorplans: ["19BHX", "20MKX", "200MK", "21RLX", "22RBX", "221RB", "23BHX", "235BH", "24BHX", "240ML", "245RL", "247BH", "25MLX", "251BH", "26BHX", "26RBX", "260RB", "261BH", "265BH", "27DBX", "297QB", "315BH", "321BH", "331BH"],
       floorplansByYear: {
+        // OEM 2024-Grand-Design-Transcend (cover: TRANSCEND XPLOR): 200MK | 221RB | 235BH | 240ML | 245RL | 247BH | 251BH | 260RB | 261BH | 265BH | 297QB | 315BH | 321BH | 331BH
+        // RVUSA 2024 Transcend Xplor spec guide matches (297QB not 2970B). Do not invent 20MKX / 245RLT onto 2024.
+        "2024": ["200MK", "221RB", "235BH", "240ML", "245RL", "247BH", "251BH", "260RB", "261BH", "265BH", "297QB", "315BH", "321BH", "331BH"],
         // OEM 2025-Grand-Design-Transcend Xplor page
         "2025": ["20MKX", "22RBX", "23BHX", "24BHX", "25MLX", "26BHX", "26RBX", "27DBX"],
         // OEM Transcend Brochure (2026 MODEL YEAR): adds 19BHX + 21RLX
@@ -18409,11 +18432,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2012,
       warrantyYears: 2,
       yearStart: 2020,
-      description: "Grand Design Transcend Xplor — mid Transcend. RVUSA from 2020; first locked OEM card is MY2025."
+      description: "Grand Design Transcend Xplor — mid Transcend. RVUSA from 2020; first locked OEM card is MY2024 (200MK–331BH numeric codes). MY25 switches to *X suffixes — do not copy those back."
     },
     Momentum: {
       type: "Toy Hauler",
-      floorplans: ["349M", "376TH", "395M", "395MS", "395MT", "396DB", "397TH", "397THS", "399M", "410TH", "414M"],
+      floorplans: ["349M", "376TH", "395M", "395MS", "395MT", "396DB", "397TH", "397THS", "399M", "399TH", "410TH", "414M"],
       floorplansByYear: {
         "2014": ["349M", "376TH", "395M"],
         "2015": ["349M", "376TH", "395M"],
@@ -18425,7 +18448,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2021": ["349M", "376TH", "395M", "397TH"],
         "2022": ["376TH", "395M", "397TH"],
         "2023": ["376TH", "395M", "397TH"],
-        "2024": ["395M", "397TH"],
+        // OEM 2024-Grand-Design-Momentum TH / flagship page: 397THS | 399TH | 410TH
+        // RVUSA 2024 Momentum spec guide matches. 395MS / 414M print on the 2024 M-Class page — not here.
+        "2024": ["397THS", "399TH", "410TH"],
         // OEM 2025-Grand-Design-Momentum flagship FW (not M-Class 344M/351MS/381MS/392M)
         "2025": ["395MS", "397THS", "410TH", "414M"],
         // OEM Momentum Brochure (2026 MODEL YEAR, REV 2.24.26): 395MT | 396DB | 399M
@@ -18461,7 +18486,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Momentum M-Class": {
       type: "Toy Hauler",
-      floorplans: ["328M", "344M", "349M", "351MS", "381M", "381MS", "392M", "395M"],
+      floorplans: ["328M", "344M", "349M", "351MS", "381M", "381MS", "392M", "395M", "395MS", "398M", "414M"],
       floorplansByYear: {
         "2015": ["328M", "349M", "381M"],
         "2016": ["328M", "349M", "381M"],
@@ -18472,7 +18497,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2021": ["328M", "349M", "381M", "395M"],
         "2022": ["349M", "381M", "395M"],
         "2023": ["349M", "381M", "395M"],
-        "2024": ["349M", "381M", "395M"],
+        // OEM 2024-Grand-Design-Momentum M-Class page: 349M | 351MS | 381MS | 395MS | 398M | 414M (414M NEW)
+        // RVUSA 2024 M-Class spec guide matches. Do not collapse 395MS/414M into 2024 flagship.
+        "2024": ["349M", "351MS", "381MS", "395MS", "398M", "414M"],
         // OEM 2025-Grand-Design-Momentum M-Class FW + RVUSA 2026 344M as M-Class
         "2025": ["344M", "351MS", "381MS", "392M"],
         "2026": ["344M", "351MS", "381MS", "392M"]
@@ -18514,7 +18541,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2021": ["21G", "25G", "29G"],
         "2022": ["21G", "25G", "29G"],
         "2023": ["21G", "25G", "29G"],
-        "2024": ["25G", "29G"],
+        // OEM 2024-Grand-Design-Momentum G-Class TT page: 21G | 23G | 25G | 28G | 29G | 30G | 31G
+        // No 27G (MY25); 29G not 29GS (MY25 suffix). Do not absorb FW 320G+.
+        "2024": ["21G", "23G", "25G", "28G", "29G", "30G", "31G"],
         // OEM 2025-Grand-Design-Momentum G-Class towables
         "2025": ["21G", "23G", "25G", "27G", "28G", "29GS", "30G", "31G"],
         // OEM Momentum Brochure (2026 MODEL YEAR) G-Class TT — drops 23G / 28G / 30G
@@ -18549,8 +18578,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Momentum G-Class Fifth Wheel": {
       type: "Toy Hauler",
-      floorplans: ["320G", "325G", "350G", "394G", "415G"],
+      floorplans: ["320G", "325G", "350G", "355G", "394G", "415G"],
       floorplansByYear: {
+        // OEM 2024-Grand-Design-Momentum G-Class FW page: 320G | 325G | 350G | 355G | 415G (415G NEW)
+        // 355G is 2024-only on this card. No 394G (MY26).
+        "2024": ["320G", "325G", "350G", "355G", "415G"],
         // OEM 2025-Grand-Design-Momentum G-Class FW
         "2025": ["320G", "325G", "350G", "415G"],
         // OEM Momentum Brochure (2026 MODEL YEAR): 320G | 325G | 350G | 394G
@@ -18587,6 +18619,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Toy Hauler",
       floorplans: ["17MAV", "22MAV", "24MAV", "27MAV", "28MAV"],
       floorplansByYear: {
+        // OEM 2024-Grand-Design-Momentum MAV page: 22MAV | 27MAV. RVUSA window starts 2024.
+        // No 24MAV (MY25); no 17MAV / 28MAV (MY26).
         "2024": ["22MAV", "27MAV"],
         // OEM 2025-Grand-Design-Momentum MAV page
         "2025": ["22MAV", "24MAV", "27MAV"],
