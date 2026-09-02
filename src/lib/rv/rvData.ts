@@ -15423,6 +15423,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["29UM", "29UR", "29V", "31UL", "33U", "34B", "34G", "35S", "35UN", "35UP", "36A", "36C", "36T"],
       floorplansByYear: {
+        // 2010 Precept 10-PCPT-PL is a Dodge Sprinter Class C (24DSS, Mercedes 3.0 V6 CRD) — different generation. Do not merge onto this F53 Class A key. No MY11/MY12 Precept Class A brochure. yearStart 2014.
         // No 2013 Precept OEM brochure (3rock / jayco archive: Class A starts with 14-PRCT-PL). Do not invent 2013 or copy MY14/MY15 backward.
         // OEM 2014 Precept 14-PRCT-PL 0214-10K / 0713-40K: 29UM | 31UL · F53 18k GVWR · 6.8 Triton V10 362/457 · 5-speed · hitch 5k. Do not copy leftover 35S/36T or MY15 29UR/35UN/35UP backward.
         "2014": ["29UM", "31UL"],
@@ -15483,7 +15484,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 2,
       yearStart: 2014,
-      description: "Jayco Precept — gas Class A on Ford F53. No 2013 OEM brochure. OEM MY14: 29UM / 31UL, F53 18k GVWR, 6.8 Triton V10 362 / 457, 5-speed, hitch 5k. MY15: 29UM / 29UR / 31UL / 35UN / 35UP, F53 6.8 Triton V10 362 / 457, hitch 5k. MY16: 29UR / 31UL / 35S / 35UN / 35UP at 320 / 460. MY17: 31UL / 35S / 35UP / 36T at 320 / 460. MY18: 29V / 31UL / 33U / 35S / 36T at 320 / 460. MY19: 29V / 31UL / 33U / 34G / 36A (HP not printed). MY20: 29V / 31UL / 34B / 34G / 36A (HP not printed). MY21: 29V / 31UL / 34B / 34G / 36A, 7.3 350 / 468, hitch 5k. MY22: 31UL / 34B / 34G / 36A / 36C at 350 / 468. MY23–27: same plans as MY22 at 7.3 335 / 468. Do not copy 35S/36T onto 2014, 29UR onto 2014, 35S onto 2015, 29UM onto 2016, 35UP onto 2018, 34G onto 2018, or 335 onto 2014–22. Not Precept Prestige. Not diesel.",
+      description: "Jayco Precept — gas Class A on Ford F53. 2010 10-PCPT-PL is a Dodge Sprinter Class C (24DSS) — not this F53 line. No MY11–13 Class A Precept brochure. OEM MY14: 29UM / 31UL, F53 18k GVWR, 6.8 Triton V10 362 / 457, 5-speed, hitch 5k. MY15: 29UM / 29UR / 31UL / 35UN / 35UP, F53 6.8 Triton V10 362 / 457, hitch 5k. MY16: 29UR / 31UL / 35S / 35UN / 35UP at 320 / 460. MY17: 31UL / 35S / 35UP / 36T at 320 / 460. MY18: 29V / 31UL / 33U / 35S / 36T at 320 / 460. MY19: 29V / 31UL / 33U / 34G / 36A (HP not printed). MY20: 29V / 31UL / 34B / 34G / 36A (HP not printed). MY21: 29V / 31UL / 34B / 34G / 36A, 7.3 350 / 468, hitch 5k. MY22: 31UL / 34B / 34G / 36A / 36C at 350 / 468. MY23–27: same plans as MY22 at 7.3 335 / 468. Do not copy 35S/36T onto 2014, 29UR onto 2014, 35S onto 2015, 29UM onto 2016, 35UP onto 2018, 34G onto 2018, or 335 onto 2014–22. Not Precept Prestige. Not diesel.",
       powertrainByYear: [
         {
           from: 2014,
@@ -15739,8 +15740,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Seneca: {
       type: "Super C",
-      floorplans: ["33J", "36FK", "37FS", "37HJ", "37K", "37L", "37M", "37RB", "37TS"],
+      floorplans: ["33J", "35GS", "36FK", "36FS", "36MS", "37FS", "37HJ", "37K", "37L", "37M", "37RB", "37TS"],
       floorplansByYear: {
+        // OEM 2010 Seneca 10-SNCA-PL 0809-50K: 35GS | 36FS | 36MS · Chevy Kodiak · Duramax 6.6 330 (torque not printed) · Allison 1000 · hitch 8k · GVWR 22k · 80 gal. Do not copy MY12 ISB 36FK/37FS backward.
+        "2010": ["35GS", "36FS", "36MS"],
+        // No 2011 Seneca OEM brochure on 3rock (2010 Duramax and 2012 reinvented ISB exist). Do not invent 2011 or copy either era.
+        // OEM 2012 Seneca 12-SNCA-PL 0911-75K (reinvented): 36FK | 37FS | 37RB | 37TS · Freightliner M2 106 · ISB 6.7 340 (torque not printed) · Allison 2500 TRV · hitch 12k · GVWR 25.5k. Do not copy MY10 Duramax 35GS/36FS/36MS or MY13 10k hitch backward.
+        "2012": ["36FK", "37FS", "37RB", "37TS"],
         // OEM 2013 Seneca 13-SNCA-PL 0712-50K: 36FK | 37FS | 37RB | 37TS · Freightliner M2 106 · ISB 6.7 340 (torque not printed) · Allison 2500 MH · hitch 10k · GVWR 26k · 74 gal. Do not copy leftover 37HJ or invent 700.
         "2013": ["36FK", "37FS", "37RB", "37TS"],
         // OEM 2014 Seneca 14-SNCA-PL 0114-20K: 36FK | 37FS | 37RB | 37TS · Freightliner M2 106 · ISB 6.7 340 (torque not printed) · Allison 2500 MH · hitch 10k · GVWR 28k · 74 gal. Do not copy leftover 37HJ or invent 700.
@@ -15794,11 +15800,34 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 84,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2013,
+      yearStart: 2010,
       yearEnd: 2027,
       description:
-        "Jayco Seneca Super C — Cummins ISB 6.7. OEM MY13: 36FK / 37FS / 37RB / 37TS on Freightliner M2 106, ISB 340 (torque not printed), Allison 2500 MH, hitch 10k, GVWR 26k, 74 gal. MY14: same plans, ISB 340 (torque not printed), GVWR 28k. MY15: 36FK / 37FS / 37HJ / 37RB / 37TS on Freightliner M2, ISB 340 / 700, Allison 2500 MH, hitch 10k, GVWR 28k, 74 gal. MY16: same plans, ISB 340 (torque not printed), Allison 2500 MH, hitch 10k, GVWR 28k. MY17: same plans, ISB 340 (torque not printed). MY18: 37FS / 37HJ / 37K / 37RB / 37TS on S2RV (not Plus), ISB 360 / 800, Allison 3000 MH, hitch 10k, GVWR 29k, 100 gal. MY19: 37FS / 37HJ / 37K / 37RB / 37TS on S2RV, hitch 12k, GVWR 29k. MY20: 37HJ / 37K / 37L / 37RB / 37TS on S2RV. MY21: 37HJ / 37K / 37L / 37M / 37RB / 37TS on S2RV. MY22: 37K / 37L / 37M / 37RB / 37TS on S2RV. MY23: 37K / 37L / 37M on S2RV. MY24–26: same plans on S2RV Plus. MY27 adds 33J (34' 2\"). Sister to Entegra Accolade. Not Seneca XT Power Stroke / not Seneca Prestige trim key. Do not copy 37HJ onto 2013–14, 36FK onto 2018, 12k hitch onto 2018, or invent 700 onto 2013–14 / 2016–17.",
+        "Jayco Seneca Super C — OEM MY10 (10-SNCA-PL): 35GS / 36FS / 36MS on Chevy Kodiak, Duramax 6.6 330 (torque not printed), Allison 1000, hitch 8k, GVWR 22k, 80 gal. No 2011 brochure. MY12 reinvented (12-SNCA-PL): 36FK / 37FS / 37RB / 37TS on Freightliner M2 106, ISB 340 (torque not printed), Allison 2500 TRV, hitch 12k, GVWR 25.5k. MY13: same ISB plans, hitch 10k, GVWR 26k, 74 gal. MY14: same plans, ISB 340 (torque not printed), GVWR 28k. MY15: 36FK / 37FS / 37HJ / 37RB / 37TS on Freightliner M2, ISB 340 / 700, Allison 2500 MH, hitch 10k, GVWR 28k, 74 gal. MY16: same plans, ISB 340 (torque not printed), Allison 2500 MH, hitch 10k, GVWR 28k. MY17: same plans, ISB 340 (torque not printed). MY18: 37FS / 37HJ / 37K / 37RB / 37TS on S2RV (not Plus), ISB 360 / 800, Allison 3000 MH, hitch 10k, GVWR 29k, 100 gal. MY19: 37FS / 37HJ / 37K / 37RB / 37TS on S2RV, hitch 12k, GVWR 29k. MY20: 37HJ / 37K / 37L / 37RB / 37TS on S2RV. MY21: 37HJ / 37K / 37L / 37M / 37RB / 37TS on S2RV. MY22: 37K / 37L / 37M / 37RB / 37TS on S2RV. MY23: 37K / 37L / 37M on S2RV. MY24–26: same plans on S2RV Plus. MY27 adds 33J (34' 2\"). Sister to Entegra Accolade. Not Seneca XT Power Stroke / not Seneca Prestige trim key. Do not copy 37HJ onto 2013–14, 36FK onto 2018, 12k hitch onto 2018, or invent 700 onto 2013–14 / 2016–17.",
       powertrainByYear: [
+        {
+          from: 2010,
+          to: 2010,
+          engine: "Duramax 6.6L V8 turbodiesel 330HP",
+          horsepower: 330,
+          chassis: "Chevy Kodiak",
+          transmission: "Allison 1000 6-speed",
+          towingCapacity: 8000,
+          fuelCapacityGal: 80,
+          gvwrLbs: 22000,
+          notes: "OEM 2010 Seneca 10-SNCA-PL: Chevy Kodiak · Duramax 6.6 330 · Allison 1000 · hitch 8k · GVWR 22k · 80 gal. Torque not printed — do not invent. Not MY12 Freightliner ISB / not Seneca XT.",
+        },
+        {
+          from: 2012,
+          to: 2012,
+          engine: "Cummins ISB 6.7L 340HP",
+          horsepower: 340,
+          chassis: "Freightliner M2",
+          transmission: "Allison 2500 TRV",
+          towingCapacity: 12000,
+          gvwrLbs: 25500,
+          notes: "OEM 2012 Seneca 12-SNCA-PL (reinvented): Freightliner M2 106 · ISB 6.7 340 · Allison 2500 TRV · hitch 12k · GVWR 25.5k. Torque not printed — do not invent 700. Do not copy MY10 Duramax or MY13 10k hitch. Not S2RV / not Seneca XT.",
+        },
         {
           from: 2013,
           to: 2013,
@@ -15919,8 +15948,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Seneca Super C": {
       type: "Super C",
-      floorplans: ["33J", "36FK", "37FS", "37HJ", "37K", "37L", "37M", "37RB", "37TS"],
+      floorplans: ["33J", "35GS", "36FK", "36FS", "36MS", "37FS", "37HJ", "37K", "37L", "37M", "37RB", "37TS"],
       floorplansByYear: {
+        // OEM 2010 Seneca 10-SNCA-PL: 35GS | 36FS | 36MS · Chevy Kodiak · Duramax 6.6 330 (torque not printed) · GVWR 22k
+        "2010": ["35GS", "36FS", "36MS"],
+        // No 2011 Seneca OEM brochure. Do not invent 2011.
+        // OEM 2012 Seneca 12-SNCA-PL (reinvented): 36FK | 37FS | 37RB | 37TS · Freightliner M2 106 · ISB 6.7 340 · hitch 12k · GVWR 25.5k
+        "2012": ["36FK", "37FS", "37RB", "37TS"],
         // OEM 2013 Seneca 13-SNCA-PL: 36FK | 37FS | 37RB | 37TS · Freightliner M2 106 · ISB 6.7 340 (torque not printed) · GVWR 26k
         "2013": ["36FK", "37FS", "37RB", "37TS"],
         // OEM 2014 Seneca 14-SNCA-PL: 36FK | 37FS | 37RB | 37TS · Freightliner M2 106 · ISB 6.7 340 (torque not printed) · GVWR 28k
@@ -15974,11 +16008,32 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 84,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2013,
+      yearStart: 2010,
       yearEnd: 2027,
       description:
-        "Jayco Seneca Super C — same as Seneca. OEM MY13: 36FK / 37FS / 37RB / 37TS on Freightliner M2 106, ISB 340 (torque not printed), GVWR 26k. MY14: same plans, GVWR 28k. MY15: 36FK / 37FS / 37HJ / 37RB / 37TS on Freightliner M2, ISB 340 / 700. MY16: same plans, ISB 340 (torque not printed). MY17: same plans, ISB 340 (torque not printed). MY18: 37FS / 37HJ / 37K / 37RB / 37TS on S2RV, ISB 360 / 800, hitch 10k. MY19: 37FS / 37HJ / 37K / 37RB / 37TS on S2RV. MY20: 37HJ / 37K / 37L / 37RB / 37TS on S2RV. MY21: 37HJ / 37K / 37L / 37M / 37RB / 37TS on S2RV. MY22: 37K / 37L / 37M / 37RB / 37TS on S2RV. MY23: 37K / 37L / 37M on S2RV. MY24–26 same plans on S2RV Plus. MY27 adds 33J. Not Seneca XT. Do not copy 37HJ onto 2013–14 or 37M onto 2020.",
+        "Jayco Seneca Super C — same as Seneca. OEM MY10: 35GS / 36FS / 36MS on Chevy Kodiak, Duramax 6.6 330 (torque not printed), GVWR 22k. No 2011 brochure. MY12 reinvented: 36FK / 37FS / 37RB / 37TS on Freightliner M2 106, ISB 340 (torque not printed), hitch 12k, GVWR 25.5k. MY13: same ISB plans, hitch 10k, GVWR 26k. MY14: same plans, GVWR 28k. MY15: 36FK / 37FS / 37HJ / 37RB / 37TS on Freightliner M2, ISB 340 / 700. MY16: same plans, ISB 340 (torque not printed). MY17: same plans, ISB 340 (torque not printed). MY18: 37FS / 37HJ / 37K / 37RB / 37TS on S2RV, ISB 360 / 800, hitch 10k. MY19: 37FS / 37HJ / 37K / 37RB / 37TS on S2RV. MY20: 37HJ / 37K / 37L / 37RB / 37TS on S2RV. MY21: 37HJ / 37K / 37L / 37M / 37RB / 37TS on S2RV. MY22: 37K / 37L / 37M / 37RB / 37TS on S2RV. MY23: 37K / 37L / 37M on S2RV. MY24–26 same plans on S2RV Plus. MY27 adds 33J. Not Seneca XT. Do not copy 37HJ onto 2013–14 or 37M onto 2020.",
       powertrainByYear: [
+        {
+          from: 2010,
+          to: 2010,
+          engine: "Duramax 6.6L V8 turbodiesel 330HP",
+          horsepower: 330,
+          chassis: "Chevy Kodiak",
+          transmission: "Allison 1000 6-speed",
+          towingCapacity: 8000,
+          fuelCapacityGal: 80,
+          gvwrLbs: 22000,
+        },
+        {
+          from: 2012,
+          to: 2012,
+          engine: "Cummins ISB 6.7L 340HP",
+          horsepower: 340,
+          chassis: "Freightliner M2",
+          transmission: "Allison 2500 TRV",
+          towingCapacity: 12000,
+          gvwrLbs: 25500,
+        },
         {
           from: 2013,
           to: 2013,
@@ -16087,13 +16142,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Greyhawk: {
       type: "Class C",
-      floorplans: ["26DS", "26Y", "27U", "29KS", "29ME", "29MV", "29W", "30X", "30Z", "31DS", "31F", "31FK", "31FS", "31SS", "32S"],
+      floorplans: ["26DS", "26Y", "27U", "29KS", "29ME", "29MV", "29W", "30X", "30Z", "31DS", "31F", "31FK", "31FS", "31GS", "31SS", "32S"],
       floorplansByYear: {
-        "2008": ["29MV", "30X", "31F"],
-        "2009": ["29MV", "30X", "31F"],
-        "2010": ["29MV", "30X", "31F"],
-        "2011": ["29MV", "30X", "31F"],
-        "2012": ["29MV", "30X", "31F"],
+        // OEM 2010 Greyhawk 10-GREY-PL 0809-50K: 31FK | 31FS | 31GS | 31SS · Triton 6.8 EFI V10 305 (torque / Ford E-450 not printed) · 5-speed · hitch 5k. Do not walk into 2009. Do not copy leftover 29MV/30X/31F or MY11 26DS/31DS backward.
+        "2010": ["31FK", "31FS", "31GS", "31SS"],
+        // OEM 2011 Greyhawk 11-GREY-PL 0710-50K: 26DS | 31DS | 31FK | 31FS | 31SS · Ford E-450 6.8 Triton 305 (torque not printed) · 5-speed · hitch 5k. 31DS marked NEW. Do not invent flyer-only 31TS or copy 31GS forward.
+        "2011": ["26DS", "31DS", "31FK", "31FS", "31SS"],
+        // OEM 2012 Greyhawk 12-GREY-PL 0711-75K: 26DS | 31DS | 31FK | 31FS | 31SS · Ford E-450 6.8 Triton 305 (torque not printed) · 5-speed · hitch 5k. Do not copy MY13 29KS backward.
+        "2012": ["26DS", "31DS", "31FK", "31FS", "31SS"],
         // OEM 2013 Greyhawk 13-GREY-PL 1012-20K: 26DS | 29KS | 31DS | 31FK | 31FS | 31SS · E-450 6.8 Triton 305 (torque not printed) · 5-speed · hitch 5k. Do not copy leftover 29MV/30X/31F or MY14 29MV backward.
         "2013": ["26DS", "29KS", "31DS", "31FK", "31FS", "31SS"],
         // OEM 2014 Greyhawk 14-GREY-PL 0214-20K: 29KS | 29MV | 31DS | 31FK | 31FS | 31SS · E-450 6.8 Triton 305/420 · 5-speed · hitch 5k. Do not copy leftover 30X/31F, MY13 26DS, or MY15 29ME backward.
@@ -16155,24 +16211,27 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 84,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2008,
-      description: "Jayco Greyhawk — Ford E-450 Class C. OEM MY13: 26DS / 29KS / 31DS / 31FK / 31FS / 31SS, E-450 6.8 Triton 305 (torque not printed), hitch 5k. MY14: 29KS / 29MV / 31DS / 31FK / 31FS / 31SS at 305 / 420, hitch 5k. MY15: 29KS / 29ME / 29MV / 31DS / 31FK / 31FS, E-450 6.8 Triton V10 305 / 420, hitch 5k. MY16: same plans at 305 / 420, hitch 7.5k. MY17: 29ME / 29MV / 29W / 31DS / 31FK / 31FS, hitch 7.5k. MY18: 26Y / 29ME / 29MV / 29W / 30X / 31DS / 31FS at 305 / 420. MY19: 26Y / 29MV / 30X / 30Z / 31F / 31FS (HP not printed). MY20: 27U / 29MV / 30X / 30Z / 31F (HP not printed). MY21–22: 27U / 29MV / 30X / 30Z / 31F, 7.3 350 / 468, hitch 7.5k. MY23: drops 30X at 350 / 468. MY24–27: same plans at 7.3 325 / 450. Not Greyhawk XL Super C / not Greyhawk Prestige / not F53 335. Do not copy 29MV onto 2013, 26DS onto 2014, 29W onto 2015–16, or 7.5k hitch onto 2013–15.",
+      yearStart: 2010,
+      description: "Jayco Greyhawk — Ford E-450 Class C. OEM MY10 (10-GREY-PL): 31FK / 31FS / 31GS / 31SS, Triton 6.8 305 (torque / E-450 not printed), hitch 5k. MY11: 26DS / 31DS / 31FK / 31FS / 31SS at 305 (torque not printed). MY12: same five plans at 305. MY13: 26DS / 29KS / 31DS / 31FK / 31FS / 31SS, E-450 6.8 Triton 305 (torque not printed), hitch 5k. MY14: 29KS / 29MV / 31DS / 31FK / 31FS / 31SS at 305 / 420, hitch 5k. MY15: 29KS / 29ME / 29MV / 31DS / 31FK / 31FS, E-450 6.8 Triton V10 305 / 420, hitch 5k. MY16: same plans at 305 / 420, hitch 7.5k. MY17: 29ME / 29MV / 29W / 31DS / 31FK / 31FS, hitch 7.5k. MY18: 26Y / 29ME / 29MV / 29W / 30X / 31DS / 31FS at 305 / 420. MY19: 26Y / 29MV / 30X / 30Z / 31F / 31FS (HP not printed). MY20: 27U / 29MV / 30X / 30Z / 31F (HP not printed). MY21–22: 27U / 29MV / 30X / 30Z / 31F, 7.3 350 / 468, hitch 7.5k. MY23: drops 30X at 350 / 468. MY24–27: same plans at 7.3 325 / 450. Not Greyhawk XL Super C / not Greyhawk Prestige / not F53 335. Do not copy 29MV onto 2013, 26DS onto 2014, 29W onto 2015–16, or 7.5k hitch onto 2013–15.",
       powertrainByYear: [
         {
-          from: 2008,
+          from: 2010,
           to: 2010,
-          engine: "Ford V10 / 6.8L or 6.0L (by year)",
+          engine: "Ford 6.8L Triton V10 305HP",
           horsepower: 305,
-          chassis: "Ford E-450 / E-350",
-          notes: "Pre-6.2/7.3 Ford cutaway Class C"
+          transmission: "TorqShift 5-speed automatic",
+          towingCapacity: 5000,
+          notes: "OEM 2010 Greyhawk 10-GREY-PL: Triton 6.8 EFI V10 305 · 5-speed · hitch 5k. Torque and E-450 not printed — do not invent 420. Not Greyhawk Prestige / not Greyhawk XL."
         },
         {
           from: 2011,
           to: 2012,
-          engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
+          engine: "Ford 6.8L Triton V10 305HP",
           horsepower: 305,
           chassis: "Ford E-450",
-          notes: "2011–2012 leftover — do not copy MY13 6.8 Triton 305 lock backward. Next slice."
+          transmission: "TorqShift 5-speed automatic",
+          towingCapacity: 5000,
+          notes: "OEM 2011 11-GREY-PL / 2012 12-GREY-PL: Ford E-450 · 6.8 Triton V10 305 · 5-speed · hitch 5k. Torque not printed — do not invent 420. Not Greyhawk Prestige / not Greyhawk XL."
         },
         {
           from: 2013,
@@ -16312,9 +16371,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["22J", "23X2", "23XM", "24B", "25R", "26M", "26X1", "26XD", "26XS", "27G", "29XK", "31F", "31XL"],
       floorplansByYear: {
-        "2010": ["22J", "26XD", "29XK"],
-        "2011": ["22J", "26XD", "29XK"],
-        "2012": ["22J", "26XD", "29XK"],
+        // No 2010–2012 Redhawk OEM brochure on 3rock (first official reprint is 2013 Redhawk.cdr). Do not invent 22J / 26XD / 29XK. yearStart 2013.
         // OEM 2013 Redhawk.cdr JM 11-12 60K: 26XS | 29XK | 31XL · Ford E-450 6.8 Triton 305/420 · hitch 5k. Ford only — no Chevy. Do not copy leftover 22J/26XD or MY14 23XM backward.
         "2013": ["26XS", "29XK", "31XL"],
         // OEM 2014 Redhawk 14-RDHK-PL 0214-20K: 23XM | 26XS | 29XK | 31XL · Ford E-450 6.8 Triton 305/420 · 5-speed · hitch 5k. Ford only — no Chevy. Do not copy leftover 22J/26XD or MY15 26XD backward.
@@ -16376,25 +16433,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 84,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2010,
-      description: "Jayco Redhawk — value Class C sibling to Greyhawk. OEM MY13: 26XS / 29XK / 31XL — Ford E-450 6.8 Triton 305 / 420 only, hitch 5k. MY14: 23XM / 26XS / 29XK / 31XL at 305 / 420, hitch 5k. MY15: 23XM / 26XD / 29XK / 31XL — Ford E-450 6.8 Triton 305 / 420 only, hitch 5k. MY16: 23X2 / 23XM / 26X1 / 26XD / 29XK / 31XL — Ford 305 / 420 hitch 7.5k and Chevy 4500 6.0 Vortec 342 / 373 hitch 5k (option-band HP). MY17: same six plans, same option band. MY18: 22J / 25R / 26X1 / 26XD / 29XK / 31XL, same option band. MY19: 22J / 24B / 25R / 26XD / 29XK / 31F / 31XL (HP not printed). MY20: 22J / 24B / 25R / 26XD / 29XK / 31F (HP not printed). MY21: 22J / 24B / 25R / 26M / 26XD / 29XK / 31F, 7.3 350 / 468, hitch 7.5k. MY22: drops 22J, keeps 25R at 350 / 468. MY23–24: 24B / 26M / 26XD / 29XK / 31F at 7.3 325 / 450. MY25–26 drops 26XD. MY27: 24B / 26M / 27G. Do not copy 22J/26XD onto 2013–14, 23XM onto 2013, Chevy onto 2013–15, 24B/26M onto 2018, or 325 onto 2013–22. Not Redhawk SE.",
+      yearStart: 2013,
+      description: "Jayco Redhawk — value Class C sibling to Greyhawk. No 2010–2012 OEM brochure (first official reprint is 2013 Redhawk.cdr) — do not invent 22J / 26XD / 29XK. OEM MY13: 26XS / 29XK / 31XL — Ford E-450 6.8 Triton 305 / 420 only, hitch 5k. MY14: 23XM / 26XS / 29XK / 31XL at 305 / 420, hitch 5k. MY15: 23XM / 26XD / 29XK / 31XL — Ford E-450 6.8 Triton 305 / 420 only, hitch 5k. MY16: 23X2 / 23XM / 26X1 / 26XD / 29XK / 31XL — Ford 305 / 420 hitch 7.5k and Chevy 4500 6.0 Vortec 342 / 373 hitch 5k (option-band HP). MY17: same six plans, same option band. MY18: 22J / 25R / 26X1 / 26XD / 29XK / 31XL, same option band. MY19: 22J / 24B / 25R / 26XD / 29XK / 31F / 31XL (HP not printed). MY20: 22J / 24B / 25R / 26XD / 29XK / 31F (HP not printed). MY21: 22J / 24B / 25R / 26M / 26XD / 29XK / 31F, 7.3 350 / 468, hitch 7.5k. MY22: drops 22J, keeps 25R at 350 / 468. MY23–24: 24B / 26M / 26XD / 29XK / 31F at 7.3 325 / 450. MY25–26 drops 26XD. MY27: 24B / 26M / 27G. Do not copy 22J/26XD onto 2013–14, 23XM onto 2013, Chevy onto 2013–15, 24B/26M onto 2018, or 325 onto 2013–22. Not Redhawk SE.",
       powertrainByYear: [
-        {
-          from: 2010,
-          to: 2010,
-          engine: "Ford V10 / 6.8L or 6.0L (by year)",
-          horsepower: 305,
-          chassis: "Ford E-450 / E-350",
-          notes: "Pre-6.2/7.3 Ford cutaway Class C"
-        },
-        {
-          from: 2011,
-          to: 2012,
-          engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
-          horsepower: 305,
-          chassis: "Ford E-450",
-          notes: "2011–2012 leftover — do not copy MY13 Ford-only 305/420 lock backward. Next slice."
-        },
         {
           from: 2013,
           to: 2014,
@@ -16467,9 +16508,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Melbourne: {
       type: "Class C",
-      floorplans: ["24K", "24L", "24M", "24N", "24R", "24T", "25L", "25R", "26A", "28F", "29D", "29X"],
+      floorplans: ["24E", "24K", "24L", "24M", "24N", "24R", "24T", "25L", "25R", "26A", "28F", "29C", "29D", "29X"],
       floorplansByYear: {
-        "2012": ["24K", "24L"],
+        // OEM 2010 Melbourne 10-MEL-PL-PL 0110-15K: 24E | 26A | 29C | 29D · Ford E-450 · Triton 6.8 305 (torque not printed) · 5-speed · hitch 5k. Gas ≠ later Sprinter diesel. Do not copy leftover Mercedes 24K/24L or walk into 2009.
+        "2010": ["24E", "26A", "29C", "29D"],
+        // OEM 2011 Melbourne 11-MEL-PL 0710-50K: 24E | 26A | 29C | 29D · Ford E-450 · Triton 6.8 305 (torque not printed) · hitch 5k. Gas ≠ later Sprinter diesel.
+        "2011": ["24E", "26A", "29C", "29D"],
+        // OEM 2012 Melbourne 12-MEL-PL 0811-75K: 26A | 28F | 29C | 29D · Ford E-450 · Triton 6.8 305 (torque not printed) · hitch 5k. 24E dropped; 28F added. Do not copy leftover Mercedes 24K/24L.
+        "2012": ["26A", "28F", "29C", "29D"],
         // OEM 2013 Melbourne 13-MELB-PL 1012-20K: 26A | 28F | 29D · Ford E-450 6.8 Triton 305 (torque not printed) · 5-speed · hitch 5k. Gas ≠ Sprinter diesel. Do not copy leftover 24K/24L or MY14 29X backward.
         "2013": ["26A", "28F", "29D"],
         // OEM 2014 Melbourne 14-MELB-PL 0214-20K: 26A | 28F | 29D | 29X · Ford E-450 6.8 Triton 305/420 · 5-speed · hitch 5k. Gas ≠ later Mercedes diesel. Do not copy leftover 24K/24L or MY15 29D-only backward.
@@ -16533,16 +16579,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 83,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2012,
-      description: "Jayco Melbourne — Class C. OEM MY13: 26A / 28F / 29D on Ford E-450 6.8 Triton 305 (torque not printed), hitch 5k (gas). MY14: 26A / 28F / 29D / 29X at 305 / 420, hitch 5k (gas). MY15: 29D only on Ford E-450 6.8 Triton 305 / 420, hitch 5k (gas). MY16: 24K / 24L on Mercedes 3500 V6 188 / 325, 5-speed, hitch 5k (diesel). MY17: 24K / 24L / 24M at 188 / 325. MY18: 24K / 24L at 188 / 325. MY19–20: 24K / 24L (HP not printed). MY21: 24K / 24L / 24T, V6 188 / 325. MY22–23: 24L / 24R / 24T at V6 188 / 325. MY24: same plans at 2.0 211 / 332. MY25–26: 24L / 24R only. MY27 renumbers to 25L / 25R — do not clone 25 onto 2026, 24K onto 2013–15, 29X onto 2013, 29D onto 2016, 24M onto 2016/2018, 24T onto 2016–20, or 24R onto 2021. Gas ≠ diesel. Not Melbourne Prestige.",
+      yearStart: 2010,
+      description: "Jayco Melbourne — Class C. OEM MY10–11 (10-MEL-PL / 11-MEL-PL): 24E / 26A / 29C / 29D on Ford E-450 Triton 6.8 305 (torque not printed), hitch 5k (gas). MY12 (12-MEL-PL): 26A / 28F / 29C / 29D at 305 (torque not printed) — 24E dropped, 28F added. MY13: 26A / 28F / 29D on Ford E-450 6.8 Triton 305 (torque not printed), hitch 5k (gas). MY14: 26A / 28F / 29D / 29X at 305 / 420, hitch 5k (gas). MY15: 29D only on Ford E-450 6.8 Triton 305 / 420, hitch 5k (gas). MY16: 24K / 24L on Mercedes 3500 V6 188 / 325, 5-speed, hitch 5k (diesel). MY17: 24K / 24L / 24M at 188 / 325. MY18: 24K / 24L at 188 / 325. MY19–20: 24K / 24L (HP not printed). MY21: 24K / 24L / 24T, V6 188 / 325. MY22–23: 24L / 24R / 24T at V6 188 / 325. MY24: same plans at 2.0 211 / 332. MY25–26: 24L / 24R only. MY27 renumbers to 25L / 25R — do not clone 25 onto 2026, 24K onto 2010–15, 29X onto 2013, 29D onto 2016, 24M onto 2016/2018, 24T onto 2016–20, or 24R onto 2021. Gas ≠ diesel. Not Melbourne Prestige.",
       powertrainByYear: [
         {
-          from: 2012,
+          from: 2010,
           to: 2012,
-          engine: "Mercedes-Benz Sprinter 3.0L V6 turbodiesel",
-          horsepower: 188,
-          chassis: "Mercedes-Benz Sprinter",
-          notes: "2012 leftover — do not copy MY13 Ford 26A/28F/29D lock backward. Next slice."
+          engine: "Ford 6.8L Triton V10 305HP",
+          horsepower: 305,
+          chassis: "Ford E-450",
+          transmission: "TorqShift 5-speed automatic",
+          towingCapacity: 5000,
+          notes: "OEM 2010 10-MEL-PL / 2011 11-MEL-PL / 2012 12-MEL-PL: Ford E-450 · Triton 6.8 305 · 5-speed · hitch 5k. Torque not printed — do not invent 420. Gas ≠ later Sprinter diesel. Not Melbourne Prestige."
         },
         {
           from: 2013,
@@ -16835,7 +16883,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Super C",
       floorplans: ["QX390", "TB390"],
       floorplansByYear: {
-        // 2012 Jayco Class C brochure: QX390 | TB390 · Freightliner M2 / Cummins ISC. Other Super C years left for walk-back.
+        // No 2009 Embark Super C brochure in this slice — do not invent 2009 plans. yearStart stays 2009 (line era).
+        // OEM 2010 Embark Super C 10-EMBK-PL 1209-50K: QX390 | TB390 · Freightliner M2 · ISC-330 / 1000 · Allison 3200 · hitch 20k · GVWR 33k · 100 gal.
+        "2010": ["QX390", "TB390"],
+        // OEM 2011 Embark Super C 11-EMBK-PL 0810-50K: QX390 | TB390 · Freightliner M2 · ISC-350 / 1000 · Allison 3200 TRV · hitch 20k · 100 gal.
+        "2011": ["QX390", "TB390"],
+        // OEM 2012 Embark Super C 12-EMBK-PL 0611-75K: QX390 | TB390 · Freightliner M2 102 · ISC-330 / 1000 @ 1400 · Allison 3200 TRV · hitch 20k. Fuel gal not clearly printed. Last Super C year.
         "2012": ["QX390", "TB390"],
       },
       lengthRange: [35, 40],
@@ -16843,17 +16896,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       slideouts: 2,
       sleeps: 6,
       msrpRange: [149000, 249000],
-      engine: "Cummins ISC 8.3L (era)",
+      engine: "Cummins ISC 8.3L 330HP",
       horsepower: 330,
+      torqueLbFt: 1000,
       chassis: "Freightliner M2",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.3,
       image: RV_CARD_IMAGE,
-      towingCapacity: 10000,
+      towingCapacity: 20000,
       freshWater: 80,
       grayWater: 50,
       blackWater: 50,
+      fuelCapacityGal: 100,
       generator: "Onan Diesel",
       awningLength: 16,
       ceilingHeight: 80,
@@ -16861,7 +16916,47 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 2,
       yearStart: 2009,
       yearEnd: 2012,
-      description: "Jayco Embark Super C (~2009–2012) — Freightliner M2 / Cummins ISC era Class C Super C. Distinct key from Embark Class A diesel pusher (MY2019–2023, yearEnd 2023). Floorplans left for Jayco walk-back — do not invent.",
+      description: "Jayco Embark Super C (~2009–2012) — Freightliner M2 / Cummins ISC Class C Super C. Distinct from Embark Class A diesel pusher (yearStart 2021, yearEnd 2023). No 2009 brochure in this slice — do not invent 2009 plans. OEM MY10 (10-EMBK-PL): QX390 / TB390, M2, ISC-330 / 1000, Allison 3200, hitch 20k, GVWR 33k, 100 gal. MY11 (11-EMBK-PL): same plans, ISC-350 / 1000, Allison 3200 TRV, hitch 20k, 100 gal. MY12 (12-EMBK-PL): same plans, M2 102, ISC-330 / 1000 @ 1400, Allison 3200 TRV, hitch 20k (fuel gal not clearly printed). yearEnd 2012 — last Super C year. Do not copy onto the 2021–2023 Embark pusher.",
+      powertrainByYear: [
+        {
+          from: 2010,
+          to: 2010,
+          engine: "Cummins ISC 8.3L 330HP",
+          horsepower: 330,
+          torqueLbFt: 1000,
+          chassis: "Freightliner M2",
+          transmission: "Allison 3200 6-speed automatic",
+          towingCapacity: 20000,
+          fuelCapacityGal: 100,
+          gvwrLbs: 33000,
+          notes: "OEM 2010 Embark Super C 10-EMBK-PL: Freightliner M2 · ISC-330 / 1000 · Allison 3200 · hitch 20k · GVWR 33k · 100 gal. Not Embark pusher.",
+        },
+        {
+          from: 2011,
+          to: 2011,
+          engine: "Cummins ISC 8.3L 350HP",
+          horsepower: 350,
+          torqueLbFt: 1000,
+          chassis: "Freightliner M2",
+          transmission: "Allison 3200 TRV 6-speed automatic",
+          towingCapacity: 20000,
+          fuelCapacityGal: 100,
+          gvwrLbs: 33000,
+          notes: "OEM 2011 Embark Super C 11-EMBK-PL: Freightliner M2 · ISC-350 / 1000 · Allison 3200 TRV · hitch 20k · 100 gal. Not Embark pusher.",
+        },
+        {
+          from: 2012,
+          to: 2012,
+          engine: "Cummins ISC 8.3L 330HP",
+          horsepower: 330,
+          torqueLbFt: 1000,
+          chassis: "Freightliner M2 102",
+          transmission: "Allison 3200 TRV 6-speed automatic",
+          towingCapacity: 20000,
+          gvwrLbs: 33000,
+          notes: "OEM 2012 Embark Super C 12-EMBK-PL: Freightliner M2 102 · ISC-330 / 1000 @ 1400 · Allison 3200 TRV · hitch 20k. Fuel gal not clearly printed — do not invent. Last Super C year. Not Embark pusher.",
+        },
+      ],
     },
     "Redhawk SE": {
       type: "Class C",
