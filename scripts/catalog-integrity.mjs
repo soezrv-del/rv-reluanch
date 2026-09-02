@@ -461,11 +461,20 @@ function main() {
       const hz0 = wgo.indexOf("    Horizon: {");
       const hz1 = wgo.indexOf('    "Grand Tour": {');
       const hz = hz0 >= 0 && hz1 > hz0 ? wgo.slice(hz0, hz1) : "";
-      if (/"2025"/.test(hz) || /"2026"/.test(hz) || /"2027"/.test(hz)) {
-        fail("Winnebago|Horizon must not list 2025–2027 (last brochure 2019; leftover ends 2024)");
+      if (/"2023"/.test(hz) || /"2024"/.test(hz) || /"2025"/.test(hz) || /"2026"/.test(hz) || /"2027"/.test(hz)) {
+        fail("Winnebago|Horizon must not list 2023–2027 (last brochure ~2019; no OEM 2023–24 card)");
       }
-      if (!/yearEnd:\s*2024/.test(hz)) {
-        fail("Winnebago|Horizon yearEnd must be 2024");
+      if (!/yearEnd:\s*2022/.test(hz)) {
+        fail("Winnebago|Horizon yearEnd must be 2022 (no OEM 2023–24 card)");
+      }
+      const in0 = wgo.indexOf("    Intent: {");
+      const in1 = wgo.indexOf("    Adventurer: {");
+      const intent = in0 >= 0 && in1 > in0 ? wgo.slice(in0, in1) : "";
+      if (/"2023"/.test(intent) || /"2024"/.test(intent) || /"2025"/.test(intent)) {
+        fail("Winnebago|Intent must not list 2023–2025 (no OEM 2023–24 card)");
+      }
+      if (!/yearEnd:\s*2022/.test(intent)) {
+        fail("Winnebago|Intent yearEnd must be 2022 (no OEM 2023–24 card)");
       }
       if (!/"2027": \["24D", "24R", "24T"\]/.test(wgo)) {
         fail("Winnebago|View/Navion MY27 OEM plans missing (24D/24R/24T)");
@@ -491,8 +500,11 @@ function main() {
       const ac0 = wgo.indexOf('    "Access Super C": {');
       const ac1 = wgo.indexOf('    "Micro Minnie": {');
       const ac = ac0 >= 0 && ac1 > ac0 ? wgo.slice(ac0, ac1) : "";
-      if (/"2025"/.test(ac) || /"2026"/.test(ac)) {
-        fail("Winnebago|Access Super C must not list 2025–2026 (2025 Access PDF is a travel trailer)");
+      if (/"2023"/.test(ac) || /"2024"/.test(ac) || /"2025"/.test(ac) || /"2026"/.test(ac)) {
+        fail("Winnebago|Access Super C must not list 2023–2026 (2024+ Access PDFs are travel trailers)");
+      }
+      if (!/yearEnd:\s*2022/.test(ac)) {
+        fail("Winnebago|Access Super C yearEnd must be 2022 (no OEM 2023–24 Super C card)");
       }
       const att0 = wgo.indexOf("    Access: {");
       const att1 = wgo.indexOf("    Thrive: {");
