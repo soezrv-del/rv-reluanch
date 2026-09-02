@@ -602,6 +602,9 @@ export function SelectSheet({
             ) {
               return;
             }
+            // Web / desktop touch: let the row click use item.value
+            // (browser hit-test). Geometric re-hit is iOS-only.
+            if (!isIosNativeWebView()) return;
             const value = resolveSheetItemValue(
               e.clientX,
               e.clientY,
