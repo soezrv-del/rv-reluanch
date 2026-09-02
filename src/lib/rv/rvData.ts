@@ -18009,7 +18009,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Solitude S-Class": {
       type: "Fifth Wheel",
-      floorplans: ["2930RL", "3330RE", "3460FL", "3540GK", "3550BH", "3740BH", "3800FL", "3950BH"],
+      floorplans: ["2930RL", "3330RE", "3460FL", "3540GK", "3550BH", "3740BH", "3950BH"],
       floorplansByYear: {
         "2019": ["2930RL", "3740BH"],
         // RVUSA 2020 Solitude S-Class spec-by-model (m11705-y2020): unique codes only (drop -R twins).
