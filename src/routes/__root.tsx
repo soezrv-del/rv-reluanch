@@ -9,7 +9,7 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
 
-const APP_NAME = "RV Fox · Mark Class Premium";
+const APP_NAME = "RvFOX · Know before you buy.";
 
 export const Route = createRootRoute({
   head: () => ({
