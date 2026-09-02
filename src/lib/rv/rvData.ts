@@ -17088,10 +17088,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2025": ["33C", "35GL", "35K", "36F"],
         "2026": ["33C", "35GL", "35K", "36F"]
       },
-      lengthRange: [
-        33,
-        36
-      ],
+      // Aggregate covers locked OEM FBY: MY10 38P. Later years max at 36' — year-specific, not a reason to leave the series at 36.
+      lengthRange: [33, 38],
       weightRange: [
         16000,
         22000
@@ -17239,10 +17237,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // Brochure 2015_bdr_b Classic table: 34B | 34M | 36H | 36R. Last OEM Classic year — no 2016.
         "2015": ["34B", "34M", "36H", "36R"]
       },
-      lengthRange: [
-        33,
-        35
-      ],
+      // Aggregate covers locked OEM FBY: MY10–14 30T through MY11–15 36R/36H. Stale 33–35 missed both ends.
+      lengthRange: [30, 36],
       weightRange: [
         16000,
         21000
