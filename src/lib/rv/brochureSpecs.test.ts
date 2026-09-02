@@ -11893,6 +11893,8 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
 
   const ctt = k.slice(k.indexOf("    Cougar: {"), k.indexOf('    "Cougar 5th Wheel"'));
   assert.doesNotMatch(ctt, /"2027":/);
+  assert.doesNotMatch(ctt, /"25FKD"/);
+  assert.doesNotMatch(ctt, /"(21LBK|22MLS|25MLE|26LBW|28BHS|29RDS|29RKE|29RLP)"/);
   assert.match(ctt, /type: "Travel Trailer"/);
 
   const cfw = k.slice(k.indexOf('    "Cougar 5th Wheel": {'), k.indexOf('    "Cougar Sport"'));
@@ -11949,4 +11951,35 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
 
   const rap = k.slice(k.indexOf("    Raptor: {"), k.indexOf("    Alpine: {"));
   assert.match(rap, /"2027": \["352", "415", "430", "433", "441", "444"\]/);
+});
+
+test("Keystone Cougar TT hygiene: no 25FKD leak; Half-Ton FW 2027 unchanged; no 2026 invent", () => {
+  const block = src("rvData.ts");
+  const k0 = block.indexOf('\n  "Keystone": {');
+  const k1 = block.indexOf('\n  "Grand Design": {');
+  const k = block.slice(k0, k1);
+
+  const ctt = k.slice(k.indexOf("    Cougar: {"), k.indexOf('    "Cougar 5th Wheel"'));
+  assert.match(ctt, /type: "Travel Trailer"/);
+  assert.doesNotMatch(ctt, /"25FKD"/);
+  assert.doesNotMatch(ctt, /"2027":/);
+  // Half-Ton TT OEM set must stay off the collapsed TT bucket (GAP own key).
+  for (const code of ["21LBK", "22MLS", "25MLE", "26LBW", "28BHS", "29RDS", "29RKE", "29RLP"]) {
+    assert.doesNotMatch(ctt, new RegExp(`"${code}"`));
+  }
+
+  const cht = k.slice(k.indexOf('    "Cougar Half-Ton": {'), k.indexOf("    Bullet: {"));
+  assert.match(cht, /"2027": \["23MLE", "26RES", "26RKE", "28RLI", "29MBD", "30REP"\]/);
+  assert.doesNotMatch(cht, /"2027": .*"29RKS"/);
+  assert.doesNotMatch(cht, /"2027": .*"25FKD"/);
+
+  // Live OEM compare cards are 2027-only — do not invent 2026 by copying 2027.
+  const aae = k.slice(k.indexOf('    "Alpine Avalanche Edition": {'), k.indexOf("    Arcadia: {"));
+  assert.doesNotMatch(aae, /"2026":/);
+  const cst = k.slice(k.indexOf('    "Cougar Sport": {'), k.indexOf('    "Cougar Half-Ton"'));
+  assert.doesNotMatch(cst, /"2026":/);
+  const spr = k.slice(k.indexOf("    Sprinter: {"));
+  assert.doesNotMatch(spr, /"2026":/);
+  const mt = k.slice(k.indexOf("    Montana: {"), k.indexOf('    "Montana High Country"'));
+  assert.doesNotMatch(mt, /"2026": .*"3600RO"/);
 });

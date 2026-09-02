@@ -59,8 +59,12 @@ const FORBIDDEN_FLOORPLANS = {
       "29MBD",
       "30REP",
       "29RKS",
+      // Half-Ton TT OEM set (live keystonerv.com/product/cougar-half-ton/luxury-travel-trailers/floorplans):
+      // 21LBK | 22MLS | 25FKD | 25MLE | 26LBW | 28BHS | 29RDS | 29RKE | 29RLP
+      // GAP own key this slice — do not dump into collapsed Cougar TT.
       "21LBK",
       "22MLS",
+      "25FKD",
       "25MLE",
       "26LBW",
       "28BHS",
@@ -1748,7 +1752,8 @@ function main() {
     }
   }
 
-  // Keystone MY2027 OEM lock + yearStart hygiene / Half-Ton 2027 follow-on. Next make is quoted Grand Design.
+  // Keystone MY2027 OEM lock + yearStart hygiene / Half-Ton 2027 + 25FKD Cougar TT scrub.
+  // MY2026 stays GAP (live OEM compare cards are 2027-only). Next make is quoted Grand Design.
   {
     const k0 = src.indexOf('\n  "Keystone": {');
     const k1 = src.indexOf('\n  "Grand Design": {');
@@ -1872,6 +1877,9 @@ function main() {
       const ctt = slice("Cougar", "Cougar 5th Wheel");
       if (/"2027":/.test(ctt)) {
         fail("Keystone|Cougar TT must omit 2027 (no generic TT card; do not dump Sport/Premium/Half-Ton)");
+      }
+      if (/"25FKD"/.test(ctt)) {
+        fail("Keystone|Cougar TT must not carry Half-Ton TT leak 25FKD");
       }
 
       const cfw = slice("Cougar 5th Wheel", "Cougar Sport");

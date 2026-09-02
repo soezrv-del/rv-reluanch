@@ -16767,7 +16767,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "22RBQ",
         "24RKS",
         "25BHS",
-        "25FKD",
         "26RBS",
         "26RBSWE",
         "27SAB",
@@ -16827,7 +16826,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "22RBQ",
           "24RKS",
           "25BHS",
-          "25FKD",
           "26RBS",
           "26RBSWE",
           "27SAB",
@@ -16840,7 +16838,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "22RBQ",
           "24RKS",
           "25BHS",
-          "25FKD",
           "26RBS",
           "26RBSWE",
           "27SAB",
@@ -16854,7 +16851,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "22RBQ",
           "24RKS",
           "25BHS",
-          "25FKD",
           "26RBS",
           "26RBSWE",
           "27SAB",
@@ -16867,7 +16863,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2026": [
           "22RBQ",
           "25BHS",
-          "25FKD",
           "26RBS",
           "26RBSWE",
           "27SAB",
@@ -16876,8 +16871,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "30RLS",
           "32BHS"
         ],
-        // No generic Cougar TT 2027 OEM card (line is Cougar Half-Ton TT / Western Elevation — GAP this slice).
+        // No generic Cougar TT 2027 OEM card (line is Cougar Half-Ton TT / Western Elevation — GAP).
         // Omit 2027 rather than dump Half-Ton / Sport / Premium FW codes into this collapsed TT bucket.
+        // 25FKD is Half-Ton TT (live OEM luxury-travel-trailers/floorplans) — never a collapsed Cougar TT code.
+        // MY2026 leftover FBY is not OEM-locked (live compare cards are 2027-only; do not copy 2027 backward).
       },
       lengthRange: [
         22,
