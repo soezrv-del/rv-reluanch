@@ -843,7 +843,7 @@ function main() {
     }
   }
 
-  // Grand Design recent OEM years (2023–2026 + Lineage as printed).
+  // Grand Design recent OEM years (2020–2026 + Lineage as printed).
   // Quoted-make parser sees `"Grand Design": {`; next make is unquoted Fleetwood.
   {
     const g0 = src.indexOf('\n  "Grand Design": {');
@@ -909,6 +909,24 @@ function main() {
       if (!/yearEnd:\s*2023/.test(sc)) {
         fail("Grand Design|Solitude S-Class yearEnd must be 2023 (RVUSA 2019–2023; no 2024–26 OEM card)");
       }
+      if (!/"2020": \["2930RL", "3550BH", "3740BH", "3950BH"\]/.test(sc)) {
+        fail("Grand Design|Solitude S-Class MY20 RVUSA plans missing (3550BH/3950BH; no leftover 3800FL)");
+      }
+      if (/"2020": .*"3800FL"/.test(sc) || /"2020": .*"3540GK"/.test(sc) || /"2020": .*"3330RE"/.test(sc) || /"2020": .*"3460FL"/.test(sc)) {
+        fail("Grand Design|Solitude S-Class must not keep leftover 3800FL or stamp MY21 3540GK / MY22 3330RE / MY23 3460FL onto 2020");
+      }
+      if (!/"2021": \["2930RL", "3540GK", "3550BH", "3740BH", "3950BH"\]/.test(sc)) {
+        fail("Grand Design|Solitude S-Class MY21 RVUSA plans missing (3540GK; no leftover 3800FL)");
+      }
+      if (/"2021": .*"3800FL"/.test(sc) || /"2021": .*"3330RE"/.test(sc) || /"2021": .*"3460FL"/.test(sc)) {
+        fail("Grand Design|Solitude S-Class must not keep leftover 3800FL or stamp MY22 3330RE / MY23 3460FL onto 2021");
+      }
+      if (!/"2022": \["2930RL", "3330RE", "3540GK", "3550BH", "3740BH", "3950BH"\]/.test(sc)) {
+        fail("Grand Design|Solitude S-Class MY22 RVUSA plans missing (3330RE; no leftover 3800FL)");
+      }
+      if (/"2022": .*"3800FL"/.test(sc) || /"2022": .*"3460FL"/.test(sc)) {
+        fail("Grand Design|Solitude S-Class must not keep leftover 3800FL or stamp MY23 3460FL onto 2022");
+      }
       if (!/"2023": \["2930RL", "3460FL", "3740BH", "3950BH"\]/.test(sc)) {
         fail("Grand Design|Solitude S-Class MY23 RVUSA plans missing (3460FL/3950BH; no leftover 3800FL)");
       }
@@ -925,6 +943,24 @@ function main() {
       }
       if (/"2014":/.test(imag) || /"2015":/.test(imag)) {
         fail("Grand Design|Imagine must not list 2014–2015");
+      }
+      if (!/"2020": \["2250RK", "2400BH", "2450RL", "2500RL", "2600RB", "2670MK", "2800BH", "2970RL", "3000QB", "3100RD", "3250BH"\]/.test(imag)) {
+        fail("Grand Design|Imagine MY20 RVUSA plans missing (2250RK/2450RL/3000QB/3250BH; no leftover 2150RB)");
+      }
+      if (/"2020": .*"2150RB"/.test(imag) || /"2020": .*"2910BH"/.test(imag) || /"2020": .*"3210BH"/.test(imag) || /"2020": .*"2660BS"/.test(imag)) {
+        fail("Grand Design|Imagine must not keep leftover 2150RB or stamp MY21 2910BH / MY23 3210BH / MY24 2660BS onto 2020");
+      }
+      if (!/"2021": \["2400BH", "2500RL", "2600RB", "2670MK", "2800BH", "2910BH", "2970RL", "3100RD", "3250BH"\]/.test(imag)) {
+        fail("Grand Design|Imagine MY21 RVUSA plans missing (2910BH; no leftover 2150RB / 2250RK)");
+      }
+      if (/"2021": .*"2150RB"/.test(imag) || /"2021": .*"2250RK"/.test(imag) || /"2021": .*"3210BH"/.test(imag) || /"2021": .*"2660BS"/.test(imag)) {
+        fail("Grand Design|Imagine must not keep leftover 2150RB/2250RK or stamp MY23 3210BH / MY24 2660BS onto 2021");
+      }
+      if (!/"2022": \["2400BH", "2500RL", "2600RB", "2670MK", "2800BH", "2910BH", "2970RL", "3100RD", "3250BH"\]/.test(imag)) {
+        fail("Grand Design|Imagine MY22 RVUSA plans missing (3250BH; no 3210BH)");
+      }
+      if (/"2022": .*"3210BH"/.test(imag) || /"2022": .*"2660BS"/.test(imag) || /"2022": .*"2920BS"/.test(imag) || /"2022": .*"2300MK"/.test(imag)) {
+        fail("Grand Design|Imagine must not stamp MY23 3210BH / MY24 2660BS/2920BS / MY25 2300MK onto 2022");
       }
       if (!/"2023": \["2400BH", "2500RL", "2600RB", "2670MK", "2800BH", "2910BH", "2970RL", "3100RD", "3210BH"\]/.test(imag)) {
         fail("Grand Design|Imagine MY23 RVUSA plans missing (2400BH/2910BH; no 2660BS/2920BS)");
@@ -958,6 +994,24 @@ function main() {
       if (/"2015":/.test(xls) || /"2016":/.test(xls) || /"2017":/.test(xls) || /"2018":/.test(xls)) {
         fail("Grand Design|Imagine XLS must not list 2015–2018");
       }
+      if (!/"2020": \["17MKE", "19BWE", "21BHE", "22MLE", "22RBE", "23BHE", "24MPR"\]/.test(xls)) {
+        fail("Grand Design|Imagine XLS MY20 RVUSA plans missing (19BWE/24MPR)");
+      }
+      if (/"2020": .*"22BHE"/.test(xls) || /"2020": .*"24BSE"/.test(xls) || /"2020": .*"21MBE"/.test(xls)) {
+        fail("Grand Design|Imagine XLS must not stamp MY24 22BHE/24BSE or MY26 21MBE onto 2020");
+      }
+      if (!/"2021": \["17MKE", "21BHE", "22MLE", "22RBE", "23BHE"\]/.test(xls)) {
+        fail("Grand Design|Imagine XLS MY21 RVUSA plans missing (5 plans; no 19BWE/24MPR/23LDE)");
+      }
+      if (/"2021": .*"19BWE"/.test(xls) || /"2021": .*"23LDE"/.test(xls) || /"2021": .*"22BHE"/.test(xls) || /"2021": .*"25BHE"/.test(xls)) {
+        fail("Grand Design|Imagine XLS must not keep 19BWE/24MPR or stamp MY22 23LDE / MY23 25BHE / MY24 22BHE onto 2021");
+      }
+      if (!/"2022": \["17MKE", "21BHE", "22MLE", "22RBE", "23BHE", "23LDE"\]/.test(xls)) {
+        fail("Grand Design|Imagine XLS MY22 RVUSA plans missing (23LDE; no 25BHE)");
+      }
+      if (/"2022": .*"25BHE"/.test(xls) || /"2022": .*"22BHE"/.test(xls) || /"2022": .*"24BSE"/.test(xls) || /"2022": .*"21MBE"/.test(xls)) {
+        fail("Grand Design|Imagine XLS must not stamp MY23 25BHE / MY24 22BHE/24BSE / MY26 21MBE onto 2022");
+      }
       if (!/"2023": \["17MKE", "21BHE", "22MLE", "22RBE", "23BHE", "23LDE", "25BHE"\]/.test(xls)) {
         fail("Grand Design|Imagine XLS MY23 RVUSA plans missing (23BHE/25BHE; no 22BHE/24BSE)");
       }
@@ -983,6 +1037,9 @@ function main() {
       const aim = slice("Imagine AIM", "Transcend");
       if (!/yearStart:\s*2023/.test(aim)) {
         fail("Grand Design|Imagine AIM yearStart must be 2023 (RVUSA; first locked card MY24)");
+      }
+      if (/"2020":/.test(aim) || /"2021":/.test(aim) || /"2022":/.test(aim)) {
+        fail("Grand Design|Imagine AIM must omit 2020–2022 (line starts ~2023; do not invent)");
       }
       if (/"2023":/.test(aim)) {
         fail("Grand Design|Imagine AIM must omit 2023 fby (first locked card is MY2024; do not invent or copy MY24–26 AIM codes back)");
@@ -1010,6 +1067,24 @@ function main() {
       if (/"2015":/.test(r150) || /"2016":/.test(r150) || /"2017":/.test(r150)) {
         fail("Grand Design|Reflection 150 Series must not list 2015–2017");
       }
+      if (!/"2020": \["240RL", "260RD", "268BH", "290BH", "295RL"\]/.test(r150)) {
+        fail("Grand Design|Reflection 150 Series MY20 RVUSA plans missing (240RL/268BH/290BH; no leftover prefixes)");
+      }
+      if (/"2020": .*"150 Series"/.test(r150) || /"2020": .*"226RK"/.test(r150) || /"2020": .*"250ML"/.test(r150)) {
+        fail("Grand Design|Reflection 150 must not keep leftover prefixes or stamp MY22 226RK / MY26 250ML onto 2020");
+      }
+      if (!/"2021": \["260RD", "268BH", "278BH", "280RS", "295RL"\]/.test(r150)) {
+        fail("Grand Design|Reflection 150 Series MY21 RVUSA plans missing");
+      }
+      if (/"2021": .*"150 Series"/.test(r150) || /"2021": .*"226RK"/.test(r150) || /"2021": .*"240RL"/.test(r150) || /"2021": .*"250ML"/.test(r150)) {
+        fail("Grand Design|Reflection 150 must not keep leftover prefixes or stamp MY20 240RL / MY22 226RK / MY26 250ML onto 2021");
+      }
+      if (!/"2022": \["226RK", "260RD", "268BH", "278BH", "280RS", "295RL"\]/.test(r150)) {
+        fail("Grand Design|Reflection 150 Series MY22 RVUSA plans missing (226RK; no 270BN/298BH)");
+      }
+      if (/"2022": .*"150 Series"/.test(r150) || /"2022": .*"270BN"/.test(r150) || /"2022": .*"298BH"/.test(r150) || /"2022": .*"250ML"/.test(r150)) {
+        fail("Grand Design|Reflection 150 must not keep leftover prefixes or stamp MY23 270BN/298BH / MY26 250ML onto 2022");
+      }
       if (!/"2023": \["226RK", "260RD", "270BN", "278BH", "280RS", "295RL", "298BH"\]/.test(r150)) {
         fail("Grand Design|Reflection 150 Series MY23 RVUSA plans missing");
       }
@@ -1033,6 +1108,24 @@ function main() {
       }
 
       const rfw = slice("Reflection", "Reflection Travel Trailer");
+      if (!/"2020": \["28BH", "29RS", "303RLS", "311BHS", "31MB", "320MKS", "337RLS", "367BHS"\]/.test(rfw)) {
+        fail("Grand Design|Reflection FW MY20 RVUSA plans missing (29RS/31MB; no *TS)");
+      }
+      if (/"2020": .*"315RLTS"/.test(rfw) || /"2020": .*"312BHTS"/.test(rfw) || /"2020": .*"340RDS"/.test(rfw) || /"2020": .*"362TBS"/.test(rfw)) {
+        fail("Grand Design|Reflection FW must not stamp TT *TS, MY21 340RDS, or MY24 362TBS onto 2020");
+      }
+      if (!/"2021": \["28BH", "303RLS", "311BHS", "31MB", "320MKS", "337RLS", "340RDS", "367BHS"\]/.test(rfw)) {
+        fail("Grand Design|Reflection FW MY21 RVUSA plans missing (340RDS; no 29RS)");
+      }
+      if (/"2021": .*"29RS"/.test(rfw) || /"2021": .*"315RLTS"/.test(rfw) || /"2021": .*"341RDS"/.test(rfw) || /"2021": .*"362TBS"/.test(rfw)) {
+        fail("Grand Design|Reflection FW must not keep 29RS or stamp TT *TS / MY22 341RDS / MY24 362TBS onto 2021");
+      }
+      if (!/"2022": \["28BH", "303RLS", "311BHS", "31MB", "320MKS", "337RLS", "341RDS", "367BHS"\]/.test(rfw)) {
+        fail("Grand Design|Reflection FW MY22 RVUSA plans missing (341RDS; no 324MBS/370FLS)");
+      }
+      if (/"2022": .*"315RLTS"/.test(rfw) || /"2022": .*"324MBS"/.test(rfw) || /"2022": .*"370FLS"/.test(rfw) || /"2022": .*"362TBS"/.test(rfw)) {
+        fail("Grand Design|Reflection FW must not stamp TT *TS, MY23 324MBS/370FLS, or MY24 362TBS onto 2022");
+      }
       if (!/"2023": \["303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "341RDS", "367BHS", "370FLS"\]/.test(rfw)) {
         fail("Grand Design|Reflection FW MY23 RVUSA plans missing (341RDS/370FLS; no 362TBS)");
       }
@@ -1062,8 +1155,8 @@ function main() {
       if (!/yearStart:\s*2024/.test(rtt)) {
         fail("Grand Design|Reflection Travel Trailer yearStart must be 2024 (OEM 2024 Reflection TT page)");
       }
-      if (/"2023":/.test(rtt)) {
-        fail("Grand Design|Reflection Travel Trailer must omit 2023 (tight slice; yearStart 2024)");
+      if (/"2020":/.test(rtt) || /"2021":/.test(rtt) || /"2022":/.test(rtt) || /"2023":/.test(rtt)) {
+        fail("Grand Design|Reflection Travel Trailer must omit 2020–2023 (tight slice; yearStart 2024 — do not invent TT from mixed Reflection family cards)");
       }
       if (!/"2024": \["296RDTS", "297RSTS", "310MKTS", "312BHTS", "315RLTS"\]/.test(rtt)) {
         fail("Grand Design|Reflection Travel Trailer MY24 OEM plans missing");
@@ -1079,8 +1172,8 @@ function main() {
       }
 
       const r100 = slice("Reflection 100 Series", "Reflection 150 Series");
-      if (/"2023":/.test(r100)) {
-        fail("Grand Design|Reflection 100 Series must omit 2023 (first card MY2024)");
+      if (/"2020":/.test(r100) || /"2021":/.test(r100) || /"2022":/.test(r100) || /"2023":/.test(r100)) {
+        fail("Grand Design|Reflection 100 Series must omit 2020–2023 (first card MY2024)");
       }
       if (!/"2024": \["22RK", "27BH", "28RL"\]/.test(r100)) {
         fail("Grand Design|Reflection 100 Series MY24 OEM plans missing (22RK/27BH/28RL NEW)");
@@ -1096,8 +1189,8 @@ function main() {
       }
 
       const inf = slice("Influence", "Reflection");
-      if (/"2023":/.test(inf)) {
-        fail("Grand Design|Influence must omit 2023 (first card MY2024)");
+      if (/"2020":/.test(inf) || /"2021":/.test(inf) || /"2022":/.test(inf) || /"2023":/.test(inf)) {
+        fail("Grand Design|Influence must omit 2020–2023 (first card MY2024)");
       }
       if (!/"2024": \["2903RL", "3503GK", "3704BH"\]/.test(inf)) {
         fail("Grand Design|Influence MY24 OEM plans missing (2903RL/3503GK/3704BH)");
@@ -1116,6 +1209,24 @@ function main() {
       }
 
       const sol = slice("Solitude", "Solitude S-Class");
+      if (!/"2020": \["310GK", "344GK", "372WB", "373FB", "375RES", "377MBS", "380FL", "382WB", "385GK", "390RK"\]/.test(sol)) {
+        fail("Grand Design|Solitude MY20 RVUSA plans missing (344GK/385GK; drop -R twins)");
+      }
+      if (/"2020": .*"345GK"/.test(sol) || /"2020": .*"280RK"/.test(sol) || /"2020": .*"370DV"/.test(sol) || /"2020": .*"414LJMJ"/.test(sol)) {
+        fail("Grand Design|Solitude must not stamp MY21 345GK / MY22 280RK / MY24 370DV / MY26 414LJMJ onto 2020");
+      }
+      if (!/"2021": \["310GK", "345GK", "372WB", "373FB", "375RES", "378MBS", "380FL", "382WB", "390RK"\]/.test(sol)) {
+        fail("Grand Design|Solitude MY21 RVUSA plans missing (345GK/378MBS; no 344GK/385GK)");
+      }
+      if (/"2021": .*"344GK"/.test(sol) || /"2021": .*"280RK"/.test(sol) || /"2021": .*"370DV"/.test(sol) || /"2021": .*"388MBS"/.test(sol)) {
+        fail("Grand Design|Solitude must not keep 344GK/385GK or stamp MY22 280RK / MY24 370DV / MY25 388MBS onto 2021");
+      }
+      if (!/"2022": \["280RK", "310GK", "345GK", "346FLS", "372WB", "373FB", "375RES", "378MBS", "380FL", "382WB", "390RK"\]/.test(sol)) {
+        fail("Grand Design|Solitude MY22 RVUSA plans missing (280RK/346FLS)");
+      }
+      if (/"2022": .*"370DV"/.test(sol) || /"2022": .*"388MBS"/.test(sol) || /"2022": .*"417KB"/.test(sol) || /"2022": .*"414LJMJ"/.test(sol)) {
+        fail("Grand Design|Solitude must not stamp MY24 370DV/417KB / MY25 388MBS / MY26 414LJMJ onto 2022");
+      }
       if (!/"2023": \["310GK", "345GK", "373FB", "376RD", "378MBS", "380FL", "382WB", "390RK", "391DL"\]/.test(sol)) {
         fail("Grand Design|Solitude MY23 RVUSA plans missing (345GK/373FB; no 375RES/370DV)");
       }
@@ -1147,6 +1258,24 @@ function main() {
       }
 
       const tx = slice("Transcend Xplor", "Momentum");
+      if (!/"2020": \["187MK", "221RB", "245RL", "247BH", "260RB", "261BH", "265BH"\]/.test(tx)) {
+        fail("Grand Design|Transcend Xplor MY20 RVUSA plans missing (187MK/221RB; no *X)");
+      }
+      if (/"2020": .*"20MKX"/.test(tx) || /"2020": .*"200MK"/.test(tx) || /"2020": .*"231RK"/.test(tx) || /"2020": .*"235BH"/.test(tx)) {
+        fail("Grand Design|Transcend Xplor must not stamp MY25 *X, MY21 200MK, MY22 231RK, or MY24 235BH onto 2020");
+      }
+      if (!/"2021": \["200MK", "221RB", "240ML", "245RL", "247BH", "260RB", "261BH", "265BH"\]/.test(tx)) {
+        fail("Grand Design|Transcend Xplor MY21 RVUSA plans missing (200MK/240ML; no leftover 187MK)");
+      }
+      if (/"2021": .*"187MK"/.test(tx) || /"2021": .*"20MKX"/.test(tx) || /"2021": .*"231RK"/.test(tx) || /"2021": .*"235BH"/.test(tx)) {
+        fail("Grand Design|Transcend Xplor must not keep leftover 187MK or stamp MY25 *X / MY22 231RK / MY24 235BH onto 2021");
+      }
+      if (!/"2022": \["200MK", "221RB", "231RK", "240ML", "245RL", "247BH", "251BH", "260RB", "261BH", "265BH", "297QB", "321BH"\]/.test(tx)) {
+        fail("Grand Design|Transcend Xplor MY22 RVUSA plans missing (231RK/251BH/297QB/321BH; no *X)");
+      }
+      if (/"2022": .*"20MKX"/.test(tx) || /"2022": .*"187MK"/.test(tx) || /"2022": .*"235BH"/.test(tx) || /"2022": .*"331BH"/.test(tx)) {
+        fail("Grand Design|Transcend Xplor must not keep leftover 187MK or stamp MY25 *X / MY24 235BH/331BH onto 2022");
+      }
       if (/"2023":/.test(tx)) {
         fail("Grand Design|Transcend Xplor must omit 2023 fby (first locked card is MY2024 numeric; do not invent a 15-plan list)");
       }
@@ -1164,6 +1293,18 @@ function main() {
       }
 
       const tr = slice("Transcend", "Transcend One");
+      if (!/"2020": \["27BHS", "28MKS", "29TBS", "30RBS", "31RLK", "32BHS"\]/.test(tr)) {
+        fail("Grand Design|Transcend premium MY20 RVUSA plans missing (27BHS/28MKS/29TBS; no leftover Xplor 245RL/265BH)");
+      }
+      if (/"2020": .*"245RL"/.test(tr) || /"2020": .*"265BH"/.test(tr) || /"2020": .*"297QB"/.test(tr) || /"2020": .*"247BH"/.test(tr)) {
+        fail("Grand Design|Transcend premium MY2020 must not list leftover Xplor 245RL/265BH/297QB/247BH");
+      }
+      if (!/"2021": \["30RBS", "31RLK", "32BHS"\]/.test(tr)) {
+        fail("Grand Design|Transcend premium MY21 RVUSA plans missing (30RBS/31RLK/32BHS; no leftover 27BHS)");
+      }
+      if (/"2021": .*"27BHS"/.test(tr) || /"2021": .*"28MKS"/.test(tr) || /"2021": .*"245RL"/.test(tr) || /"2021": .*"265BH"/.test(tr)) {
+        fail("Grand Design|Transcend premium MY2021 must not list dropped 27BHS/28MKS or leftover Xplor 245RL/265BH");
+      }
       if (/"2022":/.test(tr) || /"2023":/.test(tr) || /"2024":/.test(tr)) {
         fail("Grand Design|Transcend premium must omit 2022–2024 (mid-gap; 2024 brochure is the Xplor card; T-suffix line starts MY25)");
       }
@@ -1195,6 +1336,24 @@ function main() {
       }
 
       const mom = slice("Momentum", "Momentum M-Class");
+      if (!/"2020": \["376THS", "397TH", "399TH"\]/.test(mom)) {
+        fail("Grand Design|Momentum MY20 RVUSA flagship plans missing (376THS/397TH/399TH; no 397THS)");
+      }
+      if (/"2020": .*"397THS"/.test(mom) || /"2020": .*"349M"/.test(mom) || /"2020": .*"395M"/.test(mom) || /"2020": .*"410TH"/.test(mom)) {
+        fail("Grand Design|Momentum flagship 2020 must not list later 397THS, leftover M-Class 349M/395M, or MY23 410TH");
+      }
+      if (!/"2021": \["376THS", "397THS", "399TH"\]/.test(mom)) {
+        fail("Grand Design|Momentum MY21 RVUSA flagship plans missing (397THS replaces 397TH)");
+      }
+      if (/"2021": .*"397TH"/.test(mom) || /"2021": .*"351MS"/.test(mom) || /"2021": .*"349M"/.test(mom) || /"2021": .*"410TH"/.test(mom)) {
+        fail("Grand Design|Momentum flagship 2021 must not keep leftover 397TH, absorb M-Class 351MS/349M, or stamp MY23 410TH");
+      }
+      if (!/"2022": \["376THS", "397THS", "399TH"\]/.test(mom)) {
+        fail("Grand Design|Momentum MY22 RVUSA flagship plans missing (376THS/397THS/399TH; no 410TH)");
+      }
+      if (/"2022": .*"397TH"/.test(mom) || /"2022": .*"395M"/.test(mom) || /"2022": .*"351MS"/.test(mom) || /"2022": .*"410TH"/.test(mom)) {
+        fail("Grand Design|Momentum flagship 2022 must not keep leftover 397TH, absorb M-Class 395M/351MS, or stamp MY23 410TH");
+      }
       if (!/"2023": \["376THS", "397THS", "399TH", "410TH"\]/.test(mom)) {
         fail("Grand Design|Momentum MY23 RVUSA flagship plans missing (376THS/397THS/399TH/410TH)");
       }
@@ -1215,6 +1374,24 @@ function main() {
       }
 
       const mm = slice("Momentum M-Class", "Momentum G-Class");
+      if (!/"2020": \["349M", "351M", "381M", "395M", "398M"\]/.test(mm)) {
+        fail("Grand Design|Momentum M-Class MY20 RVUSA plans missing (351M/381M/395M; no leftover 328M)");
+      }
+      if (/"2020": .*"328M"/.test(mm) || /"2020": .*"351MS"/.test(mm) || /"2020": .*"336M"/.test(mm) || /"2020": .*"376THS"/.test(mm)) {
+        fail("Grand Design|Momentum M-Class must not keep leftover 328M or stamp MY21 351MS / MY23 336M / flagship 376THS onto 2020");
+      }
+      if (!/"2021": \["349M", "351MS", "381MS", "395MS", "398M"\]/.test(mm)) {
+        fail("Grand Design|Momentum M-Class MY21 RVUSA plans missing (351MS/381MS/395MS)");
+      }
+      if (/"2021": .*"328M"/.test(mm) || /"2021": .*"351M"/.test(mm) || /"2021": .*"336M"/.test(mm) || /"2021": .*"376THS"/.test(mm)) {
+        fail("Grand Design|Momentum M-Class must not keep leftover 328M/351M or stamp MY23 336M / flagship 376THS onto 2021");
+      }
+      if (!/"2022": \["349M", "351MS", "381MS", "395MS", "398M"\]/.test(mm)) {
+        fail("Grand Design|Momentum M-Class MY22 RVUSA plans missing (same five as MY21; no 336M)");
+      }
+      if (/"2022": .*"328M"/.test(mm) || /"2022": .*"336M"/.test(mm) || /"2022": .*"351M"/.test(mm) || /"2022": .*"376THS"/.test(mm)) {
+        fail("Grand Design|Momentum M-Class must not keep leftover 328M/351M or stamp MY23 336M / flagship 376THS onto 2022");
+      }
       if (!/"2023": \["336M", "349M", "351MS", "381MS", "395MS", "398M"\]/.test(mm)) {
         fail("Grand Design|Momentum M-Class MY23 RVUSA plans missing (336M; no 414M)");
       }
@@ -1235,6 +1412,24 @@ function main() {
       }
 
       const gtt = slice("Momentum G-Class", "Momentum G-Class Fifth Wheel");
+      if (!/"2020": \["21G", "25G", "28G", "29G"\]/.test(gtt)) {
+        fail("Grand Design|Momentum G-Class TT MY20 RVUSA plans missing (21G/25G/28G/29G; no 23G)");
+      }
+      if (/"2020": .*"23G"/.test(gtt) || /"2020": .*"30G"/.test(gtt) || /"2020": .*"32G"/.test(gtt) || /"2020": .*"320G"/.test(gtt) || /"2020": .*"29G0"/.test(gtt)) {
+        fail("Grand Design|Momentum G-Class TT must not stamp later 23G/30G/32G, absorb FW 320G, or invent OCR 29G0 onto 2020");
+      }
+      if (!/"2021": \["21G", "23G", "25G", "28G", "29G", "30G", "31G"\]/.test(gtt)) {
+        fail("Grand Design|Momentum G-Class TT MY21 RVUSA plans missing (23G/30G/31G; no 32G)");
+      }
+      if (/"2021": .*"32G"/.test(gtt) || /"2021": .*"320G"/.test(gtt) || /"2021": .*"29G0"/.test(gtt)) {
+        fail("Grand Design|Momentum G-Class TT must not stamp MY23 32G, absorb FW 320G, or invent OCR 29G0 onto 2021");
+      }
+      if (!/"2022": \["21G", "23G", "25G", "28G", "29G", "30G", "31G"\]/.test(gtt)) {
+        fail("Grand Design|Momentum G-Class TT MY22 RVUSA plans missing (same seven as MY21; no 32G)");
+      }
+      if (/"2022": .*"32G"/.test(gtt) || /"2022": .*"320G"/.test(gtt) || /"2022": .*"27G"/.test(gtt)) {
+        fail("Grand Design|Momentum G-Class TT must not stamp MY23 32G / MY25 27G or absorb FW 320G onto 2022");
+      }
       if (!/"2023": \["21G", "23G", "25G", "28G", "29G", "30G", "31G", "32G"\]/.test(gtt)) {
         fail("Grand Design|Momentum G-Class TT MY23 RVUSA plans missing (32G; no 27G/29GS)");
       }
@@ -1255,8 +1450,8 @@ function main() {
       }
 
       const gfw = slice("Momentum G-Class Fifth Wheel", "Momentum MAV");
-      if (/"2023":/.test(gfw)) {
-        fail("Grand Design|Momentum G-Class Fifth Wheel must omit 2023 fby (tight slice; first locked FW card is MY2024)");
+      if (/"2020":/.test(gfw) || /"2021":/.test(gfw) || /"2022":/.test(gfw) || /"2023":/.test(gfw)) {
+        fail("Grand Design|Momentum G-Class Fifth Wheel must omit 2020–2023 fby (tight slice; first locked FW card is MY2024)");
       }
       if (!/"2024": \["320G", "325G", "350G", "355G", "415G"\]/.test(gfw)) {
         fail("Grand Design|Momentum G-Class Fifth Wheel MY24 OEM plans missing (355G 2024-only; 415G NEW)");

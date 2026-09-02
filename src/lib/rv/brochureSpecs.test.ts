@@ -11356,7 +11356,7 @@ test("Tiffin 2010–2012 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(findPowertrainCorrection("2012", "Tiffin", "Allegro Bay", "38AB"), null);
 });
 
-test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
+test("Grand Design 2020–2026 OEM year-first floorplans + yearEnds", () => {
   const gd = CATALOG_INDEX["Grand Design"];
   assert.ok(gd);
 
@@ -11385,6 +11385,10 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.equal(gd.Transcend?.years?.includes(2024), false);
   assert.equal(gd.Transcend?.years?.includes(2025), true);
   assert.equal(gd["Transcend Xplor"]?.yearStart, 2020);
+  assert.equal(gd["Transcend Xplor"]?.years?.includes(2020), true);
+  assert.equal(gd["Transcend Xplor"]?.years?.includes(2021), true);
+  assert.equal(gd["Transcend Xplor"]?.years?.includes(2022), true);
+  assert.equal(gd["Transcend Xplor"]?.years?.includes(2023), false);
   assert.equal(gd["Solitude S-Class"]?.yearEnd, 2023);
   assert.equal(gd["Solitude S-Class"]?.years?.includes(2023), true);
   assert.equal(gd["Solitude S-Class"]?.years?.includes(2024), false);
@@ -11417,6 +11421,16 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   const g = block.slice(g0, g1);
 
   const imag = g.slice(g.indexOf("    Imagine: {"), g.indexOf('    "Imagine XLS"'));
+  assert.match(imag, /"2020": \["2250RK", "2400BH", "2450RL", "2500RL", "2600RB", "2670MK", "2800BH", "2970RL", "3000QB", "3100RD", "3250BH"\]/);
+  assert.match(imag, /"2021": \["2400BH", "2500RL", "2600RB", "2670MK", "2800BH", "2910BH", "2970RL", "3100RD", "3250BH"\]/);
+  assert.match(imag, /"2022": \["2400BH", "2500RL", "2600RB", "2670MK", "2800BH", "2910BH", "2970RL", "3100RD", "3250BH"\]/);
+  assert.doesNotMatch(imag, /"2020": .*"2150RB"/);
+  assert.doesNotMatch(imag, /"2020": .*"2910BH"/);
+  assert.doesNotMatch(imag, /"2020": .*"3210BH"/);
+  assert.doesNotMatch(imag, /"2021": .*"2150RB"/);
+  assert.doesNotMatch(imag, /"2021": .*"3210BH"/);
+  assert.doesNotMatch(imag, /"2022": .*"3210BH"/);
+  assert.doesNotMatch(imag, /"2022": .*"2660BS"/);
   assert.match(imag, /"2023": \["2400BH", "2500RL", "2600RB", "2670MK", "2800BH", "2910BH", "2970RL", "3100RD", "3210BH"\]/);
   assert.match(imag, /"2024": \["2500RL", "2600RB", "2660BS", "2670MK", "2800BH", "2920BS", "2970RL", "3100RD", "3210BH"\]/);
   assert.match(imag, /"2025": \["2300MK", "2470BH", "2500RL", "2600RB", "2670MK", "2800BH", "2920BS", "2970RL", "3100RD", "3210BH"\]/);
@@ -11432,6 +11446,14 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(imag, /"2027":/);
 
   const xls = g.slice(g.indexOf('    "Imagine XLS": {'), g.indexOf('    "Imagine AIM"'));
+  assert.match(xls, /"2020": \["17MKE", "19BWE", "21BHE", "22MLE", "22RBE", "23BHE", "24MPR"\]/);
+  assert.match(xls, /"2021": \["17MKE", "21BHE", "22MLE", "22RBE", "23BHE"\]/);
+  assert.match(xls, /"2022": \["17MKE", "21BHE", "22MLE", "22RBE", "23BHE", "23LDE"\]/);
+  assert.doesNotMatch(xls, /"2020": .*"22BHE"/);
+  assert.doesNotMatch(xls, /"2021": .*"19BWE"/);
+  assert.doesNotMatch(xls, /"2021": .*"23LDE"/);
+  assert.doesNotMatch(xls, /"2022": .*"25BHE"/);
+  assert.doesNotMatch(xls, /"2022": .*"22BHE"/);
   assert.match(xls, /"2023": \["17MKE", "21BHE", "22MLE", "22RBE", "23BHE", "23LDE", "25BHE"\]/);
   assert.match(xls, /"2024": \["17MKE", "21BHE", "22BHE", "22MLE", "22RBE", "23LDE", "24BSE", "25DBE"\]/);
   assert.match(xls, /"2026": \["17MKE", "21MBE", "22BHE", "22MLE", "22RBE", "23LDE", "25DBE", "25RLE"\]/);
@@ -11444,6 +11466,9 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(xls, /"2015":/);
 
   const aim = g.slice(g.indexOf('    "Imagine AIM": {'), g.indexOf("    Transcend: {"));
+  assert.doesNotMatch(aim, /"2020":/);
+  assert.doesNotMatch(aim, /"2021":/);
+  assert.doesNotMatch(aim, /"2022":/);
   assert.doesNotMatch(aim, /"2023":/);
   assert.match(aim, /"2024": \["14MS", "15BH", "15RB", "16BL", "16ML", "18BH"\]/);
   assert.match(aim, /"2025": \["14MS", "15RB", "16BL", "16ML"\]/);
@@ -11452,6 +11477,15 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(aim, /"2025": .*"19MLA"/);
 
   const rfw = g.slice(g.indexOf("    Reflection: {"), g.indexOf('    "Reflection Travel Trailer"'));
+  assert.match(rfw, /"2020": \["28BH", "29RS", "303RLS", "311BHS", "31MB", "320MKS", "337RLS", "367BHS"\]/);
+  assert.match(rfw, /"2021": \["28BH", "303RLS", "311BHS", "31MB", "320MKS", "337RLS", "340RDS", "367BHS"\]/);
+  assert.match(rfw, /"2022": \["28BH", "303RLS", "311BHS", "31MB", "320MKS", "337RLS", "341RDS", "367BHS"\]/);
+  assert.doesNotMatch(rfw, /"2020": .*"315RLTS"/);
+  assert.doesNotMatch(rfw, /"2020": .*"340RDS"/);
+  assert.doesNotMatch(rfw, /"2021": .*"29RS"/);
+  assert.doesNotMatch(rfw, /"2021": .*"341RDS"/);
+  assert.doesNotMatch(rfw, /"2022": .*"315RLTS"/);
+  assert.doesNotMatch(rfw, /"2022": .*"324MBS"/);
   assert.match(rfw, /"2023": \["303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "341RDS", "367BHS", "370FLS"\]/);
   assert.match(rfw, /"2024": \["303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "362TBS", "367BHS"\]/);
   assert.match(rfw, /"2026": \["303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "360FLS", "362TBS", "367BHS"\]/);
@@ -11464,6 +11498,9 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(rfw, /"2026": .*"317RSTS"/);
 
   const rtt = g.slice(g.indexOf('    "Reflection Travel Trailer": {'), g.indexOf('    "Reflection 100 Series"'));
+  assert.doesNotMatch(rtt, /"2020":/);
+  assert.doesNotMatch(rtt, /"2021":/);
+  assert.doesNotMatch(rtt, /"2022":/);
   assert.doesNotMatch(rtt, /"2023":/);
   assert.match(rtt, /"2024": \["296RDTS", "297RSTS", "310MKTS", "312BHTS", "315RLTS"\]/);
   assert.match(rtt, /"2026": \["317RSTS", "322FKTS", "342BHTS", "345RLTS"\]/);
@@ -11473,12 +11510,25 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.match(rtt, /yearStart:\s*2024/);
 
   const r100 = g.slice(g.indexOf('    "Reflection 100 Series": {'), g.indexOf('    "Reflection 150 Series"'));
+  assert.doesNotMatch(r100, /"2020":/);
+  assert.doesNotMatch(r100, /"2021":/);
+  assert.doesNotMatch(r100, /"2022":/);
+  assert.doesNotMatch(r100, /"2023":/);
   assert.match(r100, /"2024": \["22RK", "27BH", "28RL"\]/);
   assert.match(r100, /"2026": \["22RK", "24RL", "27BH", "29RL", "32BH"\]/);
   assert.doesNotMatch(r100, /"2024": .*"24RL"/);
   assert.doesNotMatch(r100, /"2025": .*"32BH"/);
 
   const r150 = g.slice(g.indexOf('    "Reflection 150 Series": {'), g.indexOf("    Imagine: {"));
+  assert.match(r150, /"2020": \["240RL", "260RD", "268BH", "290BH", "295RL"\]/);
+  assert.match(r150, /"2021": \["260RD", "268BH", "278BH", "280RS", "295RL"\]/);
+  assert.match(r150, /"2022": \["226RK", "260RD", "268BH", "278BH", "280RS", "295RL"\]/);
+  assert.doesNotMatch(r150, /"2020": .*"150 Series"/);
+  assert.doesNotMatch(r150, /"2021": .*"150 Series"/);
+  assert.doesNotMatch(r150, /"2022": .*"150 Series"/);
+  assert.doesNotMatch(r150, /"2020": .*"226RK"/);
+  assert.doesNotMatch(r150, /"2021": .*"226RK"/);
+  assert.doesNotMatch(r150, /"2022": .*"270BN"/);
   assert.match(r150, /"2023": \["226RK", "260RD", "270BN", "278BH", "280RS", "295RL", "298BH"\]/);
   assert.match(r150, /"2024": \["260RD", "270BN", "295RL", "298BH"\]/);
   assert.match(r150, /"2026": \["250ML", "260RD", "270BN", "280RL", "298BH"\]/);
@@ -11489,6 +11539,10 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(r150, /"2026": .*"320MKS"/);
 
   const inf = g.slice(g.indexOf("    Influence: {"), g.indexOf("    Reflection: {"));
+  assert.doesNotMatch(inf, /"2020":/);
+  assert.doesNotMatch(inf, /"2021":/);
+  assert.doesNotMatch(inf, /"2022":/);
+  assert.doesNotMatch(inf, /"2023":/);
   assert.match(inf, /"2024": \["2903RL", "3503GK", "3704BH"\]/);
   assert.match(inf, /"2025": \["2903RL", "3203GK", "3503GK", "3704BH", "3804DS"\]/);
   assert.match(inf, /"2026": \["2903RL", "3003RL", "3203GK", "3503GK", "3804DS", "3904BH"\]/);
@@ -11498,6 +11552,15 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(inf, /"2025": .*"3904BH"/);
 
   const sol = g.slice(g.indexOf("    Solitude: {"), g.indexOf('    "Solitude S-Class"'));
+  assert.match(sol, /"2020": \["310GK", "344GK", "372WB", "373FB", "375RES", "377MBS", "380FL", "382WB", "385GK", "390RK"\]/);
+  assert.match(sol, /"2021": \["310GK", "345GK", "372WB", "373FB", "375RES", "378MBS", "380FL", "382WB", "390RK"\]/);
+  assert.match(sol, /"2022": \["280RK", "310GK", "345GK", "346FLS", "372WB", "373FB", "375RES", "378MBS", "380FL", "382WB", "390RK"\]/);
+  assert.doesNotMatch(sol, /"2020": .*"345GK"/);
+  assert.doesNotMatch(sol, /"2020": .*"280RK"/);
+  assert.doesNotMatch(sol, /"2021": .*"344GK"/);
+  assert.doesNotMatch(sol, /"2021": .*"280RK"/);
+  assert.doesNotMatch(sol, /"2022": .*"370DV"/);
+  assert.doesNotMatch(sol, /"2022": .*"388MBS"/);
   assert.match(sol, /"2023": \["310GK", "345GK", "373FB", "376RD", "378MBS", "380FL", "382WB", "390RK", "391DL"\]/);
   assert.match(sol, /"2024": \["310GK", "370DV", "376RD", "378MBS", "380FL", "382WB", "390RK", "391DL", "417KB"\]/);
   assert.match(sol, /"2026": \["310GK", "370DV", "376RD", "380FL", "382WB", "388MBS", "390RK", "391DL", "414LJMJ", "417KB"\]/);
@@ -11512,6 +11575,15 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
 
   const sc = g.slice(g.indexOf('    "Solitude S-Class": {'), g.indexOf("    Influence: {"));
   assert.match(sc, /yearEnd:\s*2023/);
+  assert.match(sc, /"2020": \["2930RL", "3550BH", "3740BH", "3950BH"\]/);
+  assert.match(sc, /"2021": \["2930RL", "3540GK", "3550BH", "3740BH", "3950BH"\]/);
+  assert.match(sc, /"2022": \["2930RL", "3330RE", "3540GK", "3550BH", "3740BH", "3950BH"\]/);
+  assert.doesNotMatch(sc, /"2020": .*"3800FL"/);
+  assert.doesNotMatch(sc, /"2020": .*"3330RE"/);
+  assert.doesNotMatch(sc, /"2021": .*"3800FL"/);
+  assert.doesNotMatch(sc, /"2021": .*"3330RE"/);
+  assert.doesNotMatch(sc, /"2022": .*"3800FL"/);
+  assert.doesNotMatch(sc, /"2022": .*"3460FL"/);
   assert.match(sc, /"2023": \["2930RL", "3460FL", "3740BH", "3950BH"\]/);
   assert.doesNotMatch(sc, /"2023": .*"3800FL"/);
   assert.doesNotMatch(sc, /"2024":/);
@@ -11523,6 +11595,15 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(t1, /"2025": .*"131DL"/);
 
   const tx = g.slice(g.indexOf('    "Transcend Xplor": {'), g.indexOf("    Momentum: {"));
+  assert.match(tx, /"2020": \["187MK", "221RB", "245RL", "247BH", "260RB", "261BH", "265BH"\]/);
+  assert.match(tx, /"2021": \["200MK", "221RB", "240ML", "245RL", "247BH", "260RB", "261BH", "265BH"\]/);
+  assert.match(tx, /"2022": \["200MK", "221RB", "231RK", "240ML", "245RL", "247BH", "251BH", "260RB", "261BH", "265BH", "297QB", "321BH"\]/);
+  assert.doesNotMatch(tx, /"2020": .*"20MKX"/);
+  assert.doesNotMatch(tx, /"2020": .*"200MK"/);
+  assert.doesNotMatch(tx, /"2021": .*"187MK"/);
+  assert.doesNotMatch(tx, /"2021": .*"20MKX"/);
+  assert.doesNotMatch(tx, /"2022": .*"20MKX"/);
+  assert.doesNotMatch(tx, /"2022": .*"235BH"/);
   assert.doesNotMatch(tx, /"2023":/);
   assert.match(tx, /"2024": \["200MK", "221RB", "235BH", "240ML", "245RL", "247BH", "251BH", "260RB", "261BH", "265BH", "297QB", "315BH", "321BH", "331BH"\]/);
   assert.match(tx, /"2026": \["19BHX", "20MKX", "21RLX", "22RBX", "23BHX", "24BHX", "25MLX", "26BHX", "26RBX", "27DBX"\]/);
@@ -11530,7 +11611,13 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(tx, /"2025": .*"19BHX"/);
 
   const tr = g.slice(g.indexOf("    Transcend: {"), g.indexOf('    "Transcend One"'));
+  assert.match(tr, /"2020": \["27BHS", "28MKS", "29TBS", "30RBS", "31RLK", "32BHS"\]/);
+  assert.match(tr, /"2021": \["30RBS", "31RLK", "32BHS"\]/);
   assert.match(tr, /"2025": \["245RLT", "265BHT", "285RKT", "295QBT", "305BHT", "315RKT", "325BHT", "335BHT", "335DQT"\]/);
+  assert.doesNotMatch(tr, /"2020": .*"245RL"/);
+  assert.doesNotMatch(tr, /"2020": .*"297QB"/);
+  assert.doesNotMatch(tr, /"2021": .*"245RL"/);
+  assert.doesNotMatch(tr, /"2021": .*"27BHS"/);
   assert.doesNotMatch(tr, /"2022":/);
   assert.doesNotMatch(tr, /"2023":/);
   assert.doesNotMatch(tr, /"2024":/);
@@ -11543,6 +11630,15 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(mav, /"2022":/);
 
   const mom = g.slice(g.indexOf("    Momentum: {"), g.indexOf('    "Momentum M-Class"'));
+  assert.match(mom, /"2020": \["376THS", "397TH", "399TH"\]/);
+  assert.match(mom, /"2021": \["376THS", "397THS", "399TH"\]/);
+  assert.match(mom, /"2022": \["376THS", "397THS", "399TH"\]/);
+  assert.doesNotMatch(mom, /"2020": .*"349M"/);
+  assert.doesNotMatch(mom, /"2020": .*"395M"/);
+  assert.doesNotMatch(mom, /"2021": .*"397TH"/);
+  assert.doesNotMatch(mom, /"2021": .*"351MS"/);
+  assert.doesNotMatch(mom, /"2022": .*"395M"/);
+  assert.doesNotMatch(mom, /"2022": .*"410TH"/);
   assert.match(mom, /"2023": \["376THS", "397THS", "399TH", "410TH"\]/);
   assert.match(mom, /"2024": \["397THS", "399TH", "410TH"\]/);
   assert.match(mom, /"2026": \["395MT", "396DB", "399M"\]/);
@@ -11553,12 +11649,28 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(mom, /"2026": .*"344M"/);
 
   const mm = g.slice(g.indexOf('    "Momentum M-Class": {'), g.indexOf('    "Momentum G-Class"'));
+  assert.match(mm, /"2020": \["349M", "351M", "381M", "395M", "398M"\]/);
+  assert.match(mm, /"2021": \["349M", "351MS", "381MS", "395MS", "398M"\]/);
+  assert.match(mm, /"2022": \["349M", "351MS", "381MS", "395MS", "398M"\]/);
+  assert.doesNotMatch(mm, /"2020": .*"328M"/);
+  assert.doesNotMatch(mm, /"2020": .*"351MS"/);
+  assert.doesNotMatch(mm, /"2021": .*"328M"/);
+  assert.doesNotMatch(mm, /"2022": .*"336M"/);
+  assert.doesNotMatch(mm, /"2022": .*"376THS"/);
   assert.match(mm, /"2023": \["336M", "349M", "351MS", "381MS", "395MS", "398M"\]/);
   assert.match(mm, /"2024": \["349M", "351MS", "381MS", "395MS", "398M", "414M"\]/);
   assert.doesNotMatch(mm, /"2023": .*"414M"/);
   assert.doesNotMatch(mm, /"2023": .*"344M"/);
 
   const gtt = g.slice(g.indexOf('    "Momentum G-Class": {'), g.indexOf('    "Momentum G-Class Fifth Wheel"'));
+  assert.match(gtt, /"2020": \["21G", "25G", "28G", "29G"\]/);
+  assert.match(gtt, /"2021": \["21G", "23G", "25G", "28G", "29G", "30G", "31G"\]/);
+  assert.match(gtt, /"2022": \["21G", "23G", "25G", "28G", "29G", "30G", "31G"\]/);
+  assert.doesNotMatch(gtt, /"2020": .*"23G"/);
+  assert.doesNotMatch(gtt, /"2020": .*"320G"/);
+  assert.doesNotMatch(gtt, /"2021": .*"320G"/);
+  assert.doesNotMatch(gtt, /"2022": .*"32G"/);
+  assert.doesNotMatch(gtt, /"2022": .*"320G"/);
   assert.match(gtt, /"2023": \["21G", "23G", "25G", "28G", "29G", "30G", "31G", "32G"\]/);
   assert.match(gtt, /"2024": \["21G", "23G", "25G", "28G", "29G", "30G", "31G"\]/);
   assert.doesNotMatch(gtt, /"2023": .*"27G"/);
@@ -11569,6 +11681,9 @@ test("Grand Design 2023–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(gtt, /"2024": .*"29GS"/);
 
   const gfw = g.slice(g.indexOf('    "Momentum G-Class Fifth Wheel": {'), g.indexOf('    "Momentum MAV"'));
+  assert.doesNotMatch(gfw, /"2020":/);
+  assert.doesNotMatch(gfw, /"2021":/);
+  assert.doesNotMatch(gfw, /"2022":/);
   assert.doesNotMatch(gfw, /"2023":/);
   assert.match(gfw, /"2024": \["320G", "325G", "350G", "355G", "415G"\]/);
   assert.match(gfw, /"2026": \["320G", "325G", "350G", "394G"\]/);
