@@ -17262,7 +17262,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Reatta": {
       type: "Class A Diesel",
-      floorplans: ["37K", "37MB", "39BH", "39T2", "39W"],
+      floorplans: ["37K", "37MB", "39BH", "39T2"],
       floorplansByYear: {
         "2016": ["37K", "39BH"],
         // No OEM MY17 / MY18 Reatta year page — Spartan/Entegra PR (Jul 2018) unveiled all-new 2019 Reatta. Omit 2017–2018.
@@ -17419,7 +17419,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Vision": {
       type: "Class A Gas",
-      floorplans: ["26X", "27A", "29F", "29S", "31B", "31R", "31V", "36A"],
+      floorplans: ["26X", "27A", "29F", "29S", "31B", "31R", "31V"],
       floorplansByYear: {
         "2014": ["27A", "29S", "31B"],
         "2015": ["27A", "29S", "31B"],
@@ -17912,7 +17912,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Odyssey": {
       type: "Class C",
-      floorplans: ["22J", "24A", "24B", "25R", "26B", "26D", "26M", "27G", "27U", "28A", "29K", "29V", "30Z", "31F", "31L"],
+      floorplans: ["22J", "24B", "25R", "26D", "26M", "27G", "27U", "29K", "29V", "30Z", "31F", "31L"],
       floorplansByYear: {
         // OEM MY18 Odyssey year page + official 2018 Odyssey Flyer: 22J | 26D | 29V | 31L · E-450 6.8 305/420. 31L is current (not DSO).
         "2018": ["22J", "26D", "29V", "31L"],
