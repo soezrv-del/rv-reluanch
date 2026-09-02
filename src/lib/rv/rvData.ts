@@ -18225,7 +18225,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Reflection 150 Series": {
       type: "Fifth Wheel",
-      floorplans: ["220RK", "226RK", "230RL", "240RL", "250ML", "260RD", "268BH", "270BN", "273MK", "278BH", "280RL", "280RS", "290BH", "295RL", "298BH"],
+      floorplans: ["220RK", "226RK", "230RL", "240RL", "250ML", "260RD", "268BH", "270BN", "278BH", "280RL", "280RS", "290BH", "295RL", "298BH"],
       floorplansByYear: {
         // RVUSA 2018 Reflection 150 spec-by-model (m6654-y2018): 220RK | 230RL | 290BH | 295RL
         // Drop leftover "150 Series …" prefixes. No 260RD (MY20).
