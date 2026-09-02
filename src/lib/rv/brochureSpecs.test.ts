@@ -1183,8 +1183,13 @@ test("Fleetwood 2013–2014 walk-back: OEM plans, no invented ghosts", () => {
 
   const classic13gas = findPowertrainCorrection("2013", "Fleetwood", "Bounder Classic", "30T");
   assert.equal(classic13gas!.horsepower, 362);
+  assert.equal(classic13gas!.fuelType, "Gas");
   const classic13opt = findPowertrainCorrection("2013", "Fleetwood", "Bounder Classic", "34B");
   assert.equal(classic13opt!.horsepower, 0);
+  assert.notEqual(classic13opt!.fuelType, "Gas");
+  const classic13optR = findPowertrainCorrection("2013", "Fleetwood", "Bounder Classic", "36R");
+  assert.equal(classic13optR!.horsepower, 0);
+  assert.notEqual(classic13optR!.fuelType, "Gas");
   const classic14 = findPowertrainCorrection("2014", "Fleetwood", "Bounder Classic", "36R");
   assert.equal(classic14!.horsepower, 362);
   assert.equal(classic14!.fuelType, "Gas");
@@ -1213,6 +1218,9 @@ test("Fleetwood 2013–2014 walk-back: OEM plans, no invented ghosts", () => {
   assert.doesNotMatch(jam13!.engine, /7\.3/);
   const jam14 = findPowertrainCorrection("2014", "Fleetwood", "Jamboree", "31A");
   assert.equal(jam14!.horsepower, 305);
+  assert.equal(findPowertrainCorrection("2013", "Fleetwood", "Jamboree Searcher", "25K"), null);
+  assert.equal(findPowertrainCorrection("2014", "Fleetwood", "Jamboree Searcher", "23B"), null);
+  assert.equal(findPowertrainCorrection("2014", "Fleetwood", "Jamboree Searcher", "31M"), null);
 
   const tioga13 = findPowertrainCorrection("2013", "Fleetwood", "Tioga", "23B");
   assert.equal(tioga13!.horsepower, 0);

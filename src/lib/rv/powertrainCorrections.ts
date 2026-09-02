@@ -5314,8 +5314,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
       "Ford Triton V10 6.8L 362HP (all five) or Freightliner MC / Cummins ISB 6.7L 240/560 diesel option on 34B/36R",
     horsepower: 0,
     chassis: "Ford F53 or Freightliner MC / Cummins ISB 6.7L",
-    fuelType: "Gas",
-    note: "2013_bdrc_f (BC13F2): gas-or-diesel option-band. Line HP 0. Hitch 5,000. Not Bounder.",
+    note: "2013_bdrc_f (BC13F2): gas-or-diesel option-band. Line HP 0. Do not stamp fuelType Gas onto 34B/36R diesel-option coaches. Hitch 5,000. Not Bounder.",
   },
   {
     yearMin: 2013,
@@ -9747,6 +9746,10 @@ export function findPowertrainCorrection(
     }
     // Bare "tioga" must not stamp Tioga Ranger
     if (c.modelIncludes === "tioga" && md.includes("tioga ranger")) {
+      return false;
+    }
+    // Bare "jamboree" Sport must not stamp Jamboree Searcher (mixed E-350 / E-450)
+    if (c.modelIncludes === "jamboree" && md.includes("jamboree searcher")) {
       return false;
     }
     // Bare "seneca" ISB must not stamp Seneca XT Power Stroke
