@@ -6661,7 +6661,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     horsepower: 0,
     chassis: "Ford F53",
     fuelType: "Gas",
-    note: "OEM MY13 Hurricane mak6577: Ford F53. HP not printed (0). Twin of Windsport — do not copy Windsport 34F.",
+    note: "OEM MY13 Hurricane 2013Hurricane…122012: Ford F53. HP not printed (0). Twin of Windsport — do not copy Windsport HP. Compact flyer omitted 34F — dated full card keeps it.",
   },
   {
     yearMin: 2014,

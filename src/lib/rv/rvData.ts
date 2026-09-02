@@ -5124,8 +5124,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2011": ["30Q", "31G", "31J", "32A", "32D", "34T"],
         // OEM MY12 Hurricane (2012_Hurricane_A — Hurricane card, not Windsport): 30Q | 31G | 31J | 32A | 32D | 34T · Ford 6.8 Triton V10. HP not printed (0).
         "2012": ["30Q", "31G", "31J", "32A", "32D", "34T"],
-        // OEM MY13 Hurricane (RVUSA mak6577): 29X | 32A | 33G | 34E · Ford F53. HP not printed. Do not copy Windsport 34F onto this twin.
-        "2013": ["29X", "32A", "33G", "34E"],
+        // OEM MY13 Hurricane dated full card 2013Hurricane…122012 / dreamfinders: 29X | 32A | 33G | 34E | 34F · Ford F53. HP not printed. Compact flyer (mak6577) omitted 34F — trust the dated full card. Not a Windsport copy.
+        "2013": ["29X", "32A", "33G", "34E", "34F"],
         // OEM MY14 Hurricane (14_Hurricane_A): 27K | 32N | 34E | 34F | 34J · F-53 6.8 V10 362/457.
         "2014": ["27K", "32N", "34E", "34F", "34J"],
         // OEM MY15 Hurricane © 12/15/14: 27K | 31S | 32N | 34E | 34F | 34J | 35C · F-53 6.8 V10 362/457.
@@ -5204,7 +5204,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 0,
           chassis: "Ford F53",
           fuelType: "Gas",
-          notes: "OEM MY13 Hurricane mak6577: Ford F53. HP not printed (0). Twin of Windsport — do not copy Windsport 34F.",
+          notes: "OEM MY13 Hurricane 2013Hurricane…122012: Ford F53. HP not printed (0). Twin of Windsport — do not copy Windsport HP. Compact flyer omitted 34F — dated full card keeps it.",
         },
         {
           from: 2014,

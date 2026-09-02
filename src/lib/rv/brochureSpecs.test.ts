@@ -3878,9 +3878,8 @@ test("Thor 2013–2014 OEM year-first floorplans + powertrain pins", () => {
   assert.doesNotMatch(vg, /"2014": .*"25.6"/);
 
   const hu = thor.slice(thor.indexOf("    Hurricane: {"), thor.indexOf('    "Four Winds Majestic"'));
-  assert.match(hu, /"2013": \["29X", "32A", "33G", "34E"\]/);
+  assert.match(hu, /"2013": \["29X", "32A", "33G", "34E", "34F"\]/);
   assert.match(hu, /"2014": \["27K", "32N", "34E", "34F", "34J"\]/);
-  assert.doesNotMatch(hu, /"2013": .*"34F"/);
   assert.doesNotMatch(hu, /"2013": .*"27R"/);
 
   const ws = thor.slice(thor.indexOf("    Windsport: {"), thor.indexOf("    Challenger: {"));
