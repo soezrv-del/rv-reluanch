@@ -1096,6 +1096,9 @@ test("Fleetwood 2013–2014 walk-back: OEM plans, no invented ghosts", () => {
   assert.doesNotMatch(disc, /"2013": \["36G"/);
   assert.doesNotMatch(disc, /"2014": \["36G"/);
   assert.doesNotMatch(disc.slice(disc.indexOf('"2013"'), disc.indexOf('"2015"')), /"38F"/);
+  // Aggregate covers MY11–13 42' OEM plans. MY14 drop is year-specific — do not leave series at 36–40.
+  assert.match(disc, /lengthRange:\s*\[\s*36,\s*42\s*\]/);
+  assert.doesNotMatch(disc, /lengthRange:\s*\[\s*36,\s*40\s*\]/);
 
   const lxe = fleet.slice(fleet.indexOf('    "Discovery LXE": {'), fleet.indexOf("    Frontier: {"));
   assert.doesNotMatch(lxe, /"2013"/);
@@ -1302,6 +1305,9 @@ test("Fleetwood 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
   assert.doesNotMatch(disc, /"2010": \["36G"/);
   assert.doesNotMatch(disc, /"2011": \["36G"/);
   assert.doesNotMatch(disc.slice(disc.indexOf('"2010"'), disc.indexOf('"2013"')), /"38F"/);
+  // #73 leftover nit: MY11–13 lock 42' OEM plans; MY14 drop is year-specific. Aggregate is 36–42, not stale 36–40, not invented 44.
+  assert.match(disc, /lengthRange:\s*\[\s*36,\s*42\s*\]/);
+  assert.doesNotMatch(disc, /lengthRange:\s*\[\s*36,\s*40\s*\]/);
 
   const lxe = fleet.slice(fleet.indexOf('    "Discovery LXE": {'), fleet.indexOf("    Frontier: {"));
   assert.doesNotMatch(lxe, /"2010"/);
