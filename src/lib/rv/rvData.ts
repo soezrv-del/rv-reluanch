@@ -18230,9 +18230,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // RVUSA 2018 Reflection 150 spec-by-model (m6654-y2018): 220RK | 230RL | 290BH | 295RL
         // Drop leftover "150 Series …" prefixes. No 260RD (MY20).
         "2018": ["220RK", "230RL", "290BH", "295RL"],
-        // RVUSA 2019 Reflection 150 dated spec pages (m6654-y2019): 220RK | 230RL | 273MK | 290BH | 295RL
-        // Drop leftover prefixes. No 260RD (MY20).
-        "2019": ["220RK", "230RL", "273MK", "290BH", "295RL"],
+        // RVUSA 2019 Reflection 150 family card (m6654-y2019): 220RK | 230RL | 290BH | 295RL
+        // Drop leftover prefixes. No invent 273MK. No 260RD (MY20).
+        "2019": ["220RK", "230RL", "290BH", "295RL"],
         // RVUSA 2020 Reflection 150 spec-by-model (m6654-y2020): 240RL | 260RD | 268BH | 290BH | 295RL
         // Drop leftover "150 Series …" prefixes on the locked year. No 278BH / 280RS (MY21); no 226RK (MY22).
         "2020": ["240RL", "260RD", "268BH", "290BH", "295RL"],

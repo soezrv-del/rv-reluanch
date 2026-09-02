@@ -11768,10 +11768,12 @@ test("Grand Design 2020–2026 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(rfw, /"2019": .*"315RLTS"/);
 
   assert.match(r150, /"2018": \["220RK", "230RL", "290BH", "295RL"\]/);
-  assert.match(r150, /"2019": \["220RK", "230RL", "273MK", "290BH", "295RL"\]/);
+  assert.match(r150, /"2019": \["220RK", "230RL", "290BH", "295RL"\]/);
   assert.doesNotMatch(r150, /"2018": .*"150 Series"/);
   assert.doesNotMatch(r150, /"2019": .*"150 Series"/);
   assert.doesNotMatch(r150, /"2018": .*"260RD"/);
+  assert.doesNotMatch(r150, /"2018": .*"273MK"/);
+  assert.doesNotMatch(r150, /"2019": .*"273MK"/);
 
   assert.match(sol, /"2015": \["305RE", "365DEN", "366DEN", "375RE", "379FL"\]/);
   assert.match(sol, /"2017": \["300GK", "310GK", "360RL", "374TH", "375RES", "377MBS", "379FLS", "384GK"\]/);

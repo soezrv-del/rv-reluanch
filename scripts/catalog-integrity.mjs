@@ -1117,13 +1117,13 @@ function main() {
         fail("Grand Design|Reflection 150 Series MY18 RVUSA plans missing (220RK/230RL/290BH/295RL)");
       }
       if (/"2018": .*"150 Series"/.test(r150) || /"2018": .*"260RD"/.test(r150) || /"2018": .*"273MK"/.test(r150)) {
-        fail("Grand Design|Reflection 150 must not keep leftover prefixes or stamp MY20 260RD / MY19 273MK onto 2018");
+        fail("Grand Design|Reflection 150 must not keep leftover prefixes or stamp MY20 260RD / invent 273MK onto 2018");
       }
-      if (!/"2019": \["220RK", "230RL", "273MK", "290BH", "295RL"\]/.test(r150)) {
-        fail("Grand Design|Reflection 150 Series MY19 RVUSA plans missing");
+      if (!/"2019": \["220RK", "230RL", "290BH", "295RL"\]/.test(r150)) {
+        fail("Grand Design|Reflection 150 Series MY19 RVUSA plans missing (220RK/230RL/290BH/295RL)");
       }
-      if (/"2019": .*"150 Series"/.test(r150) || /"2019": .*"260RD"/.test(r150) || /"2019": .*"240RL"/.test(r150)) {
-        fail("Grand Design|Reflection 150 must not keep leftover prefixes or stamp MY20 240RL/260RD onto 2019");
+      if (/"2019": .*"150 Series"/.test(r150) || /"2019": .*"260RD"/.test(r150) || /"2019": .*"240RL"/.test(r150) || /"2019": .*"273MK"/.test(r150)) {
+        fail("Grand Design|Reflection 150 must not keep leftover prefixes, invent 273MK, or stamp MY20 240RL/260RD onto 2019");
       }
       if (!/"2020": \["240RL", "260RD", "268BH", "290BH", "295RL"\]/.test(r150)) {
         fail("Grand Design|Reflection 150 Series MY20 RVUSA plans missing (240RL/268BH/290BH; no leftover prefixes)");
