@@ -1563,7 +1563,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Tiffin: {
     Zephyr: {
       type: "Class A Diesel",
-      floorplans: ["45NZ", "45FZ", "45PZ", "45QZ", "45AZ"],
+      floorplans: ["45NZ", "45FZ", "45PZ", "45QZ", "45AZ", "45MZ"],
       floorplansByYear: {
         "2005": ["45NZ", "45FZ"],
         "2006": ["45NZ", "45FZ"],
@@ -1579,8 +1579,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["45NZ", "45FZ"],
         "2017": ["45NZ", "45FZ", "45PZ"],
         "2018": ["45NZ", "45FZ", "45PZ", "45QZ"],
-        "2019": ["45NZ", "45FZ", "45PZ", "45QZ"],
-        "2020": ["45NZ", "45FZ", "45PZ", "45AZ"],
+        // Brochure 2019_Zephyr: 45 MZ | 45 PZ — Cummins ISX 605 / 1950 on PowerGlide
+        "2019": ["45MZ", "45PZ"],
+        // Brochure 2020_Zephyr: 45 PZ — Cummins ISX / X15 605 / 1950 on PowerGlide
+        "2020": ["45PZ"],
         // No MY21 Zephyr brochure on the current Tiffin resources index — do not copy MY20 or MY22.
         // OEM MY22 Zephyr: 45 PZ only. X15 605 / 1,950 · PowerGlide · Allison 4000 · Onan 12.5 kW
         "2022": ["45PZ"],
@@ -1703,7 +1705,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Allegro Bus": {
       type: "Class A Diesel",
-      floorplans: ["37AP", "40AP", "45LP", "45OPP", "45CP", "37TS", "40IP", "45BQ", "35CP", "45FP", "45BTP", "36AP", "45BP"],
+      floorplans: ["37AP", "40AP", "45LP", "45OPP", "45CP", "37TS", "40IP", "45BQ", "35CP", "45FP", "45BTP", "36AP", "45BP", "45MP"],
       floorplansByYear: {
         "2005": ["37AP", "40AP", "45LP"],
         "2006": ["37AP", "40AP", "45LP"],
@@ -1719,8 +1721,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["37AP", "40AP", "45LP", "45OPP"],
         "2017": ["37AP", "40AP", "45LP", "45OPP", "45CP"],
         "2018": ["37TS", "40AP", "40IP", "45LP", "45OPP"],
-        "2019": ["37TS", "40AP", "40IP", "45LP", "45OPP", "45CP"],
-        "2020": ["37TS", "40AP", "40IP", "45LP", "45OPP", "45BQ"],
+        // Brochure 2019_Allegro-Bus: 37 AP | 40 AP | 40 IP | 45 OPP | 45 MP — Cummins ISL9 450 / 1250
+        "2019": ["37AP", "40AP", "40IP", "45OPP", "45MP"],
+        // Brochure 2020_Allegro-Bus: 37 AP | 40 AP | 40 IP | 45 OPP | 45 MP — ISL9 450 / 1250
+        "2020": ["37AP", "40AP", "40IP", "45OPP", "45MP"],
         // OEM MY21 Bus: 35 CP | 37 AP | 40 AP | 40 IP | 45 OPP — L9 450; X15 605 opt on 45 OPP
         "2021": ["35CP", "37AP", "40AP", "40IP", "45OPP"],
         // OEM MY22 Bus: 35 CP | 37 AP | 40 AP | 40 IP | 45 OPP | 45 FP — L9 450; X15 605 opt on 45'
@@ -2130,8 +2134,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["36GH", "40AH", "40IH", "44OH"],
         "2017": ["36GH", "37BH", "40AH", "40IH", "44OH"],
         "2018": ["36GH", "37BH", "40AH", "40IH", "44OH"],
-        "2019": ["36GH", "37BH", "40AH", "40IH", "44OH", "45OH"],
-        "2020": ["37BH", "40AH", "40IH", "40QBH", "40QKH", "44OH", "45OH"],
+        // Brochure 2019_Phaeton: 37 BH | 40 AH | 40 IH | 40 QBH | 40 QKH | 44 OH — L9 380 / 1150 default
+        "2019": ["37BH", "40AH", "40IH", "40QBH", "40QKH", "44OH"],
+        // Brochure 2020_Phaeton: 37 BH | 40 AH | 40 IH | 40 QBH | 40 QKH | 44 OH — L9 380 / 1150 default
+        "2020": ["37BH", "40AH", "40IH", "40QBH", "40QKH", "44OH"],
         // OEM MY21 / MY22 Phaeton: 36 SH | 37 BH | 40 AH | 40 IH | 40 QBH | 40 QKH | 44 OH (45 OH not in brochure)
         "2021": ["36SH", "37BH", "40AH", "40IH", "40QBH", "40QKH", "44OH"],
         "2022": ["36SH", "37BH", "40AH", "40IH", "40QBH", "40QKH", "44OH"],
@@ -2439,8 +2445,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["33AA", "37BA", "33AL"],
         "2017": ["33AA", "37BA", "37PA", "33AL"],
         "2018": ["33AA", "37BA", "37PA", "38KA"],
-        "2019": ["33AA", "37BA", "37PA", "38KA"],
-        "2020": ["33AA", "37BA", "37PA", "38KA"],
+        // Brochure 2019_RED-340-Flyer: 33 AA single model — Cummins B6.7 340 / 700 on Freightliner XC
+        "2019": ["33AA"],
+        // Brochure 2020_RED-340: 33 AL — B6.7 340 / 700 on PowerGlide
+        "2020": ["33AL"],
         // OEM MY21 / MY22 RED 340: 33 AL | 38 LL — B6.7 340 / 700. Not 33 AA / 37 BA / 38 KA (those are RED 360).
         "2021": ["33AL", "38LL"],
         "2022": ["33AL", "38LL"],
@@ -2530,11 +2538,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Allegro Red 360": {
       type: "Class A Diesel",
-      floorplans: ["33AA", "36UA", "37BA", "38KA", "38BR", "38FR", "45BR"],
+      floorplans: ["33AA", "36UA", "37BA", "38KA", "38BR", "38FR", "45BR", "37PA"],
       floorplansByYear: {
         "2018": ["33AA", "36UA", "37BA"],
-        "2019": ["33AA", "36UA", "37BA", "38KA"],
-        "2020": ["33AA", "36UA", "37BA", "38KA"],
+        // Brochure 2019_Allegro-RED (360): 33 AA | 37 BA | 37 PA — Cummins B6.7 360 / 800 on Freightliner XC
+        "2019": ["33AA", "37BA", "37PA"],
+        // Brochure 2020_Allegro-RED-360: 33 AA | 37 BA | 37 PA | 38 KA — B6.7 360 / 800 on Freightliner XC
+        "2020": ["33AA", "37BA", "37PA", "38KA"],
         // OEM MY21 / MY22 RED 360: 33 AA | 37 BA | 37 PA | 38 KA — B6.7 360 / 800. Not L9. 36 UA not in brochure.
         "2021": ["33AA", "37BA", "37PA", "38KA"],
         "2022": ["33AA", "37BA", "37PA", "38KA"],
@@ -2727,8 +2737,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["28BR", "31BR", "32BR"],
         "2017": ["28BR", "31BR", "32BR"],
         "2018": ["28BR", "31BR", "32BR"],
-        "2019": ["28BR", "31BR", "32BR"],
-        "2020": ["28BR", "31BR", "32BR"],
+        // Brochure 2019_Allegro-Breeze: 31 BR | 33 BR — Cummins ISB / B6.7 340 / 700 on Freightliner XC
+        "2019": ["31BR", "33BR"],
+        // Brochure 2020_Allegro-Breeze: 31 BR | 33 BR — B6.7 340 / 700 on Freightliner XC
+        "2020": ["31BR", "33BR"],
         // OEM MY21 / MY22 Breeze: 31 BR | 33 BR — B6.7 340 / 700 · PowerGlide · Allison 2500 · Onan 6 kW
         "2021": ["31BR", "33BR"],
         "2022": ["31BR", "33BR"],
@@ -2843,8 +2855,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["32SA", "34PA", "36LA"],
         "2017": ["32SA", "34PA", "34PR", "36LA"],
         "2018": ["32SA", "34PA", "34PR", "36LA"],
-        "2019": ["32SA", "34PA", "34PR", "36LA"],
-        "2020": ["32SA", "34PA", "34PR", "36LA"],
+        // Brochure 2019_Open-Road: 32 SA | 34 PA | 36 LA (floor plan diagrams shown) — Ford 7.3 Godzilla gas era begins ~2020
+        "2019": ["32SA", "34PA", "36LA"],
+        // Brochure 2020_Open-Road: 32 SA | 34 PA | 36 LA | 36 UA — Ford F-53 7.3 V8 350 / 468
+        "2020": ["32SA", "34PA", "36LA", "36UA"],
         // OEM MY21 Open Road: 32 SA | 34 PA | 36 LA | 36 UA — Ford 7.3 350 / 468. 32 FA / 34 PR not in brochure.
         "2021": ["32SA", "34PA", "36LA", "36UA"],
         // OEM MY22 Open Road: 32 FA | 32 SA | 34 PA | 36 LA | 36 UA — Ford 7.3 350 / 468
@@ -2956,13 +2970,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Wayfarer: {
       type: "Class C",
-      floorplans: ["24BW", "25RW", "25JW", "25TW", "25LW", "25SW", "25RLW", "25PW", "24QB", "25XLW", "25XRW", "25XPW"],
+      floorplans: ["24BW", "24FW", "25QW", "24TW", "25RW", "25JW", "25TW", "25LW", "25SW", "25RLW", "25PW", "24QB", "25XLW", "25XRW", "25XPW"],
       floorplansByYear: {
         "2016": ["24BW", "25RW"],
         "2017": ["24BW", "25RW", "25JW"],
         "2018": ["24BW", "25RW", "25JW", "25TW"],
-        "2019": ["24BW", "25RW", "25JW", "25TW", "25PW"],
-        "2020": ["25RW", "25JW", "25TW", "25PW"],
+        // Brochure 2019_Wayfarer: 24 BW | 24 FW | 25 QW | 24 TW | 25 RW — Mercedes 3.0 V6 188 HP turbodiesel on Sprinter
+        "2019": ["24BW", "24FW", "25QW", "24TW", "25RW"],
+        // Brochure 2020_Wayfarer: 24 FW | 24 TW | 25 QW | 25 RW — Mercedes 3.0 V6 188 HP turbodiesel on Sprinter
+        "2020": ["24FW", "24TW", "25QW", "25RW"],
         // OEM MY21 / MY22 Wayfarer: 25 TW | 25 RW | 25 LW | 25 SW — 3.0 V6 188 / 325. 25 JW / 25 PW not in brochure.
         "2021": ["25TW", "25RW", "25LW", "25SW"],
         "2022": ["25TW", "25RW", "25LW", "25SW"],
