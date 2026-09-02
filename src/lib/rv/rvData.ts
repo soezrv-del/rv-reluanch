@@ -15430,8 +15430,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["31UL", "34G", "35S", "36T"],
         "2019": ["31UL", "34G", "35S", "36T"],
         "2020": ["31UL", "34G", "36A", "36T"],
-        "2021": ["31UL", "34G", "36A", "36T"],
-        "2022": ["31UL", "34G", "36A", "36T"],
+        // OEM MY21 Precept flyer (jayco.com brochures): 29V | 31UL | 34B | 34G | 36A · F53 7.3 350/468. No 36C / no leftover 36T. No MY21 Prestige flyer.
+        "2021": ["29V", "31UL", "34B", "34G", "36A"],
+        // OEM MY22 Precept flyer: 31UL | 34B | 34G | 36A | 36C · F53 7.3 350/468. Do not copy 29V forward or 36C onto 2021.
+        "2022": ["31UL", "34B", "34G", "36A", "36C"],
         // OEM MY23–24 Precept floorplans: 31UL | 34B | 34G | 36A | 36C · F53 7.3 335/468. Do not keep leftover 36T / do not drop 34B+36C.
         "2023": ["31UL", "34B", "34G", "36A", "36C"],
         "2024": ["31UL", "34B", "34G", "36A", "36C"],
@@ -15473,7 +15475,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 2,
       yearStart: 2014,
-      description: "Jayco Precept — gas Class A on Ford F53. OEM MY23–27: 31UL / 34B / 34G / 36A / 36C, 7.3 335 / 468, TorqShift 6, hitch 5k. Not Precept Prestige. Not diesel.",
+      description: "Jayco Precept — gas Class A on Ford F53. OEM MY21: 29V / 31UL / 34B / 34G / 36A, 7.3 350 / 468, hitch 5k. MY22: 31UL / 34B / 34G / 36A / 36C at 350 / 468. MY23–27: same plans as MY22 at 7.3 335 / 468. Do not copy 29V onto 2022 or 335 onto 2021–22. Not Precept Prestige. Not diesel.",
       powertrainByYear: [
         {
           from: 2014,
@@ -15492,11 +15494,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2022,
+          to: 2020,
           engine: "Ford 7.3L V8 Godzilla 350HP",
           horsepower: 350,
           chassis: "Ford F53",
-          notes: "2020–2022 left for Jayco walk-back — do not copy MY23 335 backward"
+          notes: "2020 left for Jayco walk-back — do not copy MY21 29V / MY22 36C backward"
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Ford 7.3L V8 Godzilla 350HP",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift 6-speed automatic",
+          towingCapacity: 5000,
+          notes: "OEM MY21–22 Precept flyer: F53 7.3 350 / 468 · hitch 5k. Do not copy MY23 335 backward."
         },
         {
           from: 2023,
@@ -15521,8 +15534,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["26X", "29F", "31V"],
         "2019": ["26X", "29F", "31V"],
         "2020": ["26X", "29F", "31V"],
-        "2021": ["26X", "29F", "31V"],
-        "2022": ["26X", "29F", "31V"],
+        // OEM MY21–22 Alante flyer: 26X | 27A | 29F | 29S | 31V · F53 7.3 350/468. Do not drop 26X/31V until MY23.
+        "2021": ["26X", "27A", "29F", "29S", "31V"],
+        "2022": ["26X", "27A", "29F", "29S", "31V"],
         // OEM MY23–24 Alante floorplans: 27A | 29F | 29S · F53 7.3 335/468. Drop leftover 26X/31V.
         "2023": ["27A", "29F", "29S"],
         "2024": ["27A", "29F", "29S"],
@@ -15564,7 +15578,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 2,
       yearStart: 2015,
-      description: "Jayco Alante — entry/mid gas Class A on F53 (shorter than Precept). OEM MY23–27: 27A / 29F / 29S, 7.3 335 / 468, hitch 5k. Not Alante SE.",
+      description: "Jayco Alante — entry/mid gas Class A on F53 (shorter than Precept). OEM MY21–22: 26X / 27A / 29F / 29S / 31V, 7.3 350 / 468, hitch 5k. MY23–27: 27A / 29F / 29S at 7.3 335 / 468. Do not copy 26X/31V onto 2023 or 335 onto 2021–22. Not Alante SE.",
       powertrainByYear: [
         {
           from: 2015,
@@ -15583,11 +15597,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2022,
+          to: 2020,
           engine: "Ford 7.3L V8 Godzilla",
           horsepower: 350,
           chassis: "Ford F53",
-          notes: "2020–2022 left for Jayco walk-back — do not copy MY23 335 backward"
+          notes: "2020 left for Jayco walk-back — do not copy MY21 27A/29S backward"
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Ford 7.3L V8 Godzilla 350HP",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift 6-speed automatic",
+          towingCapacity: 5000,
+          notes: "OEM MY21–22 Alante flyer: F53 7.3 350 / 468 · hitch 5k. Do not copy MY23 335 backward."
         },
         {
           from: 2023,
@@ -15612,8 +15637,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["37K", "38N", "39T"],
         "2019": ["37K", "38N", "39T", "39Z"],
         "2020": ["37K", "38N", "39T", "39Z"],
-        "2021": ["37K", "38N", "39T", "39Z"],
-        "2022": ["37K", "38N", "39Z"],
+        // OEM MY21–22 Embark flyer: 37K | 39BH | 39T2 · Spartan K1 · B6.7 360/800 · hitch 10k. Drop leftover 38N/39T/39Z.
+        "2021": ["37K", "39BH", "39T2"],
+        "2022": ["37K", "39BH", "39T2"],
         // OEM MY23 Embark floorplans: 37K | 39BH | 39T2 · Spartan K1 · B6.7 360/800 · hitch 10k. Drop leftover 38N/39Z.
         "2023": ["37K", "39BH", "39T2"],
         // No 2024–2027 Jayco Embark OEM year page — pusher ends MY2023. Distinct from Embark Super C (~2009–2012).
@@ -15653,7 +15679,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 2,
       yearStart: 2015,
       yearEnd: 2023,
-      description: "Jayco Embark — Class A diesel pusher (MY2019–2023). OEM MY23: 37K / 39BH / 39T2, Spartan K1, Cummins B6.7 360 / 800, Allison 3000 MH, hitch 10k. Distinct from Embark Super C (~2009–2012). No 2024–2027 OEM page — yearEnd 2023. Not a 600 hp coach.",
+      description: "Jayco Embark — Class A diesel pusher (MY2019–2023). OEM MY21–23: 37K / 39BH / 39T2, Spartan K1, Cummins B6.7 360 / 800, Allison 3000 MH, hitch 10k. Distinct from Embark Super C (~2009–2012). No 2024–2027 OEM page — yearEnd 2023. Not a 600 hp coach.",
       powertrainByYear: [
                 {
           from: 2010,
@@ -15672,14 +15698,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2022,
+          to: 2020,
           engine: "Cummins B6.7 / L9 360–450HP",
           horsepower: 360,
           chassis: "Freightliner XC-Series",
-          notes: "2020–2022 left for Jayco walk-back — do not copy MY23 Spartan K1 backward"
+          notes: "2020 left for Jayco walk-back — do not invent 38N/39Z onto MY21"
         },
         {
-          from: 2023,
+          from: 2021,
           to: 2023,
           engine: "Cummins B6.7 360HP",
           horsepower: 360,
@@ -15687,7 +15713,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Spartan K1 Raised Rail",
           transmission: "Allison 3000 MH 6-speed",
           towingCapacity: 10000,
-          notes: "OEM MY23 Embark year page: Spartan K1 · B6.7 360 / 800 · Allison 3000 MH · hitch 10k. Not Freightliner XC / not Embark Super C."
+          notes: "OEM MY21–23 Embark flyer / year page: Spartan K1 · B6.7 360 / 800 · Allison 3000 MH · hitch 10k. Not Freightliner XC / not Embark Super C."
         },
       ]
     },
@@ -15702,8 +15728,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["37FS", "37HJ", "37TS"],
         "2019": ["37FS", "37HJ", "37K", "37RB", "37TS"],
         "2020": ["37HJ", "37K", "37L", "37M", "37RB", "37TS"],
+        // OEM MY21 Seneca flyer: 37HJ | 37K | 37L | 37M | 37RB | 37TS · S2RV (not Plus) · ISB 6.7 360/800 · hitch 12k · GVWR 29k
         "2021": ["37HJ", "37K", "37L", "37M", "37RB", "37TS"],
-        "2022": ["37K", "37L", "37M"],
+        // OEM MY22 Seneca flyer: 37K | 37L | 37M | 37RB | 37TS · S2RV (not Plus). Do not copy 37HJ forward or drop 37RB/37TS.
+        "2022": ["37K", "37L", "37M", "37RB", "37TS"],
         // OEM MY23 Seneca: 37K | 37L | 37M · S2RV (not Plus) · ISB 6.7 360/800 · hitch 12k
         "2023": ["37K", "37L", "37M"],
         // OEM MY24–26 Seneca: 37K | 37L | 37M · S2RV Plus · ISB 6.7 360/800
@@ -15740,7 +15768,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2014,
       yearEnd: 2027,
       description:
-        "Jayco Seneca Super C — Cummins ISB 6.7 360/800, Allison 3000 MH, hitch 12k. OEM MY23: 37K / 37L / 37M on S2RV (not Plus). MY24–26: same plans on S2RV Plus. MY27 adds 33J (34' 2\"). Sister to Entegra Accolade. Not Seneca XT Power Stroke / not Seneca Prestige trim key.",
+        "Jayco Seneca Super C — Cummins ISB 6.7 360/800, Allison 3000 MH, hitch 12k. OEM MY21: 37HJ / 37K / 37L / 37M / 37RB / 37TS on S2RV (not Plus), GVWR 29k. MY22: 37K / 37L / 37M / 37RB / 37TS on S2RV. MY23: 37K / 37L / 37M on S2RV. MY24–26: same plans on S2RV Plus. MY27 adds 33J (34' 2\"). Sister to Entegra Accolade. Not Seneca XT Power Stroke / not Seneca Prestige trim key.",
       powertrainByYear: [
         {
           from: 2014,
@@ -15753,7 +15781,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2018,
-          to: 2022,
+          to: 2020,
           engine: "Cummins ISB 6.7L 360HP",
           horsepower: 360,
           torqueLbFt: 800,
@@ -15764,10 +15792,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           gvwrLbs: 31000,
           exteriorWidthIn: 101,
           exteriorHeightIn: 160,
-          notes: "2018–2022 left for Jayco walk-back — do not copy MY23 S2RV (not Plus) backward.",
+          notes: "2018–2020 left for Jayco walk-back — do not copy MY21 S2RV (not Plus) backward.",
         },
         {
-          from: 2023,
+          from: 2021,
           to: 2023,
           engine: "Cummins ISB 6.7L 360HP",
           horsepower: 360,
@@ -15777,7 +15805,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           towingCapacity: 12000,
           fuelCapacityGal: 100,
           gvwrLbs: 29000,
-          notes: "OEM MY23 Seneca: S2RV (not Plus) · ISB 6.7 360/800 · hitch 12k. Not Seneca XT.",
+          notes: "OEM MY21–23 Seneca: S2RV (not Plus) · ISB 6.7 360/800 · hitch 12k · GVWR 29k. Not Seneca XT.",
         },
         {
           from: 2024,
@@ -15808,8 +15836,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["37FS", "37HJ", "37TS"],
         "2019": ["37FS", "37HJ", "37K", "37RB", "37TS"],
         "2020": ["37HJ", "37K", "37L", "37M", "37RB", "37TS"],
+        // OEM MY21 Seneca flyer: 37HJ | 37K | 37L | 37M | 37RB | 37TS · S2RV (not Plus)
         "2021": ["37HJ", "37K", "37L", "37M", "37RB", "37TS"],
-        "2022": ["37K", "37L", "37M"],
+        // OEM MY22 Seneca flyer: 37K | 37L | 37M | 37RB | 37TS · S2RV (not Plus)
+        "2022": ["37K", "37L", "37M", "37RB", "37TS"],
         // OEM MY23 Seneca: 37K | 37L | 37M · S2RV (not Plus)
         "2023": ["37K", "37L", "37M"],
         // OEM MY24–26 Seneca: 37K | 37L | 37M · S2RV Plus
@@ -15846,11 +15876,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2014,
       yearEnd: 2027,
       description:
-        "Jayco Seneca Super C — same as Seneca. OEM MY23: 37K / 37L / 37M on S2RV. MY24–26 same plans on S2RV Plus. MY27 adds 33J. Not Seneca XT.",
+        "Jayco Seneca Super C — same as Seneca. OEM MY21: 37HJ / 37K / 37L / 37M / 37RB / 37TS on S2RV. MY22: 37K / 37L / 37M / 37RB / 37TS on S2RV. MY23: 37K / 37L / 37M on S2RV. MY24–26 same plans on S2RV Plus. MY27 adds 33J. Not Seneca XT.",
       powertrainByYear: [
         {
           from: 2018,
-          to: 2022,
+          to: 2020,
           engine: "Cummins ISB 6.7L 360HP",
           horsepower: 360,
           torqueLbFt: 800,
@@ -15861,7 +15891,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           gvwrLbs: 31000,
         },
         {
-          from: 2023,
+          from: 2021,
           to: 2023,
           engine: "Cummins ISB 6.7L 360HP",
           horsepower: 360,
@@ -15903,8 +15933,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["29MV", "30X", "31F", "31FS"],
         "2019": ["29MV", "30X", "31F", "31FS"],
         "2020": ["29MV", "30X", "31F", "32S"],
-        "2021": ["29MV", "30X", "31F", "32S"],
-        "2022": ["29MV", "30X", "31F", "32S"],
+        // OEM MY21–22 Greyhawk flyer: 27U | 29MV | 30X | 30Z | 31F · E-450 7.3 350/468. Drop leftover 32S. Do not drop 30X until MY23.
+        "2021": ["27U", "29MV", "30X", "30Z", "31F"],
+        "2022": ["27U", "29MV", "30X", "30Z", "31F"],
         // OEM MY23 Greyhawk: 27U | 29MV | 30Z | 31F · E-450 7.3 350/468. Drop leftover 30X/32S.
         "2023": ["27U", "29MV", "30Z", "31F"],
         // OEM MY24 Greyhawk: 27U | 29MV | 30Z | 31F · E-450 7.3 325/450
@@ -15948,7 +15979,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 2,
       yearStart: 2008,
-      description: "Jayco Greyhawk — Ford E-450 Class C. OEM MY23: 27U / 29MV / 30Z / 31F, 7.3 350 / 468, hitch 7.5k. MY24–27: same plans at 7.3 325 / 450. Not Greyhawk XL Super C / not F53 335.",
+      description: "Jayco Greyhawk — Ford E-450 Class C. OEM MY21–22: 27U / 29MV / 30X / 30Z / 31F, 7.3 350 / 468, hitch 7.5k. MY23: drops 30X at 350 / 468. MY24–27: same plans at 7.3 325 / 450. Not Greyhawk XL Super C / not Greyhawk Prestige / not F53 335.",
       powertrainByYear: [
         {
           from: 2008,
@@ -15975,14 +16006,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2022,
+          to: 2020,
           engine: "Ford 7.3L V8 Godzilla 350HP",
           horsepower: 350,
           chassis: "Ford E-450",
-          notes: "2020–2022 left for Jayco walk-back — do not copy MY24 325 backward"
+          notes: "2020 left for Jayco walk-back — do not copy MY21 27U/30Z backward"
         },
         {
-          from: 2023,
+          from: 2021,
           to: 2023,
           engine: "Ford 7.3L V8 350HP",
           horsepower: 350,
@@ -15991,7 +16022,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           transmission: "TorqShift 6-speed automatic",
           towingCapacity: 7500,
           fuelCapacityGal: 55,
-          notes: "OEM MY23 Greyhawk: E-450 7.3 350 / 468 · hitch 7.5k · 55 gal. Do not copy MY24 325 backward."
+          notes: "OEM MY21–23 Greyhawk: E-450 7.3 350 / 468 · hitch 7.5k · 55 gal. Do not copy MY24 325 backward."
         },
         {
           from: 2024,
@@ -16007,9 +16038,48 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
       ]
     },
+    "Greyhawk Prestige": {
+      type: "Class C",
+      floorplans: ["29MVP", "30XP", "31FP"],
+      floorplansByYear: {
+        // OEM MY21–22 Greyhawk Prestige flyer: 29MVP | 30XP | 31FP · E-450 7.3 350/468 · hitch 7.5k. No 2023 OEM page — yearEnd 2022.
+        "2021": ["29MVP", "30XP", "31FP"],
+        "2022": ["29MVP", "30XP", "31FP"],
+      },
+      lengthRange: [32, 33],
+      weightRange: [12000, 15000],
+      slideouts: 1,
+      sleeps: 8,
+      msrpRange: [119000, 189000],
+      engine: "Ford 7.3L V8 350HP",
+      horsepower: 350,
+      torqueLbFt: 468,
+      chassis: "Ford E-450",
+      transmission: "TorqShift 6-speed automatic",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 7500,
+      freshWater: 60,
+      grayWater: 40,
+      blackWater: 40,
+      fuelCapacityGal: 55,
+      generator: "Onan / Generac",
+      awningLength: 16,
+      ceilingHeight: 84,
+      founded: 1968,
+      warrantyYears: 2,
+      yearStart: 2021,
+      yearEnd: 2022,
+      description: "Jayco Greyhawk Prestige — higher-content Ford E-450 Class C. OEM MY21–22 flyer: 29MVP / 30XP / 31FP, 7.3 350 / 468, hitch 7.5k. No 2023+ OEM page — yearEnd 2022. Not bare Greyhawk / not Greyhawk XL Super C.",
+      powertrainByYear: [
+        { from: 2021, to: 2022, engine: "Ford 7.3L V8 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford E-450", transmission: "TorqShift 6-speed automatic", towingCapacity: 7500, fuelCapacityGal: 55, notes: "OEM MY21–22 Greyhawk Prestige flyer: E-450 7.3 350 / 468 · hitch 7.5k. Not Greyhawk XL." },
+      ],
+    },
     Redhawk: {
       type: "Class C",
-      floorplans: ["22J", "24B", "26M", "26XD", "27G", "29XK", "31F", "31XL"],
+      floorplans: ["22J", "24B", "25R", "26M", "26XD", "27G", "29XK", "31F", "31XL"],
       floorplansByYear: {
         "2010": ["22J", "26XD", "29XK"],
         "2011": ["22J", "26XD", "29XK"],
@@ -16022,8 +16092,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["22J", "26XD", "29XK"],
         "2019": ["22J", "26XD", "29XK", "31F"],
         "2020": ["22J", "26XD", "29XK", "31F"],
-        "2021": ["22J", "26XD", "29XK", "31F"],
-        "2022": ["22J", "26XD", "29XK"],
+        // OEM MY21 Redhawk brochure: 22J | 24B | 25R | 26M | 26XD | 29XK | 31F · E-450 7.3 350/468
+        "2021": ["22J", "24B", "25R", "26M", "26XD", "29XK", "31F"],
+        // OEM MY22 Redhawk flyer: 24B | 25R | 26M | 26XD | 29XK | 31F · E-450 7.3 350/468. Do not copy 22J forward.
+        "2022": ["24B", "25R", "26M", "26XD", "29XK", "31F"],
         // OEM MY23–24 Redhawk: 24B | 26M | 26XD | 29XK | 31F · E-450 7.3 325/450. Drop leftover 22J.
         "2023": ["24B", "26M", "26XD", "29XK", "31F"],
         "2024": ["24B", "26M", "26XD", "29XK", "31F"],
@@ -16066,7 +16138,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 2,
       yearStart: 2010,
-      description: "Jayco Redhawk — value Ford E-450 Class C sibling to Greyhawk. OEM MY23–24: 24B / 26M / 26XD / 29XK / 31F, 7.3 325 / 450, hitch 7.5k. MY25–26 drops 26XD. MY27: 24B / 26M / 27G. Not Redhawk SE (Ford/Chevy option-band).",
+      description: "Jayco Redhawk — value Ford E-450 Class C sibling to Greyhawk. OEM MY21: 22J / 24B / 25R / 26M / 26XD / 29XK / 31F, 7.3 350 / 468, hitch 7.5k. MY22: drops 22J, keeps 25R at 350 / 468. MY23–24: 24B / 26M / 26XD / 29XK / 31F at 7.3 325 / 450. MY25–26 drops 26XD. MY27: 24B / 26M / 27G. Do not copy 25R onto 2023 or 325 onto 2021–22. Not Redhawk SE.",
       powertrainByYear: [
         {
           from: 2010,
@@ -16093,11 +16165,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2022,
+          to: 2020,
           engine: "Ford 7.3L V8 Godzilla",
           horsepower: 350,
           chassis: "Ford E-450",
-          notes: "2020–2022 left for Jayco walk-back — do not copy MY23 325 backward"
+          notes: "2020 left for Jayco walk-back — do not copy MY21 24B/25R/26M backward"
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Ford 7.3L V8 350HP",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford E-450",
+          transmission: "TorqShift 6-speed automatic",
+          towingCapacity: 7500,
+          notes: "OEM MY21–22 Redhawk: E-450 7.3 350 / 468 · hitch 7.5k. Do not copy MY23 325 backward."
         },
         {
           from: 2023,
@@ -16125,8 +16208,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["24K", "24L"],
         "2019": ["24K", "24L", "24N"],
         "2020": ["24K", "24L", "24N"],
-        "2021": ["24K", "24L", "24N"],
-        "2022": ["24K", "24L"],
+        // OEM MY21 Melbourne brochure: 24K | 24L | 24T · Mercedes 3500 V6 188/325. Drop leftover 24N.
+        "2021": ["24K", "24L", "24T"],
+        // OEM MY22 Melbourne flyer: 24L | 24R | 24T · Mercedes 3500 V6 188/325. Do not copy 24K forward or 24R onto 2021.
+        "2022": ["24L", "24R", "24T"],
         // OEM MY23 Melbourne: 24L | 24R | 24T · Mercedes 3500 V6 188/325 · 7-speed. Drop leftover 24K.
         "2023": ["24L", "24R", "24T"],
         // OEM MY24 Melbourne: 24L | 24R | 24T · Mercedes 3500 2.0 211/332 · 9-speed. Do not clone 25-series.
@@ -16171,7 +16256,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 2,
       yearStart: 2012,
-      description: "Jayco Melbourne — Mercedes 3500 Class C. OEM MY23: 24L / 24R / 24T, V6 188 / 325. MY24: same plans at 2.0 211 / 332. MY25–26: 24L / 24R only. MY27 renumbers to 25L / 25R — do not clone 25 onto 2026 or 24T onto 2025. Not Melbourne Prestige.",
+      description: "Jayco Melbourne — Mercedes 3500 Class C. OEM MY21: 24K / 24L / 24T, V6 188 / 325. MY22–23: 24L / 24R / 24T at V6 188 / 325. MY24: same plans at 2.0 211 / 332. MY25–26: 24L / 24R only. MY27 renumbers to 25L / 25R — do not clone 25 onto 2026, 24T onto 2025, or 24R onto 2021. Not Melbourne Prestige.",
       powertrainByYear: [
         {
           from: 2012,
@@ -16183,21 +16268,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2021,
+          to: 2020,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
           chassis: "Mercedes Sprinter"
         },
         {
-          from: 2022,
-          to: 2022,
-          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
-          horsepower: 208,
-          chassis: "Mercedes Sprinter",
-          notes: "2022 left for Jayco walk-back — do not copy MY23 V6 188 or MY24 211 backward"
-        },
-        {
-          from: 2023,
+          from: 2021,
           to: 2023,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel 188HP",
           horsepower: 188,
@@ -16206,7 +16283,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           transmission: "7-speed automatic",
           towingCapacity: 5000,
           fuelCapacityGal: 26.4,
-          notes: "OEM MY23 Melbourne: Mercedes 3500 · V6 188 / 325 · 7-speed. Do not copy MY24 2.0 211 backward."
+          notes: "OEM MY21–23 Melbourne: Mercedes 3500 · V6 188 / 325 · 7-speed. Do not copy MY24 2.0 211 backward."
         },
         {
           from: 2024,
@@ -16233,8 +16310,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["24LP", "24KP"],
         "2019": ["24LP", "24KP"],
         "2020": ["24LP", "24KP"],
-        "2021": ["24LP", "24KP"],
-        "2022": ["24LP", "24KP"],
+        // OEM MY21 Melbourne Prestige flyer: 24KP | 24LP | 24RP | 24TP · Mercedes 3500 V6 188/325
+        "2021": ["24KP", "24LP", "24RP", "24TP"],
+        // OEM MY22 Melbourne Prestige flyer: 24LP | 24NP | 24RP | 24TP · Mercedes 3500 V6 188/325. Do not copy 24KP forward or 24NP onto 2021.
+        "2022": ["24LP", "24NP", "24RP", "24TP"],
         // OEM MY23 Melbourne Prestige: 24LP | 24RP | 24NP | 24TP · Mercedes 3500 V6 188/325. Drop leftover 24KP.
         "2023": ["24LP", "24NP", "24RP", "24TP"],
         // OEM MY24 Melbourne Prestige: 24LP | 24RP | 24NP | 24TP · Mercedes 3500 2.0 211/332
@@ -16279,7 +16358,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 2,
       yearStart: 2014,
-      description: "Jayco Melbourne Prestige — higher-content Mercedes Class C. OEM URL typo on MY26–27: melburne-prestige. MY23: 24LP / 24NP / 24RP / 24TP on Mercedes 3500 V6 188 / 325. MY24: same plans at 2.0 211 / 332. MY25: 24LP / 24RP on Mercedes 3500 211 / 332. MY26–27: 25LP / 25MP / 25RP on Mercedes 4500 211 / 332. Do not copy 4500 or 25-series onto 2025. Not bare Melbourne.",
+      description: "Jayco Melbourne Prestige — higher-content Mercedes Class C. OEM URL typo on MY26–27: melburne-prestige. MY21: 24KP / 24LP / 24RP / 24TP on Mercedes 3500 V6 188 / 325. MY22–23: 24LP / 24NP / 24RP / 24TP at V6 188 / 325. MY24: same plans at 2.0 211 / 332. MY25: 24LP / 24RP on Mercedes 3500 211 / 332. MY26–27: 25LP / 25MP / 25RP on Mercedes 4500 211 / 332. Do not copy 24NP onto 2021, 4500 or 25-series onto 2025. Not bare Melbourne.",
       powertrainByYear: [
         {
           from: 2014,
@@ -16291,21 +16370,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2021,
+          to: 2020,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
           chassis: "Mercedes Sprinter"
         },
         {
-          from: 2022,
-          to: 2022,
-          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
-          horsepower: 208,
-          chassis: "Mercedes Sprinter",
-          notes: "2022 left for Jayco walk-back — do not copy MY23 V6 188 or MY24 211 backward"
-        },
-        {
-          from: 2023,
+          from: 2021,
           to: 2023,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel 188HP",
           horsepower: 188,
@@ -16313,7 +16384,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Mercedes-Benz 3500",
           transmission: "7-speed automatic",
           towingCapacity: 5000,
-          notes: "OEM MY23 Melbourne Prestige: Mercedes 3500 · V6 188 / 325 · 7-speed"
+          notes: "OEM MY21–23 Melbourne Prestige: Mercedes 3500 · V6 188 / 325 · 7-speed"
         },
         {
           from: 2024,
@@ -16381,7 +16452,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["36B", "36H", "36U"],
       floorplansByYear: {
-        // OEM MY23–27 Precept Prestige: 36B | 36H | 36U · F53 7.3 335/468. No 2022 OEM page in this slice.
+        // OEM MY22 Precept Prestige flyer: 36B | 36H | 36U · F53 7.3 350/468. No MY21 Prestige flyer — do not invent 2021.
+        "2022": ["36B", "36H", "36U"],
+        // OEM MY23–27 Precept Prestige: 36B | 36H | 36U · F53 7.3 335/468.
         "2023": ["36B", "36H", "36U"],
         "2024": ["36B", "36H", "36U"],
         "2025": ["36B", "36H", "36U"],
@@ -16411,9 +16484,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2023,
-      description: "Jayco Precept Prestige — luxury gas Class A on Ford F53. OEM MY23–27: 36B / 36H / 36U, 7.3 335 / 468, hitch 5k. Not bare Precept.",
+      yearStart: 2022,
+      description: "Jayco Precept Prestige — luxury gas Class A on Ford F53. OEM MY22 flyer: 36B / 36H / 36U, 7.3 350 / 468, hitch 5k. MY23–27: same plans at 7.3 335 / 468. No MY21 Prestige flyer. Not bare Precept.",
       powertrainByYear: [
+        { from: 2022, to: 2022, engine: "Ford 7.3L V8 Godzilla 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford F53", transmission: "TorqShift 6-speed automatic", towingCapacity: 5000, notes: "OEM MY22 Precept Prestige flyer: F53 7.3 350 / 468. Do not copy MY23 335 backward." },
         { from: 2023, to: 2027, engine: "Ford 7.3L V8 Godzilla 335HP", horsepower: 335, torqueLbFt: 468, chassis: "Ford F53", transmission: "TorqShift 6-speed automatic", towingCapacity: 5000, notes: "OEM MY23–27 Precept Prestige: F53 7.3 335 / 468" },
       ],
     },
@@ -16453,6 +16527,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["20LF", "20SF", "22A", "22AF", "22C", "22CF", "22E", "22EF", "22T", "22TF", "27N", "27NF", "29KF", "31FF"],
       floorplansByYear: {
+        // OEM MY21 Redhawk SE flyer: 22A | 22C | 27N · Chevy 4500 6.0 Vortec 342/373. No Ford AF/CF/NF.
+        "2021": ["22A", "22C", "27N"],
+        // OEM MY22 Redhawk SE flyer: 22A | 22C | 27N · Chevy 4500 6.6 Vortec 401/464. No Ford AF/CF/NF.
+        "2022": ["22A", "22C", "27N"],
         // OEM MY23 Redhawk SE: 22A/AF/C/CF + 27N/27NF. Chevy 3500 401/464 and Ford E-450 325/450 — option-band HP. No 22E/31FF.
         "2023": ["22A", "22AF", "22C", "22CF", "27N", "27NF"],
         // OEM MY24 Redhawk SE: same plans. Chevy 4500 401/464 and Ford E-450 325/450 — option-band HP. Do not copy 22E/31FF backward.
@@ -16486,9 +16564,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 84,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2023,
-      description: "Jayco Redhawk SE — compact Class C across Ford E-450 and Chevy cutaway. OEM MY23: 22A / 22AF / 22C / 22CF / 27N / 27NF, Ford 7.3 325 / 450 and Chevy 3500 6.6 Vortec 401 / 464 (option-band HP). MY24 same plans on Chevy 4500 + Ford E-450. MY25 drops 27N/27NF and adds 22E/EF/T/TF + 31FF. MY26 adds 20LF / 29KF; MY27 adds 20SF. Not bare Redhawk.",
+      yearStart: 2021,
+      description: "Jayco Redhawk SE — compact Class C. OEM MY21: 22A / 22C / 27N, Chevy 4500 6.0 Vortec 342 / 373. MY22: same plans, Chevy 4500 6.6 Vortec 401 / 464. MY23 adds Ford AF/CF/NF variants (Ford 7.3 325 / 450 and Chevy 3500 401 / 464 — option-band HP). MY24 same plans on Chevy 4500 + Ford E-450. MY25 drops 27N/27NF and adds 22E/EF/T/TF + 31FF. MY26 adds 20LF / 29KF; MY27 adds 20SF. Do not copy Ford AF/CF onto 2021–22. Not bare Redhawk.",
       powertrainByYear: [
+        { from: 2021, to: 2021, engine: "Chevy 6.0L Vortec V8 342HP", horsepower: 342, torqueLbFt: 373, chassis: "Chevy 4500", transmission: "Hydra-Matic 6-speed automatic", towingCapacity: 5000, notes: "OEM MY21 Redhawk SE flyer: Chevy 4500 · 6.0 Vortec 342 / 373. Chevy only — not option-band." },
+        { from: 2022, to: 2022, engine: "Chevy 6.6L Vortec V8 401HP", horsepower: 401, torqueLbFt: 464, chassis: "Chevy 4500", transmission: "Hydra-Matic 6-speed automatic", towingCapacity: 5000, notes: "OEM MY22 Redhawk SE brochure: Chevy 4500 · 6.6 Vortec 401 / 464. Chevy only — not option-band." },
         { from: 2023, to: 2023, engine: "Ford 7.3L 325HP or Chevy 6.6L Vortec 401HP (by chassis)", horsepower: 0, chassis: "Ford E-450 or Chevy 3500 (by floorplan)", notes: "OEM MY23 Redhawk SE prints Ford 325/450 and Chevy 3500 401/464 — option band" },
         { from: 2024, to: 2027, engine: "Ford 7.3L 325HP or Chevy 6.6L Vortec 401HP (by chassis)", horsepower: 0, chassis: "Ford E-350 / E-450 or Chevy 4500 (by floorplan)", notes: "OEM MY24–27 Redhawk SE prints Ford 325/450 and Chevy 401/464 — option band. MY24 Chevy is 4500." },
       ],
@@ -16631,6 +16711,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Super C",
       floorplans: ["37K", "37L", "37M"],
       floorplansByYear: {
+        // OEM MY21–22 Seneca Prestige flyer: 37K | 37L | 37M · S2RV (not Plus) · ISB 6.7 360/800. No 37HJ/37RB/37TS/33J.
+        "2021": ["37K", "37L", "37M"],
+        "2022": ["37K", "37L", "37M"],
         // OEM MY23 Seneca Prestige: 37K | 37L | 37M · S2RV (not Plus) · ISB 6.7 360/800. No 33J.
         "2023": ["37K", "37L", "37M"],
         // OEM MY24–27 Seneca Prestige: 37K | 37L | 37M · S2RV Plus · ISB 6.7 360/800. No 33J.
@@ -16663,10 +16746,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 84,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2023,
-      description: "Jayco Seneca Prestige — luxury trim of Seneca Super C. OEM MY23: 37K / 37L / 37M, S2RV, ISB 6.7 360 / 800, hitch 12k. MY24–27: same plans on S2RV Plus. No 33J (that's bare Seneca MY27 only). Not Seneca XT Power Stroke.",
+      yearStart: 2021,
+      description: "Jayco Seneca Prestige — luxury trim of Seneca Super C. OEM MY21–23: 37K / 37L / 37M, S2RV, ISB 6.7 360 / 800, hitch 12k. MY24–27: same plans on S2RV Plus. No 33J (that's bare Seneca MY27 only). Not Seneca XT Power Stroke.",
       powertrainByYear: [
-        { from: 2023, to: 2023, engine: "Cummins ISB 6.7L 360HP", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner S2RV", transmission: "Allison 3000 MH", towingCapacity: 12000, fuelCapacityGal: 100, notes: "OEM MY23 Seneca Prestige: S2RV (not Plus) · ISB 6.7 360/800" },
+        { from: 2021, to: 2023, engine: "Cummins ISB 6.7L 360HP", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner S2RV", transmission: "Allison 3000 MH", towingCapacity: 12000, fuelCapacityGal: 100, notes: "OEM MY21–23 Seneca Prestige: S2RV (not Plus) · ISB 6.7 360/800" },
         { from: 2024, to: 2027, engine: "Cummins ISB 6.7L 360HP", horsepower: 360, torqueLbFt: 800, chassis: "Freightliner S2RV Plus", transmission: "Allison 3000 MH", towingCapacity: 12000, fuelCapacityGal: 100, notes: "OEM MY24–27 Seneca Prestige: S2RV Plus · ISB 6.7 360/800" },
       ],
     },
@@ -16716,6 +16799,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["20A", "20D", "20E", "20T", "20Y"],
       floorplansByYear: {
+        // OEM MY21–22 Swift flyer: 20A | 20T · ProMaster 3500 3.6 V6 24V VVT. Do not copy 20D backward.
+        "2021": ["20A", "20T"],
+        "2022": ["20A", "20T"],
         // OEM MY23–24 Swift: 20A | 20D | 20T · ProMaster 3500 3.6 276/250. Do not copy 20E/20Y backward or 20D forward.
         "2023": ["20A", "20D", "20T"],
         "2024": ["20A", "20D", "20T"],
@@ -16750,9 +16836,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 75,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2023,
-      description: "Jayco Swift — Class B on RAM ProMaster 3500. OEM MY23–24: 20A / 20D / 20T, 3.6 276 / 250. MY25: 20A / 20E / 20T / 20Y — do not copy 20D forward or 20E/20Y backward. MY26 drops 20Y. MY27: 20E / 20T only.",
+      yearStart: 2021,
+      description: "Jayco Swift — Class B on RAM ProMaster 3500. OEM MY21–22 flyer: 20A / 20T, 3.6L V6 24V VVT (HP not printed). MY23–24: 20A / 20D / 20T, 3.6 276 / 250. MY25: 20A / 20E / 20T / 20Y — do not copy 20D onto 2021–22 or 20E/20Y backward. MY26 drops 20Y. MY27: 20E / 20T only.",
       powertrainByYear: [
+        { from: 2021, to: 2022, engine: "RAM 3.6L V6 24V VVT", chassis: "RAM ProMaster 3500", transmission: "6-speed automatic 62TE", towingCapacity: 3500, fuelCapacityGal: 24, notes: "OEM MY21–22 Swift flyer: ProMaster 3500 · 3.6 V6 24V VVT gas. HP not printed — do not invent 276." },
         { from: 2023, to: 2027, engine: "RAM 3.6L V6 276HP", horsepower: 276, torqueLbFt: 250, chassis: "RAM ProMaster 3500", transmission: "9-speed automatic", towingCapacity: 3500, notes: "OEM MY23–27 Swift: ProMaster 3500 · 3.6 276 / 250 gas" },
       ],
     },
@@ -16803,6 +16890,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["19A", "19AG", "19Y", "19YG"],
       floorplansByYear: {
+        // OEM MY22 Terrain brochure: 19Y only · Sprinter 2500 4x4 V6 188/325. No 2021 Terrain brochure.
+        "2022": ["19Y"],
         // OEM MY23 Terrain: 19Y only · Sprinter 2500 4x4 V6 188/325. Do not copy 19YG/19A backward.
         "2023": ["19Y"],
         // OEM MY24 Terrain: 19Y only · Sprinter 2500 AWD 2.0 211/332
@@ -16836,10 +16925,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 75,
       founded: 1968,
       warrantyYears: 2,
-      yearStart: 2023,
-      description: "Jayco Terrain — Class B on Mercedes Sprinter 2500. OEM MY23: 19Y, 4x4 V6 188 / 325. MY24: 19Y, AWD 2.0 211 / 332. MY25: 19Y / 19YG. MY26–27 adds 19A / 19AG — do not copy 19A/19AG onto 2025 or 19YG onto 2023–24.",
+      yearStart: 2022,
+      description: "Jayco Terrain — Class B on Mercedes Sprinter 2500. OEM MY22–23: 19Y, 4x4 V6 188 / 325. MY24: 19Y, AWD 2.0 211 / 332. MY25: 19Y / 19YG. MY26–27 adds 19A / 19AG — do not copy 19A/19AG onto 2025 or 19YG onto 2022–24. No 2021 Terrain brochure.",
       powertrainByYear: [
-        { from: 2023, to: 2023, engine: "Mercedes-Benz 3.0L V6 turbodiesel 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter 2500 4x4", transmission: "7-speed automatic", towingCapacity: 5000, notes: "OEM MY23 Terrain: Sprinter 2500 4x4 · V6 188 / 325" },
+        { from: 2022, to: 2023, engine: "Mercedes-Benz 3.0L V6 turbodiesel 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter 2500 4x4", transmission: "7-speed automatic", towingCapacity: 5000, notes: "OEM MY22–23 Terrain: Sprinter 2500 4x4 · V6 188 / 325" },
         { from: 2024, to: 2027, engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP", horsepower: 211, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter 2500 AWD", transmission: "9-speed automatic", towingCapacity: 5000, notes: "OEM MY24–27 Terrain: Sprinter 2500 AWD · 211 / 332" },
       ],
     },
