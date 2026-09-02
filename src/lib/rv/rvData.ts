@@ -16832,13 +16832,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   "Entegra Coach": {
     "Cornerstone": {
       type: "Class A Diesel",
-      floorplans: ["45A", "45B", "45D", "45F", "45R", "45V", "45W", "45X", "45Y", "45Z"],
+      floorplans: ["45A", "45B", "45D", "45F", "45J", "45K", "45R", "45V", "45W", "45X", "45Y", "45Z"],
       floorplansByYear: {
         "2014": ["45B", "45W", "45Z"],
         "2015": ["45B", "45W", "45Z"],
         "2016": ["45B", "45W", "45Z"],
-        "2017": ["45B", "45W", "45Z"],
-        "2018": ["45B", "45W", "45Z"],
+        // OEM MY17 Cornerstone year page + 2017 lineup brochure: 45A | 45B | 45J | 45K | 45W · ISX 600/1950 · K3
+        "2017": ["45A", "45B", "45J", "45K", "45W"],
+        // OEM MY18 Cornerstone year page + JENT 5591-01: 45A | 45B | 45F | 45W | 45X | 45Y · ISX 605/1950 · K3
+        "2018": ["45A", "45B", "45F", "45W", "45X", "45Y"],
         // OEM MY19 Cornerstone year page: 45A | 45B | 45F | 45W | 45X | 45Y · X15 605/1950 · K3
         "2019": ["45A", "45B", "45F", "45W", "45X", "45Y"],
         // OEM MY20 Cornerstone year page: 45A | 45B | 45F | 45W | 45X | 45Y — no 45Z
@@ -16903,10 +16905,33 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2018,
+          to: 2016,
           engine: "Cummins ISX 600HP class",
           horsepower: 600,
-          chassis: "Spartan K3"
+          chassis: "Spartan K3",
+          notes: "2016 placeholder until the 2015–2016 Entegra walk-back. Do not stamp 2017 ISX 600 or 2018 ISX 605 backward."
+        },
+        {
+          from: 2017,
+          to: 2017,
+          engine: "Cummins ISX 15L 600HP",
+          horsepower: 600,
+          torqueLbFt: 1950,
+          chassis: "Spartan K3 Raised Rail",
+          transmission: "Allison 4000 MH 6-speed",
+          towingCapacity: 20000,
+          notes: "OEM MY17 Cornerstone year page (Wayback 2017-06-06) + 2017 Entegra Coach lineup brochure: ISX 600 / 1,950 · Spartan K3 · Allison 4000 MH · hitch 20k. Options print Cummins 15 liter ISX turbocharged 600HP 1,950 lb. ft."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Cummins ISX 15L 605HP",
+          horsepower: 605,
+          torqueLbFt: 1950,
+          chassis: "Spartan K3 Raised Rail",
+          transmission: "Allison 4000 MH 6-speed",
+          towingCapacity: 20000,
+          notes: "OEM MY18 Cornerstone year page (Wayback 2018-03-20) + JENT 5591-01 MY2018 Entegra Coach Brochure: ISX 605 / 1,950 · Spartan K3 · Allison 4000 MH · hitch 20k. Not the later X15 name."
         },
         {
           from: 2019,
@@ -16944,13 +16969,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Anthem": {
       type: "Class A Diesel",
-      floorplans: ["37K", "42DEQ", "44A", "44B", "44D", "44F", "44R", "44V", "44W", "44Z"],
+      floorplans: ["37K", "42DEQ", "42RBQ", "44A", "44B", "44D", "44DLQ", "44F", "44R", "44V", "44W", "44Z"],
       floorplansByYear: {
         "2014": ["42DEQ", "44B", "44W"],
         "2015": ["42DEQ", "44B", "44W"],
         "2016": ["42DEQ", "44B", "44W"],
-        "2017": ["42DEQ", "44B", "44W"],
-        "2018": ["42DEQ", "44B", "44W"],
+        // OEM MY17 Anthem year page + 2017 lineup brochure: 42DEQ | 42RBQ | 44A | 44B | 44DLQ · ISL 450/1250 · K2
+        "2017": ["42DEQ", "42RBQ", "44A", "44B", "44DLQ"],
+        // OEM MY18 Anthem year page: 42DEQ | 42RBQ | 44A | 44B | 44F | 44W · ISL 450/1250 · K2 (year page includes 44W)
+        "2018": ["42DEQ", "42RBQ", "44A", "44B", "44F", "44W"],
         // OEM MY19 Anthem year page: 42DEQ | 44A | 44B | 44F | 44W · L9 450/1250 · K2
         "2019": ["42DEQ", "44A", "44B", "44F", "44W"],
         // OEM MY20 Anthem year page: 42DEQ | 44A | 44B | 44F | 44W — no 44D
@@ -17014,11 +17041,33 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2018,
+          to: 2016,
           engine: "Cummins L9 450HP",
           horsepower: 450,
           chassis: "Spartan K3",
-          notes: "Pre-MY19 Anthem — do not walk 2017–2018 in this slice"
+          notes: "2016 placeholder until the 2015–2016 Entegra walk-back. Do not stamp 2017–2018 ISL 450 backward as L9."
+        },
+        {
+          from: 2017,
+          to: 2017,
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan K2 Mountain Master",
+          transmission: "Allison 3000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY17 Anthem year page (Wayback 2017-06-06) + 2017 Entegra Coach lineup brochure: ISL 450 / 1,250 · Spartan K2 Mountain Master · hitch 15k. Not L9."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan K2",
+          transmission: "Allison 3000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY18 Anthem year page (Wayback 2018-03-20) + JENT 5591-01: ISL 450 / 1,250 · Spartan K2 · hitch 15k. Year page includes 44W (April 2018 brochure spec table omitted it). Not L9."
         },
         {
           from: 2019,
@@ -17067,12 +17116,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Aspire": {
       type: "Class A Diesel",
-      floorplans: ["38M", "38R", "40P", "42D", "42DEQ", "44B", "44D", "44F", "44R", "44V", "44W", "44Z"],
+      floorplans: ["38M", "38R", "40P", "42D", "42DEQ", "42RBQ", "44B", "44D", "44F", "44R", "44U", "44V", "44W", "44Z"],
       floorplansByYear: {
         "2015": ["38R", "42D", "44R"],
         "2016": ["38R", "42D", "44R"],
-        "2017": ["38R", "42D", "44R"],
-        "2018": ["38R", "42D", "44R"],
+        // OEM MY17 Aspire year page: 38M | 40P | 42DEQ | 42RBQ | 44B | 44R | 44U | 44W · ISL 450/1250 · hitch 15k flat
+        "2017": ["38M", "40P", "42DEQ", "42RBQ", "44B", "44R", "44U", "44W"],
+        // OEM MY18 Aspire year page: same eight · ISL 450/1250 · hitch 15k (10k on 38M and 40P)
+        "2018": ["38M", "40P", "42DEQ", "42RBQ", "44B", "44R", "44U", "44W"],
         // OEM MY19 Aspire year page: 38M | 40P | 42DEQ | 44B | 44R | 44W · L9 450/1250 · K2
         "2019": ["38M", "40P", "42DEQ", "44B", "44R", "44W"],
         // OEM MY20 Aspire year page: 38M | 40P | 42DEQ | 44B | 44F | 44R | 44W
@@ -17136,11 +17187,33 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2018,
+          to: 2016,
           engine: "Cummins L9 450HP",
           horsepower: 450,
           chassis: "Spartan / Freightliner",
-          notes: "Pre-MY19 Aspire — do not walk 2017–2018 in this slice"
+          notes: "2016 placeholder until the 2015–2016 Entegra walk-back. Do not stamp 2017–2018 ISL 450 or the 2018 38M/40P 10k hitch backward."
+        },
+        {
+          from: 2017,
+          to: 2017,
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan K2",
+          transmission: "Allison 3000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY17 Aspire year page (Wayback 2017-06-06) + 2017 lineup brochure: ISL 450 / 1,250 · Spartan K2 · hitch 15k on every plan. Do not copy the 2018 38M/40P 10k split backward. Not L9."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Cummins ISL 8.9L 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan K2",
+          transmission: "Allison 3000 MH 6-speed",
+          towingCapacity: 15000,
+          notes: "OEM MY18 Aspire year page (Wayback 2018-03-20) + JENT 5591-01: ISL 450 / 1,250 · Spartan K2 · hitch 15k (10k on 38M and 40P). Not L9."
         },
         {
           from: 2019,
@@ -17192,8 +17265,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplans: ["37K", "37MB", "39BH", "39T2", "39W"],
       floorplansByYear: {
         "2016": ["37K", "39BH"],
-        "2017": ["37K", "39BH"],
-        "2018": ["37K", "39BH", "39W"],
+        // No OEM MY17 / MY18 Reatta year page — Spartan/Entegra PR (Jul 2018) unveiled all-new 2019 Reatta. Omit 2017–2018.
         // OEM MY19 Reatta year page: 37MB | 39BH | 39T2 · B6.7 360/800 · K1
         "2019": ["37MB", "39BH", "39T2"],
         // OEM MY20 Reatta year page: 37K | 39BH | 39T2 — 37MB is Dealer Stock Only
@@ -17248,13 +17320,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2016,
-          to: 2018,
+          to: 2016,
           engine: "Cummins B6.7 360HP",
           horsepower: 360,
           torqueLbFt: 800,
           chassis: "Spartan K1",
           transmission: "Allison 3000 MH",
-          notes: "Pre-MY19 Reatta B6.7 / K1 — do not walk 2017–2018 in this slice. Not Reatta XL L9."
+          notes: "2016 placeholder until the 2015–2016 Entegra walk-back. No OEM MY17–18 Reatta year page — do not invent 2017–2018. Not Reatta XL L9."
         },
         {
           from: 2019,
@@ -17283,8 +17355,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["37K", "39BH", "39T2", "39W", "40Q2", "40Q3"],
       floorplansByYear: {
-        "2018": ["37K", "39BH"],
-        // No OEM MY19 Reatta XL year page (all-new for 2020) — omit 2019
+        // No OEM MY17–19 Reatta XL year page (all-new for 2020) — omit earlier years
         // OEM MY20 Reatta XL year page: 37K | 39BH | 39T2 | 40Q2 · L9 380/1150 · K2
         "2020": ["37K", "39BH", "39T2", "40Q2"],
         // OEM MY21 Reatta XL year page: 37K | 39BH | 39T2 | 40Q2 · L9 380/1150 · K2
@@ -17330,18 +17401,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2018,
+      yearStart: 2020,
       yearEnd: 2025,
-      description: "Entegra Reatta XL — OEM MY20–25: Cummins L9 380 / 1,150 on Spartan K2 (not the Reatta B6.7 / K1). All-new for 2020 — no 2019 OEM year page. MY20–21 40Q2; MY22 40Q3. Year-end 2025: no 2026 OEM page.",
+      description: "Entegra Reatta XL — OEM MY20–25: Cummins L9 380 / 1,150 on Spartan K2 (not the Reatta B6.7 / K1). All-new for 2020 — no 2017–2019 OEM year page. MY20–21 40Q2; MY22 40Q3. Year-end 2025: no 2026 OEM page.",
       powertrainByYear: [
-        {
-          from: 2018,
-          to: 2018,
-          engine: "Cummins B6.7 360HP",
-          horsepower: 360,
-          chassis: "Spartan K1",
-          notes: "Pre-MY20 Reatta XL — no 2019 OEM year page. Do not copy MY20 L9 / K2 onto 2018"
-        },
         {
           from: 2020,
           to: 2025,
@@ -17361,8 +17424,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2014": ["27A", "29S", "31B"],
         "2015": ["27A", "29S", "31B"],
         "2016": ["27A", "29S", "31B"],
-        "2017": ["27A", "29S", "31B"],
-        "2018": ["27A", "29S", "31B", "36A"],
+        // No OEM MY17 / MY18 Vision year page (2017–2018 lineup is diesel Class A + 2018 Class C). Omit 2017–2018.
         // OEM MY19 Vision year page: 26X | 29F | 29S | 31R | 31V · F53 6.8 Triton 320/460 — no 27A
         "2019": ["26X", "29F", "29S", "31R", "31V"],
         // OEM MY20 Vision year page: 26X | 27A | 29F | 29S | 31V — 31R not listed
@@ -17425,11 +17487,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2018,
+          to: 2016,
           engine: "Ford Triton V10 6.8L",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "Pre-MY19 Vision Triton — do not walk 2017–2018 in this slice"
+          notes: "2016 placeholder until the 2015–2016 Entegra walk-back. No OEM MY17–18 Vision year page — do not invent 2017–2018."
         },
         {
           from: 2019,
@@ -17563,8 +17625,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         "2015": ["37L", "37M"],
         "2016": ["37L", "37M"],
-        "2017": ["37L", "37M"],
-        "2018": ["37L", "37M"],
+        // No OEM MY17 / MY18 Accolade year page (2017–2018 lineup is diesel Class A + 2018 Class C). Omit 2017–2018.
         // No OEM MY19 Accolade year page / brochure — omit 2019
         // OEM MY20 Accolade year page: 37HJ | 37K | 37L | 37RB | 37TS · ISB 360/800 · S2RV
         "2020": ["37HJ", "37K", "37L", "37RB", "37TS"],
@@ -17619,11 +17680,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2015,
-          to: 2018,
+          to: 2016,
           engine: "Cummins Super C diesel ~340HP",
           horsepower: 340,
           chassis: "Freightliner Super C",
-          notes: "Pre-MY20 Accolade — no 2019 OEM year page. Do not walk 2017–2018 in this slice. Not Accolade XT."
+          notes: "2015–2016 placeholder until the 2015–2016 Entegra walk-back. No OEM MY17–19 Accolade year page — do not invent. Not Accolade XT."
         },
         {
           from: 2020,
@@ -17679,8 +17740,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Super C",
       floorplans: ["37K", "37L", "37M"],
       floorplansByYear: {
-        "2018": ["37M", "37K"],
-        // No OEM MY19 / MY20 Accolade XL year page — omit 2019–2020
+        // No OEM MY17–20 Accolade XL year page — omit 2017–2020
         // OEM MY21 Accolade XL year page: 37K | 37L | 37M · S2RV · ISB 360/800
         "2021": ["37K", "37L", "37M"],
         // OEM MY22 Accolade XL year page: 37K | 37L | 37M
@@ -17727,17 +17787,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2018,
-      description: "Entegra Accolade XL — same S2RV Plus · ISB 6.7 360/800 · Allison 3000 MH as Accolade. OEM MY26–27: 37K / 37L / 37M. Not Accolade XT.",
+      yearStart: 2021,
+      description: "Entegra Accolade XL — same S2RV Plus · ISB 6.7 360/800 · Allison 3000 MH as Accolade. First OEM year page 2021. OEM MY26–27: 37K / 37L / 37M. Not Accolade XT.",
       powertrainByYear: [
-        {
-          from: 2018,
-          to: 2018,
-          engine: "Cummins Super C diesel",
-          horsepower: 340,
-          chassis: "Freightliner Super C",
-          notes: "Pre-MY21 Accolade XL — no 2019–2020 OEM year page. Not Accolade XT."
-        },
         {
           from: 2021,
           to: 2022,
@@ -17860,9 +17912,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Odyssey": {
       type: "Class C",
-      floorplans: ["22J", "24A", "24B", "25R", "26B", "26D", "26M", "27G", "27U", "28A", "29K", "29V", "30Z", "31F"],
+      floorplans: ["22J", "24A", "24B", "25R", "26B", "26D", "26M", "27G", "27U", "28A", "29K", "29V", "30Z", "31F", "31L"],
       floorplansByYear: {
-        "2018": ["24A", "26B", "26M", "28A"],
+        // OEM MY18 Odyssey year page + official 2018 Odyssey Flyer: 22J | 26D | 29V | 31L · E-450 6.8 305/420. 31L is current (not DSO).
+        "2018": ["22J", "26D", "29V", "31L"],
         // OEM MY19 Odyssey year page: 22J | 24B | 25R | 26D | 29K | 29V | 30Z | 31F — 31L is Dealer Stock Only · E-450 6.8 305/420
         "2019": ["22J", "24B", "25R", "26D", "29K", "29V", "30Z", "31F"],
         // OEM MY20 Odyssey year page: 24B | 25R | 26D | 29K | 29V | 30Z | 31F — option-band 6.8 305 / 7.3 350
@@ -17911,10 +17964,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         {
           from: 2018,
           to: 2018,
-          engine: "Ford 6.8L V10",
+          engine: "Ford 6.8L Triton V10 305HP",
           horsepower: 305,
+          torqueLbFt: 420,
           chassis: "Ford E-450",
-          notes: "Pre-MY19 Odyssey — do not walk 2017–2018 in this slice"
+          transmission: "TorqShift 6-speed automatic",
+          towingCapacity: 7500,
+          notes: "OEM MY18 Odyssey year page + 2018 Entegra Coach Odyssey Flyer: E-450 6.8 Triton 305 / 420 · TorqShift 6 · hitch 7.5k. 22J / 26D / 29V / 31L. No 2017 Odyssey OEM page."
         },
         {
           from: 2019,
@@ -17959,13 +18015,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Esteem": {
       type: "Class C",
-      floorplans: ["26D", "26U", "27U", "29V", "30X", "31F", "31W"],
+      floorplans: ["26D", "26U", "27U", "29V", "30X", "31F", "31L", "31W"],
       floorplansByYear: {
         "2014": ["26U", "29V", "31W"],
         "2015": ["26U", "29V", "31W"],
         "2016": ["26U", "29V", "31W"],
-        "2017": ["26U", "29V", "31W"],
-        "2018": ["26U", "29V", "31W"],
+        // No OEM MY17 Esteem year page — omit 2017
+        // OEM MY18 Esteem year page + 2018 lineup blog: 29V | 30X | 31L · E-450 6.8 305/420. 31L is current (not DSO).
+        "2018": ["29V", "30X", "31L"],
         // OEM MY19 Esteem year page: 26D | 29V | 30X | 31F — 31L is Dealer Stock Only · E-450 6.8 305/420
         "2019": ["26D", "29V", "30X", "31F"],
         // OEM MY20 Esteem year page: 27U | 29V | 30X | 31F — 26D is Dealer Stock Only
@@ -18028,11 +18085,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2018,
+          to: 2016,
           engine: "Ford 6.2L / V10",
           horsepower: 305,
           chassis: "Ford E-450",
-          notes: "Pre-MY19 Esteem — do not walk 2017–2018 in this slice"
+          notes: "2016 placeholder until the 2015–2016 Entegra walk-back. No OEM MY17 Esteem year page — do not invent 2017."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Ford 6.8L Triton V10 305HP",
+          horsepower: 305,
+          torqueLbFt: 420,
+          chassis: "Ford E-450",
+          transmission: "TorqShift 6-speed automatic",
+          towingCapacity: 7500,
+          notes: "OEM MY18 Esteem year page + 2018 Entegra lineup blog: E-450 6.8 Triton 305 / 420 · TorqShift 6 · hitch 7.5k. 29V / 30X / 31L."
         },
         {
           from: 2019,
@@ -18091,8 +18159,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         "2015": ["24L", "24R"],
         "2016": ["24L", "24R"],
-        "2017": ["24L", "24R"],
-        "2018": ["24L", "24R"],
+        // No OEM MY17 Qwest year page — omit 2017
+        // OEM MY18 Qwest year page + 2018 Qwest Flyer: 24K | 24L · Mercedes 3500 V6 188/325 · 5-speed
+        "2018": ["24K", "24L"],
         // OEM MY19 Qwest year page: 24A | 24K | 24L · Mercedes 3500 V6 188/325 · 5-speed
         "2019": ["24A", "24K", "24L"],
         // OEM MY20 Qwest year page: 24A | 24K | 24L | 24R | 24T · V6 188/325 · 7-speed
@@ -18156,11 +18225,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2018,
+          to: 2016,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
           chassis: "Mercedes Sprinter",
-          notes: "Pre-MY19 Qwest V6 — do not walk 2017–2018 in this slice"
+          notes: "2016 placeholder until the 2015–2016 Entegra walk-back. No OEM MY17 Qwest year page — do not invent 2017."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Mercedes-Benz 3.0L V6 Turbo 188HP",
+          horsepower: 188,
+          torqueLbFt: 325,
+          chassis: "Mercedes-Benz 3500",
+          transmission: "5-speed automatic",
+          towingCapacity: 5000,
+          notes: "OEM MY18 Qwest year page + 2018 Entegra Coach Qwest Flyer: Mercedes 3500 · V6 Turbo 188 / 325 · 5-speed · hitch 5k. 24K / 24L."
         },
         {
           from: 2019,
