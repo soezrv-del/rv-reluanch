@@ -34,7 +34,7 @@ export type PowertrainCorrection = {
 export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
   {
     yearMin: 2018,
-    yearEnd: 2020,
+    yearEnd: 2018,
     makeIncludes: "jayco",
     modelIncludes: "seneca",
     engine: "Cummins ISB 6.7L 360HP",
@@ -43,7 +43,20 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Freightliner S2RV Plus",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "Jayco Seneca 2018–2020 left for walk-back — do not copy MY21 S2RV (not Plus) backward. Not Seneca XT.",
+    note: "Jayco Seneca 2018 left for walk-back — do not copy MY19 S2RV (not Plus) backward. Not Seneca XT.",
+  },
+  {
+    yearMin: 2019,
+    yearEnd: 2020,
+    makeIncludes: "jayco",
+    modelIncludes: "seneca",
+    engine: "Cummins ISB 6.7L 360HP",
+    horsepower: 360,
+    torqueLbFt: 800,
+    chassis: "Freightliner S2RV",
+    transmission: "Allison 3000 MH",
+    fuelType: "Diesel",
+    note: "OEM MY19–20 Seneca brochure: S2RV (not Plus) · ISB 6.7 360/800 · hitch 12k · GVWR 29k. No Seneca Prestige flyer. Not Seneca XT.",
   },
   {
     yearMin: 2021,
@@ -5893,6 +5906,14 @@ export function findPowertrainCorrection(
     }
     // Bare "seneca" ISB must not stamp Seneca XT Power Stroke
     if (c.modelIncludes === "seneca" && md.includes("seneca xt")) {
+      return false;
+    }
+    // No MY19/MY20 Seneca Prestige brochure — do not let the early Seneca pin invent Prestige
+    if (
+      c.modelIncludes === "seneca" &&
+      md.includes("seneca prestige") &&
+      c.yearEnd <= 2020
+    ) {
       return false;
     }
     // Bare "precept" F53 must not stamp Precept Prestige (no MY21 Prestige flyer)
