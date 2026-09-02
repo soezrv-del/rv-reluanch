@@ -1737,13 +1737,12 @@ const OEM_FLOORPLAN_ROWS: Array<{
     },
   },
   // ── Tiffin Phaeton (OEM brochure weights & measures) ───────────────────
-  // Cummins L9; 380 HP / 1,150 lb-ft std; 450 / 1,250 optional.
-  // Chassis: Freightliner S / PowerGlide O. Hitch 10,000 lb. Fuel 100 gal.
+  // MY19–23: L9 380 std on 37BH. MY24+ brochure: L9 450 std on all plans.
   {
     makeIncludes: "tiffin",
     modelIncludes: "phaeton",
     yearMin: 2019,
-    yearMax: 2026,
+    yearMax: 2023,
     floorplan: "37BH",
     spec: {
       lengthDisplay: `38' 7"`,
@@ -1757,8 +1756,30 @@ const OEM_FLOORPLAN_ROWS: Array<{
       freshWater: 90,
       grayWater: 66,
       blackWater: 50,
-      note: "WB 234 · GAWR-F 14,320 · GAWR-R 24,000 · GCWR 48,320 · L9 380 only (450 NOT offered on 37BH)",
+      note: "WB 234 · GAWR-F 14,320 · GAWR-R 24,000 · GCWR 48,320 · L9 380 only through MY23",
       source: "Tiffin Phaeton OEM brochure weights & measures",
+    },
+  },
+  {
+    makeIncludes: "tiffin",
+    modelIncludes: "phaeton",
+    yearMin: 2024,
+    yearMax: 2027,
+    floorplan: "37BH",
+    spec: {
+      lengthDisplay: `38' 2"`,
+      overallLengthIn: 38 * 12 + 2,
+      exteriorHeightIn: 13 * 12 + 3,
+      exteriorWidthIn: 101,
+      interiorHeightIn: 83,
+      uvwLbs: 32000,
+      gvwrLbs: 39660,
+      hitchLbs: 10000,
+      freshWater: 100,
+      grayWater: 100,
+      blackWater: 55,
+      note: "OEM MY24 Phaeton 37 BH: 38' 2\" · 13' 3\" XSH · GVWR 39,660 · L9 450 / 1,250 std",
+      source: "Tiffin MY24 Phaeton Product Update Brochure weights & measures",
     },
   },
   {

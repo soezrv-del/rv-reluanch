@@ -109,6 +109,7 @@ export const MODEL_TIERS: Record<string, Record<string, RVTier>> = {
     "Allegro Breeze": "entry",
     "Allegro Bay": "upper_mid",
     "Open Trail": "upper_mid",
+    Cahaba: "entry",
   },
   Thor: {
     Tuscany: "flagship",
