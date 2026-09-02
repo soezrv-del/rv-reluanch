@@ -5287,25 +5287,25 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
   // Fleetwood Bounder / Southwind gas V10 era
   {
     yearMin: 2005,
-    yearEnd: 2015,
+    yearEnd: 2014,
     makeIncludes: "fleetwood",
     modelIncludes: "bounder",
     engine: "Ford Triton V10 6.8L",
     horsepower: 320,
     chassis: "Ford F53",
     fuelType: "Gas",
-    note: "2005–2015 Bounder — V10 era (not 7.3 Godzilla)",
+    note: "2005–2014 Bounder leftover — V10 era. MY15–16 locked at 362/457. Not 7.3 Godzilla.",
   },
   {
     yearMin: 2005,
-    yearEnd: 2015,
+    yearEnd: 2014,
     makeIncludes: "fleetwood",
     modelIncludes: "southwind",
     engine: "Ford Triton V10 6.8L",
     horsepower: 320,
     chassis: "Ford F53",
     fuelType: "Gas",
-    note: "2005–2015 gas Class A — Triton V10",
+    note: "2005–2014 leftover Southwind — Triton V10. MY15–16 locked at 362/457.",
   },
   {
     yearMin: 2005,
@@ -5353,6 +5353,19 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
   // Discovery modern pin (duplicate-safe longer window)
   {
     yearMin: 2015,
+    yearEnd: 2016,
+    makeIncludes: "fleetwood",
+    modelIncludes: "discovery",
+    engine: "Cummins ISL9 380HP",
+    horsepower: 380,
+    torqueLbFt: 1150,
+    chassis: "Freightliner XC-M",
+    transmission: "Allison 3000 MH 6-speed",
+    fuelType: "Diesel",
+    note: "2015_di_b / 2016_di_b: regular Discovery ISL9 380 / 1,150 on Freightliner XC-M. Plans 37R | 40E | 40G | 40X. Hitch 10,000. Onan 8.0 kW QD. NOT ISB 360 / NOT LXE.",
+  },
+  {
+    yearMin: 2017,
     yearEnd: 2026,
     makeIncludes: "fleetwood",
     modelIncludes: "discovery",
@@ -5362,7 +5375,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Freightliner XC-Series",
     transmission: "Allison 3000 MH",
     fuelType: "Diesel",
-    note: "Regular Discovery — not LXE / not ISL 8.9",
+    note: "Regular Discovery — not LXE / not ISL 8.9. Do not stamp ISB 360 onto MY15–16 ISL9 years.",
   },
   {
     yearMin: 2025,
@@ -5455,6 +5468,32 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "FORTIS24F1 / MY26 sales sheet: F53 7.3 335 HP / 468 lb-ft (not marketing 350).",
   },
   {
+    yearMin: 2015,
+    yearEnd: 2016,
+    makeIncludes: "fleetwood",
+    modelIncludes: "bounder",
+    engine: "Ford Triton V10 6.8L 362HP",
+    horsepower: 362,
+    torqueLbFt: 457,
+    chassis: "Ford F53",
+    transmission: "Ford 5-speed automatic",
+    fuelType: "Gas",
+    note: "2015_bdr_b / 16_Bounder_A: 6.8L Triton V10 362 / 457. MY15 33C/34T/35K/36E; MY16 adds 36H. Hitch 5,000. Not 7.3. Do not invent gen kW.",
+  },
+  {
+    yearMin: 2015,
+    yearEnd: 2015,
+    makeIncludes: "fleetwood",
+    modelIncludes: "bounder classic",
+    engine: "Ford Triton V10 6.8L 362HP",
+    horsepower: 362,
+    torqueLbFt: 457,
+    chassis: "Ford F53",
+    transmission: "Ford 5-speed automatic",
+    fuelType: "Gas",
+    note: "2015_bdr_b Classic table: 34B / 34M / 36H / 36R. Triton V10 362 / 457. Hitch 5,000. Last OEM Classic year — no 2016.",
+  },
+  {
     yearMin: 2017,
     yearEnd: 2018,
     makeIncludes: "fleetwood",
@@ -5537,6 +5576,18 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Ford F53",
     fuelType: "Gas",
     note: "FLEX24F1: 335 HP / 468 lb-ft. Plans 32S / 34J / 35R.",
+  },
+  {
+    yearMin: 2015,
+    yearEnd: 2016,
+    makeIncludes: "fleetwood",
+    modelIncludes: "flair",
+    engine: "Ford Triton V10 6.8L 362HP",
+    horsepower: 362,
+    torqueLbFt: 457,
+    chassis: "Ford F53",
+    fuelType: "Gas",
+    note: "FL15F2 / FL16F1: 6.8L Triton V10 362 / 457. MY15 26D/26E; MY16 26D/26E/29T. Hitch 5,000. GVWR 16k. Not 7.3. Not Flair LXE.",
   },
   {
     yearMin: 2017,
@@ -5749,6 +5800,19 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "PACEARROW23F1 36U — 340 HP / 700 lb-ft.",
   },
   {
+    yearMin: 2015,
+    yearEnd: 2016,
+    makeIncludes: "fleetwood",
+    modelIncludes: "southwind",
+    engine: "Ford Triton V10 6.8L 362HP",
+    horsepower: 362,
+    torqueLbFt: 457,
+    chassis: "Ford F53",
+    transmission: "Ford 5-speed automatic",
+    fuelType: "Gas",
+    note: "SW15B1 / SW16B1: 6.8L Triton V10 362 / 457. Plans 32VS | 34A | 36L. Hitch 5,000. Not 7.3. Independently from MY17 same three plans — not a copy-forward.",
+  },
+  {
     yearMin: 2017,
     yearEnd: 2018,
     makeIncludes: "fleetwood",
@@ -5773,6 +5837,18 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     note: "Southwind MY19/MY20 brochures: 6.8L Triton V10 320/460. Plans 34C/35K/36P/37F/37FP. Onan 5.5 kW std. Not 7.3.",
   },
   {
+    yearMin: 2015,
+    yearEnd: 2016,
+    makeIncludes: "fleetwood",
+    modelIncludes: "storm",
+    engine: "Ford Triton V10 6.8L 362HP",
+    horsepower: 362,
+    torqueLbFt: 457,
+    chassis: "Ford F53",
+    fuelType: "Gas",
+    note: "ST15B1 / 16_Storm_A: 6.8L Triton V10 362 / 457. MY15 28F/28MS/30L/32H/32V; MY16 28MS/30L/32H/32V/35SK. Hitch 5,000. Not 7.3.",
+  },
+  {
     yearMin: 2017,
     yearEnd: 2018,
     makeIncludes: "fleetwood",
@@ -5783,6 +5859,39 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     chassis: "Ford F53",
     fuelType: "Gas",
     note: "ST17B1 / 2018 Storm brochure: 6.8L Triton V10 320. Plans 32A/34S/36D/36F. Final MY 2018. Do not invent gen kW.",
+  },
+  {
+    yearMin: 2015,
+    yearEnd: 2016,
+    makeIncludes: "fleetwood",
+    modelIncludes: "jamboree",
+    engine: "Ford E-450 6.8L Triton V10",
+    horsepower: 0,
+    chassis: "Ford E-450",
+    fuelType: "Gas",
+    note: "Jamboree Sport MY15–16: 25G / 31A / 31D / 31M on E-450 Triton V10. Brochure HP not extracted — do not invent 305 or 7.3. Not Searcher.",
+  },
+  {
+    yearMin: 2015,
+    yearEnd: 2016,
+    makeIncludes: "fleetwood",
+    modelIncludes: "tioga ranger",
+    engine: "Ford E-450 6.8L Triton V10",
+    horsepower: 0,
+    chassis: "Ford E-450",
+    fuelType: "Gas",
+    note: "Tioga Ranger MY15–16: 25G / 31A / 31D / 31M on E-450 Triton V10. Brochure HP not extracted — do not invent 305 or 7.3.",
+  },
+  {
+    yearMin: 2015,
+    yearEnd: 2016,
+    makeIncludes: "fleetwood",
+    modelIncludes: "tioga",
+    engine: "Ford E-350 5.4L / E-450 6.8L Triton V10 (by floorplan)",
+    horsepower: 0,
+    chassis: "Ford E-350 / E-450",
+    fuelType: "Gas",
+    note: "Tioga / Montara MY15–16: 23B / 25K / 29A / 31M. Mixed E-350 5.4 / E-450 V10. Brochure HP not extracted — do not invent 305 or 7.3. Bare tioga must not stamp Ranger.",
   },
   {
     yearMin: 2018,
@@ -8969,6 +9078,10 @@ export function findPowertrainCorrection(
     }
     // Bare "flair" must not stamp Flair LXE
     if (c.modelIncludes === "flair" && md.includes("flair lxe")) {
+      return false;
+    }
+    // Bare "tioga" must not stamp Tioga Ranger
+    if (c.modelIncludes === "tioga" && md.includes("tioga ranger")) {
       return false;
     }
     // Bare "seneca" ISB must not stamp Seneca XT Power Stroke
