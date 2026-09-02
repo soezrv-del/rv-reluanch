@@ -69,11 +69,12 @@ test("thin index covers every live make, model, type, and year window", async ()
         expectedType,
         `${make} ${model} typeByYear`,
       );
-      const liveYears = live.floorplansByYear
-        ? Object.keys(live.floorplansByYear)
-            .map((y) => parseInt(y, 10))
-            .sort((a, b) => a - b)
-        : undefined;
+      const liveYears =
+        live.floorplansByYear && Object.keys(live.floorplansByYear).length
+          ? Object.keys(live.floorplansByYear)
+              .map((y) => parseInt(y, 10))
+              .sort((a, b) => a - b)
+          : undefined;
       assert.deepEqual(idx.years, liveYears, `${make} ${model} years`);
     }
   }

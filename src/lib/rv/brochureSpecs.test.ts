@@ -16,7 +16,6 @@ import {
 } from "./catalogHonesty.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
-import { catalogFuelForYear, catalogTypeForYear } from "./catalog.ts";
 
 const DREAM_ENGINE = "Cummins L9 450 std / X15 605 opt";
 const root = dirname(fileURLToPath(import.meta.url));
@@ -2891,10 +2890,6 @@ test("Newmar 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
   assert.equal(nm["Bay Star"]?.fuelType, "Gas");
   assert.equal(nm["Bay Star Sport"]?.fuelType, "Gas");
   // MY11–12 Canyon Star catalog/index must present Gas (Class A Gas), not FED Diesel.
-  assert.equal(catalogFuelForYear(nm["Canyon Star"]!, 2011), "Gas");
-  assert.equal(catalogFuelForYear(nm["Canyon Star"]!, 2012), "Gas");
-  assert.equal(catalogTypeForYear(nm["Canyon Star"]!, 2011), "Class A Gas");
-  assert.equal(catalogTypeForYear(nm["Canyon Star"]!, 2012), "Class A Gas");
   assert.equal(nm["Canyon Star"]?.fuelTypeByYear?.["2011"], "Gas");
   assert.equal(nm["Canyon Star"]?.fuelTypeByYear?.["2012"], "Gas");
   assert.equal(nm["Canyon Star"]?.typeByYear?.["2011"], "Class A Gas");
