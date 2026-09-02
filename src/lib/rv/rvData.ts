@@ -17042,7 +17042,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         // OEM keystonerv.com/product/cougar-sport/comfort-fifth-wheels/floorplans (2027 Floorplans):
         // 2100ML | 2700BH | 3100BH
-        // Separate from Cougar Premium FW and the collapsed Cougar TT bucket. No older-year invent this slice.
+        // yearStart 2023 — omit 2023–2026 fby (no invent / no copy-forward of 2027 codes).
+        // Separate from Cougar Premium FW and the collapsed Cougar TT bucket.
         "2027": ["2100ML", "2700BH", "3100BH"]
       },
       lengthRange: [25, 33],
@@ -17063,8 +17064,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1996,
       warrantyYears: 1,
-      yearStart: 2027,
-      description: "Cougar Sport — shorter, lighter Keystone fifth wheel (OEM Comfort Fifth Wheels). 2027 card is 2100ML / 2700BH / 3100BH. Do not merge with Cougar Premium FW or the travel-trailer Cougar bucket."
+      yearStart: 2023,
+      description: "Cougar Sport — shorter, lighter Keystone fifth wheel (OEM Comfort Fifth Wheels). yearStart 2023; older fby empty until walk-back. 2027 card is 2100ML / 2700BH / 3100BH. Do not merge with Cougar Premium FW or the travel-trailer Cougar bucket."
     },
     "Cougar Half-Ton": {
       type: "Fifth Wheel",
@@ -17102,7 +17103,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2024": ["23MLE", "26RES", "26RKE", "28RLI", "29MBD", "29RKS", "30REP"],
         "2025": ["23MLE", "26RES", "26RKE", "28RLI", "29MBD", "29RKS", "30REP"],
         "2026": ["23MLE", "26RES", "26RKE", "28RLI", "29MBD", "29RKS", "30REP"],
-        "2027": ["23MLE", "26RES", "26RKE", "28RLI", "29MBD", "29RKS", "30REP"]
+        // OEM keystonerv.com/product/cougar-half-ton/premium-fifth-wheels/floorplans (2027 Floorplans):
+        // 23MLE | 26RES | 26RKE | 28RLI | 29MBD | 30REP
+        // 29RKS is Dealer Stock / Stock Only — omit. Do not dump Half-Ton TT codes here
+        // (21LBK / 22MLS / 25FKD / 25MLE / 26LBW / 28BHS / 29RDS / 29RKE / 29RLP — GAP this slice).
+        "2027": ["23MLE", "26RES", "26RKE", "28RLI", "29MBD", "30REP"]
       },
       lengthRange: [
         27,
@@ -17136,7 +17141,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       uvwLbs: 8200,
       exteriorHeightIn: 151,
       exteriorWidthIn: 96,
-      description: "Cougar Half-Ton fifth wheel — purpose-built for half-ton pickups (many plans GVWR ≤ 9,995–11,500). Popular 23MLE (~28 ft, ~7,800–8,000 UVW). Always verify hitch weight vs truck payload."
+      description: "Cougar Half-Ton fifth wheel — purpose-built for half-ton pickups (many plans GVWR ≤ 9,995–11,500). OEM 2027 FW card is 23MLE / 26RES / 26RKE / 28RLI / 29MBD / 30REP; 29RKS is dealer-stock only. Half-Ton TT stays GAP (own OEM card — do not dump into Cougar TT). Always verify hitch weight vs truck payload."
     },
     Bullet: {
       type: "Travel Trailer",
@@ -17316,7 +17321,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         // OEM keystonerv.com/product/bullet-crossfire/comfort-travel-trailers/floorplans (2027 Floorplans):
         // 208MKS | 222BHS | 2290BH | 2290BHWE | 234RBK | 245RKS | 245RKSWE | 259REV | 267MRB | 287RLS | 287RLSWE | 310RES
-        // Bullet Classic GAP. Do not dump into the collapsed Bullet bucket. No older-year invent this slice.
+        // yearStart 2017 — omit 2017–2026 fby (no invent / no copy-forward of 2027 codes).
+        // Bullet Classic GAP. Do not dump into the collapsed Bullet bucket.
         "2027": ["208MKS", "222BHS", "2290BH", "2290BHWE", "234RBK", "245RKS", "245RKSWE", "259REV", "267MRB", "287RLS", "287RLSWE", "310RES"]
       },
       lengthRange: [24, 36],
@@ -17337,8 +17343,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 78,
       founded: 1996,
       warrantyYears: 1,
-      yearStart: 2027,
-      description: "Bullet Crossfire — current Keystone lightweight travel trailer. OEM 2027 card prints 208MKS through 310RES including Western Edition twins. Not Bullet Classic / Premium."
+      yearStart: 2017,
+      description: "Bullet Crossfire — current Keystone lightweight travel trailer. yearStart 2017; older fby empty until walk-back. OEM 2027 card prints 208MKS through 310RES including Western Edition twins. Not Bullet Classic / Premium."
     },
     Passport: {
       type: "Travel Trailer",
@@ -17514,6 +17520,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         // OEM keystonerv.com/product/passport-sl/comfort-travel-trailers/floorplans (2027 Floorplans):
         // 2080MK | 2220BH | 229BH | 229BHWE | 2340RBK | 2450RK | 2450RKWE | 2590REV | 2670MRB | 2870RL | 2870RLWE | 3100RE
+        // yearStart 2019 — omit 2019–2026 fby (no invent / no copy-forward of 2027 codes).
         // Do not invent Passport Premium / GT. Do not dump into the collapsed Passport bucket.
         "2027": ["2080MK", "2220BH", "229BH", "229BHWE", "2340RBK", "2450RK", "2450RKWE", "2590REV", "2670MRB", "2870RL", "2870RLWE", "3100RE"]
       },
@@ -17535,8 +17542,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 78,
       founded: 1996,
       warrantyYears: 1,
-      yearStart: 2027,
-      description: "Passport Super Lite — current Keystone ultra-lite travel trailer. OEM 2027 card is 2080MK through 3100RE including Western Edition twins. Not Passport Classic / Premium / GT."
+      yearStart: 2019,
+      description: "Passport Super Lite — current Keystone ultra-lite travel trailer. yearStart 2019; older fby empty until walk-back. OEM 2027 card is 2080MK through 3100RE including Western Edition twins. Not Passport Classic / Premium / GT."
     },
     "Passport Classic": {
       type: "Travel Trailer",
@@ -17544,6 +17551,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         // OEM keystonerv.com/product/passport-classic/comfort-travel-trailers/floorplans (2027 Floorplans):
         // 160BHC | 160RBC | 180RBC | 180RBCWE | 190RDC | 210RKC | 210RKCWE | 214BHC | 214BHCWE | 260BHC | 260BHCWE | 284QBC
+        // yearStart 2024 — omit 2024–2026 fby (no invent / no copy-forward of 2027 codes).
         // Do not invent Passport Premium / GT. Do not dump into the collapsed Passport bucket.
         "2027": ["160BHC", "160RBC", "180RBC", "180RBCWE", "190RDC", "210RKC", "210RKCWE", "214BHC", "214BHCWE", "260BHC", "260BHCWE", "284QBC"]
       },
@@ -17565,8 +17573,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 78,
       founded: 1996,
       warrantyYears: 1,
-      yearStart: 2027,
-      description: "Passport Classic — current Keystone entry travel trailer. OEM 2027 card is 160BHC through 284QBC including Western Edition twins. Not Passport Super Lite / Premium / GT."
+      yearStart: 2024,
+      description: "Passport Classic — current Keystone entry travel trailer. yearStart 2024; older fby empty until walk-back. OEM 2027 card is 160BHC through 284QBC including Western Edition twins. Not Passport Super Lite / Premium / GT."
     },
     Springdale: {
       type: "Travel Trailer",
@@ -17718,7 +17726,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         // OEM keystonerv.com/product/hideout/comfort-travel-trailers/floorplans (2027 Floorplans):
         // 210RL | 210RLWE | 212RKS | 212RKSWE | 230BH | 230BHWE | 234MLS | 234MLSWE | 250RBS | 250RBSWE | 262BHS | 262BHSWE
-        // Mini / Max GAP — no extractable 2027 Mini/Max cards. No older-year invent this slice.
+        // yearStart 2010 — omit 2010–2026 fby (no invent / no copy-forward of 2027 codes).
+        // Mini / Max GAP — no extractable 2027 Mini/Max cards.
         "2027": ["210RL", "210RLWE", "212RKS", "212RKSWE", "230BH", "230BHWE", "234MLS", "234MLSWE", "250RBS", "250RBSWE", "262BHS", "262BHSWE"]
       },
       lengthRange: [25, 32],
@@ -17739,8 +17748,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 78,
       founded: 1996,
       warrantyYears: 1,
-      yearStart: 2027,
-      description: "Keystone Hideout — current value travel trailer. OEM 2027 card is 210RL through 262BHS including Western Edition twins. Mini / Max GAP this slice."
+      yearStart: 2010,
+      description: "Keystone Hideout — current value travel trailer. yearStart 2010; older fby empty until walk-back. OEM 2027 card is 210RL through 262BHS including Western Edition twins. Mini / Max GAP this slice."
     },
     Fuzion: {
       type: "Toy Hauler",
@@ -17947,7 +17956,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         // OEM keystonerv.com/product/alpine-avalanche-edition/luxury-fifth-wheels/floorplans (2027 Floorplans):
         // 321RL | 366LS | 379MB | 380LT | 381DL | 390DS | 392DS
-        // Do not merge with standalone Avalanche (yearEnd 2025) or core Alpine. No older-year invent this slice.
+        // yearStart 2020 — omit 2020–2026 fby (no invent / no copy-forward of 2027 codes).
+        // Do not merge with standalone Avalanche (yearEnd 2025) or core Alpine.
         "2027": ["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"]
       },
       lengthRange: [36, 44],
@@ -17968,8 +17978,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 84,
       founded: 1996,
       warrantyYears: 1,
-      yearStart: 2027,
-      description: "Alpine Avalanche Edition — family / bunk-leaning Alpine luxury fifth wheels. OEM 2027 card is 321RL / 366LS / 379MB / 380LT / 381DL / 390DS / 392DS. Not the retired standalone Avalanche line."
+      yearStart: 2020,
+      description: "Alpine Avalanche Edition — family / bunk-leaning Alpine luxury fifth wheels. yearStart 2020; older fby empty until walk-back. OEM 2027 card is 321RL / 366LS / 379MB / 380LT / 381DL / 390DS / 392DS. Not the retired standalone Avalanche line."
     },
     Arcadia: {
       type: "Fifth Wheel",
