@@ -37,10 +37,16 @@ import {
   ratingFor,
   RV_CLASS_TABS,
   rvClassLabel,
+  isCatalogLoaded,
   searchCatalog,
   useCatalogReady,
   YEARS,
 } from "@/lib/rv/catalog";
+import {
+  cascadeFromResult,
+  pickerCoachWrite,
+  shouldOpenSingleHitReport,
+} from "@/lib/rv/factsOpen";
 import { didYouMean, type SuggestHit } from "@/lib/rv/suggest";
 import { cn } from "@/lib/utils";
 import { SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
@@ -207,6 +213,13 @@ export function RvFaxApp({
     [year, make, model, floorplan, rvType, catalogGen],
   );
 
+  // Warm the report chunk before Open report so Suspense doesn't flash
+  // the empty picker splash on a single-hit open.
+  useEffect(() => {
+    if (!cascade.canSearch) return;
+    void import("./RvDetail");
+  }, [cascade.canSearch]);
+
   const applySel = useCallback((next: SearchSel) => {
     setYear(next.year);
     setMake(next.make);
@@ -215,17 +228,26 @@ export function RvFaxApp({
     if (next.rvType !== undefined) setRvType(next.rvType);
   }, []);
 
+  const openFactsUnit = useCallback(
+    (r: RVResult) => {
+      applySel(cascadeFromResult(r));
+      setDetail(r);
+    },
+    [applySel],
+  );
+
   const setActiveCoach = nav?.setActiveCoach;
   const factsPickerToken = nav?.factsPickerToken ?? 0;
 
   useEffect(() => {
-    const payload =
-      year && make && model
-        ? { year, make, model, floorplan, rvType }
-        : null;
-    if (setActiveCoach) setActiveCoach(payload);
-    else writeActiveCoach(payload);
-  }, [year, make, model, floorplan, rvType, setActiveCoach]);
+    const write = pickerCoachWrite(
+      { year, make, model, floorplan, rvType },
+      { reportOpen: Boolean(detail) },
+    );
+    if (write === undefined) return;
+    if (setActiveCoach) setActiveCoach(write);
+    else writeActiveCoach(write);
+  }, [year, make, model, floorplan, rvType, setActiveCoach, detail]);
 
   useEffect(() => {
     if (!factsPickerToken) return;
@@ -382,12 +404,12 @@ export function RvFaxApp({
         }
 
         // Exact single hit → open Vehicle History Report immediately
-        if (found.length === 1 && !found[0]!.custom) {
-          setDetail(found[0]!);
+        if (shouldOpenSingleHitReport(found)) {
+          openFactsUnit(found[0]!);
         }
       })();
     },
-    [saved],
+    [saved, openFactsUnit],
   );
 
   const runSearch = useCallback(() => {
@@ -421,6 +443,7 @@ export function RvFaxApp({
 
   useEffect(() => {
     if (!hasSearched || !cascade.canSearch || searching) return;
+    if (!isCatalogLoaded()) return;
     const found = searchCatalog({
       year: cascade.year,
       make: cascade.make,
@@ -485,7 +508,7 @@ export function RvFaxApp({
           onBack={() => setCompareOpen(false)}
           onOpen={(r) => {
             setCompareOpen(false);
-            setDetail(r);
+            openFactsUnit(r);
           }}
         />
       </Suspense>
@@ -833,7 +856,7 @@ export function RvFaxApp({
                       saved={isSavedUnit(saved, r)}
                       comparing={comparing}
                       compareFull={comparePick.length >= 3}
-                      onOpen={() => setDetail(r)}
+                      onOpen={() => openFactsUnit(r)}
                       onToggleSave={() => toggleSave(r)}
                       onToggleCompare={() => toggleCompare(r)}
                       onGrok={() =>
@@ -872,7 +895,7 @@ export function RvFaxApp({
                 >
                   <button
                     type="button"
-                    onClick={() => setDetail(r)}
+                    onClick={() => openFactsUnit(r)}
                     className="flex min-h-[52px] min-w-0 flex-1 items-center justify-between gap-2 px-3.5 py-3 text-left active:scale-[0.99]"
                   >
                     <div className="min-w-0">
