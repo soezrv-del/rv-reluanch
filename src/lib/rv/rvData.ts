@@ -16832,7 +16832,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   "Entegra Coach": {
     "Cornerstone": {
       type: "Class A Diesel",
-      floorplans: ["45A", "45B", "45D", "45R", "45V", "45W", "45Z"],
+      floorplans: ["45A", "45B", "45D", "45F", "45R", "45V", "45W", "45X", "45Y", "45Z"],
       floorplansByYear: {
         "2014": ["45B", "45W", "45Z"],
         "2015": ["45B", "45W", "45Z"],
@@ -16841,8 +16841,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["45B", "45W", "45Z"],
         "2019": ["45B", "45W", "45Z"],
         "2020": ["45B", "45W", "45Z"],
-        "2021": ["45B", "45W", "45Z"],
-        "2022": ["45B", "45W", "45Z"],
+        // OEM MY21 Cornerstone year page: 45B | 45F | 45R | 45W | 45X | 45Y | 45Z · X15 605/1950 · K3
+        "2021": ["45B", "45F", "45R", "45W", "45X", "45Y", "45Z"],
+        // OEM MY22 Cornerstone year page + luxury-diesel brochure: 45B | 45D | 45F | 45R | 45W | 45Z
+        "2022": ["45B", "45D", "45F", "45R", "45W", "45Z"],
         // OEM MY23 Cornerstone year page + brochure: 45B | 45D | 45R | 45W | 45Z
         "2023": ["45B", "45D", "45R", "45W", "45Z"],
         // OEM MY24 Cornerstone year page + brochure: 45B | 45D | 45R | 45W | 45Z — no 45A
@@ -16906,6 +16908,27 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2019,
+          to: 2020,
+          engine: "Cummins X15 605HP",
+          horsepower: 605,
+          torqueLbFt: 1950,
+          chassis: "Spartan K3",
+          transmission: "Allison 4000 MH",
+          notes: "Pre-MY21 Cornerstone — do not walk 2019–2020 in this slice"
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Cummins X15 605HP",
+          horsepower: 605,
+          torqueLbFt: 1950,
+          chassis: "Spartan K3",
+          transmission: "Allison 4000 MH",
+          towingCapacity: 20000,
+          notes: "OEM MY21–22 Cornerstone year page / brochure: X15 605 / 1,950 · Spartan K3 · Allison 4000 MH · hitch 20k"
+        },
+        {
+          from: 2023,
           to: 2026,
           engine: "Cummins X15 605HP",
           horsepower: 605,
@@ -16918,7 +16941,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Anthem": {
       type: "Class A Diesel",
-      floorplans: ["37K", "42DEQ", "44B", "44D", "44R", "44V", "44W", "44Z"],
+      floorplans: ["37K", "42DEQ", "44B", "44D", "44F", "44R", "44V", "44W", "44Z"],
       floorplansByYear: {
         "2014": ["42DEQ", "44B", "44W"],
         "2015": ["42DEQ", "44B", "44W"],
@@ -16927,8 +16950,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["42DEQ", "44B", "44W"],
         "2019": ["42DEQ", "44B", "44W", "44D"],
         "2020": ["42DEQ", "44B", "44W", "44D"],
-        "2021": ["42DEQ", "44B", "44W", "44D"],
-        "2022": ["44B", "44W", "44D"],
+        // OEM MY21 Anthem year page: 42DEQ | 44B | 44F | 44R | 44W | 44Z — no 44D
+        "2021": ["42DEQ", "44B", "44F", "44R", "44W", "44Z"],
+        // OEM MY22 Anthem year page + luxury-diesel brochure: 44B | 44D | 44F | 44R | 44W | 44Z
+        "2022": ["44B", "44D", "44F", "44R", "44W", "44Z"],
         // OEM MY23 Anthem year page + brochure: 44B | 44D | 44R | 44W | 44Z — no 37K
         "2023": ["44B", "44D", "44R", "44W", "44Z"],
         // OEM MY24 Anthem year page + brochure: 37K | 44B | 44D | 44R | 44W | 44Z
@@ -16991,10 +17016,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2022,
+          to: 2020,
           engine: "Cummins L9 / X12 450–500HP",
           horsepower: 450,
-          chassis: "Spartan K3"
+          chassis: "Spartan K3",
+          notes: "Pre-MY21 Anthem option band — do not walk 2019–2020 in this slice"
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan K2",
+          transmission: "Allison 3000 MH",
+          towingCapacity: 15000,
+          notes: "OEM MY21–22 Anthem year page / brochure: L9 450 / 1,250 · Spartan K2 · hitch 15k. Not an L9/X12 band."
         },
         {
           from: 2023,
@@ -17021,7 +17058,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Aspire": {
       type: "Class A Diesel",
-      floorplans: ["38R", "40P", "42D", "44B", "44D", "44R", "44V", "44W", "44Z"],
+      floorplans: ["38M", "38R", "40P", "42D", "42DEQ", "44B", "44D", "44F", "44R", "44V", "44W", "44Z"],
       floorplansByYear: {
         "2015": ["38R", "42D", "44R"],
         "2016": ["38R", "42D", "44R"],
@@ -17029,8 +17066,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["38R", "42D", "44R"],
         "2019": ["38R", "42D", "44R"],
         "2020": ["38R", "42D", "44R"],
-        "2021": ["38R", "42D", "44R"],
-        "2022": ["42D", "44R"],
+        // OEM MY21 Aspire year page: 38M | 40P | 42DEQ | 44B | 44F | 44R | 44W | 44Z · L9 450/1250 · K2
+        "2021": ["38M", "40P", "42DEQ", "44B", "44F", "44R", "44W", "44Z"],
+        // OEM MY22 Aspire year page: 40P | 44B | 44D | 44F | 44R | 44W | 44Z — 38M / 42DEQ dropped
+        "2022": ["40P", "44B", "44D", "44F", "44R", "44W", "44Z"],
         // OEM MY23 Aspire brochure: 40P | 44B | 44D | 44R | 44W | 44Z
         "2023": ["40P", "44B", "44D", "44R", "44W", "44Z"],
         // OEM MY24 Aspire brochure: 40P | 44B | 44D | 44R | 44W | 44Z
@@ -17086,10 +17125,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
+          to: 2020,
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          chassis: "Spartan / Freightliner",
+          notes: "Pre-MY21 Aspire — do not walk 2019–2020 in this slice"
+        },
+        {
+          from: 2021,
           to: 2022,
           engine: "Cummins L9 450HP",
           horsepower: 450,
-          chassis: "Spartan / Freightliner"
+          torqueLbFt: 1250,
+          chassis: "Spartan K2",
+          transmission: "Allison 3000 MH",
+          towingCapacity: 15000,
+          notes: "OEM MY21–22 Aspire year page / brochure: L9 450 / 1,250 · Spartan K2 · hitch 15k (10k on 38M and 40P)"
         },
         {
           from: 2023,
@@ -17123,8 +17174,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["37K", "39BH", "39W"],
         "2019": ["37K", "39BH", "39W"],
         "2020": ["37K", "39BH", "39W"],
-        "2021": ["37K", "39BH", "39W"],
-        "2022": ["37K", "39BH"],
+        // OEM MY21 Reatta year page: 37K | 39BH | 39T2 — no 39W / 37MB
+        "2021": ["37K", "39BH", "39T2"],
+        // OEM MY22 Reatta year page: 37K | 39BH | 39T2
+        "2022": ["37K", "39BH", "39T2"],
         // OEM MY23 Reatta brochure: 37K | 39BH | 39T2
         "2023": ["37K", "39BH", "39T2"],
         // OEM MY24 Reatta brochure: 37K | 39BH | 39T2 (axle line prints 37K / 39BH / 39T2)
@@ -17171,13 +17224,23 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2016,
+          to: 2020,
+          engine: "Cummins B6.7 360HP",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Spartan K1",
+          transmission: "Allison 3000 MH",
+          notes: "Pre-MY21 Reatta B6.7 / K1 — do not walk 2019–2020 in this slice. Not Reatta XL L9."
+        },
+        {
+          from: 2021,
           to: 2025,
           engine: "Cummins B6.7 360HP",
           horsepower: 360,
           torqueLbFt: 800,
           chassis: "Spartan K1",
           transmission: "Allison 3000 MH",
-          notes: "Inline-six B6.7 — not ISL 8.9 / not Reatta XL L9"
+          notes: "OEM MY21–25 Reatta: B6.7 360 / 800 · Spartan K1 · hitch 10k. MY21–22: 37K / 39BH / 39T2. Not Reatta XL L9 / K2."
         }
       ]
     },
@@ -17188,8 +17251,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["37K", "39BH"],
         "2019": ["37K", "39BH"],
         "2020": ["37K", "39BH"],
-        "2021": ["37K", "39BH", "39W"],
-        "2022": ["37K", "39BH", "39W"],
+        // OEM MY21 Reatta XL year page: 37K | 39BH | 39T2 | 40Q2 · L9 380/1150 · K2
+        "2021": ["37K", "39BH", "39T2", "40Q2"],
+        // OEM MY22 Reatta XL year page: 37K | 39BH | 39T2 | 40Q3 (40Q2 dropped)
+        "2022": ["37K", "39BH", "39T2", "40Q3"],
         // OEM MY23 Reatta XL brochure: 37K | 39BH | 39T2 | 40Q2
         "2023": ["37K", "39BH", "39T2", "40Q2"],
         // OEM MY24 Reatta XL brochure: 37K | 39BH | 39T2 | 40Q2 | 40Q3
@@ -17231,31 +17296,31 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 2,
       yearStart: 2018,
       yearEnd: 2025,
-      description: "Entegra Reatta XL — OEM MY23–25 brochure: Cummins L9 380 / 1,150 on Spartan K2 (not the Reatta B6.7 / K1). Year-end 2025: no 2026 OEM page. Pre-2023 stays on the B6.7 band until walk-back sources them.",
+      description: "Entegra Reatta XL — OEM MY21–25 brochure: Cummins L9 380 / 1,150 on Spartan K2 (not the Reatta B6.7 / K1). MY21 still 40Q2; MY22 40Q3. Year-end 2025: no 2026 OEM page. Pre-2021 stays on the B6.7 band until walk-back sources them.",
       powertrainByYear: [
         {
           from: 2018,
-          to: 2022,
+          to: 2020,
           engine: "Cummins B6.7 360HP",
           horsepower: 360,
           chassis: "Spartan K1",
-          notes: "Pre-MY23 Reatta XL — do not copy MY23 L9 backward"
+          notes: "Pre-MY21 Reatta XL B6.7 — do not copy MY21 L9 / K2 onto 2018–2020"
         },
         {
-          from: 2023,
+          from: 2021,
           to: 2025,
           engine: "Cummins L9 380HP",
           horsepower: 380,
           torqueLbFt: 1150,
           chassis: "Spartan K2",
           transmission: "Allison 3000 MH",
-          notes: "OEM MY23–25 Reatta XL brochure: L9 380 / 1,150 · Spartan K2"
+          notes: "OEM MY21–25 Reatta XL: L9 380 / 1,150 · Spartan K2 · hitch 10k. MY21 40Q2; MY22+ 40Q3. Not Reatta B6.7 / K1."
         }
       ]
     },
     "Vision": {
       type: "Class A Gas",
-      floorplans: ["27A", "29F", "29S", "31B", "36A"],
+      floorplans: ["26X", "27A", "29F", "29S", "31B", "31V", "36A"],
       floorplansByYear: {
         "2014": ["27A", "29S", "31B"],
         "2015": ["27A", "29S", "31B"],
@@ -17264,8 +17329,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["27A", "29S", "31B", "36A"],
         "2019": ["27A", "29S", "31B", "36A"],
         "2020": ["27A", "29S", "31B", "36A"],
-        "2021": ["27A", "29S", "31B", "36A"],
-        "2022": ["27A", "29S", "31B", "36A"],
+        // OEM MY21 Vision year page: 26X | 27A | 29F | 29S | 31V · F53 7.3 350/468
+        "2021": ["26X", "27A", "29F", "29S", "31V"],
+        // OEM MY22 Vision year page: 27A | 29F | 29S — 26X and 31V are Dealer Stock Only
+        "2022": ["27A", "29F", "29S"],
         // OEM MY23 Vision brochure: 27A | 29F | 29S
         "2023": ["27A", "29F", "29S"],
         // OEM MY24 Vision brochure: 27A | 29F | 29S
@@ -17332,7 +17399,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 350,
           torqueLbFt: 468,
           chassis: "Ford F53",
-          notes: "OEM MY23 Vision brochure: F53 7.3 350 / 468. Do not copy MY24 335 backward."
+          notes: "OEM MY21–23 Vision: F53 7.3 350 / 468 · TorqShift 6 · hitch 5k. Do not copy MY24 335 backward."
         },
         {
           from: 2024,
@@ -17352,8 +17419,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         "2019": ["29S", "31B", "36A"],
         "2020": ["29S", "31B", "36A"],
-        "2021": ["29S", "31B", "36A"],
-        "2022": ["29S", "31B", "36A"],
+        // OEM MY21 Vision XL year page: 34B | 34G | 36A · F53 7.3 350/468
+        "2021": ["34B", "34G", "36A"],
+        // OEM MY22 Vision XL year page: 34B | 34G | 36A | 36C — no 31UL
+        "2022": ["34B", "34G", "36A", "36C"],
         // OEM MY23 Vision XL brochure: 34B | 34G | 36A | 36C — no 31UL
         "2023": ["34B", "34G", "36A", "36C"],
         // OEM MY24 Vision XL brochure: 31UL | 34B | 34G | 36A | 36C
@@ -17412,7 +17481,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 350,
           torqueLbFt: 468,
           chassis: "Ford F53",
-          notes: "OEM MY23 Vision XL brochure: F53 7.3 350 / 468. Do not copy MY24 335 backward."
+          notes: "OEM MY21–23 Vision XL: F53 7.3 350 / 468 · TorqShift 6. Do not copy MY24 335 backward."
         },
         {
           from: 2024,
@@ -17428,7 +17497,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Accolade": {
       type: "Super C",
-      floorplans: ["37K", "37L", "37M"],
+      floorplans: ["37K", "37L", "37M", "37RB", "37TS"],
       floorplansByYear: {
         "2015": ["37L", "37M"],
         "2016": ["37L", "37M"],
@@ -17436,7 +17505,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["37L", "37M"],
         "2019": ["37L", "37M", "37K"],
         "2020": ["37L", "37M", "37K"],
-        "2021": ["37L", "37M", "37K"],
+        // OEM MY21 Accolade year page: 37K | 37L | 37M | 37RB | 37TS — 37HJ is Dealer Stock Only
+        "2021": ["37K", "37L", "37M", "37RB", "37TS"],
+        // OEM MY22 Accolade year page: 37K | 37L | 37M — 37TS is Dealer Stock Only
         "2022": ["37K", "37L", "37M"],
         // OEM MY23 Accolade brochure: 37K | 37L | 37M · S2RV · ISB 360/800
         "2023": ["37K", "37L", "37M"],
@@ -17485,11 +17556,23 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2015,
-          to: 2022,
+          to: 2020,
           engine: "Cummins Super C diesel ~340HP",
           horsepower: 340,
           chassis: "Freightliner Super C",
-          notes: "Pre-MY23 Accolade band — do not invent a single HP; pin covers 2018+"
+          notes: "Pre-MY21 Accolade band — do not walk 2019–2020 in this slice. Not Accolade XT."
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Cummins ISB 6.7L 360HP",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Freightliner S2RV",
+          transmission: "Allison 3000 MH",
+          fuelCapacityGal: 100,
+          towingCapacity: 12000,
+          notes: "OEM MY21–22 Accolade: ISB 360/800 · S2RV (not Plus) · hitch 12k. MY21 37RB/37TS; MY22 drops both (37TS DSO). Not Accolade XT."
         },
         {
           from: 2023,
@@ -17524,8 +17607,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["37M", "37K"],
         "2019": ["37M", "37K"],
         "2020": ["37M", "37K"],
-        "2021": ["37M", "37K"],
-        "2022": ["37M", "37K"],
+        // OEM MY21 Accolade XL year page: 37K | 37L | 37M · S2RV · ISB 360/800
+        "2021": ["37K", "37L", "37M"],
+        // OEM MY22 Accolade XL year page: 37K | 37L | 37M
+        "2022": ["37K", "37L", "37M"],
         // OEM MY23 Accolade XL brochure: 37K | 37L | 37M
         "2023": ["37K", "37L", "37M"],
         // OEM MY24 Accolade XL brochure: 37K | 37L | 37M
@@ -17573,10 +17658,23 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2018,
-          to: 2022,
+          to: 2020,
           engine: "Cummins Super C diesel",
           horsepower: 340,
-          chassis: "Freightliner Super C"
+          chassis: "Freightliner Super C",
+          notes: "Pre-MY21 Accolade XL — do not walk 2019–2020 in this slice. Not Accolade XT."
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Cummins ISB 6.7L 360HP",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Freightliner S2RV",
+          transmission: "Allison 3000 MH",
+          fuelCapacityGal: 100,
+          towingCapacity: 12000,
+          notes: "OEM MY21–22 Accolade XL: ISB 360/800 · S2RV (not Plus) · hitch 12k. Not Accolade XT."
         },
         {
           from: 2023,
@@ -17688,13 +17786,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Odyssey": {
       type: "Class C",
-      floorplans: ["24A", "24B", "25R", "26B", "26M", "27G", "27U", "28A", "29V", "30Z", "31F"],
+      floorplans: ["24A", "24B", "25R", "26B", "26D", "26M", "27G", "27U", "28A", "29K", "29V", "30Z", "31F"],
       floorplansByYear: {
         "2018": ["24A", "26B", "26M", "28A"],
         "2019": ["24A", "26B", "26M", "28A"],
         "2020": ["24A", "26B", "26M", "28A"],
-        "2021": ["24A", "26B", "26M", "28A"],
-        "2022": ["24A", "26B", "26M", "28A"],
+        // OEM MY21 Odyssey year page: 24B | 25R | 26D | 26M | 27U | 29K | 29V | 30Z | 31F · E-450 7.3 350/468
+        "2021": ["24B", "25R", "26D", "26M", "27U", "29K", "29V", "30Z", "31F"],
+        // OEM MY22 Odyssey year page: 24B | 25R | 26M | 27U | 29V | 30Z | 31F — 26D and 29K are Dealer Stock Only
+        "2022": ["24B", "25R", "26M", "27U", "29V", "30Z", "31F"],
         // OEM MY23 Odyssey brochure: 24B | 25R | 26M | 27U | 29V | 30Z | 31F
         "2023": ["24B", "25R", "26M", "27U", "29V", "30Z", "31F"],
         // OEM MY24 Odyssey brochure: 24B | 25R | 26M | 27U | 29V | 30Z | 31F
@@ -17746,7 +17846,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 350,
           torqueLbFt: 468,
           chassis: "Ford E-450",
-          notes: "OEM MY23 Odyssey brochure prints E-450 7.3 350 / 468. Do not copy MY24 325 backward."
+          notes: "OEM MY21–23 Odyssey: E-450 7.3 350 / 468 · hitch 7.5k. Do not copy MY24 325 backward."
         },
         {
           from: 2024,
@@ -17762,7 +17862,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Esteem": {
       type: "Class C",
-      floorplans: ["26U", "27U", "29V", "31F", "31W"],
+      floorplans: ["26U", "27U", "29V", "30X", "31F", "31W"],
       floorplansByYear: {
         "2014": ["26U", "29V", "31W"],
         "2015": ["26U", "29V", "31W"],
@@ -17771,8 +17871,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["26U", "29V", "31W"],
         "2019": ["26U", "29V", "31W"],
         "2020": ["26U", "29V", "31W"],
-        "2021": ["26U", "29V", "31W"],
-        "2022": ["26U", "29V", "31W"],
+        // OEM MY21 Esteem year page: 27U | 29V | 30X | 31F · E-450 7.3 350/468
+        "2021": ["27U", "29V", "30X", "31F"],
+        // OEM MY22 Esteem year page: 27U | 29V | 31F — 30X is Dealer Stock Only
+        "2022": ["27U", "29V", "31F"],
         // OEM MY23 Esteem brochure: 27U | 29V | 31F
         "2023": ["27U", "29V", "31F"],
         // OEM MY24 Esteem brochure: 27U | 29V | 31F
@@ -17839,7 +17941,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 350,
           torqueLbFt: 468,
           chassis: "Ford E-450",
-          notes: "OEM MY23 Esteem brochure prints E-450 7.3 350 / 468. Do not copy MY24 325 backward."
+          notes: "OEM MY21–23 Esteem: E-450 7.3 350 / 468. Do not copy MY24 325 backward."
         },
         {
           from: 2024,
@@ -17873,8 +17975,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2018": ["24L", "24R"],
         "2019": ["24L", "24R"],
         "2020": ["24L", "24R"],
-        "2021": ["24L", "24R"],
-        "2022": ["24L", "24R"],
+        // OEM MY21 Qwest year page: 24L | 24R | 24T — 24K is Dealer Stock Only · V6 188/325
+        "2021": ["24L", "24R", "24T"],
+        // OEM MY22 Qwest year page / brochure: 24L | 24N | 24R | 24T · V6 188/325 (not 2.0 208)
+        "2022": ["24L", "24N", "24R", "24T"],
         // OEM MY23 Qwest brochure: 24L | 24N | 24R | 24T
         "2023": ["24L", "24N", "24R", "24T"],
         // OEM MY24 Qwest brochure: 24L | 24N | 24R | 24T
@@ -17930,27 +18034,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2021,
+          to: 2020,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
-          chassis: "Mercedes Sprinter"
+          chassis: "Mercedes Sprinter",
+          notes: "Pre-MY21 Qwest V6 — do not walk 2019–2020 in this slice"
         },
         {
-          from: 2022,
-          to: 2022,
-          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
-          horsepower: 208,
-          chassis: "Mercedes Sprinter"
-        },
-        {
-          from: 2023,
+          from: 2021,
           to: 2023,
           engine: "Mercedes-Benz 3.0L V6 Turbo 188HP",
           horsepower: 188,
           torqueLbFt: 325,
           chassis: "Mercedes-Benz 3500",
           transmission: "7-speed automatic",
-          notes: "OEM MY23 Qwest: Mercedes 3500 · V6 Turbo 188 / 325 · 7-speed. Do not copy MY24 2.0 211 backward."
+          notes: "OEM MY21–23 Qwest: Mercedes 3500 · V6 Turbo 188 / 325. MY22 brochure still prints 188 — not 2.0 208/211. Do not copy MY24 2.0 211 backward."
         },
         {
           from: 2024,
@@ -18026,6 +18124,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["36B", "36H", "36T", "36U"],
       floorplansByYear: {
+        // OEM MY21 Emblem year page / gas Class A brochure: 36H | 36T | 36U · F53 7.3 350/468 — no 36B
+        "2021": ["36H", "36T", "36U"],
+        // OEM MY22 Emblem year page: 36H | 36T | 36U · F53 7.3 350/468 — no 36B
+        "2022": ["36H", "36T", "36U"],
         // OEM MY23 Emblem brochure: 36H | 36T | 36U · F53 7.3 350/468 — no 36B
         "2023": ["36H", "36T", "36U"],
         // OEM MY24 Emblem brochure: 36H | 36T | 36U · F53 7.3 335/468 — no 36B
@@ -18058,10 +18160,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 84,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2023,
-      description: "Entegra Emblem — gas Class A on Ford F53. OEM MY23: 36H / 36T / 36U, 7.3L 350 / 468. MY24: same plans, 335 / 468. MY25–27: 36B / 36H / 36U, 335 / 468. Do not copy 36B onto MY23–24.",
+      yearStart: 2021,
+      description: "Entegra Emblem — gas Class A on Ford F53. OEM MY21–23: 36H / 36T / 36U, 7.3L 350 / 468. MY24: same plans, 335 / 468. MY25–27: 36B / 36H / 36U, 335 / 468. Do not copy 36B onto MY21–24.",
       powertrainByYear: [
-        { from: 2023, to: 2023, engine: "Ford 7.3L V8 Godzilla 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford F53", transmission: "TorqShift 6-speed automatic", towingCapacity: 5000, notes: "OEM MY23 Emblem: F53 7.3 350 / 468" },
+        { from: 2021, to: 2023, engine: "Ford 7.3L V8 Godzilla 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford F53", transmission: "TorqShift 6-speed automatic", towingCapacity: 5000, notes: "OEM MY21–23 Emblem: F53 7.3 350 / 468" },
         { from: 2024, to: 2027, engine: "Ford 7.3L V8 Godzilla 335HP", horsepower: 335, torqueLbFt: 468, chassis: "Ford F53", transmission: "TorqShift 6-speed automatic", towingCapacity: 5000, notes: "OEM MY24–27 Emblem: F53 7.3 335 / 468" },
       ],
     },
@@ -18345,6 +18447,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["19A", "19Y", "19AG", "19YG"],
       floorplansByYear: {
+        // OEM MY22 Launch year page / brochure: 19Y only · Sprinter 2500 4x4 3.0 V6 188/325
+        "2022": ["19Y"],
         // OEM MY23 Launch brochure: 19Y only · Sprinter 2500 4x4 3.0 V6 188/325
         "2023": ["19Y"],
         // OEM MY24 Launch brochure: 19Y only · Sprinter 2500 AWD 2.0 211/332
@@ -18377,10 +18481,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 75,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2023,
-      description: "Entegra Launch — Class B on Sprinter 2500. OEM MY23: 19Y, 3.0 V6 188 / 325, 4x4, 7-speed. MY24: 19Y, 2.0 211 / 332, AWD, 9-speed. MY26–27: 19A / 19Y / 19AG / 19YG. No sourced MY25 brochure — omit 2025. Do not copy 19A/19AG/19YG onto MY23–24.",
+      yearStart: 2022,
+      description: "Entegra Launch — Class B on Sprinter 2500. OEM MY22–23: 19Y, 3.0 V6 188 / 325, 4x4. MY24: 19Y, 2.0 211 / 332, AWD, 9-speed. MY26–27: 19A / 19Y / 19AG / 19YG. No sourced MY21 / MY25 brochure — omit those years. Do not copy 19A/19AG/19YG onto MY22–24.",
       powertrainByYear: [
-        { from: 2023, to: 2023, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter 2500 4x4", transmission: "7-speed automatic", notes: "OEM MY23 Launch 19Y: Sprinter 2500 4x4 · 3.0 V6 188 / 325" },
+        { from: 2022, to: 2023, engine: "Mercedes-Benz 3.0L V6 188HP", horsepower: 188, torqueLbFt: 325, chassis: "Mercedes-Benz Sprinter 2500 4x4", transmission: "7-speed automatic", notes: "OEM MY22–23 Launch 19Y: Sprinter 2500 4x4 · 3.0 V6 188 / 325" },
         { from: 2024, to: 2027, engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP", horsepower: 211, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter 2500 AWD", transmission: "9-speed automatic", notes: "OEM MY24 / MY26–27 Launch: Sprinter 2500 AWD 211 / 332" },
       ],
     },
@@ -18388,6 +18492,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["20A", "20D", "20E", "20T"],
       floorplansByYear: {
+        // OEM MY21 Ethos year page / flyer: 20A | 20T · ProMaster 3500 3.6 V6 — HP not printed
+        "2021": ["20A", "20T"],
+        // OEM MY22 Ethos year page: 20A | 20T — do not add Ethos Li 20AL/20TL as a catalog line
+        "2022": ["20A", "20T"],
         // OEM MY23 Ethos brochure: 20A | 20D | 20T — HP not printed
         "2023": ["20A", "20D", "20T"],
         // OEM MY24 Ethos brochure: 20A | 20D | 20T · 3.6 276/250
@@ -18421,10 +18529,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 75,
       founded: 2008,
       warrantyYears: 2,
-      yearStart: 2023,
-      description: "Entegra Ethos — Class B on RAM ProMaster 3500. OEM MY23: 20A / 20D / 20T, 3.6 V6 (HP not printed). MY24: same plans, 276 / 250. MY26: 20A / 20E / 20T; MY27: 20E / 20T. No sourced MY25 brochure — omit 2025. Do not copy 20E onto MY23–24.",
+      yearStart: 2021,
+      description: "Entegra Ethos — Class B on RAM ProMaster 3500. OEM MY21–22: 20A / 20T, 3.6 V6 (HP not printed). MY23: 20A / 20D / 20T, HP not printed. MY24: same plans, 276 / 250. MY26: 20A / 20E / 20T; MY27: 20E / 20T. No sourced MY25 brochure — omit 2025. Do not copy 20E onto MY21–24. Ethos Li (20AL/20TL) is a separate OEM trim, not added here.",
       powertrainByYear: [
-        { from: 2023, to: 2023, engine: "RAM 3.6L V6 (ProMaster 3500)", horsepower: 0, chassis: "RAM ProMaster 3500", transmission: "9-speed automatic 948TE", notes: "OEM MY23 Ethos: ProMaster 3500 3.6 V6 — HP not printed on brochure" },
+        { from: 2021, to: 2023, engine: "RAM 3.6L V6 (ProMaster 3500)", horsepower: 0, chassis: "RAM ProMaster 3500", transmission: "9-speed automatic 948TE", notes: "OEM MY21–23 Ethos: ProMaster 3500 3.6 V6 — HP not printed on brochure / flyer" },
         { from: 2024, to: 2027, engine: "RAM 3.6L V6 276HP", horsepower: 276, torqueLbFt: 250, chassis: "RAM ProMaster 3500", transmission: "9-speed automatic 948TE", notes: "OEM MY24 / MY26–27 Ethos: ProMaster 3500 gas 276/250" },
       ],
     },
