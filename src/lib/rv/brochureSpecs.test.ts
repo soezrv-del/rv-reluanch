@@ -5762,6 +5762,16 @@ test("Winnebago 2010–2012 OEM year-first floorplans + powertrain pins", () => 
   assert.equal(wg["Access Super C"]?.years?.includes(2010) ?? false, false);
   assert.equal(wg["Access Super C"]?.years?.includes(2011) ?? false, false);
   assert.equal(wg["Access Super C"]?.years?.includes(2012) ?? false, false);
+  assert.equal(wg.Access?.yearStart, 2024);
+  assert.equal(wg.Access?.years?.includes(2010) ?? false, false);
+  assert.equal(wg.Access?.years?.includes(2011) ?? false, false);
+  assert.equal(wg.Access?.years?.includes(2012) ?? false, false);
+  assert.equal(wg.Suncruiser?.yearStart, 2026);
+  assert.equal(wg.Suncruiser?.years?.includes(2010) ?? false, false);
+  assert.equal(wg.Suncruiser?.years?.includes(2011) ?? false, false);
+  assert.equal(wg.Suncruiser?.years?.includes(2012) ?? false, false);
+  assert.equal(wg.Sunflyer?.yearStart, 2026);
+  assert.equal(wg.Sunflyer?.years?.includes(2010) ?? false, false);
   assert.equal(wg.Outlook?.yearStart, 2010);
   assert.equal(wg.Outlook?.years?.includes(2010), true);
   assert.equal(wg.Outlook?.years?.includes(2011) ?? false, false);
@@ -5962,13 +5972,41 @@ test("Winnebago 2010–2012 OEM year-first floorplans + powertrain pins", () => 
   assert.match(ol, /"2010": \["29B", "31C"\]/);
   assert.doesNotMatch(ol, /"2011":/);
   assert.doesNotMatch(ol, /"2012":/);
+  assert.doesNotMatch(ol, /"2013":/);
+  assert.doesNotMatch(ol, /"2014":/);
   assert.match(ol, /yearStart:\s*2010/);
   assert.doesNotMatch(ol, /"2010": .*"22C"/);
+  assert.match(ol, /"2019": \["22C", "22E", "25J", "27D", "31N"\]/);
 
   const ac = wgo.slice(wgo.indexOf('    "Access Super C": {'), wgo.indexOf('    "Micro Minnie": {'));
   assert.doesNotMatch(ac, /"2010":/);
   assert.doesNotMatch(ac, /"2011":/);
   assert.doesNotMatch(ac, /"2012":/);
+  assert.doesNotMatch(ac, /"2010": .*"24V"/);
+  assert.doesNotMatch(ac, /"2010": .*"29T"/);
+  assert.doesNotMatch(ac, /"2010": .*"31C"/);
+
+  const att = wgo.slice(wgo.indexOf("    Access: {"), wgo.indexOf("    Thrive: {"));
+  assert.doesNotMatch(att, /"2010":/);
+  assert.doesNotMatch(att, /"2011":/);
+  assert.doesNotMatch(att, /"2012":/);
+  assert.match(att, /yearStart:\s*2024/);
+  assert.doesNotMatch(att, /"24V"/);
+  assert.doesNotMatch(att, /"29T"/);
+  assert.doesNotMatch(att, /"31C"/);
+  assert.doesNotMatch(att, /"31J"/);
+  assert.doesNotMatch(att, /"31N"/);
+  assert.doesNotMatch(att, /"26Q"/);
+  assert.doesNotMatch(att, /"31R"/);
+
+  const sc = wgo.slice(wgo.indexOf("    Suncruiser: {"), wgo.indexOf("    ARKA: {"));
+  assert.doesNotMatch(sc, /"2010":/);
+  assert.doesNotMatch(sc, /"2011":/);
+  assert.doesNotMatch(sc, /"2012":/);
+  assert.match(sc, /yearStart:\s*2026/);
+  assert.doesNotMatch(sc, /"32H"/);
+  assert.doesNotMatch(sc, /"35P"/);
+  assert.doesNotMatch(sc, /"37F"/);
 
   const mm = wgo.slice(wgo.indexOf('    "Micro Minnie": {'), wgo.indexOf("    Minnie: {"));
   assert.doesNotMatch(mm, /"2010":/);
@@ -6094,6 +6132,11 @@ test("Winnebago 2010–2012 OEM year-first floorplans + powertrain pins", () => 
 
   assert.equal(findPowertrainCorrection("2010", "Winnebago", "Access Super C", "26RP"), null);
   assert.equal(findPowertrainCorrection("2011", "Winnebago", "Access Super C", "31SR"), null);
+  assert.equal(findPowertrainCorrection("2010", "Winnebago", "Access", "24V"), null);
+  assert.equal(findPowertrainCorrection("2010", "Winnebago", "Access", "31C"), null);
+  assert.equal(findPowertrainCorrection("2010", "Winnebago", "Suncruiser", "32H"), null);
+  assert.equal(findPowertrainCorrection("2011", "Winnebago", "Suncruiser", "35P"), null);
+  assert.equal(findPowertrainCorrection("2012", "Winnebago", "Suncruiser", "37F"), null);
   assert.equal(findPowertrainCorrection("2012", "Winnebago", "Solis", "59P"), null);
   assert.equal(findPowertrainCorrection("2010", "Winnebago", "Solis Pocket", "36A"), null);
   assert.equal(findPowertrainCorrection("2011", "Winnebago", "Boldt", "70KL"), null);

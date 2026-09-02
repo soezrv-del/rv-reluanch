@@ -762,6 +762,24 @@ function main() {
       if (!/"2012": \["70X"\]/.test(era)) {
         fail("Winnebago|Era MY12 OEM plans missing (70X)");
       }
+      const accTt0 = wgo.indexOf("    Access: {");
+      const accTt1 = wgo.indexOf("    Thrive: {");
+      const attTwin = accTt0 >= 0 && accTt1 > accTt0 ? wgo.slice(accTt0, accTt1) : "";
+      if (/"2010":/.test(attTwin) || /"2011":/.test(attTwin) || /"2012":/.test(attTwin)) {
+        fail("Winnebago|Access TT must not list 2010–2012 (wiring Access is Class C, not this travel-trailer key)");
+      }
+      if (/"24V"/.test(attTwin) || /"29T"/.test(attTwin) || /"31J"/.test(attTwin) || /"31N"/.test(attTwin) || /"26Q"/.test(attTwin) || /"31R"/.test(attTwin)) {
+        fail("Winnebago|Access TT must not absorb 2010–12 Access Class C plans (24V/29T/31J/31N/26Q/31R)");
+      }
+      const sc0 = wgo.indexOf("    Suncruiser: {");
+      const sc1 = wgo.indexOf("    ARKA: {");
+      const sc = sc0 >= 0 && sc1 > sc0 ? wgo.slice(sc0, sc1) : "";
+      if (/"2010":/.test(sc) || /"2011":/.test(sc) || /"2012":/.test(sc)) {
+        fail("Winnebago|Suncruiser must not list 2010–2012 (historic Itasca Suncruiser is Class A, not this 2026 Class C key)");
+      }
+      if (/"32H"/.test(sc) || /"35P"/.test(sc) || /"37F"/.test(sc)) {
+        fail("Winnebago|Suncruiser must not absorb historic Itasca Suncruiser Class A plans (32H/35P/37F)");
+      }
       if (/"2013":/.test(mm) || /"2014":/.test(mm)) {
         fail("Winnebago|Micro Minnie must not list 2013–2014 (archive starts 2015)");
       }

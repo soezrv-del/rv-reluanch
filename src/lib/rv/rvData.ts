@@ -13459,6 +13459,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["22RS", "24GG", "26FE", "28MB"],
       floorplansByYear: {
+        // No 2010–12 Winnebago Suncruiser Class C (2010–12 Suncruiser on wiring is Itasca Class A 32H/35P/37F — Adventurer twin). Do not dump historic Itasca Suncruiser into this 2026 Class C key.
         // OEM 2026 Sunflyer // Suncruiser twin: 22RS | 24GG | 26FE | 28MB. HP 0 option-band. No 2027 brochure.
         "2026": ["22RS", "24GG", "26FE", "28MB"],
       },
@@ -13528,6 +13529,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Travel Trailer",
       floorplans: ["18RK", "18DBH", "25ML", "26BH", "26RL", "28FK", "30BH", "15RB", "15BH", "24RB", "25BH", "25RK"],
       floorplansByYear: {
+        // No 2010–12 Access TT (2010–12 Access on wiring is Class C 24V/29T/31C/31J/31N · 2011 +26Q/Premier · 2012 31R/Premier — not this travel-trailer key / not Access Super C).
         // OEM/RVUSA 2024 Access TT construction card: 25ML | 26BH | 26RL | 28FK | 30BH. Not Access Super C. Do not copy 18RK/18DBH from 2025.
         "2024": ["25ML", "26BH", "26RL", "28FK", "30BH"],
         // OEM 2025 Access travel-trailer brochure: 18RK | 18DBH | 25ML | 26BH | 26RL | 28FK | 30BH. Not Access Super C.
