@@ -16830,9 +16830,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     }
   },
   "Entegra Coach": {
-    Cornerstone: {
+    "Cornerstone": {
       type: "Class A Diesel",
-      floorplans: ["45A", "45B", "45W", "45Z", "45X", "45C", "45J"],
+      floorplans: ["45A", "45B", "45D", "45R", "45V", "45W", "45Z"],
       floorplansByYear: {
         "2014": ["45B", "45W", "45Z"],
         "2015": ["45B", "45W", "45Z"],
@@ -16845,8 +16845,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["45B", "45W", "45Z"],
         "2023": ["45B", "45W", "45Z"],
         "2024": ["45A", "45B", "45W", "45Z"],
-        "2025": ["45A", "45B", "45W", "45Z"],
-        "2026": ["45A", "45B", "45W", "45Z", "45C", "45J"]
+        // OEM MY25 Cornerstone brochure: 45B | 45D | 45R | 45W | 45Z — no 45A / 45V
+        "2025": ["45B", "45D", "45R", "45W", "45Z"],
+        // OEM 2026 Cornerstone year page: 45B | 45D | 45R | 45V | 45Z. Line ends MY2026 (Thor/Jayco → Tiffin).
+        "2026": ["45B", "45D", "45R", "45V", "45Z"]
       },
       lengthRange: [
         45,
@@ -16871,7 +16873,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       recalls: 0,
       rating: 4.9,
       image: RV_CARD_IMAGE,
-      towingCapacity: 15000,
+      towingCapacity: 20000,
       freshWater: 100,
       grayWater: 60,
       blackWater: 50,
@@ -16882,7 +16884,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2008,
       warrantyYears: 2,
       yearStart: 2014,
-      description: "Entegra Cornerstone — flagship diesel on Spartan K3 + Cummins X15 605. Top of Entegra ladder (Jayco family).",
+      yearEnd: 2026,
+      description: "Entegra Cornerstone — flagship diesel on Spartan K3 + Cummins X15 605 / 1,950, Allison 4000 MH, hitch 20k. SL chassis is an option — do not lock one chassis as only. Year-end 2026: no 2027 OEM diesel Class A page.",
       powertrainByYear: [
                 {
           from: 2010,
@@ -16911,9 +16914,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         
       ]
     },
-    Anthem: {
+    "Anthem": {
       type: "Class A Diesel",
-      floorplans: ["42DEQ", "44B", "44W", "44D", "44F", "44M", "44R"],
+      floorplans: ["37K", "42DEQ", "44B", "44D", "44R", "44V", "44W", "44Z"],
       floorplansByYear: {
         "2014": ["42DEQ", "44B", "44W"],
         "2015": ["42DEQ", "44B", "44W"],
@@ -16926,8 +16929,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["44B", "44W", "44D"],
         "2023": ["44B", "44W", "44D"],
         "2024": ["44B", "44W", "44D"],
-        "2025": ["44B", "44W"],
-        "2026": ["44B", "44W", "44F", "44M", "44R"]
+        // OEM MY25 Anthem brochure: 37K | 44B | 44D | 44R | 44W | 44Z
+        "2025": ["37K", "44B", "44D", "44R", "44W", "44Z"],
+        // OEM 2026 Anthem year page: 37K | 44B | 44D | 44R | 44V | 44Z
+        "2026": ["37K", "44B", "44D", "44R", "44V", "44Z"]
       },
       lengthRange: [
         42,
@@ -16943,10 +16948,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         499000,
         849000
       ],
-      engine: "Cummins L9 / X12 450–500HP",
+      engine: "Cummins L9 450HP",
       horsepower: 450,
       torqueLbFt: 1250,
-      chassis: "Spartan K3",
+      chassis: "Spartan K2",
       transmission: "Allison 3000 MH",
       fuelType: "Diesel",
       recalls: 0,
@@ -16962,7 +16967,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2008,
       warrantyYears: 2,
       yearStart: 2014,
-      description: "Entegra Anthem — high-line Spartan diesel under Cornerstone.",
+      yearEnd: 2026,
+      description: "Entegra Anthem — Spartan K2 diesel under Cornerstone. OEM MY25–26: L9 450 / 1,250 locked (not an L9/X12 band), Allison 3000 MH, hitch 15k (10k on 37K). Year-end 2026.",
       powertrainByYear: [
                 {
           from: 2010,
@@ -16981,17 +16987,27 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2026,
+          to: 2024,
           engine: "Cummins L9 / X12 450–500HP",
           horsepower: 450,
           chassis: "Spartan K3"
         },
+        {
+          from: 2025,
+          to: 2026,
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan K2",
+          transmission: "Allison 3000 MH",
+          notes: "OEM MY25–26 Anthem: L9 450 / 1,250 locked — hitch 15k (10k on 37K)"
+        },
         
       ]
     },
-    Aspire: {
+    "Aspire": {
       type: "Class A Diesel",
-      floorplans: ["38R", "42D", "44R", "37JT", "40MBQ", "40P", "44B", "44DEQ", "44RBQ"],
+      floorplans: ["38R", "40P", "42D", "44B", "44D", "44R", "44V", "44W", "44Z"],
       floorplansByYear: {
         "2015": ["38R", "42D", "44R"],
         "2016": ["38R", "42D", "44R"],
@@ -17003,8 +17019,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["42D", "44R"],
         "2023": ["42D", "44R"],
         "2024": ["42D", "44R"],
-        "2025": ["42D", "44R"],
-        "2026": ["42D", "44R", "37JT", "40MBQ", "40P", "44B", "44DEQ", "44RBQ"]
+        // OEM MY25 Aspire brochure: 40P | 44B | 44D | 44R | 44W | 44Z
+        "2025": ["40P", "44B", "44D", "44R", "44W", "44Z"],
+        // OEM 2026 Aspire year page: 44B | 44D | 44R | 44V | 44Z — no 40P / 44W
+        "2026": ["44B", "44D", "44R", "44V", "44Z"]
       },
       lengthRange: [
         38,
@@ -17023,12 +17041,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       engine: "Cummins L9 450HP",
       horsepower: 450,
       torqueLbFt: 1250,
-      chassis: "Spartan K3 / Freightliner (by year)",
+      chassis: "Spartan K2",
+      transmission: "Allison 3000 MH",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.7,
       image: RV_CARD_IMAGE,
-      towingCapacity: 5000,
+      towingCapacity: 15000,
       freshWater: 60,
       grayWater: 40,
       blackWater: 40,
@@ -17038,7 +17057,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2008,
       warrantyYears: 2,
       yearStart: 2015,
-      description: "Entegra Aspire — diesel Class A step below Anthem.",
+      yearEnd: 2026,
+      description: "Entegra Aspire — Spartan K2 diesel under Anthem. OEM MY25–26: L9 450 / 1,250, hitch 15k (10k on 40P). Year-end 2026.",
       powertrainByYear: [
                 {
           from: 2010,
@@ -17050,17 +17070,27 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2026,
+          to: 2024,
           engine: "Cummins L9 450HP",
           horsepower: 450,
           chassis: "Spartan / Freightliner"
         },
+        {
+          from: 2025,
+          to: 2026,
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan K2",
+          transmission: "Allison 3000 MH",
+          notes: "OEM MY25–26 Aspire: L9 450 / 1,250 — hitch 15k (10k on 40P)"
+        },
         
       ]
     },
-    Reatta: {
+    "Reatta": {
       type: "Class A Diesel",
-      floorplans: ["37K", "39BH", "39W", "37FB", "37FK", "37MB", "40B", "40QBH"],
+      floorplans: ["37K", "39BH", "39T2", "39W"],
       floorplansByYear: {
         "2016": ["37K", "39BH"],
         "2017": ["37K", "39BH"],
@@ -17071,8 +17101,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["37K", "39BH"],
         "2023": ["37K", "39BH"],
         "2024": ["37K", "39BH"],
-        "2025": ["37K", "39BH"],
-        "2026": ["37K", "39BH", "37FB", "37FK", "37MB", "40B", "40QBH"]
+        // OEM MY25 Reatta brochure: 37K | 39BH | 39T2. No 2026 OEM page / brochure.
+        "2025": ["37K", "39BH", "39T2"]
       },
       lengthRange: [
         37,
@@ -17108,23 +17138,24 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2008,
       warrantyYears: 2,
       yearStart: 2016,
-      description: "Entegra Reatta — mid-diesel on Spartan K1 with Cummins B6.7 360 hp / 800 lb-ft. NOT an ISL 8.9.",
+      yearEnd: 2025,
+      description: "Entegra Reatta — mid-diesel on Spartan K1 with Cummins B6.7 360 / 800, Allison 3000 MH, hitch 10k. NOT Reatta XL (L9) and not an ISL 8.9. Year-end 2025: no 2026 OEM page.",
       powertrainByYear: [
         {
           from: 2016,
-          to: 2026,
+          to: 2025,
           engine: "Cummins B6.7 360HP",
           horsepower: 360,
           torqueLbFt: 800,
           chassis: "Spartan K1",
           transmission: "Allison 3000 MH",
-          notes: "Inline-six B6.7 — not ISL 8.9"
+          notes: "Inline-six B6.7 — not ISL 8.9 / not Reatta XL L9"
         }
       ]
     },
     "Reatta XL": {
       type: "Class A Diesel",
-      floorplans: ["37K", "39BH", "39W", "39BH2", "40QBH", "40QBH2"],
+      floorplans: ["37K", "39BH", "39T2", "39W", "40Q3"],
       floorplansByYear: {
         "2018": ["37K", "39BH"],
         "2019": ["37K", "39BH"],
@@ -17133,8 +17164,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["37K", "39BH", "39W"],
         "2023": ["37K", "39BH", "39W"],
         "2024": ["37K", "39BH"],
-        "2025": ["37K", "39BH"],
-        "2026": ["37K", "39BH", "39BH2", "40QBH", "40QBH2"]
+        // OEM MY25 Reatta XL brochure: 37K | 39BH | 39T2 | 40Q3. No 2026 OEM page.
+        "2025": ["37K", "39BH", "39T2", "40Q3"]
       },
       lengthRange: [
         37,
@@ -17150,15 +17181,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         309000,
         479000
       ],
-      engine: "Cummins B6.7 360HP",
-      horsepower: 360,
-      torqueLbFt: 800,
-      chassis: "Spartan K1",
+      engine: "Cummins L9 380HP",
+      horsepower: 380,
+      torqueLbFt: 1150,
+      chassis: "Spartan K2",
+      transmission: "Allison 3000 MH",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.55,
       image: RV_CARD_IMAGE,
-      towingCapacity: 5000,
+      towingCapacity: 10000,
       freshWater: 60,
       grayWater: 40,
       blackWater: 40,
@@ -17168,20 +17200,32 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2008,
       warrantyYears: 2,
       yearStart: 2018,
-      description: "Entegra Reatta XL — higher-content Reatta on same B6.7 / Spartan K1 platform.",
+      yearEnd: 2025,
+      description: "Entegra Reatta XL — OEM MY25 brochure: Cummins L9 380 / 1,150 on Spartan K2 (not the Reatta B6.7 / K1). Year-end 2025: no 2026 OEM page. Earlier years stay on the pre-2025 B6.7 band until walk-back sources them.",
       powertrainByYear: [
         {
           from: 2018,
-          to: 2026,
+          to: 2024,
           engine: "Cummins B6.7 360HP",
           horsepower: 360,
-          chassis: "Spartan K1"
+          chassis: "Spartan K1",
+          notes: "Pre-MY25 Reatta XL — do not copy MY25 L9 backward"
+        },
+        {
+          from: 2025,
+          to: 2025,
+          engine: "Cummins L9 380HP",
+          horsepower: 380,
+          torqueLbFt: 1150,
+          chassis: "Spartan K2",
+          transmission: "Allison 3000 MH",
+          notes: "OEM MY25 Reatta XL brochure: L9 380 / 1,150 · Spartan K2"
         }
       ]
     },
-    Vision: {
+    "Vision": {
       type: "Class A Gas",
-      floorplans: ["27A", "29S", "31B", "36A", "31F", "34G"],
+      floorplans: ["27A", "29F", "29S", "31B", "36A"],
       floorplansByYear: {
         "2014": ["27A", "29S", "31B"],
         "2015": ["27A", "29S", "31B"],
@@ -17194,8 +17238,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["27A", "29S", "31B", "36A"],
         "2023": ["27A", "29S", "31B", "36A"],
         "2024": ["27A", "29S", "31B"],
-        "2025": ["27A", "29S", "31B"],
-        "2026": ["27A", "29S", "31B", "31F", "34G"]
+        // OEM MY25–27 Vision: 27A | 29F | 29S — not XL 31UL/34/36
+        "2025": ["27A", "29F", "29S"],
+        "2026": ["27A", "29F", "29S"],
+        "2027": ["27A", "29F", "29S"]
       },
       lengthRange: [
         27,
@@ -17211,9 +17257,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         159000,
         269000
       ],
-      engine: "Ford 7.3L Godzilla / V10 (by year)",
-      horsepower: 350,
+      engine: "Ford 7.3L V8 Godzilla 335HP",
+      horsepower: 335,
+      torqueLbFt: 468,
       chassis: "Ford F53",
+      transmission: "TorqShift 6-speed automatic",
       fuelType: "Gas",
       recalls: 0,
       rating: 4.45,
@@ -17228,7 +17276,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2008,
       warrantyYears: 2,
       yearStart: 2014,
-      description: "Entegra Vision — gas Class A on Ford F53. Used pricing must use gas comps, not diesel MSRP math. 27A is a real floorplan.",
+      description: "Entegra Vision — gas Class A on Ford F53. OEM MY25–27: 27A / 29F / 29S, 7.3L 335 / 468, TorqShift 6. Used pricing must use gas comps, not diesel MSRP math. Not Vision XL / Vision SE.",
       powertrainByYear: [
         {
           from: 2014,
@@ -17247,16 +17295,26 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2026,
+          to: 2024,
           engine: "Ford 7.3L V8 Godzilla 350HP",
           horsepower: 350,
           chassis: "Ford F53"
+        },
+        {
+          from: 2025,
+          to: 2027,
+          engine: "Ford 7.3L V8 Godzilla 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift 6-speed automatic",
+          notes: "OEM MY25–27 Vision: F53 7.3 335 / 468"
         }
       ]
     },
     "Vision XL": {
       type: "Class A Gas",
-      floorplans: ["29S", "31B", "36A", "34G", "36BH"],
+      floorplans: ["29S", "31B", "31UL", "34B", "34G", "36A", "36C"],
       floorplansByYear: {
         "2019": ["29S", "31B", "36A"],
         "2020": ["29S", "31B", "36A"],
@@ -17264,8 +17322,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["29S", "31B", "36A"],
         "2023": ["29S", "31B", "36A"],
         "2024": ["29S", "31B", "36A"],
-        "2025": ["29S", "31B"],
-        "2026": ["29S", "31B", "34G", "36BH"]
+        // OEM MY25–27 Vision XL: 31UL | 34B | 34G | 36A | 36C
+        "2025": ["31UL", "34B", "34G", "36A", "36C"],
+        "2026": ["31UL", "34B", "34G", "36A", "36C"],
+        "2027": ["31UL", "34B", "34G", "36A", "36C"]
       },
       lengthRange: [
         29,
@@ -17281,9 +17341,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         169000,
         279000
       ],
-      engine: "Ford 7.3L V8 Godzilla",
-      horsepower: 350,
+      engine: "Ford 7.3L V8 Godzilla 335HP",
+      horsepower: 335,
+      torqueLbFt: 468,
       chassis: "Ford F53",
+      transmission: "TorqShift 6-speed automatic",
       fuelType: "Gas",
       recalls: 0,
       rating: 4.45,
@@ -17298,7 +17360,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2008,
       warrantyYears: 2,
       yearStart: 2019,
-      description: "Entegra Vision XL — upgraded Vision gas Class A packages.",
+      description: "Entegra Vision XL — gas Class A on Ford F53. OEM MY25–27: 31UL / 34B / 34G / 36A / 36C, 7.3L 335 / 468, TorqShift 6. Not bare Vision / Vision SE.",
       powertrainByYear: [
         {
           from: 2019,
@@ -17309,16 +17371,26 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2026,
+          to: 2024,
           engine: "Ford 7.3L V8 Godzilla",
           horsepower: 350,
           chassis: "Ford F53"
+        },
+        {
+          from: 2025,
+          to: 2027,
+          engine: "Ford 7.3L V8 Godzilla 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift 6-speed automatic",
+          notes: "OEM MY25–27 Vision XL: F53 7.3 335 / 468"
         }
       ]
     },
-    Accolade: {
+    "Accolade": {
       type: "Super C",
-      floorplans: ["37K", "37L", "37M", "37RB", "37TS", "39WB"],
+      floorplans: ["37K", "37L", "37M"],
       floorplansByYear: {
         "2015": ["37L", "37M"],
         "2016": ["37L", "37M"],
@@ -17330,8 +17402,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["37K", "37L", "37M"],
         "2023": ["37K", "37L", "37M"],
         "2024": ["37K", "37L", "37M"],
+        // OEM MY25–27 Accolade: 37K | 37L | 37M — S2RV Plus · ISB 6.7 360/800 (Jayco Seneca sibling)
         "2025": ["37K", "37L", "37M"],
-        "2026": ["37K", "37L", "37M", "37RB", "37TS", "39WB"],
+        "2026": ["37K", "37L", "37M"],
         "2027": ["37K", "37L", "37M"],
       },
       lengthRange: [
@@ -17348,37 +17421,53 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         259000,
         399000
       ],
-      engine: "Cummins Super C diesel ~340HP",
-      horsepower: 340,
-      chassis: "Freightliner Super C",
+      engine: "Cummins ISB 6.7L 360HP",
+      horsepower: 360,
+      torqueLbFt: 800,
+      chassis: "Freightliner S2RV Plus",
+      transmission: "Allison 3000 MH",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.55,
       image: RV_CARD_IMAGE,
-      towingCapacity: 5000,
+      towingCapacity: 12000,
       freshWater: 60,
       grayWater: 40,
       blackWater: 40,
+      fuelCapacityGal: 100,
       generator: "Onan / Generac",
       awningLength: 16,
       ceilingHeight: 80,
       founded: 2008,
       warrantyYears: 2,
       yearStart: 2015,
-      description: "Entegra Accolade — Super C diesel.",
+      description: "Entegra Accolade — Super C on Freightliner S2RV Plus. OEM MY25–27: 37K / 37L / 37M, Cummins ISB 6.7 360 / 800, Allison 3000 MH, 100 gal, hitch 12k. Jayco Seneca sibling. Not Accolade XT (Power Stroke F550/F600).",
       powertrainByYear: [
-                        {
+        {
           from: 2015,
-          to: 2026,
+          to: 2024,
           engine: "Cummins Super C diesel ~340HP",
           horsepower: 340,
-          chassis: "Freightliner Super C"
+          chassis: "Freightliner Super C",
+          notes: "Pre-MY25 Accolade band — do not invent a single HP; pin covers 2018+"
+        },
+        {
+          from: 2025,
+          to: 2027,
+          engine: "Cummins ISB 6.7L 360HP",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Freightliner S2RV Plus",
+          transmission: "Allison 3000 MH",
+          fuelCapacityGal: 100,
+          towingCapacity: 12000,
+          notes: "OEM MY25–27 Accolade / XL: ISB 360/800 · S2RV Plus · Allison 3000 MH · hitch 12k"
         }
       ]
     },
     "Accolade XL": {
       type: "Super C",
-      floorplans: ["37M", "37K", "37TSR", "39TBR"],
+      floorplans: ["37K", "37L", "37M"],
       floorplansByYear: {
         "2018": ["37M", "37K"],
         "2019": ["37M", "37K"],
@@ -17388,7 +17477,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["37M", "37K"],
         "2024": ["37M", "37K"],
         "2025": ["37M", "37K"],
-        "2026": ["37M", "37K", "37TSR", "39TBR"]
+        // OEM MY26–27 Accolade XL: 37K | 37L | 37M (do not copy 37L onto MY25)
+        "2026": ["37K", "37L", "37M"],
+        "2027": ["37K", "37L", "37M"]
       },
       lengthRange: [
         37,
@@ -17404,37 +17495,56 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         279000,
         429000
       ],
-      engine: "Cummins Super C diesel",
-      horsepower: 340,
-      chassis: "Freightliner Super C",
+      engine: "Cummins ISB 6.7L 360HP",
+      horsepower: 360,
+      torqueLbFt: 800,
+      chassis: "Freightliner S2RV Plus",
+      transmission: "Allison 3000 MH",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.55,
       image: RV_CARD_IMAGE,
-      towingCapacity: 5000,
+      towingCapacity: 12000,
       freshWater: 60,
       grayWater: 40,
       blackWater: 40,
+      fuelCapacityGal: 100,
       generator: "Onan / Generac",
       awningLength: 16,
       ceilingHeight: 80,
       founded: 2008,
       warrantyYears: 2,
       yearStart: 2018,
-      description: "Entegra Accolade XL — upgraded Super C packages.",
+      description: "Entegra Accolade XL — same S2RV Plus · ISB 6.7 360/800 · Allison 3000 MH as Accolade. OEM MY26–27: 37K / 37L / 37M. Not Accolade XT.",
       powertrainByYear: [
         {
           from: 2018,
-          to: 2026,
+          to: 2024,
           engine: "Cummins Super C diesel",
           horsepower: 340,
           chassis: "Freightliner Super C"
+        },
+        {
+          from: 2025,
+          to: 2027,
+          engine: "Cummins ISB 6.7L 360HP",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Freightliner S2RV Plus",
+          transmission: "Allison 3000 MH",
+          fuelCapacityGal: 100,
+          towingCapacity: 12000,
+          notes: "OEM Accolade XL: same ISB 360/800 pin as Accolade"
         }
       ]
     },
-    Centurion: {
-      type: "Super C", floorplans: ["39N","39K","45D"],
-      floorplansByYear: { "2026": ["39N","39K","45D"], "2027": ["39N","39K","45D"] },
+    "Centurion": {
+      type: "Super C",
+      floorplans: ["39N", "39K", "45D"],
+      floorplansByYear: {
+        "2026": ["39N", "39K", "45D"],
+        "2027": ["39N", "39K", "45D"],
+      },
       lengthRange: [42, 46], weightRange: [38000, 52000], slideouts: 4, sleeps: 5, msrpRange: [620000, 820000],
       engine: "Detroit DD13 GEN 5 12.8L 525HP or DD16 15.6L 600HP (by floorplan)",
       horsepower: 525, torqueLbFt: 1850, chassis: "Freightliner Cascadia 116 Day Cab / Cascadia 126 (45D)",
@@ -17448,57 +17558,58 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         { from: 2026, to: 2027, engine: "Detroit DD13 GEN 5 12.8L 525HP (39N/39K) or DD16 600HP (45D)", horsepower: 525, torqueLbFt: 1850, chassis: "Freightliner Cascadia" },
       ],
     },
-    Expanse: {
-      type: "Super C",
-      floorplans: ["26RB", "28BH", "33E", "33LB", "35RKT"],
+    "Expanse": {
+      type: "Class B",
+      floorplans: ["21B", "21L", "21T"],
       floorplansByYear: {
-        "2020": ["26RB", "28BH"],
-        "2021": ["26RB", "28BH", "33E"],
-        "2022": ["26RB", "28BH", "33E", "33LB"],
-        "2023": ["26RB", "28BH", "33E", "33LB", "35RKT"],
-        "2024": ["26RB", "28BH", "33E", "33LB", "35RKT"],
-        "2025": ["26RB", "28BH", "33E", "33LB", "35RKT"],
-        "2026": ["26RB", "28BH", "33E", "33LB", "35RKT"],
+        // OEM MY26 Expanse brochure: 21B | 21T. Do not copy 21L backward.
+        "2026": ["21B", "21T"],
+        // OEM 2027 Expanse year page listed floorplans: 21L | 21T (prose still mentions 21B — not copied onto the year key)
+        "2027": ["21L", "21T"],
       },
-      lengthRange: [26, 35],
-      weightRange: [22000, 30000],
-      slideouts: 2,
-      sleeps: 8,
-      msrpRange: [169900, 279000],
-      engine: "Ford 6.7L Power Stroke Diesel",
-      horsepower: 330,
-      torqueLbFt: 825,
-      chassis: "Ford F-550",
-      fuelType: "Diesel",
+      lengthRange: [22, 22],
+      weightRange: [9000, 11000],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [149000, 199000],
+      engine: "Ford 3.5L EcoBoost V6 310HP",
+      horsepower: 310,
+      torqueLbFt: 400,
+      chassis: "Ford Transit AWD 350HD",
+      transmission: "10-speed automatic",
+      fuelType: "Gas",
       recalls: 0,
-      rating: 4.6,
+      rating: 4.5,
       image: RV_CARD_IMAGE,
-      towingCapacity: 15000,
-      freshWater: 72,
-      grayWater: 40,
-      blackWater: 40,
-      generator: "Onan 5500W diesel",
-      awningLength: 16,
+      towingCapacity: 5000,
+      freshWater: 28,
+      grayWater: 20,
+      blackWater: 16,
+      fuelCapacityGal: 25,
+      generator: "2,800W gas with auto-gen start (available)",
+      awningLength: 12,
       ceilingHeight: 80,
       founded: 2008,
-      warrantyYears: 3,
-      yearStart: 2020,
-      description:
-        "Entegra Expanse — Super C on Ford F-550 with 6.7L Power Stroke. Compact Super C (26–35 ft) with bunkhouse and toy-hauler plans; not a Transit van conversion.",
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Entegra Expanse — Class B on Ford Transit AWD 350HD, 3.5 EcoBoost 310 / 400, 10-speed, 25 gal gas. Catalog Super C F-550 2020–2025 row was a ghost vs current OEM — dropped (walk-back can restore a sourced earlier Super C year). Year-first: MY26 21B/21T; MY27 21L/21T.",
       powertrainByYear: [
         {
-          from: 2020,
-          to: 2026,
-          engine: "Ford 6.7L Power Stroke Diesel",
-          horsepower: 330,
-          torqueLbFt: 825,
-          chassis: "Ford F-550",
+          from: 2026,
+          to: 2027,
+          engine: "Ford 3.5L EcoBoost V6 310HP",
+          horsepower: 310,
+          torqueLbFt: 400,
+          chassis: "Ford Transit AWD 350HD",
+          transmission: "10-speed automatic",
+          fuelCapacityGal: 25,
+          notes: "OEM MY26–27 Expanse: Transit AWD 350HD · EcoBoost 310/400 · gas — not Power Stroke Super C"
         },
       ],
     },
-    Odyssey: {
+    "Odyssey": {
       type: "Class C",
-      floorplans: ["24A", "26B", "26M", "28A"],
+      floorplans: ["24A", "24B", "25R", "26B", "26M", "27G", "27U", "28A", "29V", "30Z", "31F"],
       floorplansByYear: {
         "2018": ["24A", "26B", "26M", "28A"],
         "2019": ["24A", "26B", "26M", "28A"],
@@ -17507,17 +17618,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["24A", "26B", "26M", "28A"],
         "2023": ["24A", "26B", "26M", "28A"],
         "2024": ["24A", "26B", "26M", "28A"],
-        "2025": ["24A", "26B", "26M", "28A"],
-        "2026": ["24A", "26B", "26M", "28A"],
+        // OEM MY25–26 Odyssey brochure: 24B | 25R | 26M | 27U | 29V | 30Z | 31F (no 27G)
+        "2025": ["24B", "25R", "26M", "27U", "29V", "30Z", "31F"],
+        "2026": ["24B", "25R", "26M", "27U", "29V", "30Z", "31F"],
+        // OEM 2027 Odyssey year page adds 27G
+        "2027": ["24B", "25R", "26M", "27G", "27U", "29V", "30Z", "31F"],
       },
       lengthRange: [24, 28],
       weightRange: [12000, 16000],
       slideouts: 1,
       sleeps: 8,
       msrpRange: [89900, 139000],
-      engine: "Ford 7.3L Godzilla / 6.8L V10 (by year)",
-      horsepower: 350,
+      engine: "Ford 7.3L V8 325HP",
+      horsepower: 325,
+      torqueLbFt: 450,
       chassis: "Ford E-450",
+      transmission: "TorqShift 6-speed automatic",
       fuelType: "Gas",
       recalls: 0,
       rating: 4.4,
@@ -17533,7 +17649,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 3,
       yearStart: 2018,
       description:
-        "Entegra Odyssey — entry Class C on Ford E-450. Bunkhouse layouts and Entegra's 3-year structural warranty at a Thor Four Winds / Coachmen Freelander price.",
+        "Entegra Odyssey — Ford E-450 Class C. OEM MY25–26: 24B / 25R / 26M / 27U / 29V / 30Z / 31F; MY27 adds 27G. Current OEM: 7.3L 325 / 450 (not F53 350/468). Not Odyssey SE / Odyssey Esteem Edition.",
       powertrainByYear: [
         {
           from: 2018,
@@ -17544,16 +17660,26 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2026,
+          to: 2024,
           engine: "Ford 7.3L Godzilla V8",
           horsepower: 350,
           chassis: "Ford E-450",
         },
+        {
+          from: 2025,
+          to: 2027,
+          engine: "Ford 7.3L V8 325HP",
+          horsepower: 325,
+          torqueLbFt: 450,
+          chassis: "Ford E-450",
+          transmission: "TorqShift 6-speed automatic",
+          notes: "OEM MY25–27 Odyssey: E-450 7.3 325 / 450"
+        },
       ],
     },
-    Esteem: {
+    "Esteem": {
       type: "Class C",
-      floorplans: ["26U", "29V", "31W", "26E", "27P", "30X"],
+      floorplans: ["26U", "27U", "29V", "31F", "31W"],
       floorplansByYear: {
         "2014": ["26U", "29V", "31W"],
         "2015": ["26U", "29V", "31W"],
@@ -17566,8 +17692,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["26U", "29V", "31W"],
         "2023": ["26U", "29V", "31W"],
         "2024": ["26U", "29V", "31W"],
-        "2025": ["26U", "29V"],
-        "2026": ["26U", "29V", "26E", "27P", "30X"]
+        // No sourced MY25 Esteem brochure (RVUSA "2025 Esteem" PDF is Emblem). Do not invent 2025 / do not copy 2026 back.
+        // OEM MY26 Esteem brochure: 27U | 29V | 31F. 2027 product is Odyssey Esteem Edition.
+        "2026": ["27U", "29V", "31F"]
       },
       lengthRange: [
         26,
@@ -17583,9 +17710,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         99000,
         169000
       ],
-      engine: "Ford 7.3L V8",
-      horsepower: 350,
+      engine: "Ford 7.3L V8 325HP",
+      horsepower: 325,
+      torqueLbFt: 450,
       chassis: "Ford E-450",
+      transmission: "TorqShift 6-speed automatic",
       fuelType: "Gas",
       recalls: 0,
       rating: 4.3,
@@ -17600,7 +17729,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2008,
       warrantyYears: 2,
       yearStart: 2014,
-      description: "Entegra Esteem — Ford cutaway Class C.",
+      yearEnd: 2026,
+      description: "Entegra Esteem — Ford E-450 Class C. OEM MY26: 27U / 29V / 31F, 7.3L 325 / 450. No sourced MY25 Esteem brochure. Year-end 2026: 2027 product is Odyssey Esteem Edition. Not Esteem XL Super C.",
       powertrainByYear: [
         {
           from: 2011,
@@ -17619,16 +17749,26 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2026,
+          to: 2024,
           engine: "Ford 7.3L V8 Godzilla",
           horsepower: 350,
           chassis: "Ford E-450"
+        },
+        {
+          from: 2026,
+          to: 2026,
+          engine: "Ford 7.3L V8 325HP",
+          horsepower: 325,
+          torqueLbFt: 450,
+          chassis: "Ford E-450",
+          transmission: "TorqShift 6-speed automatic",
+          notes: "OEM MY26 Esteem: E-450 7.3 325 / 450"
         }
       ]
     },
-    Qwest: {
+    "Qwest": {
       type: "Class C",
-      floorplans: ["24L", "24R", "24E"],
+      floorplans: ["24L", "24R", "25L", "25M", "25R"],
       floorplansByYear: {
         "2015": ["24L", "24R"],
         "2016": ["24L", "24R"],
@@ -17640,8 +17780,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["24L", "24R"],
         "2023": ["24L", "24R"],
         "2024": ["24L", "24R"],
+        // OEM MY25 Qwest PDF: 24L | 24R on Mercedes 3500 · 2.0 211/332
         "2025": ["24L", "24R"],
-        "2026": ["24L", "24R", "24E"]
+        // OEM MY26–27 Qwest: 25L | 25M | 25R on Mercedes 4500 · 2.0 211/332
+        "2026": ["25L", "25M", "25R"],
+        "2027": ["25L", "25M", "25R"]
       },
       lengthRange: [
         24,
@@ -17657,9 +17800,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         129000,
         199000
       ],
-      engine: "Mercedes-Benz Sprinter turbodiesel",
-      horsepower: 188,
-      chassis: "Mercedes-Benz Sprinter",
+      engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP",
+      horsepower: 211,
+      torqueLbFt: 332,
+      chassis: "Mercedes-Benz 4500",
+      transmission: "9-speed automatic",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.45,
@@ -17674,7 +17819,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2008,
       warrantyYears: 2,
       yearStart: 2015,
-      description: "Entegra Qwest — Sprinter diesel Class C.",
+      description: "Entegra Qwest — Sprinter diesel Class C. OEM MY25: 24L / 24R on Mercedes 3500 211 / 332. MY26–27: 25L / 25M / 25R on Mercedes 4500 211 / 332. Not Qwest SE.",
       powertrainByYear: [
         {
           from: 2015,
@@ -17693,13 +17838,528 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2022,
-          to: 2026,
+          to: 2024,
           engine: "Mercedes-Benz 2.0L I4 turbodiesel",
           horsepower: 208,
           chassis: "Mercedes Sprinter"
+        },
+        {
+          from: 2025,
+          to: 2025,
+          engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP",
+          horsepower: 211,
+          torqueLbFt: 332,
+          chassis: "Mercedes-Benz 3500",
+          transmission: "9-speed automatic",
+          notes: "OEM MY25 Qwest: Mercedes 3500 · 2.0 211/332"
+        },
+        {
+          from: 2026,
+          to: 2027,
+          engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP",
+          horsepower: 211,
+          torqueLbFt: 332,
+          chassis: "Mercedes-Benz 4500",
+          transmission: "9-speed automatic",
+          notes: "OEM MY26–27 Qwest: Mercedes 4500 · 2.0 211/332"
         }
       ]
-    }
+    },
+    "Cornerstone Reserve": {
+      type: "Class A Diesel",
+      floorplans: ["45D"],
+      floorplansByYear: {
+        // OEM 2026 Cornerstone Reserve year page: 45D only · limited run · X15 605
+        "2026": ["45D"],
+      },
+      lengthRange: [45, 45],
+      weightRange: [50000, 58000],
+      slideouts: 4,
+      sleeps: 6,
+      msrpRange: [799000, 1250000],
+      engine: "Cummins X15 605HP",
+      horsepower: 605,
+      torqueLbFt: 1950,
+      chassis: "Spartan K3",
+      transmission: "Allison 4000 MH",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.9,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 20000,
+      freshWater: 100,
+      grayWater: 60,
+      blackWater: 50,
+      fuelCapacityGal: 175,
+      generator: "Onan 10–12.5kW Diesel QD",
+      awningLength: 16,
+      ceilingHeight: 80,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2026,
+      yearEnd: 2026,
+      description: "Entegra Cornerstone Reserve — 2026 limited-run 45D on Spartan K3 + X15 605 / 1,950, Allison 4000 MH, hitch 20k. Year-end 2026 with Cornerstone.",
+      powertrainByYear: [
+        { from: 2026, to: 2026, engine: "Cummins X15 605HP", horsepower: 605, torqueLbFt: 1950, chassis: "Spartan K3", transmission: "Allison 4000 MH", towingCapacity: 20000, notes: "OEM 2026 Cornerstone Reserve 45D" },
+      ],
+    },
+    "Emblem": {
+      type: "Class A Gas",
+      floorplans: ["36B", "36H", "36U"],
+      floorplansByYear: {
+        // OEM MY25–27 Emblem: 36B | 36H | 36U · F53 7.3 335/468 (RVUSA "2025 Esteem" PDF is this brochure)
+        "2025": ["36B", "36H", "36U"],
+        "2026": ["36B", "36H", "36U"],
+        "2027": ["36B", "36H", "36U"],
+      },
+      lengthRange: [38, 39],
+      weightRange: [18000, 24000],
+      slideouts: 2,
+      sleeps: 8,
+      msrpRange: [199000, 289000],
+      engine: "Ford 7.3L V8 Godzilla 335HP",
+      horsepower: 335,
+      torqueLbFt: 468,
+      chassis: "Ford F53",
+      transmission: "TorqShift 6-speed automatic",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.5,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 5000,
+      freshWater: 60,
+      grayWater: 40,
+      blackWater: 40,
+      generator: "Onan / Generac",
+      awningLength: 16,
+      ceilingHeight: 84,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2025,
+      description: "Entegra Emblem — gas Class A on Ford F53. OEM MY25–27: 36B / 36H / 36U, 7.3L 335 / 468, TorqShift 6, hitch 5k, GVWR 24k.",
+      powertrainByYear: [
+        { from: 2025, to: 2027, engine: "Ford 7.3L V8 Godzilla 335HP", horsepower: 335, torqueLbFt: 468, chassis: "Ford F53", transmission: "TorqShift 6-speed automatic", towingCapacity: 5000, notes: "OEM MY25–27 Emblem: F53 7.3 335 / 468" },
+      ],
+    },
+    "Vision SE": {
+      type: "Class A Gas",
+      floorplans: ["27ASE"],
+      floorplansByYear: {
+        // OEM MY26–27 Vision SE: 27ASE only · F53 7.3 335/468
+        "2026": ["27ASE"],
+        "2027": ["27ASE"],
+      },
+      lengthRange: [30, 30],
+      weightRange: [15000, 18000],
+      slideouts: 1,
+      sleeps: 5,
+      msrpRange: [149000, 229000],
+      engine: "Ford 7.3L V8 Godzilla 335HP",
+      horsepower: 335,
+      torqueLbFt: 468,
+      chassis: "Ford F53",
+      transmission: "TorqShift 6-speed automatic",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 5000,
+      freshWater: 50,
+      grayWater: 36,
+      blackWater: 36,
+      generator: "Onan / Generac",
+      awningLength: 16,
+      ceilingHeight: 84,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Entegra Vision SE — single 27ASE gas Class A on Ford F53, 7.3L 335 / 468, TorqShift 6. Not bare Vision / Vision XL.",
+      powertrainByYear: [
+        { from: 2026, to: 2027, engine: "Ford 7.3L V8 Godzilla 335HP", horsepower: 335, torqueLbFt: 468, chassis: "Ford F53", transmission: "TorqShift 6-speed automatic", notes: "OEM MY26–27 Vision SE 27ASE" },
+      ],
+    },
+    "Accolade XT": {
+      type: "Super C",
+      floorplans: ["29T", "32U", "35L"],
+      floorplansByYear: {
+        // OEM MY26–27 Accolade XT: 29T | 32U | 35L · Power Stroke 330/950 · F550 4x4 (29T) / F600 4x4 (32U, 35L)
+        "2026": ["29T", "32U", "35L"],
+        "2027": ["29T", "32U", "35L"],
+      },
+      lengthRange: [30, 37],
+      weightRange: [19000, 22000],
+      slideouts: 1,
+      sleeps: 5,
+      msrpRange: [249000, 379000],
+      engine: "Ford 6.7L Power Stroke 330HP",
+      horsepower: 330,
+      torqueLbFt: 950,
+      chassis: "Ford F550 4x4 / F600 4x4 (by floorplan)",
+      transmission: "10-speed automatic",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.5,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 12000,
+      freshWater: 60,
+      grayWater: 40,
+      blackWater: 40,
+      generator: "Onan / Generac",
+      awningLength: 16,
+      ceilingHeight: 84,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Entegra Accolade XT — Super C on Ford 4x4. OEM MY26–27: 29T / 32U / 35L, Power Stroke 6.7 330 / 950, 10-speed, hitch 12k. 29T F550 4x4; 32U / 35L F600 4x4. Not Accolade / Accolade XL ISB.",
+      powertrainByYear: [
+        { from: 2026, to: 2027, floorplans: ["29T"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F550 4x4", transmission: "10-speed automatic", towingCapacity: 12000 },
+        { from: 2026, to: 2027, floorplans: ["32U", "35L"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F600 4x4", transmission: "10-speed automatic", towingCapacity: 12000 },
+        { from: 2026, to: 2027, engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F550 4x4 / F600 4x4 (by floorplan)", transmission: "10-speed automatic" },
+      ],
+    },
+    "Esteem XL": {
+      type: "Super C",
+      floorplans: ["30M", "32U", "33F"],
+      floorplansByYear: {
+        // OEM MY26–27 Esteem XL: 30M | 32U | 33F · Power Stroke 330/950 · F550 4x4 (30M, 32U) / F600 4x4 (33F)
+        "2026": ["30M", "32U", "33F"],
+        "2027": ["30M", "32U", "33F"],
+      },
+      lengthRange: [33, 35],
+      weightRange: [19000, 22000],
+      slideouts: 1,
+      sleeps: 7,
+      msrpRange: [229000, 349000],
+      engine: "Ford 6.7L Power Stroke 330HP",
+      horsepower: 330,
+      torqueLbFt: 950,
+      chassis: "Ford F550 4x4 / F600 4x4 (by floorplan)",
+      transmission: "10-speed automatic",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.45,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 12000,
+      freshWater: 60,
+      grayWater: 40,
+      blackWater: 40,
+      generator: "Onan / Generac",
+      awningLength: 16,
+      ceilingHeight: 84,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Entegra Esteem XL — Super C on Ford 4x4. OEM MY26–27: 30M / 32U / 33F, Power Stroke 6.7 330 / 950, 10-speed, hitch 12k. F550 4x4 on 30M/32U; F600 4x4 on 33F. Not Class C Esteem.",
+      powertrainByYear: [
+        { from: 2026, to: 2027, floorplans: ["30M", "32U"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F550 4x4", transmission: "10-speed automatic", towingCapacity: 12000 },
+        { from: 2026, to: 2027, floorplans: ["33F"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F600 4x4", transmission: "10-speed automatic", towingCapacity: 12000 },
+        { from: 2026, to: 2027, engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F550 4x4 / F600 4x4 (by floorplan)", transmission: "10-speed automatic" },
+      ],
+    },
+    "Odyssey Esteem Edition": {
+      type: "Class C",
+      floorplans: ["24B", "25R", "26M", "27G", "27U", "29V", "30Z", "31F"],
+      floorplansByYear: {
+        // OEM 2027 Odyssey Esteem Edition year page: same Odyssey 2027 plans including 27G
+        "2027": ["24B", "25R", "26M", "27G", "27U", "29V", "30Z", "31F"],
+      },
+      lengthRange: [27, 33],
+      weightRange: [12000, 14500],
+      slideouts: 1,
+      sleeps: 7,
+      msrpRange: [119000, 179000],
+      engine: "Ford 7.3L V8 325HP",
+      horsepower: 325,
+      torqueLbFt: 450,
+      chassis: "Ford E-450",
+      transmission: "TorqShift 6-speed automatic",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 7500,
+      freshWater: 44,
+      grayWater: 28,
+      blackWater: 28,
+      fuelCapacityGal: 55,
+      generator: "Onan 4000W Gas MicroQuiet",
+      awningLength: 12,
+      ceilingHeight: 79,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2027,
+      description: "Entegra Odyssey Esteem Edition — 2027 trim of Odyssey on Ford E-450, 7.3L 325 / 450. Same MY27 Odyssey floorplans (24B–31F including 27G). Not Class C Esteem / Esteem XL.",
+      powertrainByYear: [
+        { from: 2027, to: 2027, engine: "Ford 7.3L V8 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-450", transmission: "TorqShift 6-speed automatic", towingCapacity: 7500, notes: "OEM 2027 Odyssey Esteem Edition: E-450 7.3 325 / 450" },
+      ],
+    },
+    "Odyssey SE": {
+      type: "Class C",
+      floorplans: ["20LF", "20SF", "22A", "22AF", "22C", "22CF", "22E", "22EF", "22T", "22TF", "29KF", "31FF"],
+      floorplansByYear: {
+        // OEM MY26 Odyssey SE brochure: 22A | 22AF | 22C | 22CF | 22E | 22EF | 22T | 22TF | 29KF | 31FF (no 20LF / 20SF)
+        "2026": ["22A", "22AF", "22C", "22CF", "22E", "22EF", "22T", "22TF", "29KF", "31FF"],
+        // OEM 2027 Odyssey SE year page adds 20LF | 20SF
+        "2027": ["20LF", "20SF", "22A", "22AF", "22C", "22CF", "22E", "22EF", "22T", "22TF", "29KF", "31FF"],
+      },
+      lengthRange: [22, 33],
+      weightRange: [11000, 14500],
+      slideouts: 1,
+      sleeps: 7,
+      msrpRange: [89000, 149000],
+      engine: "Ford 7.3L 325HP or Chevy 6.6L Vortec 401HP (by chassis)",
+      horsepower: 0,
+      chassis: "Ford E-350 / E-450 or Chevy (by floorplan)",
+      transmission: "TorqShift 6-speed / Hydra-Matic 6-speed (by chassis)",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.3,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 5000,
+      freshWater: 40,
+      grayWater: 28,
+      blackWater: 28,
+      generator: "Onan 4000W Gas MicroQuiet",
+      awningLength: 12,
+      ceilingHeight: 84,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Entegra Odyssey SE — Class C across Ford E-350 / E-450 and Chevy chassis. OEM MY26 brochure: 22-series + 29KF / 31FF. MY27 adds 20LF / 20SF. Ford 7.3 325 / 450; MY27 OEM also prints Chevy 6.6 Vortec 401 / 464 — option-band, do not invent which plan is Chevy. Not bare Odyssey.",
+      powertrainByYear: [
+        { from: 2026, to: 2026, engine: "Ford 7.3L V8 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-350 / E-450 (by floorplan)", transmission: "TorqShift 6-speed automatic", notes: "OEM MY26 Odyssey SE: Ford 7.3 325 / 450 — do not invent Chevy HP for 2026" },
+        { from: 2027, to: 2027, engine: "Ford 7.3L 325HP or Chevy 6.6L Vortec 401HP (by chassis)", horsepower: 0, chassis: "Ford E-350 / E-450 or Chevy (by floorplan)", notes: "OEM 2027 Odyssey SE prints both Ford 325/450 and Chevy 401/464 — option band" },
+      ],
+    },
+    "Qwest SE": {
+      type: "Class C",
+      floorplans: ["24L", "24R"],
+      floorplansByYear: {
+        // OEM MY26–27 Qwest SE: 24L | 24R on Mercedes 3500 · 2.0 211/332 (24R-USA / 24R-Canada are market labels)
+        "2026": ["24L", "24R"],
+        "2027": ["24L", "24R"],
+      },
+      lengthRange: [25, 25],
+      weightRange: [10000, 11000],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [139000, 189000],
+      engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP",
+      horsepower: 211,
+      torqueLbFt: 332,
+      chassis: "Mercedes-Benz 3500",
+      transmission: "9-speed automatic",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 5000,
+      freshWater: 28,
+      grayWater: 24,
+      blackWater: 24,
+      fuelCapacityGal: 26.4,
+      generator: "Onan / Generac",
+      awningLength: 12,
+      ceilingHeight: 83,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Entegra Qwest SE — Mercedes 3500 Class C. OEM MY26–27: 24L / 24R, 2.0 twin-turbo 211 / 332, 9-speed. Not the 25-series Qwest on Mercedes 4500.",
+      powertrainByYear: [
+        { from: 2026, to: 2027, engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP", horsepower: 211, torqueLbFt: 332, chassis: "Mercedes-Benz 3500", transmission: "9-speed automatic", notes: "OEM MY26–27 Qwest SE: Mercedes 3500 · 211/332" },
+      ],
+    },
+    "Condor": {
+      type: "Class C",
+      floorplans: ["22T", "23S"],
+      floorplansByYear: {
+        // OEM MY26–27 Condor: 22T Transit 350HD AWD · 23S Mercedes 3500 AWD
+        "2026": ["22T", "23S"],
+        "2027": ["22T", "23S"],
+      },
+      lengthRange: [23, 25],
+      weightRange: [9000, 11000],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [149000, 219000],
+      engine: "Ford 3.5L EcoBoost 310HP (22T) or Mercedes 2.0 211HP (23S)",
+      horsepower: 0,
+      chassis: "Ford Transit 350HD AWD / Mercedes-Benz 3500 AWD",
+      fuelType: "Gas / Diesel (by plan)",
+      recalls: 0,
+      rating: 4.4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 5000,
+      freshWater: 28,
+      grayWater: 20,
+      blackWater: 16,
+      generator: "confirm brochure — compact Class C van cutaway",
+      awningLength: 12,
+      ceilingHeight: 80,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Entegra Condor — compact Class C. 22T Ford Transit 350HD AWD; 23S Mercedes 3500 AWD 2.0 211 / 332. MY26 22T brochure did not print HP (leave 0); MY27 OEM prints EcoBoost 310 / 400 on 22T. Gas ≠ diesel.",
+      powertrainByYear: [
+        { from: 2026, to: 2026, floorplans: ["22T"], engine: "Ford 3.5L EcoBoost V6 (Transit 350HD AWD)", horsepower: 0, chassis: "Ford Transit 350HD AWD", transmission: "10-speed automatic", notes: "OEM MY26 Condor 22T: Transit 350HD AWD — HP not printed on brochure" },
+        { from: 2027, to: 2027, floorplans: ["22T"], engine: "Ford 3.5L EcoBoost V6 310HP", horsepower: 310, torqueLbFt: 400, chassis: "Ford Transit 350HD AWD", transmission: "10-speed automatic", notes: "OEM 2027 Condor 22T: EcoBoost 310 / 400" },
+        { from: 2026, to: 2027, floorplans: ["23S"], engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP", horsepower: 211, torqueLbFt: 332, chassis: "Mercedes-Benz 3500 AWD", transmission: "9-speed automatic", notes: "OEM MY26–27 Condor 23S" },
+        { from: 2026, to: 2027, engine: "Ford 3.5L EcoBoost (22T) or Mercedes 2.0 211HP (23S)", horsepower: 0, chassis: "Ford Transit 350HD AWD / Mercedes-Benz 3500 AWD" },
+      ],
+    },
+    "Launch": {
+      type: "Class B",
+      floorplans: ["19A", "19Y", "19AG", "19YG"],
+      floorplansByYear: {
+        // OEM MY26–27 Launch: 19A | 19Y | 19AG | 19YG · Sprinter 2500 AWD 2.0 211/332
+        "2026": ["19A", "19Y", "19AG", "19YG"],
+        "2027": ["19A", "19Y", "19AG", "19YG"],
+      },
+      lengthRange: [20, 20],
+      weightRange: [8500, 9500],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [139000, 189000],
+      engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP",
+      horsepower: 211,
+      torqueLbFt: 332,
+      chassis: "Mercedes-Benz Sprinter 2500 AWD",
+      transmission: "9-speed automatic",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 5000,
+      freshWater: 20,
+      grayWater: 16,
+      blackWater: 12,
+      fuelCapacityGal: 24.5,
+      generator: "confirm brochure — Sprinter Class B",
+      awningLength: 10,
+      ceilingHeight: 75,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Entegra Launch — Class B on Sprinter 2500 AWD. OEM MY26–27: 19A / 19Y / 19AG / 19YG, 2.0 211 / 332, 9-speed. 19A/19Y lithium+Victron; 19AG/19YG AGM + generator + propane.",
+      powertrainByYear: [
+        { from: 2026, to: 2027, engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP", horsepower: 211, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter 2500 AWD", transmission: "9-speed automatic", notes: "OEM MY26–27 Launch" },
+      ],
+    },
+    "Ethos": {
+      type: "Class B",
+      floorplans: ["20A", "20E", "20T"],
+      floorplansByYear: {
+        // OEM MY26 Ethos brochure: 20A | 20E | 20T
+        "2026": ["20A", "20E", "20T"],
+        // OEM 2027 Ethos year page: 20E | 20T only — do not copy 20A forward
+        "2027": ["20E", "20T"],
+      },
+      lengthRange: [21, 21],
+      weightRange: [8500, 9500],
+      slideouts: 0,
+      sleeps: 3,
+      msrpRange: [119000, 169000],
+      engine: "RAM 3.6L V6 276HP",
+      horsepower: 276,
+      torqueLbFt: 250,
+      chassis: "RAM ProMaster 3500",
+      transmission: "9-speed automatic 948TE",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.35,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 3500,
+      freshWater: 20,
+      grayWater: 16,
+      blackWater: 12,
+      fuelCapacityGal: 24,
+      generator: "confirm brochure — ProMaster Class B gas",
+      awningLength: 10,
+      ceilingHeight: 75,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Entegra Ethos — Class B on RAM ProMaster 3500, 3.6L 276 / 250 gas. OEM MY26: 20A / 20E / 20T; MY27: 20E / 20T only.",
+      powertrainByYear: [
+        { from: 2026, to: 2027, engine: "RAM 3.6L V6 276HP", horsepower: 276, torqueLbFt: 250, chassis: "RAM ProMaster 3500", transmission: "9-speed automatic 948TE", notes: "OEM MY26–27 Ethos: ProMaster 3500 gas 276/250" },
+      ],
+    },
+    "Insignia": {
+      type: "Class B",
+      floorplans: ["24B"],
+      floorplansByYear: {
+        // OEM MY26–27 Insignia: 24B · Sprinter 3500 XD AWD 2.0 211/332
+        "2026": ["24B"],
+        "2027": ["24B"],
+      },
+      lengthRange: [24, 25],
+      weightRange: [10000, 11000],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [179000, 229000],
+      engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP",
+      horsepower: 211,
+      torqueLbFt: 332,
+      chassis: "Mercedes-Benz Sprinter 3500 XD AWD",
+      transmission: "9-speed automatic",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.45,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 5000,
+      freshWater: 24,
+      grayWater: 20,
+      blackWater: 16,
+      fuelCapacityGal: 24.5,
+      generator: "confirm brochure — Sprinter Class B",
+      awningLength: 12,
+      ceilingHeight: 75,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Entegra Insignia — Class B on Sprinter 3500 XD AWD. OEM MY26–27: 24B only, 2.0 211 / 332, 9-speed.",
+      powertrainByYear: [
+        { from: 2026, to: 2027, engine: "Mercedes-Benz 2.0L I4 Twin Turbo 211HP", horsepower: 211, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter 3500 XD AWD", transmission: "9-speed automatic", notes: "OEM MY26–27 Insignia 24B" },
+      ],
+    },
+    "Arc": {
+      type: "Class B",
+      floorplans: ["18C"],
+      floorplansByYear: {
+        // OEM MY26–27 Arc: 18C · RAM ProMaster 1500 3.6 276/250 gas
+        "2026": ["18C"],
+        "2027": ["18C"],
+      },
+      lengthRange: [18, 18],
+      weightRange: [7000, 8500],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [99000, 139000],
+      engine: "RAM 3.6L V6 276HP",
+      horsepower: 276,
+      torqueLbFt: 250,
+      chassis: "RAM ProMaster 1500",
+      transmission: "9-speed automatic 948TE",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.3,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 3500,
+      freshWater: 16,
+      grayWater: 12,
+      blackWater: 10,
+      fuelCapacityGal: 24,
+      generator: "confirm brochure — compact ProMaster Class B gas",
+      awningLength: 8,
+      ceilingHeight: 75,
+      founded: 2008,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Entegra Arc — compact Class B on RAM ProMaster 1500, 3.6L 276 / 250 gas. OEM MY26–27: 18C only.",
+      powertrainByYear: [
+        { from: 2026, to: 2027, engine: "RAM 3.6L V6 276HP", horsepower: 276, torqueLbFt: 250, chassis: "RAM ProMaster 1500", transmission: "9-speed automatic 948TE", notes: "OEM MY26–27 Arc 18C" },
+      ],
+    },
   },
   "Monaco Coach": {
     Dynasty: {
