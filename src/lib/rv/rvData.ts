@@ -5119,10 +5119,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["27B", "27K", "29M", "29X", "30Q", "31C", "31G", "31J", "31S", "31Z", "32A", "32D", "32N", "33G", "33X", "34A", "34E", "34F", "34J", "34P", "34R", "34T", "35C", "35M", "35MX", "29L", "35A", "35G", "35J", "35R", "36H"],
       floorplansByYear: {
-        // No MY10 Hurricane OEM card — omit key. Do not invent or copy 2011.
-        // OEM MY11 Hurricane Literature: 30Q | 31G | 31J | 32A | 32D | 34T · Ford V10. HP not printed. Twin of Windsport — same card codes independently printed.
+        // No MY10 Hurricane OEM card — omit key. Do not invent 2010 or copy 2011 / Windsport backward.
+        // OEM MY11 Hurricane Literature (Hurricane card, not Windsport): 30Q | 31G | 31J | 32A | 32D | 34T · Ford V10. HP not printed (0). Twin of Windsport — independently printed; do not copy Windsport HP.
         "2011": ["30Q", "31G", "31J", "32A", "32D", "34T"],
-        // OEM MY12 Hurricane (2012_Hurricane_A): 30Q | 31G | 31J | 32A | 32D | 34T · Ford 6.8 Triton V10. HP not printed.
+        // OEM MY12 Hurricane (2012_Hurricane_A — Hurricane card, not Windsport): 30Q | 31G | 31J | 32A | 32D | 34T · Ford 6.8 Triton V10. HP not printed (0).
         "2012": ["30Q", "31G", "31J", "32A", "32D", "34T"],
         // OEM MY13 Hurricane (RVUSA mak6577): 29X | 32A | 33G | 34E · Ford F53. HP not printed. Do not copy Windsport 34F onto this twin.
         "2013": ["29X", "32A", "33G", "34E"],
@@ -5176,17 +5176,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2000,
+      yearStart: 2011,
       description:
-        "Thor Hurricane — gas Class A on Ford F53. OEM archive is continuous through 2026 (not discontinued in 2020). OEM MY23–24: 29M / 34A / 34J / 34R / 35M, 7.3 350 / 468. OEM MY25–26: 29L / 35G / 35J / 35R, 7.3 335 / 468. MY27: 29L / 35A / 35J / 36H (do not copy 35A/36H backward). Twin of Windsport.",
+        "Thor Hurricane — gas Class A on Ford F53. First readable OEM card is MY11 (no MY10 card — do not invent). OEM archive is continuous through 2026 (not discontinued in 2020). OEM MY23–24: 29M / 34A / 34J / 34R / 35M, 7.3 350 / 468. OEM MY25–26: 29L / 35G / 35J / 35R, 7.3 335 / 468. MY27: 29L / 35A / 35J / 36H (do not copy 35A/36H backward). Twin of Windsport.",
       powertrainByYear: [
         {
           from: 2000,
-          to: 2010,
+          to: 2009,
           engine: "Ford Triton V10 6.8L",
           horsepower: 305,
           chassis: "Ford F53",
-          notes: "Pre-2011 leftover Hurricane V10. No MY10 OEM card. Not 2011–2012.",
+          notes: "Pre-2011 leftover Hurricane V10. No MY10 OEM card — leftover ends 2009. Not 2010–2012.",
         },
         {
           from: 2011,
@@ -5195,7 +5195,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 0,
           chassis: "Ford F53",
           fuelType: "Gas",
-          notes: "OEM MY11 Hurricane Literature / MY12 2012_Hurricane_A: Ford 6.8 Triton V10. HP not printed (0). Twin of Windsport.",
+          notes: "OEM MY11 Hurricane Literature / MY12 2012_Hurricane_A (Hurricane cards): Ford 6.8 Triton V10. HP not printed (0). Twin of Windsport — do not copy Windsport HP.",
         },
         {
           from: 2013,
@@ -5375,10 +5375,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         "2008": ["27R", "29M", "31S"],
         "2009": ["27R", "29M", "31S", "34J"],
-        // No MY10 Windsport OEM card — omit key. Do not keep leftover 27R/29M/31S/34J or copy 2011.
-        // OEM MY11 Windsport Literature: 30Q | 31G | 31J | 32A | 32D | 34T · Ford V10. HP not printed. Twin of Hurricane — same card codes independently printed.
+        // No MY10 Windsport OEM card — omit key. Do not keep leftover 27R/29M/31S/34J or copy 2011 / Hurricane.
+        // OEM MY11 Windsport Literature (Windsport card, not Hurricane): 30Q | 31G | 31J | 32A | 32D | 34T · Ford V10. HP not printed (0). Twin of Hurricane — independently printed; do not copy Hurricane HP.
         "2011": ["30Q", "31G", "31J", "32A", "32D", "34T"],
-        // OEM MY12 Windsport (2012_Windsport_A): 30Q | 31G | 31J | 32A | 32D | 34T · Ford 6.8 Triton V10. HP not printed.
+        // OEM MY12 Windsport (2012_Windsport_A — Windsport card, not Hurricane): 30Q | 31G | 31J | 32A | 32D | 34T · Ford 6.8 Triton V10. HP not printed (0).
         "2012": ["30Q", "31G", "31J", "32A", "32D", "34T"],
         // OEM MY13 Windsport (RVUSA mak7714 dated 12/10/2012): 29X | 32A | 33G | 34E | 34F · Ford F53. HP not printed. Compact flyer omitted 34F — trust the dated full card. Do not keep leftover 27R/29M/31S/34J.
         "2013": ["29X", "32A", "33G", "34E", "34F"],
@@ -5446,11 +5446,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2008,
-          to: 2010,
+          to: 2009,
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "Pre-2011 leftover Windsport V10. No MY10 OEM card. Not 2011–2012."
+          notes: "Pre-2011 leftover Windsport V10. No MY10 OEM card — leftover ends 2009. Do not invent 2010 or copy Hurricane HP."
         },
         {
           from: 2011,
@@ -5459,7 +5459,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 0,
           chassis: "Ford F53",
           fuelType: "Gas",
-          notes: "OEM MY11 Windsport Literature / MY12 2012_Windsport_A: Ford 6.8 Triton V10. HP not printed (0). Twin of Hurricane."
+          notes: "OEM MY11 Windsport Literature / MY12 2012_Windsport_A (Windsport cards): Ford 6.8 Triton V10. HP not printed (0). Twin of Hurricane — do not copy Hurricane HP."
         },
         {
           from: 2013,
@@ -6074,16 +6074,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2000,
-      description: "Thor Four Winds — highest-volume Ford E-Series Class C. Twin of Chateau. OEM MY25: 27P / 28A / 28Z / 29K / 31EV / 31MV / 31WV + ESpec 19Z / 21Z / 22Z / 25Z. MY26–27 add 19X / 28G / 31E / 31H. Ford 7.3 325 / 450 or Chevy 6.6 401 / 464 (option-band). Ignore Mercedes badge on some Class C pages. Not Four Winds Sprinter / Siesta / Majestic.",
+      yearStart: 2011,
+      description: "Thor Four Winds — highest-volume Ford E-Series Class C. Twin of Chateau. First readable OEM card is MY11 (no MY10 card — do not invent). OEM MY25: 27P / 28A / 28Z / 29K / 31EV / 31MV / 31WV + ESpec 19Z / 21Z / 22Z / 25Z. MY26–27 add 19X / 28G / 31E / 31H. Ford 7.3 325 / 450 or Chevy 6.6 401 / 464 (option-band). Ignore Mercedes badge on some Class C pages. Not Four Winds Sprinter / Siesta / Majestic.",
       powertrainByYear: [
                 {
           from: 2000,
-          to: 2010,
+          to: 2009,
           engine: "Ford V10 / 6.8L or 6.0L (by year)",
           horsepower: 305,
           chassis: "Ford E-450 / E-350",
-          notes: "Pre-6.2/7.3 Ford cutaway Class C"
+          notes: "Pre-2011 leftover Ford cutaway Class C. No MY10 OEM card — leftover ends 2009. Not 2010–2012."
         },
         {
           from: 2011,
@@ -6227,16 +6227,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1980,
       warrantyYears: 1,
-      yearStart: 2005,
-      description: "Thor Chateau — Four Winds twin Class C on Ford E-Series. OEM MY25–27 floorplans match Four Winds. Ford 7.3 325 / 450 or Chevy 6.6 401 / 464 (option-band). Ignore Mercedes badge on some Class C pages. Not Chateau Sprinter.",
+      yearStart: 2011,
+      description: "Thor Chateau — Four Winds twin Class C on Ford E-Series. First readable OEM card is MY11 (no MY10 card — do not invent). OEM MY25–27 floorplans match Four Winds independently. Ford 7.3 325 / 450 or Chevy 6.6 401 / 464 (option-band). Ignore Mercedes badge on some Class C pages. Not Chateau Sprinter.",
       powertrainByYear: [
         {
           from: 2005,
-          to: 2010,
+          to: 2009,
           engine: "Ford V10 / 6.8L or 6.0L (by year)",
           horsepower: 305,
           chassis: "Ford E-450 / E-350",
-          notes: "Pre-6.2/7.3 Ford cutaway Class C"
+          notes: "Pre-2011 leftover Ford cutaway Class C. No MY10 OEM card — leftover ends 2009. Twin of Four Winds — do not copy Four Winds HP onto unprinted years."
         },
         {
           from: 2011,

@@ -6525,7 +6525,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     horsepower: 0,
     chassis: "Ford F53",
     fuelType: "Gas",
-    note: "OEM MY11 Hurricane Literature / MY12 2012_Hurricane_A: 30Q|31G|31J|32A|32D|34T · Ford 6.8 Triton V10. HP not printed (0). Twin of Windsport. No MY10 OEM card.",
+    note: "OEM MY11 Hurricane Literature / MY12 2012_Hurricane_A (Hurricane cards): 30Q|31G|31J|32A|32D|34T · Ford 6.8 Triton V10. HP not printed (0). Twin of Windsport — independently printed; do not copy Windsport HP. No MY10 OEM card — omit.",
   },
   {
     yearMin: 2011,
@@ -6536,7 +6536,7 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     horsepower: 0,
     chassis: "Ford F53",
     fuelType: "Gas",
-    note: "OEM MY11 Windsport Literature / MY12 2012_Windsport_A: 30Q|31G|31J|32A|32D|34T · Ford 6.8 Triton V10. HP not printed (0). Twin of Hurricane. No MY10 OEM card.",
+    note: "OEM MY11 Windsport Literature / MY12 2012_Windsport_A (Windsport cards): 30Q|31G|31J|32A|32D|34T · Ford 6.8 Triton V10. HP not printed (0). Twin of Hurricane — independently printed; do not copy Hurricane HP. No MY10 OEM card — omit.",
   },
   {
     yearMin: 2010,
