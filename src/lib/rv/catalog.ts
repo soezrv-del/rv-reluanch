@@ -381,7 +381,7 @@ export function buildCustomSpec(
     chassis: "—",
     fuelType: "—",
     recalls: 0,
-    rating: 4.0,
+    rating: computeRating(make, model, ""),
     image: RV_CARD_IMAGE,
     towingCapacity: 0,
     freshWater: 0,

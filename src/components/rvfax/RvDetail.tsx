@@ -927,6 +927,11 @@ export function RvDetail({
                 <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white">
                   RvFOX rating
                 </p>
+                {ratingMeta.confidence === "Low" ? (
+                  <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-amber-200/80">
+                    {ratingMeta.knownMake ? "Low confidence" : "Unknown brand · estimate"}
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -1271,8 +1276,13 @@ export function RvDetail({
           </Section>
 
           <Section title="Rating">
-            <p className="mb-4 text-[14px] leading-relaxed text-white">
+            <p className="mb-2 text-[14px] leading-relaxed text-white">
               {displayRating.toFixed(1)} out of 5 · {ratingMeta.tierLabel}
+              {" · "}
+              {ratingMeta.confidence} confidence
+            </p>
+            <p className="mb-4 text-[12px] leading-relaxed text-white/70">
+              {ratingMeta.sources[0]}
             </p>
             <SpecRow
               label="BRAND"
@@ -1280,12 +1290,19 @@ export function RvDetail({
             />
             <SpecRow
               label="MODEL"
-              value={`${ratingMeta.tierAdj >= 0 ? "+" : ""}${ratingMeta.tierAdj.toFixed(1)}`}
+              value={`${ratingMeta.tierAdj >= 0 ? "+" : ""}${ratingMeta.tierAdj.toFixed(1)}${
+                ratingMeta.matchedModelKey
+                  ? ` · ${ratingMeta.matchedModelKey}`
+                  : " · default"
+              }`}
             />
             <SpecRow
               label="YEAR"
               value={`${ratingMeta.yearAdj >= 0 ? "+" : ""}${ratingMeta.yearAdj.toFixed(1)}`}
             />
+            <p className="mt-3 text-[11px] leading-relaxed text-white/55">
+              {ratingMeta.sources[1]}
+            </p>
           </Section>
 
           {floorplansShown.length ? (
@@ -1357,47 +1374,57 @@ export function RvDetail({
             </Section>
           ) : null}
 
-          {ownerReviews.length ? (
-            <Section title="Owner reviews">
-              <div className="space-y-3">
-                {ownerReviews.map((r) => (
-                  <article
-                    key={r.id}
-                    className="rounded-2xl border border-white/10 bg-black/30 p-4"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-[16px] font-bold leading-snug text-white">
-                          {r.title}
-                        </p>
-                        <p className="mt-1 text-[13px] text-white">
-                          {r.author}
-                          {r.location ? ` · ${r.location}` : ""}
-                          {r.date ? ` · ${r.date}` : ""}
-                        </p>
+          <Section title="Sample owner notes">
+            {ownerReviews.length ? (
+              <>
+                <p className="mb-3 text-[12px] leading-relaxed text-white/60">
+                  Illustrative copy for tone — not verified owner reviews or
+                  live forum posts.
+                </p>
+                <div className="space-y-3">
+                  {ownerReviews.map((r) => (
+                    <article
+                      key={r.id}
+                      className="rounded-2xl border border-white/10 bg-black/30 p-4"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[16px] font-bold leading-snug text-white">
+                            {r.title}
+                          </p>
+                          <p className="mt-1 text-[13px] text-white">
+                            {r.author}
+                            {r.location ? ` · ${r.location}` : ""}
+                            {r.date ? ` · ${r.date}` : ""}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="text-[18px] font-bold tabular-nums text-gold-bright">
+                            {r.rating.toFixed(1)}
+                          </p>
+                          <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/45">
+                            Sample
+                          </p>
+                        </div>
                       </div>
-                      <div className="shrink-0 text-right">
-                        <p className="text-[18px] font-bold tabular-nums text-gold-bright">
-                          {r.rating.toFixed(1)}
-                        </p>
-                        {r.verified ? (
-                          <Chip tone="green">Verified</Chip>
-                        ) : null}
-                      </div>
-                    </div>
-                    <p className="mt-3 text-[15px] leading-relaxed text-white">
-                      {r.body}
-                    </p>
-                    {r.miles || r.years ? (
-                      <p className="mt-2 text-[13px] font-medium text-white">
-                        {[r.miles, r.years].filter(Boolean).join(" · ")}
+                      <p className="mt-3 text-[15px] leading-relaxed text-white">
+                        {r.body}
                       </p>
-                    ) : null}
-                  </article>
-                ))}
-              </div>
-            </Section>
-          ) : null}
+                      {r.miles || r.years ? (
+                        <p className="mt-2 text-[13px] font-medium text-white">
+                          {[r.miles, r.years].filter(Boolean).join(" · ")}
+                        </p>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-[13px] leading-relaxed text-white/65">
+                No sample notes for this brand.
+              </p>
+            )}
+          </Section>
 
           <Section title="NHTSA safety">
             {recallLoading ? (
