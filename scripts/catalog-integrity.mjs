@@ -1769,7 +1769,7 @@ function main() {
   }
 
   // Keystone MY2027 OEM lock + yearStart hygiene / Half-Ton 2027 + 25FKD Cougar TT scrub.
-  // MY2026 stays GAP (live OEM compare cards are 2027-only). Next make is quoted Grand Design.
+  // Sprinter MY2025–2026 filled from LOCK SPRINTER_MY2025_2026.md (other lines still 2026 GAP).
   {
     const k0 = src.indexOf('\n  "Keystone": {');
     const k1 = src.indexOf('\n  "Grand Design": {');
@@ -1886,8 +1886,17 @@ function main() {
       if (/"2027": .*"3590LFT"/.test(sprBlock) || /"2027": .*"3670FLS"/.test(sprBlock) || /"2027": .*"3810QBS"/.test(sprBlock)) {
         fail("Keystone|Sprinter must not keep dealer-stock 3590LFT/3670FLS/3810QBS on 2027");
       }
-      if (/"2025":/.test(sprBlock) || /"2026":/.test(sprBlock)) {
-        fail("Keystone|Sprinter must omit 2025–2026 (GAP this slice — do not invent)");
+      if (!/"2025": \["3210RLS", "3520RDS", "3590LFT", "3670FLS", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3980FBS"\]/.test(sprBlock)) {
+        fail("Keystone|Sprinter MY25 production lock missing (9 codes; omit 3190RLS)");
+      }
+      if (/"2025": .*"3190RLS"/.test(sprBlock) || /"2025": .*"3640RLP"/.test(sprBlock) || /"2025": .*"3500RDB"/.test(sprBlock)) {
+        fail("Keystone|Sprinter must omit 3190RLS / 3640RLP / 3500RDB on 2025");
+      }
+      if (!/"2026": \["3210RLS", "3520RDS", "3590LFT", "3670FLS", "3800FLB", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"\]/.test(sprBlock)) {
+        fail("Keystone|Sprinter MY26 production lock missing (11 codes; omit 3640RLP)");
+      }
+      if (/"2026": .*"3640RLP"/.test(sprBlock) || /"2026": .*"3190RLS"/.test(sprBlock) || /"2026": .*"3500RDB"/.test(sprBlock)) {
+        fail("Keystone|Sprinter must omit 3640RLP / 3190RLS / 3500RDB on 2026");
       }
 
       const ctt = slice("Cougar", "Cougar 5th Wheel");
