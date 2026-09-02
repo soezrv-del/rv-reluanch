@@ -11355,3 +11355,157 @@ test("Tiffin 2010–2012 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(findPowertrainCorrection("2011", "Tiffin", "Allegro Bay", "38AB"), null);
   assert.equal(findPowertrainCorrection("2012", "Tiffin", "Allegro Bay", "38AB"), null);
 });
+
+test("Grand Design 2025–2026 OEM year-first floorplans + yearEnds", () => {
+  const gd = CATALOG_INDEX["Grand Design"];
+  assert.ok(gd);
+
+  assert.equal(gd.Imagine?.yearStart, 2016);
+  assert.equal(gd["Imagine XLS"]?.yearStart, 2019);
+  assert.equal(gd["Imagine AIM"]?.yearStart, 2023);
+  assert.equal(gd["Reflection 150 Series"]?.yearStart, 2018);
+  assert.equal(gd["Reflection 100 Series"]?.yearStart, 2024);
+  assert.equal(gd["Reflection Travel Trailer"]?.yearStart, 2025);
+  assert.equal(gd["Reflection Travel Trailer"]?.type, "Travel Trailer");
+  assert.equal(gd.Reflection?.type, "Fifth Wheel");
+  assert.equal(gd["Momentum MAV"]?.yearStart, 2024);
+  assert.equal(gd.Influence?.yearStart, 2024);
+  assert.equal(gd["Transcend One"]?.yearStart, 2025);
+  assert.equal(gd["Transcend Xplor"]?.yearStart, 2020);
+  assert.equal(gd["Solitude S-Class"]?.yearEnd, 2023);
+  assert.equal(gd["Solitude S-Class"]?.years?.includes(2023), true);
+  assert.equal(gd["Solitude S-Class"]?.years?.includes(2024), false);
+  assert.equal(gd["Solitude S-Class"]?.years?.includes(2026), false);
+  assert.equal(gd.Imagine?.years?.includes(2014), false);
+  assert.equal(gd.Imagine?.years?.includes(2015), false);
+  assert.equal(gd["Imagine XLS"]?.years?.includes(2015), false);
+  assert.equal(gd["Imagine XLS"]?.years?.includes(2018), false);
+  assert.equal(gd["Reflection 150 Series"]?.years?.includes(2015), false);
+  assert.equal(gd["Momentum MAV"]?.years?.includes(2022), false);
+  assert.equal(gd["Momentum MAV"]?.years?.includes(2023), false);
+  assert.equal(gd["Lineage Series E"]?.yearStart, 2027);
+  assert.equal(gd["Lineage Series E"]?.fuelType, "Gas");
+  assert.equal(gd["Lineage Series E"]?.years?.includes(2026), false);
+  assert.equal(gd["Lineage Series M"]?.yearStart, 2025);
+  assert.equal(gd["Lineage Series M"]?.fuelType, "Diesel");
+  assert.equal(gd["Lineage Series M"]?.years?.includes(2027), false);
+  assert.equal(gd["Lineage Series F"]?.type, "Super C");
+  assert.equal(gd["Lineage Series F"]?.fuelType, "Diesel");
+  assert.equal(gd["Lineage Series VT"]?.type, "Class B");
+  assert.equal(gd["Lineage Series VT"]?.fuelType, "Gas");
+  assert.equal(gd["Lineage Series VT"]?.years?.includes(2026), true);
+  assert.equal(gd.Serenova, undefined);
+  assert.equal(gd.Foundation, undefined);
+  assert.equal(gd["Lineage Series VP"], undefined);
+
+  const block = src("rvData.ts");
+  const g0 = block.indexOf('  "Grand Design": {');
+  const g1 = block.indexOf("  Fleetwood: {");
+  const g = block.slice(g0, g1);
+
+  const imag = g.slice(g.indexOf("    Imagine: {"), g.indexOf('    "Imagine XLS"'));
+  assert.match(imag, /"2025": \["2300MK", "2470BH", "2500RL", "2600RB", "2670MK", "2800BH", "2920BS", "2970RL", "3100RD", "3210BH"\]/);
+  assert.match(imag, /"2026": \["2300MK", "2470BH", "2500RL", "2600RB", "2670MK", "2700BS", "2800BH", "2810BH", "2970RL", "3100RD", "3210BH"\]/);
+  assert.doesNotMatch(imag, /"2025": .*"2700BS"/);
+  assert.doesNotMatch(imag, /"2026": .*"2920BS"/);
+  assert.doesNotMatch(imag, /"2014":/);
+  assert.doesNotMatch(imag, /"2027":/);
+
+  const xls = g.slice(g.indexOf('    "Imagine XLS": {'), g.indexOf('    "Imagine AIM"'));
+  assert.match(xls, /"2026": \["17MKE", "21MBE", "22BHE", "22MLE", "22RBE", "23LDE", "25DBE", "25RLE"\]/);
+  assert.doesNotMatch(xls, /"2025": .*"21MBE"/);
+  assert.doesNotMatch(xls, /"2026": .*"25RKE"/);
+  assert.doesNotMatch(xls, /"2015":/);
+
+  const aim = g.slice(g.indexOf('    "Imagine AIM": {'), g.indexOf("    Transcend: {"));
+  assert.match(aim, /"2025": \["14MS", "15RB", "16BL", "16ML"\]/);
+  assert.match(aim, /"2026": \["15RBA", "16MLA", "19MLA", "20BHA"\]/);
+  assert.doesNotMatch(aim, /"2025": .*"19MLA"/);
+
+  const rfw = g.slice(g.indexOf("    Reflection: {"), g.indexOf('    "Reflection Travel Trailer"'));
+  assert.match(rfw, /"2026": \["303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "360FLS", "362TBS", "367BHS"\]/);
+  assert.doesNotMatch(rfw, /"2026": .*"315RLTS"/);
+  assert.doesNotMatch(rfw, /"2026": .*"317RSTS"/);
+
+  const rtt = g.slice(g.indexOf('    "Reflection Travel Trailer": {'), g.indexOf('    "Reflection 100 Series"'));
+  assert.match(rtt, /"2026": \["317RSTS", "322FKTS", "342BHTS", "345RLTS"\]/);
+  assert.doesNotMatch(rtt, /"2025": .*"317RSTS"/);
+  assert.match(rtt, /type: "Travel Trailer"/);
+
+  const r100 = g.slice(g.indexOf('    "Reflection 100 Series": {'), g.indexOf('    "Reflection 150 Series"'));
+  assert.match(r100, /"2026": \["22RK", "24RL", "27BH", "29RL", "32BH"\]/);
+  assert.doesNotMatch(r100, /"2025": .*"32BH"/);
+
+  const r150 = g.slice(g.indexOf('    "Reflection 150 Series": {'), g.indexOf("    Imagine: {"));
+  assert.match(r150, /"2026": \["250ML", "260RD", "270BN", "280RL", "298BH"\]/);
+  assert.doesNotMatch(r150, /"2015":/);
+  assert.doesNotMatch(r150, /"2026": .*"320MKS"/);
+
+  const inf = g.slice(g.indexOf("    Influence: {"), g.indexOf("    Reflection: {"));
+  assert.match(inf, /"2025": \["2903RL", "3203GK", "3503GK", "3704BH", "3804DS"\]/);
+  assert.match(inf, /"2026": \["2903RL", "3003RL", "3203GK", "3503GK", "3804DS", "3904BH"\]/);
+  assert.doesNotMatch(inf, /"2026": .*"3704BH"/);
+  assert.doesNotMatch(inf, /"2025": .*"3904BH"/);
+
+  const sol = g.slice(g.indexOf("    Solitude: {"), g.indexOf('    "Solitude S-Class"'));
+  assert.match(sol, /"2026": \["310GK", "370DV", "376RD", "380FL", "382WB", "388MBS", "390RK", "391DL", "414LJMJ", "417KB"\]/);
+  assert.doesNotMatch(sol, /"2025": .*"414LJMJ"/);
+  assert.doesNotMatch(sol, /"2026": .*"375RES"/);
+
+  const sc = g.slice(g.indexOf('    "Solitude S-Class": {'), g.indexOf("    Influence: {"));
+  assert.match(sc, /yearEnd:\s*2023/);
+  assert.doesNotMatch(sc, /"2024":/);
+  assert.doesNotMatch(sc, /"2026":/);
+
+  const t1 = g.slice(g.indexOf('    "Transcend One": {'), g.indexOf('    "Transcend Xplor"'));
+  assert.match(t1, /"2026": \["131DL", "151BH", "151RB", "161BH", "161DB"\]/);
+  assert.doesNotMatch(t1, /"2025": .*"131DL"/);
+
+  const tx = g.slice(g.indexOf('    "Transcend Xplor": {'), g.indexOf("    Momentum: {"));
+  assert.match(tx, /"2026": \["19BHX", "20MKX", "21RLX", "22RBX", "23BHX", "24BHX", "25MLX", "26BHX", "26RBX", "27DBX"\]/);
+  assert.doesNotMatch(tx, /"2025": .*"19BHX"/);
+
+  const mav = g.slice(g.indexOf('    "Momentum MAV": {'), g.indexOf('    "Lineage Series E"'));
+  assert.match(mav, /"2026": \["17MAV", "22MAV", "24MAV", "27MAV", "28MAV"\]/);
+  assert.doesNotMatch(mav, /"2025": .*"17MAV"/);
+  assert.doesNotMatch(mav, /"2022":/);
+
+  const mom = g.slice(g.indexOf("    Momentum: {"), g.indexOf('    "Momentum M-Class"'));
+  assert.match(mom, /"2026": \["395MT", "396DB", "399M"\]/);
+  assert.doesNotMatch(mom, /"2026": .*"344M"/);
+
+  const gfw = g.slice(g.indexOf('    "Momentum G-Class Fifth Wheel": {'), g.indexOf('    "Momentum MAV"'));
+  assert.match(gfw, /"2026": \["320G", "325G", "350G", "394G"\]/);
+  assert.doesNotMatch(gfw, /"2026": .*"415G"/);
+
+  const le = findPowertrainCorrection("2027", "Grand Design", "Lineage Series E", "30DC");
+  assert.equal(le!.horsepower, 325);
+  assert.equal(le!.fuelType, "Gas");
+  assert.match(le!.engine, /7\.3/);
+  assert.equal(findPowertrainCorrection("2026", "Grand Design", "Lineage Series E", "30DC"), null);
+
+  const lm = findPowertrainCorrection("2026", "Grand Design", "Lineage Series M", "25FW");
+  assert.equal(lm!.horsepower, 208);
+  assert.equal(lm!.torqueLbFt, 332);
+  assert.equal(lm!.fuelType, "Diesel");
+  assert.match(lm!.chassis || "", /Sprinter/);
+  assert.equal(findPowertrainCorrection("2027", "Grand Design", "Lineage Series M", "25FW"), null);
+
+  const lf = findPowertrainCorrection("2026", "Grand Design", "Lineage Series F", "31ZW");
+  assert.equal(lf!.horsepower, 330);
+  assert.equal(lf!.torqueLbFt, 950);
+  assert.equal(lf!.fuelType, "Diesel");
+  assert.match(lf!.engine, /Power Stroke/);
+
+  const lvt = findPowertrainCorrection("2026", "Grand Design", "Lineage Series VT", "LVT2");
+  assert.equal(lvt!.horsepower, 310);
+  assert.equal(lvt!.torqueLbFt, 400);
+  assert.equal(lvt!.fuelType, "Gas");
+  assert.match(lvt!.engine, /EcoBoost/);
+  assert.equal(findPowertrainCorrection("2025", "Grand Design", "Lineage Series VT", "LVT1"), null);
+
+  assert.equal(findPowertrainCorrection("2026", "Grand Design", "Imagine", "2500RL"), null);
+  assert.doesNotMatch(g, /"2010":/);
+  assert.doesNotMatch(g, /"2011":/);
+  assert.doesNotMatch(g, /"2012":/);
+});

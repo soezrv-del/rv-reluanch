@@ -17957,7 +17957,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   "Grand Design": {
     Solitude: {
       type: "Fifth Wheel",
-      floorplans: ["310GK", "375RES", "377MBS", "380FL", "390RK", "378MBS", "382WB"],
+      floorplans: ["310GK", "370DV", "375RES", "376RD", "377MBS", "378MBS", "380FL", "382WB", "388MBS", "390RK", "391DL", "414LJMJ", "417KB"],
       floorplansByYear: {
         "2015": ["310GK", "375RES", "377MBS"],
         "2016": ["310GK", "375RES", "377MBS"],
@@ -17969,23 +17969,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["310GK", "375RES", "380FL", "390RK"],
         "2023": ["310GK", "375RES", "380FL", "390RK"],
         "2024": ["375RES", "380FL", "390RK"],
-        "2025": ["375RES", "380FL", "390RK"],
-        "2026": ["375RES", "380FL", "390RK", "378MBS", "382WB"]
+        // OEM 2025-Grand-Design-Solitude: 310GK | 370DV | 376RD | 380FL | 382WB | 388MBS | 390RK | 391DL | 417KB
+        "2025": ["310GK", "370DV", "376RD", "380FL", "382WB", "388MBS", "390RK", "391DL", "417KB"],
+        // OEM Solitude Brochure (2026 MODEL YEAR, REV 12.4.25): adds 414LJMJ
+        "2026": ["310GK", "370DV", "376RD", "380FL", "382WB", "388MBS", "390RK", "391DL", "414LJMJ", "417KB"]
       },
-      lengthRange: [
-        31,
-        42
-      ],
-      weightRange: [
-        10000,
-        16000
-      ],
+      lengthRange: [31, 43],
+      weightRange: [10000, 19000],
       slideouts: 3,
       sleeps: 6,
-      msrpRange: [
-        75000,
-        145000
-      ],
+      msrpRange: [75000, 145000],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
       recalls: 0,
@@ -18005,31 +17998,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Solitude S-Class": {
       type: "Fifth Wheel",
-      floorplans: ["2930RL", "3740BH", "3800FL", "3350RL"],
+      floorplans: ["2930RL", "3740BH", "3800FL"],
       floorplansByYear: {
         "2019": ["2930RL", "3740BH"],
         "2020": ["2930RL", "3740BH"],
         "2021": ["2930RL", "3740BH", "3800FL"],
         "2022": ["2930RL", "3740BH", "3800FL"],
-        "2023": ["2930RL", "3740BH", "3800FL"],
-        "2024": ["2930RL", "3740BH"],
-        "2025": ["2930RL", "3740BH"],
-        "2026": ["2930RL", "3740BH", "3350RL"]
+        "2023": ["2930RL", "3740BH", "3800FL"]
       },
-      lengthRange: [
-        29,
-        40
-      ],
-      weightRange: [
-        9000,
-        14000
-      ],
+      lengthRange: [29, 40],
+      weightRange: [9000, 14000],
       slideouts: 3,
       sleeps: 8,
-      msrpRange: [
-        65000,
-        120000
-      ],
+      msrpRange: [65000, 120000],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
       recalls: 0,
@@ -18045,11 +18026,43 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2012,
       warrantyYears: 2,
       yearStart: 2019,
-      description: "Grand Design Solitude S-Class — Solitude packaging with select floorplans / content levels."
+      yearEnd: 2023,
+      description: "Grand Design Solitude S-Class — Solitude packaging with select floorplans / content levels. RVUSA and current OEM cards end MY2023 — not open through 2026."
+    },
+    Influence: {
+      type: "Fifth Wheel",
+      floorplans: ["2903RL", "3003RL", "3203GK", "3503GK", "3704BH", "3804DS", "3904BH"],
+      floorplansByYear: {
+        // OEM 2025-Grand-Design-Influence (REV 11.18.24): 2903RL | 3203GK | 3503GK | 3704BH | 3804DS
+        "2025": ["2903RL", "3203GK", "3503GK", "3704BH", "3804DS"],
+        // OEM Influence Brochure (2026 MODEL YEAR, REV 11.25.25): drops 3704BH, adds 3003RL + 3904BH
+        "2026": ["2903RL", "3003RL", "3203GK", "3503GK", "3804DS", "3904BH"]
+      },
+      lengthRange: [34, 43],
+      weightRange: [11000, 17000],
+      slideouts: 3,
+      sleeps: 6,
+      msrpRange: [85000, 130000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.6,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 81,
+      grayWater: 106,
+      blackWater: 53,
+      generator: "Optional / prep",
+      awningLength: 16,
+      ceilingHeight: 83,
+      founded: 2012,
+      warrantyYears: 2,
+      yearStart: 2024,
+      description: "Grand Design Influence — mid-luxury fifth wheel under Solitude. First locked OEM card is MY2025; RVUSA window starts 2024 (no 2024 invent in this slice)."
     },
     Reflection: {
       type: "Fifth Wheel",
-      floorplans: ["28BH", "303RLS", "337RLS", "320MKS", "367BHS", "311BH", "315RLTS"],
+      floorplans: ["28BH", "303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "360FLS", "362TBS", "367BHS"],
       floorplansByYear: {
         "2013": ["28BH", "303RLS", "337RLS"],
         "2014": ["28BH", "303RLS", "337RLS"],
@@ -18063,23 +18076,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["303RLS", "337RLS", "320MKS", "367BHS"],
         "2023": ["303RLS", "337RLS", "320MKS", "367BHS"],
         "2024": ["303RLS", "337RLS", "367BHS"],
-        "2025": ["303RLS", "337RLS", "367BHS"],
-        "2026": ["303RLS", "337RLS", "367BHS", "311BH", "315RLTS"]
+        // OEM 2025-Grand-Design-Reflection FW page: 303RLS | 311BHS | 320MKS | 324MBS | 337RLS | 360FLS | 362TBS | 367BHS
+        "2025": ["303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "360FLS", "362TBS", "367BHS"],
+        // OEM Reflection Brochure (2026 MODEL YEAR, REV 2.24.26) — same FW codes. TT codes live on Reflection Travel Trailer.
+        "2026": ["303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "360FLS", "362TBS", "367BHS"]
       },
-      lengthRange: [
-        28,
-        38
-      ],
-      weightRange: [
-        7500,
-        12000
-      ],
+      lengthRange: [28, 42],
+      weightRange: [7500, 13000],
       slideouts: 3,
       sleeps: 8,
-      msrpRange: [
-        45000,
-        95000
-      ],
+      msrpRange: [45000, 95000],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
       recalls: 0,
@@ -18095,15 +18101,74 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2012,
       warrantyYears: 2,
       yearStart: 2013,
-      description: "Grand Design Reflection — mid/high fifth wheel volume line. Strong resale; verify half-ton vs 3/4-ton by UVW/pin."
+      description: "Grand Design Reflection — mid/high fifth wheel volume line. Strong resale; verify half-ton vs 3/4-ton by UVW/pin. Travel trailers are a separate key."
+    },
+    "Reflection Travel Trailer": {
+      type: "Travel Trailer",
+      floorplans: ["296RDTS", "297RSTS", "310MKTS", "312BHTS", "315RLTS", "317RSTS", "322FKTS", "342BHTS", "345RLTS"],
+      floorplansByYear: {
+        // OEM 2025-Grand-Design-Reflection TT page
+        "2025": ["296RDTS", "297RSTS", "310MKTS", "312BHTS", "315RLTS", "322FKTS", "345RLTS"],
+        // OEM Reflection Brochure (2026 MODEL YEAR): 317RSTS | 322FKTS | 342BHTS | 345RLTS
+        "2026": ["317RSTS", "322FKTS", "342BHTS", "345RLTS"]
+      },
+      lengthRange: [35, 39],
+      weightRange: [8500, 11000],
+      slideouts: 2,
+      sleeps: 8,
+      msrpRange: [55000, 95000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.55,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 54,
+      grayWater: 78,
+      blackWater: 39,
+      generator: "Optional / prep",
+      awningLength: 16,
+      ceilingHeight: 82,
+      founded: 2012,
+      warrantyYears: 2,
+      yearStart: 2025,
+      description: "Grand Design Reflection travel trailer — fifth-wheel content in a bumper-pull. Do not collapse into Reflection FW."
+    },
+    "Reflection 100 Series": {
+      type: "Fifth Wheel",
+      floorplans: ["22RK", "24RL", "27BH", "28RL", "29RL", "32BH"],
+      floorplansByYear: {
+        // OEM 2025-Grand-Design-Reflection 100-series rows
+        "2025": ["22RK", "24RL", "27BH", "28RL"],
+        // OEM Reflection Brochure (2026 MODEL YEAR): 22RK | 24RL | 27BH | 29RL | 32BH
+        "2026": ["22RK", "24RL", "27BH", "29RL", "32BH"]
+      },
+      lengthRange: [27, 36],
+      weightRange: [6500, 10000],
+      slideouts: 2,
+      sleeps: 6,
+      msrpRange: [42000, 78000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.5,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 55,
+      grayWater: 78,
+      blackWater: 39,
+      generator: "Optional / prep",
+      awningLength: 16,
+      ceilingHeight: 82,
+      founded: 2012,
+      warrantyYears: 2,
+      yearStart: 2024,
+      description: "Grand Design Reflection 100 Series — lighter / simpler Reflection fifth wheel. RVUSA from 2024; first locked OEM card is MY2025."
     },
     "Reflection 150 Series": {
       type: "Fifth Wheel",
-      floorplans: ["150 Series 220RK", "150 Series 260RD", "150 Series 295RL", "260RD", "278BH", "290BH", "295RL", "320MKS"],
+      floorplans: ["150 Series 220RK", "150 Series 260RD", "150 Series 295RL", "250ML", "260RD", "270BN", "280RL", "295RL", "298BH"],
       floorplansByYear: {
-        "2015": ["150 Series 220RK", "150 Series 260RD"],
-        "2016": ["150 Series 220RK", "150 Series 260RD"],
-        "2017": ["150 Series 220RK", "150 Series 260RD"],
         "2018": ["150 Series 220RK", "150 Series 260RD"],
         "2019": ["150 Series 220RK", "150 Series 260RD", "150 Series 295RL"],
         "2020": ["150 Series 220RK", "150 Series 260RD", "150 Series 295RL"],
@@ -18111,23 +18176,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["150 Series 260RD", "150 Series 295RL"],
         "2023": ["150 Series 260RD", "150 Series 295RL"],
         "2024": ["150 Series 260RD", "150 Series 295RL"],
-        "2025": ["150 Series 260RD", "150 Series 295RL"],
-        "2026": ["150 Series 260RD", "150 Series 295RL", "260RD", "278BH", "290BH", "295RL", "320MKS"]
+        // OEM 2025-Grand-Design-Reflection 150-series rows
+        "2025": ["260RD", "270BN", "295RL", "298BH"],
+        // OEM Reflection Brochure (2026 MODEL YEAR): 250ML | 260RD | 270BN | 280RL | 298BH
+        "2026": ["250ML", "260RD", "270BN", "280RL", "298BH"]
       },
-      lengthRange: [
-        22,
-        32
-      ],
-      weightRange: [
-        5500,
-        9000
-      ],
+      lengthRange: [22, 35],
+      weightRange: [5500, 9500],
       slideouts: 2,
       sleeps: 6,
-      msrpRange: [
-        38000,
-        72000
-      ],
+      msrpRange: [38000, 72000],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
       recalls: 0,
@@ -18142,15 +18200,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 2012,
       warrantyYears: 2,
-      yearStart: 2015,
-      description: "Grand Design Reflection 150 Series — lighter Reflection fifth wheels aimed at half-ton tow vehicles (still verify sticker)."
+      yearStart: 2018,
+      description: "Grand Design Reflection 150 Series — lighter Reflection fifth wheels aimed at half-ton tow vehicles (still verify sticker). RVUSA from 2018 — do not invent 2015–2017."
     },
     Imagine: {
       type: "Travel Trailer",
-      floorplans: ["2150RB", "2500RL", "2800BH", "2970RL", "3100RD", "2670MK", "3000RD"],
+      floorplans: ["2150RB", "2300MK", "2470BH", "2500RL", "2600RB", "2670MK", "2700BS", "2800BH", "2810BH", "2920BS", "2970RL", "3100RD", "3210BH"],
       floorplansByYear: {
-        "2014": ["2150RB", "2500RL", "2800BH"],
-        "2015": ["2150RB", "2500RL", "2800BH"],
         "2016": ["2150RB", "2500RL", "2800BH"],
         "2017": ["2150RB", "2500RL", "2800BH"],
         "2018": ["2150RB", "2500RL", "2800BH", "2970RL"],
@@ -18160,23 +18216,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["2500RL", "2800BH", "2970RL", "3100RD"],
         "2023": ["2500RL", "2800BH", "2970RL", "3100RD"],
         "2024": ["2500RL", "2800BH", "2970RL"],
-        "2025": ["2500RL", "2800BH", "2970RL"],
-        "2026": ["2500RL", "2800BH", "2970RL", "2670MK", "3000RD"]
+        // OEM 2025-Grand-Design-Imagine
+        "2025": ["2300MK", "2470BH", "2500RL", "2600RB", "2670MK", "2800BH", "2920BS", "2970RL", "3100RD", "3210BH"],
+        // OEM Imagine Brochure (2026 MODEL YEAR, REV 02.18.26): adds 2700BS + 2810BH, drops 2920BS
+        "2026": ["2300MK", "2470BH", "2500RL", "2600RB", "2670MK", "2700BS", "2800BH", "2810BH", "2970RL", "3100RD", "3210BH"]
       },
-      lengthRange: [
-        21,
-        35
-      ],
-      weightRange: [
-        4500,
-        8500
-      ],
+      lengthRange: [21, 37],
+      weightRange: [4500, 9000],
       slideouts: 1,
       sleeps: 8,
-      msrpRange: [
-        28000,
-        58000
-      ],
+      msrpRange: [28000, 58000],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
       recalls: 0,
@@ -18191,40 +18240,29 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 2012,
       warrantyYears: 2,
-      yearStart: 2014,
-      description: "Grand Design Imagine — best-selling mid travel trailer. Easy tow for many SUVs/trucks; confirm hitch weight."
+      yearStart: 2016,
+      description: "Grand Design Imagine — best-selling mid travel trailer. Easy tow for many SUVs/trucks; confirm hitch weight. RVUSA from 2016 — do not invent 2014–2015."
     },
     "Imagine XLS": {
       type: "Travel Trailer",
-      floorplans: ["17MKE", "21BHE", "22RBE", "23LDE", "22MLE", "25DBE", "25RKE"],
+      floorplans: ["17MKE", "21BHE", "21MBE", "22BHE", "22MLE", "22RBE", "23LDE", "24BSE", "25DBE", "25RLE"],
       floorplansByYear: {
-        "2015": ["17MKE", "21BHE", "22RBE"],
-        "2016": ["17MKE", "21BHE", "22RBE"],
-        "2017": ["17MKE", "21BHE", "22RBE"],
-        "2018": ["17MKE", "21BHE", "22RBE"],
         "2019": ["17MKE", "21BHE", "22RBE", "23LDE"],
         "2020": ["17MKE", "21BHE", "22RBE", "23LDE"],
         "2021": ["17MKE", "21BHE", "22RBE", "23LDE"],
         "2022": ["17MKE", "21BHE", "22RBE"],
         "2023": ["17MKE", "21BHE", "22RBE"],
         "2024": ["17MKE", "21BHE", "22RBE"],
-        "2025": ["17MKE", "21BHE", "22RBE"],
-        "2026": ["17MKE", "21BHE", "22RBE", "22MLE", "25DBE", "25RKE"]
+        // OEM 2025-Grand-Design-Imagine XLS page
+        "2025": ["17MKE", "21BHE", "22BHE", "22MLE", "22RBE", "23LDE", "24BSE", "25DBE"],
+        // OEM Imagine Brochure (2026 MODEL YEAR): 17MKE | 21MBE | 22BHE | 22MLE | 22RBE | 23LDE | 25DBE | 25RLE
+        "2026": ["17MKE", "21MBE", "22BHE", "22MLE", "22RBE", "23LDE", "25DBE", "25RLE"]
       },
-      lengthRange: [
-        17,
-        25
-      ],
-      weightRange: [
-        3500,
-        6000
-      ],
+      lengthRange: [17, 30],
+      weightRange: [3500, 6500],
       slideouts: 0,
       sleeps: 6,
-      msrpRange: [
-        24000,
-        45000
-      ],
+      msrpRange: [24000, 45000],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
       recalls: 0,
@@ -18239,12 +18277,43 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 2012,
       warrantyYears: 2,
-      yearStart: 2015,
-      description: "Grand Design Imagine XLS — ultra-light Imagine packages for smaller tow vehicles."
+      yearStart: 2019,
+      description: "Grand Design Imagine XLS — ultra-light Imagine packages for smaller tow vehicles. RVUSA from 2019 — do not invent 2015–2018."
+    },
+    "Imagine AIM": {
+      type: "Travel Trailer",
+      floorplans: ["14MS", "15RB", "15RBA", "16BL", "16ML", "16MLA", "19MLA", "20BHA"],
+      floorplansByYear: {
+        // OEM 2025-Grand-Design-Imagine AIM page
+        "2025": ["14MS", "15RB", "16BL", "16ML"],
+        // OEM Imagine Brochure (2026 MODEL YEAR): 15RBA | 16MLA | 19MLA | 20BHA
+        "2026": ["15RBA", "16MLA", "19MLA", "20BHA"]
+      },
+      lengthRange: [15, 24],
+      weightRange: [3200, 4800],
+      slideouts: 0,
+      sleeps: 4,
+      msrpRange: [22000, 38000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.45,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 37,
+      grayWater: 45,
+      blackWater: 37,
+      generator: "Optional / prep",
+      awningLength: 14,
+      ceilingHeight: 78,
+      founded: 2012,
+      warrantyYears: 2,
+      yearStart: 2023,
+      description: "Grand Design Imagine AIM — single-axle Imagine entry (Adventure in Motion). RVUSA from 2023; first locked OEM card is MY2025."
     },
     Transcend: {
       type: "Travel Trailer",
-      floorplans: ["207RB", "245RL", "265BH", "297QB", "27BHB", "28MKS"],
+      floorplans: ["207RB", "245RL", "245RLT", "265BH", "265BHT", "285RKT", "295QBT", "297QB", "27BHB", "28MKS", "305BHT", "315RKT", "325BHT", "335BHT", "335DQT"],
       floorplansByYear: {
         "2018": ["207RB", "245RL", "265BH"],
         "2019": ["207RB", "245RL", "265BH"],
@@ -18253,23 +18322,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["245RL", "265BH", "297QB"],
         "2023": ["245RL", "265BH", "297QB"],
         "2024": ["245RL", "265BH", "297QB"],
-        "2025": ["245RL", "265BH"],
-        "2026": ["245RL", "265BH", "27BHB", "28MKS"]
+        // OEM 2025-Grand-Design-Transcend premium page (285RKT / 325BHT / 335DQT printed, some specs coming soon)
+        "2025": ["245RLT", "265BHT", "285RKT", "295QBT", "305BHT", "315RKT", "325BHT", "335BHT", "335DQT"],
+        // OEM Transcend Brochure (2026 MODEL YEAR, REV 2.24.26) — no 335DQT
+        "2026": ["245RLT", "265BHT", "285RKT", "295QBT", "305BHT", "315RKT", "325BHT", "335BHT"]
       },
-      lengthRange: [
-        20,
-        32
-      ],
-      weightRange: [
-        4000,
-        7500
-      ],
+      lengthRange: [20, 38],
+      weightRange: [4000, 10000],
       slideouts: 1,
       sleeps: 8,
-      msrpRange: [
-        25000,
-        52000
-      ],
+      msrpRange: [25000, 52000],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
       recalls: 0,
@@ -18285,11 +18347,73 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2012,
       warrantyYears: 2,
       yearStart: 2018,
-      description: "Grand Design Transcend — value travel trailer line under Imagine/Solitude brand umbrella."
+      description: "Grand Design Transcend — premium Transcend travel trailer. One and Xplor are separate keys."
+    },
+    "Transcend One": {
+      type: "Travel Trailer",
+      floorplans: ["131DL", "151BH", "151RB", "161BH", "161DB", "171RB"],
+      floorplansByYear: {
+        // OEM 2025-Grand-Design-Transcend One page (171RB specs coming soon)
+        "2025": ["151BH", "151RB", "161BH", "171RB"],
+        // OEM Transcend Brochure (2026 MODEL YEAR): 131DL | 151BH | 151RB | 161BH | 161DB
+        "2026": ["131DL", "151BH", "151RB", "161BH", "161DB"]
+      },
+      lengthRange: [16, 24],
+      weightRange: [2800, 5000],
+      slideouts: 0,
+      sleeps: 4,
+      msrpRange: [18000, 32000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 37,
+      grayWater: 37,
+      blackWater: 37,
+      generator: "Optional / prep",
+      awningLength: 12,
+      ceilingHeight: 78,
+      founded: 2012,
+      warrantyYears: 2,
+      yearStart: 2025,
+      description: "Grand Design Transcend One — single-axle Transcend entry. Do not stamp 2026 131DL/161DB onto 2025."
+    },
+    "Transcend Xplor": {
+      type: "Travel Trailer",
+      floorplans: ["19BHX", "20MKX", "21RLX", "22RBX", "23BHX", "24BHX", "25MLX", "26BHX", "26RBX", "27DBX"],
+      floorplansByYear: {
+        // OEM 2025-Grand-Design-Transcend Xplor page
+        "2025": ["20MKX", "22RBX", "23BHX", "24BHX", "25MLX", "26BHX", "26RBX", "27DBX"],
+        // OEM Transcend Brochure (2026 MODEL YEAR): adds 19BHX + 21RLX
+        "2026": ["19BHX", "20MKX", "21RLX", "22RBX", "23BHX", "24BHX", "25MLX", "26BHX", "26RBX", "27DBX"]
+      },
+      lengthRange: [19, 32],
+      weightRange: [4500, 7200],
+      slideouts: 1,
+      sleeps: 8,
+      msrpRange: [22000, 42000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.42,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 56,
+      grayWater: 78,
+      blackWater: 39,
+      generator: "Optional / prep",
+      awningLength: 16,
+      ceilingHeight: 78,
+      founded: 2012,
+      warrantyYears: 2,
+      yearStart: 2020,
+      description: "Grand Design Transcend Xplor — mid Transcend. RVUSA from 2020; first locked OEM card is MY2025."
     },
     Momentum: {
       type: "Toy Hauler",
-      floorplans: ["349M", "376TH", "395M", "397TH", "349G", "381MS"],
+      floorplans: ["349M", "376TH", "395M", "395MS", "395MT", "396DB", "397TH", "397THS", "399M", "410TH", "414M"],
       floorplansByYear: {
         "2014": ["349M", "376TH", "395M"],
         "2015": ["349M", "376TH", "395M"],
@@ -18302,23 +18426,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["376TH", "395M", "397TH"],
         "2023": ["376TH", "395M", "397TH"],
         "2024": ["395M", "397TH"],
-        "2025": ["395M", "397TH"],
-        "2026": ["395M", "397TH", "349G", "381MS"]
+        // OEM 2025-Grand-Design-Momentum flagship FW (not M-Class 344M/351MS/381MS/392M)
+        "2025": ["395MS", "397THS", "410TH", "414M"],
+        // OEM Momentum Brochure (2026 MODEL YEAR, REV 2.24.26): 395MT | 396DB | 399M
+        "2026": ["395MT", "396DB", "399M"]
       },
-      lengthRange: [
-        34,
-        42
-      ],
-      weightRange: [
-        10000,
-        16000
-      ],
+      lengthRange: [34, 47],
+      weightRange: [10000, 20000],
       slideouts: 3,
       sleeps: 8,
-      msrpRange: [
-        55000,
-        120000
-      ],
+      msrpRange: [55000, 160000],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
       recalls: 0,
@@ -18340,11 +18457,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2012,
       warrantyYears: 2,
       yearStart: 2014,
-      description: "Grand Design Momentum — full-size toy hauler. Garage depth/height/CCC vary by plan — critical for UTVs."
+      description: "Grand Design Momentum — full-size fifth-wheel toy hauler. Garage depth/height/CCC vary by plan — critical for UTVs. M-Class / G-Class / MAV stay separate keys."
     },
     "Momentum M-Class": {
       type: "Toy Hauler",
-      floorplans: ["328M", "349M", "381M", "395M", "21M", "25M", "28M", "31M"],
+      floorplans: ["328M", "344M", "349M", "351MS", "381M", "381MS", "392M", "395M"],
       floorplansByYear: {
         "2015": ["328M", "349M", "381M"],
         "2016": ["328M", "349M", "381M"],
@@ -18356,23 +18473,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["349M", "381M", "395M"],
         "2023": ["349M", "381M", "395M"],
         "2024": ["349M", "381M", "395M"],
-        "2025": ["349M", "395M"],
-        "2026": ["349M", "395M", "21M", "25M", "28M", "31M"]
+        // OEM 2025-Grand-Design-Momentum M-Class FW + RVUSA 2026 344M as M-Class
+        "2025": ["344M", "351MS", "381MS", "392M"],
+        "2026": ["344M", "351MS", "381MS", "392M"]
       },
-      lengthRange: [
-        32,
-        40
-      ],
-      weightRange: [
-        9000,
-        14000
-      ],
+      lengthRange: [32, 46],
+      weightRange: [9000, 19000],
       slideouts: 2,
       sleeps: 8,
-      msrpRange: [
-        48000,
-        100000
-      ],
+      msrpRange: [48000, 150000],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
       recalls: 0,
@@ -18393,11 +18502,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2012,
       warrantyYears: 2,
       yearStart: 2015,
-      description: "Grand Design Momentum M-Class — mid toy hauler packages under Momentum."
+      description: "Grand Design Momentum M-Class — mid fifth-wheel toy hauler under Momentum. Do not collapse into flagship Momentum."
     },
     "Momentum G-Class": {
       type: "Toy Hauler",
-      floorplans: ["21G", "25G", "29G", "24G", "28G", "30G"],
+      floorplans: ["21G", "23G", "25G", "27G", "28G", "29G", "29GS", "30G", "31G"],
       floorplansByYear: {
         "2018": ["21G", "25G", "29G"],
         "2019": ["21G", "25G", "29G"],
@@ -18406,23 +18515,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["21G", "25G", "29G"],
         "2023": ["21G", "25G", "29G"],
         "2024": ["25G", "29G"],
-        "2025": ["25G", "29G"],
-        "2026": ["25G", "29G", "24G", "28G", "30G"]
+        // OEM 2025-Grand-Design-Momentum G-Class towables
+        "2025": ["21G", "23G", "25G", "27G", "28G", "29GS", "30G", "31G"],
+        // OEM Momentum Brochure (2026 MODEL YEAR) G-Class TT — drops 23G / 28G / 30G
+        "2026": ["21G", "25G", "27G", "29GS", "31G"]
       },
-      lengthRange: [
-        21,
-        32
-      ],
-      weightRange: [
-        5000,
-        9000
-      ],
+      lengthRange: [21, 36],
+      weightRange: [5000, 9500],
       slideouts: 1,
       sleeps: 6,
-      msrpRange: [
-        35000,
-        72000
-      ],
+      msrpRange: [35000, 72000],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
       recalls: 0,
@@ -18443,100 +18545,238 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2012,
       warrantyYears: 2,
       yearStart: 2018,
-      description: "Grand Design Momentum G-Class — lighter / garage-focused toy hauler entry."
+      description: "Grand Design Momentum G-Class — travel-trailer toy hauler. Fifth-wheel G-Class is a separate key."
+    },
+    "Momentum G-Class Fifth Wheel": {
+      type: "Toy Hauler",
+      floorplans: ["320G", "325G", "350G", "394G", "415G"],
+      floorplansByYear: {
+        // OEM 2025-Grand-Design-Momentum G-Class FW
+        "2025": ["320G", "325G", "350G", "415G"],
+        // OEM Momentum Brochure (2026 MODEL YEAR): 320G | 325G | 350G | 394G
+        "2026": ["320G", "325G", "350G", "394G"]
+      },
+      lengthRange: [36, 45],
+      weightRange: [11000, 17000],
+      slideouts: 2,
+      sleeps: 8,
+      msrpRange: [65000, 130000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.52,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 98,
+      grayWater: 52,
+      blackWater: 52,
+      generator: "Optional / prep",
+      awningLength: 16,
+      ceilingHeight: 82,
+      garageLengthFt: 14,
+      garageWidthFt: 8.4,
+      garageHeightIn: 86,
+      garageCapacityLbs: 3500,
+      fuelStationGal: 30,
+      founded: 2012,
+      warrantyYears: 2,
+      yearStart: 2019,
+      description: "Grand Design Momentum G-Class fifth wheel — garage FW under G-Class. Do not collapse into G-Class travel trailers."
     },
     "Momentum MAV": {
       type: "Toy Hauler",
-      floorplans: ["22MAV", "27MAV", "25MAV"],
+      floorplans: ["17MAV", "22MAV", "24MAV", "27MAV", "28MAV"],
       floorplansByYear: {
-        "2022": ["22MAV", "27MAV"],
-        "2023": ["22MAV", "27MAV"],
         "2024": ["22MAV", "27MAV"],
-        "2025": ["22MAV", "27MAV"],
-        "2026": ["22MAV", "27MAV", "25MAV"]
+        // OEM 2025-Grand-Design-Momentum MAV page
+        "2025": ["22MAV", "24MAV", "27MAV"],
+        // OEM Momentum Brochure (2026 MODEL YEAR): 17MAV | 22MAV | 24MAV | 27MAV | 28MAV
+        "2026": ["17MAV", "22MAV", "24MAV", "27MAV", "28MAV"]
       },
-      lengthRange: [
-        22,
-        28
-      ],
-      weightRange: [
-        5500,
-        9000
-      ],
+      lengthRange: [23, 34],
+      weightRange: [5500, 8500],
       slideouts: 1,
       sleeps: 6,
-      msrpRange: [
-        42000,
-        78000
-      ],
+      msrpRange: [42000, 78000],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
       recalls: 0,
       rating: 4.55,
       image: RV_CARD_IMAGE,
       towingCapacity: 0,
-      freshWater: 60,
-      grayWater: 40,
-      blackWater: 40,
+      freshWater: 90,
+      grayWater: 74,
+      blackWater: 37,
       generator: "Optional / prep",
       awningLength: 16,
       ceilingHeight: 82,
-      garageLengthFt: 10,
+      garageLengthFt: 13,
       garageWidthFt: 8,
       garageHeightIn: 80,
       garageCapacityLbs: 2800,
       founded: 2012,
       warrantyYears: 2,
-      yearStart: 2022,
-      description: "Grand Design Momentum MAV — adventure / midsize toy hauler packaging (verify year availability)."
+      yearStart: 2024,
+      description: "Grand Design Momentum MAV — adventure travel-trailer toy hauler. RVUSA from 2024 — do not invent 2022–2023."
     },
     "Lineage Series E": {
-      type: "Class C", floorplans: ["30DC"],
-      floorplansByYear: { "2026": ["30DC"], "2027": ["30DC"] },
-      lengthRange: [32, 33], weightRange: [12000, 14500], slideouts: 2, sleeps: 6, msrpRange: [189000, 249000],
-      engine: "Ford 7.3L V8 gas 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford Econoline E-450 DRW",
-      transmission: "6-speed TorqShift", fuelType: "Gas", recalls: 0, rating: 4.45, image: RV_CARD_IMAGE,
-      towingCapacity: 7500, freshWater: 50, grayWater: 40, blackWater: 35, fuelCapacityGal: 55,
-      generator: "Onan / chassis-dependent", awningLength: 16, ceilingHeight: 82, founded: 2012, warrantyYears: 2, yearStart: 2026, gvwrLbs: 14500, overallLengthIn: 394,
-      description: "Grand Design Lineage Series E — E-450 7.3 325/450, 30DC ~32' 10\", hitch 7,500, GVWR 14,500 / GCWR 22,000.",
-      powertrainByYear: [{ from: 2026, to: 2027, engine: "Ford 7.3L V8 gas 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford Econoline E-450 DRW", transmission: "6-speed TorqShift", towingCapacity: 7500, gvwrLbs: 14500 }],
+      type: "Class C",
+      floorplans: ["30DC"],
+      floorplansByYear: {
+        // Provisional — RVUSA MY2027 only; 2026 OEM Class C brochure is Series M + F
+        "2027": ["30DC"]
+      },
+      lengthRange: [32, 33],
+      weightRange: [12000, 14500],
+      slideouts: 2,
+      sleeps: 6,
+      msrpRange: [189000, 249000],
+      engine: "Ford 7.3L V8 gas 325HP",
+      horsepower: 325,
+      torqueLbFt: 450,
+      chassis: "Ford Econoline E-450 DRW",
+      transmission: "6-speed TorqShift",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.45,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 7500,
+      freshWater: 50,
+      grayWater: 40,
+      blackWater: 35,
+      fuelCapacityGal: 55,
+      generator: "Onan / chassis-dependent",
+      awningLength: 16,
+      ceilingHeight: 82,
+      founded: 2012,
+      warrantyYears: 2,
+      yearStart: 2027,
+      gvwrLbs: 14500,
+      overallLengthIn: 394,
+      description: "Grand Design Lineage Series E — provisional until an OEM card matches the year. RVUSA lists MY2027 only (30DC). E-450 7.3 gas 325/450. Not Sprinter / not Series M.",
+      powertrainByYear: [
+        { from: 2027, to: 2027, engine: "Ford 7.3L V8 gas 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford Econoline E-450 DRW", transmission: "6-speed TorqShift", towingCapacity: 7500, gvwrLbs: 14500, notes: "Provisional — no 2026 OEM Series E card. 2026 Class C brochure is Series M + F only." },
+      ],
     },
     "Lineage Series M": {
-      type: "Class C", floorplans: ["25FW","25TK"],
-      floorplansByYear: { "2025": ["25FW","25TK"], "2026": ["25FW","25TK"], "2027": ["25FW","25TK"] },
-      lengthRange: [25, 26], weightRange: [10500, 12125], slideouts: 1, sleeps: 4, msrpRange: [210000, 260000],
-      engine: "Mercedes-Benz 2.0L twin-turbo diesel 208HP", horsepower: 208, torqueLbFt: 332,
-      chassis: "Mercedes-Benz Sprinter 4500 (MORryde Halo)", transmission: "9G-Tronic automatic", fuelType: "Diesel",
-      recalls: 0, rating: 4.5, image: RV_CARD_IMAGE, towingCapacity: 5000, freshWater: 35, grayWater: 34, blackWater: 34, fuelCapacityGal: 24.5,
-      generator: "Optional / chassis-dependent", awningLength: 14, ceilingHeight: 80, founded: 2012, warrantyYears: 2, yearStart: 2025, gvwrLbs: 12125, overallLengthIn: 308,
-      description: "Grand Design Lineage Series M — Sprinter 4500 208/332, 25FW / 25TK, 25' 8\".",
-      powertrainByYear: [{ from: 2025, to: 2027, engine: "Mercedes-Benz 2.0L twin-turbo diesel 208HP", horsepower: 208, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter 4500 (MORryde Halo)", transmission: "9G-Tronic automatic", gvwrLbs: 12125 }],
+      type: "Class C",
+      floorplans: ["25FW", "25TK"],
+      floorplansByYear: {
+        // OEM Lineage Class C Brochure 2026 MODEL YEAR (Series M also on 2025 Lineage card)
+        "2025": ["25FW", "25TK"],
+        "2026": ["25FW", "25TK"]
+      },
+      lengthRange: [25, 26],
+      weightRange: [10500, 12125],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [210000, 260000],
+      engine: "Mercedes-Benz 2.0L twin-turbo diesel 208HP",
+      horsepower: 208,
+      torqueLbFt: 332,
+      chassis: "Mercedes-Benz Sprinter 4500 (MORryde Halo)",
+      transmission: "9G-Tronic automatic",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.5,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 3500,
+      freshWater: 35,
+      grayWater: 34,
+      blackWater: 34,
+      fuelCapacityGal: 24.5,
+      generator: "4,500 NPS LP",
+      awningLength: 16,
+      ceilingHeight: 80,
+      founded: 2012,
+      warrantyYears: 2,
+      yearStart: 2025,
+      gvwrLbs: 12125,
+      overallLengthIn: 308,
+      description: "Grand Design Lineage Series M — Sprinter 4500 2.0 diesel 208/332, 25FW / 25TK, 25' 8\", hitch 3,500 (OEM Class C brochure). Not E-450 gas.",
+      powertrainByYear: [
+        { from: 2025, to: 2026, engine: "Mercedes-Benz 2.0L twin-turbo diesel 208HP", horsepower: 208, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter 4500 (MORryde Halo)", transmission: "9G-Tronic automatic", towingCapacity: 3500, gvwrLbs: 12125, notes: "OEM Lineage Class C Brochure 2026 MODEL YEAR: Mercedes 4500 2.0 twin-turbo 208HP / 332 lb-ft. Towing 3,500. GVWR 12,125." },
+      ],
     },
     "Lineage Series F": {
-      type: "Super C", floorplans: ["31ZW","31ZW5"],
-      floorplansByYear: { "2025": ["31ZW","31ZW5"], "2026": ["31ZW","31ZW5"], "2027": ["31ZW","31ZW5"] },
-      lengthRange: [33, 34], weightRange: [18000, 22000], slideouts: 2, sleeps: 5, msrpRange: [280000, 360000],
-      engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950,
-      chassis: "Ford F-600 4x4 (31ZW) / F-550 4x4 (31ZW5)", transmission: "10-speed automatic", fuelType: "Diesel",
-      recalls: 0, rating: 4.55, image: RV_CARD_IMAGE, towingCapacity: 15000, freshWater: 79, grayWater: 66, blackWater: 45, fuelCapacityGal: 66.5,
-      generator: "Onan 8.0 kW", awningLength: 13, ceilingHeight: 81, founded: 2012, warrantyYears: 2, yearStart: 2025, gvwrLbs: 22000, overallLengthIn: 405,
-      description: "Grand Design Lineage Series F — Super C 4x4. 31ZW F-600 hitch 15k; 31ZW5 F-550 hitch 10k. Power Stroke 6.7 ~330/950, 33' 9\".",
+      type: "Super C",
+      floorplans: ["31ZW", "31ZW5"],
+      floorplansByYear: {
+        "2025": ["31ZW", "31ZW5"],
+        "2026": ["31ZW", "31ZW5"]
+      },
+      lengthRange: [33, 34],
+      weightRange: [18000, 22000],
+      slideouts: 2,
+      sleeps: 5,
+      msrpRange: [280000, 360000],
+      engine: "Ford 6.7L Power Stroke 330HP",
+      horsepower: 330,
+      torqueLbFt: 950,
+      chassis: "Ford F-600 4x4 (31ZW) / F-550 4x4 (31ZW5)",
+      transmission: "10-speed automatic",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.55,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 15000,
+      freshWater: 79,
+      grayWater: 66,
+      blackWater: 45,
+      fuelCapacityGal: 66.5,
+      generator: "Onan 8.0 kW Diesel",
+      awningLength: 13,
+      ceilingHeight: 81,
+      founded: 2012,
+      warrantyYears: 2,
+      yearStart: 2025,
+      gvwrLbs: 22000,
+      overallLengthIn: 405,
+      description: "Grand Design Lineage Series F — Super C 4x4. OEM Class C brochure prints 31ZW on Ford F-600 6.7 diesel, hitch 15,000 (10,000 with 43 package). 31ZW5 is the F-550 twin. Power Stroke ~330/950.",
       powertrainByYear: [
-        { from: 2025, to: 2027, floorplans: ["31ZW"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F-600 Super Duty 4x4", towingCapacity: 15000, gvwrLbs: 22000 },
-        { from: 2025, to: 2027, floorplans: ["31ZW5"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F-550 Super Duty 4x4", towingCapacity: 10000, gvwrLbs: 19500 },
-        { from: 2025, to: 2027, engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford Super Duty 4x4 (F-600 / F-550)" },
+        { from: 2025, to: 2026, floorplans: ["31ZW"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F-600 Super Duty 4x4", towingCapacity: 15000, gvwrLbs: 22000, notes: "OEM Class C brochure: F-600 XLT 6.7L V8 diesel, hitch 15,000. 43 package drops hitch to 10,000." },
+        { from: 2025, to: 2026, floorplans: ["31ZW5"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F-550 Super Duty 4x4", towingCapacity: 10000, gvwrLbs: 19500, notes: "F-550 twin — do not stamp F-600 15k hitch." },
+        { from: 2025, to: 2026, engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford Super Duty 4x4 (F-600 / F-550)" },
       ],
     },
     "Lineage Series VT": {
-      type: "Class B", floorplans: ["LVT1"],
-      floorplansByYear: { "2026": ["LVT1"], "2027": ["LVT1"] },
-      lengthRange: [20, 21], weightRange: [8500, 9950], slideouts: 0, sleeps: 2, msrpRange: [175000, 230000],
-      engine: "Ford 3.5L EcoBoost V6 310HP", horsepower: 310, torqueLbFt: 400, chassis: "Ford Transit 350 AWD",
-      transmission: "10-speed automatic", fuelType: "Gas", recalls: 0, rating: 4.4, image: RV_CARD_IMAGE,
-      towingCapacity: 4000, freshWater: 34, grayWater: 23, blackWater: 0, fuelCapacityGal: 25,
-      generator: "Optional / chassis-dependent", awningLength: 11, ceilingHeight: 76, founded: 2012, warrantyYears: 2, yearStart: 2026, gvwrLbs: 9950, overallLengthIn: 251,
-      description: "Grand Design Lineage Series VT — Transit 350 AWD EcoBoost 310/400, LVT1 ~20' 11\".",
-      powertrainByYear: [{ from: 2026, to: 2027, engine: "Ford 3.5L EcoBoost V6 310HP", horsepower: 310, torqueLbFt: 400, chassis: "Ford Transit 350 AWD", transmission: "10-speed automatic", gvwrLbs: 9950 }],
+      type: "Class B",
+      floorplans: ["LVT1", "LVT2"],
+      floorplansByYear: {
+        // OEM Lineage Class B Brochure 2026 MODEL YEAR
+        "2026": ["LVT1", "LVT2"]
+      },
+      lengthRange: [20, 21],
+      weightRange: [8500, 9950],
+      slideouts: 0,
+      sleeps: 4,
+      msrpRange: [175000, 230000],
+      engine: "Ford 3.5L EcoBoost V6 310HP",
+      horsepower: 310,
+      torqueLbFt: 400,
+      chassis: "Ford Transit 350 AWD",
+      transmission: "10-speed automatic",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 4000,
+      freshWater: 34,
+      grayWater: 23,
+      blackWater: 0,
+      fuelCapacityGal: 25,
+      generator: "Optional / chassis-dependent",
+      awningLength: 11,
+      ceilingHeight: 76,
+      founded: 2012,
+      warrantyYears: 2,
+      yearStart: 2026,
+      gvwrLbs: 9950,
+      overallLengthIn: 251,
+      description: "Grand Design Lineage Series VT — Transit 350 AWD EcoBoost 310/400, LVT1 / LVT2 ~20' 11\". OEM Class B brochure 2026 MODEL YEAR. Not Series VP (GAP — no extractable VP codes).",
+      powertrainByYear: [
+        { from: 2026, to: 2026, engine: "Ford 3.5L EcoBoost V6 310HP", horsepower: 310, torqueLbFt: 400, chassis: "Ford Transit 350 AWD", transmission: "10-speed automatic", gvwrLbs: 9950, notes: "OEM Lineage Class B Brochure 2026: Transit Cargo AWD 3.5 EcoBoost 310/400. LVT1 + LVT2. Gas — not diesel." },
+      ],
     }
   },
   Fleetwood: {
