@@ -750,6 +750,83 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class IV"
           },
           {
+            "label": "WT — 6.6L Gas V8 (2023)",
+            "maxTow": 14500,
+            "payload": 3600,
+            "gcwr": 24500,
+            "hitch": "Class V"
+          },
+          {
+            "label": "LT — 6.6L Gas V8 5th-wheel (2023)",
+            "maxTow": 17370,
+            "payload": 3600,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "LT — 6.6L Duramax Diesel (2023)",
+            "maxTow": 18500,
+            "payload": 3979,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "LTZ — 6.6L Duramax 5th-wheel (2023)",
+            "maxTow": 18510,
+            "payload": 3979,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "High Country — 6.6L Duramax Diesel (2023)",
+            "maxTow": 18500,
+            "payload": 3700,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "WT — 6.6L Gas V8 (2024–2026)",
+            "maxTow": 16000,
+            "payload": 3689,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "LT — 6.6L Duramax Diesel (2024–2026)",
+            "maxTow": 18500,
+            "payload": 3979,
+            "gcwr": 27500,
+            "hitch": "Class V"
+          },
+          {
+            "label": "LTZ — 6.6L Duramax Max Trailering (2024–2026)",
+            "maxTow": 20000,
+            "payload": 3979,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "High Country — 6.6L Duramax 5th-wheel (2024–2026)",
+            "maxTow": 22070,
+            "payload": 3700,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "WT — 6.6L Duramax gooseneck (2024–2026)",
+            "maxTow": 22420,
+            "payload": 4039,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "ZR2 — 6.6L Duramax Diesel (2024–2026)",
+            "maxTow": 13200,
+            "payload": 2900,
+            "gcwr": 25000,
+            "hitch": "Class IV"
+          },
+          {
             "label": "WT — 6.0L Gas V8 (2018–2019)",
             "maxTow": 14500,
             "payload": 3500,
@@ -949,6 +1026,76 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 35300,
             "payload": 7000,
             "gcwr": 47000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "WT SRW — 6.6L Gas V8 (2023)",
+            "maxTow": 14500,
+            "payload": 4200,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "LT SRW — 6.6L Duramax Diesel (2023)",
+            "maxTow": 20000,
+            "payload": 4450,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "LT DRW — 6.6L Duramax 5th-wheel (2023)",
+            "maxTow": 32000,
+            "payload": 7000,
+            "gcwr": 40000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "LTZ DRW — 6.6L Duramax gooseneck (2023)",
+            "maxTow": 36000,
+            "payload": 7442,
+            "gcwr": 43900,
+            "hitch": "Class V"
+          },
+          {
+            "label": "High Country DRW — 6.6L Duramax (2023)",
+            "maxTow": 31000,
+            "payload": 7200,
+            "gcwr": 40000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "WT SRW — 6.6L Gas V8 (2024–2026)",
+            "maxTow": 19080,
+            "payload": 4200,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "LT SRW — 6.6L Duramax Diesel (2024–2026)",
+            "maxTow": 20000,
+            "payload": 4450,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "LT DRW — 6.6L Duramax 5th-wheel (2024–2026)",
+            "maxTow": 32000,
+            "payload": 7000,
+            "gcwr": 40000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "LTZ DRW — 6.6L Duramax gooseneck (2024–2026)",
+            "maxTow": 36000,
+            "payload": 7440,
+            "gcwr": 43900,
+            "hitch": "Class V"
+          },
+          {
+            "label": "High Country DRW — 6.6L Duramax (2024–2026)",
+            "maxTow": 31500,
+            "payload": 7200,
+            "gcwr": 43500,
             "hitch": "Class V"
           },
           {
@@ -3034,6 +3181,90 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class V"
           },
           {
+            "label": "Pro — 6.6L Gas V8 (2023)",
+            "maxTow": 14500,
+            "payload": 3600,
+            "gcwr": 24500,
+            "hitch": "Class V"
+          },
+          {
+            "label": "SLE — 6.6L Duramax Diesel (2023)",
+            "maxTow": 18500,
+            "payload": 3979,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "SLT — 6.6L Duramax 5th-wheel (2023)",
+            "maxTow": 18510,
+            "payload": 3979,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "AT4 — 6.6L Duramax Diesel (2023)",
+            "maxTow": 18500,
+            "payload": 3500,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Denali — 6.6L Duramax Diesel (2023)",
+            "maxTow": 18500,
+            "payload": 3700,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Pro — 6.6L Gas V8 (2024–2026)",
+            "maxTow": 16000,
+            "payload": 3863,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "SLE — 6.6L Duramax Diesel (2024–2026)",
+            "maxTow": 18500,
+            "payload": 3979,
+            "gcwr": 27500,
+            "hitch": "Class V"
+          },
+          {
+            "label": "SLT — 6.6L Duramax Max Trailering (2024–2026)",
+            "maxTow": 20000,
+            "payload": 3979,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "AT4 — 6.6L Duramax Diesel (2024–2026)",
+            "maxTow": 18500,
+            "payload": 3428,
+            "gcwr": 27500,
+            "hitch": "Class V"
+          },
+          {
+            "label": "AT4X — 6.6L Duramax Diesel (2024–2026)",
+            "maxTow": 13200,
+            "payload": 2822,
+            "gcwr": 25000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Denali — 6.6L Duramax 5th-wheel (2024–2026)",
+            "maxTow": 21870,
+            "payload": 3700,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Pro — 6.6L Duramax gooseneck (2024–2026)",
+            "maxTow": 22390,
+            "payload": 4049,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
             "label": "Base — 6.0L Gas V8 (2018–2019)",
             "maxTow": 14500,
             "payload": 3500,
@@ -3268,6 +3499,62 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 36000,
             "payload": 7200,
             "gcwr": 48000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Pro SRW — 6.6L Gas V8 (2023)",
+            "maxTow": 14500,
+            "payload": 4200,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "SLE SRW — 6.6L Duramax Diesel (2023)",
+            "maxTow": 20000,
+            "payload": 4450,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "SLT DRW — 6.6L Duramax 5th-wheel (2023)",
+            "maxTow": 32000,
+            "payload": 7000,
+            "gcwr": 40000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Denali DRW — 6.6L Duramax gooseneck (2023)",
+            "maxTow": 36000,
+            "payload": 7290,
+            "gcwr": 43900,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Pro SRW — 6.6L Gas V8 (2024–2026)",
+            "maxTow": 19080,
+            "payload": 4200,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "SLE SRW — 6.6L Duramax Diesel (2024–2026)",
+            "maxTow": 20000,
+            "payload": 4450,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "SLT DRW — 6.6L Duramax 5th-wheel (2024–2026)",
+            "maxTow": 32000,
+            "payload": 6658,
+            "gcwr": 40000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Denali DRW — 6.6L Duramax gooseneck (2024–2026)",
+            "maxTow": 36000,
+            "payload": 7290,
+            "gcwr": 43900,
             "hitch": "Class V"
           },
           {
@@ -4883,6 +5170,55 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class V"
           },
           {
+            "label": "XL — 6.8L Gas V8 (2023–2026)",
+            "maxTow": 17300,
+            "payload": 4268,
+            "gcwr": 23500,
+            "hitch": "Class V"
+          },
+          {
+            "label": "XLT — 7.3L Gas V8 (2023–2026)",
+            "maxTow": 18200,
+            "payload": 4000,
+            "gcwr": 26000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Lariat — 6.7L Power Stroke Diesel (2023–2026)",
+            "maxTow": 22000,
+            "payload": 4000,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "King Ranch — 6.7L Power Stroke Diesel (2023–2026)",
+            "maxTow": 22000,
+            "payload": 3900,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Platinum — 6.7L Power Stroke Diesel (2023–2026)",
+            "maxTow": 22000,
+            "payload": 3800,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Limited — 6.7L HO Power Stroke gooseneck (2023–2026)",
+            "maxTow": 23000,
+            "payload": 3700,
+            "gcwr": 31000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Tremor — 6.7L Power Stroke Off-Road (2023–2026)",
+            "maxTow": 18200,
+            "payload": 3500,
+            "gcwr": 28300,
+            "hitch": "Class V"
+          },
+          {
             "label": "XL — 6.2L Gas V8 (2018–2022)",
             "maxTow": 15000,
             "payload": 3800,
@@ -5211,6 +5547,55 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class V"
           },
           {
+            "label": "XL SRW — 6.8L Gas V8 (2023–2026)",
+            "maxTow": 18100,
+            "payload": 4500,
+            "gcwr": 24400,
+            "hitch": "Class V"
+          },
+          {
+            "label": "XLT SRW — 7.3L Gas V8 (2023–2026)",
+            "maxTow": 19500,
+            "payload": 4800,
+            "gcwr": 29000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Lariat SRW — 6.7L Power Stroke Diesel (2023–2026)",
+            "maxTow": 23200,
+            "payload": 5000,
+            "gcwr": 31000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Lariat DRW — 6.7L Power Stroke Diesel (2023–2026)",
+            "maxTow": 24800,
+            "payload": 7640,
+            "gcwr": 40000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "King Ranch DRW — 6.7L Power Stroke gooseneck (2023–2026)",
+            "maxTow": 36500,
+            "payload": 7400,
+            "gcwr": 43900,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Platinum DRW — 6.7L HO Power Stroke gooseneck (2023–2026)",
+            "maxTow": 38000,
+            "payload": 6935,
+            "gcwr": 45600,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Limited DRW — 6.8L Gas HD Payload (2023–2026)",
+            "maxTow": 18900,
+            "payload": 8000,
+            "gcwr": 25400,
+            "hitch": "Class V"
+          },
+          {
             "label": "XL SRW — 6.2L Gas V8 (2018–2022)",
             "maxTow": 16000,
             "payload": 4500,
@@ -5469,6 +5854,34 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class V"
           },
           {
+            "label": "XL DRW — 6.7L Power Stroke Diesel (2023–2026)",
+            "maxTow": 30000,
+            "payload": 6000,
+            "gcwr": 43500,
+            "hitch": "Class V"
+          },
+          {
+            "label": "XLT DRW — 6.7L Power Stroke Diesel (2023–2026)",
+            "maxTow": 30000,
+            "payload": 6200,
+            "gcwr": 43500,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Lariat DRW — 6.7L Power Stroke gooseneck (2023–2026)",
+            "maxTow": 38600,
+            "payload": 6322,
+            "gcwr": 46700,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Limited DRW — 6.7L HO Power Stroke gooseneck (2023–2026)",
+            "maxTow": 40000,
+            "payload": 6457,
+            "gcwr": 48000,
+            "hitch": "Class V"
+          },
+          {
             "label": "XL DRW — 6.7L Power Stroke (2018–2021)",
             "maxTow": 30000,
             "payload": 5800,
@@ -5619,6 +6032,34 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 35000,
             "payload": 11000,
             "gcwr": 46000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "XL Chassis Cab DRW — 7.3L Gas V8 (2023–2026)",
+            "maxTow": 18500,
+            "payload": 10000,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "XL Chassis Cab DRW — 6.7L Power Stroke (2023–2026)",
+            "maxTow": 18500,
+            "payload": 11000,
+            "gcwr": 43000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "XLT Chassis Cab DRW — 6.7L Power Stroke 5th-wheel (2023–2026)",
+            "maxTow": 34200,
+            "payload": 11000,
+            "gcwr": 43000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Lariat Chassis Cab DRW — 6.7L Power Stroke gooseneck (2023–2026)",
+            "maxTow": 34300,
+            "payload": 11000,
+            "gcwr": 43000,
             "hitch": "Class V"
           },
           {
@@ -8148,6 +8589,90 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class V"
           },
           {
+            "label": "Tradesman — 6.4L HEMI V8 (2023–2024)",
+            "maxTow": 17730,
+            "payload": 4000,
+            "gcwr": 24000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Big Horn — 6.4L HEMI V8 (2023–2024)",
+            "maxTow": 17730,
+            "payload": 4000,
+            "gcwr": 24000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Laramie — 6.7L Cummins Diesel (2023–2024)",
+            "maxTow": 20000,
+            "payload": 3140,
+            "gcwr": 27700,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Limited — 6.7L Cummins Diesel (2023–2024)",
+            "maxTow": 19980,
+            "payload": 3140,
+            "gcwr": 27650,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Power Wagon — 6.4L HEMI V8 (2023–2024)",
+            "maxTow": 10170,
+            "payload": 1840,
+            "gcwr": 20000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Rebel — 6.4L HEMI V8 (2023–2024)",
+            "maxTow": 16870,
+            "payload": 2600,
+            "gcwr": 23000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Tradesman — 6.4L HEMI V8 (2025–2026)",
+            "maxTow": 17750,
+            "payload": 3930,
+            "gcwr": 24000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Big Horn — 6.4L HEMI V8 (2025–2026)",
+            "maxTow": 17750,
+            "payload": 3930,
+            "gcwr": 24000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Laramie — 6.7L Cummins HO Diesel (2025–2026)",
+            "maxTow": 20000,
+            "payload": 3600,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Limited — 6.7L Cummins HO Diesel (2025–2026)",
+            "maxTow": 20000,
+            "payload": 3600,
+            "gcwr": 30000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Power Wagon — 6.4L HEMI V8 (2025–2026)",
+            "maxTow": 10170,
+            "payload": 1840,
+            "gcwr": 20000,
+            "hitch": "Class IV"
+          },
+          {
+            "label": "Rebel — 6.4L HEMI V8 (2025–2026)",
+            "maxTow": 16870,
+            "payload": 2600,
+            "gcwr": 23000,
+            "hitch": "Class V"
+          },
+          {
             "label": "Tradesman — 6.4L HEMI V8 (2018–2021)",
             "maxTow": 14510,
             "payload": 3010,
@@ -8420,6 +8945,69 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class V"
           },
           {
+            "label": "Tradesman SRW — 6.4L HEMI V8 (2023–2024)",
+            "maxTow": 16070,
+            "payload": 4010,
+            "gcwr": 25500,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Big Horn SRW — 6.7L Cummins Diesel (2023–2024)",
+            "maxTow": 23000,
+            "payload": 4500,
+            "gcwr": 32000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Laramie DRW — 6.7L Cummins HO Diesel (2023–2024)",
+            "maxTow": 37090,
+            "payload": 7680,
+            "gcwr": 48000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Limited DRW — 6.7L Cummins HO gooseneck (2023–2024)",
+            "maxTow": 37090,
+            "payload": 7500,
+            "gcwr": 48000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Tradesman SRW — 6.4L HEMI V8 (2025–2026)",
+            "maxTow": 18150,
+            "payload": 4010,
+            "gcwr": 25500,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Tradesman DRW — 6.4L HEMI V8 (2025–2026)",
+            "maxTow": 18150,
+            "payload": 7590,
+            "gcwr": 28500,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Big Horn SRW — 6.7L Cummins Diesel (2025–2026)",
+            "maxTow": 23000,
+            "payload": 4500,
+            "gcwr": 32000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Laramie DRW — 6.7L Cummins HO Diesel (2025–2026)",
+            "maxTow": 36610,
+            "payload": 6050,
+            "gcwr": 48000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Limited DRW — 6.7L Cummins HO gooseneck (2025–2026)",
+            "maxTow": 36610,
+            "payload": 6050,
+            "gcwr": 48000,
+            "hitch": "Class V"
+          },
+          {
             "label": "Tradesman SRW — 6.4L HEMI V8 (2018–2021)",
             "maxTow": 16070,
             "payload": 4010,
@@ -8608,6 +9196,20 @@ export const TOW_MAKES: TowMake[] = [
             "hitch": "Class V"
           },
           {
+            "label": "Tradesman DRW — 6.7L Cummins Diesel (2025–2026)",
+            "maxTow": 29440,
+            "payload": 9000,
+            "gcwr": 37500,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Tradesman DRW Crew — 6.7L Cummins (2025–2026)",
+            "maxTow": 28950,
+            "payload": 9000,
+            "gcwr": 37500,
+            "hitch": "Class V"
+          },
+          {
             "label": "Tradesman DRW — 6.7L Cummins (2011–2018)",
             "maxTow": 20000,
             "payload": 8500,
@@ -8639,6 +9241,13 @@ export const TOW_MAKES: TowMake[] = [
             "maxTow": 30000,
             "payload": 11000,
             "gcwr": 39000,
+            "hitch": "Class V"
+          },
+          {
+            "label": "Tradesman DRW — 6.7L Cummins Diesel (2025–2026)",
+            "maxTow": 34540,
+            "payload": 11190,
+            "gcwr": 43000,
             "hitch": "Class V"
           },
           {
