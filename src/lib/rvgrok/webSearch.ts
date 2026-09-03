@@ -8,52 +8,11 @@
  * never pretend a brochure or bulletin was fetched.
  */
 
-import { looksLikeLiveResearchQuestion, looksLikeSpecQuestion } from "./grounding";
-
 export const WEB_SEARCH_TOOL = { type: "web_search" } as const;
 
 export type WebSearchNotes =
   | { ok: true; notes: string; model: string }
   | { ok: false; reason: string };
-
-function researchSystemPrompt(catalog: string, query: string): string {
-  const wantsHelp = looksLikeLiveResearchQuestion(query);
-  const wantsSpec = looksLikeSpecQuestion(query);
-  const lines = [
-    "You research one RV question for RVFAX. Return short RESEARCH NOTES only — no JSON.",
-    "Never invent horsepower (no silent 450) or a diagnosis you cannot support. Cite uncertainty.",
-    "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
-    "Floorplan letters are labels only — do not decode bunks or a half-bath from the code.",
-  ];
-  if (wantsSpec || !wantsHelp) {
-    lines.push(
-      "If this is a spec/powertrain ask: prefer OEM brochure / chassis sheet / door-sticker facts for THAT year + make + model + floorplan. If not found, write UNKNOWN and what to verify.",
-    );
-  }
-  if (wantsHelp) {
-    lines.push(
-      "If this is troubleshooting / how-to / error code / TSB / recall / install: note likely symptoms, OEM bulletins or common forum/manual fixes, and safety caveats. Keep it short. Do not invent a campaign number or HP.",
-    );
-  }
-  if (catalog) {
-    lines.push(`Catalog lock (do not contradict these numbers):\n${catalog}`);
-  } else {
-    lines.push(
-      "No catalog row was available. If the web does not confirm a number, say UNKNOWN.",
-    );
-  }
-  return lines.join("\n");
-}
-
-function researchUserPrompt(query: string): string {
-  if (looksLikeLiveResearchQuestion(query) && !looksLikeSpecQuestion(query)) {
-    return `Find current OEM / TSB / manual / forum RESEARCH NOTES (symptoms, common fixes, safety caveats) for: ${query}`;
-  }
-  if (looksLikeLiveResearchQuestion(query)) {
-    return `Find OEM-accurate powertrain if asked, plus troubleshooting / bulletin RESEARCH NOTES for: ${query}`;
-  }
-  return `Find OEM-accurate powertrain (engine, HP, chassis, fuel) for: ${query}`;
-}
 
 export function buildWebSearchRequest(opts: {
   model: string;
@@ -61,14 +20,25 @@ export function buildWebSearchRequest(opts: {
   catalogBlock?: string;
 }): Record<string, unknown> {
   const catalog = (opts.catalogBlock || "").trim();
+  const system = [
+    "You research one RV question for RVFAX. Return short RESEARCH NOTES only — no JSON.",
+    "Match the user's ask:",
+    "- Specs/powertrain: prefer OEM brochure / chassis sheet / door-sticker facts for THAT year + make + model + floorplan. Never invent horsepower (no silent 450). If not found, write UNKNOWN and what to verify.",
+    "- Troubleshooting / how-to / error codes / TSB / recall / install: note likely symptoms, OEM bulletins or common forum/manual fixes, and safety caveats. Cite uncertainty. Do not invent a campaign number or a diagnosis you cannot support.",
+    "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
+    "Floorplan letters are labels only — do not decode bunks or a half-bath from the code.",
+    catalog
+      ? `Catalog lock (do not contradict these numbers):\n${catalog}`
+      : "No catalog row was available. If the web does not confirm a number, say UNKNOWN.",
+  ].join("\n");
 
   return {
     model: opts.model,
     input: [
-      { role: "system", content: researchSystemPrompt(catalog, opts.query) },
+      { role: "system", content: system },
       {
         role: "user",
-        content: researchUserPrompt(opts.query),
+        content: `Research this RV question (OEM / TSB / manual / forum notes as relevant — powertrain only if they asked for specs): ${opts.query}`,
       },
     ],
     tools: [WEB_SEARCH_TOOL],

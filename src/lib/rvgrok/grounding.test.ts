@@ -10,11 +10,10 @@ import {
 import { findPowertrainCorrection } from "../rv/powertrainCorrections.ts";
 import { parseCoachFromText } from "./parseCoach.ts";
 import {
-  buildChatGrounding,
   looksLikeCasualNonResearch,
   looksLikeLiveResearchQuestion,
   needsWebFallback,
-} from "./grounding.ts";
+} from "./webIntent.ts";
 import {
   buildWebSearchRequest,
   extractResponsesText,
@@ -95,8 +94,8 @@ test("chat must not write Facts cache; Live must not fill hard fields", () => {
   const cache = src(rvRoot, "verifiedCatalogCache.ts");
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(grounding, /CHAT_MAY_WRITE_FACTS_CACHE = false/);
-  assert.match(grounding, /looksLikeLiveResearchQuestion/);
   assert.match(grounding, /needsWebFallback/);
+  assert.match(src(root, "webIntent.ts"), /looksLikeLiveResearchQuestion/);
   assert.match(guard, /Live Grok never writes engine/);
   assert.match(cache, /Chat answers must never call saveVerifiedDossier/);
   assert.match(api, /catalogContext/);
@@ -197,8 +196,6 @@ test("Passport slide retract wants web even when powertrain is locked", () => {
   const q =
     "My 2018 Keystone Passport slide won’t retract — what should I check?";
   assert.equal(needsWebFallback(locked, q), true);
-  const grounded = buildChatGrounding({ query: q });
-  assert.equal(grounded.needsWeb, true);
 });
 
 test("spec miss still wants web; locked Vision engine question does not", () => {
@@ -206,10 +203,13 @@ test("spec miss still wants web; locked Vision engine question does not", () => 
     needsWebFallback(null, "What HP does a 2023 American Dream have?"),
     true,
   );
-  const miss = buildChatGrounding({
-    query: "What engine and HP does a 2023 American Coach American Dream 45A have?",
-  });
-  assert.equal(miss.needsWeb, true);
+  assert.equal(
+    needsWebFallback(
+      { missingHard: true },
+      "What engine and HP does a 2023 American Coach American Dream 45A have?",
+    ),
+    true,
+  );
 
   const lockedSpec = {
     identity: {
