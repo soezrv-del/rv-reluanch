@@ -22,6 +22,7 @@ import { Route as ApiRvfaxCatalogResearchRouteImport } from './routes/api/rvfax.
 import { Route as ApiRvfaxCompareRouteImport } from './routes/api/rvfax.compare'
 import { Route as ApiRvfaxDossierRouteImport } from './routes/api/rvfax.dossier'
 import { Route as ApiRvgrokTokenRouteImport } from './routes/api/rvgrok.token'
+import { Route as ApiRvgrokWebResearchRouteImport } from './routes/api/rvgrok.web-research'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -88,6 +89,11 @@ const ApiRvgrokTokenRoute = ApiRvgrokTokenRouteImport.update({
   path: '/token',
   getParentRoute: () => ApiRvgrokRoute,
 } as any)
+const ApiRvgrokWebResearchRoute = ApiRvgrokWebResearchRouteImport.update({
+  id: '/web-research',
+  path: '/web-research',
+  getParentRoute: () => ApiRvgrokRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/api/rvfax/compare': typeof ApiRvfaxCompareRoute
   '/api/rvfax/dossier': typeof ApiRvfaxDossierRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
+  '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/api/rvfax/compare': typeof ApiRvfaxCompareRoute
   '/api/rvfax/dossier': typeof ApiRvfaxDossierRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
+  '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/api/rvfax/compare': typeof ApiRvfaxCompareRoute
   '/api/rvfax/dossier': typeof ApiRvfaxDossierRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
+  '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/api/rvfax/compare'
     | '/api/rvfax/dossier'
     | '/api/rvgrok/token'
+    | '/api/rvgrok/web-research'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/api/rvfax/compare'
     | '/api/rvfax/dossier'
     | '/api/rvgrok/token'
+    | '/api/rvgrok/web-research'
   id:
     | '__root__'
     | '/'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/api/rvfax/compare'
     | '/api/rvfax/dossier'
     | '/api/rvgrok/token'
+    | '/api/rvgrok/web-research'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -281,15 +293,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRvgrokTokenRouteImport
       parentRoute: typeof ApiRvgrokRoute
     }
+    '/api/rvgrok/web-research': {
+      id: '/api/rvgrok/web-research'
+      path: '/web-research'
+      fullPath: '/api/rvgrok/web-research'
+      preLoaderRoute: typeof ApiRvgrokWebResearchRouteImport
+      parentRoute: typeof ApiRvgrokRoute
+    }
   }
 }
 
 interface ApiRvgrokRouteChildren {
   ApiRvgrokTokenRoute: typeof ApiRvgrokTokenRoute
+  ApiRvgrokWebResearchRoute: typeof ApiRvgrokWebResearchRoute
 }
 
 const ApiRvgrokRouteChildren: ApiRvgrokRouteChildren = {
   ApiRvgrokTokenRoute: ApiRvgrokTokenRoute,
+  ApiRvgrokWebResearchRoute: ApiRvgrokWebResearchRoute,
 }
 
 const ApiRvgrokRouteWithChildren = ApiRvgrokRoute._addFileChildren(
