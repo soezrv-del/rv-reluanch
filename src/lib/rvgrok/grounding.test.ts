@@ -15,9 +15,12 @@ import {
   needsWebFallback,
 } from "./webIntent.ts";
 import {
+  WEB_SEARCH_MODELS,
   buildWebSearchRequest,
   extractResponsesText,
+  formatWebSearchHttpFailure,
   formatWebSearchInjection,
+  truncateApiErrorBody,
 } from "./webSearch.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -118,12 +121,22 @@ test("Live Voice instructions are accuracy-first; gesture order untouched", () =
 
 test("web search sidecar uses Responses web_search tool", () => {
   const body = buildWebSearchRequest({
-    model: "grok-4.5",
+    model: "grok-4.6",
     query: "2023 American Coach American Dream engine HP chassis",
     catalogBlock: "engine: Cummins L9 450 std / X15 605 opt",
   });
+  assert.equal(body.model, "grok-4.6");
   assert.deepEqual(body.tools, [{ type: "web_search" }]);
   assert.equal("search_parameters" in body, false);
+  assert.equal("temperature" in body, false);
+  assert.equal("max_output_tokens" in body, false);
+  assert.deepEqual(Object.keys(body).sort(), ["input", "model", "tools"]);
+  const input = body.input as Array<{ role: string; content: string }>;
+  assert.equal(input.length, 1);
+  assert.equal(input[0].role, "user");
+  assert.match(input[0].content, /Catalog lock/);
+  assert.match(input[0].content, /American Dream engine HP/);
+  assert.doesNotMatch(JSON.stringify(body), /"role":"system"/);
   const notes = extractResponsesText({
     output: [
       {
@@ -133,6 +146,29 @@ test("web search sidecar uses Responses web_search tool", () => {
     ],
   });
   assert.match(notes, /UNKNOWN/);
+});
+
+test("web search model fallbacks are current Responses + web_search ids", () => {
+  assert.deepEqual([...WEB_SEARCH_MODELS], [
+    "grok-4.6",
+    "grok-4-1-fast-reasoning",
+    "grok-4-latest",
+  ]);
+});
+
+test("web search HTTP failure includes a truncated API body", () => {
+  const long = `{"error":{"message":"${"x".repeat(300)}","type":"invalid_request_error"}}`;
+  const reason = formatWebSearchHttpFailure(400, long);
+  assert.match(reason, /^web search HTTP 400: /);
+  assert.ok(reason.length <= "web search HTTP 400: ".length + 200);
+  assert.doesNotMatch(reason, /Bearer /);
+  const leaked = formatWebSearchHttpFailure(
+    400,
+    'Bearer sk-secret {"error":"model grok-4 not supported"} xai-ABCDEFGH123456',
+  );
+  assert.match(leaked, /web search HTTP 400:/);
+  assert.doesNotMatch(leaked, /sk-secret|xai-ABCDEFGH123456/);
+  assert.match(truncateApiErrorBody("  too   much   space  "), /too much space/);
 });
 
 test("looksLikeLiveResearchQuestion is true for troubleshooting and lookup", () => {
@@ -255,13 +291,16 @@ test("agent mode can request web for lookup without forcing hi", () => {
 
 test("troubleshooting web prompt asks for symptoms and bulletins", () => {
   const body = buildWebSearchRequest({
-    model: "grok-4.5",
+    model: "grok-4.6",
     query: "My 2018 Keystone Passport slide won't retract — what should I check?",
   });
   const packed = JSON.stringify(body);
   assert.match(packed, /symptoms|bulletin|TSB|troubleshooting/i);
   assert.match(packed, /slide won't retract/i);
   assert.deepEqual(body.tools, [{ type: "web_search" }]);
+  const input = body.input as Array<{ role: string; content: string }>;
+  assert.equal(input.length, 1);
+  assert.equal(input[0].role, "user");
 });
 
 test("web injection stays honest when search fails", () => {
@@ -274,7 +313,7 @@ test("web injection stays honest when search fails", () => {
   const ok = formatWebSearchInjection({
     ok: true,
     notes: "Check slide lock pins first.",
-    model: "grok-4.5",
+    model: "grok-4.6",
   });
   assert.match(ok, /WEB RESEARCH NOTES/);
   assert.match(ok, /do not claim you have no internet/i);

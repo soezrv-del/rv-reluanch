@@ -423,8 +423,8 @@ async function tryXaiDirect(
   const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
   const forceImageTool = wantsGeneratedImage(lastPlain);
   const MODELS = vision
-    ? ["grok-4.5", "grok-4-latest", "grok-2-vision-1212", "grok-3"]
-    : ["grok-4.5", "grok-4-latest", "grok-4.6", "grok-3", "grok-2-1212"];
+    ? ["grok-4.6", "grok-4.5", "grok-4-latest", "grok-2-vision-1212", "grok-3"]
+    : ["grok-4.6", "grok-4-1-fast-reasoning", "grok-4-latest", "grok-4.5", "grok-3"];
 
   const system = withGrounding(
     (agentMode ? AGENT_SYSTEM_PROMPT : RV_SYSTEM_PROMPT) +
