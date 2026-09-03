@@ -16517,19 +16517,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "3160RL",
         "3230CK",
         "3231CK",
-        "3402RL",
         "3440RL",
         "3500RD",
         "3531RE",
         "3532SP",
         "3560RL",
         "3561RL",
-        "3582RL",
         "3600RO",
         "3610RL",
         "3611RL",
         "3623EB",
-        "3625RE",
         "3660RL",
         "3661RL",
         "3700LK",
@@ -16575,10 +16572,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "3950BR"
       ],
       floorplansByYear: {
-        "2010": ["3402RL", "3582RL", "3625RE", "3710FL", "3720RL", "3790RD"],
-        "2011": ["3402RL", "3582RL", "3625RE", "3710FL", "3720RL", "3790RD"],
-        "2012": ["3402RL", "3582RL", "3625RE", "3710FL", "3720RL", "3790RD", "3811MS"],
-        "2013": ["3402RL", "3582RL", "3625RE", "3710FL", "3720RL", "3790RD", "3811MS"],
+        // MY2010–2013 leftover invent omitted (RVUSA Montana m1499 year cards are EMPTY shells).
+        // Prefer omit over empty [] so 2010–2013 drop from the selectable index (MHC #103/#104).
+        // No dated brochure in pack — do not invent-fill 3402RL / 3582RL / 3625RE / 3710FL / 3720RL / 3790RD / 3811MS.
+        // Never stamp MY2027 OEM 3100RL / 3500RD / 3600RO / 3800FL / 3900RK onto 2010–2013.
+        // Drop leftover-only invent 3402RL / 3582RL / 3625RE from aggregate floorplans[] (2010–2013-only).
         // LOCK RVUSA Montana m1499 specs-by-model year cards (production, not dealer-stock).
         // THIN years keep extract only — do not invent-fill from adjacent years / catalog / MY2025.
         // Never stamp MY2027 OEM 3100RL / 3500RD / 3600RO / 3800FL / 3900RK onto 2014–2024.
