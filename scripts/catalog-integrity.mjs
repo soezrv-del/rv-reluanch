@@ -32,6 +32,117 @@ const BRAND_EPOCH = {
  * Key: make|model (exact catalog names)
  */
 const FORBIDDEN_FLOORPLANS = {
+  "Coachmen|Catalina": {
+    codes: [
+      "134BHX",
+      "134RDX",
+      "134REX",
+      "134RKX",
+      "154RBX",
+      "154RDX",
+      "164BHX",
+      "184BHSX",
+      "184MKS",
+      "194RBS",
+      "211BH",
+      "221EPIC",
+      "231BHS",
+      "231MKS",
+      "261BHS",
+      "281QBUNK",
+      "26TH",
+      "27THS",
+      "28THS",
+      "29THS",
+      "35FME",
+      "39MKTS",
+      "40BHTS",
+      "42CONDO",
+      "43CONDO",
+      "44CONDO",
+    ],
+    reason: "Summit Series 7/8, Trail Blazer, and Destination Series codes stay off collapsed Catalina",
+  },
+  "Coachmen|Apex": {
+    codes: [
+      "181RB",
+      "183BH",
+      "185BH",
+      "186BH",
+      "187RB",
+      "190RBS",
+      "194BHS",
+      "203RBK",
+      "208BHS",
+      "216RKS",
+      "224RBS",
+      "228BHS",
+      "24RBX",
+      "26BHX",
+      "29BHX",
+      "241BHS",
+      "242BARV",
+      "244RBS",
+      "246BARV",
+      "291TBSS",
+      "293RLDS",
+    ],
+    reason: "Apex Nano / Apex Ultra-Lite codes stay off the collapsed Apex bucket",
+  },
+  "Coachmen|Freedom Express": {
+    codes: [
+      "18SE",
+      "19SE",
+      "21SE",
+      "247SE",
+      "249SE",
+      "29SE",
+      "30SE",
+      "31SE",
+      "22MLS",
+      "245RKS",
+      "252RBS",
+      "258BHS",
+      "271BHE",
+      "274RKS",
+      "288BHDS",
+      "320BHDS",
+      "324RLDS",
+    ],
+    reason: "Freedom Express Select / Ultra Lite codes stay off the collapsed Freedom Express bucket",
+  },
+  "Coachmen|Chaparral": {
+    codes: [
+      "218SE",
+      "235RK",
+      "254RLS",
+      "25RE",
+      "274BH",
+      "27BAR",
+      "284RL",
+      "30BHS",
+      "30RLS",
+      "31BH",
+      "368TBH",
+    ],
+    reason: "Chaparral Lite codes stay on Chaparral Lite, not mid-profile Chaparral",
+  },
+  "Coachmen|Chaparral Lite": {
+    codes: [
+      "298RLS",
+      "334FL",
+      "336TSIK",
+      "360IBL",
+      "367BH",
+      "370FL",
+      "373MBRB",
+      "375BAF",
+      "381DBL",
+      "389DEK",
+      "391MBH",
+    ],
+    reason: "Mid-profile Chaparral codes stay on Chaparral, not Chaparral Lite",
+  },
   "Brinkley|Model Z": {
     codes: ["3500", "3700", "3250", "3520", "3950", "3970", "4000", "4100", "4120"],
     reason: "3500/3xxx garage codes are Model G toy-hauler plans, not Model Z fifth wheels",
@@ -157,6 +268,19 @@ const EXPECTED_TYPE = {
   "Keystone|Cougar": "travel trailer",
   "Keystone|Cougar 5th Wheel": "fifth wheel",
   "Keystone|Cougar Half-Ton": "fifth wheel",
+  "Coachmen|Catalina Legacy Edition": "travel trailer",
+  "Coachmen|Catalina Summit Series 7": "travel trailer",
+  "Coachmen|Catalina Summit Series 8": "travel trailer",
+  "Coachmen|Catalina Trail Blazer": "toy hauler",
+  "Coachmen|Catalina Destination Series": "travel trailer",
+  "Coachmen|Apex Nano": "travel trailer",
+  "Coachmen|Apex Ultra-Lite": "travel trailer",
+  "Coachmen|Freedom Express Ultra Lite": "travel trailer",
+  "Coachmen|Freedom Express Select": "travel trailer",
+  "Coachmen|Chaparral": "fifth wheel",
+  "Coachmen|Chaparral Lite": "fifth wheel",
+  "Coachmen|Brookstone": "fifth wheel",
+  "Coachmen|Adrenaline": "toy hauler",
   "Keystone|Cougar Half-Ton Travel Trailer": "travel trailer",
   "Keystone|Sprinter": "fifth wheel",
   "Grand Design|Lineage Series E": "class c",
@@ -2508,6 +2632,343 @@ function main() {
 
       if (/\n    "Grand Design": \{/.test(ks) || /\n    Winnebago: \{/.test(ks) || /\n    Fleetwood: \{/.test(ks)) {
         fail("Keystone block must not absorb other-make keys");
+      }
+    }
+  }
+
+  // Coachmen towables MY2026–2027 honesty (Catalina / Apex / Freedom Express split +
+  // Chaparral / Brookstone / Adrenaline OEM lock). Motorized lines are a later slice.
+  {
+    const c0 = src.indexOf("\n  Coachmen: {");
+    const c1 = src.indexOf("\n  Winnebago: {");
+    if (c0 < 0 || c1 < c0) {
+      fail("Coachmen block not found between Coachmen: and Winnebago:");
+    } else {
+      const cm = src.slice(c0, c1);
+      const slice = (a, b) => {
+        const i = cm.indexOf(`    ${a}: {`) >= 0 ? cm.indexOf(`    ${a}: {`) : cm.indexOf(`    "${a}": {`);
+        const j = cm.indexOf(`    ${b}: {`) >= 0 ? cm.indexOf(`    ${b}: {`) : cm.indexOf(`    "${b}": {`);
+        if (i < 0) return "";
+        return j > i ? cm.slice(i, j) : cm.slice(i);
+      };
+      const yearPlans = (block, year) => {
+        const m = block.match(new RegExp(`"${year}":\\s*\\[([\\s\\S]*?)\\]`));
+        if (!m) return null;
+        return [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
+      };
+      const expectYearPlans = (block, year, expected, label) => {
+        const got = yearPlans(block, year);
+        if (!got) {
+          fail(`${label}: missing floorplansByYear ${year}`);
+          return;
+        }
+        if (JSON.stringify(got) !== JSON.stringify(expected)) {
+          fail(`${label}: ${year} expected [${expected.join(", ")}] got [${got.join(", ")}]`);
+        }
+      };
+      const yearHasCode = (block, year, code) => {
+        const got = yearPlans(block, year);
+        return got != null && got.includes(code);
+      };
+
+      for (const required of [
+        "Catalina",
+        "Catalina Legacy Edition",
+        "Catalina Summit Series 7",
+        "Catalina Summit Series 8",
+        "Catalina Trail Blazer",
+        "Catalina Destination Series",
+        "Apex",
+        "Apex Nano",
+        "Apex Ultra-Lite",
+        "Freedom Express",
+        "Freedom Express Ultra Lite",
+        "Freedom Express Select",
+        "Chaparral",
+        "Chaparral Lite",
+        "Brookstone",
+        "Adrenaline",
+      ]) {
+        const hit = cm.includes(`    ${required}: {`) || cm.includes(`    "${required}": {`);
+        if (!hit) fail(`Coachmen missing required series: ${required}`);
+      }
+
+      const cat = slice("Catalina", "Catalina Legacy Edition");
+      if (/"2026":/.test(cat) || /"2027":/.test(cat)) {
+        fail("Coachmen|Catalina collapsed bucket must omit 2026–2027 (split to Legacy / Summit / Trail Blazer / Destination)");
+      }
+      if (/"134BHX"/.test(cat) || /"184BHSX"/.test(cat) || /"211BH"/.test(cat) || /"26TH"/.test(cat) || /"35FME"/.test(cat)) {
+        fail("Coachmen|Catalina must not absorb Summit / Trail Blazer / Destination codes");
+      }
+      if (!/hitchType: "bumper-pull"/.test(cat)) {
+        fail("Coachmen|Catalina must pin hitchType bumper-pull");
+      }
+
+      const leg = slice("Catalina Legacy Edition", "Catalina Summit Series 7");
+      expectYearPlans(
+        leg,
+        "2026",
+        [
+          "243RBS",
+          "263BHSCK",
+          "263FKDS",
+          "273DBHCK",
+          "283RKS",
+          "283RNR",
+          "293QBCK",
+          "293TQBSCK",
+          "303RKDS",
+          "313RLTS",
+          "323BHDSCK",
+          "323MAZE",
+          "333DBDSCK",
+          "333DORM",
+          "343BHTS",
+          "343BHTS-2Q",
+          "343BHTS-DEN",
+        ],
+        "Coachmen|Catalina Legacy Edition MY26 OEM plans",
+      );
+      if (/"2027":/.test(leg) || /"2025":/.test(leg)) {
+        fail("Coachmen|Catalina Legacy Edition must not invent 2025/2027 fby this slice");
+      }
+      if (/"283EPIC"/.test(leg) || /"134BHX"/.test(leg)) {
+        fail("Coachmen|Catalina Legacy Edition must not keep leftover 283EPIC or Summit 134BHX");
+      }
+      if (!/yearStart:\s*2017/.test(leg) || !/hitchType: "bumper-pull"/.test(leg)) {
+        fail("Coachmen|Catalina Legacy Edition yearStart must be 2017 with bumper-pull hitch");
+      }
+
+      const s7 = slice("Catalina Summit Series 7", "Catalina Summit Series 8");
+      expectYearPlans(
+        s7,
+        "2026",
+        ["134BHX", "134RDX", "134REX", "134RKX", "154RBX", "154RDX", "164BHX", "184BHSX", "184MKS", "194RBS"],
+        "Coachmen|Catalina Summit Series 7 MY26 OEM production plans",
+      );
+      if (yearHasCode(s7, "2026", "184BHS")) {
+        fail("Coachmen|Catalina Summit Series 7 must omit DSO 184BHS on 2026");
+      }
+      if (/"2027":/.test(s7) || !/yearStart:\s*2020/.test(s7)) {
+        fail("Coachmen|Catalina Summit Series 7 yearStart must be 2020 (no 2027 invent)");
+      }
+
+      const s8 = slice("Catalina Summit Series 8", "Catalina Trail Blazer");
+      expectYearPlans(
+        s8,
+        "2026",
+        ["211BH", "221EPIC", "231BHS", "231MKS", "261BH", "261BHS", "281QBUNK"],
+        "Coachmen|Catalina Summit Series 8 MY26 OEM production plans",
+      );
+      if (/"221MKE"/.test(s8) || /"271DBS"/.test(s8)) {
+        fail("Coachmen|Catalina Summit Series 8 must omit DSO 221MKE / 271DBS");
+      }
+      if (/"2027":/.test(s8) || !/yearStart:\s*2020/.test(s8)) {
+        fail("Coachmen|Catalina Summit Series 8 yearStart must be 2020 (no 2027 invent)");
+      }
+
+      const tb = slice("Catalina Trail Blazer", "Catalina Destination Series");
+      expectYearPlans(tb, "2026", ["26TH", "27THS", "28THS", "29THS"], "Coachmen|Catalina Trail Blazer MY26 OEM plans");
+      if (!/type: "Toy Hauler"/.test(tb) || !/hitchType: "bumper-pull"/.test(tb) || !/yearStart:\s*2017/.test(tb)) {
+        fail("Coachmen|Catalina Trail Blazer must be bumper-pull toy hauler yearStart 2017");
+      }
+      if (/"2027":/.test(tb)) {
+        fail("Coachmen|Catalina Trail Blazer must not invent 2027");
+      }
+
+      const dest = slice("Catalina Destination Series", "Galleria");
+      expectYearPlans(
+        dest,
+        "2026",
+        ["35FME", "39MKTS", "40BHTS", "40BHTS2Q", "40BHTSDEN", "42CONDO", "43CONDO", "44CONDO"],
+        "Coachmen|Catalina Destination Series MY26 OEM plans",
+      );
+      if (/"2027":/.test(dest) || !/yearStart:\s*2015/.test(dest) || !/hitchType: "bumper-pull"/.test(dest)) {
+        fail("Coachmen|Catalina Destination Series yearStart must be 2015 bumper-pull (no 2027 invent)");
+      }
+
+      const apex = slice("Apex", "Apex Nano");
+      if (/"2026":/.test(apex) || /"2027":/.test(apex)) {
+        fail("Coachmen|Apex collapsed bucket must omit 2026–2027 (split to Nano + Ultra-Lite)");
+      }
+      if (/"181RB"/.test(apex) || /"24RBX"/.test(apex) || /"241BHS"/.test(apex)) {
+        fail("Coachmen|Apex must not absorb Nano / Ultra-Lite codes");
+      }
+      if (!/hitchType: "bumper-pull"/.test(apex)) {
+        fail("Coachmen|Apex must pin hitchType bumper-pull");
+      }
+
+      const nano = slice("Apex Nano", "Apex Ultra-Lite");
+      expectYearPlans(
+        nano,
+        "2026",
+        ["181RB", "183BH", "185BH", "186BH", "187RB", "190RBS", "194BHS", "203RBK", "208BHS", "213RDS", "216RKS", "224RBS", "228BHS"],
+        "Coachmen|Apex Nano MY26 OEM plans",
+      );
+      expectYearPlans(
+        nano,
+        "2027",
+        ["181RB", "183BH", "186BH", "187RB", "190RBS", "194BHS", "203RBK", "208BHS", "213RDS", "216RKS", "224RBS", "228BHS"],
+        "Coachmen|Apex Nano MY27 RVUSA plans (no 185BH)",
+      );
+      if (yearHasCode(nano, "2027", "185BH")) {
+        fail("Coachmen|Apex Nano must not stamp MY26 185BH onto 2027");
+      }
+      if (!/yearStart:\s*2015/.test(nano) || !/hitchType: "bumper-pull"/.test(nano)) {
+        fail("Coachmen|Apex Nano yearStart must be 2015 with bumper-pull hitch");
+      }
+
+      const aul = slice("Apex Ultra-Lite", "Pursuit");
+      expectYearPlans(
+        aul,
+        "2026",
+        ["24RBX", "26BHX", "29BHX", "241BHS", "242BARV", "244RBS", "246BARV", "291TBSS", "293RLDS"],
+        "Coachmen|Apex Ultra-Lite MY26 OEM plans",
+      );
+      expectYearPlans(aul, "2027", ["242BARV", "244RBS", "293RLDS"], "Coachmen|Apex Ultra-Lite MY27 RVUSA three-plan lock");
+      if (
+        yearHasCode(aul, "2026", "251RBK") ||
+        yearHasCode(aul, "2026", "188RBST") ||
+        yearHasCode(aul, "2026", "245BHS")
+      ) {
+        fail("Coachmen|Apex Ultra-Lite must not keep RVUSA-leftover 251RBK / 188RBST / 245BHS on 2026");
+      }
+      if (!/yearStart:\s*2015/.test(aul)) {
+        fail("Coachmen|Apex Ultra-Lite yearStart must be 2015");
+      }
+
+      const fe = slice("Freedom Express", "Freedom Express Ultra Lite");
+      if (/"2026":/.test(fe) || /"2027":/.test(fe)) {
+        fail("Coachmen|Freedom Express collapsed bucket must omit 2026–2027 (split to Ultra Lite + Select)");
+      }
+      if (/"18SE"/.test(fe) || /"22MLS"/.test(fe) || /"274RKS"/.test(fe)) {
+        fail("Coachmen|Freedom Express must not absorb Select / Ultra Lite codes");
+      }
+      if (!/hitchType: "bumper-pull"/.test(fe)) {
+        fail("Coachmen|Freedom Express must pin hitchType bumper-pull");
+      }
+
+      const feul = slice("Freedom Express Ultra Lite", "Freedom Express Select");
+      expectYearPlans(
+        feul,
+        "2026",
+        [
+          "192RBS",
+          "22MLS",
+          "245RKS",
+          "252RBS",
+          "258BHS",
+          "259FKDS",
+          "271BHE",
+          "274RKS",
+          "288BHDS",
+          "292BHDS",
+          "320BHDS",
+          "324RLDS",
+          "326BHDS",
+        ],
+        "Coachmen|Freedom Express Ultra Lite MY26 OEM plans",
+      );
+      if (/"2027":/.test(feul) || !/yearStart:\s*2014/.test(feul)) {
+        fail("Coachmen|Freedom Express Ultra Lite yearStart must be 2014 (no 2027 invent)");
+      }
+      if (/"18SE"/.test(feul) || /"246RKS"/.test(feul) || /"326BHDE"/.test(feul)) {
+        fail("Coachmen|Freedom Express Ultra Lite must not absorb Select or leftover 246RKS / 326BHDE");
+      }
+
+      const fes = slice("Freedom Express Select", "Catalina");
+      expectYearPlans(
+        fes,
+        "2026",
+        ["18SE", "19SE", "21SE", "247SE", "249SE", "29SE", "30SE", "31SE"],
+        "Coachmen|Freedom Express Select MY26 OEM plans",
+      );
+      if (/"2027":/.test(fes) || !/yearStart:\s*2016/.test(fes)) {
+        fail("Coachmen|Freedom Express Select yearStart must be 2016 (no 2027 invent from a single 30SE page)");
+      }
+      if (/"192RBS"/.test(fes) || /"23SE"/.test(fes)) {
+        fail("Coachmen|Freedom Express Select must not absorb Ultra Lite or leftover 23SE");
+      }
+
+      const chap = slice("Chaparral", "Chaparral Lite");
+      expectYearPlans(
+        chap,
+        "2026",
+        ["298RLS", "334FL", "336TSIK", "360IBL", "367BH", "373MBRB", "375BAF", "381DBL", "389DEK", "391MBH"],
+        "Coachmen|Chaparral MY26 OEM mid-profile plans",
+      );
+      if (
+        yearHasCode(chap, "2026", "370FL") ||
+        yearHasCode(chap, "2026", "218SE") ||
+        yearHasCode(chap, "2026", "393MBX")
+      ) {
+        fail("Coachmen|Chaparral must not keep leftover 370FL, Lite 218SE, or unsourced 393MBX on 2026");
+      }
+      if (/"2027":/.test(chap) || !/hitchType: "king pin"/.test(chap)) {
+        fail("Coachmen|Chaparral must pin king pin hitch and omit 2027");
+      }
+
+      const chl = slice("Chaparral Lite", "Brookstone");
+      expectYearPlans(
+        chl,
+        "2026",
+        ["218SE", "235RK", "254RLS", "25RE", "274BH", "27BAR", "284RL", "30BHS", "30RLS", "31BH", "368TBH"],
+        "Coachmen|Chaparral Lite MY26 RVUSA/OEM Lite plans",
+      );
+      if (/"336TSIK"/.test(chl) || /"2027":/.test(chl) || !/hitchType: "king pin"/.test(chl) || !/yearStart:\s*2008/.test(chl)) {
+        fail("Coachmen|Chaparral Lite yearStart must be 2008 king pin (no mid-profile / no 2027)");
+      }
+
+      const brk = slice("Brookstone", "Adrenaline");
+      expectYearPlans(
+        brk,
+        "2026",
+        ["290RL", "318RLL", "344FL", "370RLLO", "374RK", "395DBL", "398MBL"],
+        "Coachmen|Brookstone MY26 OEM plans",
+      );
+      if (
+        yearHasCode(brk, "2026", "390RL") ||
+        yearHasCode(brk, "2026", "395RL") ||
+        yearHasCode(brk, "2026", "398MB")
+      ) {
+        fail("Coachmen|Brookstone must drop leftover 390RL / 395RL / 398MB from 2026");
+      }
+      if (/"2027":/.test(brk) || !/hitchType: "king pin"/.test(brk)) {
+        fail("Coachmen|Brookstone must pin king pin hitch and omit 2027");
+      }
+
+      const adr = slice("Adrenaline", "Freelander LE");
+      expectYearPlans(
+        adr,
+        "2026",
+        ["18LT", "21LT", "27KB", "27LT", "29SS", "30GS"],
+        "Coachmen|Adrenaline MY26 OEM plans",
+      );
+      if (yearHasCode(adr, "2026", "23LT") || yearHasCode(adr, "2026", "33OT")) {
+        fail("Coachmen|Adrenaline must drop leftover 23LT / 33OT from 2026");
+      }
+      if (/"2027":/.test(adr) || !/hitchType: "bumper-pull"/.test(adr)) {
+        fail("Coachmen|Adrenaline must pin bumper-pull hitch and omit 2027");
+      }
+
+      // Motorized lines in this make must still exist and must not have been hitch-pinned.
+      for (const motor of [
+        "Encore",
+        "Sportscoach",
+        "Freelander",
+        "Mirada",
+        "Leprechaun",
+        "Prism",
+        "Galleria",
+        "Beyond",
+        "Pursuit",
+        "Concord",
+      ]) {
+        const hit = cm.includes(`    ${motor}: {`) || cm.includes(`    "${motor}": {`);
+        if (!hit) fail(`Coachmen motorized regression: missing ${motor}`);
+      }
+      if (/Encore:[\s\S]*?hitchType:/.test(cm.slice(cm.indexOf("Encore:"), cm.indexOf("Sportscoach:")))) {
+        fail("Coachmen motorized Encore must not receive hitchType");
       }
     }
   }
