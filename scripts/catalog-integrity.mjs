@@ -1078,17 +1078,20 @@ function main() {
       };
 
       const card = slice("Cardinal", "Cedar Creek");
-      if (!/"2026": \["32LIVE", "33CHEF", "34CRIB", "35CRIB", "35FL", "35FUN", "36FUN", "36MB", "37BEST", "37GALLEY", "37PUB", "402BEDS"\]/.test(card)) {
-        fail("Forest River|Cardinal MY26 OEM lock missing (12 codes; library.rvusa.com/brochure/2026-Forest-River-Cardinal.pdf + OEM print)");
+      if (!/"2026": \["32LIVE", "33CHEF", "34CRIB", "35FL", "35FUN", "36MB", "37BEST", "402BEDS"\]/.test(card)) {
+        fail("Forest River|Cardinal MY26 dated-flyer lock missing (8 codes; 2026-Forest-River-Cardinal.pdf Title=2026 Flyer, footer 5/25)");
       }
       if (!/"2027": \["32CHILL", "33CHEF", "35CRIB", "36FL", "36FUN", "37GALLEY", "38DEN", "41DUB"\]/.test(card)) {
-        fail("Forest River|Cardinal MY27 brochure lock missing (8 codes incl. NEW 38DEN/41DUB; 2027-Forest-River-Cardinal.pdf)");
+        fail("Forest River|Cardinal MY27 brochure lock missing (8 codes incl. NEW 38DEN/41DUB; 2027-Forest-River-Cardinal.pdf footer 07/26)");
       }
       if (!/hitchType: "king pin"/.test(card)) {
         fail("Forest River|Cardinal must pin hitchType king pin");
       }
       if (/"2026": .*"3450RL"/.test(card) || /"2026": .*"3825FL"/.test(card) || /"2026": .*"3950RL"/.test(card) || /"2026": .*"3250BKX"/.test(card)) {
         fail("Forest River|Cardinal must not keep 2015-era 3450RL/3825FL/3950RL/3250BKX on 2026");
+      }
+      if (/"2026": .*"35CRIB"/.test(card) || /"2026": .*"36FUN"/.test(card) || /"2026": .*"37GALLEY"/.test(card) || /"2026": .*"37PUB"/.test(card)) {
+        fail("Forest River|Cardinal must not put undated-current/MY27 codes 35CRIB/36FUN/37GALLEY/37PUB on 2026");
       }
       if (/"2027": .*"32LIVE"/.test(card) || /"2027": .*"402BEDS"/.test(card)) {
         fail("Forest River|Cardinal must not stamp MY26-only codes onto 2027");

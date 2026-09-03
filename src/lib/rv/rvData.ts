@@ -15110,7 +15110,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Cardinal: {
       type: "Fifth Wheel",
-      floorplans: ["32LIVE", "33CHEF", "34CRIB", "35CRIB", "35FL", "35FUN", "36FUN", "36MB", "37BEST", "37GALLEY", "37PUB", "402BEDS", "32CHILL", "36FL", "38DEN", "41DUB"],
+      floorplans: ["32LIVE", "33CHEF", "34CRIB", "35FL", "35FUN", "36MB", "37BEST", "402BEDS", "32CHILL", "35CRIB", "36FL", "36FUN", "37GALLEY", "38DEN", "41DUB"],
       floorplansByYear: {
         "2010": ["3450RL", "3825FL", "3950RL"],
         "2011": ["3450RL", "3825FL", "3950RL"],
@@ -15128,7 +15128,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["3450RL", "3825FL", "3950RL"],
         "2024": ["3450RL", "3825FL", "3950RL"],
         "2025": ["3450RL", "3825FL", "3950RL"],
-        "2026": ["32LIVE", "33CHEF", "34CRIB", "35CRIB", "35FL", "35FUN", "36FUN", "36MB", "37BEST", "37GALLEY", "37PUB", "402BEDS"],
+        "2026": ["32LIVE", "33CHEF", "34CRIB", "35FL", "35FUN", "36MB", "37BEST", "402BEDS"],
         "2027": ["32CHILL", "33CHEF", "35CRIB", "36FL", "36FUN", "37GALLEY", "38DEN", "41DUB"]
       },
       lengthRange: [
