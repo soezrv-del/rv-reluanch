@@ -12417,3 +12417,241 @@ test("Keystone MHC MY2014–2024 invent scrub (omit 2014–2020; RVUSA lock 2021
     }
   }
 });
+
+test("Keystone Montana MY2014–2024 invent scrub (RVUSA m1499 locks; thin extract only)", () => {
+  const idx = CATALOG_INDEX.Keystone;
+  assert.ok(idx);
+
+  // Selectable years = FBY keys 2010–2027 (2010–2013 leftover banks untouched this slice).
+  assert.deepEqual(idx.Montana?.years, [
+    2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025,
+    2026, 2027,
+  ]);
+  assert.equal(idx.Montana?.yearStart, 1996);
+
+  // MHC body / years unchanged vs #104.
+  assert.deepEqual(idx["Montana High Country"]?.years, [2011, 2021, 2022, 2023, 2024, 2025, 2026, 2027]);
+  assert.equal(idx["Montana High Country"]?.yearStart, 2011);
+
+  const block = src("rvData.ts");
+  const k0 = block.indexOf('\n  "Keystone": {');
+  const k1 = block.indexOf('\n  "Grand Design": {');
+  const k = block.slice(k0, k1);
+  const mt = k.slice(k.indexOf("    Montana: {"), k.indexOf('    "Montana High Country"'));
+  const mhc = k.slice(k.indexOf('    "Montana High Country": {'), k.indexOf("    Cougar: {"));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  // KEEP INTACT vs main: MY2025–2027 Montana locks (do not rewrite).
+  assert.match(
+    mt,
+    /"2025": \["3123RL", "3231CK", "3531RE", "3532SP", "3623EB", "3761FL", "3781RL", "3793RD", "3795FK", "3857BR", "3901RK", "3915TB", "3941FO"\]/,
+  );
+  assert.match(
+    mt,
+    /"2026": \["3100RL", "3123RL", "3231CK", "3531RE", "3532SP", "3623EB", "3761FL", "3781RL", "3795FK", "3857BR", "3901RK", "3915TB", "3941FO"\]/,
+  );
+  assert.match(mt, /"2027": \["3100RL", "3500RD", "3600RO", "3800FL", "3900RK"\]/);
+  assert.doesNotMatch(mt, /"2027": .*"3231CK"/);
+  assert.doesNotMatch(mt, /"2026": .*"3600RO"/);
+  assert.doesNotMatch(mt, /"2025": .*"3100RL"/);
+
+  // 2010–2013 leftover banks stay (out of slice — do not invent-fill or rewrite).
+  assert.deepEqual(fbyYear(mt, 2010), ["3402RL", "3582RL", "3625RE", "3710FL", "3720RL", "3790RD"]);
+  assert.deepEqual(fbyYear(mt, 2011), ["3402RL", "3582RL", "3625RE", "3710FL", "3720RL", "3790RD"]);
+  assert.deepEqual(fbyYear(mt, 2012), ["3402RL", "3582RL", "3625RE", "3710FL", "3720RL", "3790RD", "3811MS"]);
+  assert.deepEqual(fbyYear(mt, 2013), ["3402RL", "3582RL", "3625RE", "3710FL", "3720RL", "3790RD", "3811MS"]);
+
+  // LOCK RVUSA Montana m1499 year cards (production, not dealer-stock galleries).
+  assert.deepEqual(fbyYear(mt, 2014), ["3610RL"]);
+  assert.deepEqual(fbyYear(mt, 2015), ["3720RL", "3790RD"]);
+  assert.deepEqual(fbyYear(mt, 2016), [
+    "3000RE",
+    "3160RL",
+    "3440RL",
+    "3610RL",
+    "3611RL",
+    "3660RL",
+    "3661RL",
+    "3710FL",
+    "3711FL",
+    "3720RL",
+    "3721RL",
+    "3790RD",
+    "3791RD",
+    "3820FK",
+    "3910FB",
+    "3911FB",
+    "3950BR",
+  ]);
+  assert.deepEqual(fbyYear(mt, 2017), [
+    "3000RE",
+    "3160RL",
+    "3660RL",
+    "3661RL",
+    "3720RL",
+    "3721RL",
+    "3730FL",
+    "3731FL",
+    "3790RD",
+    "3791RD",
+    "3810MSI",
+    "3811MS",
+    "3820FK",
+    "3920FB",
+    "3921FB",
+    "3950BR",
+  ]);
+  assert.ok(fbyYear(mt, 2017)?.includes("3810MSI"));
+  assert.equal(fbyYear(mt, 2017)?.includes("3810MS"), false);
+  assert.deepEqual(fbyYear(mt, 2018), [
+    "3120RL",
+    "3121RL",
+    "3130RE",
+    "3560RL",
+    "3561RL",
+    "3700LK",
+    "3701LK",
+    "3720RL",
+    "3721RL",
+    "3730FL",
+    "3731FL",
+    "3790RD",
+    "3791RD",
+    "3810MS",
+    "3811MS",
+    "3820FK",
+    "3920FB",
+    "3921FB",
+    "3930FB",
+    "3931FB",
+    "3950BR",
+  ]);
+  assert.deepEqual(fbyYear(mt, 2019), [
+    "3121RL",
+    "3130RE",
+    "3561RL",
+    "3701LK",
+    "3721RL",
+    "3741FK",
+    "3761FL",
+    "3791RD",
+    "3811MS",
+    "3855BR",
+    "3921FB",
+    "3931FB",
+  ]);
+  assert.deepEqual(fbyYear(mt, 2020), ["3810MS"]);
+  assert.deepEqual(fbyYear(mt, 2021), [
+    "3120RL",
+    "3121RL",
+    "3230CK",
+    "3231CK",
+    "3700LK",
+    "3701LK",
+    "3740FK",
+    "3741FK",
+    "3760FL",
+    "3761FL",
+    "3762BP",
+    "3763BP",
+    "3780RL",
+    "3781RL",
+    "3790RD",
+    "3791RD",
+    "3812MS",
+    "3813MS",
+    "3854BR",
+    "3855BR",
+    "3930FB",
+    "3931FB",
+  ]);
+  assert.deepEqual(fbyYear(mt, 2022), [
+    "3121RL",
+    "3231CK",
+    "3761FL",
+    "3763BP",
+    "3781RL",
+    "3791RD",
+    "3813MS",
+    "3855BR",
+    "3931FB",
+  ]);
+  assert.deepEqual(fbyYear(mt, 2023), [
+    "3121RL",
+    "3123RL",
+    "3231CK",
+    "3761FL",
+    "3763BP",
+    "3781RL",
+    "3791RD",
+    "3793RD",
+    "3813MS",
+    "3855BR",
+    "3857BR",
+    "3901RK",
+    "3931FB",
+    "3941FO",
+  ]);
+  assert.deepEqual(fbyYear(mt, 2024), [
+    "3123RL",
+    "3231CK",
+    "3531RE",
+    "3623EB",
+    "3761FL",
+    "3781RL",
+    "3793RD",
+    "3795FK",
+    "3857BR",
+    "3901RK",
+    "3915TB",
+    "3941FO",
+  ]);
+
+  // Never stamp MY2027 OEM five onto 2014–2024 keys (per-year array only).
+  for (const y of [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]) {
+    const plans = fbyYear(mt, y) ?? [];
+    for (const code of ["3100RL", "3500RD", "3600RO", "3800FL", "3900RK"]) {
+      assert.equal(plans.includes(code), false, `Montana ${y} must not stamp MY27 ${code}`);
+    }
+  }
+
+  // Leftover invent dropped from the Montana body (scrubbed-year-only codes).
+  assert.doesNotMatch(mt, /"3700RL"/);
+  assert.doesNotMatch(mt, /"3764KB"/);
+  assert.doesNotMatch(mt, /"3953FB"/);
+
+  // MHC body unchanged vs #104 (2011 PDF + omit 2014–2020 + RVUSA 2021–2024 + 2025–2027 locks).
+  assert.match(mhc, /yearStart:\s*2011/);
+  assert.match(mhc, /"2011": \["313RE", "323RL", "333DB", "343RL"\]/);
+  assert.doesNotMatch(mhc, /"2010":/);
+  assert.doesNotMatch(mhc, /"2012":/);
+  assert.doesNotMatch(mhc, /"2013":/);
+  for (let y = 2014; y <= 2020; y++) {
+    assert.doesNotMatch(mhc, new RegExp(`"${y}":`));
+  }
+  assert.match(
+    mhc,
+    /"2021": \[\s*"280CK",\s*"281CK",\s*"294RL",\s*"295RL",\s*"330RL",\s*"331RL",\s*"334BH",\s*"335BH",\s*"350BH",\s*"351BH",\s*"362RD",\s*"364BH",\s*"365BH",\s*"372RD",\s*"373RD",\s*"376FL",\s*"377FL",\s*"382TH",\s*"383TH",\s*"384BR",\s*"385BR"\s*\]/,
+  );
+  assert.match(mhc, /"2022": \["281CK", "295RL", "331RL", "335BH", "351BH", "373RD", "377FL", "385BR"\]/);
+  assert.match(mhc, /"2023": \["281CK", "295RL", "311RD", "331RL", "335BH", "351BH", "373RD", "377FL", "381TB", "385BR"\]/);
+  assert.match(mhc, /"2024": \["295RL", "311RD", "331RL", "335BH", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH"\]/);
+  assert.match(
+    mhc,
+    /"2025": \["295RL", "311RD", "325RK", "331RL", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH", "397FB"\]/,
+  );
+  assert.match(
+    mhc,
+    /"2026": \["290RL", "295RL", "311RD", "325RK", "331RL", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH", "397FB"\]/,
+  );
+  assert.match(mhc, /"2027": \["290RL", "300RK", "362BRK", "391TB", "396BH"\]/);
+  assert.doesNotMatch(mhc, /"2027": .*"397FB"/);
+  assert.doesNotMatch(mhc, /"335FL"/);
+  assert.doesNotMatch(mhc, /"370FL"/);
+  assert.doesNotMatch(mhc, /"381TH"/);
+});
