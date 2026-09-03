@@ -29,6 +29,17 @@ import {
 } from "../rv/catalogHonesty";
 import { parseCoachFromText } from "./parseCoach";
 import type { RVSpec } from "../rv/rvTypes";
+import { needsWebFallback } from "./webIntent";
+
+export {
+  looksLikeCasualNonResearch,
+  looksLikeLiveResearchQuestion,
+  looksLikePureLifestyleOrPayment,
+  looksLikeSpecQuestion,
+  needsWebFallback,
+  normalizeAskText,
+} from "./webIntent";
+export type { WebFallbackOpts, WebFallbackSpecs } from "./webIntent";
 
 export type CoachIdentity = {
   year: string;
@@ -429,33 +440,18 @@ export function formatVoiceCatalogAddendum(specs: GroundedSpecs): string {
   return `\n\n${formatCatalogGroundingBlock(specs)}\nSpeak those locked numbers. If UNKNOWN, say so in one breath — do not guess.`;
 }
 
-const SPEC_QUESTION_RE =
-  /\b(hp|horsepower|engine|chassis|torque|transmission|fuel|gvwr|gcwr|uvw|ccc|tow|hitch|mpg|length|weight|spec|brochure|powertrain|godzilla|cummins|f-?53)\b/i;
-
-export function looksLikeSpecQuestion(text: string): boolean {
-  return SPEC_QUESTION_RE.test(text || "");
-}
-
-/** Web search only when the user asked for a number we do not have. */
-export function needsWebFallback(
-  specs: GroundedSpecs | null,
-  userText: string,
-): boolean {
-  if (!looksLikeSpecQuestion(userText)) return false;
-  if (!specs) return true;
-  return specs.missingHard;
-}
-
 export function buildChatGrounding(opts: {
   query: string;
   facts?: ActiveCoach | null;
   extraText?: string;
+  agentMode?: boolean;
 }): {
   identity: CoachIdentity | null;
   specs: GroundedSpecs | null;
   block: string;
   needsWeb: boolean;
 } {
+  const webOpts = { agentMode: opts.agentMode };
   const identity = resolveCoachIdentity(
     opts.query,
     opts.facts,
@@ -466,7 +462,7 @@ export function buildChatGrounding(opts: {
       identity: null,
       specs: null,
       block: "",
-      needsWeb: looksLikeSpecQuestion(opts.query),
+      needsWeb: needsWebFallback(null, opts.query, webOpts),
     };
   }
   const specs = lookupGroundedSpecs(identity);
@@ -474,7 +470,7 @@ export function buildChatGrounding(opts: {
     identity,
     specs,
     block: `${formatCatalogGroundingBlock(specs)}\n\n${GROUNDING_RULES}`,
-    needsWeb: needsWebFallback(specs, opts.query),
+    needsWeb: needsWebFallback(specs, opts.query, webOpts),
   };
 }
 
