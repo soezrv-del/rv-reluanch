@@ -2159,6 +2159,94 @@ function main() {
       if (/"2026": .*"295RDS"/.test(cfw) || /"2026": .*"354FLS"/.test(cfw) || /"2026": .*"368MBI"/.test(cfw) || /"2026": .*"2100ML"/.test(cfw)) {
         fail("Keystone|Cougar 5th Wheel must omit 295RDS / 354FLS / 368MBI / Sport on 2026");
       }
+      // MY2010 / MY2012 leftover invent omitted (RVUSA Cougar Premium FW m1492 — prefer omit).
+      // Do not invent-fill 30RLS / 32BHSWE / 34TSB / 345MBS. Never stamp MY2027 OEM nine / 295RDS onto 2010–2024.
+      if (/"2010":/.test(cfw) || /"2012":/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel must omit leftover 2010/2012 fby (prefer omit — no 30RLS/32BHSWE/34TSB/345MBS invent)");
+      }
+      if (/"30RLS"/.test(cfw) || /"32BHSWE"/.test(cfw) || /"34TSB"/.test(cfw) || /"345MBS"/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel must drop leftover invent 30RLS / 32BHSWE / 34TSB / 345MBS");
+      }
+      // LOCK RVUSA m1492 year cards (production). THIN 2011 / 2014 keep extract only.
+      if (!/"2011": \["297RKS", "328QBS"\]/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel MY11 RVUSA lock missing (THIN: 297RKS / 328QBS; m1492-y2011)");
+      }
+      if (
+        !/"2013": \["280RLS", "280RLSWE", "318SAB", "318SABWE", "324RLB", "324RLBWE", "330RBKWE", "331MKS", "331MKSWE"\]/.test(
+          cfw,
+        )
+      ) {
+        fail("Keystone|Cougar 5th Wheel MY13 RVUSA lock missing (9 codes; keep 280RLSWE as printed)");
+      }
+      if (!/"2014": \["313RLIWE"\]/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel MY14 RVUSA lock missing (THIN: 313RLIWE only; m1492-y2014)");
+      }
+      if (!/"2015": \["280RLS", "288RLS", "301SAB", "336BHS"\]/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel MY15 RVUSA lock missing (4 codes; m1492-y2015)");
+      }
+      if (!/"2016": \["288RLS", "303RLS", "325RPSWE", "326RDSWE", "341RKI"\]/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel MY16 RVUSA lock missing (5 codes; keep 325RPSWE/326RDSWE as printed)");
+      }
+      if (
+        !/"2017": \["326RDS", "326SRX", "327RES", "327RLK", "333MKS", "336BHS", "337FLS", "341RKI", "359MBI"\]/.test(
+          cfw,
+        )
+      ) {
+        fail("Keystone|Cougar 5th Wheel MY17 RVUSA lock missing (9 codes; m1492-y2017)");
+      }
+      if (!/"2018": \["310RLS", "311RES", "338RLK", "344MKS", "366RDS", "367FLS", "368MBI", "369BHS"\]/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel MY18 RVUSA lock missing (8 codes; m1492-y2018)");
+      }
+      if (!/"2019": \["315RLS", "338RLK", "361RLW", "362RKS", "366RDS", "367FLS", "368MBI", "369BHS"\]/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel MY19 RVUSA lock missing (8 codes; m1492-y2019)");
+      }
+      if (
+        !/"2020": \["302RLS", "307RES", "315RLS", "338RLK", "361RLW", "362RKS", "364BHL", "366RDS", "367FLS", "368MBI", "369BHS"\]/.test(
+          cfw,
+        )
+      ) {
+        fail("Keystone|Cougar 5th Wheel MY20 RVUSA lock missing (11 codes; m1492-y2020)");
+      }
+      if (
+        !/"2021": \["290RLS", "302RLS", "315RLS", "316RLS", "354FLS", "355FBS", "357UMR", "364BHL", "366RDS", "368MBI"\]/.test(
+          cfw,
+        )
+      ) {
+        fail("Keystone|Cougar 5th Wheel MY21 RVUSA lock missing (10 codes; m1492-y2021)");
+      }
+      if (!/"2022": \["290RLS", "316RLS", "354FLS", "355FBS", "357UMR", "364BHL", "368MBI"\]/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel MY22 RVUSA lock missing (7 codes; m1492-y2022)");
+      }
+      if (!/"2023": \["290RLS", "316RLS", "320RDS", "350DMS", "354FLS", "355FBS", "364BHL", "368MBI"\]/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel MY23 RVUSA lock missing (8 codes; m1492-y2023)");
+      }
+      if (
+        !/"2024": \["260MLE", "290RLS", "316RLS", "316RLSSE", "320RDS", "350DMS", "354FLS", "355FBS", "364BHL", "368MBI"\]/.test(
+          cfw,
+        )
+      ) {
+        fail("Keystone|Cougar 5th Wheel MY24 RVUSA lock missing (10 codes; keep 316RLSSE as printed)");
+      }
+      for (const y of [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]) {
+        const ym = cfw.match(new RegExp(`"${y}": \\[([^\\]]*)\\]`));
+        const inner = ym?.[1] ?? "";
+        if (/"295RDS"/.test(inner)) {
+          fail(`Keystone|Cougar 5th Wheel must not stamp MY27 295RDS onto ${y}`);
+        }
+        if (
+          /"260MLE"/.test(inner) &&
+          /"290RLS"/.test(inner) &&
+          /"295RDS"/.test(inner) &&
+          /"316RLS"/.test(inner) &&
+          /"320RDS"/.test(inner) &&
+          /"350LLK"/.test(inner) &&
+          /"355FBS"/.test(inner) &&
+          /"360MBI"/.test(inner) &&
+          /"364BHL"/.test(inner)
+        ) {
+          fail(`Keystone|Cougar 5th Wheel must not stamp MY27 OEM nine onto ${y}`);
+        }
+      }
 
       const cst = slice("Cougar Sport", "Cougar Half-Ton");
       if (!/"2027": \["2100ML", "2700BH", "3100BH"\]/.test(cst)) {
