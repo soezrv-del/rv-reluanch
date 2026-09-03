@@ -359,27 +359,24 @@ export function getModelsForYearMake(
  * - Missing year but model known → all floorplans for model
  * - Missing model → []
  */
-export function getFloorplansForYear(
+/**
+ * Year-scoped floorplan list from a catalog spec alone.
+ * Empty `floorplansByYear[year]` stays empty — never substitutes the aggregate list.
+ */
+export function floorplansForYearFromSpec(
   year: string,
-  make: string,
-  model: string,
+  spec: CatalogIndexSpec,
 ): string[] {
-  const spec = catalogMap()[make]?.[model];
-  if (!spec) return [];
-
   const y = parseInt(year, 10);
   const hasYear = Boolean(year && Number.isFinite(y));
   const all = [...(spec.floorplans ?? [])];
 
   if (!hasYear) {
-    // No year prior → full floorplan list for this model
     return all;
   }
 
   if (!modelAvailableInYear(spec, y)) return [];
 
-  // Explicit OEM year lineup when we have it — do NOT fall back to the full
-  // multi-year floorplan dump (that was showing layouts from other years).
   const byYearMap = spec.floorplansByYear;
   if (byYearMap && Object.keys(byYearMap).length > 0) {
     const byYear = byYearMap[year] ?? byYearMap[String(y)];
@@ -387,6 +384,132 @@ export function getFloorplansForYear(
   }
 
   return all;
+}
+
+export function getFloorplansForYear(
+  year: string,
+  make: string,
+  model: string,
+): string[] {
+  const spec = catalogMap()[make]?.[model];
+  if (!spec) return [];
+  return floorplansForYearFromSpec(year, spec);
+}
+
+/** Years with at least one sourced floorplan code for this model. */
+export function yearsWithSourcedFloorplans(
+  make: string,
+  model: string,
+): number[] {
+  const spec = catalogMap()[make]?.[model];
+  if (!spec) return [];
+
+  const fby = spec.floorplansByYear;
+  if (fby && Object.keys(fby).length > 0) {
+    return Object.entries(fby)
+      .filter(([, fps]) => fps?.length)
+      .map(([y]) => parseInt(y, 10))
+      .filter((n) => Number.isFinite(n))
+      .sort((a, b) => a - b);
+  }
+
+  if ((spec.floorplans ?? []).length > 0) {
+    return yearsFromFloorplansByYear(spec);
+  }
+
+  return [];
+}
+
+/** Non-empty sourced floorplan rows grouped by OEM year. */
+export function sourcedFloorplansByYear(
+  make: string,
+  model: string,
+): { year: number; floorplans: string[] }[] {
+  const spec = catalogMap()[make]?.[model];
+  if (!spec?.floorplansByYear) return [];
+
+  return Object.entries(spec.floorplansByYear)
+    .filter(([, fps]) => fps?.length)
+    .map(([y, fps]) => ({ year: parseInt(y, 10), floorplans: [...fps] }))
+    .filter((row) => Number.isFinite(row.year))
+    .sort((a, b) => a.year - b.year);
+}
+
+function modelNameTokens(name: string): string[] {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter((t) => t.length >= 3);
+}
+
+function modelsLookRelated(parent: string, candidate: string): boolean {
+  const p = parent.toLowerCase().trim();
+  const c = candidate.toLowerCase().trim();
+  if (!p || !c || p === c) return false;
+  if (c.includes(p) || p.includes(c)) return true;
+
+  const pt = new Set(modelNameTokens(parent));
+  const ct = modelNameTokens(candidate);
+  const shared = ct.filter((t) => pt.has(t));
+  if (shared.length >= 2) return true;
+  return shared.some((t) => t.length >= 4);
+}
+
+/**
+ * Same-make models with sourced floorplans in `year` that appear related by
+ * name overlap or brochure description reference — no hardcoded brand map.
+ */
+export function relatedModelsWithFloorplansInYear(
+  make: string,
+  model: string,
+  year: string,
+): string[] {
+  const y = parseInt(year, 10);
+  if (!Number.isFinite(y)) return [];
+
+  const map = catalogMap()[make];
+  if (!map) return [];
+
+  const live = peekCatalog()?.RV_DATA?.[make];
+  const parentDesc = live?.[model]?.description?.toLowerCase() ?? "";
+  const out: string[] = [];
+
+  for (const [name, spec] of Object.entries(map)) {
+    if (name === model) continue;
+    if (!modelAvailableInYear(spec, y)) continue;
+    if (!getFloorplansForYear(year, make, name).length) continue;
+
+    const desc = live?.[name]?.description?.toLowerCase() ?? "";
+    const descRefsParent =
+      desc.includes(model.toLowerCase()) ||
+      parentDesc.includes(name.toLowerCase());
+
+    if (modelsLookRelated(model, name) || descRefsParent) {
+      out.push(name);
+    }
+  }
+
+  return out.sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Floorplans to show under “Floorplans this year”.
+ * Catalog year scope wins; never substitutes aggregate or live when the year row is empty.
+ */
+export function floorplansForSelectedYear(
+  year: string,
+  make: string,
+  model: string,
+  live?: { live?: boolean; floorplansThisYear?: string[] } | null,
+): string[] {
+  const catalog = getFloorplansForYear(year, make, model);
+  if (!catalog.length) return [];
+  if (live?.live && live.floorplansThisYear?.length) {
+    return live.floorplansThisYear;
+  }
+  return catalog;
 }
 
 export function getFloorplans(make: string, model: string): string[] {
@@ -725,7 +848,7 @@ export function searchCatalog(sel: Partial<RVSelection>): RVResult[] {
       year: sel.year,
       make,
       model,
-      floorplan: sel.floorplan || fps[0] || data.floorplans[0] || "",
+      floorplan: sel.floorplan || fps[0] || "",
       rvType: data.type,
       data,
     });
