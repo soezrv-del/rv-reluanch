@@ -2402,6 +2402,64 @@ function main() {
       if (/"2027":/.test(pass)) {
         fail("Keystone|Passport collapsed bucket must omit 2027 (split to Super Lite + Classic)");
       }
+      // MY2010–2020 + MY2023 leftover invent omitted (RVUSA Passport m1502 — prefer omit).
+      // Do not invent-fill 189ML / 219BH / 2400BH bank. Do not merge SL / Classic.
+      // LOCK RVUSA m1502 Specs. THIN 2025 keep 2600FK / 2710KB / 3360BK. WE-only 2022 as printed.
+      for (const y of [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2023]) {
+        if (new RegExp(`"${y}":`).test(pass)) {
+          fail(`Keystone|Passport must omit leftover ${y} fby (prefer omit — no 189ML/219BH/2400BH invent)`);
+        }
+      }
+      if (
+        /"189ML"/.test(pass) ||
+        /"199ML"/.test(pass) ||
+        /"219BH"/.test(pass) ||
+        /"221BH"/.test(pass) ||
+        /"239ML"/.test(pass) ||
+        /"2400BH"/.test(pass) ||
+        /"248BH"/.test(pass) ||
+        /"2500RL"/.test(pass) ||
+        /"253RD"/.test(pass) ||
+        /"2700BH"/.test(pass) ||
+        /"2920BH"/.test(pass)
+      ) {
+        fail("Keystone|Passport must drop leftover invent 189ML / 219BH / 2400BH bank");
+      }
+      if (!/"2021": \["2400RB", "2400RBWE", "2401BH", "2401BHWE"\]/.test(pass)) {
+        fail("Keystone|Passport MY21 RVUSA lock missing (4 codes; m1502 Specs)");
+      }
+      if (
+        !/"2022": \["189RBWE", "219BHWE", "221BHWE", "229RKWE", "2400RBWE", "2401BHWE", "268BHWE", "2700RLWE", "2704RKWE", "282QBWE", "2951BHWE"\]/.test(
+          pass,
+        )
+      ) {
+        fail("Keystone|Passport MY22 RVUSA lock missing (WE-only 11 codes; m1502 Specs — no East twins)");
+      }
+      if (/"2022": .*"219BH"/.test(pass) || /"2022": .*"221BH"/.test(pass) || /"2022": .*"229BHWE"/.test(pass)) {
+        fail("Keystone|Passport must not invent East 219BH/221BH or paste SL 229BHWE onto 2022");
+      }
+      if (
+        !/"2024": \["2400RB", "2400RBWE", "2401BH", "2401BHWE", "2700RL", "2704RK", "2704RKWE", "2951BH", "2951BHWE", "3352BH"\]/.test(
+          pass,
+        )
+      ) {
+        fail("Keystone|Passport MY24 RVUSA lock missing (10 codes; m1502 Specs)");
+      }
+      if (!/"2025": \["2600FK", "2710KB", "3360BK"\]/.test(pass)) {
+        fail("Keystone|Passport MY25 RVUSA lock missing (THIN: 2600FK/2710KB/3360BK; m1502 Specs)");
+      }
+      if (/"2025": .*"189RB"/.test(pass) || /"2025": .*"219BH"/.test(pass) || /"2025": .*"253RD"/.test(pass) || /"2025": .*"2900BHWE"/.test(pass)) {
+        fail("Keystone|Passport must not paste SL MY2025 nineteen onto 2025");
+      }
+      if (!/"2026": \["2600FK", "2710KB", "3100RE", "3300BK", "3360BK"\]/.test(pass)) {
+        fail("Keystone|Passport MY26 RVUSA lock missing (5 codes; 3100RE is m1502 this year only)");
+      }
+      if (/"2026": .*"229BH"/.test(pass) || /"2026": .*"253RD"/.test(pass) || /"2026": .*"3401QD"/.test(pass)) {
+        fail("Keystone|Passport must not paste SL MY2026 fifteen onto 2026");
+      }
+      if (/"2021": .*"3100RE"/.test(pass) || /"2022": .*"3100RE"/.test(pass) || /"2024": .*"3100RE"/.test(pass) || /"2025": .*"3100RE"/.test(pass)) {
+        fail("Keystone|Passport must not back-date m1502 3100RE onto 2021/2022/2024/2025");
+      }
 
       const bxf = slice("Bullet Crossfire", "Passport");
       if (!/"2027": \["208MKS", "222BHS", "2290BH", "2290BHWE", "234RBK", "245RKS", "245RKSWE", "259REV", "267MRB", "287RLS", "287RLSWE", "310RES"\]/.test(bxf)) {
