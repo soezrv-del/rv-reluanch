@@ -105,7 +105,7 @@ test("chat must not write Facts cache; Live must not fill hard fields", () => {
   assert.match(guard, /Live Grok never writes engine/);
   assert.match(cache, /Chat answers must never call saveVerifiedDossier/);
   assert.match(api, /catalogContext/);
-  assert.match(api, /fetchWebSearchNotes/);
+  assert.match(api, /executeWebResearch/);
   assert.doesNotMatch(api, /search_parameters/);
 });
 
@@ -164,7 +164,7 @@ test("web search model fallbacks are current Responses + web_search ids", () => 
   assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 7_000);
   assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 12_000);
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
-  assert.match(api, /fetchWebSearchNotes/);
+  assert.match(api, /executeWebResearch/);
   assert.match(api, /CHAT_WEB_SEARCH_TIMEOUT_MS/);
   assert.doesNotMatch(api, /VOICE_WEB_SEARCH/);
 });

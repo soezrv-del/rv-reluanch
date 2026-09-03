@@ -161,8 +161,7 @@ test("chat and voice routes pass the new timeout/profile", () => {
   );
   assert.match(chat, /CHAT_WEB_SEARCH_TIMEOUT_MS/);
   assert.match(chat, /profile: "chat"/);
-  assert.match(voice, /profile: "voice"/);
-  assert.match(voice, /VOICE_WEB_SEARCH_TIMEOUT_MS/);
-  assert.doesNotMatch(chat, /search_parameters/);
-  assert.doesNotMatch(voice, /search_parameters/);
+  assert.match(voice, /executeWebResearch/);
+  assert.match(voice, /webResearchJsonResponse/);
+  assert.doesNotMatch(voice, /fetchWebSearchNotes/);
 });

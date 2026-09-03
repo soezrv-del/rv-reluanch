@@ -151,9 +151,8 @@ test("voice research reuses webIntent — no second detector", () => {
     join(root, "../../routes/api/rvgrok.web-research.ts"),
     "utf8",
   );
-  assert.match(api, /needsWebFallback/);
-  assert.match(api, /fetchWebSearchNotes/);
-  assert.match(api, /VOICE_WEB_SEARCH_TIMEOUT_MS/);
+  assert.match(api, /executeWebResearch/);
+  assert.match(api, /webResearchJsonResponse/);
   assert.doesNotMatch(api, /search_parameters/);
   const realtime = src("realtime.ts");
   assert.match(realtime, /buildChatGrounding/);
