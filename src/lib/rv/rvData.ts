@@ -9375,8 +9375,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "292BHDS",
           "326BHDE",
           "326BHDS"
-        ],
-        "2026": ["192RBS", "23SE", "246RKS", "257BHS", "259FKDS", "292BHDS", "326BHDE"]
+        ]
+        // No 2026–27 on this collapsed bucket — current OEM is Freedom Express Ultra Lite
+        // + Freedom Express Select. Do not merge those series here.
       },
       lengthRange: [
         20,
@@ -9394,6 +9395,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
       recalls: 0,
       rating: 4.25,
       image: RV_CARD_IMAGE,
@@ -9406,7 +9408,96 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1964,
       warrantyYears: 2,
       yearStart: 2012,
-      description: "Coachmen Freedom Express — ultra-lite / Select travel trailer family. Half-ton friendly bunkhouses (257BHS, 326BHDE). High dealer volume."
+      description: "Coachmen Freedom Express — collapsed historical TT bucket (2012–2025 leftover). Current OEM is Freedom Express Ultra Lite + Freedom Express Select — do not merge those codes here. MY2026–2027 omitted (empty is correct)."
+    },
+    "Freedom Express Ultra Lite": {
+      type: "Travel Trailer",
+      floorplans: [
+        "192RBS",
+        "22MLS",
+        "245RKS",
+        "252RBS",
+        "258BHS",
+        "259FKDS",
+        "271BHE",
+        "274RKS",
+        "288BHDS",
+        "292BHDS",
+        "320BHDS",
+        "324RLDS",
+        "326BHDS"
+      ],
+      floorplansByYear: {
+        // yearStart 2014 (RVUSA m6854 first available year). Older fby omitted this slice.
+        // OEM coachmenrv.com/print/floorplans/freedom-express-ultra-lite + /freedom-express-ultra-lite
+        // (2026 Freedom Express Ultra Lite Floorplans):
+        // 192RBS | 22MLS | 245RKS | 252RBS | 258BHS | 259FKDS | 271BHE | 274RKS |
+        // 288BHDS | 292BHDS | 320BHDS | 324RLDS | 326BHDS
+        // Do not copy 2025 leftover 246RKS / 294BHDS / 298FDS. No 2027 OEM/RVUSA family card.
+        "2026": [
+          "192RBS",
+          "22MLS",
+          "245RKS",
+          "252RBS",
+          "258BHS",
+          "259FKDS",
+          "271BHE",
+          "274RKS",
+          "288BHDS",
+          "292BHDS",
+          "320BHDS",
+          "324RLDS",
+          "326BHDS"
+        ]
+      },
+      lengthRange: [22, 37],
+      weightRange: [4500, 7500],
+      slideouts: 1,
+      sleeps: 8,
+      msrpRange: [27900, 52000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.25,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      awningLength: 14,
+      ceilingHeight: 81,
+      founded: 1964,
+      warrantyYears: 2,
+      yearStart: 2014,
+      description: "Coachmen Freedom Express Ultra Lite — current half-ton TT series. OEM MY2026: 192RBS / 22MLS / 245RKS / 252RBS / 258BHS / 259FKDS / 271BHE / 274RKS / 288BHDS / 292BHDS / 320BHDS / 324RLDS / 326BHDS. Sibling of Freedom Express Select — do not dump Select SE codes or collapsed Freedom Express leftovers here."
+    },
+    "Freedom Express Select": {
+      type: "Travel Trailer",
+      floorplans: ["18SE", "19SE", "21SE", "247SE", "249SE", "29SE", "30SE", "31SE"],
+      floorplansByYear: {
+        // yearStart 2016 (RVUSA m6453 first available year). Older fby omitted this slice.
+        // OEM coachmenrv.com/print/floorplans/freedom-express-select (current card):
+        // 18SE | 19SE | 21SE | 247SE | 249SE | 29SE | 30SE | 31SE
+        // RVUSA 2026 family page (m6453-y2026) prints 6 (drops 249SE / 30SE) — keep OEM eight.
+        // RVUSA has a 2027 30SE unit page only — no 2027 family card → omit 2027 (do not copy the eight forward).
+        "2026": ["18SE", "19SE", "21SE", "247SE", "249SE", "29SE", "30SE", "31SE"]
+      },
+      lengthRange: [21, 36],
+      weightRange: [3900, 7200],
+      slideouts: 1,
+      sleeps: 9,
+      msrpRange: [24900, 48000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      awningLength: 14,
+      ceilingHeight: 81,
+      founded: 1964,
+      warrantyYears: 2,
+      yearStart: 2016,
+      description: "Coachmen Freedom Express Select — value SE-coded travel trailers. OEM MY2026: 18SE / 19SE / 21SE / 247SE / 249SE / 29SE / 30SE / 31SE. Sibling of Freedom Express Ultra Lite — do not merge Ultra Lite codes or collapsed 23SE leftovers here."
     },
     Catalina: {
       type: "Travel Trailer",
@@ -9503,18 +9594,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "283RNR",
           "293QBCK",
           "303RKDS"
-        ],
-        "2026": [
-          "243RBS",
-          "263BHSCK",
-          "263FKDS",
-          "273DBHCK",
-          "283EPIC",
-          "283RKS",
-          "283RNR",
-          "293QBCK",
-          "303RKDS"
         ]
+        // No 2026–27 on this collapsed bucket — current OEM is Catalina Legacy Edition /
+        // Summit Series 7 / Summit Series 8 / Trail Blazer / Destination Series.
+        // Summit short codes (134BHX-class) must never land here.
       },
       lengthRange: [
         26,
@@ -9532,6 +9615,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
       recalls: 0,
       rating: 4.2,
       image: RV_CARD_IMAGE,
@@ -9544,7 +9628,237 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1964,
       warrantyYears: 2,
       yearStart: 2010,
-      description: "Coachmen Catalina (Legacy Edition) — high-volume family TT. Popular 283RKS / 283EPIC / 263BHSCK. Half-ton capable on many plans."
+      description: "Coachmen Catalina — collapsed historical TT bucket (2012–2025 leftover). Current OEM is Catalina Legacy Edition, Summit Series 7, Summit Series 8, Trail Blazer, and Destination Series. Summit / Destination / Trail Blazer codes must not land here. MY2026–2027 omitted (empty is correct)."
+    },
+    "Catalina Legacy Edition": {
+      type: "Travel Trailer",
+      floorplans: [
+        "243RBS",
+        "263BHSCK",
+        "263FKDS",
+        "273DBHCK",
+        "283RKS",
+        "283RNR",
+        "293QBCK",
+        "293TQBSCK",
+        "303RKDS",
+        "313RLTS",
+        "323BHDSCK",
+        "323MAZE",
+        "333DBDSCK",
+        "333DORM",
+        "343BHTS",
+        "343BHTS-2Q",
+        "343BHTS-DEN"
+      ],
+      floorplansByYear: {
+        // yearStart 2017 (RVUSA m6541 available years 2017–2026). Older fby omitted this slice.
+        // OEM coachmenrv.com/print/floorplans/catalina-legacy-edition + 2026 Legacy Edition card:
+        // 243RBS | 263BHSCK | 263FKDS | 273DBHCK | 283RKS | 283RNR | 293QBCK | 293TQBSCK |
+        // 303RKDS | 313RLTS | 323BHDSCK | 323MAZE | 333DBDSCK | 333DORM | 343BHTS |
+        // 343BHTS-2Q | 343BHTS-DEN
+        // RVUSA 2026 (m6541-y2026) prints 15 (drops 283RNR / 333DBDSCK) — keep OEM seventeen.
+        // 283EPIC is not on the 2026 OEM card. No 2027 OEM/RVUSA family card.
+        "2026": [
+          "243RBS",
+          "263BHSCK",
+          "263FKDS",
+          "273DBHCK",
+          "283RKS",
+          "283RNR",
+          "293QBCK",
+          "293TQBSCK",
+          "303RKDS",
+          "313RLTS",
+          "323BHDSCK",
+          "323MAZE",
+          "333DBDSCK",
+          "333DORM",
+          "343BHTS",
+          "343BHTS-2Q",
+          "343BHTS-DEN"
+        ]
+      },
+      lengthRange: [28, 39],
+      weightRange: [5500, 9200],
+      slideouts: 1,
+      sleeps: 8,
+      msrpRange: [28900, 56000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      awningLength: 14,
+      ceilingHeight: 81,
+      founded: 1964,
+      warrantyYears: 2,
+      yearStart: 2017,
+      description: "Coachmen Catalina Legacy Edition — current family travel-trailer card. OEM MY2026: 243RBS / 263BHSCK / 263FKDS / 273DBHCK / 283RKS / 283RNR / 293QBCK / 293TQBSCK / 303RKDS / 313RLTS / 323BHDSCK / 323MAZE / 333DBDSCK / 333DORM / 343BHTS / 343BHTS-2Q / 343BHTS-DEN. Summit / Trail Blazer / Destination codes stay off this key."
+    },
+    "Catalina Summit Series 7": {
+      type: "Travel Trailer",
+      floorplans: [
+        "134BHX",
+        "134RDX",
+        "134REX",
+        "134RKX",
+        "154RBX",
+        "154RDX",
+        "164BHX",
+        "184BHSX",
+        "184MKS",
+        "194RBS"
+      ],
+      floorplansByYear: {
+        // yearStart 2020 (RVUSA m9072-y2020). Older fby omitted this slice.
+        // OEM 2026 Summit Series 7 card (coachmenrv.com/catalina-summit-series-7 + print):
+        // 134BHX | 134RDX | 134REX | 134RKX | 154RBX | 154RDX | 164BHX | 184BHSX | 184MKS | 194RBS
+        // 184BHS / 184RBS are Dealer Stock Only on the OEM card — omit.
+        // Never dump these short codes into collapsed Catalina. No 2027 OEM/RVUSA family card.
+        "2026": [
+          "134BHX",
+          "134RDX",
+          "134REX",
+          "134RKX",
+          "154RBX",
+          "154RDX",
+          "164BHX",
+          "184BHSX",
+          "184MKS",
+          "194RBS"
+        ]
+      },
+      lengthRange: [16, 26],
+      weightRange: [2600, 5300],
+      slideouts: 0,
+      sleeps: 6,
+      msrpRange: [18900, 36000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      awningLength: 12,
+      ceilingHeight: 78,
+      founded: 1964,
+      warrantyYears: 2,
+      yearStart: 2020,
+      description: "Coachmen Catalina Summit Series 7 — ultra-light 90-inch-wide TT. OEM MY2026 production: 134BHX / 134RDX / 134REX / 134RKX / 154RBX / 154RDX / 164BHX / 184BHSX / 184MKS / 194RBS. DSO 184BHS / 184RBS omitted. Do not merge into collapsed Catalina or Summit Series 8."
+    },
+    "Catalina Summit Series 8": {
+      type: "Travel Trailer",
+      floorplans: ["211BH", "221EPIC", "231BHS", "231MKS", "261BH", "261BHS", "281QBUNK"],
+      floorplansByYear: {
+        // yearStart 2020 (RVUSA m9073 first available year). Older fby omitted this slice.
+        // OEM coachmenrv.com/print/floorplans/catalina-summit-series-8:
+        // 211BH | 221EPIC | 231BHS | 231MKS | 261BH | 261BHS | 281QBUNK
+        // 221MKE / 271DBS are DSO on the OEM card — omit.
+        // RVUSA 2026 (m9073-y2026) prints 9 including those DSO rows. No 2027 family card.
+        "2026": ["211BH", "221EPIC", "231BHS", "231MKS", "261BH", "261BHS", "281QBUNK"]
+      },
+      lengthRange: [25, 37],
+      weightRange: [4600, 7400],
+      slideouts: 1,
+      sleeps: 10,
+      msrpRange: [22900, 42000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      awningLength: 14,
+      ceilingHeight: 78,
+      founded: 1964,
+      warrantyYears: 2,
+      yearStart: 2020,
+      description: "Coachmen Catalina Summit Series 8 — half-ton / SUV-tow Catalina TT. OEM MY2026 production: 211BH / 221EPIC / 231BHS / 231MKS / 261BH / 261BHS / 281QBUNK. DSO 221MKE / 271DBS omitted. Do not merge into collapsed Catalina or Summit Series 7."
+    },
+    "Catalina Trail Blazer": {
+      type: "Toy Hauler",
+      floorplans: ["26TH", "27THS", "28THS", "29THS"],
+      floorplansByYear: {
+        // yearStart 2017 (RVUSA m6039 first available year). Older fby omitted this slice.
+        // OEM coachmenrv.com/print/floorplans/catalina-trail-blazer + 2026 Trail Blazer brochure:
+        // 26TH | 27THS | 28THS | 29THS
+        // Bumper-pull TT toy-hauler body. No 2027 OEM/RVUSA family card.
+        "2026": ["26TH", "27THS", "28THS", "29THS"]
+      },
+      lengthRange: [29, 36],
+      weightRange: [5400, 7900],
+      slideouts: 1,
+      sleeps: 6,
+      msrpRange: [34900, 62000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      awningLength: 16,
+      ceilingHeight: 81,
+      founded: 1964,
+      warrantyYears: 2,
+      yearStart: 2017,
+      garageLengthFt: 10,
+      garageWidthFt: 8,
+      garageHeightIn: 78,
+      rampWidthFt: 7.5,
+      description: "Coachmen Catalina Trail Blazer — bumper-pull toy-hauler TT. OEM MY2026: 26TH / 27THS / 28THS / 29THS. Do not merge into collapsed Catalina or Adrenaline."
+    },
+    "Catalina Destination Series": {
+      type: "Travel Trailer",
+      floorplans: [
+        "35FME",
+        "39MKTS",
+        "40BHTS",
+        "40BHTS2Q",
+        "40BHTSDEN",
+        "42CONDO",
+        "43CONDO",
+        "44CONDO"
+      ],
+      floorplansByYear: {
+        // yearStart 2015 (RVUSA m5403 available years 2015–2026). Older fby omitted this slice.
+        // OEM coachmenrv.com/print/floorplans/catalina-destination-series + RVUSA 2026 (m5403-y2026):
+        // 35FME | 39MKTS | 40BHTS | 40BHTS2Q | 40BHTSDEN | 42CONDO | 43CONDO | 44CONDO
+        // Bumper-pull destination / park trailer — not a fifth wheel. No 2027 family card.
+        "2026": [
+          "35FME",
+          "39MKTS",
+          "40BHTS",
+          "40BHTS2Q",
+          "40BHTSDEN",
+          "42CONDO",
+          "43CONDO",
+          "44CONDO"
+        ]
+      },
+      lengthRange: [40, 46],
+      weightRange: [10200, 13300],
+      slideouts: 3,
+      sleeps: 10,
+      msrpRange: [39900, 79000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      awningLength: 16,
+      ceilingHeight: 84,
+      founded: 1964,
+      warrantyYears: 2,
+      yearStart: 2015,
+      description: "Coachmen Catalina Destination Series — bumper-pull destination / park trailers. OEM/RVUSA MY2026: 35FME / 39MKTS / 40BHTS / 40BHTS2Q / 40BHTSDEN / 42CONDO / 43CONDO / 44CONDO. Do not merge into collapsed Catalina."
     },
     Galleria: {
       type: "Class B",
@@ -9666,8 +9980,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["213RDS", "245BHS", "249RBS", "251RBK", "288BHS"],
         "2023": ["213RDS", "245BHS", "249RBS", "251RBK", "288BHS"],
         "2024": ["213RDS", "245BHS", "249RBS", "251RBK", "288BHS"],
-        "2025": ["213RDS", "245BHS", "249RBS", "251RBK", "288BHS"],
-        "2026": ["213RDS", "245BHS", "249RBS", "251RBK"]
+        "2025": ["213RDS", "245BHS", "249RBS", "251RBK", "288BHS"]
+        // No 2026–27 on this collapsed bucket — current OEM is Apex Nano + Apex Ultra-Lite.
+        // Do not merge Nano 181RB–228BHS or Ultra-Lite 24RBX / 241BHS-class codes here.
       },
       lengthRange: [
         21,
@@ -9685,6 +10000,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
       recalls: 0,
       rating: 4.3,
       image: RV_CARD_IMAGE,
@@ -9697,7 +10013,131 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1964,
       warrantyYears: 2,
       yearStart: 2010,
-      description: "Coachmen Apex — ultra-lightweight aluminum-framed travel trailer for half-ton towers."
+      description: "Coachmen Apex — collapsed historical TT bucket (2012–2025 leftover). Current OEM is Apex Nano + Apex Ultra-Lite — do not merge those codes here. MY2026–2027 omitted (empty is correct)."
+    },
+    "Apex Nano": {
+      type: "Travel Trailer",
+      floorplans: [
+        "181RB",
+        "183BH",
+        "185BH",
+        "186BH",
+        "187RB",
+        "190RBS",
+        "194BHS",
+        "203RBK",
+        "208BHS",
+        "213RDS",
+        "216RKS",
+        "224RBS",
+        "228BHS"
+      ],
+      floorplansByYear: {
+        // yearStart 2015 (RVUSA m5300 first available year). Older fby omitted this slice.
+        // OEM coachmenrv.com/print/floorplans/apex-nano + 2026 Apex Nano card:
+        // 181RB | 183BH | 185BH | 186BH | 187RB | 190RBS | 194BHS | 203RBK | 208BHS |
+        // 213RDS | 216RKS | 224RBS | 228BHS
+        "2026": [
+          "181RB",
+          "183BH",
+          "185BH",
+          "186BH",
+          "187RB",
+          "190RBS",
+          "194BHS",
+          "203RBK",
+          "208BHS",
+          "213RDS",
+          "216RKS",
+          "224RBS",
+          "228BHS"
+        ],
+        // RVUSA 2027 Apex Nano family card (m5300-y2027): drops 185BH. Do not copy 185BH forward.
+        "2027": [
+          "181RB",
+          "183BH",
+          "186BH",
+          "187RB",
+          "190RBS",
+          "194BHS",
+          "203RBK",
+          "208BHS",
+          "213RDS",
+          "216RKS",
+          "224RBS",
+          "228BHS"
+        ]
+      },
+      lengthRange: [20, 28],
+      weightRange: [3400, 4700],
+      slideouts: 1,
+      sleeps: 7,
+      msrpRange: [22900, 40000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.3,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      awningLength: 12,
+      ceilingHeight: 77,
+      founded: 1964,
+      warrantyYears: 2,
+      yearStart: 2015,
+      description: "Coachmen Apex Nano — current compact aluminum-framed TT. OEM MY2026: 181RB / 183BH / 185BH / 186BH / 187RB / 190RBS / 194BHS / 203RBK / 208BHS / 213RDS / 216RKS / 224RBS / 228BHS. RVUSA MY2027 drops 185BH. Sibling of Apex Ultra-Lite — do not dump Ultra-Lite or collapsed Apex leftovers here."
+    },
+    "Apex Ultra-Lite": {
+      type: "Travel Trailer",
+      floorplans: [
+        "24RBX",
+        "26BHX",
+        "29BHX",
+        "241BHS",
+        "242BARV",
+        "244RBS",
+        "246BARV",
+        "291TBSS",
+        "293RLDS"
+      ],
+      floorplansByYear: {
+        // yearStart 2015 (RVUSA m6855 first available year). Older fby omitted this slice.
+        // OEM coachmenrv.com/print/floorplans/apex-ultra-lite (current card):
+        // 24RBX | 26BHX | 29BHX | 241BHS | 242BARV | 244RBS | 246BARV | 291TBSS | 293RLDS
+        // RVUSA 2026 (m6855-y2026) still lists a leftover 13 (188RBST / 243FKS / 251RBK / …)
+        // that is not on the current OEM print card — omit those, do not invent 24RBX onto RVUSA's list.
+        "2026": [
+          "24RBX",
+          "26BHX",
+          "29BHX",
+          "241BHS",
+          "242BARV",
+          "244RBS",
+          "246BARV",
+          "291TBSS",
+          "293RLDS"
+        ],
+        // RVUSA 2027 Apex Ultra-Lite (m6855, 3 plans): 242BARV | 244RBS | 293RLDS
+        "2027": ["242BARV", "244RBS", "293RLDS"]
+      },
+      lengthRange: [28, 34],
+      weightRange: [5500, 7400],
+      slideouts: 1,
+      sleeps: 8,
+      msrpRange: [27900, 48000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.3,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      awningLength: 16,
+      ceilingHeight: 78,
+      founded: 1964,
+      warrantyYears: 2,
+      yearStart: 2015,
+      description: "Coachmen Apex Ultra-Lite — current mid-size Apex TT. OEM MY2026: 24RBX / 26BHX / 29BHX / 241BHS / 242BARV / 244RBS / 246BARV / 291TBSS / 293RLDS. RVUSA MY2027 thins to 242BARV / 244RBS / 293RLDS. Sibling of Apex Nano — do not merge Nano or collapsed Apex leftovers here."
     },
     Pursuit: {
       type: "Class A Gas",
@@ -9766,7 +10206,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Chaparral: {
       type: "Fifth Wheel",
-      floorplans: ["336TSIK", "360IBL", "373MBRB", "370FL"],
+      floorplans: [
+        "298RLS",
+        "334FL",
+        "336TSIK",
+        "360IBL",
+        "367BH",
+        "370FL",
+        "373MBRB",
+        "375BAF",
+        "381DBL",
+        "389DEK",
+        "391MBH"
+      ],
       floorplansByYear: {
         "2010": ["336TSIK", "360IBL"],
         "2011": ["336TSIK", "360IBL"],
@@ -9784,7 +10236,24 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["336TSIK", "360IBL", "373MBRB"],
         "2024": ["336TSIK", "360IBL", "373MBRB"],
         "2025": ["336TSIK", "360IBL", "373MBRB"],
-        "2026": ["336TSIK", "360IBL", "373MBRB"]
+        // OEM 2026 Chaparral mid-profile (coachmenrv.com/print/floorplans/chaparral +
+        // library.rvusa.com/brochure/2026-Coachmen-Chaparral.pdf):
+        // 298RLS | 334FL | 336TSIK | 360IBL | 367BH | 373MBRB | 375BAF | 381DBL | 389DEK | 391MBH
+        // Drop leftover 370FL. Do not absorb Chaparral Lite (218SE / 254RLS / 27BAR / 30BHS / …).
+        // RVUSA 2026 (m2826-y2026) also lists 393MBX — not on the OEM brochure; omit.
+        // No 2027 OEM/RVUSA family card.
+        "2026": [
+          "298RLS",
+          "334FL",
+          "336TSIK",
+          "360IBL",
+          "367BH",
+          "373MBRB",
+          "375BAF",
+          "381DBL",
+          "389DEK",
+          "391MBH"
+        ]
       },
       lengthRange: [
         34,
@@ -9802,6 +10271,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "king pin",
       recalls: 0,
       rating: 4.3,
       image: RV_CARD_IMAGE,
@@ -9814,11 +10284,65 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1964,
       warrantyYears: 1,
       yearStart: 2008,
-      description: "Coachmen Chaparral — popular fifth wheel with bunkhouse and rear living family floorplans."
+      description: "Coachmen Chaparral — mid-profile fifth wheel. OEM MY2026: 298RLS / 334FL / 336TSIK / 360IBL / 367BH / 373MBRB / 375BAF / 381DBL / 389DEK / 391MBH. Chaparral Lite codes stay on that sibling — do not merge 218SE-class Lite plans here."
+    },
+    "Chaparral Lite": {
+      type: "Fifth Wheel",
+      floorplans: [
+        "218SE",
+        "235RK",
+        "254RLS",
+        "25RE",
+        "274BH",
+        "27BAR",
+        "284RL",
+        "30BHS",
+        "30RLS",
+        "31BH",
+        "368TBH"
+      ],
+      floorplansByYear: {
+        // yearStart 2008 (RVUSA m636 first available year). Older fby omitted this slice.
+        // RVUSA 2026 Chaparral Lite family card (m636-y2026, 11 plans) + OEM Lite brochure labels:
+        // 218SE | 235RK | 254RLS | 25RE | 274BH | 27BAR | 284RL | 30BHS | 30RLS | 31BH | 368TBH
+        // Shared Chaparral hub also prints these as LITE 5TH WHEEL. Do not merge mid-profile
+        // 298RLS–391MBH into this key. No 2027 OEM/RVUSA family card.
+        "2026": [
+          "218SE",
+          "235RK",
+          "254RLS",
+          "25RE",
+          "274BH",
+          "27BAR",
+          "284RL",
+          "30BHS",
+          "30RLS",
+          "31BH",
+          "368TBH"
+        ]
+      },
+      lengthRange: [27, 42],
+      weightRange: [7000, 9900],
+      slideouts: 2,
+      sleeps: 8,
+      msrpRange: [44900, 79900],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "king pin",
+      recalls: 0,
+      rating: 4.3,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      awningLength: 16,
+      ceilingHeight: 84,
+      founded: 1964,
+      warrantyYears: 1,
+      yearStart: 2008,
+      description: "Coachmen Chaparral Lite — lighter fifth-wheel sibling of Chaparral. RVUSA/OEM MY2026: 218SE / 235RK / 254RLS / 25RE / 274BH / 27BAR / 284RL / 30BHS / 30RLS / 31BH / 368TBH. Mid-profile Chaparral codes stay on Chaparral."
     },
     Brookstone: {
       type: "Fifth Wheel",
-      floorplans: ["390RL", "395RL", "398MB"],
+      floorplans: ["290RL", "318RLL", "344FL", "370RLLO", "374RK", "390RL", "395DBL", "395RL", "398MB", "398MBL"],
       floorplansByYear: {
         "2012": ["390RL", "395RL"],
         "2013": ["390RL", "395RL"],
@@ -9834,7 +10358,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["390RL", "395RL", "398MB"],
         "2024": ["390RL", "395RL", "398MB"],
         "2025": ["390RL", "395RL"],
-        "2026": ["390RL", "395RL"]
+        // OEM coachmenrv.com/print/floorplans/brookstone + RVUSA 2026 (m2818-y2026):
+        // 290RL | 318RLL | 344FL | 370RLLO | 374RK | 395DBL | 398MBL
+        // Drop leftover 390RL / 395RL / 398MB — those are not on the current OEM card.
+        // No 2027 OEM/RVUSA family card.
+        "2026": ["290RL", "318RLL", "344FL", "370RLLO", "374RK", "395DBL", "398MBL"]
       },
       lengthRange: [
         38,
@@ -9852,6 +10380,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "king pin",
       recalls: 0,
       rating: 4.4,
       image: RV_CARD_IMAGE,
@@ -9864,11 +10393,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1964,
       warrantyYears: 1,
       yearStart: 2012,
-      description: "Coachmen Brookstone — higher-end fifth wheel for full-time and extended-stay owners."
+      description: "Coachmen Brookstone — higher-end fifth wheel. OEM/RVUSA MY2026: 290RL / 318RLL / 344FL / 370RLLO / 374RK / 395DBL / 398MBL. Leftover 390RL / 395RL / 398MB removed from 2026 — do not copy them forward."
     },
     Adrenaline: {
       type: "Toy Hauler",
-      floorplans: ["23LT", "29SS", "33OT"],
+      floorplans: ["18LT", "21LT", "23LT", "27KB", "27LT", "29SS", "30GS", "33OT"],
       floorplansByYear: {
         "2014": ["23LT", "29SS"],
         "2015": ["23LT", "29SS", "33OT"],
@@ -9882,7 +10411,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["23LT", "29SS", "33OT"],
         "2024": ["23LT", "29SS", "33OT"],
         "2025": ["23LT", "29SS", "33OT"],
-        "2026": ["23LT", "29SS"]
+        // OEM coachmenrv.com/print/floorplans/adrenaline + RVUSA 2026 (m2498-y2026):
+        // 18LT | 21LT | 27KB | 27LT | 29SS | 30GS
+        // Drop leftover 23LT / 33OT — not on the current OEM card. No 2027 family card.
+        "2026": ["18LT", "21LT", "27KB", "27LT", "29SS", "30GS"]
       },
       lengthRange: [
         26,
@@ -9900,6 +10432,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
       recalls: 0,
       rating: 4.2,
       image: RV_CARD_IMAGE,
@@ -9921,7 +10454,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       fuelStationGal: 20,
       generatorFuelGal: 20,
       garageFits: "1 UTV or dual bikes",
-      description: "Coachmen Adrenaline — toy hauler with ramp patio and garage sofas."
+      description: "Coachmen Adrenaline — bumper-pull toy hauler. OEM/RVUSA MY2026: 18LT / 21LT / 27KB / 27LT / 29SS / 30GS. Leftover 23LT / 33OT removed from 2026. Do not merge Catalina Trail Blazer TH codes here."
     },
     "Freelander LE": {
       type: "Class C",

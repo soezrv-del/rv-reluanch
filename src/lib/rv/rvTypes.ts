@@ -81,6 +81,8 @@ export interface RVSpec {
   fuelStationGal?: number;
   generatorFuelGal?: number;
   garageFits?: string;
+  /** Towable hitch class when the body is unambiguous (do not globalize across mixed families). */
+  hitchType?: "king pin" | "bumper-pull";
   gvwrLbs?: number;
   uvwLbs?: number;
   cccLbs?: number;
