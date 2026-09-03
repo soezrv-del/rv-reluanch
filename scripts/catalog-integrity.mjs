@@ -1879,6 +1879,79 @@ function main() {
       if (/"2026": .*"3500RD"/.test(mt) || /"2026": .*"3800FL"/.test(mt) || /"2026": .*"3900RK"/.test(mt) || /"2026": .*"3793RD"/.test(mt)) {
         fail("Keystone|Montana must not keep 3500RD/3800FL/3900RK/3793RD on 2026");
       }
+      // MY2014–2024 RVUSA Montana m1499 specs-by-model locks (production cards, not dealer-stock).
+      // THIN 2014 / 2015 / 2020 keep extract only — do not invent-fill.
+      if (!/"2014": \["3610RL"\]/.test(mt)) {
+        fail("Keystone|Montana MY14 RVUSA lock missing (THIN: 3610RL only; m1499-y2014)");
+      }
+      if (!/"2015": \["3720RL", "3790RD"\]/.test(mt)) {
+        fail("Keystone|Montana MY15 RVUSA lock missing (THIN: 3720RL / 3790RD; m1499-y2015)");
+      }
+      if (
+        !/"2016": \["3000RE", "3160RL", "3440RL", "3610RL", "3611RL", "3660RL", "3661RL", "3710FL", "3711FL", "3720RL", "3721RL", "3790RD", "3791RD", "3820FK", "3910FB", "3911FB", "3950BR"\]/.test(
+          mt,
+        )
+      ) {
+        fail("Keystone|Montana MY16 RVUSA lock missing (17 codes; m1499-y2016)");
+      }
+      if (
+        !/"2017": \["3000RE", "3160RL", "3660RL", "3661RL", "3720RL", "3721RL", "3730FL", "3731FL", "3790RD", "3791RD", "3810MSI", "3811MS", "3820FK", "3920FB", "3921FB", "3950BR"\]/.test(
+          mt,
+        )
+      ) {
+        fail("Keystone|Montana MY17 RVUSA lock missing (16 codes; keep 3810MSI as printed — do not normalize to 3810MS)");
+      }
+      if (
+        !/"2018": \["3120RL", "3121RL", "3130RE", "3560RL", "3561RL", "3700LK", "3701LK", "3720RL", "3721RL", "3730FL", "3731FL", "3790RD", "3791RD", "3810MS", "3811MS", "3820FK", "3920FB", "3921FB", "3930FB", "3931FB", "3950BR"\]/.test(
+          mt,
+        )
+      ) {
+        fail("Keystone|Montana MY18 RVUSA lock missing (21 codes; m1499-y2018)");
+      }
+      if (
+        !/"2019": \["3121RL", "3130RE", "3561RL", "3701LK", "3721RL", "3741FK", "3761FL", "3791RD", "3811MS", "3855BR", "3921FB", "3931FB"\]/.test(
+          mt,
+        )
+      ) {
+        fail("Keystone|Montana MY19 RVUSA lock missing (12 codes; m1499-y2019)");
+      }
+      if (!/"2020": \["3810MS"\]/.test(mt)) {
+        fail("Keystone|Montana MY20 RVUSA lock missing (THIN: 3810MS only; m1499-y2020)");
+      }
+      if (
+        !/"2021": \["3120RL", "3121RL", "3230CK", "3231CK", "3700LK", "3701LK", "3740FK", "3741FK", "3760FL", "3761FL", "3762BP", "3763BP", "3780RL", "3781RL", "3790RD", "3791RD", "3812MS", "3813MS", "3854BR", "3855BR", "3930FB", "3931FB"\]/.test(
+          mt,
+        )
+      ) {
+        fail("Keystone|Montana MY21 RVUSA lock missing (22 codes; m1499-y2021)");
+      }
+      if (!/"2022": \["3121RL", "3231CK", "3761FL", "3763BP", "3781RL", "3791RD", "3813MS", "3855BR", "3931FB"\]/.test(mt)) {
+        fail("Keystone|Montana MY22 RVUSA lock missing (9 codes; m1499-y2022)");
+      }
+      if (
+        !/"2023": \["3121RL", "3123RL", "3231CK", "3761FL", "3763BP", "3781RL", "3791RD", "3793RD", "3813MS", "3855BR", "3857BR", "3901RK", "3931FB", "3941FO"\]/.test(
+          mt,
+        )
+      ) {
+        fail("Keystone|Montana MY23 RVUSA lock missing (14 codes; m1499-y2023)");
+      }
+      if (
+        !/"2024": \["3123RL", "3231CK", "3531RE", "3623EB", "3761FL", "3781RL", "3793RD", "3795FK", "3857BR", "3901RK", "3915TB", "3941FO"\]/.test(
+          mt,
+        )
+      ) {
+        fail("Keystone|Montana MY24 RVUSA lock missing (12 codes; m1499-y2024)");
+      }
+      for (const y of [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]) {
+        const ym = mt.match(new RegExp(`"${y}": \\[([^\\]]*)\\]`));
+        const inner = ym?.[1] ?? "";
+        if (/"3100RL"|"3500RD"|"3600RO"|"3800FL"|"3900RK"/.test(inner)) {
+          fail(`Keystone|Montana must not stamp MY27 OEM five onto ${y}`);
+        }
+      }
+      if (/"3700RL"/.test(mt) || /"3764KB"/.test(mt) || /"3953FB"/.test(mt)) {
+        fail("Keystone|Montana must drop leftover invent 3700RL / 3764KB / 3953FB");
+      }
 
       const mhc = slice("Montana High Country", "Cougar");
       if (!/yearStart:\s*2011/.test(mhc)) {
