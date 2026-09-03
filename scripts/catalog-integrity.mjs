@@ -1879,6 +1879,21 @@ function main() {
       if (/"2026": .*"3500RD"/.test(mt) || /"2026": .*"3800FL"/.test(mt) || /"2026": .*"3900RK"/.test(mt) || /"2026": .*"3793RD"/.test(mt)) {
         fail("Keystone|Montana must not keep 3500RD/3800FL/3900RK/3793RD on 2026");
       }
+      // MY2010–2013 leftover invent omitted (RVUSA m1499 year cards EMPTY shells).
+      // Prefer omit over empty [] — same as MHC #103/#104. No dated brochure fill.
+      if (/"2010":/.test(mt) || /"2011":/.test(mt) || /"2012":/.test(mt) || /"2013":/.test(mt)) {
+        fail("Keystone|Montana must omit leftover 2010–2013 fby (prefer omit — RVUSA m1499 EMPTY shells)");
+      }
+      if (/"3402RL"/.test(mt) || /"3582RL"/.test(mt) || /"3625RE"/.test(mt)) {
+        fail("Keystone|Montana must drop leftover invent 3402RL / 3582RL / 3625RE (2010–2013-only)");
+      }
+      for (const y of [2010, 2011, 2012, 2013]) {
+        const ym = mt.match(new RegExp(`"${y}": \\[([^\\]]*)\\]`));
+        const inner = ym?.[1] ?? "";
+        if (/"3100RL"|"3500RD"|"3600RO"|"3800FL"|"3900RK"/.test(inner)) {
+          fail(`Keystone|Montana must not stamp MY27 OEM five onto ${y}`);
+        }
+      }
       // MY2014–2024 RVUSA Montana m1499 specs-by-model locks (production cards, not dealer-stock).
       // THIN 2014 / 2015 / 2020 keep extract only — do not invent-fill.
       if (!/"2014": \["3610RL"\]/.test(mt)) {
