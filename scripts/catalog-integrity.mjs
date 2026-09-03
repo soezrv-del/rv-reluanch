@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const DATA = resolve(ROOT, "src/lib/rv/rvData.ts");
+const INDEX = resolve(ROOT, "src/lib/rv/rvCatalogIndex.ts");
 const CURRENT_YEAR = 2026;
 
 /** Hard OEM / company epoch floors (inclusive). Pre-floor years are hallucinations. */
@@ -1057,6 +1058,134 @@ function main() {
       }
       if (/\n    "Grand Design": \{/.test(wgo) || /\n    Keystone: \{/.test(wgo)) {
         fail("Winnebago block must not absorb other-make keys");
+      }
+    }
+  }
+
+  // Forest River fifth-wheel MY2026–2027 OEM lock (Cardinal, Sabre, Cedar Creek, Columbus, Rockwood Signature, Cherokee Arctic Wolf).
+  {
+    const fr0 = src.indexOf('\n  "Forest River": {');
+    const fr1 = src.indexOf('\n  "Keystone": {');
+    if (fr0 < 0 || fr1 < fr0) {
+      fail('Forest River block not found between "Forest River": and "Keystone":');
+    } else {
+      const fr = src.slice(fr0, fr1);
+      const slice = (a, b) => {
+        const i = fr.indexOf(`    ${a}: {`) >= 0 ? fr.indexOf(`    ${a}: {`) : fr.indexOf(`    "${a}": {`);
+        const j = fr.indexOf(`    ${b}: {`) >= 0 ? fr.indexOf(`    ${b}: {`) : fr.indexOf(`    "${b}": {`);
+        if (i < 0) return "";
+        return j > i ? fr.slice(i, j) : fr.slice(i);
+      };
+
+      const card = slice("Cardinal", "Cedar Creek");
+      if (!/"2026": \["32LIVE", "33CHEF", "34CRIB", "35CRIB", "35FL", "35FUN", "36FUN", "36MB", "37BEST", "37GALLEY", "37PUB", "402BEDS"\]/.test(card)) {
+        fail("Forest River|Cardinal MY26 OEM lock missing (12 codes; library.rvusa.com/brochure/2026-Forest-River-Cardinal.pdf + OEM print)");
+      }
+      if (!/"2027": \["32CHILL", "33CHEF", "35CRIB", "36FL", "36FUN", "37GALLEY", "38DEN", "41DUB"\]/.test(card)) {
+        fail("Forest River|Cardinal MY27 brochure lock missing (8 codes incl. NEW 38DEN/41DUB; 2027-Forest-River-Cardinal.pdf)");
+      }
+      if (!/hitchType: "king pin"/.test(card)) {
+        fail("Forest River|Cardinal must pin hitchType king pin");
+      }
+      if (/"2026": .*"3450RL"/.test(card) || /"2026": .*"3825FL"/.test(card) || /"2026": .*"3950RL"/.test(card) || /"2026": .*"3250BKX"/.test(card)) {
+        fail("Forest River|Cardinal must not keep 2015-era 3450RL/3825FL/3950RL/3250BKX on 2026");
+      }
+      if (/"2027": .*"32LIVE"/.test(card) || /"2027": .*"402BEDS"/.test(card)) {
+        fail("Forest River|Cardinal must not stamp MY26-only codes onto 2027");
+      }
+
+      const sab = slice("Sabre", "Cherokee Arctic Wolf");
+      if (!/"2026": \["32GKS", "33RLP", "36DBB", "36EST", "36FLX", "37FLH", "37RVMILES", "38DBL", "38RVHUNTER"\]/.test(sab)) {
+        fail("Forest River|Sabre MY26 brochure lock missing (9 codes; 2026-Forest-River-Sabre.pdf dated 03/26)");
+      }
+      if (/"2027":/.test(sab)) {
+        fail("Forest River|Sabre must omit 2027 (no dated 2027 brochure — library 403)");
+      }
+      if (!/hitchType: "king pin"/.test(sab)) {
+        fail("Forest River|Sabre must pin hitchType king pin");
+      }
+      if (/"2026": .*"36BHQ"/.test(sab) || /"2026": .*"38DBQ"/.test(sab) || /"2026": .*"32BHT"/.test(sab) || /"2026": .*"40FLP"/.test(sab) || /"2026": .*"36ML"/.test(sab)) {
+        fail("Forest River|Sabre must not keep stale 36BHQ/38DBQ/32BHT/40FLP/36ML on 2026");
+      }
+
+      const cc = slice("Cedar Creek", "Sabre");
+      if (!/"2026": \["29RL", "361RL", "370FL", "381MUD", "383FB", "385RK", "38DB", "39RKB"\]/.test(cc)) {
+        fail("Forest River|Cedar Creek MY26 brochure lock missing (8 codes; 2026-Forest-River-Cedar-Creek.pdf)");
+      }
+      if (/"2027":/.test(cc)) {
+        fail("Forest River|Cedar Creek must omit 2027 (no dated 2027 brochure — library 403)");
+      }
+      if (!/hitchType: "king pin"/.test(cc)) {
+        fail("Forest River|Cedar Creek must pin hitchType king pin");
+      }
+      if (/"2026": .*"34RL2"/.test(cc) || /"2026": .*"36CK2"/.test(cc) || /"2026": .*"38EL"/.test(cc) || /"2026": .*"38DBQ"/.test(cc)) {
+        fail("Forest River|Cedar Creek must not keep Hathaway-era 34RL2/36CK2/38EL/38DBQ on 2026");
+      }
+
+      const col = slice("Columbus", "Cardinal");
+      if (!/"2026": \["377DS", "379MBL", "383RLH", "384RKH", "388FKH", "389FLH"\]/.test(col)) {
+        fail("Forest River|Columbus MY26 brochure lock missing (6 codes; 2026-Forest-River-Columbus.pdf)");
+      }
+      if (/"2027":/.test(col)) {
+        fail("Forest River|Columbus must omit 2027 (no dated 2027 brochure — library 403)");
+      }
+      if (!/hitchType: "king pin"/.test(col)) {
+        fail("Forest River|Columbus must pin hitchType king pin");
+      }
+      if (/"2026": .*"330RL"/.test(col) || /"2026": .*"377MBC"/.test(col) || /"2026": .*"383FB"/.test(col) || /"2026": .*"329DV"/.test(col)) {
+        fail("Forest River|Columbus must not keep Palomino-era 330RL/377MBC/383FB/329DV on 2026");
+      }
+
+      const sig = slice("Rockwood Signature", "Columbus");
+      if (!/"2026": \["290SFK", "401SFB", "402SFL", "405SBH", "R281RK", "R282RK", "R301RKS", "R331RL", "R361RLS", "R371RK", "R372RL", "R374DBH"\]/.test(sig)) {
+        fail("Forest River|Rockwood Signature MY26 brochure lock missing (12 FW codes; 2026-Forest-River-Rockwood-Signature.pdf)");
+      }
+      if (/"2027":/.test(sig)) {
+        fail("Forest River|Rockwood Signature must omit 2027 (no dated 2027 brochure — library 403)");
+      }
+      if (!/hitchType: "king pin"/.test(sig)) {
+        fail("Forest River|Rockwood Signature must pin hitchType king pin");
+      }
+      if (/"2026": .*"8289WS"/.test(sig) || /"2026": .*"8311WS"/.test(sig) || /"2026": .*"8335BSS"/.test(sig) || /"2026": .*"404SRK"/.test(sig)) {
+        fail("Forest River|Rockwood Signature must not keep Ultra Lite 8289WS/8311WS/8335BSS or unsourced 404SRK on 2026");
+      }
+
+      const aw = slice("Cherokee Arctic Wolf", "Sandstorm");
+      if (!/"2026": \["27SGS", "285OPT", "287BH", "289PANO", "3250SUITE", "331BH", "3650SUITE", "3750SUITE", "3800DECK", "387ML", "38DST", "38LEAH.G", "3950SUITE"\]/.test(aw)) {
+        fail("Forest River|Cherokee Arctic Wolf MY26 brochure lock missing (13 codes; 2026-Forest-River-Cherokee-Arctic-Wolf.pdf)");
+      }
+      if (/"2027":/.test(aw)) {
+        fail("Forest River|Cherokee Arctic Wolf must omit 2027 (no dated 2027 brochure — library 403)");
+      }
+      if (!/hitchType: "king pin"/.test(aw)) {
+        fail("Forest River|Cherokee Arctic Wolf must pin hitchType king pin");
+      }
+      if (/"2026": .*"250BH"/.test(aw) || /"2026": .*"255RRT"/.test(aw) || /"2026": \[[^\]]*"38LEAH"/.test(aw)) {
+        fail("Forest River|Cherokee Arctic Wolf must not keep invent/stale 250BH/255RRT/38LEAH (use 38LEAH.G) on 2026");
+      }
+
+      if (/\n    "Keystone": \{/.test(fr) || /\n    "Grand Design": \{/.test(fr)) {
+        fail("Forest River block must not absorb other-make keys");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const frIdx = catalogIndex["Forest River"];
+      if (!frIdx) fail("Forest River missing from CATALOG_INDEX");
+
+      if (!frIdx.Cardinal?.years?.includes(2027)) {
+        fail("Forest River|Cardinal index must include 2027 in years[]");
+      }
+      if (frIdx.Sabre?.years?.includes(2027)) {
+        fail("Forest River|Sabre index must omit 2027 (no dated brochure)");
+      }
+      if (frIdx["Cedar Creek"]?.years?.includes(2027)) {
+        fail("Forest River|Cedar Creek index must omit 2027 (no dated brochure)");
+      }
+      if (frIdx["Rockwood Signature"]?.years?.includes(2027)) {
+        fail("Forest River|Rockwood Signature index must omit 2027 (no dated brochure)");
       }
     }
   }
