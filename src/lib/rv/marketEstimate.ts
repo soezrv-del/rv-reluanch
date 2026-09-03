@@ -14,12 +14,12 @@
  * Trade is then clamped so it never sits above retail low.
  */
 
-import { clampTradeToRetailLow } from "./marketClamp";
+import { clampTradeToRetailLow } from "./marketClamp.ts";
 import {
   getModelTier,
   MANUFACTURER_BASE_SCORES,
-} from "./ratingSystem";
-import type { RVSpec } from "./rvTypes";
+} from "./ratingSystem.ts";
+import type { RVSpec } from "./rvTypes.ts";
 
 export type MarketValueSource = "catalog" | "public_listings" | "live_dossier";
 
