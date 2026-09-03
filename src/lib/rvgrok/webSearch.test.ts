@@ -27,7 +27,7 @@ test("fast research models never include grok-4.6", () => {
     "grok-4-1-fast-non-reasoning",
   ]);
   assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
-  assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 7_000);
+  assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 10_000);
   assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 12_000);
   assert.equal(WEB_SEARCH_MAX_TOOL_CALLS, 1);
 });

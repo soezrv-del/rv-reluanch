@@ -33,8 +33,16 @@ export const WEB_SEARCH_MODELS = [
 /** Chat: one primary attempt. HTTP errors may try the next id; timeouts do not stack. */
 export const CHAT_WEB_SEARCH_TIMEOUT_MS = 12_000;
 
-/** Live Voice: one model, 7s — fast-path budget, not a 60s hang. */
-export const VOICE_WEB_SEARCH_TIMEOUT_MS = 7_000;
+/**
+ * Live Voice research wall-clock budget (server-side fetch timeout).
+ *
+ * NOT the old "raise timeout to fake a pass" move (60s of dead air is
+ * unacceptable in speech). Post–#116 production cold calls land ~5–7s on
+ * grok-4-1-fast-reasoning; 10s covers normal upstream variance while the
+ * existing "let me check that" hold keeps the pause conversational (~phone
+ * lookup time). Chat keeps CHAT_WEB_SEARCH_TIMEOUT_MS (12s).
+ */
+export const VOICE_WEB_SEARCH_TIMEOUT_MS = 10_000;
 export const VOICE_WEB_SEARCH_MODELS = [WEB_SEARCH_MODELS[0]] as const;
 
 /** Bound sequential search/browse loops. One lookup, then write notes. */
@@ -291,7 +299,7 @@ export async function fetchWebSearchNotes(opts: {
   apiKey: string | undefined;
   query: string;
   catalogBlock?: string;
-  /** Per-attempt fetch timeout. Chat default 12s; Live Voice passes 7s. */
+  /** Per-attempt fetch timeout. Chat default 12s; Live Voice passes 10s. */
   timeoutMs?: number;
   /** Model list to try. Chat default is WEB_SEARCH_MODELS; voice uses one shot. */
   models?: readonly string[];

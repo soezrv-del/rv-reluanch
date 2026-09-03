@@ -161,7 +161,7 @@ test("web search model fallbacks are current Responses + web_search ids", () => 
   ]);
   assert.equal((WEB_SEARCH_MODELS as readonly string[]).includes("grok-4.6"), false);
   assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
-  assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 7_000);
+  assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 10_000);
   assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 12_000);
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(api, /executeWebResearch/);

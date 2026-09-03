@@ -689,9 +689,10 @@ export class GrokRealtimeSession {
   /**
    * Pre-turn enrichment: `buildChatGrounding` + shared `needsWebFallback`
    * (same detector as text chat). Cancel the VAD auto-reply, speak a short hold,
-   * fetch web notes with a 7s bound on the fast research model, then answer
+   * fetch web notes with a 10s bound on the fast research model, then answer
    * from the notes (or honestly fall back if the lookup is slow or fails).
-   * Do not stretch the hold to 60s — a spoken miss is better than dead air.
+   * Do not stretch the hold toward 60s — a spoken miss is better than dead air.
+   * The immediate "let me check that" acknowledgement makes ~10s tolerable.
    */
   private async maybeEnrichWithWebResearch(transcript: string) {
     const grounded = buildChatGrounding({

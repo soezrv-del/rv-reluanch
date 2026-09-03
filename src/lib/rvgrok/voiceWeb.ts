@@ -17,7 +17,7 @@ export {
   VOICE_WEB_SEARCH_TIMEOUT_MS,
 } from "./webSearch.ts";
 
-/** Client abort slightly above the server 7s budget so we receive an honest body. */
+/** Client abort slightly above the server voice budget so we receive an honest body. */
 export const VOICE_WEB_SEARCH_CLIENT_BUDGET_MS =
   VOICE_WEB_SEARCH_TIMEOUT_MS + 1_000;
 
