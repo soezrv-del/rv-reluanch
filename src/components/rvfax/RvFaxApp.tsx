@@ -33,6 +33,7 @@ import {
   compareSelectionKey,
   countModelsForClass,
   ensureCatalogLoaded,
+  formatYearRanges,
   modelPickerMeta,
   ratingFor,
   RV_CLASS_TABS,
@@ -40,6 +41,7 @@ import {
   isCatalogLoaded,
   searchCatalog,
   useCatalogReady,
+  yearsForFloorplanCode,
   YEARS,
 } from "@/lib/rv/catalog";
 import {
@@ -308,21 +310,34 @@ export function RvFaxApp({
   );
 
   const floorplanItems = useMemo(() => {
-    const fps = cascade.floorplans.map((fp) => ({
-      value: fp,
-      label: fp,
-      meta: year && make && model
-        ? `${year} ${make} ${model}`
-        : "Available for this coach",
-    }));
+    const fps = cascade.floorplans.map((fp) => {
+      const span = year
+        ? ""
+        : formatYearRanges(yearsForFloorplanCode(make, model, fp));
+      return {
+        value: fp,
+        label: fp,
+        meta:
+          year && make && model
+            ? `${year} ${make} ${model}`
+            : span
+              ? `${span} · not a current-year lineup`
+              : "Across model years · not a current-year lineup",
+      };
+    });
     // Always allow “any / all” so user can finish without a specific layout
+    const anyMeta = year
+      ? fps.length
+        ? `Skip · ${fps.length} layout${fps.length === 1 ? "" : "s"} for ${year}`
+        : `No verified layouts for ${year} · open report`
+      : fps.length
+        ? `Skip · ${fps.length} layouts across model years`
+        : "No layouts listed";
     return [
       {
         value: "",
         label: "Any floorplan",
-        meta: fps.length
-          ? `Skip · ${fps.length} layout${fps.length === 1 ? "" : "s"} for this year`
-          : "No year-specific layouts · open report",
+        meta: anyMeta,
       },
       ...fps,
     ];
@@ -735,8 +750,12 @@ export function RvFaxApp({
                 hint={
                   model
                     ? cascade.counts.floorplans
-                      ? `${cascade.counts.floorplans} layout${cascade.counts.floorplans === 1 ? "" : "s"}`
-                      : "Any · no year-specific layouts listed"
+                      ? year
+                        ? `${cascade.counts.floorplans} layout${cascade.counts.floorplans === 1 ? "" : "s"}`
+                        : `${cascade.counts.floorplans} layout${cascade.counts.floorplans === 1 ? "" : "s"} across years`
+                      : year
+                        ? "Any · no year-specific layouts listed"
+                        : "Any · layouts span model years when listed"
                     : undefined
                 }
               />
@@ -998,8 +1017,18 @@ export function RvFaxApp({
       />
       <SelectSheet
         open={sheet === "floorplan"}
-        title={model ? `Floorplans · ${model}` : "Floorplans"}
-        subtitle={`${cascade.counts.floorplans} layouts · or Any`}
+        title={
+          model
+            ? year
+              ? `Floorplans · ${year} ${model}`
+              : `Floorplans · ${model} · all years`
+            : "Floorplans"
+        }
+        subtitle={
+          year
+            ? `${cascade.counts.floorplans} layouts for ${year} · or Any`
+            : `${cascade.counts.floorplans} layouts across model years · not a current-year lineup`
+        }
         items={floorplanItems}
         selected={floorplan}
         onSelect={(v) => onCascadeSelect("floorplan", v)}

@@ -571,6 +571,11 @@ export function RvDetail({
     return getFloorplansForYear(year, make, model).length === 0;
   }, [year, make, model]);
 
+  const noYearFloorplanBrowse = useMemo(() => {
+    const y = parseInt(year, 10);
+    return !year || !Number.isFinite(y);
+  }, [year]);
+
   const overviewText = useMemo(() => {
     const raw =
       (live?.live && live.overview) || data.description || null;
@@ -1358,6 +1363,27 @@ export function RvDetail({
                   </ul>
                 </div>
               ) : null}
+            </Section>
+          ) : noYearFloorplanBrowse && historicalFloorplans.length ? (
+            <Section title="Floorplans across model years">
+              <p className="mb-4 text-[13px] leading-relaxed text-white/70">
+                No year selected. These layouts span multiple model years —
+                they are not a current-year lineup.
+              </p>
+              <div className="space-y-4">
+                {historicalFloorplans.map((row) => (
+                  <div key={row.year}>
+                    <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-white/60">
+                      {row.year} lineup
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {row.floorplans.map((fp) => (
+                        <Chip key={`${row.year}-${fp}`}>{fp}</Chip>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </Section>
           ) : null}
 

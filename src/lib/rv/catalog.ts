@@ -268,7 +268,7 @@ export function modelYearWindow(spec: CatalogIndexSpec): { start: number; end: n
 
 /**
  * Floorplan available for a year?
- * - floorplansByYear[year] → only those codes
+ * - floorplansByYear present → that year's list only (empty year stays empty)
  * - else full floorplans list when model is available that year
  */
 export function floorplanAvailableInYear(
@@ -277,8 +277,11 @@ export function floorplanAvailableInYear(
   year: number,
 ): boolean {
   if (!modelAvailableInYear(spec, year)) return false;
-  const byYear = spec.floorplansByYear?.[String(year)];
-  if (byYear?.length) return byYear.includes(floorplan);
+  const byYearMap = spec.floorplansByYear;
+  if (byYearMap && Object.keys(byYearMap).length > 0) {
+    const byYear = byYearMap[String(year)];
+    return Boolean(byYear?.includes(floorplan));
+  }
   const fps = spec.floorplans ?? [];
   if (fps.length === 0) return false;
   return fps.includes(floorplan);
@@ -496,6 +499,7 @@ export function relatedModelsWithFloorplansInYear(
 
 /**
  * Floorplans to show under “Floorplans this year”.
+ * Requires a selected year. Empty year → [] so the union is never labeled current.
  * Catalog year scope wins; never substitutes aggregate or live when the year row is empty.
  */
 export function floorplansForSelectedYear(
@@ -504,12 +508,56 @@ export function floorplansForSelectedYear(
   model: string,
   live?: { live?: boolean; floorplansThisYear?: string[] } | null,
 ): string[] {
+  const y = parseInt(year, 10);
+  if (!year || !Number.isFinite(y)) return [];
   const catalog = getFloorplansForYear(year, make, model);
   if (!catalog.length) return [];
   if (live?.live && live.floorplansThisYear?.length) {
     return live.floorplansThisYear;
   }
   return catalog;
+}
+
+/** OEM years a floorplan code appears in `floorplansByYear` (empty if unknown). */
+export function yearsForFloorplanCode(
+  make: string,
+  model: string,
+  code: string,
+): number[] {
+  const spec = catalogMap()[make]?.[model];
+  const fby = spec?.floorplansByYear;
+  if (!fby) return [];
+  const want = code.trim();
+  if (!want) return [];
+  return Object.entries(fby)
+    .filter(([, fps]) => fps?.includes(want))
+    .map(([y]) => parseInt(y, 10))
+    .filter((n) => Number.isFinite(n))
+    .sort((a, b) => a - b);
+}
+
+/** Compact year list: `2012–2018, 2020, 2022–2025`. */
+export function formatYearRanges(years: number[]): string {
+  if (!years.length) return "";
+  const sorted = [...years]
+    .filter((n) => Number.isFinite(n))
+    .sort((a, b) => a - b);
+  if (!sorted.length) return "";
+  const parts: string[] = [];
+  let start = sorted[0]!;
+  let prev = start;
+  for (let i = 1; i <= sorted.length; i++) {
+    const n = sorted[i];
+    if (n === prev + 1) {
+      prev = n;
+      continue;
+    }
+    parts.push(start === prev ? String(start) : `${start}–${prev}`);
+    if (n != null) {
+      start = prev = n;
+    }
+  }
+  return parts.join(", ");
 }
 
 export function getFloorplans(make: string, model: string): string[] {
@@ -983,6 +1031,9 @@ export function modelPickerMeta(
     ? getFloorplansForYear(year, make, model)
     : getFloorplans(make, model);
   if (!fps.length) return `${spec.type} · ${start}–${endLabel}`;
+  if (!year) {
+    return `${spec.type} · ${start}–${endLabel} · ${fps.length} FP across years`;
+  }
   return `${spec.type} · ${start}–${endLabel} · ${fps.length} FP`;
 }
 
