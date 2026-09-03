@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -13398,4 +13399,208 @@ test("Keystone Alpine MY2010–2024 invent scrub (RVUSA m2918 locks; prefer-empt
   );
   assert.doesNotMatch(bxf, /"2025":/);
   assert.doesNotMatch(bxf, /"2026":/);
+});
+
+test("Keystone Passport (collapsed) MY2010–2026 invent scrub (RVUSA m1502 locks; prefer-empty 2010–2020+2023)", () => {
+  const idx = CATALOG_INDEX.Keystone;
+  assert.ok(idx);
+
+  // Selectable years = FBY keys (omit 2010–2020 + 2023 leftover invent banks).
+  assert.deepEqual(idx.Passport?.years, [2021, 2022, 2024, 2025, 2026]);
+  for (const y of [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2023, 2027]) {
+    assert.equal(idx.Passport?.years?.includes(y), false, `collapsed Passport must omit leftover ${y}`);
+  }
+  assert.equal(idx.Passport?.yearStart, 2000);
+  assert.equal(idx.Passport?.type, "Travel Trailer");
+
+  // SL / Classic / Crossfire / Alpine / Montana / MHC / Cougar Premium keep-intact vs tip 79c89c7.
+  assert.deepEqual(idx["Passport Super Lite"]?.years, [2025, 2026, 2027]);
+  assert.equal(idx["Passport Super Lite"]?.yearStart, 2019);
+  assert.deepEqual(idx["Passport Classic"]?.years, [2027]);
+  assert.equal(idx["Passport Classic"]?.yearStart, 2024);
+  assert.deepEqual(idx["Bullet Crossfire"]?.years, [2027]);
+  assert.deepEqual(idx.Alpine?.years, [
+    2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
+  ]);
+  assert.deepEqual(idx.Montana?.years, [
+    2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
+  ]);
+  assert.deepEqual(idx["Montana High Country"]?.years, [2011, 2021, 2022, 2023, 2024, 2025, 2026, 2027]);
+  assert.deepEqual(idx["Cougar 5th Wheel"]?.years, [
+    2011, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
+  ]);
+
+  const block = src("rvData.ts");
+  const k0 = block.indexOf('\n  "Keystone": {');
+  const k1 = block.indexOf('\n  "Grand Design": {');
+  const k = block.slice(k0, k1);
+  const pass = k.slice(k.indexOf("    Passport: {"), k.indexOf('    "Passport Super Lite"'));
+  const psl = k.slice(k.indexOf('    "Passport Super Lite": {'), k.indexOf('    "Passport Classic"'));
+  const pcl = k.slice(k.indexOf('    "Passport Classic": {'), k.indexOf("    Springdale: {"));
+  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf("    Passport: {"));
+  const alp = k.slice(k.indexOf("    Alpine: {"), k.indexOf('    "Alpine Avalanche Edition"'));
+  const mt = k.slice(k.indexOf("    Montana: {"), k.indexOf('    "Montana High Country"'));
+  const mhc = k.slice(k.indexOf('    "Montana High Country": {'), k.indexOf("    Cougar: {"));
+  const cfw = k.slice(k.indexOf('    "Cougar 5th Wheel": {'), k.indexOf('    "Cougar Sport"'));
+
+  function sha256(s: string) {
+    return createHash("sha256").update(s).digest("hex");
+  }
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  // Byte-identical SL / Classic vs tip 79c89c7 (#109).
+  assert.equal(
+    sha256(psl),
+    "cb75bbf12d0b6ece02aa254893920232abdce9d28e6b6f3c39127a4ce10d666c",
+    "Passport Super Lite must stay byte-identical vs 79c89c7",
+  );
+  assert.equal(
+    sha256(pcl),
+    "55de9a47f56753c21ec22377a96b6e1fae3d545f76fad5a0c5db7984265a7d75",
+    "Passport Classic must stay byte-identical vs 79c89c7",
+  );
+
+  // PREFER EMPTY: omit 2010–2020 + 2023 invent banks (not []).
+  for (const y of [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2023]) {
+    assert.equal(fbyYear(pass, y), null, `collapsed Passport ${y} FBY key must be omitted`);
+    assert.doesNotMatch(pass, new RegExp(`"${y}":`));
+  }
+  assert.doesNotMatch(pass, /"2010": \[\]/);
+  assert.doesNotMatch(pass, /"2020": \[\]/);
+  assert.doesNotMatch(pass, /"2023": \[\]/);
+  assert.doesNotMatch(pass, /"2027":/);
+
+  // Invent-only orphans dropped from FBY + aggregate. 2400BH ≠ 2400RB / 2401BH.
+  for (const code of [
+    "189ML",
+    "199ML",
+    "219BH",
+    "221BH",
+    "239ML",
+    "2400BH",
+    "248BH",
+    "2500RL",
+    "253RD",
+    "2700BH",
+    "2920BH",
+  ]) {
+    assert.doesNotMatch(pass, new RegExp(`"${code}"`), `collapsed Passport must drop invent ${code}`);
+  }
+
+  // LOCK RVUSA m1502 Specs (replace invent — never invent fill).
+  assert.deepEqual(fbyYear(pass, 2021), ["2400RB", "2400RBWE", "2401BH", "2401BHWE"]);
+  assert.deepEqual(fbyYear(pass, 2022), [
+    "189RBWE",
+    "219BHWE",
+    "221BHWE",
+    "229RKWE",
+    "2400RBWE",
+    "2401BHWE",
+    "268BHWE",
+    "2700RLWE",
+    "2704RKWE",
+    "282QBWE",
+    "2951BHWE",
+  ]);
+  assert.deepEqual(fbyYear(pass, 2024), [
+    "2400RB",
+    "2400RBWE",
+    "2401BH",
+    "2401BHWE",
+    "2700RL",
+    "2704RK",
+    "2704RKWE",
+    "2951BH",
+    "2951BHWE",
+    "3352BH",
+  ]);
+  assert.deepEqual(fbyYear(pass, 2025), ["2600FK", "2710KB", "3360BK"]);
+  assert.deepEqual(fbyYear(pass, 2026), ["2600FK", "2710KB", "3100RE", "3300BK", "3360BK"]);
+
+  // WE-only 2022 as printed — no invented East twins. 229RKWE ≠ SL 229BHWE.
+  assert.ok(fbyYear(pass, 2022)?.includes("219BHWE"));
+  assert.ok(fbyYear(pass, 2022)?.includes("221BHWE"));
+  assert.equal(fbyYear(pass, 2022)?.includes("219BH"), false);
+  assert.equal(fbyYear(pass, 2022)?.includes("221BH"), false);
+  assert.equal(fbyYear(pass, 2022)?.includes("229BHWE"), false);
+
+  // Never paste SL MY2025 nineteen / SL MY2026 fifteen onto collapsed.
+  const sl2025 = [
+    "189RB",
+    "219BH",
+    "221BH",
+    "229BH",
+    "229BHWE",
+    "2450RK",
+    "2450RKWE",
+    "253RD",
+    "253RDWE",
+    "2605RB",
+    "2605RBWE",
+    "2660RL",
+    "2660RLWE",
+    "268BH",
+    "2700RK",
+    "2870RL",
+    "2870RLWE",
+    "2900BH",
+    "2900BHWE",
+  ];
+  const sl2026 = [
+    "229BH",
+    "229BHWE",
+    "2450RK",
+    "2450RKWE",
+    "253RD",
+    "253RDWE",
+    "2605RB",
+    "2605RBWE",
+    "2660RL",
+    "2660RLWE",
+    "2870RL",
+    "2870RLWE",
+    "2900BH",
+    "2900BHWE",
+    "3401QD",
+  ];
+  const y25 = fbyYear(pass, 2025) ?? [];
+  const y26 = fbyYear(pass, 2026) ?? [];
+  assert.equal(
+    sl2025.every((code) => y25.includes(code)),
+    false,
+    "collapsed Passport 2025 must not paste SL MY2025 nineteen",
+  );
+  assert.equal(
+    sl2026.every((code) => y26.includes(code)),
+    false,
+    "collapsed Passport 2026 must not paste SL MY2026 fifteen",
+  );
+  for (const code of sl2025) {
+    assert.equal(y25.includes(code), false, `collapsed Passport 2025 must not carry SL ${code}`);
+  }
+  for (const code of sl2026) {
+    assert.equal(y26.includes(code), false, `collapsed Passport 2026 must not carry SL ${code}`);
+  }
+
+  // 3100RE is m1502 Specs on collapsed 2026 only — not back-dated, not SL-paste.
+  assert.ok(fbyYear(pass, 2026)?.includes("3100RE"));
+  for (const y of [2021, 2022, 2024, 2025]) {
+    assert.equal(fbyYear(pass, y)?.includes("3100RE"), false, `collapsed Passport ${y} must not back-date 3100RE`);
+  }
+
+  // Soft Crossfire MY2025–2026 omit stands; Alpine / Montana / MHC / Cougar Premium untouched.
+  assert.doesNotMatch(bxf, /"2025":/);
+  assert.doesNotMatch(bxf, /"2026":/);
+  assert.match(bxf, /"2027": \["208MKS", "222BHS", "2290BH", "2290BHWE", "234RBK", "245RKS", "245RKSWE", "259REV", "267MRB", "287RLS", "287RLSWE", "310RES"\]/);
+  assert.match(alp, /"2027": \["3100RE", "3303CK", "3710FL", "3800MR", "3820FK", "3910RK"\]/);
+  assert.match(mt, /"2027": \["3100RL", "3500RD", "3600RO", "3800FL", "3900RK"\]/);
+  assert.match(mhc, /"2027": \["290RL", "300RK", "362BRK", "391TB", "396BH"\]/);
+  assert.match(
+    cfw,
+    /"2027": \["260MLE", "290RLS", "295RDS", "316RLS", "320RDS", "350LLK", "355FBS", "360MBI", "364BHL"\]/,
+  );
 });

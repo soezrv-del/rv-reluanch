@@ -17366,138 +17366,45 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     Passport: {
       type: "Travel Trailer",
       floorplans: [
-        "189ML",
-        "199ML",
-        "219BH",
-        "221BH",
-        "239ML",
-        "2400BH",
-        "248BH",
-        "2500RL",
-        "253RD",
-        "2700BH",
+        "189RBWE",
+        "219BHWE",
+        "221BHWE",
+        "229RKWE",
+        "2400RB",
+        "2400RBWE",
+        "2401BH",
+        "2401BHWE",
+        "2600FK",
+        "268BHWE",
         "2700RL",
-        "2920BH"
+        "2700RLWE",
+        "2704RK",
+        "2704RKWE",
+        "2710KB",
+        "282QBWE",
+        "2951BH",
+        "2951BHWE",
+        "3100RE",
+        "3300BK",
+        "3352BH",
+        "3360BK"
       ],
       floorplansByYear: {
-        "2010": ["189ML", "219BH", "221BH", "248BH"],
-        "2011": ["189ML", "219BH", "221BH", "248BH"],
-        "2012": ["189ML", "199ML", "219BH", "221BH", "248BH"],
-        "2013": ["189ML", "199ML", "219BH", "221BH", "248BH"],
-        "2014": ["189ML", "199ML", "219BH", "221BH", "239ML", "248BH"],
-        "2015": ["189ML", "199ML", "219BH", "221BH", "239ML", "248BH"],
-        "2016": ["189ML", "199ML", "219BH", "221BH", "239ML", "248BH", "2700BH"],
-        "2017": ["189ML", "199ML", "219BH", "221BH", "239ML", "2400BH", "248BH", "2700BH"],
-        "2018": [
-          "189ML",
-          "199ML",
-          "219BH",
-          "221BH",
-          "239ML",
-          "2400BH",
-          "248BH",
-          "2500RL",
-          "2700BH"
-        ],
-        "2019": [
-          "189ML",
-          "199ML",
-          "219BH",
-          "221BH",
-          "239ML",
-          "2400BH",
-          "2500RL",
-          "2700BH",
-          "2700RL"
-        ],
-        "2020": [
-          "189ML",
-          "199ML",
-          "219BH",
-          "221BH",
-          "239ML",
-          "2400BH",
-          "2500RL",
-          "2700BH",
-          "2700RL",
-          "2920BH"
-        ],
-        "2021": [
-          "189ML",
-          "199ML",
-          "219BH",
-          "221BH",
-          "239ML",
-          "2400BH",
-          "2500RL",
-          "253RD",
-          "2700BH",
-          "2700RL",
-          "2920BH"
-        ],
-        "2022": [
-          "189ML",
-          "199ML",
-          "219BH",
-          "221BH",
-          "239ML",
-          "2400BH",
-          "2500RL",
-          "253RD",
-          "2700BH",
-          "2700RL",
-          "2920BH"
-        ],
-        "2023": [
-          "189ML",
-          "199ML",
-          "219BH",
-          "221BH",
-          "239ML",
-          "2400BH",
-          "2500RL",
-          "253RD",
-          "2700BH",
-          "2700RL",
-          "2920BH"
-        ],
-        "2024": [
-          "189ML",
-          "199ML",
-          "219BH",
-          "221BH",
-          "239ML",
-          "2400BH",
-          "2500RL",
-          "253RD",
-          "2700BH",
-          "2700RL",
-          "2920BH"
-        ],
-        "2025": [
-          "189ML",
-          "199ML",
-          "219BH",
-          "221BH",
-          "239ML",
-          "2400BH",
-          "2500RL",
-          "253RD",
-          "2700BH",
-          "2700RL",
-          "2920BH"
-        ],
-        "2026": [
-          "189ML",
-          "219BH",
-          "221BH",
-          "239ML",
-          "2400BH",
-          "2500RL",
-          "253RD",
-          "2700BH",
-          "2700RL"
-        ],
+        // MY2010–2020 + MY2023 leftover invent omitted (RVUSA Passport m1502 — prefer omit).
+        // Do not invent-fill 189ML / 199ML / 219BH / 221BH / 239ML / 2400BH / 248BH / 2500RL / 253RD / 2700BH / 2920BH.
+        // Do not merge Passport Super Lite (m6799) or Passport Classic onto this key.
+        // Do not invent Passport Premium / GT / Solo. Do not invent East twins for WE-only 2022 cards.
+        // LOCK RVUSA Passport m1502 Specs year cards.
+        // MY2021: 2400RB | 2400RBWE | 2401BH | 2401BHWE
+        "2021": ["2400RB", "2400RBWE", "2401BH", "2401BHWE"],
+        // MY2022 WE-only as printed — do not invent East twins (219BH/221BH ≠ 219BHWE/221BHWE).
+        "2022": ["189RBWE", "219BHWE", "221BHWE", "229RKWE", "2400RBWE", "2401BHWE", "268BHWE", "2700RLWE", "2704RKWE", "282QBWE", "2951BHWE"],
+        // MY2024:
+        "2024": ["2400RB", "2400RBWE", "2401BH", "2401BHWE", "2700RL", "2704RK", "2704RKWE", "2951BH", "2951BHWE", "3352BH"],
+        // MY2025 THIN: 2600FK | 2710KB | 3360BK — do not paste SL MY2025 nineteen.
+        "2025": ["2600FK", "2710KB", "3360BK"],
+        // MY2026: 2600FK | 2710KB | 3100RE | 3300BK | 3360BK — 3100RE is m1502 this year only; do not paste SL MY2026 fifteen.
+        "2026": ["2600FK", "2710KB", "3100RE", "3300BK", "3360BK"],
         // Collapsed Passport bucket has no 2027 OEM card. Split OEM 2027 is Passport Super Lite + Passport Classic.
         // Do not invent Passport Premium / GT. Omit 2027 here.
       },
