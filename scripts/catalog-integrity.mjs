@@ -1893,6 +1893,41 @@ function main() {
       if (/"2014": .*"313RE"/.test(mhc) || /"2014": .*"323RL"/.test(mhc) || /"2014": .*"333DB"/.test(mhc) || /"2014": .*"343RL"/.test(mhc)) {
         fail("Keystone|Montana High Country must not stamp 2011 PDF codes onto leftover 2014");
       }
+      for (let y = 2014; y <= 2020; y++) {
+        if (new RegExp(`"${y}":`).test(mhc)) {
+          fail(`Keystone|Montana High Country must omit leftover ${y} fby (prefer omit — RVUSA m2939 empty/ambiguous)`);
+        }
+      }
+      if (
+        !/"2021": \[\s*"280CK",\s*"281CK",\s*"294RL",\s*"295RL",\s*"330RL",\s*"331RL",\s*"334BH",\s*"335BH",\s*"350BH",\s*"351BH",\s*"362RD",\s*"364BH",\s*"365BH",\s*"372RD",\s*"373RD",\s*"376FL",\s*"377FL",\s*"382TH",\s*"383TH",\s*"384BR",\s*"385BR"\s*\]/.test(
+          mhc,
+        )
+      ) {
+        fail("Keystone|Montana High Country MY21 RVUSA lock missing (21 codes; m2939-y2021)");
+      }
+      if (!/"2022": \["281CK", "295RL", "331RL", "335BH", "351BH", "373RD", "377FL", "385BR"\]/.test(mhc)) {
+        fail("Keystone|Montana High Country MY22 RVUSA lock missing (8 codes; m2939-y2022)");
+      }
+      if (!/"2023": \["281CK", "295RL", "311RD", "331RL", "335BH", "351BH", "373RD", "377FL", "381TB", "385BR"\]/.test(mhc)) {
+        fail("Keystone|Montana High Country MY23 RVUSA lock missing (10 codes; m2939-y2023)");
+      }
+      if (!/"2024": \["295RL", "311RD", "331RL", "335BH", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH"\]/.test(mhc)) {
+        fail("Keystone|Montana High Country MY24 RVUSA lock missing (10 codes; m2939-y2024)");
+      }
+      for (const y of [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]) {
+        const ym = mhc.match(new RegExp(`"${y}": \\[([^\\]]*)\\]`));
+        if (y <= 2020) {
+          if (ym) fail(`Keystone|Montana High Country must omit leftover ${y} fby (prefer omit — RVUSA m2939 empty/ambiguous)`);
+          continue;
+        }
+        const inner = ym?.[1] ?? "";
+        if (/"290RL"|"300RK"|"362BRK"|"391TB"|"396BH"|"397FB"/.test(inner)) {
+          fail(`Keystone|Montana High Country must not stamp MY27 OEM six onto ${y}`);
+        }
+      }
+      if (/"335FL"/.test(mhc) || /"370FL"/.test(mhc) || /"381TH"/.test(mhc)) {
+        fail("Keystone|Montana High Country must drop leftover invent 335FL / 370FL / 381TH");
+      }
       if (!/"2027": \["290RL", "300RK", "362BRK", "391TB", "396BH"\]/.test(mhc)) {
         fail("Keystone|Montana High Country MY27 OEM plans missing");
       }

@@ -12242,13 +12242,13 @@ test("Keystone MHC MY2011 PDF lock + Sprinter/Avalanche ≤2024 invent scrub", (
   const idx = CATALOG_INDEX.Keystone;
   assert.ok(idx);
 
-  // MHC: dated Feb 2011 PDF pin only. 2012–2013 omitted. 2014 leftover + 2025–2027 locks stay.
+  // MHC: dated Feb 2011 PDF pin only. 2012–2013 omitted. 2014–2020 leftover omitted (see MHC 2014–2024 test).
   assert.equal(idx["Montana High Country"]?.yearStart, 2011);
   assert.equal(idx["Montana High Country"]?.years?.includes(2011), true);
   assert.equal(idx["Montana High Country"]?.years?.includes(2010), false);
   assert.equal(idx["Montana High Country"]?.years?.includes(2012), false);
   assert.equal(idx["Montana High Country"]?.years?.includes(2013), false);
-  assert.equal(idx["Montana High Country"]?.years?.includes(2014), true);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2014), false);
   assert.equal(idx["Montana High Country"]?.years?.includes(2025), true);
   assert.equal(idx["Montana High Country"]?.years?.includes(2026), true);
   assert.equal(idx["Montana High Country"]?.years?.includes(2027), true);
@@ -12349,4 +12349,71 @@ test("Keystone MHC MY2011 PDF lock + Sprinter/Avalanche ≤2024 invent scrub", (
   );
   assert.match(aae, /"2027": \["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"\]/);
   assert.doesNotMatch(aae, /"2024":/);
+});
+
+test("Keystone MHC MY2014–2024 invent scrub (omit 2014–2020; RVUSA lock 2021–2024)", () => {
+  const idx = CATALOG_INDEX.Keystone;
+  assert.ok(idx);
+
+  assert.equal(idx["Montana High Country"]?.yearStart, 2011);
+  assert.deepEqual(idx["Montana High Country"]?.years, [2011, 2021, 2022, 2023, 2024, 2025, 2026, 2027]);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2010), false);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2012), false);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2013), false);
+  for (let y = 2014; y <= 2020; y++) {
+    assert.equal(idx["Montana High Country"]?.years?.includes(y), false, `MHC must omit leftover ${y}`);
+  }
+
+  const block = src("rvData.ts");
+  const k0 = block.indexOf('\n  "Keystone": {');
+  const k1 = block.indexOf('\n  "Grand Design": {');
+  const k = block.slice(k0, k1);
+  const mhc = k.slice(k.indexOf('    "Montana High Country": {'), k.indexOf("    Cougar: {"));
+
+  // KEEP INTACT vs main: MY2011 PDF four + MY2025–2027 locks (397FB is 2025/26 production; dealer-stock omit is 2027-only).
+  assert.match(mhc, /yearStart:\s*2011/);
+  assert.match(mhc, /"2011": \["313RE", "323RL", "333DB", "343RL"\]/);
+  assert.match(
+    mhc,
+    /"2025": \["295RL", "311RD", "325RK", "331RL", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH", "397FB"\]/,
+  );
+  assert.match(
+    mhc,
+    /"2026": \["290RL", "295RL", "311RD", "325RK", "331RL", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH", "397FB"\]/,
+  );
+  assert.match(mhc, /"2027": \["290RL", "300RK", "362BRK", "391TB", "396BH"\]/);
+  assert.doesNotMatch(mhc, /"2027": .*"397FB"/);
+
+  // 2012–2013 / 2014–2020 leftover invent omitted (prefer omit over empty []).
+  assert.doesNotMatch(mhc, /"2010":/);
+  assert.doesNotMatch(mhc, /"2012":/);
+  assert.doesNotMatch(mhc, /"2013":/);
+  for (let y = 2014; y <= 2020; y++) {
+    assert.doesNotMatch(mhc, new RegExp(`"${y}":`));
+  }
+  assert.doesNotMatch(mhc, /"335FL"/);
+  assert.doesNotMatch(mhc, /"370FL"/);
+  assert.doesNotMatch(mhc, /"381TH"/);
+
+  // LOCK RVUSA MHC m2939 year cards (production, not dealer-stock galleries).
+  assert.match(
+    mhc,
+    /"2021": \[\s*"280CK",\s*"281CK",\s*"294RL",\s*"295RL",\s*"330RL",\s*"331RL",\s*"334BH",\s*"335BH",\s*"350BH",\s*"351BH",\s*"362RD",\s*"364BH",\s*"365BH",\s*"372RD",\s*"373RD",\s*"376FL",\s*"377FL",\s*"382TH",\s*"383TH",\s*"384BR",\s*"385BR"\s*\]/,
+  );
+  assert.match(mhc, /"2022": \["281CK", "295RL", "331RL", "335BH", "351BH", "373RD", "377FL", "385BR"\]/);
+  assert.match(mhc, /"2023": \["281CK", "295RL", "311RD", "331RL", "335BH", "351BH", "373RD", "377FL", "381TB", "385BR"\]/);
+  assert.match(mhc, /"2024": \["295RL", "311RD", "331RL", "335BH", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH"\]/);
+
+  // Never stamp MY2027 OEM six onto 2014–2024 keys (per-year array only).
+  for (const y of [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]) {
+    const ym = mhc.match(new RegExp(`"${y}": \\[([^\\]]*)\\]`));
+    const inner = ym?.[1] ?? "";
+    if (y <= 2020) {
+      assert.equal(ym, null, `MHC ${y} key must be omitted`);
+      continue;
+    }
+    for (const code of ["290RL", "300RK", "362BRK", "391TB", "396BH", "397FB"]) {
+      assert.doesNotMatch(inner, new RegExp(`"${code}"`));
+    }
+  }
 });

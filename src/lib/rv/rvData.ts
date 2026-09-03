@@ -16634,7 +16634,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     "Montana High Country": {
       type: "Fifth Wheel",
       floorplans: [
+        "280CK",
+        "281CK",
         "290RL",
+        "294RL",
         "295RL",
         "300RK",
         "311RD",
@@ -16644,15 +16647,23 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "330RL",
         "331RL",
         "333DB",
-        "335FL",
+        "334BH",
+        "335BH",
         "343RL",
+        "350BH",
         "351BH",
         "362BRK",
-        "370FL",
+        "362RD",
+        "364BH",
+        "365BH",
+        "372RD",
         "373RD",
+        "376FL",
         "377FL",
         "381TB",
-        "381TH",
+        "382TH",
+        "383TH",
+        "384BR",
         "385BR",
         "389BH",
         "391TB",
@@ -16665,58 +16676,37 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // Pin MY2011 only — do not stamp onto 2010 / 2012–2013 (omit) or leftover 2014+.
         // UVW/hitch from this card stay unused (no invent this slice).
         "2011": ["313RE", "323RL", "333DB", "343RL"],
-        "2014": ["295RL", "335FL", "377FL"],
-        "2015": ["295RL", "335FL", "377FL", "381TH"],
-        "2016": ["295RL", "335FL", "351BH", "377FL", "381TH"],
-        "2017": ["295RL", "311RD", "335FL", "351BH", "377FL", "381TH"],
-        "2018": ["295RL", "311RD", "330RL", "335FL", "351BH", "377FL", "381TH"],
-        "2019": ["295RL", "311RD", "330RL", "335FL", "351BH", "370FL", "377FL", "381TH"],
-        "2020": ["295RL", "311RD", "330RL", "335FL", "351BH", "370FL", "377FL", "381TH"],
+        // 2012–2013 omitted (no dated card). 2014–2020 leftover FBY omitted
+        // (RVUSA MHC m2939 year URLs EMPTY/AMBIGUOUS — no named plans; SEO filler).
+        // Prefer omit over empty [] so those years drop from the selectable index.
+        // Do not stamp MY2027 OEM 290RL / 300RK / 362BRK / 391TB / 396BH / 397FB onto 2014–2024.
+        // LOCK RVUSA MHC m2939 year cards (production cards, not dealer-stock galleries).
         "2021": [
-          "290RL",
+          "280CK",
+          "281CK",
+          "294RL",
           "295RL",
-          "311RD",
           "330RL",
-          "335FL",
+          "331RL",
+          "334BH",
+          "335BH",
+          "350BH",
           "351BH",
-          "370FL",
+          "362RD",
+          "364BH",
+          "365BH",
+          "372RD",
+          "373RD",
+          "376FL",
           "377FL",
-          "381TB"
+          "382TH",
+          "383TH",
+          "384BR",
+          "385BR"
         ],
-        "2022": [
-          "290RL",
-          "295RL",
-          "311RD",
-          "330RL",
-          "335FL",
-          "351BH",
-          "370FL",
-          "377FL",
-          "381TB"
-        ],
-        "2023": [
-          "290RL",
-          "295RL",
-          "311RD",
-          "330RL",
-          "335FL",
-          "351BH",
-          "370FL",
-          "377FL",
-          "381TB"
-        ],
-        "2024": [
-          "290RL",
-          "295RL",
-          "311RD",
-          "330RL",
-          "335FL",
-          "351BH",
-          "370FL",
-          "377FL",
-          "381TB",
-          "391TB"
-        ],
+        "2022": ["281CK", "295RL", "331RL", "335BH", "351BH", "373RD", "377FL", "385BR"],
+        "2023": ["281CK", "295RL", "311RD", "331RL", "335BH", "351BH", "373RD", "377FL", "381TB", "385BR"],
+        "2024": ["295RL", "311RD", "331RL", "335BH", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH"],
         // LOCK SLICE_NOTES_WALKBACK_2025_2010.md §6 (RVUSA m2939-y2025). 11 codes.
         // Drop leftover 290RL / 330RL / 335FL / 370FL / 391TB (290RL + 391TB are later-year; do not stamp MY27).
         "2025": ["295RL", "311RD", "325RK", "331RL", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH", "397FB"],
@@ -16757,7 +16747,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2011,
-      description: "Montana High Country — Keystone half-ton / lighter-luxury fifth wheel. yearStart 2011 from the dated Feb 2011 RVUSA PDF (313RE / 323RL / 333DB / 343RL). 2012–2013 fby omitted (no dated card). 2014–2024 leftover maps stay GAP. MY2025–2027 locks unchanged. Verify pin weight vs truck rating."
+      description: "Montana High Country — Keystone half-ton / lighter-luxury fifth wheel. yearStart 2011 from the dated Feb 2011 RVUSA PDF (313RE / 323RL / 333DB / 343RL). 2012–2013 fby omitted (no dated card). 2014–2020 leftover fby omitted (RVUSA m2939 year URLs empty/ambiguous). MY2021–2024 locked to RVUSA MHC m2939 production cards. MY2025–2027 locks unchanged. Verify pin weight vs truck rating."
     },
     Cougar: {
       type: "Travel Trailer",
