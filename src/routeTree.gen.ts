@@ -21,6 +21,7 @@ import { Route as ApiNhtsaVinRouteImport } from './routes/api/nhtsa.vin'
 import { Route as ApiRvfaxCatalogResearchRouteImport } from './routes/api/rvfax.catalog-research'
 import { Route as ApiRvfaxCompareRouteImport } from './routes/api/rvfax.compare'
 import { Route as ApiRvfaxDossierRouteImport } from './routes/api/rvfax.dossier'
+import { Route as ApiRvfaxPublicCompsRouteImport } from './routes/api/rvfax.public-comps'
 import { Route as ApiRvgrokTokenRouteImport } from './routes/api/rvgrok.token'
 
 const IndexRoute = IndexRouteImport.update({
@@ -83,6 +84,11 @@ const ApiRvfaxDossierRoute = ApiRvfaxDossierRouteImport.update({
   path: '/rvfax/dossier',
   getParentRoute: () => ApiRouteRoute,
 } as any)
+const ApiRvfaxPublicCompsRoute = ApiRvfaxPublicCompsRouteImport.update({
+  id: '/rvfax/public-comps',
+  path: '/rvfax/public-comps',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
 const ApiRvgrokTokenRoute = ApiRvgrokTokenRouteImport.update({
   id: '/token',
   path: '/token',
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/api/rvfax/catalog-research': typeof ApiRvfaxCatalogResearchRoute
   '/api/rvfax/compare': typeof ApiRvfaxCompareRoute
   '/api/rvfax/dossier': typeof ApiRvfaxDossierRoute
+  '/api/rvfax/public-comps': typeof ApiRvfaxPublicCompsRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
 }
 export interface FileRoutesByTo {
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/api/rvfax/catalog-research': typeof ApiRvfaxCatalogResearchRoute
   '/api/rvfax/compare': typeof ApiRvfaxCompareRoute
   '/api/rvfax/dossier': typeof ApiRvfaxDossierRoute
+  '/api/rvfax/public-comps': typeof ApiRvfaxPublicCompsRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
 }
 export interface FileRoutesById {
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/api/rvfax/catalog-research': typeof ApiRvfaxCatalogResearchRoute
   '/api/rvfax/compare': typeof ApiRvfaxCompareRoute
   '/api/rvfax/dossier': typeof ApiRvfaxDossierRoute
+  '/api/rvfax/public-comps': typeof ApiRvfaxPublicCompsRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
 }
 export interface FileRouteTypes {
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/api/rvfax/catalog-research'
     | '/api/rvfax/compare'
     | '/api/rvfax/dossier'
+    | '/api/rvfax/public-comps'
     | '/api/rvgrok/token'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/api/rvfax/catalog-research'
     | '/api/rvfax/compare'
     | '/api/rvfax/dossier'
+    | '/api/rvfax/public-comps'
     | '/api/rvgrok/token'
   id:
     | '__root__'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/api/rvfax/catalog-research'
     | '/api/rvfax/compare'
     | '/api/rvfax/dossier'
+    | '/api/rvfax/public-comps'
     | '/api/rvgrok/token'
   fileRoutesById: FileRoutesById
 }
@@ -274,6 +286,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRvfaxDossierRouteImport
       parentRoute: typeof ApiRouteRoute
     }
+    '/api/rvfax/public-comps': {
+      id: '/api/rvfax/public-comps'
+      path: '/rvfax/public-comps'
+      fullPath: '/api/rvfax/public-comps'
+      preLoaderRoute: typeof ApiRvfaxPublicCompsRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
     '/api/rvgrok/token': {
       id: '/api/rvgrok/token'
       path: '/token'
@@ -307,6 +326,7 @@ interface ApiRouteRouteChildren {
   ApiRvfaxCatalogResearchRoute: typeof ApiRvfaxCatalogResearchRoute
   ApiRvfaxCompareRoute: typeof ApiRvfaxCompareRoute
   ApiRvfaxDossierRoute: typeof ApiRvfaxDossierRoute
+  ApiRvfaxPublicCompsRoute: typeof ApiRvfaxPublicCompsRoute
 }
 
 const ApiRouteRouteChildren: ApiRouteRouteChildren = {
@@ -320,6 +340,7 @@ const ApiRouteRouteChildren: ApiRouteRouteChildren = {
   ApiRvfaxCatalogResearchRoute: ApiRvfaxCatalogResearchRoute,
   ApiRvfaxCompareRoute: ApiRvfaxCompareRoute,
   ApiRvfaxDossierRoute: ApiRvfaxDossierRoute,
+  ApiRvfaxPublicCompsRoute: ApiRvfaxPublicCompsRoute,
 }
 
 const ApiRouteRouteWithChildren = ApiRouteRoute._addFileChildren(

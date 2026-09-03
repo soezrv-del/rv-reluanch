@@ -1,6 +1,10 @@
 import { computeRating } from "./ratingSystem";
 import { clampTradeToRetailLow } from "./marketClamp";
 import {
+  estimateMarket,
+  type MarketEstimate,
+} from "./marketEstimate";
+import {
   CATALOG_INDEX,
   MAKES,
 } from "./rvCatalogIndex";
@@ -19,8 +23,8 @@ import {
   type RVSpec,
 } from "./rvTypes";
 
-export type { RVSpec };
-export { MAKES, YEARS, CLASSIC_BRANDS, clampTradeToRetailLow };
+export type { RVSpec, MarketEstimate };
+export { MAKES, YEARS, CLASSIC_BRANDS, clampTradeToRetailLow, estimateMarket };
 export {
   ensureCatalogLoaded,
   getRVData,
@@ -749,88 +753,6 @@ export function searchCatalog(sel: Partial<RVSelection>): RVResult[] {
 
 export function countCatalogMatches(sel: Partial<RVSelection>): number {
   return searchCatalog(sel).length;
-}
-
-export type MarketEstimate = {
-  tradeIn: number;
-  retailLow: number;
-  retailHigh: number;
-  msrpLo: number;
-  msrpHi: number;
-  segment: string;
-  ageYears: number;
-  /** True when trade-in was lowered so it cannot sit above retail low. */
-  tradeCappedAtRetailLow?: boolean;
-};
-
-export function estimateMarket(
-  spec: RVSpec,
-  year: string,
-  floorplan?: string,
-): MarketEstimate {
-  const y = parseInt(year, 10) || new Date().getFullYear();
-  const age = Math.max(0, new Date().getFullYear() - y);
-  const [msrpLo0, msrpHi0] = spec.msrpRange || [80000, 200000];
-  let msrpLo = msrpLo0;
-  let msrpHi = msrpHi0;
-
-  // Mild floorplan length bias when code encodes length
-  if (floorplan) {
-    const m = floorplan.match(/(\d{2})/);
-    if (m) {
-      const ft = parseInt(m[1]!, 10);
-      if (ft >= 20 && ft <= 50) {
-        const mid = (msrpLo + msrpHi) / 2;
-        const bias = (ft - 32) * 1200;
-        const half = (msrpHi - msrpLo) / 2;
-        msrpLo = Math.max(20000, Math.round(mid + bias - half));
-        msrpHi = Math.round(mid + bias + half);
-      }
-    }
-  }
-
-  if (!msrpLo && !msrpHi) {
-    return {
-      tradeIn: 0,
-      retailLow: 0,
-      retailHigh: 0,
-      msrpLo: 0,
-      msrpHi: 0,
-      segment: spec.type || "RV",
-      ageYears: age,
-    };
-  }
-
-  const mid = (msrpLo + msrpHi) / 2;
-  const retain = Math.max(0.38, 0.92 - age * 0.045);
-  const retailHigh = Math.round((msrpHi * retain) / 1000) * 1000;
-  const retailLow = Math.round((msrpLo * retain * 0.88) / 1000) * 1000;
-  const rawTrade = Math.round((mid * retain * 0.78) / 1000) * 1000;
-  const lo = Math.min(retailLow, retailHigh);
-  const hi = Math.max(retailLow, retailHigh);
-  const trade = clampTradeToRetailLow(rawTrade, lo);
-
-  const segment =
-    /diesel/i.test(spec.fuelType) || /diesel/i.test(spec.type)
-      ? "Diesel motorhome"
-      : /fifth/i.test(spec.type)
-        ? "Fifth wheel"
-        : /trailer/i.test(spec.type)
-          ? "Travel trailer"
-          : /class b/i.test(spec.type)
-            ? "Class B"
-            : "Motorhome";
-
-  return {
-    tradeIn: trade.tradeIn,
-    retailLow: lo,
-    retailHigh: hi,
-    msrpLo,
-    msrpHi,
-    segment,
-    ageYears: age,
-    tradeCappedAtRetailLow: trade.capped || undefined,
-  };
 }
 
 export function formatMoney(n: number) {

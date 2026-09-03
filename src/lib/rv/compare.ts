@@ -7,6 +7,10 @@ import { estimateMarket, formatMoney, ratingFor } from "./catalog";
 import type { LiveDossier } from "./liveDossier";
 import { liveMarketLadder, mergeLiveIntoDisplay } from "./liveDossier";
 import {
+  resolvePrimaryMarket,
+  type PublicListingComps,
+} from "./publicListingComps";
+import {
   formatHardHorsepower,
   formatHardTorque,
   resolveHardPowertrain,
@@ -313,11 +317,13 @@ function finalizeRatings(
 }
 
 export type LiveMap = Record<string, LiveDossier | null | undefined>;
+export type CompsMap = Record<string, PublicListingComps | null | undefined>;
 
 /** Build structured side-by-side compare matrix (2–3 coaches). Live Grok overlays when present. */
 export function buildCompareReport(
   items: RVResult[],
   liveMap?: LiveMap,
+  compsMap?: CompsMap,
 ): CompareReport {
   const cols = items.slice(0, 3).map((r) => {
     const key = keyOf(r);
@@ -386,23 +392,16 @@ export function buildCompareReport(
       },
     );
     const oem = findOemFloorplanSpec(r.year, r.make, r.model, r.floorplan);
-    const catalogMarket = estimateMarket(r.data, r.year, r.floorplan);
+    const catalogMarket = estimateMarket(r.data, r.year, r.floorplan, {
+      make: r.make,
+      model: r.model,
+    });
     const ladder = liveMarketLadder(live?.live ? live : null);
-    const market = ladder
-      ? {
-          tradeIn: ladder.tradeIn,
-          retailLow: ladder.retailLow,
-          retailHigh: ladder.retailHigh,
-          msrpLo: ladder.msrpLo ?? catalogMarket.msrpLo,
-          msrpHi: ladder.msrpHi ?? catalogMarket.msrpHi,
-        }
-      : {
-          tradeIn: catalogMarket.tradeIn,
-          retailLow: catalogMarket.retailLow,
-          retailHigh: catalogMarket.retailHigh,
-          msrpLo: catalogMarket.msrpLo,
-          msrpHi: catalogMarket.msrpHi,
-        };
+    const market = resolvePrimaryMarket({
+      catalog: catalogMarket,
+      liveLadder: ladder,
+      comps: compsMap?.[key] ?? null,
+    });
 
     const rawRating =
       live?.ratingEstimate && live.ratingEstimate > 0
@@ -434,6 +433,7 @@ export function buildCompareReport(
       fuelLabel,
       live: Boolean(live?.live),
       key,
+      valueSource: market.sourceLabel || "Catalog estimate",
       prestige: prestigeScore(r.make, r.model),
       layoutNote: oem?.layoutNote || "",
       oemSleeps: oem?.sleeps ?? null,
@@ -636,6 +636,15 @@ export function buildCompareReport(
       colsWithRating.map((c) => ({
         display: c.brochure.warranty,
         raw: c.r.data.warrantyYears || parseNum(c.brochure.warranty),
+      })),
+    ),
+    row(
+      "valueSource",
+      "Value source",
+      "neutral",
+      colsWithRating.map((c) => ({
+        display: c.valueSource,
+        raw: null,
       })),
     ),
     row(

@@ -9,9 +9,10 @@ import {
   Trophy,
 } from "lucide-react";
 import type { RVResult } from "@/lib/rv/catalog";
-import { buildCompareReport, compareSelectionKey, type CompareCell, type CompareReport, type LiveMap } from "@/lib/rv/compare";
+import { buildCompareReport, compareSelectionKey, type CompsMap, type CompareCell, type CompareReport, type LiveMap } from "@/lib/rv/compare";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import { fetchLiveDossier, peekVerifiedDossier } from "@/lib/rv/liveDossier";
+import { fetchPublicListingComps } from "@/lib/rv/publicListingComps";
 
 
 import { exportVehicleReport } from "@/lib/rv/exportReport";
@@ -47,6 +48,7 @@ export function RvCompare({
 }) {
   const [liveMap, setLiveMap] = useState<LiveMap>({});
   const [liveLoading, setLiveLoading] = useState(true);
+  const [compsMap, setCompsMap] = useState<CompsMap>({});
   const [summary, setSummary] = useState<string | null>(null);
   const [summaryLive, setSummaryLive] = useState(false);
   const [loadingSummary, setLoadingSummary] = useState(true);
@@ -114,10 +116,35 @@ export function RvCompare({
     return () => ctrl.abort();
   }, [items]);
 
+  useEffect(() => {
+    const ctrl = new AbortController();
+    Promise.all(
+      items.slice(0, 3).map(async (r) => {
+        const data = await fetchPublicListingComps(
+          {
+            year: r.year,
+            make: r.make,
+            model: r.model,
+            floorplan: r.floorplan,
+          },
+          ctrl.signal,
+        );
+        return { key: compareSelectionKey(r), data };
+      }),
+    ).then((rows) => {
+      if (ctrl.signal.aborted) return;
+      const map: CompsMap = {};
+      for (const row of rows) {
+        if (row.data) map[row.key] = row.data;
+      }
+      setCompsMap(map);
+    });
+    return () => ctrl.abort();
+  }, [items]);
 
   const report: CompareReport = useMemo(
-    () => buildCompareReport(items, liveMap),
-    [items, liveMap],
+    () => buildCompareReport(items, liveMap, compsMap),
+    [items, liveMap, compsMap],
   );
 
   const titleLine = useMemo(
@@ -303,6 +330,11 @@ export function RvCompare({
               <p className="text-[11px] text-white/55">{report.generatedAt}</p>
               <p className="mt-1 text-[13px] font-semibold text-white">
                 {titleLine}
+              </p>
+              <p className="mt-2 text-[11px] leading-snug text-white/50">
+                Market figures prefer public listing asks for the same coach
+                (year ±2), then live research, then a catalog estimate — not
+                NADA, J.D. Power, or MarketCheck.
               </p>
               {liveLoading ? (
                 <p className="mt-2 flex items-center gap-2 text-[12px] text-white/50">
