@@ -12237,3 +12237,116 @@ test("Keystone Alpine Avalanche Edition MY2025–2026 RVUSA locks; Crossfire ble
   assert.doesNotMatch(bul, /"208MKS"/);
   assert.doesNotMatch(bul, /"2027":/);
 });
+
+test("Keystone MHC MY2011 PDF lock + Sprinter/Avalanche ≤2024 invent scrub", () => {
+  const idx = CATALOG_INDEX.Keystone;
+  assert.ok(idx);
+
+  // MHC: dated Feb 2011 PDF pin only. 2012–2013 omitted. 2014 leftover + 2025–2027 locks stay.
+  assert.equal(idx["Montana High Country"]?.yearStart, 2011);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2011), true);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2010), false);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2012), false);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2013), false);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2014), true);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2025), true);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2026), true);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2027), true);
+
+  // Sprinter: 2010–2024 leftover emptied (index years shrink). 2025–2027 locks from #100/#96 stay.
+  assert.deepEqual(idx.Sprinter?.years, [2025, 2026, 2027]);
+  assert.equal(idx.Sprinter?.yearEnd, undefined);
+  for (let y = 2010; y <= 2024; y++) {
+    assert.equal(idx.Sprinter?.years?.includes(y), false, `Sprinter must omit leftover ${y}`);
+  }
+
+  // Avalanche standalone: ≤2024 leftover emptied. MY2025 lock + yearEnd 2025 from #101 stay.
+  assert.deepEqual(idx.Avalanche?.years, [2025]);
+  assert.equal(idx.Avalanche?.yearEnd, 2025);
+  assert.equal(idx.Avalanche?.yearStart, 2010);
+  for (let y = 2010; y <= 2024; y++) {
+    assert.equal(idx.Avalanche?.years?.includes(y), false, `Avalanche must omit leftover ${y}`);
+  }
+  assert.equal(idx.Avalanche?.years?.includes(2026), false);
+  assert.equal(idx.Avalanche?.years?.includes(2027), false);
+
+  // Alpine Avalanche Edition untouched.
+  assert.deepEqual(idx["Alpine Avalanche Edition"]?.years, [2025, 2026, 2027]);
+  assert.equal(idx["Alpine Avalanche Edition"]?.yearStart, 2020);
+
+  const block = src("rvData.ts");
+  const k0 = block.indexOf('\n  "Keystone": {');
+  const k1 = block.indexOf('\n  "Grand Design": {');
+  const k = block.slice(k0, k1);
+
+  const mhc = k.slice(k.indexOf('    "Montana High Country": {'), k.indexOf("    Cougar: {"));
+  assert.match(mhc, /yearStart:\s*2011/);
+  assert.match(mhc, /"2011": \["313RE", "323RL", "333DB", "343RL"\]/);
+  assert.doesNotMatch(mhc, /"2010":/);
+  assert.doesNotMatch(mhc, /"2012":/);
+  assert.doesNotMatch(mhc, /"2013":/);
+  // Do not stamp the 2011 PDF set onto leftover 2014 or later locked years.
+  assert.doesNotMatch(mhc, /"2014": .*"313RE"/);
+  assert.doesNotMatch(mhc, /"2014": .*"323RL"/);
+  assert.doesNotMatch(mhc, /"2014": .*"333DB"/);
+  assert.doesNotMatch(mhc, /"2014": .*"343RL"/);
+  assert.doesNotMatch(mhc, /"2025": .*"313RE"/);
+  assert.doesNotMatch(mhc, /"2026": .*"313RE"/);
+  assert.doesNotMatch(mhc, /"2027": .*"313RE"/);
+  assert.match(
+    mhc,
+    /"2025": \["295RL", "311RD", "325RK", "331RL", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH", "397FB"\]/,
+  );
+  assert.match(
+    mhc,
+    /"2026": \["290RL", "295RL", "311RD", "325RK", "331RL", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH", "397FB"\]/,
+  );
+  assert.match(mhc, /"2027": \["290RL", "300RK", "362BRK", "391TB", "396BH"\]/);
+
+  const spr = k.slice(k.indexOf("    Sprinter: {"));
+  for (let y = 2010; y <= 2024; y++) {
+    assert.doesNotMatch(spr, new RegExp(`"${y}":`));
+  }
+  assert.doesNotMatch(spr, /"2010": .*"269FWRLS"/);
+  assert.doesNotMatch(spr, /"2012": .*"3530SIK"/);
+  assert.doesNotMatch(spr, /"2024": .*"3570FLS"/);
+  assert.match(
+    spr,
+    /"2025": \["3210RLS", "3520RDS", "3590LFT", "3670FLS", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3980FBS"\]/,
+  );
+  assert.match(
+    spr,
+    /"2026": \["3210RLS", "3520RDS", "3590LFT", "3670FLS", "3800FLB", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"\]/,
+  );
+  assert.match(
+    spr,
+    /"2027": \["3500RDB", "3520RDS", "3640RLP", "3800FLB", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"\]/,
+  );
+  assert.doesNotMatch(spr, /yearEnd:\s*2024/);
+
+  const av = k.slice(k.indexOf('    "Avalanche": {'), k.indexOf("    Laredo: {"));
+  for (let y = 2010; y <= 2024; y++) {
+    assert.doesNotMatch(av, new RegExp(`"${y}":`));
+  }
+  assert.match(av, /yearEnd:\s*2025/);
+  assert.match(av, /yearStart:\s*2010/);
+  assert.match(
+    av,
+    /"2025": \["302RS", "321RL", "338GK", "346FL", "366LS", "378BH", "379MB", "380LT", "390DS"\]/,
+  );
+  assert.doesNotMatch(av, /"2026":/);
+  assert.doesNotMatch(av, /"2027":/);
+  assert.doesNotMatch(av, /"2025": .*"360RB"/);
+
+  const aae = k.slice(k.indexOf('    "Alpine Avalanche Edition": {'), k.indexOf("    Arcadia: {"));
+  assert.match(
+    aae,
+    /"2025": \["302RS", "321RL", "322RL", "338GK", "346FL", "366LS", "372MB", "378BH", "379MB", "380LT", "390DS"\]/,
+  );
+  assert.match(
+    aae,
+    /"2026": \["302RS", "321RL", "338GK", "346FL", "366LS", "378BH", "379MB", "380LT", "381DL", "390DS"\]/,
+  );
+  assert.match(aae, /"2027": \["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"\]/);
+  assert.doesNotMatch(aae, /"2024":/);
+});
