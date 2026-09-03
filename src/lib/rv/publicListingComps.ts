@@ -11,8 +11,8 @@
  * same-coach year-range listings are often sparse.
  */
 
-import { clampTradeToRetailLow } from "./marketClamp";
-import type { MarketEstimate } from "./marketEstimate";
+import { clampTradeToRetailLow } from "./marketClamp.ts";
+import type { MarketEstimate } from "./marketEstimate.ts";
 
 /** Live Grok ladder already merged by the caller — not computed here. */
 export type LiveMarketLadder = {
