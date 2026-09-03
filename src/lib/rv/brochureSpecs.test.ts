@@ -12896,3 +12896,224 @@ test("Keystone Montana MY2010–2013 invent scrub (EMPTY RVUSA m1499 shells; pre
   );
   assert.match(mhc, /"2027": \["290RL", "300RK", "362BRK", "391TB", "396BH"\]/);
 });
+
+test("Keystone Cougar Premium FW MY2010–2024 invent scrub (RVUSA m1492 locks; prefer-empty 2010/2012)", () => {
+  const idx = CATALOG_INDEX.Keystone;
+  assert.ok(idx);
+
+  // Selectable years = FBY keys (omit 2010/2012 leftover invent banks).
+  assert.deepEqual(idx["Cougar 5th Wheel"]?.years, [
+    2011, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
+  ]);
+  assert.equal(idx["Cougar 5th Wheel"]?.years?.includes(2010), false);
+  assert.equal(idx["Cougar 5th Wheel"]?.years?.includes(2012), false);
+  assert.equal(idx["Cougar 5th Wheel"]?.yearStart, 2004);
+  assert.equal(idx["Cougar 5th Wheel"]?.type, "Fifth Wheel");
+
+  // Siblings / Montana / MHC / Crossfire keep-intact vs main after #107.
+  assert.equal(idx.Cougar?.type, "Travel Trailer");
+  assert.equal(idx.Cougar?.years?.includes(2027), false);
+  assert.deepEqual(idx["Cougar Sport"]?.years, [2027]);
+  assert.equal(idx["Cougar Half-Ton"]?.type, "Fifth Wheel");
+  assert.equal(idx["Cougar Half-Ton"]?.years?.includes(2027), true);
+  assert.deepEqual(idx["Cougar Half-Ton Travel Trailer"]?.years, [2027]);
+  assert.deepEqual(idx.Montana?.years, [
+    2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
+  ]);
+  assert.deepEqual(idx["Montana High Country"]?.years, [2011, 2021, 2022, 2023, 2024, 2025, 2026, 2027]);
+  assert.deepEqual(idx["Bullet Crossfire"]?.years, [2027]);
+
+  const block = src("rvData.ts");
+  const k0 = block.indexOf('\n  "Keystone": {');
+  const k1 = block.indexOf('\n  "Grand Design": {');
+  const k = block.slice(k0, k1);
+  const cfw = k.slice(k.indexOf('    "Cougar 5th Wheel": {'), k.indexOf('    "Cougar Sport"'));
+  const ctt = k.slice(k.indexOf("    Cougar: {"), k.indexOf('    "Cougar 5th Wheel"'));
+  const cst = k.slice(k.indexOf('    "Cougar Sport": {'), k.indexOf('    "Cougar Half-Ton"'));
+  const cht = k.slice(k.indexOf('    "Cougar Half-Ton": {'), k.indexOf('    "Cougar Half-Ton Travel Trailer"'));
+  const chtt = k.slice(k.indexOf('    "Cougar Half-Ton Travel Trailer": {'), k.indexOf("    Bullet: {"));
+  const mt = k.slice(k.indexOf("    Montana: {"), k.indexOf('    "Montana High Country"'));
+  const mhc = k.slice(k.indexOf('    "Montana High Country": {'), k.indexOf("    Cougar: {"));
+  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf("    Passport: {"));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  // PREFER EMPTY: omit 2010 / 2012 invent banks (not []).
+  assert.equal(fbyYear(cfw, 2010), null, "Cougar Premium FW 2010 FBY key must be omitted");
+  assert.equal(fbyYear(cfw, 2012), null, "Cougar Premium FW 2012 FBY key must be omitted");
+  assert.doesNotMatch(cfw, /"2010":/);
+  assert.doesNotMatch(cfw, /"2012":/);
+  assert.doesNotMatch(cfw, /"2010": \[\]/);
+  assert.doesNotMatch(cfw, /"2012": \[\]/);
+
+  // Invent-only orphans dropped from FBY + aggregate.
+  assert.doesNotMatch(cfw, /"30RLS"/);
+  assert.doesNotMatch(cfw, /"32BHSWE"/);
+  assert.doesNotMatch(cfw, /"34TSB"/);
+  assert.doesNotMatch(cfw, /"345MBS"/);
+
+  // LOCK RVUSA m1492 year cards (THIN 2011 / 2014 keep extract only).
+  assert.deepEqual(fbyYear(cfw, 2011), ["297RKS", "328QBS"]);
+  assert.deepEqual(fbyYear(cfw, 2013), [
+    "280RLS",
+    "280RLSWE",
+    "318SAB",
+    "318SABWE",
+    "324RLB",
+    "324RLBWE",
+    "330RBKWE",
+    "331MKS",
+    "331MKSWE",
+  ]);
+  assert.deepEqual(fbyYear(cfw, 2014), ["313RLIWE"]);
+  assert.deepEqual(fbyYear(cfw, 2015), ["280RLS", "288RLS", "301SAB", "336BHS"]);
+  assert.deepEqual(fbyYear(cfw, 2016), ["288RLS", "303RLS", "325RPSWE", "326RDSWE", "341RKI"]);
+  assert.deepEqual(fbyYear(cfw, 2017), [
+    "326RDS",
+    "326SRX",
+    "327RES",
+    "327RLK",
+    "333MKS",
+    "336BHS",
+    "337FLS",
+    "341RKI",
+    "359MBI",
+  ]);
+  assert.deepEqual(fbyYear(cfw, 2018), [
+    "310RLS",
+    "311RES",
+    "338RLK",
+    "344MKS",
+    "366RDS",
+    "367FLS",
+    "368MBI",
+    "369BHS",
+  ]);
+  assert.deepEqual(fbyYear(cfw, 2019), [
+    "315RLS",
+    "338RLK",
+    "361RLW",
+    "362RKS",
+    "366RDS",
+    "367FLS",
+    "368MBI",
+    "369BHS",
+  ]);
+  assert.deepEqual(fbyYear(cfw, 2020), [
+    "302RLS",
+    "307RES",
+    "315RLS",
+    "338RLK",
+    "361RLW",
+    "362RKS",
+    "364BHL",
+    "366RDS",
+    "367FLS",
+    "368MBI",
+    "369BHS",
+  ]);
+  assert.deepEqual(fbyYear(cfw, 2021), [
+    "290RLS",
+    "302RLS",
+    "315RLS",
+    "316RLS",
+    "354FLS",
+    "355FBS",
+    "357UMR",
+    "364BHL",
+    "366RDS",
+    "368MBI",
+  ]);
+  assert.deepEqual(fbyYear(cfw, 2022), [
+    "290RLS",
+    "316RLS",
+    "354FLS",
+    "355FBS",
+    "357UMR",
+    "364BHL",
+    "368MBI",
+  ]);
+  assert.deepEqual(fbyYear(cfw, 2023), [
+    "290RLS",
+    "316RLS",
+    "320RDS",
+    "350DMS",
+    "354FLS",
+    "355FBS",
+    "364BHL",
+    "368MBI",
+  ]);
+  assert.deepEqual(fbyYear(cfw, 2024), [
+    "260MLE",
+    "290RLS",
+    "316RLS",
+    "316RLSSE",
+    "320RDS",
+    "350DMS",
+    "354FLS",
+    "355FBS",
+    "364BHL",
+    "368MBI",
+  ]);
+
+  // Keep WE/SE suffixes as printed — do not invent missing twins.
+  assert.ok(fbyYear(cfw, 2013)?.includes("280RLSWE"));
+  assert.ok(fbyYear(cfw, 2013)?.includes("318SABWE"));
+  assert.ok(fbyYear(cfw, 2024)?.includes("316RLSSE"));
+  assert.equal(fbyYear(cfw, 2024)?.includes("316RLSWE"), false);
+  assert.equal(fbyYear(cfw, 2013)?.includes("330RBK"), false);
+
+  // Never stamp MY2027 OEM nine as a set / never back-date 295RDS onto 2010–2024.
+  const oemNine = ["260MLE", "290RLS", "295RDS", "316RLS", "320RDS", "350LLK", "355FBS", "360MBI", "364BHL"];
+  for (const y of [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]) {
+    const plans = fbyYear(cfw, y) ?? [];
+    assert.equal(plans.includes("295RDS"), false, `Cougar Premium FW ${y} must not stamp MY27 295RDS`);
+    assert.equal(
+      oemNine.every((code) => plans.includes(code)),
+      false,
+      `Cougar Premium FW ${y} must not stamp MY27 OEM nine`,
+    );
+    assert.equal(plans.includes("350LLK"), false, `Cougar Premium FW ${y} must not back-date 350LLK`);
+    assert.equal(plans.includes("360MBI"), false, `Cougar Premium FW ${y} must not back-date 360MBI`);
+  }
+
+  // KEEP INTACT vs main after #101/#96: MY2025–2027 Premium FW locks (do not rewrite).
+  assert.match(
+    cfw,
+    /"2025": \["260MLE", "290RLS", "316RLS", "320RDS", "354FLS", "355FBS", "360MBI", "364BHL", "368MBI"\]/,
+  );
+  assert.match(
+    cfw,
+    /"2026": \["260MLE", "290RLS", "316RLS", "320RDS", "350LLK", "355FBS", "360MBI", "364BHL"\]/,
+  );
+  assert.match(
+    cfw,
+    /"2027": \["260MLE", "290RLS", "295RDS", "316RLS", "320RDS", "350LLK", "355FBS", "360MBI", "364BHL"\]/,
+  );
+  assert.doesNotMatch(cfw, /"2025": .*"295RDS"/);
+  assert.doesNotMatch(cfw, /"2026": .*"295RDS"/);
+  assert.doesNotMatch(cfw, /"2026": .*"354FLS"/);
+  assert.doesNotMatch(cfw, /"2027": .*"2100ML"/);
+
+  // Half-Ton / Sport / TT / Montana / MHC / Crossfire unchanged.
+  assert.match(ctt, /type: "Travel Trailer"/);
+  assert.doesNotMatch(ctt, /"2027":/);
+  assert.doesNotMatch(ctt, /"25FKD"/);
+  assert.match(cst, /"2027": \["2100ML", "2700BH", "3100BH"\]/);
+  assert.doesNotMatch(cst, /"2026":/);
+  assert.match(cht, /"2027": \["23MLE", "26RES", "26RKE", "28RLI", "29MBD", "30REP"\]/);
+  assert.doesNotMatch(cht, /"2027": .*"29RKS"/);
+  assert.match(chtt, /"2027": \["21LBK", "22MLS", "25FKD", "25MLE", "26LBW", "28BHS", "29RDS", "29RKE", "29RLP"\]/);
+  assert.doesNotMatch(chtt, /"2026":/);
+  assert.match(mt, /"2027": \["3100RL", "3500RD", "3600RO", "3800FL", "3900RK"\]/);
+  assert.doesNotMatch(mt, /"2010":/);
+  assert.doesNotMatch(mt, /"2013":/);
+  assert.match(mhc, /"2027": \["290RL", "300RK", "362BRK", "391TB", "396BH"\]/);
+  assert.match(mhc, /"2011": \["313RE", "323RL", "333DB", "343RL"\]/);
+  assert.doesNotMatch(bxf, /"2025":/);
+  assert.doesNotMatch(bxf, /"2026":/);
+});
