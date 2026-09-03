@@ -70,7 +70,12 @@ import {
   loadInventoryZip,
   saveInventoryZip,
 } from "@/lib/marketcheck/client";
-import type { McListingCard } from "@/lib/marketcheck/types";
+import type { McListingCard, McYearRange } from "@/lib/marketcheck/types";
+import {
+  DEFAULT_YEAR_PAD,
+  medianListingPrice,
+  yearRangeFromCenter,
+} from "@/lib/marketcheck/yearRange";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullResetHint } from "@/components/shell/PullResetHint";
@@ -170,10 +175,12 @@ export function RvDetail({
 
   const [invZip, setInvZip] = useState(() => loadInventoryZip() || "98402");
   const [invRadius, setInvRadius] = useState(100);
+  const [invYearPad, setInvYearPad] = useState(DEFAULT_YEAR_PAD);
   const [invLoading, setInvLoading] = useState(false);
   const [invError, setInvError] = useState<string | null>(null);
   const [invListings, setInvListings] = useState<McListingCard[]>([]);
   const [invSearched, setInvSearched] = useState(false);
+  const [invQueryRange, setInvQueryRange] = useState<McYearRange | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement | null>(null);
   const [saveFlash, setSaveFlash] = useState<string | null>(null);
@@ -590,27 +597,32 @@ export function RvDetail({
       model,
       zip,
       radius: invRadius,
+      yearPad: invYearPad,
     });
     setInvLoading(false);
     if (!res.ok) {
       setInvListings([]);
+      setInvQueryRange(null);
       setInvError(res.error || "Inventory search unavailable");
       return;
     }
     setInvListings(res.listings || []);
+    setInvQueryRange(res.query?.yearRange ?? yearRangeFromCenter(Number(year), invYearPad));
     if (!res.listings?.length) {
       setInvError("No local listings found");
     }
   };
 
-  const invMedian = useMemo(() => {
-    const prices = invListings
-      .map((l) => l.price)
-      .filter((n): n is number => typeof n === "number" && n > 0)
-      .sort((a, b) => a - b);
-    if (!prices.length) return null;
-    return prices[Math.floor(prices.length / 2)]!;
-  }, [invListings]);
+  const invYearWindow = useMemo(
+    () => invQueryRange ?? yearRangeFromCenter(Number(year), invYearPad),
+    [invQueryRange, year, invYearPad],
+  );
+  const invRadiusShown = Math.min(100, invRadius);
+
+  const invMedian = useMemo(
+    () => medianListingPrice(invListings.map((l) => l.price)),
+    [invListings],
+  );
 
   const exportPdf = async () => {
     if (exportBusy) return;
@@ -1072,6 +1084,19 @@ export function RvDetail({
                 />
               </label>
               <select
+                value={invYearPad}
+                onChange={(e) => {
+                  setInvYearPad(Number(e.target.value));
+                  setInvQueryRange(null);
+                }}
+                className="rounded-full border border-white/15 bg-black/30 px-3 py-1.5 text-[12px] font-semibold text-white"
+                aria-label="Year window"
+              >
+                <option value={1}>±1 yr</option>
+                <option value={2}>±2 yr</option>
+                <option value={3}>±3 yr</option>
+              </select>
+              <select
                 value={invRadius}
                 onChange={(e) => setInvRadius(Number(e.target.value))}
                 className="rounded-full border border-white/15 bg-black/30 px-3 py-1.5 text-[12px] font-semibold text-white"
@@ -1089,6 +1114,9 @@ export function RvDetail({
                 {invLoading ? "…" : "Search"}
               </button>
             </div>
+            <p className="mt-2 text-[11px] text-white/55">
+              Years {invYearWindow.min}–{invYearWindow.max} · {invRadiusShown} mi
+            </p>
             {invError ? (
               <p className="mt-2 text-[11px] text-amber">{invError}</p>
             ) : null}

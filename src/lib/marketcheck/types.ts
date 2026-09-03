@@ -22,13 +22,23 @@ export type McListingCard = {
   vdpUrl: string | null;
 };
 
+export type McYearRange = { min: number; max: number };
+
+export type McSearchQuery = {
+  year: string | null;
+  make: string;
+  model: string;
+  /** Inclusive MarketCheck `year_range` actually sent (or exact year as min=max). */
+  yearRange: McYearRange;
+};
+
 export type McSearchResult = {
   ok: true;
   numFound: number;
   listings: McListingCard[];
   radius: number;
   zip: string;
-  query: { year: string; make: string; model: string };
+  query: McSearchQuery;
   cached: boolean;
   medianPrice: number | null;
 };

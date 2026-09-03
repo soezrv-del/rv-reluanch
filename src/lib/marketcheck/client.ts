@@ -1,4 +1,5 @@
 import type { McSearchError, McSearchResult } from "./types";
+import { DEFAULT_YEAR_PAD, inventoryYearQuery } from "./yearRange";
 
 const ZIP_KEY = "rvfax_inventory_zip_v1";
 
@@ -25,14 +26,25 @@ export async function fetchLocalInventory(opts: {
   zip: string;
   radius?: number;
   rows?: number;
+  /** Years on either side of `year`. Default 2. Ignored when min/max are set. */
+  yearPad?: number;
+  yearMin?: number | string;
+  yearMax?: number | string;
   signal?: AbortSignal;
 }): Promise<McSearchResult | McSearchError> {
+  const years = inventoryYearQuery({
+    year: opts.year,
+    yearPad: opts.yearPad ?? DEFAULT_YEAR_PAD,
+    yearMin: opts.yearMin,
+    yearMax: opts.yearMax,
+  });
   const params = new URLSearchParams({
-    year: String(opts.year),
+    year: years.year,
+    year_range: years.year_range,
     make: opts.make,
     model: opts.model,
     zip: opts.zip.trim(),
-    radius: String(opts.radius ?? 250),
+    radius: String(opts.radius ?? 100),
     rows: String(opts.rows ?? 8),
   });
   try {
