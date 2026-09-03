@@ -18129,7 +18129,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Avalanche": {
       type: "Fifth Wheel",
-      floorplans: ["300RL", "302RS", "321RL", "338GK", "346FL", "360RB", "366LS", "372BH", "378BH", "379MB", "380LT", "390DS"],
+      floorplans: ["302RS", "321RL", "338GK", "346FL", "366LS", "378BH", "379MB", "380LT", "390DS"],
       floorplansByYear: {
         // 2010–2024 leftover FBY emptied (prefer omit — thin/unsourced invent).
         // yearStart 2010 kept; no dated ≤2024 cards this slice. Do not invent 300RL/360RB/372BH years.
@@ -18221,7 +18221,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Sprinter: {
       type: "Fifth Wheel",
-      floorplans: ["269FWRLS", "293FWRLS", "3210RLS", "333FWRKS", "3500RDB", "3520RDS", "3530SIK", "3570FLS", "3590LFT", "3640RLP", "3670FLS", "3800FLB", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"],
+      floorplans: ["3210RLS", "3500RDB", "3520RDS", "3590LFT", "3640RLP", "3670FLS", "3800FLB", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"],
       floorplansByYear: {
         // 2010–2024 leftover FBY emptied (prefer omit — era-mismatched invent:
         // 269FWRLS / 293FWRLS / 333FWRKS / 3530SIK / 3570FLS catalog chains).
