@@ -16,6 +16,7 @@ import {
   type LiveVoicePrewarm,
 } from "./liveVoice";
 import type { ActiveCoach } from "../rv/activeCoach";
+import { buildChatGrounding } from "./grounding";
 import {
   decideVoiceWebResearch,
   fetchVoiceWebResearchNotes,
@@ -686,15 +687,20 @@ export class GrokRealtimeSession {
   }
 
   /**
-   * Pre-turn enrichment: same `buildChatGrounding` / `needsWebFallback`
-   * detector as text chat. Cancel the VAD auto-reply, speak a short hold,
+   * Pre-turn enrichment: `buildChatGrounding` + shared `needsWebFallback`
+   * (same detector as text chat). Cancel the VAD auto-reply, speak a short hold,
    * fetch web notes with a 7s bound, then answer from the notes (or
    * honestly fall back if the lookup is slow or fails).
    */
   private async maybeEnrichWithWebResearch(transcript: string) {
+    const grounded = buildChatGrounding({
+      query: transcript,
+      facts: this.facts,
+    });
     const decision = decideVoiceWebResearch({
       transcript,
-      facts: this.facts,
+      specs: grounded.specs,
+      catalogBlock: grounded.block || this.catalogContext,
     });
     if (decision.action !== "research") return;
     if (this.closed || this.intentionalStop) return;

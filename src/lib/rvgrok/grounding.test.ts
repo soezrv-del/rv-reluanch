@@ -349,6 +349,7 @@ test("system prompts know injected web research is live internet", () => {
   const live = src(root, "liveVoice.ts");
   assert.doesNotMatch(live, /wantsWebFallback/);
   const realtime = src(root, "realtime.ts");
+  assert.match(realtime, /buildChatGrounding/);
   assert.match(realtime, /decideVoiceWebResearch/);
   assert.match(realtime, /formatVoiceWebSearchInjection/);
   assert.match(realtime, /maybeEnrichWithWebResearch/);

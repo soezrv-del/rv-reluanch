@@ -1,22 +1,21 @@
 /**
  * Live Voice rendering of the shared chat web-research path.
  *
- * Detection is NOT forked: `decideVoiceWebResearch` calls `buildChatGrounding`
- * (same `needsWebFallback` / `webIntent.ts` chat uses). This module only
- * shapes notes for speech, bounds latency, and fetches the sidecar.
+ * Detection is NOT forked: `decideVoiceWebResearch` calls `needsWebFallback`
+ * from `webIntent.ts` (same function chat uses via `buildChatGrounding`).
+ * This module only shapes notes for speech, bounds latency, and fetches.
  */
 
-import type { ActiveCoach } from "../rv/activeCoach";
-import { buildChatGrounding } from "./grounding";
+import { needsWebFallback, type WebFallbackSpecs } from "./webIntent.ts";
 import {
   type WebSearchNotes,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
-} from "./webSearch";
+} from "./webSearch.ts";
 
 export {
   VOICE_WEB_SEARCH_MODELS,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
-} from "./webSearch";
+} from "./webSearch.ts";
 
 /** Client abort slightly above the server 7s budget so we receive an honest body. */
 export const VOICE_WEB_SEARCH_CLIENT_BUDGET_MS =
@@ -33,32 +32,33 @@ export type VoiceWebDecision =
   | { action: "research"; query: string; catalogBlock: string };
 
 /**
- * Same trigger as text chat: `buildChatGrounding` → `needsWebFallback`.
+ * Same trigger as text chat: `needsWebFallback` from `webIntent.ts`.
+ * Callers pass specs from `buildChatGrounding` when a coach is in context.
  * Greetings / lifestyle / payment stay on the catalog-only voice path.
  */
 export function decideVoiceWebResearch(opts: {
   transcript: string;
-  facts?: ActiveCoach | null;
+  specs?: WebFallbackSpecs;
+  catalogBlock?: string;
 }): VoiceWebDecision {
   const transcript = (opts.transcript || "").trim();
   if (!transcript) return { action: "pass" };
-  const grounded = buildChatGrounding({
-    query: transcript,
-    facts: opts.facts ?? null,
-  });
-  if (!grounded.needsWeb) return { action: "pass" };
+  if (!needsWebFallback(opts.specs ?? null, transcript)) {
+    return { action: "pass" };
+  }
   return {
     action: "research",
     query: transcript.slice(0, 400),
-    catalogBlock: grounded.block,
+    catalogBlock: (opts.catalogBlock || "").trim(),
   };
 }
 
 /** Strip URLs / markdown so Live Voice does not read citations aloud. */
 export function stripNotesForSpeech(notes: string): string {
   return notes
+    .replace(/\[[^\]]*\]\([^)]*\)/g, "")
     .replace(/https?:\/\/\S+/gi, "")
-    .replace(/\[[^\]]*\]\([^)]+\)/g, "")
+    .replace(/\[[^\]]*\]\(/g, "")
     .replace(/[#*_`>]+/g, "")
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
@@ -115,6 +115,9 @@ export async function fetchVoiceWebResearchNotes(opts: {
     if (data && typeof data.ok === "boolean") return data;
     return { ok: false, reason: "voice web research returned an invalid body" };
   } catch (e) {
+    if (opts.signal?.aborted) {
+      return { ok: false, reason: "web search timed out" };
+    }
     const msg = e instanceof Error ? e.message : "voice web research error";
     if (/abort|timeout/i.test(msg)) {
       return { ok: false, reason: "web search timed out" };
