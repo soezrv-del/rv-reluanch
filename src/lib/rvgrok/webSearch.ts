@@ -1,11 +1,14 @@
 /**
- * Optional xAI web search sidecar for chat when catalog misses a hard field.
+ * Optional xAI web search sidecar for chat when the turn needs live notes
+ * (troubleshooting / OEM / forum / manual, or a missing hard spec).
  *
  * Confirmed: Live Search `search_parameters` on chat completions is retired
  * (410 Gone). The working path is POST /v1/responses with { type: "web_search" }.
  * If the key is missing or the call fails, callers must say so honestly —
- * never pretend a brochure was fetched.
+ * never pretend a brochure or bulletin was fetched.
  */
+
+import { looksLikeLiveResearchQuestion, looksLikeSpecQuestion } from "./grounding";
 
 export const WEB_SEARCH_TOOL = { type: "web_search" } as const;
 
@@ -13,30 +16,59 @@ export type WebSearchNotes =
   | { ok: true; notes: string; model: string }
   | { ok: false; reason: string };
 
+function researchSystemPrompt(catalog: string, query: string): string {
+  const wantsHelp = looksLikeLiveResearchQuestion(query);
+  const wantsSpec = looksLikeSpecQuestion(query);
+  const lines = [
+    "You research one RV question for RVFAX. Return short RESEARCH NOTES only — no JSON.",
+    "Never invent horsepower (no silent 450) or a diagnosis you cannot support. Cite uncertainty.",
+    "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
+    "Floorplan letters are labels only — do not decode bunks or a half-bath from the code.",
+  ];
+  if (wantsSpec || !wantsHelp) {
+    lines.push(
+      "If this is a spec/powertrain ask: prefer OEM brochure / chassis sheet / door-sticker facts for THAT year + make + model + floorplan. If not found, write UNKNOWN and what to verify.",
+    );
+  }
+  if (wantsHelp) {
+    lines.push(
+      "If this is troubleshooting / how-to / error code / TSB / recall / install: note likely symptoms, OEM bulletins or common forum/manual fixes, and safety caveats. Keep it short. Do not invent a campaign number or HP.",
+    );
+  }
+  if (catalog) {
+    lines.push(`Catalog lock (do not contradict these numbers):\n${catalog}`);
+  } else {
+    lines.push(
+      "No catalog row was available. If the web does not confirm a number, say UNKNOWN.",
+    );
+  }
+  return lines.join("\n");
+}
+
+function researchUserPrompt(query: string): string {
+  if (looksLikeLiveResearchQuestion(query) && !looksLikeSpecQuestion(query)) {
+    return `Find current OEM / TSB / manual / forum RESEARCH NOTES (symptoms, common fixes, safety caveats) for: ${query}`;
+  }
+  if (looksLikeLiveResearchQuestion(query)) {
+    return `Find OEM-accurate powertrain if asked, plus troubleshooting / bulletin RESEARCH NOTES for: ${query}`;
+  }
+  return `Find OEM-accurate powertrain (engine, HP, chassis, fuel) for: ${query}`;
+}
+
 export function buildWebSearchRequest(opts: {
   model: string;
   query: string;
   catalogBlock?: string;
 }): Record<string, unknown> {
   const catalog = (opts.catalogBlock || "").trim();
-  const system = [
-    "You research one RV for RVFAX. Return short RESEARCH NOTES only — no JSON.",
-    "Prefer OEM brochure / chassis sheet / door-sticker facts for THAT year + make + model + floorplan.",
-    "Never invent horsepower (no silent 450). If not found, write UNKNOWN and what to verify.",
-    "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
-    "Floorplan letters are labels only — do not decode bunks or a half-bath from the code.",
-    catalog
-      ? `Catalog lock (do not contradict these numbers):\n${catalog}`
-      : "No catalog row was available. If the web does not confirm a number, say UNKNOWN.",
-  ].join("\n");
 
   return {
     model: opts.model,
     input: [
-      { role: "system", content: system },
+      { role: "system", content: researchSystemPrompt(catalog, opts.query) },
       {
         role: "user",
-        content: `Find OEM-accurate powertrain (engine, HP, chassis, fuel) for: ${opts.query}`,
+        content: researchUserPrompt(opts.query),
       },
     ],
     tools: [WEB_SEARCH_TOOL],
@@ -80,10 +112,11 @@ export function formatWebSearchInjection(result: WebSearchNotes): string {
     return [
       "WEB RESEARCH NOTES (xAI web_search — may be incomplete):",
       result.notes.slice(0, 3500),
-      "Catalog lock still wins if it names a number. If notes do not confirm a missing field, say unknown / EST.",
+      "You have live web research this turn — do not claim you have no internet or cannot get online.",
+      "Catalog lock still wins if it names a number. Use notes for troubleshooting / OEM / forum context. If notes do not confirm a fact, say unknown / EST.",
     ].join("\n");
   }
-  return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). If the catalog line is UNKNOWN, say unknown / EST. and what to verify — do not invent HP, engine, chassis, or fuel.`;
+  return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). Be honest that you could not browse. Give your best EST. and what to verify — do not invent HP, engine, chassis, fuel, a bulletin, or a campaign number.`;
 }
 
 export async function fetchWebSearchNotes(opts: {

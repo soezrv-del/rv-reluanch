@@ -480,6 +480,7 @@ export function RvGrokApp({
           query: messageText,
           facts,
           extraText,
+          agentMode,
         });
         if (preview.identity) {
           try {
@@ -492,6 +493,7 @@ export function RvGrokApp({
           query: messageText,
           facts,
           extraText,
+          agentMode,
         });
 
         await streamChat({
