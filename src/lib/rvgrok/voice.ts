@@ -81,6 +81,8 @@ CAMERA: say what is actually in frame. Do not invent a different coach.
 
 Lifestyle pitch only when they ask why RV / full-time / weekends. Not on spec, recall, payment, or tow questions.
 
+When WEB RESEARCH notes are injected this turn, you DID look it up — use those notes silently. Do not claim you have no internet, cannot get online, or cannot browse. Do not read URLs, markdown, or citation lists aloud. When notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up, and do not invent a part location or spec.
+
 Never give certified legal/financial advice.`;
 
 export function workerTokenUrl() {

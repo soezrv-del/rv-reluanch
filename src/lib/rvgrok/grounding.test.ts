@@ -16,6 +16,8 @@ import {
 } from "./webIntent.ts";
 import {
   WEB_SEARCH_MODELS,
+  VOICE_WEB_SEARCH_MODELS,
+  VOICE_WEB_SEARCH_TIMEOUT_MS,
   buildWebSearchRequest,
   extractResponsesText,
   formatWebSearchHttpFailure,
@@ -154,6 +156,12 @@ test("web search model fallbacks are current Responses + web_search ids", () => 
     "grok-4-1-fast-reasoning",
     "grok-4-latest",
   ]);
+  assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4.6"]);
+  assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 7_000);
+  const api = src(join(root, "../../routes/api"), "rvgrok.ts");
+  assert.match(api, /fetchWebSearchNotes/);
+  assert.doesNotMatch(api, /timeoutMs:/);
+  assert.doesNotMatch(api, /VOICE_WEB_SEARCH/);
 });
 
 test("web search HTTP failure includes a truncated API body", () => {
@@ -335,6 +343,13 @@ test("system prompts know injected web research is live internet", () => {
   assert.match(prompts, /WEB RESEARCH notes/);
   assert.match(prompts, /no internet/i);
   assert.match(prompts, /WEB SEARCH NOT AVAILABLE/);
+  const voice = src(root, "voice.ts");
+  assert.match(voice, /WEB RESEARCH notes/);
+  assert.match(voice, /WEB SEARCH NOT AVAILABLE/);
   const live = src(root, "liveVoice.ts");
   assert.doesNotMatch(live, /wantsWebFallback/);
+  const realtime = src(root, "realtime.ts");
+  assert.match(realtime, /decideVoiceWebResearch/);
+  assert.match(realtime, /formatVoiceWebSearchInjection/);
+  assert.match(realtime, /maybeEnrichWithWebResearch/);
 });

@@ -18,6 +18,10 @@ export const WEB_SEARCH_MODELS = [
   "grok-4-latest",
 ] as const;
 
+/** Live Voice: one model, 7s — long enough for Responses + web_search, short enough to fall back. */
+export const VOICE_WEB_SEARCH_TIMEOUT_MS = 7_000;
+export const VOICE_WEB_SEARCH_MODELS = [WEB_SEARCH_MODELS[0]] as const;
+
 const ERROR_SNIPPET_MAX = 200;
 
 export type WebSearchNotes =
@@ -122,12 +126,18 @@ export async function fetchWebSearchNotes(opts: {
   apiKey: string | undefined;
   query: string;
   catalogBlock?: string;
+  /** Per-model fetch timeout. Chat default 18s; Live Voice passes a tighter bound. */
+  timeoutMs?: number;
+  /** Model list to try. Chat default is WEB_SEARCH_MODELS; voice uses one shot. */
+  models?: readonly string[];
 }): Promise<WebSearchNotes> {
   if (!opts.apiKey) {
     return { ok: false, reason: "no XAI_API_KEY on the server" };
   }
+  const timeoutMs = opts.timeoutMs ?? 18_000;
+  const models = opts.models ?? WEB_SEARCH_MODELS;
   let last = "web search request failed";
-  for (const model of WEB_SEARCH_MODELS) {
+  for (const model of models) {
     try {
       const resp = await fetch("https://api.x.ai/v1/responses", {
         method: "POST",
@@ -142,7 +152,7 @@ export async function fetchWebSearchNotes(opts: {
             catalogBlock: opts.catalogBlock,
           }),
         ),
-        signal: AbortSignal.timeout(18_000),
+        signal: AbortSignal.timeout(timeoutMs),
       });
       if (!resp.ok) {
         const raw = await resp.text().catch(() => "");

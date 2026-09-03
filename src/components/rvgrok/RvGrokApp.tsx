@@ -954,7 +954,7 @@ export function RvGrokApp({
         },
       },
       selectedVoice,
-      { speed: playbackSpeed, catalogContext },
+      { speed: playbackSpeed, catalogContext, facts },
     );
 
     realtimeRef.current = session;

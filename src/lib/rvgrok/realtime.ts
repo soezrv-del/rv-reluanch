@@ -15,6 +15,14 @@ import {
   retainLiveCapture,
   type LiveVoicePrewarm,
 } from "./liveVoice";
+import type { ActiveCoach } from "../rv/activeCoach";
+import {
+  decideVoiceWebResearch,
+  fetchVoiceWebResearchNotes,
+  formatVoiceWebSearchInjection,
+  VOICE_RESEARCH_ANSWER_INSTRUCTIONS,
+  VOICE_RESEARCH_HOLD_INSTRUCTIONS,
+} from "./voiceWeb";
 
 export type RealtimeStatus =
   | "idle"
@@ -62,19 +70,30 @@ export class GrokRealtimeSession {
   private voiceId: string;
   private speed: number;
   private catalogContext: string;
+  private facts: ActiveCoach | null;
   private rearmTimer: ReturnType<typeof setTimeout> | null = null;
   private earlyPcm: ArrayBuffer[] = [];
   private readonly maxEarlyChunks = 48;
+  private researchAbort: AbortController | null = null;
+  private researchPhase: "idle" | "holding" | "searching" | "answering" =
+    "idle";
+  private pendingResearchInjection: string | null = null;
+  private lastResearchTranscript = "";
 
   constructor(
     handlers: RealtimeHandlers,
     voiceId = DEFAULT_VOICE,
-    opts?: { speed?: number; catalogContext?: string },
+    opts?: {
+      speed?: number;
+      catalogContext?: string;
+      facts?: ActiveCoach | null;
+    },
   ) {
     this.handlers = handlers;
     this.voiceId = voiceId;
     this.speed = opts?.speed ?? 1;
     this.catalogContext = (opts?.catalogContext || "").trim();
+    this.facts = opts?.facts ?? null;
   }
 
   get isActive() {
@@ -87,6 +106,7 @@ export class GrokRealtimeSession {
     this.suppressMic = false;
     this.finishedAssistantOnce = false;
     this.earlyPcm = [];
+    this.resetResearchTurn();
 
     this.handlers.onStatus("connecting", "Allow microphone if the phone asks…");
 
@@ -319,12 +339,22 @@ export class GrokRealtimeSession {
         this.handlers.onStatus("thinking", "Processing…");
         break;
 
-      case "conversation.item.input_audio_transcription.completed":
       case "conversation.item.input_audio_transcription.updated": {
         const transcript = String(
           (msg as { transcript?: string }).transcript || "",
         );
         if (transcript) this.handlers.onUserTranscript(transcript);
+        break;
+      }
+
+      case "conversation.item.input_audio_transcription.completed": {
+        const transcript = String(
+          (msg as { transcript?: string }).transcript || "",
+        );
+        if (transcript) {
+          this.handlers.onUserTranscript(transcript);
+          void this.maybeEnrichWithWebResearch(transcript);
+        }
         break;
       }
 
@@ -383,8 +413,18 @@ export class GrokRealtimeSession {
       }
 
       case "response.done":
+        if (this.finishResearchHoldIfNeeded()) break;
         if (this.assistantText) {
           this.emitAssistantDone(this.assistantText);
+        }
+        if (this.researchPhase === "answering") {
+          this.researchPhase = "idle";
+        }
+        if (this.researchPhase === "searching") {
+          // Hold finished; web lookup still running — keep mic muted.
+          this.assistantText = "";
+          this.finishedAssistantOnce = false;
+          break;
         }
         this.scheduleRearm();
         this.assistantText = "";
@@ -393,6 +433,10 @@ export class GrokRealtimeSession {
 
       case "response.cancelled":
       case "response.cancel":
+        if (this.researchPhase !== "idle") {
+          // Expected: we cancelled the VAD auto-reply to run web research.
+          break;
+        }
         this.interruptPlayback();
         this.suppressMic = false;
         this.handlers.onStatus(
@@ -408,6 +452,7 @@ export class GrokRealtimeSession {
             ? err
             : err?.message || JSON.stringify(msg).slice(0, 200);
         if (/cancel|interrupt|no active response/i.test(message)) {
+          if (this.researchPhase !== "idle") break;
           this.suppressMic = false;
           this.handlers.onStatus(
             "listening",
@@ -426,6 +471,9 @@ export class GrokRealtimeSession {
   }
 
   private emitAssistantDone(text: string) {
+    if (this.researchPhase === "holding" || this.researchPhase === "searching") {
+      return;
+    }
     if (this.finishedAssistantOnce) return;
     this.finishedAssistantOnce = true;
     if (text) this.handlers.onAssistantDone(text);
@@ -500,6 +548,7 @@ export class GrokRealtimeSession {
   }
 
   stop(opts?: { keepCapture?: boolean }) {
+    this.resetResearchTurn();
     this.intentionalStop = true;
     this.closed = true;
     if (this.rearmTimer) {
@@ -637,10 +686,152 @@ export class GrokRealtimeSession {
   }
 
   /**
+   * Pre-turn enrichment: same `buildChatGrounding` / `needsWebFallback`
+   * detector as text chat. Cancel the VAD auto-reply, speak a short hold,
+   * fetch web notes with a 7s bound, then answer from the notes (or
+   * honestly fall back if the lookup is slow or fails).
+   */
+  private async maybeEnrichWithWebResearch(transcript: string) {
+    const decision = decideVoiceWebResearch({
+      transcript,
+      facts: this.facts,
+    });
+    if (decision.action !== "research") return;
+    if (this.closed || this.intentionalStop) return;
+
+    const key = transcript.trim();
+    if (this.lastResearchTranscript === key && this.researchPhase !== "idle") {
+      return;
+    }
+    this.lastResearchTranscript = key;
+
+    this.researchAbort?.abort();
+    this.researchAbort = new AbortController();
+    this.pendingResearchInjection = null;
+    this.researchPhase = "holding";
+
+    this.cancelAutoResponseForResearch();
+    this.handlers.onStatus("thinking", "Looking that up…");
+    this.speakResearchHold();
+
+    const result = await fetchVoiceWebResearchNotes({
+      query: decision.query,
+      catalogContext: decision.catalogBlock || this.catalogContext,
+      signal: this.researchAbort.signal,
+    });
+
+    if (this.closed || this.intentionalStop) return;
+    if (this.researchAbort.signal.aborted) return;
+
+    const injection = formatVoiceWebSearchInjection(result);
+    if (this.researchPhase === "holding") {
+      this.pendingResearchInjection = injection;
+      return;
+    }
+    this.researchPhase = "answering";
+    this.flushResearchAnswer(injection);
+  }
+
+  private cancelAutoResponseForResearch() {
+    this.interruptPlayback();
+    this.suppressMic = true;
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    try {
+      ws.send(JSON.stringify({ type: "response.cancel" }));
+    } catch {
+      /* nothing active */
+    }
+    try {
+      ws.send(JSON.stringify({ type: "input_audio_buffer.clear" }));
+    } catch {
+      /* */
+    }
+  }
+
+  private speakResearchHold() {
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      this.researchPhase = "searching";
+      return;
+    }
+    try {
+      ws.send(
+        JSON.stringify({
+          type: "response.create",
+          response: {
+            modalities: ["text", "audio"],
+            instructions: VOICE_RESEARCH_HOLD_INSTRUCTIONS,
+          },
+        }),
+      );
+    } catch {
+      this.researchPhase = "searching";
+    }
+  }
+
+  private finishResearchHoldIfNeeded(): boolean {
+    if (this.researchPhase !== "holding") return false;
+    if (this.pendingResearchInjection) {
+      this.researchPhase = "answering";
+      const injection = this.pendingResearchInjection;
+      this.pendingResearchInjection = null;
+      this.flushResearchAnswer(injection);
+    } else {
+      this.researchPhase = "searching";
+    }
+    this.assistantText = "";
+    this.finishedAssistantOnce = false;
+    return true;
+  }
+
+  private flushResearchAnswer(injection: string) {
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      this.researchPhase = "idle";
+      return;
+    }
+    this.suppressMic = true;
+    this.handlers.onStatus("thinking", "Answering…");
+    try {
+      ws.send(
+        JSON.stringify({
+          type: "conversation.item.create",
+          item: {
+            type: "message",
+            role: "user",
+            content: [{ type: "input_text", text: injection }],
+          },
+        }),
+      );
+      ws.send(
+        JSON.stringify({
+          type: "response.create",
+          response: {
+            modalities: ["text", "audio"],
+            instructions: VOICE_RESEARCH_ANSWER_INSTRUCTIONS,
+          },
+        }),
+      );
+    } catch {
+      this.researchPhase = "idle";
+      this.suppressMic = false;
+    }
+  }
+
+  private resetResearchTurn() {
+    this.researchAbort?.abort();
+    this.researchAbort = null;
+    this.researchPhase = "idle";
+    this.pendingResearchInjection = null;
+  }
+
+  /**
    * Barge-in: stop Grok mid-sentence, clear audio queue, open mic again.
    * Does NOT end the Live Voice session. Safe to call repeatedly.
    */
   interrupt(): boolean {
+    this.resetResearchTurn();
     const ws = this.ws;
     const wasLive = Boolean(ws && ws.readyState === WebSocket.OPEN);
 
