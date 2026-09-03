@@ -3,6 +3,7 @@ import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
 import { appendGrounding } from "@/lib/rvgrok/grounding";
 import {
+  CHAT_WEB_SEARCH_TIMEOUT_MS,
   fetchWebSearchNotes,
   formatWebSearchInjection,
 } from "@/lib/rvgrok/webSearch";
@@ -628,6 +629,8 @@ export const Route = createFileRoute("/api/rvgrok")({
             apiKey: process.env.XAI_API_KEY,
             query: lastPlain.slice(0, 400),
             catalogBlock: catalogContext,
+            timeoutMs: CHAT_WEB_SEARCH_TIMEOUT_MS,
+            profile: "chat",
           });
           webNotes = formatWebSearchInjection(researched);
         }

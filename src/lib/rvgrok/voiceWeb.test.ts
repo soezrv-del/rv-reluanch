@@ -124,10 +124,10 @@ test("stripNotesForSpeech drops URLs and markdown without adding facts", () => {
   assert.doesNotMatch(spoken, /#/);
 });
 
-test("voice web search is bounded to 7s and a single model", () => {
+test("voice web search is bounded to 7s and a single fast model", () => {
   assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 7_000);
   assert.equal(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS, 8_000);
-  assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4.6"]);
+  assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
 });
 
 test("client fetch timeout/abort falls back without claiming a lookup", async () => {

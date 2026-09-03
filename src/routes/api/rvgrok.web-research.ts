@@ -51,6 +51,7 @@ async function handleResearch(request: Request): Promise<Response> {
       typeof body.catalogContext === "string" ? body.catalogContext : undefined,
     timeoutMs: VOICE_WEB_SEARCH_TIMEOUT_MS,
     models: VOICE_WEB_SEARCH_MODELS,
+    profile: "voice",
   });
   return json(researched);
 }
