@@ -4,15 +4,47 @@
  *
  * Confirmed: Live Search `search_parameters` on chat completions is retired
  * (410 Gone). The working path is POST /v1/responses with { type: "web_search" }.
+ * Payload matches current xAI docs: model + user input + tools only.
  * If the key is missing or the call fails, callers must say so honestly —
  * never pretend a brochure or bulletin was fetched.
  */
 
 export const WEB_SEARCH_TOOL = { type: "web_search" } as const;
 
+/** Current Responses + web_search models (docs.x.ai / Agent Tools). */
+export const WEB_SEARCH_MODELS = [
+  "grok-4.6",
+  "grok-4-1-fast-reasoning",
+  "grok-4-latest",
+] as const;
+
+const ERROR_SNIPPET_MAX = 200;
+
 export type WebSearchNotes =
   | { ok: true; notes: string; model: string }
   | { ok: false; reason: string };
+
+export function truncateApiErrorBody(
+  text: string,
+  max = ERROR_SNIPPET_MAX,
+): string {
+  const cleaned = text
+    .replace(/Bearer\s+\S+/gi, "Bearer [redacted]")
+    .replace(/xai-[A-Za-z0-9_-]{8,}/gi, "[redacted]")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned.slice(0, max);
+}
+
+export function formatWebSearchHttpFailure(
+  status: number,
+  bodyText: string,
+): string {
+  const snippet = truncateApiErrorBody(bodyText);
+  return snippet
+    ? `web search HTTP ${status}: ${snippet}`
+    : `web search HTTP ${status}`;
+}
 
 export function buildWebSearchRequest(opts: {
   model: string;
@@ -20,7 +52,7 @@ export function buildWebSearchRequest(opts: {
   catalogBlock?: string;
 }): Record<string, unknown> {
   const catalog = (opts.catalogBlock || "").trim();
-  const system = [
+  const instructions = [
     "You research one RV question for RVFAX. Return short RESEARCH NOTES only — no JSON.",
     "Match the user's ask:",
     "- Specs/powertrain: prefer OEM brochure / chassis sheet / door-sticker facts for THAT year + make + model + floorplan. Never invent horsepower (no silent 450). If not found, write UNKNOWN and what to verify.",
@@ -35,15 +67,12 @@ export function buildWebSearchRequest(opts: {
   return {
     model: opts.model,
     input: [
-      { role: "system", content: system },
       {
         role: "user",
-        content: `Research this RV question (OEM / TSB / manual / forum notes as relevant — powertrain only if they asked for specs): ${opts.query}`,
+        content: `${instructions}\n\nResearch this RV question (OEM / TSB / manual / forum notes as relevant — powertrain only if they asked for specs): ${opts.query}`,
       },
     ],
     tools: [WEB_SEARCH_TOOL],
-    temperature: 0.1,
-    max_output_tokens: 900,
   };
 }
 
@@ -97,9 +126,8 @@ export async function fetchWebSearchNotes(opts: {
   if (!opts.apiKey) {
     return { ok: false, reason: "no XAI_API_KEY on the server" };
   }
-  const models = ["grok-4.5", "grok-4-latest", "grok-4"];
   let last = "web search request failed";
-  for (const model of models) {
+  for (const model of WEB_SEARCH_MODELS) {
     try {
       const resp = await fetch("https://api.x.ai/v1/responses", {
         method: "POST",
@@ -117,7 +145,8 @@ export async function fetchWebSearchNotes(opts: {
         signal: AbortSignal.timeout(18_000),
       });
       if (!resp.ok) {
-        last = `web search HTTP ${resp.status}`;
+        const raw = await resp.text().catch(() => "");
+        last = formatWebSearchHttpFailure(resp.status, raw);
         continue;
       }
       const data = await resp.json();
