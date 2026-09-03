@@ -2054,6 +2054,90 @@ function main() {
       if (/"2026": .*"3800MR"/.test(alp) || /"2026": .*"321RL"/.test(alp) || /"2026": .*"3501RL"/.test(alp)) {
         fail("Keystone|Alpine must not keep 3800MR / Edition 321RL / leftover 3501RL on 2026");
       }
+      // MY2010–2014 leftover invent omitted (RVUSA Alpine m2918 — prefer omit).
+      // Do not invent-fill 3400RL / 3781FK / 3900RK. Never stamp MY2027 OEM six onto 2010–2024.
+      // LOCK RVUSA m2918 year cards. THIN 2015 keep 3010RE. Keep 3712KB on 2020–2024 only.
+      for (const y of [2010, 2011, 2012, 2013, 2014]) {
+        if (new RegExp(`"${y}":`).test(alp)) {
+          fail(`Keystone|Alpine must omit leftover ${y} fby (prefer omit — no 3400RL/3781FK/3900RK invent)`);
+        }
+      }
+      if (/"3400RL"/.test(alp) || /"3781FK"/.test(alp) || /"3900RK"/.test(alp)) {
+        fail("Keystone|Alpine must drop leftover invent 3400RL / 3781FK / 3900RK");
+      }
+      if (!/"2015": \["3010RE"\]/.test(alp)) {
+        fail("Keystone|Alpine MY15 RVUSA lock missing (THIN: 3010RE only; m2918-y2015)");
+      }
+      if (
+        !/"2016": \["3010RE", "3011RE", "3100RL", "3101RL", "3470RK", "3510RE", "3511RE", "3535RE", "3536RE", "3590RS", "3591RS", "3600RS", "3601RS", "3660FL", "3730FB", "3731FB", "3900RE", "3901RE"\]/.test(
+          alp,
+        )
+      ) {
+        fail("Keystone|Alpine MY16 RVUSA lock missing (18 codes; m2918-y2016)");
+      }
+      if (
+        !/"2017": \["3010RE", "3011RE", "3300GR", "3301GR", "3400RS", "3401RS", "3500RL", "3501RL", "3650RL", "3651RL", "3660FL", "3661FL", "3900RE", "3901RE"\]/.test(
+          alp,
+        )
+      ) {
+        fail("Keystone|Alpine MY17 RVUSA lock missing (14 codes; m2918-y2017)");
+      }
+      if (
+        !/"2018": \["3020RE", "3021RE", "3300GR", "3301GR", "3400RS", "3401RS", "3500RL", "3501RL", "3650RL", "3651RL", "3700FL", "3701FL", "3800FK", "3801FK", "3900RE", "3901RE"\]/.test(
+          alp,
+        )
+      ) {
+        fail("Keystone|Alpine MY18 RVUSA lock missing (16 codes; m2918-y2018)");
+      }
+      if (
+        !/"2019": \["3020RE", "3021RE", "3320MK", "3321MK", "3400RS", "3401RS", "3500RL", "3501RL", "3650RL", "3651RL", "3700FL", "3701FL", "3710KP", "3711KP", "3800FK", "3801FK", "3850RD", "3851RD"\]/.test(
+          alp,
+        )
+      ) {
+        fail("Keystone|Alpine MY19 RVUSA lock missing (18 codes; m2918-y2019)");
+      }
+      if (
+        !/"2020": \["3020RE", "3021RE", "3120RE", "3121RE", "3320MK", "3321MK", "3450GK", "3451GK", "3650RL", "3651RL", "3700FL", "3701FL", "3710KP", "3712KB", "3713KB", "3790FK", "3800FK", "3801FK", "3850RD", "3851RD"\]/.test(
+          alp,
+        )
+      ) {
+        fail("Keystone|Alpine MY20 RVUSA lock missing (20 codes; keep 3712KB; m2918-y2020)");
+      }
+      if (!/"2021": \["3020RE", "3120RS", "3220RL", "3320MK", "3650RL", "3700FL", "3712KB", "3790FK", "3850RD", "3910RK"\]/.test(alp)) {
+        fail("Keystone|Alpine MY21 RVUSA lock missing (10 codes; keep 3712KB; m2918-y2021)");
+      }
+      if (!/"2022": \["3220RL", "3650RL", "3700FL", "3712KB", "3720MD", "3790FK", "3850RD", "3910RK"\]/.test(alp)) {
+        fail("Keystone|Alpine MY22 RVUSA lock missing (8 codes; keep 3712KB; m2918-y2022)");
+      }
+      if (!/"2023": \["3102RL", "3220RL", "3650RL", "3700FL", "3712KB", "3720MD", "3790FK", "3910RK", "3912DS"\]/.test(alp)) {
+        fail("Keystone|Alpine MY23 RVUSA lock missing (9 codes; keep 3712KB; m2918-y2023)");
+      }
+      if (!/"2024": \["3011CK", "3102RL", "3220RL", "3303CK", "3700FL", "3712KB", "3720MD", "3790FK", "3910RK", "3912DS"\]/.test(alp)) {
+        fail("Keystone|Alpine MY24 RVUSA lock missing (10 codes; keep 3712KB; m2918-y2024)");
+      }
+      for (const y of [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]) {
+        const ym = alp.match(new RegExp(`"${y}": \\[([^\\]]*)\\]`));
+        const inner = ym?.[1] ?? "";
+        if (/"3800MR"/.test(inner)) {
+          fail(`Keystone|Alpine must not stamp MY27 3800MR onto ${y}`);
+        }
+        if (/"3100RE"/.test(inner) || /"3710FL"/.test(inner) || /"3820FK"/.test(inner)) {
+          fail(`Keystone|Alpine must not back-date MY27 3100RE / 3710FL / 3820FK onto ${y}`);
+        }
+        if (
+          /"3100RE"/.test(inner) &&
+          /"3303CK"/.test(inner) &&
+          /"3710FL"/.test(inner) &&
+          /"3800MR"/.test(inner) &&
+          /"3820FK"/.test(inner) &&
+          /"3910RK"/.test(inner)
+        ) {
+          fail(`Keystone|Alpine must not stamp MY27 OEM six onto ${y}`);
+        }
+        if (y >= 2020 && y <= 2024 && !/"3712KB"/.test(inner)) {
+          fail(`Keystone|Alpine must keep 3712KB on ${y} (RVUSA lists it)`);
+        }
+      }
 
       const aae = slice("Alpine Avalanche Edition", "Arcadia");
       if (!/"2027": \["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"\]/.test(aae)) {
