@@ -139,7 +139,7 @@ function row(
   };
 }
 
-/** Brand / model prestige for compare when live ratings collapse to one number */
+/** Brand / model prestige — used only as a badge tie-break, never to mutate scores. */
 function prestigeScore(make: string, model: string): number {
   const s = `${make} ${model}`.toLowerCase();
   if (
@@ -232,84 +232,24 @@ function hpDisplayAndRank(
   return { display, raw, engineDisplay };
 }
 
-/**
- * Live Grok often returns the same 4.6 for every luxury diesel.
- * Force a spread using prestige + power + residual signals so green/red mean something.
- */
-function finalizeRatings(
-  bases: number[],
-  signals: {
-    prestige: number;
-    hp: number | null;
-    tradeIn: number;
-    retailHigh: number;
-    live: boolean;
-  }[],
-): number[] {
-  const n = bases.length;
-  if (n < 2) return bases.map((r) => Math.round(r * 10) / 10);
-
-  const composites = bases.map((base, i) => {
-    const s = signals[i]!;
-    const hpN = s.hp ?? 400;
-    return (
-      base * 10 +
-      s.prestige * 0.04 +
-      hpN / 200 +
-      s.tradeIn / 500_000 +
-      s.retailHigh / 600_000 +
-      (s.live ? 0.05 : 0)
-    );
-  });
-
-  const ranked = composites
-    .map((score, i) => ({ score, i, base: bases[i]! }))
-    .sort((a, b) => b.score - a.score);
-
-  const maxB = Math.max(...bases);
-  const minB = Math.min(...bases);
-  const collapsed = maxB - minB < 0.15;
-
-  const out = bases.map((b) => Math.round(b * 10) / 10);
-
-  if (collapsed) {
-    // Distinct tiers centered near the original cluster
-    const center = Math.round(((maxB + minB) / 2) * 10) / 10 || 4.5;
-    const spreads =
-      n === 3 ? [0.3, 0, -0.3] : n === 2 ? [0.2, -0.2] : [0];
-    ranked.forEach((r, rank) => {
-      const delta = spreads[rank] ?? 0;
-      out[r.i] = Math.min(
-        5,
-        Math.max(3.6, Math.round((center + delta) * 10) / 10),
-      );
-    });
-  } else {
-    // Already spread — still break exact ties
-    const seen = new Map<string, number>();
-    ranked.forEach((r) => {
-      let v = out[r.i]!;
-      let key = v.toFixed(1);
-      while (seen.has(key)) {
-        v = Math.min(5, Math.round((v + 0.1) * 10) / 10);
-        key = v.toFixed(1);
-      }
-      seen.set(key, r.i);
-      out[r.i] = v;
-    });
-  }
-
-  // Guarantee highest ≠ lowest when n≥2
-  if (n >= 2) {
-    const mx = Math.max(...out);
-    const mn = Math.min(...out);
-    if (mx === mn) {
-      out[ranked[0]!.i] = Math.min(5, mx + 0.2);
-      out[ranked[ranked.length - 1]!.i] = Math.max(3.6, mn - 0.2);
+/** Highest / lowest badge only — never changes the displayed RvFOX score. */
+function ratingBadgeIndexes(
+  ratings: number[],
+  prestige: number[],
+): { highest: number; lowest: number } {
+  let highest = 0;
+  let lowest = 0;
+  ratings.forEach((v, i) => {
+    const hi = ratings[highest]!;
+    const lo = ratings[lowest]!;
+    if (v > hi || (v === hi && (prestige[i] ?? 0) > (prestige[highest] ?? 0))) {
+      highest = i;
     }
-  }
-
-  return out.map((v) => Math.round(v * 10) / 10);
+    if (v < lo || (v === lo && (prestige[i] ?? 0) < (prestige[lowest] ?? 0))) {
+      lowest = i;
+    }
+  });
+  return { highest, lowest };
 }
 
 export type LiveMap = Record<string, LiveDossier | null | undefined>;
@@ -404,10 +344,7 @@ export function buildCompareReport(
           msrpHi: catalogMarket.msrpHi,
         };
 
-    const rawRating =
-      live?.ratingEstimate && live.ratingEstimate > 0
-        ? live.ratingEstimate
-        : ratingFor(r.make, r.model, r.year);
+    const rawRating = ratingFor(r.make, r.model, r.year);
 
     const typeLabel = live?.rvType || r.data.type;
     const fuelLabel = live?.fuelType || r.data.fuelType;
@@ -441,29 +378,18 @@ export function buildCompareReport(
     };
   });
 
-  const finalRatings = finalizeRatings(
-    cols.map((c) => c.rawRating),
-    cols.map((c) => ({
-      prestige: c.prestige,
-      hp: c.hpRaw,
-      tradeIn: c.market.tradeIn,
-      retailHigh: c.market.retailHigh,
-      live: c.live,
-    })),
-  );
-
-  const colsWithRating = cols.map((c, i) => ({
+  const colsWithRating = cols.map((c) => ({
     ...c,
-    rating: finalRatings[i]!,
+    rating: Math.round(c.rawRating * 10) / 10,
   }));
 
   const ratings = colsWithRating.map((c) => c.rating);
-  let highestRatingIndex = 0;
-  let lowestRatingIndex = 0;
-  ratings.forEach((v, i) => {
-    if (v > ratings[highestRatingIndex]!) highestRatingIndex = i;
-    if (v < ratings[lowestRatingIndex]!) lowestRatingIndex = i;
-  });
+  const badges = ratingBadgeIndexes(
+    ratings,
+    colsWithRating.map((c) => c.prestige),
+  );
+  const highestRatingIndex = badges.highest;
+  const lowestRatingIndex = badges.lowest;
 
   const columns: CompareColumn[] = colsWithRating.map(
     ({ r, rating, live, typeLabel, key }) => ({

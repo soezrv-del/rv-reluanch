@@ -20,7 +20,6 @@ import {
   estimateMarket,
   formatMoney,
   getFloorplansForYear,
-  ratingFor,
 } from "@/lib/rv/catalog";
 import {
   bestCalPrice,
@@ -28,7 +27,11 @@ import {
   formatActiveCoachShort,
   snapshotActiveCoach,
 } from "@/lib/rv/activeCoach";
-import { getRatingMetadata, ratingStars } from "@/lib/rv/ratingSystem";
+import {
+  formatRatingAdj,
+  getRatingMetadata,
+  ratingStars,
+} from "@/lib/rv/ratingSystem";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import {
   findPowertrainCorrection,
@@ -111,11 +114,6 @@ export function RvDetail({
 }) {
   const { data, year, make, model, floorplan } = result;
   const catalogMarket = estimateMarket(data, year, floorplan);
-  const rating = ratingFor(make, model, year);
-  const ratingMeta = useMemo(
-    () => getRatingMetadata(make, model, year),
-    [make, model, year],
-  );
   const [correctBump, setCorrectBump] = useState(0);
   const brochure = useMemo(
     () => buildBrochureSpecs(data, year, make, model, floorplan || ""),
@@ -147,6 +145,14 @@ export function RvDetail({
   const [recallSearchNote, setRecallSearchNote] = useState<string | null>(null);
   const [recallLoading, setRecallLoading] = useState(true);
   const [recallError, setRecallError] = useState<string | null>(null);
+  const liveRecallCount = recallLoading ? null : liveRecalls.length;
+  const ratingMeta = useMemo(
+    () =>
+      getRatingMetadata(make, model, year, {
+        recallCount: liveRecallCount,
+      }),
+    [make, model, year, liveRecallCount],
+  );
 
   const [live, setLive] = useState<LiveDossier | null>(null);
   const [liveLoading, setLiveLoading] = useState(true);
@@ -425,7 +431,7 @@ export function RvDetail({
     return merged;
   }, [catalogSpecs, live, brochurePinned, powertrainGuard]);
 
-  const displayRating = rating;
+  const displayRating = ratingMeta.score;
 
   const ownerReviews = useMemo(
     () => getMockReviews(make, model, displayRating),
@@ -927,6 +933,11 @@ export function RvDetail({
                 <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white">
                   RvFOX rating
                 </p>
+                {ratingMeta.confidence === "Low" ? (
+                  <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-amber-200/80">
+                    {ratingMeta.knownMake ? "Low confidence" : "Unknown brand · estimate"}
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -1271,8 +1282,13 @@ export function RvDetail({
           </Section>
 
           <Section title="Rating">
-            <p className="mb-4 text-[14px] leading-relaxed text-white">
+            <p className="mb-2 text-[14px] leading-relaxed text-white">
               {displayRating.toFixed(1)} out of 5 · {ratingMeta.tierLabel}
+              {" · "}
+              {ratingMeta.confidence} confidence
+            </p>
+            <p className="mb-4 text-[12px] leading-relaxed text-white/70">
+              {ratingMeta.sources[0]}
             </p>
             <SpecRow
               label="BRAND"
@@ -1280,12 +1296,48 @@ export function RvDetail({
             />
             <SpecRow
               label="MODEL"
-              value={`${ratingMeta.tierAdj >= 0 ? "+" : ""}${ratingMeta.tierAdj.toFixed(1)}`}
+              value={`${ratingMeta.tierAdj >= 0 ? "+" : ""}${ratingMeta.tierAdj.toFixed(1)}${
+                ratingMeta.matchedModelKey
+                  ? ` · ${ratingMeta.matchedModelKey}`
+                  : " · default"
+              }`}
             />
             <SpecRow
               label="YEAR"
               value={`${ratingMeta.yearAdj >= 0 ? "+" : ""}${ratingMeta.yearAdj.toFixed(1)}`}
             />
+            <SpecRow
+              label="NHTSA"
+              value={
+                recallLoading
+                  ? "Checking live campaigns…"
+                  : `${liveRecalls.length} campaign${
+                      liveRecalls.length === 1 ? "" : "s"
+                    } · ${formatRatingAdj(ratingMeta.recallAdj)}`
+              }
+            />
+            <p className="mt-3 text-[11px] leading-relaxed text-white/55">
+              {ratingMeta.sources.slice(1).join(" ")}
+            </p>
+            {live?.live &&
+            (live.ratingEstimate || live.ownerSentiment) ? (
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/55">
+                  Research notes — not in the RvFOX score
+                </p>
+                {live.ratingEstimate && live.ratingEstimate > 0 ? (
+                  <p className="mt-1.5 text-[13px] text-white">
+                    Research estimate {live.ratingEstimate.toFixed(1)} / 5.0
+                    (Grok dossier)
+                  </p>
+                ) : null}
+                {live.ownerSentiment ? (
+                  <p className="mt-1.5 text-[13px] italic text-white/85">
+                    {live.ownerSentiment}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
           </Section>
 
           {floorplansShown.length ? (
@@ -1350,54 +1402,65 @@ export function RvDetail({
                 </ul>
               ) : null}
               {live.ownerSentiment ? (
-                <p className="mt-2 text-[14px] italic text-white">
-                  {live.ownerSentiment}
+                <p className="mt-2 text-[12px] text-white/55">
+                  Owner-sentiment research is labeled under Rating — not part of
+                  the RvFOX number.
                 </p>
               ) : null}
             </Section>
           ) : null}
 
-          {ownerReviews.length ? (
-            <Section title="Owner reviews">
-              <div className="space-y-3">
-                {ownerReviews.map((r) => (
-                  <article
-                    key={r.id}
-                    className="rounded-2xl border border-white/10 bg-black/30 p-4"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-[16px] font-bold leading-snug text-white">
-                          {r.title}
-                        </p>
-                        <p className="mt-1 text-[13px] text-white">
-                          {r.author}
-                          {r.location ? ` · ${r.location}` : ""}
-                          {r.date ? ` · ${r.date}` : ""}
-                        </p>
+          <Section title="Sample owner notes">
+            {ownerReviews.length ? (
+              <>
+                <p className="mb-3 text-[12px] leading-relaxed text-white/60">
+                  Illustrative copy for tone — not verified owner reviews or
+                  live forum posts.
+                </p>
+                <div className="space-y-3">
+                  {ownerReviews.map((r) => (
+                    <article
+                      key={r.id}
+                      className="rounded-2xl border border-white/10 bg-black/30 p-4"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[16px] font-bold leading-snug text-white">
+                            {r.title}
+                          </p>
+                          <p className="mt-1 text-[13px] text-white">
+                            {r.author}
+                            {r.location ? ` · ${r.location}` : ""}
+                            {r.date ? ` · ${r.date}` : ""}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="text-[18px] font-bold tabular-nums text-gold-bright">
+                            {r.rating.toFixed(1)}
+                          </p>
+                          <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/45">
+                            Sample
+                          </p>
+                        </div>
                       </div>
-                      <div className="shrink-0 text-right">
-                        <p className="text-[18px] font-bold tabular-nums text-gold-bright">
-                          {r.rating.toFixed(1)}
-                        </p>
-                        {r.verified ? (
-                          <Chip tone="green">Verified</Chip>
-                        ) : null}
-                      </div>
-                    </div>
-                    <p className="mt-3 text-[15px] leading-relaxed text-white">
-                      {r.body}
-                    </p>
-                    {r.miles || r.years ? (
-                      <p className="mt-2 text-[13px] font-medium text-white">
-                        {[r.miles, r.years].filter(Boolean).join(" · ")}
+                      <p className="mt-3 text-[15px] leading-relaxed text-white">
+                        {r.body}
                       </p>
-                    ) : null}
-                  </article>
-                ))}
-              </div>
-            </Section>
-          ) : null}
+                      {r.miles || r.years ? (
+                        <p className="mt-2 text-[13px] font-medium text-white">
+                          {[r.miles, r.years].filter(Boolean).join(" · ")}
+                        </p>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-[13px] leading-relaxed text-white/65">
+                No sample notes for this brand.
+              </p>
+            )}
+          </Section>
 
           <Section title="NHTSA safety">
             {recallLoading ? (
