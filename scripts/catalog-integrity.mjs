@@ -1881,6 +1881,18 @@ function main() {
       }
 
       const mhc = slice("Montana High Country", "Cougar");
+      if (!/yearStart:\s*2011/.test(mhc)) {
+        fail("Keystone|Montana High Country yearStart must be 2011 (dated Feb 2011 PDF)");
+      }
+      if (!/"2011": \["313RE", "323RL", "333DB", "343RL"\]/.test(mhc)) {
+        fail("Keystone|Montana High Country MY2011 PDF lock missing (313RE/323RL/333DB/343RL)");
+      }
+      if (/"2010":/.test(mhc) || /"2012":/.test(mhc) || /"2013":/.test(mhc)) {
+        fail("Keystone|Montana High Country must not stamp the 2011 PDF set onto 2010/2012/2013");
+      }
+      if (/"2014": .*"313RE"/.test(mhc) || /"2014": .*"323RL"/.test(mhc) || /"2014": .*"333DB"/.test(mhc) || /"2014": .*"343RL"/.test(mhc)) {
+        fail("Keystone|Montana High Country must not stamp 2011 PDF codes onto leftover 2014");
+      }
       if (!/"2027": \["290RL", "300RK", "362BRK", "391TB", "396BH"\]/.test(mhc)) {
         fail("Keystone|Montana High Country MY27 OEM plans missing");
       }
@@ -1962,6 +1974,11 @@ function main() {
       ) {
         fail("Keystone|Avalanche must omit Edition-only 322RL/372MB/381DL/392DS and leftover 360RB on 2025");
       }
+      for (let y = 2010; y <= 2024; y++) {
+        if (new RegExp(`"${y}":`).test(av)) {
+          fail(`Keystone|Avalanche must empty leftover ${y} fby (prefer omit — no invent)`);
+        }
+      }
 
       const spr = slice("Sprinter", "Sprinter");
       const sprBlock = ks.slice(ks.indexOf("    Sprinter: {"));
@@ -1985,6 +2002,11 @@ function main() {
       }
       if (/"2026": .*"3640RLP"/.test(sprBlock) || /"2026": .*"3190RLS"/.test(sprBlock) || /"2026": .*"3500RDB"/.test(sprBlock)) {
         fail("Keystone|Sprinter must omit 3640RLP / 3190RLS / 3500RDB on 2026");
+      }
+      for (let y = 2010; y <= 2024; y++) {
+        if (new RegExp(`"${y}":`).test(sprBlock)) {
+          fail(`Keystone|Sprinter must empty leftover ${y} fby (prefer omit — no 269FWRLS/3530SIK invent)`);
+        }
       }
 
       const ctt = slice("Cougar", "Cougar 5th Wheel");

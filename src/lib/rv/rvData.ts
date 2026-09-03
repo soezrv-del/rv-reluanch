@@ -16638,10 +16638,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "295RL",
         "300RK",
         "311RD",
+        "313RE",
+        "323RL",
         "325RK",
         "330RL",
         "331RL",
+        "333DB",
         "335FL",
+        "343RL",
         "351BH",
         "362BRK",
         "370FL",
@@ -16656,6 +16660,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "397FB"
       ],
       floorplansByYear: {
+        // LOCK media.rvusa.com/library/montanahc2011.pdf (LOT_DESK / walk-back pack).
+        // Dated Feb 2011 / 2/2011 spec table: 313RE | 323RL | 333DB | 343RL.
+        // Pin MY2011 only — do not stamp onto 2010 / 2012–2013 (omit) or leftover 2014+.
+        // UVW/hitch from this card stay unused (no invent this slice).
+        "2011": ["313RE", "323RL", "333DB", "343RL"],
         "2014": ["295RL", "335FL", "377FL"],
         "2015": ["295RL", "335FL", "377FL", "381TH"],
         "2016": ["295RL", "335FL", "351BH", "377FL", "381TH"],
@@ -16747,8 +16756,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 96,
       founded: 1996,
       warrantyYears: 1,
-      yearStart: 2014,
-      description: "Montana High Country — Keystone half-ton / lighter-luxury fifth wheel. Residential features at lower pin weights for capable 3/4-ton and some half-ton towers. Verify pin weight vs truck rating."
+      yearStart: 2011,
+      description: "Montana High Country — Keystone half-ton / lighter-luxury fifth wheel. yearStart 2011 from the dated Feb 2011 RVUSA PDF (313RE / 323RL / 333DB / 343RL). 2012–2013 fby omitted (no dated card). 2014–2024 leftover maps stay GAP. MY2025–2027 locks unchanged. Verify pin weight vs truck rating."
     },
     Cougar: {
       type: "Travel Trailer",
@@ -18120,23 +18129,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Avalanche": {
       type: "Fifth Wheel",
-      floorplans: ["300RL", "302RS", "321RL", "338GK", "346FL", "360RB", "366LS", "372BH", "378BH", "379MB", "380LT", "390DS"],
+      floorplans: ["302RS", "321RL", "338GK", "346FL", "366LS", "378BH", "379MB", "380LT", "390DS"],
       floorplansByYear: {
-        "2010": ["300RL", "338GK", "360RB"],
-        "2011": ["300RL", "338GK", "360RB", "372BH"],
-        "2012": ["300RL", "338GK", "360RB", "372BH"],
-        "2013": ["300RL", "338GK", "360RB", "372BH", "378BH"],
-        "2014": ["300RL", "338GK", "360RB", "372BH", "378BH"],
-        "2015": ["300RL", "338GK", "360RB", "372BH", "378BH"],
-        "2016": ["338GK", "360RB", "372BH", "378BH"],
-        "2017": ["338GK", "360RB", "372BH", "378BH"],
-        "2018": ["338GK", "360RB", "372BH", "378BH"],
-        "2019": ["338GK", "360RB", "378BH"],
-        "2020": ["338GK", "360RB", "378BH"],
-        "2021": ["338GK", "360RB", "378BH"],
-        "2022": ["338GK", "360RB", "378BH"],
-        "2023": ["338GK", "360RB", "378BH"],
-        "2024": ["338GK", "360RB"],
+        // 2010–2024 leftover FBY emptied (prefer omit — thin/unsourced invent).
+        // yearStart 2010 kept; no dated ≤2024 cards this slice. Do not invent 300RL/360RB/372BH years.
         // LOCK SLICE_NOTES_WALKBACK_2025_2010.md §6 — standalone Avalanche close-out (RVUSA m2919-y2025).
         // MY2025: 302RS | 321RL | 338GK | 346FL | 366LS | 378BH | 379MB | 380LT | 390DS
         // yearEnd 2025 — do not invent 2026/2027. Do not copy this list onto Alpine Avalanche Edition.
@@ -18172,7 +18168,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2010,
       yearEnd: 2025,
-      description: "Keystone Avalanche — adventure-oriented fifth wheel; bunk and rear-living layouts popular with full-time families. Standalone line closes MY2025 (RVUSA year-card lock). Alpine Avalanche Edition is the later sibling — do not merge."
+      description: "Keystone Avalanche — adventure-oriented fifth wheel; bunk and rear-living layouts popular with full-time families. Standalone line closes MY2025 (RVUSA year-card lock). 2010–2024 leftover fby emptied (prefer omit). Alpine Avalanche Edition is the later sibling — do not merge."
     },
     Laredo: {
       type: "Travel Trailer",
@@ -18225,23 +18221,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Sprinter: {
       type: "Fifth Wheel",
-      floorplans: ["269FWRLS", "293FWRLS", "3210RLS", "333FWRKS", "3500RDB", "3520RDS", "3530SIK", "3570FLS", "3590LFT", "3640RLP", "3670FLS", "3800FLB", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"],
+      floorplans: ["3210RLS", "3500RDB", "3520RDS", "3590LFT", "3640RLP", "3670FLS", "3800FLB", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"],
       floorplansByYear: {
-        "2010": ["269FWRLS", "293FWRLS", "333FWRKS"],
-        "2011": ["269FWRLS", "293FWRLS", "333FWRKS"],
-        "2012": ["269FWRLS", "293FWRLS", "333FWRKS", "3530SIK"],
-        "2013": ["269FWRLS", "293FWRLS", "333FWRKS", "3530SIK", "3570FLS"],
-        "2014": ["269FWRLS", "293FWRLS", "333FWRKS", "3530SIK", "3570FLS"],
-        "2015": ["269FWRLS", "293FWRLS", "333FWRKS", "3530SIK", "3570FLS"],
-        "2016": ["269FWRLS", "293FWRLS", "333FWRKS", "3530SIK", "3570FLS"],
-        "2017": ["293FWRLS", "333FWRKS", "3530SIK", "3570FLS"],
-        "2018": ["293FWRLS", "333FWRKS", "3530SIK", "3570FLS"],
-        "2019": ["293FWRLS", "3530SIK", "3570FLS"],
-        "2020": ["293FWRLS", "3530SIK", "3570FLS"],
-        "2021": ["293FWRLS", "3530SIK", "3570FLS"],
-        "2022": ["293FWRLS", "3530SIK", "3570FLS"],
-        "2023": ["3530SIK", "3570FLS"],
-        "2024": ["3530SIK", "3570FLS"],
+        // 2010–2024 leftover FBY emptied (prefer omit — era-mismatched invent:
+        // 269FWRLS / 293FWRLS / 333FWRKS / 3530SIK / 3570FLS catalog chains).
+        // yearStart 2000 kept. MY2025–2027 locks from #100/#96 unchanged.
         // LOCK research/keystone/SPRINTER_MY2025_2026.md (EzMe corrected 2026-09-02).
         // MY2025 production (9): 3210RLS | 3520RDS | 3590LFT | 3670FLS | 3810QBS | 3840LRK | 3900DBL | 3920DSL | 3980FBS
         // OMIT 3190RLS (RVUSA-only; Limited carryover / not on OEM flyer or Tampa booth).
@@ -18254,7 +18238,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // OEM keystonerv.com/product/sprinter/premium-fifth-wheels/floorplans (2027 Floorplans):
         // 3500RDB | 3520RDS | 3640RLP | 3800FLB | 3840LRK | 3900DBL | 3920DSL | 3950SSP | 3980FBS
         // 3590LFT / 3670FLS / 3810QBS are Dealer Stock — omit from the 2027 production lock.
-        // yearEnd 2024 was false (line is current). MY2024→2010 leftover maps stay GAP this slice.
+        // yearEnd 2024 was false (line is current). 2010–2024 leftover maps emptied (prefer omit).
         "2027": ["3500RDB", "3520RDS", "3640RLP", "3800FLB", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"]
       },
       lengthRange: [
@@ -18285,7 +18269,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2000,
-      description: "Keystone Sprinter — current premium-value fifth wheel. MY2025 lock: 3210RLS / 3520RDS / 3590LFT / 3670FLS / 3810QBS / 3840LRK / 3900DBL / 3920DSL / 3980FBS (omit 3190RLS). MY2026 lock adds 3800FLB / 3950SSP (omit 3640RLP). MY2027 OEM card is 3500RDB / 3520RDS / 3640RLP / 3800FLB / 3840LRK / 3900DBL / 3920DSL / 3950SSP / 3980FBS. yearEnd 2024 was false."
+      description: "Keystone Sprinter — current premium-value fifth wheel. 2010–2024 leftover fby emptied (prefer omit). MY2025 lock: 3210RLS / 3520RDS / 3590LFT / 3670FLS / 3810QBS / 3840LRK / 3900DBL / 3920DSL / 3980FBS (omit 3190RLS). MY2026 lock adds 3800FLB / 3950SSP (omit 3640RLP). MY2027 OEM card is 3500RDB / 3520RDS / 3640RLP / 3800FLB / 3840LRK / 3900DBL / 3920DSL / 3950SSP / 3980FBS. yearEnd 2024 was false."
     }
   },
   "Grand Design": {
