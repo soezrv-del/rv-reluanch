@@ -18,8 +18,12 @@ import type { RVResult } from "@/lib/rv/catalog";
 import {
   clampTradeToRetailLow,
   estimateMarket,
+  floorplansForSelectedYear,
   formatMoney,
   getFloorplansForYear,
+  relatedModelsWithFloorplansInYear,
+  sourcedFloorplansByYear,
+  yearsWithSourcedFloorplans,
   ratingFor,
 } from "@/lib/rv/catalog";
 import {
@@ -122,10 +126,6 @@ export function RvDetail({
     // correctBump forces re-read of local overrides
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, year, make, model, floorplan, correctBump],
-  );
-  const yearFloorplans = useMemo(
-    () => getFloorplansForYear(year, make, model),
-    [year, make, model],
   );
   const maintenance = useMemo(() => getMaintenanceSchedule(data), [data]);
 
@@ -543,12 +543,38 @@ export function RvDetail({
     [market, displayRating, recallLoading, liveRecalls.length, data.warrantyYears],
   );
 
-  const floorplansShown = useMemo(() => {
-    if (live?.live && live.floorplansThisYear?.length)
-      return live.floorplansThisYear;
-    if (yearFloorplans.length) return yearFloorplans;
-    return data.floorplans || [];
-  }, [live, yearFloorplans, data.floorplans]);
+  const floorplansShown = useMemo(
+    () => floorplansForSelectedYear(year, make, model, live),
+    [year, make, model, live],
+  );
+
+  const sourcedYears = useMemo(
+    () => yearsWithSourcedFloorplans(make, model),
+    [make, model],
+  );
+
+  const historicalFloorplans = useMemo(() => {
+    const y = parseInt(year, 10);
+    return sourcedFloorplansByYear(make, model).filter(
+      (row) => !Number.isFinite(y) || row.year !== y,
+    );
+  }, [make, model, year]);
+
+  const relatedModels = useMemo(
+    () => relatedModelsWithFloorplansInYear(make, model, year),
+    [make, model, year],
+  );
+
+  const emptyYearFloorplans = useMemo(() => {
+    const y = parseInt(year, 10);
+    if (!Number.isFinite(y)) return false;
+    return getFloorplansForYear(year, make, model).length === 0;
+  }, [year, make, model]);
+
+  const noYearFloorplanBrowse = useMemo(() => {
+    const y = parseInt(year, 10);
+    return !year || !Number.isFinite(y);
+  }, [year]);
 
   const overviewText = useMemo(() => {
     const raw =
@@ -1303,6 +1329,82 @@ export function RvDetail({
                   >
                     {fp}
                   </Chip>
+                ))}
+              </div>
+            </Section>
+          ) : emptyYearFloorplans ? (
+            <Section title="Floorplans this year">
+              <p className="text-[14px] leading-relaxed text-white/90">
+                We don&apos;t have verified floorplan data for {year}{" "}
+                {make} {model}. Showing layouts from other years as{" "}
+                {year} would mislabel them.
+              </p>
+              {sourcedYears.length ? (
+                <p className="mt-3 text-[13px] leading-relaxed text-white/70">
+                  Sourced years in catalog:{" "}
+                  {sourcedYears.join(", ")}
+                </p>
+              ) : null}
+              {relatedModels.length ? (
+                <div className="mt-4">
+                  <p className="text-[13px] font-medium text-white/80">
+                    For {year}, these related {make} series have sourced
+                    floorplans:
+                  </p>
+                  <ul className="mt-2 space-y-1.5">
+                    {relatedModels.map((md) => (
+                      <li
+                        key={md}
+                        className="text-[14px] text-white/90"
+                      >
+                        {make} {md}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </Section>
+          ) : noYearFloorplanBrowse && historicalFloorplans.length ? (
+            <Section title="Floorplans across model years">
+              <p className="mb-4 text-[13px] leading-relaxed text-white/70">
+                No year selected. These layouts span multiple model years —
+                they are not a current-year lineup.
+              </p>
+              <div className="space-y-4">
+                {historicalFloorplans.map((row) => (
+                  <div key={row.year}>
+                    <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-white/60">
+                      {row.year} lineup
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {row.floorplans.map((fp) => (
+                        <Chip key={`${row.year}-${fp}`}>{fp}</Chip>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          ) : null}
+
+          {emptyYearFloorplans && historicalFloorplans.length ? (
+            <Section title="Sourced floorplans from other years">
+              <p className="mb-4 text-[13px] leading-relaxed text-white/70">
+                Each layout below is labeled with its OEM model year — not
+                the year selected above.
+              </p>
+              <div className="space-y-4">
+                {historicalFloorplans.map((row) => (
+                  <div key={row.year}>
+                    <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-white/60">
+                      {row.year} lineup
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {row.floorplans.map((fp) => (
+                        <Chip key={`${row.year}-${fp}`}>{fp}</Chip>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </Section>

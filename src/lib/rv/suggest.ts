@@ -1,9 +1,11 @@
 import { CATALOG_INDEX, MAKES } from "./rvCatalogIndex";
 import { peekCatalog } from "./catalogLoad";
 import {
+  getFloorplansForYear,
   getMakesForYear,
   getModelsForYearMake,
   modelAvailableInYear,
+  relatedModelsWithFloorplansInYear,
 } from "./catalog";
 
 function specMap() {
@@ -160,6 +162,40 @@ export function suggestModels(
     .slice(0, limit);
 }
 
+/** Catalog model exists but has no sourced lineup (or no availability) this year. */
+export function suggestCatalogAlternatives(opts: {
+  year: string;
+  make: string;
+  model: string;
+  limit?: number;
+}): SuggestHit[] {
+  const { year, make, model, limit = 5 } = opts;
+  if (!year.trim() || !make.trim() || !model.trim()) return [];
+
+  const data = specMap();
+  const spec = data[make]?.[model];
+  if (!spec) return [];
+
+  const y = parseInt(year, 10);
+  if (!Number.isFinite(y)) return [];
+
+  const inYearPicker = getModelsForYearMake(year, make).some(
+    (m) => norm(m) === norm(model),
+  );
+  const hasYearFloorplans = getFloorplansForYear(year, make, model).length > 0;
+  if (inYearPicker && hasYearFloorplans) return [];
+
+  const related = relatedModelsWithFloorplansInYear(make, model, year);
+  return related.slice(0, limit).map((md) => ({
+    kind: "model" as const,
+    make,
+    model: md,
+    label: `${make} ${md}`,
+    score: 92,
+    reason: `${year} · sourced floorplans available`,
+  }));
+}
+
 /** Combined suggestions when search misses or custom entry looks off. */
 export function didYouMean(opts: {
   year: string;
@@ -177,6 +213,7 @@ export function didYouMean(opts: {
 
   if (model) {
     if (makeInCatalog) {
+      out.push(...suggestCatalogAlternatives({ year, make, model }));
       const models = year ? getModelsForYearMake(year, make) : Object.keys(data[make] || {});
       const exact = models.some((m) => norm(m) === norm(model));
       if (!exact) {
