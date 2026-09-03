@@ -98,12 +98,26 @@ const FORBIDDEN_FLOORPLANS = {
     reason: "Cougar Sport / Premium FW / Half-Ton FW+TT codes must not land in the collapsed TT Cougar bucket",
   },
   "Keystone|Alpine": {
-    codes: ["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"],
+    codes: [
+      "302RS",
+      "321RL",
+      "322RL",
+      "338GK",
+      "346FL",
+      "366LS",
+      "372MB",
+      "378BH",
+      "379MB",
+      "380LT",
+      "381DL",
+      "390DS",
+      "392DS",
+    ],
     reason: "Alpine Avalanche Edition codes stay on that key, not core Alpine",
   },
   "Keystone|Avalanche": {
-    codes: ["381DL", "392DS"],
-    reason: "Alpine Avalanche Edition-only 2027 codes (381DL / 392DS) must not merge into standalone Avalanche",
+    codes: ["322RL", "372MB", "381DL", "392DS"],
+    reason: "Alpine Avalanche Edition-only extras (322RL / 372MB) and later OEM codes (381DL / 392DS) must not merge into standalone Avalanche",
   },
   "Keystone|Passport": {
     codes: ["2080MK", "160BHC", "284QBC", "229BHWE"],
@@ -1910,8 +1924,23 @@ function main() {
       if (!/"2027": \["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"\]/.test(aae)) {
         fail("Keystone|Alpine Avalanche Edition MY27 OEM plans missing");
       }
-      if (!/yearStart:\s*2020/.test(aae) || /"2026":/.test(aae)) {
-        fail("Keystone|Alpine Avalanche Edition yearStart must be 2020 (empty older fby — no invent)");
+      if (!/yearStart:\s*2020/.test(aae)) {
+        fail("Keystone|Alpine Avalanche Edition yearStart must be 2020");
+      }
+      if (!/"2025": \["302RS", "321RL", "322RL", "338GK", "346FL", "366LS", "372MB", "378BH", "379MB", "380LT", "390DS"\]/.test(aae)) {
+        fail("Keystone|Alpine Avalanche Edition MY25 RVUSA lock missing (11 codes; no 381DL / 392DS)");
+      }
+      if (/"2025": .*"381DL"/.test(aae) || /"2025": .*"392DS"/.test(aae)) {
+        fail("Keystone|Alpine Avalanche Edition must not stamp 381DL / MY27 392DS onto 2025");
+      }
+      if (!/"2026": \["302RS", "321RL", "338GK", "346FL", "366LS", "378BH", "379MB", "380LT", "381DL", "390DS"\]/.test(aae)) {
+        fail("Keystone|Alpine Avalanche Edition MY26 RVUSA lock missing (10 codes; no 322RL / 372MB / 392DS)");
+      }
+      if (/"2026": .*"322RL"/.test(aae) || /"2026": .*"372MB"/.test(aae) || /"2026": .*"392DS"/.test(aae)) {
+        fail("Keystone|Alpine Avalanche Edition must omit 322RL / 372MB / MY27 392DS on 2026");
+      }
+      if (/"2020":/.test(aae) || /"2021":/.test(aae) || /"2022":/.test(aae) || /"2023":/.test(aae) || /"2024":/.test(aae)) {
+        fail("Keystone|Alpine Avalanche Edition must not invent 2020–2024 fby this slice");
       }
 
       const av = slice("Avalanche", "Laredo");
@@ -1924,8 +1953,14 @@ function main() {
       if (!/"2025": \["302RS", "321RL", "338GK", "346FL", "366LS", "378BH", "379MB", "380LT", "390DS"\]/.test(av)) {
         fail("Keystone|Avalanche MY25 RVUSA lock missing (9 codes; standalone close-out)");
       }
-      if (/"2025": .*"381DL"/.test(av) || /"2025": .*"392DS"/.test(av) || /"2025": .*"360RB"/.test(av)) {
-        fail("Keystone|Avalanche must omit Edition-only 381DL/392DS and leftover 360RB on 2025");
+      if (
+        /"2025": .*"322RL"/.test(av) ||
+        /"2025": .*"372MB"/.test(av) ||
+        /"2025": .*"381DL"/.test(av) ||
+        /"2025": .*"392DS"/.test(av) ||
+        /"2025": .*"360RB"/.test(av)
+      ) {
+        fail("Keystone|Avalanche must omit Edition-only 322RL/372MB/381DL/392DS and leftover 360RB on 2025");
       }
 
       const spr = slice("Sprinter", "Sprinter");
@@ -2055,8 +2090,8 @@ function main() {
       if (!/"2027": \["208MKS", "222BHS", "2290BH", "2290BHWE", "234RBK", "245RKS", "245RKSWE", "259REV", "267MRB", "287RLS", "287RLSWE", "310RES"\]/.test(bxf)) {
         fail("Keystone|Bullet Crossfire MY27 OEM plans missing");
       }
-      if (!/yearStart:\s*2017/.test(bxf) || /"2026":/.test(bxf)) {
-        fail("Keystone|Bullet Crossfire yearStart must be 2017 (empty older fby — no invent)");
+      if (!/yearStart:\s*2017/.test(bxf) || /"2025":/.test(bxf) || /"2026":/.test(bxf)) {
+        fail("Keystone|Bullet Crossfire yearStart must be 2017 (omit 2025–2026 disputed RVUSA bleed — no invent)");
       }
 
       const bul = slice("Bullet", "Bullet Crossfire");

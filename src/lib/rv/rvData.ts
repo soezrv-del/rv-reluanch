@@ -17326,8 +17326,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         // OEM keystonerv.com/product/bullet-crossfire/comfort-travel-trailers/floorplans (2027 Floorplans):
         // 208MKS | 222BHS | 2290BH | 2290BHWE | 234RBK | 245RKS | 245RKSWE | 259REV | 267MRB | 287RLS | 287RLSWE | 310RES
-        // yearStart 2017 — omit 2017–2026 fby (no invent / no copy-forward of 2027 codes).
-        // Bullet Classic GAP. Do not dump into the collapsed Bullet bucket.
+        // yearStart 2017 — omit 2017–2026 fby.
+        // Re-validated live RVUSA m7341-y2025 / m7341-y2026 (2026-09-03): prefer omit disputed bleed.
+        // Those year cards mix Crossfire codes with adjacent Bullet naming (1700BH / 1900RD / 260RBS / 290BHS and similar).
+        // Do not invent a filtered subset. Do not dump into collapsed Bullet. MY2027 OEM lock unchanged.
+        // Bullet Classic GAP.
         "2027": ["208MKS", "222BHS", "2290BH", "2290BHWE", "234RBK", "245RKS", "245RKSWE", "259REV", "267MRB", "287RLS", "287RLSWE", "310RES"]
       },
       lengthRange: [24, 36],
@@ -17349,7 +17352,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2017,
-      description: "Bullet Crossfire — current Keystone lightweight travel trailer. yearStart 2017; older fby empty until walk-back. OEM 2027 card prints 208MKS through 310RES including Western Edition twins. Not Bullet Classic / Premium."
+      description: "Bullet Crossfire — current Keystone lightweight travel trailer. yearStart 2017; 2017–2026 fby empty (RVUSA 2025/2026 year cards mix adjacent Bullet naming — prefer omit). OEM 2027 card prints 208MKS through 310RES including Western Edition twins. Not Bullet Classic / Premium."
     },
     Passport: {
       type: "Travel Trailer",
@@ -18017,11 +18020,32 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Alpine Avalanche Edition": {
       type: "Fifth Wheel",
-      floorplans: ["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"],
+      floorplans: [
+        "302RS",
+        "321RL",
+        "322RL",
+        "338GK",
+        "346FL",
+        "366LS",
+        "372MB",
+        "378BH",
+        "379MB",
+        "380LT",
+        "381DL",
+        "390DS",
+        "392DS"
+      ],
       floorplansByYear: {
+        // LOCK live RVUSA Alpine Avalanche Edition year cards (m10948) 2026-09-03.
+        // MY2025 (m10948-y2025, 11): 302RS | 321RL | 322RL | 338GK | 346FL | 366LS | 372MB | 378BH | 379MB | 380LT | 390DS
+        // Overlap with standalone Avalanche MY2025 is on this Edition card independently — do not dual-merge keys.
+        // Edition-only extras vs standalone close-out: 322RL | 372MB. Do not stamp 381DL / 392DS (2026/2027) onto 2025.
+        "2025": ["302RS", "321RL", "322RL", "338GK", "346FL", "366LS", "372MB", "378BH", "379MB", "380LT", "390DS"],
+        // MY2026 (m10948-y2026, 10): drops 322RL / 372MB; adds 381DL. No 392DS (MY2027 NEW).
+        "2026": ["302RS", "321RL", "338GK", "346FL", "366LS", "378BH", "379MB", "380LT", "381DL", "390DS"],
         // OEM keystonerv.com/product/alpine-avalanche-edition/luxury-fifth-wheels/floorplans (2027 Floorplans):
         // 321RL | 366LS | 379MB | 380LT | 381DL | 390DS | 392DS
-        // yearStart 2020 — omit 2020–2026 fby (no invent / no copy-forward of 2027 codes).
+        // yearStart 2020 — omit 2020–2024 fby (no invent). Do not copy 2027 onto 2025/2026.
         // Do not merge with standalone Avalanche (yearEnd 2025) or core Alpine.
         "2027": ["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"]
       },
@@ -18044,7 +18068,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2020,
-      description: "Alpine Avalanche Edition — family / bunk-leaning Alpine luxury fifth wheels. yearStart 2020; older fby empty until walk-back. OEM 2027 card is 321RL / 366LS / 379MB / 380LT / 381DL / 390DS / 392DS. Not the retired standalone Avalanche line."
+      description: "Alpine Avalanche Edition — family / bunk-leaning Alpine luxury fifth wheels. yearStart 2020; 2020–2024 fby empty until a dated year card. MY2025–2026 locked from RVUSA Edition year cards (m10948). OEM 2027 card is 321RL / 366LS / 379MB / 380LT / 381DL / 390DS / 392DS. Not the retired standalone Avalanche line."
     },
     Arcadia: {
       type: "Fifth Wheel",
@@ -18116,7 +18140,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // LOCK SLICE_NOTES_WALKBACK_2025_2010.md §6 — standalone Avalanche close-out (RVUSA m2919-y2025).
         // MY2025: 302RS | 321RL | 338GK | 346FL | 366LS | 378BH | 379MB | 380LT | 390DS
         // yearEnd 2025 — do not invent 2026/2027. Do not copy this list onto Alpine Avalanche Edition.
-        // Edition keeps its own MY2027 OEM lock; older Edition years stay empty this slice.
+        // Edition has its own RVUSA m10948 year cards — lock those on the Edition key only.
         "2025": ["302RS", "321RL", "338GK", "346FL", "366LS", "378BH", "379MB", "380LT", "390DS"]
       },
       lengthRange: [
