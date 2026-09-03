@@ -11844,7 +11844,7 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
   assert.deepEqual(idx["Cougar Half-Ton Travel Trailer"]?.years, [2027]);
   assert.equal(idx.Arcadia?.years?.includes(2027), true);
   assert.equal(idx["Passport Super Lite"]?.yearStart, 2019);
-  assert.deepEqual(idx["Passport Super Lite"]?.years, [2027]);
+  assert.deepEqual(idx["Passport Super Lite"]?.years, [2025, 2026, 2027]);
   assert.equal(idx["Passport Classic"]?.yearStart, 2024);
   assert.deepEqual(idx["Passport Classic"]?.years, [2027]);
   assert.equal(idx.Passport?.years?.includes(2027), false);
@@ -11930,7 +11930,8 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
   const psl = k.slice(k.indexOf('    "Passport Super Lite": {'), k.indexOf('    "Passport Classic"'));
   assert.match(psl, /"2027": \["2080MK", "2220BH", "229BH", "229BHWE", "2340RBK", "2450RK", "2450RKWE", "2590REV", "2670MRB", "2870RL", "2870RLWE", "3100RE"\]/);
   assert.match(psl, /yearStart:\s*2019/);
-  assert.doesNotMatch(psl, /"2026":/);
+  assert.doesNotMatch(psl, /"2026": .*"2080MK"/);
+  assert.doesNotMatch(psl, /"2026": .*"3100RE"/);
 
   const pcl = k.slice(k.indexOf('    "Passport Classic": {'), k.indexOf("    Springdale: {"));
   assert.match(pcl, /"2027": \["160BHC", "160RBC", "180RBC", "180RBCWE", "190RDC", "210RKC", "210RKCWE", "214BHC", "214BHCWE", "260BHC", "260BHCWE", "284QBC"\]/);
@@ -12037,4 +12038,130 @@ test("Keystone Sprinter MY2025–2026 lock (OEM/Tampa; omit RVUSA-only)", () => 
   assert.doesNotMatch(spr, /"2027": .*"3670FLS"/);
   assert.doesNotMatch(spr, /"2027": .*"3810QBS"/);
   assert.doesNotMatch(spr, /"2027": .*"3210RLS"/);
+});
+
+test("Keystone MY2025–2026 major-line RVUSA locks (walk-back pack §6)", () => {
+  const idx = CATALOG_INDEX.Keystone;
+  assert.ok(idx);
+  assert.equal(idx.Montana?.years?.includes(2025), true);
+  assert.equal(idx.Montana?.years?.includes(2026), true);
+  assert.equal(idx["Montana High Country"]?.years?.includes(2025), true);
+  assert.equal(idx.Alpine?.years?.includes(2025), true);
+  assert.equal(idx["Cougar 5th Wheel"]?.years?.includes(2025), true);
+  assert.deepEqual(idx["Passport Super Lite"]?.years, [2025, 2026, 2027]);
+  assert.equal(idx.Avalanche?.yearEnd, 2025);
+  assert.equal(idx.Avalanche?.years?.includes(2025), true);
+  assert.equal(idx.Avalanche?.years?.includes(2026), false);
+  assert.deepEqual(idx["Alpine Avalanche Edition"]?.years, [2027]);
+  assert.deepEqual(idx["Bullet Crossfire"]?.years, [2027]);
+
+  const block = src("rvData.ts");
+  const k0 = block.indexOf('\n  "Keystone": {');
+  const k1 = block.indexOf('\n  "Grand Design": {');
+  const k = block.slice(k0, k1);
+
+  const mt = k.slice(k.indexOf("    Montana: {"), k.indexOf('    "Montana High Country"'));
+  assert.match(
+    mt,
+    /"2025": \["3123RL", "3231CK", "3531RE", "3532SP", "3623EB", "3761FL", "3781RL", "3793RD", "3795FK", "3857BR", "3901RK", "3915TB", "3941FO"\]/,
+  );
+  assert.match(
+    mt,
+    /"2026": \["3100RL", "3123RL", "3231CK", "3531RE", "3532SP", "3623EB", "3761FL", "3781RL", "3795FK", "3857BR", "3901RK", "3915TB", "3941FO"\]/,
+  );
+  assert.doesNotMatch(mt, /"2025": .*"3100RL"/);
+  assert.doesNotMatch(mt, /"2025": .*"3800FL"/);
+  assert.doesNotMatch(mt, /"2026": .*"3600RO"/);
+  assert.doesNotMatch(mt, /"2026": .*"3793RD"/);
+  assert.match(mt, /"2027": \["3100RL", "3500RD", "3600RO", "3800FL", "3900RK"\]/);
+
+  const mhc = k.slice(k.indexOf('    "Montana High Country": {'), k.indexOf("    Cougar: {"));
+  assert.match(
+    mhc,
+    /"2025": \["295RL", "311RD", "325RK", "331RL", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH", "397FB"\]/,
+  );
+  assert.match(
+    mhc,
+    /"2026": \["290RL", "295RL", "311RD", "325RK", "331RL", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH", "397FB"\]/,
+  );
+  assert.doesNotMatch(mhc, /"2025": .*"290RL"/);
+  assert.doesNotMatch(mhc, /"2026": .*"300RK"/);
+  assert.match(mhc, /"2027": \["290RL", "300RK", "362BRK", "391TB", "396BH"\]/);
+  assert.doesNotMatch(mhc, /"2027": .*"397FB"/);
+
+  const alp = k.slice(k.indexOf("    Alpine: {"), k.indexOf('    "Alpine Avalanche Edition"'));
+  assert.match(
+    alp,
+    /"2025": \["3011CK", "3102RL", "3220RL", "3303CK", "3700FL", "3712KB", "3720MD", "3790FK", "3820FK", "3910RK", "3912DS"\]/,
+  );
+  assert.match(
+    alp,
+    /"2026": \["3011CK", "3100RE", "3303CK", "3700FL", "3710FL", "3712KB", "3820FK", "3910RK"\]/,
+  );
+  assert.doesNotMatch(alp, /"2025": .*"3100RE"/);
+  assert.doesNotMatch(alp, /"2026": .*"3800MR"/);
+  assert.doesNotMatch(alp, /"2025": .*"321RL"/);
+  assert.match(alp, /"2027": \["3100RE", "3303CK", "3710FL", "3800MR", "3820FK", "3910RK"\]/);
+
+  const aae = k.slice(k.indexOf('    "Alpine Avalanche Edition": {'), k.indexOf("    Arcadia: {"));
+  assert.doesNotMatch(aae, /"2025":/);
+  assert.doesNotMatch(aae, /"2026":/);
+  assert.match(aae, /"2027": \["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"\]/);
+
+  const cfw = k.slice(k.indexOf('    "Cougar 5th Wheel": {'), k.indexOf('    "Cougar Sport"'));
+  assert.match(
+    cfw,
+    /"2025": \["260MLE", "290RLS", "316RLS", "320RDS", "354FLS", "355FBS", "360MBI", "364BHL", "368MBI"\]/,
+  );
+  assert.match(
+    cfw,
+    /"2026": \["260MLE", "290RLS", "316RLS", "320RDS", "350LLK", "355FBS", "360MBI", "364BHL"\]/,
+  );
+  assert.doesNotMatch(cfw, /"2025": .*"295RDS"/);
+  assert.doesNotMatch(cfw, /"2026": .*"295RDS"/);
+  assert.doesNotMatch(cfw, /"2026": .*"354FLS"/);
+  assert.match(cfw, /"2027": \["260MLE", "290RLS", "295RDS", "316RLS", "320RDS", "350LLK", "355FBS", "360MBI", "364BHL"\]/);
+
+  const ctt = k.slice(k.indexOf("    Cougar: {"), k.indexOf('    "Cougar 5th Wheel"'));
+  for (const code of ["260MLE", "290RLS", "316RLS", "354FLS", "355FBS", "360MBI", "364BHL", "368MBI"]) {
+    assert.doesNotMatch(ctt, new RegExp(`"${code}"`));
+  }
+
+  const psl = k.slice(k.indexOf('    "Passport Super Lite": {'), k.indexOf('    "Passport Classic"'));
+  assert.match(
+    psl,
+    /"2025": \["189RB", "219BH", "221BH", "229BH", "229BHWE", "2450RK", "2450RKWE", "253RD", "253RDWE", "2605RB", "2605RBWE", "2660RL", "2660RLWE", "268BH", "2700RK", "2870RL", "2870RLWE", "2900BH", "2900BHWE"\]/,
+  );
+  assert.match(
+    psl,
+    /"2026": \["229BH", "229BHWE", "2450RK", "2450RKWE", "253RD", "253RDWE", "2605RB", "2605RBWE", "2660RL", "2660RLWE", "2870RL", "2870RLWE", "2900BH", "2900BHWE", "3401QD"\]/,
+  );
+  assert.doesNotMatch(psl, /"2025": .*"2080MK"/);
+  assert.doesNotMatch(psl, /"2026": .*"3100RE"/);
+  assert.doesNotMatch(psl, /"2024":/);
+  assert.match(psl, /"2027": \["2080MK", "2220BH", "229BH", "229BHWE", "2340RBK", "2450RK", "2450RKWE", "2590REV", "2670MRB", "2870RL", "2870RLWE", "3100RE"\]/);
+
+  const av = k.slice(k.indexOf('    "Avalanche": {'), k.indexOf("    Laredo: {"));
+  assert.match(av, /yearEnd:\s*2025/);
+  assert.match(
+    av,
+    /"2025": \["302RS", "321RL", "338GK", "346FL", "366LS", "378BH", "379MB", "380LT", "390DS"\]/,
+  );
+  assert.doesNotMatch(av, /"2026":/);
+  assert.doesNotMatch(av, /"2027":/);
+  assert.doesNotMatch(av, /"2025": .*"381DL"/);
+
+  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf("    Passport: {"));
+  assert.doesNotMatch(bxf, /"2025":/);
+  assert.doesNotMatch(bxf, /"2026":/);
+
+  const spr = k.slice(k.indexOf("    Sprinter: {"));
+  assert.match(
+    spr,
+    /"2025": \["3210RLS", "3520RDS", "3590LFT", "3670FLS", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3980FBS"\]/,
+  );
+  assert.match(
+    spr,
+    /"2026": \["3210RLS", "3520RDS", "3590LFT", "3670FLS", "3800FLB", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"\]/,
+  );
 });
