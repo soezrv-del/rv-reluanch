@@ -7,7 +7,7 @@
  *   XAI_API_KEY=… node scripts/benchmark-web-research.mjs direct
  *   XAI_API_KEY=… node scripts/benchmark-web-research.mjs local http://127.0.0.1:8080
  *
- * Prints JSON rows: { query, endpoint, ms, ok, model, notesLen, reason }
+ * Prints JSON rows: { query, ms, ok, kind, durationMs, model, notesLen, reason }
  */
 import { performance } from "node:perf_hooks";
 
@@ -36,7 +36,24 @@ async function timeFetch(label, url, init) {
       model = data?.model;
       notesLen = typeof data?.notes === "string" ? data.notes.length : 0;
       reason = data?.reason;
-      return { query: label, endpoint: url, ms, ok, status, model, notesLen, reason };
+      const kind = data?.kind ?? res.headers.get("x-rvgrok-research-kind") ?? undefined;
+      const durationMs =
+        data?.durationMs ??
+        (res.headers.get("x-rvgrok-research-ms")
+          ? Number(res.headers.get("x-rvgrok-research-ms"))
+          : ms);
+      return {
+        query: label,
+        endpoint: url,
+        ms,
+        ok,
+        status,
+        model,
+        kind,
+        durationMs,
+        notesLen,
+        reason,
+      };
     }
     const text = await res.text();
     ok = res.ok && text.length > 0;
