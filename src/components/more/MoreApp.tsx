@@ -384,8 +384,6 @@ export function MoreApp({
             <div className="glass-prestige overflow-hidden rounded-[1.25rem]">
               <a
                 href="/privacy.html"
-                target="_blank"
-                rel="noreferrer"
                 className="flex w-full items-center gap-3 px-3.5 py-3.5 text-left transition hover:bg-white/5"
               >
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue/20">
@@ -399,12 +397,10 @@ export function MoreApp({
                     How we handle your data
                   </span>
                 </span>
-                <ExternalLink className="size-4 shrink-0 text-white" />
+                <ChevronRight className="size-4 shrink-0 text-white" />
               </a>
               <a
                 href="/support.html"
-                target="_blank"
-                rel="noreferrer"
                 className="flex w-full items-center gap-3 border-t border-white/10 px-3.5 py-3.5 text-left transition hover:bg-white/5"
               >
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue/20">
@@ -418,7 +414,7 @@ export function MoreApp({
                     Help and contact
                   </span>
                 </span>
-                <ExternalLink className="size-4 shrink-0 text-white" />
+                <ChevronRight className="size-4 shrink-0 text-white" />
               </a>
               <RowLink
                 icon={<FileText className="size-4 text-white" />}

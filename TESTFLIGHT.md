@@ -113,18 +113,28 @@ This is the same **Grok Voice** engine as grok.com (talk, listen, talk). It is *
    - Bundle ID: same as Xcode  
    - SKU: any unique string  
 
-2. In Xcode: device menu → **Any iOS Device (arm64)**  
+2. **App Information — Privacy Policy URL (required for External TestFlight and App Store review)**  
+   Apple opens this HTTPS URL during review. It must load real policy copy — a 404 fails the listing.
+
+   | Field | Use this URL |
+   |---|---|
+   | **Privacy Policy URL** | `https://rv-reluanch.vercel.app/privacy.html` |
+   | **Support URL** (App Information / Support) | `https://rv-reluanch.vercel.app/support.html` |
+
+   **Do not** set Privacy Policy URL to `https://rvfox.app/privacy.html` until that host serves the page (it currently **404s**). Same-origin `/privacy.html` in the app is fine because TestFlight loads `CAP_SERVER_URL` (the Vercel deploy). Switch the ASC URL to `https://rvfox.app/privacy.html` only after that path returns 200 with the policy.
+
+3. In Xcode: device menu → **Any iOS Device (arm64)**  
    → **Product → Archive**
 
-3. Organizer → **Distribute App** → **App Store Connect** → **Upload**
+4. Organizer → **Distribute App** → **App Store Connect** → **Upload**
 
-4. App Store Connect → **TestFlight** → wait for **Processing**
+5. App Store Connect → **TestFlight** → wait for **Processing**
 
-5. Answer **Export Compliance** if asked (HTTPS-only → usually “No” custom encryption)
+6. Answer **Export Compliance** if asked (HTTPS-only → usually “No” custom encryption)
 
-6. Add **Internal** testers (instant) or **External** (Beta Review)
+7. Add **Internal** testers (instant) or **External** (Beta Review). External / App Store review need the Privacy Policy URL above to load.
 
-7. Install **TestFlight** on the phone → accept invite → Install RVFAX
+8. Install **TestFlight** on the phone → accept invite → Install RVFAX
 
 ---
 
