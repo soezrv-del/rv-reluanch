@@ -11828,8 +11828,8 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
   assert.deepEqual(idx["Alpine Avalanche Edition"]?.years, [2027]);
   assert.equal(idx.Sprinter?.yearEnd, undefined);
   assert.equal(idx.Sprinter?.years?.includes(2027), true);
-  assert.equal(idx.Sprinter?.years?.includes(2025), false);
-  assert.equal(idx.Sprinter?.years?.includes(2026), false);
+  assert.equal(idx.Sprinter?.years?.includes(2025), true);
+  assert.equal(idx.Sprinter?.years?.includes(2026), true);
   assert.equal(idx["Cougar Sport"]?.yearStart, 2023);
   assert.equal(idx["Cougar Sport"]?.type, "Fifth Wheel");
   assert.deepEqual(idx["Cougar Sport"]?.years, [2027]);
@@ -11890,8 +11890,8 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(spr, /yearEnd:\s*2024/);
   assert.match(spr, /"2027": \["3500RDB", "3520RDS", "3640RLP", "3800FLB", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"\]/);
   assert.doesNotMatch(spr, /"2027": .*"3590LFT"/);
-  assert.doesNotMatch(spr, /"2025":/);
-  assert.doesNotMatch(spr, /"2026":/);
+  assert.doesNotMatch(spr, /"2027": .*"3670FLS"/);
+  assert.doesNotMatch(spr, /"2027": .*"3810QBS"/);
 
   const ctt = k.slice(k.indexOf("    Cougar: {"), k.indexOf('    "Cougar 5th Wheel"'));
   assert.doesNotMatch(ctt, /"2027":/);
@@ -11993,8 +11993,48 @@ test("Keystone Cougar TT hygiene: no 25FKD leak; Half-Ton FW 2027 unchanged; no 
   assert.doesNotMatch(aae, /"2026":/);
   const cst = k.slice(k.indexOf('    "Cougar Sport": {'), k.indexOf('    "Cougar Half-Ton"'));
   assert.doesNotMatch(cst, /"2026":/);
-  const spr = k.slice(k.indexOf("    Sprinter: {"));
-  assert.doesNotMatch(spr, /"2026":/);
   const mt = k.slice(k.indexOf("    Montana: {"), k.indexOf('    "Montana High Country"'));
   assert.doesNotMatch(mt, /"2026": .*"3600RO"/);
+});
+
+test("Keystone Sprinter MY2025–2026 lock (OEM/Tampa; omit RVUSA-only)", () => {
+  const idx = CATALOG_INDEX.Keystone;
+  assert.ok(idx);
+  assert.equal(idx.Sprinter?.yearEnd, undefined);
+  assert.equal(idx.Sprinter?.years?.includes(2025), true);
+  assert.equal(idx.Sprinter?.years?.includes(2026), true);
+  assert.equal(idx.Sprinter?.years?.includes(2027), true);
+
+  const block = src("rvData.ts");
+  const k0 = block.indexOf('\n  "Keystone": {');
+  const k1 = block.indexOf('\n  "Grand Design": {');
+  const k = block.slice(k0, k1);
+  const spr = k.slice(k.indexOf("    Sprinter: {"));
+
+  assert.doesNotMatch(spr, /yearEnd:\s*2024/);
+  // MY2025 production (9) — omit 3190RLS. 3590LFT / 3670FLS / 3810QBS + mid-year 3840LRK are in.
+  assert.match(
+    spr,
+    /"2025": \["3210RLS", "3520RDS", "3590LFT", "3670FLS", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3980FBS"\]/,
+  );
+  assert.doesNotMatch(spr, /"2025": .*"3190RLS"/);
+  assert.doesNotMatch(spr, /"2025": .*"3640RLP"/);
+  assert.doesNotMatch(spr, /"2025": .*"3500RDB"/);
+  // MY2026 production (11) — omit 3640RLP (MY2027 NEW). Adds 3800FLB / 3950SSP.
+  assert.match(
+    spr,
+    /"2026": \["3210RLS", "3520RDS", "3590LFT", "3670FLS", "3800FLB", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"\]/,
+  );
+  assert.doesNotMatch(spr, /"2026": .*"3640RLP"/);
+  assert.doesNotMatch(spr, /"2026": .*"3190RLS"/);
+  assert.doesNotMatch(spr, /"2026": .*"3500RDB"/);
+  // MY2027 OEM lock from #96 unchanged — dealer-stock demotion stays 2027-only.
+  assert.match(
+    spr,
+    /"2027": \["3500RDB", "3520RDS", "3640RLP", "3800FLB", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"\]/,
+  );
+  assert.doesNotMatch(spr, /"2027": .*"3590LFT"/);
+  assert.doesNotMatch(spr, /"2027": .*"3670FLS"/);
+  assert.doesNotMatch(spr, /"2027": .*"3810QBS"/);
+  assert.doesNotMatch(spr, /"2027": .*"3210RLS"/);
 });

@@ -18162,7 +18162,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Sprinter: {
       type: "Fifth Wheel",
-      floorplans: ["269FWRLS", "293FWRLS", "333FWRKS", "3500RDB", "3520RDS", "3530SIK", "3570FLS", "3640RLP", "3800FLB", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"],
+      floorplans: ["269FWRLS", "293FWRLS", "3210RLS", "333FWRKS", "3500RDB", "3520RDS", "3530SIK", "3570FLS", "3590LFT", "3640RLP", "3670FLS", "3800FLB", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"],
       floorplansByYear: {
         "2010": ["269FWRLS", "293FWRLS", "333FWRKS"],
         "2011": ["269FWRLS", "293FWRLS", "333FWRKS"],
@@ -18179,10 +18179,19 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["293FWRLS", "3530SIK", "3570FLS"],
         "2023": ["3530SIK", "3570FLS"],
         "2024": ["3530SIK", "3570FLS"],
+        // LOCK research/keystone/SPRINTER_MY2025_2026.md (EzMe corrected 2026-09-02).
+        // MY2025 production (9): 3210RLS | 3520RDS | 3590LFT | 3670FLS | 3810QBS | 3840LRK | 3900DBL | 3920DSL | 3980FBS
+        // OMIT 3190RLS (RVUSA-only; Limited carryover / not on OEM flyer or Tampa booth).
+        // 3590LFT / 3670FLS / 3810QBS are production on 2025/26 — dealer-stock demotion is MY2027-only.
+        // 3840LRK is a mid-year add (Tampa + RVUSA).
+        "2025": ["3210RLS", "3520RDS", "3590LFT", "3670FLS", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3980FBS"],
+        // MY2026 production (11): 3210RLS | 3520RDS | 3590LFT | 3670FLS | 3800FLB | 3810QBS | 3840LRK | 3900DBL | 3920DSL | 3950SSP | 3980FBS
+        // OMIT 3640RLP (RVUSA-only; MY2027 NEW — not on MY2026 flyer / Dec 2025 OEM).
+        "2026": ["3210RLS", "3520RDS", "3590LFT", "3670FLS", "3800FLB", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"],
         // OEM keystonerv.com/product/sprinter/premium-fifth-wheels/floorplans (2027 Floorplans):
         // 3500RDB | 3520RDS | 3640RLP | 3800FLB | 3840LRK | 3900DBL | 3920DSL | 3950SSP | 3980FBS
         // 3590LFT / 3670FLS / 3810QBS are Dealer Stock — omit from the 2027 production lock.
-        // yearEnd 2024 was false (line is current). 2025–2026 GAP this slice — do not invent.
+        // yearEnd 2024 was false (line is current). MY2024→2010 leftover maps stay GAP this slice.
         "2027": ["3500RDB", "3520RDS", "3640RLP", "3800FLB", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"]
       },
       lengthRange: [
@@ -18213,7 +18222,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2000,
-      description: "Keystone Sprinter — current premium-value fifth wheel. MY2027 OEM card is 3500RDB / 3520RDS / 3640RLP / 3800FLB / 3840LRK / 3900DBL / 3920DSL / 3950SSP / 3980FBS. yearEnd 2024 was false."
+      description: "Keystone Sprinter — current premium-value fifth wheel. MY2025 lock: 3210RLS / 3520RDS / 3590LFT / 3670FLS / 3810QBS / 3840LRK / 3900DBL / 3920DSL / 3980FBS (omit 3190RLS). MY2026 lock adds 3800FLB / 3950SSP (omit 3640RLP). MY2027 OEM card is 3500RDB / 3520RDS / 3640RLP / 3800FLB / 3840LRK / 3900DBL / 3920DSL / 3950SSP / 3980FBS. yearEnd 2024 was false."
     }
   },
   "Grand Design": {
