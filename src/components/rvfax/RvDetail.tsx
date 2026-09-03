@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import type { RVResult } from "@/lib/rv/catalog";
 import {
-  clampTradeToRetailLow,
   estimateMarket,
   formatMoney,
   getFloorplansForYear,
@@ -60,6 +59,11 @@ import {
   refreshCoachDossierCache,
   type LiveDossier,
 } from "@/lib/rv/liveDossier";
+import {
+  fetchPublicListingComps,
+  resolvePrimaryMarket,
+  type PublicListingComps,
+} from "@/lib/rv/publicListingComps";
 import { fetchRecallsViaApi } from "@/lib/nhtsa/recalls";
 import type { NhtsaComplaint, NhtsaRecall } from "@/lib/nhtsa/recalls";
 import { buildReportId, valueFactors } from "@/lib/rv/reportMeta";
@@ -110,7 +114,7 @@ export function RvDetail({
   onAskGrok: () => void;
 }) {
   const { data, year, make, model, floorplan } = result;
-  const catalogMarket = estimateMarket(data, year, floorplan);
+  const catalogMarket = estimateMarket(data, year, floorplan, { make, model });
   const rating = ratingFor(make, model, year);
   const ratingMeta = useMemo(
     () => getRatingMetadata(make, model, year),
@@ -152,6 +156,10 @@ export function RvDetail({
   const [liveLoading, setLiveLoading] = useState(true);
   const [liveError, setLiveError] = useState<string | null>(null);
   const [liveRetry, setLiveRetry] = useState(0);
+  const [publicComps, setPublicComps] = useState<PublicListingComps | null>(
+    null,
+  );
+  const [compsLoading, setCompsLoading] = useState(true);
 
   const [exportBusy, setExportBusy] = useState(false);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
@@ -294,6 +302,29 @@ export function RvDetail({
     };
   }, [year, make, model, floorplan, liveRetry, brochure, data.fuelType, data.type]);
 
+  // Public year-range listing asks — primary market ladder when sample is enough.
+  // Independent of MarketCheck inventory search.
+  useEffect(() => {
+    const ctrl = new AbortController();
+    let cancelled = false;
+    setCompsLoading(true);
+    setPublicComps(null);
+    fetchPublicListingComps(
+      { year, make, model, floorplan },
+      ctrl.signal,
+    )
+      .then((data) => {
+        if (!cancelled) setPublicComps(data);
+      })
+      .finally(() => {
+        if (!cancelled) setCompsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+      ctrl.abort();
+    };
+  }, [year, make, model, floorplan, liveRetry]);
+
   // Instant catalog brochure → live Grok overwrites fields when ready
   const catalogSpecs = useMemo(
     () => ({
@@ -433,33 +464,16 @@ export function RvDetail({
   );
 
   const liveLadder = liveMarketLadder(live?.live ? live : null);
-  const market = useMemo(() => {
-    const merged = liveLadder
-      ? {
-          tradeIn:
-            liveLadder.tradeIn > 0 ? liveLadder.tradeIn : catalogMarket.tradeIn,
-          retailLow:
-            liveLadder.retailLow > 0
-              ? liveLadder.retailLow
-              : catalogMarket.retailLow,
-          retailHigh:
-            liveLadder.retailHigh > 0
-              ? liveLadder.retailHigh
-              : catalogMarket.retailHigh,
-          msrpLo: liveLadder.msrpLo ?? catalogMarket.msrpLo,
-          msrpHi: liveLadder.msrpHi ?? catalogMarket.msrpHi,
-          segment: catalogMarket.segment,
-          ageYears: catalogMarket.ageYears,
-        }
-      : catalogMarket;
-    const trade = clampTradeToRetailLow(merged.tradeIn, merged.retailLow);
-    return {
-      ...merged,
-      tradeIn: trade.tradeIn,
-      tradeCappedAtRetailLow:
-        trade.capped || catalogMarket.tradeCappedAtRetailLow,
-    };
-  }, [liveLadder, catalogMarket]);
+  const market = useMemo(
+    () =>
+      resolvePrimaryMarket({
+        catalog: catalogMarket,
+        liveLadder,
+        comps: publicComps,
+      }),
+    [catalogMarket, liveLadder, publicComps],
+  );
+  const marketUpdating = liveLoading || compsLoading;
 
   const displayType =
     (powertrainGuard.hard.fuelType === "Diesel"
@@ -863,9 +877,9 @@ export function RvDetail({
               <StatTile
                 label="Used market"
                 value={
-                  liveLoading
+                  marketUpdating
                     ? "Updating…"
-                    : "Trade · retail range"
+                    : market.sourceLabel || "Catalog estimate"
                 }
                 accent
               />
@@ -996,11 +1010,19 @@ export function RvDetail({
 
           {/* Market */}
           <section className="glass-prestige rounded-[1.25rem] p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold/90">
-                Market value
-              </p>
-              {liveLoading ? (
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold/90">
+                  Market value
+                </p>
+                <p className="mt-1 text-[11px] leading-snug text-white/65">
+                  {market.sourceLabel || "Catalog estimate"}
+                  {market.source === "public_listings" && publicComps
+                    ? ` · ${publicComps.sampleSize} asks`
+                    : null}
+                </p>
+              </div>
+              {marketUpdating ? (
                 <span className="inline-flex items-center gap-1 text-[10px] text-white">
                   <Loader2 className="size-3 animate-spin" />
                   Updating
@@ -1029,6 +1051,22 @@ export function RvDetail({
                 sub="Dealer asking"
               />
             </div>
+            {market.source === "public_listings" ? (
+              <p className="mt-3 text-[11px] leading-snug text-white/55">
+                Public listing asks in the year window — not closed sales, not
+                NADA or J.D. Power.
+              </p>
+            ) : market.source === "catalog" ? (
+              <p className="mt-3 text-[11px] leading-snug text-white/55">
+                Catalog estimate from a segment retain curve — not a guidebook
+                or paid inventory feed.
+              </p>
+            ) : (
+              <p className="mt-3 text-[11px] leading-snug text-white/55">
+                Live research estimate — confirm public asks before you write
+                a number.
+              </p>
+            )}
             {market.tradeCappedAtRetailLow ? (
               <p className="mt-3 rounded-xl border border-amber-400/45 bg-amber-500/15 px-3 py-2.5 text-[13px] font-semibold leading-snug text-amber-100">
                 Trade equals retail low because the estimate was capped — do
@@ -1058,6 +1096,10 @@ export function RvDetail({
             <div className="mb-2 flex items-center justify-between">
               <p className="text-[10px] font-bold tracking-[0.14em] text-white">
                 LOCAL INVENTORY
+              </p>
+              <p className="mt-1 text-[10px] leading-snug text-white/45">
+                Nearby listings only — not used for the market-value numbers
+                above.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">

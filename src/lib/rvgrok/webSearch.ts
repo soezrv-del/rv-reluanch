@@ -86,16 +86,37 @@ export function formatWebSearchInjection(result: WebSearchNotes): string {
   return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). If the catalog line is UNKNOWN, say unknown / EST. and what to verify — do not invent HP, engine, chassis, or fuel.`;
 }
 
-export async function fetchWebSearchNotes(opts: {
+export function buildCustomWebSearchRequest(opts: {
+  model: string;
+  system: string;
+  user: string;
+  maxOutputTokens?: number;
+}): Record<string, unknown> {
+  return {
+    model: opts.model,
+    input: [
+      { role: "system", content: opts.system },
+      { role: "user", content: opts.user },
+    ],
+    tools: [WEB_SEARCH_TOOL],
+    temperature: 0.1,
+    max_output_tokens: opts.maxOutputTokens ?? 900,
+  };
+}
+
+export async function fetchWebSearch(opts: {
   apiKey: string | undefined;
-  query: string;
-  catalogBlock?: string;
+  system: string;
+  user: string;
+  maxOutputTokens?: number;
+  timeoutMs?: number;
 }): Promise<WebSearchNotes> {
   if (!opts.apiKey) {
     return { ok: false, reason: "no XAI_API_KEY on the server" };
   }
   const models = ["grok-4.5", "grok-4-latest", "grok-4"];
   let last = "web search request failed";
+  const timeoutMs = opts.timeoutMs ?? 18_000;
   for (const model of models) {
     try {
       const resp = await fetch("https://api.x.ai/v1/responses", {
@@ -105,13 +126,14 @@ export async function fetchWebSearchNotes(opts: {
           Authorization: `Bearer ${opts.apiKey}`,
         },
         body: JSON.stringify(
-          buildWebSearchRequest({
+          buildCustomWebSearchRequest({
             model,
-            query: opts.query,
-            catalogBlock: opts.catalogBlock,
+            system: opts.system,
+            user: opts.user,
+            maxOutputTokens: opts.maxOutputTokens,
           }),
         ),
-        signal: AbortSignal.timeout(18_000),
+        signal: AbortSignal.timeout(timeoutMs),
       });
       if (!resp.ok) {
         last = `web search HTTP ${resp.status}`;
@@ -126,4 +148,24 @@ export async function fetchWebSearchNotes(opts: {
     }
   }
   return { ok: false, reason: last };
+}
+
+export async function fetchWebSearchNotes(opts: {
+  apiKey: string | undefined;
+  query: string;
+  catalogBlock?: string;
+}): Promise<WebSearchNotes> {
+  const req = buildWebSearchRequest({
+    model: "grok-4.5",
+    query: opts.query,
+    catalogBlock: opts.catalogBlock,
+  });
+  const input = req.input as Array<{ role?: string; content?: string }>;
+  const system = input.find((m) => m.role === "system")?.content || "";
+  const user = input.find((m) => m.role === "user")?.content || opts.query;
+  return fetchWebSearch({
+    apiKey: opts.apiKey,
+    system,
+    user,
+  });
 }
