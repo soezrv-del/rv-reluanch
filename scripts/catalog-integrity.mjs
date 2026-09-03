@@ -65,8 +65,16 @@ const FORBIDDEN_FLOORPLANS = {
       "2700BH",
       "3100BH",
       "260MLE",
+      "290RLS",
       "295RDS",
       "316RLS",
+      "320RDS",
+      "350LLK",
+      "354FLS",
+      "355FBS",
+      "360MBI",
+      "364BHL",
+      "368MBI",
       "23MLE",
       "26RES",
       "26RKE",
@@ -94,8 +102,8 @@ const FORBIDDEN_FLOORPLANS = {
     reason: "Alpine Avalanche Edition codes stay on that key, not core Alpine",
   },
   "Keystone|Avalanche": {
-    codes: ["321RL", "366LS", "379MB", "380LT", "381DL", "390DS", "392DS"],
-    reason: "Alpine Avalanche Edition must not merge into standalone Avalanche",
+    codes: ["381DL", "392DS"],
+    reason: "Alpine Avalanche Edition-only 2027 codes (381DL / 392DS) must not merge into standalone Avalanche",
   },
   "Keystone|Passport": {
     codes: ["2080MK", "160BHC", "284QBC", "229BHWE"],
@@ -1769,7 +1777,7 @@ function main() {
   }
 
   // Keystone MY2027 OEM lock + yearStart hygiene / Half-Ton 2027 + 25FKD Cougar TT scrub.
-  // Sprinter MY2025–2026 filled from LOCK SPRINTER_MY2025_2026.md (other lines still 2026 GAP).
+  // Sprinter MY2025–2026 from #100. This slice locks major-line MY2025–2026 from walk-back pack §6.
   {
     const k0 = src.indexOf('\n  "Keystone": {');
     const k1 = src.indexOf('\n  "Grand Design": {');
@@ -1845,6 +1853,18 @@ function main() {
       if (/"2026": .*"3600RO"/.test(mt)) {
         fail("Keystone|Montana must not copy MY27 3600RO onto 2026");
       }
+      if (!/"2025": \["3123RL", "3231CK", "3531RE", "3532SP", "3623EB", "3761FL", "3781RL", "3793RD", "3795FK", "3857BR", "3901RK", "3915TB", "3941FO"\]/.test(mt)) {
+        fail("Keystone|Montana MY25 RVUSA lock missing (13 codes; no MY27 3100RL/3500RD/3600RO/3800FL/3900RK)");
+      }
+      if (/"2025": .*"3100RL"/.test(mt) || /"2025": .*"3800FL"/.test(mt) || /"2025": .*"3900RK"/.test(mt) || /"2025": .*"3600RO"/.test(mt)) {
+        fail("Keystone|Montana must not stamp MY27 codes onto 2025");
+      }
+      if (!/"2026": \["3100RL", "3123RL", "3231CK", "3531RE", "3532SP", "3623EB", "3761FL", "3781RL", "3795FK", "3857BR", "3901RK", "3915TB", "3941FO"\]/.test(mt)) {
+        fail("Keystone|Montana MY26 RVUSA lock missing (13 codes; no 3793RD / no MY27 3500RD/3600RO/3800FL/3900RK)");
+      }
+      if (/"2026": .*"3500RD"/.test(mt) || /"2026": .*"3800FL"/.test(mt) || /"2026": .*"3900RK"/.test(mt) || /"2026": .*"3793RD"/.test(mt)) {
+        fail("Keystone|Montana must not keep 3500RD/3800FL/3900RK/3793RD on 2026");
+      }
 
       const mhc = slice("Montana High Country", "Cougar");
       if (!/"2027": \["290RL", "300RK", "362BRK", "391TB", "396BH"\]/.test(mhc)) {
@@ -1853,6 +1873,18 @@ function main() {
       if (/"2027": .*"397FB"/.test(mhc) || /"2027": .*"295RL"/.test(mhc) || /"2027": .*"351BH"/.test(mhc)) {
         fail("Keystone|Montana High Country must not keep dealer-stock 397FB or leftover 295RL/351BH on 2027");
       }
+      if (!/"2025": \["295RL", "311RD", "325RK", "331RL", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH", "397FB"\]/.test(mhc)) {
+        fail("Keystone|Montana High Country MY25 RVUSA lock missing (11 codes; no 290RL / no MY27 300RK/362BRK/391TB/396BH)");
+      }
+      if (/"2025": .*"290RL"/.test(mhc) || /"2025": .*"300RK"/.test(mhc) || /"2025": .*"391TB"/.test(mhc)) {
+        fail("Keystone|Montana High Country must not stamp 290RL / MY27 300RK/391TB onto 2025");
+      }
+      if (!/"2026": \["290RL", "295RL", "311RD", "325RK", "331RL", "351BH", "373RD", "377FL", "381TB", "385BR", "389BH", "397FB"\]/.test(mhc)) {
+        fail("Keystone|Montana High Country MY26 RVUSA lock missing (12 codes)");
+      }
+      if (/"2026": .*"300RK"/.test(mhc) || /"2026": .*"362BRK"/.test(mhc) || /"2026": .*"391TB"/.test(mhc) || /"2026": .*"396BH"/.test(mhc)) {
+        fail("Keystone|Montana High Country must not stamp MY27 300RK/362BRK/391TB/396BH onto 2026");
+      }
 
       const alp = slice("Alpine", "Alpine Avalanche Edition");
       if (!/"2027": \["3100RE", "3303CK", "3710FL", "3800MR", "3820FK", "3910RK"\]/.test(alp)) {
@@ -1860,6 +1892,18 @@ function main() {
       }
       if (/"2027": .*"3712KB"/.test(alp) || /"2027": .*"321RL"/.test(alp) || /"2027": .*"3501RL"/.test(alp)) {
         fail("Keystone|Alpine must not keep 3712KB stock, Avalanche Edition 321RL, or leftover 3501RL on 2027");
+      }
+      if (!/"2025": \["3011CK", "3102RL", "3220RL", "3303CK", "3700FL", "3712KB", "3720MD", "3790FK", "3820FK", "3910RK", "3912DS"\]/.test(alp)) {
+        fail("Keystone|Alpine MY25 RVUSA lock missing (11 codes; no MY27 3100RE/3710FL/3800MR)");
+      }
+      if (/"2025": .*"3100RE"/.test(alp) || /"2025": .*"3710FL"/.test(alp) || /"2025": .*"3800MR"/.test(alp) || /"2025": .*"321RL"/.test(alp)) {
+        fail("Keystone|Alpine must not stamp MY27 3100RE/3710FL/3800MR or Edition 321RL onto 2025");
+      }
+      if (!/"2026": \["3011CK", "3100RE", "3303CK", "3700FL", "3710FL", "3712KB", "3820FK", "3910RK"\]/.test(alp)) {
+        fail("Keystone|Alpine MY26 RVUSA lock missing (8 codes; 3712KB still production)");
+      }
+      if (/"2026": .*"3800MR"/.test(alp) || /"2026": .*"321RL"/.test(alp) || /"2026": .*"3501RL"/.test(alp)) {
+        fail("Keystone|Alpine must not keep 3800MR / Edition 321RL / leftover 3501RL on 2026");
       }
 
       const aae = slice("Alpine Avalanche Edition", "Arcadia");
@@ -1873,6 +1917,15 @@ function main() {
       const av = slice("Avalanche", "Laredo");
       if (/"2027":/.test(av) || /"2026":/.test(av)) {
         fail("Keystone|Avalanche must not absorb Avalanche Edition or invent 2026–27 (yearEnd 2025)");
+      }
+      if (!/yearEnd:\s*2025/.test(av)) {
+        fail("Keystone|Avalanche yearEnd must stay 2025 (standalone close-out)");
+      }
+      if (!/"2025": \["302RS", "321RL", "338GK", "346FL", "366LS", "378BH", "379MB", "380LT", "390DS"\]/.test(av)) {
+        fail("Keystone|Avalanche MY25 RVUSA lock missing (9 codes; standalone close-out)");
+      }
+      if (/"2025": .*"381DL"/.test(av) || /"2025": .*"392DS"/.test(av) || /"2025": .*"360RB"/.test(av)) {
+        fail("Keystone|Avalanche must omit Edition-only 381DL/392DS and leftover 360RB on 2025");
       }
 
       const spr = slice("Sprinter", "Sprinter");
@@ -1913,6 +1966,18 @@ function main() {
       }
       if (/"2027": .*"2100ML"/.test(cfw) || /"2027": .*"2700BH"/.test(cfw) || /"2027": .*"23MLE"/.test(cfw)) {
         fail("Keystone|Cougar 5th Wheel must not absorb Sport or Half-Ton codes");
+      }
+      if (!/"2025": \["260MLE", "290RLS", "316RLS", "320RDS", "354FLS", "355FBS", "360MBI", "364BHL", "368MBI"\]/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel MY25 Premium FW lock missing (9 codes; no 295RDS / no 350LLK)");
+      }
+      if (/"2025": .*"295RDS"/.test(cfw) || /"2025": .*"350LLK"/.test(cfw) || /"2025": .*"2100ML"/.test(cfw) || /"2025": .*"23MLE"/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel must not stamp MY27 295RDS/350LLK or Sport/Half-Ton onto 2025");
+      }
+      if (!/"2026": \["260MLE", "290RLS", "316RLS", "320RDS", "350LLK", "355FBS", "360MBI", "364BHL"\]/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel MY26 Premium FW lock missing (8 codes; no 354FLS/368MBI/295RDS)");
+      }
+      if (/"2026": .*"295RDS"/.test(cfw) || /"2026": .*"354FLS"/.test(cfw) || /"2026": .*"368MBI"/.test(cfw) || /"2026": .*"2100ML"/.test(cfw)) {
+        fail("Keystone|Cougar 5th Wheel must omit 295RDS / 354FLS / 368MBI / Sport on 2026");
       }
 
       const cst = slice("Cougar Sport", "Cougar Half-Ton");
@@ -1957,8 +2022,20 @@ function main() {
       if (!/"2027": \["2080MK", "2220BH", "229BH", "229BHWE", "2340RBK", "2450RK", "2450RKWE", "2590REV", "2670MRB", "2870RL", "2870RLWE", "3100RE"\]/.test(psl)) {
         fail("Keystone|Passport Super Lite MY27 OEM plans missing");
       }
-      if (!/yearStart:\s*2019/.test(psl) || /"2026":/.test(psl)) {
-        fail("Keystone|Passport Super Lite yearStart must be 2019 (empty older fby — no invent)");
+      if (!/yearStart:\s*2019/.test(psl)) {
+        fail("Keystone|Passport Super Lite yearStart must be 2019");
+      }
+      if (/"2019":/.test(psl) || /"2020":/.test(psl) || /"2021":/.test(psl) || /"2022":/.test(psl) || /"2023":/.test(psl) || /"2024":/.test(psl)) {
+        fail("Keystone|Passport Super Lite must not invent 2019–2024 fby this slice");
+      }
+      if (!/"2025": \["189RB", "219BH", "221BH", "229BH", "229BHWE", "2450RK", "2450RKWE", "253RD", "253RDWE", "2605RB", "2605RBWE", "2660RL", "2660RLWE", "268BH", "2700RK", "2870RL", "2870RLWE", "2900BH", "2900BHWE"\]/.test(psl)) {
+        fail("Keystone|Passport Super Lite MY25 RVUSA lock missing (19 codes incl. WE twins)");
+      }
+      if (!/"2026": \["229BH", "229BHWE", "2450RK", "2450RKWE", "253RD", "253RDWE", "2605RB", "2605RBWE", "2660RL", "2660RLWE", "2870RL", "2870RLWE", "2900BH", "2900BHWE", "3401QD"\]/.test(psl)) {
+        fail("Keystone|Passport Super Lite MY26 RVUSA lock missing (15 codes incl. WE twins + 3401QD)");
+      }
+      if (/"2025": .*"2080MK"/.test(psl) || /"2025": .*"3100RE"/.test(psl) || /"2026": .*"2080MK"/.test(psl) || /"2026": .*"3100RE"/.test(psl)) {
+        fail("Keystone|Passport Super Lite must not stamp MY27 2080MK/3100RE onto 2025/2026");
       }
 
       const pcl = slice("Passport Classic", "Springdale");
