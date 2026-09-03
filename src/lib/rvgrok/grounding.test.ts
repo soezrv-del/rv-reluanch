@@ -18,6 +18,7 @@ import {
   WEB_SEARCH_MODELS,
   VOICE_WEB_SEARCH_MODELS,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
+  CHAT_WEB_SEARCH_TIMEOUT_MS,
   buildWebSearchRequest,
   extractResponsesText,
   formatWebSearchHttpFailure,
@@ -104,7 +105,7 @@ test("chat must not write Facts cache; Live must not fill hard fields", () => {
   assert.match(guard, /Live Grok never writes engine/);
   assert.match(cache, /Chat answers must never call saveVerifiedDossier/);
   assert.match(api, /catalogContext/);
-  assert.match(api, /fetchWebSearchNotes/);
+  assert.match(api, /executeWebResearch/);
   assert.doesNotMatch(api, /search_parameters/);
 });
 
@@ -132,7 +133,10 @@ test("web search sidecar uses Responses web_search tool", () => {
   assert.equal("search_parameters" in body, false);
   assert.equal("temperature" in body, false);
   assert.equal("max_output_tokens" in body, false);
-  assert.deepEqual(Object.keys(body).sort(), ["input", "model", "tools"]);
+  assert.equal(body.max_tool_calls, 1);
+  assert.equal(body.tool_choice, "required");
+  assert.deepEqual(body.reasoning, { effort: "low" });
+  assert.ok(!("role" in (body as { role?: string })));
   const input = body.input as Array<{ role: string; content: string }>;
   assert.equal(input.length, 1);
   assert.equal(input[0].role, "user");
@@ -152,15 +156,16 @@ test("web search sidecar uses Responses web_search tool", () => {
 
 test("web search model fallbacks are current Responses + web_search ids", () => {
   assert.deepEqual([...WEB_SEARCH_MODELS], [
-    "grok-4.6",
     "grok-4-1-fast-reasoning",
-    "grok-4-latest",
+    "grok-4-1-fast-non-reasoning",
   ]);
-  assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4.6"]);
+  assert.equal((WEB_SEARCH_MODELS as readonly string[]).includes("grok-4.6"), false);
+  assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
   assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 7_000);
+  assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 12_000);
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
-  assert.match(api, /fetchWebSearchNotes/);
-  assert.doesNotMatch(api, /timeoutMs:/);
+  assert.match(api, /executeWebResearch/);
+  assert.match(api, /CHAT_WEB_SEARCH_TIMEOUT_MS/);
   assert.doesNotMatch(api, /VOICE_WEB_SEARCH/);
 });
 

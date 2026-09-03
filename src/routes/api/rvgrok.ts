@@ -3,9 +3,10 @@ import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
 import { appendGrounding } from "@/lib/rvgrok/grounding";
 import {
-  fetchWebSearchNotes,
+  CHAT_WEB_SEARCH_TIMEOUT_MS,
   formatWebSearchInjection,
 } from "@/lib/rvgrok/webSearch";
+import { executeWebResearch } from "@/lib/rvgrok/webResearchTelemetry";
 import {
   GENERATE_IMAGE_TOOL,
   generateImageFromPrompt,
@@ -624,10 +625,13 @@ export const Route = createFileRoute("/api/rvgrok")({
 
         let webNotes: string | undefined;
         if (body.wantsWebFallback) {
-          const researched = await fetchWebSearchNotes({
+          const researched = await executeWebResearch({
             apiKey: process.env.XAI_API_KEY,
             query: lastPlain.slice(0, 400),
             catalogBlock: catalogContext,
+            timeoutMs: CHAT_WEB_SEARCH_TIMEOUT_MS,
+            profile: "chat",
+            skipGate: true,
           });
           webNotes = formatWebSearchInjection(researched);
         }
