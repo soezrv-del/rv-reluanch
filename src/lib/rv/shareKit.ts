@@ -184,7 +184,10 @@ export function lifestyleImageFor(type?: string, fuelType?: string, chassis?: st
 
 export function defaultPaymentFor(r: RVResult): SharePayment {
   r = hydrateShareCoachResult(r);
-  const market = estimateMarket(r.data, r.year, r.floorplan);
+  const market = estimateMarket(r.data, r.year, r.floorplan, {
+    make: r.make,
+    model: r.model,
+  });
   const price = market.retailHigh || market.msrpHi || 150000;
   const termMonths = 144;
   return {
@@ -197,7 +200,10 @@ export function defaultPaymentFor(r: RVResult): SharePayment {
 
 export function defaultMarketFor(r: RVResult): ShareMarket {
   r = hydrateShareCoachResult(r);
-  const market = estimateMarket(r.data, r.year, r.floorplan);
+  const market = estimateMarket(r.data, r.year, r.floorplan, {
+    make: r.make,
+    model: r.model,
+  });
   return {
     tradeIn: market.tradeIn || 0,
     retailLow: market.retailLow || 0,

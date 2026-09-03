@@ -295,6 +295,24 @@ async function postResponses(opts: {
   }
 }
 
+export function buildCustomWebSearchRequest(opts: {
+  model: string;
+  system: string;
+  user: string;
+  maxOutputTokens?: number;
+}): Record<string, unknown> {
+  return {
+    model: opts.model,
+    input: [
+      { role: "system", content: opts.system },
+      { role: "user", content: opts.user },
+    ],
+    tools: [WEB_SEARCH_TOOL],
+    temperature: 0.1,
+    max_output_tokens: opts.maxOutputTokens ?? 900,
+  };
+}
+
 export async function fetchWebSearchNotes(opts: {
   apiKey: string | undefined;
   query: string;
@@ -357,6 +375,52 @@ export async function fetchWebSearchNotes(opts: {
       last = "web search returned empty notes";
       break;
     }
+  }
+  return { ok: false, reason: last };
+}
+
+/** Custom system/user web_search for public listing comps — not chat research. */
+export async function fetchWebSearch(opts: {
+  apiKey: string | undefined;
+  system: string;
+  user: string;
+  maxOutputTokens?: number;
+  timeoutMs?: number;
+  models?: readonly string[];
+}): Promise<WebSearchNotes> {
+  if (!opts.apiKey) {
+    return { ok: false, reason: "no XAI_API_KEY on the server" };
+  }
+  const timeoutMs = opts.timeoutMs ?? 18_000;
+  const models = opts.models ?? WEB_SEARCH_MODELS;
+  let last = "web search request failed";
+  for (const model of models) {
+    const posted = await postResponses({
+      apiKey: opts.apiKey,
+      timeoutMs,
+      body: buildCustomWebSearchRequest({
+        model,
+        system: opts.system,
+        user: opts.user,
+        maxOutputTokens: opts.maxOutputTokens,
+      }),
+    });
+    if (posted.kind === "abort") {
+      return { ok: false, reason: posted.reason };
+    }
+    if (posted.kind === "error") {
+      last = posted.reason;
+      continue;
+    }
+    if (posted.kind === "http") {
+      last = formatWebSearchHttpFailure(posted.status, posted.text);
+      continue;
+    }
+    const notes = extractResponsesText(posted.data);
+    if (notes) {
+      return { ok: true, notes, model };
+    }
+    last = "web search returned empty notes";
   }
   return { ok: false, reason: last };
 }
