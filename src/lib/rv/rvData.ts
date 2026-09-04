@@ -31246,14 +31246,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Dynamax: {
     "Isata 3": {
       type: "Class C",
-      floorplans: ["24FW", "24CB", "26DS", "24CB SD", "24RW", "24FWSFX", "24SSSFXM", "24TW"],
+      floorplans: ["24FW", "24CB", "24RB", "24RW", "24FWSFX", "24SSSFXM", "24TW"],
       floorplansByYear: {
-        "2016": ["24FW", "24CB", "26DS"],
-        "2017": ["24FW", "24CB", "26DS"],
-        "2018": ["24FW", "24CB", "26DS"],
-        "2019": ["24FW", "24CB", "24CB SD", "26DS"],
-        "2020": ["24FW", "24CB", "24CB SD", "26DS"],
-        "2021": ["24FW", "24CB", "24CB SD", "26DS"],
+        "2016": ["24FW", "24RW"],
+        "2018": ["24FW", "24RW"],
+        "2019": ["24CB", "24FW", "24RB", "24RW"],
+        "2020": ["24CB", "24FW", "24RB", "24RW"],
+        "2021": ["24FW", "24RW"],
         "2022": ["24FW", "24RW"],
         "2023": ["24FW", "24RW"],
         "2024": ["24FW", "24RW", "24FWSFX"],
@@ -31297,21 +31296,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2016,
-          to: 2019,
-          engine: "Ford Transit 3.5L EcoBoost V6",
-          horsepower: 310,
-          chassis: "Ford Transit"
+          to: 2020,
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel",
+          horsepower: 188,
+          torqueLbFt: 325,
+          chassis: "Mercedes-Benz Sprinter",
+          transmission: "5-Speed Automatic with Overdrive"
         },
         {
-          from: 2020,
-          to: 2021,
-          engine: "Ford Transit 3.5L EcoBoost V6 ~310HP",
-          horsepower: 310,
-          torqueLbFt: 400,
-          chassis: "Ford Transit"
-        },
-        {
-          from: 2022,
+          from: 2021,
           to: 2024,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
@@ -31332,11 +31325,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Isata 4": {
       type: "Class C",
-      floorplans: ["24FW", "26DS", "26RK"],
+      floorplans: ["25FW", "31DS"],
       floorplansByYear: {
-        "2019": ["24FW", "26DS", "26RK"],
-        "2020": ["24FW", "26DS", "26RK"],
-        "2021": ["24FW", "26DS", "26RK"]
+        "2018": ["25FW", "31DS"],
+        "2019": ["25FW", "31DS"],
+        "2020": ["25FW", "31DS"]
       },
       lengthRange: [
         24,
@@ -31352,47 +31345,50 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         169900,
         249000
       ],
-      engine: "Mercedes-Benz Sprinter turbodiesel",
-      horsepower: 188,
-      chassis: "Mercedes-Benz Sprinter",
-      fuelType: "Diesel",
+      engine: "Ford 6.8L Triton V10",
+      horsepower: 305,
+      torqueLbFt: 420,
+      chassis: "Ford E450",
+      transmission: "6-Speed Automatic with Tow-Haul Mode",
+      fuelType: "Gas",
       recalls: 0,
       rating: 4.55,
       image: RV_CARD_IMAGE,
-      towingCapacity: 5000,
-      freshWater: 40,
-      grayWater: 28,
-      blackWater: 28,
-      generator: "Onan 3600W / diesel option",
-      awningLength: 14,
-      ceilingHeight: 80,
+      towingCapacity: 7500,
+      freshWater: 51,
+      grayWater: 42,
+      blackWater: 42,
+      generator: "Onan 4kW Gas",
+      awningLength: 16,
+      ceilingHeight: 84,
       founded: 1997,
       warrantyYears: 2,
-      yearStart: 2019,
-      yearEnd: 2021,
-      description: "Dynamax Isata 4 — Sprinter diesel Class C between Isata 3 and Isata 5. Premium Dynamax paint and interior. OEM line ends after MY2021 (no dated 2022–2026 brochure).",
+      yearStart: 2018,
+      yearEnd: 2020,
+      description: "Dynamax Isata 4 — Ford E450 Class C with 6.8L Triton V10. Dated OEM brochures cover MY2018–2020 (25FW / 31DS); no sourced card after MY2020.",
       powertrainByYear: [
         {
-          from: 2019,
-          to: 2021,
-          engine: "Mercedes-Benz 3.0L V6 turbodiesel",
-          horsepower: 188,
-          chassis: "Mercedes Sprinter"
+          from: 2018,
+          to: 2020,
+          engine: "Ford 6.8L Triton V10",
+          horsepower: 305,
+          torqueLbFt: 420,
+          chassis: "Ford E450",
+          transmission: "6-Speed Automatic with Tow-Haul Mode",
+          fuelType: "Gas"
         }
       ]
     },
     "Isata 5": {
       type: "Class C",
-      floorplans: ["24FW", "26CB", "26DS", "27BH", "28SS", "30FW", "34DS"],
+      floorplans: ["24FW", "26CB", "26DS", "35DB", "36DS", "28SS", "30FW", "34DS"],
       floorplansByYear: {
         "2014": ["24FW", "26CB", "26DS"],
-        "2015": ["24FW", "26CB", "26DS"],
-        "2016": ["24FW", "26CB", "26DS"],
-        "2017": ["24FW", "26CB", "26DS", "27BH"],
-        "2018": ["24FW", "26CB", "26DS", "27BH"],
-        "2019": ["24FW", "26CB", "26DS", "27BH"],
-        "2020": ["26CB", "26DS", "27BH", "28SS"],
-        "2021": ["26CB", "26DS", "27BH", "28SS"],
+        "2016": ["35DB", "36DS"],
+        "2018": ["30FW", "35DB", "36DS"],
+        "2019": ["30FW", "35DB", "36DS"],
+        "2020": ["30FW", "35DB", "36DS"],
+        "2021": ["28SS", "30FW", "34DS"],
         "2022": ["28SS", "30FW", "34DS"],
         "2023": ["28SS", "30FW", "34DS"],
         "2024": ["28SS", "30FW", "34DS"],
@@ -31437,13 +31433,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2014,
-          to: 2021,
+          to: 2014,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
           chassis: "Mercedes Sprinter"
         },
         {
-          from: 2022,
+          from: 2016,
+          to: 2020,
+          engine: "Cummins 6.7L I6 turbodiesel",
+          horsepower: 325,
+          torqueLbFt: 750,
+          chassis: "Ram 5500 SLT",
+          transmission: "AISIN HD 6-speed automatic"
+        },
+        {
+          from: 2021,
           to: 2026,
           engine: "Cummins 6.7L I6 turbodiesel",
           horsepower: 360,
@@ -31462,13 +31467,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2012": ["31SS", "31RB"],
         "2013": ["31SS", "31RB", "33E"],
         "2014": ["31SS", "31RB", "33E"],
-        "2015": ["31SS", "31RB", "33E"],
-        "2016": ["31SS", "31RB", "33E", "34SS"],
-        "2017": ["31SS", "31RB", "33E", "34SS"],
-        "2018": ["31SS", "31RB", "33E", "34SS"],
-        "2019": ["31SS", "31RB", "33E", "34SS"],
-        "2020": ["31SS", "31RB", "33E", "34SS"],
-        "2021": ["31SS", "31RB", "33E", "34SS"],
+        "2021": ["31SS"],
         "2022": ["31SS"],
         "2023": ["31SS", "32KD"],
         "2024": ["31SS", "32KD"],
@@ -31519,16 +31518,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Ford F-550"
         },
         {
-          from: 2016,
-          to: 2021,
-          engine: "Ford 6.7L Power Stroke Diesel ~330HP",
-          horsepower: 330,
-          torqueLbFt: 950,
-          chassis: "Ford F-550 Super Duty",
-          transmission: "TorqShift automatic"
-        },
-        {
-          from: 2022,
+          from: 2021,
           to: 2024,
           engine: "Cummins B 6.7L Turbo Diesel",
           horsepower: 360,
@@ -31549,18 +31539,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Force: {
       type: "Super C",
-      floorplans: ["36FK", "37RB", "36BHK", "38TSK", "40TS", "34KD", "37BD", "37TS"],
+      floorplans: ["36FK", "37RB", "35DS", "37BH", "37TS", "37FD", "34KD", "37BD", "34KDHD", "37BHHD", "37TSHD", "37BDHD"],
       floorplansByYear: {
         "2012": ["36FK", "37RB"],
         "2013": ["36FK", "37RB"],
         "2014": ["36FK", "37RB"],
-        "2015": ["36FK", "37RB", "36BHK"],
-        "2016": ["36FK", "37RB", "36BHK"],
-        "2017": ["36FK", "37RB", "36BHK"],
-        "2018": ["36FK", "37RB", "36BHK", "38TSK"],
-        "2019": ["36FK", "37RB", "36BHK", "38TSK"],
-        "2020": ["36FK", "37RB", "36BHK", "38TSK"],
-        "2021": ["36FK", "37RB", "38TSK", "40TS"],
+        "2015": ["35DS", "36FK", "37BH", "37FD", "37TS"],
+        "2016": ["35DS", "36FK", "37BH", "37TS"],
+        "2018": ["35DS", "36FK", "37BH", "37TS"],
+        "2019": ["34KDHD", "37BHHD", "37TSHD"],
+        "2020": ["34KDHD", "37BHHD", "37TSHD"],
+        "2021": ["34KDHD", "37BDHD", "37TSHD"],
         "2022": ["34KD", "37BD", "37TS"]
       },
       lengthRange: [
@@ -31601,22 +31590,31 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2012,
-          to: 2016,
+          to: 2014,
           engine: "Ford 6.7L Power Stroke Diesel",
           horsepower: 300,
           chassis: "Ford F-550/F-600 Super C"
         },
         {
-          from: 2017,
-          to: 2021,
-          engine: "Ford 6.7L Power Stroke Diesel ~330HP",
-          horsepower: 330,
-          torqueLbFt: 950,
-          chassis: "Ford F-600 Super Duty",
-          transmission: "TorqShift automatic"
+          from: 2015,
+          to: 2016,
+          engine: "Cummins ISB 6.7L Turbo Diesel",
+          horsepower: 340,
+          torqueLbFt: 700,
+          chassis: "Freightliner M2",
+          transmission: "Allison 2500 MH automatic"
         },
         {
-          from: 2022,
+          from: 2018,
+          to: 2020,
+          engine: "Cummins ISL 8.9L Turbo Diesel",
+          horsepower: 350,
+          torqueLbFt: 1000,
+          chassis: "Freightliner M2 106",
+          transmission: "Allison 3200 TRV automatic"
+        },
+        {
+          from: 2021,
           to: 2022,
           engine: "Detroit DD8 7.7L Turbo Diesel",
           horsepower: 375,
@@ -31628,7 +31626,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     DynaQuest: {
       type: "Super C",
-      floorplans: ["XL 3400", "XL 3700", "XL 3800", "XL 3900", "3400KD", "3700BD", "37RB", "3801TS", "3200KD", "3700RB"],
+      floorplans: ["XL 3400", "XL 3700", "XL 3800", "XL 3900", "37BH", "37RB", "38TS", "3400KD", "3700BD", "3800TS", "3801TS", "3200KD", "3700RB"],
       floorplansByYear: {
         "2008": ["XL 3400", "XL 3700"],
         "2009": ["XL 3400", "XL 3700"],
@@ -31637,13 +31635,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2012": ["XL 3400", "XL 3700", "XL 3800"],
         "2013": ["XL 3400", "XL 3700", "XL 3800"],
         "2014": ["XL 3400", "XL 3700", "XL 3800", "XL 3900"],
-        "2015": ["XL 3400", "XL 3700", "XL 3800", "XL 3900"],
-        "2016": ["XL 3400", "XL 3700", "XL 3800", "XL 3900"],
-        "2017": ["XL 3700", "XL 3800", "XL 3900"],
-        "2018": ["XL 3700", "XL 3800", "XL 3900"],
-        "2019": ["XL 3700", "XL 3800", "XL 3900"],
-        "2020": ["XL 3700", "XL 3800", "XL 3900"],
-        "2021": ["XL 3700", "XL 3800", "XL 3900"],
+        "2016": ["37BH", "37RB", "38TS"],
+        "2019": ["3400KD", "37BH", "37RB", "3800TS", "3801TS"],
+        "2020": ["3400KD", "37BH", "37RB", "3801TS"],
+        "2021": ["3400KD", "3700BD", "37RB", "3801TS"],
         "2022": ["3400KD", "3700BD", "37RB", "3801TS"],
         "2023": ["3400KD", "3700BD", "37RB", "3801TS"],
         "2024": ["3200KD", "3400KD", "3700BD", "3700RB", "3801TS"],
@@ -31688,7 +31683,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2008,
-          to: 2015,
+          to: 2014,
           engine: "Ford 6.7L Power Stroke / Super C diesel (era)",
           horsepower: 300,
           chassis: "Ford Super C platform"
@@ -31696,10 +31691,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         {
           from: 2016,
           to: 2021,
-          engine: "Ford 6.7L Power Stroke Diesel ~330HP",
-          horsepower: 330,
-          torqueLbFt: 950,
-          chassis: "Ford F-600 Super C"
+          engine: "Cummins 8.9L ISL Turbo Diesel",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner M2 112",
+          transmission: "Allison 3200 TRV automatic"
         },
         {
           from: 2022,
@@ -31732,15 +31728,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     DX3: {
       type: "Super C",
-      floorplans: ["34KD", "37KD", "37TS", "37BD", "37RB", "32KD"],
+      floorplans: ["35DS", "36FK", "37BH", "37TS", "37RB", "34KD", "37BD", "32KD"],
       floorplansByYear: {
-        "2015": ["34KD", "37KD"],
-        "2016": ["34KD", "37KD"],
-        "2017": ["34KD", "37KD"],
-        "2018": ["34KD", "37KD", "37TS"],
-        "2019": ["34KD", "37KD", "37TS"],
-        "2020": ["34KD", "37KD", "37TS"],
-        "2021": ["34KD", "37KD", "37TS"],
+        "2016": ["35DS", "36FK", "37BH", "37TS"],
+        "2017": ["35DS", "36FK", "37BH", "37RB", "37TS"],
+        "2018": ["35DS", "36FK", "37BH", "37TS", "37RB"],
+        "2019": ["34KD", "37BH", "37TS", "37RB"],
+        "2020": ["34KD", "37BH", "37TS", "37RB"],
+        "2021": ["34KD", "37BD", "37TS", "37RB"],
         "2022": ["34KD", "37BD", "37RB", "37TS"],
         "2023": ["34KD", "37BD", "37RB", "37TS"],
         "2024": ["32KD", "34KD", "37BD", "37RB", "37TS"],
@@ -31780,18 +31775,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 83,
       founded: 1997,
       warrantyYears: 2,
-      yearStart: 2015,
-      description: "Dynamax DX3 — Freightliner M2 Super C with Cummins L9 (Detroit DD8 on MY2022–early 2024). Dynamax finish level; current OEM plans 32KD / 34KD / 37BD / 37RB / 37TS.",
+      yearStart: 2016,
+      description: "Dynamax DX3 — Freightliner M2 Super C. MY2016–2020 Cummins 8.9L ISL; MY2021–early 2024 Detroit DD8; later Cummins L9. Current OEM plans 32KD / 34KD / 37BD / 37RB / 37TS.",
       powertrainByYear: [
         {
-          from: 2015,
-          to: 2021,
-          engine: "Ford 6.7L Power Stroke Diesel",
-          horsepower: 330,
-          chassis: "Ford F-550 Super C"
+          from: 2016,
+          to: 2020,
+          engine: "Cummins 8.9L ISL Turbo Diesel",
+          horsepower: 350,
+          torqueLbFt: 1000,
+          chassis: "Freightliner M2 106",
+          transmission: "Allison 3200 TRV automatic"
         },
         {
-          from: 2022,
+          from: 2021,
           to: 2023,
           engine: "Detroit DD8 7.7L Turbo Diesel",
           horsepower: 375,
@@ -31833,9 +31830,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2011": ["3300", "3500", "3700"],
         "2012": ["3300", "3500", "3700"],
         "2013": ["3500", "3700"],
-        "2014": ["3500", "3700"],
-        "2015": ["3500", "3700"],
-        "2016": ["3500", "3700"]
+        "2014": ["3500", "3700"]
       },
       lengthRange: [
         33,
