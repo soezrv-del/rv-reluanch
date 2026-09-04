@@ -1,8 +1,9 @@
 /**
  * Server-side lender catalog for GET /api/lenders.
  * Self-contained (no import cycle with rvCal).
- * Curated estimates — not live offers. Live CU rates (when RATEAPI_API_KEY
- * is set) are wired in rateApiLenders.ts and fall back here.
+ * Curated estimates — not live offers. RATEAPI_MODE=live (plus a key) uses
+ * RateAPI in rateApiLenders.ts and falls back here. simulate / off never
+ * call RateAPI.
  *
  * Credit-aware: big RV loans need stronger scores at many banks.
  */
@@ -285,7 +286,50 @@ export type LendersLookupQuery = {
   zip?: string;
 };
 
-export type LenderRateSource = "curated" | "rateapi";
+export type LenderRateSource = "curated" | "rateapi" | "simulate";
+
+/** Client-side pause so simulate mode feels like a lookup. */
+export const SIMULATE_LOOKUP_MS = 650;
+
+export const SIMULATE_SOURCE_LINE =
+  "Simulated live lookup (sample CU-style rates) — preview / demo, not live RateAPI.";
+
+export const SIMULATE_BADGE_LABEL = "Preview / demo rates — not live RateAPI";
+
+export function parseLenderRateSource(raw: unknown): LenderRateSource {
+  if (raw === "rateapi" || raw === "simulate" || raw === "curated") return raw;
+  return "curated";
+}
+
+export function formatLenderAsOf(raw: string): string {
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return raw;
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+/** Footer / badge copy. Live CU wording only when source is actually rateapi. */
+export function lendersSourceLine(
+  meta: { source: LenderRateSource; asOf: string; state: string | null } | null,
+): string {
+  const asOf = meta?.asOf ? formatLenderAsOf(meta.asOf) : "";
+  if (meta?.source === "rateapi") {
+    const where = meta.state ? ` in ${meta.state}` : "";
+    return asOf
+      ? `Live credit-union RV rates${where} as of ${asOf}. Published CU rates — membership and credit still apply.`
+      : `Live credit-union RV rates${where}. Published CU rates — membership and credit still apply.`;
+  }
+  if (meta?.source === "simulate") {
+    return SIMULATE_SOURCE_LINE;
+  }
+  return asOf
+    ? `Curated estimates as of ${asOf} — not live offers.`
+    : "Curated estimates — not live offers.";
+}
 
 export type LendersLookupResponse = {
   source: LenderRateSource;
@@ -411,5 +455,24 @@ export function buildLendersResponse(
       state,
     },
     lenders: sorted,
+  };
+}
+
+/**
+ * Same curated catalog + ZIP/state query, labeled as a simulated live lookup.
+ * Never claims RateAPI or live CU rates.
+ */
+export function buildSimulateLendersResponse(
+  query: LendersLookupQuery,
+): LendersLookupResponse {
+  const curated = buildLendersResponse(query);
+  const stateBit = curated.query.state
+    ? ` ZIP maps to ${curated.query.state}.`
+    : "";
+  return {
+    ...curated,
+    source: "simulate",
+    disclaimer:
+      `Simulated live lookup using sample CU-style catalog rates.${stateBit} Preview / demo only — not live RateAPI quotes. Not a loan offer or prequalification. Always confirm with the lender.`,
   };
 }

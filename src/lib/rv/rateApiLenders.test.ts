@@ -12,6 +12,7 @@ import {
   parseRateApiPayload,
   pickPreferredRow,
   rateApiCacheKey,
+  readRateApiMode,
   resolveLendersResponse,
   rowApr,
   snapPreferredTerm,
@@ -115,12 +116,21 @@ test("buildRateApiResponse sets source rateapi and asOf", () => {
   assert.match(body.disclaimer, /RateAPI/);
 });
 
-test("resolveLendersResponse stays curated when key is absent", async () => {
+test("readRateApiMode defaults to simulate and accepts live/off", () => {
+  assert.equal(readRateApiMode({}), "simulate");
+  assert.equal(readRateApiMode({ RATEAPI_MODE: "  LIVE " }), "live");
+  assert.equal(readRateApiMode({ RATEAPI_MODE: "off" }), "off");
+  assert.equal(readRateApiMode({ RATEAPI_MODE: "simulate" }), "simulate");
+  assert.equal(readRateApiMode({ RATEAPI_MODE: "nope" }), "simulate");
+});
+
+test("resolveLendersResponse stays curated when live and key is absent", async () => {
   clearRateApiCache();
   let calls = 0;
   const body = await resolveLendersResponse(
     { amount: 40_000, termMonths: 120, zip: "78701" },
     {
+      mode: "live",
       apiKey: null,
       fetchImpl: async () => {
         calls += 1;
@@ -139,6 +149,7 @@ test("resolveLendersResponse stays curated without a ZIP/state", async () => {
   const body = await resolveLendersResponse(
     { amount: 40_000, termMonths: 120 },
     {
+      mode: "live",
       apiKey: "test-key",
       fetchImpl: async () => {
         calls += 1;
@@ -154,7 +165,7 @@ test("resolveLendersResponse maps a live RateAPI payload", async () => {
   clearRateApiCache();
   const body = await resolveLendersResponse(
     { amount: 80_000, termMonths: 180, credit: "excellent", zip: "78701" },
-    { apiKey: "test-key", fetchImpl: jsonFetch(mockPayload()) },
+    { mode: "live", apiKey: "test-key", fetchImpl: jsonFetch(mockPayload()) },
   );
   assert.equal(body.source, "rateapi");
   assert.equal(body.lenders[0]?.estimatedApr, 6.49);
@@ -178,11 +189,11 @@ test("resolveLendersResponse caches RateAPI and does not refetch", async () => {
   };
   const first = await resolveLendersResponse(
     { amount: 80_000, termMonths: 180, zip: "78701" },
-    { apiKey: "test-key", fetchImpl },
+    { mode: "live", apiKey: "test-key", fetchImpl },
   );
   const second = await resolveLendersResponse(
     { amount: 120_000, termMonths: 175, credit: "fair", zip: "78704" },
-    { apiKey: "test-key", fetchImpl, now: Date.now() + 60_000 },
+    { mode: "live", apiKey: "test-key", fetchImpl, now: Date.now() + 60_000 },
   );
   assert.equal(first.source, "rateapi");
   assert.equal(second.source, "rateapi");
@@ -194,7 +205,7 @@ test("resolveLendersResponse falls back to curated on RateAPI failure", async ()
   clearRateApiCache();
   const body = await resolveLendersResponse(
     { amount: 40_000, termMonths: 120, zip: "10001" },
-    { apiKey: "test-key", fetchImpl: jsonFetch({ error: "nope" }, 429) },
+    { mode: "live", apiKey: "test-key", fetchImpl: jsonFetch({ error: "nope" }, 429) },
   );
   assert.equal(body.source, "curated");
   assert.equal(body.query.state, "NY");
@@ -210,16 +221,106 @@ test("resolveLendersResponse falls back when RateAPI returns no rows", async () 
   clearRateApiCache();
   const body = await resolveLendersResponse(
     { amount: 40_000, termMonths: 120, zip: "90210" },
-    { apiKey: "test-key", fetchImpl: jsonFetch({ rates: [], as_of: null }) },
+    { mode: "live", apiKey: "test-key", fetchImpl: jsonFetch({ rates: [], as_of: null }) },
   );
   assert.equal(body.source, "curated");
   assert.equal(body.query.state, "CA");
+});
+
+test("simulate mode never calls RateAPI even when a key is present", async () => {
+  clearRateApiCache();
+  let calls = 0;
+  const body = await resolveLendersResponse(
+    { amount: 80_000, termMonths: 180, credit: "excellent", zip: "78701" },
+    {
+      mode: "simulate",
+      apiKey: "test-key",
+      env: { RATEAPI_API_KEY: "test-key", RATEAPI_MODE: "simulate" },
+      fetchImpl: async () => {
+        calls += 1;
+        throw new Error("should not fetch RateAPI in simulate");
+      },
+    },
+  );
+  assert.equal(body.source, "simulate");
+  assert.equal(calls, 0);
+  assert.equal(body.query.amount, 80_000);
+  assert.equal(body.query.termMonths, 180);
+  assert.equal(body.query.credit, "excellent");
+  assert.equal(body.query.zip, "78701");
+  assert.equal(body.query.state, "TX");
+  assert.match(body.disclaimer, /not live RateAPI/i);
+  assert.doesNotMatch(body.disclaimer, /Live credit-union/);
+  const curated = buildLendersResponse({
+    amount: 80_000,
+    termMonths: 180,
+    credit: "excellent",
+    zip: "78701",
+  });
+  assert.equal(body.lenders.length, curated.lenders.length);
+  assert.equal(body.lenders[0]?.estimatedApr, curated.lenders[0]?.estimatedApr);
+});
+
+test("unset RATEAPI_MODE defaults to simulate and skips RateAPI", async () => {
+  clearRateApiCache();
+  let calls = 0;
+  const body = await resolveLendersResponse(
+    { amount: 40_000, termMonths: 120, zip: "10001" },
+    {
+      env: { RATEAPI_API_KEY: "test-key" },
+      fetchImpl: async () => {
+        calls += 1;
+        throw new Error("should not fetch when mode unset");
+      },
+    },
+  );
+  assert.equal(body.source, "simulate");
+  assert.equal(calls, 0);
+});
+
+test("off mode is curated only and never calls RateAPI", async () => {
+  clearRateApiCache();
+  let calls = 0;
+  const body = await resolveLendersResponse(
+    { amount: 40_000, termMonths: 120, zip: "90210" },
+    {
+      mode: "off",
+      apiKey: "test-key",
+      env: { RATEAPI_API_KEY: "test-key", RATEAPI_MODE: "off" },
+      fetchImpl: async () => {
+        calls += 1;
+        throw new Error("should not fetch RateAPI in off");
+      },
+    },
+  );
+  assert.equal(body.source, "curated");
+  assert.equal(calls, 0);
+  assert.match(body.disclaimer, /not live/i);
+  assert.doesNotMatch(body.disclaimer, /Simulated live lookup/);
+  assert.doesNotMatch(body.disclaimer, /RateAPI/);
 });
 
 test("parseRateApiPayload rejects junk", () => {
   assert.equal(parseRateApiPayload(null), null);
   assert.equal(parseRateApiPayload({ nope: true }), null);
   assert.ok(parseRateApiPayload({ rates: [] }));
+});
+
+test("RATEAPI_MODE=live from env still calls RateAPI when a key is set", async () => {
+  clearRateApiCache();
+  let calls = 0;
+  const body = await resolveLendersResponse(
+    { amount: 80_000, termMonths: 180, zip: "78701" },
+    {
+      env: { RATEAPI_MODE: "live", RATEAPI_API_KEY: "test-key" },
+      fetchImpl: async () => {
+        calls += 1;
+        return { ok: true, status: 200, json: async () => mockPayload() };
+      },
+    },
+  );
+  assert.equal(body.source, "rateapi");
+  assert.equal(calls, 1);
 });
 
 test("source files never hardcode a RateAPI key", () => {

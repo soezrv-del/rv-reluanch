@@ -1,8 +1,15 @@
 /**
  * RateAPI live credit-union RV rates behind GET /api/lenders.
  *
- * Free tier is 20 requests / 30 days — cache hard by state (not by amount,
- * credit, or exact term). Preferred term is applied locally after the fetch.
+ * RATEAPI_MODE:
+ *   live      — current RateAPI path when RATEAPI_API_KEY is set; else curated
+ *   simulate  — curated catalog shaped like a live lookup; NEVER calls RateAPI
+ *   off       — curated only (`source: "curated"`), no pretend-live copy
+ *
+ * Unset defaults to simulate so Production can demo without burning the
+ * free 20 requests / 30 days. Set live only when ready to spend quota.
+ *
+ * Live path caches hard by state (not by amount, credit, or exact term).
  * Missing key, no ZIP/state, errors, 429s, and empty payloads fall back to
  * the curated catalog. Never invent live rates.
  */
@@ -10,6 +17,7 @@
 import {
   badgeLowestApr,
   buildLendersResponse,
+  buildSimulateLendersResponse,
   monthlyPayment,
   normalizeLendersQuery,
   sortLenderQuotes,
@@ -18,6 +26,8 @@ import {
   type LendersLookupQuery,
   type LendersLookupResponse,
 } from "./lendersCatalog.ts";
+
+export type RateApiMode = "live" | "simulate" | "off";
 
 export const RATEAPI_BASE = "https://api.rateapi.dev";
 export const RATEAPI_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -101,6 +111,14 @@ export function readRateApiKey(
 ): string | null {
   const key = env.RATEAPI_API_KEY?.trim();
   return key ? key : null;
+}
+
+export function readRateApiMode(
+  env: NodeJS.ProcessEnv = process.env,
+): RateApiMode {
+  const raw = env.RATEAPI_MODE?.trim().toLowerCase();
+  if (raw === "live" || raw === "simulate" || raw === "off") return raw;
+  return "simulate";
 }
 
 function cacheGet(key: string, now: number): CacheEntry | null {
@@ -418,20 +436,39 @@ async function loadRateApiPayload(opts: {
 
 export type ResolveLendersOptions = {
   apiKey?: string | null;
+  /** Overrides RATEAPI_MODE. Unset env defaults to simulate. */
+  mode?: RateApiMode;
   fetchImpl?: RateApiFetch;
   now?: number;
   env?: NodeJS.ProcessEnv;
+  /** Optional pause in simulate mode (0 in tests). Client also delays. */
+  simulateDelayMs?: number;
 };
+
+function sleep(ms: number): Promise<void> {
+  if (ms <= 0) return Promise.resolve();
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export async function resolveLendersResponse(
   query: LendersLookupQuery,
   options: ResolveLendersOptions = {},
 ): Promise<LendersLookupResponse> {
+  const env = options.env ?? process.env;
+  const mode = options.mode ?? readRateApiMode(env);
   const curated = () => buildLendersResponse(query);
+
+  if (mode === "off") return curated();
+
+  if (mode === "simulate") {
+    await sleep(options.simulateDelayMs ?? 0);
+    return buildSimulateLendersResponse(query);
+  }
+
   const apiKey =
     options.apiKey !== undefined
       ? options.apiKey?.trim() || null
-      : readRateApiKey(options.env ?? process.env);
+      : readRateApiKey(env);
   if (!apiKey) return curated();
 
   const normalized = normalizeLendersQuery(query);

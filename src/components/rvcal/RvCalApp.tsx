@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type {
-  Lender,
-  LenderQuote,
-  LenderRateSource,
+import {
+  LENDERS_CATALOG,
+  SIMULATE_BADGE_LABEL,
+  SIMULATE_LOOKUP_MS,
+  lendersSourceLine,
+  parseLenderRateSource,
+  type Lender,
+  type LenderQuote,
+  type LenderRateSource,
 } from "@/lib/rv/lendersCatalog";
 import {
   ArrowLeftRight,
@@ -45,7 +50,6 @@ import {
   type CreditBand,
   type StateTaxInfo,
 } from "@/lib/rv/rvCal";
-import { LENDERS_CATALOG } from "@/lib/rv/lendersCatalog";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
@@ -139,32 +143,6 @@ function clampTermYears(n: number) {
   return Math.min(40, Math.max(5, Math.round(n)));
 }
 
-function formatLenderAsOf(raw: string): string {
-  if (!raw) return "";
-  const d = new Date(raw);
-  if (Number.isNaN(d.getTime())) return raw;
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function lendersSourceLine(
-  meta: { source: LenderRateSource; asOf: string; state: string | null } | null,
-): string {
-  const asOf = meta?.asOf ? formatLenderAsOf(meta.asOf) : "";
-  if (meta?.source === "rateapi") {
-    const where = meta.state ? ` in ${meta.state}` : "";
-    return asOf
-      ? `Live credit-union RV rates${where} as of ${asOf}. Published CU rates — membership and credit still apply.`
-      : `Live credit-union RV rates${where}. Published CU rates — membership and credit still apply.`;
-  }
-  return asOf
-    ? `Curated estimates as of ${asOf} — not live offers.`
-    : "Curated estimates — not live offers.";
-}
-
 export function RvCalApp() {
   const [price, setPrice] = useState(0);
   const [priceFocused, setPriceFocused] = useState(false);
@@ -205,11 +183,13 @@ export function RvCalApp() {
     asOf: string;
     state: string | null;
   } | null>(null);
+  const [lendersLookingUp, setLendersLookingUp] = useState(false);
   const [coachLabel, setCoachLabel] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const lendersSectionRef = useRef<HTMLElement | null>(null);
   const lastSeedToken = useRef(0);
   const lastCoachKey = useRef("");
+  const lendersSourceRef = useRef<LenderRateSource | null>(null);
   const nav = useShellNavOptional();
   useEffect(() => {
     const v = validateUsZip(zip);
@@ -455,6 +435,9 @@ export function RvCalApp() {
   ]);
   useEffect(() => {
     const ctrl = new AbortController();
+    const timeoutBox: { id?: ReturnType<typeof setTimeout> } = {};
+    const started = Date.now();
+    if (lendersSourceRef.current === "simulate") setLendersLookingUp(true);
     const qs = new URLSearchParams({
       amount: String(Math.round(loan.amountFinanced)),
       termMonths: String(termMonths),
@@ -462,21 +445,47 @@ export function RvCalApp() {
       zip
     });
     fetch(`/api/lenders?${qs}`, { signal: ctrl.signal }).then((r) => r.json()).then((j) => {
-      if (j.lenders?.length) {
-        setApiLenders(j.lenders);
-        const source: LenderRateSource =
-          j.source === "rateapi" ? "rateapi" : "curated";
-        setLendersMeta({
-          source,
-          asOf: typeof j.asOf === "string" ? j.asOf : "",
-          state:
-            typeof j.query?.state === "string" && j.query.state
-              ? j.query.state
-              : null,
-        });
+      if (ctrl.signal.aborted) return;
+      if (!j.lenders?.length) {
+        setLendersLookingUp(false);
+        return;
       }
-    }).catch(() => {});
-    return () => ctrl.abort();
+      const source = parseLenderRateSource(j.source);
+      const meta = {
+        source,
+        asOf: typeof j.asOf === "string" ? j.asOf : "",
+        state:
+          typeof j.query?.state === "string" && j.query.state
+            ? j.query.state
+            : null,
+      };
+      const apply = () => {
+        if (ctrl.signal.aborted) return;
+        lendersSourceRef.current = source;
+        setApiLenders(j.lenders);
+        setLendersMeta(meta);
+        setLendersLookingUp(false);
+      };
+      if (source === "simulate") {
+        lendersSourceRef.current = source;
+        setLendersMeta(meta);
+        setLendersLookingUp(true);
+        const remain = Math.max(0, SIMULATE_LOOKUP_MS - (Date.now() - started));
+        timeoutBox.id = setTimeout(() => {
+          if (ctrl.signal.aborted) return;
+          setApiLenders(j.lenders);
+          setLendersLookingUp(false);
+        }, remain);
+        return;
+      }
+      apply();
+    }).catch(() => {
+      if (!ctrl.signal.aborted) setLendersLookingUp(false);
+    });
+    return () => {
+      ctrl.abort();
+      if (timeoutBox.id) clearTimeout(timeoutBox.id);
+    };
   }, [
     loan.amountFinanced,
     termMonths,
@@ -1157,9 +1166,16 @@ export function RvCalApp() {
                   <Star className="size-2.5 fill-gold-bright text-gold-bright" />
                   Exclusive
                 </span>
+                {lendersMeta?.source === "simulate" ? (
+                  <span className="inline-flex items-center rounded-full border border-white/25 bg-black/40 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-white/85">
+                    Preview
+                  </span>
+                ) : null}
               </span>
               <span className="mt-0.5 block text-[10px] font-medium leading-snug text-white/80">
-                Your broker edge — match the deal, then let them choose you
+                {lendersMeta?.source === "simulate"
+                  ? SIMULATE_BADGE_LABEL
+                  : "Your broker edge — match the deal, then let them choose you"}
               </span>
             </span>
           </span>
@@ -1182,7 +1198,23 @@ export function RvCalApp() {
                 {termMonths}
                  mo. Estimates to start the conversation — you broker the best real offer.
               </p>
-              {lendersList.map((L: Lender | LenderQuote, i: number) => {
+              {lendersLookingUp ? (
+                <div
+                  className="exclusive-lender-row flex items-center gap-3 rounded-xl border border-gold/25 bg-black/35 px-3 py-3"
+                  role="status"
+                  aria-live="polite"
+                  style={{ ["--lender-delay" as string]: "0ms" }}
+                >
+                  <span
+                    className="size-4 shrink-0 animate-spin rounded-full border-2 border-gold/25 border-t-gold-bright"
+                    aria-hidden
+                  />
+                  <p className="text-[13px] font-semibold text-white">
+                    Looking up rates…
+                  </p>
+                </div>
+              ) : (
+                lendersList.map((L: Lender | LenderQuote, i: number) => {
                       const quote = "estimatedApr" in L ? L : null;
                       const eligible = quote ? quote.eligible !== false : true;
                       const reason = quote?.ineligibilityReason;
@@ -1222,7 +1254,8 @@ export function RvCalApp() {
   <ExternalLink className="size-3.5 shrink-0 text-white" />
                   </a>
                 );
-              })}
+              })
+              )}
               <p className="px-0.5 text-[10px] leading-relaxed text-white/70">
                 {lendersSourceLine(lendersMeta)}
               </p>
