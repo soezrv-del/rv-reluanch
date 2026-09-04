@@ -31246,7 +31246,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Dynamax: {
     "Isata 3": {
       type: "Class C",
-      floorplans: ["24FW", "24CB", "26DS", "24CB SD", "28SS"],
+      floorplans: ["24FW", "24CB", "26DS", "24CB SD", "24RW", "24FWSFX", "24SSSFXM", "24TW"],
       floorplansByYear: {
         "2016": ["24FW", "24CB", "26DS"],
         "2017": ["24FW", "24CB", "26DS"],
@@ -31254,11 +31254,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2019": ["24FW", "24CB", "24CB SD", "26DS"],
         "2020": ["24FW", "24CB", "24CB SD", "26DS"],
         "2021": ["24FW", "24CB", "24CB SD", "26DS"],
-        "2022": ["24FW", "24CB", "24CB SD", "26DS", "28SS"],
-        "2023": ["24FW", "24CB", "24CB SD", "26DS", "28SS"],
-        "2024": ["24FW", "24CB", "24CB SD", "26DS", "28SS"],
-        "2025": ["24FW", "24CB", "24CB SD", "26DS", "28SS"],
-        "2026": ["24FW", "24CB", "24CB SD", "26DS", "28SS"]
+        "2022": ["24FW", "24RW"],
+        "2023": ["24FW", "24RW"],
+        "2024": ["24FW", "24RW", "24FWSFX"],
+        "2025": ["24FW", "24RW", "24FWSFX", "24SSSFXM"],
+        "2026": ["24FW", "24TW", "24RW", "24FWSFX", "24SSSFXM"]
       },
       lengthRange: [
         24,
@@ -31276,23 +31276,24 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       engine: "Mercedes-Benz 2.0L I4 turbodiesel",
       horsepower: 211,
-      torqueLbFt: 400,
+      torqueLbFt: 332,
       chassis: "Mercedes-Benz Sprinter",
+      transmission: "9G-TRONIC PLUS automatic",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.45,
       image: RV_CARD_IMAGE,
       towingCapacity: 5000,
       freshWater: 35,
-      grayWater: 25,
-      blackWater: 25,
+      grayWater: 32,
+      blackWater: 32,
       generator: "None (solar option) / optional",
-      awningLength: 11,
-      ceilingHeight: 78,
+      awningLength: 16,
+      ceilingHeight: 81,
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2016,
-      description: "Dynamax Isata 3 — premium Ford Transit Class C with full-body paint and residential interior. Lighter/driveable alternative to E-450 Class C and Sprinter competitors.",
+      description: "Dynamax Isata 3 — premium Mercedes-Benz Sprinter Class C with full-body paint and residential interior. Compact diesel alternative to E-450 Class C coaches.",
       powertrainByYear: [
         {
           from: 2016,
@@ -31303,26 +31304,39 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2026,
+          to: 2021,
           engine: "Ford Transit 3.5L EcoBoost V6 ~310HP",
           horsepower: 310,
           torqueLbFt: 400,
           chassis: "Ford Transit"
+        },
+        {
+          from: 2022,
+          to: 2024,
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel",
+          horsepower: 188,
+          torqueLbFt: 325,
+          chassis: "Mercedes-Benz Sprinter",
+          transmission: "7G-TRONIC PLUS automatic"
+        },
+        {
+          from: 2025,
+          to: 2026,
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          horsepower: 211,
+          torqueLbFt: 332,
+          chassis: "Mercedes-Benz Sprinter",
+          transmission: "9G-TRONIC PLUS automatic"
         }
       ]
     },
     "Isata 4": {
       type: "Class C",
-      floorplans: ["24FW", "26DS", "26RK", "28SS", "28DS"],
+      floorplans: ["24FW", "26DS", "26RK"],
       floorplansByYear: {
         "2019": ["24FW", "26DS", "26RK"],
         "2020": ["24FW", "26DS", "26RK"],
-        "2021": ["24FW", "26DS", "26RK"],
-        "2022": ["24FW", "26DS", "26RK", "28SS"],
-        "2023": ["24FW", "26DS", "26RK", "28SS"],
-        "2024": ["24FW", "26DS", "26RK", "28SS"],
-        "2025": ["24FW", "26DS", "28SS", "28DS"],
-        "2026": ["24FW", "26DS", "28SS", "28DS"]
+        "2021": ["24FW", "26DS", "26RK"]
       },
       lengthRange: [
         24,
@@ -31355,7 +31369,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2019,
-      description: "Dynamax Isata 4 — Sprinter diesel Class C between Isata 3 (Transit) and Isata 5. Premium Dynamax paint and interior.",
+      yearEnd: 2021,
+      description: "Dynamax Isata 4 — Sprinter diesel Class C between Isata 3 and Isata 5. Premium Dynamax paint and interior. OEM line ends after MY2021 (no dated 2022–2026 brochure).",
       powertrainByYear: [
         {
           from: 2019,
@@ -31363,19 +31378,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
           horsepower: 188,
           chassis: "Mercedes Sprinter"
-        },
-        {
-          from: 2022,
-          to: 2026,
-          engine: "Mercedes-Benz 2.0L I4 turbodiesel ~208HP",
-          horsepower: 208,
-          chassis: "Mercedes Sprinter"
         }
       ]
     },
     "Isata 5": {
       type: "Class C",
-      floorplans: ["24FW", "26CB", "26DS", "27BH", "28SS", "30FW"],
+      floorplans: ["24FW", "26CB", "26DS", "27BH", "28SS", "30FW", "34DS"],
       floorplansByYear: {
         "2014": ["24FW", "26CB", "26DS"],
         "2015": ["24FW", "26CB", "26DS"],
@@ -31385,11 +31393,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2019": ["24FW", "26CB", "26DS", "27BH"],
         "2020": ["26CB", "26DS", "27BH", "28SS"],
         "2021": ["26CB", "26DS", "27BH", "28SS"],
-        "2022": ["26CB", "26DS", "27BH", "28SS"],
-        "2023": ["26CB", "26DS", "27BH", "28SS", "30FW"],
-        "2024": ["26CB", "26DS", "27BH", "28SS", "30FW"],
-        "2025": ["26CB", "26DS", "27BH", "28SS", "30FW"],
-        "2026": ["26CB", "26DS", "27BH", "28SS", "30FW"]
+        "2022": ["28SS", "30FW", "34DS"],
+        "2023": ["28SS", "30FW", "34DS"],
+        "2024": ["28SS", "30FW", "34DS"],
+        "2025": ["28SS", "30FW", "34DS"],
+        "2026": ["28SS", "30FW"]
       },
       lengthRange: [
         24,
@@ -31405,24 +31413,27 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         149900,
         239000
       ],
-      engine: "Mercedes-Benz Sprinter turbodiesel",
-      horsepower: 188,
-      chassis: "Mercedes-Benz Sprinter",
+      engine: "Cummins 6.7L I6 turbodiesel",
+      horsepower: 360,
+      torqueLbFt: 800,
+      chassis: "Ram 5500 SLT (factory 4WD)",
+      transmission: "AISIN HD 6-speed automatic",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.6,
       image: RV_CARD_IMAGE,
-      towingCapacity: 5000,
-      freshWater: 35,
-      grayWater: 25,
-      blackWater: 25,
+      towingCapacity: 10000,
+      freshWater: 78,
+      grayWater: 45,
+      blackWater: 45,
+      fuelCapacityGal: 52,
       generator: "Onan 2800–3600W Diesel",
-      awningLength: 11,
-      ceilingHeight: 78,
+      awningLength: 16,
+      ceilingHeight: 82,
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2014,
-      description: "Dynamax Isata 5 — flagship Sprinter diesel Class C. Full-body paint, high interior finish, strong used demand vs generic Sprinter C coaches.",
+      description: "Dynamax Isata 5 — flagship Class C on Ram 5500 SLT 4x4 with Cummins 6.7L. Full-body paint, high interior finish, 28SS and 30FW current lineup.",
       powertrainByYear: [
         {
           from: 2014,
@@ -31434,15 +31445,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         {
           from: 2022,
           to: 2026,
-          engine: "Mercedes-Benz 2.0L I4 turbodiesel ~208HP",
-          horsepower: 208,
-          chassis: "Mercedes Sprinter"
+          engine: "Cummins 6.7L I6 turbodiesel",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Ram 5500 SLT (factory 4WD)",
+          transmission: "AISIN HD 6-speed automatic"
         }
       ]
     },
     Europa: {
       type: "Super C",
-      floorplans: ["31SS", "31RB", "33E", "34SS"],
+      floorplans: ["31SS", "31RB", "33E", "34SS", "32KD"],
       floorplansByYear: {
         "2010": ["31SS", "31RB"],
         "2011": ["31SS", "31RB"],
@@ -31456,11 +31469,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2019": ["31SS", "31RB", "33E", "34SS"],
         "2020": ["31SS", "31RB", "33E", "34SS"],
         "2021": ["31SS", "31RB", "33E", "34SS"],
-        "2022": ["31SS", "31RB", "34SS"],
-        "2023": ["31SS", "31RB", "34SS"],
-        "2024": ["31SS", "31RB", "34SS"],
-        "2025": ["31SS", "34SS", "33E"],
-        "2026": ["31SS", "34SS", "33E"]
+        "2022": ["31SS"],
+        "2023": ["31SS", "32KD"],
+        "2024": ["31SS", "32KD"],
+        "2025": ["31SS", "32KD", "34SS"],
+        "2026": ["31SS", "32KD", "34SS"]
       },
       lengthRange: [
         31,
@@ -31476,27 +31489,27 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         199900,
         329000
       ],
-      engine: "Ford 6.7L Power Stroke Diesel",
-      horsepower: 330,
-      torqueLbFt: 950,
-      chassis: "Ford F-550 Super Duty",
-      transmission: "TorqShift automatic",
+      engine: "Cummins B 6.7L Turbo Diesel",
+      horsepower: 360,
+      torqueLbFt: 800,
+      chassis: "Freightliner M2 106B Plus",
+      transmission: "Allison 3200 TRV automatic",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.6,
       image: RV_CARD_IMAGE,
-      towingCapacity: 15000,
+      towingCapacity: 12000,
       freshWater: 75,
       grayWater: 42,
       blackWater: 42,
-      fuelCapacityGal: 68,
+      fuelCapacityGal: 100,
       generator: "Onan 5.5–6kW Diesel QD",
       awningLength: 17,
       ceilingHeight: 83,
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2010,
-      description: "Dynamax Europa — mid Super C on Ford F-550 with full-body paint and residential Dynamax interior. ~15k lb tow rating typical for F-550 Super C class.",
+      description: "Dynamax Europa — mid Super C on Freightliner M2 106B with Cummins B 6.7 and residential Dynamax interior.",
       powertrainByYear: [
         {
           from: 2010,
@@ -31507,18 +31520,36 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2026,
+          to: 2021,
           engine: "Ford 6.7L Power Stroke Diesel ~330HP",
           horsepower: 330,
           torqueLbFt: 950,
           chassis: "Ford F-550 Super Duty",
           transmission: "TorqShift automatic"
+        },
+        {
+          from: 2022,
+          to: 2024,
+          engine: "Cummins B 6.7L Turbo Diesel",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Freightliner M2 106B",
+          transmission: "Allison 3200 TRV automatic"
+        },
+        {
+          from: 2025,
+          to: 2026,
+          engine: "Cummins B 6.7L Turbo Diesel",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Freightliner M2 106B Plus",
+          transmission: "Allison 3200 TRV automatic"
         }
       ]
     },
     Force: {
       type: "Super C",
-      floorplans: ["36FK", "37RB", "36BHK", "38TSK", "40TS"],
+      floorplans: ["36FK", "37RB", "36BHK", "38TSK", "40TS", "34KD", "37BD", "37TS"],
       floorplansByYear: {
         "2012": ["36FK", "37RB"],
         "2013": ["36FK", "37RB"],
@@ -31530,11 +31561,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2019": ["36FK", "37RB", "36BHK", "38TSK"],
         "2020": ["36FK", "37RB", "36BHK", "38TSK"],
         "2021": ["36FK", "37RB", "38TSK", "40TS"],
-        "2022": ["36FK", "37RB", "38TSK", "40TS"],
-        "2023": ["36FK", "37RB", "38TSK", "40TS"],
-        "2024": ["36FK", "38TSK", "37RB", "40TS"],
-        "2025": ["36FK", "38TSK", "37RB", "40TS"],
-        "2026": ["36FK", "38TSK", "37RB", "40TS"]
+        "2022": ["34KD", "37BD", "37TS"]
       },
       lengthRange: [
         36,
@@ -31550,27 +31577,27 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         249900,
         399000
       ],
-      engine: "Ford 6.7L Power Stroke Diesel",
-      horsepower: 330,
-      torqueLbFt: 950,
-      chassis: "Ford F-600 Super Duty",
-      transmission: "TorqShift automatic",
+      engine: "Detroit DD8 7.7L Turbo Diesel",
+      horsepower: 375,
+      torqueLbFt: 1050,
+      chassis: "Freightliner M2 106",
+      transmission: "Allison 3200 TRV automatic",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.7,
       image: RV_CARD_IMAGE,
-      towingCapacity: 22000,
+      towingCapacity: 20000,
       freshWater: 90,
       grayWater: 50,
       blackWater: 50,
-      fuelCapacityGal: 68,
+      fuelCapacityGal: 100,
       generator: "Onan 8kW Diesel QD",
       awningLength: 19,
       ceilingHeight: 84,
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2012,
-      description: "Dynamax Force — flagship Super C on heavy Ford Super Duty (F-600 class). Strong tow ratings, multi-slide living, full-body paint. Between premium Super C and mid diesel Class A.",
+      description: "Dynamax Force — Super C on Freightliner M2 106 with Detroit DD8. Last dated OEM brochure is MY2022 (34KD / 37BD / 37TS); later years omitted pending a sourced card.",
       powertrainByYear: [
         {
           from: 2012,
@@ -31581,18 +31608,27 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2017,
-          to: 2026,
+          to: 2021,
           engine: "Ford 6.7L Power Stroke Diesel ~330HP",
           horsepower: 330,
           torqueLbFt: 950,
           chassis: "Ford F-600 Super Duty",
           transmission: "TorqShift automatic"
+        },
+        {
+          from: 2022,
+          to: 2022,
+          engine: "Detroit DD8 7.7L Turbo Diesel",
+          horsepower: 375,
+          torqueLbFt: 1050,
+          chassis: "Freightliner M2 106",
+          transmission: "Allison 3200 TRV automatic"
         }
       ]
     },
     DynaQuest: {
       type: "Super C",
-      floorplans: ["XL 3400", "XL 3700", "XL 3800", "XL 3900"],
+      floorplans: ["XL 3400", "XL 3700", "XL 3800", "XL 3900", "3400KD", "3700BD", "37RB", "3801TS", "3200KD", "3700RB"],
       floorplansByYear: {
         "2008": ["XL 3400", "XL 3700"],
         "2009": ["XL 3400", "XL 3700"],
@@ -31608,11 +31644,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2019": ["XL 3700", "XL 3800", "XL 3900"],
         "2020": ["XL 3700", "XL 3800", "XL 3900"],
         "2021": ["XL 3700", "XL 3800", "XL 3900"],
-        "2022": ["XL 3700", "XL 3800", "XL 3900"],
-        "2023": ["XL 3700", "XL 3800", "XL 3900"],
-        "2024": ["XL 3700", "XL 3800", "XL 3900"],
-        "2025": ["XL 3700", "XL 3800", "XL 3900"],
-        "2026": ["XL 3700", "XL 3800", "XL 3900"]
+        "2022": ["3400KD", "3700BD", "37RB", "3801TS"],
+        "2023": ["3400KD", "3700BD", "37RB", "3801TS"],
+        "2024": ["3200KD", "3400KD", "3700BD", "3700RB", "3801TS"],
+        "2025": ["3200KD", "3400KD", "3700BD", "3700RB", "3801TS"],
+        "2026": ["3200KD", "3400KD", "3700BD", "3700RB", "3801TS"]
       },
       lengthRange: [
         34,
@@ -31628,10 +31664,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         299900,
         459000
       ],
-      engine: "Ford 6.7L Power Stroke Diesel",
-      horsepower: 330,
-      torqueLbFt: 950,
-      chassis: "Ford F-600 / Super C platform",
+      engine: "Cummins L9 Turbo Diesel",
+      horsepower: 450,
+      torqueLbFt: 1250,
+      chassis: "Freightliner M2 112 Plus",
+      transmission: "Allison 3200 TRV automatic",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.75,
@@ -31640,14 +31677,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       freshWater: 90,
       grayWater: 50,
       blackWater: 50,
-      fuelCapacityGal: 68,
+      fuelCapacityGal: 100,
       generator: "Onan 8kW Diesel QD",
       awningLength: 16,
       ceilingHeight: 84,
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2008,
-      description: "Dynamax DynaQuest — luxury Super C with high-end residential interiors and strong tow capacity. XL floorplan family (3400–3900).",
+      description: "Dynamax DynaQuest XL — luxury Super C on Freightliner M2 112 with Cummins L9. OEM codes are 3200KD / 3400KD / 3700BD / 3700RB / 3801TS (printed 37RB on MY2022–2023 cards).",
       powertrainByYear: [
         {
           from: 2008,
@@ -31658,17 +31695,44 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2026,
+          to: 2021,
           engine: "Ford 6.7L Power Stroke Diesel ~330HP",
           horsepower: 330,
           torqueLbFt: 950,
           chassis: "Ford F-600 Super C"
+        },
+        {
+          from: 2022,
+          to: 2022,
+          engine: "Cummins 8.9L ISL Turbo Diesel",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner M2 112",
+          transmission: "Allison 3200 TRV automatic"
+        },
+        {
+          from: 2023,
+          to: 2023,
+          engine: "Cummins L9 Turbo Diesel",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner M2 112",
+          transmission: "Allison 3200 TRV automatic"
+        },
+        {
+          from: 2024,
+          to: 2026,
+          engine: "Cummins L9 Turbo Diesel",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner M2 112 Plus",
+          transmission: "Allison 3200 TRV automatic"
         }
       ]
     },
     DX3: {
       type: "Super C",
-      floorplans: ["34KD", "37KD", "37TS"],
+      floorplans: ["34KD", "37KD", "37TS", "37BD", "37RB", "32KD"],
       floorplansByYear: {
         "2015": ["34KD", "37KD"],
         "2016": ["34KD", "37KD"],
@@ -31677,11 +31741,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2019": ["34KD", "37KD", "37TS"],
         "2020": ["34KD", "37KD", "37TS"],
         "2021": ["34KD", "37KD", "37TS"],
-        "2022": ["34KD", "37KD", "37TS"],
-        "2023": ["34KD", "37KD", "37TS"],
-        "2024": ["34KD", "37TS"],
-        "2025": ["34KD", "37TS"],
-        "2026": ["34KD", "37TS"]
+        "2022": ["34KD", "37BD", "37RB", "37TS"],
+        "2023": ["34KD", "37BD", "37RB", "37TS"],
+        "2024": ["32KD", "34KD", "37BD", "37RB", "37TS"],
+        "2025": ["32KD", "34KD", "37BD", "37RB", "37TS"],
+        "2026": ["32KD", "34KD", "37BD", "37RB", "37TS"]
       },
       lengthRange: [
         34,
@@ -31697,31 +31761,62 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         219900,
         349000
       ],
-      engine: "Cummins L9 360HP",
+      engine: "Cummins L9 Turbo Diesel",
       horsepower: 360,
+      torqueLbFt: 1150,
       chassis: "Freightliner M2 106 Plus",
+      transmission: "Allison 3200 TRV automatic",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.55,
       image: RV_CARD_IMAGE,
-      towingCapacity: 15000,
+      towingCapacity: 20000,
       freshWater: 80,
       grayWater: 45,
       blackWater: 45,
+      fuelCapacityGal: 100,
       generator: "Onan 5.5–8kW Diesel",
       awningLength: 16,
       ceilingHeight: 83,
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2015,
-      description: "Dynamax DX3 — Super C package in the Dynamax family (confirm year availability). Power Stroke diesel Super C living with Dynamax finish level.",
+      description: "Dynamax DX3 — Freightliner M2 Super C with Cummins L9 (Detroit DD8 on MY2022–early 2024). Dynamax finish level; current OEM plans 32KD / 34KD / 37BD / 37RB / 37TS.",
       powertrainByYear: [
         {
           from: 2015,
-          to: 2026,
+          to: 2021,
           engine: "Ford 6.7L Power Stroke Diesel",
           horsepower: 330,
           chassis: "Ford F-550 Super C"
+        },
+        {
+          from: 2022,
+          to: 2023,
+          engine: "Detroit DD8 7.7L Turbo Diesel",
+          horsepower: 375,
+          torqueLbFt: 1050,
+          chassis: "Freightliner M2 106",
+          transmission: "Allison 3200 TRV automatic"
+        },
+        {
+          from: 2024,
+          to: 2024,
+          engine: "Detroit DD8 7.7L Turbo Diesel or Cummins L9 (from DXC006075)",
+          horsepower: 360,
+          torqueLbFt: 1150,
+          chassis: "Freightliner M2 106 Plus",
+          transmission: "Allison 3200 TRV automatic",
+          notes: "MY2024 brochure: DD8 375hp/1,050 or Cummins L9 360hp/1,150 starting at DXC006075"
+        },
+        {
+          from: 2025,
+          to: 2026,
+          engine: "Cummins L9 Turbo Diesel",
+          horsepower: 360,
+          torqueLbFt: 1150,
+          chassis: "Freightliner M2 106 Plus",
+          transmission: "Allison 3200 TRV automatic"
         }
       ]
     },

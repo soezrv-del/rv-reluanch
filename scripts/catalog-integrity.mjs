@@ -3105,6 +3105,165 @@ function main() {
     }
   }
 
+  // Dynamax MY2022–2026 OEM floorplan lock (dated RVUSA library / OEM year-folder PDFs).
+  // Unquoted `Dynamax: {` so the quoted-make parser misses it — slice raw like Newmar.
+  {
+    const d0 = src.indexOf("\n  Dynamax: {");
+    const d1 = src.indexOf('\n  "Storyteller Overland": {');
+    if (d0 < 0 || d1 < d0) {
+      fail("Dynamax block not found between Dynamax: and Storyteller Overland:");
+    } else {
+      const dx = src.slice(d0, d1);
+      const slice = (a, b) => {
+        const i = dx.indexOf(`    ${a}: {`) >= 0 ? dx.indexOf(`    ${a}: {`) : dx.indexOf(`    "${a}": {`);
+        const j = dx.indexOf(`    ${b}: {`) >= 0 ? dx.indexOf(`    ${b}: {`) : dx.indexOf(`    "${b}": {`);
+        if (i < 0) return "";
+        return j > i ? dx.slice(i, j) : dx.slice(i);
+      };
+      const yearPlans = (block, year) => {
+        const m = block.match(new RegExp(`"${year}":\\s*\\[([\\s\\S]*?)\\]`));
+        if (!m) return null;
+        return [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
+      };
+      const expectYearPlans = (block, year, expected, label) => {
+        const got = yearPlans(block, year);
+        if (!got) {
+          fail(`${label}: missing floorplansByYear ${year}`);
+          return;
+        }
+        if (JSON.stringify(got) !== JSON.stringify(expected)) {
+          fail(`${label}: ${year} expected [${expected.join(", ")}] got [${got.join(", ")}]`);
+        }
+      };
+      const yearHasCode = (block, year, code) => {
+        const got = yearPlans(block, year);
+        return got != null && got.includes(code);
+      };
+
+      for (const required of [
+        "Isata 3",
+        "Isata 4",
+        "Isata 5",
+        "Europa",
+        "Force",
+        "DynaQuest",
+        "DX3",
+        "Grand Sport",
+      ]) {
+        const hit = dx.includes(`    ${required}: {`) || dx.includes(`    "${required}": {`);
+        if (!hit) fail(`Dynamax missing required series: ${required}`);
+      }
+      if (dx.includes("Isata 6") || dx.includes("Europa S") || dx.includes("Dynamax Isata (FR)")) {
+        fail("Dynamax block must not absorb Isata 6 / Europa S / Forest River Dynamax Isata (FR)");
+      }
+
+      const i3 = slice("Isata 3", "Isata 4");
+      expectYearPlans(i3, "2022", ["24FW", "24RW"], "Dynamax|Isata 3 MY22 OEM plans");
+      expectYearPlans(i3, "2023", ["24FW", "24RW"], "Dynamax|Isata 3 MY23 OEM plans");
+      expectYearPlans(i3, "2024", ["24FW", "24RW", "24FWSFX"], "Dynamax|Isata 3 MY24 OEM plans");
+      expectYearPlans(i3, "2025", ["24FW", "24RW", "24FWSFX", "24SSSFXM"], "Dynamax|Isata 3 MY25 OEM plans");
+      expectYearPlans(i3, "2026", ["24FW", "24TW", "24RW", "24FWSFX", "24SSSFXM"], "Dynamax|Isata 3 MY26 OEM plans");
+      for (const y of ["2022", "2023", "2024", "2025", "2026"]) {
+        if (yearHasCode(i3, y, "24CB") || yearHasCode(i3, y, "26DS") || yearHasCode(i3, y, "28SS") || yearHasCode(i3, y, "24CB SD")) {
+          fail(`Dynamax|Isata 3 must not keep leftover 24CB / 26DS / 28SS / 24CB SD on ${y}`);
+        }
+      }
+      if (/"2027":/.test(i3)) fail("Dynamax|Isata 3 must not invent 2027 this slice");
+
+      const i4 = slice("Isata 4", "Isata 5");
+      if (/"2022":/.test(i4) || /"2023":/.test(i4) || /"2024":/.test(i4) || /"2025":/.test(i4) || /"2026":/.test(i4) || /"2027":/.test(i4)) {
+        fail("Dynamax|Isata 4 must omit 2022–2027 (no dated brochure; RVUSA years end 2020)");
+      }
+      if (!/yearEnd:\s*2021/.test(i4)) {
+        fail("Dynamax|Isata 4 yearEnd must be 2021 (last remaining pre-lock fby year)");
+      }
+
+      const i5 = slice("Isata 5", "Europa");
+      expectYearPlans(i5, "2022", ["28SS", "30FW", "34DS"], "Dynamax|Isata 5 MY22 OEM plans");
+      expectYearPlans(i5, "2023", ["28SS", "30FW", "34DS"], "Dynamax|Isata 5 MY23 OEM plans");
+      expectYearPlans(i5, "2024", ["28SS", "30FW", "34DS"], "Dynamax|Isata 5 MY24 OEM plans");
+      expectYearPlans(i5, "2025", ["28SS", "30FW", "34DS"], "Dynamax|Isata 5 MY25 OEM plans");
+      expectYearPlans(i5, "2026", ["28SS", "30FW"], "Dynamax|Isata 5 MY26 OEM plans");
+      for (const y of ["2022", "2023", "2024", "2025", "2026"]) {
+        if (yearHasCode(i5, y, "26CB") || yearHasCode(i5, y, "26DS") || yearHasCode(i5, y, "27BH") || yearHasCode(i5, y, "24FW")) {
+          fail(`Dynamax|Isata 5 must not keep leftover 24FW / 26CB / 26DS / 27BH on ${y}`);
+        }
+      }
+      if (yearHasCode(i5, "2026", "34DS") || yearHasCode(i5, "2026", "28SSEX") || yearHasCode(i5, "2026", "30FWEX")) {
+        fail("Dynamax|Isata 5 MY26 must not keep 34DS or Extreme package codes 28SSEX / 30FWEX");
+      }
+      if (/"2027":/.test(i5)) fail("Dynamax|Isata 5 must not invent 2027 this slice");
+
+      const eu = slice("Europa", "Force");
+      expectYearPlans(eu, "2022", ["31SS"], "Dynamax|Europa MY22 OEM plans");
+      expectYearPlans(eu, "2023", ["31SS", "32KD"], "Dynamax|Europa MY23 OEM plans");
+      expectYearPlans(eu, "2024", ["31SS", "32KD"], "Dynamax|Europa MY24 OEM plans");
+      expectYearPlans(eu, "2025", ["31SS", "32KD", "34SS"], "Dynamax|Europa MY25 OEM plans");
+      expectYearPlans(eu, "2026", ["31SS", "32KD", "34SS"], "Dynamax|Europa MY26 OEM plans");
+      for (const y of ["2022", "2023", "2024", "2025", "2026"]) {
+        if (yearHasCode(eu, y, "31RB") || yearHasCode(eu, y, "33E")) {
+          fail(`Dynamax|Europa must not keep leftover 31RB / 33E on ${y}`);
+        }
+      }
+      if (yearHasCode(eu, "2022", "34SS") || yearHasCode(eu, "2023", "34SS") || yearHasCode(eu, "2024", "34SS")) {
+        fail("Dynamax|Europa must not back-date 34SS onto 2022–2024");
+      }
+      if (/"2027":/.test(eu)) fail("Dynamax|Europa must not invent 2027 this slice");
+
+      const fo = slice("Force", "DynaQuest");
+      expectYearPlans(fo, "2022", ["34KD", "37BD", "37TS"], "Dynamax|Force MY22 OEM plans");
+      if (/"2023":/.test(fo) || /"2024":/.test(fo) || /"2025":/.test(fo) || /"2026":/.test(fo) || /"2027":/.test(fo)) {
+        fail("Dynamax|Force must omit 2023–2027 (no dated brochure after MY2022)");
+      }
+      if (yearHasCode(fo, "2022", "36FK") || yearHasCode(fo, "2022", "38TSK") || yearHasCode(fo, "2022", "40TS") || yearHasCode(fo, "2022", "37RB")) {
+        fail("Dynamax|Force MY22 must not keep leftover 36FK / 37RB / 38TSK / 40TS");
+      }
+
+      const dq = slice("DynaQuest", "DX3");
+      expectYearPlans(dq, "2022", ["3400KD", "3700BD", "37RB", "3801TS"], "Dynamax|DynaQuest MY22 OEM plans");
+      expectYearPlans(dq, "2023", ["3400KD", "3700BD", "37RB", "3801TS"], "Dynamax|DynaQuest MY23 OEM plans");
+      expectYearPlans(dq, "2024", ["3200KD", "3400KD", "3700BD", "3700RB", "3801TS"], "Dynamax|DynaQuest MY24 OEM plans");
+      expectYearPlans(dq, "2025", ["3200KD", "3400KD", "3700BD", "3700RB", "3801TS"], "Dynamax|DynaQuest MY25 OEM plans");
+      expectYearPlans(dq, "2026", ["3200KD", "3400KD", "3700BD", "3700RB", "3801TS"], "Dynamax|DynaQuest MY26 OEM plans");
+      for (const y of ["2022", "2023", "2024", "2025", "2026"]) {
+        if (yearHasCode(dq, y, "XL 3400") || yearHasCode(dq, y, "XL 3700") || yearHasCode(dq, y, "XL 3800") || yearHasCode(dq, y, "XL 3900")) {
+          fail(`Dynamax|DynaQuest must not keep leftover XL 3400/3700/3800/3900 labels on ${y}`);
+        }
+      }
+      if (yearHasCode(dq, "2022", "3700RB") || yearHasCode(dq, "2023", "3700RB")) {
+        fail("Dynamax|DynaQuest must keep printed 37RB on 2022–2023 (do not rename to 3700RB)");
+      }
+      if (yearHasCode(dq, "2024", "37RB") || yearHasCode(dq, "2025", "37RB") || yearHasCode(dq, "2026", "37RB")) {
+        fail("Dynamax|DynaQuest MY24–26 spec table is 3700RB, not 37RB");
+      }
+      if (/"2027":/.test(dq)) fail("Dynamax|DynaQuest must not invent 2027 this slice");
+
+      const d3 = slice("DX3", "Grand Sport");
+      expectYearPlans(d3, "2022", ["34KD", "37BD", "37RB", "37TS"], "Dynamax|DX3 MY22 OEM plans");
+      expectYearPlans(d3, "2023", ["34KD", "37BD", "37RB", "37TS"], "Dynamax|DX3 MY23 OEM plans");
+      expectYearPlans(d3, "2024", ["32KD", "34KD", "37BD", "37RB", "37TS"], "Dynamax|DX3 MY24 OEM plans");
+      expectYearPlans(d3, "2025", ["32KD", "34KD", "37BD", "37RB", "37TS"], "Dynamax|DX3 MY25 OEM plans");
+      expectYearPlans(d3, "2026", ["32KD", "34KD", "37BD", "37RB", "37TS"], "Dynamax|DX3 MY26 OEM plans");
+      for (const y of ["2022", "2023", "2024", "2025", "2026"]) {
+        if (yearHasCode(d3, y, "37KD")) {
+          fail(`Dynamax|DX3 must not keep leftover 37KD on ${y}`);
+        }
+      }
+      if (yearHasCode(d3, "2022", "32KD") || yearHasCode(d3, "2023", "32KD")) {
+        fail("Dynamax|DX3 must not back-date 32KD onto 2022–2023");
+      }
+      if (/"2027":/.test(d3)) fail("Dynamax|DX3 must not invent 2027 this slice");
+
+      const gs = slice("Grand Sport", "ZZZ");
+      if (/"2022":/.test(gs) || /"2023":/.test(gs) || /"2024":/.test(gs) || /"2025":/.test(gs) || /"2026":/.test(gs) || /"2027":/.test(gs)) {
+        fail("Dynamax|Grand Sport classic key must stay yearEnd 2016 — do not attach revived 2026 Grand Sport rows");
+      }
+      if (!/yearEnd:\s*2016/.test(gs)) {
+        fail("Dynamax|Grand Sport yearEnd must remain 2016");
+      }
+    }
+  }
+
   // Fleetwood must include core modern lines (regression gate after prior skip)
   if (makes.has("Fleetwood")) {
     for (const required of ["Fortis", "Frontier", "Southwind", "Discovery", "Bounder", "Altitude", "Insight", "Palisade", "Flex"]) {
