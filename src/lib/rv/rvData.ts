@@ -31381,7 +31381,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Isata 5": {
       type: "Class C",
-      floorplans: ["24FW", "26CB", "26DS", "27BH", "35DB", "36DS", "28SS", "30FW", "34DS"],
+      floorplans: ["24FW", "26CB", "26DS", "35DB", "36DS", "28SS", "30FW", "34DS"],
       floorplansByYear: {
         "2014": ["24FW", "26CB", "26DS"],
         "2016": ["35DB", "36DS"],
@@ -31539,7 +31539,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Force: {
       type: "Super C",
-      floorplans: ["36FK", "37RB", "36BHK", "38TSK", "40TS", "35DS", "37BH", "37TS", "37FD", "34KD", "37BD", "34KDHD", "37BHHD", "37TSHD", "37BDHD"],
+      floorplans: ["36FK", "37RB", "35DS", "37BH", "37TS", "37FD", "34KD", "37BD", "34KDHD", "37BHHD", "37TSHD", "37BDHD"],
       floorplansByYear: {
         "2012": ["36FK", "37RB"],
         "2013": ["36FK", "37RB"],
@@ -31830,9 +31830,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2011": ["3300", "3500", "3700"],
         "2012": ["3300", "3500", "3700"],
         "2013": ["3500", "3700"],
-        "2014": ["3500", "3700"],
-        "2015": [],
-        "2016": []
+        "2014": ["3500", "3700"]
       },
       lengthRange: [
         33,

@@ -3320,10 +3320,13 @@ function main() {
       if (/"2027":/.test(d3)) fail("Dynamax|DX3 must not invent 2027 this slice");
 
       const gs = slice("Grand Sport", "ZZZ");
-      const gs15 = yearPlans(gs, "2015");
-      const gs16 = yearPlans(gs, "2016");
-      if (!gs15 || gs15.length !== 0) fail("Dynamax|Grand Sport MY2015 must be empty (no dated brochure)");
-      if (!gs16 || gs16.length !== 0) fail("Dynamax|Grand Sport MY2016 must be empty (no dated brochure)");
+      if (/"2015":/.test(gs) || /"2016":/.test(gs)) {
+        const gs15 = yearPlans(gs, "2015") || [];
+        const gs16 = yearPlans(gs, "2016") || [];
+        if (gs15.length || gs16.length) {
+          fail("Dynamax|Grand Sport MY2015–2016 must be omitted or empty (no dated brochure)");
+        }
+      }
       if (/"2022":/.test(gs) || /"2023":/.test(gs) || /"2024":/.test(gs) || /"2025":/.test(gs) || /"2026":/.test(gs) || /"2027":/.test(gs)) {
         fail("Dynamax|Grand Sport classic key must stay yearEnd 2016 — do not attach revived 2026 Grand Sport rows");
       }
