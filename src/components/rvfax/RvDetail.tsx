@@ -620,7 +620,11 @@ export function RvDetail({
     setInvLoading(false);
     if (!res.ok) {
       setInvListings([]);
-      setInvError(res.error || "Inventory search unavailable");
+      setInvError(
+        res.code === "missing_key"
+          ? "MarketCheck not configured on server"
+          : res.error || "Inventory search unavailable",
+      );
       return;
     }
     setInvListings(res.listings || []);
@@ -1102,9 +1106,9 @@ export function RvDetail({
                 onChange={(e) => setInvRadius(Number(e.target.value))}
                 className="rounded-full border border-white/15 bg-black/30 px-3 py-1.5 text-[12px] font-semibold text-white"
               >
+                <option value={25}>25 mi</option>
                 <option value={50}>50 mi</option>
                 <option value={100}>100 mi</option>
-                <option value={250}>250 mi</option>
               </select>
               <button
                 type="button"
