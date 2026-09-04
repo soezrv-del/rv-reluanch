@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Lender, LenderQuote } from "@/lib/rv/lendersCatalog";
+import type {
+  Lender,
+  LenderQuote,
+  LenderRateSource,
+} from "@/lib/rv/lendersCatalog";
 import {
   ArrowLeftRight,
   Building2,
@@ -135,6 +139,32 @@ function clampTermYears(n: number) {
   return Math.min(40, Math.max(5, Math.round(n)));
 }
 
+function formatLenderAsOf(raw: string): string {
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return raw;
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function lendersSourceLine(
+  meta: { source: LenderRateSource; asOf: string; state: string | null } | null,
+): string {
+  const asOf = meta?.asOf ? formatLenderAsOf(meta.asOf) : "";
+  if (meta?.source === "rateapi") {
+    const where = meta.state ? ` in ${meta.state}` : "";
+    return asOf
+      ? `Live credit-union RV rates${where} as of ${asOf}. Published CU rates — membership and credit still apply.`
+      : `Live credit-union RV rates${where}. Published CU rates — membership and credit still apply.`;
+  }
+  return asOf
+    ? `Curated estimates as of ${asOf} — not live offers.`
+    : "Curated estimates — not live offers.";
+}
+
 export function RvCalApp() {
   const [price, setPrice] = useState(0);
   const [priceFocused, setPriceFocused] = useState(false);
@@ -170,6 +200,11 @@ export function RvCalApp() {
   const [financeDriven, setFinanceDriven] = useState(false);
   const [lastTargetFinance, setLastTargetFinance] = useState(0);
   const [apiLenders, setApiLenders] = useState<LenderQuote[] | null>(null);
+  const [lendersMeta, setLendersMeta] = useState<{
+    source: LenderRateSource;
+    asOf: string;
+    state: string | null;
+  } | null>(null);
   const [coachLabel, setCoachLabel] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const lendersSectionRef = useRef<HTMLElement | null>(null);
@@ -427,7 +462,19 @@ export function RvCalApp() {
       zip
     });
     fetch(`/api/lenders?${qs}`, { signal: ctrl.signal }).then((r) => r.json()).then((j) => {
-      if (j.lenders?.length) setApiLenders(j.lenders);
+      if (j.lenders?.length) {
+        setApiLenders(j.lenders);
+        const source: LenderRateSource =
+          j.source === "rateapi" ? "rateapi" : "curated";
+        setLendersMeta({
+          source,
+          asOf: typeof j.asOf === "string" ? j.asOf : "",
+          state:
+            typeof j.query?.state === "string" && j.query.state
+              ? j.query.state
+              : null,
+        });
+      }
     }).catch(() => {});
     return () => ctrl.abort();
   }, [
@@ -1141,7 +1188,12 @@ export function RvCalApp() {
                       const reason = quote?.ineligibilityReason;
                       const monthly = quote ? quote.estimatedMonthly : lenderMonthly(L, loan.amountFinanced, termMonths, credit);
                       const aprShow = quote ? quote.estimatedApr : lenderApr(L, credit);
-                      const range = `${L.aprLow}%–${L.aprHigh}%`;
+                      const range =
+                        quote?.rateNote
+                          ? quote.rateNote
+                          : L.aprLow === L.aprHigh
+                            ? `${formatPct(L.aprLow)} published`
+                            : `${L.aprLow}%–${L.aprHigh}%`;
                       const delayMs = (i + 1) * 1e3;
                       return (
                   <a key={`${L.id}-${lenderRevealKey}`} href={L.url || "#"} target="_blank" rel="noopener noreferrer" className={cn("exclusive-lender-row flex items-center gap-3 rounded-xl border px-3 py-2.5 transition", eligible ? "border-gold/25 bg-black/35 hover:border-gold/45 hover:bg-gold/10" : "border-white/10 bg-black/20 opacity-70")} style={{ ["--lender-delay" as string]: `${delayMs}ms` }}>
@@ -1171,6 +1223,9 @@ export function RvCalApp() {
                   </a>
                 );
               })}
+              <p className="px-0.5 text-[10px] leading-relaxed text-white/70">
+                {lendersSourceLine(lendersMeta)}
+              </p>
             </div>
           </div>
         </div>

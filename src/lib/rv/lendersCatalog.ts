@@ -1,10 +1,13 @@
 /**
  * Server-side lender catalog for GET /api/lenders.
  * Self-contained (no import cycle with rvCal).
- * Curated estimates — not live offers.
+ * Curated estimates — not live offers. Live CU rates (when RATEAPI_API_KEY
+ * is set) are wired in rateApiLenders.ts and fall back here.
  *
  * Credit-aware: big RV loans need stronger scores at many banks.
  */
+
+import { stateFromZip } from "./zipTax.ts";
 
 export type CreditBand = "fair" | "good" | "very-good" | "excellent";
 
@@ -211,7 +214,7 @@ function lenderApr(lender: Lender, band: CreditBand): number {
   );
 }
 
-function monthlyPayment(
+export function monthlyPayment(
   principal: number,
   aprPercent: number,
   termMonths: number,
@@ -269,6 +272,10 @@ export type LenderQuote = Lender & {
   termUsed: number;
   eligible: boolean;
   ineligibilityReason?: string;
+  /** Row-level RateAPI `as_of` when this quote came from a live CU rate. */
+  asOf?: string;
+  /** Honest label when credit/membership floors are unknown. */
+  rateNote?: string;
 };
 
 export type LendersLookupQuery = {
@@ -278,17 +285,30 @@ export type LendersLookupQuery = {
   zip?: string;
 };
 
+export type LenderRateSource = "curated" | "rateapi";
+
 export type LendersLookupResponse = {
-  source: "curated";
+  source: LenderRateSource;
   asOf: string;
   disclaimer: string;
+  /** True when the RateAPI payload was served from the server cache. */
+  cached?: boolean;
   query: {
     amount: number | null;
     termMonths: number | null;
     credit: CreditBand;
     zip: string | null;
+    state: string | null;
   };
   lenders: LenderQuote[];
+};
+
+export type NormalizedLendersQuery = {
+  amount: number | null;
+  termMonths: number | null;
+  credit: CreditBand;
+  zip: string | null;
+  state: string | null;
 };
 
 const CREDIT_BANDS: CreditBand[] = [
@@ -305,9 +325,9 @@ export function parseCreditBand(raw: string | null): CreditBand {
   return "excellent";
 }
 
-export function buildLendersResponse(
+export function normalizeLendersQuery(
   query: LendersLookupQuery,
-): LendersLookupResponse {
+): NormalizedLendersQuery {
   const amount =
     query.amount != null && Number.isFinite(query.amount) && query.amount > 0
       ? query.amount
@@ -320,6 +340,38 @@ export function buildLendersResponse(
       : null;
   const credit = query.credit ?? "excellent";
   const zip = query.zip?.replace(/\D/g, "").slice(0, 5) || null;
+  const state = zip ? stateFromZip(zip)?.abbr ?? null : null;
+  return { amount, termMonths, credit, zip, state };
+}
+
+/** Eligible first, then lowest APR, then lowest monthly. */
+export function sortLenderQuotes(quotes: LenderQuote[]): LenderQuote[] {
+  return [...quotes].sort((a, b) => {
+    if (a.eligible !== b.eligible) return a.eligible ? -1 : 1;
+    if (a.estimatedApr !== b.estimatedApr) return a.estimatedApr - b.estimatedApr;
+    const am = a.estimatedMonthly ?? 1e12;
+    const bm = b.estimatedMonthly ?? 1e12;
+    return am - bm;
+  });
+}
+
+export function badgeLowestApr(quotes: LenderQuote[]): LenderQuote[] {
+  const firstOk = quotes.find((l) => l.eligible);
+  return quotes.map((l) => ({
+    ...l,
+    badge:
+      firstOk && l.id === firstOk.id
+        ? ("best" as const)
+        : l.badge === "best"
+          ? ("high" as const)
+          : l.badge,
+  }));
+}
+
+export function buildLendersResponse(
+  query: LendersLookupQuery,
+): LendersLookupResponse {
+  const { amount, termMonths, credit, zip, state } = normalizeLendersQuery(query);
 
   const lenders: LenderQuote[] = LENDERS_CATALOG.map((lender) => {
     const termUsed = termMonths
@@ -341,36 +393,23 @@ export function buildLendersResponse(
       eligible: gate.eligible,
       ineligibilityReason: gate.reason,
     };
-  }).sort((a, b) => {
-    if (a.eligible !== b.eligible) return a.eligible ? -1 : 1;
-    const am = a.estimatedMonthly ?? 1e12;
-    const bm = b.estimatedMonthly ?? 1e12;
-    if (am !== bm) return am - bm;
-    return a.estimatedApr - b.estimatedApr;
   });
 
-  const firstOk = lenders.find((l) => l.eligible);
-  const withBadges = lenders.map((l) => ({
-    ...l,
-    badge:
-      firstOk && l.id === firstOk.id
-        ? ("best" as const)
-        : l.badge === "best"
-          ? ("high" as const)
-          : l.badge,
-  }));
+  const sorted = badgeLowestApr(sortLenderQuotes(lenders));
+  const stateBit = state ? ` ZIP maps to ${state}.` : "";
 
   return {
     source: "curated",
     asOf: LENDERS_CATALOG_AS_OF,
     disclaimer:
-      "Estimated rates from a curated catalog — not live offers or prequalification. Lender eligibility reflects typical credit-score floors and loan-size caps for large RVs. Always confirm with the lender.",
+      `Estimated rates from a curated catalog — not live offers or prequalification.${stateBit} Lender eligibility reflects typical credit-score floors and loan-size caps for large RVs. Always confirm with the lender.`,
     query: {
       amount,
       termMonths,
       credit,
       zip,
+      state,
     },
-    lenders: withBadges,
+    lenders: sorted,
   };
 }
