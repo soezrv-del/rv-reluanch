@@ -15002,7 +15002,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Rockwood Signature": {
       type: "Fifth Wheel",
-      floorplans: ["8289WS", "8311WS", "8329SS", "8335BSS", "8280WS", "8290BS", "8299BS", "8311BH", "8324BS", "8337WS"],
+      floorplans: ["290SFK", "401SFB", "402SFL", "405SBH", "R281RK", "R282RK", "R301RKS", "R331RL", "R361RLS", "R371RK", "R372RL", "R374DBH"],
       floorplansByYear: {
         "2010": ["8289WS", "8311WS", "8329SS"],
         "2011": ["8289WS", "8311WS", "8329SS"],
@@ -15020,7 +15020,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["8289WS", "8311WS", "8335BSS"],
         "2024": ["8289WS", "8311WS", "8335BSS"],
         "2025": ["8289WS", "8311WS", "8335BSS"],
-        "2026": ["8289WS", "8311WS", "8335BSS", "8280WS", "8290BS", "8299BS", "8311BH", "8324BS", "8337WS"]
+        "2026": ["290SFK", "401SFB", "402SFL", "405SBH", "R281RK", "R282RK", "R301RKS", "R331RL", "R361RLS", "R371RK", "R372RL", "R374DBH"],
       },
       lengthRange: [
         21,
@@ -15038,6 +15038,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "king pin",
       recalls: 0,
       rating: 4.35,
       image: RV_CARD_IMAGE,
@@ -15055,7 +15056,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Columbus: {
       type: "Fifth Wheel",
-      floorplans: ["330RL", "377MBC", "383FB", "385BH", "286RK", "329DV", "340RLC", "376MB"],
+      floorplans: ["377DS", "379MBL", "383RLH", "384RKH", "388FKH", "389FLH"],
       floorplansByYear: {
         "2010": ["330RL", "377MBC", "383FB"],
         "2011": ["330RL", "377MBC", "383FB"],
@@ -15073,7 +15074,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["330RL", "377MBC", "383FB"],
         "2024": ["330RL", "377MBC", "383FB"],
         "2025": ["330RL", "377MBC", "383FB"],
-        "2026": ["330RL", "377MBC", "383FB", "286RK", "329DV", "340RLC", "376MB"]
+        "2026": ["377DS", "379MBL", "383RLH", "384RKH", "388FKH", "389FLH"]
       },
       lengthRange: [
         21,
@@ -15091,6 +15092,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "king pin",
       recalls: 0,
       rating: 4.35,
       image: RV_CARD_IMAGE,
@@ -15108,7 +15110,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Cardinal: {
       type: "Fifth Wheel",
-      floorplans: ["3450RL", "3825FL", "3950RL", "3456RL", "3250BKX", "3350BHX", "370BHLE", "380BHLE", "3850BKX", "4050BKX"],
+      floorplans: ["32LIVE", "33CHEF", "34CRIB", "35FL", "35FUN", "36MB", "37BEST", "402BEDS", "32CHILL", "35CRIB", "36FL", "36FUN", "37GALLEY", "38DEN", "41DUB"],
       floorplansByYear: {
         "2010": ["3450RL", "3825FL", "3950RL"],
         "2011": ["3450RL", "3825FL", "3950RL"],
@@ -15126,7 +15128,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["3450RL", "3825FL", "3950RL"],
         "2024": ["3450RL", "3825FL", "3950RL"],
         "2025": ["3450RL", "3825FL", "3950RL"],
-        "2026": ["3450RL", "3825FL", "3950RL", "3250BKX", "3350BHX", "370BHLE", "380BHLE", "3850BKX", "4050BKX"]
+        "2026": ["32LIVE", "33CHEF", "34CRIB", "35FL", "35FUN", "36MB", "37BEST", "402BEDS"],
+        "2027": ["32CHILL", "33CHEF", "35CRIB", "36FL", "36FUN", "37GALLEY", "38DEN", "41DUB"]
       },
       lengthRange: [
         21,
@@ -15144,6 +15147,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "king pin",
       recalls: 0,
       rating: 4.35,
       image: RV_CARD_IMAGE,
@@ -15161,7 +15165,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Cedar Creek": {
       type: "Fifth Wheel",
-      floorplans: ["34RL2", "36CK2", "38EL", "38FB2", "286RL", "293RLBS", "313BLOK", "345IKZ", "360RL", "38DBQ"],
+      floorplans: ["29RL", "361RL", "370FL", "381MUD", "383FB", "385RK", "38DB", "39RKB"],
       floorplansByYear: {
         "2010": ["34RL2", "36CK2", "38EL"],
         "2011": ["34RL2", "36CK2", "38EL"],
@@ -15179,7 +15183,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["34RL2", "36CK2", "38EL"],
         "2024": ["34RL2", "36CK2", "38EL"],
         "2025": ["34RL2", "36CK2", "38EL"],
-        "2026": ["34RL2", "36CK2", "38EL", "286RL", "293RLBS", "313BLOK", "345IKZ", "360RL", "38DBQ"]
+        "2026": ["29RL", "361RL", "370FL", "381MUD", "383FB", "385RK", "38DB", "39RKB"]
       },
       lengthRange: [
         21,
@@ -15197,6 +15201,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "king pin",
       recalls: 0,
       rating: 4.35,
       image: RV_CARD_IMAGE,
@@ -15214,7 +15219,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Sabre: {
       type: "Fifth Wheel",
-      floorplans: ["36BHQ", "38DBQ", "37FLH", "32BHT", "33BKS", "38FLH", "40FLP"],
+      floorplans: ["32GKS", "33RLP", "36DBB", "36EST", "36FLX", "37FLH", "37RVMILES", "38DBL", "38RVHUNTER"],
       floorplansByYear: {
         "2010": ["36BHQ", "38DBQ"],
         "2011": ["36BHQ", "38DBQ"],
@@ -15232,7 +15237,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["36BHQ", "38DBQ"],
         "2024": ["36BHQ", "38DBQ"],
         "2025": ["36BHQ", "38DBQ"],
-        "2026": ["36BHQ", "38DBQ", "32BHT", "33BKS", "38FLH", "40FLP"]
+        "2026": ["32GKS", "33RLP", "36DBB", "36EST", "36FLX", "37FLH", "37RVMILES", "38DBL", "38RVHUNTER"]
       },
       lengthRange: [
         21,
@@ -15250,6 +15255,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "king pin",
       recalls: 0,
       rating: 4.35,
       image: RV_CARD_IMAGE,
@@ -15267,7 +15273,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Cherokee Arctic Wolf": {
       type: "Fifth Wheel",
-      floorplans: ["255RRT", "27SGS", "285OPT", "287BH", "289PANO", "3250SUITE", "331BH", "3550WST", "3650SUITE", "3660SUITE", "3750SUITE", "3800DECK", "387ML", "38DST", "38LEAH", "3950SUITE", "250BH", "265DBH", "272SGB", "305ML6", "321BH", "323BH8", "331MK8", "340BH8", "350BH8", "380BH8"],
+      floorplans: ["27SGS", "285OPT", "287BH", "289PANO", "3250SUITE", "331BH", "3650SUITE", "3750SUITE", "3800DECK", "387ML", "38DST", "38LEAH.G", "3950SUITE"],
       floorplansByYear: {
         "2010": ["255RRT", "287BH", "3550WST"],
         "2011": ["255RRT", "287BH", "3550WST"],
@@ -15333,7 +15339,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "38LEAH",
           "3950SUITE"
         ],
-        "2026": ["27SGS", "285OPT", "287BH", "289PANO", "3250SUITE", "331BH", "3650SUITE", "3750SUITE", "3800DECK", "387ML", "38DST", "38LEAH", "3950SUITE", "250BH", "265DBH", "272SGB", "305ML6", "321BH", "323BH8", "331MK8", "340BH8", "350BH8", "380BH8"]
+        "2026": ["27SGS", "285OPT", "287BH", "289PANO", "3250SUITE", "331BH", "3650SUITE", "3750SUITE", "3800DECK", "387ML", "38DST", "38LEAH.G", "3950SUITE"]
       },
       lengthRange: [
         30,
@@ -15351,6 +15357,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "king pin",
       recalls: 0,
       rating: 4.35,
       image: RV_CARD_IMAGE,
