@@ -83,7 +83,7 @@ The iPhone app is a **native WebView shell** that loads your **live HTTPS site**
 2. Bundle ID = `com.markclass.rvfax` (or change in `capacitor.config.ts` **before** first listing)  
 3. Version `1.0.0`, Build `1`  
 4. **Product → Archive** → **Distribute App** → App Store Connect  
-5. [App Store Connect](https://appstoreconnect.apple.com) → **TestFlight** → wait for processing → invite testers  
+5. [App Store Connect](https://appstoreconnect.apple.com) → **App Information** → set **Privacy Policy URL** to `https://rv-reluanch.vercel.app/privacy.html` (do not use rvfox.app until that path returns 200) → **TestFlight** → wait for processing → invite testers  
 
 Mic permissions are already in `ios/App/App/Info.plist`.
 

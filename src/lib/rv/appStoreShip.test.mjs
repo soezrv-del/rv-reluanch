@@ -17,6 +17,26 @@ test("Premium legal links are same-origin privacy/support pages", () => {
   assert.match(more, /href="\/support\.html"/);
   assert.equal(more.includes("https://rvfox.app/privacy.html"), false);
   assert.equal(more.includes("https://rvfox.app/support.html"), false);
+  // Capacitor/TestFlight WebViews drop target=_blank; legal pages stay in-app.
+  const privacyAnchor = more.match(/<a\s+href="\/privacy\.html"[\s\S]*?>/);
+  const supportAnchor = more.match(/<a\s+href="\/support\.html"[\s\S]*?>/);
+  assert.ok(privacyAnchor, "privacy anchor");
+  assert.ok(supportAnchor, "support anchor");
+  assert.equal(privacyAnchor[0].includes("target="), false);
+  assert.equal(supportAnchor[0].includes("target="), false);
+});
+
+test("TestFlight docs list a working ASC Privacy Policy URL", () => {
+  const doc = read("TESTFLIGHT.md");
+  assert.match(doc, /Privacy Policy URL/);
+  assert.match(doc, /https:\/\/rv-reluanch\.vercel\.app\/privacy\.html/);
+  assert.match(doc, /https:\/\/rv-reluanch\.vercel\.app\/support\.html/);
+});
+
+test("privacy canonical points at the live Vercel URL until rvfox.app serves it", () => {
+  const html = read("public/privacy.html");
+  assert.match(html, /https:\/\/rv-reluanch\.vercel\.app\/privacy\.html/);
+  assert.equal(html.includes('href="https://rvfox.app/privacy.html"'), false);
 });
 
 test("Send Feedback opens mailto contact", () => {
