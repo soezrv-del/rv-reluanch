@@ -7,10 +7,12 @@ import { resolveLendersResponse } from "@/lib/rv/rateApiLenders";
  *
  * Query: amount, termMonths (or term), credit, zip
  *
- * When RATEAPI_API_KEY is set and ZIP maps to a state, returns live
- * credit-union RV rates from RateAPI (cached 24h by state+term).
- * Otherwise — and on any RateAPI failure — falls back to the curated
- * catalog. `source` is "rateapi" or "curated"; never invents live rates.
+ * RATEAPI_MODE=live | simulate | off (unset → simulate).
+ * live: RateAPI when RATEAPI_API_KEY is set and ZIP maps to a state;
+ *       otherwise curated. Cached 24h by state+term.
+ * simulate: curated catalog, source "simulate" — never calls RateAPI.
+ * off: curated only, source "curated".
+ * `source` is "rateapi" | "simulate" | "curated"; never invents live rates.
  */
 
 export const Route = createFileRoute("/api/lenders")({
