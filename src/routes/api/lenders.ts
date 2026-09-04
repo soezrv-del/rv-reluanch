@@ -1,17 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  buildLendersResponse,
-  parseCreditBand,
-} from "@/lib/rv/lendersCatalog";
+import { parseCreditBand } from "@/lib/rv/lendersCatalog";
+import { resolveLendersResponse } from "@/lib/rv/rateApiLenders";
 
 /**
  * GET /api/lenders
  *
- * Curated RV / personal-loan lender estimates for RvCal.
  * Query: amount, termMonths (or term), credit, zip
  *
- * Not a live rate feed — catalog maintained in lendersCatalog.ts.
- * Ready to swap for a partner API later without changing the client contract.
+ * When RATEAPI_API_KEY is set and ZIP maps to a state, returns live
+ * credit-union RV rates from RateAPI (cached 24h by state+term).
+ * Otherwise — and on any RateAPI failure — falls back to the curated
+ * catalog. `source` is "rateapi" or "curated"; never invents live rates.
  */
 
 export const Route = createFileRoute("/api/lenders")({
@@ -41,7 +40,7 @@ export const Route = createFileRoute("/api/lenders")({
           );
         }
 
-        const body = buildLendersResponse({
+        const body = await resolveLendersResponse({
           amount,
           termMonths,
           credit,
@@ -50,8 +49,10 @@ export const Route = createFileRoute("/api/lenders")({
 
         return Response.json(body, {
           headers: {
-            // Catalog can be CDN-cached briefly; bump when rates change often
-            "Cache-Control": "public, max-age=300, stale-while-revalidate=3600",
+            "Cache-Control":
+              body.source === "rateapi"
+                ? "public, max-age=3600, stale-while-revalidate=86400"
+                : "public, max-age=300, stale-while-revalidate=3600",
           },
         });
       },

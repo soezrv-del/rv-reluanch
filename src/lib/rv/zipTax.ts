@@ -861,6 +861,13 @@ const ZIP_RANGE_FALLBACK: Array<{ min: number; max: number; state: string; code:
 ];
 
 
+/** 2-letter state (or DC) from a US ZIP — same table as tax lookup. */
+export function stateFromZip(zip: string): { state: string; abbr: string } | null {
+  const info = lookupTaxByZip(zip);
+  if (!info) return null;
+  return { state: info.state, abbr: info.abbr };
+}
+
 export function lookupTaxByZip(zip: string): ZipTaxInfo | null {
   const digits = zip.replace(/\D/g, "");
   if (digits.length < 3) return null;
