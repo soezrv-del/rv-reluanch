@@ -147,6 +147,22 @@ export function buildShareMarketSection(
   return ["MARKET", ...rows];
 }
 
+/**
+ * Compact POWER lines for the shared kit — Facts/catalog SoT only.
+ * Never invent; omit the block when both HP and torque are missing
+ * or are placeholders ("—", N/A, Confirm brochure, varies).
+ */
+export function sharePowerLines(
+  horsepower?: string | null,
+  torque?: string | null,
+): string[] {
+  const rows: string[] = [];
+  if (isShareableValue(horsepower)) rows.push(String(horsepower).trim());
+  if (isShareableValue(torque)) rows.push(String(torque).trim());
+  if (!rows.length) return [];
+  return ["POWER", ...rows];
+}
+
 export function formatShareMarketText(
   market: ShareMarketAmounts,
   lines: ShareMarketLines | undefined,

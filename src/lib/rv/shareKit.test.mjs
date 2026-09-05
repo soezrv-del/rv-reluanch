@@ -65,6 +65,8 @@ test("share payload keeps a real card image file for Messages", () => {
   assert.match(src, /captureShareCardFile/);
   assert.match(src, /shareDataAttempts/);
   assert.match(src, /peekCachedShareImage/);
+  assert.match(src, /sharePowerLines/);
+  assert.match(src, /orderShareImageFiles/);
   assert.doesNotMatch(
     src,
     /if \(!canShareData\(nav\.canShare, data\)\) continue/,

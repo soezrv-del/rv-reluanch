@@ -61,6 +61,7 @@ import {
   shareOrCopy,
   sharePaymentAfterTermDown,
   sharePaymentPricePills,
+  sharePowerLines,
   type ShareInclude,
   type ShareMarket,
   type ShareMarketLineId,
@@ -513,6 +514,13 @@ export function RvShareApp({
     () => (selected ? brochureSpecGroups(selected) : []),
     [selected],
   );
+  const powerLines = useMemo(() => {
+    const g = specGroups.find((x) => x.id === "powertrain");
+    if (!g) return [];
+    const hp = g.rows.find((r) => r.label === "Horsepower")?.value;
+    const tq = g.rows.find((r) => r.label === "Torque")?.value;
+    return sharePowerLines(hp, tq);
+  }, [specGroups]);
   const summary = useMemo(
     () => (selected ? brochureSummary(selected) : { pitch: "", features: [] }),
     [selected],
@@ -562,21 +570,24 @@ export function RvShareApp({
     }
     void hapticLight();
     const slug = coachTitle(selected).replace(/[^\w.-]+/g, "_") || "RvFOX";
+    const heroUrl = lifestyleImageFor(
+      selected.data.type,
+      selected.data.fuelType,
+      selected.data.chassis,
+    );
+    const heroImg = peekCachedShareImage(heroUrl);
+    const heroFile = heroImg
+      ? new File([heroImg], `${slug}-hero.jpg`, {
+          type: heroImg.type || "image/jpeg",
+        })
+      : null;
     const extraFiles: File[] = [];
-    if (include.lifestyle) {
-      const url = lifestyleImageFor(
-        selected.data.type,
-        selected.data.fuelType,
-        selected.data.chassis,
+    if (include.lifestyle && heroImg) {
+      extraFiles.push(
+        new File([heroImg], `${slug}-lifestyle.jpg`, {
+          type: heroImg.type || "image/jpeg",
+        }),
       );
-      const img = peekCachedShareImage(url);
-      if (img) {
-        extraFiles.push(
-          new File([img], `${slug}-lifestyle.jpg`, {
-            type: img.type || "image/jpeg",
-          }),
-        );
-      }
     }
     const cardFile =
       cardFileRef.current ||
@@ -585,6 +596,7 @@ export function RvShareApp({
     const payload = buildShareKitPayload({
       title: coachTitle(selected),
       text: kitText,
+      heroFile,
       cardFile,
       extraFiles,
     });
@@ -783,6 +795,11 @@ export function RvShareApp({
                   {selected.floorplan ? (
                     <p className="text-[12px] text-white/85">
                       Floorplan {selected.floorplan}
+                    </p>
+                  ) : null}
+                  {powerLines.length ? (
+                    <p className="mt-1 text-[12px] font-semibold text-sky-100">
+                      {powerLines.filter((l) => l !== "POWER").join(" · ")}
                     </p>
                   ) : null}
                 </div>
@@ -1100,10 +1117,10 @@ export function RvShareApp({
                 <div
                   ref={shareCardRef}
                   data-report-signature="1"
-                  className="overflow-hidden rounded-[var(--radius-lg)] border border-white/20 bg-[#f4f8fc]"
+                  className="flex aspect-[16/9] flex-col overflow-hidden rounded-[var(--radius-lg)] border border-white/20 bg-[#f4f8fc]"
                 >
-                  <div className="h-1.5 bg-[#0b1b33]" />
-                  <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-4">
+                  <div className="h-1.5 shrink-0 bg-[#0b1b33]" />
+                  <div className="flex min-h-0 flex-1 flex-wrap items-center justify-between gap-4 px-5 py-6">
                     <div className="flex min-w-0 items-center gap-3.5">
                       <div
                         aria-hidden
@@ -1135,7 +1152,7 @@ export function RvShareApp({
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0b1b33] px-4 py-2.5 text-[10px] font-bold tracking-wide text-white/70">
+                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 bg-[#0b1b33] px-5 py-3 text-[10px] font-bold tracking-wide text-white/70">
                     <span>Confirm door sticker · PPI · lender</span>
                     <span className="text-sky-300">RvFOX · Powered by Grok</span>
                   </div>
