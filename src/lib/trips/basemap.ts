@@ -255,7 +255,7 @@ export function fitTileView(
   if (!(w > 0) || !(h > 0)) return null;
   if (!Number.isFinite(box.minLng) || !Number.isFinite(box.minLat)) return null;
 
-  const pad = 0.14;
+  const pad = 0.08;
   for (let z = 12; z >= 3; z--) {
     const a = projectMercator(box.minLat, box.minLng, z);
     const b = projectMercator(box.maxLat, box.maxLng, z);

@@ -11,10 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiRouteRouteImport } from './routes/api/route'
-import { Route as ApiGeocodeRouteImport } from './routes/api/geocode'
 import { Route as ApiFuelRouteImport } from './routes/api/fuel'
-import { Route as ApiMapTilesRouteImport } from './routes/api/map-tiles'
+import { Route as ApiGeocodeRouteImport } from './routes/api/geocode'
 import { Route as ApiLendersRouteImport } from './routes/api/lenders'
+import { Route as ApiMapTilesRouteImport } from './routes/api/map-tiles'
 import { Route as ApiOsrmRouteImport } from './routes/api/osrm'
 import { Route as ApiRvgrokRouteImport } from './routes/api/rvgrok'
 import { Route as ApiMarketcheckSearchRouteImport } from './routes/api/marketcheck.search'
@@ -36,24 +36,24 @@ const ApiRouteRoute = ApiRouteRouteImport.update({
   path: '/api',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGeocodeRoute = ApiGeocodeRouteImport.update({
-  id: '/geocode',
-  path: '/geocode',
-  getParentRoute: () => ApiRouteRoute,
-} as any)
 const ApiFuelRoute = ApiFuelRouteImport.update({
   id: '/fuel',
   path: '/fuel',
   getParentRoute: () => ApiRouteRoute,
 } as any)
-const ApiMapTilesRoute = ApiMapTilesRouteImport.update({
-  id: '/map-tiles',
-  path: '/map-tiles',
+const ApiGeocodeRoute = ApiGeocodeRouteImport.update({
+  id: '/geocode',
+  path: '/geocode',
   getParentRoute: () => ApiRouteRoute,
 } as any)
 const ApiLendersRoute = ApiLendersRouteImport.update({
   id: '/lenders',
   path: '/lenders',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
+const ApiMapTilesRoute = ApiMapTilesRouteImport.update({
+  id: '/map-tiles',
+  path: '/map-tiles',
   getParentRoute: () => ApiRouteRoute,
 } as any)
 const ApiOsrmRoute = ApiOsrmRouteImport.update({
@@ -110,10 +110,10 @@ const ApiRvgrokWebResearchRoute = ApiRvgrokWebResearchRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteRouteWithChildren
-  '/api/geocode': typeof ApiGeocodeRoute
   '/api/fuel': typeof ApiFuelRoute
-  '/api/map-tiles': typeof ApiMapTilesRoute
+  '/api/geocode': typeof ApiGeocodeRoute
   '/api/lenders': typeof ApiLendersRoute
+  '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
@@ -128,10 +128,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteRouteWithChildren
-  '/api/geocode': typeof ApiGeocodeRoute
   '/api/fuel': typeof ApiFuelRoute
-  '/api/map-tiles': typeof ApiMapTilesRoute
+  '/api/geocode': typeof ApiGeocodeRoute
   '/api/lenders': typeof ApiLendersRoute
+  '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
@@ -147,10 +147,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api': typeof ApiRouteRouteWithChildren
-  '/api/geocode': typeof ApiGeocodeRoute
   '/api/fuel': typeof ApiFuelRoute
-  '/api/map-tiles': typeof ApiMapTilesRoute
+  '/api/geocode': typeof ApiGeocodeRoute
   '/api/lenders': typeof ApiLendersRoute
+  '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
@@ -167,10 +167,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/api'
-    | '/api/geocode'
     | '/api/fuel'
-    | '/api/map-tiles'
+    | '/api/geocode'
     | '/api/lenders'
+    | '/api/map-tiles'
     | '/api/osrm'
     | '/api/rvgrok'
     | '/api/marketcheck/search'
@@ -185,10 +185,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/api'
-    | '/api/geocode'
     | '/api/fuel'
-    | '/api/map-tiles'
+    | '/api/geocode'
     | '/api/lenders'
+    | '/api/map-tiles'
     | '/api/osrm'
     | '/api/rvgrok'
     | '/api/marketcheck/search'
@@ -203,10 +203,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/api'
-    | '/api/geocode'
     | '/api/fuel'
-    | '/api/map-tiles'
+    | '/api/geocode'
     | '/api/lenders'
+    | '/api/map-tiles'
     | '/api/osrm'
     | '/api/rvgrok'
     | '/api/marketcheck/search'
@@ -240,13 +240,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/geocode': {
-      id: '/api/geocode'
-      path: '/geocode'
-      fullPath: '/api/geocode'
-      preLoaderRoute: typeof ApiGeocodeRouteImport
-      parentRoute: typeof ApiRouteRoute
-    }
     '/api/fuel': {
       id: '/api/fuel'
       path: '/fuel'
@@ -254,11 +247,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiFuelRouteImport
       parentRoute: typeof ApiRouteRoute
     }
-    '/api/map-tiles': {
-      id: '/api/map-tiles'
-      path: '/map-tiles'
-      fullPath: '/api/map-tiles'
-      preLoaderRoute: typeof ApiMapTilesRouteImport
+    '/api/geocode': {
+      id: '/api/geocode'
+      path: '/geocode'
+      fullPath: '/api/geocode'
+      preLoaderRoute: typeof ApiGeocodeRouteImport
       parentRoute: typeof ApiRouteRoute
     }
     '/api/lenders': {
@@ -266,6 +259,13 @@ declare module '@tanstack/react-router' {
       path: '/lenders'
       fullPath: '/api/lenders'
       preLoaderRoute: typeof ApiLendersRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/map-tiles': {
+      id: '/api/map-tiles'
+      path: '/map-tiles'
+      fullPath: '/api/map-tiles'
+      preLoaderRoute: typeof ApiMapTilesRouteImport
       parentRoute: typeof ApiRouteRoute
     }
     '/api/osrm': {
@@ -356,10 +356,10 @@ const ApiRvgrokRouteWithChildren = ApiRvgrokRoute._addFileChildren(
 )
 
 interface ApiRouteRouteChildren {
-  ApiGeocodeRoute: typeof ApiGeocodeRoute
   ApiFuelRoute: typeof ApiFuelRoute
-  ApiMapTilesRoute: typeof ApiMapTilesRoute
+  ApiGeocodeRoute: typeof ApiGeocodeRoute
   ApiLendersRoute: typeof ApiLendersRoute
+  ApiMapTilesRoute: typeof ApiMapTilesRoute
   ApiOsrmRoute: typeof ApiOsrmRoute
   ApiRvgrokRoute: typeof ApiRvgrokRouteWithChildren
   ApiMarketcheckSearchRoute: typeof ApiMarketcheckSearchRoute
@@ -371,10 +371,10 @@ interface ApiRouteRouteChildren {
 }
 
 const ApiRouteRouteChildren: ApiRouteRouteChildren = {
-  ApiGeocodeRoute: ApiGeocodeRoute,
   ApiFuelRoute: ApiFuelRoute,
-  ApiMapTilesRoute: ApiMapTilesRoute,
+  ApiGeocodeRoute: ApiGeocodeRoute,
   ApiLendersRoute: ApiLendersRoute,
+  ApiMapTilesRoute: ApiMapTilesRoute,
   ApiOsrmRoute: ApiOsrmRoute,
   ApiRvgrokRoute: ApiRvgrokRouteWithChildren,
   ApiMarketcheckSearchRoute: ApiMarketcheckSearchRoute,

@@ -55,9 +55,9 @@ test("projectMercator puts west/north toward smaller x / smaller y", () => {
 test("fitTileView frames Reno→Seattle without exploding tile count", () => {
   const box = bboxFromGeometry(RENO_SEA);
   assert.ok(box);
-  const view = fitTileView(box, 360, 240);
+  const view = fitTileView(box, 360, 300);
   assert.ok(view);
-  assert.ok(view.z >= 3 && view.z <= 8);
+  assert.ok(view.z >= 5 && view.z <= 8, `expected z>=5, got ${view.z}`);
   const tiles = enumerateTiles(view);
   assert.ok(tiles.length >= 1);
   assert.ok(tiles.length <= MAX_TILES);

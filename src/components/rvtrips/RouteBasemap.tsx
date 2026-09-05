@@ -23,7 +23,7 @@ import {
   type TileProvider,
 } from "@/lib/trips/basemap";
 
-const MAP_H = 240;
+const MAP_H = 300;
 const MAX_FUEL_PINS = 12;
 
 function asPlace(
@@ -229,7 +229,7 @@ export function RouteBasemap({
         </div>
       ) : null}
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/20" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-black/10" />
 
       {view && overlay ? (
         <svg
