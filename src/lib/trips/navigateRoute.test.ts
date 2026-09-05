@@ -281,7 +281,7 @@ test("Navigate wires fetchNavigateRoute and honest engine labels", () => {
   );
   assert.match(ui, /fetchNavigateRoute/);
   assert.match(ui, /routeEngineLabel/);
-  assert.match(ui, /routeEngineNote/);
+  assert.match(ui, /liveRouteStats/);
   assert.doesNotMatch(ui, /["']OSRM live["']/);
   assert.doesNotMatch(ui, /\/api\/route/);
 });
