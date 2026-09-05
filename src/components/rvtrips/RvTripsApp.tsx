@@ -30,7 +30,6 @@ import {
 import {
   fetchOsrmRoute,
   type OsrmLngLat,
-  type OsrmLineString,
   type OsrmRouteResult,
 } from "@/lib/trips/osrm";
 import {
@@ -39,7 +38,6 @@ import {
   routeEngineLabel,
 } from "@/lib/trips/navigateRoute";
 import {
-  geometryToSvgPath,
   liveProviderNote,
   liveRouteStats,
   tripRouteFromLive,
@@ -86,6 +84,7 @@ import {
 } from "@/lib/trips/dumpStations";
 import { DumpMap } from "@/components/rvtrips/DumpMap";
 import { FuelAlongRoute } from "@/components/rvtrips/FuelAlongRoute";
+import { RouteBasemap } from "@/components/rvtrips/RouteBasemap";
 import {
   buildFuelQuery,
   downsampleByDistance,
@@ -1537,7 +1536,15 @@ export function RvTripsApp() {
                     </p>
                   ) : null}
 
-                  <RouteLinePreview geometry={osrm.geometry} />
+                  <RouteBasemap
+                    geometry={osrm.geometry}
+                    origin={originPlace}
+                    destination={destPlace}
+                    vias={viaPlaces}
+                    fuelStops={fuel?.stops}
+                    selectedFuelId={fuelFocusId}
+                    onSelectFuel={(id) => setFuelFocusId(id || null)}
+                  />
 
                   <FuelAlongRoute
                     status={fuelStatus}
@@ -2085,36 +2092,6 @@ function FieldBtn({
         {value}
       </span>
     </button>
-  );
-}
-
-function RouteLinePreview({
-  geometry,
-}: {
-  geometry: OsrmLineString | null | undefined;
-}) {
-  const w = 320;
-  const h = 112;
-  const d = geometryToSvgPath(geometry, w, h);
-  if (!d) return null;
-  return (
-    <div className="overflow-hidden rounded-xl border border-white/12 bg-black/35">
-      <svg
-        viewBox={`0 0 ${w} ${h}`}
-        className="h-28 w-full"
-        role="img"
-        aria-label="Route line from the live response"
-      >
-        <path
-          d={d}
-          fill="none"
-          className="stroke-blue"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </div>
   );
 }
 
