@@ -25,6 +25,9 @@ import {
   honestHorsepowerForCoach,
   honestTorqueForCoach,
 } from "./catalogHonesty.ts";
+import { buildBrochureSpecs } from "./brochureSpecs.ts";
+import { hydrateShareCoachResult } from "./shareCoachHydrate.ts";
+import type { RVSpec } from "./rvTypes.ts";
 
 const src = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "shareKit.ts"),
@@ -350,6 +353,106 @@ test("kit always writes catalog POWER from brochure SoT", () => {
   assert.match(src, /sharePowerLines\(snap\.horsepower, snap\.torque\)/);
   assert.match(src, /horsepower: isShareableValue\(b\.horsepower\)/);
   assert.match(src, /torque: isShareableValue\(b\.torque\)/);
+  assert.match(src, /hydrateShareCoachResult\(opts\.result/);
+  assert.match(src, /function coachBrochure[\s\S]*?hydrateShareCoachResult/);
+});
+
+function georgetownShapedSpec(opts: { torqueOnBand: boolean }): RVSpec {
+  return {
+    type: "Class A Gas",
+    floorplans: ["328DS"],
+    lengthRange: [32, 37],
+    weightRange: [16000, 22000],
+    slideouts: 2,
+    sleeps: 8,
+    msrpRange: [139000, 229000],
+    engine: "Ford 7.3L / V10 (by year)",
+    horsepower: 350,
+    chassis: "Ford F53",
+    fuelType: "Gas",
+    recalls: 0,
+    rating: 4.3,
+    image: "",
+    powertrainByYear: [
+      {
+        from: 2020,
+        to: 2026,
+        engine: "Ford 7.3L V8 Godzilla",
+        horsepower: 350,
+        chassis: "Ford F53",
+        ...(opts.torqueOnBand ? { torqueLbFt: 468 } : {}),
+      },
+    ],
+  };
+}
+
+function kitPowerFromCoach(result: {
+  year: string;
+  make: string;
+  model: string;
+  floorplan?: string;
+  data: RVSpec;
+}) {
+  const b = buildBrochureSpecs(
+    result.data,
+    result.year,
+    result.make,
+    result.model,
+    result.floorplan || "",
+  );
+  return sharePowerLines(b.horsepower, b.torque);
+}
+
+test("stale saved Georgetown data rehydrates live catalog torque into kit POWER", () => {
+  const stale = georgetownShapedSpec({ torqueOnBand: false });
+  const live = georgetownShapedSpec({ torqueOnBand: true });
+  const saved = {
+    year: "2022",
+    make: "Forest River",
+    model: "Georgetown",
+    floorplan: "328DS",
+    data: stale,
+  };
+
+  const stalePower = kitPowerFromCoach(saved);
+  assert.match(stalePower.join("\n"), /350\s*HP/);
+  assert.doesNotMatch(stalePower.join("\n"), /468/);
+  assert.doesNotMatch(stalePower.join("\n"), /lb-?ft/i);
+
+  const hydrated = hydrateShareCoachResult(
+    saved,
+    (make, model) =>
+      make === "Forest River" && model === "Georgetown" ? live : null,
+  );
+  assert.equal(hydrated.year, "2022");
+  assert.equal(hydrated.make, "Forest River");
+  assert.equal(hydrated.model, "Georgetown");
+  assert.equal(hydrated.floorplan, "328DS");
+  assert.equal(hydrated.data, live);
+  assert.notEqual(hydrated.data, stale);
+
+  const power = kitPowerFromCoach(hydrated);
+  assert.deepEqual(power, ["POWER", "350 HP", "468 lb-ft"]);
+});
+
+test("custom / missing catalog coach keeps saved data for kit POWER", () => {
+  const customData = georgetownShapedSpec({ torqueOnBand: false });
+  const saved = {
+    year: "2021",
+    make: "Homebuilt",
+    model: "One-Off",
+    floorplan: "Custom",
+    data: customData,
+  };
+  const hydrated = hydrateShareCoachResult(saved, () => null);
+  assert.equal(hydrated.data, customData);
+  assert.equal(hydrated.year, "2021");
+  assert.equal(hydrated.floorplan, "Custom");
+
+  const power = kitPowerFromCoach(hydrated);
+  assert.match(power.join("\n"), /350\s*HP/);
+  assert.doesNotMatch(power.join("\n"), /468/);
+  assert.doesNotMatch(power.join("\n"), /lb-?ft/i);
 });
 
 test("Share kit send attaches the bottom card as a PNG file", () => {
@@ -363,6 +466,7 @@ test("Share kit send attaches the bottom card as a PNG file", () => {
   assert.match(src, /buildShareKitPayload/);
   assert.match(src, /captureShareCardFile/);
   assert.match(src, /shareOrCopy/);
+  assert.match(ui, /hydrateShareCoachResult\(raw\)/);
   assert.match(ui, /captureShareCardFile\(\s*shareCardRef\.current/);
   assert.match(ui, /buildShareKitPayload\(\{/);
   assert.match(ui, /cardFile/);

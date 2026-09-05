@@ -46,6 +46,7 @@ import {
   defaultMarketFor,
   defaultPaymentFor,
   fetchShareImage,
+  hydrateShareCoachResult,
   hasOptionalShareSections,
   hasSelectedMarketLines,
   kitStrengths,
@@ -418,10 +419,15 @@ export function RvShareApp({
   }, [saved, usingSample]);
 
   const selected = useMemo(() => {
-    if (usingSample) return sample;
-    if (!selectedKey) return saved[0] ?? null;
-    return saved.find((r) => compareSelectionKey(r) === selectedKey) ?? saved[0] ?? null;
-  }, [saved, selectedKey, usingSample, sample]);
+    const raw = usingSample
+      ? sample
+      : !selectedKey
+        ? saved[0] ?? null
+        : saved.find((r) => compareSelectionKey(r) === selectedKey) ??
+          saved[0] ??
+          null;
+    return raw ? hydrateShareCoachResult(raw) : null;
+  }, [saved, selectedKey, usingSample, sample, catalogReady]);
 
   useEffect(() => {
     if (!selected) return;

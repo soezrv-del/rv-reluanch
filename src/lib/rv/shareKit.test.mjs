@@ -72,6 +72,17 @@ test("customer-facing MSRP is a single label — not low/high", () => {
   assert.doesNotMatch(ui, /MSRP HIGH/);
 });
 
+test("share kit rehydrates saved coaches from live catalog SoT", () => {
+  assert.match(src, /hydrateShareCoachResult/);
+  assert.match(src, /lookupCatalog/);
+  const hydrate = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "shareCoachHydrate.ts"),
+    "utf8",
+  );
+  assert.match(hydrate, /getSpec/);
+  assert.match(hydrate, /if \(!live\) return result/);
+});
+
 test("share payload keeps a real card image file for Messages", () => {
   assert.match(src, /buildShareKitPayload/);
   assert.match(src, /captureShareCardFile/);

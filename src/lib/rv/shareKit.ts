@@ -6,6 +6,10 @@
 import type { RVResult } from "./catalog";
 import { estimateMarket, ratingFor } from "./catalog";
 import { buildBrochureSpecs, type BrochureSpecs } from "./brochureSpecs";
+import {
+  hydrateShareCoachResult,
+  type ShareCatalogLookup,
+} from "./shareCoachHydrate";
 import { getRatingMetadata } from "./ratingSystem";
 import {
   computeLoan,
@@ -53,6 +57,9 @@ export {
   toShareData,
 } from "./shareCardImage";
 export type { ShareKitPayload, ShareOutcome } from "./shareCardImage";
+
+export { hydrateShareCoachResult } from "./shareCoachHydrate";
+export type { ShareCatalogLookup } from "./shareCoachHydrate";
 
 export {
   buildShareMarketSection,
@@ -155,6 +162,7 @@ export function lifestyleImageFor(type?: string, fuelType?: string, chassis?: st
 }
 
 export function defaultPaymentFor(r: RVResult): SharePayment {
+  r = hydrateShareCoachResult(r);
   const market = estimateMarket(r.data, r.year, r.floorplan);
   const price = market.retailHigh || market.msrpHi || 150000;
   const termMonths = 144;
@@ -167,6 +175,7 @@ export function defaultPaymentFor(r: RVResult): SharePayment {
 }
 
 export function defaultMarketFor(r: RVResult): ShareMarket {
+  r = hydrateShareCoachResult(r);
   const market = estimateMarket(r.data, r.year, r.floorplan);
   return {
     tradeIn: market.tradeIn || 0,
@@ -210,6 +219,7 @@ function liveBrochureBits(r: RVResult): BrochureSummary {
  * Never invent specs — empty pitch falls back to catalog type only.
  */
 export function brochureSummary(r: RVResult): BrochureSummary {
+  r = hydrateShareCoachResult(r);
   const live = liveBrochureBits(r);
   const catalogPitch = customerFacingPitch(r.data.description);
   const pitch = live.pitch || catalogPitch || (r.data.type || "").trim();
@@ -233,11 +243,19 @@ function group(
   };
 }
 
-function coachBrochure(r: RVResult): BrochureSpecs {
-  return buildBrochureSpecs(r.data, r.year, r.make, r.model, r.floorplan || "");
+function coachBrochure(r: RVResult, lookup?: ShareCatalogLookup): BrochureSpecs {
+  const live = hydrateShareCoachResult(r, lookup);
+  return buildBrochureSpecs(
+    live.data,
+    live.year,
+    live.make,
+    live.model,
+    live.floorplan || "",
+  );
 }
 
 export function brochureSpecGroups(r: RVResult) {
+  r = hydrateShareCoachResult(r);
   const b = coachBrochure(r);
   const hwyOk = hasVal(b.mpgHighway);
   const cityOk = hasVal(b.mpgCity);
@@ -319,6 +337,7 @@ export function kitStrengths(
   ratingScore?: number,
   includeRating = false,
 ): string[] {
+  r = hydrateShareCoachResult(r);
   const b = coachBrochure(r);
   const meta = getRatingMetadata(r.make, r.model, r.year);
   const out: string[] = [];
@@ -391,6 +410,7 @@ export function coachSnapshot(
   horsepower: string;
   torque: string;
 } {
+  r = hydrateShareCoachResult(r);
   const b = coachBrochure(r);
   const catalog = ratingFor(r.make, r.model, r.year);
   const rating =
@@ -436,8 +456,10 @@ export function buildCoachKit(opts: {
   strengths?: string[];
   rating?: number;
   summary?: BrochureSummary;
+  lookupCatalog?: ShareCatalogLookup;
 }): string {
-  const { result: r, payment } = opts;
+  const r = hydrateShareCoachResult(opts.result, opts.lookupCatalog);
+  const { payment } = opts;
   const include = effectiveShareInclude(opts.include);
   const lines: string[] = [];
   const title = coachTitle(r);
