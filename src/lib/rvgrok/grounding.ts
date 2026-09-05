@@ -22,6 +22,7 @@ import {
 } from "../rv/localSpecOverrides";
 import type { ActiveCoach } from "../rv/activeCoach";
 import {
+  extractOptionHpClasses,
   honestEngineLabel,
   honestHorsepowerLabel,
   honestTorqueLabel,
@@ -286,16 +287,18 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
     spec?.engine ||
     null;
   const engineLabel = honestEngineLabel(rawEngine);
+  const sotHp =
+    pin && pin.horsepower > 0
+      ? pin.horsepower
+      : snap?.horsepower ?? spec?.horsepower ?? null;
   const hpLabel = local?.horsepower
     ? `${Math.round(local.horsepower)} HP`
     : honestHorsepowerLabel({
         engine: rawEngine,
-        horsepower:
-          pin && pin.horsepower > 0
-            ? pin.horsepower
-            : snap?.horsepower ?? spec?.horsepower ?? null,
+        horsepower: sotHp,
       });
-  const engineAmbiguous = isAmbiguousCatalogValue(rawEngine);
+  const dualRating = extractOptionHpClasses(rawEngine).length >= 2;
+  const engineAmbiguous = dualRating || isAmbiguousCatalogValue(rawEngine);
 
   const engine = pickField(
     { value: local?.engine, trust: "local" },
@@ -305,15 +308,16 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
         ? pin?.engine
           ? "pin"
           : "catalog"
-        : engineLabel.text
+        : engineAmbiguous || engineLabel.text
           ? "est"
           : "empty",
     },
   );
-  // Option-band HP (Dream L9/X15) is EST, not a locked single number.
+  // Dual-rating engines (Dream L9/X15) are EST. A catalog number on a
+  // "by year" engine label is still catalog SoT — do not demote it.
   const horsepower = local?.horsepower
     ? field(`${Math.round(local.horsepower)} HP`, "local")
-    : engineAmbiguous || (hpLabel && /varies|opt|EST/i.test(hpLabel))
+    : dualRating || (hpLabel && /varies|opt|EST/i.test(hpLabel))
       ? field(hpLabel, "est")
       : pickField(
           {
@@ -337,7 +341,7 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
       });
   const torque = local?.torqueLbFt
     ? field(`${local.torqueLbFt} lb-ft`, "local")
-    : engineAmbiguous ||
+    : dualRating ||
         (tqLabel && /std|opt|varies|EST|confirm/i.test(tqLabel))
       ? field(tqLabel, "est")
       : pickField(

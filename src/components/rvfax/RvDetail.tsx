@@ -40,14 +40,13 @@ import {
   sanitizeNarrativeForPin,
 } from "@/lib/rv/powertrainCorrections";
 import {
-  formatHardHorsepower,
-  formatHardTorque,
   resolveHardPowertrain,
   type PowertrainTrust,
 } from "@/lib/rv/livePowertrainGuard";
 import {
-  honestHorsepowerLabel,
-  honestTorqueLabel,
+  formatFactsHorsepower,
+  formatFactsTorque,
+  omitInventPolicyProse,
 } from "@/lib/rv/catalogHonesty";
 import {
   findLocalSpecOverride,
@@ -364,21 +363,18 @@ export function RvDetail({
   const powertrainTrust: PowertrainTrust = powertrainGuard.trust;
 
   const specs = useMemo(() => {
-    const hardHp =
-      honestHorsepowerLabel({
-        engine: powertrainGuard.hard.engine || catalogSpecs.engine,
-        horsepower:
-          powertrainGuard.hard.horsepower ?? catalogSpecs.horsepower,
-      }) ||
-      formatHardHorsepower(powertrainGuard.hard.horsepower) ||
-      catalogSpecs.horsepower;
-    const hardTq =
-      honestTorqueLabel({
-        engine: powertrainGuard.hard.engine || catalogSpecs.engine,
-        torqueLbFt: powertrainGuard.hard.torqueLbFt,
-      }) ||
-      formatHardTorque(powertrainGuard.hard.torqueLbFt) ||
-      catalogSpecs.torque;
+    const hardHp = formatFactsHorsepower({
+      engine: powertrainGuard.hard.engine || catalogSpecs.engine,
+      horsepower:
+        powertrainGuard.hard.horsepower ??
+        omitInventPolicyProse(catalogSpecs.horsepower),
+    });
+    const hardTq = formatFactsTorque({
+      engine: powertrainGuard.hard.engine || catalogSpecs.engine,
+      torqueLbFt:
+        powertrainGuard.hard.torqueLbFt ??
+        omitInventPolicyProse(catalogSpecs.torque),
+    });
 
     const hardOverride = {
       engine: powertrainGuard.hard.engine || catalogSpecs.engine,
@@ -1797,6 +1793,13 @@ function SpecRow({
   value?: string | null;
   accent?: boolean;
 }) {
+  const powertrain =
+    label === "HORSEPOWER" || label === "TORQUE" || label === "ENGINE";
+  const shown = powertrain
+    ? omitInventPolicyProse(value) || "—"
+    : value && String(value).trim()
+      ? value
+      : "—";
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-white/[0.07] py-2.5 last:border-0">
       <span className="text-[13px] font-medium uppercase tracking-[0.08em] text-white">
@@ -1808,7 +1811,7 @@ function SpecRow({
           accent && "font-semibold",
         )}
       >
-        {value && String(value).trim() ? value : "—"}
+        {shown}
       </span>
     </div>
   );

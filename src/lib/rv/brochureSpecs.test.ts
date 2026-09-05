@@ -60,9 +60,7 @@ test("honestTorqueLabel does not pretend L9-only when X15 opt exists", () => {
     engine: DREAM_ENGINE,
     torqueLbFt: 1250,
   });
-  assert.ok(tq);
-  assert.doesNotMatch(tq || "", /^1,?250 lb-ft$/);
-  assert.match(tq || "", /X15|opt|varies|confirm/i);
+  assert.equal(tq, null);
 });
 
 test("Grok catalog injection helpers do not lock horsepower: 450 alone", () => {
@@ -199,23 +197,23 @@ test("gas chassis rewrites Diesel/Gas generator; diesel does not get gas-only", 
   assert.doesNotMatch(diesel, /4\.0 kW gas/i);
 });
 
-test("E-450 7.3 does not present F53 350/468 as certified", () => {
+test("E-450 7.3 shows catalog HP/torque — no invented typicals or confirm essays", () => {
   const hp = honestHorsepowerForCoach({
     engine: "Ford 7.3L V8 Godzilla",
     horsepower: 350,
     chassis: "Ford E-450",
     type: "Class C",
   });
-  assert.notEqual(hp, "350 HP");
-  assert.match(hp, /325|confirm/i);
+  assert.equal(hp, "350 HP");
+  assert.doesNotMatch(hp, /confirm|varies|do not invent/i);
   const tq = honestTorqueForCoach({
     engine: "Ford 7.3L V8 Godzilla",
     chassis: "Ford E-450",
     type: "Class C",
     torqueLbFt: 468,
   });
-  assert.doesNotMatch(tq, /^468 lb-ft/);
-  assert.match(tq, /450|confirm/i);
+  assert.equal(tq, "468 lb-ft");
+  assert.doesNotMatch(tq, /confirm|typ\.|varies/i);
 });
 
 test("Sprinter Class C does not inherit E-450 tires / 50A / triple AC", () => {
