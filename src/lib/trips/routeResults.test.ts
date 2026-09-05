@@ -85,10 +85,17 @@ test("tripRouteFromLive does not spread DEMO_ROUTE fields", () => {
   assert.equal(tripRouteFromLive({ ...LIVE, miles: Number.NaN }, "A", "B"), null);
 });
 
-test("liveProviderNote is API text only", () => {
+test("liveProviderNote is API text only — hides key-setup copy", () => {
   assert.equal(liveProviderNote(LIVE), "Truck dims 411cm H · 1372cm L · 19958kg");
   assert.equal(liveProviderNote({ providerNote: "  " }), "");
   assert.equal(liveProviderNote(null), "");
+  assert.equal(
+    liveProviderNote({
+      providerNote:
+        "HERE key not configured — using OSRM RV-weighted fallback. Add HERE_API_KEY for true truck height/weight avoidance.",
+    }),
+    "",
+  );
 });
 
 test("geometryToSvgPath draws the API polyline", () => {

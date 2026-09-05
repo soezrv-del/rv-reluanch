@@ -74,11 +74,19 @@ export function tripRouteFromLive(
   };
 }
 
-/** Provider / dim note only when the API sent one. */
+/**
+ * Provider / dim note only when the API sent one that a driver can use.
+ * Hide server-key / setup copy — the engine chip already says fallback.
+ */
 export function liveProviderNote(
   route: Pick<OsrmRouteResult, "providerNote"> | null | undefined,
 ): string {
-  return (route?.providerNote || "").trim();
+  const raw = (route?.providerNote || "").trim();
+  if (!raw) return "";
+  if (/HERE[_ ]?API[_ ]?KEY|HERE key not configured|HERE unavailable/i.test(raw)) {
+    return "";
+  }
+  return raw;
 }
 
 /** SVG path from the same LineString the numbers came from. */
