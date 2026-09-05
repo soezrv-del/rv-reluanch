@@ -144,6 +144,7 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
     "utf8",
   );
   const follow = readFileSync(join(root, "geoFollow.ts"), "utf8");
+  const hook = readFileSync(join(root, "useNavFollow.ts"), "utf8");
 
   assert.match(ui, /useNavFollow\(navArmed\)/);
   assert.match(ui, /getCurrentPosition/);
@@ -162,10 +163,14 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(map, /shouldRecenterFollow/);
   assert.doesNotMatch(map, /["'`]\/api\/route/);
 
-  assert.match(follow, /watchPosition/);
-  assert.match(follow, /clearWatch/);
   assert.match(follow, /FOLLOW_WATCH_OPTIONS/);
-  assert.match(follow, /distanceFilter|FOLLOW_DISTANCE_FILTER_M/);
+  assert.match(follow, /FOLLOW_DISTANCE_FILTER_M/);
+  assert.doesNotMatch(follow, /from ["']react["']/);
   assert.doesNotMatch(follow, /["'`]\/api\/route/);
   assert.doesNotMatch(follow, /RATEAPI|rvData/);
+
+  assert.match(hook, /watchPosition/);
+  assert.match(hook, /clearWatch/);
+  assert.match(hook, /FOLLOW_WATCH_OPTIONS/);
+  assert.doesNotMatch(hook, /["'`]\/api\/route/);
 });

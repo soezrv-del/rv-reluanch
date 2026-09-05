@@ -119,7 +119,7 @@ import {
   saveTrip,
   type SavedTrip,
 } from "@/lib/trips/savedTrip";
-import { useNavFollow } from "@/lib/trips/geoFollow";
+import { useNavFollow } from "@/lib/trips/useNavFollow";
 
 type SubTab =
   | "navigate"
