@@ -19,7 +19,6 @@ import {
   DollarSign,
   ExternalLink,
   FileText,
-  Info,
   Landmark,
   MapPin,
   SlidersHorizontal,
@@ -27,6 +26,7 @@ import {
   Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import {
   APR_PRESETS,
   CREDIT_BANDS,
@@ -661,7 +661,7 @@ export function RvCalApp() {
       pullLabel="Release to reset RvCal · pull down"
       adaptiveGlass={false}
     >
-    <div className="landscape-content mx-auto w-full max-w-lg space-y-3 px-3 pb-10 pt-3 sm:px-4">
+    <div className="landscape-content mx-auto w-full max-w-lg space-y-4 px-3 pb-10 pt-3 sm:px-4">
       {coachLabel ? <p className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-center text-[11px] font-semibold text-gold-bright">
   Market avg · 
   {coachLabel}
@@ -1263,10 +1263,9 @@ export function RvCalApp() {
           </div>
         </div>
       </section>
-      <p className="flex gap-1.5 px-1 text-[10px] leading-relaxed text-white">
-        <Info className="mt-0.5 size-3 shrink-0" />
-        Estimates only — not a credit offer. Confirm rates and fees with a dealer or lender.
-      </p>
+      <SuiteDisclaimer>
+        Estimates only — confirm rates with a lender before you buy.
+      </SuiteDisclaimer>
     </div>
     </SuitePage>
   );

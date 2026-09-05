@@ -30,7 +30,7 @@ const TOOLS: {
   { id: "rvcal", title: "RvCal", blurb: "ZIP-based calculator with lender comparisons", Icon: Calculator },
   { id: "rvtow", title: "RvTow", blurb: "Tow match", Icon: Truck },
   { id: "rvtrips", title: "RvTrips", blurb: "RV GPS with campgrounds, dump stations, and more", Icon: MapPin },
-  { id: "rvshare", title: "RvShare", blurb: "Send a brochure summary — tap + for rating, market, specs", Icon: Share2 },
+  { id: "rvshare", title: "RvShare", blurb: "Send a brochure summary", Icon: Share2 },
   { id: "rvgrok", title: "RvGrok", blurb: "Your RV expert — from the best fishing spots to troubleshooting your RV", Icon: MessageCircle },
   { id: "more", title: "Premium", blurb: "Settings", Icon: Shield },
 ];

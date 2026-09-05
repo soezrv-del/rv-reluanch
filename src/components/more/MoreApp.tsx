@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SuitePage } from "@/components/shell/SuitePage";
+import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import type { AppTab } from "@/components/shell/BottomTabs";
 import { NhtsaRecallsPanel } from "@/components/nhtsa/NhtsaRecallsPanel";
 import { VoicePanel } from "@/components/rvgrok/VoicePanel";
@@ -148,7 +149,7 @@ export function MoreApp({
   return (
     <>
     <SuitePage tab="more" adaptiveGlass={false}>
-        <div className="mx-auto w-full max-w-lg space-y-4 px-3 pb-12 pt-3 sm:px-4">
+        <div className="mx-auto w-full max-w-lg space-y-5 px-3 pb-12 pt-3 sm:px-4">
           <header className="flex items-center justify-between gap-3">
             {onNavigate ? (
               <button
@@ -222,8 +223,8 @@ export function MoreApp({
               />
               <RowLink
                 icon={<Share2 className="size-4 text-sky-200" />}
-                title="RvShare send kit"
-                sub="Saved coach · payment · lifestyle · native share"
+                title="RvShare"
+                sub="Send a brochure summary"
                 onClick={() => onNavigate?.("rvshare")}
               />
               <RowLink
@@ -244,9 +245,8 @@ export function MoreApp({
             <p className="mt-1.5 text-[17px] font-bold leading-snug text-white">
               Everything included
             </p>
-            <p className="mt-1 text-[12px] leading-relaxed text-white">
-              No in-app purchases — full suite included. Facts, Cal, Tow, Trips,
-              Share, and Grok are all open.
+            <p className="mt-1 text-[12px] leading-relaxed text-white/80">
+              Full suite included — no in-app purchases.
             </p>
             <div className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full border border-amber/40 bg-amber/15">
               <Star className="size-4 text-amber" />
@@ -312,9 +312,8 @@ export function MoreApp({
               NHTSA RECALL LOOKUP
             </p>
             <div className="glass-prestige space-y-2.5 rounded-[1.25rem] p-3.5">
-              <p className="text-[12px] leading-relaxed text-white">
-                Live government data by year, make, and model — same feed as the
-                VIN decoder.
+              <p className="text-[12px] leading-relaxed text-white/70">
+                Look up recalls by year, make, and model.
               </p>
               <div className="grid grid-cols-3 gap-2">
                 <label className="block">
@@ -446,11 +445,7 @@ export function MoreApp({
             </div>
           </section>
 
-          <footer className="space-y-1.5 px-1 pb-2 text-center text-[10px] leading-relaxed text-white">
-            <p>© 2026 RVFAX · All Rights Reserved</p>
-            <p>Recall data sourced from NHTSA.gov (U.S. Government)</p>
-            <p>AI specs are estimates — always verify before purchase</p>
-          </footer>
+          <SuiteDisclaimer />
         </div>
     </SuitePage>
       {sheet ? (

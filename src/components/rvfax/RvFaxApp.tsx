@@ -60,6 +60,7 @@ import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullResetHint } from "@/components/shell/PullResetHint";
 import { ActiveCoachChip } from "@/components/shell/ActiveCoachChip";
+import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import { SelectSheet } from "./SelectSheet";
 import { writeActiveCoach } from "@/lib/rv/activeCoach";
@@ -288,13 +289,9 @@ export function RvFaxApp({
       cascade.makes.map((m) => ({
         value: m,
         label: m,
-        meta: [
-          year || "All years",
-          rvType ? rvClassLabel(rvType) : null,
-          "brand in catalog",
-        ]
+        meta: [year || null, rvType ? rvClassLabel(rvType) : null]
           .filter(Boolean)
-          .join(" · "),
+          .join(" · ") || undefined,
       })),
     [cascade.makes, year, rvType],
   );
@@ -321,18 +318,16 @@ export function RvFaxApp({
           year && make && model
             ? `${year} ${make} ${model}`
             : span
-              ? `${span} · not a current-year lineup`
-              : "Across model years · not a current-year lineup",
+              ? span
+              : "All years",
       };
     });
     // Always allow “any / all” so user can finish without a specific layout
     const anyMeta = year
       ? fps.length
-        ? `Skip · ${fps.length} layout${fps.length === 1 ? "" : "s"} for ${year}`
-        : `No verified layouts for ${year} · open report`
-      : fps.length
-        ? `Skip · ${fps.length} layouts across model years`
-        : "No layouts listed";
+        ? `Optional · ${year}`
+        : `No verified layouts for ${year}`
+      : "Optional";
     return [
       {
         value: "",
@@ -352,17 +347,26 @@ export function RvFaxApp({
       {
         value: "",
         label: "All types",
-        meta: year
-          ? `${year} · every class in the catalog`
-          : "Do not filter by class",
+        meta: year ? year : undefined,
       },
       ...tabs.map((t) => ({
         value: t.id,
         label: t.label,
-        meta: `${t.n} model${t.n === 1 ? "" : "s"} in ${year || "catalog"}`,
       })),
     ];
   }, [year, catalogGen]);
+
+  const catalogModelTotal = useMemo(
+    () =>
+      buildCascadeOptions({
+        year,
+        make: "",
+        model: "",
+        floorplan: "",
+        rvType,
+      }).counts.models,
+    [year, rvType, catalogGen],
+  );
 
   const eraItems = useMemo(
     () =>
@@ -583,28 +587,36 @@ export function RvFaxApp({
           label="Release to reset search · pull down"
         />
 
-        <div className="mx-auto w-full max-w-lg space-y-2.5 px-3 pb-28 pt-0 sm:px-4">
+        <div className="mx-auto w-full max-w-lg space-y-3.5 px-3 pb-28 pt-0 sm:px-4">
           {/* Cascading dropdown search */}
-          <section className="glass-prestige space-y-2 rounded-[var(--radius-xl)] p-3 sm:p-4">
+          <section className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4 sm:p-5">
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-[16px] font-extrabold tracking-tight text-white">
                   Catalog search
                 </p>
-                <p className="mt-0.5 text-[11px] leading-snug text-white/70">
+                <p className="mt-1 text-[12px] leading-snug text-white/65">
                   {year
                     ? [
                         year,
-                        rvType ? rvClassLabel(rvType) : "All types",
-                        make || `${cascade.counts.makes} makes`,
-                        model || (make ? `${cascade.counts.models} models` : null),
+                        rvType ? rvClassLabel(rvType) : null,
+                        make,
+                        model,
                         floorplan || (model ? "Any floorplan" : null),
                       ]
                         .filter(Boolean)
-                        .join(" → ")
-                    : "Year → type → make → model → floorplan"}
-                  {!catalogReady ? " · loading coach library…" : ""}
+                        .join(" · ")
+                    : "Year, type, make, model, floorplan"}
                 </p>
+                {catalogReady ? (
+                  <p className="mt-1 text-[11px] text-white/45">
+                    {catalogModelTotal.toLocaleString()} models
+                    {year ? ` · ${year}` : ""}
+                    {rvType ? ` · ${rvClassLabel(rvType)}` : ""}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-[11px] text-white/45">Loading…</p>
+                )}
               </div>
               <button
                 type="button"
@@ -688,20 +700,14 @@ export function RvFaxApp({
                 required
                 onClick={() => setSheet("year")}
                 sapphire
-                hint={`${yearsForEra.length} years`}
               />
               <FieldButton
                 label="RV Type"
                 value={rvType ? rvClassLabel(rvType) : ""}
-                placeholder={year ? "All types · tap to narrow" : "Pick a year first"}
+                placeholder={year ? "All types" : "Pick a year first"}
                 disabled={!year}
                 onClick={() => year && setSheet("rvType")}
                 sapphire
-                hint={
-                  year
-                    ? `${Math.max(0, typeItems.length - 1)} classes in ${year}`
-                    : undefined
-                }
               />
               <FieldButton
                 label="Make"
@@ -714,11 +720,6 @@ export function RvFaxApp({
                 custom={cascade.custom.make}
                 onClick={() => year && !cascade.locks.make && setSheet("make")}
                 sapphire
-                hint={
-                  year
-                    ? `${cascade.counts.makes} brand${cascade.counts.makes === 1 ? "" : "s"}${rvType ? ` · ${rvClassLabel(rvType)}` : ""}`
-                    : undefined
-                }
               />
               <FieldButton
                 label="Model"
@@ -729,11 +730,6 @@ export function RvFaxApp({
                 custom={cascade.custom.model}
                 onClick={() => make && !cascade.locks.model && setSheet("model")}
                 sapphire
-                hint={
-                  make
-                    ? `${cascade.counts.models} model${cascade.counts.models === 1 ? "" : "s"}`
-                    : undefined
-                }
               />
               <FieldButton
                 label="Floorplan"
@@ -747,17 +743,6 @@ export function RvFaxApp({
                   model && !cascade.locks.floorplan && setSheet("floorplan")
                 }
                 sapphire
-                hint={
-                  model
-                    ? cascade.counts.floorplans
-                      ? year
-                        ? `${cascade.counts.floorplans} layout${cascade.counts.floorplans === 1 ? "" : "s"}`
-                        : `${cascade.counts.floorplans} layout${cascade.counts.floorplans === 1 ? "" : "s"} across years`
-                      : year
-                        ? "Any · no year-specific layouts listed"
-                        : "Any · layouts span model years when listed"
-                    : undefined
-                }
               />
             </div>
 
@@ -776,9 +761,8 @@ export function RvFaxApp({
                 Open report
               </button>
             ) : (
-              <p className="text-center text-[11px] leading-snug text-white/65">
-                Pick year, type, make, and model. Each dropdown narrows the
-                next. Report opens on floorplan — or tap Open report.
+              <p className="text-center text-[11px] leading-snug text-white/55">
+                Choose year, make, and model.
               </p>
             )}
           </section>
@@ -790,9 +774,8 @@ export function RvFaxApp({
                 <Sparkles className="size-3.5" />
                 DID YOU MEAN?
               </p>
-              <p className="text-[12px] text-white">
-                We couldn’t match that exactly. Tap a suggestion, or open the
-                custom result and live Grok will research it.
+              <p className="text-[12px] text-white/80">
+                No exact match. Try a suggestion.
               </p>
               <ul className="space-y-1.5">
                 {suggestions.map((hit) => (
@@ -842,10 +825,10 @@ export function RvFaxApp({
                 <div className="glass-prestige rounded-[var(--radius-xl)] p-5 text-center">
                   <AlertTriangle className="mx-auto size-6 text-amber" />
                   <p className="mt-2 text-[14px] font-bold text-white">
-                    No catalog match
+                    No match
                   </p>
-                  <p className="mt-1 text-[12px] text-white">
-                    Use a suggestion above or Ask Grok for live research.
+                  <p className="mt-1 text-[12px] text-white/70">
+                    Try a suggestion or Ask Grok.
                   </p>
                   {onOpenGrok ? (
                     <button
@@ -958,16 +941,14 @@ export function RvFaxApp({
             <ChevronDown className="size-4 -rotate-90 text-white" />
           </button>
 
-          <p className="pb-2 text-center text-[12px] tracking-[0.14em] text-white">
-            SPECS · MARKET · RECALLS
-          </p>
+          <SuiteDisclaimer className="pb-2" />
         </div>
       </div>
 
       <SelectSheet
         open={sheet === "year"}
         title="Select year"
-        subtitle={`${yearsForEra.length} years · ${eraLabel}`}
+        subtitle={eraLabel}
         items={yearsForEra}
         selected={year}
         onSelect={(v) => onCascadeSelect("year", v)}
@@ -979,11 +960,7 @@ export function RvFaxApp({
       <SelectSheet
         open={sheet === "rvType"}
         title="RV Type"
-        subtitle={
-          year
-            ? `${typeItems.length - 1} classes in ${year} · tap All types to skip`
-            : "Narrows makes and models"
-        }
+        subtitle={year ? year : undefined}
         items={typeItems}
         selected={rvType}
         onSelect={(v) => onCascadeSelect("rvType", v)}
@@ -992,7 +969,7 @@ export function RvFaxApp({
       <SelectSheet
         open={sheet === "make"}
         title={year ? `Manufacturers · ${year}` : "Manufacturers"}
-        subtitle={`${cascade.counts.makes} brands · or type any make`}
+        subtitle="Or type any make"
         items={makeItems}
         selected={make}
         onSelect={(v) => onCascadeSelect("make", v)}
@@ -1005,7 +982,7 @@ export function RvFaxApp({
       <SelectSheet
         open={sheet === "model"}
         title={make ? `Models · ${make}` : "Models"}
-        subtitle={`${cascade.counts.models} models · or type any model`}
+        subtitle="Or type any model"
         items={modelItems}
         selected={model}
         onSelect={(v) => onCascadeSelect("model", v)}
@@ -1024,11 +1001,7 @@ export function RvFaxApp({
               : `Floorplans · ${model} · all years`
             : "Floorplans"
         }
-        subtitle={
-          year
-            ? `${cascade.counts.floorplans} layouts for ${year} · or Any`
-            : `${cascade.counts.floorplans} layouts across model years · not a current-year lineup`
-        }
+        subtitle={year ? "Optional · or Any" : "Optional"}
         items={floorplanItems}
         selected={floorplan}
         onSelect={(v) => onCascadeSelect("floorplan", v)}
@@ -1109,7 +1082,7 @@ function FieldButton({
       </button>
       {custom && value ? (
         <span className="mt-1 inline-block rounded-full border border-blue/40 bg-blue/20 px-1.5 py-0.5 text-[9px] font-bold text-blue">
-          Custom · live Grok
+          Custom
         </span>
       ) : hint ? (
         <p className="mt-1 text-[10px] text-white/60">{hint}</p>

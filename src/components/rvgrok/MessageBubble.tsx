@@ -149,9 +149,7 @@ export function MessageBubble({
 
         {message.unverified ? (
           <p className="mb-2 rounded-md border border-amber-400/35 bg-amber-500/15 px-2.5 py-1.5 text-[11px] leading-snug text-amber-100">
-            Unverified reply — not catalog truth. Engine, HP, chassis, and fuel
-            stay on the Facts report. This chat never writes those numbers into
-            Facts.
+            Unverified — confirm specs on the Facts report.
           </p>
         ) : null}
 
