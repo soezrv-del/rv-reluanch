@@ -25,7 +25,6 @@ import {
   honestHorsepowerForCoach,
   honestTorqueForCoach,
 } from "./catalogHonesty.ts";
-import { buildBrochureSpecs } from "./brochureSpecs.ts";
 import { hydrateShareCoachResult } from "./shareCoachHydrate.ts";
 import type { RVSpec } from "./rvTypes.ts";
 
@@ -393,14 +392,28 @@ function kitPowerFromCoach(result: {
   floorplan?: string;
   data: RVSpec;
 }) {
-  const b = buildBrochureSpecs(
-    result.data,
-    result.year,
-    result.make,
-    result.model,
-    result.floorplan || "",
+  const y = parseInt(result.year, 10);
+  const band = (result.data.powertrainByYear || []).find(
+    (b) => y >= b.from && y <= b.to,
   );
-  return sharePowerLines(b.horsepower, b.torque);
+  const engine = band?.engine ?? result.data.engine;
+  const horsepower = band?.horsepower ?? result.data.horsepower;
+  const chassis = band?.chassis ?? result.data.chassis;
+  const torqueLbFt = band?.torqueLbFt ?? result.data.torqueLbFt ?? null;
+  const hp = honestHorsepowerForCoach({
+    engine,
+    horsepower,
+    chassis,
+    type: result.data.type,
+  });
+  const tq = honestTorqueForCoach({
+    engine,
+    chassis,
+    type: result.data.type,
+    torqueLbFt,
+    horsepower,
+  });
+  return sharePowerLines(hp, tq);
 }
 
 test("stale saved Georgetown data rehydrates live catalog torque into kit POWER", () => {

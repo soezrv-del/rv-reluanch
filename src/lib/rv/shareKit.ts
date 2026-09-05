@@ -4,10 +4,10 @@
  */
 
 import type { RVResult } from "./catalog";
-import { estimateMarket, ratingFor } from "./catalog";
+import { estimateMarket, getSpec, ratingFor } from "./catalog";
 import { buildBrochureSpecs, type BrochureSpecs } from "./brochureSpecs";
 import {
-  hydrateShareCoachResult,
+  hydrateShareCoachResult as hydrateShareCoachFromLookup,
   type ShareCatalogLookup,
 } from "./shareCoachHydrate";
 import { getRatingMetadata } from "./ratingSystem";
@@ -58,8 +58,15 @@ export {
 } from "./shareCardImage";
 export type { ShareKitPayload, ShareOutcome } from "./shareCardImage";
 
-export { hydrateShareCoachResult } from "./shareCoachHydrate";
 export type { ShareCatalogLookup } from "./shareCoachHydrate";
+
+/** Rehydrate saved `data` from live catalog SoT. Custom coaches are unchanged. */
+export function hydrateShareCoachResult(
+  result: RVResult,
+  lookup: ShareCatalogLookup = getSpec,
+): RVResult {
+  return hydrateShareCoachFromLookup(result, lookup);
+}
 
 export {
   buildShareMarketSection,
