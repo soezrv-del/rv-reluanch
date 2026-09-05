@@ -54,7 +54,7 @@ export const PAGE_COPY: Record<
   },
   rvshare: {
     title: "RvSHARE",
-    line: "Full brochure specs plus a payment calculator for talking-point strengths.",
+    line: "Brochure summary first — tap + to add rating, market, or specs.",
     badge: "SEND",
   },
   more: {

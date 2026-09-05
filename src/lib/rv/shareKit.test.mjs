@@ -29,9 +29,15 @@ test("STRENGTHS stay product-only; LIFESTYLE is never an empty header", () => {
   assert.doesNotMatch(src, /Financed \$\{formatMoney/);
 });
 
-test("PDF economy does not dress Confirm brochure as a hwy number", () => {
-  assert.match(src, /confirmMpg/);
-  assert.match(src, /confirm brochure/i);
+test("share kit strips Confirm brochure placeholders instead of printing them", () => {
+  assert.match(src, /isSharePlaceholder/);
+  assert.match(src, /brochureSummary/);
+  assert.match(src, /effectiveShareInclude/);
+  const policy = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "shareCardPolicy.ts"),
+    "utf8",
+  );
+  assert.match(policy, /confirm brochure/i);
 });
 
 test("kit footer is a prepared-by signature", () => {

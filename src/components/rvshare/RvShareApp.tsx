@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Bookmark,
   Check,
@@ -7,6 +7,7 @@ import {
   FileText,
   Landmark,
   MessageCircle,
+  Minus,
   Plus,
   Share2,
   Sparkles,
@@ -34,13 +35,15 @@ import {
   buildCoachKit,
   buildSuitePitch,
   brochureSpecGroups,
-  coachSnapshot,
   coachTitle,
   copyKit,
+  brochureSummary,
+  lifestylePitch,
   DEFAULT_SHARE_INCLUDE,
   defaultMarketFor,
   defaultPaymentFor,
   fetchShareImage,
+  hasOptionalShareSections,
   kitStrengths,
   lifestyleImageFor,
   loadSavedUnits,
@@ -218,13 +221,66 @@ function NativeSelect<T extends string | number>({
   );
 }
 
-const INCLUDE_CHIPS: { id: keyof ShareInclude; label: string }[] = [
-  { id: "market", label: "Market" },
+const SHARE_SECTIONS: { id: keyof ShareInclude; label: string }[] = [
+  { id: "rating", label: "Rating" },
+  { id: "market", label: "Market prices" },
   { id: "payment", label: "Payment" },
   { id: "lifestyle", label: "Lifestyle" },
   { id: "strengths", label: "Strengths" },
-  { id: "specs", label: "Specs" },
+  { id: "notes", label: "Notes" },
+  { id: "powertrain", label: "Powertrain" },
+  { id: "weights", label: "Weights" },
+  { id: "dimensions", label: "Dimensions" },
+  { id: "living", label: "Living" },
+  { id: "tanks", label: "Tanks" },
+  { id: "power", label: "Power" },
+  { id: "chassisGear", label: "Chassis gear" },
+  { id: "garage", label: "Garage" },
 ];
+
+function SectionToggle({
+  title,
+  name,
+  on,
+  onToggle,
+  children,
+}: {
+  title: string;
+  name?: string;
+  on: boolean;
+  onToggle: () => void;
+  children?: ReactNode;
+}) {
+  const label = name || title;
+  return (
+    <div className="space-y-2">
+      <div className="flex min-h-11 items-center justify-between gap-2">
+        <p className="text-[9px] font-bold tracking-[0.16em] text-white/70">
+          {title}
+        </p>
+        <button
+          type="button"
+          aria-pressed={on}
+          aria-label={on ? `Remove ${label}` : `Include ${label}`}
+          onClick={onToggle}
+          className={cn(
+            "inline-flex size-11 shrink-0 items-center justify-center rounded-full border",
+            on
+              ? "border-sky-300/40 bg-sky-400/15 text-sky-50"
+              : "border-white/20 bg-white/5 text-white/70",
+          )}
+        >
+          {on ? (
+            <Minus className="size-4" aria-hidden />
+          ) : (
+            <Plus className="size-4" aria-hidden />
+          )}
+        </button>
+      </div>
+      {on ? children : null}
+    </div>
+  );
+}
 
 export function RvShareApp({
   active = true,
@@ -322,9 +378,10 @@ export function RvShareApp({
         selected,
         include.payment ? payment : undefined,
         ratingValue,
+        include.rating,
       ),
     );
-  }, [selected, include.payment, payment, strengthsLocked, ratingValue]);
+  }, [selected, include.payment, include.rating, payment, strengthsLocked, ratingValue]);
 
   const priceOptions = useMemo(() => {
     const mid = Math.round((marketEdit.retailLow + marketEdit.retailHigh) / 2);
@@ -337,6 +394,16 @@ export function RvShareApp({
     return [...uniq.entries()].map(([value, label]) => ({ value, label }));
   }, [marketEdit]);
 
+  const specGroups = useMemo(
+    () => (selected ? brochureSpecGroups(selected) : []),
+    [selected],
+  );
+  const summary = useMemo(
+    () => (selected ? brochureSummary(selected) : { pitch: "", features: [] }),
+    [selected],
+  );
+  const fallbackExtras = !hasOptionalShareSections(include);
+
   const kitText = useMemo(() => {
     if (!selected) return "";
     return buildCoachKit({
@@ -346,20 +413,15 @@ export function RvShareApp({
       market: marketEdit,
       strengths: strengthDraft,
       rating: ratingValue,
+      summary,
     });
-  }, [selected, include, payment, marketEdit, strengthDraft, ratingValue]);
+  }, [selected, include, payment, marketEdit, strengthDraft, ratingValue, summary]);
 
   const loan = useMemo(() => paymentBreakdown(payment), [payment]);
 
-  const snap = useMemo(
-    () => (selected ? coachSnapshot(selected, ratingValue) : null),
-    [selected, ratingValue],
-  );
-
-  const specGroups = useMemo(
-    () => (selected ? brochureSpecGroups(selected) : []),
-    [selected],
-  );
+  const toggleSection = (id: keyof ShareInclude) => {
+    setInclude((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const flash = (msg: string) => {
     setStatus(msg);
@@ -456,12 +518,11 @@ export function RvShareApp({
             SEND KIT
           </p>
           <p className="mt-1.5 text-[17px] font-bold leading-snug text-white">
-            Full brochure specs, then the calculator for strengths
+            Brochure summary first — tap + for the rest
           </p>
           <p className="mt-1 text-[12px] leading-relaxed text-white/90">
-            Year-true powertrain, weights, tanks, and living data from Facts —
-            plus a payment calculator that writes talking-point strengths into
-            the kit.
+            Customers see year, make, model, and the OEM pitch. Add rating,
+            market, payment, or specs only when you want them on the card.
           </p>
           <div className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full border border-amber/40 bg-amber/15">
             <Share2 className="size-4 text-amber" />
@@ -571,121 +632,108 @@ export function RvShareApp({
                 </div>
               </div>
               <div className="space-y-3 p-4">
-                <div className="flex flex-wrap gap-1.5">
-                  {INCLUDE_CHIPS.map((chip) => {
-                    const on = include[chip.id];
-                    return (
-                      <button
-                        key={chip.id}
-                        type="button"
-                        onClick={() => {
-                          setInclude((prev) => ({ ...prev, [chip.id]: !prev[chip.id] }));
-                        }}
-                        className={cn(
-                          "min-h-[36px] rounded-full border px-3 text-[11px] font-bold tracking-wide",
-                          on
-                            ? "border-sky-300/40 bg-sky-400/15 text-sky-50"
-                            : "border-white/20 bg-white/5 text-white/55",
-                        )}
-                      >
-                        {chip.label}
-                      </button>
-                    );
-                  })}
+                <div className="space-y-1.5">
+                  <p className="text-[9px] font-bold tracking-[0.16em] text-white/70">
+                    SUMMARY
+                  </p>
+                  {summary.pitch ? (
+                    <p className="text-[13px] font-semibold leading-relaxed text-white">
+                      {summary.pitch}
+                    </p>
+                  ) : (
+                    <p className="text-[12px] leading-relaxed text-white/70">
+                      Catalog pitch not on file for this coach — type only.
+                    </p>
+                  )}
+                  {summary.features.length ? (
+                    <ul className="space-y-1">
+                      {summary.features.map((f) => (
+                        <li
+                          key={f}
+                          className="text-[12px] font-semibold leading-snug text-white/90"
+                        >
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
 
-                {snap ? (
-                  <div className="space-y-2">
-                    <p className="text-[9px] font-bold tracking-[0.16em] text-white/70">
-                      COACH — RATING IS EDITABLE
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-[var(--radius-md)] border border-white/10 bg-black/20 px-2.5 py-2">
-                        <p className="text-[9px] font-bold tracking-wide text-white/55">
-                          TYPE
-                        </p>
-                        <p className="mt-0.5 truncate text-[13px] font-bold text-white">
-                          {snap.type || "—"}
-                        </p>
-                      </div>
-                      <DraftNumberField
-                        label="RATING ★"
-                        value={ratingValue}
-                        onChange={setRatingEdit}
-                        min={1}
-                        max={5}
-                        decimals={1}
-                      />
-                      <div className="rounded-[var(--radius-md)] border border-white/10 bg-black/20 px-2.5 py-2">
-                        <p className="text-[9px] font-bold tracking-wide text-white/55">
-                          SLEEPS
-                        </p>
-                        <p className="mt-0.5 truncate text-[13px] font-bold text-white">
-                          {snap.sleeps || "—"}
-                        </p>
-                      </div>
-                      <div className="rounded-[var(--radius-md)] border border-white/10 bg-black/20 px-2.5 py-2">
-                        <p className="text-[9px] font-bold tracking-wide text-white/55">
-                          LENGTH
-                        </p>
-                        <p className="mt-0.5 truncate text-[13px] font-bold text-white">
-                          {snap.length || "—"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                {fallbackExtras ? (
+                  <p className="rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-[11px] leading-relaxed text-white/80">
+                    No extras selected — Market and Payment are added so the
+                    card stays useful. Tap + to choose exactly what goes out.
+                  </p>
                 ) : null}
 
-                {include.market ? (
-                  <div className="space-y-2">
-                    <p className="text-[9px] font-bold tracking-[0.16em] text-white/70">
-                      MARKET — EDITABLE
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <MoneyField
-                        label="TRADE-IN EST."
-                        value={marketEdit.tradeIn}
-                        onChange={(tradeIn) =>
-                          setMarketEdit((m) => ({ ...m, tradeIn }))
-                        }
-                      />
-                      <MoneyField
-                        label="RETAIL LOW"
-                        value={marketEdit.retailLow}
-                        onChange={(retailLow) =>
-                          setMarketEdit((m) => ({ ...m, retailLow }))
-                        }
-                      />
-                      <MoneyField
-                        label="RETAIL HIGH"
-                        value={marketEdit.retailHigh}
-                        onChange={(retailHigh) =>
-                          setMarketEdit((m) => ({ ...m, retailHigh }))
-                        }
-                      />
-                      <MoneyField
-                        label="MSRP LOW"
-                        value={marketEdit.msrpLo}
-                        onChange={(msrpLo) =>
-                          setMarketEdit((m) => ({ ...m, msrpLo }))
-                        }
-                      />
-                      <MoneyField
-                        label="MSRP HIGH"
-                        value={marketEdit.msrpHi}
-                        onChange={(msrpHi) =>
-                          setMarketEdit((m) => ({ ...m, msrpHi }))
-                        }
-                      />
-                    </div>
-                  </div>
-                ) : null}
+                <SectionToggle
+                  title="RATING — TAP + TO SHARE"
+                  name="Rating"
+                  on={include.rating}
+                  onToggle={() => toggleSection("rating")}
+                >
+                  <DraftNumberField
+                    label="RATING ★"
+                    value={ratingValue}
+                    onChange={setRatingEdit}
+                    min={1}
+                    max={5}
+                    decimals={1}
+                  />
+                </SectionToggle>
 
-                {include.payment ? (
+                <SectionToggle
+                  title="MARKET PRICES"
+                  name="Market prices"
+                  on={include.market}
+                  onToggle={() => toggleSection("market")}
+                >
+                  <div className="grid grid-cols-2 gap-2">
+                    <MoneyField
+                      label="TRADE-IN EST."
+                      value={marketEdit.tradeIn}
+                      onChange={(tradeIn) =>
+                        setMarketEdit((m) => ({ ...m, tradeIn }))
+                      }
+                    />
+                    <MoneyField
+                      label="RETAIL LOW"
+                      value={marketEdit.retailLow}
+                      onChange={(retailLow) =>
+                        setMarketEdit((m) => ({ ...m, retailLow }))
+                      }
+                    />
+                    <MoneyField
+                      label="RETAIL HIGH"
+                      value={marketEdit.retailHigh}
+                      onChange={(retailHigh) =>
+                        setMarketEdit((m) => ({ ...m, retailHigh }))
+                      }
+                    />
+                    <MoneyField
+                      label="MSRP LOW"
+                      value={marketEdit.msrpLo}
+                      onChange={(msrpLo) =>
+                        setMarketEdit((m) => ({ ...m, msrpLo }))
+                      }
+                    />
+                    <MoneyField
+                      label="MSRP HIGH"
+                      value={marketEdit.msrpHi}
+                      onChange={(msrpHi) =>
+                        setMarketEdit((m) => ({ ...m, msrpHi }))
+                      }
+                    />
+                  </div>
+                </SectionToggle>
+
+                <SectionToggle
+                  title="PAYMENT"
+                  name="Payment"
+                  on={include.payment}
+                  onToggle={() => toggleSection("payment")}
+                >
                   <div className="space-y-2">
-                    <p className="text-[9px] font-bold tracking-[0.16em] text-white/70">
-                      PAYMENT — PRICE & RATE ARE EDITABLE
-                    </p>
                     <div className="grid grid-cols-2 gap-2">
                       <MoneyField
                         label="PRICE"
@@ -790,36 +838,47 @@ export function RvShareApp({
                       ))}
                     </div>
                   </div>
-                ) : null}
+                </SectionToggle>
 
-                {include.strengths ? (
+                <SectionToggle
+                  title="LIFESTYLE"
+                  name="Lifestyle"
+                  on={include.lifestyle}
+                  onToggle={() => toggleSection("lifestyle")}
+                >
+                  <p className="text-[12px] font-semibold leading-relaxed text-white/90">
+                    {lifestylePitch(selected.data.type)}
+                  </p>
+                </SectionToggle>
+
+                <SectionToggle
+                  title="STRENGTHS — EDITABLE"
+                  name="Strengths"
+                  on={include.strengths}
+                  onToggle={() => toggleSection("strengths")}
+                >
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-[9px] font-bold tracking-[0.16em] text-white/70">
-                        STRENGTHS — EDITABLE
-                      </p>
-                      <div className="flex gap-2">
-                        {strengthsLocked ? (
-                          <button
-                            type="button"
-                            onClick={() => setStrengthsLocked(false)}
-                            className="text-[10px] font-bold tracking-wide text-sky-200"
-                          >
-                            Reset
-                          </button>
-                        ) : null}
+                    <div className="flex justify-end gap-2">
+                      {strengthsLocked ? (
                         <button
                           type="button"
-                          onClick={() => {
-                            setStrengthsLocked(true);
-                            setStrengthDraft((prev) => [...prev, ""]);
-                          }}
-                          className="inline-flex min-h-[32px] items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2.5 text-[10px] font-bold text-white"
+                          onClick={() => setStrengthsLocked(false)}
+                          className="text-[10px] font-bold tracking-wide text-sky-200"
                         >
-                          <Plus className="size-3" />
-                          Add
+                          Reset
                         </button>
-                      </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStrengthsLocked(true);
+                          setStrengthDraft((prev) => [...prev, ""]);
+                        }}
+                        className="inline-flex min-h-[32px] items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2.5 text-[10px] font-bold text-white"
+                      >
+                        <Plus className="size-3" />
+                        Add
+                      </button>
                     </div>
                     <ul className="space-y-1.5">
                       {strengthDraft.map((s, i) => (
@@ -853,34 +912,33 @@ export function RvShareApp({
                       ))}
                     </ul>
                   </div>
-                ) : null}
+                </SectionToggle>
 
-                {include.specs && specGroups.length ? (
-                  <div className="space-y-3">
-                    <p className="text-[9px] font-bold tracking-[0.16em] text-white/70">
-                      BROCHURE SPECS
-                    </p>
-                    {specGroups.map((g) => (
-                        <div key={g.title}>
-                          <p className="mb-1 text-[10px] font-bold tracking-[0.14em] text-sky-200/90">
-                            {g.title}
-                          </p>
-                          <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                            {g.rows.map((row) => (
-                              <div key={`${g.title}-${row.label}`} className="min-w-0">
-                                <dt className="text-[9px] font-bold tracking-wide text-white/50">
-                                  {row.label}
-                                </dt>
-                                <dd className="truncate text-[12px] font-semibold text-white">
-                                  {row.value}
-                                </dd>
-                              </div>
-                            ))}
-                          </dl>
-                        </div>
-                      ))}
-                  </div>
-                ) : null}
+                {specGroups.map((g) => {
+                  const meta = SHARE_SECTIONS.find((s) => s.id === g.id);
+                  return (
+                    <SectionToggle
+                      key={g.id}
+                      title={meta?.label.toUpperCase() || g.title}
+                      name={meta?.label || g.title}
+                      on={include[g.id]}
+                      onToggle={() => toggleSection(g.id)}
+                    >
+                      <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                        {g.rows.map((row) => (
+                          <div key={`${g.title}-${row.label}`} className="min-w-0">
+                            <dt className="text-[9px] font-bold tracking-wide text-white/50">
+                              {row.label}
+                            </dt>
+                            <dd className="truncate text-[12px] font-semibold text-white">
+                              {row.value}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </SectionToggle>
+                  );
+                })}
 
                 <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/10 bg-black/30 p-3 text-[11px] leading-relaxed text-white/85">
                   {kitText}
