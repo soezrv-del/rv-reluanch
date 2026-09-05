@@ -249,6 +249,10 @@ test("Trips Navigate no longer forces SET PROFILE when a coach is known", () => 
   assert.match(ui, /Add an RV profile\?/);
   assert.doesNotMatch(ui, /SET PROFILE/);
   assert.doesNotMatch(ui, /Set your RV profile first/);
+  assert.ok(
+    ui.indexOf("Add an RV profile?") > ui.indexOf("Start Turn-by-Turn"),
+    "unknown-coach prompt stays after a route, not a gate",
+  );
 });
 
 test("loadLockedProfile keeps a coach without floorplan", () => {
