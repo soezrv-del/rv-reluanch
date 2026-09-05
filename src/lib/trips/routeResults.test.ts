@@ -124,6 +124,8 @@ test("Navigate results sheet uses live stats and labels demo camps/map", () => {
   assert.match(ui, /not a clearance/);
   assert.match(ui, /Sample pads — not live inventory/);
   assert.match(ui, /\bDEMO\b/);
+  assert.match(ui, /FuelAlongRoute/);
+  assert.match(ui, /\/api\/fuel/);
   assert.doesNotMatch(ui, /useState\(DEMO_ROUTE\)/);
   assert.doesNotMatch(ui, /\.\.\.DEMO_ROUTE/);
   assert.doesNotMatch(ui, /RVTRIPS_MAP_PANEL/);
