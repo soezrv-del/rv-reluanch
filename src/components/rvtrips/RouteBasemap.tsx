@@ -23,6 +23,12 @@ import {
   type TileCatalog,
   type TileProvider,
 } from "@/lib/trips/basemap";
+import {
+  followTileView,
+  shouldRecenterFollow,
+  type FollowStatus,
+  type GeoFix,
+} from "@/lib/trips/geoFollow";
 
 const MAP_H = 300;
 const MAX_FUEL_PINS = 12;
@@ -46,6 +52,9 @@ export function RouteBasemap({
   campStops,
   selectedCampId,
   onSelectCamp,
+  follow,
+  followActive,
+  followStatus = "off",
 }: {
   geometry: OsrmLineString | null | undefined;
   origin?: { lat: number; lng: number; label?: string } | null;
@@ -57,6 +66,9 @@ export function RouteBasemap({
   campStops?: CampStop[];
   selectedCampId?: string | null;
   onSelectCamp?: (id: string) => void;
+  follow?: Pick<GeoFix, "lat" | "lng" | "heading"> | null;
+  followActive?: boolean;
+  followStatus?: FollowStatus;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(320);
@@ -113,6 +125,31 @@ export function RouteBasemap({
     [vias],
   );
 
+  const followPt = useMemo(() => {
+    if (!followActive || !follow || !finiteLngLat(follow)) return null;
+    return follow;
+  }, [followActive, follow]);
+
+  const [followCenter, setFollowCenter] = useState<BasemapLngLat | null>(null);
+  const lastRecenterRef = useRef(0);
+
+  useEffect(() => {
+    if (!followPt) {
+      setFollowCenter(null);
+      lastRecenterRef.current = 0;
+      return;
+    }
+    setFollowCenter((prev) => {
+      if (
+        shouldRecenterFollow(prev, followPt, lastRecenterRef.current, Date.now())
+      ) {
+        lastRecenterRef.current = Date.now();
+        return { lat: followPt.lat, lng: followPt.lng };
+      }
+      return prev ?? { lat: followPt.lat, lng: followPt.lng };
+    });
+  }, [followPt]);
+
   const box = useMemo(() => {
     return mergeBboxes(
       bboxFromGeometry(geometry),
@@ -123,9 +160,12 @@ export function RouteBasemap({
   }, [geometry, originPt, destPt, viaPts]);
 
   const view = useMemo(() => {
+    if (followActive && followCenter) {
+      return followTileView(followCenter, w, MAP_H);
+    }
     if (!box) return null;
     return fitTileView(box, w, MAP_H);
-  }, [box, w]);
+  }, [box, w, followActive, followCenter]);
 
   const tiles = useMemo(() => {
     if (!view || provider === "svg") return [];
@@ -203,6 +243,23 @@ export function RouteBasemap({
     return rows;
   }, [view, originPt, destPt, viaPts, fuelStops, campStops]);
 
+  const puck = useMemo(() => {
+    if (!view || !followPt) return null;
+    return {
+      ...pointToPixel(followPt.lat, followPt.lng, view),
+      heading: followPt.heading ?? null,
+    };
+  }, [view, followPt]);
+
+  const status: FollowStatus =
+    followStatus !== "off"
+      ? followStatus
+      : !followActive
+        ? "off"
+        : puck
+          ? "live"
+          : "waiting";
+
   const onTileError = () => {
     failRef.current += 1;
     if (failRef.current < 3) return;
@@ -228,6 +285,7 @@ export function RouteBasemap({
       ref={wrapRef}
       data-route-basemap
       data-tile-source={catalog ? provider : "pending"}
+      data-follow-status={status}
       className="relative overflow-hidden rounded-xl border border-white/12 bg-[#0b1410]"
       style={{ height: MAP_H }}
     >
@@ -331,6 +389,54 @@ export function RouteBasemap({
           </span>
         );
       })}
+
+      {puck ? (
+        <div
+          data-follow-puck
+          className="pointer-events-none absolute z-[6] -translate-x-1/2 -translate-y-1/2"
+          style={{ left: puck.left, top: puck.top }}
+          title="Your location"
+        >
+          <div
+            className="relative flex flex-col items-center"
+            style={
+              puck.heading != null
+                ? { transform: `rotate(${puck.heading}deg)` }
+                : undefined
+            }
+          >
+            {puck.heading != null ? (
+              <span
+                data-follow-heading
+                className="mb-px h-0 w-0 border-x-[5px] border-b-[9px] border-x-transparent border-b-blue"
+              />
+            ) : null}
+            <span className="relative">
+              <span className="absolute -inset-1.5 rounded-full bg-blue/30" />
+              <span className="relative block size-3.5 rounded-full border-2 border-white bg-blue" />
+            </span>
+          </div>
+        </div>
+      ) : null}
+
+      {followActive ? (
+        <p
+          data-follow-chip
+          className={cn(
+            "absolute left-2 top-2 z-[6] rounded-full px-2 py-1 text-[10px] font-bold",
+            status === "live" && "bg-blue/90 text-black",
+            status === "denied" && "bg-amber text-black",
+            (status === "waiting" || status === "off") &&
+              "bg-black/55 text-white/85",
+          )}
+        >
+          {status === "live"
+            ? "GPS follow"
+            : status === "denied"
+              ? "Location denied"
+              : "Finding GPS…"}
+        </p>
+      ) : null}
 
       <p
         data-tile-note

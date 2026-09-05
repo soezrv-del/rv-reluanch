@@ -119,6 +119,7 @@ import {
   saveTrip,
   type SavedTrip,
 } from "@/lib/trips/savedTrip";
+import { useNavFollow } from "@/lib/trips/geoFollow";
 
 type SubTab =
   | "navigate"
@@ -186,6 +187,7 @@ export function RvTripsApp() {
   const [pack, setPack] = useState(DEMO_PACK);
   const [navArmed, setNavArmed] = useState(false);
   const [navStepIdx, setNavStepIdx] = useState(0);
+  const follow = useNavFollow(navArmed);
   const shellNav = useShellNavOptional();
 
   const bootSeed = useMemo(() => {
@@ -1606,6 +1608,9 @@ export function RvTripsApp() {
                     campStops={camps?.camps}
                     selectedCampId={campFocusId}
                     onSelectCamp={(id) => setCampFocusId(id || null)}
+                    follow={follow.fix}
+                    followActive={navArmed}
+                    followStatus={follow.status}
                   />
 
                   <FuelAlongRoute
@@ -1697,6 +1702,19 @@ export function RvTripsApp() {
                       {liveDirections[navStepIdx]?.mi} mi
                     </span>
                   </div>
+                  {follow.error ? (
+                    <p data-follow-note className="text-[11px] leading-snug text-amber">
+                      {follow.error}
+                    </p>
+                  ) : follow.status === "live" ? (
+                    <p data-follow-note className="text-[11px] text-blue">
+                      Map follows your GPS.
+                    </p>
+                  ) : (
+                    <p data-follow-note className="text-[11px] text-white/75">
+                      Finding GPS…
+                    </p>
+                  )}
                   <p className="text-[18px] font-bold leading-snug text-white">
                     {liveDirections[navStepIdx]?.instruction}
                   </p>
@@ -1734,7 +1752,8 @@ export function RvTripsApp() {
                     </button>
                   </div>
                   <p className="text-[11px] text-white">
-                    Speaks each step on your phone. Use Next as you drive.
+                    Speaks each step. Map follows you when GPS is on. Use Next
+                    as you drive.
                   </p>
                 </section>
               ) : null}
