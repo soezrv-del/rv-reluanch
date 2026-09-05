@@ -10,7 +10,6 @@ import {
   Lock,
   MapPin,
   Navigation,
-  Search,
   Tent,
   Unlock,
   User,
@@ -75,6 +74,16 @@ import {
   mapsUrl,
 } from "@/lib/trips/dumpStations";
 import { DumpMap } from "@/components/rvtrips/DumpMap";
+import {
+  canSubmitPlan,
+  GEOCODE_DEBOUNCE_MS,
+  loadLastKnownOrigin,
+  originIsDevice,
+  PLAN_DEST_CHIPS,
+  saveLastKnownOrigin,
+  shouldTypeahead,
+  type PlanPlace,
+} from "@/lib/trips/planTrip";
 
 type SubTab =
   | "navigate"
@@ -94,7 +103,7 @@ const SUB_TABS: { id: SubTab; label: string; icon: typeof Navigation }[] = [
   { id: "profile", label: "Profile", icon: User },
 ];
 
-type PlaceHit = { label: string; lat: number; lng: number; kind: string };
+type PlaceHit = PlanPlace;
 
 type NavStep = {
   id: string;
@@ -183,15 +192,25 @@ export function RvTripsApp() {
     bootSeed ? coachIdentityKey(bootSeed.profile) : "",
   );
 
-  const [originText, setOriginText] = useState("");
+  const bootOrigin = useMemo(() => {
+    try {
+      return loadLastKnownOrigin();
+    } catch {
+      return null;
+    }
+  }, []);
+  const [originText, setOriginText] = useState(bootOrigin?.label ?? "");
   const [destText, setDestText] = useState("");
-  const [originPlace, setOriginPlace] = useState<PlaceHit | null>(null);
+  const [originPlace, setOriginPlace] = useState<PlaceHit | null>(bootOrigin);
   const [destPlace, setDestPlace] = useState<PlaceHit | null>(null);
+  const [originOpen, setOriginOpen] = useState(!bootOrigin);
   const [geoHits, setGeoHits] = useState<PlaceHit[]>([]);
   const [geoFor, setGeoFor] = useState<"origin" | "dest" | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
+  const geoAbortRef = useRef<AbortController | null>(null);
+  const didAutoLocate = useRef(false);
 
   const [route, setRoute] = useState(DEMO_ROUTE);
   const [osrm, setOsrm] = useState<OsrmRouteResult | null>(null);
@@ -454,72 +473,111 @@ export function RvTripsApp() {
     speakNav(line);
   }, [navArmed, navStepIdx, liveDirections, speakNav]);
 
+  const commitOrigin = useCallback((hit: PlaceHit) => {
+    setOriginPlace(hit);
+    setOriginText(hit.label);
+    setOriginOpen(false);
+    saveLastKnownOrigin(hit);
+    setNavArmed(false);
+    setNavStepIdx(0);
+  }, []);
+
   const searchPlace = async (q: string, which: "origin" | "dest") => {
+    geoAbortRef.current?.abort();
+    const ctrl = new AbortController();
+    geoAbortRef.current = ctrl;
     setGeoFor(which);
     setGeoLoading(true);
-    setLocateError(null);
+    if (which === "origin") setLocateError(null);
     try {
       const res = await fetch(
         `/api/geocode?q=${encodeURIComponent(q.trim() || " ")}`,
+        { signal: ctrl.signal },
       );
       const json = (await res.json()) as { hits?: PlaceHit[] };
+      if (ctrl.signal.aborted) return;
       setGeoHits(json.hits || []);
-    } catch {
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
       setGeoHits([]);
     } finally {
-      setGeoLoading(false);
+      if (!ctrl.signal.aborted) setGeoLoading(false);
     }
   };
 
   const pickPlace = (hit: PlaceHit) => {
-    if (geoFor === "origin") {
-      setOriginPlace(hit);
-      setOriginText(hit.label);
-    } else if (geoFor === "dest") {
-      setDestPlace(hit);
-      setDestText(hit.label);
-    }
+    const which = geoFor;
     setGeoHits([]);
     setGeoFor(null);
     setLocateError(null);
     setNavArmed(false);
     setNavStepIdx(0);
+    if (which === "origin") {
+      commitOrigin(hit);
+      return;
+    }
+    setDestPlace(hit);
+    setDestText(hit.label);
+    if (originPlace) setRouteKey((k) => k + 1);
   };
 
-  const useCurrentLocation = useCallback(async () => {
-    setLocateError(null);
-    setLocating(true);
-    setGeoHits([]);
-    setGeoFor(null);
-    try {
-      const pos = await readDevicePosition();
-      const { latitude: lat, longitude: lng } = pos.coords;
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-        throw new Error("Invalid coordinates from device.");
-      }
-
-      let label = "Current location";
+  const useCurrentLocation = useCallback(
+    async (opts?: { quiet?: boolean }) => {
+      const quiet = Boolean(opts?.quiet);
+      if (!quiet) setLocateError(null);
+      setLocating(true);
+      setGeoHits([]);
+      setGeoFor(null);
       try {
-        const res = await fetch(
-          `/api/geocode?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`,
-        );
-        const json = (await res.json()) as { hits?: PlaceHit[] };
-        if (json.hits?.[0]?.label) label = json.hits[0].label;
-      } catch {
-        /* coords still route even if reverse geocode fails */
-      }
+        const pos = await readDevicePosition();
+        const { latitude: lat, longitude: lng } = pos.coords;
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+          throw new Error("Invalid coordinates from device.");
+        }
 
-      const hit: PlaceHit = { label, lat, lng, kind: "current" };
-      setOriginPlace(hit);
-      setOriginText(label);
-      setNavArmed(false);
-      setNavStepIdx(0);
-    } catch (err) {
-      setLocateError(geoErrorMessage(err));
-    } finally {
-      setLocating(false);
-    }
-  }, []);
+        let label = "Current location";
+        try {
+          const res = await fetch(
+            `/api/geocode?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`,
+          );
+          const json = (await res.json()) as { hits?: PlaceHit[] };
+          if (json.hits?.[0]?.label) label = json.hits[0].label;
+        } catch {
+          /* coords still route even if reverse geocode fails */
+        }
+
+        commitOrigin({ label, lat, lng, kind: "current" });
+      } catch (err) {
+        if (!quiet) setLocateError(geoErrorMessage(err));
+      } finally {
+        setLocating(false);
+      }
+    },
+    [commitOrigin],
+  );
+
+  useEffect(() => {
+    if (didAutoLocate.current) return;
+    didAutoLocate.current = true;
+    void useCurrentLocation({ quiet: Boolean(bootOrigin) });
+  }, [bootOrigin, useCurrentLocation]);
+
+  useEffect(() => {
+    if (!shouldTypeahead(destText, destPlace)) return;
+    const t = window.setTimeout(() => {
+      void searchPlace(destText, "dest");
+    }, GEOCODE_DEBOUNCE_MS);
+    return () => window.clearTimeout(t);
+  }, [destText, destPlace]);
+
+  useEffect(() => {
+    if (!originOpen) return;
+    if (!shouldTypeahead(originText, originPlace)) return;
+    const t = window.setTimeout(() => {
+      void searchPlace(originText, "origin");
+    }, GEOCODE_DEBOUNCE_MS);
+    return () => window.clearTimeout(t);
+  }, [originOpen, originText, originPlace]);
 
   const geocodeAndRoute = async () => {
     setRouteError(null);
@@ -532,10 +590,7 @@ export function RvTripsApp() {
       );
       const j = (await r.json()) as { hits?: PlaceHit[] };
       o = j.hits?.[0] || null;
-      if (o) {
-        setOriginPlace(o);
-        setOriginText(o.label);
-      }
+      if (o) commitOrigin(o);
     }
     if (!d && destText.trim()) {
       const r = await fetch(
@@ -630,22 +685,32 @@ export function RvTripsApp() {
     [dumpQuery, dumpState, dumpNearLat, dumpNearLng],
   );
 
-  const routeToDump = (d: (typeof dumpList)[number]) => {
-    const hit: PlaceHit = {
-      label: `${d.name} · ${d.city}, ${d.state}`,
-      lat: d.lat,
-      lng: d.lng,
-      kind: "dump",
-    };
+  const pickDest = (hit: PlaceHit) => {
     setDestPlace(hit);
     setDestText(hit.label);
     setGeoHits([]);
     setGeoFor(null);
     setNavArmed(false);
     setNavStepIdx(0);
-    setSub("navigate");
     if (originPlace) setRouteKey((k) => k + 1);
   };
+
+  const routeToDump = (d: (typeof dumpList)[number]) => {
+    pickDest({
+      label: `${d.name} · ${d.city}, ${d.state}`,
+      lat: d.lat,
+      lng: d.lng,
+      kind: "dump",
+    });
+    setSub("navigate");
+  };
+
+  const canRoute = canSubmitPlan({
+    originPlace,
+    originText,
+    destPlace,
+    destText,
+  });
   const hasRoutePoints = Boolean(originPlace && destPlace);
   const canLock = profileIsComplete(draft) && !locked;
   const dimsReady = Boolean((year && make && model) || draft.lengthFt > 0);
@@ -722,7 +787,7 @@ export function RvTripsApp() {
                       ? "Route offline"
                       : hasRoutePoints
                         ? "Ready"
-                        : "Enter route"}
+                        : "Where to?"}
               </span>
             </div>
           </div>
@@ -877,91 +942,59 @@ export function RvTripsApp() {
           {/* ── NAVIGATE ── */}
           {sub === "navigate" ? (
             <>
-              {displayCoach ? (
-                <div className="glass-prestige flex items-center gap-3 rounded-[1.15rem] px-3.5 py-3">
-                  {locked ? (
-                    <Lock className="size-4 text-emerald-300" />
-                  ) : (
-                    <User className="size-4 text-sky-200" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-bold text-white">
-                      {displayCoach.year} {displayCoach.make} {displayCoach.model}
-                      {displayCoach.floorplan ? ` · ${displayCoach.floorplan}` : ""}
-                    </p>
-                    <p className="text-[11px] text-white">
-                      {displayCoach.heightFt}′ H · {displayCoach.lengthFt}′ L ·{" "}
-                      {displayCoach.widthFt}′ W ·{" "}
-                      {displayCoach.weightLbs.toLocaleString()} lbs
-                      {anyDimEstimated(displayCoach.dimSources)
-                        ? " · some estimates"
-                        : ""}
-                    </p>
-                  </div>
+              <section className="glass-prestige space-y-2.5 rounded-[1.25rem] p-3.5">
+                {originPlace && !originOpen ? (
                   <button
                     type="button"
-                    onClick={() => setSub("profile")}
-                    className="text-[11px] font-bold text-blue"
+                    onClick={() => setOriginOpen(true)}
+                    className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-white/12 bg-black/30 px-3 py-2.5 text-left"
+                    aria-label="Change starting point"
                   >
-                    Edit
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setSub("profile")}
-                  className="glass-prestige flex w-full items-center gap-3 rounded-[1.15rem] px-3.5 py-3 text-left"
-                >
-                  <User className="size-5 text-white/80" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-bold text-white">
-                      Add an RV profile?
-                    </p>
-                    <p className="text-[11px] text-white">
-                      Optional — route anyway. Profile unlocks height/length
-                      alerts.
-                    </p>
-                  </div>
-                  <ChevronRight className="size-5 text-white" />
-                </button>
-              )}
-
-              <section className="glass-prestige space-y-2.5 rounded-[1.25rem] p-3.5">
-                <div className="flex items-center gap-2">
-                  <MapPin className="size-4 text-blue" />
-                  <h2 className="text-[12px] font-bold tracking-[0.14em] text-white">
-                    ROUTE
-                  </h2>
-                </div>
-
-                <div className="block">
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-bold tracking-[0.12em] text-white">
-                      STARTING FROM
+                    {locating ? (
+                      <Loader2 className="size-4 shrink-0 animate-spin text-sky-200" />
+                    ) : (
+                      <LocateFixed
+                        className={cn(
+                          "size-4 shrink-0",
+                          originIsDevice(originPlace)
+                            ? "text-emerald-300"
+                            : "text-blue",
+                        )}
+                      />
+                    )}
+                    <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-white">
+                      {originPlace.label}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => void useCurrentLocation()}
-                      disabled={locating}
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold transition",
-                        locating
-                          ? "border-sky-300/40 bg-sky-500/20 text-sky-100"
-                          : originPlace?.kind === "current"
-                            ? "border-emerald-400/45 bg-emerald-500/20 text-emerald-100"
-                            : "border-white/20 bg-black/35 text-white/90 hover:border-sky-300/40 hover:bg-sky-500/15",
-                      )}
-                      aria-label="Use current location as starting point"
-                    >
-                      {locating ? (
-                        <Loader2 className="size-3 animate-spin" />
-                      ) : (
-                        <LocateFixed className="size-3" />
-                      )}
-                      {locating ? "Locating…" : "Current location"}
-                    </button>
-                  </div>
-                  <div className="flex gap-2">
+                    <span className="text-[11px] font-bold text-blue">Change</span>
+                  </button>
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold tracking-[0.12em] text-white">
+                        FROM
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void useCurrentLocation()}
+                        disabled={locating}
+                        className={cn(
+                          "inline-flex min-h-11 items-center gap-1 rounded-full border px-3 py-2 text-[11px] font-bold transition",
+                          locating
+                            ? "border-sky-300/40 bg-sky-500/20 text-sky-100"
+                            : originIsDevice(originPlace)
+                              ? "border-emerald-400/45 bg-emerald-500/20 text-emerald-100"
+                              : "border-white/20 bg-black/35 text-white/90 hover:border-sky-300/40 hover:bg-sky-500/15",
+                        )}
+                        aria-label="Use my location as starting point"
+                      >
+                        {locating ? (
+                          <Loader2 className="size-3 animate-spin" />
+                        ) : (
+                          <LocateFixed className="size-3" />
+                        )}
+                        {locating ? "Locating…" : "Use my location"}
+                      </button>
+                    </div>
                     <input
                       value={originText}
                       onChange={(e) => {
@@ -969,54 +1002,35 @@ export function RvTripsApp() {
                         setOriginPlace(null);
                         setLocateError(null);
                       }}
-                      placeholder="City, address, or use current location"
-                      className="glass-field min-w-0 flex-1 rounded-xl px-3 py-2.5 text-[14px] text-white outline-none placeholder:text-white/70"
+                      placeholder="City or address"
+                      className="glass-field min-h-11 w-full rounded-xl px-3 py-2.5 text-[14px] text-white outline-none placeholder:text-white/70"
                       autoComplete="street-address"
+                      aria-label="Starting from"
                     />
-                    <button
-                      type="button"
-                      onClick={() => void searchPlace(originText, "origin")}
-                      className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue text-white"
-                      aria-label="Search origin"
-                    >
-                      <Search className="size-4" />
-                    </button>
                   </div>
-                  {locateError ? (
-                    <p className="mt-1.5 text-[11px] leading-snug text-amber">
-                      {locateError}
-                    </p>
-                  ) : originPlace?.kind === "current" ? (
-                    <p className="mt-1.5 text-[11px] leading-snug text-emerald-200/90">
-                      Using your current location for the start of the route.
-                    </p>
-                  ) : null}
-                </div>
+                )}
+                {locateError ? (
+                  <p className="text-[11px] leading-snug text-amber">
+                    {locateError}
+                  </p>
+                ) : null}
 
-                <label className="block">
-                  <span className="mb-1 block text-[10px] font-bold tracking-[0.12em] text-white">
-                    DESTINATION
-                  </span>
-                  <div className="flex gap-2">
-                    <input
-                      value={destText}
-                      onChange={(e) => {
-                        setDestText(e.target.value);
-                        setDestPlace(null);
-                      }}
-                      placeholder="City, park, or address"
-                      className="glass-field min-w-0 flex-1 rounded-xl px-3 py-2.5 text-[14px] text-white outline-none placeholder:text-white/70"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => void searchPlace(destText, "dest")}
-                      className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue text-white"
-                      aria-label="Search destination"
-                    >
-                      <Search className="size-4" />
-                    </button>
-                  </div>
-                </label>
+                <input
+                  value={destText}
+                  onChange={(e) => {
+                    setDestText(e.target.value);
+                    setDestPlace(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && canRoute) {
+                      e.preventDefault();
+                      void geocodeAndRoute();
+                    }
+                  }}
+                  placeholder="Where to?"
+                  className="glass-field min-h-11 w-full rounded-xl px-3 py-2.5 text-[15px] font-semibold text-white outline-none placeholder:text-white/65"
+                  aria-label="Destination"
+                />
 
                 {geoFor && (geoLoading || geoHits.length > 0) ? (
                   <div className="max-h-48 space-y-1 overflow-y-auto rounded-xl border border-white/15 bg-black/50 p-1.5">
@@ -1030,7 +1044,7 @@ export function RvTripsApp() {
                           key={`${h.lat},${h.lng},${h.label}`}
                           type="button"
                           onClick={() => pickPlace(h)}
-                          className="flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left hover:bg-white/10"
+                          className="flex min-h-11 w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left hover:bg-white/10"
                         >
                           <MapPin className="mt-0.5 size-3.5 shrink-0 text-blue" />
                           <span className="text-[13px] font-medium leading-snug text-white">
@@ -1043,35 +1057,26 @@ export function RvTripsApp() {
                 ) : null}
 
                 <div className="flex flex-wrap gap-1.5">
-                  {[
-                    "Seattle, WA",
-                    "Portland, OR",
-                    "Glacier National Park, MT",
-                    "Yellowstone National Park, WY",
-                    "Quartzsite, AZ",
-                  ].map((label) => (
+                  {PLAN_DEST_CHIPS.map((chip) => (
                     <button
-                      key={label}
+                      key={chip.label}
                       type="button"
-                      onClick={() => {
-                        setDestText(label);
-                        void searchPlace(label, "dest");
-                      }}
-                      className="rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[10px] font-semibold text-white"
+                      onClick={() => pickDest(chip)}
+                      className="min-h-11 rounded-full border border-white/20 bg-black/30 px-3 py-2 text-[11px] font-semibold text-white"
                     >
-                      {label.split(",")[0]}
+                      {chip.label.split(",")[0]}
                     </button>
                   ))}
                 </div>
 
                 <button
                   type="button"
-                  disabled={!originText.trim() || !destText.trim()}
+                  disabled={!canRoute}
                   onClick={() => void geocodeAndRoute()}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue px-3 py-3 text-[14px] font-bold text-white disabled:opacity-40"
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue px-3 py-3 text-[15px] font-bold text-white disabled:opacity-40"
                 >
                   <Navigation className="size-4" />
-                  Calculate RV Route
+                  Route
                 </button>
                 {routeError ? (
                   <p className="text-[12px] text-amber">{routeError}</p>
@@ -1137,39 +1142,58 @@ export function RvTripsApp() {
                 </section>
               )}
 
-              <button
-                type="button"
-                disabled={routeStatus !== "live" || !liveDirections?.length}
-                onClick={() => {
-                  if (navArmed) {
-                    setNavArmed(false);
-                    setNavStepIdx(0);
-                    try {
-                      window.speechSynthesis?.cancel();
-                    } catch {
-                      /* */
+              {(routeStatus === "live" || routeStatus === "loading") && (
+                <button
+                  type="button"
+                  disabled={routeStatus !== "live" || !liveDirections?.length}
+                  onClick={() => {
+                    if (navArmed) {
+                      setNavArmed(false);
+                      setNavStepIdx(0);
+                      try {
+                        window.speechSynthesis?.cancel();
+                      } catch {
+                        /* */
+                      }
+                      return;
                     }
-                    return;
-                  }
-                  setNavStepIdx(0);
-                  setNavArmed(true);
-                }}
-                className={cn(
-                  "flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-[16px] font-bold transition disabled:opacity-40",
-                  navArmed
-                    ? "border border-ruby/80 bg-ruby text-white shadow-[0_0_28px_rgba(212,37,53,0.55)]"
-                    : "bg-blue text-white shadow-[0_0_28px_rgba(80,160,255,0.4)]",
-                )}
-              >
-                <Navigation className="size-5" />
-                {navArmed
-                  ? "Stop navigation"
-                  : routeStatus === "live" && liveDirections?.length
-                    ? "Start Turn-by-Turn"
-                    : routeStatus === "loading"
-                      ? "Calculating…"
-                      : "Calculate a route first"}
-              </button>
+                    setNavStepIdx(0);
+                    setNavArmed(true);
+                  }}
+                  className={cn(
+                    "flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-[16px] font-bold transition disabled:opacity-40",
+                    navArmed
+                      ? "border border-ruby/80 bg-ruby text-white shadow-[0_0_28px_rgba(212,37,53,0.55)]"
+                      : "bg-blue text-white shadow-[0_0_28px_rgba(80,160,255,0.4)]",
+                  )}
+                >
+                  <Navigation className="size-5" />
+                  {navArmed
+                    ? "Stop navigation"
+                    : routeStatus === "live" && liveDirections?.length
+                      ? "Start Turn-by-Turn"
+                      : "Calculating…"}
+                </button>
+              )}
+
+              {routeStatus === "live" && !displayCoach ? (
+                <button
+                  type="button"
+                  onClick={() => setSub("profile")}
+                  className="glass-prestige flex w-full items-center gap-3 rounded-[1.15rem] px-3.5 py-3 text-left"
+                >
+                  <User className="size-5 text-white/80" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-bold text-white">
+                      Add an RV profile?
+                    </p>
+                    <p className="text-[11px] text-white">
+                      Optional — height and length alerts. Routing already works.
+                    </p>
+                  </div>
+                  <ChevronRight className="size-5 text-white" />
+                </button>
+              ) : null}
 
               {navArmed && liveDirections && liveDirections.length > 0 ? (
                 <section className="glass-prestige space-y-3 rounded-[1.25rem] border border-emerald-400/35 p-3.5">
@@ -1269,9 +1293,8 @@ export function RvTripsApp() {
                 </p>
               ) : !hasRoutePoints ? (
                 <p className="rounded-xl border border-white/15 bg-black/30 px-3 py-2.5 text-[13px] text-white">
-                  Enter start + destination, then{" "}
-                  <span className="font-bold">Calculate RV Route</span> for
-                  miles, time, and spoken turn-by-turn.
+                  Type a destination — or tap a city — then{" "}
+                  <span className="font-bold">Route</span>.
                 </p>
               ) : null}
 
