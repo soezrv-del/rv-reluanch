@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { parseLngLat, type OsrmLngLat } from "@/lib/trips/osrm";
 import {
   clampCorridorWidthMi,
+  effectiveCorridorWidthMi,
   emptyFuelResult,
   encodePathParam,
   finalizeFuelStops,
@@ -179,7 +180,7 @@ export const Route = createFileRoute("/api/fuel")({
         const to = parseLngLat(url.searchParams.get("to"));
         const via = parsePathParam(url.searchParams.get("via"));
         const path = parsePathParam(url.searchParams.get("path"));
-        const widthMi = clampCorridorWidthMi(url.searchParams.get("widthMi"));
+        const requestedWidth = clampCorridorWidthMi(url.searchParams.get("widthMi"));
 
         const corridor = resolveCorridor({ from, to, via, path });
         if (!corridor || corridor.length < 2) {
@@ -189,6 +190,7 @@ export const Route = createFileRoute("/api/fuel")({
           );
         }
 
+        const widthMi = effectiveCorridorWidthMi(requestedWidth, corridor.length);
         const centers = sampleCorridorPoints(corridor);
         const cacheKey = `${encodePathParam(centers)}|w${widthMi}|${hereKey() ? "h" : "o"}`;
         const cached = cache.get(cacheKey);

@@ -7,6 +7,7 @@ import {
   buildFuelQuery,
   classifyFuelKind,
   clampCorridorWidthMi,
+  effectiveCorridorWidthMi,
   dedupFuelStops,
   downsampleByDistance,
   emptyFuelResult,
@@ -25,6 +26,7 @@ import {
   sortAlongCorridor,
   sourceLabel,
   sourceNote,
+  type FuelOverpassEl,
   type FuelStop,
 } from "./corridorFuel.ts";
 import type { OsrmLngLat } from "./osrm.ts";
@@ -127,7 +129,7 @@ test("normalizeHereItems keeps corridor truck stops, drops far / nameless", () =
 });
 
 test("normalizeOverpassElements requires a name and corridor filter", () => {
-  const els = [
+  const els: FuelOverpassEl[] = [
     {
       type: "node",
       id: 1,
@@ -200,6 +202,10 @@ test("classifyFuelKind is honest — random gas is fuel, not truck", () => {
     "truck-stop",
   );
   assert.equal(looksLikeTruckStop({ name: "City Pump" }), false);
+  assert.equal(
+    classifyFuelKind({ name: "ARCO (Marathon Petroleum)" }),
+    "fuel",
+  );
 });
 
 test("emptyFuelResult never invents stations", () => {
@@ -221,6 +227,8 @@ test("clampCorridorWidthMi and resolveCorridor", () => {
   assert.equal(clampCorridorWidthMi(1), 3);
   assert.equal(clampCorridorWidthMi(99), 15);
   assert.equal(clampCorridorWidthMi("nope"), 8);
+  assert.equal(effectiveCorridorWidthMi(8, 3), 12);
+  assert.equal(effectiveCorridorWidthMi(8, 24), 8);
   assert.deepEqual(resolveCorridor({ from: RENO, to: SEATTLE, via: [BOISE] }), [
     RENO,
     BOISE,

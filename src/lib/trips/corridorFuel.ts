@@ -71,7 +71,7 @@ export type FuelOverpassEl = {
 const EARTH_MI = 3958.8;
 
 const TRUCK_NAME_RE =
-  /\b(truck stop|travel center|travel plaza|flying j|pilot|love'?s|petro(?:leum)?|travelcenters|ta\b|ambest)\b/i;
+  /\b(truck stop|travel center|travel plaza|flying j|pilot|love'?s|\bpetro\b|travelcenters|\bta\b|ambest)\b/i;
 
 export function haversineMiles(
   a: { lat: number; lng: number },
@@ -91,6 +91,16 @@ export function clampCorridorWidthMi(raw: unknown): number {
   const n = typeof raw === "number" ? raw : Number(raw);
   if (!Number.isFinite(n)) return DEFAULT_CORRIDOR_WIDTH_MI;
   return Math.min(MAX_CORRIDOR_WIDTH_MI, Math.max(MIN_CORRIDOR_WIDTH_MI, n));
+}
+
+/** City-only paths (no live polyline) bow away from the interstate. */
+export function effectiveCorridorWidthMi(
+  widthMi: number,
+  corridorPointCount: number,
+): number {
+  const w = clampCorridorWidthMi(widthMi);
+  if (corridorPointCount <= 4) return Math.min(MAX_CORRIDOR_WIDTH_MI, Math.max(w, 12));
+  return w;
 }
 
 export function finitePlace(p: {
