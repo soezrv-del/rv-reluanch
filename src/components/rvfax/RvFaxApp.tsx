@@ -689,10 +689,7 @@ export function RvFaxApp({
               </div>
             ) : null}
 
-            <div className="space-y-2.5 border-t border-white/10 pt-3">
-              <p className="rvfax-sapphire-label text-[10px] font-bold tracking-[0.12em]">
-                YEAR · TYPE · MAKE · MODEL · FLOORPLAN
-              </p>
+            <div className="space-y-3 border-t border-white/10 pt-4">
               <FieldButton
                 label="Year"
                 value={year}
@@ -760,11 +757,7 @@ export function RvFaxApp({
                 <Search className="size-3.5" />
                 Open report
               </button>
-            ) : (
-              <p className="text-center text-[11px] leading-snug text-white/55">
-                Choose year, make, and model.
-              </p>
-            )}
+            ) : null}
           </section>
 
           {/* Did you mean */}
