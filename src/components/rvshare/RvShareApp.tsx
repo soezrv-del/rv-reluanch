@@ -108,7 +108,12 @@ function MoneyField({
         onShareToggle && shareOn && "ring-1 ring-sky-300/35",
       )}
     >
-      <div className="mb-1 flex min-h-11 items-center justify-between gap-1">
+      <div
+        className={cn(
+          "mb-1 flex items-center justify-between gap-1",
+          onShareToggle && "min-h-11",
+        )}
+      >
         <span className="text-[9px] font-bold tracking-wide text-white/70">
           {label}
         </span>
