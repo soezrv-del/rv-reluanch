@@ -209,4 +209,6 @@ test("Navigate plan-trip: dest-first, profile after route, no Search tap require
     ui.includes('routeStatus === "live" && !displayCoach'),
     "soft profile only after a live route when unknown",
   );
+  assert.match(ui, /fetchNavigateRoute/);
+  assert.doesNotMatch(ui, /\/api\/route/);
 });
