@@ -284,7 +284,7 @@ test("catalog HP and torque become POWER lines; missing torque is omitted", () =
   assert.deepEqual(sharePowerLines("", ""), []);
 });
 
-test("Georgetown-shaped catalog HP surfaces in share POWER; no invented torque", () => {
+test("Georgetown-shaped catalog HP surfaces in share POWER; missing SoT torque is omitted", () => {
   const hp = honestHorsepowerForCoach({
     engine: "Ford 7.3L / V10 (by year)",
     horsepower: 350,
@@ -303,6 +303,27 @@ test("Georgetown-shaped catalog HP surfaces in share POWER; no invented torque",
   assert.doesNotMatch(lines.join("\n"), /lb-?ft/i);
   assert.doesNotMatch(lines.join("\n"), /confirm brochure/i);
   assert.doesNotMatch(lines.join("\n"), /do not invent/i);
+});
+
+test("Georgetown / Pursuit SoT 350 + 468 becomes Share POWER HP · torque", () => {
+  const hp = honestHorsepowerForCoach({
+    engine: "Ford 7.3L V8 Godzilla",
+    horsepower: 350,
+    chassis: "Ford F53",
+    type: "Class A Gas",
+  });
+  const tq = honestTorqueForCoach({
+    engine: "Ford 7.3L V8 Godzilla",
+    chassis: "Ford F53",
+    type: "Class A Gas",
+    torqueLbFt: 468,
+    horsepower: 350,
+  });
+  assert.equal(hp, "350 HP");
+  assert.equal(tq, "468 lb-ft");
+  const lines = sharePowerLines(hp, tq);
+  assert.deepEqual(lines, ["POWER", "350 HP", "468 lb-ft"]);
+  assert.equal(lines.filter((l) => l !== "POWER").join(" · "), "350 HP · 468 lb-ft");
 });
 
 test("motorhome catalog torque rides with HP when SoT has both", () => {
