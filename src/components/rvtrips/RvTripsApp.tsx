@@ -81,6 +81,14 @@ import {
   mapsUrl,
 } from "@/lib/trips/dumpStations";
 import { DumpMap } from "@/components/rvtrips/DumpMap";
+import { FuelAlongRoute } from "@/components/rvtrips/FuelAlongRoute";
+import {
+  buildFuelQuery,
+  downsampleByDistance,
+  sortAlongCorridor,
+  type FuelSearchResult,
+  type FuelStop,
+} from "@/lib/trips/corridorFuel";
 import {
   canSubmitPlan,
   defaultTripName,
@@ -252,6 +260,11 @@ export function RvTripsApp() {
   const [dumpQuery, setDumpQuery] = useState("");
   const [dumpState, setDumpState] = useState<string | null>(null);
   const [dumpFocusId, setDumpFocusId] = useState<string | null>(null);
+  const [fuel, setFuel] = useState<FuelSearchResult | null>(null);
+  const [fuelStatus, setFuelStatus] = useState<
+    "idle" | "loading" | "live" | "error"
+  >("idle");
+  const [fuelFocusId, setFuelFocusId] = useState<string | null>(null);
 
   const applySeedIdentity = useCallback((p: CoachProfile, source: CoachSeedSource) => {
     lastAutoKeyRef.current = coachIdentityKey(p);
@@ -473,6 +486,50 @@ export function RvTripsApp() {
     // viaSig tracks filled stops; empty via rows do not retrigger.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originPlace, destPlace, viaSig, routeKey, runRoute]);
+
+  useEffect(() => {
+    if (routeStatus !== "live" || !originPlace || !destPlace) {
+      setFuel(null);
+      setFuelStatus("idle");
+      setFuelFocusId(null);
+      return;
+    }
+    const ctrl = new AbortController();
+    setFuelStatus("loading");
+    setFuelFocusId(null);
+    const path = osrm?.geometry?.coordinates?.length
+      ? osrm.geometry.coordinates.map(([lng, lat]) => ({ lng, lat }))
+      : [originPlace, ...viaPlaces, destPlace];
+    const qs = buildFuelQuery({
+      from: { lng: originPlace.lng, lat: originPlace.lat },
+      to: { lng: destPlace.lng, lat: destPlace.lat },
+      via: viaPlaces.map((p) => ({ lng: p.lng, lat: p.lat })),
+      path: downsampleByDistance(path, 24),
+    });
+    fetch(`/api/fuel?${qs}`, {
+      signal: ctrl.signal,
+      headers: { Accept: "application/json" },
+    })
+      .then(async (res) => {
+        const json = (await res.json()) as FuelSearchResult & { error?: string };
+        if (ctrl.signal.aborted) return;
+        if (!res.ok) {
+          setFuel(null);
+          setFuelStatus("error");
+          return;
+        }
+        setFuel(json);
+        setFuelStatus("live");
+      })
+      .catch((e) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setFuel(null);
+        setFuelStatus("error");
+      });
+    return () => ctrl.abort();
+    // viaSig covers filled overnight stops; geometry comes from the live route.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeStatus, osrm, originPlace, destPlace, viaSig]);
 
   const liveDirections: NavStep[] | null = useMemo(() => {
     if (!osrm?.steps?.length) return null;
@@ -874,6 +931,65 @@ export function RvTripsApp() {
     });
     setSub("navigate");
   };
+
+  const routeViaFuel = (stop: FuelStop) => {
+    const hit: PlaceHit = {
+      label: stop.city
+        ? `${stop.name} · ${stop.city}${stop.state ? `, ${stop.state}` : ""}`
+        : stop.name,
+      lat: stop.lat,
+      lng: stop.lng,
+      kind: stop.kind,
+    };
+    const corridor =
+      osrm?.geometry?.coordinates?.map(([lng, lat]) => ({ lng, lat })) ??
+      (originPlace && destPlace
+        ? [originPlace, ...viaPlaces, destPlace]
+        : []);
+    setVias((rows) => {
+      const filled = rows
+        .filter((v) => v.place)
+        .map((v) => ({ ...v, text: v.place!.label }));
+      const empty = rows.find((v) => !v.place);
+      let next: ViaDraft[];
+      if (empty) {
+        next = rows.map((v) =>
+          v.id === empty.id ? { ...v, text: hit.label, place: hit } : v,
+        );
+      } else if (filled.length >= MAX_VIAS) {
+        return rows;
+      } else {
+        next = [...rows, { id: newViaId(), text: hit.label, place: hit }];
+      }
+      if (corridor.length >= 2) {
+        const withPlace = next.filter((v) => v.place);
+        const ordered = sortAlongCorridor(
+          withPlace.map((v) => v.place!),
+          corridor,
+        );
+        const used = new Set<string>();
+        next = ordered.map((p) => {
+          const match = withPlace.find(
+            (v) =>
+              v.place &&
+              !used.has(v.id) &&
+              v.place.lat === p.lat &&
+              v.place.lng === p.lng,
+          );
+          if (match) used.add(match.id);
+          return match ?? { id: newViaId(), text: p.label, place: p };
+        });
+      }
+      return next;
+    });
+    setFuelFocusId(null);
+    setNavArmed(false);
+    setNavStepIdx(0);
+    setSub("navigate");
+  };
+
+  const viaSlotsFull =
+    viaPlaces.length >= MAX_VIAS && !vias.some((v) => !v.place);
 
   const liveStats = liveRouteStats(osrm);
   const engineChip = routeStatus === "live" ? routeEngineLabel(osrm) : "";
@@ -1398,6 +1514,15 @@ export function RvTripsApp() {
                   ) : null}
 
                   <RouteLinePreview geometry={osrm.geometry} />
+
+                  <FuelAlongRoute
+                    status={fuelStatus}
+                    result={fuel}
+                    selectedId={fuelFocusId}
+                    onSelect={(id) => setFuelFocusId(id || null)}
+                    onRouteVia={routeViaFuel}
+                    viaDisabled={viaSlotsFull}
+                  />
                 </section>
               ) : !hasRoutePoints ? (
                 <p className="px-1 py-2 text-[13px] text-white/80">
