@@ -288,6 +288,7 @@ const EXPECTED_TYPE = {
   "Grand Design|Lineage Series M": "class c",
   "Grand Design|Lineage Series F": "super c",
   "Grand Design|Lineage Series VT": "class b",
+  "Grand Design|Lineage Series VP": "class b",
 };
 
 /** Phantom / non-OEM series that must not exist. */
@@ -1225,6 +1226,7 @@ function main() {
         "Lineage Series M",
         "Lineage Series F",
         "Lineage Series VT",
+        "Lineage Series VP",
       ]) {
         const hit =
           gd.includes(`    ${required}: {`) ||
@@ -1236,10 +1238,9 @@ function main() {
         /\n    "Serenova": \{/.test(gd) ||
         /\n    Foundation: \{/.test(gd) ||
         /\n    "Foundation": \{/.test(gd) ||
-        /\n    "Lineage Series VP": \{/.test(gd) ||
         /\n    "Transcend Lite": \{/.test(gd)
       ) {
-        fail("Grand Design must not invent Serenova / Foundation / Lineage VP / Transcend Lite without extractable OEM codes (GAP this slice)");
+        fail("Grand Design must not invent Serenova / Foundation / Transcend Lite without extractable OEM codes (GAP this slice)");
       }
       if (/"2010":/.test(gd) || /"2011":/.test(gd) || /"2012":/.test(gd)) {
         fail("Grand Design must not list MY2010–2012 (founded 2012; first retail ~MY2013)");
@@ -1984,10 +1985,13 @@ function main() {
 
       const le = slice("Lineage Series E", "Lineage Series M");
       if (/"2024":/.test(le) || /"2025":/.test(le) || /"2026":/.test(le)) {
-        fail("Grand Design|Lineage Series E must not list 2024–2026 (provisional MY2027; no 2026 OEM card)");
+        fail("Grand Design|Lineage Series E must not list 2024–2026 (RVUSA MY2027 only)");
       }
       if (!/yearStart:\s*2027/.test(le) || !/fuelType: "Gas"/.test(le)) {
         fail("Grand Design|Lineage Series E must be MY2027 gas E-450 (not Sprinter diesel)");
+      }
+      if (!/"2027": \["30DC"\]/.test(le)) {
+        fail("Grand Design|Lineage Series E MY27 must print 30DC only (RVUSA m12200-y2027)");
       }
 
       const lm = slice("Lineage Series M", "Lineage Series F");
@@ -1997,8 +2001,11 @@ function main() {
       if (!/"2025": \["25FW", "25TK"\]/.test(lm) || !/"2026": \["25FW", "25TK"\]/.test(lm)) {
         fail("Grand Design|Lineage Series M must print 25FW/25TK on 2025–2026");
       }
-      if (/"2027":/.test(lm)) {
-        fail("Grand Design|Lineage Series M must not invent 2027 without an OEM card");
+      if (!/"2027": \["25FW", "25MD"\]/.test(lm)) {
+        fail("Grand Design|Lineage Series M MY27 must print 25FW/25MD (RV-Pro Sept 2026; no 25TK)");
+      }
+      if (/"2027": .*"25TK"/.test(lm) || /"2027": .*"31ZW"/.test(lm)) {
+        fail("Grand Design|Lineage Series M must not keep 25TK or absorb Super C 31ZW onto 2027");
       }
       if (!/horsepower:\s*208/.test(lm) || !/fuelType: "Diesel"/.test(lm)) {
         fail("Grand Design|Lineage Series M must stay Sprinter diesel 208/332");
@@ -2011,33 +2018,138 @@ function main() {
       if (!/fuelType: "Diesel"/.test(lf) || !/Power Stroke/.test(lf)) {
         fail("Grand Design|Lineage Series F must stay Super C Power Stroke diesel");
       }
-      if (/"2027":/.test(lf)) {
-        fail("Grand Design|Lineage Series F must not invent 2027 without an OEM card");
+      if (!/"2027": \["31ZW", "31ZW5"\]/.test(lf)) {
+        fail("Grand Design|Lineage Series F MY27 must print 31ZW/31ZW5 (RVUSA m10876-y2027)");
+      }
+      if (/"2027": .*"29AN"/.test(lf)) {
+        fail("Grand Design|Lineage Series F must not invent 29AN on 2027 without a family card");
       }
 
-      const lvt = slice("Lineage Series VT", "Lineage Series VT");
       const lvtBlock = gd.slice(gd.indexOf('    "Lineage Series VT": {'));
       if (!/"2026": \["LVT1", "LVT2"\]/.test(lvtBlock)) {
         fail("Grand Design|Lineage Series VT MY26 must print LVT1 + LVT2");
       }
-      if (/"2025":/.test(lvtBlock) || /"2027":/.test(lvtBlock)) {
-        fail("Grand Design|Lineage Series VT must not invent 2025/2027 without a printed card");
+      if (!/"2027": \["LVT1", "LVT2"\]/.test(lvtBlock)) {
+        fail("Grand Design|Lineage Series VT MY27 must print LVT1 + LVT2 (RVUSA m10877-y2027)");
+      }
+      if (/"2025":/.test(lvtBlock)) {
+        fail("Grand Design|Lineage Series VT must not invent 2025 without a printed card");
       }
       if (!/fuelType: "Gas"/.test(lvtBlock) || !/EcoBoost/.test(lvtBlock)) {
         fail("Grand Design|Lineage Series VT must stay Transit EcoBoost gas (not diesel)");
       }
 
-      const towable2027 = [
-        slice("Solitude", "Solitude S-Class"),
-        slice("Imagine", "Imagine XLS"),
-        slice("Transcend", "Transcend One"),
-        slice("Momentum", "Momentum M-Class"),
-        slice("Influence", "Reflection"),
-      ];
-      for (const block of towable2027) {
-        if (/"2027":/.test(block)) {
-          fail("Grand Design towables must not invent 2027 (current OEM cards are MY2026)");
-        }
+      const lvp = gd.slice(gd.indexOf('    "Lineage Series VP": {'));
+      if (!/"2027": \["LVP1", "LVP2"\]/.test(lvp)) {
+        fail("Grand Design|Lineage Series VP MY27 must print LVP1 + LVP2 (RVUSA m11835-y2027)");
+      }
+      if (/"2027": .*"LVP3"/.test(lvp)) {
+        fail("Grand Design|Lineage Series VP must not invent LVP3 on 2027 without a family card");
+      }
+      if (/"2026":/.test(lvp) || /"2025":/.test(lvp)) {
+        fail("Grand Design|Lineage Series VP must not invent 2025–2026 fby this lock");
+      }
+      if (!/yearStart:\s*2027/.test(lvp) || !/fuelType: "Gas"/.test(lvp) || !/ProMaster/.test(lvp)) {
+        fail("Grand Design|Lineage Series VP must be MY2027 gas ProMaster (not Transit / not Series VT)");
+      }
+
+      const imag27 = slice("Imagine", "Imagine XLS");
+      if (!/"2027": \["2300MK", "2470BH", "2500RL", "2600RB", "2670MK", "2700BS", "2800BH", "2810BH", "2970RL", "3100RD", "3210BH"\]/.test(imag27)) {
+        fail("Grand Design|Imagine MY27 RVUSA plans missing (m5537-y2027 same eleven as MY26)");
+      }
+      const xls27 = slice("Imagine XLS", "Imagine AIM");
+      if (!/"2027": \["17MKE", "21MBE", "22BHE", "22MLE", "22RBE", "23LDE", "25DBE", "25RLE"\]/.test(xls27)) {
+        fail("Grand Design|Imagine XLS MY27 RVUSA plans missing (m6604-y2027)");
+      }
+      const aim27 = slice("Imagine AIM", "Transcend");
+      if (!/"2027": \["15RBA", "16MLA", "19MLA", "20BHA"\]/.test(aim27)) {
+        fail("Grand Design|Imagine AIM MY27 RVUSA plans missing (m9145-y2027)");
+      }
+      if (/"2027": .*"17MKA"/.test(aim27) || /"2027": .*"21MBA"/.test(aim27)) {
+        fail("Grand Design|Imagine AIM must not invent 17MKA/21MBA on 2027");
+      }
+      const tr27 = slice("Transcend", "Transcend One");
+      if (!/"2027": \["245RLT", "265BHT", "285RKT", "295QBT", "305BHT", "315RKT", "325BHT", "335BHT", "345DQT"\]/.test(tr27)) {
+        fail("Grand Design|Transcend MY27 RVUSA plans missing (m6522-y2027 adds 345DQT)");
+      }
+      if (/"2027": .*"275FKT"/.test(tr27) || /"2027": .*"335DQT"/.test(tr27)) {
+        fail("Grand Design|Transcend must not invent 275FKT or keep leftover 335DQT on 2027");
+      }
+      const t1_27 = slice("Transcend One", "Transcend Xplor");
+      if (!/"2027": \["151BH", "151RB", "161BH", "161DB"\]/.test(t1_27)) {
+        fail("Grand Design|Transcend One MY27 year-page plans missing (no leftover 131DL)");
+      }
+      if (/"2027": .*"131DL"/.test(t1_27)) {
+        fail("Grand Design|Transcend One must not keep leftover 131DL on 2027");
+      }
+      const tx27 = slice("Transcend Xplor", "Momentum");
+      if (!/"2027": \["19BHX", "20MKX", "22RBX", "23BHX", "24BHX", "26BHX"\]/.test(tx27)) {
+        fail("Grand Design|Transcend Xplor MY27 year-page plans missing");
+      }
+      if (/"2027": .*"18FQX"/.test(tx27) || /"2027": .*"21RLX"/.test(tx27) || /"2027": .*"27DBX"/.test(tx27)) {
+        fail("Grand Design|Transcend Xplor must not invent 18FQX or copy unproven 21RLX/27DBX onto 2027");
+      }
+      const sol27 = slice("Solitude", "Solitude S-Class");
+      if (!/"2027": \["310GK", "370DV", "376RD", "380FL", "382WB", "388MBS", "390RK", "391DL", "414LJMJ", "417KB"\]/.test(sol27)) {
+        fail("Grand Design|Solitude MY27 RVUSA plans missing (m4729-y2027)");
+      }
+      if (/"2027": .*"394RO"/.test(sol27) || /"2027": .*"320RK"/.test(sol27)) {
+        fail("Grand Design|Solitude must not invent 394RO/320RK on 2027");
+      }
+      const inf27 = slice("Influence", "Reflection");
+      if (!/"2027": \["2903RL", "3003RL", "3203GK", "3503GK", "3804DS", "3904BH"\]/.test(inf27)) {
+        fail("Grand Design|Influence MY27 RVUSA plans missing (m9611-y2027)");
+      }
+      if (/"2027": .*"3705RD"/.test(inf27) || /"2027": .*"3704BH"/.test(inf27)) {
+        fail("Grand Design|Influence must not invent 3705RD or keep leftover 3704BH on 2027");
+      }
+      const rfw27 = slice("Reflection", "Reflection Travel Trailer");
+      if (!/"2027": \["303RLS", "311BHS", "324MBS", "337RLS"\]/.test(rfw27)) {
+        fail("Grand Design|Reflection FW MY27 year-page plans missing");
+      }
+      if (/"2027": .*"310RL"/.test(rfw27) || /"2027": .*"350RDS"/.test(rfw27) || /"2027": .*"367BHS"/.test(rfw27)) {
+        fail("Grand Design|Reflection FW must not invent 310RL/350RDS or copy unproven 367BHS onto 2027");
+      }
+      const rtt27 = slice("Reflection Travel Trailer", "Reflection 100 Series");
+      if (!/"2027": \["317RSTS", "345RLTS"\]/.test(rtt27)) {
+        fail("Grand Design|Reflection TT MY27 year-page plans missing");
+      }
+      const r100_27 = slice("Reflection 100 Series", "Reflection 150 Series");
+      if (!/"2027": \["22RK", "24RL", "27BH", "28RL", "29RL", "32BH"\]/.test(r100_27)) {
+        fail("Grand Design|Reflection 100 MY27 RVUSA plans missing (m9613-y2027)");
+      }
+      const r150_27 = slice("Reflection 150 Series", "Imagine");
+      if (!/"2027": \["250ML", "260RD"\]/.test(r150_27)) {
+        fail("Grand Design|Reflection 150 MY27 year-page plans missing (250ML/260RD)");
+      }
+      if (/"2027": .*"270BN"/.test(r150_27) || /"2027": .*"298BH"/.test(r150_27)) {
+        fail("Grand Design|Reflection 150 must not copy unproven 270BN/298BH onto 2027");
+      }
+      const mom27 = slice("Momentum", "Momentum M-Class");
+      if (/"2027":/.test(mom27)) {
+        fail("Grand Design|Momentum flagship must omit 2027 (no dated family card)");
+      }
+      const mm27 = slice("Momentum M-Class", "Momentum G-Class");
+      if (/"2027":/.test(mm27)) {
+        fail("Grand Design|Momentum M-Class must omit 2027 (RVUSA years end 2026)");
+      }
+      const gtt27 = slice("Momentum G-Class", "Momentum G-Class Fifth Wheel");
+      if (!/"2027": \["29GS"\]/.test(gtt27)) {
+        fail("Grand Design|Momentum G-Class TT MY27 must print 29GS only (year page)");
+      }
+      const gfw27 = slice("Momentum G-Class Fifth Wheel", "Momentum MAV");
+      if (!/"2027": \["320G", "350G", "394G"\]/.test(gfw27)) {
+        fail("Grand Design|G-Class FW MY27 year-page plans missing (320G/350G/394G)");
+      }
+      if (/"2027": .*"363G"/.test(gfw27) || /"2027": .*"325G"/.test(gfw27)) {
+        fail("Grand Design|G-Class FW must not invent 363G or copy unproven 325G onto 2027");
+      }
+      const mav27 = slice("Momentum MAV", "Lineage Series E");
+      if (!/"2027": \["17MAV", "22MAV", "24MAV", "27MAV", "28MAV"\]/.test(mav27)) {
+        fail("Grand Design|Momentum MAV MY27 RVUSA plans missing (m10873-y2027)");
+      }
+      if (/"2027": .*"30MAV"/.test(mav27)) {
+        fail("Grand Design|Momentum MAV must not invent 30MAV on 2027");
       }
 
       if (/\n    Keystone: \{/.test(gd) || /\n    Winnebago: \{/.test(gd) || /\n    Coachmen: \{/.test(gd)) {
