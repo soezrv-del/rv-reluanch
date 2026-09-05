@@ -182,7 +182,7 @@ test("dedup + rank: along-route first, closer dupe wins", () => {
   assert.equal(camps[1]!.kind, "rv-park");
 });
 
-test("finalizeCamps keeps dest-area sites when origin parks are dense", () => {
+test("finalizeCamps spreads mid-corridor and dest when origin parks are dense", () => {
   const many: CampStop[] = [];
   for (let i = 0; i < 24; i++) {
     many.push(
@@ -200,6 +200,18 @@ test("finalizeCamps keeps dest-area sites when origin parks are dense", () => {
   }
   many.push(
     camp({
+      id: "boise",
+      name: "Boise RV Park",
+      kind: "rv-park",
+      progress: 0.45,
+      milesOff: 2,
+      lat: 43.6,
+      lng: -116.2,
+      nearDest: false,
+    }),
+  );
+  many.push(
+    camp({
       id: "seattle",
       name: "Seattle KOA",
       kind: "rv-park",
@@ -212,6 +224,7 @@ test("finalizeCamps keeps dest-area sites when origin parks are dense", () => {
   );
   const out = finalizeCamps(many, 20);
   assert.ok(out.some((c) => c.name === "Seattle KOA"));
+  assert.ok(out.some((c) => c.name === "Boise RV Park"));
   assert.ok(out.length <= 20);
 });
 

@@ -238,7 +238,21 @@ export function finalizeCamps(
   const dest = unique.filter((c) => c.nearDest);
   const rest = unique.filter((c) => !c.nearDest);
   const destSlots = Math.min(dest.length, Math.max(4, Math.round(limit * 0.3)));
-  return [...rest.slice(0, limit - destSlots), ...dest.slice(0, destSlots)];
+  const alongSlots = limit - destSlots;
+  const buckets: CampStop[][] = [[], [], [], [], []];
+  for (const c of rest) {
+    const i = Math.min(4, Math.max(0, Math.floor(c.progress * 5)));
+    buckets[i]!.push(c);
+  }
+  const along: CampStop[] = [];
+  let cursor = 0;
+  while (along.length < alongSlots && buckets.some((b) => b.length)) {
+    const bucket = buckets[cursor % 5]!;
+    const next = bucket.shift();
+    if (next) along.push(next);
+    cursor += 1;
+  }
+  return rankCamps([...along, ...dest.slice(0, destSlots)]);
 }
 
 export function emptyCampResult(
