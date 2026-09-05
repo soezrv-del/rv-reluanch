@@ -54,10 +54,22 @@ test("customer-facing MSRP is a single label — not low/high", () => {
     join(dirname(fileURLToPath(import.meta.url)), "shareCardPolicy.ts"),
     "utf8",
   );
+  const ui = readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../../components/rvshare/RvShareApp.tsx",
+    ),
+    "utf8",
+  );
   assert.match(policy, /shareLabel: "MSRP"/);
   assert.doesNotMatch(policy, /shareLabel: "MSRP (low|high)"/);
+  assert.doesNotMatch(policy, /fieldLabel: "MSRP LOW"/);
+  assert.doesNotMatch(policy, /id: "msrpLo"/);
+  assert.match(policy, /SHARE_MSRP_LINE_ID = "msrpHi"/);
   assert.match(policy, /sharePaymentPricePills/);
   assert.match(policy, /rate updated/i);
+  assert.doesNotMatch(ui, /MSRP LOW/);
+  assert.doesNotMatch(ui, /MSRP HIGH/);
 });
 
 test("share payload keeps a real card image file for Messages", () => {

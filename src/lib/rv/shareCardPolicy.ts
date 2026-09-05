@@ -54,6 +54,10 @@ export function hasOptionalShareSections(include: ShareInclude): boolean {
 /**
  * Price lines the salesman can opt into after Market is on.
  * Default all OFF — force an intentional pick (never dump the stack).
+ *
+ * `msrpLo` may exist on the catalog-backed amounts object but is never a
+ * Share opt-in. The only MSRP line is `msrpHi` (asking / brochure figure),
+ * labeled "MSRP" — never "MSRP low" / "MSRP high".
  */
 export type ShareMarketAmounts = {
   tradeIn: number;
@@ -63,8 +67,12 @@ export type ShareMarketAmounts = {
   msrpHi: number;
 };
 
-export type ShareMarketLineId = keyof ShareMarketAmounts;
+/** Offered Market +s. Catalog may still carry `msrpLo`; Share never offers it. */
+export type ShareMarketLineId = Exclude<keyof ShareMarketAmounts, "msrpLo">;
 export type ShareMarketLines = Record<ShareMarketLineId, boolean>;
+
+/** Asking / brochure MSRP — the only MSRP toggle, pill, and shared line. */
+export const SHARE_MSRP_LINE_ID = "msrpHi" as const satisfies ShareMarketLineId;
 
 export const SHARE_MARKET_LINE_DEFS: {
   id: ShareMarketLineId;
@@ -94,13 +102,7 @@ export const SHARE_MARKET_LINE_DEFS: {
     name: "asking",
   },
   {
-    id: "msrpLo",
-    shareLabel: "MSRP",
-    fieldLabel: "MSRP LOW",
-    name: "MSRP",
-  },
-  {
-    id: "msrpHi",
+    id: SHARE_MSRP_LINE_ID,
     shareLabel: "MSRP",
     fieldLabel: "MSRP",
     name: "MSRP",
@@ -111,23 +113,34 @@ export const DEFAULT_SHARE_MARKET_LINES: ShareMarketLines = {
   tradeIn: false,
   retailLow: false,
   retailHigh: false,
-  msrpLo: false,
   msrpHi: false,
 };
 
-export function hasSelectedMarketLines(lines?: ShareMarketLines | null): boolean {
+/** Stale payloads may still carry `msrpLo`; it is never an offered line. */
+export function isOfferedShareMarketLine(id: string): id is ShareMarketLineId {
+  return SHARE_MARKET_LINE_DEFS.some((d) => d.id === id);
+}
+
+export function hasSelectedMarketLines(
+  lines?: ShareMarketLines | Record<string, boolean> | null,
+): boolean {
   if (!lines) return false;
-  return SHARE_MARKET_LINE_DEFS.some((d) => lines[d.id]);
+  return SHARE_MARKET_LINE_DEFS.some((d) => Boolean(lines[d.id]));
 }
 
 export function selectedShareMarketEntries(
   market: ShareMarketAmounts,
-  lines?: ShareMarketLines | null,
+  lines?: ShareMarketLines | Record<string, boolean> | null,
 ): { id: ShareMarketLineId; shareLabel: string; amount: number }[] {
   if (!lines) return [];
-  return SHARE_MARKET_LINE_DEFS.filter(
-    (d) => lines[d.id] && Number.isFinite(market[d.id]) && market[d.id] > 0,
-  ).map((d) => ({
+  return SHARE_MARKET_LINE_DEFS.filter((d) => {
+    if (!isOfferedShareMarketLine(d.id)) return false;
+    return (
+      Boolean(lines[d.id]) &&
+      Number.isFinite(market[d.id]) &&
+      market[d.id] > 0
+    );
+  }).map((d) => ({
     id: d.id,
     shareLabel: d.shareLabel,
     amount: market[d.id],
@@ -137,7 +150,7 @@ export function selectedShareMarketEntries(
 /** Shared-card MARKET block — empty when nothing was picked (no dump). */
 export function buildShareMarketSection(
   market: ShareMarketAmounts,
-  lines: ShareMarketLines | undefined,
+  lines: ShareMarketLines | Record<string, boolean> | undefined,
   money: (n: number) => string,
 ): string[] {
   const rows = selectedShareMarketEntries(market, lines).map(
@@ -165,7 +178,7 @@ export function sharePowerLines(
 
 export function formatShareMarketText(
   market: ShareMarketAmounts,
-  lines: ShareMarketLines | undefined,
+  lines: ShareMarketLines | Record<string, boolean> | undefined,
   money: (n: number) => string,
 ): string {
   return buildShareMarketSection(market, lines, money).join("\n");
@@ -199,6 +212,7 @@ export function sharePaymentPricePills(
   if (market.msrpHi > 0) {
     uniq.set(market.msrpHi, `MSRP ${money(market.msrpHi)}`);
   }
+  // Never a second MSRP from catalog msrpLo — pills stay MSRP-high only.
   return [...uniq.entries()].map(([value, label]) => ({ value, label }));
 }
 

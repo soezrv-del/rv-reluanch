@@ -64,7 +64,6 @@ import {
   sharePowerLines,
   type ShareInclude,
   type ShareMarket,
-  type ShareMarketLineId,
   type ShareMarketLines,
   type SharePayment,
 } from "@/lib/rv/shareKit";
@@ -874,7 +873,7 @@ export function RvShareApp({
                     ) : null}
                     <div className="grid grid-cols-2 gap-2">
                       {SHARE_MARKET_LINE_DEFS.map((def) => {
-                        const id = def.id as ShareMarketLineId;
+                        const id = def.id;
                         return (
                           <MoneyField
                             key={id}
