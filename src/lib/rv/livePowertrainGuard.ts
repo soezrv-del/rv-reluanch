@@ -16,7 +16,7 @@ import {
   localOverrideAsPin,
 } from "./localSpecOverrides";
 import { engineConflictsWithChassis } from "./powertrainFamily";
-import { isAmbiguousCatalogValue } from "./catalogHonesty";
+import { extractOptionHpClasses } from "./catalogHonesty";
 
 export type PowertrainTrust =
   | "local"
@@ -377,15 +377,17 @@ export function resolveHardPowertrain(opts: {
     fuelType: catFuel,
   };
 
-  // Pin always wins hard fields. horsepower 0 / option-band engine = not a single HP.
+  // Pin always wins hard fields. horsepower 0 / dual-rating engine = not a
+  // single locked HP. "by year" on the engine label is not a wipe — catalog
+  // numbers stay when the pin/catalog actually has them.
   if (pin) {
-    const hpVaries =
-      pin.horsepower <= 0 || isAmbiguousCatalogValue(pin.engine);
+    const dualRating = extractOptionHpClasses(pin.engine).length >= 2;
+    const pinHp = pin.horsepower > 0 && !dualRating ? pin.horsepower : null;
     return {
       hard: {
         engine: pin.engine,
-        horsepower: hpVaries ? null : pin.horsepower,
-        torqueLbFt: hpVaries ? null : (pin.torqueLbFt ?? base.torqueLbFt),
+        horsepower: pinHp,
+        torqueLbFt: dualRating ? null : (pin.torqueLbFt ?? base.torqueLbFt),
         chassis: pin.chassis ?? base.chassis,
         transmission: pin.transmission ?? base.transmission,
         fuelType: pin.fuelType ?? base.fuelType,
@@ -399,11 +401,14 @@ export function resolveHardPowertrain(opts: {
 
   // Hard-field lock: Live Grok never writes engine / HP / chassis / fuel /
   // transmission. Empty catalog stays empty (unknown / EST) — no invented 450.
+  // Do not null a real catalog HP just because the engine string says "by year".
   const trust: PowertrainTrust = base.engine ? "catalog" : "empty";
+  const dualRating = extractOptionHpClasses(base.engine).length >= 2;
   return {
     hard: {
       ...base,
-      horsepower: isAmbiguousCatalogValue(base.engine) ? null : base.horsepower,
+      horsepower: dualRating ? null : base.horsepower,
+      torqueLbFt: dualRating ? null : base.torqueLbFt,
     },
     trust,
     liveRejectedReasons: opts.live?.live

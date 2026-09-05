@@ -585,10 +585,13 @@ export function buildBrochureSpecs(
         type: spec.type,
       });
 
-  // Never surface a bare invented 450 — especially when engine is std/opt
+  // Dual-rating engines (L9 450 / X15 605) must not lock a lone 450.
+  // "by year" + a catalog number is SoT — keep the number.
   const safeHpDisplay =
-    !isTowable && /^450\s*HP$/i.test(hpDisplay.trim())
-      ? parseHp(snap.engine, horsepowerIsOptionBand(snap.engine) ? 0 : snap.horsepower)
+    !isTowable &&
+    /^450\s*HP$/i.test(hpDisplay.trim()) &&
+    horsepowerIsOptionBand(snap.engine)
+      ? parseHp(snap.engine, snap.horsepower)
       : hpDisplay;
 
   const dataSource: BrochureSpecs["dataSource"] = oem
@@ -604,15 +607,6 @@ export function buildBrochureSpecs(
             : "estimated";
 
   const yearLabel = String(snap.resolvedYear || year);
-  const hpMissingNote =
-    !isTowable &&
-    (snap.horsepower == null ||
-      !Number.isFinite(snap.horsepower) ||
-      (snap.horsepower as number) <= 0) &&
-    /varies|confirm brochure/i.test(safeHpDisplay)
-      ? `Horsepower not fixed for ${yearLabel} — engine shown; HP varies by option or year. Confirm OEM brochure / door sticker.`
-      : null;
-
   const noBandNote =
     !isTowable &&
     !snap.band &&
@@ -629,7 +623,6 @@ export function buildBrochureSpecs(
       (local
         ? `Local correction for ${yearLabel}${local.note ? ` · ${local.note}` : ""} · exportable pin.`
         : null) ||
-      hpMissingNote ||
       noBandNote ||
       (dataSource === "estimated"
         ? "Some fields estimated from class averages — verify against OEM brochure / VIN."

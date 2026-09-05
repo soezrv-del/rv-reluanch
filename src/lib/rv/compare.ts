@@ -11,6 +11,11 @@ import {
   formatHardTorque,
   resolveHardPowertrain,
 } from "./livePowertrainGuard";
+import {
+  formatFactsHorsepower,
+  formatFactsTorque,
+  omitInventPolicyProse,
+} from "./catalogHonesty";
 
 /** Direction for “better” highlighting */
 export type BetterDir = "higher" | "lower" | "neutral";
@@ -198,7 +203,8 @@ function hpDisplayAndRank(
   const mentions450 =
     /\b450\b/.test(blob) || /l9|isl\b/i.test(blob) || baseHp === 450;
 
-  let display = hpStr && hpStr !== "—" ? hpStr : "—";
+  const cleanHp = omitInventPolicyProse(hpStr);
+  let display = cleanHp || "—";
   let engineDisplay = engine && engine !== "—" ? engine : "—";
   let raw = baseHp;
 
@@ -375,11 +381,18 @@ export function buildCompareReport(
         lockPowertrainFromCatalog: true,
         hardOverride: {
           engine: guard.hard.engine || baseBrochure.engine,
-          horsepower:
-            formatHardHorsepower(guard.hard.horsepower) ||
-            baseBrochure.horsepower,
-          torque:
-            formatHardTorque(guard.hard.torqueLbFt) || baseBrochure.torque,
+          horsepower: formatFactsHorsepower({
+            engine: guard.hard.engine || baseBrochure.engine,
+            horsepower:
+              formatHardHorsepower(guard.hard.horsepower) ||
+              omitInventPolicyProse(baseBrochure.horsepower),
+          }),
+          torque: formatFactsTorque({
+            engine: guard.hard.engine || baseBrochure.engine,
+            torqueLbFt:
+              formatHardTorque(guard.hard.torqueLbFt) ||
+              omitInventPolicyProse(baseBrochure.torque),
+          }),
           chassis: guard.hard.chassis || baseBrochure.chassis,
           transmission: guard.hard.transmission || baseBrochure.transmission,
         },

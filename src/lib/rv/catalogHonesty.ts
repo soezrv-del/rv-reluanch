@@ -1,9 +1,13 @@
 /**
- * Catalog rows are not all brochure-locked. Some year-bands say
- * "by option" / "typical" / "L9 or X15". Those must display as EST /
- * unknown — never as a single invented HP.
+ * Catalog honesty for customer Facts.
  *
- * Primary example: 2023 American Coach American Dream
+ * Horsepower / torque on pulled motorhomes come from catalog / brochure SoT.
+ * Dual-rating engines (L9 450 std / X15 605 opt) show the brochure option
+ * string — never a lone invented 450. "by year" on an engine label is not a
+ * reason to wipe a catalog number or emit invent-policy essays.
+ * Missing SoT → omit (—). Never invent typicals.
+ *
+ * Primary dual-rating example: 2023 American Coach American Dream
  * (Cummins L9 450 std / X15 605 opt — no floorplan-specific OEM pin).
  */
 
@@ -48,136 +52,165 @@ export function isAmbiguousCatalogValue(
   return false;
 }
 
-/** True when a catalog HP number must not be spoken as the only factory rating. */
-export function horsepowerIsOptionBand(
-  engine: string | null | undefined,
-  horsepower?: string | number | null,
+/**
+ * Coder / invent-lock essays. These are internal policy — never customer Facts.
+ * "by year" on an engine label is not a reason to emit these.
+ */
+export const INVENT_POLICY_PROSE_RE =
+  /do not invent|HP varies\s*\/\s*confirm brochure|Torque varies by option|Horsepower not fixed for|HP varies by option\s*—\s*EST|Varies by option\s*\/\s*year\s*—\s*confirm brochure/i;
+
+export function isInventPolicyProse(
+  text: string | number | null | undefined,
 ): boolean {
-  if (extractOptionHpClasses(engine).length >= 2) return true;
-  return (
-    isAmbiguousCatalogValue(engine) || isAmbiguousCatalogValue(horsepower)
-  );
+  if (text == null || text === "") return false;
+  return INVENT_POLICY_PROSE_RE.test(String(text));
 }
 
+export function omitInventPolicyProse(
+  text: string | null | undefined,
+): string | null {
+  if (text == null) return null;
+  const s = String(text).trim();
+  if (!s || s === "—") return null;
+  if (isInventPolicyProse(s)) return null;
+  return s;
+}
+
+/** Engine lists two+ brochure HP ratings (L9 450 / X15 605). Not merely "by year". */
+export function horsepowerIsOptionBand(
+  engine: string | null | undefined,
+  _horsepower?: string | number | null,
+): boolean {
+  return extractOptionHpClasses(engine).length >= 2;
+}
+
+function catalogNumericHp(
+  horsepower: string | number | null | undefined,
+): number | null {
+  if (horsepower == null || horsepower === "") return null;
+  if (typeof horsepower === "number") {
+    return Number.isFinite(horsepower) && horsepower > 0
+      ? Math.round(horsepower)
+      : null;
+  }
+  const s = String(horsepower).trim();
+  if (!s || s === "—" || isInventPolicyProse(s)) return null;
+  const m = s.replace(/,/g, "").match(/(\d{2,4})/);
+  if (!m) return null;
+  const n = parseInt(m[1]!, 10);
+  return n >= 150 && n <= 800 ? n : null;
+}
+
+function catalogNumericTorque(
+  torqueLbFt: string | number | null | undefined,
+): number | null {
+  if (torqueLbFt == null || torqueLbFt === "") return null;
+  if (typeof torqueLbFt === "number") {
+    return Number.isFinite(torqueLbFt) && torqueLbFt > 0
+      ? Math.round(torqueLbFt)
+      : null;
+  }
+  const s = String(torqueLbFt).trim();
+  if (!s || s === "—" || isInventPolicyProse(s)) return null;
+  const m = s.replace(/,/g, "").match(/(\d{2,5})/);
+  if (!m) return null;
+  const n = parseInt(m[1]!, 10);
+  return n >= 200 && n <= 3000 ? n : null;
+}
+
+function brochureOptionHpLabel(engine: string, classes: number[]): string {
+  if (
+    (/450/.test(engine) && /605/.test(engine)) ||
+    (classes.includes(450) && classes.includes(605))
+  ) {
+    return "450 std / 605 opt";
+  }
+  return `${classes.join(" / ")} HP`;
+}
+
+/**
+ * Customer Facts HP: catalog / brochure SoT when present.
+ * Dual-rating engine text (L9 + X15) surfaces the brochure option string —
+ * never a lone invented 450, never "do not invent" essays.
+ * Missing SoT → null (caller shows —).
+ */
 export function honestHorsepowerLabel(opts: {
   engine?: string | null;
   horsepower?: string | number | null;
 }): string | null {
   const engine = (opts.engine || "").trim();
   const classes = extractOptionHpClasses(engine);
-  if (horsepowerIsOptionBand(engine, opts.horsepower) || classes.length >= 2) {
-    if (
-      (/450/.test(engine) && /605/.test(engine)) ||
-      (classes.includes(450) && classes.includes(605))
-    ) {
-      return "450 std / 605 opt";
-    }
-    if (classes.length >= 2) {
-      return `Varies (${classes.join("–")} HP by option) — confirm door sticker`;
-    }
-    if (/360/.test(engine) && /450/.test(engine)) {
-      return "HP varies by option — EST, confirm brochure";
-    }
-    return "HP varies / confirm brochure — do not invent a single number";
+  if (classes.length >= 2) {
+    return brochureOptionHpLabel(engine, classes);
   }
-  if (opts.horsepower == null || opts.horsepower === "") return null;
-  if (typeof opts.horsepower === "number") {
-    return opts.horsepower > 0 ? `${Math.round(opts.horsepower)} HP` : null;
+
+  if (typeof opts.horsepower === "string") {
+    const raw = omitInventPolicyProse(opts.horsepower);
+    if (raw && /\d/.test(raw) && !/varies/i.test(raw)) {
+      return /\bhp\b/i.test(raw) ? raw : `${raw} HP`;
+    }
   }
-  const s = String(opts.horsepower).trim();
-  if (!s || s === "—") return null;
-  if (/^450\s*HP$/i.test(s) && horsepowerIsOptionBand(engine, s)) {
-    return "HP varies / confirm brochure — do not invent a single number";
-  }
-  return /\bhp\b/i.test(s) ? s : `${s} HP`;
+
+  const sot = catalogNumericHp(opts.horsepower);
+  if (sot != null) return `${sot} HP`;
+
+  const range = engine.match(/(\d{2,4})\s*[–—\-to]+\s*(\d{2,4})\s*HP/i);
+  if (range) return `${range[1]}–${range[2]} HP`;
+
+  const mentions = [...engine.matchAll(/(\d{2,4})\s*HP\b/gi)].map((m) => m[1]!);
+  if (mentions.length === 1) return `${mentions[0]} HP`;
+
+  return null;
 }
 
 /**
- * Dual-option diesel (L9 std / X15 opt) must not show L9-only torque.
- * Lone numeric torque is ignored when the engine string is an option band.
+ * Customer Facts torque: SoT number when present.
+ * Dual-rating engines omit a lone L9 (or similar) figure — do not invent
+ * option-band torque or emit "varies / confirm door sticker" essays.
  */
 export function honestTorqueLabel(opts: {
   engine?: string | null;
   torqueLbFt?: string | number | null;
 }): string | null {
   const engine = (opts.engine || "").trim();
-  if (horsepowerIsOptionBand(engine, null) || extractOptionHpClasses(engine).length >= 2) {
-    if (/l9/i.test(engine) && /x15/i.test(engine)) {
-      return "1,250 lb-ft L9 std / 1,850–1,950 lb-ft X15 opt — confirm door sticker";
+  if (extractOptionHpClasses(engine).length >= 2) {
+    return null;
+  }
+
+  if (typeof opts.torqueLbFt === "string") {
+    const raw = omitInventPolicyProse(opts.torqueLbFt);
+    if (raw && /\d/.test(raw) && !/varies/i.test(raw)) {
+      return /lb-?ft/i.test(raw) ? raw : `${raw} lb-ft`;
     }
-    return "Torque varies by option — confirm door sticker";
   }
-  if (opts.torqueLbFt == null || opts.torqueLbFt === "") return null;
-  if (typeof opts.torqueLbFt === "number") {
-    return opts.torqueLbFt > 0
-      ? `${opts.torqueLbFt.toLocaleString()} lb-ft`
-      : null;
-  }
-  const s = String(opts.torqueLbFt).trim();
-  if (!s || s === "—") return null;
-  return /lb-?ft/i.test(s) ? s : `${s} lb-ft`;
+
+  const sot = catalogNumericTorque(opts.torqueLbFt);
+  if (sot != null) return `${sot.toLocaleString()} lb-ft`;
+  return null;
+}
+
+/** Customer Facts cell — SoT or em dash, never invent-policy prose. */
+export function formatFactsHorsepower(opts: {
+  engine?: string | null;
+  horsepower?: string | number | null;
+}): string {
+  return omitInventPolicyProse(honestHorsepowerLabel(opts)) || "—";
+}
+
+export function formatFactsTorque(opts: {
+  engine?: string | null;
+  torqueLbFt?: string | number | null;
+}): string {
+  return omitInventPolicyProse(honestTorqueLabel(opts)) || "—";
 }
 
 /**
  * Brochure / Facts HP line.
- * Option-band engine text (std/opt, L9 + X15, 450 and 605) always wins
- * over a single catalog/pin number — never return lone "450 HP" when
- * the engine lists more than one rating.
+ * Dual-rating engine text wins over a lone catalog 450. Otherwise the
+ * catalog/brochure number. Missing → "—" — never a policy essay.
  */
 export function parseHp(engine?: string, hp?: number): string {
-  const eng = (engine || "").trim();
-  const classes = extractOptionHpClasses(eng);
-  const optionBand = horsepowerIsOptionBand(eng, hp) || classes.length >= 2;
-
-  if (optionBand) {
-    const honest = honestHorsepowerLabel({ engine: eng, horsepower: hp });
-    if (honest && !/^450\s*HP$/i.test(honest.trim())) return honest;
-    if (classes.length >= 2) {
-      return `Varies (${classes.join("–")} HP by option) — confirm door sticker`;
-    }
-    return "Varies by option / year — confirm brochure";
-  }
-
-  if (hp != null && Number.isFinite(hp) && hp > 0) {
-    return `${Math.round(hp)} HP`;
-  }
-  if (!eng) {
-    return "Varies by option / year — confirm brochure";
-  }
-
-  const hpMentions = [...eng.matchAll(/(\d{2,4})\s*HP/gi)].map((m) => m[1]!);
-  const looksMulti =
-    /[·|]/.test(eng) ||
-    /\bor\b/i.test(eng) ||
-    /by (year|option|chassis|floorplan)/i.test(eng) ||
-    hpMentions.length >= 2;
-
-  if (looksMulti && hpMentions.length >= 2) {
-    const unique = [...new Set(hpMentions)];
-    return `Varies (${unique.join("–")} HP by option) — confirm door sticker`;
-  }
-  if (looksMulti && hpMentions.length === 0) {
-    return "Varies by option / year — confirm brochure";
-  }
-
-  const range = eng.match(/(\d{2,4})\s*[–—\-to]+\s*(\d{2,4})\s*HP/i);
-  if (range) {
-    return `${range[1]}–${range[2]} HP (by option)`;
-  }
-
-  const m = eng.match(/(\d{2,4})\s*HP/i);
-  if (m) return `${m[1]} HP`;
-
-  if (/V10|Triton/i.test(eng)) return "305–362 HP (by year) — confirm brochure";
-  if (/7\.3L|Godzilla/i.test(eng))
-    return "335–350 HP (by application) — confirm brochure";
-  if (/EcoBoost/i.test(eng)) return "Varies by option / year — confirm brochure";
-
-  if (/Cummins|Power Stroke|Duramax|ISB|B6\.7|L9|ISL|X15|X12|Cat /i.test(eng)) {
-    return "Varies by option / year — confirm brochure";
-  }
-
-  return "Varies by option / year — confirm brochure";
+  return formatFactsHorsepower({ engine, horsepower: hp });
 }
 
 export function honestEngineLabel(engine: string | null | undefined): {
@@ -366,45 +399,21 @@ export function honestGenerator(opts: {
 }
 
 /**
- * Do not present F53 468 lb-ft (or a lone catalog number) as certified
- * when the chassis is an E-450 cutaway / Class C.
+ * Facts torque for a motorized coach: catalog/brochure SoT only.
+ * Do not invent chassis-typical 468 / 450 / V10 ranges.
  */
 export function honestTorqueForCoach(opts: {
   engine?: string | null;
   chassis?: string | null;
   type?: string | null;
-  torqueLbFt?: number | null;
+  torqueLbFt?: string | number | null;
   diesel?: boolean;
   horsepower?: number | null;
 }): string {
-  const engine = (opts.engine || "").trim();
-  const cutaway =
-    isCutawayChassis(opts.chassis) || coachClassKind(opts.type) === "class-c";
-  const option = honestTorqueLabel({
-    engine,
+  return formatFactsTorque({
+    engine: opts.engine,
     torqueLbFt: opts.torqueLbFt,
   });
-  if (option && horsepowerIsOptionBand(engine, null)) return option;
-
-  if (/godzilla|7\.3/i.test(engine)) {
-    if (cutaway) {
-      return "450 lb-ft (typ. E-450 7.3 — confirm door sticker)";
-    }
-    return "468 lb-ft (typ. F53 7.3 — confirm door sticker)";
-  }
-  if (/v10|triton/i.test(engine)) {
-    return "420–460 lb-ft (typ. V10 — confirm year)";
-  }
-  if (opts.torqueLbFt && opts.torqueLbFt > 0 && !cutaway) {
-    return `${opts.torqueLbFt.toLocaleString()} lb-ft`;
-  }
-  if (opts.torqueLbFt && opts.torqueLbFt > 0 && cutaway && opts.torqueLbFt >= 468) {
-    return "450 lb-ft (typ. E-450 — confirm door sticker)";
-  }
-  if (opts.torqueLbFt && opts.torqueLbFt > 0) {
-    return `${opts.torqueLbFt.toLocaleString()} lb-ft (typ. — confirm door sticker)`;
-  }
-  return option || "Varies by option / year — confirm brochure";
 }
 
 export function honestHorsepowerForCoach(opts: {
@@ -413,19 +422,10 @@ export function honestHorsepowerForCoach(opts: {
   chassis?: string | null;
   type?: string | null;
 }): string {
-  const engine = (opts.engine || "").trim();
-  const parsed = parseHp(
-    engine,
-    typeof opts.horsepower === "number" ? opts.horsepower : undefined,
-  );
-  const cutaway =
-    isCutawayChassis(opts.chassis) || coachClassKind(opts.type) === "class-c";
-  if (cutaway && /7\.3|godzilla/i.test(engine)) {
-    if (/^350\s*HP$/i.test(parsed) || opts.horsepower === 350) {
-      return "325–350 HP (E-450 7.3 by year — confirm door sticker)";
-    }
-  }
-  return parsed;
+  return formatFactsHorsepower({
+    engine: opts.engine,
+    horsepower: opts.horsepower,
+  });
 }
 
 /** Class C cutaway is typically 50A; Sprinter / van Class C is typically 30A. Never hash-pick. */
