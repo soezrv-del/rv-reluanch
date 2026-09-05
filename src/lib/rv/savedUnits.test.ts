@@ -7,6 +7,8 @@ import {
   autoSaveFactsUnit,
   isMotorhomeFactsType,
   isSavedUnit,
+  loadLatestSavedUnit,
+  SAVED_UNITS_KEY,
   shouldAutoSaveFacts,
   toggleSavedUnit,
   type SavedUnitLike,
@@ -95,4 +97,45 @@ test("toggle removes an auto-saved motorhome and can re-add", () => {
   const resaved = toggleSavedUnit(unsaved, dream);
   assert.equal(resaved.length, 1);
   assert.equal(resaved[0]!.make, "American Coach");
+});
+
+test("loadLatestSavedUnit returns newest-first saved coach identity", () => {
+  const mem = new Map<string, string>();
+  const store = {
+    getItem: (k: string) => mem.get(k) ?? null,
+    setItem: (k: string, v: string) => {
+      mem.set(k, v);
+    },
+    removeItem: (k: string) => {
+      mem.delete(k);
+    },
+  };
+  const g = globalThis as { localStorage?: typeof store };
+  const prev = g.localStorage;
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: store,
+  });
+  try {
+    assert.equal(loadLatestSavedUnit(), null);
+    store.setItem(
+      SAVED_UNITS_KEY,
+      JSON.stringify([dream, montana]),
+    );
+    const latest = loadLatestSavedUnit();
+    assert.ok(latest);
+    assert.equal(latest.make, "American Coach");
+    assert.equal(latest.model, "American Dream");
+    assert.equal(latest.floorplan, "45A");
+  } finally {
+    if (prev) {
+      Object.defineProperty(globalThis, "localStorage", {
+        configurable: true,
+        value: prev,
+      });
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (globalThis as any).localStorage;
+    }
+  }
 });
