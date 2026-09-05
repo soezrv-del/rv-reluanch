@@ -19,8 +19,10 @@ import {
   sharePaymentPricePills,
   sharePowerLines,
 } from "./shareCardPolicy.ts";
-import { buildBrochureSpecs } from "./brochureSpecs.ts";
-import type { RVSpec } from "./rvTypes.ts";
+import {
+  honestHorsepowerForCoach,
+  honestTorqueForCoach,
+} from "./catalogHonesty.ts";
 
 const src = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "shareKit.ts"),
@@ -243,50 +245,21 @@ test("catalog HP and torque become POWER lines; missing torque is omitted", () =
   assert.deepEqual(sharePowerLines("", ""), []);
 });
 
-function gasClassASpec(opts: {
-  horsepower?: number;
-  torqueLbFt?: number;
-  engine?: string;
-}): RVSpec {
-  return {
-    type: "Class A Gas",
-    floorplans: ["328DS"],
-    lengthRange: [32, 37],
-    weightRange: [16000, 22000],
-    slideouts: 2,
-    sleeps: 8,
-    msrpRange: [139000, 229000],
-    engine: opts.engine ?? "Ford 7.3L / V10 (by year)",
-    horsepower: opts.horsepower,
-    torqueLbFt: opts.torqueLbFt,
-    chassis: "Ford F53",
-    fuelType: "Gas",
-    recalls: 0,
-    rating: 2.6,
-    image: "",
-    description: "Forest River Georgetown — core gas Class A line.",
-    powertrainByYear: [
-      {
-        from: 2020,
-        to: 2026,
-        engine: "Ford 7.3L V8 Godzilla",
-        horsepower: opts.horsepower,
-        torqueLbFt: opts.torqueLbFt,
-        chassis: "Ford F53",
-      },
-    ],
-  };
-}
-
 test("Georgetown-shaped catalog HP surfaces in share POWER; no invented torque", () => {
-  const georgetown = buildBrochureSpecs(
-    gasClassASpec({ horsepower: 350 }),
-    "2022",
-    "Forest River",
-    "Georgetown",
-    "328DS",
-  );
-  const lines = sharePowerLines(georgetown.horsepower, georgetown.torque);
+  const hp = honestHorsepowerForCoach({
+    engine: "Ford 7.3L / V10 (by year)",
+    horsepower: 350,
+    chassis: "Ford F53",
+    type: "Class A Gas",
+  });
+  const tq = honestTorqueForCoach({
+    engine: "Ford 7.3L / V10 (by year)",
+    chassis: "Ford F53",
+    type: "Class A Gas",
+    torqueLbFt: null,
+    horsepower: 350,
+  });
+  const lines = sharePowerLines(hp, tq);
   assert.match(lines.join("\n"), /350\s*HP/);
   assert.doesNotMatch(lines.join("\n"), /lb-?ft/i);
   assert.doesNotMatch(lines.join("\n"), /confirm brochure/i);
@@ -294,18 +267,20 @@ test("Georgetown-shaped catalog HP surfaces in share POWER; no invented torque",
 });
 
 test("motorhome catalog torque rides with HP when SoT has both", () => {
-  const both = buildBrochureSpecs(
-    gasClassASpec({
-      horsepower: 335,
-      torqueLbFt: 468,
-      engine: "Ford 7.3L V8 Godzilla",
-    }),
-    "2022",
-    "Forest River",
-    "FR3",
-    "30DS",
-  );
-  const lines = sharePowerLines(both.horsepower, both.torque);
+  const hp = honestHorsepowerForCoach({
+    engine: "Ford 7.3L V8 Godzilla",
+    horsepower: 335,
+    chassis: "Ford F53",
+    type: "Class A Gas",
+  });
+  const tq = honestTorqueForCoach({
+    engine: "Ford 7.3L V8 Godzilla",
+    chassis: "Ford F53",
+    type: "Class A Gas",
+    torqueLbFt: 468,
+    horsepower: 335,
+  });
+  const lines = sharePowerLines(hp, tq);
   assert.match(lines.join("\n"), /335\s*HP/);
   assert.match(lines.join("\n"), /468/);
   assert.match(lines.join("\n"), /lb-?ft/i);

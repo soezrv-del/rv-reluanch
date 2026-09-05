@@ -122,14 +122,22 @@ export async function hardenShareImageFile(file: File): Promise<File | null> {
 }
 
 export function imageFileFromBytes(
-  bytes: BlobPart,
+  bytes: BlobPart | Uint8Array,
   filename: string,
   mime = SHARE_CARD_MIME,
 ): File {
   const name = /\.(png|jpe?g|webp)$/i.test(filename)
     ? filename
     : `${filename}.png`;
-  return new File([bytes], name, { type: mime, lastModified: Date.now() });
+  let part: BlobPart;
+  if (bytes instanceof Uint8Array) {
+    const copy = new Uint8Array(bytes.byteLength);
+    copy.set(bytes);
+    part = copy.buffer;
+  } else {
+    part = bytes;
+  }
+  return new File([part], name, { type: mime, lastModified: Date.now() });
 }
 
 export type ShareKitPayload = {

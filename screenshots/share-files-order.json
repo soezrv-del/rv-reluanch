@@ -1,0 +1,39 @@
+{
+  "preference": "RV hero first — iMessage preview uses files[0]",
+  "default": [
+    {
+      "index": 0,
+      "role": "hero",
+      "name": "2022_Forest_River_Georgetown_328DS-hero.jpg",
+      "type": "image/jpeg"
+    },
+    {
+      "index": 1,
+      "role": "card",
+      "name": "2022_Forest_River_Georgetown_328DS-card.png",
+      "type": "image/png",
+      "aspect": "16:9"
+    }
+  ],
+  "lifestyleOn": [
+    {
+      "index": 0,
+      "role": "hero",
+      "name": "…-hero.jpg",
+      "type": "image/jpeg"
+    },
+    {
+      "index": 1,
+      "role": "lifestyle",
+      "name": "…-lifestyle.jpg",
+      "type": "image/jpeg",
+      "note": "deduped if same bytes as hero"
+    },
+    {
+      "index": 2,
+      "role": "card",
+      "name": "…-card.png",
+      "type": "image/png"
+    }
+  ]
+}
