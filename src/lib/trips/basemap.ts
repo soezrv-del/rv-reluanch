@@ -10,7 +10,14 @@ export type TileProvider = "here" | "osm" | "svg";
 
 export type BasemapLngLat = { lat: number; lng: number };
 
-export type BasemapPinKind = "origin" | "via" | "dest" | "fuel" | "truck-stop";
+export type BasemapPinKind =
+  | "origin"
+  | "via"
+  | "dest"
+  | "fuel"
+  | "truck-stop"
+  | "campground"
+  | "rv-park";
 
 export type BasemapPin = BasemapLngLat & {
   id: string;

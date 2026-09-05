@@ -20,8 +20,8 @@ import {
 import { cn } from "@/lib/utils";
 import { RVTRIPS_AMERICA_BACKDROP } from "@/assets/tripMedia";
 import {
-  DEMO_CAMPS,
   DEMO_PACK,
+  SAMPLE_CAMPS,
   formatDrive,
   formatMiles,
   type TripAlert,
@@ -84,6 +84,7 @@ import {
 } from "@/lib/trips/dumpStations";
 import { DumpMap } from "@/components/rvtrips/DumpMap";
 import { FuelAlongRoute } from "@/components/rvtrips/FuelAlongRoute";
+import { CampsAlongRoute } from "@/components/rvtrips/CampsAlongRoute";
 import { RouteBasemap } from "@/components/rvtrips/RouteBasemap";
 import {
   buildFuelQuery,
@@ -92,6 +93,11 @@ import {
   type FuelSearchResult,
   type FuelStop,
 } from "@/lib/trips/corridorFuel";
+import {
+  buildCampsQuery,
+  type CampSearchResult,
+  type CampStop,
+} from "@/lib/trips/corridorCamps";
 import {
   canSubmitPlan,
   defaultTripName,
@@ -126,7 +132,7 @@ type SheetId = "year" | "make" | "model" | "floorplan" | null;
 const SUB_TABS: { id: SubTab; label: string; icon: typeof Navigation }[] = [
   { id: "navigate", label: "Navigate", icon: Navigation },
   { id: "directions", label: "Directions", icon: ListChecks },
-  { id: "campgrounds", label: "Demo camps", icon: Tent },
+  { id: "campgrounds", label: "Camps", icon: Tent },
   { id: "dumps", label: "Dumps", icon: Droplets },
   { id: "pack", label: "Pack List", icon: ListChecks },
   { id: "profile", label: "Profile", icon: User },
@@ -268,6 +274,12 @@ export function RvTripsApp() {
     "idle" | "loading" | "live" | "error"
   >("idle");
   const [fuelFocusId, setFuelFocusId] = useState<string | null>(null);
+  const [camps, setCamps] = useState<CampSearchResult | null>(null);
+  const [campsStatus, setCampsStatus] = useState<
+    "idle" | "loading" | "live" | "error"
+  >("idle");
+  const [campFocusId, setCampFocusId] = useState<string | null>(null);
+  const [showSampleCamps, setShowSampleCamps] = useState(false);
 
   const applySeedIdentity = useCallback((p: CoachProfile, source: CoachSeedSource) => {
     lastAutoKeyRef.current = coachIdentityKey(p);
@@ -536,6 +548,50 @@ export function RvTripsApp() {
       });
     return () => ctrl.abort();
     // viaSig covers filled overnight stops; geometry comes from the live route.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeStatus, osrm, originPlace, destPlace, viaSig]);
+
+  useEffect(() => {
+    if (routeStatus !== "live" || !originPlace || !destPlace) {
+      setCamps(null);
+      setCampsStatus("idle");
+      setCampFocusId(null);
+      return;
+    }
+    const ctrl = new AbortController();
+    setCampsStatus("loading");
+    setCampFocusId(null);
+    const path = osrm?.geometry?.coordinates?.length
+      ? osrm.geometry.coordinates.map(([lng, lat]) => ({ lng, lat }))
+      : [originPlace, ...viaPlaces, destPlace];
+    const qs = buildCampsQuery({
+      from: { lng: originPlace.lng, lat: originPlace.lat },
+      to: { lng: destPlace.lng, lat: destPlace.lat },
+      via: viaPlaces.map((p) => ({ lng: p.lng, lat: p.lat })),
+      path: downsampleByDistance(path, 24),
+      widthMi: 15,
+    });
+    fetch(`/api/camps?${qs}`, {
+      signal: ctrl.signal,
+      headers: { Accept: "application/json" },
+    })
+      .then(async (res) => {
+        const json = (await res.json()) as CampSearchResult & { error?: string };
+        if (ctrl.signal.aborted) return;
+        if (!res.ok) {
+          setCamps(null);
+          setCampsStatus("error");
+          return;
+        }
+        setCamps(json);
+        setCampsStatus("live");
+      })
+      .catch((e) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setCamps(null);
+        setCampsStatus("error");
+      });
+    return () => ctrl.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routeStatus, osrm, originPlace, destPlace, viaSig]);
 
@@ -955,7 +1011,9 @@ export function RvTripsApp() {
     setSub("navigate");
   };
 
-  const routeViaFuel = (stop: FuelStop) => {
+  const routeViaPoi = (
+    stop: Pick<FuelStop | CampStop, "name" | "city" | "state" | "lat" | "lng" | "kind">,
+  ) => {
     const hit: PlaceHit = {
       label: stop.city
         ? `${stop.name} · ${stop.city}${stop.state ? `, ${stop.state}` : ""}`
@@ -1006,6 +1064,7 @@ export function RvTripsApp() {
       return next;
     });
     setFuelFocusId(null);
+    setCampFocusId(null);
     setNavArmed(false);
     setNavStepIdx(0);
     setSub("navigate");
@@ -1544,6 +1603,9 @@ export function RvTripsApp() {
                     fuelStops={fuel?.stops}
                     selectedFuelId={fuelFocusId}
                     onSelectFuel={(id) => setFuelFocusId(id || null)}
+                    campStops={camps?.camps}
+                    selectedCampId={campFocusId}
+                    onSelectCamp={(id) => setCampFocusId(id || null)}
                   />
 
                   <FuelAlongRoute
@@ -1551,8 +1613,18 @@ export function RvTripsApp() {
                     result={fuel}
                     selectedId={fuelFocusId}
                     onSelect={(id) => setFuelFocusId(id || null)}
-                    onRouteVia={routeViaFuel}
+                    onRouteVia={routeViaPoi}
                     viaDisabled={viaSlotsFull}
+                  />
+
+                  <CampsAlongRoute
+                    status={campsStatus}
+                    result={camps}
+                    selectedId={campFocusId}
+                    onSelect={(id) => setCampFocusId(id || null)}
+                    onRouteVia={routeViaPoi}
+                    viaDisabled={viaSlotsFull}
+                    limit={6}
                   />
                 </section>
               ) : !hasRoutePoints ? (
@@ -1758,48 +1830,75 @@ export function RvTripsApp() {
             <section className="space-y-3">
               <div className="flex items-center gap-2">
                 <h2 className="flex items-center gap-1.5 text-[12px] font-bold tracking-[0.12em] text-white">
-                  <Tent className="size-3.5 text-amber" />
+                  <Tent className="size-3.5 text-emerald-300" />
                   CAMPGROUNDS
                 </h2>
-                <span className="rounded-full border border-amber/45 bg-amber/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-amber">
-                  DEMO
-                </span>
+                {campsStatus === "live" && camps?.sourceLabel ? (
+                  <span className="rounded-full border border-white/20 bg-black/30 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white/80">
+                    {camps.sourceLabel}
+                  </span>
+                ) : null}
               </div>
-              <p className="text-[12px] text-white/80">
-                Sample pads — not live inventory.
-              </p>
-              {DEMO_CAMPS.filter(
-                (c) =>
-                  !displayCoach || c.maxLengthFt >= displayCoach.lengthFt,
-              ).map((c) => (
-                <div
-                  key={c.id}
-                  className="glass-prestige flex items-start gap-3 rounded-[1.15rem] p-3.5"
+
+              {campsStatus === "idle" ? (
+                <p className="text-[13px] leading-snug text-white/80">
+                  Route a trip on Navigate to load campgrounds along the corridor
+                  and near the destination. Not a reservation inventory.
+                </p>
+              ) : (
+                <CampsAlongRoute
+                  status={campsStatus}
+                  result={camps}
+                  selectedId={campFocusId}
+                  onSelect={(id) => setCampFocusId(id || null)}
+                  onRouteVia={routeViaPoi}
+                  viaDisabled={viaSlotsFull}
+                  limit={16}
+                  heading="ALONG THIS ROUTE"
+                />
+              )}
+
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowSampleCamps((v) => !v)}
+                  className="text-[11px] font-semibold text-white/55 underline-offset-2 hover:text-white/80 hover:underline"
                 >
-                  <Tent className="mt-0.5 size-5 text-amber" />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[14px] font-bold text-white">{c.name}</p>
-                      <span className="rounded-full border border-amber/40 px-1.5 py-px text-[9px] font-bold text-amber">
-                        DEMO
-                      </span>
-                    </div>
-                    <p className="mt-1 text-[11px] text-white/80">
-                      Sample · max {c.maxLengthFt} ft
-                      {c.hasHookups ? " · hookups" : " · dry"}
+                  {showSampleCamps
+                    ? "Hide sample pads"
+                    : "Sample pads — not live"}
+                </button>
+                {showSampleCamps ? (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-[11px] leading-snug text-white/60">
+                      Sample only — invented Glacier-route names, not this
+                      corridor. Use the live list above.
                     </p>
+                    {SAMPLE_CAMPS.map((c) => (
+                      <div
+                        key={c.id}
+                        className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5"
+                      >
+                        <Tent className="mt-0.5 size-4 text-white/45" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-[13px] font-bold text-white/80">
+                              {c.name}
+                            </p>
+                            <span className="rounded-full border border-white/20 px-1.5 py-px text-[9px] font-bold text-white/55">
+                              SAMPLE
+                            </span>
+                          </div>
+                          <p className="mt-0.5 text-[11px] text-white/60">
+                            Sample · max {c.maxLengthFt} ft
+                            {c.hasHookups ? " · hookups" : " · dry"}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <a
-                    href={c.campspotUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue"
-                    aria-label={`Sample listing for ${c.name}`}
-                  >
-                    <ExternalLink className="size-4" />
-                  </a>
-                </div>
-              ))}
+                ) : null}
+              </div>
             </section>
           ) : null}
 

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiRouteRouteImport } from './routes/api/route'
+import { Route as ApiCampsRouteImport } from './routes/api/camps'
 import { Route as ApiFuelRouteImport } from './routes/api/fuel'
 import { Route as ApiGeocodeRouteImport } from './routes/api/geocode'
 import { Route as ApiLendersRouteImport } from './routes/api/lenders'
@@ -35,6 +36,11 @@ const ApiRouteRoute = ApiRouteRouteImport.update({
   id: '/api',
   path: '/api',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCampsRoute = ApiCampsRouteImport.update({
+  id: '/camps',
+  path: '/camps',
+  getParentRoute: () => ApiRouteRoute,
 } as any)
 const ApiFuelRoute = ApiFuelRouteImport.update({
   id: '/fuel',
@@ -110,6 +116,7 @@ const ApiRvgrokWebResearchRoute = ApiRvgrokWebResearchRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteRouteWithChildren
+  '/api/camps': typeof ApiCampsRoute
   '/api/fuel': typeof ApiFuelRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/lenders': typeof ApiLendersRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api': typeof ApiRouteRouteWithChildren
+  '/api/camps': typeof ApiCampsRoute
   '/api/fuel': typeof ApiFuelRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/lenders': typeof ApiLendersRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api': typeof ApiRouteRouteWithChildren
+  '/api/camps': typeof ApiCampsRoute
   '/api/fuel': typeof ApiFuelRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/lenders': typeof ApiLendersRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/api'
+    | '/api/camps'
     | '/api/fuel'
     | '/api/geocode'
     | '/api/lenders'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/api'
+    | '/api/camps'
     | '/api/fuel'
     | '/api/geocode'
     | '/api/lenders'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/api'
+    | '/api/camps'
     | '/api/fuel'
     | '/api/geocode'
     | '/api/lenders'
@@ -239,6 +251,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api'
       preLoaderRoute: typeof ApiRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/camps': {
+      id: '/api/camps'
+      path: '/camps'
+      fullPath: '/api/camps'
+      preLoaderRoute: typeof ApiCampsRouteImport
+      parentRoute: typeof ApiRouteRoute
     }
     '/api/fuel': {
       id: '/api/fuel'
@@ -356,6 +375,7 @@ const ApiRvgrokRouteWithChildren = ApiRvgrokRoute._addFileChildren(
 )
 
 interface ApiRouteRouteChildren {
+  ApiCampsRoute: typeof ApiCampsRoute
   ApiFuelRoute: typeof ApiFuelRoute
   ApiGeocodeRoute: typeof ApiGeocodeRoute
   ApiLendersRoute: typeof ApiLendersRoute
@@ -371,6 +391,7 @@ interface ApiRouteRouteChildren {
 }
 
 const ApiRouteRouteChildren: ApiRouteRouteChildren = {
+  ApiCampsRoute: ApiCampsRoute,
   ApiFuelRoute: ApiFuelRoute,
   ApiGeocodeRoute: ApiGeocodeRoute,
   ApiLendersRoute: ApiLendersRoute,
