@@ -13,6 +13,7 @@ export type PlanPlace = {
 export const LAST_ORIGIN_KEY = "rvfax_trips_last_origin_v1";
 export const GEOCODE_DEBOUNCE_MS = 350;
 export const GEOCODE_MIN_CHARS = 2;
+export const MAX_VIAS = 3;
 
 /** One-tap destinations — coords match /api/geocode presets. */
 export const PLAN_DEST_CHIPS: PlanPlace[] = [
@@ -31,6 +32,14 @@ export const PLAN_DEST_CHIPS: PlanPlace[] = [
     kind: "park",
   },
   { label: "Quartzsite, AZ", lat: 33.6639, lng: -114.2297, kind: "rv" },
+];
+
+/** Overnight / via chips — common western corridor stops. */
+export const PLAN_VIA_CHIPS: PlanPlace[] = [
+  { label: "Boise, ID", lat: 43.615, lng: -116.2023, kind: "city" },
+  { label: "Salt Lake City, UT", lat: 40.7608, lng: -111.891, kind: "city" },
+  { label: "Bend, OR", lat: 44.0582, lng: -121.3153, kind: "city" },
+  { label: "Spokane, WA", lat: 47.6588, lng: -117.426, kind: "city" },
 ];
 
 export function isFiniteCoord(lat: number, lng: number): boolean {
@@ -115,4 +124,23 @@ export function shouldTypeahead(
 
 export function originIsDevice(place: PlanPlace | null): boolean {
   return place?.kind === "current";
+}
+
+/** City-first label for chips and saved-trip names. */
+export function shortPlaceLabel(place: Pick<PlanPlace, "label">): string {
+  const raw = place.label.trim();
+  const city = raw.split(",")[0]?.trim();
+  return city || raw;
+}
+
+export function defaultTripName(
+  origin: Pick<PlanPlace, "label">,
+  dest: Pick<PlanPlace, "label">,
+  vias: Pick<PlanPlace, "label">[] = [],
+): string {
+  return [origin, ...vias, dest].map(shortPlaceLabel).join(" → ");
+}
+
+export function newViaId(): string {
+  return `via-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
