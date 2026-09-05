@@ -153,6 +153,10 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(ui, /followActive=\{navArmed\}/);
   assert.match(ui, /followStatus=\{follow\.status\}/);
   assert.match(ui, /data-follow-note/);
+  assert.match(ui, /CampsAlongRoute/);
+  assert.match(ui, /campStops=\{camps\?\.camps\}/);
+  assert.match(ui, /FuelAlongRoute/);
+  assert.match(ui, /fuelStops=\{fuel\?\.stops\}/);
   assert.doesNotMatch(ui, /["'`]\/api\/route/);
   assert.doesNotMatch(ui, /RATEAPI|rvData\.live/);
 
@@ -161,6 +165,8 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(map, /data-follow-chip/);
   assert.match(map, /followTileView/);
   assert.match(map, /shouldRecenterFollow/);
+  assert.match(map, /campStops/);
+  assert.match(map, /fuelStops/);
   assert.doesNotMatch(map, /["'`]\/api\/route/);
 
   assert.match(follow, /FOLLOW_WATCH_OPTIONS/);
@@ -170,6 +176,7 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.doesNotMatch(follow, /RATEAPI|rvData/);
 
   assert.match(hook, /watchPosition/);
+  assert.match(hook, /getCurrentPosition/);
   assert.match(hook, /clearWatch/);
   assert.match(hook, /FOLLOW_WATCH_OPTIONS/);
   assert.doesNotMatch(hook, /["'`]\/api\/route/);

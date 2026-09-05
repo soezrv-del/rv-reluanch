@@ -33,19 +33,30 @@ export function useNavFollow(armed: boolean): {
     }
 
     let last: GeoFix | null = null;
+    let cancelled = false;
     setError(null);
     setDenied(false);
 
+    const applyFix = (pos: GeolocationPosition) => {
+      if (cancelled) return;
+      const next = fixFromCoords(pos.coords, pos.timestamp);
+      if (!shouldAcceptFix(last, next)) return;
+      last = next;
+      setFix(next);
+      setError(null);
+      setDenied(false);
+    };
+
+    // Prime the first puck from a real fix — watch can be slow in WKWebView.
+    // Origin / Plan trip still owns its own one-shot; this is guidance-only.
+    navigator.geolocation.getCurrentPosition(applyFix, () => {
+      /* watchPosition owns denied / unavailable */
+    }, FOLLOW_WATCH_OPTIONS);
+
     const id = navigator.geolocation.watchPosition(
-      (pos) => {
-        const next = fixFromCoords(pos.coords, pos.timestamp);
-        if (!shouldAcceptFix(last, next)) return;
-        last = next;
-        setFix(next);
-        setError(null);
-        setDenied(false);
-      },
+      applyFix,
       (err) => {
+        if (cancelled) return;
         const msg = followErrorMessage(err);
         if (err.code === 1) {
           last = null;
@@ -60,6 +71,7 @@ export function useNavFollow(armed: boolean): {
     );
 
     return () => {
+      cancelled = true;
       navigator.geolocation.clearWatch(id);
       last = null;
       setFix(null);
