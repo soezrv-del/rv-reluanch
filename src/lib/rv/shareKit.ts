@@ -16,27 +16,29 @@ import {
 import { resolveShareHost } from "@/lib/og/shareHost";
 import { mediaForRvType } from "@/assets/typeMedia";
 import { REPORT_CONTACT_KICKER, REPORT_CONTACT_NAME, REPORT_CONTACT_PHONE } from "./reportContact";
+import { getVerifiedDossier } from "./verifiedCatalogCache";
+import {
+  customerFacingPitch,
+  effectiveShareInclude,
+  isShareableValue,
+  isSharePlaceholder,
+  type ShareInclude,
+  type ShareSpecGroupId,
+} from "./shareCardPolicy";
+
+export {
+  customerFacingPitch,
+  DEFAULT_SHARE_INCLUDE,
+  effectiveShareInclude,
+  hasOptionalShareSections,
+  isShareableValue,
+  isSharePlaceholder,
+  OPTIONAL_SHARE_KEYS,
+} from "./shareCardPolicy";
+export type { ShareInclude, ShareSpecGroupId } from "./shareCardPolicy";
 
 export const SAVED_UNITS_KEY = "rvfax_saved_v1";
 export const SAVED_UNITS_EVENT = "rvfax-saved-changed";
-
-export type ShareInclude = {
-  coach: boolean;
-  market: boolean;
-  payment: boolean;
-  lifestyle: boolean;
-  specs: boolean;
-  strengths: boolean;
-};
-
-export const DEFAULT_SHARE_INCLUDE: ShareInclude = {
-  coach: true,
-  market: true,
-  payment: true,
-  lifestyle: true,
-  specs: true,
-  strengths: true,
-};
 
 export type SharePayment = {
   price: number;
@@ -133,18 +135,54 @@ export function defaultMarketFor(r: RVResult): ShareMarket {
 }
 
 function hasVal(v?: string | null): boolean {
-  if (!v) return false;
-  const t = v.trim();
-  if (!t || t === "—" || t === "-" || t === "–") return false;
-  if (/^n\/a\b/i.test(t)) return false;
-  return true;
+  return isShareableValue(v);
+}
+
+export type BrochureSummary = {
+  pitch: string;
+  features: string[];
+};
+
+function liveBrochureBits(r: RVResult): BrochureSummary {
+  if (typeof localStorage === "undefined") return { pitch: "", features: [] };
+  try {
+    const live = getVerifiedDossier(r.year, r.make, r.model, r.floorplan);
+    if (!live?.live) return { pitch: "", features: [] };
+    const features = (live.keyFeatures || [])
+      .map((f) => customerFacingPitch(f))
+      .filter(Boolean)
+      .slice(0, 6);
+    return {
+      pitch: customerFacingPitch(live.overview),
+      features,
+    };
+  } catch {
+    return { pitch: "", features: [] };
+  }
+}
+
+/**
+ * OEM brochure sales pitch for the shared card.
+ * Prefer live/cached brochure overview + key features; else curated description.
+ * Never invent specs — empty pitch falls back to catalog type only.
+ */
+export function brochureSummary(r: RVResult): BrochureSummary {
+  const live = liveBrochureBits(r);
+  const catalogPitch = customerFacingPitch(r.data.description);
+  const pitch = live.pitch || catalogPitch || (r.data.type || "").trim();
+  const features = live.features.filter(
+    (f) => f && !pitch.toLowerCase().includes(f.toLowerCase()),
+  );
+  return { pitch, features };
 }
 
 function group(
+  id: ShareSpecGroupId,
   title: string,
   pairs: Array<[string, string | undefined]>,
-): { title: string; rows: { label: string; value: string }[] } {
+): { id: ShareSpecGroupId; title: string; rows: { label: string; value: string }[] } {
   return {
+    id,
     title,
     rows: pairs
       .filter(([, v]) => hasVal(v))
@@ -158,21 +196,17 @@ function coachBrochure(r: RVResult): BrochureSpecs {
 
 export function brochureSpecGroups(r: RVResult) {
   const b = coachBrochure(r);
-  const confirmMpg = /confirm brochure/i.test(b.mpgHighway || "");
-  const economy = confirmMpg
-    ? b.mpgHighway
-    : hasVal(b.mpgHighway) && b.mpgHighway !== "—"
-      ? `${b.mpgHighway} hwy${
-          b.mpgCity && b.mpgCity !== "—" && !/confirm brochure/i.test(b.mpgCity)
-            ? ` · ${b.mpgCity} city`
-            : ""
-        }`
-      : undefined;
+  const hwyOk = hasVal(b.mpgHighway);
+  const cityOk = hasVal(b.mpgCity);
+  const economy = hwyOk
+    ? `${b.mpgHighway} hwy${cityOk ? ` · ${b.mpgCity} city` : ""}`
+    : undefined;
+  const notesPitch = customerFacingPitch(r.data.description);
   return [
-    group("NOTES", [
-      ["Catalog", r.data.description ? r.data.description.slice(0, 280) : undefined],
+    group("notes", "NOTES", [
+      ["Catalog", notesPitch ? notesPitch.slice(0, 280) : undefined],
     ]),
-    group("POWERTRAIN", [
+    group("powertrain", "POWERTRAIN", [
       ["Engine", b.engine],
       ["Horsepower", b.horsepower],
       ["Torque", b.torque],
@@ -183,21 +217,22 @@ export function brochureSpecGroups(r: RVResult) {
       ["Economy", economy],
       ["Range", b.rangeMiles],
     ]),
-    group("WEIGHTS", [
+    group("weights", "WEIGHTS", [
       ["GVWR", b.gvwr],
       ["UVW", b.uvw],
       ["CCC", b.ccc],
       ["GCWR", b.gcwr],
       [b.hitchLabel || "Hitch / tow", b.hitchOrPin],
     ]),
-    group("DIMENSIONS", [
+    group("dimensions", "DIMENSIONS", [
       ["Length", b.lengthFt],
       ["Exterior width", b.exteriorWidth],
       ["Exterior height", b.exteriorHeight],
       ["Interior height", b.interiorHeight],
       ["Wheelbase", b.wheelbase],
     ]),
-    group("LIVING", [
+    group("living", "LIVING", [
+      ["Type", r.data.type],
       ["Sleeps", b.sleeps],
       ["Slideouts", b.slideouts],
       ["Seat belts", b.seatBelts],
@@ -205,25 +240,25 @@ export function brochureSpecGroups(r: RVResult) {
       ["Construction", b.construction],
       ["Warranty", b.warranty],
     ]),
-    group("TANKS", [
+    group("tanks", "TANKS", [
       ["Fresh", b.freshWater],
       ["Gray", b.grayWater],
       ["Black", b.blackWater],
       ["Propane", b.propane],
       ["Water heater", b.waterHeater],
     ]),
-    group("POWER", [
+    group("power", "POWER", [
       ["Generator", b.generator],
       ["Electrical", b.electricalService],
       ["A/C", b.acUnits],
       ["Furnace", b.furnaceBtu],
       ["Converter", b.converter],
     ]),
-    group("CHASSIS GEAR", [
+    group("chassisGear", "CHASSIS GEAR", [
       ["Axles", b.axles],
       ["Tires", b.tireSize],
     ]),
-    group("GARAGE", [
+    group("garage", "GARAGE", [
       ["Length", b.garageLength],
       ["Width", b.garageWidth],
       ["Height", b.garageHeight],
@@ -239,6 +274,7 @@ export function kitStrengths(
   r: RVResult,
   payment?: SharePayment,
   ratingScore?: number,
+  includeRating = false,
 ): string[] {
   const b = coachBrochure(r);
   const meta = getRatingMetadata(r.make, r.model, r.year);
@@ -247,10 +283,14 @@ export function kitStrengths(
     ratingScore != null && Number.isFinite(ratingScore) && ratingScore > 0
       ? ratingScore
       : meta.score;
-  out.push(
-    `${meta.tierLabel} · ${score.toFixed(1)} / 5.0 · ${meta.confidence} confidence`,
-  );
-  if (meta.yearNote) out.push(meta.yearNote);
+  if (includeRating) {
+    out.push(
+      `${meta.tierLabel} · ${score.toFixed(1)} / 5.0 · ${meta.confidence} confidence`,
+    );
+    if (meta.yearNote && !isSharePlaceholder(meta.yearNote)) {
+      out.push(meta.yearNote);
+    }
+  }
   if (
     /diesel/i.test(b.fuelType) ||
     /diesel|cummins|isl|l9|x15/i.test(b.engine)
@@ -347,21 +387,35 @@ export function buildCoachKit(opts: {
   market?: ShareMarket;
   strengths?: string[];
   rating?: number;
+  summary?: BrochureSummary;
 }): string {
-  const { result: r, include, payment } = opts;
+  const { result: r, payment } = opts;
+  const include = effectiveShareInclude(opts.include);
   const lines: string[] = [];
   const title = coachTitle(r);
   const market = opts.market ?? defaultMarketFor(r);
   const snap = coachSnapshot(r, opts.rating);
+  const summary = opts.summary ?? brochureSummary(r);
 
   lines.push(SHARE_KIT_HEADER);
   lines.push(SHARE_KIT_TAGLINE);
   lines.push("");
   lines.push(title);
-  if (snap.type) lines.push(`Type: ${snap.type}`);
-  if (snap.rating) lines.push(`Rating: ${snap.rating}`);
-  if (snap.sleeps) lines.push(`Sleeps: ${snap.sleeps}`);
-  if (snap.length) lines.push(`Length: ${snap.length}`);
+
+  if (summary.pitch || summary.features.length) {
+    lines.push("");
+    lines.push("SUMMARY");
+    if (summary.pitch) lines.push(summary.pitch);
+    for (const feature of summary.features) {
+      lines.push(`• ${feature}`);
+    }
+  }
+
+  if (include.rating && snap.rating) {
+    lines.push("");
+    lines.push("RATING");
+    lines.push(snap.rating);
+  }
 
   if (include.market) {
     lines.push("");
@@ -392,8 +446,15 @@ export function buildCoachKit(opts: {
   if (include.strengths) {
     const items =
       opts.strengths ??
-      kitStrengths(r, include.payment ? payment : undefined, opts.rating);
-    const clean = items.map((s) => s.trim()).filter(Boolean);
+      kitStrengths(
+        r,
+        include.payment ? payment : undefined,
+        opts.rating,
+        include.rating,
+      );
+    const clean = items
+      .map((s) => s.trim())
+      .filter((s) => s && !isSharePlaceholder(s));
     if (clean.length) {
       lines.push("");
       lines.push("STRENGTHS");
@@ -401,16 +462,14 @@ export function buildCoachKit(opts: {
     }
   }
 
-  if (include.specs) {
-    const groups = brochureSpecGroups(r);
-    if (groups.length) {
-      for (const g of groups) {
-        lines.push("");
-        lines.push(g.title);
-        for (const row of g.rows) {
-          lines.push(`${row.label}: ${row.value}`);
-        }
-      }
+  const groups = brochureSpecGroups(r);
+  for (const g of groups) {
+    if (!include[g.id]) continue;
+    lines.push("");
+    lines.push(g.title);
+    for (const row of g.rows) {
+      if (isSharePlaceholder(row.value)) continue;
+      lines.push(`${row.label}: ${row.value}`);
     }
   }
 
@@ -421,7 +480,7 @@ export function buildCoachKit(opts: {
   lines.push(REPORT_CONTACT_PHONE);
   lines.push("RvFOX Pro · Know before you buy.");
   lines.push(SHARE_KIT_FOOTER);
-  return lines.join("\n");
+  return lines.filter((line) => !isSharePlaceholder(line)).join("\n");
 }
 
 export function buildSuitePitch(): string {
