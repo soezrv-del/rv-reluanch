@@ -54,7 +54,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>RV Grok uses the camera so you can show a coach, panel, label, or problem and get help. VIN scan also uses the camera.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>RV Trips uses your location to sort free dump stations and campgrounds by distance. Your location stays on the phone unless you tap a map link.</string>
+	<string>RV Trips uses your location to start a trip from where you are, follow the map during turn-by-turn guidance, and sort dump stations nearby. Your location stays on the phone unless you tap a map link.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a photo of your RV, a panel, or a problem to show RV Grok.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
