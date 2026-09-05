@@ -34,6 +34,11 @@ import {
   type OsrmRouteResult,
 } from "@/lib/trips/osrm";
 import {
+  fetchNavigateRoute,
+  routeEngineLabel,
+  routeEngineNote,
+} from "@/lib/trips/navigateRoute";
+import {
   anyDimEstimated,
   clearLockedProfile,
   coachIdentityKey,
@@ -363,7 +368,12 @@ export function RvTripsApp() {
       setRouteError(null);
       setNavArmed(false);
       setNavStepIdx(0);
-      fetchOsrmRoute({ from, to, signal: ctrl.signal })
+      fetchNavigateRoute({
+        from,
+        to,
+        coach: locked,
+        signal: ctrl.signal,
+      })
         .then((data) => {
           setOsrm(data);
           setRoute({
@@ -393,7 +403,7 @@ export function RvTripsApp() {
         });
       return () => ctrl.abort();
     },
-    [],
+    [locked],
   );
 
   useEffect(() => {
@@ -591,7 +601,7 @@ export function RvTripsApp() {
       });
       setRouteStatus("live");
       setSaferNote(
-        "Applied highway-preferring RV route. Re-check warnings below.",
+        "Applied OSRM highway re-rank — not truck routing. Re-check warnings below.",
       );
       setNavStepIdx(0);
     } catch (e) {
@@ -705,7 +715,7 @@ export function RvTripsApp() {
               </span>
               <span className="text-[9px] font-bold uppercase tracking-wide text-blue">
                 {routeStatus === "live"
-                  ? "OSRM live"
+                  ? routeEngineLabel(osrm)
                   : routeStatus === "loading"
                     ? "Routing…"
                     : routeStatus === "offline"
@@ -1114,6 +1124,14 @@ export function RvTripsApp() {
                         <MapPin className="size-3.5 text-blue" />
                         {destPlace?.label || route.destination.label}
                       </p>
+                      {routeStatus === "live" && osrm ? (
+                        <p className="mt-1 text-[10px] leading-snug text-white/85">
+                          {routeEngineLabel(osrm)}
+                          {routeEngineNote(osrm)
+                            ? ` · ${routeEngineNote(osrm)}`
+                            : ""}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 </section>
@@ -1296,10 +1314,17 @@ export function RvTripsApp() {
               {routeStatus !== "live" || !liveDirections?.length ? (
                 <p className="text-[13px] text-white">
                   Calculate a route on Navigate to fill this list with live
-                  OSRM steps.
+                  turn-by-turn steps.
                 </p>
               ) : (
-                liveDirections.map((d, i) => (
+                <>
+                {osrm ? (
+                  <p className="text-[11px] font-semibold text-blue">
+                    {routeEngineLabel(osrm)}
+                    {routeEngineNote(osrm) ? ` · ${routeEngineNote(osrm)}` : ""}
+                  </p>
+                ) : null}
+                {liveDirections.map((d, i) => (
                   <div
                     key={d.id}
                     className="flex items-start gap-3 rounded-xl border border-white/12 bg-black/30 px-3 py-2.5"
@@ -1314,7 +1339,8 @@ export function RvTripsApp() {
                       {d.mi} mi
                     </span>
                   </div>
-                ))
+                ))}
+                </>
               )}
             </section>
           ) : null}
