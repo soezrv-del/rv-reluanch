@@ -16,7 +16,8 @@ import {
 export const SHARE_CARD_MIME = "image/png";
 export const SHARE_CARD_FILENAME = "RvFOX-share-card.png";
 export const SHARE_CARD_WIDTH = 1200;
-export const SHARE_CARD_HEIGHT = 460;
+/** 16:9 so Messages preview shows the full PREPARED BY card — 1200×460 was cropped. */
+export const SHARE_CARD_HEIGHT = 675;
 export const SHARE_CARD_MIN_BYTES = 32;
 
 const NAVY = "#0b1b33";
@@ -138,21 +139,51 @@ export type ShareKitPayload = {
 };
 
 /**
- * Share payload for the kit. The card image is first when present.
+ * Messages / iOS Web Share uses files[0] as the bubble preview.
+ * Locked order: RV hero → extra lifestyle JPEGs → PREPARED BY card last.
+ * If only one image can ship, the hero wins over the contact card.
+ */
+export function orderShareImageFiles(opts: {
+  heroFile?: File | null;
+  extraFiles?: File[];
+  cardFile?: File | null;
+}): File[] {
+  const files: File[] = [];
+  const seen = new Set<string>();
+  const push = (file?: File | null) => {
+    if (!isShareImageFile(file)) return;
+    const ident = `${file.type}:${file.size}`;
+    if (seen.has(ident)) return;
+    seen.add(ident);
+    files.push(file);
+  };
+  push(opts.heroFile);
+  for (const extra of opts.extraFiles || []) push(extra);
+  push(opts.cardFile);
+  return files;
+}
+
+/**
+ * Share payload for the kit. RV hero is first when present so Messages
+ * previews the coach photo, not a cropped signature card.
  * HTML / empty / non-image blobs are dropped — Messages can't show them.
  */
 export function buildShareKitPayload(opts: {
   title: string;
   text: string;
+  heroFile?: File | null;
   cardFile?: File | null;
   extraFiles?: File[];
 }): ShareKitPayload {
-  const files: File[] = [];
-  if (isShareImageFile(opts.cardFile)) files.push(opts.cardFile);
-  for (const extra of opts.extraFiles || []) {
-    if (isShareImageFile(extra)) files.push(extra);
-  }
-  return { title: opts.title, text: opts.text, files };
+  return {
+    title: opts.title,
+    text: opts.text,
+    files: orderShareImageFiles({
+      heroFile: opts.heroFile,
+      extraFiles: opts.extraFiles,
+      cardFile: opts.cardFile,
+    }),
+  };
 }
 
 export type ShareAttempt = {
@@ -290,8 +321,12 @@ export function paintShareSignatureCard(
   ctx.fillRect(0, 0, width, 12);
 
   const box = 96;
-  const pad = 48;
-  const boxY = 56;
+  const pad = 72;
+  const footH = 72;
+  const contentH = 150;
+  const boxY = Math.round(
+    12 + Math.max(36, (height - 12 - footH - contentH) / 2),
+  );
   roundRectPath(ctx, pad, boxY, box, box, 16);
   ctx.fillStyle = NAVY;
   ctx.fill();
@@ -341,7 +376,6 @@ export function paintShareSignatureCard(
   ctx.font = "800 16px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
   fillTracked(ctx, "KNOW BEFORE YOU BUY", brandX, boxY + 82, 2.4, "right");
 
-  const footH = 68;
   ctx.fillStyle = NAVY;
   ctx.fillRect(0, height - footH, width, footH);
   ctx.fillStyle = FOOT_MUTED;
@@ -455,7 +489,7 @@ export async function copyKit(text: string): Promise<ShareOutcome> {
  *
  * Rules:
  * - If navigator.share exists, call it. Do not skip because canShare is false.
- * - Prefer file-bearing payloads first (card PNG + lifestyle JPEG).
+ * - Prefer file-bearing payloads first (RV hero JPEG, then card PNG).
  * - Never write the clipboard before / instead of the sheet on a capable device.
  * - Download + copy only when share() is missing or every share() throw is
  *   not a user cancel.

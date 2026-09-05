@@ -17,7 +17,10 @@ import {
   SHARE_MARKET_LINE_DEFS,
   sharePaymentAfterTermDown,
   sharePaymentPricePills,
+  sharePowerLines,
 } from "./shareCardPolicy.ts";
+import { buildBrochureSpecs } from "./brochureSpecs.ts";
+import type { RVSpec } from "./rvTypes.ts";
 
 const src = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "shareKit.ts"),
@@ -224,6 +227,96 @@ test("auto rate flash only when term/down actually changes the schedule APR", ()
   assert.equal(RATE_UPDATED_FLASH, "rate updated");
 });
 
+test("catalog HP and torque become POWER lines; missing torque is omitted", () => {
+  assert.deepEqual(sharePowerLines("350 HP", "468 lb-ft"), [
+    "POWER",
+    "350 HP",
+    "468 lb-ft",
+  ]);
+  assert.deepEqual(sharePowerLines("350 HP", "—"), ["POWER", "350 HP"]);
+  assert.deepEqual(sharePowerLines("350 HP", "N/A"), ["POWER", "350 HP"]);
+  assert.deepEqual(sharePowerLines("Confirm brochure", "468 lb-ft"), [
+    "POWER",
+    "468 lb-ft",
+  ]);
+  assert.deepEqual(sharePowerLines("HP varies / confirm brochure", null), []);
+  assert.deepEqual(sharePowerLines("", ""), []);
+});
+
+function gasClassASpec(opts: {
+  horsepower?: number;
+  torqueLbFt?: number;
+  engine?: string;
+}): RVSpec {
+  return {
+    type: "Class A Gas",
+    floorplans: ["328DS"],
+    lengthRange: [32, 37],
+    weightRange: [16000, 22000],
+    slideouts: 2,
+    sleeps: 8,
+    msrpRange: [139000, 229000],
+    engine: opts.engine ?? "Ford 7.3L / V10 (by year)",
+    horsepower: opts.horsepower,
+    torqueLbFt: opts.torqueLbFt,
+    chassis: "Ford F53",
+    fuelType: "Gas",
+    recalls: 0,
+    rating: 2.6,
+    image: "",
+    description: "Forest River Georgetown — core gas Class A line.",
+    powertrainByYear: [
+      {
+        from: 2020,
+        to: 2026,
+        engine: "Ford 7.3L V8 Godzilla",
+        horsepower: opts.horsepower,
+        torqueLbFt: opts.torqueLbFt,
+        chassis: "Ford F53",
+      },
+    ],
+  };
+}
+
+test("Georgetown-shaped catalog HP surfaces in share POWER; no invented torque", () => {
+  const georgetown = buildBrochureSpecs(
+    gasClassASpec({ horsepower: 350 }),
+    "2022",
+    "Forest River",
+    "Georgetown",
+    "328DS",
+  );
+  const lines = sharePowerLines(georgetown.horsepower, georgetown.torque);
+  assert.match(lines.join("\n"), /350\s*HP/);
+  assert.doesNotMatch(lines.join("\n"), /lb-?ft/i);
+  assert.doesNotMatch(lines.join("\n"), /confirm brochure/i);
+  assert.doesNotMatch(lines.join("\n"), /do not invent/i);
+});
+
+test("motorhome catalog torque rides with HP when SoT has both", () => {
+  const both = buildBrochureSpecs(
+    gasClassASpec({
+      horsepower: 335,
+      torqueLbFt: 468,
+      engine: "Ford 7.3L V8 Godzilla",
+    }),
+    "2022",
+    "Forest River",
+    "FR3",
+    "30DS",
+  );
+  const lines = sharePowerLines(both.horsepower, both.torque);
+  assert.match(lines.join("\n"), /335\s*HP/);
+  assert.match(lines.join("\n"), /468/);
+  assert.match(lines.join("\n"), /lb-?ft/i);
+});
+
+test("kit always writes catalog POWER from brochure SoT", () => {
+  assert.match(src, /sharePowerLines\(snap\.horsepower, snap\.torque\)/);
+  assert.match(src, /horsepower: isShareableValue\(b\.horsepower\)/);
+  assert.match(src, /torque: isShareableValue\(b\.torque\)/);
+});
+
 test("Share kit send attaches the bottom card as a PNG file", () => {
   const ui = readFileSync(
     join(
@@ -239,9 +332,11 @@ test("Share kit send attaches the bottom card as a PNG file", () => {
   assert.match(ui, /buildShareKitPayload\(\{/);
   assert.match(ui, /cardFile/);
   assert.match(ui, /data-report-signature="1"/);
+  assert.match(ui, /aspect-\[16\/9\]/);
   const send = ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const copyOnly"));
   assert.match(send, /include\.lifestyle/);
   assert.match(send, /peekCachedShareImage/);
+  assert.match(send, /heroFile/);
   assert.match(send, /extraFiles/);
   assert.doesNotMatch(send, /await fetchShareImage/);
   assert.doesNotMatch(send, /await captureShareCardFile/);

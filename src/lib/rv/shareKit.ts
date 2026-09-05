@@ -24,6 +24,7 @@ import {
   effectiveShareInclude,
   isShareableValue,
   isSharePlaceholder,
+  sharePowerLines,
   type ShareInclude,
   type ShareMarketLines,
   type ShareSpecGroupId,
@@ -44,6 +45,7 @@ export {
   hardenShareImageFile,
   hardenShareImageFileSync,
   isShareImageFile,
+  orderShareImageFiles,
   SHARE_CARD_FILENAME,
   SHARE_CARD_MIME,
   shareDataAttempts,
@@ -69,6 +71,7 @@ export {
   SHARE_MARKET_LINE_DEFS,
   sharePaymentAfterTermDown,
   sharePaymentPricePills,
+  sharePowerLines,
 } from "./shareCardPolicy";
 export type {
   ShareInclude,
@@ -383,6 +386,8 @@ export function coachSnapshot(
   rating: string;
   sleeps: string;
   length: string;
+  horsepower: string;
+  torque: string;
 } {
   const b = coachBrochure(r);
   const catalog = ratingFor(r.make, r.model, r.year);
@@ -395,6 +400,8 @@ export function coachSnapshot(
     rating: Number.isFinite(rating) && rating > 0 ? `★ ${rating.toFixed(1)}` : "",
     sleeps: b.sleeps || (r.data.sleeps ? String(r.data.sleeps) : ""),
     length: b.lengthFt || "",
+    horsepower: isShareableValue(b.horsepower) ? b.horsepower.trim() : "",
+    torque: isShareableValue(b.torque) ? b.torque.trim() : "",
   };
 }
 
@@ -455,6 +462,12 @@ export function buildCoachKit(opts: {
     lines.push("");
     lines.push("RATING");
     lines.push(snap.rating);
+  }
+
+  const power = sharePowerLines(snap.horsepower, snap.torque);
+  if (power.length) {
+    lines.push("");
+    lines.push(...power);
   }
 
   if (include.market) {

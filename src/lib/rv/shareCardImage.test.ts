@@ -13,12 +13,15 @@ import {
   imageFileFromBytes,
   isShareImageFile,
   normalizeShareImageMeta,
+  orderShareImageFiles,
   paintShareSignatureCard,
   shareDataAttempts,
   shareOrCopy,
   toShareData,
   SHARE_CARD_FILENAME,
+  SHARE_CARD_HEIGHT,
   SHARE_CARD_MIME,
+  SHARE_CARD_WIDTH,
 } from "./shareCardImage.ts";
 import {
   REPORT_CONTACT_NAME,
@@ -86,19 +89,55 @@ test("HTML and empty blobs are never treated as the card image", () => {
   assert.equal(isShareImageFile(empty), false);
 });
 
-test("lifestyle JPEG can ride along after the card PNG", () => {
-  const jpeg = new File([MINI_PNG], "coach-lifestyle.jpg", {
+test("RV hero is first; contact card is never the preview when a hero exists", () => {
+  const jpeg = new File([MINI_PNG], "coach-hero.jpg", {
     type: "image/jpeg",
   });
   const payload = buildShareKitPayload({
     title: "coach",
     text: "kit",
+    heroFile: jpeg,
     cardFile: cardFile(),
-    extraFiles: [jpeg],
   });
   assert.equal(payload.files.length, 2);
-  assert.equal(payload.files[0]!.type, "image/png");
-  assert.equal(payload.files[1]!.type, "image/jpeg");
+  assert.equal(payload.files[0]!.type, "image/jpeg");
+  assert.match(payload.files[0]!.name, /hero/i);
+  assert.equal(payload.files[1]!.type, "image/png");
+  assert.equal(SHARE_CARD_WIDTH / SHARE_CARD_HEIGHT, 16 / 9);
+});
+
+test("lifestyle JPEG rides after the hero and before the card PNG", () => {
+  const hero = new File([MINI_PNG], "coach-hero.jpg", {
+    type: "image/jpeg",
+  });
+  const lifestyle = new File([new Uint8Array([...MINI_PNG, 1])], "coach-lifestyle.jpg", {
+    type: "image/jpeg",
+  });
+  const payload = buildShareKitPayload({
+    title: "coach",
+    text: "kit",
+    heroFile: hero,
+    cardFile: cardFile(),
+    extraFiles: [lifestyle],
+  });
+  assert.equal(payload.files.length, 3);
+  assert.equal(payload.files[0]!.name, "coach-hero.jpg");
+  assert.equal(payload.files[1]!.name, "coach-lifestyle.jpg");
+  assert.equal(payload.files[2]!.type, "image/png");
+});
+
+test("same-bytes lifestyle is not duplicated when the hero is already attached", () => {
+  const jpeg = new File([MINI_PNG], "coach-hero.jpg", {
+    type: "image/jpeg",
+  });
+  const files = orderShareImageFiles({
+    heroFile: jpeg,
+    extraFiles: [new File([MINI_PNG], "coach-lifestyle.jpg", { type: "image/jpeg" })],
+    cardFile: cardFile(),
+  });
+  assert.equal(files.length, 2);
+  assert.equal(files[0]!.type, "image/jpeg");
+  assert.equal(files[1]!.type, "image/png");
 });
 
 test("share attempts always keep the image file — never text-only", () => {
@@ -170,8 +209,8 @@ test("painted card matches the in-app signature (name + phone)", () => {
   };
   paintShareSignatureCard(
     ctx as unknown as CanvasRenderingContext2D,
-    1200,
-    460,
+    SHARE_CARD_WIDTH,
+    SHARE_CARD_HEIGHT,
     defaultShareCardContact(),
   );
   const joined = texts.join("");
@@ -270,22 +309,22 @@ test("shareOrCopy still opens the sheet with files when canShare({files}) is fal
     },
   });
   try {
-    const jpeg = new File([MINI_PNG], "coach-lifestyle.jpg", {
+    const jpeg = new File([MINI_PNG], "coach-hero.jpg", {
       type: "image/jpeg",
     });
     const payload = buildShareKitPayload({
       title: "Essex",
       text: "kit",
+      heroFile: jpeg,
       cardFile: cardFile(),
-      extraFiles: [jpeg],
     });
     const out = await shareOrCopy(payload);
     assert.equal(out, "shared");
     assert.equal(shared.length, 1);
     const files = shared[0]!.files as File[] | undefined;
     assert.equal(files?.length, 2);
-    assert.equal(files![0]!.type, "image/png");
-    assert.equal(files![1]!.type, "image/jpeg");
+    assert.equal(files![0]!.type, "image/jpeg");
+    assert.equal(files![1]!.type, "image/png");
     assert.equal(copied.length, 0);
   } finally {
     Object.defineProperty(globalThis, "navigator", {
@@ -384,31 +423,39 @@ test("clipboard-only / download is last-resort when navigator.share is missing",
 });
 
 test("lifestyle JPEG is in files[] when the lifestyle section is on", () => {
-  const jpeg = new File([MINI_PNG], "coach-lifestyle.jpg", {
+  const jpeg = new File([new Uint8Array([...MINI_PNG, 2])], "coach-lifestyle.jpg", {
+    type: "image/jpeg",
+  });
+  const hero = new File([MINI_PNG], "coach-hero.jpg", {
     type: "image/jpeg",
   });
   const on = buildShareKitPayload({
     title: "coach",
     text: "kit",
+    heroFile: hero,
     cardFile: cardFile(),
     extraFiles: [jpeg],
   });
   const off = buildShareKitPayload({
     title: "coach",
     text: "kit",
+    heroFile: hero,
     cardFile: cardFile(),
     extraFiles: [],
   });
-  assert.equal(on.files.length, 2);
+  assert.equal(on.files.length, 3);
+  assert.equal(on.files[0]!.name, "coach-hero.jpg");
   assert.equal(on.files[1]!.name, "coach-lifestyle.jpg");
-  assert.equal(off.files.length, 1);
-  assert.equal(off.files[0]!.type, "image/png");
+  assert.equal(off.files.length, 2);
+  assert.equal(off.files[0]!.type, "image/jpeg");
+  assert.equal(off.files[1]!.type, "image/png");
   assert.match(ui, /include\.lifestyle/);
   assert.match(ui, /peekCachedShareImage/);
   assert.match(ui, /prefetchShareImages/);
+  assert.match(ui, /heroFile/);
   assert.match(
     ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const copyOnly")),
-    /extraFiles/,
+    /heroFile/,
   );
 });
 
