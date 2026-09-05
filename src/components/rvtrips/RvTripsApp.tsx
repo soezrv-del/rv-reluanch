@@ -15,28 +15,31 @@ import {
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  RVTRIPS_AMERICA_BACKDROP,
-  RVTRIPS_MAP_PANEL,
-} from "@/assets/tripMedia";
+import { RVTRIPS_AMERICA_BACKDROP } from "@/assets/tripMedia";
 import {
   DEMO_CAMPS,
   DEMO_PACK,
-  DEMO_ROUTE,
   formatDrive,
   formatMiles,
   type TripAlert,
+  type TripRoute,
 } from "@/lib/trips/tripData";
 import {
   fetchOsrmRoute,
   type OsrmLngLat,
+  type OsrmLineString,
   type OsrmRouteResult,
 } from "@/lib/trips/osrm";
 import {
   fetchNavigateRoute,
   routeEngineLabel,
-  routeEngineNote,
 } from "@/lib/trips/navigateRoute";
+import {
+  geometryToSvgPath,
+  liveProviderNote,
+  liveRouteStats,
+  tripRouteFromLive,
+} from "@/lib/trips/routeResults";
 import {
   anyDimEstimated,
   clearLockedProfile,
@@ -97,7 +100,7 @@ type SheetId = "year" | "make" | "model" | "floorplan" | null;
 const SUB_TABS: { id: SubTab; label: string; icon: typeof Navigation }[] = [
   { id: "navigate", label: "Navigate", icon: Navigation },
   { id: "directions", label: "Directions", icon: ListChecks },
-  { id: "campgrounds", label: "Campgrounds", icon: Tent },
+  { id: "campgrounds", label: "Demo camps", icon: Tent },
   { id: "dumps", label: "Dumps", icon: Droplets },
   { id: "pack", label: "Pack List", icon: ListChecks },
   { id: "profile", label: "Profile", icon: User },
@@ -212,7 +215,7 @@ export function RvTripsApp() {
   const geoAbortRef = useRef<AbortController | null>(null);
   const didAutoLocate = useRef(false);
 
-  const [route, setRoute] = useState(DEMO_ROUTE);
+  const [route, setRoute] = useState<TripRoute | null>(null);
   const [osrm, setOsrm] = useState<OsrmRouteResult | null>(null);
   const [routeStatus, setRouteStatus] = useState<
     "idle" | "loading" | "live" | "offline"
@@ -339,10 +342,10 @@ export function RvTripsApp() {
         coach: displayCoach,
         route: osrm,
         hasRoute: Boolean(originPlace && destPlace && osrm),
-        destLabel: destPlace?.label || route.destination.label,
-        originLabel: originPlace?.label || route.origin.label,
+        destLabel: destPlace?.label || route?.destination.label || "",
+        originLabel: originPlace?.label || route?.origin.label || "",
       }),
-    [displayCoach, osrm, originPlace, destPlace, route.destination.label, route.origin.label],
+    [displayCoach, osrm, originPlace, destPlace, route?.destination.label, route?.origin.label],
   );
   const alerts = restriction.alerts;
 
@@ -394,27 +397,22 @@ export function RvTripsApp() {
         signal: ctrl.signal,
       })
         .then((data) => {
+          const next = tripRouteFromLive(data, originLabel, destLabel);
+          if (!next) {
+            setOsrm(null);
+            setRoute(null);
+            setRouteStatus("offline");
+            setRouteError("Route returned no miles or time");
+            return;
+          }
           setOsrm(data);
-          setRoute({
-            ...DEMO_ROUTE,
-            id: `route-${Date.now()}`,
-            origin: { id: "origin", label: originLabel },
-            destination: {
-              id: "dest",
-              label: destLabel,
-              subtitle: data.engine,
-            },
-            miles: data.miles,
-            driveHours: data.driveHours,
-            driveMinutes: data.driveMinutes,
-            engine: data.engine,
-            alertCount: 0,
-          });
+          setRoute(next);
           setRouteStatus("live");
         })
         .catch((e) => {
           if (ctrl.signal.aborted) return;
           setOsrm(null);
+          setRoute(null);
           setRouteStatus("offline");
           setRouteError(
             e instanceof Error ? e.message : "Routing unavailable",
@@ -638,22 +636,16 @@ export function RvTripsApp() {
         exclude: safer.exclude,
         bypassCache: true,
       });
-      setOsrm(data);
-      setRoute({
-        ...DEMO_ROUTE,
-        id: `safer-${Date.now()}`,
-        origin: { id: "origin", label: originPlace.label },
-        destination: {
-          id: "dest",
-          label: destPlace.label,
-          subtitle: "Safer RV route",
-        },
-        miles: data.miles,
-        driveHours: data.driveHours,
-        driveMinutes: data.driveMinutes,
-        engine: `${data.engine} · safer`,
-        alertCount: 0,
+      const next = tripRouteFromLive(data, originPlace.label, destPlace.label, {
+        id: `safer-${data.fetchedAt || "live"}`,
+        engineExtra: "safer",
       });
+      if (!next) {
+        setSaferNote("Safer route returned no miles or time");
+        return;
+      }
+      setOsrm(data);
+      setRoute(next);
       setRouteStatus("live");
       setSaferNote(
         "Applied OSRM highway re-rank — not truck routing. Re-check warnings below.",
@@ -704,6 +696,10 @@ export function RvTripsApp() {
     });
     setSub("navigate");
   };
+
+  const liveStats = liveRouteStats(osrm);
+  const engineChip = routeStatus === "live" ? routeEngineLabel(osrm) : "";
+  const providerNote = liveProviderNote(osrm);
 
   const canRoute = canSubmitPlan({
     originPlace,
@@ -1083,64 +1079,76 @@ export function RvTripsApp() {
                 ) : null}
               </section>
 
-              {(hasRoutePoints || routeStatus === "live") && (
-                <section className="relative aspect-[4/3.2] overflow-hidden rounded-[1.35rem] border border-white/20 shadow-[0_16px_48px_rgba(0,0,0,0.45)]">
-                  <img
-                    src={RVTRIPS_MAP_PANEL}
-                    alt="RV route map"
-                    className="absolute inset-0 size-full object-cover object-[center_35%]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/25" />
-                  <div className="absolute left-2.5 right-2.5 top-2.5 flex flex-wrap items-center gap-2 rounded-full border border-white/15 bg-black/70 px-3 py-2 backdrop-blur-md">
-                    {routeStatus === "loading" ? (
-                      <span className="text-[14px] font-bold text-white">
-                        Calculating…
-                      </span>
-                    ) : (
-                      <>
-                        <span className="text-[17px] font-bold tabular-nums text-white">
-                          {formatMiles(route.miles)}
-                          <span className="ml-1 text-[11px] font-semibold text-white">
-                            mi
-                          </span>
-                        </span>
-                        <span className="text-white">|</span>
-                        <span className="text-[17px] font-bold tabular-nums text-white">
-                          {formatDrive(route.driveHours, route.driveMinutes)}
-                          <span className="ml-1 text-[11px] font-semibold text-white">
-                            drive
-                          </span>
-                        </span>
-                      </>
-                    )}
+              {routeStatus === "loading" ? (
+                <section className="glass-prestige rounded-[1.25rem] px-4 py-6">
+                  <p className="text-[15px] font-semibold text-white">
+                    Calculating…
+                  </p>
+                </section>
+              ) : routeStatus === "live" && liveStats && osrm ? (
+                <section
+                  className="glass-prestige space-y-5 rounded-[1.25rem] p-4"
+                  data-route-results
+                  data-route-miles={String(liveStats.miles)}
+                  data-route-drive={`${liveStats.driveHours}h ${String(liveStats.driveMinutes).padStart(2, "0")}m`}
+                  data-route-engine={engineChip}
+                >
+                  <div className="flex items-end justify-between gap-6">
+                    <div>
+                      <p className="text-[11px] font-semibold tracking-wide text-white/65">
+                        Miles
+                      </p>
+                      <p className="mt-1 text-[34px] font-bold tabular-nums leading-none text-white">
+                        {formatMiles(liveStats.miles)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[11px] font-semibold tracking-wide text-white/65">
+                        Time
+                      </p>
+                      <p className="mt-1 text-[34px] font-bold tabular-nums leading-none text-white">
+                        {formatDrive(
+                          liveStats.driveHours,
+                          liveStats.driveMinutes,
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full border border-white/20 bg-black/35 px-3 py-1.5 text-[12px] font-bold text-white">
+                      {engineChip}
+                    </span>
                     {alerts.length > 0 ? (
-                      <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-amber">
+                      <span className="inline-flex items-center gap-1 text-[12px] font-bold text-amber">
                         <AlertTriangle className="size-3.5" />
-                        {alerts.length} RV alerts
+                        {alerts.length}
                       </span>
                     ) : null}
                   </div>
-                  <div className="absolute bottom-2.5 left-2.5 right-2.5">
-                    <div className="rounded-lg border border-white/15 bg-black/55 px-2.5 py-1.5 backdrop-blur-md">
-                      <p className="text-[10px] font-semibold tracking-wide text-white">
-                        DESTINATION
-                      </p>
-                      <p className="flex items-center gap-1 text-[13px] font-bold text-white">
-                        <MapPin className="size-3.5 text-blue" />
-                        {destPlace?.label || route.destination.label}
-                      </p>
-                      {routeStatus === "live" && osrm ? (
-                        <p className="mt-1 text-[10px] leading-snug text-white/85">
-                          {routeEngineLabel(osrm)}
-                          {routeEngineNote(osrm)
-                            ? ` · ${routeEngineNote(osrm)}`
-                            : ""}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
+
+                  {originPlace || destPlace ? (
+                    <p className="text-[14px] font-semibold leading-snug text-white">
+                      {originPlace?.label || route?.origin.label}
+                      <span className="mx-1.5 text-white/50">→</span>
+                      {destPlace?.label || route?.destination.label}
+                    </p>
+                  ) : null}
+
+                  {providerNote ? (
+                    <p className="text-[12px] leading-snug text-white/75">
+                      {providerNote}
+                    </p>
+                  ) : null}
+
+                  <RouteLinePreview geometry={osrm.geometry} />
                 </section>
-              )}
+              ) : !hasRoutePoints ? (
+                <p className="px-1 py-2 text-[13px] text-white/80">
+                  Type a destination — or tap a city — then{" "}
+                  <span className="font-bold text-white">Route</span>.
+                </p>
+              ) : null}
 
               {(routeStatus === "live" || routeStatus === "loading") && (
                 <button
@@ -1247,107 +1255,79 @@ export function RvTripsApp() {
                 </section>
               ) : null}
 
-              {routeStatus === "live" && liveDirections && liveDirections.length > 0 ? (
-                <section className="glass-prestige space-y-2 rounded-[1.25rem] p-3.5">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-[12px] font-bold tracking-[0.12em] text-white">
-                      TURN-BY-TURN
-                    </h2>
-                    <span className="text-[11px] font-semibold text-blue">
-                      {liveDirections.length} steps · {formatMiles(route.miles)}{" "}
-                      mi
-                    </span>
-                  </div>
-                  <div className="max-h-72 space-y-1.5 overflow-y-auto">
-                    {liveDirections.map((d, i) => (
-                      <button
-                        key={d.id}
-                        type="button"
-                        onClick={() => {
-                          setNavStepIdx(i);
-                          if (navArmed) speakNav(d.instruction);
-                        }}
-                        className={cn(
-                          "flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left",
-                          navArmed && i === navStepIdx
-                            ? "border-emerald-400/50 bg-emerald-500/15"
-                            : "border-white/12 bg-black/30",
-                        )}
-                      >
-                        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-blue/25 text-[12px] font-bold text-blue">
-                          {i + 1}
-                        </span>
-                        <p className="min-w-0 flex-1 text-[13px] font-semibold leading-snug text-white">
-                          {d.instruction}
-                        </p>
-                        <span className="shrink-0 text-[12px] font-bold tabular-nums text-white">
-                          {d.mi} mi
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              ) : routeStatus === "loading" ? (
-                <p className="rounded-xl border border-white/15 bg-black/30 px-3 py-2.5 text-[13px] text-white">
-                  Building RV-aware route…
-                </p>
-              ) : !hasRoutePoints ? (
-                <p className="rounded-xl border border-white/15 bg-black/30 px-3 py-2.5 text-[13px] text-white">
-                  Type a destination — or tap a city — then{" "}
-                  <span className="font-bold">Route</span>.
-                </p>
-              ) : null}
-
-              {displayCoach && originPlace && destPlace && osrm ? (
-                <div className="space-y-2">
-                  {alerts.length === 0 ? (
-                    <p className="rounded-xl border border-emerald-400/35 bg-emerald-500/10 px-3 py-2.5 text-[12px] text-white">
-                      {restriction.summary ||
-                        "No route-specific restrictions for this coach."}
-                    </p>
-                  ) : (
-                    <AlertsBlock alerts={alerts} />
-                  )}
-                  {restriction.canSuggestSafer || alerts.length > 0 ? (
+              {displayCoach && originPlace && destPlace && osrm && alerts.length > 0 ? (
+                <div className="space-y-3">
+                  <p className="px-0.5 text-[11px] font-bold tracking-wide text-white/65">
+                    Coach notes — not a clearance database
+                  </p>
+                  <AlertsBlock alerts={alerts} />
+                  {restriction.canSuggestSafer ? (
                     <button
                       type="button"
                       disabled={saferBusy}
                       onClick={() => void applySaferRoute()}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue/40 bg-blue/20 py-3 text-[13px] font-bold text-white disabled:opacity-50"
+                      className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-black/30 py-3 text-[13px] font-bold text-white disabled:opacity-50"
                     >
                       <Navigation className="size-4" />
-                      {saferBusy
-                        ? "Finding safer RV route…"
-                        : "Reroute to safer RV path"}
+                      {saferBusy ? "Finding safer path…" : "Safer path"}
                     </button>
                   ) : null}
                   {saferNote ? (
-                    <p className="text-[11px] text-white">{saferNote}</p>
+                    <p className="text-[12px] text-white/80">{saferNote}</p>
                   ) : null}
                 </div>
+              ) : displayCoach &&
+                originPlace &&
+                destPlace &&
+                osrm &&
+                restriction.canSuggestSafer ? (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    disabled={saferBusy}
+                    onClick={() => void applySaferRoute()}
+                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-black/30 py-3 text-[13px] font-bold text-white disabled:opacity-50"
+                  >
+                    <Navigation className="size-4" />
+                    {saferBusy ? "Finding safer path…" : "Safer path"}
+                  </button>
+                  {saferNote ? (
+                    <p className="text-[12px] text-white/80">{saferNote}</p>
+                  ) : null}
+                </div>
+              ) : saferNote ? (
+                <p className="text-[12px] text-white/80">{saferNote}</p>
               ) : null}
             </>
           ) : null}
 
           {sub === "directions" ? (
-            <section className="glass-prestige space-y-2 rounded-[1.25rem] p-3.5">
+            <section className="glass-prestige space-y-3 rounded-[1.25rem] p-4">
               <h2 className="text-[13px] font-bold tracking-[0.12em] text-white">
-                RV-AWARE DIRECTIONS
+                DIRECTIONS
               </h2>
+              {routeStatus === "live" && liveStats && osrm ? (
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <p className="text-[20px] font-bold tabular-nums text-white">
+                    {formatMiles(liveStats.miles)}
+                    <span className="ml-1 text-[12px] font-semibold text-white/70">
+                      mi
+                    </span>
+                    <span className="mx-2 text-white/40">·</span>
+                    {formatDrive(liveStats.driveHours, liveStats.driveMinutes)}
+                  </p>
+                  <span className="rounded-full border border-white/20 px-2.5 py-1 text-[11px] font-bold text-white">
+                    {routeEngineLabel(osrm)}
+                  </span>
+                </div>
+              ) : null}
               {routeStatus !== "live" || !liveDirections?.length ? (
-                <p className="text-[13px] text-white">
-                  Calculate a route on Navigate to fill this list with live
-                  turn-by-turn steps.
+                <p className="text-[13px] text-white/80">
+                  Route on Navigate to fill this list.
                 </p>
               ) : (
-                <>
-                  {osrm ? (
-                    <p className="text-[11px] font-semibold text-blue">
-                      {routeEngineLabel(osrm)}
-                      {routeEngineNote(osrm) ? ` · ${routeEngineNote(osrm)}` : ""}
-                    </p>
-                  ) : null}
-                    {liveDirections.map((d, i) => (
+                <div className="space-y-2">
+                  {liveDirections.map((d, i) => (
                     <div
                       key={d.id}
                       className="flex items-start gap-3 rounded-xl border border-white/12 bg-black/30 px-3 py-2.5"
@@ -1363,20 +1343,24 @@ export function RvTripsApp() {
                       </span>
                     </div>
                   ))}
-                </>
+                </div>
               )}
             </section>
           ) : null}
 
           {sub === "campgrounds" ? (
-            <section className="space-y-2.5">
-              <h2 className="flex items-center gap-1.5 text-[12px] font-bold tracking-[0.12em] text-white">
-                <Tent className="size-3.5 text-emerald-400" />
-                CAMPGROUNDS
-              </h2>
-              <p className="text-[12px] text-white">
-                Sample pads near popular corridors — filter by your coach
-                length when set.
+            <section className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h2 className="flex items-center gap-1.5 text-[12px] font-bold tracking-[0.12em] text-white">
+                  <Tent className="size-3.5 text-amber" />
+                  CAMPGROUNDS
+                </h2>
+                <span className="rounded-full border border-amber/45 bg-amber/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-amber">
+                  DEMO
+                </span>
+              </div>
+              <p className="text-[12px] text-white/80">
+                Sample pads — not live inventory.
               </p>
               {DEMO_CAMPS.filter(
                 (c) =>
@@ -1386,11 +1370,16 @@ export function RvTripsApp() {
                   key={c.id}
                   className="glass-prestige flex items-start gap-3 rounded-[1.15rem] p-3.5"
                 >
-                  <Tent className="mt-0.5 size-5 text-emerald-400" />
+                  <Tent className="mt-0.5 size-5 text-amber" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[14px] font-bold text-white">{c.name}</p>
-                    <p className="text-[11px] text-white">
-                      ~{c.miFromMidpoint} mi · max {c.maxLengthFt} ft
+                    <div className="flex items-center gap-2">
+                      <p className="text-[14px] font-bold text-white">{c.name}</p>
+                      <span className="rounded-full border border-amber/40 px-1.5 py-px text-[9px] font-bold text-amber">
+                        DEMO
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-white/80">
+                      Sample · max {c.maxLengthFt} ft
                       {c.hasHookups ? " · hookups" : " · dry"}
                     </p>
                   </div>
@@ -1399,6 +1388,7 @@ export function RvTripsApp() {
                     target="_blank"
                     rel="noreferrer"
                     className="text-blue"
+                    aria-label={`Sample listing for ${c.name}`}
                   >
                     <ExternalLink className="size-4" />
                   </a>
@@ -1696,6 +1686,36 @@ function FieldBtn({
         {value}
       </span>
     </button>
+  );
+}
+
+function RouteLinePreview({
+  geometry,
+}: {
+  geometry: OsrmLineString | null | undefined;
+}) {
+  const w = 320;
+  const h = 112;
+  const d = geometryToSvgPath(geometry, w, h);
+  if (!d) return null;
+  return (
+    <div className="overflow-hidden rounded-xl border border-white/12 bg-black/35">
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        className="h-28 w-full"
+        role="img"
+        aria-label="Route line from the live response"
+      >
+        <path
+          d={d}
+          fill="none"
+          className="stroke-blue"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
   );
 }
 
