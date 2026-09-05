@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Bookmark,
   Check,
@@ -50,9 +50,13 @@ import {
   lifestyleImageFor,
   loadSavedUnits,
   paymentBreakdown,
+  RATE_UPDATED_FLASH,
+  RATE_UPDATED_FLASH_MS,
   SAVED_UNITS_EVENT,
   SHARE_MARKET_LINE_DEFS,
   shareOrCopy,
+  sharePaymentAfterTermDown,
+  sharePaymentPricePills,
   type ShareInclude,
   type ShareMarket,
   type ShareMarketLineId,
@@ -158,6 +162,7 @@ function DraftNumberField({
   min,
   max,
   decimals = 2,
+  aside,
 }: {
   label: string;
   value: number;
@@ -167,6 +172,7 @@ function DraftNumberField({
   min?: number;
   max?: number;
   decimals?: number;
+  aside?: ReactNode;
 }) {
   const format = (n: number) =>
     Number.isFinite(n) ? n.toFixed(decimals) : "";
@@ -197,8 +203,9 @@ function DraftNumberField({
 
   return (
     <label className="block">
-      <span className="mb-1 block text-[9px] font-bold tracking-wide text-white/70">
+      <span className="mb-1 flex min-h-3 items-center justify-between gap-2 text-[9px] font-bold tracking-wide text-white/70">
         {label}
+        {aside}
       </span>
       <div className="glass-field flex min-h-11 items-center gap-1 rounded-[var(--radius-md)] px-2.5">
         {prefix ? (
@@ -361,6 +368,8 @@ export function RvShareApp({
   const [strengthDraft, setStrengthDraft] = useState<string[]>([]);
   const [strengthsLocked, setStrengthsLocked] = useState(false);
   const [ratingEdit, setRatingEdit] = useState<number | null>(null);
+  const [rateUpdated, setRateUpdated] = useState(false);
+  const rateFlashTimer = useRef<number | null>(null);
 
   const reloadSaved = useCallback(() => {
     setSaved(loadSavedUnits());
@@ -410,6 +419,7 @@ export function RvShareApp({
     setMarketLines(DEFAULT_SHARE_MARKET_LINES);
     setStrengthsLocked(false);
     setRatingEdit(null);
+    setRateUpdated(false);
   }, [selected]);
 
   const catalogRating = useMemo(
@@ -431,16 +441,43 @@ export function RvShareApp({
     );
   }, [selected, include.payment, include.rating, payment, strengthsLocked, ratingValue]);
 
-  const priceOptions = useMemo(() => {
-    const mid = Math.round((marketEdit.retailLow + marketEdit.retailHigh) / 2);
-    const uniq = new Map<number, string>();
-    if (marketEdit.tradeIn) uniq.set(marketEdit.tradeIn, `Trade ${formatMoney(marketEdit.tradeIn)}`);
-    if (marketEdit.retailLow) uniq.set(marketEdit.retailLow, `Low ${formatMoney(marketEdit.retailLow)}`);
-    if (mid) uniq.set(mid, `Mid ${formatMoney(mid)}`);
-    if (marketEdit.retailHigh) uniq.set(marketEdit.retailHigh, `Ask ${formatMoney(marketEdit.retailHigh)}`);
-    if (marketEdit.msrpHi) uniq.set(marketEdit.msrpHi, `MSRP ${formatMoney(marketEdit.msrpHi)}`);
-    return [...uniq.entries()].map(([value, label]) => ({ value, label }));
-  }, [marketEdit]);
+  const priceOptions = useMemo(
+    () => sharePaymentPricePills(marketEdit, formatMoney),
+    [marketEdit],
+  );
+
+  const flashRateUpdated = useCallback(() => {
+    if (rateFlashTimer.current != null) {
+      window.clearTimeout(rateFlashTimer.current);
+    }
+    setRateUpdated(true);
+    rateFlashTimer.current = window.setTimeout(() => {
+      setRateUpdated(false);
+      rateFlashTimer.current = null;
+    }, RATE_UPDATED_FLASH_MS);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (rateFlashTimer.current != null) {
+        window.clearTimeout(rateFlashTimer.current);
+      }
+    },
+    [],
+  );
+
+  const applyTermDown = useCallback(
+    (patch: { downPct?: number; termMonths?: number }) => {
+      const { next, autoRateChanged } = sharePaymentAfterTermDown(
+        payment,
+        patch,
+        defaultAprForTerm,
+      );
+      setPayment(next);
+      if (autoRateChanged) flashRateUpdated();
+    },
+    [payment, flashRateUpdated],
+  );
 
   const specGroups = useMemo(
     () => (selected ? brochureSpecGroups(selected) : []),
@@ -799,22 +836,12 @@ export function RvShareApp({
                   onToggle={() => toggleSection("payment")}
                 >
                   <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      <MoneyField
-                        label="PRICE"
-                        value={payment.price}
-                        onChange={(price) => setPayment((p) => ({ ...p, price }))}
-                      />
-                      <DraftNumberField
-                        label="INTEREST RATE"
-                        value={payment.apr}
-                        onChange={(apr) => setPayment((p) => ({ ...p, apr }))}
-                        suffix="%"
-                        min={0}
-                        max={30}
-                        decimals={2}
-                      />
-                    </div>
+                    {/* Locked: Price → pills → Down → Term → Rate → Est. Rate never above down/term. */}
+                    <MoneyField
+                      label="PRICE"
+                      value={payment.price}
+                      onChange={(price) => setPayment((p) => ({ ...p, price }))}
+                    />
                     {priceOptions.length ? (
                       <div className="flex flex-wrap gap-1.5">
                         {priceOptions.map((o) => (
@@ -836,46 +863,55 @@ export function RvShareApp({
                         ))}
                       </div>
                     ) : null}
-                    <div className="grid grid-cols-2 gap-2">
-                      <label className="block">
-                        <span className="mb-1 block text-[9px] font-bold tracking-wide text-white/70">
-                          DOWN
-                        </span>
-                        <NativeSelect
-                          aria-label="Down payment percent"
-                          value={payment.downPct}
-                          options={DOWN_PRESETS.map((n) => ({
-                            value: n,
-                            label: `${n}%`,
-                          }))}
-                          parse={(raw) => Number(raw)}
-                          onChange={(downPct) =>
-                            setPayment((p) => ({ ...p, downPct }))
-                          }
-                        />
-                      </label>
-                      <label className="block">
-                        <span className="mb-1 block text-[9px] font-bold tracking-wide text-white/70">
-                          TERM
-                        </span>
-                        <NativeSelect
-                          aria-label="Loan term"
-                          value={payment.termMonths}
-                          options={TERM_PRESETS.map((t) => ({
-                            value: t.months,
-                            label: t.label,
-                          }))}
-                          parse={(raw) => Number(raw)}
-                          onChange={(termMonths) =>
-                            setPayment((p) => ({
-                              ...p,
-                              termMonths,
-                              apr: defaultAprForTerm(termMonths),
-                            }))
-                          }
-                        />
-                      </label>
-                    </div>
+                    <label className="block">
+                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-white/70">
+                        DOWN
+                      </span>
+                      <NativeSelect
+                        aria-label="Down payment percent"
+                        value={payment.downPct}
+                        options={DOWN_PRESETS.map((n) => ({
+                          value: n,
+                          label: `${n}%`,
+                        }))}
+                        parse={(raw) => Number(raw)}
+                        onChange={(downPct) => applyTermDown({ downPct })}
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-white/70">
+                        TERM (YEARS)
+                      </span>
+                      <NativeSelect
+                        aria-label="Loan term years"
+                        value={payment.termMonths}
+                        options={TERM_PRESETS.map((t) => ({
+                          value: t.months,
+                          label: t.label,
+                        }))}
+                        parse={(raw) => Number(raw)}
+                        onChange={(termMonths) => applyTermDown({ termMonths })}
+                      />
+                    </label>
+                    <DraftNumberField
+                      label="INTEREST RATE"
+                      value={payment.apr}
+                      onChange={(apr) => setPayment((p) => ({ ...p, apr }))}
+                      suffix="%"
+                      min={0}
+                      max={30}
+                      decimals={2}
+                      aside={
+                        rateUpdated ? (
+                          <span
+                            role="status"
+                            className="text-[9px] font-bold tracking-wide text-sky-200"
+                          >
+                            {RATE_UPDATED_FLASH}
+                          </span>
+                        ) : null
+                      }
+                    />
                     <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2.5">
                       <p className="text-[9px] font-bold tracking-wide text-white/70">
                         EST. / MO

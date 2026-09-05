@@ -49,6 +49,17 @@ test("share kit requires per-price picks instead of dumping the market stack", (
   );
 });
 
+test("customer-facing MSRP is a single label — not low/high", () => {
+  const policy = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "shareCardPolicy.ts"),
+    "utf8",
+  );
+  assert.match(policy, /shareLabel: "MSRP"/);
+  assert.doesNotMatch(policy, /shareLabel: "MSRP (low|high)"/);
+  assert.match(policy, /sharePaymentPricePills/);
+  assert.match(policy, /rate updated/i);
+});
+
 test("kit footer is a prepared-by signature", () => {
   assert.match(src, /REPORT_CONTACT_KICKER/);
   assert.match(src, /REPORT_CONTACT_NAME/);

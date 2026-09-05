@@ -41,7 +41,11 @@ export {
   isShareableValue,
   isSharePlaceholder,
   OPTIONAL_SHARE_KEYS,
+  RATE_UPDATED_FLASH,
+  RATE_UPDATED_FLASH_MS,
   SHARE_MARKET_LINE_DEFS,
+  sharePaymentAfterTermDown,
+  sharePaymentPricePills,
 } from "./shareCardPolicy";
 export type {
   ShareInclude,
