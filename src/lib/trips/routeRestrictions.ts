@@ -1,51 +1,94 @@
 /**
- * Route-aware RV restriction analysis.
- * Fires with a known coach (Facts / saved / locked) AND a calculated route.
+ * Route-aware restriction notes.
+ * HERE Truck → real notices from the hybrid response.
+ * OSRM / car fallback → no invented clearance DB. Ferry word-match
+ * only, and only when labeled as a text hint.
  */
 
 import type { TripAlert } from "@/lib/trips/tripData";
 import type { CoachProfile } from "@/lib/trips/coachFromCatalog";
-import type { OsrmRouteResult, OsrmStep } from "@/lib/trips/osrm";
+import type { OsrmRouteResult, RouteNotice } from "@/lib/trips/osrm";
+import { canUseRvSafe } from "@/lib/trips/navigateRoute";
+
+export type RestrictionSource = "here" | "heuristic" | "none";
 
 export type RestrictionAnalysis = {
   alerts: TripAlert[];
   canSuggestSafer: boolean;
   summary: string;
+  banner: string;
+  source: RestrictionSource;
 };
 
-const TUNNEL_RE =
-  /\b(tunnel|underpass|tube|bore|subway|zion|carmel|newfound)\b/i;
-const GRADE_RE =
-  /\b(pass|summit|canyon|mountain|grade|sierra|cascade|rockies|glacier|yellowstone|banff|steep)\b/i;
+export type SaferRouteIntent = "here_truck" | "osrm_rerank" | "none";
+
 const FERRY_RE = /\b(ferry|boat)\b/i;
-const PARK_RE =
-  /\b(national park|state park|\bnp\b|going-to-the-sun|scenic|parkway)\b/i;
 const LOCAL_RE =
   /\b(residential|service|alley|drive|lane|court|circle|trail|farm|forest)\b/i;
-const BRIDGE_RE = /\b(bridge|viaduct|overpass|causeway)\b/i;
 
-function corpusFromRoute(
-  route: OsrmRouteResult,
-  destLabel: string,
-  originLabel: string,
-): { text: string; steps: OsrmStep[] } {
-  const steps = route.steps || [];
-  const parts = [
-    destLabel,
-    originLabel,
-    route.engine,
-    ...steps.map((s) => `${s.instruction} ${s.name} ${s.maneuver}`),
-  ];
-  return { text: parts.join(" · "), steps };
+const empty: RestrictionAnalysis = {
+  alerts: [],
+  canSuggestSafer: false,
+  summary: "",
+  banner: "",
+  source: "none",
+};
+
+export function isHereTruckRoute(
+  route: Pick<OsrmRouteResult, "source" | "fallbackFrom"> | null | undefined,
+): boolean {
+  return route?.source === "here" && !route.fallbackFrom;
 }
 
-function stepMatches(steps: OsrmStep[], re: RegExp): boolean {
-  return steps.some((s) => re.test(`${s.instruction} ${s.name}`));
+function kindFromNotice(n: RouteNotice): string {
+  const blob = `${n.code} ${n.title} ${n.cause || ""}`.toLowerCase();
+  if (/height|overpass|clearance/.test(blob)) return "HEIGHT CLEARANCE";
+  if (/width|narrow/.test(blob)) return "WIDTH RESTRICTION";
+  if (/\blength\b/.test(blob)) return "LENGTH RESTRICTION";
+  if (/weight|axle|gross/.test(blob)) return "WEIGHT RESTRICTION";
+  if (/tunnel|propane|hazard|hazmat/.test(blob)) return "TUNNEL / HAZMAT";
+  if (/ferry/.test(blob)) return "FERRY ON ROUTE";
+  if (/seasonal|closure|blocked/.test(blob)) return "ROAD CLOSURE";
+  if (/zone/.test(blob)) return "ZONE RESTRICTION";
+  if (/vehicle/i.test(n.code)) return "VEHICLE RESTRICTION";
+  return "HERE NOTICE";
+}
+
+function noticeSeverity(n: RouteNotice): TripAlert["severity"] {
+  if (n.severity === "critical") return "critical";
+  if (/violated/i.test(n.code)) return "caution";
+  return "info";
+}
+
+function alertsFromHereNotices(notices: RouteNotice[]): TripAlert[] {
+  return notices.map((n, i) => ({
+    id: `here-${i}-${n.code}`,
+    severity: noticeSeverity(n),
+    kind: kindFromNotice(n),
+    title: n.title || n.code,
+    body:
+      n.cause ||
+      "HERE Truck flagged this segment for the locked coach dimensions.",
+  }));
+}
+
+function fromHereNotices(notices: RouteNotice[]): RestrictionAnalysis {
+  const alerts = alertsFromHereNotices(notices);
+  return {
+    alerts,
+    canSuggestSafer: false,
+    summary:
+      alerts.length === 0
+        ? "HERE Truck reported no restriction notices."
+        : `${alerts.length} HERE Truck notice${alerts.length === 1 ? "" : "s"} on this path.`,
+    banner: alerts.length ? "HERE Truck notices" : "",
+    source: alerts.length ? "here" : "none",
+  };
 }
 
 /**
- * Analyze live OSRM route against known coach dimensions.
- * Returns empty if the coach has no usable dims or there is no route.
+ * Analyze the live route. HERE Truck uses API notices only.
+ * OSRM never pretends we have a clearance database.
  */
 export function analyzeRouteRestrictions(opts: {
   coach: CoachProfile | null;
@@ -54,128 +97,106 @@ export function analyzeRouteRestrictions(opts: {
   destLabel?: string;
   originLabel?: string;
 }): RestrictionAnalysis {
-  const empty: RestrictionAnalysis = {
-    alerts: [],
-    canSuggestSafer: false,
-    summary: "",
-  };
-
   const coach = opts.coach;
   if (!coach?.make || !coach.lengthFt || !coach.heightFt) return empty;
   if (!opts.hasRoute || !opts.route) return empty;
 
   const route = opts.route;
-  // Need either steps or a real distance
   if ((!route.steps || route.steps.length === 0) && route.miles <= 0) {
     return empty;
   }
 
-  const { text, steps } = corpusFromRoute(
-    route,
-    opts.destLabel || "",
-    opts.originLabel || "",
-  );
+  if (isHereTruckRoute(route)) {
+    return fromHereNotices(route.notices ?? []);
+  }
 
-  const hasTunnel = TUNNEL_RE.test(text) || stepMatches(steps, TUNNEL_RE);
-  const hasGrade =
-    GRADE_RE.test(text) ||
-    stepMatches(steps, GRADE_RE) ||
-    (route.miles > 200 && (route.avgSpeedMph ?? 55) < 48);
-  const hasFerry = FERRY_RE.test(text) || stepMatches(steps, FERRY_RE);
-  const hasPark = PARK_RE.test(text);
-  const hasBridge = BRIDGE_RE.test(text) || stepMatches(steps, BRIDGE_RE);
+  const steps = route.steps || [];
+  const hasFerry = steps.some((s) =>
+    FERRY_RE.test(`${s.instruction} ${s.name}`),
+  );
   const localHeavy =
     steps.filter((s) => LOCAL_RE.test(`${s.name} ${s.instruction}`)).length >=
     4;
-  const highwayShare =
-    (route.scoreBreakdown?.highwayM ?? 0) /
-    Math.max(1, route.distanceM || 1);
+  const highwayM = route.scoreBreakdown?.highwayM;
+  const canUseShare =
+    typeof highwayM === "number" &&
+    Number.isFinite(highwayM) &&
+    (route.distanceM || 0) > 0;
+  const lowHighway =
+    canUseShare && highwayM / Math.max(1, route.distanceM) < 0.4;
 
   const alerts: TripAlert[] = [];
-  const h = coach.heightFt;
-  const L = coach.lengthFt;
-  const w = coach.widthFt;
-
-  if (hasTunnel || (hasPark && /zion|carmel|newfound|glacier/i.test(text))) {
-    alerts.push({
-      id: "propane",
-      severity: "critical",
-      kind: "PROPANE RESTRICTION",
-      title: "Propane tanks OFF in tunnels",
-      body: `Route includes tunnel / park corridor language. Shut propane OFF before entry. Your ${coach.year} ${coach.make} ${coach.model} still needs local rules verified.`,
-    });
-  }
-
-  if (h >= 12.5 && (hasTunnel || hasBridge || localHeavy || highwayShare < 0.45)) {
-    alerts.push({
-      id: "bridge",
-      severity: h >= 13.2 ? "caution" : "info",
-      kind: "HEIGHT CLEARANCE",
-      title: "Verify overpass / tunnel clearance",
-      body: `Coach height ${h} ft — route has ${hasTunnel ? "tunnels" : hasBridge ? "bridges/overpasses" : "more local roads"}. Prefer freeways; check posted clearances before committing.`,
-    });
-  } else if (h >= 13.5 && route.miles > 50 && localHeavy) {
-    alerts.push({
-      id: "bridge-soft",
-      severity: "info",
-      kind: "HEIGHT ADVISORY",
-      title: "High coach · local roads on path",
-      body: `${h} ft overall height — avoid GPS shortcuts onto farm roads.`,
-    });
-  }
-
-  if (hasGrade && L >= 28) {
-    alerts.push({
-      id: "grade",
-      severity: "caution",
-      kind: "GRADE RESTRICTION",
-      title: "Mountain grades ahead",
-      body: `Your ${L} ft coach may hit steep grades on this corridor. Use engine braking, watch runaway ramps, and verify campsite length before arrival.`,
-    });
-  }
-
-  if (w >= 8.0 && (localHeavy || (hasPark && L >= 35))) {
-    alerts.push({
-      id: "width",
-      severity: "caution",
-      kind: "WIDTH RESTRICTION",
-      title: "Narrow corridors",
-      body: `Width ${w} ft — park roads / local approaches on this route may feel tight. Take wide turns; avoid sub-9 ft bridges.`,
-    });
-  }
-
   if (hasFerry) {
     alerts.push({
-      id: "ferry",
-      severity: "critical",
-      kind: "FERRY ON ROUTE",
-      title: "Ferry segment detected",
-      body: "This path includes ferry language. Many high coaches prefer a land detour — try Safer RV route.",
-    });
-  }
-
-  if (L >= 35 && (hasPark || (route.miles > 80 && hasGrade))) {
-    alerts.push({
-      id: "length",
+      id: "ferry-text",
       severity: "info",
-      kind: "LENGTH ADVISORY",
-      title: "Campsite length",
-      body: `${L} ft overall — filter pads for ${Math.ceil(L + 5)} ft+. Short sites near park gates may not fit.`,
+      kind: "TEXT HINT",
+      title: "Ferry mentioned in directions",
+      body: "Instruction text mentions a ferry. Word match only — not a clearance database. Confirm before you roll.",
     });
   }
 
-  const canSuggestSafer =
-    alerts.some((a) => a.severity === "critical" || a.severity === "caution") ||
-    localHeavy ||
-    hasFerry ||
-    highwayShare < 0.4;
+  const canSuggestSafer = hasFerry || localHeavy || lowHighway;
 
-  const summary =
-    alerts.length === 0
-      ? "No route-specific restrictions found for this coach and path."
-      : `${alerts.length} restriction${alerts.length === 1 ? "" : "s"} matched this route + profile.`;
+  return {
+    alerts,
+    canSuggestSafer,
+    summary: alerts.length
+      ? "Text hint from directions — not a clearance database."
+      : "OSRM path — no clearance database. Lock a coach for HERE Truck notices.",
+    banner: alerts.length ? "Text hints — not a clearance database" : "",
+    source: alerts.length ? "heuristic" : "none",
+  };
+}
 
-  return { alerts, canSuggestSafer, summary };
+/** Locked + dims, but current path is still plain OSRM (not a hybrid fallback). */
+export function lockedNeedsHereTruck(
+  coach: Parameters<typeof canUseRvSafe>[0],
+  route: OsrmRouteResult | null,
+): boolean {
+  if (!canUseRvSafe(coach) || !route) return false;
+  if (isHereTruckRoute(route)) return false;
+  if (route.fallbackFrom === "here" || route.routingMode === "rv_safe") {
+    return false;
+  }
+  return route.source !== "here";
+}
+
+export function saferRouteIntent(opts: {
+  coach: Parameters<typeof canUseRvSafe>[0];
+  route: OsrmRouteResult | null;
+  canSuggestSafer: boolean;
+}): SaferRouteIntent {
+  if (!opts.route) return "none";
+  if (isHereTruckRoute(opts.route)) return "none";
+  if (lockedNeedsHereTruck(opts.coach, opts.route)) return "here_truck";
+  if (!opts.canSuggestSafer) return "none";
+  return "osrm_rerank";
+}
+
+export function saferCtaLabel(intent: SaferRouteIntent): string {
+  if (intent === "here_truck") return "Safer RV · HERE Truck";
+  if (intent === "osrm_rerank") return "OSRM highway re-rank";
+  return "";
+}
+
+export function saferBusyLabel(intent: SaferRouteIntent): string {
+  if (intent === "here_truck") return "Requesting HERE Truck…";
+  if (intent === "osrm_rerank") return "Re-ranking on OSRM…";
+  return "";
+}
+
+export function saferAppliedNote(
+  intent: SaferRouteIntent,
+  route: OsrmRouteResult | null,
+): string {
+  if (intent === "here_truck") {
+    if (isHereTruckRoute(route)) {
+      return "Applied HERE Truck path — height and weight on the polyline.";
+    }
+    return "HERE Truck unavailable — OSRM RV-weighted fallback. Not truck routing.";
+  }
+  return "Applied OSRM highway re-rank — not truck routing.";
 }
 
 export function saferOsrmParams(coach: CoachProfile | null): {

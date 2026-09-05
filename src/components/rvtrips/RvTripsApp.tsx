@@ -64,7 +64,11 @@ import { loadLatestSavedUnit } from "@/lib/rv/savedUnits";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
   analyzeRouteRestrictions,
+  saferAppliedNote,
+  saferBusyLabel,
+  saferCtaLabel,
   saferOsrmParams,
+  saferRouteIntent,
 } from "@/lib/trips/routeRestrictions";
 import {
   getFloorplansForYear,
@@ -395,6 +399,11 @@ export function RvTripsApp() {
     [displayCoach, osrm, originPlace, destPlace, viaPlaces, route?.destination.label, route?.origin.label],
   );
   const alerts = restriction.alerts;
+  const saferIntent = saferRouteIntent({
+    coach: displayCoach,
+    route: osrm,
+    canSuggestSafer: restriction.canSuggestSafer,
+  });
 
   const coachLine = useMemo(() => {
     if (!displayCoach) return "Route without a profile — or add your coach";
@@ -764,35 +773,52 @@ export function RvTripsApp() {
 
   const applySaferRoute = async () => {
     if (!originPlace || !destPlace || !displayCoach) return;
+    const intent = saferRouteIntent({
+      coach: displayCoach,
+      route: osrm,
+      canSuggestSafer: true,
+    });
+    if (intent === "none") return;
     setSaferBusy(true);
     setSaferNote(null);
     try {
-      const safer = saferOsrmParams(displayCoach);
-      const points: OsrmLngLat[] = [
-        { lng: originPlace.lng, lat: originPlace.lat },
-        ...viaPlaces.map((p) => ({ lng: p.lng, lat: p.lat })),
-        { lng: destPlace.lng, lat: destPlace.lat },
-      ];
-      const legs = [];
-      for (let i = 0; i < points.length - 1; i++) {
-        legs.push(
-          await fetchOsrmRoute({
-            from: points[i]!,
-            to: points[i + 1]!,
-            weight: safer.weight,
-            exclude: safer.exclude,
-            bypassCache: true,
-          }),
-        );
+      const from = { lng: originPlace.lng, lat: originPlace.lat };
+      const to = { lng: destPlace.lng, lat: destPlace.lat };
+      const via = viaPlaces.map((p) => ({ lng: p.lng, lat: p.lat }));
+      let data: OsrmRouteResult | null = null;
+
+      if (intent === "here_truck") {
+        data = await fetchNavigateRoute({
+          from,
+          to,
+          via: via.length ? via : undefined,
+          coach: displayCoach,
+        });
+      } else {
+        const safer = saferOsrmParams(displayCoach);
+        const points: OsrmLngLat[] = [from, ...via, to];
+        const legs = [];
+        for (let i = 0; i < points.length - 1; i++) {
+          legs.push(
+            await fetchOsrmRoute({
+              from: points[i]!,
+              to: points[i + 1]!,
+              weight: safer.weight,
+              exclude: safer.exclude,
+              bypassCache: true,
+            }),
+          );
+        }
+        data = mergeLiveLegs(legs);
       }
-      const data = mergeLiveLegs(legs);
+
       if (!data) {
         setSaferNote("Safer route returned no miles or time");
         return;
       }
       const next = tripRouteFromLive(data, originPlace.label, destPlace.label, {
         id: `safer-${data.fetchedAt || "live"}`,
-        engineExtra: "safer",
+        engineExtra: intent === "here_truck" ? "HERE Truck" : "OSRM re-rank",
         viaLabels: viaPlaces.map((p) => p.label),
       });
       if (!next) {
@@ -802,9 +828,7 @@ export function RvTripsApp() {
       setOsrm(data);
       setRoute(next);
       setRouteStatus("live");
-      setSaferNote(
-        "Applied OSRM highway re-rank — not truck routing. Re-check warnings below.",
-      );
+      setSaferNote(saferAppliedNote(intent, data));
       setNavStepIdx(0);
     } catch (e) {
       setSaferNote(
@@ -1636,13 +1660,24 @@ export function RvTripsApp() {
                 </section>
               ) : null}
 
-              {displayCoach && originPlace && destPlace && osrm && alerts.length > 0 ? (
+              {displayCoach &&
+              originPlace &&
+              destPlace &&
+              osrm &&
+              (alerts.length > 0 || saferIntent !== "none") ? (
                 <div className="space-y-3">
-                  <p className="px-0.5 text-[11px] font-bold tracking-wide text-white/65">
-                    Coach notes — not a clearance database
-                  </p>
-                  <AlertsBlock alerts={alerts} />
-                  {restriction.canSuggestSafer ? (
+                  {alerts.length > 0 ? (
+                    <>
+                      <p className="px-0.5 text-[11px] font-bold tracking-wide text-white/65">
+                        {restriction.banner ||
+                          (restriction.source === "here"
+                            ? "HERE Truck notices"
+                            : "Text hints — not a clearance database")}
+                      </p>
+                      <AlertsBlock alerts={alerts} />
+                    </>
+                  ) : null}
+                  {saferIntent !== "none" ? (
                     <button
                       type="button"
                       disabled={saferBusy}
@@ -1650,28 +1685,11 @@ export function RvTripsApp() {
                       className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-black/30 py-3 text-[13px] font-bold text-white disabled:opacity-50"
                     >
                       <Navigation className="size-4" />
-                      {saferBusy ? "Finding safer path…" : "Safer path"}
+                      {saferBusy
+                        ? saferBusyLabel(saferIntent)
+                        : saferCtaLabel(saferIntent)}
                     </button>
                   ) : null}
-                  {saferNote ? (
-                    <p className="text-[12px] text-white/80">{saferNote}</p>
-                  ) : null}
-                </div>
-              ) : displayCoach &&
-                originPlace &&
-                destPlace &&
-                osrm &&
-                restriction.canSuggestSafer ? (
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    disabled={saferBusy}
-                    onClick={() => void applySaferRoute()}
-                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-black/30 py-3 text-[13px] font-bold text-white disabled:opacity-50"
-                  >
-                    <Navigation className="size-4" />
-                    {saferBusy ? "Finding safer path…" : "Safer path"}
-                  </button>
                   {saferNote ? (
                     <p className="text-[12px] text-white/80">{saferNote}</p>
                   ) : null}

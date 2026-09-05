@@ -329,6 +329,47 @@ test("mergeLiveLegs sums live API miles/time only", () => {
   assert.equal(mergeLiveLegs([stubRoute({ miles: Number.NaN })]), null);
 });
 
+test("mergeLiveLegs concatenates HERE notices and dedupes", () => {
+  const notice = {
+    code: "violatedVehicleRestriction",
+    title: "Violated vehicle restriction.",
+    severity: "critical" as const,
+    cause: "Max height 380 cm",
+    source: "here" as const,
+  };
+  const a = stubRoute({
+    source: "here",
+    miles: 100,
+    driveHours: 2,
+    driveMinutes: 0,
+    distanceM: 160_934,
+    durationS: 7_200,
+    notices: [notice],
+  });
+  const b = stubRoute({
+    source: "here",
+    miles: 50,
+    driveHours: 1,
+    driveMinutes: 0,
+    distanceM: 80_467,
+    durationS: 3_600,
+    notices: [
+      notice,
+      {
+        code: "seasonalClosure",
+        title: "Seasonal closure.",
+        severity: "info",
+        source: "here",
+      },
+    ],
+  });
+  const merged = mergeLiveLegs([a, b]);
+  assert.ok(merged);
+  assert.equal(merged.notices?.length, 2);
+  assert.equal(merged.notices?.[0]?.code, "violatedVehicleRestriction");
+  assert.equal(merged.notices?.[1]?.code, "seasonalClosure");
+});
+
 test("fetchNavigateRoute: via hops stitch two helper calls, never /api/route", async () => {
   const via = { lng: -116.2, lat: 43.6 };
   const calls: string[] = [];
