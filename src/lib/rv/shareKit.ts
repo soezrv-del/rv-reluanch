@@ -28,6 +28,20 @@ import {
   type ShareMarketLines,
   type ShareSpecGroupId,
 } from "./shareCardPolicy";
+export {
+  buildShareKitPayload,
+  captureShareCardFile,
+  copyKit,
+  downloadShareFile,
+  elementLooksLikeShareCard,
+  hardenShareImageFile,
+  isShareImageFile,
+  SHARE_CARD_FILENAME,
+  SHARE_CARD_MIME,
+  shareDataAttempts,
+  shareOrCopy,
+} from "./shareCardImage";
+export type { ShareKitPayload, ShareOutcome } from "./shareCardImage";
 
 export {
   buildShareMarketSection,
@@ -76,8 +90,6 @@ export const SHARE_KIT_HEADER = "RvFOX · Powered by Grok";
 export const SHARE_KIT_TAGLINE = "Know before you buy.";
 export const SHARE_KIT_FOOTER =
   "Confirm door sticker, PPI, and lender.";
-
-export type ShareOutcome = "shared" | "copied" | "cancelled" | "failed";
 
 export function loadSavedUnits(): RVResult[] {
   try {
@@ -525,58 +537,5 @@ export async function fetchShareImage(
     return new File([blob], filename, { type: blob.type || "image/jpeg" });
   } catch {
     return null;
-  }
-}
-
-export async function shareOrCopy(opts: {
-  title: string;
-  text: string;
-  files?: File[];
-}): Promise<ShareOutcome> {
-  const nav = navigator as Navigator & {
-    share?: (data: ShareData) => Promise<void>;
-    canShare?: (data?: ShareData) => boolean;
-  };
-  try {
-    if (typeof nav.share === "function") {
-      const data: ShareData = { title: opts.title, text: opts.text };
-      if (opts.files?.length) data.files = opts.files;
-      if (!nav.canShare || nav.canShare(data)) {
-        await nav.share(data);
-        return "shared";
-      }
-      if (opts.files?.length) {
-        const textOnly: ShareData = { title: opts.title, text: opts.text };
-        if (!nav.canShare || nav.canShare(textOnly)) {
-          await nav.share(textOnly);
-          return "shared";
-        }
-      }
-    }
-  } catch (e) {
-    if (e instanceof Error && /Abort|cancel/i.test(e.message)) return "cancelled";
-  }
-  return copyKit(opts.text);
-}
-
-export async function copyKit(text: string): Promise<ShareOutcome> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return "copied";
-  } catch {
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand("copy");
-      ta.remove();
-      return ok ? "copied" : "failed";
-    } catch {
-      return "failed";
-    }
   }
 }

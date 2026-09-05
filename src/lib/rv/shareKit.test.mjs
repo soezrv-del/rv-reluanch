@@ -60,6 +60,22 @@ test("customer-facing MSRP is a single label — not low/high", () => {
   assert.match(policy, /rate updated/i);
 });
 
+test("share payload keeps a real card image file for Messages", () => {
+  assert.match(src, /buildShareKitPayload/);
+  assert.match(src, /captureShareCardFile/);
+  assert.match(src, /shareDataAttempts/);
+  assert.doesNotMatch(
+    src,
+    /const textOnly: ShareData = \{ title: opts\.title, text: opts\.text \}/,
+  );
+  const card = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "shareCardImage.ts"),
+    "utf8",
+  );
+  assert.match(card, /image\/png/);
+  assert.match(card, /files\[\]/);
+});
+
 test("kit footer is a prepared-by signature", () => {
   assert.match(src, /REPORT_CONTACT_KICKER/);
   assert.match(src, /REPORT_CONTACT_NAME/);

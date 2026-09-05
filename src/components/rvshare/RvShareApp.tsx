@@ -33,11 +33,13 @@ import { hapticLight, hapticSuccess } from "@/lib/haptics";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
   buildCoachKit,
+  buildShareKitPayload,
   buildSuitePitch,
   brochureSpecGroups,
   coachTitle,
   copyKit,
   brochureSummary,
+  captureShareCardFile,
   lifestylePitch,
   DEFAULT_SHARE_INCLUDE,
   DEFAULT_SHARE_MARKET_LINES,
@@ -370,6 +372,7 @@ export function RvShareApp({
   const [ratingEdit, setRatingEdit] = useState<number | null>(null);
   const [rateUpdated, setRateUpdated] = useState(false);
   const rateFlashTimer = useRef<number | null>(null);
+  const shareCardRef = useRef<HTMLDivElement>(null);
 
   const reloadSaved = useCallback(() => {
     setSaved(loadSavedUnits());
@@ -531,22 +534,36 @@ export function RvShareApp({
       return;
     }
     void hapticLight();
-    const files: File[] = [];
+    const slug = coachTitle(selected).replace(/[^\w.-]+/g, "_") || "RvFOX";
+    const extraFiles: File[] = [];
     if (include.lifestyle) {
       const img = await fetchShareImage(
         lifestyleImageFor(selected.data.type, selected.data.fuelType, selected.data.chassis),
-        `${coachTitle(selected).replace(/[^\w.-]+/g, "_")}-lifestyle.jpg`,
+        `${slug}-lifestyle.jpg`,
       );
-      if (img) files.push(img);
+      if (img) extraFiles.push(img);
     }
-    const out = await shareOrCopy({
+    const cardFile = await captureShareCardFile(
+      shareCardRef.current,
+      `${slug}-card.png`,
+    );
+    const payload = buildShareKitPayload({
       title: coachTitle(selected),
       text: kitText,
-      files: files.length ? files : undefined,
+      cardFile,
+      extraFiles,
+    });
+    const out = await shareOrCopy({
+      title: payload.title,
+      text: payload.text,
+      files: payload.files.length ? payload.files : undefined,
     });
     if (out === "shared") {
       hapticSuccess();
       flash("Sent");
+    } else if (out === "downloaded") {
+      hapticSuccess();
+      flash("Image saved · text copied");
     } else if (out === "copied") {
       hapticSuccess();
       flash("Copied");
@@ -1046,6 +1063,7 @@ export function RvShareApp({
                 </pre>
 
                 <div
+                  ref={shareCardRef}
                   data-report-signature="1"
                   className="overflow-hidden rounded-[var(--radius-lg)] border border-white/20 bg-[#f4f8fc]"
                 >
