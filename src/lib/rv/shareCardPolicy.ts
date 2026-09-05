@@ -51,10 +51,114 @@ export function hasOptionalShareSections(include: ShareInclude): boolean {
   return OPTIONAL_SHARE_KEYS.some((k) => include[k]);
 }
 
-/** Zero extras → keep the card commercially useful. */
+/**
+ * Price lines the salesman can opt into after Market is on.
+ * Default all OFF — force an intentional pick (never dump the stack).
+ */
+export type ShareMarketAmounts = {
+  tradeIn: number;
+  retailLow: number;
+  retailHigh: number;
+  msrpLo: number;
+  msrpHi: number;
+};
+
+export type ShareMarketLineId = keyof ShareMarketAmounts;
+export type ShareMarketLines = Record<ShareMarketLineId, boolean>;
+
+export const SHARE_MARKET_LINE_DEFS: {
+  id: ShareMarketLineId;
+  /** Label printed on the shared card. */
+  shareLabel: string;
+  /** Compact field label in the Share editor. */
+  fieldLabel: string;
+  /** Spoken name for include/remove + aria. */
+  name: string;
+}[] = [
+  {
+    id: "tradeIn",
+    shareLabel: "Trade-in est.",
+    fieldLabel: "TRADE-IN / WHOLESALE",
+    name: "trade-in",
+  },
+  {
+    id: "retailLow",
+    shareLabel: "Retail low",
+    fieldLabel: "RETAIL LOW",
+    name: "retail low",
+  },
+  {
+    id: "retailHigh",
+    shareLabel: "Asking",
+    fieldLabel: "ASKING / RETAIL HIGH",
+    name: "asking",
+  },
+  {
+    id: "msrpLo",
+    shareLabel: "MSRP low",
+    fieldLabel: "MSRP LOW",
+    name: "MSRP low",
+  },
+  {
+    id: "msrpHi",
+    shareLabel: "MSRP high",
+    fieldLabel: "MSRP HIGH",
+    name: "MSRP high",
+  },
+];
+
+export const DEFAULT_SHARE_MARKET_LINES: ShareMarketLines = {
+  tradeIn: false,
+  retailLow: false,
+  retailHigh: false,
+  msrpLo: false,
+  msrpHi: false,
+};
+
+export function hasSelectedMarketLines(lines?: ShareMarketLines | null): boolean {
+  if (!lines) return false;
+  return SHARE_MARKET_LINE_DEFS.some((d) => lines[d.id]);
+}
+
+export function selectedShareMarketEntries(
+  market: ShareMarketAmounts,
+  lines?: ShareMarketLines | null,
+): { id: ShareMarketLineId; shareLabel: string; amount: number }[] {
+  if (!lines) return [];
+  return SHARE_MARKET_LINE_DEFS.filter(
+    (d) => lines[d.id] && Number.isFinite(market[d.id]) && market[d.id] > 0,
+  ).map((d) => ({
+    id: d.id,
+    shareLabel: d.shareLabel,
+    amount: market[d.id],
+  }));
+}
+
+/** Shared-card MARKET block — empty when nothing was picked (no dump). */
+export function buildShareMarketSection(
+  market: ShareMarketAmounts,
+  lines: ShareMarketLines | undefined,
+  money: (n: number) => string,
+): string[] {
+  const rows = selectedShareMarketEntries(market, lines).map(
+    (e) => `${e.shareLabel} ${money(e.amount)}`,
+  );
+  if (!rows.length) return [];
+  return ["MARKET", ...rows];
+}
+
+export function formatShareMarketText(
+  market: ShareMarketAmounts,
+  lines: ShareMarketLines | undefined,
+  money: (n: number) => string,
+): string {
+  return buildShareMarketSection(market, lines, money).join("\n");
+}
+
+/** Zero extras → header + Summary + Payment. Never inject a Market dump. */
 export function effectiveShareInclude(include: ShareInclude): ShareInclude {
   if (hasOptionalShareSections(include)) return include;
-  return { ...include, market: true, payment: true };
+  return { ...include, payment: true };
 }
 
 /** Customer-facing share must never leak catalog placeholder tags. */
