@@ -146,7 +146,7 @@ test("normalizeOverpassCamps requires a name and corridor / dest filter", () => 
   assert.ok(camps.some((c) => c.name === "Golden Gardens Camp" && c.nearDest));
 });
 
-test("dedup + rank: RV parks first, then along-route, no dupes", () => {
+test("dedup + rank: along-route first, closer dupe wins", () => {
   const camps = finalizeCamps([
     camp({
       id: "a",
@@ -177,9 +177,42 @@ test("dedup + rank: RV parks first, then along-route, no dupes", () => {
     }),
   ]);
   assert.equal(camps.length, 2);
-  assert.equal(camps[0]!.kind, "rv-park");
-  assert.equal(camps[1]!.name, "Forest Camp");
-  assert.equal(camps[1]!.milesOff, 0.4);
+  assert.equal(camps[0]!.name, "Forest Camp");
+  assert.equal(camps[0]!.milesOff, 0.4);
+  assert.equal(camps[1]!.kind, "rv-park");
+});
+
+test("finalizeCamps keeps dest-area sites when origin parks are dense", () => {
+  const many: CampStop[] = [];
+  for (let i = 0; i < 24; i++) {
+    many.push(
+      camp({
+        id: `o${i}`,
+        name: `Reno Park ${i}`,
+        kind: "rv-park",
+        progress: 0.02,
+        milesOff: 1,
+        lat: 39.5 + i * 0.02,
+        lng: -119.8,
+        nearDest: false,
+      }),
+    );
+  }
+  many.push(
+    camp({
+      id: "seattle",
+      name: "Seattle KOA",
+      kind: "rv-park",
+      progress: 0.98,
+      milesOff: 4,
+      lat: 47.6,
+      lng: -122.3,
+      nearDest: true,
+    }),
+  );
+  const out = finalizeCamps(many, 20);
+  assert.ok(out.some((c) => c.name === "Seattle KOA"));
+  assert.ok(out.length <= 20);
 });
 
 test("classifyCampKind is honest — generic camp vs RV park", () => {
@@ -193,6 +226,32 @@ test("classifyCampKind is honest — generic camp vs RV park", () => {
     looksLikeRvPark({ name: "Dispersed Camp", tags: { tourism: "camp_site" } }),
     false,
   );
+  assert.equal(
+    looksLikeRvPark({ name: "Silver Crown Mobile Home Park" }),
+    false,
+  );
+});
+
+test("normalize drops mobile-home parks that are not RV", () => {
+  const items = [
+    {
+      id: "here:mh",
+      title: "Silver Crown Mobile Home Park",
+      position: { lat: 43.58, lng: -116.18 },
+      address: { city: "Reno", stateCode: "NV" },
+      categories: [{ id: HERE_RV_PARK_CATEGORY }],
+    },
+    {
+      id: "here:koa",
+      title: "Reno KOA",
+      position: { lat: 43.59, lng: -116.2 },
+      address: { city: "Reno", stateCode: "NV" },
+      categories: [{ id: HERE_RV_PARK_CATEGORY }],
+    },
+  ];
+  const camps = normalizeHereCamps(items, CORRIDOR, 15);
+  assert.equal(camps.length, 1);
+  assert.equal(camps[0]!.name, "Reno KOA");
 });
 
 test("amenityHintFromTags never invents hookups", () => {

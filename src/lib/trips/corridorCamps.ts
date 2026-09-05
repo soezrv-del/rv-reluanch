@@ -57,6 +57,8 @@ export type CampOverpassEl = FuelOverpassEl;
 const RV_NAME_RE =
   /\b(rv park|rv resort|rv campground|koa|thousand trails|good sam|sun outdoors|caravan park|holiday park)\b/i;
 
+const MOBILE_HOME_RE = /\bmobile home\b/i;
+
 export function campSourceLabel(source: CampSource): string {
   return source === "here" ? "HERE Places" : "OpenStreetMap Overpass";
 }
@@ -77,11 +79,16 @@ function taggedYes(raw: string | undefined): boolean {
   return /^(yes|true|designated)$/i.test(raw || "");
 }
 
+export function looksLikeResidentialPark(name: string): boolean {
+  return MOBILE_HOME_RE.test(name) && !/\brv\b/i.test(name);
+}
+
 export function looksLikeRvPark(opts: {
   name: string;
   categories?: string[];
   tags?: Record<string, string>;
 }): boolean {
+  if (looksLikeResidentialPark(opts.name)) return false;
   const cats = (opts.categories ?? []).join(" ");
   if (cats.includes(HERE_RV_PARK_CATEGORY)) return true;
   const tags = opts.tags ?? {};
@@ -141,7 +148,7 @@ export function normalizeHereCamps(
     const lng = Number(item.position?.lng);
     if (!finitePlace({ lat, lng })) continue;
     const name = cleanName(item.title || item.address?.label || "");
-    if (!name) continue;
+    if (!name || looksLikeResidentialPark(name)) continue;
     const categories = (item.categories ?? [])
       .map((c) => String(c.id || ""))
       .filter(Boolean);
@@ -179,7 +186,7 @@ export function normalizeOverpassCamps(
     const name = cleanName(
       tags.name || tags.brand || tags.operator || tags["name:en"] || "",
     );
-    if (!name) continue;
+    if (!name || looksLikeResidentialPark(name)) continue;
     const kept = keepCampPoi({ lat, lng }, corridor, widthMi);
     if (!kept) continue;
     camps.push({
@@ -207,7 +214,7 @@ export function normalizeOverpassCamps(
 export function dedupCamps(camps: CampStop[]): CampStop[] {
   const seen = new Map<string, CampStop>();
   for (const c of camps) {
-    const key = `${c.lat.toFixed(3)}|${c.lng.toFixed(3)}|${c.name.toLowerCase()}`;
+    const key = `${c.name.toLowerCase()}|${c.city.toLowerCase()}|${c.lat.toFixed(2)}|${c.lng.toFixed(2)}`;
     const prev = seen.get(key);
     if (!prev || c.milesOff < prev.milesOff) seen.set(key, c);
   }
@@ -216,11 +223,8 @@ export function dedupCamps(camps: CampStop[]): CampStop[] {
 
 export function rankCamps(camps: CampStop[]): CampStop[] {
   return [...camps].sort((a, b) => {
-    if (a.kind !== b.kind) return a.kind === "rv-park" ? -1 : 1;
-    if (a.nearDest !== b.nearDest && Math.abs(a.progress - b.progress) < 0.08) {
-      return a.nearDest ? 1 : -1;
-    }
     if (Math.abs(a.progress - b.progress) > 0.02) return a.progress - b.progress;
+    if (a.kind !== b.kind) return a.kind === "rv-park" ? -1 : 1;
     return a.milesOff - b.milesOff;
   });
 }
@@ -229,7 +233,12 @@ export function finalizeCamps(
   camps: CampStop[],
   limit = MAX_CAMPS,
 ): CampStop[] {
-  return rankCamps(dedupCamps(camps)).slice(0, limit);
+  const unique = rankCamps(dedupCamps(camps));
+  if (unique.length <= limit) return unique;
+  const dest = unique.filter((c) => c.nearDest);
+  const rest = unique.filter((c) => !c.nearDest);
+  const destSlots = Math.min(dest.length, Math.max(4, Math.round(limit * 0.3)));
+  return [...rest.slice(0, limit - destSlots), ...dest.slice(0, destSlots)];
 }
 
 export function emptyCampResult(

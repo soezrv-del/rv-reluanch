@@ -112,7 +112,7 @@ test("geometryToSvgPath draws the API polyline", () => {
   assert.equal(geometryToSvgPath({ type: "LineString", coordinates: [] }, 200, 80), null);
 });
 
-test("Navigate results sheet uses live stats and labels demo camps/map", () => {
+test("Navigate results sheet uses live stats and live camps — not DEMO pads", () => {
   const ui = readFileSync(
     join(root, "../../components/rvtrips/RvTripsApp.tsx"),
     "utf8",
@@ -122,8 +122,11 @@ test("Navigate results sheet uses live stats and labels demo camps/map", () => {
   assert.match(ui, /data-route-results/);
   assert.match(ui, /routeEngineLabel/);
   assert.match(ui, /not a clearance/);
-  assert.match(ui, /Sample pads — not live inventory/);
-  assert.match(ui, /\bDEMO\b/);
+  assert.match(ui, /CampsAlongRoute/);
+  assert.match(ui, /\/api\/camps/);
+  assert.match(ui, /Sample pads — not live/);
+  assert.match(ui, /showSampleCamps/);
+  assert.doesNotMatch(ui, /label: "Demo camps"/);
   assert.match(ui, /FuelAlongRoute/);
   assert.match(ui, /RouteBasemap/);
   assert.match(ui, /\/api\/fuel/);
