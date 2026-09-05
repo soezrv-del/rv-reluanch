@@ -235,7 +235,7 @@ test("payment calculator field order is price → down → term → rate → est
   const pay = ui.slice(ui.indexOf('title="PAYMENT"'));
   const price = pay.indexOf('label="PRICE"');
   const down = pay.indexOf("DOWN");
-  const term = pay.indexOf("TERM");
+  const term = pay.indexOf("TERM (YEARS)");
   const rate = pay.indexOf('label="INTEREST RATE"');
   const est = pay.indexOf("EST. / MO");
   assert.ok(price >= 0 && down >= 0 && term >= 0 && rate >= 0 && est >= 0);
@@ -243,6 +243,11 @@ test("payment calculator field order is price → down → term → rate → est
   assert.ok(down < term);
   assert.ok(term < rate);
   assert.ok(rate < est);
+  assert.match(pay, /Rate never above down\/term/);
   assert.match(pay, /RATE_UPDATED_FLASH/);
   assert.match(ui, /sharePaymentPricePills/);
+  assert.doesNotMatch(
+    pay.slice(down, rate),
+    /grid grid-cols-2/,
+  );
 });

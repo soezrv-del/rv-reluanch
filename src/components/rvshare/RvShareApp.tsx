@@ -836,6 +836,7 @@ export function RvShareApp({
                   onToggle={() => toggleSection("payment")}
                 >
                   <div className="space-y-2">
+                    {/* Locked: Price → pills → Down → Term → Rate → Est. Rate never above down/term. */}
                     <MoneyField
                       label="PRICE"
                       value={payment.price}
@@ -862,38 +863,36 @@ export function RvShareApp({
                         ))}
                       </div>
                     ) : null}
-                    <div className="grid grid-cols-2 gap-2">
-                      <label className="block">
-                        <span className="mb-1 block text-[9px] font-bold tracking-wide text-white/70">
-                          DOWN
-                        </span>
-                        <NativeSelect
-                          aria-label="Down payment percent"
-                          value={payment.downPct}
-                          options={DOWN_PRESETS.map((n) => ({
-                            value: n,
-                            label: `${n}%`,
-                          }))}
-                          parse={(raw) => Number(raw)}
-                          onChange={(downPct) => applyTermDown({ downPct })}
-                        />
-                      </label>
-                      <label className="block">
-                        <span className="mb-1 block text-[9px] font-bold tracking-wide text-white/70">
-                          TERM
-                        </span>
-                        <NativeSelect
-                          aria-label="Loan term"
-                          value={payment.termMonths}
-                          options={TERM_PRESETS.map((t) => ({
-                            value: t.months,
-                            label: t.label,
-                          }))}
-                          parse={(raw) => Number(raw)}
-                          onChange={(termMonths) => applyTermDown({ termMonths })}
-                        />
-                      </label>
-                    </div>
+                    <label className="block">
+                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-white/70">
+                        DOWN
+                      </span>
+                      <NativeSelect
+                        aria-label="Down payment percent"
+                        value={payment.downPct}
+                        options={DOWN_PRESETS.map((n) => ({
+                          value: n,
+                          label: `${n}%`,
+                        }))}
+                        parse={(raw) => Number(raw)}
+                        onChange={(downPct) => applyTermDown({ downPct })}
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-white/70">
+                        TERM (YEARS)
+                      </span>
+                      <NativeSelect
+                        aria-label="Loan term years"
+                        value={payment.termMonths}
+                        options={TERM_PRESETS.map((t) => ({
+                          value: t.months,
+                          label: t.label,
+                        }))}
+                        parse={(raw) => Number(raw)}
+                        onChange={(termMonths) => applyTermDown({ termMonths })}
+                      />
+                    </label>
                     <DraftNumberField
                       label="INTEREST RATE"
                       value={payment.apr}
