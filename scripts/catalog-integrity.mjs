@@ -288,6 +288,7 @@ const EXPECTED_TYPE = {
   "Grand Design|Lineage Series M": "class c",
   "Grand Design|Lineage Series F": "super c",
   "Grand Design|Lineage Series VT": "class b",
+  "Grand Design|Lineage Series VP": "class b",
 };
 
 /** Phantom / non-OEM series that must not exist. */
