@@ -240,15 +240,18 @@ const SHARE_SECTIONS: { id: keyof ShareInclude; label: string }[] = [
 
 function SectionToggle({
   title,
+  name,
   on,
   onToggle,
   children,
 }: {
   title: string;
+  name?: string;
   on: boolean;
   onToggle: () => void;
   children?: ReactNode;
 }) {
+  const label = name || title;
   return (
     <div className="space-y-2">
       <div className="flex min-h-11 items-center justify-between gap-2">
@@ -258,7 +261,7 @@ function SectionToggle({
         <button
           type="button"
           aria-pressed={on}
-          aria-label={on ? `Remove ${title}` : `Include ${title}`}
+          aria-label={on ? `Remove ${label}` : `Include ${label}`}
           onClick={onToggle}
           className={cn(
             "inline-flex size-11 shrink-0 items-center justify-center rounded-full border",
@@ -665,6 +668,7 @@ export function RvShareApp({
 
                 <SectionToggle
                   title="RATING — TAP + TO SHARE"
+                  name="Rating"
                   on={include.rating}
                   onToggle={() => toggleSection("rating")}
                 >
@@ -680,6 +684,7 @@ export function RvShareApp({
 
                 <SectionToggle
                   title="MARKET PRICES"
+                  name="Market prices"
                   on={include.market}
                   onToggle={() => toggleSection("market")}
                 >
@@ -724,6 +729,7 @@ export function RvShareApp({
 
                 <SectionToggle
                   title="PAYMENT"
+                  name="Payment"
                   on={include.payment}
                   onToggle={() => toggleSection("payment")}
                 >
@@ -836,6 +842,7 @@ export function RvShareApp({
 
                 <SectionToggle
                   title="LIFESTYLE"
+                  name="Lifestyle"
                   on={include.lifestyle}
                   onToggle={() => toggleSection("lifestyle")}
                 >
@@ -846,6 +853,7 @@ export function RvShareApp({
 
                 <SectionToggle
                   title="STRENGTHS — EDITABLE"
+                  name="Strengths"
                   on={include.strengths}
                   onToggle={() => toggleSection("strengths")}
                 >
@@ -912,6 +920,7 @@ export function RvShareApp({
                     <SectionToggle
                       key={g.id}
                       title={meta?.label.toUpperCase() || g.title}
+                      name={meta?.label || g.title}
                       on={include[g.id]}
                       onToggle={() => toggleSection(g.id)}
                     >
