@@ -69,6 +69,8 @@ export {
   RATE_UPDATED_FLASH,
   RATE_UPDATED_FLASH_MS,
   SHARE_MARKET_LINE_DEFS,
+  SHARE_MSRP_LINE_ID,
+  isOfferedShareMarketLine,
   sharePaymentAfterTermDown,
   sharePaymentPricePills,
   sharePowerLines,

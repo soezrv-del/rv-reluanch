@@ -15,6 +15,8 @@ import {
   RATE_UPDATED_FLASH,
   RATE_UPDATED_FLASH_MS,
   SHARE_MARKET_LINE_DEFS,
+  SHARE_MSRP_LINE_ID,
+  isOfferedShareMarketLine,
   sharePaymentAfterTermDown,
   sharePaymentPricePills,
   sharePowerLines,
@@ -167,14 +169,30 @@ test("kit writes only picked market lines — no trade+retail dump", () => {
   );
 });
 
-test("shared and selected MSRP lines say MSRP — not low/high", () => {
-  const lo = SHARE_MARKET_LINE_DEFS.find((d) => d.id === "msrpLo");
+test("Share Market offers one MSRP — never an MSRP-low option or label", () => {
+  assert.equal(SHARE_MSRP_LINE_ID, "msrpHi");
+  assert.equal(isOfferedShareMarketLine("msrpLo"), false);
+  assert.equal(isOfferedShareMarketLine("msrpHi"), true);
+  assert.equal(
+    SHARE_MARKET_LINE_DEFS.some((d) => d.id === "msrpLo"),
+    false,
+  );
+  assert.equal(
+    SHARE_MARKET_LINE_DEFS.filter((d) => d.id === "msrpHi").length,
+    1,
+  );
+  assert.equal("msrpLo" in DEFAULT_SHARE_MARKET_LINES, false);
+  for (const def of SHARE_MARKET_LINE_DEFS) {
+    assert.doesNotMatch(def.id, /msrpLo/i);
+    assert.doesNotMatch(def.shareLabel, /MSRP\s*(low|high)/i);
+    assert.doesNotMatch(def.fieldLabel, /MSRP\s*(low|high)/i);
+    assert.doesNotMatch(def.name, /MSRP\s*(low|high)/i);
+  }
   const hi = SHARE_MARKET_LINE_DEFS.find((d) => d.id === "msrpHi");
-  assert.equal(lo?.shareLabel, "MSRP");
   assert.equal(hi?.shareLabel, "MSRP");
   assert.equal(hi?.fieldLabel, "MSRP");
-  assert.doesNotMatch(lo!.shareLabel, /low|high/i);
-  assert.doesNotMatch(hi!.shareLabel, /low|high/i);
+  assert.equal(hi?.name, "MSRP");
+
   const text = formatShareMarketText(
     SAMPLE_MARKET,
     { ...DEFAULT_SHARE_MARKET_LINES, msrpHi: true },
@@ -182,6 +200,18 @@ test("shared and selected MSRP lines say MSRP — not low/high", () => {
   );
   assert.match(text, /^MARKET\nMSRP \$280000$/);
   assert.doesNotMatch(text, /MSRP high|MSRP low/);
+
+  const staleLowOnly = formatShareMarketText(
+    SAMPLE_MARKET,
+    { ...DEFAULT_SHARE_MARKET_LINES, msrpLo: true },
+    money,
+  );
+  assert.equal(staleLowOnly, "");
+  assert.doesNotMatch(staleLowOnly, /MSRP/);
+  assert.equal(
+    hasSelectedMarketLines({ ...DEFAULT_SHARE_MARKET_LINES, msrpLo: true }),
+    false,
+  );
 });
 
 test("calculator pills use one MSRP from the high/asking figure", () => {
@@ -191,9 +221,18 @@ test("calculator pills use one MSRP from the high/asking figure", () => {
   assert.equal(msrp[0]?.value, SAMPLE_MARKET.msrpHi);
   assert.doesNotMatch(msrp[0]!.label, /low|high/i);
   assert.equal(
-    pills.some((p) => p.value === SAMPLE_MARKET.msrpLo && /^MSRP\b/.test(p.label)),
+    pills.some((p) => p.value === SAMPLE_MARKET.msrpLo),
     false,
   );
+  for (const p of pills) {
+    assert.doesNotMatch(p.label, /MSRP\s*(low|high)/i);
+  }
+  const noHigh = sharePaymentPricePills({ ...SAMPLE_MARKET, msrpHi: 0 }, money);
+  assert.equal(
+    noHigh.some((p) => p.value === SAMPLE_MARKET.msrpLo),
+    false,
+  );
+  assert.equal(noHigh.filter((p) => /^MSRP\b/.test(p.label)).length, 0);
 });
 
 const scheduleApr = (termMonths: number) => (termMonths <= 180 ? 7.99 : 8.49);
@@ -343,4 +382,9 @@ test("payment calculator field order is price → down → term → rate → est
     pay.slice(down, rate),
     /grid grid-cols-2/,
   );
+  assert.doesNotMatch(ui, /MSRP\s*(LOW|low|HIGH|high)/);
+  const market = ui.slice(ui.indexOf('title="MARKET PRICES"'), ui.indexOf('title="PAYMENT"'));
+  assert.match(market, /SHARE_MARKET_LINE_DEFS\.map/);
+  assert.doesNotMatch(market, /MSRP LOW/);
+  assert.doesNotMatch(market, /id === "msrpLo"/);
 });
