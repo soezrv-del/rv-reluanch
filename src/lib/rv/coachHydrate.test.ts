@@ -7,8 +7,12 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
-import { buildBrochureSpecs } from "./brochureSpecs.ts";
-import { formatFactsTorque } from "./catalogHonesty.ts";
+import {
+  formatFactsHorsepower,
+  formatFactsTorque,
+  honestHorsepowerForCoach,
+  honestTorqueForCoach,
+} from "./catalogHonesty.ts";
 import { sharePowerLines } from "./shareCardPolicy.ts";
 import {
   hydrateSavedCoachList,
@@ -54,21 +58,33 @@ function factsAndShareFromCoach(result: {
   floorplan?: string;
   data: RVSpec;
 }) {
-  const brochure = buildBrochureSpecs(
-    result.data,
-    result.year,
-    result.make,
-    result.model,
-    result.floorplan || "",
+  const y = parseInt(result.year, 10);
+  const band = (result.data.powertrainByYear || []).find(
+    (b) => y >= b.from && y <= b.to,
   );
-  const factsTorque = formatFactsTorque({
-    engine: brochure.engine,
-    torqueLbFt: brochure.torque,
+  const engine = band?.engine ?? result.data.engine;
+  const horsepower = band?.horsepower ?? result.data.horsepower;
+  const chassis = band?.chassis ?? result.data.chassis;
+  const torqueLbFt = band?.torqueLbFt ?? result.data.torqueLbFt ?? null;
+  const factsHp = formatFactsHorsepower({ engine, horsepower });
+  const factsTorque = formatFactsTorque({ engine, torqueLbFt });
+  const hp = honestHorsepowerForCoach({
+    engine,
+    horsepower,
+    chassis,
+    type: result.data.type,
+  });
+  const tq = honestTorqueForCoach({
+    engine,
+    chassis,
+    type: result.data.type,
+    torqueLbFt,
+    horsepower,
   });
   return {
-    brochure,
+    factsHp,
     factsTorque,
-    sharePower: sharePowerLines(brochure.horsepower, brochure.torque),
+    sharePower: sharePowerLines(hp, tq),
   };
 }
 
@@ -102,9 +118,8 @@ test("stale saved snapshot missing torqueLbFt → Facts + Share both get 468 fro
   assert.notEqual(hydrated.data, stale);
 
   const after = factsAndShareFromCoach(hydrated);
+  assert.equal(after.factsHp, "350 HP");
   assert.equal(after.factsTorque, "468 lb-ft");
-  assert.equal(after.brochure.horsepower, "350 HP");
-  assert.equal(after.brochure.torque, "468 lb-ft");
   assert.deepEqual(after.sharePower, ["POWER", "350 HP", "468 lb-ft"]);
 });
 
