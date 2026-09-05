@@ -3,8 +3,8 @@
  * Dimensions: HERE expects cm (height/width/length) and kg (weight).
  */
 
-import type { OsrmLngLat, OsrmRouteResult, OsrmStep, RouteNotice } from "./osrm";
-import { compactSteps, metersToMiles, splitDuration } from "./osrm";
+import type { OsrmLngLat, OsrmRouteResult, OsrmStep, RouteNotice } from "./osrm.ts";
+import { compactSteps, metersToMiles, splitDuration } from "./osrm.ts";
 
 /** HERE noise / EV / toll-data codes — not clearance-relevant. */
 const HERE_NOTICE_NOISE = new Set([

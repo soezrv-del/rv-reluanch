@@ -5,10 +5,10 @@
  * only, and only when labeled as a text hint.
  */
 
-import type { TripAlert } from "@/lib/trips/tripData";
-import type { CoachProfile } from "@/lib/trips/coachFromCatalog";
-import type { OsrmRouteResult, RouteNotice } from "@/lib/trips/osrm";
-import { canUseRvSafe } from "@/lib/trips/navigateRoute";
+import type { TripAlert } from "./tripData.ts";
+import type { CoachProfile } from "./coachProfile.ts";
+import type { OsrmRouteResult, RouteNotice } from "./osrm.ts";
+import { canUseRvSafe } from "./navigateRoute.ts";
 
 export type RestrictionSource = "here" | "heuristic" | "none";
 

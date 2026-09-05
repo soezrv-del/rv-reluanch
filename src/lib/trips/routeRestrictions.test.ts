@@ -261,12 +261,14 @@ test("Navigate copy stays honest and never calls /api/route", () => {
     join(root, "../../components/rvtrips/RvTripsApp.tsx"),
     "utf8",
   );
+  const helpers = readFileSync(join(root, "routeRestrictions.ts"), "utf8");
   assert.match(ui, /saferCtaLabel/);
   assert.match(ui, /HERE Truck notices/);
   assert.match(ui, /not a clearance database/);
-  assert.match(ui, /OSRM highway re-rank/);
-  assert.match(ui, /Safer RV · HERE Truck/);
   assert.match(ui, /fetchNavigateRoute/);
+  assert.match(helpers, /OSRM highway re-rank/);
+  assert.match(helpers, /Safer RV · HERE Truck/);
   assert.doesNotMatch(ui, /["']Safer path["']/);
   assert.doesNotMatch(ui, /\/api\/route/);
+  assert.doesNotMatch(helpers, /\/api\/route/);
 });
