@@ -13,11 +13,31 @@ import {
   profileIsComplete,
   resolveTripsProfileSeed,
   saveLockedProfile,
-  suggestCoachFromSelection,
-} from "./coachFromCatalog.ts";
+  type CoachProfile,
+  type SuggestCoachFn,
+} from "./coachProfile.ts";
 import { findOemFloorplanSpec } from "../rv/floorplanSpecs.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
+
+const stubSuggest: SuggestCoachFn = (opts) => ({
+  ...EMPTY_COACH_PROFILE,
+  year: opts.year,
+  make: opts.make,
+  model: opts.model,
+  floorplan: opts.floorplan,
+  type: opts.rvType || "",
+  heightFt: 13,
+  lengthFt: 40,
+  widthFt: 8.5,
+  weightLbs: opts.gvwrLbs || opts.uvwLbs || 10000,
+  dimSources: {
+    height: "estimate",
+    length: "estimate",
+    width: "estimate",
+    weight: opts.gvwrLbs || opts.uvwLbs ? "facts" : "estimate",
+  },
+});
 
 function stubStorage() {
   const mem = new Map<string, string>();
@@ -37,7 +57,6 @@ function stubStorage() {
     value: store,
   });
   return {
-    store,
     restore() {
       if (prev) {
         Object.defineProperty(globalThis, "localStorage", {
@@ -107,25 +126,30 @@ test("dimsFromKnownSources: class heuristic is labeled estimate", () => {
   assert.equal(anyDimEstimated(dims.dimSources), true);
 });
 
-test("suggestCoachFromSelection uses brochure OEM for Brinkley Model T 3250", () => {
+test("brochure OEM for Brinkley Model T 3250 is used, not invented", () => {
   const oem = findOemFloorplanSpec("2024", "Brinkley", "Model T", "3250");
   assert.ok(oem, "OEM row must exist — do not invent specs in the test");
-  const p = suggestCoachFromSelection({
+  const dims = dimsFromKnownSources({
+    type: "Fifth Wheel",
+    floorplan: "3250",
+    make: "Brinkley",
+    model: "Model T",
+    oem,
+  });
+  assert.equal(dims.heightFt, 13.3);
+  assert.equal(dims.lengthFt, 37.9);
+  assert.equal(dims.weightLbs, 22000);
+  assert.equal(dims.dimSources.height, "brochure");
+  assert.equal(dims.dimSources.length, "brochure");
+  assert.equal(dims.dimSources.weight, "brochure");
+  const p: CoachProfile = {
+    ...EMPTY_COACH_PROFILE,
     year: "2024",
     make: "Brinkley",
     model: "Model T",
     floorplan: "3250",
-  });
-  assert.equal(p.year, "2024");
-  assert.equal(p.make, "Brinkley");
-  assert.equal(p.model, "Model T");
-  assert.equal(p.floorplan, "3250");
-  assert.equal(p.heightFt, 13.3);
-  assert.equal(p.lengthFt, 37.9);
-  assert.equal(p.weightLbs, 22000);
-  assert.equal(p.dimSources?.height, "brochure");
-  assert.equal(p.dimSources?.length, "brochure");
-  assert.equal(p.dimSources?.weight, "brochure");
+    ...dims,
+  };
   assert.equal(coachIsReady(p), true);
   assert.equal(profileIsComplete(p), true);
 });
@@ -174,13 +198,16 @@ test("resolveTripsProfileSeed: locked > Facts > saved; empty invents nothing", (
     locked: true,
   };
 
-  assert.equal(resolveTripsProfileSeed({}), null);
+  assert.equal(resolveTripsProfileSeed({}, stubSuggest), null);
   assert.equal(
-    resolveTripsProfileSeed({ activeCoach: null, savedCoach: null }),
+    resolveTripsProfileSeed({ activeCoach: null, savedCoach: null }, stubSuggest),
     null,
   );
 
-  const fromFacts = resolveTripsProfileSeed({ activeCoach: facts, savedCoach: saved });
+  const fromFacts = resolveTripsProfileSeed(
+    { activeCoach: facts, savedCoach: saved },
+    stubSuggest,
+  );
   assert.ok(fromFacts);
   assert.equal(fromFacts.source, "facts");
   assert.equal(fromFacts.profile.make, "American Coach");
@@ -189,17 +216,20 @@ test("resolveTripsProfileSeed: locked > Facts > saved; empty invents nothing", (
   assert.equal(fromFacts.profile.weightLbs, 52000);
   assert.equal(fromFacts.profile.dimSources?.weight, "facts");
 
-  const fromSaved = resolveTripsProfileSeed({ savedCoach: saved });
+  const fromSaved = resolveTripsProfileSeed({ savedCoach: saved }, stubSuggest);
   assert.ok(fromSaved);
   assert.equal(fromSaved.source, "saved");
   assert.equal(fromSaved.profile.make, "Keystone");
   assert.equal(fromSaved.profile.model, "Montana");
 
-  const fromLocked = resolveTripsProfileSeed({
-    locked,
-    activeCoach: facts,
-    savedCoach: saved,
-  });
+  const fromLocked = resolveTripsProfileSeed(
+    {
+      locked,
+      activeCoach: facts,
+      savedCoach: saved,
+    },
+    stubSuggest,
+  );
   assert.ok(fromLocked);
   assert.equal(fromLocked.source, "locked");
   assert.equal(fromLocked.profile.make, "Tiffin");
