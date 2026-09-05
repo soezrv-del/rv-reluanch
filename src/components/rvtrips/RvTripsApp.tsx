@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   ChevronRight,
@@ -34,15 +34,23 @@ import {
   type OsrmRouteResult,
 } from "@/lib/trips/osrm";
 import {
+  anyDimEstimated,
   clearLockedProfile,
+  coachIdentityKey,
+  coachIsReady,
   EMPTY_COACH_PROFILE,
   loadLockedProfile,
   profileIsComplete,
+  resolveTripsProfileSeed,
   saveLockedProfile,
   suggestCoachFromSelection,
   TRIP_YEARS,
   type CoachProfile,
+  type CoachSeedSource,
 } from "@/lib/trips/coachFromCatalog";
+import { readActiveCoach } from "@/lib/rv/activeCoach";
+import { loadLatestSavedUnit } from "@/lib/rv/savedUnits";
+import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
   analyzeRouteRestrictions,
   saferOsrmParams,
@@ -127,16 +135,48 @@ export function RvTripsApp() {
   const [pack, setPack] = useState(DEMO_PACK);
   const [navArmed, setNavArmed] = useState(false);
   const [navStepIdx, setNavStepIdx] = useState(0);
+  const shellNav = useShellNavOptional();
 
-  const [year, setYear] = useState("");
-  const [make, setMake] = useState("");
-  const [model, setModel] = useState("");
-  const [floorplan, setFloorplan] = useState("");
+  const bootSeed = useMemo(() => {
+    try {
+      const savedUnit = loadLatestSavedUnit();
+      return resolveTripsProfileSeed({
+        locked: loadLockedProfile(),
+        activeCoach: readActiveCoach(),
+        savedCoach: savedUnit
+          ? {
+              year: savedUnit.year,
+              make: savedUnit.make,
+              model: savedUnit.model,
+              floorplan: savedUnit.floorplan,
+              rvType: savedUnit.data?.type ?? undefined,
+            }
+          : null,
+      });
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const [year, setYear] = useState(bootSeed?.profile.year ?? "");
+  const [make, setMake] = useState(bootSeed?.profile.make ?? "");
+  const [model, setModel] = useState(bootSeed?.profile.model ?? "");
+  const [floorplan, setFloorplan] = useState(bootSeed?.profile.floorplan ?? "");
   const [sheet, setSheet] = useState<SheetId>(null);
   const { gen: catalogGen } = useCatalogReady();
 
-  const [draft, setDraft] = useState<CoachProfile>(EMPTY_COACH_PROFILE);
-  const [locked, setLocked] = useState<CoachProfile | null>(null);
+  const [draft, setDraft] = useState<CoachProfile>(
+    bootSeed?.profile ?? EMPTY_COACH_PROFILE,
+  );
+  const [locked, setLocked] = useState<CoachProfile | null>(
+    bootSeed?.source === "locked" ? bootSeed.profile : null,
+  );
+  const [seedSource, setSeedSource] = useState<CoachSeedSource | null>(
+    bootSeed?.source ?? null,
+  );
+  const lastAutoKeyRef = useRef(
+    bootSeed ? coachIdentityKey(bootSeed.profile) : "",
+  );
 
   const [originText, setOriginText] = useState("");
   const [destText, setDestText] = useState("");
@@ -161,17 +201,54 @@ export function RvTripsApp() {
   const [dumpState, setDumpState] = useState<string | null>(null);
   const [dumpFocusId, setDumpFocusId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const saved = loadLockedProfile();
-    if (saved) {
-      setLocked(saved);
-      setYear(saved.year);
-      setMake(saved.make);
-      setModel(saved.model);
-      setFloorplan(saved.floorplan);
-      setDraft(saved);
-    }
+  const applySeedIdentity = useCallback((p: CoachProfile, source: CoachSeedSource) => {
+    lastAutoKeyRef.current = coachIdentityKey(p);
+    setYear(p.year);
+    setMake(p.make);
+    setModel(p.model);
+    setFloorplan(p.floorplan);
+    setDraft(p);
+    setSeedSource(source);
   }, []);
+
+  useEffect(() => {
+    const facts = readActiveCoach();
+    const savedUnit = loadLatestSavedUnit();
+    const resolved = resolveTripsProfileSeed({
+      locked: loadLockedProfile(),
+      activeCoach: facts,
+      savedCoach: savedUnit
+        ? {
+            year: savedUnit.year,
+            make: savedUnit.make,
+            model: savedUnit.model,
+            floorplan: savedUnit.floorplan,
+            rvType: savedUnit.data?.type ?? undefined,
+          }
+        : null,
+    });
+    if (!resolved) return;
+    applySeedIdentity(resolved.profile, resolved.source);
+    if (resolved.source === "locked") setLocked(resolved.profile);
+  }, [applySeedIdentity]);
+
+  useEffect(() => {
+    if (locked || loadLockedProfile()) return;
+    const coach = shellNav?.activeCoach;
+    if (!coach?.year || !coach.make || !coach.model) return;
+    const key = coachIdentityKey(coach);
+    if (key === lastAutoKeyRef.current) return;
+    const suggested = suggestCoachFromSelection({
+      year: coach.year,
+      make: coach.make,
+      model: coach.model,
+      floorplan: coach.floorplan || "",
+      gvwrLbs: coach.gvwrLbs,
+      uvwLbs: coach.uvwLbs,
+      rvType: coach.rvType,
+    });
+    applySeedIdentity({ ...suggested, seedSource: "facts" }, "facts");
+  }, [shellNav?.activeCoach, locked, applySeedIdentity]);
 
   const makes = useMemo(() => getMakesForYear(year), [year, catalogGen]);
   const models = useMemo(
@@ -184,19 +261,17 @@ export function RvTripsApp() {
     [year, make, model, catalogGen],
   );
 
+  const factsWeights = useMemo(
+    () => ({
+      gvwrLbs: shellNav?.activeCoach?.gvwrLbs,
+      uvwLbs: shellNav?.activeCoach?.uvwLbs,
+      rvType: shellNav?.activeCoach?.rvType,
+    }),
+    [shellNav?.activeCoach],
+  );
+
   useEffect(() => {
-    if (!year || !make || !model || !floorplan) {
-      setDraft((prev) => ({
-        ...EMPTY_COACH_PROFILE,
-        year,
-        make,
-        model,
-        floorplan,
-        heightFt: floorplan ? prev.heightFt : 0,
-        lengthFt: floorplan ? prev.lengthFt : 0,
-        widthFt: floorplan ? prev.widthFt : 0,
-        weightLbs: floorplan ? prev.weightLbs : 0,
-      }));
+    if (!year || !make || !model) {
       return;
     }
     const suggested = suggestCoachFromSelection({
@@ -204,6 +279,9 @@ export function RvTripsApp() {
       make,
       model,
       floorplan,
+      gvwrLbs: factsWeights.gvwrLbs,
+      uvwLbs: factsWeights.uvwLbs,
+      rvType: factsWeights.rvType,
     });
     setDraft((prev) => {
       if (
@@ -218,31 +296,38 @@ export function RvTripsApp() {
           type: suggested.type,
           engine: suggested.engine,
           fuelType: suggested.fuelType,
+          dimSources: prev.dimSources ?? suggested.dimSources,
         };
       }
-      return { ...suggested, locked: false };
+      return {
+        ...suggested,
+        locked: false,
+        seedSource: seedSource ?? suggested.seedSource ?? "manual",
+      };
     });
-  }, [year, make, model, floorplan, catalogGen]);
+  }, [year, make, model, floorplan, catalogGen, factsWeights, seedSource]);
+
+  const displayCoach = locked ?? (coachIsReady(draft) ? draft : null);
 
   const restriction = useMemo(
     () =>
       analyzeRouteRestrictions({
-        coach: locked,
+        coach: displayCoach,
         route: osrm,
         hasRoute: Boolean(originPlace && destPlace && osrm),
         destLabel: destPlace?.label || route.destination.label,
         originLabel: originPlace?.label || route.origin.label,
       }),
-    [locked, osrm, originPlace, destPlace, route.destination.label, route.origin.label],
+    [displayCoach, osrm, originPlace, destPlace, route.destination.label, route.origin.label],
   );
   const alerts = restriction.alerts;
 
   const coachLine = useMemo(() => {
-    if (!locked) return "Profile tab · year · make · model · floorplan";
-    const y = locked.year ? `${locked.year} ` : "";
-    const fp = locked.floorplan ? ` · ${locked.floorplan}` : "";
-    return `${y}${locked.make} ${locked.model}${fp} · ${locked.heightFt}′H · ${locked.lengthFt}′L`;
-  }, [locked]);
+    if (!displayCoach) return "Route without a profile — or add your coach";
+    const y = displayCoach.year ? `${displayCoach.year} ` : "";
+    const fp = displayCoach.floorplan ? ` · ${displayCoach.floorplan}` : "";
+    return `${y}${displayCoach.make} ${displayCoach.model}${fp} · ${displayCoach.heightFt}′H · ${displayCoach.lengthFt}′L`;
+  }, [displayCoach]);
 
   const speakNav = useCallback((text: string) => {
     try {
@@ -462,22 +547,25 @@ export function RvTripsApp() {
 
   const lockProfile = () => {
     if (!profileIsComplete(draft)) return;
-    const next = { ...draft, locked: true as const };
+    const next = { ...draft, locked: true as const, seedSource: "locked" as const };
     setLocked(next);
+    setSeedSource("locked");
+    lastAutoKeyRef.current = coachIdentityKey(next);
     saveLockedProfile(next);
   };
 
   const unlockProfile = () => {
     setLocked(null);
     clearLockedProfile();
+    setSeedSource(seedSource === "locked" ? "manual" : seedSource);
   };
 
   const applySaferRoute = async () => {
-    if (!originPlace || !destPlace || !locked) return;
+    if (!originPlace || !destPlace || !displayCoach) return;
     setSaferBusy(true);
     setSaferNote(null);
     try {
-      const safer = saferOsrmParams(locked);
+      const safer = saferOsrmParams(displayCoach);
       const data = await fetchOsrmRoute({
         from: { lng: originPlace.lng, lat: originPlace.lat },
         to: { lng: destPlace.lng, lat: destPlace.lat },
@@ -550,7 +638,17 @@ export function RvTripsApp() {
   };
   const hasRoutePoints = Boolean(originPlace && destPlace);
   const canLock = profileIsComplete(draft) && !locked;
-  const dimsReady = Boolean(floorplan && draft.lengthFt > 0);
+  const dimsReady = Boolean((year && make && model) || draft.lengthFt > 0);
+  const dimsEstimated = anyDimEstimated(draft.dimSources);
+  const profileBadge = locked
+    ? "PROFILE LOCKED"
+    : displayCoach
+      ? seedSource === "facts"
+        ? "FROM FACTS"
+        : seedSource === "saved"
+          ? "FROM SAVED"
+          : "COACH READY"
+      : "ADD PROFILE";
 
   return (
     <div
@@ -597,11 +695,13 @@ export function RvTripsApp() {
                   "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide",
                   locked
                     ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
-                    : "border-amber/40 bg-amber/15 text-amber",
+                    : displayCoach
+                      ? "border-sky-400/40 bg-sky-500/15 text-sky-200"
+                      : "border-white/25 bg-white/10 text-white/85",
                 )}
               >
                 {locked ? <Lock className="size-3" /> : <Unlock className="size-3" />}
-                {locked ? "PROFILE LOCKED" : "SET PROFILE"}
+                {profileBadge}
               </span>
               <span className="text-[9px] font-bold uppercase tracking-wide text-blue">
                 {routeStatus === "live"
@@ -655,8 +755,13 @@ export function RvTripsApp() {
                 RV PROFILE
               </h2>
               <p className="text-[12px] text-white">
-                Year → make → model → floorplan, then adjust length/weight and
-                lock for map alerts.
+                {seedSource === "facts"
+                  ? "Filled from your Facts coach. Edit dims if your door sticker differs, then lock for map alerts."
+                  : seedSource === "saved"
+                    ? "Filled from a saved coach. Edit dims if needed, then lock for map alerts."
+                    : seedSource === "locked"
+                      ? "Locked for this device. Unlock to change coach or override dims."
+                      : "Optional. Pick a coach or leave blank — routing still works."}
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <FieldBtn
@@ -687,15 +792,28 @@ export function RvTripsApp() {
                 <div className="grid grid-cols-2 gap-2">
                   {(
                     [
-                      ["heightFt", "Height (ft)"],
-                      ["lengthFt", "Length (ft)"],
-                      ["widthFt", "Width (ft)"],
-                      ["weightLbs", "Weight (lbs)"],
+                      ["heightFt", "Height (ft)", "height"],
+                      ["lengthFt", "Length (ft)", "length"],
+                      ["widthFt", "Width (ft)", "width"],
+                      ["weightLbs", "Weight (lbs)", "weight"],
                     ] as const
-                  ).map(([key, label]) => (
+                  ).map(([key, label, dim]) => (
                     <label key={key} className="block">
                       <span className="mb-1 block text-[10px] font-bold text-white">
                         {label}
+                        {draft.dimSources?.[dim] === "estimate" ? (
+                          <span className="ml-1 font-semibold text-amber">
+                            · estimate
+                          </span>
+                        ) : draft.dimSources?.[dim] === "brochure" ? (
+                          <span className="ml-1 font-semibold text-emerald-300">
+                            · brochure
+                          </span>
+                        ) : draft.dimSources?.[dim] === "facts" ? (
+                          <span className="ml-1 font-semibold text-sky-200">
+                            · facts
+                          </span>
+                        ) : null}
                       </span>
                       <input
                         type="number"
@@ -713,9 +831,16 @@ export function RvTripsApp() {
                 </div>
               ) : (
                 <p className="text-[12px] text-white">
-                  Pick floorplan to unlock dimension fields.
+                  Year, make, and model unlock dimension fields. Floorplan is
+                  optional when catalog dims are already known.
                 </p>
               )}
+              {dimsReady && dimsEstimated ? (
+                <p className="text-[11px] leading-snug text-amber">
+                  Estimate = class or floorplan heuristic — confirm door sticker.
+                  Brochure / Facts numbers stay labeled as such.
+                </p>
+              ) : null}
               {locked ? (
                 <button
                   type="button"
@@ -742,35 +867,25 @@ export function RvTripsApp() {
           {/* ── NAVIGATE ── */}
           {sub === "navigate" ? (
             <>
-              {!locked ? (
-                <button
-                  type="button"
-                  onClick={() => setSub("profile")}
-                  className="glass-prestige flex w-full items-center gap-3 rounded-[1.15rem] px-3.5 py-3 text-left"
-                >
-                  <User className="size-5 text-amber" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-bold text-white">
-                      Set your RV profile first
-                    </p>
-                    <p className="text-[11px] text-white">
-                      Optional for routing — required for height/length alerts
-                    </p>
-                  </div>
-                  <ChevronRight className="size-5 text-white" />
-                </button>
-              ) : (
+              {displayCoach ? (
                 <div className="glass-prestige flex items-center gap-3 rounded-[1.15rem] px-3.5 py-3">
-                  <Lock className="size-4 text-emerald-300" />
+                  {locked ? (
+                    <Lock className="size-4 text-emerald-300" />
+                  ) : (
+                    <User className="size-4 text-sky-200" />
+                  )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-bold text-white">
-                      {locked.year} {locked.make} {locked.model}
-                      {locked.floorplan ? ` · ${locked.floorplan}` : ""}
+                      {displayCoach.year} {displayCoach.make} {displayCoach.model}
+                      {displayCoach.floorplan ? ` · ${displayCoach.floorplan}` : ""}
                     </p>
                     <p className="text-[11px] text-white">
-                      {locked.heightFt}′ H · {locked.lengthFt}′ L ·{" "}
-                      {locked.widthFt}′ W ·{" "}
-                      {locked.weightLbs.toLocaleString()} lbs
+                      {displayCoach.heightFt}′ H · {displayCoach.lengthFt}′ L ·{" "}
+                      {displayCoach.widthFt}′ W ·{" "}
+                      {displayCoach.weightLbs.toLocaleString()} lbs
+                      {anyDimEstimated(displayCoach.dimSources)
+                        ? " · some estimates"
+                        : ""}
                     </p>
                   </div>
                   <button
@@ -781,6 +896,24 @@ export function RvTripsApp() {
                     Edit
                   </button>
                 </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setSub("profile")}
+                  className="glass-prestige flex w-full items-center gap-3 rounded-[1.15rem] px-3.5 py-3 text-left"
+                >
+                  <User className="size-5 text-white/80" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-bold text-white">
+                      Add an RV profile?
+                    </p>
+                    <p className="text-[11px] text-white">
+                      Optional — route anyway. Profile unlocks height/length
+                      alerts.
+                    </p>
+                  </div>
+                  <ChevronRight className="size-5 text-white" />
+                </button>
               )}
 
               <section className="glass-prestige space-y-2.5 rounded-[1.25rem] p-3.5">
@@ -1124,12 +1257,12 @@ export function RvTripsApp() {
                 </p>
               ) : null}
 
-              {locked && originPlace && destPlace && osrm ? (
+              {displayCoach && originPlace && destPlace && osrm ? (
                 <div className="space-y-2">
                   {alerts.length === 0 ? (
                     <p className="rounded-xl border border-emerald-400/35 bg-emerald-500/10 px-3 py-2.5 text-[12px] text-white">
                       {restriction.summary ||
-                        "No route-specific restrictions for this locked profile."}
+                        "No route-specific restrictions for this coach."}
                     </p>
                   ) : (
                     <AlertsBlock alerts={alerts} />
@@ -1193,11 +1326,12 @@ export function RvTripsApp() {
                 CAMPGROUNDS
               </h2>
               <p className="text-[12px] text-white">
-                Sample pads near popular corridors — filter by your locked
+                Sample pads near popular corridors — filter by your coach
                 length when set.
               </p>
               {DEMO_CAMPS.filter(
-                (c) => !locked || c.maxLengthFt >= locked.lengthFt,
+                (c) =>
+                  !displayCoach || c.maxLengthFt >= displayCoach.lengthFt,
               ).map((c) => (
                 <div
                   key={c.id}
@@ -1462,15 +1596,20 @@ export function RvTripsApp() {
               setMake("");
               setModel("");
               setFloorplan("");
+              setSeedSource("manual");
+              setDraft({ ...EMPTY_COACH_PROFILE, year: v, seedSource: "manual" });
             } else if (sheet === "make") {
               setMake(v);
               setModel("");
               setFloorplan("");
+              setSeedSource("manual");
             } else if (sheet === "model") {
               setModel(v);
               setFloorplan("");
+              setSeedSource("manual");
             } else {
               setFloorplan(v);
+              setSeedSource((s) => s ?? "manual");
             }
             setSheet(null);
           }}

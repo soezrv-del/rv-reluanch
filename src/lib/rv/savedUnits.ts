@@ -73,3 +73,22 @@ export function toggleSavedUnit<T extends SavedUnitLike>(
   }
   return [{ ...result, saved: true }, ...saved].slice(0, SAVED_UNITS_CAP);
 }
+
+/** Most recently saved Facts unit (list is newest-first). */
+export function loadLatestSavedUnit(): SavedUnitLike | null {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(SAVED_UNITS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    for (const row of parsed) {
+      if (!row || typeof row !== "object") continue;
+      const u = row as SavedUnitLike;
+      if (u.year && u.make && u.model) return u;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}

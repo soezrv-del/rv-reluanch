@@ -1,6 +1,6 @@
 /**
  * Route-aware RV restriction analysis.
- * Only fires with a coach profile AND a calculated route.
+ * Fires with a known coach (Facts / saved / locked) AND a calculated route.
  */
 
 import type { TripAlert } from "@/lib/trips/tripData";
@@ -44,8 +44,8 @@ function stepMatches(steps: OsrmStep[], re: RegExp): boolean {
 }
 
 /**
- * Analyze live OSRM route against locked coach dimensions.
- * Returns empty if no locked profile or no route.
+ * Analyze live OSRM route against known coach dimensions.
+ * Returns empty if the coach has no usable dims or there is no route.
  */
 export function analyzeRouteRestrictions(opts: {
   coach: CoachProfile | null;
@@ -61,9 +61,7 @@ export function analyzeRouteRestrictions(opts: {
   };
 
   const coach = opts.coach;
-  // Only locked profiles feed restriction analysis
-  if (!coach?.locked) return empty;
-  if (!coach.make || !coach.lengthFt || !coach.heightFt) return empty;
+  if (!coach?.make || !coach.lengthFt || !coach.heightFt) return empty;
   if (!opts.hasRoute || !opts.route) return empty;
 
   const route = opts.route;
