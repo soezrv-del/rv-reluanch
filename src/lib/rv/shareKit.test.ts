@@ -224,6 +224,23 @@ test("auto rate flash only when term/down actually changes the schedule APR", ()
   assert.equal(RATE_UPDATED_FLASH, "rate updated");
 });
 
+test("Share kit send attaches the bottom card as a PNG file", () => {
+  const ui = readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../../components/rvshare/RvShareApp.tsx",
+    ),
+    "utf8",
+  );
+  assert.match(src, /buildShareKitPayload/);
+  assert.match(src, /captureShareCardFile/);
+  assert.match(src, /shareOrCopy/);
+  assert.match(ui, /captureShareCardFile\(\s*shareCardRef\.current/);
+  assert.match(ui, /buildShareKitPayload\(\{/);
+  assert.match(ui, /cardFile/);
+  assert.match(ui, /data-report-signature="1"/);
+});
+
 test("payment calculator field order is price → down → term → rate → est", () => {
   const ui = readFileSync(
     join(

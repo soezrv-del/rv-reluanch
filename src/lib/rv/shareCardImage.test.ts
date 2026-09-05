@@ -1,0 +1,315 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  buildShareKitPayload,
+  defaultShareCardContact,
+  elementLooksLikeShareCard,
+  hardenShareImageFile,
+  imageFileFromBytes,
+  isShareImageFile,
+  normalizeShareImageMeta,
+  paintShareSignatureCard,
+  shareDataAttempts,
+  shareOrCopy,
+  SHARE_CARD_FILENAME,
+  SHARE_CARD_MIME,
+} from "./shareCardImage.ts";
+import {
+  REPORT_CONTACT_NAME,
+  REPORT_CONTACT_PHONE,
+} from "./reportContact.ts";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const ui = readFileSync(
+  join(here, "../../components/rvshare/RvShareApp.tsx"),
+  "utf8",
+);
+const kit = readFileSync(join(here, "shareKit.ts"), "utf8");
+
+/** 1×1 PNG — real image bytes, not a canvas URL or HTML. */
+const MINI_PNG = Uint8Array.from(
+  atob(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  ),
+  (c) => c.charCodeAt(0),
+);
+
+function cardFile(name = SHARE_CARD_FILENAME) {
+  return imageFileFromBytes(MINI_PNG, name, SHARE_CARD_MIME);
+}
+
+test("share payload includes a real PNG when the card is present", () => {
+  const payload = buildShareKitPayload({
+    title: "2024 Newmar Essex 4551",
+    text: "RvFOX · Powered by Grok\n\nSUMMARY\nFlagship diesel.",
+    cardFile: cardFile("Essex-card.png"),
+  });
+  assert.equal(payload.files.length, 1);
+  const file = payload.files[0]!;
+  assert.equal(file.type, "image/png");
+  assert.match(file.name, /\.png$/i);
+  assert.ok(file.size >= 32);
+  assert.equal(file.name.includes("blob:"), false);
+  assert.doesNotMatch(file.type, /html|octet-stream/i);
+  assert.match(payload.text, /SUMMARY/);
+});
+
+test("share payload omits the card file when the card is absent", () => {
+  const payload = buildShareKitPayload({
+    title: "2024 Newmar Essex",
+    text: "kit",
+    cardFile: null,
+  });
+  assert.equal(payload.files.length, 0);
+  assert.equal(payload.text, "kit");
+});
+
+test("HTML and empty blobs are never treated as the card image", () => {
+  const html = new File(["<html><body>card</body></html>"], "card.html", {
+    type: "text/html",
+  });
+  const empty = new File([], "empty.png", { type: "image/png" });
+  const payload = buildShareKitPayload({
+    title: "x",
+    text: "y",
+    cardFile: html,
+    extraFiles: [empty],
+  });
+  assert.equal(payload.files.length, 0);
+  assert.equal(isShareImageFile(html), false);
+  assert.equal(isShareImageFile(empty), false);
+});
+
+test("lifestyle JPEG can ride along after the card PNG", () => {
+  const jpeg = new File([MINI_PNG], "coach-lifestyle.jpg", {
+    type: "image/jpeg",
+  });
+  const payload = buildShareKitPayload({
+    title: "coach",
+    text: "kit",
+    cardFile: cardFile(),
+    extraFiles: [jpeg],
+  });
+  assert.equal(payload.files.length, 2);
+  assert.equal(payload.files[0]!.type, "image/png");
+  assert.equal(payload.files[1]!.type, "image/jpeg");
+});
+
+test("share attempts always keep the image file — never text-only", () => {
+  const files = [cardFile()];
+  const attempts = shareDataAttempts({
+    title: "2024 Newmar Essex",
+    text: "long kit text",
+    files,
+  });
+  assert.ok(attempts.length >= 2);
+  for (const attempt of attempts) {
+    assert.ok(attempt.files?.length);
+    assert.equal(attempt.files![0]!.type, "image/png");
+  }
+  assert.equal(
+    attempts.some((a) => a.text && !a.files?.length),
+    false,
+  );
+});
+
+test("text-only attempt is used only when no image file exists", () => {
+  const attempts = shareDataAttempts({
+    title: "RvFOX Pro",
+    text: "suite pitch",
+    files: [],
+  });
+  assert.deepEqual(attempts, [{ title: "RvFOX Pro", text: "suite pitch" }]);
+});
+
+test("hardenShareImageFile rewrites bytes into a named image File", async () => {
+  const raw = new File([MINI_PNG], "card", { type: "image/png" });
+  const file = await hardenShareImageFile(raw);
+  assert.ok(file);
+  assert.equal(file.type, "image/png");
+  assert.match(file.name, /\.png$/);
+  assert.ok(file.size >= 32);
+  assert.equal(normalizeShareImageMeta(raw)?.type, "image/png");
+});
+
+test("hardenShareImageFile rejects HTML attachments", async () => {
+  const html = new File(["<html></html>"], "report.html", {
+    type: "text/html",
+  });
+  assert.equal(await hardenShareImageFile(html), null);
+  assert.equal(normalizeShareImageMeta(html), null);
+});
+
+test("painted card matches the in-app signature (name + phone)", () => {
+  const texts: string[] = [];
+  const ctx = {
+    save() {},
+    restore() {},
+    fillRect() {},
+    beginPath() {},
+    moveTo() {},
+    arcTo() {},
+    closePath() {},
+    fill() {},
+    fillStyle: "",
+    font: "",
+    textAlign: "left",
+    textBaseline: "alphabetic",
+    fillText(text: string) {
+      texts.push(text);
+    },
+    measureText(text: string) {
+      return { width: String(text).length * 10 };
+    },
+  };
+  paintShareSignatureCard(
+    ctx as unknown as CanvasRenderingContext2D,
+    1200,
+    460,
+    defaultShareCardContact(),
+  );
+  const joined = texts.join("");
+  assert.match(joined, new RegExp(REPORT_CONTACT_NAME));
+  assert.match(joined, new RegExp(REPORT_CONTACT_PHONE.replace(/-/g, "\\-")));
+  assert.match(joined, /FOX/);
+  assert.match(joined.replace(/\s+/g, ""), /KNOWBEFOREYOUBUY/);
+  assert.match(joined, /RvFOX · Powered by Grok/);
+});
+
+test("live card node is the capture target — same preview, real file on send", () => {
+  assert.match(ui, /data-report-signature="1"/);
+  assert.match(ui, /shareCardRef/);
+  assert.match(ui, /captureShareCardFile/);
+  assert.match(ui, /buildShareKitPayload/);
+  assert.match(ui, /cardFile/);
+  assert.doesNotMatch(
+    ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const copyOnly")),
+    /files: files\.length \? files : undefined/,
+  );
+});
+
+test("shareOrCopy no longer drops files on a text-only Messages fallback", () => {
+  const card = readFileSync(join(here, "shareCardImage.ts"), "utf8");
+  assert.match(kit, /shareOrCopy/);
+  assert.match(kit, /buildShareKitPayload/);
+  assert.match(card, /shareDataAttempts/);
+  assert.match(card, /hardenShareImageFile/);
+  assert.match(card, /downloadShareFile/);
+  assert.match(card, /return "downloaded"/);
+  assert.doesNotMatch(
+    card,
+    /const textOnly: ShareData = \{ title: opts\.title, text: opts\.text \}/,
+  );
+});
+
+test("shareOrCopy passes a real PNG in files[] when the card is present", async () => {
+  const shared: ShareData[] = [];
+  const prior = globalThis.navigator;
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      share: async (data: ShareData) => {
+        shared.push(data);
+      },
+      canShare: () => true,
+      clipboard: { writeText: async () => {} },
+    },
+  });
+  try {
+    const payload = buildShareKitPayload({
+      title: "2024 Newmar Essex",
+      text: "RvFOX · Powered by Grok\nSUMMARY",
+      cardFile: cardFile("Essex-card.png"),
+    });
+    const out = await shareOrCopy(payload);
+    assert.equal(out, "shared");
+    assert.equal(shared.length, 1);
+    const files = shared[0]!.files as File[] | undefined;
+    assert.ok(files?.length);
+    assert.equal(files![0]!.type, "image/png");
+    assert.match(files![0]!.name, /\.png$/);
+    assert.ok(files![0]!.size >= 32);
+  } finally {
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: prior,
+    });
+  }
+});
+
+test("shareOrCopy downloads the PNG instead of sending text-only when files cannot share", async () => {
+  const shared: ShareData[] = [];
+  const downloaded: string[] = [];
+  const prior = globalThis.navigator;
+  const priorDoc = globalThis.document;
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      share: async (data: ShareData) => {
+        shared.push(data);
+      },
+      canShare: (data?: ShareData) => !data?.files?.length,
+      clipboard: { writeText: async () => {} },
+    },
+  });
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    value: {
+      createElement: (tag: string) => {
+        if (tag === "a") {
+          return {
+            href: "",
+            download: "",
+            rel: "",
+            style: { display: "" },
+            click() {
+              downloaded.push(this.download || "file");
+            },
+          };
+        }
+        return { style: {}, setAttribute() {}, select() {}, remove() {} };
+      },
+      body: { appendChild() {} },
+    },
+  });
+  try {
+    const out = await shareOrCopy({
+      title: "Essex",
+      text: "kit",
+      files: [cardFile()],
+    });
+    assert.equal(out, "downloaded");
+    assert.equal(shared.length, 0);
+    assert.ok(downloaded.length >= 1);
+    assert.match(downloaded[0]!, /\.png$/);
+  } finally {
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: prior,
+    });
+    Object.defineProperty(globalThis, "document", {
+      configurable: true,
+      value: priorDoc,
+    });
+  }
+});
+
+test("elementLooksLikeShareCard requires the on-screen signature card", () => {
+  const el = {
+    getAttribute: (name: string) =>
+      name === "data-report-signature" ? "1" : null,
+    textContent: `Prepared by ${REPORT_CONTACT_NAME} ${REPORT_CONTACT_PHONE}`,
+  };
+  assert.equal(elementLooksLikeShareCard(el as unknown as Element), true);
+  assert.equal(elementLooksLikeShareCard(null), false);
+  assert.equal(
+    elementLooksLikeShareCard({
+      getAttribute: () => "1",
+      textContent: "empty",
+    } as unknown as Element),
+    false,
+  );
+});
