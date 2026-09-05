@@ -40,6 +40,15 @@ test("share kit strips Confirm brochure placeholders instead of printing them", 
   assert.match(policy, /confirm brochure/i);
 });
 
+test("share kit requires per-price picks instead of dumping the market stack", () => {
+  assert.match(src, /marketLines/);
+  assert.match(src, /buildShareMarketSection/);
+  assert.doesNotMatch(
+    src,
+    /Trade-in est\. \$\{formatMoney\(market\.tradeIn\)\} · Retail/,
+  );
+});
+
 test("kit footer is a prepared-by signature", () => {
   assert.match(src, /REPORT_CONTACT_KICKER/);
   assert.match(src, /REPORT_CONTACT_NAME/);

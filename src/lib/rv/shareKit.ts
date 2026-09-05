@@ -18,24 +18,37 @@ import { mediaForRvType } from "@/assets/typeMedia";
 import { REPORT_CONTACT_KICKER, REPORT_CONTACT_NAME, REPORT_CONTACT_PHONE } from "./reportContact";
 import { getVerifiedDossier } from "./verifiedCatalogCache";
 import {
+  buildShareMarketSection,
   customerFacingPitch,
+  DEFAULT_SHARE_MARKET_LINES,
   effectiveShareInclude,
   isShareableValue,
   isSharePlaceholder,
   type ShareInclude,
+  type ShareMarketLines,
   type ShareSpecGroupId,
 } from "./shareCardPolicy";
 
 export {
+  buildShareMarketSection,
   customerFacingPitch,
   DEFAULT_SHARE_INCLUDE,
+  DEFAULT_SHARE_MARKET_LINES,
   effectiveShareInclude,
+  formatShareMarketText,
   hasOptionalShareSections,
+  hasSelectedMarketLines,
   isShareableValue,
   isSharePlaceholder,
   OPTIONAL_SHARE_KEYS,
+  SHARE_MARKET_LINE_DEFS,
 } from "./shareCardPolicy";
-export type { ShareInclude, ShareSpecGroupId } from "./shareCardPolicy";
+export type {
+  ShareInclude,
+  ShareMarketLineId,
+  ShareMarketLines,
+  ShareSpecGroupId,
+} from "./shareCardPolicy";
 
 export const SAVED_UNITS_KEY = "rvfax_saved_v1";
 export const SAVED_UNITS_EVENT = "rvfax-saved-changed";
@@ -385,6 +398,7 @@ export function buildCoachKit(opts: {
   include: ShareInclude;
   payment?: SharePayment;
   market?: ShareMarket;
+  marketLines?: ShareMarketLines;
   strengths?: string[];
   rating?: number;
   summary?: BrochureSummary;
@@ -394,6 +408,7 @@ export function buildCoachKit(opts: {
   const lines: string[] = [];
   const title = coachTitle(r);
   const market = opts.market ?? defaultMarketFor(r);
+  const marketLines = opts.marketLines ?? DEFAULT_SHARE_MARKET_LINES;
   const snap = coachSnapshot(r, opts.rating);
   const summary = opts.summary ?? brochureSummary(r);
 
@@ -418,11 +433,11 @@ export function buildCoachKit(opts: {
   }
 
   if (include.market) {
-    lines.push("");
-    lines.push("MARKET");
-    lines.push(
-      `Trade-in est. ${formatMoney(market.tradeIn)} · Retail ${formatMoney(market.retailLow)} – ${formatMoney(market.retailHigh)}`,
-    );
+    const marketBlock = buildShareMarketSection(market, marketLines, formatMoney);
+    if (marketBlock.length) {
+      lines.push("");
+      lines.push(...marketBlock);
+    }
   }
 
   if (include.payment && payment && payment.price > 0) {

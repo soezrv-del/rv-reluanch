@@ -40,18 +40,23 @@ import {
   brochureSummary,
   lifestylePitch,
   DEFAULT_SHARE_INCLUDE,
+  DEFAULT_SHARE_MARKET_LINES,
   defaultMarketFor,
   defaultPaymentFor,
   fetchShareImage,
   hasOptionalShareSections,
+  hasSelectedMarketLines,
   kitStrengths,
   lifestyleImageFor,
   loadSavedUnits,
   paymentBreakdown,
   SAVED_UNITS_EVENT,
+  SHARE_MARKET_LINE_DEFS,
   shareOrCopy,
   type ShareInclude,
   type ShareMarket,
+  type ShareMarketLineId,
+  type ShareMarketLines,
   type SharePayment,
 } from "@/lib/rv/shareKit";
 import {
@@ -84,16 +89,55 @@ function MoneyField({
   label,
   value,
   onChange,
+  shareOn,
+  onShareToggle,
+  shareName,
 }: {
   label: string;
   value: number;
   onChange: (n: number) => void;
+  shareOn?: boolean;
+  onShareToggle?: () => void;
+  shareName?: string;
 }) {
+  const pickName = shareName || label.toLowerCase();
   return (
-    <label className="block">
-      <span className="mb-1 block text-[9px] font-bold tracking-wide text-white/70">
-        {label}
-      </span>
+    <div
+      className={cn(
+        "rounded-[var(--radius-md)]",
+        onShareToggle && shareOn && "ring-1 ring-sky-300/35",
+      )}
+    >
+      <div
+        className={cn(
+          "mb-1 flex items-center justify-between gap-1",
+          onShareToggle && "min-h-11",
+        )}
+      >
+        <span className="text-[9px] font-bold tracking-wide text-white/70">
+          {label}
+        </span>
+        {onShareToggle ? (
+          <button
+            type="button"
+            aria-pressed={!!shareOn}
+            aria-label={shareOn ? `Remove ${pickName}` : `Include ${pickName}`}
+            onClick={onShareToggle}
+            className={cn(
+              "inline-flex size-11 shrink-0 items-center justify-center rounded-full border",
+              shareOn
+                ? "border-sky-300/40 bg-sky-400/15 text-sky-50"
+                : "border-white/20 bg-white/5 text-white/70",
+            )}
+          >
+            {shareOn ? (
+              <Minus className="size-4" aria-hidden />
+            ) : (
+              <Plus className="size-4" aria-hidden />
+            )}
+          </button>
+        ) : null}
+      </div>
       <input
         aria-label={label}
         inputMode="numeric"
@@ -101,7 +145,7 @@ function MoneyField({
         onChange={(e) => onChange(parseMoney(e.target.value))}
         className="glass-field min-h-11 w-full rounded-[var(--radius-md)] px-2.5 py-2.5 text-[13px] font-bold tabular-nums text-white outline-none [color-scheme:dark]"
       />
-    </label>
+    </div>
   );
 }
 
@@ -310,6 +354,9 @@ export function RvShareApp({
     msrpLo: 0,
     msrpHi: 0,
   });
+  const [marketLines, setMarketLines] = useState<ShareMarketLines>(
+    DEFAULT_SHARE_MARKET_LINES,
+  );
   const [status, setStatus] = useState<string | null>(null);
   const [strengthDraft, setStrengthDraft] = useState<string[]>([]);
   const [strengthsLocked, setStrengthsLocked] = useState(false);
@@ -360,6 +407,7 @@ export function RvShareApp({
     if (!selected) return;
     setPayment(defaultPaymentFor(selected));
     setMarketEdit(defaultMarketFor(selected));
+    setMarketLines(DEFAULT_SHARE_MARKET_LINES);
     setStrengthsLocked(false);
     setRatingEdit(null);
   }, [selected]);
@@ -403,6 +451,7 @@ export function RvShareApp({
     [selected],
   );
   const fallbackExtras = !hasOptionalShareSections(include);
+  const marketNeedsPick = include.market && !hasSelectedMarketLines(marketLines);
 
   const kitText = useMemo(() => {
     if (!selected) return "";
@@ -411,11 +460,21 @@ export function RvShareApp({
       include,
       payment,
       market: marketEdit,
+      marketLines,
       strengths: strengthDraft,
       rating: ratingValue,
       summary,
     });
-  }, [selected, include, payment, marketEdit, strengthDraft, ratingValue, summary]);
+  }, [
+    selected,
+    include,
+    payment,
+    marketEdit,
+    marketLines,
+    strengthDraft,
+    ratingValue,
+    summary,
+  ]);
 
   const loan = useMemo(() => paymentBreakdown(payment), [payment]);
 
@@ -430,6 +489,10 @@ export function RvShareApp({
 
   const sendKit = async () => {
     if (!selected || !kitText) return;
+    if (marketNeedsPick) {
+      flash("Pick which prices to share");
+      return;
+    }
     void hapticLight();
     const files: File[] = [];
     if (include.lifestyle) {
@@ -459,6 +522,10 @@ export function RvShareApp({
 
   const copyOnly = async () => {
     if (!kitText) return;
+    if (marketNeedsPick) {
+      flash("Pick which prices to share");
+      return;
+    }
     void hapticLight();
     const out = await copyKit(kitText);
     if (out === "copied") {
@@ -661,8 +728,9 @@ export function RvShareApp({
 
                 {fallbackExtras ? (
                   <p className="rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-[11px] leading-relaxed text-white/80">
-                    No extras selected — Market and Payment are added so the
-                    card stays useful. Tap + to choose exactly what goes out.
+                    No extras selected — Payment is added so the card stays
+                    useful. Tap + to choose exactly what goes out. Market stays
+                    off until you pick prices.
                   </p>
                 ) : null}
 
@@ -688,42 +756,39 @@ export function RvShareApp({
                   on={include.market}
                   onToggle={() => toggleSection("market")}
                 >
-                  <div className="grid grid-cols-2 gap-2">
-                    <MoneyField
-                      label="TRADE-IN EST."
-                      value={marketEdit.tradeIn}
-                      onChange={(tradeIn) =>
-                        setMarketEdit((m) => ({ ...m, tradeIn }))
-                      }
-                    />
-                    <MoneyField
-                      label="RETAIL LOW"
-                      value={marketEdit.retailLow}
-                      onChange={(retailLow) =>
-                        setMarketEdit((m) => ({ ...m, retailLow }))
-                      }
-                    />
-                    <MoneyField
-                      label="RETAIL HIGH"
-                      value={marketEdit.retailHigh}
-                      onChange={(retailHigh) =>
-                        setMarketEdit((m) => ({ ...m, retailHigh }))
-                      }
-                    />
-                    <MoneyField
-                      label="MSRP LOW"
-                      value={marketEdit.msrpLo}
-                      onChange={(msrpLo) =>
-                        setMarketEdit((m) => ({ ...m, msrpLo }))
-                      }
-                    />
-                    <MoneyField
-                      label="MSRP HIGH"
-                      value={marketEdit.msrpHi}
-                      onChange={(msrpHi) =>
-                        setMarketEdit((m) => ({ ...m, msrpHi }))
-                      }
-                    />
+                  <div className="space-y-2">
+                    {marketNeedsPick ? (
+                      <p
+                        className="rounded-[var(--radius-md)] border border-amber/35 bg-amber/10 px-3 py-2 text-[11px] leading-relaxed text-amber"
+                        role="status"
+                      >
+                        Pick which prices to share — nothing is sent until you
+                        tap + on a line.
+                      </p>
+                    ) : null}
+                    <div className="grid grid-cols-2 gap-2">
+                      {SHARE_MARKET_LINE_DEFS.map((def) => {
+                        const id = def.id as ShareMarketLineId;
+                        return (
+                          <MoneyField
+                            key={id}
+                            label={def.fieldLabel}
+                            shareName={def.name}
+                            value={marketEdit[id]}
+                            onChange={(amount) =>
+                              setMarketEdit((m) => ({ ...m, [id]: amount }))
+                            }
+                            shareOn={marketLines[id]}
+                            onShareToggle={() =>
+                              setMarketLines((prev) => ({
+                                ...prev,
+                                [id]: !prev[id],
+                              }))
+                            }
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
                 </SectionToggle>
 
