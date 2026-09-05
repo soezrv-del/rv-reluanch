@@ -7,6 +7,7 @@ import type { RVResult } from "./catalog";
 import { estimateMarket, getSpec, ratingFor } from "./catalog";
 import { buildBrochureSpecs, type BrochureSpecs } from "./brochureSpecs";
 import {
+  hydrateSavedCoachList as hydrateSavedCoachListFromLookup,
   hydrateShareCoachResult as hydrateShareCoachFromLookup,
   type ShareCatalogLookup,
 } from "./shareCoachHydrate";
@@ -68,6 +69,14 @@ export function hydrateShareCoachResult(
   return hydrateShareCoachFromLookup(result, lookup);
 }
 
+/** Facts + Share saved-list load: merge live catalog onto each frozen snapshot. */
+export function hydrateSavedCoachList(
+  units: RVResult[],
+  lookup: ShareCatalogLookup = getSpec,
+): RVResult[] {
+  return hydrateSavedCoachListFromLookup(units, lookup);
+}
+
 export {
   buildShareMarketSection,
   customerFacingPitch,
@@ -124,7 +133,8 @@ export function loadSavedUnits(): RVResult[] {
     const raw = localStorage.getItem(SAVED_UNITS_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? (parsed as RVResult[]) : [];
+    if (!Array.isArray(parsed)) return [];
+    return hydrateSavedCoachList(parsed as RVResult[]);
   } catch {
     return [];
   }

@@ -11,6 +11,7 @@ import {
 import type { RVResult } from "@/lib/rv/catalog";
 import { buildCompareReport, compareSelectionKey, type CompareCell, type CompareReport, type LiveMap } from "@/lib/rv/compare";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
+import { hydrateShareCoachResult } from "@/lib/rv/shareKit";
 import { fetchLiveDossier, peekVerifiedDossier } from "@/lib/rv/liveDossier";
 
 
@@ -68,7 +69,8 @@ export function RvCompare({
     if (Object.keys(seed).length) setLiveMap(seed);
 
     Promise.all(
-      items.slice(0, 3).map(async (r) => {
+      items.slice(0, 3).map(async (raw) => {
+        const r = hydrateShareCoachResult(raw);
         const br = buildBrochureSpecs(
           r.data,
           r.year,

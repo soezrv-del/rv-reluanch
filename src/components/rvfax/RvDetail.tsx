@@ -25,6 +25,7 @@ import {
   sourcedFloorplansByYear,
   yearsWithSourcedFloorplans,
   ratingFor,
+  useCatalogReady,
 } from "@/lib/rv/catalog";
 import {
   bestCalPrice,
@@ -67,7 +68,7 @@ import { fetchRecallsViaApi } from "@/lib/nhtsa/recalls";
 import type { NhtsaComplaint, NhtsaRecall } from "@/lib/nhtsa/recalls";
 import { buildReportId, valueFactors } from "@/lib/rv/reportMeta";
 import { exportVehicleReport } from "@/lib/rv/exportReport";
-import { kitStrengths, lifestylePitch } from "@/lib/rv/shareKit";
+import { hydrateShareCoachResult, kitStrengths, lifestylePitch } from "@/lib/rv/shareKit";
 import {
   fetchLocalInventory,
   loadInventoryZip,
@@ -112,7 +113,12 @@ export function RvDetail({
   onOpenCompare?: () => void;
   onAskGrok: () => void;
 }) {
-  const { data, year, make, model, floorplan } = result;
+  const { ready: catalogReady } = useCatalogReady();
+  const coach = useMemo(
+    () => hydrateShareCoachResult(result),
+    [result, catalogReady],
+  );
+  const { data, year, make, model, floorplan } = coach;
   const catalogMarket = estimateMarket(data, year, floorplan);
   const rating = ratingFor(make, model, year);
   const ratingMeta = useMemo(

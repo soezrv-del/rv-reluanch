@@ -279,8 +279,11 @@ test("floorplan picker copy does not imply currency on a no-year browse", () => 
   assert.doesNotMatch(fax, /Available for this coach/);
   assert.match(fax, /not a current-year lineup/);
   assert.match(fax, /yearsForFloorplanCode/);
-  assert.match(fax, /JSON\.parse\(raw\) as RVResult\[\]/);
-  assert.match(fax, /applySel\(cascadeFromResult\(r\)\);\s*setDetail\(r\)/);
+  assert.match(fax, /loadSavedUnits\(\)/);
+  assert.match(
+    fax,
+    /applySel\(cascadeFromResult\(r\)\);\s*setDetail\(hydrateShareCoachResult\(r\)\)/,
+  );
 });
 
 test("suggest.ts offers catalog alternatives for parent models missing a year lineup", () => {
