@@ -95,15 +95,15 @@ export const SHARE_MARKET_LINE_DEFS: {
   },
   {
     id: "msrpLo",
-    shareLabel: "MSRP low",
+    shareLabel: "MSRP",
     fieldLabel: "MSRP LOW",
-    name: "MSRP low",
+    name: "MSRP",
   },
   {
     id: "msrpHi",
-    shareLabel: "MSRP high",
-    fieldLabel: "MSRP HIGH",
-    name: "MSRP high",
+    shareLabel: "MSRP",
+    fieldLabel: "MSRP",
+    name: "MSRP",
   },
 ];
 
@@ -153,6 +153,65 @@ export function formatShareMarketText(
   money: (n: number) => string,
 ): string {
   return buildShareMarketSection(market, lines, money).join("\n");
+}
+
+/**
+ * Payment calculator quick-pills. One MSRP only — the high / asking figure
+ * (`msrpHi`), labeled "MSRP", never "MSRP low" / "MSRP high".
+ */
+export function sharePaymentPricePills(
+  market: ShareMarketAmounts,
+  money: (n: number) => string,
+): { value: number; label: string }[] {
+  const mid =
+    market.retailLow > 0 && market.retailHigh > 0
+      ? Math.round((market.retailLow + market.retailHigh) / 2)
+      : 0;
+  const uniq = new Map<number, string>();
+  if (market.tradeIn > 0) {
+    uniq.set(market.tradeIn, `Trade ${money(market.tradeIn)}`);
+  }
+  if (market.retailLow > 0) {
+    uniq.set(market.retailLow, `Low ${money(market.retailLow)}`);
+  }
+  if (mid > 0) {
+    uniq.set(mid, `Mid ${money(mid)}`);
+  }
+  if (market.retailHigh > 0) {
+    uniq.set(market.retailHigh, `Ask ${money(market.retailHigh)}`);
+  }
+  if (market.msrpHi > 0) {
+    uniq.set(market.msrpHi, `MSRP ${money(market.msrpHi)}`);
+  }
+  return [...uniq.entries()].map(([value, label]) => ({ value, label }));
+}
+
+export const RATE_UPDATED_FLASH_MS = 1000;
+export const RATE_UPDATED_FLASH = "rate updated";
+
+export type SharePaymentTermDown = {
+  apr: number;
+  downPct: number;
+  termMonths: number;
+};
+
+/**
+ * Apply a down / term change and the schedule APR for that term.
+ * `autoRateChanged` is true only when the schedule rate differs from the
+ * prior APR — not on first mount, not on a manual rate edit.
+ */
+export function sharePaymentAfterTermDown<T extends SharePaymentTermDown>(
+  payment: T,
+  patch: { downPct?: number; termMonths?: number },
+  scheduleApr: (termMonths: number) => number,
+): { next: T; autoRateChanged: boolean } {
+  const termMonths = patch.termMonths ?? payment.termMonths;
+  const downPct = patch.downPct ?? payment.downPct;
+  const nextApr = scheduleApr(termMonths);
+  return {
+    next: { ...payment, downPct, termMonths, apr: nextApr },
+    autoRateChanged: nextApr !== payment.apr,
+  };
 }
 
 /** Zero extras → header + Summary + Payment. Never inject a Market dump. */

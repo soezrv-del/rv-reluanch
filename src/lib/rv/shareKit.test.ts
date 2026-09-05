@@ -12,6 +12,11 @@ import {
   hasOptionalShareSections,
   hasSelectedMarketLines,
   isSharePlaceholder,
+  RATE_UPDATED_FLASH,
+  RATE_UPDATED_FLASH_MS,
+  SHARE_MARKET_LINE_DEFS,
+  sharePaymentAfterTermDown,
+  sharePaymentPricePills,
 } from "./shareCardPolicy.ts";
 
 const src = readFileSync(
@@ -155,4 +160,89 @@ test("kit writes only picked market lines — no trade+retail dump", () => {
     src,
     /Trade-in est\. \$\{formatMoney\(market\.tradeIn\)\} · Retail/,
   );
+});
+
+test("shared and selected MSRP lines say MSRP — not low/high", () => {
+  const lo = SHARE_MARKET_LINE_DEFS.find((d) => d.id === "msrpLo");
+  const hi = SHARE_MARKET_LINE_DEFS.find((d) => d.id === "msrpHi");
+  assert.equal(lo?.shareLabel, "MSRP");
+  assert.equal(hi?.shareLabel, "MSRP");
+  assert.equal(hi?.fieldLabel, "MSRP");
+  assert.doesNotMatch(lo!.shareLabel, /low|high/i);
+  assert.doesNotMatch(hi!.shareLabel, /low|high/i);
+  const text = formatShareMarketText(
+    SAMPLE_MARKET,
+    { ...DEFAULT_SHARE_MARKET_LINES, msrpHi: true },
+    money,
+  );
+  assert.match(text, /^MARKET\nMSRP \$280000$/);
+  assert.doesNotMatch(text, /MSRP high|MSRP low/);
+});
+
+test("calculator pills use one MSRP from the high/asking figure", () => {
+  const pills = sharePaymentPricePills(SAMPLE_MARKET, money);
+  const msrp = pills.filter((p) => /^MSRP\b/.test(p.label));
+  assert.equal(msrp.length, 1);
+  assert.equal(msrp[0]?.value, SAMPLE_MARKET.msrpHi);
+  assert.doesNotMatch(msrp[0]!.label, /low|high/i);
+  assert.equal(
+    pills.some((p) => p.value === SAMPLE_MARKET.msrpLo && /^MSRP\b/.test(p.label)),
+    false,
+  );
+});
+
+const scheduleApr = (termMonths: number) => (termMonths <= 180 ? 7.99 : 8.49);
+
+test("auto rate flash only when term/down actually changes the schedule APR", () => {
+  const base = { price: 220000, downPct: 10, termMonths: 180, apr: 7.99 };
+  const sameDown = sharePaymentAfterTermDown(base, { downPct: 20 }, scheduleApr);
+  assert.equal(sameDown.next.downPct, 20);
+  assert.equal(sameDown.next.apr, 7.99);
+  assert.equal(sameDown.autoRateChanged, false);
+
+  const bump = sharePaymentAfterTermDown(base, { termMonths: 240 }, scheduleApr);
+  assert.equal(bump.next.apr, 8.49);
+  assert.equal(bump.next.termMonths, 240);
+  assert.equal(bump.autoRateChanged, true);
+
+  const sameTerm = sharePaymentAfterTermDown(
+    base,
+    { termMonths: 180 },
+    scheduleApr,
+  );
+  assert.equal(sameTerm.autoRateChanged, false);
+
+  const customThenDown = sharePaymentAfterTermDown(
+    { ...base, apr: 6.5 },
+    { downPct: 15 },
+    scheduleApr,
+  );
+  assert.equal(customThenDown.next.apr, 7.99);
+  assert.equal(customThenDown.autoRateChanged, true);
+
+  assert.equal(RATE_UPDATED_FLASH_MS, 1000);
+  assert.equal(RATE_UPDATED_FLASH, "rate updated");
+});
+
+test("payment calculator field order is price → down → term → rate → est", () => {
+  const ui = readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../../components/rvshare/RvShareApp.tsx",
+    ),
+    "utf8",
+  );
+  const pay = ui.slice(ui.indexOf('title="PAYMENT"'));
+  const price = pay.indexOf('label="PRICE"');
+  const down = pay.indexOf("DOWN");
+  const term = pay.indexOf("TERM");
+  const rate = pay.indexOf('label="INTEREST RATE"');
+  const est = pay.indexOf("EST. / MO");
+  assert.ok(price >= 0 && down >= 0 && term >= 0 && rate >= 0 && est >= 0);
+  assert.ok(price < down);
+  assert.ok(down < term);
+  assert.ok(term < rate);
+  assert.ok(rate < est);
+  assert.match(pay, /RATE_UPDATED_FLASH/);
+  assert.match(pay, /sharePaymentPricePills/);
 });
