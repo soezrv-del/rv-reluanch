@@ -51,6 +51,8 @@ import {
   kitStrengths,
   lifestyleImageFor,
   loadSavedUnits,
+  peekCachedShareImage,
+  prefetchShareImages,
   paymentBreakdown,
   RATE_UPDATED_FLASH,
   RATE_UPDATED_FLASH_MS,
@@ -72,6 +74,7 @@ import {
   REPORT_CONTACT_PHONE,
   REPORT_CONTACT_TEL,
 } from "@/lib/rv/reportContact";
+import { LIFESTYLE_SHARE_URLS } from "@/assets/typeMedia";
 
 function sampleCoach(): RVResult | null {
   const spec = getSpec("Newmar", "Essex");
@@ -373,6 +376,7 @@ export function RvShareApp({
   const [rateUpdated, setRateUpdated] = useState(false);
   const rateFlashTimer = useRef<number | null>(null);
   const shareCardRef = useRef<HTMLDivElement>(null);
+  const cardFileRef = useRef<File | null>(null);
 
   const reloadSaved = useCallback(() => {
     setSaved(loadSavedUnits());
@@ -394,6 +398,10 @@ export function RvShareApp({
   useEffect(() => {
     if (active) reloadSaved();
   }, [active, reloadSaved]);
+
+  useEffect(() => {
+    prefetchShareImages(LIFESTYLE_SHARE_URLS);
+  }, []);
 
   const sample = useMemo(() => sampleCoach(), [catalogReady]);
 
@@ -443,6 +451,25 @@ export function RvShareApp({
       ),
     );
   }, [selected, include.payment, include.rating, payment, strengthsLocked, ratingValue]);
+
+  useEffect(() => {
+    if (!selected) {
+      cardFileRef.current = null;
+      return;
+    }
+    const slug = coachTitle(selected).replace(/[^\w.-]+/g, "_") || "RvFOX";
+    const url = lifestyleImageFor(
+      selected.data.type,
+      selected.data.fuelType,
+      selected.data.chassis,
+    );
+    void fetchShareImage(url, `${slug}-lifestyle.jpg`);
+    const painted = captureShareCardFile(
+      shareCardRef.current,
+      `${slug}-card.png`,
+    );
+    if (painted) cardFileRef.current = painted;
+  }, [selected]);
 
   const priceOptions = useMemo(
     () => sharePaymentPricePills(marketEdit, formatMoney),
@@ -537,16 +564,24 @@ export function RvShareApp({
     const slug = coachTitle(selected).replace(/[^\w.-]+/g, "_") || "RvFOX";
     const extraFiles: File[] = [];
     if (include.lifestyle) {
-      const img = await fetchShareImage(
-        lifestyleImageFor(selected.data.type, selected.data.fuelType, selected.data.chassis),
-        `${slug}-lifestyle.jpg`,
+      const url = lifestyleImageFor(
+        selected.data.type,
+        selected.data.fuelType,
+        selected.data.chassis,
       );
-      if (img) extraFiles.push(img);
+      const img = peekCachedShareImage(url);
+      if (img) {
+        extraFiles.push(
+          new File([img], `${slug}-lifestyle.jpg`, {
+            type: img.type || "image/jpeg",
+          }),
+        );
+      }
     }
-    const cardFile = await captureShareCardFile(
-      shareCardRef.current,
-      `${slug}-card.png`,
-    );
+    const cardFile =
+      cardFileRef.current ||
+      captureShareCardFile(shareCardRef.current, `${slug}-card.png`);
+    if (cardFile) cardFileRef.current = cardFile;
     const payload = buildShareKitPayload({
       title: coachTitle(selected),
       text: kitText,

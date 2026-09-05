@@ -239,6 +239,12 @@ test("Share kit send attaches the bottom card as a PNG file", () => {
   assert.match(ui, /buildShareKitPayload\(\{/);
   assert.match(ui, /cardFile/);
   assert.match(ui, /data-report-signature="1"/);
+  const send = ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const copyOnly"));
+  assert.match(send, /include\.lifestyle/);
+  assert.match(send, /peekCachedShareImage/);
+  assert.match(send, /extraFiles/);
+  assert.doesNotMatch(send, /await fetchShareImage/);
+  assert.doesNotMatch(send, /await captureShareCardFile/);
 });
 
 test("payment calculator field order is price → down → term → rate → est", () => {

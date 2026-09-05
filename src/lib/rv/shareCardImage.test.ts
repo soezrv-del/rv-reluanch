@@ -5,6 +5,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   buildShareKitPayload,
+  canShareSaysYes,
+  coerceShareImageType,
   defaultShareCardContact,
   elementLooksLikeShareCard,
   hardenShareImageFile,
@@ -14,6 +16,7 @@ import {
   paintShareSignatureCard,
   shareDataAttempts,
   shareOrCopy,
+  toShareData,
   SHARE_CARD_FILENAME,
   SHARE_CARD_MIME,
 } from "./shareCardImage.ts";
@@ -191,22 +194,25 @@ test("live card node is the capture target — same preview, real file on send",
   );
 });
 
-test("shareOrCopy no longer drops files on a text-only Messages fallback", () => {
+test("shareOrCopy prefers the native sheet and does not gate on canShare", () => {
   const card = readFileSync(join(here, "shareCardImage.ts"), "utf8");
   assert.match(kit, /shareOrCopy/);
   assert.match(kit, /buildShareKitPayload/);
   assert.match(card, /shareDataAttempts/);
-  assert.match(card, /hardenShareImageFile/);
+  assert.match(card, /hardenShareImageFileSync/);
+  assert.match(card, /canShareSaysYes/);
   assert.match(card, /downloadShareFile/);
   assert.match(card, /return "downloaded"/);
+  assert.doesNotMatch(card, /if \(!canShareData\(nav\.canShare, data\)\) continue/);
   assert.doesNotMatch(
     card,
-    /const textOnly: ShareData = \{ title: opts\.title, text: opts\.text \}/,
+    /if \(hardened\.length && !attempt\.text\) \{\s*await copyKit/,
   );
 });
 
-test("shareOrCopy passes a real PNG in files[] when the card is present", async () => {
+test("share path prefers navigator.share with files when canShare is true", async () => {
   const shared: ShareData[] = [];
+  const copied: string[] = [];
   const prior = globalThis.navigator;
   Object.defineProperty(globalThis, "navigator", {
     configurable: true,
@@ -215,7 +221,11 @@ test("shareOrCopy passes a real PNG in files[] when the card is present", async 
         shared.push(data);
       },
       canShare: () => true,
-      clipboard: { writeText: async () => {} },
+      clipboard: {
+        writeText: async (text: string) => {
+          copied.push(text);
+        },
+      },
     },
   });
   try {
@@ -232,6 +242,7 @@ test("shareOrCopy passes a real PNG in files[] when the card is present", async 
     assert.equal(files![0]!.type, "image/png");
     assert.match(files![0]!.name, /\.png$/);
     assert.ok(files![0]!.size >= 32);
+    assert.equal(copied.length, 0);
   } finally {
     Object.defineProperty(globalThis, "navigator", {
       configurable: true,
@@ -240,11 +251,10 @@ test("shareOrCopy passes a real PNG in files[] when the card is present", async 
   }
 });
 
-test("shareOrCopy downloads the PNG instead of sending text-only when files cannot share", async () => {
+test("shareOrCopy still opens the sheet with files when canShare({files}) is false", async () => {
   const shared: ShareData[] = [];
-  const downloaded: string[] = [];
+  const copied: string[] = [];
   const prior = globalThis.navigator;
-  const priorDoc = globalThis.document;
   Object.defineProperty(globalThis, "navigator", {
     configurable: true,
     value: {
@@ -252,7 +262,83 @@ test("shareOrCopy downloads the PNG instead of sending text-only when files cann
         shared.push(data);
       },
       canShare: (data?: ShareData) => !data?.files?.length,
+      clipboard: {
+        writeText: async (text: string) => {
+          copied.push(text);
+        },
+      },
+    },
+  });
+  try {
+    const jpeg = new File([MINI_PNG], "coach-lifestyle.jpg", {
+      type: "image/jpeg",
+    });
+    const payload = buildShareKitPayload({
+      title: "Essex",
+      text: "kit",
+      cardFile: cardFile(),
+      extraFiles: [jpeg],
+    });
+    const out = await shareOrCopy(payload);
+    assert.equal(out, "shared");
+    assert.equal(shared.length, 1);
+    const files = shared[0]!.files as File[] | undefined;
+    assert.equal(files?.length, 2);
+    assert.equal(files![0]!.type, "image/png");
+    assert.equal(files![1]!.type, "image/jpeg");
+    assert.equal(copied.length, 0);
+  } finally {
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: prior,
+    });
+  }
+});
+
+test("shareOrCopy still shares when canShare throws", async () => {
+  const shared: ShareData[] = [];
+  const prior = globalThis.navigator;
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      share: async (data: ShareData) => {
+        shared.push(data);
+      },
+      canShare: () => {
+        throw new Error("canShare exploded");
+      },
       clipboard: { writeText: async () => {} },
+    },
+  });
+  try {
+    const out = await shareOrCopy({
+      title: "Essex",
+      text: "kit",
+      files: [cardFile()],
+    });
+    assert.equal(out, "shared");
+    assert.ok((shared[0]!.files as File[])?.length);
+  } finally {
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: prior,
+    });
+  }
+});
+
+test("clipboard-only / download is last-resort when navigator.share is missing", async () => {
+  const downloaded: string[] = [];
+  const copied: string[] = [];
+  const prior = globalThis.navigator;
+  const priorDoc = globalThis.document;
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      clipboard: {
+        writeText: async (text: string) => {
+          copied.push(text);
+        },
+      },
     },
   });
   Object.defineProperty(globalThis, "document", {
@@ -282,9 +368,9 @@ test("shareOrCopy downloads the PNG instead of sending text-only when files cann
       files: [cardFile()],
     });
     assert.equal(out, "downloaded");
-    assert.equal(shared.length, 0);
     assert.ok(downloaded.length >= 1);
     assert.match(downloaded[0]!, /\.png$/);
+    assert.deepEqual(copied, ["kit"]);
   } finally {
     Object.defineProperty(globalThis, "navigator", {
       configurable: true,
@@ -295,6 +381,64 @@ test("shareOrCopy downloads the PNG instead of sending text-only when files cann
       value: priorDoc,
     });
   }
+});
+
+test("lifestyle JPEG is in files[] when the lifestyle section is on", () => {
+  const jpeg = new File([MINI_PNG], "coach-lifestyle.jpg", {
+    type: "image/jpeg",
+  });
+  const on = buildShareKitPayload({
+    title: "coach",
+    text: "kit",
+    cardFile: cardFile(),
+    extraFiles: [jpeg],
+  });
+  const off = buildShareKitPayload({
+    title: "coach",
+    text: "kit",
+    cardFile: cardFile(),
+    extraFiles: [],
+  });
+  assert.equal(on.files.length, 2);
+  assert.equal(on.files[1]!.name, "coach-lifestyle.jpg");
+  assert.equal(off.files.length, 1);
+  assert.equal(off.files[0]!.type, "image/png");
+  assert.match(ui, /include\.lifestyle/);
+  assert.match(ui, /peekCachedShareImage/);
+  assert.match(ui, /prefetchShareImages/);
+  assert.match(
+    ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const copyOnly")),
+    /extraFiles/,
+  );
+});
+
+test("octet-stream lifestyle JPEG is still a shareable image file", () => {
+  const raw = new File([MINI_PNG], "fifth-wheel-lifestyle.jpg", {
+    type: "application/octet-stream",
+  });
+  assert.equal(coerceShareImageType(raw.type, raw.name), "image/jpeg");
+  assert.equal(isShareImageFile(raw), true);
+  const payload = buildShareKitPayload({
+    title: "coach",
+    text: "kit",
+    extraFiles: [raw],
+  });
+  assert.equal(payload.files.length, 1);
+  assert.match(payload.files[0]!.name, /\.jpe?g$/i);
+});
+
+test("canShareSaysYes is a hint — missing or throw is not a no", () => {
+  const data: ShareData = { title: "x", text: "y", files: [cardFile()] };
+  assert.equal(canShareSaysYes(undefined, data), true);
+  assert.equal(canShareSaysYes(() => true, data), true);
+  assert.equal(canShareSaysYes(() => false, data), false);
+  assert.equal(
+    canShareSaysYes(() => {
+      throw new Error("nope");
+    }, data),
+    false,
+  );
+  assert.ok(toShareData({ title: "t", files: [cardFile()] }).files?.length);
 });
 
 test("elementLooksLikeShareCard requires the on-screen signature card", () => {
