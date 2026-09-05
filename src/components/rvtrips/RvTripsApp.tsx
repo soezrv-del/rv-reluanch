@@ -788,7 +788,7 @@ export function RvTripsApp() {
   const emptyVia = vias.find((v) => !v.place);
 
   const pickChip = (hit: PlaceHit) => {
-    if (emptyVia) {
+    if (destPlace && emptyVia) {
       setVias((rows) =>
         rows.map((v) =>
           v.id === emptyVia.id ? { ...v, text: hit.label, place: hit } : v,
@@ -1269,7 +1269,7 @@ export function RvTripsApp() {
                 ) : null}
 
                 <div className="flex flex-wrap gap-1.5">
-                  {(emptyVia ? PLAN_VIA_CHIPS : PLAN_DEST_CHIPS).map((chip) => (
+                  {(destPlace && emptyVia ? PLAN_VIA_CHIPS : PLAN_DEST_CHIPS).map((chip) => (
                     <button
                       key={chip.label}
                       type="button"
