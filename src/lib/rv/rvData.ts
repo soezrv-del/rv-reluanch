@@ -18907,7 +18907,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Reflection: {
       type: "Fifth Wheel",
-      floorplans: ["27RL", "28BH", "29RS", "303RLS", "311BHS", "31MB", "320MKS", "323BHS", "324MBS", "337RLS", "340RDS", "341RDS", "357BHS", "360FLS", "362TBS", "367BHS", "370FLS"],
+      floorplans: ["27RL", "28BH", "29RS", "303RLS", "311BHS", "31MB", "320MKS", "323BHS", "324MBS", "337RLS", "340RDS", "341RDS", "350RDS", "357BHS", "360FLS", "362TBS", "367BHS", "370FLS"],
       floorplansByYear: {
         // RVUSA 2013 Reflection — no dated family card. Omit (do not keep thin sample invent).
         // RVUSA 2014 Reflection (m4966-y2014) exists but prints no extractable floorplan list — omit.
@@ -18943,10 +18943,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2025": ["303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "360FLS", "362TBS", "367BHS"],
         // OEM Reflection Brochure (2026 MODEL YEAR, REV 2.24.26) — same FW codes. TT codes live on Reflection Travel Trailer.
         "2026": ["303RLS", "311BHS", "320MKS", "324MBS", "337RLS", "360FLS", "362TBS", "367BHS"],
-        // RVUSA 2027 Reflection FW year pages only (no complete family extract this slice):
-        // 303RLS | 311BHS | 324MBS | 337RLS. No leftover 320MKS / 360FLS / 362TBS / 367BHS.
-        // No 310RL / 350RDS (RV-Pro Open House names — omit until family card lists them).
-        "2027": ["303RLS", "311BHS", "324MBS", "337RLS"]
+        // RVUSA 2027 Reflection spec-by-model (m4966-y2027; FW + TT on one family card).
+        // FW rows: 303RLS | 311BHS | 324MBS | 337RLS | 350RDS | 360FLS | 362TBS | 367BHS
+        // TT *TS stay on Reflection Travel Trailer. No leftover 320MKS. No 310RL (RV-Pro only).
+        "2027": ["303RLS", "311BHS", "324MBS", "337RLS", "350RDS", "360FLS", "362TBS", "367BHS"]
       },
       lengthRange: [28, 42],
       weightRange: [7500, 13000],
@@ -18981,8 +18981,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2025": ["296RDTS", "297RSTS", "310MKTS", "312BHTS", "315RLTS", "322FKTS", "345RLTS"],
         // OEM Reflection Brochure (2026 MODEL YEAR): 317RSTS | 322FKTS | 342BHTS | 345RLTS
         "2026": ["317RSTS", "322FKTS", "342BHTS", "345RLTS"],
-        // RVUSA 2027 Reflection TT year pages: 317RSTS | 345RLTS. No leftover 322FKTS / 342BHTS.
-        "2027": ["317RSTS", "345RLTS"]
+        // RVUSA 2027 Reflection spec-by-model (m4966-y2027) TT *TS rows:
+        // 317RSTS | 322FKTS | 342BHTS | 345RLTS. Same four as MY26.
+        "2027": ["317RSTS", "322FKTS", "342BHTS", "345RLTS"]
       },
       lengthRange: [35, 39],
       weightRange: [8500, 11000],
@@ -19071,9 +19072,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2025": ["260RD", "270BN", "295RL", "298BH"],
         // OEM Reflection Brochure (2026 MODEL YEAR): 250ML | 260RD | 270BN | 280RL | 298BH
         "2026": ["250ML", "260RD", "270BN", "280RL", "298BH"],
-        // RVUSA 2027 Reflection 150 year pages only (no complete family extract this slice):
-        // 250ML | 260RD. No leftover 270BN / 280RL / 298BH.
-        "2027": ["250ML", "260RD"]
+        // RVUSA 2027 Reflection 150 spec-by-model (m6654-y2027):
+        // 250ML | 260RD | 270BN | 298BH. No leftover 280RL (MY26-only on this card).
+        "2027": ["250ML", "260RD", "270BN", "298BH"]
       },
       lengthRange: [22, 35],
       weightRange: [5500, 9500],
@@ -19303,8 +19304,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2025": ["151BH", "151RB", "161BH", "171RB"],
         // OEM Transcend Brochure (2026 MODEL YEAR): 131DL | 151BH | 151RB | 161BH | 161DB
         "2026": ["131DL", "151BH", "151RB", "161BH", "161DB"],
-        // RVUSA 2027 Transcend One year pages: 151BH | 151RB | 161BH | 161DB. No leftover 131DL.
-        "2027": ["151BH", "151RB", "161BH", "161DB"]
+        // RVUSA 2027 Transcend One spec-by-model (m10276-y2027):
+        // 131DL | 151BH | 151RB | 161BH | 161DB. Same five as MY26. No 121RBL (classified / Open House).
+        "2027": ["131DL", "151BH", "151RB", "161BH", "161DB"]
       },
       lengthRange: [16, 24],
       weightRange: [2800, 5000],
@@ -19348,10 +19350,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2025": ["20MKX", "22RBX", "23BHX", "24BHX", "25MLX", "26BHX", "26RBX", "27DBX"],
         // OEM Transcend Brochure (2026 MODEL YEAR): adds 19BHX + 21RLX
         "2026": ["19BHX", "20MKX", "21RLX", "22RBX", "23BHX", "24BHX", "25MLX", "26BHX", "26RBX", "27DBX"],
-        // RVUSA 2027 Transcend Xplor year pages only (no complete family extract this slice):
-        // 19BHX | 20MKX | 22RBX | 23BHX | 24BHX | 26BHX.
-        // No leftover 21RLX / 25MLX / 26RBX / 27DBX. No 18FQX (RV-Pro — omit until family card).
-        "2027": ["19BHX", "20MKX", "22RBX", "23BHX", "24BHX", "26BHX"]
+        // RVUSA 2027 Transcend Xplor spec-by-model (m6849-y2027):
+        // 19BHX | 20MKX | 21RLX | 22RBX | 23BHX | 24BHX | 25MLX | 26BHX | 26RBX | 27DBX
+        // Same ten as MY26. No 18FQX (RV-Pro Open House — omit until family card lists it).
+        "2027": ["19BHX", "20MKX", "21RLX", "22RBX", "23BHX", "24BHX", "25MLX", "26BHX", "26RBX", "27DBX"]
       },
       lengthRange: [19, 32],
       weightRange: [4500, 7200],
@@ -19377,7 +19379,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Momentum: {
       type: "Toy Hauler",
-      floorplans: ["349M", "376TH", "376THS", "395M", "395MS", "395MT", "396DB", "397TH", "397THS", "399M", "399TH", "410TH", "414M"],
+      floorplans: ["344M", "349M", "351MS", "376TH", "376THS", "381MS", "392M", "395M", "395MS", "395MT", "396DB", "397TH", "397THS", "399M", "399TH", "410TH", "414M"],
       floorplansByYear: {
         // RVUSA Momentum flagship (m4965) first complete family card is MY2018 — omit 2014–2017 (2015/2017 pages print no extractable list).
         // RVUSA 2018 Momentum spec-by-model (m4965-y2018): 376TH | 397TH | 399TH
@@ -19404,7 +19406,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // OEM 2025-Grand-Design-Momentum flagship FW (not M-Class 344M/351MS/381MS/392M)
         "2025": ["395MS", "397THS", "410TH", "414M"],
         // OEM Momentum Brochure (2026 MODEL YEAR, REV 2.24.26): 395MT | 396DB | 399M
-        "2026": ["395MT", "396DB", "399M"]
+        "2026": ["395MT", "396DB", "399M"],
+        // RVUSA 2027 Momentum spec-by-model (m4965-y2027): seven codes.
+        // 344M | 351MS | 381MS | 392M | 395MT | 396DB | 399M
+        // m4965 prints the combined flagship card (no separate 2027 M-Class m10874 row).
+        // No leftover 395MS / 410TH / 414M.
+        "2027": ["344M", "351MS", "381MS", "392M", "395MT", "396DB", "399M"]
       },
       lengthRange: [34, 47],
       weightRange: [10000, 20000],
@@ -19519,8 +19526,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2025": ["21G", "23G", "25G", "27G", "28G", "29GS", "30G", "31G"],
         // OEM Momentum Brochure (2026 MODEL YEAR) G-Class TT — drops 23G / 28G / 30G
         "2026": ["21G", "25G", "27G", "29GS", "31G"],
-        // RVUSA 2027 G-Class TT year page: 29GS. No leftover 21G / 25G / 27G / 31G (no 2027 spec cards).
-        "2027": ["29GS"]
+        // RVUSA 2027 Momentum G-Class spec-by-model (m6791-y2027) TT rows:
+        // 21G | 25G | 27G | 29GS | 31G. Same five as MY26. FW *G stay on G-Class Fifth Wheel.
+        "2027": ["21G", "25G", "27G", "29GS", "31G"]
       },
       lengthRange: [21, 36],
       weightRange: [5000, 9500],
@@ -19551,7 +19559,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Momentum G-Class Fifth Wheel": {
       type: "Toy Hauler",
-      floorplans: ["320G", "325G", "350G", "355G", "394G", "415G"],
+      floorplans: ["320G", "325G", "350G", "355G", "363G", "394G", "415G"],
       floorplansByYear: {
         // yearStart 2019 — omit 2020–2023 fby (tight slice; FW codes on mixed G-Class cards stay off TT).
         // First locked G-Class FW card is MY2024.
@@ -19562,8 +19570,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2025": ["320G", "325G", "350G", "415G"],
         // OEM Momentum Brochure (2026 MODEL YEAR): 320G | 325G | 350G | 394G
         "2026": ["320G", "325G", "350G", "394G"],
-        // RVUSA 2027 G-Class FW year pages: 320G | 350G | 394G. No leftover 325G. No 363G (RV-Pro — omit).
-        "2027": ["320G", "350G", "394G"]
+        // RVUSA 2027 Momentum G-Class spec-by-model (m6791-y2027) FW rows:
+        // 320G | 325G | 350G | 363G | 394G. No leftover 355G / 415G.
+        "2027": ["320G", "325G", "350G", "363G", "394G"]
       },
       lengthRange: [36, 45],
       weightRange: [11000, 17000],
@@ -19679,9 +19688,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // OEM Lineage Class C Brochure 2026 MODEL YEAR (Series M also on 2025 Lineage card)
         "2025": ["25FW", "25TK"],
         "2026": ["25FW", "25TK"],
-        // RV-Pro "Model Year 2027: Grand Design" (Sept 3, 2026): 25FW redesign + new 25MD (Sprinter 4500).
-        // Year-labeled 2027 25FW listings (RVUSA classifieds / dealer cards) confirm 25FW still prints.
-        // Do not keep 25TK (no dated 2027 card). RVUSA m10875-y2027 is a Series F leak (31ZW/31ZW5).
+        // STANDING EXCEPTION (source-weak): keep 25FW / 25MD on 2027.
+        // Authority is RV-Pro "Model Year 2027: Grand Design" (Sept 3, 2026) + year-labeled 2027
+        // 25FW dealer / classified listings. No clean RVUSA Specs family card this year —
+        // m10875-y2027 is a Series F leak (31ZW / 31ZW5) and must not be absorbed.
+        // Do not drop 25FW / 25MD unless David/EzMe later requires. No 25TK (no dated 2027 card).
         "2027": ["25FW", "25MD"]
       },
       lengthRange: [25, 26],
@@ -19711,7 +19722,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2025,
       gvwrLbs: 12125,
       overallLengthIn: 308,
-      description: "Grand Design Lineage Series M — Sprinter 4500 2.0 diesel 208/332. MY25–26 25FW / 25TK; MY27 25FW redesign + 25MD (RV-Pro Sept 3, 2026 + year-labeled 2027 25FW listings). Hitch 3,500. Not E-450 gas / not Series F Super C.",
+      description: "Grand Design Lineage Series M — Sprinter 4500 2.0 diesel 208/332. MY25–26 25FW / 25TK; MY27 25FW redesign + 25MD (RV-Pro Sept 3, 2026 + year-labeled 2027 25FW listings — standing exception until RVUSA fixes m10875 Series F leak). Hitch 3,500. Not E-450 gas / not Series F Super C.",
       powertrainByYear: [
         { from: 2025, to: 2027, engine: "Mercedes-Benz 2.0L twin-turbo diesel 208HP", horsepower: 208, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter 4500 (MORryde Halo)", transmission: "9G-Tronic automatic", towingCapacity: 3500, gvwrLbs: 12125, notes: "OEM Class C brochure MY25–26 + RV-Pro MY2027 25MD / year-labeled 2027 25FW: Mercedes 4500 2.0 twin-turbo 208HP / 332 lb-ft. Towing 3,500. GVWR 12,125." },
       ],
