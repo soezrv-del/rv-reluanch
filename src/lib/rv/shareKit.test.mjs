@@ -64,9 +64,10 @@ test("share payload keeps a real card image file for Messages", () => {
   assert.match(src, /buildShareKitPayload/);
   assert.match(src, /captureShareCardFile/);
   assert.match(src, /shareDataAttempts/);
+  assert.match(src, /peekCachedShareImage/);
   assert.doesNotMatch(
     src,
-    /const textOnly: ShareData = \{ title: opts\.title, text: opts\.text \}/,
+    /if \(!canShareData\(nav\.canShare, data\)\) continue/,
   );
   const card = readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), "shareCardImage.ts"),

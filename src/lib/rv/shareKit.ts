@@ -28,18 +28,27 @@ import {
   type ShareMarketLines,
   type ShareSpecGroupId,
 } from "./shareCardPolicy";
+import {
+  coerceShareImageType,
+  hardenShareImageFileSync,
+  isShareImageFile,
+} from "./shareCardImage";
 export {
   buildShareKitPayload,
+  canShareSaysYes,
   captureShareCardFile,
+  coerceShareImageType,
   copyKit,
   downloadShareFile,
   elementLooksLikeShareCard,
   hardenShareImageFile,
+  hardenShareImageFileSync,
   isShareImageFile,
   SHARE_CARD_FILENAME,
   SHARE_CARD_MIME,
   shareDataAttempts,
   shareOrCopy,
+  toShareData,
 } from "./shareCardImage";
 export type { ShareKitPayload, ShareOutcome } from "./shareCardImage";
 
@@ -526,15 +535,43 @@ export function buildSuitePitch(): string {
   return lines.join("\n");
 }
 
+const shareImageCache = new Map<string, File>();
+
+export function peekCachedShareImage(url: string): File | null {
+  return shareImageCache.get(url) ?? null;
+}
+
+export function prefetchShareImages(urls: string[]): void {
+  for (const url of urls) {
+    if (shareImageCache.has(url)) continue;
+    const base = (url.split("?")[0] || "").split("/").pop() || "lifestyle.jpg";
+    void fetchShareImage(url, base);
+  }
+}
+
 export async function fetchShareImage(
   url: string,
   filename: string,
 ): Promise<File | null> {
+  const hit = shareImageCache.get(url);
+  if (hit) return hit;
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
     const blob = await res.blob();
-    return new File([blob], filename, { type: blob.type || "image/jpeg" });
+    const type =
+      coerceShareImageType(blob.type, filename) ||
+      coerceShareImageType(blob.type, url);
+    if (!type) return null;
+    const name = /\.(png|jpe?g|webp)$/i.test(filename)
+      ? filename
+      : `${filename}.${type === "image/jpeg" ? "jpg" : type === "image/webp" ? "webp" : "png"}`;
+    const file = hardenShareImageFileSync(
+      new File([blob], name, { type }),
+    );
+    if (!file || !isShareImageFile(file)) return null;
+    shareImageCache.set(url, file);
+    return file;
   } catch {
     return null;
   }

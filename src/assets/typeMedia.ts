@@ -11,6 +11,9 @@ const LIFESTYLE = {
   classAGas: "/assets/lifestyle/class-a-gas.jpg?v=f53-busfront",
 } as const;
 
+/** Public lifestyle stills — prefetch so Share tap does not await a fetch. */
+export const LIFESTYLE_SHARE_URLS: string[] = Object.values(LIFESTYLE);
+
 /** Fallback card media when type unknown */
 export const RV_CARD_MEDIA = LIFESTYLE.classADiesel;
 

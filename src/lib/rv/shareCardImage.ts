@@ -60,22 +60,36 @@ export function isShareImageMime(type: string): boolean {
   return /^image\/(png|jpeg|webp)$/i.test(type);
 }
 
+/**
+ * Accept a real image, or infer PNG/JPEG/WebP from the filename when the
+ * blob type is empty / generic (static JPEGs often arrive as octet-stream).
+ */
+export function coerceShareImageType(
+  type: string,
+  filename: string,
+): string | null {
+  let t = (type || "").toLowerCase().split(";")[0]!.trim();
+  if (t === "image/jpg") t = "image/jpeg";
+  if (isShareImageMime(t)) return t;
+  const generic =
+    !t || t === "application/octet-stream" || t === "binary/octet-stream";
+  if (!generic) return null;
+  const name = (filename || "").split("?")[0] || "";
+  if (/\.png$/i.test(name)) return "image/png";
+  if (/\.jpe?g$/i.test(name)) return "image/jpeg";
+  if (/\.webp$/i.test(name)) return "image/webp";
+  return null;
+}
+
 export function isShareImageFile(file: File | null | undefined): file is File {
-  if (!file) return false;
-  if (file.size < SHARE_CARD_MIN_BYTES) return false;
-  if (!isShareImageMime(file.type)) return false;
-  return /\.(png|jpe?g|webp)$/i.test(file.name);
+  return !!file && !!normalizeShareImageMeta(file);
 }
 
 export function normalizeShareImageMeta(
   file: File,
 ): { name: string; type: string } | null {
-  let type = (file.type || "").toLowerCase();
-  if (type === "image/jpg") type = "image/jpeg";
-  if (!type && /\.png$/i.test(file.name)) type = "image/png";
-  if (!type && /\.jpe?g$/i.test(file.name)) type = "image/jpeg";
-  if (!type && /\.webp$/i.test(file.name)) type = "image/webp";
-  if (!isShareImageMime(type)) return null;
+  const type = coerceShareImageType(file.type, file.name);
+  if (!type) return null;
   if (file.size < SHARE_CARD_MIN_BYTES) return null;
   const ext =
     type === "image/jpeg" ? "jpg" : type === "image/webp" ? "webp" : "png";
@@ -86,20 +100,24 @@ export function normalizeShareImageMeta(
   return { name: `${base}.${ext}`, type };
 }
 
-/** Rebuild as a real File (ArrayBuffer + image MIME). Blob URLs never leave. */
-export async function hardenShareImageFile(file: File): Promise<File | null> {
+/** Sync rewrite so Share tap can call `navigator.share` as its first await. */
+export function hardenShareImageFileSync(file: File): File | null {
   const meta = normalizeShareImageMeta(file);
   if (!meta) return null;
+  if (file.type === meta.type && file.name === meta.name) return file;
   try {
-    const buf = await file.arrayBuffer();
-    if (buf.byteLength < SHARE_CARD_MIN_BYTES) return null;
-    return new File([buf], meta.name, {
+    return new File([file], meta.name, {
       type: meta.type,
       lastModified: Date.now(),
     });
   } catch {
     return null;
   }
+}
+
+/** Rebuild as a real File (image MIME + .png/.jpg name). Blob URLs never leave. */
+export async function hardenShareImageFile(file: File): Promise<File | null> {
+  return hardenShareImageFileSync(file);
 }
 
 export function imageFileFromBytes(
@@ -144,18 +162,21 @@ export type ShareAttempt = {
 };
 
 /**
- * Web Share attempts for iPhone Messages:
- * 1) text + image (best when the OS keeps both)
- * 2) title + image (common iOS path — long text can drop the photo)
- * 3) image only
- * Never a text-only attempt while a real image file is in hand.
+ * Web Share attempts — file payloads first so the OS sheet gets images:
+ * 1) title + text + files (best when the OS keeps both)
+ * 2) title + files (iOS sometimes drops long text + photo)
+ * 3) files only
+ * Text-only is NOT listed here. shareOrCopy may try it only after share({files})
+ * throws — never because canShare({files}) returned false.
  */
 export function shareDataAttempts(opts: {
   title: string;
   text: string;
   files: File[];
 }): ShareAttempt[] {
-  const files = opts.files.filter(isShareImageFile);
+  const files = opts.files
+    .map((file) => hardenShareImageFileSync(file))
+    .filter(isShareImageFile);
   if (files.length) {
     return [
       { title: opts.title, text: opts.text, files },
@@ -164,6 +185,31 @@ export function shareDataAttempts(opts: {
     ];
   }
   return [{ title: opts.title, text: opts.text }];
+}
+
+export function toShareData(attempt: ShareAttempt): ShareData {
+  const data: ShareData = {};
+  if (attempt.title) data.title = attempt.title;
+  if (attempt.text) data.text = attempt.text;
+  if (attempt.files?.length) data.files = attempt.files;
+  return data;
+}
+
+/**
+ * iOS Safari / Capacitor WKWebView often return false (or throw) from
+ * canShare({ files }) even when share({ files }) opens the sheet. Treat
+ * canShare as a hint, never a gate. Missing / throwing → unknown (try share).
+ */
+export function canShareSaysYes(
+  canShare: ((data?: ShareData) => boolean) | undefined,
+  data: ShareData,
+): boolean {
+  if (typeof canShare !== "function") return true;
+  try {
+    return canShare(data) === true;
+  } catch {
+    return false;
+  }
 }
 
 export function downloadShareFile(file: File): boolean {
@@ -341,25 +387,20 @@ export function canvasLooksPainted(
   return seen.size >= 2;
 }
 
-function canvasToBlob(
-  canvas: HTMLCanvasElement,
-  type: string,
-): Promise<Blob | null> {
-  return new Promise((resolve) => {
-    try {
-      canvas.toBlob((blob) => resolve(blob), type);
-    } catch {
-      resolve(null);
-    }
-  });
+function canvasToPngBytes(canvas: HTMLCanvasElement): Uint8Array | null {
+  try {
+    const dataUrl = canvas.toDataURL(SHARE_CARD_MIME);
+    const comma = dataUrl.indexOf(",");
+    if (comma < 0) return null;
+    const bin = atob(dataUrl.slice(comma + 1));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.length >= SHARE_CARD_MIN_BYTES ? bytes : null;
+  } catch {
+    return null;
+  }
 }
 
-/**
- * Render the signature card the salesman already sees to a PNG File.
- * `el` is the on-screen card — we only paint when that card is present
- * (or when called without a document, tests pass a null and get a File
- * from the same paint path in browsers).
- */
 export type ShareOutcome =
   | "shared"
   | "copied"
@@ -367,23 +408,20 @@ export type ShareOutcome =
   | "cancelled"
   | "failed";
 
-function canShareData(
-  canShare: ((data?: ShareData) => boolean) | undefined,
-  data: ShareData,
-): boolean {
-  if (!canShare) return true;
-  try {
-    return canShare(data);
-  } catch {
-    return false;
-  }
-}
-
 function isShareAbort(e: unknown): boolean {
   if (typeof DOMException !== "undefined" && e instanceof DOMException) {
     if (e.name === "AbortError") return true;
   }
   return e instanceof Error && /Abort|cancel/i.test(e.message);
+}
+
+function nativeShare(
+  nav: Navigator & {
+    share?: (data: ShareData) => Promise<void>;
+    canShare?: (data?: ShareData) => boolean;
+  },
+): ((data: ShareData) => Promise<void>) | null {
+  return typeof nav.share === "function" ? nav.share.bind(nav) : null;
 }
 
 export async function copyKit(text: string): Promise<ShareOutcome> {
@@ -408,40 +446,63 @@ export async function copyKit(text: string): Promise<ShareOutcome> {
   }
 }
 
+/**
+ * Happy path on iPhone / Capacitor: open the OS share sheet with files.
+ *
+ * #129 gated every attempt on canShare() and copied text when that failed
+ * closed. iOS often returns false for files even though share({files}) works,
+ * and a clipboard.writeText before share() made the tap look like "copy only".
+ *
+ * Rules:
+ * - If navigator.share exists, call it. Do not skip because canShare is false.
+ * - Prefer file-bearing payloads first (card PNG + lifestyle JPEG).
+ * - Never write the clipboard before / instead of the sheet on a capable device.
+ * - Download + copy only when share() is missing or every share() throw is
+ *   not a user cancel.
+ */
 export async function shareOrCopy(opts: {
   title: string;
   text: string;
   files?: File[];
 }): Promise<ShareOutcome> {
-  const hardened = opts.files?.length
-    ? (
-        await Promise.all(opts.files.map((file) => hardenShareImageFile(file)))
-      ).filter(isShareImageFile)
-    : [];
+  const files = (opts.files || [])
+    .map((file) => hardenShareImageFileSync(file))
+    .filter(isShareImageFile);
   const attempts = shareDataAttempts({
     title: opts.title,
     text: opts.text,
-    files: hardened,
+    files,
   });
   const nav = navigator as Navigator & {
     share?: (data: ShareData) => Promise<void>;
     canShare?: (data?: ShareData) => boolean;
   };
+  const share = nativeShare(nav);
 
-  if (typeof nav.share === "function") {
+  if (share) {
+    // Prefer payloads canShare accepts, but still try the rest — iOS often
+    // returns false for files even when the sheet accepts them.
+    const preferred: ShareAttempt[] = [];
+    const rest: ShareAttempt[] = [];
     for (const attempt of attempts) {
-      const data: ShareData = {};
-      if (attempt.title) data.title = attempt.title;
-      if (attempt.text) data.text = attempt.text;
-      if (attempt.files?.length) data.files = attempt.files;
-      if (!canShareData(nav.canShare, data)) continue;
+      if (canShareSaysYes(nav.canShare, toShareData(attempt))) {
+        preferred.push(attempt);
+      } else {
+        rest.push(attempt);
+      }
+    }
+    for (const attempt of [...preferred, ...rest]) {
       try {
-        // iOS Messages often keeps the photo only when `text` is omitted.
-        // Copy the kit first so the report is still on the clipboard.
-        if (hardened.length && !attempt.text) {
-          await copyKit(opts.text);
-        }
-        await nav.share(data);
+        // First await in this function — keep user activation for iOS share.
+        await share(toShareData(attempt));
+        return "shared";
+      } catch (e) {
+        if (isShareAbort(e)) return "cancelled";
+      }
+    }
+    if (files.length) {
+      try {
+        await share({ title: opts.title, text: opts.text });
         return "shared";
       } catch (e) {
         if (isShareAbort(e)) return "cancelled";
@@ -449,8 +510,8 @@ export async function shareOrCopy(opts: {
     }
   }
 
-  if (hardened.length) {
-    for (const file of hardened) downloadShareFile(file);
+  if (files.length) {
+    for (const file of files) downloadShareFile(file);
     await copyKit(opts.text);
     return "downloaded";
   }
@@ -458,13 +519,13 @@ export async function shareOrCopy(opts: {
 }
 
 /**
- * Render the signature card the salesman already sees to a PNG File.
- * `_previewEl` is the on-screen card (same name / phone / mark).
+ * Paint the signature card to a PNG File synchronously (toDataURL).
+ * Async toBlob + arrayBuffer burned the iOS tap gesture before share().
  */
-export async function captureShareCardFile(
+export function captureShareCardFile(
   _previewEl: Element | null,
   filename = SHARE_CARD_FILENAME,
-): Promise<File | null> {
+): File | null {
   if (typeof document === "undefined") return null;
   try {
     const canvas = document.createElement("canvas");
@@ -476,12 +537,12 @@ export async function captureShareCardFile(
     if (!canvasLooksPainted(ctx, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT)) {
       return null;
     }
-    const blob = await canvasToBlob(canvas, SHARE_CARD_MIME);
-    if (!blob || blob.size < SHARE_CARD_MIN_BYTES) return null;
+    const bytes = canvasToPngBytes(canvas);
+    if (!bytes) return null;
     const name = filename.toLowerCase().endsWith(".png")
       ? filename
       : `${filename}.png`;
-    return imageFileFromBytes(await blob.arrayBuffer(), name, SHARE_CARD_MIME);
+    return imageFileFromBytes(bytes, name, SHARE_CARD_MIME);
   } catch {
     return null;
   }
