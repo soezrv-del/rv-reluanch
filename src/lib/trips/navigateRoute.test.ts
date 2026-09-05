@@ -144,13 +144,13 @@ test("fetchNavigateRoute: unlocked stays on /api/osrm", async () => {
     assert.equal(data.source, "osrm");
     assert.equal(calls.length, 1);
     assert.match(calls[0]!, /\/api\/osrm/);
-    assert.doesNotMatch(calls[0]!, /\/api\/route/);
+    assert.doesNotMatch(calls[0]!, /\/api\?/);
   } finally {
     globalThis.fetch = prev;
   }
 });
 
-test("fetchNavigateRoute: locked prefers /api/route?mode=rv_safe with dims", async () => {
+test("fetchNavigateRoute: locked prefers /api?mode=rv_safe with dims", async () => {
   const calls: string[] = [];
   const prev = globalThis.fetch;
   globalThis.fetch = (async (input: RequestInfo | URL) => {
@@ -173,7 +173,8 @@ test("fetchNavigateRoute: locked prefers /api/route?mode=rv_safe with dims", asy
     assert.equal(data.source, "here");
     assert.equal(data.engine, "RV-SAFE · HERE Truck");
     assert.equal(calls.length, 1);
-    assert.match(calls[0]!, /\/api\/route\?/);
+    assert.match(calls[0]!, /\/api\?/);
+    assert.doesNotMatch(calls[0]!, /\/api\/route/);
     assert.match(calls[0]!, /mode=rv_safe/);
     assert.match(calls[0]!, /heightFt=13\.5/);
     assert.match(calls[0]!, /weightLbs=44000/);
@@ -209,7 +210,8 @@ test("fetchNavigateRoute: server OSRM fallback (no HERE key) is not a second /ap
     assert.equal(data.fallbackFrom, "here");
     assert.equal(routeEngineLabel(data), "OSRM · car fallback");
     assert.equal(calls.length, 1);
-    assert.match(calls[0]!, /\/api\/route/);
+    assert.match(calls[0]!, /\/api\?/);
+    assert.doesNotMatch(calls[0]!, /\/api\/osrm/);
   } finally {
     globalThis.fetch = prev;
   }
@@ -221,7 +223,7 @@ test("fetchNavigateRoute: HERE/hybrid failure falls back to fetchOsrmRoute", asy
   globalThis.fetch = (async (input: RequestInfo | URL) => {
     const url = String(input);
     calls.push(url);
-    if (url.includes("/api/route")) {
+    if (url.includes("/api?")) {
       return new Response(JSON.stringify({ error: "HERE HTTP 503" }), {
         status: 502,
         headers: { "Content-Type": "application/json" },
@@ -237,7 +239,7 @@ test("fetchNavigateRoute: HERE/hybrid failure falls back to fetchOsrmRoute", asy
     assert.equal(data.source, "osrm");
     assert.equal(data.miles, 12.4);
     assert.equal(calls.length, 2);
-    assert.match(calls[0]!, /\/api\/route/);
+    assert.match(calls[0]!, /\/api\?/);
     assert.match(calls[1]!, /\/api\/osrm/);
   } finally {
     globalThis.fetch = prev;
