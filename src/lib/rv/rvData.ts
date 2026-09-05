@@ -10200,6 +10200,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 320,
           chassis: "Ford F53",
           notes: "2006–2015 gas Class A — Triton V10 (not 7.3 Godzilla)"
+        },
+        {
+          from: 2020,
+          to: 2026,
+          engine: "Ford 7.3L V8 Godzilla",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          notes: "F53 7.3 Godzilla brochure 350 HP / 468 lb-ft — same pair as FR3 gas Class A SoT"
         }
       ],
       description: "Coachmen Pursuit — entry gas Class A, family bunkhouse layouts."
@@ -14258,6 +14267,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           to: 2026,
           engine: "Ford 7.3L V8 Godzilla 350HP",
           horsepower: 350,
+          torqueLbFt: 468,
           chassis: "Ford F53"
         }
       ]
@@ -14335,6 +14345,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           to: 2026,
           engine: "Ford 7.3L V8 Godzilla",
           horsepower: 350,
+          torqueLbFt: 468,
           chassis: "Ford F53"
         }
       ]
@@ -14419,6 +14430,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           to: 2026,
           engine: "Ford 7.3L V8 Godzilla",
           horsepower: 350,
+          torqueLbFt: 468,
           chassis: "Ford F53"
         }
       ]

@@ -22,6 +22,7 @@ import {
 } from "../rv/localSpecOverrides";
 import type { ActiveCoach } from "../rv/activeCoach";
 import {
+  engineOmitsLoneTorque,
   extractOptionHpClasses,
   honestEngineLabel,
   honestHorsepowerLabel,
@@ -341,7 +342,7 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
       });
   const torque = local?.torqueLbFt
     ? field(`${local.torqueLbFt} lb-ft`, "local")
-    : dualRating ||
+    : engineOmitsLoneTorque(rawEngine) ||
         (tqLabel && /std|opt|varies|EST|confirm/i.test(tqLabel))
       ? field(tqLabel, "est")
       : pickField(

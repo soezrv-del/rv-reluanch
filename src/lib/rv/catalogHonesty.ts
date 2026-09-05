@@ -18,6 +18,8 @@ const OPTION_SLASH_RE = /\/\s*(x15|x12|l9|isl|isx|\d{2,4})/i;
 
 const L9_AND_X15_RE = /\b(l9|isl)\b[\s\S]{0,48}\b(x15|x12)\b/i;
 
+const STD_AND_OPT_RE = /\b(?:std|standard)\b/i;
+
 /** HP-class numbers mentioned next to HP / std / opt / engine family. */
 export function extractOptionHpClasses(
   engine: string | null | undefined,
@@ -82,6 +84,23 @@ export function horsepowerIsOptionBand(
   _horsepower?: string | number | null,
 ): boolean {
   return extractOptionHpClasses(engine).length >= 2;
+}
+
+/**
+ * Omit a lone catalog torque only on a true brochure option band
+ * (L9 450 std / X15 605 opt). Two HP mentions that are year or
+ * floorplan variants still show SoT torque when present — that is
+ * the same class of wipe as treating "by year" as unknown HP.
+ */
+export function engineOmitsLoneTorque(
+  engine: string | null | undefined,
+): boolean {
+  const e = (engine || "").trim();
+  if (!e) return false;
+  if (extractOptionHpClasses(e).length < 2) return false;
+  if (L9_AND_X15_RE.test(e)) return true;
+  if (STD_AND_OPT_RE.test(e) && /\b(?:opt|optional)\b/i.test(e)) return true;
+  return false;
 }
 
 function catalogNumericHp(
@@ -165,15 +184,15 @@ export function honestHorsepowerLabel(opts: {
 
 /**
  * Customer Facts torque: SoT number when present.
- * Dual-rating engines omit a lone L9 (or similar) figure — do not invent
- * option-band torque or emit "varies / confirm door sticker" essays.
+ * True option-band engines (L9 std / X15 opt) omit a lone figure — do not
+ * invent option-band torque. Year or floorplan HP pairs still show SoT.
  */
 export function honestTorqueLabel(opts: {
   engine?: string | null;
   torqueLbFt?: string | number | null;
 }): string | null {
   const engine = (opts.engine || "").trim();
-  if (extractOptionHpClasses(engine).length >= 2) {
+  if (engineOmitsLoneTorque(engine)) {
     return null;
   }
 

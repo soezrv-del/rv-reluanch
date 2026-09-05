@@ -16,7 +16,10 @@ import {
   localOverrideAsPin,
 } from "./localSpecOverrides";
 import { engineConflictsWithChassis } from "./powertrainFamily";
-import { extractOptionHpClasses } from "./catalogHonesty";
+import {
+  engineOmitsLoneTorque,
+  extractOptionHpClasses,
+} from "./catalogHonesty";
 
 export type PowertrainTrust =
   | "local"
@@ -387,7 +390,9 @@ export function resolveHardPowertrain(opts: {
       hard: {
         engine: pin.engine,
         horsepower: pinHp,
-        torqueLbFt: dualRating ? null : (pin.torqueLbFt ?? base.torqueLbFt),
+        torqueLbFt: engineOmitsLoneTorque(pin.engine)
+          ? null
+          : (pin.torqueLbFt ?? base.torqueLbFt),
         chassis: pin.chassis ?? base.chassis,
         transmission: pin.transmission ?? base.transmission,
         fuelType: pin.fuelType ?? base.fuelType,
@@ -408,7 +413,7 @@ export function resolveHardPowertrain(opts: {
     hard: {
       ...base,
       horsepower: dualRating ? null : base.horsepower,
-      torqueLbFt: dualRating ? null : base.torqueLbFt,
+      torqueLbFt: engineOmitsLoneTorque(base.engine) ? null : base.torqueLbFt,
     },
     trust,
     liveRejectedReasons: opts.live?.live

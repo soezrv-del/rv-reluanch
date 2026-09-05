@@ -9,6 +9,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
+  engineOmitsLoneTorque,
   formatFactsHorsepower,
   formatFactsTorque,
   honestHorsepowerForCoach,
@@ -18,6 +19,7 @@ import {
   isInventPolicyProse,
   parseHp,
 } from "./catalogHonesty.ts";
+import { sharePowerLines } from "./shareCardPolicy.ts";
 
 const POLICY =
   /do not invent|HP varies\s*\/\s*confirm brochure|Torque varies by option/i;
@@ -111,6 +113,29 @@ test("Facts: Class C / B / Super C SoT HP+torque are not replaced with essays", 
   assertCustomerFacts(superCHp, superCTq);
 });
 
+test("Facts: year/floorplan HP pairs do not wipe catalog torque", () => {
+  assert.equal(
+    engineOmitsLoneTorque(
+      "Mercedes-Benz 2.0L turbo diesel 211HP (MY27) / 208HP (MY26)",
+    ),
+    false,
+  );
+  assert.equal(
+    engineOmitsLoneTorque("Cummins B6.7 360HP or L9 400HP (by floorplan length)"),
+    false,
+  );
+  assert.equal(engineOmitsLoneTorque(DREAM_ENGINE), true);
+  const yearPair = formatFactsTorque({
+    engine: "Mercedes-Benz 2.0L turbo diesel 211HP (MY27) / 208HP (MY26)",
+    torqueLbFt: 332,
+  });
+  assert.equal(yearPair, "332 lb-ft");
+  assert.equal(
+    formatFactsTorque({ engine: DREAM_ENGINE, torqueLbFt: 1250 }),
+    "—",
+  );
+});
+
 test("Facts: missing SoT omits HP/torque — never invent numbers or policy essays", () => {
   const hp = formatFactsHorsepower({
     engine: BY_YEAR_ENGINE,
@@ -153,14 +178,55 @@ test("Coachmen Pursuit catalog still has SoT 350 on the by-year engine (screensh
   const pursuit = block.slice(start, next > start ? next : start + 4000);
   assert.match(pursuit, /Ford 7\.3L \/ V10 \(by year\)/);
   assert.match(pursuit, /horsepower:\s*350/);
+  assert.match(pursuit, /torqueLbFt:\s*468/);
   assert.match(pursuit, /Onan 4000W Gas MicroQuiet/);
   assert.match(pursuit, /sleeps:\s*8/);
   const shown = formatFactsHorsepower({
     engine: BY_YEAR_ENGINE,
     horsepower: 350,
   });
+  const shownTq = formatFactsTorque({
+    engine: "Ford 7.3L V8 Godzilla",
+    torqueLbFt: 468,
+  });
   assert.equal(shown, "350 HP");
+  assert.equal(shownTq, "468 lb-ft");
   assert.doesNotMatch(shown, POLICY);
+  assert.doesNotMatch(shownTq, POLICY);
+});
+
+test("Forest River Georgetown Godzilla band has brochure 350 / 468 SoT", () => {
+  const block = src("rvData.ts");
+  const start = block.indexOf("    Georgetown: {");
+  assert.ok(start > 0, "expected Forest River Georgetown in catalog");
+  const next = block.indexOf("    FR3:", start);
+  const georgetown = block.slice(start, next > start ? next : start + 6000);
+  assert.match(georgetown, /from:\s*2020/);
+  assert.match(georgetown, /horsepower:\s*350/);
+  assert.match(georgetown, /torqueLbFt:\s*468/);
+  const five = block.slice(
+    block.indexOf('    "Georgetown 5 Series": {'),
+    block.indexOf('    "Georgetown XL": {'),
+  );
+  const xl = block.slice(
+    block.indexOf('    "Georgetown XL": {'),
+    start,
+  );
+  assert.match(five, /torqueLbFt:\s*468/);
+  assert.match(xl, /torqueLbFt:\s*468/);
+  const hp = formatFactsHorsepower({
+    engine: "Ford 7.3L V8 Godzilla",
+    horsepower: 350,
+  });
+  const tq = formatFactsTorque({
+    engine: "Ford 7.3L V8 Godzilla",
+    torqueLbFt: 468,
+  });
+  assert.equal(hp, "350 HP");
+  assert.equal(tq, "468 lb-ft");
+  assertCustomerFacts(hp, tq);
+  const power = sharePowerLines(hp, tq);
+  assert.deepEqual(power, ["POWER", "350 HP", "468 lb-ft"]);
 });
 
 test("Thor Challenger MY23–24 catalog/pin SoT is 335 / 468", () => {
@@ -199,6 +265,11 @@ test("display paths wire Facts HP/torque to SoT formatters — no honesty wipe o
   );
   assert.match(honesty, /export function formatFactsHorsepower/);
   assert.match(honesty, /export function formatFactsTorque/);
+  assert.match(honesty, /export function engineOmitsLoneTorque/);
+  assert.doesNotMatch(
+    honesty,
+    /if \(extractOptionHpClasses\(engine\)\.length >= 2\) \{\s*return null;/,
+  );
 
   const brochure = src("brochureSpecs.ts");
   assert.match(brochure, /honestHorsepowerForCoach/);
@@ -207,10 +278,12 @@ test("display paths wire Facts HP/torque to SoT formatters — no honesty wipe o
 
   const guard = src("livePowertrainGuard.ts");
   assert.match(guard, /extractOptionHpClasses/);
+  assert.match(guard, /engineOmitsLoneTorque/);
   assert.doesNotMatch(
     guard,
     /horsepower:\s*isAmbiguousCatalogValue\(base\.engine\) \? null/,
   );
+  assert.doesNotMatch(guard, /torqueLbFt: dualRating \? null/);
 
   const detail = readFileSync(
     join(root, "../../components/rvfax/RvDetail.tsx"),
