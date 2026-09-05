@@ -1,5 +1,6 @@
 import type { RVResult } from "./catalog";
-import { compareSelectionKey } from "./catalog";
+import { compareSelectionKey, getSpec } from "./catalog";
+import { hydrateShareCoachResult } from "./shareCoachHydrate";
 import { buildBrochureSpecs } from "./brochureSpecs";
 import { findOemFloorplanSpec } from "./floorplanSpecs";
 import { unverifiedLayoutLabel } from "./promptRules";
@@ -325,7 +326,8 @@ export function buildCompareReport(
   items: RVResult[],
   liveMap?: LiveMap,
 ): CompareReport {
-  const cols = items.slice(0, 3).map((r) => {
+  const cols = items.slice(0, 3).map((raw) => {
+    const r = hydrateShareCoachResult(raw, getSpec);
     const key = keyOf(r);
     const live = liveMap?.[key] ?? null;
     const baseBrochure = buildBrochureSpecs(

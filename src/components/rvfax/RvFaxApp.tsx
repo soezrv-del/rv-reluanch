@@ -69,6 +69,10 @@ import {
   SAVED_UNITS_KEY,
   toggleSavedUnit,
 } from "@/lib/rv/savedUnits";
+import {
+  hydrateShareCoachResult,
+  loadSavedUnits,
+} from "@/lib/rv/shareKit";
 
 const RvDetail = lazy(() =>
   import("./RvDetail").then((m) => ({ default: m.RvDetail })),
@@ -178,13 +182,9 @@ export function RvFaxApp({
   savedRef.current = saved;
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(SAVED_UNITS_KEY);
-      if (raw) setSaved(JSON.parse(raw) as RVResult[]);
-    } catch {
-      /* */
-    }
-  }, []);
+    setSaved(loadSavedUnits());
+    setDetail((prev) => (prev ? hydrateShareCoachResult(prev) : prev));
+  }, [catalogReady]);
 
   const persistSaved = (next: RVResult[]) => {
     savedRef.current = next;
@@ -233,7 +233,7 @@ export function RvFaxApp({
   const openFactsUnit = useCallback(
     (r: RVResult) => {
       applySel(cascadeFromResult(r));
-      setDetail(r);
+      setDetail(hydrateShareCoachResult(r));
     },
     [applySel],
   );
