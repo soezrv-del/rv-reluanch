@@ -15,6 +15,7 @@ import {
   type OsrmRouteResult,
 } from "./osrm.ts";
 import { liveRouteStats } from "./routeResults.ts";
+import { dedupeRouteNotices } from "./hereRouting.ts";
 
 /** Thin coach shape — avoid pulling the catalog graph into route tests. */
 export type RvSafeCoachInput = {
@@ -167,6 +168,7 @@ export function mergeLiveLegs(legs: OsrmRouteResult[]): OsrmRouteResult | null {
 
   const first = legs[0]!;
   const last = legs[legs.length - 1]!;
+  const notices = dedupeRouteNotices(legs.flatMap((leg) => leg.notices ?? []));
   const labels = legs.map((leg) => routeEngineLabel(leg));
   const sameEngine = labels.every((label) => label === labels[0]);
   const engineFields = sameEngine
@@ -208,6 +210,7 @@ export function mergeLiveLegs(legs: OsrmRouteResult[]): OsrmRouteResult | null {
     origin: first.origin,
     destination: last.destination,
     fetchedAt: last.fetchedAt || first.fetchedAt,
+    notices: notices.length ? notices : undefined,
   };
 }
 

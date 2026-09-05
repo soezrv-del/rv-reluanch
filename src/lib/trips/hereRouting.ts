@@ -3,8 +3,140 @@
  * Dimensions: HERE expects cm (height/width/length) and kg (weight).
  */
 
-import type { OsrmLngLat, OsrmRouteResult, OsrmStep } from "./osrm";
-import { compactSteps, metersToMiles, splitDuration } from "./osrm";
+import type { OsrmLngLat, OsrmRouteResult, OsrmStep, RouteNotice } from "./osrm.ts";
+import { compactSteps, metersToMiles, splitDuration } from "./osrm.ts";
+
+/** HERE noise / EV / toll-data codes — not clearance-relevant. */
+const HERE_NOTICE_NOISE = new Set([
+  "simplePolyline",
+  "tollsDataUnavailable",
+  "tollsDataTemporarilyUnavailable",
+  "currencyUnsupported",
+  "chargingStopNotNeeded",
+  "violatedMinChargeAtDestination",
+  "violatedMinChargeAtFirstChargingStation",
+  "violatedMinChargeAtChargingStation",
+  "outOfCharge",
+  "targetChargeNotAchievable",
+  "violatedChargingStationOpeningHours",
+  "violatedChargingStationTransportMode",
+  "violatedChargingStationVehicleRestrictions",
+]);
+
+function asRecord(v: unknown): Record<string, unknown> | null {
+  return v && typeof v === "object" && !Array.isArray(v)
+    ? (v as Record<string, unknown>)
+    : null;
+}
+
+function noticeSeverity(raw: unknown): "critical" | "info" {
+  return String(raw ?? "").toLowerCase() === "critical" ? "critical" : "info";
+}
+
+function formatCm(cm: number): string {
+  return `${cm} cm (${(cm / 30.48).toFixed(1)} ft)`;
+}
+
+function formatKg(kg: number): string {
+  return `${kg} kg (${Math.round(kg / 0.453592).toLocaleString()} lb)`;
+}
+
+function detailCause(detail: Record<string, unknown>): string {
+  const parts: string[] = [];
+  if (typeof detail.cause === "string" && detail.cause.trim()) {
+    parts.push(detail.cause.trim());
+  }
+  if (typeof detail.maxHeight === "number" && Number.isFinite(detail.maxHeight)) {
+    parts.push(`Max height ${formatCm(detail.maxHeight)}`);
+  }
+  if (typeof detail.maxWidth === "number" && Number.isFinite(detail.maxWidth)) {
+    parts.push(`Max width ${formatCm(detail.maxWidth)}`);
+  }
+  if (typeof detail.maxLength === "number" && Number.isFinite(detail.maxLength)) {
+    parts.push(`Max length ${formatCm(detail.maxLength)}`);
+  }
+  if (
+    typeof detail.maxGrossWeight === "number" &&
+    Number.isFinite(detail.maxGrossWeight)
+  ) {
+    parts.push(`Max gross weight ${formatKg(detail.maxGrossWeight)}`);
+  }
+  const maxWeight = asRecord(detail.maxWeight);
+  if (maxWeight && typeof maxWeight.value === "number") {
+    parts.push(`Max weight ${formatKg(maxWeight.value)}`);
+  }
+  if (
+    typeof detail.maxWeightPerAxle === "number" &&
+    Number.isFinite(detail.maxWeightPerAxle)
+  ) {
+    parts.push(`Max weight per axle ${formatKg(detail.maxWeightPerAxle)}`);
+  }
+  const haz = detail.forbiddenHazardousGoods;
+  if (Array.isArray(haz) && haz.length) {
+    parts.push(`Forbidden hazmat: ${haz.map(String).join(", ")}`);
+  } else if (typeof haz === "string" && haz.trim()) {
+    parts.push(`Forbidden hazmat: ${haz.trim()}`);
+  }
+  return [...new Set(parts)].join(" · ");
+}
+
+function parseHereNotice(raw: unknown): RouteNotice | null {
+  const rec = asRecord(raw);
+  if (!rec) return null;
+  const code = String(rec.code ?? "").trim();
+  if (!code || HERE_NOTICE_NOISE.has(code) || /^\d+$/.test(code)) return null;
+  const title = String(rec.title ?? "").trim() || code;
+  const details = Array.isArray(rec.details) ? rec.details : [];
+  const causes = details
+    .map((d) => {
+      const row = asRecord(d);
+      return row ? detailCause(row) : "";
+    })
+    .filter(Boolean);
+  return {
+    code,
+    title,
+    severity: noticeSeverity(rec.severity),
+    cause: causes.join(" · ") || undefined,
+    source: "here",
+  };
+}
+
+export function dedupeRouteNotices(notices: RouteNotice[]): RouteNotice[] {
+  const seen = new Set<string>();
+  const out: RouteNotice[] = [];
+  for (const n of notices) {
+    const key = `${n.code}\0${n.title}\0${n.cause ?? ""}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(n);
+  }
+  return out;
+}
+
+/**
+ * Pull route + section notices from a HERE v8 body.
+ * `spans=notices` only indexes into section.notices — we do not invent
+ * alerts from truckAttributes or instruction text.
+ */
+export function extractHereNotices(json: Record<string, unknown>): RouteNotice[] {
+  const bag: unknown[] = [];
+  if (Array.isArray(json.notices)) bag.push(...json.notices);
+  const routes = Array.isArray(json.routes) ? json.routes : [];
+  for (const route of routes) {
+    const r = asRecord(route);
+    if (!r) continue;
+    if (Array.isArray(r.notices)) bag.push(...r.notices);
+    const sections = Array.isArray(r.sections) ? r.sections : [];
+    for (const sec of sections) {
+      const s = asRecord(sec);
+      if (s && Array.isArray(s.notices)) bag.push(...s.notices);
+    }
+  }
+  return dedupeRouteNotices(
+    bag.map(parseHereNotice).filter((n): n is RouteNotice => n != null),
+  );
+}
 
 export type TruckVehicle = {
   heightCm: number;
@@ -241,6 +373,7 @@ export function normalizeHereRoute(
     fetchedAt: new Date().toISOString(),
     routingMode: "rv_safe",
     providerNote: `Truck dims ${opts.vehicle.heightCm}cm H · ${opts.vehicle.lengthCm}cm L · ${opts.vehicle.grossWeightKg}kg`,
+    notices: extractHereNotices(json),
   };
 }
 

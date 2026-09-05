@@ -18,6 +18,15 @@ export type OsrmStep = {
   location: OsrmLngLat | null;
 };
 
+/** Truck-router notice from HERE (or a future provider). Never invented. */
+export type RouteNotice = {
+  code: string;
+  title: string;
+  severity: "critical" | "info";
+  cause?: string;
+  source: "here";
+};
+
 export type OsrmRouteResult = {
   source: "osrm" | "here";
   engine: string;
@@ -53,6 +62,8 @@ export type OsrmRouteResult = {
   routingMode?: "standard" | "rv_safe";
   providerNote?: string;
   fallbackFrom?: string;
+  /** Real HERE Truck notices when source=here. Absent on OSRM. */
+  notices?: RouteNotice[];
 };
 
 export type OsrmRouteError = {
