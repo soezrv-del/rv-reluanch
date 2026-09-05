@@ -20,6 +20,7 @@ export type {
 } from "./coachProfile";
 export {
   anyDimEstimated,
+  anyFilledDimEstimated,
   clearLockedProfile,
   coachIdentityKey,
   coachIsReady,
@@ -59,26 +60,32 @@ export function suggestCoachFromSelection(opts: {
     };
   }
 
+  const catalogSpec = getSpec(make, model);
   const spec: RVSpec =
-    getSpec(make, model) ||
-    buildCustomSpec(make, model, floorplan, opts.rvType);
+    catalogSpec || buildCustomSpec(make, model, floorplan, opts.rvType);
   const oem = findOemFloorplanSpec(opts.year, make, model, floorplan);
-  const snap = resolveYearSnapshot(spec, opts.year, floorplan);
-  const type = snap.type || spec.type;
+  const snap = catalogSpec
+    ? resolveYearSnapshot(catalogSpec, opts.year, floorplan)
+    : null;
+  const type = snap?.type || (catalogSpec ? spec.type : opts.rvType || "");
   const dims = dimsFromKnownSources({
     type,
     floorplan,
     make,
     model,
-    lengthRange: spec.lengthRange,
-    weightRange: spec.weightRange,
+    // Dummy custom ranges ([20,45] / [5k,45k]) look like OEM — only real catalog spans.
+    lengthRange: catalogSpec?.lengthRange,
+    weightRange: catalogSpec?.weightRange,
     oem,
-    catalog: {
-      overallLengthIn: snap.overallLengthIn ?? spec.overallLengthIn,
-      exteriorHeightIn: snap.exteriorHeightIn ?? spec.exteriorHeightIn,
-      exteriorWidthIn: snap.exteriorWidthIn ?? spec.exteriorWidthIn,
-      gvwrLbs: snap.gvwrLbs ?? spec.gvwrLbs,
-    },
+    catalog: catalogSpec
+      ? {
+          overallLengthIn: snap?.overallLengthIn ?? catalogSpec.overallLengthIn,
+          exteriorHeightIn:
+            snap?.exteriorHeightIn ?? catalogSpec.exteriorHeightIn,
+          exteriorWidthIn: snap?.exteriorWidthIn ?? catalogSpec.exteriorWidthIn,
+          gvwrLbs: snap?.gvwrLbs ?? catalogSpec.gvwrLbs,
+        }
+      : null,
     facts: { gvwrLbs: opts.gvwrLbs, uvwLbs: opts.uvwLbs },
   });
 

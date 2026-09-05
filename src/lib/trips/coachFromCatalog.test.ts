@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
   anyDimEstimated,
+  anyFilledDimEstimated,
   coachIdentityKey,
   coachIsReady,
   dimsFromKnownSources,
@@ -98,7 +99,7 @@ test("dimsFromKnownSources: brochure pins beat catalog and class heuristic", () 
   assert.equal(anyDimEstimated(dims.dimSources), false);
 });
 
-test("dimsFromKnownSources: Facts GVWR wins weight; catalog height when no OEM", () => {
+test("dimsFromKnownSources: catalog SoT beats Facts weight; catalog height when no OEM", () => {
   const dims = dimsFromKnownSources({
     type: "Class A Diesel",
     floorplan: "45A",
@@ -107,10 +108,22 @@ test("dimsFromKnownSources: Facts GVWR wins weight; catalog height when no OEM",
   });
   assert.equal(dims.heightFt, 13.5);
   assert.equal(dims.lengthFt, 45);
-  assert.equal(dims.weightLbs, 52000);
+  assert.equal(dims.weightLbs, 49900);
   assert.equal(dims.dimSources.height, "catalog");
   assert.equal(dims.dimSources.length, "catalog");
+  assert.equal(dims.dimSources.weight, "catalog");
+});
+
+test("dimsFromKnownSources: Facts weight only when brochure/catalog GVWR is missing", () => {
+  const dims = dimsFromKnownSources({
+    type: "Class A Diesel",
+    floorplan: "45A",
+    facts: { gvwrLbs: 52000 },
+  });
+  assert.equal(dims.weightLbs, 52000);
   assert.equal(dims.dimSources.weight, "facts");
+  assert.equal(dims.heightFt, 13.5);
+  assert.equal(dims.dimSources.height, "estimate");
 });
 
 test("dimsFromKnownSources: class heuristic is labeled estimate", () => {
@@ -124,6 +137,51 @@ test("dimsFromKnownSources: class heuristic is labeled estimate", () => {
   assert.equal(dims.weightLbs, 0);
   assert.equal(dims.dimSources.height, "estimate");
   assert.equal(anyDimEstimated(dims.dimSources), true);
+  assert.equal(
+    anyFilledDimEstimated({ ...dims, dimSources: dims.dimSources }),
+    true,
+  );
+});
+
+test("dimsFromKnownSources: unknown type and dummy ranges invent nothing", () => {
+  const dims = dimsFromKnownSources({
+    type: "RV (custom entry)",
+    floorplan: "",
+    lengthRange: [20, 45],
+    weightRange: [5000, 45000],
+  });
+  assert.equal(dims.heightFt, 0);
+  assert.equal(dims.widthFt, 0);
+  assert.equal(dims.lengthFt, 0);
+  assert.equal(dims.weightLbs, 0);
+  assert.equal(
+    anyFilledDimEstimated({ ...dims, dimSources: dims.dimSources }),
+    false,
+  );
+});
+
+test("dimsFromKnownSources: floorplan length code is estimate; no range midpoint", () => {
+  const dims = dimsFromKnownSources({
+    type: "Class A Diesel",
+    floorplan: "37BH",
+    make: "Tiffin",
+    model: "Phaeton",
+    lengthRange: [34, 40],
+    weightRange: [28000, 36000],
+  });
+  assert.equal(dims.lengthFt, 37);
+  assert.equal(dims.dimSources.length, "estimate");
+  assert.ok(dims.weightLbs > 0);
+  assert.equal(dims.dimSources.weight, "estimate");
+
+  const noCode = dimsFromKnownSources({
+    type: "Class A Diesel",
+    floorplan: "LXE",
+    lengthRange: [34, 40],
+    weightRange: [28000, 36000],
+  });
+  assert.equal(noCode.lengthFt, 0);
+  assert.equal(noCode.weightLbs, 0);
 });
 
 test("brochure OEM for Brinkley Model T 3250 is used, not invented", () => {
@@ -237,6 +295,19 @@ test("resolveTripsProfileSeed: locked > Facts > saved; empty invents nothing", (
   assert.equal(fromLocked.profile.weightLbs, 34000);
 });
 
+test("coachFromCatalog: custom spec ranges are not treated as catalog SoT", () => {
+  const src = readFileSync(join(root, "coachFromCatalog.ts"), "utf8");
+  assert.match(src, /const catalogSpec = getSpec/);
+  assert.match(src, /lengthRange: catalogSpec\?\.lengthRange/);
+  assert.match(src, /weightRange: catalogSpec\?\.weightRange/);
+  assert.match(src, /catalog: catalogSpec/);
+  assert.doesNotMatch(
+    src,
+    /lengthRange: spec\.lengthRange/,
+    "dummy buildCustomSpec [20,45] must not feed length",
+  );
+});
+
 test("Trips Navigate no longer forces SET PROFILE when a coach is known", () => {
   const ui = readFileSync(
     join(root, "../../components/rvtrips/RvTripsApp.tsx"),
@@ -253,6 +324,26 @@ test("Trips Navigate no longer forces SET PROFILE when a coach is known", () => 
     ui.indexOf("Add an RV profile?") > ui.indexOf("Start Turn-by-Turn"),
     "unknown-coach prompt stays after a route, not a gate",
   );
+});
+
+test("Profile labels brochure/catalog/estimate; Pack is sample-opt-in", () => {
+  const ui = readFileSync(
+    join(root, "../../components/rvtrips/RvTripsApp.tsx"),
+    "utf8",
+  );
+  assert.match(ui, /dimSourceTag/);
+  assert.match(ui, /["']catalog["']/);
+  assert.match(ui, /["']brochure["']/);
+  assert.match(ui, /["']estimate["']/);
+  assert.match(ui, /SAMPLE_PACK/);
+  assert.match(ui, /showSamplePack/);
+  assert.match(ui, /Sample list — not your gear/);
+  assert.match(ui, /label: "Pack"/);
+  assert.doesNotMatch(ui, /Pack List/);
+  assert.doesNotMatch(ui, /DEMO_PACK/);
+  assert.doesNotMatch(ui, /useState\(DEMO_PACK\)/);
+  assert.match(ui, /rank: "primary"/);
+  assert.match(ui, /rank: "tool"/);
 });
 
 test("loadLockedProfile keeps a coach without floorplan", () => {
