@@ -1,8 +1,9 @@
 /**
- * Navigate route picker: locked coach + dims → /api/route?mode=rv_safe
- * (HERE Truck when the server has HERE_API_KEY). Everything else stays on
- * fetchOsrmRoute. No invented specs — only pass profile fields the API
- * already accepts.
+ * Navigate route picker: locked coach + dims → /api?mode=rv_safe
+ * (HERE Truck when the server has HERE_API_KEY). File route
+ * src/routes/api/route.ts is registered at GET /api, not /api/route.
+ * Everything else stays on fetchOsrmRoute. No invented specs — only pass
+ * profile fields the API already accepts.
  */
 
 import {
@@ -32,7 +33,7 @@ export function canUseRvSafe(coach: RvSafeCoachInput | null | undefined): boolea
   return positive(coach.heightFt) && positive(coach.lengthFt) && positive(coach.weightLbs);
 }
 
-/** Query string for GET /api/route — existing params only. */
+/** Query string for GET /api — existing params only. */
 export function buildRvSafeQuery(
   from: OsrmLngLat,
   to: OsrmLngLat,
@@ -87,7 +88,7 @@ export function routeEngineNote(route: OsrmRouteResult | null): string {
 }
 
 /**
- * Locked + dims → /api/route?mode=rv_safe. Unlocked, missing dims, or a
+ * Locked + dims → /api?mode=rv_safe. Unlocked, missing dims, or a
  * failed/empty hybrid response → existing fetchOsrmRoute. Abort is not
  * treated as a fallback (caller is tearing down).
  */
@@ -100,7 +101,7 @@ export async function fetchNavigateRoute(params: {
   if (canUseRvSafe(params.coach) && params.coach) {
     try {
       const qs = buildRvSafeQuery(params.from, params.to, params.coach);
-      const res = await fetch(`/api/route?${qs}`, {
+      const res = await fetch(`/api?${qs}`, {
         signal: params.signal,
         headers: { Accept: "application/json" },
       });

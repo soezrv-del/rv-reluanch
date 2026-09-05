@@ -18,7 +18,7 @@ import {
 import { rankOsrmRoutes } from "@/lib/trips/osrmWeights";
 
 /**
- * GET /api/route
+ * GET /api  (this file is the /api route module — not /api/route)
  *
  * Hybrid routing:
  *   mode=standard  → OSRM RV weights
