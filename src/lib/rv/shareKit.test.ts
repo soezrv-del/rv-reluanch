@@ -244,5 +244,5 @@ test("payment calculator field order is price → down → term → rate → est
   assert.ok(term < rate);
   assert.ok(rate < est);
   assert.match(pay, /RATE_UPDATED_FLASH/);
-  assert.match(pay, /sharePaymentPricePills/);
+  assert.match(ui, /sharePaymentPricePills/);
 });
