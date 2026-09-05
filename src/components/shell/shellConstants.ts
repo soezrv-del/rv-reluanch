@@ -54,7 +54,7 @@ export const PAGE_COPY: Record<
   },
   rvshare: {
     title: "RvSHARE",
-    line: "Brochure summary first — tap + to add rating, market, or specs.",
+    line: "Send a brochure summary.",
     badge: "SEND",
   },
   more: {

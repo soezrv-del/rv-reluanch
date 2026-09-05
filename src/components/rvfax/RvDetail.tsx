@@ -81,6 +81,7 @@ import { PullResetHint } from "@/components/shell/PullResetHint";
 import { SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
 import { resolveCardImage } from "@/assets/typeMedia";
 import { SuiteBackdrop } from "@/components/shell/SuitePage";
+import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { cn } from "@/lib/utils";
 import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
 import { sanitizeUnverifiedLayout } from "@/lib/rv/promptRules";
@@ -1003,8 +1004,7 @@ export function RvDetail({
             {liveError && !liveLoading ? (
               <div className="mt-5 rounded-xl border border-amber-400/35 bg-amber-500/12 px-3.5 py-3">
                 <p className="text-[13px] leading-snug text-amber-100">
-                  Live research failed. Engine, HP, chassis, and fuel on this
-                  report are the catalog year-band for this coach.
+                  Live research failed. Catalog specs are shown.
                 </p>
                 <button
                   type="button"
@@ -1059,9 +1059,7 @@ export function RvDetail({
             </div>
             {market.tradeCappedAtRetailLow ? (
               <p className="mt-3 rounded-xl border border-amber-400/45 bg-amber-500/15 px-3 py-2.5 text-[13px] font-semibold leading-snug text-amber-100">
-                Trade equals retail low because the estimate was capped — do
-                not read that as a real lot offer sitting on the retail floor.
-                Confirm comps before you write a number.
+                Trade was capped at retail low — confirm comps.
               </p>
             ) : null}
             {factors.length ? (
@@ -1198,11 +1196,6 @@ export function RvDetail({
             <p className="mb-3 mt-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-white">
               Powertrain & chassis
             </p>
-            {liveError && !liveLoading ? (
-              <p className="mb-2 text-[11px] leading-snug text-amber-200/85">
-                Live failed — year-band catalog shown.
-              </p>
-            ) : null}
             <SpecRow label="FUEL" value={displayFuel} />
             <SpecRow label="ENGINE" value={specs.engine} accent />
             <SpecRow label="HORSEPOWER" value={specs.horsepower} accent />
@@ -1336,22 +1329,18 @@ export function RvDetail({
             </Section>
           ) : emptyYearFloorplans ? (
             <Section title="Floorplans this year">
-              <p className="text-[14px] leading-relaxed text-white/90">
-                We don&apos;t have verified floorplan data for {year}{" "}
-                {make} {model}. Showing layouts from other years as{" "}
-                {year} would mislabel them.
+              <p className="text-[14px] leading-relaxed text-white/80">
+                No verified floorplans for {year} {make} {model}.
               </p>
               {sourcedYears.length ? (
-                <p className="mt-3 text-[13px] leading-relaxed text-white/70">
-                  Sourced years in catalog:{" "}
-                  {sourcedYears.join(", ")}
+                <p className="mt-3 text-[13px] leading-relaxed text-white/60">
+                  On file: {sourcedYears.join(", ")}
                 </p>
               ) : null}
               {relatedModels.length ? (
                 <div className="mt-4">
-                  <p className="text-[13px] font-medium text-white/80">
-                    For {year}, these related {make} series have sourced
-                    floorplans:
+                  <p className="text-[13px] font-medium text-white/70">
+                    Related {make} series in {year}:
                   </p>
                   <ul className="mt-2 space-y-1.5">
                     {relatedModels.map((md) => (
@@ -1368,9 +1357,8 @@ export function RvDetail({
             </Section>
           ) : noYearFloorplanBrowse && historicalFloorplans.length ? (
             <Section title="Floorplans across model years">
-              <p className="mb-4 text-[13px] leading-relaxed text-white/70">
-                No year selected. These layouts span multiple model years —
-                they are not a current-year lineup.
+              <p className="mb-4 text-[13px] leading-relaxed text-white/60">
+                Layouts from other years.
               </p>
               <div className="space-y-4">
                 {historicalFloorplans.map((row) => (
@@ -1390,10 +1378,9 @@ export function RvDetail({
           ) : null}
 
           {emptyYearFloorplans && historicalFloorplans.length ? (
-            <Section title="Sourced floorplans from other years">
-              <p className="mb-4 text-[13px] leading-relaxed text-white/70">
-                Each layout below is labeled with its OEM model year — not
-                the year selected above.
+            <Section title="Floorplans from other years">
+              <p className="mb-4 text-[13px] leading-relaxed text-white/60">
+                Labeled by model year.
               </p>
               <div className="space-y-4">
                 {historicalFloorplans.map((row) => (
@@ -1631,9 +1618,7 @@ export function RvDetail({
             </section>
           ) : null}
 
-          <p className="px-1 pb-6 text-[12px] text-white">
-            Confirm brochure, door sticker, and NHTSA before you buy.
-          </p>
+          <SuiteDisclaimer className="pb-6" />
         </div>
         </div>
       </div>
@@ -1656,8 +1641,7 @@ export function RvDetail({
                   {floorplan ? ` · ${floorplan}` : ""}
                 </p>
                 <p className="mt-1 text-[11px] text-white/55">
-                  Saves a local override on this device. Export pins to share
-                  with ops or pin into the catalog later.
+                  Saves on this device.
                 </p>
               </div>
               <button

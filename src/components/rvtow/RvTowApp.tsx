@@ -17,6 +17,7 @@ import {
   type VehicleKind,
 } from "@/lib/tow/towVehicles";
 import { SuitePage } from "@/components/shell/SuitePage";
+import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
   activeCoachKey,
@@ -428,8 +429,7 @@ export function RvTowApp() {
             {prefill.coach.towingCapacityLbs ? (
               <p className="mt-2 text-[11px] font-semibold text-sky-100">
                 Typical coach tow rating ~{" "}
-                {prefill.coach.towingCapacityLbs.toLocaleString()} lbs — confirm
-                the door sticker.
+                {prefill.coach.towingCapacityLbs.toLocaleString()} lbs
               </p>
             ) : null}
             <button
@@ -710,8 +710,8 @@ export function RvTowApp() {
               className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-3 py-3 text-sm text-white outline-none focus:border-blue/50"
               inputMode="numeric"
             />
-            <span className="mt-1 block text-[10px] text-white">
-              Gross Vehicle Weight Rating — from RV door sticker or spec sheet
+            <span className="mt-1 block text-[10px] text-white/55">
+              From the RV door sticker
             </span>
           </label>
 
@@ -831,10 +831,7 @@ export function RvTowApp() {
           </section>
         )}
 
-        <p className="px-1 text-center text-[10px] leading-relaxed text-white">
-          Max = OEM ceiling when properly equipped. Recommended ≈ 80% of max for
-          real-world margin. SUV → Travel Trailer only. Verify door sticker.
-        </p>
+        <SuiteDisclaimer />
 
       </div>
     </SuitePage>

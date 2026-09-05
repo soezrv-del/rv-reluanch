@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import {
   scrollFieldIntoVisibleArea,
   useKeyboardInset,
@@ -239,7 +240,7 @@ export function VinDecoder({
               aria-label="Vehicle identification number"
             />
             <span className="mt-1 block text-[10px] text-white/80">
-              {normalizeVin(vin).length}/17 · NHTSA vPIC + ISO check digit
+              {normalizeVin(vin).length}/17
             </span>
           </label>
 
@@ -272,10 +273,8 @@ export function VinDecoder({
             </button>
           </div>
 
-          <p className="text-[11px] leading-relaxed text-white/85">
-            Full NHTSA vPIC decode: structure, powertrain, plant, safety
-            equipment, and recalls. Use the chassis VIN on motorhomes (door jamb
-            / title).
+          <p className="text-[11px] leading-relaxed text-white/70">
+            Decode the chassis VIN on motorhomes.
           </p>
 
           {error ? (
@@ -286,7 +285,7 @@ export function VinDecoder({
 
           <details className="rounded-[var(--radius-md)] border border-white/15 bg-black/30 p-3">
             <summary className="cursor-pointer text-[12px] font-bold text-sky-200">
-              Test barcode (scanner practice)
+              Practice scan
             </summary>
             <div className="mt-2 space-y-2">
               <p className="text-[11px] leading-relaxed text-white/80">
@@ -678,11 +677,7 @@ export function VinDecoder({
                 )}
               </div>
 
-              <p className="text-center text-[10px] leading-relaxed text-white/75">
-                Data from NHTSA vPIC DecodeVinValuesExtended & Recalls APIs.
-                Motorhomes: decode the chassis VIN; coach floorplan is not
-                encoded in the VIN. Confirm door sticker & PPI.
-              </p>
+              <SuiteDisclaimer />
             </div>
           ) : null}
         </div>

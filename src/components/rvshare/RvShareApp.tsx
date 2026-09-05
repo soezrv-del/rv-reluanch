@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SuitePage } from "@/components/shell/SuitePage";
+import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import type { AppTab } from "@/components/shell/BottomTabs";
 import {
   compareSelectionKey,
@@ -685,17 +686,13 @@ export function RvShareApp({
 
   return (
     <SuitePage tab="rvshare" onPullReset={reloadSaved} pullLabel="Release to refresh saved units">
-      <div className="mx-auto w-full max-w-lg space-y-4 px-3 pb-12 pt-3 sm:px-4">
+      <div className="mx-auto w-full max-w-lg space-y-5 px-3 pb-12 pt-3 sm:px-4">
         <section className="glass-prestige-gold relative overflow-hidden rounded-[1.25rem] p-4">
           <p className="text-[10px] font-bold tracking-[0.16em] text-amber">
             SEND KIT
           </p>
           <p className="mt-1.5 text-[17px] font-bold leading-snug text-white">
-            Brochure summary first — tap + for the rest
-          </p>
-          <p className="mt-1 text-[12px] leading-relaxed text-white/90">
-            Customers see year, make, model, and the OEM pitch. Add rating,
-            market, payment, or specs only when you want them on the card.
+            Brochure summary
           </p>
           <div className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full border border-amber/40 bg-amber/15">
             <Share2 className="size-4 text-amber" />
@@ -714,8 +711,8 @@ export function RvShareApp({
           </div>
           {saved.length === 0 ? (
             <div className="glass-prestige space-y-3 rounded-[1.25rem] p-4">
-              <p className="text-[13px] leading-relaxed text-white">
-                Heart a coach in Facts, then it lands here for the desk or the buyer.
+              <p className="text-[13px] leading-relaxed text-white/80">
+                Heart a coach in Facts to send it from here.
               </p>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -819,8 +816,8 @@ export function RvShareApp({
                       {summary.pitch}
                     </p>
                   ) : (
-                    <p className="text-[12px] leading-relaxed text-white/70">
-                      Catalog pitch not on file for this coach — type only.
+                    <p className="text-[12px] leading-relaxed text-white/60">
+                      No summary on file.
                     </p>
                   )}
                   {summary.features.length ? (
@@ -838,15 +835,13 @@ export function RvShareApp({
                 </div>
 
                 {fallbackExtras ? (
-                  <p className="rounded-[var(--radius-md)] border border-white/15 bg-white/5 px-3 py-2 text-[11px] leading-relaxed text-white/80">
-                    No extras selected — Payment is added so the card stays
-                    useful. Tap + to choose exactly what goes out. Market stays
-                    off until you pick prices.
+                  <p className="text-[11px] leading-relaxed text-white/50">
+                    Payment included.
                   </p>
                 ) : null}
 
                 <SectionToggle
-                  title="RATING — TAP + TO SHARE"
+                  title="RATING"
                   name="Rating"
                   on={include.rating}
                   onToggle={() => toggleSection("rating")}
@@ -873,8 +868,7 @@ export function RvShareApp({
                         className="rounded-[var(--radius-md)] border border-amber/35 bg-amber/10 px-3 py-2 text-[11px] leading-relaxed text-amber"
                         role="status"
                       >
-                        Pick which prices to share — nothing is sent until you
-                        tap + on a line.
+                        Choose prices to include.
                       </p>
                     ) : null}
                     <div className="grid grid-cols-2 gap-2">
@@ -1218,10 +1212,7 @@ export function RvShareApp({
             SHARE THE SUITE
           </p>
           <p className="mt-1.5 text-[15px] font-bold text-white">
-            Send RvFOX Pro itself
-          </p>
-          <p className="mt-1 text-[12px] leading-relaxed text-white/85">
-            A short pitch for a spouse, a buyer, or the next person on the lot.
+            Send RvFOX Pro
           </p>
           <button
             type="button"
@@ -1241,9 +1232,7 @@ export function RvShareApp({
             {status}
           </p>
         ) : (
-          <p className="pb-1 text-center text-[12px] tracking-[0.14em] text-white/55">
-            NATIVE SHARE · COPY · SAVED COACHES
-          </p>
+          <SuiteDisclaimer className="pb-1" />
         )}
       </div>
     </SuitePage>

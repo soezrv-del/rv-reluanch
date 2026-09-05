@@ -18,6 +18,7 @@ import { fetchLiveDossier, peekVerifiedDossier } from "@/lib/rv/liveDossier";
 import { exportVehicleReport } from "@/lib/rv/exportReport";
 import { cn } from "@/lib/utils";
 import { SuiteBackdrop } from "@/components/shell/SuitePage";
+import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { RV_CARD_MEDIA } from "@/assets/typeMedia";
 
 function toneClass(tone: CompareCell["tone"], emphasis?: boolean) {
@@ -492,9 +493,7 @@ export function RvCompare({
             </button>
           </div>
 
-          <p className="pb-4 text-center text-[12px] text-white">
-            Confirm brochure and door sticker before you buy.
-          </p>
+          <SuiteDisclaimer className="pb-4" />
         </div>
       </div>
     </div>
