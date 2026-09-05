@@ -110,7 +110,8 @@ export const DEMO_ALERTS: TripAlert[] = [
   },
 ];
 
-export const DEMO_CAMPS: TripCampground[] = [
+/** Quarantined sample pads — never the default Camps tab product. */
+export const SAMPLE_CAMPS: TripCampground[] = [
   {
     id: "shorts-bar",
     name: "Shorts Bar",
@@ -136,6 +137,9 @@ export const DEMO_CAMPS: TripCampground[] = [
     campspotUrl: "https://www.campspot.com/",
   },
 ];
+
+/** @deprecated Use SAMPLE_CAMPS only behind an explicit Sample disclosure. */
+export const DEMO_CAMPS = SAMPLE_CAMPS;
 
 export const DEMO_DIRECTIONS: { id: string; instruction: string; mi: string }[] =
   [

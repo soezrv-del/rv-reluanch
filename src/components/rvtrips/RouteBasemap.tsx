@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { OsrmLineString } from "@/lib/trips/osrm";
 import type { FuelStop } from "@/lib/trips/corridorFuel";
+import type { CampStop } from "@/lib/trips/corridorCamps";
 import {
   attributionFor,
   bboxFromGeometry,
@@ -25,6 +26,7 @@ import {
 
 const MAP_H = 300;
 const MAX_FUEL_PINS = 12;
+const MAX_CAMP_PINS = 10;
 
 function asPlace(
   p: { lat: number; lng: number; label?: string } | null | undefined,
@@ -41,6 +43,9 @@ export function RouteBasemap({
   fuelStops,
   selectedFuelId,
   onSelectFuel,
+  campStops,
+  selectedCampId,
+  onSelectCamp,
 }: {
   geometry: OsrmLineString | null | undefined;
   origin?: { lat: number; lng: number; label?: string } | null;
@@ -49,6 +54,9 @@ export function RouteBasemap({
   fuelStops?: FuelStop[];
   selectedFuelId?: string | null;
   onSelectFuel?: (id: string) => void;
+  campStops?: CampStop[];
+  selectedCampId?: string | null;
+  onSelectCamp?: (id: string) => void;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(320);
@@ -182,8 +190,18 @@ export function RouteBasemap({
         label: s.name,
       });
     }
+    for (const s of (campStops ?? []).slice(0, MAX_CAMP_PINS)) {
+      if (!finiteLngLat(s)) continue;
+      push({
+        id: s.id,
+        kind: s.kind === "rv-park" ? "rv-park" : "campground",
+        lat: s.lat,
+        lng: s.lng,
+        label: s.name,
+      });
+    }
     return rows;
-  }, [view, originPt, destPt, viaPts, fuelStops]);
+  }, [view, originPt, destPt, viaPts, fuelStops, campStops]);
 
   const onTileError = () => {
     failRef.current += 1;
@@ -261,14 +279,19 @@ export function RouteBasemap({
 
       {pins.map((p) => {
         const fuel = p.kind === "fuel" || p.kind === "truck-stop";
-        const on = fuel && p.id === selectedFuelId;
-        if (fuel) {
+        const camp = p.kind === "campground" || p.kind === "rv-park";
+        const on =
+          (fuel && p.id === selectedFuelId) || (camp && p.id === selectedCampId);
+        if (fuel || camp) {
           return (
             <button
               key={p.id}
               type="button"
               title={p.label}
-              onClick={() => onSelectFuel?.(on ? "" : p.id)}
+              onClick={() => {
+                if (fuel) onSelectFuel?.(on ? "" : p.id);
+                else onSelectCamp?.(on ? "" : p.id);
+              }}
               className={cn(
                 "absolute z-[3] flex size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center",
                 on ? "z-[4]" : "",
@@ -278,8 +301,12 @@ export function RouteBasemap({
               <span
                 className={cn(
                   "size-2.5 rounded-full border border-white/90 shadow",
-                  p.kind === "truck-stop" ? "bg-amber" : "bg-white/85",
-                  on && "size-3.5 bg-amber",
+                  p.kind === "truck-stop" && "bg-amber",
+                  p.kind === "fuel" && "bg-white/85",
+                  p.kind === "rv-park" && "bg-emerald-400",
+                  p.kind === "campground" && "bg-emerald-200",
+                  on && fuel && "size-3.5 bg-amber",
+                  on && camp && "size-3.5 bg-emerald-300",
                 )}
               />
             </button>
