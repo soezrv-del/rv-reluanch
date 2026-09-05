@@ -1318,28 +1318,28 @@ export function RvTripsApp() {
                 </p>
               ) : (
                 <>
-                {osrm ? (
-                  <p className="text-[11px] font-semibold text-blue">
-                    {routeEngineLabel(osrm)}
-                    {routeEngineNote(osrm) ? ` · ${routeEngineNote(osrm)}` : ""}
-                  </p>
-                ) : null}
-                {liveDirections.map((d, i) => (
-                  <div
-                    key={d.id}
-                    className="flex items-start gap-3 rounded-xl border border-white/12 bg-black/30 px-3 py-2.5"
-                  >
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-blue/25 text-[12px] font-bold text-blue">
-                      {i + 1}
-                    </span>
-                    <p className="min-w-0 flex-1 text-[13px] font-semibold leading-snug text-white">
-                      {d.instruction}
+                  {osrm ? (
+                    <p className="text-[11px] font-semibold text-blue">
+                      {routeEngineLabel(osrm)}
+                      {routeEngineNote(osrm) ? ` · ${routeEngineNote(osrm)}` : ""}
                     </p>
-                    <span className="shrink-0 text-[12px] font-bold tabular-nums text-white">
-                      {d.mi} mi
-                    </span>
-                  </div>
-                ))}
+                  ) : null}
+                    {liveDirections.map((d, i) => (
+                    <div
+                      key={d.id}
+                      className="flex items-start gap-3 rounded-xl border border-white/12 bg-black/30 px-3 py-2.5"
+                    >
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-blue/25 text-[12px] font-bold text-blue">
+                        {i + 1}
+                      </span>
+                      <p className="min-w-0 flex-1 text-[13px] font-semibold leading-snug text-white">
+                        {d.instruction}
+                      </p>
+                      <span className="shrink-0 text-[12px] font-bold tabular-nums text-white">
+                        {d.mi} mi
+                      </span>
+                    </div>
+                  ))}
                 </>
               )}
             </section>

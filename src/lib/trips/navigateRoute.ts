@@ -96,14 +96,11 @@ export async function fetchNavigateRoute(params: {
   to: OsrmLngLat;
   coach?: RvSafeCoachInput | null;
   signal?: AbortSignal;
-  fetchImpl?: typeof fetch;
 }): Promise<OsrmRouteResult> {
-  const doFetch = params.fetchImpl ?? fetch;
-
   if (canUseRvSafe(params.coach) && params.coach) {
     try {
       const qs = buildRvSafeQuery(params.from, params.to, params.coach);
-      const res = await doFetch(`/api/route?${qs}`, {
+      const res = await fetch(`/api/route?${qs}`, {
         signal: params.signal,
         headers: { Accept: "application/json" },
       });
