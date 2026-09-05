@@ -7,8 +7,10 @@ import {
   buildRvSafeQuery,
   canUseRvSafe,
   fetchNavigateRoute,
+  mergeLiveLegs,
   routeEngineLabel,
   routeEngineNote,
+  routeStopOrder,
   type RvSafeCoachInput,
 } from "./navigateRoute.ts";
 import type { OsrmLngLat, OsrmRouteResult } from "./osrm.ts";
@@ -269,6 +271,145 @@ test("fetchNavigateRoute: abort on hybrid fetch is not an OSRM fallback", async 
         }),
     );
     assert.equal(osrmHits, 0);
+  } finally {
+    globalThis.fetch = prev;
+  }
+});
+
+test("routeStopOrder inserts vias between origin and dest", () => {
+  const via = { lng: -116.2, lat: 43.6 };
+  assert.deepEqual(routeStopOrder(FROM, TO, [via]), [FROM, via, TO]);
+  assert.deepEqual(routeStopOrder(FROM, TO, []), [FROM, TO]);
+  assert.deepEqual(
+    routeStopOrder(FROM, TO, [{ lng: Number.NaN, lat: 43 }]),
+    [FROM, TO],
+  );
+});
+
+test("mergeLiveLegs sums live API miles/time only", () => {
+  const a = stubRoute({
+    miles: 100,
+    driveHours: 2,
+    driveMinutes: 0,
+    distanceM: 160_934.4,
+    durationS: 7_200,
+    geometry: {
+      type: "LineString",
+      coordinates: [
+        [-119.8, 39.5],
+        [-116.2, 43.6],
+      ],
+    },
+    destination: { lng: -116.2, lat: 43.6 },
+  });
+  const b = stubRoute({
+    miles: 50.2,
+    driveHours: 1,
+    driveMinutes: 6,
+    distanceM: 80_467.2,
+    durationS: 3_960,
+    origin: { lng: -116.2, lat: 43.6 },
+    geometry: {
+      type: "LineString",
+      coordinates: [
+        [-116.2, 43.6],
+        [-122.3, 47.6],
+      ],
+    },
+  });
+  const merged = mergeLiveLegs([a, b]);
+  assert.ok(merged);
+  assert.equal(merged.miles, 150);
+  assert.equal(merged.driveHours, 3);
+  assert.equal(merged.driveMinutes, 6);
+  assert.equal(merged.origin.lng, FROM.lng);
+  assert.equal(merged.destination.lng, TO.lng);
+  assert.equal(merged.geometry?.coordinates.length, 3);
+  assert.equal(mergeLiveLegs([]), null);
+  assert.equal(mergeLiveLegs([stubRoute({ miles: Number.NaN })]), null);
+});
+
+test("fetchNavigateRoute: via hops stitch two helper calls, never /api/route", async () => {
+  const via = { lng: -116.2, lat: 43.6 };
+  const calls: string[] = [];
+  const prev = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    calls.push(url);
+    const isFirst = calls.length === 1;
+    return new Response(
+      JSON.stringify(
+        stubRoute({
+          miles: isFirst ? 400 : 457.6,
+          driveHours: isFirst ? 7 : 8,
+          driveMinutes: isFirst ? 10 : 28,
+          distanceM: isFirst ? 643_700 : 736_500,
+          durationS: isFirst ? 25_800 : 30_480,
+        }),
+      ),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }) as typeof fetch;
+  try {
+    const data = await fetchNavigateRoute({
+      from: FROM,
+      to: TO,
+      via: [via],
+    });
+    assert.equal(calls.length, 2);
+    assert.match(calls[0]!, /\/api\/osrm/);
+    assert.match(calls[1]!, /\/api\/osrm/);
+    assert.doesNotMatch(calls.join("\n"), /\/api\/route/);
+    assert.match(calls[0]!, /from=-119\.8(%2C|,)39\.5/);
+    assert.match(calls[0]!, /to=-116\.2(%2C|,)43\.6/);
+    assert.match(calls[1]!, /from=-116\.2(%2C|,)43\.6/);
+    assert.match(calls[1]!, /to=-122\.3(%2C|,)47\.6/);
+    assert.equal(data.miles, 857.6);
+    assert.equal(data.driveHours, 15);
+    assert.equal(data.driveMinutes, 38);
+  } finally {
+    globalThis.fetch = prev;
+  }
+});
+
+test("fetchNavigateRoute: locked via hop still uses /api?mode=rv_safe", async () => {
+  const via = { lng: -116.2, lat: 43.6 };
+  const calls: string[] = [];
+  const prev = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    calls.push(url);
+    return new Response(
+      JSON.stringify(
+        stubRoute({
+          source: "osrm",
+          routingMode: "rv_safe",
+          fallbackFrom: "here",
+          miles: 100,
+          driveHours: 2,
+          driveMinutes: 0,
+          distanceM: 160_934,
+          durationS: 7_200,
+        }),
+      ),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }) as typeof fetch;
+  try {
+    const data = await fetchNavigateRoute({
+      from: FROM,
+      to: TO,
+      via: [via],
+      coach: LOCKED,
+    });
+    assert.equal(calls.length, 2);
+    assert.match(calls[0]!, /\/api\?/);
+    assert.match(calls[1]!, /\/api\?/);
+    assert.match(calls[0]!, /mode=rv_safe/);
+    assert.doesNotMatch(calls.join("\n"), /\/api\/route/);
+    assert.doesNotMatch(calls.join("\n"), /\/api\/osrm/);
+    assert.equal(routeEngineLabel(data), "OSRM · car fallback");
+    assert.equal(data.miles, 200);
   } finally {
     globalThis.fetch = prev;
   }

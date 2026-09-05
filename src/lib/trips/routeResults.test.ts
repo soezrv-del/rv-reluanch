@@ -83,6 +83,11 @@ test("tripRouteFromLive does not spread DEMO_ROUTE fields", () => {
   assert.notEqual(trip.miles, DEMO_ROUTE.miles);
   assert.notEqual(trip.destination.label, DEMO_ROUTE.destination.label);
   assert.equal(tripRouteFromLive({ ...LIVE, miles: Number.NaN }, "A", "B"), null);
+  const multi = tripRouteFromLive(LIVE, "Reno, NV", "Seattle, WA", {
+    viaLabels: ["Boise, ID"],
+  });
+  assert.equal(multi?.vias?.[0]?.label, "Boise, ID");
+  assert.equal(multi?.miles, LIVE.miles);
 });
 
 test("liveProviderNote is API text only — hides key-setup copy", () => {

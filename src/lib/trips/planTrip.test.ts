@@ -13,8 +13,11 @@ import {
   originIsDevice,
   placeFromUnknown,
   PLAN_DEST_CHIPS,
+  PLAN_VIA_CHIPS,
   saveLastKnownOrigin,
   shouldTypeahead,
+  defaultTripName,
+  MAX_VIAS,
   type PlanPlace,
 } from "./planTrip.ts";
 
@@ -170,6 +173,19 @@ test("originIsDevice is current-location only", () => {
   assert.equal(originIsDevice(null), false);
 });
 
+test("via chips and default trip name stay lean", () => {
+  assert.ok(MAX_VIAS >= 1 && MAX_VIAS <= 4);
+  assert.ok(PLAN_VIA_CHIPS.some((c) => c.label.startsWith("Boise")));
+  for (const c of PLAN_VIA_CHIPS) {
+    assert.ok(isFiniteCoord(c.lat, c.lng));
+  }
+  assert.equal(defaultTripName(RENO, HERE, []), "Reno → Near Seattle");
+  assert.equal(
+    defaultTripName(RENO, HERE, [{ label: "Boise, ID", lat: 1, lng: 1, kind: "city" }]),
+    "Reno → Boise → Near Seattle",
+  );
+});
+
 test("dest chips carry coords so a tap can route without Search", () => {
   assert.ok(PLAN_DEST_CHIPS.length >= 4);
   for (const c of PLAN_DEST_CHIPS) {
@@ -211,4 +227,7 @@ test("Navigate plan-trip: dest-first, profile after route, no Search tap require
   );
   assert.match(ui, /fetchNavigateRoute/);
   assert.doesNotMatch(ui, /\/api\/route/);
+  assert.match(ui, /PLAN_VIA_CHIPS/);
+  assert.match(ui, />\s*Stop\s*</);
+  assert.match(ui, /saveTrip/);
 });

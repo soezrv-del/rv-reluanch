@@ -55,15 +55,20 @@ export function tripRouteFromLive(
   data: OsrmRouteResult,
   originLabel: string,
   destLabel: string,
-  opts?: { id?: string; engineExtra?: string },
+  opts?: { id?: string; engineExtra?: string; viaLabels?: string[] },
 ): TripRoute | null {
   const stats = liveRouteStats(data);
   if (!stats) return null;
   const engine = (data.engine || "").trim();
+  const vias = (opts?.viaLabels ?? [])
+    .map((label) => label.trim())
+    .filter(Boolean)
+    .map((label, i) => ({ id: `via-${i}`, label }));
   return {
     id: opts?.id ?? `route-${data.fetchedAt || "live"}`,
     origin: { id: "origin", label: originLabel },
     destination: { id: "dest", label: destLabel },
+    ...(vias.length ? { vias } : {}),
     miles: stats.miles,
     driveHours: stats.driveHours,
     driveMinutes: stats.driveMinutes,

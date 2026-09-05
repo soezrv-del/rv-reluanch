@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
+  Bookmark,
   ChevronRight,
   Droplets,
   ExternalLink,
@@ -10,9 +11,11 @@ import {
   Lock,
   MapPin,
   Navigation,
+  Plus,
   Tent,
   Unlock,
   User,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RVTRIPS_AMERICA_BACKDROP } from "@/assets/tripMedia";
@@ -32,6 +35,7 @@ import {
 } from "@/lib/trips/osrm";
 import {
   fetchNavigateRoute,
+  mergeLiveLegs,
   routeEngineLabel,
 } from "@/lib/trips/navigateRoute";
 import {
@@ -79,14 +83,25 @@ import {
 import { DumpMap } from "@/components/rvtrips/DumpMap";
 import {
   canSubmitPlan,
+  defaultTripName,
   GEOCODE_DEBOUNCE_MS,
   loadLastKnownOrigin,
+  MAX_VIAS,
+  newViaId,
   originIsDevice,
   PLAN_DEST_CHIPS,
+  PLAN_VIA_CHIPS,
   saveLastKnownOrigin,
   shouldTypeahead,
   type PlanPlace,
 } from "@/lib/trips/planTrip";
+import {
+  deleteSavedTrip,
+  loadSavedTrips,
+  sameCorridor,
+  saveTrip,
+  type SavedTrip,
+} from "@/lib/trips/savedTrip";
 
 type SubTab =
   | "navigate"
@@ -107,6 +122,8 @@ const SUB_TABS: { id: SubTab; label: string; icon: typeof Navigation }[] = [
 ];
 
 type PlaceHit = PlanPlace;
+type GeoTarget = "origin" | "dest" | `via:${string}`;
+type ViaDraft = { id: string; text: string; place: PlaceHit | null };
 
 type NavStep = {
   id: string;
@@ -206,9 +223,17 @@ export function RvTripsApp() {
   const [destText, setDestText] = useState("");
   const [originPlace, setOriginPlace] = useState<PlaceHit | null>(bootOrigin);
   const [destPlace, setDestPlace] = useState<PlaceHit | null>(null);
+  const [vias, setVias] = useState<ViaDraft[]>([]);
+  const [savedTrips, setSavedTrips] = useState<SavedTrip[]>(() => {
+    try {
+      return loadSavedTrips();
+    } catch {
+      return [];
+    }
+  });
   const [originOpen, setOriginOpen] = useState(!bootOrigin);
   const [geoHits, setGeoHits] = useState<PlaceHit[]>([]);
-  const [geoFor, setGeoFor] = useState<"origin" | "dest" | null>(null);
+  const [geoFor, setGeoFor] = useState<GeoTarget | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
@@ -336,16 +361,25 @@ export function RvTripsApp() {
 
   const displayCoach = locked ?? (coachIsReady(draft) ? draft : null);
 
+  const viaPlaces = useMemo(
+    () => vias.map((v) => v.place).filter((p): p is PlaceHit => p != null),
+    [vias],
+  );
+  const viaSig = viaPlaces.map((p) => `${p.lng.toFixed(4)},${p.lat.toFixed(4)}`).join("|");
+
   const restriction = useMemo(
     () =>
       analyzeRouteRestrictions({
         coach: displayCoach,
         route: osrm,
         hasRoute: Boolean(originPlace && destPlace && osrm),
-        destLabel: destPlace?.label || route?.destination.label || "",
+        destLabel:
+          [viaPlaces.map((p) => p.label).join(" "), destPlace?.label || route?.destination.label || ""]
+            .filter(Boolean)
+            .join(" ") || "",
         originLabel: originPlace?.label || route?.origin.label || "",
       }),
-    [displayCoach, osrm, originPlace, destPlace, route?.destination.label, route?.origin.label],
+    [displayCoach, osrm, originPlace, destPlace, viaPlaces, route?.destination.label, route?.origin.label],
   );
   const alerts = restriction.alerts;
 
@@ -384,6 +418,7 @@ export function RvTripsApp() {
       to: OsrmLngLat,
       destLabel: string,
       originLabel: string,
+      viaPts: PlaceHit[] = [],
     ) => {
       const ctrl = new AbortController();
       setRouteStatus("loading");
@@ -393,11 +428,14 @@ export function RvTripsApp() {
       fetchNavigateRoute({
         from,
         to,
+        via: viaPts.map((p) => ({ lng: p.lng, lat: p.lat })),
         coach: locked,
         signal: ctrl.signal,
       })
         .then((data) => {
-          const next = tripRouteFromLive(data, originLabel, destLabel);
+          const next = tripRouteFromLive(data, originLabel, destLabel, {
+            viaLabels: viaPts.map((p) => p.label),
+          });
           if (!next) {
             setOsrm(null);
             setRoute(null);
@@ -430,8 +468,11 @@ export function RvTripsApp() {
       { lng: destPlace.lng, lat: destPlace.lat },
       destPlace.label,
       originPlace.label,
+      viaPlaces,
     );
-  }, [originPlace, destPlace, routeKey, runRoute]);
+    // viaSig tracks filled stops; empty via rows do not retrigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originPlace, destPlace, viaSig, routeKey, runRoute]);
 
   const liveDirections: NavStep[] | null = useMemo(() => {
     if (!osrm?.steps?.length) return null;
@@ -480,7 +521,7 @@ export function RvTripsApp() {
     setNavStepIdx(0);
   }, []);
 
-  const searchPlace = async (q: string, which: "origin" | "dest") => {
+  const searchPlace = async (q: string, which: GeoTarget) => {
     geoAbortRef.current?.abort();
     const ctrl = new AbortController();
     geoAbortRef.current = ctrl;
@@ -512,6 +553,13 @@ export function RvTripsApp() {
     setNavStepIdx(0);
     if (which === "origin") {
       commitOrigin(hit);
+      return;
+    }
+    if (which && which.startsWith("via:")) {
+      const id = which.slice(4);
+      setVias((rows) =>
+        rows.map((v) => (v.id === id ? { ...v, text: hit.label, place: hit } : v)),
+      );
       return;
     }
     setDestPlace(hit);
@@ -577,6 +625,16 @@ export function RvTripsApp() {
     return () => window.clearTimeout(t);
   }, [originOpen, originText, originPlace]);
 
+  useEffect(() => {
+    const drafts = vias.filter((v) => shouldTypeahead(v.text, v.place));
+    const draft = drafts[drafts.length - 1];
+    if (!draft) return;
+    const t = window.setTimeout(() => {
+      void searchPlace(draft.text, `via:${draft.id}`);
+    }, GEOCODE_DEBOUNCE_MS);
+    return () => window.clearTimeout(t);
+  }, [vias]);
+
   const geocodeAndRoute = async () => {
     setRouteError(null);
     setLocateError(null);
@@ -600,6 +658,30 @@ export function RvTripsApp() {
         setDestPlace(d);
         setDestText(d.label);
       }
+    }
+    const nextVias: ViaDraft[] = [];
+    for (const row of vias) {
+      if (row.place) {
+        nextVias.push(row);
+        continue;
+      }
+      if (!row.text.trim()) {
+        nextVias.push(row);
+        continue;
+      }
+      const r = await fetch(
+        `/api/geocode?q=${encodeURIComponent(row.text.trim())}`,
+      );
+      const j = (await r.json()) as { hits?: PlaceHit[] };
+      const hit = j.hits?.[0] || null;
+      if (!hit) {
+        setRouteError("Could not find that stop — try a city name");
+        return;
+      }
+      nextVias.push({ ...row, text: hit.label, place: hit });
+    }
+    if (nextVias.some((v, i) => v.place !== vias[i]?.place)) {
+      setVias(nextVias);
     }
     if (o && d) setRouteKey((k) => k + 1);
     else
@@ -629,16 +711,32 @@ export function RvTripsApp() {
     setSaferNote(null);
     try {
       const safer = saferOsrmParams(displayCoach);
-      const data = await fetchOsrmRoute({
-        from: { lng: originPlace.lng, lat: originPlace.lat },
-        to: { lng: destPlace.lng, lat: destPlace.lat },
-        weight: safer.weight,
-        exclude: safer.exclude,
-        bypassCache: true,
-      });
+      const points: OsrmLngLat[] = [
+        { lng: originPlace.lng, lat: originPlace.lat },
+        ...viaPlaces.map((p) => ({ lng: p.lng, lat: p.lat })),
+        { lng: destPlace.lng, lat: destPlace.lat },
+      ];
+      const legs = [];
+      for (let i = 0; i < points.length - 1; i++) {
+        legs.push(
+          await fetchOsrmRoute({
+            from: points[i]!,
+            to: points[i + 1]!,
+            weight: safer.weight,
+            exclude: safer.exclude,
+            bypassCache: true,
+          }),
+        );
+      }
+      const data = mergeLiveLegs(legs);
+      if (!data) {
+        setSaferNote("Safer route returned no miles or time");
+        return;
+      }
       const next = tripRouteFromLive(data, originPlace.label, destPlace.label, {
         id: `safer-${data.fetchedAt || "live"}`,
         engineExtra: "safer",
+        viaLabels: viaPlaces.map((p) => p.label),
       });
       if (!next) {
         setSaferNote("Safer route returned no miles or time");
@@ -686,6 +784,86 @@ export function RvTripsApp() {
     setNavStepIdx(0);
     if (originPlace) setRouteKey((k) => k + 1);
   };
+
+  const emptyVia = vias.find((v) => !v.place);
+
+  const pickChip = (hit: PlaceHit) => {
+    if (emptyVia) {
+      setVias((rows) =>
+        rows.map((v) =>
+          v.id === emptyVia.id ? { ...v, text: hit.label, place: hit } : v,
+        ),
+      );
+      setGeoHits([]);
+      setGeoFor(null);
+      setNavArmed(false);
+      setNavStepIdx(0);
+      return;
+    }
+    pickDest(hit);
+  };
+
+  const addVia = () => {
+    if (vias.length >= MAX_VIAS) return;
+    setVias((rows) => [...rows, { id: newViaId(), text: "", place: null }]);
+    setGeoHits([]);
+    setGeoFor(null);
+  };
+
+  const removeVia = (id: string) => {
+    setVias((rows) => rows.filter((v) => v.id !== id));
+    setGeoHits([]);
+    setGeoFor(null);
+    setNavArmed(false);
+    setNavStepIdx(0);
+  };
+
+  const openSavedTrip = (trip: SavedTrip) => {
+    setOriginPlace(trip.origin);
+    setOriginText(trip.origin.label);
+    setOriginOpen(false);
+    saveLastKnownOrigin(trip.origin);
+    setVias(
+      trip.vias.map((p) => ({ id: newViaId(), text: p.label, place: p })),
+    );
+    setDestPlace(trip.dest);
+    setDestText(trip.dest.label);
+    setGeoHits([]);
+    setGeoFor(null);
+    setNavArmed(false);
+    setNavStepIdx(0);
+    setRouteKey((k) => k + 1);
+  };
+
+  const persistTrip = () => {
+    if (!originPlace || !destPlace) return;
+    const saved = saveTrip({
+      origin: originPlace,
+      dest: destPlace,
+      vias: viaPlaces,
+    });
+    if (saved) setSavedTrips(loadSavedTrips());
+  };
+
+  const forgetTrip = (id: string) => {
+    setSavedTrips(deleteSavedTrip(id));
+  };
+
+  const corridor =
+    originPlace && destPlace
+      ? defaultTripName(originPlace, destPlace, viaPlaces)
+      : "";
+  const alreadySaved = Boolean(
+    originPlace &&
+      destPlace &&
+      savedTrips.some((t) =>
+        sameCorridor(t, {
+          origin: originPlace,
+          dest: destPlace,
+          vias: viaPlaces,
+        }),
+      ),
+  );
 
   const routeToDump = (d: (typeof dumpList)[number]) => {
     pickDest({
@@ -1011,6 +1189,44 @@ export function RvTripsApp() {
                   </p>
                 ) : null}
 
+                {vias.map((via) => (
+                  <div key={via.id} className="flex items-center gap-1.5">
+                    <input
+                      value={via.text}
+                      onChange={(e) => {
+                        const text = e.target.value;
+                        setVias((rows) =>
+                          rows.map((v) =>
+                            v.id === via.id ? { ...v, text, place: null } : v,
+                          ),
+                        );
+                      }}
+                      placeholder="Overnight"
+                      className="glass-field min-h-11 min-w-0 flex-1 rounded-xl px-3 py-2.5 text-[14px] text-white outline-none placeholder:text-white/65"
+                      aria-label="Overnight stop"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeVia(via.id)}
+                      className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-black/30 text-white"
+                      aria-label="Remove stop"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+                ))}
+
+                {vias.length < MAX_VIAS ? (
+                  <button
+                    type="button"
+                    onClick={addVia}
+                    className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-full border border-white/18 bg-black/30 px-3 py-2 text-[12px] font-bold text-white"
+                  >
+                    <Plus className="size-3.5" />
+                    Stop
+                  </button>
+                ) : null}
+
                 <input
                   value={destText}
                   onChange={(e) => {
@@ -1053,11 +1269,11 @@ export function RvTripsApp() {
                 ) : null}
 
                 <div className="flex flex-wrap gap-1.5">
-                  {PLAN_DEST_CHIPS.map((chip) => (
+                  {(emptyVia ? PLAN_VIA_CHIPS : PLAN_DEST_CHIPS).map((chip) => (
                     <button
                       key={chip.label}
                       type="button"
-                      onClick={() => pickDest(chip)}
+                      onClick={() => pickChip(chip)}
                       className="min-h-11 rounded-full border border-white/20 bg-black/30 px-3 py-2 text-[11px] font-semibold text-white"
                     >
                       {chip.label.split(",")[0]}
@@ -1076,6 +1292,33 @@ export function RvTripsApp() {
                 </button>
                 {routeError ? (
                   <p className="text-[12px] text-amber">{routeError}</p>
+                ) : null}
+
+                {savedTrips.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5" data-saved-trips>
+                    {savedTrips.map((trip) => (
+                      <div
+                        key={trip.id}
+                        className="flex min-h-11 items-center rounded-full border border-white/18 bg-black/35"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => openSavedTrip(trip)}
+                          className="max-w-[14rem] truncate px-3 py-2 text-[11px] font-semibold text-white"
+                        >
+                          {trip.name}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => forgetTrip(trip.id)}
+                          className="pr-2.5 text-white/70"
+                          aria-label={`Remove ${trip.name}`}
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 ) : null}
               </section>
 
@@ -1125,9 +1368,22 @@ export function RvTripsApp() {
                         {alerts.length}
                       </span>
                     ) : null}
+                    <button
+                      type="button"
+                      onClick={persistTrip}
+                      className="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/20 bg-black/35 px-3 py-1.5 text-[12px] font-bold text-white"
+                      data-save-trip
+                    >
+                      <Bookmark className="size-3.5" />
+                      {alreadySaved ? "Saved" : "Save"}
+                    </button>
                   </div>
 
-                  {originPlace || destPlace ? (
+                  {corridor ? (
+                    <p className="text-[14px] font-semibold leading-snug text-white">
+                      {corridor}
+                    </p>
+                  ) : originPlace || destPlace ? (
                     <p className="text-[14px] font-semibold leading-snug text-white">
                       {originPlace?.label || route?.origin.label}
                       <span className="mx-1.5 text-white/50">→</span>

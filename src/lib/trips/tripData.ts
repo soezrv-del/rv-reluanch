@@ -36,6 +36,7 @@ export type TripRoute = {
   id: string;
   origin: TripStop;
   destination: TripStop;
+  vias?: TripStop[];
   miles: number;
   driveHours: number;
   driveMinutes: number;
