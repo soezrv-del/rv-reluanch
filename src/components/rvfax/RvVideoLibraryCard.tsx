@@ -3,6 +3,7 @@ import { ExternalLink, Loader2, Play } from "lucide-react";
 import {
   EMPTY_MATCH_MESSAGE,
   fetchRvVideos,
+  isRvVideoLibraryYear,
   MISSING_KEY_MESSAGE,
   RELATED_NOTE,
   RV_VIDEO_LIBRARY_URL,
@@ -14,20 +15,26 @@ type Phase = "prompt" | "hidden" | "loading" | "list" | "empty" | "calm";
 
 /**
  * Quiet opt-in. Never searches until Yes. Catalog stays SoT.
+ * Known model years before 2016 stay hidden — channel coverage is ~2016+.
  */
 export function RvVideoLibraryCard(coach: RvVideoCoach) {
   const identity = `${coach.year}|${coach.make}|${coach.model}|${coach.floorplan || ""}|${coach.series || ""}`;
-  const [phase, setPhase] = useState<Phase>("prompt");
+  const covered = isRvVideoLibraryYear(coach.year);
+  const [phase, setPhase] = useState<Phase>(covered ? "prompt" : "hidden");
   const [videos, setVideos] = useState<RvVideoHit[]>([]);
   const [note, setNote] = useState("");
 
   useEffect(() => {
-    setPhase("prompt");
+    setPhase(isRvVideoLibraryYear(coach.year) ? "prompt" : "hidden");
     setVideos([]);
     setNote("");
   }, [identity]);
 
   async function onYes() {
+    if (!isRvVideoLibraryYear(coach.year)) {
+      setPhase("hidden");
+      return;
+    }
     setPhase("loading");
     setVideos([]);
     setNote("");

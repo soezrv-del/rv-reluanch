@@ -3,6 +3,7 @@
  *
  * Catalog remains SoT. Videos are optional media — never facts.
  * The client must not call YouTube (or this proxy) until the user taps Yes.
+ * Channel coverage is ~2016+ — known model years before that stay silent.
  */
 
 import { coachTowRole } from "./activeCoach.ts";
@@ -11,6 +12,8 @@ export const RV_VIDEO_LIBRARY_HANDLE = "RVVideoLibrary";
 export const RV_VIDEO_LIBRARY_URL = "https://www.youtube.com/@RVVideoLibrary";
 /** David-confirmed @RVVideoLibrary id — use this constant, do not resolve live. */
 export const RV_VIDEO_LIBRARY_CHANNEL_ID = "UCaAH7nANvUhdPWN93uQ6mcA";
+/** @RVVideoLibrary walkthroughs start around this model year. */
+export const RV_VIDEO_LIBRARY_MIN_YEAR = 2016;
 
 export const MISSING_KEY_MESSAGE = "Video lookup not configured.";
 export const LOOKUP_FAILED_MESSAGE = "Video lookup failed. Try again shortly.";
@@ -90,11 +93,41 @@ function clean(v?: string | null): string {
     .replace(/\s+/g, " ");
 }
 
+/** 4-digit model year, or null when we cannot tell. */
+export function parseCoachModelYear(year?: string | null): number | null {
+  const t = clean(year);
+  if (!/^\d{4}$/.test(t)) return null;
+  return Number(t);
+}
+
+/**
+ * Channel coverage is ~2016+. A known year before that is out.
+ * Unparseable / unknown year stays eligible — do not invent a cutoff.
+ */
+export function isRvVideoLibraryYear(year?: string | null): boolean {
+  const n = parseCoachModelYear(year);
+  if (n == null) return true;
+  return n >= RV_VIDEO_LIBRARY_MIN_YEAR;
+}
+
+function emptyVideosOk(coach: RvVideoCoach, cached = true): RvVideosOk {
+  return {
+    ok: true,
+    source: "RV Video Library",
+    channel: RV_VIDEO_LIBRARY_URL,
+    query: buildRvVideoQuery(coach),
+    videos: [],
+    cached,
+    note: EMPTY_MATCH_MESSAGE,
+  };
+}
+
 /** Quiet prompt only for a selected RV with year / make / model. */
 export function shouldShowRvVideoPrompt(coach: RvVideoCoach): boolean {
   if (!clean(coach.year) || !clean(coach.make) || !clean(coach.model)) {
     return false;
   }
+  if (!isRvVideoLibraryYear(coach.year)) return false;
   const type = clean(coach.type);
   if (!type) return true;
   const role = coachTowRole(type);
@@ -191,6 +224,15 @@ export async function fetchRvVideos(
       error: "Year, make, and model are required.",
       code: "bad_request",
     };
+  }
+  if (!isRvVideoLibraryYear(year)) {
+    return emptyVideosOk({
+      year,
+      make,
+      model,
+      floorplan: coach.floorplan,
+      series: coach.series,
+    });
   }
 
   const qs = new URLSearchParams({ year, make, model });

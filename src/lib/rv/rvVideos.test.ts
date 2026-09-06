@@ -8,12 +8,16 @@ import {
   buildRvVideoQuery,
   calmVideoLookupError,
   EMPTY_MATCH_MESSAGE,
+  fetchRvVideos,
+  isRvVideoLibraryYear,
   LOOKUP_FAILED_MESSAGE,
   MISSING_KEY_MESSAGE,
+  parseCoachModelYear,
   rankRvVideos,
   RELATED_NOTE,
   RV_VIDEO_LIBRARY_CHANNEL_ID,
   RV_VIDEO_LIBRARY_HANDLE,
+  RV_VIDEO_LIBRARY_MIN_YEAR,
   shouldShowRvVideoPrompt,
   scoreTitleOverlap,
   tokenizeCoachQuery,
@@ -25,6 +29,21 @@ const root = dirname(fileURLToPath(import.meta.url));
 function src(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
+
+test("channel coverage is 2016+; unknown year stays eligible", () => {
+  assert.equal(RV_VIDEO_LIBRARY_MIN_YEAR, 2016);
+  assert.equal(parseCoachModelYear("2015"), 2015);
+  assert.equal(parseCoachModelYear("2016"), 2016);
+  assert.equal(parseCoachModelYear("late"), null);
+  assert.equal(parseCoachModelYear(""), null);
+  assert.equal(isRvVideoLibraryYear("2015"), false);
+  assert.equal(isRvVideoLibraryYear("2014"), false);
+  assert.equal(isRvVideoLibraryYear("2016"), true);
+  assert.equal(isRvVideoLibraryYear("2023"), true);
+  assert.equal(isRvVideoLibraryYear(""), true);
+  assert.equal(isRvVideoLibraryYear("n/a"), true);
+  assert.equal(isRvVideoLibraryYear("2015-2016"), true);
+});
 
 test("prompt hides empty / non-RV selection and shows motorhomes", () => {
   assert.equal(shouldShowRvVideoPrompt({}), false);
@@ -69,6 +88,56 @@ test("prompt hides empty / non-RV selection and shows motorhomes", () => {
     }),
     true,
   );
+  assert.equal(
+    shouldShowRvVideoPrompt({
+      year: "2016",
+      make: "Tiffin",
+      model: "Allegro Bus",
+      type: "Class A Diesel",
+    }),
+    true,
+  );
+  assert.equal(
+    shouldShowRvVideoPrompt({
+      year: "2015",
+      make: "Tiffin",
+      model: "Allegro Bus",
+      type: "Class A Diesel",
+    }),
+    false,
+  );
+  assert.equal(
+    shouldShowRvVideoPrompt({
+      year: "2010",
+      make: "Newmar",
+      model: "Dutch Star",
+      type: "Class A Diesel",
+    }),
+    false,
+  );
+  assert.equal(
+    shouldShowRvVideoPrompt({
+      year: "n/a",
+      make: "Tiffin",
+      model: "Allegro Bus",
+      type: "Class A Diesel",
+    }),
+    true,
+  );
+});
+
+test("pre-2016 client lookup stays empty and never hits the proxy", async () => {
+  const res = await fetchRvVideos({
+    year: "2014",
+    make: "Tiffin",
+    model: "Allegro Bus",
+    floorplan: "45OPP",
+  });
+  assert.equal(res.ok, true);
+  if (res.ok) {
+    assert.equal(res.videos.length, 0);
+    assert.match(res.query, /2014 Tiffin Allegro Bus/);
+  }
 });
 
 test("query is year + make + model and optional series/floorplan, no invent", () => {
@@ -190,4 +259,10 @@ test("Facts report only fetches videos after opt-in; key stays server-side", () 
   assert.match(client, /\/api\/rv-videos/);
   assert.doesNotMatch(client, /YOUTUBE_API_KEY/);
   assert.doesNotMatch(client, /googleapis\.com\/youtube/);
+  assert.match(client, /RV_VIDEO_LIBRARY_MIN_YEAR/);
+  assert.match(client, /isRvVideoLibraryYear/);
+  assert.match(api, /isRvVideoLibraryYear/);
+  assert.doesNotMatch(api, /publishedAfter|publishedBefore|order=date/);
+  assert.match(card, /isRvVideoLibraryYear/);
+  assert.doesNotMatch(card, /Want a video date|publish date|video date/i);
 });

@@ -17,7 +17,7 @@ Read this first in any new chat before scanning the codebase.
 - **Mobile:** Capacitor 8 (iOS + Android)
 - **Auth / data:** better-auth, Kysely, Postgres / PGlite
 - **RV Grok:** xAI API (`XAI_API_KEY` on Vercel); chat via `/api/rvgrok`; voice web research via `/api/rvgrok/web-research`
-- **Facts videos:** YouTube Data API (`YOUTUBE_API_KEY` on Vercel Production + Preview, server-only); opt-in `GET /api/rv-videos` after “Want a video?” — never on Facts open
+- **Facts videos:** YouTube Data API (`YOUTUBE_API_KEY` on Vercel Production + Preview, server-only); opt-in `GET /api/rv-videos` after “Want a video?” — never on Facts open; silent for model years before 2016 (channel coverage)
 - **Ship path:** GitHub `soezrv-del/rv-reluanch` → Vercel team `rvfox`, project `rv-reluanch` (also duplicate `rv-reluanch-blef`)
 - **DNS:** `rvmax.app` at GoDaddy → Vercel
 
