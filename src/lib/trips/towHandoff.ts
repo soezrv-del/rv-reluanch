@@ -94,7 +94,7 @@ export function offerFromCoach(
 export function decideTowHandoff(
   input: {
     locked?: CoachProfile | null;
-    offer?: TowHandoffOffer | null;
+    offer?: Partial<TowHandoffOffer> | null;
   },
   suggest: SuggestCoachFn,
 ): TowHandoffDecision {
