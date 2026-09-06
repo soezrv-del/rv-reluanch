@@ -4,7 +4,6 @@ import {
   Bookmark,
   Droplets,
   ExternalLink,
-  ListChecks,
   Loader2,
   LocateFixed,
   Lock,
@@ -13,7 +12,6 @@ import {
   Plus,
   Tent,
   Unlock,
-  User,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -120,28 +118,8 @@ import {
 } from "@/lib/trips/savedTrip";
 import { useNavFollow } from "@/lib/trips/useNavFollow";
 
-type SubTab =
-  | "navigate"
-  | "directions"
-  | "campgrounds"
-  | "dumps"
-  | "pack"
-  | "profile";
+type ToolPane = "profile" | "dumps" | "pack" | null;
 type SheetId = "year" | "make" | "model" | "floorplan" | null;
-
-const SUB_TABS: {
-  id: SubTab;
-  label: string;
-  icon: typeof Navigation;
-  rank: "primary" | "route" | "tool";
-}[] = [
-  { id: "navigate", label: "Navigate", icon: Navigation, rank: "primary" },
-  { id: "directions", label: "Directions", icon: ListChecks, rank: "route" },
-  { id: "campgrounds", label: "Camps", icon: Tent, rank: "route" },
-  { id: "dumps", label: "Dumps", icon: Droplets, rank: "tool" },
-  { id: "pack", label: "Pack", icon: ListChecks, rank: "tool" },
-  { id: "profile", label: "Profile", icon: User, rank: "tool" },
-];
 
 type PackRow = { id: string; item: string; done: boolean; sample?: boolean };
 
@@ -197,12 +175,11 @@ function geoErrorMessage(err: unknown): string {
 }
 
 export function RvTripsApp() {
-  const [sub, setSub] = useState<SubTab>("navigate");
+  const [tool, setTool] = useState<ToolPane>(null);
   const [pack, setPack] = useState<PackRow[]>([]);
   const [showSamplePack, setShowSamplePack] = useState(false);
   const [packDraft, setPackDraft] = useState("");
   const [navArmed, setNavArmed] = useState(false);
-  const [navStepIdx, setNavStepIdx] = useState(0);
   const follow = useNavFollow(navArmed);
   const shellNav = useShellNavOptional();
 
@@ -503,7 +480,6 @@ export function RvTripsApp() {
       setRouteStatus("loading");
       setRouteError(null);
       setNavArmed(false);
-      setNavStepIdx(0);
       fetchNavigateRoute({
         from,
         to,
@@ -667,25 +643,12 @@ export function RvTripsApp() {
     return steps.length ? steps : null;
   }, [osrm]);
 
-  useEffect(() => {
-    if (!navArmed || !liveDirections?.length) return;
-    const step =
-      liveDirections[Math.min(navStepIdx, liveDirections.length - 1)];
-    if (!step) return;
-    const line =
-      navStepIdx === 0
-        ? `Navigation started. ${step.instruction}. ${step.mi} miles.`
-        : `${step.instruction}. ${step.mi} miles.`;
-    speakNav(line);
-  }, [navArmed, navStepIdx, liveDirections, speakNav]);
-
   const commitOrigin = useCallback((hit: PlaceHit) => {
     setOriginPlace(hit);
     setOriginText(hit.label);
     setOriginOpen(false);
     saveLastKnownOrigin(hit);
     setNavArmed(false);
-    setNavStepIdx(0);
   }, []);
 
   const searchPlace = async (q: string, which: GeoTarget) => {
@@ -717,7 +680,6 @@ export function RvTripsApp() {
     setGeoFor(null);
     setLocateError(null);
     setNavArmed(false);
-    setNavStepIdx(0);
     if (which === "origin") {
       commitOrigin(hit);
       return;
@@ -930,7 +892,6 @@ export function RvTripsApp() {
       setRoute(next);
       setRouteStatus("live");
       setSaferNote(saferAppliedNote(intent, data));
-      setNavStepIdx(0);
     } catch (e) {
       setSaferNote(
         e instanceof Error ? e.message : "Could not compute safer route",
@@ -963,7 +924,6 @@ export function RvTripsApp() {
     setGeoHits([]);
     setGeoFor(null);
     setNavArmed(false);
-    setNavStepIdx(0);
     if (originPlace) setRouteKey((k) => k + 1);
   };
 
@@ -979,7 +939,6 @@ export function RvTripsApp() {
       setGeoHits([]);
       setGeoFor(null);
       setNavArmed(false);
-      setNavStepIdx(0);
       return;
     }
     pickDest(hit);
@@ -997,7 +956,6 @@ export function RvTripsApp() {
     setGeoHits([]);
     setGeoFor(null);
     setNavArmed(false);
-    setNavStepIdx(0);
   };
 
   const openSavedTrip = (trip: SavedTrip) => {
@@ -1013,7 +971,6 @@ export function RvTripsApp() {
     setGeoHits([]);
     setGeoFor(null);
     setNavArmed(false);
-    setNavStepIdx(0);
     setRouteKey((k) => k + 1);
   };
 
@@ -1054,7 +1011,7 @@ export function RvTripsApp() {
       lng: d.lng,
       kind: "dump",
     });
-    setSub("navigate");
+    setTool(null);
   };
 
   const routeViaPoi = (
@@ -1112,8 +1069,7 @@ export function RvTripsApp() {
     setFuelFocusId(null);
     setCampFocusId(null);
     setNavArmed(false);
-    setNavStepIdx(0);
-    setSub("navigate");
+    setTool(null);
   };
 
   const viaSlotsFull =
@@ -1184,9 +1140,11 @@ export function RvTripsApp() {
               </div>
             </div>
             {displayCoach ? (
-              <span
+              <button
+                type="button"
+                onClick={() => setTool("profile")}
                 className={cn(
-                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide",
+                  "inline-flex min-h-11 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide",
                   locked
                     ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
                     : "border-sky-400/40 bg-sky-500/15 text-sky-200",
@@ -1194,58 +1152,35 @@ export function RvTripsApp() {
               >
                 {locked ? <Lock className="size-3" /> : <Unlock className="size-3" />}
                 {profileBadge}
-              </span>
-            ) : null}
-          </div>
-
-          <div
-            className="mt-3 flex gap-1 overflow-x-auto rounded-full border border-white/15 bg-black/45 p-1 backdrop-blur-xl"
-            style={{ scrollbarWidth: "none" }}
-            role="tablist"
-          >
-            {SUB_TABS.map((t) => {
-              const Icon = t.icon;
-              const active = sub === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setSub(t.id)}
-                  className={cn(
-                    "flex shrink-0 items-center gap-1 rounded-full transition",
-                    t.rank === "primary"
-                      ? "px-3.5 py-2 text-[12px] font-bold"
-                      : t.rank === "tool"
-                        ? "px-2.5 py-1.5 text-[10px] font-semibold"
-                        : "px-3 py-2 text-[11px] font-semibold",
-                    active
-                      ? t.rank === "primary"
-                        ? "bg-blue text-white shadow-[0_0_16px_rgba(80,160,255,0.4)]"
-                        : "bg-white/18 text-white"
-                      : t.rank === "tool"
-                        ? "text-white/45 hover:bg-white/8 hover:text-white/70"
-                        : t.rank === "primary"
-                          ? "text-white/85 hover:bg-white/10"
-                          : "text-white/70 hover:bg-white/10",
-                  )}
-                >
-                  <Icon className="size-3.5" />
-                  {t.label}
-                </button>
-              );
-            })}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setTool("profile")}
+                className="min-h-11 text-[11px] font-semibold text-white/55"
+              >
+                Profile
+              </button>
+            )}
           </div>
         </header>
 
         <div className="mx-auto w-full max-w-lg space-y-3 px-3 pb-16 pt-2 sm:px-4">
           {/* ── PROFILE ── */}
-          {sub === "profile" ? (
+          {tool === "profile" ? (
             <section className="glass-prestige space-y-3 rounded-[1.25rem] p-3.5">
-              <h2 className="text-[12px] font-bold tracking-[0.14em] text-white">
-                RV PROFILE
-              </h2>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-[12px] font-bold tracking-[0.14em] text-white">
+                  RV PROFILE
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setTool(null)}
+                  className="min-h-11 text-[12px] font-bold text-blue"
+                >
+                  Back
+                </button>
+              </div>
               {seedSource === "locked" ? (
                 <p className="text-[12px] text-white/70">Locked on this device.</p>
               ) : seedSource === "facts" || seedSource === "saved" ? (
@@ -1342,7 +1277,7 @@ export function RvTripsApp() {
           ) : null}
 
           {/* ── NAVIGATE ── */}
-          {sub === "navigate" ? (
+          {!tool ? (
             <>
               <section className="glass-prestige space-y-2.5 rounded-[1.25rem] p-3.5">
                 {originPlace && !originOpen ? (
@@ -1659,6 +1594,48 @@ export function RvTripsApp() {
                     viaDisabled={viaSlotsFull}
                     limit={6}
                   />
+
+                  <div className="pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowSampleCamps((v) => !v)}
+                      className="text-[11px] font-semibold text-white/45 underline-offset-2 hover:text-white/70 hover:underline"
+                    >
+                      {showSampleCamps
+                        ? "Hide sample pads"
+                        : "Sample pads — not live"}
+                    </button>
+                    {showSampleCamps ? (
+                      <div className="mt-2 space-y-2" data-sample-camps>
+                        <p className="text-[11px] leading-snug text-white/60">
+                          Sample only — invented Glacier-route names, not this
+                          corridor. Use the live list above.
+                        </p>
+                        {SAMPLE_CAMPS.map((c) => (
+                          <div
+                            key={c.id}
+                            className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5"
+                          >
+                            <Tent className="mt-0.5 size-4 text-white/45" />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className="text-[13px] font-bold text-white/80">
+                                  {c.name}
+                                </p>
+                                <span className="rounded-full border border-white/20 px-1.5 py-px text-[9px] font-bold text-white/55">
+                                  SAMPLE
+                                </span>
+                              </div>
+                              <p className="mt-0.5 text-[11px] text-white/60">
+                                Sample · max {c.maxLengthFt} ft
+                                {c.hasHookups ? " · hookups" : " · dry"}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 </section>
               ) : !hasRoutePoints ? (
                 <p className="px-1 py-2 text-[13px] text-white/80">
@@ -1674,7 +1651,6 @@ export function RvTripsApp() {
                   onClick={() => {
                     if (navArmed) {
                       setNavArmed(false);
-                      setNavStepIdx(0);
                       try {
                         window.speechSynthesis?.cancel();
                       } catch {
@@ -1682,8 +1658,13 @@ export function RvTripsApp() {
                       }
                       return;
                     }
-                    setNavStepIdx(0);
                     setNavArmed(true);
+                    const step = liveDirections?.[0];
+                    if (step) {
+                      speakNav(
+                        `Navigation started. ${step.instruction}. ${step.mi} miles.`,
+                      );
+                    }
                   }}
                   className={cn(
                     "flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-[16px] font-bold transition disabled:opacity-40",
@@ -1704,74 +1685,48 @@ export function RvTripsApp() {
               {routeStatus === "live" && !displayCoach ? (
                 <button
                   type="button"
-                  onClick={() => setSub("profile")}
+                  onClick={() => setTool("profile")}
                   className="px-1 py-1 text-left text-[12px] text-white/55"
                 >
                   Add an RV profile?
                 </button>
               ) : null}
 
-              {navArmed && liveDirections && liveDirections.length > 0 ? (
-                <section className="glass-prestige space-y-3 rounded-[1.25rem] border border-emerald-400/35 p-3.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[10px] font-bold tracking-[0.16em] text-emerald-300">
-                      GUIDANCE · STEP {navStepIdx + 1} / {liveDirections.length}
-                    </p>
-                    <span className="text-[11px] font-bold text-white">
-                      {liveDirections[navStepIdx]?.mi} mi
-                    </span>
-                  </div>
-                  {follow.error ? (
-                    <p data-follow-note className="text-[11px] leading-snug text-amber">
-                      {follow.error}
-                    </p>
-                  ) : follow.status === "live" ? (
-                    <p data-follow-note className="text-[11px] text-blue">
-                      Map follows your GPS.
-                    </p>
-                  ) : (
-                    <p data-follow-note className="text-[11px] text-white/75">
-                      Finding GPS…
-                    </p>
-                  )}
-                  <p className="text-[18px] font-bold leading-snug text-white">
-                    {liveDirections[navStepIdx]?.instruction}
+              {navArmed ? (
+                follow.error ? (
+                  <p data-follow-note className="px-1 text-[11px] leading-snug text-amber">
+                    {follow.error}
                   </p>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      disabled={navStepIdx <= 0}
-                      onClick={() => setNavStepIdx((i) => Math.max(0, i - 1))}
-                      className="flex-1 rounded-xl border border-white/20 bg-black/40 py-2.5 text-[13px] font-bold text-white disabled:opacity-40"
-                    >
-                      Prev
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        speakNav(
-                          liveDirections[navStepIdx]?.instruction || "Continue",
-                        )
-                      }
-                      className="flex-1 rounded-xl border border-blue/40 bg-blue/25 py-2.5 text-[13px] font-bold text-white"
-                    >
-                      Repeat
-                    </button>
-                    <button
-                      type="button"
-                      disabled={navStepIdx >= liveDirections.length - 1}
-                      onClick={() =>
-                        setNavStepIdx((i) =>
-                          Math.min(liveDirections.length - 1, i + 1),
-                        )
-                      }
-                      className="flex-1 rounded-xl bg-emerald-500 py-2.5 text-[13px] font-bold text-black disabled:opacity-40"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </section>
+                ) : follow.status === "live" ? (
+                  <p data-follow-note className="px-1 text-[11px] text-blue">
+                    Map follows your GPS.
+                  </p>
+                ) : (
+                  <p data-follow-note className="px-1 text-[11px] text-white/75">
+                    Finding GPS…
+                  </p>
+                )
               ) : null}
+
+              <div
+                className="flex items-center justify-end gap-4 px-1"
+                data-trips-tools
+              >
+                <button
+                  type="button"
+                  onClick={() => setTool("dumps")}
+                  className="min-h-11 text-[11px] font-semibold text-white/45"
+                >
+                  Dumps
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTool("pack")}
+                  className="min-h-11 text-[11px] font-semibold text-white/45"
+                >
+                  Pack
+                </button>
+              </div>
 
               {displayCoach &&
               originPlace &&
@@ -1813,134 +1768,21 @@ export function RvTripsApp() {
             </>
           ) : null}
 
-          {sub === "directions" ? (
-            <section className="glass-prestige space-y-3 rounded-[1.25rem] p-4">
-              <h2 className="text-[13px] font-bold tracking-[0.12em] text-white">
-                DIRECTIONS
-              </h2>
-              {routeStatus === "live" && liveStats && osrm ? (
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                  <p className="text-[20px] font-bold tabular-nums text-white">
-                    {formatMiles(liveStats.miles)}
-                    <span className="ml-1 text-[12px] font-semibold text-white/70">
-                      mi
-                    </span>
-                    <span className="mx-2 text-white/40">·</span>
-                    {formatDrive(liveStats.driveHours, liveStats.driveMinutes)}
-                  </p>
-                  <span className="rounded-full border border-white/20 px-2.5 py-1 text-[11px] font-bold text-white">
-                    {routeEngineLabel(osrm)}
-                  </span>
-                </div>
-              ) : null}
-              {routeStatus !== "live" || !liveDirections?.length ? (
-                <p className="text-[13px] text-white/80">
-                  Route on Navigate to fill this list.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {liveDirections.map((d, i) => (
-                    <div
-                      key={d.id}
-                      className="flex items-start gap-3 rounded-xl border border-white/12 bg-black/30 px-3 py-2.5"
-                    >
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-blue/25 text-[12px] font-bold text-blue">
-                        {i + 1}
-                      </span>
-                      <p className="min-w-0 flex-1 text-[13px] font-semibold leading-snug text-white">
-                        {d.instruction}
-                      </p>
-                      <span className="shrink-0 text-[12px] font-bold tabular-nums text-white">
-                        {d.mi} mi
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          ) : null}
-
-          {sub === "campgrounds" ? (
-            <section className="space-y-3">
-              <div className="flex items-center gap-2">
+          {tool === "dumps" ? (
+            <section className="space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
                 <h2 className="flex items-center gap-1.5 text-[12px] font-bold tracking-[0.12em] text-white">
-                  <Tent className="size-3.5 text-emerald-300" />
-                  CAMPGROUNDS
+                  <Droplets className="size-3.5 text-sky-300" />
+                  FREE SEWER DUMPS
                 </h2>
-                {campsStatus === "live" && camps?.sourceLabel ? (
-                  <span className="rounded-full border border-white/20 bg-black/30 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white/80">
-                    {camps.sourceLabel}
-                  </span>
-                ) : null}
-              </div>
-
-              {campsStatus === "idle" ? (
-                <p className="text-[13px] leading-snug text-white/70">
-                  Route on Navigate for camps along the corridor.
-                </p>
-              ) : (
-                <CampsAlongRoute
-                  status={campsStatus}
-                  result={camps}
-                  selectedId={campFocusId}
-                  onSelect={(id) => setCampFocusId(id || null)}
-                  onRouteVia={routeViaPoi}
-                  viaDisabled={viaSlotsFull}
-                  limit={16}
-                  heading="ALONG THIS ROUTE"
-                />
-              )}
-
-              <div className="pt-1">
                 <button
                   type="button"
-                  onClick={() => setShowSampleCamps((v) => !v)}
-                  className="text-[11px] font-semibold text-white/55 underline-offset-2 hover:text-white/80 hover:underline"
+                  onClick={() => setTool(null)}
+                  className="min-h-11 text-[12px] font-bold text-blue"
                 >
-                  {showSampleCamps
-                    ? "Hide sample pads"
-                    : "Sample pads — not live"}
+                  Back
                 </button>
-                {showSampleCamps ? (
-                  <div className="mt-2 space-y-2">
-                    <p className="text-[11px] leading-snug text-white/60">
-                      Sample only — invented Glacier-route names, not this
-                      corridor. Use the live list above.
-                    </p>
-                    {SAMPLE_CAMPS.map((c) => (
-                      <div
-                        key={c.id}
-                        className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5"
-                      >
-                        <Tent className="mt-0.5 size-4 text-white/45" />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="text-[13px] font-bold text-white/80">
-                              {c.name}
-                            </p>
-                            <span className="rounded-full border border-white/20 px-1.5 py-px text-[9px] font-bold text-white/55">
-                              SAMPLE
-                            </span>
-                          </div>
-                          <p className="mt-0.5 text-[11px] text-white/60">
-                            Sample · max {c.maxLengthFt} ft
-                            {c.hasHookups ? " · hookups" : " · dry"}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
               </div>
-            </section>
-          ) : null}
-
-          {sub === "dumps" ? (
-            <section className="space-y-2.5">
-              <h2 className="flex items-center gap-1.5 text-[12px] font-bold tracking-[0.12em] text-white">
-                <Droplets className="size-3.5 text-sky-300" />
-                FREE SEWER DUMPS
-              </h2>
               <p className="text-[12px] text-white/65">
                 Free western dumps — confirm hours.
               </p>
@@ -2085,17 +1927,26 @@ export function RvTripsApp() {
             </section>
           ) : null}
 
-          {sub === "pack" ? (
+          {tool === "pack" ? (
             <section className="glass-prestige space-y-2 rounded-[1.25rem] p-3.5">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-[13px] font-bold tracking-[0.12em] text-white">
                   PACK
                 </h2>
-                {pack.length > 0 ? (
-                  <span className="text-[11px] text-white/70">
-                    {packDone}/{pack.length}
-                  </span>
-                ) : null}
+                <div className="flex items-center gap-3">
+                  {pack.length > 0 ? (
+                    <span className="text-[11px] text-white/70">
+                      {packDone}/{pack.length}
+                    </span>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setTool(null)}
+                    className="min-h-11 text-[12px] font-bold text-blue"
+                  >
+                    Back
+                  </button>
+                </div>
               </div>
               <div className="flex gap-2">
                 <input
