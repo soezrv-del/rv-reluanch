@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Bookmark,
   ChevronDown,
   ChevronRight,
   Eraser,
   Info,
+  MapPin,
   RefreshCw,
   Search,
   Truck,
@@ -44,6 +46,14 @@ import {
   formatActiveCoachChip,
   towPrefillFromCoach,
 } from "@/lib/rv/activeCoach";
+import {
+  clearLastTowVehicle,
+  formatSavedTowVehicle,
+  loadLastTowVehicle,
+  saveLastTowVehicle,
+  type SavedTowVehicle,
+} from "@/lib/tow/savedTowVehicle";
+import { offerFromCoach } from "@/lib/trips/towHandoff";
 
 
 const YEARS = Array.from({ length: 22 }, (_, i) => String(2026 - i)); // 2026 → 2005
@@ -65,29 +75,49 @@ const EMPTY = {
   trim: "",
 };
 
+function bootTowVehicle(): SavedTowVehicle | null {
+  try {
+    return loadLastTowVehicle();
+  } catch {
+    return null;
+  }
+}
+
 export function RvTowApp() {
-  const [kindFilter, setKindFilter] = useState<KindFilter>("all");
-  const [year, setYear] = useState(DEFAULT_TOW_VEHICLE.year);
-  const [make, setMake] = useState(DEFAULT_TOW_VEHICLE.make);
-  const [model, setModel] = useState(DEFAULT_TOW_VEHICLE.model);
-  const [trim, setTrim] = useState(DEFAULT_TOW_VEHICLE.trim);
-  const [rvType, setRvType] = useState("Fifth Wheel");
-  const [gvwr, setGvwr] = useState("14000");
-  const [bed, setBed] = useState("6.5 ft (Standard Bed)");
-  const [pin, setPin] = useState("");
+  const savedBoot = useMemo(() => bootTowVehicle(), []);
+  const [kindFilter, setKindFilter] = useState<KindFilter>(
+    savedBoot?.kindFilter ?? "all",
+  );
+  const [year, setYear] = useState(savedBoot?.year ?? DEFAULT_TOW_VEHICLE.year);
+  const [make, setMake] = useState(savedBoot?.make ?? DEFAULT_TOW_VEHICLE.make);
+  const [model, setModel] = useState(
+    savedBoot?.model ?? DEFAULT_TOW_VEHICLE.model,
+  );
+  const [trim, setTrim] = useState(savedBoot?.trim ?? DEFAULT_TOW_VEHICLE.trim);
+  const [rvType, setRvType] = useState(savedBoot?.rvType ?? "Fifth Wheel");
+  const [gvwr, setGvwr] = useState(savedBoot?.gvwr || "14000");
+  const [bed, setBed] = useState(savedBoot?.bed || "6.5 ft (Standard Bed)");
+  const [pin, setPin] = useState(savedBoot?.pin ?? "");
   const [sheet, setSheet] = useState<
     "year" | "make" | "model" | "trim" | "rvType" | "bed" | null
   >(null);
   // Manual OEM ratings when vehicle is not in the catalog
-  const [manualMaxTow, setManualMaxTow] = useState("");
-  const [manualPayload, setManualPayload] = useState("");
-  const [manualGcwr, setManualGcwr] = useState("");
+  const [manualMaxTow, setManualMaxTow] = useState(
+    savedBoot?.manualMaxTow ?? "",
+  );
+  const [manualPayload, setManualPayload] = useState(
+    savedBoot?.manualPayload ?? "",
+  );
+  const [manualGcwr, setManualGcwr] = useState(savedBoot?.manualGcwr ?? "");
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const nav = useShellNavOptional();
   const lastPrefillKey = useRef("");
   const [matchTrailer, setMatchTrailer] = useState(false);
   const [shopMode, setShopMode] = useState<ShopMode>("match");
   const [reverseLimit, setReverseLimit] = useState(REVERSE_SHORTLIST);
+  const [deviceSaved, setDeviceSaved] = useState<SavedTowVehicle | null>(
+    savedBoot,
+  );
 
   const prefill = useMemo(
     () => towPrefillFromCoach(nav?.activeCoach ?? null),
@@ -96,7 +126,29 @@ export function RvTowApp() {
 
   useEffect(() => {
     const coach = nav?.activeCoach;
-    if (!coach) return;
+    if (!coach) {
+      if (lastPrefillKey.current && !make && !model) {
+        const saved = loadLastTowVehicle();
+        if (saved) {
+          setKindFilter(saved.kindFilter);
+          setYear(saved.year);
+          setMake(saved.make);
+          setModel(saved.model);
+          setTrim(saved.trim);
+          setBed(saved.bed);
+          setRvType(saved.rvType);
+          setGvwr(saved.gvwr || "14000");
+          setPin(saved.pin);
+          setManualMaxTow(saved.manualMaxTow);
+          setManualPayload(saved.manualPayload);
+          setManualGcwr(saved.manualGcwr);
+          setDeviceSaved(saved);
+          setShopMode("match");
+        }
+      }
+      lastPrefillKey.current = "";
+      return;
+    }
     const key = activeCoachKey(coach);
     if (lastPrefillKey.current === key) return;
     lastPrefillKey.current = key;
@@ -116,7 +168,54 @@ export function RvTowApp() {
       if (prefill.gvwrLbs > 0) setGvwr(String(prefill.gvwrLbs));
       setShopMode("reverse");
     }
-  }, [nav?.activeCoach, prefill]);
+  }, [nav?.activeCoach, prefill, make, model]);
+
+  const persistVehicle = useCallback(() => {
+    if (!make || !model) return null;
+    return saveLastTowVehicle({
+      year,
+      make,
+      model,
+      trim,
+      kindFilter,
+      bed,
+      rvType,
+      gvwr,
+      pin,
+      manualMaxTow,
+      manualPayload,
+      manualGcwr,
+    });
+  }, [
+    year,
+    make,
+    model,
+    trim,
+    kindFilter,
+    bed,
+    rvType,
+    gvwr,
+    pin,
+    manualMaxTow,
+    manualPayload,
+    manualGcwr,
+  ]);
+
+  useEffect(() => {
+    // Toad mode empties the truck on purpose — do not wipe a saved last truck.
+    if (prefill.kind === "motorhome" && !matchTrailer) return;
+    const next = persistVehicle();
+    if (next) setDeviceSaved(next);
+  }, [persistVehicle, prefill.kind, matchTrailer]);
+
+  const tripsOffer = useMemo(
+    () => offerFromCoach(nav?.activeCoach ?? null),
+    [nav?.activeCoach],
+  );
+
+  const openTripsProfile = useCallback(() => {
+    nav?.openTripsProfile(tripsOffer);
+  }, [nav, tripsOffer]);
 
   const toadMode = prefill.kind === "motorhome" && !matchTrailer;
 
@@ -358,6 +457,8 @@ export function RvTowApp() {
     setManualMaxTow("");
     setManualPayload("");
     setManualGcwr("");
+    clearLastTowVehicle();
+    setDeviceSaved(null);
   };
 
   const openReverse = useCallback(() => {
@@ -397,6 +498,21 @@ export function RvTowApp() {
     setMatchTrailer(prefill.kind === "motorhome");
     setShopMode("match");
     setReverseLimit(REVERSE_SHORTLIST);
+    const next = saveLastTowVehicle({
+      year: DEFAULT_TOW_VEHICLE.year,
+      make: DEFAULT_TOW_VEHICLE.make,
+      model: DEFAULT_TOW_VEHICLE.model,
+      trim: DEFAULT_TOW_VEHICLE.trim,
+      kindFilter: "all",
+      bed: "6.5 ft (Standard Bed)",
+      rvType: "Fifth Wheel",
+      gvwr: "14000",
+      pin: "",
+      manualMaxTow: "",
+      manualPayload: "",
+      manualGcwr: "",
+    });
+    setDeviceSaved(next);
   };
 
   const reverseMode = shopMode === "reverse" && !toadMode;
@@ -1060,10 +1176,78 @@ export function RvTowApp() {
           </section>
         )}
 
+        <SuiteHandoffCard
+          saved={deviceSaved}
+          hasVehicle={hasVehicle}
+          tripsOffer={tripsOffer}
+          coachChip={
+            nav?.activeCoach ? formatActiveCoachChip(nav.activeCoach) : null
+          }
+          onOpenTrips={openTripsProfile}
+        />
+
         <SuiteDisclaimer />
 
       </div>
     </SuitePage>
+  );
+}
+
+function SuiteHandoffCard({
+  saved,
+  hasVehicle,
+  tripsOffer,
+  coachChip,
+  onOpenTrips,
+}: {
+  saved: SavedTowVehicle | null;
+  hasVehicle: boolean;
+  tripsOffer: ReturnType<typeof offerFromCoach>;
+  coachChip: string | null;
+  onOpenTrips: () => void;
+}) {
+  const truckLine = saved
+    ? formatSavedTowVehicle(saved)
+    : hasVehicle
+      ? "Current truck is not saved yet"
+      : "No truck saved on this device";
+  return (
+    <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
+      <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-blue">
+        SUITE · FACTS → TOW → TRIPS
+      </p>
+      <p className="flex items-start gap-1.5 text-[13px] font-bold text-white">
+        <Bookmark className="mt-0.5 size-3.5 shrink-0 text-blue" />
+        {saved ? "Saved on this device" : "Last truck"}
+      </p>
+      <p className="mt-1 pl-5 text-[12px] leading-snug text-white/85">
+        {truckLine}
+      </p>
+      {tripsOffer && coachChip ? (
+        <p className="mt-2 pl-5 text-[11px] leading-relaxed text-white/70">
+          Coach from Facts:{" "}
+          <span className="font-semibold text-white">{coachChip}</span>
+        </p>
+      ) : (
+        <p className="mt-2 pl-5 text-[11px] leading-relaxed text-white/65">
+          Open a coach in Facts to send it to Trips Profile. We do not invent
+          height or length from this truck.
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={onOpenTrips}
+        className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full border border-sky-300/40 bg-sky-500/20 px-3.5 text-[12px] font-bold text-white"
+      >
+        <MapPin className="size-3.5" />
+        Use for trip alerts
+        <ChevronRight className="size-3.5" />
+      </button>
+      <p className="mt-2 text-[10px] leading-relaxed text-white/55">
+        Opens Trips Profile. A locked coach stays locked until you unlock.
+        Approx when properly equipped — confirm the door sticker.
+      </p>
+    </section>
   );
 }
 

@@ -56,6 +56,7 @@ import {
 } from "@/lib/trips/coachFromCatalog";
 import { readActiveCoach } from "@/lib/rv/activeCoach";
 import { loadLatestSavedUnit } from "@/lib/rv/savedUnits";
+import { decideTowHandoff } from "@/lib/trips/towHandoff";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
   analyzeRouteRestrictions,
@@ -224,6 +225,11 @@ export function RvTripsApp() {
   const lastAutoKeyRef = useRef(
     bootSeed ? coachIdentityKey(bootSeed.profile) : "",
   );
+  const lastTowHandoffToken = useRef(0);
+  const [towReplace, setTowReplace] = useState<{
+    locked: CoachProfile;
+    incoming: CoachProfile;
+  } | null>(null);
 
   const bootOrigin = useMemo(() => {
     try {
@@ -325,6 +331,31 @@ export function RvTripsApp() {
     });
     applySeedIdentity({ ...suggested, seedSource: "facts" }, "facts");
   }, [shellNav?.activeCoach, locked, applySeedIdentity]);
+
+  useEffect(() => {
+    const handoff = shellNav?.tripsHandoff;
+    if (!handoff || handoff.token === lastTowHandoffToken.current) return;
+    lastTowHandoffToken.current = handoff.token;
+    setTool("profile");
+    const decision = decideTowHandoff(
+      {
+        locked: locked ?? loadLockedProfile(),
+        offer: handoff.offer,
+      },
+      suggestCoachFromSelection,
+    );
+    if (decision.action === "apply") {
+      applySeedIdentity(decision.profile, "tow");
+      setTowReplace(null);
+    } else if (decision.action === "same-locked") {
+      setTowReplace(null);
+    } else if (decision.action === "confirm-replace") {
+      setTowReplace({ locked: decision.locked, incoming: decision.incoming });
+    } else {
+      setTowReplace(null);
+    }
+    shellNav.clearTripsHandoff();
+  }, [shellNav, locked, applySeedIdentity]);
 
   const makes = useMemo(() => getMakesForYear(year), [year, catalogGen]);
   const models = useMemo(
@@ -1097,7 +1128,9 @@ export function RvTripsApp() {
         ? "FROM FACTS"
         : seedSource === "saved"
           ? "FROM SAVED"
-          : "COACH READY"
+          : seedSource === "tow"
+            ? "FROM TOW"
+            : "COACH READY"
       : "ADD PROFILE";
 
   return (
@@ -1201,10 +1234,54 @@ export function RvTripsApp() {
               </div>
               {seedSource === "locked" ? (
                 <p className="text-[12px] text-white/70">Locked on this device.</p>
-              ) : seedSource === "facts" || seedSource === "saved" ? (
+              ) : seedSource === "facts" || seedSource === "saved" || seedSource === "tow" ? (
                 <p className="text-[12px] text-white/70">
-                  {seedSource === "facts" ? "From Facts." : "From a saved coach."}
+                  {seedSource === "facts"
+                    ? "From Facts."
+                    : seedSource === "saved"
+                      ? "From a saved coach."
+                      : "From Tow. Dims from catalog, brochure, or Facts — not invented."}
                 </p>
+              ) : null}
+              {towReplace ? (
+                <div className="rounded-xl border border-amber/40 bg-amber/10 px-3 py-3">
+                  <p className="text-[12px] font-bold text-amber">
+                    Tow sent a different coach
+                  </p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-white/80">
+                    Locked: {towReplace.locked.year} {towReplace.locked.make}{" "}
+                    {towReplace.locked.model}
+                    {towReplace.locked.floorplan
+                      ? ` · ${towReplace.locked.floorplan}`
+                      : ""}
+                    . Incoming: {towReplace.incoming.year}{" "}
+                    {towReplace.incoming.make} {towReplace.incoming.model}
+                    {towReplace.incoming.floorplan
+                      ? ` · ${towReplace.incoming.floorplan}`
+                      : ""}
+                    . Unlock to replace — we will not overwrite a locked profile.
+                  </p>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTowReplace(null)}
+                      className="min-h-11 rounded-xl border border-white/20 text-[12px] font-bold text-white"
+                    >
+                      Keep locked
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        unlockProfile();
+                        applySeedIdentity(towReplace.incoming, "tow");
+                        setTowReplace(null);
+                      }}
+                      className="min-h-11 rounded-xl bg-amber py-2 text-[12px] font-bold text-black"
+                    >
+                      Unlock to replace
+                    </button>
+                  </div>
+                </div>
               ) : null}
               <div className="grid grid-cols-2 gap-2">
                 <FieldBtn

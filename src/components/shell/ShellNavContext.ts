@@ -1,12 +1,19 @@
 import { createContext, useContext } from "react";
 import type { AppTab } from "./BottomTabs";
 import type { ActiveCoach, ActiveCoachInput } from "@/lib/rv/activeCoach";
+import type { TowHandoffOffer } from "@/lib/trips/towHandoff";
 
 /** Prefill RvCal from a Facts detail report (avg market). */
 export type CalSeed = {
   price: number;
   label?: string;
   token: number;
+};
+
+/** One-shot Tow → Trips Profile deep-link. Coach identity only — no invented dims. */
+export type TripsHandoff = {
+  token: number;
+  offer: TowHandoffOffer | null;
 };
 
 export type ShellNavValue = {
@@ -25,6 +32,10 @@ export type ShellNavValue = {
   /** Close a Facts report and show the catalog picker */
   openFactsPicker: () => void;
   factsPickerToken: number;
+  /** One-shot Tow → Trips Profile (open pane; never auto-lock) */
+  tripsHandoff: TripsHandoff | null;
+  openTripsProfile: (offer?: TowHandoffOffer | null) => void;
+  clearTripsHandoff: () => void;
 };
 
 export const ShellNavContext = createContext<ShellNavValue | null>(null);

@@ -13,7 +13,8 @@ import {
 import { BottomTabs, type AppTab } from "./BottomTabs";
 import { PAGE_ACCENT, TAB_ORDER } from "./shellConstants";
 import { Launchpad } from "./Launchpad";
-import { ShellNavProvider, type CalSeed } from "./ShellNav";
+import { ShellNavProvider, type CalSeed, type TripsHandoff } from "./ShellNav";
+import type { TowHandoffOffer } from "@/lib/trips/towHandoff";
 import {
   readActiveCoach,
   writeActiveCoach,
@@ -114,6 +115,7 @@ export function AppShell() {
   const [tab, setTab] = useState<AppTab>("rvfax");
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
   const [calSeed, setCalSeed] = useState<CalSeed | null>(null);
+  const [tripsHandoff, setTripsHandoff] = useState<TripsHandoff | null>(null);
   const [activeCoach, setActiveCoachState] = useState<ActiveCoach | null>(() =>
     readActiveCoach(),
   );
@@ -127,6 +129,7 @@ export function AppShell() {
   const shellRef = useRef<HTMLDivElement | null>(null);
   const launchDoneRef = useRef(false);
   const calTokenRef = useRef(0);
+  const tripsTokenRef = useRef(0);
   const kb = useKeyboardInset();
   useFocusScrollIntoView(true);
   useDockSafeInset();
@@ -189,6 +192,21 @@ export function AppShell() {
 
   const clearCalSeed = useCallback(() => setCalSeed(null), []);
 
+  const openTripsProfile = useCallback(
+    (offer?: TowHandoffOffer | null) => {
+      tripsTokenRef.current += 1;
+      setTripsHandoff({
+        token: tripsTokenRef.current,
+        offer: offer ?? null,
+      });
+      setTab("rvtrips");
+      markVisited("rvtrips");
+    },
+    [markVisited],
+  );
+
+  const clearTripsHandoff = useCallback(() => setTripsHandoff(null), []);
+
   const setActiveCoach = useCallback((sel: ActiveCoachInput | null) => {
     const next = writeActiveCoach(sel);
     setActiveCoachState(next);
@@ -235,6 +253,9 @@ export function AppShell() {
       setActiveCoach,
       openFactsPicker,
       factsPickerToken,
+      tripsHandoff,
+      openTripsProfile,
+      clearTripsHandoff,
     }),
     [
       tab,
@@ -248,6 +269,9 @@ export function AppShell() {
       setActiveCoach,
       openFactsPicker,
       factsPickerToken,
+      tripsHandoff,
+      openTripsProfile,
+      clearTripsHandoff,
     ],
   );
 
