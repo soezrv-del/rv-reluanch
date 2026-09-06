@@ -12,8 +12,15 @@ import { parseCoachFromText } from "./parseCoach.ts";
 import {
   looksLikeCasualNonResearch,
   looksLikeLiveResearchQuestion,
+  looksLikeNamedCoachProductQuestion,
   needsWebFallback,
 } from "./webIntent.ts";
+import {
+  buildChatGrounding,
+  resolveCatalogModel,
+  resolveCoachIdentity,
+} from "./grounding.ts";
+import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
 import {
   WEB_SEARCH_MODELS,
   VOICE_WEB_SEARCH_MODELS,
@@ -32,6 +39,26 @@ const rvRoot = join(root, "../rv");
 function src(dir: string, name: string) {
   return readFileSync(join(dir, name), "utf8");
 }
+
+test("parses Lineage M series letters and last-make self-corrections", () => {
+  const about = parseCoachFromText(
+    "I'd like to know about the 2027 Grand Design Lineage M series.",
+  );
+  assert.equal(about.year, "2027");
+  assert.equal(about.make, "Grand Design");
+  assert.match(about.model, /lineage/i);
+  assert.match(about.model, /\bM\b/i);
+  assert.doesNotMatch(about.model, /^Lineage series$/i);
+
+  const stutter = parseCoachFromText(
+    "I'm afraid to ask this, but what about the 2026 Grand Design Limin, uh, Grand Design Lineage M series?",
+  );
+  assert.equal(stutter.year, "2026");
+  assert.equal(stutter.make, "Grand Design");
+  assert.match(stutter.model, /lineage/i);
+  assert.match(stutter.model, /\bM\b/i);
+  assert.doesNotMatch(stutter.model, /limin/i);
+});
 
 test("parses David’s test coach from a spec question", () => {
   const p = parseCoachFromText(
@@ -348,9 +375,12 @@ test("system prompts know injected web research is live internet", () => {
   assert.match(prompts, /WEB RESEARCH notes/);
   assert.match(prompts, /no internet/i);
   assert.match(prompts, /WEB SEARCH NOT AVAILABLE/);
+  assert.match(prompts, /no catalog data/i);
+  assert.match(prompts, /OEM site or a dealer/);
   const voice = src(root, "voice.ts");
   assert.match(voice, /WEB RESEARCH notes/);
   assert.match(voice, /WEB SEARCH NOT AVAILABLE/);
+  assert.match(voice, /no catalog data/i);
   const live = src(root, "liveVoice.ts");
   assert.doesNotMatch(live, /wantsWebFallback/);
   const realtime = src(root, "realtime.ts");
@@ -358,4 +388,92 @@ test("system prompts know injected web research is live internet", () => {
   assert.match(realtime, /decideVoiceWebResearch/);
   assert.match(realtime, /formatVoiceWebSearchInjection/);
   assert.match(realtime, /maybeEnrichWithWebResearch/);
+  const grounding = src(root, "grounding.ts");
+  assert.match(grounding, /no catalog data/i);
+  assert.match(grounding, /do not send the user to the OEM site/i);
+  assert.match(src(root, "webIntent.ts"), /looksLikeNamedCoachProductQuestion/);
+});
+
+test("know about / what about a named coach wants web when catalog is missing", () => {
+  const q2027 =
+    "I'd like to know about the 2027 Grand Design Lineage M series.";
+  const q2026 =
+    "I'm afraid to ask this, but what about the 2026 Grand Design Lineage M series?";
+  for (const q of [q2027, q2026]) {
+    assert.equal(looksLikeNamedCoachProductQuestion(q), true, q);
+    assert.equal(needsWebFallback(null, q), true, q);
+    assert.equal(needsWebFallback({ missingHard: true }, q), true, q);
+  }
+  assert.equal(
+    needsWebFallback({ missingHard: false }, q2027),
+    false,
+    "locked catalog should not browse a plain about-this-coach ask",
+  );
+  assert.equal(
+    looksLikeNamedCoachProductQuestion("Is full-timing worth it?"),
+    false,
+  );
+  assert.equal(looksLikeNamedCoachProductQuestion("hi"), false);
+});
+
+test("Lineage M / Lineage M series resolve to catalog Lineage Series M", () => {
+  assert.ok(CATALOG_INDEX["Grand Design"]?.["Lineage Series M"]);
+  for (const spoken of [
+    "Lineage M",
+    "Lineage M series",
+    "Lineage Series M",
+    "lineage series m",
+  ]) {
+    assert.equal(
+      resolveCatalogModel("Grand Design", spoken),
+      "Lineage Series M",
+      spoken,
+    );
+  }
+  assert.equal(
+    resolveCatalogModel("Grand Design", "Lineage E series"),
+    "Lineage Series E",
+  );
+  assert.notEqual(
+    resolveCatalogModel("Grand Design", "Lineage M"),
+    "Lineage Series E",
+  );
+  assert.notEqual(
+    resolveCatalogModel("Grand Design", "Lineage M"),
+    "Lineage Series F",
+  );
+});
+
+test("2027 Lineage M about-ask grounds from catalog and does not claim no data", () => {
+  const q = "I'd like to know about the 2027 Grand Design Lineage M series.";
+  const identity = resolveCoachIdentity(q);
+  assert.ok(identity);
+  assert.equal(identity!.year, "2027");
+  assert.equal(identity!.make, "Grand Design");
+  assert.equal(identity!.model, "Lineage Series M");
+
+  const grounded = buildChatGrounding({ query: q });
+  assert.equal(grounded.identity?.model, "Lineage Series M");
+  assert.ok(grounded.specs);
+  assert.equal(grounded.specs!.hasHardLock, true);
+  assert.equal(grounded.specs!.missingHard, false);
+  assert.match(grounded.block, /Lineage Series M/);
+  assert.match(grounded.block, /208|Sprinter/i);
+  assert.doesNotMatch(grounded.block, /no catalog data/i);
+  assert.doesNotMatch(grounded.block, /No locked catalog numbers/);
+  assert.equal(
+    grounded.needsWeb,
+    false,
+    "verified 2027 Series M should answer from catalog, not browse",
+  );
+});
+
+test("unresolved named coach about-ask still fires web instead of a dealer dead-end", () => {
+  const q = "I'd like to know about the 2027 Grand Design Unicorn Deluxe.";
+  assert.equal(looksLikeNamedCoachProductQuestion(q), true);
+  const grounded = buildChatGrounding({ query: q });
+  assert.equal(grounded.needsWeb, true);
+  assert.equal(grounded.specs?.hasHardLock ?? false, false);
+  assert.match(grounded.block, /WEB RESEARCH notes/i);
+  assert.match(grounded.block, /do not send the user to the OEM site/i);
 });

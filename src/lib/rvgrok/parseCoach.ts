@@ -52,7 +52,8 @@ export function parseCoachFromText(text: string): {
   let model = "";
   let floorplan = "";
   if (make) {
-    const after = raw.slice(lower.indexOf(make.toLowerCase()) + make.length);
+    // Last mention wins — people self-correct ("Grand Design Limin, uh, Grand Design Lineage M").
+    const after = raw.slice(lower.lastIndexOf(make.toLowerCase()) + make.length);
     const fp = after.match(
       /\b(\d{2,3}\s?[A-Z]{1,4}|[A-Z]{1,3}\d{2,3}[A-Z]?)\b/,
     );
@@ -72,13 +73,21 @@ export function parseCoachFromText(text: string): {
       "gas",
       "motorhome",
       "coach",
+      "uh",
+      "um",
+      "er",
+      "ah",
+      "oh",
+      "hmm",
     ]);
     const words: string[] = [];
     for (const w of chunk) {
       if (fp && w.replace(/\s+/g, "") === floorplan) break;
       if (/^\d{4}$/.test(w)) continue;
       if (skip.has(w.toLowerCase())) continue;
-      if (w.length < 2) continue;
+      // Keep "M" / "E" / "F" series letters — `w.length < 2` used to drop them
+      // so "Lineage M series" collapsed to "Lineage series".
+      if (w.length < 2 && !/^[A-Za-z]$/.test(w)) continue;
       words.push(w);
       if (words.join(" ").length > 28) break;
     }

@@ -36,6 +36,7 @@ import { needsWebFallback } from "./webIntent";
 export {
   looksLikeCasualNonResearch,
   looksLikeLiveResearchQuestion,
+  looksLikeNamedCoachProductQuestion,
   looksLikePureLifestyleOrPayment,
   looksLikeSpecQuestion,
   needsWebFallback,
@@ -89,7 +90,8 @@ export const CHAT_MAY_WRITE_FACTS_CACHE = false;
 export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - The CATALOG / BROCHURE block in this request is source-of-truth for engine, horsepower, chassis, transmission, and fuel.
 - If a field has a number or name, USE THAT EXACT VALUE. Do not substitute a sibling model, a later year, or a "typical" HP (never invent 450).
-- If a field is marked UNKNOWN, say unknown or EST. and tell the user what to verify (door sticker / OEM brochure / build sheet). Never invent HP, engine, chassis, or fuel.
+- If a field is marked UNKNOWN, say unknown or EST. Prefer WEB RESEARCH notes for those gaps. Brochure / door sticker / dealer is a verify-after — never the whole answer when research notes are present or this turn can browse.
+- Do not invent a "no catalog data — check the OEM site" dead-end. Answer from locked numbers and/or WEB RESEARCH notes. Never invent HP, engine, chassis, or fuel.
 - Floorplan letters (BH, K, L, FS, …) are labels only — never decode bunks or a half-bath from the code.
 - Entegra Vision = gas Ford F-53 / 7.3 Godzilla — not diesel.
 - Newmar Ventana / Dutch Star of this era already have Comfort Drive, residential fridge, hydraulic auto-level, and OEM camera — do not "upgrade" those.
@@ -159,6 +161,24 @@ export function resolveCatalogMake(raw: string): string {
   return contains || raw.trim();
 }
 
+/**
+ * Spoken "Lineage M" / "Lineage M series" ↔ catalog "Lineage Series M".
+ * Letter/code must match so Series M never collapses onto Series E/F/VT/VP.
+ */
+function parseSeriesAlias(
+  s: string,
+): { family: string; code: string } | null {
+  const t = norm(s);
+  if (!t) return null;
+  let m = t.match(/^(.+?)\s+series\s+([a-z]{1,3})$/);
+  if (m?.[1] && m[2]) return { family: m[1], code: m[2] };
+  m = t.match(/^(.+?)\s+([a-z]{1,3})\s+series$/);
+  if (m?.[1] && m[2]) return { family: m[1], code: m[2] };
+  m = t.match(/^(.+?)\s+([a-z]{1,2})$/);
+  if (m?.[1] && m[2]) return { family: m[1], code: m[2] };
+  return null;
+}
+
 /** Best catalog model name under a make. */
 export function resolveCatalogModel(make: string, rawModel: string): string {
   const n = norm(rawModel);
@@ -166,15 +186,35 @@ export function resolveCatalogModel(make: string, rawModel: string): string {
   const catalogMake = resolveCatalogMake(make);
   const live = peekCatalog()?.RV_DATA?.[catalogMake];
   const index = CATALOG_INDEX[catalogMake];
-  const names = new Set<string>([
+  const names = [...new Set<string>([
     ...Object.keys(live || {}),
     ...Object.keys(index || {}),
-  ]);
+  ])];
+
+  for (const name of names) {
+    if (norm(name) === n) return name;
+  }
+
+  const spokenSeries = parseSeriesAlias(n);
+  if (spokenSeries) {
+    const hits = names.filter((name) => {
+      const catalogSeries = parseSeriesAlias(norm(name));
+      return (
+        !!catalogSeries &&
+        catalogSeries.family === spokenSeries.family &&
+        catalogSeries.code === spokenSeries.code
+      );
+    });
+    if (hits.length === 1) return hits[0]!;
+    if (hits.length > 1) {
+      return hits.find((h) => /\bseries\b/i.test(h)) || hits[0]!;
+    }
+  }
+
   let best = rawModel.trim();
   let bestLen = -1;
   for (const name of names) {
     const nn = norm(name);
-    if (nn === n) return name;
     if (nn.includes(n) || n.includes(nn)) {
       if (nn.length > bestLen) {
         best = name;
@@ -435,7 +475,9 @@ export function formatCatalogGroundingBlock(specs: GroundedSpecs): string {
     line("class / type", specs.rvType),
     specs.note ? `- note: ${specs.note}` : null,
     specs.weightBand ? `- weights: ${specs.weightBand}` : null,
-    "Use the locked numbers above. If a line is UNKNOWN, say unknown / EST. — never invent HP, engine, chassis, or fuel.",
+    specs.hasHardLock
+      ? "Use the locked numbers above. If a line is UNKNOWN, say unknown / EST. — never invent HP, engine, chassis, or fuel."
+      : "No locked catalog numbers for this identity. If WEB RESEARCH notes are present this turn, answer from those notes. Do not invent specs. Do not send the user to the OEM site or a dealer as the primary answer.",
   ]
     .filter(Boolean)
     .join("\n");

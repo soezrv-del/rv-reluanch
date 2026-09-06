@@ -3,6 +3,8 @@
  * Kept catalog-free so tests and the sidecar prompt can import it.
  */
 
+import { parseCoachFromText } from "./parseCoach.ts";
+
 export type WebFallbackSpecs = {
   missingHard: boolean;
 } | null;
@@ -32,6 +34,10 @@ const CASUAL_CHAT_RE =
 
 const AGENT_EXTRA_LOOKUP_RE =
   /\b(look(?:\s+(?:this|it))?\s+up|search|research|forum|owners?\s+say|latest|current|compare reviews|what(?:'s|\s+is) the (?:latest|current|word))\b/i;
+
+/** "tell me about / what about / I'd like to know about [coach]" — not spec keywords. */
+const PRODUCT_ABOUT_RE =
+  /\b((?:i(?:'d| would) like to |can you |please )?(?:tell me |know |learn |hear )about|what about|how about|info(?:rmation)? (?:on|about|for)|details (?:on|about|for)|looking (?:at|into|up)|anything (?:on|about)|overview of|walk me through|break down|brief me on)\b/i;
 
 /** Curly quotes in “won’t” / “how do I” from phones. */
 export function normalizeAskText(text: string): string {
@@ -70,8 +76,30 @@ export function looksLikeLiveResearchQuestion(text: string): boolean {
 }
 
 /**
+ * Named year/make/model (or about-this-coach phrasing). Catalog miss or
+ * missing hard fields should browse — not invent a dealer dead-end.
+ */
+export function looksLikeNamedCoachProductQuestion(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim() || looksLikeCasualNonResearch(t)) return false;
+  const parsed = parseCoachFromText(t);
+  const yearMakeModel = Boolean(parsed.year && parsed.make && parsed.model);
+  const yearMake = Boolean(parsed.year && parsed.make);
+  const makeModel = Boolean(parsed.make && parsed.model);
+  if (!yearMake && !makeModel) return false;
+  if (yearMakeModel) return true;
+  return PRODUCT_ABOUT_RE.test(t);
+}
+
+function catalogGapNeedsWeb(specs: WebFallbackSpecs): boolean {
+  if (!specs) return true;
+  return specs.missingHard;
+}
+
+/**
  * Web sidecar when the turn needs live OEM / forum / manual notes.
- * Spec questions still browse only when hard fields are missing.
+ * Spec + "about this coach" questions browse only when the catalog is
+ * missing or hard fields are still empty / EST.
  */
 export function needsWebFallback(
   specs: WebFallbackSpecs,
@@ -79,9 +107,11 @@ export function needsWebFallback(
   opts?: WebFallbackOpts,
 ): boolean {
   if (looksLikeLiveResearchQuestion(userText)) return true;
-  if (looksLikeSpecQuestion(userText)) {
-    if (!specs) return true;
-    if (specs.missingHard) return true;
+  if (looksLikeSpecQuestion(userText) && catalogGapNeedsWeb(specs)) {
+    return true;
+  }
+  if (looksLikeNamedCoachProductQuestion(userText) && catalogGapNeedsWeb(specs)) {
+    return true;
   }
   if (
     opts?.agentMode &&
