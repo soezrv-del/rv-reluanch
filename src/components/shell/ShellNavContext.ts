@@ -25,6 +25,9 @@ export type ShellNavValue = {
   /** Close a Facts report and show the catalog picker */
   openFactsPicker: () => void;
   factsPickerToken: number;
+  /** Open the active (or last saved) Facts report and scroll to Share */
+  openFactsShare: () => void;
+  factsShareToken: number;
 };
 
 export const ShellNavContext = createContext<ShellNavValue | null>(null);

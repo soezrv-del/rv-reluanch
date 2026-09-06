@@ -37,7 +37,7 @@ test("share surfaces have no SpaceX trademark", () => {
   const files = [
     "src/lib/rv/shareKit.ts",
     "src/lib/rv/exportReport.ts",
-    "src/components/rvshare/RvShareApp.tsx",
+    "src/components/rvshare/RvShareKit.tsx",
   ];
   for (const rel of files) {
     const src = read(rel);

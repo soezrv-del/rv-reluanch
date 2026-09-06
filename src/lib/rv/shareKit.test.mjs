@@ -57,7 +57,7 @@ test("customer-facing MSRP is a single label — not low/high", () => {
   const ui = readFileSync(
     join(
       dirname(fileURLToPath(import.meta.url)),
-      "../../components/rvshare/RvShareApp.tsx",
+      "../../components/rvshare/RvShareKit.tsx",
     ),
     "utf8",
   );

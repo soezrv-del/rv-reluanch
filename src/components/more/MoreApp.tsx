@@ -224,7 +224,7 @@ export function MoreApp({
               <RowLink
                 icon={<Share2 className="size-4 text-sky-200" />}
                 title="RvShare"
-                sub="Send a brochure summary"
+                sub="Send a brochure summary from the report"
                 onClick={() => onNavigate?.("rvshare")}
               />
               <RowLink

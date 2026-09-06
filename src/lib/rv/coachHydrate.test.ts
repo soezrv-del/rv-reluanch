@@ -184,5 +184,6 @@ test("Facts + Share bind the shared hydrate on saved-coach open / load", () => {
   assert.match(fax, /loadSavedUnits\(\)/);
   assert.match(fax, /setDetail\(hydrateShareCoachResult\(r\)\)/);
   assert.match(detail, /hydrateShareCoachResult\(result\)/);
+  assert.match(detail, /<RvShareKit result=\{coach\}/);
   assert.match(detail, /useCatalogReady/);
 });
