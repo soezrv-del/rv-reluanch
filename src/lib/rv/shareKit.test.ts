@@ -38,6 +38,7 @@ test("default include is all extras off", () => {
   for (const v of Object.values(DEFAULT_SHARE_INCLUDE)) {
     assert.equal(v, false);
   }
+  assert.equal("video" in DEFAULT_SHARE_INCLUDE, false);
 });
 
 test("zero extras falls back to payment only — no market dump", () => {
@@ -126,6 +127,8 @@ test("kit always writes Summary and only writes rating when toggled", () => {
   assert.match(src, /lines\.push\("SUMMARY"\)/);
   assert.match(src, /if \(include\.rating && snap\.rating\)/);
   assert.doesNotMatch(src, /include\.specs/);
+  assert.match(src, /formatShareVideoBlock\(opts\.video\)/);
+  assert.doesNotMatch(src, /include\.video/);
 });
 
 test("summary uses curated description and never invents specs", () => {
@@ -494,6 +497,9 @@ test("Share kit send attaches the bottom card as a PNG file", () => {
   assert.doesNotMatch(send, /await captureShareCardFile/);
   assert.doesNotMatch(send, /cardFileRef/);
   assert.doesNotMatch(src, /shareImageCache\.set\(url, file\)/);
+  assert.doesNotMatch(send, /video\/|youtube.*File|new File\([^\)]*mp4/i);
+  assert.match(ui, /data-share-video-toggle/);
+  assert.match(ui, /includeVideo \? shareVideo : null/);
 });
 
 test("payment calculator field order is price → down → term → rate → est", () => {

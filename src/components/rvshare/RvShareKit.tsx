@@ -67,6 +67,14 @@ import {
   REPORT_CONTACT_TEL,
 } from "@/lib/rv/reportContact";
 import { LIFESTYLE_SHARE_URLS } from "@/assets/typeMedia";
+import {
+  fetchRvVideos,
+  peekRvVideoSession,
+  shareVideoForCoach,
+  shouldShowRvVideoPrompt,
+  subscribeRvVideoSession,
+  type RvVideoCoach,
+} from "@/lib/rv/rvVideos";
 
 function parseMoney(raw: string): number {
   const n = Number(String(raw).replace(/[^\d.]/g, ""));
@@ -353,6 +361,9 @@ export function RvShareKit({
   const rateFlashTimer = useRef<number | null>(null);
   const statusTimer = useRef<number | null>(null);
   const shareCardRef = useRef<HTMLDivElement>(null);
+  const shareRootRef = useRef<HTMLElement>(null);
+  const [includeVideo, setIncludeVideo] = useState(false);
+  const [videoTick, setVideoTick] = useState(0);
 
   useEffect(() => {
     prefetchShareImages(LIFESTYLE_SHARE_URLS);
@@ -363,6 +374,24 @@ export function RvShareKit({
     [result, catalogReady],
   );
 
+  const videoCoach = useMemo<RvVideoCoach | null>(() => {
+    if (!selected) return null;
+    return {
+      year: selected.year,
+      make: selected.make,
+      model: selected.model,
+      floorplan: selected.floorplan,
+      type: selected.data.type,
+    };
+  }, [selected]);
+
+  const shareVideo = useMemo(() => {
+    if (!videoCoach || !shouldShowRvVideoPrompt(videoCoach)) return null;
+    return shareVideoForCoach(videoCoach);
+  }, [videoCoach, videoTick]);
+
+  useEffect(() => subscribeRvVideoSession(() => setVideoTick((n) => n + 1)), []);
+
   useEffect(() => {
     if (!selected) return;
     setPayment(defaultPaymentFor(selected));
@@ -371,7 +400,31 @@ export function RvShareKit({
     setStrengthsLocked(false);
     setRatingEdit(null);
     setRateUpdated(false);
+    setIncludeVideo(false);
   }, [selected]);
+
+  useEffect(() => {
+    if (!videoCoach || !shouldShowRvVideoPrompt(videoCoach)) return;
+    if (peekRvVideoSession(videoCoach)) return;
+    const el = shareRootRef.current;
+    const probe = () => {
+      void fetchRvVideos(videoCoach);
+    };
+    if (!el || typeof IntersectionObserver === "undefined") {
+      probe();
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((row) => row.isIntersecting)) return;
+        probe();
+        io.disconnect();
+      },
+      { root: null, rootMargin: "120px 0px", threshold: 0.01 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [videoCoach]);
 
   const catalogRating = useMemo(
     () =>
@@ -474,6 +527,7 @@ export function RvShareKit({
       strengths: strengthDraft,
       rating: ratingValue,
       summary,
+      video: includeVideo ? shareVideo : null,
     });
   }, [
     selected,
@@ -484,6 +538,8 @@ export function RvShareKit({
     strengthDraft,
     ratingValue,
     summary,
+    includeVideo,
+    shareVideo,
   ]);
 
   const loan = useMemo(() => paymentBreakdown(payment), [payment]);
@@ -621,6 +677,7 @@ export function RvShareKit({
 
   return (
     <section
+      ref={shareRootRef}
       id="rv-share-kit"
       data-share-kit
       className="space-y-3"
@@ -891,6 +948,29 @@ export function RvShareKit({
                     {lifestylePitch(selected.data.type)}
                   </p>
                 </SectionToggle>
+
+                {shareVideo ? (
+                  <div
+                    data-share-video-toggle
+                    data-include-video={includeVideo ? "1" : "0"}
+                  >
+                    <SectionToggle
+                      title="INCLUDE VIDEO"
+                      name="video"
+                      on={includeVideo}
+                      onToggle={() => setIncludeVideo((on) => !on)}
+                    >
+                      <div className="space-y-1">
+                        <p className="text-[12px] font-semibold leading-snug text-white/90">
+                          {shareVideo.title}
+                        </p>
+                        <p className="break-all text-[11px] leading-snug text-sky-200">
+                          {shareVideo.youtubeUrl}
+                        </p>
+                      </div>
+                    </SectionToggle>
+                  </div>
+                ) : null}
 
                 <SectionToggle
                   title="STRENGTHS — EDITABLE"

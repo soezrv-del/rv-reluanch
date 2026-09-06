@@ -434,6 +434,14 @@ test("clipboard-only / download is last-resort when navigator.share is missing",
   }
 });
 
+test("Include video never adds a video file to Share files[]", () => {
+  const send = ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const copyOnly"));
+  assert.match(ui, /includeVideo \? shareVideo : null/);
+  assert.match(ui, /data-share-video-toggle/);
+  assert.doesNotMatch(send, /video\/mp4|video\/webm|\.mp4|\.webm/);
+  assert.doesNotMatch(send, /extraFiles\.push\([^\)]*video/i);
+});
+
 test("lifestyle JPEG is in files[] when the lifestyle section is on", () => {
   const jpeg = new File([new Uint8Array([...MINI_PNG, 2])], "coach-lifestyle.jpg", {
     type: "image/jpeg",

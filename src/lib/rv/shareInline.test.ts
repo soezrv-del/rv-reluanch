@@ -24,6 +24,9 @@ test("Share kit is inline at the bottom of the Facts report", () => {
   assert.match(kit, /const sendKit/);
   assert.match(kit, /captureShareCardFile\(\s*shareCardRef\.current/);
   assert.match(kit, /hydrateShareCoachResult\(result\)/);
+  assert.match(kit, /data-share-video-toggle/);
+  assert.match(kit, /IntersectionObserver/);
+  assert.doesNotMatch(kit, /MISSING_KEY_MESSAGE/);
   assert.doesNotMatch(kit, /SAVED UNITS/);
   assert.doesNotMatch(kit, /Try a sample kit/);
 });
