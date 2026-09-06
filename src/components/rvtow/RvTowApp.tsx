@@ -12,10 +12,17 @@ import { SelectSheet } from "@/components/rvfax/SelectSheet";
 import {
   getModels,
   getRating,
-  getTrims,
   makesForKind,
   type VehicleKind,
 } from "@/lib/tow/towVehicles";
+import {
+  DEFAULT_TOW_VEHICLE,
+  formatTrimYearRange,
+  getTrimsForYear,
+  isCatalogTrimForYear,
+  pickSuccessorTrim,
+  trimStem,
+} from "@/lib/tow/towYear";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
@@ -50,12 +57,10 @@ const EMPTY = {
 
 export function RvTowApp() {
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
-  const [year, setYear] = useState("2024");
-  const [make, setMake] = useState("Ford");
-  const [model, setModel] = useState("F-350 Super Duty");
-  const [trim, setTrim] = useState(
-    "XL — 6.7L Power Stroke Diesel (SRW)",
-  );
+  const [year, setYear] = useState(DEFAULT_TOW_VEHICLE.year);
+  const [make, setMake] = useState(DEFAULT_TOW_VEHICLE.make);
+  const [model, setModel] = useState(DEFAULT_TOW_VEHICLE.model);
+  const [trim, setTrim] = useState(DEFAULT_TOW_VEHICLE.trim);
   const [rvType, setRvType] = useState("Fifth Wheel");
   const [gvwr, setGvwr] = useState("14000");
   const [bed, setBed] = useState("6.5 ft (Standard Bed)");
@@ -111,19 +116,29 @@ export function RvTowApp() {
 
   const trims = useMemo(() => {
     if (!make || !model) return [];
-    return getTrims(make, model);
-  }, [make, model]);
+    return getTrimsForYear(make, model, year);
+  }, [make, model, year]);
 
-  const trimLabels = useMemo(() => trims.map((t) => t.label), [trims]);
+  const trimItems = useMemo(
+    () =>
+      trims.map((t) => {
+        const years = formatTrimYearRange(t.label);
+        return {
+          value: t.label,
+          label: trimStem(t.label),
+          meta: years ? `${years} · approx when equipped` : undefined,
+        };
+      }),
+    [trims],
+  );
 
   const inCatalog = useMemo(() => {
     if (!make || !model) return false;
     const mods = getModels(make, "all");
     if (!mods.some((m) => m.name === model)) return false;
-    const trims = getTrims(make, model);
     if (!trim) return mods.length > 0;
-    return trims.some((t) => t.label === trim) || trims.length === 0;
-  }, [make, model, trim]);
+    return isCatalogTrimForYear(make, model, trim, year);
+  }, [make, model, trim, year]);
 
   const hasVehicle = Boolean(make && model && (trim || !inCatalog));
 
@@ -235,6 +250,26 @@ export function RvTowApp() {
     [make, model],
   );
 
+  const pickYear = useCallback(
+    (nextYear: string) => {
+      setYear(nextYear);
+      if (!make || !model) return;
+      const nextTrims = getTrimsForYear(make, model, nextYear);
+      if (trim && nextTrims.some((t) => t.label === trim)) return;
+      const successor = pickSuccessorTrim(trim, nextTrims);
+      if (successor) {
+        setTrim(successor.label);
+        return;
+      }
+      const inFullTable = getTrimsForYear(make, model, "").some(
+        (t) => t.label === trim,
+      );
+      if (trim && !inFullTable) return;
+      setTrim("");
+    },
+    [make, model, trim],
+  );
+
   const pickMake = useCallback(
     (m: string) => {
       setMake(m);
@@ -245,14 +280,14 @@ export function RvTowApp() {
       if (nextModels.length === 1) {
         const only = nextModels[0]!;
         setModel(only.name);
-        const onlyTrims = only.trims;
+        const onlyTrims = getTrimsForYear(m, only.name, year);
         setTrim(onlyTrims.length === 1 ? onlyTrims[0]!.label : "");
       } else {
         setModel("");
         setTrim("");
       }
     },
-    [kindFilter],
+    [kindFilter, year],
   );
 
   const pickModel = useCallback(
@@ -261,11 +296,11 @@ export function RvTowApp() {
       setManualMaxTow("");
       setManualPayload("");
       setManualGcwr("");
-      const nextTrims = getTrims(make, m);
+      const nextTrims = getTrimsForYear(make, m, year);
       if (nextTrims.length === 1) setTrim(nextTrims[0]!.label);
       else setTrim("");
     },
-    [make],
+    [make, year],
   );
 
   const clearVehicle = () => {
@@ -282,10 +317,10 @@ export function RvTowApp() {
   const resetDefaults = () => {
     lastPrefillKey.current = "";
     setKindFilter("all");
-    setYear("2024");
-    setMake("Ford");
-    setModel("F-350 Super Duty");
-    setTrim("XL — 6.7L Power Stroke Diesel (SRW)");
+    setYear(DEFAULT_TOW_VEHICLE.year);
+    setMake(DEFAULT_TOW_VEHICLE.make);
+    setModel(DEFAULT_TOW_VEHICLE.model);
+    setTrim(DEFAULT_TOW_VEHICLE.trim);
     setRvType("Fifth Wheel");
     setGvwr("14000");
     setBed("6.5 ft (Standard Bed)");
@@ -309,9 +344,10 @@ export function RvTowApp() {
       <SelectSheet
         open={sheet === "year"}
         title="Year"
+        subtitle="Year filters which trims and ratings apply"
         items={YEARS}
         selected={year}
-        onSelect={setYear}
+        onSelect={pickYear}
         onClose={() => setSheet(null)}
         allowCustom
         customLabel="Use this year"
@@ -347,13 +383,20 @@ export function RvTowApp() {
       <SelectSheet
         open={sheet === "trim"}
         title="Trim / Engine"
-        items={trimLabels}
+        subtitle={
+          year
+            ? `Rows that cover ${year}`
+            : "All years in the table — pick a year to filter"
+        }
+        items={trimItems}
         selected={trim}
         onSelect={setTrim}
         onClose={() => setSheet(null)}
         emptyHint={
           model
-            ? "No catalog trims — type yours or skip"
+            ? year
+              ? `No catalog row for ${year} ${make} ${model} — type yours or skip`
+              : "No catalog trims — type yours or skip"
             : "Pick a model first"
         }
         allowCustom
@@ -491,6 +534,15 @@ export function RvTowApp() {
             empty={!year}
             onClick={() => setSheet("year")}
           />
+          {make && model ? (
+            <p className="mt-1.5 text-[11px] leading-relaxed text-white/70">
+              {trims.length
+                ? `${trims.length} catalog ${trims.length === 1 ? "row" : "rows"} cover ${year || "all years"}`
+                : year
+                  ? `No catalog row for ${year} — pick Custom and use the door sticker`
+                  : "Pick a year to filter trims"}
+            </p>
+          ) : null}
           <Field
             label="MAKE"
             value={make || "Select make"}
@@ -583,7 +635,16 @@ export function RvTowApp() {
                   <Info className="mt-0.5 size-3.5 shrink-0 text-blue" />
                   {year || "—"} {make} {model}
                 </p>
-                <p className="mt-0.5 pl-5 text-[11px] text-white">{trim}</p>
+                <p className="mt-0.5 pl-5 text-[11px] text-white">
+                  {rating.custom ? trim : trimStem(trim)}
+                </p>
+                {formatTrimYearRange(trim) ? (
+                  <p className="mt-1 pl-5">
+                    <span className="inline-flex rounded-full border border-blue/35 bg-blue/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-blue">
+                      {formatTrimYearRange(trim)}
+                    </span>
+                  </p>
+                ) : null}
                 <p className="mt-1 pl-5 text-[10px] font-semibold uppercase tracking-wide text-blue/90">
                   {rating.kind === "suv" ? "SUV" : "Truck"} · {rating.hitch}{" "}
                   hitch
@@ -675,6 +736,20 @@ export function RvTowApp() {
           <p className="mb-3 text-[10px] font-bold tracking-[0.12em] text-blue">
             RV DETAILS
           </p>
+          {prefill.kind === "towable" ? (
+            <div className="mb-3 rounded-[var(--radius-md)] border border-sky-400/30 bg-sky-500/10 px-3 py-2.5">
+              <p className="text-[10px] font-bold tracking-[0.12em] text-sky-200">
+                TRAILER FROM FACTS
+              </p>
+              <p className="mt-1 text-[13px] font-bold text-white">
+                {formatActiveCoachChip(prefill.coach)}
+              </p>
+              <p className="mt-1 text-[11px] leading-relaxed text-white/80">
+                Type and GVWR filled from the open Facts coach. Change the
+                coach in Facts or edit the fields below.
+              </p>
+            </div>
+          ) : null}
           <Field
             label="RV TYPE"
             value={
