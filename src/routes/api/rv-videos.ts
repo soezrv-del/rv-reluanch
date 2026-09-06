@@ -4,6 +4,7 @@ import {
   buildRvVideoQuery,
   calmVideoLookupError,
   EMPTY_MATCH_MESSAGE,
+  isRvVideoLibraryYear,
   MISSING_KEY_MESSAGE,
   rankRvVideos,
   RELATED_NOTE,
@@ -18,6 +19,8 @@ import {
  * GET /api/rv-videos?year=2023&make=Tiffin&model=Allegro%20Bus&floorplan=45OPP
  *
  * Opt-in only. Facts must never call this on report open.
+ * Known model years before 2016 return empty — no YouTube call
+ * (channel coverage is ~2016+). Unknown year is allowed through.
  * YouTube Data API v3 search.list scoped to the fixed @RVVideoLibrary
  * channelId UCaAH7nANvUhdPWN93uQ6mcA (David-confirmed). No handle resolve.
  *
@@ -167,6 +170,18 @@ export const Route = createFileRoute("/api/rv-videos")({
             },
             { status: 400 },
           );
+        }
+        if (!isRvVideoLibraryYear(year)) {
+          const query = buildRvVideoQuery({
+            year,
+            make,
+            model,
+            floorplan,
+            series,
+          });
+          return Response.json(payload(query, [], false), {
+            headers: { "Cache-Control": "private, max-age=300" },
+          });
         }
 
         const apiKey = getKey();
