@@ -450,20 +450,157 @@ export type ShareOutcome =
   | "cancelled"
   | "failed";
 
-function isShareAbort(e: unknown): boolean {
+type ShareFn = (data: ShareData) => Promise<void>;
+
+type ShareNav = Navigator & {
+  share?: ShareFn;
+  canShare?: (data?: ShareData) => boolean;
+};
+
+/**
+ * WebKit sets `m_hasPendingShare` until the native sheet completion fires.
+ * On iOS WKWebView that callback often never runs after Messages / a dismiss,
+ * so the next `navigator.share()` throws InvalidStateError ("already in
+ * progress") until the WebView is destroyed. Track that so a later tap can
+ * use a fresh iframe Navigator instead of the stuck parent.
+ */
+let parentShareInFlight = false;
+
+/** Test hook — production callers never need this. */
+export function resetShareSession(): void {
+  parentShareInFlight = false;
+}
+
+/** New File wrapper so a previous OS share cannot consume the same blob. */
+export function freshShareImageFile(file: File): File | null {
+  const meta = normalizeShareImageMeta(file);
+  if (!meta) return null;
+  try {
+    return new File([file], meta.name, {
+      type: meta.type,
+      lastModified: Date.now(),
+    });
+  } catch {
+    return null;
+  }
+}
+
+export function isShareAbort(e: unknown): boolean {
   if (typeof DOMException !== "undefined" && e instanceof DOMException) {
     if (e.name === "AbortError") return true;
   }
-  return e instanceof Error && /Abort|cancel/i.test(e.message);
+  const name = e instanceof Error ? e.name : "";
+  const msg = e instanceof Error ? e.message : String(e ?? "");
+  if (name === "AbortError") return true;
+  // WebKit: "Abort due to cancellation of share."
+  return /AbortError|due to cancellation|cancelled|canceled/i.test(msg);
 }
 
-function nativeShare(
-  nav: Navigator & {
-    share?: (data: ShareData) => Promise<void>;
-    canShare?: (data?: ShareData) => boolean;
-  },
-): ((data: ShareData) => Promise<void>) | null {
+export function isShareBusyError(e: unknown): boolean {
+  if (typeof DOMException !== "undefined" && e instanceof DOMException) {
+    if (e.name === "InvalidStateError") return true;
+  }
+  const name = e instanceof Error ? e.name : "";
+  const msg = e instanceof Error ? e.message : String(e ?? "");
+  return (
+    name === "InvalidStateError" ||
+    /already in progress|not yet completed|earlier share/i.test(msg)
+  );
+}
+
+function isShareNotAllowed(e: unknown): boolean {
+  if (typeof DOMException !== "undefined" && e instanceof DOMException) {
+    if (e.name === "NotAllowedError") return true;
+  }
+  const name = e instanceof Error ? e.name : "";
+  return name === "NotAllowedError";
+}
+
+function nativeShare(nav: ShareNav): ShareFn | null {
   return typeof nav.share === "function" ? nav.share.bind(nav) : null;
+}
+
+function makeIframeShare(
+  doc: Document | undefined,
+): { share: ShareFn; dispose: () => void } | null {
+  if (!doc?.body || typeof doc.createElement !== "function") return null;
+  try {
+    const iframe = doc.createElement("iframe");
+    iframe.setAttribute("allow", "web-share");
+    iframe.setAttribute("aria-hidden", "true");
+    iframe.src = "about:blank";
+    iframe.style.cssText =
+      "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;border:0;left:0;top:0;";
+    doc.body.appendChild(iframe);
+    const win = iframe.contentWindow;
+    const nav = win?.navigator as ShareNav | undefined;
+    if (typeof nav?.share !== "function") {
+      iframe.remove();
+      return null;
+    }
+    return {
+      share: nav.share.bind(nav),
+      dispose: () => {
+        try {
+          iframe.remove();
+        } catch {
+          /* iframe already gone */
+        }
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Open the OS sheet on a Navigator that is not stuck.
+ * Parent window first (has the tap's user activation). If that Navigator is
+ * still pending from an earlier share, use a disposable same-origin iframe —
+ * each iframe has its own `m_hasPendingShare`, so a hung first share does
+ * not block the next tap.
+ */
+async function shareOnAvailableNavigator(
+  data: ShareData,
+  nav: ShareNav,
+  doc: Document | undefined,
+): Promise<ShareOutcome | "failed"> {
+  const parent = nativeShare(nav);
+  if (parent && !parentShareInFlight) {
+    parentShareInFlight = true;
+    try {
+      await parent(data);
+      parentShareInFlight = false;
+      return "shared";
+    } catch (e) {
+      if (isShareAbort(e)) {
+        parentShareInFlight = false;
+        return "cancelled";
+      }
+      if (isShareBusyError(e)) {
+        parentShareInFlight = true;
+      } else {
+        parentShareInFlight = false;
+      }
+    }
+  }
+
+  const frame = makeIframeShare(doc);
+  if (frame) {
+    try {
+      await frame.share(data);
+      return "shared";
+    } catch (e) {
+      if (isShareAbort(e)) return "cancelled";
+      if (!isShareBusyError(e) && !isShareNotAllowed(e)) {
+        /* TypeError on this payload — caller tries the next attempt */
+      }
+    } finally {
+      frame.dispose();
+    }
+  }
+
+  return "failed";
 }
 
 export async function copyKit(text: string): Promise<ShareOutcome> {
@@ -509,16 +646,15 @@ export async function shareOrCopy(opts: {
 }): Promise<ShareOutcome> {
   const files = (opts.files || [])
     .map((file) => hardenShareImageFileSync(file))
+    .map((file) => (file ? freshShareImageFile(file) : null))
     .filter(isShareImageFile);
   const attempts = shareDataAttempts({
     title: opts.title,
     text: opts.text,
     files,
   });
-  const nav = navigator as Navigator & {
-    share?: (data: ShareData) => Promise<void>;
-    canShare?: (data?: ShareData) => boolean;
-  };
+  const nav = navigator as ShareNav;
+  const doc = typeof document !== "undefined" ? document : undefined;
   const share = nativeShare(nav);
 
   if (share) {
@@ -533,22 +669,18 @@ export async function shareOrCopy(opts: {
         rest.push(attempt);
       }
     }
-    for (const attempt of [...preferred, ...rest]) {
-      try {
-        // First await in this function — keep user activation for iOS share.
-        await share(toShareData(attempt));
-        return "shared";
-      } catch (e) {
-        if (isShareAbort(e)) return "cancelled";
-      }
-    }
+    const ordered = [...preferred, ...rest];
     if (files.length) {
-      try {
-        await share({ title: opts.title, text: opts.text });
-        return "shared";
-      } catch (e) {
-        if (isShareAbort(e)) return "cancelled";
-      }
+      ordered.push({ title: opts.title, text: opts.text });
+    }
+    for (const attempt of ordered) {
+      // First await in this function — keep user activation for iOS share.
+      const out = await shareOnAvailableNavigator(
+        toShareData(attempt),
+        nav,
+        doc,
+      );
+      if (out === "shared" || out === "cancelled") return out;
     }
   }
 

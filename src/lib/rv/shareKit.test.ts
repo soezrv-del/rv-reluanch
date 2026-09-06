@@ -492,6 +492,8 @@ test("Share kit send attaches the bottom card as a PNG file", () => {
   assert.match(send, /extraFiles/);
   assert.doesNotMatch(send, /await fetchShareImage/);
   assert.doesNotMatch(send, /await captureShareCardFile/);
+  assert.doesNotMatch(send, /cardFileRef/);
+  assert.doesNotMatch(src, /shareImageCache\.set\(url, file\)/);
 });
 
 test("payment calculator field order is price → down → term → rate → est", () => {
