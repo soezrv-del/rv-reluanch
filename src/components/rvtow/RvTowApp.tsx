@@ -1322,7 +1322,7 @@ function MatchVerdictBlock({
         {verdict.overallOk
           ? "✓ Tow, hitch, and GCWR clear — confirm the door sticker"
           : firstFail
-            ? `⚠ ${firstFail.title}`
+            ? `⚠ Match fails — ${firstFail.title}`
             : "⚠ Match incomplete"}
       </div>
       {hard.map((check) => (
