@@ -836,12 +836,16 @@ export function RvTowApp() {
               <p className="mt-1 text-[13px] font-bold text-white">
                 {formatActiveCoachChip(prefill.coach)}
               </p>
+              {reverseMode ? (
+                <p className="mt-0.5 text-[11px] text-white/70">
+                  Edit GVWR if the sticker differs.
+                </p>
+              ) : (
+                <>
               <p className="mt-1 text-[11px] leading-relaxed text-white/80">
-                {reverseMode
-                  ? "One-tap truck shortlist for this coach. Edit GVWR below if the sticker differs."
-                  : "Type and GVWR filled from the open Facts coach. Change the coach in Facts or edit the fields below."}
+                Type and GVWR filled from the open Facts coach. Change the
+                coach in Facts or edit the fields below.
               </p>
-              {!reverseMode ? (
                 <button
                   type="button"
                   onClick={openReverse}
@@ -851,17 +855,32 @@ export function RvTowApp() {
                   Can I tow this coach?
                   <ChevronRight className="size-3.5" />
                 </button>
-              ) : null}
+                </>
+              )}
             </div>
           ) : null}
           {reverseMode ? (
-            <Field
-              label="CATALOG YEAR"
-              value={year || "Select year"}
-              empty={!year}
-              onClick={() => setSheet("year")}
-            />
-          ) : null}
+            <div className="grid grid-cols-2 gap-2">
+              <Field
+                label="YEAR"
+                value={year || "Year"}
+                empty={!year}
+                onClick={() => setSheet("year")}
+                flush
+              />
+              <Field
+                label="RV TYPE"
+                value={
+                  vehicleIsTruck ? rvType : "Travel Trailer"
+                }
+                onClick={() => {
+                  if (vehicleIsTruck) setSheet("rvType");
+                }}
+                disabled={!vehicleIsTruck}
+                flush
+              />
+            </div>
+          ) : (
           <Field
             label="RV TYPE"
             value={
@@ -874,7 +893,8 @@ export function RvTowApp() {
             }}
             disabled={!vehicleIsTruck}
           />
-          {!vehicleIsTruck ? (
+          )}
+          {reverseMode ? null : !vehicleIsTruck ? (
             <p className="mt-1.5 text-[11px] leading-relaxed text-sky-200/90">
               SUVs and non-truck vehicles are set to{" "}
               <span className="font-semibold text-white">Travel Trailer</span>
@@ -902,9 +922,8 @@ export function RvTowApp() {
             </span>
           </label>
 
-          {rvType === "Fifth Wheel" && vehicleIsTruck && (
+          {rvType === "Fifth Wheel" && vehicleIsTruck && !reverseMode && (
             <>
-              {reverseMode ? null : (
               <div className="mt-2.5">
                 <Field
                   label="TRUCK BED LENGTH"
@@ -912,7 +931,6 @@ export function RvTowApp() {
                   onClick={() => setSheet("bed")}
                 />
               </div>
-              )}
               <label className="mt-2.5 block">
                 <div className="mb-1 flex items-center justify-between">
                   <span className="text-[10px] font-bold tracking-[0.12em] text-white">
@@ -988,6 +1006,7 @@ export function RvTowApp() {
         )}
 
         {reverseMode ? (
+          <>
           <ReverseResults
             gvwrN={gvwrN}
             rvType={rvType}
@@ -1001,6 +1020,40 @@ export function RvTowApp() {
             }
             onPick={applyReversePick}
           />
+          {rvType === "Fifth Wheel" ? (
+            <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
+              <label className="block">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[10px] font-bold tracking-[0.12em] text-white">
+                    PIN WEIGHT (lbs){" "}
+                    <span className="text-white/60">OPTIONAL</span>
+                  </span>
+                  {pin ? (
+                    <button
+                      type="button"
+                      onClick={() => setPin("")}
+                      className="text-[10px] font-semibold text-blue"
+                    >
+                      Clear pin
+                    </button>
+                  ) : null}
+                </div>
+                <input
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                  placeholder={`est. ${reverseResult.hitchLoad.toLocaleString()} (20% of GVWR)`}
+                  className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-3 py-3 text-sm text-white outline-none placeholder:text-white/45 focus:border-blue/50"
+                  inputMode="numeric"
+                />
+              </label>
+              <p className="mt-2 text-[11px] leading-relaxed text-white/65">
+                Ranking uses {reverseResult.hitchLoad.toLocaleString()} lbs pin
+                (typed or 20% of GVWR) against each truck’s rec. payload when
+                that number exists.
+              </p>
+            </section>
+          ) : null}
+          </>
         ) : null}
 
         {rvType === "Fifth Wheel" && vehicleIsTruck && !toadMode && !reverseMode && (
@@ -1072,11 +1125,9 @@ function ReverseResults({
       </p>
       {gvwrN > 0 ? (
         <p className="mb-3 text-[11px] leading-relaxed text-white/75">
-          Ranked by closest recommended tow (80% of OEM max) that still covers{" "}
-          {gvwrN.toLocaleString()} lbs
-          {year ? ` · ${year} catalog` : ""}. {hitchLabel} ~{" "}
-          {hitchLoad.toLocaleString()} lbs must sit under rec. payload when
-          that rating exists.
+          Closest rec. tow (80% of max) that covers {gvwrN.toLocaleString()} lbs
+          {year ? ` · ${year}` : ""}. {hitchLabel} ~{hitchLoad.toLocaleString()}{" "}
+          lbs vs rec. payload when listed.
         </p>
       ) : (
         <p className="mb-3 text-[11px] leading-relaxed text-white/75">
@@ -1213,15 +1264,17 @@ function Field({
   onClick,
   empty,
   disabled,
+  flush,
 }: {
   label: string;
   value: string;
   onClick: () => void;
   empty?: boolean;
   disabled?: boolean;
+  flush?: boolean;
 }) {
   return (
-    <div className="mt-2.5 first:mt-0">
+    <div className={flush ? "mt-2.5" : "mt-2.5 first:mt-0"}>
       <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-blue">
         {label}
       </p>
