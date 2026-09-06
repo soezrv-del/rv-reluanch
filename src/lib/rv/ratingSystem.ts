@@ -1,16 +1,13 @@
 // ─── RVFOX COMPUTED RATING SYSTEM ────────────────────────────────────────────
-// Final Score = Manufacturer Base Score + Model Tier Adjustment + Year Build Adjustment
+// Score = manufacturer base + model tier + year band [+ optional NHTSA recall adj]
 //
-// Sources cross-referenced per brand:
-//   · iRV2 Owner Forums (real long-term owner feedback)
-//   · Reddit r/rving & r/GoRVing community consensus
-//   · RVInsider.com owner satisfaction scores
-//   · YouTube tech inspections (RV Geeks, Keep Your Daydream, Less Junk More Journey)
-//   · NHTSA complaint + recall frequency analysis
-//   · Facebook owner group sentiment (Montana Owners, Grand Design Nation, etc.)
-//   · Industry analyst consensus mid-2026
+// Real inputs that may change the number:
+//   · Editorial tables in this file (brand base, model tier)
+//   · Year band (shared build-era adj)
+//   · Live NHTSA campaign count when the caller passes it (Facts after fetch)
 //
-// Conservative scoring: 5.0-point scale, volume brands score noticeably lower than premium.
+// Not inputs: iRV2, Reddit, RVInsider, YouTube, Facebook, App Store stars,
+// Grok ownerSentiment / ratingEstimate (show those labeled separately).
 
 export type RVTier = "flagship" | "upper_mid" | "standard" | "entry";
 
@@ -90,13 +87,33 @@ export const MODEL_TIERS: Record<string, Record<string, RVTier>> = {
   Newmar: {
     "King Aire": "flagship",
     Essex: "flagship",
+    "London Aire": "flagship",
     "Mountain Aire": "flagship",
+    "Supreme Aire": "flagship",
+    "Summit Aire": "flagship",
     "Dutch Star": "upper_mid",
+    "New Aire": "upper_mid",
     Ventana: "upper_mid",
     "Ventana LE": "upper_mid",
+    "Grand Star": "upper_mid",
+    "Super Star": "upper_mid",
+    "Northern Star": "upper_mid",
     "Kountry Star": "standard",
+    "Canyon Star": "standard",
     "Bay Star": "standard",
+    "Freedom Aire": "standard",
     "Bay Star Sport": "entry",
+  },
+  "Newmar Classic": {
+    "King Aire": "flagship",
+    "London Aire": "flagship",
+    "Mountain Aire": "flagship",
+    Essex: "flagship",
+    "Dutch Star": "upper_mid",
+    Ventana: "upper_mid",
+    "Kountry Star": "standard",
+    "Canyon Star": "standard",
+    "Bay Star": "standard",
   },
   Tiffin: {
     Zephyr: "flagship",
@@ -106,6 +123,7 @@ export const MODEL_TIERS: Record<string, Record<string, RVTier>> = {
     "Allegro Red": "upper_mid",
     Wayfarer: "upper_mid",
     "Open Road": "standard",
+    Allegro: "standard",
     "Allegro Breeze": "entry",
     "Allegro Bay": "upper_mid",
     "Open Trail": "upper_mid",
@@ -356,7 +374,44 @@ export const MODEL_TIERS: Record<string, Record<string, RVTier>> = {
   },
 };
 
-function getYearAdjustment(yearStr: string): number {
+export const UNKNOWN_MAKE_BASE = 3.5;
+
+const TIER_SUFFIX_TOKENS = [
+  "super c",
+  "class a",
+  "class b",
+  "class c",
+  "prestige",
+  "premier",
+  "classic",
+  "signature",
+  "limited",
+  "sport",
+  "xl",
+  "xls",
+  "xe",
+  "le",
+  "gt",
+  "xg",
+];
+
+function normName(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function formatRatingAdj(n: number): string {
+  const abs = Math.abs(n).toFixed(2);
+  if (n > 0) return `+${abs}`;
+  if (n < 0) return `-${abs}`;
+  return "+0.00";
+}
+
+export function getYearAdjustment(yearStr: string): number {
   const yr = parseInt(yearStr, 10);
   if (isNaN(yr)) return 0;
   if (yr >= 2025) return 0.1;
@@ -368,20 +423,144 @@ function getYearAdjustment(yearStr: string): number {
   return -0.15;
 }
 
+export type TierMatch = {
+  tier: RVTier;
+  matchedKey: string | null;
+};
+
+function lookupTierMap(make: string): Record<string, RVTier> | undefined {
+  if (MODEL_TIERS[make]) return MODEL_TIERS[make];
+  const want = normName(make);
+  for (const [brand, map] of Object.entries(MODEL_TIERS)) {
+    if (normName(brand) === want) return map;
+  }
+  // "Newmar Classic" can inherit Newmar line names
+  if (want.endsWith(" classic")) {
+    const parent = Object.entries(MODEL_TIERS).find(
+      ([brand]) => normName(brand) === want.replace(/ classic$/, ""),
+    );
+    if (parent) return parent[1];
+  }
+  return undefined;
+}
+
+function longestPrefixTier(
+  map: Record<string, RVTier>,
+  modelNorm: string,
+): { key: string; tier: RVTier } | null {
+  let best: { key: string; tier: RVTier; len: number } | null = null;
+  for (const [key, tier] of Object.entries(map)) {
+    const kn = normName(key);
+    if (!kn) continue;
+    const hit = modelNorm === kn || modelNorm.startsWith(`${kn} `);
+    if (!hit) continue;
+    if (!best || kn.length > best.len) best = { key, tier, len: kn.length };
+  }
+  return best ? { key: best.key, tier: best.tier } : null;
+}
+
+function stripTrailingTierTokens(modelNorm: string): string {
+  let cur = modelNorm;
+  let changed = true;
+  while (changed && cur) {
+    changed = false;
+    const hpTail = cur.match(/^(.*?)(?:\s+\d{2,4}[a-z]{0,4})$/);
+    if (hpTail?.[1] && hpTail[1].length >= 3) {
+      cur = hpTail[1].trim();
+      changed = true;
+      continue;
+    }
+    for (const tok of TIER_SUFFIX_TOKENS) {
+      if (cur.endsWith(` ${tok}`)) {
+        cur = cur.slice(0, -(tok.length + 1)).trim();
+        changed = true;
+        break;
+      }
+    }
+  }
+  return cur;
+}
+
+/** Resolve catalog model names (Allegro Red 340 → Allegro Red) to a tier. */
+export function resolveModelTier(make: string, model: string): TierMatch {
+  const map = lookupTierMap(make);
+  if (!map) return { tier: "standard", matchedKey: null };
+
+  const modelNorm = normName(model);
+  if (!modelNorm) return { tier: "standard", matchedKey: null };
+
+  const exact = Object.entries(map).find(([key]) => normName(key) === modelNorm);
+  if (exact) return { tier: exact[1], matchedKey: exact[0] };
+
+  const prefixed = longestPrefixTier(map, modelNorm);
+  if (prefixed) return { tier: prefixed.tier, matchedKey: prefixed.key };
+
+  const stripped = stripTrailingTierTokens(modelNorm);
+  if (stripped && stripped !== modelNorm) {
+    const again = longestPrefixTier(map, stripped);
+    if (again) return { tier: again.tier, matchedKey: again.key };
+  }
+
+  return { tier: "standard", matchedKey: null };
+}
+
 export function getModelTier(make: string, model: string): RVTier {
-  return MODEL_TIERS[make]?.[model] ?? "standard";
+  return resolveModelTier(make, model).tier;
+}
+
+export function isKnownManufacturer(make: string): boolean {
+  if (MANUFACTURER_BASE_SCORES[make] != null) return true;
+  const want = normName(make);
+  return Object.keys(MANUFACTURER_BASE_SCORES).some((k) => normName(k) === want);
+}
+
+function manufacturerBase(make: string): number {
+  if (MANUFACTURER_BASE_SCORES[make] != null) return MANUFACTURER_BASE_SCORES[make]!;
+  const want = normName(make);
+  for (const [brand, score] of Object.entries(MANUFACTURER_BASE_SCORES)) {
+    if (normName(brand) === want) return score;
+  }
+  return UNKNOWN_MAKE_BASE;
+}
+
+export type RatingSignals = {
+  /**
+   * Live NHTSA campaign count from the Facts fetch.
+   * Omit / null when unknown — do not pass catalog stub 0 as “proven clean.”
+   */
+  recallCount?: number | null;
+};
+
+/** −0.05 per campaign, floor −0.25. Unknown / 0 → 0. One recall cannot collapse a 4.x coach. */
+export function recallAdjustment(recallCount?: number | null): number {
+  if (recallCount == null || !Number.isFinite(recallCount)) return 0;
+  const n = Math.max(0, Math.floor(recallCount));
+  if (n <= 0) return 0;
+  return Math.round(-Math.min(0.25, 0.05 * n) * 100) / 100;
+}
+
+function clampScore(raw: number): number {
+  return Math.round(Math.min(5.0, Math.max(1.0, raw)) * 10) / 10;
 }
 
 /**
- * Credible RvFOX rating for a specific make/model/year.
- * Score = Manufacturer Base + Tier Adjustment + Year Build Adjustment
- * Clamped to [1.0, 5.0], rounded to 1 decimal.
+ * RvFOX rating. Optional `signals.recallCount` is the only live numeric input.
+ * Cards / Compare call this without signals (editorial base).
  */
-export function computeRating(make: string, model: string, year: string): number {
-  const base = MANUFACTURER_BASE_SCORES[make] ?? 3.5;
+export function computeRating(
+  make: string,
+  model: string,
+  year: string,
+  signals?: RatingSignals,
+): number {
+  const base = manufacturerBase(make);
   const tier = getModelTier(make, model);
-  const raw = base + TIER_ADJUSTMENTS[tier] + getYearAdjustment(year);
-  return Math.round(Math.min(5.0, Math.max(1.0, raw)) * 10) / 10;
+  const raw =
+    base +
+    TIER_ADJUSTMENTS[tier] +
+    getYearAdjustment(year) +
+    recallAdjustment(signals?.recallCount);
+  return clampScore(raw);
 }
 
 export interface RatingMetadata {
@@ -391,8 +570,13 @@ export interface RatingMetadata {
   base: number;
   tierAdj: number;
   yearAdj: number;
+  recallAdj: number;
+  recallCount: number | null;
   yearNote: string;
   confidence: "High" | "Medium" | "Low";
+  knownMake: boolean;
+  tierMatched: boolean;
+  matchedModelKey: string | null;
   sources: string[];
 }
 
@@ -416,30 +600,78 @@ const LOW_CONF = new Set(["Regency", "Brinkley", "Alliance RV"]);
 
 function getYearNote(yearStr: string): string {
   const yr = parseInt(yearStr, 10);
-  if (isNaN(yr)) return "Unknown year";
-  if (yr >= 2025) return `${yr} — current model, quality recovery (+0.10)`;
-  if (yr === 2024) return `${yr} — transition year (-0.10)`;
-  if (yr >= 2020 && yr <= 2023) return `${yr} — COVID-era supply chain impact (-0.30)`;
-  if (yr >= 2018 && yr <= 2019) return `${yr} — pre-COVID peak quality (+0.15)`;
-  return `${yr} — older model year`;
+  const adj = getYearAdjustment(yearStr);
+  const delta = formatRatingAdj(adj);
+  if (isNaN(yr)) return `Unknown year (${delta})`;
+  if (yr >= 2025) return `${yr} — current model, quality recovery (${delta})`;
+  if (yr === 2024) return `${yr} — transition year (${delta})`;
+  if (yr >= 2020 && yr <= 2023) return `${yr} — COVID-era supply chain impact (${delta})`;
+  if (yr >= 2018 && yr <= 2019) return `${yr} — pre-COVID peak quality (${delta})`;
+  if (yr >= 2015 && yr <= 2017) return `${yr} — mid-2010s build (${delta})`;
+  if (yr >= 2011 && yr <= 2014) return `${yr} — early-2010s build (${delta})`;
+  return `${yr} — older model year (${delta})`;
+}
+
+function brandConfidence(make: string): "High" | "Medium" | "Low" | null {
+  if (HIGH_CONF.has(make)) return "High";
+  if (LOW_CONF.has(make)) return "Low";
+  const want = normName(make);
+  for (const name of HIGH_CONF) {
+    if (normName(name) === want) return "High";
+  }
+  for (const name of LOW_CONF) {
+    if (normName(name) === want) return "Low";
+  }
+  return null;
 }
 
 export function getRatingMetadata(
   make: string,
   model: string,
   year: string,
+  signals?: RatingSignals,
 ): RatingMetadata {
-  const base = MANUFACTURER_BASE_SCORES[make] ?? 3.5;
-  const tier = getModelTier(make, model);
+  const knownMake = isKnownManufacturer(make);
+  const resolved = resolveModelTier(make, model);
+  const base = manufacturerBase(make);
+  const tier = resolved.tier;
   const tierAdj = TIER_ADJUSTMENTS[tier];
   const yearAdj = getYearAdjustment(year);
-  const score = Math.round(Math.min(5.0, Math.max(1.0, base + tierAdj + yearAdj)) * 10) / 10;
+  const recallCount =
+    signals && "recallCount" in signals && signals.recallCount != null
+      ? Math.max(0, Math.floor(signals.recallCount))
+      : null;
+  const recallAdj = recallAdjustment(recallCount);
+  const score = clampScore(base + tierAdj + yearAdj + recallAdj);
 
-  const confidence: "High" | "Medium" | "Low" = HIGH_CONF.has(make)
-    ? "High"
-    : LOW_CONF.has(make)
-      ? "Low"
-      : "Medium";
+  let confidence: "High" | "Medium" | "Low";
+  if (!knownMake) {
+    confidence = "Low";
+  } else {
+    const brand = brandConfidence(make) ?? "Medium";
+    if (brand === "Low") confidence = "Low";
+    else if (brand === "High" && resolved.matchedKey) confidence = "High";
+    else if (brand === "High") confidence = "Medium";
+    else confidence = "Medium";
+  }
+
+  const modelBit = resolved.matchedKey
+    ? `model ${resolved.matchedKey} (${TIER_LABELS[tier]}, ${formatRatingAdj(tierAdj)})`
+    : `model ${model || "unlisted"} (default ${TIER_LABELS[tier]}, ${formatRatingAdj(tierAdj)})`;
+
+  const sources = [
+    `RvFOX model: manufacturer base ${base.toFixed(1)} + ${modelBit} + year ${formatRatingAdj(yearAdj)}`,
+  ];
+  if (recallCount != null) {
+    sources.push(
+      `NHTSA open campaigns: ${recallCount} (${formatRatingAdj(recallAdj)}; −0.05 each, cap −0.25)`,
+    );
+  } else {
+    sources.push("NHTSA campaigns: not applied — count unknown on this surface");
+  }
+  sources.push(
+    "Brand/tier tables are editorial. Not a live owner survey, forum scrape, or App Store rating.",
+  );
 
   return {
     score,
@@ -448,20 +680,23 @@ export function getRatingMetadata(
     base,
     tierAdj,
     yearAdj,
+    recallAdj,
+    recallCount,
     yearNote: getYearNote(year),
     confidence,
-    sources: [
-      "iRV2 Owner Forums",
-      "Reddit r/rving community",
-      "RVInsider.com scores",
-      "YouTube tech inspections",
-      "NHTSA complaint analysis",
-      "Facebook owner group sentiment",
-    ],
+    knownMake,
+    tierMatched: Boolean(resolved.matchedKey),
+    matchedModelKey: resolved.matchedKey,
+    sources,
   };
 }
 
+/** Nearest half-star so 4.4 → ★★★★½ and 3.5 → ★★★½☆, not both four full stars. */
 export function ratingStars(score: number): string {
-  const full = Math.max(0, Math.min(5, Math.round(score)));
-  return "★".repeat(full) + "☆".repeat(5 - full);
+  const clamped = Math.max(0, Math.min(5, score));
+  const halves = Math.round(clamped * 2) / 2;
+  const full = Math.floor(halves);
+  const half = halves - full >= 0.5;
+  const empty = 5 - full - (half ? 1 : 0);
+  return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(Math.max(0, empty));
 }
