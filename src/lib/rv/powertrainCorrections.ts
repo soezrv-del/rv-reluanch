@@ -11991,6 +11991,19 @@ export const POWERTRAIN_CORRECTIONS: PowertrainCorrection[] = [
     fuelType: "Diesel",
     note: "OEM MY25–26 Tranquility: HP not printed.",
   },
+  {
+    yearMin: 2019,
+    yearEnd: 2024,
+    makeIncludes: "coachmen",
+    modelIncludes: "sportscoach srs",
+    engine: "Cummins ISB 6.7L 340HP @ 2600",
+    horsepower: 340,
+    torqueLbFt: 700,
+    chassis: "Straight Rail Freightliner Chassis",
+    transmission: "Allison 2100MH / 2500MH (by floorplan)",
+    fuelType: "Diesel",
+    note: "Dated Sportscoach SRS 2019–2024 brochures: Class A diesel pusher · ISB 6.7 340 @ 2600 / 700. Not Ford F-550 / Power Stroke / Super C. Freightliner S2RV/M2 unprinted. Bare Sportscoach (RD/collapsed) must not inherit this pin.",
+  },
 ];
 
 /** Patterns that prove a Live Grok narrative stole a flagship/sibling powertrain. */

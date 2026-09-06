@@ -58,6 +58,10 @@ const FORBIDDEN_FLOORPLANS = {
       "35FME",
       "39MKTS",
       "40BHTS",
+      "40BHTS2Q",
+      "40BHTSDEN",
+      "40BHTS-2Q",
+      "40BHTS-DEN",
       "42CONDO",
       "43CONDO",
       "44CONDO",
@@ -2964,7 +2968,6 @@ function main() {
           "263FKDS",
           "273DBHCK",
           "283RKS",
-          "283RNR",
           "293QBCK",
           "293TQBSCK",
           "303RKDS",
@@ -2977,8 +2980,11 @@ function main() {
           "343BHTS-2Q",
           "343BHTS-DEN",
         ],
-        "Coachmen|Catalina Legacy Edition MY26 OEM plans",
+        "Coachmen|Catalina Legacy Edition MY26 dated RVUSA plans",
       );
+      if (yearHasCode(leg, "2026", "283RNR")) {
+        fail("Coachmen|Catalina Legacy Edition 2026 must not keep 283RNR (dated RVUSA/PDF omit it)");
+      }
       if (/"2027":/.test(leg) || /"2025":/.test(leg)) {
         fail("Coachmen|Catalina Legacy Edition must not invent 2025/2027 fby this slice");
       }
@@ -3030,9 +3036,12 @@ function main() {
       expectYearPlans(
         dest,
         "2026",
-        ["35FME", "39MKTS", "40BHTS", "40BHTS2Q", "40BHTSDEN", "42CONDO", "43CONDO", "44CONDO"],
-        "Coachmen|Catalina Destination Series MY26 OEM plans",
+        ["35FME", "39MKTS", "40BHTS", "40BHTS-2Q", "40BHTS-DEN", "42CONDO", "43CONDO", "44CONDO"],
+        "Coachmen|Catalina Destination Series MY26 brochure-hyphen plans",
       );
+      if (yearHasCode(dest, "2026", "40BHTS2Q") || yearHasCode(dest, "2026", "40BHTSDEN")) {
+        fail("Coachmen|Catalina Destination Series must hyphenate 40BHTS-2Q / 40BHTS-DEN to match dated brochure");
+      }
       if (/"2027":/.test(dest) || !/yearStart:\s*2015/.test(dest) || !/hitchType: "bumper-pull"/.test(dest)) {
         fail("Coachmen|Catalina Destination Series yearStart must be 2015 bumper-pull (no 2027 invent)");
       }
@@ -3109,7 +3118,6 @@ function main() {
           "252RBS",
           "258BHS",
           "259FKDS",
-          "271BHE",
           "274RKS",
           "288BHDS",
           "292BHDS",
@@ -3117,10 +3125,33 @@ function main() {
           "324RLDS",
           "326BHDS",
         ],
-        "Coachmen|Freedom Express Ultra Lite MY26 OEM plans",
+        "Coachmen|Freedom Express Ultra Lite MY26 dated RVUSA plans",
       );
-      if (/"2027":/.test(feul) || !/yearStart:\s*2014/.test(feul)) {
-        fail("Coachmen|Freedom Express Ultra Lite yearStart must be 2014 (no 2027 invent)");
+      if (yearHasCode(feul, "2026", "271BHE")) {
+        fail("Coachmen|Freedom Express Ultra Lite 2026 must not keep 271BHE (dated RVUSA 2026 omits it)");
+      }
+      expectYearPlans(
+        feul,
+        "2027",
+        [
+          "22MLS",
+          "245RKS",
+          "259FKDS",
+          "271BHE",
+          "274RKS",
+          "292BHDS",
+          "320BHDS",
+          "324RLDS",
+          "326BHDS",
+          "330BHJJLE",
+        ],
+        "Coachmen|Freedom Express Ultra Lite MY27 dated RVUSA plans",
+      );
+      if (!yearHasCode(feul, "2027", "271BHE")) {
+        fail("Coachmen|Freedom Express Ultra Lite 2027 must keep dated 271BHE");
+      }
+      if (!/yearStart:\s*2014/.test(feul)) {
+        fail("Coachmen|Freedom Express Ultra Lite yearStart must be 2014");
       }
       if (/"18SE"/.test(feul) || /"246RKS"/.test(feul) || /"326BHDE"/.test(feul)) {
         fail("Coachmen|Freedom Express Ultra Lite must not absorb Select or leftover 246RKS / 326BHDE");
@@ -3130,9 +3161,12 @@ function main() {
       expectYearPlans(
         fes,
         "2026",
-        ["18SE", "19SE", "21SE", "247SE", "249SE", "29SE", "30SE", "31SE"],
-        "Coachmen|Freedom Express Select MY26 OEM plans",
+        ["18SE", "19SE", "21SE", "247SE", "29SE", "31SE"],
+        "Coachmen|Freedom Express Select MY26 dated RVUSA plans",
       );
+      if (yearHasCode(fes, "2026", "249SE") || yearHasCode(fes, "2026", "30SE")) {
+        fail("Coachmen|Freedom Express Select 2026 must not keep 249SE / 30SE (dated RVUSA 2026 omits them)");
+      }
       if (/"2027":/.test(fes) || !/yearStart:\s*2016/.test(fes)) {
         fail("Coachmen|Freedom Express Select yearStart must be 2016 (no 2027 invent from a single 30SE page)");
       }
@@ -3205,6 +3239,7 @@ function main() {
       for (const motor of [
         "Encore",
         "Sportscoach",
+        "Sportscoach SRS Super C",
         "Freelander",
         "Mirada",
         "Leprechaun",
@@ -3219,6 +3254,35 @@ function main() {
       }
       if (/Encore:[\s\S]*?hitchType:/.test(cm.slice(cm.indexOf("Encore:"), cm.indexOf("Sportscoach:")))) {
         fail("Coachmen motorized Encore must not receive hitchType");
+      }
+
+      const srs = slice("Sportscoach SRS Super C", "Winnebago");
+      if (!/type: "Class A Diesel"/.test(srs)) {
+        fail("Coachmen|Sportscoach SRS Super C must be Class A Diesel (dated SRS brochures), not Super C");
+      }
+      if (/\btype: "Super C"/.test(srs) || /engine: "Ford Power Stroke/.test(srs) || /chassis: "Ford F-550"/.test(srs)) {
+        fail("Coachmen|Sportscoach SRS Super C must not invent F-550 / Power Stroke / Super C drivetrain");
+      }
+      if (/"350RB"/.test(srs) || /"376DB"/.test(srs)) {
+        fail("Coachmen|Sportscoach SRS Super C must quarantine invented 350RB / 376DB");
+      }
+      if (/"2018":/.test(srs) || /"2025":/.test(srs) || /"2026":/.test(srs) || /"2027":/.test(srs)) {
+        fail("Coachmen|Sportscoach SRS Super C must omit 2018 and 2025–2027 (no dated SRS card)");
+      }
+      expectYearPlans(srs, "2019", ["339DS", "365RB", "366BH"], "Coachmen|Sportscoach SRS 2019 dated plans");
+      expectYearPlans(srs, "2020", ["339DS", "365RB", "366BH"], "Coachmen|Sportscoach SRS 2020 dated plans");
+      expectYearPlans(srs, "2021", ["339DS", "354QS", "365RB", "376ES"], "Coachmen|Sportscoach SRS 2021 dated plans");
+      expectYearPlans(srs, "2022", ["339DS", "354QS", "365RB", "376ES"], "Coachmen|Sportscoach SRS 2022 dated plans");
+      expectYearPlans(srs, "2023", ["339DS", "354QS", "365RB", "376ES"], "Coachmen|Sportscoach SRS 2023 dated plans");
+      expectYearPlans(srs, "2024", ["341SA", "354QS", "365RB"], "Coachmen|Sportscoach SRS 2024 dated plans");
+      if (!/Cummins ISB 6\.7L 340HP/.test(srs) || !/Straight Rail Freightliner Chassis/.test(srs) || !/torqueLbFt:\s*700/.test(srs)) {
+        fail("Coachmen|Sportscoach SRS Super C must lock Freightliner / ISB 340 / 700 from dated SRS brochures");
+      }
+      if (!/yearStart:\s*2019/.test(srs) || !/yearEnd:\s*2024/.test(srs)) {
+        fail("Coachmen|Sportscoach SRS Super C yearStart 2019 / yearEnd 2024 (dated brochure window)");
+      }
+      if (/chassis: "[^"]*(S2RV|Freightliner M2)/.test(srs)) {
+        fail("Coachmen|Sportscoach SRS Super C must not invent unprinted Freightliner model codes");
       }
     }
   }
