@@ -623,9 +623,8 @@ function iframeDocument(shareImpl: (data: ShareData) => Promise<void>) {
   };
 }
 
-test("InvalidStateError on the parent Navigator still opens the sheet on an iframe", async () => {
+test("iframe NotAllowedError falls back to parent navigator.share", async () => {
   const parentCalls: ShareData[] = [];
-  const iframeCalls: ShareData[] = [];
   const prior = globalThis.navigator;
   const priorDoc = globalThis.document;
   Object.defineProperty(globalThis, "navigator", {
@@ -633,6 +632,50 @@ test("InvalidStateError on the parent Navigator still opens the sheet on an ifra
     value: {
       share: async (data: ShareData) => {
         parentCalls.push(data);
+      },
+      canShare: () => true,
+      clipboard: { writeText: async () => {} },
+    },
+  });
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    value: iframeDocument(async () => {
+      throw new DOMException(
+        "The request is not allowed by the user agent",
+        "NotAllowedError",
+      );
+    }),
+  });
+  try {
+    const out = await shareOrCopy({
+      title: "Essex",
+      text: "kit",
+      files: [cardFile()],
+    });
+    assert.equal(out, "shared");
+    assert.equal(parentCalls.length, 1);
+    assert.ok((parentCalls[0]!.files as File[])?.length);
+  } finally {
+    resetShareSession();
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: prior,
+    });
+    Object.defineProperty(globalThis, "document", {
+      configurable: true,
+      value: priorDoc,
+    });
+  }
+});
+
+test("InvalidStateError on the parent Navigator still opens the sheet on an iframe", async () => {
+  const iframeCalls: ShareData[] = [];
+  const prior = globalThis.navigator;
+  const priorDoc = globalThis.document;
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      share: async () => {
         throw new DOMException(
           "share() is already in progress",
           "InvalidStateError",
@@ -642,9 +685,17 @@ test("InvalidStateError on the parent Navigator still opens the sheet on an ifra
       clipboard: { writeText: async () => {} },
     },
   });
+  let iframeTries = 0;
   Object.defineProperty(globalThis, "document", {
     configurable: true,
     value: iframeDocument(async (data: ShareData) => {
+      iframeTries += 1;
+      if (iframeTries === 1) {
+        throw new DOMException(
+          "The request is not allowed by the user agent",
+          "NotAllowedError",
+        );
+      }
       iframeCalls.push(data);
     }),
   });
@@ -655,7 +706,6 @@ test("InvalidStateError on the parent Navigator still opens the sheet on an ifra
       files: [cardFile()],
     });
     assert.equal(out, "shared");
-    assert.ok(parentCalls.length >= 1);
     assert.equal(iframeCalls.length, 1);
     assert.ok((iframeCalls[0]!.files as File[])?.length);
   } finally {
@@ -678,14 +728,22 @@ test("a hung first navigator.share does not block a second tap", async () => {
   Object.defineProperty(globalThis, "navigator", {
     configurable: true,
     value: {
-      share: () => new Promise<void>(() => {}),
+      share: async () => {
+        throw new DOMException(
+          "The request is not allowed by the user agent",
+          "NotAllowedError",
+        );
+      },
       canShare: () => true,
       clipboard: { writeText: async () => {} },
     },
   });
+  let iframeTries = 0;
   Object.defineProperty(globalThis, "document", {
     configurable: true,
     value: iframeDocument(async (data: ShareData) => {
+      iframeTries += 1;
+      if (iframeTries === 1) return new Promise<void>(() => {});
       iframeCalls.push(data);
     }),
   });

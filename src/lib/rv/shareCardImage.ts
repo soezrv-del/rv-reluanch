@@ -555,10 +555,11 @@ function makeIframeShare(
 
 /**
  * Open the OS sheet on a Navigator that is not stuck.
- * Parent window first (has the tap's user activation). If that Navigator is
- * still pending from an earlier share, use a disposable same-origin iframe —
- * each iframe has its own `m_hasPendingShare`, so a hung first share does
- * not block the next tap.
+ *
+ * Prefer a disposable same-origin iframe (own `m_hasPendingShare`). That is
+ * the known iOS workaround: after a hung first share, a new iframe still
+ * opens the sheet. Fall back to the parent window when the iframe has no
+ * share() or rejects NotAllowedError (no user activation in the frame).
  */
 async function shareOnAvailableNavigator(
   data: ShareData,
@@ -566,6 +567,22 @@ async function shareOnAvailableNavigator(
   doc: Document | undefined,
 ): Promise<ShareOutcome | "failed"> {
   const parent = nativeShare(nav);
+  const frame = makeIframeShare(doc);
+
+  if (frame) {
+    try {
+      await frame.share(data);
+      return "shared";
+    } catch (e) {
+      if (isShareAbort(e)) return "cancelled";
+      if (!isShareNotAllowed(e) && !isShareBusyError(e)) {
+        /* TypeError on this payload — try parent, then next attempt */
+      }
+    } finally {
+      frame.dispose();
+    }
+  }
+
   if (parent && !parentShareInFlight) {
     parentShareInFlight = true;
     try {
@@ -582,21 +599,6 @@ async function shareOnAvailableNavigator(
       } else {
         parentShareInFlight = false;
       }
-    }
-  }
-
-  const frame = makeIframeShare(doc);
-  if (frame) {
-    try {
-      await frame.share(data);
-      return "shared";
-    } catch (e) {
-      if (isShareAbort(e)) return "cancelled";
-      if (!isShareBusyError(e) && !isShareNotAllowed(e)) {
-        /* TypeError on this payload — caller tries the next attempt */
-      }
-    } finally {
-      frame.dispose();
     }
   }
 
