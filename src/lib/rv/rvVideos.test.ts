@@ -7,17 +7,21 @@ import {
   buildRvVideoCoreQuery,
   buildRvVideoQuery,
   calmVideoLookupError,
+  clearRvVideoSession,
   EMPTY_MATCH_MESSAGE,
   fetchRvVideos,
+  formatShareVideoBlock,
   isRvVideoLibraryYear,
   LOOKUP_FAILED_MESSAGE,
   MISSING_KEY_MESSAGE,
   parseCoachModelYear,
   rankRvVideos,
   RELATED_NOTE,
+  peekRvVideoSession,
   RV_VIDEO_LIBRARY_CHANNEL_ID,
   RV_VIDEO_LIBRARY_HANDLE,
   RV_VIDEO_LIBRARY_MIN_YEAR,
+  shareVideoForCoach,
   shouldShowRvVideoPrompt,
   scoreTitleOverlap,
   tokenizeCoachQuery,
@@ -127,6 +131,7 @@ test("prompt hides empty / non-RV selection and shows motorhomes", () => {
 });
 
 test("pre-2016 client lookup stays empty and never hits the proxy", async () => {
+  clearRvVideoSession();
   const res = await fetchRvVideos({
     year: "2014",
     make: "Tiffin",
@@ -265,4 +270,136 @@ test("Facts report only fetches videos after opt-in; key stays server-side", () 
   assert.doesNotMatch(api, /publishedAfter|publishedBefore|order=date/);
   assert.match(card, /isRvVideoLibraryYear/);
   assert.doesNotMatch(card, /Want a video date|publish date|video date/i);
+
+  const kit = src("../../components/rvshare/RvShareKit.tsx");
+  const share = src("shareKit.ts");
+  assert.match(kit, /IntersectionObserver/);
+  assert.match(kit, /fetchRvVideos/);
+  assert.match(kit, /shouldShowRvVideoPrompt/);
+  assert.match(kit, /data-share-video-toggle/);
+  assert.match(kit, /INCLUDE VIDEO/);
+  assert.match(kit, /includeVideo \? shareVideo : null/);
+  assert.doesNotMatch(kit, /MISSING_KEY_MESSAGE/);
+  assert.doesNotMatch(kit, /not configured/);
+  assert.doesNotMatch(kit, /video\/mp4|video\/webm|new File\([^\)]*video/i);
+  assert.match(share, /formatShareVideoBlock\(opts\.video\)/);
+  assert.doesNotMatch(share, /include\.video/);
+});
+
+test("Share kit video block is a YouTube title + watch URL — never a file", () => {
+  assert.deepEqual(
+    formatShareVideoBlock({
+      title: "2023 Tiffin Allegro Bus 45OPP walkthrough",
+      youtubeUrl: "https://www.youtube.com/watch?v=abc123",
+    }),
+    [
+      "VIDEO",
+      "2023 Tiffin Allegro Bus 45OPP walkthrough",
+      "https://www.youtube.com/watch?v=abc123",
+    ],
+  );
+  assert.deepEqual(formatShareVideoBlock(null), []);
+  assert.deepEqual(
+    formatShareVideoBlock({
+      title: "Walkthrough",
+      youtubeUrl: "/tmp/walkthrough.mp4",
+    }),
+    [],
+  );
+  assert.deepEqual(
+    formatShareVideoBlock({
+      title: "",
+      youtubeUrl: "https://www.youtube.com/watch?v=abc123",
+    }),
+    [],
+  );
+});
+
+test("session cache surfaces one watch-link hit and stays silent without a match", async () => {
+  clearRvVideoSession();
+  const prior = globalThis.fetch;
+  const modern = {
+    year: "2023",
+    make: "Tiffin",
+    model: "Allegro Bus",
+    floorplan: "45OPP",
+    type: "Class A Diesel",
+  };
+  globalThis.fetch = (async () =>
+    new Response(
+      JSON.stringify({
+        ok: true,
+        source: "RV Video Library",
+        channel: "https://www.youtube.com/@RVVideoLibrary",
+        query: "2023 Tiffin Allegro Bus 45OPP",
+        videos: [
+          {
+            videoId: "abc123",
+            title: "2023 Tiffin Allegro Bus 45OPP walkthrough",
+            thumbnailUrl: "",
+            youtubeUrl: "https://www.youtube.com/watch?v=abc123",
+          },
+        ],
+        cached: false,
+        note: RELATED_NOTE,
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    )) as typeof fetch;
+  try {
+    const res = await fetchRvVideos(modern);
+    assert.equal(res.ok, true);
+    const hit = shareVideoForCoach(modern);
+    assert.ok(hit);
+    assert.equal(hit!.title, "2023 Tiffin Allegro Bus 45OPP walkthrough");
+    assert.equal(hit!.youtubeUrl, "https://www.youtube.com/watch?v=abc123");
+    const again = await fetchRvVideos(modern);
+    assert.equal(again, res);
+  } finally {
+    globalThis.fetch = prior;
+    clearRvVideoSession();
+  }
+});
+
+test("session cache hides Share toggle when key is missing or there is no match", async () => {
+  clearRvVideoSession();
+  const coach = {
+    year: "2014",
+    make: "Tiffin",
+    model: "Allegro Bus",
+    type: "Class A Diesel",
+  };
+  assert.equal(shouldShowRvVideoPrompt(coach), false);
+  const res = await fetchRvVideos(coach);
+  assert.equal(res.ok, true);
+  if (res.ok) assert.equal(res.videos.length, 0);
+  assert.equal(shareVideoForCoach(coach), null);
+  assert.ok(peekRvVideoSession(coach));
+
+  clearRvVideoSession();
+  const prior = globalThis.fetch;
+  globalThis.fetch = (async () =>
+    new Response(
+      JSON.stringify({
+        ok: false,
+        error: MISSING_KEY_MESSAGE,
+        code: "missing_key",
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    )) as typeof fetch;
+  try {
+    const modern = {
+      year: "2023",
+      make: "Tiffin",
+      model: "Allegro Bus",
+      floorplan: "45OPP",
+      type: "Class A Diesel",
+    };
+    const missing = await fetchRvVideos(modern);
+    assert.equal(missing.ok, false);
+    if (!missing.ok) assert.equal(missing.code, "missing_key");
+    assert.equal(shareVideoForCoach(modern), null);
+  } finally {
+    globalThis.fetch = prior;
+    clearRvVideoSession();
+  }
 });

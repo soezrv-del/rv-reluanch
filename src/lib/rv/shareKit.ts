@@ -34,6 +34,7 @@ import {
   type ShareMarketLines,
   type ShareSpecGroupId,
 } from "./shareCardPolicy";
+import { formatShareVideoBlock, type RvVideoHit } from "./rvVideos";
 import {
   coerceShareImageType,
   hardenShareImageFileSync,
@@ -477,6 +478,8 @@ export function buildCoachKit(opts: {
   rating?: number;
   summary?: BrochureSummary;
   lookupCatalog?: ShareCatalogLookup;
+  /** Real RV Video Library hit only — never invent a title or URL. */
+  video?: Pick<RvVideoHit, "title" | "youtubeUrl"> | null;
 }): string {
   const r = hydrateShareCoachResult(opts.result, opts.lookupCatalog);
   const { payment } = opts;
@@ -568,6 +571,12 @@ export function buildCoachKit(opts: {
       if (isSharePlaceholder(row.value)) continue;
       lines.push(`${row.label}: ${row.value}`);
     }
+  }
+
+  const videoLines = formatShareVideoBlock(opts.video);
+  if (videoLines.length) {
+    lines.push("");
+    lines.push(...videoLines);
   }
 
   lines.push("");

@@ -2,8 +2,9 @@
  * Opt-in RV Video Library match for a Facts coach.
  *
  * Catalog remains SoT. Videos are optional media — never facts.
- * The client must not call YouTube (or this proxy) until the user taps Yes.
- * Channel coverage is ~2016+ — known model years before that stay silent.
+ * The client must not call YouTube (or this proxy) on Facts open.
+ * Lookups run after Want a video? Yes, or when the inline Share kit is on
+ * screen for a 2016+ coach. Channel coverage is ~2016+ — earlier years stay silent.
  */
 
 import { coachTowRole } from "./activeCoach.ts";
@@ -210,8 +211,101 @@ export function youtubeWatchUrl(videoId: string): string {
   return `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
 }
 
-/** Client → /api/rv-videos. Call only after the user opts in. */
+const YT_WATCH_RE = /^https:\/\/www\.youtube\.com\/watch\?v=/i;
+
+/** Same-session cache so Want a video? and Share kit share one lookup. */
+const videoSession = new Map<string, RvVideosResponse>();
+const videoInflight = new Map<string, Promise<RvVideosResponse>>();
+const videoListeners = new Set<() => void>();
+
+export function rvVideoSessionKey(coach: RvVideoCoach): string {
+  return [
+    clean(coach.year),
+    clean(coach.make),
+    clean(coach.model),
+    clean(coach.floorplan),
+    clean(coach.series),
+  ]
+    .join("|")
+    .toLowerCase();
+}
+
+export function clearRvVideoSession(): void {
+  videoSession.clear();
+  videoInflight.clear();
+}
+
+export function subscribeRvVideoSession(listener: () => void): () => void {
+  videoListeners.add(listener);
+  return () => {
+    videoListeners.delete(listener);
+  };
+}
+
+function emitRvVideoSession(): void {
+  for (const fn of videoListeners) fn();
+}
+
+export function peekRvVideoSession(
+  coach: RvVideoCoach,
+): RvVideosResponse | null {
+  return videoSession.get(rvVideoSessionKey(coach)) ?? null;
+}
+
+/** Top ranked hit only — Share kit sends one link, never a file. */
+export function shareVideoForCoach(coach: RvVideoCoach): RvVideoHit | null {
+  const hit = peekRvVideoSession(coach);
+  if (!hit?.ok || !hit.videos.length) return null;
+  return hit.videos[0] ?? null;
+}
+
+function rememberRvVideoSession(
+  coach: RvVideoCoach,
+  data: RvVideosResponse,
+): void {
+  if (!data.ok && data.error === "cancelled") return;
+  videoSession.set(rvVideoSessionKey(coach), data);
+  emitRvVideoSession();
+}
+
+/**
+ * Brochure-kit VIDEO block. Title + watch URL only.
+ * Rejects anything that is not a YouTube watch link — never a file path.
+ */
+export function formatShareVideoBlock(
+  video?: { title?: string | null; youtubeUrl?: string | null } | null,
+): string[] {
+  const title = clean(video?.title);
+  const url = clean(video?.youtubeUrl);
+  if (!title || !url) return [];
+  if (!YT_WATCH_RE.test(url)) return [];
+  return ["VIDEO", title, url];
+}
+
+/** Client → /api/rv-videos. After Want a video? or when Share kit is on screen. */
 export async function fetchRvVideos(
+  coach: RvVideoCoach,
+  signal?: AbortSignal,
+): Promise<RvVideosResponse> {
+  const key = rvVideoSessionKey(coach);
+  const cached = videoSession.get(key);
+  if (cached) return cached;
+  const pending = videoInflight.get(key);
+  if (pending) return pending;
+
+  const run = lookupRvVideos(coach, signal).then((data) => {
+    rememberRvVideoSession(coach, data);
+    return data;
+  });
+  videoInflight.set(key, run);
+  try {
+    return await run;
+  } finally {
+    if (videoInflight.get(key) === run) videoInflight.delete(key);
+  }
+}
+
+async function lookupRvVideos(
   coach: RvVideoCoach,
   signal?: AbortSignal,
 ): Promise<RvVideosResponse> {
