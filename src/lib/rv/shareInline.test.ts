@@ -1,0 +1,50 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = dirname(fileURLToPath(import.meta.url));
+
+function read(rel: string) {
+  return readFileSync(join(root, rel), "utf8");
+}
+
+test("Share kit is inline at the bottom of the Facts report", () => {
+  const detail = read("../../components/rvfax/RvDetail.tsx");
+  const kit = read("../../components/rvshare/RvShareKit.tsx");
+  const kitAt = detail.indexOf("<RvShareKit");
+  const disclaimerAt = detail.indexOf('<SuiteDisclaimer className="pb-6"');
+  assert.ok(kitAt >= 0, "RvDetail mounts RvShareKit");
+  assert.ok(disclaimerAt > kitAt, "Share sits above the report disclaimer");
+  assert.match(detail, /import \{ RvShareKit \}/);
+  assert.match(detail, /shareFocusToken/);
+  assert.match(detail, /querySelector\("\[data-share-kit\]"\)/);
+  assert.match(kit, /data-share-kit/);
+  assert.match(kit, /const sendKit/);
+  assert.match(kit, /captureShareCardFile\(\s*shareCardRef\.current/);
+  assert.match(kit, /hydrateShareCoachResult\(result\)/);
+  assert.doesNotMatch(kit, /SAVED UNITS/);
+  assert.doesNotMatch(kit, /Try a sample kit/);
+});
+
+test("Share dock / launch / More deep-link to Facts — no standalone pane", () => {
+  const shell = read("../../components/shell/AppShell.tsx");
+  const tabs = read("../../components/shell/BottomTabs.tsx");
+  const launch = read("../../components/shell/Launchpad.tsx");
+  const more = read("../../components/more/MoreApp.tsx");
+  const fax = read("../../components/rvfax/RvFaxApp.tsx");
+  const shareApp = read("../../components/rvshare/RvShareApp.tsx");
+
+  assert.match(tabs, /id: "rvshare"/);
+  assert.match(launch, /id: "rvshare"/);
+  assert.match(more, /onNavigate\?\.\("rvshare"\)/);
+  assert.match(shell, /openFactsShare/);
+  assert.match(shell, /if \(next === "rvshare"\)/);
+  assert.match(shell, /nextTab === "rvshare"/);
+  assert.doesNotMatch(shell, /<RvShareApp/);
+  assert.match(fax, /factsShareToken/);
+  assert.match(fax, /shareFocusToken=\{shareFocusToken\}/);
+  assert.match(shareApp, /openFactsShare/);
+  assert.match(shareApp, /Opening the coach report to Share/);
+});

@@ -32,6 +32,9 @@ export type ShellNavValue = {
   /** Close a Facts report and show the catalog picker */
   openFactsPicker: () => void;
   factsPickerToken: number;
+  /** Open the active (or last saved) Facts report and scroll to Share */
+  openFactsShare: () => void;
+  factsShareToken: number;
   /** One-shot Tow → Trips Profile (open pane; never auto-lock) */
   tripsHandoff: TripsHandoff | null;
   openTripsProfile: (offer?: TowHandoffOffer | null) => void;

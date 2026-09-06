@@ -34,7 +34,7 @@ import {
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ui = readFileSync(
-  join(here, "../../components/rvshare/RvShareApp.tsx"),
+  join(here, "../../components/rvshare/RvShareKit.tsx"),
   "utf8",
 );
 const kit = readFileSync(join(here, "shareKit.ts"), "utf8");

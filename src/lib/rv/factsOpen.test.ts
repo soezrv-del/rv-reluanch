@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   cascadeFromResult,
   pickerCoachWrite,
+  resolveShareOpenSel,
   shouldOpenSingleHitReport,
 } from "./factsOpen.ts";
 
@@ -96,6 +97,65 @@ test("Open report opens a single non-custom hit and not a multi/custom list", ()
   assert.equal(shouldOpenSingleHitReport([]), false);
 });
 
+test("Share opens the on-screen report, else Active Coach, else first saved", () => {
+  const saved = [
+    { year: "2021", make: "Keystone", model: "Montana", floorplan: "3855BR" },
+  ];
+  const active = {
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+  };
+  assert.deepEqual(
+    resolveShareOpenSel({
+      detail: dream,
+      active,
+      saved,
+    }),
+    {
+      year: "2023",
+      make: "American Coach",
+      model: "American Dream",
+      floorplan: "45A",
+    },
+  );
+  assert.deepEqual(
+    resolveShareOpenSel({
+      detail: null,
+      active,
+      saved,
+    }),
+    {
+      year: "2023",
+      make: "American Coach",
+      model: "American Dream",
+      floorplan: "45A",
+    },
+  );
+  assert.deepEqual(
+    resolveShareOpenSel({
+      detail: null,
+      active: null,
+      saved,
+    }),
+    {
+      year: "2021",
+      make: "Keystone",
+      model: "Montana",
+      floorplan: "3855BR",
+    },
+  );
+  assert.equal(
+    resolveShareOpenSel({
+      detail: null,
+      active: { year: "", make: "", model: "" },
+      saved: [],
+    }),
+    null,
+  );
+});
+
 test("searchCatalog is empty until the live catalog is loaded", () => {
   const catalogSrc = readFileSync(join(root, "catalog.ts"), "utf8");
   const fax = readFileSync(join(root, "../../components/rvfax/RvFaxApp.tsx"), "utf8");
@@ -123,6 +183,9 @@ test("Facts app restores cascade on every open path and skips coach clear mid-re
   assert.match(fax, /pickerCoachWrite/);
   assert.match(fax, /shouldOpenSingleHitReport/);
   assert.match(fax, /openFactsUnit/);
+  assert.match(fax, /resolveShareOpenSel/);
+  assert.match(fax, /factsShareToken/);
+  assert.match(fax, /setShareFocusToken/);
   assert.match(fax, /ensureCatalogLoaded/);
   assert.match(fax, /if \(!isCatalogLoaded\(\)\) return/);
 

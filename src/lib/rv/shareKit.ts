@@ -586,7 +586,7 @@ export function buildSuitePitch(): string {
     "RvFOX Pro — Know before you buy.",
     "",
     "Specs, market, NHTSA, payments, tow match, trips, and Grok — in one suite.",
-    "Send a coach kit from RvSHARE: full brochure specs, payment strengths, lifestyle, and the report.",
+    "Send a coach kit from the Facts report: full brochure specs, payment strengths, lifestyle, and the report.",
   ];
   if (host) lines.push("", `https://${host}`);
   return lines.join("\n");

@@ -49,11 +49,6 @@ const RvTripsApp = lazy(() =>
     default: m.RvTripsApp,
   })),
 );
-const RvShareApp = lazy(() =>
-  import("@/components/rvshare/RvShareApp").then((m) => ({
-    default: m.RvShareApp,
-  })),
-);
 const MoreApp = lazy(() =>
   import("@/components/more/MoreApp").then((m) => ({ default: m.MoreApp })),
 );
@@ -120,6 +115,7 @@ export function AppShell() {
     readActiveCoach(),
   );
   const [factsPickerToken, setFactsPickerToken] = useState(0);
+  const [factsShareToken, setFactsShareToken] = useState(0);
   const [launchOpen, setLaunchOpen] = useState(true);
   const [launchFading, setLaunchFading] = useState(false);
   const [suiteReady, setSuiteReady] = useState(false);
@@ -147,9 +143,12 @@ export function AppShell() {
     (nextTab?: AppTab) => {
       if (launchDoneRef.current) return;
       launchDoneRef.current = true;
-      const dest = nextTab ?? "rvfax";
+      const dest = nextTab === "rvshare" ? "rvfax" : (nextTab ?? "rvfax");
       setTab(dest);
       markVisited(dest);
+      if (nextTab === "rvshare") {
+        setFactsShareToken((n) => n + 1);
+      }
       setSuiteReady(true);
       setLaunchFading(true);
       window.setTimeout(() => {
@@ -218,13 +217,23 @@ export function AppShell() {
     markVisited("rvfax");
   }, [markVisited]);
 
+  const openFactsShare = useCallback(() => {
+    setFactsShareToken((n) => n + 1);
+    setTab("rvfax");
+    markVisited("rvfax");
+  }, [markVisited]);
+
   const onTabChange = useCallback(
     (next: AppTab) => {
+      if (next === "rvshare") {
+        openFactsShare();
+        return;
+      }
       setTab(next);
       markVisited(next);
       if (next !== "rvgrok") setGrokSplashPlaying(false);
     },
-    [markVisited],
+    [markVisited, openFactsShare],
   );
 
   useSwipeTabs({
@@ -253,6 +262,8 @@ export function AppShell() {
       setActiveCoach,
       openFactsPicker,
       factsPickerToken,
+      openFactsShare,
+      factsShareToken,
       tripsHandoff,
       openTripsProfile,
       clearTripsHandoff,
@@ -269,6 +280,8 @@ export function AppShell() {
       setActiveCoach,
       openFactsPicker,
       factsPickerToken,
+      openFactsShare,
+      factsShareToken,
       tripsHandoff,
       openTripsProfile,
       clearTripsHandoff,
@@ -344,17 +357,6 @@ export function AppShell() {
               <div className={tab === "rvtrips" ? TAB_PANE_ON : "hidden"}>
                 <SuiteErrorBoundary name="RvTRIPS">
                   <RvTripsApp />
-                </SuiteErrorBoundary>
-              </div>
-            ) : null}
-            {show("rvshare") ? (
-              <div className={tab === "rvshare" ? TAB_PANE_ON : "hidden"}>
-                <SuiteErrorBoundary name="RvSHARE">
-                  <RvShareApp
-                    active={tab === "rvshare" && !launchOpen}
-                    onNavigate={onTabChange}
-                    onOpenGrok={openGrok}
-                  />
                 </SuiteErrorBoundary>
               </div>
             ) : null}

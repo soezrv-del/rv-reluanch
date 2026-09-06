@@ -69,6 +69,7 @@ import type { NhtsaComplaint, NhtsaRecall } from "@/lib/nhtsa/recalls";
 import { buildReportId, valueFactors } from "@/lib/rv/reportMeta";
 import { exportVehicleReport } from "@/lib/rv/exportReport";
 import { hydrateShareCoachResult, kitStrengths, lifestylePitch } from "@/lib/rv/shareKit";
+import { RvShareKit } from "@/components/rvshare/RvShareKit";
 import {
   fetchLocalInventory,
   loadInventoryZip,
@@ -95,6 +96,7 @@ import { RvVideoLibraryCard } from "./RvVideoLibraryCard";
  */
 export function RvDetail({
   result,
+  shareFocusToken = 0,
   onBack,
   saved,
   onToggleSave,
@@ -106,6 +108,7 @@ export function RvDetail({
   onAskGrok,
 }: {
   result: RVResult;
+  shareFocusToken?: number;
   onBack: () => void;
   saved: boolean;
   onToggleSave: () => void;
@@ -188,6 +191,19 @@ export function RvDetail({
   const wasSavedRef = useRef(saved);
 
   const pullHint = usePullToReset(scrollRef, onBack);
+
+  useEffect(() => {
+    if (!shareFocusToken) return;
+    const root = scrollRef.current;
+    if (!root) return;
+    const t = window.setTimeout(() => {
+      const el = root.querySelector("[data-share-kit]");
+      if (el instanceof HTMLElement) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 80);
+    return () => window.clearTimeout(t);
+  }, [shareFocusToken]);
 
   useEffect(() => {
     if (saved && !wasSavedRef.current) {
@@ -1634,6 +1650,8 @@ export function RvDetail({
               ) : null}
             </section>
           ) : null}
+
+          <RvShareKit result={coach} onAskGrok={onAskGrok} />
 
           <SuiteDisclaimer className="pb-6" />
         </div>

@@ -47,6 +47,7 @@ import {
 import {
   cascadeFromResult,
   pickerCoachWrite,
+  resolveShareOpenSel,
   shouldOpenSingleHitReport,
 } from "@/lib/rv/factsOpen";
 import { didYouMean, type SuggestHit } from "@/lib/rv/suggest";
@@ -139,6 +140,7 @@ export function RvFaxApp({
   const [hasSearched, setHasSearched] = useState(false);
   const [saved, setSaved] = useState<RVResult[]>([]);
   const [detail, setDetail] = useState<RVResult | null>(null);
+  const [shareFocusToken, setShareFocusToken] = useState(0);
   const [vinOpen, setVinOpen] = useState(false);
   const [comparePick, setComparePick] = useState<RVResult[]>([]);
   const { ready: catalogReady, gen: catalogGen } = useCatalogReady();
@@ -241,6 +243,9 @@ export function RvFaxApp({
 
   const setActiveCoach = nav?.setActiveCoach;
   const factsPickerToken = nav?.factsPickerToken ?? 0;
+  const factsShareToken = nav?.factsShareToken ?? 0;
+  const detailRef = useRef(detail);
+  detailRef.current = detail;
 
   useEffect(() => {
     const write = pickerCoachWrite(
@@ -258,6 +263,48 @@ export function RvFaxApp({
     setCompareOpen(false);
     setVinOpen(false);
   }, [factsPickerToken]);
+
+  useEffect(() => {
+    if (!factsShareToken) return;
+    let cancelled = false;
+    setCompareOpen(false);
+    setVinOpen(false);
+
+    const focusShare = (r?: RVResult) => {
+      if (cancelled) return;
+      if (r) openFactsUnit(r);
+      setShareFocusToken((n) => n + 1);
+    };
+
+    if (detailRef.current) {
+      focusShare();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void (async () => {
+      await ensureCatalogLoaded();
+      if (cancelled) return;
+      const sel = resolveShareOpenSel({
+        detail: detailRef.current,
+        active: nav?.activeCoach ?? null,
+        saved: savedRef.current,
+      });
+      if (!sel) return;
+      const found = searchCatalog(sel);
+      const hit =
+        found.find((r) => (r.floorplan || "") === (sel.floorplan || "")) ??
+        found[0] ??
+        savedRef.current[0] ??
+        null;
+      if (hit) focusShare(hit);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [factsShareToken, openFactsUnit, nav?.activeCoach]);
 
   const yearsForEra = useMemo(() => {
     const e = YEAR_ERAS.find((x) => x.id === era) ?? YEAR_ERAS[0]!;
@@ -539,6 +586,7 @@ export function RvFaxApp({
       <Suspense fallback={<PanelFallback />}>
         <RvDetail
           result={detail}
+          shareFocusToken={shareFocusToken}
           onBack={() => setDetail(null)}
           onToggleSave={() => toggleSave(detail)}
           saved={isSavedUnit(saved, detail)}

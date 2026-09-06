@@ -472,14 +472,14 @@ test("Share kit send attaches the bottom card as a PNG file", () => {
   const ui = readFileSync(
     join(
       dirname(fileURLToPath(import.meta.url)),
-      "../../components/rvshare/RvShareApp.tsx",
+      "../../components/rvshare/RvShareKit.tsx",
     ),
     "utf8",
   );
   assert.match(src, /buildShareKitPayload/);
   assert.match(src, /captureShareCardFile/);
   assert.match(src, /shareOrCopy/);
-  assert.match(ui, /hydrateShareCoachResult\(raw\)/);
+  assert.match(ui, /hydrateShareCoachResult\(result\)/);
   assert.match(ui, /captureShareCardFile\(\s*shareCardRef\.current/);
   assert.match(ui, /buildShareKitPayload\(\{/);
   assert.match(ui, /cardFile/);
@@ -500,7 +500,7 @@ test("payment calculator field order is price → down → term → rate → est
   const ui = readFileSync(
     join(
       dirname(fileURLToPath(import.meta.url)),
-      "../../components/rvshare/RvShareApp.tsx",
+      "../../components/rvshare/RvShareKit.tsx",
     ),
     "utf8",
   );

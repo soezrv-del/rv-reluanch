@@ -69,3 +69,17 @@ export function pickerCoachWrite(
   }
   return null;
 }
+
+/**
+ * Which coach Share should open. Prefer the report already on screen,
+ * then Active Coach, then the first saved unit. No catalog invent.
+ */
+export function resolveShareOpenSel(opts: {
+  detail: ResultLike | null;
+  active: ResultLike | null;
+  saved: ResultLike[];
+}): FactsCascadeSel | null {
+  const pick = opts.detail ?? opts.active ?? opts.saved[0] ?? null;
+  if (!pick?.year || !pick.make || !pick.model) return null;
+  return cascadeFromResult(pick);
+}
