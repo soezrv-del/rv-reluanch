@@ -9,12 +9,16 @@ import {
   coerceShareImageType,
   defaultShareCardContact,
   elementLooksLikeShareCard,
+  freshShareImageFile,
   hardenShareImageFile,
   imageFileFromBytes,
+  isShareAbort,
+  isShareBusyError,
   isShareImageFile,
   normalizeShareImageMeta,
   orderShareImageFiles,
   paintShareSignatureCard,
+  resetShareSession,
   shareDataAttempts,
   shareOrCopy,
   toShareData,
@@ -242,6 +246,10 @@ test("shareOrCopy prefers the native sheet and does not gate on canShare", () =>
   assert.match(card, /canShareSaysYes/);
   assert.match(card, /downloadShareFile/);
   assert.match(card, /return "downloaded"/);
+  assert.match(card, /parentShareInFlight/);
+  assert.match(card, /makeIframeShare/);
+  assert.match(card, /freshShareImageFile/);
+  assert.match(card, /resetShareSession/);
   assert.doesNotMatch(card, /if \(!canShareData\(nav\.canShare, data\)\) continue/);
   assert.doesNotMatch(
     card,
@@ -283,6 +291,7 @@ test("share path prefers navigator.share with files when canShare is true", asyn
     assert.ok(files![0]!.size >= 32);
     assert.equal(copied.length, 0);
   } finally {
+    resetShareSession();
     Object.defineProperty(globalThis, "navigator", {
       configurable: true,
       value: prior,
@@ -327,6 +336,7 @@ test("shareOrCopy still opens the sheet with files when canShare({files}) is fal
     assert.equal(files![1]!.type, "image/png");
     assert.equal(copied.length, 0);
   } finally {
+    resetShareSession();
     Object.defineProperty(globalThis, "navigator", {
       configurable: true,
       value: prior,
@@ -358,6 +368,7 @@ test("shareOrCopy still shares when canShare throws", async () => {
     assert.equal(out, "shared");
     assert.ok((shared[0]!.files as File[])?.length);
   } finally {
+    resetShareSession();
     Object.defineProperty(globalThis, "navigator", {
       configurable: true,
       value: prior,
@@ -411,6 +422,7 @@ test("clipboard-only / download is last-resort when navigator.share is missing",
     assert.match(downloaded[0]!, /\.png$/);
     assert.deepEqual(copied, ["kit"]);
   } finally {
+    resetShareSession();
     Object.defineProperty(globalThis, "navigator", {
       configurable: true,
       value: prior,
@@ -486,6 +498,284 @@ test("canShareSaysYes is a hint — missing or throw is not a no", () => {
     false,
   );
   assert.ok(toShareData({ title: "t", files: [cardFile()] }).files?.length);
+});
+
+test("freshShareImageFile is a new File so a prior share cannot consume the cache", () => {
+  const original = cardFile("Essex-card.png");
+  const next = freshShareImageFile(original);
+  assert.ok(next);
+  assert.notEqual(next, original);
+  assert.equal(next!.type, original.type);
+  assert.equal(next!.size, original.size);
+  assert.match(next!.name, /\.png$/i);
+});
+
+test("isShareBusyError matches WebKit already-in-progress; cancel stays abort", () => {
+  const busy = new DOMException(
+    "share() is already in progress",
+    "InvalidStateError",
+  );
+  const earlier = new Error("An earlier share has not yet completed.");
+  earlier.name = "InvalidStateError";
+  const abort = new DOMException(
+    "Abort due to cancellation of share.",
+    "AbortError",
+  );
+  assert.equal(isShareBusyError(busy), true);
+  assert.equal(isShareBusyError(earlier), true);
+  assert.equal(isShareBusyError(abort), false);
+  assert.equal(isShareAbort(abort), true);
+  assert.equal(isShareAbort(busy), false);
+});
+
+test("shareOrCopy can open the sheet twice in the same session", async () => {
+  const shared: ShareData[] = [];
+  const prior = globalThis.navigator;
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      share: async (data: ShareData) => {
+        shared.push(data);
+      },
+      canShare: () => true,
+      clipboard: { writeText: async () => {} },
+    },
+  });
+  try {
+    const payload = {
+      title: "Essex",
+      text: "kit one",
+      files: [cardFile()],
+    };
+    assert.equal(await shareOrCopy(payload), "shared");
+    assert.equal(
+      await shareOrCopy({ ...payload, text: "kit two" }),
+      "shared",
+    );
+    assert.equal(shared.length, 2);
+    assert.equal(shared[0]!.text, "kit one");
+    assert.equal(shared[1]!.text, "kit two");
+    const firstFiles = shared[0]!.files as File[];
+    const secondFiles = shared[1]!.files as File[];
+    assert.ok(firstFiles?.length && secondFiles?.length);
+    assert.notEqual(firstFiles[0], secondFiles[0]);
+  } finally {
+    resetShareSession();
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: prior,
+    });
+  }
+});
+
+test("shareOrCopy treats a cancelled sheet as ready for another share", async () => {
+  const shared: ShareData[] = [];
+  const prior = globalThis.navigator;
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      share: async (data: ShareData) => {
+        shared.push(data);
+        if (shared.length === 1) {
+          throw new DOMException(
+            "Abort due to cancellation of share.",
+            "AbortError",
+          );
+        }
+      },
+      canShare: () => true,
+      clipboard: { writeText: async () => {} },
+    },
+  });
+  try {
+    const payload = { title: "Essex", text: "kit", files: [cardFile()] };
+    assert.equal(await shareOrCopy(payload), "cancelled");
+    assert.equal(await shareOrCopy(payload), "shared");
+    assert.equal(shared.length, 2);
+  } finally {
+    resetShareSession();
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: prior,
+    });
+  }
+});
+
+function iframeDocument(shareImpl: (data: ShareData) => Promise<void>) {
+  return {
+    body: { appendChild() {} },
+    createElement: (tag: string) => {
+      if (tag === "iframe") {
+        return {
+          setAttribute() {},
+          style: { cssText: "" },
+          src: "",
+          contentWindow: {
+            navigator: {
+              share: shareImpl,
+            },
+          },
+          remove() {},
+        };
+      }
+      return { style: {}, setAttribute() {}, select() {}, remove() {} };
+    },
+  };
+}
+
+test("iframe NotAllowedError falls back to parent navigator.share", async () => {
+  const parentCalls: ShareData[] = [];
+  const prior = globalThis.navigator;
+  const priorDoc = globalThis.document;
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      share: async (data: ShareData) => {
+        parentCalls.push(data);
+      },
+      canShare: () => true,
+      clipboard: { writeText: async () => {} },
+    },
+  });
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    value: iframeDocument(async () => {
+      throw new DOMException(
+        "The request is not allowed by the user agent",
+        "NotAllowedError",
+      );
+    }),
+  });
+  try {
+    const out = await shareOrCopy({
+      title: "Essex",
+      text: "kit",
+      files: [cardFile()],
+    });
+    assert.equal(out, "shared");
+    assert.equal(parentCalls.length, 1);
+    assert.ok((parentCalls[0]!.files as File[])?.length);
+  } finally {
+    resetShareSession();
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: prior,
+    });
+    Object.defineProperty(globalThis, "document", {
+      configurable: true,
+      value: priorDoc,
+    });
+  }
+});
+
+test("InvalidStateError on the parent Navigator still opens the sheet on an iframe", async () => {
+  const iframeCalls: ShareData[] = [];
+  const prior = globalThis.navigator;
+  const priorDoc = globalThis.document;
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      share: async () => {
+        throw new DOMException(
+          "share() is already in progress",
+          "InvalidStateError",
+        );
+      },
+      canShare: () => true,
+      clipboard: { writeText: async () => {} },
+    },
+  });
+  let iframeTries = 0;
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    value: iframeDocument(async (data: ShareData) => {
+      iframeTries += 1;
+      if (iframeTries === 1) {
+        throw new DOMException(
+          "The request is not allowed by the user agent",
+          "NotAllowedError",
+        );
+      }
+      iframeCalls.push(data);
+    }),
+  });
+  try {
+    const out = await shareOrCopy({
+      title: "Essex",
+      text: "kit",
+      files: [cardFile()],
+    });
+    assert.equal(out, "shared");
+    assert.equal(iframeCalls.length, 1);
+    assert.ok((iframeCalls[0]!.files as File[])?.length);
+  } finally {
+    resetShareSession();
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: prior,
+    });
+    Object.defineProperty(globalThis, "document", {
+      configurable: true,
+      value: priorDoc,
+    });
+  }
+});
+
+test("a hung first navigator.share does not block a second tap", async () => {
+  const iframeCalls: ShareData[] = [];
+  const prior = globalThis.navigator;
+  const priorDoc = globalThis.document;
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      share: async () => {
+        throw new DOMException(
+          "The request is not allowed by the user agent",
+          "NotAllowedError",
+        );
+      },
+      canShare: () => true,
+      clipboard: { writeText: async () => {} },
+    },
+  });
+  let iframeTries = 0;
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    value: iframeDocument(async (data: ShareData) => {
+      iframeTries += 1;
+      if (iframeTries === 1) return new Promise<void>(() => {});
+      iframeCalls.push(data);
+    }),
+  });
+  try {
+    const payload = { title: "Essex", text: "kit", files: [cardFile()] };
+    const first = shareOrCopy(payload);
+    await Promise.resolve();
+    const second = await shareOrCopy({ ...payload, text: "kit again" });
+    assert.equal(second, "shared");
+    assert.equal(iframeCalls.length, 1);
+    assert.equal(iframeCalls[0]!.text, "kit again");
+    void first;
+  } finally {
+    resetShareSession();
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: prior,
+    });
+    Object.defineProperty(globalThis, "document", {
+      configurable: true,
+      value: priorDoc,
+    });
+  }
+});
+
+test("Share kit send recaptures the card and never disables after one send", () => {
+  const send = ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const copyOnly"));
+  assert.match(send, /captureShareCardFile\(\s*shareCardRef\.current/);
+  assert.doesNotMatch(send, /cardFileRef/);
+  assert.doesNotMatch(send, /if \(sending\) return/);
+  assert.doesNotMatch(send, /disabled=\{sending/);
+  assert.match(ui, /onClick=\{\(\) => void sendKit\(\)\}/);
 });
 
 test("elementLooksLikeShareCard requires the on-screen signature card", () => {

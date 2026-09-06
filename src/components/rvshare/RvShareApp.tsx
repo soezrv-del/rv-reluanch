@@ -377,8 +377,8 @@ export function RvShareApp({
   const [ratingEdit, setRatingEdit] = useState<number | null>(null);
   const [rateUpdated, setRateUpdated] = useState(false);
   const rateFlashTimer = useRef<number | null>(null);
+  const statusTimer = useRef<number | null>(null);
   const shareCardRef = useRef<HTMLDivElement>(null);
-  const cardFileRef = useRef<File | null>(null);
 
   const reloadSaved = useCallback(() => {
     setSaved(loadSavedUnits());
@@ -460,10 +460,7 @@ export function RvShareApp({
   }, [selected, include.payment, include.rating, payment, strengthsLocked, ratingValue]);
 
   useEffect(() => {
-    if (!selected) {
-      cardFileRef.current = null;
-      return;
-    }
+    if (!selected) return;
     const slug = coachTitle(selected).replace(/[^\w.-]+/g, "_") || "RvFOX";
     const url = lifestyleImageFor(
       selected.data.type,
@@ -471,11 +468,7 @@ export function RvShareApp({
       selected.data.chassis,
     );
     void fetchShareImage(url, `${slug}-lifestyle.jpg`);
-    const painted = captureShareCardFile(
-      shareCardRef.current,
-      `${slug}-card.png`,
-    );
-    if (painted) cardFileRef.current = painted;
+    captureShareCardFile(shareCardRef.current, `${slug}-card.png`);
   }, [selected]);
 
   const priceOptions = useMemo(
@@ -498,6 +491,9 @@ export function RvShareApp({
     () => () => {
       if (rateFlashTimer.current != null) {
         window.clearTimeout(rateFlashTimer.current);
+      }
+      if (statusTimer.current != null) {
+        window.clearTimeout(statusTimer.current);
       }
     },
     [],
@@ -563,9 +559,18 @@ export function RvShareApp({
     setInclude((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const flash = (msg: string) => {
+  const flash = (msg: string | null) => {
+    if (statusTimer.current != null) {
+      window.clearTimeout(statusTimer.current);
+      statusTimer.current = null;
+    }
     setStatus(msg);
-    window.setTimeout(() => setStatus(null), 2200);
+    if (msg) {
+      statusTimer.current = window.setTimeout(() => {
+        setStatus(null);
+        statusTimer.current = null;
+      }, 2200);
+    }
   };
 
   const sendKit = async () => {
@@ -574,6 +579,7 @@ export function RvShareApp({
       flash("Pick which prices to share");
       return;
     }
+    flash(null);
     void hapticLight();
     const slug = coachTitle(selected).replace(/[^\w.-]+/g, "_") || "RvFOX";
     const heroUrl = lifestyleImageFor(
@@ -595,10 +601,10 @@ export function RvShareApp({
         }),
       );
     }
-    const cardFile =
-      cardFileRef.current ||
-      captureShareCardFile(shareCardRef.current, `${slug}-card.png`);
-    if (cardFile) cardFileRef.current = cardFile;
+    const cardFile = captureShareCardFile(
+      shareCardRef.current,
+      `${slug}-card.png`,
+    );
     const payload = buildShareKitPayload({
       title: coachTitle(selected),
       text: kitText,
@@ -644,6 +650,7 @@ export function RvShareApp({
   };
 
   const sendSuite = async () => {
+    flash(null);
     void hapticLight();
     const out = await shareOrCopy({
       title: "RvFOX Pro",

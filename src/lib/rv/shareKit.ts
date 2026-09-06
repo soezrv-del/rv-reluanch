@@ -47,10 +47,13 @@ export {
   copyKit,
   downloadShareFile,
   elementLooksLikeShareCard,
+  freshShareImageFile,
   hardenShareImageFile,
   hardenShareImageFileSync,
+  isShareBusyError,
   isShareImageFile,
   orderShareImageFiles,
+  resetShareSession,
   SHARE_CARD_FILENAME,
   SHARE_CARD_MIME,
   shareDataAttempts,
@@ -589,10 +592,25 @@ export function buildSuitePitch(): string {
   return lines.join("\n");
 }
 
-const shareImageCache = new Map<string, File>();
+type CachedShareImage = { bytes: Uint8Array; name: string; type: string };
+
+const shareImageCache = new Map<string, CachedShareImage>();
+
+function fileFromCachedImage(hit: CachedShareImage): File | null {
+  const copy = new Uint8Array(hit.bytes.byteLength);
+  copy.set(hit.bytes);
+  return hardenShareImageFileSync(
+    new File([copy], hit.name, {
+      type: hit.type,
+      lastModified: Date.now(),
+    }),
+  );
+}
 
 export function peekCachedShareImage(url: string): File | null {
-  return shareImageCache.get(url) ?? null;
+  const hit = shareImageCache.get(url);
+  if (!hit) return null;
+  return fileFromCachedImage(hit);
 }
 
 export function prefetchShareImages(urls: string[]): void {
@@ -607,8 +625,8 @@ export async function fetchShareImage(
   url: string,
   filename: string,
 ): Promise<File | null> {
-  const hit = shareImageCache.get(url);
-  if (hit) return hit;
+  const cached = shareImageCache.get(url);
+  if (cached) return fileFromCachedImage(cached);
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
@@ -620,12 +638,16 @@ export async function fetchShareImage(
     const name = /\.(png|jpe?g|webp)$/i.test(filename)
       ? filename
       : `${filename}.${type === "image/jpeg" ? "jpg" : type === "image/webp" ? "webp" : "png"}`;
+    const buf = new Uint8Array(await blob.arrayBuffer());
+    if (buf.byteLength < 32) return null;
     const file = hardenShareImageFileSync(
-      new File([blob], name, { type }),
+      new File([buf], name, { type, lastModified: Date.now() }),
     );
     if (!file || !isShareImageFile(file)) return null;
-    shareImageCache.set(url, file);
-    return file;
+    const bytes = new Uint8Array(buf.byteLength);
+    bytes.set(buf);
+    shareImageCache.set(url, { bytes, name: file.name, type: file.type });
+    return fileFromCachedImage(shareImageCache.get(url)!);
   } catch {
     return null;
   }
