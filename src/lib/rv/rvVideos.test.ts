@@ -6,7 +6,9 @@ import { fileURLToPath } from "node:url";
 import {
   buildRvVideoCoreQuery,
   buildRvVideoQuery,
+  calmVideoLookupError,
   EMPTY_MATCH_MESSAGE,
+  LOOKUP_FAILED_MESSAGE,
   MISSING_KEY_MESSAGE,
   rankRvVideos,
   RELATED_NOTE,
@@ -131,6 +133,18 @@ test("watch URL is YouTube, not an invented Facts spec", () => {
   assert.match(RELATED_NOTE, /not a confirmed match/i);
   assert.match(EMPTY_MATCH_MESSAGE, /No RV Video Library videos matched/i);
   assert.equal(MISSING_KEY_MESSAGE, "Video lookup not configured.");
+  assert.equal(
+    calmVideoLookupError("API key not valid. Please pass a valid API key.").error,
+    MISSING_KEY_MESSAGE,
+  );
+  assert.equal(
+    calmVideoLookupError("API key not valid. Please pass a valid API key.").code,
+    "missing_key",
+  );
+  assert.deepEqual(calmVideoLookupError("quotaExceeded"), {
+    error: LOOKUP_FAILED_MESSAGE,
+    code: "upstream",
+  });
 });
 
 test("Facts report only fetches videos after opt-in; key stays server-side", () => {
@@ -146,6 +160,12 @@ test("Facts report only fetches videos after opt-in; key stays server-side", () 
 
   assert.match(card, /Want a video\?/);
   assert.match(card, /Would you like a video from RV Video Library\?/);
+  const promptBlock = card.match(
+    /data-rv-video-prompt[\s\S]*?<\/section>/,
+  );
+  assert.ok(promptBlock, "opt-in prompt block present");
+  assert.doesNotMatch(promptBlock![0], /MISSING_KEY_MESSAGE/);
+  assert.doesNotMatch(promptBlock![0], /Video lookup not configured/);
   assert.match(card, /fetchRvVideos/);
   assert.match(card, /onClick=\{\(\) => void onYes\(\)\}/);
   const resetEffect = card.match(
@@ -157,6 +177,7 @@ test("Facts report only fetches videos after opt-in; key stays server-side", () 
   assert.match(card, /RELATED_NOTE/);
 
   assert.match(api, /YOUTUBE_API_KEY/);
+  assert.match(api, /process\.env\.YOUTUBE_API_KEY/);
   assert.match(api, /search\.list|youtube\/v3\/search/);
   assert.match(api, /channelId/);
   assert.match(api, /RV_VIDEO_LIBRARY_CHANNEL_ID/);

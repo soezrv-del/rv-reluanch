@@ -13,10 +13,27 @@ export const RV_VIDEO_LIBRARY_URL = "https://www.youtube.com/@RVVideoLibrary";
 export const RV_VIDEO_LIBRARY_CHANNEL_ID = "UCaAH7nANvUhdPWN93uQ6mcA";
 
 export const MISSING_KEY_MESSAGE = "Video lookup not configured.";
+export const LOOKUP_FAILED_MESSAGE = "Video lookup failed. Try again shortly.";
 export const EMPTY_MATCH_MESSAGE =
   "No RV Video Library videos matched this coach.";
 export const RELATED_NOTE =
   "Related walkthroughs from RV Video Library on YouTube — not a confirmed match for this exact unit.";
+
+/** After-tap only. Never surface raw YouTube / key errors. */
+export function calmVideoLookupError(raw: string): {
+  error: string;
+  code: "missing_key" | "upstream";
+} {
+  const m = (raw || "").toLowerCase();
+  if (
+    /api[\s_-]?key|keyinvalid|keyexpired|unauthorized|forbidden|permission|credentials?/.test(
+      m,
+    )
+  ) {
+    return { error: MISSING_KEY_MESSAGE, code: "missing_key" };
+  }
+  return { error: LOOKUP_FAILED_MESSAGE, code: "upstream" };
+}
 
 const QUERY_STOP = new Set([
   "the",

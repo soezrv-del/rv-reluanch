@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   buildRvVideoCoreQuery,
   buildRvVideoQuery,
+  calmVideoLookupError,
   EMPTY_MATCH_MESSAGE,
   MISSING_KEY_MESSAGE,
   rankRvVideos,
@@ -19,7 +20,10 @@ import {
  *
  * Opt-in only. Facts must never call this on report open.
  * YouTube Data API v3 search.list scoped to @RVVideoLibrary.
- * YOUTUBE_API_KEY stays on the server.
+ *
+ * Server-only key: process.env.YOUTUBE_API_KEY (Vercel Production + Preview).
+ * Never VITE_ — that would leak the key to the client.
+ * Read at request time so the vault/Vercel value is live, not baked at build.
  */
 
 const YT_SEARCH = "https://www.googleapis.com/youtube/v3/search";
@@ -32,7 +36,7 @@ const cache = new Map<string, { at: number; data: RvVideosOk }>();
 let channelIdCache: string | null = null;
 
 function getKey(): string | null {
-  const key = (process.env.YOUTUBE_API_KEY || "").trim();
+  const key = String(process.env.YOUTUBE_API_KEY ?? "").trim();
   return key || null;
 }
 
@@ -234,14 +238,15 @@ export const Route = createFileRoute("/api/rv-videos")({
             headers: { "Cache-Control": "private, max-age=300" },
           });
         } catch (err) {
-          const msg =
+          const raw =
             (err as Error)?.name === "AbortError"
-              ? "YouTube timed out."
+              ? "timeout"
               : err instanceof Error
                 ? err.message
-                : "YouTube request failed.";
+                : "upstream";
+          const calm = calmVideoLookupError(raw);
           return Response.json(
-            { ok: false, error: msg, code: "upstream" },
+            { ok: false, error: calm.error, code: calm.code },
             { status: 200 },
           );
         }
