@@ -179,7 +179,7 @@ function researchInstructions(opts: {
     "Floorplan letters are labels only — do not decode bunks or a half-bath from the code.",
     opts.catalog
       ? `Catalog lock (do not contradict these numbers):\n${opts.catalog}`
-      : "No catalog row was available. If the web does not confirm a number, say UNKNOWN.",
+      : "No catalog row was available. Search OEM / RVUSA / brochure sources for THAT year + make + model. If the web does not confirm a number, say UNKNOWN. Do not tell the user to go check the OEM site instead of researching.",
   ].join("\n");
 }
 

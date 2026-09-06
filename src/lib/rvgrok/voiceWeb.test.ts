@@ -55,6 +55,38 @@ test("spoken troubleshooting uses the same detector as chat and wants research",
   }
 });
 
+test("named coach about-ask researches when catalog is missing", () => {
+  const q = "I'd like to know about the 2027 Grand Design Lineage M series.";
+  assert.equal(
+    decideVoiceWebResearch({ transcript: q, specs: null }).action,
+    "research",
+  );
+  assert.equal(
+    decideVoiceWebResearch({
+      transcript: q,
+      specs: { missingHard: false },
+    }).action,
+    "pass",
+  );
+});
+
+test("catalog miss and fishing browse without about-phrasing", () => {
+  assert.equal(
+    decideVoiceWebResearch({
+      transcript: "What's the tow rating on a 2019 XYZ Phantom?",
+      specs: null,
+    }).action,
+    "research",
+  );
+  assert.equal(
+    decideVoiceWebResearch({
+      transcript: "Best fishing spots near Moab for an RV",
+      specs: { missingHard: false },
+    }).action,
+    "research",
+  );
+});
+
 test("spoken greeting and lifestyle questions do not fire voice web research", () => {
   const casual = [
     "hi",

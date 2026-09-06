@@ -8,12 +8,20 @@ import {
   isAmbiguousCatalogValue,
 } from "../rv/catalogHonesty.ts";
 import { findPowertrainCorrection } from "../rv/powertrainCorrections.ts";
-import { parseCoachFromText } from "./parseCoach.ts";
+import {
+  catalogYearIsListed,
+  matchCatalogModelName,
+  parseCoachFromText,
+} from "./parseCoach.ts";
 import {
   looksLikeCasualNonResearch,
+  looksLikeImageOnlyAsk,
   looksLikeLiveResearchQuestion,
+  looksLikeNamedCoachProductQuestion,
+  looksLikeOffCatalogQuestion,
   needsWebFallback,
 } from "./webIntent.ts";
+import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
 import {
   WEB_SEARCH_MODELS,
   VOICE_WEB_SEARCH_MODELS,
@@ -32,6 +40,26 @@ const rvRoot = join(root, "../rv");
 function src(dir: string, name: string) {
   return readFileSync(join(dir, name), "utf8");
 }
+
+test("parses Lineage M series letters and last-make self-corrections", () => {
+  const about = parseCoachFromText(
+    "I'd like to know about the 2027 Grand Design Lineage M series.",
+  );
+  assert.equal(about.year, "2027");
+  assert.equal(about.make, "Grand Design");
+  assert.match(about.model, /lineage/i);
+  assert.match(about.model, /\bM\b/i);
+  assert.doesNotMatch(about.model, /^Lineage series$/i);
+
+  const stutter = parseCoachFromText(
+    "I'm afraid to ask this, but what about the 2026 Grand Design Limin, uh, Grand Design Lineage M series?",
+  );
+  assert.equal(stutter.year, "2026");
+  assert.equal(stutter.make, "Grand Design");
+  assert.match(stutter.model, /lineage/i);
+  assert.match(stutter.model, /\bM\b/i);
+  assert.doesNotMatch(stutter.model, /limin/i);
+});
 
 test("parses David’s test coach from a spec question", () => {
   const p = parseCoachFromText(
@@ -218,7 +246,9 @@ test("looksLikeLiveResearchQuestion is false for lifestyle, payment, and hi", ()
     assert.equal(needsWebFallback(null, q, { agentMode: true }), false, q);
   }
   assert.equal(looksLikeLiveResearchQuestion("Draw a Class A at sunset"), false);
+  assert.equal(looksLikeImageOnlyAsk("Draw a Class A at sunset"), true);
   assert.equal(needsWebFallback(null, "Draw a Class A at sunset"), false);
+  assert.equal(needsWebFallback(null, "hi how are you"), false);
 });
 
 test("Passport slide retract wants web even when powertrain is locked", () => {
@@ -348,9 +378,12 @@ test("system prompts know injected web research is live internet", () => {
   assert.match(prompts, /WEB RESEARCH notes/);
   assert.match(prompts, /no internet/i);
   assert.match(prompts, /WEB SEARCH NOT AVAILABLE/);
+  assert.match(prompts, /no catalog data/i);
+  assert.match(prompts, /OEM site or a dealer/);
   const voice = src(root, "voice.ts");
   assert.match(voice, /WEB RESEARCH notes/);
   assert.match(voice, /WEB SEARCH NOT AVAILABLE/);
+  assert.match(voice, /no catalog data/i);
   const live = src(root, "liveVoice.ts");
   assert.doesNotMatch(live, /wantsWebFallback/);
   const realtime = src(root, "realtime.ts");
@@ -358,4 +391,126 @@ test("system prompts know injected web research is live internet", () => {
   assert.match(realtime, /decideVoiceWebResearch/);
   assert.match(realtime, /formatVoiceWebSearchInjection/);
   assert.match(realtime, /maybeEnrichWithWebResearch/);
+  const grounding = src(root, "grounding.ts");
+  assert.match(grounding, /no catalog data/i);
+  assert.match(grounding, /do not send the user to the OEM site/i);
+  assert.match(src(root, "webIntent.ts"), /looksLikeNamedCoachProductQuestion/);
+  assert.match(src(root, "webIntent.ts"), /catalogGapNeedsWeb/);
+  assert.match(src(root, "webIntent.ts"), /looksLikeOffCatalogQuestion/);
+  assert.match(src(root, "grounding.ts"), /catalogYearIsListed/);
+  assert.match(src(root, "grounding.ts"), /hasYearRow/);
+});
+
+test("know about / what about a named coach wants web when catalog is missing", () => {
+  const q2027 =
+    "I'd like to know about the 2027 Grand Design Lineage M series.";
+  const q2026 =
+    "I'm afraid to ask this, but what about the 2026 Grand Design Lineage M series?";
+  for (const q of [q2027, q2026]) {
+    assert.equal(looksLikeNamedCoachProductQuestion(q), true, q);
+    assert.equal(needsWebFallback(null, q), true, q);
+    assert.equal(needsWebFallback({ missingHard: true }, q), true, q);
+  }
+  assert.equal(
+    needsWebFallback({ missingHard: false }, q2027),
+    false,
+    "locked catalog should not browse a plain about-this-coach ask",
+  );
+  assert.equal(
+    looksLikeNamedCoachProductQuestion("Is full-timing worth it?"),
+    false,
+  );
+  assert.equal(looksLikeNamedCoachProductQuestion("hi"), false);
+});
+
+test("Lineage M / Lineage M series resolve to catalog Lineage Series M", () => {
+  const gd = Object.keys(CATALOG_INDEX["Grand Design"] || {});
+  assert.ok(gd.includes("Lineage Series M"));
+  for (const spoken of [
+    "Lineage M",
+    "Lineage M series",
+    "Lineage Series M",
+    "lineage series m",
+  ]) {
+    assert.equal(matchCatalogModelName(spoken, gd), "Lineage Series M", spoken);
+  }
+  assert.equal(matchCatalogModelName("Lineage E series", gd), "Lineage Series E");
+  assert.notEqual(matchCatalogModelName("Lineage M", gd), "Lineage Series E");
+  assert.notEqual(matchCatalogModelName("Lineage M", gd), "Lineage Series F");
+  assert.match(src(root, "grounding.ts"), /matchCatalogModelName/);
+});
+
+test("2027 Lineage M about-ask grounds from catalog and does not claim no data", () => {
+  const q = "I'd like to know about the 2027 Grand Design Lineage M series.";
+  const parsed = parseCoachFromText(q);
+  const gd = Object.keys(CATALOG_INDEX["Grand Design"] || {});
+  const model = matchCatalogModelName(parsed.model, gd);
+  assert.equal(parsed.year, "2027");
+  assert.equal(parsed.make, "Grand Design");
+  assert.equal(model, "Lineage Series M");
+
+  const pin = findPowertrainCorrection(parsed.year, parsed.make, model);
+  assert.ok(pin, "expected a locked Series M pin for 2027");
+  assert.match(pin!.engine, /208|Sprinter/i);
+  assert.equal(pin!.fuelType, "Diesel");
+  assert.doesNotMatch(pin!.note || "", /no catalog data/i);
+
+  assert.equal(needsWebFallback({ missingHard: false }, q), false);
+  assert.equal(
+    needsWebFallback({ missingHard: true }, q),
+    true,
+    "gaps still browse",
+  );
+  const pin26 = findPowertrainCorrection(
+    "2026",
+    "Grand Design",
+    "Lineage Series M",
+  );
+  assert.ok(pin26, "MY2026 Series M is in the catalog pin, not empty");
+});
+
+test("unresolved named coach about-ask still fires web instead of a dealer dead-end", () => {
+  const q = "I'd like to know about the 2027 Grand Design Unicorn Deluxe.";
+  assert.equal(looksLikeNamedCoachProductQuestion(q), true);
+  const gd = Object.keys(CATALOG_INDEX["Grand Design"] || {});
+  const model = matchCatalogModelName("Unicorn Deluxe", gd);
+  assert.notEqual(model, "Lineage Series M");
+  const pin = findPowertrainCorrection("2027", "Grand Design", model);
+  assert.equal(pin, null);
+  assert.equal(needsWebFallback(null, q), true);
+  assert.equal(needsWebFallback({ missingHard: true }, q), true);
+  const grounding = src(root, "grounding.ts");
+  assert.match(grounding, /WEB RESEARCH notes/i);
+  assert.match(grounding, /do not send the user to the OEM site/i);
+  const api = src(join(root, "../../routes/api"), "rvgrok.ts");
+  assert.match(api, /wantsWebFallback/);
+  assert.match(api, /executeWebResearch/);
+});
+
+test("catalog miss fires web without about-phrasing", () => {
+  const tow =
+    "What's the tow rating on a 2019 XYZ Phantom that's not in catalog?";
+  assert.equal(looksLikeNamedCoachProductQuestion(tow), false);
+  assert.equal(needsWebFallback(null, tow), true);
+  assert.equal(needsWebFallback({ missingHard: true }, tow), true);
+
+  const fish = "Best fishing spots near Moab for an RV";
+  assert.equal(looksLikeOffCatalogQuestion(fish), true);
+  assert.equal(needsWebFallback(null, fish), true);
+  assert.equal(
+    needsWebFallback({ missingHard: false }, fish),
+    true,
+    "locked coach still browses fishing — catalog never has spots",
+  );
+
+  const eYears = CATALOG_INDEX["Grand Design"]?.["Lineage Series E"]?.years;
+  assert.equal(catalogYearIsListed("2027", eYears), true);
+  assert.equal(catalogYearIsListed("2026", eYears), false);
+  assert.equal(
+    needsWebFallback(
+      { missingHard: true },
+      "2026 Grand Design Lineage Series E hitch rating",
+    ),
+    true,
+  );
 });

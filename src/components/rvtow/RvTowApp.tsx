@@ -28,12 +28,14 @@ import {
 import {
   REVERSE_LIST_CAP,
   REVERSE_SHORTLIST,
-  hitchLoadLbs,
   rankTowVehiclesForTrailer,
-  recommendedPayloadLbs,
-  recommendedTowLbs,
   type ReverseHit,
 } from "@/lib/tow/towReverse";
+import {
+  evaluateTowMatch,
+  type TowCheck,
+  type TowMatchVerdict,
+} from "@/lib/tow/towMatch";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
@@ -171,10 +173,10 @@ export function RvTowApp() {
       const r = getRating(make, model, trim);
       return { ...r, custom: false };
     }
-    // Custom / not-in-list vehicle — use manual door-sticker numbers
+    // Custom / not-in-list vehicle — door-sticker numbers only. No invented GCWR.
     const maxTow = parseInt(manualMaxTow, 10) || 0;
     const payload = parseInt(manualPayload, 10) || 0;
-    const gcwr = parseInt(manualGcwr, 10) || (maxTow && payload ? maxTow + payload + 5000 : 0);
+    const gcwr = parseInt(manualGcwr, 10) || 0;
     return {
       maxTow,
       payload,
@@ -198,15 +200,6 @@ export function RvTowApp() {
 
   const gvwrN = parseInt(gvwr, 10) || 0;
   const pinN = pin ? parseInt(pin, 10) : 0;
-  const pinEst = hitchLoadLbs({
-    rvType,
-    gvwrLbs: gvwrN,
-    pinLbs: pinN > 0 ? pinN : undefined,
-  });
-  const canTow = hasVehicle && rating.maxTow >= gvwrN;
-  const pinOk =
-    !hasVehicle || rvType !== "Fifth Wheel" || pinEst <= rating.payload;
-  const margin = hasVehicle ? rating.maxTow - gvwrN : 0;
 
   /** Effective vehicle kind for RV-type rules */
   const vehicleIsTruck =
@@ -218,15 +211,35 @@ export function RvTowApp() {
     ? [...RV_TYPES_TRUCK]
     : [...RV_TYPES_NON_TRUCK];
 
-  /** Recommended continuous tow / payload (below OEM max). */
-  const recommendedTow = hasVehicle ? recommendedTowLbs(rating.maxTow) : 0;
-  const recommendedPayload = hasVehicle
-    ? recommendedPayloadLbs(rating.payload)
-    : 0;
-  const withinRecommended =
-    hasVehicle && gvwrN > 0 && gvwrN <= recommendedTow;
-  const overRecommendedUnderMax =
-    hasVehicle && gvwrN > recommendedTow && gvwrN <= rating.maxTow;
+  const verdict = useMemo(
+    () =>
+      evaluateTowMatch({
+        hasVehicle,
+        rvType,
+        gvwrLbs: gvwrN,
+        hitchLbs: pinN > 0 ? pinN : undefined,
+        maxTow: rating.maxTow,
+        payload: rating.payload,
+        gcwr: rating.gcwr,
+        bed,
+        vehicleIsTruck,
+      }),
+    [
+      hasVehicle,
+      rvType,
+      gvwrN,
+      pinN,
+      rating.maxTow,
+      rating.payload,
+      rating.gcwr,
+      bed,
+      vehicleIsTruck,
+    ],
+  );
+
+  const recommendedTow = verdict.recommendedTow;
+  const recommendedPayload = verdict.recommendedPayload;
+  const pinEst = verdict.hitchLoad;
 
   // Non-truck vehicles (SUV / car-class) → travel trailer only
   useEffect(() => {
@@ -710,12 +723,16 @@ export function RvTowApp() {
                     onChange={(e) =>
                       setManualGcwr(e.target.value.replace(/\D/g, ""))
                     }
-                    placeholder="lbs"
+                    placeholder="sticker"
                     inputMode="numeric"
                     className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
                   />
                 </label>
               </div>
+              <p className="text-[10px] leading-relaxed text-white/70">
+                GCWR from the door sticker only. Leave blank if it isn’t
+                printed — we will not invent max tow + payload + 5,000.
+              </p>
             </div>
           ) : null}
 
@@ -753,7 +770,13 @@ export function RvTowApp() {
                 />
                 <Stat
                   value={fmtK(rating.gcwr)}
-                  sub={`GCWR\n${rating.gcwr.toLocaleString()} lbs`}
+                  sub={
+                    rating.gcwr
+                      ? `GCWR\n${rating.gcwr.toLocaleString()} lbs`
+                      : rating.custom
+                        ? "GCWR\nenter sticker"
+                        : "GCWR\n—"
+                  }
                 />
               </div>
 
@@ -931,67 +954,33 @@ export function RvTowApp() {
                   onClick={() => setSheet("bed")}
                 />
               </div>
-              <label className="mt-2.5 block">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-[10px] font-bold tracking-[0.12em] text-white">
-                    PIN WEIGHT (lbs){" "}
-                    <span className="text-white">OPTIONAL</span>
-                  </span>
-                  {pin ? (
-                    <button
-                      type="button"
-                      onClick={() => setPin("")}
-                      className="text-[10px] font-semibold text-blue"
-                    >
-                      Clear pin
-                    </button>
-                  ) : null}
-                </div>
-                <input
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                  placeholder="e.g. 3,000  (est. 20% of GVWR)"
-                  className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-3 py-3 text-sm text-white outline-none placeholder:text-white focus:border-blue/50"
-                  inputMode="numeric"
-                />
-              </label>
-              <p className="mt-2 text-[11px] text-blue">
-                Auto-estimating pin weight at {pinEst.toLocaleString()} lbs (20%
-                of GVWR) · keep pin under ~{recommendedPayload.toLocaleString()}{" "}
-                lbs recommended payload
-              </p>
+              {verdict.bed ? <BedAdvisory fit={verdict.bed} /> : null}
+              <HitchWeightField
+                kind="pin"
+                value={pin}
+                estimatedLbs={pinEst}
+                recommendedPayload={recommendedPayload}
+                onChange={setPin}
+              />
             </>
           )}
 
+          {rvType !== "Fifth Wheel" && !reverseMode && (
+            <HitchWeightField
+              kind="tongue"
+              value={pin}
+              estimatedLbs={pinEst}
+              recommendedPayload={recommendedPayload}
+              onChange={setPin}
+            />
+          )}
+
           {hasVehicle && !reverseMode ? (
-            <div className="mt-3 space-y-2">
-              <div
-                className={cn(
-                  "rounded-[var(--radius-md)] border px-3 py-3 text-sm font-semibold",
-                  canTow && pinOk
-                    ? "border-green/40 bg-green/10 text-green"
-                    : "border-ruby-border bg-ruby-soft text-ruby",
-                )}
-              >
-                {canTow && pinOk
-                  ? `✓ Within OEM max — ${margin.toLocaleString()} lb tow margin (${rating.maxTow.toLocaleString()} max vs ${gvwrN.toLocaleString()} GVWR)`
-                  : `⚠ Over OEM max — max tow ${rating.maxTow.toLocaleString()} lbs / payload ${rating.payload.toLocaleString()} lbs`}
-              </div>
-              {canTow && withinRecommended ? (
-                <div className="rounded-[var(--radius-md)] border border-emerald-400/35 bg-emerald-500/10 px-3 py-2.5 text-[12px] font-semibold text-emerald-100">
-                  ✓ Within recommended planning weight (≤{" "}
-                  {recommendedTow.toLocaleString()} lbs / 80% of max)
-                </div>
-              ) : null}
-              {canTow && overRecommendedUnderMax ? (
-                <div className="rounded-[var(--radius-md)] border border-amber/40 bg-amber/10 px-3 py-2.5 text-[12px] font-semibold leading-relaxed text-amber">
-                  ⚠ Above recommended {recommendedTow.toLocaleString()} lbs but
-                  under OEM max {rating.maxTow.toLocaleString()} lbs — legal when
-                  equipped, but little margin for hills, wind, or gear. Prefer a
-                  lighter trailer or higher-rated truck.
-                </div>
-              ) : null}
-            </div>
+            <MatchVerdictBlock
+              verdict={verdict}
+              recommendedTow={recommendedTow}
+              maxTow={rating.maxTow}
+            />
           ) : null}
 
           {hasVehicle && !reverseMode && rating.kind === "suv" && gvwrN > 8000 ? (
@@ -1020,39 +1009,21 @@ export function RvTowApp() {
             }
             onPick={applyReversePick}
           />
-          {rvType === "Fifth Wheel" ? (
-            <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
-              <label className="block">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-[10px] font-bold tracking-[0.12em] text-white">
-                    PIN WEIGHT (lbs){" "}
-                    <span className="text-white/60">OPTIONAL</span>
-                  </span>
-                  {pin ? (
-                    <button
-                      type="button"
-                      onClick={() => setPin("")}
-                      className="text-[10px] font-semibold text-blue"
-                    >
-                      Clear pin
-                    </button>
-                  ) : null}
-                </div>
-                <input
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                  placeholder={`est. ${reverseResult.hitchLoad.toLocaleString()} (20% of GVWR)`}
-                  className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-3 py-3 text-sm text-white outline-none placeholder:text-white/45 focus:border-blue/50"
-                  inputMode="numeric"
-                />
-              </label>
-              <p className="mt-2 text-[11px] leading-relaxed text-white/65">
-                Ranking uses {reverseResult.hitchLoad.toLocaleString()} lbs pin
-                (typed or 20% of GVWR) against each truck’s rec. payload when
-                that number exists.
-              </p>
-            </section>
-          ) : null}
+          <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
+            <HitchWeightField
+              kind={/fifth/i.test(rvType) ? "pin" : "tongue"}
+              value={pin}
+              estimatedLbs={reverseResult.hitchLoad}
+              recommendedPayload={0}
+              onChange={setPin}
+              flush
+              rankingNote={
+                /fifth/i.test(rvType)
+                  ? `Ranking uses ${reverseResult.hitchLoad.toLocaleString()} lbs pin (typed or 20% of GVWR) against each truck’s rec. payload when that number exists.`
+                  : `Ranking uses ${reverseResult.hitchLoad.toLocaleString()} lbs tongue (typed or 12% of GVWR) against each truck’s rec. payload when that number exists.`
+              }
+            />
+          </section>
           </>
         ) : null}
 
@@ -1246,6 +1217,161 @@ function ReverseHitCard({
       </p>
       <p className="mt-2 text-[11px] font-bold text-blue">Use this truck</p>
     </button>
+  );
+}
+
+function HitchWeightField({
+  kind,
+  value,
+  estimatedLbs,
+  recommendedPayload,
+  onChange,
+  rankingNote,
+  flush,
+}: {
+  kind: "pin" | "tongue";
+  value: string;
+  estimatedLbs: number;
+  recommendedPayload: number;
+  onChange: (next: string) => void;
+  rankingNote?: string;
+  flush?: boolean;
+}) {
+  const label = kind === "pin" ? "PIN WEIGHT (lbs)" : "TONGUE WEIGHT (lbs)";
+  const noun = kind === "pin" ? "pin" : "tongue";
+  const frac = kind === "pin" ? "20%" : "12%";
+  return (
+    <label className={flush ? "block" : "mt-2.5 block"}>
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-[10px] font-bold tracking-[0.12em] text-white">
+          {label} <span className="text-white/60">OPTIONAL</span>
+        </span>
+        {value ? (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="text-[10px] font-semibold text-blue"
+          >
+            Clear {noun}
+          </button>
+        ) : null}
+      </div>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
+        placeholder={`e.g. ${estimatedLbs.toLocaleString()}  (est. ${frac} of GVWR)`}
+        className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-3 py-3 text-sm text-white outline-none placeholder:text-white/45 focus:border-blue/50"
+        inputMode="numeric"
+      />
+      <p className="mt-2 text-[11px] leading-relaxed text-blue">
+        {rankingNote ??
+          `Using ${estimatedLbs.toLocaleString()} lbs ${noun} (${
+            value ? "typed" : `est. ${frac} of GVWR`
+          })${
+            recommendedPayload > 0
+              ? ` · keep under ~${recommendedPayload.toLocaleString()} lbs recommended payload`
+              : ""
+          }`}
+      </p>
+    </label>
+  );
+}
+
+function BedAdvisory({
+  fit,
+}: {
+  fit: NonNullable<TowMatchVerdict["bed"]>;
+}) {
+  const tone =
+    fit.level === "needed"
+      ? "border-amber/40 bg-amber/10 text-amber"
+      : fit.level === "ok"
+        ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-100"
+        : "border-sky-400/30 bg-sky-500/10 text-sky-100";
+  return (
+    <div className={cn("mt-2 rounded-[var(--radius-md)] border px-3 py-2.5", tone)}>
+      <p className="text-[12px] font-bold">{fit.title}</p>
+      <p className="mt-1 text-[11px] font-medium leading-relaxed text-white/85">
+        {fit.detail}
+      </p>
+    </div>
+  );
+}
+
+function MatchVerdictBlock({
+  verdict,
+  recommendedTow,
+  maxTow,
+}: {
+  verdict: TowMatchVerdict;
+  recommendedTow: number;
+  maxTow: number;
+}) {
+  const hard = verdict.checks.filter((c) => c.id !== "bed");
+  const firstFail = hard.find((c) => c.level === "fail");
+  return (
+    <div className="mt-3 space-y-2">
+      <div
+        className={cn(
+          "rounded-[var(--radius-md)] border px-3 py-3 text-sm font-semibold",
+          verdict.overallOk
+            ? "border-green/40 bg-green/10 text-green"
+            : "border-ruby-border bg-ruby-soft text-ruby",
+        )}
+      >
+        {verdict.overallOk
+          ? "✓ Tow, hitch, and GCWR clear — confirm the door sticker"
+          : firstFail
+            ? `⚠ Match fails — ${firstFail.title}`
+            : "⚠ Match incomplete"}
+      </div>
+      {hard.map((check) => (
+        <CheckRow key={check.id} check={check} />
+      ))}
+      {verdict.overallOk && verdict.withinRecommended ? (
+        <div className="rounded-[var(--radius-md)] border border-emerald-400/35 bg-emerald-500/10 px-3 py-2.5 text-[12px] font-semibold text-emerald-100">
+          ✓ Within recommended planning weight (≤{" "}
+          {recommendedTow.toLocaleString()} lbs / 80% of max)
+        </div>
+      ) : null}
+      {verdict.towOk && verdict.overRecommendedUnderMax ? (
+        <div className="rounded-[var(--radius-md)] border border-amber/40 bg-amber/10 px-3 py-2.5 text-[12px] font-semibold leading-relaxed text-amber">
+          ⚠ Above recommended {recommendedTow.toLocaleString()} lbs but under OEM
+          max {maxTow.toLocaleString()} lbs — legal when equipped, but little
+          margin for hills, wind, or gear. Prefer a lighter trailer or
+          higher-rated truck.
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function CheckRow({ check }: { check: TowCheck }) {
+  const tone =
+    check.level === "fail"
+      ? "border-ruby-border bg-ruby-soft/60 text-ruby"
+      : check.level === "warn"
+        ? "border-amber/40 bg-amber/10 text-amber"
+        : check.level === "skip"
+          ? "border-white/15 bg-black/25 text-white/80"
+          : "border-white/15 bg-black/20 text-white";
+  const mark =
+    check.level === "fail"
+      ? "⚠"
+      : check.level === "warn"
+        ? "⚠"
+        : check.level === "skip"
+          ? "·"
+          : "✓";
+  return (
+    <div className={cn("rounded-[var(--radius-md)] border px-3 py-2.5", tone)}>
+      <p className="text-[12px] font-semibold">
+        {mark} {check.title}
+      </p>
+      <p className="mt-1 text-[11px] font-medium leading-relaxed text-white/80">
+        {check.detail}
+      </p>
+    </div>
   );
 }
 

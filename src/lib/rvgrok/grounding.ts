@@ -29,13 +29,20 @@ import {
   honestTorqueLabel,
   isAmbiguousCatalogValue,
 } from "../rv/catalogHonesty";
-import { parseCoachFromText } from "./parseCoach";
+import {
+  catalogYearIsListed,
+  matchCatalogModelName,
+  parseCoachFromText,
+} from "./parseCoach";
 import type { RVSpec } from "../rv/rvTypes";
 import { needsWebFallback } from "./webIntent";
 
 export {
   looksLikeCasualNonResearch,
+  looksLikeImageOnlyAsk,
   looksLikeLiveResearchQuestion,
+  looksLikeNamedCoachProductQuestion,
+  looksLikeOffCatalogQuestion,
   looksLikePureLifestyleOrPayment,
   looksLikeSpecQuestion,
   needsWebFallback,
@@ -89,7 +96,8 @@ export const CHAT_MAY_WRITE_FACTS_CACHE = false;
 export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - The CATALOG / BROCHURE block in this request is source-of-truth for engine, horsepower, chassis, transmission, and fuel.
 - If a field has a number or name, USE THAT EXACT VALUE. Do not substitute a sibling model, a later year, or a "typical" HP (never invent 450).
-- If a field is marked UNKNOWN, say unknown or EST. and tell the user what to verify (door sticker / OEM brochure / build sheet). Never invent HP, engine, chassis, or fuel.
+- If a field is marked UNKNOWN, say unknown or EST. Prefer WEB RESEARCH notes for those gaps. Brochure / door sticker / dealer is a verify-after — never the whole answer when research notes are present or this turn can browse.
+- Do not invent a "no catalog data — check the OEM site" dead-end. Answer from locked numbers and/or WEB RESEARCH notes. Never invent HP, engine, chassis, or fuel.
 - Floorplan letters (BH, K, L, FS, …) are labels only — never decode bunks or a half-bath from the code.
 - Entegra Vision = gas Ford F-53 / 7.3 Godzilla — not diesel.
 - Newmar Ventana / Dutch Star of this era already have Comfort Drive, residential fridge, hydraulic auto-level, and OEM camera — do not "upgrade" those.
@@ -161,28 +169,13 @@ export function resolveCatalogMake(raw: string): string {
 
 /** Best catalog model name under a make. */
 export function resolveCatalogModel(make: string, rawModel: string): string {
-  const n = norm(rawModel);
-  if (!n) return rawModel.trim();
   const catalogMake = resolveCatalogMake(make);
   const live = peekCatalog()?.RV_DATA?.[catalogMake];
   const index = CATALOG_INDEX[catalogMake];
-  const names = new Set<string>([
+  return matchCatalogModelName(rawModel, [
     ...Object.keys(live || {}),
     ...Object.keys(index || {}),
   ]);
-  let best = rawModel.trim();
-  let bestLen = -1;
-  for (const name of names) {
-    const nn = norm(name);
-    if (nn === n) return name;
-    if (nn.includes(n) || n.includes(nn)) {
-      if (nn.length > bestLen) {
-        best = name;
-        bestLen = nn.length;
-      }
-    }
-  }
-  return best;
 }
 
 /**
@@ -280,6 +273,31 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
     CATALOG_INDEX[resolveCatalogMake(make)]?.[
       resolveCatalogModel(make, model)
     ] ?? null;
+
+  // Empty year row: do not leak another year's top-level engine/HP as locked.
+  const hasYearRow = Boolean(
+    local ||
+      pin ||
+      snap?.yearTruePowertrain ||
+      catalogYearIsListed(year, index?.years),
+  );
+  if (!hasYearRow) {
+    const empty = field(null, "empty");
+    return {
+      identity,
+      engine: empty,
+      horsepower: empty,
+      torque: empty,
+      chassis: empty,
+      transmission: empty,
+      fuelType: empty,
+      rvType: pickField({ value: index?.type, trust: "index" }),
+      note: "No locked catalog row for this model year. Use WEB RESEARCH notes if present — do not invent specs or send the user to the OEM site as the primary answer.",
+      weightBand: null,
+      hasHardLock: false,
+      missingHard: true,
+    };
+  }
 
   const rawEngine =
     local?.engine ||
@@ -435,7 +453,9 @@ export function formatCatalogGroundingBlock(specs: GroundedSpecs): string {
     line("class / type", specs.rvType),
     specs.note ? `- note: ${specs.note}` : null,
     specs.weightBand ? `- weights: ${specs.weightBand}` : null,
-    "Use the locked numbers above. If a line is UNKNOWN, say unknown / EST. — never invent HP, engine, chassis, or fuel.",
+    specs.hasHardLock
+      ? "Use the locked numbers above. If a line is UNKNOWN, say unknown / EST. — never invent HP, engine, chassis, or fuel."
+      : "No locked catalog numbers for this identity. If WEB RESEARCH notes are present this turn, answer from those notes. Do not invent specs. Do not send the user to the OEM site or a dealer as the primary answer.",
   ]
     .filter(Boolean)
     .join("\n");
