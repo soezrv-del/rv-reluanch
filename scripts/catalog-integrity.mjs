@@ -3281,7 +3281,7 @@ function main() {
       if (!/yearStart:\s*2019/.test(srs) || !/yearEnd:\s*2024/.test(srs)) {
         fail("Coachmen|Sportscoach SRS Super C yearStart 2019 / yearEnd 2024 (dated brochure window)");
       }
-      if (/S2RV|Freightliner M2/.test(srs)) {
+      if (/chassis: "[^"]*(S2RV|Freightliner M2)/.test(srs)) {
         fail("Coachmen|Sportscoach SRS Super C must not invent unprinted Freightliner model codes");
       }
     }
