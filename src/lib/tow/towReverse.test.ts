@@ -35,6 +35,10 @@ test("hitch load: 20% pin on 5th wheel, 12% tongue on travel trailer", () => {
     3100,
   );
   assert.equal(hitchLoadLbs({ rvType: "Travel Trailer", gvwrLbs: 7000 }), 840);
+  assert.equal(
+    hitchLoadLbs({ rvType: "Travel Trailer", gvwrLbs: 7000, tongueLbs: 900 }),
+    900,
+  );
   assert.equal(hitchLoadLbs({ rvType: "fifth-wheel", gvwrLbs: 10000 }), 2000);
   assert.equal(PIN_WEIGHT_FRACTION, 0.2);
 });
@@ -219,6 +223,24 @@ test("show-more raises the cap and can add a second trim per model", () => {
   if (more.total > 8) {
     assert.ok(more.hits.length > short.hits.length || more.hits.length === 16);
   }
+});
+
+test("typed travel-trailer tongue is used instead of the 12% estimate", () => {
+  const est = rankTowVehiclesForTrailer({
+    gvwrLbs: 7000,
+    rvType: "Travel Trailer",
+    year: "2024",
+    kind: "suv",
+  });
+  const typed = rankTowVehiclesForTrailer({
+    gvwrLbs: 7000,
+    rvType: "Travel Trailer",
+    year: "2024",
+    kind: "suv",
+    pinLbs: 900,
+  });
+  assert.equal(est.hitchLoad, 840);
+  assert.equal(typed.hitchLoad, 900);
 });
 
 test("user pin that exceeds rec payload drops that trim", () => {

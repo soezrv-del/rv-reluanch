@@ -14,9 +14,9 @@ import {
 export const RECOMMENDED_TOW_FACTOR = 0.8;
 export const RECOMMENDED_PAYLOAD_FACTOR = 0.85;
 
-/** Existing 5th-wheel pin estimate (vehicle-first already uses 20%). */
+/** Existing 5th-wheel pin estimate (vehicle-first uses 20%). */
 export const PIN_WEIGHT_FRACTION = 0.2;
-/** Mid-band conventional tongue (10–15%) — ranking only, not full #4 math. */
+/** Mid-band conventional tongue (10–15%). Typed tongue wins when present. */
 export const TONGUE_WEIGHT_FRACTION = 0.12;
 
 export const REVERSE_SHORTLIST = 8;
@@ -78,17 +78,20 @@ export function hitchLoadLbs(input: {
   rvType: string;
   gvwrLbs: number;
   pinLbs?: number;
+  tongueLbs?: number;
+  hitchLbs?: number;
 }): number {
+  const typed = input.hitchLbs ?? input.pinLbs ?? input.tongueLbs;
+  if (typeof typed === "number" && Number.isFinite(typed) && typed > 0) {
+    return Math.round(typed);
+  }
   const gvwr = input.gvwrLbs;
   if (!(gvwr > 0)) return 0;
-  if (normalizeReverseRvType(input.rvType) === "Fifth Wheel") {
-    const pin = input.pinLbs;
-    if (typeof pin === "number" && Number.isFinite(pin) && pin > 0) {
-      return Math.round(pin);
-    }
-    return Math.round(gvwr * PIN_WEIGHT_FRACTION);
-  }
-  return Math.round(gvwr * TONGUE_WEIGHT_FRACTION);
+  const frac =
+    normalizeReverseRvType(input.rvType) === "Fifth Wheel"
+      ? PIN_WEIGHT_FRACTION
+      : TONGUE_WEIGHT_FRACTION;
+  return Math.round(gvwr * frac);
 }
 
 export function trimQualifiesForTrailer(
