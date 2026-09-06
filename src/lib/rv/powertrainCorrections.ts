@@ -1,3 +1,5 @@
+import { seriesAliasEquals } from "../rvgrok/parseCoach.ts";
+
 /**
  * Hard brochure corrections for known catalog / Live Grok mistakes.
  * These ALWAYS win over static rvData defaults AND over Live Grok powertrain
@@ -12016,7 +12018,12 @@ export function findPowertrainCorrection(
     if (!mk.includes(c.makeIncludes.toLowerCase())) return false;
     // Bare "newmar" must not stamp live-line pins onto Newmar Classic historic rows
     if (c.makeIncludes === "newmar" && mk.includes("classic")) return false;
-    if (!md.includes(c.modelIncludes.toLowerCase())) return false;
+    if (
+      !md.includes(c.modelIncludes.toLowerCase()) &&
+      !seriesAliasEquals(md, c.modelIncludes)
+    ) {
+      return false;
+    }
     if (c.floorplanIncludes) {
       const cfp = c.floorplanIncludes.toLowerCase().replace(/[\s\-_/]/g, "");
       const nfp = fp.replace(/[\s\-_/]/g, "");
