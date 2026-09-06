@@ -85,6 +85,8 @@ import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { cn } from "@/lib/utils";
 import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
 import { sanitizeUnverifiedLayout } from "@/lib/rv/promptRules";
+import { shouldShowRvVideoPrompt } from "@/lib/rv/rvVideos";
+import { RvVideoLibraryCard } from "./RvVideoLibraryCard";
 
 /**
  * Vehicle History Report — catalog paints instantly; Live Grok updates soft fields.
@@ -1078,6 +1080,21 @@ export function RvDetail({
               </ul>
             ) : null}
           </section>
+
+          {shouldShowRvVideoPrompt({
+            year,
+            make,
+            model,
+            floorplan,
+            type: data.type,
+          }) ? (
+            <RvVideoLibraryCard
+              year={year}
+              make={make}
+              model={model}
+              floorplan={floorplan}
+            />
+          ) : null}
 
           {/* Local inventory */}
           <section className="glass-prestige rounded-[1.15rem] p-3.5" data-no-export>

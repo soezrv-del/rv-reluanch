@@ -17,6 +17,7 @@ import { Route as ApiGeocodeRouteImport } from './routes/api/geocode'
 import { Route as ApiLendersRouteImport } from './routes/api/lenders'
 import { Route as ApiMapTilesRouteImport } from './routes/api/map-tiles'
 import { Route as ApiOsrmRouteImport } from './routes/api/osrm'
+import { Route as ApiRvVideosRouteImport } from './routes/api/rv-videos'
 import { Route as ApiRvgrokRouteImport } from './routes/api/rvgrok'
 import { Route as ApiMarketcheckSearchRouteImport } from './routes/api/marketcheck.search'
 import { Route as ApiNhtsaRecallsRouteImport } from './routes/api/nhtsa.recalls'
@@ -65,6 +66,11 @@ const ApiMapTilesRoute = ApiMapTilesRouteImport.update({
 const ApiOsrmRoute = ApiOsrmRouteImport.update({
   id: '/osrm',
   path: '/osrm',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
+const ApiRvVideosRoute = ApiRvVideosRouteImport.update({
+  id: '/rv-videos',
+  path: '/rv-videos',
   getParentRoute: () => ApiRouteRoute,
 } as any)
 const ApiRvgrokRoute = ApiRvgrokRouteImport.update({
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/api/lenders': typeof ApiLendersRoute
   '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
+  '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
   '/api/nhtsa/recalls': typeof ApiNhtsaRecallsRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/api/lenders': typeof ApiLendersRoute
   '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
+  '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
   '/api/nhtsa/recalls': typeof ApiNhtsaRecallsRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/api/lenders': typeof ApiLendersRoute
   '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
+  '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
   '/api/nhtsa/recalls': typeof ApiNhtsaRecallsRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/api/lenders'
     | '/api/map-tiles'
     | '/api/osrm'
+    | '/api/rv-videos'
     | '/api/rvgrok'
     | '/api/marketcheck/search'
     | '/api/nhtsa/recalls'
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/api/lenders'
     | '/api/map-tiles'
     | '/api/osrm'
+    | '/api/rv-videos'
     | '/api/rvgrok'
     | '/api/marketcheck/search'
     | '/api/nhtsa/recalls'
@@ -220,6 +231,7 @@ export interface FileRouteTypes {
     | '/api/lenders'
     | '/api/map-tiles'
     | '/api/osrm'
+    | '/api/rv-videos'
     | '/api/rvgrok'
     | '/api/marketcheck/search'
     | '/api/nhtsa/recalls'
@@ -292,6 +304,13 @@ declare module '@tanstack/react-router' {
       path: '/osrm'
       fullPath: '/api/osrm'
       preLoaderRoute: typeof ApiOsrmRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/rv-videos': {
+      id: '/api/rv-videos'
+      path: '/rv-videos'
+      fullPath: '/api/rv-videos'
+      preLoaderRoute: typeof ApiRvVideosRouteImport
       parentRoute: typeof ApiRouteRoute
     }
     '/api/rvgrok': {
@@ -381,6 +400,7 @@ interface ApiRouteRouteChildren {
   ApiLendersRoute: typeof ApiLendersRoute
   ApiMapTilesRoute: typeof ApiMapTilesRoute
   ApiOsrmRoute: typeof ApiOsrmRoute
+  ApiRvVideosRoute: typeof ApiRvVideosRoute
   ApiRvgrokRoute: typeof ApiRvgrokRouteWithChildren
   ApiMarketcheckSearchRoute: typeof ApiMarketcheckSearchRoute
   ApiNhtsaRecallsRoute: typeof ApiNhtsaRecallsRoute
@@ -397,6 +417,7 @@ const ApiRouteRouteChildren: ApiRouteRouteChildren = {
   ApiLendersRoute: ApiLendersRoute,
   ApiMapTilesRoute: ApiMapTilesRoute,
   ApiOsrmRoute: ApiOsrmRoute,
+  ApiRvVideosRoute: ApiRvVideosRoute,
   ApiRvgrokRoute: ApiRvgrokRouteWithChildren,
   ApiMarketcheckSearchRoute: ApiMarketcheckSearchRoute,
   ApiNhtsaRecallsRoute: ApiNhtsaRecallsRoute,
