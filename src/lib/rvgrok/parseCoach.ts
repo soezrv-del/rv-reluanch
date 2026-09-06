@@ -32,6 +32,16 @@ export const COACH_BRANDS = [
   "Entegra",
 ].sort((a, b) => b.length - a.length);
 
+/** True when this model year is on the thin catalog year list. */
+export function catalogYearIsListed(
+  year: string,
+  years?: readonly number[] | null,
+): boolean {
+  const y = parseInt(year, 10);
+  if (!Number.isFinite(y) || !years?.length) return false;
+  return years.includes(y);
+}
+
 function normName(s: string): string {
   return (s || "").toLowerCase().replace(/\s+/g, " ").trim();
 }

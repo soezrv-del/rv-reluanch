@@ -9,13 +9,16 @@ import {
 } from "../rv/catalogHonesty.ts";
 import { findPowertrainCorrection } from "../rv/powertrainCorrections.ts";
 import {
+  catalogYearIsListed,
   matchCatalogModelName,
   parseCoachFromText,
 } from "./parseCoach.ts";
 import {
   looksLikeCasualNonResearch,
+  looksLikeImageOnlyAsk,
   looksLikeLiveResearchQuestion,
   looksLikeNamedCoachProductQuestion,
+  looksLikeOffCatalogQuestion,
   needsWebFallback,
 } from "./webIntent.ts";
 import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
@@ -243,7 +246,9 @@ test("looksLikeLiveResearchQuestion is false for lifestyle, payment, and hi", ()
     assert.equal(needsWebFallback(null, q, { agentMode: true }), false, q);
   }
   assert.equal(looksLikeLiveResearchQuestion("Draw a Class A at sunset"), false);
+  assert.equal(looksLikeImageOnlyAsk("Draw a Class A at sunset"), true);
   assert.equal(needsWebFallback(null, "Draw a Class A at sunset"), false);
+  assert.equal(needsWebFallback(null, "hi how are you"), false);
 });
 
 test("Passport slide retract wants web even when powertrain is locked", () => {
@@ -390,6 +395,10 @@ test("system prompts know injected web research is live internet", () => {
   assert.match(grounding, /no catalog data/i);
   assert.match(grounding, /do not send the user to the OEM site/i);
   assert.match(src(root, "webIntent.ts"), /looksLikeNamedCoachProductQuestion/);
+  assert.match(src(root, "webIntent.ts"), /catalogGapNeedsWeb/);
+  assert.match(src(root, "webIntent.ts"), /looksLikeOffCatalogQuestion/);
+  assert.match(src(root, "grounding.ts"), /catalogYearIsListed/);
+  assert.match(src(root, "grounding.ts"), /hasYearRow/);
 });
 
 test("know about / what about a named coach wants web when catalog is missing", () => {
@@ -476,4 +485,32 @@ test("unresolved named coach about-ask still fires web instead of a dealer dead-
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(api, /wantsWebFallback/);
   assert.match(api, /executeWebResearch/);
+});
+
+test("catalog miss fires web without about-phrasing", () => {
+  const tow =
+    "What's the tow rating on a 2019 XYZ Phantom that's not in catalog?";
+  assert.equal(looksLikeNamedCoachProductQuestion(tow), false);
+  assert.equal(needsWebFallback(null, tow), true);
+  assert.equal(needsWebFallback({ missingHard: true }, tow), true);
+
+  const fish = "Best fishing spots near Moab for an RV";
+  assert.equal(looksLikeOffCatalogQuestion(fish), true);
+  assert.equal(needsWebFallback(null, fish), true);
+  assert.equal(
+    needsWebFallback({ missingHard: false }, fish),
+    true,
+    "locked coach still browses fishing — catalog never has spots",
+  );
+
+  const eYears = CATALOG_INDEX["Grand Design"]?.["Lineage Series E"]?.years;
+  assert.equal(catalogYearIsListed("2027", eYears), true);
+  assert.equal(catalogYearIsListed("2026", eYears), false);
+  assert.equal(
+    needsWebFallback(
+      { missingHard: true },
+      "2026 Grand Design Lineage Series E hitch rating",
+    ),
+    true,
+  );
 });

@@ -1,6 +1,9 @@
 /**
  * When chat should fire the xAI web_search sidecar.
  * Kept catalog-free so tests and the sidecar prompt can import it.
+ *
+ * Standing rule: browse whenever the catalog cannot answer the ask.
+ * Skip only hi / lifestyle / payment / image-only turns.
  */
 
 import { parseCoachFromText } from "./parseCoach.ts";
@@ -39,6 +42,13 @@ const AGENT_EXTRA_LOOKUP_RE =
 const PRODUCT_ABOUT_RE =
   /\b((?:i(?:'d| would) like to |can you |please )?(?:tell me |know |learn |hear )about|what about|how about|info(?:rmation)? (?:on|about|for)|details (?:on|about|for)|looking (?:at|into|up)|anything (?:on|about)|overview of|walk me through|break down|brief me on)\b/i;
 
+const IMAGE_ONLY_RE =
+  /\b(draw|generate|illustrate|sketch|visualize|paint)\b/i;
+
+/** Places / conditions the catalog never stores — still browse when a coach is locked. */
+const OFF_CATALOG_RE =
+  /\b(fish(?:ing)?|campgrounds?|rv parks?|dump stations?|boondock(?:ing)?|national parks?|state parks?|lakes?|rivers?|piers?|hiking|trailheads?|weather|road closures?|propane stations?)\b/i;
+
 /** Curly quotes in “won’t” / “how do I” from phones. */
 export function normalizeAskText(text: string): string {
   return (text || "").replace(/[\u2018\u2019\u201B\u2032]/g, "'");
@@ -59,8 +69,34 @@ export function looksLikePureLifestyleOrPayment(text: string): boolean {
 export function looksLikeCasualNonResearch(text: string): boolean {
   const t = normalizeAskText(text).trim();
   if (!t) return true;
-  if (t.length < 24 && CASUAL_CHAT_RE.test(t)) return true;
-  return looksLikePureLifestyleOrPayment(t);
+  if (looksLikePureLifestyleOrPayment(t)) return true;
+  if (CASUAL_CHAT_RE.test(t)) return true;
+  // "hi how are you" / short small-talk — not a catalog miss.
+  if (
+    t.length < 40 &&
+    /^(hi|hey|hello|thanks|thank you|yo|sup)\b/i.test(t) &&
+    !looksLikeSpecQuestion(t) &&
+    !looksLikeLiveResearchQuestion(t) &&
+    !parseCoachFromText(t).make
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** Draw / generate / illustrate — not a research turn. */
+export function looksLikeImageOnlyAsk(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!IMAGE_ONLY_RE.test(t)) return false;
+  if (looksLikeLiveResearchQuestion(t) || looksLikeSpecQuestion(t)) return false;
+  return true;
+}
+
+/** Destinations / fishing / parks — never in the coach catalog. */
+export function looksLikeOffCatalogQuestion(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim() || looksLikeCasualNonResearch(t)) return false;
+  return OFF_CATALOG_RE.test(t);
 }
 
 /**
@@ -97,26 +133,23 @@ function catalogGapNeedsWeb(specs: WebFallbackSpecs): boolean {
 }
 
 /**
- * Web sidecar when the turn needs live OEM / forum / manual notes.
- * Spec + "about this coach" questions browse only when the catalog is
- * missing or hard fields are still empty / EST.
+ * Browse whenever the catalog cannot answer — unresolved coach, missing
+ * hard fields / empty year row, or an ask the catalog never covers.
+ * Hi / lifestyle / payment / image-only stay offline.
  */
 export function needsWebFallback(
   specs: WebFallbackSpecs,
   userText: string,
   opts?: WebFallbackOpts,
 ): boolean {
+  if (looksLikeCasualNonResearch(userText)) return false;
+  if (looksLikeImageOnlyAsk(userText)) return false;
   if (looksLikeLiveResearchQuestion(userText)) return true;
-  if (looksLikeSpecQuestion(userText) && catalogGapNeedsWeb(specs)) {
-    return true;
-  }
-  if (looksLikeNamedCoachProductQuestion(userText) && catalogGapNeedsWeb(specs)) {
-    return true;
-  }
+  if (catalogGapNeedsWeb(specs)) return true;
+  if (looksLikeOffCatalogQuestion(userText)) return true;
   if (
     opts?.agentMode &&
-    AGENT_EXTRA_LOOKUP_RE.test(normalizeAskText(userText)) &&
-    !looksLikeCasualNonResearch(userText)
+    AGENT_EXTRA_LOOKUP_RE.test(normalizeAskText(userText))
   ) {
     return true;
   }

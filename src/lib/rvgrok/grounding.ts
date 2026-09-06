@@ -29,14 +29,20 @@ import {
   honestTorqueLabel,
   isAmbiguousCatalogValue,
 } from "../rv/catalogHonesty";
-import { matchCatalogModelName, parseCoachFromText } from "./parseCoach";
+import {
+  catalogYearIsListed,
+  matchCatalogModelName,
+  parseCoachFromText,
+} from "./parseCoach";
 import type { RVSpec } from "../rv/rvTypes";
 import { needsWebFallback } from "./webIntent";
 
 export {
   looksLikeCasualNonResearch,
+  looksLikeImageOnlyAsk,
   looksLikeLiveResearchQuestion,
   looksLikeNamedCoachProductQuestion,
+  looksLikeOffCatalogQuestion,
   looksLikePureLifestyleOrPayment,
   looksLikeSpecQuestion,
   needsWebFallback,
@@ -267,6 +273,31 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
     CATALOG_INDEX[resolveCatalogMake(make)]?.[
       resolveCatalogModel(make, model)
     ] ?? null;
+
+  // Empty year row: do not leak another year's top-level engine/HP as locked.
+  const hasYearRow = Boolean(
+    local ||
+      pin ||
+      snap?.yearTruePowertrain ||
+      catalogYearIsListed(year, index?.years),
+  );
+  if (!hasYearRow) {
+    const empty = field(null, "empty");
+    return {
+      identity,
+      engine: empty,
+      horsepower: empty,
+      torque: empty,
+      chassis: empty,
+      transmission: empty,
+      fuelType: empty,
+      rvType: pickField({ value: index?.type, trust: "index" }),
+      note: "No locked catalog row for this model year. Use WEB RESEARCH notes if present — do not invent specs or send the user to the OEM site as the primary answer.",
+      weightBand: null,
+      hasHardLock: false,
+      missingHard: true,
+    };
+  }
 
   const rawEngine =
     local?.engine ||

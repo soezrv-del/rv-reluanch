@@ -70,6 +70,23 @@ test("named coach about-ask researches when catalog is missing", () => {
   );
 });
 
+test("catalog miss and fishing browse without about-phrasing", () => {
+  assert.equal(
+    decideVoiceWebResearch({
+      transcript: "What's the tow rating on a 2019 XYZ Phantom?",
+      specs: null,
+    }).action,
+    "research",
+  );
+  assert.equal(
+    decideVoiceWebResearch({
+      transcript: "Best fishing spots near Moab for an RV",
+      specs: { missingHard: false },
+    }).action,
+    "research",
+  );
+});
+
 test("spoken greeting and lifestyle questions do not fire voice web research", () => {
   const casual = [
     "hi",
