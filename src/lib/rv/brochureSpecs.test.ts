@@ -13659,3 +13659,95 @@ test("Keystone Passport (collapsed) MY2010–2026 invent scrub (RVUSA m1502 lock
     /"2027": \["260MLE", "290RLS", "295RDS", "316RLS", "320RDS", "350LLK", "355FBS", "360MBI", "364BHL"\]/,
   );
 });
+
+test("Coachmen honesty lock: MY2026 towable quarantine + Destination hyphens + SRS Class A diesel", () => {
+  const block = src("rvData.ts");
+  const c0 = block.indexOf("\n  Coachmen: {");
+  const c1 = block.indexOf("\n  Winnebago: {");
+  assert.ok(c0 > 0 && c1 > c0, "Coachmen block");
+  const cm = block.slice(c0, c1);
+  const slice = (a: string, b: string) => {
+    const i = cm.includes(`    ${a}: {`) ? cm.indexOf(`    ${a}: {`) : cm.indexOf(`    "${a}": {`);
+    const j = cm.includes(`    ${b}: {`) ? cm.indexOf(`    ${b}: {`) : cm.indexOf(`    "${b}": {`);
+    if (i < 0) return "";
+    return j > i ? cm.slice(i, j) : cm.slice(i);
+  };
+  const yearPlans = (s: string, year: number) => {
+    const m = s.match(new RegExp(`"${year}":\\s*\\[([\\s\\S]*?)\\]`));
+    return m ? [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]) : [];
+  };
+
+  const feul = slice("Freedom Express Ultra Lite", "Freedom Express Select");
+  assert.equal(yearPlans(feul, 2026).includes("271BHE"), false);
+  assert.deepEqual(yearPlans(feul, 2026), [
+    "192RBS",
+    "22MLS",
+    "245RKS",
+    "252RBS",
+    "258BHS",
+    "259FKDS",
+    "274RKS",
+    "288BHDS",
+    "292BHDS",
+    "320BHDS",
+    "324RLDS",
+    "326BHDS",
+  ]);
+  assert.equal(yearPlans(feul, 2027).includes("271BHE"), true);
+
+  const fes = slice("Freedom Express Select", "Catalina");
+  assert.equal(yearPlans(fes, 2026).includes("249SE"), false);
+  assert.equal(yearPlans(fes, 2026).includes("30SE"), false);
+  assert.deepEqual(yearPlans(fes, 2026), ["18SE", "19SE", "21SE", "247SE", "29SE", "31SE"]);
+
+  const leg = slice("Catalina Legacy Edition", "Catalina Summit Series 7");
+  assert.equal(yearPlans(leg, 2026).includes("283RNR"), false);
+  assert.equal(yearPlans(leg, 2026).includes("343BHTS-2Q"), true);
+  assert.equal(yearPlans(leg, 2026).includes("343BHTS-DEN"), true);
+  assert.doesNotMatch(leg, /"2027":/);
+
+  const dest = slice("Catalina Destination Series", "Galleria");
+  assert.deepEqual(yearPlans(dest, 2026), [
+    "35FME",
+    "39MKTS",
+    "40BHTS",
+    "40BHTS-2Q",
+    "40BHTS-DEN",
+    "42CONDO",
+    "43CONDO",
+    "44CONDO",
+  ]);
+  assert.equal(yearPlans(dest, 2026).includes("40BHTS2Q"), false);
+  assert.equal(yearPlans(dest, 2026).includes("40BHTSDEN"), false);
+
+  const srs = slice("Sportscoach SRS Super C", "Winnebago");
+  assert.match(srs, /type: "Class A Diesel"/);
+  assert.doesNotMatch(srs, /type: "Super C"/);
+  assert.doesNotMatch(srs, /engine: "Ford Power Stroke/);
+  assert.doesNotMatch(srs, /chassis: "Ford F-550"/);
+  assert.doesNotMatch(srs, /"350RB"|"376DB"/);
+  assert.match(srs, /Cummins ISB 6\.7L 340HP @ 2600/);
+  assert.match(srs, /Straight Rail Freightliner Chassis/);
+  assert.match(srs, /yearEnd:\s*2024/);
+  assert.deepEqual(yearPlans(srs, 2019), ["339DS", "365RB", "366BH"]);
+  assert.deepEqual(yearPlans(srs, 2024), ["341SA", "354QS", "365RB"]);
+
+  const pin = findPowertrainCorrection("2023", "Coachmen", "Sportscoach SRS Super C", "365RB");
+  assert.ok(pin);
+  assert.equal(pin!.horsepower, 340);
+  assert.equal(pin!.torqueLbFt, 700);
+  assert.match(pin!.engine, /ISB 6\.7L 340HP/);
+  assert.match(pin!.chassis || "", /Freightliner/);
+  assert.doesNotMatch(pin!.engine, /Power Stroke/);
+  assert.doesNotMatch(pin!.chassis || "", /F-550/);
+  assert.equal(
+    findPowertrainCorrection("2023", "Coachmen", "Sportscoach", "364TS"),
+    null,
+    "collapsed Sportscoach must not inherit the SRS pin",
+  );
+  assert.equal(
+    findPowertrainCorrection("2026", "Coachmen", "Sportscoach SRS Super C", "365RB"),
+    null,
+    "2026 SRS is GAP — do not copy-forward the 2019–2024 pin",
+  );
+});

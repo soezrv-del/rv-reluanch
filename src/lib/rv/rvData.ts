@@ -9425,15 +9425,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "292BHDS",
         "320BHDS",
         "324RLDS",
-        "326BHDS"
+        "326BHDS",
+        "330BHJJLE"
       ],
       floorplansByYear: {
         // yearStart 2014 (RVUSA m6854 first available year). Older fby omitted this slice.
-        // OEM coachmenrv.com/print/floorplans/freedom-express-ultra-lite + /freedom-express-ultra-lite
-        // (2026 Freedom Express Ultra Lite Floorplans):
-        // 192RBS | 22MLS | 245RKS | 252RBS | 258BHS | 259FKDS | 271BHE | 274RKS |
+        // Dated RVUSA 2026 family page (m6854-y2026) outranks undated OEM card:
+        // 192RBS | 22MLS | 245RKS | 252RBS | 258BHS | 259FKDS | 274RKS |
         // 288BHDS | 292BHDS | 320BHDS | 324RLDS | 326BHDS
-        // Do not copy 2025 leftover 246RKS / 294BHDS / 298FDS. No 2027 OEM/RVUSA family card.
+        // 271BHE is NOT on dated 2026 — dealer lots / undated OEM print are not MY authority.
+        // Dated RVUSA 2027 family page (m6854-y2027) includes 271BHE + 330BHJJLE.
+        // Do not copy 2025 leftover 246RKS / 294BHDS / 298FDS.
         "2026": [
           "192RBS",
           "22MLS",
@@ -9441,13 +9443,24 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "252RBS",
           "258BHS",
           "259FKDS",
-          "271BHE",
           "274RKS",
           "288BHDS",
           "292BHDS",
           "320BHDS",
           "324RLDS",
           "326BHDS"
+        ],
+        "2027": [
+          "22MLS",
+          "245RKS",
+          "259FKDS",
+          "271BHE",
+          "274RKS",
+          "292BHDS",
+          "320BHDS",
+          "324RLDS",
+          "326BHDS",
+          "330BHJJLE"
         ]
       },
       lengthRange: [22, 37],
@@ -9467,18 +9480,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1964,
       warrantyYears: 2,
       yearStart: 2014,
-      description: "Coachmen Freedom Express Ultra Lite — current half-ton TT series. OEM MY2026: 192RBS / 22MLS / 245RKS / 252RBS / 258BHS / 259FKDS / 271BHE / 274RKS / 288BHDS / 292BHDS / 320BHDS / 324RLDS / 326BHDS. Sibling of Freedom Express Select — do not dump Select SE codes or collapsed Freedom Express leftovers here."
+      description: "Coachmen Freedom Express Ultra Lite — current half-ton TT series. Dated RVUSA MY2026 (m6854-y2026): 192RBS / 22MLS / 245RKS / 252RBS / 258BHS / 259FKDS / 274RKS / 288BHDS / 292BHDS / 320BHDS / 324RLDS / 326BHDS. 271BHE is MY2027 (m6854-y2027), not MY2026. Sibling of Freedom Express Select — do not dump Select SE codes or collapsed Freedom Express leftovers here."
     },
     "Freedom Express Select": {
       type: "Travel Trailer",
-      floorplans: ["18SE", "19SE", "21SE", "247SE", "249SE", "29SE", "30SE", "31SE"],
+      floorplans: ["18SE", "19SE", "21SE", "247SE", "29SE", "31SE"],
       floorplansByYear: {
         // yearStart 2016 (RVUSA m6453 first available year). Older fby omitted this slice.
-        // OEM coachmenrv.com/print/floorplans/freedom-express-select (current card):
-        // 18SE | 19SE | 21SE | 247SE | 249SE | 29SE | 30SE | 31SE
-        // RVUSA 2026 family page (m6453-y2026) prints 6 (drops 249SE / 30SE) — keep OEM eight.
-        // RVUSA has a 2027 30SE unit page only — no 2027 family card → omit 2027 (do not copy the eight forward).
-        "2026": ["18SE", "19SE", "21SE", "247SE", "249SE", "29SE", "30SE", "31SE"]
+        // Dated RVUSA 2026 family page (m6453-y2026) outranks undated OEM eight:
+        // 18SE | 19SE | 21SE | 247SE | 29SE | 31SE
+        // 249SE / 30SE are not on dated 2026. No dated 2027 family card this slice —
+        // do not invent 2027 from dealer 30SE/249SE unit pages.
+        "2026": ["18SE", "19SE", "21SE", "247SE", "29SE", "31SE"]
       },
       lengthRange: [21, 36],
       weightRange: [3900, 7200],
@@ -9497,7 +9510,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1964,
       warrantyYears: 2,
       yearStart: 2016,
-      description: "Coachmen Freedom Express Select — value SE-coded travel trailers. OEM MY2026: 18SE / 19SE / 21SE / 247SE / 249SE / 29SE / 30SE / 31SE. Sibling of Freedom Express Ultra Lite — do not merge Ultra Lite codes or collapsed 23SE leftovers here."
+      description: "Coachmen Freedom Express Select — value SE-coded travel trailers. Dated RVUSA MY2026 (m6453-y2026): 18SE / 19SE / 21SE / 247SE / 29SE / 31SE. 249SE / 30SE quarantined off 2026 (undated OEM / dealer lots are not MY authority). Sibling of Freedom Express Ultra Lite — do not merge Ultra Lite codes or collapsed 23SE leftovers here."
     },
     Catalina: {
       type: "Travel Trailer",
@@ -9638,7 +9651,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "263FKDS",
         "273DBHCK",
         "283RKS",
-        "283RNR",
         "293QBCK",
         "293TQBSCK",
         "303RKDS",
@@ -9653,19 +9665,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       floorplansByYear: {
         // yearStart 2017 (RVUSA m6541 available years 2017–2026). Older fby omitted this slice.
-        // OEM coachmenrv.com/print/floorplans/catalina-legacy-edition + 2026 Legacy Edition card:
-        // 243RBS | 263BHSCK | 263FKDS | 273DBHCK | 283RKS | 283RNR | 293QBCK | 293TQBSCK |
+        // Dated RVUSA 2026 family page (m6541-y2026) outranks undated OEM seventeen:
+        // 243RBS | 263BHSCK | 263FKDS | 273DBHCK | 283RKS | 293QBCK | 293TQBSCK |
         // 303RKDS | 313RLTS | 323BHDSCK | 323MAZE | 333DBDSCK | 333DORM | 343BHTS |
         // 343BHTS-2Q | 343BHTS-DEN
-        // RVUSA 2026 (m6541-y2026) prints 15 (drops 283RNR / 333DBDSCK) — keep OEM seventeen.
-        // 283EPIC is not on the 2026 OEM card. No 2027 OEM/RVUSA family card.
+        // 283RNR is not on dated 2026 PDF/RVUSA. 333DBDSCK IS on dated RVUSA 2026 — keep.
+        // 283EPIC is not on the 2026 card. Do not invent a 2027 Legacy list.
         "2026": [
           "243RBS",
           "263BHSCK",
           "263FKDS",
           "273DBHCK",
           "283RKS",
-          "283RNR",
           "293QBCK",
           "293TQBSCK",
           "303RKDS",
@@ -9696,7 +9707,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1964,
       warrantyYears: 2,
       yearStart: 2017,
-      description: "Coachmen Catalina Legacy Edition — current family travel-trailer card. OEM MY2026: 243RBS / 263BHSCK / 263FKDS / 273DBHCK / 283RKS / 283RNR / 293QBCK / 293TQBSCK / 303RKDS / 313RLTS / 323BHDSCK / 323MAZE / 333DBDSCK / 333DORM / 343BHTS / 343BHTS-2Q / 343BHTS-DEN. Summit / Trail Blazer / Destination codes stay off this key."
+      description: "Coachmen Catalina Legacy Edition — current family travel-trailer card. Dated RVUSA MY2026 (m6541-y2026): 243RBS / 263BHSCK / 263FKDS / 273DBHCK / 283RKS / 293QBCK / 293TQBSCK / 303RKDS / 313RLTS / 323BHDSCK / 323MAZE / 333DBDSCK / 333DORM / 343BHTS / 343BHTS-2Q / 343BHTS-DEN. 283RNR quarantined off 2026. Summit / Trail Blazer / Destination codes stay off this key."
     },
     "Catalina Summit Series 7": {
       type: "Travel Trailer",
@@ -9819,23 +9830,24 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "35FME",
         "39MKTS",
         "40BHTS",
-        "40BHTS2Q",
-        "40BHTSDEN",
+        "40BHTS-2Q",
+        "40BHTS-DEN",
         "42CONDO",
         "43CONDO",
         "44CONDO"
       ],
       floorplansByYear: {
         // yearStart 2015 (RVUSA m5403 available years 2015–2026). Older fby omitted this slice.
-        // OEM coachmenrv.com/print/floorplans/catalina-destination-series + RVUSA 2026 (m5403-y2026):
-        // 35FME | 39MKTS | 40BHTS | 40BHTS2Q | 40BHTSDEN | 42CONDO | 43CONDO | 44CONDO
+        // Dated 2026-Coachmen-Catalina.pdf / 2026-Coachmen-Catalina-Destination.pdf print
+        // 40BHTS-2Q and 40BHTS-DEN (hyphens). Brochure characters outrank stripped
+        // OEM/RVUSA 40BHTS2Q / 40BHTSDEN. Do not regress Legacy 343BHTS-2Q / 343BHTS-DEN.
         // Bumper-pull destination / park trailer — not a fifth wheel. No 2027 family card.
         "2026": [
           "35FME",
           "39MKTS",
           "40BHTS",
-          "40BHTS2Q",
-          "40BHTSDEN",
+          "40BHTS-2Q",
+          "40BHTS-DEN",
           "42CONDO",
           "43CONDO",
           "44CONDO"
@@ -9858,7 +9870,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1964,
       warrantyYears: 2,
       yearStart: 2015,
-      description: "Coachmen Catalina Destination Series — bumper-pull destination / park trailers. OEM/RVUSA MY2026: 35FME / 39MKTS / 40BHTS / 40BHTS2Q / 40BHTSDEN / 42CONDO / 43CONDO / 44CONDO. Do not merge into collapsed Catalina."
+      description: "Coachmen Catalina Destination Series — bumper-pull destination / park trailers. Dated 2026 brochure: 35FME / 39MKTS / 40BHTS / 40BHTS-2Q / 40BHTS-DEN / 42CONDO / 43CONDO / 44CONDO. Do not merge into collapsed Catalina."
     },
     Galleria: {
       type: "Class B",
@@ -10643,26 +10655,31 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       description: "Leprechaun Premier — upgraded Leprechaun interiors and residential appointments."
     },
     "Sportscoach SRS Super C": {
-      type: "Super C",
-      floorplans: ["339DS", "350RB", "365RB", "376DB"],
+      type: "Class A Diesel",
+      floorplans: ["339DS", "341SA", "354QS", "365RB", "366BH", "376ES"],
       floorplansByYear: {
-        "2018": ["339DS", "365RB"],
-        "2019": ["339DS", "350RB", "365RB"],
-        "2020": ["339DS", "350RB", "365RB", "376DB"],
-        "2021": ["339DS", "350RB", "365RB", "376DB"],
-        "2022": ["339DS", "350RB", "365RB", "376DB"],
-        "2023": ["339DS", "350RB", "365RB", "376DB"],
-        "2024": ["339DS", "350RB", "365RB", "376DB"],
-        "2025": ["339DS", "350RB", "365RB"],
-        "2026": ["339DS", "350RB", "365RB"]
+        // Catalog key leftover says Super C — dated Sportscoach SRS brochures print Class A diesel.
+        // 2019 RVUSA m6006-y2019 + 2020 dated SRS brochure (library 2020-Coachmen-Sportscoach-SRS.pdf):
+        // 339DS | 365RB | 366BH · ISB 6.7 340 @ 2600 / 700 · Straight Rail Freightliner Chassis.
+        // 2021–2022 RVUSA m6006-y2021 / y2022: 339DS | 354QS | 365RB | 376ES.
+        // 2023 dated SRS brochure: 339DS | 354QS | 365RB | 376ES.
+        // 2024 dated SRS brochure: 341SA | 354QS | 365RB · Vault Foundation on later cards.
+        // 350RB / 376DB were not printed on dated SRS cards — quarantined.
+        // Do not invent Freightliner S2RV/M2 codes (not printed). No 2018 / 2025–2027 dated SRS card → GAP.
+        "2019": ["339DS", "365RB", "366BH"],
+        "2020": ["339DS", "365RB", "366BH"],
+        "2021": ["339DS", "354QS", "365RB", "376ES"],
+        "2022": ["339DS", "354QS", "365RB", "376ES"],
+        "2023": ["339DS", "354QS", "365RB", "376ES"],
+        "2024": ["341SA", "354QS", "365RB"]
       },
       lengthRange: [
-        33,
-        38
+        36,
+        40
       ],
       weightRange: [
-        24000,
-        30000
+        26000,
+        29410
       ],
       slideouts: 3,
       sleeps: 6,
@@ -10670,27 +10687,50 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         229900,
         329000
       ],
-      engine: "Ford Power Stroke 6.7L Diesel",
-      horsepower: 330,
+      engine: "Cummins ISB 6.7L 340HP @ 2600",
+      horsepower: 340,
+      torqueLbFt: 700,
       powertrainByYear: [
-        { from: 2018, to: 2026, engine: "Ford Power Stroke 6.7L Diesel", horsepower: 330, chassis: "Ford F-550" },
+        {
+          from: 2019,
+          to: 2022,
+          engine: "Cummins ISB 6.7L 340HP @ 2600",
+          horsepower: 340,
+          torqueLbFt: 700,
+          chassis: "Straight Rail Freightliner Chassis",
+          transmission: "Allison 2100MH / 2500MH (by floorplan)",
+          fuelType: "Diesel",
+          notes: "Dated Sportscoach SRS 2019–2022: Class A diesel pusher · ISB 6.7 340 / 700. Do not invent F-550 / Power Stroke / Super C. Freightliner model codes unprinted."
+        },
+        {
+          from: 2023,
+          to: 2024,
+          engine: "Cummins ISB 6.7L 340HP @ 2600",
+          horsepower: 340,
+          torqueLbFt: 700,
+          chassis: "Straight Rail Freightliner Chassis (Vault Foundation)",
+          transmission: "Allison 2100MH / 2500MH (by floorplan)",
+          fuelType: "Diesel",
+          notes: "Dated Sportscoach SRS 2023–2024 brochures: Class A diesel · Vault Foundation · ISB 6.7 340 / 700. Do not invent S2RV/M2 or copy-forward onto 2025–2027."
+        }
       ],
-      chassis: "Ford F-550",
+      chassis: "Straight Rail Freightliner Chassis",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.5,
       image: RV_CARD_IMAGE,
-      towingCapacity: 15000,
-      freshWater: 70,
-      grayWater: 40,
-      blackWater: 40,
-      generator: "Onan 6000W Diesel",
-      awningLength: 14,
+      towingCapacity: 8000,
+      freshWater: 72,
+      grayWater: 45,
+      blackWater: 45,
+      generator: "6.0 kW Diesel",
+      awningLength: 18,
       ceilingHeight: 80,
       founded: 1964,
       warrantyYears: 1,
-      yearStart: 2018,
-      description: "Coachmen Sportscoach Super C — diesel F-550 high tow ratings in the Sportscoach family."
+      yearStart: 2019,
+      yearEnd: 2024,
+      description: "Coachmen Sportscoach SRS — Class A diesel pusher on Straight Rail Freightliner Chassis, Cummins ISB 6.7L 340 HP @ 2600 / 700 lb-ft (dated 2019–2024 SRS brochures). Catalog key leftover says Super C; dated cards print Class A diesel. Not Ford F-550 / Power Stroke. 2018 and 2025–2027 omitted (no dated SRS card)."
     }
   },
   Winnebago: {

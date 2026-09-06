@@ -297,3 +297,29 @@ test("display paths wire Facts HP/torque to SoT formatters — no honesty wipe o
   assert.match(compare, /formatFactsHorsepower/);
   assert.match(compare, /formatFactsTorque/);
 });
+
+test("Coachmen Sportscoach SRS Super C Facts SoT is Class A diesel / ISB 340 — never F-550 invent", () => {
+  const block = src("rvData.ts");
+  const start = block.indexOf('    "Sportscoach SRS Super C": {');
+  assert.ok(start > 0, "expected Sportscoach SRS Super C catalog key");
+  const srs = block.slice(start, start + 4500);
+  assert.match(srs, /type: "Class A Diesel"/);
+  assert.doesNotMatch(srs, /type: "Super C"/);
+  assert.match(srs, /Cummins ISB 6\.7L 340HP @ 2600/);
+  assert.match(srs, /Straight Rail Freightliner Chassis/);
+  assert.match(srs, /torqueLbFt:\s*700/);
+  assert.doesNotMatch(srs, /engine: "Ford Power Stroke/);
+  assert.doesNotMatch(srs, /chassis: "Ford F-550"/);
+  assert.doesNotMatch(srs, /"350RB"|"376DB"/);
+  const shown = formatFactsHorsepower({
+    engine: "Cummins ISB 6.7L 340HP @ 2600",
+    horsepower: 340,
+  });
+  const shownTq = formatFactsTorque({
+    engine: "Cummins ISB 6.7L 340HP @ 2600",
+    torqueLbFt: 700,
+  });
+  assert.equal(shown, "340 HP");
+  assert.equal(shownTq, "700 lb-ft");
+  assertCustomerFacts(shown, shownTq);
+});
