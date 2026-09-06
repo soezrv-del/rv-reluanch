@@ -18,6 +18,7 @@ import { Route as ApiLendersRouteImport } from './routes/api/lenders'
 import { Route as ApiMapTilesRouteImport } from './routes/api/map-tiles'
 import { Route as ApiOsrmRouteImport } from './routes/api/osrm'
 import { Route as ApiRvgrokRouteImport } from './routes/api/rvgrok'
+import { Route as ApiRvVideosRouteImport } from './routes/api/rv-videos'
 import { Route as ApiMarketcheckSearchRouteImport } from './routes/api/marketcheck.search'
 import { Route as ApiNhtsaRecallsRouteImport } from './routes/api/nhtsa.recalls'
 import { Route as ApiNhtsaVinRouteImport } from './routes/api/nhtsa.vin'
@@ -72,6 +73,11 @@ const ApiRvgrokRoute = ApiRvgrokRouteImport.update({
   path: '/rvgrok',
   getParentRoute: () => ApiRouteRoute,
 } as any)
+const ApiRvVideosRoute = ApiRvVideosRouteImport.update({
+  id: '/rv-videos',
+  path: '/rv-videos',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
 const ApiMarketcheckSearchRoute = ApiMarketcheckSearchRouteImport.update({
   id: '/marketcheck/search',
   path: '/marketcheck/search',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
   '/api/nhtsa/recalls': typeof ApiNhtsaRecallsRoute
   '/api/nhtsa/vin': typeof ApiNhtsaVinRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
   '/api/nhtsa/recalls': typeof ApiNhtsaRecallsRoute
   '/api/nhtsa/vin': typeof ApiNhtsaVinRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
   '/api/nhtsa/recalls': typeof ApiNhtsaRecallsRoute
   '/api/nhtsa/vin': typeof ApiNhtsaVinRoute
@@ -183,6 +192,7 @@ export interface FileRouteTypes {
     | '/api/map-tiles'
     | '/api/osrm'
     | '/api/rvgrok'
+    | '/api/rv-videos'
     | '/api/marketcheck/search'
     | '/api/nhtsa/recalls'
     | '/api/nhtsa/vin'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/api/map-tiles'
     | '/api/osrm'
     | '/api/rvgrok'
+    | '/api/rv-videos'
     | '/api/marketcheck/search'
     | '/api/nhtsa/recalls'
     | '/api/nhtsa/vin'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/api/map-tiles'
     | '/api/osrm'
     | '/api/rvgrok'
+    | '/api/rv-videos'
     | '/api/marketcheck/search'
     | '/api/nhtsa/recalls'
     | '/api/nhtsa/vin'
@@ -299,6 +311,13 @@ declare module '@tanstack/react-router' {
       path: '/rvgrok'
       fullPath: '/api/rvgrok'
       preLoaderRoute: typeof ApiRvgrokRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/rv-videos': {
+      id: '/api/rv-videos'
+      path: '/rv-videos'
+      fullPath: '/api/rv-videos'
+      preLoaderRoute: typeof ApiRvVideosRouteImport
       parentRoute: typeof ApiRouteRoute
     }
     '/api/marketcheck/search': {
@@ -382,6 +401,7 @@ interface ApiRouteRouteChildren {
   ApiMapTilesRoute: typeof ApiMapTilesRoute
   ApiOsrmRoute: typeof ApiOsrmRoute
   ApiRvgrokRoute: typeof ApiRvgrokRouteWithChildren
+  ApiRvVideosRoute: typeof ApiRvVideosRoute
   ApiMarketcheckSearchRoute: typeof ApiMarketcheckSearchRoute
   ApiNhtsaRecallsRoute: typeof ApiNhtsaRecallsRoute
   ApiNhtsaVinRoute: typeof ApiNhtsaVinRoute
@@ -398,6 +418,7 @@ const ApiRouteRouteChildren: ApiRouteRouteChildren = {
   ApiMapTilesRoute: ApiMapTilesRoute,
   ApiOsrmRoute: ApiOsrmRoute,
   ApiRvgrokRoute: ApiRvgrokRouteWithChildren,
+  ApiRvVideosRoute: ApiRvVideosRoute,
   ApiMarketcheckSearchRoute: ApiMarketcheckSearchRoute,
   ApiNhtsaRecallsRoute: ApiNhtsaRecallsRoute,
   ApiNhtsaVinRoute: ApiNhtsaVinRoute,
