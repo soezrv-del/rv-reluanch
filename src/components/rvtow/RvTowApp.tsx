@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
+  ChevronRight,
   Eraser,
   Info,
   RefreshCw,
+  Search,
   Truck,
   Car,
 } from "lucide-react";
@@ -23,6 +25,15 @@ import {
   pickSuccessorTrim,
   trimStem,
 } from "@/lib/tow/towYear";
+import {
+  REVERSE_LIST_CAP,
+  REVERSE_SHORTLIST,
+  hitchLoadLbs,
+  rankTowVehiclesForTrailer,
+  recommendedPayloadLbs,
+  recommendedTowLbs,
+  type ReverseHit,
+} from "@/lib/tow/towReverse";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
@@ -40,13 +51,10 @@ const YEARS = Array.from({ length: 22 }, (_, i) => String(2026 - i)); // 2026 �
 const RV_TYPES_TRUCK = ["Fifth Wheel", "Travel Trailer"] as const;
 const RV_TYPES_NON_TRUCK = ["Travel Trailer"] as const;
 
-/** Comfort / safety planning load (industry “80% rule”) vs OEM maximum. */
-const RECOMMENDED_TOW_FACTOR = 0.8;
-const RECOMMENDED_PAYLOAD_FACTOR = 0.85;
-
 const BEDS = ["5.5 ft (Short Bed)", "6.5 ft (Standard Bed)", "8 ft (Long Bed)"];
 
 type KindFilter = "all" | VehicleKind;
+type ShopMode = "match" | "reverse";
 
 const EMPTY = {
   year: "",
@@ -76,6 +84,8 @@ export function RvTowApp() {
   const nav = useShellNavOptional();
   const lastPrefillKey = useRef("");
   const [matchTrailer, setMatchTrailer] = useState(false);
+  const [shopMode, setShopMode] = useState<ShopMode>("match");
+  const [reverseLimit, setReverseLimit] = useState(REVERSE_SHORTLIST);
 
   const prefill = useMemo(
     () => towPrefillFromCoach(nav?.activeCoach ?? null),
@@ -89,7 +99,9 @@ export function RvTowApp() {
     if (lastPrefillKey.current === key) return;
     lastPrefillKey.current = key;
     setMatchTrailer(false);
+    setReverseLimit(REVERSE_SHORTLIST);
     if (prefill.kind === "motorhome") {
+      setShopMode("match");
       setYear("");
       setMake("");
       setModel("");
@@ -100,6 +112,7 @@ export function RvTowApp() {
     } else if (prefill.kind === "towable") {
       setRvType(prefill.rvType);
       if (prefill.gvwrLbs > 0) setGvwr(String(prefill.gvwrLbs));
+      setShopMode("reverse");
     }
   }, [nav?.activeCoach, prefill]);
 
@@ -184,7 +197,12 @@ export function RvTowApp() {
   ]);
 
   const gvwrN = parseInt(gvwr, 10) || 0;
-  const pinEst = pin ? parseInt(pin, 10) : Math.round(gvwrN * 0.2);
+  const pinN = pin ? parseInt(pin, 10) : 0;
+  const pinEst = hitchLoadLbs({
+    rvType,
+    gvwrLbs: gvwrN,
+    pinLbs: pinN > 0 ? pinN : undefined,
+  });
   const canTow = hasVehicle && rating.maxTow >= gvwrN;
   const pinOk =
     !hasVehicle || rvType !== "Fifth Wheel" || pinEst <= rating.payload;
@@ -201,11 +219,9 @@ export function RvTowApp() {
     : [...RV_TYPES_NON_TRUCK];
 
   /** Recommended continuous tow / payload (below OEM max). */
-  const recommendedTow = hasVehicle
-    ? Math.round(rating.maxTow * RECOMMENDED_TOW_FACTOR)
-    : 0;
+  const recommendedTow = hasVehicle ? recommendedTowLbs(rating.maxTow) : 0;
   const recommendedPayload = hasVehicle
-    ? Math.round(rating.payload * RECOMMENDED_PAYLOAD_FACTOR)
+    ? recommendedPayloadLbs(rating.payload)
     : 0;
   const withinRecommended =
     hasVehicle && gvwrN > 0 && gvwrN <= recommendedTow;
@@ -218,6 +234,23 @@ export function RvTowApp() {
       if (rvType !== "Travel Trailer") setRvType("Travel Trailer");
     }
   }, [kindFilter, hasVehicle, rating.kind, rvType]);
+
+  useEffect(() => {
+    setReverseLimit(REVERSE_SHORTLIST);
+  }, [gvwrN, rvType, year, kindFilter, pinN]);
+
+  const reverseResult = useMemo(
+    () =>
+      rankTowVehiclesForTrailer({
+        gvwrLbs: gvwrN,
+        rvType,
+        year,
+        kind: kindFilter,
+        pinLbs: pinN > 0 ? pinN : undefined,
+        limit: reverseLimit,
+      }),
+    [gvwrN, rvType, year, kindFilter, pinN, reverseLimit],
+  );
 
   const truckCount = useMemo(
     () =>
@@ -314,6 +347,26 @@ export function RvTowApp() {
     setManualGcwr("");
   };
 
+  const openReverse = useCallback(() => {
+    setShopMode("reverse");
+    setReverseLimit(REVERSE_SHORTLIST);
+    setMatchTrailer(true);
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const applyReversePick = useCallback((hit: ReverseHit) => {
+    setKindFilter(hit.kind === "suv" ? "suv" : kindFilter === "suv" ? "truck" : kindFilter);
+    setMake(hit.make);
+    setModel(hit.model);
+    setTrim(hit.trim);
+    setManualMaxTow("");
+    setManualPayload("");
+    setManualGcwr("");
+    setShopMode("match");
+    setMatchTrailer(true);
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [kindFilter]);
+
   const resetDefaults = () => {
     lastPrefillKey.current = "";
     setKindFilter("all");
@@ -329,7 +382,11 @@ export function RvTowApp() {
     setManualPayload("");
     setManualGcwr("");
     setMatchTrailer(prefill.kind === "motorhome");
+    setShopMode("match");
+    setReverseLimit(REVERSE_SHORTLIST);
   };
+
+  const reverseMode = shopMode === "reverse" && !toadMode;
 
   return (
     <SuitePage
@@ -477,7 +534,7 @@ export function RvTowApp() {
             ) : null}
             <button
               type="button"
-              onClick={() => setMatchTrailer(true)}
+              onClick={openReverse}
               className="mt-3 inline-flex min-h-11 items-center rounded-full border border-white/20 bg-black/40 px-3.5 text-[12px] font-bold text-white"
             >
               Match a different trailer instead
@@ -514,6 +571,40 @@ export function RvTowApp() {
           ))}
         </div>
 
+        {toadMode ? null : (
+          <div className="flex gap-1 rounded-full border border-white/15 bg-black/30 p-1">
+            {(
+              [
+                ["match", "Match a truck"],
+                ["reverse", "Can I tow this?"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => {
+                  if (id === "reverse") openReverse();
+                  else setShopMode("match");
+                }}
+                className={cn(
+                  "flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[12px] font-bold transition",
+                  shopMode === id
+                    ? "bg-blue text-white shadow-[0_0_14px_rgba(77,166,255,0.35)]"
+                    : "text-white hover:text-white",
+                )}
+              >
+                {id === "reverse" ? (
+                  <Search className="size-3.5" />
+                ) : (
+                  <Truck className="size-3.5" />
+                )}
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {reverseMode ? null : (
         <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
           <p className="mb-1 flex items-center gap-1.5 text-[12px] font-bold text-blue">
             <img
@@ -730,11 +821,12 @@ export function RvTowApp() {
             </div>
           )}
         </section>
+        )}
 
         {toadMode ? null : (
         <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
           <p className="mb-3 text-[10px] font-bold tracking-[0.12em] text-blue">
-            RV DETAILS
+            {reverseMode ? "THIS TRAILER" : "RV DETAILS"}
           </p>
           {prefill.kind === "towable" ? (
             <div className="mb-3 rounded-[var(--radius-md)] border border-sky-400/30 bg-sky-500/10 px-3 py-2.5">
@@ -744,12 +836,51 @@ export function RvTowApp() {
               <p className="mt-1 text-[13px] font-bold text-white">
                 {formatActiveCoachChip(prefill.coach)}
               </p>
+              {reverseMode ? (
+                <p className="mt-0.5 text-[11px] text-white/70">
+                  Edit GVWR if the sticker differs.
+                </p>
+              ) : (
+                <>
               <p className="mt-1 text-[11px] leading-relaxed text-white/80">
                 Type and GVWR filled from the open Facts coach. Change the
                 coach in Facts or edit the fields below.
               </p>
+                <button
+                  type="button"
+                  onClick={openReverse}
+                  className="mt-3 inline-flex min-h-11 items-center gap-1 rounded-full border border-sky-300/40 bg-sky-500/20 px-3.5 text-[12px] font-bold text-white"
+                >
+                  <Search className="size-3.5" />
+                  Can I tow this coach?
+                  <ChevronRight className="size-3.5" />
+                </button>
+                </>
+              )}
             </div>
           ) : null}
+          {reverseMode ? (
+            <div className="grid grid-cols-2 gap-2">
+              <Field
+                label="YEAR"
+                value={year || "Year"}
+                empty={!year}
+                onClick={() => setSheet("year")}
+                flush
+              />
+              <Field
+                label="RV TYPE"
+                value={
+                  vehicleIsTruck ? rvType : "Travel Trailer"
+                }
+                onClick={() => {
+                  if (vehicleIsTruck) setSheet("rvType");
+                }}
+                disabled={!vehicleIsTruck}
+                flush
+              />
+            </div>
+          ) : (
           <Field
             label="RV TYPE"
             value={
@@ -762,7 +893,8 @@ export function RvTowApp() {
             }}
             disabled={!vehicleIsTruck}
           />
-          {!vehicleIsTruck ? (
+          )}
+          {reverseMode ? null : !vehicleIsTruck ? (
             <p className="mt-1.5 text-[11px] leading-relaxed text-sky-200/90">
               SUVs and non-truck vehicles are set to{" "}
               <span className="font-semibold text-white">Travel Trailer</span>
@@ -790,7 +922,7 @@ export function RvTowApp() {
             </span>
           </label>
 
-          {rvType === "Fifth Wheel" && vehicleIsTruck && (
+          {rvType === "Fifth Wheel" && vehicleIsTruck && !reverseMode && (
             <>
               <div className="mt-2.5">
                 <Field
@@ -831,7 +963,7 @@ export function RvTowApp() {
             </>
           )}
 
-          {hasVehicle ? (
+          {hasVehicle && !reverseMode ? (
             <div className="mt-3 space-y-2">
               <div
                 className={cn(
@@ -862,7 +994,7 @@ export function RvTowApp() {
             </div>
           ) : null}
 
-          {hasVehicle && rating.kind === "suv" && gvwrN > 8000 ? (
+          {hasVehicle && !reverseMode && rating.kind === "suv" && gvwrN > 8000 ? (
             <p className="mt-2 flex gap-1.5 text-[11px] leading-relaxed text-amber">
               <Info className="mt-0.5 size-3.5 shrink-0" />
               Heavy trailers on SUVs need careful weight distribution, brake
@@ -873,7 +1005,58 @@ export function RvTowApp() {
         </section>
         )}
 
-        {rvType === "Fifth Wheel" && vehicleIsTruck && !toadMode && (
+        {reverseMode ? (
+          <>
+          <ReverseResults
+            gvwrN={gvwrN}
+            rvType={rvType}
+            year={year}
+            hitchLoad={reverseResult.hitchLoad}
+            hits={reverseResult.hits}
+            total={reverseResult.total}
+            limit={reverseLimit}
+            onShowMore={() =>
+              setReverseLimit((n) => Math.min(n + REVERSE_SHORTLIST, REVERSE_LIST_CAP))
+            }
+            onPick={applyReversePick}
+          />
+          {rvType === "Fifth Wheel" ? (
+            <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
+              <label className="block">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[10px] font-bold tracking-[0.12em] text-white">
+                    PIN WEIGHT (lbs){" "}
+                    <span className="text-white/60">OPTIONAL</span>
+                  </span>
+                  {pin ? (
+                    <button
+                      type="button"
+                      onClick={() => setPin("")}
+                      className="text-[10px] font-semibold text-blue"
+                    >
+                      Clear pin
+                    </button>
+                  ) : null}
+                </div>
+                <input
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                  placeholder={`est. ${reverseResult.hitchLoad.toLocaleString()} (20% of GVWR)`}
+                  className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-3 py-3 text-sm text-white outline-none placeholder:text-white/45 focus:border-blue/50"
+                  inputMode="numeric"
+                />
+              </label>
+              <p className="mt-2 text-[11px] leading-relaxed text-white/65">
+                Ranking uses {reverseResult.hitchLoad.toLocaleString()} lbs pin
+                (typed or 20% of GVWR) against each truck’s rec. payload when
+                that number exists.
+              </p>
+            </section>
+          ) : null}
+          </>
+        ) : null}
+
+        {rvType === "Fifth Wheel" && vehicleIsTruck && !toadMode && !reverseMode && (
           <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
             <p className="mb-3 text-[13px] font-bold text-blue">
               5th Wheel: Pin Weight & Hitch Guide
@@ -913,6 +1096,159 @@ export function RvTowApp() {
   );
 }
 
+function ReverseResults({
+  gvwrN,
+  rvType,
+  year,
+  hitchLoad,
+  hits,
+  total,
+  limit,
+  onShowMore,
+  onPick,
+}: {
+  gvwrN: number;
+  rvType: string;
+  year: string;
+  hitchLoad: number;
+  hits: ReverseHit[];
+  total: number;
+  limit: number;
+  onShowMore: () => void;
+  onPick: (hit: ReverseHit) => void;
+}) {
+  const hitchLabel = /fifth/i.test(rvType) ? "Pin" : "Tongue";
+  return (
+    <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
+      <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-blue">
+        TRUCKS THAT FIT
+      </p>
+      {gvwrN > 0 ? (
+        <p className="mb-3 text-[11px] leading-relaxed text-white/75">
+          Closest rec. tow (80% of max) that covers {gvwrN.toLocaleString()} lbs
+          {year ? ` · ${year}` : ""}. {hitchLabel} ~{hitchLoad.toLocaleString()}{" "}
+          lbs vs rec. payload when listed.
+        </p>
+      ) : (
+        <p className="mb-3 text-[11px] leading-relaxed text-white/75">
+          Enter trailer GVWR — or open a fifth wheel / travel trailer in Facts
+          — to rank trucks.
+        </p>
+      )}
+
+      {gvwrN <= 0 ? (
+        <div className="rounded-[var(--radius-md)] border border-dashed border-white/20 bg-black/25 px-3 py-4 text-center">
+          <p className="text-[13px] font-semibold text-white">
+            Need a trailer weight
+          </p>
+          <p className="mt-1 text-[11px] text-white/70">
+            Type GVWR above. Empty is honest — we do not invent a match.
+          </p>
+        </div>
+      ) : hits.length === 0 ? (
+        <div className="rounded-[var(--radius-md)] border border-dashed border-white/20 bg-black/25 px-3 py-4 text-center">
+          <p className="text-[13px] font-semibold text-white">
+            No catalog row meets the 80% planning band
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-white/70">
+            We do not invent OEM ratings. Try a lower GVWR, another year, or
+            Trucks instead of SUVs.
+          </p>
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {hits.map((hit) => (
+            <li key={`${hit.make}|${hit.model}|${hit.trim}`}>
+              <ReverseHitCard
+                hit={hit}
+                hitchLabel={hitchLabel}
+                onPick={onPick}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {gvwrN > 0 && total > 0 ? (
+        <p className="mt-3 text-[11px] text-white/65">
+          Showing {hits.length} of {total} qualifying{" "}
+          {total === 1 ? "row" : "rows"}
+          {total > hits.length ? " · more in the table" : ""}
+        </p>
+      ) : null}
+
+      {total > hits.length && limit < REVERSE_LIST_CAP ? (
+        <button
+          type="button"
+          onClick={onShowMore}
+          className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/20 bg-black/40 text-[12px] font-bold text-white"
+        >
+          Show more fits
+        </button>
+      ) : null}
+
+      <p className="mt-3 text-[10px] leading-relaxed text-white/55">
+        Approx when properly equipped. Confirm the door sticker — hitch, axle,
+        and options change the real number.
+      </p>
+    </section>
+  );
+}
+
+function ReverseHitCard({
+  hit,
+  hitchLabel,
+  onPick,
+}: {
+  hit: ReverseHit;
+  hitchLabel: string;
+  onPick: (hit: ReverseHit) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onPick(hit)}
+      className="flex w-full min-h-11 flex-col rounded-[var(--radius-md)] border border-blue/25 bg-blue/10 px-3 py-3 text-left active:scale-[0.99]"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[13px] font-bold text-white">
+            {hit.make} {hit.model}
+          </p>
+          <p className="mt-0.5 text-[11px] leading-snug text-white/85">
+            {hit.stem}
+          </p>
+        </div>
+        <ChevronRight className="mt-0.5 size-4 shrink-0 text-blue" />
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        {hit.yearRange ? (
+          <span className="inline-flex rounded-full border border-blue/35 bg-blue/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-blue">
+            {hit.yearRange}
+          </span>
+        ) : null}
+        <span className="inline-flex rounded-full border border-white/15 bg-black/30 px-2 py-0.5 text-[10px] font-semibold text-white/80">
+          {hit.kind === "suv" ? "SUV" : "Truck"} · {hit.hitch}
+        </span>
+      </div>
+      <p className="mt-2 text-[12px] font-semibold text-white">
+        Rec. tow {hit.recommendedTow.toLocaleString()} lbs
+        <span className="font-medium text-emerald-200">
+          {" "}
+          · +{hit.towMargin.toLocaleString()} vs trailer
+        </span>
+      </p>
+      <p className="mt-0.5 text-[11px] text-white/70">
+        OEM max {hit.maxTow.toLocaleString()} lbs
+        {hit.payloadChecked
+          ? ` · ${hitchLabel.toLowerCase()} ${hit.hitchLoad.toLocaleString()} ≤ rec. payload ${hit.recommendedPayload.toLocaleString()}`
+          : ` · ${hitchLabel.toLowerCase()} not checked (no payload in table)`}
+      </p>
+      <p className="mt-2 text-[11px] font-bold text-blue">Use this truck</p>
+    </button>
+  );
+}
+
 function fmtK(n: number) {
   if (!n) return "—";
   if (n >= 1000) {
@@ -928,15 +1264,17 @@ function Field({
   onClick,
   empty,
   disabled,
+  flush,
 }: {
   label: string;
   value: string;
   onClick: () => void;
   empty?: boolean;
   disabled?: boolean;
+  flush?: boolean;
 }) {
   return (
-    <div className="mt-2.5 first:mt-0">
+    <div className={flush ? "mt-2.5" : "mt-2.5 first:mt-0"}>
       <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-blue">
         {label}
       </p>
