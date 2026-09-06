@@ -97,7 +97,8 @@ export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - The CATALOG / BROCHURE block in this request is source-of-truth for engine, horsepower, chassis, transmission, and fuel.
 - If a field has a number or name, USE THAT EXACT VALUE. Do not substitute a sibling model, a later year, or a "typical" HP (never invent 450).
 - If a field is marked UNKNOWN, say unknown or EST. Prefer WEB RESEARCH notes for those gaps. Brochure / door sticker / dealer is a verify-after — never the whole answer when research notes are present or this turn can browse.
-- Do not invent a "no catalog data — check the OEM site" dead-end. Answer from locked numbers and/or WEB RESEARCH notes. Never invent HP, engine, chassis, or fuel.
+- Do not invent a "no catalog data — check the OEM site" dead-end. If this block names locked numbers, the coach IS in the catalog — never say it is missing, not in catalogs, or to wait for a brochure. Answer from locked numbers and/or WEB RESEARCH notes. Never invent HP, engine, chassis, or fuel.
+- WEB RESEARCH notes must not override a locked catalog row or invent a fifth-wheel / towable class when this block names a motorized class.
 - Floorplan letters (BH, K, L, FS, …) are labels only — never decode bunks or a half-bath from the code.
 - Entegra Vision = gas Ford F-53 / 7.3 Godzilla — not diesel.
 - Newmar Ventana / Dutch Star of this era already have Comfort Drive, residential fridge, hydraulic auto-level, and OEM camera — do not "upgrade" those.
@@ -187,7 +188,13 @@ export function resolveCoachIdentity(
   facts?: ActiveCoach | null,
   extraText = "",
 ): CoachIdentity | null {
-  const parsed = parseCoachFromText(`${query}\n${extraText}`);
+  // Current ask wins. History/extraText used to steal the last brand mention
+  // ("Grand Design fifth-wheels…") and dump a named Lineage M lock.
+  const fromQuery = parseCoachFromText(query);
+  const parsed =
+    fromQuery.year && fromQuery.make && fromQuery.model
+      ? fromQuery
+      : parseCoachFromText(`${query}\n${extraText}`);
   const factsOk = Boolean(
     facts?.year?.trim() && facts.make?.trim() && facts.model?.trim(),
   );
@@ -454,7 +461,7 @@ export function formatCatalogGroundingBlock(specs: GroundedSpecs): string {
     specs.note ? `- note: ${specs.note}` : null,
     specs.weightBand ? `- weights: ${specs.weightBand}` : null,
     specs.hasHardLock
-      ? "Use the locked numbers above. If a line is UNKNOWN, say unknown / EST. — never invent HP, engine, chassis, or fuel."
+      ? "This coach IS in the verified catalog. Use the locked numbers above. Do not say it is missing, not in catalogs, or to wait for a brochure. If a line is UNKNOWN, say unknown / EST. — never invent HP, engine, chassis, or fuel."
       : "No locked catalog numbers for this identity. If WEB RESEARCH notes are present this turn, answer from those notes. Do not invent specs. Do not send the user to the OEM site or a dealer as the primary answer.",
   ]
     .filter(Boolean)

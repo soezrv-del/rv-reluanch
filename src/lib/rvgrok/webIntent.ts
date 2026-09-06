@@ -145,6 +145,18 @@ export function needsWebFallback(
   if (looksLikeCasualNonResearch(userText)) return false;
   if (looksLikeImageOnlyAsk(userText)) return false;
   if (looksLikeLiveResearchQuestion(userText)) return true;
+  // Resolved hard row → do not browse. A "no catalog" web note must not
+  // overwrite a pin the catalog already answered (Lineage Series M, etc.).
+  if (specs && !specs.missingHard) {
+    if (looksLikeOffCatalogQuestion(userText)) return true;
+    if (
+      opts?.agentMode &&
+      AGENT_EXTRA_LOOKUP_RE.test(normalizeAskText(userText))
+    ) {
+      return true;
+    }
+    return false;
+  }
   if (catalogGapNeedsWeb(specs)) return true;
   if (looksLikeOffCatalogQuestion(userText)) return true;
   if (

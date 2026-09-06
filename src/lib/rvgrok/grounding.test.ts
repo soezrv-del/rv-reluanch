@@ -12,6 +12,7 @@ import {
   catalogYearIsListed,
   matchCatalogModelName,
   parseCoachFromText,
+  seriesAliasEquals,
 } from "./parseCoach.ts";
 import {
   looksLikeCasualNonResearch,
@@ -68,6 +69,7 @@ test("parses David’s test coach from a spec question", () => {
   assert.equal(p.year, "2023");
   assert.equal(p.make, "American Coach");
   assert.match(p.model, /american dream/i);
+  assert.doesNotMatch(p.model, /\bhave\b/i);
   assert.equal(p.floorplan, "45A");
 });
 
@@ -394,6 +396,9 @@ test("system prompts know injected web research is live internet", () => {
   const grounding = src(root, "grounding.ts");
   assert.match(grounding, /no catalog data/i);
   assert.match(grounding, /do not send the user to the OEM site/i);
+  assert.match(grounding, /IS in the verified catalog/);
+  assert.match(grounding, /fromQuery/);
+  assert.match(src(root, "webIntent.ts"), /Resolved hard row/);
   assert.match(src(root, "webIntent.ts"), /looksLikeNamedCoachProductQuestion/);
   assert.match(src(root, "webIntent.ts"), /catalogGapNeedsWeb/);
   assert.match(src(root, "webIntent.ts"), /looksLikeOffCatalogQuestion/);
@@ -431,42 +436,75 @@ test("Lineage M / Lineage M series resolve to catalog Lineage Series M", () => {
     "Lineage M series",
     "Lineage Series M",
     "lineage series m",
+    "Lineage M have",
   ]) {
     assert.equal(matchCatalogModelName(spoken, gd), "Lineage Series M", spoken);
+    assert.equal(seriesAliasEquals(spoken, "Lineage Series M"), true, spoken);
   }
   assert.equal(matchCatalogModelName("Lineage E series", gd), "Lineage Series E");
   assert.notEqual(matchCatalogModelName("Lineage M", gd), "Lineage Series E");
   assert.notEqual(matchCatalogModelName("Lineage M", gd), "Lineage Series F");
   assert.match(src(root, "grounding.ts"), /matchCatalogModelName/);
+  assert.match(src(root, "grounding.ts"), /fromQuery/);
 });
 
-test("2027 Lineage M about-ask grounds from catalog and does not claim no data", () => {
-  const q = "I'd like to know about the 2027 Grand Design Lineage M series.";
+function assertLineageSeriesMLock(
+  q: string,
+  year: string,
+  spokenModel: RegExp,
+) {
   const parsed = parseCoachFromText(q);
   const gd = Object.keys(CATALOG_INDEX["Grand Design"] || {});
   const model = matchCatalogModelName(parsed.model, gd);
-  assert.equal(parsed.year, "2027");
-  assert.equal(parsed.make, "Grand Design");
-  assert.equal(model, "Lineage Series M");
+  const index = CATALOG_INDEX["Grand Design"]?.[model];
+  assert.equal(parsed.year, year, q);
+  assert.equal(parsed.make, "Grand Design", q);
+  assert.match(parsed.model, spokenModel);
+  assert.doesNotMatch(parsed.model, /\bhave\b/i);
+  assert.equal(model, "Lineage Series M", q);
+  assert.equal(index?.type, "Class C", q);
+  assert.equal(index?.fuelType, "Diesel", q);
+  assert.doesNotMatch(index?.type || "", /fifth[- ]wheel/i);
 
-  const pin = findPowertrainCorrection(parsed.year, parsed.make, model);
-  assert.ok(pin, "expected a locked Series M pin for 2027");
-  assert.match(pin!.engine, /208|Sprinter/i);
-  assert.equal(pin!.fuelType, "Diesel");
-  assert.doesNotMatch(pin!.note || "", /no catalog data/i);
+  // Spoken form must hit the pin — chat used to miss "Lineage M series".
+  const pinSpoken = findPowertrainCorrection(parsed.year, parsed.make, parsed.model);
+  const pinCatalog = findPowertrainCorrection(parsed.year, parsed.make, model);
+  assert.ok(pinSpoken, `spoken pin missing for ${JSON.stringify(parsed)}`);
+  assert.ok(pinCatalog, `catalog pin missing for ${model}`);
+  assert.equal(pinSpoken!.horsepower, 208);
+  assert.equal(pinCatalog!.horsepower, 208);
+  assert.match(pinSpoken!.engine, /208|Sprinter|2\.0/i);
+  assert.equal(pinSpoken!.fuelType, "Diesel");
+  assert.match(pinSpoken!.chassis || "", /Sprinter 4500/i);
+  assert.doesNotMatch(pinSpoken!.note || "", /no catalog data/i);
+  assert.doesNotMatch(pinSpoken!.engine, /fifth[- ]wheel/i);
 
-  assert.equal(needsWebFallback({ missingHard: false }, q), false);
+  assert.equal(
+    needsWebFallback({ missingHard: false }, q),
+    false,
+    "locked Series M must not browse into a no-catalog narrative",
+  );
   assert.equal(
     needsWebFallback({ missingHard: true }, q),
     true,
     "gaps still browse",
   );
-  const pin26 = findPowertrainCorrection(
-    "2026",
-    "Grand Design",
-    "Lineage Series M",
+}
+
+test("David live fail: 2027 Lineage M series about-ask locks Series M Class C 208HP", () => {
+  assertLineageSeriesMLock(
+    "I'd like to know about the 2027 Grand Design Lineage M series.",
+    "2027",
+    /lineage m series/i,
   );
-  assert.ok(pin26, "MY2026 Series M is in the catalog pin, not empty");
+});
+
+test("David live fail: 2026 Lineage M engine/HP locks Series M not fifth-wheel", () => {
+  assertLineageSeriesMLock(
+    "What engine and HP does a 2026 Grand Design Lineage M have?",
+    "2026",
+    /^Lineage M$/i,
+  );
 });
 
 test("unresolved named coach about-ask still fires web instead of a dealer dead-end", () => {
@@ -485,6 +523,8 @@ test("unresolved named coach about-ask still fires web instead of a dealer dead-
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(api, /wantsWebFallback/);
   assert.match(api, /executeWebResearch/);
+  assert.match(api, /buildChatGrounding/);
+  assert.match(api, /serverGrounded/);
 });
 
 test("catalog miss fires web without about-phrasing", () => {

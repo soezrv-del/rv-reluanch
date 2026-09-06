@@ -178,7 +178,7 @@ function researchInstructions(opts: {
     "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
     "Floorplan letters are labels only — do not decode bunks or a half-bath from the code.",
     opts.catalog
-      ? `Catalog lock (do not contradict these numbers):\n${opts.catalog}`
+      ? `Catalog lock (do not contradict these numbers). If this lock names engine / HP / class, the coach IS in the catalog — do not write "not in catalogs" or "wait for a brochure":\n${opts.catalog}`
       : "No catalog row was available. Search OEM / RVUSA / brochure sources for THAT year + make + model. If the web does not confirm a number, say UNKNOWN. Do not tell the user to go check the OEM site instead of researching.",
   ].join("\n");
 }

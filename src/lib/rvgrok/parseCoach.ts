@@ -61,7 +61,19 @@ export function parseSeriesAlias(
   if (m?.[1] && m[2]) return { family: m[1], code: m[2] };
   m = t.match(/^(.+?)\s+([a-z]{1,2})$/);
   if (m?.[1] && m[2]) return { family: m[1], code: m[2] };
+  // "Lineage M have" / "Lineage M, thanks" — keep the series letter, drop the tail.
+  m = t.match(/^(.+?)\s+([a-z]{1,2})\s+\S+/);
+  if (m?.[1] && m[2]) return { family: m[1], code: m[2] };
   return null;
+}
+
+/** Spoken "Lineage M series" is the same series as catalog "Lineage Series M". */
+export function seriesAliasEquals(a: string, b: string): boolean {
+  const sa = parseSeriesAlias(normName(a));
+  const sb = parseSeriesAlias(normName(b));
+  return Boolean(
+    sa && sb && sa.family === sb.family && sa.code === sb.code,
+  );
 }
 
 /** Pick the catalog model key for a spoken/typed name. Catalog-free. */
@@ -155,11 +167,39 @@ export function parseCoachFromText(text: string): {
       "oh",
       "hmm",
     ]);
+    // Predicate / question tail — "Lineage M have?" must not become "Lineage M have".
+    const stopAfterModel = new Set([
+      "have",
+      "has",
+      "had",
+      "having",
+      "does",
+      "do",
+      "did",
+      "is",
+      "are",
+      "was",
+      "were",
+      "with",
+      "for",
+      "that",
+      "which",
+      "what",
+      "when",
+      "and",
+      "but",
+      "or",
+      "please",
+      "thanks",
+      "thank",
+    ]);
     const words: string[] = [];
     for (const w of chunk) {
       if (fp && w.replace(/\s+/g, "") === floorplan) break;
       if (/^\d{4}$/.test(w)) continue;
-      if (skip.has(w.toLowerCase())) continue;
+      const lowerW = w.toLowerCase();
+      if (skip.has(lowerW)) continue;
+      if (words.length > 0 && stopAfterModel.has(lowerW)) break;
       // Keep "M" / "E" / "F" series letters — `w.length < 2` used to drop them
       // so "Lineage M series" collapsed to "Lineage series".
       if (w.length < 2 && !/^[A-Za-z]$/.test(w)) continue;

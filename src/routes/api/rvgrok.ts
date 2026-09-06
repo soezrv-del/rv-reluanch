@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
-import { appendGrounding } from "@/lib/rvgrok/grounding";
+import { appendGrounding, buildChatGrounding } from "@/lib/rvgrok/grounding";
 import {
   CHAT_WEB_SEARCH_TIMEOUT_MS,
   formatWebSearchInjection,
@@ -619,12 +619,24 @@ export const Route = createFileRoute("/api/rvgrok")({
 
         const agentMode = Boolean(body.agentMode);
         const feedbackContext = body.feedbackContext;
-        const catalogContext = body.catalogContext;
         const lastUser = [...messages].reverse().find((m) => m.role === "user");
         const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
 
+        // Server re-grounds the latest ask so a phone/API probe without
+        // client catalogContext still locks Lineage Series M (and friends).
+        // A resolved hard row must not browse into a "not in catalog" story.
+        const serverGrounded = buildChatGrounding({
+          query: lastPlain,
+          agentMode,
+        });
+        const catalogContext =
+          serverGrounded.block || body.catalogContext || "";
+        const wantsWebFallback = serverGrounded.identity
+          ? serverGrounded.needsWeb
+          : Boolean(body.wantsWebFallback);
+
         let webNotes: string | undefined;
-        if (body.wantsWebFallback) {
+        if (wantsWebFallback) {
           const researched = await executeWebResearch({
             apiKey: process.env.XAI_API_KEY,
             query: lastPlain.slice(0, 400),
