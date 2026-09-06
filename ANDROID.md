@@ -110,6 +110,7 @@ The live address was missing at sync time. Repeat step 3 with the real `https://
 1. **Build → Generate Signed Bundle / APK** → **Android App Bundle**
 2. Upload the `.aab` to Play Console → **Internal testing**
 3. Add testers by email
+4. Store listing → **Privacy policy** URL: `https://rv-reluanch.vercel.app/privacy.html` (do not use `https://rvfox.app/privacy.html` until that host serves the page)
 
 ---
 
