@@ -323,3 +323,20 @@ test("Coachmen Sportscoach SRS Super C Facts SoT is Class A diesel / ISB 340 —
   assert.equal(shownTq, "700 lb-ft");
   assertCustomerFacts(shown, shownTq);
 });
+
+test("Forest River fifth-wheel Facts SoT: 2026 spec-table quarantine + dated 2027 only where a family card exists", () => {
+  const block = src("rvData.ts");
+  const f0 = block.indexOf('\n  "Forest River": {');
+  const f1 = block.indexOf('\n  "Keystone": {');
+  const fr = block.slice(f0, f1);
+  const aw = fr.slice(fr.indexOf('    "Cherokee Arctic Wolf": {'), fr.indexOf("    Sandstorm: {"));
+  assert.match(aw, /"2026": \["27SGS", "285OPT", "287BH", "289PANO", "3250SUITE", "331BH", "3650SUITE", "3750SUITE", "387ML", "38DST", "38LEAH.G", "3950SUITE"\]/);
+  assert.doesNotMatch(aw, /"2026": .*"3800DECK"/);
+  assert.doesNotMatch(aw, /"2027":/);
+  const sab = fr.slice(fr.indexOf("    Sabre: {"), fr.indexOf('    "Cherokee Arctic Wolf": {'));
+  assert.match(sab, /"2027": \["32GKS", "32RK"/);
+  assert.doesNotMatch(sab, /"2027": .*"38DBL"/);
+  const col = fr.slice(fr.indexOf("    Columbus: {"), fr.indexOf("    Cardinal: {"));
+  assert.doesNotMatch(col, /"2027":/);
+});
+
