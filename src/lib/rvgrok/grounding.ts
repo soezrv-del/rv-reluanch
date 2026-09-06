@@ -29,7 +29,7 @@ import {
   honestTorqueLabel,
   isAmbiguousCatalogValue,
 } from "../rv/catalogHonesty";
-import { parseCoachFromText } from "./parseCoach";
+import { matchCatalogModelName, parseCoachFromText } from "./parseCoach";
 import type { RVSpec } from "../rv/rvTypes";
 import { needsWebFallback } from "./webIntent";
 
@@ -161,68 +161,15 @@ export function resolveCatalogMake(raw: string): string {
   return contains || raw.trim();
 }
 
-/**
- * Spoken "Lineage M" / "Lineage M series" ↔ catalog "Lineage Series M".
- * Letter/code must match so Series M never collapses onto Series E/F/VT/VP.
- */
-function parseSeriesAlias(
-  s: string,
-): { family: string; code: string } | null {
-  const t = norm(s);
-  if (!t) return null;
-  let m = t.match(/^(.+?)\s+series\s+([a-z]{1,3})$/);
-  if (m?.[1] && m[2]) return { family: m[1], code: m[2] };
-  m = t.match(/^(.+?)\s+([a-z]{1,3})\s+series$/);
-  if (m?.[1] && m[2]) return { family: m[1], code: m[2] };
-  m = t.match(/^(.+?)\s+([a-z]{1,2})$/);
-  if (m?.[1] && m[2]) return { family: m[1], code: m[2] };
-  return null;
-}
-
 /** Best catalog model name under a make. */
 export function resolveCatalogModel(make: string, rawModel: string): string {
-  const n = norm(rawModel);
-  if (!n) return rawModel.trim();
   const catalogMake = resolveCatalogMake(make);
   const live = peekCatalog()?.RV_DATA?.[catalogMake];
   const index = CATALOG_INDEX[catalogMake];
-  const names = [...new Set<string>([
+  return matchCatalogModelName(rawModel, [
     ...Object.keys(live || {}),
     ...Object.keys(index || {}),
-  ])];
-
-  for (const name of names) {
-    if (norm(name) === n) return name;
-  }
-
-  const spokenSeries = parseSeriesAlias(n);
-  if (spokenSeries) {
-    const hits = names.filter((name) => {
-      const catalogSeries = parseSeriesAlias(norm(name));
-      return (
-        !!catalogSeries &&
-        catalogSeries.family === spokenSeries.family &&
-        catalogSeries.code === spokenSeries.code
-      );
-    });
-    if (hits.length === 1) return hits[0]!;
-    if (hits.length > 1) {
-      return hits.find((h) => /\bseries\b/i.test(h)) || hits[0]!;
-    }
-  }
-
-  let best = rawModel.trim();
-  let bestLen = -1;
-  for (const name of names) {
-    const nn = norm(name);
-    if (nn.includes(n) || n.includes(nn)) {
-      if (nn.length > bestLen) {
-        best = name;
-        bestLen = nn.length;
-      }
-    }
-  }
-  return best;
+  ]);
 }
 
 /**

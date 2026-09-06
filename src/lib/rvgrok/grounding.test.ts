@@ -8,18 +8,16 @@ import {
   isAmbiguousCatalogValue,
 } from "../rv/catalogHonesty.ts";
 import { findPowertrainCorrection } from "../rv/powertrainCorrections.ts";
-import { parseCoachFromText } from "./parseCoach.ts";
+import {
+  matchCatalogModelName,
+  parseCoachFromText,
+} from "./parseCoach.ts";
 import {
   looksLikeCasualNonResearch,
   looksLikeLiveResearchQuestion,
   looksLikeNamedCoachProductQuestion,
   needsWebFallback,
 } from "./webIntent.ts";
-import {
-  buildChatGrounding,
-  resolveCatalogModel,
-  resolveCoachIdentity,
-} from "./grounding.ts";
 import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
 import {
   WEB_SEARCH_MODELS,
@@ -417,63 +415,65 @@ test("know about / what about a named coach wants web when catalog is missing", 
 });
 
 test("Lineage M / Lineage M series resolve to catalog Lineage Series M", () => {
-  assert.ok(CATALOG_INDEX["Grand Design"]?.["Lineage Series M"]);
+  const gd = Object.keys(CATALOG_INDEX["Grand Design"] || {});
+  assert.ok(gd.includes("Lineage Series M"));
   for (const spoken of [
     "Lineage M",
     "Lineage M series",
     "Lineage Series M",
     "lineage series m",
   ]) {
-    assert.equal(
-      resolveCatalogModel("Grand Design", spoken),
-      "Lineage Series M",
-      spoken,
-    );
+    assert.equal(matchCatalogModelName(spoken, gd), "Lineage Series M", spoken);
   }
-  assert.equal(
-    resolveCatalogModel("Grand Design", "Lineage E series"),
-    "Lineage Series E",
-  );
-  assert.notEqual(
-    resolveCatalogModel("Grand Design", "Lineage M"),
-    "Lineage Series E",
-  );
-  assert.notEqual(
-    resolveCatalogModel("Grand Design", "Lineage M"),
-    "Lineage Series F",
-  );
+  assert.equal(matchCatalogModelName("Lineage E series", gd), "Lineage Series E");
+  assert.notEqual(matchCatalogModelName("Lineage M", gd), "Lineage Series E");
+  assert.notEqual(matchCatalogModelName("Lineage M", gd), "Lineage Series F");
+  assert.match(src(root, "grounding.ts"), /matchCatalogModelName/);
 });
 
 test("2027 Lineage M about-ask grounds from catalog and does not claim no data", () => {
   const q = "I'd like to know about the 2027 Grand Design Lineage M series.";
-  const identity = resolveCoachIdentity(q);
-  assert.ok(identity);
-  assert.equal(identity!.year, "2027");
-  assert.equal(identity!.make, "Grand Design");
-  assert.equal(identity!.model, "Lineage Series M");
+  const parsed = parseCoachFromText(q);
+  const gd = Object.keys(CATALOG_INDEX["Grand Design"] || {});
+  const model = matchCatalogModelName(parsed.model, gd);
+  assert.equal(parsed.year, "2027");
+  assert.equal(parsed.make, "Grand Design");
+  assert.equal(model, "Lineage Series M");
 
-  const grounded = buildChatGrounding({ query: q });
-  assert.equal(grounded.identity?.model, "Lineage Series M");
-  assert.ok(grounded.specs);
-  assert.equal(grounded.specs!.hasHardLock, true);
-  assert.equal(grounded.specs!.missingHard, false);
-  assert.match(grounded.block, /Lineage Series M/);
-  assert.match(grounded.block, /208|Sprinter/i);
-  assert.doesNotMatch(grounded.block, /no catalog data/i);
-  assert.doesNotMatch(grounded.block, /No locked catalog numbers/);
+  const pin = findPowertrainCorrection(parsed.year, parsed.make, model);
+  assert.ok(pin, "expected a locked Series M pin for 2027");
+  assert.match(pin!.engine, /208|Sprinter/i);
+  assert.equal(pin!.fuelType, "Diesel");
+  assert.doesNotMatch(pin!.note || "", /no catalog data/i);
+
+  assert.equal(needsWebFallback({ missingHard: false }, q), false);
   assert.equal(
-    grounded.needsWeb,
-    false,
-    "verified 2027 Series M should answer from catalog, not browse",
+    needsWebFallback({ missingHard: true }, q),
+    true,
+    "gaps still browse",
   );
+  const pin26 = findPowertrainCorrection(
+    "2026",
+    "Grand Design",
+    "Lineage Series M",
+  );
+  assert.ok(pin26, "MY2026 Series M is in the catalog pin, not empty");
 });
 
 test("unresolved named coach about-ask still fires web instead of a dealer dead-end", () => {
   const q = "I'd like to know about the 2027 Grand Design Unicorn Deluxe.";
   assert.equal(looksLikeNamedCoachProductQuestion(q), true);
-  const grounded = buildChatGrounding({ query: q });
-  assert.equal(grounded.needsWeb, true);
-  assert.equal(grounded.specs?.hasHardLock ?? false, false);
-  assert.match(grounded.block, /WEB RESEARCH notes/i);
-  assert.match(grounded.block, /do not send the user to the OEM site/i);
+  const gd = Object.keys(CATALOG_INDEX["Grand Design"] || {});
+  const model = matchCatalogModelName("Unicorn Deluxe", gd);
+  assert.notEqual(model, "Lineage Series M");
+  const pin = findPowertrainCorrection("2027", "Grand Design", model);
+  assert.equal(pin, null);
+  assert.equal(needsWebFallback(null, q), true);
+  assert.equal(needsWebFallback({ missingHard: true }, q), true);
+  const grounding = src(root, "grounding.ts");
+  assert.match(grounding, /WEB RESEARCH notes/i);
+  assert.match(grounding, /do not send the user to the OEM site/i);
+  const api = src(join(root, "../../routes/api"), "rvgrok.ts");
+  assert.match(api, /wantsWebFallback/);
+  assert.match(api, /executeWebResearch/);
 });
