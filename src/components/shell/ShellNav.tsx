@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
-import { ShellNavContext, type ShellNavValue, type CalSeed } from "./ShellNavContext";
+import {
+  ShellNavContext,
+  type ShellNavValue,
+  type CalSeed,
+  type TripsHandoff,
+} from "./ShellNavContext";
 
-export type { ShellNavValue, CalSeed };
+export type { ShellNavValue, CalSeed, TripsHandoff };
 
 /** Provider only — hooks live in `ShellNavContext.ts` for Fast Refresh. */
 export function ShellNavProvider({

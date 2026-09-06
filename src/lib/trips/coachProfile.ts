@@ -13,7 +13,7 @@ export type DimSources = {
   weight: DimSource;
 };
 
-export type CoachSeedSource = "locked" | "facts" | "saved" | "manual";
+export type CoachSeedSource = "locked" | "facts" | "saved" | "manual" | "tow";
 
 export type CoachProfile = TripCoach & {
   year: string;
