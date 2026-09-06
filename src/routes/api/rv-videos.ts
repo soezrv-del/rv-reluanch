@@ -8,7 +8,6 @@ import {
   rankRvVideos,
   RELATED_NOTE,
   RV_VIDEO_LIBRARY_CHANNEL_ID,
-  RV_VIDEO_LIBRARY_HANDLE,
   RV_VIDEO_LIBRARY_URL,
   youtubeWatchUrl,
   type RvVideoHit,
@@ -19,7 +18,8 @@ import {
  * GET /api/rv-videos?year=2023&make=Tiffin&model=Allegro%20Bus&floorplan=45OPP
  *
  * Opt-in only. Facts must never call this on report open.
- * YouTube Data API v3 search.list scoped to @RVVideoLibrary.
+ * YouTube Data API v3 search.list scoped to the fixed @RVVideoLibrary
+ * channelId UCaAH7nANvUhdPWN93uQ6mcA (David-confirmed). No handle resolve.
  *
  * Server-only key: process.env.YOUTUBE_API_KEY (Vercel Production + Preview).
  * Never VITE_ — that would leak the key to the client.
@@ -27,13 +27,11 @@ import {
  */
 
 const YT_SEARCH = "https://www.googleapis.com/youtube/v3/search";
-const YT_CHANNELS = "https://www.googleapis.com/youtube/v3/channels";
 const CACHE_TTL_MS = 20 * 60 * 1000;
 const MAX_RESULTS = 8;
 const SHOW_RESULTS = 5;
 
 const cache = new Map<string, { at: number; data: RvVideosOk }>();
-let channelIdCache: string | null = null;
 
 function getKey(): string | null {
   const key = String(process.env.YOUTUBE_API_KEY ?? "").trim();
@@ -65,32 +63,6 @@ async function fetchJson(
   } finally {
     clearTimeout(timer);
   }
-}
-
-/** Resolve @RVVideoLibrary once per process; fall back to the verified UC id. */
-async function resolveChannelId(apiKey: string): Promise<string> {
-  if (channelIdCache) return channelIdCache;
-  try {
-    const url = new URL(YT_CHANNELS);
-    url.searchParams.set("part", "id");
-    url.searchParams.set("forHandle", RV_VIDEO_LIBRARY_HANDLE);
-    url.searchParams.set("key", apiKey);
-    const { ok, json } = await fetchJson(url.toString());
-    const items = Array.isArray(json.items) ? json.items : [];
-    const first = items[0];
-    const id =
-      first && typeof first === "object"
-        ? String((first as { id?: unknown }).id || "")
-        : "";
-    if (ok && /^UC[\w-]{20,}$/.test(id)) {
-      channelIdCache = id;
-      return id;
-    }
-  } catch {
-    /* use known id */
-  }
-  channelIdCache = RV_VIDEO_LIBRARY_CHANNEL_ID;
-  return channelIdCache;
 }
 
 function pickThumb(snippet: Record<string, unknown>): string {
@@ -127,14 +99,10 @@ function mapItems(raw: unknown[]): RvVideoHit[] {
   return out;
 }
 
-async function searchChannel(
-  apiKey: string,
-  channelId: string,
-  q: string,
-): Promise<RvVideoHit[]> {
+async function searchChannel(apiKey: string, q: string): Promise<RvVideoHit[]> {
   const url = new URL(YT_SEARCH);
   url.searchParams.set("part", "snippet");
-  url.searchParams.set("channelId", channelId);
+  url.searchParams.set("channelId", RV_VIDEO_LIBRARY_CHANNEL_ID);
   url.searchParams.set("q", q);
   url.searchParams.set("type", "video");
   url.searchParams.set("maxResults", String(MAX_RESULTS));
@@ -226,10 +194,9 @@ export const Route = createFileRoute("/api/rv-videos")({
         }
 
         try {
-          const channelId = await resolveChannelId(apiKey);
-          let hits = await searchChannel(apiKey, channelId, query);
+          let hits = await searchChannel(apiKey, query);
           if (!hits.length && core && core !== query) {
-            hits = await searchChannel(apiKey, channelId, core);
+            hits = await searchChannel(apiKey, core);
           }
           const ranked = rankRvVideos(hits, query).slice(0, SHOW_RESULTS);
           const data = payload(query, ranked, false);

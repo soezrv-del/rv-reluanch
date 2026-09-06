@@ -181,7 +181,7 @@ test("Facts report only fetches videos after opt-in; key stays server-side", () 
   assert.match(api, /search\.list|youtube\/v3\/search/);
   assert.match(api, /channelId/);
   assert.match(api, /RV_VIDEO_LIBRARY_CHANNEL_ID/);
-  assert.match(api, /RV_VIDEO_LIBRARY_HANDLE/);
+  assert.doesNotMatch(api, /forHandle|resolveChannelId|youtube\/v3\/channels/);
   assert.equal(RV_VIDEO_LIBRARY_CHANNEL_ID, "UCaAH7nANvUhdPWN93uQ6mcA");
   assert.equal(RV_VIDEO_LIBRARY_HANDLE, "RVVideoLibrary");
   assert.match(api, /MISSING_KEY_MESSAGE/);

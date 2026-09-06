@@ -9,7 +9,7 @@ import { coachTowRole } from "./activeCoach.ts";
 
 export const RV_VIDEO_LIBRARY_HANDLE = "RVVideoLibrary";
 export const RV_VIDEO_LIBRARY_URL = "https://www.youtube.com/@RVVideoLibrary";
-/** Verified from youtube.com/@RVVideoLibrary (browseId / externalId). */
+/** David-confirmed @RVVideoLibrary id — use this constant, do not resolve live. */
 export const RV_VIDEO_LIBRARY_CHANNEL_ID = "UCaAH7nANvUhdPWN93uQ6mcA";
 
 export const MISSING_KEY_MESSAGE = "Video lookup not configured.";
