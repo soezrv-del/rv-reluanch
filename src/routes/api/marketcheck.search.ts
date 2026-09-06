@@ -2,10 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { McListingCard, McSearchResult } from "@/lib/marketcheck/types";
+import {
+  formatYearRange,
+  medianListingPrice,
+  resolveSearchYears,
+} from "@/lib/marketcheck/yearRange";
 
 /**
  * GET /api/marketcheck/search
  *   ?year=2022&make=Fleetwood&model=Discovery&zip=98374&radius=100&rows=8
+ *   ?year_range=2020-2024&make=Fleetwood&model=Discovery&zip=98374
+ *   ?year_min=2020&year_max=2024&make=Fleetwood&model=Discovery&zip=98374
 
  *
  * Proxies MarketCheck RV Inventory Search. API key stays server-side.
@@ -127,15 +134,7 @@ function mapListing(raw: Record<string, unknown>): McListingCard {
 }
 
 function medianPrices(listings: McListingCard[]): number | null {
-  const prices = listings
-    .map((l) => l.price)
-    .filter((p): p is number => p != null && p > 0)
-    .sort((a, b) => a - b);
-  if (!prices.length) return null;
-  const mid = Math.floor(prices.length / 2);
-  return prices.length % 2
-    ? prices[mid]!
-    : Math.round((prices[mid - 1]! + prices[mid]!) / 2);
+  return medianListingPrice(listings.map((l) => l.price));
 }
 
 export const Route = createFileRoute("/api/marketcheck/search")({
@@ -143,7 +142,12 @@ export const Route = createFileRoute("/api/marketcheck/search")({
     handlers: {
       GET: async ({ request }) => {
         const url = new URL(request.url);
-        const year = url.searchParams.get("year")?.trim() || "";
+        const years = resolveSearchYears({
+          year: url.searchParams.get("year"),
+          yearRange: url.searchParams.get("year_range"),
+          yearMin: url.searchParams.get("year_min"),
+          yearMax: url.searchParams.get("year_max"),
+        });
         const make = url.searchParams.get("make")?.trim() || "";
         const model = url.searchParams.get("model")?.trim() || "";
         const zip = (url.searchParams.get("zip") || "").replace(/\D/g, "");
@@ -158,11 +162,21 @@ export const Route = createFileRoute("/api/marketcheck/search")({
           Math.max(1, Number(url.searchParams.get("rows") || 8) || 8),
         );
 
-        if (!year || !make || !model) {
+        if (!years.ok) {
           return Response.json(
             {
               ok: false,
-              error: "year, make, and model are required",
+              error: years.error,
+              code: "bad_request",
+            },
+            { status: 400 },
+          );
+        }
+        if (!make || !model) {
+          return Response.json(
+            {
+              ok: false,
+              error: "make and model are required",
               code: "bad_request",
             },
             { status: 400 },
@@ -192,7 +206,10 @@ export const Route = createFileRoute("/api/marketcheck/search")({
           );
         }
 
-        const cacheKey = `${year}|${make.toLowerCase()}|${model.toLowerCase()}|${zip}|${radius}|${rows}`;
+        const yearKey = years.useRange
+          ? `r:${formatYearRange(years.range)}`
+          : `y:${years.year ?? formatYearRange(years.range)}`;
+        const cacheKey = `${yearKey}|${make.toLowerCase()}|${model.toLowerCase()}|${zip}|${radius}|${rows}`;
         const hit = cache.get(cacheKey);
         if (hit && Date.now() - hit.at < TTL_MS) {
           return Response.json({ ...hit.data, cached: true });
@@ -200,7 +217,11 @@ export const Route = createFileRoute("/api/marketcheck/search")({
 
         const mc = new URL(`${MC_BASE}/v2/search/rv/active`);
         mc.searchParams.set("api_key", apiKey);
-        mc.searchParams.set("year", year);
+        if (years.useRange) {
+          mc.searchParams.set("year_range", formatYearRange(years.range));
+        } else if (years.year) {
+          mc.searchParams.set("year", years.year);
+        }
         mc.searchParams.set("make", make);
         mc.searchParams.set("model", model);
         mc.searchParams.set("zip", zip);
@@ -259,7 +280,12 @@ export const Route = createFileRoute("/api/marketcheck/search")({
             listings,
             radius,
             zip,
-            query: { year, make, model },
+            query: {
+              year: years.year,
+              make,
+              model,
+              yearRange: years.range,
+            },
             cached: false,
             medianPrice: medianPrices(listings),
           };
