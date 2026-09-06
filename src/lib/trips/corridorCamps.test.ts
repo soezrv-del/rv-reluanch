@@ -360,7 +360,7 @@ test("DEMO_CAMPS is quarantined behind sample — not the default camps path", (
   assert.match(app, /SAMPLE_CAMPS/);
   const liveBlock = app.slice(
     app.indexOf("<CampsAlongRoute"),
-    app.indexOf("data-trips-tools"),
+    app.indexOf("data-sample-camps"),
   );
   assert.match(liveBlock, /CampsAlongRoute/);
   assert.match(liveBlock, /Sample pads/);

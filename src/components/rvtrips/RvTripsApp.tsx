@@ -180,6 +180,7 @@ export function RvTripsApp() {
   const [showSamplePack, setShowSamplePack] = useState(false);
   const [packDraft, setPackDraft] = useState("");
   const [navArmed, setNavArmed] = useState(false);
+  const [planOpen, setPlanOpen] = useState(true);
   const follow = useNavFollow(navArmed);
   const shellNav = useShellNavOptional();
 
@@ -501,6 +502,7 @@ export function RvTripsApp() {
           setOsrm(data);
           setRoute(next);
           setRouteStatus("live");
+          setPlanOpen(false);
         })
         .catch((e) => {
           if (ctrl.signal.aborted) return;
@@ -1139,29 +1141,45 @@ export function RvTripsApp() {
                 ) : null}
               </div>
             </div>
-            {displayCoach ? (
+            <div className="flex shrink-0 items-center gap-2" data-trips-tools>
               <button
                 type="button"
-                onClick={() => setTool("profile")}
-                className={cn(
-                  "inline-flex min-h-11 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide",
-                  locked
-                    ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
-                    : "border-sky-400/40 bg-sky-500/15 text-sky-200",
-                )}
+                onClick={() => setTool("dumps")}
+                className="min-h-11 px-1 text-[11px] font-semibold text-white/45"
               >
-                {locked ? <Lock className="size-3" /> : <Unlock className="size-3" />}
-                {profileBadge}
+                Dumps
               </button>
-            ) : (
               <button
                 type="button"
-                onClick={() => setTool("profile")}
-                className="min-h-11 text-[11px] font-semibold text-white/55"
+                onClick={() => setTool("pack")}
+                className="min-h-11 px-1 text-[11px] font-semibold text-white/45"
               >
-                Profile
+                Pack
               </button>
-            )}
+              {displayCoach ? (
+                <button
+                  type="button"
+                  onClick={() => setTool("profile")}
+                  className={cn(
+                    "inline-flex min-h-11 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide",
+                    locked
+                      ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
+                      : "border-sky-400/40 bg-sky-500/15 text-sky-200",
+                  )}
+                >
+                  {locked ? <Lock className="size-3" /> : <Unlock className="size-3" />}
+                  {profileBadge}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setTool("profile")}
+                  className="min-h-11 text-[11px] font-semibold text-white/55"
+                >
+                  Profile
+                </button>
+              )}
+            </div>
           </div>
         </header>
 
@@ -1279,6 +1297,20 @@ export function RvTripsApp() {
           {/* ── NAVIGATE ── */}
           {!tool ? (
             <>
+              {routeStatus === "live" && !planOpen ? (
+                <button
+                  type="button"
+                  onClick={() => setPlanOpen(true)}
+                  className="glass-prestige flex min-h-11 w-full items-center gap-2 rounded-[1.25rem] px-3.5 py-3 text-left"
+                  aria-label="Edit trip"
+                >
+                  <Navigation className="size-4 shrink-0 text-blue" />
+                  <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-white">
+                    {corridor || "Route"}
+                  </span>
+                  <span className="text-[11px] font-bold text-blue">Edit</span>
+                </button>
+              ) : (
               <section className="glass-prestige space-y-2.5 rounded-[1.25rem] p-3.5">
                 {originPlace && !originOpen ? (
                   <button
@@ -1484,6 +1516,7 @@ export function RvTripsApp() {
                   </div>
                 ) : null}
               </section>
+              )}
 
               {routeStatus === "loading" ? (
                 <section className="glass-prestige rounded-[1.25rem] px-4 py-6">
@@ -1493,7 +1526,7 @@ export function RvTripsApp() {
                 </section>
               ) : routeStatus === "live" && liveStats && osrm ? (
                 <section
-                  className="glass-prestige space-y-5 rounded-[1.25rem] p-4"
+                  className="glass-prestige space-y-3 rounded-[1.25rem] p-4"
                   data-route-results
                   data-route-miles={String(liveStats.miles)}
                   data-route-drive={`${liveStats.driveHours}h ${String(liveStats.driveMinutes).padStart(2, "0")}m`}
@@ -1576,6 +1609,53 @@ export function RvTripsApp() {
                     followStatus={follow.status}
                   />
 
+                  <button
+                    type="button"
+                    disabled={!liveDirections?.length}
+                    onClick={() => {
+                      if (navArmed) {
+                        setNavArmed(false);
+                        try {
+                          window.speechSynthesis?.cancel();
+                        } catch {
+                          /* */
+                        }
+                        return;
+                      }
+                      setNavArmed(true);
+                      const step = liveDirections?.[0];
+                      if (step) {
+                        speakNav(
+                          `Navigation started. ${step.instruction}. ${step.mi} miles.`,
+                        );
+                      }
+                    }}
+                    className={cn(
+                      "flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-[16px] font-bold transition disabled:opacity-40",
+                      navArmed
+                        ? "border border-ruby/80 bg-ruby text-white shadow-[0_0_28px_rgba(212,37,53,0.55)]"
+                        : "bg-blue text-white shadow-[0_0_28px_rgba(80,160,255,0.4)]",
+                    )}
+                  >
+                    <Navigation className="size-5" />
+                    {navArmed ? "Stop navigation" : "Start Turn-by-Turn"}
+                  </button>
+                  {navArmed ? (
+                    follow.error ? (
+                      <p data-follow-note className="text-[11px] leading-snug text-amber">
+                        {follow.error}
+                      </p>
+                    ) : follow.status === "live" ? (
+                      <p data-follow-note className="text-[11px] text-blue">
+                        Map follows your GPS.
+                      </p>
+                    ) : (
+                      <p data-follow-note className="text-[11px] text-white/75">
+                        Finding GPS…
+                      </p>
+                    )
+                  ) : null}
+
                   <FuelAlongRoute
                     status={fuelStatus}
                     result={fuel}
@@ -1644,44 +1724,6 @@ export function RvTripsApp() {
                 </p>
               ) : null}
 
-              {(routeStatus === "live" || routeStatus === "loading") && (
-                <button
-                  type="button"
-                  disabled={routeStatus !== "live" || !liveDirections?.length}
-                  onClick={() => {
-                    if (navArmed) {
-                      setNavArmed(false);
-                      try {
-                        window.speechSynthesis?.cancel();
-                      } catch {
-                        /* */
-                      }
-                      return;
-                    }
-                    setNavArmed(true);
-                    const step = liveDirections?.[0];
-                    if (step) {
-                      speakNav(
-                        `Navigation started. ${step.instruction}. ${step.mi} miles.`,
-                      );
-                    }
-                  }}
-                  className={cn(
-                    "flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-[16px] font-bold transition disabled:opacity-40",
-                    navArmed
-                      ? "border border-ruby/80 bg-ruby text-white shadow-[0_0_28px_rgba(212,37,53,0.55)]"
-                      : "bg-blue text-white shadow-[0_0_28px_rgba(80,160,255,0.4)]",
-                  )}
-                >
-                  <Navigation className="size-5" />
-                  {navArmed
-                    ? "Stop navigation"
-                    : routeStatus === "live" && liveDirections?.length
-                      ? "Start Turn-by-Turn"
-                      : "Calculating…"}
-                </button>
-              )}
-
               {routeStatus === "live" && !displayCoach ? (
                 <button
                   type="button"
@@ -1691,42 +1733,6 @@ export function RvTripsApp() {
                   Add an RV profile?
                 </button>
               ) : null}
-
-              {navArmed ? (
-                follow.error ? (
-                  <p data-follow-note className="px-1 text-[11px] leading-snug text-amber">
-                    {follow.error}
-                  </p>
-                ) : follow.status === "live" ? (
-                  <p data-follow-note className="px-1 text-[11px] text-blue">
-                    Map follows your GPS.
-                  </p>
-                ) : (
-                  <p data-follow-note className="px-1 text-[11px] text-white/75">
-                    Finding GPS…
-                  </p>
-                )
-              ) : null}
-
-              <div
-                className="flex items-center justify-end gap-4 px-1"
-                data-trips-tools
-              >
-                <button
-                  type="button"
-                  onClick={() => setTool("dumps")}
-                  className="min-h-11 text-[11px] font-semibold text-white/45"
-                >
-                  Dumps
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTool("pack")}
-                  className="min-h-11 text-[11px] font-semibold text-white/45"
-                >
-                  Pack
-                </button>
-              </div>
 
               {displayCoach &&
               originPlace &&
