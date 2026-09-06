@@ -130,6 +130,12 @@ test("Navigate results sheet uses live stats and live camps — not DEMO pads", 
   assert.match(ui, /FuelAlongRoute/);
   assert.match(ui, /RouteBasemap/);
   assert.match(ui, /\/api\/fuel/);
+  assert.doesNotMatch(ui, /role="tablist"/);
+  assert.doesNotMatch(ui, /GUIDANCE · STEP/);
+  assert.doesNotMatch(ui, />\s*Next\s*</);
+  assert.doesNotMatch(ui, /navStepIdx/);
+  assert.match(ui, /setTool\("profile"\)/);
+  assert.match(ui, /data-trips-tools/);
   assert.doesNotMatch(ui, /RouteLinePreview/);
   assert.doesNotMatch(ui, /useState\(DEMO_ROUTE\)/);
   assert.doesNotMatch(ui, /\.\.\.DEMO_ROUTE/);

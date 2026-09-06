@@ -338,12 +338,13 @@ test("Profile labels brochure/catalog/estimate; Pack is sample-opt-in", () => {
   assert.match(ui, /SAMPLE_PACK/);
   assert.match(ui, /showSamplePack/);
   assert.match(ui, /Sample list — not your gear/);
-  assert.match(ui, /label: "Pack"/);
+  assert.match(ui, /setTool\("pack"\)/);
+  assert.match(ui, /tool === "pack"/);
   assert.doesNotMatch(ui, /Pack List/);
   assert.doesNotMatch(ui, /DEMO_PACK/);
   assert.doesNotMatch(ui, /useState\(DEMO_PACK\)/);
-  assert.match(ui, /rank: "primary"/);
-  assert.match(ui, /rank: "tool"/);
+  assert.doesNotMatch(ui, /role="tablist"/);
+  assert.doesNotMatch(ui, /SUB_TABS/);
 });
 
 test("loadLockedProfile keeps a coach without floorplan", () => {

@@ -342,9 +342,11 @@ test("GET /api/camps stays on HERE/Overpass and never /api/route", () => {
   assert.doesNotMatch(api, /\/api\/route/);
   assert.match(app, /\/api\/camps/);
   assert.doesNotMatch(app, /\/api\/route/);
-  assert.match(app, /label: "Camps"/);
+  assert.match(app, /CampsAlongRoute/);
   assert.doesNotMatch(app, /label: "Demo camps"/);
   assert.match(ui, /data-camps-along-route/);
+  assert.match(ui, /data-along-open/);
+  assert.match(ui, /useState\(false\)/);
   assert.doesNotMatch(ui, /DEMO_CAMPS/);
   assert.doesNotMatch(api, /RATEAPI_MODE|rvData/);
 });
@@ -357,8 +359,8 @@ test("DEMO_CAMPS is quarantined behind sample — not the default camps path", (
   assert.match(app, /showSampleCamps/);
   assert.match(app, /SAMPLE_CAMPS/);
   const liveBlock = app.slice(
-    app.indexOf("sub === \"campgrounds\""),
-    app.indexOf("sub === \"dumps\""),
+    app.indexOf("<CampsAlongRoute"),
+    app.indexOf("data-sample-camps"),
   );
   assert.match(liveBlock, /CampsAlongRoute/);
   assert.match(liveBlock, /Sample pads/);

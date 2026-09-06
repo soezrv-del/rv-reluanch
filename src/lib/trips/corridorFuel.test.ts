@@ -284,4 +284,10 @@ test("GET /api/fuel stays on HERE/Overpass and never /api/route", () => {
   assert.match(app, /\/api\/fuel/);
   assert.doesNotMatch(app, /\/api\/route/);
   assert.doesNotMatch(api, /RATEAPI_MODE|rvData/);
+  const fuelUi = readFileSync(
+    join(root, "../../components/rvtrips/FuelAlongRoute.tsx"),
+    "utf8",
+  );
+  assert.match(fuelUi, /data-along-open/);
+  assert.match(fuelUi, /useState\(false\)/);
 });

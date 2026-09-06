@@ -157,6 +157,9 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(ui, /campStops=\{camps\?\.camps\}/);
   assert.match(ui, /FuelAlongRoute/);
   assert.match(ui, /fuelStops=\{fuel\?\.stops\}/);
+  assert.doesNotMatch(ui, /GUIDANCE · STEP/);
+  assert.doesNotMatch(ui, /navStepIdx/);
+  assert.doesNotMatch(ui, />\s*Next\s*</);
   assert.doesNotMatch(ui, /["'`]\/api\/route/);
   assert.doesNotMatch(ui, /RATEAPI|rvData\.live/);
 
