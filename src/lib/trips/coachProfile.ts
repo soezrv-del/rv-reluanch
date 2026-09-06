@@ -105,7 +105,8 @@ export function clearLockedProfile() {
   }
 }
 
-function heightForType(type: string): number {
+/** Class-family height only. Unknown / custom types return null — never invent 12.5. */
+function heightForType(type: string): number | null {
   const t = type.toLowerCase();
   if (t.includes("super c")) return 13.0;
   if (
@@ -119,13 +120,26 @@ function heightForType(type: string): number {
   if (t.includes("5th") || t.includes("fifth")) return 13.2;
   if (t.includes("toy")) return 13.0;
   if (t.includes("trailer") || t.includes("travel")) return 11.2;
-  return 12.5;
+  return null;
 }
 
-function widthForType(type: string): number {
+/** Class-family width only. Unknown / custom types return null — never invent 8.5. */
+function widthForType(type: string): number | null {
   const t = type.toLowerCase();
   if (t.includes("class b")) return 7.5;
-  return 8.5;
+  if (
+    t.includes("class a") ||
+    t.includes("class c") ||
+    t.includes("super c") ||
+    t.includes("diesel pusher") ||
+    t.includes("5th") ||
+    t.includes("fifth") ||
+    t.includes("toy") ||
+    t.includes("trailer") ||
+    t.includes("travel")
+  )
+    return 8.5;
+  return null;
 }
 
 function inchesToFt(inches: number): number {
@@ -146,10 +160,30 @@ export function anyDimEstimated(sources?: DimSources | null): boolean {
   );
 }
 
+/** True only when a filled number is a class/floorplan heuristic — not empty fields. */
+export function anyFilledDimEstimated(
+  p: {
+    heightFt: number;
+    lengthFt: number;
+    widthFt: number;
+    weightLbs: number;
+    dimSources?: DimSources | null;
+  },
+): boolean {
+  const s = p.dimSources;
+  if (!s) return false;
+  return (
+    (p.heightFt > 0 && s.height === "estimate") ||
+    (p.lengthFt > 0 && s.length === "estimate") ||
+    (p.widthFt > 0 && s.width === "estimate") ||
+    (p.weightLbs > 0 && s.weight === "estimate")
+  );
+}
+
 /**
  * Pick height / length / width / weight from brochure → catalog → Facts →
- * existing class/floorplan heuristic. Never invent a number that is not one
- * of those sources.
+ * labeled class/floorplan heuristic. Never invent a number that is not one
+ * of those sources — no dummy range midpoints, no unknown-type defaults.
  */
 export function dimsFromKnownSources(opts: {
   type: string;
@@ -194,9 +228,12 @@ export function dimsFromKnownSources(opts: {
   } else if (positive(catalog?.exteriorHeightIn)) {
     heightFt = inchesToFt(catalog.exteriorHeightIn);
     heightSrc = "catalog";
-  } else if (type) {
-    heightFt = heightForType(type);
-    heightSrc = "estimate";
+  } else {
+    const heuristic = heightForType(type);
+    if (positive(heuristic ?? undefined)) {
+      heightFt = heuristic as number;
+      heightSrc = "estimate";
+    }
   }
 
   let widthFt = 0;
@@ -207,9 +244,12 @@ export function dimsFromKnownSources(opts: {
   } else if (positive(catalog?.exteriorWidthIn)) {
     widthFt = inchesToFt(catalog.exteriorWidthIn);
     widthSrc = "catalog";
-  } else if (type) {
-    widthFt = widthForType(type);
-    widthSrc = "estimate";
+  } else {
+    const heuristic = widthForType(type);
+    if (positive(heuristic ?? undefined)) {
+      widthFt = heuristic as number;
+      widthSrc = "estimate";
+    }
   }
 
   let lengthFt = 0;
@@ -228,36 +268,38 @@ export function dimsFromKnownSources(opts: {
     if (positive(fromCode ?? undefined)) {
       lengthFt = fromCode as number;
       lengthSrc = "estimate";
-    } else {
-      lengthFt = Math.round((lengthRange[0] + lengthRange[1]) / 2);
-      lengthSrc = "estimate";
     }
-  } else if (lengthRange) {
-    lengthFt = Math.round((lengthRange[0] + lengthRange[1]) / 2);
-    lengthSrc = "estimate";
   }
 
   let weightLbs = 0;
   let weightSrc: DimSource = "estimate";
-  if (positive(facts?.gvwrLbs)) {
-    weightLbs = Math.round(facts.gvwrLbs);
-    weightSrc = "facts";
-  } else if (positive(facts?.uvwLbs)) {
-    weightLbs = Math.round(facts.uvwLbs);
-    weightSrc = "facts";
-  } else if (positive(oem?.gvwrLbs)) {
+  if (positive(oem?.gvwrLbs)) {
     weightLbs = Math.round(oem.gvwrLbs);
     weightSrc = "brochure";
   } else if (positive(catalog?.gvwrLbs)) {
     weightLbs = Math.round(catalog.gvwrLbs);
     weightSrc = "catalog";
-  } else if (weightRange) {
-    const w = weightForFloorplan(floorplan, weightRange, lengthRange ?? [20, 40], {
-      make: opts.make,
-      model: opts.model,
-    });
-    weightLbs = Math.round(w.mid);
-    weightSrc = "estimate";
+  } else if (positive(facts?.gvwrLbs)) {
+    weightLbs = Math.round(facts.gvwrLbs);
+    weightSrc = "facts";
+  } else if (positive(facts?.uvwLbs)) {
+    weightLbs = Math.round(facts.uvwLbs);
+    weightSrc = "facts";
+  } else if (floorplan && weightRange) {
+    const fromCode = lengthRange
+      ? lengthFtFromFloorplan(floorplan, lengthRange, {
+          make: opts.make,
+          model: opts.model,
+        })
+      : null;
+    if (fromCode != null) {
+      const w = weightForFloorplan(floorplan, weightRange, lengthRange ?? [20, 40], {
+        make: opts.make,
+        model: opts.model,
+      });
+      weightLbs = Math.round(w.mid);
+      weightSrc = "estimate";
+    }
   }
 
   return {

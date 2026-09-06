@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Bookmark,
-  ChevronRight,
   Droplets,
   ExternalLink,
   ListChecks,
@@ -20,8 +19,8 @@ import {
 import { cn } from "@/lib/utils";
 import { RVTRIPS_AMERICA_BACKDROP } from "@/assets/tripMedia";
 import {
-  DEMO_PACK,
   SAMPLE_CAMPS,
+  SAMPLE_PACK,
   formatDrive,
   formatMiles,
   type TripAlert,
@@ -43,7 +42,6 @@ import {
   tripRouteFromLive,
 } from "@/lib/trips/routeResults";
 import {
-  anyDimEstimated,
   clearLockedProfile,
   coachIdentityKey,
   coachIsReady,
@@ -56,6 +54,7 @@ import {
   TRIP_YEARS,
   type CoachProfile,
   type CoachSeedSource,
+  type DimSource,
 } from "@/lib/trips/coachFromCatalog";
 import { readActiveCoach } from "@/lib/rv/activeCoach";
 import { loadLatestSavedUnit } from "@/lib/rv/savedUnits";
@@ -130,14 +129,29 @@ type SubTab =
   | "profile";
 type SheetId = "year" | "make" | "model" | "floorplan" | null;
 
-const SUB_TABS: { id: SubTab; label: string; icon: typeof Navigation }[] = [
-  { id: "navigate", label: "Navigate", icon: Navigation },
-  { id: "directions", label: "Directions", icon: ListChecks },
-  { id: "campgrounds", label: "Camps", icon: Tent },
-  { id: "dumps", label: "Dumps", icon: Droplets },
-  { id: "pack", label: "Pack List", icon: ListChecks },
-  { id: "profile", label: "Profile", icon: User },
+const SUB_TABS: {
+  id: SubTab;
+  label: string;
+  icon: typeof Navigation;
+  rank: "primary" | "route" | "tool";
+}[] = [
+  { id: "navigate", label: "Navigate", icon: Navigation, rank: "primary" },
+  { id: "directions", label: "Directions", icon: ListChecks, rank: "route" },
+  { id: "campgrounds", label: "Camps", icon: Tent, rank: "route" },
+  { id: "dumps", label: "Dumps", icon: Droplets, rank: "tool" },
+  { id: "pack", label: "Pack", icon: ListChecks, rank: "tool" },
+  { id: "profile", label: "Profile", icon: User, rank: "tool" },
 ];
+
+type PackRow = { id: string; item: string; done: boolean; sample?: boolean };
+
+function dimSourceTag(source?: DimSource): { text: string; className: string } | null {
+  if (source === "estimate") return { text: "estimate", className: "text-amber" };
+  if (source === "brochure") return { text: "brochure", className: "text-emerald-300" };
+  if (source === "catalog") return { text: "catalog", className: "text-sky-200" };
+  if (source === "facts") return { text: "facts", className: "text-sky-200" };
+  return null;
+}
 
 type PlaceHit = PlanPlace;
 type GeoTarget = "origin" | "dest" | `via:${string}`;
@@ -184,7 +198,9 @@ function geoErrorMessage(err: unknown): string {
 
 export function RvTripsApp() {
   const [sub, setSub] = useState<SubTab>("navigate");
-  const [pack, setPack] = useState(DEMO_PACK);
+  const [pack, setPack] = useState<PackRow[]>([]);
+  const [showSamplePack, setShowSamplePack] = useState(false);
+  const [packDraft, setPackDraft] = useState("");
   const [navArmed, setNavArmed] = useState(false);
   const [navStepIdx, setNavStepIdx] = useState(0);
   const follow = useNavFollow(navArmed);
@@ -419,11 +435,39 @@ export function RvTripsApp() {
   });
 
   const coachLine = useMemo(() => {
-    if (!displayCoach) return "Route without a profile — or add your coach";
+    if (!displayCoach) return "";
     const y = displayCoach.year ? `${displayCoach.year} ` : "";
     const fp = displayCoach.floorplan ? ` · ${displayCoach.floorplan}` : "";
     return `${y}${displayCoach.make} ${displayCoach.model}${fp} · ${displayCoach.heightFt}′H · ${displayCoach.lengthFt}′L`;
   }, [displayCoach]);
+
+  const toggleSamplePack = () => {
+    setShowSamplePack((on) => {
+      const next = !on;
+      if (next) {
+        setPack((list) => {
+          if (list.some((row) => row.sample)) return list;
+          return [
+            ...SAMPLE_PACK.map((row) => ({ ...row, sample: true, done: false })),
+            ...list,
+          ];
+        });
+      } else {
+        setPack((list) => list.filter((row) => !row.sample));
+      }
+      return next;
+    });
+  };
+
+  const addPackItem = () => {
+    const item = packDraft.trim();
+    if (!item) return;
+    setPack((list) => [
+      ...list,
+      { id: `u-${Date.now()}`, item, done: false },
+    ]);
+    setPackDraft("");
+  };
 
   const speakNav = useCallback((text: string) => {
     try {
@@ -1088,7 +1132,6 @@ export function RvTripsApp() {
   const hasRoutePoints = Boolean(originPlace && destPlace);
   const canLock = profileIsComplete(draft) && !locked;
   const dimsReady = Boolean((year && make && model) || draft.lengthFt > 0);
-  const dimsEstimated = anyDimEstimated(draft.dimSources);
   const profileBadge = locked
     ? "PROFILE LOCKED"
     : displayCoach
@@ -1135,35 +1178,24 @@ export function RvTripsApp() {
                 <h1 className="text-[22px] font-bold tracking-tight text-white">
                   RvTrips
                 </h1>
-                <p className="text-[11px] font-medium text-white">{coachLine}</p>
+                {coachLine ? (
+                  <p className="text-[11px] font-medium text-white/80">{coachLine}</p>
+                ) : null}
               </div>
             </div>
-            <div className="flex flex-col items-end gap-1">
+            {displayCoach ? (
               <span
                 className={cn(
                   "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide",
                   locked
                     ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
-                    : displayCoach
-                      ? "border-sky-400/40 bg-sky-500/15 text-sky-200"
-                      : "border-white/25 bg-white/10 text-white/85",
+                    : "border-sky-400/40 bg-sky-500/15 text-sky-200",
                 )}
               >
                 {locked ? <Lock className="size-3" /> : <Unlock className="size-3" />}
                 {profileBadge}
               </span>
-              <span className="text-[9px] font-bold uppercase tracking-wide text-blue">
-                {routeStatus === "live"
-                  ? routeEngineLabel(osrm)
-                  : routeStatus === "loading"
-                    ? "Routing…"
-                    : routeStatus === "offline"
-                      ? "Route offline"
-                      : hasRoutePoints
-                        ? "Ready"
-                        : "Where to?"}
-              </span>
-            </div>
+            ) : null}
           </div>
 
           <div
@@ -1182,10 +1214,21 @@ export function RvTripsApp() {
                   aria-selected={active}
                   onClick={() => setSub(t.id)}
                   className={cn(
-                    "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-bold transition",
+                    "flex shrink-0 items-center gap-1 rounded-full transition",
+                    t.rank === "primary"
+                      ? "px-3.5 py-2 text-[12px] font-bold"
+                      : t.rank === "tool"
+                        ? "px-2.5 py-1.5 text-[10px] font-semibold"
+                        : "px-3 py-2 text-[11px] font-semibold",
                     active
-                      ? "bg-blue text-white shadow-[0_0_16px_rgba(80,160,255,0.4)]"
-                      : "text-white hover:bg-white/10",
+                      ? t.rank === "primary"
+                        ? "bg-blue text-white shadow-[0_0_16px_rgba(80,160,255,0.4)]"
+                        : "bg-white/18 text-white"
+                      : t.rank === "tool"
+                        ? "text-white/45 hover:bg-white/8 hover:text-white/70"
+                        : t.rank === "primary"
+                          ? "text-white/85 hover:bg-white/10"
+                          : "text-white/70 hover:bg-white/10",
                   )}
                 >
                   <Icon className="size-3.5" />
@@ -1203,15 +1246,13 @@ export function RvTripsApp() {
               <h2 className="text-[12px] font-bold tracking-[0.14em] text-white">
                 RV PROFILE
               </h2>
-              <p className="text-[12px] text-white">
-                {seedSource === "facts"
-                  ? "Filled from your Facts coach. Edit dims if your door sticker differs, then lock for map alerts."
-                  : seedSource === "saved"
-                    ? "Filled from a saved coach. Edit dims if needed, then lock for map alerts."
-                    : seedSource === "locked"
-                      ? "Locked for this device. Unlock to change coach or override dims."
-                      : "Optional. Pick a coach or leave blank — routing still works."}
-              </p>
+              {seedSource === "locked" ? (
+                <p className="text-[12px] text-white/70">Locked on this device.</p>
+              ) : seedSource === "facts" || seedSource === "saved" ? (
+                <p className="text-[12px] text-white/70">
+                  {seedSource === "facts" ? "From Facts." : "From a saved coach."}
+                </p>
+              ) : null}
               <div className="grid grid-cols-2 gap-2">
                 <FieldBtn
                   label="Year"
@@ -1246,21 +1287,18 @@ export function RvTripsApp() {
                       ["widthFt", "Width (ft)", "width"],
                       ["weightLbs", "Weight (lbs)", "weight"],
                     ] as const
-                  ).map(([key, label, dim]) => (
+                  ).map(([key, label, dim]) => {
+                    const tag =
+                      draft[key] > 0
+                        ? dimSourceTag(draft.dimSources?.[dim])
+                        : null;
+                    return (
                     <label key={key} className="block">
                       <span className="mb-1 block text-[10px] font-bold text-white">
                         {label}
-                        {draft.dimSources?.[dim] === "estimate" ? (
-                          <span className="ml-1 font-semibold text-amber">
-                            · estimate
-                          </span>
-                        ) : draft.dimSources?.[dim] === "brochure" ? (
-                          <span className="ml-1 font-semibold text-emerald-300">
-                            · brochure
-                          </span>
-                        ) : draft.dimSources?.[dim] === "facts" ? (
-                          <span className="ml-1 font-semibold text-sky-200">
-                            · facts
+                        {tag ? (
+                          <span className={cn("ml-1 font-semibold", tag.className)}>
+                            · {tag.text}
                           </span>
                         ) : null}
                       </span>
@@ -1276,19 +1314,9 @@ export function RvTripsApp() {
                         className="glass-field w-full rounded-xl px-3 py-2 text-[14px] font-semibold text-white outline-none"
                       />
                     </label>
-                  ))}
+                    );
+                  })}
                 </div>
-              ) : (
-                <p className="text-[12px] text-white">
-                  Year, make, and model unlock dimension fields. Floorplan is
-                  optional when catalog dims are already known.
-                </p>
-              )}
-              {dimsReady && dimsEstimated ? (
-                <p className="text-[11px] leading-snug text-amber">
-                  Estimate = class or floorplan heuristic — confirm door sticker.
-                  Brochure / Facts numbers stay labeled as such.
-                </p>
               ) : null}
               {locked ? (
                 <button
@@ -1677,18 +1705,9 @@ export function RvTripsApp() {
                 <button
                   type="button"
                   onClick={() => setSub("profile")}
-                  className="glass-prestige flex w-full items-center gap-3 rounded-[1.15rem] px-3.5 py-3 text-left"
+                  className="px-1 py-1 text-left text-[12px] text-white/55"
                 >
-                  <User className="size-5 text-white/80" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-bold text-white">
-                      Add an RV profile?
-                    </p>
-                    <p className="text-[11px] text-white">
-                      Optional — height and length alerts. Routing already works.
-                    </p>
-                  </div>
-                  <ChevronRight className="size-5 text-white" />
+                  Add an RV profile?
                 </button>
               ) : null}
 
@@ -1751,10 +1770,6 @@ export function RvTripsApp() {
                       Next
                     </button>
                   </div>
-                  <p className="text-[11px] text-white">
-                    Speaks each step. Map follows you when GPS is on. Use Next
-                    as you drive.
-                  </p>
                 </section>
               ) : null}
 
@@ -1860,9 +1875,8 @@ export function RvTripsApp() {
               </div>
 
               {campsStatus === "idle" ? (
-                <p className="text-[13px] leading-snug text-white/80">
-                  Route a trip on Navigate to load campgrounds along the corridor
-                  and near the destination. Not a reservation inventory.
+                <p className="text-[13px] leading-snug text-white/70">
+                  Route on Navigate for camps along the corridor.
                 </p>
               ) : (
                 <CampsAlongRoute
@@ -1927,12 +1941,8 @@ export function RvTripsApp() {
                 <Droplets className="size-3.5 text-sky-300" />
                 FREE SEWER DUMPS
               </h2>
-              <p className="text-[12px] leading-relaxed text-white/90">
-                Public and no-fee sanitary dumps on major western corridors.
-                Hours change — confirm before you pull in.
-                {dumpNearLat != null
-                  ? " Sorted by distance from your start or destination."
-                  : " Set a start location on Navigate to sort by distance."}
+              <p className="text-[12px] text-white/65">
+                Free western dumps — confirm hours.
               </p>
 
               <div className="flex gap-2">
@@ -2077,47 +2087,91 @@ export function RvTripsApp() {
 
           {sub === "pack" ? (
             <section className="glass-prestige space-y-2 rounded-[1.25rem] p-3.5">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <h2 className="text-[13px] font-bold tracking-[0.12em] text-white">
-                  PACK LIST
+                  PACK
                 </h2>
-                <span className="text-[11px] text-white">
-                  {packDone}/{pack.length}
-                </span>
+                {pack.length > 0 ? (
+                  <span className="text-[11px] text-white/70">
+                    {packDone}/{pack.length}
+                  </span>
+                ) : null}
               </div>
-              {pack.map((p) => (
+              <div className="flex gap-2">
+                <input
+                  value={packDraft}
+                  onChange={(e) => setPackDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addPackItem();
+                    }
+                  }}
+                  placeholder="Add an item"
+                  className="glass-field min-h-11 min-w-0 flex-1 rounded-xl px-3 py-2 text-[14px] text-white outline-none placeholder:text-white/55"
+                  aria-label="Add pack item"
+                />
                 <button
-                  key={p.id}
                   type="button"
-                  onClick={() =>
-                    setPack((list) =>
-                      list.map((x) =>
-                        x.id === p.id ? { ...x, done: !x.done } : x,
-                      ),
-                    )
-                  }
-                  className="flex w-full items-center gap-3 rounded-xl border border-white/12 bg-black/30 px-3 py-2.5 text-left"
+                  onClick={addPackItem}
+                  disabled={!packDraft.trim()}
+                  className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue text-white disabled:opacity-40"
+                  aria-label="Add to pack list"
                 >
-                  <span
-                    className={cn(
-                      "flex size-5 items-center justify-center rounded border text-[10px] font-bold",
-                      p.done
-                        ? "border-emerald-400 bg-emerald-500 text-black"
-                        : "border-white/30 text-transparent",
-                    )}
-                  >
-                    ✓
-                  </span>
-                  <span
-                    className={cn(
-                      "text-[13px] font-semibold text-white",
-                      p.done && "line-through opacity-60",
-                    )}
-                  >
-                    {p.item}
-                  </span>
+                  <Plus className="size-4" />
                 </button>
-              ))}
+              </div>
+              {pack.length === 0 ? (
+                <p className="text-[12px] text-white/55">Your list.</p>
+              ) : (
+                pack.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() =>
+                      setPack((list) =>
+                        list.map((x) =>
+                          x.id === p.id ? { ...x, done: !x.done } : x,
+                        ),
+                      )
+                    }
+                    className="flex w-full items-center gap-3 rounded-xl border border-white/12 bg-black/30 px-3 py-2.5 text-left"
+                  >
+                    <span
+                      className={cn(
+                        "flex size-5 items-center justify-center rounded border text-[10px] font-bold",
+                        p.done
+                          ? "border-emerald-400 bg-emerald-500 text-black"
+                          : "border-white/30 text-transparent",
+                      )}
+                    >
+                      ✓
+                    </span>
+                    <span
+                      className={cn(
+                        "min-w-0 flex-1 text-[13px] font-semibold text-white",
+                        p.done && "line-through opacity-60",
+                      )}
+                    >
+                      {p.item}
+                    </span>
+                    {p.sample ? (
+                      <span className="rounded-full border border-white/20 px-1.5 py-px text-[9px] font-bold text-white/50">
+                        SAMPLE
+                      </span>
+                    ) : null}
+                  </button>
+                ))
+              )}
+              <button
+                type="button"
+                onClick={toggleSamplePack}
+                className="pt-1 text-[11px] font-semibold text-white/50 underline-offset-2 hover:text-white/75 hover:underline"
+              >
+                {showSamplePack
+                  ? "Hide sample list"
+                  : "Sample list — not your gear"}
+              </button>
             </section>
           ) : null}
         </div>

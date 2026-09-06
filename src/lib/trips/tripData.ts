@@ -150,14 +150,16 @@ export const DEMO_DIRECTIONS: { id: string; instruction: string; mi: string }[] 
     { id: "d5", instruction: "Arrive Glacier NP staging · verify propane OFF", mi: "0.4" },
   ];
 
-export const DEMO_PACK: { id: string; item: string; done: boolean }[] = [
-  { id: "p1", item: "Propane tank valves + leak soap", done: true },
-  { id: "p2", item: "Engine brake check · jake brake test", done: true },
-  { id: "p3", item: "Height stickers / clearance card", done: false },
-  { id: "p4", item: "Leveling blocks · 45 ft pad kit", done: false },
-  { id: "p5", item: "National Parks annual pass", done: true },
-  { id: "p6", item: "Tire pressure for mountain grades", done: false },
+/** Lean starter — not live inventory. Show only behind an explicit Sample disclosure. */
+export const SAMPLE_PACK: { id: string; item: string; done: boolean }[] = [
+  { id: "p1", item: "Propane valves", done: false },
+  { id: "p2", item: "Tire pressure", done: false },
+  { id: "p3", item: "Height / clearance card", done: false },
+  { id: "p4", item: "Leveling blocks", done: false },
 ];
+
+/** @deprecated Use SAMPLE_PACK only behind an explicit Sample disclosure. */
+export const DEMO_PACK = SAMPLE_PACK;
 
 export function formatDrive(hours: number, minutes: number) {
   return `${hours}h ${String(minutes).padStart(2, "0")}m`;
