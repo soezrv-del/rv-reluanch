@@ -3055,6 +3055,133 @@ function main() {
     }
   }
 
+  // Airstream 2005–2009 honesty. Boss scope: Interstate MY2007 + International MY2008 only.
+  // Dated RVUSA brochures lock those two chips. Prefer omit (GAP) over invent / copy-forward.
+  {
+    const a0 = src.indexOf("\n  Airstream: {");
+    const a1 = src.indexOf('\n  "Keystone": {');
+    if (a0 < 0 || a1 < a0) {
+      fail('Airstream block not found between Airstream: and "Keystone":');
+    } else {
+      const as = src.slice(a0, a1);
+      const slice = (a, b) => {
+        const i = as.indexOf(`    ${a}: {`) >= 0 ? as.indexOf(`    ${a}: {`) : as.indexOf(`    "${a}": {`);
+        const j =
+          b == null
+            ? as.length
+            : as.indexOf(`    ${b}: {`) >= 0
+              ? as.indexOf(`    ${b}: {`)
+              : as.indexOf(`    "${b}": {`);
+        if (i < 0) return "";
+        return j > i ? as.slice(i, j) : as.slice(i);
+      };
+
+      if (/\n    Safari: \{/.test(as) || /\n    "Safari": \{/.test(as)) {
+        fail("Airstream|Safari must not be added this slice (optional new-key — out of scope)");
+      }
+      if (/\n    "Ocean Breeze": \{/.test(as) || /\n    "CCD Signature": \{/.test(as) || /\n    CCD: \{/.test(as)) {
+        fail("Airstream must not invent CCD Signature / Ocean Breeze catalog keys (share International)");
+      }
+
+      const interstate = slice("Interstate", "Tommy Bahama");
+      if (!/type: "Class B"/.test(interstate) || /type: "Class B\+"/.test(interstate)) {
+        fail("Airstream|Interstate must stay Class B");
+      }
+      if (!/"2007": \["22DT", "22FS", "22RS", "22RD"\]/.test(interstate)) {
+        fail("Airstream|Interstate MY2007 PDF lock missing (2007-Airstream-Interstate.pdf — 22DT/22FS/22RS/22RD)");
+      }
+      if (/"Interstate 22 DT"|"22 Dinette Twin"|"22 Front Sleeper"/.test(interstate)) {
+        fail("Airstream|Interstate must store short codes (not long brochure names)");
+      }
+      if (/"2005":/.test(interstate) || /"2006":/.test(interstate) || /"2008":/.test(interstate) || /"2009":/.test(interstate)) {
+        fail("Airstream|Interstate must omit 2005–06 / 2008–09 (GAP — 2008 RVUSA Base only; do not copy 2007)");
+      }
+      if (/"2010": .*"22DT"/.test(interstate) || /"2010": .*"22FS"/.test(interstate) || /"2010": .*"22RS"/.test(interstate) || /"2010": .*"22RD"/.test(interstate)) {
+        fail("Airstream|Interstate must not copy 2007 codes onto 2010+");
+      }
+      if (!/"2010": \["24GL", "Grand Tour EXT"\]/.test(interstate)) {
+        fail("Airstream|Interstate 2010 tip-era codes must stay 24GL / Grand Tour EXT");
+      }
+
+      const intl = slice("International", "Globetrotter");
+      if (!/type: "Travel Trailer"/.test(intl)) {
+        fail("Airstream|International must stay Travel Trailer");
+      }
+      if (!/"2008": \["16", "19", "23D", "25SS", "25FB", "27FB", "28"\]/.test(intl)) {
+        fail("Airstream|International MY2008 PDF lock missing (2008-Airstream-International.pdf — 16/19/23D/25SS/25FB/27FB/28)");
+      }
+      if (/"23'D"|"23′D"/.test(intl)) {
+        fail("Airstream|International must store 23D (not brochure 23'D)");
+      }
+      if (/"2005":/.test(intl) || /"2006":/.test(intl) || /"2007":/.test(intl) || /"2009":/.test(intl)) {
+        fail("Airstream|International must omit 2005–07 / 2009 (GAP — no dated card this pack)");
+      }
+      if (/"2010": \["16"/.test(intl) || /"2010": .*"23D"/.test(intl) || /"2010": .*"25SS"/.test(intl)) {
+        fail("Airstream|International must not copy 2008-only codes onto 2010+");
+      }
+      if (!/"2010": \["23FB", "25FB", "27FB", "28RB", "30RB"\]/.test(intl)) {
+        fail("Airstream|International 2010 tip-era codes must stay 23FB / 25FB / 27FB / 28RB / 30RB");
+      }
+
+      for (const [name, next] of [
+        ["Bambi", "Caravel"],
+        ["Flying Cloud", "Trade Wind"],
+        ["Classic", "Stetson 6666"],
+      ]) {
+        const body = slice(name, next);
+        if (/"2005":/.test(body) || /"2006":/.test(body) || /"2007":/.test(body) || /"2008":/.test(body) || /"2009":/.test(body)) {
+          fail(`Airstream|${name} must omit 2005–2009 (GAP — do not invent)`);
+        }
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const asIdx = catalogIndex.Airstream;
+      if (!asIdx) fail("Airstream missing from CATALOG_INDEX");
+      if (asIdx.Safari) fail("Airstream|Safari must not appear in CATALOG_INDEX this slice");
+      if (asIdx["Ocean Breeze"] || asIdx["CCD Signature"] || asIdx.CCD) {
+        fail("Airstream must not index CCD / Ocean Breeze as separate keys");
+      }
+      if (!asIdx.Interstate?.years?.includes(2007)) {
+        fail("Airstream|Interstate index must include 2007");
+      }
+      if (
+        asIdx.Interstate?.years?.includes(2005) ||
+        asIdx.Interstate?.years?.includes(2006) ||
+        asIdx.Interstate?.years?.includes(2008) ||
+        asIdx.Interstate?.years?.includes(2009)
+      ) {
+        fail("Airstream|Interstate index must omit 2005–06 / 2008–09 (GAP)");
+      }
+      if (!asIdx.International?.years?.includes(2008)) {
+        fail("Airstream|International index must include 2008");
+      }
+      if (
+        asIdx.International?.years?.includes(2005) ||
+        asIdx.International?.years?.includes(2006) ||
+        asIdx.International?.years?.includes(2007) ||
+        asIdx.International?.years?.includes(2009)
+      ) {
+        fail("Airstream|International index must omit 2005–07 / 2009 (GAP)");
+      }
+      for (const gap of ["Bambi", "Flying Cloud", "Classic"]) {
+        if (
+          asIdx[gap]?.years?.includes(2005) ||
+          asIdx[gap]?.years?.includes(2006) ||
+          asIdx[gap]?.years?.includes(2007) ||
+          asIdx[gap]?.years?.includes(2008) ||
+          asIdx[gap]?.years?.includes(2009)
+        ) {
+          fail(`Airstream|${gap} index must omit 2005–2009 (GAP)`);
+        }
+      }
+      if (asIdx.Interstate?.type !== "Class B") fail("Airstream|Interstate index must be Class B");
+      if (asIdx.International?.type !== "Travel Trailer") fail("Airstream|International index must be Travel Trailer");
+    }
+  }
+
   // Keystone MY2027 OEM lock + yearStart hygiene / Half-Ton 2027 + 25FKD Cougar TT scrub.
   // Sprinter MY2025–2026 from #100. This slice locks major-line MY2025–2026 from walk-back pack §6.
   {

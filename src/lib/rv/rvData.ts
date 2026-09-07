@@ -16712,6 +16712,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Travel Trailer",
       floorplans: ["23FB", "25FB", "27FB", "28RB", "30RB", "23FB Coastal Cove", "25FB Coastal Cove", "27FB Coastal Cove", "28RB Coastal Cove", "30RB Coastal Cove"],
       floorplansByYear: {
+        // LOCK research/airstream/LOT_DESK_2005_2009.md + CODES_2005_2009.json
+        // library.rvusa.com/brochure/2008-Airstream-International.pdf
+        // 16 / 19 / 23D / 25SS / 25FB / 27FB / 28 (brochure 23'D → 23D).
+        // CCD Signature + Ocean Breeze share this list — one International key.
+        // Do not invent CCD / Ocean Breeze catalog models. Do not fold Safari here.
+        // GAP 2005–07 / 2009 (no dated card this pack — prefer omit).
+        "2008": ["16", "19", "23D", "25SS", "25FB", "27FB", "28"],
         "2010": ["23FB", "25FB", "27FB", "28RB", "30RB"],
         "2011": ["23FB", "25FB", "27FB", "28RB", "30RB"],
         "2012": ["23FB", "25FB", "27FB", "28RB", "30RB"],
@@ -16901,6 +16908,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["19", "19GT", "19GTX", "19X", "19X LE Outland", "24GL", "24GLX", "24GT", "24GT Twin", "24GTX", "24X", "Grand Tour EXT", "19GT Tommy Bahama", "24GL Tommy Bahama", "24GT Tommy Bahama", "Tommy Bahama"],
       floorplansByYear: {
+        // LOCK research/airstream/LOT_DESK_2005_2009.md + CODES_2005_2009.json
+        // library.rvusa.com/brochure/2007-Airstream-Interstate.pdf
+        // Short codes only: 22DT / 22FS / 22RS / 22RD (not long brochure names).
+        // GAP 2005–06 / 2008–09 (2008 RVUSA "Base" only — do not copy 2007 forward).
+        "2007": ["22DT", "22FS", "22RS", "22RD"],
         "2010": ["24GL", "Grand Tour EXT"],
         "2011": ["24GL", "Grand Tour EXT"],
         "2012": ["24GL", "Grand Tour EXT"],
