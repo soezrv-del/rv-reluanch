@@ -1157,7 +1157,10 @@ export function RvTripsApp() {
         data-app-scroll
         className="rv-scroll relative z-10 h-full overflow-y-auto overscroll-y-contain"
       >
-        <header className="px-3 pb-2 pt-2 sm:px-4">
+        <header
+          data-trips-chrome
+          className="relative z-40 isolate pointer-events-auto px-3 pb-2 pt-2 sm:px-4"
+        >
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2.5">
               <img
@@ -1378,7 +1381,8 @@ export function RvTripsApp() {
                 <button
                   type="button"
                   onClick={() => setPlanOpen(true)}
-                  className="glass-prestige flex min-h-11 w-full items-center gap-2 rounded-[1.25rem] px-3.5 py-3 text-left"
+                  data-trips-chrome
+                  className="glass-prestige relative z-40 isolate pointer-events-auto flex min-h-11 w-full items-center gap-2 rounded-[1.25rem] px-3.5 py-3 text-left"
                   aria-label="Edit trip"
                 >
                   <Navigation className="size-4 shrink-0 text-blue" />
@@ -1388,7 +1392,10 @@ export function RvTripsApp() {
                   <span className="text-[11px] font-bold text-blue">Edit</span>
                 </button>
               ) : (
-              <section className="glass-prestige space-y-2.5 rounded-[1.25rem] p-3.5">
+              <section
+                data-trips-chrome
+                className="glass-prestige relative z-40 isolate pointer-events-auto space-y-2.5 rounded-[1.25rem] p-3.5"
+              >
                 {originPlace && !originOpen ? (
                   <button
                     type="button"

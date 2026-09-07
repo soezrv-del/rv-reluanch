@@ -345,7 +345,7 @@ export function RouteBasemap({
       data-tile-source={catalog ? provider : "pending"}
       data-map-engine="raster"
       data-follow-status={status}
-      className="relative overflow-hidden rounded-xl border border-white/12 bg-[#0b1410]"
+      className="relative z-0 isolate overflow-hidden rounded-xl border border-white/12 bg-[#0b1410]"
       style={{ height: MAP_PANEL_H }}
     >
       {tiles.length > 0 ? (
