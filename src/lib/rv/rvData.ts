@@ -27927,6 +27927,240 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       description: "The Lance 1172 is the brand's flagship truck camper — designed for long-bed trucks with a full slide-out, pass-through basement storage, and Lance's massive holding tanks."
     }
   },
+  // Chinook (Peru, IN revival). Living motorhome keys only.
+  // Pre-digital / pre-2025 year cards and 2027 library PDFs are GAP — do not invent.
+  // Destiny: undated OEM + MY2027 press only — no dated PDF / no RVUSA year-card matrix. No key.
+  "Chinook": {
+    "Summit": {
+      type: "Class B+",
+      floorplans: ["DS", "EB", "SS"],
+      floorplansByYear: {
+        // LOCK library.rvusa.com/brochure/2025-Chinook-Summit.pdf (Printed 11-1-2024; CreationDate 2024-10-31)
+        // + RVUSA m9849-y2025-b105 cards: SummitDS / SummitEB / SummitSS. Mercedes Sprinter diesel. Class B+.
+        "2025": ["DS", "EB", "SS"],
+        // LOCK library.rvusa.com/brochure/2026-Chinook-RV-Summit.pdf (11v2/2025)
+        // + RVUSA m9849-y2026-b105 cards: SummitEB / SummitSS only.
+        // FTB is an SS option on the dated PDF ("Also available with Front Twin Beds") — not a year-card code.
+        "2026": ["EB", "SS"]
+        // 2021–2024 GAP: OEM/RVIA intro 2021; no extractable year-true PDF or RVUSA cards (2024 page has no Specs cards).
+        // 2027 GAP: RVUSA m9849-y2027-b105 has no Specs cards; 2027-Chinook-Summit.pdf 403. Press FTB is a lead only.
+      },
+      lengthRange: [
+        24,
+        24
+      ],
+      weightRange: [
+        9380,
+        11030
+      ],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [
+        180000,
+        280000
+      ],
+      engine: "Mercedes-Benz Sprinter 4-cyl twin-turbo diesel",
+      chassis: "Mercedes-Benz Sprinter",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.5,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 5000,
+      freshWater: 30,
+      grayWater: 24,
+      blackWater: 24,
+      fuelCapacityGal: 25,
+      acUnits: "Truma Aventa 13,500 BTU",
+      generator: "Cummins Onan diesel optional (2025–2026 brochure)",
+      awningLength: 0,
+      ceilingHeight: 75,
+      founded: 1938,
+      warrantyYears: 2,
+      yearStart: 2021,
+      description: "Chinook Summit — Mercedes-Benz Sprinter Class B+. Floorplans locked from dated 2025–2026 library brochures / RVUSA year cards.",
+      powertrainByYear: [
+        {
+          from: 2025,
+          to: 2026,
+          engine: "Mercedes-Benz Sprinter 4-cyl twin-turbo diesel",
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "LOCK 2025-Chinook-Summit.pdf / 2026-Chinook-RV-Summit.pdf — AWD optional on 2025 brochure; standard AWD on 2026 brochure. No brochure HP pin."
+        }
+      ]
+    },
+    "Maverick": {
+      type: "Class B+",
+      floorplans: ["DS", "EB", "SS"],
+      floorplansByYear: {
+        // LOCK library.rvusa.com/brochure/2025-Chinook-Maverick.pdf (Printed 11-1-2024; CreationDate 2024-10-31)
+        // + RVUSA m9850-y2025-b105 cards: MaverickDS / MaverickEB / MaverickSS. Ford Transit 350HD AWD gas. Class B+.
+        "2025": ["DS", "EB", "SS"],
+        // LOCK library.rvusa.com/brochure/2026-Chinook-RV-Maverick.pdf (11v2/2025)
+        // + RVUSA m9850-y2026-b105 cards: MaverickEB / MaverickSS only.
+        // FTB is an SS option on the dated PDF — not a year-card code.
+        "2026": ["EB", "SS"]
+        // 2022–2024 GAP: OEM history intro 2022; no extractable year-true PDF or RVUSA cards.
+        // 2027 GAP: RVUSA m9850-y2027-b105 has no Specs cards; 2027-Chinook-Maverick.pdf 403. Press FTB is a lead only.
+      },
+      lengthRange: [
+        24,
+        25
+      ],
+      weightRange: [
+        9780,
+        11000
+      ],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [
+        170000,
+        270000
+      ],
+      engine: "Ford Transit 3.5L EcoBoost twin-turbo gas",
+      chassis: "Ford Transit 350HD AWD",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.5,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 5000,
+      freshWater: 30,
+      grayWater: 24,
+      blackWater: 24,
+      fuelCapacityGal: 31,
+      acUnits: "Truma Aventa 13,500 BTU",
+      generator: "Cummins Onan gas optional (2025–2026 brochure)",
+      awningLength: 0,
+      ceilingHeight: 75,
+      founded: 1938,
+      warrantyYears: 2,
+      yearStart: 2022,
+      description: "Chinook Maverick — Ford Transit AWD Class B+. Floorplans locked from dated 2025–2026 library brochures / RVUSA year cards.",
+      powertrainByYear: [
+        {
+          from: 2025,
+          to: 2026,
+          engine: "Ford Transit 3.5L EcoBoost twin-turbo gas",
+          chassis: "Ford Transit 350HD AWD",
+          fuelType: "Gas",
+          notes: "LOCK 2025-Chinook-Maverick.pdf / 2026-Chinook-RV-Maverick.pdf. No brochure HP pin."
+        }
+      ]
+    },
+    "Bayside": {
+      type: "Class B",
+      floorplans: ["RS", "RT", "SS", "TB"],
+      floorplansByYear: {
+        // LOCK library.rvusa.com/brochure/2025-Chinook-Bayside.pdf (CreationDate 2024-10-30)
+        // + RVUSA m9851-y2025-b105 cards: BaysideRS / BaysideSS / BaysideTB (no RT card).
+        "2025": ["RS", "SS", "TB"],
+        // LOCK library.rvusa.com/brochure/2026-Chinook-RV-Bayside.pdf (11/2025; CreationDate 2025-11-13) — CLASS B
+        // + RVUSA m9851-y2026-b105 cards: BaysideRS / BaysideRT / BaysideSS / BaysideTB.
+        "2026": ["RS", "RT", "SS", "TB"]
+        // 2021–2024 GAP: OEM history intro 2021 with Summit; no extractable year-true PDF or RVUSA cards.
+        // 2027 GAP: RVUSA m9851-y2027-b105 has no Specs cards; 2027-Chinook-Bayside.pdf 403.
+      },
+      lengthRange: [
+        22,
+        22
+      ],
+      weightRange: [
+        8650,
+        11000
+      ],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [
+        150000,
+        230000
+      ],
+      engine: "Ford Transit 3.5L EcoBoost twin-turbo gas",
+      chassis: "Ford Transit 350HD AWD",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 30,
+      grayWater: 16,
+      blackWater: 6,
+      fuelCapacityGal: 31,
+      acUnits: "Truma Aventa 13,500 BTU",
+      generator: "Cummins Onan gas optional (2026 brochure)",
+      awningLength: 12,
+      ceilingHeight: 75,
+      founded: 1938,
+      warrantyYears: 2,
+      yearStart: 2021,
+      description: "Chinook Bayside — Ford Transit van Class B. Floorplans locked from dated 2025–2026 library brochures / RVUSA year cards.",
+      powertrainByYear: [
+        {
+          from: 2025,
+          to: 2026,
+          engine: "Ford Transit 3.5L EcoBoost twin-turbo gas",
+          chassis: "Ford Transit 350HD AWD",
+          fuelType: "Gas",
+          notes: "LOCK 2025-Chinook-Bayside.pdf / 2026-Chinook-RV-Bayside.pdf. Type Class B (2026 brochure). No brochure HP pin."
+        }
+      ]
+    },
+    "Concourse": {
+      type: "Class B+",
+      floorplans: ["MT"],
+      floorplansByYear: {
+        // LOCK library.rvusa.com/brochure/2026-Chinook-Concourse.pdf (11v2/2025; CreationDate 2025-11-10)
+        // + RVUSA m11615-y2026-b105 card: ConcourseMT. Mercedes Sprinter diesel AWD. Class B+.
+        "2026": ["MT"]
+        // 2025 GAP: RVUSA m11615-y2025-b105 has no Specs cards; no 2025-Chinook-Concourse.pdf.
+        // 2027 GAP: RVUSA m11615-y2027-b105 has no Specs cards; 2027-Chinook-Concourse.pdf 403.
+        // Press "Concourse Mid-Twin AWD 4S" is a lead only — do not copy-forward MT onto 2027.
+        // Pre-hiatus Concourse nameplate (1980s–2000s) has no dated year-true cards this pass — GAP.
+      },
+      lengthRange: [
+        25,
+        26
+      ],
+      weightRange: [
+        10000,
+        11030
+      ],
+      slideouts: 0,
+      sleeps: 3,
+      msrpRange: [
+        200000,
+        300000
+      ],
+      engine: "Mercedes-Benz Sprinter 4-cyl twin-turbo diesel",
+      chassis: "Mercedes-Benz Sprinter AWD",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.5,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 5000,
+      freshWater: 30,
+      grayWater: 24,
+      blackWater: 24,
+      fuelCapacityGal: 25,
+      acUnits: "Truma Aventa 13,500 BTU",
+      generator: "Cummins Onan diesel optional (2026 brochure)",
+      awningLength: 0,
+      ceilingHeight: 75,
+      founded: 1938,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Chinook Concourse — Mercedes-Benz Sprinter side-entry Class B+ (modern revival). Floorplans locked from dated 2026 library brochure / RVUSA year card.",
+      powertrainByYear: [
+        {
+          from: 2026,
+          to: 2026,
+          engine: "Mercedes-Benz Sprinter 4-cyl twin-turbo diesel",
+          chassis: "Mercedes-Benz Sprinter AWD",
+          fuelType: "Diesel",
+          notes: "LOCK 2026-Chinook-Concourse.pdf. No brochure HP pin."
+        }
+      ]
+    }
+  },
   "Pleasure-Way": {
     Plateau: {
       type: "Class B",

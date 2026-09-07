@@ -475,3 +475,48 @@ test("Palomino Facts SoT: Sabre quarantined; SolAire MY2026 brochure lock; MY202
   assert.match(frSab, /not Palomino/);
 });
 
+test("Chinook Facts SoT: dated 2025–2026 library PDFs + RVUSA year cards; 2027/Destiny GAP", () => {
+  const block = src("rvData.ts");
+  const c0 = block.indexOf('\n  "Chinook": {');
+  const c1 = block.indexOf('\n  "Pleasure-Way": {');
+  assert.ok(c0 > 0 && c1 > c0, "expected Chinook block");
+  const chinook = block.slice(c0, c1);
+
+  assert.doesNotMatch(chinook, /\n    Destiny: \{/);
+  assert.doesNotMatch(chinook, /\n    "Destiny": \{/);
+  assert.doesNotMatch(chinook, /horsepower:\s*\d/);
+  assert.doesNotMatch(chinook, /torqueLbFt:\s*\d/);
+
+  const summit = chinook.slice(chinook.indexOf('    "Summit": {'), chinook.indexOf('    "Maverick": {'));
+  assert.match(summit, /type: "Class B\+"/);
+  assert.match(summit, /fuelType: "Diesel"/);
+  assert.match(summit, /yearStart:\s*2021/);
+  assert.match(summit, /"2025": \[\s*"DS",\s*"EB",\s*"SS"\s*\]/);
+  assert.match(summit, /"2026": \[\s*"EB",\s*"SS"\s*\]/);
+  assert.doesNotMatch(summit, /"2027":|"2024":|"2021":|"FTB"|"MT"/);
+
+  const maverick = chinook.slice(chinook.indexOf('    "Maverick": {'), chinook.indexOf('    "Bayside": {'));
+  assert.match(maverick, /type: "Class B\+"/);
+  assert.match(maverick, /fuelType: "Gas"/);
+  assert.match(maverick, /yearStart:\s*2022/);
+  assert.match(maverick, /"2025": \[\s*"DS",\s*"EB",\s*"SS"\s*\]/);
+  assert.match(maverick, /"2026": \[\s*"EB",\s*"SS"\s*\]/);
+  assert.doesNotMatch(maverick, /"2027":|"2024":|"FTB"|"MT"/);
+
+  const bayside = chinook.slice(chinook.indexOf('    "Bayside": {'), chinook.indexOf('    "Concourse": {'));
+  assert.match(bayside, /type: "Class B"/);
+  assert.doesNotMatch(bayside, /type: "Class B\+"/);
+  assert.match(bayside, /fuelType: "Gas"/);
+  assert.match(bayside, /yearStart:\s*2021/);
+  assert.match(bayside, /"2025": \[\s*"RS",\s*"SS",\s*"TB"\s*\]/);
+  assert.match(bayside, /"2026": \[\s*"RS",\s*"RT",\s*"SS",\s*"TB"\s*\]/);
+  assert.doesNotMatch(bayside, /"2027":|"2024":/);
+
+  const concourse = chinook.slice(chinook.indexOf('    "Concourse": {'));
+  assert.match(concourse, /type: "Class B\+"/);
+  assert.match(concourse, /fuelType: "Diesel"/);
+  assert.match(concourse, /yearStart:\s*2026/);
+  assert.match(concourse, /"2026": \[\s*"MT"\s*\]/);
+  assert.doesNotMatch(concourse, /"2025":|"2027":|"FTB"/);
+});
+

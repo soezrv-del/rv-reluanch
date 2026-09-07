@@ -357,6 +357,10 @@ const EXPECTED_TYPE = {
   "Grand Design|Lineage Series F": "super c",
   "Grand Design|Lineage Series VT": "class b",
   "Grand Design|Lineage Series VP": "class b",
+  "Chinook|Summit": "class b",
+  "Chinook|Maverick": "class b",
+  "Chinook|Bayside": "class b",
+  "Chinook|Concourse": "class b",
 };
 
 /** Phantom / non-OEM series that must not exist. */
@@ -4449,8 +4453,164 @@ function main() {
     }
   }
 
+  // Chinook greenfield lock. Make key is quoted (`"Chinook": {`).
+  // Dated 2025-Chinook-*.pdf / 2026-Chinook-*.pdf + RVUSA year cards lock 2025–2026.
+  // MY2027 year pages exist but have no Specs cards; 2027-Chinook-*.pdf 403 — GAP.
+  // Destiny: undated OEM + press only — no key.
+  {
+    const c0 = src.indexOf('\n  "Chinook": {');
+    const c1 = src.indexOf('\n  "Pleasure-Way": {');
+    if (c0 < 0 || c1 < c0) {
+      fail('Chinook block not found between "Chinook": and "Pleasure-Way":');
+    } else {
+      const chinook = src.slice(c0, c1);
+      const slice = (a, b) => {
+        const i =
+          chinook.indexOf(`    "${a}": {`) >= 0
+            ? chinook.indexOf(`    "${a}": {`)
+            : chinook.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? chinook.length
+            : chinook.indexOf(`    "${b}": {`) >= 0
+              ? chinook.indexOf(`    "${b}": {`)
+              : chinook.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? chinook.slice(i, j) : chinook.slice(i);
+      };
+
+      if (/\n    Destiny: \{/.test(chinook) || /\n    "Destiny": \{/.test(chinook)) {
+        fail("Chinook|Destiny must not be added without a dated PDF / RVUSA year-card matrix");
+      }
+      if (/"Premier"|"Glacier"|"Cascade"|"Countryside"|"Dream"|"RPM"/.test(chinook)) {
+        fail("Chinook must not invent pre-digital / trailer keys this pass");
+      }
+
+      const summit = slice("Summit", "Maverick");
+      if (!/type: "Class B\+"/.test(summit) || !/fuelType: "Diesel"/.test(summit)) {
+        fail("Chinook|Summit must be Class B+ / Diesel (Sprinter)");
+      }
+      if (!/yearStart:\s*2021/.test(summit)) {
+        fail("Chinook|Summit yearStart must be 2021 (RVIA / OEM history intro)");
+      }
+      if (
+        !/"2025": \[\s*"DS",\s*"EB",\s*"SS"\s*\]/.test(summit) ||
+        !/"2026": \[\s*"EB",\s*"SS"\s*\]/.test(summit)
+      ) {
+        fail("Chinook|Summit MY25–26 brochure/RVUSA lock missing (DS/EB/SS then EB/SS)");
+      }
+      if (/"2027":/.test(summit) || /"2024":/.test(summit) || /"2023":/.test(summit) || /"2022":/.test(summit) || /"2021":/.test(summit)) {
+        fail("Chinook|Summit must omit 2021–2024 and 2027 (GAP — no dated cards)");
+      }
+      if (/"FTB"/.test(summit) || /"MT"/.test(summit)) {
+        fail("Chinook|Summit must not invent FTB as a year-card code or absorb Concourse MT");
+      }
+      if (/horsepower:\s*\d/.test(summit) || /torqueLbFt:\s*\d/.test(summit)) {
+        fail("Chinook|Summit must not invent HP/torque (no brochure pin)");
+      }
+
+      const maverick = slice("Maverick", "Bayside");
+      if (!/type: "Class B\+"/.test(maverick) || !/fuelType: "Gas"/.test(maverick)) {
+        fail("Chinook|Maverick must be Class B+ / Gas (Transit EcoBoost)");
+      }
+      if (!/yearStart:\s*2022/.test(maverick)) {
+        fail("Chinook|Maverick yearStart must be 2022 (OEM history intro)");
+      }
+      if (
+        !/"2025": \[\s*"DS",\s*"EB",\s*"SS"\s*\]/.test(maverick) ||
+        !/"2026": \[\s*"EB",\s*"SS"\s*\]/.test(maverick)
+      ) {
+        fail("Chinook|Maverick MY25–26 brochure/RVUSA lock missing (DS/EB/SS then EB/SS)");
+      }
+      if (/"2027":/.test(maverick) || /"2024":/.test(maverick) || /"2023":/.test(maverick) || /"2022":/.test(maverick)) {
+        fail("Chinook|Maverick must omit 2022–2024 and 2027 (GAP — no dated cards)");
+      }
+      if (/"FTB"/.test(maverick) || /"MT"/.test(maverick)) {
+        fail("Chinook|Maverick must not invent FTB as a year-card code or absorb Concourse MT");
+      }
+      if (/horsepower:\s*\d/.test(maverick) || /torqueLbFt:\s*\d/.test(maverick)) {
+        fail("Chinook|Maverick must not invent HP/torque (no brochure pin)");
+      }
+
+      const bayside = slice("Bayside", "Concourse");
+      if (!/type: "Class B"/.test(bayside) || /type: "Class B\+"/.test(bayside) || !/fuelType: "Gas"/.test(bayside)) {
+        fail("Chinook|Bayside must be Class B / Gas (Transit van) — not Class B+");
+      }
+      if (!/yearStart:\s*2021/.test(bayside)) {
+        fail("Chinook|Bayside yearStart must be 2021 (OEM history intro)");
+      }
+      if (
+        !/"2025": \[\s*"RS",\s*"SS",\s*"TB"\s*\]/.test(bayside) ||
+        !/"2026": \[\s*"RS",\s*"RT",\s*"SS",\s*"TB"\s*\]/.test(bayside)
+      ) {
+        fail("Chinook|Bayside MY25–26 brochure/RVUSA lock missing (RS/SS/TB then RS/RT/SS/TB)");
+      }
+      if (/"2027":/.test(bayside) || /"2024":/.test(bayside) || /"2021":/.test(bayside)) {
+        fail("Chinook|Bayside must omit 2021–2024 and 2027 (GAP — no dated cards)");
+      }
+      if (/horsepower:\s*\d/.test(bayside) || /torqueLbFt:\s*\d/.test(bayside)) {
+        fail("Chinook|Bayside must not invent HP/torque (no brochure pin)");
+      }
+
+      const concourse = slice("Concourse", null);
+      if (!/type: "Class B\+"/.test(concourse) || !/fuelType: "Diesel"/.test(concourse)) {
+        fail("Chinook|Concourse must be Class B+ / Diesel (modern Sprinter revival)");
+      }
+      if (!/yearStart:\s*2026/.test(concourse)) {
+        fail("Chinook|Concourse yearStart must be 2026 (modern revival; do not invent 1980s years)");
+      }
+      if (!/"2026": \[\s*"MT"\s*\]/.test(concourse)) {
+        fail("Chinook|Concourse MY26 brochure/RVUSA lock missing (MT only)");
+      }
+      if (/"2025":/.test(concourse) || /"2027":/.test(concourse) || /"2024":/.test(concourse)) {
+        fail("Chinook|Concourse must omit 2025 and 2027 (GAP — no dated cards) and pre-revival years");
+      }
+      if (/"FTB"/.test(concourse) || /"DS"/.test(concourse) || /"SS"/.test(concourse)) {
+        fail("Chinook|Concourse must not absorb Summit/Maverick sofa codes");
+      }
+      if (/horsepower:\s*\d/.test(concourse) || /torqueLbFt:\s*\d/.test(concourse)) {
+        fail("Chinook|Concourse must not invent HP/torque (no brochure pin)");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const chIdx = catalogIndex.Chinook;
+      if (!chIdx) fail("Chinook missing from CATALOG_INDEX");
+      if (chIdx.Destiny) fail("Chinook|Destiny must not appear in CATALOG_INDEX (GAP — no dated matrix)");
+      for (const lock of ["Summit", "Maverick", "Bayside"]) {
+        if (!chIdx[lock]?.years?.includes(2025) || !chIdx[lock]?.years?.includes(2026)) {
+          fail(`Chinook|${lock} index must include 2025–2026`);
+        }
+        if (chIdx[lock]?.years?.includes(2027) || chIdx[lock]?.years?.includes(2024)) {
+          fail(`Chinook|${lock} index must omit 2024 and 2027 (GAP)`);
+        }
+      }
+      if (!chIdx.Concourse?.years?.includes(2026) || chIdx.Concourse?.years?.includes(2027) || chIdx.Concourse?.years?.includes(2025)) {
+        fail("Chinook|Concourse index must be 2026 only (GAP 2025/2027)");
+      }
+      if (chIdx.Summit?.type !== "Class B+" || chIdx.Summit?.fuelType !== "Diesel") {
+        fail("Chinook|Summit index must be Class B+ / Diesel");
+      }
+      if (chIdx.Maverick?.type !== "Class B+" || chIdx.Maverick?.fuelType !== "Gas") {
+        fail("Chinook|Maverick index must be Class B+ / Gas");
+      }
+      if (chIdx.Bayside?.type !== "Class B" || chIdx.Bayside?.fuelType !== "Gas") {
+        fail("Chinook|Bayside index must be Class B / Gas");
+      }
+      if (chIdx.Concourse?.type !== "Class B+" || chIdx.Concourse?.fuelType !== "Diesel") {
+        fail("Chinook|Concourse index must be Class B+ / Diesel");
+      }
+      if (chIdx.Summit?.yearStart !== 2021) fail("Chinook|Summit index yearStart must be 2021");
+      if (chIdx.Maverick?.yearStart !== 2022) fail("Chinook|Maverick index yearStart must be 2022");
+      if (chIdx.Bayside?.yearStart !== 2021) fail("Chinook|Bayside index yearStart must be 2021");
+      if (chIdx.Concourse?.yearStart !== 2026) fail("Chinook|Concourse index yearStart must be 2026");
+    }
+  }
+
   // New makes must stay present once added
-  for (const make of ["Prime Time", "East to West"]) {
+  for (const make of ["Prime Time", "East to West", "Chinook"]) {
     if (!makes.has(make)) fail(`Missing make after expansion: ${make}`);
   }
   if (makes.has("Prime Time")) {
@@ -4461,6 +4621,14 @@ function main() {
   if (makes.has("East to West")) {
     for (const required of ["Della Terra", "Alta", "Tandara", "Ahara"]) {
       if (!makes.get("East to West").has(required)) fail(`East to West missing: ${required}`);
+    }
+  }
+  if (makes.has("Chinook")) {
+    for (const required of ["Summit", "Maverick", "Bayside", "Concourse"]) {
+      if (!makes.get("Chinook").has(required)) fail(`Chinook missing: ${required}`);
+    }
+    if (makes.get("Chinook").has("Destiny")) {
+      fail("Chinook|Destiny must not be added without a dated PDF / RVUSA year-card matrix");
     }
   }
 
