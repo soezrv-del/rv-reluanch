@@ -11,13 +11,11 @@ import {
 import { cn } from "@/lib/utils";
 import { hapticLight, hapticMedium } from "@/lib/haptics";
 import { DOCK_TAP_SLOP, isStationaryDockTap } from "@/lib/hooks/nativeWebView";
+import { DAVID_BOOK_SPLASH, DAVID_BOOK_SPLASH_POSTER } from "@/assets/launchMedia";
 import type { AppTab } from "./BottomTabs";
 import { PAGE_COPY } from "./shellConstants";
-import sealPoster from "@/assets/splash/rvfox-launch-seal-poster.jpg";
-import sealCover from "@/assets/splash/rvfox-cover-seal.jpg";
 
-/** Cover open / page-turn budgets — keep both under 500ms. */
-export const COVER_FLIP_MS = 380;
+/** Feature-page swipe budget — keep under 500ms. */
 export const PAGE_TURN_MS = 320;
 
 const LAUNCH_PAGES: {
@@ -121,30 +119,40 @@ export function MetalVerifiedTrue({
   );
 }
 
+function silenceVideo(el: HTMLVideoElement) {
+  el.defaultMuted = true;
+  el.muted = true;
+  el.volume = 0;
+  el.setAttribute("muted", "");
+  el.playsInline = true;
+  el.setAttribute("playsinline", "");
+  el.setAttribute("webkit-playsinline", "true");
+}
+
 /**
- * Closed 3D field-guide launch — Image 1 hardcover silhouette on a studio floor,
- * Image 2 chrome/cobalt seal printed on the cover. Tap flips open.
- * Inside leaves: Facts → Cal → Tow → Trips → Share → Grok → Premium.
+ * Cold open is David’s whole book video — cover open + page flips.
+ * After it ends or skip, the suite picker (Facts → … → Premium) is the app door.
  */
 export function Launchpad({
   onSelect,
-  onSkip: _onSkip,
-  menuImageSrc,
-  videoSrc: _videoSrc,
+  onSkip,
+  videoSrc,
 }: {
   onSelect: (tab: AppTab) => void;
   onSkip: () => void;
   menuImageSrc?: string;
   videoSrc?: string;
 }) {
-  const [opened, setOpened] = useState(false);
-  const [flipping, setFlipping] = useState(false);
+  const [phase, setPhase] = useState<"video" | "pages">(() =>
+    prefersReducedMotion() ? "pages" : "video",
+  );
   const [page, setPage] = useState(0);
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const viewportRef = useRef<HTMLDivElement | null>(null);
-  const flipTimer = useRef<number>(0);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const fireLock = useRef(0);
+  const entered = useRef(false);
   const swipeConsumed = useRef(false);
   const gesture = useRef<{
     id: number;
@@ -155,17 +163,50 @@ export function Launchpad({
     lastX: number;
     lastT: number;
   } | null>(null);
-  const emblem = menuImageSrc ?? sealCover ?? sealPoster;
+
+  const clip = videoSrc || DAVID_BOOK_SPLASH;
 
   useEffect(() => {
     hideNativeSplash();
   }, []);
 
+  const enterPages = () => {
+    if (entered.current) return;
+    entered.current = true;
+    const node = videoRef.current;
+    if (node) {
+      silenceVideo(node);
+      node.pause();
+    }
+    setPhase("pages");
+    setPage(0);
+    setDragX(0);
+  };
+
   useEffect(() => {
-    return () => {
-      if (flipTimer.current) window.clearTimeout(flipTimer.current);
+    if (phase !== "video") return;
+    const node = videoRef.current;
+    if (!node) return;
+    silenceVideo(node);
+    const keepSilent = () => silenceVideo(node);
+    node.addEventListener("volumechange", keepSilent);
+    const play = () => {
+      silenceVideo(node);
+      void node.play().catch(() => {
+        /* autoplay can be blocked — tap still skips */
+      });
     };
-  }, []);
+    if (node.readyState >= 2) play();
+    else node.addEventListener("canplay", play, { once: true });
+    const failSafe = window.setTimeout(enterPages, 8000);
+    return () => {
+      node.removeEventListener("volumechange", keepSilent);
+      node.removeEventListener("canplay", play);
+      window.clearTimeout(failSafe);
+    };
+    // enterPages is stable for this overlay lifetime
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, clip]);
 
   const once = (fn: () => void) => {
     const now = performance.now();
@@ -174,37 +215,17 @@ export function Launchpad({
     fn();
   };
 
-  const openBook = () => {
-    if (opened || flipping) return;
-    void hapticMedium();
-    if (prefersReducedMotion()) {
-      setOpened(true);
-      setPage(0);
-      return;
-    }
-    setFlipping(true);
-    flipTimer.current = window.setTimeout(() => {
-      setOpened(true);
-      setFlipping(false);
-      setPage(0);
-    }, COVER_FLIP_MS);
-  };
-
-  const closeBook = () => {
-    if (!opened || flipping) return;
-    void hapticLight();
-    setPage(0);
-    setDragX(0);
-    setOpened(false);
-    setFlipping(false);
-  };
-
   const pickTool = (id: AppTab) => {
     if (swipeConsumed.current) return;
     once(() => {
       void hapticMedium();
       onSelect(id);
     });
+  };
+
+  const skipSplash = () => {
+    void hapticLight();
+    enterPages();
   };
 
   const markSwipe = () => {
@@ -223,27 +244,6 @@ export function Launchpad({
     void hapticLight();
     setPage(clamped);
     setDragX(0);
-  };
-
-  const onCoverPointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
-    gesture.current = {
-      id: e.pointerId,
-      x: e.clientX,
-      y: e.clientY,
-      t: performance.now(),
-      swiping: false,
-      lastX: e.clientX,
-      lastT: performance.now(),
-    };
-  };
-
-  const onCoverPointerUp = (e: ReactPointerEvent<HTMLButtonElement>) => {
-    const g = gesture.current;
-    gesture.current = null;
-    if (!g) return;
-    const dx = e.clientX - g.x;
-    const dy = e.clientY - g.y;
-    if (isStationaryDockTap(dx, dy) || dx < -40) openBook();
   };
 
   const onPagerPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -302,10 +302,8 @@ export function Launchpad({
       const width = viewportRef.current?.clientWidth ?? window.innerWidth;
       const needed = Math.abs(vx) > 0.35 ? 18 : width * 0.18;
       if (dx < -needed) goPage(page + 1);
-      else if (dx > needed) {
-        if (page <= 0) closeBook();
-        else goPage(page - 1);
-      } else setDragX(0);
+      else if (dx > needed) goPage(page - 1);
+      else setDragX(0);
       return;
     }
 
@@ -327,12 +325,17 @@ export function Launchpad({
   };
 
   useEffect(() => {
-    if (!opened) return;
     const onKey = (e: KeyboardEvent) => {
+      if (phase === "video") {
+        if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          skipSplash();
+        }
+        return;
+      }
       if (e.key === "ArrowLeft") {
         e.preventDefault();
-        if (page <= 0) closeBook();
-        else goPage(page - 1);
+        goPage(page - 1);
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
         goPage(page + 1);
@@ -342,140 +345,99 @@ export function Launchpad({
         if (dest) pickTool(dest.id);
       } else if (e.key === "Escape") {
         e.preventDefault();
-        closeBook();
+        onSkip();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-    // page is enough — goPage/closeBook/pickTool are stable enough for this overlay
+    // page/phase is enough for this overlay
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opened, page]);
+  }, [phase, page]);
 
   const stripX = `calc(${-page * 100}% + ${dragX}px)`;
 
   return (
     <div
-      className="leather-launch fixed inset-0 z-[100] flex flex-col overflow-hidden text-fg"
+      className="lp-launch fixed inset-0 z-[100] flex flex-col overflow-hidden text-fg"
       data-no-swipe
-      data-magazine-open={opened ? "true" : "false"}
+      data-magazine-open={phase === "pages" ? "true" : "false"}
+      data-splash-phase={phase}
       onTouchMove={(e) => e.stopPropagation()}
     >
-      <div className="leather-stage flex min-h-0 flex-1 items-center justify-center">
-        <div className="leather-studio" aria-hidden />
-        <div
-          className={cn("leather-book relative mx-auto", (opened || flipping) && "is-open")}
-          onPointerUp={(e) => {
-            if (opened || flipping) return;
-            const dx = gesture.current ? e.clientX - gesture.current.x : 0;
-            const dy = gesture.current ? e.clientY - gesture.current.y : 0;
-            if (!gesture.current || isStationaryDockTap(dx, dy) || dx < -40) {
-              openBook();
-            }
-          }}
-        >
-          <div className="leather-book-shadow" aria-hidden />
-          <div className="leather-back" aria-hidden />
-          <div className="leather-pages-top" data-book-page-top aria-hidden />
-          <div className="leather-pages-bottom" aria-hidden />
-          <div className="leather-spine" data-book-spine aria-hidden>
-            <span className="leather-spine-title">RvFOX</span>
-          </div>
-          <div className="leather-page-edge" data-book-page-edge aria-hidden />
-          <div
-            ref={viewportRef}
-            className="leather-viewport"
-            onPointerDown={opened ? onPagerPointerDown : undefined}
-            onPointerMove={opened ? onPagerPointerMove : undefined}
-            onPointerUp={opened ? finishPagerGesture : undefined}
-            onPointerCancel={opened ? finishPagerGesture : undefined}
-            onClick={opened ? onPagerClick : undefined}
-            role={opened ? "group" : undefined}
-            aria-label={opened ? "RvFOX book pages" : undefined}
+      {phase === "video" ? (
+        <div className="lp-video-stage" onClick={skipSplash} role="presentation">
+          <video
+            ref={videoRef}
+            data-david-book-splash
+            className="lp-video"
+            src={clip}
+            poster={DAVID_BOOK_SPLASH_POSTER}
+            muted
+            playsInline
+            autoPlay
+            preload="auto"
+            controls={false}
+            disablePictureInPicture
+            disableRemotePlayback
+            aria-label="RvFOX book splash"
+            onEnded={enterPages}
+            onError={enterPages}
+            onVolumeChange={(e) => silenceVideo(e.currentTarget)}
+          />
+          <button
+            type="button"
+            data-launch-skip
+            className="lp-video-skip"
+            onClick={(e) => {
+              e.stopPropagation();
+              skipSplash();
+            }}
           >
-            <div
-              className={cn(
-                "leather-strip flex h-full",
-                dragging ? "leather-strip-dragging" : "leather-strip-snap",
-              )}
-              style={{ transform: `translate3d(${stripX}, 0, 0)` }}
-            >
-              {LAUNCH_PAGES.map((item, index) => {
-                const Icon = item.Icon;
-                return (
-                  <section
-                    key={item.id}
-                    className="leather-page"
-                    data-magazine-page={item.id}
-                    data-launch-tool={item.id}
-                    aria-hidden={!opened || index !== page}
-                  >
-                    <p className="leather-folio">
-                      {String(index + 1).padStart(2, "0")} /{" "}
-                      {String(LAUNCH_PAGES.length).padStart(2, "0")}
-                    </p>
-                    <div className="leather-page-icon" aria-hidden>
-                      <Icon className="size-7" strokeWidth={1.75} />
-                    </div>
-                    <h2 className="leather-page-title">{item.title}</h2>
-                    <p className="leather-page-blurb">{item.blurb}</p>
-                    <p className="leather-page-cue">Tap to open</p>
-                  </section>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              data-magazine-cover
-              data-book-cover
-              aria-label="Open RvFOX. Verified and True. Know before you buy."
-              disabled={opened && !flipping}
-              onPointerDown={onCoverPointerDown}
-              onPointerUp={onCoverPointerUp}
-              onPointerCancel={() => {
-                gesture.current = null;
-              }}
-              onClick={() => {
-                if (!opened && !flipping) openBook();
-              }}
-              className={cn(
-                "leather-cover",
-                flipping && "is-flipping",
-                opened && !flipping && "is-gone",
-              )}
-            >
-              <span aria-hidden className="leather-cover-plate" />
-              <span aria-hidden className="leather-cover-grain" />
-              <span aria-hidden className="leather-cover-glow" />
-              <span aria-hidden className="leather-cover-crease" />
-
-              <span className="leather-cover-copy leather-cover-copy-top">
-                <span className="leather-wordmark" data-cover-wordmark>
-                  RvFOX®
-                </span>
-                <span className="leather-verified">Verified and True</span>
-              </span>
-
-              <span className="leather-emblem-well">
-                <span className="leather-emblem-die">
-                  <img
-                    src={emblem}
-                    alt=""
-                    className="leather-emblem-stamp"
-                    draggable={false}
-                    decoding="async"
-                    fetchPriority="high"
-                  />
-                </span>
-              </span>
-
-              <span className="leather-cover-copy leather-cover-copy-bottom">
-                <span className="leather-tagline">Know before you buy.</span>
-              </span>
-            </button>
+            Skip
+          </button>
+        </div>
+      ) : (
+        <div
+          ref={viewportRef}
+          className="lp-deck"
+          data-launch-deck
+          onPointerDown={onPagerPointerDown}
+          onPointerMove={onPagerPointerMove}
+          onPointerUp={finishPagerGesture}
+          onPointerCancel={finishPagerGesture}
+          onClick={onPagerClick}
+          role="group"
+          aria-label="RvFOX tools"
+        >
+          <div
+            className={cn("lp-strip flex h-full", dragging ? "lp-strip-dragging" : "lp-strip-snap")}
+            style={{ transform: `translate3d(${stripX}, 0, 0)` }}
+          >
+            {LAUNCH_PAGES.map((item, index) => {
+              const Icon = item.Icon;
+              return (
+                <section
+                  key={item.id}
+                  className="lp-page"
+                  data-magazine-page={item.id}
+                  data-launch-tool={item.id}
+                  aria-hidden={index !== page}
+                >
+                  <p className="lp-folio">
+                    {String(index + 1).padStart(2, "0")} / {String(LAUNCH_PAGES.length).padStart(2, "0")}
+                  </p>
+                  <div className="lp-page-icon" aria-hidden>
+                    <Icon className="size-7" strokeWidth={1.75} />
+                  </div>
+                  <h2 className="lp-page-title">{item.title}</h2>
+                  <p className="lp-page-blurb">{item.blurb}</p>
+                  <p className="lp-page-cue">Tap to open</p>
+                </section>
+              );
+            })}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
