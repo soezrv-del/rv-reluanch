@@ -340,3 +340,31 @@ test("Forest River fifth-wheel Facts SoT: 2026 spec-table quarantine + dated 202
   assert.doesNotMatch(col, /"2027":/);
 });
 
+test("Forest River thin-line Facts SoT: 2010–2014 dated locks + empty GAP years", () => {
+  const block = src("rvData.ts");
+  const f0 = block.indexOf('\n  "Forest River": {');
+  const f1 = block.indexOf("\n  Airstream: {");
+  const fr = block.slice(f0, f1);
+  const mini = fr.slice(fr.indexOf('    "Rockwood Mini Lite": {'), fr.indexOf('    "Rockwood Ultra Lite": {'));
+  assert.match(mini, /yearStart:\s*2013/);
+  assert.match(mini, /"2013": \["1809S", "2104S", "2109S", "2304", "2306", "2502S", "2503S", "2504"\]/);
+  assert.doesNotMatch(mini, /"2014":/);
+  assert.match(mini, /"2027": \["2108RB", "2109S", "2205S", "2213S"/);
+  const micro = fr.slice(fr.indexOf('    "Flagstaff Micro Lite": {'), fr.indexOf('    "Salem Cruise Lite": {'));
+  assert.match(micro, /yearStart:\s*2015/);
+  assert.doesNotMatch(micro, /"2010":|"2011":|"2012":|"2013":|"2014":/);
+  const cruise = fr.slice(fr.indexOf('    "Salem Cruise Lite": {'), fr.indexOf('    "Salem Hemisphere": {'));
+  assert.match(cruise, /yearStart:\s*2013/);
+  assert.match(cruise, /"2013": \["221RB", "241QB", "251RL", "261BH", "271BH", "281BH", "281QB", "291FB"\]/);
+  assert.doesNotMatch(cruise, /"2010":|"2011":|"2012":/);
+  const wild = fr.slice(fr.indexOf("    Wildwood: {"), fr.indexOf('    "r-Pod": {'));
+  assert.match(wild, /yearStart:\s*2014/);
+  assert.doesNotMatch(wild, /"2010":|"2011":|"2012":|"2013":/);
+  const rpod = fr.slice(fr.indexOf('    "r-Pod": {'));
+  assert.match(rpod, /yearStart:\s*2010/);
+  assert.match(rpod, /"2010": \["RP-151"/);
+  assert.doesNotMatch(rpod, /"2022":/);
+  assert.doesNotMatch(rpod, /"2027":/);
+  assert.doesNotMatch(rpod, /"22RB"/);
+});
+
