@@ -1509,8 +1509,8 @@
 .leather-spine {
   position: relative;
   z-index: 5;
-  flex: 0 0 1.7rem;
-  width: 1.7rem;
+  flex: 0 0 1.85rem;
+  width: 1.85rem;
   height: 100%;
   border-radius: 14px 0 0 14px;
   background:
@@ -1546,19 +1546,19 @@
 
 .leather-spine-band {
   position: absolute;
-  left: 14%;
-  right: 22%;
-  height: 0.42rem;
-  border-radius: 2px;
+  left: 16%;
+  right: 24%;
+  height: 0.55rem;
+  border-radius: 3px;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-gold-bright) 55%, #2a1c14) 0%,
-    var(--leather-deep) 45%,
-    color-mix(in srgb, var(--color-gold) 40%, #2a1c14) 100%
+    var(--color-gold-bright) 0%,
+    var(--color-gold) 48%,
+    #8a7350 100%
   );
   box-shadow:
-    0 1px 0 color-mix(in srgb, var(--color-gold-bright) 35%, transparent),
-    inset 0 1px 0 rgba(255, 244, 220, 0.2);
+    0 1px 0 color-mix(in srgb, var(--color-gold-bright) 55%, transparent),
+    inset 0 1px 0 rgba(255, 244, 220, 0.35);
 }
 
 .leather-spine-band-a {
@@ -1573,8 +1573,8 @@
   position: relative;
   z-index: 3;
   display: flex;
-  flex: 0 0 0.72rem;
-  width: 0.72rem;
+  flex: 0 0 0.9rem;
+  width: 0.9rem;
   height: 100%;
   flex-direction: row;
   border-radius: 0 12px 12px 0;
@@ -1633,14 +1633,19 @@
   background:
     linear-gradient(
       90deg,
-      rgba(0, 0, 0, 0.22) 0%,
-      transparent 14%
+      rgba(0, 0, 0, 0.18) 0%,
+      transparent 16%
+    ),
+    radial-gradient(
+      ellipse 90% 55% at 50% 28%,
+      color-mix(in srgb, var(--color-gold-dim) 90%, transparent),
+      transparent 70%
     ),
     linear-gradient(
       180deg,
-      var(--color-bg-elevated) 0%,
-      var(--color-surface) 48%,
-      var(--color-bg) 100%
+      var(--color-surface-2) 0%,
+      var(--color-surface) 46%,
+      var(--color-bg-elevated) 100%
     );
   touch-action: none;
   user-select: none;
@@ -1785,9 +1790,9 @@
   position: absolute;
   inset: 0.7rem 0.65rem 0.7rem 0.45rem;
   border-radius: 6px;
-  border: 1px solid var(--color-gold-border);
+  border: 1.5px solid var(--color-gold-bright);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--color-gold-bright) 22%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 40%, transparent),
     0 0 0 1px color-mix(in srgb, var(--leather-deep) 45%, transparent);
   pointer-events: none;
 }
