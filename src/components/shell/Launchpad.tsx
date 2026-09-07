@@ -121,7 +121,7 @@ export function MetalVerifiedTrue({
 }
 
 /**
- * Field-guide launch — chestnut cover + original suite golds, then a book pager.
+ * Field-guide launch — bright chrome/cobalt seal on a black plate, then a book pager.
  * Cover tap/swipe-left flips to page one (RvFacts). Each leaf opens that tool.
  */
 export function Launchpad({
@@ -440,6 +440,7 @@ export function Launchpad({
             >
               <span aria-hidden className="leather-cover-plate" />
               <span aria-hidden className="leather-cover-grain" />
+              <span aria-hidden className="leather-cover-glow" />
               <span aria-hidden className="leather-cover-frame" />
               <span aria-hidden className="leather-cover-crease" />
 

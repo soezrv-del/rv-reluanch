@@ -51,7 +51,10 @@ test("leather cover opens a book of real suite destinations", () => {
   assert.match(css, /--leather-ink:\s*var\(--color-fg\)/);
   assert.match(css, /\.leather-launch[\s\S]*background:\s*var\(--color-bg\)/);
   assert.match(css, /color:\s*var\(--color-gold-bright\)/);
+  assert.match(css, /\.leather-emblem-stamp[\s\S]*?filter:\s*none/);
+  assert.match(css, /object-fit:\s*contain/);
   assert.doesNotMatch(css, /--leather-hide:\s*#0b0a0c/);
+  assert.doesNotMatch(css, /--leather-board:\s*#8a6348/);
   assert.doesNotMatch(css, /brightness\(0\.7\)/);
   assert.doesNotMatch(css, /mix-blend-mode:\s*overlay/);
   assert.doesNotMatch(css, /\.magazine-spine/);
