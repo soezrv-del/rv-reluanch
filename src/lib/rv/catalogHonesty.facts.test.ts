@@ -520,3 +520,64 @@ test("Chinook Facts SoT: dated 2025–2026 library PDFs + RVUSA year cards; 2027
   assert.doesNotMatch(concourse, /"2025":|"2027":|"FTB"/);
 });
 
+test("Roadtrek Facts SoT: dated library PDFs + RVUSA year cards; ghosts quarantined", () => {
+  const block = src("rvData.ts");
+  const r0 = block.indexOf("\n  Roadtrek: {");
+  const r1 = block.indexOf('\n  "Nexus RV": {');
+  assert.ok(r0 > 0 && r1 > r0, "expected Roadtrek block");
+  const roadtrek = block.slice(r0, r1);
+
+  assert.doesNotMatch(roadtrek, /\n    Pivot: \{/);
+  assert.doesNotMatch(roadtrek, /"170"|"190P"|"136"|"170D"|"170P"|"Chase Plus"/);
+
+  const zion = roadtrek.slice(roadtrek.indexOf("    Zion: {"), roadtrek.indexOf('    "Zion Slumber": {'));
+  assert.match(zion, /type: "Class B"/);
+  assert.match(zion, /fuelType: "Gas"/);
+  assert.match(zion, /yearStart:\s*2015/);
+  assert.match(zion, /"2017": \[\s*"Zion",\s*"Zion SRT"\s*\]/);
+  assert.match(zion, /"2026": \[\s*"Zion"\s*\]/);
+  assert.match(zion, /"2027": \[\s*"Zion"\s*\]/);
+  assert.doesNotMatch(zion, /"2020":|"2015":|"Sleeper"|"SL"/);
+
+  const slumber = roadtrek.slice(roadtrek.indexOf('    "Zion Slumber": {'), roadtrek.indexOf("    Play: {"));
+  assert.match(slumber, /yearStart:\s*2021/);
+  assert.match(slumber, /"2021": \[\s*"Zion Slumber"\s*\]/);
+  assert.match(slumber, /"2027": \[\s*"Zion Slumber"\s*\]/);
+  assert.doesNotMatch(slumber, /"2015":|"2020":/);
+
+  const play = roadtrek.slice(roadtrek.indexOf("    Play: {"), roadtrek.indexOf('    "SS Agile": {'));
+  assert.match(play, /fuelType: "Gas"/);
+  assert.match(play, /yearStart:\s*2021/);
+  assert.match(play, /"2025": \[\s*"Play",\s*"Play Slumber",\s*"Play SRT",\s*"Play\+",\s*"Play\+ Slumber"\s*\]/);
+  assert.match(play, /"2026": \[\s*"Play",\s*"Play Slumber",\s*"Play\+",\s*"Play\+ Slumber"\s*\]/);
+  assert.match(play, /"2027": \[\s*"Play Slumber"\s*\]/);
+  assert.doesNotMatch(play, /"2018":|"2024":|"136"/);
+
+  const agile = roadtrek.slice(roadtrek.indexOf('    "SS Agile": {'), roadtrek.indexOf("    Chase: {"));
+  assert.match(agile, /fuelType: "Diesel"/);
+  assert.match(agile, /yearStart:\s*2011/);
+  assert.match(agile, /"2011": \[\s*"SS-Agile"\s*\]/);
+  assert.match(agile, /"2026": \[\s*"SS Agile"\s*\]/);
+  assert.doesNotMatch(agile, /"2027":|"2020":|"2023":/);
+
+  const chase = roadtrek.slice(roadtrek.indexOf("    Chase: {"), roadtrek.indexOf('    "CS Adventurous": {'));
+  assert.match(chase, /fuelType: "Gas"/);
+  assert.match(chase, /yearStart:\s*2021/);
+  assert.match(chase, /"2024": \[\s*"Chase 50"\s*\]/);
+  assert.match(chase, /"2027": \[\s*"Chase"\s*\]/);
+  assert.doesNotMatch(chase, /"2016":|"Chase Plus"/);
+
+  const cs = roadtrek.slice(roadtrek.indexOf('    "CS Adventurous": {'), roadtrek.indexOf("    Popular: {"));
+  assert.match(cs, /fuelType: "Diesel"/);
+  assert.match(cs, /yearEnd:\s*2019/);
+  assert.match(cs, /"2019": \[\s*"CS Adventurous"\s*\]/);
+  assert.doesNotMatch(cs, /"2010":|"2026":|"2027":/);
+
+  const popular = roadtrek.slice(roadtrek.indexOf("    Popular: {"));
+  assert.match(popular, /fuelType: "Gas"/);
+  assert.match(popular, /yearEnd:\s*2018/);
+  assert.match(popular, /"2011": \[\s*"190-Popular",\s*"210-Popular"\s*\]/);
+  assert.match(popular, /"2017": \[\s*"190 Popular",\s*"210 Popular"\s*\]/);
+  assert.doesNotMatch(popular, /"2010":|"2026":|"170D"/);
+});
+

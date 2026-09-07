@@ -295,6 +295,34 @@ const FORBIDDEN_FLOORPLANS = {
     ],
     reason: "Springdale Mini / Max 2027 codes and Mini leftover bleed stay off core Springdale",
   },
+  "Roadtrek|Zion": {
+    codes: ["170", "190P", "D", "Slumber", "Sleeper", "SL", "136", "170D", "170P"],
+    reason: "Chassis leftovers / Zion Slumber sibling / unsourced Sleeper-SL stay off Zion",
+  },
+  "Roadtrek|Zion Slumber": {
+    codes: ["170", "190P", "D", "Sleeper", "SL", "Zion SRT", "Slumber"],
+    reason: "Brochure/RVUSA character is Zion Slumber — not bare Slumber or SRT",
+  },
+  "Roadtrek|Play": {
+    codes: ["136", "170", "190P"],
+    reason: "ProMaster wheelbase leftovers stay off Play",
+  },
+  "Roadtrek|SS Agile": {
+    codes: ["170", "Agile", "190P"],
+    reason: "Bare Agile / Sprinter 170 leftovers stay off SS Agile",
+  },
+  "Roadtrek|Chase": {
+    codes: ["170", "Chase Plus"],
+    reason: "Chase Plus and 170 are unsourced ghosts — not on dated Chase PDFs",
+  },
+  "Roadtrek|CS Adventurous": {
+    codes: ["CS", "Adventurous"],
+    reason: "Dated PDFs print CS Adventurous — not split CS / Adventurous codes",
+  },
+  "Roadtrek|Popular": {
+    codes: ["190", "210", "170D", "170P", "190P", "Popular 190", "Popular 210"],
+    reason: "Bare length codes and reversed Popular 190 names stay off; brochure is 190-Popular / 190 Popular",
+  },
 };
 
 /** Series expected type substring (case-insensitive). */
@@ -361,6 +389,13 @@ const EXPECTED_TYPE = {
   "Chinook|Maverick": "class b",
   "Chinook|Bayside": "class b",
   "Chinook|Concourse": "class b",
+  "Roadtrek|Zion": "class b",
+  "Roadtrek|Zion Slumber": "class b",
+  "Roadtrek|Play": "class b",
+  "Roadtrek|SS Agile": "class b",
+  "Roadtrek|Chase": "class b",
+  "Roadtrek|CS Adventurous": "class b",
+  "Roadtrek|Popular": "class b",
 };
 
 /** Phantom / non-OEM series that must not exist. */
@@ -4609,6 +4644,175 @@ function main() {
     }
   }
 
+  // Roadtrek honesty lock. Make key is unquoted (`Roadtrek: {`).
+  // Dated library.rvusa.com/brochure/{Year}-Roadtrek-*.pdf + RVUSA year cards.
+  // MY2027 locked only where year-labeled RVUSA pages have Base cards; else GAP.
+  {
+    const r0 = src.indexOf("\n  Roadtrek: {");
+    const r1 = src.indexOf('\n  "Nexus RV": {');
+    if (r0 < 0 || r1 < r0) {
+      fail('Roadtrek block not found between Roadtrek: and "Nexus RV":');
+    } else {
+      const roadtrek = src.slice(r0, r1);
+      const slice = (a, b) => {
+        const i =
+          roadtrek.indexOf(`    "${a}": {`) >= 0
+            ? roadtrek.indexOf(`    "${a}": {`)
+            : roadtrek.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? roadtrek.length
+            : roadtrek.indexOf(`    "${b}": {`) >= 0
+              ? roadtrek.indexOf(`    "${b}": {`)
+              : roadtrek.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? roadtrek.slice(i, j) : roadtrek.slice(i);
+      };
+
+      if (/"Pivot"|"RS Adventurous"|"RS-Adventurous"/.test(roadtrek)) {
+        fail("Roadtrek must not add Pivot / RS-Adventurous keys this pass");
+      }
+
+      const zion = slice("Zion", "Zion Slumber");
+      if (!/type: "Class B"/.test(zion) || !/fuelType: "Gas"/.test(zion)) {
+        fail("Roadtrek|Zion must be Class B / Gas (ProMaster)");
+      }
+      if (!/yearStart:\s*2015/.test(zion)) {
+        fail("Roadtrek|Zion yearStart must stay 2015 (nameplate intro)");
+      }
+      if (!/"2017": \[\s*"Zion",\s*"Zion SRT"\s*\]/.test(zion) || !/"2018": \[\s*"Zion"\s*\]/.test(zion)) {
+        fail("Roadtrek|Zion MY17–18 brochure/RVUSA lock missing");
+      }
+      if (!/"2025": \[\s*"Zion"\s*\]/.test(zion) || !/"2026": \[\s*"Zion"\s*\]/.test(zion) || !/"2027": \[\s*"Zion"\s*\]/.test(zion)) {
+        fail("Roadtrek|Zion MY25–27 lock missing (Zion only; no SRT copy-forward)");
+      }
+      if (/"2020":|"2016":|"2015":/.test(zion) || /"Sleeper"|"SL"|"170"|"190P"/.test(zion)) {
+        fail("Roadtrek|Zion must omit GAP years and ghost Sleeper/SL/170/190P");
+      }
+
+      const slumber = slice("Zion Slumber", "Play");
+      if (!/type: "Class B"/.test(slumber) || !/fuelType: "Gas"/.test(slumber)) {
+        fail("Roadtrek|Zion Slumber must be Class B / Gas (ProMaster)");
+      }
+      if (!/yearStart:\s*2021/.test(slumber)) {
+        fail("Roadtrek|Zion Slumber yearStart must be 2021 (MY2021 launch)");
+      }
+      if (!/"2021": \[\s*"Zion Slumber"\s*\]/.test(slumber) || !/"2027": \[\s*"Zion Slumber"\s*\]/.test(slumber)) {
+        fail("Roadtrek|Zion Slumber MY21/MY27 brochure/RVUSA lock missing");
+      }
+      if (/"2015":|"2016":|"2020":/.test(slumber) || /"Sleeper"|"SL"/.test(slumber)) {
+        fail("Roadtrek|Zion Slumber must omit pre-2021 GAP years and Sleeper/SL");
+      }
+
+      const play = slice("Play", "SS Agile");
+      if (!/type: "Class B"/.test(play) || !/fuelType: "Gas"/.test(play)) {
+        fail("Roadtrek|Play must be Class B / Gas (ProMaster)");
+      }
+      if (!/yearStart:\s*2021/.test(play)) {
+        fail("Roadtrek|Play yearStart must be 2021 (MY2021 launch)");
+      }
+      if (!/"2021": \[\s*"Play"\s*\]/.test(play) || !/"2025": \[\s*"Play",\s*"Play Slumber",\s*"Play SRT",\s*"Play\+",\s*"Play\+ Slumber"\s*\]/.test(play)) {
+        fail("Roadtrek|Play MY21 / MY25 brochure lock missing");
+      }
+      if (!/"2026": \[\s*"Play",\s*"Play Slumber",\s*"Play\+",\s*"Play\+ Slumber"\s*\]/.test(play)) {
+        fail("Roadtrek|Play MY26 RVUSA lock missing (no Play SRT)");
+      }
+      if (!/"2027": \[\s*"Play Slumber"\s*\]/.test(play)) {
+        fail("Roadtrek|Play MY27 must be Play Slumber only (RVUSA Base card)");
+      }
+      if (/"2018":|"2019":|"2020":|"2024":|"136"/.test(play)) {
+        fail("Roadtrek|Play must omit pre-2021 / 2024 GAP years and 136 ghost");
+      }
+
+      const agile = slice("SS Agile", "Chase");
+      if (!/type: "Class B"/.test(agile) || !/fuelType: "Diesel"/.test(agile)) {
+        fail("Roadtrek|SS Agile must be Class B / Diesel (Sprinter) — not ProMaster gas");
+      }
+      if (!/yearStart:\s*2011/.test(agile)) {
+        fail("Roadtrek|SS Agile yearStart must be 2011 (first MY2010+ dated lock)");
+      }
+      if (!/"2011": \[\s*"SS-Agile"\s*\]/.test(agile) || !/"2025": \[\s*"SS Agile"\s*\]/.test(agile) || !/"2026": \[\s*"SS Agile"\s*\]/.test(agile)) {
+        fail("Roadtrek|SS Agile 2011 hyphen / 2025–2026 space lock missing");
+      }
+      if (/"2020":|"2023":|"2024":|"2027":|"Agile"|"170"/.test(agile)) {
+        fail("Roadtrek|SS Agile must omit GAP years and bare Agile/170");
+      }
+
+      const chase = slice("Chase", "CS Adventurous");
+      if (!/type: "Class B"/.test(chase) || !/fuelType: "Gas"/.test(chase)) {
+        fail("Roadtrek|Chase must be Class B / Gas (ProMaster) — not diesel");
+      }
+      if (!/yearStart:\s*2021/.test(chase)) {
+        fail("Roadtrek|Chase yearStart must be 2021 (MY2021 launch)");
+      }
+      if (!/"2021": \[\s*"Chase"\s*\]/.test(chase) || !/"2024": \[\s*"Chase 50"\s*\]/.test(chase) || !/"2027": \[\s*"Chase"\s*\]/.test(chase)) {
+        fail("Roadtrek|Chase MY21 / Chase 50 MY24 / MY27 RVUSA lock missing");
+      }
+      if (/"2016":|"2017":|"2018":|"2020":|"Chase Plus"|"170"/.test(chase)) {
+        fail("Roadtrek|Chase must omit pre-2021 GAP years and Chase Plus/170");
+      }
+
+      const cs = slice("CS Adventurous", "Popular");
+      if (!/type: "Class B"/.test(cs) || !/fuelType: "Diesel"/.test(cs)) {
+        fail("Roadtrek|CS Adventurous must be Class B / Diesel (Sprinter)");
+      }
+      if (!/yearStart:\s*2008/.test(cs) || !/yearEnd:\s*2019/.test(cs)) {
+        fail("Roadtrek|CS Adventurous yearStart 2008 / yearEnd 2019");
+      }
+      if (!/"2014": \[\s*"CS Adventurous"\s*\]/.test(cs) || !/"2019": \[\s*"CS Adventurous"\s*\]/.test(cs)) {
+        fail("Roadtrek|CS Adventurous MY14 / MY19 brochure lock missing");
+      }
+      if (/"2010":|"2011":|"2015":|"2020":|"2026":|"2027":/.test(cs)) {
+        fail("Roadtrek|CS Adventurous must omit pre-2014 / 2015 / post-2019 GAP years");
+      }
+
+      const popular = slice("Popular", null);
+      if (!/type: "Class B"/.test(popular) || !/fuelType: "Gas"/.test(popular)) {
+        fail("Roadtrek|Popular must be Class B / Gas (Chevy Express) — not dual-fuel invent");
+      }
+      if (!/yearStart:\s*2005/.test(popular) || !/yearEnd:\s*2018/.test(popular)) {
+        fail("Roadtrek|Popular yearStart 2005 / yearEnd 2018");
+      }
+      if (!/"2011": \[\s*"190-Popular",\s*"210-Popular"\s*\]/.test(popular) || !/"2017": \[\s*"190 Popular",\s*"210 Popular"\s*\]/.test(popular)) {
+        fail("Roadtrek|Popular MY11 hyphen / MY17 space brochure lock missing");
+      }
+      if (/"2010":|"2014":|"2015":|"2016":|"2019":|"2026":|"170D"|"170P"/.test(popular)) {
+        fail("Roadtrek|Popular must omit GAP years and 170D/170P ghosts");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const rtIdx = catalogIndex.Roadtrek;
+      if (!rtIdx) fail("Roadtrek missing from CATALOG_INDEX");
+      if (rtIdx.Zion?.fuelType !== "Gas" || rtIdx.Zion?.type !== "Class B") {
+        fail("Roadtrek|Zion index must be Class B / Gas");
+      }
+      if (rtIdx["SS Agile"]?.fuelType !== "Diesel") {
+        fail("Roadtrek|SS Agile index must be Diesel");
+      }
+      if (rtIdx.Chase?.fuelType !== "Gas" || rtIdx.Chase?.yearStart !== 2021) {
+        fail("Roadtrek|Chase index must be Gas / yearStart 2021");
+      }
+      if (rtIdx.Play?.yearStart !== 2021 || !rtIdx.Play?.years?.includes(2027)) {
+        fail("Roadtrek|Play index must start 2021 and include 2027");
+      }
+      if (rtIdx["SS Agile"]?.years?.includes(2027)) {
+        fail("Roadtrek|SS Agile index must omit 2027 (GAP)");
+      }
+      if (rtIdx.Popular?.years?.includes(2026) || rtIdx.Popular?.years?.includes(2010)) {
+        fail("Roadtrek|Popular index must omit 2010 and 2026 (GAP)");
+      }
+      if (rtIdx["CS Adventurous"]?.years?.includes(2026)) {
+        fail("Roadtrek|CS Adventurous index must omit 2026 (GAP)");
+      }
+      if (rtIdx.Zion?.yearStart !== 2015) fail("Roadtrek|Zion index yearStart must be 2015");
+      if (rtIdx["Zion Slumber"]?.yearStart !== 2021) fail("Roadtrek|Zion Slumber index yearStart must be 2021");
+      if (rtIdx["SS Agile"]?.yearStart !== 2011) fail("Roadtrek|SS Agile index yearStart must be 2011");
+    }
+  }
+
   // New makes must stay present once added
   for (const make of ["Prime Time", "East to West", "Chinook"]) {
     if (!makes.has(make)) fail(`Missing make after expansion: ${make}`);
@@ -4629,6 +4833,14 @@ function main() {
     }
     if (makes.get("Chinook").has("Destiny")) {
       fail("Chinook|Destiny must not be added without a dated PDF / RVUSA year-card matrix");
+    }
+  }
+  if (makes.has("Roadtrek")) {
+    for (const required of ["Zion", "Zion Slumber", "Play", "SS Agile", "Chase", "CS Adventurous", "Popular"]) {
+      if (!makes.get("Roadtrek").has(required)) fail(`Roadtrek missing: ${required}`);
+    }
+    if (makes.get("Roadtrek").has("Pivot") || makes.get("Roadtrek").has("RS Adventurous")) {
+      fail("Roadtrek must not add Pivot / RS-Adventurous keys this pass");
     }
   }
 

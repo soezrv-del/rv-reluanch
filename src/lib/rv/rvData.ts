@@ -28529,23 +28529,47 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       description: "Pleasure-Way Ontour 2.0 — compact Transit Class B entry under the Ontour family."
     }
   },
+  // Roadtrek (Home & Park 1974; Erwin Hymer / Thor adjacency historically; Rapido 2019).
+  // Living Class B keys only. Empty/GAP > invent. Dated library PDF / year-labeled RVUSA
+  // outranks undated OEM “current”. Do not invent pre-2010 fills. Do not copy 2026 onto 2027.
   Roadtrek: {
     Zion: {
       type: "Class B",
-      floorplans: ["Zion", "Slumber", "Sleeper", "SL", "170", "190P", "D"],
+      floorplans: ["Zion", "Zion SRT"],
       floorplansByYear: {
-        "2015": ["Zion", "Slumber"],
-        "2016": ["Zion", "Slumber"],
-        "2017": ["Zion", "Slumber", "Sleeper"],
-        "2018": ["Zion", "Slumber", "Sleeper"],
-        "2019": ["Zion", "Slumber", "Sleeper"],
-        "2020": ["Zion", "Slumber", "Sleeper"],
-        "2021": ["Zion", "Slumber", "Sleeper", "SL"],
-        "2022": ["Zion", "Slumber", "Sleeper", "SL"],
-        "2023": ["Zion", "Slumber", "Sleeper", "SL"],
-        "2024": ["Zion", "Slumber", "Sleeper", "SL"],
-        "2025": ["Zion", "Slumber", "SL"],
-        "2026": ["Zion", "Slumber", "SL", "170", "190P", "D"]
+        // 2015–2016 GAP: yearStart 2015 (JD Power / 2015 Zion nameplate). No extractable
+        // library.rvusa.com year PDF this pass. Do not invent Sleeper / SL / Slumber on this key.
+        // LOCK library.rvusa.com/brochure/2017-Roadtrek-ZION.pdf (Ram ProMaster 3500 · 3.6L gas)
+        // + library.rvusa.com/brochure/2017-Roadtrek-Zion-SRT.pdf
+        "2017": ["Zion", "Zion SRT"],
+        // LOCK library.rvusa.com/brochure/2018_Roadtrek_ZION.pdf (same bytes as 2017-Roadtrek-ZION.pdf)
+        // + RVUSA spec-guide-search brand_id=464: ZION 2018 Base. No 2018-Roadtrek-Zion-SRT.pdf.
+        "2018": ["Zion"],
+        // LOCK library.rvusa.com/brochure/2019-Roadtrek-ZION.pdf
+        // + library.rvusa.com/brochure/2019-Roadtrek-Zion-SRT.pdf
+        "2019": ["Zion", "Zion SRT"],
+        // 2020 GAP: no year-true library PDF.
+        // LOCK library.rvusa.com/brochure/2021-Roadtrek-ZION.pdf
+        // + library.rvusa.com/brochure/2021-Roadtrek-Zion-SRT.pdf
+        // Zion Slumber is a sibling key (2021 launch) — do not list Slumber here.
+        "2021": ["Zion", "Zion SRT"],
+        // LOCK library.rvusa.com/brochure/2022-Roadtrek-ZION.pdf
+        // + library.rvusa.com/brochure/2022-Roadtrek-Zion-SRT.pdf
+        "2022": ["Zion", "Zion SRT"],
+        // LOCK library.rvusa.com/brochure/2023-Roadtrek-ZION.pdf (shared premium: CHASE / ZION Series / PIVOT)
+        "2023": ["Zion", "Zion SRT"],
+        // LOCK library.rvusa.com/brochure/2024-Roadtrek-ZION.pdf spec table: Zion / Zion Slumber / Zion SRT
+        // + RVUSA spec-guide-search: Zion SRT 2024 Base.
+        "2024": ["Zion", "Zion SRT"],
+        // LOCK library.rvusa.com/brochure/2025-Roadtrek-ZION.pdf (same bytes as 2024 premium PDF)
+        // + RVUSA m5396-y2025-b464 ZION Base. No 2025 Zion SRT year card.
+        "2025": ["Zion"],
+        // LOCK RVUSA 2026-roadtrek-zion-base-class-b-specs-fp22698 (Floorplan: Base) · 3.6L gas · 280 HP.
+        // No 2026-Roadtrek-ZION.pdf. Do not copy-forward Zion SRT.
+        "2026": ["Zion"],
+        // LOCK RVUSA spec-guide-search brand_id=464: ZION 2027 Base.
+        // No 2027-Roadtrek-ZION.pdf.
+        "2027": ["Zion"]
       },
       lengthRange: [
         19,
@@ -28562,7 +28586,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         145000
       ],
       engine: "Ram 3.6L V6 gas",
-      horsepower: 280,
       chassis: "Ram ProMaster 3500",
       fuelType: "Gas",
       recalls: 0,
@@ -28581,32 +28604,46 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       mpgHighwayEst: 16,
       powertrainByYear: [
         {
-          from: 2015,
-          to: 2015,
-          engine: "Ram / Dodge 3.6L V6 gas (or earlier 3.6/3.0 by year)",
+          from: 2017,
+          to: 2019,
+          engine: "Ram 3.6L V6 gas",
+          chassis: "Ram ProMaster 3500",
+          fuelType: "Gas",
+          notes: "LOCK 2017-Roadtrek-ZION.pdf / 2018_Roadtrek_ZION.pdf / 2019-Roadtrek-ZION.pdf — Fuel type Gasoline. No brochure HP pin on the 2017/2018 PDF."
+        },
+        {
+          from: 2021,
+          to: 2027,
+          engine: "Ram 3.6L V6 gas",
           horsepower: 280,
-          chassis: "Ram ProMaster / earlier van chassis",
-          notes: "2006–2015 era powertrain for Roadtrek Zion"
+          chassis: "Ram ProMaster 3500",
+          fuelType: "Gas",
+          notes: "LOCK 2021–2025 library Zion PDFs (3.6L gas V6). 2021-Roadtrek-Chase.pdf pins 209 kW/280 HP on the same ProMaster family. RVUSA 2026 Zion Base pins 280 HP/209 kW."
         }
       ],
-      description: "Roadtrek Zion — ProMaster Class B volume line. Slumber / Sleeper / SL packages. Compact couple van."
+      description: "Roadtrek Zion — Ram ProMaster Class B. Floorplans locked from dated library brochures / RVUSA year cards. Zion Slumber is a sibling key."
     },
     "Zion Slumber": {
       type: "Class B",
-      floorplans: ["Slumber"],
+      floorplans: ["Zion Slumber"],
       floorplansByYear: {
-        "2015": ["Slumber"],
-        "2016": ["Slumber"],
-        "2017": ["Slumber"],
-        "2018": ["Slumber"],
-        "2019": ["Slumber"],
-        "2020": ["Slumber"],
-        "2021": ["Slumber"],
-        "2022": ["Slumber"],
-        "2023": ["Slumber"],
-        "2024": ["Slumber"],
-        "2025": ["Slumber"],
-        "2026": ["Slumber"]
+        // 2015–2020 GAP: catalog yearStart was 2015 (Zion family). Zion Slumber pop-top launched
+        // with Play / Chase as MY2021 (Roadtrek Inc. 2020-10-02 / classbforum). No pre-2021 PDF.
+        // LOCK library.rvusa.com/brochure/2021-Roadtrek-Zion-Slumber.pdf
+        "2021": ["Zion Slumber"],
+        // LOCK library.rvusa.com/brochure/2022-Roadtrek-Zion-Slumber.pdf
+        "2022": ["Zion Slumber"],
+        // LOCK library.rvusa.com/brochure/2023-Roadtrek-Zion-Slumber.pdf (shared 2023 premium)
+        "2023": ["Zion Slumber"],
+        // LOCK library.rvusa.com/brochure/2024-Roadtrek-Zion-Slumber.pdf spec table: Zion Slumber
+        "2024": ["Zion Slumber"],
+        // LOCK library.rvusa.com/brochure/2025-Roadtrek-Zion-Slumber.pdf (same bytes as 2024 premium)
+        "2025": ["Zion Slumber"],
+        // LOCK RVUSA m7927-y2026-b464 + 2026-roadtrek-zion-slumber-base-class-b-specs-fp22697
+        "2026": ["Zion Slumber"],
+        // LOCK RVUSA 2027-roadtrek-zion-slumber-base-class-b-specs-fp58205 (Floorplan: Base)
+        // + spec-guide-search brand_id=464: Zion Slumber 2027 Base. No 2027-Roadtrek-Zion-Slumber.pdf.
+        "2027": ["Zion Slumber"]
       },
       lengthRange: [
         19,
@@ -28623,8 +28660,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         125000
       ],
       engine: "Ram 3.6L V6 gas",
-      horsepower: 280,
-      chassis: "Ram ProMaster",
+      chassis: "Ram ProMaster 3500",
       fuelType: "Gas",
       recalls: 0,
       rating: 4.3,
@@ -28638,32 +28674,44 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 71,
       founded: 1974,
       warrantyYears: 2,
-      yearStart: 2015,
+      yearStart: 2021,
       powertrainByYear: [
         {
-          from: 2015,
-          to: 2015,
-          engine: "Ram / Dodge 3.6L V6 gas (or earlier 3.6/3.0 by year)",
+          from: 2021,
+          to: 2027,
+          engine: "Ram 3.6L V6 gas",
           horsepower: 280,
-          chassis: "Ram ProMaster / earlier van chassis",
-          notes: "2006–2015 era powertrain for Roadtrek Zion Slumber"
+          chassis: "Ram ProMaster 3500",
+          fuelType: "Gas",
+          notes: "LOCK 2021–2025 Zion Slumber / premium library PDFs — 3.6L gas V6. RVUSA 2026 Zion Slumber Base pins 280 HP/209 kW."
         }
       ],
-      description: "Roadtrek Zion Slumber — dedicated sleep-forward Zion package for couples."
+      description: "Roadtrek Zion Slumber — Zion-family pop-top Class B on Ram ProMaster. Floorplans locked from dated library brochures / RVUSA year cards."
     },
     Play: {
       type: "Class B",
-      floorplans: ["Play", "Play+", "136"],
+      floorplans: ["Play", "Play Slumber", "Play SRT", "Play+", "Play+ Slumber"],
       floorplansByYear: {
-        "2018": ["Play"],
-        "2019": ["Play"],
-        "2020": ["Play"],
-        "2021": ["Play", "Play+"],
-        "2022": ["Play", "Play+"],
-        "2023": ["Play", "Play+"],
-        "2024": ["Play", "Play+"],
-        "2025": ["Play", "Play+"],
-        "2026": ["Play", "Play+", "136"]
+        // 2018–2020 GAP: catalog yearStart was 2018. Play launched MY2021 (Roadtrek Inc. 2020-10-02).
+        // LOCK library.rvusa.com/brochure/2021-Roadtrek-Play.pdf — single Play coach, Ram ProMaster 3500 gas.
+        "2021": ["Play"],
+        // LOCK 2022-Roadtrek-Play.pdf / 2022-Roadtrek-Play-Slumber.pdf / 2022-Roadtrek-Play-SRT.pdf
+        "2022": ["Play", "Play Slumber", "Play SRT"],
+        // LOCK library.rvusa.com/brochure/2023-Roadtrek-Play.pdf — PLAY / PLAY SLUMBER / PLAY SRT
+        "2023": ["Play", "Play Slumber", "Play SRT"],
+        // 2024 GAP: no 2024-Roadtrek-Play*.pdf. Do not copy-forward 2023.
+        // LOCK library.rvusa.com/brochure/2025-Roadtrek-Play.pdf spec table:
+        // PLAY | PLAY Slumber | PLAY SRT | PLAY+ | PLAY+ Slumber
+        // Play+ / Play+ Slumber debut MY2025 (RV Lifestyle / RVBusiness SuperShow).
+        "2025": ["Play", "Play Slumber", "Play SRT", "Play+", "Play+ Slumber"],
+        // LOCK RVUSA year cards (no 2026-Roadtrek-Play.pdf):
+        // Play m7929-y2026-b464 Base; Play Slumber m8801-y2026-b464 Base;
+        // Play+ m10530-y2026-b464 Base; Play+ Slumber m10531-y2026-b464 Base.
+        // Play SRT last year card is 2025 — do not copy-forward.
+        "2026": ["Play", "Play Slumber", "Play+", "Play+ Slumber"],
+        // LOCK RVUSA m8801-y2027-b464 + 2027-roadtrek-play-slumber-base-class-b-specs-fp58201
+        // (Play Slumber Base only). No 2027 Play / Play+ / Play SRT year cards. No 2027 library PDF.
+        "2027": ["Play Slumber"]
       },
       lengthRange: [
         19,
@@ -28682,9 +28730,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       engine: "Ram 3.6L V6 gas",
       horsepower: 280,
       powertrainByYear: [
-        { from: 2018, to: 2026, engine: "Ram 3.6L V6 gas", horsepower: 280, chassis: "Ram ProMaster" },
+        {
+          from: 2021,
+          to: 2027,
+          engine: "Ram 3.6L V6 gas",
+          horsepower: 280,
+          chassis: "Ram ProMaster 3500",
+          fuelType: "Gas",
+          notes: "LOCK 2021–2025 Play library PDFs (3.6L gas V6). 2023-Roadtrek-Play.pdf pins 280HP. RVUSA 2026 Play+ / Play Slumber Base pin 280 HP/209 kW."
+        },
       ],
-      chassis: "Ram ProMaster",
+      chassis: "Ram ProMaster 3500",
       fuelType: "Gas",
       recalls: 0,
       rating: 4.4,
@@ -28698,20 +28754,42 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 72,
       founded: 1974,
       warrantyYears: 2,
-      yearStart: 2018,
-      description: "Roadtrek Play / Play+ — lifestyle Class B on ProMaster with upgraded packages on Play+."
+      yearStart: 2021,
+      description: "Roadtrek Play — Ram ProMaster Class B. Floorplans locked from dated library brochures / RVUSA year cards. Play+ / Play+ Slumber are MY2025+ variants, not a separate make."
     },
     "SS Agile": {
       type: "Class B",
-      floorplans: ["SS Agile", "Agile", "170"],
+      floorplans: ["SS-Agile", "SS Agile"],
       floorplansByYear: {
-        "2020": ["SS Agile", "Agile"],
-        "2021": ["SS Agile", "Agile"],
-        "2022": ["SS Agile", "Agile"],
-        "2023": ["SS Agile", "Agile"],
-        "2024": ["SS Agile", "Agile"],
-        "2025": ["SS Agile", "Agile"],
-        "2026": ["SS Agile", "Agile", "170"]
+        // LOCK library.rvusa.com/brochure/Roadtrek_Brochure2011_chassis_model_year.pdf
+        // 2011 STANDARD MOTORHOME FEATURES line: SS-Agile // SS-Ideal on 2011 Sprinter 2500 “Short” Van.
+        "2011": ["SS-Agile"],
+        // LOCK library.rvusa.com/brochure/Roadtrek_Brochure20122013_chassis_model_year_1.pdf
+        // SS-Agile on Sprinter 2500 “Short” Van (covers MY2012 and MY2013).
+        "2012": ["SS-Agile"],
+        "2013": ["SS-Agile"],
+        // 2014–2015 GAP: no extractable year-true library PDF.
+        // LOCK library.rvusa.com/brochure/Roadtrek_SSAgileBrochure2016.pdf — Fuel type Diesel · 188 HP.
+        "2016": ["SS Agile"],
+        // LOCK library.rvusa.com/brochure/2017-Roadtrek-SS-Agile.pdf
+        "2017": ["SS Agile"],
+        // LOCK library.rvusa.com/brochure/2018_Roadtrek_SS-Agile.pdf (same bytes as 2017 PDF)
+        "2018": ["SS Agile"],
+        // LOCK library.rvusa.com/brochure/2019-Roadtrek-SS-Agile.pdf
+        "2019": ["SS Agile"],
+        // 2020 GAP: no year-true library PDF. Catalog yearStart 2020 was a ghost floor.
+        // LOCK library.rvusa.com/brochure/2021-Roadtrek-SS-Agile.pdf
+        "2021": ["SS Agile"],
+        // LOCK library.rvusa.com/brochure/2022-Roadtrek-SS-Agile.pdf — Fuel type Diesel · Sprinter 2500.
+        "2022": ["SS Agile"],
+        // 2023–2024 GAP: no year-true library PDF. Do not copy-forward.
+        // LOCK library.rvusa.com/brochure/2025-Roadtrek-SS-Agile.pdf (Printed September 2024)
+        // Mercedes-Benz Sprinter 2500 144” · 2.0L Turbo Diesel. No brochure HP pin.
+        "2025": ["SS Agile"],
+        // LOCK RVUSA m1824-y2026-b464 + 2026-roadtrek-ss-agile-base-class-b-specs-fp22700
+        // (Floorplan: Base). No 2026-Roadtrek-SS-Agile.pdf. 2027 year page / PDF: GAP.
+        "2026": ["SS Agile"]
+        // 2027 GAP: no 2027-Roadtrek-SS-Agile.pdf; spec-guide-search has no 2027 SS Agile Base card.
       },
       lengthRange: [
         19,
@@ -28727,13 +28805,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         100000,
         160000
       ],
-      engine: "Ram 3.6L V6 gas",
-      horsepower: 280,
-      powertrainByYear: [
-        { from: 2020, to: 2026, engine: "Ram 3.6L V6 gas", horsepower: 280, chassis: "Ram ProMaster" },
-      ],
-      chassis: "Ram ProMaster",
-      fuelType: "Gas",
+      engine: "Mercedes-Benz 3.0L CRD V6 turbo diesel",
+      chassis: "Mercedes-Benz Sprinter 2500",
+      fuelType: "Diesel",
       recalls: 0,
       rating: 4.45,
       image: RV_CARD_IMAGE,
@@ -28743,27 +28817,79 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       blackWater: 12,
       generator: "Solar + lithium packages",
       awningLength: 8,
-      ceilingHeight: 72,
+      ceilingHeight: 75,
       founded: 1974,
       warrantyYears: 2,
-      yearStart: 2020,
-      description: "Roadtrek SS Agile — Sport Utility Class B packaging (agile urban/adventure use)."
+      yearStart: 2011,
+      powertrainByYear: [
+        {
+          from: 2011,
+          to: 2013,
+          engine: "Mercedes 3.0L CRD V6 turbo diesel",
+          chassis: "Mercedes-Benz Sprinter 2500",
+          fuelType: "Diesel",
+          notes: "LOCK 2011 / 2012–2013 chassis-year brochures — SS-Agile on Sprinter 2500 Short Van diesel. No HP pin on those pages."
+        },
+        {
+          from: 2016,
+          to: 2019,
+          engine: "Mercedes-Benz 3.0L CRD V6 turbo diesel BlueTec",
+          horsepower: 188,
+          chassis: "Mercedes-Benz Sprinter 2500",
+          fuelType: "Diesel",
+          notes: "LOCK Roadtrek_SSAgileBrochure2016.pdf — Fuel type Diesel · Power 120 kW/188 HP."
+        },
+        {
+          from: 2021,
+          to: 2022,
+          engine: "Mercedes-Benz 3.0L CRD V6 turbo diesel BlueTec",
+          chassis: "Mercedes-Benz Sprinter 2500",
+          fuelType: "Diesel",
+          notes: "LOCK 2021-Roadtrek-SS-Agile.pdf / 2022-Roadtrek-SS-Agile.pdf — Fuel type Diesel. No HP pin on the 2022 PDF."
+        },
+        {
+          from: 2025,
+          to: 2025,
+          engine: "Mercedes-Benz 2.0L turbo diesel",
+          chassis: "Mercedes-Benz Sprinter 2500 144\"",
+          fuelType: "Diesel",
+          notes: "LOCK 2025-Roadtrek-SS-Agile.pdf (Printed September 2024) — 2.0L Turbo Diesel, 4 cyl. No brochure HP pin."
+        },
+        {
+          from: 2026,
+          to: 2026,
+          engine: "Mercedes-Benz 3.0L CRD V6 turbo diesel",
+          horsepower: 190,
+          chassis: "Mercedes-Benz Sprinter 2500",
+          fuelType: "Diesel",
+          notes: "LOCK RVUSA 2026 SS Agile Base fp22700 — 3.0L CRD V6 turbo diesel · 190 HP/141 kW. No 2026 library PDF."
+        }
+      ],
+      description: "Roadtrek SS Agile — Mercedes-Benz Sprinter Class B (Short Sprinter). Floorplans locked from dated library brochures / RVUSA year cards. Not a ProMaster gas van."
     },
     Chase: {
       type: "Class B",
-      floorplans: ["Chase", "Chase Plus", "170"],
+      floorplans: ["Chase", "Chase 50"],
       floorplansByYear: {
-        "2016": ["Chase"],
-        "2017": ["Chase"],
-        "2018": ["Chase", "Chase Plus"],
-        "2019": ["Chase", "Chase Plus"],
-        "2020": ["Chase", "Chase Plus"],
-        "2021": ["Chase", "Chase Plus"],
-        "2022": ["Chase", "Chase Plus"],
-        "2023": ["Chase", "Chase Plus"],
-        "2024": ["Chase", "Chase Plus"],
-        "2025": ["Chase"],
-        "2026": ["Chase", "170"]
+        // 2016–2020 GAP: catalog yearStart was 2016. Chase launched MY2021 with Play / Zion Slumber
+        // (Roadtrek Inc. 2020-10-02). No Chase Plus on any dated PDF.
+        // LOCK library.rvusa.com/brochure/2021-Roadtrek-Chase.pdf — Ram ProMaster 3500 · 3.6L gas · 280 HP.
+        "2021": ["Chase"],
+        // LOCK library.rvusa.com/brochure/2022-Roadtrek-Chase.pdf
+        "2022": ["Chase"],
+        // LOCK library.rvusa.com/brochure/2023-Roadtrek-Chase.pdf (shared premium) — CHASE, not Chase 50.
+        "2023": ["Chase"],
+        // LOCK library.rvusa.com/brochure/2024-Roadtrek-Chase-50.pdf spec table: Chase 50
+        "2024": ["Chase 50"],
+        // LOCK library.rvusa.com/brochure/2025-Roadtrek-ZION.pdf (same bytes as 2024 premium; year-labeled 2025)
+        // + RVUSA m7928-y2025-b464 Chase Base. Brochure character is Chase 50.
+        "2025": ["Chase 50"],
+        // LOCK RVUSA 2026-roadtrek-chase-base-class-b-specs-fp22699 (Floorplan: Base) · Ram ProMaster 3500 · 3.6L.
+        // No 2026-Roadtrek-Chase.pdf. Do not copy-forward Chase 50.
+        "2026": ["Chase"],
+        // LOCK RVUSA 2027-roadtrek-chase-base-class-b-specs-fp58206 (Floorplan: Base)
+        // + spec-guide-search brand_id=464: Chase 2027 Base. No 2027-Roadtrek-Chase.pdf.
+        "2027": ["Chase"]
       },
       lengthRange: [
         19,
@@ -28779,14 +28905,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         85000,
         140000
       ],
-      engine: "Ram 3.6L V6 / Mercedes diesel (by year)",
-      horsepower: 188,
+      engine: "Ram 3.6L V6 gas",
+      horsepower: 280,
       powertrainByYear: [
-        { from: 2016, to: 2018, engine: "Mercedes-Benz turbodiesel (Sprinter)", horsepower: 188, chassis: "Ram ProMaster / Mercedes Sprinter" },
-        { from: 2019, to: 2026, engine: "Mercedes-Benz 2.0L I4 turbodiesel", horsepower: 188, chassis: "Ram ProMaster / Mercedes Sprinter" },
+        {
+          from: 2021,
+          to: 2027,
+          engine: "Ram 3.6L V6 gas",
+          horsepower: 280,
+          chassis: "Ram ProMaster 3500",
+          fuelType: "Gas",
+          notes: "LOCK 2021-Roadtrek-Chase.pdf — 3.6L gas V6 · 209 kW/280 HP · Fuel type Gasoline. 2023–2025 premium PDFs are the same ProMaster family. No dated diesel Chase."
+        },
       ],
-      chassis: "Ram ProMaster / Mercedes Sprinter",
-      fuelType: "Gas / Diesel",
+      chassis: "Ram ProMaster 3500",
+      fuelType: "Gas",
       recalls: 0,
       rating: 4.35,
       image: RV_CARD_IMAGE,
@@ -28799,30 +28932,28 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 72,
       founded: 1974,
       warrantyYears: 2,
-      yearStart: 2016,
-      description: "Roadtrek Chase — compact Class B entry packaging (chassis varies by model year)."
+      yearStart: 2021,
+      description: "Roadtrek Chase — Ram ProMaster Class B. Floorplans locked from dated library brochures / RVUSA year cards. Chase 50 is the 2024–2025 brochure name."
     },
     "CS Adventurous": {
       type: "Class B",
-      floorplans: ["CS", "Adventurous"],
+      floorplans: ["CS Adventurous"],
       floorplansByYear: {
-        "2010": ["CS"],
-        "2011": ["CS"],
-        "2012": ["CS"],
-        "2013": ["CS"],
-        "2014": ["CS", "Adventurous"],
-        "2015": ["CS", "Adventurous"],
-        "2016": ["CS", "Adventurous"],
-        "2017": ["CS", "Adventurous"],
-        "2018": ["CS", "Adventurous"],
-        "2019": ["CS", "Adventurous"],
-        "2020": ["CS", "Adventurous"],
-        "2021": ["CS", "Adventurous"],
-        "2022": ["CS", "Adventurous"],
-        "2023": ["CS"],
-        "2024": ["CS"],
-        "2025": ["CS"],
-        "2026": ["CS"]
+        // 2008–2013 GAP: yearStart 2008 already chipped. 2011 / 2012–2013 chassis-year brochures
+        // list RS-Adventurous / SS-Agile, not CS Adventurous. Do not invent pre-2014 fills.
+        // LOCK library.rvusa.com/brochure/2014-Roadtrek-CS-Adventurous.pdf
+        "2014": ["CS Adventurous"],
+        // 2015 GAP: no extractable year-true library PDF.
+        // LOCK library.rvusa.com/brochure/Roadtrek_CSAdventurousBrochure2016.pdf — Fuel type Diesel · 188 HP.
+        "2016": ["CS Adventurous"],
+        // LOCK library.rvusa.com/brochure/2017-Roadtrek-CS-Adventurous.pdf
+        "2017": ["CS Adventurous"],
+        // LOCK library.rvusa.com/brochure/2018_Roadtrek_CS-Adventurous.pdf (same bytes as 2017 PDF)
+        "2018": ["CS Adventurous"],
+        // LOCK library.rvusa.com/brochure/2019-Roadtrek-CS-Adventurous.pdf — 3.0L CRD V6 · 141 kW/190 HP.
+        "2019": ["CS Adventurous"]
+        // 2020–2027 GAP: no year-true library PDF or RVUSA CS Adventurous year-card matrix.
+        // Do not copy-forward CS / Adventurous split codes or 2019 onto later years.
       },
       lengthRange: [
         22,
@@ -28838,9 +28969,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         120000,
         185000
       ],
-      engine: "Mercedes-Benz diesel (Sprinter)",
-      horsepower: 188,
-      chassis: "Mercedes Sprinter",
+      engine: "Mercedes-Benz 3.0L CRD V6 turbo diesel",
+      chassis: "Mercedes-Benz Sprinter 3500",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.4,
@@ -28855,40 +28985,50 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1974,
       warrantyYears: 2,
       yearStart: 2008,
+      yearEnd: 2019,
       mpgHighwayEst: 16,
       powertrainByYear: [
         {
-          from: 2010,
-          to: 2015,
-          engine: "Mercedes-Benz turbodiesel (Sprinter)",
+          from: 2014,
+          to: 2018,
+          engine: "Mercedes-Benz 3.0L CRD V6 turbo diesel BlueTec",
           horsepower: 188,
-          chassis: "Mercedes-Benz Sprinter",
-          notes: "Sprinter OM642 / era diesel ~188 HP class"
+          chassis: "Mercedes-Benz Sprinter 3500",
+          fuelType: "Diesel",
+          notes: "LOCK 2014-Roadtrek-CS-Adventurous.pdf / Roadtrek_CSAdventurousBrochure2016.pdf — Fuel type Diesel · 140 kW/188 HP."
+        },
+        {
+          from: 2019,
+          to: 2019,
+          engine: "Mercedes-Benz 3.0L CRD V6 turbo diesel BlueTec",
+          horsepower: 190,
+          chassis: "Mercedes-Benz Sprinter 3500",
+          fuelType: "Diesel",
+          notes: "LOCK 2019-Roadtrek-CS-Adventurous.pdf — Power 141 kW/190 HP. XL chassis is an option, not a separate year-card code."
         }
       ],
-      description: "Roadtrek CS Adventurous — Sprinter Class B flagship of the CS family."
+      description: "Roadtrek CS Adventurous — Mercedes-Benz Sprinter Class B. Floorplans locked from dated library brochures. Not RS-Adventurous (sibling nameplate)."
     },
     Popular: {
       type: "Class B",
-      floorplans: ["190", "210", "Popular 190", "Popular 210", "170D", "170P"],
+      floorplans: ["190-Popular", "210-Popular", "190 Popular", "210 Popular"],
       floorplansByYear: {
-        "2010": ["190", "210"],
-        "2011": ["190", "210"],
-        "2012": ["190", "210"],
-        "2013": ["190", "210"],
-        "2014": ["190", "210", "Popular 190", "Popular 210"],
-        "2015": ["190", "210", "Popular 190", "Popular 210"],
-        "2016": ["190", "210", "Popular 190", "Popular 210"],
-        "2017": ["190", "210", "Popular 190", "Popular 210"],
-        "2018": ["190", "210", "Popular 190", "Popular 210"],
-        "2019": ["190", "210"],
-        "2020": ["190", "210"],
-        "2021": ["190", "210"],
-        "2022": ["190", "210"],
-        "2023": ["190", "210"],
-        "2024": ["190", "210"],
-        "2025": ["190", "210"],
-        "2026": ["190", "210", "170D", "170P"]
+        // 2005–2010 GAP: yearStart 2005 already chipped. 2008 chassis-year brochure is pre-2010 —
+        // do not invent 2008–2010 fills (170-Popular stays off this pass).
+        // LOCK library.rvusa.com/brochure/Roadtrek_Brochure2011_chassis_model_year.pdf
+        // 190-Popular // 210-Popular on 2011 Chevrolet Express.
+        "2011": ["190-Popular", "210-Popular"],
+        // LOCK library.rvusa.com/brochure/Roadtrek_Brochure20122013_chassis_model_year_1.pdf
+        "2012": ["190-Popular", "210-Popular"],
+        "2013": ["190-Popular", "210-Popular"],
+        // 2014–2016 GAP: no extractable Popular year-true library PDF. JD Power 2015 is not a brochure lock.
+        // LOCK library.rvusa.com/brochure/2017-Roadtrek-190-Popular.pdf
+        // + library.rvusa.com/brochure/2017-Roadtrek-210-Popular.pdf — "190 Popular" / "210 Popular" (space).
+        "2017": ["190 Popular", "210 Popular"],
+        // LOCK 2018-Roadtrek-190-Popular.pdf / 2018_Roadtrek_210-Popular.pdf (same bytes as 2017 pair)
+        "2018": ["190 Popular", "210 Popular"]
+        // 2019–2027 GAP: Chevy Popular discontinued (RV-PRO Rapido rebirth). No year-true PDF.
+        // Quarantine bare 190 / 210 / 170D / 170P / Popular 190 ghosts.
       },
       lengthRange: [
         19,
@@ -28904,10 +29044,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         80000,
         140000
       ],
-      engine: "Ram / Mercedes / Chevy (by era)",
-      horsepower: 188,
-      chassis: "ProMaster / Sprinter / Chevy (by era)",
-      fuelType: "Gas / Diesel",
+      engine: "Chevrolet Vortec 6.0 V8 gas",
+      chassis: "Chevrolet Express 3500",
+      fuelType: "Gas",
       recalls: 0,
       rating: 4.3,
       image: RV_CARD_IMAGE,
@@ -28921,23 +29060,27 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1974,
       warrantyYears: 2,
       yearStart: 2005,
+      yearEnd: 2018,
       powertrainByYear: [
         {
-          from: 2010,
-          to: 2015,
-          engine: "Gas or diesel chassis by build (era)",
-          horsepower: 300,
-          notes: "Verify door sticker — dual fuel families in this era"
+          from: 2011,
+          to: 2013,
+          engine: "Chevrolet 4.8L / 6.0L SFI gas V8 (by Popular length)",
+          chassis: "Chevrolet Express 2500 / 3500",
+          fuelType: "Gas",
+          notes: "LOCK 2011 / 2012–2013 chassis-year brochures — 190-Popular / 210-Popular on Chevrolet Express gas V8. No diesel Popular on those dated pages."
         },
         {
-          from: 2005,
-          to: 2005,
-          engine: "Gas or diesel chassis by build (2000–2005)",
-          horsepower: 300,
-          notes: "2000–2005 era powertrain for Roadtrek Popular"
+          from: 2017,
+          to: 2018,
+          engine: "Chevrolet Vortec 6.0 V8 gas",
+          horsepower: 323,
+          chassis: "Chevrolet Express 3500",
+          fuelType: "Gas",
+          notes: "LOCK 2017-Roadtrek-190-Popular.pdf / 2017-Roadtrek-210-Popular.pdf — Fuel type Gas · Power 224 kW/323 HP."
         }
       ],
-      description: "Roadtrek Popular — long-running Class B nameplate; chassis changed across eras. Always verify door sticker."
+      description: "Roadtrek Popular — Chevrolet Express Class B (190 / 210). Floorplans locked from dated library brochures. Hyphen vs space follows the year’s brochure characters."
     }
   },
   "Nexus RV": {
