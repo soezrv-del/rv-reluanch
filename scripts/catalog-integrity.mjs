@@ -231,6 +231,26 @@ const FORBIDDEN_FLOORPLANS = {
     ],
     reason: "Alpine Avalanche Edition codes stay on that key, not core Alpine",
   },
+  "Alliance RV|Avenue": {
+    codes: ["25RL", "26RD", "29BH", "29RL", "30BH", "332RL", "333BH", "23ML"],
+    reason: "Avenue All-Access / unlabeled 23ML stay off the Avenue FW key",
+  },
+  "Alliance RV|Valor": {
+    codes: ["32A10", "35A14", "36A10", "40A14", "40A10"],
+    reason: "Valor All-Access A-codes stay off core Valor",
+  },
+  "Alliance RV|Valor V-Series": {
+    codes: ["32A10", "35A14", "36A10", "40A14", "23T15", "4213", "4216"],
+    reason: "Do not copy Valor 2027 or All-Access onto the V-Series historical key",
+  },
+  "Alliance RV|Delta": {
+    codes: ["282RK", "294RL", "312BH", "322BH", "RB152", "ML166", "BH181"],
+    reason: "Invent FW codes and Delta Solo stay off the Delta travel-trailer key",
+  },
+  "Alliance RV|Benchmark": {
+    codes: ["29BH", "32RL", "34BH", "37FL"],
+    reason: "Invent TT chips stay off Benchmark destination lock (42LFT / 44LFT / 44RKL)",
+  },
   "Keystone|Avalanche": {
     codes: ["322RL", "372MB", "381DL", "392DS"],
     reason: "Alpine Avalanche Edition-only extras (322RL / 372MB) and later OEM codes (381DL / 392DS) must not merge into standalone Avalanche",
@@ -254,6 +274,12 @@ const EXPECTED_TYPE = {
   "Brinkley|Model T": "toy hauler",
   "Brinkley|Model I": "travel trailer",
   "Brinkley|Model Ix": "travel trailer",
+  "Alliance RV|Paradigm": "fifth wheel",
+  "Alliance RV|Avenue": "fifth wheel",
+  "Alliance RV|Valor": "toy hauler",
+  "Alliance RV|Valor V-Series": "toy hauler",
+  "Alliance RV|Delta": "travel trailer",
+  "Alliance RV|Benchmark": "travel trailer",
   "Fleetwood|Discovery": "diesel",
   "Fleetwood|Fortis": "gas",
   "Fleetwood|Frontier": "diesel",
@@ -795,6 +821,190 @@ function main() {
         if (palIdx[gap]?.yearEnd !== 2025) {
           fail(`Palomino|${gap} index yearEnd must be 2025`);
         }
+      }
+    }
+  }
+
+  // Alliance RV MY2027 lock. Make key is quoted (`"Alliance RV": {`).
+  // Dated 2026-Alliance-RV-*.pdf (print Sept 19–22, 2025) lock 2026.
+  // Year-labeled RVUSA y2027 pages lock 2027. No 2027-Alliance-RV-*.pdf (403).
+  {
+    const a0 = src.indexOf('\n  "Alliance RV": {');
+    const a1 = src.indexOf('\n  "Highland Ridge": {');
+    if (a0 < 0 || a1 < a0) {
+      fail('Alliance RV block not found between "Alliance RV": and "Highland Ridge":');
+    } else {
+      const alli = src.slice(a0, a1);
+      const slice = (a, b) => {
+        const i =
+          alli.indexOf(`    "${a}": {`) >= 0
+            ? alli.indexOf(`    "${a}": {`)
+            : alli.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? alli.length
+            : alli.indexOf(`    "${b}": {`) >= 0
+              ? alli.indexOf(`    "${b}": {`)
+              : alli.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? alli.slice(i, j) : alli.slice(i);
+      };
+
+      const paradigm = slice("Paradigm", "Avenue");
+      if (
+        !/"2026": \[\s*"295MK",\s*"310RL",\s*"312RK",\s*"340RL",\s*"370FB",\s*"375RD",\s*"382RK",\s*"385FL",\s*"388SP",\s*"395DS"\s*\]/.test(
+          paradigm,
+        )
+      ) {
+        fail("Alliance RV|Paradigm MY26 brochure lock missing (2026-Alliance-RV-Paradigm.pdf print 09/19/25)");
+      }
+      if (
+        !/"2027": \[\s*"310RL",\s*"312RK",\s*"340RL",\s*"370FB",\s*"375RD",\s*"382RK",\s*"385FL",\s*"386FL",\s*"388SP",\s*"395DS"\s*\]/.test(
+          paradigm,
+        )
+      ) {
+        fail("Alliance RV|Paradigm MY27 RVUSA lock missing (m7775-y2027-b1801)");
+      }
+      if (/"2027": .*"373FB"/.test(paradigm) || /"2026": .*"395MK"/.test(paradigm)) {
+        fail("Alliance RV|Paradigm must not add news-only 373FB or keep invent 395MK on 2026");
+      }
+      if (!/type: "Fifth Wheel"/.test(paradigm) || !/hitchType: "king pin"/.test(paradigm)) {
+        fail("Alliance RV|Paradigm must be Fifth Wheel / king pin");
+      }
+
+      const avenue = slice("Avenue", "Valor");
+      if (!/"2026": \["32RLS", "33RKS", "35RKS", "38DBL", "39MBR"\]/.test(avenue)) {
+        fail("Alliance RV|Avenue MY26 brochure lock missing (Avenue FW cards only)");
+      }
+      if (!/"2027": \["32RLS", "34RLS", "35RKS", "38DBL", "39MBR"\]/.test(avenue)) {
+        fail("Alliance RV|Avenue MY27 RVUSA lock missing (m8229-y2027-b1801)");
+      }
+      if (/"2026": .*"332RL"/.test(avenue) || /"2027": .*"332RL"/.test(avenue) || /"2026": .*"30RL"/.test(avenue)) {
+        fail("Alliance RV|Avenue must not merge All-Access / invent 30RL on 2026–2027");
+      }
+      if (!/type: "Fifth Wheel"/.test(avenue) || !/hitchType: "king pin"/.test(avenue)) {
+        fail("Alliance RV|Avenue must be Fifth Wheel / king pin");
+      }
+
+      const valor = slice("Valor", "Valor V-Series");
+      if (
+        !/"2026": \["36V11", "37V11", "40V13", "41V13", "41V16", "42V14", "44V14"\]/.test(
+          valor,
+        )
+      ) {
+        fail("Alliance RV|Valor MY26 brochure lock missing (Valor FW only)");
+      }
+      if (
+        !/"2027": \[\s*"23T15",\s*"27T14",\s*"32T13",\s*"36V11",\s*"37V11",\s*"41V13",\s*"4213",\s*"4216",\s*"44V14"\s*\]/.test(
+          valor,
+        )
+      ) {
+        fail("Alliance RV|Valor MY27 RVUSA lock missing (m8123-y2027-b1801)");
+      }
+      if (/"32A10"/.test(valor) || /"35A14"/.test(valor) || /"36A10"/.test(valor)) {
+        fail("Alliance RV|Valor must not absorb All-Access A-codes");
+      }
+      if (!/type: "Toy Hauler"/.test(valor)) {
+        fail("Alliance RV|Valor must stay Toy Hauler");
+      }
+
+      const vseries = slice("Valor V-Series", "Delta");
+      if (/"2026":/.test(vseries) || /"2027":/.test(vseries)) {
+        fail("Alliance RV|Valor V-Series must omit 2026–2027 (no dedicated family page)");
+      }
+      if (!/yearEnd:\s*2025/.test(vseries)) {
+        fail("Alliance RV|Valor V-Series yearEnd must be 2025");
+      }
+
+      const delta = slice("Delta", "Benchmark");
+      if (!/type: "Travel Trailer"/.test(delta) || !/hitchType: "bumper-pull"/.test(delta)) {
+        fail("Alliance RV|Delta must be Travel Trailer / bumper-pull (never Fifth Wheel)");
+      }
+      if (/"2022":/.test(delta) || /"2023":/.test(delta) || /"2024":/.test(delta)) {
+        fail("Alliance RV|Delta must omit 2022–2024 (pre-dated-PDF / invent FW years)");
+      }
+      if (
+        !/"2025": \[\s*"251BH",\s*"252RL",\s*"262RB",\s*"281BH",\s*"292RL",\s*"294RK",\s*"321BH",\s*"ML206",\s*"RK234"\s*\]/.test(
+          delta,
+        )
+      ) {
+        fail("Alliance RV|Delta MY25 brochure lock missing (2025-Alliance-RV-Delta.pdf)");
+      }
+      if (
+        !/"2026": \[\s*"252RL",\s*"262RB",\s*"274RKW",\s*"281BH",\s*"291BH",\s*"292RL",\s*"294RK",\s*"321BH",\s*"324KS",\s*"BH241",\s*"BH271",\s*"ML206",\s*"ML226",\s*"RK234"\s*\]/.test(
+          delta,
+        )
+      ) {
+        fail("Alliance RV|Delta MY26 brochure lock missing (preserve 274RKW)");
+      }
+      if (
+        !/"2027": \[\s*"252RL",\s*"262RB",\s*"274RKW",\s*"281BH",\s*"284RK",\s*"291BH",\s*"292RL",\s*"321BH",\s*"BH255",\s*"BH271",\s*"LK254",\s*"ML206",\s*"ML216",\s*"ML226",\s*"RE250",\s*"RK234"\s*\]/.test(
+          delta,
+        )
+      ) {
+        fail("Alliance RV|Delta MY27 RVUSA lock missing (m9426-y2027-b1801)");
+      }
+      if (/"282RK"/.test(delta) || /"294RL"/.test(delta) || /"RB152"/.test(delta)) {
+        fail("Alliance RV|Delta must not keep invent FW codes or absorb Solo RB152");
+      }
+      if (!/yearStart:\s*2023/.test(delta)) {
+        fail("Alliance RV|Delta yearStart must be 2023 (July 2023 intro)");
+      }
+
+      const bench = slice("Benchmark", null);
+      if (!/type: "Travel Trailer"/.test(bench) || !/hitchType: "bumper-pull"/.test(bench)) {
+        fail("Alliance RV|Benchmark must be Travel Trailer / bumper-pull (destination; TT tab)");
+      }
+      if (/"2023":/.test(bench) || /"2024":/.test(bench) || /"2025":/.test(bench)) {
+        fail("Alliance RV|Benchmark must omit 2023–2025 (invent chips / unextracted 2025 PDF)");
+      }
+      if (!/"2026": \["42LFT", "44LFT", "44RKL"\]/.test(bench)) {
+        fail("Alliance RV|Benchmark MY26 brochure lock missing (42LFT / 44LFT / 44RKL)");
+      }
+      if (!/"2027": \["42LFT", "44LFT", "44RKL"\]/.test(bench)) {
+        fail("Alliance RV|Benchmark MY27 RVUSA lock missing (m10483-y2027-b1801)");
+      }
+      if (/"29BH"/.test(bench) || /"32RL"/.test(bench) || /"37FL"/.test(bench)) {
+        fail("Alliance RV|Benchmark must not keep invent 29BH/32RL/37FL");
+      }
+      if (!/yearStart:\s*2025/.test(bench)) {
+        fail("Alliance RV|Benchmark yearStart must be 2025");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const arIdx = catalogIndex["Alliance RV"];
+      if (!arIdx) fail("Alliance RV missing from CATALOG_INDEX");
+      for (const lock of ["Paradigm", "Avenue", "Valor", "Delta", "Benchmark"]) {
+        if (!arIdx[lock]?.years?.includes(2027)) {
+          fail(`Alliance RV|${lock} index must include 2027 in years[]`);
+        }
+      }
+      if (arIdx["Valor V-Series"]?.years?.includes(2026) || arIdx["Valor V-Series"]?.years?.includes(2027)) {
+        fail("Alliance RV|Valor V-Series index must omit 2026–2027 (GAP)");
+      }
+      if (arIdx["Valor V-Series"]?.yearEnd !== 2025) {
+        fail("Alliance RV|Valor V-Series index yearEnd must be 2025");
+      }
+      if (arIdx.Delta?.type !== "Travel Trailer") {
+        fail("Alliance RV|Delta index type must be Travel Trailer");
+      }
+      if (arIdx.Paradigm?.type !== "Fifth Wheel") {
+        fail("Alliance RV|Paradigm index type must be Fifth Wheel");
+      }
+      if (arIdx.Avenue?.type !== "Fifth Wheel") {
+        fail("Alliance RV|Avenue index type must be Fifth Wheel");
+      }
+      if (arIdx.Valor?.type !== "Toy Hauler") {
+        fail("Alliance RV|Valor index type must be Toy Hauler");
+      }
+      if (arIdx.Benchmark?.type !== "Travel Trailer") {
+        fail("Alliance RV|Benchmark index type must be Travel Trailer");
+      }
+      if (arIdx.Benchmark?.years?.includes(2025)) {
+        fail("Alliance RV|Benchmark index must omit 2025 (GAP — unextracted PDF)");
       }
     }
   }

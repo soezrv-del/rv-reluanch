@@ -34590,8 +34590,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "340RL",
         "370FB",
         "372RK",
+        "375RD",
+        "382RK",
         "385FL",
+        "386FL",
+        "388SP",
         "390MP",
+        "395DS",
         "395MK"
       ],
       floorplansByYear: {
@@ -34621,7 +34626,36 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "390MP",
           "395MK"
         ],
-        "2026": ["310RL", "312RK", "340RL", "370FB", "385FL", "395MK"]
+        // Dated 2026-Alliance-RV-Paradigm.pdf (CreationDate 2025-09-22 / print Sept 19, 2025):
+        // 295MK | 310RL | 312RK | 340RL | 370FB | 375RD | 382RK | 385FL | 388SP | 395DS
+        // Drop invent 395MK on 2026 (brochure is 395DS). Do not copy-forward to 2027.
+        "2026": [
+          "295MK",
+          "310RL",
+          "312RK",
+          "340RL",
+          "370FB",
+          "375RD",
+          "382RK",
+          "385FL",
+          "388SP",
+          "395DS"
+        ],
+        // Year-labeled RVUSA 2027 (m7775-y2027-b1801). No 2027-Alliance-RV-Paradigm.pdf (403).
+        // 310RL | 312RK | 340RL | 370FB | 375RD | 382RK | 385FL | 386FL | 388SP | 395DS
+        // Do not add news-only 373FB. Undated OEM current cards do not establish MY.
+        "2027": [
+          "310RL",
+          "312RK",
+          "340RL",
+          "370FB",
+          "375RD",
+          "382RK",
+          "385FL",
+          "386FL",
+          "388SP",
+          "395DS"
+        ]
       },
       lengthRange: [
         33,
@@ -34639,6 +34673,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "king pin",
       recalls: 0,
       rating: 4.85,
       image: RV_CARD_IMAGE,
@@ -34651,11 +34686,24 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2019,
       warrantyYears: 2,
       yearStart: 2020,
-      description: "Alliance Paradigm — flagship luxury fifth wheel (residential ceiling height). Popular 310RL / 340RL / 385FL / 395MK. Heavy pin weights — match truck carefully. Live Grok fills exact UVW."
+      description: "Alliance Paradigm — flagship luxury fifth wheel (residential ceiling height). Popular 310RL / 340RL / 385FL. MY2026 brochure is 395DS (not 395MK). Heavy pin weights — match truck carefully. Live Grok fills exact UVW."
     },
     Avenue: {
       type: "Fifth Wheel",
-      floorplans: ["30RL", "32RLS", "33RLS", "36RLP", "37RLP", "42MLQ", "42MLO"],
+      floorplans: [
+        "30RL",
+        "32RLS",
+        "33RLS",
+        "33RKS",
+        "34RLS",
+        "35RKS",
+        "36RLP",
+        "37RLP",
+        "38DBL",
+        "39MBR",
+        "42MLQ",
+        "42MLO"
+      ],
       floorplansByYear: {
         "2020": ["32RLS", "36RLP", "37RLP"],
         "2021": ["32RLS", "36RLP", "37RLP"],
@@ -34663,7 +34711,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["30RL", "32RLS", "33RLS", "36RLP", "37RLP", "42MLQ"],
         "2024": ["30RL", "32RLS", "33RLS", "36RLP", "37RLP", "42MLQ", "42MLO"],
         "2025": ["30RL", "32RLS", "33RLS", "36RLP", "37RLP", "42MLQ", "42MLO"],
-        "2026": ["30RL", "32RLS", "33RLS", "36RLP", "37RLP", "42MLQ"]
+        // Dated 2026-Alliance-RV-Avenue.pdf (CreationDate 2025-09-22 / print Sept 19, 2025)
+        // Avenue FW spec cards only: 32RLS | 33RKS | 35RKS | 38DBL | 39MBR
+        // Do not merge All-Access (25RL / 26RD / 29BH / 29RL / 30BH / 332RL / 333BH)
+        // or Avenue TT. Skipped unlabeled 23ML (All-Access weight class).
+        "2026": ["32RLS", "33RKS", "35RKS", "38DBL", "39MBR"],
+        // Year-labeled RVUSA 2027 (m8229-y2027-b1801). No 2027-Alliance-RV-Avenue.pdf (403).
+        // 32RLS | 34RLS | 35RKS | 38DBL | 39MBR. Do not copy 2026 33RKS forward.
+        "2027": ["32RLS", "34RLS", "35RKS", "38DBL", "39MBR"]
       },
       lengthRange: [
         30,
@@ -34681,6 +34736,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "king pin",
       recalls: 0,
       rating: 4.75,
       image: RV_CARD_IMAGE,
@@ -34693,18 +34749,50 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2019,
       warrantyYears: 2,
       yearStart: 2020,
-      description: "Alliance Avenue — mid-profile luxury fifth wheel (value vs Paradigm). 32RLS is a volume search unit; shorter than most Paradigm plans."
+      description: "Alliance Avenue — mid-profile luxury fifth wheel (value vs Paradigm). 32RLS is a volume search unit. All-Access and Avenue travel-trailer codes stay off this key."
     },
     Valor: {
       type: "Toy Hauler",
-      floorplans: ["36V11", "37V13", "40V13", "42V13", "4213", "4216"],
+      floorplans: [
+        "23T15",
+        "27T14",
+        "32T13",
+        "36V11",
+        "37V11",
+        "37V13",
+        "40V13",
+        "41V13",
+        "41V16",
+        "42V13",
+        "42V14",
+        "4213",
+        "4216",
+        "44V14"
+      ],
       floorplansByYear: {
         "2021": ["36V11", "37V13", "40V13"],
         "2022": ["36V11", "37V13", "40V13", "42V13"],
         "2023": ["36V11", "37V13", "40V13", "42V13"],
         "2024": ["36V11", "37V13", "40V13", "42V13"],
         "2025": ["36V11", "37V13", "40V13", "42V13", "4213", "4216"],
-        "2026": ["36V11", "37V13", "40V13", "42V13", "4213", "4216"]
+        // Dated 2026-Alliance-RV-Valor.pdf (CreationDate 2025-09-22 / print Sept 22, 2025)
+        // Valor FW only: 36V11 | 37V11 | 40V13 | 41V13 | 41V16 | 42V14 | 44V14
+        // All-Access A-codes (32A10 / 35A14) and brochure All-Access TT stay off this key.
+        "2026": ["36V11", "37V11", "40V13", "41V13", "41V16", "42V14", "44V14"],
+        // Year-labeled RVUSA 2027 (m8123-y2027-b1801). No 2027-Alliance-RV-Valor.pdf (403).
+        // 23T15 | 27T14 | 32T13 | 36V11 | 37V11 | 41V13 | 4213 | 4216 | 44V14
+        // Preserve 4213 / 4216 (no hyphen). Do not copy All-Access 32A10 / 35A14 / 36A10 / 40A14.
+        "2027": [
+          "23T15",
+          "27T14",
+          "32T13",
+          "36V11",
+          "37V11",
+          "41V13",
+          "4213",
+          "4216",
+          "44V14"
+        ]
       },
       lengthRange: [
         37,
@@ -34743,7 +34831,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       fuelStationGal: 40,
       generatorFuelGal: 40,
       garageFits: "2 full-size UTVs + patio ramp mode (plan-dependent)",
-      description: "Alliance Valor — premium fifth-wheel toy hauler. Residential living + serious garage (36V11 / 42V13). Verify garage length and fuel station options."
+      description: "Alliance Valor — premium toy hauler. Residential living + garage (36V11 / 42V14). All-Access A-codes stay on that sibling — not this key. Verify garage length and fuel station options."
     },
     "Valor V-Series": {
       type: "Toy Hauler",
@@ -34752,8 +34840,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["36V12", "37V11", "40V12"],
         "2023": ["36V12", "37V11", "40V12"],
         "2024": ["36V12", "37V11", "40V12"],
-        "2025": ["36V12", "37V11", "40V12"],
-        "2026": ["36V12", "37V11", "40V12"]
+        "2025": ["36V12", "37V11", "40V12"]
+        // No dated Valor V-Series PDF. RVUSA family is Valor (m8123) + Valor All-Access (m11625),
+        // not V-Series. MY2026–2027 GAP — do not copy Valor 2027 or All-Access A-codes.
       },
       lengthRange: [
         36,
@@ -34792,86 +34881,161 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       fuelStationGal: 40,
       generatorFuelGal: 40,
       garageFits: "2 UTVs",
-      description: "Alliance Valor V-Series — alternate garage lengths and living layouts under the Valor family."
+      yearEnd: 2025,
+      description: "Alliance Valor V-Series — historical garage-length variants. No dedicated 2026–2027 brochure or RVUSA family page. Do not merge Valor All-Access (A-codes) here."
     },
     Delta: {
-      type: "Fifth Wheel",
-      floorplans: ["282RK", "294RL", "312BH", "322BH"],
+      type: "Travel Trailer",
+      floorplans: [
+        "251BH",
+        "252RL",
+        "262RB",
+        "274RKW",
+        "281BH",
+        "284RK",
+        "291BH",
+        "292RL",
+        "294RK",
+        "321BH",
+        "324KS",
+        "BH241",
+        "BH255",
+        "BH271",
+        "LK254",
+        "ML206",
+        "ML216",
+        "ML226",
+        "RE250",
+        "RK234"
+      ],
       floorplansByYear: {
-        "2022": ["282RK", "294RL", "312BH"],
-        "2023": ["282RK", "294RL", "312BH", "322BH"],
-        "2024": ["282RK", "294RL", "312BH", "322BH"],
-        "2025": ["282RK", "294RL", "312BH", "322BH"],
-        "2026": ["282RK", "294RL", "312BH"]
+        // Introduced July 2023 (OEM brochure history). No 2023-Alliance-RV-Delta.pdf.
+        // Dropped invent fifth-wheel 282RK / 294RL / 312BH / 322BH (Delta was never a FW).
+        // Dated 2025-Alliance-RV-Delta.pdf (CreationDate 2024-09-12): core + Ultra Lite.
+        // Solo (RB152 / ML166 / BH181) is a sibling family — stay off this key.
+        "2025": [
+          "251BH",
+          "252RL",
+          "262RB",
+          "281BH",
+          "292RL",
+          "294RK",
+          "321BH",
+          "ML206",
+          "RK234"
+        ],
+        // Dated 2026-Alliance-RV-Delta.pdf (CreationDate 2025-09-22 / print Sept 19, 2025).
+        // Core + Ultra Lite. Preserve 274RKW. Do not merge Delta Solo.
+        "2026": [
+          "252RL",
+          "262RB",
+          "274RKW",
+          "281BH",
+          "291BH",
+          "292RL",
+          "294RK",
+          "321BH",
+          "324KS",
+          "BH241",
+          "BH271",
+          "ML206",
+          "ML226",
+          "RK234"
+        ],
+        // Year-labeled RVUSA 2027 (m9426-y2027-b1801). No 2027-Alliance-RV-Delta.pdf (403).
+        // Do not copy-forward 2026 294RK / 324KS. Do not add Solo.
+        "2027": [
+          "252RL",
+          "262RB",
+          "274RKW",
+          "281BH",
+          "284RK",
+          "291BH",
+          "292RL",
+          "321BH",
+          "BH255",
+          "BH271",
+          "LK254",
+          "ML206",
+          "ML216",
+          "ML226",
+          "RE250",
+          "RK234"
+        ]
       },
       lengthRange: [
-        28,
-        34
+        24,
+        37
       ],
       weightRange: [
-        7500,
-        11500
+        4900,
+        8300
       ],
       slideouts: 2,
       sleeps: 8,
       msrpRange: [
-        65000,
-        110000
+        45000,
+        75000
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
       recalls: 0,
       rating: 4.65,
       image: RV_CARD_IMAGE,
       towingCapacity: 0,
-      freshWater: 60,
-      grayWater: 40,
-      blackWater: 40,
+      freshWater: 45,
+      grayWater: 90,
+      blackWater: 45,
       awningLength: 16,
       ceilingHeight: 84,
       founded: 2019,
       warrantyYears: 2,
-      yearStart: 2022,
-      description: "Alliance Delta — lighter half-ton / light 3/4-ton fifth wheel with Alliance build standards."
+      yearStart: 2023,
+      description: "Alliance Delta — laminated lightweight travel trailer (half-ton / SUV tow). Ultra Lite codes live on this family card; Delta Solo stays off. Never a fifth wheel."
     },
     Benchmark: {
       type: "Travel Trailer",
-      floorplans: ["29BH", "32RL", "34BH", "37FL"],
+      floorplans: ["42LFT", "44LFT", "44RKL"],
       floorplansByYear: {
-        "2023": ["29BH", "32RL", "34BH"],
-        "2024": ["29BH", "32RL", "34BH", "37FL"],
-        "2025": ["29BH", "32RL", "34BH", "37FL"],
-        "2026": ["29BH", "32RL", "34BH", "37FL"]
+        // OEM history: 2025 intro (destination trailers). 2025-Alliance-RV-Benchmark.pdf
+        // is image-only / unextracted — GAP 2025 rather than invent which two plans.
+        // Dated 2026-Alliance-RV-Benchmark.pdf (CreationDate 2025-09-22 / print Sept 19, 2025):
+        // 42LFT | 44LFT | 44RKL. Preserve 44LFT (brochure also prints "44 LFT").
+        "2026": ["42LFT", "44LFT", "44RKL"],
+        // Year-labeled RVUSA 2027 (m10483-y2027-b1801). No 2027-Alliance-RV-Benchmark.pdf (403).
+        "2027": ["42LFT", "44LFT", "44RKL"]
       },
       lengthRange: [
-        29,
-        38
+        42,
+        45
       ],
       weightRange: [
-        7000,
-        11000
+        14000,
+        15000
       ],
-      slideouts: 2,
-      sleeps: 8,
+      slideouts: 3,
+      sleeps: 10,
       msrpRange: [
-        55000,
-        95000
+        110000,
+        145000
       ],
       chassis: "N/A (towable)",
       fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
       recalls: 0,
       rating: 4.6,
       image: RV_CARD_IMAGE,
       towingCapacity: 0,
-      freshWater: 54,
-      grayWater: 40,
-      blackWater: 35,
-      awningLength: 16,
+      freshWater: 71,
+      grayWater: 114,
+      blackWater: 52,
+      awningLength: 22,
       ceilingHeight: 82,
       founded: 2019,
       warrantyYears: 2,
-      yearStart: 2023,
-      description: "Alliance Benchmark — travel trailer line bringing Alliance construction into the TT segment."
+      yearStart: 2025,
+      description: "Alliance Benchmark — luxury destination trailer (OEM / RVUSA class). Catalog type stays Travel Trailer so Facts can find it. Dropped invent 29BH / 32RL / 34BH / 37FL."
     }
   },
   "Highland Ridge": {
