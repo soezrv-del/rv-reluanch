@@ -23,6 +23,39 @@ test("SUMMARY and NOTES are brochure/options gated — never catalog ledger", ()
   assert.doesNotMatch(src, /\["Catalog", notesPitch/);
 });
 
+/** `export { foo } from "./mod"` does not bind `foo` in this module. */
+function namedSpecifiers(src, kind, modulePath) {
+  const escaped = modulePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const block = src.match(
+    new RegExp(`${kind} \\{([^}]*)\\} from "${escaped}"`),
+  )?.[1];
+  assert.ok(block, `expected ${kind} from ${modulePath}`);
+  return {
+    block,
+    names: new Set(
+      [...block.matchAll(/\b([A-Za-z_][A-Za-z0-9_]*)\b/g)]
+        .map((m) => m[1])
+        .filter((n) => n !== "type"),
+    ),
+  };
+}
+
+test("shareCardPolicy symbols used locally are imported, not only re-exported", () => {
+  const imported = namedSpecifiers(src, "import", "./shareCardPolicy");
+  const reexported = namedSpecifiers(src, "export", "./shareCardPolicy");
+  assert.match(imported.block, /\bsharePowerLines\b/);
+  const rest = src
+    .replace(imported.block, "")
+    .replace(reexported.block, "");
+  for (const name of reexported.names) {
+    if (!new RegExp(`\\b${name}\\b`).test(rest)) continue;
+    assert.ok(
+      imported.names.has(name),
+      `${name} is used in shareKit but only re-exported (Safari: Can't find variable)`,
+    );
+  }
+});
+
 test("payment block includes the interest rate", () => {
   assert.match(src, /Rate \$\{formatPct\(payment\.apr\)\}/);
 });

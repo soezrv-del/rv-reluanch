@@ -31,6 +31,7 @@ import {
   resolveShareNotes,
   resolveShareSummary,
   shareNotesLines,
+  sharePowerLines,
   shareSummaryLines,
   type ShareInclude,
   type ShareMarketLines,
