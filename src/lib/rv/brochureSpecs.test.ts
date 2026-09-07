@@ -14469,6 +14469,139 @@ test("Dutchmen 2005–2009 honesty: Aerolite MY2006+2008 dated locks; Coleman/Ko
   }
 });
 
+test("Palomino 2005–2009 honesty: Puma MY2005+2006 dated TT locks; Real-Lite early stays GAP", () => {
+  const idx = CATALOG_INDEX.Palomino;
+  assert.ok(idx);
+
+  assert.deepEqual(idx.Puma?.years, [
+    2005, 2006, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022,
+    2023, 2024, 2025,
+  ]);
+  assert.equal(idx.Puma?.yearStart, 2005);
+  assert.equal(idx.Puma?.yearEnd, 2025);
+  assert.equal(idx.Puma?.type, "Travel Trailer");
+  assert.equal(idx.Sabre, undefined);
+
+  assert.deepEqual(idx["Real-Lite"]?.years, [
+    2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,
+    2025,
+  ]);
+  assert.equal(idx["Real-Lite"]?.yearStart, 2006);
+  assert.equal(idx["Real-Lite"]?.type, "Truck Camper");
+
+  const block = src("rvData.ts");
+  const p0 = block.indexOf("\n  Palomino: {");
+  const p1 = block.indexOf("\n  Dutchmen: {");
+  assert.ok(p0 > 0 && p1 > p0, "Palomino block");
+  const pal = block.slice(p0, p1);
+  const puma = pal.slice(pal.indexOf("    Puma: {"), pal.indexOf("    SolAire: {"));
+  const solaire = pal.slice(pal.indexOf("    SolAire: {"), pal.indexOf("    Columbus: {"));
+  const columbus = pal.slice(pal.indexOf("    Columbus: {"), pal.indexOf('    "Columbus Compass": {'));
+  const compass = pal.slice(pal.indexOf('    "Columbus Compass": {'), pal.indexOf('    "Real-Lite": {'));
+  const realLite = pal.slice(pal.indexOf('    "Real-Lite": {'), pal.indexOf('    "Real-Lite FW": {'));
+  const realLiteFw = pal.slice(pal.indexOf('    "Real-Lite FW": {'), pal.indexOf('    "Puma Unleashed": {'));
+  const unleashed = pal.slice(pal.indexOf('    "Puma Unleashed": {'));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  assert.match(puma, /type: "Travel Trailer"/);
+  // LOCK recreationalvehicles.info 2005-palomino-puma-brochure.pdf OCR — no hyphens.
+  assert.deepEqual(fbyYear(puma, 2005), [
+    "19FS",
+    "25BH",
+    "25RKS",
+    "26FBS",
+    "26RLSS",
+    "27RLS",
+    "27FQ",
+    "28BHS",
+    "29BHSS",
+    "29FKSS",
+    "29FQS",
+    "30DBSS",
+    "30FQSS",
+    "31DSBH",
+  ]);
+  // LOCK recreationalvehicles.info 2006-palomino-puma-brochure.pdf OCR — no hyphens.
+  assert.deepEqual(fbyYear(puma, 2006), [
+    "19FS",
+    "25RS",
+    "25RKS",
+    "26RB",
+    "26FBSS",
+    "26RLSS",
+    "27FQ",
+    "27RBSS",
+    "27RLS",
+    "28BHS",
+    "29FBS",
+    "29FKSS",
+    "29FQS",
+    "29RKSS",
+    "30DBSS",
+    "30FQSS",
+    "30QBSS",
+    "31DSBH",
+    "31FKBS",
+    "32RDSS",
+  ]);
+  // FW / park-model lists from the same brochures stay off the TT key.
+  assert.doesNotMatch(
+    puma,
+    /"243RESS"|"249RBSS"|"253FBS"|"255RKS"|"259RGSS"|"275RLSS"|"282RKSS"|"285BHSS"|"301RESS"|"311QBSS"|"39PRLSS"|"39PTBSS"/,
+  );
+  for (const y of [2007, 2008, 2009]) {
+    assert.equal(fbyYear(puma, y), null, `Puma ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(puma, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(puma, 2010), ["25RKSS", "28BHSS", "30RKQS", "32BHQS"]);
+  for (const y of [2005, 2006]) {
+    const plans = fbyYear(puma, y) ?? [];
+    for (const code of ["16BHQ", "25RKSS", "26FKDS", "28BHSS", "30RKQS", "32BHQS", "32FBIS", "337BH", "38RLB"]) {
+      assert.equal(plans.includes(code), false, `Puma ${y} must not stamp 2010-era ${code}`);
+    }
+  }
+  for (const y of [2010, 2015, 2025]) {
+    const plans = fbyYear(puma, y) ?? [];
+    for (const code of ["19FS", "25BH", "25RKS", "26FBS", "26RLSS", "27FQ", "28BHS", "29FKSS", "30FQSS", "31DSBH", "32RDSS"]) {
+      assert.equal(plans.includes(code), false, `Puma ${y} must not stamp MY2005/06 ${code}`);
+    }
+  }
+
+  for (const y of [2006, 2007, 2008, 2009]) {
+    assert.equal(fbyYear(realLite, y), null, `Real-Lite ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(realLite, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(realLite, 2010), ["160SS", "180", "208"]);
+  assert.doesNotMatch(realLite, /"19FS"|"25RKS"|"26RLSS"|"28BHS"|"31DSBH"/);
+  assert.equal(idx["Real-Lite"]?.years?.includes(2006), false);
+  assert.equal(idx["Real-Lite"]?.years?.includes(2007), false);
+  assert.equal(idx["Real-Lite"]?.years?.includes(2008), false);
+  assert.equal(idx["Real-Lite"]?.years?.includes(2009), false);
+
+  assert.doesNotMatch(pal, /\n    Sabre: \{|\n    "Sabre": \{/);
+
+  for (const [name, srcBlock] of [
+    ["SolAire", solaire],
+    ["Columbus", columbus],
+    ["Columbus Compass", compass],
+    ["Real-Lite FW", realLiteFw],
+    ["Puma Unleashed", unleashed],
+  ] as const) {
+    for (const y of [2005, 2006, 2007, 2008, 2009]) {
+      assert.equal(fbyYear(srcBlock, y), null, `${name} ${y} must stay GAP`);
+      assert.doesNotMatch(srcBlock, new RegExp(`"${y}":`));
+    }
+    assert.equal(idx[name]?.years?.includes(2005), false);
+    assert.equal(idx[name]?.years?.includes(2006), false);
+    assert.equal(idx[name]?.years?.includes(2008), false);
+  }
+});
+
 test("Coachmen honesty lock: MY2026 towable quarantine + Destination hyphens + SRS Class A diesel", () => {
   const block = src("rvData.ts");
   const c0 = block.indexOf("\n  Coachmen: {");

@@ -29842,6 +29842,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Travel Trailer",
       floorplans: ["16BHQ", "25RKSS", "26FKDS", "28BHSS", "30RKQS", "32BHQS", "32FBIS", "337BH", "38RLB"],
       floorplansByYear: {
+        // LOCK research/palomino/LOT_DESK_2005_2009.md + CODES_2005_2009.json (EzMe pack)
+        // recreationalvehicles.info/2005-palomino-puma/2005-palomino-puma-brochure.pdf OCR.
+        // Travel Trailer only. Store codes without hyphens.
+        // FW list stays off this TT key: 243RESS / 249RBSS / 253FBS / 255RKS / 259RGSS / 275RLSS / 282RKSS / 285BHSS / 311QBSS.
+        // Park models (39PRLSS / 39PTBSS) omitted.
+        // GAP 2007–09 (no dated brochure; empty RVUSA) — do not copy 2006 forward.
+        // Do not copy these codes onto 2007–2009 / 2010+ or invent 25RKSS-era plans.
+        "2005": ["19FS", "25BH", "25RKS", "26FBS", "26RLSS", "27RLS", "27FQ", "28BHS", "29BHSS", "29FKSS", "29FQS", "30DBSS", "30FQSS", "31DSBH"],
+        // LOCK research/palomino/LOT_DESK_2005_2009.md + CODES_2005_2009.json (EzMe pack)
+        // recreationalvehicles.info/2006-palomino-puma/2006-palomino-puma-brochure.pdf OCR.
+        // FW list stays off this TT key: 249RBSS / 253FBS / 255RKS / 259RGSS / 275RLSS / 282RKSS / 285BHSS / 301RESS / 311QBSS.
+        "2006": ["19FS", "25RS", "25RKS", "26RB", "26FBSS", "26RLSS", "27FQ", "27RBSS", "27RLS", "28BHS", "29FBS", "29FKSS", "29FQS", "29RKSS", "30DBSS", "30FQSS", "30QBSS", "31DSBH", "31FKBS", "32RDSS"],
         "2010": ["25RKSS", "28BHSS", "30RKQS", "32BHQS"],
         "2011": ["25RKSS", "28BHSS", "30RKQS", "32BHQS"],
         "2012": ["25RKSS", "26FKDS", "28BHSS", "30RKQS", "32BHQS"],
@@ -29951,7 +29963,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2005,
       yearEnd: 2025,
-      description: "Palomino Puma — travel trailer. MY2026–2027 omitted (dated 2026-Forest-River-Puma.pdf is CE/TT/Ambush/Vista/LFT — do not merge into this single key; RVUSA m1931 Available Years stop at 2025). No dated 2027 brochure."
+      description: "Palomino Puma — travel trailer. Dated 2005/2006 recreationalvehicles.info Puma brochures lock TT chips only (FW / park-model lists stay off this key). MY2007–09 omitted (no dated brochure). MY2026–2027 omitted (dated 2026-Forest-River-Puma.pdf is CE/TT/Ambush/Vista/LFT — do not merge into this single key; RVUSA m1931 Available Years stop at 2025). No dated 2027 brochure."
     },
     SolAire: {
       type: "Travel Trailer",
@@ -30133,6 +30145,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Truck Camper",
       floorplans: ["160SS", "180", "1810BH", "208", "Mini Lite 180", "SS-1607"],
       floorplansByYear: {
+        // GAP 2006–09 early: no dated Real-Lite brochure this pack (empty RVUSA).
+        // Prefer omit. Do not invent chips or copy Puma TT codes onto this truck-camper key.
         "2010": ["160SS", "180", "208"],
         "2011": ["160SS", "180", "208"],
         "2012": ["160SS", "180", "208", "Mini Lite 180"],

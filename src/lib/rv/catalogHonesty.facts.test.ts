@@ -458,12 +458,27 @@ test("Palomino Facts SoT: Sabre quarantined; SolAire MY2026 brochure lock; MY202
   assert.doesNotMatch(solaire, /"2027":/);
   assert.match(solaire, /yearEnd:\s*2026/);
   const puma = pal.slice(pal.indexOf("    Puma: {"), pal.indexOf("    SolAire: {"));
+  assert.match(puma, /type: "Travel Trailer"/);
+  assert.match(
+    puma,
+    /"2005": \["19FS", "25BH", "25RKS", "26FBS", "26RLSS", "27RLS", "27FQ", "28BHS", "29BHSS", "29FKSS", "29FQS", "30DBSS", "30FQSS", "31DSBH"\]/,
+  );
+  assert.match(
+    puma,
+    /"2006": \["19FS", "25RS", "25RKS", "26RB", "26FBSS", "26RLSS", "27FQ", "27RBSS", "27RLS", "28BHS", "29FBS", "29FKSS", "29FQS", "29RKSS", "30DBSS", "30FQSS", "30QBSS", "31DSBH", "31FKBS", "32RDSS"\]/,
+  );
+  assert.doesNotMatch(puma, /"2007":|"2008":|"2009":/);
   assert.doesNotMatch(puma, /"2026":|"2027":/);
+  assert.doesNotMatch(
+    puma,
+    /"243RESS"|"249RBSS"|"253FBS"|"255RKS"|"259RGSS"|"275RLSS"|"282RKSS"|"285BHSS"|"301RESS"|"311QBSS"|"39PRLSS"|"39PTBSS"/,
+  );
   const columbus = pal.slice(pal.indexOf("    Columbus: {"), pal.indexOf('    "Columbus Compass": {'));
   assert.doesNotMatch(columbus, /"2026":|"2027":/);
   assert.doesNotMatch(columbus, /377DS|379MBL|384RKH|389FLH/);
   const realLite = pal.slice(pal.indexOf('    "Real-Lite": {'), pal.indexOf('    "Real-Lite FW": {'));
   assert.match(realLite, /type: "Truck Camper"/);
+  assert.doesNotMatch(realLite, /"2006":|"2007":|"2008":|"2009":/);
   assert.doesNotMatch(realLite, /"2026":|"2027":/);
 
   const fr0 = block.indexOf('\n  "Forest River": {');
