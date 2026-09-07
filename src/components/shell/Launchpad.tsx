@@ -25,12 +25,12 @@ const LAUNCH_PAGES: {
   blurb: string;
   Icon: typeof MessageCircle;
 }[] = [
-  { id: "rvfax", title: "RvFacts", blurb: PAGE_COPY.rvfax.line, Icon: FileText },
-  { id: "rvgrok", title: "RvGrok", blurb: PAGE_COPY.rvgrok.line, Icon: MessageCircle },
+  { id: "rvfax", title: "RvFACTS", blurb: PAGE_COPY.rvfax.line, Icon: FileText },
   { id: "rvcal", title: "RvCal", blurb: PAGE_COPY.rvcal.line, Icon: Calculator },
   { id: "rvtow", title: "RvTow", blurb: PAGE_COPY.rvtow.line, Icon: Truck },
   { id: "rvtrips", title: "RvTrips", blurb: PAGE_COPY.rvtrips.line, Icon: MapPin },
   { id: "rvshare", title: "RvShare", blurb: PAGE_COPY.rvshare.line, Icon: Share2 },
+  { id: "rvgrok", title: "RvGrok", blurb: PAGE_COPY.rvgrok.line, Icon: MessageCircle },
   { id: "more", title: "Premium", blurb: PAGE_COPY.more.line, Icon: Shield },
 ];
 
@@ -121,8 +121,9 @@ export function MetalVerifiedTrue({
 }
 
 /**
- * Field-guide launch — bright chrome/cobalt seal on a black plate, then a book pager.
- * Cover tap/swipe-left flips to page one (RvFacts). Each leaf opens that tool.
+ * Book-cover launch — Image 2 hero (huge chrome/cobalt seal on black) plus
+ * Image 1’s tagline stack. Tap anywhere flips open. Inside leaves follow the
+ * original splash order: Facts → Cal → Tow → Trips → Share → Grok → Premium.
  */
 export function Launchpad({
   onSelect,
@@ -353,14 +354,14 @@ export function Launchpad({
 
   return (
     <div
-      className="leather-launch fixed inset-0 z-[100] flex flex-col overflow-hidden bg-bg text-fg"
+      className="leather-launch fixed inset-0 z-[100] flex flex-col overflow-hidden text-fg"
       data-no-swipe
       data-magazine-open={opened ? "true" : "false"}
       onTouchMove={(e) => e.stopPropagation()}
     >
-      <div className="leather-stage flex min-h-0 flex-1 items-center justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.65rem,env(safe-area-inset-top))] sm:px-5">
+      <div className="leather-stage flex min-h-0 flex-1 items-center justify-center px-2 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-[max(0.35rem,env(safe-area-inset-top))] sm:px-4">
         <div
-          className="leather-book relative mx-auto flex h-full w-full max-w-md"
+          className="leather-book relative mx-auto flex h-full w-full max-w-lg"
           onPointerUp={(e) => {
             if (opened || flipping) return;
             const dx = gesture.current ? e.clientX - gesture.current.x : 0;
@@ -372,8 +373,6 @@ export function Launchpad({
         >
           <div className="leather-spine" data-book-spine aria-hidden>
             <span className="leather-spine-fillet" />
-            <span className="leather-spine-band leather-spine-band-a" />
-            <span className="leather-spine-band leather-spine-band-b" />
           </div>
           <div
             ref={viewportRef}
@@ -422,7 +421,7 @@ export function Launchpad({
               type="button"
               data-magazine-cover
               data-book-cover
-              aria-label="Open RvFOX — Verified and True"
+              aria-label="Open RvFOX. Verified and True. Know before you buy."
               disabled={opened && !flipping}
               onPointerDown={onCoverPointerDown}
               onPointerUp={onCoverPointerUp}
@@ -441,7 +440,6 @@ export function Launchpad({
               <span aria-hidden className="leather-cover-plate" />
               <span aria-hidden className="leather-cover-grain" />
               <span aria-hidden className="leather-cover-glow" />
-              <span aria-hidden className="leather-cover-frame" />
               <span aria-hidden className="leather-cover-crease" />
 
               <span className="leather-emblem-well">
@@ -458,10 +456,15 @@ export function Launchpad({
               </span>
 
               <span className="leather-cover-copy">
-                <span className="leather-title">RvFOX — Verified and True</span>
+                <span className="leather-kicker">RVFOX PRO</span>
+                <span className="leather-wordmark" data-cover-wordmark>
+                  <span className="leather-wordmark-rv">Rv</span>
+                  <span className="leather-wordmark-fox">FOX</span>
+                </span>
+                <MetalVerifiedTrue size="lg" />
                 <span className="leather-tagline">Know before you buy.</span>
-                <span className="leather-cover-cue">Tap anywhere to open</span>
               </span>
+              <span className="leather-cover-cue">Tap anywhere to open</span>
             </button>
           </div>
           <div className="leather-page-edge" data-book-page-edge aria-hidden>
