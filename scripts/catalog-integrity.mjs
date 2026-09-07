@@ -3182,6 +3182,95 @@ function main() {
     }
   }
 
+  // Thor early ghosts (2005 pack). Boss scope: Four Winds Majestic quarantine + Mandalay MY2007 only.
+  // Dated RVUSA 2007-Mandalay.pdf locks that chip. Majestic is not a retail MY line — empty FBY.
+  {
+    const t0 = src.indexOf("\n  Thor: {");
+    const t1 = src.indexOf("\n  Coachmen: {");
+    if (t0 < 0 || t1 < t0) {
+      fail("Thor block not found between Thor: and Coachmen:");
+    } else {
+      const thor = src.slice(t0, t1);
+      const slice = (a, b) => {
+        const i = thor.indexOf(`    ${a}: {`) >= 0 ? thor.indexOf(`    ${a}: {`) : thor.indexOf(`    "${a}": {`);
+        const j =
+          b == null
+            ? thor.length
+            : thor.indexOf(`    ${b}: {`) >= 0
+              ? thor.indexOf(`    ${b}: {`)
+              : thor.indexOf(`    "${b}": {`);
+        if (i < 0) return "";
+        return j > i ? thor.slice(i, j) : thor.slice(i);
+      };
+
+      const majestic = slice("Four Winds Majestic", "Mandalay");
+      if (!majestic) fail("Thor|Four Winds Majestic key must stay (do not merge into Four Winds)");
+      if (!/type: "Class C"/.test(majestic)) fail("Thor|Four Winds Majestic must stay Class C");
+      if (!/yearStart:\s*2000/.test(majestic) || !/yearEnd:\s*2014/.test(majestic)) {
+        fail("Thor|Four Winds Majestic must keep yearStart 2000 / yearEnd 2014 (empty-years quarantine)");
+      }
+      if (/"2000":|"2005":|"2006":|"2007":|"2008":|"2010":|"2014":/.test(majestic)) {
+        fail("Thor|Four Winds Majestic must not invent year chips (quarantine — Cruise America ex-rental, no dated retail brochure)");
+      }
+      const fw = slice("Four Winds", "Chateau");
+      // Living Four Winds already says "Not … Majestic" — that is not a merge.
+      // Ban leftover Majestic-only aliases (23A / 23MU / 28MU) on the retail key. 28A is a living Four Winds code.
+      if (/"23A"|"23MU"|"28MU"/.test(fw)) {
+        fail("Thor|Four Winds must not absorb Majestic leftover codes (keep a separate quarantined key)");
+      }
+
+      const mandalay = slice("Mandalay", "Windsport");
+      if (!/type: "Class A Diesel"/.test(mandalay)) fail("Thor|Mandalay must stay Class A Diesel");
+      if (!/"2007": \["40B", "40E", "40F", "40G", "40H"\]/.test(mandalay)) {
+        fail("Thor|Mandalay MY2007 PDF lock missing (2007-Mandalay.pdf — 40B/40E/40F/40G/40H)");
+      }
+      if (/"M-40B"|"M-40E"|"M-40F"|"M-40G"|"M-40H"/.test(mandalay)) {
+        fail("Thor|Mandalay must store bare brochure codes (no M- prefix)");
+      }
+      if (/"2005":/.test(mandalay) || /"2006":/.test(mandalay) || /"2008":/.test(mandalay)) {
+        fail("Thor|Mandalay must omit 2005–06 / 2008 (GAP — no dated PDF; do not invent 2008 chips)");
+      }
+      if (!/yearEnd:\s*2008/.test(mandalay)) {
+        fail("Thor|Mandalay yearEnd 2008 is the ceiling — keep it, do not invent 2008 chips");
+      }
+
+      const tuscany = slice("Tuscany", "Palazzo");
+      if (/"2007": .*"40E"/.test(tuscany) || /"2007": .*"40F"/.test(tuscany) || /"2007": .*"40G"/.test(tuscany) || /"2007": .*"40H"/.test(tuscany)) {
+        fail("Thor|Tuscany must not receive Mandalay MY2007 codes");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const thIdx = catalogIndex.Thor;
+      if (!thIdx) fail("Thor missing from CATALOG_INDEX");
+      if (!thIdx["Four Winds Majestic"]) {
+        fail("Thor|Four Winds Majestic must remain in CATALOG_INDEX (quarantine key, not omit)");
+      }
+      if ((thIdx["Four Winds Majestic"].years || []).length) {
+        fail("Thor|Four Winds Majestic index years must stay empty (quarantine)");
+      }
+      if (thIdx["Four Winds Majestic"].yearStart !== 2000 || thIdx["Four Winds Majestic"].yearEnd !== 2014) {
+        fail("Thor|Four Winds Majestic index must keep yearStart 2000 / yearEnd 2014");
+      }
+      if (!thIdx.Mandalay?.years?.includes(2007)) {
+        fail("Thor|Mandalay index must include 2007");
+      }
+      if (
+        thIdx.Mandalay?.years?.includes(2005) ||
+        thIdx.Mandalay?.years?.includes(2006) ||
+        thIdx.Mandalay?.years?.includes(2008)
+      ) {
+        fail("Thor|Mandalay index must omit 2005–06 / 2008 (GAP)");
+      }
+      if (thIdx.Mandalay?.yearEnd !== 2008) {
+        fail("Thor|Mandalay index yearEnd must stay 2008");
+      }
+      if (thIdx.Mandalay?.type !== "Class A Diesel") fail("Thor|Mandalay index must be Class A Diesel");
+    }
+  }
+
   // Keystone MY2027 OEM lock + yearStart hygiene / Half-Ton 2027 + 25FKD Cougar TT scrub.
   // Sprinter MY2025–2026 from #100. This slice locks major-line MY2025–2026 from walk-back pack §6.
   {

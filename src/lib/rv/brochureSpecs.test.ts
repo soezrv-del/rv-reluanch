@@ -13947,6 +13947,86 @@ test("Airstream 2005–2009 honesty: Interstate MY2007 + International MY2008 lo
   }
 });
 
+test("Thor early-ghosts honesty: Four Winds Majestic quarantine + Mandalay MY2007 lock", () => {
+  const th = CATALOG_INDEX.Thor;
+  assert.ok(th);
+
+  // Majestic: keep the key, empty years (Magnitude XG quarantine pattern). Do not merge into Four Winds.
+  assert.ok(th["Four Winds Majestic"]);
+  assert.equal(th["Four Winds Majestic"]?.yearStart, 2000);
+  assert.equal(th["Four Winds Majestic"]?.yearEnd, 2014);
+  assert.equal(th["Four Winds Majestic"]?.type, "Class C");
+  assert.deepEqual(th["Four Winds Majestic"]?.years ?? [], []);
+  for (const y of [2000, 2005, 2007, 2010, 2014]) {
+    assert.equal((th["Four Winds Majestic"]?.years ?? []).includes(y), false);
+  }
+
+  // Mandalay: lock 2007 only. yearEnd 2008 is ceiling — no 2005–06 / 2008 chips.
+  assert.equal(th.Mandalay?.yearStart, 2001);
+  assert.equal(th.Mandalay?.yearEnd, 2008);
+  assert.equal(th.Mandalay?.type, "Class A Diesel");
+  assert.deepEqual(th.Mandalay?.years, [2007]);
+  assert.equal(th.Mandalay?.years?.includes(2005), false);
+  assert.equal(th.Mandalay?.years?.includes(2006), false);
+  assert.equal(th.Mandalay?.years?.includes(2008), false);
+
+  const block = src("rvData.ts");
+  const t0 = block.indexOf("\n  Thor: {");
+  const t1 = block.indexOf("\n  Coachmen: {");
+  assert.ok(t0 > 0 && t1 > t0, "Thor block");
+  const thor = block.slice(t0, t1);
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  const majestic = thor.slice(
+    thor.indexOf('    "Four Winds Majestic": {'),
+    thor.indexOf("    Mandalay: {"),
+  );
+  assert.match(majestic, /type: "Class C"/);
+  assert.match(majestic, /yearStart:\s*2000/);
+  assert.match(majestic, /yearEnd:\s*2014/);
+  assert.match(majestic, /QUARANTINE|not a retail MY line/i);
+  assert.match(majestic, /Do not merge into living Four Winds/);
+  for (const y of [2000, 2005, 2006, 2007, 2008, 2010, 2014]) {
+    assert.equal(fbyYear(majestic, y), null, `Majestic ${y} must stay empty (quarantine)`);
+    assert.doesNotMatch(majestic, new RegExp(`"${y}":`));
+  }
+  // Must stay a separate key — not folded into Four Winds (28A is a living Four Winds code; 23A/23MU/28MU are Majestic leftovers).
+  const fw = thor.slice(thor.indexOf('    "Four Winds": {'), thor.indexOf("    Chateau: {"));
+  assert.doesNotMatch(fw, /"23A"|"23MU"|"28MU"/);
+
+  const mandalay = thor.slice(thor.indexOf("    Mandalay: {"), thor.indexOf("    Windsport: {"));
+  // LOCK library 2007-Mandalay.pdf — bare codes (no M- prefix).
+  assert.deepEqual(fbyYear(mandalay, 2007), ["40B", "40E", "40F", "40G", "40H"]);
+  assert.doesNotMatch(mandalay, /"M-40B"|"M-40E"|"M-40F"|"M-40G"|"M-40H"/);
+  for (const y of [2005, 2006, 2008]) {
+    assert.equal(fbyYear(mandalay, y), null, `Mandalay ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(mandalay, new RegExp(`"${y}":`));
+  }
+  assert.match(mandalay, /yearEnd:\s*2008/);
+  assert.match(mandalay, /Freightliner XC/);
+  assert.match(mandalay, /Cummins ISL 400/);
+  assert.doesNotMatch(mandalay, /from: 2001,\s*to: 2008/);
+
+  // Do not copy Mandalay 2007 onto Tuscany.
+  const tuscany = thor.slice(thor.indexOf("    Tuscany: {"), thor.indexOf("    Palazzo: {"));
+  assert.deepEqual(fbyYear(tuscany, 2007), ["40IX", "42RQ", "45AT"]);
+  const tu07 = fbyYear(tuscany, 2007) ?? [];
+  for (const code of ["40E", "40F", "40G", "40H"]) {
+    assert.equal(tu07.includes(code), false, `Tuscany 2007 must not stamp Mandalay ${code}`);
+  }
+
+  // Out of scope this slice — do not invent Magnitude XG chips or reopen Challenger / Windsport.
+  const magXg = thor.slice(thor.indexOf('    "Magnitude XG": {'), thor.indexOf("    Seneca: {"));
+  for (const y of [2019, 2020, 2021, 2022, 2023, 2024]) {
+    assert.equal(fbyYear(magXg, y), null, `Magnitude XG ${y} must stay empty (later ghost — out of scope)`);
+  }
+});
+
 test("Coachmen honesty lock: MY2026 towable quarantine + Destination hyphens + SRS Class A diesel", () => {
   const block = src("rvData.ts");
   const c0 = block.indexOf("\n  Coachmen: {");
