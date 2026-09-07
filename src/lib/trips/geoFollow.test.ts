@@ -157,6 +157,7 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(ui, /useNavVoice/);
   assert.match(ui, /data-voice-toggle/);
   assert.match(ui, /data-nav-voice/);
+  assert.ok(ui.indexOf("Start Turn-by-Turn") < ui.indexOf("data-nav-voice"));
   assert.match(ui, /data-follow-note/);
   assert.match(ui, /CampsAlongRoute/);
   assert.match(ui, /campStops=\{camps\?\.camps\}/);

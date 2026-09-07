@@ -256,6 +256,17 @@ test("Trips nav UI has a speaker toggle and uses Web Speech Synthesis — no mic
   assert.match(ui, /useNavVoice/);
   assert.match(ui, /data-trips-chrome/);
   assert.match(ui, /useOffRouteReroute/);
+  assert.match(ui, /glass-prestige/);
+  assert.match(ui, /glass-chip/);
+  assert.ok(
+    ui.indexOf("Start Turn-by-Turn") < ui.indexOf("data-nav-voice"),
+    "speaker lives on armed TBT chrome, after Start Turn-by-Turn",
+  );
+  const plan = ui.slice(
+    ui.indexOf('placeholder="Where to?"'),
+    ui.indexOf("Start Turn-by-Turn"),
+  );
+  assert.doesNotMatch(plan, /data-voice-toggle|data-nav-voice/);
   assert.doesNotMatch(ui, /getUserMedia/);
   assert.doesNotMatch(ui, /mediaDevices/);
   assert.doesNotMatch(ui, /GUIDANCE · STEP/);
