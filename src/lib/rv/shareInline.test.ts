@@ -62,5 +62,11 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(shareApp, /Opening the coach report to Share/);
   assert.match(css, /--dock-label-size:\s*1rem/);
   assert.match(css, /\.bottom-tabs-frost/);
-  assert.match(css, /\.bottom-tab-label\.is-etched-active/);
+  assert.match(tabs, /bottom-tab-etch-halo/);
+  assert.match(tabs, /bottom-tab-etch-bevel/);
+  assert.match(tabs, /bottom-tab-etch-face/);
+  assert.match(css, /\.bottom-tab-etch-face/);
+  assert.match(css, /-webkit-text-stroke:\s*0\.7px/);
+  assert.match(css, /\.bottom-tab-label\.is-etched-active \.bottom-tab-etch-face/);
+  assert.doesNotMatch(css, /--color-dock-etch:/);
 });

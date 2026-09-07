@@ -154,12 +154,19 @@ export function BottomTabs({
             >
               <span
                 className={cn(
-                  "bottom-tab-label pointer-events-none text-center font-bold uppercase leading-none",
+                  "bottom-tab-label pointer-events-none text-center font-extrabold uppercase leading-none",
                   isGrok && "bottom-tab-label-grok",
                   active && "is-etched-active",
                 )}
+                data-label={short}
               >
-                {short}
+                <span aria-hidden className="bottom-tab-etch-halo">
+                  {short}
+                </span>
+                <span aria-hidden className="bottom-tab-etch-bevel">
+                  {short}
+                </span>
+                <span className="bottom-tab-etch-face">{short}</span>
               </span>
               {active ? (
                 <span
