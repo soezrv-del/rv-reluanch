@@ -32,7 +32,6 @@ import {
   snapshotActiveCoach,
 } from "@/lib/rv/activeCoach";
 import {
-  formatRatingAdj,
   getRatingMetadata,
   ratingStars,
 } from "@/lib/rv/ratingSystem";
@@ -1409,47 +1408,10 @@ export function RvDetail({
             </details>
           </Section>
 
-          <Section title="Rating">
-            <p className="mb-2 text-[14px] leading-relaxed text-white">
-              {displayRating.toFixed(1)} out of 5 · {ratingMeta.tierLabel}
-              {" · "}
-              {ratingMeta.confidence} confidence
-            </p>
-            <p className="mb-4 text-[12px] leading-relaxed text-white/70">
-              {ratingMeta.sources[0]}
-            </p>
-            <SpecRow
-              label="BRAND"
-              value={ratingMeta.base.toFixed(1)}
-            />
-            <SpecRow
-              label="MODEL"
-              value={`${ratingMeta.tierAdj >= 0 ? "+" : ""}${ratingMeta.tierAdj.toFixed(1)}${
-                ratingMeta.matchedModelKey
-                  ? ` · ${ratingMeta.matchedModelKey}`
-                  : " · default"
-              }`}
-            />
-            <SpecRow
-              label="YEAR"
-              value={`${ratingMeta.yearAdj >= 0 ? "+" : ""}${ratingMeta.yearAdj.toFixed(1)}`}
-            />
-            <SpecRow
-              label="NHTSA"
-              value={
-                recallLoading
-                  ? "Checking live campaigns…"
-                  : `${liveRecalls.length} campaign${
-                      liveRecalls.length === 1 ? "" : "s"
-                    } · ${formatRatingAdj(ratingMeta.recallAdj)}`
-              }
-            />
-            <p className="mt-3 text-[11px] leading-relaxed text-white/55">
-              {ratingMeta.sources.slice(1).join(" ")}
-            </p>
-            {live?.live &&
-            (live.ratingEstimate || live.ownerSentiment) ? (
-              <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-3">
+          {live?.live &&
+          (live.ratingEstimate || live.ownerSentiment) ? (
+            <Section title="Rating">
+              <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/55">
                   Research notes — not in the RvFOX score
                 </p>
@@ -1465,8 +1427,8 @@ export function RvDetail({
                   </p>
                 ) : null}
               </div>
-            ) : null}
-          </Section>
+            </Section>
+          ) : null}
 
           {floorplansShown.length ? (
             <Section title="Floorplans this year">

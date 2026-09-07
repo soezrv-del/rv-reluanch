@@ -29,6 +29,14 @@ test("STRENGTHS stay product-only; LIFESTYLE is never an empty header", () => {
   assert.doesNotMatch(src, /Financed \$\{formatMoney/);
 });
 
+test("STRENGTHS never carry rating breakdown, summary, or disclaimer notes", () => {
+  assert.doesNotMatch(src, /getRatingMetadata/);
+  assert.doesNotMatch(src, /tierLabel/);
+  assert.doesNotMatch(src, /yearNote/);
+  assert.doesNotMatch(src, /RvFOX model:/);
+  assert.doesNotMatch(src, /Brand\/tier tables are editorial/);
+});
+
 test("share kit strips Confirm brochure placeholders instead of printing them", () => {
   assert.match(src, /isSharePlaceholder/);
   assert.match(src, /brochureSummary/);
