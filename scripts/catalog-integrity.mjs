@@ -4621,6 +4621,170 @@ function main() {
     }
   }
 
+  // Coachmen motorized 2005–2009 honesty. EzMe formal pack:
+  // LOT_DESK_2005_2009_MOTORIZED.md + CODES_2005_2009_MOTORIZED.json
+  // LOCK Leprechaun 2005–06, Freelander 2005 + 2007 (not 2006), Mirada 2006–07.
+  // GAP remaining early years. Prefer omit over invent / copy-forward.
+  {
+    const c0 = src.indexOf("\n  Coachmen: {");
+    const c1 = src.indexOf("\n  Winnebago: {");
+    if (c0 < 0 || c1 < c0) {
+      fail("Coachmen block not found between Coachmen: and Winnebago:");
+    } else {
+      const cm = src.slice(c0, c1);
+      const slice = (a, b) => {
+        const i = cm.indexOf(`    ${a}: {`) >= 0 ? cm.indexOf(`    ${a}: {`) : cm.indexOf(`    "${a}": {`);
+        const j =
+          b == null
+            ? cm.length
+            : cm.indexOf(`    ${b}: {`) >= 0
+              ? cm.indexOf(`    ${b}: {`)
+              : cm.indexOf(`    "${b}": {`);
+        if (i < 0) return "";
+        return j > i ? cm.slice(i, j) : cm.slice(i);
+      };
+
+      const lep = slice("Leprechaun", "Prism");
+      if (!/type: "Class C"/.test(lep)) fail("Coachmen|Leprechaun must stay Class C");
+      if (!/"2005": \["292DS", "307KS", "314SS", "317KS"\]/.test(lep)) {
+        fail("Coachmen|Leprechaun MY2005 PDF lock missing (2005-Coachmen-Leprechaun.pdf)");
+      }
+      if (!/"2006": \["292DS", "307KS", "314SS", "317KS", "318DS"\]/.test(lep)) {
+        fail("Coachmen|Leprechaun MY2006 PDF lock missing (2006-Coachmen-Leprechaun.pdf)");
+      }
+      if (/"2007":/.test(lep) || /"2008":/.test(lep) || /"2009":/.test(lep)) {
+        fail("Coachmen|Leprechaun must omit 2007–09 (GAP — 2007 poster / 2008–09 library 403)");
+      }
+      if (/"2010": .*"292DS"/.test(lep) || /"2010": .*"318DS"/.test(lep) || /"2010": .*"317KS"/.test(lep)) {
+        fail("Coachmen|Leprechaun must not copy 2005–06 codes onto 2010+");
+      }
+      if (!/"2010": \["210RS", "220QB", "240FS", "260FS", "280BH"\]/.test(lep)) {
+        fail("Coachmen|Leprechaun 2010 tip-era codes must stay 210RS / 220QB / 240FS / 260FS / 280BH");
+      }
+      if (/"2005": .*"210RS"/.test(lep) || /"2006": .*"210RS"/.test(lep)) {
+        fail("Coachmen|Leprechaun must not copy 210RS-era codes onto 2005–06");
+      }
+
+      const free = slice("Freelander", "Mirada");
+      if (!/type: "Class C"/.test(free)) fail("Coachmen|Freelander must stay Class C");
+      if (!/"2005": \["2400WB", "2600SO", "2890QB", "2920DS", "3100SO", "3150SS"\]/.test(free)) {
+        fail("Coachmen|Freelander MY2005 PDF lock missing (2005-Coachmen-Freelander.pdf)");
+      }
+      if (!/"2007": \["2230RK", "2430DB", "2600SO", "2890QB", "2920DS", "3100SO", "3150SS"\]/.test(free)) {
+        fail("Coachmen|Freelander MY2007 lock missing (EzMe: library 2006 file is mislabeled MY2007)");
+      }
+      if (/"2006":/.test(free) || /"2008":/.test(free) || /"2009":/.test(free)) {
+        fail("Coachmen|Freelander must omit 2006 / 2008–09 (GAP — mislabeled 2006 dup; later library 403)");
+      }
+      if (/"2010": .*"2400WB"/.test(free) || /"2010": .*"2230RK"/.test(free) || /"2010": .*"3150SS"/.test(free)) {
+        fail("Coachmen|Freelander must not copy 2005/07 codes onto 2010+");
+      }
+      if (!/"2010": \["21RS", "26DS", "30BH", "32FS"\]/.test(free)) {
+        fail("Coachmen|Freelander 2010 tip-era codes must stay 21RS / 26DS / 30BH / 32FS");
+      }
+      if (/"2005": .*"21RS"/.test(free) || /"2007": .*"21RS"/.test(free)) {
+        fail("Coachmen|Freelander must not copy 21RS-era codes onto 2005/07");
+      }
+
+      const mir = slice("Mirada", "Leprechaun");
+      if (!/type: "Class A Gas"/.test(mir)) fail("Coachmen|Mirada must stay Class A Gas");
+      if (!/"2006": \["290KS", "300QB", "310DS", "348DS", "358TS"\]/.test(mir)) {
+        fail("Coachmen|Mirada MY2006 PDF lock missing (2006-Coachmen-Mirada.pdf)");
+      }
+      if (!/"2007": \["290KS", "300QB", "310DS", "350DS"\]/.test(mir)) {
+        fail("Coachmen|Mirada MY2007 PDF lock missing (2007-Coachmen-Mirada.pdf)");
+      }
+      if (/"290KDS"/.test(mir)) {
+        fail("Coachmen|Mirada must GAP 290KDS (options text only)");
+      }
+      if (/"2005":/.test(mir) || /"2008":/.test(mir) || /"2009":/.test(mir)) {
+        fail("Coachmen|Mirada must omit 2005 / 2008–09 (GAP — no dated card this pack)");
+      }
+      if (/"2010": .*"290KS"/.test(mir) || /"2010": .*"350DS"/.test(mir) || /"2010": .*"348DS"/.test(mir)) {
+        fail("Coachmen|Mirada must not copy 2006–07 codes onto 2010+");
+      }
+      if (!/"2010": \["29FW", "31FW", "35BH"\]/.test(mir)) {
+        fail("Coachmen|Mirada 2010 tip-era codes must stay 29FW / 31FW / 35BH");
+      }
+
+      const pursuit = slice("Pursuit", "Chaparral");
+      if (!/type: "Class A Gas"/.test(pursuit)) fail("Coachmen|Pursuit must stay Class A Gas");
+      if (/"2005":/.test(pursuit) || /"2006":/.test(pursuit) || /"2007":/.test(pursuit) || /"2008":/.test(pursuit) || /"2009":/.test(pursuit)) {
+        fail("Coachmen|Pursuit must omit 2005–09 (GAP — no dated library PDF)");
+      }
+      if (!/"2010": \["29SS", "31BH", "33BH"\]/.test(pursuit)) {
+        fail("Coachmen|Pursuit 2010 tip-era codes must stay 29SS / 31BH / 33BH");
+      }
+
+      for (const [name, next] of [
+        ["Encore", "Sportscoach"],
+        ["Sportscoach", "Freelander"],
+        ["Prism", "Freedom Express"],
+        ["Concord", "Leprechaun Premier"],
+        ["Freelander LE", "Concord"],
+        ["Leprechaun Premier", "Sportscoach SRS Super C"],
+      ]) {
+        const body = slice(name, next);
+        if (/"2005":/.test(body) || /"2006":/.test(body) || /"2007":/.test(body) || /"2008":/.test(body) || /"2009":/.test(body)) {
+          fail(`Coachmen|${name} must omit 2005–2009 (GAP — do not invent)`);
+        }
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const cmIdx = catalogIndex.Coachmen;
+      if (!cmIdx) fail("Coachmen missing from CATALOG_INDEX");
+      if (!cmIdx.Leprechaun?.years?.includes(2005) || !cmIdx.Leprechaun?.years?.includes(2006)) {
+        fail("Coachmen|Leprechaun index must include 2005–06");
+      }
+      if (
+        cmIdx.Leprechaun?.years?.includes(2007) ||
+        cmIdx.Leprechaun?.years?.includes(2008) ||
+        cmIdx.Leprechaun?.years?.includes(2009)
+      ) {
+        fail("Coachmen|Leprechaun index must omit 2007–09 (GAP)");
+      }
+      if (!cmIdx.Freelander?.years?.includes(2005) || !cmIdx.Freelander?.years?.includes(2007)) {
+        fail("Coachmen|Freelander index must include 2005 and 2007");
+      }
+      if (
+        cmIdx.Freelander?.years?.includes(2006) ||
+        cmIdx.Freelander?.years?.includes(2008) ||
+        cmIdx.Freelander?.years?.includes(2009)
+      ) {
+        fail("Coachmen|Freelander index must omit 2006 / 2008–09 (GAP)");
+      }
+      if (!cmIdx.Mirada?.years?.includes(2006) || !cmIdx.Mirada?.years?.includes(2007)) {
+        fail("Coachmen|Mirada index must include 2006–07");
+      }
+      if (
+        cmIdx.Mirada?.years?.includes(2005) ||
+        cmIdx.Mirada?.years?.includes(2008) ||
+        cmIdx.Mirada?.years?.includes(2009)
+      ) {
+        fail("Coachmen|Mirada index must omit 2005 / 2008–09 (GAP)");
+      }
+      if (cmIdx.Mirada?.yearStart !== 2007) {
+        fail("Coachmen|Mirada index yearStart must stay 2007 (2006 is a locked chip only)");
+      }
+      if (
+        cmIdx.Pursuit?.years?.includes(2005) ||
+        cmIdx.Pursuit?.years?.includes(2006) ||
+        cmIdx.Pursuit?.years?.includes(2007) ||
+        cmIdx.Pursuit?.years?.includes(2008) ||
+        cmIdx.Pursuit?.years?.includes(2009)
+      ) {
+        fail("Coachmen|Pursuit index must omit 2005–09 (GAP)");
+      }
+      if (cmIdx.Leprechaun?.type !== "Class C") fail("Coachmen|Leprechaun index must be Class C");
+      if (cmIdx.Freelander?.type !== "Class C") fail("Coachmen|Freelander index must be Class C");
+      if (cmIdx.Mirada?.type !== "Class A Gas") fail("Coachmen|Mirada index must be Class A Gas");
+      if (cmIdx.Pursuit?.type !== "Class A Gas") fail("Coachmen|Pursuit index must be Class A Gas");
+    }
+  }
+
   // Dynamax MY2022–2026 OEM floorplan lock (dated RVUSA library / OEM year-folder PDFs).
   // Unquoted `Dynamax: {` so the quoted-make parser misses it — slice raw like Newmar.
   {
