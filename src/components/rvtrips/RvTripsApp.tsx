@@ -12,6 +12,8 @@ import {
   Plus,
   Tent,
   Unlock,
+  Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -119,6 +121,11 @@ import {
 } from "@/lib/trips/savedTrip";
 import { useNavFollow } from "@/lib/trips/useNavFollow";
 import { useOffRouteReroute } from "@/lib/trips/useOffRouteReroute";
+import { useNavVoice } from "@/lib/trips/useNavVoice";
+import {
+  formatRemainLabel,
+  resolveUpcomingGuidance,
+} from "@/lib/trips/voiceGuidance";
 
 type ToolPane = "profile" | "dumps" | "pack" | null;
 type SheetId = "year" | "make" | "model" | "floorplan" | null;
@@ -494,28 +501,6 @@ export function RvTripsApp() {
     setPackDraft("");
   };
 
-  const speakNav = useCallback((text: string) => {
-    try {
-      if (typeof window === "undefined" || !window.speechSynthesis) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.rate = 1;
-      window.speechSynthesis.speak(u);
-    } catch {
-      /* no TTS */
-    }
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      try {
-        window.speechSynthesis?.cancel();
-      } catch {
-        /* */
-      }
-    };
-  }, []);
-
   const runRoute = useCallback(
     (
       from: OsrmLngLat,
@@ -691,6 +676,26 @@ export function RvTripsApp() {
       }));
     return steps.length ? steps : null;
   }, [osrm]);
+
+  const routeId = osrm
+    ? `${osrm.fetchedAt}|${osrm.distanceM}|${osrm.steps.length}`
+    : "";
+  const guidance = useMemo(
+    () =>
+      resolveUpcomingGuidance({
+        steps: osrm?.steps ?? [],
+        fix: follow.fix,
+        polyline: osrm?.geometry?.coordinates,
+        routeDistanceM: osrm?.distanceM,
+      }),
+    [osrm, follow.fix],
+  );
+  const { voiceOn, toggleVoice, speakStart, hush } = useNavVoice({
+    armed: navArmed,
+    routeId,
+    guidance,
+    rerouting,
+  });
 
   const commitOrigin = useCallback((hit: PlaceHit) => {
     setOriginPlace(hit);
@@ -1715,20 +1720,11 @@ export function RvTripsApp() {
                     onClick={() => {
                       if (navArmed) {
                         setNavArmed(false);
-                        try {
-                          window.speechSynthesis?.cancel();
-                        } catch {
-                          /* */
-                        }
+                        hush();
                         return;
                       }
                       setNavArmed(true);
-                      const step = liveDirections?.[0];
-                      if (step) {
-                        speakNav(
-                          `Navigation started. ${step.instruction}. ${step.mi} miles.`,
-                        );
-                      }
+                      speakStart();
                     }}
                     className={cn(
                       "flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-[16px] font-bold transition disabled:opacity-40",
@@ -1740,6 +1736,53 @@ export function RvTripsApp() {
                     <Navigation className="size-5" />
                     {navArmed ? "Stop navigation" : "Start Turn-by-Turn"}
                   </button>
+                  {navArmed ? (
+                    <div
+                      data-nav-voice
+                      className="glass-prestige relative z-10 flex items-center gap-2 rounded-[1.25rem] px-3.5 py-3 pointer-events-auto"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p
+                          data-nav-prompt
+                          className="text-[14px] font-bold leading-snug text-white"
+                        >
+                          {guidance?.step.instruction || "Following the route"}
+                        </p>
+                        <p className="mt-0.5 text-[11px] font-semibold text-white/80">
+                          {guidance
+                            ? formatRemainLabel(guidance.remainM)
+                            : follow.status === "live"
+                              ? "GPS follow"
+                              : "Finding GPS…"}
+                          {voiceOn ? " · Voice on" : " · Muted"}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        data-voice-toggle
+                        data-voice-on={voiceOn ? "1" : "0"}
+                        aria-pressed={voiceOn}
+                        aria-label={
+                          voiceOn
+                            ? "Mute voice guidance"
+                            : "Turn on voice guidance"
+                        }
+                        onClick={toggleVoice}
+                        className={cn(
+                          "inline-flex size-11 shrink-0 items-center justify-center rounded-full border",
+                          voiceOn
+                            ? "border-blue/80 bg-blue text-white shadow-[0_0_22px_rgba(80,160,255,0.45)]"
+                            : "border-white/20 bg-black/30 text-white",
+                        )}
+                      >
+                        {voiceOn ? (
+                          <Volume2 className="size-5" />
+                        ) : (
+                          <VolumeX className="size-5" />
+                        )}
+                      </button>
+                    </div>
+                  ) : null}
                   {navArmed ? (
                     follow.error ? (
                       <p data-follow-note className="text-[11px] leading-snug text-amber">
