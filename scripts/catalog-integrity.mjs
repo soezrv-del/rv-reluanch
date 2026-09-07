@@ -249,8 +249,11 @@ const FORBIDDEN_FLOORPLANS = {
 const EXPECTED_TYPE = {
   "Brinkley|Model Z": "fifth wheel",
   "Brinkley|Model Z Air": "travel trailer",
-  "Brinkley|Model G": "toy hauler",
+  "Brinkley|Model G": "fifth wheel",
+  "Brinkley|Model Gx": "toy hauler",
   "Brinkley|Model T": "toy hauler",
+  "Brinkley|Model I": "travel trailer",
+  "Brinkley|Model Ix": "travel trailer",
   "Fleetwood|Discovery": "diesel",
   "Fleetwood|Fortis": "gas",
   "Fleetwood|Frontier": "diesel",
@@ -297,8 +300,8 @@ const EXPECTED_TYPE = {
 
 /** Phantom / non-OEM series that must not exist. */
 const BANNED_SERIES = [
-  "Brinkley|Model Z Expand",
-  "Brinkley|Model T Air",
+  // Brinkley Model Z Expand / Model T Air are historical GAP keys (yearEnd 2026),
+  // not phantoms — keep them. Do not copy Model I / Ix / 2027 Z codes onto them.
 ];
 
 const errors = [];
@@ -469,6 +472,186 @@ function main() {
     if (!z) fail("Brinkley|Model Z missing");
     else if (z.yearStart !== 2022 && z.yearStart !== 2023) {
       warn(`Brinkley|Model Z yearStart is ${z.yearStart} (expected 2022 or 2023)`);
+    }
+  }
+
+  // Brinkley MY2027 OEM flyer lock. Make key is unquoted (`Brinkley: {`) so the
+  // quoted-make parser misses it — scan the raw Brinkley…Genesis Supreme slice.
+  {
+    const b0 = src.indexOf("\n  Brinkley: {");
+    const b1 = src.indexOf('\n  "Genesis Supreme": {');
+    if (b0 < 0 || b1 < b0) {
+      fail('Brinkley block not found between Brinkley: and "Genesis Supreme":');
+    } else {
+      const brinkley = src.slice(b0, b1);
+      const slice = (a, b) => {
+        const i =
+          brinkley.indexOf(`    "${a}": {`) >= 0
+            ? brinkley.indexOf(`    "${a}": {`)
+            : brinkley.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? brinkley.length
+            : brinkley.indexOf(`    "${b}": {`) >= 0
+              ? brinkley.indexOf(`    "${b}": {`)
+              : brinkley.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? brinkley.slice(i, j) : brinkley.slice(i);
+      };
+
+      for (const required of [
+        "Model Z",
+        "Model Z Air",
+        "Model Z Expand",
+        "Model G",
+        "Model Gx",
+        "Model T",
+        "Model T Air",
+        "Model I",
+        "Model Ix",
+      ]) {
+        if (!brinkley.includes(`    "${required}": {`)) {
+          fail(`Brinkley missing required series: ${required}`);
+        }
+      }
+
+      const z = slice("Model Z", "Model Z Air");
+      if (
+        !/"2027": \["2680", "2700", "2900", "3100", "3110", "3200", "3210", "3420", "3510", "3515", "3600", "3610"\]/.test(
+          z,
+        )
+      ) {
+        fail(
+          "Brinkley|Model Z MY27 flyer lock missing (Docs/Flyers/27/Z; RVUSA 2027 shell empty)",
+        );
+      }
+      if (/"2027": .*"3500"/.test(z) || /"2027": .*"3700"/.test(z)) {
+        fail("Brinkley|Model Z 2027 must not keep 3500/3700 (G-family codes)");
+      }
+      if (/"2020"/.test(z) || /"2021"/.test(z)) {
+        fail("Brinkley|Model Z must not offer pre-2022 years");
+      }
+      if (!/type: "Fifth Wheel"/.test(z) || !/hitchType: "king pin"/.test(z)) {
+        fail("Brinkley|Model Z must be Fifth Wheel / king pin");
+      }
+
+      const zAir = slice("Model Z Air", "Model Z Expand");
+      if (!/"2027": \["297", "310", "315"\]/.test(zAir)) {
+        fail(
+          "Brinkley|Model Z Air MY27 flyer lock missing (Docs/Flyers/27/Z_AIR; RVUSA 2027 shell empty)",
+        );
+      }
+      if (!/type: "Travel Trailer"/.test(zAir) || !/hitchType: "bumper-pull"/.test(zAir)) {
+        fail("Brinkley|Model Z Air must be Travel Trailer / bumper-pull (not Fifth Wheel)");
+      }
+
+      const zExp = slice("Model Z Expand", "Model G");
+      if (/"2027":/.test(zExp)) {
+        fail("Brinkley|Model Z Expand must omit 2027 (absent from OEM 2027 downloads)");
+      }
+      if (!/yearEnd:\s*2026/.test(zExp)) {
+        fail("Brinkley|Model Z Expand yearEnd must be 2026");
+      }
+
+      const g = slice("Model G", "Model Gx");
+      if (
+        !/"2027": \["3250", "3520", "3950", "3970", "4100", "4120", "4150", "4155", "4170"\]/.test(
+          g,
+        )
+      ) {
+        fail(
+          "Brinkley|Model G MY27 flyer lock missing (Docs/Flyers/27/G; RVUSA 2027 shell empty)",
+        );
+      }
+      if (/"2027": .*"3500"/.test(g) || /"2027": .*"4000"/.test(g)) {
+        fail("Brinkley|Model G 2027 must not keep 3500/4000 (those moved to Model Gx as 3500x/4000x)");
+      }
+      if (!/type: "Fifth Wheel"/.test(g) || !/hitchType: "king pin"/.test(g)) {
+        fail("Brinkley|Model G must be Fifth Wheel / king pin (Gx is the toy-hauler sibling)");
+      }
+
+      const gx = slice("Model Gx", "Model T");
+      if (!/"2027": \["3450x", "3500x", "4000x"\]/.test(gx)) {
+        fail(
+          "Brinkley|Model Gx MY27 flyer lock missing (Docs/Flyers/27/Gx — 3450x not 3450)",
+        );
+      }
+      if (!/type: "Toy Hauler"/.test(gx) || !/hitchType: "king pin"/.test(gx)) {
+        fail("Brinkley|Model Gx must be Toy Hauler / king pin");
+      }
+      if (/"2026":/.test(gx)) {
+        fail("Brinkley|Model Gx must not backfill 2026 on this 2027 lock pass");
+      }
+
+      const t = slice("Model T", "Model T Air");
+      if (/"2027":/.test(t)) {
+        fail("Brinkley|Model T must omit 2027 (no flyer; do not copy Model I)");
+      }
+      if (/"2021":/.test(t)) {
+        fail("Brinkley|Model T must not offer pre-2022 years");
+      }
+      if (!/yearEnd:\s*2026/.test(t)) {
+        fail("Brinkley|Model T yearEnd must be 2026");
+      }
+
+      const tAir = slice("Model T Air", "Model I");
+      if (/"2027":/.test(tAir)) {
+        fail("Brinkley|Model T Air must omit 2027 (no flyer; do not copy Model Ix)");
+      }
+      if (!/yearEnd:\s*2026/.test(tAir)) {
+        fail("Brinkley|Model T Air yearEnd must be 2026");
+      }
+
+      const modelI = slice("Model I", "Model Ix");
+      if (!/"2027": \["235", "265", "275", "280", "290", "294"\]/.test(modelI)) {
+        fail("Brinkley|Model I MY27 flyer lock missing (Docs/Flyers/27/I)");
+      }
+      if (!/type: "Travel Trailer"/.test(modelI) || !/hitchType: "bumper-pull"/.test(modelI)) {
+        fail("Brinkley|Model I must be Travel Trailer / bumper-pull");
+      }
+      if (/"2025":/.test(modelI) || /"2026":/.test(modelI)) {
+        fail("Brinkley|Model I must not backfill 2025–2026 on this 2027 lock pass");
+      }
+
+      const ix = slice("Model Ix", null);
+      if (!/"2027": \["20x", "23x", "24x", "25x", "26x"\]/.test(ix)) {
+        fail("Brinkley|Model Ix MY27 flyer lock missing (Docs/Flyers/27/Ix — preserve x)");
+      }
+      if (!/type: "Travel Trailer"/.test(ix) || !/hitchType: "bumper-pull"/.test(ix)) {
+        fail("Brinkley|Model Ix must be Travel Trailer / bumper-pull");
+      }
+      if (/"2026":/.test(ix)) {
+        fail("Brinkley|Model Ix must not backfill 2026 on this 2027 lock pass");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const brIdx = catalogIndex.Brinkley;
+      if (!brIdx) fail("Brinkley missing from CATALOG_INDEX");
+      for (const lock of ["Model Z", "Model Z Air", "Model G", "Model Gx", "Model I", "Model Ix"]) {
+        if (!brIdx[lock]?.years?.includes(2027)) {
+          fail(`Brinkley|${lock} index must include 2027 in years[]`);
+        }
+      }
+      for (const gap of ["Model T", "Model T Air", "Model Z Expand"]) {
+        if (brIdx[gap]?.years?.includes(2027)) {
+          fail(`Brinkley|${gap} index must omit 2027 (GAP — no dated 2027 flyer)`);
+        }
+        if (brIdx[gap]?.yearEnd !== 2026) {
+          fail(`Brinkley|${gap} index yearEnd must be 2026`);
+        }
+      }
+      if (brIdx["Model Z Air"]?.type !== "Travel Trailer") {
+        fail("Brinkley|Model Z Air index type must be Travel Trailer");
+      }
+      if (brIdx["Model G"]?.type !== "Fifth Wheel") {
+        fail("Brinkley|Model G index type must be Fifth Wheel");
+      }
+      if (brIdx["Model Gx"]?.type !== "Toy Hauler") {
+        fail("Brinkley|Model Gx index type must be Toy Hauler");
+      }
     }
   }
 
