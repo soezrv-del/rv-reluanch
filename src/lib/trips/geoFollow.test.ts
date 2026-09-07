@@ -170,7 +170,17 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(map, /shouldRecenterFollow/);
   assert.match(map, /campStops/);
   assert.match(map, /fuelStops/);
+  assert.match(map, /RouteMapboxGl/);
   assert.doesNotMatch(map, /["'`]\/api\/route/);
+
+  const gl = readFileSync(
+    join(root, "../../components/rvtrips/RouteMapboxGl.tsx"),
+    "utf8",
+  );
+  assert.match(gl, /data-follow-puck/);
+  assert.match(gl, /shouldRecenterFollow/);
+  assert.match(gl, /easeTo/);
+  assert.doesNotMatch(gl, /["'`]\/api\/route/);
 
   assert.match(follow, /FOLLOW_WATCH_OPTIONS/);
   assert.match(follow, /FOLLOW_DISTANCE_FILTER_M/);

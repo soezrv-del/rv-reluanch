@@ -12,6 +12,7 @@ import {
   finiteLngLat,
   fitTileView,
   geometryToOverlayPath,
+  MAP_PANEL_H,
   MAP_PROBE_PATH,
   mergeBboxes,
   nextProviderAfterTileFail,
@@ -29,8 +30,8 @@ import {
   type FollowStatus,
   type GeoFix,
 } from "@/lib/trips/geoFollow";
+import { RouteMapboxGl } from "@/components/rvtrips/RouteMapboxGl";
 
-const MAP_H = 300;
 const MAX_FUEL_PINS = 12;
 const MAX_CAMP_PINS = 10;
 
@@ -74,6 +75,7 @@ export function RouteBasemap({
   const [w, setW] = useState(320);
   const [catalog, setCatalog] = useState<TileCatalog | null>(null);
   const [provider, setProvider] = useState<TileProvider>("svg");
+  const [glFailed, setGlFailed] = useState(false);
   const failRef = useRef(0);
 
   useEffect(() => {
@@ -96,6 +98,16 @@ export function RouteBasemap({
       .then(async (res) => {
         const json = (await res.json()) as TileCatalog;
         if (cancelled) return;
+        if (
+          json?.provider === "mapbox" &&
+          json.token?.startsWith("pk.") &&
+          json.tileTemplate
+        ) {
+          setCatalog(json);
+          setProvider("mapbox");
+          failRef.current = 0;
+          return;
+        }
         if (json?.tileTemplate && (json.provider === "here" || json.provider === "osm")) {
           setCatalog(json);
           setProvider(json.provider);
@@ -161,20 +173,22 @@ export function RouteBasemap({
 
   const view = useMemo(() => {
     if (followActive && followCenter) {
-      return followTileView(followCenter, w, MAP_H);
+      return followTileView(followCenter, w, MAP_PANEL_H);
     }
     if (!box) return null;
-    return fitTileView(box, w, MAP_H);
+    return fitTileView(box, w, MAP_PANEL_H);
   }, [box, w, followActive, followCenter]);
 
   const tiles = useMemo(() => {
     if (!view || provider === "svg") return [];
     const template =
-      provider === "here"
-        ? catalog?.tileTemplate || "/api/map-tiles?z={z}&x={x}&y={y}"
-        : catalog?.provider === "osm"
-          ? catalog.tileTemplate
-          : OSM_TILE_TEMPLATE;
+      provider === "mapbox"
+        ? catalog?.tileTemplate || OSM_TILE_TEMPLATE
+        : provider === "here"
+          ? catalog?.tileTemplate || "/api/map-tiles?z={z}&x={x}&y={y}"
+          : catalog?.provider === "osm"
+            ? catalog.tileTemplate
+            : OSM_TILE_TEMPLATE;
     return enumerateTiles(view).map((t) => ({
       ...t,
       src: fillTileTemplate(template, t.z, t.x, t.y),
@@ -265,29 +279,74 @@ export function RouteBasemap({
     if (failRef.current < 3) return;
     const next = nextProviderAfterTileFail(provider);
     if (next === provider) return;
-    if (next === "osm") setCatalog(osmCatalog("OpenStreetMap — HERE tiles failed to load"));
+    if (next === "osm") {
+      setCatalog(
+        osmCatalog(
+          provider === "mapbox"
+            ? "OpenStreetMap — Mapbox tiles failed to load"
+            : "OpenStreetMap — HERE tiles failed to load",
+        ),
+      );
+    }
     setProvider(next);
     failRef.current = 0;
   };
 
   const sourceLabel = !catalog
     ? "Loading map…"
-    : provider === "here"
-      ? catalog.attribution || attributionFor("here")
-      : provider === "osm"
-        ? catalog.attribution || attributionFor("osm")
-        : attributionFor("svg");
+    : provider === "mapbox"
+      ? catalog.attribution || attributionFor("mapbox")
+      : provider === "here"
+        ? catalog.attribution || attributionFor("here")
+        : provider === "osm"
+          ? catalog.attribution || attributionFor("osm")
+          : attributionFor("svg");
+
+  const vitePk = String(
+    (import.meta as { env?: { VITE_MAPBOX_TOKEN?: string } }).env
+      ?.VITE_MAPBOX_TOKEN || "",
+  ).trim();
+  const mapboxToken =
+    (catalog?.provider === "mapbox" ? catalog.token || "" : "") ||
+    (vitePk.startsWith("pk.") ? vitePk : "");
+  const useGl = mapboxToken.startsWith("pk.") && !glFailed;
 
   if (!overlay && !geometry?.coordinates?.length) return null;
+
+  if (useGl) {
+    return (
+      <RouteMapboxGl
+        token={mapboxToken}
+        geometry={geometry}
+        origin={origin}
+        destination={destination}
+        vias={vias}
+        fuelStops={fuelStops}
+        selectedFuelId={selectedFuelId}
+        onSelectFuel={onSelectFuel}
+        campStops={campStops}
+        selectedCampId={selectedCampId}
+        onSelectCamp={onSelectCamp}
+        follow={follow}
+        followActive={followActive}
+        followStatus={followStatus}
+        onUnavailable={() => {
+          setGlFailed(true);
+          failRef.current = 0;
+        }}
+      />
+    );
+  }
 
   return (
     <div
       ref={wrapRef}
       data-route-basemap
       data-tile-source={catalog ? provider : "pending"}
+      data-map-engine="raster"
       data-follow-status={status}
       className="relative overflow-hidden rounded-xl border border-white/12 bg-[#0b1410]"
-      style={{ height: MAP_H }}
+      style={{ height: MAP_PANEL_H }}
     >
       {tiles.length > 0 ? (
         <div className="absolute inset-0">
@@ -310,8 +369,8 @@ export function RouteBasemap({
       {view && overlay ? (
         <svg
           width={w}
-          height={MAP_H}
-          viewBox={`0 0 ${w} ${MAP_H}`}
+          height={MAP_PANEL_H}
+          viewBox={`0 0 ${w} ${MAP_PANEL_H}`}
           className="pointer-events-none absolute inset-0 h-full w-full"
           role="img"
           aria-label="Live route line"
@@ -378,10 +437,10 @@ export function RouteBasemap({
             key={p.id}
             title={p.label}
             className={cn(
-              "pointer-events-none absolute z-[4] flex size-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white text-[10px] font-bold text-white shadow-lg",
-              p.kind === "origin" && "bg-emerald-600",
-              p.kind === "dest" && "bg-ruby",
-              p.kind === "via" && "bg-amber text-black",
+              "rv-map-pin pointer-events-none absolute z-[4] -translate-x-1/2 -translate-y-full",
+              p.kind === "origin" && "rv-map-pin-origin",
+              p.kind === "dest" && "rv-map-pin-dest",
+              p.kind === "via" && "rv-map-pin-via",
             )}
             style={{ left: p.left, top: p.top }}
           >

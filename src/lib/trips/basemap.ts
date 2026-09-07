@@ -1,12 +1,19 @@
 /**
  * Web-Mercator basemap under the live route polyline.
  * Same LineString as miles/time — never a stock photo.
- * HERE raster when the routing key also unlocks tiles; else OSM.
+ * Mapbox (GL or raster) when a public pk. token is set; else HERE
+ * raster when the routing key also unlocks tiles; else OSM.
+ * Visual layer only — truck routing stays HERE.
  */
 
 import type { OsrmLineString } from "./osrm.ts";
+import {
+  MAPBOX_ATTRIBUTION,
+  mapboxPublicToken,
+  mapboxRasterTemplate,
+} from "./mapbox.ts";
 
-export type TileProvider = "here" | "osm" | "svg";
+export type TileProvider = "mapbox" | "here" | "osm" | "svg";
 
 export type BasemapLngLat = { lat: number; lng: number };
 
@@ -43,10 +50,13 @@ export type TileCell = {
 };
 
 export type TileCatalog = {
-  provider: "here" | "osm";
+  provider: "mapbox" | "here" | "osm";
   tileTemplate: string;
   attribution: string;
   note: string;
+  token?: string;
+  style?: string;
+  engine?: "gl" | "raster";
 };
 
 export type BasemapBBox = {
@@ -59,6 +69,7 @@ export type BasemapBBox = {
 export const TILE_SIZE = 256;
 export const MAX_TILES = 24;
 export const MAX_OVERLAY_POINTS = 160;
+export const MAP_PANEL_H = 420;
 export const MAP_PROBE_PATH = "/api/map-tiles";
 export const OSM_TILE_TEMPLATE = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 export const HERE_PROXY_TEMPLATE = "/api/map-tiles?z={z}&x={x}&y={y}";
@@ -85,6 +96,20 @@ export function hereCatalog(): TileCatalog {
     tileTemplate: HERE_PROXY_TEMPLATE,
     attribution: HERE_ATTRIBUTION,
     note: "HERE map tiles — same account as truck routing.",
+  };
+}
+
+export function mapboxCatalog(token: string): TileCatalog | null {
+  const pk = token.startsWith("pk.") ? token : mapboxPublicToken();
+  if (!pk) return null;
+  return {
+    provider: "mapbox",
+    tileTemplate: mapboxRasterTemplate(pk),
+    attribution: MAPBOX_ATTRIBUTION,
+    note: "Mapbox streets — visual layer only. Truck clearance stays HERE.",
+    token: pk,
+    style: "mapbox://styles/mapbox/streets-v12",
+    engine: "gl",
   };
 }
 
@@ -363,11 +388,13 @@ export function geometryToOverlayPath(
 export function nextProviderAfterTileFail(
   current: TileProvider,
 ): TileProvider {
+  if (current === "mapbox") return "here";
   if (current === "here") return "osm";
   return "svg";
 }
 
 export function attributionFor(provider: TileProvider): string {
+  if (provider === "mapbox") return MAPBOX_ATTRIBUTION;
   if (provider === "here") return HERE_ATTRIBUTION;
   if (provider === "osm") return OSM_ATTRIBUTION;
   return "Route line · map tiles unavailable";

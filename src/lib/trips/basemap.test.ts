@@ -22,6 +22,7 @@ import {
   MAP_PROBE_PATH,
   MAX_TILES,
   mergeBboxes,
+  mapboxCatalog,
   nextProviderAfterTileFail,
   OSM_TILE_TEMPLATE,
   osmCatalog,
@@ -148,10 +149,12 @@ test("HERE probe failure is honest OSM — never a fake photo", () => {
   assert.equal(hereCatalog().provider, "here");
 });
 
-test("tile fail steps HERE → OSM → SVG-only", () => {
+test("tile fail steps Mapbox → HERE → OSM → SVG-only", () => {
+  assert.equal(nextProviderAfterTileFail("mapbox"), "here");
   assert.equal(nextProviderAfterTileFail("here"), "osm");
   assert.equal(nextProviderAfterTileFail("osm"), "svg");
   assert.equal(nextProviderAfterTileFail("svg"), "svg");
+  assert.match(attributionFor("mapbox"), /Mapbox/);
   assert.equal(attributionFor("here"), "© HERE");
   assert.equal(attributionFor("osm"), "© OpenStreetMap");
   assert.match(attributionFor("svg"), /tiles unavailable/);
@@ -179,10 +182,16 @@ test("Navigate wires RouteBasemap and never /api/route or stock map photo", () =
   assert.match(map, /data-tile-source/);
   assert.match(map, /data-follow-puck/);
   assert.match(map, /geometryToOverlayPath/);
+  assert.match(map, /RouteMapboxGl/);
   assert.doesNotMatch(map, /RVTRIPS_MAP_PANEL/);
-  assert.doesNotMatch(map, /leaflet|maplibre|mapbox/i);
+  assert.doesNotMatch(map, /leaflet/i);
   assert.match(api, /createFileRoute\("\/api\/map-tiles"\)/);
   assert.match(api, /hereRasterV3Url/);
+  assert.match(api, /mapboxCatalog/);
   assert.doesNotMatch(api, /["'`]\/api\/route/);
   assert.doesNotMatch(api, /from ["']@\/lib\/rv\/|RATEAPI_API_KEY|rvData\.live/);
+  const pk = "pk.eyJ1IjoidGVzdCIsImEiOiJ0ZXN0In0.test";
+  const cat = mapboxCatalog(pk);
+  assert.ok(cat);
+  assert.equal(cat.provider, "mapbox");
 });
