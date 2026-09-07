@@ -1,6 +1,10 @@
 /**
  * Turn-by-turn voice prompts from the live HERE / OSRM step list.
  * Mapbox is visual-only — this never invents a Directions router.
+ *
+ * Spoken English for US drivers is feet / miles only. HERE step text may
+ * still include metric "Go for 200 m" — that is stripped or converted here,
+ * not by changing the truck router.
  */
 
 import { haversineMeters } from "./geoFollow.ts";
@@ -9,26 +13,31 @@ import type { OsrmLngLat, OsrmStep } from "./osrm.ts";
 
 export const VOICE_PREF_KEY = "rvfax_trips_voice";
 
-/** ~0.5 mi — first heads-up. */
-export const VOICE_MILE_M = 900;
-/** ~0.25 mi / 1,000 ft. */
-export const VOICE_FAR_M = 450;
-/** ~500 ft. */
-export const VOICE_NEAR_M = 180;
-/** Speak the maneuver itself. */
-export const VOICE_NOW_M = 45;
+const FT_PER_M = 3.28084;
+const M_PER_MI = 1609.344;
+/** Speak feet below this (~0.2 mi). */
+export const VOICE_FEET_MAX_M = 0.2 * M_PER_MI;
+
+/** First heads-up (~0.5 mi). Wider than the old 0.25 / 0.5 / 500 ft stack. */
+export const VOICE_AHEAD_M = 800;
+/** Critical turn (~300 ft). */
+export const VOICE_NOW_M = 90;
+/** Alias: close enough to treat as the upcoming turn window. */
+export const VOICE_NEAR_M = VOICE_NOW_M;
 /** Past the maneuver point — advance. */
 export const VOICE_PASS_M = 28;
 /** Ignore snap-to-line when GPS is this far off (reroute owns that). */
 export const VOICE_OFFROUTE_M = 90;
+/** Minimum gap between non-critical utterances. */
+export const VOICE_MIN_GAP_MS = 28_000;
+/** Don't stack "Turn right" on a just-spoken "In 500 feet, turn right". */
+export const VOICE_NOW_STACK_MS = 10_000;
 
-export type VoiceBand = "mile" | "far" | "near" | "now";
+export type VoiceBand = "ahead" | "now";
 
 const BAND_RANK: Record<VoiceBand, number> = {
-  mile: 1,
-  far: 2,
-  near: 3,
-  now: 4,
+  ahead: 1,
+  now: 2,
 };
 
 export type GuidanceStep = {
@@ -50,10 +59,19 @@ export type VoiceMemory = {
   stepId: string | null;
   band: VoiceBand | null;
   rank: number;
+  lastSpokenAt: number;
+  lastLine: string;
 };
 
 export function emptyVoiceMemory(): VoiceMemory {
-  return { routeId: "", stepId: null, band: null, rank: 0 };
+  return {
+    routeId: "",
+    stepId: null,
+    band: null,
+    rank: 0,
+    lastSpokenAt: 0,
+    lastLine: "",
+  };
 }
 
 export function loadVoicePref(): boolean {
@@ -89,52 +107,112 @@ export function isSpeakableManeuver(maneuver: string, instruction: string): bool
   const blob = `${maneuver} ${instruction}`.toLowerCase();
   if (/\bdepart\b/.test(blob)) return false;
   if (/\barrive\b/.test(blob)) return true;
-  return /turn|ramp|merge|fork|exit|roundabout|rotary|end of road|u-?turn|keep (left|right)|slight (left|right)|sharp (left|right)|left|right/.test(
+  return /turn|ramp|merge|fork|exit|roundabout|rotary|end of road|u-?turn|keep (left|right)|slight (left|right)|sharp (left|right)/.test(
     blob,
   );
 }
 
 export function pickBand(remainM: number): VoiceBand | null {
-  if (!Number.isFinite(remainM) || remainM > VOICE_MILE_M) return null;
+  if (!Number.isFinite(remainM) || remainM > VOICE_AHEAD_M) return null;
   if (remainM <= VOICE_NOW_M) return "now";
-  if (remainM <= VOICE_NEAR_M) return "near";
-  if (remainM <= VOICE_FAR_M) return "far";
-  return "mile";
+  return "ahead";
+}
+
+function formatMilesSpoken(miles: number): string {
+  if (!Number.isFinite(miles) || miles <= 0) return "";
+  const tenths = Math.round(miles * 10) / 10;
+  if (tenths < 0.15) return "";
+  if (tenths === 1) return "1 mile";
+  if (Math.abs(tenths - Math.round(tenths)) < 0.05) {
+    const n = Math.round(tenths);
+    return n === 1 ? "1 mile" : `${n} miles`;
+  }
+  return `${tenths.toFixed(1)} miles`;
 }
 
 export function formatDistanceForVoice(m: number): string {
   if (!Number.isFinite(m) || m < 12) return "";
-  if (m < 280) {
-    const ft = Math.max(50, Math.round((m * 3.28084) / 50) * 50);
+  if (m < VOICE_FEET_MAX_M) {
+    const ft = Math.max(50, Math.round((m * FT_PER_M) / 50) * 50);
     return `${ft} feet`;
   }
-  const miles = m / 1609.344;
-  if (miles < 0.4) return "a quarter mile";
-  if (miles < 0.7) return "half a mile";
-  if (miles < 1.15) return "1 mile";
-  const n = Math.round(miles);
-  return n === 1 ? "1 mile" : `${n} miles`;
+  return formatMilesSpoken(m / M_PER_MI);
 }
 
 export function formatRemainLabel(m: number): string {
   if (!Number.isFinite(m) || m < 0) return "";
-  if (m < 80) {
-    const ft = Math.max(50, Math.round((m * 3.28084) / 10) * 10);
+  const miles = m / M_PER_MI;
+  if (miles < 0.2) {
+    const ft = Math.max(50, Math.round((m * FT_PER_M) / 50) * 50);
     return `${ft} ft`;
   }
-  if (m < 1609) {
-    const miles = Math.round((m / 1609.344) * 10) / 10;
-    if (miles < 0.1) {
-      return `${Math.round((m * 3.28084) / 50) * 50} ft`;
-    }
-    return `${miles.toFixed(1)} mi`;
-  }
-  const miles = m / 1609.344;
   return miles >= 10 ? `${Math.round(miles)} mi` : `${miles.toFixed(1)} mi`;
 }
 
+/** Drop HERE's trailing "Go for 200 m" — we announce approach ourselves. */
+export function stripFollowOnDistance(instruction: string): string {
+  return instruction
+    .replace(
+      /\s*(?:\.|,)?\s*(?:then\s+)?(?:go|continue|drive|walk|proceed)\s+for\s+[\d.,]+\s*(?:kilo\s*meters?|kilometers?|kilometres?|kms?|meters?|metres?|miles?|feet|ft|m)\s*\.?$/i,
+      "",
+    )
+    .replace(
+      /^(?:in|after|for)\s+[\d.,]+\s*(?:kilo\s*meters?|kilometers?|kilometres?|kms?|meters?|metres?|miles?|feet|ft|m)\s*[,.]?\s*/i,
+      "",
+    )
+    .replace(/\s+/g, " ")
+    .replace(/[.\s]+$/g, "")
+    .trim();
+}
+
+function spokenFromMetric(value: number, unit: string): string {
+  const u = unit.toLowerCase().replace(/\s+/g, "");
+  const isKm = /^(?:km|kms|kilometer|kilometers|kilometre|kilometres|kilo)$/.test(u);
+  const meters = isKm ? value * 1000 : value;
+  return formatDistanceForVoice(meters) || `${Math.max(50, Math.round(meters * FT_PER_M))} feet`;
+}
+
+/**
+ * Convert leftover metric phrases so spoken English never says meters/km.
+ */
+export function sanitizeSpokenEnglish(text: string): string {
+  if (!text) return "";
+  let s = text;
+  s = s.replace(
+    /\b(\d+(?:\.\d+)?)\s*(kilo\s*meters?|kilometers?|kilometres?|kms?)\b/gi,
+    (_, n: string, unit: string) => spokenFromMetric(Number(n), unit),
+  );
+  s = s.replace(
+    /\b(\d+(?:\.\d+)?)\s*(meters?|metres?)\b/gi,
+    (_, n: string, unit: string) => spokenFromMetric(Number(n), unit),
+  );
+  // Bare "200 m" / "200m" — not "I-80" or "am".
+  s = s.replace(
+    /\b(\d+(?:\.\d+)?)\s*m\b(?!\s*i)/gi,
+    (_, n: string) => spokenFromMetric(Number(n), "m"),
+  );
+  return s.replace(/\s+/g, " ").trim();
+}
+
+export function promptFingerprint(line: string): string {
+  return sanitizeSpokenEnglish(line)
+    .toLowerCase()
+    .replace(/\bin\s+[\d.]+\s+(feet|foot|miles?)\b/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+export function isNearDuplicatePrompt(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  const fa = promptFingerprint(a);
+  const fb = promptFingerprint(b);
+  if (!fa || !fb) return false;
+  if (fa === fb) return true;
+  return fa.includes(fb) || fb.includes(fa);
+}
+
 export function formatVoicePrompt(instruction: string, remainM: number): string {
-  const inst = instruction.replace(/\.+$/, "").trim();
+  const inst = sanitizeSpokenEnglish(stripFollowOnDistance(instruction));
   if (!inst) return "";
   const band = pickBand(remainM);
   if (!band || band === "now") return inst;
@@ -148,12 +226,15 @@ export function rememberSpoken(
   routeId: string,
   stepId: string,
   band: VoiceBand,
+  spoken?: { at?: number; line?: string },
 ): VoiceMemory {
   return {
     routeId,
     stepId,
     band,
     rank: BAND_RANK[band],
+    lastSpokenAt: spoken?.at ?? 0,
+    lastLine: spoken?.line ?? "",
   };
 }
 
@@ -257,7 +338,9 @@ export function considerVoiceCue(input: {
   routeId: string;
   guidance: UpcomingGuidance | null;
   memory: VoiceMemory;
+  nowMs?: number;
 }): { speak: string | null; memory: VoiceMemory } {
+  const nowMs = input.nowMs ?? Date.now();
   const memory =
     input.memory.routeId === input.routeId
       ? input.memory
@@ -281,8 +364,30 @@ export function considerVoiceCue(input: {
     return { speak: null, memory: aligned };
   }
 
+  const line = formatVoicePrompt(step.instruction, remainM);
+  if (!line) return { speak: null, memory: aligned };
+
+  const elapsed = aligned.lastSpokenAt ? nowMs - aligned.lastSpokenAt : Infinity;
+  const sameStepRecent =
+    aligned.stepId === step.id &&
+    Boolean(aligned.lastLine) &&
+    elapsed < VOICE_NOW_STACK_MS;
+
+  if (band === "now" && sameStepRecent) {
+    return { speak: null, memory: aligned };
+  }
+
+  if (band !== "now") {
+    if (elapsed < VOICE_MIN_GAP_MS) {
+      return { speak: null, memory: aligned };
+    }
+    if (isNearDuplicatePrompt(line, aligned.lastLine)) {
+      return { speak: null, memory: aligned };
+    }
+  }
+
   return {
-    speak: formatVoicePrompt(step.instruction, remainM),
-    memory: rememberSpoken(input.routeId, step.id, band),
+    speak: line,
+    memory: rememberSpoken(input.routeId, step.id, band, { at: nowMs, line }),
   };
 }

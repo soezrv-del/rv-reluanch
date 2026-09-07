@@ -6,7 +6,10 @@
  * TTS plugin would need a TestFlight rebuild and is not required.
  * iOS / Android do not show a speech-synthesis permission dialog.
  * Unlock by speaking from a user gesture (speaker tap or Start).
+ * Spoken copy is US customary (feet / miles) — never meters.
  */
+
+import { sanitizeSpokenEnglish } from "./voiceGuidance.ts";
 
 export function isNavSpeechAvailable(): boolean {
   return typeof window !== "undefined" && "speechSynthesis" in window;
@@ -47,7 +50,7 @@ function pickEnglishVoice(): SpeechSynthesisVoice | null {
 
 /** Speak a turn prompt. No-op when TTS is missing. */
 export function speakNavPrompt(text: string): boolean {
-  const line = text.replace(/\s+/g, " ").trim();
+  const line = sanitizeSpokenEnglish(text.replace(/\s+/g, " ").trim());
   if (!line || !isNavSpeechAvailable()) return false;
   try {
     const syn = window.speechSynthesis;
