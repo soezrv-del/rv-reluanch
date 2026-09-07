@@ -462,6 +462,7 @@ test("Navigate wires fetchNavigateRoute and honest engine labels", () => {
     "utf8",
   );
   assert.match(ui, /fetchNavigateRoute/);
+  assert.match(ui, /useOffRouteReroute/);
   assert.match(ui, /routeEngineLabel/);
   assert.match(ui, /liveRouteStats/);
   assert.doesNotMatch(ui, /["']OSRM live["']/);

@@ -118,6 +118,7 @@ import {
   type SavedTrip,
 } from "@/lib/trips/savedTrip";
 import { useNavFollow } from "@/lib/trips/useNavFollow";
+import { useOffRouteReroute } from "@/lib/trips/useOffRouteReroute";
 
 type ToolPane = "profile" | "dumps" | "pack" | null;
 type SheetId = "year" | "make" | "model" | "floorplan" | null;
@@ -421,6 +422,21 @@ export function RvTripsApp() {
     [vias],
   );
   const viaSig = viaPlaces.map((p) => `${p.lng.toFixed(4)},${p.lat.toFixed(4)}`).join("|");
+
+  const { rerouting } = useOffRouteReroute({
+    armed: navArmed,
+    liveRoute: routeStatus === "live",
+    fix: follow.fix,
+    dest: destPlace,
+    vias: viaPlaces,
+    polyline: osrm?.geometry?.coordinates,
+    coach: locked,
+    originLabel: originPlace?.label || "Current location",
+    onApplied: (data, trip) => {
+      setOsrm(data);
+      setRoute(trip);
+    },
+  });
 
   const restriction = useMemo(
     () =>
@@ -1728,6 +1744,10 @@ export function RvTripsApp() {
                     follow.error ? (
                       <p data-follow-note className="text-[11px] leading-snug text-amber">
                         {follow.error}
+                      </p>
+                    ) : rerouting ? (
+                      <p data-follow-note data-reroute-note className="text-[11px] text-blue">
+                        Off route — recalculating with the same truck profile…
                       </p>
                     ) : follow.status === "live" ? (
                       <p data-follow-note className="text-[11px] text-blue">
