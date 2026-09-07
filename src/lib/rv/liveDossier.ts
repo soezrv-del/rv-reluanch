@@ -50,6 +50,10 @@ export type LiveDossier = {
   floorplansThisYear: string[];
   overview: string | null;
   keyFeatures: string[];
+  /** Brochure option list when research sourced one. Never catalog honesty. */
+  options?: string[];
+  /** Brochure upgrade list when research sourced one. Never catalog honesty. */
+  upgrades?: string[];
   reliabilitySummary: string | null;
   commonIssues: string[];
   servicePriorities: string[];

@@ -14,6 +14,15 @@ test("kit header is RvFOX Powered by Grok — no SpaceX", () => {
   assert.equal(src.includes("SpaceX"), false);
 });
 
+test("SUMMARY and NOTES are brochure/options gated — never catalog ledger", () => {
+  assert.match(src, /resolveShareSummary/);
+  assert.match(src, /resolveShareNotes/);
+  assert.match(src, /shareSummaryLines/);
+  assert.match(src, /shareNotesLines/);
+  assert.doesNotMatch(src, /catalogPitch \|\| \(r\.data\.type/);
+  assert.doesNotMatch(src, /\["Catalog", notesPitch/);
+});
+
 test("payment block includes the interest rate", () => {
   assert.match(src, /Rate \$\{formatPct\(payment\.apr\)\}/);
 });

@@ -70,6 +70,10 @@ export interface RVSpec {
   founded?: number;
   warrantyYears?: number;
   description?: string;
+  /** OEM brochure option list when sourced. Never catalog honesty / year-matrix. */
+  options?: string[];
+  /** OEM brochure upgrade list when sourced. Never catalog honesty / year-matrix. */
+  upgrades?: string[];
   yearStart?: number;
   yearEnd?: number;
   powertrainByYear?: PowertrainYearBand[];
