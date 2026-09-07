@@ -15140,7 +15140,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2025,
-      yearEnd: 2026,
       description: "Forest River Columbus — residential fifth wheel. 2010–2024 omitted (330RL / 377MBC / 383FB ghosts). Dated 2025 flyer: 376DS / 379MBL / 380RL / 383RLH / 384RKH / 388FKH. Dated 2026 flyer H-series: 377DS / 379MBL / 383RLH / 384RKH / 388FKH / 389FLH. 2027 omitted (empty dated family page). Palomino Columbus is a different make."
     },
     Cardinal: {
