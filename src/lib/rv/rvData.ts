@@ -5393,7 +5393,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Four Winds Majestic": {
       type: "Class C",
+      // Leftover aliases only — not year chips. Integrity requires a non-empty floorplans[].
       floorplans: ["23A", "23MU", "28A", "28MU"],
+      floorplansByYear: {
+        // QUARANTINE — not a retail MY line. Cruise America ex-rental builds later sold as Majestic.
+        // No dated retail brochure / RVUSA year-card matrix (library 403; RVUSA empty shells).
+        // Do not invent year chips. Do not merge into living Four Winds / Chateau.
+        // yearStart 2000 / yearEnd 2014 kept as catalog ceiling; FBY stays empty (Magnitude XG pattern).
+      },
       lengthRange: [23, 29],
       weightRange: [11000, 15500],
       slideouts: 1,
@@ -5418,7 +5425,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2000,
       yearEnd: 2014,
       description:
-        "Thor Four Winds Majestic — budget Class C on Ford E-450 (through ~2014). Over-cab bunk layouts; later folded into Four Winds / Chateau.",
+        "Thor Four Winds Majestic — catalog leftover for Cruise America ex-rental Class C coaches later sold as Majestic. Not a retail MY line. No dated retail brochure / RVUSA matrix (library 403; RVUSA empty shells). yearStart 2000 / yearEnd 2014; floorplansByYear empty — do not invent chips. Do not merge into Four Winds / Chateau.",
       powertrainByYear: [
         {
           from: 2000,
@@ -5426,20 +5433,29 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Ford 6.8L V10 / 6.2L V8 (by year)",
           horsepower: 305,
           chassis: "Ford E-450",
+          notes: "Quarantine leftover — no dated Majestic retail brochure. Confirm on the unit. Do not invent year chips.",
         },
       ],
     },
     Mandalay: {
       type: "Class A Diesel",
-      floorplans: ["40A", "40B", "40C", "44B", "44E"],
+      floorplans: ["40B", "40E", "40F", "40G", "40H"],
+      floorplansByYear: {
+        // LOCK research/thor/LOT_DESK_2005_GHOSTS.md + CODES_GHOSTS_2005.json
+        // library.rvusa.com/brochure/2007-Mandalay.pdf (© 2006 Litho 1006-50M)
+        // Specs table Model | 40B | 40E | 40F | 40G | 40H — bare codes (no M- prefix; match Thor diesel tip).
+        // GAP 2005–06 / 2008 (no dated PDF). yearEnd 2008 is the ceiling — do not invent 2008 chips.
+        // Do not copy 2007 onto Tuscany / other Thor diesel keys.
+        "2007": ["40B", "40E", "40F", "40G", "40H"],
+      },
       lengthRange: [40, 45],
       weightRange: [44000, 52000],
       slideouts: 4,
       sleeps: 4,
       msrpRange: [349900, 549000],
-      engine: "Cummins ISL 380HP / ISX 500HP (by trim)",
-      horsepower: 380,
-      chassis: "Spartan K2",
+      engine: "Cummins ISL 400HP (MY2007 brochure)",
+      horsepower: 400,
+      chassis: "Freightliner XC",
       fuelType: "Diesel",
       recalls: 0,
       rating: 4.7,
@@ -5456,15 +5472,31 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2001,
       yearEnd: 2008,
       description:
-        "Mandalay — Thor-owned luxury diesel pusher from Coburg, Oregon (2001–2008). Spartan K2 + Cummins ISL/ISX. Above Tuscany; brand ended in 2008.",
+        "Mandalay — Thor-owned luxury diesel pusher (2001–2008). Dated 2007-Mandalay.pdf (RVUSA library; © 2006 Litho 1006-50M): 40B / 40E / 40F / 40G / 40H on Freightliner XC · Cummins ISL 400. 2005–06 and 2008 omitted (no dated PDF). yearEnd 2008. Above Tuscany — do not copy chips onto Tuscany.",
       powertrainByYear: [
         {
           from: 2001,
+          to: 2006,
+          engine: "Cummins diesel (confirm on unit)",
+          horsepower: 0,
+          notes: "GAP 2005–06 — no dated Mandalay PDF this pack. Do not copy MY2007 Freightliner XC / ISL 400. Confirm on VIN / engine door tag.",
+        },
+        {
+          from: 2007,
+          to: 2007,
+          engine: "Cummins ISL 400HP",
+          horsepower: 400,
+          chassis: "Freightliner XC",
+          transmission: "Allison MH 3000",
+          towingCapacity: 10000,
+          notes: "LOCK library.rvusa.com/brochure/2007-Mandalay.pdf © 2006 Litho 1006-50M. Freightliner XC · ISL 400 · hitch 10,000 lb. Do not copy onto 2005–06 / 2008 or Tuscany.",
+        },
+        {
+          from: 2008,
           to: 2008,
-          engine: "Cummins ISL ~380HP / ISX ~500HP (by trim)",
-          horsepower: 380,
-          chassis: "Spartan K2",
-          notes: "Confirm ISL vs ISX on VIN / engine door tag",
+          engine: "Cummins diesel (confirm on unit)",
+          horsepower: 0,
+          notes: "GAP 2008 — no dated Mandalay PDF. Do not invent 2008 chips or copy MY2007. Confirm on VIN / engine door tag.",
         },
       ],
     },
