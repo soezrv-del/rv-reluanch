@@ -8849,6 +8849,17 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "32FS"
       ],
       floorplansByYear: {
+        // LOCK research/coachmen/LOT_DESK_2005_2009_MOTORIZED.md + CODES_2005_2009_MOTORIZED.json (EzMe pack)
+        // library.rvusa.com/brochure/2005-Coachmen-Freelander.pdf
+        // Pin MY2005 only from that dated specs table (bare 4-digit codes).
+        // GAP 2006: library 2006-Coachmen-Freelander.pdf is a mislabeled MY2007
+        // duplicate (byte-identical 2007-Coachmen-Freelander.pdf) — do not lock 2006.
+        // GAP 2008–09 (library 403 / no dated card this pack — prefer omit).
+        // Do not copy these codes onto 2006 / 2008–09 / 2010+ or invent 21RS-era plans.
+        "2005": ["2400WB", "2600SO", "2890QB", "2920DS", "3100SO", "3150SS"],
+        // LOCK EzMe pack: library “2006” file = MY2007. Codes as 2007 only.
+        // library.rvusa.com/brochure/2006-Coachmen-Freelander.pdf (©2005 Litho 11/05)
+        "2007": ["2230RK", "2430DB", "2600SO", "2890QB", "2920DS", "3100SO", "3150SS"],
         "2010": ["21RS", "26DS", "30BH", "32FS"],
         "2011": ["21RS", "26DS", "30BH", "32FS"],
         "2012": ["21RS", "26DS", "27QB", "30BH", "32FS"],
@@ -8972,6 +8983,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["29FW", "31FW", "35BH", "35OS"],
       floorplansByYear: {
+        // LOCK research/coachmen/LOT_DESK_2005_2009_MOTORIZED.md + CODES_2005_2009_MOTORIZED.json (EzMe pack)
+        // library.rvusa.com/brochure/2006-Coachmen-Mirada.pdf
+        // Dated 2006 brochure exists even though yearStart is 2007 — lock the 2006 chip.
+        // GAP 2005 / 2008–09 (no dated card this pack — prefer omit).
+        // GAP token 290KDS (options text only — no separate floorplan header).
+        // Do not copy these codes onto 2005 / 2008–09 / 2010+ or invent 29FW-era plans.
+        "2006": ["290KS", "300QB", "310DS", "348DS", "358TS"],
+        // LOCK library.rvusa.com/brochure/2007-Coachmen-Mirada.pdf
+        "2007": ["290KS", "300QB", "310DS", "350DS"],
         "2010": ["29FW", "31FW", "35BH"],
         "2011": ["29FW", "31FW", "35BH"],
         "2012": ["29FW", "31FW", "35BH", "35OS"],
@@ -9049,6 +9069,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "319MB"
       ],
       floorplansByYear: {
+        // LOCK research/coachmen/LOT_DESK_2005_2009_MOTORIZED.md + CODES_2005_2009_MOTORIZED.json (EzMe pack)
+        // library.rvusa.com/brochure/2005-Coachmen-Leprechaun.pdf
+        // Historical 3-digit Class C codes. Do not copy 210RS-era plans backward.
+        // GAP 2007–09 (2007 poster, no clean codes; 2008–09 library 403 — prefer omit).
+        // Do not copy these codes onto 2007–09 / 2010+.
+        "2005": ["292DS", "307KS", "314SS", "317KS"],
+        // LOCK library.rvusa.com/brochure/2006-Coachmen-Leprechaun.pdf
+        "2006": ["292DS", "307KS", "314SS", "317KS", "318DS"],
         "2010": ["210RS", "220QB", "240FS", "260FS", "280BH"],
         "2011": ["210RS", "220QB", "240FS", "260FS", "280BH"],
         "2012": ["210RS", "220QB", "240FS", "260FS", "280BH", "300BH"],
@@ -10187,6 +10215,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["29SS", "31BH", "33BH", "33XPS"],
       floorplansByYear: {
+        // GAP research/coachmen/LOT_DESK_2005_2009_MOTORIZED.md + CODES_2005_2009_MOTORIZED.json (EzMe pack)
+        // Pursuit 2005–09: no dated library PDF this pass (all probes 403). Prefer omit.
+        // Do not invent chips or copy 29SS / 31BH / 33BH backward.
         "2010": ["29SS", "31BH", "33BH"],
         "2011": ["29SS", "31BH", "33BH"],
         "2012": ["29SS", "31BH", "33BH", "33XPS"],

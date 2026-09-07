@@ -14160,6 +14160,161 @@ test("Heartland 2005–2009 honesty: Bighorn MY2008 + Cyclone/Sundance MY2009 FW
   }
 });
 
+test("Coachmen 2005–2009 motorized honesty: EzMe pack locks; remaining early years stay GAP", () => {
+  const idx = CATALOG_INDEX.Coachmen;
+  assert.ok(idx);
+
+  assert.deepEqual(idx.Leprechaun?.years, [
+    2005, 2006, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022,
+    2023, 2024, 2025, 2026,
+  ]);
+  assert.equal(idx.Leprechaun?.yearStart, 2000);
+  assert.equal(idx.Leprechaun?.type, "Class C");
+
+  assert.deepEqual(idx.Freelander?.years, [
+    2005, 2007, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022,
+    2023, 2024, 2025, 2026,
+  ]);
+  assert.equal(idx.Freelander?.yearStart, 2005);
+  assert.equal(idx.Freelander?.type, "Class C");
+
+  assert.deepEqual(idx.Mirada?.years, [
+    2006, 2007, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022,
+    2023, 2024, 2025, 2026,
+  ]);
+  assert.equal(idx.Mirada?.yearStart, 2007);
+  assert.equal(idx.Mirada?.type, "Class A Gas");
+
+  assert.deepEqual(idx.Pursuit?.years, [
+    2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,
+    2025, 2026,
+  ]);
+  assert.equal(idx.Pursuit?.yearStart, 2006);
+  assert.equal(idx.Pursuit?.type, "Class A Gas");
+
+  const block = src("rvData.ts");
+  const c0 = block.indexOf("\n  Coachmen: {");
+  const c1 = block.indexOf("\n  Winnebago: {");
+  assert.ok(c0 > 0 && c1 > c0, "Coachmen block");
+  const cm = block.slice(c0, c1);
+  const leprechaun = cm.slice(cm.indexOf("    Leprechaun: {"), cm.indexOf("    Prism: {"));
+  const freelander = cm.slice(cm.indexOf("    Freelander: {"), cm.indexOf("    Mirada: {"));
+  const mirada = cm.slice(cm.indexOf("    Mirada: {"), cm.indexOf("    Leprechaun: {"));
+  const pursuit = cm.slice(cm.indexOf("    Pursuit: {"), cm.indexOf("    Chaparral: {"));
+  const encore = cm.slice(cm.indexOf("    Encore: {"), cm.indexOf("    Sportscoach: {"));
+  const sportscoach = cm.slice(cm.indexOf("    Sportscoach: {"), cm.indexOf("    Freelander: {"));
+  const prism = cm.slice(cm.indexOf("    Prism: {"), cm.indexOf('    "Freedom Express": {'));
+  const concord = cm.slice(cm.indexOf("    Concord: {"), cm.indexOf('    "Leprechaun Premier": {'));
+  const freelanderLe = cm.slice(cm.indexOf('    "Freelander LE": {'), cm.indexOf("    Concord: {"));
+  const lepPremier = cm.slice(cm.indexOf('    "Leprechaun Premier": {'), cm.indexOf('    "Sportscoach SRS Super C": {'));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  // LOCK library 2005-Coachmen-Leprechaun.pdf — EzMe formal pack order.
+  assert.deepEqual(fbyYear(leprechaun, 2005), ["292DS", "307KS", "314SS", "317KS"]);
+  // LOCK library 2006-Coachmen-Leprechaun.pdf
+  assert.deepEqual(fbyYear(leprechaun, 2006), ["292DS", "307KS", "314SS", "317KS", "318DS"]);
+  for (const y of [2007, 2008, 2009]) {
+    assert.equal(fbyYear(leprechaun, y), null, `Leprechaun ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(leprechaun, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(leprechaun, 2010), ["210RS", "220QB", "240FS", "260FS", "280BH"]);
+  for (const y of [2005, 2006]) {
+    const plans = fbyYear(leprechaun, y) ?? [];
+    for (const code of ["210RS", "220QB", "260FS", "280BH", "300BH", "319MB"]) {
+      assert.equal(plans.includes(code), false, `Leprechaun ${y} must not stamp 210RS-era ${code}`);
+    }
+  }
+  for (const y of [2010, 2015, 2025, 2026]) {
+    const plans = fbyYear(leprechaun, y) ?? [];
+    for (const code of ["292DS", "307KS", "314SS", "317KS", "318DS"]) {
+      assert.equal(plans.includes(code), false, `Leprechaun ${y} must not stamp MY2005–06 ${code}`);
+    }
+  }
+
+  // LOCK library 2005-Coachmen-Freelander.pdf
+  assert.deepEqual(fbyYear(freelander, 2005), ["2400WB", "2600SO", "2890QB", "2920DS", "3100SO", "3150SS"]);
+  // LOCK EzMe: library “2006” file is mislabeled MY2007 — lock 2007 only.
+  assert.deepEqual(fbyYear(freelander, 2007), [
+    "2230RK",
+    "2430DB",
+    "2600SO",
+    "2890QB",
+    "2920DS",
+    "3100SO",
+    "3150SS",
+  ]);
+  for (const y of [2006, 2008, 2009]) {
+    assert.equal(fbyYear(freelander, y), null, `Freelander ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(freelander, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(freelander, 2010), ["21RS", "26DS", "30BH", "32FS"]);
+  for (const y of [2005, 2007]) {
+    const plans = fbyYear(freelander, y) ?? [];
+    for (const code of ["21RS", "22XG", "26DS", "27QB", "30BH", "32FS"]) {
+      assert.equal(plans.includes(code), false, `Freelander ${y} must not stamp 21RS-era ${code}`);
+    }
+  }
+  for (const y of [2010, 2015, 2025, 2026]) {
+    const plans = fbyYear(freelander, y) ?? [];
+    for (const code of ["2230RK", "2400WB", "2430DB", "2600SO", "2890QB", "2920DS", "3100SO", "3150SS"]) {
+      assert.equal(plans.includes(code), false, `Freelander ${y} must not stamp MY2005/07 ${code}`);
+    }
+  }
+
+  // LOCK library 2006-Coachmen-Mirada.pdf — yearStart stays 2007; lock 2006 chip.
+  assert.deepEqual(fbyYear(mirada, 2006), ["290KS", "300QB", "310DS", "348DS", "358TS"]);
+  // LOCK library 2007-Coachmen-Mirada.pdf
+  assert.deepEqual(fbyYear(mirada, 2007), ["290KS", "300QB", "310DS", "350DS"]);
+  assert.doesNotMatch(mirada, /"290KDS"/);
+  for (const y of [2005, 2008, 2009]) {
+    assert.equal(fbyYear(mirada, y), null, `Mirada ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(mirada, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(mirada, 2010), ["29FW", "31FW", "35BH"]);
+  for (const y of [2006, 2007]) {
+    const plans = fbyYear(mirada, y) ?? [];
+    for (const code of ["29FW", "31FW", "35BH", "35OS", "290KDS"]) {
+      assert.equal(plans.includes(code), false, `Mirada ${y} must not stamp 29FW-era ${code}`);
+    }
+  }
+  for (const y of [2010, 2015, 2025, 2026]) {
+    const plans = fbyYear(mirada, y) ?? [];
+    for (const code of ["290KS", "300QB", "310DS", "348DS", "350DS", "358TS"]) {
+      assert.equal(plans.includes(code), false, `Mirada ${y} must not stamp MY2006–07 ${code}`);
+    }
+  }
+
+  for (const y of [2005, 2006, 2007, 2008, 2009]) {
+    assert.equal(fbyYear(pursuit, y), null, `Pursuit ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(pursuit, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(pursuit, 2010), ["29SS", "31BH", "33BH"]);
+
+  for (const [name, srcBlock] of [
+    ["Encore", encore],
+    ["Sportscoach", sportscoach],
+    ["Prism", prism],
+    ["Concord", concord],
+    ["Freelander LE", freelanderLe],
+    ["Leprechaun Premier", lepPremier],
+  ] as const) {
+    for (const y of [2005, 2006, 2007, 2008, 2009]) {
+      assert.equal(fbyYear(srcBlock, y), null, `${name} ${y} must stay GAP`);
+      assert.doesNotMatch(srcBlock, new RegExp(`"${y}":`));
+    }
+    assert.equal(idx[name]?.years?.includes(2005), false);
+    assert.equal(idx[name]?.years?.includes(2006), false);
+    assert.equal(idx[name]?.years?.includes(2007), false);
+    assert.equal(idx[name]?.years?.includes(2008), false);
+    assert.equal(idx[name]?.years?.includes(2009), false);
+  }
+});
+
 test("Coachmen honesty lock: MY2026 towable quarantine + Destination hyphens + SRS Class A diesel", () => {
   const block = src("rvData.ts");
   const c0 = block.indexOf("\n  Coachmen: {");
