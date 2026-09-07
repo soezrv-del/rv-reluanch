@@ -57,6 +57,10 @@
     0 12px 40px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.38),
     inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+
+  --dock-label-size: 1rem;
+  --dock-label-size-sm: 1.0625rem;
+  --dock-label-track: 0.05em;
 }
 
 @layer base {
@@ -274,7 +278,7 @@
   }
 
   .bottom-tab-label {
-    font-size: 11px !important;
+    font-size: 0.8125rem !important;
     letter-spacing: 0.04em !important;
   }
 
@@ -724,7 +728,7 @@
   );
 }
 
-/* Dock — obsidian platinum island */
+/* Dock — frosted glass, labels etched into the plate */
 .bottom-tabs-nav {
   z-index: 80;
   touch-action: manipulation;
@@ -732,26 +736,55 @@
 .bottom-tabs-dock {
   background: linear-gradient(
     180deg,
-    rgba(18, 24, 42, 0.82) 0%,
-    rgba(6, 10, 22, 0.9) 48%,
-    rgba(4, 8, 16, 0.94) 100%
+    rgba(210, 226, 255, 0.2) 0%,
+    rgba(90, 130, 190, 0.12) 32%,
+    rgba(18, 28, 52, 0.4) 68%,
+    rgba(8, 14, 28, 0.52) 100%
   );
-  border: 1px solid rgba(210, 224, 255, 0.22);
+  border: 1px solid rgba(220, 234, 255, 0.34);
   box-shadow:
-    0 18px 48px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -1px 0 rgba(40, 70, 140, 0.28);
-  backdrop-filter: blur(28px) saturate(1.55);
-  -webkit-backdrop-filter: blur(28px) saturate(1.55);
+    0 16px 40px rgba(0, 8, 24, 0.38),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.52),
+    inset 0 -1px 0 rgba(20, 40, 80, 0.32),
+    inset 0 0 28px rgba(160, 196, 240, 0.08);
+  backdrop-filter: blur(40px) saturate(1.75);
+  -webkit-backdrop-filter: blur(40px) saturate(1.75);
+}
+.bottom-tabs-frost {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(255, 255, 255, 0.03) 1px,
+      rgba(255, 255, 255, 0.03) 2px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(190, 214, 255, 0.025) 1px,
+      rgba(190, 214, 255, 0.025) 2px
+    );
+  mix-blend-mode: overlay;
+  opacity: 0.7;
 }
 .bottom-tabs-dock-ruby {
-  border-color: rgba(255, 180, 190, 0.22);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 214, 220, 0.18) 0%,
+    rgba(180, 60, 80, 0.12) 32%,
+    rgba(40, 12, 20, 0.42) 68%,
+    rgba(22, 6, 12, 0.52) 100%
+  );
+  border-color: rgba(255, 200, 208, 0.34);
   box-shadow:
-    0 18px 48px rgba(0, 0, 0, 0.55),
-    0 0 24px rgba(212, 37, 53, 0.12),
-    inset 0 1px 0 rgba(255, 220, 224, 0.22),
-    inset 0 -1px 0 rgba(120, 20, 40, 0.28);
+    0 16px 40px rgba(24, 0, 8, 0.36),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 230, 234, 0.48),
+    inset 0 -1px 0 rgba(80, 16, 28, 0.32),
+    inset 0 0 28px rgba(255, 120, 140, 0.08);
 }
 .bottom-tabs-ambient {
   background: radial-gradient(
@@ -1041,8 +1074,134 @@
   z-index: 3;
 }
 .bottom-tab-label {
-  color: #fff;
-  text-shadow: 0 1px 8px rgba(0, 10, 40, 0.55);
+  position: relative;
+  display: inline-block;
+  font-size: var(--dock-label-size);
+  letter-spacing: var(--dock-label-track);
+  line-height: 1;
+}
+@media (min-width: 640px) {
+  .bottom-tab-label {
+    font-size: var(--dock-label-size-sm);
+    letter-spacing: 0.06em;
+  }
+}
+.bottom-tab-etch-halo,
+.bottom-tab-etch-core,
+.bottom-tab-etch-bevel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+}
+/* Soft halo — Image 1 glow, not a neon bloom */
+.bottom-tab-etch-halo {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow:
+    0 0 5px rgba(255, 255, 255, 0.38),
+    0 1px 8px rgba(220, 234, 255, 0.22);
+}
+/* Milky frosted body — navy tints through the glass */
+.bottom-tab-etch-core {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(228, 238, 252, 0.5) 42%,
+    rgba(176, 202, 232, 0.28) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+/* Carved inner bevel: dark inside the rim, light opposite */
+.bottom-tab-etch-bevel {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow:
+    0.6px 0.75px 0 rgba(4, 10, 26, 0.55),
+    -0.45px -0.55px 0 rgba(255, 255, 255, 0.42);
+}
+/* Sharp rim light via edge drops — not a hollow text-stroke */
+.bottom-tab-etch-face {
+  position: relative;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter:
+    drop-shadow(0.45px 0 0 rgba(255, 255, 255, 0.95))
+    drop-shadow(-0.4px 0 0 rgba(255, 255, 255, 0.82))
+    drop-shadow(0 -0.45px 0 rgba(255, 255, 255, 0.98))
+    drop-shadow(0 0.4px 0 rgba(255, 255, 255, 0.7));
+}
+.bottom-tab-label.is-etched-active .bottom-tab-etch-halo {
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.5),
+    0 1px 10px rgba(220, 238, 255, 0.32);
+}
+.bottom-tab-label.is-etched-active .bottom-tab-etch-core {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(240, 246, 255, 0.64) 40%,
+    rgba(196, 218, 245, 0.38) 100%
+  );
+}
+.bottom-tab-label.is-etched-active .bottom-tab-etch-bevel {
+  text-shadow:
+    0.6px 0.75px 0 rgba(4, 10, 26, 0.42),
+    -0.5px -0.6px 0 rgba(255, 255, 255, 0.55);
+}
+.bottom-tab-label.is-etched-active .bottom-tab-etch-face {
+  filter:
+    drop-shadow(0.5px 0 0 rgba(255, 255, 255, 1))
+    drop-shadow(-0.45px 0 0 rgba(255, 255, 255, 0.9))
+    drop-shadow(0 -0.5px 0 rgba(255, 255, 255, 1))
+    drop-shadow(0 0.45px 0 rgba(255, 255, 255, 0.78));
+}
+.bottom-tab-label-grok .bottom-tab-etch-halo {
+  text-shadow:
+    0 0 5px rgba(255, 228, 232, 0.32),
+    0 1px 8px rgba(255, 190, 200, 0.18);
+}
+.bottom-tab-label-grok .bottom-tab-etch-core {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 246, 248, 0.7) 0%,
+    rgba(255, 220, 226, 0.46) 46%,
+    rgba(220, 150, 162, 0.26) 100%
+  );
+}
+.bottom-tab-label-grok .bottom-tab-etch-face {
+  filter:
+    drop-shadow(0.45px 0 0 rgba(255, 240, 242, 0.94))
+    drop-shadow(-0.4px 0 0 rgba(255, 230, 234, 0.8))
+    drop-shadow(0 -0.45px 0 rgba(255, 246, 248, 0.96))
+    drop-shadow(0 0.4px 0 rgba(255, 220, 226, 0.7));
+}
+.bottom-tab-label-grok.is-etched-active .bottom-tab-etch-halo {
+  text-shadow:
+    0 0 6px rgba(255, 236, 238, 0.48),
+    0 1px 10px rgba(255, 190, 200, 0.26);
+}
+.bottom-tab-label-grok.is-etched-active .bottom-tab-etch-core {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 250, 251, 0.86) 0%,
+    rgba(255, 230, 234, 0.6) 42%,
+    rgba(236, 170, 180, 0.34) 100%
+  );
+}
+.bottom-tab-mark {
+  height: 2px;
+  width: 0.875rem;
+  border-radius: 999px;
+  background: var(--color-sapphire-glow);
+  box-shadow: 0 0 8px rgba(140, 200, 255, 0.7);
+}
+.bottom-tab-mark-ruby {
+  background: var(--color-ruby-glow);
+  box-shadow: 0 0 8px rgba(255, 90, 110, 0.75);
 }
 .bottom-tab-label-sapphire {
   background: linear-gradient(180deg, #fff 0%, #cfe4ff 45%, #8ec5ff 100%);

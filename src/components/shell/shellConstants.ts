@@ -1,12 +1,11 @@
 import type { AppTab } from "./BottomTabs";
 
-/** Dock order — Facts home, Grok on the right */
+/** Dock + swipe order — Facts home, Grok on the right. Share is not a dock tab. */
 export const TAB_ORDER = [
   "rvfax",
   "rvcal",
   "rvtow",
   "rvtrips",
-  "rvshare",
   "rvgrok",
 ] as const satisfies readonly AppTab[];
 

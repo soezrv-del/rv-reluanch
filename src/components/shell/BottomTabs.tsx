@@ -15,9 +15,9 @@ export type AppTab =
   | "rvshare"
   | "more";
 
-/** Dock tabs only — Premium lives in the top-right ⋯ menu */
+/** Dock tabs only — Share is inline on Facts; Premium lives in ⋯ */
 const TABS: {
-  id: Exclude<AppTab, "more">;
+  id: Exclude<AppTab, "more" | "rvshare">;
   label: string;
   short: string;
 }[] = [
@@ -25,16 +25,15 @@ const TABS: {
   { id: "rvcal", label: "RvCAL", short: "Cal" },
   { id: "rvtow", label: "RvTOW", short: "Tow" },
   { id: "rvtrips", label: "RvTRIPS", short: "Trips" },
-  { id: "rvshare", label: "RvSHARE", short: "Share" },
   { id: "rvgrok", label: "RvGROK", short: "Grok" },
 ];
 
 /**
- * Floating platinum-glass dock — text labels, sliding active capsule.
+ * Floating etched-glass dock — text labels, sliding active capsule.
  *
  * Android WebView: do NOT put pointer-events-none on this nav. Parent
  * none + child auto + backdrop-filter fails hit-testing on Chromium
- * WebView, so Facts/Cal/Tow/Trips/Share/Grok never fire. iOS still uses
+ * WebView, so Facts/Cal/Tow/Trips/Grok never fire. iOS still uses
  * onClick only (no extra pointer path).
  */
 export function BottomTabs({
@@ -75,7 +74,7 @@ export function BottomTabs({
     >
       <div
         className={cn(
-          "bottom-tabs-dock pointer-events-auto relative isolate mx-auto grid w-full max-w-lg grid-cols-6 items-stretch gap-0 overflow-hidden rounded-[1.7rem] p-1",
+          "bottom-tabs-dock pointer-events-auto relative isolate mx-auto grid w-full max-w-lg grid-cols-5 items-stretch gap-0 overflow-hidden rounded-[1.7rem] p-1",
           grokActive && "bottom-tabs-dock-ruby",
         )}
         style={{ touchAction: "manipulation" }}
@@ -83,6 +82,10 @@ export function BottomTabs({
         <span
           aria-hidden
           className="pointer-events-none absolute inset-[1px] z-0 rounded-[1.55rem] border border-white/[0.08]"
+        />
+        <span
+          aria-hidden
+          className="bottom-tabs-frost pointer-events-none absolute inset-0 z-[1]"
         />
         <span
           aria-hidden
@@ -106,7 +109,7 @@ export function BottomTabs({
               : "bottom-tab-indicator-sapphire",
           )}
           style={{
-            width: "calc((100% - 0.5rem) / 6)",
+            width: `calc((100% - 0.5rem) / ${TABS.length})`,
             left: "0.25rem",
             transform: `translateX(${activeIndex * 100}%)`,
           }}
@@ -151,26 +154,29 @@ export function BottomTabs({
             >
               <span
                 className={cn(
-                  "bottom-tab-label pointer-events-none text-center text-[12px] font-bold uppercase leading-none tracking-[0.06em] sm:text-[13px] sm:tracking-[0.08em]",
-                  isGrok
-                    ? active
-                      ? "text-[#ffd0d6]"
-                      : "text-white/55"
-                    : active
-                      ? "text-sky-50"
-                      : "text-white/55",
+                  "bottom-tab-label pointer-events-none text-center font-extrabold uppercase leading-none",
+                  isGrok && "bottom-tab-label-grok",
+                  active && "is-etched-active",
                 )}
+                data-label={short}
               >
-                {short}
+                <span aria-hidden className="bottom-tab-etch-halo">
+                  {short}
+                </span>
+                <span aria-hidden className="bottom-tab-etch-core">
+                  {short}
+                </span>
+                <span aria-hidden className="bottom-tab-etch-bevel">
+                  {short}
+                </span>
+                <span className="bottom-tab-etch-face">{short}</span>
               </span>
               {active ? (
                 <span
                   aria-hidden
                   className={cn(
-                    "pointer-events-none absolute bottom-1.5 h-[2px] w-3.5 rounded-full",
-                    isGrok
-                      ? "bg-[#ff8a96] shadow-[0_0_8px_rgba(255,90,110,0.8)]"
-                      : "bg-sky-200 shadow-[0_0_8px_rgba(140,200,255,0.75)]",
+                    "bottom-tab-mark pointer-events-none absolute bottom-1.5",
+                    isGrok && "bottom-tab-mark-ruby",
                   )}
                 />
               ) : null}
