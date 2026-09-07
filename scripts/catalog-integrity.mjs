@@ -655,6 +655,150 @@ function main() {
     }
   }
 
+  // Palomino honesty lock. Make key is unquoted (`Palomino: {`).
+  // Sabre under Palomino is the wrong brand (Forest River / Cherokee m5596 b203).
+  // MY2027 is GAP across the board. Dated 2026-Forest-River-Solaire.pdf locks SolAire only.
+  {
+    const p0 = src.indexOf("\n  Palomino: {");
+    const p1 = src.indexOf("\n  Dutchmen: {");
+    if (p0 < 0 || p1 < p0) {
+      fail("Palomino block not found between Palomino: and Dutchmen:");
+    } else {
+      const pal = src.slice(p0, p1);
+      const slice = (a, b) => {
+        const i =
+          pal.indexOf(`    "${a}": {`) >= 0
+            ? pal.indexOf(`    "${a}": {`)
+            : pal.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? pal.length
+            : pal.indexOf(`    "${b}": {`) >= 0
+              ? pal.indexOf(`    "${b}": {`)
+              : pal.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? pal.slice(i, j) : pal.slice(i);
+      };
+
+      if (/\n    Sabre: \{/.test(pal) || /\n    "Sabre": \{/.test(pal)) {
+        fail("Palomino must not keep Sabre (Forest River / Cherokee m5596 b203 — wrong brand)");
+      }
+
+      const solaire = slice("SolAire", "Columbus");
+      if (
+        !/"2026": \["232UD", "235BH", "237RK", "302BHS", "2420RBS", "2430BHS", "2580RBSS", "2750BHS", "3060RKTS", "3070RKLS", "3150TBSS", "3200TSBH", "3300FLBS", "3380RLBT"\]/.test(
+          solaire,
+        )
+      ) {
+        fail(
+          "Palomino|SolAire MY26 brochure lock missing (2026-Forest-River-Solaire.pdf footer 01/26 — Lite + SolAire spec table)",
+        );
+      }
+      if (/"2027":/.test(solaire)) {
+        fail("Palomino|SolAire must omit 2027 (no dated 2027 brochure)");
+      }
+      if (/"2026": .*"2080RBS"/.test(solaire) || /"2026": .*"2085BHS"/.test(solaire) || /"2026": .*"2300FKBS"/.test(solaire)) {
+        fail("Palomino|SolAire must not add RVUSA m11558 extras 2080RBS/2085BHS/2300FKBS (dated brochure outranks)");
+      }
+      if (/"2026": .*"267BHS"/.test(solaire) || /"2026": .*"282BH"/.test(solaire) || /"2026": .*"282BHSK"/.test(solaire)) {
+        fail("Palomino|SolAire must not keep invent 267BHS/282BH/282BHSK on 2026");
+      }
+      if (!/yearEnd:\s*2026/.test(solaire)) {
+        fail("Palomino|SolAire yearEnd must be 2026");
+      }
+
+      const puma = slice("Puma", "SolAire");
+      if (/"2026":/.test(puma) || /"2027":/.test(puma)) {
+        fail("Palomino|Puma must omit 2026–2027 (no honest single-key lock; dated Puma PDF is CE/TT/Ambush/Vista/LFT)");
+      }
+      if (!/yearEnd:\s*2025/.test(puma)) {
+        fail("Palomino|Puma yearEnd must be 2025");
+      }
+
+      const unleashed = slice("Puma Unleashed", null);
+      if (/"2026":/.test(unleashed) || /"2027":/.test(unleashed)) {
+        fail("Palomino|Puma Unleashed must omit 2026–2027 (no dated Unleashed PDF; do not merge Ambush)");
+      }
+      if (/"25TH"/.test(unleashed) || /"27TH"/.test(unleashed) || /"29TH"/.test(unleashed)) {
+        fail("Palomino|Puma Unleashed must not absorb Ambush 25TH/27TH/29TH from the 2026 Puma PDF");
+      }
+      if (!/yearEnd:\s*2025/.test(unleashed)) {
+        fail("Palomino|Puma Unleashed yearEnd must be 2025");
+      }
+
+      const columbus = slice("Columbus", "Columbus Compass");
+      if (/"2026":/.test(columbus) || /"2027":/.test(columbus)) {
+        fail("Palomino|Columbus must omit 2026–2027 (RVUSA m4268 through 2025; do not copy Forest River Columbus PDF)");
+      }
+      if (/"377DS"/.test(columbus) || /"379MBL"/.test(columbus) || /"384RKH"/.test(columbus) || /"389FLH"/.test(columbus)) {
+        fail("Palomino|Columbus must not copy Forest River Columbus H-series 377DS/379MBL/384RKH/389FLH");
+      }
+      if (!/yearEnd:\s*2025/.test(columbus)) {
+        fail("Palomino|Columbus yearEnd must be 2025");
+      }
+
+      const compass = slice("Columbus Compass", "Real-Lite");
+      if (/"2026":/.test(compass) || /"2027":/.test(compass)) {
+        fail("Palomino|Columbus Compass must omit 2026–2027 (no dated Compass card)");
+      }
+      if (!/yearEnd:\s*2025/.test(compass)) {
+        fail("Palomino|Columbus Compass yearEnd must be 2025");
+      }
+
+      const realLite = slice("Real-Lite", "Real-Lite FW");
+      if (!/type: "Truck Camper"/.test(realLite)) {
+        fail("Palomino|Real-Lite must be Truck Camper (RVUSA m2968), not Travel Trailer");
+      }
+      if (/"2026":/.test(realLite) || /"2027":/.test(realLite)) {
+        fail("Palomino|Real-Lite must omit 2026–2027 (do not invent 2027; incomplete HS/SS stay empty)");
+      }
+      if (!/yearEnd:\s*2025/.test(realLite)) {
+        fail("Palomino|Real-Lite yearEnd must be 2025");
+      }
+
+      const realLiteFw = slice("Real-Lite FW", "Puma Unleashed");
+      if (/"2026":/.test(realLiteFw) || /"2027":/.test(realLiteFw)) {
+        fail("Palomino|Real-Lite FW must omit 2026–2027 (no dedicated RVUSA FW key)");
+      }
+      if (!/yearEnd:\s*2025/.test(realLiteFw)) {
+        fail("Palomino|Real-Lite FW yearEnd must be 2025");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const palIdx = catalogIndex.Palomino;
+      if (!palIdx) fail("Palomino missing from CATALOG_INDEX");
+      if (palIdx.Sabre) {
+        fail("Palomino|Sabre must not exist in CATALOG_INDEX (wrong brand)");
+      }
+      if (!palIdx.SolAire?.years?.includes(2026)) {
+        fail("Palomino|SolAire index must include 2026 (dated brochure lock)");
+      }
+      if (palIdx.SolAire?.years?.includes(2027)) {
+        fail("Palomino|SolAire index must omit 2027");
+      }
+      if (palIdx.SolAire?.yearEnd !== 2026) {
+        fail("Palomino|SolAire index yearEnd must be 2026");
+      }
+      if (palIdx.SolAire?.type !== "Travel Trailer") {
+        fail("Palomino|SolAire index type must stay Travel Trailer");
+      }
+      if (palIdx["Real-Lite"]?.type !== "Truck Camper") {
+        fail("Palomino|Real-Lite index type must be Truck Camper");
+      }
+      for (const gap of ["Puma", "Puma Unleashed", "Columbus", "Columbus Compass", "Real-Lite", "Real-Lite FW"]) {
+        if (palIdx[gap]?.years?.includes(2026) || palIdx[gap]?.years?.includes(2027)) {
+          fail(`Palomino|${gap} index must omit 2026–2027 (GAP)`);
+        }
+        if (palIdx[gap]?.yearEnd !== 2025) {
+          fail(`Palomino|${gap} index yearEnd must be 2025`);
+        }
+      }
+    }
+  }
+
   // Newmar block is unquoted (`Newmar: {`) so the quoted-make parser misses it.
   // Scan the raw Newmar…Tiffin slice for recent-years OEM gates.
   {
