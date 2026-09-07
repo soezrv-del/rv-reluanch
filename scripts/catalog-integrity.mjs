@@ -260,8 +260,40 @@ const FORBIDDEN_FLOORPLANS = {
     reason: "Passport Super Lite / Classic 2027 codes stay on those keys, not the collapsed Passport bucket",
   },
   "Keystone|Bullet": {
-    codes: ["208MKS", "2290BH", "245RKS", "310RES"],
-    reason: "Bullet Crossfire 2027 codes stay on that key, not the collapsed Bullet bucket",
+    codes: [
+      "208MKS",
+      "2290BH",
+      "245RKS",
+      "310RES",
+      "16BHC",
+      "16RBC",
+      "18RBC",
+      "21BHC",
+      "21BHCWE",
+      "21RKC",
+      "26BHC",
+      "28QBC",
+    ],
+    reason: "Bullet Crossfire / Bullet Classic 2027 codes stay on those keys, not the collapsed Bullet bucket",
+  },
+  "Keystone|Springdale": {
+    codes: [
+      "1200BT",
+      "1230BB",
+      "1610BH",
+      "1660RB",
+      "1950RBS",
+      "1990BHS",
+      "29HAVEN",
+      "3100XBR",
+      "31SUNROOM",
+      "1700FQ",
+      "1750RD",
+      "1760BH",
+      "1800BH",
+      "1860SS",
+    ],
+    reason: "Springdale Mini / Max 2027 codes and Mini leftover bleed stay off core Springdale",
   },
 };
 
@@ -296,8 +328,11 @@ const EXPECTED_TYPE = {
   "Keystone|Cougar Sport": "fifth wheel",
   "Keystone|Alpine Avalanche Edition": "fifth wheel",
   "Keystone|Bullet Crossfire": "travel trailer",
+  "Keystone|Bullet Classic": "travel trailer",
   "Keystone|Passport Super Lite": "travel trailer",
   "Keystone|Passport Classic": "travel trailer",
+  "Keystone|Springdale Mini": "travel trailer",
+  "Keystone|Springdale Max": "travel trailer",
   "Keystone|Hideout": "travel trailer",
   "Keystone|Cougar": "travel trailer",
   "Keystone|Cougar 5th Wheel": "fifth wheel",
@@ -3012,8 +3047,11 @@ function main() {
         "Passport Super Lite",
         "Passport Classic",
         "Bullet Crossfire",
+        "Bullet Classic",
         "Hideout",
         "Springdale",
+        "Springdale Mini",
+        "Springdale Max",
         "Fuzion",
         "Raptor",
       ]) {
@@ -3036,11 +3074,8 @@ function main() {
         "Arcadia Super Lite",
         "Passport Premium",
         "Passport GT",
-        "Bullet Classic",
         "Hideout Mini",
         "Hideout Max",
-        "Springdale Mini",
-        "Springdale Max",
       ];
       for (const name of banned) {
         if (ks.includes(`    ${name}: {`) || ks.includes(`    "${name}": {`)) {
@@ -3652,7 +3687,7 @@ function main() {
         fail("Keystone|Passport must not back-date m1502 3100RE onto 2021/2022/2024/2025");
       }
 
-      const bxf = slice("Bullet Crossfire", "Passport");
+      const bxf = slice("Bullet Crossfire", "Bullet Classic");
       if (!/"2027": \["208MKS", "222BHS", "2290BH", "2290BHWE", "234RBK", "245RKS", "245RKSWE", "259REV", "267MRB", "287RLS", "287RLSWE", "310RES"\]/.test(bxf)) {
         fail("Keystone|Bullet Crossfire MY27 OEM plans missing");
       }
@@ -3660,9 +3695,23 @@ function main() {
         fail("Keystone|Bullet Crossfire yearStart must be 2017 (omit 2025–2026 disputed RVUSA bleed — no invent)");
       }
 
+      const bcl = slice("Bullet Classic", "Passport");
+      if (!/"2027": \["16BHC", "16RBC", "18RBC", "18RBCWE", "19RDC", "21BHC", "21BHCWE", "21RKC", "21RKCWE", "26BHC", "26BHCWE", "28QBC"\]/.test(bcl)) {
+        fail("Keystone|Bullet Classic MY27 OEM plans missing (21BHCWE on card; 28QBCWE not on OEM compare)");
+      }
+      if (!/yearStart:\s*2024/.test(bcl) || /"2026":/.test(bcl) || /"2025":/.test(bcl) || /"2024":/.test(bcl)) {
+        fail("Keystone|Bullet Classic yearStart must be 2024 (empty older fby — no invent / no RVUSA bleed)");
+      }
+      if (/"2027": .*"28QBCWE"/.test(bcl) || /"2027": .*"208MKS"/.test(bcl) || /"2027": .*"160BHC"/.test(bcl)) {
+        fail("Keystone|Bullet Classic must not keep 28QBCWE or absorb Crossfire / Passport Classic codes");
+      }
+
       const bul = slice("Bullet", "Bullet Crossfire");
       if (/"2027":/.test(bul)) {
-        fail("Keystone|Bullet collapsed bucket must omit 2027 (Crossfire is the 2027 line)");
+        fail("Keystone|Bullet collapsed bucket must omit 2027 (split to Crossfire + Classic)");
+      }
+      if (/"16BHC"/.test(bul) || /"21BHCWE"/.test(bul) || /"28QBC"/.test(bul)) {
+        fail("Keystone|Bullet collapsed bucket must not absorb Bullet Classic codes");
       }
 
       const hid = slice("Hideout", "Fuzion");
@@ -3672,13 +3721,46 @@ function main() {
       if (!/yearStart:\s*2010/.test(hid) || /"2026":/.test(hid)) {
         fail("Keystone|Hideout yearStart must be 2010 (empty older fby — no invent)");
       }
+      if (/"120BT"/.test(hid) || /"29HAVEN"/.test(hid) || /"310XBR"/.test(hid)) {
+        fail("Keystone|Hideout must not absorb Hideout Mini / Max codes (GAP this slice)");
+      }
 
-      const sprd = slice("Springdale", "Hideout");
+      const sprd = slice("Springdale", "Springdale Mini");
       if (!/"2027": \["2100RL", "2100RLWE", "2120RKS", "2120RKSWE", "2300BH", "2300BHWE", "2340MLS", "2340MLSWE", "2500RBS", "2500RBSWE", "2620BHS", "2620BHSWE"\]/.test(sprd)) {
         fail("Keystone|Springdale MY27 OEM plans missing");
       }
       if (/"2027": .*"1700FQ"/.test(sprd) || /"2027": .*"260BH"/.test(sprd)) {
         fail("Keystone|Springdale must not keep Mini leftover 1700FQ/260BH on 2027");
+      }
+      for (const y of [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]) {
+        if (new RegExp(`"${y}":`).test(sprd)) {
+          fail(`Keystone|Springdale must omit leftover ${y} fby (prefer omit — Mini bleed / copy-forward invent)`);
+        }
+      }
+      if (/"1700FQ"/.test(sprd) || /"1750RD"/.test(sprd) || /"1760BH"/.test(sprd) || /"1800BH"/.test(sprd) || /"1860SS"/.test(sprd) || /"260BHC"/.test(sprd) || /"1200BT"/.test(sprd) || /"29HAVEN"/.test(sprd)) {
+        fail("Keystone|Springdale must drop Mini leftover / Mini-Max sibling codes");
+      }
+
+      const smini = slice("Springdale Mini", "Springdale Max");
+      if (!/"2027": \["1200BT", "1230BB", "1610BH", "1660RB", "1950RBS", "1990BHS"\]/.test(smini)) {
+        fail("Keystone|Springdale Mini MY27 OEM plans missing");
+      }
+      if (!/yearStart:\s*2021/.test(smini) || /"2026":/.test(smini)) {
+        fail("Keystone|Springdale Mini yearStart must be 2021 (empty older fby — no invent)");
+      }
+      if (/"2100RL"/.test(smini) || /"29HAVEN"/.test(smini) || /"120BT"/.test(smini)) {
+        fail("Keystone|Springdale Mini must not absorb core Springdale / Max / Hideout Mini codes");
+      }
+
+      const smax = slice("Springdale Max", "Hideout");
+      if (!/"2027": \["29HAVEN", "3100XBR", "31SUNROOM"\]/.test(smax)) {
+        fail("Keystone|Springdale Max MY27 OEM plans missing (keep 3100XBR as printed — not Hideout 310XBR)");
+      }
+      if (!/yearStart:\s*2026/.test(smax) || /"2026":/.test(smax)) {
+        fail("Keystone|Springdale Max yearStart must be 2026 (empty older fby — no invent)");
+      }
+      if (/"310XBR"/.test(smax) || /"2100RL"/.test(smax) || /"1200BT"/.test(smax)) {
+        fail("Keystone|Springdale Max must not absorb Hideout Max 310XBR or core / Mini codes");
       }
 
       const fuz = slice("Fuzion", "Raptor");

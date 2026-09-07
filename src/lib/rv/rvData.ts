@@ -17876,8 +17876,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "308BHS",
           "330BHS"
         ],
-        // Bullet Premium card is 2025/2026 only. Bullet Classic GAP. 2027 production is Bullet Crossfire (separate key).
-        // Omit 2027 on this collapsed Bullet bucket rather than dump Crossfire codes here.
+        // Bullet Premium card is 2025/2026 only. 2027 production is Bullet Crossfire (separate key).
+        // Bullet Classic is its own key (OEM 2027 Floorplans). Omit 2027 here — do not dump Classic / Crossfire.
       },
       lengthRange: [
         18,
@@ -17907,7 +17907,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2010,
-      description: "Keystone Bullet — lightweight comfort travel trailer. MY2027 production is Bullet Crossfire (separate key). Bullet Classic GAP this slice."
+      description: "Keystone Bullet — historic collapsed lightweight travel-trailer bucket for used-market cascade. MY2027 production is split: Bullet Crossfire + Bullet Classic. Do not dump sibling codes here."
     },
     "Bullet Crossfire": {
       type: "Travel Trailer",
@@ -17919,7 +17919,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // Re-validated live RVUSA m7341-y2025 / m7341-y2026 (2026-09-03): prefer omit disputed bleed.
         // Those year cards mix Crossfire codes with adjacent Bullet naming (1700BH / 1900RD / 260RBS / 290BHS and similar).
         // Do not invent a filtered subset. Do not dump into collapsed Bullet. MY2027 OEM lock unchanged.
-        // Bullet Classic GAP.
+        // Bullet Classic is a sibling key — do not merge.
         "2027": ["208MKS", "222BHS", "2290BH", "2290BHWE", "234RBK", "245RKS", "245RKSWE", "259REV", "267MRB", "287RLS", "287RLSWE", "310RES"]
       },
       lengthRange: [24, 36],
@@ -17942,6 +17942,38 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2017,
       description: "Bullet Crossfire — current Keystone lightweight travel trailer. yearStart 2017; 2017–2026 fby empty (RVUSA 2025/2026 year cards mix adjacent Bullet naming — prefer omit). OEM 2027 card prints 208MKS through 310RES including Western Edition twins. Not Bullet Classic / Premium."
+    },
+    "Bullet Classic": {
+      type: "Travel Trailer",
+      floorplans: ["16BHC", "16RBC", "18RBC", "18RBCWE", "19RDC", "21BHC", "21BHCWE", "21RKC", "21RKCWE", "26BHC", "26BHCWE", "28QBC"],
+      floorplansByYear: {
+        // OEM keystonerv.com/product/bullet-classic/comfort-travel-trailers/floorplans (2027 Floorplans):
+        // 16BHC | 16RBC | 18RBC | 18RBCWE | 19RDC | 21BHC | 21BHCWE | 21RKC | 21RKCWE | 26BHC | 26BHCWE | 28QBC
+        // Live OEM prints 21BHCWE. 28QBCWE is on RVUSA m10303-y2027 but not this OEM compare card — omit.
+        // yearStart 2024 — omit 2024–2026 fby (RVUSA 2025/2026 Classic cards mix collapsed Bullet 1700BH / 1900RD bleed — prefer omit).
+        // Do not infer Classic from Passport Classic or Bullet Crossfire. Do not dump into collapsed Bullet.
+        "2027": ["16BHC", "16RBC", "18RBC", "18RBCWE", "19RDC", "21BHC", "21BHCWE", "21RKC", "21RKCWE", "26BHC", "26BHCWE", "28QBC"]
+      },
+      lengthRange: [20, 33],
+      weightRange: [2900, 6200],
+      slideouts: 1,
+      sleeps: 6,
+      msrpRange: [19900, 42000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 37,
+      grayWater: 30,
+      blackWater: 30,
+      awningLength: 14,
+      ceilingHeight: 78,
+      founded: 1996,
+      warrantyYears: 1,
+      yearStart: 2024,
+      description: "Bullet Classic — current Keystone entry lightweight travel trailer. yearStart 2024; older fby empty until a clean dated year card. OEM 2027 card is 16BHC through 28QBC including Western Edition twins (21BHCWE on card; 28QBCWE not on OEM compare). Not Bullet Crossfire / Premium / collapsed Bullet."
     },
     Passport: {
       type: "Travel Trailer",
@@ -18117,11 +18149,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     Springdale: {
       type: "Travel Trailer",
       floorplans: [
-        "1700FQ",
-        "1750RD",
-        "1760BH",
-        "1800BH",
-        "1860SS",
         "2100RL",
         "2100RLWE",
         "2120RKS",
@@ -18130,102 +18157,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2300BHWE",
         "2340MLS",
         "2340MLSWE",
-        "241FK",
         "2500RBS",
         "2500RBSWE",
-        "260BH",
-        "260BHC",
         "2620BHS",
-        "2620BHSWE",
-        "262RKS",
-        "2880BRS"
+        "2620BHSWE"
       ],
       floorplansByYear: {
-        "2010": ["2300BH", "260BH", "260BHC"],
-        "2011": ["2300BH", "260BH", "260BHC"],
-        "2012": ["2300BH", "260BH", "260BHC", "262RKS"],
-        "2013": ["2300BH", "260BH", "260BHC", "262RKS"],
-        "2014": ["2100RL", "2300BH", "260BH", "260BHC", "262RKS"],
-        "2015": ["2100RL", "2300BH", "260BH", "260BHC", "262RKS", "2880BRS"],
-        "2016": ["2100RL", "2120RKS", "2300BH", "260BH", "260BHC", "262RKS", "2880BRS"],
-        "2017": ["2100RL", "2120RKS", "2300BH", "260BH", "260BHC", "262RKS", "2880BRS"],
-        "2018": ["2100RL", "2120RKS", "2300BH", "260BH", "260BHC", "262RKS", "2880BRS"],
-        "2019": ["2100RL", "2120RKS", "2300BH", "260BH", "260BHC", "262RKS", "2880BRS"],
-        "2020": ["2100RL", "2120RKS", "2300BH", "260BH", "260BHC", "262RKS", "2880BRS"],
-        "2021": ["2100RL", "2120RKS", "2300BH", "260BH", "260BHC", "262RKS", "2880BRS"],
-        "2022": [
-          "1700FQ",
-          "1750RD",
-          "1760BH",
-          "1800BH",
-          "1860SS",
-          "2100RL",
-          "2120RKS",
-          "2300BH",
-          "260BH",
-          "262RKS"
-        ],
-        "2023": [
-          "1700FQ",
-          "1750RD",
-          "1760BH",
-          "1800BH",
-          "1860SS",
-          "2100RL",
-          "2120RKS",
-          "2300BH",
-          "2340MLS",
-          "260BH",
-          "262RKS",
-          "2880BRS"
-        ],
-        "2024": [
-          "1700FQ",
-          "1750RD",
-          "1760BH",
-          "1800BH",
-          "1860SS",
-          "2100RL",
-          "2120RKS",
-          "2300BH",
-          "2340MLS",
-          "241FK",
-          "260BH",
-          "262RKS",
-          "2880BRS"
-        ],
-        "2025": [
-          "1700FQ",
-          "1750RD",
-          "1760BH",
-          "1800BH",
-          "1860SS",
-          "2100RL",
-          "2120RKS",
-          "2300BH",
-          "2340MLS",
-          "241FK",
-          "260BH",
-          "260BHC",
-          "262RKS",
-          "2880BRS"
-        ],
-        "2026": [
-          "1700FQ",
-          "1750RD",
-          "1760BH",
-          "1800BH",
-          "1860SS",
-          "2100RL",
-          "2120RKS",
-          "2300BH",
-          "241FK",
-          "260BH",
-          "262RKS"
-        ],
+        // MY2010–2026 leftover invent omitted (prefer omit). Residual was Mini bleed
+        // (1700FQ / 1750RD / 1760BH / 1800BH / 1860SS) plus 260BH / 260BHC / 262RKS / 2880BRS copy-forward.
+        // Do not use Western Edition / core leftovers as proof of Mini / Max. Do not invent-fill from 2027.
         // OEM keystonerv.com/product/springdale/comfort-travel-trailers/floorplans (2027 Floorplans):
         // 2100RL | 2100RLWE | 2120RKS | 2120RKSWE | 2300BH | 2300BHWE | 2340MLS | 2340MLSWE | 2500RBS | 2500RBSWE | 2620BHS | 2620BHSWE
-        // Mini / Max GAP — no extractable 2027 Mini/Max cards. WE codes print on this same compare card.
+        // Mini / Max are sibling keys. WE codes print on this same compare card.
         "2027": ["2100RL", "2100RLWE", "2120RKS", "2120RKSWE", "2300BH", "2300BHWE", "2340MLS", "2340MLSWE", "2500RBS", "2500RBSWE", "2620BHS", "2620BHSWE"]
       },
       lengthRange: [
@@ -18256,7 +18199,69 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2005,
-      description: "Keystone Springdale — entry / value travel trailer. MY2027 OEM card is 2100RL through 2620BHS including Western Edition twins. Mini / Max GAP this slice."
+      description: "Keystone Springdale — entry / value travel trailer. 2010–2026 leftover fby emptied (prefer omit — Mini bleed / copy-forward invent). MY2027 OEM card is 2100RL through 2620BHS including Western Edition twins. Mini / Max are sibling keys."
+    },
+    "Springdale Mini": {
+      type: "Travel Trailer",
+      floorplans: ["1200BT", "1230BB", "1610BH", "1660RB", "1950RBS", "1990BHS"],
+      floorplansByYear: {
+        // OEM keystonerv.com/product/springdale-mini/comfort-travel-trailers/floorplans (2027 Floorplans):
+        // 1200BT | 1230BB | 1610BH | 1660RB | 1950RBS | 1990BHS
+        // yearStart 2021 — omit 2021–2026 fby (do not copy 2027 backward; do not paste RVUSA Mini 2026 extras onto 2027).
+        // Do not use Western Edition / core Springdale as proof. Not Hideout Mini.
+        "2027": ["1200BT", "1230BB", "1610BH", "1660RB", "1950RBS", "1990BHS"]
+      },
+      lengthRange: [15, 24],
+      weightRange: [2500, 4200],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [16900, 32000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.1,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 21,
+      grayWater: 34,
+      blackWater: 34,
+      awningLength: 8,
+      ceilingHeight: 78,
+      founded: 1996,
+      warrantyYears: 1,
+      yearStart: 2021,
+      description: "Springdale Mini — compact Keystone entry travel trailer. yearStart 2021; older fby empty until a clean dated Mini year card. OEM 2027 card is 1200BT / 1230BB / 1610BH / 1660RB / 1950RBS / 1990BHS. Not core Springdale / Springdale Max / Hideout Mini."
+    },
+    "Springdale Max": {
+      type: "Travel Trailer",
+      floorplans: ["29HAVEN", "3100XBR", "31SUNROOM"],
+      floorplansByYear: {
+        // OEM keystonerv.com/product/springdale-max/comfort-travel-trailers/floorplans (2027 Floorplans):
+        // 29HAVEN | 3100XBR | 31SUNROOM
+        // Keep brochure characters (29HAVEN / 31SUNROOM / 3100XBR). Hideout Max bunkhouse uses a different code — do not merge.
+        // yearStart 2026 — omit 2026 fby (no invent / no copy-forward of 2027 codes).
+        "2027": ["29HAVEN", "3100XBR", "31SUNROOM"]
+      },
+      lengthRange: [33, 36],
+      weightRange: [7300, 8500],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [34900, 62000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.15,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 54,
+      grayWater: 39,
+      blackWater: 39,
+      awningLength: 16,
+      ceilingHeight: 82,
+      founded: 1996,
+      warrantyYears: 1,
+      yearStart: 2026,
+      description: "Springdale Max — larger Keystone Springdale travel trailer. yearStart 2026; older fby empty until a dated Max year card. OEM 2027 card is 29HAVEN / 3100XBR / 31SUNROOM. Not core Springdale / Springdale Mini / Hideout Max."
     },
     Hideout: {
       type: "Travel Trailer",
