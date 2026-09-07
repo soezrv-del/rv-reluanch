@@ -359,7 +359,7 @@ export function Launchpad({
       data-magazine-open={opened ? "true" : "false"}
       onTouchMove={(e) => e.stopPropagation()}
     >
-      <div className="leather-stage flex min-h-0 flex-1 items-center justify-center px-2 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-[max(0.35rem,env(safe-area-inset-top))] sm:px-4">
+      <div className="leather-stage flex min-h-0 flex-1 items-center justify-center px-1.5 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-[max(0.2rem,env(safe-area-inset-top))] sm:px-3">
         <div
           className="leather-book relative mx-auto flex h-full w-full max-w-lg"
           onPointerUp={(e) => {

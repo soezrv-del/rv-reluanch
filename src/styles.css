@@ -1765,8 +1765,10 @@
 
 .leather-emblem-die {
   position: relative;
-  width: min(128%, 36rem);
-  height: min(94%, 36rem);
+  width: 148%;
+  height: auto;
+  aspect-ratio: 1;
+  max-width: none;
   max-height: none;
   overflow: visible;
   border-radius: 0;
@@ -1805,12 +1807,12 @@
 .leather-cover-copy::before {
   content: "";
   position: absolute;
-  inset: -0.4rem -0.6rem auto;
-  height: 9.5rem;
+  inset: -0.5rem -0.8rem auto;
+  height: 6.5rem;
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.78) 0%,
-    rgba(0, 0, 0, 0.42) 58%,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.18) 62%,
     transparent 100%
   );
   pointer-events: none;
