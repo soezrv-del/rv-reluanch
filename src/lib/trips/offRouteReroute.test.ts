@@ -289,8 +289,59 @@ test("disarmed follow / missing polyline never hits the router", () => {
   );
 });
 
+test("locked reroute with a remaining via still sends truck dims on every hop", async () => {
+  const beforeVia = shiftMeters(RENO, 200, 80);
+  const decision = decideOffRouteReroute({
+    armed: true,
+    liveRoute: true,
+    here: beforeVia,
+    dest: DEST,
+    vias: [VIA],
+    polyline: LINE,
+    lastRerouteAt: 0,
+    now: 8_000,
+  });
+  assert.equal(decision.action, "reroute");
+  if (decision.action !== "reroute") return;
+  assert.equal(decision.via.length, 1);
+
+  const params = navigateParamsForReroute(decision, LOCKED);
+  const calls: string[] = [];
+  const prev = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    calls.push(url);
+    return new Response(
+      JSON.stringify(
+        stubRoute({
+          miles: 50,
+          driveHours: 1,
+          driveMinutes: 0,
+          distanceM: 80_467,
+          durationS: 3_600,
+        }),
+      ),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }) as typeof fetch;
+  try {
+    await fetchNavigateRoute(params);
+    assert.equal(calls.length, 2);
+    for (const url of calls) {
+      assert.match(url, /\/api\?/);
+      assert.match(url, /mode=rv_safe/);
+      assert.match(url, /heightFt=13\.5/);
+      assert.match(url, /weightLbs=44000/);
+      assert.doesNotMatch(url, /api\.mapbox\.com\/directions/);
+    }
+  } finally {
+    globalThis.fetch = prev;
+  }
+});
+
 test("Trips follow reroute stays on HERE Truck / OSRM — not Mapbox Directions", () => {
   const helper = readFileSync(join(root, "offRouteReroute.ts"), "utf8");
+  const hook = readFileSync(join(root, "useOffRouteReroute.ts"), "utf8");
   const ui = readFileSync(
     join(root, "../../components/rvtrips/RvTripsApp.tsx"),
     "utf8",
@@ -311,13 +362,30 @@ test("Trips follow reroute stays on HERE Truck / OSRM — not Mapbox Directions"
   assert.doesNotMatch(helper, /api\.mapbox\.com\/directions/);
   assert.doesNotMatch(helper, /["'`]\/api\/route/);
 
-  assert.match(ui, /createOffRouteGate/);
-  assert.match(ui, /navigateParamsForReroute/);
+  assert.match(hook, /createOffRouteGate/);
+  assert.match(hook, /navigateParamsForReroute/);
+  assert.match(hook, /fetchNavigateRoute/);
+  assert.doesNotMatch(hook, /api\.mapbox\.com\/directions/);
+  assert.doesNotMatch(hook, /["'`]\/api\/route/);
+  assert.doesNotMatch(hook, /sapphire-header|data-trips-tools/);
+
+  assert.match(ui, /useOffRouteReroute/);
   assert.match(ui, /fetchNavigateRoute/);
   assert.doesNotMatch(ui, /api\.mapbox\.com\/directions/);
   assert.doesNotMatch(ui, /["'`]\/api\/route/);
 
+  const tools = ui.slice(
+    ui.indexOf("data-trips-tools"),
+    ui.indexOf("</header>"),
+  );
+  assert.match(tools, /Dumps/);
+  assert.match(tools, /Pack/);
+  assert.match(tools, /Profile/);
+  assert.doesNotMatch(tools, /pointer-events-none/);
+
   assert.doesNotMatch(map, /api\.mapbox\.com\/directions/);
   assert.doesNotMatch(gl, /api\.mapbox\.com\/directions/);
   assert.doesNotMatch(gl, /mapbox-gl-directions/i);
+  assert.match(gl, /overflow-hidden/);
+  assert.doesNotMatch(gl, /fixed inset-0/);
 });

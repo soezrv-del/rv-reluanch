@@ -145,6 +145,7 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   );
   const follow = readFileSync(join(root, "geoFollow.ts"), "utf8");
   const hook = readFileSync(join(root, "useNavFollow.ts"), "utf8");
+  const reroute = readFileSync(join(root, "useOffRouteReroute.ts"), "utf8");
 
   assert.match(ui, /useNavFollow\(navArmed\)/);
   assert.match(ui, /getCurrentPosition/);
@@ -152,8 +153,7 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(ui, /follow=\{follow\.fix\}/);
   assert.match(ui, /followActive=\{navArmed\}/);
   assert.match(ui, /followStatus=\{follow\.status\}/);
-  assert.match(ui, /createOffRouteGate/);
-  assert.match(ui, /navigateParamsForReroute/);
+  assert.match(ui, /useOffRouteReroute/);
   assert.match(ui, /data-follow-note/);
   assert.match(ui, /CampsAlongRoute/);
   assert.match(ui, /campStops=\{camps\?\.camps\}/);
@@ -195,4 +195,9 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(hook, /clearWatch/);
   assert.match(hook, /FOLLOW_WATCH_OPTIONS/);
   assert.doesNotMatch(hook, /["'`]\/api\/route/);
+
+  assert.match(reroute, /fetchNavigateRoute/);
+  assert.match(reroute, /createOffRouteGate/);
+  assert.doesNotMatch(reroute, /["'`]\/api\/route/);
+  assert.doesNotMatch(reroute, /api\.mapbox\.com\/directions/);
 });

@@ -118,10 +118,7 @@ import {
   type SavedTrip,
 } from "@/lib/trips/savedTrip";
 import { useNavFollow } from "@/lib/trips/useNavFollow";
-import {
-  createOffRouteGate,
-  navigateParamsForReroute,
-} from "@/lib/trips/offRouteReroute";
+import { useOffRouteReroute } from "@/lib/trips/useOffRouteReroute";
 
 type ToolPane = "profile" | "dumps" | "pack" | null;
 type SheetId = "year" | "make" | "model" | "floorplan" | null;
@@ -187,9 +184,6 @@ export function RvTripsApp() {
   const [navArmed, setNavArmed] = useState(false);
   const [planOpen, setPlanOpen] = useState(true);
   const follow = useNavFollow(navArmed);
-  const [rerouting, setRerouting] = useState(false);
-  const offRouteGateRef = useRef(createOffRouteGate());
-  const rerouteAbortRef = useRef<AbortController | null>(null);
   const shellNav = useShellNavOptional();
 
   const bootSeed = useMemo(() => {
@@ -429,6 +423,21 @@ export function RvTripsApp() {
   );
   const viaSig = viaPlaces.map((p) => `${p.lng.toFixed(4)},${p.lat.toFixed(4)}`).join("|");
 
+  const { rerouting } = useOffRouteReroute({
+    armed: navArmed,
+    liveRoute: routeStatus === "live",
+    fix: follow.fix,
+    dest: destPlace,
+    vias: viaPlaces,
+    polyline: osrm?.geometry?.coordinates,
+    coach: locked,
+    originLabel: originPlace?.label || "Current location",
+    onApplied: (data, trip) => {
+      setOsrm(data);
+      setRoute(trip);
+    },
+  });
+
   const restriction = useMemo(
     () =>
       analyzeRouteRestrictions({
@@ -504,7 +513,6 @@ export function RvTripsApp() {
       } catch {
         /* */
       }
-      rerouteAbortRef.current?.abort();
     };
   }, []);
 
@@ -657,82 +665,6 @@ export function RvTripsApp() {
     return () => ctrl.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routeStatus, osrm, originPlace, destPlace, viaSig]);
-
-  useEffect(() => {
-    if (!navArmed) {
-      rerouteAbortRef.current?.abort();
-      rerouteAbortRef.current = null;
-      offRouteGateRef.current.reset();
-      setRerouting(false);
-      return;
-    }
-    if (
-      routeStatus !== "live" ||
-      !destPlace ||
-      !follow.fix ||
-      !osrm?.geometry?.coordinates?.length
-    ) {
-      return;
-    }
-
-    const decision = offRouteGateRef.current.consider({
-      armed: true,
-      liveRoute: true,
-      here: follow.fix,
-      dest: destPlace,
-      vias: viaPlaces,
-      polyline: osrm.geometry.coordinates,
-      now: Date.now(),
-    });
-    if (decision.action !== "reroute") return;
-
-    const ctrl = new AbortController();
-    rerouteAbortRef.current = ctrl;
-    setRerouting(true);
-
-    const viaKept = viaPlaces.filter((p) =>
-      decision.via.some(
-        (v) =>
-          Math.abs(v.lat - p.lat) < 1e-5 && Math.abs(v.lng - p.lng) < 1e-5,
-      ),
-    );
-
-    fetchNavigateRoute({
-      ...navigateParamsForReroute(decision, locked),
-      signal: ctrl.signal,
-    })
-      .then((data) => {
-        if (ctrl.signal.aborted) return;
-        const next = tripRouteFromLive(
-          data,
-          originPlace?.label || "Current location",
-          destPlace.label,
-          { viaLabels: viaKept.map((p) => p.label) },
-        );
-        if (!next) return;
-        setOsrm(data);
-        setRoute(next);
-      })
-      .catch((e) => {
-        if (ctrl.signal.aborted) return;
-        if (e instanceof DOMException && e.name === "AbortError") return;
-        /* Keep the existing blue line — do not blank the map. */
-      })
-      .finally(() => {
-        if (ctrl.signal.aborted) return;
-        offRouteGateRef.current.finish();
-        setRerouting(false);
-      });
-  }, [
-    navArmed,
-    follow.fix,
-    routeStatus,
-    destPlace,
-    viaPlaces,
-    osrm,
-    locked,
-    originPlace,
-  ]);
 
   const liveDirections: NavStep[] | null = useMemo(() => {
     if (!osrm?.steps?.length) return null;
