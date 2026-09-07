@@ -16910,7 +16910,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         // LOCK research/airstream/LOT_DESK_2005_2009.md + CODES_2005_2009.json
         // library.rvusa.com/brochure/2007-Airstream-Interstate.pdf
-        // Short codes only: 22DT / 22FS / 22RS / 22RD (not "Interstate 22 DT").
+        // Short codes only: 22DT / 22FS / 22RS / 22RD (not long brochure names).
         // GAP 2005–06 / 2008–09 (2008 RVUSA "Base" only — do not copy 2007 forward).
         "2007": ["22DT", "22FS", "22RS", "22RD"],
         "2010": ["24GL", "Grand Tour EXT"],

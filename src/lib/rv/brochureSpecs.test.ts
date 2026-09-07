@@ -13902,7 +13902,7 @@ test("Airstream 2005–2009 honesty: Interstate MY2007 + International MY2008 lo
 
   // LOCK library 2007-Airstream-Interstate.pdf — short codes only.
   assert.deepEqual(fbyYear(interstate, 2007), ["22DT", "22FS", "22RS", "22RD"]);
-  assert.doesNotMatch(interstate, /Interstate 22 DT|22 Dinette Twin/);
+  assert.doesNotMatch(interstate, /"Interstate 22 DT"|"22 Dinette Twin"|"22 Front Sleeper"/);
   for (const y of [2005, 2006, 2008, 2009]) {
     assert.equal(fbyYear(interstate, y), null, `Interstate ${y} must stay GAP (prefer omit)`);
     assert.doesNotMatch(interstate, new RegExp(`"${y}":`));
