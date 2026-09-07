@@ -13916,3 +13916,319 @@ test("Forest River honesty lock: MY2026 spec-table quarantine + dated MY2027 fam
   assert.equal(CATALOG_INDEX["Forest River"]?.Columbus?.years?.includes(2027), false);
   assert.equal(CATALOG_INDEX["Forest River"]?.["Cherokee Arctic Wolf"]?.years?.includes(2027), false);
 });
+
+test("Forest River thin-line honesty: dated 2010–2014 + tip years (Micro/Mini/Cruise/Wildwood/r-Pod)", () => {
+  const block = src("rvData.ts");
+  const f0 = block.indexOf('\n  "Forest River": {');
+  const f1 = block.indexOf('\n  "Keystone": {');
+  assert.ok(f0 > 0 && f1 > f0, "Forest River block");
+  const fr = block.slice(f0, f1);
+  const slice = (a: string, b: string) => {
+    const i = fr.includes(`    ${a}: {`) ? fr.indexOf(`    ${a}: {`) : fr.indexOf(`    "${a}": {`);
+    const j = fr.includes(`    ${b}: {`) ? fr.indexOf(`    ${b}: {`) : fr.indexOf(`    "${b}": {`);
+    if (i < 0) return "";
+    return j > i ? fr.slice(i, j) : fr.slice(i);
+  };
+  const yearPlans = (s: string, year: number) => {
+    const m = s.match(new RegExp(`"${year}":\\s*\\[([\\s\\S]*?)\\]`));
+    return m ? [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]) : [];
+  };
+
+  assert.equal(fr.includes('    "Cherokee Micro Lite": {'), false);
+
+  const mini = slice("Rockwood Mini Lite", "Rockwood Ultra Lite");
+  assert.match(mini, /yearStart:\s*2013/);
+  assert.deepEqual(yearPlans(mini, 2013), [
+    "1809S",
+    "2104S",
+    "2109S",
+    "2304",
+    "2306",
+    "2502S",
+    "2503S",
+    "2504",
+  ]);
+  assert.deepEqual(yearPlans(mini, 2010), []);
+  assert.deepEqual(yearPlans(mini, 2011), []);
+  assert.deepEqual(yearPlans(mini, 2012), []);
+  assert.deepEqual(yearPlans(mini, 2014), []);
+  assert.deepEqual(yearPlans(mini, 2026), [
+    "2108RB",
+    "2109S",
+    "2205S",
+    "2214S",
+    "2506FK",
+    "2509S",
+    "2511S",
+    "2513S",
+    "2515S",
+    "2519S",
+    "2520BH",
+    "2522FB",
+    "2523MBR",
+  ]);
+  assert.equal(yearPlans(mini, 2026).includes("1905"), false);
+  assert.equal(yearPlans(mini, 2026).includes("2104S"), false);
+  assert.deepEqual(yearPlans(mini, 2027), [
+    "2108RB",
+    "2109S",
+    "2205S",
+    "2213S",
+    "2506FK",
+    "2509S",
+    "2513S",
+    "2515S",
+    "2520BH",
+    "2522FB",
+    "2523MBR",
+    "2524FBT",
+  ]);
+  assert.equal(yearPlans(mini, 2027).includes("2214S"), false);
+
+  const micro = slice("Flagstaff Micro Lite", "Salem Cruise Lite");
+  assert.match(micro, /yearStart:\s*2015/);
+  assert.deepEqual(yearPlans(micro, 2010), []);
+  assert.deepEqual(yearPlans(micro, 2011), []);
+  assert.deepEqual(yearPlans(micro, 2012), []);
+  assert.deepEqual(yearPlans(micro, 2013), []);
+  assert.deepEqual(yearPlans(micro, 2014), []);
+  assert.deepEqual(yearPlans(micro, 2026), [
+    "21FBRS",
+    "22FBS",
+    "22SQS",
+    "25BRDS",
+    "25BSDS",
+    "25DBH",
+    "25FBD",
+    "25FBH",
+    "25FBLS",
+    "25FKB",
+    "25MBR",
+    "25SRK",
+  ]);
+  assert.equal(yearPlans(micro, 2026).includes("21DS"), false);
+  assert.equal(yearPlans(micro, 2026).includes("23LB"), false);
+  assert.deepEqual(yearPlans(micro, 2027), [
+    "21FBRS",
+    "21SRB",
+    "22FBS",
+    "22LKS",
+    "25BRDS",
+    "25BSDS",
+    "25DBH",
+    "25FBD",
+    "25FBT",
+    "25FKB",
+    "25MBR",
+    "25SRB",
+    "25SRK",
+  ]);
+
+  const cruise = slice("Salem Cruise Lite", "Salem Hemisphere");
+  assert.match(cruise, /yearStart:\s*2013/);
+  assert.deepEqual(yearPlans(cruise, 2010), []);
+  assert.deepEqual(yearPlans(cruise, 2011), []);
+  assert.deepEqual(yearPlans(cruise, 2012), []);
+  assert.deepEqual(yearPlans(cruise, 2013), [
+    "221RB",
+    "241QB",
+    "251RL",
+    "261BH",
+    "271BH",
+    "281BH",
+    "281QB",
+    "291FB",
+  ]);
+  assert.equal(yearPlans(cruise, 2013).includes("154BH"), false);
+  assert.deepEqual(yearPlans(cruise, 2014), [
+    "181BHXL",
+    "221RBXL",
+    "231BHXL",
+    "231RKXL",
+    "241QBXL",
+    "252RLXL",
+    "261BHXL",
+    "262BHXL",
+    "272QBXL",
+    "281BHXL",
+    "281QBXL",
+  ]);
+  assert.deepEqual(yearPlans(cruise, 2026), [
+    "171RBXL",
+    "19DBXL",
+    "210RBXL",
+    "22VERANDA",
+    "23ZEN",
+    "240BHXL",
+    "241BHXL",
+    "24RLXL",
+    "24ZEN",
+    "25ICE",
+    "261BHXL",
+    "263BHXL",
+    "265RTXL",
+    "26ICE",
+    "273QBXL",
+    "28ICE",
+    "28VBXL",
+  ]);
+  assert.equal(yearPlans(cruise, 2026).includes("24DBXL"), false);
+  assert.deepEqual(yearPlans(cruise, 2027), [
+    "25ICE",
+    "263BHXL",
+    "26ICE",
+    "273QBXL",
+    "28VBXL",
+  ]);
+
+  const wild = slice("Wildwood", "r-Pod");
+  assert.match(wild, /yearStart:\s*2014/);
+  assert.deepEqual(yearPlans(wild, 2010), []);
+  assert.deepEqual(yearPlans(wild, 2011), []);
+  assert.deepEqual(yearPlans(wild, 2012), []);
+  assert.deepEqual(yearPlans(wild, 2013), []);
+  assert.deepEqual(yearPlans(wild, 2014), [
+    "26DDSS",
+    "26TBSS",
+    "27RKSS",
+    "27RLSS",
+    "28DBUD",
+    "29FKBS",
+    "29QBDS",
+    "29RKSS",
+    "29UD3",
+    "30KQBSS",
+    "30QBSS",
+    "31BKIS",
+    "31KQBTS",
+    "31QBTS",
+    "32BHDS",
+    "33BHOK",
+    "36BHBS",
+    "37BHSS2Q",
+    "37REDS",
+  ]);
+  assert.deepEqual(yearPlans(wild, 2026), [
+    "22ERAS",
+    "250ZEN",
+    "260ICE",
+    "26DBUD",
+    "270ZEN",
+    "27RK",
+    "28DBUD",
+    "29VBUD",
+    "300ICE",
+    "31KQBTS",
+    "320ICE",
+    "32BHDS",
+    "33TS",
+    "36VBDS",
+  ]);
+  assert.equal(yearPlans(wild, 2026).includes("178BHSK"), false);
+  assert.equal(yearPlans(wild, 2026).includes("T25RD"), false);
+  assert.deepEqual(yearPlans(wild, 2027), [
+    "26DBHD",
+    "27RK",
+    "27RLHD",
+    "31KQBTS",
+    "32BHDS",
+    "33TS",
+    "36VBDS",
+  ]);
+
+  const rpod = slice("r-Pod", "ZZZ");
+  assert.match(rpod, /yearStart:\s*2010/);
+  assert.deepEqual(yearPlans(rpod, 2009), []);
+  assert.deepEqual(yearPlans(rpod, 2010), [
+    "RP-151",
+    "RP-171",
+    "RP-172",
+    "RP-172T",
+    "RP-173",
+    "RP-173T",
+    "RP-175",
+    "RP-176",
+    "RP-176T",
+    "RP-177",
+  ]);
+  assert.deepEqual(yearPlans(rpod, 2011), [
+    "RP-171",
+    "RP-172",
+    "RP-172T",
+    "RP-173",
+    "RP-173T",
+    "RP-175",
+    "RP-176",
+    "RP-176T",
+    "RP-177",
+    "RP-181G",
+    "RP-182",
+  ]);
+  assert.equal(yearPlans(rpod, 2011).includes("RP-182G"), false);
+  assert.deepEqual(yearPlans(rpod, 2012), [
+    "RP-171",
+    "RP-172",
+    "RP-172T",
+    "RP-173",
+    "RP-173T",
+    "RP-175",
+    "RP-176",
+    "RP-176T",
+    "RP-177",
+    "RP-181G",
+    "RP-182G",
+  ]);
+  assert.deepEqual(yearPlans(rpod, 2013), [
+    "RP-171",
+    "RP-172",
+    "RP-172T",
+    "RP-176",
+    "RP-176T",
+    "RP-177",
+    "RP-178",
+    "RP-181G",
+    "RP-182G",
+  ]);
+  assert.deepEqual(yearPlans(rpod, 2014), [
+    "RP-171",
+    "RP-172",
+    "RP-176",
+    "RP-176T",
+    "RP-177",
+    "RP-178",
+    "RP-179",
+    "RP-181G",
+    "RP-182G",
+  ]);
+  assert.deepEqual(yearPlans(rpod, 2022), []);
+  assert.deepEqual(yearPlans(rpod, 2026), [
+    "RP-153",
+    "RP-171",
+    "RP-180",
+    "RP-185",
+    "RP-190",
+    "RP-192",
+    "RP-194",
+    "RP-197",
+    "RP-198",
+    "RP-200",
+    "RP-203",
+    "RP-204",
+    "RP-205",
+    "RP-206",
+    "RP-207",
+  ]);
+  assert.equal(yearPlans(rpod, 2026).includes("22RB"), false);
+  assert.deepEqual(yearPlans(rpod, 2027), []);
+
+  assert.equal(CATALOG_INDEX["Forest River"]?.["Rockwood Mini Lite"]?.years?.includes(2013), true);
+  assert.equal(CATALOG_INDEX["Forest River"]?.["Rockwood Mini Lite"]?.years?.includes(2014), false);
+  assert.equal(CATALOG_INDEX["Forest River"]?.["Flagstaff Micro Lite"]?.years?.includes(2014), false);
+  assert.equal(CATALOG_INDEX["Forest River"]?.["Salem Cruise Lite"]?.years?.includes(2013), true);
+  assert.equal(CATALOG_INDEX["Forest River"]?.["Salem Cruise Lite"]?.years?.includes(2012), false);
+  assert.equal(CATALOG_INDEX["Forest River"]?.Wildwood?.years?.includes(2014), true);
+  assert.equal(CATALOG_INDEX["Forest River"]?.Wildwood?.years?.includes(2013), false);
+  assert.equal(CATALOG_INDEX["Forest River"]?.["r-Pod"]?.years?.includes(2010), true);
+  assert.equal(CATALOG_INDEX["Forest River"]?.["r-Pod"]?.years?.includes(2022), false);
+  assert.equal(CATALOG_INDEX["Forest River"]?.["r-Pod"]?.years?.includes(2027), false);
+});

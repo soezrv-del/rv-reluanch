@@ -15946,8 +15946,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Rockwood Mini Lite": {
       type: "Travel Trailer",
-      floorplans: ["2104S", "2109S", "2204S", "2205S", "2506S", "2509S", "2511S", "2513S", "2516S", "1905", "2512", "2514", "2715", "2718BS"],
+      floorplans: ["1809S", "2104S", "2108RB", "2109S", "2204S", "2205S", "2213S", "2214S", "2304", "2306", "2502S", "2503S", "2504", "2506FK", "2506S", "2509S", "2511S", "2513S", "2515S", "2516S", "2519S", "2520BH", "2522FB", "2523MBR", "2524FBT"],
       floorplansByYear: {
+        // Dated 13_RockwoodRoo.pdf Mini Lite spec table (Litho U.S.A 2013.05.13). 1901/1905/1906 are option-matrix only — no spec-table row.
+        // 2010–2012 / 2014 omitted (no dated year card / no dated 2014 Mini Lite PDF). Do not copy-forward 2013.
+        "2013": ["1809S", "2104S", "2109S", "2304", "2306", "2502S", "2503S", "2504"],
         "2015": ["2104S", "2109S", "2205S", "2506S", "2509S"],
         "2016": ["2104S", "2109S", "2205S", "2506S", "2509S", "2511S"],
         "2017": ["2104S", "2109S", "2205S", "2506S", "2509S", "2511S"],
@@ -16009,7 +16012,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "2513S",
           "2516S"
         ],
-        "2026": ["2104S", "2109S", "2204S", "2205S", "2506S", "2509S", "2511S", "2513S", "2516S", "1905", "2512", "2514", "2715", "2718BS"]
+        // Dated 2026-Forest-River-Rockwood-Mini-Lite.pdf spec table + RVUSA m2293-y2026 (13 codes).
+        // 1905 / 2104S / 2512 / 2514 / 2715 / 2718BS stay off 2026.
+        "2026": ["2108RB", "2109S", "2205S", "2214S", "2506FK", "2509S", "2511S", "2513S", "2515S", "2519S", "2520BH", "2522FB", "2523MBR"],
+        // Dated RVUSA 2027 family page (m2293-y2027). 2213S / 2524FBT new; 2214S / 2511S / 2519S are 2026-only.
+        "2027": ["2108RB", "2109S", "2205S", "2213S", "2506FK", "2509S", "2513S", "2515S", "2520BH", "2522FB", "2523MBR", "2524FBT"]
       },
       lengthRange: [
         21,
@@ -16038,8 +16045,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 78,
       founded: 1996,
       warrantyYears: 1,
-      yearStart: 2010,
-      description: "Rockwood Mini Lite — Forest River lightweight couples/family TT. Strong build reputation; half-ton friendly on most plans. Sister line to Flagstaff Micro Lite."
+      yearStart: 2013,
+      description: "Rockwood Mini Lite — Forest River lightweight couples/family TT. Dated 2013 Mini Lite spec table (8 codes). 2010–2012 / 2014 omitted (no dated card). Dated 2026 flyer/RVUSA (13). Dated RVUSA MY2027 (12). Sister line to Flagstaff Micro Lite."
     },
     "Rockwood Ultra Lite": {
       type: "Travel Trailer",
@@ -16090,7 +16097,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Flagstaff Micro Lite": {
       type: "Travel Trailer",
-      floorplans: ["21FBRS", "21DS", "22FBS", "25BDS", "25BHS", "25FBTS", "25FKBS", "21DSLE", "22FBR", "23LB", "25BRDS", "25FBS"],
+      floorplans: ["21DS", "21FBRS", "21SRB", "22FBS", "22LKS", "22SQS", "25BDS", "25BHS", "25BRDS", "25BSDS", "25DBH", "25FBD", "25FBH", "25FBLS", "25FBS", "25FBT", "25FBTS", "25FKB", "25FKBS", "25MBR", "25SRB", "25SRK"],
       floorplansByYear: {
         "2015": ["21FBRS", "21DS", "22FBS", "25BHS"],
         "2016": ["21FBRS", "21DS", "22FBS", "25BHS", "25BDS"],
@@ -16103,7 +16110,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["21FBRS", "21DS", "22FBS", "25BHS", "25BDS", "25FKBS", "25FBTS"],
         "2024": ["21FBRS", "21DS", "22FBS", "25BHS", "25BDS", "25FKBS", "25FBTS"],
         "2025": ["21FBRS", "21DS", "22FBS", "25BHS", "25BDS", "25FKBS", "25FBTS"],
-        "2026": ["21FBRS", "21DS", "22FBS", "25BHS", "25BDS", "25FKBS", "25FBTS", "21DSLE", "22FBR", "23LB", "25BRDS", "25FBS"]
+        // Dated 2026-Forest-River-Flagstaff-Micro-Lite.pdf spec table + RVUSA m2996-y2026 (12 codes).
+        // 21DS / 25BHS / 21DSLE / 22FBR / 23LB / 25FBS stay off 2026.
+        "2026": ["21FBRS", "22FBS", "22SQS", "25BRDS", "25BSDS", "25DBH", "25FBD", "25FBH", "25FBLS", "25FKB", "25MBR", "25SRK"],
+        // Dated RVUSA 2027 family page (m2996-y2027). 21SRB / 22LKS / 25FBT / 25SRB new.
+        "2027": ["21FBRS", "21SRB", "22FBS", "22LKS", "25BRDS", "25BSDS", "25DBH", "25FBD", "25FBT", "25FKB", "25MBR", "25SRB", "25SRK"]
       },
       lengthRange: [
         21,
@@ -16132,13 +16143,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 78,
       founded: 1996,
       warrantyYears: 1,
-      yearStart: 2010,
-      description: "Flagstaff Micro Lite — Forest River lightweight TT (Rockwood sister brand). Popular 22FBS / 25BHS family of plans."
+      yearStart: 2015,
+      description: "Flagstaff Micro Lite — Forest River lightweight TT (Rockwood sister brand). 2010–2014 omitted (dated year pages list no floorplan cards). Dated 2026 flyer/RVUSA (12). Dated RVUSA MY2027 (13)."
     },
     "Salem Cruise Lite": {
       type: "Travel Trailer",
-      floorplans: ["19DBXL", "21RBXL", "24DBXL", "25ICE", "263BHXL", "26BHXL", "26ICE", "273QBXL", "273QBXLX", "28VBXL", "29BHXL", "30QBXL", "171RBXL", "177RB", "204RDXL", "240VIEW", "24RLXL", "261BHXL", "280RLS", "292BHXL"],
+      floorplans: ["171RBXL", "181BHXL", "19DBXL", "210RBXL", "21RBXL", "221RB", "221RBXL", "22VERANDA", "231BHXL", "231RKXL", "23ZEN", "240BHXL", "241BHXL", "241QB", "241QBXL", "24DBXL", "24RLXL", "24ZEN", "251RL", "252RLXL", "25ICE", "261BH", "261BHXL", "262BHXL", "263BHXL", "265RTXL", "26BHXL", "26ICE", "271BH", "272QBXL", "273QBXL", "273QBXLX", "281BH", "281BHXL", "281QB", "281QBXL", "28ICE", "28VBXL", "291FB", "29BHXL", "30QBXL"],
       floorplansByYear: {
+        // Dated 13_CruiseLite.pdf spec table (© 2013 Salem) + RVUSA m2296-y2013 (8 codes). Cruise Lite FS 154BH/184BH/185RB/195BH stay off this key.
+        "2013": ["221RB", "241QB", "251RL", "261BH", "271BH", "281BH", "281QB", "291FB"],
+        // Dated RVUSA 2014 family page (m2296-y2014; 11 codes).
+        "2014": ["181BHXL", "221RBXL", "231BHXL", "231RKXL", "241QBXL", "252RLXL", "261BHXL", "262BHXL", "272QBXL", "281BHXL", "281QBXL"],
+        // 2010–2012 omitted: 2011/2012 year pages have no extractable cards; cruiselite2010.pdf print code PIP 041808 is not a dated MY2010 card.
         "2015": ["19DBXL", "21RBXL", "24DBXL", "26BHXL", "28VBXL", "29BHXL"],
         "2016": ["19DBXL", "21RBXL", "24DBXL", "26BHXL", "28VBXL", "29BHXL", "30QBXL"],
         "2017": ["19DBXL", "21RBXL", "24DBXL", "26BHXL", "28VBXL", "29BHXL", "30QBXL"],
@@ -16196,7 +16212,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "28VBXL",
           "29BHXL"
         ],
-        "2026": ["24DBXL", "25ICE", "263BHXL", "26BHXL", "26ICE", "273QBXL", "273QBXLX", "28VBXL", "29BHXL", "171RBXL", "177RB", "204RDXL", "240VIEW", "24RLXL", "261BHXL", "280RLS", "292BHXL"]
+        // Dated RVUSA 2026 family page (m2296-y2026; 17 codes). 24DBXL / 26BHXL / 273QBXLX / 29BHXL / 177RB / 204RDXL / 240VIEW / 280RLS / 292BHXL stay off 2026.
+        "2026": ["171RBXL", "19DBXL", "210RBXL", "22VERANDA", "23ZEN", "240BHXL", "241BHXL", "24RLXL", "24ZEN", "25ICE", "261BHXL", "263BHXL", "265RTXL", "26ICE", "273QBXL", "28ICE", "28VBXL"],
+        // Dated RVUSA 2027 family page (m2296-y2027; 5 codes).
+        "2027": ["25ICE", "263BHXL", "26ICE", "273QBXL", "28VBXL"]
       },
       lengthRange: [
         21,
@@ -16225,8 +16244,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 78,
       founded: 1996,
       warrantyYears: 1,
-      yearStart: 2010,
-      description: "Salem Cruise Lite — Forest River volume value travel trailer. Regional plan banks; common bunkhouse codes 26BHXL / 273QBXL. Live Grok verifies brochure UVW."
+      yearStart: 2013,
+      description: "Salem Cruise Lite — Forest River volume value travel trailer. Dated 2013 flyer/RVUSA (8). Dated RVUSA 2014 (11). 2010–2012 omitted. Dated RVUSA MY2026 (17) / MY2027 (5). Cruise Lite FS sibling stays off this key."
     },
     "Salem Hemisphere": {
       type: "Travel Trailer",
@@ -16277,8 +16296,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Wildwood: {
       type: "Travel Trailer",
-      floorplans: ["22RBS", "24RBS", "26DBUD", "27RE", "28VIEW", "29VBUD", "32BHDS", "32RET", "33TS", "36VBAL", "28DBUD", "33BHDS", "34BHDS", "36BHBS", "38BHDS"],
+      floorplans: ["22ERAS", "22RBS", "24RBS", "250ZEN", "260ICE", "26DBHD", "26DBUD", "26DDSS", "26TBSS", "270ZEN", "27RE", "27RK", "27RKSS", "27RLHD", "27RLSS", "28DBUD", "28VIEW", "29FKBS", "29QBDS", "29RKSS", "29UD3", "29VBUD", "300ICE", "30KQBSS", "30QBSS", "31BKIS", "31KQBTS", "31QBTS", "320ICE", "32BHDS", "32RET", "33BHOK", "33TS", "36BHBS", "36VBAL", "36VBDS", "37BHSS2Q", "37REDS"],
       floorplansByYear: {
+        // Dated RVUSA 2014 family page (m1638-y2014; 19 codes as printed). 2010–2013 omitted (2013 year page incomplete; do not copy-forward).
+        "2014": ["26DDSS", "26TBSS", "27RKSS", "27RLSS", "28DBUD", "29FKBS", "29QBDS", "29RKSS", "29UD3", "30KQBSS", "30QBSS", "31BKIS", "31KQBTS", "31QBTS", "32BHDS", "33BHOK", "36BHBS", "37BHSS2Q", "37REDS"],
         "2015": ["22RBS", "24RBS", "26DBUD", "27RE", "29VBUD", "32BHDS"],
         "2016": ["22RBS", "24RBS", "26DBUD", "27RE", "29VBUD", "32BHDS", "33TS"],
         "2017": ["22RBS", "24RBS", "26DBUD", "27RE", "29VBUD", "32BHDS", "33TS"],
@@ -16365,7 +16386,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "33TS",
           "36VBAL"
         ],
-        "2026": ["26DBUD", "27RE", "28VIEW", "29VBUD", "32BHDS", "32RET", "33TS", "36VBAL", "28DBUD", "33BHDS", "34BHDS", "36BHBS", "38BHDS"]
+        // Dated 2026-Forest-River-Wildwood.pdf WILDWOOD section only (footer 9/25). FSX / X-Lite / T25RD stay off this key.
+        "2026": ["22ERAS", "250ZEN", "260ICE", "26DBUD", "270ZEN", "27RK", "28DBUD", "29VBUD", "300ICE", "31KQBTS", "320ICE", "32BHDS", "33TS", "36VBDS"],
+        // Dated RVUSA 2027 family page (m1638-y2027; 7 codes).
+        "2027": ["26DBHD", "27RK", "27RLHD", "31KQBTS", "32BHDS", "33TS", "36VBDS"]
       },
       lengthRange: [
         24,
@@ -16394,13 +16418,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 78,
       founded: 1996,
       warrantyYears: 1,
-      yearStart: 2008,
-      description: "Wildwood — Forest River high-volume family travel trailer (bunkhouse specialists: 26DBUD, 33TS). Sister to Salem in many dealer lots."
+      yearStart: 2014,
+      description: "Wildwood — Forest River high-volume family travel trailer. Dated RVUSA 2014 (19). 2010–2013 omitted. Dated 2026 flyer WILDWOOD section (14; FSX/X-Lite stay off). Dated RVUSA MY2027 (7)."
     },
     "r-Pod": {
       type: "Travel Trailer",
-      floorplans: ["171", "180", "190", "193", "202", "RP-171", "RP-190", "RP-202", "170", "176", "178", "179", "181", "192", "196"],
+      floorplans: ["171", "180", "190", "193", "202", "RP-151", "RP-153", "RP-171", "RP-172", "RP-172T", "RP-173", "RP-173T", "RP-175", "RP-176", "RP-176T", "RP-177", "RP-178", "RP-179", "RP-180", "RP-181G", "RP-182", "RP-182G", "RP-185", "RP-190", "RP-192", "RP-194", "RP-197", "RP-198", "RP-200", "RP-202", "RP-203", "RP-204", "RP-205", "RP-206", "RP-207"],
       floorplansByYear: {
+        // Dated RVUSA year pages (m1641-y2010…y2014). Codes as printed (RP- prefix).
+        "2010": ["RP-151", "RP-171", "RP-172", "RP-172T", "RP-173", "RP-173T", "RP-175", "RP-176", "RP-176T", "RP-177"],
+        // Dated RVUSA m1641-y2011 + media rpodbrochure2011.pdf spec table (RP-182 as printed, not RP-182G).
+        "2011": ["RP-171", "RP-172", "RP-172T", "RP-173", "RP-173T", "RP-175", "RP-176", "RP-176T", "RP-177", "RP-181G", "RP-182"],
+        "2012": ["RP-171", "RP-172", "RP-172T", "RP-173", "RP-173T", "RP-175", "RP-176", "RP-176T", "RP-177", "RP-181G", "RP-182G"],
+        "2013": ["RP-171", "RP-172", "RP-172T", "RP-176", "RP-176T", "RP-177", "RP-178", "RP-181G", "RP-182G"],
+        "2014": ["RP-171", "RP-172", "RP-176", "RP-176T", "RP-177", "RP-178", "RP-179", "RP-181G", "RP-182G"],
         "2015": ["171", "180", "190", "193"],
         "2016": ["171", "180", "190", "193", "202"],
         "2017": ["171", "180", "190", "193", "202"],
@@ -16408,11 +16439,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2019": ["171", "180", "190", "193", "202"],
         "2020": ["171", "180", "190", "193", "202"],
         "2021": ["171", "180", "190", "193", "202"],
-        "2022": ["171", "180", "190", "193", "202", "RP-171", "RP-190"],
+        // 2022 omitted (GAP: Forest River make-level years skip 2022; year page has no extractable cards).
         "2023": ["171", "180", "190", "193", "202", "RP-171", "RP-190", "RP-202"],
         "2024": ["171", "180", "190", "193", "202", "RP-171", "RP-190", "RP-202"],
         "2025": ["171", "180", "190", "193", "202", "RP-171", "RP-190", "RP-202"],
-        "2026": ["171", "190", "193", "202", "RP-171", "RP-190", "RP-202", "170", "176", "178", "179", "181", "192", "196"]
+        // Dated 2026-Forest-River-R-Pod.pdf spec table (footer 10/25) + RVUSA m1641-y2026 (15 codes).
+        "2026": ["RP-153", "RP-171", "RP-180", "RP-185", "RP-190", "RP-192", "RP-194", "RP-197", "RP-198", "RP-200", "RP-203", "RP-204", "RP-205", "RP-206", "RP-207"],
       },
       lengthRange: [
         16,
@@ -16441,8 +16473,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 78,
       founded: 1996,
       warrantyYears: 1,
-      yearStart: 2009,
-      description: "Forest River r-Pod — iconic teardrop-style lightweight travel trailer. SUV / half-ton friendly. Codes listed as 171/190/202 and RP- variants used on listings."
+      yearStart: 2010,
+      description: "Forest River r-Pod — iconic teardrop-style lightweight travel trailer. Dated RVUSA 2010–2014 + 2011 brochure. 2022 omitted (GAP). Dated 2026 flyer/RVUSA (15). 2027 omitted (GAP: R-Pod ends 2026 on the make page; Un-Mapped is a sibling family)."
     }
   },
   Airstream: {
