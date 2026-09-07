@@ -12398,8 +12398,8 @@ test("Keystone MHC MY2011 PDF lock + Sprinter/Avalanche ≤2024 invent scrub", (
   assert.equal(idx["Montana High Country"]?.years?.includes(2026), true);
   assert.equal(idx["Montana High Country"]?.years?.includes(2027), true);
 
-  // Sprinter: 2010–2024 leftover emptied (index years shrink). 2025–2027 locks from #100/#96 stay.
-  assert.deepEqual(idx.Sprinter?.years, [2025, 2026, 2027]);
+  // Sprinter: 2010–2024 leftover emptied. MY2006 TT PDF lock + 2025–2027 stay.
+  assert.deepEqual(idx.Sprinter?.years, [2006, 2025, 2026, 2027]);
   assert.equal(idx.Sprinter?.yearEnd, undefined);
   for (let y = 2010; y <= 2024; y++) {
     assert.equal(idx.Sprinter?.years?.includes(y), false, `Sprinter must omit leftover ${y}`);
@@ -12567,9 +12567,9 @@ test("Keystone Montana MY2014–2024 invent scrub (RVUSA m1499 locks; thin extra
   const idx = CATALOG_INDEX.Keystone;
   assert.ok(idx);
 
-  // Selectable years = FBY keys 2014–2027 (2010–2013 leftover banks omitted in the 2010–2013 slice).
+  // Selectable years = FBY keys 2005 + 2014–2027 (2010–2013 leftover banks omitted).
   assert.deepEqual(idx.Montana?.years, [
-    2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
+    2005, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
   ]);
   assert.equal(idx.Montana?.yearStart, 1996);
 
@@ -12811,9 +12811,9 @@ test("Keystone Montana MY2010–2013 invent scrub (EMPTY RVUSA m1499 shells; pre
   const idx = CATALOG_INDEX.Keystone;
   assert.ok(idx);
 
-  // 2010–2013 drop from selectable years when FBY keys are omitted; 2014–2027 stay.
+  // 2010–2013 drop from selectable years when FBY keys are omitted; 2005 PDF + 2014–2027 stay.
   assert.deepEqual(idx.Montana?.years, [
-    2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
+    2005, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
   ]);
   assert.equal(idx.Montana?.years?.includes(2010), false);
   assert.equal(idx.Montana?.years?.includes(2011), false);
@@ -13063,7 +13063,7 @@ test("Keystone Cougar Premium FW MY2010–2024 invent scrub (RVUSA m1492 locks; 
   assert.equal(idx["Cougar Half-Ton"]?.years?.includes(2027), true);
   assert.deepEqual(idx["Cougar Half-Ton Travel Trailer"]?.years, [2027]);
   assert.deepEqual(idx.Montana?.years, [
-    2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
+    2005, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
   ]);
   assert.deepEqual(idx["Montana High Country"]?.years, [2011, 2021, 2022, 2023, 2024, 2025, 2026, 2027]);
   assert.deepEqual(idx["Bullet Crossfire"]?.years, [2027]);
@@ -13283,7 +13283,7 @@ test("Keystone Alpine MY2010–2024 invent scrub (RVUSA m2918 locks; prefer-empt
   assert.deepEqual(idx.Avalanche?.years, [2025]);
   assert.equal(idx.Avalanche?.yearEnd, 2025);
   assert.deepEqual(idx.Montana?.years, [
-    2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
+    2005, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
   ]);
   assert.deepEqual(idx["Montana High Country"]?.years, [2011, 2021, 2022, 2023, 2024, 2025, 2026, 2027]);
   assert.deepEqual(idx["Cougar 5th Wheel"]?.years, [
@@ -13291,7 +13291,7 @@ test("Keystone Alpine MY2010–2024 invent scrub (RVUSA m2918 locks; prefer-empt
   ]);
   assert.deepEqual(idx["Cougar Sport"]?.years, [2027]);
   assert.deepEqual(idx["Bullet Crossfire"]?.years, [2027]);
-  assert.deepEqual(idx.Sprinter?.years, [2025, 2026, 2027]);
+  assert.deepEqual(idx.Sprinter?.years, [2006, 2025, 2026, 2027]);
 
   const block = src("rvData.ts");
   const k0 = block.indexOf('\n  "Keystone": {');
@@ -13567,7 +13567,7 @@ test("Keystone Passport (collapsed) MY2010–2026 invent scrub (RVUSA m1502 lock
     2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
   ]);
   assert.deepEqual(idx.Montana?.years, [
-    2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
+    2005, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
   ]);
   assert.deepEqual(idx["Montana High Country"]?.years, [2011, 2021, 2022, 2023, 2024, 2025, 2026, 2027]);
   assert.deepEqual(idx["Cougar 5th Wheel"]?.years, [
@@ -13747,6 +13747,120 @@ test("Keystone Passport (collapsed) MY2010–2026 invent scrub (RVUSA m1502 lock
     cfw,
     /"2027": \["260MLE", "290RLS", "295RDS", "316RLS", "320RDS", "350LLK", "355FBS", "360MBI", "364BHL"\]/,
   );
+});
+
+test("Keystone 2005–2009 honesty: Montana MY2005 + Sprinter MY2006 TT locks; pack GAP stays empty", () => {
+  const idx = CATALOG_INDEX.Keystone;
+  assert.ok(idx);
+
+  assert.deepEqual(idx.Montana?.years, [
+    2005, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027,
+  ]);
+  assert.equal(idx.Montana?.yearStart, 1996);
+  assert.equal(idx.Montana?.type, "Fifth Wheel");
+  assert.deepEqual(idx.Sprinter?.years, [2006, 2025, 2026, 2027]);
+  assert.equal(idx.Sprinter?.yearStart, 2000);
+  assert.equal(idx.Sprinter?.yearEnd, undefined);
+  assert.equal(idx.Sprinter?.type, "Fifth Wheel");
+
+  const block = src("rvData.ts");
+  const k0 = block.indexOf('\n  "Keystone": {');
+  const k1 = block.indexOf('\n  "Grand Design": {');
+  const k = block.slice(k0, k1);
+  const mt = k.slice(k.indexOf("    Montana: {"), k.indexOf('    "Montana High Country"'));
+  const spr = k.slice(k.indexOf("    Sprinter: {"));
+  const ctt = k.slice(k.indexOf("    Cougar: {"), k.indexOf('    "Cougar 5th Wheel"'));
+  const cfw = k.slice(k.indexOf('    "Cougar 5th Wheel": {'), k.indexOf('    "Cougar Sport"'));
+  const lar = k.slice(k.indexOf("    Laredo: {"), k.indexOf("    Sprinter: {"));
+  const alp = k.slice(k.indexOf("    Alpine: {"), k.indexOf('    "Alpine Avalanche Edition"'));
+  const pass = k.slice(k.indexOf("    Passport: {"), k.indexOf('    "Passport Super Lite"'));
+  const sprd = k.slice(k.indexOf("    Springdale: {"), k.indexOf('    "Springdale Mini"'));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  // LOCK library 2005-Keystone-Montana.pdf OCR (3400RI→3400RL already applied).
+  assert.deepEqual(fbyYear(mt, 2005), [
+    "2950RK",
+    "2955RL",
+    "2980RL",
+    "3255RL",
+    "3295RK",
+    "3380RL",
+    "3400RL",
+    "3650RK",
+    "3670RL",
+    "3685FL",
+  ]);
+  // GAP 2006–2008; prefer GAP for thin 2009 RVUSA (3075RL / 3400RL) — do not lock partial 2009.
+  for (const y of [2006, 2007, 2008, 2009]) {
+    assert.equal(fbyYear(mt, y), null, `Montana ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(mt, new RegExp(`"${y}":`));
+  }
+  assert.doesNotMatch(mt, /"3075RL"/);
+  // 2010–2013 invent-scrub empties stay omitted.
+  for (const y of [2010, 2011, 2012, 2013]) {
+    assert.equal(fbyYear(mt, y), null, `Montana ${y} invent-scrub omit must stay`);
+  }
+  // Do not copy 2005 codes onto later locked years.
+  for (const y of [2014, 2015, 2016, 2025, 2026, 2027]) {
+    const plans = fbyYear(mt, y) ?? [];
+    for (const code of ["2950RK", "2955RL", "2980RL", "3255RL", "3295RK", "3380RL", "3650RK", "3670RL", "3685FL"]) {
+      assert.equal(plans.includes(code), false, `Montana ${y} must not stamp MY2005 ${code}`);
+    }
+  }
+  assert.deepEqual(fbyYear(mt, 2014), ["3610RL"]);
+  assert.match(mt, /"2027": \["3100RL", "3500RD", "3600RO", "3800FL", "3900RK"\]/);
+
+  // LOCK library 2006-Keystone-Sprinter.pdf Sprinter TT section only.
+  assert.deepEqual(fbyYear(spr, 2006), ["249RKS", "259RBS", "274RLS", "303BHS", "365BHS", "380BWS"]);
+  assert.doesNotMatch(spr, /"37BHS"/);
+  // GAP 2005, 2007–2009. Do not reopen 2010–2024 era-mismatch empties.
+  for (const y of [2005, 2007, 2008, 2009]) {
+    assert.equal(fbyYear(spr, y), null, `Sprinter ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(spr, new RegExp(`"${y}":`));
+  }
+  for (let y = 2010; y <= 2024; y++) {
+    assert.equal(fbyYear(spr, y), null, `Sprinter ${y} era-mismatch omit must stay`);
+  }
+  // Do not copy 2006 TT codes onto later FW locks.
+  for (const y of [2025, 2026, 2027]) {
+    const plans = fbyYear(spr, y) ?? [];
+    for (const code of ["249RKS", "259RBS", "274RLS", "303BHS", "365BHS", "380BWS"]) {
+      assert.equal(plans.includes(code), false, `Sprinter ${y} must not stamp MY2006 TT ${code}`);
+    }
+  }
+  assert.match(
+    spr,
+    /"2025": \["3210RLS", "3520RDS", "3590LFT", "3670FLS", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3980FBS"\]/,
+  );
+  assert.match(
+    spr,
+    /"2026": \["3210RLS", "3520RDS", "3590LFT", "3670FLS", "3800FLB", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"\]/,
+  );
+  assert.match(
+    spr,
+    /"2027": \["3500RDB", "3520RDS", "3640RLP", "3800FLB", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"\]/,
+  );
+  assert.doesNotMatch(spr, /yearEnd:\s*2024/);
+
+  // Other Keystone keys in this pack stay GAP for 2005–2009 (do not invent).
+  for (const [name, srcBlock] of [
+    ["Cougar", ctt],
+    ["Cougar 5th Wheel", cfw],
+    ["Laredo", lar],
+    ["Alpine", alp],
+    ["Passport", pass],
+    ["Springdale", sprd],
+  ] as const) {
+    for (const y of [2005, 2006, 2007, 2008, 2009]) {
+      assert.equal(fbyYear(srcBlock, y), null, `${name} ${y} must stay GAP`);
+      assert.doesNotMatch(srcBlock, new RegExp(`"${y}":`));
+    }
+  }
 });
 
 test("Coachmen honesty lock: MY2026 towable quarantine + Destination hyphens + SRS Class A diesel", () => {

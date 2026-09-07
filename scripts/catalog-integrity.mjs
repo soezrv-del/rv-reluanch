@@ -3144,6 +3144,15 @@ function main() {
       if (/"2026": .*"3500RD"/.test(mt) || /"2026": .*"3800FL"/.test(mt) || /"2026": .*"3900RK"/.test(mt) || /"2026": .*"3793RD"/.test(mt)) {
         fail("Keystone|Montana must not keep 3500RD/3800FL/3900RK/3793RD on 2026");
       }
+      if (!/"2005": \["2950RK", "2955RL", "2980RL", "3255RL", "3295RK", "3380RL", "3400RL", "3650RK", "3670RL", "3685FL"\]/.test(mt)) {
+        fail("Keystone|Montana MY2005 PDF lock missing (2005-Keystone-Montana.pdf OCR; 3400RI→3400RL)");
+      }
+      if (/"2006":/.test(mt) || /"2007":/.test(mt) || /"2008":/.test(mt) || /"2009":/.test(mt)) {
+        fail("Keystone|Montana must omit 2006–2009 (GAP — no dated card / do not lock thin 2009 3075RL+3400RL)");
+      }
+      if (/"3075RL"/.test(mt)) {
+        fail("Keystone|Montana must not lock thin 2009 RVUSA 3075RL");
+      }
       // MY2010–2013 leftover invent omitted (RVUSA m1499 year cards EMPTY shells).
       // Prefer omit over empty [] — same as MHC #103/#104. No dated brochure fill.
       if (/"2010":/.test(mt) || /"2011":/.test(mt) || /"2012":/.test(mt) || /"2013":/.test(mt)) {
@@ -3475,6 +3484,18 @@ function main() {
       if (/"2026": .*"3640RLP"/.test(sprBlock) || /"2026": .*"3190RLS"/.test(sprBlock) || /"2026": .*"3500RDB"/.test(sprBlock)) {
         fail("Keystone|Sprinter must omit 3640RLP / 3190RLS / 3500RDB on 2026");
       }
+      if (!/"2006": \["249RKS", "259RBS", "274RLS", "303BHS", "365BHS", "380BWS"\]/.test(sprBlock)) {
+        fail("Keystone|Sprinter MY2006 TT PDF lock missing (2006-Keystone-Sprinter.pdf TT section only)");
+      }
+      if (/"37BHS"/.test(sprBlock)) {
+        fail("Keystone|Sprinter must not lock OCR-uncertain 37BHS");
+      }
+      if (/"2005":/.test(sprBlock) || /"2007":/.test(sprBlock) || /"2008":/.test(sprBlock) || /"2009":/.test(sprBlock)) {
+        fail("Keystone|Sprinter must omit 2005 / 2007–2009 (GAP — no dated Sprinter card this pack)");
+      }
+      if (/"2025": .*"249RKS"/.test(sprBlock) || /"2026": .*"249RKS"/.test(sprBlock) || /"2027": .*"249RKS"/.test(sprBlock)) {
+        fail("Keystone|Sprinter must not copy 2006 TT codes onto MY2025–2027 FW locks");
+      }
       for (let y = 2010; y <= 2024; y++) {
         if (new RegExp(`"${y}":`).test(sprBlock)) {
           fail(`Keystone|Sprinter must empty leftover ${y} fby (prefer omit — no 269FWRLS/3530SIK invent)`);
@@ -3482,6 +3503,23 @@ function main() {
       }
 
       const ctt = slice("Cougar", "Cougar 5th Wheel");
+      const cfw05 = slice("Cougar 5th Wheel", "Cougar Sport");
+      const lar05 = slice("Laredo", "Sprinter");
+      const alp05 = slice("Alpine", "Alpine Avalanche Edition");
+      const pass05 = slice("Passport", "Passport Super Lite");
+      const sprd05 = slice("Springdale", "Springdale Mini");
+      for (const [name, body] of [
+        ["Cougar", ctt],
+        ["Cougar 5th Wheel", cfw05],
+        ["Laredo", lar05],
+        ["Alpine", alp05],
+        ["Passport", pass05],
+        ["Springdale", sprd05],
+      ]) {
+        if (/"2005":/.test(body) || /"2006":/.test(body) || /"2007":/.test(body) || /"2008":/.test(body) || /"2009":/.test(body)) {
+          fail(`Keystone|${name} must omit 2005–2009 (GAP — no dated card this pack)`);
+        }
+      }
       if (/"2027":/.test(ctt)) {
         fail("Keystone|Cougar TT must omit 2027 (no generic TT card; do not dump Sport/Premium/Half-Ton)");
       }
