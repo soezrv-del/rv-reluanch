@@ -334,10 +334,29 @@ test("Forest River fifth-wheel Facts SoT: 2026 spec-table quarantine + dated 202
   assert.doesNotMatch(aw, /"2026": .*"3800DECK"/);
   assert.doesNotMatch(aw, /"2027":/);
   const sab = fr.slice(fr.indexOf("    Sabre: {"), fr.indexOf('    "Cherokee Arctic Wolf": {'));
+  assert.match(sab, /yearStart:\s*2025/);
+  assert.match(sab, /"2025": \["25RLS", "26BBR", "32BHT"/);
   assert.match(sab, /"2027": \["32GKS", "32RK"/);
   assert.doesNotMatch(sab, /"2027": .*"38DBL"/);
+  assert.doesNotMatch(sab, /"2010":|"2024":/);
   const col = fr.slice(fr.indexOf("    Columbus: {"), fr.indexOf("    Cardinal: {"));
+  assert.match(col, /yearStart:\s*2025/);
+  assert.match(col, /"2025": \["376DS", "379MBL", "380RL"/);
   assert.doesNotMatch(col, /"2027":/);
+  assert.doesNotMatch(col, /"2010":|"2024":/);
+  const card = fr.slice(fr.indexOf("    Cardinal: {"), fr.indexOf('    "Cedar Creek": {'));
+  assert.match(card, /yearStart:\s*2025/);
+  assert.match(card, /"2025": \["32LIVE", "33CHEF", "35FL", "35FUN", "36MB", "37BEST", "402BEDS", "41DREAM"\]/);
+  assert.match(card, /"2027": \["32CHILL", "33CHEF", "35CRIB", "36FL", "36FUN", "37GALLEY", "38DEN", "41DUB"\]/);
+  assert.doesNotMatch(card, /"2010":|"2024":/);
+  const cc = fr.slice(fr.indexOf('    "Cedar Creek": {'), fr.indexOf("    Sabre: {"));
+  assert.match(cc, /yearStart:\s*2025/);
+  assert.match(cc, /"2025": \["361RL", "370FL", "379BHO", "381MUD", "395WOW"\]/);
+  assert.doesNotMatch(cc, /"2010":|"2024":/);
+  const sig = fr.slice(fr.indexOf('    "Rockwood Signature": {'), fr.indexOf("    Columbus: {"));
+  assert.match(sig, /yearStart:\s*2025/);
+  assert.match(sig, /"2025": \["R281RK", "R282RK", "R301RKS"/);
+  assert.doesNotMatch(sig, /"2010":|"2024":/);
 });
 
 test("Forest River thin-line Facts SoT: 2010–2014 dated locks + empty GAP years", () => {

@@ -13777,6 +13777,18 @@ test("Forest River honesty lock: MY2026 spec-table quarantine + dated MY2027 fam
   };
 
   const card = slice("Cardinal", "Cedar Creek");
+  assert.deepEqual(yearPlans(card, 2025), [
+    "32LIVE",
+    "33CHEF",
+    "35FL",
+    "35FUN",
+    "36MB",
+    "37BEST",
+    "402BEDS",
+    "41DREAM",
+  ]);
+  assert.equal(yearPlans(card, 2010).length, 0);
+  assert.equal(yearPlans(card, 2025).includes("23RK"), false);
   assert.deepEqual(yearPlans(card, 2026), [
     "32LIVE",
     "33CHEF",
@@ -13801,6 +13813,21 @@ test("Forest River honesty lock: MY2026 spec-table quarantine + dated MY2027 fam
   ]);
 
   const sab = slice("Sabre", "Cherokee Arctic Wolf");
+  assert.deepEqual(yearPlans(sab, 2025), [
+    "25RLS",
+    "26BBR",
+    "32BHT",
+    "32GKS",
+    "33RLP",
+    "36DBB",
+    "36FLX",
+    "36ML",
+    "37FLH",
+    "37FLL",
+    "37RVMILES",
+    "38DBL",
+  ]);
+  assert.equal(yearPlans(sab, 2010).length, 0);
   assert.deepEqual(yearPlans(sab, 2026), [
     "32GKS",
     "33RLP",
@@ -13826,6 +13853,14 @@ test("Forest River honesty lock: MY2026 spec-table quarantine + dated MY2027 fam
   assert.equal(yearPlans(sab, 2027).includes("38DBL"), false);
 
   const cc = slice("Cedar Creek", "Sabre");
+  assert.deepEqual(yearPlans(cc, 2025), [
+    "361RL",
+    "370FL",
+    "379BHO",
+    "381MUD",
+    "395WOW",
+  ]);
+  assert.equal(yearPlans(cc, 2010).length, 0);
   assert.deepEqual(yearPlans(cc, 2026), [
     "29RL",
     "361RL",
@@ -13850,6 +13885,15 @@ test("Forest River honesty lock: MY2026 spec-table quarantine + dated MY2027 fam
   assert.equal(yearPlans(cc, 2027).includes("40CBK"), false);
 
   const col = slice("Columbus", "Cardinal");
+  assert.deepEqual(yearPlans(col, 2025), [
+    "376DS",
+    "379MBL",
+    "380RL",
+    "383RLH",
+    "384RKH",
+    "388FKH",
+  ]);
+  assert.equal(yearPlans(col, 2010).length, 0);
   assert.deepEqual(yearPlans(col, 2026), [
     "377DS",
     "379MBL",
@@ -13861,6 +13905,21 @@ test("Forest River honesty lock: MY2026 spec-table quarantine + dated MY2027 fam
   assert.deepEqual(yearPlans(col, 2027), []);
 
   const sig = slice("Rockwood Signature", "Columbus");
+  assert.deepEqual(yearPlans(sig, 2025), [
+    "R281RK",
+    "R282RK",
+    "R301RKS",
+    "R331RL",
+    "R361RLS",
+    "R371RK",
+    "R372RL",
+    "R374DBH",
+    "R375RL",
+    "R376RK",
+    "R378BH",
+  ]);
+  assert.equal(yearPlans(sig, 2010).length, 0);
+  assert.equal(yearPlans(sig, 2025).includes("8336BH"), false);
   assert.deepEqual(yearPlans(sig, 2026), [
     "290SFK",
     "401SFB",

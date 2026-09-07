@@ -1620,6 +1620,18 @@ function main() {
       };
 
       const card = slice("Cardinal", "Cedar Creek");
+      if (!/yearStart:\s*2025/.test(card)) {
+        fail("Forest River|Cardinal yearStart must be 2025 (drop 2010–2024 3450RL ghosts)");
+      }
+      if (/"2010":|"2011":|"2012":|"2013":|"2014":|"2023":|"2024":/.test(card)) {
+        fail("Forest River|Cardinal must omit 2010–2024 (unsourced 3450RL/3825FL/3950RL copy-forward)");
+      }
+      if (!/"2025": \["32LIVE", "33CHEF", "35FL", "35FUN", "36MB", "37BEST", "402BEDS", "41DREAM"\]/.test(card)) {
+        fail("Forest River|Cardinal MY25 dated-flyer lock missing (8 codes; 2025-Forest-River-Cardinal.pdf footer 11/24)");
+      }
+      if (/"2025": .*"23RK"/.test(card) || /"2025": .*"27RB"/.test(card) || /"2025": .*"3450RL"/.test(card)) {
+        fail("Forest River|Cardinal 2025 must not keep RVUSA extras 23RK/27RB or 3450RL ghosts (PDF outranks)");
+      }
       if (!/"2026": \["32LIVE", "33CHEF", "34CRIB", "35FL", "35FUN", "36MB", "37BEST", "402BEDS"\]/.test(card)) {
         fail("Forest River|Cardinal MY26 dated-flyer lock missing (8 codes; 2026-Forest-River-Cardinal.pdf Title=2026 Flyer, footer 5/25)");
       }
@@ -1638,8 +1650,20 @@ function main() {
       if (/"2027": .*"32LIVE"/.test(card) || /"2027": .*"402BEDS"/.test(card)) {
         fail("Forest River|Cardinal must not stamp MY26-only codes onto 2027");
       }
+      if (/"20\d\d": \[[^\]]*(?:3450RL|3825FL|3950RL|3250BKX)/.test(card)) {
+        fail("Forest River|Cardinal must drop unsupported 3450RL/3825FL/3950RL/3250BKX from every year");
+      }
 
       const sab = slice("Sabre", "Cherokee Arctic Wolf");
+      if (!/yearStart:\s*2025/.test(sab)) {
+        fail("Forest River|Sabre yearStart must be 2025 (drop 2010–2024 36BHQ/38DBQ ghosts)");
+      }
+      if (/"2010":|"2011":|"2012":|"2013":|"2014":|"2023":|"2024":/.test(sab)) {
+        fail("Forest River|Sabre must omit 2010–2024 (unsourced 36BHQ/38DBQ copy-forward)");
+      }
+      if (!/"2025": \["25RLS", "26BBR", "32BHT", "32GKS", "33RLP", "36DBB", "36FLX", "36ML", "37FLH", "37FLL", "37RVMILES", "38DBL"\]/.test(sab)) {
+        fail("Forest River|Sabre MY25 dated RVUSA lock missing (m5596-y2025; 12 codes)");
+      }
       if (!/"2026": \["32GKS", "33RLP", "36DBB", "36EST", "36FLX", "37FLH", "37RVMILES", "38DBL", "38RVHUNTER"\]/.test(sab)) {
         fail("Forest River|Sabre MY26 brochure lock missing (9 codes; 2026-Forest-River-Sabre.pdf dated 03/26 + RVUSA m5596-y2026)");
       }
@@ -1655,8 +1679,20 @@ function main() {
       if (/"2027": .*"38DBL"/.test(sab) || /"2027": .*"36ML"/.test(sab)) {
         fail("Forest River|Sabre must not stamp 38DBL / 36ML onto 2027");
       }
+      if (/"20\d\d": \[[^\]]*(?:36BHQ|38DBQ|33BKS|40FLP)/.test(sab)) {
+        fail("Forest River|Sabre must drop unsupported 36BHQ/38DBQ/33BKS/40FLP from every year");
+      }
 
       const cc = slice("Cedar Creek", "Sabre");
+      if (!/yearStart:\s*2025/.test(cc)) {
+        fail("Forest River|Cedar Creek yearStart must be 2025 (drop 2010–2024 34RL2 ghosts)");
+      }
+      if (/"2010":|"2011":|"2012":|"2013":|"2014":|"2023":|"2024":/.test(cc)) {
+        fail("Forest River|Cedar Creek must omit 2010–2024 (34RL2/36CK2/38EL not re-verified dated-OK)");
+      }
+      if (!/"2025": \["361RL", "370FL", "379BHO", "381MUD", "395WOW"\]/.test(cc)) {
+        fail("Forest River|Cedar Creek MY25 dated lock missing (5 FW; 2025-Forest-River-Cedar-Creek.pdf + m1630-y2025)");
+      }
       if (!/"2026": \["29RL", "361RL", "370FL", "381MUD", "383FB", "385RK", "38DB", "39RKB"\]/.test(cc)) {
         fail("Forest River|Cedar Creek MY26 brochure lock missing (8 codes; 2026-Forest-River-Cedar-Creek.pdf)");
       }
@@ -1672,8 +1708,20 @@ function main() {
       if (/"2027": .*"40CBK"/.test(cc) || /"2027": .*"412FWC"/.test(cc) || /"2027": .*"41FWC"/.test(cc) || /"2027": .*"370FL"/.test(cc)) {
         fail("Forest River|Cedar Creek must not put Cottage 40CBK/412FWC/41FWC or MY26-only 370FL on 2027");
       }
+      if (/"20\d\d": \[[^\]]*(?:34RL2|36CK2|38EL|38DBQ|286RL)/.test(cc)) {
+        fail("Forest River|Cedar Creek must drop unsupported 34RL2/36CK2/38EL/38DBQ/286RL from every year");
+      }
 
       const col = slice("Columbus", "Cardinal");
+      if (!/yearStart:\s*2025/.test(col)) {
+        fail("Forest River|Columbus yearStart must be 2025 (drop 2010–2024 330RL ghosts)");
+      }
+      if (/"2010":|"2011":|"2012":|"2013":|"2014":|"2023":|"2024":/.test(col)) {
+        fail("Forest River|Columbus must omit 2010–2024 (unsourced 330RL/377MBC/383FB copy-forward)");
+      }
+      if (!/"2025": \["376DS", "379MBL", "380RL", "383RLH", "384RKH", "388FKH"\]/.test(col)) {
+        fail("Forest River|Columbus MY25 dated-flyer lock missing (6 codes; 2025-Forest-River-Columbus.pdf footer 01/25)");
+      }
       if (!/"2026": \["377DS", "379MBL", "383RLH", "384RKH", "388FKH", "389FLH"\]/.test(col)) {
         fail("Forest River|Columbus MY26 brochure lock missing (6 codes; 2026-Forest-River-Columbus.pdf)");
       }
@@ -1686,8 +1734,23 @@ function main() {
       if (/"2026": .*"330RL"/.test(col) || /"2026": .*"377MBC"/.test(col) || /"2026": .*"383FB"/.test(col) || /"2026": .*"329DV"/.test(col)) {
         fail("Forest River|Columbus must not keep Palomino-era 330RL/377MBC/383FB/329DV on 2026");
       }
+      if (/"20\d\d": \[[^\]]*(?:330RL|377MBC|383FB|329DV)/.test(col)) {
+        fail("Forest River|Columbus must drop unsupported 330RL/377MBC/383FB/329DV from every year");
+      }
 
       const sig = slice("Rockwood Signature", "Columbus");
+      if (!/yearStart:\s*2025/.test(sig)) {
+        fail("Forest River|Rockwood Signature yearStart must be 2025 (drop 2010–2024 Ultra Lite TT ghosts)");
+      }
+      if (/"2010":|"2011":|"2012":|"2013":|"2014":|"2023":|"2024":/.test(sig)) {
+        fail("Forest River|Rockwood Signature must omit 2010–2024 (8289WS/8311WS/8335BSS copy-forward)");
+      }
+      if (!/"2025": \["R281RK", "R282RK", "R301RKS", "R331RL", "R361RLS", "R371RK", "R372RL", "R374DBH", "R375RL", "R376RK", "R378BH"\]/.test(sig)) {
+        fail("Forest River|Rockwood Signature MY25 dated RVUSA FW lock missing (m7527-y2025; TT 8xxx stay off)");
+      }
+      if (/"2025": .*"8289WS"/.test(sig) || /"2025": .*"8336BH"/.test(sig) || /"2025": .*"8263MBR"/.test(sig)) {
+        fail("Forest River|Rockwood Signature 2025 must stay FW-only (no TT 8xxx)");
+      }
       if (!/"2026": \["290SFK", "401SFB", "402SFL", "405SBH", "R281RK", "R282RK", "R301RKS", "R331RL", "R361RLS", "R371RK", "R372RL", "R374DBH"\]/.test(sig)) {
         fail("Forest River|Rockwood Signature MY26 brochure lock missing (12 FW codes; 2026-Forest-River-Rockwood-Signature.pdf)");
       }
@@ -1702,6 +1765,9 @@ function main() {
       }
       if (/"2027": .*"8336BH"/.test(sig) || /"2027": .*"8421DB"/.test(sig) || /"2027": .*"405SBH"/.test(sig) || /"2027": .*"R281RK"/.test(sig)) {
         fail("Forest River|Rockwood Signature 2027 must stay FW-only (no TT 8xxx / no 2026-only 405SBH / R281RK)");
+      }
+      if (/"20\d\d": \[[^\]]*(?:8289WS|8311WS|8335BSS)/.test(sig)) {
+        fail("Forest River|Rockwood Signature must drop Ultra Lite 8289WS/8311WS/8335BSS from every year");
       }
 
       const aw = slice("Cherokee Arctic Wolf", "Sandstorm");
@@ -1732,17 +1798,38 @@ function main() {
       if (!frIdx.Cardinal?.years?.includes(2027)) {
         fail("Forest River|Cardinal index must include 2027 in years[]");
       }
+      if (frIdx.Cardinal?.years?.includes(2010) || frIdx.Cardinal?.years?.includes(2024)) {
+        fail("Forest River|Cardinal index must omit 2010–2024 ghost years");
+      }
+      if (frIdx.Cardinal?.yearStart !== 2025) {
+        fail("Forest River|Cardinal index yearStart must be 2025");
+      }
       if (!frIdx.Sabre?.years?.includes(2027)) {
         fail("Forest River|Sabre index must include 2027 (dated RVUSA m5596-y2027)");
+      }
+      if (frIdx.Sabre?.years?.includes(2010) || frIdx.Sabre?.years?.includes(2024)) {
+        fail("Forest River|Sabre index must omit 2010–2024 ghost years");
       }
       if (!frIdx["Cedar Creek"]?.years?.includes(2027)) {
         fail("Forest River|Cedar Creek index must include 2027 (dated RVUSA m1630-y2027)");
       }
+      if (frIdx["Cedar Creek"]?.years?.includes(2010) || frIdx["Cedar Creek"]?.years?.includes(2024)) {
+        fail("Forest River|Cedar Creek index must omit 2010–2024 ghost years");
+      }
       if (!frIdx["Rockwood Signature"]?.years?.includes(2027)) {
         fail("Forest River|Rockwood Signature index must include 2027 (dated RVUSA m7527-y2027)");
       }
+      if (frIdx["Rockwood Signature"]?.years?.includes(2010) || frIdx["Rockwood Signature"]?.years?.includes(2024)) {
+        fail("Forest River|Rockwood Signature index must omit 2010–2024 ghost years");
+      }
       if (frIdx.Columbus?.years?.includes(2027)) {
         fail("Forest River|Columbus index must omit 2027 (empty dated family page)");
+      }
+      if (frIdx.Columbus?.years?.includes(2010) || frIdx.Columbus?.years?.includes(2024)) {
+        fail("Forest River|Columbus index must omit 2010–2024 ghost years");
+      }
+      if (!frIdx.Columbus?.years?.includes(2025) || !frIdx.Columbus?.years?.includes(2026)) {
+        fail("Forest River|Columbus index must include 2025–2026");
       }
       if (frIdx["Cherokee Arctic Wolf"]?.years?.includes(2027)) {
         fail("Forest River|Cherokee Arctic Wolf index must omit 2027 (no dated family card)");
