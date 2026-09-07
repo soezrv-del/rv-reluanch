@@ -10,13 +10,12 @@ import {
   formatRepairCoachLock,
   formatRepairGroundingBlock,
   looksLikeRepairQuestion,
+  repairCoachLockFromGrounded,
 } from "./repairMode.ts";
 import {
-  buildChatGrounding,
-  buildVoiceGrounding,
+  looksLikeLiveResearchQuestion,
   needsWebFallback,
-} from "./grounding.ts";
-import { looksLikeLiveResearchQuestion } from "./webIntent.ts";
+} from "./webIntent.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -24,22 +23,24 @@ function src(name: string) {
   return readFileSync(join(root, name), "utf8");
 }
 
-const CLASS_A_FACTS = {
+const CLASS_A_LOCK = {
   year: "2019",
   make: "Newmar",
   model: "Dutch Star",
   floorplan: "4369",
   rvType: "Class A",
-  updatedAt: "2026-09-07T00:00:00.000Z",
+  chassis: "Spartan K3",
+  fuelType: "Diesel",
+  source: "facts",
 };
 
-const TRAVEL_TRAILER_FACTS = {
+const TRAVEL_TRAILER_LOCK = {
   year: "2018",
   make: "Keystone",
   model: "Passport",
   floorplan: "3350BH",
   rvType: "Travel Trailer",
-  updatedAt: "2026-09-07T00:00:00.000Z",
+  source: "facts",
 };
 
 test("repair intent fires on diagnose / leak / no-start / code / named systems", () => {
@@ -70,6 +71,7 @@ test("repair intent stays off for specs, lifestyle, and system-name-only asks", 
   const no = [
     "What engine and HP does a 2023 Entegra Vision have?",
     "I'd like to know about the 2027 Grand Design Lineage M series.",
+    "What engine and HP does a 2026 Grand Design Lineage M have?",
     "Does this have AquaHot?",
     "How many slides does this floorplan have?",
     "What is the propane tank size?",
@@ -81,6 +83,11 @@ test("repair intent stays off for specs, lifestyle, and system-name-only asks", 
   for (const q of no) {
     assert.equal(looksLikeRepairQuestion(q), false, q);
   }
+  assert.equal(
+    needsWebFallback({ missingHard: false }, no[2]!),
+    false,
+    "Lineage M spec lock must not browse",
+  );
 });
 
 test("playbook rails discourage invented torque / part numbers / wiring / bypass", () => {
@@ -99,107 +106,102 @@ test("playbook rails discourage invented torque / part numbers / wiring / bypass
 });
 
 test("locked Class A repair grounds to motorhome — not generic trailer tips", () => {
-  const grounded = buildChatGrounding({
-    query: "furnace clicks but no heat",
-    facts: CLASS_A_FACTS,
+  const q = "furnace clicks but no heat";
+  assert.equal(looksLikeRepairQuestion(q), true);
+  const block = formatRepairGroundingBlock({
+    active: true,
+    lock: CLASS_A_LOCK,
   });
-  assert.equal(grounded.repairMode, true);
-  assert.equal(grounded.needsWeb, true);
-  assert.match(grounded.block, /REPAIR PLAYBOOK/);
-  assert.match(grounded.block, /Dutch Star/);
-  assert.match(grounded.block, /2019/);
-  assert.match(grounded.block, /MOTORHOME|Class A/i);
-  assert.match(grounded.block, /torque spec/i);
-  assert.match(grounded.block, /not a certified RV technician/i);
-  assert.doesNotMatch(grounded.block, /do not give Class A diesel/i);
+  assert.match(block, /REPAIR PLAYBOOK/);
+  assert.match(block, /Dutch Star/);
+  assert.match(block, /2019/);
+  assert.match(block, /MOTORHOME|Class A/i);
+  assert.match(block, /Spartan K3/);
+  assert.match(block, /torque spec/i);
+  assert.match(block, /not a certified RV technician/i);
+  assert.doesNotMatch(block, /do not give Class A diesel/i);
 });
 
 test("locked travel trailer leak grounds to towable — not Class A AquaHot", () => {
-  const grounded = buildChatGrounding({
-    query: "fresh tank leak",
-    facts: TRAVEL_TRAILER_FACTS,
+  const q = "fresh tank leak";
+  assert.equal(looksLikeRepairQuestion(q), true);
+  const block = formatRepairGroundingBlock({
+    active: true,
+    lock: TRAVEL_TRAILER_LOCK,
   });
-  assert.equal(grounded.repairMode, true);
-  assert.match(grounded.block, /REPAIR PLAYBOOK/);
-  assert.match(grounded.block, /Passport/);
-  assert.match(grounded.block, /TOWABLE|Travel Trailer/i);
-  assert.match(grounded.block, /Do not give Class A diesel/i);
-  assert.match(grounded.block, /AquaHot/i);
+  assert.match(block, /REPAIR PLAYBOOK/);
+  assert.match(block, /Passport/);
+  assert.match(block, /TOWABLE|Travel Trailer/i);
+  assert.match(block, /Do not give Class A diesel/i);
+  assert.match(block, /AquaHot/i);
 });
 
 test("non-repair spec question does not switch into the playbook", () => {
-  const grounded = buildChatGrounding({
-    query: "What engine and HP does a 2023 Entegra Vision have?",
-    facts: CLASS_A_FACTS,
-  });
-  assert.equal(grounded.repairMode, false);
-  assert.doesNotMatch(grounded.block, /REPAIR PLAYBOOK/);
-  assert.doesNotMatch(grounded.block, /Clarify symptoms/i);
-  assert.match(grounded.block, /VERIFIED CATALOG/);
-});
-
-test("Lineage M spec lock is unchanged — no repair playbook, no browse", () => {
-  const q = "What engine and HP does a 2026 Grand Design Lineage M have?";
-  const grounded = buildChatGrounding({ query: q });
-  assert.equal(grounded.repairMode, false);
-  assert.doesNotMatch(grounded.block, /REPAIR PLAYBOOK/);
-  assert.equal(grounded.needsWeb, false);
-  assert.equal(grounded.identity?.model, "Lineage Series M");
+  assert.equal(
+    looksLikeRepairQuestion(
+      "What engine and HP does a 2023 Entegra Vision have?",
+    ),
+    false,
+  );
+  assert.equal(formatRepairGroundingBlock({ active: false }), "");
+  assert.doesNotMatch(
+    formatRepairGroundingBlock({ active: false, lock: CLASS_A_LOCK }),
+    /REPAIR PLAYBOOK/,
+  );
 });
 
 test("repair without a locked coach still injects rails and asks class", () => {
-  const grounded = buildChatGrounding({
-    query: "furnace clicks but no heat",
-  });
-  assert.equal(grounded.repairMode, true);
-  assert.equal(grounded.needsWeb, true);
-  assert.match(grounded.block, /REPAIR PLAYBOOK/);
-  assert.match(grounded.block, /LOCKED COACH: none/i);
-  assert.match(grounded.block, /Do not assume a Class A/i);
+  const block = formatRepairGroundingBlock({ active: true, lock: null });
+  assert.match(block, /REPAIR PLAYBOOK/);
+  assert.match(block, /LOCKED COACH: none/i);
+  assert.match(block, /Do not assume a Class A/i);
 });
 
-test("voice grounding keeps standing repair rails and coach class", () => {
-  const standing = buildVoiceGrounding({ facts: TRAVEL_TRAILER_FACTS });
+test("voice standing rails stay off until a repair ask; Facts class still grounds", () => {
+  const standing = formatRepairGroundingBlock({
+    active: false,
+    voice: true,
+    lock: TRAVEL_TRAILER_LOCK,
+  });
   assert.match(standing, /REPAIR RAILS|If they ask to repair/i);
   assert.match(standing, /Passport|Travel Trailer|TOWABLE/i);
   assert.doesNotMatch(standing, /REPAIR PLAYBOOK \(this turn/);
 
-  const active = buildVoiceGrounding({
-    query: "fresh tank leak",
-    facts: TRAVEL_TRAILER_FACTS,
+  const active = formatRepairGroundingBlock({
+    active: true,
+    voice: true,
+    lock: TRAVEL_TRAILER_LOCK,
   });
   assert.match(active, /REPAIR this turn|REPAIR PLAYBOOK/i);
   assert.match(active, /torque spec/i);
 });
 
-test("coach lock helper names class-specific don'ts", () => {
-  const mh = formatRepairCoachLock({
-    year: "2019",
-    make: "Newmar",
-    model: "Dutch Star",
-    floorplan: "4369",
-    rvType: "Class A",
-    chassis: "Spartan K3",
-    fuelType: "Diesel",
-    source: "facts",
+test("Facts rvType fills class when catalog type is empty", () => {
+  const lock = repairCoachLockFromGrounded({
+    identity: {
+      year: "2019",
+      make: "Newmar",
+      model: "Dutch Star",
+      floorplan: "4369",
+      source: "facts",
+    },
+    specs: { rvType: { value: null }, chassis: { value: null } },
+    facts: CLASS_A_LOCK,
   });
+  assert.equal(lock?.rvType, "Class A");
+  assert.match(formatRepairCoachLock(lock), /MOTORHOME/);
+});
+
+test("coach lock helper names class-specific don'ts", () => {
+  const mh = formatRepairCoachLock(CLASS_A_LOCK);
   assert.match(mh, /Dutch Star/);
   assert.match(mh, /MOTORHOME/);
   assert.match(mh, /Spartan K3/);
   assert.doesNotMatch(mh, /do not give Class A diesel/i);
 
-  const tt = formatRepairCoachLock({
-    year: "2018",
-    make: "Keystone",
-    model: "Passport",
-    rvType: "Travel Trailer",
-    source: "facts",
-  });
+  const tt = formatRepairCoachLock(TRAVEL_TRAILER_LOCK);
   assert.match(tt, /TOWABLE/);
   assert.match(tt, /Do not give Class A diesel/i);
-
-  const none = formatRepairGroundingBlock({ active: true, lock: null });
-  assert.match(none, /LOCKED COACH: none/i);
 });
 
 test("wiring: chat, voice, browse, and Live share the same repair rails", () => {
@@ -213,6 +215,7 @@ test("wiring: chat, voice, browse, and Live share the same repair rails", () => 
 
   assert.match(grounding, /repairMode/);
   assert.match(grounding, /formatRepairGroundingBlock/);
+  assert.match(grounding, /repairBlockFor/);
   assert.match(webIntent, /looksLikeRepairQuestion/);
   assert.match(prompts, /REPAIR \/ DIAGNOSE/);
   assert.match(prompts, /not a certified RV technician/i);

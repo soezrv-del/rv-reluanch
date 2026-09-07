@@ -26,7 +26,7 @@ const REPAIR_SYSTEM_RE =
   /\b(propane|lp\s?gas|lpg|slides?|slide[- ]outs?|aquahot|aqua[- ]hot|hydronic|furnace|water\s+heater|(?:air\s+)?cond(?:itioner)?|\bac\b|refrigerat(?:or|ion)|fridge|generator|genset|inverter|converter|awning|jacks?|level(?:ing|ers?)|(?:black|gray|grey|fresh)\s+tanks?|water\s+pump|toilet|batter(?:y|ies)|fuse|breaker|wiring|wires?|brakes?|tires?|carbon\s+monoxide|\bco\s+detect)\b/i;
 
 const REPAIR_PROBLEM_RE =
-  /\b(won'?t|will\s+not|doesn'?t|does\s+not|leak|broken|stuck|jammed|dead|failed|failing|not\s+(?:working|heating|cooling|lighting|charging|retracting|extending|igniting)|no\s+(?:heat|power|ignition|hot\s+water)|clicks?|hiss(?:ing)?|smell(?:s|ing)?|error|fault|alarm|code|dtc|diagnos|repair|fix|troubleshoot)\b/i;
+  /\b(won'?t|will\s+not|doesn'?t|does\s+not|leak|broken|stuck|jammed|dead|failed|failing|(?:not|isn'?t|ain'?t)\s+(?:working|heating|cooling|lighting|charging|retracting|extending|igniting)|no\s+(?:heat|power|ignition|hot\s+water)|clicks?|hiss(?:ing)?|smell(?:s|ing)?|error|fault|alarm|code|dtc|diagnos|repair|fix|troubleshoot)\b/i;
 
 const LIFESTYLE_OR_PAYMENT_RE =
   /\b(full[- ]?tim(?:e|ing)|snowbird|lifestyle|worth\s+it|vs\.?\s+hotels?|van\s+life|why\s+rv|weekend\s+warrior|retiring\s+on\s+the\s+road|second\s+home|monthly\s+payment|loan\s+payment|apr\b|interest\s+rate|amortiz|out[- ]the[- ]door|\botd\b|financing|payment\s+on\s+\$)\b/i;
