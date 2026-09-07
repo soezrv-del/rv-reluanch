@@ -14,6 +14,7 @@ import { DOCK_TAP_SLOP, isStationaryDockTap } from "@/lib/hooks/nativeWebView";
 import type { AppTab } from "./BottomTabs";
 import { PAGE_COPY } from "./shellConstants";
 import sealPoster from "@/assets/splash/rvfox-launch-seal-poster.jpg";
+import sealCover from "@/assets/splash/rvfox-cover-seal.jpg";
 
 /** Cover open / page-turn budgets — keep both under 500ms. */
 export const COVER_FLIP_MS = 380;
@@ -154,7 +155,7 @@ export function Launchpad({
     lastX: number;
     lastT: number;
   } | null>(null);
-  const emblem = menuImageSrc ?? sealPoster;
+  const emblem = menuImageSrc ?? sealCover ?? sealPoster;
 
   useEffect(() => {
     hideNativeSplash();
@@ -381,6 +382,13 @@ export function Launchpad({
           <div
             ref={viewportRef}
             className="leather-viewport relative flex min-h-0 min-w-0 flex-1 overflow-hidden"
+            onPointerDown={opened ? onPagerPointerDown : undefined}
+            onPointerMove={opened ? onPagerPointerMove : undefined}
+            onPointerUp={opened ? finishPagerGesture : undefined}
+            onPointerCancel={opened ? finishPagerGesture : undefined}
+            onClick={opened ? onPagerClick : undefined}
+            role={opened ? "group" : undefined}
+            aria-label={opened ? "RvFOX book pages" : undefined}
           >
             <div
               className={cn(
@@ -388,13 +396,6 @@ export function Launchpad({
                 dragging ? "leather-strip-dragging" : "leather-strip-snap",
               )}
               style={{ transform: `translate3d(${stripX}, 0, 0)` }}
-              onPointerDown={opened ? onPagerPointerDown : undefined}
-              onPointerMove={opened ? onPagerPointerMove : undefined}
-              onPointerUp={opened ? finishPagerGesture : undefined}
-              onPointerCancel={opened ? finishPagerGesture : undefined}
-              onClick={opened ? onPagerClick : undefined}
-              role={opened ? "group" : undefined}
-              aria-label={opened ? "RvFOX book pages" : undefined}
             >
               {LAUNCH_PAGES.map((item, index) => {
                 const Icon = item.Icon;
@@ -468,7 +469,7 @@ export function Launchpad({
               </span>
 
               <span className="leather-cover-copy leather-cover-copy-bottom">
-                <MetalVerifiedTrue size="lg" />
+                <MetalVerifiedTrue size="md" className="leather-verified" />
                 <span className="leather-tagline">Know before you buy.</span>
               </span>
               <span className="leather-cover-cue">Tap anywhere to open</span>

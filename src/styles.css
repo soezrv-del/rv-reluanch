@@ -1497,8 +1497,8 @@
   --book-page: #efe4cc;
   --book-spine: #12141b;
   --book-spine-w: 1.7rem;
-  --book-edge-w: 1.05rem;
-  --book-board-w: 0.28rem;
+  --book-edge-w: 1.2rem;
+  --book-board-w: 0.34rem;
   --page-ink: #1b1712;
   background: #000000;
 }
@@ -1848,17 +1848,7 @@
 }
 
 .leather-cover-glow {
-  position: absolute;
-  inset: 22% 6% 26%;
-  z-index: 1;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 48%,
-    color-mix(in srgb, var(--color-sapphire) 16%, transparent) 0%,
-    color-mix(in srgb, var(--color-sapphire-glow) 7%, transparent) 42%,
-    transparent 70%
-  );
-  pointer-events: none;
+  display: none;
 }
 
 .leather-cover-crease {
@@ -1891,15 +1881,15 @@
 
 .leather-emblem-die {
   position: relative;
-  width: min(92%, 17.25rem);
+  width: min(94%, 18rem);
   height: auto;
   aspect-ratio: 1;
-  max-width: 17.25rem;
-  max-height: min(46vh, 17.25rem);
-  overflow: visible;
+  max-width: 18rem;
+  max-height: min(50vh, 18rem);
+  overflow: hidden;
   border-radius: 50%;
   background: transparent;
-  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.4);
 }
 
 .leather-emblem-die::after {
@@ -1971,6 +1961,14 @@
   color: transparent;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 14px color-mix(in srgb, var(--color-sapphire-glow) 55%, transparent));
+}
+
+.leather-verified,
+.leather-cover .metal-hammered {
+  white-space: nowrap;
+  max-width: 100%;
+  font-size: clamp(0.92rem, 3.7vw, 1.12rem);
+  letter-spacing: 0.14em;
 }
 
 .leather-tagline {

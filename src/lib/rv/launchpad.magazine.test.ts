@@ -28,6 +28,7 @@ test("closed 3D field-guide cover opens Image-1 suite pages", () => {
   assert.match(launch, /Verified and True/);
   assert.match(launch, /Know before you buy\./);
   assert.match(launch, /rvfox-launch-seal-poster/);
+  assert.match(launch, /rvfox-cover-seal/);
   assert.doesNotMatch(launch, /RvFOX — Verified and True/);
   assert.doesNotMatch(launch, /RATEAPI/);
   assert.doesNotMatch(launch, /from ["']@\/lib\/rv\/rvData/);
@@ -56,7 +57,7 @@ test("closed 3D field-guide cover opens Image-1 suite pages", () => {
   assert.match(css, /\.leather-book-foot/);
   assert.match(css, /rotateY\(-14deg\)/);
   assert.match(css, /--book-spine-w:\s*1\.7rem/);
-  assert.match(css, /--book-edge-w:\s*1\.05rem/);
+  assert.match(css, /--book-edge-w:\s*1\.2rem/);
   assert.match(css, /--book-page:\s*#efe4cc/);
   assert.match(css, /--leather-hide:\s*#000000/);
   assert.match(css, /--leather-foil:\s*var\(--color-sapphire-glow\)/);
