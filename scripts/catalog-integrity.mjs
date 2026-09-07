@@ -3271,6 +3271,152 @@ function main() {
     }
   }
 
+  // Heartland 2005–2009 honesty. EzMe formal pack: Bighorn MY2008 + Cyclone/Sundance MY2009 FW only.
+  // Dated RVUSA brochures lock those three chips. Prefer omit (GAP) over invent / copy-forward.
+  {
+    const h0 = src.indexOf("\n  Heartland: {");
+    const h1 = src.indexOf("\n  Lance: {");
+    if (h0 < 0 || h1 < h0) {
+      fail("Heartland block not found between Heartland: and Lance:");
+    } else {
+      const hl = src.slice(h0, h1);
+      const slice = (a, b) => {
+        const i = hl.indexOf(`    ${a}: {`) >= 0 ? hl.indexOf(`    ${a}: {`) : hl.indexOf(`    "${a}": {`);
+        const j =
+          b == null
+            ? hl.length
+            : hl.indexOf(`    ${b}: {`) >= 0
+              ? hl.indexOf(`    ${b}: {`)
+              : hl.indexOf(`    "${b}": {`);
+        if (i < 0) return "";
+        return j > i ? hl.slice(i, j) : hl.slice(i);
+      };
+
+      if (/\n    "Sundance XLT": \{/.test(hl) || /\n    "Sundance Ultra-Lite": \{/.test(hl)) {
+        fail("Heartland must not invent Sundance XLT / Ultra-Lite keys (XLT FW stays on Sundance)");
+      }
+
+      const bighorn = slice("Bighorn", "Sundance");
+      if (!/type: "Fifth Wheel"/.test(bighorn)) fail("Heartland|Bighorn must stay Fifth Wheel");
+      if (!/"2008": \["3055RL", "3100RL", "3370RL", "3400RL", "3400RE", "3580RL", "3600RE", "3600RL", "3670RL"\]/.test(bighorn)) {
+        fail("Heartland|Bighorn MY2008 PDF lock missing (2008-Heartland-Bighorn.pdf)");
+      }
+      if (/"3500RL"/.test(bighorn)) {
+        fail("Heartland|Bighorn must not lock thin 2006 3500RL (prefer GAP)");
+      }
+      if (/"2005":/.test(bighorn) || /"2006":/.test(bighorn) || /"2007":/.test(bighorn) || /"2009":/.test(bighorn)) {
+        fail("Heartland|Bighorn must omit 2005–07 / 2009 (GAP — thin 2006 2-code; no dated 2005/07/09 card)");
+      }
+      if (/"2010": .*"3055RL"/.test(bighorn) || /"2010": .*"3370RL"/.test(bighorn) || /"2010": .*"3600RL"/.test(bighorn)) {
+        fail("Heartland|Bighorn must not copy 2008 codes onto 2010+");
+      }
+      if (!/"2010": \["3375SS", "3900FL", "3985QB"\]/.test(bighorn)) {
+        fail("Heartland|Bighorn 2010 tip-era codes must stay 3375SS / 3900FL / 3985QB");
+      }
+
+      const cyclone = slice("Cyclone", "Torque");
+      if (!/type: "Toy Hauler"/.test(cyclone)) fail("Heartland|Cyclone must stay Toy Hauler");
+      if (!/"2009": \["3010TDS", "3210", "3795", "3912", "3950", "4012"\]/.test(cyclone)) {
+        fail("Heartland|Cyclone MY2009 PDF lock missing (2009-Heartland-Cyclone.pdf — include 3210)");
+      }
+      if (/"2007":/.test(cyclone) || /"2008":/.test(cyclone)) {
+        fail("Heartland|Cyclone must omit 2007–08 (GAP — no dated card this pack)");
+      }
+      if (/"2010": .*"3010TDS"/.test(cyclone) || /"2010": .*"3210"/.test(cyclone) || /"2010": .*"4012"/.test(cyclone)) {
+        fail("Heartland|Cyclone must not copy 2009 codes onto 2010+");
+      }
+      if (!/"2010": \["3012", "3612", "4006"\]/.test(cyclone)) {
+        fail("Heartland|Cyclone 2010 tip-era codes must stay 3012 / 3612 / 4006");
+      }
+
+      const sundance = slice("Sundance", "Landmark");
+      if (!/type: "Fifth Wheel"/.test(sundance)) fail("Heartland|Sundance must stay Fifth Wheel");
+      if (!/"2009": \["2998RB", "2800RLS", "2900MK", "3200RE", "3300SK", "3300FB", "3300RLB", "3300RC", "245RL", "287RL", "297RE"\]/.test(sundance)) {
+        fail("Heartland|Sundance MY2009 FW PDF lock missing (2009-Heartland-Sundance.pdf)");
+      }
+      if (/"3000RK"/.test(sundance) || /"3100ES"/.test(sundance) || /"3300RCB"/.test(sundance)) {
+        fail("Heartland|Sundance must GAP uncertain 3000RK / 3100ES / 3300RCB");
+      }
+      if (/"265RK"/.test(sundance) || /"285BH"/.test(sundance) || /"310BDS"/.test(sundance) || /"310RLS"/.test(sundance) || /"320BS"/.test(sundance)) {
+        fail("Heartland|Sundance must not lock XLT travel-trailer codes on the FW key");
+      }
+      if (/"2005":/.test(sundance) || /"2006":/.test(sundance) || /"2007":/.test(sundance) || /"2008":/.test(sundance)) {
+        fail("Heartland|Sundance must omit 2005–08 (GAP — no dated card this pack)");
+      }
+      if (/"2010": .*"245RL"/.test(sundance) || /"2010": .*"2998RB"/.test(sundance) || /"2010": .*"3300SK"/.test(sundance)) {
+        fail("Heartland|Sundance must not copy 2009 codes onto 2010+");
+      }
+      if (!/"2010": \["2600RE", "2800QB", "3100RL"\]/.test(sundance)) {
+        fail("Heartland|Sundance 2010 tip-era codes must stay 2600RE / 2800QB / 3100RL");
+      }
+
+      const landmark = slice("Landmark", "Big Country");
+      if (/Augusta/.test(landmark) || /Pinehurst/.test(landmark)) {
+        fail("Heartland|Landmark must not lock early Augusta / Pinehurst names (prefer GAP)");
+      }
+
+      for (const [name, next] of [
+        ["Landmark", "Big Country"],
+        ["Big Country", "Cyclone"],
+        ["Prowler", "Gravity"],
+        ["Torque", "Road Warrior"],
+        ["Road Warrior", "Prowler"],
+        ["Gravity", null],
+      ]) {
+        const body = slice(name, next);
+        if (/"2005":/.test(body) || /"2006":/.test(body) || /"2007":/.test(body) || /"2008":/.test(body) || /"2009":/.test(body)) {
+          fail(`Heartland|${name} must omit 2005–2009 (GAP — do not invent)`);
+        }
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const hlIdx = catalogIndex.Heartland;
+      if (!hlIdx) fail("Heartland missing from CATALOG_INDEX");
+      if (hlIdx["Sundance XLT"] || hlIdx["Sundance Ultra-Lite"]) {
+        fail("Heartland must not index Sundance XLT / Ultra-Lite as separate keys");
+      }
+      if (!hlIdx.Bighorn?.years?.includes(2008)) fail("Heartland|Bighorn index must include 2008");
+      if (
+        hlIdx.Bighorn?.years?.includes(2005) ||
+        hlIdx.Bighorn?.years?.includes(2006) ||
+        hlIdx.Bighorn?.years?.includes(2007) ||
+        hlIdx.Bighorn?.years?.includes(2009)
+      ) {
+        fail("Heartland|Bighorn index must omit 2005–07 / 2009 (GAP)");
+      }
+      if (!hlIdx.Cyclone?.years?.includes(2009)) fail("Heartland|Cyclone index must include 2009");
+      if (hlIdx.Cyclone?.years?.includes(2007) || hlIdx.Cyclone?.years?.includes(2008)) {
+        fail("Heartland|Cyclone index must omit 2007–08 (GAP)");
+      }
+      if (!hlIdx.Sundance?.years?.includes(2009)) fail("Heartland|Sundance index must include 2009");
+      if (
+        hlIdx.Sundance?.years?.includes(2005) ||
+        hlIdx.Sundance?.years?.includes(2006) ||
+        hlIdx.Sundance?.years?.includes(2007) ||
+        hlIdx.Sundance?.years?.includes(2008)
+      ) {
+        fail("Heartland|Sundance index must omit 2005–08 (GAP)");
+      }
+      for (const gap of ["Landmark", "Big Country", "Prowler", "Torque", "Road Warrior", "Gravity"]) {
+        if (
+          hlIdx[gap]?.years?.includes(2005) ||
+          hlIdx[gap]?.years?.includes(2006) ||
+          hlIdx[gap]?.years?.includes(2007) ||
+          hlIdx[gap]?.years?.includes(2008) ||
+          hlIdx[gap]?.years?.includes(2009)
+        ) {
+          fail(`Heartland|${gap} index must omit 2005–2009 (GAP)`);
+        }
+      }
+      if (hlIdx.Bighorn?.type !== "Fifth Wheel") fail("Heartland|Bighorn index must be Fifth Wheel");
+      if (hlIdx.Cyclone?.type !== "Toy Hauler") fail("Heartland|Cyclone index must be Toy Hauler");
+      if (hlIdx.Sundance?.type !== "Fifth Wheel") fail("Heartland|Sundance index must be Fifth Wheel");
+    }
+  }
+
   // Keystone MY2027 OEM lock + yearStart hygiene / Half-Ton 2027 + 25FKD Cougar TT scrub.
   // Sprinter MY2025–2026 from #100. This slice locks major-line MY2025–2026 from walk-back pack §6.
   {
