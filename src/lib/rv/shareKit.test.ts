@@ -131,6 +131,28 @@ test("kit always writes Summary and only writes rating when toggled", () => {
   assert.doesNotMatch(src, /include\.video/);
 });
 
+test("shared rating is the score only — no breakdown, summary, or notes", () => {
+  assert.match(src, /if \(include\.rating && snap\.rating\)/);
+  assert.match(src, /lines\.push\(snap\.rating\)/);
+  assert.doesNotMatch(src, /getRatingMetadata/);
+  assert.doesNotMatch(src, /tierLabel/);
+  assert.doesNotMatch(src, /yearNote/);
+  assert.doesNotMatch(src, /confidence confidence/);
+  assert.doesNotMatch(src, /RvFOX model:/);
+  assert.doesNotMatch(src, /Brand\/tier tables are editorial/);
+  assert.doesNotMatch(src, /NHTSA open campaigns/);
+  const detail = readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../../components/rvfax/RvDetail.tsx",
+    ),
+    "utf8",
+  );
+  assert.doesNotMatch(detail, /out of 5/);
+  assert.doesNotMatch(detail, /ratingMeta\.sources/);
+  assert.doesNotMatch(detail, /label="BRAND"/);
+});
+
 test("summary uses curated description and never invents specs", () => {
   const pitch = customerFacingPitch(
     "Newmar Essex — limited-production flagship diesel. Do not invent 2028 plans. yearEnd 2027.",

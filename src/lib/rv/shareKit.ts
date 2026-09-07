@@ -11,7 +11,6 @@ import {
   hydrateShareCoachResult as hydrateShareCoachFromLookup,
   type ShareCatalogLookup,
 } from "./shareCoachHydrate";
-import { getRatingMetadata } from "./ratingSystem";
 import {
   computeLoan,
   defaultAprForTerm,
@@ -366,20 +365,11 @@ export function kitStrengths(
 ): string[] {
   r = hydrateShareCoachResult(r);
   const b = coachBrochure(r);
-  const meta = getRatingMetadata(r.make, r.model, r.year);
   const out: string[] = [];
-  const score =
-    ratingScore != null && Number.isFinite(ratingScore) && ratingScore > 0
-      ? ratingScore
-      : meta.score;
-  if (includeRating) {
-    out.push(
-      `${meta.tierLabel} · ${score.toFixed(1)} / 5.0 · ${meta.confidence} confidence`,
-    );
-    if (meta.yearNote && !isSharePlaceholder(meta.yearNote)) {
-      out.push(meta.yearNote);
-    }
-  }
+  // Rating toggle still writes ★ score in RATING. Never leak breakdown,
+  // "out of 5 · tier · confidence", calculation prose, or disclaimer notes.
+  void ratingScore;
+  void includeRating;
   if (
     /diesel/i.test(b.fuelType) ||
     /diesel|cummins|isl|l9|x15/i.test(b.engine)

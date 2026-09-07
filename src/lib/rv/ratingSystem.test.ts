@@ -86,7 +86,10 @@ test("ratingFor / Facts / share stay wired to computeRating", () => {
   const detail = src("../../components/rvfax/RvDetail.tsx");
   assert.match(detail, /getRatingMetadata\(make, model, year/);
   assert.match(detail, /displayRating = ratingMeta.score/);
-  assert.match(detail, /label="NHTSA"/);
+  assert.doesNotMatch(detail, /out of 5/);
+  assert.doesNotMatch(detail, /ratingMeta\.sources/);
+  assert.doesNotMatch(detail, /label="BRAND"/);
+  assert.doesNotMatch(detail, /label="NHTSA"/);
   assert.match(detail, /Research notes — not in the RvFOX score/);
   const ratingSrc = src("ratingSystem.ts");
   assert.doesNotMatch(ratingSrc, /"iRV2 Owner Forums"|RVInsider\.com|r\/rving community/);
