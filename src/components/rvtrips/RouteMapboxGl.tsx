@@ -467,10 +467,14 @@ export function RouteMapboxGl({
       data-tile-source="mapbox"
       data-map-engine="mapbox-gl"
       data-follow-status={status}
-      className="relative overflow-hidden rounded-xl border border-white/12 bg-[#0b1410]"
+      className="relative z-0 isolate overflow-hidden rounded-xl border border-white/12 bg-[#0b1410]"
       style={{ height: MAP_PANEL_H }}
     >
-      <div ref={mapElRef} className="absolute inset-0" />
+      <div
+        ref={mapElRef}
+        data-mapbox-canvas-host
+        className="absolute inset-0 overflow-hidden"
+      />
 
       <div className="absolute right-2 top-12 z-[6] flex gap-1">
         <button

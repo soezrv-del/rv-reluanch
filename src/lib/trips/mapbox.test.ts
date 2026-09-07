@@ -136,3 +136,24 @@ test("Trips wires Mapbox as visual layer; truck routing stays HERE", () => {
   assert.match(env, /Vercel Production \+ Preview/);
   assert.doesNotMatch(env, /browser login|sign in to Mapbox/i);
 });
+
+test("Trips header chrome sits above the Mapbox canvas", () => {
+  const ui = readFileSync(
+    join(root, "../../components/rvtrips/RvTripsApp.tsx"),
+    "utf8",
+  );
+  const gl = readFileSync(
+    join(root, "../../components/rvtrips/RouteMapboxGl.tsx"),
+    "utf8",
+  );
+  const css = readFileSync(join(root, "../../styles.css"), "utf8");
+  assert.match(ui, /data-trips-chrome/);
+  assert.match(ui, /setTool\("dumps"\)/);
+  assert.match(ui, /aria-label="Edit trip"/);
+  assert.match(gl, /isolate/);
+  assert.match(gl, /data-mapbox-canvas-host/);
+  assert.match(css, /\[data-trips-chrome\]/);
+  assert.match(css, /z-index:\s*40/);
+  assert.match(css, /clip-path:\s*inset\(0\)/);
+  assert.match(css, /\[data-route-basemap\]/);
+});
