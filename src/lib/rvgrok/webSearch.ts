@@ -174,7 +174,7 @@ function researchInstructions(opts: {
     lengthRule,
     "Match the ask:",
     "- Specs/powertrain: OEM brochure / chassis sheet / door-sticker for THAT year + make + model + floorplan. Never invent horsepower (no silent 450). If not found, write UNKNOWN and what to verify.",
-    "- Troubleshooting / how-to / error codes / TSB / recall / install: likely symptoms, common OEM/forum/manual fixes, safety caveats. Cite uncertainty. Do not invent a campaign number or a diagnosis you cannot support.",
+    "- Troubleshooting / how-to / error codes / TSB / recall / install: likely symptoms, common OEM/forum/manual fixes, safety caveats. Cite uncertainty. Do not invent a campaign number, torque spec, part number, wiring color, sensor bypass, or a diagnosis you cannot support. Prefer OEM procedure / NHTSA. If none found, write UNKNOWN / no OEM procedure.",
     "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
     "Floorplan letters are labels only — do not decode bunks or a half-bath from the code.",
     opts.catalog

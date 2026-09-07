@@ -17,6 +17,7 @@ import {
 } from "./liveVoice";
 import type { ActiveCoach } from "../rv/activeCoach";
 import { buildChatGrounding } from "./grounding";
+import { looksLikeRepairQuestion, REPAIR_VOICE_PLAYBOOK } from "./repairMode";
 import {
   decideVoiceWebResearch,
   fetchVoiceWebResearchNotes,
@@ -817,7 +818,9 @@ export class GrokRealtimeSession {
           type: "response.create",
           response: {
             modalities: ["text", "audio"],
-            instructions: VOICE_RESEARCH_ANSWER_INSTRUCTIONS,
+            instructions: looksLikeRepairQuestion(this.lastResearchTranscript)
+              ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\n${REPAIR_VOICE_PLAYBOOK}`
+              : VOICE_RESEARCH_ANSWER_INSTRUCTIONS,
           },
         }),
       );
