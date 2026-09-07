@@ -163,6 +163,9 @@ export function BottomTabs({
                 <span aria-hidden className="bottom-tab-etch-halo">
                   {short}
                 </span>
+                <span aria-hidden className="bottom-tab-etch-core">
+                  {short}
+                </span>
                 <span aria-hidden className="bottom-tab-etch-bevel">
                   {short}
                 </span>

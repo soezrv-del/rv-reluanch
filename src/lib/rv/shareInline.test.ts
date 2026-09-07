@@ -63,10 +63,14 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(css, /--dock-label-size:\s*1rem/);
   assert.match(css, /\.bottom-tabs-frost/);
   assert.match(tabs, /bottom-tab-etch-halo/);
+  assert.match(tabs, /bottom-tab-etch-core/);
   assert.match(tabs, /bottom-tab-etch-bevel/);
   assert.match(tabs, /bottom-tab-etch-face/);
+  assert.match(css, /\.bottom-tab-etch-core/);
   assert.match(css, /\.bottom-tab-etch-face/);
-  assert.match(css, /-webkit-text-stroke:\s*0\.7px/);
-  assert.match(css, /\.bottom-tab-label\.is-etched-active \.bottom-tab-etch-face/);
+  assert.match(css, /\.bottom-tab-etch-core[\s\S]*background-clip:\s*text/);
+  assert.match(css, /drop-shadow\(0 -0\.45px 0 rgba\(255, 255, 255, 0\.98\)\)/);
+  assert.match(css, /\.bottom-tab-label\.is-etched-active \.bottom-tab-etch-core/);
   assert.doesNotMatch(css, /--color-dock-etch:/);
+  assert.doesNotMatch(css, /\.bottom-tab-etch-face[\s\S]{0,180}-webkit-text-stroke/);
 });
