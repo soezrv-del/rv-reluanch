@@ -241,7 +241,7 @@ export function AppShell() {
     active: tab,
     onChange: onTabChange,
     // Suite panes only — never the dock. Ancestor capture listeners on
-    // the shell eat Android WebView clicks on Facts/Cal/Tow/Trips/Share/Grok.
+    // the shell eat Android WebView clicks on Facts/Cal/Tow/Trips/Grok.
     targetRef: mainRef,
     threshold: 24,
     enabled: !launchOpen,

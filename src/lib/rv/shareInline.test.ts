@@ -31,15 +31,25 @@ test("Share kit is inline at the bottom of the Facts report", () => {
   assert.doesNotMatch(kit, /Try a sample kit/);
 });
 
-test("Share dock / launch / More deep-link to Facts — no standalone pane", () => {
+test("Share launch / More deep-link to Facts — no dock tab, no standalone pane", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   const tabs = read("../../components/shell/BottomTabs.tsx");
+  const constants = read("../../components/shell/shellConstants.ts");
   const launch = read("../../components/shell/Launchpad.tsx");
   const more = read("../../components/more/MoreApp.tsx");
   const fax = read("../../components/rvfax/RvFaxApp.tsx");
   const shareApp = read("../../components/rvshare/RvShareApp.tsx");
+  const css = read("../../styles.css");
 
-  assert.match(tabs, /id: "rvshare"/);
+  assert.match(tabs, /\| "rvshare"/);
+  assert.doesNotMatch(tabs, /id: "rvshare"/);
+  assert.match(tabs, /grid-cols-5/);
+  assert.match(tabs, /bottom-tabs-frost/);
+  assert.match(
+    constants,
+    /TAB_ORDER = \[\s*"rvfax",\s*"rvcal",\s*"rvtow",\s*"rvtrips",\s*"rvgrok",\s*\]/,
+  );
+  assert.doesNotMatch(constants, /TAB_ORDER = \[[^\]]*rvshare/);
   assert.match(launch, /id: "rvshare"/);
   assert.match(more, /onNavigate\?\.\("rvshare"\)/);
   assert.match(shell, /openFactsShare/);
@@ -50,4 +60,7 @@ test("Share dock / launch / More deep-link to Facts — no standalone pane", () 
   assert.match(fax, /shareFocusToken=\{shareFocusToken\}/);
   assert.match(shareApp, /openFactsShare/);
   assert.match(shareApp, /Opening the coach report to Share/);
+  assert.match(css, /--dock-label-size:\s*0\.9375rem/);
+  assert.match(css, /\.bottom-tabs-frost/);
+  assert.match(css, /\.bottom-tab-label\.is-etched-active/);
 });

@@ -57,6 +57,14 @@
     0 12px 40px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.38),
     inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+
+  --dock-label-size: 0.9375rem;
+  --dock-label-size-sm: 1rem;
+  --dock-label-track: 0.05em;
+  --color-dock-etch: rgba(210, 226, 248, 0.78);
+  --color-dock-etch-active: rgba(244, 249, 255, 0.96);
+  --color-dock-etch-grok: rgba(255, 214, 220, 0.8);
+  --color-dock-etch-grok-active: rgba(255, 236, 238, 0.96);
 }
 
 @layer base {
@@ -274,7 +282,7 @@
   }
 
   .bottom-tab-label {
-    font-size: 11px !important;
+    font-size: 0.8125rem !important;
     letter-spacing: 0.04em !important;
   }
 
@@ -724,7 +732,7 @@
   );
 }
 
-/* Dock — obsidian platinum island */
+/* Dock — frosted glass, labels etched into the plate */
 .bottom-tabs-nav {
   z-index: 80;
   touch-action: manipulation;
@@ -732,26 +740,55 @@
 .bottom-tabs-dock {
   background: linear-gradient(
     180deg,
-    rgba(18, 24, 42, 0.82) 0%,
-    rgba(6, 10, 22, 0.9) 48%,
-    rgba(4, 8, 16, 0.94) 100%
+    rgba(210, 226, 255, 0.2) 0%,
+    rgba(90, 130, 190, 0.12) 32%,
+    rgba(18, 28, 52, 0.4) 68%,
+    rgba(8, 14, 28, 0.52) 100%
   );
-  border: 1px solid rgba(210, 224, 255, 0.22);
+  border: 1px solid rgba(220, 234, 255, 0.34);
   box-shadow:
-    0 18px 48px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -1px 0 rgba(40, 70, 140, 0.28);
-  backdrop-filter: blur(28px) saturate(1.55);
-  -webkit-backdrop-filter: blur(28px) saturate(1.55);
+    0 16px 40px rgba(0, 8, 24, 0.38),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.52),
+    inset 0 -1px 0 rgba(20, 40, 80, 0.32),
+    inset 0 0 28px rgba(160, 196, 240, 0.08);
+  backdrop-filter: blur(40px) saturate(1.75);
+  -webkit-backdrop-filter: blur(40px) saturate(1.75);
+}
+.bottom-tabs-frost {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(255, 255, 255, 0.03) 1px,
+      rgba(255, 255, 255, 0.03) 2px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(190, 214, 255, 0.025) 1px,
+      rgba(190, 214, 255, 0.025) 2px
+    );
+  mix-blend-mode: overlay;
+  opacity: 0.7;
 }
 .bottom-tabs-dock-ruby {
-  border-color: rgba(255, 180, 190, 0.22);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 214, 220, 0.18) 0%,
+    rgba(180, 60, 80, 0.12) 32%,
+    rgba(40, 12, 20, 0.42) 68%,
+    rgba(22, 6, 12, 0.52) 100%
+  );
+  border-color: rgba(255, 200, 208, 0.34);
   box-shadow:
-    0 18px 48px rgba(0, 0, 0, 0.55),
-    0 0 24px rgba(212, 37, 53, 0.12),
-    inset 0 1px 0 rgba(255, 220, 224, 0.22),
-    inset 0 -1px 0 rgba(120, 20, 40, 0.28);
+    0 16px 40px rgba(24, 0, 8, 0.36),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 230, 234, 0.48),
+    inset 0 -1px 0 rgba(80, 16, 28, 0.32),
+    inset 0 0 28px rgba(255, 120, 140, 0.08);
 }
 .bottom-tabs-ambient {
   background: radial-gradient(
@@ -1041,8 +1078,46 @@
   z-index: 3;
 }
 .bottom-tab-label {
-  color: #fff;
-  text-shadow: 0 1px 8px rgba(0, 10, 40, 0.55);
+  font-size: var(--dock-label-size);
+  letter-spacing: var(--dock-label-track);
+  color: var(--color-dock-etch);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.42),
+    0 -1px 0 rgba(6, 12, 28, 0.5);
+}
+@media (min-width: 640px) {
+  .bottom-tab-label {
+    font-size: var(--dock-label-size-sm);
+    letter-spacing: 0.06em;
+  }
+}
+.bottom-tab-label.is-etched-active {
+  color: var(--color-dock-etch-active);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55),
+    0 -1px 0 rgba(8, 22, 52, 0.32),
+    0 0 12px rgba(142, 197, 255, 0.32);
+}
+.bottom-tab-label-grok {
+  color: var(--color-dock-etch-grok);
+}
+.bottom-tab-label-grok.is-etched-active {
+  color: var(--color-dock-etch-grok-active);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.48),
+    0 -1px 0 rgba(40, 8, 16, 0.38),
+    0 0 12px rgba(255, 120, 140, 0.28);
+}
+.bottom-tab-mark {
+  height: 2px;
+  width: 0.875rem;
+  border-radius: 999px;
+  background: var(--color-sapphire-glow);
+  box-shadow: 0 0 8px rgba(140, 200, 255, 0.7);
+}
+.bottom-tab-mark-ruby {
+  background: var(--color-ruby-glow);
+  box-shadow: 0 0 8px rgba(255, 90, 110, 0.75);
 }
 .bottom-tab-label-sapphire {
   background: linear-gradient(180deg, #fff 0%, #cfe4ff 45%, #8ec5ff 100%);
