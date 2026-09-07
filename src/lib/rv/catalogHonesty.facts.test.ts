@@ -368,6 +368,61 @@ test("Forest River thin-line Facts SoT: 2010–2014 dated locks + empty GAP year
   assert.doesNotMatch(rpod, /"22RB"/);
 });
 
+test("Alliance RV Facts SoT: dated 2026 brochure + RVUSA 2027 locks; V-Series GAP", () => {
+  const block = src("rvData.ts");
+  const a0 = block.indexOf('\n  "Alliance RV": {');
+  const a1 = block.indexOf('\n  "Highland Ridge": {');
+  assert.ok(a0 > 0 && a1 > a0, "expected Alliance RV block");
+  const alli = block.slice(a0, a1);
+
+  const paradigm = alli.slice(alli.indexOf("    Paradigm: {"), alli.indexOf("    Avenue: {"));
+  assert.match(
+    paradigm,
+    /"2026": \[\s*"295MK",\s*"310RL",\s*"312RK",\s*"340RL",\s*"370FB",\s*"375RD",\s*"382RK",\s*"385FL",\s*"388SP",\s*"395DS"\s*\]/,
+  );
+  assert.match(
+    paradigm,
+    /"2027": \[\s*"310RL",\s*"312RK",\s*"340RL",\s*"370FB",\s*"375RD",\s*"382RK",\s*"385FL",\s*"386FL",\s*"388SP",\s*"395DS"\s*\]/,
+  );
+  assert.doesNotMatch(paradigm, /"2026": .*"395MK"/);
+  assert.doesNotMatch(paradigm, /"373FB"/);
+  assert.match(paradigm, /hitchType: "king pin"/);
+
+  const avenue = alli.slice(alli.indexOf("    Avenue: {"), alli.indexOf("    Valor: {"));
+  assert.match(avenue, /"2026": \["32RLS", "33RKS", "35RKS", "38DBL", "39MBR"\]/);
+  assert.match(avenue, /"2027": \["32RLS", "34RLS", "35RKS", "38DBL", "39MBR"\]/);
+  assert.doesNotMatch(avenue, /"332RL"|"333BH"|"25RL"/);
+  assert.match(avenue, /type: "Fifth Wheel"/);
+
+  const valor = alli.slice(alli.indexOf("    Valor: {"), alli.indexOf('    "Valor V-Series": {'));
+  assert.match(valor, /"2026": \["36V11", "37V11", "40V13", "41V13", "41V16", "42V14", "44V14"\]/);
+  assert.match(
+    valor,
+    /"2027": \[\s*"23T15",\s*"27T14",\s*"32T13",\s*"36V11",\s*"37V11",\s*"41V13",\s*"4213",\s*"4216",\s*"44V14"\s*\]/,
+  );
+  assert.doesNotMatch(valor, /"32A10"|"35A14"|"36A10"/);
+
+  const vseries = alli.slice(alli.indexOf('    "Valor V-Series": {'), alli.indexOf("    Delta: {"));
+  assert.doesNotMatch(vseries, /"2026":|"2027":/);
+  assert.match(vseries, /yearEnd:\s*2025/);
+
+  const delta = alli.slice(alli.indexOf("    Delta: {"), alli.indexOf("    Benchmark: {"));
+  assert.match(delta, /type: "Travel Trailer"/);
+  assert.match(delta, /hitchType: "bumper-pull"/);
+  assert.doesNotMatch(delta, /"2022":|"2023":|"2024":/);
+  assert.doesNotMatch(delta, /"282RK"|"294RL"|"312BH"|"RB152"/);
+  assert.match(delta, /"274RKW"/);
+  assert.match(delta, /yearStart:\s*2023/);
+
+  const bench = alli.slice(alli.indexOf("    Benchmark: {"));
+  assert.match(bench, /type: "Travel Trailer"/);
+  assert.match(bench, /"2026": \["42LFT", "44LFT", "44RKL"\]/);
+  assert.match(bench, /"2027": \["42LFT", "44LFT", "44RKL"\]/);
+  assert.doesNotMatch(bench, /"2023":|"2024":|"2025":/);
+  assert.doesNotMatch(bench, /"29BH"|"37FL"/);
+  assert.match(bench, /yearStart:\s*2025/);
+});
+
 test("Palomino Facts SoT: Sabre quarantined; SolAire MY2026 brochure lock; MY2027 GAP", () => {
   const block = src("rvData.ts");
   const p0 = block.indexOf("\n  Palomino: {");
