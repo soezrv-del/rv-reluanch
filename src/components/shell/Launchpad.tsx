@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import {
   Calculator,
-  ChevronDown,
   FileText,
   MapPin,
   MessageCircle,
@@ -10,65 +9,30 @@ import {
   Truck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { hapticMedium } from "@/lib/haptics";
-import { isStationaryDockTap } from "@/lib/hooks/nativeWebView";
+import { hapticLight, hapticMedium } from "@/lib/haptics";
+import { DOCK_TAP_SLOP, isStationaryDockTap } from "@/lib/hooks/nativeWebView";
 import type { AppTab } from "./BottomTabs";
+import { PAGE_COPY } from "./shellConstants";
 import sealPoster from "@/assets/splash/rvfox-launch-seal-poster.jpg";
-import {
-  RVFOX_LAUNCH_SEAL,
-  RVFOX_LAUNCH_SEAL_LITE,
-  RVFOX_LAUNCH_SEAL_ULTRA,
-} from "@/assets/launchMedia";
 
-const TOOLS: {
+/** Cover open / page-turn budgets — keep both under 500ms. */
+export const COVER_FLIP_MS = 380;
+export const PAGE_TURN_MS = 320;
+
+const LAUNCH_PAGES: {
   id: AppTab;
   title: string;
   blurb: string;
   Icon: typeof MessageCircle;
 }[] = [
-  { id: "rvfax", title: "RvFACTS", blurb: "Get specs, market value, ratings, NHTSA recalls, and more", Icon: FileText },
-  { id: "rvcal", title: "RvCal", blurb: "ZIP-based calculator with lender comparisons", Icon: Calculator },
-  { id: "rvtow", title: "RvTow", blurb: "Tow match", Icon: Truck },
-  { id: "rvtrips", title: "RvTrips", blurb: "RV GPS with campgrounds, dump stations, and more", Icon: MapPin },
-  { id: "rvshare", title: "RvShare", blurb: "Send a brochure summary from the coach report", Icon: Share2 },
-  { id: "rvgrok", title: "RvGrok", blurb: "Your RV expert — from the best fishing spots to troubleshooting your RV", Icon: MessageCircle },
-  { id: "more", title: "Premium", blurb: "Settings", Icon: Shield },
+  { id: "rvfax", title: "RvFacts", blurb: PAGE_COPY.rvfax.line, Icon: FileText },
+  { id: "rvgrok", title: "RvGrok", blurb: PAGE_COPY.rvgrok.line, Icon: MessageCircle },
+  { id: "rvcal", title: "RvCal", blurb: PAGE_COPY.rvcal.line, Icon: Calculator },
+  { id: "rvtow", title: "RvTow", blurb: PAGE_COPY.rvtow.line, Icon: Truck },
+  { id: "rvtrips", title: "RvTrips", blurb: PAGE_COPY.rvtrips.line, Icon: MapPin },
+  { id: "rvshare", title: "RvShare", blurb: PAGE_COPY.rvshare.line, Icon: Share2 },
+  { id: "more", title: "Premium", blurb: PAGE_COPY.more.line, Icon: Shield },
 ];
-
-const LAUNCH_SEAL = RVFOX_LAUNCH_SEAL;
-const LAUNCH_SEAL_LITE = RVFOX_LAUNCH_SEAL_LITE;
-const LAUNCH_SEAL_ULTRA = RVFOX_LAUNCH_SEAL_ULTRA;
-
-function isNativeOrIOS(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    const cap = (
-      window as Window & { Capacitor?: { isNativePlatform?: () => boolean } }
-    ).Capacitor;
-    if (cap?.isNativePlatform?.()) return true;
-  } catch {
-    /* */
-  }
-  return /iPhone|iPad|iPod|Capacitor/i.test(navigator.userAgent || "");
-}
-
-function pickLaunchVideo(): string {
-  if (isNativeOrIOS()) return LAUNCH_SEAL_ULTRA;
-  try {
-    const conn = (
-      navigator as Navigator & {
-        connection?: { saveData?: boolean; effectiveType?: string };
-      }
-    ).connection;
-    if (conn?.saveData) return LAUNCH_SEAL_ULTRA;
-    const t = conn?.effectiveType;
-    if (t === "slow-2g" || t === "2g") return LAUNCH_SEAL_ULTRA;
-    if (t === "3g") return LAUNCH_SEAL_LITE;
-  } catch {
-    /* */
-  }
-  return LAUNCH_SEAL;
-}
 
 function hideNativeSplash() {
   void (async () => {
@@ -79,6 +43,11 @@ function hideNativeSplash() {
       /* */
     }
   })();
+}
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
 }
 
 /**
@@ -152,279 +121,348 @@ export function MetalVerifiedTrue({
 }
 
 /**
- * Splash launch — full-bleed seal ray film + transparent tool menu.
- * Any tool button or Enter suite stops the video immediately.
+ * Leather field-guide launch — embossed emblem on the cover, then a book pager.
+ * Cover tap/swipe-left flips to page one (RvFacts). Each leaf opens that tool.
  */
 export function Launchpad({
   onSelect,
-  onSkip,
+  onSkip: _onSkip,
   menuImageSrc,
-  videoSrc,
+  videoSrc: _videoSrc,
 }: {
   onSelect: (tab: AppTab) => void;
   onSkip: () => void;
   menuImageSrc?: string;
   videoSrc?: string;
 }) {
-  const [hi, setHi] = useState(0);
-  const [videoPlaying, setVideoPlaying] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const listRef = useRef<HTMLDivElement | null>(null);
-  const pressRef = useRef<{
-    id: AppTab;
+  const [opened, setOpened] = useState(false);
+  const [flipping, setFlipping] = useState(false);
+  const [page, setPage] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const flipTimer = useRef<number>(0);
+  const fireLock = useRef(0);
+  const swipeConsumed = useRef(false);
+  const gesture = useRef<{
+    id: number;
     x: number;
     y: number;
-    scroll: number;
+    t: number;
+    swiping: boolean;
+    lastX: number;
+    lastT: number;
   } | null>(null);
-  const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(
-    () => videoSrc,
-  );
-  const poster = menuImageSrc ?? sealPoster;
+  const emblem = menuImageSrc ?? sealPoster;
 
   useEffect(() => {
     hideNativeSplash();
   }, []);
 
   useEffect(() => {
-    setResolvedSrc(videoSrc ?? pickLaunchVideo());
-  }, [videoSrc]);
-
-  useEffect(() => {
-    const t = window.setInterval(() => {
-      setHi((i) => (i + 1) % TOOLS.length);
-    }, 2400);
-    return () => window.clearInterval(t);
+    return () => {
+      if (flipTimer.current) window.clearTimeout(flipTimer.current);
+    };
   }, []);
 
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v || !resolvedSrc) return;
-    let cancelled = false;
-    v.muted = true;
-    v.defaultMuted = true;
-    v.playsInline = true;
-    v.loop = true;
-    v.setAttribute("playsinline", "true");
-    v.setAttribute("webkit-playsinline", "true");
+  const once = (fn: () => void) => {
+    const now = performance.now();
+    if (now - fireLock.current < 400) return;
+    fireLock.current = now;
+    fn();
+  };
 
-    const onPlaying = () => {
-      if (!cancelled) setVideoPlaying(true);
-    };
-    const onError = () => {
-      if (!cancelled) setVideoPlaying(false);
-    };
-    v.addEventListener("playing", onPlaying);
-    v.addEventListener("error", onError);
-
-    void v.play().catch(() => {
-      if (!cancelled) setVideoPlaying(false);
-    });
-
-    return () => {
-      cancelled = true;
-      v.removeEventListener("playing", onPlaying);
-      v.removeEventListener("error", onError);
-      try {
-        v.pause();
-      } catch {
-        /* */
-      }
-    };
-  }, [resolvedSrc]);
-
-  /** Stop seal film immediately — call from every exit control. */
-  const stopVideo = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    try {
-      v.pause();
-      v.currentTime = 0;
-      v.loop = false;
-      // Drop the media source so decode can't continue during fade-out
-      v.removeAttribute("src");
-      v.load();
-    } catch {
-      /* */
+  const openBook = () => {
+    if (opened || flipping) return;
+    void hapticMedium();
+    if (prefersReducedMotion()) {
+      setOpened(true);
+      setPage(0);
+      return;
     }
-    setVideoPlaying(false);
+    setFlipping(true);
+    flipTimer.current = window.setTimeout(() => {
+      setOpened(true);
+      setFlipping(false);
+      setPage(0);
+    }, COVER_FLIP_MS);
+  };
+
+  const closeBook = () => {
+    if (!opened || flipping) return;
+    void hapticLight();
+    setPage(0);
+    setDragX(0);
+    setOpened(false);
+    setFlipping(false);
   };
 
   const pickTool = (id: AppTab) => {
-    stopVideo();
-    void hapticMedium();
-    onSelect(id);
+    if (swipeConsumed.current) return;
+    once(() => {
+      void hapticMedium();
+      onSelect(id);
+    });
   };
 
-  const enterSuite = () => {
-    stopVideo();
-    void hapticMedium();
-    onSkip();
+  const markSwipe = () => {
+    swipeConsumed.current = true;
+    window.setTimeout(() => {
+      swipeConsumed.current = false;
+    }, 420);
   };
 
-  const onToolPointerDown = (
-    id: AppTab,
-    index: number,
-    e: ReactPointerEvent<HTMLButtonElement>,
-  ) => {
-    pressRef.current = {
-      id,
+  const goPage = (next: number) => {
+    const clamped = Math.max(0, Math.min(LAUNCH_PAGES.length - 1, next));
+    if (clamped === page) {
+      setDragX(0);
+      return;
+    }
+    void hapticLight();
+    setPage(clamped);
+    setDragX(0);
+  };
+
+  const onCoverPointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    gesture.current = {
+      id: e.pointerId,
       x: e.clientX,
       y: e.clientY,
-      scroll: listRef.current?.scrollTop ?? 0,
+      t: performance.now(),
+      swiping: false,
+      lastX: e.clientX,
+      lastT: performance.now(),
     };
-    setHi(index);
   };
 
-  const onToolPointerUp = (
-    id: AppTab,
-    e: ReactPointerEvent<HTMLButtonElement>,
-  ) => {
-    const p = pressRef.current;
-    pressRef.current = null;
-    if (!p || p.id !== id) return;
-    if (!isStationaryDockTap(e.clientX - p.x, e.clientY - p.y)) return;
-    if (Math.abs((listRef.current?.scrollTop ?? 0) - p.scroll) > 2) return;
-    pickTool(id);
+  const onCoverPointerUp = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    const g = gesture.current;
+    gesture.current = null;
+    if (!g) return;
+    const dx = e.clientX - g.x;
+    const dy = e.clientY - g.y;
+    if (isStationaryDockTap(dx, dy) || dx < -40) openBook();
   };
+
+  const onPagerPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    gesture.current = {
+      id: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      t: performance.now(),
+      swiping: false,
+      lastX: e.clientX,
+      lastT: performance.now(),
+    };
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* */
+    }
+  };
+
+  const onPagerPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const g = gesture.current;
+    if (!g || g.id !== e.pointerId) return;
+    const dx = e.clientX - g.x;
+    const dy = e.clientY - g.y;
+    if (!g.swiping) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      if (Math.abs(dx) <= Math.abs(dy) * 0.85) return;
+      g.swiping = true;
+      setDragging(true);
+    }
+    g.lastX = e.clientX;
+    g.lastT = performance.now();
+    const width = viewportRef.current?.clientWidth ?? window.innerWidth;
+    const atStart = page <= 0 && dx > 0;
+    const atEnd = page >= LAUNCH_PAGES.length - 1 && dx < 0;
+    const rubber = atStart || atEnd ? 0.35 : 1;
+    setDragX(dx * rubber);
+    if (Math.abs(dx) > width) {
+      setDragX(Math.sign(dx) * width);
+    }
+  };
+
+  const finishPagerGesture = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const g = gesture.current;
+    gesture.current = null;
+    setDragging(false);
+    if (!g) return;
+    const dx = e.clientX - g.x;
+    const dy = e.clientY - g.y;
+    const dt = Math.max(1, performance.now() - g.t);
+    const vx = dx / dt;
+
+    if (g.swiping) {
+      markSwipe();
+      const width = viewportRef.current?.clientWidth ?? window.innerWidth;
+      const needed = Math.abs(vx) > 0.35 ? 18 : width * 0.18;
+      if (dx < -needed) goPage(page + 1);
+      else if (dx > needed) {
+        if (page <= 0) closeBook();
+        else goPage(page - 1);
+      } else setDragX(0);
+      return;
+    }
+
+    if (!isStationaryDockTap(dx, dy, DOCK_TAP_SLOP)) {
+      setDragX(0);
+      return;
+    }
+    const dest = LAUNCH_PAGES[page];
+    if (dest) pickTool(dest.id);
+  };
+
+  const onPagerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (dragging || swipeConsumed.current || gesture.current?.swiping) {
+      e.preventDefault();
+      return;
+    }
+    const dest = LAUNCH_PAGES[page];
+    if (dest) pickTool(dest.id);
+  };
+
+  useEffect(() => {
+    if (!opened) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (page <= 0) closeBook();
+        else goPage(page - 1);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        goPage(page + 1);
+      } else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        const dest = LAUNCH_PAGES[page];
+        if (dest) pickTool(dest.id);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        closeBook();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // page is enough — goPage/closeBook/pickTool are stable enough for this overlay
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opened, page]);
+
+  const stripX = `calc(${-page * 100}% + ${dragX}px)`;
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-[#050508] text-white"
+      className="leather-launch fixed inset-0 z-[100] flex flex-col overflow-hidden bg-bg text-fg"
       data-no-swipe
+      data-magazine-open={opened ? "true" : "false"}
       onTouchMove={(e) => e.stopPropagation()}
     >
-      <div className="pointer-events-none absolute inset-0">
-        <img
-          src={poster}
-          alt=""
-          className={cn(
-            "absolute inset-0 size-full object-cover object-center transition-opacity duration-500",
-            videoPlaying ? "opacity-0" : "opacity-100",
-          )}
-          draggable={false}
-          decoding="async"
-          fetchPriority="high"
-        />
-        <video
-          ref={videoRef}
-          className={cn(
-            "absolute inset-0 size-full object-cover object-center transition-opacity duration-500",
-            videoPlaying ? "opacity-100" : "opacity-0",
-          )}
-          src={resolvedSrc}
-          poster={typeof poster === "string" ? poster : undefined}
-          muted
-          playsInline
-          loop
-          preload="metadata"
-          aria-hidden
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/55" />
-      </div>
+      <svg className="absolute h-0 w-0" aria-hidden>
+        <filter id="leather-grain" x="0%" y="0%" width="100%" height="100%">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.72"
+            numOctaves="4"
+            stitchTiles="stitch"
+            result="noise"
+          />
+          <feColorMatrix
+            type="matrix"
+            values="0 0 0 0 0.08  0 0 0 0 0.06  0 0 0 0 0.05  0 0 0 0.55 0"
+          />
+        </filter>
+      </svg>
 
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.85rem,env(safe-area-inset-top))]">
-        <div className="flex shrink-0 flex-col items-center pt-2 text-center">
-          <p className="text-[10px] font-extrabold tracking-[0.28em] text-sky-100/90 drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
-            RVFOX PRO
-          </p>
-          <h1 className="mt-1 text-[clamp(2.35rem,11vw,3.1rem)] font-black leading-none tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]">
-            <span className="text-white">Rv</span>
-            <span className="bg-gradient-to-b from-sky-100 via-sky-300 to-blue-400 bg-clip-text text-transparent">
-              FOX
-            </span>
-          </h1>
-          <div className="mt-3">
-            <MetalVerifiedTrue size="lg" />
-          </div>
-          <p className="mt-2 text-[13px] font-medium text-white/80 drop-shadow-[0_1px_8px_rgba(0,0,0,0.55)]">
-            Know before you buy.
-          </p>
-        </div>
-
-        <div className="mx-auto mt-3 flex w-full max-w-sm min-h-0 flex-1 flex-col">
-          <div className="flex shrink-0 flex-col items-center gap-0.5 py-1.5">
-            <p className="text-[10px] font-bold tracking-[0.28em] text-white/45">
-              FEATURES
-            </p>
-            <ChevronDown className="size-3.5 text-white/35" strokeWidth={2} />
-          </div>
-
-          <div className="flex min-h-0 flex-1 flex-col">
+      <div className="leather-stage flex min-h-0 flex-1 items-center justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.65rem,env(safe-area-inset-top))] sm:px-5">
+        <div className="leather-book relative mx-auto flex h-full w-full max-w-md">
+          <div
+            ref={viewportRef}
+            className="leather-viewport relative flex min-h-0 min-w-0 flex-1 overflow-hidden"
+          >
             <div
-              ref={listRef}
-              className="pointer-events-auto min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-[1.5rem] border border-white/22 bg-white/[0.03] p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.18)] backdrop-blur-[1.5px]"
-              style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}
+              className={cn(
+                "leather-strip flex h-full",
+                dragging ? "leather-strip-dragging" : "leather-strip-snap",
+              )}
+              style={{ transform: `translate3d(${stripX}, 0, 0)` }}
+              onPointerDown={opened ? onPagerPointerDown : undefined}
+              onPointerMove={opened ? onPagerPointerMove : undefined}
+              onPointerUp={opened ? finishPagerGesture : undefined}
+              onPointerCancel={opened ? finishPagerGesture : undefined}
+              onClick={opened ? onPagerClick : undefined}
+              role={opened ? "group" : undefined}
+              aria-label={opened ? "RvFOX book pages" : undefined}
             >
-              {TOOLS.map((item, index) => {
-                const active = index === hi;
+              {LAUNCH_PAGES.map((item, index) => {
                 const Icon = item.Icon;
                 return (
-                  <button
+                  <section
                     key={item.id}
-                    type="button"
+                    className="leather-page"
+                    data-magazine-page={item.id}
                     data-launch-tool={item.id}
-                    onPointerDown={(e) => onToolPointerDown(item.id, index, e)}
-                    onPointerUp={(e) => onToolPointerUp(item.id, e)}
-                    onPointerCancel={() => {
-                      pressRef.current = null;
-                    }}
-                    onClick={() => pickTool(item.id)}
-                    className={cn(
-                      "pointer-events-auto flex w-full items-center gap-3 rounded-[1.15rem] px-3 py-2 text-left transition-all duration-300 ease-out touch-manipulation select-none",
-                      active
-                        ? "scale-[1.01] bg-gradient-to-r from-sky-500/90 via-blue-500/85 to-blue-600/90 shadow-[0_0_28px_rgba(56,140,255,0.45)]"
-                        : "bg-transparent hover:bg-white/[0.07]",
-                    )}
+                    aria-hidden={!opened || index !== page}
                   >
-                    <span
-                      className={cn(
-                        "flex size-9 shrink-0 items-center justify-center rounded-full border",
-                        active
-                          ? "border-white/25 bg-white/15 text-white"
-                          : "border-white/18 bg-white/[0.06] text-sky-300",
-                      )}
-                    >
-                      <Icon className="size-4" strokeWidth={2.1} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[15px] font-bold leading-tight text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.7)]">
-                        {item.title}
-                      </span>
-                      <span
-                        className={cn(
-                          "mt-0.5 block text-[11.5px] leading-snug drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)]",
-                          active ? "text-white/90" : "text-white/72",
-                        )}
-                      >
-                        {item.blurb}
-                      </span>
-                    </span>
-                  </button>
+                    <p className="leather-folio">
+                      {String(index + 1).padStart(2, "0")} /{" "}
+                      {String(LAUNCH_PAGES.length).padStart(2, "0")}
+                    </p>
+                    <div className="leather-page-icon" aria-hidden>
+                      <Icon className="size-7" strokeWidth={1.75} />
+                    </div>
+                    <h2 className="leather-page-title">{item.title}</h2>
+                    <p className="leather-page-blurb">{item.blurb}</p>
+                    <p className="leather-page-cue">Tap to open</p>
+                  </section>
                 );
               })}
             </div>
-          </div>
-        </div>
 
-        <div className="relative mt-auto flex shrink-0 flex-col items-center gap-2 pb-1 pt-6">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-[-30%] -bottom-4 top-0 -z-0"
-            style={{
-              background:
-                "radial-gradient(ellipse 75% 90% at 50% 75%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.22) 32%, rgba(255,255,255,0.06) 55%, transparent 75%)",
-            }}
-          />
-          <button
-            type="button"
-            onClick={enterSuite}
-            className="relative z-10 w-full max-w-sm rounded-full border border-white/60 bg-white/18 py-3.5 text-[14px] font-semibold tracking-wide text-white shadow-[0_0_28px_rgba(255,255,255,0.55),0_0_56px_rgba(255,255,255,0.28),0_0_90px_rgba(255,255,255,0.12),inset_0_1px_0_rgba(255,255,255,0.55)] backdrop-blur-md active:scale-[0.99]"
-          >
-            Enter suite
-          </button>
-          <p className="relative z-10 text-[10px] text-white/60">
-            Or tap any tool above
-          </p>
+            <button
+              type="button"
+              data-magazine-cover
+              data-book-cover
+              aria-label="Open RvFOX — Verified and True"
+              disabled={opened && !flipping}
+              onPointerDown={onCoverPointerDown}
+              onPointerUp={onCoverPointerUp}
+              onPointerCancel={() => {
+                gesture.current = null;
+              }}
+              onClick={() => {
+                if (!opened && !flipping) openBook();
+              }}
+              className={cn(
+                "leather-cover",
+                flipping && "is-flipping",
+                opened && !flipping && "is-gone",
+              )}
+            >
+              <span aria-hidden className="leather-cover-plate" />
+              <span aria-hidden className="leather-cover-grain" />
+              <span aria-hidden className="leather-cover-crease" />
+
+              <span className="leather-emblem-well">
+                <span className="leather-emblem-die">
+                  <img
+                    src={emblem}
+                    alt=""
+                    className="leather-emblem-stamp"
+                    draggable={false}
+                    decoding="async"
+                    fetchPriority="high"
+                  />
+                </span>
+              </span>
+
+              <span className="leather-cover-copy">
+                <span className="leather-title">RvFOX — Verified and True</span>
+                <span className="leather-tagline">Know before you buy.</span>
+                <span className="leather-cover-cue">Tap anywhere to open</span>
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
