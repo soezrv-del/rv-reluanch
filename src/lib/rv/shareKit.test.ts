@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  brochureSalesPitch,
   customerFacingPitch,
   DEFAULT_SHARE_INCLUDE,
   DEFAULT_SHARE_MARKET_LINES,
@@ -11,15 +12,20 @@ import {
   formatShareMarketText,
   hasOptionalShareSections,
   hasSelectedMarketLines,
+  isCatalogHonestyProse,
   isSharePlaceholder,
   RATE_UPDATED_FLASH,
   RATE_UPDATED_FLASH_MS,
+  resolveShareNotes,
+  resolveShareSummary,
   SHARE_MARKET_LINE_DEFS,
   SHARE_MSRP_LINE_ID,
   isOfferedShareMarketLine,
+  shareNotesLines,
   sharePaymentAfterTermDown,
   sharePaymentPricePills,
   sharePowerLines,
+  shareSummaryLines,
 } from "./shareCardPolicy.ts";
 import {
   honestHorsepowerForCoach,
@@ -122,13 +128,16 @@ test("trade-in and asking together only when both are picked", () => {
   assert.doesNotMatch(text, /MSRP/);
 });
 
-test("kit always writes Summary and only writes rating when toggled", () => {
+test("kit writes Summary only when brochure highlights exist", () => {
   assert.match(src, /effectiveShareInclude\(opts\.include\)/);
-  assert.match(src, /lines\.push\("SUMMARY"\)/);
+  assert.match(src, /shareSummaryLines/);
+  assert.match(src, /shareNotesLines/);
   assert.match(src, /if \(include\.rating && snap\.rating\)/);
   assert.doesNotMatch(src, /include\.specs/);
   assert.match(src, /formatShareVideoBlock\(opts\.video\)/);
   assert.doesNotMatch(src, /include\.video/);
+  assert.doesNotMatch(src, /catalogPitch/);
+  assert.doesNotMatch(src, /\["Catalog"/);
 });
 
 test("shared rating is the score only — no breakdown, summary, or notes", () => {
@@ -176,6 +185,99 @@ test("Confirm brochure clauses are stripped from pitch", () => {
   assert.equal(pitch, "Hand-built residential interiors.");
 });
 
+/** Catalog honesty ledger for 2023 Entegra Coach Launch 19Y — not brochure copy. */
+const LAUNCH_19Y_CATALOG =
+  "Entegra Launch — Class B on Sprinter 2500. OEM MY22–23: 19Y, 3.0 V6 188 / 325, 4x4. MY24: 19Y, 2.0 211 / 332, AWD, 9-speed. MY26–27: 19A / 19Y / 19AG / 19YG. No sourced MY21 / MY25 brochure — omit those years. Do not copy 19A/19AG/19YG onto MY22–24.";
+
+test("missing brochure summary omits the SUMMARY block entirely", () => {
+  const summary = resolveShareSummary({
+    liveOverview: "",
+    liveFeatures: [],
+  });
+  assert.equal(summary.pitch, "");
+  assert.deepEqual(summary.features, []);
+  assert.deepEqual(shareSummaryLines(summary), []);
+});
+
+test("real brochure summary shows sales-pitch highlights", () => {
+  const summary = resolveShareSummary({
+    liveOverview:
+      "Park anywhere. Sleep anywhere. The Sprinter van that turns every weekend into a trip.",
+    liveFeatures: ["4x4 adventure package", "Wet bath with cassette toilet"],
+  });
+  assert.match(summary.pitch, /Park anywhere/);
+  assert.equal(summary.features.includes("4x4 adventure package"), true);
+  const lines = shareSummaryLines(summary);
+  assert.equal(lines[0], "SUMMARY");
+  assert.match(lines.join("\n"), /Park anywhere/);
+  assert.match(lines.join("\n"), /• 4x4 adventure package/);
+  assert.doesNotMatch(lines.join("\n"), /omit those years/);
+});
+
+test("catalog GAP / year-matrix prose is never a SUMMARY", () => {
+  assert.equal(isCatalogHonestyProse(LAUNCH_19Y_CATALOG), true);
+  assert.equal(brochureSalesPitch(LAUNCH_19Y_CATALOG), "");
+  const summary = resolveShareSummary({
+    liveOverview: LAUNCH_19Y_CATALOG,
+    liveFeatures: [
+      "No sourced MY21 / MY25 brochure — omit those years.",
+      "OEM MY22–23: 19Y, 3.0 V6 188 / 325",
+    ],
+  });
+  assert.equal(summary.pitch, "");
+  assert.deepEqual(summary.features, []);
+  assert.deepEqual(shareSummaryLines(summary), []);
+  assert.doesNotMatch(
+    shareSummaryLines({
+      pitch: LAUNCH_19Y_CATALOG,
+      features: [],
+    }).join("\n"),
+    /SUMMARY/,
+  );
+});
+
+test("catalog description leftover is not used as brochure pitch", () => {
+  assert.equal(
+    brochureSalesPitch("Entegra Launch — Class B on Sprinter 2500."),
+    "",
+  );
+  assert.equal(
+    resolveShareSummary({
+      liveOverview: "Entegra Odyssey SE — Class C across Ford E-450.",
+    }).pitch,
+    "",
+  );
+});
+
+test("missing options omits the NOTES block entirely", () => {
+  assert.deepEqual(resolveShareNotes({ options: [], upgrades: [] }), []);
+  assert.deepEqual(shareNotesLines([]), []);
+  assert.deepEqual(
+    shareNotesLines([
+      LAUNCH_19Y_CATALOG,
+      "No sourced MY21 / MY25 brochure — omit those years.",
+    ]),
+    [],
+  );
+});
+
+test("real options/upgrades become NOTES — never catalog honesty", () => {
+  const notes = resolveShareNotes({
+    options: ["200W solar + lithium house bank"],
+    upgrades: ["Theater seating", LAUNCH_19Y_CATALOG],
+  });
+  assert.deepEqual(notes, [
+    "200W solar + lithium house bank",
+    "Theater seating",
+  ]);
+  const lines = shareNotesLines(notes);
+  assert.equal(lines[0], "NOTES");
+  assert.match(lines.join("\n"), /• 200W solar/);
+  assert.doesNotMatch(lines.join("\n"), /omit those years/);
+  assert.doesNotMatch(lines.join("\n"), /OEM MY/);
+  assert.doesNotMatch(lines.join("\n"), /Catalog/);
+});
+
 test("isSharePlaceholder catches typical confirm tags", () => {
   assert.equal(isSharePlaceholder("Confirm brochure"), true);
   assert.equal(isSharePlaceholder("Confirm brochure (van chassis tire)"), true);
@@ -185,7 +287,7 @@ test("isSharePlaceholder catches typical confirm tags", () => {
 
 test("kit filters placeholder lines from the shared card", () => {
   assert.match(src, /lines\.filter\(\(line\) => !isSharePlaceholder\(line\)\)/);
-  assert.match(src, /if \(isSharePlaceholder\(row\.value\)\) continue/);
+  assert.match(src, /g\.rows\.filter\(\(row\) => !isSharePlaceholder\(row\.value\)\)/);
 });
 
 test("kit writes only picked market lines — no trade+retail dump", () => {
@@ -555,4 +657,64 @@ test("payment calculator field order is price → down → term → rate → est
   assert.match(market, /SHARE_MARKET_LINE_DEFS\.map/);
   assert.doesNotMatch(market, /MSRP LOW/);
   assert.doesNotMatch(market, /id === "msrpLo"/);
+  assert.doesNotMatch(ui, /No summary on file/);
+  assert.match(ui, /summary\.pitch \|\| summary\.features\.length/);
+});
+
+test("2023 Entegra Launch 19Y Share text omits SUMMARY and NOTES", () => {
+  const header = "RvFOX · Powered by Grok";
+  const tagline = "Know before you buy.";
+  const title = "2023 Entegra Coach Launch 19Y";
+  const summary = resolveShareSummary({
+    liveOverview: LAUNCH_19Y_CATALOG,
+    liveFeatures: [],
+  });
+  const notes = resolveShareNotes({
+    options: [LAUNCH_19Y_CATALOG],
+    upgrades: [],
+  });
+  const blocks = [
+    header,
+    tagline,
+    "",
+    title,
+    ...shareSummaryLines(summary),
+    ...shareNotesLines(notes),
+  ];
+  const text = blocks.join("\n");
+  assert.equal(text, `${header}\n${tagline}\n\n${title}`);
+  assert.doesNotMatch(text, /SUMMARY/);
+  assert.doesNotMatch(text, /NOTES/);
+  assert.doesNotMatch(text, /omit those years/);
+  assert.doesNotMatch(text, /No sourced MY/);
+  assert.doesNotMatch(text, /OEM MY22/);
+  assert.doesNotMatch(text, /Do not copy/);
+  assert.doesNotMatch(text, /Catalog/);
+  assert.match(src, /SHARE_KIT_HEADER = "RvFOX · Powered by Grok"/);
+  assert.match(src, /SHARE_KIT_TAGLINE = "Know before you buy\."/);
+  assert.match(src, /opts\.summary \?\? brochureSummary\(r\)/);
+  assert.match(src, /brochureNotes\(r\)/);
+});
+
+test("Share kit prints real brochure SUMMARY and option NOTES", () => {
+  const summaryLines = shareSummaryLines({
+    pitch: "Limited-production flagship diesel with residential interiors.",
+    features: ["Spartan K3 chassis", "Full-wall slide"],
+  });
+  const noteLines = shareNotesLines([
+    "Aqua-Hot hydronic heat",
+    "Full-body paint",
+    LAUNCH_19Y_CATALOG,
+  ]);
+  const text = ["RvFOX · Powered by Grok", "", "2024 Newmar Essex 4551", "", ...summaryLines, "", ...noteLines].join(
+    "\n",
+  );
+  assert.match(text, /^SUMMARY$/m);
+  assert.match(text, /Limited-production flagship diesel/);
+  assert.match(text, /• Spartan K3 chassis/);
+  assert.match(text, /^NOTES$/m);
+  assert.match(text, /• Aqua-Hot hydronic heat/);
+  assert.match(text, /• Full-body paint/);
+  assert.doesNotMatch(text, /omit those years/);
+  assert.doesNotMatch(text, /Entegra Launch/);
 });

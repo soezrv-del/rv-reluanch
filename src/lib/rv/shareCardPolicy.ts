@@ -3,7 +3,7 @@
  * Kept free of catalog / path-alias imports so node:test can load it.
  */
 
-/** Optional dump sections — default OFF. Header + Summary are always on. */
+/** Optional dump sections — default OFF. Header is always on. SUMMARY/NOTES are gated. */
 export type ShareInclude = {
   rating: boolean;
   market: boolean;
@@ -244,7 +244,7 @@ export function sharePaymentAfterTermDown<T extends SharePaymentTermDown>(
   };
 }
 
-/** Zero extras → header + Summary + Payment. Never inject a Market dump. */
+/** Zero extras → header + Payment. SUMMARY only if real brochure highlights exist. */
 export function effectiveShareInclude(include: ShareInclude): ShareInclude {
   if (hasOptionalShareSections(include)) return include;
   return { ...include, payment: true };
@@ -271,6 +271,25 @@ export function isShareableValue(v?: string | null): boolean {
 const INTERNAL_PITCH_RE =
   /do not invent|do not copy|do not stamp|do not merge|do not globalize|yearEnd|yearStart|legacy search alias|kept so older|prefer [a-z0-9 .+-]+ \+|no \d{4}(?:[–-]\d{2,4})? (?:oem )?(?:brochure|card|page)|floorplans still absent|floorplans still unsourced|not copied onto|not a separate (?:make|brand)|use [a-z].+ for my/i;
 
+/**
+ * Year-matrix / GAP / OEM ledger — never a brochure Summary or options NOTES.
+ * Matches the standing Share policy: omit the block rather than dump catalog prose.
+ */
+const CATALOG_LEDGER_RE =
+  /omit those years|no sourced|oem my\d{2}|\bmy\d{2}(?:[–-]\d{2,4})?\s*:|do not invent|do not copy|do not stamp|do not merge|do not globalize|yearEnd|yearStart|legacy search alias|kept so older|prefer [a-z0-9 .+-]+ \+|no \d{4}(?:[–-]\d{2,4})? (?:oem )?(?:brochure|card|page)|floorplans still absent|floorplans still unsourced|not copied onto|not a separate (?:make|brand)|not bare |catalog leftover|dated (?:my)?\d{4}|year-true card|honesty ledger|year-matrix/i;
+
+/** Catalog identity one-liner ("Brand — Class B on Sprinter 2500"), not a sales pitch. */
+const CATALOG_IDENTITY_RE = /—\s*Class\s+[ABC][+]?/i;
+
+export function isCatalogHonestyProse(raw?: string | null): boolean {
+  if (!raw) return false;
+  const t = raw.replace(/\s+/g, " ").trim();
+  if (!t) return false;
+  if (CATALOG_LEDGER_RE.test(t) || CATALOG_IDENTITY_RE.test(t)) return true;
+  const myHits = t.match(/\bMY\d{2}\b/gi);
+  return Boolean(myHits && myHits.length >= 2);
+}
+
 export function customerFacingPitch(raw?: string | null): string {
   if (!raw) return "";
   const clauses = raw
@@ -279,4 +298,69 @@ export function customerFacingPitch(raw?: string | null): string {
     .filter(Boolean)
     .filter((c) => isShareableValue(c) && !INTERNAL_PITCH_RE.test(c));
   return clauses.join(" ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Brochure / sales-pitch highlight only. Catalog ledger, year-matrix, GAP, and
+ * identity one-liners return empty — callers omit SUMMARY rather than invent.
+ */
+export function brochureSalesPitch(raw?: string | null): string {
+  if (!raw || isCatalogHonestyProse(raw)) return "";
+  const pitch = customerFacingPitch(raw);
+  if (!pitch || isCatalogHonestyProse(pitch)) return "";
+  return pitch;
+}
+
+export type ShareBrochureSummary = {
+  pitch: string;
+  features: string[];
+};
+
+/** Live brochure overview + feature chips only — never catalog `description`. */
+export function resolveShareSummary(input: {
+  liveOverview?: string | null;
+  liveFeatures?: string[] | null;
+}): ShareBrochureSummary {
+  const pitch = brochureSalesPitch(input.liveOverview);
+  const features = (input.liveFeatures || [])
+    .map((f) => brochureSalesPitch(f))
+    .filter((f) => f && !pitch.toLowerCase().includes(f.toLowerCase()))
+    .slice(0, 6);
+  return { pitch, features };
+}
+
+export function shareSummaryLines(summary: ShareBrochureSummary): string[] {
+  const gated = resolveShareSummary({
+    liveOverview: summary.pitch,
+    liveFeatures: summary.features,
+  });
+  if (!gated.pitch && !gated.features.length) return [];
+  const lines = ["SUMMARY"];
+  if (gated.pitch) lines.push(gated.pitch);
+  for (const feature of gated.features) lines.push(`• ${feature}`);
+  return lines;
+}
+
+/** Options / upgrades only. Catalog honesty and empty lists omit NOTES. */
+export function resolveShareNotes(input: {
+  options?: string[] | null;
+  upgrades?: string[] | null;
+}): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of [...(input.options || []), ...(input.upgrades || [])]) {
+    const item = brochureSalesPitch(raw);
+    if (!item) continue;
+    const key = item.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
+export function shareNotesLines(notes: string[]): string[] {
+  const items = resolveShareNotes({ options: notes });
+  if (!items.length) return [];
+  return ["NOTES", ...items.map((n) => `• ${n}`)];
 }

@@ -736,32 +736,30 @@ export function RvShareKit({
                 </div>
               </div>
               <div className="space-y-3 p-4">
-                <div className="space-y-1.5">
-                  <p className="text-[9px] font-bold tracking-[0.16em] text-white/70">
-                    SUMMARY
-                  </p>
-                  {summary.pitch ? (
-                    <p className="text-[13px] font-semibold leading-relaxed text-white">
-                      {summary.pitch}
+                {summary.pitch || summary.features.length ? (
+                  <div className="space-y-1.5">
+                    <p className="text-[9px] font-bold tracking-[0.16em] text-white/70">
+                      SUMMARY
                     </p>
-                  ) : (
-                    <p className="text-[12px] leading-relaxed text-white/60">
-                      No summary on file.
-                    </p>
-                  )}
-                  {summary.features.length ? (
-                    <ul className="space-y-1">
-                      {summary.features.map((f) => (
-                        <li
-                          key={f}
-                          className="text-[12px] font-semibold leading-snug text-white/90"
-                        >
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </div>
+                    {summary.pitch ? (
+                      <p className="text-[13px] font-semibold leading-relaxed text-white">
+                        {summary.pitch}
+                      </p>
+                    ) : null}
+                    {summary.features.length ? (
+                      <ul className="space-y-1">
+                        {summary.features.map((f) => (
+                          <li
+                            key={f}
+                            className="text-[12px] font-semibold leading-snug text-white/90"
+                          >
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 {fallbackExtras ? (
                   <p className="text-[11px] leading-relaxed text-white/50">

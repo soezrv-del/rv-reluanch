@@ -22,13 +22,16 @@ import { mediaForRvType } from "@/assets/typeMedia";
 import { REPORT_CONTACT_KICKER, REPORT_CONTACT_NAME, REPORT_CONTACT_PHONE } from "./reportContact";
 import { getVerifiedDossier } from "./verifiedCatalogCache";
 import {
+  brochureSalesPitch,
   buildShareMarketSection,
-  customerFacingPitch,
   DEFAULT_SHARE_MARKET_LINES,
   effectiveShareInclude,
   isShareableValue,
   isSharePlaceholder,
-  sharePowerLines,
+  resolveShareNotes,
+  resolveShareSummary,
+  shareNotesLines,
+  shareSummaryLines,
   type ShareInclude,
   type ShareMarketLines,
   type ShareSpecGroupId,
@@ -81,6 +84,7 @@ export function hydrateSavedCoachList(
 }
 
 export {
+  brochureSalesPitch,
   buildShareMarketSection,
   customerFacingPitch,
   DEFAULT_SHARE_INCLUDE,
@@ -89,17 +93,22 @@ export {
   formatShareMarketText,
   hasOptionalShareSections,
   hasSelectedMarketLines,
+  isCatalogHonestyProse,
   isShareableValue,
   isSharePlaceholder,
   OPTIONAL_SHARE_KEYS,
   RATE_UPDATED_FLASH,
   RATE_UPDATED_FLASH_MS,
+  resolveShareNotes,
+  resolveShareSummary,
   SHARE_MARKET_LINE_DEFS,
   SHARE_MSRP_LINE_ID,
   isOfferedShareMarketLine,
+  shareNotesLines,
   sharePaymentAfterTermDown,
   sharePaymentPricePills,
   sharePowerLines,
+  shareSummaryLines,
 } from "./shareCardPolicy";
 export type {
   ShareInclude,
@@ -221,38 +230,53 @@ export type BrochureSummary = {
   features: string[];
 };
 
-function liveBrochureBits(r: RVResult): BrochureSummary {
-  if (typeof localStorage === "undefined") return { pitch: "", features: [] };
+function liveShareCopy(r: RVResult): {
+  overview: string;
+  features: string[];
+  options: string[];
+  upgrades: string[];
+} {
+  const empty = { overview: "", features: [], options: [], upgrades: [] };
+  if (typeof localStorage === "undefined") return empty;
   try {
     const live = getVerifiedDossier(r.year, r.make, r.model, r.floorplan);
-    if (!live?.live) return { pitch: "", features: [] };
-    const features = (live.keyFeatures || [])
-      .map((f) => customerFacingPitch(f))
-      .filter(Boolean)
-      .slice(0, 6);
+    if (!live?.live) return empty;
     return {
-      pitch: customerFacingPitch(live.overview),
-      features,
+      overview: live.overview || "",
+      features: live.keyFeatures || [],
+      options: live.options || [],
+      upgrades: live.upgrades || [],
     };
   } catch {
-    return { pitch: "", features: [] };
+    return empty;
   }
 }
 
 /**
- * OEM brochure sales pitch for the shared card.
- * Prefer live/cached brochure overview + key features; else curated description.
- * Never invent specs — empty pitch falls back to catalog type only.
+ * Brochure / sales-pitch highlights only when live brochure copy exists.
+ * Never invent. Never dump catalog year-matrix / GAP / honesty ledger.
+ * Missing brochure → empty (callers omit the SUMMARY block).
  */
 export function brochureSummary(r: RVResult): BrochureSummary {
   r = hydrateShareCoachResult(r);
-  const live = liveBrochureBits(r);
-  const catalogPitch = customerFacingPitch(r.data.description);
-  const pitch = live.pitch || catalogPitch || (r.data.type || "").trim();
-  const features = live.features.filter(
-    (f) => f && !pitch.toLowerCase().includes(f.toLowerCase()),
-  );
-  return { pitch, features };
+  const live = liveShareCopy(r);
+  return resolveShareSummary({
+    liveOverview: live.overview,
+    liveFeatures: live.features,
+  });
+}
+
+/**
+ * Options / upgrades only. Catalog description and honesty notes are not NOTES.
+ * Missing options → empty (callers omit the NOTES block).
+ */
+export function brochureNotes(r: RVResult): string[] {
+  r = hydrateShareCoachResult(r);
+  const live = liveShareCopy(r);
+  return resolveShareNotes({
+    options: [...live.options, ...(r.data.options || [])],
+    upgrades: [...live.upgrades, ...(r.data.upgrades || [])],
+  });
 }
 
 function group(
@@ -288,11 +312,13 @@ export function brochureSpecGroups(r: RVResult) {
   const economy = hwyOk
     ? `${b.mpgHighway} hwy${cityOk ? ` · ${b.mpgCity} city` : ""}`
     : undefined;
-  const notesPitch = customerFacingPitch(r.data.description);
+  const notes = brochureNotes(r);
   return [
-    group("notes", "NOTES", [
-      ["Catalog", notesPitch ? notesPitch.slice(0, 280) : undefined],
-    ]),
+    group(
+      "notes",
+      "NOTES",
+      notes.map((item) => ["Option", item]),
+    ),
     group("powertrain", "POWERTRAIN", [
       ["Engine", b.engine],
       ["Horsepower", b.horsepower],
@@ -492,13 +518,15 @@ export function buildCoachKit(opts: {
   lines.push("");
   lines.push(title);
 
-  if (summary.pitch || summary.features.length) {
+  const summaryLines = shareSummaryLines({
+    pitch: brochureSalesPitch(summary.pitch),
+    features: summary.features
+      .map((f) => brochureSalesPitch(f))
+      .filter(Boolean),
+  });
+  if (summaryLines.length) {
     lines.push("");
-    lines.push("SUMMARY");
-    if (summary.pitch) lines.push(summary.pitch);
-    for (const feature of summary.features) {
-      lines.push(`• ${feature}`);
-    }
+    lines.push(...summaryLines);
   }
 
   if (include.rating && snap.rating) {
@@ -561,10 +589,18 @@ export function buildCoachKit(opts: {
   const groups = brochureSpecGroups(r);
   for (const g of groups) {
     if (!include[g.id]) continue;
+    if (g.id === "notes") {
+      const noteLines = shareNotesLines(g.rows.map((row) => row.value));
+      if (!noteLines.length) continue;
+      lines.push("");
+      lines.push(...noteLines);
+      continue;
+    }
+    const rows = g.rows.filter((row) => !isSharePlaceholder(row.value));
+    if (!rows.length) continue;
     lines.push("");
     lines.push(g.title);
-    for (const row of g.rows) {
-      if (isSharePlaceholder(row.value)) continue;
+    for (const row of rows) {
       lines.push(`${row.label}: ${row.value}`);
     }
   }
