@@ -1769,18 +1769,17 @@ export function RvTripsApp() {
                         }
                         onClick={toggleVoice}
                         className={cn(
-                          "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[11px] font-bold",
+                          "inline-flex size-11 shrink-0 items-center justify-center rounded-full border",
                           voiceOn
-                            ? "border-blue/80 bg-blue text-white shadow-[0_0_22px_rgba(80,160,255,0.5)]"
-                            : "glass-chip",
+                            ? "border-blue/80 bg-blue text-white shadow-[0_0_22px_rgba(80,160,255,0.45)]"
+                            : "border-white/20 bg-black/30 text-white",
                         )}
                       >
                         {voiceOn ? (
-                          <Volume2 className="size-4" />
+                          <Volume2 className="size-5" />
                         ) : (
-                          <VolumeX className="size-4" />
+                          <VolumeX className="size-5" />
                         )}
-                        {voiceOn ? "Voice" : "Muted"}
                       </button>
                     </div>
                   ) : null}
