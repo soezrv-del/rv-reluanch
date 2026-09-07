@@ -11917,13 +11917,21 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(idx.Hideout?.yearStart, 2010);
   assert.deepEqual(idx.Hideout?.years, [2027]);
   assert.equal(idx.Springdale?.years?.includes(2027), true);
+  assert.deepEqual(idx.Springdale?.years, [2027]);
+  assert.equal(idx["Springdale Mini"]?.yearStart, 2021);
+  assert.deepEqual(idx["Springdale Mini"]?.years, [2027]);
+  assert.equal(idx["Springdale Max"]?.yearStart, 2026);
+  assert.deepEqual(idx["Springdale Max"]?.years, [2027]);
+  assert.equal(idx["Bullet Classic"]?.yearStart, 2024);
+  assert.deepEqual(idx["Bullet Classic"]?.years, [2027]);
   assert.equal(idx.Fuzion?.years?.includes(2027), true);
   assert.equal(idx.Raptor?.years?.includes(2027), true);
   assert.equal(idx.Avalanche?.yearEnd, 2025);
   assert.equal(idx.Avalanche?.years?.includes(2027), false);
   assert.equal(idx["Cougar Western Elevation"], undefined);
   assert.equal(idx["Passport Premium"], undefined);
-  assert.equal(idx["Bullet Classic"], undefined);
+  assert.equal(idx["Hideout Mini"], undefined);
+  assert.equal(idx["Hideout Max"], undefined);
 
   const block = src("rvData.ts");
   const k0 = block.indexOf('\n  "Keystone": {');
@@ -12004,27 +12012,101 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
   const pass = k.slice(k.indexOf("    Passport: {"), k.indexOf('    "Passport Super Lite"'));
   assert.doesNotMatch(pass, /"2027":/);
 
-  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf("    Passport: {"));
+  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf('    "Bullet Classic": {'));
   assert.match(bxf, /"2027": \["208MKS", "222BHS", "2290BH", "2290BHWE", "234RBK", "245RKS", "245RKSWE", "259REV", "267MRB", "287RLS", "287RLSWE", "310RES"\]/);
   assert.match(bxf, /yearStart:\s*2017/);
   assert.doesNotMatch(bxf, /"2026":/);
 
+  const bcl = k.slice(k.indexOf('    "Bullet Classic": {'), k.indexOf("    Passport: {"));
+  assert.match(bcl, /"2027": \["16BHC", "16RBC", "18RBC", "18RBCWE", "19RDC", "21BHC", "21BHCWE", "21RKC", "21RKCWE", "26BHC", "26BHCWE", "28QBC"\]/);
+  assert.match(bcl, /yearStart:\s*2024/);
+  assert.doesNotMatch(bcl, /"2026":/);
+  assert.doesNotMatch(bcl, /"28QBCWE"/);
+  assert.doesNotMatch(bcl, /"208MKS"/);
+  assert.doesNotMatch(bcl, /"160BHC"/);
+
   const bul = k.slice(k.indexOf("    Bullet: {"), k.indexOf('    "Bullet Crossfire"'));
   assert.doesNotMatch(bul, /"2027":/);
+  assert.doesNotMatch(bul, /"16BHC"/);
+  assert.doesNotMatch(bul, /"21BHCWE"/);
 
   const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf("    Fuzion: {"));
   assert.match(hid, /"2027": \["210RL", "210RLWE", "212RKS", "212RKSWE", "230BH", "230BHWE", "234MLS", "234MLSWE", "250RBS", "250RBSWE", "262BHS", "262BHSWE"\]/);
   assert.match(hid, /yearStart:\s*2010/);
   assert.doesNotMatch(hid, /"2026":/);
+  assert.doesNotMatch(hid, /"120BT"/);
+  assert.doesNotMatch(hid, /"29HAVEN"/);
 
-  const sprd = k.slice(k.indexOf("    Springdale: {"), k.indexOf("    Hideout: {"));
+  const sprd = k.slice(k.indexOf("    Springdale: {"), k.indexOf('    "Springdale Mini": {'));
   assert.match(sprd, /"2027": \["2100RL", "2100RLWE", "2120RKS", "2120RKSWE", "2300BH", "2300BHWE", "2340MLS", "2340MLSWE", "2500RBS", "2500RBSWE", "2620BHS", "2620BHSWE"\]/);
+  assert.doesNotMatch(sprd, /"2010":/);
+  assert.doesNotMatch(sprd, /"2026":/);
+  assert.doesNotMatch(sprd, /"1700FQ"/);
+  assert.doesNotMatch(sprd, /"1200BT"/);
+  assert.doesNotMatch(sprd, /"29HAVEN"/);
+
+  const smini = k.slice(k.indexOf('    "Springdale Mini": {'), k.indexOf('    "Springdale Max": {'));
+  assert.match(smini, /"2027": \["1200BT", "1230BB", "1610BH", "1660RB", "1950RBS", "1990BHS"\]/);
+  assert.match(smini, /yearStart:\s*2021/);
+  assert.doesNotMatch(smini, /"2026":/);
+  assert.doesNotMatch(smini, /"2100RL"/);
+
+  const smax = k.slice(k.indexOf('    "Springdale Max": {'), k.indexOf("    Hideout: {"));
+  assert.match(smax, /"2027": \["29HAVEN", "3100XBR", "31SUNROOM"\]/);
+  assert.match(smax, /yearStart:\s*2026/);
+  assert.doesNotMatch(smax, /"2026":/);
+  assert.doesNotMatch(smax, /"310XBR"/);
 
   const fuz = k.slice(k.indexOf("    Fuzion: {"), k.indexOf("    Raptor: {"));
   assert.match(fuz, /"2027": \["373", "383", "419", "432", "440", "442"\]/);
 
   const rap = k.slice(k.indexOf("    Raptor: {"), k.indexOf("    Alpine: {"));
   assert.match(rap, /"2027": \["352", "415", "430", "433", "441", "444"\]/);
+});
+
+test("Keystone P3 honesty: Bullet Classic + Springdale Mini/Max OEM 2027; empty Crossfire/Hideout/Half-Ton TT bands", () => {
+  const idx = CATALOG_INDEX.Keystone;
+  assert.deepEqual(idx["Bullet Classic"]?.years, [2027]);
+  assert.deepEqual(idx["Springdale Mini"]?.years, [2027]);
+  assert.deepEqual(idx["Springdale Max"]?.years, [2027]);
+  assert.deepEqual(idx["Bullet Crossfire"]?.years, [2027]);
+  assert.deepEqual(idx.Hideout?.years, [2027]);
+  assert.deepEqual(idx["Cougar Half-Ton Travel Trailer"]?.years, [2027]);
+  assert.equal(idx.Cougar?.years?.includes(2027), false);
+  assert.equal(idx.Bullet?.years?.includes(2027), false);
+  assert.equal(idx.Passport?.years?.includes(2027), false);
+  assert.equal(idx["Hideout Mini"], undefined);
+  assert.equal(idx["Hideout Max"], undefined);
+
+  const block = src("rvData.ts");
+  const k0 = block.indexOf('\n  "Keystone": {');
+  const k1 = block.indexOf('\n  "Grand Design": {');
+  const k = block.slice(k0, k1);
+
+  const bcl = k.slice(k.indexOf('    "Bullet Classic": {'), k.indexOf("    Passport: {"));
+  assert.match(bcl, /"2027": \["16BHC", "16RBC", "18RBC", "18RBCWE", "19RDC", "21BHC", "21BHCWE", "21RKC", "21RKCWE", "26BHC", "26BHCWE", "28QBC"\]/);
+  assert.doesNotMatch(bcl, /"2010":|"2024":|"2025":|"2026":/);
+
+  const smini = k.slice(k.indexOf('    "Springdale Mini": {'), k.indexOf('    "Springdale Max": {'));
+  assert.match(smini, /"2027": \["1200BT", "1230BB", "1610BH", "1660RB", "1950RBS", "1990BHS"\]/);
+  assert.doesNotMatch(smini, /"2021":|"2026":/);
+
+  const smax = k.slice(k.indexOf('    "Springdale Max": {'), k.indexOf("    Hideout: {"));
+  assert.match(smax, /"2027": \["29HAVEN", "3100XBR", "31SUNROOM"\]/);
+
+  const sprd = k.slice(k.indexOf("    Springdale: {"), k.indexOf('    "Springdale Mini": {'));
+  assert.doesNotMatch(sprd, /"2010":|"2025":|"2026":/);
+  assert.doesNotMatch(sprd, /"1700FQ"|"1750RD"|"1760BH"|"1860SS"|"260BHC"/);
+
+  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf('    "Bullet Classic": {'));
+  assert.doesNotMatch(bxf, /"2017":|"2025":|"2026":/);
+
+  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf("    Fuzion: {"));
+  assert.doesNotMatch(hid, /"2010":|"2026":/);
+
+  const chtt = k.slice(k.indexOf('    "Cougar Half-Ton Travel Trailer": {'), k.indexOf("    Bullet: {"));
+  assert.doesNotMatch(chtt, /"2012":|"2026":/);
+  assert.match(chtt, /"2027": \["21LBK", "22MLS", "25FKD", "25MLE", "26LBW", "28BHS", "29RDS", "29RKE", "29RLP"\]/);
 });
 
 test("Keystone Cougar TT hygiene: no 25FKD leak; Half-Ton FW 2027 unchanged; no 2026 invent", () => {
@@ -12226,7 +12308,7 @@ test("Keystone MY2025–2026 major-line RVUSA locks (walk-back pack §6)", () =>
   assert.doesNotMatch(av, /"2027":/);
   assert.doesNotMatch(av, /"2025": .*"381DL"/);
 
-  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf("    Passport: {"));
+  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf('    "Bullet Classic": {'));
   assert.doesNotMatch(bxf, /"2025":/);
   assert.doesNotMatch(bxf, /"2026":/);
 
@@ -12288,7 +12370,7 @@ test("Keystone Alpine Avalanche Edition MY2025–2026 RVUSA locks; Crossfire ble
   assert.doesNotMatch(av, /"2025": .*"381DL"/);
   assert.doesNotMatch(av, /"2026":/);
 
-  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf("    Passport: {"));
+  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf('    "Bullet Classic": {'));
   assert.match(
     bxf,
     /"2027": \["208MKS", "222BHS", "2290BH", "2290BHWE", "234RBK", "245RKS", "245RKSWE", "259REV", "267MRB", "287RLS", "287RLSWE", "310RES"\]/,
@@ -12997,7 +13079,7 @@ test("Keystone Cougar Premium FW MY2010–2024 invent scrub (RVUSA m1492 locks; 
   const chtt = k.slice(k.indexOf('    "Cougar Half-Ton Travel Trailer": {'), k.indexOf("    Bullet: {"));
   const mt = k.slice(k.indexOf("    Montana: {"), k.indexOf('    "Montana High Country"'));
   const mhc = k.slice(k.indexOf('    "Montana High Country": {'), k.indexOf("    Cougar: {"));
-  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf("    Passport: {"));
+  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf('    "Bullet Classic": {'));
 
   function fbyYear(srcBlock: string, year: number): string[] | null {
     const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
@@ -13221,7 +13303,7 @@ test("Keystone Alpine MY2010–2024 invent scrub (RVUSA m2918 locks; prefer-empt
   const mt = k.slice(k.indexOf("    Montana: {"), k.indexOf('    "Montana High Country"'));
   const mhc = k.slice(k.indexOf('    "Montana High Country": {'), k.indexOf("    Cougar: {"));
   const cfw = k.slice(k.indexOf('    "Cougar 5th Wheel": {'), k.indexOf('    "Cougar Sport"'));
-  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf("    Passport: {"));
+  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf('    "Bullet Classic": {'));
 
   function fbyYear(srcBlock: string, year: number): string[] | null {
     const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
@@ -13499,7 +13581,7 @@ test("Keystone Passport (collapsed) MY2010–2026 invent scrub (RVUSA m1502 lock
   const pass = k.slice(k.indexOf("    Passport: {"), k.indexOf('    "Passport Super Lite"'));
   const psl = k.slice(k.indexOf('    "Passport Super Lite": {'), k.indexOf('    "Passport Classic"'));
   const pcl = k.slice(k.indexOf('    "Passport Classic": {'), k.indexOf("    Springdale: {"));
-  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf("    Passport: {"));
+  const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf('    "Bullet Classic": {'));
   const alp = k.slice(k.indexOf("    Alpine: {"), k.indexOf('    "Alpine Avalanche Edition"'));
   const mt = k.slice(k.indexOf("    Montana: {"), k.indexOf('    "Montana High Country"'));
   const mhc = k.slice(k.indexOf('    "Montana High Country": {'), k.indexOf("    Cougar: {"));
