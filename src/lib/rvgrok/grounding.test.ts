@@ -375,6 +375,22 @@ test("RvGROK chat client injects catalog grounding", () => {
   assert.match(stream, /wantsWebFallback/);
 });
 
+test("repair-mode playbook is wired through chat, voice, and browse", () => {
+  assert.match(src(root, "repairMode.ts"), /REPAIR PLAYBOOK/);
+  assert.match(src(root, "repairMode.ts"), /torque spec/);
+  assert.match(src(root, "repairMode.ts"), /part number/);
+  assert.match(src(root, "repairMode.ts"), /wiring color/);
+  assert.match(src(root, "repairMode.ts"), /bypass the sensor/);
+  assert.match(src(root, "grounding.ts"), /repairMode/);
+  assert.match(src(root, "grounding.ts"), /formatRepairGroundingBlock/);
+  assert.match(src(root, "webIntent.ts"), /looksLikeRepairQuestion/);
+  assert.match(src(root, "prompts.ts"), /REPAIR \/ DIAGNOSE/);
+  assert.match(src(root, "voice.ts"), /Not a certified RV tech/);
+  assert.match(src(root, "webSearch.ts"), /torque spec, part number, wiring color/);
+  const api = src(join(root, "../../routes/api"), "rvgrok.ts");
+  assert.match(api, /buildChatGrounding/);
+});
+
 test("system prompts know injected web research is live internet", () => {
   const prompts = src(root, "prompts.ts");
   assert.match(prompts, /WEB RESEARCH notes/);

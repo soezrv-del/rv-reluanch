@@ -36,6 +36,11 @@ import {
 } from "./parseCoach";
 import type { RVSpec } from "../rv/rvTypes";
 import { needsWebFallback } from "./webIntent";
+import {
+  formatRepairGroundingBlock,
+  looksLikeRepairQuestion,
+  repairCoachLockFromGrounded,
+} from "./repairMode";
 
 export {
   looksLikeCasualNonResearch,
@@ -44,6 +49,7 @@ export {
   looksLikeNamedCoachProductQuestion,
   looksLikeOffCatalogQuestion,
   looksLikePureLifestyleOrPayment,
+  looksLikeRepairQuestion,
   looksLikeSpecQuestion,
   needsWebFallback,
   normalizeAskText,
@@ -472,6 +478,22 @@ export function formatVoiceCatalogAddendum(specs: GroundedSpecs): string {
   return `\n\n${formatCatalogGroundingBlock(specs)}\nSpeak those locked numbers. If UNKNOWN, say so in one breath — do not guess.`;
 }
 
+function repairBlockFor(
+  query: string,
+  identity: CoachIdentity | null,
+  specs: GroundedSpecs | null,
+  voice = false,
+  facts?: ActiveCoach | null,
+): string {
+  const active = looksLikeRepairQuestion(query);
+  if (!active && !voice) return "";
+  return formatRepairGroundingBlock({
+    lock: repairCoachLockFromGrounded({ identity, specs, facts }),
+    active,
+    voice,
+  });
+}
+
 export function buildChatGrounding(opts: {
   query: string;
   facts?: ActiveCoach | null;
@@ -482,27 +504,34 @@ export function buildChatGrounding(opts: {
   specs: GroundedSpecs | null;
   block: string;
   needsWeb: boolean;
+  repairMode: boolean;
 } {
   const webOpts = { agentMode: opts.agentMode };
+  const repairMode = looksLikeRepairQuestion(opts.query);
   const identity = resolveCoachIdentity(
     opts.query,
     opts.facts,
     opts.extraText || "",
   );
   if (!identity) {
+    const repair = repairBlockFor(opts.query, null, null, false, opts.facts);
     return {
       identity: null,
       specs: null,
-      block: "",
+      block: repair,
       needsWeb: needsWebFallback(null, opts.query, webOpts),
+      repairMode,
     };
   }
   const specs = lookupGroundedSpecs(identity);
+  const catalog = `${formatCatalogGroundingBlock(specs)}\n\n${GROUNDING_RULES}`;
+  const repair = repairBlockFor(opts.query, identity, specs, false, opts.facts);
   return {
     identity,
     specs,
-    block: `${formatCatalogGroundingBlock(specs)}\n\n${GROUNDING_RULES}`,
+    block: repair ? `${catalog}\n\n${repair}` : catalog,
     needsWeb: needsWebFallback(specs, opts.query, webOpts),
+    repairMode,
   };
 }
 
@@ -511,16 +540,16 @@ export function buildVoiceGrounding(opts: {
   query?: string;
   facts?: ActiveCoach | null;
 }): string {
-  const identity = resolveCoachIdentity(
-    opts.query || "",
-    opts.facts,
-    "",
-  );
+  const query = opts.query || "";
+  const identity = resolveCoachIdentity(query, opts.facts, "");
+  const specs = identity ? lookupGroundedSpecs(identity) : null;
+  const repair = repairBlockFor(query, identity, specs, true, opts.facts);
   if (!identity) {
-    return "No verified catalog row is loaded. If they name a year/make/model and you do not have locked numbers, say unknown / EST. — never invent HP, engine, chassis, or fuel.";
+    const base =
+      "No verified catalog row is loaded. If they name a year/make/model and you do not have locked numbers, say unknown / EST. — never invent HP, engine, chassis, or fuel.";
+    return repair ? `${base}\n\n${repair}` : base;
   }
-  const specs = lookupGroundedSpecs(identity);
-  return formatVoiceCatalogAddendum(specs);
+  return `${formatVoiceCatalogAddendum(specs!)}\n\n${repair}`;
 }
 
 export function appendGrounding(system: string, catalogContext?: string): string {

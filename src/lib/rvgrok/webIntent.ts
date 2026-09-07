@@ -7,6 +7,9 @@
  */
 
 import { parseCoachFromText } from "./parseCoach.ts";
+import { looksLikeRepairQuestion } from "./repairMode.ts";
+
+export { looksLikeRepairQuestion } from "./repairMode.ts";
 
 export type WebFallbackSpecs = {
   missingHard: boolean;
@@ -106,8 +109,10 @@ export function looksLikeOffCatalogQuestion(text: string): boolean {
 export function looksLikeLiveResearchQuestion(text: string): boolean {
   const t = normalizeAskText(text);
   if (!t.trim()) return false;
-  if (!LIVE_RESEARCH_RE.test(t)) return false;
   if (looksLikePureLifestyleOrPayment(t)) return false;
+  // Repair / diagnose always needs live notes — catalog has no procedure.
+  if (looksLikeRepairQuestion(t)) return true;
+  if (!LIVE_RESEARCH_RE.test(t)) return false;
   return true;
 }
 
