@@ -14315,6 +14315,160 @@ test("Coachmen 2005–2009 motorized honesty: EzMe pack locks; remaining early y
   }
 });
 
+test("Dutchmen 2005–2009 honesty: Aerolite MY2006+2008 dated locks; Coleman/Kodiak/Yukon stay GAP", () => {
+  const idx = CATALOG_INDEX.Dutchmen;
+  assert.ok(idx);
+
+  assert.deepEqual(idx.Aerolite?.years, [
+    2006, 2008, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022,
+    2023, 2024, 2025, 2026,
+  ]);
+  assert.equal(idx.Aerolite?.yearStart, 2005);
+  assert.equal(idx.Aerolite?.type, "Travel Trailer");
+
+  assert.deepEqual(idx.Coleman?.years, [
+    2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,
+    2025, 2026,
+  ]);
+  assert.equal(idx.Coleman?.yearStart, 2006);
+  assert.equal(idx.Coleman?.type, "Travel Trailer");
+
+  assert.deepEqual(idx.Kodiak?.years, [
+    2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,
+    2025, 2026,
+  ]);
+  assert.equal(idx.Kodiak?.yearStart, 2006);
+  assert.equal(idx.Kodiak?.type, "Travel Trailer");
+
+  assert.deepEqual(idx.Yukon?.years, [
+    2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,
+    2025, 2026,
+  ]);
+  assert.equal(idx.Yukon?.yearStart, 2008);
+  assert.equal(idx.Yukon?.type, "Fifth Wheel");
+  assert.equal(idx.Cub, undefined);
+
+  const block = src("rvData.ts");
+  const d0 = block.indexOf("\n  Dutchmen: {");
+  const d1 = block.indexOf('\n  "Leisure Travel Vans": {');
+  assert.ok(d0 > 0 && d1 > d0, "Dutchmen block");
+  const dm = block.slice(d0, d1);
+  const kodiak = dm.slice(dm.indexOf("    Kodiak: {"), dm.indexOf("    Coleman: {"));
+  const coleman = dm.slice(dm.indexOf("    Coleman: {"), dm.indexOf('    "Aspen Trail": {'));
+  const aspenTrail = dm.slice(dm.indexOf('    "Aspen Trail": {'), dm.indexOf('    "Aspen Trail FW": {'));
+  const aspenTrailFw = dm.slice(dm.indexOf('    "Aspen Trail FW": {'), dm.indexOf("    Voltage: {"));
+  const voltage = dm.slice(dm.indexOf("    Voltage: {"), dm.indexOf('    "Voltage V-Series": {'));
+  const voltageV = dm.slice(dm.indexOf('    "Voltage V-Series": {'), dm.indexOf("    Yukon: {"));
+  const yukon = dm.slice(dm.indexOf("    Yukon: {"), dm.indexOf("    Astoria: {"));
+  const astoria = dm.slice(dm.indexOf("    Astoria: {"), dm.indexOf("    Aerolite: {"));
+  const aerolite = dm.slice(dm.indexOf("    Aerolite: {"), dm.indexOf("    Infinity: {"));
+  const infinity = dm.slice(dm.indexOf("    Infinity: {"));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  // LOCK library 2006-Aerolite.pdf specs row — hyphenated suffixes exact.
+  assert.deepEqual(fbyYear(aerolite, 2006), [
+    "18FS",
+    "19FL",
+    "21QS",
+    "24RB-SL",
+    "25RGB-SL",
+    "25QS",
+    "26QS",
+    "26QSL",
+    "26QSQ",
+    "26RG-SL",
+    "26RK-SL",
+    "27RB-SL",
+    "27BH",
+    "29QBH",
+    "30BH-SL",
+  ]);
+  // LOCK library 2008-Aerolite.pdf series line — 27QSBH / 27QSTH stay bare.
+  assert.deepEqual(fbyYear(aerolite, 2008), [
+    "19FL",
+    "24RB-SL",
+    "25RGB-SL",
+    "26RG-SL",
+    "27CD-SL",
+    "27RB-SL",
+    "27RS-SL",
+    "29RLK-SL",
+    "30BH-SL",
+    "21QS",
+    "25QS",
+    "26QS",
+    "26QSL",
+    "27QSBH",
+    "27QSTH",
+  ]);
+  assert.doesNotMatch(aerolite, /"27QSBH-SL"|"27QSTH-SL"/);
+  assert.doesNotMatch(aerolite, /"160"|"17FL"|"195"|"214"|"215"|"235"|"236"|"23BH"|"23TT"/);
+  assert.doesNotMatch(dm, /\n    Cub: \{|\n    "Cub": \{/);
+  for (const y of [2005, 2007, 2009]) {
+    assert.equal(fbyYear(aerolite, y), null, `Aerolite ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(aerolite, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(aerolite, 2010), ["1923RB", "2423BH", "2603QB"]);
+  for (const y of [2006, 2008]) {
+    const plans = fbyYear(aerolite, y) ?? [];
+    for (const code of ["1923RB", "2133RB", "2423BH", "2603QB", "2830QB"]) {
+      assert.equal(plans.includes(code), false, `Aerolite ${y} must not stamp 1923RB-era ${code}`);
+    }
+  }
+  for (const y of [2010, 2015, 2025, 2026]) {
+    const plans = fbyYear(aerolite, y) ?? [];
+    for (const code of ["18FS", "24RB-SL", "25RGB-SL", "27CD-SL", "27QSBH", "27QSTH", "30BH-SL"]) {
+      assert.equal(plans.includes(code), false, `Aerolite ${y} must not stamp MY2006/08 ${code}`);
+    }
+  }
+
+  for (const y of [2006, 2007, 2008, 2009]) {
+    assert.equal(fbyYear(coleman, y), null, `Coleman ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(coleman, new RegExp(`"${y}":`));
+    assert.equal(fbyYear(kodiak, y), null, `Kodiak ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(kodiak, new RegExp(`"${y}":`));
+  }
+  for (const y of [2008, 2009]) {
+    assert.equal(fbyYear(yukon, y), null, `Yukon ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(yukon, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(coleman, 2010), ["17B", "19BH", "2555BH", "2855BH"]);
+  assert.deepEqual(fbyYear(kodiak, 2010), ["200BHSL", "248BHSL", "263BHSL", "294BHSL"]);
+  assert.deepEqual(fbyYear(yukon, 2010), ["343RLB", "393RLB"]);
+  for (const [name, srcBlock] of [
+    ["Coleman", coleman],
+    ["Kodiak", kodiak],
+    ["Yukon", yukon],
+  ] as const) {
+    assert.doesNotMatch(srcBlock, /"18FS"|"24RB-SL"|"27QSBH"|"30BH-SL"/);
+    assert.equal(idx[name]?.years?.includes(2006), false);
+    assert.equal(idx[name]?.years?.includes(2008), false);
+    assert.equal(idx[name]?.years?.includes(2009), false);
+  }
+
+  for (const [name, srcBlock] of [
+    ["Aspen Trail", aspenTrail],
+    ["Aspen Trail FW", aspenTrailFw],
+    ["Voltage", voltage],
+    ["Voltage V-Series", voltageV],
+    ["Astoria", astoria],
+    ["Infinity", infinity],
+  ] as const) {
+    for (const y of [2005, 2006, 2007, 2008, 2009]) {
+      assert.equal(fbyYear(srcBlock, y), null, `${name} ${y} must stay GAP`);
+      assert.doesNotMatch(srcBlock, new RegExp(`"${y}":`));
+    }
+    assert.equal(idx[name]?.years?.includes(2005), false);
+    assert.equal(idx[name]?.years?.includes(2006), false);
+    assert.equal(idx[name]?.years?.includes(2008), false);
+  }
+});
+
 test("Coachmen honesty lock: MY2026 towable quarantine + Destination hyphens + SRS Class A diesel", () => {
   const block = src("rvData.ts");
   const c0 = block.indexOf("\n  Coachmen: {");

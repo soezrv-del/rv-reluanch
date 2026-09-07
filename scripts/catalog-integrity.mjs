@@ -3417,6 +3417,166 @@ function main() {
     }
   }
 
+  // Dutchmen MY2005–09 honesty. Dated library Aerolite PDFs lock 2006 + 2008 only.
+  // Coleman / Kodiak / Yukon early years stay GAP (no dated PDF). Prefer omit over invent.
+  {
+    const d0 = src.indexOf("\n  Dutchmen: {");
+    const d1 = src.indexOf('\n  "Leisure Travel Vans": {');
+    if (d0 < 0 || d1 < d0) {
+      fail('Dutchmen block not found between Dutchmen: and "Leisure Travel Vans":');
+    } else {
+      const dm = src.slice(d0, d1);
+      const slice = (a, b) => {
+        const i = dm.indexOf(`    ${a}: {`) >= 0 ? dm.indexOf(`    ${a}: {`) : dm.indexOf(`    "${a}": {`);
+        const j =
+          b == null
+            ? dm.length
+            : dm.indexOf(`    ${b}: {`) >= 0
+              ? dm.indexOf(`    ${b}: {`)
+              : dm.indexOf(`    "${b}": {`);
+        if (i < 0) return "";
+        return j > i ? dm.slice(i, j) : dm.slice(i);
+      };
+
+      if (/\n    Cub: \{/.test(dm) || /\n    "Cub": \{/.test(dm)) {
+        fail("Dutchmen must not invent a Cub key (sibling marketing in Aerolite brochure)");
+      }
+
+      const aero = slice("Aerolite", "Infinity");
+      if (!/type: "Travel Trailer"/.test(aero)) fail("Dutchmen|Aerolite must stay Travel Trailer");
+      if (
+        !/"2006": \["18FS", "19FL", "21QS", "24RB-SL", "25RGB-SL", "25QS", "26QS", "26QSL", "26QSQ", "26RG-SL", "26RK-SL", "27RB-SL", "27BH", "29QBH", "30BH-SL"\]/.test(
+          aero,
+        )
+      ) {
+        fail("Dutchmen|Aerolite MY2006 PDF lock missing (2006-Aerolite.pdf specs row)");
+      }
+      if (
+        !/"2008": \["19FL", "24RB-SL", "25RGB-SL", "26RG-SL", "27CD-SL", "27RB-SL", "27RS-SL", "29RLK-SL", "30BH-SL", "21QS", "25QS", "26QS", "26QSL", "27QSBH", "27QSTH"\]/.test(
+          aero,
+        )
+      ) {
+        fail("Dutchmen|Aerolite MY2008 PDF lock missing (2008-Aerolite.pdf series line)");
+      }
+      if (/"27QSBH-SL"/.test(aero) || /"27QSTH-SL"/.test(aero)) {
+        fail("Dutchmen|Aerolite must keep series-line 27QSBH / 27QSTH (not drawing -SL extras)");
+      }
+      if (
+        /"160"/.test(aero) ||
+        /"17FL"/.test(aero) ||
+        /"195"/.test(aero) ||
+        /"214"/.test(aero) ||
+        /"215"/.test(aero) ||
+        /"235"/.test(aero) ||
+        /"236"/.test(aero) ||
+        /"23BH"/.test(aero) ||
+        /"23TT"/.test(aero)
+      ) {
+        fail("Dutchmen|Aerolite must not merge Cub expandable codes from the 2006 brochure");
+      }
+      if (/"2005":/.test(aero) || /"2007":/.test(aero) || /"2009":/.test(aero)) {
+        fail("Dutchmen|Aerolite must omit 2005 / 2007 / 2009 (GAP — no dated PDF this pack)");
+      }
+      if (/"2010": .*"18FS"/.test(aero) || /"2010": .*"24RB-SL"/.test(aero) || /"2010": .*"27QSBH"/.test(aero)) {
+        fail("Dutchmen|Aerolite must not copy 2006/2008 codes onto 2010+");
+      }
+      if (/"2006": .*"1923RB"/.test(aero) || /"2008": .*"1923RB"/.test(aero) || /"2008": .*"2423BH"/.test(aero)) {
+        fail("Dutchmen|Aerolite must not copy 1923RB-era codes onto 2006/2008");
+      }
+      if (!/"2010": \["1923RB", "2423BH", "2603QB"\]/.test(aero)) {
+        fail("Dutchmen|Aerolite 2010 tip-era codes must stay 1923RB / 2423BH / 2603QB");
+      }
+
+      const coleman = slice("Coleman", "Aspen Trail");
+      const kodiak = slice("Kodiak", "Coleman");
+      const yukon = slice("Yukon", "Astoria");
+      for (const [name, body, years] of [
+        ["Coleman", coleman, [2006, 2007, 2008, 2009]],
+        ["Kodiak", kodiak, [2006, 2007, 2008, 2009]],
+        ["Yukon", yukon, [2008, 2009]],
+      ]) {
+        for (const y of years) {
+          if (new RegExp(`"${y}":`).test(body)) {
+            fail(`Dutchmen|${name} must omit ${y} (GAP — no dated PDF this pack)`);
+          }
+        }
+        if (/"18FS"/.test(body) || /"24RB-SL"/.test(body) || /"27QSBH"/.test(body) || /"30BH-SL"/.test(body)) {
+          fail(`Dutchmen|${name} must not copy Aerolite codes`);
+        }
+      }
+      if (!/"2010": \["17B", "19BH", "2555BH", "2855BH"\]/.test(coleman)) {
+        fail("Dutchmen|Coleman 2010 tip-era codes must stay 17B / 19BH / 2555BH / 2855BH");
+      }
+      if (!/"2010": \["200BHSL", "248BHSL", "263BHSL", "294BHSL"\]/.test(kodiak)) {
+        fail("Dutchmen|Kodiak 2010 tip-era codes must stay 200BHSL / 248BHSL / 263BHSL / 294BHSL");
+      }
+      if (!/"2010": \["343RLB", "393RLB"\]/.test(yukon)) {
+        fail("Dutchmen|Yukon 2010 tip-era codes must stay 343RLB / 393RLB");
+      }
+
+      for (const [name, next] of [
+        ["Aspen Trail", "Aspen Trail FW"],
+        ["Aspen Trail FW", "Voltage"],
+        ["Voltage", "Voltage V-Series"],
+        ["Voltage V-Series", "Yukon"],
+        ["Astoria", "Aerolite"],
+        ["Infinity", null],
+      ]) {
+        const body = slice(name, next);
+        if (/"2005":/.test(body) || /"2006":/.test(body) || /"2007":/.test(body) || /"2008":/.test(body) || /"2009":/.test(body)) {
+          fail(`Dutchmen|${name} must omit 2005–2009 (later-only / GAP — do not invent)`);
+        }
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const dmIdx = catalogIndex.Dutchmen;
+      if (!dmIdx) fail("Dutchmen missing from CATALOG_INDEX");
+      if (dmIdx.Cub) fail("Dutchmen must not index Cub");
+      if (!dmIdx.Aerolite?.years?.includes(2006) || !dmIdx.Aerolite?.years?.includes(2008)) {
+        fail("Dutchmen|Aerolite index must include 2006 and 2008");
+      }
+      if (
+        dmIdx.Aerolite?.years?.includes(2005) ||
+        dmIdx.Aerolite?.years?.includes(2007) ||
+        dmIdx.Aerolite?.years?.includes(2009)
+      ) {
+        fail("Dutchmen|Aerolite index must omit 2005 / 2007 / 2009 (GAP)");
+      }
+      if (dmIdx.Aerolite?.yearStart !== 2005) {
+        fail("Dutchmen|Aerolite index yearStart must stay 2005");
+      }
+      for (const [name, years] of [
+        ["Coleman", [2006, 2007, 2008, 2009]],
+        ["Kodiak", [2006, 2007, 2008, 2009]],
+        ["Yukon", [2008, 2009]],
+      ]) {
+        for (const y of years) {
+          if (dmIdx[name]?.years?.includes(y)) {
+            fail(`Dutchmen|${name} index must omit ${y} (GAP)`);
+          }
+        }
+      }
+      for (const gap of ["Aspen Trail", "Aspen Trail FW", "Voltage", "Voltage V-Series", "Astoria", "Infinity"]) {
+        if (
+          dmIdx[gap]?.years?.includes(2005) ||
+          dmIdx[gap]?.years?.includes(2006) ||
+          dmIdx[gap]?.years?.includes(2007) ||
+          dmIdx[gap]?.years?.includes(2008) ||
+          dmIdx[gap]?.years?.includes(2009)
+        ) {
+          fail(`Dutchmen|${gap} index must omit 2005–2009 (GAP)`);
+        }
+      }
+      if (dmIdx.Aerolite?.type !== "Travel Trailer") fail("Dutchmen|Aerolite index must be Travel Trailer");
+      if (dmIdx.Coleman?.type !== "Travel Trailer") fail("Dutchmen|Coleman index must be Travel Trailer");
+      if (dmIdx.Kodiak?.type !== "Travel Trailer") fail("Dutchmen|Kodiak index must be Travel Trailer");
+      if (dmIdx.Yukon?.type !== "Fifth Wheel") fail("Dutchmen|Yukon index must be Fifth Wheel");
+    }
+  }
+
   // Keystone MY2027 OEM lock + yearStart hygiene / Half-Ton 2027 + 25FKD Cougar TT scrub.
   // Sprinter MY2025–2026 from #100. This slice locks major-line MY2025–2026 from walk-back pack §6.
   {

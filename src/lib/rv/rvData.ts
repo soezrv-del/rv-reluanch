@@ -30307,6 +30307,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "332BHSL"
       ],
       floorplansByYear: {
+        // GAP 2006–09: no dated Kodiak PDF this pack (library 403 / RVUSA empty shells).
+        // Prefer omit. Do not invent chips or copy Aerolite / 2010+ 200BHSL-era codes backward.
         "2010": ["200BHSL", "248BHSL", "263BHSL", "294BHSL"],
         "2011": ["200BHSL", "248BHSL", "263BHSL", "294BHSL"],
         "2012": ["200BHSL", "248BHSL", "261RBSL", "263BHSL", "294BHSL"],
@@ -30465,6 +30467,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "3225BH"
       ],
       floorplansByYear: {
+        // GAP 2006–09: no dated Coleman PDF this pack (library 403 / RVUSA empty shells).
+        // Prefer omit. Do not invent chips or copy Aerolite / 2010+ 17B-era codes backward.
         "2010": ["17B", "19BH", "2555BH", "2855BH"],
         "2011": ["17B", "19BH", "2555BH", "2855BH"],
         "2012": ["17B", "19BH", "2455RL", "2555BH", "2855BH"],
@@ -30828,6 +30832,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Fifth Wheel",
       floorplans: ["343RLB", "381MBL", "393RLB", "397RLB", "399ML"],
       floorplansByYear: {
+        // GAP 2008–09: no dated Yukon PDF this pack (library 403 / RVUSA empty shells).
+        // Prefer omit. Do not invent chips or copy Aerolite / 2010+ 343RLB-era codes backward.
         "2010": ["343RLB", "393RLB"],
         "2011": ["343RLB", "393RLB"],
         "2012": ["343RLB", "381MBL", "393RLB"],
@@ -30930,6 +30936,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Travel Trailer",
       floorplans: ["1923RB", "2133RB", "2423BH", "2603QB", "2830QB"],
       floorplansByYear: {
+        // LOCK library.rvusa.com/brochure/2006-Aerolite.pdf specs row (hyphenated suffixes exact).
+        // Cub expandable codes in the same brochure (160 / 17FL / 195 / 214 / 215 / 235 / 236 / 23BH / 23TT)
+        // stay off this key — Cub is sibling marketing; tip has no Cub key.
+        // GAP 2005 / 2007 / 2009 (no dated Aerolite PDF this pack — prefer omit).
+        // Do not copy these codes onto 2005 / 2007 / 2009 / 2010+ or invent 1923RB-era plans.
+        "2006": ["18FS", "19FL", "21QS", "24RB-SL", "25RGB-SL", "25QS", "26QS", "26QSL", "26QSQ", "26RG-SL", "26RK-SL", "27RB-SL", "27BH", "29QBH", "30BH-SL"],
+        // LOCK library.rvusa.com/brochure/2008-Aerolite.pdf series / specs line.
+        // Keep 27QSBH / 27QSTH bare (series line); drawings also show 27QSBH-SL / 27QSTH-SL — do not invent extras.
+        "2008": ["19FL", "24RB-SL", "25RGB-SL", "26RG-SL", "27CD-SL", "27RB-SL", "27RS-SL", "29RLK-SL", "30BH-SL", "21QS", "25QS", "26QS", "26QSL", "27QSBH", "27QSTH"],
         "2010": ["1923RB", "2423BH", "2603QB"],
         "2011": ["1923RB", "2423BH", "2603QB"],
         "2012": ["1923RB", "2133RB", "2423BH", "2603QB"],
