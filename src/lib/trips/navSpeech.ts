@@ -1,7 +1,7 @@
 /**
  * Spoken turn prompts for Trips navigation.
  *
- * Web Speech Synthesis only — no microphone, no SpeechRecognition.
+ * Web Speech Synthesis only — playback, not recording.
  * Capacitor WKWebView already exposes window.speechSynthesis; a native
  * TTS plugin would need a TestFlight rebuild and is not required.
  * iOS / Android do not show a speech-synthesis permission dialog.
@@ -21,10 +21,7 @@ export function cancelNavSpeech(): void {
   }
 }
 
-/**
- * Prime voices from a tap. Does not call getUserMedia.
- * Returns false when the WebView has no synthesizer.
- */
+/** Prime voices from a tap. Returns false when TTS is missing. */
 export function unlockNavSpeech(): boolean {
   if (!isNavSpeechAvailable()) return false;
   try {

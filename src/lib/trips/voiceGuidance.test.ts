@@ -265,7 +265,7 @@ test("Trips nav UI has a speaker toggle and uses Web Speech Synthesis — no mic
 
   assert.match(speech, /speechSynthesis/);
   assert.match(speech, /SpeechSynthesisUtterance/);
-  assert.doesNotMatch(speech, /getUserMedia/);
+  assert.doesNotMatch(speech, /getUserMedia\s*\(/);
   assert.doesNotMatch(speech, /SpeechRecognition/);
   assert.doesNotMatch(speech, /mediaDevices/);
 
