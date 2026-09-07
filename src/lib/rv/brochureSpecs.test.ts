@@ -13920,7 +13920,7 @@ test("Forest River honesty lock: MY2026 spec-table quarantine + dated MY2027 fam
 test("Forest River thin-line honesty: dated 2010–2014 + tip years (Micro/Mini/Cruise/Wildwood/r-Pod)", () => {
   const block = src("rvData.ts");
   const f0 = block.indexOf('\n  "Forest River": {');
-  const f1 = block.indexOf('\n  "Keystone": {');
+  const f1 = block.indexOf("\n  Airstream: {");
   assert.ok(f0 > 0 && f1 > f0, "Forest River block");
   const fr = block.slice(f0, f1);
   const slice = (a: string, b: string) => {

@@ -1216,9 +1216,9 @@ function main() {
   // Forest River thin-line MY2010–2014 + tip-year lock (Micro Lite, Mini Lite, Cruise Lite, Wildwood, r-Pod).
   {
     const fr0 = src.indexOf('\n  "Forest River": {');
-    const fr1 = src.indexOf('\n  "Keystone": {');
+    const fr1 = src.indexOf("\n  Airstream: {");
     if (fr0 < 0 || fr1 < fr0) {
-      fail('Forest River block not found between "Forest River": and "Keystone":');
+      fail('Forest River block not found between "Forest River": and Airstream:');
     } else {
       const fr = src.slice(fr0, fr1);
       const slice = (a, b) => {

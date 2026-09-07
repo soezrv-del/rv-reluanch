@@ -343,7 +343,7 @@ test("Forest River fifth-wheel Facts SoT: 2026 spec-table quarantine + dated 202
 test("Forest River thin-line Facts SoT: 2010–2014 dated locks + empty GAP years", () => {
   const block = src("rvData.ts");
   const f0 = block.indexOf('\n  "Forest River": {');
-  const f1 = block.indexOf('\n  "Keystone": {');
+  const f1 = block.indexOf("\n  Airstream: {");
   const fr = block.slice(f0, f1);
   const mini = fr.slice(fr.indexOf('    "Rockwood Mini Lite": {'), fr.indexOf('    "Rockwood Ultra Lite": {'));
   assert.match(mini, /yearStart:\s*2013/);

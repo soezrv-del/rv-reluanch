@@ -16097,7 +16097,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Flagstaff Micro Lite": {
       type: "Travel Trailer",
-      floorplans: ["21DS", "21FBRS", "21SRB", "22FBS", "22LKS", "22SQS", "25BDS", "25BHS", "25BRDS", "25BSDS", "25DBH", "25FBD", "25FBH", "25FBLS", "25FBS", "25FBT", "25FBTS", "25FKB", "25FKBS", "25MBR", "25SRB", "25SRK"],
+      floorplans: ["21DS", "21FBRS", "21SRB", "22FBS", "22LKS", "22SQS", "25BDS", "25BHS", "25BRDS", "25BSDS", "25DBH", "25FBD", "25FBH", "25FBLS", "25FBT", "25FBTS", "25FKB", "25FKBS", "25MBR", "25SRB", "25SRK"],
       floorplansByYear: {
         "2015": ["21FBRS", "21DS", "22FBS", "25BHS"],
         "2016": ["21FBRS", "21DS", "22FBS", "25BHS", "25BDS"],
