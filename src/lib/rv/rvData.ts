@@ -15340,7 +15340,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2010,
-      description: "Forest River Sabre — bunkhouse-capable fifth wheels. Dated RVUSA/PDF MY2026: 32GKS / 33RLP / 36DBB / 36EST / 36FLX / 37FLH / 37RVMILES / 38DBL / 38RVHUNTER. Dated RVUSA MY2027 adds 32RK and drops 38DBL. Palomino Sabre is a different make."
+      description: "Forest River Sabre — bunkhouse-capable fifth wheels. Dated RVUSA/PDF MY2026: 32GKS / 33RLP / 36DBB / 36EST / 36FLX / 37FLH / 37RVMILES / 38DBL / 38RVHUNTER. Dated RVUSA MY2027 adds 32RK and drops 38DBL. Sabre is Forest River / Cherokee (RVUSA m5596 b203), not Palomino."
     },
     "Cherokee Arctic Wolf": {
       type: "Fifth Wheel",
@@ -29406,7 +29406,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Palomino: {
     Puma: {
       type: "Travel Trailer",
-      floorplans: ["16BHQ", "25RKSS", "26FKDS", "28BHSS", "30RKQS", "32BHQS", "32FBIS", "337BH", "38RLB", "22RBC", "253FBS", "29RBFQ", "31BHSS"],
+      floorplans: ["16BHQ", "25RKSS", "26FKDS", "28BHSS", "30RKQS", "32BHQS", "32FBIS", "337BH", "38RLB"],
       floorplansByYear: {
         "2010": ["25RKSS", "28BHSS", "30RKQS", "32BHQS"],
         "2011": ["25RKSS", "28BHSS", "30RKQS", "32BHQS"],
@@ -29483,8 +29483,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "337BH",
           "38RLB"
         ],
-        "2025": ["16BHQ", "25RKSS", "26FKDS", "28BHSS", "30RKQS", "32BHQS", "337BH", "38RLB"],
-        "2026": ["16BHQ", "25RKSS", "26FKDS", "28BHSS", "30RKQS", "32BHQS", "337BH", "22RBC", "253FBS", "29RBFQ", "31BHSS"]
+        "2025": ["16BHQ", "25RKSS", "26FKDS", "28BHSS", "30RKQS", "32BHQS", "337BH", "38RLB"]
+        // MY2026–2027 GAP. Dated 2026-Forest-River-Puma.pdf (CreationDate 2025-12-02 / footer 12/25)
+        // is CE / TT / Ambush TH / Vista / Vista LFT — do not merge into this single Puma key.
+        // RVUSA m1931 Available Years stop at 2025. Empty beats a merged mush. No dated 2027 PDF.
       },
       lengthRange: [
         18,
@@ -29514,11 +29516,33 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 1,
       yearStart: 2005,
-      description: "Palomino Puma — Forest River high-volume travel trailer (destination and towable). Common bunk codes 28BHSS / 32BHQS / 337BH."
+      yearEnd: 2025,
+      description: "Palomino Puma — travel trailer. MY2026–2027 omitted (dated 2026-Forest-River-Puma.pdf is CE/TT/Ambush/Vista/LFT — do not merge into this single key; RVUSA m1931 Available Years stop at 2025). No dated 2027 brochure."
     },
     SolAire: {
       type: "Travel Trailer",
-      floorplans: ["202RB", "243BHS", "258RBSS", "294DBHS", "304RKDS", "317BHSK", "267BHS", "282BH", "282BHSK"],
+      floorplans: [
+        "202RB",
+        "232UD",
+        "235BH",
+        "237RK",
+        "2420RBS",
+        "243BHS",
+        "2430BHS",
+        "258RBSS",
+        "2580RBSS",
+        "2750BHS",
+        "294DBHS",
+        "302BHS",
+        "304RKDS",
+        "3060RKTS",
+        "3070RKLS",
+        "3150TBSS",
+        "317BHSK",
+        "3200TSBH",
+        "3300FLBS",
+        "3380RLBT"
+      ],
       floorplansByYear: {
         "2014": ["202RB", "243BHS", "258RBSS"],
         "2015": ["202RB", "243BHS", "258RBSS", "294DBHS"],
@@ -29532,7 +29556,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["202RB", "243BHS", "258RBSS", "294DBHS", "304RKDS", "317BHSK"],
         "2024": ["202RB", "243BHS", "258RBSS", "294DBHS", "304RKDS", "317BHSK"],
         "2025": ["202RB", "243BHS", "258RBSS", "294DBHS", "304RKDS"],
-        "2026": ["202RB", "243BHS", "258RBSS", "294DBHS", "304RKDS", "267BHS", "282BH", "282BHSK"]
+        // Dated 2026-Forest-River-Solaire.pdf (CreationDate 2026-01-12 / footer Forest River, Inc. 01/26).
+        // Palomino line; Forest-River-* filename is not Forest River Columbus / Sabre.
+        // Lite + SolAire spec-table codes. Do not add RVUSA m11558 extras (2080RBS / 2085BHS / 2300FKBS).
+        "2026": ["232UD", "235BH", "237RK", "302BHS", "2420RBS", "2430BHS", "2580RBSS", "2750BHS", "3060RKTS", "3070RKLS", "3150TBSS", "3200TSBH", "3300FLBS", "3380RLBT"]
       },
       lengthRange: [
         22,
@@ -29562,11 +29589,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 1,
       yearStart: 2014,
-      description: "Palomino SolAire Ultra Lite — lighter Puma-family travel trailer for half-ton towers."
+      yearEnd: 2026,
+      description: "Palomino SolAire — travel trailer. Dated 2026-Forest-River-Solaire.pdf (footer 01/26): Lite 232UD / 235BH / 237RK / 302BHS; SolAire 2420RBS / 2430BHS / 2580RBSS / 2750BHS / 3060RKTS / 3070RKLS / 3150TBSS / 3200TSBH / 3300FLBS / 3380RLBT. 2027 omitted (no dated 2027 brochure)."
     },
     Columbus: {
       type: "Fifth Wheel",
-      floorplans: ["329DV", "340RK", "370FL", "380RL", "383FB", "383RLH", "388FKH", "340RLC", "378MB"],
+      floorplans: ["329DV", "340RK", "370FL", "380RL", "383FB", "383RLH", "388FKH"],
       floorplansByYear: {
         "2012": ["329DV", "383FB"],
         "2013": ["329DV", "383FB"],
@@ -29581,8 +29609,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["329DV", "340RK", "370FL", "380RL", "383FB", "383RLH", "388FKH"],
         "2023": ["329DV", "340RK", "370FL", "380RL", "383FB", "383RLH", "388FKH"],
         "2024": ["329DV", "340RK", "380RL", "383FB", "383RLH", "388FKH"],
-        "2025": ["329DV", "380RL", "383FB", "383RLH", "388FKH"],
-        "2026": ["329DV", "380RL", "383FB", "383RLH", "388FKH", "340RLC", "378MB"]
+        "2025": ["329DV", "380RL", "383FB", "383RLH", "388FKH"]
+        // MY2026–2027 GAP. RVUSA m4268 years ~2020–2025. Do not copy 2026-Forest-River-Columbus.pdf
+        // (Forest River Columbus H-series — different brand key).
       },
       lengthRange: [
         33,
@@ -29612,7 +29641,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 1,
       yearStart: 2012,
-      description: "Palomino Columbus — residential fifth wheel (Compass / Luxury packages). 380RL / 383FB staples."
+      yearEnd: 2025,
+      description: "Palomino Columbus — fifth wheel. MY2026–2027 omitted (RVUSA m4268 years through 2025). Do not use 2026-Forest-River-Columbus.pdf — that is Forest River Columbus, not this key."
     },
     "Columbus Compass": {
       type: "Fifth Wheel",
@@ -29631,8 +29661,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["320RL", "329DV", "340RK", "383FB"],
         "2023": ["320RL", "329DV", "340RK", "383FB"],
         "2024": ["320RL", "329DV", "340RK", "383FB"],
-        "2025": ["320RL", "329DV", "383FB"],
-        "2026": ["320RL", "329DV", "383FB"]
+        "2025": ["320RL", "329DV", "383FB"]
+        // MY2026–2027 GAP. No dated Palomino Columbus Compass card.
       },
       lengthRange: [
         32,
@@ -29662,10 +29692,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 1,
       yearStart: 2012,
-      description: "Palomino Columbus Compass — lighter Columbus packaging for more trucks."
+      yearEnd: 2025,
+      description: "Palomino Columbus Compass — fifth wheel. MY2026–2027 omitted (no dated Palomino Compass card)."
     },
     "Real-Lite": {
-      type: "Travel Trailer",
+      type: "Truck Camper",
       floorplans: ["160SS", "180", "1810BH", "208", "Mini Lite 180", "SS-1607"],
       floorplansByYear: {
         "2010": ["160SS", "180", "208"],
@@ -29683,8 +29714,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["160SS", "180", "1810BH", "208", "Mini Lite 180", "SS-1607"],
         "2023": ["160SS", "180", "1810BH", "208", "Mini Lite 180"],
         "2024": ["160SS", "180", "1810BH", "208", "Mini Lite 180"],
-        "2025": ["160SS", "180", "1810BH", "208"],
-        "2026": ["160SS", "180", "1810BH", "208"]
+        "2025": ["160SS", "180", "1810BH", "208"]
+        // MY2026–2027 GAP. RVUSA m2968 is Truck Camper (2026 cards exist) — do not invent 2027
+        // or keep the Travel Trailer type. Incomplete HS/SS lists stay empty this pass.
       },
       lengthRange: [
         16,
@@ -29714,11 +29746,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 1,
       yearStart: 2006,
-      description: "Palomino Real-Lite — ultra-light mini TT / truck-camper-adjacent small trailers."
+      yearEnd: 2025,
+      description: "Palomino Real-Lite — truck camper (RVUSA m2968). Type was Travel Trailer in error. MY2026–2027 omitted this pass (2026 truck-camper cards exist on RVUSA; do not invent 2027)."
     },
     "Real-Lite FW": {
       type: "Fifth Wheel",
-      floorplans: ["1850", "2120", "2450", "2600", "26LRSS", "29QBI", "29RKSS"],
+      floorplans: ["1850", "2120", "2450", "2600"],
       floorplansByYear: {
         "2012": ["1850", "2120"],
         "2013": ["1850", "2120", "2450"],
@@ -29733,8 +29766,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["1850", "2120", "2450", "2600"],
         "2023": ["1850", "2120", "2450"],
         "2024": ["1850", "2120", "2450"],
-        "2025": ["1850", "2120"],
-        "2026": ["1850", "2120", "26LRSS", "29QBI", "29RKSS"]
+        "2025": ["1850", "2120"]
+        // MY2026–2027 GAP. No dedicated RVUSA Real-Lite FW key.
       },
       lengthRange: [
         20,
@@ -29764,62 +29797,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 1,
       yearStart: 2012,
-      description: "Palomino Real-Lite FW — light fifth wheel for small trucks and first-time pin-hitch owners."
-    },
-    Sabre: {
-      type: "Fifth Wheel",
-      floorplans: ["36DBQ", "37FLL", "38MBH", "36BHQ", "37FLH", "38RLB"],
-      floorplansByYear: {
-        "2011": ["36DBQ", "37FLL"],
-        "2012": ["36DBQ", "37FLL", "38MBH"],
-        "2013": ["36DBQ", "37FLL", "38MBH"],
-        "2014": ["36DBQ", "37FLL", "38MBH"],
-        "2015": ["36DBQ", "37FLL", "38MBH"],
-        "2016": ["36DBQ", "37FLL", "38MBH"],
-        "2017": ["36DBQ", "37FLL", "38MBH"],
-        "2018": ["36DBQ", "37FLL", "38MBH"],
-        "2019": ["36DBQ", "37FLL", "38MBH"],
-        "2020": ["36DBQ", "37FLL", "38MBH"],
-        "2021": ["36DBQ", "37FLL", "38MBH"],
-        "2022": ["36DBQ", "37FLL", "38MBH"],
-        "2023": ["36DBQ", "37FLL"],
-        "2024": ["36DBQ", "37FLL"],
-        "2025": ["36DBQ", "37FLL"],
-        "2026": ["36DBQ", "37FLL", "36BHQ", "37FLH", "38RLB"]
-      },
-      lengthRange: [
-        36,
-        40
-      ],
-      weightRange: [
-        11000,
-        15000
-      ],
-      slideouts: 3,
-      sleeps: 8,
-      msrpRange: [
-        54900,
-        99000
-      ],
-      chassis: "N/A (towable)",
-      fuelType: "N/A (towable)",
-      recalls: 0,
-      rating: 4.25,
-      image: RV_CARD_IMAGE,
-      towingCapacity: 0,
-      freshWater: 54,
-      grayWater: 60,
-      blackWater: 40,
-      awningLength: 16,
-      ceilingHeight: 84,
-      founded: 1968,
-      warrantyYears: 1,
-      yearStart: 2011,
-      description: "Palomino Sabre — family bunk fifth wheel under the Palomino umbrella."
+      yearEnd: 2025,
+      description: "Palomino Real-Lite FW — fifth wheel. MY2026–2027 omitted (no dedicated RVUSA FW key)."
     },
     "Puma Unleashed": {
       type: "Toy Hauler",
-      floorplans: ["383THS", "383TOC", "356THS", "357QBC", "373QBC", "388RBC"],
+      floorplans: ["383THS", "383TOC", "356THS"],
       floorplansByYear: {
         "2014": ["383THS"],
         "2015": ["383THS", "383TOC"],
@@ -29832,8 +29815,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2022": ["356THS", "383THS", "383TOC"],
         "2023": ["356THS", "383THS", "383TOC"],
         "2024": ["356THS", "383THS", "383TOC"],
-        "2025": ["356THS", "383THS"],
-        "2026": ["356THS", "383THS", "357QBC", "373QBC", "388RBC"]
+        "2025": ["356THS", "383THS"]
+        // MY2026–2027 GAP. No dated Unleashed PDF. 2026 Puma brochure Ambush 25TH/27TH/29TH stay off this key.
       },
       lengthRange: [
         34,
@@ -29863,6 +29846,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 1,
       yearStart: 2014,
+      yearEnd: 2025,
       generator: "Generator prep",
       garageLengthFt: 10,
       garageWidthFt: 8,
@@ -29870,7 +29854,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       garageCapacityLbs: 2500,
       rampWidthFt: 7.5,
       garageFits: "1 UTV or dual bikes",
-      description: "Palomino Puma Unleashed — toy hauler TT/FW hybrid garage plans for weekend toys."
+      description: "Palomino Puma Unleashed — toy hauler. MY2026–2027 omitted (no dated Unleashed PDF; do not merge Ambush/Puma brochure codes onto this key)."
     }
   },
   Dutchmen: {
