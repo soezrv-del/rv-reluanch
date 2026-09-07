@@ -13758,3 +13758,161 @@ test("Coachmen honesty lock: MY2026 towable quarantine + Destination hyphens + S
     "2026 SRS is GAP — do not copy-forward the 2019–2024 pin",
   );
 });
+
+test("Forest River honesty lock: MY2026 spec-table quarantine + dated MY2027 family pages", () => {
+  const block = src("rvData.ts");
+  const f0 = block.indexOf('\n  "Forest River": {');
+  const f1 = block.indexOf('\n  "Keystone": {');
+  assert.ok(f0 > 0 && f1 > f0, "Forest River block");
+  const fr = block.slice(f0, f1);
+  const slice = (a: string, b: string) => {
+    const i = fr.includes(`    ${a}: {`) ? fr.indexOf(`    ${a}: {`) : fr.indexOf(`    "${a}": {`);
+    const j = fr.includes(`    ${b}: {`) ? fr.indexOf(`    ${b}: {`) : fr.indexOf(`    "${b}": {`);
+    if (i < 0) return "";
+    return j > i ? fr.slice(i, j) : fr.slice(i);
+  };
+  const yearPlans = (s: string, year: number) => {
+    const m = s.match(new RegExp(`"${year}":\\s*\\[([\\s\\S]*?)\\]`));
+    return m ? [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]) : [];
+  };
+
+  const card = slice("Cardinal", "Cedar Creek");
+  assert.deepEqual(yearPlans(card, 2026), [
+    "32LIVE",
+    "33CHEF",
+    "34CRIB",
+    "35FL",
+    "35FUN",
+    "36MB",
+    "37BEST",
+    "402BEDS",
+  ]);
+  assert.equal(yearPlans(card, 2026).includes("35CRIB"), false);
+  assert.equal(yearPlans(card, 2026).includes("37PUB"), false);
+  assert.deepEqual(yearPlans(card, 2027), [
+    "32CHILL",
+    "33CHEF",
+    "35CRIB",
+    "36FL",
+    "36FUN",
+    "37GALLEY",
+    "38DEN",
+    "41DUB",
+  ]);
+
+  const sab = slice("Sabre", "Cherokee Arctic Wolf");
+  assert.deepEqual(yearPlans(sab, 2026), [
+    "32GKS",
+    "33RLP",
+    "36DBB",
+    "36EST",
+    "36FLX",
+    "37FLH",
+    "37RVMILES",
+    "38DBL",
+    "38RVHUNTER",
+  ]);
+  assert.deepEqual(yearPlans(sab, 2027), [
+    "32GKS",
+    "32RK",
+    "33RLP",
+    "36DBB",
+    "36EST",
+    "36FLX",
+    "37FLH",
+    "37RVMILES",
+    "38RVHUNTER",
+  ]);
+  assert.equal(yearPlans(sab, 2027).includes("38DBL"), false);
+
+  const cc = slice("Cedar Creek", "Sabre");
+  assert.deepEqual(yearPlans(cc, 2026), [
+    "29RL",
+    "361RL",
+    "370FL",
+    "381MUD",
+    "383FB",
+    "385RK",
+    "38DB",
+    "39RKB",
+  ]);
+  assert.deepEqual(yearPlans(cc, 2027), [
+    "290RL",
+    "361RL",
+    "380DB",
+    "381MUD",
+    "383FB",
+    "385RK",
+    "390RKB",
+    "398FL",
+  ]);
+  assert.equal(yearPlans(cc, 2027).includes("412FWC"), false);
+  assert.equal(yearPlans(cc, 2027).includes("40CBK"), false);
+
+  const col = slice("Columbus", "Cardinal");
+  assert.deepEqual(yearPlans(col, 2026), [
+    "377DS",
+    "379MBL",
+    "383RLH",
+    "384RKH",
+    "388FKH",
+    "389FLH",
+  ]);
+  assert.deepEqual(yearPlans(col, 2027), []);
+
+  const sig = slice("Rockwood Signature", "Columbus");
+  assert.deepEqual(yearPlans(sig, 2026), [
+    "290SFK",
+    "401SFB",
+    "402SFL",
+    "405SBH",
+    "R281RK",
+    "R282RK",
+    "R301RKS",
+    "R331RL",
+    "R361RLS",
+    "R371RK",
+    "R372RL",
+    "R374DBH",
+  ]);
+  assert.deepEqual(yearPlans(sig, 2027), [
+    "281SRK",
+    "290SFK",
+    "301SRK",
+    "401SFB",
+    "402SFL",
+    "403SDB",
+    "404SRK",
+    "R361RLS",
+    "R371RK",
+    "R372RL",
+    "R374DBH",
+  ]);
+  assert.equal(yearPlans(sig, 2027).includes("8336BH"), false);
+  assert.equal(yearPlans(sig, 2026).includes("404SRK"), false);
+
+  const aw = slice("Cherokee Arctic Wolf", "Sandstorm");
+  assert.deepEqual(yearPlans(aw, 2026), [
+    "27SGS",
+    "285OPT",
+    "287BH",
+    "289PANO",
+    "3250SUITE",
+    "331BH",
+    "3650SUITE",
+    "3750SUITE",
+    "387ML",
+    "38DST",
+    "38LEAH.G",
+    "3950SUITE",
+  ]);
+  assert.equal(yearPlans(aw, 2026).includes("3800DECK"), false);
+  assert.equal(yearPlans(aw, 2026).includes("38LEAH"), false);
+  assert.deepEqual(yearPlans(aw, 2027), []);
+
+  assert.equal(CATALOG_INDEX["Forest River"]?.Sabre?.years?.includes(2027), true);
+  assert.equal(CATALOG_INDEX["Forest River"]?.["Cedar Creek"]?.years?.includes(2027), true);
+  assert.equal(CATALOG_INDEX["Forest River"]?.["Rockwood Signature"]?.years?.includes(2027), true);
+  assert.equal(CATALOG_INDEX["Forest River"]?.Columbus?.years?.includes(2027), false);
+  assert.equal(CATALOG_INDEX["Forest River"]?.["Cherokee Arctic Wolf"]?.years?.includes(2027), false);
+});

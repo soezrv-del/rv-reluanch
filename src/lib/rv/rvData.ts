@@ -15054,7 +15054,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Rockwood Signature": {
       type: "Fifth Wheel",
-      floorplans: ["290SFK", "401SFB", "402SFL", "405SBH", "R281RK", "R282RK", "R301RKS", "R331RL", "R361RLS", "R371RK", "R372RL", "R374DBH"],
+      floorplans: ["281SRK", "290SFK", "301SRK", "401SFB", "402SFL", "403SDB", "404SRK", "405SBH", "R281RK", "R282RK", "R301RKS", "R331RL", "R361RLS", "R371RK", "R372RL", "R374DBH"],
       floorplansByYear: {
         "2010": ["8289WS", "8311WS", "8329SS"],
         "2011": ["8289WS", "8311WS", "8329SS"],
@@ -15072,7 +15072,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["8289WS", "8311WS", "8335BSS"],
         "2024": ["8289WS", "8311WS", "8335BSS"],
         "2025": ["8289WS", "8311WS", "8335BSS"],
+        // Dated 2026-Forest-River-Rockwood-Signature.pdf FW spec table (p.15, CreationDate 2025-09-10):
+        // R281RK | R282RK | 290SFK | R301RKS | R331RL | R361RLS | R371RK | R372RL | R374DBH | 401SFB | 402SFL | 405SBH
+        // TT 8xxx stay off this fifth-wheel key. 404SRK is not on the 2026 FW table.
         "2026": ["290SFK", "401SFB", "402SFL", "405SBH", "R281RK", "R282RK", "R301RKS", "R331RL", "R361RLS", "R371RK", "R372RL", "R374DBH"],
+        // Dated RVUSA 2027 family page (m7527-y2027). Library 2027 PDF 403.
+        // FW only — TT 8336BH / 8391FK / 8392RL / 8393RK / 8421DB stay off this key.
+        "2027": ["281SRK", "290SFK", "301SRK", "401SFB", "402SFL", "403SDB", "404SRK", "R361RLS", "R371RK", "R372RL", "R374DBH"],
       },
       lengthRange: [
         21,
@@ -15104,7 +15110,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2010,
-      description: "Forest River Rockwood Signature — mid/high fifth wheel. UVW/pin weight vary by floorplan."
+      description: "Forest River Rockwood Signature — mid/high fifth wheel. Dated 2026 FW spec table (12 codes). Dated RVUSA MY2027 FW-only (11 codes; TT 8xxx stay off). Pin weight varies — door sticker rules."
     },
     Columbus: {
       type: "Fifth Wheel",
@@ -15126,6 +15132,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["330RL", "377MBC", "383FB"],
         "2024": ["330RL", "377MBC", "383FB"],
         "2025": ["330RL", "377MBC", "383FB"],
+        // Dated 2026-Forest-River-Columbus.pdf (CreationDate 2025-08-18): 377DS | 379MBL | 383RLH | 384RKH | 388FKH | 389FLH
+        // RVUSA 2027 family page (m11310-y2027) exists but lists no floorplans — GAP, do not invent from dealer lots.
         "2026": ["377DS", "379MBL", "383RLH", "384RKH", "388FKH", "389FLH"]
       },
       lengthRange: [
@@ -15158,7 +15166,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2010,
-      description: "Forest River Columbus — residential fifth wheel. Confirm hitch/pin and GVWR."
+      description: "Forest River Columbus — residential fifth wheel. Dated 2026 flyer H-series: 377DS / 379MBL / 383RLH / 384RKH / 388FKH / 389FLH. 2027 omitted (empty dated family page). Palomino Columbus is a different make."
     },
     Cardinal: {
       type: "Fifth Wheel",
@@ -15180,7 +15188,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["3450RL", "3825FL", "3950RL"],
         "2024": ["3450RL", "3825FL", "3950RL"],
         "2025": ["3450RL", "3825FL", "3950RL"],
+        // Dated 2026-Forest-River-Cardinal.pdf Title=2026 Flyer footer 5/25. RVUSA 2026 year page mixes 2027-leak 35CRIB/36FUN/37GALLEY/37PUB — PDF outranks.
         "2026": ["32LIVE", "33CHEF", "34CRIB", "35FL", "35FUN", "36MB", "37BEST", "402BEDS"],
+        // Dated 2027-Forest-River-Cardinal.pdf footer 07/26.
         "2027": ["32CHILL", "33CHEF", "35CRIB", "36FL", "36FUN", "37GALLEY", "38DEN", "41DUB"]
       },
       lengthRange: [
@@ -15213,11 +15223,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2010,
-      description: "Forest River Cardinal — luxury fifth wheel. Heavy pin weights common."
+      description: "Forest River Cardinal — luxury fifth wheel. Dated 2026 Flyer: 32LIVE / 33CHEF / 34CRIB / 35FL / 35FUN / 36MB / 37BEST / 402BEDS. Dated 2027: 32CHILL / 33CHEF / 35CRIB / 36FL / 36FUN / 37GALLEY / 38DEN / 41DUB. Heavy pin weights common."
     },
     "Cedar Creek": {
       type: "Fifth Wheel",
-      floorplans: ["29RL", "361RL", "370FL", "381MUD", "383FB", "385RK", "38DB", "39RKB"],
+      floorplans: ["29RL", "290RL", "361RL", "370FL", "380DB", "381MUD", "383FB", "385RK", "38DB", "390RKB", "398FL", "39RKB"],
       floorplansByYear: {
         "2010": ["34RL2", "36CK2", "38EL"],
         "2011": ["34RL2", "36CK2", "38EL"],
@@ -15235,7 +15245,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["34RL2", "36CK2", "38EL"],
         "2024": ["34RL2", "36CK2", "38EL"],
         "2025": ["34RL2", "36CK2", "38EL"],
-        "2026": ["29RL", "361RL", "370FL", "381MUD", "383FB", "385RK", "38DB", "39RKB"]
+        // Dated 2026-Forest-River-Cedar-Creek.pdf "2026 FIFTH WHEEL FLOORPLANS" footer 11/25.
+        // Cottage 40CBK / 40CCK / 40CDL / 40CRS / 40CFK2B print on the same PDF — stay off this FW key.
+        "2026": ["29RL", "361RL", "370FL", "381MUD", "383FB", "385RK", "38DB", "39RKB"],
+        // Dated RVUSA 2027 family page (m1630-y2027). Library 2027 FW PDF 403.
+        // Cottage 2027 dated PDF (412FWC / 41FWC / 413FWC) is a destination sibling — stay off this key.
+        "2027": ["290RL", "361RL", "380DB", "381MUD", "383FB", "385RK", "390RKB", "398FL"]
       },
       lengthRange: [
         21,
@@ -15267,11 +15282,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2010,
-      description: "Forest River Cedar Creek — fifth wheel. Year/floorplan UVW varies widely."
+      description: "Forest River Cedar Creek — fifth wheel. Dated 2026 FW: 29RL / 361RL / 370FL / 381MUD / 383FB / 385RK / 38DB / 39RKB. Dated RVUSA MY2027: 290RL / 361RL / 380DB / 381MUD / 383FB / 385RK / 390RKB / 398FL. Cottage destination codes stay off this key."
     },
     Sabre: {
       type: "Fifth Wheel",
-      floorplans: ["32GKS", "33RLP", "36DBB", "36EST", "36FLX", "37FLH", "37RVMILES", "38DBL", "38RVHUNTER"],
+      floorplans: ["32GKS", "32RK", "33RLP", "36DBB", "36EST", "36FLX", "37FLH", "37RVMILES", "38DBL", "38RVHUNTER"],
       floorplansByYear: {
         "2010": ["36BHQ", "38DBQ"],
         "2011": ["36BHQ", "38DBQ"],
@@ -15289,7 +15304,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["36BHQ", "38DBQ"],
         "2024": ["36BHQ", "38DBQ"],
         "2025": ["36BHQ", "38DBQ"],
-        "2026": ["32GKS", "33RLP", "36DBB", "36EST", "36FLX", "37FLH", "37RVMILES", "38DBL", "38RVHUNTER"]
+        // Dated 2026-Forest-River-Sabre.pdf footer 03/26 + dated RVUSA 2026 family page (m5596-y2026).
+        // 38DBL is on the dated 2026 year page / flyer art (9-plan count). 36ML is search-summary only.
+        "2026": ["32GKS", "33RLP", "36DBB", "36EST", "36FLX", "37FLH", "37RVMILES", "38DBL", "38RVHUNTER"],
+        // Dated RVUSA 2027 family page (m5596-y2027). Library 2027 PDF 403. 38DBL is MY2026-only; 32RK is new.
+        "2027": ["32GKS", "32RK", "33RLP", "36DBB", "36EST", "36FLX", "37FLH", "37RVMILES", "38RVHUNTER"]
       },
       lengthRange: [
         21,
@@ -15321,11 +15340,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2010,
-      description: "Forest River Sabre — bunkhouse-capable fifth wheels."
+      description: "Forest River Sabre — bunkhouse-capable fifth wheels. Dated RVUSA/PDF MY2026: 32GKS / 33RLP / 36DBB / 36EST / 36FLX / 37FLH / 37RVMILES / 38DBL / 38RVHUNTER. Dated RVUSA MY2027 adds 32RK and drops 38DBL. Palomino Sabre is a different make."
     },
     "Cherokee Arctic Wolf": {
       type: "Fifth Wheel",
-      floorplans: ["27SGS", "285OPT", "287BH", "289PANO", "3250SUITE", "331BH", "3650SUITE", "3750SUITE", "3800DECK", "387ML", "38DST", "38LEAH.G", "3950SUITE"],
+      floorplans: ["27SGS", "285OPT", "287BH", "289PANO", "3250SUITE", "331BH", "3650SUITE", "3750SUITE", "387ML", "38DST", "38LEAH.G", "3950SUITE"],
       floorplansByYear: {
         "2010": ["255RRT", "287BH", "3550WST"],
         "2011": ["255RRT", "287BH", "3550WST"],
@@ -15391,7 +15410,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           "38LEAH",
           "3950SUITE"
         ],
-        "2026": ["27SGS", "285OPT", "287BH", "289PANO", "3250SUITE", "331BH", "3650SUITE", "3750SUITE", "3800DECK", "387ML", "38DST", "38LEAH.G", "3950SUITE"]
+        // Dated 2026-Forest-River-Cherokee-Arctic-Wolf.pdf spec table (CreationDate 2025-12-19, footer 12/25): 12 codes.
+        // 3800DECK is named only on an N/A hitch note — no spec-table row. RVUSA model index counts 2026 as 12.
+        // 2850PT is scan-graphic only. 38LEAH.G keeps the printed dot+G. No dated 2027 family card (library 403).
+        "2026": ["27SGS", "285OPT", "287BH", "289PANO", "3250SUITE", "331BH", "3650SUITE", "3750SUITE", "387ML", "38DST", "38LEAH.G", "3950SUITE"]
       },
       lengthRange: [
         30,
@@ -15422,7 +15444,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2010,
-      description: "Cherokee Arctic Wolf — popular mid fifth wheel (half-ton to mid-profile). 2026 OEM includes 285OPT, 289PANO, 331BH, 3950SUITE. Pin weight varies widely — door sticker rules."
+      description: "Cherokee Arctic Wolf — popular mid fifth wheel (half-ton to mid-profile). Dated 2026 spec table (12 codes; 3800DECK quarantined). 2027 omitted (no dated family card). Pin weight varies widely — door sticker rules."
     },
     Sandstorm: {
       type: "Toy Hauler",
