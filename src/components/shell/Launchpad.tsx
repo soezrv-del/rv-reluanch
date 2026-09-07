@@ -122,9 +122,9 @@ export function MetalVerifiedTrue({
 }
 
 /**
- * Closed 3D field-guide launch — hardcover board, spine, cream page block.
- * David’s chrome/cobalt seal is printed on the cover (full circle, unfiltered).
- * Tap anywhere flips open. Inside leaves: Facts → Cal → Tow → Trips → Share → Grok → Premium.
+ * Closed 3D field-guide launch — Image 1 hardcover silhouette on a studio floor,
+ * Image 2 chrome/cobalt seal printed on the cover. Tap flips open.
+ * Inside leaves: Facts → Cal → Tow → Trips → Share → Grok → Premium.
  */
 export function Launchpad({
   onSelect,
@@ -361,8 +361,9 @@ export function Launchpad({
       onTouchMove={(e) => e.stopPropagation()}
     >
       <div className="leather-stage flex min-h-0 flex-1 items-center justify-center">
+        <div className="leather-studio" aria-hidden />
         <div
-          className={cn("leather-book relative mx-auto flex", (opened || flipping) && "is-open")}
+          className={cn("leather-book relative mx-auto", (opened || flipping) && "is-open")}
           onPointerUp={(e) => {
             if (opened || flipping) return;
             const dx = gesture.current ? e.clientX - gesture.current.x : 0;
@@ -373,15 +374,16 @@ export function Launchpad({
           }}
         >
           <div className="leather-book-shadow" aria-hidden />
+          <div className="leather-back" aria-hidden />
+          <div className="leather-pages-top" data-book-page-top aria-hidden />
+          <div className="leather-pages-bottom" aria-hidden />
           <div className="leather-spine" data-book-spine aria-hidden>
-            <span className="leather-spine-fillet" />
-            <span className="leather-spine-ridge leather-spine-ridge-a" />
-            <span className="leather-spine-ridge leather-spine-ridge-b" />
             <span className="leather-spine-title">RvFOX</span>
           </div>
+          <div className="leather-page-edge" data-book-page-edge aria-hidden />
           <div
             ref={viewportRef}
-            className="leather-viewport relative flex min-h-0 min-w-0 flex-1 overflow-hidden"
+            className="leather-viewport"
             onPointerDown={opened ? onPagerPointerDown : undefined}
             onPointerMove={opened ? onPagerPointerMove : undefined}
             onPointerUp={opened ? finishPagerGesture : undefined}
@@ -448,11 +450,10 @@ export function Launchpad({
               <span aria-hidden className="leather-cover-crease" />
 
               <span className="leather-cover-copy leather-cover-copy-top">
-                <span className="leather-kicker">RVFOX PRO</span>
                 <span className="leather-wordmark" data-cover-wordmark>
-                  <span className="leather-wordmark-rv">Rv</span>
-                  <span className="leather-wordmark-fox">FOX</span>
+                  RvFOX®
                 </span>
+                <span className="leather-verified">Verified and True</span>
               </span>
 
               <span className="leather-emblem-well">
@@ -469,24 +470,10 @@ export function Launchpad({
               </span>
 
               <span className="leather-cover-copy leather-cover-copy-bottom">
-                <MetalVerifiedTrue size="md" className="leather-verified" />
                 <span className="leather-tagline">Know before you buy.</span>
               </span>
-              <span className="leather-cover-cue">Tap anywhere to open</span>
             </button>
           </div>
-          <div className="leather-board-edge" aria-hidden />
-          <div className="leather-page-edge" data-book-page-edge aria-hidden>
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
-          <div className="leather-book-foot" aria-hidden />
         </div>
       </div>
     </div>
