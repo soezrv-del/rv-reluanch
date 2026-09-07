@@ -17088,6 +17088,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     Montana: {
       type: "Fifth Wheel",
       floorplans: [
+        "2950RK",
+        "2955RL",
+        "2980RL",
         "3000RE",
         "3100RL",
         "3120RL",
@@ -17097,6 +17100,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "3160RL",
         "3230CK",
         "3231CK",
+        "3255RL",
+        "3295RK",
+        "3380RL",
+        "3400RL",
         "3440RL",
         "3500RD",
         "3531RE",
@@ -17107,8 +17114,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "3610RL",
         "3611RL",
         "3623EB",
+        "3650RK",
         "3660RL",
         "3661RL",
+        "3670RL",
+        "3685FL",
         "3700LK",
         "3701LK",
         "3710FL",
@@ -17152,6 +17162,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "3950BR"
       ],
       floorplansByYear: {
+        // LOCK research/keystone/LOT_DESK_2005_2009.md + CODES_2005_2009.json
+        // library 2005-Keystone-Montana.pdf OCR (3400RI→3400RL already applied).
+        // Pin MY2005 only. Do not copy these codes onto 2006–2009 / 2010+.
+        // GAP 2006–2008 (no dated card this pack). Prefer GAP for thin 2009 RVUSA
+        // (3075RL / 3400RL) — do not lock a partial 2009. Do not invent-fill.
+        "2005": ["2950RK", "2955RL", "2980RL", "3255RL", "3295RK", "3380RL", "3400RL", "3650RK", "3670RL", "3685FL"],
         // MY2010–2013 leftover invent omitted (RVUSA Montana m1499 year cards are EMPTY shells).
         // Prefer omit over empty [] so 2010–2013 drop from the selectable index (MHC #103/#104).
         // No dated brochure in pack — do not invent-fill 3402RL / 3582RL / 3625RE / 3710FL / 3720RL / 3790RD / 3811MS.
@@ -18753,8 +18769,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Sprinter: {
       type: "Fifth Wheel",
-      floorplans: ["3210RLS", "3500RDB", "3520RDS", "3590LFT", "3640RLP", "3670FLS", "3800FLB", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"],
+      floorplans: ["249RKS", "259RBS", "274RLS", "303BHS", "3210RLS", "3500RDB", "3520RDS", "3590LFT", "3640RLP", "365BHS", "3670FLS", "3800FLB", "380BWS", "3810QBS", "3840LRK", "3900DBL", "3920DSL", "3950SSP", "3980FBS"],
       floorplansByYear: {
+        // LOCK research/keystone/LOT_DESK_2005_2009.md + CODES_2005_2009.json
+        // library 2006-Keystone-Sprinter.pdf — Sprinter travel-trailer section only.
+        // Do not merge Copper Canyon tables. Do not lock OCR-uncertain 37BHS.
+        // Do not copy these codes onto 2005 / 2007–2009 / 2010+ / MY2025–2027 FW.
+        // 2006 is TT-era codes on the current FW series key — no typeByYear invent
+        // (series type stays Fifth Wheel; dated type change would need by-year type on tip).
+        // GAP 2005, 2007–2009 (no dated Sprinter card this pack). Prefer omit.
+        "2006": ["249RKS", "259RBS", "274RLS", "303BHS", "365BHS", "380BWS"],
         // 2010–2024 leftover FBY emptied (prefer omit — era-mismatched invent:
         // 269FWRLS / 293FWRLS / 333FWRKS / 3530SIK / 3570FLS catalog chains).
         // yearStart 2000 kept. MY2025–2027 locks from #100/#96 unchanged.
@@ -18801,7 +18825,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2000,
-      description: "Keystone Sprinter — current premium-value fifth wheel. 2010–2024 leftover fby emptied (prefer omit). MY2025 lock: 3210RLS / 3520RDS / 3590LFT / 3670FLS / 3810QBS / 3840LRK / 3900DBL / 3920DSL / 3980FBS (omit 3190RLS). MY2026 lock adds 3800FLB / 3950SSP (omit 3640RLP). MY2027 OEM card is 3500RDB / 3520RDS / 3640RLP / 3800FLB / 3840LRK / 3900DBL / 3920DSL / 3950SSP / 3980FBS. yearEnd 2024 was false."
+      description: "Keystone Sprinter — current premium-value fifth wheel. MY2006 travel-trailer PDF lock (249RKS / 259RBS / 274RLS / 303BHS / 365BHS / 380BWS) is year-scoped only — do not copy forward. 2005 / 2007–2009 / 2010–2024 leftover fby emptied (prefer omit). MY2025 lock: 3210RLS / 3520RDS / 3590LFT / 3670FLS / 3810QBS / 3840LRK / 3900DBL / 3920DSL / 3980FBS (omit 3190RLS). MY2026 lock adds 3800FLB / 3950SSP (omit 3640RLP). MY2027 OEM card is 3500RDB / 3520RDS / 3640RLP / 3800FLB / 3840LRK / 3900DBL / 3920DSL / 3950SSP / 3980FBS. yearEnd 2024 was false."
     }
   },
   "Grand Design": {
