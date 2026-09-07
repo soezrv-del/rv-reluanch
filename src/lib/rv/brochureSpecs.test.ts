@@ -13863,6 +13863,90 @@ test("Keystone 2005–2009 honesty: Montana MY2005 + Sprinter MY2006 TT locks; p
   }
 });
 
+test("Airstream 2005–2009 honesty: Interstate MY2007 + International MY2008 locks; pack GAP stays empty", () => {
+  const idx = CATALOG_INDEX.Airstream;
+  assert.ok(idx);
+
+  assert.deepEqual(idx.Interstate?.years, [
+    2007, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023,
+    2024, 2025, 2026, 2027,
+  ]);
+  assert.equal(idx.Interstate?.yearStart, 2005);
+  assert.equal(idx.Interstate?.type, "Class B");
+  assert.deepEqual(idx.International?.years, [
+    2008, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023,
+    2024, 2025, 2026, 2027,
+  ]);
+  assert.equal(idx.International?.yearStart, 2000);
+  assert.equal(idx.International?.type, "Travel Trailer");
+  assert.equal(idx.Safari, undefined);
+  assert.equal(idx["Ocean Breeze"], undefined);
+  assert.equal(idx["CCD Signature"], undefined);
+
+  const block = src("rvData.ts");
+  const a0 = block.indexOf("\n  Airstream: {");
+  const a1 = block.indexOf('\n  "Keystone": {');
+  assert.ok(a0 > 0 && a1 > a0, "Airstream block");
+  const as = block.slice(a0, a1);
+  const interstate = as.slice(as.indexOf("    Interstate: {"), as.indexOf("    \"Tommy Bahama\": {"));
+  const intl = as.slice(as.indexOf("    International: {"), as.indexOf("    Globetrotter: {"));
+  const bambi = as.slice(as.indexOf("    Bambi: {"), as.indexOf("    Caravel: {"));
+  const flying = as.slice(as.indexOf('    "Flying Cloud": {'), as.indexOf('    "Trade Wind": {'));
+  const classic = as.slice(as.indexOf("    Classic: {"), as.indexOf('    "Stetson 6666": {'));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  // LOCK library 2007-Airstream-Interstate.pdf — short codes only.
+  assert.deepEqual(fbyYear(interstate, 2007), ["22DT", "22FS", "22RS", "22RD"]);
+  assert.doesNotMatch(interstate, /Interstate 22 DT|22 Dinette Twin/);
+  for (const y of [2005, 2006, 2008, 2009]) {
+    assert.equal(fbyYear(interstate, y), null, `Interstate ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(interstate, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(interstate, 2010), ["24GL", "Grand Tour EXT"]);
+  for (const y of [2010, 2015, 2025, 2026, 2027]) {
+    const plans = fbyYear(interstate, y) ?? [];
+    for (const code of ["22DT", "22FS", "22RS", "22RD"]) {
+      assert.equal(plans.includes(code), false, `Interstate ${y} must not stamp MY2007 ${code}`);
+    }
+  }
+
+  // LOCK library 2008-Airstream-International.pdf — 23'D → 23D. One list (CCD + Ocean Breeze).
+  assert.deepEqual(fbyYear(intl, 2008), ["16", "19", "23D", "25SS", "25FB", "27FB", "28"]);
+  assert.doesNotMatch(intl, /"23'D"|"23′D"/);
+  for (const y of [2005, 2006, 2007, 2009]) {
+    assert.equal(fbyYear(intl, y), null, `International ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(intl, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(intl, 2010), ["23FB", "25FB", "27FB", "28RB", "30RB"]);
+  for (const y of [2010, 2025, 2026, 2027]) {
+    const plans = fbyYear(intl, y) ?? [];
+    for (const code of ["16", "19", "23D", "25SS", "28"]) {
+      assert.equal(plans.includes(code), false, `International ${y} must not stamp MY2008-only ${code}`);
+    }
+  }
+
+  assert.doesNotMatch(as, /\n    Safari: \{|\n    "Safari": \{/);
+  assert.doesNotMatch(as, /\n    "Ocean Breeze": \{|\n    "CCD Signature": \{/);
+
+  for (const [name, srcBlock] of [
+    ["Bambi", bambi],
+    ["Flying Cloud", flying],
+    ["Classic", classic],
+  ] as const) {
+    for (const y of [2005, 2006, 2007, 2008, 2009]) {
+      assert.equal(fbyYear(srcBlock, y), null, `${name} ${y} must stay GAP`);
+      assert.doesNotMatch(srcBlock, new RegExp(`"${y}":`));
+    }
+    assert.equal(idx[name]?.years?.includes(2005), false);
+    assert.equal(idx[name]?.years?.includes(2009), false);
+  }
+});
+
 test("Coachmen honesty lock: MY2026 towable quarantine + Destination hyphens + SRS Class A diesel", () => {
   const block = src("rvData.ts");
   const c0 = block.indexOf("\n  Coachmen: {");
