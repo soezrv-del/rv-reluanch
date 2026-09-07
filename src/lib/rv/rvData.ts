@@ -27351,6 +27351,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Fifth Wheel",
       floorplans: ["3270RS", "3375SS", "3575SS", "3700FL", "3900FL", "3950MB", "3985QB", "4001QB"],
       floorplansByYear: {
+        // LOCK research/heartland/LOT_DESK_2005_2009.md + CODES_2005_2009.json (EzMe pack)
+        // library.rvusa.com/brochure/2008-Heartland-Bighorn.pdf
+        // Pin MY2008 only. Prefer GAP for thin 2006 3500RL/3600RL (do not lock 2-code).
+        // GAP 2005 / 2007 / 2009 (no dated card this pack — prefer omit).
+        // Do not copy these codes onto 2005–07 / 2009 / 2010+.
+        "2008": ["3055RL", "3100RL", "3370RL", "3400RL", "3400RE", "3580RL", "3600RE", "3600RL", "3670RL"],
         "2010": ["3375SS", "3900FL", "3985QB"],
         "2011": ["3375SS", "3900FL", "3985QB"],
         "2012": ["3375SS", "3700FL", "3900FL", "3985QB"],
@@ -27403,6 +27409,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Fifth Wheel",
       floorplans: ["2600RE", "2800QB", "2910RL", "3100RL", "3260BH", "3200MK"],
       floorplansByYear: {
+        // LOCK research/heartland/LOT_DESK_2005_2009.md + CODES_2005_2009.json (EzMe pack)
+        // library.rvusa.com/brochure/2009-Heartland-Sundance.pdf
+        // FW only: mid-profile + XLT FW (245RL / 287RL / 297RE) on the single Sundance key.
+        // GAP uncertain 3000RK / 3100ES / 3300RCB. Do not lock XLT TT
+        // (265RK / 285BH / 310BDS / 310RLS / 320BS). Do not invent a Sundance XLT key.
+        // GAP 2005–08 (prefer omit). Do not copy these codes onto 2005–08 / 2010+.
+        "2009": ["2998RB", "2800RLS", "2900MK", "3200RE", "3300SK", "3300FB", "3300RLB", "3300RC", "245RL", "287RL", "297RE"],
         "2010": ["2600RE", "2800QB", "3100RL"],
         "2011": ["2600RE", "2800QB", "3100RL"],
         "2012": ["2600RE", "2800QB", "2910RL", "3100RL"],
@@ -27559,6 +27572,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Toy Hauler",
       floorplans: ["3012", "3612", "4005King", "4006", "4113", "4270King"],
       floorplansByYear: {
+        // LOCK research/heartland/LOT_DESK_2005_2009.md + CODES_2005_2009.json (EzMe pack)
+        // library.rvusa.com/brochure/2009-Heartland-Cyclone.pdf
+        // Include 3210 (formal pack). Do not lock OCR junk / serial / litho.
+        // GAP 2007–08 (yearStart 2007; no dated card this pack — prefer omit).
+        // Do not copy these codes onto 2007–08 / 2010+.
+        "2009": ["3010TDS", "3210", "3795", "3912", "3950", "4012"],
         "2010": ["3012", "3612", "4006"],
         "2011": ["3012", "3612", "4006"],
         "2012": ["3012", "3612", "4005King", "4006"],

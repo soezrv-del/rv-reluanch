@@ -14027,6 +14027,139 @@ test("Thor early-ghosts honesty: Four Winds Majestic quarantine + Mandalay MY200
   }
 });
 
+test("Heartland 2005–2009 honesty: Bighorn MY2008 + Cyclone/Sundance MY2009 FW locks; pack GAP stays empty", () => {
+  const idx = CATALOG_INDEX.Heartland;
+  assert.ok(idx);
+
+  assert.deepEqual(idx.Bighorn?.years, [
+    2008, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023,
+    2024, 2025, 2026,
+  ]);
+  assert.equal(idx.Bighorn?.yearStart, 2003);
+  assert.equal(idx.Bighorn?.type, "Fifth Wheel");
+  assert.deepEqual(idx.Cyclone?.years, [
+    2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023,
+    2024, 2025, 2026,
+  ]);
+  assert.equal(idx.Cyclone?.yearStart, 2007);
+  assert.equal(idx.Cyclone?.type, "Toy Hauler");
+  assert.deepEqual(idx.Sundance?.years, [
+    2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023,
+    2024, 2025, 2026,
+  ]);
+  assert.equal(idx.Sundance?.yearStart, 2003);
+  assert.equal(idx.Sundance?.type, "Fifth Wheel");
+  assert.equal(idx["Sundance XLT"], undefined);
+  assert.equal(idx["Sundance Ultra-Lite"], undefined);
+
+  const block = src("rvData.ts");
+  const h0 = block.indexOf("\n  Heartland: {");
+  const h1 = block.indexOf("\n  Lance: {");
+  assert.ok(h0 > 0 && h1 > h0, "Heartland block");
+  const hl = block.slice(h0, h1);
+  const bighorn = hl.slice(hl.indexOf("    Bighorn: {"), hl.indexOf("    Sundance: {"));
+  const sundance = hl.slice(hl.indexOf("    Sundance: {"), hl.indexOf("    Landmark: {"));
+  const landmark = hl.slice(hl.indexOf("    Landmark: {"), hl.indexOf('    "Big Country": {'));
+  const bigCountry = hl.slice(hl.indexOf('    "Big Country": {'), hl.indexOf("    Cyclone: {"));
+  const cyclone = hl.slice(hl.indexOf("    Cyclone: {"), hl.indexOf("    Torque: {"));
+  const torque = hl.slice(hl.indexOf("    Torque: {"), hl.indexOf('    "Road Warrior": {'));
+  const roadWarrior = hl.slice(hl.indexOf('    "Road Warrior": {'), hl.indexOf("    Prowler: {"));
+  const prowler = hl.slice(hl.indexOf("    Prowler: {"), hl.indexOf("    Gravity: {"));
+  const gravity = hl.slice(hl.indexOf("    Gravity: {"));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  // LOCK library 2008-Heartland-Bighorn.pdf — EzMe formal pack order.
+  assert.deepEqual(fbyYear(bighorn, 2008), [
+    "3055RL",
+    "3100RL",
+    "3370RL",
+    "3400RL",
+    "3400RE",
+    "3580RL",
+    "3600RE",
+    "3600RL",
+    "3670RL",
+  ]);
+  assert.doesNotMatch(bighorn, /"3500RL"/);
+  for (const y of [2005, 2006, 2007, 2009]) {
+    assert.equal(fbyYear(bighorn, y), null, `Bighorn ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(bighorn, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(bighorn, 2010), ["3375SS", "3900FL", "3985QB"]);
+  for (const y of [2010, 2015, 2025, 2026]) {
+    const plans = fbyYear(bighorn, y) ?? [];
+    for (const code of ["3055RL", "3100RL", "3370RL", "3400RL", "3400RE", "3580RL", "3600RE", "3600RL", "3670RL"]) {
+      assert.equal(plans.includes(code), false, `Bighorn ${y} must not stamp MY2008 ${code}`);
+    }
+  }
+
+  // LOCK library 2009-Heartland-Cyclone.pdf — include 3210 (formal pack).
+  assert.deepEqual(fbyYear(cyclone, 2009), ["3010TDS", "3210", "3795", "3912", "3950", "4012"]);
+  for (const y of [2007, 2008]) {
+    assert.equal(fbyYear(cyclone, y), null, `Cyclone ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(cyclone, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(cyclone, 2010), ["3012", "3612", "4006"]);
+  for (const y of [2010, 2015, 2025, 2026]) {
+    const plans = fbyYear(cyclone, y) ?? [];
+    for (const code of ["3010TDS", "3210", "3795", "3912", "3950", "4012"]) {
+      assert.equal(plans.includes(code), false, `Cyclone ${y} must not stamp MY2009 ${code}`);
+    }
+  }
+
+  // LOCK library 2009-Heartland-Sundance.pdf — FW mid-profile + XLT FW only.
+  assert.deepEqual(fbyYear(sundance, 2009), [
+    "2998RB",
+    "2800RLS",
+    "2900MK",
+    "3200RE",
+    "3300SK",
+    "3300FB",
+    "3300RLB",
+    "3300RC",
+    "245RL",
+    "287RL",
+    "297RE",
+  ]);
+  assert.doesNotMatch(sundance, /"3000RK"|"3100ES"|"3300RCB"/);
+  assert.doesNotMatch(sundance, /"265RK"|"285BH"|"310BDS"|"310RLS"|"320BS"/);
+  for (const y of [2005, 2006, 2007, 2008]) {
+    assert.equal(fbyYear(sundance, y), null, `Sundance ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(sundance, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(sundance, 2010), ["2600RE", "2800QB", "3100RL"]);
+  for (const y of [2010, 2015, 2025, 2026]) {
+    const plans = fbyYear(sundance, y) ?? [];
+    for (const code of ["2998RB", "2800RLS", "2900MK", "3200RE", "3300SK", "3300FB", "3300RLB", "3300RC", "245RL", "287RL", "297RE"]) {
+      assert.equal(plans.includes(code), false, `Sundance ${y} must not stamp MY2009 ${code}`);
+    }
+  }
+
+  assert.doesNotMatch(hl, /\n    "Sundance XLT": \{|\n    "Sundance Ultra-Lite": \{/);
+  assert.doesNotMatch(landmark, /Augusta|Pinehurst/);
+  for (const [name, srcBlock] of [
+    ["Landmark", landmark],
+    ["Big Country", bigCountry],
+    ["Prowler", prowler],
+    ["Torque", torque],
+    ["Road Warrior", roadWarrior],
+    ["Gravity", gravity],
+  ] as const) {
+    for (const y of [2005, 2006, 2007, 2008, 2009]) {
+      assert.equal(fbyYear(srcBlock, y), null, `${name} ${y} must stay GAP`);
+      assert.doesNotMatch(srcBlock, new RegExp(`"${y}":`));
+    }
+    assert.equal(idx[name]?.years?.includes(2005), false);
+    assert.equal(idx[name]?.years?.includes(2008), false);
+    assert.equal(idx[name]?.years?.includes(2009), false);
+  }
+});
+
 test("Coachmen honesty lock: MY2026 towable quarantine + Destination hyphens + SRS Class A diesel", () => {
   const block = src("rvData.ts");
   const c0 = block.indexOf("\n  Coachmen: {");
