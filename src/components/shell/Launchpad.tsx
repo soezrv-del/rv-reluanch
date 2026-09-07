@@ -121,7 +121,7 @@ export function MetalVerifiedTrue({
 }
 
 /**
- * Leather field-guide launch — embossed emblem on the cover, then a book pager.
+ * Field-guide launch — chestnut cover + original suite golds, then a book pager.
  * Cover tap/swipe-left flips to page one (RvFacts). Each leaf opens that tool.
  */
 export function Launchpad({
@@ -358,24 +358,23 @@ export function Launchpad({
       data-magazine-open={opened ? "true" : "false"}
       onTouchMove={(e) => e.stopPropagation()}
     >
-      <svg className="absolute h-0 w-0" aria-hidden>
-        <filter id="leather-grain" x="0%" y="0%" width="100%" height="100%">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.72"
-            numOctaves="4"
-            stitchTiles="stitch"
-            result="noise"
-          />
-          <feColorMatrix
-            type="matrix"
-            values="0 0 0 0 0.08  0 0 0 0 0.06  0 0 0 0 0.05  0 0 0 0.55 0"
-          />
-        </filter>
-      </svg>
-
       <div className="leather-stage flex min-h-0 flex-1 items-center justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.65rem,env(safe-area-inset-top))] sm:px-5">
-        <div className="leather-book relative mx-auto flex h-full w-full max-w-md">
+        <div
+          className="leather-book relative mx-auto flex h-full w-full max-w-md"
+          onPointerUp={(e) => {
+            if (opened || flipping) return;
+            const dx = gesture.current ? e.clientX - gesture.current.x : 0;
+            const dy = gesture.current ? e.clientY - gesture.current.y : 0;
+            if (!gesture.current || isStationaryDockTap(dx, dy) || dx < -40) {
+              openBook();
+            }
+          }}
+        >
+          <div className="leather-spine" data-book-spine aria-hidden>
+            <span className="leather-spine-fillet" />
+            <span className="leather-spine-band leather-spine-band-a" />
+            <span className="leather-spine-band leather-spine-band-b" />
+          </div>
           <div
             ref={viewportRef}
             className="leather-viewport relative flex min-h-0 min-w-0 flex-1 overflow-hidden"
@@ -441,6 +440,7 @@ export function Launchpad({
             >
               <span aria-hidden className="leather-cover-plate" />
               <span aria-hidden className="leather-cover-grain" />
+              <span aria-hidden className="leather-cover-frame" />
               <span aria-hidden className="leather-cover-crease" />
 
               <span className="leather-emblem-well">
@@ -462,6 +462,11 @@ export function Launchpad({
                 <span className="leather-cover-cue">Tap anywhere to open</span>
               </span>
             </button>
+          </div>
+          <div className="leather-page-edge" data-book-page-edge aria-hidden>
+            <span />
+            <span />
+            <span />
           </div>
         </div>
       </div>
