@@ -76,12 +76,18 @@ export function useNavVoice(opts: {
     rerouteSaid.current = opts.rerouting;
   }, [opts.armed, voiceOn, opts.rerouting]);
 
-  const markGuidance = useCallback((guidance: UpcomingGuidance | null) => {
-    if (!guidance) return;
-    const band = pickBand(guidance.remainM);
-    if (!band) return;
-    mem.current = rememberSpoken(routeIdRef.current, guidance.step.id, band);
-  }, []);
+  const markGuidance = useCallback(
+    (guidance: UpcomingGuidance | null, line?: string) => {
+      if (!guidance) return;
+      const band = pickBand(guidance.remainM);
+      if (!band) return;
+      mem.current = rememberSpoken(routeIdRef.current, guidance.step.id, band, {
+        at: Date.now(),
+        line: line ?? formatVoicePrompt(guidance.step.instruction, guidance.remainM),
+      });
+    },
+    [],
+  );
 
   const toggleVoice = useCallback(() => {
     const next = !voiceOn;
@@ -97,7 +103,7 @@ export function useNavVoice(opts: {
       ? formatVoicePrompt(g.step.instruction, g.remainM)
       : "Voice guidance on";
     speakNavPrompt(line);
-    markGuidance(g);
+    markGuidance(g, line);
   }, [voiceOn, markGuidance]);
 
   const speakStart = useCallback(() => {
@@ -108,7 +114,7 @@ export function useNavVoice(opts: {
       ? `Navigation started. ${formatVoicePrompt(g.step.instruction, g.remainM)}`
       : "Navigation started.";
     speakNavPrompt(line);
-    markGuidance(g);
+    markGuidance(g, line);
   }, [voiceOn, markGuidance]);
 
   const hush = useCallback(() => {
