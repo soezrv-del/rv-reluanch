@@ -808,6 +808,51 @@ function main() {
       }
 
       const puma = slice("Puma", "SolAire");
+      if (!/type: "Travel Trailer"/.test(puma)) {
+        fail("Palomino|Puma must stay Travel Trailer");
+      }
+      if (
+        !/"2005": \["19FS", "25BH", "25RKS", "26FBS", "26RLSS", "27RLS", "27FQ", "28BHS", "29BHSS", "29FKSS", "29FQS", "30DBSS", "30FQSS", "31DSBH"\]/.test(
+          puma,
+        )
+      ) {
+        fail("Palomino|Puma MY2005 PDF lock missing (2005-palomino-puma-brochure.pdf OCR)");
+      }
+      if (
+        !/"2006": \["19FS", "25RS", "25RKS", "26RB", "26FBSS", "26RLSS", "27FQ", "27RBSS", "27RLS", "28BHS", "29FBS", "29FKSS", "29FQS", "29RKSS", "30DBSS", "30FQSS", "30QBSS", "31DSBH", "31FKBS", "32RDSS"\]/.test(
+          puma,
+        )
+      ) {
+        fail("Palomino|Puma MY2006 PDF lock missing (2006-palomino-puma-brochure.pdf OCR)");
+      }
+      if (/"2007":/.test(puma) || /"2008":/.test(puma) || /"2009":/.test(puma)) {
+        fail("Palomino|Puma must omit 2007–2009 (GAP — no dated brochure; do not copy 2006 forward)");
+      }
+      if (
+        /"243RESS"/.test(puma) ||
+        /"249RBSS"/.test(puma) ||
+        /"253FBS"/.test(puma) ||
+        /"255RKS"/.test(puma) ||
+        /"259RGSS"/.test(puma) ||
+        /"275RLSS"/.test(puma) ||
+        /"282RKSS"/.test(puma) ||
+        /"285BHSS"/.test(puma) ||
+        /"301RESS"/.test(puma) ||
+        /"311QBSS"/.test(puma) ||
+        /"39PRLSS"/.test(puma) ||
+        /"39PTBSS"/.test(puma)
+      ) {
+        fail("Palomino|Puma must not merge FW / park-model codes from the 2005–2006 brochures onto the TT key");
+      }
+      if (/"2010": .*"19FS"/.test(puma) || /"2010": .*"25RKS"/.test(puma) || /"2010": .*"32RDSS"/.test(puma)) {
+        fail("Palomino|Puma must not copy 2005/2006 codes onto 2010+");
+      }
+      if (/"2005": .*"25RKSS"/.test(puma) || /"2006": .*"25RKSS"/.test(puma) || /"2006": .*"28BHSS"/.test(puma)) {
+        fail("Palomino|Puma must not copy 25RKSS-era codes onto 2005/2006");
+      }
+      if (!/"2010": \["25RKSS", "28BHSS", "30RKQS", "32BHQS"\]/.test(puma)) {
+        fail("Palomino|Puma 2010 tip-era codes must stay 25RKSS / 28BHSS / 30RKQS / 32BHQS");
+      }
       if (/"2026":/.test(puma) || /"2027":/.test(puma)) {
         fail("Palomino|Puma must omit 2026–2027 (no honest single-key lock; dated Puma PDF is CE/TT/Ambush/Vista/LFT)");
       }
@@ -849,6 +894,15 @@ function main() {
       if (!/type: "Truck Camper"/.test(realLite)) {
         fail("Palomino|Real-Lite must be Truck Camper (RVUSA m2968), not Travel Trailer");
       }
+      if (/"2006":/.test(realLite) || /"2007":/.test(realLite) || /"2008":/.test(realLite) || /"2009":/.test(realLite)) {
+        fail("Palomino|Real-Lite must omit 2006–2009 (GAP — no dated brochure this pack)");
+      }
+      if (/"19FS"/.test(realLite) || /"25RKS"/.test(realLite) || /"26RLSS"/.test(realLite) || /"31DSBH"/.test(realLite)) {
+        fail("Palomino|Real-Lite must not copy Puma TT codes");
+      }
+      if (!/"2010": \["160SS", "180", "208"\]/.test(realLite)) {
+        fail("Palomino|Real-Lite 2010 tip-era codes must stay 160SS / 180 / 208");
+      }
       if (/"2026":/.test(realLite) || /"2027":/.test(realLite)) {
         fail("Palomino|Real-Lite must omit 2026–2027 (do not invent 2027; incomplete HS/SS stay empty)");
       }
@@ -887,6 +941,38 @@ function main() {
       }
       if (palIdx["Real-Lite"]?.type !== "Truck Camper") {
         fail("Palomino|Real-Lite index type must be Truck Camper");
+      }
+      if (palIdx.Puma?.type !== "Travel Trailer") {
+        fail("Palomino|Puma index type must stay Travel Trailer");
+      }
+      if (!palIdx.Puma?.years?.includes(2005) || !palIdx.Puma?.years?.includes(2006)) {
+        fail("Palomino|Puma index must include 2005 and 2006");
+      }
+      if (
+        palIdx.Puma?.years?.includes(2007) ||
+        palIdx.Puma?.years?.includes(2008) ||
+        palIdx.Puma?.years?.includes(2009)
+      ) {
+        fail("Palomino|Puma index must omit 2007 / 2008 / 2009 (GAP)");
+      }
+      if (palIdx.Puma?.yearStart !== 2005) {
+        fail("Palomino|Puma index yearStart must stay 2005");
+      }
+      for (const y of [2006, 2007, 2008, 2009]) {
+        if (palIdx["Real-Lite"]?.years?.includes(y)) {
+          fail(`Palomino|Real-Lite index must omit ${y} (GAP)`);
+        }
+      }
+      for (const gap of ["SolAire", "Columbus", "Columbus Compass", "Real-Lite FW", "Puma Unleashed"]) {
+        if (
+          palIdx[gap]?.years?.includes(2005) ||
+          palIdx[gap]?.years?.includes(2006) ||
+          palIdx[gap]?.years?.includes(2007) ||
+          palIdx[gap]?.years?.includes(2008) ||
+          palIdx[gap]?.years?.includes(2009)
+        ) {
+          fail(`Palomino|${gap} index must omit 2005–2009 (GAP)`);
+        }
       }
       for (const gap of ["Puma", "Puma Unleashed", "Columbus", "Columbus Compass", "Real-Lite", "Real-Lite FW"]) {
         if (palIdx[gap]?.years?.includes(2026) || palIdx[gap]?.years?.includes(2027)) {
