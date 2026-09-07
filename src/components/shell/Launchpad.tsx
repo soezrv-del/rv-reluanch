@@ -27,11 +27,11 @@ const LAUNCH_PAGES: {
 }[] = [
   { id: "rvfax", title: "RvFACTS", blurb: PAGE_COPY.rvfax.line, Icon: FileText },
   { id: "rvcal", title: "RvCal", blurb: PAGE_COPY.rvcal.line, Icon: Calculator },
-  { id: "rvtow", title: "RvTow", blurb: PAGE_COPY.rvtow.line, Icon: Truck },
+  { id: "rvtow", title: "RvTow", blurb: "Tow match", Icon: Truck },
   { id: "rvtrips", title: "RvTrips", blurb: PAGE_COPY.rvtrips.line, Icon: MapPin },
   { id: "rvshare", title: "RvShare", blurb: PAGE_COPY.rvshare.line, Icon: Share2 },
   { id: "rvgrok", title: "RvGrok", blurb: PAGE_COPY.rvgrok.line, Icon: MessageCircle },
-  { id: "more", title: "Premium", blurb: PAGE_COPY.more.line, Icon: Shield },
+  { id: "more", title: "Premium", blurb: "Settings", Icon: Shield },
 ];
 
 function hideNativeSplash() {
@@ -121,9 +121,9 @@ export function MetalVerifiedTrue({
 }
 
 /**
- * Book-cover launch — Image 2 hero (huge chrome/cobalt seal on black) plus
- * Image 1’s tagline stack. Tap anywhere flips open. Inside leaves follow the
- * original splash order: Facts → Cal → Tow → Trips → Share → Grok → Premium.
+ * Closed 3D field-guide launch — hardcover board, spine, cream page block.
+ * David’s chrome/cobalt seal is printed on the cover (full circle, unfiltered).
+ * Tap anywhere flips open. Inside leaves: Facts → Cal → Tow → Trips → Share → Grok → Premium.
  */
 export function Launchpad({
   onSelect,
@@ -359,9 +359,9 @@ export function Launchpad({
       data-magazine-open={opened ? "true" : "false"}
       onTouchMove={(e) => e.stopPropagation()}
     >
-      <div className="leather-stage flex min-h-0 flex-1 items-center justify-center px-1.5 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-[max(0.2rem,env(safe-area-inset-top))] sm:px-3">
+      <div className="leather-stage flex min-h-0 flex-1 items-center justify-center">
         <div
-          className="leather-book relative mx-auto flex h-full w-full max-w-lg"
+          className={cn("leather-book relative mx-auto flex", (opened || flipping) && "is-open")}
           onPointerUp={(e) => {
             if (opened || flipping) return;
             const dx = gesture.current ? e.clientX - gesture.current.x : 0;
@@ -371,8 +371,12 @@ export function Launchpad({
             }
           }}
         >
+          <div className="leather-book-shadow" aria-hidden />
           <div className="leather-spine" data-book-spine aria-hidden>
             <span className="leather-spine-fillet" />
+            <span className="leather-spine-ridge leather-spine-ridge-a" />
+            <span className="leather-spine-ridge leather-spine-ridge-b" />
+            <span className="leather-spine-title">RvFOX</span>
           </div>
           <div
             ref={viewportRef}
@@ -442,6 +446,14 @@ export function Launchpad({
               <span aria-hidden className="leather-cover-glow" />
               <span aria-hidden className="leather-cover-crease" />
 
+              <span className="leather-cover-copy leather-cover-copy-top">
+                <span className="leather-kicker">RVFOX PRO</span>
+                <span className="leather-wordmark" data-cover-wordmark>
+                  <span className="leather-wordmark-rv">Rv</span>
+                  <span className="leather-wordmark-fox">FOX</span>
+                </span>
+              </span>
+
               <span className="leather-emblem-well">
                 <span className="leather-emblem-die">
                   <img
@@ -455,23 +467,25 @@ export function Launchpad({
                 </span>
               </span>
 
-              <span className="leather-cover-copy">
-                <span className="leather-kicker">RVFOX PRO</span>
-                <span className="leather-wordmark" data-cover-wordmark>
-                  <span className="leather-wordmark-rv">Rv</span>
-                  <span className="leather-wordmark-fox">FOX</span>
-                </span>
+              <span className="leather-cover-copy leather-cover-copy-bottom">
                 <MetalVerifiedTrue size="lg" />
                 <span className="leather-tagline">Know before you buy.</span>
               </span>
               <span className="leather-cover-cue">Tap anywhere to open</span>
             </button>
           </div>
+          <div className="leather-board-edge" aria-hidden />
           <div className="leather-page-edge" data-book-page-edge aria-hidden>
             <span />
             <span />
             <span />
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
           </div>
+          <div className="leather-book-foot" aria-hidden />
         </div>
       </div>
     </div>

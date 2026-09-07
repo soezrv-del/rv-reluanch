@@ -10,7 +10,7 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("bright seal book cover opens Image-1 suite pages", () => {
+test("closed 3D field-guide cover opens Image-1 suite pages", () => {
   const launch = read("../../components/shell/Launchpad.tsx");
   const css = read("../../styles.css");
 
@@ -52,6 +52,12 @@ test("bright seal book cover opens Image-1 suite pages", () => {
   assert.match(css, /\.leather-page-edge/);
   assert.match(css, /\.leather-kicker/);
   assert.match(css, /\.leather-wordmark-fox/);
+  assert.match(css, /\.leather-board-edge/);
+  assert.match(css, /\.leather-book-foot/);
+  assert.match(css, /rotateY\(-14deg\)/);
+  assert.match(css, /--book-spine-w:\s*1\.7rem/);
+  assert.match(css, /--book-edge-w:\s*1\.05rem/);
+  assert.match(css, /--book-page:\s*#efe4cc/);
   assert.match(css, /--leather-hide:\s*#000000/);
   assert.match(css, /--leather-foil:\s*var\(--color-sapphire-glow\)/);
   assert.match(css, /--leather-ink:\s*var\(--color-fg\)/);
@@ -59,6 +65,9 @@ test("bright seal book cover opens Image-1 suite pages", () => {
   assert.match(css, /\.leather-cover-plate[\s\S]*background-color:\s*#000000/);
   assert.match(css, /\.leather-emblem-stamp[\s\S]*?filter:\s*none/);
   assert.match(css, /object-fit:\s*contain/);
+  assert.match(launch, /Tow match/);
+  assert.match(launch, /Settings/);
+  assert.doesNotMatch(css, /width:\s*148%/);
   assert.doesNotMatch(css, /--leather-hide:\s*#0b0a0c/);
   assert.doesNotMatch(css, /--leather-board:\s*#8a6348/);
   assert.doesNotMatch(css, /--leather-foil:\s*var\(--color-gold-bright\)/);
