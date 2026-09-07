@@ -152,6 +152,8 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(ui, /follow=\{follow\.fix\}/);
   assert.match(ui, /followActive=\{navArmed\}/);
   assert.match(ui, /followStatus=\{follow\.status\}/);
+  assert.match(ui, /createOffRouteGate/);
+  assert.match(ui, /navigateParamsForReroute/);
   assert.match(ui, /data-follow-note/);
   assert.match(ui, /CampsAlongRoute/);
   assert.match(ui, /campStops=\{camps\?\.camps\}/);
