@@ -60,7 +60,7 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(fax, /shareFocusToken=\{shareFocusToken\}/);
   assert.match(shareApp, /openFactsShare/);
   assert.match(shareApp, /Opening the coach report to Share/);
-  assert.match(css, /--dock-label-size:\s*0\.9375rem/);
+  assert.match(css, /--dock-label-size:\s*1rem/);
   assert.match(css, /\.bottom-tabs-frost/);
   assert.match(css, /\.bottom-tab-label\.is-etched-active/);
 });

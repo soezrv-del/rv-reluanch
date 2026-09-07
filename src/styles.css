@@ -58,8 +58,8 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.38),
     inset 0 -1px 0 rgba(255, 255, 255, 0.06);
 
-  --dock-label-size: 0.9375rem;
-  --dock-label-size-sm: 1rem;
+  --dock-label-size: 1rem;
+  --dock-label-size-sm: 1.0625rem;
   --dock-label-track: 0.05em;
   --color-dock-etch: rgba(210, 226, 248, 0.78);
   --color-dock-etch-active: rgba(244, 249, 255, 0.96);
