@@ -154,6 +154,9 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(ui, /followActive=\{navArmed\}/);
   assert.match(ui, /followStatus=\{follow\.status\}/);
   assert.match(ui, /useOffRouteReroute/);
+  assert.match(ui, /useNavVoice/);
+  assert.match(ui, /data-voice-toggle/);
+  assert.match(ui, /data-nav-voice/);
   assert.match(ui, /data-follow-note/);
   assert.match(ui, /CampsAlongRoute/);
   assert.match(ui, /campStops=\{camps\?\.camps\}/);
@@ -164,6 +167,7 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.doesNotMatch(ui, />\s*Next\s*</);
   assert.doesNotMatch(ui, /["'`]\/api\/route/);
   assert.doesNotMatch(ui, /RATEAPI|rvData\.live/);
+  assert.doesNotMatch(ui, /getUserMedia/);
 
   assert.match(map, /data-follow-puck/);
   assert.match(map, /data-follow-status/);
