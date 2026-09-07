@@ -308,7 +308,7 @@ export function AppShell() {
           >
             <Launchpad
               onSelect={(t) => finishLaunch(t)}
-              onSkip={() => finishLaunch()}
+              onSkip={() => finishLaunch("rvfax")}
             />
           </div>
         ) : null}

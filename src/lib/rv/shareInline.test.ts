@@ -45,12 +45,16 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.doesNotMatch(tabs, /id: "rvshare"/);
   assert.match(tabs, /grid-cols-5/);
   assert.match(tabs, /bottom-tabs-frost/);
+  const dockIds = [...tabs.matchAll(/id: "(rvfax|rvcal|rvtow|rvtrips|rvgrok)"/g)].map(
+    (m) => m[1],
+  );
+  assert.deepEqual(dockIds, ["rvfax", "rvcal", "rvgrok", "rvtow", "rvtrips"]);
   assert.match(
     constants,
-    /TAB_ORDER = \[\s*"rvfax",\s*"rvcal",\s*"rvtow",\s*"rvtrips",\s*"rvgrok",\s*\]/,
+    /TAB_ORDER = \[\s*"rvfax",\s*"rvcal",\s*"rvgrok",\s*"rvtow",\s*"rvtrips",\s*\]/,
   );
   assert.doesNotMatch(constants, /TAB_ORDER = \[[^\]]*rvshare/);
-  assert.match(launch, /id: "rvshare"/);
+  assert.doesNotMatch(launch, /id: "rvshare"/);
   assert.match(more, /onNavigate\?\.\("rvshare"\)/);
   assert.match(shell, /openFactsShare/);
   assert.match(shell, /if \(next === "rvshare"\)/);
