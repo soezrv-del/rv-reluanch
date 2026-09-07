@@ -13995,9 +13995,9 @@ test("Thor early-ghosts honesty: Four Winds Majestic quarantine + Mandalay MY200
     assert.equal(fbyYear(majestic, y), null, `Majestic ${y} must stay empty (quarantine)`);
     assert.doesNotMatch(majestic, new RegExp(`"${y}":`));
   }
-  // Must stay a separate key — not folded into Four Winds.
+  // Must stay a separate key — not folded into Four Winds (28A is a living Four Winds code; 23A/23MU/28MU are Majestic leftovers).
   const fw = thor.slice(thor.indexOf('    "Four Winds": {'), thor.indexOf("    Chateau: {"));
-  assert.doesNotMatch(fw, /Majestic/);
+  assert.doesNotMatch(fw, /"23A"|"23MU"|"28MU"/);
 
   const mandalay = thor.slice(thor.indexOf("    Mandalay: {"), thor.indexOf("    Windsport: {"));
   // LOCK library 2007-Mandalay.pdf — bare codes (no M- prefix).

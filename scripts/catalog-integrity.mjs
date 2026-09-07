@@ -3213,8 +3213,10 @@ function main() {
         fail("Thor|Four Winds Majestic must not invent year chips (quarantine — Cruise America ex-rental, no dated retail brochure)");
       }
       const fw = slice("Four Winds", "Chateau");
-      if (/Majestic/.test(fw)) {
-        fail("Thor|Four Winds must not absorb Majestic (keep a separate quarantined key)");
+      // Living Four Winds already says "Not … Majestic" — that is not a merge.
+      // Ban leftover Majestic-only aliases (23A / 23MU / 28MU) on the retail key. 28A is a living Four Winds code.
+      if (/"23A"|"23MU"|"28MU"/.test(fw)) {
+        fail("Thor|Four Winds must not absorb Majestic leftover codes (keep a separate quarantined key)");
       }
 
       const mandalay = slice("Mandalay", "Windsport");
