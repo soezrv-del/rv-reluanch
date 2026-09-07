@@ -1,12 +1,12 @@
 import type { AppTab } from "./BottomTabs";
 
-/** Dock + swipe order — Facts home, Grok on the right. Share is not a dock tab. */
+/** Dock + swipe order — Facts home, Grok centered. Share is not a dock tab. */
 export const TAB_ORDER = [
   "rvfax",
   "rvcal",
+  "rvgrok",
   "rvtow",
   "rvtrips",
-  "rvgrok",
 ] as const satisfies readonly AppTab[];
 
 /** One hero accent per page — premium color discipline */
