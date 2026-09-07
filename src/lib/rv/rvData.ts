@@ -33283,15 +33283,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Brinkley: {
     "Model Z": {
       type: "Fifth Wheel",
-      floorplans: ["2900", "3100", "3500", "3700"],
+      floorplans: ["2680", "2700", "2900", "3100", "3110", "3200", "3210", "3420", "3500", "3510", "3515", "3600", "3610", "3700"],
       floorplansByYear: {
-        "2020": ["2900", "3100", "3500"],
-        "2021": ["2900", "3100", "3500"],
         "2022": ["2900", "3100", "3500", "3700"],
         "2023": ["2900", "3100", "3500", "3700"],
         "2024": ["2900", "3100", "3500", "3700"],
         "2025": ["2900", "3100", "3500", "3700"],
-        "2026": ["3100", "3500", "3700"]
+        "2026": ["3100", "3500", "3700"],
+        // OEM /Docs/Flyers/27/Z/2027-Brinkley-Model-Z-*-Floorplan-Flyer.pdf
+        // RVUSA 2027 Model Z year page is an empty shell — dated flyers are SoT.
+        "2027": ["2680", "2700", "2900", "3100", "3110", "3200", "3210", "3420", "3510", "3515", "3600", "3610"]
       },
       lengthRange: [
         29,
@@ -33321,18 +33322,22 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 82,
       founded: 2019,
       warrantyYears: 2,
-      yearStart: 2020,
+      yearStart: 2022,
+      hitchType: "king pin",
       description: "Brinkley Model Z — premium fifth wheel. High build quality, residential feel. UVW/pin weight vary widely by floorplan — door sticker rules. Live Grok verifies exact brochure numbers."
     },
     "Model Z Air": {
-      type: "Fifth Wheel",
-      floorplans: ["250", "280", "295", "310"],
+      type: "Travel Trailer",
+      floorplans: ["250", "280", "295", "297", "310", "315"],
       floorplansByYear: {
         "2022": ["250", "280", "295"],
         "2023": ["250", "280", "295"],
         "2024": ["250", "280", "295", "310"],
         "2025": ["250", "280", "295", "310"],
-        "2026": ["250", "280", "295"]
+        "2026": ["250", "280", "295"],
+        // OEM /Docs/Flyers/27/Z_AIR/2027-Brinkley-Model-Z-AIR-*-Floorplan-Flyer.pdf
+        // RVUSA 2027 Model Z Air year page is an empty shell — dated flyers are SoT.
+        "2027": ["297", "310", "315"]
       },
       lengthRange: [
         25,
@@ -33363,7 +33368,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2019,
       warrantyYears: 2,
       yearStart: 2022,
-      description: "Brinkley Model Z Air — lighter / half-ton-friendly packaging under Model Z. Still verify actual pin weight vs truck rating."
+      hitchType: "bumper-pull",
+      description: "Brinkley Model Z Air — travel trailer (OEM Model Z AIR). Bumper-pull. MY2027 flyer codes 297 / 310 / 315. UVW/hitch weight vary by floorplan — door sticker rules."
     },
     "Model Z Expand": {
       type: "Fifth Wheel",
@@ -33403,16 +33409,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2019,
       warrantyYears: 2,
       yearStart: 2023,
-      description: "Brinkley Model Z Expand — expanded floorplan packages on Model Z platform."
+      yearEnd: 2026,
+      hitchType: "king pin",
+      description: "Brinkley Model Z Expand — expanded floorplan packages on Model Z platform. No dated MY2027 OEM flyer — yearEnd 2026. Do not invent 2027 codes."
     },
     "Model G": {
-      type: "Toy Hauler",
-      floorplans: ["3250", "3500", "3520", "3950", "3970", "4000", "4100", "4120"],
+      type: "Fifth Wheel",
+      floorplans: ["3250", "3500", "3520", "3950", "3970", "4000", "4100", "4120", "4150", "4155", "4170"],
       floorplansByYear: {
         "2023": ["3250", "3500", "3520", "3950", "3970", "4000"],
         "2024": ["3250", "3500", "3520", "3950", "3970", "4000", "4100", "4120"],
         "2025": ["3250", "3500", "3520", "3950", "3970", "4000", "4100", "4120"],
-        "2026": ["3250", "3500", "3520", "3950", "3970", "4100", "4120"]
+        "2026": ["3250", "3500", "3520", "3950", "3970", "4100", "4120"],
+        // OEM /Docs/Flyers/27/G/2027-Brinkley-Model-G-*-Floorplan-Flyer.pdf
+        // RVUSA 2027 Model G year page is an empty shell — dated flyers are SoT.
+        "2027": ["3250", "3520", "3950", "3970", "4100", "4120", "4150", "4155", "4170"]
       },
       lengthRange: [
         38,
@@ -33454,13 +33465,53 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2019,
       warrantyYears: 2,
       yearStart: 2023,
-      description: "Brinkley Model G — official OEM luxury fifth-wheel toy hauler. 2024 floorplans: 3250 (6.5 ft garage), 3500/3520 (11 ft), 3950 (14 ft), 3970 (11 ft + 2nd bath), 4000 (16 ft), 4100 (12.5 ft), 4120 (17 ft). Brochure: 101 in wide, 13 ft 4 in tall, triple 7k axles, 150 gal fresh, 30-60 gal fuel station."
+      hitchType: "king pin",
+      description: "Brinkley Model G — fifth wheel (OEM 2027 Model_Type: Fifth Wheels). MY2027 flyer codes only on 2027. Garage/toy-hauler sibling is Model Gx. UVW/pin vary by floorplan — door sticker rules."
+    },
+    "Model Gx": {
+      type: "Toy Hauler",
+      floorplans: ["3450x", "3500x", "4000x"],
+      floorplansByYear: {
+        // OEM /Docs/Flyers/27/Gx/2027-Brinkley-Model-Gx-*-Floorplan-Flyer.pdf
+        // Floorplan column / flyer titles / RVUSA print 3450x (filename drops the x).
+        "2027": ["3450x", "3500x", "4000x"]
+      },
+      lengthRange: [
+        38,
+        46
+      ],
+      weightRange: [
+        16900,
+        23000
+      ],
+      slideouts: 3,
+      sleeps: 8,
+      msrpRange: [
+        169000,
+        185000
+      ],
+      chassis: "N/A (towable · fifth-wheel toy hauler)",
+      fuelType: "N/A (towable)",
+      hitchType: "king pin",
+      recalls: 0,
+      rating: 4.8,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 150,
+      grayWater: 156,
+      blackWater: 85,
+      generator: "Generator prep / optional (shared fuel station)",
+      awningLength: 18,
+      ceilingHeight: 79.5,
+      founded: 2019,
+      warrantyYears: 2,
+      yearStart: 2027,
+      description: "Brinkley Model Gx — 2027 fifth-wheel toy-hauler sibling of Model G. MY2027 flyer codes 3450x / 3500x / 4000x. Do not merge Model G residential plans here."
     },
     "Model T": {
       type: "Toy Hauler",
       floorplans: ["3250", "3500", "3520", "3950", "3970", "4000", "4100", "4120"],
       floorplansByYear: {
-        "2021": ["3500", "3950"],
         "2022": ["3500", "3950", "4000"],
         "2023": ["3250", "3500", "3520", "3950", "3970", "4000"],
         "2024": ["3250", "3500", "3520", "3950", "3970", "4000", "4100", "4120"],
@@ -33506,8 +33557,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       exteriorWidthIn: 101,
       founded: 2019,
       warrantyYears: 2,
-      yearStart: 2021,
-      description: "Brinkley Model T — premium fifth-wheel toy hauler (OEM markets this line as Model G). 2024 floorplans: 3250/3500/3520/3950/3970/4000/4100/4120. Wide-body 101 in, 13 ft 4 in height, triple 7k axles, 150 gal fresh, garage/flex 6.5-17 ft, 30-60 gal fuel station. Exact UVW/pin/garage by floorplan from OEM brochure table."
+      yearStart: 2022,
+      yearEnd: 2026,
+      description: "Brinkley Model T — historical fifth-wheel toy hauler key. No dated MY2027 OEM flyer (successor appears to be Model I). yearEnd 2026. Do not copy Model I codes onto this key."
     },
     "Model T Air": {
       type: "Toy Hauler",
@@ -33552,7 +33604,87 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2019,
       warrantyYears: 2,
       yearStart: 2023,
-      description: "Brinkley Model T Air — lighter toy hauler packaging. Garage capacity lower than full Model T — verify toys fit."
+      yearEnd: 2026,
+      description: "Brinkley Model T Air — historical lighter toy-hauler key. No dated MY2027 OEM flyer (near Model Ix). yearEnd 2026. Do not copy Model Ix codes onto this key."
+    },
+    "Model I": {
+      type: "Travel Trailer",
+      floorplans: ["235", "265", "275", "280", "290", "294"],
+      floorplansByYear: {
+        // OEM /Docs/Flyers/27/I/2027-Brinkley-Model-I-*-Floorplan-Flyer.pdf
+        // 290 flyer is listed Hold on the OEM download table; dated path still exists.
+        "2027": ["235", "265", "275", "280", "290", "294"]
+      },
+      lengthRange: [
+        26,
+        35
+      ],
+      weightRange: [
+        7000,
+        11000
+      ],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [
+        77000,
+        90000
+      ],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.7,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 60,
+      grayWater: 40,
+      blackWater: 40,
+      generator: "Optional / prep",
+      awningLength: 16,
+      ceilingHeight: 82,
+      founded: 2019,
+      warrantyYears: 2,
+      yearStart: 2027,
+      description: "Brinkley Model I — 2027 travel trailer. MY2027 flyer codes 235 / 265 / 275 / 280 / 290 / 294. Not Model T — do not copy these codes onto Model T."
+    },
+    "Model Ix": {
+      type: "Travel Trailer",
+      floorplans: ["20x", "23x", "24x", "25x", "26x"],
+      floorplansByYear: {
+        // OEM /Docs/Flyers/27/Ix/2027-Brinkley-Model-Ix-*-Floorplan-Flyer.pdf
+        "2027": ["20x", "23x", "24x", "25x", "26x"]
+      },
+      lengthRange: [
+        20,
+        30
+      ],
+      weightRange: [
+        5000,
+        9000
+      ],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [
+        65000,
+        75000
+      ],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.7,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      freshWater: 60,
+      grayWater: 40,
+      blackWater: 40,
+      generator: "Optional / prep",
+      awningLength: 16,
+      ceilingHeight: 82,
+      founded: 2019,
+      warrantyYears: 2,
+      yearStart: 2027,
+      description: "Brinkley Model Ix — 2027 travel trailer. MY2027 flyer codes 20x / 23x / 24x / 25x / 26x (preserve x). Not Model T Air — do not copy these codes onto Model T Air."
     }
   },
   "Genesis Supreme": {
