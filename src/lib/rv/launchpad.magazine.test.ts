@@ -41,7 +41,7 @@ test("leather cover opens a book of real suite destinations", () => {
 
   assert.match(css, /\.leather-cover-plate/);
   assert.match(css, /\.leather-emblem-stamp/);
-  assert.match(css, /leather-grain/);
+  assert.match(css, /\.leather-cover-grain/);
   assert.doesNotMatch(css, /\.magazine-spine/);
   assert.doesNotMatch(css, /\.magazine-edge/);
 });
