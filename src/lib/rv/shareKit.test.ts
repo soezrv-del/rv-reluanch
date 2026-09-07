@@ -483,6 +483,15 @@ test("kit always writes catalog POWER from brochure SoT", () => {
   assert.match(src, /function coachBrochure[\s\S]*?hydrateShareCoachResult/);
 });
 
+test("sharePowerLines is imported into shareKit local scope (not only re-exported)", () => {
+  const importBlock = src.match(
+    /import \{[\s\S]*?\} from "\.\/shareCardPolicy"/,
+  )?.[0];
+  assert.ok(importBlock);
+  assert.match(importBlock, /\bsharePowerLines\b/);
+  assert.match(src, /export \{[\s\S]*?\bsharePowerLines\b[\s\S]*?\} from "\.\/shareCardPolicy"/);
+});
+
 function georgetownShapedSpec(opts: { torqueOnBand: boolean }): RVSpec {
   return {
     type: "Class A Gas",
