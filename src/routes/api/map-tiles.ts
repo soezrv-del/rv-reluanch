@@ -4,23 +4,26 @@ import {
   hereRasterV2Url,
   hereRasterV3Url,
   isValidTile,
+  mapboxCatalog,
   osmCatalog,
   parseTileCoord,
   PROBE_TILE,
   type TileCatalog,
 } from "@/lib/trips/basemap";
+import { mapboxPublicToken } from "@/lib/trips/mapbox";
 
 /**
  * GET /api/map-tiles
  *
- * No z/x/y → probe which raster source the Production key can actually
- * fetch. HERE Raster Tile API is a different product than Truck routing;
- * a 403/401 falls back to OSM. Never a stock photo.
+ * No z/x/y → probe which visual source to use.
+ * Mapbox (public pk. token) wins for the GL / raster streets layer.
+ * Else HERE Raster when the routing key also unlocks tiles; else OSM.
+ * HERE Truck routing is a different product — this file is tiles only.
  *
- * z,x,y → proxy one HERE PNG (key stays server-side). OSM tiles are
- * loaded by the browser directly.
+ * z,x,y → proxy one HERE PNG (key stays server-side). Mapbox raster
+ * and OSM tiles load in the browser (pk. token / public tiles).
  *
- * Tiles only — no rates, no catalog dump, no dead hybrid path.
+ * Tiles only — no rates, no catalog dump, no Directions swap.
  */
 
 const PROBE_TIMEOUT_MS = 4_000;
@@ -202,14 +205,25 @@ export const Route = createFileRoute("/api/map-tiles")({
           }
         }
 
+        const mapbox = mapboxCatalog(mapboxPublicToken());
+        if (mapbox) {
+          return jsonCatalog(mapbox, {
+            "X-Map-Tiles": "mapbox",
+            "X-Mapbox-Configured": "1",
+          });
+        }
         const key = hereKey();
         if (!key) {
-          return jsonCatalog(osmCatalog(), { "X-Here-Configured": "0" });
+          return jsonCatalog(osmCatalog(), {
+            "X-Here-Configured": "0",
+            "X-Mapbox-Configured": "0",
+          });
         }
         const probed = await probeHere(key);
         return jsonCatalog(probed.catalog, {
           "X-Here-Configured": "1",
           "X-Here-Tiles": probed.ok ? "1" : "0",
+          "X-Mapbox-Configured": "0",
         });
       },
     },

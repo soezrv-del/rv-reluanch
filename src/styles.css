@@ -1643,6 +1643,107 @@
   }
 }
 
+/* ─── Trips map pins (Mapbox GL + raster fallback) ─── */
+.rv-map-pin {
+  position: relative;
+  display: flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+}
+.rv-map-pin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 8px;
+  height: 8px;
+  background: inherit;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: translateX(-50%) rotate(45deg);
+}
+.rv-map-pin-origin {
+  background: #1f8a5b;
+}
+.rv-map-pin-dest {
+  background: var(--color-ruby);
+}
+.rv-map-pin-via {
+  background: var(--color-amber);
+  color: #111;
+}
+.rv-map-dot {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.rv-map-dot-fuel {
+  background: rgba(255, 255, 255, 0.9);
+}
+.rv-map-dot-truck {
+  background: var(--color-amber);
+}
+.rv-map-dot-park {
+  background: #34d399;
+}
+.rv-map-dot-camp {
+  background: #a7f3d0;
+}
+.rv-map-dot-on {
+  width: 18px;
+  height: 18px;
+  outline: 2px solid var(--color-blue);
+}
+.rv-map-puck {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fff;
+  border-radius: 999px;
+  background: var(--color-blue);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-blue) 32%, transparent);
+  transform: rotate(var(--puck-heading, 0deg));
+}
+.rv-map-puck[data-follow-heading]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 9px solid var(--color-blue);
+  transform: translateX(-50%);
+}
+[data-route-basemap] .mapboxgl-map,
+[data-route-basemap] .mapboxgl-canvas-container,
+[data-route-basemap] .mapboxgl-canvas {
+  width: 100%;
+  height: 100%;
+}
+[data-route-basemap] .mapboxgl-ctrl-attrib {
+  font-size: 9px;
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.88);
+}
+[data-route-basemap] .mapboxgl-ctrl-attrib a {
+  color: rgba(255, 255, 255, 0.88);
+}
+[data-route-basemap] .mapboxgl-ctrl-logo {
+  margin: 0 4px 2px;
+}
+
 /* ─── David book video splash ─── */
 .lp-launch {
   background: var(--color-bg);

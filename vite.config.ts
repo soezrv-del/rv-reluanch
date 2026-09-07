@@ -157,6 +157,13 @@ export default defineConfig(({ command, isPreview }) => ({
     strictPort: true,
   },
   resolve: { tsconfigPaths: true },
+  optimizeDeps: {
+    include: ["mapbox-gl"],
+  },
+  ssr: {
+    noExternal: [],
+    external: ["mapbox-gl"],
+  },
   plugins: [
     pgliteBootstrapPlugin(),
     // Before tanstackStart so /auth/popup never falls through to the SPA.

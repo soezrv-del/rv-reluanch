@@ -1,9 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
+import {
+  hitFromMapboxReverse,
+  hitsFromMapboxForward,
+  mapboxForwardUrl,
+  mapboxReverseUrl,
+  readMapboxToken,
+} from "@/lib/trips/mapbox";
 
 /**
  * GET /api/geocode?q=address
  * GET /api/geocode?lat=47.6&lng=-122.3  (reverse — current location)
- * Proxies OpenStreetMap Nominatim (free) for origin/destination lookup.
+ * Mapbox Geocoding when MAPBOX_ACCESS_TOKEN / VITE_MAPBOX_TOKEN is set;
+ * else OpenStreetMap Nominatim. Visual / typeahead only — not a router.
  */
 
 type GeoHit = {
@@ -104,6 +112,32 @@ function nearestPreset(lat: number, lng: number): GeoHit {
   };
 }
 
+function mapboxToken(): string {
+  return readMapboxToken();
+}
+
+async function fetchJson(
+  url: string,
+  timeoutMs: number,
+  userAgent: string,
+): Promise<unknown> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const resp = await fetch(url, {
+      signal: ctrl.signal,
+      headers: {
+        Accept: "application/json",
+        "User-Agent": userAgent,
+      },
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    return await resp.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function formatReverseLabel(raw: {
   display_name?: string;
   address?: Record<string, string>;
@@ -168,6 +202,34 @@ export const Route = createFileRoute("/api/geocode")({
                 },
               },
             );
+          }
+
+          const token = mapboxToken();
+          if (token) {
+            try {
+              const json = await fetchJson(
+                mapboxReverseUrl(lng, lat, token),
+                8000,
+                "RVFAX-RvTrips/1.0 (geocode; +https://rvfax.app)",
+              );
+              const mapped = hitFromMapboxReverse(json, lat, lng);
+              if (mapped) {
+                const hits = [mapped];
+                cache.set(key, { at: Date.now(), hits });
+                return Response.json(
+                  { source: "mapbox-reverse", hits },
+                  {
+                    headers: {
+                      "Cache-Control": "public, max-age=600",
+                      "X-Geocode-Cache": "MISS",
+                      "X-Geocode-Engine": "mapbox",
+                    },
+                  },
+                );
+              }
+            } catch {
+              /* Nominatim below */
+            }
           }
 
           const ctrl = new AbortController();
@@ -249,6 +311,37 @@ export const Route = createFileRoute("/api/geocode")({
         }
 
         const presets = matchPresets(q);
+        const token = mapboxToken();
+        if (token) {
+          try {
+            const json = await fetchJson(
+              mapboxForwardUrl(q, token),
+              8000,
+              "RVFAX-RvTrips/1.0 (geocode; +https://rvfax.app)",
+            );
+            const hits = hitsFromMapboxForward(json, q);
+            if (hits.length) {
+              const merged = [
+                ...presets.filter((p) => !hits.some((h) => h.label === p.label)),
+                ...hits,
+              ].slice(0, 8);
+              cache.set(key, { at: Date.now(), hits: merged });
+              return Response.json(
+                { source: "mapbox", hits: merged },
+                {
+                  headers: {
+                    "Cache-Control": "public, max-age=600",
+                    "X-Geocode-Cache": "MISS",
+                    "X-Geocode-Engine": "mapbox",
+                  },
+                },
+              );
+            }
+          } catch {
+            /* Nominatim below */
+          }
+        }
+
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 8000);
         try {
