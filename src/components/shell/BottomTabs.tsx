@@ -36,43 +36,29 @@ const TABS: {
   { id: "rvtrips", label: "RvTRIPS", short: "Trips" },
 ];
 
-function EtchLabel({
+function DockLabel({
   text,
-  active,
-  grok,
   className,
 }: {
   text: string;
-  active?: boolean;
-  grok?: boolean;
   className?: string;
 }) {
   return (
     <span
       className={cn(
-        "bottom-tab-label pointer-events-none text-center font-extrabold uppercase leading-none",
-        grok && "bottom-tab-label-grok",
-        active && "is-etched-active",
+        "bottom-tab-label pointer-events-none text-center uppercase leading-none",
         className,
       )}
       data-label={text}
     >
-      <span aria-hidden className="bottom-tab-etch-halo">
-        {text}
-      </span>
-      <span aria-hidden className="bottom-tab-etch-core">
-        {text}
-      </span>
-      <span aria-hidden className="bottom-tab-etch-bevel">
-        {text}
-      </span>
-      <span className="bottom-tab-etch-face">{text}</span>
+      {text}
     </span>
   );
 }
 
 /**
- * Floating etched-glass dock — bright icy-white labels, sliding capsule.
+ * Floating true-glass dock — 2026-09-08 tokens (blur/saturate plate,
+ * 16px radius, 2px brand-blue top rule on the active tab).
  *
  * Android WebView: do NOT put pointer-events-none on this nav. Parent
  * none + child auto + backdrop-filter fails hit-testing on Chromium
@@ -110,11 +96,6 @@ export function BottomTabs({
       ]
     : TABS;
 
-  const activeIndex = Math.max(
-    0,
-    tabs.findIndex((t) => t.id === tab),
-  );
-  const grokActive = tab === "rvgrok";
   const lastFire = useRef({ id: "" as AppTab | "", at: 0 });
   const press = useRef<{ id: AppTab; x: number; y: number } | null>(null);
 
@@ -141,51 +122,13 @@ export function BottomTabs({
     >
       <div
         className={cn(
-          "bottom-tabs-dock pointer-events-auto relative isolate mx-auto grid w-full max-w-lg items-stretch gap-0 overflow-hidden rounded-[1.7rem] p-1",
+          "bottom-tabs-dock pointer-events-auto relative isolate mx-auto grid w-full max-w-lg items-stretch gap-0 overflow-hidden rounded-[16px] p-1",
           pro ? "grid-cols-6" : "grid-cols-5",
-          grokActive && "bottom-tabs-dock-ruby",
         )}
         style={{ touchAction: "manipulation" }}
       >
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-[1px] z-0 rounded-[1.55rem] border border-white/[0.08]"
-        />
-        <span
-          aria-hidden
-          className="bottom-tabs-frost pointer-events-none absolute inset-0 z-[1]"
-        />
-        <span
-          aria-hidden
-          className="bottom-tabs-ambient pointer-events-none absolute inset-0 z-[1]"
-        />
-        <span
-          aria-hidden
-          className="bottom-tabs-edge-light pointer-events-none absolute inset-x-4 top-0 z-[1] h-px"
-        />
-        <span
-          aria-hidden
-          className="bottom-tabs-shine bottom-tabs-shine-primary pointer-events-none absolute inset-y-0 left-0 z-[2] w-[38%]"
-        />
-
-        <span
-          aria-hidden
-          className={cn(
-            "bottom-tab-indicator pointer-events-none absolute top-1 bottom-1 z-[1] rounded-[1.25rem]",
-            grokActive
-              ? "bottom-tab-indicator-ruby"
-              : "bottom-tab-indicator-sapphire",
-          )}
-          style={{
-            width: `calc((100% - 0.5rem) / ${tabs.length})`,
-            left: "0.25rem",
-            transform: `translateX(${activeIndex * 100}%)`,
-          }}
-        />
-
         {tabs.map(({ id, label, short }) => {
           const active = tab === id;
-          const isGrok = id === "rvgrok";
           const isSold = id === "rvsold";
           const soldLabel = formatSoldDockAria(owedNet);
           return (
@@ -218,37 +161,23 @@ export function BottomTabs({
               aria-label={isSold ? soldLabel : label}
               title={isSold ? soldLabel : label}
               className={cn(
-                "bottom-tab-btn group relative z-[3] flex min-h-[48px] w-full items-center justify-center rounded-[1.25rem] px-0.5 py-2 sm:min-h-[52px]",
+                "bottom-tab-btn group relative z-[3] flex min-h-[48px] w-full items-center justify-center rounded-none px-0.5 py-2 sm:min-h-[52px]",
                 "transition-[transform,opacity] duration-200 ease-out",
                 "pointer-events-auto active:scale-[0.94] touch-manipulation select-none",
+                active && "is-active",
               )}
             >
               {isSold ? (
                 <span className="pointer-events-none flex flex-col items-center justify-center gap-0.5 leading-none">
-                  <EtchLabel
-                    text="Sold"
-                    active={active}
-                    className="bottom-tab-label-sold"
-                  />
-                  <EtchLabel
+                  <DockLabel text="Sold" className="bottom-tab-label-sold" />
+                  <DockLabel
                     text={short}
-                    active={active}
                     className="bottom-tab-label-sold-owed"
                   />
                 </span>
               ) : (
-                <EtchLabel text={short} active={active} grok={isGrok} />
+                <DockLabel text={short} />
               )}
-              {active ? (
-                <span
-                  aria-hidden
-                  className={cn(
-                    "bottom-tab-mark pointer-events-none absolute bottom-1.5",
-                    isGrok && "bottom-tab-mark-ruby",
-                    isSold && "bottom-tab-mark-gold",
-                  )}
-                />
-              ) : null}
             </button>
           );
         })}
