@@ -10,6 +10,7 @@ import {
   loadLatestSavedUnit,
   SAVED_UNITS_KEY,
   shouldAutoSaveFacts,
+  removeSavedUnit,
   toggleSavedUnit,
   type SavedUnitLike,
 } from "./savedUnits.ts";
@@ -88,6 +89,14 @@ test("Facts report chrome wires auto-save + unsave controls", () => {
   assert.match(detail, /Remove from Saved/);
   assert.match(detail, /Save to list/);
   assert.match(detail, /aria-label=\{saved \? "Remove from saved"/);
+});
+
+test("removeSavedUnit drops a coach without toggling others back in", () => {
+  const saved = [dream, montana];
+  const next = removeSavedUnit(saved, dream);
+  assert.equal(next.length, 1);
+  assert.equal(next[0]!.model, "Montana");
+  assert.equal(removeSavedUnit(next, dream).length, 1);
 });
 
 test("toggle removes an auto-saved motorhome and can re-add", () => {
