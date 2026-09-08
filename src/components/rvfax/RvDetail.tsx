@@ -5,7 +5,6 @@ import {
   Calculator,
   CheckCircle2,
   ExternalLink,
-  FileText,
   GitCompare,
   Heart,
   Loader2,
@@ -101,6 +100,14 @@ import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
 import { sanitizeUnverifiedLayout } from "@/lib/rv/promptRules";
 import { shouldShowRvVideoPrompt } from "@/lib/rv/rvVideos";
 import { RvVideoLibraryCard } from "./RvVideoLibraryCard";
+import { FactsCollapse } from "./FactsCollapse";
+import {
+  factsInventoryHeadline,
+  factsMoneyHeadline,
+  factsOwnerHeadline,
+  factsRecallHeadline,
+  factsSpecsHeadline,
+} from "@/lib/rv/factsCollapse";
 
 /**
  * Vehicle History Report — catalog paints instantly; Live Grok updates soft fields.
@@ -186,7 +193,7 @@ export function RvDetail({
 
   const [exportBusy, setExportBusy] = useState(false);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
-  const [openMaint, setOpenMaint] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [correctOpen, setCorrectOpen] = useState(false);
   const [correctEngine, setCorrectEngine] = useState("");
   const [correctHp, setCorrectHp] = useState("");
@@ -218,6 +225,7 @@ export function RvDetail({
     if (!shareFocusToken) return;
     const root = scrollRef.current;
     if (!root) return;
+    setShareOpen(true);
     const t = window.setTimeout(() => {
       const el = root.querySelector("[data-share-kit]");
       if (el instanceof HTMLElement) {
@@ -644,17 +652,6 @@ export function RvDetail({
     return !year || !Number.isFinite(y);
   }, [year]);
 
-  const overviewText = useMemo(() => {
-    const raw =
-      (live?.live && live.overview) || data.description || null;
-    if (!raw) return null;
-    const pinned = powertrainPin
-      ? sanitizeNarrativeForPin(powertrainPin, raw) || raw
-      : raw;
-    const oem = findOemFloorplanSpec(year, make, model, floorplan || "");
-    return sanitizeUnverifiedLayout(pinned, [oem?.layoutNote, oem?.note]) || pinned;
-  }, [live, data.description, powertrainPin, year, make, model, floorplan]);
-
   const featureChips = useMemo(() => {
     if (!live?.live || !live.keyFeatures?.length) return [];
     const oem = findOemFloorplanSpec(year, make, model, floorplan || "");
@@ -978,7 +975,7 @@ export function RvDetail({
                 value={
                   marketUpdating
                     ? "Updating…"
-                    : market.sourceLabel || "Catalog estimate"
+                    : factsMoneyHeadline(financePrice)
                 }
                 accent
               />
@@ -1040,11 +1037,6 @@ export function RvDetail({
                 <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white">
                   RvFOX rating
                 </p>
-                {ratingMeta.confidence === "Low" ? (
-                  <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-amber-200/80">
-                    {ratingMeta.knownMake ? "Low confidence" : "Unknown brand · estimate"}
-                  </p>
-                ) : null}
               </div>
             </div>
 
@@ -1076,12 +1068,6 @@ export function RvDetail({
               />
             </div>
 
-            {overviewText ? (
-              <p className="mt-6 text-[15px] font-normal leading-[1.65] text-white">
-                {overviewText}
-              </p>
-            ) : null}
-
             {featureChips.length ? (
               <div className="mt-5 flex flex-wrap gap-2">
                 {featureChips.map((f) => (
@@ -1111,70 +1097,30 @@ export function RvDetail({
           </section>
 
 
-          {/* Market */}
-          <section className="glass-prestige rounded-[1.25rem] p-5">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold/90">
-                  Market value
-                </p>
-                <p className="mt-1 text-[11px] leading-snug text-white/65">
-                  {market.sourceLabel || "Catalog estimate"}
-                  {market.source === "public_listings" && publicComps
-                    ? ` · ${publicComps.sampleSize} asks`
-                    : null}
-                </p>
-              </div>
-              {marketUpdating ? (
-                <span className="inline-flex items-center gap-1 text-[10px] text-white">
-                  <Loader2 className="size-3 animate-spin" />
-                  Updating
-                </span>
-              ) : null}
-            </div>
-            <div className="grid grid-cols-3 gap-2">
+          <FactsCollapse
+            title="Market value"
+            headline={
+              marketUpdating ? "Updating…" : factsMoneyHeadline(financePrice)
+            }
+          >
+            <div className="grid grid-cols-2 gap-2">
               <MarketTile
-                label="TRADE-IN"
+                label="Market value"
+                value={factsMoneyHeadline(financePrice)}
+              />
+              <MarketTile
+                label="Trade-in"
                 value={formatMoney(market.tradeIn)}
-                sub={
-                  market.tradeCappedAtRetailLow
-                    ? "CAPPED AT RETAIL LOW"
-                    : "Dealer trade"
-                }
-                warn={Boolean(market.tradeCappedAtRetailLow)}
               />
               <MarketTile
-                label="RETAIL LOW"
+                label="Retail low"
                 value={formatMoney(market.retailLow)}
-                sub="Private party"
               />
               <MarketTile
-                label="RETAIL HIGH"
+                label="Retail high"
                 value={formatMoney(market.retailHigh)}
-                sub="Dealer asking"
               />
             </div>
-            {market.source === "public_listings" ? (
-              <p className="mt-3 text-[11px] leading-snug text-white/55">
-                Public listing asks in the year window — not closed sales, not
-                NADA or J.D. Power.
-              </p>
-            ) : market.source === "catalog" ? (
-              <p className="mt-3 text-[11px] leading-snug text-white/55">
-                Catalog estimate from a segment retain curve — not a guidebook
-                or paid inventory feed.
-              </p>
-            ) : (
-              <p className="mt-3 text-[11px] leading-snug text-white/55">
-                Live research estimate — confirm public asks before you write
-                a number.
-              </p>
-            )}
-            {market.tradeCappedAtRetailLow ? (
-              <p className="mt-3 rounded-xl border border-amber-400/45 bg-amber-500/15 px-3 py-2.5 text-[13px] font-semibold leading-snug text-amber-100">
-                Trade was capped at retail low — confirm comps.
-              </p>
-            ) : null}
             {shellNav ? (
               <button
                 type="button"
@@ -1187,22 +1133,7 @@ export function RvDetail({
                 {financePrice > 0 ? ` · ${formatMoney(financePrice)}` : ""}
               </button>
             ) : null}
-            {factors.length ? (
-              <ul className="mt-2 space-y-1">
-                {factors.map((f) => (
-                  <li
-                    key={f.label}
-                    className={cn(
-                      "text-[11px]",
-                      f.positive ? "text-emerald-200" : "text-amber",
-                    )}
-                  >
-                    {f.positive ? "↑" : "↓"} {f.label}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </section>
+          </FactsCollapse>
 
           {shouldShowRvVideoPrompt({
             year,
@@ -1219,17 +1150,14 @@ export function RvDetail({
             />
           ) : null}
 
-          {/* Local inventory */}
-          <section className="glass-prestige rounded-[1.15rem] p-3.5" data-no-export>
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-[10px] font-bold tracking-[0.14em] text-white">
-                LOCAL INVENTORY
-              </p>
-              <p className="mt-1 text-[10px] leading-snug text-white/45">
-                Nearby listings only — not used for the market-value numbers
-                above.
-              </p>
-            </div>
+          <FactsCollapse
+            title="Local inventory"
+            headline={factsInventoryHeadline({
+              searched: invSearched,
+              count: invListings.length,
+            })}
+          >
+            <div data-no-export>
             <div className="flex flex-wrap items-center gap-2">
               <label className="flex min-w-[7rem] flex-1 items-center gap-1.5 rounded-full border border-white/15 bg-black/30 px-3 py-1.5">
                 <MapPin className="size-3.5 text-blue" />
@@ -1322,15 +1250,16 @@ export function RvDetail({
                 Check payment · local median · {formatMoney(invMedian)}
               </button>
             ) : null}
-          </section>
+            </div>
+          </FactsCollapse>
 
-          {/* Specs */}
-          <Section title="Vehicle Specifications">
-            <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-white">
-              Identity & dimensions
-            </p>
-            <SpecRow label="TYPE" value={displayType} />
-            <SpecRow label="YEAR" value={year} />
+          <FactsCollapse
+            title="Vehicle specifications"
+            headline={factsSpecsHeadline({
+              length: specs.lengthFt,
+              engine: specs.engine,
+            })}
+          >
             <SpecRow label="LENGTH" value={specs.lengthFt} accent />
             <SpecRow label="WIDTH" value={specs.exteriorWidth} />
             <SpecRow label="HEIGHT" value={specs.exteriorHeight} />
@@ -1340,9 +1269,6 @@ export function RvDetail({
 
             {specs.isToyHauler ? (
               <>
-                <p className="mb-2 mt-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-white">
-                  Toy hauler garage
-                </p>
                 <SpecRow label="GARAGE DEPTH" value={specs.garageLength} accent />
                 <SpecRow label="GARAGE WIDTH" value={specs.garageWidth} />
                 <SpecRow label="GARAGE HEIGHT" value={specs.garageHeight} />
@@ -1353,9 +1279,6 @@ export function RvDetail({
               </>
             ) : null}
 
-            <p className="mb-3 mt-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-white">
-              Powertrain & chassis
-            </p>
             <SpecRow label="FUEL" value={displayFuel} />
             <SpecRow label="ENGINE" value={specs.engine} accent />
             <SpecRow label="HORSEPOWER" value={specs.horsepower} accent />
@@ -1366,15 +1289,8 @@ export function RvDetail({
             <SpecRow label="GENERATOR" value={brochure.generator} />
             <SpecRow label="A/C" value={brochure.acUnits} />
             <SpecRow label="TIRES" value={brochure.tireSize} />
-            <SpecRow
-              label="HIGHWAY MPG"
-              value={highwayMpgDisplay(specs.mpgHighway)}
-            />
+            <SpecRow label="HIGHWAY MPG" value={specs.mpgHighway} />
             <SpecRow label="FUEL CAPACITY" value={specs.fuelCapacity} />
-
-            <p className="mb-3 mt-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-white">
-              Weights
-            </p>
             <SpecRow label="GVWR" value={specs.gvwr} accent />
             <SpecRow label="UVW" value={specs.uvw} />
             <SpecRow label="CCC" value={specs.ccc} />
@@ -1391,9 +1307,6 @@ export function RvDetail({
               </button>
             ) : null}
 
-            <p className="mb-3 mt-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-white">
-              Tanks
-            </p>
             <SpecRow label="FRESH WATER" value={specs.freshWater} />
             <SpecRow label="GRAY WATER" value={specs.grayWater} />
             <SpecRow label="BLACK WATER" value={specs.blackWater} />
@@ -1460,32 +1373,41 @@ export function RvDetail({
                 <p className="mt-2 text-[11px] text-white/50">{correctMsg}</p>
               ) : null}
             </details>
-          </Section>
+          </FactsCollapse>
 
           {live?.live &&
           (live.ratingEstimate || live.ownerSentiment) ? (
-            <Section title="Rating">
+            <FactsCollapse
+              title="Rating"
+              headline={
+                live.ratingEstimate && live.ratingEstimate > 0
+                  ? live.ratingEstimate.toFixed(1)
+                  : "Notes"
+              }
+            >
               <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/55">
-                  Research notes — not in the RvFOX score
-                </p>
                 {live.ratingEstimate && live.ratingEstimate > 0 ? (
-                  <p className="mt-1.5 text-[13px] text-white">
-                    Research estimate {live.ratingEstimate.toFixed(1)} / 5.0
-                    (Grok dossier)
+                  <p className="text-[15px] font-semibold text-white">
+                    {live.ratingEstimate.toFixed(1)}
                   </p>
                 ) : null}
                 {live.ownerSentiment ? (
-                  <p className="mt-1.5 text-[13px] italic text-white/85">
+                  <p className="mt-1.5 text-[14px] italic text-white/85">
                     {live.ownerSentiment}
                   </p>
                 ) : null}
               </div>
-            </Section>
+            </FactsCollapse>
           ) : null}
 
           {floorplansShown.length ? (
-            <Section title="Floorplans this year">
+            <FactsCollapse
+              title="Floorplans this year"
+              headline={
+                floorplan ||
+                `${floorplansShown.length} ${floorplansShown.length === 1 ? "plan" : "plans"}`
+              }
+            >
               <div className="flex flex-wrap gap-1.5">
                 {floorplansShown.map((fp) => (
                   <Chip
@@ -1501,9 +1423,9 @@ export function RvDetail({
                   </Chip>
                 ))}
               </div>
-            </Section>
+            </FactsCollapse>
           ) : emptyYearFloorplans ? (
-            <Section title="Floorplans this year">
+            <FactsCollapse title="Floorplans this year" headline="None on file">
               <p className="text-[14px] leading-relaxed text-white/80">
                 No verified floorplans for {year} {make} {model}.
               </p>
@@ -1529,17 +1451,17 @@ export function RvDetail({
                   </ul>
                 </div>
               ) : null}
-            </Section>
+            </FactsCollapse>
           ) : noYearFloorplanBrowse && historicalFloorplans.length ? (
-            <Section title="Floorplans across model years">
-              <p className="mb-4 text-[13px] leading-relaxed text-white/60">
-                Layouts from other years.
-              </p>
+            <FactsCollapse
+              title="Floorplans across model years"
+              headline={`${historicalFloorplans.length} years`}
+            >
               <div className="space-y-4">
                 {historicalFloorplans.map((row) => (
                   <div key={row.year}>
                     <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-white/60">
-                      {row.year} lineup
+                      {row.year}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {row.floorplans.map((fp) => (
@@ -1549,19 +1471,19 @@ export function RvDetail({
                   </div>
                 ))}
               </div>
-            </Section>
+            </FactsCollapse>
           ) : null}
 
           {emptyYearFloorplans && historicalFloorplans.length ? (
-            <Section title="Floorplans from other years">
-              <p className="mb-4 text-[13px] leading-relaxed text-white/60">
-                Labeled by model year.
-              </p>
+            <FactsCollapse
+              title="Floorplans from other years"
+              headline={`${historicalFloorplans.length} years`}
+            >
               <div className="space-y-4">
                 {historicalFloorplans.map((row) => (
                   <div key={row.year}>
                     <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-white/60">
-                      {row.year} lineup
+                      {row.year}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {row.floorplans.map((fp) => (
@@ -1571,14 +1493,21 @@ export function RvDetail({
                   </div>
                 ))}
               </div>
-            </Section>
+            </FactsCollapse>
           ) : null}
 
           {live?.live &&
           (live.reliabilitySummary ||
             live.commonIssues?.length ||
             live.servicePriorities?.length) ? (
-            <Section title="Reliability & ownership">
+            <FactsCollapse
+              title="Reliability & ownership"
+              headline={
+                live.commonIssues?.length
+                  ? `${live.commonIssues.length} issues`
+                  : "Notes"
+              }
+            >
               {live.reliabilitySummary ? (
                 <p className="text-[13px] leading-relaxed text-white/90">
                   {powertrainPin
@@ -1615,95 +1544,77 @@ export function RvDetail({
                   ))}
                 </ul>
               ) : null}
-              {live.ownerSentiment ? (
-                <p className="mt-2 text-[12px] text-white/55">
-                  Owner-sentiment research is labeled under Rating — not part of
-                  the RvFOX number.
-                </p>
-              ) : null}
-            </Section>
+            </FactsCollapse>
           ) : null}
 
-          <Section title="Sample owner notes">
+          <FactsCollapse
+            title="Sample owner notes"
+            headline={factsOwnerHeadline(ownerReviews[0] ?? null)}
+          >
             {ownerReviews.length ? (
-              <>
-                <p className="mb-3 text-[12px] leading-relaxed text-white/60">
-                  Illustrative copy for tone — not verified owner reviews or
-                  live forum posts.
-                </p>
-                <div className="space-y-3">
-                  {ownerReviews.map((r) => (
-                    <article
-                      key={r.id}
-                      className="rounded-2xl border border-white/10 bg-black/30 p-4"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-[16px] font-bold leading-snug text-white">
-                            {r.title}
-                          </p>
-                          <p className="mt-1 text-[13px] text-white">
-                            {r.author}
-                            {r.location ? ` · ${r.location}` : ""}
-                            {r.date ? ` · ${r.date}` : ""}
-                          </p>
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <p className="text-[18px] font-bold tabular-nums text-gold-bright">
-                            {r.rating.toFixed(1)}
-                          </p>
-                          <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/45">
-                            Sample
-                          </p>
-                        </div>
-                      </div>
-                      <p className="mt-3 text-[15px] leading-relaxed text-white">
-                        {r.body}
-                      </p>
-                      {r.miles || r.years ? (
-                        <p className="mt-2 text-[13px] font-medium text-white">
-                          {[r.miles, r.years].filter(Boolean).join(" · ")}
+              <div className="space-y-3">
+                {ownerReviews.map((r) => (
+                  <article
+                    key={r.id}
+                    className="rounded-2xl border border-white/10 bg-black/30 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-[16px] font-bold leading-snug text-white">
+                          {r.title}
                         </p>
-                      ) : null}
-                    </article>
-                  ))}
-                </div>
-              </>
+                        <p className="mt-1 text-[13px] text-white">
+                          {r.author}
+                          {r.location ? ` · ${r.location}` : ""}
+                          {r.date ? ` · ${r.date}` : ""}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-[18px] font-bold tabular-nums text-gold-bright">
+                        {r.rating.toFixed(1)}
+                      </p>
+                    </div>
+                    <p className="mt-3 text-[15px] leading-relaxed text-white">
+                      {r.body}
+                    </p>
+                    {r.miles || r.years ? (
+                      <p className="mt-2 text-[13px] font-medium text-white">
+                        {[r.miles, r.years].filter(Boolean).join(" · ")}
+                      </p>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
             ) : (
               <p className="text-[13px] leading-relaxed text-white/65">
                 No sample notes for this brand.
               </p>
             )}
-          </Section>
+          </FactsCollapse>
 
-          <Section title="NHTSA safety">
+          <FactsCollapse
+            title="NHTSA safety"
+            headline={factsRecallHeadline({
+              loading: recallLoading,
+              count: liveRecalls.length,
+            })}
+          >
             {recallLoading ? (
               <p className="flex items-center gap-2 text-[14px] text-white">
                 <Loader2 className="size-4 animate-spin" /> Loading recalls
-                from NHTSA…
               </p>
             ) : recallError ? (
               <p className="text-[12px] text-amber">{recallError}</p>
             ) : liveRecalls.length === 0 ? (
-              <div className="space-y-2">
-                <p className="text-[13px] text-white">
-                  None found for this year / make / model.
-                </p>
-                <a
-                  href="https://www.nhtsa.gov/recalls"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue"
-                >
-                  Search nhtsa.gov <ExternalLink className="size-3" />
-                </a>
-              </div>
+              <a
+                href="https://www.nhtsa.gov/recalls"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-[13px] font-semibold text-blue"
+              >
+                nhtsa.gov <ExternalLink className="size-3" />
+              </a>
             ) : (
               <div className="space-y-2">
-                <p className="text-[15px] font-bold text-ruby">
-                  {liveRecalls.length} NHTSA campaign
-                  {liveRecalls.length === 1 ? "" : "s"} on record
-                </p>
                 <ul className="space-y-2">
                   {liveRecalls.map((r, i) => (
                     <li
@@ -1767,44 +1678,41 @@ export function RvDetail({
                 </ul>
               </details>
             ) : null}
-          </Section>
+          </FactsCollapse>
 
           {maintenance.length ? (
-            <section className="glass-prestige rounded-[1.15rem] p-3.5">
-              <button
-                type="button"
-                onClick={() => setOpenMaint((v) => !v)}
-                className="flex w-full items-center justify-between"
-              >
-                <span className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-white">
-                  <FileText className="size-3.5 text-amber" />
-                  MAINTENANCE SCHEDULE ({maintenance.length})
-                </span>
-                <span className="text-[11px] text-white/60">
-                  {openMaint ? "Hide" : "Show"}
-                </span>
-              </button>
-              {openMaint ? (
-                <ul className="mt-2 space-y-2">
-                  {maintenance.map((m, i) => (
-                    <li
-                      key={i}
-                      className="rounded-xl border border-white/10 bg-black/30 px-3 py-2"
-                    >
-                      <p className="text-[13px] font-bold text-white">
-                        {m.task}
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-white/75">
-                        {m.interval} · {m.category} · {m.priority}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </section>
+            <FactsCollapse
+              title="Maintenance"
+              headline={`${maintenance.length} tasks`}
+            >
+              <ul className="space-y-2">
+                {maintenance.map((m, i) => (
+                  <li
+                    key={i}
+                    className="rounded-xl border border-white/10 bg-black/30 px-3 py-2"
+                  >
+                    <p className="text-[13px] font-bold text-white">
+                      {m.task}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-white/75">
+                      {m.interval} · {m.category} · {m.priority}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </FactsCollapse>
           ) : null}
 
-          <RvShareKit result={coach} onAskGrok={onAskGrok} />
+          <div data-share-kit>
+            <FactsCollapse
+              title="Share kit"
+              headline="Send this report"
+              open={shareOpen}
+              onOpenChange={setShareOpen}
+            >
+              <RvShareKit result={coach} onAskGrok={onAskGrok} />
+            </FactsCollapse>
+          </div>
 
           <SuiteDisclaimer className="pb-6" />
         </div>
@@ -1937,32 +1845,6 @@ function OverflowItem({
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="glass-prestige rounded-[1.25rem] px-5 py-5">
-      <h2 className="mb-4 text-[18px] font-bold tracking-tight text-white">
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
-function highwayMpgDisplay(v?: string | null): string {
-  const t = (v || "").trim();
-  if (!t || t === "—") return "—";
-  if (/confirm brochure/i.test(t) || /est/i.test(t) || /tow vehicle/i.test(t)) {
-    return t;
-  }
-  return `${t} EST.`;
-}
-
 function SpecRow({
   label,
   value,
@@ -2024,41 +1906,17 @@ function Chip({
 function MarketTile({
   label,
   value,
-  sub,
-  warn,
 }: {
   label: string;
   value: string;
-  sub: string;
-  warn?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "rounded-2xl border px-2.5 py-3 text-center",
-        warn
-          ? "border-amber-400/50 bg-amber-500/15"
-          : "border-white/10 bg-black/25",
-      )}
-    >
-      <p
-        className={cn(
-          "text-[11px] font-medium uppercase tracking-[0.12em]",
-          warn ? "text-amber-100" : "text-white",
-        )}
-      >
+    <div className="rounded-2xl border border-white/10 bg-black/25 px-2.5 py-3 text-center">
+      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-white">
         {label}
       </p>
       <p className="mt-1 text-[15px] font-semibold tabular-nums text-white">
         {value}
-      </p>
-      <p
-        className={cn(
-          "mt-0.5 text-[11px] font-semibold",
-          warn ? "text-amber-100" : "text-white",
-        )}
-      >
-        {sub}
       </p>
     </div>
   );
