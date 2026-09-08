@@ -70,6 +70,8 @@ export type SuitePageProps = {
   /** Expose scroll node to parent (lenders, focus, etc.). */
   scrollRef?: RefObject<HTMLDivElement | null>;
   style?: CSSProperties;
+  /** Landing photo/glass override (Tow beach, Facts showroom). */
+  landing?: "tow";
 };
 
 /**
@@ -93,6 +95,7 @@ export function SuitePage({
   overlays,
   scrollRef: scrollRefProp,
   style,
+  landing,
 }: SuitePageProps) {
   const localRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = scrollRefProp ?? localRef;
@@ -122,6 +125,7 @@ export function SuitePage({
         adaptiveGlass ? glass.luminance.toFixed(3) : undefined
       }
       data-no-swipe-scroll={noSwipeScroll ? "" : undefined}
+      data-tow-landing={landing === "tow" ? "" : undefined}
     >
       <SuiteBackdrop src={backdrop} objectPosition={objectPosition} />
       {topSlot}

@@ -55,6 +55,11 @@ import {
   towPrefillFromOffer,
   type FactsTowHandoffOffer,
 } from "@/lib/tow/factsTowHandoff";
+import { TOW_LANDING_BACKDROP } from "@/assets/prestige";
+import {
+  selFromTowExampleChip,
+  TOW_EXAMPLE_CHIPS,
+} from "@/lib/tow/towOpen";
 
 
 const YEARS = Array.from({ length: 22 }, (_, i) => String(2026 - i)); // 2026 → 2005
@@ -484,6 +489,20 @@ export function RvTowApp() {
     [make, year],
   );
 
+  const runExampleChip = useCallback((label: string) => {
+    const sel = selFromTowExampleChip(label);
+    setKindFilter("all");
+    setYear(sel.year);
+    setMake(sel.make);
+    setModel(sel.model);
+    setTrim(sel.trim);
+    setManualMaxTow("");
+    setManualPayload("");
+    setManualGcwr("");
+    setShopMode("match");
+    setDetailsOpen(false);
+  }, []);
+
   const clearVehicle = () => {
     setYear(EMPTY.year);
     setMake(EMPTY.make);
@@ -652,6 +671,9 @@ export function RvTowApp() {
     <SuitePage
       tab="rvtow"
       className="rvtow-screen"
+      backdrop={TOW_LANDING_BACKDROP}
+      objectPosition="center 32%"
+      landing="tow"
       scrollRef={scrollRef}
       onPullReset={clearVehicle}
       pullLabel="Release to clear vehicle · pull down"
@@ -751,6 +773,15 @@ export function RvTowApp() {
       }
     >
       <div className="landscape-content mx-auto w-full max-w-lg space-y-2.5 px-3 pb-8 sm:px-4">
+        <section className="tow-hero-panel glass-prestige rounded-[var(--radius-xl)] px-4 py-3.5 sm:px-5">
+          <p className="text-[22px] font-extrabold tracking-tight text-white sm:text-[24px]">
+            Know before you hitch,
+          </p>
+          <p className="mt-1 text-[13px] leading-snug text-white/70">
+            Max tow and pin from the OEM table — not a guess.
+          </p>
+        </section>
+
         {toadMode && prefill.kind === "motorhome" ? (
           <section
             data-tow-coach
@@ -780,7 +811,7 @@ export function RvTowApp() {
             {reverseMode ? null : (
               <section
                 data-tow-truck
-                className="glass-surface rounded-[var(--radius-xl)] p-3"
+                className="glass-prestige space-y-1 rounded-[var(--radius-xl)] p-3"
               >
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <p className="flex items-center gap-1.5 text-[12px] font-bold text-blue">
@@ -812,6 +843,7 @@ export function RvTowApp() {
                     </button>
                   </div>
                 </div>
+                {/* Cascading search — year → make → model; trim stays on the default view */}
                 <div className="grid grid-cols-2 gap-2">
                   <Field
                     label="YEAR"
@@ -849,6 +881,19 @@ export function RvTowApp() {
                   disabled={!model}
                   onClick={() => model && setSheet("trim")}
                 />
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {TOW_EXAMPLE_CHIPS.map((label) => (
+                    <button
+                      key={label}
+                      type="button"
+                      data-tow-example-chip={label}
+                      onClick={() => runExampleChip(label)}
+                      className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 bg-black/35 px-3.5 py-2 text-left text-[12px] font-semibold text-white transition active:scale-[0.99]"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </section>
             )}
 
