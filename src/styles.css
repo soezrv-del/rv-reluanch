@@ -61,6 +61,10 @@
   --dock-label-size: 1rem;
   --dock-label-size-sm: 1.0625rem;
   --dock-label-track: 0.5px;
+
+  --z-ask-grok-badge: 90;
+  --z-ask-grok-panel: 70;
+  --shadow-ask-grok: 0 6px 20px rgba(0, 0, 0, 0.42);
 }
 
 @layer base {
@@ -1789,6 +1793,179 @@
   text-transform: uppercase;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+/* Ask Grok overlay chrome — badge + slide-over. Mounted inside <main>
+   so the panel never paints over the bottom dock (sibling z-index 80).
+   Wrapper is not inset — a full-size box would steal page taps. */
+.ask-grok-chrome {
+  position: static;
+}
+
+.ask-grok-badge {
+  position: fixed;
+  top: max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.5rem));
+  left: max(0.75rem, calc(env(safe-area-inset-left, 0px) + 0.5rem));
+  z-index: var(--z-ask-grok-badge);
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem 0.45rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-elevated);
+  color: var(--color-fg);
+  box-shadow: var(--shadow-ask-grok);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  touch-action: manipulation;
+  transition:
+    transform 180ms ease-out,
+    background-color 180ms ease-out,
+    border-color 180ms ease-out;
+}
+
+.ask-grok-badge:hover {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+}
+
+.ask-grok-badge:active {
+  transform: scale(0.96);
+}
+
+.ask-grok-badge-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--color-sapphire-glow);
+}
+
+.ask-grok-badge-label {
+  color: var(--color-fg);
+}
+
+.ask-grok-layer {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-ask-grok-panel);
+  overflow: hidden;
+}
+
+.ask-grok-layer[hidden] {
+  display: none;
+}
+
+.ask-grok-scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--color-bg) 52%, transparent);
+  cursor: pointer;
+}
+
+.ask-grok-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  width: min(100%, 26rem);
+  max-width: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-fg);
+  box-shadow: var(--shadow-panel);
+  transform: translateX(-100%);
+  transition: transform 220ms ease-out;
+}
+
+.ask-grok-layer.is-open .ask-grok-panel {
+  transform: translateX(0);
+}
+
+.ask-grok-panel-bar {
+  display: flex;
+  min-height: 48px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0.5rem 0.35rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.ask-grok-panel-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-fg);
+}
+
+.ask-grok-close {
+  display: inline-flex;
+  min-height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-fg);
+  transition: background-color 160ms ease-out;
+}
+
+.ask-grok-close:hover {
+  background: var(--color-surface-2);
+}
+
+.ask-grok-mount {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.ask-grok-mount-fallback {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+}
+
+.ask-grok-mount-pulse {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  animation: ask-grok-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes ask-grok-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask-grok-badge,
+  .ask-grok-panel,
+  .ask-grok-close {
+    transition: none;
+  }
+  .ask-grok-mount-pulse {
+    animation: none;
+  }
 }
 
 /* RvTow answer numbers — max tow + pin, first glance on a phone */
