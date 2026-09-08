@@ -1,6 +1,7 @@
 /**
  * Professional Sold book — device-local deals from Facts saved coaches.
- * Net is always gross × split. Never typed. No delete in v1.
+ * Lot-desk net: 25% of gross for a whole deal, then × share
+ * (whole 1 / half 0.5 / quarter 0.25). Never typed. No delete in v1.
  */
 
 import {
@@ -12,10 +13,13 @@ export const SOLD_DEALS_KEY = "rvfax_sold_v1";
 export const SOLD_CHANGED_EVENT = "rvfax-sold-changed";
 export const OPEN_SOLD_EVENT = "rvfax-open-sold";
 
+/** Whole-deal desk commission — always 25% of gross. */
+export const WHOLE_DEAL_COMMISSION = 0.25;
+
 export const DEAL_SPLITS = {
-  quarter: { id: "quarter", label: "Quarter deal", rate: 0.25 },
-  half: { id: "half", label: "Half deal", rate: 0.5 },
-  whole: { id: "whole", label: "Whole deal", rate: 1 },
+  quarter: { id: "quarter", label: "Quarter deal", share: 0.25 },
+  half: { id: "half", label: "Half deal", share: 0.5 },
+  whole: { id: "whole", label: "Whole deal", share: 1 },
 } as const;
 
 export type DealSplitId = keyof typeof DEAL_SPLITS;
@@ -59,18 +63,31 @@ export function isDealSplitId(v: unknown): v is DealSplitId {
   return typeof v === "string" && v in DEAL_SPLITS;
 }
 
+/** Effective share of the 25% whole-deal commission. */
+export function splitShare(split: DealSplitId): number {
+  return DEAL_SPLITS[split].share;
+}
+
+/** Gross multiplier: 0.25 × share (whole 25% / half 12.5% / quarter 6.25%). */
 export function splitRate(split: DealSplitId): number {
-  return DEAL_SPLITS[split].rate;
+  return WHOLE_DEAL_COMMISSION * splitShare(split);
 }
 
 export function splitLabel(split: DealSplitId): string {
   return DEAL_SPLITS[split].label;
 }
 
-/** Salesman net — always auto-calculated, never a typed field. */
+export function splitPercentLabel(split: DealSplitId): string {
+  return `${splitRate(split) * 100}%`;
+}
+
+/**
+ * Salesman net — always auto-calculated, never a typed field.
+ * `round(gross × 0.25 × share)` — whole / half / quarter share is 1 / 0.5 / 0.25.
+ */
 export function salesmanNet(gross: number, split: DealSplitId): number {
   if (!Number.isFinite(gross) || gross <= 0) return 0;
-  return Math.round(gross * splitRate(split));
+  return Math.round(gross * WHOLE_DEAL_COMMISSION * splitShare(split));
 }
 
 export function formatSoldMoney(n: number): string {

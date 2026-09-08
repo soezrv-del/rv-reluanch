@@ -45,11 +45,14 @@ const montana = unit(
   "3855BR",
 );
 
-test("salesman net is always gross × split — never typed", () => {
-  assert.equal(salesmanNet(10000, "quarter"), 2500);
-  assert.equal(salesmanNet(10000, "half"), 5000);
-  assert.equal(salesmanNet(10000, "whole"), 10000);
-  assert.equal(salesmanNet(39999, "quarter"), 10000);
+test("salesman net is 25% of gross for a whole deal, then × share", () => {
+  assert.equal(salesmanNet(100000, "whole"), 25000);
+  assert.equal(salesmanNet(100000, "half"), 12500);
+  assert.equal(salesmanNet(100000, "quarter"), 6250);
+  assert.equal(salesmanNet(10000, "whole"), 2500);
+  assert.equal(salesmanNet(10000, "half"), 1250);
+  assert.equal(salesmanNet(10000, "quarter"), 625);
+  assert.equal(salesmanNet(39999, "quarter"), 2500);
   assert.equal(salesmanNet(0, "whole"), 0);
   assert.equal(salesmanNet(-100, "half"), 0);
 });
@@ -70,7 +73,7 @@ test("optional customer name never blocks a sell", () => {
   if (!skipped.ok) return;
   assert.equal(skipped.deal.customerName, "");
   assert.equal(skipped.deal.gross, 40000);
-  assert.equal(salesmanNet(skipped.deal.gross, skipped.deal.split), 20000);
+  assert.equal(salesmanNet(skipped.deal.gross, skipped.deal.split), 5000);
 
   const named = sellSavedCoach([dream], [], {
     unit: dream,
@@ -99,7 +102,7 @@ test("sell removes the coach from saved and keeps other units", () => {
   assert.equal(result.deals.length, 1);
   assert.equal(result.deal.unitLabel, "2023 American Coach American Dream 45A");
   assert.equal(result.deal.paid, false);
-  assert.equal(salesmanNet(result.deal.gross, result.deal.split), 12000);
+  assert.equal(salesmanNet(result.deal.gross, result.deal.split), 3000);
 });
 
 test("removeSavedUnit is a no-op when the coach is not saved", () => {
@@ -126,19 +129,20 @@ test("paid toggle drops net out of owed and tap-again restores", () => {
 
   const open = soldTotals(second.deals);
   assert.equal(open.totalGross, 12000);
-  assert.equal(open.owedNet, 4000 + 1000);
+  // 8000 half = 1000; 4000 quarter = 250
+  assert.equal(open.owedNet, 1000 + 250);
   assert.equal(open.paidNet, 0);
 
   const paidFirst = toggleDealPaid(second.deals, first.deal.id);
   const afterPay = soldTotals(paidFirst);
   assert.equal(afterPay.totalGross, 12000);
-  assert.equal(afterPay.owedNet, 1000);
-  assert.equal(afterPay.paidNet, 4000);
+  assert.equal(afterPay.owedNet, 250);
+  assert.equal(afterPay.paidNet, 1000);
   assert.equal(paidFirst.find((d) => d.id === first.deal.id)?.paid, true);
 
   const reverted = toggleDealPaid(paidFirst, first.deal.id);
   const afterRevert = soldTotals(reverted);
-  assert.equal(afterRevert.owedNet, 5000);
+  assert.equal(afterRevert.owedNet, 1250);
   assert.equal(afterRevert.paidNet, 0);
   assert.equal(reverted.find((d) => d.id === first.deal.id)?.paid, false);
 });
@@ -195,8 +199,8 @@ test("sold deals persist on the same device localStorage as saved units", () => 
     const loaded = loadSoldDeals();
     assert.equal(loaded.length, 1);
     assert.equal(loaded[0]!.gross, 9000);
-    assert.equal(salesmanNet(loaded[0]!.gross, loaded[0]!.split), 2250);
-    assert.equal(formatSoldMoney(2250), "$2,250");
+    assert.equal(salesmanNet(loaded[0]!.gross, loaded[0]!.split), 563);
+    assert.equal(formatSoldMoney(563), "$563");
   } finally {
     if (prev) {
       Object.defineProperty(globalThis, "localStorage", {

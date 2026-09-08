@@ -10,6 +10,7 @@ import {
   formatUnitLabel,
   parseGrossAmount,
   salesmanNet,
+  splitPercentLabel,
   type DealSplitId,
 } from "@/lib/rv/soldDeals";
 import type { SavedUnitIdentity } from "@/lib/rv/savedUnits";
@@ -211,7 +212,7 @@ export function SoldPrompt({
                       <span className="text-[12px] font-semibold text-white/70">
                         {preview != null
                           ? formatSoldMoney(preview)
-                          : `${Math.round(opt.rate * 100)}%`}
+                          : splitPercentLabel(id)}
                       </span>
                     </button>
                   );
