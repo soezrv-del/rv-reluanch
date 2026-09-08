@@ -6743,7 +6743,7 @@ test("Thor 2010–2012 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(th.Hurricane?.years?.includes(2010), false);
   assert.equal(th.Hurricane?.years?.includes(2011), true);
   assert.equal(th.Hurricane?.years?.includes(2012), true);
-  assert.equal(th.Windsport?.years?.includes(2010), false);
+  assert.equal(th.Windsport?.years?.includes(2010), true);
   assert.equal(th.Windsport?.years?.includes(2011), true);
   assert.equal(th.Windsport?.years?.includes(2012), true);
   assert.equal(th.ACE?.years?.includes(2010), false);
@@ -6774,7 +6774,7 @@ test("Thor 2010–2012 OEM year-first floorplans + powertrain pins", () => {
   assert.match(hu, /from: 2000,\s*to: 2009/);
 
   const ws = thor.slice(thor.indexOf("    Windsport: {"), thor.indexOf("    Challenger: {"));
-  assert.doesNotMatch(ws, /"2010":/);
+  assert.match(ws, /"2010": \["30Q", "31D", "31G", "32A", "33T"\]/);
   assert.match(ws, /"2011": \["30Q", "31G", "31J", "32A", "32D", "34T"\]/);
   assert.match(ws, /"2012": \["30Q", "31G", "31J", "32A", "32D", "34T"\]/);
   assert.match(ws, /from: 2008,\s*to: 2009/);
@@ -6852,6 +6852,71 @@ test("Thor 2010–2012 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(findPowertrainCorrection("2012", "Thor", "Four Winds Siesta", "24SA"), null);
   assert.equal(findPowertrainCorrection("2012", "Thor", "Seneca", "37SS"), null);
   assert.equal(findPowertrainCorrection("2012", "Thor", "Outlaw", "29H"), null);
+});
+
+test("Thor MY2010 honesty: lock Windsport five codes; Four Winds Majestic stays GAP", () => {
+  const idx = CATALOG_INDEX.Thor;
+  assert.ok(idx);
+
+  assert.equal(idx.Windsport?.years?.includes(2010), true);
+  assert.equal(idx.Windsport?.type, "Class A Gas");
+  assert.equal(idx["Four Winds Majestic"]?.years?.includes(2010), false, "Majestic MY2010 GAP — no 2010 chip");
+  assert.deepEqual(idx["Four Winds Majestic"]?.years ?? [], []);
+  assert.equal(idx.Hurricane?.years?.includes(2010), false, "Hurricane must not receive Windsport MY2010 lock");
+  assert.equal(idx["Four Winds"]?.years?.includes(2010), false, "Four Winds MY2010 stays empty — not Majestic");
+  assert.equal(idx.Chateau?.years?.includes(2010), false, "Chateau MY2010 stays empty — not Majestic");
+
+  const block = src("rvData.ts");
+  const t0 = block.indexOf("\n  Thor: {");
+  const t1 = block.indexOf("\n  Coachmen: {");
+  assert.ok(t0 > 0 && t1 > t0, "Thor block");
+  const thor = block.slice(t0, t1);
+  const windsport = thor.slice(thor.indexOf("    Windsport: {"), thor.indexOf("    Challenger: {"));
+  const majestic = thor.slice(thor.indexOf('    "Four Winds Majestic": {'), thor.indexOf("    Mandalay: {"));
+  const hurricane = thor.slice(thor.indexOf("    Hurricane: {"), thor.indexOf('    "Four Winds Majestic"'));
+  const fourWinds = thor.slice(thor.indexOf('    "Four Winds": {'), thor.indexOf("    Chateau: {"));
+  const chateau = thor.slice(thor.indexOf("    Chateau: {"), thor.indexOf("    Quantum: {"));
+  const sereno = thor.slice(thor.indexOf("    Sereno: {"), thor.indexOf("    Hurricane: {"));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  // LOCK — dated RVUSA 2010_Windsport_Class_A_Brochure_LR.pdf semi-basement matrix only.
+  // Do not copy 2009 or 2011 → 2010.
+  assert.deepEqual(fbyYear(windsport, 2010), ["30Q", "31D", "31G", "32A", "33T"]);
+  assert.equal((fbyYear(windsport, 2010) ?? []).includes("31J"), false, "Windsport must not copy 2011 31J");
+  assert.equal((fbyYear(windsport, 2010) ?? []).includes("32D"), false, "Windsport must not copy 2011 32D");
+  assert.equal((fbyYear(windsport, 2010) ?? []).includes("34T"), false, "Windsport must not copy 2011 34T");
+  assert.equal((fbyYear(windsport, 2010) ?? []).includes("32V"), false, "Windsport must not add soft basement 32V");
+  assert.equal((fbyYear(windsport, 2010) ?? []).includes("34B"), false, "Windsport must not add soft basement 34B");
+  assert.equal((fbyYear(windsport, 2010) ?? []).includes("34U"), false, "Windsport must not add soft basement 34U");
+  assert.equal((fbyYear(windsport, 2010) ?? []).includes("36F"), false, "Windsport must not add soft basement 36F");
+  assert.equal((fbyYear(windsport, 2010) ?? []).includes("31V"), false, "Windsport must not absorb Serrano 31V");
+  assert.equal((fbyYear(windsport, 2010) ?? []).includes("31Z"), false, "Windsport must not absorb Serrano 31Z");
+  assert.equal((fbyYear(windsport, 2010) ?? []).includes("27R"), false, "Windsport must not copy 2009 leftover 27R");
+  assert.deepEqual(fbyYear(windsport, 2009), ["27R", "29M", "31S", "34J"]);
+  assert.deepEqual(fbyYear(windsport, 2011), ["30Q", "31G", "31J", "32A", "32D", "34T"]);
+  assert.equal((fbyYear(windsport, 2011) ?? []).includes("31D"), false, "Windsport must not stamp MY2010 31D onto 2011");
+  assert.equal((fbyYear(windsport, 2011) ?? []).includes("33T"), false, "Windsport must not stamp MY2010 33T onto 2011");
+  assert.equal(findPowertrainCorrection("2010", "Thor", "Windsport", "30Q"), null, "Windsport MY2010 is matrix-only — do not invent HP");
+
+  // Hurricane / Serrano stay their own keys — no cross-contamination of the 2010 lock.
+  assert.equal(fbyYear(hurricane, 2010), null, "Hurricane 2010 must stay omitted");
+  assert.doesNotMatch(hurricane, /"2010":/);
+  assert.deepEqual(fbyYear(sereno, 2010), ["31V", "31Z"]);
+  assert.equal((fbyYear(sereno, 2010) ?? []).includes("30Q"), false);
+
+  // GAP MY2010 — Four Winds Majestic stays empty. Never invent from Four Winds / Chateau 19G.
+  assert.equal(fbyYear(majestic, 2010), null, "Majestic 2010 must stay GAP");
+  assert.doesNotMatch(majestic, /"2010":/);
+  assert.doesNotMatch(majestic, /"19G"|"M-19G"|"M-27G"|"27G"/);
+  assert.equal(fbyYear(fourWinds, 2010), null, "Four Winds 2010 must stay empty — not a Majestic invent");
+  assert.doesNotMatch(fourWinds, /"2010":/);
+  assert.equal(fbyYear(chateau, 2010), null, "Chateau 2010 must stay empty — not a Majestic invent");
+  assert.doesNotMatch(chateau, /"2010":/);
 });
 
 test("Thor leftover honesty: Seneca yearStart + Sereno FBY/flat hygiene", () => {
