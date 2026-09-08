@@ -46,8 +46,10 @@ import {
 } from "@/lib/rv/catalog";
 import {
   cascadeFromResult,
+  FACTS_EXAMPLE_CHIPS,
   pickerCoachWrite,
   resolveShareOpenSel,
+  selFromExampleChip,
   shouldOpenSingleHitReport,
 } from "@/lib/rv/factsOpen";
 import { didYouMean, type SuggestHit } from "@/lib/rv/suggest";
@@ -524,6 +526,17 @@ export function RvFaxApp({
     runSearchNow({ year, make, model, floorplan, rvType });
   }, [year, make, model, floorplan, rvType, runSearchNow]);
 
+  const runExampleChip = useCallback(
+    (label: string) => {
+      const sel = selFromExampleChip(label);
+      applySel(sel);
+      runSearchNow(sel);
+    },
+    [applySel, runSearchNow],
+  );
+
+  const revealModelTrim = hasSearched || Boolean(model || floorplan);
+
   const onCascadeSelect = useCallback(
     (field: CascadeField, value: string) => {
       setSuggestions([]);
@@ -702,7 +715,16 @@ export function RvFaxApp({
         <ActiveCoachChip />
 
         <div className="mx-auto w-full max-w-lg space-y-3.5 px-3 pb-28 pt-0 sm:px-4">
-          {/* Cascading dropdown search */}
+          <section className="px-0.5 pt-1">
+            <p className="text-[22px] font-extrabold tracking-tight text-white sm:text-[24px]">
+              Know before you buy,
+            </p>
+            <p className="mt-1 text-[13px] leading-snug text-white/70">
+              Specs, market, and recalls for the coach in front of you.
+            </p>
+          </section>
+
+          {/* Cascading dropdown search — year → make → model → trim */}
           <section className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4 sm:p-5">
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
@@ -720,7 +742,7 @@ export function RvFaxApp({
                       ]
                         .filter(Boolean)
                         .join(" · ")
-                    : "Year, type, make, model, floorplan"}
+                    : "Year and make to start"}
                 </p>
                 {catalogReady ? (
                   <p className="mt-1 text-[11px] text-white/45">
@@ -800,6 +822,14 @@ export function RvFaxApp({
                   onClick={() => setSheet("era")}
                   sapphire
                 />
+                <FieldButton
+                  label="RV Type"
+                  value={rvType ? rvClassLabel(rvType) : ""}
+                  placeholder={year ? "All types" : "Pick a year first"}
+                  disabled={!year}
+                  onClick={() => year && setSheet("rvType")}
+                  sapphire
+                />
               </div>
             ) : null}
 
@@ -810,14 +840,6 @@ export function RvFaxApp({
                 placeholder="Required"
                 required
                 onClick={() => setSheet("year")}
-                sapphire
-              />
-              <FieldButton
-                label="RV Type"
-                value={rvType ? rvClassLabel(rvType) : ""}
-                placeholder={year ? "All types" : "Pick a year first"}
-                disabled={!year}
-                onClick={() => year && setSheet("rvType")}
                 sapphire
               />
               <FieldButton
@@ -832,44 +854,65 @@ export function RvFaxApp({
                 onClick={() => year && !cascade.locks.make && setSheet("make")}
                 sapphire
               />
-              <FieldButton
-                label="Model"
-                value={model}
-                placeholder={cascade.locks.model || "Required"}
-                required
-                disabled={!make || Boolean(cascade.locks.model)}
-                custom={cascade.custom.model}
-                onClick={() => make && !cascade.locks.model && setSheet("model")}
-                sapphire
-              />
-              <FieldButton
-                label="Floorplan"
-                value={
-                  floorplan || (model && !cascade.locks.floorplan ? "Any floorplan" : "")
-                }
-                placeholder={cascade.locks.floorplan || "Optional"}
-                disabled={!model || Boolean(cascade.locks.floorplan)}
-                custom={cascade.custom.floorplan}
-                onClick={() =>
-                  model && !cascade.locks.floorplan && setSheet("floorplan")
-                }
-                sapphire
-              />
+              {revealModelTrim ? (
+                <>
+                  <FieldButton
+                    label="Model"
+                    value={model}
+                    placeholder={cascade.locks.model || "Required"}
+                    required
+                    disabled={!make || Boolean(cascade.locks.model)}
+                    custom={cascade.custom.model}
+                    onClick={() => make && !cascade.locks.model && setSheet("model")}
+                    sapphire
+                  />
+                  <FieldButton
+                    label="Trim"
+                    value={
+                      floorplan ||
+                      (model && !cascade.locks.floorplan ? "Any floorplan" : "")
+                    }
+                    placeholder={cascade.locks.floorplan || "Optional"}
+                    disabled={!model || Boolean(cascade.locks.floorplan)}
+                    custom={cascade.custom.floorplan}
+                    onClick={() =>
+                      model && !cascade.locks.floorplan && setSheet("floorplan")
+                    }
+                    sapphire
+                  />
+                </>
+              ) : null}
             </div>
+
+            {!revealModelTrim ? (
+              <div className="flex flex-wrap gap-2">
+                {FACTS_EXAMPLE_CHIPS.map((label) => (
+                  <button
+                    key={label}
+                    type="button"
+                    data-facts-example-chip={label}
+                    onClick={() => runExampleChip(label)}
+                    className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 bg-black/35 px-3.5 py-2 text-left text-[12px] font-semibold text-white transition active:scale-[0.99]"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
 
             {searching ? (
               <p className="flex items-center justify-center gap-2 text-[12px] font-semibold text-sky-200">
                 <Loader2 className="size-3.5 animate-spin" />
                 Opening report…
               </p>
-            ) : cascade.canSearch ? (
+            ) : year && make ? (
               <button
                 type="button"
                 onClick={runSearch}
                 className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full border border-gold-border/50 bg-gold-dim/25 py-2.5 text-[13px] font-bold text-gold-bright active:scale-[0.99]"
               >
                 <Search className="size-3.5" />
-                Open report
+                {cascade.canSearch ? "Open report" : "Search"}
               </button>
             ) : null}
           </section>
