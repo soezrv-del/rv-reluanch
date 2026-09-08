@@ -11,7 +11,6 @@ import {
   type ReactNode,
 } from "react";
 import { BottomTabs, type AppTab } from "./BottomTabs";
-import { AskGrokOverlay } from "./AskGrokOverlay";
 import { dockTabOrder, PAGE_ACCENT } from "./shellConstants";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
 import { OPEN_SOLD_EVENT } from "@/lib/rv/soldDeals";
@@ -483,9 +482,6 @@ export function AppShell() {
               </Suspense>
             </div>
           ) : null}
-
-          {/* Overlay chrome only — dock Grok tab stays the full-page chat. */}
-          <AskGrokOverlay tab={tab} launchOpen={launchOpen} />
         </main>
 
         {!hideDock ? (
