@@ -54,6 +54,7 @@ import {
   compressImageToDataUrl,
   startVideoFramePump,
 } from "@/lib/rvgrok/vision";
+import { planGrokTabEntry } from "@/lib/rvgrok/tabEntry";
 import { cn, uid } from "@/lib/utils";
 import type { AppTab } from "@/components/shell/BottomTabs";
 import { MessageBubble } from "./MessageBubble";
@@ -97,13 +98,16 @@ const GROK_STARTERS: {
 export function RvGrokApp({
   seedPrompt,
   onSeedConsumed,
-  active: _active = true,
+  active = true,
+  entryToken = 0,
   onNavigate: _onNavigate,
   onSplashPlayingChange: _onSplashPlayingChange,
 }: {
   seedPrompt?: string;
   onSeedConsumed?: () => void;
   active?: boolean;
+  /** Bumps on every Grok tab entry (dock tap included) so a remounted pane resets. */
+  entryToken?: number;
   onNavigate?: (tab: AppTab) => void;
   onSplashPlayingChange?: (playing: boolean) => void;
 } = {}) {
@@ -281,10 +285,13 @@ export function RvGrokApp({
     startingLiveRef.current = false;
     stopBrowserTts();
     setMessages([]);
+    messagesRef.current = [];
     setSessionId(null);
+    sessionIdRef.current = null;
     setInput("");
     setPendingImage(null);
     setIsLoading(false);
+    isLoadingRef.current = false;
     setIsRecording(false);
     setSpeakingId(null);
     setActiveModel(null);
@@ -292,6 +299,8 @@ export function RvGrokApp({
     setRealtimeDetail(null);
     setInterimTranscript("");
     setVoiceError(null);
+    setHistoryOpen(false);
+    setVoicePanelOpen(false);
     camStreamRef.current?.getTracks().forEach((t) => t.stop());
     camStreamRef.current = null;
     if (liveVideoRef.current) liveVideoRef.current.srcObject = null;
@@ -1153,12 +1162,36 @@ export function RvGrokApp({
     }
   };
 
+  const entryHandledRef = useRef<{ token: number; seed: string | null } | null>(
+    null,
+  );
+
   useEffect(() => {
-    if (!seedPrompt?.trim()) return;
-    const t = seedPrompt.trim();
-    onSeedConsumed?.();
-    void sendMessageRef.current(t);
-  }, [seedPrompt, onSeedConsumed]);
+    if (!active) {
+      startNewChat();
+      return;
+    }
+
+    let handled = entryHandledRef.current;
+    if (!handled || handled.token !== entryToken) {
+      const plan = planGrokTabEntry(seedPrompt);
+      handled = { token: entryToken, seed: plan.seed };
+      entryHandledRef.current = handled;
+      if (plan.seed) onSeedConsumed?.();
+    }
+
+    startNewChat();
+    if (!handled.seed) return;
+
+    const seed = handled.seed;
+    const t = window.setTimeout(() => {
+      void sendMessageRef.current(seed);
+    }, 0);
+    return () => window.clearTimeout(t);
+    // seedPrompt / onSeedConsumed are captured per entryToken. Listing
+    // seedPrompt would re-fire after onSeedConsumed clears the parent seed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- entry-scoped
+  }, [active, entryToken, startNewChat]);
 
   useEffect(() => {
     sessionsRef.current = sessions;
