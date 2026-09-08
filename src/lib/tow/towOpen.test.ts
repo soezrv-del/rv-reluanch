@@ -3,76 +3,76 @@ import test from "node:test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { getRating } from "./towVehicles.ts";
 import { getTrimsForYear } from "./towYear.ts";
-import {
-  pickChipCatalogTrim,
-  selFromTowExampleChip,
-  TOW_EXAMPLE_CHIPS,
-} from "./towOpen.ts";
+import { inferTowKind, towCascadeReveal } from "./towOpen.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-test("landing chips are exactly the three locked trucks — no 2027 Sierra", () => {
-  assert.deepEqual([...TOW_EXAMPLE_CHIPS], [
-    "2024 Ford F-350 Super Duty",
-    "2020 Ram 3500",
-    "2026 GMC Sierra 2500HD",
-  ]);
-  assert.equal(TOW_EXAMPLE_CHIPS.length, 3);
-  const joined = TOW_EXAMPLE_CHIPS.join(" | ");
-  assert.doesNotMatch(joined, /2027/);
-  assert.doesNotMatch(joined, /F-250/);
-});
-
 test("2027 GMC Sierra 2500HD is a catalog GAP — no invented row", () => {
   assert.equal(getTrimsForYear("GMC", "Sierra 2500HD", "2027").length, 0);
-  assert.equal(pickChipCatalogTrim("GMC", "Sierra 2500HD", "2027"), "");
 });
 
-test("example chips resolve onto catalog year/make/model and a real trim", () => {
-  const ford = selFromTowExampleChip("2024 Ford F-350 Super Duty");
-  assert.equal(ford.year, "2024");
-  assert.equal(ford.make, "Ford");
-  assert.equal(ford.model, "F-350 Super Duty");
-  assert.ok(ford.trim, "2024 F-350 must pick a catalog trim");
-  assert.equal(
-    getTrimsForYear(ford.make, ford.model, ford.year).some(
-      (t) => t.label === ford.trim,
-    ),
-    true,
+test("toggle-first cascade: each parent unlocks the next; trim gates the numbers", () => {
+  assert.deepEqual(
+    towCascadeReveal({ kind: "", year: "", make: "", model: "", trim: "" }),
+    { year: false, make: false, model: false, trim: false, answer: false },
   );
-  const fordRating = getRating(ford.make, ford.model, ford.trim);
-  assert.ok(fordRating.maxTow > 5000, "chip uses a real catalog rating");
-  assert.equal(fordRating.label, ford.trim);
+  assert.deepEqual(
+    towCascadeReveal({
+      kind: "truck",
+      year: "",
+      make: "",
+      model: "",
+      trim: "",
+    }),
+    { year: true, make: false, model: false, trim: false, answer: false },
+  );
+  assert.deepEqual(
+    towCascadeReveal({
+      kind: "suv",
+      year: "2024",
+      make: "",
+      model: "",
+      trim: "",
+    }),
+    { year: true, make: true, model: false, trim: false, answer: false },
+  );
+  assert.deepEqual(
+    towCascadeReveal({
+      kind: "truck",
+      year: "2024",
+      make: "Ford",
+      model: "",
+      trim: "",
+    }),
+    { year: true, make: true, model: true, trim: false, answer: false },
+  );
+  assert.deepEqual(
+    towCascadeReveal({
+      kind: "truck",
+      year: "2024",
+      make: "Ford",
+      model: "F-350 Super Duty",
+      trim: "",
+    }),
+    { year: true, make: true, model: true, trim: true, answer: false },
+  );
+  const withTrim = towCascadeReveal({
+    kind: "truck",
+    year: "2024",
+    make: "Ford",
+    model: "F-350 Super Duty",
+    trim: "Lariat SRW — 6.7L Power Stroke Diesel (2023–2026)",
+  });
+  assert.equal(withTrim.trim, true);
+  assert.equal(withTrim.answer, true);
 
-  const ram = selFromTowExampleChip("2020 Ram 3500");
-  assert.equal(ram.year, "2020");
-  assert.equal(ram.make, "Ram");
-  assert.equal(ram.model, "3500");
-  assert.ok(ram.trim, "2020 Ram 3500 must pick a catalog trim");
-  assert.equal(
-    getTrimsForYear(ram.make, ram.model, ram.year).some(
-      (t) => t.label === ram.trim,
-    ),
-    true,
-  );
-  const ramRating = getRating(ram.make, ram.model, ram.trim);
-  assert.ok(ramRating.maxTow > 5000);
-
-  const gmc = selFromTowExampleChip("2026 GMC Sierra 2500HD");
-  assert.equal(gmc.year, "2026");
-  assert.equal(gmc.make, "GMC");
-  assert.equal(gmc.model, "Sierra 2500HD");
-  assert.ok(gmc.trim, "2026 Sierra 2500HD must pick a catalog trim");
-  assert.equal(
-    getTrimsForYear(gmc.make, gmc.model, gmc.year).some(
-      (t) => t.label === gmc.trim,
-    ),
-    true,
-  );
-  const gmcRating = getRating(gmc.make, gmc.model, gmc.trim);
-  assert.ok(gmcRating.maxTow > 5000);
+  assert.equal(inferTowKind(undefined), "");
+  assert.equal(inferTowKind("all"), "");
+  assert.equal(inferTowKind("truck"), "truck");
+  assert.equal(inferTowKind("suv"), "suv");
+  assert.equal(inferTowKind("all", "Ford", "F-350 Super Duty"), "truck");
+  assert.equal(inferTowKind("all", "Jeep", "Grand Cherokee"), "suv");
 });
 
 test("Tow landing uses the beach fifth-wheel still behind glass", () => {
@@ -93,15 +93,56 @@ test("Tow landing uses the beach fifth-wheel still behind glass", () => {
   assert.match(tow, /landing="tow"/);
   assert.match(tow, /tow-hero-panel/);
   assert.match(tow, /Know before you hitch,/);
-  assert.match(tow, /TOW_EXAMPLE_CHIPS/);
-  assert.match(tow, /selFromTowExampleChip/);
-  assert.match(tow, /runExampleChip/);
-  assert.match(tow, /data-tow-example-chip/);
-  assert.match(tow, /year → make → model/);
   assert.match(css, /data-tow-landing/);
   assert.match(css, /opacity: 0\.46/);
   assert.match(page, /data-tow-landing/);
   assert.doesNotMatch(tow, /facts-landing-motorhome/);
   assert.doesNotMatch(tow, /2027 GMC Sierra/);
   assert.ok(existsSync(asset), "tow-landing-beach.jpg is in public/assets");
+});
+
+test("Tow landing source-lock: no preset chips; toggle-first; trim-gated AnswerHero", () => {
+  const tow = readFileSync(
+    join(root, "../../components/rvtow/RvTowApp.tsx"),
+    "utf8",
+  );
+  const open = readFileSync(join(root, "towOpen.ts"), "utf8");
+
+  assert.doesNotMatch(tow, /TOW_EXAMPLE_CHIPS/);
+  assert.doesNotMatch(tow, /runExampleChip/);
+  assert.doesNotMatch(tow, /selFromTowExampleChip/);
+  assert.doesNotMatch(tow, /data-tow-example-chip/);
+  assert.doesNotMatch(tow, /2024 Ford F-350 Super Duty/);
+  assert.doesNotMatch(tow, /2020 Ram 3500/);
+  assert.doesNotMatch(tow, /2026 GMC Sierra 2500HD/);
+  assert.doesNotMatch(open, /TOW_EXAMPLE_CHIPS/);
+  assert.doesNotMatch(open, /pickChipCatalogTrim/);
+
+  assert.match(tow, /towCascadeReveal/);
+  assert.match(tow, /inferTowKind/);
+  assert.match(tow, /data-tow-kind-toggle/);
+  assert.match(tow, /makesForKindYear/);
+  assert.match(tow, /getModelsForYear/);
+  assert.match(tow, /reveal\.year/);
+  assert.match(tow, /reveal\.make/);
+  assert.match(tow, /reveal\.model/);
+  assert.match(tow, /reveal\.trim/);
+  assert.match(tow, /reveal\.answer/);
+  assert.match(tow, /Toggle → year → make → model → trim/);
+  assert.doesNotMatch(tow, /disabled=\{!make\}/);
+  assert.doesNotMatch(tow, /disabled=\{!model\}/);
+  assert.doesNotMatch(tow, /Make first/);
+  assert.doesNotMatch(tow, /Model first/);
+
+  const toggle = tow.indexOf("data-tow-kind-toggle");
+  const yearField = tow.indexOf('label="YEAR"');
+  const makeField = tow.indexOf('label="MAKE"');
+  const modelField = tow.indexOf('label="MODEL"');
+  const trimField = tow.indexOf("TRIM / ENGINE / CONFIGURATION");
+  const details = tow.indexOf(">More details<");
+  assert.ok(toggle >= 0 && toggle < yearField, "toggle sits above year");
+  assert.ok(yearField >= 0 && yearField < makeField);
+  assert.ok(makeField >= 0 && makeField < modelField);
+  assert.ok(modelField >= 0 && modelField < trimField);
+  assert.ok(trimField >= 0 && trimField < details);
 });

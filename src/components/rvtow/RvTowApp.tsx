@@ -57,10 +57,7 @@ import {
   type FactsTowHandoffOffer,
 } from "@/lib/tow/factsTowHandoff";
 import { TOW_LANDING_BACKDROP } from "@/assets/prestige";
-import {
-  selFromTowExampleChip,
-  TOW_EXAMPLE_CHIPS,
-} from "@/lib/tow/towOpen";
+import { inferTowKind, towCascadeReveal } from "@/lib/tow/towOpen";
 
 
 const YEARS = Array.from({ length: 22 }, (_, i) => String(2026 - i)); // 2026 → 2005
@@ -72,12 +69,8 @@ const RV_TYPES_NON_TRUCK = ["Travel Trailer"] as const;
 
 const BEDS = ["5.5 ft (Short Bed)", "6.5 ft (Standard Bed)", "8 ft (Long Bed)"];
 
-type KindFilter = VehicleKind;
+type KindFilter = VehicleKind | "";
 type ShopMode = "match" | "reverse";
-
-function coerceKind(k: string | undefined | null): KindFilter {
-  return k === "suv" ? "suv" : "truck";
-}
 
 const EMPTY = {
   year: "",
@@ -97,14 +90,12 @@ function bootTowVehicle(): SavedTowVehicle | null {
 export function RvTowApp() {
   const savedBoot = useMemo(() => bootTowVehicle(), []);
   const [kindFilter, setKindFilter] = useState<KindFilter>(
-    coerceKind(savedBoot?.kindFilter),
+    inferTowKind(savedBoot?.kindFilter, savedBoot?.make, savedBoot?.model),
   );
-  const [year, setYear] = useState(savedBoot?.year ?? DEFAULT_TOW_VEHICLE.year);
-  const [make, setMake] = useState(savedBoot?.make ?? DEFAULT_TOW_VEHICLE.make);
-  const [model, setModel] = useState(
-    savedBoot?.model ?? DEFAULT_TOW_VEHICLE.model,
-  );
-  const [trim, setTrim] = useState(savedBoot?.trim ?? DEFAULT_TOW_VEHICLE.trim);
+  const [year, setYear] = useState(savedBoot?.year ?? "");
+  const [make, setMake] = useState(savedBoot?.make ?? "");
+  const [model, setModel] = useState(savedBoot?.model ?? "");
+  const [trim, setTrim] = useState(savedBoot?.trim ?? "");
   const [rvType, setRvType] = useState(savedBoot?.rvType ?? "Fifth Wheel");
   const [gvwr, setGvwr] = useState(savedBoot?.gvwr || "14000");
   const [bed, setBed] = useState(savedBoot?.bed || "6.5 ft (Standard Bed)");
@@ -149,7 +140,7 @@ export function RvTowApp() {
     setReverseLimit(REVERSE_SHORTLIST);
     const saved = loadLastTowVehicle();
     if (saved) {
-      setKindFilter(coerceKind(saved.kindFilter));
+      setKindFilter(inferTowKind(saved.kindFilter, saved.make, saved.model));
       setYear(saved.year);
       setMake(saved.make);
       setModel(saved.model);
@@ -164,11 +155,11 @@ export function RvTowApp() {
       setDeviceSaved(saved);
       return;
     }
-    setKindFilter("truck");
-    setYear(DEFAULT_TOW_VEHICLE.year);
-    setMake(DEFAULT_TOW_VEHICLE.make);
-    setModel(DEFAULT_TOW_VEHICLE.model);
-    setTrim(DEFAULT_TOW_VEHICLE.trim);
+    setKindFilter("");
+    setYear("");
+    setMake("");
+    setModel("");
+    setTrim("");
     setRvType("Fifth Wheel");
     setGvwr("14000");
     setBed("6.5 ft (Standard Bed)");
@@ -222,7 +213,7 @@ export function RvTowApp() {
       make,
       model,
       trim,
-      kindFilter,
+      kindFilter: kindFilter || "all",
       bed,
       rvType,
       gvwr,
@@ -265,13 +256,16 @@ export function RvTowApp() {
 
   const toadMode = prefill.kind === "motorhome" && !matchTrailer;
 
+  const catalogKind = kindFilter || "all";
+
   const makeList = useMemo(
-    () => (year ? makesForKindYear(kindFilter, year) : []),
+    () =>
+      year && kindFilter ? makesForKindYear(kindFilter, year) : [],
     [kindFilter, year],
   );
 
   const models = useMemo(() => {
-    if (!make || !year) return [];
+    if (!make || !year || !kindFilter) return [];
     return getModelsForYear(make, kindFilter, year);
   }, [make, kindFilter, year]);
 
@@ -406,16 +400,21 @@ export function RvTowApp() {
         gvwrLbs: gvwrN,
         rvType,
         year,
-        kind: kindFilter,
+        kind: catalogKind,
         pinLbs: pinN > 0 ? pinN : undefined,
         limit: reverseLimit,
       }),
-    [gvwrN, rvType, year, kindFilter, pinN, reverseLimit],
+    [gvwrN, rvType, year, catalogKind, pinN, reverseLimit],
+  );
+
+  const reveal = useMemo(
+    () => towCascadeReveal({ kind: kindFilter, year, make, model, trim }),
+    [kindFilter, year, make, model, trim],
   );
 
   /** Truck/SUV toggle — keep a still-valid make/model, else hide+reset children */
   const applyKindFilter = useCallback(
-    (next: KindFilter) => {
+    (next: VehicleKind) => {
       setKindFilter(next);
       if (next === "suv") setRvType("Travel Trailer");
       if (!year) {
@@ -445,6 +444,12 @@ export function RvTowApp() {
     (nextYear: string) => {
       setYear(nextYear);
       if (!nextYear) {
+        setMake("");
+        setModel("");
+        setTrim("");
+        return;
+      }
+      if (!kindFilter) {
         setMake("");
         setModel("");
         setTrim("");
@@ -490,14 +495,11 @@ export function RvTowApp() {
         setTrim("");
         return;
       }
-      const nextModels = year
-        ? getModelsForYear(m, kindFilter, year)
-        : [];
+      const nextModels =
+        year && kindFilter ? getModelsForYear(m, kindFilter, year) : [];
       if (nextModels.length === 1) {
-        const only = nextModels[0]!;
-        setModel(only.name);
-        const onlyTrims = getTrimsForYear(m, only.name, year);
-        setTrim(onlyTrims.length === 1 ? onlyTrims[0]!.label : "");
+        setModel(nextModels[0]!.name);
+        setTrim("");
       } else {
         setModel("");
         setTrim("");
@@ -512,31 +514,13 @@ export function RvTowApp() {
       setManualMaxTow("");
       setManualPayload("");
       setManualGcwr("");
-      const nextTrims = getTrimsForYear(make, m, year);
-      if (nextTrims.length === 1) setTrim(nextTrims[0]!.label);
-      else setTrim("");
+      setTrim("");
     },
     [make, year],
   );
 
-  const runExampleChip = useCallback((label: string) => {
-    const sel = selFromTowExampleChip(label);
-    const chipKind =
-      getModels(sel.make, "all").find((m) => m.name === sel.model)?.kind ??
-      "truck";
-    setKindFilter(chipKind === "suv" ? "suv" : "truck");
-    setYear(sel.year);
-    setMake(sel.make);
-    setModel(sel.model);
-    setTrim(sel.trim);
-    setManualMaxTow("");
-    setManualPayload("");
-    setManualGcwr("");
-    setShopMode("match");
-    setDetailsOpen(false);
-  }, []);
-
   const clearVehicle = () => {
+    setKindFilter("");
     setYear(EMPTY.year);
     setMake(EMPTY.make);
     setModel(EMPTY.model);
@@ -876,7 +860,7 @@ export function RvTowApp() {
                     </button>
                   </div>
                 </div>
-                {/* Progressive year → make → model → trim; trim stays on the default view */}
+                {/* Toggle → year → make → model → trim; trim gates AnswerHero */}
                 <div
                   data-tow-kind-toggle
                   className="flex gap-1 rounded-full border border-white/15 bg-black/30 p-1"
@@ -911,13 +895,15 @@ export function RvTowApp() {
                     </button>
                   ))}
                 </div>
-                <Field
-                  label="YEAR"
-                  value={year || "Select year"}
-                  empty={!year}
-                  onClick={() => setSheet("year")}
-                />
-                {year ? (
+                {reveal.year ? (
+                  <Field
+                    label="YEAR"
+                    value={year || "Select year"}
+                    empty={!year}
+                    onClick={() => setSheet("year")}
+                  />
+                ) : null}
+                {reveal.make ? (
                   <Field
                     label="MAKE"
                     value={make || "Select make"}
@@ -925,7 +911,7 @@ export function RvTowApp() {
                     onClick={() => setSheet("make")}
                   />
                 ) : null}
-                {year && make ? (
+                {reveal.model ? (
                   <Field
                     label="MODEL"
                     value={model || "Select or type model"}
@@ -933,7 +919,7 @@ export function RvTowApp() {
                     onClick={() => setSheet("model")}
                   />
                 ) : null}
-                {year && make && model ? (
+                {reveal.trim ? (
                   <Field
                     label="TRIM / ENGINE / CONFIGURATION"
                     value={
@@ -946,22 +932,10 @@ export function RvTowApp() {
                     onClick={() => setSheet("trim")}
                   />
                 ) : null}
-                <div className="flex flex-wrap gap-2 pt-2">
-                  {TOW_EXAMPLE_CHIPS.map((label) => (
-                    <button
-                      key={label}
-                      type="button"
-                      data-tow-example-chip={label}
-                      onClick={() => runExampleChip(label)}
-                      className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 bg-black/35 px-3.5 py-2 text-left text-[12px] font-semibold text-white transition active:scale-[0.99]"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
               </section>
             )}
 
+            {reverseMode || reveal.answer || prefill.kind === "towable" ? (
             <section
               data-tow-coach
               className="glass-surface rounded-[var(--radius-xl)] p-3"
@@ -1015,6 +989,7 @@ export function RvTowApp() {
                 />
               )}
             </section>
+            ) : null}
 
             {reverseMode ? (
               <ReverseResults
@@ -1032,13 +1007,13 @@ export function RvTowApp() {
                 }
                 onPick={applyReversePick}
               />
-            ) : (
+            ) : reveal.answer ? (
               <AnswerHero
                 maxTow={rating.maxTow}
                 hitchLbs={pinEst}
                 hitchKind={/fifth/i.test(rvType) ? "pin" : "tongue"}
               />
-            )}
+            ) : null}
           </>
         )}
 
