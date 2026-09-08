@@ -4398,13 +4398,20 @@ function main() {
       if (/"2006":/.test(mt) || /"2007":/.test(mt) || /"2008":/.test(mt) || /"2009":/.test(mt)) {
         fail("Keystone|Montana must omit 2006–2009 (GAP — no dated card / do not lock thin 2009 3075RL+3400RL)");
       }
-      if (/"3075RL"/.test(mt)) {
+      if (/"2009": .*"3075RL"/.test(mt)) {
         fail("Keystone|Montana must not lock thin 2009 RVUSA 3075RL");
       }
-      // MY2010–2013 leftover invent omitted (RVUSA m1499 year cards EMPTY shells).
+      // LOCK MY2010 Hickory Edition 04/09 (LOT_DESK_2010 / CODES_2010.json).
+      if (!/"2010": \["2955RL", "3000RK", "3075RL", "3150RL", "3400RL", "3455SA", "3465SA", "3585SA", "3605RL", "3665RE"\]/.test(mt)) {
+        fail("Keystone|Montana MY2010 Hickory Edition lock missing (LOT_DESK_2010)");
+      }
+      if (/"2010": .*"3402RL"/.test(mt) || /"2010": .*"3582RL"/.test(mt) || /"2010": .*"3625RE"/.test(mt) || /"2010": .*"3710FL"/.test(mt) || /"2010": .*"3720RL"/.test(mt) || /"2010": .*"3790RD"/.test(mt)) {
+        fail("Keystone|Montana MY2010 must drop leftover invent 3402RL / 3582RL / 3625RE / 3710FL / 3720RL / 3790RD");
+      }
+      // MY2011–2013 leftover invent omitted (RVUSA m1499 year cards EMPTY shells).
       // Prefer omit over empty [] — same as MHC #103/#104. No dated brochure fill.
-      if (/"2010":/.test(mt) || /"2011":/.test(mt) || /"2012":/.test(mt) || /"2013":/.test(mt)) {
-        fail("Keystone|Montana must omit leftover 2010–2013 fby (prefer omit — RVUSA m1499 EMPTY shells)");
+      if (/"2011":/.test(mt) || /"2012":/.test(mt) || /"2013":/.test(mt)) {
+        fail("Keystone|Montana must omit leftover 2011–2013 fby (prefer omit — RVUSA m1499 EMPTY shells)");
       }
       if (/"3402RL"/.test(mt) || /"3582RL"/.test(mt) || /"3625RE"/.test(mt)) {
         fail("Keystone|Montana must drop leftover invent 3402RL / 3582RL / 3625RE (2010–2013-only)");
@@ -4703,7 +4710,10 @@ function main() {
       ) {
         fail("Keystone|Avalanche must omit Edition-only 322RL/372MB/381DL/392DS and leftover 360RB on 2025");
       }
-      for (let y = 2010; y <= 2024; y++) {
+      if (!/"2010": \["290RL", "320RK", "330RE", "335RB", "340TG", "350LB"\]/.test(av)) {
+        fail("Keystone|Avalanche MY2010 Nov 2009 brochure lock missing (LOT_DESK_2010)");
+      }
+      for (let y = 2011; y <= 2024; y++) {
         if (new RegExp(`"${y}":`).test(av)) {
           fail(`Keystone|Avalanche must empty leftover ${y} fby (prefer omit — no invent)`);
         }
@@ -4953,10 +4963,17 @@ function main() {
       if (/"2027":/.test(pass)) {
         fail("Keystone|Passport collapsed bucket must omit 2027 (split to Super Lite + Classic)");
       }
-      // MY2010–2020 + MY2023 leftover invent omitted (RVUSA Passport m1502 — prefer omit).
+      // LOCK MY2010 PA_brochure0609_low.pdf June 2009 (LOT_DESK_2010 / CODES_2010.json).
+      if (!/"2010": \["195RB", "245RB", "250BH", "280BH", "285RL", "286RB", "288RK", "290BH", "292BH", "300BH"\]/.test(pass)) {
+        fail("Keystone|Passport MY2010 June 2009 brochure lock missing (LOT_DESK_2010)");
+      }
+      if (/"2010": .*"189ML"/.test(pass) || /"2010": .*"GT"/.test(pass)) {
+        fail("Keystone|Passport MY2010 must not lock Micro 189ML or GT fours");
+      }
+      // MY2011–2020 + MY2023 leftover invent omitted (RVUSA Passport m1502 — prefer omit).
       // Do not invent-fill 189ML / 219BH / 2400BH bank. Do not merge SL / Classic.
       // LOCK RVUSA m1502 Specs. THIN 2025 keep 2600FK / 2710KB / 3360BK. WE-only 2022 as printed.
-      for (const y of [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2023]) {
+      for (const y of [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2023]) {
         if (new RegExp(`"${y}":`).test(pass)) {
           fail(`Keystone|Passport must omit leftover ${y} fby (prefer omit — no 189ML/219BH/2400BH invent)`);
         }
@@ -5038,6 +5055,9 @@ function main() {
       if (/"16BHC"/.test(bul) || /"21BHCWE"/.test(bul) || /"28QBC"/.test(bul)) {
         fail("Keystone|Bullet collapsed bucket must not absorb Bullet Classic codes");
       }
+      if (!/"2010": \["230BHS", "246RBS", "250RKS", "278RLS", "281BHS", "288RLS", "294BHS", "151EXP", "180FBS", "188EXP", "200EXP"\]/.test(bul)) {
+        fail("Keystone|Bullet MY2010 Nov 2009 Standard + Micro lock missing (LOT_DESK_2010)");
+      }
 
       const hid = slice("Hideout", "Fuzion");
       if (!/"2027": \["210RL", "210RLWE", "212RKS", "212RKSWE", "230BH", "230BHWE", "234MLS", "234MLSWE", "250RBS", "250RBSWE", "262BHS", "262BHSWE"\]/.test(hid)) {
@@ -5045,6 +5065,9 @@ function main() {
       }
       if (!/yearStart:\s*2010/.test(hid) || /"2026":/.test(hid)) {
         fail("Keystone|Hideout yearStart must be 2010 (empty older fby — no invent)");
+      }
+      if (/"2010":/.test(hid)) {
+        fail("Keystone|Hideout must omit MY2010 fby (GAP — captions Hideout West 2011)");
       }
       if (/"120BT"/.test(hid) || /"29HAVEN"/.test(hid) || /"310XBR"/.test(hid)) {
         fail("Keystone|Hideout must not absorb Hideout Mini / Max codes (GAP this slice)");
@@ -5057,7 +5080,13 @@ function main() {
       if (/"2027": .*"1700FQ"/.test(sprd) || /"2027": .*"260BH"/.test(sprd)) {
         fail("Keystone|Springdale must not keep Mini leftover 1700FQ/260BH on 2027");
       }
-      for (const y of [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]) {
+      if (!/"2010": \["266RL-SSR", "267BH-SSR", "276RB-SSR", "291RK-SSR", "294BH-SSR", "296BH-SSR", "297FK-SSR", "298BH-SSR", "303BHSSR", "372BH-GL", "373QB-GL"\]/.test(sprd)) {
+        fail("Keystone|Springdale MY2010 May 2010 Eastern TT lock missing (LOT_DESK_2010)");
+      }
+      if (/"2010": .*"Summerland"/.test(sprd) || /"SSR-FW"/.test(sprd)) {
+        fail("Keystone|Springdale must not merge Summerland or Springdale FW SSR");
+      }
+      for (const y of [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]) {
         if (new RegExp(`"${y}":`).test(sprd)) {
           fail(`Keystone|Springdale must omit leftover ${y} fby (prefer omit — Mini bleed / copy-forward invent)`);
         }
@@ -5106,6 +5135,27 @@ function main() {
 
       if (/\n    "Grand Design": \{/.test(ks) || /\n    Winnebago: \{/.test(ks) || /\n    Fleetwood: \{/.test(ks)) {
         fail("Keystone block must not absorb other-make keys");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      else {
+        const catalogIndex = JSON.parse(idxM[1]);
+        const ksIdx = catalogIndex.Keystone;
+        if (!ksIdx) fail("Keystone missing from CATALOG_INDEX");
+        else {
+          for (const name of ["Avalanche", "Bullet", "Montana", "Passport", "Springdale"]) {
+            if (!ksIdx[name]?.years?.includes(2010)) {
+              fail(`Keystone|${name} index must include 2010 (MY2010 LOCK)`);
+            }
+          }
+          for (const name of ["Alpine", "Cougar 5th Wheel", "Hideout", "Sprinter"]) {
+            if (ksIdx[name]?.years?.includes(2010)) {
+              fail(`Keystone|${name} index must omit 2010 (MY2010 GAP)`);
+            }
+          }
+        }
       }
     }
   }
