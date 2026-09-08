@@ -1044,54 +1044,62 @@
   z-index: 3;
 }
 /*
- * Forged steel chrome — same tokens as MetalVerifiedTrue
- * ("VERIFIED AND TRUE" on Facts). Depth/emboss only; no glow.
+ * Engraved brushed steel — dark base, one soft top highlight, subtle bevel.
+ * One highlight band max. No repeating specular stripes. No glow.
  */
 .metal-hammered-strike {
   position: absolute;
   inset: 0;
-  transform: translate(1.5px, 2px);
-  filter: blur(0.4px);
-  color: rgba(4, 6, 10, 0.78);
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55), 0 0 14px rgba(0, 0, 0, 0.35);
+  transform: translate(1px, 1.5px);
+  filter: blur(0.3px);
+  color: rgba(4, 6, 10, 0.55);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 .metal-hammered-face {
   position: relative;
   background-image: linear-gradient(
-    162deg,
-    #f7f9fc 0%,
-    #b8c0cc 9%,
-    #6a7384 18%,
-    #e8edf4 28%,
-    #4a5260 38%,
-    #d0d7e2 47%,
-    #8b94a4 56%,
-    #f2f5f9 66%,
-    #5c6574 76%,
-    #c5cdd8 86%,
-    #9aa3b2 93%,
-    #eef2f7 100%
+    180deg,
+    #d8dee8 0%,
+    #9aa3b2 24%,
+    #6a7384 62%,
+    #4a5260 100%
   );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  -webkit-text-stroke: 0.45px rgba(12, 14, 20, 0.4);
-  filter: drop-shadow(0 -0.5px 0 rgba(255, 255, 255, 0.45))
-    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5))
-    drop-shadow(0 3px 8px rgba(0, 0, 0, 0.55));
+  -webkit-text-stroke: 0.35px rgba(12, 14, 20, 0.32);
+  filter: drop-shadow(0 -0.5px 0 rgba(255, 255, 255, 0.3))
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
 }
 
-/* Dock labels — metal chrome + dock size/track. No glow, no active fill. */
+/* Dock labels — same steel, dialed down for small type. Weight 600. */
 .bottom-tab-label {
   position: relative;
   display: inline-block;
   overflow: visible;
   font-size: var(--dock-label-size);
-  font-weight: 900;
+  font-weight: 600;
   letter-spacing: 0.5px;
   line-height: 1;
   color: transparent;
   text-shadow: none;
+}
+.bottom-tab-label .metal-hammered-strike {
+  transform: translate(0.55px, 0.75px);
+  filter: blur(0.2px);
+  color: rgba(4, 6, 10, 0.36);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.26);
+}
+.bottom-tab-label .metal-hammered-face {
+  background-image: linear-gradient(
+    180deg,
+    #c8ced8 0%,
+    #8f98a6 40%,
+    #717986 100%
+  );
+  -webkit-text-stroke: 0.2px rgba(12, 14, 20, 0.2);
+  filter: drop-shadow(0 -0.35px 0 rgba(255, 255, 255, 0.18))
+    drop-shadow(0 0.65px 0 rgba(0, 0, 0, 0.3));
 }
 @media (min-width: 640px) {
   .bottom-tab-label {
