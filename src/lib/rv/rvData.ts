@@ -20807,7 +20807,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2007": ["33D", "35R", "36U"],
         "2008": ["33D", "35R", "36U"],
         "2009": ["33D", "35R", "36U"],
-        // No OEM Pace Arrow brochure for MY10–16 (RVUSA Pace Arrow index: 2009 then 2017). Do not invent leftover 33D/35R/36U.
+        // GAP MY2010 (research/fleetwood/LOT_DESK_2010.md) — no dated Pace Arrow card.
+        // Do not lock soft RV Guide 35A/37C/36D or copy 2009 leftover 33D/35R/36U.
+        // No OEM Pace Arrow brochure for MY10–16 (RVUSA Pace Arrow index: 2009 then 2017). Prefer omit.
         // No OEM gas Pace Arrow brochure for MY13–16 (RVUSA Pace Arrow index: 2009 then 2017).
         // 2016 Pace Arrow LXE diesel 38B/38F/38K is a separate line — not added, not stamped onto Pace Arrow.
         // Brochure PAPALXE17B1: diesel 33D | 35E | 35M | 36U — not F53 gas, not 35R
@@ -20857,7 +20859,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2000,
       yearEnd: 2023,
-      description: "Fleetwood Pace Arrow — no OEM Pace Arrow brochure for MY10–16 (RVUSA year index jumps 2009 → 2017); those years omitted rather than copying leftover 33D/35R/36U. 2016 Pace Arrow LXE diesel is a separate line, not added. MY17–23 are diesel on Freightliner XCS (not F53): MY17–18 33D / 35E / 35M / 36U; MY19 33D / 35E / 35QS / 36U; MY20–21 33D / 35QS / 35RB / 35S / 36U; MY22 33D / 36U; MY23 33D / 35BP / 36U. ISB 300 (33D) / 340 (other plans). No 2024 page.",
+      description: "Fleetwood Pace Arrow — GAP MY2010 (LOT_DESK_2010): no dated Pace Arrow card — do not lock soft RV Guide 35A/37C/36D or copy 2009. No OEM Pace Arrow brochure for MY10–16 (RVUSA year index jumps 2009 → 2017); those years omitted rather than copying leftover 33D/35R/36U. 2016 Pace Arrow LXE diesel is a separate line, not added. MY17–23 are diesel on Freightliner XCS (not F53): MY17–18 33D / 35E / 35M / 36U; MY19 33D / 35E / 35QS / 36U; MY20–21 33D / 35QS / 35RB / 35S / 36U; MY22 33D / 36U; MY23 33D / 35BP / 36U. ISB 300 (33D) / 340 (other plans). No 2024 page.",
       powertrainByYear: [
         {
           from: 2005,
@@ -20909,7 +20911,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2007": ["28F", "32V", "36F"],
         "2008": ["28F", "32V", "36F"],
         "2009": ["28F", "32V", "36F"],
-        // No OEM Storm card for MY10 (RV Guide 2010 lists Encounter, not Storm — do not invent Encounter).
+        // GAP MY2010 (research/fleetwood/LOT_DESK_2010.md) — no dated Storm card. Prefer omit.
+        // Never lock 2011 Storm 28MS/30SA/32BH into 2010. Do not invent Encounter.
         // Brochure 2011_st_f (STO11F1): 28MS | 30SA | 32BH — Triton V10 362/457
         "2011": ["28MS", "30SA", "32BH"],
         // Brochure 2012_st_f (ST12F1): 28F | 28MS | 30SA | 32BH | 32V — Triton V10 362/457
@@ -20959,7 +20962,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2005,
       yearEnd: 2018,
-      description: "Fleetwood Storm — gas Class A on F53. MY10: no OEM Storm card (omit — do not invent Encounter). MY11 OEM (2011_st_f / STO11F1): 28MS / 30SA / 32BH on Ford F-53 Triton 6.8 V10 (362 hp / 457 lb-ft). MY12 OEM (2012_st_f / ST12F1): 28F / 28MS / 30SA / 32BH / 32V, same 362/457. MY13 OEM (2013_st_f / ST13F1): 28F / 28MS / 32BH / 32V / 33Q; MY14 (2014_st_f / ST14F2): 28F / 28MS / 32H / 32V / 33Q (32BH → 32H) on Triton V10 362/457, hitch 5,000, F53 18k GVWR. MY15 OEM (ST15B1): 28F / 28MS / 30L / 32H / 32V; MY16 (16_Storm_A): 28MS / 30L / 32H / 32V / 35SK on Triton V10 362/457 (35SK is 22k GVWR; others 18k — same 362/457). MY17–18 OEM: 32A / 34S / 36D / 36F on Triton V10 320/460. Last catalog year 2018 (not a current Fleetwood line).",
+      description: "Fleetwood Storm — gas Class A on F53. GAP MY2010 (LOT_DESK_2010): no dated Storm card — never lock 2011 28MS/30SA/32BH into 2010; do not invent Encounter. MY11 OEM (2011_st_f / STO11F1): 28MS / 30SA / 32BH on Ford F-53 Triton 6.8 V10 (362 hp / 457 lb-ft). MY12 OEM (2012_st_f / ST12F1): 28F / 28MS / 30SA / 32BH / 32V, same 362/457. MY13 OEM (2013_st_f / ST13F1): 28F / 28MS / 32BH / 32V / 33Q; MY14 (2014_st_f / ST14F2): 28F / 28MS / 32H / 32V / 33Q (32BH → 32H) on Triton V10 362/457, hitch 5,000, F53 18k GVWR. MY15 OEM (ST15B1): 28F / 28MS / 30L / 32H / 32V; MY16 (16_Storm_A): 28MS / 30L / 32H / 32V / 35SK on Triton V10 362/457 (35SK is 22k GVWR; others 18k — same 362/457). MY17–18 OEM: 32A / 34S / 36D / 36F on Triton V10 320/460. Last catalog year 2018 (not a current Fleetwood line).",
       powertrainByYear: [
         {
           from: 2005,
@@ -21017,6 +21020,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         "2008": ["28A", "30U", "32S"],
         "2009": ["28A", "30U", "32S"],
+        // GAP MY2010 (research/fleetwood/LOT_DESK_2010.md) — no dated Flair card. Prefer omit.
         // No OEM Flair brochure for MY10–14 (RVUSA Flair years start 2015). Do not invent leftover 28A/30U/32S.
         // No OEM Flair brochure for MY13–14 (RVUSA Flair years start 2015). Do not invent or copy leftover 28A/30U/32S.
         // Brochure 2015_fl_b (FL15F2): 26D | 26E only — GVWR 16k, Triton V10 362/457
@@ -21076,7 +21080,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2008,
-      description: "Fleetwood Flair — shorter gas Class A on F53. No OEM Flair brochure for MY10–14 (RVUSA Flair years start 2015) — those years omitted rather than copying leftover 28A/30U/32S. MY15 OEM (FL15F2): 26D / 26E only; MY16 (FL16F1): 26D / 26E / 29T on Triton V10 362/457 (GVWR 16k). Do not copy leftover 28A/30U/32S or MY17 26D/30P/31A/31E onto these years. Flair LXE is a separate OEM trim, not added. MY17: 26D / 30P / 31A / 31E; MY18: 30P / 31A / 31E on Triton V10 320/460. MY19–22: 28A / 29M / 32S / 34J / 35R (no 30U). MY19–20 are Triton V10 320/460; MY21–23 Ford 7.3 is 350/468; MY24+ 335/468 (FLAIR24F1). MY23–25: 28A / 29M / 32N / 33B6.",
+      description: "Fleetwood Flair — shorter gas Class A on F53. GAP MY2010 (LOT_DESK_2010): no dated Flair card — prefer omit / no invent. No OEM Flair brochure for MY10–14 (RVUSA Flair years start 2015) — those years omitted rather than copying leftover 28A/30U/32S. MY15 OEM (FL15F2): 26D / 26E only; MY16 (FL16F1): 26D / 26E / 29T on Triton V10 362/457 (GVWR 16k). Do not copy leftover 28A/30U/32S or MY17 26D/30P/31A/31E onto these years. Flair LXE is a separate OEM trim, not added. MY17: 26D / 30P / 31A / 31E; MY18: 30P / 31A / 31E on Triton V10 320/460. MY19–22: 28A / 29M / 32S / 34J / 35R (no 30U). MY19–20 are Triton V10 320/460; MY21–23 Ford 7.3 is 350/468; MY24+ 335/468 (FLAIR24F1). MY23–25: 28A / 29M / 32N / 33B6.",
       powertrainByYear: [
         {
           from: 2008,
@@ -21335,14 +21339,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Tioga: {
       type: "Class C",
-      floorplans: ["22C", "23B", "24K", "25G", "25K", "29A", "31M"],
+      floorplans: ["22C", "23B", "24K", "25G", "25K", "28Y", "29A", "30U", "31M", "31N", "31W"],
       floorplansByYear: {
         "2005": ["24K", "25G", "31M"],
         "2006": ["24K", "25G", "31M"],
         "2007": ["24K", "25G", "31M"],
         "2008": ["24K", "25G", "31M"],
         "2009": ["24K", "25G", "31M"],
-        // No OEM Tioga Montara card for MY10 (2010_tim_f 403). Do not invent leftover 24K/25G/31M.
+        // LOCK research/fleetwood/LOT_DESK_2010.md + CODES_2010.json
+        // Dated 2010_ti_f.pdf (TIO10F1, 7/09) — regular Tioga Class C, not Ranger, not Montara, not Jamboree.
+        // Pin MY2010 only. Exact-match: 25G | 28Y | 30U | 31M | 31N | 31W.
+        // Do not copy 2009 leftover 24K/25G/31M or 2011 Montara 22C/23B onto 2010.
+        // Do not merge Ranger-only 23B/26Q (2010_tir_f). Soft production ≠ LOCK.
+        "2010": ["25G", "28Y", "30U", "31M", "31N", "31W"],
+        // No OEM Tioga Montara card for MY10 (2010_tim_f 403). Later years on this key are Montara.
         // Brochure 2011_tim_f (TI11F2) Tioga Montara: 22C | 23B — E-350 5.4 Triton 255/350
         "2011": ["22C", "23B"],
         // Brochure 2012_tim_f (TIM12F1) Tioga Montara: 22C | 23B | 25K — mixed E-350 255 / E-450 305
@@ -21388,7 +21398,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2000,
       yearEnd: 2016,
       gvwrLbs: 14500,
-      description: "Fleetwood Tioga — discontinued Ford cutaway Class C (last catalog year 2016). This catalog key is Montara, not Ranger. MY10: no OEM Montara card (omit — do not invent leftover 24K/25G/31M). MY11 OEM Montara (2011_tim_f / TI11F2): 22C / 23B on Ford E-350 5.4 Triton (255 hp / 350 lb-ft). MY12 OEM Montara (2012_tim_f / TIM12F1): 22C / 23B / 25K — E-350 5.4 255 hp on 22C/23B, E-450 6.8 305 hp on 25K (option-band HP 0). MY13 OEM Montara (2013_tim_f / TIM13F1): 23B / 25K on mixed E-350 5.4 255/350 / E-450 6.8 305/420 (line HP 0). MY14 OEM Montara (2014_tim_f / TIRGR_TIM14F1): 23B / 25K / 31M, same mixed chassis (line HP 0). MY15–16 OEM/RV Guide lists are the Montara rebadge: 23B / 25K / 29A / 31M on mixed Ford E-350 5.4 / E-450 Triton V10 (HP not printed — do not invent). Not Tioga Ranger. Current Fleetwood Class C is Altitude (gas) / Insight (diesel).",
+      description: "Fleetwood Tioga — discontinued Ford cutaway Class C (last catalog year 2016). MY10 OEM Tioga (2010_ti_f / TIO10F1, 7/09): 25G / 28Y / 30U / 31M / 31N / 31W — regular Tioga, not Ranger, not Montara, not Jamboree (do not merge Ranger-only 23B/26Q). Later years on this key are Montara, not Ranger. MY11 OEM Montara (2011_tim_f / TI11F2): 22C / 23B on Ford E-350 5.4 Triton (255 hp / 350 lb-ft). MY12 OEM Montara (2012_tim_f / TIM12F1): 22C / 23B / 25K — E-350 5.4 255 hp on 22C/23B, E-450 6.8 305 hp on 25K (option-band HP 0). MY13 OEM Montara (2013_tim_f / TIM13F1): 23B / 25K on mixed E-350 5.4 255/350 / E-450 6.8 305/420 (line HP 0). MY14 OEM Montara (2014_tim_f / TIRGR_TIM14F1): 23B / 25K / 31M, same mixed chassis (line HP 0). MY15–16 OEM/RV Guide lists are the Montara rebadge: 23B / 25K / 29A / 31M on mixed Ford E-350 5.4 / E-450 Triton V10 (HP not printed — do not invent). Not Tioga Ranger. Current Fleetwood Class C is Altitude (gas) / Insight (diesel).",
       powertrainByYear: [
         {
           from: 2005,
@@ -21396,7 +21406,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Ford V10 / 6.8L or 6.0L (by year)",
           horsepower: 305,
           chassis: "Ford E-450 / E-350",
-          notes: "2005–2009 leftover until an earlier walk-back. Do not invent MY10 Montara. Do not stamp leftover 24K/25G onto MY11–12."
+          notes: "2005–2009 leftover until an earlier walk-back. Do not stamp leftover 24K/25G onto MY10 Tioga lock or MY11–12 Montara."
         },
         {
           from: 2011,
