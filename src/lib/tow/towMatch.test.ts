@@ -192,31 +192,48 @@ test("RvTowApp wires honest match and no longer invents custom GCWR", () => {
   assert.equal(/payload \+ 5000/.test(src), false);
 });
 
-test("RvTowApp redesign: hero guides, collapsed Details, one footer disclaimer", () => {
+test("RvTowApp salesman default: truck + coach + two numbers, More details collapsed", () => {
   const src = readFileSync(join(root, "../../components/rvtow/RvTowApp.tsx"), "utf8");
-  const pin = src.indexOf('kicker="PIN WEIGHT"');
-  const hitch = src.indexOf('kicker="HITCH GUIDE"');
-  const details = src.indexOf(">Details<");
+  const truck = src.indexOf("data-tow-truck");
+  const coach = src.indexOf("data-tow-coach");
+  const answer = src.indexOf("<AnswerHero");
+  const details = src.indexOf(">More details<");
   const disclaimer = src.indexOf("<SuiteDisclaimer");
-  assert.ok(pin >= 0 && pin < details, "Pin Weight hero sits above Details");
-  assert.ok(hitch >= 0 && hitch < details, "Hitch Guide hero sits above Details");
-  assert.ok(disclaimer > details, "one SuiteDisclaimer after Details");
+  const gvwr = src.indexOf("RV GVWR (lbs)");
+  const trim = src.indexOf("TRIM / ENGINE / CONFIGURATION");
+  const bed = src.indexOf("TRUCK BED LENGTH");
+  assert.ok(truck >= 0 && truck < details, "truck picker sits above More details");
+  assert.ok(coach >= 0 && coach < details, "coach picker sits above More details");
+  assert.ok(answer >= 0 && answer < details, "max tow + pin sit above More details");
+  assert.ok(disclaimer > details, "one SuiteDisclaimer after More details");
   assert.equal(src.split("<SuiteDisclaimer").length - 1, 1);
   assert.match(src, /const \[detailsOpen, setDetailsOpen\] = useState\(false\)/);
+  assert.match(src, /function AnswerHero/);
   assert.match(src, /function GlanceChecks/);
   assert.match(src, /function GuideHero/);
   assert.equal(src.includes("function GuideCard"), false);
+  assert.equal(src.includes(">Details<"), false);
+  assert.ok(gvwr > details, "GVWR lives in More details");
+  assert.ok(trim > details, "trim / engine lives in More details");
+  assert.ok(bed > details, "bed length lives in More details");
+  assert.ok(
+    src.indexOf("<HitchWeightField") > details,
+    "typed pin/tongue field lives in More details",
+  );
+  assert.ok(
+    src.indexOf("<GlanceChecks") > details,
+    "GlanceChecks stay behind More details",
+  );
+  assert.ok(
+    src.indexOf("<GuideHero") > details,
+    "percentage hitch guides stay behind More details",
+  );
   assert.equal(
     src.includes("checks={"),
     false,
     "GuideHero face is kicker/title/% only — no checks list",
   );
   assert.equal(src.includes("✓ {item}"), false);
-  const heroBlock = src.slice(
-    src.indexOf("function GuideHero"),
-    src.indexOf("function GuideHero") + 700,
-  );
-  assert.equal(heroBlock.includes("More stable at speed"), false);
   assert.match(
     src,
     /more stable at speed, higher weight limits, lower center of gravity/,
