@@ -49,43 +49,10 @@ export function MetalVerifiedTrue({
       )}
       aria-label={label}
     >
-      <span
-        aria-hidden
-        className="absolute inset-0 translate-x-[1.5px] translate-y-[2px] blur-[0.4px]"
-        style={{
-          color: "rgba(4, 6, 10, 0.78)",
-          textShadow: "0 2px 6px rgba(0,0,0,0.55), 0 0 14px rgba(0,0,0,0.35)",
-        }}
-      >
+      <span aria-hidden className="metal-hammered-strike">
         {label}
       </span>
-      <span
-        className="relative"
-        style={{
-          backgroundImage:
-            "linear-gradient(162deg," +
-            "#f7f9fc 0%," +
-            "#b8c0cc 9%," +
-            "#6a7384 18%," +
-            "#e8edf4 28%," +
-            "#4a5260 38%," +
-            "#d0d7e2 47%," +
-            "#8b94a4 56%," +
-            "#f2f5f9 66%," +
-            "#5c6574 76%," +
-            "#c5cdd8 86%," +
-            "#9aa3b2 93%," +
-            "#eef2f7 100%)",
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          color: "transparent",
-          WebkitTextStroke: "0.45px rgba(12, 14, 20, 0.4)",
-          filter:
-            "drop-shadow(0 -0.5px 0 rgba(255,255,255,0.45)) drop-shadow(0 1px 0 rgba(0,0,0,0.5)) drop-shadow(0 3px 8px rgba(0,0,0,0.55))",
-        }}
-      >
-        {label}
-      </span>
+      <span className="metal-hammered-face">{label}</span>
     </span>
   );
 }

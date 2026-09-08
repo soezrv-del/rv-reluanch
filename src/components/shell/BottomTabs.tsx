@@ -8,7 +8,6 @@ import {
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
 import {
   formatSoldDockAria,
-  formatSoldDockMoney,
   readOwedNet,
   SOLD_CHANGED_EVENT,
 } from "@/lib/rv/soldDeals";
@@ -46,12 +45,15 @@ function DockLabel({
   return (
     <span
       className={cn(
-        "bottom-tab-label pointer-events-none text-center uppercase leading-none",
+        "bottom-tab-label metal-hammered pointer-events-none text-center uppercase leading-none",
         className,
       )}
       data-label={text}
     >
-      {text}
+      <span aria-hidden className="metal-hammered-strike">
+        {text}
+      </span>
+      <span className="metal-hammered-face">{text}</span>
     </span>
   );
 }
@@ -91,7 +93,7 @@ export function BottomTabs({
         {
           id: "rvsold",
           label: "Sold",
-          short: formatSoldDockMoney(owedNet),
+          short: "Sold",
         },
       ]
     : TABS;
@@ -167,17 +169,10 @@ export function BottomTabs({
                 active && "is-active",
               )}
             >
-              {isSold ? (
-                <span className="pointer-events-none flex flex-col items-center justify-center gap-0.5 leading-none">
-                  <DockLabel text="Sold" className="bottom-tab-label-sold" />
-                  <DockLabel
-                    text={short}
-                    className="bottom-tab-label-sold-owed"
-                  />
-                </span>
-              ) : (
-                <DockLabel text={short} />
-              )}
+              <DockLabel
+                text={short}
+                className={isSold ? "bottom-tab-label-sold" : undefined}
+              />
             </button>
           );
         })}
