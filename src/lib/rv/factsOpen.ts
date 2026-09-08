@@ -8,9 +8,13 @@ import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
  * Facts picker ↔ report handoff.
  *
  * Opening a unit (saved list, result card, or single-hit Open report) must
- * restore year / make / model / floorplan so Back and chip “change” keep
- * the cascade. While a report is open the picker must not publish a null
+ * restore year / make / model / floorplan so Back keeps the cascade.
+ * Dock tap / chip “change” bump `factsPickerToken` → clean catalog search
+ * (resetFax). While a report is open the picker must not publish a null
  * Active Coach — that race cleared the chip mid-report.
+ *
+ * Cross-feature prefill is button-only: Ask Grok, Check tow, Check payment.
+ * Facts never hands off to GPS / Trips.
  */
 
 export type FactsCascadeSel = {

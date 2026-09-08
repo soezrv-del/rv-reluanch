@@ -273,15 +273,14 @@ test("Facts app restores cascade on every open path and skips coach clear mid-re
   assert.match(fax, /onClick=\{\(\) => openFactsUnit\(r\)\}/);
   assert.match(fax, /shouldOpenSingleHitReport\(found\)[\s\S]{0,80}openFactsUnit\(found\[0\]!\)/);
 
-  // Chip “change” closes the report via token — does not resetFax
+  // Chip “change” and dock Facts share openFactsPicker → resetFax (clean search)
   assert.match(chip, /openFactsPicker/);
   assert.match(shell, /setFactsPickerToken/);
   const tokenEffect = fax.match(
-    /useEffect\(\(\) => \{[\s\S]*?factsPickerToken[\s\S]*?\}, \[factsPickerToken\]\);/,
+    /useEffect\(\(\) => \{[\s\S]*?factsPickerToken[\s\S]*?\}, \[factsPickerToken, resetFax\]\);/,
   );
   assert.ok(tokenEffect, "factsPickerToken effect present");
-  assert.match(tokenEffect![0], /setDetail\(null\)/);
-  assert.doesNotMatch(tokenEffect![0], /resetFax/);
+  assert.match(tokenEffect![0], /resetFax\(\)/);
   assert.doesNotMatch(tokenEffect![0], /applySel\(\{ year: ""/);
 });
 
@@ -341,4 +340,68 @@ test("Facts landing uses the showroom motorhome behind glass, cards stay put", (
   assert.match(fax, /VIN Decoder/);
   assert.match(fax, /Scan or type a VIN · NHTSA decode/);
   assert.ok(existsSync(asset), "facts-landing-motorhome.jpg is in public/assets");
+});
+
+test("dock Facts tab always opens clean search via openFactsPicker", () => {
+  const shell = readFileSync(
+    join(root, "../../components/shell/AppShell.tsx"),
+    "utf8",
+  );
+  const tabs = readFileSync(
+    join(root, "../../components/shell/BottomTabs.tsx"),
+    "utf8",
+  );
+  const onTab = shell.match(
+    /const onTabChange = useCallback\(\s*\(next: AppTab\) => \{[\s\S]*?\}, \[/,
+  );
+  assert.ok(onTab, "onTabChange present");
+  assert.match(onTab[0], /next === "rvfax"/);
+  assert.match(onTab[0], /openFactsPicker/);
+  assert.doesNotMatch(onTab[0], /openCalWithPrice/);
+  assert.doesNotMatch(onTab[0], /openGrok/);
+  assert.doesNotMatch(onTab[0], /openTowWithCoach/);
+  assert.doesNotMatch(onTab[0], /openTripsProfile/);
+  assert.match(tabs, /onChange\(id\)/);
+  assert.doesNotMatch(tabs, /openFactsPicker/);
+  assert.doesNotMatch(tabs, /setFactsPickerToken/);
+});
+
+test("Facts bridges are Ask Grok, Check tow, Check payment only — no GPS", () => {
+  const detail = readFileSync(
+    join(root, "../../components/rvfax/RvDetail.tsx"),
+    "utf8",
+  );
+  const fax = readFileSync(
+    join(root, "../../components/rvfax/RvFaxApp.tsx"),
+    "utf8",
+  );
+  const nav = readFileSync(
+    join(root, "../../components/shell/ShellNavContext.ts"),
+    "utf8",
+  );
+  const shell = readFileSync(
+    join(root, "../../components/shell/AppShell.tsx"),
+    "utf8",
+  );
+
+  assert.match(detail, /Ask Grok/);
+  assert.match(detail, /Check tow/);
+  assert.match(detail, /Check payment/);
+  assert.match(detail, /data-facts-check-tow/);
+  assert.match(detail, /data-facts-check-payment/);
+  assert.match(detail, /openTowWithCoach/);
+  assert.match(detail, /openCalWithPrice/);
+  assert.match(detail, /factsCoachOffer/);
+  assert.doesNotMatch(detail, /setTab\("rvtow"\)/);
+  assert.doesNotMatch(detail, /openTripsProfile/);
+  assert.doesNotMatch(detail, /setTab\("rvtrips"\)/);
+  assert.doesNotMatch(fax, /openTripsProfile/);
+  assert.doesNotMatch(fax, /setTab\("rvtrips"\)/);
+
+  assert.match(nav, /openTowWithCoach/);
+  assert.match(nav, /towHandoff/);
+  assert.match(nav, /FactsTowHandoff/);
+  assert.match(shell, /openTowWithCoach/);
+  assert.match(shell, /normalizeActiveCoach/);
+  assert.match(shell, /setTab\("rvtow"\)/);
 });

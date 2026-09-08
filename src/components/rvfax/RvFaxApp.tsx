@@ -306,10 +306,10 @@ export function RvFaxApp({
 
   useEffect(() => {
     if (!factsPickerToken) return;
-    setDetail(null);
-    setCompareOpen(false);
-    setVinOpen(false);
-  }, [factsPickerToken]);
+    // Dock Facts + chip “change” share this token: always land on clean search.
+    // Do not inherit Tow / Cal / GPS session data — resetFax clears the picker.
+    resetFax();
+  }, [factsPickerToken, resetFax]);
 
   useEffect(() => {
     if (!factsShareToken) return;

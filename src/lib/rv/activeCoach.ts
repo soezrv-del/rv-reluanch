@@ -3,8 +3,8 @@
  * Chat / Live Voice read this so “what’s the HP?” uses the open report
  * instead of inventing a sibling powertrain.
  *
- * Cal / Tow also read price, GVWR, and class so Finance and tow matching
- * follow the open report — not a leftover F-350 + fifth-wheel demo.
+ * Sticky chip + explicit Facts bridges (Ask Grok / Check tow / Check payment).
+ * Dock entry on Cal / Tow / Grok / Trips must not auto-apply this.
  *
  * Not a Facts cache. Chat answers never write here.
  */
