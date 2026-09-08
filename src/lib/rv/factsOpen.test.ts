@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -278,4 +278,23 @@ test("Facts first-run hero, year+make default, and chip search stay on the casca
   assert.ok(yearAt > 0 && makeAt > yearAt);
   assert.ok(revealAt > makeAt, "year and make stay visible before the tail");
   assert.ok(modelAt > revealAt, "model/trim reveal after the first result");
+});
+
+test("Facts landing uses the showroom motorhome behind glass, cards stay put", () => {
+  const fax = readFileSync(join(root, "../../components/rvfax/RvFaxApp.tsx"), "utf8");
+  const prestige = readFileSync(join(root, "../../assets/prestige.ts"), "utf8");
+  const css = readFileSync(join(root, "../../styles.css"), "utf8");
+  const asset = join(root, "../../../public/assets/facts-landing-motorhome.jpg");
+  assert.match(prestige, /FACTS_LANDING_BACKDROP/);
+  assert.match(prestige, /\/assets\/facts-landing-motorhome\.jpg/);
+  assert.match(fax, /FACTS_LANDING_BACKDROP/);
+  assert.match(fax, /data-facts-landing/);
+  assert.match(fax, /facts-hero-panel/);
+  assert.match(fax, /SuiteBackdrop src=\{PRESTIGE_BACKDROP\}/);
+  assert.match(css, /data-facts-landing/);
+  assert.match(css, /opacity: 0\.46/);
+  assert.match(fax, /Catalog search/);
+  assert.match(fax, /VIN Decoder/);
+  assert.match(fax, /Scan or type a VIN · NHTSA decode/);
+  assert.ok(existsSync(asset), "facts-landing-motorhome.jpg is in public/assets");
 });

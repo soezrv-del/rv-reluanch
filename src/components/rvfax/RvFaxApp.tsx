@@ -54,7 +54,7 @@ import {
 } from "@/lib/rv/factsOpen";
 import { didYouMean, type SuggestHit } from "@/lib/rv/suggest";
 import { cn } from "@/lib/utils";
-import { SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
+import { FACTS_LANDING_BACKDROP } from "@/assets/prestige";
 import { resolveCardImage } from "@/assets/typeMedia";
 import { ScrollSuiteHeader } from "@/components/shell/ScrollChrome";
 import { SuiteBackdrop } from "@/components/shell/SuitePage";
@@ -107,7 +107,7 @@ function PanelFallback() {
   );
 }
 
-const PRESTIGE_BACKDROP = SHARED_PRESTIGE_BACKDROP;
+const PRESTIGE_BACKDROP = FACTS_LANDING_BACKDROP;
 
 type YearEra = "all" | "classic" | "recent" | "modern" | "newer17";
 
@@ -690,12 +690,13 @@ export function RvFaxApp({
 
   return (
     <div
-      className="rvfax-screen adaptive-glass relative flex h-full min-h-0 flex-col overflow-hidden text-white"
+      className="rvfax-screen adaptive-glass relative flex h-full min-h-0 flex-col overflow-hidden bg-bg text-white"
       style={adaptiveGlass.style}
       data-glass-l={adaptiveGlass.luminance.toFixed(3)}
       data-readable-cards=""
+      data-facts-landing=""
     >
-      <SuiteBackdrop src={PRESTIGE_BACKDROP} />
+      <SuiteBackdrop src={PRESTIGE_BACKDROP} objectPosition="center 42%" />
 
       <div
         ref={scrollRef}
@@ -715,7 +716,7 @@ export function RvFaxApp({
         <ActiveCoachChip />
 
         <div className="mx-auto w-full max-w-lg space-y-3.5 px-3 pb-28 pt-0 sm:px-4">
-          <section className="px-0.5 pt-1">
+          <section className="facts-hero-panel glass-prestige rounded-[var(--radius-xl)] px-4 py-3.5 sm:px-5">
             <p className="text-[22px] font-extrabold tracking-tight text-white sm:text-[24px]">
               Know before you buy,
             </p>
