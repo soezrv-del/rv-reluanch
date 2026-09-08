@@ -46,15 +46,12 @@ import {
 } from "@/lib/rv/catalog";
 import {
   cascadeFromResult,
-  FACTS_EXAMPLE_CHIPS,
   pickerCoachWrite,
   resolveShareOpenSel,
   revealFactsFloorplan,
   revealFactsModel,
-  selFromExampleChip,
   shouldCascadeAutoSearch,
   shouldOpenSingleHitReport,
-  showFactsExampleChips,
 } from "@/lib/rv/factsOpen";
 import { didYouMean, type SuggestHit } from "@/lib/rv/suggest";
 import { cn } from "@/lib/utils";
@@ -530,15 +527,6 @@ export function RvFaxApp({
     runSearchNow({ year, make, model, floorplan, rvType });
   }, [year, make, model, floorplan, rvType, runSearchNow]);
 
-  const runExampleChip = useCallback(
-    (label: string) => {
-      const sel = selFromExampleChip(label);
-      applySel(sel);
-      runSearchNow(sel);
-    },
-    [applySel, runSearchNow],
-  );
-
   const refreshCascadeAfterChange = useCallback(
     (next: SearchSel, field?: CascadeField) => {
       void ensureCatalogLoaded();
@@ -566,12 +554,6 @@ export function RvFaxApp({
     floorplan,
   });
   const revealFloorplan = revealFactsFloorplan({
-    model,
-    floorplan,
-  });
-  const exampleChipsOpen = showFactsExampleChips({
-    year,
-    make,
     model,
     floorplan,
   });
@@ -909,22 +891,6 @@ export function RvFaxApp({
                 />
               ) : null}
             </div>
-
-            {exampleChipsOpen ? (
-              <div className="flex flex-wrap gap-2">
-                {FACTS_EXAMPLE_CHIPS.map((label) => (
-                  <button
-                    key={label}
-                    type="button"
-                    data-facts-example-chip={label}
-                    onClick={() => runExampleChip(label)}
-                    className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 bg-black/35 px-3.5 py-2 text-left text-[12px] font-semibold text-white transition active:scale-[0.99]"
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            ) : null}
 
             {searching ? (
               <p className="flex items-center justify-center gap-2 text-[12px] font-semibold text-sky-200">
