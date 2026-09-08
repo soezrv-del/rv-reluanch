@@ -1259,7 +1259,7 @@ export function RvTripsApp() {
         className="rv-scroll relative z-10 h-full overflow-y-auto overscroll-y-contain"
       >
         <PullRefreshLayer state={pull} label="Release to refresh Trips">
-        <header>
+        <header
           data-trips-chrome
           className="relative z-40 isolate pointer-events-auto px-3 pb-2 pt-2 sm:px-4"
         >

@@ -37,7 +37,7 @@ test("shell swipe strip follows the finger", () => {
   const css = read("../../styles.css");
   assert.match(shell, /suite-swipe-viewport/);
   assert.match(shell, /onPeek/);
-  assert.match(shell, /--swipe-i/);
+  assert.match(shell, /--pane-shift/);
   assert.match(css, /--swipe-dx/);
   assert.match(css, /cubic-bezier\(0\.32, 0\.72, 0, 1\)/);
 });

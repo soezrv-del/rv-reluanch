@@ -216,7 +216,7 @@
     flex-direction: column;
     overflow: hidden;
     transform: translate3d(
-      calc((var(--pane-i) - var(--swipe-i)) * 100% + var(--swipe-dx)),
+      calc(var(--pane-shift, 0%) + var(--swipe-dx, 0px)),
       0,
       0
     );

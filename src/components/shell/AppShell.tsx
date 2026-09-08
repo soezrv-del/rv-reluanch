@@ -347,23 +347,20 @@ export function AppShell() {
           ref={mainRef}
           className="suite-swipe-viewport relative min-h-0 flex-1 overflow-hidden"
           aria-hidden={launchOpen}
-          style={{
-            ["--swipe-i" as string]: String(swipeIndex),
-          }}
         >
-          <Suspense fallback={<SuiteFallback />}>
-            {dockOrder.map((id, i) => {
-              if (!show(id)) return null;
-              return (
-                <div
-                  key={id}
-                  className={SWIPE_PANE}
-                  data-suite-pane={id}
-                  style={{
-                    ["--pane-i" as string]: String(i),
-                    pointerEvents: id === tab ? "auto" : "none",
-                  }}
-                >
+          {dockOrder.map((id, i) => {
+            if (!show(id)) return null;
+            return (
+              <div
+                key={id}
+                className={SWIPE_PANE}
+                data-suite-pane={id}
+                style={{
+                  ["--pane-shift" as string]: `${(i - swipeIndex) * 100}%`,
+                  pointerEvents: id === tab ? "auto" : "none",
+                }}
+              >
+                <Suspense fallback={<SuiteFallback />}>
                   <SuiteErrorBoundary
                     name={
                       id === "rvfax"
@@ -401,17 +398,19 @@ export function AppShell() {
                       <SoldBookApp />
                     ) : null}
                   </SuiteErrorBoundary>
-                </div>
-              );
-            })}
-            {show("more") ? (
-              <div className={tab === "more" ? TAB_PANE_ON : "hidden"}>
+                </Suspense>
+              </div>
+            );
+          })}
+          {show("more") ? (
+            <div className={tab === "more" ? TAB_PANE_ON : "hidden"}>
+              <Suspense fallback={<SuiteFallback />}>
                 <SuiteErrorBoundary name="More">
                   <MoreApp onNavigate={onTabChange} />
                 </SuiteErrorBoundary>
-              </div>
-            ) : null}
-          </Suspense>
+              </Suspense>
+            </div>
+          ) : null}
         </main>
 
         {!hideDock ? (

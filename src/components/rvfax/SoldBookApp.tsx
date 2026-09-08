@@ -61,13 +61,13 @@ export function SoldBookApp() {
         className="rv-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
       >
         <PullRefreshLayer state={pull} label="Release to refresh Sold">
-        <ScrollSuiteHeader tab="rvsold" />
-        <SoldList>
-          deals={deals}
-          onBack={() => nav?.setTab("rvfax")}
-          onTogglePaid={(id) => persistDeals(toggleDealPaid(deals, id))}
-          onRemove={(id) => persistDeals(removeSoldDeal(deals, id))}
-        />
+          <ScrollSuiteHeader tab="rvsold" />
+          <SoldList
+            deals={deals}
+            onBack={() => nav?.setTab("rvfax")}
+            onTogglePaid={(id) => persistDeals(toggleDealPaid(deals, id))}
+            onRemove={(id) => persistDeals(removeSoldDeal(deals, id))}
+          />
         </PullRefreshLayer>
       </div>
     </div>
