@@ -1257,6 +1257,10 @@ function main() {
         }
       }
 
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
       const hrIdx = catalogIndex["Holiday Rambler"];
       if (!hrIdx) fail("Holiday Rambler missing from CATALOG_INDEX");
       for (const lock of [
