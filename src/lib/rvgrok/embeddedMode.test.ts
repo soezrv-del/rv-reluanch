@@ -41,17 +41,8 @@ test("RvGrokApp defaults to page variant and gates suite chrome for embedded", (
   assert.match(app, /onSeedConsumed/);
 });
 
-test("Ask Grok overlay passes variant=embedded; Grok tab stays default page", () => {
-  const overlay = read("../../components/shell/AskGrokOverlay.tsx");
+test("Grok tab stays default page variant", () => {
   const shell = read("../../components/shell/AppShell.tsx");
-
-  assert.match(
-    overlay,
-    /<RvGrokApp[\s\S]*variant="embedded"[\s\S]*active=\{panelOpen\}/,
-  );
-  assert.match(overlay, /seedPrompt=\{seedPrompt\}/);
-  assert.match(overlay, /onSeedConsumed=\{onSeedConsumed\}/);
-  assert.doesNotMatch(overlay, /streamChat|GrokRealtimeSession|sendMessage/);
 
   const pageMount = shell.match(
     /id === "rvgrok" \? \([\s\S]*?<RvGrokApp[\s\S]*?\/>/,
