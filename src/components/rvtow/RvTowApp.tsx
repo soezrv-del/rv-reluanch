@@ -535,7 +535,7 @@ export function RvTowApp() {
     if (hasVehicle && rating.custom) {
       const who = [year || "—", make, model, trim].filter(Boolean).join(" ");
       lines.push(
-        `${who} is not in the OEM table. Type max tow / payload from the sticker. Leave GCWR blank if it is not printed — we do not invent max tow + payload + 5,000.`,
+        `${who} is not in the OEM table. Type max tow / payload from the door sticker. Leave GCWR blank if it is not printed — we do not invent max tow + payload + 5,000.`,
       );
     }
     if (toadMode && prefill.kind === "motorhome") {
