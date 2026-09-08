@@ -7,8 +7,11 @@ import {
   cascadeFromResult,
   pickerCoachWrite,
   resolveShareOpenSel,
+  FACTS_TYPE_OPTIONS,
+  factsTypeLabel,
   revealFactsFloorplan,
   revealFactsModel,
+  revealFactsYear,
   shouldCascadeAutoSearch,
   shouldOpenSingleHitReport,
 } from "./factsOpen.ts";
@@ -88,6 +91,52 @@ test("picker must not publish null Active Coach while a report is open", () => {
 
   // Empty picker with no report may clear (Reset)
   assert.equal(pickerCoachWrite(empty, { reportOpen: false }), null);
+});
+
+test("Type is the first cascade step — Year stays locked until Type", () => {
+  assert.equal(revealFactsYear({ rvType: "" }), false);
+  assert.equal(revealFactsYear({ rvType: "   " }), false);
+  assert.equal(
+    revealFactsYear({ rvType: "class-a" }),
+    true,
+    "Class A unlocks Year",
+  );
+  assert.equal(revealFactsYear({ rvType: "class-a-diesel" }), true);
+  assert.equal(revealFactsYear({ rvType: "fifth-wheel" }), true);
+  assert.deepEqual(
+    FACTS_TYPE_OPTIONS.map((t) => t.label),
+    [
+      "Class A",
+      "Class A Diesel",
+      "Class B",
+      "Class C",
+      "Super C",
+      "Fifth Wheel",
+      "Travel Trailer",
+      "Toy Hauler",
+    ],
+  );
+  assert.deepEqual(
+    FACTS_TYPE_OPTIONS.map((t) => t.id),
+    [
+      "class-a",
+      "class-a-diesel",
+      "class-b",
+      "class-c",
+      "super-c",
+      "fifth-wheel",
+      "travel-trailer",
+      "toy-hauler",
+    ],
+  );
+  assert.equal(factsTypeLabel("class-a"), "Class A");
+  assert.equal(factsTypeLabel("class-a-diesel"), "Class A Diesel");
+  assert.equal(factsTypeLabel("class-a-gas"), "");
+  assert.equal(factsTypeLabel(""), "");
+  assert.ok(
+    !FACTS_TYPE_OPTIONS.some((t) => t.id === "class-a-gas" || t.id === ""),
+    "Type step has no All / Class A Gas",
+  );
 });
 
 test("Model reveal after year+make — Search is not the gate", () => {
@@ -290,17 +339,19 @@ test("Facts first-run hero and year+make default stay on the cascade — no exam
   const fax = readFileSync(join(root, "../../components/rvfax/RvFaxApp.tsx"), "utf8");
   const open = readFileSync(join(root, "factsOpen.ts"), "utf8");
   assert.match(fax, /Know before you buy,/);
+  assert.match(fax, /revealFactsYear/);
   assert.match(fax, /revealFactsModel/);
   assert.match(fax, /revealFactsFloorplan/);
   assert.match(fax, /shouldCascadeAutoSearch/);
   assert.match(fax, /refreshCascadeAfterChange\(next, field\)/);
   assert.match(fax, /refreshCascadeAfterChange/);
+  assert.match(fax, /label="Type"/);
   assert.match(fax, /label="Year"/);
   assert.match(fax, /label="Make"/);
   assert.match(fax, /label="Model"/);
   assert.match(fax, /label="Floorplan"/);
   assert.doesNotMatch(fax, /label="Trim"/);
-  assert.match(fax, /year → make → model → floorplan/);
+  assert.match(fax, /type → year → make → model → floorplan/);
   assert.doesNotMatch(fax, /FACTS_EXAMPLE_CHIPS/);
   assert.doesNotMatch(fax, /selFromExampleChip/);
   assert.doesNotMatch(fax, /runExampleChip/);
@@ -333,14 +384,16 @@ test("Facts first-run hero and year+make default stay on the cascade — no exam
     /year && make \? \([\s\S]*?\{cascade\.canSearch \? "Open report" : "Search"\}/,
     "Search / Open report stays as the year+make override",
   );
-  // Progressive unlock: Year → Make → Model → Floorplan (separate steps)
+  // Progressive unlock: Type → Year → Make → Model → Floorplan
+  const typeAt = fax.indexOf('label="Type"');
   const yearAt = fax.indexOf('label="Year"');
   const makeAt = fax.indexOf('label="Make"');
   const revealModelAt = fax.indexOf("{revealModel ? (");
   const modelAt = fax.indexOf('label="Model"');
   const revealFloorplanAt = fax.indexOf("{revealFloorplan ? (");
   const floorplanAt = fax.indexOf('label="Floorplan"');
-  assert.ok(yearAt > 0 && makeAt > yearAt);
+  assert.ok(typeAt > 0 && yearAt > typeAt, "Type is the first cascade field");
+  assert.ok(makeAt > yearAt);
   assert.ok(revealModelAt > makeAt, "year and make stay visible before Model");
   assert.ok(modelAt > revealModelAt, "Model follows year+make, not a Search click");
   assert.ok(
@@ -348,6 +401,28 @@ test("Facts first-run hero and year+make default stay on the cascade — no exam
     "Floorplan is a later step than Model — not revealed together",
   );
   assert.ok(floorplanAt > revealFloorplanAt);
+  assert.match(fax, /yearUnlocked && setSheet\("year"\)/);
+  assert.match(fax, /disabled=\{!yearUnlocked\}/);
+  assert.match(fax, /Pick a type first/);
+  assert.doesNotMatch(fax, /label="RV Type"/);
+  assert.doesNotMatch(fax, /All types/);
+  assert.doesNotMatch(
+    fax,
+    /onClick=\{\(\) => year && setSheet\("rvType"\)\}/,
+  );
+  assert.match(open, /FACTS_TYPE_OPTIONS/);
+  assert.match(open, /revealFactsYear/);
+  const catalogSrc = readFileSync(join(root, "catalog.ts"), "utf8");
+  assert.match(
+    catalogSrc,
+    /case "year":[\s\S]*?rvType: next\.rvType/,
+    "Year change must keep Type (cascade step 1)",
+  );
+  assert.match(
+    catalogSrc,
+    /case "rvType":[\s\S]*?year: ""/,
+    "Type change restarts Year and everything after",
+  );
 });
 
 test("Facts landing uses the showroom motorhome behind glass, cards stay put", () => {

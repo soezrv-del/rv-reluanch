@@ -29,6 +29,40 @@ export type ResultLike = {
 };
 
 /**
+ * Facts Type-first cascade labels. Map onto catalog class ids only —
+ * Class A is any Class A (`class-a`); Class A Diesel is diesel-only.
+ * No All / Class A Gas on this step. Type is required to enter the cascade.
+ */
+export const FACTS_TYPE_OPTIONS = [
+  { id: "class-a", label: "Class A" },
+  { id: "class-a-diesel", label: "Class A Diesel" },
+  { id: "class-b", label: "Class B" },
+  { id: "class-c", label: "Class C" },
+  { id: "super-c", label: "Super C" },
+  { id: "fifth-wheel", label: "Fifth Wheel" },
+  { id: "travel-trailer", label: "Travel Trailer" },
+  { id: "toy-hauler", label: "Toy Hauler" },
+] as const;
+
+export type FactsTypeId = (typeof FACTS_TYPE_OPTIONS)[number]["id"];
+
+export function factsTypeLabel(classId: string | undefined | null): string {
+  if (!classId) return "";
+  return FACTS_TYPE_OPTIONS.find((t) => t.id === classId)?.label ?? "";
+}
+
+export function isFactsTypeId(v: string | undefined | null): v is FactsTypeId {
+  return Boolean(v && FACTS_TYPE_OPTIONS.some((t) => t.id === v));
+}
+
+/**
+ * Year unlocks after Type. Cascade path cannot skip Type.
+ */
+export function revealFactsYear(sel: { rvType?: string | null }): boolean {
+  return Boolean(sel.rvType?.trim());
+}
+
+/**
  * Model follows the cascade, not a Search click.
  * Year + Make (or an already-chosen model/floorplan) is enough.
  * Floorplan stays hidden until Model is selected.
