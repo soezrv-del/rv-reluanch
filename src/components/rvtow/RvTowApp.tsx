@@ -713,64 +713,23 @@ export function RvTowApp() {
         </>
       }
     >
-      <div className="flex items-center justify-end gap-1.5 px-3 pb-1 pt-1 sm:px-4">
-        <button
-          type="button"
-          onClick={clearVehicle}
-          className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[10px] font-semibold text-white"
-          aria-label="Clear vehicle selection"
-        >
-          <Eraser className="size-3" />
-          Clear
-        </button>
-        <button
-          type="button"
-          onClick={resetDefaults}
-          className="inline-flex items-center gap-1 rounded-full border border-blue/30 bg-blue/10 px-2.5 py-1 text-[10px] font-semibold text-blue"
-          aria-label="Reset to defaults"
-        >
-          <RefreshCw className="size-3" />
-          Reset
-        </button>
-      </div>
-
-      <div className="landscape-content mx-auto w-full max-w-lg space-y-3 px-3 pb-8 sm:px-4">
-        <section
-          className="rvtow-hero grid grid-cols-2 gap-2"
-          aria-label="Pin weight and hitch guide"
-        >
-          <GuideHero
-            kicker="PIN WEIGHT"
-            title="5th Wheel"
-            pct="18–25%"
-            active={pinHeroActive}
-          />
-          <GuideHero
-            kicker="HITCH GUIDE"
-            title="Travel Trailer"
-            pct="10–15%"
-            active={!pinHeroActive}
-          />
-        </section>
-
-        {hasVehicle && !reverseMode && !toadMode ? (
-          <GlanceChecks verdict={verdict} gvwrN={gvwrN} maxTow={rating.maxTow} />
-        ) : null}
-
+      <div className="landscape-content mx-auto w-full max-w-lg space-y-2.5 px-3 pb-8 sm:px-4">
         {toadMode && prefill.kind === "motorhome" ? (
-          <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
+          <section
+            data-tow-coach
+            className="glass-surface rounded-[var(--radius-xl)] p-3"
+          >
             <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-sky-200">
-              TOAD MODE
+              COACH
             </p>
             <p className="text-[14px] font-bold text-white">
               {formatActiveCoachChip(prefill.coach)}
             </p>
-            {prefill.coach.towingCapacityLbs ? (
-              <p className="mt-2 text-[18px] font-black tabular-nums text-sky-100">
-                {prefill.coach.towingCapacityLbs.toLocaleString()}
-                <span className="ml-1 text-[11px] font-semibold">lbs</span>
-              </p>
-            ) : null}
+            <AnswerHero
+              maxTow={prefill.coach.towingCapacityLbs ?? 0}
+              hitchLbs={0}
+              hitchKind="tongue"
+            />
             <button
               type="button"
               onClick={openReverse}
@@ -779,268 +738,89 @@ export function RvTowApp() {
               Match a different trailer instead
             </button>
           </section>
-        ) : null}
-        <div className="flex gap-1 rounded-full border border-white/15 bg-black/30 p-1">
-          {(
-            [
-              ["all", "All", truckCount + suvCount],
-              ["truck", "Trucks", truckCount],
-              ["suv", "SUVs", suvCount],
-            ] as const
-          ).map(([id, label, count]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => applyKindFilter(id)}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-1 rounded-full py-2 text-[12px] font-bold transition",
-                kindFilter === id
-                  ? "bg-blue text-white shadow-[0_0_14px_rgba(77,166,255,0.35)]"
-                  : "text-white hover:text-white",
-              )}
-            >
-              {id === "truck" ? (
-                <Truck className="size-3.5" />
-              ) : id === "suv" ? (
-                <Car className="size-3.5" />
-              ) : null}
-              {label}
-              <span className="text-[10px] opacity-80">({count})</span>
-            </button>
-          ))}
-        </div>
-
-        {toadMode ? null : (
-          <div className="flex gap-1 rounded-full border border-white/15 bg-black/30 p-1">
-            {(
-              [
-                ["match", "Match a truck"],
-                ["reverse", "Can I tow this?"],
-              ] as const
-            ).map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => {
-                  if (id === "reverse") openReverse();
-                  else setShopMode("match");
-                }}
-                className={cn(
-                  "flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[12px] font-bold transition",
-                  shopMode === id
-                    ? "bg-blue text-white shadow-[0_0_14px_rgba(77,166,255,0.35)]"
-                    : "text-white hover:text-white",
-                )}
+        ) : (
+          <>
+            {reverseMode ? null : (
+              <section
+                data-tow-truck
+                className="glass-surface rounded-[var(--radius-xl)] p-3"
               >
-                {id === "reverse" ? (
-                  <Search className="size-3.5" />
-                ) : (
-                  <Truck className="size-3.5" />
-                )}
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {reverseMode ? null : (
-        <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
-          <p className="mb-1 flex items-center gap-1.5 text-[12px] font-bold text-blue">
-            <img
-              src="/assets/brand/icon-rvtow.png"
-              alt=""
-              className="size-4 object-contain"
-            />
-            Tow Vehicle
-          </p>
-          <Field
-            label="YEAR"
-            value={year || "Select year"}
-            empty={!year}
-            onClick={() => setSheet("year")}
-          />
-          <Field
-            label="MAKE"
-            value={make || "Select make"}
-            empty={!make}
-            onClick={() => setSheet("make")}
-          />
-          <Field
-            label="MODEL"
-            value={model || (make ? "Select or type model" : "Make first")}
-            empty={!model}
-            disabled={!make}
-            onClick={() => make && setSheet("model")}
-          />
-          <Field
-            label="TRIM / ENGINE / CONFIGURATION"
-            value={
-              trim ||
-              (model
-                ? inCatalog
-                  ? "Select or type trim"
-                  : "Type trim (optional)"
-                : "Model first")
-            }
-            empty={!trim}
-            disabled={!model}
-            onClick={() => model && setSheet("trim")}
-          />
-
-          {hasVehicle && rating.custom ? (
-            <div className="mt-3 space-y-2 rounded-[var(--radius-md)] border border-amber/35 bg-amber/10 px-3 py-3">
-              <p className="text-[12px] font-bold text-amber">
-                Custom vehicle
-              </p>
-              <div className="grid grid-cols-3 gap-2 pt-1">
-                <label className="block">
-                  <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
-                    MAX TOW
-                  </span>
-                  <input
-                    value={manualMaxTow}
-                    onChange={(e) =>
-                      setManualMaxTow(e.target.value.replace(/\D/g, ""))
-                    }
-                    placeholder="lbs"
-                    inputMode="numeric"
-                    className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
-                    PAYLOAD
-                  </span>
-                  <input
-                    value={manualPayload}
-                    onChange={(e) =>
-                      setManualPayload(e.target.value.replace(/\D/g, ""))
-                    }
-                    placeholder="lbs"
-                    inputMode="numeric"
-                    className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
-                    GCWR
-                  </span>
-                  <input
-                    value={manualGcwr}
-                    onChange={(e) =>
-                      setManualGcwr(e.target.value.replace(/\D/g, ""))
-                    }
-                    placeholder="lbs"
-                    inputMode="numeric"
-                    className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
-                  />
-                </label>
-              </div>
-            </div>
-          ) : null}
-
-          {hasVehicle ? (
-            <>
-              <div className="mt-3 rounded-[var(--radius-md)] border border-blue/25 bg-blue/10 px-3 py-2.5">
-                <p className="text-[12px] font-semibold text-white">
-                  {year || "—"} {make} {model}
-                </p>
-                <p className="mt-0.5 text-[11px] text-white">
-                  {rating.custom ? trim : trimStem(trim)}
-                </p>
-                {formatTrimYearRange(trim) ? (
-                  <p className="mt-1">
-                    <span className="inline-flex rounded-full border border-blue/35 bg-blue/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-blue">
-                      {formatTrimYearRange(trim)}
-                    </span>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <p className="flex items-center gap-1.5 text-[12px] font-bold text-blue">
+                    <img
+                      src="/assets/brand/icon-rvtow.png"
+                      alt=""
+                      className="size-4 object-contain"
+                    />
+                    Truck
                   </p>
-                ) : null}
-                <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-blue/90">
-                  {rating.kind === "suv" ? "SUV" : "Truck"} · {rating.hitch}
-                </p>
-              </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={clearVehicle}
+                      className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[10px] font-semibold text-white"
+                      aria-label="Clear vehicle selection"
+                    >
+                      <Eraser className="size-3" />
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetDefaults}
+                      className="inline-flex items-center gap-1 rounded-full border border-blue/30 bg-blue/10 px-2.5 py-1 text-[10px] font-semibold text-blue"
+                      aria-label="Reset to defaults"
+                    >
+                      <RefreshCw className="size-3" />
+                      Reset
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field
+                    label="YEAR"
+                    value={year || "Select year"}
+                    empty={!year}
+                    onClick={() => setSheet("year")}
+                    flush
+                  />
+                  <Field
+                    label="MAKE"
+                    value={make || "Select make"}
+                    empty={!make}
+                    onClick={() => setSheet("make")}
+                    flush
+                  />
+                </div>
+                <Field
+                  label="MODEL"
+                  value={model || (make ? "Select or type model" : "Make first")}
+                  empty={!model}
+                  disabled={!make}
+                  onClick={() => make && setSheet("model")}
+                />
+              </section>
+            )}
 
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                <Stat
-                  value={fmtK(rating.maxTow)}
-                  sub={`MAX TOW\n${rating.maxTow.toLocaleString()} lbs`}
-                />
-                <Stat
-                  value={fmtK(rating.payload)}
-                  sub={`PAYLOAD\n${rating.payload.toLocaleString()} lbs`}
-                />
-                <Stat
-                  value={fmtK(rating.gcwr)}
-                  sub={
-                    rating.gcwr
-                      ? `GCWR\n${rating.gcwr.toLocaleString()} lbs`
-                      : rating.custom
-                        ? "GCWR\nenter sticker"
-                        : "GCWR\n—"
-                  }
-                />
-              </div>
-
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <Stat
-                  value={fmtK(recommendedTow)}
-                  sub={`REC. TOW\n${recommendedTow.toLocaleString()} lbs`}
-                />
-                <Stat
-                  value={fmtK(recommendedPayload)}
-                  sub={`REC. PAYLOAD\n${recommendedPayload.toLocaleString()} lbs`}
-                />
-              </div>
-            </>
-          ) : (
-            <div className="mt-3 rounded-[var(--radius-md)] border border-dashed border-white/20 bg-black/25 px-3 py-4 text-center">
-              <p className="text-[13px] font-semibold text-white">
-                No vehicle selected
+            <section
+              data-tow-coach
+              className="glass-surface rounded-[var(--radius-xl)] p-3"
+            >
+              <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-blue">
+                Coach
               </p>
-            </div>
-          )}
-        </section>
-        )}
-
-        {toadMode ? null : (
-        <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
-          <p className="mb-3 text-[10px] font-bold tracking-[0.12em] text-blue">
-            {reverseMode ? "THIS TRAILER" : "RV DETAILS"}
-          </p>
-          {prefill.kind === "towable" ? (
-            <div className="mb-3 rounded-[var(--radius-md)] border border-sky-400/30 bg-sky-500/10 px-3 py-2.5">
-              <p className="text-[10px] font-bold tracking-[0.12em] text-sky-200">
-                TRAILER FROM FACTS
-              </p>
-              <p className="mt-1 text-[13px] font-bold text-white">
-                {formatActiveCoachChip(prefill.coach)}
-              </p>
-              {reverseMode ? null : (
-                <button
-                  type="button"
-                  onClick={openReverse}
-                  className="mt-3 inline-flex min-h-11 items-center gap-1 rounded-full border border-sky-300/40 bg-sky-500/20 px-3.5 text-[12px] font-bold text-white"
-                >
-                  <Search className="size-3.5" />
-                  Can I tow this coach?
-                  <ChevronRight className="size-3.5" />
-                </button>
-              )}
-            </div>
-          ) : null}
-          {reverseMode ? (
-            <div className="grid grid-cols-2 gap-2">
-              <Field
-                label="YEAR"
-                value={year || "Year"}
-                empty={!year}
-                onClick={() => setSheet("year")}
-                flush
-              />
+              {prefill.kind === "towable" ? (
+                <div className="mb-2 rounded-[var(--radius-md)] border border-sky-400/30 bg-sky-500/10 px-3 py-2">
+                  <p className="text-[13px] font-bold text-white">
+                    {formatActiveCoachChip(prefill.coach)}
+                  </p>
+                </div>
+              ) : null}
               <Field
                 label="RV TYPE"
                 value={
-                  vehicleIsTruck ? rvType : "Travel Trailer"
+                  vehicleIsTruck
+                    ? rvType
+                    : "Travel Trailer (auto · non-truck)"
                 }
                 onClick={() => {
                   if (vehicleIsTruck) setSheet("rvType");
@@ -1048,101 +828,33 @@ export function RvTowApp() {
                 disabled={!vehicleIsTruck}
                 flush
               />
-            </div>
-          ) : (
-          <Field
-            label="RV TYPE"
-            value={
-              vehicleIsTruck
-                ? rvType
-                : "Travel Trailer (auto · non-truck)"
-            }
-            onClick={() => {
-              if (vehicleIsTruck) setSheet("rvType");
-            }}
-            disabled={!vehicleIsTruck}
-          />
-          )}
-          <label className="mt-2.5 block">
-            <span className="mb-1 block text-[10px] font-bold tracking-[0.12em] text-blue">
-              RV GVWR (lbs) *
-            </span>
-            <input
-              value={gvwr}
-              onChange={(e) => setGvwr(e.target.value.replace(/\D/g, ""))}
-              className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-3 py-3 text-sm text-white outline-none focus:border-blue/50"
-              inputMode="numeric"
-            />
-          </label>
+            </section>
 
-          {rvType === "Fifth Wheel" && vehicleIsTruck && !reverseMode && (
-            <>
-              <div className="mt-2.5">
-                <Field
-                  label="TRUCK BED LENGTH"
-                  value={bed}
-                  onClick={() => setSheet("bed")}
-                />
-              </div>
-              <HitchWeightField
-                kind="pin"
-                value={pin}
-                estimatedLbs={pinEst}
-                recommendedPayload={recommendedPayload}
-                onChange={setPin}
+            {reverseMode ? (
+              <ReverseResults
+                gvwrN={gvwrN}
+                rvType={rvType}
+                year={year}
+                hitchLoad={reverseResult.hitchLoad}
+                hits={reverseResult.hits}
+                total={reverseResult.total}
+                limit={reverseLimit}
+                onShowMore={() =>
+                  setReverseLimit((n) =>
+                    Math.min(n + REVERSE_SHORTLIST, REVERSE_LIST_CAP),
+                  )
+                }
+                onPick={applyReversePick}
               />
-            </>
-          )}
-
-          {rvType !== "Fifth Wheel" && !reverseMode && (
-            <HitchWeightField
-              kind="tongue"
-              value={pin}
-              estimatedLbs={pinEst}
-              recommendedPayload={recommendedPayload}
-              onChange={setPin}
-            />
-          )}
-        </section>
-        )}
-
-        {reverseMode ? (
-          <>
-          <ReverseResults
-            gvwrN={gvwrN}
-            rvType={rvType}
-            year={year}
-            hitchLoad={reverseResult.hitchLoad}
-            hits={reverseResult.hits}
-            total={reverseResult.total}
-            limit={reverseLimit}
-            onShowMore={() =>
-              setReverseLimit((n) => Math.min(n + REVERSE_SHORTLIST, REVERSE_LIST_CAP))
-            }
-            onPick={applyReversePick}
-          />
-          <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
-            <HitchWeightField
-              kind={/fifth/i.test(rvType) ? "pin" : "tongue"}
-              value={pin}
-              estimatedLbs={reverseResult.hitchLoad}
-              recommendedPayload={0}
-              onChange={setPin}
-              flush
-            />
-          </section>
+            ) : (
+              <AnswerHero
+                maxTow={rating.maxTow}
+                hitchLbs={pinEst}
+                hitchKind={/fifth/i.test(rvType) ? "pin" : "tongue"}
+              />
+            )}
           </>
-        ) : null}
-
-        <SuiteHandoffCard
-          saved={deviceSaved}
-          hasVehicle={hasVehicle}
-          tripsOffer={tripsOffer}
-          coachChip={
-            nav?.activeCoach ? formatActiveCoachChip(nav.activeCoach) : null
-          }
-          onOpenTrips={openTripsProfile}
-        />
+        )}
 
         <section className="glass-surface rounded-[var(--radius-xl)] p-1.5">
           <button
@@ -1152,7 +864,7 @@ export function RvTowApp() {
             onClick={() => setDetailsOpen((open) => !open)}
             className="flex min-h-11 w-full items-center justify-between rounded-[var(--radius-lg)] px-3 text-left"
           >
-            <span className="text-[13px] font-bold text-white">Details</span>
+            <span className="text-[13px] font-bold text-white">More details</span>
             <ChevronDown
               className={cn(
                 "size-4 shrink-0 text-white/80 transition-transform",
@@ -1161,16 +873,296 @@ export function RvTowApp() {
             />
           </button>
           {detailsOpen ? (
-            <ul className="space-y-2 px-3 pb-3">
-              {detailLines.map((line) => (
-                <li
-                  key={line}
-                  className="text-[12px] leading-relaxed text-white/80"
+            <div className="space-y-3 px-1.5 pb-3">
+              <div className="flex gap-1 rounded-full border border-white/15 bg-black/30 p-1">
+                {(
+                  [
+                    ["all", "All", truckCount + suvCount],
+                    ["truck", "Trucks", truckCount],
+                    ["suv", "SUVs", suvCount],
+                  ] as const
+                ).map(([id, label, count]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => applyKindFilter(id)}
+                    className={cn(
+                      "flex flex-1 items-center justify-center gap-1 rounded-full py-2 text-[12px] font-bold transition",
+                      kindFilter === id
+                        ? "bg-blue text-white shadow-[0_0_14px_rgba(77,166,255,0.35)]"
+                        : "text-white hover:text-white",
+                    )}
+                  >
+                    {id === "truck" ? (
+                      <Truck className="size-3.5" />
+                    ) : id === "suv" ? (
+                      <Car className="size-3.5" />
+                    ) : null}
+                    {label}
+                    <span className="text-[10px] opacity-80">({count})</span>
+                  </button>
+                ))}
+              </div>
+
+              {toadMode ? null : (
+                <div className="flex gap-1 rounded-full border border-white/15 bg-black/30 p-1">
+                  {(
+                    [
+                      ["match", "Match a truck"],
+                      ["reverse", "Can I tow this?"],
+                    ] as const
+                  ).map(([id, label]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => {
+                        if (id === "reverse") openReverse();
+                        else setShopMode("match");
+                      }}
+                      className={cn(
+                        "flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[12px] font-bold transition",
+                        shopMode === id
+                          ? "bg-blue text-white shadow-[0_0_14px_rgba(77,166,255,0.35)]"
+                          : "text-white hover:text-white",
+                      )}
+                    >
+                      {id === "reverse" ? (
+                        <Search className="size-3.5" />
+                      ) : (
+                        <Truck className="size-3.5" />
+                      )}
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {reverseMode ? (
+                <Field
+                  label="YEAR"
+                  value={year || "Year"}
+                  empty={!year}
+                  onClick={() => setSheet("year")}
+                  flush
+                />
+              ) : (
+                <Field
+                  label="TRIM / ENGINE / CONFIGURATION"
+                  value={
+                    trim ||
+                    (model
+                      ? inCatalog
+                        ? "Select or type trim"
+                        : "Type trim (optional)"
+                      : "Model first")
+                  }
+                  empty={!trim}
+                  disabled={!model}
+                  onClick={() => model && setSheet("trim")}
+                  flush
+                />
+              )}
+
+              {hasVehicle && rating.custom ? (
+                <div className="space-y-2 rounded-[var(--radius-md)] border border-amber/35 bg-amber/10 px-3 py-3">
+                  <p className="text-[12px] font-bold text-amber">
+                    Custom vehicle
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 pt-1">
+                    <label className="block">
+                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
+                        MAX TOW
+                      </span>
+                      <input
+                        value={manualMaxTow}
+                        onChange={(e) =>
+                          setManualMaxTow(e.target.value.replace(/\D/g, ""))
+                        }
+                        placeholder="lbs"
+                        inputMode="numeric"
+                        className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
+                        PAYLOAD
+                      </span>
+                      <input
+                        value={manualPayload}
+                        onChange={(e) =>
+                          setManualPayload(e.target.value.replace(/\D/g, ""))
+                        }
+                        placeholder="lbs"
+                        inputMode="numeric"
+                        className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
+                        GCWR
+                      </span>
+                      <input
+                        value={manualGcwr}
+                        onChange={(e) =>
+                          setManualGcwr(e.target.value.replace(/\D/g, ""))
+                        }
+                        placeholder="lbs"
+                        inputMode="numeric"
+                        className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
+                      />
+                    </label>
+                  </div>
+                </div>
+              ) : null}
+
+              {hasVehicle && !reverseMode ? (
+                <>
+                  <div className="rounded-[var(--radius-md)] border border-blue/25 bg-blue/10 px-3 py-2.5">
+                    <p className="text-[12px] font-semibold text-white">
+                      {year || "—"} {make} {model}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-white">
+                      {rating.custom ? trim : trimStem(trim)}
+                    </p>
+                    {formatTrimYearRange(trim) ? (
+                      <p className="mt-1">
+                        <span className="inline-flex rounded-full border border-blue/35 bg-blue/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-blue">
+                          {formatTrimYearRange(trim)}
+                        </span>
+                      </p>
+                    ) : null}
+                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-blue/90">
+                      {rating.kind === "suv" ? "SUV" : "Truck"} · {rating.hitch}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Stat
+                      value={fmtK(rating.payload)}
+                      sub={`PAYLOAD\n${rating.payload.toLocaleString()} lbs`}
+                    />
+                    <Stat
+                      value={fmtK(rating.gcwr)}
+                      sub={
+                        rating.gcwr
+                          ? `GCWR\n${rating.gcwr.toLocaleString()} lbs`
+                          : rating.custom
+                            ? "GCWR\nenter sticker"
+                            : "GCWR\n—"
+                      }
+                    />
+                    <Stat
+                      value={fmtK(recommendedTow)}
+                      sub={`REC. TOW\n${recommendedTow.toLocaleString()} lbs`}
+                    />
+                  </div>
+                  <GlanceChecks
+                    verdict={verdict}
+                    gvwrN={gvwrN}
+                    maxTow={rating.maxTow}
+                  />
+                </>
+              ) : !reverseMode ? (
+                <div className="rounded-[var(--radius-md)] border border-dashed border-white/20 bg-black/25 px-3 py-4 text-center">
+                  <p className="text-[13px] font-semibold text-white">
+                    No vehicle selected
+                  </p>
+                </div>
+              ) : null}
+
+              <section
+                className="grid grid-cols-2 gap-2"
+                aria-label="Pin weight and hitch guide"
+              >
+                <GuideHero
+                  kicker="PIN WEIGHT"
+                  title="5th Wheel"
+                  pct="18–25%"
+                  active={pinHeroActive}
+                />
+                <GuideHero
+                  kicker="HITCH GUIDE"
+                  title="Travel Trailer"
+                  pct="10–15%"
+                  active={!pinHeroActive}
+                />
+              </section>
+
+              <label className="block">
+                <span className="mb-1 block text-[10px] font-bold tracking-[0.12em] text-blue">
+                  RV GVWR (lbs) *
+                </span>
+                <input
+                  value={gvwr}
+                  onChange={(e) => setGvwr(e.target.value.replace(/\D/g, ""))}
+                  className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-3 py-3 text-sm text-white outline-none focus:border-blue/50"
+                  inputMode="numeric"
+                />
+              </label>
+
+              {rvType === "Fifth Wheel" && vehicleIsTruck && !reverseMode ? (
+                <Field
+                  label="TRUCK BED LENGTH"
+                  value={bed}
+                  onClick={() => setSheet("bed")}
+                  flush
+                />
+              ) : null}
+
+              {reverseMode ? (
+                <HitchWeightField
+                  kind={/fifth/i.test(rvType) ? "pin" : "tongue"}
+                  value={pin}
+                  estimatedLbs={reverseResult.hitchLoad}
+                  recommendedPayload={0}
+                  onChange={setPin}
+                  flush
+                />
+              ) : (
+                <HitchWeightField
+                  kind={/fifth/i.test(rvType) ? "pin" : "tongue"}
+                  value={pin}
+                  estimatedLbs={pinEst}
+                  recommendedPayload={recommendedPayload}
+                  onChange={setPin}
+                  flush
+                />
+              )}
+
+              {prefill.kind === "towable" && !reverseMode ? (
+                <button
+                  type="button"
+                  onClick={openReverse}
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-1 rounded-full border border-sky-300/40 bg-sky-500/20 px-3.5 text-[12px] font-bold text-white"
                 >
-                  {line}
-                </li>
-              ))}
-            </ul>
+                  <Search className="size-3.5" />
+                  Can I tow this coach?
+                  <ChevronRight className="size-3.5" />
+                </button>
+              ) : null}
+
+              <SuiteHandoffCard
+                saved={deviceSaved}
+                hasVehicle={hasVehicle}
+                tripsOffer={tripsOffer}
+                coachChip={
+                  nav?.activeCoach
+                    ? formatActiveCoachChip(nav.activeCoach)
+                    : null
+                }
+                onOpenTrips={openTripsProfile}
+              />
+
+              <ul className="space-y-2 px-1">
+                {detailLines.map((line) => (
+                  <li
+                    key={line}
+                    className="text-[12px] leading-relaxed text-white/80"
+                  >
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
         </section>
 
@@ -1512,6 +1504,43 @@ function Stat({ value, sub }: { value: string; sub: string }) {
   );
 }
 
+function AnswerHero({
+  maxTow,
+  hitchLbs,
+  hitchKind,
+}: {
+  maxTow: number;
+  hitchLbs: number;
+  hitchKind: "pin" | "tongue";
+}) {
+  return (
+    <section
+      data-tow-answer
+      className="rvtow-hero grid grid-cols-2 gap-2"
+      aria-label="Max tow and pin weight"
+    >
+      <div className="glass-surface flex min-h-28 flex-col justify-center rounded-[var(--radius-xl)] px-3 py-3">
+        <p className="text-[10px] font-bold tracking-[0.16em] text-blue">
+          MAX TOW
+        </p>
+        <p className="rvtow-hero-pct mt-1 font-black tabular-nums text-blue">
+          {maxTow > 0 ? maxTow.toLocaleString() : "—"}
+        </p>
+        <p className="mt-0.5 text-[11px] font-semibold text-white/80">lbs</p>
+      </div>
+      <div className="glass-surface flex min-h-28 flex-col justify-center rounded-[var(--radius-xl)] px-3 py-3">
+        <p className="text-[10px] font-bold tracking-[0.16em] text-blue">
+          {hitchKind === "pin" ? "PIN WEIGHT" : "TONGUE"}
+        </p>
+        <p className="rvtow-hero-pct mt-1 font-black tabular-nums text-blue">
+          {hitchLbs > 0 ? hitchLbs.toLocaleString() : "—"}
+        </p>
+        <p className="mt-0.5 text-[11px] font-semibold text-white/80">lbs</p>
+      </div>
+    </section>
+  );
+}
+
 function GuideHero({
   kicker,
   title,
@@ -1526,7 +1555,7 @@ function GuideHero({
   return (
     <div
       className={cn(
-        "glass-surface flex min-h-44 flex-col justify-center rounded-[var(--radius-xl)] px-3 py-3.5",
+        "glass-surface flex min-h-28 flex-col justify-center rounded-[var(--radius-xl)] px-3 py-3",
         active ? "border-blue/55" : "border-white/20",
       )}
     >
@@ -1534,7 +1563,7 @@ function GuideHero({
         {kicker}
       </p>
       <p className="mt-0.5 text-[11px] font-semibold text-white/85">{title}</p>
-      <p className="rvtow-hero-pct mt-1 font-black tabular-nums text-blue">
+      <p className="mt-1 text-[22px] font-black tabular-nums text-blue">
         {pct}
       </p>
     </div>
