@@ -6,6 +6,7 @@
  * Sticky chip + explicit Facts bridges (Ask Grok / Check tow / Check payment).
  * Dock entry on Cal / Tow / Grok / Trips must not auto-apply this.
  * Tow only accepts the narrow Facts Check-tow handoff.
+ * Cal pre-fill is Check payment only — never this shared session.
  *
  * Not a Facts cache. Chat answers never write here.
  */
@@ -100,7 +101,7 @@ export function normalizeActiveCoach(
 
 /**
  * Persist the desk’s active coach. Same year/make/model/floorplan keeps
- * price / GVWR from the last report so the wizard doesn’t wipe Cal/Tow.
+ * price / GVWR from the last report so the wizard doesn’t wipe Tow.
  */
 export function writeActiveCoach(sel: ActiveCoachInput | null): ActiveCoach | null {
   if (!canUseStorage()) return normalizeActiveCoach(sel as ActiveCoach);

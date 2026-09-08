@@ -657,11 +657,7 @@ export function RvShareKit({
   };
 
   const goCal = () => {
-    if (selected && payment.price) {
-      nav?.openCalWithPrice(payment.price, coachTitle(selected));
-    } else {
-      nav?.setTab("rvcal");
-    }
+    nav?.setTab("rvcal");
   };
   const goGrok = () => {
     if (onAskGrok) {

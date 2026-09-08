@@ -32,6 +32,7 @@ import {
   type ActiveCoach,
   type ActiveCoachInput,
 } from "@/lib/rv/activeCoach";
+import { normalizeCalHandoff } from "@/lib/rv/calHandoff";
 import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import {
   useFocusScrollIntoView,
@@ -133,6 +134,7 @@ export function AppShell() {
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
   const [grokEntryToken, setGrokEntryToken] = useState(0);
   const [calSeed, setCalSeed] = useState<CalSeed | null>(null);
+  const [calCleanToken, setCalCleanToken] = useState(0);
   const [tripsHandoff, setTripsHandoff] = useState<TripsHandoff | null>(null);
   const [towHandoff, setTowHandoff] = useState<FactsTowHandoff | null>(null);
   const [activeCoach, setActiveCoachState] = useState<ActiveCoach | null>(() =>
@@ -171,6 +173,10 @@ export function AppShell() {
       const dest = nextTab === "rvshare" ? "rvfax" : (nextTab ?? "rvfax");
       setTab(dest);
       markVisited(dest);
+      if (dest === "rvcal") {
+        setCalSeed(null);
+        setCalCleanToken((n) => n + 1);
+      }
       if (nextTab === "rvshare") {
         setFactsShareToken((n) => n + 1);
       }
@@ -201,18 +207,29 @@ export function AppShell() {
     markVisited("rvgrok");
   };
 
+  const requestCleanCal = useCallback(() => {
+    setCalSeed(null);
+    setCalCleanToken((n) => n + 1);
+  }, []);
+
   const openCalWithPrice = useCallback(
     (price: number, label?: string) => {
+      const payload = normalizeCalHandoff({ price, label });
+      if (!payload) {
+        requestCleanCal();
+        setTab("rvcal");
+        markVisited("rvcal");
+        return;
+      }
       calTokenRef.current += 1;
       setCalSeed({
-        price: Math.max(0, Math.round(price)),
-        label,
+        ...payload,
         token: calTokenRef.current,
       });
       setTab("rvcal");
       markVisited("rvcal");
     },
-    [markVisited],
+    [markVisited, requestCleanCal],
   );
 
   const clearCalSeed = useCallback(() => setCalSeed(null), []);
@@ -285,9 +302,10 @@ export function AppShell() {
       }
       setTab(next);
       markVisited(next);
+      if (next === "rvcal") requestCleanCal();
       if (next !== "rvgrok") setGrokSplashPlaying(false);
     },
-    [markVisited, openFactsShare, openFactsPicker],
+    [markVisited, openFactsShare, openFactsPicker, requestCleanCal],
   );
 
   const isPro = isProfessionalTier();
@@ -330,6 +348,7 @@ export function AppShell() {
       splashPlaying: launchOpen || grokSplashPlaying,
       setSplashPlaying: setGrokSplashPlaying,
       calSeed,
+      calCleanToken,
       openCalWithPrice,
       clearCalSeed,
       activeCoach,
@@ -351,6 +370,7 @@ export function AppShell() {
       launchOpen,
       grokSplashPlaying,
       calSeed,
+      calCleanToken,
       openCalWithPrice,
       clearCalSeed,
       activeCoach,

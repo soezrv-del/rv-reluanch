@@ -3,13 +3,9 @@ import type { AppTab } from "./BottomTabs";
 import type { ActiveCoach, ActiveCoachInput } from "@/lib/rv/activeCoach";
 import type { TowHandoffOffer } from "@/lib/trips/towHandoff";
 import type { FactsTowHandoffOffer } from "@/lib/tow/factsTowHandoff";
+import type { CalSeed } from "@/lib/rv/calHandoff";
 
-/** Prefill RvCal from a Facts detail report (avg market). */
-export type CalSeed = {
-  price: number;
-  label?: string;
-  token: number;
-};
+export type { CalSeed };
 
 /** One-shot Tow → Trips Profile deep-link. Coach identity only — no invented dims. */
 export type TripsHandoff = {
@@ -29,11 +25,13 @@ export type ShellNavValue = {
   /** Grok opening splash video — hide bottom tabs while playing */
   splashPlaying: boolean;
   setSplashPlaying: (playing: boolean) => void;
-  /** One-shot seed for RvCal (detail → finance) */
+  /** One-shot Facts Check payment seed — consume then drop */
   calSeed: CalSeed | null;
+  /** Bumps on every plain Cal tab / swipe / launch open (not Check payment) */
+  calCleanToken: number;
   openCalWithPrice: (price: number, label?: string) => void;
   clearCalSeed: () => void;
-  /** Last Facts coach for the chip. Other tabs must not auto-read this on dock entry. */
+  /** Last Facts coach for the chip. Cal / Tow / Grok / Trips must not auto-read this on dock entry. */
   activeCoach: ActiveCoach | null;
   setActiveCoach: (sel: ActiveCoachInput | null) => void;
   /** Dock Facts / chip “change”: clean catalog search (factsPickerToken). */
