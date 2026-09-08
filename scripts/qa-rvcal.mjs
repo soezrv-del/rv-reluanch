@@ -57,8 +57,21 @@ const hasMinus1k = body.includes("− $1k") || body.includes("- $1k") || body.in
 const hasManual = /Manual/i.test(body);
 const hasRollerLabel = /Swipe to set|Slow ·|purchase price/i.test(body);
 const hasTaxInputVisibleNearPrice = false;
+const hasCardPitch =
+  /Show this list|Estimates to start the conversation|Your broker edge|Type a monthly payment to reverse-solve|Trade equity always lowers|Exclusive|Market avg|5-digit US|auto from ZIP|CUSTOMER ZIP CODE|LOCATION & TAX|VEHICLE DETAILS|QUICK LOAN|EST\. MONTHLY/.test(
+    body,
+  );
+const disclaimerHits = body.match(/Estimates only/g) ?? [];
 
-console.log({ hasPlus1k, hasMinus1k, hasManual, hasRollerLabel, errors });
+console.log({
+  hasPlus1k,
+  hasMinus1k,
+  hasManual,
+  hasRollerLabel,
+  hasCardPitch,
+  disclaimerHits: disclaimerHits.length,
+  errors,
+});
 
 // Scroll to purchase price section
 const purchase = page.getByText(/purchase price/i).first();
@@ -92,6 +105,12 @@ if (errors.length) {
 } else if (hasPlus1k || hasMinus1k) {
   console.error("STEP_TABS_STILL_PRESENT");
   process.exitCode = 2;
+} else if (hasCardPitch) {
+  console.error("PER_CARD_OR_HELPER_DISCLAIMER_STILL_PRESENT");
+  process.exitCode = 3;
+} else if (disclaimerHits.length !== 1) {
+  console.error("EXPECTED_ONE_SCREEN_DISCLAIMER", disclaimerHits.length);
+  process.exitCode = 4;
 } else {
   console.log("QA_OK");
 }
