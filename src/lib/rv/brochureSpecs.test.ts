@@ -6860,7 +6860,7 @@ test("Thor MY2010 honesty: lock Windsport five codes; Four Winds Majestic stays 
 
   assert.equal(idx.Windsport?.years?.includes(2010), true);
   assert.equal(idx.Windsport?.type, "Class A Gas");
-  assert.equal(idx["Four Winds Majestic"]?.years?.includes(2010), false, "Majestic MY2010 GAP — no 2010 chip");
+  assert.equal((idx["Four Winds Majestic"]?.years ?? []).includes(2010), false, "Majestic MY2010 GAP — no 2010 chip");
   assert.deepEqual(idx["Four Winds Majestic"]?.years ?? [], []);
   assert.equal(idx.Hurricane?.years?.includes(2010), false, "Hurricane must not receive Windsport MY2010 lock");
   assert.equal(idx["Four Winds"]?.years?.includes(2010), false, "Four Winds MY2010 stays empty — not Majestic");
