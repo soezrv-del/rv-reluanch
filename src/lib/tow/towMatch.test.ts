@@ -191,3 +191,24 @@ test("RvTowApp wires honest match and no longer invents custom GCWR", () => {
   assert.equal(src.includes("maxTow+payload+5000"), false);
   assert.equal(/payload \+ 5000/.test(src), false);
 });
+
+test("RvTowApp redesign: hero guides, collapsed Details, one footer disclaimer", () => {
+  const src = readFileSync(join(root, "../../components/rvtow/RvTowApp.tsx"), "utf8");
+  const pin = src.indexOf('kicker="PIN WEIGHT"');
+  const hitch = src.indexOf('kicker="HITCH GUIDE"');
+  const details = src.indexOf(">Details<");
+  const disclaimer = src.indexOf("<SuiteDisclaimer");
+  assert.ok(pin >= 0 && pin < details, "Pin Weight hero sits above Details");
+  assert.ok(hitch >= 0 && hitch < details, "Hitch Guide hero sits above Details");
+  assert.ok(disclaimer > details, "one SuiteDisclaimer after Details");
+  assert.equal(src.split("<SuiteDisclaimer").length - 1, 1);
+  assert.match(src, /const \[detailsOpen, setDetailsOpen\] = useState\(false\)/);
+  assert.match(src, /function GlanceChecks/);
+  assert.match(src, /function GuideHero/);
+  assert.equal(src.includes("function GuideCard"), false);
+  assert.equal(src.includes("More info if saved"), false);
+  assert.equal(src.includes("Lower weight only"), false);
+  assert.equal(src.includes("Full weight only"), false);
+  assert.equal(src.includes("Approx when properly equipped"), false);
+  assert.equal(src.includes("confirm the door sticker"), false);
+});
