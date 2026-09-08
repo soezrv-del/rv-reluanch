@@ -44,7 +44,7 @@ export const PAGE_COPY: Record<
   },
   rvcal: {
     title: "RvCAL",
-    line: "ZIP-based calculator with lender comparisons.",
+    line: "",
     badge: "LIVE",
   },
   rvtow: {
