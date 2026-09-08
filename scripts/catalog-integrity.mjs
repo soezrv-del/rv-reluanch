@@ -1452,6 +1452,49 @@ function main() {
       if (fwIdx["Altitude FS600D"]?.fuelType !== "Diesel") {
         fail("Fleetwood|Altitude FS600D index fuelType must be Diesel");
       }
+
+      // LOCK MY2010 Tioga (research/fleetwood/LOT_DESK_2010.md + 2010_ti_f.pdf TIO10F1, 7/09).
+      // GAP Flair / Pace Arrow / Storm — index already skips 2010. Empty > invent.
+      const tioga2010 = slice("Tioga", "Tioga Ranger");
+      if (!/"2010": \["25G", "28Y", "30U", "31M", "31N", "31W"\]/.test(tioga2010) || !/type: "Class C"/.test(tioga2010)) {
+        fail("Fleetwood|Tioga MY2010 2010_ti_f.pdf lock missing (25G / 28Y / 30U / 31M / 31N / 31W Class C)");
+      }
+      if (/"2010": .*"23B"/.test(tioga2010) || /"2010": .*"26Q"/.test(tioga2010)) {
+        fail("Fleetwood|Tioga MY2010 must not merge Ranger-only 23B/26Q");
+      }
+      if (/"2010": .*"24K"/.test(tioga2010) || /"2010": .*"22C"/.test(tioga2010)) {
+        fail("Fleetwood|Tioga MY2010 must not copy 2009 leftover 24K or 2011 Montara 22C");
+      }
+
+      const ranger2010 = slice("Tioga Ranger", "Pulse");
+      if (/"2010": .*"30U"/.test(ranger2010)) {
+        fail("Fleetwood|Tioga Ranger must not absorb Tioga-only 30U");
+      }
+
+      const flair2010 = slice("Flair", "Fortis");
+      if (/"2010":/.test(flair2010)) {
+        fail("Fleetwood|Flair must omit MY2010 fby (GAP — no dated Flair card)");
+      }
+      const pace2010 = slice("Pace Arrow", "Storm");
+      if (/"2010":/.test(pace2010)) {
+        fail("Fleetwood|Pace Arrow must omit MY2010 fby (GAP — do not lock soft RV Guide 35A/37C/36D)");
+      }
+      if (/"35A"/.test(pace2010) || /"37C"/.test(pace2010)) {
+        fail("Fleetwood|Pace Arrow must not lock soft RV Guide 35A/37C");
+      }
+      const storm2010 = slice("Storm", "Flair");
+      if (/"2010":/.test(storm2010)) {
+        fail("Fleetwood|Storm must omit MY2010 fby (GAP — never lock 2011 28MS/30SA/32BH into 2010)");
+      }
+
+      if (!fwIdx.Tioga?.years?.includes(2010)) {
+        fail("Fleetwood|Tioga index must include 2010 (MY2010 LOCK)");
+      }
+      for (const name of ["Flair", "Pace Arrow", "Storm"]) {
+        if (fwIdx[name]?.years?.includes(2010)) {
+          fail(`Fleetwood|${name} index must omit 2010 (MY2010 GAP)`);
+        }
+      }
     }
   }
 

@@ -1272,7 +1272,7 @@ test("Fleetwood 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
   assert.equal(fw.Jamboree?.years?.includes(2010), true);
   assert.equal(fw.Jamboree?.years?.includes(2011), true);
   assert.equal(fw.Jamboree?.years?.includes(2012), true);
-  assert.equal(fw.Tioga?.years?.includes(2010), false);
+  assert.equal(fw.Tioga?.years?.includes(2010), true);
   assert.equal(fw.Tioga?.years?.includes(2011), true);
   assert.equal(fw.Tioga?.years?.includes(2012), true);
   assert.equal(fw["Tioga Ranger"]?.years?.includes(2010), true);
@@ -1379,9 +1379,10 @@ test("Fleetwood 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
   assert.doesNotMatch(jamboree.slice(jamboree.indexOf('"2011"'), jamboree.indexOf('"2013"')), /"23B"/);
 
   const tioga = fleet.slice(fleet.indexOf("    Tioga: {"), fleet.indexOf('    "Tioga Ranger"'));
-  assert.doesNotMatch(tioga, /"2010"/);
+  assert.match(tioga, /"2010": \["25G", "28Y", "30U", "31M", "31N", "31W"\]/);
   assert.match(tioga, /"2011": \["22C", "23B"\]/);
   assert.match(tioga, /"2012": \["22C", "23B", "25K"\]/);
+  assert.doesNotMatch(tioga, /"2010": \["24K"/);
   assert.doesNotMatch(tioga, /"2011": \["24K"/);
   assert.doesNotMatch(tioga.slice(tioga.indexOf('"2011"'), tioga.indexOf('"2013"')), /"25G"/);
 
@@ -1472,6 +1473,7 @@ test("Fleetwood 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
   assert.equal(findPowertrainCorrection("2012", "Fleetwood", "Jamboree Searcher", "25G"), null);
 
   assert.equal(findPowertrainCorrection("2010", "Fleetwood", "Tioga", "22C"), null);
+  assert.equal(findPowertrainCorrection("2010", "Fleetwood", "Tioga", "25G"), null);
   const tioga11 = findPowertrainCorrection("2011", "Fleetwood", "Tioga", "22C");
   assert.equal(tioga11!.horsepower, 255);
   assert.equal(tioga11!.torqueLbFt, 350);
@@ -1490,6 +1492,61 @@ test("Fleetwood 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
 
   assert.equal(findPowertrainCorrection("2010", "Fleetwood", "Pulse", "24A"), null);
   assert.equal(findPowertrainCorrection("2012", "Fleetwood", "Pulse", "24A"), null);
+});
+
+test("Fleetwood MY2010 honesty: lock Tioga six codes; Flair/Pace Arrow/Storm stay GAP", () => {
+  const idx = CATALOG_INDEX.Fleetwood;
+  assert.ok(idx);
+
+  assert.equal(idx.Tioga?.years?.includes(2010), true);
+  assert.equal(idx.Tioga?.type, "Class C");
+  assert.equal(idx.Flair?.years?.includes(2010), false, "Flair MY2010 GAP — no 2010 chip");
+  assert.equal(idx["Pace Arrow"]?.years?.includes(2010), false, "Pace Arrow MY2010 GAP — no 2010 chip");
+  assert.equal(idx.Storm?.years?.includes(2010), false, "Storm MY2010 GAP — no 2010 chip");
+
+  const block = src("rvData.ts");
+  const f0 = block.indexOf("\n  Fleetwood: {");
+  const f1 = block.indexOf("\n  Jayco: {");
+  const fw = block.slice(f0, f1);
+  const tioga = fw.slice(fw.indexOf("    Tioga: {"), fw.indexOf('    "Tioga Ranger"'));
+  const ranger = fw.slice(fw.indexOf('    "Tioga Ranger": {'), fw.indexOf("    Pulse: {"));
+  const jamboree = fw.slice(fw.indexOf("    Jamboree: {"), fw.indexOf("    Tioga: {"));
+  const flair = fw.slice(fw.indexOf("    Flair: {"), fw.indexOf("    Fortis: {"));
+  const pace = fw.slice(fw.indexOf('    "Pace Arrow": {'), fw.indexOf("    Storm: {"));
+  const storm = fw.slice(fw.indexOf("    Storm: {"), fw.indexOf("    Flair: {"));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  // LOCK — dated 2010_ti_f.pdf (TIO10F1, 7/09). Do not copy 2009 or 2011 → 2010.
+  assert.deepEqual(fbyYear(tioga, 2010), ["25G", "28Y", "30U", "31M", "31N", "31W"]);
+  assert.equal((fbyYear(tioga, 2010) ?? []).includes("23B"), false, "Tioga must not absorb Ranger-only 23B");
+  assert.equal((fbyYear(tioga, 2010) ?? []).includes("26Q"), false, "Tioga must not absorb Ranger-only 26Q");
+  assert.equal((fbyYear(tioga, 2010) ?? []).includes("24K"), false, "Tioga must not copy 2009 leftover 24K");
+  assert.equal((fbyYear(tioga, 2010) ?? []).includes("22C"), false, "Tioga must not copy 2011 Montara 22C");
+  assert.deepEqual(fbyYear(tioga, 2011), ["22C", "23B"]);
+  assert.deepEqual(fbyYear(tioga, 2009), ["24K", "25G", "31M"]);
+
+  // Tioga Ranger / Jamboree stay their own keys — no cross-contamination.
+  assert.deepEqual(fbyYear(ranger, 2010), ["23B", "25G", "26Q", "28Y", "31M", "31N", "31W"]);
+  assert.equal((fbyYear(ranger, 2010) ?? []).includes("30U"), false, "Ranger must not absorb Tioga-only 30U");
+  assert.deepEqual(fbyYear(jamboree, 2010), ["23B", "25G", "26Q", "28Y", "31M", "31N", "31W"]);
+  assert.equal((fbyYear(jamboree, 2010) ?? []).includes("30U"), false);
+
+  // GAP MY2010 — prefer omit / no invent.
+  assert.equal(fbyYear(flair, 2010), null, "Flair 2010 must stay GAP");
+  assert.doesNotMatch(flair, /"2010":/);
+  assert.equal(fbyYear(pace, 2010), null, "Pace Arrow 2010 must stay GAP");
+  assert.doesNotMatch(pace, /"2010":/);
+  assert.equal((fbyYear(pace, 2009) ?? []).includes("35A"), false);
+  assert.doesNotMatch(pace, /"35A"/);
+  assert.doesNotMatch(pace, /"37C"/);
+  assert.equal(fbyYear(storm, 2010), null, "Storm 2010 must stay GAP");
+  assert.doesNotMatch(storm, /"2010":/);
+  assert.deepEqual(fbyYear(storm, 2011), ["28MS", "30SA", "32BH"]);
 });
 
 test("Altitude E-450 pin is 325/450 and does not apply to FS550", () => {
