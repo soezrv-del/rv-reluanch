@@ -34,6 +34,7 @@ test("Ask Grok chrome mounts overlay-only and hides on the Grok route", () => {
 test("GROK MOUNT POINT is RvGrokApp — chrome does not fork chat", () => {
   const overlay = read("../../components/shell/AskGrokOverlay.tsx");
   assert.match(overlay, /@\/components\/rvgrok\/RvGrokApp/);
+  assert.match(overlay, /<RvGrokApp[\s\S]*variant="embedded"/);
   assert.match(overlay, /<RvGrokApp[\s\S]*active=\{panelOpen\}/);
   assert.match(overlay, /seedPrompt=\{seedPrompt\}/);
   assert.match(overlay, /onSeedConsumed=\{onSeedConsumed\}/);
@@ -48,7 +49,7 @@ test("Ask Grok overlay does not rewrite dock, glass plate, or Facts/Tow", () => 
   const tow = read("../../components/rvtow/RvTowApp.tsx");
   const overlay = read("../../components/shell/AskGrokOverlay.tsx");
 
-  assert.match(tabs, /\{ id: "rvgrok", label: "RvGROK", short: "Grok" \}/);
+  assert.match(tabs, /\{ id: "rvgrok", label: "RvGROK", short: "LIVE!" \}/);
   assert.match(css, /backdrop-filter:\s*blur\(20px\) saturate\(180%\)/);
   assert.match(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
   assert.doesNotMatch(overlay, /onOpenGrok|openTowWithCoach|setGrokSeed/);

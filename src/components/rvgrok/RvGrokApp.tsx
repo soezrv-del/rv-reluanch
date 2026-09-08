@@ -95,11 +95,14 @@ const GROK_STARTERS: {
   },
 ];
 
+export type RvGrokVariant = "page" | "embedded";
+
 export function RvGrokApp({
   seedPrompt,
   onSeedConsumed,
   active = true,
   entryToken = 0,
+  variant = "page",
   onNavigate: _onNavigate,
   onSplashPlayingChange: _onSplashPlayingChange,
 }: {
@@ -108,9 +111,15 @@ export function RvGrokApp({
   active?: boolean;
   /** Bumps on every Grok tab entry (dock tap included) so a remounted pane resets. */
   entryToken?: number;
+  /**
+   * `page` (default) — Grok tab: suite backdrop, sapphire header, pull-to-reset.
+   * `embedded` — Ask Grok overlay mount: same chat stack, no suite-page chrome.
+   */
+  variant?: RvGrokVariant;
   onNavigate?: (tab: AppTab) => void;
   onSplashPlayingChange?: (playing: boolean) => void;
 } = {}) {
+  const embedded = variant === "embedded";
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -308,7 +317,7 @@ export function RvGrokApp({
     liveCamRef.current = false;
   }, []);
 
-  const pull = usePullToReset(listRef, startNewChat);
+  const pull = usePullToReset(listRef, startNewChat, { enabled: !embedded });
 
   const handleStop = () => {
     abortRef.current?.abort();
@@ -1262,10 +1271,56 @@ export function RvGrokApp({
     !isLoading &&
     !liveActive;
 
+  const startersOrThread =
+    messages.length === 0 ? (
+      <div className="mx-auto flex max-w-xl flex-col px-0.5 pb-4 pt-6">
+        <p className="text-center text-[13px] leading-relaxed text-white/75">
+          Tap a prompt or type below.
+        </p>
+
+        <div className="mt-4 flex flex-col gap-2.5">
+          {GROK_STARTERS.map((s) => (
+            <button
+              key={s.title}
+              type="button"
+              onClick={() => void sendMessage(s.prompt)}
+              className="glass-prestige flex min-h-[4.25rem] items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition hover:border-white/25"
+            >
+              <s.Icon className="size-5 shrink-0 text-sky-100" />
+              <span className="min-w-0">
+                <span className="block text-[15px] font-semibold leading-snug text-white">
+                  {s.title}
+                </span>
+                <span className="mt-0.5 block text-[12px] leading-snug text-white/70">
+                  {s.line}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <div className="mx-auto flex max-w-2xl flex-col gap-3 pb-4 pt-3">
+        {messages.map((m) => (
+          <MessageBubble
+            key={m.id}
+            message={m}
+            onSpeak={handleSpeak}
+            speakingId={speakingId}
+          />
+        ))}
+      </div>
+    );
+
   return (
-    <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden text-fg">
-      <SuiteBackdrop />
-      <ScrollSuiteHeader tab="rvgrok" className="relative z-10 shrink-0" />
+    <div
+      className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden text-fg"
+      data-rvgrok-variant={variant}
+    >
+      {!embedded && <SuiteBackdrop />}
+      {!embedded && (
+        <ScrollSuiteHeader tab="rvgrok" className="relative z-10 shrink-0" />
+      )}
 
 
       <header className="relative z-10 flex shrink-0 items-center gap-2 border-b border-white/10 bg-black/20 px-3 py-1.5 sm:px-4">
@@ -1344,50 +1399,16 @@ export function RvGrokApp({
           paddingBottom: kb.open ? 12 : undefined,
         }}
       >
-        <PullRefreshLayer
-          state={pull}
-          label="Release to refresh Grok · new chat"
-        >
-        {messages.length === 0 ? (
-          <div className="mx-auto flex max-w-xl flex-col px-0.5 pb-4 pt-6">
-            <p className="text-center text-[13px] leading-relaxed text-white/75">
-              Tap a prompt or type below.
-            </p>
-
-            <div className="mt-4 flex flex-col gap-2.5">
-              {GROK_STARTERS.map((s) => (
-                <button
-                  key={s.title}
-                  type="button"
-                  onClick={() => void sendMessage(s.prompt)}
-                  className="glass-prestige flex min-h-[4.25rem] items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition hover:border-white/25"
-                >
-                  <s.Icon className="size-5 shrink-0 text-sky-100" />
-                  <span className="min-w-0">
-                    <span className="block text-[15px] font-semibold leading-snug text-white">
-                      {s.title}
-                    </span>
-                    <span className="mt-0.5 block text-[12px] leading-snug text-white/70">
-                      {s.line}
-                    </span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
+        {embedded ? (
+          startersOrThread
         ) : (
-          <div className="mx-auto flex max-w-2xl flex-col gap-3 pb-4 pt-3">
-            {messages.map((m) => (
-              <MessageBubble
-                key={m.id}
-                message={m}
-                onSpeak={handleSpeak}
-                speakingId={speakingId}
-              />
-            ))}
-          </div>
+          <PullRefreshLayer
+            state={pull}
+            label="Release to refresh Grok · new chat"
+          >
+            {startersOrThread}
+          </PullRefreshLayer>
         )}
-        </PullRefreshLayer>
       </div>
 
       <div className="relative z-20 shrink-0 border-t border-white/10 bg-bg px-3 py-2 sm:px-4">
