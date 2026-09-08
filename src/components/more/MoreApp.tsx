@@ -17,11 +17,14 @@ import {
   FileText,
   Volume2,
   X,
+  CircleDollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import type { AppTab } from "@/components/shell/BottomTabs";
+import { isProfessionalTier } from "@/lib/rv/proEntitlement";
+import { OPEN_SOLD_EVENT } from "@/lib/rv/soldDeals";
 import { NhtsaRecallsPanel } from "@/components/nhtsa/NhtsaRecallsPanel";
 import { VoicePanel } from "@/components/rvgrok/VoicePanel";
 import type { GrokVoice } from "@/lib/rvgrok/voice";
@@ -137,6 +140,8 @@ export function MoreApp({
     window.setTimeout(() => setPreviewingId(null), 3500);
   };
 
+  const isPro = isProfessionalTier();
+
   const stats = useMemo(
     () => ({
       saved: countSaved(),
@@ -227,6 +232,21 @@ export function MoreApp({
                 sub="Send a brochure summary from the report"
                 onClick={() => onNavigate?.("rvshare")}
               />
+              {isPro ? (
+                <RowLink
+                  icon={<CircleDollarSign className="size-4 text-gold-bright" />}
+                  title="Sold"
+                  sub="Log a deal from a saved coach"
+                  onClick={() => {
+                    try {
+                      window.dispatchEvent(new Event(OPEN_SOLD_EVENT));
+                    } catch {
+                      /* */
+                    }
+                    onNavigate?.("rvfax");
+                  }}
+                />
+              ) : null}
               <RowLink
                 icon={<MapIcon className="size-4 text-amber" />}
                 title="RvTow match"

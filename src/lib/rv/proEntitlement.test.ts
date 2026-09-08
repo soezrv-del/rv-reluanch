@@ -1,0 +1,75 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  parseRvfoxTier,
+  resolveRvfoxTier,
+} from "./proEntitlement.ts";
+
+const root = dirname(fileURLToPath(import.meta.url));
+
+test("unset entitlement is consumer — Sold stays hidden", () => {
+  assert.equal(resolveRvfoxTier({}), "consumer");
+  assert.equal(
+    resolveRvfoxTier({ stored: null, envTier: null, envPro: null }),
+    "consumer",
+  );
+});
+
+test("VITE_RVFOX_TIER professional / pro unlocks; consumer / free lock", () => {
+  assert.equal(parseRvfoxTier("professional"), "professional");
+  assert.equal(parseRvfoxTier("PRO"), "professional");
+  assert.equal(parseRvfoxTier("consumer"), "consumer");
+  assert.equal(parseRvfoxTier("free"), "consumer");
+  assert.equal(parseRvfoxTier("nope"), null);
+  assert.equal(
+    resolveRvfoxTier({ envTier: "professional" }),
+    "professional",
+  );
+  assert.equal(resolveRvfoxTier({ envTier: "consumer" }), "consumer");
+});
+
+test("device localStorage entitlement wins over env (no parallel auth)", () => {
+  assert.equal(
+    resolveRvfoxTier({
+      stored: "consumer",
+      envTier: "professional",
+    }),
+    "consumer",
+  );
+  assert.equal(
+    resolveRvfoxTier({
+      stored: "professional",
+      envTier: "consumer",
+    }),
+    "professional",
+  );
+});
+
+test("VITE_RVFOX_PRO true/false maps to a tier when TIER is unset", () => {
+  assert.equal(resolveRvfoxTier({ envPro: "true" }), "professional");
+  assert.equal(resolveRvfoxTier({ envPro: "1" }), "professional");
+  assert.equal(resolveRvfoxTier({ envPro: "false" }), "consumer");
+});
+
+test("Facts / More / dock gate Sold to isProfessionalTier — no extra dock tab", () => {
+  const fax = readFileSync(
+    join(root, "../../components/rvfax/RvFaxApp.tsx"),
+    "utf8",
+  );
+  const more = readFileSync(
+    join(root, "../../components/more/MoreApp.tsx"),
+    "utf8",
+  );
+  const dock = readFileSync(
+    join(root, "../../components/shell/BottomTabs.tsx"),
+    "utf8",
+  );
+  assert.match(fax, /isProfessionalTier/);
+  assert.match(fax, /SoldPrompt/);
+  assert.match(more, /isProfessionalTier/);
+  assert.doesNotMatch(dock, /sold|rvsold/i);
+  assert.match(dock, /grid-cols-5/);
+});

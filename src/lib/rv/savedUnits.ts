@@ -74,6 +74,15 @@ export function toggleSavedUnit<T extends SavedUnitLike>(
   return [{ ...result, saved: true }, ...saved].slice(0, SAVED_UNITS_CAP);
 }
 
+/** Drop a unit from Saved (Sold / unsave). No-op if it is not in the list. */
+export function removeSavedUnit<T extends SavedUnitIdentity>(
+  saved: T[],
+  result: SavedUnitIdentity,
+): T[] {
+  if (!isSavedUnit(saved, result)) return saved;
+  return saved.filter((s) => !sameSavedUnit(s, result));
+}
+
 /** Most recently saved Facts unit (list is newest-first). */
 export function loadLatestSavedUnit(): SavedUnitLike | null {
   if (typeof localStorage === "undefined") return null;

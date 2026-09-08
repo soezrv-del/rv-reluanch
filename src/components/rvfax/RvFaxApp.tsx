@@ -25,6 +25,7 @@ import {
   Sparkles,
   Trash2,
   X,
+  CircleDollarSign,
 } from "lucide-react";
 import type { CascadeField, RVResult } from "@/lib/rv/catalog";
 import {
@@ -75,6 +76,19 @@ import {
   hydrateShareCoachResult,
   loadSavedUnits,
 } from "@/lib/rv/shareKit";
+import { isProfessionalTier } from "@/lib/rv/proEntitlement";
+import {
+  loadSoldDeals,
+  OPEN_SOLD_EVENT,
+  persistSoldDeals,
+  sellSavedCoach,
+  SOLD_CHANGED_EVENT,
+  toggleDealPaid,
+  type DealSplitId,
+  type SoldDeal,
+} from "@/lib/rv/soldDeals";
+import { SoldList } from "./SoldList";
+import { SoldPrompt } from "./SoldPrompt";
 
 const RvDetail = lazy(() =>
   import("./RvDetail").then((m) => ({ default: m.RvDetail })),
@@ -139,6 +153,10 @@ export function RvFaxApp({
   const [results, setResults] = useState<RVResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [saved, setSaved] = useState<RVResult[]>([]);
+  const [deals, setDeals] = useState<SoldDeal[]>([]);
+  const [soldOpen, setSoldOpen] = useState(false);
+  const [sellUnit, setSellUnit] = useState<RVResult | null>(null);
+  const isPro = isProfessionalTier();
   const [detail, setDetail] = useState<RVResult | null>(null);
   const [shareFocusToken, setShareFocusToken] = useState(0);
   const [vinOpen, setVinOpen] = useState(false);
@@ -186,8 +204,25 @@ export function RvFaxApp({
 
   useEffect(() => {
     setSaved(loadSavedUnits());
+    setDeals(loadSoldDeals());
     setDetail((prev) => (prev ? hydrateShareCoachResult(prev) : prev));
   }, [catalogReady]);
+
+  useEffect(() => {
+    const openSold = () => {
+      if (!isProfessionalTier()) return;
+      setSoldOpen(true);
+      setDetail(null);
+      setCompareOpen(false);
+    };
+    const syncDeals = () => setDeals(loadSoldDeals());
+    window.addEventListener(OPEN_SOLD_EVENT, openSold);
+    window.addEventListener(SOLD_CHANGED_EVENT, syncDeals);
+    return () => {
+      window.removeEventListener(OPEN_SOLD_EVENT, openSold);
+      window.removeEventListener(SOLD_CHANGED_EVENT, syncDeals);
+    };
+  }, []);
 
   const persistSaved = (next: RVResult[]) => {
     savedRef.current = next;
@@ -198,6 +233,10 @@ export function RvFaxApp({
     } catch {
       /* */
     }
+  };
+
+  const persistDeals = (next: SoldDeal[]) => {
+    setDeals(persistSoldDeals(next));
   };
 
   useEffect(() => {
@@ -551,6 +590,30 @@ export function RvFaxApp({
     persistSaved(toggleSavedUnit(saved, r));
   };
 
+  const beginSell = (r: RVResult) => {
+    if (!isPro) return;
+    setSellUnit(r);
+  };
+
+  const submitSell = (input: {
+    customerName: string;
+    gross: number;
+    split: DealSplitId;
+  }) => {
+    if (!sellUnit) return;
+    const result = sellSavedCoach(saved, deals, {
+      unit: sellUnit,
+      customerName: input.customerName,
+      gross: input.gross,
+      split: input.split,
+    });
+    if (!result.ok) return;
+    persistSaved(result.saved);
+    persistDeals(result.deals);
+    setSellUnit(null);
+    setSoldOpen(true);
+  };
+
   const toggleCompare = (r: RVResult) => {
     const key = compareSelectionKey(r);
     const idx = comparePick.findIndex((c) => compareSelectionKey(c) === key);
@@ -565,6 +628,31 @@ export function RvFaxApp({
   const eraLabel =
     YEAR_ERAS.find((e) => e.id === era)?.label ?? "All Years";
   const eraSub = YEAR_ERAS.find((e) => e.id === era)?.sub ?? "";
+
+  if (isPro && soldOpen && !detail && !(compareOpen && comparePick.length >= 2)) {
+    return (
+      <div
+        className="rvfax-screen adaptive-glass relative flex h-full min-h-0 flex-col overflow-hidden text-white"
+        style={adaptiveGlass.style}
+        data-glass-l={adaptiveGlass.luminance.toFixed(3)}
+        data-readable-cards=""
+      >
+        <SuiteBackdrop src={PRESTIGE_BACKDROP} />
+        <div
+          ref={scrollRef}
+          data-app-scroll
+          className="rv-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        >
+          <ScrollSuiteHeader tab="rvfax" />
+          <SoldList
+            deals={deals}
+            onBack={() => setSoldOpen(false)}
+            onTogglePaid={(id) => persistDeals(toggleDealPaid(deals, id))}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (compareOpen && comparePick.length >= 2) {
     return (
@@ -915,21 +1003,36 @@ export function RvFaxApp({
           ) : null}
 
           {/* Saved */}
-          {saved.length > 0 ? (
+          {saved.length > 0 || (isPro && deals.length > 0) ? (
             <section className="space-y-2.5">
               <div className="flex items-center justify-between px-0.5">
                 <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-white">
                   <Bookmark className="size-3.5" />
                   SAVED UNITS
                 </p>
-                <button
-                  type="button"
-                  onClick={() => persistSaved([])}
-                  className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
-                >
-                  <Trash2 className="size-3" />
-                  Clear
-                </button>
+                <div className="flex items-center gap-2">
+                  {isPro ? (
+                    <button
+                      type="button"
+                      onClick={() => setSoldOpen(true)}
+                      className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-sky-200"
+                    >
+                      <CircleDollarSign className="size-3.5" />
+                      Sold
+                      {deals.length > 0 ? ` · ${deals.length}` : ""}
+                    </button>
+                  ) : null}
+                  {saved.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => persistSaved([])}
+                      className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
+                    >
+                      <Trash2 className="size-3" />
+                      Clear
+                    </button>
+                  ) : null}
+                </div>
               </div>
               {saved.map((r) => (
                 <div
@@ -951,6 +1054,16 @@ export function RvFaxApp({
                     </div>
                     <ChevronDown className="size-4 -rotate-90 shrink-0 text-white" />
                   </button>
+                  {isPro ? (
+                    <button
+                      type="button"
+                      aria-label={`Sold ${r.year} ${r.make} ${r.model}`}
+                      onClick={() => beginSell(r)}
+                      className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-gold-border/50 bg-gold-dim/30 px-2.5 text-[11px] font-bold text-gold-bright"
+                    >
+                      Sold
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     aria-label={`Remove ${r.year} ${r.make} ${r.model} from saved`}
@@ -962,6 +1075,25 @@ export function RvFaxApp({
                 </div>
               ))}
             </section>
+          ) : null}
+
+          {isPro && saved.length === 0 ? (
+            <button
+              type="button"
+              onClick={() => setSoldOpen(true)}
+              className="glass-prestige flex w-full min-h-[52px] items-center gap-3 rounded-[var(--radius-xl)] px-4 py-3 text-left active:scale-[0.99]"
+            >
+              <CircleDollarSign className="size-5 shrink-0 text-gold-bright" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-bold text-white">Sold</p>
+                <p className="text-[11px] text-white/70">
+                  {deals.length > 0
+                    ? `${deals.length} deal${deals.length === 1 ? "" : "s"}`
+                    : "Save a coach, then log a deal"}
+                </p>
+              </div>
+              <ChevronDown className="size-4 -rotate-90 text-white" />
+            </button>
           ) : null}
 
           {/* VIN last */}
@@ -985,6 +1117,14 @@ export function RvFaxApp({
           <SuiteDisclaimer className="pb-2" />
         </div>
       </div>
+
+      {isPro && sellUnit ? (
+        <SoldPrompt
+          unit={sellUnit}
+          onClose={() => setSellUnit(null)}
+          onSubmit={submitSell}
+        />
+      ) : null}
 
       <SelectSheet
         open={sheet === "year"}
