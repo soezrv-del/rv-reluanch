@@ -5,6 +5,7 @@
  *
  * Sticky chip + explicit Facts bridges (Ask Grok / Check tow / Check payment).
  * Dock entry on Cal / Tow / Grok / Trips must not auto-apply this.
+ * Tow only accepts the narrow Facts Check-tow handoff.
  *
  * Not a Facts cache. Chat answers never write here.
  */

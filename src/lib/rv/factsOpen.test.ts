@@ -391,7 +391,8 @@ test("Facts bridges are Ask Grok, Check tow, Check payment only — no GPS", () 
   assert.match(detail, /data-facts-check-payment/);
   assert.match(detail, /openTowWithCoach/);
   assert.match(detail, /openCalWithPrice/);
-  assert.match(detail, /factsCoachOffer/);
+  assert.match(detail, /factsTowOffer/);
+  assert.match(detail, /offerFromFactsReport/);
   assert.doesNotMatch(detail, /setTab\("rvtow"\)/);
   assert.doesNotMatch(detail, /openTripsProfile/);
   assert.doesNotMatch(detail, /setTab\("rvtrips"\)/);
@@ -401,7 +402,8 @@ test("Facts bridges are Ask Grok, Check tow, Check payment only — no GPS", () 
   assert.match(nav, /openTowWithCoach/);
   assert.match(nav, /towHandoff/);
   assert.match(nav, /FactsTowHandoff/);
+  assert.match(nav, /FactsTowHandoffOffer/);
   assert.match(shell, /openTowWithCoach/);
-  assert.match(shell, /normalizeActiveCoach/);
+  assert.match(shell, /normalizeFactsTowOffer/);
   assert.match(shell, /setTab\("rvtow"\)/);
 });

@@ -23,7 +23,10 @@ import {
 } from "./ShellNav";
 import type { TowHandoffOffer } from "@/lib/trips/towHandoff";
 import {
-  normalizeActiveCoach,
+  normalizeFactsTowOffer,
+  type FactsTowHandoffOffer,
+} from "@/lib/tow/factsTowHandoff";
+import {
   readActiveCoach,
   writeActiveCoach,
   type ActiveCoach,
@@ -231,11 +234,11 @@ export function AppShell() {
 
   /** Facts “Check tow” only — dock / swipe / launchpad must not set this. */
   const openTowWithCoach = useCallback(
-    (offer?: ActiveCoachInput | null) => {
+    (offer?: FactsTowHandoffOffer | null) => {
       towTokenRef.current += 1;
       setTowHandoff({
         token: towTokenRef.current,
-        offer: normalizeActiveCoach(offer ? { ...offer, updatedAt: "" } : null),
+        offer: normalizeFactsTowOffer(offer ?? null),
       });
       setTab("rvtow");
       markVisited("rvtow");

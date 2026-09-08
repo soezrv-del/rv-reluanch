@@ -141,13 +141,13 @@ export function SuitePage({
         {onPullReset ? (
           <PullRefreshLayer state={pull} label={pullLabel}>
             {tab ? <ScrollSuiteHeader tab={tab} /> : null}
-            {tab === "rvcal" || tab === "rvtow" ? <ActiveCoachChip /> : null}
+            {tab === "rvcal" ? <ActiveCoachChip /> : null}
             {children}
           </PullRefreshLayer>
         ) : (
           <>
             {tab ? <ScrollSuiteHeader tab={tab} /> : null}
-            {tab === "rvcal" || tab === "rvtow" ? <ActiveCoachChip /> : null}
+            {tab === "rvcal" ? <ActiveCoachChip /> : null}
             {children}
           </>
         )}

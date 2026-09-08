@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import type { AppTab } from "./BottomTabs";
 import type { ActiveCoach, ActiveCoachInput } from "@/lib/rv/activeCoach";
 import type { TowHandoffOffer } from "@/lib/trips/towHandoff";
+import type { FactsTowHandoffOffer } from "@/lib/tow/factsTowHandoff";
 
 /** Prefill RvCal from a Facts detail report (avg market). */
 export type CalSeed = {
@@ -16,10 +17,10 @@ export type TripsHandoff = {
   offer: TowHandoffOffer | null;
 };
 
-/** One-shot Facts → Tow. Dock tab / swipe never sets this. */
+/** One-shot Facts → Tow. Dock / swipe never sets this. */
 export type FactsTowHandoff = {
   token: number;
-  offer: ActiveCoach | null;
+  offer: FactsTowHandoffOffer | null;
 };
 
 export type ShellNavValue = {
@@ -47,7 +48,7 @@ export type ShellNavValue = {
   clearTripsHandoff: () => void;
   /** One-shot Facts → Tow (Check tow). Dock setTab("rvtow") must not set this. */
   towHandoff: FactsTowHandoff | null;
-  openTowWithCoach: (offer?: ActiveCoachInput | null) => void;
+  openTowWithCoach: (offer?: FactsTowHandoffOffer | null) => void;
   clearTowHandoff: () => void;
 };
 
