@@ -596,3 +596,77 @@ test("Roadtrek Facts SoT: dated library PDFs + RVUSA year cards; ghosts quaranti
   assert.doesNotMatch(popular, /"2010":|"2026":|"170D"/);
 });
 
+test("Holiday Rambler Facts SoT: MY2027 OEM+PDF locks; GAP Ambassador/Navigator/Augusta/Xpedition", () => {
+  const block = src("rvData.ts");
+  const h0 = block.indexOf('\n  "Holiday Rambler": {');
+  const h1 = block.indexOf("\n  Heartland: {");
+  assert.ok(h0 > 0 && h1 > h0, "expected Holiday Rambler block");
+  const hr = block.slice(h0, h1);
+
+  assert.doesNotMatch(hr, /\n    Fleetwood: \{/);
+  assert.doesNotMatch(hr, /\n    "American Coach": \{/);
+
+  const armada = hr.slice(hr.indexOf("    Armada: {"), hr.indexOf("    Vacationer: {"));
+  assert.match(armada, /type: "Class A Diesel"/);
+  assert.match(armada, /"2027": \["40M", "40P", "44B", "44LE"\]/);
+  assert.match(armada, /"2026": \["40M", "40P", "44B", "44LE"\]/);
+  assert.doesNotMatch(armada, /"44E"|"45EL"|"45F"/);
+  assert.doesNotMatch(armada, /"2026": .*"38F"/);
+
+  const invicta = hr.slice(hr.indexOf("    Invicta: {"), hr.indexOf("    Augusta: {"));
+  assert.match(invicta, /type: "Class A Gas"/);
+  assert.match(invicta, /"2027": \["32RW", "33HB", "34MB", "35R", "36Y"\]/);
+  assert.match(invicta, /"2026": \["32RW", "33HB", "34MB", "36T", "36Y"\]/);
+  assert.doesNotMatch(invicta, /"2027": .*"36T"/);
+  assert.doesNotMatch(invicta, /"34RB"|"36TX"|"36U"/);
+
+  const vacationer = hr.slice(hr.indexOf("    Vacationer: {"), hr.indexOf("    Invicta: {"));
+  assert.match(vacationer, /type: "Class A Gas"/);
+  assert.match(vacationer, /"2027": \["33C", "35GL", "35K", "36F"\]/);
+  assert.doesNotMatch(vacationer, /"2026": .*"32A"|"2026": .*"35P"/);
+
+  const admiral = hr.slice(hr.indexOf("    Admiral: {"), hr.indexOf("    Endeavor: {"));
+  assert.match(admiral, /type: "Class A Gas"/);
+  assert.match(admiral, /yearStart:\s*2026/);
+  assert.match(admiral, /"2027": \["28A", "29M", "32N", "34J"\]/);
+
+  const endeavor = hr.slice(hr.indexOf("    Endeavor: {"), hr.indexOf("    Nautica: {"));
+  assert.match(endeavor, /type: "Class A Diesel"/);
+  assert.match(endeavor, /"2027": \["38K", "38N", "38W"\]/);
+  assert.match(endeavor, /"2026": \["38N", "38W"\]/);
+  assert.doesNotMatch(endeavor, /"38L"/);
+
+  const nautica = hr.slice(hr.indexOf("    Nautica: {"), hr.indexOf("    Incline: {"));
+  assert.match(nautica, /type: "Class A Diesel"/);
+  assert.match(nautica, /"2027": \["33TL", "34RX", "37S"\]/);
+
+  const incline = hr.slice(hr.indexOf("    Incline: {"), hr.indexOf('    "Incline FS550": {'));
+  assert.match(incline, /type: "Class C"/);
+  assert.match(incline, /fuelType: "Gas"/);
+  assert.match(incline, /"2027": \["27U", "29H", "31W"\]/);
+  assert.doesNotMatch(incline, /"25M"|"26ME"|"32DBH"/);
+
+  const fs550 = hr.slice(hr.indexOf('    "Incline FS550": {'), hr.indexOf('    "Incline FS600D": {'));
+  assert.match(fs550, /type: "Super C"/);
+  assert.match(fs550, /fuelType: "Gas"/);
+  assert.match(fs550, /"2027": \["30SB", "30WM", "32AW"\]/);
+
+  const fs600 = hr.slice(hr.indexOf('    "Incline FS600D": {'));
+  assert.match(fs600, /type: "Super C"/);
+  assert.match(fs600, /fuelType: "Diesel"/);
+  assert.match(fs600, /"2027": \["36CS", "36FW"\]/);
+
+  const ambassador = hr.slice(hr.indexOf("    Ambassador: {"), hr.indexOf("    Armada: {"));
+  assert.doesNotMatch(ambassador, /"2027":/);
+
+  const navigator = hr.slice(hr.indexOf("    Navigator: {"), hr.indexOf("    Ambassador: {"));
+  assert.doesNotMatch(navigator, /"2027":/);
+
+  const augusta = hr.slice(hr.indexOf("    Augusta: {"), hr.indexOf("    Xpedition: {"));
+  assert.doesNotMatch(augusta, /"2027":/);
+  assert.doesNotMatch(augusta, /"27U"|"29H"|"31W"/);
+
+  const xpedition = hr.slice(hr.indexOf("    Xpedition: {"), hr.indexOf("    Admiral: {"));
+  assert.doesNotMatch(xpedition, /"2027":/);
+});
+

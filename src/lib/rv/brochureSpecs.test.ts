@@ -15226,3 +15226,49 @@ test("Forest River thin-line honesty: dated 2010–2014 + tip years (Micro/Mini/
   assert.equal(CATALOG_INDEX["Forest River"]?.["r-Pod"]?.years?.includes(2022), false);
   assert.equal(CATALOG_INDEX["Forest River"]?.["r-Pod"]?.years?.includes(2027), false);
 });
+
+test("Holiday Rambler MY2027 OEM+PDF floorplans + GAP living lines", () => {
+  const idx = CATALOG_INDEX["Holiday Rambler"];
+  assert.ok(idx);
+
+  assert.equal(idx.Armada?.type, "Class A Diesel");
+  assert.equal(idx.Armada?.years?.includes(2027), true);
+  assert.equal(idx.Invicta?.type, "Class A Gas");
+  assert.equal(idx.Invicta?.years?.includes(2027), true);
+  assert.equal(idx.Vacationer?.type, "Class A Gas");
+  assert.equal(idx.Vacationer?.years?.includes(2027), true);
+
+  assert.equal(idx.Admiral?.type, "Class A Gas");
+  assert.deepEqual(idx.Admiral?.years, [2026, 2027]);
+  assert.equal(idx.Endeavor?.type, "Class A Diesel");
+  assert.deepEqual(idx.Endeavor?.years, [2026, 2027]);
+  assert.equal(idx.Nautica?.type, "Class A Diesel");
+  assert.deepEqual(idx.Nautica?.years, [2026, 2027]);
+  assert.equal(idx.Incline?.type, "Class C");
+  assert.deepEqual(idx.Incline?.years, [2026, 2027]);
+  assert.equal(idx["Incline FS550"]?.type, "Super C");
+  assert.equal(idx["Incline FS550"]?.fuelType, "Gas");
+  assert.deepEqual(idx["Incline FS550"]?.years, [2026, 2027]);
+  assert.equal(idx["Incline FS600D"]?.type, "Super C");
+  assert.equal(idx["Incline FS600D"]?.fuelType, "Diesel");
+  assert.deepEqual(idx["Incline FS600D"]?.years, [2026, 2027]);
+
+  assert.equal(idx.Ambassador?.years?.includes(2027), false);
+  assert.equal(idx.Navigator?.years?.includes(2027), false);
+  assert.equal(idx.Augusta?.years?.includes(2027), false);
+  assert.equal(idx.Xpedition?.years?.includes(2027), false);
+
+  const block = src("rvData.ts");
+  const h0 = block.indexOf('\n  "Holiday Rambler": {');
+  const h1 = block.indexOf("\n  Heartland: {");
+  const hr = block.slice(h0, h1);
+  assert.match(hr, /"2027": \["40M", "40P", "44B", "44LE"\]/);
+  assert.match(hr, /"2027": \["32RW", "33HB", "34MB", "35R", "36Y"\]/);
+  assert.match(hr, /"2027": \["33C", "35GL", "35K", "36F"\]/);
+  assert.match(hr, /"2027": \["38K", "38N", "38W"\]/);
+  assert.doesNotMatch(hr, /Endeavor[\s\S]*"38L"/);
+  assert.doesNotMatch(hr.slice(hr.indexOf("    Ambassador: {"), hr.indexOf("    Armada: {")), /"2027":/);
+  assert.doesNotMatch(hr.slice(hr.indexOf("    Navigator: {"), hr.indexOf("    Ambassador: {")), /"2027":/);
+  assert.doesNotMatch(hr.slice(hr.indexOf("    Augusta: {"), hr.indexOf("    Xpedition: {")), /"2027":/);
+  assert.doesNotMatch(hr.slice(hr.indexOf("    Xpedition: {"), hr.indexOf("    Admiral: {")), /"2027":/);
+});

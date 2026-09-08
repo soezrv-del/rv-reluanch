@@ -1169,6 +1169,128 @@ function main() {
     }
   }
 
+  // Holiday Rambler MY2027 pack. Make key is quoted (`"Holiday Rambler": {`).
+  // Dated OEM year pages + library 2027-Holiday-Rambler-*.pdf lock living chips.
+  // Ambassador / Navigator / Augusta / Xpedition stay GAP 2027.
+  {
+    const h0 = src.indexOf('\n  "Holiday Rambler": {');
+    const h1 = src.indexOf("\n  Heartland: {");
+    if (h0 < 0 || h1 < h0) {
+      fail('Holiday Rambler block not found between "Holiday Rambler": and Heartland:');
+    } else {
+      const hr = src.slice(h0, h1);
+      const slice = (a, b) => {
+        const i =
+          hr.indexOf(`    "${a}": {`) >= 0
+            ? hr.indexOf(`    "${a}": {`)
+            : hr.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? hr.length
+            : hr.indexOf(`    "${b}": {`) >= 0
+              ? hr.indexOf(`    "${b}": {`)
+              : hr.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? hr.slice(i, j) : hr.slice(i);
+      };
+
+      const armada = slice("Armada", "Vacationer");
+      if (!/"2027": \["40M", "40P", "44B", "44LE"\]/.test(armada)) {
+        fail("Holiday Rambler|Armada MY27 OEM+PDF lock missing (40M / 40P / 44B / 44LE)");
+      }
+      if (/"44E"|"45EL"|"45F"/.test(armada)) {
+        fail("Holiday Rambler|Armada must not keep invent 44E / 45EL / 45F");
+      }
+
+      const invicta = slice("Invicta", "Augusta");
+      if (!/"2027": \["32RW", "33HB", "34MB", "35R", "36Y"\]/.test(invicta)) {
+        fail("Holiday Rambler|Invicta MY27 OEM+PDF lock missing (32RW / 33HB / 34MB / 35R / 36Y)");
+      }
+      if (/"2027": .*"36T"/.test(invicta) || /"34RB"|"36TX"|"36U"/.test(invicta)) {
+        fail("Holiday Rambler|Invicta must not copy 36T onto 2027 or keep invent 34RB / 36TX / 36U");
+      }
+
+      const vacationer = slice("Vacationer", "Invicta");
+      if (!/"2027": \["33C", "35GL", "35K", "36F"\]/.test(vacationer)) {
+        fail("Holiday Rambler|Vacationer MY27 OEM+PDF lock missing (33C / 35GL / 35K / 36F)");
+      }
+
+      const admiral = slice("Admiral", "Endeavor");
+      if (!/"2027": \["28A", "29M", "32N", "34J"\]/.test(admiral)) {
+        fail("Holiday Rambler|Admiral MY27 OEM+PDF lock missing (28A / 29M / 32N / 34J)");
+      }
+
+      const endeavor = slice("Endeavor", "Nautica");
+      if (!/"2027": \["38K", "38N", "38W"\]/.test(endeavor)) {
+        fail("Holiday Rambler|Endeavor MY27 PDF lock missing (38K / 38N / 38W)");
+      }
+      if (/"38L"/.test(endeavor)) {
+        fail("Holiday Rambler|Endeavor must omit 38L (PDF authority)");
+      }
+
+      const nautica = slice("Nautica", "Incline");
+      if (!/"2027": \["33TL", "34RX", "37S"\]/.test(nautica)) {
+        fail("Holiday Rambler|Nautica MY27 OEM+PDF lock missing (33TL / 34RX / 37S)");
+      }
+
+      const incline = slice("Incline", "Incline FS550");
+      if (!/"2027": \["27U", "29H", "31W"\]/.test(incline) || !/type: "Class C"/.test(incline)) {
+        fail("Holiday Rambler|Incline MY27 OEM+PDF lock missing (27U / 29H / 31W Class C)");
+      }
+      if (/"25M"|"26ME"|"32DBH"/.test(incline)) {
+        fail("Holiday Rambler|Incline must not absorb Augusta codes");
+      }
+
+      const fs550 = slice("Incline FS550", "Incline FS600D");
+      if (!/"2027": \["30SB", "30WM", "32AW"\]/.test(fs550) || !/type: "Super C"/.test(fs550)) {
+        fail("Holiday Rambler|Incline FS550 MY27 OEM+PDF lock missing (30SB / 30WM / 32AW Super C)");
+      }
+
+      const fs600 = slice("Incline FS600D");
+      if (!/"2027": \["36CS", "36FW"\]/.test(fs600) || !/fuelType: "Diesel"/.test(fs600)) {
+        fail("Holiday Rambler|Incline FS600D MY27 OEM lock missing (36CS / 36FW Super C diesel)");
+      }
+
+      for (const gap of ["Ambassador", "Navigator", "Augusta", "Xpedition"]) {
+        if (/"2027":/.test(slice(gap, gap === "Ambassador" ? "Armada" : gap === "Navigator" ? "Ambassador" : gap === "Augusta" ? "Xpedition" : "Admiral"))) {
+          fail(`Holiday Rambler|${gap} must omit 2027 (GAP — no dated card)`);
+        }
+      }
+
+      const hrIdx = catalogIndex["Holiday Rambler"];
+      if (!hrIdx) fail("Holiday Rambler missing from CATALOG_INDEX");
+      for (const lock of [
+        "Armada",
+        "Invicta",
+        "Vacationer",
+        "Admiral",
+        "Endeavor",
+        "Nautica",
+        "Incline",
+        "Incline FS550",
+        "Incline FS600D",
+      ]) {
+        if (!hrIdx[lock]?.years?.includes(2027)) {
+          fail(`Holiday Rambler|${lock} index must include 2027 in years[]`);
+        }
+      }
+      for (const gap of ["Ambassador", "Navigator", "Augusta", "Xpedition"]) {
+        if (hrIdx[gap]?.years?.includes(2027)) {
+          fail(`Holiday Rambler|${gap} index must omit 2027 (GAP)`);
+        }
+      }
+      if (hrIdx.Incline?.type !== "Class C") {
+        fail("Holiday Rambler|Incline index type must be Class C");
+      }
+      if (hrIdx["Incline FS550"]?.type !== "Super C") {
+        fail("Holiday Rambler|Incline FS550 index type must be Super C");
+      }
+      if (hrIdx["Incline FS600D"]?.fuelType !== "Diesel") {
+        fail("Holiday Rambler|Incline FS600D index fuelType must be Diesel");
+      }
+    }
+  }
+
   // Newmar block is unquoted (`Newmar: {`) so the quoted-make parser misses it.
   // Scan the raw Newmar…Tiffin slice for recent-years OEM gates.
   {
