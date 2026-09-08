@@ -670,3 +670,71 @@ test("Holiday Rambler Facts SoT: MY2027 OEM+PDF locks; GAP Ambassador/Navigator/
   assert.doesNotMatch(xpedition, /"2027":/);
 });
 
+test("Fleetwood Facts SoT: MY2027 OEM+PDF locks; GAP Insight; retired shells closed", () => {
+  const block = src("rvData.ts");
+  const f0 = block.indexOf("\n  Fleetwood: {");
+  const f1 = block.indexOf("\n  Jayco: {");
+  assert.ok(f0 > 0 && f1 > f0, "expected Fleetwood block");
+  const fw = block.slice(f0, f1);
+
+  assert.doesNotMatch(fw, /\n    "Holiday Rambler": \{/);
+  assert.doesNotMatch(fw, /\n    "American Coach": \{/);
+
+  const bounder = fw.slice(fw.indexOf("    Bounder: {"), fw.indexOf('    "Bounder Classic"'));
+  assert.match(bounder, /type: "Class A Gas"/);
+  assert.match(bounder, /"2027": \["33C", "35GL", "35K", "36F"\]/);
+
+  const discovery = fw.slice(fw.indexOf("    Discovery: {"), fw.indexOf('    "Discovery LXE": {'));
+  assert.match(discovery, /type: "Class A Diesel"/);
+  assert.match(discovery, /"2027": \["38K", "38N", "38W"\]/);
+  assert.doesNotMatch(discovery, /"38L"/);
+  assert.doesNotMatch(discovery, /"2026": .*"38K"/);
+
+  const lxe = fw.slice(fw.indexOf('    "Discovery LXE": {'), fw.indexOf("    Frontier: {"));
+  assert.match(lxe, /type: "Class A Diesel"/);
+  assert.match(lxe, /"2027": \["40G", "40M", "44B", "44S"\]/);
+
+  const flair = fw.slice(fw.indexOf("    Flair: {"), fw.indexOf("    Fortis: {"));
+  assert.match(flair, /type: "Class A Gas"/);
+  assert.match(flair, /"2027": \["28A", "29M", "32S", "33B6"\]/);
+
+  const frontier = fw.slice(fw.indexOf("    Frontier: {"), fw.indexOf('    "Frontier GTX"'));
+  assert.match(frontier, /type: "Class A Diesel"/);
+  assert.match(frontier, /"2027": \["33TL", "37S", "38RT", "39B"\]/);
+  assert.doesNotMatch(frontier, /"2026": .*"39B"/);
+
+  const palisade = fw.slice(fw.indexOf("    Palisade: {"), fw.indexOf("    Bounder: {"));
+  assert.match(palisade, /type: "Class A Diesel"/);
+  assert.match(palisade, /"2027": \["40H", "45CS", "45DS", "45FS"\]/);
+
+  const altitude = fw.slice(fw.indexOf("    Altitude: {"), fw.indexOf("    Insight: {"));
+  assert.match(altitude, /type: "Class C"/);
+  assert.match(altitude, /"2027": \["27U", "29F", "29H", "31W"\]/);
+
+  const fs550 = fw.slice(fw.indexOf('    "Altitude FS550": {'), fw.indexOf('    "Altitude FS600D": {'));
+  assert.match(fs550, /type: "Super C"/);
+  assert.match(fs550, /fuelType: "Gas"/);
+  assert.match(fs550, /"2027": \["30SB", "30WM", "32AW"\]/);
+
+  const fs600 = fw.slice(fw.indexOf('    "Altitude FS600D": {'), fw.indexOf("    Xcursion: {"));
+  assert.match(fs600, /type: "Super C"/);
+  assert.match(fs600, /fuelType: "Diesel"/);
+  assert.match(fs600, /"2027": \["36CS", "36FW"\]/);
+
+  const fortis = fw.slice(fw.indexOf("    Fortis: {"), fw.indexOf("    Flex: {"));
+  assert.match(fortis, /type: "Class A Gas"/);
+  assert.match(fortis, /"2027": \["32RW", "33HB", "34MB", "35R", "36Y"\]/);
+  assert.match(fortis, /"2026": \["32RW", "33HB", "34MB", "36T", "36Y"\]/);
+  assert.doesNotMatch(fortis, /"2027": .*"36T"/);
+
+  const insight = fw.slice(fw.indexOf("    Insight: {"), fw.indexOf('    "Altitude FS550": {'));
+  assert.doesNotMatch(insight, /"2027":/);
+
+  const gtx = fw.slice(fw.indexOf('    "Frontier GTX": {'), fw.indexOf("    Palisade: {"));
+  assert.doesNotMatch(gtx, /"2027":/);
+  const flex = fw.slice(fw.indexOf("    Flex: {"), fw.indexOf("    Jamboree: {"));
+  assert.doesNotMatch(flex, /"2027":/);
+  const xcursion = fw.slice(fw.indexOf("    Xcursion: {"));
+  assert.doesNotMatch(xcursion, /"2027":/);
+});
+

@@ -1295,6 +1295,166 @@ function main() {
     }
   }
 
+  // Fleetwood MY2027 pack. Make key is unquoted (`Fleetwood: {`).
+  // Dated OEM year pages + library 2027-Fleetwood-*.pdf lock living chips.
+  // Insight stays GAP 2027 (OEM 404 / library 403). Retired shells stay closed.
+  {
+    const f0 = src.indexOf("\n  Fleetwood: {");
+    const f1 = src.indexOf("\n  Jayco: {");
+    if (f0 < 0 || f1 < f0) {
+      fail("Fleetwood block not found between Fleetwood: and Jayco:");
+    } else {
+      const fw = src.slice(f0, f1);
+      const slice = (a, b) => {
+        const i =
+          fw.indexOf(`    "${a}": {`) >= 0
+            ? fw.indexOf(`    "${a}": {`)
+            : fw.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? fw.length
+            : fw.indexOf(`    "${b}": {`) >= 0
+              ? fw.indexOf(`    "${b}": {`)
+              : fw.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? fw.slice(i, j) : fw.slice(i);
+      };
+
+      const bounder = slice("Bounder", "Bounder Classic");
+      if (!/"2027": \["33C", "35GL", "35K", "36F"\]/.test(bounder) || !/type: "Class A Gas"/.test(bounder)) {
+        fail("Fleetwood|Bounder MY27 OEM+PDF lock missing (33C / 35GL / 35K / 36F Class A Gas)");
+      }
+
+      const discovery = slice("Discovery", "Discovery LXE");
+      if (!/"2027": \["38K", "38N", "38W"\]/.test(discovery) || !/type: "Class A Diesel"/.test(discovery)) {
+        fail("Fleetwood|Discovery MY27 PDF lock missing (38K / 38N / 38W)");
+      }
+      if (/"38L"/.test(discovery)) {
+        fail("Fleetwood|Discovery must omit 38L (PDF authority)");
+      }
+
+      const lxe = slice("Discovery LXE", "Frontier");
+      if (!/"2027": \["40G", "40M", "44B", "44S"\]/.test(lxe) || !/type: "Class A Diesel"/.test(lxe)) {
+        fail("Fleetwood|Discovery LXE MY27 OEM+PDF lock missing (40G / 40M / 44B / 44S)");
+      }
+
+      const flair = slice("Flair", "Fortis");
+      if (!/"2027": \["28A", "29M", "32S", "33B6"\]/.test(flair) || !/type: "Class A Gas"/.test(flair)) {
+        fail("Fleetwood|Flair MY27 OEM+PDF lock missing (28A / 29M / 32S / 33B6 Class A Gas)");
+      }
+
+      const frontier = slice("Frontier", "Frontier GTX");
+      if (!/"2027": \["33TL", "37S", "38RT", "39B"\]/.test(frontier) || !/type: "Class A Diesel"/.test(frontier)) {
+        fail("Fleetwood|Frontier MY27 OEM+PDF lock missing (33TL / 37S / 38RT / 39B)");
+      }
+      if (/"2026": .*"39B"/.test(frontier)) {
+        fail("Fleetwood|Frontier must not stamp 39B onto 2026");
+      }
+
+      const palisade = slice("Palisade", "Bounder");
+      if (!/"2027": \["40H", "45CS", "45DS", "45FS"\]/.test(palisade) || !/type: "Class A Diesel"/.test(palisade)) {
+        fail("Fleetwood|Palisade MY27 OEM+PDF lock missing (40H / 45CS / 45DS / 45FS)");
+      }
+
+      const altitude = slice("Altitude", "Insight");
+      if (!/"2027": \["27U", "29F", "29H", "31W"\]/.test(altitude) || !/type: "Class C"/.test(altitude)) {
+        fail("Fleetwood|Altitude MY27 OEM+PDF lock missing (27U / 29F / 29H / 31W Class C)");
+      }
+
+      const fs550 = slice("Altitude FS550", "Altitude FS600D");
+      if (!/"2027": \["30SB", "30WM", "32AW"\]/.test(fs550) || !/type: "Super C"/.test(fs550)) {
+        fail("Fleetwood|Altitude FS550 MY27 OEM+PDF lock missing (30SB / 30WM / 32AW Super C)");
+      }
+
+      const fs600 = slice("Altitude FS600D", "Xcursion");
+      if (!/"2027": \["36CS", "36FW"\]/.test(fs600) || !/fuelType: "Diesel"/.test(fs600)) {
+        fail("Fleetwood|Altitude FS600D MY27 OEM+PDF lock missing (36CS / 36FW Super C diesel)");
+      }
+
+      const fortis = slice("Fortis", "Flex");
+      if (!/"2027": \["32RW", "33HB", "34MB", "35R", "36Y"\]/.test(fortis) || !/type: "Class A Gas"/.test(fortis)) {
+        fail("Fleetwood|Fortis MY27 OEM+PDF lock missing (32RW / 33HB / 34MB / 35R / 36Y)");
+      }
+      if (/"2027": .*"36T"/.test(fortis)) {
+        fail("Fleetwood|Fortis must not copy 36T onto 2027");
+      }
+
+      if (/"2027":/.test(slice("Insight", "Altitude FS550"))) {
+        fail("Fleetwood|Insight must omit 2027 (GAP — OEM 404 / library 403)");
+      }
+
+      for (const [gap, next] of [
+        ["Bounder Classic", "Southwind"],
+        ["Frontier GTX", "Palisade"],
+        ["Southwind", "Pace Arrow"],
+        ["Pace Arrow", "Storm"],
+        ["Storm", "Flair"],
+        ["Flex", "Jamboree"],
+        ["Jamboree", "Tioga"],
+        ["Tioga", "Tioga Ranger"],
+        ["Tioga Ranger", "Pulse"],
+        ["Pulse", "Altitude"],
+        ["Xcursion", null],
+      ]) {
+        if (/"2027":/.test(slice(gap, next))) {
+          fail(`Fleetwood|${gap} must omit 2027 (retired / out of scope)`);
+        }
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const fwIdx = catalogIndex.Fleetwood;
+      if (!fwIdx) fail("Fleetwood missing from CATALOG_INDEX");
+      for (const lock of [
+        "Bounder",
+        "Discovery",
+        "Discovery LXE",
+        "Flair",
+        "Frontier",
+        "Palisade",
+        "Altitude",
+        "Altitude FS550",
+        "Altitude FS600D",
+        "Fortis",
+      ]) {
+        if (!fwIdx[lock]?.years?.includes(2027)) {
+          fail(`Fleetwood|${lock} index must include 2027 in years[]`);
+        }
+      }
+      if (fwIdx.Insight?.years?.includes(2027)) {
+        fail("Fleetwood|Insight index must omit 2027 (GAP)");
+      }
+      for (const gap of [
+        "Bounder Classic",
+        "Frontier GTX",
+        "Southwind",
+        "Pace Arrow",
+        "Storm",
+        "Flex",
+        "Jamboree",
+        "Tioga",
+        "Tioga Ranger",
+        "Pulse",
+        "Xcursion",
+      ]) {
+        if (fwIdx[gap]?.years?.includes(2027)) {
+          fail(`Fleetwood|${gap} index must omit 2027 (retired / out of scope)`);
+        }
+      }
+      if (fwIdx.Altitude?.type !== "Class C") {
+        fail("Fleetwood|Altitude index type must be Class C");
+      }
+      if (fwIdx["Altitude FS550"]?.type !== "Super C") {
+        fail("Fleetwood|Altitude FS550 index type must be Super C");
+      }
+      if (fwIdx["Altitude FS600D"]?.fuelType !== "Diesel") {
+        fail("Fleetwood|Altitude FS600D index fuelType must be Diesel");
+      }
+    }
+  }
+
   // Newmar block is unquoted (`Newmar: {`) so the quoted-make parser misses it.
   // Scan the raw Newmar…Tiffin slice for recent-years OEM gates.
   {
