@@ -44,7 +44,10 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(tabs, /\| "rvshare"/);
   assert.doesNotMatch(tabs, /id: "rvshare"/);
   assert.match(tabs, /grid-cols-5/);
-  assert.match(tabs, /bottom-tabs-frost/);
+  assert.match(tabs, /bottom-tabs-dock/);
+  assert.match(tabs, /rounded-\[16px\]/);
+  assert.doesNotMatch(tabs, /bottom-tabs-frost/);
+  assert.doesNotMatch(tabs, /bottom-tab-indicator/);
   const dockIds = [...tabs.matchAll(/id: "(rvfax|rvcal|rvtow|rvtrips|rvgrok)"/g)].map(
     (m) => m[1],
   );
@@ -65,28 +68,26 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(shareApp, /openFactsShare/);
   assert.match(shareApp, /Opening the coach report to Share/);
   assert.match(css, /--dock-label-size:\s*1rem/);
-  assert.match(css, /\.bottom-tabs-frost/);
-  assert.match(tabs, /bottom-tab-etch-halo/);
-  assert.match(tabs, /bottom-tab-etch-core/);
-  assert.match(tabs, /bottom-tab-etch-bevel/);
-  assert.match(tabs, /bottom-tab-etch-face/);
-  assert.match(css, /\.bottom-tab-etch-core/);
-  assert.match(css, /\.bottom-tab-etch-face/);
-  assert.match(css, /\.bottom-tab-etch-core[\s\S]*background-clip:\s*text/);
-  assert.match(css, /\.bottom-tab-etch-face[\s\S]*#ffffff/);
-  assert.match(css, /drop-shadow\(0 -0\.55px 0 #ffffff\)/);
-  assert.match(css, /--dock-etch-under-hue:\s*rgba\(168, 208, 242, 0\.18\)/);
-  assert.match(css, /--dock-etch-under-hue-grok:\s*rgba\(255, 186, 198, 0\.14\)/);
-  assert.match(css, /--dock-etch-under-shift:\s*1px/);
-  assert.match(
-    css,
-    /\.bottom-tab-label\.is-etched-active \.bottom-tab-etch-halo[\s\S]*?var\(--dock-etch-under-hue\)/,
-  );
-  assert.match(
-    css,
-    /\.bottom-tab-label-grok\.is-etched-active \.bottom-tab-etch-halo[\s\S]*?var\(--dock-etch-under-hue-grok\)/,
-  );
-  assert.match(css, /\.bottom-tab-label\.is-etched-active \.bottom-tab-etch-core/);
+  assert.match(css, /\.bottom-tabs-dock \{/);
+  assert.match(css, /backdrop-filter:\s*blur\(20px\) saturate\(180%\)/);
+  assert.match(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
+  assert.match(css, /border:\s*1px solid rgba\(255, 255, 255, 0\.12\)/);
+  assert.match(css, /border-radius:\s*16px/);
+  assert.match(css, /box-shadow:\s*0 8px 32px rgba\(0, 0, 0, 0\.37\)/);
+  assert.match(css, /font-weight:\s*600/);
+  assert.match(css, /letter-spacing:\s*0\.5px/);
+  assert.match(css, /color:\s*rgba\(255, 255, 255, 0\.85\)/);
+  assert.match(css, /border-top:\s*2px solid transparent/);
+  assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
+  assert.doesNotMatch(tabs, /bottom-tab-etch-halo/);
+  assert.doesNotMatch(tabs, /bottom-tab-etch-core/);
+  assert.doesNotMatch(tabs, /bottom-tab-etch-bevel/);
+  assert.doesNotMatch(tabs, /bottom-tab-etch-face/);
+  assert.doesNotMatch(css, /\.bottom-tab-etch-core/);
+  assert.doesNotMatch(css, /\.bottom-tab-etch-face/);
+  assert.doesNotMatch(css, /--dock-etch-under-hue/);
+  assert.doesNotMatch(css, /\.bottom-tab-indicator-sapphire/);
+  assert.doesNotMatch(css, /border-radius:\s*1\.45rem/);
   assert.match(tabs, /bottom-tab-label-sold/);
   assert.match(tabs, /bottom-tab-label-sold-owed/);
   assert.doesNotMatch(css, /--color-dock-etch:/);
@@ -96,5 +97,4 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.doesNotMatch(css, /0 0 20px rgba\(120, 200, 255, 0\.52\)/);
   assert.doesNotMatch(css, /drop-shadow\(0 0 5px rgba\(140, 210, 255/);
   assert.doesNotMatch(css, /drop-shadow\(0 0 7px rgba\(160, 220, 255/);
-  assert.doesNotMatch(css, /\.bottom-tab-etch-face[\s\S]{0,180}-webkit-text-stroke/);
 });

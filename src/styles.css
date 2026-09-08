@@ -60,12 +60,7 @@
 
   --dock-label-size: 1rem;
   --dock-label-size-sm: 1.0625rem;
-  --dock-label-track: 0.05em;
-
-  /* Active dock label — faint etched-glass catch-light, not a glow */
-  --dock-etch-under-hue: rgba(168, 208, 242, 0.18);
-  --dock-etch-under-hue-grok: rgba(255, 186, 198, 0.14);
-  --dock-etch-under-shift: 1px;
+  --dock-label-track: 0.5px;
 }
 
 @layer base {
@@ -330,7 +325,7 @@
   .bottom-tabs-dock {
     padding: 0.2rem !important;
     max-width: 28rem !important;
-    border-radius: 1.45rem !important;
+    border-radius: 16px !important;
   }
 
   .bottom-tab-btn {
@@ -341,7 +336,7 @@
 
   .bottom-tab-label {
     font-size: 0.9375rem !important;
-    letter-spacing: 0.04em !important;
+    letter-spacing: 0.5px !important;
   }
 
   .landscape-content {
@@ -790,116 +785,29 @@
   );
 }
 
-/* Dock — frosted glass, labels etched into the plate */
+/* Dock — true glassmorphism (David 2026-09-08). Exact tokens win. */
 .bottom-tabs-nav {
   z-index: 80;
   touch-action: manipulation;
 }
 .bottom-tabs-dock {
-  background: linear-gradient(
-    180deg,
-    rgba(210, 226, 255, 0.2) 0%,
-    rgba(90, 130, 190, 0.12) 32%,
-    rgba(18, 28, 52, 0.4) 68%,
-    rgba(8, 14, 28, 0.52) 100%
-  );
-  border: 1px solid rgba(220, 234, 255, 0.34);
-  box-shadow:
-    0 16px 40px rgba(0, 8, 24, 0.38),
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.52),
-    inset 0 -1px 0 rgba(20, 40, 80, 0.32),
-    inset 0 0 28px rgba(160, 196, 240, 0.08);
-  backdrop-filter: blur(40px) saturate(1.75);
-  -webkit-backdrop-filter: blur(40px) saturate(1.75);
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
-.bottom-tabs-frost {
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 1px,
-      rgba(255, 255, 255, 0.03) 1px,
-      rgba(255, 255, 255, 0.03) 2px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 1px,
-      rgba(190, 214, 255, 0.025) 1px,
-      rgba(190, 214, 255, 0.025) 2px
-    );
-  mix-blend-mode: overlay;
-  opacity: 0.7;
+.bottom-tab-btn {
+  background: transparent;
+  border-top: 2px solid transparent;
 }
-.bottom-tabs-dock-ruby {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 214, 220, 0.18) 0%,
-    rgba(180, 60, 80, 0.12) 32%,
-    rgba(40, 12, 20, 0.42) 68%,
-    rgba(22, 6, 12, 0.52) 100%
-  );
-  border-color: rgba(255, 200, 208, 0.34);
-  box-shadow:
-    0 16px 40px rgba(24, 0, 8, 0.36),
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    inset 0 1px 0 rgba(255, 230, 234, 0.48),
-    inset 0 -1px 0 rgba(80, 16, 28, 0.32),
-    inset 0 0 28px rgba(255, 120, 140, 0.08);
+.bottom-tab-btn.is-active,
+.bottom-tab-btn[aria-current="page"] {
+  background: transparent;
+  border-top-color: var(--color-sapphire);
 }
-.bottom-tabs-ambient {
-  background: radial-gradient(
-    ellipse 80% 70% at 50% 0%,
-    rgba(120, 170, 255, 0.16) 0%,
-    transparent 62%
-  );
-  opacity: 0.85;
-}
-.bottom-tabs-dock-ruby .bottom-tabs-ambient {
-  background: radial-gradient(
-    ellipse 80% 70% at 50% 0%,
-    rgba(255, 90, 110, 0.14) 0%,
-    transparent 62%
-  );
-}
-.bottom-tabs-edge-light {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.5),
-    transparent
-  );
-}
-.bottom-tab-indicator {
-  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
-}
-.bottom-tab-indicator-sapphire {
-  background: linear-gradient(
-    180deg,
-    rgba(170, 210, 255, 0.28) 0%,
-    rgba(70, 130, 230, 0.16) 55%,
-    rgba(40, 90, 180, 0.12) 100%
-  );
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -1px 0 rgba(40, 90, 180, 0.25),
-    0 0 18px rgba(90, 160, 255, 0.22);
-}
-.bottom-tab-indicator-ruby {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 170, 180, 0.28) 0%,
-    rgba(200, 40, 60, 0.18) 55%,
-    rgba(120, 16, 32, 0.16) 100%
-  );
-  box-shadow:
-    inset 0 1px 0 rgba(255, 230, 232, 0.4),
-    inset 0 -1px 0 rgba(90, 10, 24, 0.3),
-    0 0 18px rgba(255, 70, 90, 0.22);
-}
-/* Single sheen only */
+/* Single sheen only — header chrome, not the dock plate */
 .bottom-tabs-shine {
   pointer-events: none;
   background: linear-gradient(
@@ -1135,28 +1043,30 @@
   position: relative;
   z-index: 3;
 }
-/* Bright icy-white etched glass — #204 lineage, bloom dialed back.
-   Opaque faces, sharp white rim. Active: faint under-hue catch-light only. */
+/* Dock labels — 2026-09-08 tokens. No etch, no glow, no text-shadow. */
 .bottom-tab-label {
   position: relative;
   display: inline-block;
   overflow: visible;
   font-size: var(--dock-label-size);
-  letter-spacing: var(--dock-label-track);
+  font-weight: 600;
+  letter-spacing: 0.5px;
   line-height: 1;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: none;
 }
 @media (min-width: 640px) {
   .bottom-tab-label {
     font-size: var(--dock-label-size-sm);
-    letter-spacing: 0.06em;
+    letter-spacing: 0.5px;
   }
 }
 .bottom-tab-label-sold {
-  letter-spacing: 0.08em;
+  letter-spacing: 0.5px;
 }
 .bottom-tab-label-sold-owed {
   font-size: 0.6875rem;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.5px;
   text-transform: none;
   font-variant-numeric: tabular-nums;
 }
@@ -1165,167 +1075,6 @@
     font-size: 0.75rem;
   }
 }
-.bottom-tab-etch-halo,
-.bottom-tab-etch-core,
-.bottom-tab-etch-bevel {
-  position: absolute;
-  left: 0;
-  top: 0;
-  white-space: nowrap;
-}
-.bottom-tab-etch-halo {
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  text-shadow: none;
-}
-.bottom-tab-etch-core {
-  background-image: linear-gradient(
-    180deg,
-    #ffffff 0%,
-    #f4f9ff 42%,
-    #e6f1ff 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-}
-.bottom-tab-etch-bevel {
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  text-shadow:
-    0.55px 0.7px 0 rgba(18, 48, 88, 0.22),
-    -0.5px -0.6px 0 rgba(255, 255, 255, 0.92);
-}
-.bottom-tab-etch-face {
-  position: relative;
-  background-image: linear-gradient(
-    180deg,
-    #ffffff 0%,
-    #f7fbff 38%,
-    #eef6ff 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  filter:
-    drop-shadow(0.55px 0 0 #ffffff)
-    drop-shadow(-0.5px 0 0 #ffffff)
-    drop-shadow(0 -0.55px 0 #ffffff)
-    drop-shadow(0 0.5px 0 rgba(255, 255, 255, 0.95));
-}
-.bottom-tab-label.is-etched-active .bottom-tab-etch-halo {
-  color: var(--dock-etch-under-hue);
-  -webkit-text-fill-color: var(--dock-etch-under-hue);
-  text-shadow: none;
-  transform: translateY(var(--dock-etch-under-shift));
-}
-.bottom-tab-label.is-etched-active .bottom-tab-etch-core {
-  background-image: linear-gradient(
-    180deg,
-    #ffffff 0%,
-    #ffffff 40%,
-    #f0f7ff 100%
-  );
-}
-.bottom-tab-label.is-etched-active .bottom-tab-etch-bevel {
-  text-shadow:
-    0.55px 0.7px 0 rgba(18, 48, 88, 0.16),
-    -0.55px -0.65px 0 rgba(255, 255, 255, 1);
-}
-.bottom-tab-label.is-etched-active .bottom-tab-etch-face {
-  background-image: linear-gradient(
-    180deg,
-    #ffffff 0%,
-    #ffffff 36%,
-    #f4f9ff 100%
-  );
-  filter:
-    drop-shadow(0.6px 0 0 #ffffff)
-    drop-shadow(-0.55px 0 0 #ffffff)
-    drop-shadow(0 -0.6px 0 #ffffff)
-    drop-shadow(0 0.55px 0 #ffffff);
-}
-.bottom-tab-label-grok .bottom-tab-etch-halo {
-  text-shadow: none;
-}
-.bottom-tab-label-grok .bottom-tab-etch-core {
-  background-image: linear-gradient(
-    180deg,
-    #ffffff 0%,
-    #fff6f8 48%,
-    #ffe8ee 100%
-  );
-}
-.bottom-tab-label-grok .bottom-tab-etch-face {
-  background-image: linear-gradient(
-    180deg,
-    #ffffff 0%,
-    #fff8fa 40%,
-    #ffeff3 100%
-  );
-  filter:
-    drop-shadow(0.55px 0 0 #ffffff)
-    drop-shadow(-0.5px 0 0 #ffffff)
-    drop-shadow(0 -0.55px 0 #ffffff)
-    drop-shadow(0 0.5px 0 rgba(255, 246, 248, 0.95));
-}
-.bottom-tab-label-grok.is-etched-active .bottom-tab-etch-halo {
-  color: var(--dock-etch-under-hue-grok);
-  -webkit-text-fill-color: var(--dock-etch-under-hue-grok);
-  text-shadow: none;
-  transform: translateY(var(--dock-etch-under-shift));
-}
-.bottom-tab-label-grok.is-etched-active .bottom-tab-etch-core {
-  background-image: linear-gradient(
-    180deg,
-    #ffffff 0%,
-    #fffafb 42%,
-    #ffeef2 100%
-  );
-}
-.bottom-tab-mark {
-  height: 2px;
-  width: 0.875rem;
-  border-radius: 999px;
-  background: var(--color-sapphire-glow);
-  box-shadow: 0 0 8px rgba(140, 200, 255, 0.7);
-}
-.bottom-tab-mark-ruby {
-  background: var(--color-ruby-glow);
-  box-shadow: 0 0 8px rgba(255, 90, 110, 0.75);
-}
-.bottom-tab-mark-gold {
-  background: var(--color-amber);
-  box-shadow: 0 0 8px rgba(232, 180, 80, 0.7);
-}
-.bottom-tab-label-sapphire {
-  background: linear-gradient(180deg, #fff 0%, #cfe4ff 45%, #8ec5ff 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.bottom-tab-label-ruby {
-  background: linear-gradient(180deg, #fff5f6 0%, #ffc0c8 40%, #ff6a7a 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.bottom-tab-specular {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.18) 0%,
-    transparent 55%
-  );
-}
-.bottom-tab-active-glow-sapphire {
-  box-shadow: inset 0 0 24px rgba(100, 180, 255, 0.25);
-}
-.bottom-tab-active-glow-ruby {
-  box-shadow: inset 0 0 24px rgba(255, 80, 100, 0.28);
-}
-
 /* Header banner — single sheen */
 .sapphire-banner-ambient {
   background: radial-gradient(
