@@ -10,8 +10,11 @@ import {
   parseExampleChip,
   pickerCoachWrite,
   resolveShareOpenSel,
+  revealFactsModelTrim,
   selFromExampleChip,
+  shouldCascadeAutoSearch,
   shouldOpenSingleHitReport,
+  showFactsExampleChips,
 } from "./factsOpen.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -131,6 +134,35 @@ test("picker must not publish null Active Coach while a report is open", () => {
 
   // Empty picker with no report may clear (Reset)
   assert.equal(pickerCoachWrite(empty, { reportOpen: false }), null);
+});
+
+test("Model/Trim reveal after year+make — Search is not the gate", () => {
+  assert.equal(revealFactsModelTrim({ year: "", make: "", model: "", floorplan: "" }), false);
+  assert.equal(revealFactsModelTrim({ year: "2023", make: "", model: "", floorplan: "" }), false);
+  assert.equal(
+    revealFactsModelTrim({ year: "2023", make: "Newmar", model: "", floorplan: "" }),
+    true,
+    "year + make must show Model without a Search click",
+  );
+  assert.equal(
+    revealFactsModelTrim({ year: "", make: "", model: "Dutch Star", floorplan: "" }),
+    true,
+  );
+  assert.equal(showFactsExampleChips({ year: "", make: "" }), true);
+  assert.equal(
+    showFactsExampleChips({ year: "2023", make: "Newmar" }),
+    false,
+    "example chips stay a first-run shortcut, not a Search-gate stand-in",
+  );
+});
+
+test("cascade auto-search fires once year+make+model are set", () => {
+  assert.equal(shouldCascadeAutoSearch({ year: "2023", make: "Newmar" }), false);
+  assert.equal(
+    shouldCascadeAutoSearch({ year: "2023", make: "Newmar", model: "Dutch Star" }),
+    true,
+  );
+  assert.equal(shouldCascadeAutoSearch({ year: "2023", make: "", model: "Dutch Star" }), false);
 });
 
 test("Open report opens a single non-custom hit and not a multi/custom list", () => {
@@ -260,7 +292,9 @@ test("Facts first-run hero, year+make default, and chip search stay on the casca
   assert.match(fax, /selFromExampleChip/);
   assert.match(fax, /runExampleChip/);
   assert.match(fax, /runSearchNow\(sel\)/);
-  assert.match(fax, /revealModelTrim/);
+  assert.match(fax, /revealFactsModelTrim/);
+  assert.match(fax, /shouldCascadeAutoSearch/);
+  assert.match(fax, /refreshCascadeAfterChange/);
   assert.match(fax, /data-facts-example-chip/);
   assert.match(fax, /label="Year"/);
   assert.match(fax, /label="Make"/);
@@ -270,14 +304,24 @@ test("Facts first-run hero, year+make default, and chip search stay on the casca
   assert.doesNotMatch(fax, /F-250/);
   assert.doesNotMatch(fax, /Keystone Cougar/);
   assert.doesNotMatch(fax, /Winnebago Vista/);
-  // Required year + make stay on the first-run form — not inside revealModelTrim
+  assert.doesNotMatch(
+    fax,
+    /revealModelTrim = hasSearched/,
+    "Search must not gate Model/Trim",
+  );
+  assert.doesNotMatch(
+    fax,
+    /if \(field === "floorplan" && next\.year/,
+    "auto-fetch is not floorplan-only",
+  );
+  // Required year + make stay on the first-run form — Model/Trim follow year+make
   const yearAt = fax.indexOf('label="Year"');
   const makeAt = fax.indexOf('label="Make"');
   const revealAt = fax.indexOf("{revealModelTrim ? (");
   const modelAt = fax.indexOf('label="Model"');
   assert.ok(yearAt > 0 && makeAt > yearAt);
   assert.ok(revealAt > makeAt, "year and make stay visible before the tail");
-  assert.ok(modelAt > revealAt, "model/trim reveal after the first result");
+  assert.ok(modelAt > revealAt, "model/trim follow year+make, not a Search click");
 });
 
 test("Facts landing uses the showroom motorhome behind glass, cards stay put", () => {

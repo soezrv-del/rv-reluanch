@@ -49,8 +49,11 @@ import {
   FACTS_EXAMPLE_CHIPS,
   pickerCoachWrite,
   resolveShareOpenSel,
+  revealFactsModelTrim,
   selFromExampleChip,
+  shouldCascadeAutoSearch,
   shouldOpenSingleHitReport,
+  showFactsExampleChips,
 } from "@/lib/rv/factsOpen";
 import { didYouMean, type SuggestHit } from "@/lib/rv/suggest";
 import { cn } from "@/lib/utils";
@@ -535,7 +538,38 @@ export function RvFaxApp({
     [applySel, runSearchNow],
   );
 
-  const revealModelTrim = hasSearched || Boolean(model || floorplan);
+  const refreshCascadeAfterChange = useCallback(
+    (next: SearchSel) => {
+      void ensureCatalogLoaded();
+      if (shouldCascadeAutoSearch(next)) {
+        runSearchNow({
+          year: next.year,
+          make: next.make,
+          model: next.model,
+          floorplan: next.floorplan,
+          rvType: next.rvType,
+        });
+        return;
+      }
+      setHasSearched(false);
+      setResults([]);
+    },
+    [runSearchNow],
+  );
+
+  // Year + Make unlocks Model / Trim — Search is not the gate.
+  const revealModelTrim = revealFactsModelTrim({
+    year,
+    make,
+    model,
+    floorplan,
+  });
+  const exampleChipsOpen = showFactsExampleChips({
+    year,
+    make,
+    model,
+    floorplan,
+  });
 
   const onCascadeSelect = useCallback(
     (field: CascadeField, value: string) => {
@@ -547,19 +581,9 @@ export function RvFaxApp({
       );
       applySel(next);
       setSheet(null);
-      setHasSearched(false);
-      setResults([]);
-      if (field === "floorplan" && next.year && next.make && next.model) {
-        runSearchNow({
-          year: next.year,
-          make: next.make,
-          model: next.model,
-          floorplan: next.floorplan,
-          rvType: next.rvType,
-        });
-      }
+      refreshCascadeAfterChange(next);
     },
-    [year, make, model, floorplan, rvType, applySel, runSearchNow],
+    [year, make, model, floorplan, rvType, applySel, refreshCascadeAfterChange],
   );
 
   useEffect(() => {
@@ -596,10 +620,9 @@ export function RvFaxApp({
       if (hit.model) next = applyCascadeChange(next, "model", hit.model);
       applySel(next);
       setSuggestions([]);
-      setHasSearched(false);
-      setResults([]);
+      refreshCascadeAfterChange(next);
     },
-    [year, make, model, floorplan, rvType, applySel],
+    [year, make, model, floorplan, rvType, applySel, refreshCascadeAfterChange],
   );
 
   const toggleSave = (r: RVResult) => {
@@ -885,7 +908,7 @@ export function RvFaxApp({
               ) : null}
             </div>
 
-            {!revealModelTrim ? (
+            {exampleChipsOpen ? (
               <div className="flex flex-wrap gap-2">
                 {FACTS_EXAMPLE_CHIPS.map((label) => (
                   <button
