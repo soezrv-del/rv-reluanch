@@ -1,7 +1,8 @@
 /**
  * Professional Sold book — device-local deals from Facts saved coaches.
  * Lot-desk net: 25% of gross for a whole deal, then × share
- * (whole 1 / half 0.5 / quarter 0.25). Never typed. No delete in v1.
+ * (whole 1 / half 0.5 / quarter 0.25). Never typed.
+ * Remove is confirm-then-drop from `rvfax_sold_v1` — stays gone after refresh.
  */
 
 import {
@@ -131,6 +132,11 @@ export function soldTotals(deals: SoldDeal[]): SoldTotals {
   return { totalGross, owedNet, paidNet };
 }
 
+/** Facts chip line — totals visible without opening the Sold book. */
+export function soldFactsSummary(totals: SoldTotals): string {
+  return `${formatSoldMoney(totals.totalGross)} gross · ${formatSoldMoney(totals.owedNet)} owed`;
+}
+
 export function normalizeSoldDeal(raw: unknown): SoldDeal | null {
   if (!raw || typeof raw !== "object") return null;
   const row = raw as Record<string, unknown>;
@@ -198,6 +204,13 @@ export function persistSoldDeals(deals: SoldDeal[]): SoldDeal[] {
 
 export function toggleDealPaid(deals: SoldDeal[], id: string): SoldDeal[] {
   return deals.map((d) => (d.id === id ? { ...d, paid: !d.paid } : d));
+}
+
+/** Drop one deal. Caller persists — empty id is a no-op. */
+export function removeSoldDeal(deals: SoldDeal[], id: string): SoldDeal[] {
+  const want = typeof id === "string" ? id.trim() : "";
+  if (!want) return deals;
+  return deals.filter((d) => d.id !== want);
 }
 
 function newDealId(): string {

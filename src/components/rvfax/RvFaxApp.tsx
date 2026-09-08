@@ -81,13 +81,14 @@ import {
   loadSoldDeals,
   OPEN_SOLD_EVENT,
   persistSoldDeals,
+  removeSoldDeal,
   sellSavedCoach,
   SOLD_CHANGED_EVENT,
   toggleDealPaid,
   type DealSplitId,
   type SoldDeal,
 } from "@/lib/rv/soldDeals";
-import { SoldList } from "./SoldList";
+import { SoldList, SoldTotalsChip } from "./SoldList";
 import { SoldPrompt } from "./SoldPrompt";
 
 const RvDetail = lazy(() =>
@@ -648,6 +649,7 @@ export function RvFaxApp({
             deals={deals}
             onBack={() => setSoldOpen(false)}
             onTogglePaid={(id) => persistDeals(toggleDealPaid(deals, id))}
+            onRemove={(id) => persistDeals(removeSoldDeal(deals, id))}
           />
         </div>
       </div>
@@ -1003,7 +1005,7 @@ export function RvFaxApp({
           ) : null}
 
           {/* Saved */}
-          {saved.length > 0 || (isPro && deals.length > 0) ? (
+          {saved.length > 0 ? (
             <section className="space-y-2.5">
               <div className="flex items-center justify-between px-0.5">
                 <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-white">
@@ -1077,23 +1079,11 @@ export function RvFaxApp({
             </section>
           ) : null}
 
-          {isPro && saved.length === 0 ? (
-            <button
-              type="button"
-              onClick={() => setSoldOpen(true)}
-              className="glass-prestige flex w-full min-h-[52px] items-center gap-3 rounded-[var(--radius-xl)] px-4 py-3 text-left active:scale-[0.99]"
-            >
-              <CircleDollarSign className="size-5 shrink-0 text-gold-bright" />
-              <div className="min-w-0 flex-1">
-                <p className="text-[14px] font-bold text-white">Sold</p>
-                <p className="text-[11px] text-white/70">
-                  {deals.length > 0
-                    ? `${deals.length} deal${deals.length === 1 ? "" : "s"}`
-                    : "Save a coach, then log a deal"}
-                </p>
-              </div>
-              <ChevronDown className="size-4 -rotate-90 text-white" />
-            </button>
+          {isPro ? (
+            <SoldTotalsChip
+              deals={deals}
+              onOpen={() => setSoldOpen(true)}
+            />
           ) : null}
 
           {/* VIN last */}

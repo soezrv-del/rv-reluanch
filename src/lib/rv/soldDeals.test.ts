@@ -7,9 +7,11 @@ import {
   normalizeCustomerName,
   parseGrossAmount,
   persistSoldDeals,
+  removeSoldDeal,
   salesmanNet,
   sellSavedCoach,
   SOLD_DEALS_KEY,
+  soldFactsSummary,
   soldTotals,
   toggleDealPaid,
   type SoldDeal,
@@ -145,6 +147,73 @@ test("paid toggle drops net out of owed and tap-again restores", () => {
   assert.equal(afterRevert.owedNet, 1250);
   assert.equal(afterRevert.paidNet, 0);
   assert.equal(reverted.find((d) => d.id === first.deal.id)?.paid, false);
+});
+
+test("removeSoldDeal drops the row and persist stays gone after reload", () => {
+  const first = sellSavedCoach([dream], [], {
+    unit: dream,
+    customerName: "Kim",
+    gross: 8000,
+    split: "half",
+  });
+  assert.equal(first.ok, true);
+  if (!first.ok) return;
+  const second = sellSavedCoach([montana], first.deals, {
+    unit: montana,
+    customerName: "Lee",
+    gross: 4000,
+    split: "quarter",
+  });
+  assert.equal(second.ok, true);
+  if (!second.ok) return;
+
+  assert.equal(removeSoldDeal(second.deals, "").length, 2);
+  assert.equal(removeSoldDeal(second.deals, "missing").length, 2);
+
+  const after = removeSoldDeal(second.deals, first.deal.id);
+  assert.equal(after.length, 1);
+  assert.equal(after[0]!.id, second.deal.id);
+  const totals = soldTotals(after);
+  assert.equal(totals.totalGross, 4000);
+  assert.equal(totals.owedNet, 250);
+  assert.equal(
+    soldFactsSummary(totals),
+    "$4,000 gross · $250 owed",
+  );
+
+  const mem = new Map<string, string>();
+  const store = {
+    getItem: (k: string) => mem.get(k) ?? null,
+    setItem: (k: string, v: string) => {
+      mem.set(k, v);
+    },
+    removeItem: (k: string) => {
+      mem.delete(k);
+    },
+  };
+  const g = globalThis as { localStorage?: typeof store };
+  const prev = g.localStorage;
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: store,
+  });
+  try {
+    persistSoldDeals(after);
+    assert.equal(loadSoldDeals().length, 1);
+    persistSoldDeals(removeSoldDeal(loadSoldDeals(), second.deal.id));
+    assert.deepEqual(loadSoldDeals(), []);
+    assert.equal(soldFactsSummary(soldTotals([])), "$0 gross · $0 owed");
+  } finally {
+    if (prev) {
+      Object.defineProperty(globalThis, "localStorage", {
+        configurable: true,
+        value: prev,
+      });
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (globalThis as any).localStorage;
+    }
+  }
 });
 
 test("gross parse requires a positive amount — no free-text split", () => {

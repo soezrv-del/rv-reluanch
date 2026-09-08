@@ -67,9 +67,19 @@ test("Facts / More / dock gate Sold to isProfessionalTier — no extra dock tab"
     join(root, "../../components/shell/BottomTabs.tsx"),
     "utf8",
   );
+  const list = readFileSync(
+    join(root, "../../components/rvfax/SoldList.tsx"),
+    "utf8",
+  );
   assert.match(fax, /isProfessionalTier/);
   assert.match(fax, /SoldPrompt/);
+  assert.match(fax, /SoldTotalsChip/);
+  assert.match(fax, /removeSoldDeal/);
   assert.match(more, /isProfessionalTier/);
+  assert.match(more, /soldFactsSummary/);
   assert.doesNotMatch(dock, /sold|rvsold/i);
   assert.match(dock, /grid-cols-5/);
+  assert.match(list, /soldFactsSummary/);
+  assert.match(list, /Remove this deal\?/);
+  assert.match(list, /onRemove/);
 });

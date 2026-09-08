@@ -24,7 +24,12 @@ import { SuitePage } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import type { AppTab } from "@/components/shell/BottomTabs";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
-import { OPEN_SOLD_EVENT } from "@/lib/rv/soldDeals";
+import {
+  loadSoldDeals,
+  OPEN_SOLD_EVENT,
+  soldFactsSummary,
+  soldTotals,
+} from "@/lib/rv/soldDeals";
 import { NhtsaRecallsPanel } from "@/components/nhtsa/NhtsaRecallsPanel";
 import { VoicePanel } from "@/components/rvgrok/VoicePanel";
 import type { GrokVoice } from "@/lib/rvgrok/voice";
@@ -146,6 +151,7 @@ export function MoreApp({
     () => ({
       saved: countSaved(),
       chats: countGrokChats(),
+      soldLine: soldFactsSummary(soldTotals(loadSoldDeals())),
     }),
     // re-read when opening More — parent remounts not needed; refresh on focus
     [sheet],
@@ -236,7 +242,7 @@ export function MoreApp({
                 <RowLink
                   icon={<CircleDollarSign className="size-4 text-gold-bright" />}
                   title="Sold"
-                  sub="Log a deal from a saved coach"
+                  sub={stats.soldLine}
                   onClick={() => {
                     try {
                       window.dispatchEvent(new Event(OPEN_SOLD_EVENT));
