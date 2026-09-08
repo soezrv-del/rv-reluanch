@@ -36,8 +36,43 @@ const TABS: {
   { id: "rvtrips", label: "RvTRIPS", short: "Trips" },
 ];
 
+function EtchLabel({
+  text,
+  active,
+  grok,
+  className,
+}: {
+  text: string;
+  active?: boolean;
+  grok?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "bottom-tab-label pointer-events-none text-center font-extrabold uppercase leading-none",
+        grok && "bottom-tab-label-grok",
+        active && "is-etched-active",
+        className,
+      )}
+      data-label={text}
+    >
+      <span aria-hidden className="bottom-tab-etch-halo">
+        {text}
+      </span>
+      <span aria-hidden className="bottom-tab-etch-core">
+        {text}
+      </span>
+      <span aria-hidden className="bottom-tab-etch-bevel">
+        {text}
+      </span>
+      <span className="bottom-tab-etch-face">{text}</span>
+    </span>
+  );
+}
+
 /**
- * Floating etched-glass dock — text labels, sliding active capsule.
+ * Floating etched-glass dock — bright icy-white labels, sliding capsule.
  *
  * Android WebView: do NOT put pointer-events-none on this nav. Parent
  * none + child auto + backdrop-filter fails hit-testing on Chromium
@@ -190,33 +225,19 @@ export function BottomTabs({
             >
               {isSold ? (
                 <span className="pointer-events-none flex flex-col items-center justify-center gap-0.5 leading-none">
-                  <span className="text-[8px] font-extrabold tracking-[0.16em] text-white">
-                    Sold
-                  </span>
-                  <span className="text-[11px] font-extrabold tabular-nums text-white sm:text-[12px]">
-                    {short}
-                  </span>
+                  <EtchLabel
+                    text="Sold"
+                    active={active}
+                    className="bottom-tab-label-sold"
+                  />
+                  <EtchLabel
+                    text={short}
+                    active={active}
+                    className="bottom-tab-label-sold-owed"
+                  />
                 </span>
               ) : (
-                <span
-                  className={cn(
-                    "bottom-tab-label pointer-events-none text-center font-extrabold uppercase leading-none",
-                    isGrok && "bottom-tab-label-grok",
-                    active && "is-etched-active",
-                  )}
-                  data-label={short}
-                >
-                  <span aria-hidden className="bottom-tab-etch-halo">
-                    {short}
-                  </span>
-                  <span aria-hidden className="bottom-tab-etch-core">
-                    {short}
-                  </span>
-                  <span aria-hidden className="bottom-tab-etch-bevel">
-                    {short}
-                  </span>
-                  <span className="bottom-tab-etch-face">{short}</span>
-                </span>
+                <EtchLabel text={short} active={active} grok={isGrok} />
               )}
               {active ? (
                 <span
