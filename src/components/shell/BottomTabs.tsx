@@ -7,8 +7,8 @@ import {
 } from "@/lib/hooks/nativeWebView";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
 import {
+  formatSoldDockAria,
   formatSoldDockMoney,
-  formatSoldMoney,
   readOwedNet,
   SOLD_CHANGED_EVENT,
 } from "@/lib/rv/soldDeals";
@@ -152,7 +152,7 @@ export function BottomTabs({
           const active = tab === id;
           const isGrok = id === "rvgrok";
           const isSold = id === "rvsold";
-          const soldLabel = `Sold · ${formatSoldMoney(owedNet)} owed`;
+          const soldLabel = formatSoldDockAria(owedNet);
           return (
             <button
               key={id}
@@ -190,8 +190,8 @@ export function BottomTabs({
             >
               {isSold ? (
                 <span className="pointer-events-none flex flex-col items-center justify-center gap-0.5 leading-none">
-                  <span className="text-[8px] font-extrabold tracking-[0.16em] text-amber">
-                    SOLD
+                  <span className="text-[8px] font-extrabold tracking-[0.16em] text-white">
+                    Sold
                   </span>
                   <span className="text-[11px] font-extrabold tabular-nums text-white sm:text-[12px]">
                     {short}

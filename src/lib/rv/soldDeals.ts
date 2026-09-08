@@ -98,26 +98,21 @@ export function formatSoldMoney(n: number): string {
   return n < 0 ? `-$${formatted}` : `$${formatted}`;
 }
 
-/** Compact owed figure for the pro dock tab — always the unpaid net. */
+/**
+ * Dock owed figure — bare digits only. No `$`, no “owed”, no compact k/M.
+ * Glance-safe for a phone on the lot: `9,375` never `$9,375`.
+ */
 export function formatSoldDockMoney(n: number): string {
-  if (!Number.isFinite(n)) return "$0";
-  const sign = n < 0 ? "-" : "";
-  const abs = Math.abs(Math.round(n));
-  if (abs >= 1_000_000) {
-    const m = abs / 1_000_000;
-    const s = m >= 10 ? String(Math.round(m)) : trimDockDecimal(m);
-    return `${sign}$${s}M`;
-  }
-  if (abs >= 10_000) {
-    const k = abs / 1000;
-    const s = Number.isInteger(k) ? String(k) : trimDockDecimal(k);
-    return `${sign}$${s}k`;
-  }
-  return formatSoldMoney(n);
+  if (!Number.isFinite(n)) return "0";
+  const rounded = Math.round(n);
+  const formatted = Math.abs(rounded).toLocaleString("en-US");
+  return rounded < 0 ? `-${formatted}` : formatted;
 }
 
-function trimDockDecimal(n: number): string {
-  return n.toFixed(1).replace(/\.0$/, "");
+/** Screen-reader / title only — visible dock chrome must not use this. */
+export function formatSoldDockAria(n: number): string {
+  const rounded = Number.isFinite(n) ? Math.round(n) : 0;
+  return `Sold · ${rounded} owed`;
 }
 
 export function readOwedNet(): number {
