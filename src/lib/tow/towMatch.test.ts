@@ -214,7 +214,14 @@ test("RvTowApp salesman default: truck + coach + two numbers, More details colla
   assert.equal(src.includes("function GuideCard"), false);
   assert.equal(src.includes(">Details<"), false);
   assert.ok(gvwr > details, "GVWR lives in More details");
-  assert.ok(trim > details, "trim / engine lives in More details");
+  assert.ok(
+    trim >= 0 && trim < details,
+    "trim / engine stays on the default view — required for max tow + pin",
+  );
+  assert.ok(
+    src.lastIndexOf("TRIM / ENGINE / CONFIGURATION") < details,
+    "More details must not bury the trim picker the math needs",
+  );
   assert.ok(bed > details, "bed length lives in More details");
   assert.ok(
     src.indexOf("<HitchWeightField") > details,
