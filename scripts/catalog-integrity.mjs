@@ -5764,6 +5764,93 @@ function main() {
     }
   }
 
+  // Coachmen MY2010 living-line honesty.
+  // LOCK Catalina TT (10_Catalina_TT.pdf CreationDate 2010-04-29 + RVUSA 2010 year page)
+  // and Chaparral Lite FW (populated RVUSA 2010 year page).
+  // GAP Apex / Encore / Sportscoach — empty > invent. Never copy 2009 or 2011 → 2010.
+  {
+    const c0 = src.indexOf("\n  Coachmen: {");
+    const c1 = src.indexOf("\n  Winnebago: {");
+    if (c0 < 0 || c1 < c0) {
+      fail("Coachmen block not found between Coachmen: and Winnebago:");
+    } else {
+      const cm = src.slice(c0, c1);
+      const slice = (a, b) => {
+        const i = cm.indexOf(`    ${a}: {`) >= 0 ? cm.indexOf(`    ${a}: {`) : cm.indexOf(`    "${a}": {`);
+        const j = cm.indexOf(`    ${b}: {`) >= 0 ? cm.indexOf(`    ${b}: {`) : cm.indexOf(`    "${b}": {`);
+        if (i < 0) return "";
+        return j > i ? cm.slice(i, j) : cm.slice(i);
+      };
+
+      const cat = slice("Catalina", "Catalina Legacy Edition");
+      if (!/type: "Travel Trailer"/.test(cat)) fail("Coachmen|Catalina must stay Travel Trailer");
+      if (
+        !/"2010": \["20RD", "21BH", "22FB", "24FBS", "26BH", "27BHS", "28BHS", "29RLS", "29RKS", "30BHS", "32BHDS", "38BHDS"\]/.test(
+          cat,
+        )
+      ) {
+        fail("Coachmen|Catalina MY2010 10_Catalina_TT.pdf + RVUSA 2010 lock missing");
+      }
+      if (/"2009":/.test(cat) || /"2011":/.test(cat)) {
+        fail("Coachmen|Catalina must not invent 2009 or 2011 (never copy adjacent years onto 2010)");
+      }
+      if (/"2010": .*"243RBS"/.test(cat) || /"2010": .*"283RKS"/.test(cat)) {
+        fail("Coachmen|Catalina must not stamp leftover 2012+ codes onto 2010");
+      }
+
+      const chl = slice("Chaparral Lite", "Brookstone");
+      if (!/type: "Fifth Wheel"/.test(chl)) fail("Coachmen|Chaparral Lite must stay Fifth Wheel");
+      if (!/"2010": \["267RL", "268RLE", "269BH", "270RKS"\]/.test(chl)) {
+        fail("Coachmen|Chaparral Lite MY2010 RVUSA 2010 year-page lock missing (267RL / 268RLE / 269BH / 270RKS)");
+      }
+      if (/"2010": .*"271BHS"/.test(chl) || /"2010": .*"275RLS"/.test(chl)) {
+        fail("Coachmen|Chaparral Lite MY2010 must not add 271BHS / 275RLS");
+      }
+      if (/"2009":/.test(chl) || /"2011":/.test(chl)) {
+        fail("Coachmen|Chaparral Lite must not invent 2009 or 2011 (never copy adjacent years onto 2010)");
+      }
+      if (/"2010": .*"218SE"/.test(chl) || /"2010": .*"368TBH"/.test(chl)) {
+        fail("Coachmen|Chaparral Lite must not stamp leftover 2026 Lite codes onto 2010");
+      }
+
+      const apex = slice("Apex", "Apex Nano");
+      if (/"2010":/.test(apex)) {
+        fail("Coachmen|Apex must omit MY2010 fby (GAP — never copy 2011 Apex or Viking Apex)");
+      }
+
+      const encore = slice("Encore", "Sportscoach");
+      if (/"2010":/.test(encore)) {
+        fail("Coachmen|Encore must omit MY2010 fby (GAP — Available Years 2021–2027; leave empty)");
+      }
+
+      const sports = slice("Sportscoach", "Freelander");
+      if (/"2010":/.test(sports)) {
+        fail("Coachmen|Sportscoach must omit MY2010 fby (GAP — never copy adjacent Cross Country; soft ≠ LOCK)");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      else {
+        const catalogIndex = JSON.parse(idxM[1]);
+        const cmIdx = catalogIndex.Coachmen;
+        if (!cmIdx) fail("Coachmen missing from CATALOG_INDEX");
+        else {
+          for (const name of ["Catalina", "Chaparral Lite"]) {
+            if (!cmIdx[name]?.years?.includes(2010)) {
+              fail(`Coachmen|${name} index must include 2010 (MY2010 LOCK)`);
+            }
+          }
+          for (const name of ["Apex", "Encore", "Sportscoach"]) {
+            if (cmIdx[name]?.years?.includes(2010)) {
+              fail(`Coachmen|${name} index must omit 2010 (MY2010 GAP)`);
+            }
+          }
+        }
+      }
+    }
+  }
+
   // Dynamax MY2022–2026 OEM floorplan lock (dated RVUSA library / OEM year-folder PDFs).
   // Unquoted `Dynamax: {` so the quoted-make parser misses it — slice raw like Newmar.
   {
