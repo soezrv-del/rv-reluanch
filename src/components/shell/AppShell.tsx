@@ -35,6 +35,10 @@ import {
   useKeyboardInset,
 } from "@/lib/hooks/useKeyboardInset";
 import { useDockSafeInset } from "@/lib/hooks/nativeWebView";
+import {
+  clearGrokSeedOnDockTap,
+  grokSeedFromAskHandoff,
+} from "@/lib/rvgrok/tabEntry";
 
 /**
  * Code-split suite tools — iOS cold start was parsing all apps under splash.
@@ -124,6 +128,7 @@ class SuiteErrorBoundary extends Component<
 export function AppShell() {
   const [tab, setTab] = useState<AppTab>("rvfax");
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
+  const [grokEntryToken, setGrokEntryToken] = useState(0);
   const [calSeed, setCalSeed] = useState<CalSeed | null>(null);
   const [tripsHandoff, setTripsHandoff] = useState<TripsHandoff | null>(null);
   const [towHandoff, setTowHandoff] = useState<FactsTowHandoff | null>(null);
@@ -187,7 +192,8 @@ export function AppShell() {
   }, []);
 
   const openGrok = (prompt?: string) => {
-    setGrokSeed(prompt);
+    setGrokSeed(grokSeedFromAskHandoff(prompt));
+    setGrokEntryToken((n) => n + 1);
     setTab("rvgrok");
     markVisited("rvgrok");
   };
@@ -269,6 +275,11 @@ export function AppShell() {
         return;
       }
       if (next === "rvsold" && !isProfessionalTier()) return;
+      if (next === "rvgrok") {
+        // Dock tap / swipe / More — never restore a leftover Ask-Grok seed.
+        setGrokSeed(clearGrokSeedOnDockTap());
+        setGrokEntryToken((n) => n + 1);
+      }
       setTab(next);
       markVisited(next);
       if (next !== "rvgrok") setGrokSplashPlaying(false);
@@ -421,6 +432,7 @@ export function AppShell() {
                     ) : id === "rvgrok" ? (
                       <RvGrokApp
                         active={tab === "rvgrok" && !launchOpen}
+                        entryToken={grokEntryToken}
                         seedPrompt={grokSeed}
                         onSeedConsumed={() => setGrokSeed(undefined)}
                         onNavigate={onTabChange}
