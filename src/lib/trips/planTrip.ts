@@ -3,6 +3,8 @@
  * cheap gates for as-you-type geocode. No routing, no profile.
  */
 
+import { featuredRvDestinations } from "./rvDestinations.ts";
+
 export type PlanPlace = {
   label: string;
   lat: number;
@@ -15,24 +17,8 @@ export const GEOCODE_DEBOUNCE_MS = 350;
 export const GEOCODE_MIN_CHARS = 2;
 export const MAX_VIAS = 3;
 
-/** One-tap destinations — coords match /api/geocode presets. */
-export const PLAN_DEST_CHIPS: PlanPlace[] = [
-  { label: "Seattle, WA", lat: 47.6062, lng: -122.3321, kind: "city" },
-  { label: "Portland, OR", lat: 45.5152, lng: -122.6784, kind: "city" },
-  {
-    label: "Glacier National Park, MT",
-    lat: 48.7596,
-    lng: -113.787,
-    kind: "park",
-  },
-  {
-    label: "Yellowstone National Park, WY",
-    lat: 44.428,
-    lng: -110.5885,
-    kind: "park",
-  },
-  { label: "Quartzsite, AZ", lat: 33.6639, lng: -114.2297, kind: "rv" },
-];
+/** Featured one-tap dests — first five of `RV_DESTINATIONS`. */
+export const PLAN_DEST_CHIPS: PlanPlace[] = featuredRvDestinations();
 
 /** Overnight / via chips — common western corridor stops. */
 export const PLAN_VIA_CHIPS: PlanPlace[] = [

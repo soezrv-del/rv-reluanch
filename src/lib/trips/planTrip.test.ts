@@ -205,7 +205,8 @@ test("Navigate plan-trip: dest-first, profile after route, no Search tap require
   assert.match(ui, /saveLastKnownOrigin/);
   assert.match(ui, /canSubmitPlan/);
   assert.match(ui, /shouldTypeahead/);
-  assert.match(ui, /PLAN_DEST_CHIPS/);
+  assert.match(ui, /data-dest-suggest/);
+  assert.match(ui, /mergeDestSuggestions/);
   assert.match(ui, /Use my location/);
   assert.match(ui, /Add an RV profile\?/);
   assert.match(ui, /Where to\?/);
