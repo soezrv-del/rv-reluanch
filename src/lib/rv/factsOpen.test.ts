@@ -133,8 +133,9 @@ test("Type is the first cascade step — Year stays locked until Type", () => {
   assert.equal(factsTypeLabel("class-a-diesel"), "Class A Diesel");
   assert.equal(factsTypeLabel("class-a-gas"), "");
   assert.equal(factsTypeLabel(""), "");
+  const typeIds: readonly string[] = FACTS_TYPE_OPTIONS.map((t) => t.id);
   assert.ok(
-    !FACTS_TYPE_OPTIONS.some((t) => t.id === "class-a-gas" || t.id === ""),
+    !typeIds.includes("class-a-gas") && !typeIds.includes(""),
     "Type step has no All / Class A Gas",
   );
 });
