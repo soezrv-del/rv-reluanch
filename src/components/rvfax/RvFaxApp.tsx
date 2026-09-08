@@ -36,7 +36,6 @@ import {
   formatYearRanges,
   modelPickerMeta,
   ratingFor,
-  RV_CLASS_TABS,
   rvClassLabel,
   isCatalogLoaded,
   searchCatalog,
@@ -46,10 +45,13 @@ import {
 } from "@/lib/rv/catalog";
 import {
   cascadeFromResult,
+  FACTS_TYPE_OPTIONS,
+  factsTypeLabel,
   pickerCoachWrite,
   resolveShareOpenSel,
   revealFactsFloorplan,
   revealFactsModel,
+  revealFactsYear,
   shouldCascadeAutoSearch,
   shouldOpenSingleHitReport,
 } from "@/lib/rv/factsOpen";
@@ -430,23 +432,18 @@ export function RvFaxApp({
     ];
   }, [cascade.floorplans, year, make, model]);
 
-  const typeItems = useMemo(() => {
-    const tabs = RV_CLASS_TABS.filter((t) => t.id !== "").map((t) => {
-      const n = countModelsForClass(year, t.id);
-      return { ...t, n };
-    }).filter((t) => t.n > 0);
-    return [
-      {
-        value: "",
-        label: "All types",
-        meta: year ? year : undefined,
-      },
-      ...tabs.map((t) => ({
-        value: t.id,
-        label: t.label,
-      })),
-    ];
-  }, [year, catalogGen]);
+  const typeItems = useMemo(
+    () =>
+      FACTS_TYPE_OPTIONS.map((t) => {
+        const n = countModelsForClass("", t.id);
+        return {
+          value: t.id,
+          label: t.label,
+          meta: n > 0 ? `${n.toLocaleString()} models` : undefined,
+        };
+      }),
+    [catalogGen],
+  );
 
   const catalogModelTotal = useMemo(
     () =>
@@ -546,7 +543,9 @@ export function RvFaxApp({
     [runSearchNow],
   );
 
-  // Year + Make unlocks Model. Model unlocks Floorplan. Search is not the gate.
+  // Type unlocks Year. Year + Make unlocks Model. Model unlocks Floorplan.
+  // Search is not the gate — year+make is the override path.
+  const yearUnlocked = revealFactsYear({ rvType });
   const revealModel = revealFactsModel({
     year,
     make,
@@ -735,7 +734,7 @@ export function RvFaxApp({
             </p>
           </section>
 
-          {/* Cascading dropdown search — year → make → model → floorplan */}
+          {/* Cascading dropdown search — type → year → make → model → floorplan */}
           <section className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4 sm:p-5">
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
@@ -743,17 +742,17 @@ export function RvFaxApp({
                   Catalog search
                 </p>
                 <p className="mt-1 text-[12px] leading-snug text-white/65">
-                  {year
+                  {rvType || year
                     ? [
+                        rvType ? factsTypeLabel(rvType) || rvClassLabel(rvType) : null,
                         year,
-                        rvType ? rvClassLabel(rvType) : null,
                         make,
                         model,
                         floorplan || (model ? "Any floorplan" : null),
                       ]
                         .filter(Boolean)
                         .join(" · ")
-                    : "Year and make to start"}
+                    : "Type, then year and make"}
                 </p>
                 {catalogReady ? (
                   <p className="mt-1 text-[11px] text-white/45">
@@ -833,24 +832,25 @@ export function RvFaxApp({
                   onClick={() => setSheet("era")}
                   sapphire
                 />
-                <FieldButton
-                  label="RV Type"
-                  value={rvType ? rvClassLabel(rvType) : ""}
-                  placeholder={year ? "All types" : "Pick a year first"}
-                  disabled={!year}
-                  onClick={() => year && setSheet("rvType")}
-                  sapphire
-                />
               </div>
             ) : null}
 
             <div className="space-y-3 border-t border-white/10 pt-4">
               <FieldButton
-                label="Year"
-                value={year}
+                label="Type"
+                value={factsTypeLabel(rvType) || (rvType ? rvClassLabel(rvType) : "")}
                 placeholder="Required"
                 required
-                onClick={() => setSheet("year")}
+                onClick={() => setSheet("rvType")}
+                sapphire
+              />
+              <FieldButton
+                label="Year"
+                value={year}
+                placeholder={yearUnlocked ? "Required" : "Pick a type first"}
+                required
+                disabled={!yearUnlocked}
+                onClick={() => yearUnlocked && setSheet("year")}
                 sapphire
               />
               <FieldButton
@@ -1120,8 +1120,8 @@ export function RvFaxApp({
       />
       <SelectSheet
         open={sheet === "rvType"}
-        title="RV Type"
-        subtitle={year ? year : undefined}
+        title="Type"
+        subtitle="Required · first step"
         items={typeItems}
         selected={rvType}
         onSelect={(v) => onCascadeSelect("rvType", v)}

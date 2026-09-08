@@ -146,6 +146,8 @@ export function matchesRvClass(
 }
 
 export function rvClassLabel(classId: string): string {
+  // Facts Type step uses class-a (any Class A) — not a tab, still a real id.
+  if (classId === "class-a") return "Class A";
   return RV_CLASS_TABS.find((t) => t.id === classId)?.label ?? "All";
 }
 
@@ -779,13 +781,13 @@ export function applyCascadeChange(
 
   switch (field) {
     case "year":
-      // Changing year clears type → make → model → floorplan
+      // Type stays (cascade step 1). Year change clears make → model → floorplan.
       next = {
         year: trimmed,
         make: "",
         model: "",
         floorplan: "",
-        rvType: "",
+        rvType: next.rvType,
       };
       break;
     case "make":
@@ -798,12 +800,13 @@ export function applyCascadeChange(
       next = { ...next, floorplan: trimmed };
       break;
     case "rvType":
+      // Type is first — changing it restarts Year and everything after.
       next = {
-        ...next,
-        rvType: trimmed,
+        year: "",
         make: "",
         model: "",
         floorplan: "",
+        rvType: trimmed,
       };
       break;
   }
