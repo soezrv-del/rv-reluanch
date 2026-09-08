@@ -57,8 +57,6 @@ import {
   type CoachSeedSource,
   type DimSource,
 } from "@/lib/trips/coachFromCatalog";
-import { readActiveCoach } from "@/lib/rv/activeCoach";
-import { loadLatestSavedUnit } from "@/lib/rv/savedUnits";
 import { decideTowHandoff } from "@/lib/trips/towHandoff";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
@@ -202,20 +200,7 @@ export function RvTripsApp() {
 
   const bootSeed = useMemo(() => {
     try {
-      const savedUnit = loadLatestSavedUnit();
-      return resolveTripsProfileSeed({
-        locked: loadLockedProfile(),
-        activeCoach: readActiveCoach(),
-        savedCoach: savedUnit
-          ? {
-              year: savedUnit.year,
-              make: savedUnit.make,
-              model: savedUnit.model,
-              floorplan: savedUnit.floorplan,
-              rvType: savedUnit.data?.type ?? undefined,
-            }
-          : null,
-      });
+      return resolveTripsProfileSeed({ locked: loadLockedProfile() });
     } catch {
       return null;
     }
@@ -313,43 +298,11 @@ export function RvTripsApp() {
   }, []);
 
   useEffect(() => {
-    const facts = readActiveCoach();
-    const savedUnit = loadLatestSavedUnit();
-    const resolved = resolveTripsProfileSeed({
-      locked: loadLockedProfile(),
-      activeCoach: facts,
-      savedCoach: savedUnit
-        ? {
-            year: savedUnit.year,
-            make: savedUnit.make,
-            model: savedUnit.model,
-            floorplan: savedUnit.floorplan,
-            rvType: savedUnit.data?.type ?? undefined,
-          }
-        : null,
-    });
+    const resolved = resolveTripsProfileSeed({ locked: loadLockedProfile() });
     if (!resolved) return;
     applySeedIdentity(resolved.profile, resolved.source);
     if (resolved.source === "locked") setLocked(resolved.profile);
   }, [applySeedIdentity]);
-
-  useEffect(() => {
-    if (locked || loadLockedProfile()) return;
-    const coach = shellNav?.activeCoach;
-    if (!coach?.year || !coach.make || !coach.model) return;
-    const key = coachIdentityKey(coach);
-    if (key === lastAutoKeyRef.current) return;
-    const suggested = suggestCoachFromSelection({
-      year: coach.year,
-      make: coach.make,
-      model: coach.model,
-      floorplan: coach.floorplan || "",
-      gvwrLbs: coach.gvwrLbs,
-      uvwLbs: coach.uvwLbs,
-      rvType: coach.rvType,
-    });
-    applySeedIdentity({ ...suggested, seedSource: "facts" }, "facts");
-  }, [shellNav?.activeCoach, locked, applySeedIdentity]);
 
   useEffect(() => {
     const handoff = shellNav?.tripsHandoff;
@@ -387,15 +340,6 @@ export function RvTripsApp() {
     [year, make, model, catalogGen],
   );
 
-  const factsWeights = useMemo(
-    () => ({
-      gvwrLbs: shellNav?.activeCoach?.gvwrLbs,
-      uvwLbs: shellNav?.activeCoach?.uvwLbs,
-      rvType: shellNav?.activeCoach?.rvType,
-    }),
-    [shellNav?.activeCoach],
-  );
-
   useEffect(() => {
     if (!year || !make || !model) {
       return;
@@ -405,9 +349,6 @@ export function RvTripsApp() {
       make,
       model,
       floorplan,
-      gvwrLbs: factsWeights.gvwrLbs,
-      uvwLbs: factsWeights.uvwLbs,
-      rvType: factsWeights.rvType,
     });
     setDraft((prev) => {
       if (
@@ -431,7 +372,7 @@ export function RvTripsApp() {
         seedSource: seedSource ?? suggested.seedSource ?? "manual",
       };
     });
-  }, [year, make, model, floorplan, catalogGen, factsWeights, seedSource]);
+  }, [year, make, model, floorplan, catalogGen, seedSource]);
 
   const displayCoach = locked ?? (coachIsReady(draft) ? draft : null);
 
@@ -1188,13 +1129,9 @@ export function RvTripsApp() {
   const profileBadge = locked
     ? "PROFILE LOCKED"
     : displayCoach
-      ? seedSource === "facts"
-        ? "FROM FACTS"
-        : seedSource === "saved"
-          ? "FROM SAVED"
-          : seedSource === "tow"
-            ? "FROM TOW"
-            : "COACH READY"
+      ? seedSource === "tow"
+        ? "FROM TOW"
+        : "COACH READY"
       : "ADD PROFILE";
 
   const refreshTrips = useCallback(() => {
@@ -1205,20 +1142,8 @@ export function RvTripsApp() {
     }
     if (!locked) {
       try {
-        const facts = readActiveCoach();
-        const savedUnit = loadLatestSavedUnit();
         const resolved = resolveTripsProfileSeed({
           locked: loadLockedProfile(),
-          activeCoach: facts,
-          savedCoach: savedUnit
-            ? {
-                year: savedUnit.year,
-                make: savedUnit.make,
-                model: savedUnit.model,
-                floorplan: savedUnit.floorplan,
-                rvType: savedUnit.data?.type ?? undefined,
-              }
-            : null,
         });
         if (resolved) applySeedIdentity(resolved.profile, resolved.source);
       } catch {
@@ -1339,13 +1264,9 @@ export function RvTripsApp() {
               </div>
               {seedSource === "locked" ? (
                 <p className="text-[12px] text-white/70">Locked on this device.</p>
-              ) : seedSource === "facts" || seedSource === "saved" || seedSource === "tow" ? (
+              ) : seedSource === "tow" ? (
                 <p className="text-[12px] text-white/70">
-                  {seedSource === "facts"
-                    ? "From Facts."
-                    : seedSource === "saved"
-                      ? "From a saved coach."
-                      : "From Tow. Dims from catalog, brochure, or Facts — not invented."}
+                  From Tow (one-shot). Dims from catalog or brochure — not from Facts session.
                 </p>
               ) : null}
               {towReplace ? (

@@ -228,7 +228,7 @@ test("profile lock does not require floorplan when dims are known", () => {
   assert.equal(coachIsReady(EMPTY_COACH_PROFILE), false);
 });
 
-test("resolveTripsProfileSeed: locked > Facts > saved; empty invents nothing", () => {
+test("resolveTripsProfileSeed: locked only — Facts/saved never seed GPS", () => {
   const facts = {
     year: "2023",
     make: "American Coach",
@@ -261,24 +261,11 @@ test("resolveTripsProfileSeed: locked > Facts > saved; empty invents nothing", (
     resolveTripsProfileSeed({ activeCoach: null, savedCoach: null }, stubSuggest),
     null,
   );
-
-  const fromFacts = resolveTripsProfileSeed(
-    { activeCoach: facts, savedCoach: saved },
-    stubSuggest,
+  assert.equal(
+    resolveTripsProfileSeed({ activeCoach: facts, savedCoach: saved }, stubSuggest),
+    null,
+    "Facts / saved-unit coaches must not seed Trips",
   );
-  assert.ok(fromFacts);
-  assert.equal(fromFacts.source, "facts");
-  assert.equal(fromFacts.profile.make, "American Coach");
-  assert.equal(fromFacts.profile.model, "American Dream");
-  assert.equal(fromFacts.profile.floorplan, "45A");
-  assert.equal(fromFacts.profile.weightLbs, 52000);
-  assert.equal(fromFacts.profile.dimSources?.weight, "facts");
-
-  const fromSaved = resolveTripsProfileSeed({ savedCoach: saved }, stubSuggest);
-  assert.ok(fromSaved);
-  assert.equal(fromSaved.source, "saved");
-  assert.equal(fromSaved.profile.make, "Keystone");
-  assert.equal(fromSaved.profile.model, "Montana");
 
   const fromLocked = resolveTripsProfileSeed(
     {
@@ -314,9 +301,9 @@ test("Trips Navigate no longer forces SET PROFILE when a coach is known", () => 
     "utf8",
   );
   assert.match(ui, /resolveTripsProfileSeed/);
-  assert.match(ui, /readActiveCoach/);
-  assert.match(ui, /loadLatestSavedUnit/);
-  assert.match(ui, /FROM FACTS/);
+  assert.doesNotMatch(ui, /readActiveCoach/);
+  assert.doesNotMatch(ui, /loadLatestSavedUnit/);
+  assert.doesNotMatch(ui, /FROM FACTS/);
   assert.match(ui, /Add an RV profile\?/);
   assert.doesNotMatch(ui, /SET PROFILE/);
   assert.doesNotMatch(ui, /Set your RV profile first/);
