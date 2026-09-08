@@ -4040,6 +4040,93 @@ function main() {
     }
   }
 
+  // Thor MY2010 living-line honesty.
+  // LOCK Windsport Class A Gas (dated RVUSA 2010_Windsport_Class_A_Brochure_LR.pdf semi-basement matrix only).
+  // GAP Four Winds Majestic — empty > invent. Never copy 2009 or 2011 → 2010.
+  {
+    const t0 = src.indexOf("\n  Thor: {");
+    const t1 = src.indexOf("\n  Coachmen: {");
+    if (t0 < 0 || t1 < t0) {
+      fail("Thor block not found between Thor: and Coachmen:");
+    } else {
+      const thor = src.slice(t0, t1);
+      const slice = (a, b) => {
+        const i = thor.indexOf(`    ${a}: {`) >= 0 ? thor.indexOf(`    ${a}: {`) : thor.indexOf(`    "${a}": {`);
+        const j =
+          b == null
+            ? thor.length
+            : thor.indexOf(`    ${b}: {`) >= 0
+              ? thor.indexOf(`    ${b}: {`)
+              : thor.indexOf(`    "${b}": {`);
+        if (i < 0) return "";
+        return j > i ? thor.slice(i, j) : thor.slice(i);
+      };
+
+      const ws = slice("Windsport", "Challenger");
+      if (!/type: "Class A Gas"/.test(ws)) fail("Thor|Windsport must stay Class A Gas");
+      if (!/"2010": \["30Q", "31D", "31G", "32A", "33T"\]/.test(ws)) {
+        fail("Thor|Windsport MY2010 2010_Windsport_Class_A_Brochure_LR.pdf lock missing (30Q / 31D / 31G / 32A / 33T)");
+      }
+      if (/"2010": .*"31J"/.test(ws) || /"2010": .*"32D"/.test(ws) || /"2010": .*"34T"/.test(ws)) {
+        fail("Thor|Windsport MY2010 must not copy 2011 Windsport 31J/32D/34T");
+      }
+      if (/"2010": .*"32V"/.test(ws) || /"2010": .*"34B"/.test(ws) || /"2010": .*"34U"/.test(ws) || /"2010": .*"36F"/.test(ws)) {
+        fail("Thor|Windsport MY2010 must not add soft basement 32V/34B/34U/36F");
+      }
+      if (/"2010": .*"31V"/.test(ws) || /"2010": .*"31Z"/.test(ws) || /"2010": .*"33A"/.test(ws)) {
+        fail("Thor|Windsport MY2010 must not absorb Serrano/Hurricane codes");
+      }
+      if (/"2010": .*"27R"/.test(ws) || /"2010": .*"29M"/.test(ws) || /"2010": .*"31S"/.test(ws) || /"2010": .*"34J"/.test(ws)) {
+        fail("Thor|Windsport MY2010 must not copy 2009 leftover 27R/29M/31S/34J");
+      }
+      if (/"2011": .*"31D"/.test(ws) || /"2011": .*"33T"/.test(ws)) {
+        fail("Thor|Windsport must not stamp MY2010 31D/33T onto 2011");
+      }
+
+      const majestic = slice("Four Winds Majestic", "Mandalay");
+      if (/"2010":/.test(majestic)) {
+        fail("Thor|Four Winds Majestic must omit MY2010 fby (GAP — no dated Majestic brochure; soft JD / Cruise America ≠ LOCK)");
+      }
+      if (/"19G"|"M-19G"|"M-27G"/.test(majestic)) {
+        fail("Thor|Four Winds Majestic must not invent 19G / M-19G / M-27G from Four Winds / Chateau");
+      }
+
+      const hurricane = slice("Hurricane", "Four Winds Majestic");
+      if (/"2010":/.test(hurricane)) {
+        fail("Thor|Hurricane must omit MY2010 fby (do not copy Windsport lock onto Hurricane twin)");
+      }
+
+      const fw = slice("Four Winds", "Chateau");
+      if (/"2010":/.test(fw)) {
+        fail("Thor|Four Winds must omit MY2010 fby (never invent Majestic from Four Winds 19G)");
+      }
+      const chateau = slice("Chateau", "Quantum");
+      if (/"2010":/.test(chateau)) {
+        fail("Thor|Chateau must omit MY2010 fby (never invent Majestic from Chateau 19G)");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      else {
+        const catalogIndex = JSON.parse(idxM[1]);
+        const thIdx = catalogIndex.Thor;
+        if (!thIdx) fail("Thor missing from CATALOG_INDEX");
+        else {
+          if (!thIdx.Windsport?.years?.includes(2010)) {
+            fail("Thor|Windsport index must include 2010 (MY2010 LOCK)");
+          }
+          if (thIdx["Four Winds Majestic"]?.years?.includes(2010)) {
+            fail("Thor|Four Winds Majestic index must omit 2010 (MY2010 GAP)");
+          }
+          if (thIdx.Hurricane?.years?.includes(2010)) {
+            fail("Thor|Hurricane index must omit 2010 (do not copy Windsport lock)");
+          }
+        }
+      }
+    }
+  }
+
   // Heartland 2005–2009 honesty. EzMe formal pack: Bighorn MY2008 + Cyclone/Sundance MY2009 FW only.
   // Dated RVUSA brochures lock those three chips. Prefer omit (GAP) over invent / copy-forward.
   {

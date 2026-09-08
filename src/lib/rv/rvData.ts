@@ -5398,6 +5398,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         // QUARANTINE — not a retail MY line. Cruise America ex-rental builds later sold as Majestic.
         // No dated retail brochure / RVUSA year-card matrix (library 403; RVUSA empty shells).
+        // GAP MY2010 — no dated Majestic brochure. Soft JD M-19G/M-27G and Cruise America ≠ LOCK.
+        // Never invent Majestic from Four Winds / Chateau twin 19G matrices. Prefer omit / no invent.
         // Do not invent year chips. Do not merge into living Four Winds / Chateau.
         // yearStart 2000 / yearEnd 2014 kept as catalog ceiling; FBY stays empty (Magnitude XG pattern).
       },
@@ -5425,7 +5427,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2000,
       yearEnd: 2014,
       description:
-        "Thor Four Winds Majestic — catalog leftover for Cruise America ex-rental Class C coaches later sold as Majestic. Not a retail MY line. No dated retail brochure / RVUSA matrix (library 403; RVUSA empty shells). yearStart 2000 / yearEnd 2014; floorplansByYear empty — do not invent chips. Do not merge into Four Winds / Chateau.",
+        "Thor Four Winds Majestic — catalog leftover for Cruise America ex-rental Class C coaches later sold as Majestic. Not a retail MY line. No dated retail brochure / RVUSA matrix (library 403; RVUSA empty shells). GAP MY2010 — no dated Majestic brochure; soft JD M-19G/M-27G and Cruise America ≠ LOCK. Never invent Majestic from Four Winds / Chateau 19G matrices. yearStart 2000 / yearEnd 2014; floorplansByYear empty — do not invent chips. Do not merge into Four Winds / Chateau.",
       powertrainByYear: [
         {
           from: 2000,
@@ -5502,11 +5504,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Windsport: {
       type: "Class A Gas",
-      floorplans: ["27B", "27K", "27R", "29M", "29X", "30Q", "31C", "31G", "31J", "31S", "32A", "32D", "32N", "33G", "33X", "34A", "34E", "34F", "34J", "34R", "34T", "35C", "35M", "27BE", "29VX", "31Z", "34P", "29L", "35A", "35G", "35J", "35R", "36H"],
+      floorplans: ["27B", "27K", "27R", "29M", "29X", "30Q", "31C", "31D", "31G", "31J", "31S", "32A", "32D", "32N", "33G", "33T", "33X", "34A", "34E", "34F", "34J", "34R", "34T", "35C", "35M", "27BE", "29VX", "31Z", "34P", "29L", "35A", "35G", "35J", "35R", "36H"],
       floorplansByYear: {
         "2008": ["27R", "29M", "31S"],
         "2009": ["27R", "29M", "31S", "34J"],
-        // No MY10 Windsport OEM card — omit key. Do not keep leftover 27R/29M/31S/34J or copy 2011 / Hurricane.
+        // LOCK MY2010 — dated RVUSA 2010_Windsport_Class_A_Brochure_LR.pdf semi-basement matrix only.
+        // Exact-match: 30Q | 31D | 31G | 32A | 33T.
+        // Do NOT add soft basement 32V/34B/34U/36F or Hurricane/Serrano codes.
+        // Never copy 2011 Windsport 31J/32D/34T or 2009 leftover 27R/29M/31S/34J → 2010.
+        "2010": ["30Q", "31D", "31G", "32A", "33T"],
         // OEM MY11 Windsport Literature (Windsport card, not Hurricane): 30Q | 31G | 31J | 32A | 32D | 34T · Ford V10. HP not printed (0). Twin of Hurricane — independently printed; do not copy Hurricane HP.
         "2011": ["30Q", "31G", "31J", "32A", "32D", "34T"],
         // OEM MY12 Windsport (2012_Windsport_A — Windsport card, not Hurricane): 30Q | 31G | 31J | 32A | 32D | 34T · Ford 6.8 Triton V10. HP not printed (0).
@@ -5573,7 +5579,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1980,
       warrantyYears: 1,
       yearStart: 2008,
-      description: "Thor Windsport — gas Class A family coach on F53. Twin of Hurricane. OEM MY25–26: 29L / 35G / 35J / 35R, 7.3 335 / 468. MY27: 29L / 35A / 35J / 36H. Not ACE / Indigo.",
+      description: "Thor Windsport — gas Class A family coach on F53. Twin of Hurricane. MY2010 lock (dated RVUSA 2010_Windsport_Class_A_Brochure_LR.pdf semi-basement matrix): 30Q / 31D / 31G / 32A / 33T — do not add soft basement 32V/34B/34U/36F or Hurricane/Serrano codes; do not copy 2011 31J/32D/34T or 2009 leftover onto 2010. OEM MY25–26: 29L / 35G / 35J / 35R, 7.3 335 / 468. MY27: 29L / 35A / 35J / 36H. Not ACE / Indigo.",
       powertrainByYear: [
         {
           from: 2008,
@@ -5581,7 +5587,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Ford Triton V10 6.8L ~305–362HP",
           horsepower: 320,
           chassis: "Ford F53",
-          notes: "Pre-2011 leftover Windsport V10. No MY10 OEM card — leftover ends 2009. Do not invent 2010 or copy Hurricane HP."
+          notes: "Pre-2011 leftover Windsport V10. MY2010 floorplans are a separate FBY lock (2010_Windsport_Class_A_Brochure_LR.pdf). Do not stamp leftover 27R/29M/31S/34J onto 2010 or copy Hurricane HP."
         },
         {
           from: 2011,
