@@ -1691,6 +1691,124 @@ function main() {
     }
   }
 
+  // Midwest Automotive Designs MY2027 pack. Make key is quoted.
+  // Dated OEM 2027 floorplan titles + RVUSA 2027 guides. No library MY2027 PDF (403).
+  // Passage / Passage Daycruiser / Weekender stay GAP. Skip Legend / Patriot Cruiser.
+  {
+    const m0 = src.indexOf('\n  "Midwest Automotive Designs": {');
+    const m1 = src.indexOf('\n  "Outdoors RV": {');
+    if (m0 < 0 || m1 < m0) {
+      fail('Midwest Automotive Designs block not found between "Midwest Automotive Designs": and "Outdoors RV":');
+    } else {
+      const mw = src.slice(m0, m1);
+      const slice = (a, b) => {
+        const i =
+          mw.indexOf(`    "${a}": {`) >= 0
+            ? mw.indexOf(`    "${a}": {`)
+            : mw.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? mw.length
+            : mw.indexOf(`    "${b}": {`) >= 0
+              ? mw.indexOf(`    "${b}": {`)
+              : mw.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? mw.slice(i, j) : mw.slice(i);
+      };
+
+      const passage = slice("Passage", "Weekender");
+      if (/"2027":/.test(passage)) {
+        fail("Midwest Automotive Designs|Passage must omit 2027 (GAP — no dated OEM 2027 titles / library 403)");
+      }
+
+      const weekender = slice("Weekender", "Passage Daycruiser");
+      if (/"2027":/.test(weekender)) {
+        fail("Midwest Automotive Designs|Weekender must omit 2027 (GAP — no dated OEM 2027 titles / library 403)");
+      }
+      if (/"2005":/.test(weekender)) {
+        fail("Midwest Automotive Designs|Weekender must not add MY2005 early chips on this pass");
+      }
+
+      const day = slice("Passage Daycruiser", "Heritage");
+      if (/"2027":/.test(day)) {
+        fail("Midwest Automotive Designs|Passage Daycruiser must omit 2027 (GAP — do not invent-map to Luxe Cruiser)");
+      }
+      if (/"D4"/.test(day) || /"LD4"/.test(day)) {
+        fail("Midwest Automotive Designs|Passage Daycruiser must not absorb Luxe Cruiser chips");
+      }
+
+      const heritage = slice("Heritage", "Luxe Cruiser");
+      if (!/"2027": \["FD2", "MD2", "MD3", "MD4"\]/.test(heritage) || !/type: "Class B Diesel"/.test(heritage)) {
+        fail("Midwest Automotive Designs|Heritage MY27 OEM+RVUSA lock missing (FD2 / MD2 / MD3 / MD4 Class B Diesel)");
+      }
+      if (/"MD2S"/.test(heritage)) {
+        fail("Midwest Automotive Designs|Heritage must omit MD2S (Patriot-only)");
+      }
+      if (/"2026":/.test(heritage)) {
+        fail("Midwest Automotive Designs|Heritage must not stamp 2026 (new 2027 lock; do not copy 2026→2027)");
+      }
+
+      const luxe = slice("Luxe Cruiser", "Patriot");
+      if (!/"2027": \["D4", "D6", "LD4", "S5"\]/.test(luxe) || !/type: "Class B Diesel"/.test(luxe)) {
+        fail("Midwest Automotive Designs|Luxe Cruiser MY27 OEM+RVUSA lock missing (D4 / D6 / LD4 / S5 Class B Diesel)");
+      }
+      if (/"D6 Full Partition"/.test(luxe) || /"D6 Arched Partition"/.test(luxe) || /"d6-full-partition"/.test(luxe)) {
+        fail("Midwest Automotive Designs|Luxe Cruiser must omit partition slugs as separate codes");
+      }
+      if (/"2026":/.test(luxe)) {
+        fail("Midwest Automotive Designs|Luxe Cruiser must not stamp 2026 (new 2027 lock; do not copy 2026→2027)");
+      }
+
+      const patriot = slice("Patriot");
+      if (
+        !/"2027": \["FD2", "MD2", "MD2S", "MD3", "MD4"\]/.test(patriot) ||
+        !/type: "Class B Diesel"/.test(patriot)
+      ) {
+        fail("Midwest Automotive Designs|Patriot MY27 OEM+RVUSA lock missing (FD2 / MD2 / MD2S / MD3 / MD4 Class B Diesel)");
+      }
+      if (!/"MD2S"/.test(patriot)) {
+        fail("Midwest Automotive Designs|Patriot must keep MD2S distinct from MD2");
+      }
+      if (/"2026":/.test(patriot)) {
+        fail("Midwest Automotive Designs|Patriot must not stamp 2026 (new 2027 lock; do not copy 2026→2027)");
+      }
+
+      if (/\n    Legend: \{/.test(mw) || /\n    "Patriot Cruiser": \{/.test(mw)) {
+        fail("Midwest Automotive Designs must skip Legend / Patriot Cruiser");
+      }
+      if (/\n    Athletic: \{/.test(mw) || /\n    "G55": \{/.test(mw) || /\n    "G45": \{/.test(mw)) {
+        fail("Midwest Automotive Designs must skip executive people-movers (G55/G45, Athletic)");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const mwIdx = catalogIndex["Midwest Automotive Designs"];
+      if (!mwIdx) fail("Midwest Automotive Designs missing from CATALOG_INDEX");
+      for (const lock of ["Patriot", "Heritage", "Luxe Cruiser"]) {
+        if (!mwIdx[lock]?.years?.includes(2027)) {
+          fail(`Midwest Automotive Designs|${lock} index must include 2027 in years[]`);
+        }
+        if (mwIdx[lock]?.type !== "Class B Diesel") {
+          fail(`Midwest Automotive Designs|${lock} index type must be Class B Diesel`);
+        }
+      }
+      for (const gap of ["Passage", "Passage Daycruiser", "Weekender"]) {
+        if (mwIdx[gap]?.years?.includes(2027)) {
+          fail(`Midwest Automotive Designs|${gap} index must omit 2027 (GAP)`);
+        }
+      }
+      const extra = Object.keys(mwIdx).filter(
+        (k) =>
+          !["Passage", "Passage Daycruiser", "Weekender", "Patriot", "Heritage", "Luxe Cruiser"].includes(k),
+      );
+      if (extra.length) {
+        fail(`Midwest Automotive Designs must not add skip nameplates (${extra.join(", ")})`);
+      }
+    }
+  }
+
   // Newmar block is unquoted (`Newmar: {`) so the quoted-make parser misses it.
   // Scan the raw Newmar…Tiffin slice for recent-years OEM gates.
   {

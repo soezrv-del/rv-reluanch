@@ -849,3 +849,49 @@ test("Renegade RV Facts SoT: MY2027 OEM+PDF locks; Villagio reopen; GAP Villager
   assert.doesNotMatch(veracruz, /"33TBR"/);
 });
 
+test("Midwest Automotive Designs Facts SoT: MY2027 OEM+RVUSA locks; GAP Passage/Weekender", () => {
+  const block = src("rvData.ts");
+  const m0 = block.indexOf('\n  "Midwest Automotive Designs": {');
+  const m1 = block.indexOf('\n  "Outdoors RV": {');
+  assert.ok(m0 > 0 && m1 > m0, "expected Midwest Automotive Designs block");
+  const mw = block.slice(m0, m1);
+
+  assert.doesNotMatch(mw, /\n    "Renegade RV": \{/);
+  assert.doesNotMatch(mw, /\n    "American Coach": \{/);
+  assert.doesNotMatch(mw, /\n    Fleetwood: \{/);
+  assert.doesNotMatch(mw, /\n    Legend: \{/);
+  assert.doesNotMatch(mw, /\n    "Patriot Cruiser": \{/);
+
+  const passage = mw.slice(mw.indexOf("    Passage: {"), mw.indexOf("    Weekender: {"));
+  assert.doesNotMatch(passage, /"2027":/);
+  assert.match(passage, /"2026": \["FD2", "MD2", "MD3", "MD4", "MD2F"\]/);
+
+  const weekender = mw.slice(mw.indexOf("    Weekender: {"), mw.indexOf('    "Passage Daycruiser": {'));
+  assert.doesNotMatch(weekender, /"2027":/);
+  assert.doesNotMatch(weekender, /"2005":/);
+
+  const day = mw.slice(mw.indexOf('    "Passage Daycruiser": {'), mw.indexOf("    Heritage: {"));
+  assert.doesNotMatch(day, /"2027":/);
+  assert.doesNotMatch(day, /"D4"/);
+  assert.doesNotMatch(day, /"LD4"/);
+
+  const heritage = mw.slice(mw.indexOf("    Heritage: {"), mw.indexOf('    "Luxe Cruiser": {'));
+  assert.match(heritage, /type: "Class B Diesel"/);
+  assert.match(heritage, /"2027": \["FD2", "MD2", "MD3", "MD4"\]/);
+  assert.doesNotMatch(heritage, /"MD2S"/);
+  assert.doesNotMatch(heritage, /"2026":/);
+
+  const luxe = mw.slice(mw.indexOf('    "Luxe Cruiser": {'), mw.indexOf("    Patriot: {"));
+  assert.match(luxe, /type: "Class B Diesel"/);
+  assert.match(luxe, /"2027": \["D4", "D6", "LD4", "S5"\]/);
+  assert.doesNotMatch(luxe, /"D6 Full Partition"/);
+  assert.doesNotMatch(luxe, /"D6 Arched Partition"/);
+  assert.doesNotMatch(luxe, /"2026":/);
+
+  const patriot = mw.slice(mw.indexOf("    Patriot: {"));
+  assert.match(patriot, /type: "Class B Diesel"/);
+  assert.match(patriot, /"2027": \["FD2", "MD2", "MD2S", "MD3", "MD4"\]/);
+  assert.match(patriot, /"MD2S"/);
+  assert.doesNotMatch(patriot, /"2026":/);
+});
+

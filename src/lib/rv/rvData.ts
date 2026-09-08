@@ -33439,6 +33439,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2024": ["FD2", "MD2", "MD3", "MD4", "MD2F"],
         "2025": ["FD2", "MD2", "MD3", "MD4", "MD2F"],
         "2026": ["FD2", "MD2", "MD3", "MD4", "MD2F"]
+        // GAP 2027 — no dated OEM 2027 Passage floorplan titles; library MY2027 PDF 403.
+        // Do not invent. Do not copy 2026→2027. Do not invent-map to Patriot / Heritage.
       },
       lengthRange: [
         19,
@@ -33504,6 +33506,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2024": ["Weekender", "144", "170"],
         "2025": ["Weekender", "144", "170"],
         "2026": ["Weekender", "144", "170", "24FW", "24RB", "24TB"]
+        // GAP 2027 — no dated OEM 2027 Weekender floorplan titles; library MY2027 PDF 403.
+        // Do not invent. Do not copy 2026→2027. No MY2005 early work on this pass.
       },
       lengthRange: [
         19,
@@ -33569,6 +33573,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2024": ["Daycruiser", "DC"],
         "2025": ["Daycruiser", "DC"],
         "2026": ["Daycruiser", "DC"]
+        // GAP 2027 — no dated OEM 2027 Passage Daycruiser floorplan titles; library MY2027 PDF 403.
+        // Do not invent. Do not copy 2026→2027. Do not invent-map to Luxe Cruiser.
       },
       lengthRange: [
         19,
@@ -33606,6 +33612,117 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 2,
       yearStart: 2018,
       description: "Midwest Passage Daycruiser — lounge-forward Class B day/ overnight layout."
+    },
+    Heritage: {
+      type: "Class B Diesel",
+      floorplans: ["FD2", "MD2", "MD3", "MD4"],
+      floorplansByYear: {
+        // LOCK midwestautomotivedesigns.com/floorplan/rv-mercedes-heritage/{fd2,md2,md3,md4}
+        // titles 2027 MERCEDES HERITAGE + RVUSA 2027 Midwest Heritage guide.
+        // No library MY2027 PDF (403). Omit MD2S (Patriot-only). Do not copy 2026→2027.
+        "2027": ["FD2", "MD2", "MD3", "MD4"]
+      },
+      lengthRange: [19, 25],
+      weightRange: [8500, 11030],
+      slideouts: 0,
+      sleeps: 4,
+      msrpRange: [138665, 233120],
+      engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+      chassis: "Mercedes-Benz Sprinter 2500 144 / 3500XD 170 EXT",
+      transmission: "9G-Tronic 9-speed automatic",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.7,
+      image: RV_CARD_IMAGE,
+      founded: 2000,
+      yearStart: 2027,
+      description: "Midwest Heritage — Class B diesel. MY27 OEM titles + RVUSA 2027: FD2 / MD2 / MD3 / MD4. Omit MD2S. No library MY2027 PDF.",
+      powertrainByYear: [
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          chassis: "Mercedes-Benz Sprinter 2500 144 / 3500XD 170 EXT",
+          transmission: "9G-Tronic 9-speed automatic",
+          notes: "MY27 OEM titles + RVUSA 2027: FD2 | MD2 | MD3 | MD4. Omit MD2S. HP not printed on 2027 floorplan titles — do not copy 2026 208."
+        }
+      ]
+    },
+    "Luxe Cruiser": {
+      type: "Class B Diesel",
+      floorplans: ["D4", "D6", "LD4", "S5"],
+      floorplansByYear: {
+        // LOCK midwestautomotivedesigns.com/floorplan/mercedes-luxe-cruiser/{d4,d6,ld4,s5}
+        // titles 2027 MERCEDES LUXE CRUISER + RVUSA 2027 Midwest Luxe Cruiser Class B guides.
+        // Omit partition slugs (d6-full-partition / d6-arched-partition) as separate codes.
+        // OEM brand page is Executive/luxury van; RVUSA types Class B — lock Class B Diesel.
+        // No library MY2027 PDF (403). Do not invent-map Passage Daycruiser here.
+        "2027": ["D4", "D6", "LD4", "S5"]
+      },
+      lengthRange: [24, 25],
+      weightRange: [8500, 11030],
+      slideouts: 0,
+      sleeps: 4,
+      msrpRange: [210179, 259995],
+      engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+      chassis: "Mercedes-Benz Sprinter 3500XD 170 EXT",
+      transmission: "9G-Tronic 9-speed automatic",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.65,
+      image: RV_CARD_IMAGE,
+      fuelCapacityGal: 24.5,
+      founded: 2000,
+      yearStart: 2027,
+      description: "Midwest Luxe Cruiser — Class B diesel (RVUSA). MY27 OEM titles: D4 / D6 / LD4 / S5. Omit partition slugs. OEM executive-van vs RVUSA Class B honesty. No library MY2027 PDF.",
+      powertrainByYear: [
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          chassis: "Mercedes-Benz Sprinter 3500XD 170 EXT",
+          transmission: "9G-Tronic 9-speed automatic",
+          fuelCapacityGal: 24.5,
+          gvwrLbs: 11030,
+          notes: "MY27 OEM titles + RVUSA 2027: D4 | D6 | LD4 | S5. Omit D6 Full/Arched Partition as codes. HP not printed on 2027 titles — do not copy 2026."
+        }
+      ]
+    },
+    Patriot: {
+      type: "Class B Diesel",
+      floorplans: ["FD2", "MD2", "MD2S", "MD3", "MD4"],
+      floorplansByYear: {
+        // LOCK midwestautomotivedesigns.com/floorplan/rv-mercedes-patriot/{fd2,md2,md2s,md3,md4}
+        // titles 2027 MERCEDES PATRIOT + RVUSA 2027 Midwest Patriot guide.
+        // Keep MD2 and MD2S distinct. Skip Ford Patriot / Patriot Cruiser / Legend.
+        // No library MY2027 PDF (403). Do not copy 2026→2027.
+        "2027": ["FD2", "MD2", "MD2S", "MD3", "MD4"]
+      },
+      lengthRange: [19, 25],
+      weightRange: [8500, 11030],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [239995, 255000],
+      engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+      chassis: "Mercedes-Benz Sprinter 2500 144 / 3500 170 EXT / 3500XD 170 EXT",
+      transmission: "9G-Tronic 9-speed automatic",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.75,
+      image: RV_CARD_IMAGE,
+      founded: 2000,
+      yearStart: 2027,
+      description: "Midwest Patriot — Class B diesel. MY27 OEM titles + RVUSA 2027: FD2 / MD2 / MD2S / MD3 / MD4. MD2 and MD2S stay distinct. No library MY2027 PDF.",
+      powertrainByYear: [
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          chassis: "Mercedes-Benz Sprinter 2500 144 / 3500 170 EXT / 3500XD 170 EXT",
+          transmission: "9G-Tronic 9-speed automatic",
+          notes: "MY27 OEM titles + RVUSA 2027: FD2 | MD2 | MD2S | MD3 | MD4. Keep MD2 ≠ MD2S. HP not printed on 2027 floorplan titles — do not copy 2026 208."
+        }
+      ]
     }
   },
   "Outdoors RV": {
