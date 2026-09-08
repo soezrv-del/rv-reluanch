@@ -10,7 +10,8 @@ import {
   parseExampleChip,
   pickerCoachWrite,
   resolveShareOpenSel,
-  revealFactsModelTrim,
+  revealFactsFloorplan,
+  revealFactsModel,
   selFromExampleChip,
   shouldCascadeAutoSearch,
   shouldOpenSingleHitReport,
@@ -136,16 +137,16 @@ test("picker must not publish null Active Coach while a report is open", () => {
   assert.equal(pickerCoachWrite(empty, { reportOpen: false }), null);
 });
 
-test("Model/Trim reveal after year+make — Search is not the gate", () => {
-  assert.equal(revealFactsModelTrim({ year: "", make: "", model: "", floorplan: "" }), false);
-  assert.equal(revealFactsModelTrim({ year: "2023", make: "", model: "", floorplan: "" }), false);
+test("Model reveal after year+make — Search is not the gate", () => {
+  assert.equal(revealFactsModel({ year: "", make: "", model: "", floorplan: "" }), false);
+  assert.equal(revealFactsModel({ year: "2023", make: "", model: "", floorplan: "" }), false);
   assert.equal(
-    revealFactsModelTrim({ year: "2023", make: "Newmar", model: "", floorplan: "" }),
+    revealFactsModel({ year: "2023", make: "Newmar", model: "", floorplan: "" }),
     true,
     "year + make must show Model without a Search click",
   );
   assert.equal(
-    revealFactsModelTrim({ year: "", make: "", model: "Dutch Star", floorplan: "" }),
+    revealFactsModel({ year: "", make: "", model: "Dutch Star", floorplan: "" }),
     true,
   );
   assert.equal(showFactsExampleChips({ year: "", make: "" }), true);
@@ -156,13 +157,67 @@ test("Model/Trim reveal after year+make — Search is not the gate", () => {
   );
 });
 
-test("cascade auto-search fires once year+make+model are set", () => {
+test("Floorplan reveal is its own step after Model — not with Make", () => {
+  assert.equal(
+    revealFactsFloorplan({ model: "", floorplan: "" }),
+    false,
+    "year + make must not show Floorplan yet",
+  );
+  assert.equal(
+    revealFactsFloorplan({ model: "Dutch Star", floorplan: "" }),
+    true,
+    "model unlocks Floorplan",
+  );
+  assert.equal(
+    revealFactsFloorplan({ model: "", floorplan: "45A" }),
+    true,
+    "restored floorplan still shows the field",
+  );
+});
+
+test("cascade auto-search fires on floorplan, never on model alone", () => {
   assert.equal(shouldCascadeAutoSearch({ year: "2023", make: "Newmar" }), false);
   assert.equal(
-    shouldCascadeAutoSearch({ year: "2023", make: "Newmar", model: "Dutch Star" }),
-    true,
+    shouldCascadeAutoSearch({
+      year: "2023",
+      make: "Newmar",
+      model: "Dutch Star",
+    }),
+    false,
+    "model alone must not auto-open the report",
   );
-  assert.equal(shouldCascadeAutoSearch({ year: "2023", make: "", model: "Dutch Star" }), false);
+  assert.equal(
+    shouldCascadeAutoSearch({
+      year: "2023",
+      make: "Newmar",
+      model: "Dutch Star",
+    }, "model"),
+    false,
+  );
+  assert.equal(
+    shouldCascadeAutoSearch({
+      year: "2023",
+      make: "Newmar",
+      model: "Dutch Star",
+      floorplan: "4551",
+    }),
+    true,
+    "concrete floorplan completes the cascade",
+  );
+  assert.equal(
+    shouldCascadeAutoSearch({
+      year: "2023",
+      make: "Newmar",
+      model: "Dutch Star",
+      floorplan: "",
+    }, "floorplan"),
+    true,
+    "explicit Any floorplan fetches the list; Search stays the override",
+  );
+  assert.equal(
+    shouldCascadeAutoSearch({ year: "2023", make: "", model: "Dutch Star", floorplan: "4551" }),
+    false,
+  );
 });
 
 test("Open report opens a single non-custom hit and not a multi/custom list", () => {
@@ -291,36 +346,52 @@ test("Facts first-run hero, year+make default, and chip search stay on the casca
   assert.match(fax, /selFromExampleChip/);
   assert.match(fax, /runExampleChip/);
   assert.match(fax, /runSearchNow\(sel\)/);
-  assert.match(fax, /revealFactsModelTrim/);
+  assert.match(fax, /revealFactsModel/);
+  assert.match(fax, /revealFactsFloorplan/);
   assert.match(fax, /shouldCascadeAutoSearch/);
+  assert.match(fax, /refreshCascadeAfterChange\(next, field\)/);
   assert.match(fax, /refreshCascadeAfterChange/);
   assert.match(fax, /data-facts-example-chip/);
   assert.match(fax, /label="Year"/);
   assert.match(fax, /label="Make"/);
   assert.match(fax, /label="Model"/);
-  assert.match(fax, /label="Trim"/);
-  assert.match(fax, /year → make → model → trim/);
+  assert.match(fax, /label="Floorplan"/);
+  assert.doesNotMatch(fax, /label="Trim"/);
+  assert.match(fax, /year → make → model → floorplan/);
   assert.doesNotMatch(fax, /F-250/);
   assert.doesNotMatch(fax, /Keystone Cougar/);
   assert.doesNotMatch(fax, /Winnebago Vista/);
   assert.doesNotMatch(
     fax,
     /revealModelTrim = hasSearched/,
-    "Search must not gate Model/Trim",
+    "Search must not gate Model/Floorplan",
   );
-  assert.doesNotMatch(
+  assert.doesNotMatch(fax, /revealFactsModelTrim/);
+  assert.match(
     fax,
-    /if \(field === "floorplan" && next\.year/,
-    "auto-fetch is not floorplan-only",
+    /shouldCascadeAutoSearch\(next, field\)/,
+    "auto-open is floorplan-gated via the helper + changed field",
   );
-  // Required year + make stay on the first-run form — Model/Trim follow year+make
+  assert.match(
+    fax,
+    /year && make \? \([\s\S]*?\{cascade\.canSearch \? "Open report" : "Search"\}/,
+    "Search / Open report stays as the year+make override",
+  );
+  // Progressive unlock: Year → Make → Model → Floorplan (separate steps)
   const yearAt = fax.indexOf('label="Year"');
   const makeAt = fax.indexOf('label="Make"');
-  const revealAt = fax.indexOf("{revealModelTrim ? (");
+  const revealModelAt = fax.indexOf("{revealModel ? (");
   const modelAt = fax.indexOf('label="Model"');
+  const revealFloorplanAt = fax.indexOf("{revealFloorplan ? (");
+  const floorplanAt = fax.indexOf('label="Floorplan"');
   assert.ok(yearAt > 0 && makeAt > yearAt);
-  assert.ok(revealAt > makeAt, "year and make stay visible before the tail");
-  assert.ok(modelAt > revealAt, "model/trim follow year+make, not a Search click");
+  assert.ok(revealModelAt > makeAt, "year and make stay visible before Model");
+  assert.ok(modelAt > revealModelAt, "Model follows year+make, not a Search click");
+  assert.ok(
+    revealFloorplanAt > modelAt,
+    "Floorplan is a later step than Model — not revealed together",
+  );
+  assert.ok(floorplanAt > revealFloorplanAt);
 });
 
 test("Facts landing uses the showroom motorhome behind glass, cards stay put", () => {
