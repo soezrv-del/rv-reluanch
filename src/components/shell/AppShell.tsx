@@ -63,6 +63,8 @@ const SoldBookApp = lazy(() =>
 const TAB_PANE_ON =
   "absolute inset-0 flex min-h-0 flex-col overflow-hidden";
 
+const SWIPE_PANE = "suite-swipe-pane";
+
 function SuiteFallback() {
   return (
     <div className="flex h-full items-center justify-center bg-bg">
@@ -245,6 +247,10 @@ export function AppShell() {
   );
 
   const isPro = isProfessionalTier();
+  const dockOrder = useMemo(() => dockTabOrder(isPro), [isPro]);
+  const swipeIndex = Math.max(0, dockOrder.indexOf(tab));
+  const swipeArmed =
+    !launchOpen && !grokSplashPlaying && dockOrder.includes(tab);
 
   useEffect(() => {
     const openSold = () => {
@@ -255,15 +261,20 @@ export function AppShell() {
     return () => window.removeEventListener(OPEN_SOLD_EVENT, openSold);
   }, [onTabChange]);
 
+  const peekTab = useCallback((next: AppTab) => {
+    markVisited(next);
+  }, [markVisited]);
+
   useSwipeTabs({
-    order: dockTabOrder(isPro),
+    order: dockOrder,
     active: tab,
     onChange: onTabChange,
     // Suite panes only — never the dock. Ancestor capture listeners on
     // the shell eat Android WebView clicks on Facts/Cal/Tow/Trips/Grok.
     targetRef: mainRef,
     threshold: 24,
-    enabled: !launchOpen,
+    enabled: swipeArmed,
+    onPeek: peekTab,
   });
 
   const hideDock = launchOpen || grokSplashPlaying || kb.open;
@@ -334,62 +345,69 @@ export function AppShell() {
 
         <main
           ref={mainRef}
-          className="relative min-h-0 flex-1 overflow-hidden touch-pan-y"
+          className="suite-swipe-viewport relative min-h-0 flex-1 overflow-hidden"
           aria-hidden={launchOpen}
+          style={{
+            ["--swipe-i" as string]: String(swipeIndex),
+          }}
         >
           <Suspense fallback={<SuiteFallback />}>
-            {show("rvgrok") ? (
-              <div className={tab === "rvgrok" ? TAB_PANE_ON : "hidden"}>
-                <SuiteErrorBoundary name="RvGROK">
-                  <RvGrokApp
-                    active={tab === "rvgrok" && !launchOpen}
-                    seedPrompt={grokSeed}
-                    onSeedConsumed={() => setGrokSeed(undefined)}
-                    onNavigate={onTabChange}
-                    onSplashPlayingChange={setGrokSplashPlaying}
-                  />
-                </SuiteErrorBoundary>
-              </div>
-            ) : null}
-            {show("rvfax") ? (
-              <div className={tab === "rvfax" ? TAB_PANE_ON : "hidden"}>
-                <SuiteErrorBoundary name="RvFACTS">
-                  <RvFaxApp onOpenGrok={openGrok} />
-                </SuiteErrorBoundary>
-              </div>
-            ) : null}
-            {show("rvcal") ? (
-              <div className={tab === "rvcal" ? TAB_PANE_ON : "hidden"}>
-                <SuiteErrorBoundary name="RvCAL">
-                  <RvCalApp />
-                </SuiteErrorBoundary>
-              </div>
-            ) : null}
-            {show("rvtow") ? (
-              <div className={tab === "rvtow" ? TAB_PANE_ON : "hidden"}>
-                <SuiteErrorBoundary name="RvTOW">
-                  <RvTowApp />
-                </SuiteErrorBoundary>
-              </div>
-            ) : null}
-            {show("rvtrips") ? (
-              <div className={tab === "rvtrips" ? TAB_PANE_ON : "hidden"}>
-                <SuiteErrorBoundary name="RvTRIPS">
-                  <RvTripsApp />
-                </SuiteErrorBoundary>
-              </div>
-            ) : null}
+            {dockOrder.map((id, i) => {
+              if (!show(id)) return null;
+              return (
+                <div
+                  key={id}
+                  className={SWIPE_PANE}
+                  data-suite-pane={id}
+                  style={{
+                    ["--pane-i" as string]: String(i),
+                    pointerEvents: id === tab ? "auto" : "none",
+                  }}
+                >
+                  <SuiteErrorBoundary
+                    name={
+                      id === "rvfax"
+                        ? "RvFACTS"
+                        : id === "rvcal"
+                          ? "RvCAL"
+                          : id === "rvgrok"
+                            ? "RvGROK"
+                            : id === "rvtow"
+                              ? "RvTOW"
+                              : id === "rvtrips"
+                                ? "RvTRIPS"
+                                : id === "rvsold"
+                                  ? "Sold"
+                                  : "Suite"
+                    }
+                  >
+                    {id === "rvfax" ? (
+                      <RvFaxApp onOpenGrok={openGrok} />
+                    ) : id === "rvcal" ? (
+                      <RvCalApp />
+                    ) : id === "rvgrok" ? (
+                      <RvGrokApp
+                        active={tab === "rvgrok" && !launchOpen}
+                        seedPrompt={grokSeed}
+                        onSeedConsumed={() => setGrokSeed(undefined)}
+                        onNavigate={onTabChange}
+                        onSplashPlayingChange={setGrokSplashPlaying}
+                      />
+                    ) : id === "rvtow" ? (
+                      <RvTowApp />
+                    ) : id === "rvtrips" ? (
+                      <RvTripsApp />
+                    ) : id === "rvsold" && isPro ? (
+                      <SoldBookApp />
+                    ) : null}
+                  </SuiteErrorBoundary>
+                </div>
+              );
+            })}
             {show("more") ? (
               <div className={tab === "more" ? TAB_PANE_ON : "hidden"}>
                 <SuiteErrorBoundary name="More">
                   <MoreApp onNavigate={onTabChange} />
-                </SuiteErrorBoundary>
-              </div>
-            ) : null}
-            {isPro && show("rvsold") ? (
-              <div className={tab === "rvsold" ? TAB_PANE_ON : "hidden"}>
-                <SuiteErrorBoundary name="Sold">
-                  <SoldBookApp />
                 </SuiteErrorBoundary>
               </div>
             ) : null}

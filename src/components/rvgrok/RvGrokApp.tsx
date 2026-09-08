@@ -61,7 +61,7 @@ import { HistoryPanel } from "./HistoryPanel";
 import { VoicePanel } from "./VoicePanel";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
-import { PullResetHint } from "@/components/shell/PullResetHint";
+import { PullRefreshLayer } from "@/components/shell/PullResetHint";
 import { ScrollSuiteHeader } from "@/components/shell/ScrollChrome";
 import { SuiteBackdrop } from "@/components/shell/SuitePage";
 
@@ -299,7 +299,7 @@ export function RvGrokApp({
     liveCamRef.current = false;
   }, []);
 
-  const pullHint = usePullToReset(listRef, startNewChat);
+  const pull = usePullToReset(listRef, startNewChat);
 
   const handleStop = () => {
     abortRef.current?.abort();
@@ -1311,10 +1311,10 @@ export function RvGrokApp({
           paddingBottom: kb.open ? 12 : undefined,
         }}
       >
-        <PullResetHint
-          show={pullHint}
-          label="Release to reset Live Voice & chat · pull down"
-        />
+        <PullRefreshLayer
+          state={pull}
+          label="Release to refresh Grok · new chat"
+        >
         {messages.length === 0 ? (
           <div className="mx-auto flex max-w-xl flex-col px-0.5 pb-4 pt-6">
             <p className="text-center text-[13px] leading-relaxed text-white/75">
@@ -1354,6 +1354,7 @@ export function RvGrokApp({
             ))}
           </div>
         )}
+        </PullRefreshLayer>
       </div>
 
       <div className="relative z-20 shrink-0 border-t border-white/10 bg-bg px-3 py-2 sm:px-4">

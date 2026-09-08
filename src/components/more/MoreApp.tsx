@@ -76,6 +76,7 @@ export function MoreApp({
   onNavigate?: (tab: AppTab) => void;
 }) {
   const [sheet, setSheet] = useState<SheetId>(null);
+  const [refreshTick, setRefreshTick] = useState(0);
   const [recallYear, setRecallYear] = useState("2024");
   const [recallMake, setRecallMake] = useState("Tiffin");
   const [recallModel, setRecallModel] = useState("Allegro Bus");
@@ -154,12 +155,17 @@ export function MoreApp({
       soldLine: soldFactsSummary(soldTotals(loadSoldDeals())),
     }),
     // re-read when opening More — parent remounts not needed; refresh on focus
-    [sheet],
+    [sheet, refreshTick],
   );
 
   return (
     <>
-    <SuitePage tab="more" adaptiveGlass={false}>
+    <SuitePage
+      tab="more"
+      adaptiveGlass={false}
+      onPullReset={() => setRefreshTick((n) => n + 1)}
+      pullLabel="Release to refresh Premium"
+    >
         <div className="mx-auto w-full max-w-lg space-y-5 px-3 pb-12 pt-3 sm:px-4">
           <header className="flex items-center justify-between gap-3">
             {onNavigate ? (

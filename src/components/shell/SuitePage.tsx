@@ -9,7 +9,7 @@ import { SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
 import type { AppTab } from "./BottomTabs";
 import { ScrollSuiteHeader } from "./ScrollChrome";
 import { ActiveCoachChip } from "./ActiveCoachChip";
-import { PullResetHint } from "./PullResetHint";
+import { PullRefreshLayer } from "./PullResetHint";
 import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
@@ -98,7 +98,7 @@ export function SuitePage({
   const scrollRef = scrollRefProp ?? localRef;
   const kb = useKeyboardInset();
   const glass = useAdaptiveGlass(backdrop, scrollRef);
-  const pullHint = usePullToReset(
+  const pull = usePullToReset(
     scrollRef,
     onPullReset ?? (() => undefined),
     { enabled: Boolean(onPullReset) },
@@ -138,12 +138,19 @@ export function SuitePage({
             : undefined,
         }}
       >
-        {tab ? <ScrollSuiteHeader tab={tab} /> : null}
-        {tab === "rvcal" || tab === "rvtow" ? <ActiveCoachChip /> : null}
         {onPullReset ? (
-          <PullResetHint show={pullHint} label={pullLabel} />
-        ) : null}
-        {children}
+          <PullRefreshLayer state={pull} label={pullLabel}>
+            {tab ? <ScrollSuiteHeader tab={tab} /> : null}
+            {tab === "rvcal" || tab === "rvtow" ? <ActiveCoachChip /> : null}
+            {children}
+          </PullRefreshLayer>
+        ) : (
+          <>
+            {tab ? <ScrollSuiteHeader tab={tab} /> : null}
+            {tab === "rvcal" || tab === "rvtow" ? <ActiveCoachChip /> : null}
+            {children}
+          </>
+        )}
       </div>
       {overlays}
     </div>

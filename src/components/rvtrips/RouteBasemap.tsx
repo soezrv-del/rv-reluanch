@@ -342,6 +342,7 @@ export function RouteBasemap({
     <div
       ref={wrapRef}
       data-route-basemap
+      data-no-swipe=""
       data-tile-source={catalog ? provider : "pending"}
       data-map-engine="raster"
       data-follow-status={status}

@@ -89,7 +89,7 @@ import {
 } from "@/lib/marketcheck/yearRange";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
-import { PullResetHint } from "@/components/shell/PullResetHint";
+import { PullRefreshLayer } from "@/components/shell/PullResetHint";
 import { SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
 import { resolveCardImage } from "@/assets/typeMedia";
 import { SuiteBackdrop } from "@/components/shell/SuitePage";
@@ -210,7 +210,7 @@ export function RvDetail({
   const [saveFlash, setSaveFlash] = useState<string | null>(null);
   const wasSavedRef = useRef(saved);
 
-  const pullHint = usePullToReset(scrollRef, onBack);
+  const pull = usePullToReset(scrollRef, onBack);
 
   useEffect(() => {
     if (!shareFocusToken) return;
@@ -758,7 +758,7 @@ export function RvDetail({
         data-rvfax-scroll
         className="rv-scroll relative z-10 h-full overflow-y-auto overscroll-y-contain"
       >
-        <PullResetHint show={pullHint} label="Release to go back" />
+        <PullRefreshLayer state={pull} label="Release to go back">
         {/* Sticky under the iPhone clock / Dynamic Island */}
         <div
           className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/10 bg-[#070b14]/95 backdrop-blur-md"
@@ -1755,6 +1755,7 @@ export function RvDetail({
           <SuiteDisclaimer className="pb-6" />
         </div>
         </div>
+        </PullRefreshLayer>
       </div>
 
       {correctOpen ? (

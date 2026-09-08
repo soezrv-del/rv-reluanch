@@ -137,6 +137,7 @@ export function DumpMap({
   return (
     <div
       ref={wrapRef}
+      data-no-swipe=""
       className="relative overflow-hidden rounded-2xl border border-white/15 bg-[#0b1a12]"
       style={{ height: h }}
     >

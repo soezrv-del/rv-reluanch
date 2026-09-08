@@ -464,6 +464,7 @@ export function RouteMapboxGl({
     <div
       ref={wrapRef}
       data-route-basemap
+      data-no-swipe=""
       data-tile-source="mapbox"
       data-map-engine="mapbox-gl"
       data-follow-status={status}
