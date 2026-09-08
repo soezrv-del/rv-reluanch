@@ -73,7 +73,7 @@ test("consumer dock is five tabs; pro dock appends Sold", () => {
   ]);
 });
 
-test("Facts / More / dock gate Sold to isProfessionalTier — pro dock shows owed", () => {
+test("Facts / More / dock gate Sold to isProfessionalTier — visual SOLD, owed in aria", () => {
   const fax = readFileSync(
     join(root, "../../components/rvfax/RvFaxApp.tsx"),
     "utf8",
@@ -108,8 +108,9 @@ test("Facts / More / dock gate Sold to isProfessionalTier — pro dock shows owe
   assert.match(more, /onNavigate\?\.\("rvsold"\)/);
   assert.match(dock, /isProfessionalTier/);
   assert.match(dock, /rvsold/);
-  assert.match(dock, /formatSoldDockMoney/);
+  assert.doesNotMatch(dock, /formatSoldDockMoney/);
   assert.match(dock, /formatSoldDockAria/);
+  assert.match(dock, /short: "Sold"/);
   assert.doesNotMatch(dock, /formatSoldMoney/);
   assert.match(dock, /grid-cols-5/);
   assert.match(dock, /grid-cols-6/);

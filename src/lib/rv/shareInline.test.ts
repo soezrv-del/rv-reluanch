@@ -74,11 +74,13 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(css, /border:\s*1px solid rgba\(255, 255, 255, 0\.12\)/);
   assert.match(css, /border-radius:\s*16px/);
   assert.match(css, /box-shadow:\s*0 8px 32px rgba\(0, 0, 0, 0\.37\)/);
-  assert.match(css, /font-weight:\s*600/);
+  assert.match(css, /\.metal-hammered-face/);
+  assert.match(css, /linear-gradient\(\s*162deg/);
   assert.match(css, /letter-spacing:\s*0\.5px/);
-  assert.match(css, /color:\s*rgba\(255, 255, 255, 0\.85\)/);
   assert.match(css, /border-top:\s*2px solid transparent/);
   assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
+  assert.match(tabs, /metal-hammered-face/);
+  assert.match(launch, /metal-hammered-face/);
   assert.doesNotMatch(tabs, /bottom-tab-etch-halo/);
   assert.doesNotMatch(tabs, /bottom-tab-etch-core/);
   assert.doesNotMatch(tabs, /bottom-tab-etch-bevel/);
@@ -89,7 +91,9 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.doesNotMatch(css, /\.bottom-tab-indicator-sapphire/);
   assert.doesNotMatch(css, /border-radius:\s*1\.45rem/);
   assert.match(tabs, /bottom-tab-label-sold/);
-  assert.match(tabs, /bottom-tab-label-sold-owed/);
+  assert.doesNotMatch(tabs, /bottom-tab-label-sold-owed/);
+  assert.doesNotMatch(tabs, /formatSoldDockMoney/);
+  assert.doesNotMatch(css, /\.bottom-tab-label-sold-owed/);
   assert.doesNotMatch(css, /--color-dock-etch:/);
   assert.doesNotMatch(css, /Milky frosted body/);
   assert.doesNotMatch(css, /rgba\(176, 202, 232, 0\.28\)/);
