@@ -25,7 +25,6 @@ import {
   Sparkles,
   Trash2,
   X,
-  CircleDollarSign,
 } from "lucide-react";
 import type { CascadeField, RVResult } from "@/lib/rv/catalog";
 import {
@@ -87,7 +86,6 @@ import {
   type SoldDeal,
 } from "@/lib/rv/soldDeals";
 import { SoldPrompt } from "./SoldPrompt";
-import { SoldTotalsChip } from "./SoldList";
 
 const RvDetail = lazy(() =>
   import("./RvDetail").then((m) => ({ default: m.RvDetail })),
@@ -984,29 +982,14 @@ export function RvFaxApp({
                   <Bookmark className="size-3.5" />
                   SAVED UNITS
                 </p>
-                <div className="flex items-center gap-2">
-                  {isPro ? (
-                    <button
-                      type="button"
-                      onClick={openSoldBook}
-                      className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-sky-200"
-                    >
-                      <CircleDollarSign className="size-3.5" />
-                      Sold
-                      {deals.length > 0 ? ` · ${deals.length}` : ""}
-                    </button>
-                  ) : null}
-                  {saved.length > 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => persistSaved([])}
-                      className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
-                    >
-                      <Trash2 className="size-3" />
-                      Clear
-                    </button>
-                  ) : null}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => persistSaved([])}
+                  className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
+                >
+                  <Trash2 className="size-3" />
+                  Clear
+                </button>
               </div>
               {saved.map((r) => (
                 <div
@@ -1049,10 +1032,6 @@ export function RvFaxApp({
                 </div>
               ))}
             </section>
-          ) : null}
-
-          {isPro ? (
-            <SoldTotalsChip deals={deals} onOpen={openSoldBook} />
           ) : null}
 
           {/* VIN last */}

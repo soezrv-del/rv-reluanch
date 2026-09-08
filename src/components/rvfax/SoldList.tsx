@@ -1,11 +1,10 @@
 import { useRef, useState, type PointerEvent } from "react";
-import { ChevronDown, ChevronLeft, CircleDollarSign, Trash2 } from "lucide-react";
+import { ChevronLeft, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hapticLight, hapticWarn } from "@/lib/haptics";
 import {
   formatSoldMoney,
   salesmanNet,
-  soldFactsSummary,
   soldTotals,
   splitLabel,
   type SoldDeal,
@@ -13,42 +12,6 @@ import {
 
 const SWIPE_REVEAL = 88;
 const SWIPE_COMMIT = 56;
-
-export function SoldTotalsChip({
-  deals,
-  onOpen,
-}: {
-  deals: SoldDeal[];
-  onOpen: () => void;
-}) {
-  const totals = soldTotals(deals);
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        void hapticLight();
-        onOpen();
-      }}
-      className="glass-prestige-gold flex w-full min-h-[52px] items-center gap-3 rounded-[var(--radius-xl)] px-4 py-3 text-left transition hover:border-gold/70 active:scale-[0.99]"
-      aria-label={`Sold book ${soldFactsSummary(totals)}`}
-    >
-      <CircleDollarSign className="size-5 shrink-0 text-gold-bright" />
-      <div className="min-w-0 flex-1">
-        <p className="text-[14px] font-bold text-white">Sold book</p>
-        <p className="text-[11px] text-white/75">{soldFactsSummary(totals)}</p>
-      </div>
-      <div className="shrink-0 text-right">
-        <p className="text-[10px] font-bold tracking-[0.16em] text-amber">
-          OWED
-        </p>
-        <p className="text-[15px] font-extrabold text-white">
-          {formatSoldMoney(totals.owedNet)}
-        </p>
-      </div>
-      <ChevronDown className="size-4 -rotate-90 shrink-0 text-white" />
-    </button>
-  );
-}
 
 export function SoldList({
   deals,
