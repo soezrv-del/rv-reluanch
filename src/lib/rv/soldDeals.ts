@@ -97,6 +97,32 @@ export function formatSoldMoney(n: number): string {
   return n < 0 ? `-$${formatted}` : `$${formatted}`;
 }
 
+/** Compact owed figure for the pro dock tab — always the unpaid net. */
+export function formatSoldDockMoney(n: number): string {
+  if (!Number.isFinite(n)) return "$0";
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(Math.round(n));
+  if (abs >= 1_000_000) {
+    const m = abs / 1_000_000;
+    const s = m >= 10 ? String(Math.round(m)) : trimDockDecimal(m);
+    return `${sign}$${s}M`;
+  }
+  if (abs >= 10_000) {
+    const k = abs / 1000;
+    const s = Number.isInteger(k) ? String(k) : trimDockDecimal(k);
+    return `${sign}$${s}k`;
+  }
+  return formatSoldMoney(n);
+}
+
+function trimDockDecimal(n: number): string {
+  return n.toFixed(1).replace(/\.0$/, "");
+}
+
+export function readOwedNet(): number {
+  return soldTotals(loadSoldDeals()).owedNet;
+}
+
 /** Optional name — empty is valid and must never block a deal. */
 export function normalizeCustomerName(raw: unknown): string {
   return clean(raw);
@@ -132,7 +158,7 @@ export function soldTotals(deals: SoldDeal[]): SoldTotals {
   return { totalGross, owedNet, paidNet };
 }
 
-/** Facts chip line — totals visible without opening the Sold book. */
+/** More-row / book subtitle — gross + unpaid net. */
 export function soldFactsSummary(totals: SoldTotals): string {
   return `${formatSoldMoney(totals.totalGross)} gross · ${formatSoldMoney(totals.owedNet)} owed`;
 }

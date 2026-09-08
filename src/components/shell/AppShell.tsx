@@ -11,7 +11,9 @@ import {
   type ReactNode,
 } from "react";
 import { BottomTabs, type AppTab } from "./BottomTabs";
-import { PAGE_ACCENT, TAB_ORDER } from "./shellConstants";
+import { dockTabOrder, PAGE_ACCENT } from "./shellConstants";
+import { isProfessionalTier } from "@/lib/rv/proEntitlement";
+import { OPEN_SOLD_EVENT } from "@/lib/rv/soldDeals";
 import { Launchpad } from "./Launchpad";
 import { ShellNavProvider, type CalSeed, type TripsHandoff } from "./ShellNav";
 import type { TowHandoffOffer } from "@/lib/trips/towHandoff";
@@ -51,6 +53,11 @@ const RvTripsApp = lazy(() =>
 );
 const MoreApp = lazy(() =>
   import("@/components/more/MoreApp").then((m) => ({ default: m.MoreApp })),
+);
+const SoldBookApp = lazy(() =>
+  import("@/components/rvfax/SoldBookApp").then((m) => ({
+    default: m.SoldBookApp,
+  })),
 );
 
 const TAB_PANE_ON =
@@ -229,6 +236,7 @@ export function AppShell() {
         openFactsShare();
         return;
       }
+      if (next === "rvsold" && !isProfessionalTier()) return;
       setTab(next);
       markVisited(next);
       if (next !== "rvgrok") setGrokSplashPlaying(false);
@@ -236,8 +244,19 @@ export function AppShell() {
     [markVisited, openFactsShare],
   );
 
+  const isPro = isProfessionalTier();
+
+  useEffect(() => {
+    const openSold = () => {
+      if (!isProfessionalTier()) return;
+      onTabChange("rvsold");
+    };
+    window.addEventListener(OPEN_SOLD_EVENT, openSold);
+    return () => window.removeEventListener(OPEN_SOLD_EVENT, openSold);
+  }, [onTabChange]);
+
   useSwipeTabs({
-    order: TAB_ORDER,
+    order: dockTabOrder(isPro),
     active: tab,
     onChange: onTabChange,
     // Suite panes only — never the dock. Ancestor capture listeners on
@@ -364,6 +383,13 @@ export function AppShell() {
               <div className={tab === "more" ? TAB_PANE_ON : "hidden"}>
                 <SuiteErrorBoundary name="More">
                   <MoreApp onNavigate={onTabChange} />
+                </SuiteErrorBoundary>
+              </div>
+            ) : null}
+            {isPro && show("rvsold") ? (
+              <div className={tab === "rvsold" ? TAB_PANE_ON : "hidden"}>
+                <SuiteErrorBoundary name="Sold">
+                  <SoldBookApp />
                 </SuiteErrorBoundary>
               </div>
             ) : null}

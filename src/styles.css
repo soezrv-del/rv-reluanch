@@ -1203,6 +1203,10 @@
   background: var(--color-ruby-glow);
   box-shadow: 0 0 8px rgba(255, 90, 110, 0.75);
 }
+.bottom-tab-mark-gold {
+  background: var(--color-amber);
+  box-shadow: 0 0 8px rgba(232, 180, 80, 0.7);
+}
 .bottom-tab-label-sapphire {
   background: linear-gradient(180deg, #fff 0%, #cfe4ff 45%, #8ec5ff 100%);
   -webkit-background-clip: text;

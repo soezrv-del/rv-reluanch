@@ -7,6 +7,7 @@ import {
   parseRvfoxTier,
   resolveRvfoxTier,
 } from "./proEntitlement.ts";
+import { dockTabOrder } from "../../components/shell/shellConstants.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -54,7 +55,25 @@ test("VITE_RVFOX_PRO true/false maps to a tier when TIER is unset", () => {
   assert.equal(resolveRvfoxTier({ envPro: "false" }), "consumer");
 });
 
-test("Facts / More / dock gate Sold to isProfessionalTier — no extra dock tab", () => {
+test("consumer dock is five tabs; pro dock appends Sold", () => {
+  assert.deepEqual(dockTabOrder(false), [
+    "rvfax",
+    "rvcal",
+    "rvgrok",
+    "rvtow",
+    "rvtrips",
+  ]);
+  assert.deepEqual(dockTabOrder(true), [
+    "rvfax",
+    "rvcal",
+    "rvgrok",
+    "rvtow",
+    "rvtrips",
+    "rvsold",
+  ]);
+});
+
+test("Facts / More / dock gate Sold to isProfessionalTier — pro dock shows owed", () => {
   const fax = readFileSync(
     join(root, "../../components/rvfax/RvFaxApp.tsx"),
     "utf8",
@@ -71,15 +90,29 @@ test("Facts / More / dock gate Sold to isProfessionalTier — no extra dock tab"
     join(root, "../../components/rvfax/SoldList.tsx"),
     "utf8",
   );
+  const shell = readFileSync(
+    join(root, "../../components/shell/AppShell.tsx"),
+    "utf8",
+  );
+  const constants = readFileSync(
+    join(root, "../../components/shell/shellConstants.ts"),
+    "utf8",
+  );
   assert.match(fax, /isProfessionalTier/);
   assert.match(fax, /SoldPrompt/);
-  assert.match(fax, /SoldTotalsChip/);
-  assert.match(fax, /removeSoldDeal/);
+  assert.match(fax, /OPEN_SOLD_EVENT/);
+  assert.doesNotMatch(fax, /SoldTotalsChip/);
   assert.match(more, /isProfessionalTier/);
   assert.match(more, /soldFactsSummary/);
-  assert.doesNotMatch(dock, /sold|rvsold/i);
+  assert.match(more, /onNavigate\?\.\("rvsold"\)/);
+  assert.match(dock, /isProfessionalTier/);
+  assert.match(dock, /rvsold/);
+  assert.match(dock, /formatSoldDockMoney/);
   assert.match(dock, /grid-cols-5/);
-  assert.match(list, /soldFactsSummary/);
+  assert.match(dock, /grid-cols-6/);
+  assert.match(shell, /SoldBookApp/);
+  assert.match(shell, /dockTabOrder/);
+  assert.match(constants, /dockTabOrder/);
   assert.match(list, /Remove this deal\?/);
   assert.match(list, /onRemove/);
 });

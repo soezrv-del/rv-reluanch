@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  formatSoldDockMoney,
   formatSoldMoney,
   formatUnitLabel,
   loadSoldDeals,
@@ -46,6 +47,17 @@ const montana = unit(
   "Fifth Wheel",
   "3855BR",
 );
+
+test("dock owed label stays compact so the balance fits a pro tab", () => {
+  assert.equal(formatSoldDockMoney(0), "$0");
+  assert.equal(formatSoldDockMoney(250), "$250");
+  assert.equal(formatSoldDockMoney(1250), "$1,250");
+  assert.equal(formatSoldDockMoney(10000), "$10k");
+  assert.equal(formatSoldDockMoney(12500), "$12.5k");
+  assert.equal(formatSoldDockMoney(25000), "$25k");
+  assert.equal(formatSoldDockMoney(100000), "$100k");
+  assert.equal(formatSoldDockMoney(2_000_000), "$2M");
+});
 
 test("salesman net is 25% of gross for a whole deal, then × share", () => {
   assert.equal(salesmanNet(100000, "whole"), 25000);

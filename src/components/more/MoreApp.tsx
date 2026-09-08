@@ -249,7 +249,7 @@ export function MoreApp({
                     } catch {
                       /* */
                     }
-                    onNavigate?.("rvfax");
+                    onNavigate?.("rvsold");
                   }}
                 />
               ) : null}
