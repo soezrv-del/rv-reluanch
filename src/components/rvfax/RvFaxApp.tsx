@@ -158,7 +158,7 @@ export function RvFaxApp({
   const [shareFocusToken, setShareFocusToken] = useState(0);
   const [vinOpen, setVinOpen] = useState(false);
   const [comparePick, setComparePick] = useState<RVResult[]>([]);
-  const { gen: catalogGen } = useCatalogReady();
+  const { ready: catalogReady, gen: catalogGen } = useCatalogReady();
   const [compareOpen, setCompareOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestHit[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
