@@ -764,6 +764,10 @@ export function RvTowApp() {
           />
         </section>
 
+        {hasVehicle && !reverseMode && !toadMode ? (
+          <GlanceChecks verdict={verdict} gvwrN={gvwrN} maxTow={rating.maxTow} />
+        ) : null}
+
         {toadMode && prefill.kind === "motorhome" ? (
           <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
             <p className="mb-1 text-[10px] font-bold tracking-[0.12em] text-sky-200">
@@ -1110,10 +1114,6 @@ export function RvTowApp() {
               onChange={setPin}
             />
           )}
-
-          {hasVehicle && !reverseMode ? (
-            <GlanceChecks verdict={verdict} gvwrN={gvwrN} maxTow={rating.maxTow} />
-          ) : null}
         </section>
         )}
 
@@ -1158,6 +1158,7 @@ export function RvTowApp() {
         <section className="glass-surface rounded-[var(--radius-xl)] p-1.5">
           <button
             type="button"
+            data-tow-details
             aria-expanded={detailsOpen}
             onClick={() => setDetailsOpen((open) => !open)}
             className="flex min-h-11 w-full items-center justify-between rounded-[var(--radius-lg)] px-3 text-left"
@@ -1373,9 +1374,6 @@ function HitchWeightField({
         className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-3 py-3 text-sm text-white outline-none placeholder:text-white/45 focus:border-blue/50"
         inputMode="numeric"
       />
-      <p className="mt-1.5 text-[16px] font-black tabular-nums text-white">
-        {estimatedLbs > 0 ? estimatedLbs.toLocaleString() : "—"}
-      </p>
     </label>
   );
 }
@@ -1428,7 +1426,7 @@ function GlanceChecks({
 }) {
   const cards = verdict.checks.filter((c) => c.id !== "bed");
   return (
-    <div className="mt-3 grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-3 gap-2">
       {cards.map((check) => {
         const glance = glanceForCheck(check, verdict, gvwrN, maxTow);
         const tone =
