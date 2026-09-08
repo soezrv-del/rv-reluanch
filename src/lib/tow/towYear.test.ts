@@ -243,14 +243,19 @@ test("RvTowApp: Truck/SUV toggle above year + progressive cascade source-lock", 
 
   assert.match(src, /makesForKindYear/);
   assert.match(src, /getModelsForYear/);
-  assert.match(src, /\{year \? \(/);
-  assert.match(src, /\{year && make \? \(/);
-  assert.match(src, /\{year && make && model \? \(/);
+  assert.match(src, /towCascadeReveal/);
+  assert.match(src, /reveal\.year/);
+  assert.match(src, /reveal\.make/);
+  assert.match(src, /reveal\.model/);
+  assert.match(src, /reveal\.trim/);
+  assert.match(src, /reveal\.answer/);
   assert.doesNotMatch(src, /disabled=\{!make\}/);
   assert.doesNotMatch(src, /disabled=\{!model\}/);
   assert.doesNotMatch(src, /\["all", "All"/);
   assert.doesNotMatch(src, /\["truck", "Trucks"/);
   assert.doesNotMatch(src, /Make first/);
   assert.doesNotMatch(src, /Model first/);
+  assert.doesNotMatch(src, /TOW_EXAMPLE_CHIPS/);
+  assert.doesNotMatch(src, /runExampleChip/);
   assert.equal(src.includes("const TRUCK_MAKES"), false);
 });
