@@ -4,13 +4,16 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { getRating, getTrims } from "./towVehicles.ts";
+import { getModels, makesForKind } from "./towVehicles.ts";
 import {
   DEFAULT_TOW_VEHICLE,
   LEGACY_FAKE_TOW_TRIM,
   filterTrimsForYear,
   formatTrimYearRange,
+  getModelsForYear,
   getTrimsForYear,
   isCatalogTrimForYear,
+  makesForKindYear,
   parseTrimYears,
   pickSuccessorTrim,
   resolveDefaultTowVehicle,
@@ -147,4 +150,107 @@ test("RvTowApp no longer hard-codes the fake XL diesel trim", () => {
   assert.equal(src.includes(LEGACY_FAKE_TOW_TRIM), false);
   assert.equal(src.includes("DEFAULT_TOW_VEHICLE"), true);
   assert.equal(src.includes("getTrimsForYear"), true);
+});
+
+test("makesForKindYear / getModelsForYear derive from catalog year-bands — no invented rows", () => {
+  const trucks2024 = makesForKindYear("truck", "2024");
+  const suvs2024 = makesForKindYear("suv", "2024");
+  const trucks2010 = makesForKindYear("truck", "2010");
+
+  assert.ok(trucks2024.includes("Ford"), "Ford has 2024 truck rows");
+  assert.ok(trucks2024.includes("Ram"), "Ram has 2024 truck rows");
+  assert.equal(
+    suvs2024.includes("Ram"),
+    false,
+    "Ram has no SUV models — SUV toggle must not list it",
+  );
+  assert.ok(suvs2024.includes("Ford"), "Ford has 2024 SUV rows");
+  assert.ok(suvs2024.includes("Jeep"), "Jeep has 2024 SUV rows");
+
+  assert.equal(
+    trucks2010.includes("Jeep"),
+    false,
+    "Jeep Gladiator year-bands start later — 2010 truck list stays empty",
+  );
+  assert.ok(
+    makesForKind("truck").includes("Jeep"),
+    "fixture: Jeep is still a truck make in the catalog",
+  );
+
+  const chevyTrucks2024 = getModelsForYear("Chevrolet", "truck", "2024").map(
+    (m) => m.name,
+  );
+  assert.equal(chevyTrucks2024.includes("Avalanche"), false);
+  assert.ok(chevyTrucks2024.includes("Silverado 1500"));
+
+  assert.equal(
+    getModelsForYear("GMC", "truck", "2027").some(
+      (m) => m.name === "Sierra 2500HD",
+    ),
+    false,
+    "2027 Sierra 2500HD is a catalog GAP",
+  );
+
+  for (const make of trucks2024) {
+    assert.ok(
+      getModelsForYear(make, "truck", "2024").length > 0,
+      `${make} must have a 2024 truck model with a year-covering trim`,
+    );
+  }
+  for (const make of suvs2024) {
+    assert.ok(
+      getModelsForYear(make, "suv", "2024").length > 0,
+      `${make} must have a 2024 SUV model with a year-covering trim`,
+    );
+  }
+
+  assert.deepEqual(
+    makesForKindYear("truck", ""),
+    makesForKind("truck").filter(
+      (make) => getModels(make, "truck").length > 0,
+    ),
+    "empty year does not invent — unlabeled / full tables stay",
+  );
+});
+
+test("year+kind helpers stay catalog-derived — no hardcoded brand lists", () => {
+  const helpers = readFileSync(join(root, "towYear.ts"), "utf8");
+  assert.match(helpers, /export function getModelsForYear/);
+  assert.match(helpers, /export function makesForKindYear/);
+  assert.match(helpers, /getModels\(/);
+  assert.match(helpers, /makesForKind\(/);
+  assert.match(helpers, /getTrimsForYear\(/);
+  assert.doesNotMatch(helpers, /const TRUCK_MAKES\s*=/);
+  assert.doesNotMatch(helpers, /"Ford",\s*"Ram",\s*"GMC"/);
+});
+
+test("RvTowApp: Truck/SUV toggle above year + progressive cascade source-lock", () => {
+  const src = readFileSync(join(root, "../../components/rvtow/RvTowApp.tsx"), "utf8");
+  const truck = src.indexOf("data-tow-truck");
+  const toggle = src.indexOf("data-tow-kind-toggle");
+  const yearField = src.indexOf('label="YEAR"');
+  const makeField = src.indexOf('label="MAKE"');
+  const modelField = src.indexOf('label="MODEL"');
+  const trim = src.indexOf("TRIM / ENGINE / CONFIGURATION");
+  const details = src.indexOf(">More details<");
+
+  assert.ok(truck >= 0 && toggle > truck, "kind toggle lives on the truck form");
+  assert.ok(toggle >= 0 && toggle < yearField, "Truck/SUV toggle sits above year");
+  assert.ok(yearField >= 0 && yearField < makeField);
+  assert.ok(makeField >= 0 && makeField < modelField);
+  assert.ok(modelField >= 0 && modelField < trim);
+  assert.ok(trim >= 0 && trim < details, "trim stays on the default path");
+
+  assert.match(src, /makesForKindYear/);
+  assert.match(src, /getModelsForYear/);
+  assert.match(src, /\{year \? \(/);
+  assert.match(src, /\{year && make \? \(/);
+  assert.match(src, /\{year && make && model \? \(/);
+  assert.doesNotMatch(src, /disabled=\{!make\}/);
+  assert.doesNotMatch(src, /disabled=\{!model\}/);
+  assert.doesNotMatch(src, /\["all", "All"/);
+  assert.doesNotMatch(src, /\["truck", "Trucks"/);
+  assert.doesNotMatch(src, /Make first/);
+  assert.doesNotMatch(src, /Model first/);
+  assert.equal(src.includes("const TRUCK_MAKES"), false);
 });

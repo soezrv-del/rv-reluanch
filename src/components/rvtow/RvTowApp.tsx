@@ -15,14 +15,15 @@ import { SelectSheet } from "@/components/rvfax/SelectSheet";
 import {
   getModels,
   getRating,
-  makesForKind,
   type VehicleKind,
 } from "@/lib/tow/towVehicles";
 import {
   DEFAULT_TOW_VEHICLE,
   formatTrimYearRange,
+  getModelsForYear,
   getTrimsForYear,
   isCatalogTrimForYear,
+  makesForKindYear,
   pickSuccessorTrim,
   trimStem,
 } from "@/lib/tow/towYear";
@@ -71,8 +72,12 @@ const RV_TYPES_NON_TRUCK = ["Travel Trailer"] as const;
 
 const BEDS = ["5.5 ft (Short Bed)", "6.5 ft (Standard Bed)", "8 ft (Long Bed)"];
 
-type KindFilter = "all" | VehicleKind;
+type KindFilter = VehicleKind;
 type ShopMode = "match" | "reverse";
+
+function coerceKind(k: string | undefined | null): KindFilter {
+  return k === "suv" ? "suv" : "truck";
+}
 
 const EMPTY = {
   year: "",
@@ -92,7 +97,7 @@ function bootTowVehicle(): SavedTowVehicle | null {
 export function RvTowApp() {
   const savedBoot = useMemo(() => bootTowVehicle(), []);
   const [kindFilter, setKindFilter] = useState<KindFilter>(
-    savedBoot?.kindFilter ?? "all",
+    coerceKind(savedBoot?.kindFilter),
   );
   const [year, setYear] = useState(savedBoot?.year ?? DEFAULT_TOW_VEHICLE.year);
   const [make, setMake] = useState(savedBoot?.make ?? DEFAULT_TOW_VEHICLE.make);
@@ -144,7 +149,7 @@ export function RvTowApp() {
     setReverseLimit(REVERSE_SHORTLIST);
     const saved = loadLastTowVehicle();
     if (saved) {
-      setKindFilter(saved.kindFilter);
+      setKindFilter(coerceKind(saved.kindFilter));
       setYear(saved.year);
       setMake(saved.make);
       setModel(saved.model);
@@ -159,7 +164,7 @@ export function RvTowApp() {
       setDeviceSaved(saved);
       return;
     }
-    setKindFilter("all");
+    setKindFilter("truck");
     setYear(DEFAULT_TOW_VEHICLE.year);
     setMake(DEFAULT_TOW_VEHICLE.make);
     setModel(DEFAULT_TOW_VEHICLE.model);
@@ -260,12 +265,15 @@ export function RvTowApp() {
 
   const toadMode = prefill.kind === "motorhome" && !matchTrailer;
 
-  const makeList = useMemo(() => makesForKind(kindFilter), [kindFilter]);
+  const makeList = useMemo(
+    () => (year ? makesForKindYear(kindFilter, year) : []),
+    [kindFilter, year],
+  );
 
   const models = useMemo(() => {
-    if (!make) return [];
-    return getModels(make, kindFilter === "all" ? "all" : kindFilter);
-  }, [make, kindFilter]);
+    if (!make || !year) return [];
+    return getModelsForYear(make, kindFilter, year);
+  }, [make, kindFilter, year]);
 
   const modelNames = useMemo(() => models.map((m) => m.name), [models]);
 
@@ -405,41 +413,56 @@ export function RvTowApp() {
     [gvwrN, rvType, year, kindFilter, pinN, reverseLimit],
   );
 
-  const truckCount = useMemo(
-    () =>
-      makesForKind("truck").reduce(
-        (n, m) => n + getModels(m, "truck").length,
-        0,
-      ),
-    [],
-  );
-  const suvCount = useMemo(
-    () =>
-      makesForKind("suv").reduce((n, m) => n + getModels(m, "suv").length, 0),
-    [],
-  );
-
-  /** Change kind filter without fighting the user — keep selection if still valid */
+  /** Truck/SUV toggle — keep a still-valid make/model, else hide+reset children */
   const applyKindFilter = useCallback(
     (next: KindFilter) => {
       setKindFilter(next);
       if (next === "suv") setRvType("Travel Trailer");
-      if (!make) return;
-      const stillValid = getModels(
-        make,
-        next === "all" ? "all" : next,
-      ).some((m) => m.name === model);
+      if (!year) {
+        setMake("");
+        setModel("");
+        setTrim("");
+        return;
+      }
+      const nextMakes = makesForKindYear(next, year);
+      if (!make || !nextMakes.includes(make)) {
+        setMake("");
+        setModel("");
+        setTrim("");
+        return;
+      }
+      const stillValid = getModelsForYear(make, next, year).some(
+        (m) => m.name === model,
+      );
       if (stillValid) return;
       setModel("");
       setTrim("");
     },
-    [make, model],
+    [year, make, model],
   );
 
   const pickYear = useCallback(
     (nextYear: string) => {
       setYear(nextYear);
-      if (!make || !model) return;
+      if (!nextYear) {
+        setMake("");
+        setModel("");
+        setTrim("");
+        return;
+      }
+      const nextMakes = makesForKindYear(kindFilter, nextYear);
+      if (!make || !nextMakes.includes(make)) {
+        setMake("");
+        setModel("");
+        setTrim("");
+        return;
+      }
+      const nextModels = getModelsForYear(make, kindFilter, nextYear);
+      if (!model || !nextModels.some((m) => m.name === model)) {
+        setModel("");
+        setTrim("");
+        return;
+      }
       const nextTrims = getTrimsForYear(make, model, nextYear);
       if (trim && nextTrims.some((t) => t.label === trim)) return;
       const successor = pickSuccessorTrim(trim, nextTrims);
@@ -453,7 +476,7 @@ export function RvTowApp() {
       if (trim && !inFullTable) return;
       setTrim("");
     },
-    [make, model, trim],
+    [kindFilter, make, model, trim],
   );
 
   const pickMake = useCallback(
@@ -462,7 +485,14 @@ export function RvTowApp() {
       setManualMaxTow("");
       setManualPayload("");
       setManualGcwr("");
-      const nextModels = getModels(m, kindFilter === "all" ? "all" : kindFilter);
+      if (!m) {
+        setModel("");
+        setTrim("");
+        return;
+      }
+      const nextModels = year
+        ? getModelsForYear(m, kindFilter, year)
+        : [];
       if (nextModels.length === 1) {
         const only = nextModels[0]!;
         setModel(only.name);
@@ -491,7 +521,10 @@ export function RvTowApp() {
 
   const runExampleChip = useCallback((label: string) => {
     const sel = selFromTowExampleChip(label);
-    setKindFilter("all");
+    const chipKind =
+      getModels(sel.make, "all").find((m) => m.name === sel.model)?.kind ??
+      "truck";
+    setKindFilter(chipKind === "suv" ? "suv" : "truck");
     setYear(sel.year);
     setMake(sel.make);
     setModel(sel.model);
@@ -524,7 +557,7 @@ export function RvTowApp() {
   }, []);
 
   const applyReversePick = useCallback((hit: ReverseHit) => {
-    setKindFilter(hit.kind === "suv" ? "suv" : kindFilter === "suv" ? "truck" : kindFilter);
+    setKindFilter(hit.kind === "suv" ? "suv" : "truck");
     setMake(hit.make);
     setModel(hit.model);
     setTrim(hit.trim);
@@ -534,12 +567,12 @@ export function RvTowApp() {
     setShopMode("match");
     setMatchTrailer(true);
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, [kindFilter]);
+  }, []);
 
   const resetDefaults = () => {
     appliedOfferRef.current = null;
     setAppliedOffer(null);
-    setKindFilter("all");
+    setKindFilter("truck");
     setYear(DEFAULT_TOW_VEHICLE.year);
     setMake(DEFAULT_TOW_VEHICLE.make);
     setModel(DEFAULT_TOW_VEHICLE.model);
@@ -559,7 +592,7 @@ export function RvTowApp() {
       make: DEFAULT_TOW_VEHICLE.make,
       model: DEFAULT_TOW_VEHICLE.model,
       trim: DEFAULT_TOW_VEHICLE.trim,
-      kindFilter: "all",
+      kindFilter: "truck",
       bed: "6.5 ft (Standard Bed)",
       rvType: "Fifth Wheel",
       gvwr: "14000",
@@ -843,44 +876,76 @@ export function RvTowApp() {
                     </button>
                   </div>
                 </div>
-                {/* Cascading search — year → make → model; trim stays on the default view */}
-                <div className="grid grid-cols-2 gap-2">
-                  <Field
-                    label="YEAR"
-                    value={year || "Select year"}
-                    empty={!year}
-                    onClick={() => setSheet("year")}
-                    flush
-                  />
+                {/* Progressive year → make → model → trim; trim stays on the default view */}
+                <div
+                  data-tow-kind-toggle
+                  className="flex gap-1 rounded-full border border-white/15 bg-black/30 p-1"
+                  role="group"
+                  aria-label="Truck or SUV"
+                >
+                  {(
+                    [
+                      ["truck", "Truck"],
+                      ["suv", "SUV"],
+                    ] as const
+                  ).map(([id, label]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      data-tow-kind={id}
+                      aria-pressed={kindFilter === id}
+                      onClick={() => applyKindFilter(id)}
+                      className={cn(
+                        "flex min-h-11 flex-1 items-center justify-center gap-1 rounded-full px-2 text-[12px] font-bold transition",
+                        kindFilter === id
+                          ? "bg-blue text-white shadow-[0_0_14px_rgba(77,166,255,0.35)]"
+                          : "text-white hover:text-white",
+                      )}
+                    >
+                      {id === "truck" ? (
+                        <Truck className="size-3.5" />
+                      ) : (
+                        <Car className="size-3.5" />
+                      )}
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <Field
+                  label="YEAR"
+                  value={year || "Select year"}
+                  empty={!year}
+                  onClick={() => setSheet("year")}
+                />
+                {year ? (
                   <Field
                     label="MAKE"
                     value={make || "Select make"}
                     empty={!make}
                     onClick={() => setSheet("make")}
-                    flush
                   />
-                </div>
-                <Field
-                  label="MODEL"
-                  value={model || (make ? "Select or type model" : "Make first")}
-                  empty={!model}
-                  disabled={!make}
-                  onClick={() => make && setSheet("model")}
-                />
-                <Field
-                  label="TRIM / ENGINE / CONFIGURATION"
-                  value={
-                    trim ||
-                    (model
-                      ? inCatalog
+                ) : null}
+                {year && make ? (
+                  <Field
+                    label="MODEL"
+                    value={model || "Select or type model"}
+                    empty={!model}
+                    onClick={() => setSheet("model")}
+                  />
+                ) : null}
+                {year && make && model ? (
+                  <Field
+                    label="TRIM / ENGINE / CONFIGURATION"
+                    value={
+                      trim ||
+                      (inCatalog
                         ? "Select or type trim"
-                        : "Type trim (optional)"
-                      : "Model first")
-                  }
-                  empty={!trim}
-                  disabled={!model}
-                  onClick={() => model && setSheet("trim")}
-                />
+                        : "Type trim (optional)")
+                    }
+                    empty={!trim}
+                    onClick={() => setSheet("trim")}
+                  />
+                ) : null}
                 <div className="flex flex-wrap gap-2 pt-2">
                   {TOW_EXAMPLE_CHIPS.map((label) => (
                     <button
@@ -995,36 +1060,6 @@ export function RvTowApp() {
           </button>
           {detailsOpen ? (
             <div className="space-y-3 px-1.5 pb-3">
-              <div className="flex gap-1 rounded-full border border-white/15 bg-black/30 p-1">
-                {(
-                  [
-                    ["all", "All", truckCount + suvCount],
-                    ["truck", "Trucks", truckCount],
-                    ["suv", "SUVs", suvCount],
-                  ] as const
-                ).map(([id, label, count]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => applyKindFilter(id)}
-                    className={cn(
-                      "flex flex-1 items-center justify-center gap-1 rounded-full py-2 text-[12px] font-bold transition",
-                      kindFilter === id
-                        ? "bg-blue text-white shadow-[0_0_14px_rgba(77,166,255,0.35)]"
-                        : "text-white hover:text-white",
-                    )}
-                  >
-                    {id === "truck" ? (
-                      <Truck className="size-3.5" />
-                    ) : id === "suv" ? (
-                      <Car className="size-3.5" />
-                    ) : null}
-                    {label}
-                    <span className="text-[10px] opacity-80">({count})</span>
-                  </button>
-                ))}
-              </div>
-
               {toadMode ? null : (
                 <div className="flex gap-1 rounded-full border border-white/15 bg-black/30 p-1">
                   {(

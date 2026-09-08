@@ -1,9 +1,13 @@
 /** Year-aware trim helpers for RvTow. Does not edit the OEM table. */
 
 import {
+  getModels,
   getRating,
   getTrims,
+  makesForKind,
+  type TowModel,
   type TowTrim,
+  type VehicleKind,
 } from "./towVehicles.ts";
 
 export const DEFAULT_TOW_YEAR = "2024";
@@ -84,6 +88,36 @@ export function getTrimsForYear(
 ): TowTrim[] {
   if (!make || !model) return [];
   return filterTrimsForYear(getTrims(make, model), year);
+}
+
+/**
+ * Models of `kind` that already have a catalog trim covering `year`.
+ * Uses getModels + getTrimsForYear — empty year-banded rows stay empty.
+ * Empty / unset year → same as getModels (no invented years).
+ */
+export function getModelsForYear(
+  make: string,
+  kind: VehicleKind | "all",
+  year: string | number | null | undefined,
+): TowModel[] {
+  if (!make) return [];
+  return getModels(make, kind).filter(
+    (m) => getTrimsForYear(make, m.name, year).length > 0,
+  );
+}
+
+/**
+ * Makes that have at least one `kind` model covering `year`.
+ * Derived from makesForKind + getModelsForYear — never a hardcoded brand list.
+ * New catalog rows appear automatically.
+ */
+export function makesForKindYear(
+  kind: VehicleKind | "all",
+  year: string | number | null | undefined,
+): string[] {
+  return makesForKind(kind).filter(
+    (make) => getModelsForYear(make, kind, year).length > 0,
+  );
 }
 
 export function isCatalogTrimForYear(
