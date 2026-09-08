@@ -101,7 +101,7 @@ test("Facts / More / dock gate Sold to isProfessionalTier — pro dock shows owe
   assert.match(fax, /isProfessionalTier/);
   assert.match(fax, /SoldPrompt/);
   assert.match(fax, /OPEN_SOLD_EVENT/);
-  assert.doesNotMatch(fax, /SoldTotalsChip/);
+  assert.match(fax, /SoldTotalsChip/);
   assert.match(more, /isProfessionalTier/);
   assert.match(more, /soldFactsSummary/);
   assert.match(more, /onNavigate\?\.\("rvsold"\)/);
@@ -113,6 +113,9 @@ test("Facts / More / dock gate Sold to isProfessionalTier — pro dock shows owe
   assert.match(shell, /SoldBookApp/);
   assert.match(shell, /dockTabOrder/);
   assert.match(constants, /dockTabOrder/);
-  assert.match(list, /Remove this deal\?/);
+  assert.match(list, /soldFactsSummary/);
+  assert.match(list, /Delete/);
   assert.match(list, /onRemove/);
+  assert.doesNotMatch(list, /Remove this deal\?/);
+  assert.doesNotMatch(list, /unwind|put the coach back|restore.*[Ss]aved/);
 });

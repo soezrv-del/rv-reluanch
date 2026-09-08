@@ -2,7 +2,8 @@
  * Professional Sold book — device-local deals from Facts saved coaches.
  * Lot-desk net: 25% of gross for a whole deal, then × share
  * (whole 1 / half 0.5 / quarter 0.25). Never typed.
- * Remove is confirm-then-drop from `rvfax_sold_v1` — stays gone after refresh.
+ * Swipe/Delete drops the row from `rvfax_sold_v1` only — does not put the
+ * coach back on Saved. For test deals and fallen-through / went-backwards.
  */
 
 import {
@@ -232,7 +233,10 @@ export function toggleDealPaid(deals: SoldDeal[], id: string): SoldDeal[] {
   return deals.map((d) => (d.id === id ? { ...d, paid: !d.paid } : d));
 }
 
-/** Drop one deal. Caller persists — empty id is a no-op. */
+/**
+ * Drop one deal from Sold only. Does not touch Saved — no unwind / restore.
+ * Empty id is a no-op.
+ */
 export function removeSoldDeal(deals: SoldDeal[], id: string): SoldDeal[] {
   const want = typeof id === "string" ? id.trim() : "";
   if (!want) return deals;

@@ -87,6 +87,7 @@ import {
   type SoldDeal,
 } from "@/lib/rv/soldDeals";
 import { SoldPrompt } from "./SoldPrompt";
+import { SoldTotalsChip } from "./SoldList";
 
 const RvDetail = lazy(() =>
   import("./RvDetail").then((m) => ({ default: m.RvDetail })),
@@ -1048,6 +1049,10 @@ export function RvFaxApp({
                 </div>
               ))}
             </section>
+          ) : null}
+
+          {isPro ? (
+            <SoldTotalsChip deals={deals} onOpen={openSoldBook} />
           ) : null}
 
           {/* VIN last */}

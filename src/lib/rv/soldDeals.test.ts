@@ -185,6 +185,9 @@ test("removeSoldDeal drops the row and persist stays gone after reload", () => {
   const after = removeSoldDeal(second.deals, first.deal.id);
   assert.equal(after.length, 1);
   assert.equal(after[0]!.id, second.deal.id);
+  // Remove is Sold-only — does not unwind the sale back onto Saved.
+  assert.equal(isSavedUnit(second.saved, dream), false);
+  assert.equal(isSavedUnit(second.saved, montana), false);
   const totals = soldTotals(after);
   assert.equal(totals.totalGross, 4000);
   assert.equal(totals.owedNet, 250);

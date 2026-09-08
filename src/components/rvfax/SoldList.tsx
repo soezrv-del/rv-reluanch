@@ -1,16 +1,54 @@
 import { useRef, useState, type PointerEvent } from "react";
-import { ChevronLeft, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, CircleDollarSign, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hapticLight, hapticWarn } from "@/lib/haptics";
 import {
   formatSoldMoney,
   salesmanNet,
+  soldFactsSummary,
   soldTotals,
   splitLabel,
   type SoldDeal,
 } from "@/lib/rv/soldDeals";
 
 const SWIPE_REVEAL = 88;
+const SWIPE_COMMIT = 56;
+
+export function SoldTotalsChip({
+  deals,
+  onOpen,
+}: {
+  deals: SoldDeal[];
+  onOpen: () => void;
+}) {
+  const totals = soldTotals(deals);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        void hapticLight();
+        onOpen();
+      }}
+      className="glass-prestige-gold flex w-full min-h-[52px] items-center gap-3 rounded-[var(--radius-xl)] px-4 py-3 text-left transition hover:border-gold/70 active:scale-[0.99]"
+      aria-label={`Sold book ${soldFactsSummary(totals)}`}
+    >
+      <CircleDollarSign className="size-5 shrink-0 text-gold-bright" />
+      <div className="min-w-0 flex-1">
+        <p className="text-[14px] font-bold text-white">Sold book</p>
+        <p className="text-[11px] text-white/75">{soldFactsSummary(totals)}</p>
+      </div>
+      <div className="shrink-0 text-right">
+        <p className="text-[10px] font-bold tracking-[0.16em] text-amber">
+          OWED
+        </p>
+        <p className="text-[15px] font-extrabold text-white">
+          {formatSoldMoney(totals.owedNet)}
+        </p>
+      </div>
+      <ChevronDown className="size-4 -rotate-90 shrink-0 text-white" />
+    </button>
+  );
+}
 
 export function SoldList({
   deals,
@@ -24,19 +62,6 @@ export function SoldList({
   onRemove: (id: string) => void;
 }) {
   const totals = soldTotals(deals);
-  const [pending, setPending] = useState<SoldDeal | null>(null);
-
-  const askRemove = (deal: SoldDeal) => {
-    void hapticWarn();
-    setPending(deal);
-  };
-
-  const confirmRemove = () => {
-    if (!pending) return;
-    void hapticWarn();
-    onRemove(pending.id);
-    setPending(null);
-  };
 
   return (
     <div
@@ -72,7 +97,7 @@ export function SoldList({
               key={deal.id}
               deal={deal}
               onTogglePaid={onTogglePaid}
-              onAskRemove={askRemove}
+              onRemove={onRemove}
             />
           ))}
         </section>
@@ -98,53 +123,10 @@ export function SoldList({
           </div>
         </div>
         <p className="mt-2 text-[11px] text-white/65">
-          Paid deals drop out of owed. Swipe left or tap the trash to remove a
-          deal — confirm first.
+          Swipe left or tap Delete to drop a test or fallen-through deal. It
+          leaves Sold only — the coach stays off Saved.
         </p>
       </section>
-
-      {pending ? (
-        <div
-          className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 px-3 pb-28 pt-8 backdrop-blur-md sm:items-center sm:pb-8"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="sold-remove-title"
-        >
-          <div className="glass-prestige w-full max-w-lg space-y-3 rounded-[var(--radius-xl)] p-4">
-            <p
-              id="sold-remove-title"
-              className="text-[15px] font-bold text-white"
-            >
-              Remove this deal?
-            </p>
-            <p className="text-[13px] leading-relaxed text-white/75">
-              {pending.customerName || "—"} · {pending.unitLabel}
-              <br />
-              {formatSoldMoney(pending.gross)} · {splitLabel(pending.split)} ·{" "}
-              {formatSoldMoney(salesmanNet(pending.gross, pending.split))} net
-            </p>
-            <p className="text-[12px] text-white/60">
-              It leaves the Sold book on this device. Confirm to drop it.
-            </p>
-            <div className="flex gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setPending(null)}
-                className="min-h-[48px] flex-1 rounded-full border border-white/20 bg-black/40 px-4 text-[13px] font-bold text-white"
-              >
-                Keep
-              </button>
-              <button
-                type="button"
-                onClick={confirmRemove}
-                className="min-h-[48px] flex-1 rounded-full bg-ruby px-4 text-[13px] font-bold text-white"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -152,11 +134,11 @@ export function SoldList({
 function SoldDealRow({
   deal,
   onTogglePaid,
-  onAskRemove,
+  onRemove,
 }: {
   deal: SoldDeal;
   onTogglePaid: (id: string) => void;
-  onAskRemove: (deal: SoldDeal) => void;
+  onRemove: (id: string) => void;
 }) {
   const net = salesmanNet(deal.gross, deal.split);
   const [offset, setOffset] = useState(0);
@@ -168,14 +150,27 @@ function SoldDealRow({
     axis: "h" | "v" | null;
   } | null>(null);
 
+  const drop = () => {
+    void hapticWarn();
+    onRemove(deal.id);
+  };
+
   const snap = (n: number) => {
-    const next = n < -SWIPE_REVEAL / 2 ? -SWIPE_REVEAL : 0;
-    offsetRef.current = next;
-    setOffset(next);
+    if (n <= -SWIPE_COMMIT) {
+      drop();
+      return;
+    }
+    offsetRef.current = 0;
+    setOffset(0);
   };
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement | null)?.closest("button")) return;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* */
+    }
     start.current = {
       x: e.clientX,
       y: e.clientY,
@@ -217,11 +212,11 @@ function SoldDealRow({
     >
       <button
         type="button"
-        onClick={() => onAskRemove(deal)}
+        onClick={drop}
         className="absolute inset-y-0 right-0 flex w-[88px] items-center justify-center bg-ruby text-[12px] font-bold text-white"
-        aria-label={`Remove ${deal.unitLabel}`}
+        aria-label={`Delete ${deal.unitLabel} from Sold`}
       >
-        Remove
+        Delete
       </button>
       <article
         className={cn(
@@ -249,11 +244,12 @@ function SoldDealRow({
           <div className="flex shrink-0 items-center gap-1">
             <button
               type="button"
-              aria-label={`Remove ${deal.unitLabel} from Sold`}
-              onClick={() => onAskRemove(deal)}
-              className="flex size-11 items-center justify-center rounded-full border border-white/15 bg-black/35 text-white/85 hover:bg-white/10 hover:text-white"
+              aria-label={`Delete ${deal.unitLabel} from Sold`}
+              onClick={drop}
+              className="inline-flex min-h-[44px] items-center gap-1 rounded-full border border-ruby-border/60 bg-ruby-soft px-3 text-[12px] font-bold text-ruby"
             >
-              <Trash2 className="size-4" />
+              <Trash2 className="size-3.5" />
+              Delete
             </button>
             <button
               type="button"
