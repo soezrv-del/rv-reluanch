@@ -17167,11 +17167,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2955RL",
         "2980RL",
         "3000RE",
+        "3000RK",
+        "3075RL",
         "3100RL",
         "3120RL",
         "3121RL",
         "3123RL",
         "3130RE",
+        "3150RL",
         "3160RL",
         "3230CK",
         "3231CK",
@@ -17180,18 +17183,23 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "3380RL",
         "3400RL",
         "3440RL",
+        "3455SA",
+        "3465SA",
         "3500RD",
         "3531RE",
         "3532SP",
         "3560RL",
         "3561RL",
+        "3585SA",
         "3600RO",
+        "3605RL",
         "3610RL",
         "3611RL",
         "3623EB",
         "3650RK",
         "3660RL",
         "3661RL",
+        "3665RE",
         "3670RL",
         "3685FL",
         "3700LK",
@@ -17243,11 +17251,15 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // GAP 2006–2008 (no dated card this pack). Prefer GAP for thin 2009 RVUSA
         // (3075RL / 3400RL) — do not lock a partial 2009. Do not invent-fill.
         "2005": ["2950RK", "2955RL", "2980RL", "3255RL", "3295RK", "3380RL", "3400RL", "3650RK", "3670RL", "3685FL"],
-        // MY2010–2013 leftover invent omitted (RVUSA Montana m1499 year cards are EMPTY shells).
-        // Prefer omit over empty [] so 2010–2013 drop from the selectable index (MHC #103/#104).
-        // No dated brochure in pack — do not invent-fill 3402RL / 3582RL / 3625RE / 3710FL / 3720RL / 3790RD / 3811MS.
-        // Never stamp MY2027 OEM 3100RL / 3500RD / 3600RO / 3800FL / 3900RK onto 2010–2013.
-        // Drop leftover-only invent 3402RL / 3582RL / 3625RE from aggregate floorplans[] (2010–2013-only).
+        // LOCK research/keystone/LOT_DESK_2010.md + CODES_2010.json
+        // Hickory Edition 04/09 “all new 2010”. Pin MY2010 only.
+        // Do not copy 2009 thin RVUSA (3075RL / 3400RL) or 2011+ onto this year.
+        // Do not mix Big Sky short codes. Delete leftover invent 3402RL / 3582RL / 3625RE
+        // / 3710FL / 3720RL / 3790RD from this year (later-year RVUSA locks stay).
+        // Never stamp MY2027 OEM 3100RL / 3500RD / 3600RO / 3800FL / 3900RK onto 2010.
+        "2010": ["2955RL", "3000RK", "3075RL", "3150RL", "3400RL", "3455SA", "3465SA", "3585SA", "3605RL", "3665RE"],
+        // MY2011–2013 leftover invent omitted (RVUSA Montana m1499 year cards are EMPTY shells).
+        // Prefer omit over empty [] so 2011–2013 drop from the selectable index.
         // LOCK RVUSA Montana m1499 specs-by-model year cards (production, not dealer-stock).
         // THIN years keep extract only — do not invent-fill from adjacent years / catalog / MY2025.
         // Never stamp MY2027 OEM 3100RL / 3500RD / 3600RO / 3800FL / 3900RK onto 2014–2024.
@@ -17305,7 +17317,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 1996,
-      description: "Keystone Montana — America's best-selling luxury fifth wheel. Residential living, large floorplan bank. UVW/pin vary widely by plan — door sticker + live Grok verify exact brochure numbers."
+      description: "Keystone Montana — America's best-selling luxury fifth wheel. Residential living, large floorplan bank. MY2010 Hickory Edition lock (LOT_DESK_2010). UVW/pin vary widely by plan — door sticker + live Grok verify exact brochure numbers."
     },
     "Montana High Country": {
       type: "Fifth Wheel",
@@ -17628,7 +17640,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "369BHS"
       ],
       floorplansByYear: {
-        // MY2010 / MY2012 leftover invent omitted (RVUSA Cougar Premium FW m1492 — prefer omit).
+        // GAP MY2010 (research/keystone/LOT_DESK_2010.md) — 2011-footered “2010” tags; no X-Lite mix.
+        // Prefer omit. Residual invent 30RLS / 32BHSWE / 34TSB stay off this year.
+        // MY2012 leftover invent omitted (RVUSA Cougar Premium FW m1492 — prefer omit).
         // Do not invent-fill 30RLS / 32BHSWE / 34TSB / 345MBS. Never stamp MY2027 OEM nine / 295RDS onto 2010–2024.
         // LOCK RVUSA m1492 year cards (production). THIN 2011 / 2014 keep extract only — do not invent-fill.
         // Keep WE/SE suffixes as printed (280RLSWE, 316RLSSE); do not invent missing twins.
@@ -17831,21 +17845,36 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     Bullet: {
       type: "Travel Trailer",
       floorplans: [
+        "151EXP",
         "1700BH",
+        "180FBS",
+        "188EXP",
         "1900RD",
+        "200EXP",
         "221BHS",
+        "230BHS",
         "243BHS",
+        "246RBS",
         "250BHS",
+        "250RKS",
         "253RDS",
         "260RBS",
         "260RBSWE",
+        "278RLS",
+        "281BHS",
         "287QBS",
+        "288RLS",
         "290BHS",
+        "294BHS",
         "308BHS",
         "330BHS",
         "330BKQ"
       ],
       floorplansByYear: {
+        // LOCK research/keystone/LOT_DESK_2010.md + CODES_2010.json
+        // Nov 2009 Bullet brochure (Standard + Micro). Pin MY2010 only.
+        // Do not copy 2009 / 2011 onto 2010. Do not dump Crossfire / Classic here.
+        "2010": ["230BHS", "246RBS", "250RKS", "278RLS", "281BHS", "288RLS", "294BHS", "151EXP", "180FBS", "188EXP", "200EXP"],
         "2012": ["1700BH", "1900RD", "221BHS", "243BHS", "250BHS"],
         "2013": ["1700BH", "1900RD", "221BHS", "243BHS", "250BHS", "260RBS"],
         "2014": ["1700BH", "1900RD", "221BHS", "243BHS", "250BHS", "260RBS"],
@@ -17998,7 +18027,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2010,
-      description: "Keystone Bullet — historic collapsed lightweight travel-trailer bucket for used-market cascade. MY2027 production is split: Bullet Crossfire + Bullet Classic. Do not dump sibling codes here."
+      description: "Keystone Bullet — historic collapsed lightweight travel-trailer bucket for used-market cascade. MY2010 Nov 2009 Standard + Micro lock (LOT_DESK_2010). MY2027 production is split: Bullet Crossfire + Bullet Classic. Do not dump sibling codes here."
     },
     "Bullet Crossfire": {
       type: "Travel Trailer",
@@ -18069,6 +18098,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     Passport: {
       type: "Travel Trailer",
       floorplans: [
+        "195RB",
         "189RBWE",
         "219BHWE",
         "221BHWE",
@@ -18077,6 +18107,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2400RBWE",
         "2401BH",
         "2401BHWE",
+        "245RB",
+        "250BH",
         "2600FK",
         "268BHWE",
         "2700RL",
@@ -18084,18 +18116,29 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2704RK",
         "2704RKWE",
         "2710KB",
+        "280BH",
         "282QBWE",
+        "285RL",
+        "286RB",
+        "288RK",
+        "290BH",
+        "292BH",
         "2951BH",
         "2951BHWE",
+        "300BH",
         "3100RE",
         "3300BK",
         "3352BH",
         "3360BK"
       ],
       floorplansByYear: {
-        // MY2010–2020 + MY2023 leftover invent omitted (RVUSA Passport m1502 — prefer omit).
-        // Do not invent-fill 189ML / 199ML / 219BH / 221BH / 239ML / 2400BH / 248BH / 2500RL / 253RD / 2700BH / 2920BH.
+        // LOCK research/keystone/LOT_DESK_2010.md + CODES_2010.json
+        // PA_brochure0609_low.pdf June 2009. Pin MY2010 only.
+        // Do not lock GT fours or Micro 189ML without a dated matrix.
         // Do not merge Passport Super Lite (m6799) or Passport Classic onto this key.
+        "2010": ["195RB", "245RB", "250BH", "280BH", "285RL", "286RB", "288RK", "290BH", "292BH", "300BH"],
+        // MY2011–2020 + MY2023 leftover invent omitted (RVUSA Passport m1502 — prefer omit).
+        // Do not invent-fill 189ML / 199ML / 219BH / 221BH / 239ML / 2400BH / 248BH / 2500RL / 253RD / 2700BH / 2920BH.
         // Do not invent Passport Premium / GT / Solo. Do not invent East twins for WE-only 2022 cards.
         // LOCK RVUSA Passport m1502 Specs year cards.
         // MY2021: 2400RB | 2400RBWE | 2401BH | 2401BHWE
@@ -18139,7 +18182,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2000,
-      description: "Keystone Passport — historic collapsed SL / GT travel-trailer bucket for used-market cascade. MY2027 OEM is split: Passport Super Lite + Passport Classic. Do not invent Premium / GT."
+      description: "Keystone Passport — historic collapsed SL / GT travel-trailer bucket for used-market cascade. MY2010 June 2009 brochure lock (LOT_DESK_2010). MY2027 OEM is split: Passport Super Lite + Passport Classic. Do not invent Premium / GT."
     },
     "Passport Super Lite": {
       type: "Travel Trailer",
@@ -18251,10 +18294,25 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2500RBS",
         "2500RBSWE",
         "2620BHS",
-        "2620BHSWE"
+        "2620BHSWE",
+        "266RL-SSR",
+        "267BH-SSR",
+        "276RB-SSR",
+        "291RK-SSR",
+        "294BH-SSR",
+        "296BH-SSR",
+        "297FK-SSR",
+        "298BH-SSR",
+        "303BHSSR",
+        "372BH-GL",
+        "373QB-GL"
       ],
       floorplansByYear: {
-        // MY2010–2026 leftover invent omitted (prefer omit). Residual was Mini bleed
+        // LOCK research/keystone/LOT_DESK_2010.md + CODES_2010.json
+        // May 2010 Eastern TT row only. Pin MY2010 only.
+        // Do not merge Summerland or Springdale FW SSR into this key.
+        "2010": ["266RL-SSR", "267BH-SSR", "276RB-SSR", "291RK-SSR", "294BH-SSR", "296BH-SSR", "297FK-SSR", "298BH-SSR", "303BHSSR", "372BH-GL", "373QB-GL"],
+        // MY2011–2026 leftover invent omitted (prefer omit). Residual was Mini bleed
         // (1700FQ / 1750RD / 1760BH / 1800BH / 1860SS) plus 260BH / 260BHC / 262RKS / 2880BRS copy-forward.
         // Do not use Western Edition / core leftovers as proof of Mini / Max. Do not invent-fill from 2027.
         // OEM keystonerv.com/product/springdale/comfort-travel-trailers/floorplans (2027 Floorplans):
@@ -18290,7 +18348,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2005,
-      description: "Keystone Springdale — entry / value travel trailer. 2010–2026 leftover fby emptied (prefer omit — Mini bleed / copy-forward invent). MY2027 OEM card is 2100RL through 2620BHS including Western Edition twins. Mini / Max are sibling keys."
+      description: "Keystone Springdale — entry / value travel trailer. MY2010 May 2010 Eastern TT lock (LOT_DESK_2010). 2011–2026 leftover fby emptied (prefer omit — Mini bleed / copy-forward invent). MY2027 OEM card is 2100RL through 2620BHS including Western Edition twins. Mini / Max are sibling keys."
     },
     "Springdale Mini": {
       type: "Travel Trailer",
@@ -18360,6 +18418,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         // OEM keystonerv.com/product/hideout/comfort-travel-trailers/floorplans (2027 Floorplans):
         // 210RL | 210RLWE | 212RKS | 212RKSWE | 230BH | 230BHWE | 234MLS | 234MLSWE | 250RBS | 250RBSWE | 262BHS | 262BHSWE
+        // GAP MY2010 (research/keystone/LOT_DESK_2010.md) — captions Hideout West 2011.
         // yearStart 2010 — omit 2010–2026 fby (no invent / no copy-forward of 2027 codes).
         // Mini / Max GAP — no extractable 2027 Mini/Max cards.
         "2027": ["210RL", "210RLWE", "212RKS", "212RKSWE", "230BH", "230BHWE", "234MLS", "234MLSWE", "250RBS", "250RBSWE", "262BHS", "262BHSWE"]
@@ -18590,7 +18649,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "3912DS"
       ],
       floorplansByYear: {
-        // MY2010–2014 leftover invent omitted (RVUSA Alpine m2918 — prefer omit).
+        // GAP MY2010 (research/keystone/LOT_DESK_2010.md) — Sept 2010 PDF is MY2011 invent-risk.
+        // Prefer omit. Residual invent 3400RL / 3501RL / 3781FK stay off this year.
+        // MY2011–2014 leftover invent omitted (RVUSA Alpine m2918 — prefer omit).
         // Do not invent-fill 3400RL / 3781FK / 3900RK. Never stamp MY2027 OEM six
         // (3100RE / 3303CK / 3710FL / 3800MR / 3820FK / 3910RK) as a bank onto 2010–2024.
         // LOCK RVUSA Alpine m2918 year cards (production). THIN 2015 keep 3010RE extract only.
@@ -18752,10 +18813,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Avalanche": {
       type: "Fifth Wheel",
-      floorplans: ["302RS", "321RL", "338GK", "346FL", "366LS", "378BH", "379MB", "380LT", "390DS"],
+      floorplans: ["290RL", "302RS", "320RK", "321RL", "330RE", "335RB", "338GK", "340TG", "346FL", "350LB", "366LS", "378BH", "379MB", "380LT", "390DS"],
       floorplansByYear: {
-        // 2010–2024 leftover FBY emptied (prefer omit — thin/unsourced invent).
-        // yearStart 2010 kept; no dated ≤2024 cards this slice. Do not invent 300RL/360RB/372BH years.
+        // LOCK research/keystone/LOT_DESK_2010.md + CODES_2010.json
+        // Nov 2009 Avalanche fifth-wheel brochure. Pin MY2010 only.
+        // Do not copy 2009 / 2011 onto 2010. Alpine Avalanche Edition is a later sibling.
+        "2010": ["290RL", "320RK", "330RE", "335RB", "340TG", "350LB"],
+        // 2011–2024 leftover FBY emptied (prefer omit — thin/unsourced invent).
+        // yearStart 2010 kept. Do not invent 300RL/360RB/372BH years.
         // LOCK SLICE_NOTES_WALKBACK_2025_2010.md §6 — standalone Avalanche close-out (RVUSA m2919-y2025).
         // MY2025: 302RS | 321RL | 338GK | 346FL | 366LS | 378BH | 379MB | 380LT | 390DS
         // yearEnd 2025 — do not invent 2026/2027. Do not copy this list onto Alpine Avalanche Edition.
@@ -18791,7 +18856,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2010,
       yearEnd: 2025,
-      description: "Keystone Avalanche — adventure-oriented fifth wheel; bunk and rear-living layouts popular with full-time families. Standalone line closes MY2025 (RVUSA year-card lock). 2010–2024 leftover fby emptied (prefer omit). Alpine Avalanche Edition is the later sibling — do not merge."
+      description: "Keystone Avalanche — adventure-oriented fifth wheel; bunk and rear-living layouts popular with full-time families. Standalone line closes MY2025 (RVUSA year-card lock). MY2010 Nov 2009 brochure lock (LOT_DESK_2010). 2011–2024 leftover fby emptied (prefer omit). Alpine Avalanche Edition is the later sibling — do not merge."
     },
     Laredo: {
       type: "Travel Trailer",
@@ -18854,6 +18919,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // (series type stays Fifth Wheel; dated type change would need by-year type on tip).
         // GAP 2005, 2007–2009 (no dated Sprinter card this pack). Prefer omit.
         "2006": ["249RKS", "259RBS", "274RLS", "303BHS", "365BHS", "380BWS"],
+        // GAP MY2010 (research/keystone/LOT_DESK_2010.md) — only dated Sprinter Select TT exists; leave FW empty.
         // 2010–2024 leftover FBY emptied (prefer omit — era-mismatched invent:
         // 269FWRLS / 293FWRLS / 333FWRKS / 3530SIK / 3570FLS catalog chains).
         // yearStart 2000 kept. MY2025–2027 locks from #100/#96 unchanged.
