@@ -31,16 +31,12 @@ import {
   applyCascadeChange,
   buildCascadeOptions,
   compareSelectionKey,
-  countModelsForClass,
   ensureCatalogLoaded,
-  formatYearRanges,
-  modelPickerMeta,
   ratingFor,
   rvClassLabel,
   isCatalogLoaded,
   searchCatalog,
   useCatalogReady,
-  yearsForFloorplanCode,
   YEARS,
 } from "@/lib/rv/catalog";
 import {
@@ -162,7 +158,7 @@ export function RvFaxApp({
   const [shareFocusToken, setShareFocusToken] = useState(0);
   const [vinOpen, setVinOpen] = useState(false);
   const [comparePick, setComparePick] = useState<RVResult[]>([]);
-  const { ready: catalogReady, gen: catalogGen } = useCatalogReady();
+  const { gen: catalogGen } = useCatalogReady();
   const [compareOpen, setCompareOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestHit[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -378,83 +374,21 @@ export function RvFaxApp({
     [year, rvType, applySel],
   );
 
-  const makeItems = useMemo(
-    () =>
-      cascade.makes.map((m) => ({
-        value: m,
-        label: m,
-        meta: [year || null, rvType ? rvClassLabel(rvType) : null]
-          .filter(Boolean)
-          .join(" · ") || undefined,
-      })),
-    [cascade.makes, year, rvType],
-  );
+  const makeItems = cascade.makes;
 
-  const modelItems = useMemo(
-    () =>
-      cascade.models.map((m) => ({
-        value: m,
-        label: m,
-        meta: modelPickerMeta(make || cascade.make, m, year || cascade.year),
-      })),
-    [cascade.models, cascade.make, cascade.year, make, year],
-  );
+  const modelItems = cascade.models;
 
-  const floorplanItems = useMemo(() => {
-    const fps = cascade.floorplans.map((fp) => {
-      const span = year
-        ? ""
-        : formatYearRanges(yearsForFloorplanCode(make, model, fp));
-      return {
-        value: fp,
-        label: fp,
-        meta:
-          year && make && model
-            ? `${year} ${make} ${model}`
-            : span
-              ? span
-              : "All years",
-      };
-    });
-    // Always allow “any / all” so user can finish without a specific layout
-    const anyMeta = year
-      ? fps.length
-        ? `Optional · ${year}`
-        : `No verified layouts for ${year}`
-      : "Optional · not a current-year lineup";
-    return [
-      {
-        value: "",
-        label: "Any floorplan",
-        meta: anyMeta,
-      },
-      ...fps,
-    ];
-  }, [cascade.floorplans, year, make, model]);
+  const floorplanItems = useMemo(
+    () => [
+      { value: "", label: "Any floorplan" },
+      ...cascade.floorplans.map((fp) => ({ value: fp, label: fp })),
+    ],
+    [cascade.floorplans],
+  );
 
   const typeItems = useMemo(
-    () =>
-      FACTS_TYPE_OPTIONS.map((t) => {
-        const n = countModelsForClass("", t.id);
-        return {
-          value: t.id,
-          label: t.label,
-          meta: n > 0 ? `${n.toLocaleString()} models` : undefined,
-        };
-      }),
-    [catalogGen],
-  );
-
-  const catalogModelTotal = useMemo(
-    () =>
-      buildCascadeOptions({
-        year,
-        make: "",
-        model: "",
-        floorplan: "",
-        rvType,
-      }).counts.models,
-    [year, rvType, catalogGen],
+    () => FACTS_TYPE_OPTIONS.map((t) => ({ value: t.id, label: t.label })),
+    [],
   );
 
   const eraItems = useMemo(
@@ -725,11 +659,11 @@ export function RvFaxApp({
         <ActiveCoachChip />
 
         <div className="mx-auto w-full max-w-lg space-y-3.5 px-3 pb-28 pt-0 sm:px-4">
-          <section className="facts-hero-panel glass-prestige rounded-[var(--radius-xl)] px-4 py-3.5 sm:px-5">
-            <p className="text-[22px] font-extrabold tracking-tight text-white sm:text-[24px]">
+          <section className="facts-hero-panel glass-prestige rounded-[var(--radius-xl)] px-4 py-4 sm:px-5">
+            <p className="text-[26px] font-extrabold tracking-tight text-white sm:text-[28px]">
               Know before you buy,
             </p>
-            <p className="mt-1 text-[13px] leading-snug text-white/70">
+            <p className="mt-1.5 text-[15px] leading-snug text-white/75">
               Specs, market, and recalls for the coach in front of you.
             </p>
           </section>
@@ -738,31 +672,9 @@ export function RvFaxApp({
           <section className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4 sm:p-5">
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[16px] font-extrabold tracking-tight text-white">
-                  Catalog search
+                <p className="text-[20px] font-extrabold tracking-tight text-white sm:text-[22px]">
+                  RV Search
                 </p>
-                <p className="mt-1 text-[12px] leading-snug text-white/65">
-                  {rvType || year
-                    ? [
-                        rvType ? factsTypeLabel(rvType) || rvClassLabel(rvType) : null,
-                        year,
-                        make,
-                        model,
-                        floorplan || (model ? "Any floorplan" : null),
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")
-                    : "Type, then year and make"}
-                </p>
-                {catalogReady ? (
-                  <p className="mt-1 text-[11px] text-white/45">
-                    {catalogModelTotal.toLocaleString()} models
-                    {year ? ` · ${year}` : ""}
-                    {rvType ? ` · ${rvClassLabel(rvType)}` : ""}
-                  </p>
-                ) : (
-                  <p className="mt-1 text-[11px] text-white/45">Loading…</p>
-                )}
               </div>
               <button
                 type="button"
@@ -784,7 +696,7 @@ export function RvFaxApp({
                       : "text-white/80",
                   )}
                 />
-                <span className="text-[10px] font-bold tracking-wide text-white">
+                <span className="text-[12px] font-bold tracking-wide text-white">
                   Year range
                 </span>
                 <ChevronDown
@@ -901,7 +813,7 @@ export function RvFaxApp({
               <button
                 type="button"
                 onClick={runSearch}
-                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full border border-gold-border/50 bg-gold-dim/25 py-2.5 text-[13px] font-bold text-gold-bright active:scale-[0.99]"
+                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border border-gold-border/50 bg-gold-dim/25 py-2.5 text-[15px] font-bold text-gold-bright active:scale-[0.99]"
               >
                 <Search className="size-3.5" />
                 {cascade.canSearch ? "Open report" : "Search"}
@@ -1216,7 +1128,7 @@ function FieldButton({
     <div className="w-full">
       <p
         className={cn(
-          "mb-1 text-[10px] font-bold tracking-wide",
+          "mb-1.5 text-[12px] font-bold tracking-wide",
           sapphire ? "rvfax-sapphire-label" : "text-white",
         )}
       >
@@ -1229,7 +1141,7 @@ function FieldButton({
         onClick={onClick}
         data-catalog-field={label}
         className={cn(
-          "flex min-h-[48px] w-full items-center justify-between gap-2 rounded-[var(--radius-md)] border px-3.5 py-3 text-left text-[14px] font-semibold text-white touch-manipulation active:scale-[0.99] disabled:opacity-100",
+          "flex min-h-[52px] w-full items-center justify-between gap-2 rounded-[var(--radius-md)] border px-3.5 py-3.5 text-left text-[16px] font-semibold text-white touch-manipulation active:scale-[0.99] disabled:opacity-100",
           value && !custom && "border-gold-border/60 bg-gold-dim/25",
           value && custom && "border-blue/50 bg-blue/10",
           !value && "border-white/35 bg-white/[0.04]",
@@ -1309,11 +1221,8 @@ function ResultCard({
                 Floorplan: {result.floorplan}
               </p>
             ) : null}
-            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[13px]">
+            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[14px]">
               <span className="text-amber">★ {rating.toFixed(1)}</span>
-              <span className="font-bold text-sky-200">
-                Live specs & market on open
-              </span>
             </div>
           </div>
           <button

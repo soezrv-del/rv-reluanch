@@ -439,7 +439,7 @@ test("Facts landing uses the showroom motorhome behind glass, cards stay put", (
   assert.match(fax, /SuiteBackdrop src=\{PRESTIGE_BACKDROP\}/);
   assert.match(css, /data-facts-landing/);
   assert.match(css, /opacity: 0\.46/);
-  assert.match(fax, /Catalog search/);
+  assert.match(fax, /RV Search/);
   assert.match(fax, /VIN Decoder/);
   assert.match(fax, /Scan or type a VIN · NHTSA decode/);
   assert.ok(existsSync(asset), "facts-landing-motorhome.jpg is in public/assets");
