@@ -40,11 +40,7 @@ import {
 import { SuitePage } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
-import {
-  activeCoachKey,
-  formatActiveCoachChip,
-  towPrefillFromCoach,
-} from "@/lib/rv/activeCoach";
+import { formatActiveCoachChip } from "@/lib/rv/activeCoach";
 import {
   clearLastTowVehicle,
   formatSavedTowVehicle,
@@ -53,6 +49,12 @@ import {
   type SavedTowVehicle,
 } from "@/lib/tow/savedTowVehicle";
 import { offerFromCoach } from "@/lib/trips/towHandoff";
+import {
+  normalizeFactsTowOffer,
+  towFormPatchFromPrefill,
+  towPrefillFromOffer,
+  type FactsTowHandoffOffer,
+} from "@/lib/tow/factsTowHandoff";
 
 
 const YEARS = Array.from({ length: 22 }, (_, i) => String(2026 - i)); // 2026 → 2005
@@ -110,7 +112,12 @@ export function RvTowApp() {
   const [manualGcwr, setManualGcwr] = useState(savedBoot?.manualGcwr ?? "");
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const nav = useShellNavOptional();
-  const lastPrefillKey = useRef("");
+  const lastHandoffToken = useRef(0);
+  const lastTowTab = useRef<string | undefined>(undefined);
+  const appliedOfferRef = useRef<FactsTowHandoffOffer | null>(null);
+  const [appliedOffer, setAppliedOffer] = useState<FactsTowHandoffOffer | null>(
+    null,
+  );
   const [matchTrailer, setMatchTrailer] = useState(false);
   const [shopMode, setShopMode] = useState<ShopMode>("match");
   const [reverseLimit, setReverseLimit] = useState(REVERSE_SHORTLIST);
@@ -120,55 +127,83 @@ export function RvTowApp() {
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const prefill = useMemo(
-    () => towPrefillFromCoach(nav?.activeCoach ?? null),
-    [nav?.activeCoach],
+    () => towPrefillFromOffer(appliedOffer),
+    [appliedOffer],
   );
 
-  useEffect(() => {
-    const coach = nav?.activeCoach;
-    if (!coach) {
-      if (lastPrefillKey.current && !make && !model) {
-        const saved = loadLastTowVehicle();
-        if (saved) {
-          setKindFilter(saved.kindFilter);
-          setYear(saved.year);
-          setMake(saved.make);
-          setModel(saved.model);
-          setTrim(saved.trim);
-          setBed(saved.bed);
-          setRvType(saved.rvType);
-          setGvwr(saved.gvwr || "14000");
-          setPin(saved.pin);
-          setManualMaxTow(saved.manualMaxTow);
-          setManualPayload(saved.manualPayload);
-          setManualGcwr(saved.manualGcwr);
-          setDeviceSaved(saved);
-          setShopMode("match");
-        }
-      }
-      lastPrefillKey.current = "";
+  const restoreStandaloneTruck = useCallback(() => {
+    appliedOfferRef.current = null;
+    setAppliedOffer(null);
+    setMatchTrailer(false);
+    setShopMode("match");
+    setReverseLimit(REVERSE_SHORTLIST);
+    const saved = loadLastTowVehicle();
+    if (saved) {
+      setKindFilter(saved.kindFilter);
+      setYear(saved.year);
+      setMake(saved.make);
+      setModel(saved.model);
+      setTrim(saved.trim);
+      setBed(saved.bed);
+      setRvType(saved.rvType);
+      setGvwr(saved.gvwr || "14000");
+      setPin(saved.pin);
+      setManualMaxTow(saved.manualMaxTow);
+      setManualPayload(saved.manualPayload);
+      setManualGcwr(saved.manualGcwr);
+      setDeviceSaved(saved);
       return;
     }
-    const key = activeCoachKey(coach);
-    if (lastPrefillKey.current === key) return;
-    lastPrefillKey.current = key;
-    setMatchTrailer(false);
-    setReverseLimit(REVERSE_SHORTLIST);
-    if (prefill.kind === "motorhome") {
-      setShopMode("match");
-      setYear("");
-      setMake("");
-      setModel("");
-      setTrim("");
-      setRvType("Travel Trailer");
-      setGvwr("");
-      setPin("");
-    } else if (prefill.kind === "towable") {
-      setRvType(prefill.rvType);
-      if (prefill.gvwrLbs > 0) setGvwr(String(prefill.gvwrLbs));
-      setShopMode("reverse");
+    setKindFilter("all");
+    setYear(DEFAULT_TOW_VEHICLE.year);
+    setMake(DEFAULT_TOW_VEHICLE.make);
+    setModel(DEFAULT_TOW_VEHICLE.model);
+    setTrim(DEFAULT_TOW_VEHICLE.trim);
+    setRvType("Fifth Wheel");
+    setGvwr("14000");
+    setBed("6.5 ft (Standard Bed)");
+    setPin("");
+    setManualMaxTow("");
+    setManualPayload("");
+    setManualGcwr("");
+    setDeviceSaved(null);
+  }, []);
+
+  const towHandoff = nav?.towHandoff ?? null;
+  const towTab = nav?.tab;
+  const clearTowHandoff = nav?.clearTowHandoff;
+
+  useEffect(() => {
+    if (towHandoff && towHandoff.token !== lastHandoffToken.current) {
+      lastHandoffToken.current = towHandoff.token;
+      lastTowTab.current = "rvtow";
+      const offer = normalizeFactsTowOffer(towHandoff.offer);
+      appliedOfferRef.current = offer;
+      setAppliedOffer(offer);
+      const patch = towFormPatchFromPrefill(towPrefillFromOffer(offer));
+      setMatchTrailer(false);
+      setReverseLimit(REVERSE_SHORTLIST);
+      if (patch.kind === "motorhome") {
+        setShopMode(patch.shopMode);
+        setYear(patch.year);
+        setMake(patch.make);
+        setModel(patch.model);
+        setTrim(patch.trim);
+        setRvType(patch.rvType);
+        setGvwr(patch.gvwr);
+        setPin(patch.pin);
+      } else if (patch.kind === "towable") {
+        setRvType(patch.rvType);
+        if (patch.gvwr) setGvwr(patch.gvwr);
+        setShopMode(patch.shopMode);
+      }
+      clearTowHandoff?.();
+      return;
     }
-  }, [nav?.activeCoach, prefill, make, model]);
+    const arrivedStandalone = towTab === "rvtow" && lastTowTab.current !== "rvtow";
+    lastTowTab.current = towTab;
+    if (arrivedStandalone) restoreStandaloneTruck();
+  }, [towHandoff, towTab, clearTowHandoff, restoreStandaloneTruck]);
 
   const persistVehicle = useCallback(() => {
     if (!make || !model) return null;
@@ -202,15 +237,16 @@ export function RvTowApp() {
   ]);
 
   useEffect(() => {
-    // Toad mode empties the truck on purpose — do not wipe a saved last truck.
+    // Facts handoff / toad must not write trailer or an emptied truck into last-truck.
+    if (appliedOffer) return;
     if (prefill.kind === "motorhome" && !matchTrailer) return;
     const next = persistVehicle();
     if (next) setDeviceSaved(next);
-  }, [persistVehicle, prefill.kind, matchTrailer]);
+  }, [persistVehicle, prefill.kind, matchTrailer, appliedOffer]);
 
   const tripsOffer = useMemo(
-    () => offerFromCoach(nav?.activeCoach ?? null),
-    [nav?.activeCoach],
+    () => offerFromCoach(appliedOffer),
+    [appliedOffer],
   );
 
   const openTripsProfile = useCallback(() => {
@@ -482,7 +518,8 @@ export function RvTowApp() {
   }, [kindFilter]);
 
   const resetDefaults = () => {
-    lastPrefillKey.current = "";
+    appliedOfferRef.current = null;
+    setAppliedOffer(null);
     setKindFilter("all");
     setYear(DEFAULT_TOW_VEHICLE.year);
     setMake(DEFAULT_TOW_VEHICLE.make);
@@ -495,7 +532,7 @@ export function RvTowApp() {
     setManualMaxTow("");
     setManualPayload("");
     setManualGcwr("");
-    setMatchTrailer(prefill.kind === "motorhome");
+    setMatchTrailer(false);
     setShopMode("match");
     setReverseLimit(REVERSE_SHORTLIST);
     const next = saveLastTowVehicle({
@@ -540,7 +577,7 @@ export function RvTowApp() {
     }
     if (toadMode && prefill.kind === "motorhome") {
       lines.push(
-        `This coach is a ${prefill.coach.rvType || "motorhome"} — it tows a toad (car), it is not a fifth wheel.`,
+        `This coach is a ${prefill.offer.rvType || "motorhome"} — it tows a toad (car), it is not a fifth wheel.`,
       );
     }
     if (prefill.kind === "towable") {
@@ -578,11 +615,11 @@ export function RvTowApp() {
           : `Ranking uses ${hitchLbs} lbs tongue (typed or 12% of GVWR) against each truck’s rec. payload when that number exists.`,
       );
     }
-    if (tripsOffer && nav?.activeCoach) {
-      lines.push(`Coach from Facts: ${formatActiveCoachChip(nav.activeCoach)}.`);
+    if (tripsOffer && appliedOffer) {
+      lines.push(`Coach from Facts: ${formatActiveCoachChip(appliedOffer)}.`);
     } else {
       lines.push(
-        "Open a coach in Facts to send it to Trips Profile. We do not invent height or length from this truck.",
+        "Open a coach in Facts and tap Check tow to send it here. We do not invent height or length from this truck.",
       );
     }
     lines.push(
@@ -608,7 +645,7 @@ export function RvTowApp() {
     reverseResult.hitchLoad,
     rvType,
     tripsOffer,
-    nav?.activeCoach,
+    appliedOffer,
   ]);
 
   return (
@@ -723,10 +760,10 @@ export function RvTowApp() {
               COACH
             </p>
             <p className="text-[14px] font-bold text-white">
-              {formatActiveCoachChip(prefill.coach)}
+              {formatActiveCoachChip(prefill.offer)}
             </p>
             <AnswerHero
-              maxTow={prefill.coach.towingCapacityLbs ?? 0}
+              maxTow={prefill.offer.towingCapacityLbs ?? 0}
               hitchLbs={0}
               hitchKind="tongue"
             />
@@ -825,7 +862,7 @@ export function RvTowApp() {
               {prefill.kind === "towable" ? (
                 <div className="mb-2 rounded-[var(--radius-md)] border border-sky-400/30 bg-sky-500/10 px-3 py-2">
                   <p className="text-[13px] font-bold text-white">
-                    {formatActiveCoachChip(prefill.coach)}
+                    {formatActiveCoachChip(prefill.offer)}
                   </p>
                 </div>
               ) : null}
@@ -1158,9 +1195,7 @@ export function RvTowApp() {
                 hasVehicle={hasVehicle}
                 tripsOffer={tripsOffer}
                 coachChip={
-                  nav?.activeCoach
-                    ? formatActiveCoachChip(nav.activeCoach)
-                    : null
+                  appliedOffer ? formatActiveCoachChip(appliedOffer) : null
                 }
                 onOpenTrips={openTripsProfile}
               />

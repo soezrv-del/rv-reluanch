@@ -32,6 +32,7 @@ import {
   formatActiveCoachShort,
   snapshotActiveCoach,
 } from "@/lib/rv/activeCoach";
+import { offerFromFactsReport } from "@/lib/tow/factsTowHandoff";
 import {
   getRatingMetadata,
   ratingStars,
@@ -548,21 +549,19 @@ export function RvDetail({
     floorplan: floorplan || "",
   });
 
-  const factsCoachOffer = () =>
-    snapshotActiveCoach({
+  const factsTowOffer = () =>
+    offerFromFactsReport({
       year,
       make,
       model,
       floorplan,
       rvType: displayType,
-      price: financePrice,
       gvwr: specs.gvwr,
-      uvw: specs.uvw,
       towingCapacityLbs: data.towingCapacity,
     });
 
   const openCheckTow = () => {
-    shellNav?.openTowWithCoach(factsCoachOffer());
+    shellNav?.openTowWithCoach(factsTowOffer());
   };
 
   const openCheckPayment = (price = financePrice, label = coachChip) => {
