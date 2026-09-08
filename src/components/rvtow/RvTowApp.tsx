@@ -521,10 +521,10 @@ export function RvTowApp() {
   const detailLines = useMemo(() => {
     const lines: string[] = [];
     lines.push(
-      "5th wheel pin is 18–25% of GVWR — bed hitch required, bed access reduced.",
+      "5th wheel pin is 18–25% of GVWR — more stable at speed, higher weight limits, lower center of gravity. Bed hitch required; bed access reduced.",
     );
     lines.push(
-      "Travel trailer hitch is 10–15% of GVWR — lower weight limit, more sway risk.",
+      "Travel trailer hitch is 10–15% of GVWR — no bed modification, ball hitch (universal), full bed access kept. Lower weight limit; more sway risk.",
     );
     if (hasVehicle) {
       lines.push(
@@ -744,22 +744,12 @@ export function RvTowApp() {
             kicker="PIN WEIGHT"
             title="5th Wheel"
             pct="18–25%"
-            checks={[
-              "More stable at speed",
-              "Higher weight limits",
-              "Lower center of gravity",
-            ]}
             active={pinHeroActive}
           />
           <GuideHero
             kicker="HITCH GUIDE"
             title="Travel Trailer"
             pct="10–15%"
-            checks={[
-              "No bed modification",
-              "Ball hitch (universal)",
-              "Full bed access kept",
-            ]}
             active={!pinHeroActive}
           />
         </section>
@@ -1527,19 +1517,17 @@ function GuideHero({
   kicker,
   title,
   pct,
-  checks,
   active,
 }: {
   kicker: string;
   title: string;
   pct: string;
-  checks: string[];
   active?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "glass-surface flex min-h-44 flex-col rounded-[var(--radius-xl)] px-3 py-3.5",
+        "glass-surface flex min-h-44 flex-col justify-center rounded-[var(--radius-xl)] px-3 py-3.5",
         active ? "border-blue/55" : "border-white/20",
       )}
     >
@@ -1550,16 +1538,6 @@ function GuideHero({
       <p className="rvtow-hero-pct mt-1 font-black tabular-nums text-blue">
         {pct}
       </p>
-      <ul className="mt-auto space-y-1 pt-3">
-        {checks.map((item) => (
-          <li
-            key={item}
-            className="text-[10px] font-semibold leading-tight text-green"
-          >
-            ✓ {item}
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

@@ -206,6 +206,25 @@ test("RvTowApp redesign: hero guides, collapsed Details, one footer disclaimer",
   assert.match(src, /function GlanceChecks/);
   assert.match(src, /function GuideHero/);
   assert.equal(src.includes("function GuideCard"), false);
+  assert.equal(
+    src.includes("checks={"),
+    false,
+    "GuideHero face is kicker/title/% only — no checks list",
+  );
+  assert.equal(src.includes("✓ {item}"), false);
+  const heroBlock = src.slice(
+    src.indexOf("function GuideHero"),
+    src.indexOf("function GuideHero") + 700,
+  );
+  assert.equal(heroBlock.includes("More stable at speed"), false);
+  assert.match(
+    src,
+    /more stable at speed, higher weight limits, lower center of gravity/,
+  );
+  assert.match(
+    src,
+    /no bed modification, ball hitch \(universal\), full bed access kept/,
+  );
   assert.equal(src.includes("More info if saved"), false);
   assert.equal(src.includes("Lower weight only"), false);
   assert.equal(src.includes("Full weight only"), false);
