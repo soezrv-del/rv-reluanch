@@ -1455,6 +1455,81 @@ function main() {
     }
   }
 
+  // American Coach MY2027 pack. Make key is quoted (`"American Coach": {`).
+  // Dated OEM year pages + library 2027-American-Coach-*.pdf lock Dream / Eagle.
+  // Tradition stays GAP 2027 (OEM 404 / library 403). No new nameplates.
+  {
+    const a0 = src.indexOf('\n  "American Coach": {');
+    const a1 = src.indexOf('\n  "Entegra Coach": {');
+    if (a0 < 0 || a1 < a0) {
+      fail('American Coach block not found between "American Coach": and "Entegra Coach":');
+    } else {
+      const ac = src.slice(a0, a1);
+      const slice = (a, b) => {
+        const i =
+          ac.indexOf(`    "${a}": {`) >= 0
+            ? ac.indexOf(`    "${a}": {`)
+            : ac.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? ac.length
+            : ac.indexOf(`    "${b}": {`) >= 0
+              ? ac.indexOf(`    "${b}": {`)
+              : ac.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? ac.slice(i, j) : ac.slice(i);
+      };
+
+      const dream = slice("American Dream");
+      if (!/"2027": \["42Q", "45A", "45P"\]/.test(dream) || !/type: "Class A Diesel"/.test(dream)) {
+        fail("American Coach|American Dream MY27 PDF lock missing (42Q / 45A / 45P Class A Diesel)");
+      }
+      if (/"45Q"/.test(dream)) {
+        fail("American Coach|American Dream must omit 45Q (option-text only)");
+      }
+      if (/"2026": .*"42Q"/.test(dream)) {
+        fail("American Coach|American Dream must not stamp 42Q onto 2026");
+      }
+
+      const eagle = slice("American Eagle", "American Dream");
+      if (!/"2027": \["45FW", "45J", "45K"\]/.test(eagle) || !/type: "Class A Diesel"/.test(eagle)) {
+        fail("American Coach|American Eagle MY27 PDF lock missing (45FW / 45J / 45K Class A Diesel)");
+      }
+      if (/"2026": .*"45FW"/.test(eagle)) {
+        fail("American Coach|American Eagle must not stamp 45FW onto 2026");
+      }
+
+      const tradition = slice("American Tradition", "American Eagle");
+      if (/"2027":/.test(tradition)) {
+        fail("American Coach|American Tradition must omit 2027 (GAP — OEM 404 / library 403)");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const acIdx = catalogIndex["American Coach"];
+      if (!acIdx) fail("American Coach missing from CATALOG_INDEX");
+      for (const lock of ["American Dream", "American Eagle"]) {
+        if (!acIdx[lock]?.years?.includes(2027)) {
+          fail(`American Coach|${lock} index must include 2027 in years[]`);
+        }
+        if (acIdx[lock]?.type !== "Class A Diesel") {
+          fail(`American Coach|${lock} index type must be Class A Diesel`);
+        }
+      }
+      if (acIdx["American Tradition"]?.years?.includes(2027)) {
+        fail("American Coach|American Tradition index must omit 2027 (GAP)");
+      }
+      const extra = Object.keys(acIdx).filter(
+        (k) => !["American Dream", "American Eagle", "American Tradition"].includes(k),
+      );
+      if (extra.length) {
+        fail(`American Coach must not add new nameplates (${extra.join(", ")})`);
+      }
+    }
+  }
+
   // Newmar block is unquoted (`Newmar: {`) so the quoted-make parser misses it.
   // Scan the raw Newmar…Tiffin slice for recent-years OEM gates.
   {

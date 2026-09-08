@@ -738,3 +738,34 @@ test("Fleetwood Facts SoT: MY2027 OEM+PDF locks; GAP Insight; retired shells clo
   assert.doesNotMatch(xcursion, /"2027":/);
 });
 
+test("American Coach Facts SoT: MY2027 OEM+PDF locks; GAP Tradition", () => {
+  const block = src("rvData.ts");
+  const a0 = block.indexOf('\n  "American Coach": {');
+  const a1 = block.indexOf('\n  "Entegra Coach": {');
+  assert.ok(a0 > 0 && a1 > a0, "expected American Coach block");
+  const ac = block.slice(a0, a1);
+
+  assert.doesNotMatch(ac, /\n    Fleetwood: \{/);
+  assert.doesNotMatch(ac, /\n    "Holiday Rambler": \{/);
+
+  const dream = ac.slice(ac.indexOf('    "American Dream": {'));
+  assert.match(dream, /type: "Class A Diesel"/);
+  assert.match(dream, /"2027": \["42Q", "45A", "45P"\]/);
+  assert.match(dream, /"2026": \["45A", "45B", "42C", "44Q"\]/);
+  assert.doesNotMatch(dream, /"45Q"/);
+  assert.doesNotMatch(dream, /"2027": .*"45B"/);
+  assert.doesNotMatch(dream, /"2026": .*"42Q"/);
+
+  const eagle = ac.slice(ac.indexOf('    "American Eagle": {'), ac.indexOf('    "American Dream": {'));
+  assert.match(eagle, /type: "Class A Diesel"/);
+  assert.match(eagle, /"2027": \["45FW", "45J", "45K"\]/);
+  assert.match(eagle, /"2026": \["45B", "45J", "42X", "45A", "45T"\]/);
+  assert.doesNotMatch(eagle, /"2027": .*"45B"/);
+  assert.doesNotMatch(eagle, /"2026": .*"45FW"/);
+
+  const tradition = ac.slice(ac.indexOf('    "American Tradition": {'), ac.indexOf('    "American Eagle": {'));
+  assert.match(tradition, /type: "Class A Diesel"/);
+  assert.match(tradition, /"2026": \["42Q", "42V", "42B", "42X", "45T"\]/);
+  assert.doesNotMatch(tradition, /"2027":/);
+});
+
