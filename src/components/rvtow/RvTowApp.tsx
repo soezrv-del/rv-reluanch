@@ -798,6 +798,20 @@ export function RvTowApp() {
                   disabled={!make}
                   onClick={() => make && setSheet("model")}
                 />
+                <Field
+                  label="TRIM / ENGINE / CONFIGURATION"
+                  value={
+                    trim ||
+                    (model
+                      ? inCatalog
+                        ? "Select or type trim"
+                        : "Type trim (optional)"
+                      : "Model first")
+                  }
+                  empty={!trim}
+                  disabled={!model}
+                  onClick={() => model && setSheet("trim")}
+                />
               </section>
             )}
 
@@ -815,19 +829,44 @@ export function RvTowApp() {
                   </p>
                 </div>
               ) : null}
-              <Field
-                label="RV TYPE"
-                value={
-                  vehicleIsTruck
-                    ? rvType
-                    : "Travel Trailer (auto · non-truck)"
-                }
-                onClick={() => {
-                  if (vehicleIsTruck) setSheet("rvType");
-                }}
-                disabled={!vehicleIsTruck}
-                flush
-              />
+              {reverseMode ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <Field
+                    label="YEAR"
+                    value={year || "Year"}
+                    empty={!year}
+                    onClick={() => setSheet("year")}
+                    flush
+                  />
+                  <Field
+                    label="RV TYPE"
+                    value={
+                      vehicleIsTruck
+                        ? rvType
+                        : "Travel Trailer (auto · non-truck)"
+                    }
+                    onClick={() => {
+                      if (vehicleIsTruck) setSheet("rvType");
+                    }}
+                    disabled={!vehicleIsTruck}
+                    flush
+                  />
+                </div>
+              ) : (
+                <Field
+                  label="RV TYPE"
+                  value={
+                    vehicleIsTruck
+                      ? rvType
+                      : "Travel Trailer (auto · non-truck)"
+                  }
+                  onClick={() => {
+                    if (vehicleIsTruck) setSheet("rvType");
+                  }}
+                  disabled={!vehicleIsTruck}
+                  flush
+                />
+              )}
             </section>
 
             {reverseMode ? (
@@ -935,32 +974,6 @@ export function RvTowApp() {
                     </button>
                   ))}
                 </div>
-              )}
-
-              {reverseMode ? (
-                <Field
-                  label="YEAR"
-                  value={year || "Year"}
-                  empty={!year}
-                  onClick={() => setSheet("year")}
-                  flush
-                />
-              ) : (
-                <Field
-                  label="TRIM / ENGINE / CONFIGURATION"
-                  value={
-                    trim ||
-                    (model
-                      ? inCatalog
-                        ? "Select or type trim"
-                        : "Type trim (optional)"
-                      : "Model first")
-                  }
-                  empty={!trim}
-                  disabled={!model}
-                  onClick={() => model && setSheet("trim")}
-                  flush
-                />
               )}
 
               {hasVehicle && rating.custom ? (
