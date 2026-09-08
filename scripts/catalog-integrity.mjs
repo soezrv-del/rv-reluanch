@@ -1530,6 +1530,167 @@ function main() {
     }
   }
 
+  // Renegade RV MY2027 pack. Make key is quoted (`"Renegade RV": {`).
+  // Dated OEM year pages + library 2027-Renegade-RV-*.pdf lock living chips.
+  // Villagio reopens (yearEnd 2024 was stale). Villager GAP / Ikon skip.
+  {
+    const r0 = src.indexOf('\n  "Renegade RV": {');
+    const r1 = src.indexOf("\n  Dynamax: {");
+    if (r0 < 0 || r1 < r0) {
+      fail('Renegade RV block not found between "Renegade RV": and Dynamax:');
+    } else {
+      const rg = src.slice(r0, r1);
+      const slice = (a, b) => {
+        const i =
+          rg.indexOf(`    "${a}": {`) >= 0
+            ? rg.indexOf(`    "${a}": {`)
+            : rg.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? rg.length
+            : rg.indexOf(`    "${b}": {`) >= 0
+              ? rg.indexOf(`    "${b}": {`)
+              : rg.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? rg.slice(i, j) : rg.slice(i);
+      };
+
+      const valencia = slice("Valencia", "Verona");
+      if (!/"2027": \["36SB", "39BB", "39FW", "39RB"\]/.test(valencia) || !/type: "Class C Diesel"/.test(valencia)) {
+        fail("Renegade RV|Valencia MY27 OEM+PDF lock missing (36SB / 39BB / 39FW / 39RB Class C Diesel)");
+      }
+      if (/"2026": .*"36SB"/.test(valencia)) {
+        fail("Renegade RV|Valencia must not stamp 36SB onto 2026");
+      }
+
+      const verona = slice("Verona", "Verona LE");
+      if (!/"2027": \["36VSB", "40VTB", "40VTR", "40VTS"\]/.test(verona) || !/type: "Super C Diesel"/.test(verona)) {
+        fail("Renegade RV|Verona MY27 OEM+PDF lock missing (36VSB / 40VTB / 40VTR / 40VTS Super C Diesel)");
+      }
+      if (/"2027": .*"38LDG"/.test(verona)) {
+        fail("Renegade RV|Verona must not absorb Verona LE chips");
+      }
+
+      const le = slice("Verona LE", "Classic Super C");
+      if (!/"2027": \["38LDG", "40LBH", "40LRB", "40LTS"\]/.test(le) || !/type: "Super C Diesel"/.test(le)) {
+        fail("Renegade RV|Verona LE MY27 OEM+PDF lock missing (38LDG / 40LBH / 40LRB / 40LTS Super C Diesel)");
+      }
+      if (/"2027": .*"36VSB"/.test(le)) {
+        fail("Renegade RV|Verona LE must not absorb Verona chips");
+      }
+
+      const classic = slice("Classic Super C", "Ikon");
+      if (
+        !/"2027": \["38CSB", "41CMB", "41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"\]/.test(classic) ||
+        !/type: "Super C Diesel"/.test(classic)
+      ) {
+        fail("Renegade RV|Classic Super C MY27 PDF lock missing (motorhome Super C Diesel)");
+      }
+      if (/"CS150"/.test(classic) || /"CS170"/.test(classic) || /"CS172"/.test(classic)) {
+        fail("Renegade RV|Classic Super C must omit toter CS150/CS170/CS172");
+      }
+      if (/"2509"/.test(classic) || /"2509GS"/.test(classic)) {
+        fail("Renegade RV|Classic Super C must omit garage 2509/2509GS");
+      }
+
+      const ikon = slice("Ikon", "Villagio");
+      if (/"2027":/.test(ikon)) {
+        fail("Renegade RV|Ikon must omit 2027 (skip — OEM 404 / library 403)");
+      }
+
+      const villagio = slice("Villagio", "Villager");
+      if (!/"2027": \["25FWC", "25RMC", "25TBC"\]/.test(villagio) || !/type: "Class C Diesel"/.test(villagio)) {
+        fail("Renegade RV|Villagio MY27 PDF reopen missing (25FWC / 25RMC / 25TBC Class C Diesel)");
+      }
+      if (/type: "Class A Diesel"/.test(villagio) || /yearEnd: 2024/.test(villagio)) {
+        fail("Renegade RV|Villagio must not stay Class A Diesel / yearEnd 2024");
+      }
+      if (/"25FW"/.test(villagio) || /"25RM"/.test(villagio) || /"25TB"/.test(villagio)) {
+        fail("Renegade RV|Villagio must prefer PDF 25FWC/25RMC/25TBC over OEM shorts");
+      }
+
+      const villager = slice("Villager", "Vienna");
+      if (/"2027":/.test(villager)) {
+        fail("Renegade RV|Villager must omit 2027 (GAP — OEM 404 / library 403)");
+      }
+
+      const vienna = slice("Vienna", "XL");
+      if (
+        !/"2027": \["25DLC", "25DLN", "25FWC", "25FWS", "25RMC", "25RML", "25TBC", "25TBN"\]/.test(vienna) ||
+        !/type: "Class C Diesel"/.test(vienna)
+      ) {
+        fail("Renegade RV|Vienna MY27 OEM+PDF lock missing (prefer OEM 25DLN Class C Diesel)");
+      }
+      if (/"25DNL"/.test(vienna)) {
+        fail("Renegade RV|Vienna must omit PDF typo 25DNL");
+      }
+
+      const xl = slice("XL", "Explorer");
+      if (!/"2027": \["X43DB", "X45BBC", "X45DBM", "X45QBH", "X45QS"\]/.test(xl) || !/type: "Super C Diesel"/.test(xl)) {
+        fail("Renegade RV|XL MY27 OEM+PDF lock missing (X43DB / X45BBC / X45DBM / X45QBH / X45QS Super C Diesel)");
+      }
+
+      const explorer = slice("Explorer", "Explorer TS");
+      if (!/"2027": \["38EMB", "40EBH", "40ERB"\]/.test(explorer) || !/type: "Super C Diesel"/.test(explorer)) {
+        fail("Renegade RV|Explorer MY27 OEM+PDF lock missing (38EMB / 40EBH / 40ERB Super C Diesel)");
+      }
+      if (/"42RB"/.test(explorer)) {
+        fail("Renegade RV|Explorer must not absorb Explorer TS 42RB");
+      }
+
+      const ts = slice("Explorer TS", "Veracruz");
+      if (!/"2027": \["42RB"\]/.test(ts) || !/type: "Super C Diesel"/.test(ts)) {
+        fail("Renegade RV|Explorer TS MY27 OEM+PDF lock missing (42RB Super C Diesel)");
+      }
+      if (/"38EMB"/.test(ts)) {
+        fail("Renegade RV|Explorer TS must not absorb Explorer chips");
+      }
+
+      const veracruz = slice("Veracruz");
+      if (!/"2027": \["30VRM", "33VDS", "33VRS"\]/.test(veracruz) || !/type: "Class C Diesel"/.test(veracruz)) {
+        fail("Renegade RV|Veracruz MY27 PDF lock missing (30VRM / 33VDS / 33VRS Class C Diesel)");
+      }
+      if (/"33TBR"/.test(veracruz)) {
+        fail("Renegade RV|Veracruz must omit web-only 33TBR");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const rgIdx = catalogIndex["Renegade RV"];
+      if (!rgIdx) fail("Renegade RV missing from CATALOG_INDEX");
+      for (const [lock, type] of [
+        ["Valencia", "Class C Diesel"],
+        ["Verona", "Super C Diesel"],
+        ["Verona LE", "Super C Diesel"],
+        ["Classic Super C", "Super C Diesel"],
+        ["Vienna", "Class C Diesel"],
+        ["Villagio", "Class C Diesel"],
+        ["XL", "Super C Diesel"],
+        ["Explorer", "Super C Diesel"],
+        ["Explorer TS", "Super C Diesel"],
+        ["Veracruz", "Class C Diesel"],
+      ]) {
+        if (!rgIdx[lock]?.years?.includes(2027)) {
+          fail(`Renegade RV|${lock} index must include 2027 in years[]`);
+        }
+        if (rgIdx[lock]?.type !== type) {
+          fail(`Renegade RV|${lock} index type must be ${type}`);
+        }
+      }
+      if (rgIdx.Villagio?.yearEnd === 2024) {
+        fail("Renegade RV|Villagio index must drop stale yearEnd 2024");
+      }
+      if (rgIdx.Villager?.years?.includes(2027)) {
+        fail("Renegade RV|Villager index must omit 2027 (GAP)");
+      }
+      if (rgIdx.Ikon?.years?.includes(2027)) {
+        fail("Renegade RV|Ikon index must omit 2027 (skip)");
+      }
+    }
+  }
+
   // Newmar block is unquoted (`Newmar: {`) so the quoted-make parser misses it.
   // Scan the raw Newmar…Tiffin slice for recent-years OEM gates.
   {

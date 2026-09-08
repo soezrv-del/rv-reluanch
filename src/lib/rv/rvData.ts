@@ -31702,8 +31702,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   },
   "Renegade RV": {
     Valencia: {
-      type: "Super C",
-      floorplans: ["35MB", "38RW", "38RB", "38RBB", "40RBB", "45RB", "45RBB"],
+      type: "Class C Diesel",
+      floorplans: ["35MB", "38RW", "38RB", "38RBB", "40RBB", "45RB", "45RBB", "36SB", "39BB", "39FW", "39RB"],
       floorplansByYear: {
         "2014": ["35MB", "38RW"],
         "2015": ["35MB", "38RW"],
@@ -31717,11 +31717,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["35MB", "38RW", "38RB"],
         "2024": ["35MB", "38RW", "38RB"],
         "2025": ["35MB", "38RW"],
-        "2026": ["35MB", "38RW", "38RBB", "40RBB", "45RB", "45RBB"]
+        "2026": ["35MB", "38RW", "38RBB", "40RBB", "45RB", "45RBB"],
+        // LOCK renegaderv.com/rvmodel/valencia-2027/ + library 2027-Renegade-RV-Valencia.pdf (VALENCIA, 4/26)
+        // PDF CLASS C • DIESEL: 36SB | 39BB | 39FW | 39RB. Do not copy 2026 35MB/38RW/38RBB/40RBB/45RB/45RBB forward.
+        "2027": ["36SB", "39BB", "39FW", "39RB"]
       },
       lengthRange: [
         35,
-        38
+        39
       ],
       weightRange: [
         26000,
@@ -31752,7 +31755,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2014,
-      description: "Renegade Valencia — Super C diesel (REV specialty). Strong tow vs Class A gas.",
+      description: "Renegade Valencia — Class C diesel. MY27 OEM+PDF: 36SB / 39BB / 39FW / 39RB on Freightliner S2RV Plus (Cummins ISB 6.7 360/800).",
       powertrainByYear: [
         {
           from: 2014,
@@ -31768,12 +31771,24 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Cummins ISB / B6.7 Super C diesel",
           horsepower: 340,
           chassis: "Freightliner Super C"
+        },
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Cummins ISB 6.7L 360HP",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Freightliner S2RV Plus",
+          transmission: "9-speed Auto (2909MH)",
+          towingCapacity: 12000,
+          generator: "Onan 8kW Quiet Diesel",
+          notes: "MY27 OEM+PDF: 36SB | 39BB | 39FW | 39RB. Do not copy 2026 35MB/38RW/38RBB/40RBB/45RB/45RBB onto 2027."
         }
       ]
     },
     Verona: {
-      type: "Super C",
-      floorplans: ["36VSB", "40VRB", "40VSB", "35RBB", "36RBB", "38RBB"],
+      type: "Super C Diesel",
+      floorplans: ["36VSB", "40VRB", "40VSB", "35RBB", "36RBB", "38RBB", "40VTB", "40VTR", "40VTS"],
       floorplansByYear: {
         "2012": ["36VSB", "40VRB"],
         "2013": ["36VSB", "40VRB"],
@@ -31789,7 +31804,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["36VSB", "40VRB"],
         "2024": ["36VSB", "40VRB"],
         "2025": ["36VSB", "40VRB"],
-        "2026": ["36VSB", "40VRB", "35RBB", "36RBB", "38RBB"]
+        "2026": ["36VSB", "40VRB", "35RBB", "36RBB", "38RBB"],
+        // LOCK renegaderv.com/rvmodel/verona-2027/ + library 2027-Renegade-RV-Verona.pdf (VERONA, 4/26)
+        // Keep separate from Verona LE. Do not copy 2026 40VRB/35RBB/36RBB/38RBB forward.
+        "2027": ["36VSB", "40VTB", "40VTR", "40VTS"]
       },
       lengthRange: [
         36,
@@ -31823,7 +31841,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2012,
-      description: "Renegade Verona — full Super C diesel living.",
+      description: "Renegade Verona — Super C diesel living. MY27 OEM+PDF: 36VSB / 40VTB / 40VTR / 40VTS. Twin key — do not merge with Verona LE.",
       powertrainByYear: [
         {
           from: 2012,
@@ -31839,12 +31857,24 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Cummins Super C diesel 340–360HP",
           horsepower: 360,
           chassis: "Freightliner Super C"
+        },
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Cummins L9 360HP",
+          horsepower: 360,
+          torqueLbFt: 1150,
+          chassis: "Freightliner M2-106 Plus",
+          transmission: "Allison 6-speed Auto (3200TRV)",
+          towingCapacity: 20000,
+          generator: "Onan 8kW Quiet Diesel",
+          notes: "MY27 OEM+PDF: 36VSB | 40VTB | 40VTR | 40VTS. Do not merge with Verona LE (38LDG / 40LBH / 40LRB / 40LTS)."
         }
       ]
     },
     "Verona LE": {
-      type: "Super C",
-      floorplans: ["36VSB", "40VRB", "37RB", "38RB"],
+      type: "Super C Diesel",
+      floorplans: ["36VSB", "40VRB", "37RB", "38RB", "38LDG", "40LBH", "40LRB", "40LTS"],
       floorplansByYear: {
         "2018": ["36VSB", "40VRB"],
         "2019": ["36VSB", "40VRB"],
@@ -31854,7 +31884,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["36VSB", "40VRB"],
         "2024": ["36VSB", "40VRB"],
         "2025": ["36VSB", "40VRB"],
-        "2026": ["36VSB", "40VRB", "37RB", "38RB"]
+        "2026": ["36VSB", "40VRB", "37RB", "38RB"],
+        // LOCK renegaderv.com/rvmodel/verona-le-2027/ + library 2027-Renegade-RV-Verona-LE.pdf (VERONA LE, 4/26)
+        // Twin key — do not merge with Verona. Do not copy 2026 36VSB/40VRB/37RB/38RB forward.
+        "2027": ["38LDG", "40LBH", "40LRB", "40LTS"]
       },
       lengthRange: [
         36,
@@ -31887,7 +31920,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2018,
-      description: "Renegade Verona LE — value Super C packages on same diesel platform.",
+      description: "Renegade Verona LE — value Super C diesel. MY27 OEM+PDF: 38LDG / 40LBH / 40LRB / 40LTS. Twin key — do not merge with Verona.",
       powertrainByYear: [
         {
           from: 2018,
@@ -31895,12 +31928,24 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Cummins Super C diesel",
           horsepower: 340,
           chassis: "Freightliner Super C"
+        },
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Cummins L9 360HP",
+          horsepower: 360,
+          torqueLbFt: 1150,
+          chassis: "Freightliner M2-106 Plus / Peterbilt 548 PX9",
+          transmission: "Allison 6-speed Auto (3200TRV / 3000HS)",
+          towingCapacity: 20000,
+          generator: "Onan 8kW Quiet Diesel",
+          notes: "MY27 OEM+PDF: 38LDG | 40LBH | 40LRB | 40LTS. Do not merge with Verona (36VSB / 40VTB / 40VTR / 40VTS)."
         }
       ]
     },
     "Classic Super C": {
-      type: "Super C",
-      floorplans: ["38FSB", "40FSB", "40FSBXL", "34RBB", "38RBB", "45RBB"],
+      type: "Super C Diesel",
+      floorplans: ["38FSB", "40FSB", "40FSBXL", "34RBB", "38RBB", "45RBB", "38CSB", "41CMB", "41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"],
       floorplansByYear: {
         "2010": ["38FSB", "40FSB"],
         "2011": ["38FSB", "40FSB"],
@@ -31918,11 +31963,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["38FSB", "40FSB"],
         "2024": ["38FSB", "40FSB"],
         "2025": ["38FSB", "40FSB"],
-        "2026": ["38FSB", "40FSB", "34RBB", "38RBB", "45RBB"]
+        "2026": ["38FSB", "40FSB", "34RBB", "38RBB", "45RBB"],
+        // LOCK renegaderv.com/rvmodel/classic-2027/ + library 2027-Renegade-RV-Classic.pdf (CLASSIC, 4/26)
+        // Motorhome only. Omit toter CS150/CS170/CS172 and garage 2509/2509GS/2609.
+        "2027": ["38CSB", "41CMB", "41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"]
       },
       lengthRange: [
         38,
-        40
+        45
       ],
       weightRange: [
         30000,
@@ -31951,7 +31999,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2010,
-      description: "Renegade Classic Super C — premium Super C diesel packages.",
+      description: "Renegade Classic Super C — premium Super C diesel motorhome (OEM Classic). MY27 OEM+PDF motorhome: 38CSB / 41CMB / 41CRB / 41CRW / 43CMD / 45CBF / 45CME / 45CMR / 45CRS. Omit toter CS150/CS170/CS172 and garage 2509/2509GS/2609.",
       powertrainByYear: [
         {
           from: 2010,
@@ -31967,6 +32015,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Cummins Super C diesel",
           horsepower: 360,
           chassis: "Freightliner Super C"
+        },
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Freightliner Cascadia DD13 525 / DD16 600 / Peterbilt X15 605 (by chassis)",
+          chassis: "Freightliner Cascadia / Volvo VNR-VNL / Western Star / Peterbilt (by option)",
+          towingCapacity: 20000,
+          notes: "MY27 OEM+PDF motorhome only: 38CSB | 41CMB | 41CRB | 41CRW | 43CMD | 45CBF | 45CME | 45CMR | 45CRS. Chassis-specific HP — do not lock a lone 360. Omit toter CS150/CS170/CS172 and garage 2509/2509GS/2609. 20,000-lb hitch single axle / 30,000-lb tandem."
         }
       ]
     },
@@ -31983,6 +32039,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2024": ["28DSB", "32DSB"],
         "2025": ["28DSB", "32DSB"],
         "2026": ["28DSB", "32DSB", "34RB", "38RB"]
+        // SKIP MY27: OEM renegaderv.com/rvmodel/ikon-2027/ 404 / library 2027-Renegade-RV-Ikon.pdf 403. Do not invent.
       },
       lengthRange: [
         28,
@@ -32016,7 +32073,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2018,
-      description: "Renegade Ikon — compact Super C. Confirm Ford vs Freightliner chassis on the unit.",
+      description: "Renegade Ikon — compact Super C. Confirm Ford vs Freightliner chassis on the unit. SKIP MY27 (OEM 404 / library 403) — do not invent or copy 2026 forward.",
       powertrainByYear: [
         {
           from: 2018,
@@ -32028,8 +32085,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ]
     },
     Villagio: {
-      type: "Class A Diesel",
-      floorplans: ["24FW", "24RB"],
+      type: "Class C Diesel",
+      floorplans: ["24FW", "24RB", "25FWC", "25RMC", "25TBC"],
       floorplansByYear: {
         "2014": ["24FW", "24RB"],
         "2015": ["24FW", "24RB"],
@@ -32041,7 +32098,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2021": ["24FW", "24RB"],
         "2022": ["24FW", "24RB"],
         "2023": ["24FW", "24RB"],
-        "2024": ["24FW", "24RB"]
+        "2024": ["24FW", "24RB"],
+        // REOPEN MY27: yearEnd 2024 was stale. Prefer PDF codes 25FWC/25RMC/25TBC over OEM shorts 25FW/25RM/25TB.
+        // LOCK renegaderv.com/rvmodel/villagio-2027/ + library 2027-Renegade-RV-Villagio.pdf (VILLAGIO, 12/25). Class C Diesel, not Class A Diesel.
+        "2027": ["25FWC", "25RMC", "25TBC"]
       },
       lengthRange: [
         24,
@@ -32074,8 +32134,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2014,
-      yearEnd: 2024,
-      description: "Renegade Villagio — compact Sprinter-based diesel coach.",
+      description: "Renegade Villagio — Class C diesel on Mercedes Sprinter cab chassis (not Class A Diesel). MY27 OEM+PDF: 25FWC / 25RMC / 25TBC — prefer PDF codes over OEM shorts 25FW/25RM/25TB.",
       powertrainByYear: [
         {
           from: 2014,
@@ -32103,6 +32162,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           torqueLbFt: 332,
           chassis: "Mercedes-Benz Sprinter cowl",
         },
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel 208HP",
+          horsepower: 208,
+          torqueLbFt: 332,
+          chassis: "Mercedes-Benz Sprinter 4500XD cab chassis",
+          transmission: "9-speed automatic",
+          towingCapacity: 4200,
+          generator: "Onan 3.6kW LP",
+          notes: "MY27 OEM+PDF Class C Diesel: 25FWC | 25RMC | 25TBC. Prefer PDF codes over OEM shorts 25FW/25RM/25TB. Not a Cummins pusher. 2025–26 GAP — do not invent.",
+        },
       ]
     },
     Villager: {
@@ -32124,6 +32195,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2024": ["25QBG", "25QBS"],
         "2025": ["25QBG", "25QBS"],
         "2026": ["25QBG", "25QBS", "25RE", "25RLE"]
+        // GAP MY27: OEM renegaderv.com/rvmodel/villager-2027/ 404 / library 2027-Renegade-RV-Villager.pdf 403. Do not invent or copy 2026 forward.
       },
       lengthRange: [
         25,
@@ -32156,7 +32228,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2012,
-      description: "Renegade Villager — Ford Class C packages.",
+      description: "Renegade Villager — Ford Class C packages. GAP MY27 (OEM 404 / library 403) — do not invent or copy 2026 forward.",
       powertrainByYear: [
         {
           from: 2011,
@@ -32183,8 +32255,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ]
     },
     Vienna: {
-      type: "Super C",
-      floorplans: ["25VRB", "28VRB", "34RB", "37RB"],
+      type: "Class C Diesel",
+      floorplans: ["25VRB", "28VRB", "34RB", "37RB", "25DLC", "25DLN", "25FWC", "25FWS", "25RMC", "25RML", "25TBC", "25TBN"],
       floorplansByYear: {
         "2020": ["25VRB", "28VRB"],
         "2021": ["25VRB", "28VRB"],
@@ -32192,7 +32264,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["25VRB", "28VRB"],
         "2024": ["25VRB", "28VRB"],
         "2025": ["25VRB", "28VRB"],
-        "2026": ["25VRB", "28VRB", "34RB", "37RB"]
+        "2026": ["25VRB", "28VRB", "34RB", "37RB"],
+        // LOCK renegaderv.com/rvmodel/vienna-2027/ + library 2027-Renegade-RV-Vienna.pdf (VIENNA, 4/26)
+        // Prefer OEM 25DLN — omit PDF typo 25DNL. Do not copy 2026 25VRB/28VRB/34RB/37RB forward.
+        "2027": ["25DLC", "25DLN", "25FWC", "25FWS", "25RMC", "25RML", "25TBC", "25TBN"]
       },
       lengthRange: [
         25,
@@ -32225,7 +32300,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1997,
       warrantyYears: 2,
       yearStart: 2020,
-      description: "Renegade Vienna — smaller Super C packages (verify availability by year).",
+      description: "Renegade Vienna — Class C diesel on Mercedes Sprinter. MY27 OEM+PDF: 25DLC / 25DLN / 25FWC / 25FWS / 25RMC / 25RML / 25TBC / 25TBN — prefer OEM 25DLN, omit PDF typo 25DNL.",
       powertrainByYear: [
         {
           from: 2020,
@@ -32233,6 +32308,198 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Super C diesel",
           horsepower: 330,
           chassis: "Super C platform"
+        },
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel 208HP",
+          horsepower: 208,
+          torqueLbFt: 332,
+          chassis: "Mercedes-Benz Sprinter 4500XD cab chassis",
+          transmission: "9-speed automatic",
+          towingCapacity: 4200,
+          generator: "Onan 3.6kW LP",
+          notes: "MY27 OEM+PDF Class C Diesel: 25DLC | 25DLN | 25FWC | 25FWS | 25RMC | 25RML | 25TBC | 25TBN. Prefer OEM 25DLN — omit PDF typo 25DNL."
+        }
+      ]
+    },
+    XL: {
+      type: "Super C Diesel",
+      floorplans: ["X43DB", "X45BBC", "X45DBM", "X45QBH", "X45QS"],
+      floorplansByYear: {
+        // LOCK renegaderv.com/rvmodel/xl-2027/ + library 2027-Renegade-RV-XL.pdf (XL, 4/26)
+        "2027": ["X43DB", "X45BBC", "X45DBM", "X45QBH", "X45QS"]
+      },
+      lengthRange: [43, 45],
+      weightRange: [40000, 52000],
+      slideouts: 2,
+      sleeps: 8,
+      msrpRange: [449000, 699000],
+      engine: "Freightliner Cascadia DD13 525 / DD16 600 / Peterbilt X15 605 (by chassis)",
+      chassis: "Freightliner Cascadia 116/126 / Peterbilt 567",
+      transmission: "DT12 12-speed / Endurant 18-speed (by chassis)",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.65,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 30000,
+      freshWater: 150,
+      grayWater: 75,
+      blackWater: 75,
+      fuelCapacityGal: 120,
+      generator: "Onan 12.5kW Quiet Diesel",
+      ceilingHeight: 90,
+      founded: 1997,
+      warrantyYears: 1,
+      yearStart: 2027,
+      description: "Renegade XL — Super C diesel. MY27 OEM+PDF: X43DB / X45BBC / X45DBM / X45QBH / X45QS. Chassis-specific 525/600/605 HP — do not lock a lone number.",
+      powertrainByYear: [
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Freightliner Cascadia DD13 525 / DD16 600 / Peterbilt X15 605 (by chassis)",
+          torqueLbFt: 1850,
+          chassis: "Freightliner Cascadia 116/126 / Peterbilt 567",
+          transmission: "DT12 12-speed / Endurant 18-speed (by chassis)",
+          towingCapacity: 30000,
+          generator: "Onan 12.5kW Quiet Diesel",
+          notes: "MY27 OEM+PDF: X43DB | X45BBC | X45DBM | X45QBH | X45QS. HP is chassis option-band — do not lock a lone 525."
+        }
+      ]
+    },
+    Explorer: {
+      type: "Super C Diesel",
+      floorplans: ["38EMB", "40EBH", "40ERB"],
+      floorplansByYear: {
+        // LOCK renegaderv.com/rvmodel/explorer-2027/ + library 2027-Renegade-RV-Explorer.pdf (EXPLORER, 4/26)
+        "2027": ["38EMB", "40EBH", "40ERB"]
+      },
+      lengthRange: [38, 41],
+      weightRange: [30000, 40000],
+      slideouts: 2,
+      sleeps: 6,
+      msrpRange: [399000, 599000],
+      engine: "Detroit DD13 525 std / Cummins X15 500 opt (Peterbilt, N/A 38EMB)",
+      chassis: "Freightliner Cascadia 116 / Peterbilt 567 single axle",
+      transmission: "DT12 / Endurant (by chassis)",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.6,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 20000,
+      freshWater: 150,
+      grayWater: 75,
+      blackWater: 75,
+      generator: "Onan 8kW Quiet Diesel",
+      ceilingHeight: 84,
+      founded: 1997,
+      warrantyYears: 1,
+      yearStart: 2027,
+      description: "Renegade Explorer — Super C diesel. MY27 OEM+PDF: 38EMB / 40EBH / 40ERB. Twin key — do not merge with Explorer TS.",
+      powertrainByYear: [
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Detroit DD13 525 std / Cummins X15 500 opt (Peterbilt, N/A 38EMB)",
+          chassis: "Freightliner Cascadia 116 / Peterbilt 567 single axle",
+          transmission: "DT12 / Endurant (by chassis)",
+          towingCapacity: 20000,
+          generator: "Onan 8kW Quiet Diesel",
+          notes: "MY27 OEM+PDF: 38EMB | 40EBH | 40ERB. Cascadia DD13 525/1,850; Peterbilt X15 500/1,650 (N/A 38EMB). Do not merge with Explorer TS 42RB."
+        }
+      ]
+    },
+    "Explorer TS": {
+      type: "Super C Diesel",
+      floorplans: ["42RB"],
+      floorplansByYear: {
+        // LOCK renegaderv.com/rvmodel/explorer-ts-2027/ + library 2027-Renegade-RV-Explorer-TS.pdf (EXPLORER TS, 3/25)
+        "2027": ["42RB"]
+      },
+      lengthRange: [42, 43],
+      weightRange: [35000, 45000],
+      slideouts: 2,
+      sleeps: 6,
+      msrpRange: [429000, 629000],
+      engine: "Detroit DD13 525HP",
+      horsepower: 525,
+      torqueLbFt: 1850,
+      chassis: "Freightliner Cascadia 116 tandem axle",
+      transmission: "DT12",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.6,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 30000,
+      freshWater: 150,
+      grayWater: 75,
+      blackWater: 75,
+      generator: "Onan 12.5kW Quiet Diesel",
+      ceilingHeight: 84,
+      founded: 1997,
+      warrantyYears: 1,
+      yearStart: 2027,
+      description: "Renegade Explorer TS — tandem-axle Super C diesel. MY27 OEM+PDF: 42RB. Twin key — do not merge with Explorer.",
+      powertrainByYear: [
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Detroit DD13 525HP",
+          horsepower: 525,
+          torqueLbFt: 1850,
+          chassis: "Freightliner Cascadia 116 tandem axle",
+          transmission: "DT12",
+          towingCapacity: 30000,
+          generator: "Onan 12.5kW Quiet Diesel",
+          notes: "MY27 OEM+PDF: 42RB. Twin-screw / tandem axle. Do not merge with Explorer 38EMB/40EBH/40ERB."
+        }
+      ]
+    },
+    Veracruz: {
+      type: "Class C Diesel",
+      floorplans: ["30VRM", "33VDS", "33VRS"],
+      floorplansByYear: {
+        // LOCK renegaderv.com/rvmodel/veracruz-2027/ + library 2027-Renegade-RV-Veracruz.pdf (VERACRUZ, 4/26)
+        // Omit web-only 33TBR (OEM lists it; PDF MODELS 30VRM | 33VDS | 33VRS).
+        "2027": ["30VRM", "33VDS", "33VRS"]
+      },
+      lengthRange: [30, 33],
+      weightRange: [18000, 26000],
+      slideouts: 2,
+      sleeps: 6,
+      msrpRange: [249000, 399000],
+      engine: "Ford 6.7L Power Stroke 330HP",
+      horsepower: 330,
+      torqueLbFt: 950,
+      chassis: "Ford F-600 4x4 XLT",
+      transmission: "10-speed automatic",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.5,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 12000,
+      freshWater: 75,
+      grayWater: 44,
+      blackWater: 44,
+      fuelCapacityGal: 66.5,
+      generator: "Onan 8kW Quiet Diesel",
+      ceilingHeight: 82,
+      founded: 1997,
+      warrantyYears: 1,
+      yearStart: 2027,
+      description: "Renegade Veracruz — 4x4 Class C diesel on Ford F-600. MY27 OEM+PDF: 30VRM / 33VDS / 33VRS — omit web-only 33TBR.",
+      powertrainByYear: [
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Ford 6.7L Power Stroke 330HP",
+          horsepower: 330,
+          torqueLbFt: 950,
+          chassis: "Ford F-600 4x4 XLT",
+          transmission: "10-speed automatic",
+          towingCapacity: 12000,
+          generator: "Onan 8kW Quiet Diesel",
+          notes: "MY27 OEM+PDF Class C Diesel: 30VRM | 33VDS | 33VRS. Omit web-only 33TBR."
         }
       ]
     }

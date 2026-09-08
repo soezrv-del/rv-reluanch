@@ -15357,3 +15357,68 @@ test("American Coach MY2027 OEM+PDF floorplans + Tradition GAP", () => {
   const tradition = ac.slice(ac.indexOf('    "American Tradition": {'), ac.indexOf('    "American Eagle": {'));
   assert.doesNotMatch(tradition, /"2027":/);
 });
+
+test("Renegade RV MY2027 OEM+PDF floorplans + Villagio reopen + Villager/Ikon GAP", () => {
+  const idx = CATALOG_INDEX["Renegade RV"];
+  assert.ok(idx);
+
+  assert.equal(idx.Valencia?.type, "Class C Diesel");
+  assert.equal(idx.Valencia?.years?.includes(2027), true);
+  assert.equal(idx.Verona?.type, "Super C Diesel");
+  assert.equal(idx.Verona?.years?.includes(2027), true);
+  assert.equal(idx["Verona LE"]?.type, "Super C Diesel");
+  assert.equal(idx["Verona LE"]?.years?.includes(2027), true);
+  assert.equal(idx["Classic Super C"]?.type, "Super C Diesel");
+  assert.equal(idx["Classic Super C"]?.years?.includes(2027), true);
+  assert.equal(idx.Vienna?.type, "Class C Diesel");
+  assert.equal(idx.Vienna?.years?.includes(2027), true);
+
+  assert.equal(idx.Villagio?.type, "Class C Diesel");
+  assert.equal(idx.Villagio?.yearEnd, undefined);
+  assert.equal(idx.Villagio?.years?.includes(2024), true);
+  assert.equal(idx.Villagio?.years?.includes(2027), true);
+
+  assert.equal(idx.Villager?.years?.includes(2026), true);
+  assert.equal(idx.Villager?.years?.includes(2027), false);
+  assert.equal(idx.Ikon?.years?.includes(2026), true);
+  assert.equal(idx.Ikon?.years?.includes(2027), false);
+
+  assert.equal(idx.XL?.type, "Super C Diesel");
+  assert.equal(idx.XL?.years?.includes(2027), true);
+  assert.equal(idx.Explorer?.type, "Super C Diesel");
+  assert.equal(idx.Explorer?.years?.includes(2027), true);
+  assert.equal(idx["Explorer TS"]?.type, "Super C Diesel");
+  assert.equal(idx["Explorer TS"]?.years?.includes(2027), true);
+  assert.equal(idx.Veracruz?.type, "Class C Diesel");
+  assert.equal(idx.Veracruz?.years?.includes(2027), true);
+
+  const block = src("rvData.ts");
+  const r0 = block.indexOf('\n  "Renegade RV": {');
+  const r1 = block.indexOf("\n  Dynamax: {");
+  const rg = block.slice(r0, r1);
+  assert.match(rg, /"2027": \["36SB", "39BB", "39FW", "39RB"\]/);
+  assert.match(rg, /"2027": \["36VSB", "40VTB", "40VTR", "40VTS"\]/);
+  assert.match(rg, /"2027": \["38LDG", "40LBH", "40LRB", "40LTS"\]/);
+  assert.match(rg, /"2027": \["38CSB", "41CMB", "41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"\]/);
+  assert.match(rg, /"2027": \["25DLC", "25DLN", "25FWC", "25FWS", "25RMC", "25RML", "25TBC", "25TBN"\]/);
+  assert.match(rg, /"2027": \["25FWC", "25RMC", "25TBC"\]/);
+  assert.match(rg, /"2027": \["X43DB", "X45BBC", "X45DBM", "X45QBH", "X45QS"\]/);
+  assert.match(rg, /"2027": \["38EMB", "40EBH", "40ERB"\]/);
+  assert.match(rg, /"2027": \["42RB"\]/);
+  assert.match(rg, /"2027": \["30VRM", "33VDS", "33VRS"\]/);
+
+  const classic = rg.slice(rg.indexOf('    "Classic Super C": {'), rg.indexOf("    Ikon: {"));
+  assert.doesNotMatch(classic, /"CS150"/);
+  assert.doesNotMatch(classic, /"2509"/);
+
+  const vienna = rg.slice(rg.indexOf("    Vienna: {"), rg.indexOf("    XL: {"));
+  assert.doesNotMatch(vienna, /"25DNL"/);
+
+  const veracruz = rg.slice(rg.indexOf("    Veracruz: {"));
+  assert.doesNotMatch(veracruz, /"33TBR"/);
+
+  const villager = rg.slice(rg.indexOf("    Villager: {"), rg.indexOf("    Vienna: {"));
+  assert.doesNotMatch(villager, /"2027":/);
+  const ikon = rg.slice(rg.indexOf("    Ikon: {"), rg.indexOf("    Villagio: {"));
+  assert.doesNotMatch(ikon, /"2027":/);
+});
