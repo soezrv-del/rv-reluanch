@@ -44,7 +44,6 @@ import {
 } from "@/lib/trips/routeResults";
 import {
   clearLockedProfile,
-  coachIdentityKey,
   coachIsReady,
   EMPTY_COACH_PROFILE,
   loadLockedProfile,
@@ -222,9 +221,6 @@ export function RvTripsApp() {
   const [seedSource, setSeedSource] = useState<CoachSeedSource | null>(
     bootSeed?.source ?? null,
   );
-  const lastAutoKeyRef = useRef(
-    bootSeed ? coachIdentityKey(bootSeed.profile) : "",
-  );
   const lastTowHandoffToken = useRef(0);
   const [towReplace, setTowReplace] = useState<{
     locked: CoachProfile;
@@ -288,7 +284,6 @@ export function RvTripsApp() {
   const [showSampleCamps, setShowSampleCamps] = useState(false);
 
   const applySeedIdentity = useCallback((p: CoachProfile, source: CoachSeedSource) => {
-    lastAutoKeyRef.current = coachIdentityKey(p);
     setYear(p.year);
     setMake(p.make);
     setModel(p.model);
@@ -830,7 +825,6 @@ export function RvTripsApp() {
     const next = { ...draft, locked: true as const, seedSource: "locked" as const };
     setLocked(next);
     setSeedSource("locked");
-    lastAutoKeyRef.current = coachIdentityKey(next);
     saveLockedProfile(next);
   };
 
