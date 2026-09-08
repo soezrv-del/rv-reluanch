@@ -14541,6 +14541,73 @@ test("Coachmen 2005–2009 motorized honesty: EzMe pack locks; remaining early y
   }
 });
 
+test("Coachmen MY2010 honesty: lock Catalina/Chaparral Lite; Apex/Encore/Sportscoach stay GAP", () => {
+  const idx = CATALOG_INDEX.Coachmen;
+  assert.ok(idx);
+
+  assert.equal(idx.Catalina?.years?.includes(2010), true);
+  assert.equal(idx.Catalina?.type, "Travel Trailer");
+  assert.equal(idx["Chaparral Lite"]?.years?.includes(2010), true);
+  assert.equal(idx["Chaparral Lite"]?.type, "Fifth Wheel");
+  assert.equal(idx.Apex?.years?.includes(2010), false, "Apex MY2010 GAP — no 2010 chip");
+  assert.equal(idx.Encore?.years?.includes(2010), false, "Encore MY2010 GAP — no 2010 chip");
+  assert.equal(idx.Sportscoach?.years?.includes(2010), false, "Sportscoach MY2010 GAP — no 2010 chip");
+
+  const block = src("rvData.ts");
+  const c0 = block.indexOf("\n  Coachmen: {");
+  const c1 = block.indexOf("\n  Winnebago: {");
+  assert.ok(c0 > 0 && c1 > c0, "Coachmen block");
+  const cm = block.slice(c0, c1);
+  const catalina = cm.slice(cm.indexOf("    Catalina: {"), cm.indexOf('    "Catalina Legacy Edition"'));
+  const chapLite = cm.slice(cm.indexOf('    "Chaparral Lite": {'), cm.indexOf("    Brookstone: {"));
+  const apex = cm.slice(cm.indexOf("    Apex: {"), cm.indexOf('    "Apex Nano"'));
+  const encore = cm.slice(cm.indexOf("    Encore: {"), cm.indexOf("    Sportscoach: {"));
+  const sportscoach = cm.slice(cm.indexOf("    Sportscoach: {"), cm.indexOf("    Freelander: {"));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  // LOCK — 10_Catalina_TT.pdf CreationDate 2010-04-29 + RVUSA 2010 year page.
+  // Do not copy 2009 or 2011 → 2010.
+  assert.deepEqual(fbyYear(catalina, 2010), [
+    "20RD",
+    "21BH",
+    "22FB",
+    "24FBS",
+    "26BH",
+    "27BHS",
+    "28BHS",
+    "29RLS",
+    "29RKS",
+    "30BHS",
+    "32BHDS",
+    "38BHDS",
+  ]);
+  assert.equal(fbyYear(catalina, 2009), null, "Catalina must not invent 2009");
+  assert.doesNotMatch(catalina, /"2009":/);
+  assert.doesNotMatch(catalina, /"2011":/);
+  assert.equal((fbyYear(catalina, 2012) ?? []).includes("20RD"), false, "Catalina must not stamp MY2010 20RD onto 2012");
+
+  // LOCK — populated RVUSA 2010 year page. Do NOT add 271BHS / 275RLS.
+  assert.deepEqual(fbyYear(chapLite, 2010), ["267RL", "268RLE", "269BH", "270RKS"]);
+  assert.equal((fbyYear(chapLite, 2010) ?? []).includes("271BHS"), false, "Chaparral Lite must not add 271BHS");
+  assert.equal((fbyYear(chapLite, 2010) ?? []).includes("275RLS"), false, "Chaparral Lite must not add 275RLS");
+  assert.doesNotMatch(chapLite, /"2009":/);
+  assert.doesNotMatch(chapLite, /"2011":/);
+  assert.equal((fbyYear(chapLite, 2026) ?? []).includes("267RL"), false, "Chaparral Lite must not stamp MY2010 267RL onto 2026");
+
+  // GAP MY2010 — prefer omit / no invent.
+  assert.equal(fbyYear(apex, 2010), null, "Apex 2010 must stay GAP");
+  assert.doesNotMatch(apex, /"2010":/);
+  assert.equal(fbyYear(encore, 2010), null, "Encore 2010 must stay GAP");
+  assert.doesNotMatch(encore, /"2010":/);
+  assert.equal(fbyYear(sportscoach, 2010), null, "Sportscoach 2010 must stay GAP");
+  assert.doesNotMatch(sportscoach, /"2010":/);
+});
+
 test("Dutchmen 2005–2009 honesty: Aerolite MY2006+2008 dated locks; Coleman/Kodiak/Yukon stay GAP", () => {
   const idx = CATALOG_INDEX.Dutchmen;
   assert.ok(idx);

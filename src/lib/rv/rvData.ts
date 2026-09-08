@@ -8713,6 +8713,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Gas",
       floorplans: ["325SS", "330TS", "370FL", "370RB"],
       floorplansByYear: {
+        // GAP MY2010 — pack Available Years 2021–2027. Leave 2010 empty.
+        // Prefer omit / no invent. Do not copy leftover 325SS/370FL onto 2010.
         "2012": ["325SS", "370FL"],
         "2013": ["325SS", "370FL"],
         "2014": ["325SS", "330TS", "370FL"],
@@ -8770,12 +8772,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           notes: "2006–2015 gas Class A — Triton V10 (not 7.3 Godzilla)"
         }
       ],
-      description: "Coachmen Encore — premium gas Class A on Ford F53. Triple-slide residential layouts."
+      description: "Coachmen Encore — premium gas Class A on Ford F53. Triple-slide residential layouts. GAP MY2010 (Available Years 2021–2027 on the pack card) — 2010 omitted; do not invent leftover 325SS/370FL."
     },
     Sportscoach: {
       type: "Class A Diesel",
       floorplans: ["364TS", "389QB", "403QBC", "407FW"],
       floorplansByYear: {
+        // GAP MY2010 — never copy adjacent Cross Country; soft production ≠ LOCK.
+        // Prefer omit / no invent. Do not copy leftover 364TS/407FW onto 2010.
         "2012": ["364TS", "407FW"],
         "2013": ["364TS", "407FW"],
         "2014": ["364TS", "389QB", "407FW"],
@@ -8833,7 +8837,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           notes: "Mid diesel pusher 2006–2015 — not F53 gas, not modern L9 default"
         }
       ],
-      description: "Coachmen Sportscoach — entry diesel pusher value on Freightliner."
+      description: "Coachmen Sportscoach — entry diesel pusher value on Freightliner. GAP MY2010 — never copy adjacent Cross Country; soft production ≠ LOCK. 2010 omitted rather than invented."
     },
     Freelander: {
       type: "Class C",
@@ -9575,6 +9579,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     Catalina: {
       type: "Travel Trailer",
       floorplans: [
+        "20RD",
+        "21BH",
+        "22FB",
+        "24FBS",
+        "26BH",
+        "27BHS",
+        "28BHS",
+        "29RLS",
+        "29RKS",
+        "30BHS",
+        "32BHDS",
+        "38BHDS",
         "243RBS",
         "261BH",
         "263BHS",
@@ -9588,6 +9604,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "303RKDS"
       ],
       floorplansByYear: {
+        // LOCK MY2010 — 10_Catalina_TT.pdf CreationDate 2010-04-29 + RVUSA 2010 year page.
+        // Exact-match only. Do not copy 2009 or 2011 → 2010.
+        "2010": ["20RD", "21BH", "22FB", "24FBS", "26BH", "27BHS", "28BHS", "29RLS", "29RKS", "30BHS", "32BHDS", "38BHDS"],
         "2012": ["243RBS", "261BH", "263BHS", "283RKS"],
         "2013": ["243RBS", "261BH", "263BHS", "283RKS"],
         "2014": ["243RBS", "261BH", "263BHS", "263FKDS", "283RKS"],
@@ -9701,7 +9720,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1964,
       warrantyYears: 2,
       yearStart: 2010,
-      description: "Coachmen Catalina — collapsed historical TT bucket (2012–2025 leftover). Current OEM is Catalina Legacy Edition, Summit Series 7, Summit Series 8, Trail Blazer, and Destination Series. Summit / Destination / Trail Blazer codes must not land here. MY2026–2027 omitted (empty is correct)."
+      description: "Coachmen Catalina — collapsed historical TT bucket. MY2010 lock (10_Catalina_TT.pdf CreationDate 2010-04-29 + RVUSA 2010 year page): 20RD / 21BH / 22FB / 24FBS / 26BH / 27BHS / 28BHS / 29RLS / 29RKS / 30BHS / 32BHDS / 38BHDS. Do not copy 2009 or 2011 onto 2010. 2012–2025 leftover stays on this key. Current OEM is Catalina Legacy Edition, Summit Series 7, Summit Series 8, Trail Blazer, and Destination Series. Summit / Destination / Trail Blazer codes must not land here. MY2026–2027 omitted (empty is correct)."
     },
     "Catalina Legacy Edition": {
       type: "Travel Trailer",
@@ -10039,6 +10058,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Travel Trailer",
       floorplans: ["213RDS", "245BHS", "249RBS", "251RBK", "288BHS"],
       floorplansByYear: {
+        // GAP MY2010 — never copy 2011 Apex or Viking Apex. Prefer omit / no invent.
         "2012": ["213RDS", "245BHS", "249RBS"],
         "2013": ["213RDS", "245BHS", "249RBS"],
         "2014": ["213RDS", "245BHS", "249RBS", "251RBK"],
@@ -10085,7 +10105,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1964,
       warrantyYears: 2,
       yearStart: 2010,
-      description: "Coachmen Apex — collapsed historical TT bucket (2012–2025 leftover). Current OEM is Apex Nano + Apex Ultra-Lite — do not merge those codes here. MY2026–2027 omitted (empty is correct)."
+      description: "Coachmen Apex — collapsed historical TT bucket (2012–2025 leftover). GAP MY2010 — never copy 2011 Apex or Viking Apex; 2010 omitted rather than invented. Current OEM is Apex Nano + Apex Ultra-Lite — do not merge those codes here. MY2026–2027 omitted (empty is correct)."
     },
     "Apex Nano": {
       type: "Travel Trailer",
@@ -10377,6 +10397,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "235RK",
         "254RLS",
         "25RE",
+        "267RL",
+        "268RLE",
+        "269BH",
+        "270RKS",
         "274BH",
         "27BAR",
         "284RL",
@@ -10386,6 +10410,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "368TBH"
       ],
       floorplansByYear: {
+        // LOCK MY2010 — populated RVUSA 2010 year page.
+        // Exact-match: 267RL | 268RLE | 269BH | 270RKS.
+        // Do NOT add 271BHS / 275RLS. Do not copy 2009 or 2011 → 2010.
+        "2010": ["267RL", "268RLE", "269BH", "270RKS"],
         // yearStart 2008 (RVUSA m636 first available year). Older fby omitted this slice.
         // RVUSA 2026 Chaparral Lite family card (m636-y2026, 11 plans) + OEM Lite brochure labels:
         // 218SE | 235RK | 254RLS | 25RE | 274BH | 27BAR | 284RL | 30BHS | 30RLS | 31BH | 368TBH
@@ -10422,7 +10450,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1964,
       warrantyYears: 1,
       yearStart: 2008,
-      description: "Coachmen Chaparral Lite — lighter fifth-wheel sibling of Chaparral. RVUSA/OEM MY2026: 218SE / 235RK / 254RLS / 25RE / 274BH / 27BAR / 284RL / 30BHS / 30RLS / 31BH / 368TBH. Mid-profile Chaparral codes stay on Chaparral."
+      description: "Coachmen Chaparral Lite — lighter fifth-wheel sibling of Chaparral. MY2010 lock (populated RVUSA 2010 year page): 267RL / 268RLE / 269BH / 270RKS — do not add 271BHS / 275RLS or copy 2009/2011 onto 2010. RVUSA/OEM MY2026: 218SE / 235RK / 254RLS / 25RE / 274BH / 27BAR / 284RL / 30BHS / 30RLS / 31BH / 368TBH. Mid-profile Chaparral codes stay on Chaparral."
     },
     Brookstone: {
       type: "Fifth Wheel",
