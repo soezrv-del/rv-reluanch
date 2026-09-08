@@ -195,15 +195,33 @@ test("RvTowApp wires honest match and no longer invents custom GCWR", () => {
 test("RvTowApp salesman default: truck + coach + two numbers, More details collapsed", () => {
   const src = readFileSync(join(root, "../../components/rvtow/RvTowApp.tsx"), "utf8");
   const truck = src.indexOf("data-tow-truck");
+  const trim = src.indexOf("data-tow-trim");
   const coach = src.indexOf("data-tow-coach");
+  const math = src.indexOf("data-tow-math");
   const answer = src.indexOf("<AnswerHero");
   const details = src.indexOf(">More details<");
   const disclaimer = src.indexOf("<SuiteDisclaimer");
+  const trimField = src.indexOf("TRIM / ENGINE / CONFIGURATION");
   const gvwr = src.indexOf("RV GVWR (lbs)");
-  const trim = src.indexOf("TRIM / ENGINE / CONFIGURATION");
   const bed = src.indexOf("TRUCK BED LENGTH");
   assert.ok(truck >= 0 && truck < details, "truck picker sits above More details");
+  assert.ok(
+    truck < trim && trim < details,
+    "trim Field sits on the default truck section, not inside More details",
+  );
+  assert.ok(trimField >= 0 && trimField < details, "trim label is on the default path");
+  assert.equal(
+    src.split("TRIM / ENGINE / CONFIGURATION").length - 1,
+    1,
+    "one trim picker — not duplicated in More details",
+  );
   assert.ok(coach >= 0 && coach < details, "coach picker sits above More details");
+  assert.ok(math >= 0 && math < details, "GVWR + typed pin sit on the default path");
+  assert.ok(gvwr >= 0 && gvwr < details, "GVWR is not buried in More details");
+  assert.ok(
+    src.indexOf("<HitchWeightField") < details,
+    "typed pin/tongue field sits on the default path",
+  );
   assert.ok(answer >= 0 && answer < details, "max tow + pin sit above More details");
   assert.ok(disclaimer > details, "one SuiteDisclaimer after More details");
   assert.equal(src.split("<SuiteDisclaimer").length - 1, 1);
@@ -213,13 +231,7 @@ test("RvTowApp salesman default: truck + coach + two numbers, More details colla
   assert.match(src, /function GuideHero/);
   assert.equal(src.includes("function GuideCard"), false);
   assert.equal(src.includes(">Details<"), false);
-  assert.ok(gvwr > details, "GVWR lives in More details");
-  assert.ok(trim > details, "trim / engine lives in More details");
-  assert.ok(bed > details, "bed length lives in More details");
-  assert.ok(
-    src.indexOf("<HitchWeightField") > details,
-    "typed pin/tongue field lives in More details",
-  );
+  assert.ok(bed > details, "bed length stays in More details");
   assert.ok(
     src.indexOf("<GlanceChecks") > details,
     "GlanceChecks stay behind More details",

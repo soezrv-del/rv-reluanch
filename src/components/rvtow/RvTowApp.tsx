@@ -798,6 +798,73 @@ export function RvTowApp() {
                   disabled={!make}
                   onClick={() => make && setSheet("model")}
                 />
+                <div data-tow-trim>
+                  <Field
+                    label="TRIM / ENGINE / CONFIGURATION"
+                    value={
+                      trim ||
+                      (model
+                        ? inCatalog
+                          ? "Select or type trim"
+                          : "Type trim (optional)"
+                        : "Model first")
+                    }
+                    empty={!trim}
+                    disabled={!model}
+                    onClick={() => model && setSheet("trim")}
+                  />
+                </div>
+                {hasVehicle && rating.custom ? (
+                  <div className="mt-2.5 space-y-2 rounded-[var(--radius-md)] border border-amber/35 bg-amber/10 px-3 py-3">
+                    <p className="text-[12px] font-bold text-amber">
+                      Custom vehicle
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 pt-1">
+                      <label className="block">
+                        <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
+                          MAX TOW
+                        </span>
+                        <input
+                          value={manualMaxTow}
+                          onChange={(e) =>
+                            setManualMaxTow(e.target.value.replace(/\D/g, ""))
+                          }
+                          placeholder="lbs"
+                          inputMode="numeric"
+                          className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
+                          PAYLOAD
+                        </span>
+                        <input
+                          value={manualPayload}
+                          onChange={(e) =>
+                            setManualPayload(e.target.value.replace(/\D/g, ""))
+                          }
+                          placeholder="lbs"
+                          inputMode="numeric"
+                          className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
+                          GCWR
+                        </span>
+                        <input
+                          value={manualGcwr}
+                          onChange={(e) =>
+                            setManualGcwr(e.target.value.replace(/\D/g, ""))
+                          }
+                          placeholder="lbs"
+                          inputMode="numeric"
+                          className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ) : null}
               </section>
             )}
 
@@ -815,6 +882,15 @@ export function RvTowApp() {
                   </p>
                 </div>
               ) : null}
+              {reverseMode ? (
+                <Field
+                  label="YEAR"
+                  value={year || "Year"}
+                  empty={!year}
+                  onClick={() => setSheet("year")}
+                  flush
+                />
+              ) : null}
               <Field
                 label="RV TYPE"
                 value={
@@ -828,6 +904,32 @@ export function RvTowApp() {
                 disabled={!vehicleIsTruck}
                 flush
               />
+              <div
+                data-tow-math
+                className="mt-2.5 grid grid-cols-2 gap-2"
+              >
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-bold tracking-[0.12em] text-blue">
+                    RV GVWR (lbs)
+                  </span>
+                  <input
+                    value={gvwr}
+                    onChange={(e) => setGvwr(e.target.value.replace(/\D/g, ""))}
+                    className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-3 py-3 text-sm text-white outline-none focus:border-blue/50"
+                    inputMode="numeric"
+                  />
+                </label>
+                <HitchWeightField
+                  kind={/fifth/i.test(rvType) ? "pin" : "tongue"}
+                  value={pin}
+                  estimatedLbs={
+                    reverseMode ? reverseResult.hitchLoad : pinEst
+                  }
+                  recommendedPayload={reverseMode ? 0 : recommendedPayload}
+                  onChange={setPin}
+                  flush
+                />
+              </div>
             </section>
 
             {reverseMode ? (
@@ -937,84 +1039,6 @@ export function RvTowApp() {
                 </div>
               )}
 
-              {reverseMode ? (
-                <Field
-                  label="YEAR"
-                  value={year || "Year"}
-                  empty={!year}
-                  onClick={() => setSheet("year")}
-                  flush
-                />
-              ) : (
-                <Field
-                  label="TRIM / ENGINE / CONFIGURATION"
-                  value={
-                    trim ||
-                    (model
-                      ? inCatalog
-                        ? "Select or type trim"
-                        : "Type trim (optional)"
-                      : "Model first")
-                  }
-                  empty={!trim}
-                  disabled={!model}
-                  onClick={() => model && setSheet("trim")}
-                  flush
-                />
-              )}
-
-              {hasVehicle && rating.custom ? (
-                <div className="space-y-2 rounded-[var(--radius-md)] border border-amber/35 bg-amber/10 px-3 py-3">
-                  <p className="text-[12px] font-bold text-amber">
-                    Custom vehicle
-                  </p>
-                  <div className="grid grid-cols-3 gap-2 pt-1">
-                    <label className="block">
-                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
-                        MAX TOW
-                      </span>
-                      <input
-                        value={manualMaxTow}
-                        onChange={(e) =>
-                          setManualMaxTow(e.target.value.replace(/\D/g, ""))
-                        }
-                        placeholder="lbs"
-                        inputMode="numeric"
-                        className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
-                      />
-                    </label>
-                    <label className="block">
-                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
-                        PAYLOAD
-                      </span>
-                      <input
-                        value={manualPayload}
-                        onChange={(e) =>
-                          setManualPayload(e.target.value.replace(/\D/g, ""))
-                        }
-                        placeholder="lbs"
-                        inputMode="numeric"
-                        className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
-                      />
-                    </label>
-                    <label className="block">
-                      <span className="mb-1 block text-[9px] font-bold tracking-wide text-blue">
-                        GCWR
-                      </span>
-                      <input
-                        value={manualGcwr}
-                        onChange={(e) =>
-                          setManualGcwr(e.target.value.replace(/\D/g, ""))
-                        }
-                        placeholder="lbs"
-                        inputMode="numeric"
-                        className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-2 py-2 text-sm text-white outline-none focus:border-blue/50"
-                      />
-                    </label>
-                  </div>
-                </div>
-              ) : null}
-
               {hasVehicle && !reverseMode ? (
                 <>
                   <div className="rounded-[var(--radius-md)] border border-blue/25 bg-blue/10 px-3 py-2.5">
@@ -1087,18 +1111,6 @@ export function RvTowApp() {
                 />
               </section>
 
-              <label className="block">
-                <span className="mb-1 block text-[10px] font-bold tracking-[0.12em] text-blue">
-                  RV GVWR (lbs) *
-                </span>
-                <input
-                  value={gvwr}
-                  onChange={(e) => setGvwr(e.target.value.replace(/\D/g, ""))}
-                  className="w-full rounded-[var(--radius-md)] border border-border bg-black/40 px-3 py-3 text-sm text-white outline-none focus:border-blue/50"
-                  inputMode="numeric"
-                />
-              </label>
-
               {rvType === "Fifth Wheel" && vehicleIsTruck && !reverseMode ? (
                 <Field
                   label="TRUCK BED LENGTH"
@@ -1107,26 +1119,6 @@ export function RvTowApp() {
                   flush
                 />
               ) : null}
-
-              {reverseMode ? (
-                <HitchWeightField
-                  kind={/fifth/i.test(rvType) ? "pin" : "tongue"}
-                  value={pin}
-                  estimatedLbs={reverseResult.hitchLoad}
-                  recommendedPayload={0}
-                  onChange={setPin}
-                  flush
-                />
-              ) : (
-                <HitchWeightField
-                  kind={/fifth/i.test(rvType) ? "pin" : "tongue"}
-                  value={pin}
-                  estimatedLbs={pinEst}
-                  recommendedPayload={recommendedPayload}
-                  onChange={setPin}
-                  flush
-                />
-              )}
 
               {prefill.kind === "towable" && !reverseMode ? (
                 <button
