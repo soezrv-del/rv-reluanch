@@ -769,3 +769,83 @@ test("American Coach Facts SoT: MY2027 OEM+PDF locks; GAP Tradition", () => {
   assert.doesNotMatch(tradition, /"2027":/);
 });
 
+test("Renegade RV Facts SoT: MY2027 OEM+PDF locks; Villagio reopen; GAP Villager/Ikon", () => {
+  const block = src("rvData.ts");
+  const r0 = block.indexOf('\n  "Renegade RV": {');
+  const r1 = block.indexOf("\n  Dynamax: {");
+  assert.ok(r0 > 0 && r1 > r0, "expected Renegade RV block");
+  const rg = block.slice(r0, r1);
+
+  assert.doesNotMatch(rg, /\n    "American Coach": \{/);
+  assert.doesNotMatch(rg, /\n    Fleetwood: \{/);
+  assert.doesNotMatch(rg, /\n    "Holiday Rambler": \{/);
+
+  const valencia = rg.slice(rg.indexOf("    Valencia: {"), rg.indexOf("    Verona: {"));
+  assert.match(valencia, /type: "Class C Diesel"/);
+  assert.match(valencia, /"2027": \["36SB", "39BB", "39FW", "39RB"\]/);
+  assert.match(valencia, /"2026": \["35MB", "38RW", "38RBB", "40RBB", "45RB", "45RBB"\]/);
+  assert.doesNotMatch(valencia, /"2026": .*"36SB"/);
+
+  const verona = rg.slice(rg.indexOf("    Verona: {"), rg.indexOf('    "Verona LE": {'));
+  assert.match(verona, /type: "Super C Diesel"/);
+  assert.match(verona, /"2027": \["36VSB", "40VTB", "40VTR", "40VTS"\]/);
+  assert.doesNotMatch(verona, /"2027": .*"38LDG"/);
+  assert.doesNotMatch(verona, /"2026": .*"40VTB"/);
+
+  const le = rg.slice(rg.indexOf('    "Verona LE": {'), rg.indexOf('    "Classic Super C": {'));
+  assert.match(le, /type: "Super C Diesel"/);
+  assert.match(le, /"2027": \["38LDG", "40LBH", "40LRB", "40LTS"\]/);
+  assert.doesNotMatch(le, /"2027": .*"36VSB"/);
+  assert.doesNotMatch(le, /"2026": .*"38LDG"/);
+
+  const classic = rg.slice(rg.indexOf('    "Classic Super C": {'), rg.indexOf("    Ikon: {"));
+  assert.match(classic, /type: "Super C Diesel"/);
+  assert.match(classic, /"2027": \["38CSB", "41CMB", "41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"\]/);
+  assert.doesNotMatch(classic, /"CS150"/);
+  assert.doesNotMatch(classic, /"CS170"/);
+  assert.doesNotMatch(classic, /"CS172"/);
+  assert.doesNotMatch(classic, /"2509"/);
+  assert.doesNotMatch(classic, /"2509GS"/);
+  assert.doesNotMatch(classic, /"2026": .*"38CSB"/);
+
+  const ikon = rg.slice(rg.indexOf("    Ikon: {"), rg.indexOf("    Villagio: {"));
+  assert.doesNotMatch(ikon, /"2027":/);
+
+  const villagio = rg.slice(rg.indexOf("    Villagio: {"), rg.indexOf("    Villager: {"));
+  assert.match(villagio, /type: "Class C Diesel"/);
+  assert.doesNotMatch(villagio, /type: "Class A Diesel"/);
+  assert.doesNotMatch(villagio, /yearEnd: 2024/);
+  assert.match(villagio, /"2027": \["25FWC", "25RMC", "25TBC"\]/);
+  assert.doesNotMatch(villagio, /"25FW"/);
+  assert.doesNotMatch(villagio, /"25RM"/);
+  assert.doesNotMatch(villagio, /"25TB"/);
+
+  const villager = rg.slice(rg.indexOf("    Villager: {"), rg.indexOf("    Vienna: {"));
+  assert.doesNotMatch(villager, /"2027":/);
+
+  const vienna = rg.slice(rg.indexOf("    Vienna: {"), rg.indexOf("    XL: {"));
+  assert.match(vienna, /type: "Class C Diesel"/);
+  assert.match(vienna, /"2027": \["25DLC", "25DLN", "25FWC", "25FWS", "25RMC", "25RML", "25TBC", "25TBN"\]/);
+  assert.doesNotMatch(vienna, /"25DNL"/);
+  assert.doesNotMatch(vienna, /"2026": .*"25DLN"/);
+
+  const xl = rg.slice(rg.indexOf("    XL: {"), rg.indexOf("    Explorer: {"));
+  assert.match(xl, /type: "Super C Diesel"/);
+  assert.match(xl, /"2027": \["X43DB", "X45BBC", "X45DBM", "X45QBH", "X45QS"\]/);
+
+  const explorer = rg.slice(rg.indexOf("    Explorer: {"), rg.indexOf('    "Explorer TS": {'));
+  assert.match(explorer, /type: "Super C Diesel"/);
+  assert.match(explorer, /"2027": \["38EMB", "40EBH", "40ERB"\]/);
+  assert.doesNotMatch(explorer, /"42RB"/);
+
+  const ts = rg.slice(rg.indexOf('    "Explorer TS": {'), rg.indexOf("    Veracruz: {"));
+  assert.match(ts, /type: "Super C Diesel"/);
+  assert.match(ts, /"2027": \["42RB"\]/);
+  assert.doesNotMatch(ts, /"38EMB"/);
+
+  const veracruz = rg.slice(rg.indexOf("    Veracruz: {"));
+  assert.match(veracruz, /type: "Class C Diesel"/);
+  assert.match(veracruz, /"2027": \["30VRM", "33VDS", "33VRS"\]/);
+  assert.doesNotMatch(veracruz, /"33TBR"/);
+});
+
