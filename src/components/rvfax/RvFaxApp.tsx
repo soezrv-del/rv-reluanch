@@ -418,7 +418,7 @@ export function RvFaxApp({
       ? fps.length
         ? `Optional · ${year}`
         : `No verified layouts for ${year}`
-      : "Optional";
+      : "Optional · not a current-year lineup";
     return [
       {
         value: "",

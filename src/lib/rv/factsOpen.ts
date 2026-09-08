@@ -1,12 +1,8 @@
 import {
-  getMakesForYear,
-  getModelsForYearMake,
-  YEARS,
-} from "./catalog";
-import {
   matchCatalogModelName,
   parseCoachFromText,
-} from "../rvgrok/parseCoach";
+} from "../rvgrok/parseCoach.ts";
+import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
 
 /**
  * Facts picker ↔ report handoff.
@@ -71,15 +67,29 @@ export function parseExampleChip(label: string): FactsCascadeSel {
  */
 export function selFromExampleChip(label: string): FactsCascadeSel {
   const parsed = parseExampleChip(label);
-  const make = matchCatalogMake(parsed.make, getMakesForYear(parsed.year));
-  const models = make ? getModelsForYearMake(parsed.year, make) : [];
+  const makes = Object.keys(CATALOG_INDEX);
+  const make = matchCatalogMake(parsed.make, makes);
+  const models = make ? Object.keys(CATALOG_INDEX[make] ?? {}) : [];
+  const y = parseInt(parsed.year, 10);
+  const inYear =
+    parsed.year && Number.isFinite(y)
+      ? models.filter((m) => {
+          const years = CATALOG_INDEX[make]?.[m]?.years;
+          return !years?.length || years.includes(y);
+        })
+      : models;
   const model = parsed.model
-    ? matchCatalogModelName(parsed.model, models.length ? models : [parsed.model])
+    ? matchCatalogModelName(
+        parsed.model,
+        inYear.length ? inYear : models.length ? models : [parsed.model],
+      )
     : "";
   let year = parsed.year;
   if (!year && make && model) {
-    year =
-      YEARS.find((y) => getModelsForYearMake(y, make).includes(model)) ?? "";
+    const listed = [...(CATALOG_INDEX[make]?.[model]?.years ?? [])].sort(
+      (a, b) => b - a,
+    );
+    year = listed[0] != null ? String(listed[0]) : "";
   }
   return {
     year,
