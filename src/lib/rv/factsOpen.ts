@@ -37,6 +37,45 @@ export const FACTS_EXAMPLE_CHIPS = [
   "Tiffin Allegro Bus",
 ] as const;
 
+/**
+ * Model / Trim fields follow the cascade, not a Search click.
+ * Year + Make (or an already-chosen model/trim) is enough.
+ */
+export function revealFactsModelTrim(sel: {
+  year?: string | null;
+  make?: string | null;
+  model?: string | null;
+  floorplan?: string | null;
+}): boolean {
+  return Boolean(
+    (sel.year?.trim() && sel.make?.trim()) ||
+      sel.model?.trim() ||
+      sel.floorplan?.trim(),
+  );
+}
+
+/** Example chips stay a first-run shortcut — hide once year + make are set. */
+export function showFactsExampleChips(sel: {
+  year?: string | null;
+  make?: string | null;
+  model?: string | null;
+  floorplan?: string | null;
+}): boolean {
+  return !revealFactsModelTrim(sel);
+}
+
+/**
+ * Cascade picks that can fetch results without the Search button.
+ * Year / Make still load option lists via ensureCatalogLoaded.
+ */
+export function shouldCascadeAutoSearch(sel: {
+  year?: string | null;
+  make?: string | null;
+  model?: string | null;
+}): boolean {
+  return Boolean(sel.year?.trim() && sel.make?.trim() && sel.model?.trim());
+}
+
 /** "Entegra" → catalog "Entegra Coach". Exact match wins; no invent. */
 export function matchCatalogMake(
   parsed: string,
