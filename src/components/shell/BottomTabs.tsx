@@ -30,7 +30,7 @@ const TABS: {
 }[] = [
   { id: "rvfax", label: "RvFACTS", short: "Facts" },
   { id: "rvcal", label: "RvCAL", short: "Cal" },
-  { id: "rvgrok", label: "RvGROK", short: "Grok" },
+  { id: "rvgrok", label: "RvGROK", short: "LIVE!" },
   { id: "rvtow", label: "RvTOW", short: "Tow" },
   { id: "rvtrips", label: "RvTRIPS", short: "Trips" },
 ];
