@@ -138,14 +138,16 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
             ) : null}
           </div>
 
-          <p
-            className={cn(
-              "sapphire-header-line mt-2.5 max-w-md text-[11px] font-medium leading-relaxed sm:text-[12.5px]",
-              accent === "gold" ? "text-gold-bright/90" : "text-sky-50/90",
-            )}
-          >
-            {copy.line}
-          </p>
+          {copy.line ? (
+            <p
+              className={cn(
+                "sapphire-header-line mt-2.5 max-w-md text-[11px] font-medium leading-relaxed sm:text-[12.5px]",
+                accent === "gold" ? "text-gold-bright/90" : "text-sky-50/90",
+              )}
+            >
+              {copy.line}
+            </p>
+          ) : null}
         </div>
       </div>
     </header>
