@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
 import { ScrollSuiteHeader } from "@/components/shell/ScrollChrome";
 import { SuiteBackdrop } from "@/components/shell/SuitePage";
+import { PullRefreshLayer } from "@/components/shell/PullResetHint";
 import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
+import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
   loadSoldDeals,
@@ -30,6 +32,16 @@ export function SoldBookApp() {
     return () => window.removeEventListener(SOLD_CHANGED_EVENT, sync);
   }, []);
 
+  const refreshSold = useCallback(() => {
+    setDeals(loadSoldDeals());
+    try {
+      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      /* */
+    }
+  }, []);
+  const pull = usePullToReset(scrollRef, refreshSold);
+
   const persistDeals = (next: SoldDeal[]) => {
     setDeals(persistSoldDeals(next));
   };
@@ -48,13 +60,15 @@ export function SoldBookApp() {
         data-app-scroll
         className="rv-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
       >
-        <ScrollSuiteHeader tab="rvsold" />
-        <SoldList
-          deals={deals}
-          onBack={() => nav?.setTab("rvfax")}
-          onTogglePaid={(id) => persistDeals(toggleDealPaid(deals, id))}
-          onRemove={(id) => persistDeals(removeSoldDeal(deals, id))}
-        />
+        <PullRefreshLayer state={pull} label="Release to refresh Sold">
+          <ScrollSuiteHeader tab="rvsold" />
+          <SoldList
+            deals={deals}
+            onBack={() => nav?.setTab("rvfax")}
+            onTogglePaid={(id) => persistDeals(toggleDealPaid(deals, id))}
+            onRemove={(id) => persistDeals(removeSoldDeal(deals, id))}
+          />
+        </PullRefreshLayer>
       </div>
     </div>
   );

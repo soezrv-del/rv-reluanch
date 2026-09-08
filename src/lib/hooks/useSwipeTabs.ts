@@ -1,4 +1,12 @@
 import { useEffect, type RefObject } from "react";
+import { hapticLight } from "@/lib/haptics";
+import {
+  IOS_SWIPE_MS,
+  shouldCommitSwipe,
+  swipeAxisLock,
+  swipeFollowDx,
+  swipeStep,
+} from "./iosGestures";
 
 /**
  * Capture-phase swipe must not claim the bottom dock. Android WebView
@@ -6,17 +14,30 @@ import { useEffect, type RefObject } from "react";
  * same touch — even with passive listeners.
  */
 export const SWIPE_BLOCK_SELECTOR =
-  "input, textarea, select, [contenteditable='true'], [role='dialog'], [data-no-swipe], [data-no-swipe-scroll], [data-bottom-dock], .bottom-tabs-nav, .bottom-tab-btn, .price-slider-wrap, .price-slider, video";
+  "input, textarea, select, [contenteditable='true'], [role='dialog'], [data-no-swipe], [data-no-swipe-scroll], [data-bottom-dock], .bottom-tabs-nav, .bottom-tab-btn, .price-slider-wrap, .price-slider, video, [data-map-engine], [data-mapbox-canvas-host], [data-route-basemap], .select-sheet-root";
 
 export function isSwipeBlockedTarget(t: EventTarget | null): boolean {
   if (!(t instanceof Element)) return false;
   return Boolean(t.closest(SWIPE_BLOCK_SELECTOR));
 }
 
+function writeSwipeVars(
+  el: HTMLElement,
+  dx: number,
+  dragging: boolean,
+) {
+  el.style.setProperty("--swipe-dx", `${dx}px`);
+  if (dragging) el.setAttribute("data-swipe-dragging", "1");
+  else el.removeAttribute("data-swipe-dragging");
+}
+
 /**
  * Easy left/right swipe to change tabs.
  * Attach to the suite <main>, not the shell — the dock must stay out of
  * the gesture target so Android tab taps fire.
+ *
+ * Follows the finger (iOS interactive pop feel) by writing `--swipe-dx`
+ * on `targetRef`. AppShell panes consume that + `--swipe-i`.
  */
 export function useSwipeTabs<T extends string>({
   order,
@@ -28,6 +49,8 @@ export function useSwipeTabs<T extends string>({
   edgeOnly = false,
   /** When false, listeners still attach but never switch tabs. */
   enabled = true,
+  /** Mount the adjacent pane as soon as the finger locks horizontal. */
+  onPeek,
 }: {
   order: readonly T[];
   active: T;
@@ -36,6 +59,7 @@ export function useSwipeTabs<T extends string>({
   threshold?: number;
   edgeOnly?: boolean;
   enabled?: boolean;
+  onPeek?: (next: T) => void;
 }) {
   useEffect(() => {
     const el = targetRef.current;
@@ -46,8 +70,48 @@ export function useSwipeTabs<T extends string>({
     let startT = 0;
     let tracking = false;
     let locked: "h" | "v" | null = null;
+    let finishing = false;
+    let finishTimer = 0;
+
+    const widthOf = () => el.getBoundingClientRect().width || window.innerWidth;
+
+    const peekToward = (dx: number) => {
+      if (!onPeek) return;
+      const idx = order.indexOf(active);
+      const step = swipeStep(dx, idx, order.length);
+      if (step === 0) return;
+      const next = order[idx + step];
+      if (next) onPeek(next);
+    };
+
+    const snapBack = () => {
+      writeSwipeVars(el, 0, false);
+    };
+
+    const commit = (next: T, destDx: number) => {
+      finishing = true;
+      writeSwipeVars(el, destDx, false);
+      const finish = () => {
+        window.clearTimeout(finishTimer);
+        el.removeEventListener("transitionend", onEndTransition);
+        writeSwipeVars(el, 0, true);
+        void hapticLight();
+        onChange(next);
+        requestAnimationFrame(() => {
+          writeSwipeVars(el, 0, false);
+          finishing = false;
+        });
+      };
+      const onEndTransition = (e: TransitionEvent) => {
+        if (e.propertyName && e.propertyName !== "transform") return;
+        finish();
+      };
+      el.addEventListener("transitionend", onEndTransition);
+      finishTimer = window.setTimeout(finish, IOS_SWIPE_MS + 40);
+    };
 
     const onStart = (e: TouchEvent) => {
+      if (finishing) return;
       if (e.touches.length !== 1) return;
       const touch = e.touches[0]!;
       if (isSwipeBlockedTarget(e.target)) {
@@ -69,71 +133,86 @@ export function useSwipeTabs<T extends string>({
     };
 
     const onMove = (e: TouchEvent) => {
-      if (!tracking || e.touches.length !== 1) return;
+      if (!tracking || finishing || e.touches.length !== 1) return;
       const touch = e.touches[0]!;
       const dx = touch.clientX - startX;
       const dy = touch.clientY - startY;
       if (!locked) {
-        // Very small deadzone + strong horizontal bias
-        if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
-        locked = Math.abs(dx) > Math.abs(dy) * 0.55 ? "h" : "v";
+        locked = swipeAxisLock(dx, dy);
+        if (!locked) return;
+        if (locked === "h") peekToward(dx);
       }
       if (locked === "v") {
         tracking = false;
+        snapBack();
+        return;
       }
+      const idx = order.indexOf(active);
+      const followed = swipeFollowDx(dx, idx, order.length, widthOf());
+      writeSwipeVars(el, followed, true);
+      if (Math.abs(followed) > 16) peekToward(followed);
     };
 
     const onEnd = (e: TouchEvent) => {
-      if (!tracking) return;
+      if (!tracking || finishing) return;
       tracking = false;
       const touch = e.changedTouches[0];
-      if (!touch) return;
+      if (!touch) {
+        snapBack();
+        return;
+      }
       const dx = touch.clientX - startX;
       const dy = touch.clientY - startY;
       const dt = Date.now() - startT;
-      const absX = Math.abs(dx);
-      const absY = Math.abs(dy);
-
-      // If we never locked horizontal but gesture is clearly horizontal, allow it
-      const clearlyHorizontal = absX > absY * 1.15 && absX >= 18;
-      if (locked === "v" && !clearlyHorizontal) return;
-      if (locked !== "h" && !clearlyHorizontal) return;
-
-      const velocity = absX / Math.max(dt, 1);
-      // Short flicks OK
-      const needed =
-        velocity > 0.3
-          ? Math.max(16, threshold * 0.45)
-          : velocity > 0.18
-            ? Math.max(20, threshold * 0.7)
-            : threshold;
-
-      if (absX < needed) return;
-      if (absX < absY * 0.95 && !clearlyHorizontal) return;
-      if (dt > 1400) return;
-
       const idx = order.indexOf(active);
-      if (idx < 0) return;
-      if (dx < 0 && idx < order.length - 1) onChange(order[idx + 1]!);
-      else if (dx > 0 && idx > 0) onChange(order[idx - 1]!);
+      const width = widthOf();
+      const followed = swipeFollowDx(dx, idx, order.length, width);
+
+      if (
+        !shouldCommitSwipe({
+          dx: followed,
+          dy,
+          dt,
+          threshold,
+          locked,
+          width,
+        })
+      ) {
+        snapBack();
+        return;
+      }
+
+      const step = swipeStep(followed, idx, order.length);
+      if (step === 0) {
+        snapBack();
+        return;
+      }
+      const next = order[idx + step];
+      if (!next) {
+        snapBack();
+        return;
+      }
+      commit(next, step > 0 ? -width : width);
     };
 
-    // Capture phase so we see events even if children scroll
+    const onCancel = () => {
+      if (finishing) return;
+      tracking = false;
+      snapBack();
+    };
+
     el.addEventListener("touchstart", onStart, { passive: true, capture: true });
     el.addEventListener("touchmove", onMove, { passive: true, capture: true });
     el.addEventListener("touchend", onEnd, { passive: true, capture: true });
-    el.addEventListener(
-      "touchcancel",
-      () => {
-        tracking = false;
-      },
-      { capture: true },
-    );
+    el.addEventListener("touchcancel", onCancel, { capture: true });
 
     return () => {
+      window.clearTimeout(finishTimer);
       el.removeEventListener("touchstart", onStart, true);
       el.removeEventListener("touchmove", onMove, true);
       el.removeEventListener("touchend", onEnd, true);
+      el.removeEventListener("touchcancel", onCancel, true);
+      writeSwipeVars(el, 0, false);
     };
-  }, [active, edgeOnly, enabled, onChange, order, targetRef, threshold]);
+  }, [active, edgeOnly, enabled, onChange, onPeek, order, targetRef, threshold]);
 }

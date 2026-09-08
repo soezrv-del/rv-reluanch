@@ -401,6 +401,8 @@ export function SelectSheet({
   return (
     <div
       className="select-sheet-root fixed inset-x-0 top-0 z-[80] flex items-end justify-center px-3 sm:items-center sm:px-4"
+      data-no-pull-reset=""
+      data-no-swipe=""
       style={{
         height: kb.vvHeight > 0 ? `${kb.vvHeight}px` : "100dvh",
         top: kb.vvOffsetTop > 0 ? kb.vvOffsetTop : 0,

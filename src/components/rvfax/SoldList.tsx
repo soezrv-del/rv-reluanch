@@ -29,7 +29,6 @@ export function SoldList({
   return (
     <div
       className="relative mx-auto w-full max-w-lg space-y-3.5 px-3 pb-28 pt-2 sm:px-4"
-      data-no-swipe
     >
       <header className="flex items-center justify-between gap-3">
         <button

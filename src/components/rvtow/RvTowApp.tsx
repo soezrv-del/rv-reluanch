@@ -615,7 +615,6 @@ export function RvTowApp() {
     <SuitePage
       tab="rvtow"
       className="rvtow-screen"
-      noSwipeScroll
       scrollRef={scrollRef}
       onPullReset={clearVehicle}
       pullLabel="Release to clear vehicle · pull down"

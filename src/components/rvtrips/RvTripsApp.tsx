@@ -126,6 +126,8 @@ import {
 import { useNavFollow } from "@/lib/trips/useNavFollow";
 import { useOffRouteReroute } from "@/lib/trips/useOffRouteReroute";
 import { useNavVoice } from "@/lib/trips/useNavVoice";
+import { usePullToReset } from "@/lib/hooks/usePullToReset";
+import { PullRefreshLayer } from "@/components/shell/PullResetHint";
 import {
   formatRemainLabel,
   resolveUpcomingGuidance,
@@ -196,6 +198,7 @@ export function RvTripsApp() {
   const [planOpen, setPlanOpen] = useState(true);
   const follow = useNavFollow(navArmed);
   const shellNav = useShellNavOptional();
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const bootSeed = useMemo(() => {
     try {
@@ -1194,10 +1197,46 @@ export function RvTripsApp() {
             : "COACH READY"
       : "ADD PROFILE";
 
+  const refreshTrips = useCallback(() => {
+    try {
+      setSavedTrips(loadSavedTrips());
+    } catch {
+      /* */
+    }
+    if (!locked) {
+      try {
+        const facts = readActiveCoach();
+        const savedUnit = loadLatestSavedUnit();
+        const resolved = resolveTripsProfileSeed({
+          locked: loadLockedProfile(),
+          activeCoach: facts,
+          savedCoach: savedUnit
+            ? {
+                year: savedUnit.year,
+                make: savedUnit.make,
+                model: savedUnit.model,
+                floorplan: savedUnit.floorplan,
+                rvType: savedUnit.data?.type ?? undefined,
+              }
+            : null,
+        });
+        if (resolved) applySeedIdentity(resolved.profile, resolved.source);
+      } catch {
+        /* */
+      }
+    }
+    if (originPlace && destPlace) setRouteKey((k) => k + 1);
+    try {
+      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      /* */
+    }
+  }, [applySeedIdentity, destPlace, locked, originPlace]);
+  const pull = usePullToReset(scrollRef, refreshTrips);
+
   return (
     <div
       className="relative flex h-full flex-col overflow-hidden bg-bg text-white"
-      data-no-swipe-scroll
     >
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <img
@@ -1215,9 +1254,11 @@ export function RvTripsApp() {
       </div>
 
       <div
+        ref={scrollRef}
         data-app-scroll
         className="rv-scroll relative z-10 h-full overflow-y-auto overscroll-y-contain"
       >
+        <PullRefreshLayer state={pull} label="Release to refresh Trips">
         <header
           data-trips-chrome
           className="relative z-40 isolate pointer-events-auto px-3 pb-2 pt-2 sm:px-4"
@@ -2332,6 +2373,7 @@ export function RvTripsApp() {
             </section>
           ) : null}
         </div>
+        </PullRefreshLayer>
       </div>
 
       {sheet ? (

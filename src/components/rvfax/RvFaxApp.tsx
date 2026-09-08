@@ -59,7 +59,7 @@ import { SuiteBackdrop } from "@/components/shell/SuitePage";
 import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
-import { PullResetHint } from "@/components/shell/PullResetHint";
+import { PullRefreshLayer } from "@/components/shell/PullResetHint";
 import { ActiveCoachChip } from "@/components/shell/ActiveCoachChip";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
@@ -188,11 +188,17 @@ export function RvFaxApp({
       /* */
     }
   }, []);
-  // Pull-to-reset was wiping search when users dragged a picker at
-  // scrollTop≈0. Disable on the search surface — use the Reset control.
-  const pullHint = usePullToReset(scrollRef, resetFax, {
-    enabled: false,
-  });
+  const refreshFax = useCallback(() => {
+    setSaved(loadSavedUnits());
+    setDeals(loadSoldDeals());
+    setDetail((prev) => (prev ? hydrateShareCoachResult(prev) : prev));
+    try {
+      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      /* */
+    }
+  }, []);
+  const pull = usePullToReset(scrollRef, refreshFax);
 
 
   const savedRef = useRef(saved);
@@ -688,12 +694,12 @@ export function RvFaxApp({
             : undefined,
         }}
       >
+        <PullRefreshLayer
+          state={pull}
+          label="Release to refresh Facts"
+        >
         <ScrollSuiteHeader tab="rvfax" />
         <ActiveCoachChip />
-        <PullResetHint
-          show={pullHint}
-          label="Release to reset search · pull down"
-        />
 
         <div className="mx-auto w-full max-w-lg space-y-3.5 px-3 pb-28 pt-0 sm:px-4">
           {/* Cascading dropdown search */}
@@ -1054,6 +1060,7 @@ export function RvFaxApp({
 
           <SuiteDisclaimer className="pb-2" />
         </div>
+        </PullRefreshLayer>
       </div>
 
       {isPro && sellUnit ? (
