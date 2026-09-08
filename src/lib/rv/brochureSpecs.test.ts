@@ -15272,3 +15272,55 @@ test("Holiday Rambler MY2027 OEM+PDF floorplans + GAP living lines", () => {
   assert.doesNotMatch(hr.slice(hr.indexOf("    Augusta: {"), hr.indexOf("    Xpedition: {")), /"2027":/);
   assert.doesNotMatch(hr.slice(hr.indexOf("    Xpedition: {"), hr.indexOf("    Admiral: {")), /"2027":/);
 });
+
+test("Fleetwood MY2027 OEM+PDF floorplans + Insight GAP", () => {
+  const idx = CATALOG_INDEX.Fleetwood;
+  assert.ok(idx);
+
+  assert.equal(idx.Bounder?.type, "Class A Gas");
+  assert.equal(idx.Bounder?.years?.includes(2027), true);
+  assert.equal(idx.Discovery?.type, "Class A Diesel");
+  assert.equal(idx.Discovery?.years?.includes(2027), true);
+  assert.equal(idx["Discovery LXE"]?.type, "Class A Diesel");
+  assert.equal(idx["Discovery LXE"]?.years?.includes(2027), true);
+  assert.equal(idx.Flair?.type, "Class A Gas");
+  assert.equal(idx.Flair?.years?.includes(2027), true);
+  assert.equal(idx.Frontier?.type, "Class A Diesel");
+  assert.equal(idx.Frontier?.years?.includes(2027), true);
+  assert.equal(idx.Palisade?.type, "Class A Diesel");
+  assert.equal(idx.Palisade?.years?.includes(2027), true);
+  assert.equal(idx.Altitude?.type, "Class C");
+  assert.equal(idx.Altitude?.years?.includes(2027), true);
+  assert.equal(idx["Altitude FS550"]?.type, "Super C");
+  assert.equal(idx["Altitude FS550"]?.fuelType, "Gas");
+  assert.equal(idx["Altitude FS550"]?.years?.includes(2027), true);
+  assert.equal(idx["Altitude FS600D"]?.type, "Super C");
+  assert.equal(idx["Altitude FS600D"]?.fuelType, "Diesel");
+  assert.equal(idx["Altitude FS600D"]?.years?.includes(2027), true);
+  assert.equal(idx.Fortis?.type, "Class A Gas");
+  assert.equal(idx.Fortis?.years?.includes(2027), true);
+
+  assert.equal(idx.Insight?.years?.includes(2026), true);
+  assert.equal(idx.Insight?.years?.includes(2027), false);
+  assert.equal(idx["Frontier GTX"]?.years?.includes(2027), false);
+  assert.equal(idx.Flex?.years?.includes(2027), false);
+  assert.equal(idx.Xcursion?.years?.includes(2027), false);
+
+  const block = src("rvData.ts");
+  const f0 = block.indexOf("\n  Fleetwood: {");
+  const f1 = block.indexOf("\n  Jayco: {");
+  const fw = block.slice(f0, f1);
+  assert.match(fw, /"2027": \["33C", "35GL", "35K", "36F"\]/);
+  assert.match(fw, /"2027": \["38K", "38N", "38W"\]/);
+  assert.match(fw, /"2027": \["40G", "40M", "44B", "44S"\]/);
+  assert.match(fw, /"2027": \["28A", "29M", "32S", "33B6"\]/);
+  assert.match(fw, /"2027": \["33TL", "37S", "38RT", "39B"\]/);
+  assert.match(fw, /"2027": \["40H", "45CS", "45DS", "45FS"\]/);
+  assert.match(fw, /"2027": \["27U", "29F", "29H", "31W"\]/);
+  assert.match(fw, /"2027": \["30SB", "30WM", "32AW"\]/);
+  assert.match(fw, /"2027": \["36CS", "36FW"\]/);
+  assert.match(fw, /"2027": \["32RW", "33HB", "34MB", "35R", "36Y"\]/);
+  assert.doesNotMatch(fw.slice(fw.indexOf("    Discovery: {"), fw.indexOf('    "Discovery LXE": {')), /"38L"/);
+  assert.doesNotMatch(fw.slice(fw.indexOf("    Fortis: {"), fw.indexOf("    Flex: {")), /"2027": .*"36T"/);
+  assert.doesNotMatch(fw.slice(fw.indexOf("    Insight: {"), fw.indexOf('    "Altitude FS550": {')), /"2027":/);
+});
