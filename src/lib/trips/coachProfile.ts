@@ -345,60 +345,27 @@ export function coachIdentityKey(
 }
 
 /**
- * Locked Trips profile wins (user overrides). Else active Facts coach.
- * Else most recently saved Facts unit. Nothing invented when all are empty.
- * `suggest` fills dims from catalog/brochure/Facts — inject a stub in tests.
+ * GPS / Trips is profile-code based and stays alone.
+ * Only a coach the user locked in Trips Profile seeds Navigate.
+ * Facts / saved-unit / suite coaches are ignored even if passed in.
+ * `suggest` is kept so call sites and tests share one signature.
  */
 export function resolveTripsProfileSeed(
   input: {
     locked?: CoachProfile | null;
+    /** Ignored — no Facts → Trips auto-handoff. */
     activeCoach?: CoachSeedIdentity | null;
+    /** Ignored — no Facts saved-unit → Trips auto-handoff. */
     savedCoach?: CoachSeedIdentity | null;
   },
   suggest: SuggestCoachFn,
 ): { profile: CoachProfile; source: CoachSeedSource } | null {
+  void suggest;
+  void input.activeCoach;
+  void input.savedCoach;
   const locked = input.locked;
   if (locked?.make && locked.model) {
     return { profile: { ...locked, locked: true, seedSource: "locked" }, source: "locked" };
   }
-
-  const facts = input.activeCoach;
-  if (facts?.year && facts.make && facts.model) {
-    return {
-      profile: {
-        ...suggest({
-          year: facts.year,
-          make: facts.make,
-          model: facts.model,
-          floorplan: facts.floorplan || "",
-          gvwrLbs: facts.gvwrLbs,
-          uvwLbs: facts.uvwLbs,
-          rvType: facts.rvType,
-        }),
-        seedSource: "facts",
-      },
-      source: "facts",
-    };
-  }
-
-  const saved = input.savedCoach;
-  if (saved?.year && saved.make && saved.model) {
-    return {
-      profile: {
-        ...suggest({
-          year: saved.year,
-          make: saved.make,
-          model: saved.model,
-          floorplan: saved.floorplan || "",
-          gvwrLbs: saved.gvwrLbs,
-          uvwLbs: saved.uvwLbs,
-          rvType: saved.rvType,
-        }),
-        seedSource: "saved",
-      },
-      source: "saved",
-    };
-  }
-
   return null;
 }

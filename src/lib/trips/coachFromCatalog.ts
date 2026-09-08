@@ -109,7 +109,9 @@ export function suggestCoachFromSelection(opts: {
 
 export function resolveTripsProfileSeed(input: {
   locked?: CoachProfile | null;
+  /** Ignored — GPS never reads the Facts session. */
   activeCoach?: CoachSeedIdentity | null;
+  /** Ignored — GPS never reads Facts saved units. */
   savedCoach?: CoachSeedIdentity | null;
 }) {
   return resolveSeed(input, suggestCoachFromSelection);

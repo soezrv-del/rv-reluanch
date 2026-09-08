@@ -1,10 +1,10 @@
 /**
- * Tow → Trips Profile handoff.
+ * Tow → Trips Profile one-shot handoff (user-initiated from Tow).
  *
- * Tow never invents coach dims. We only pass a known Facts/saved identity
- * (year / make / model / optional floorplan + known weights). Trips fills
- * height/length/width via suggestCoachFromSelection (brochure → catalog →
- * Facts → labeled class heuristic).
+ * Not a shared session. Trips must not read Tow/Facts stores.
+ * The offer is identity + known weights only. Trips fills height/length/width
+ * via suggestCoachFromSelection (brochure → catalog → offer weights →
+ * labeled class heuristic).
  *
  * A locked Trips coach is never overwritten here — the UI must confirm.
  */
@@ -15,8 +15,6 @@ import {
   type CoachSeedIdentity,
   type SuggestCoachFn,
 } from "./coachProfile.ts";
-
-export const TOW_HANDOFF_KEY = "rvfax_trips_tow_handoff_v1";
 
 export type TowHandoffOffer = CoachSeedIdentity & {
   savedAt?: string;
@@ -125,37 +123,4 @@ export function decideTowHandoff(
   }
 
   return { action: "confirm-replace", locked, incoming };
-}
-
-export function loadTowHandoffOffer(): TowHandoffOffer | null {
-  if (typeof localStorage === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(TOW_HANDOFF_KEY);
-    if (!raw) return null;
-    return normalizeTowHandoffOffer(JSON.parse(raw) as Partial<TowHandoffOffer>);
-  } catch {
-    return null;
-  }
-}
-
-export function saveTowHandoffOffer(offer: TowHandoffOffer | null): void {
-  if (typeof localStorage === "undefined") return;
-  try {
-    if (!offer) {
-      localStorage.removeItem(TOW_HANDOFF_KEY);
-      return;
-    }
-    const next = normalizeTowHandoffOffer(offer);
-    if (!next) {
-      localStorage.removeItem(TOW_HANDOFF_KEY);
-      return;
-    }
-    localStorage.setItem(TOW_HANDOFF_KEY, JSON.stringify(next));
-  } catch {
-    /* quota */
-  }
-}
-
-export function clearTowHandoffOffer(): void {
-  saveTowHandoffOffer(null);
 }
