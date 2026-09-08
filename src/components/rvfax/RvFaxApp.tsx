@@ -49,7 +49,8 @@ import {
   FACTS_EXAMPLE_CHIPS,
   pickerCoachWrite,
   resolveShareOpenSel,
-  revealFactsModelTrim,
+  revealFactsFloorplan,
+  revealFactsModel,
   selFromExampleChip,
   shouldCascadeAutoSearch,
   shouldOpenSingleHitReport,
@@ -539,9 +540,9 @@ export function RvFaxApp({
   );
 
   const refreshCascadeAfterChange = useCallback(
-    (next: SearchSel) => {
+    (next: SearchSel, field?: CascadeField) => {
       void ensureCatalogLoaded();
-      if (shouldCascadeAutoSearch(next)) {
+      if (shouldCascadeAutoSearch(next, field)) {
         runSearchNow({
           year: next.year,
           make: next.make,
@@ -557,10 +558,14 @@ export function RvFaxApp({
     [runSearchNow],
   );
 
-  // Year + Make unlocks Model / Trim — Search is not the gate.
-  const revealModelTrim = revealFactsModelTrim({
+  // Year + Make unlocks Model. Model unlocks Floorplan. Search is not the gate.
+  const revealModel = revealFactsModel({
     year,
     make,
+    model,
+    floorplan,
+  });
+  const revealFloorplan = revealFactsFloorplan({
     model,
     floorplan,
   });
@@ -581,7 +586,7 @@ export function RvFaxApp({
       );
       applySel(next);
       setSheet(null);
-      refreshCascadeAfterChange(next);
+      refreshCascadeAfterChange(next, field);
     },
     [year, make, model, floorplan, rvType, applySel, refreshCascadeAfterChange],
   );
@@ -748,7 +753,7 @@ export function RvFaxApp({
             </p>
           </section>
 
-          {/* Cascading dropdown search — year → make → model → trim */}
+          {/* Cascading dropdown search — year → make → model → floorplan */}
           <section className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4 sm:p-5">
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
@@ -878,33 +883,30 @@ export function RvFaxApp({
                 onClick={() => year && !cascade.locks.make && setSheet("make")}
                 sapphire
               />
-              {revealModelTrim ? (
-                <>
-                  <FieldButton
-                    label="Model"
-                    value={model}
-                    placeholder={cascade.locks.model || "Required"}
-                    required
-                    disabled={!make || Boolean(cascade.locks.model)}
-                    custom={cascade.custom.model}
-                    onClick={() => make && !cascade.locks.model && setSheet("model")}
-                    sapphire
-                  />
-                  <FieldButton
-                    label="Trim"
-                    value={
-                      floorplan ||
-                      (model && !cascade.locks.floorplan ? "Any floorplan" : "")
-                    }
-                    placeholder={cascade.locks.floorplan || "Optional"}
-                    disabled={!model || Boolean(cascade.locks.floorplan)}
-                    custom={cascade.custom.floorplan}
-                    onClick={() =>
-                      model && !cascade.locks.floorplan && setSheet("floorplan")
-                    }
-                    sapphire
-                  />
-                </>
+              {revealModel ? (
+                <FieldButton
+                  label="Model"
+                  value={model}
+                  placeholder={cascade.locks.model || "Required"}
+                  required
+                  disabled={!make || Boolean(cascade.locks.model)}
+                  custom={cascade.custom.model}
+                  onClick={() => make && !cascade.locks.model && setSheet("model")}
+                  sapphire
+                />
+              ) : null}
+              {revealFloorplan ? (
+                <FieldButton
+                  label="Floorplan"
+                  value={floorplan}
+                  placeholder={cascade.locks.floorplan || "Optional"}
+                  disabled={!model || Boolean(cascade.locks.floorplan)}
+                  custom={cascade.custom.floorplan}
+                  onClick={() =>
+                    model && !cascade.locks.floorplan && setSheet("floorplan")
+                  }
+                  sapphire
+                />
               ) : null}
             </div>
 

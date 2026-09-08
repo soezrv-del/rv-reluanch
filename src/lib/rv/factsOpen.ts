@@ -42,10 +42,11 @@ export const FACTS_EXAMPLE_CHIPS = [
 ] as const;
 
 /**
- * Model / Trim fields follow the cascade, not a Search click.
- * Year + Make (or an already-chosen model/trim) is enough.
+ * Model follows the cascade, not a Search click.
+ * Year + Make (or an already-chosen model/floorplan) is enough.
+ * Floorplan stays hidden until Model is selected.
  */
-export function revealFactsModelTrim(sel: {
+export function revealFactsModel(sel: {
   year?: string | null;
   make?: string | null;
   model?: string | null;
@@ -58,6 +59,17 @@ export function revealFactsModelTrim(sel: {
   );
 }
 
+/**
+ * Floorplan is its own step. Model (or a restored floorplan) unlocks it.
+ * Year + Make alone must not reveal Floorplan — that collapsed the cascade.
+ */
+export function revealFactsFloorplan(sel: {
+  model?: string | null;
+  floorplan?: string | null;
+}): boolean {
+  return Boolean(sel.model?.trim() || sel.floorplan?.trim());
+}
+
 /** Example chips stay a first-run shortcut — hide once year + make are set. */
 export function showFactsExampleChips(sel: {
   year?: string | null;
@@ -65,19 +77,30 @@ export function showFactsExampleChips(sel: {
   model?: string | null;
   floorplan?: string | null;
 }): boolean {
-  return !revealFactsModelTrim(sel);
+  return !revealFactsModel(sel);
 }
 
 /**
- * Cascade picks that can fetch results without the Search button.
- * Year / Make still load option lists via ensureCatalogLoaded.
+ * Auto-fetch / auto-open fires on Floorplan, never on Model alone.
+ * Concrete floorplan → search (single-hit opens the report).
+ * Explicit "Any floorplan" (empty value + field === "floorplan") → fetch the
+ * list; Search stays the year+make override. Single-hit honesty still applies.
  */
-export function shouldCascadeAutoSearch(sel: {
-  year?: string | null;
-  make?: string | null;
-  model?: string | null;
-}): boolean {
-  return Boolean(sel.year?.trim() && sel.make?.trim() && sel.model?.trim());
+export function shouldCascadeAutoSearch(
+  sel: {
+    year?: string | null;
+    make?: string | null;
+    model?: string | null;
+    floorplan?: string | null;
+  },
+  field?: string | null,
+): boolean {
+  const year = sel.year?.trim();
+  const make = sel.make?.trim();
+  const model = sel.model?.trim();
+  if (!year || !make || !model) return false;
+  if (sel.floorplan?.trim()) return true;
+  return field === "floorplan";
 }
 
 /** "Entegra" → catalog "Entegra Coach". Exact match wins; no invent. */
