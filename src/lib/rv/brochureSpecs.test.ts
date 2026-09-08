@@ -14012,7 +14012,7 @@ test("Keystone MY2010 honesty: lock Avalanche/Bullet/Montana/Passport/Springdale
   assert.equal(fbyYear(mt, 2010)?.includes("3720RL"), false);
   assert.equal(fbyYear(mt, 2010)?.includes("3790RD"), false);
   assert.doesNotMatch(pass, /"189ML"/);
-  assert.doesNotMatch(sprd, /Summerland/);
+  assert.equal((fbyYear(sprd, 2010) ?? []).some((c) => /Summerland|SSR-FW/i.test(c)), false);
 
   // GAP MY2010 — prefer omit / no invent.
   assert.equal(fbyYear(alp, 2010), null, "Alpine 2010 must stay GAP");
