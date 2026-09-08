@@ -26836,6 +26836,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["38F", "38N", "38R", "38K", "40M", "43M", "45A"],
       floorplansByYear: {
+        // GAP 2027 — no dated Navigator OEM/PDF year card. Living diesel is Endeavor
+        // (separate key). Do not copy 2026 forward. Do not absorb Endeavor 38K/38N/38W.
         "2005": ["38F", "38N", "38R"],
         "2006": ["38F", "38N", "38R"],
         "2007": ["38F", "38N", "38R"],
@@ -26931,6 +26933,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["38F", "38R", "40B", "36M", "40P", "40R"],
       floorplansByYear: {
+        // GAP 2027 — no dated Ambassador OEM/PDF year card. Do not copy 2026 forward.
         "2005": ["38F", "38R", "40B"],
         "2006": ["38F", "38R", "40B"],
         "2007": ["38F", "38R", "40B"],
@@ -27024,15 +27027,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Armada: {
       type: "Class A Diesel",
-      floorplans: ["36F", "38F", "40P", "44E", "45EL", "45F"],
+      floorplans: ["36F", "38F", "40P", "40M", "44B", "44LE"],
       floorplansByYear: {
         "2020": ["36F", "38F", "40P"],
         "2021": ["36F", "38F", "40P"],
         "2022": ["36F", "38F", "40P"],
         "2023": ["36F", "38F", "40P"],
-        "2024": ["36F", "38F", "40P"],
-        "2025": ["38F", "40P"],
-        "2026": ["38F", "40P", "44E", "45EL", "45F"]
+        // LOCK holidayrambler.com/models/2024-armada/ + 2025/2026 OEM year pages
+        // + library 2026-Holiday-Rambler-Armada.pdf (ARMADA26F1) /
+        // 2027-Holiday-Rambler-Armada.pdf (ARMADA27F1, 3/26). Codes 40M | 40P | 44B | 44LE.
+        // Dropped invent 38F / 44E / 45EL / 45F on 2024–2026 (dated cards).
+        "2024": ["40M", "40P", "44B", "44LE"],
+        "2025": ["40M", "40P", "44B", "44LE"],
+        "2026": ["40M", "40P", "44B", "44LE"],
+        "2027": ["40M", "40P", "44B", "44LE"]
       },
       lengthRange: [
         36,
@@ -27069,7 +27077,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2019,
-          to: 2026,
+          to: 2027,
           engine: "Cummins B6.7 / L9 360–450HP",
           horsepower: 360,
           chassis: "Freightliner XC"
@@ -27078,7 +27086,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Vacationer: {
       type: "Class A Gas",
-      floorplans: ["33C", "35K", "36F", "32A", "35P"],
+      floorplans: ["33C", "35K", "36F", "35GL"],
       floorplansByYear: {
         "2005": ["33C", "35K", "36F"],
         "2006": ["33C", "35K", "36F"],
@@ -27099,9 +27107,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2021": ["33C", "35K", "36F"],
         "2022": ["33C", "35K", "36F"],
         "2023": ["33C", "35K", "36F"],
-        "2024": ["33C", "35K", "36F"],
-        "2025": ["33C", "35K"],
-        "2026": ["33C", "35K", "32A", "35P"]
+        // LOCK holidayrambler.com/models/2024-vacationer/ through 2027-vacationer
+        // + library 2025/2026/2027-Holiday-Rambler-Vacationer.pdf (VACATIONER27F1, 03/26).
+        // Codes 33C | 35GL | 35K | 36F. Dropped invent 32A / 35P on 2026.
+        "2024": ["33C", "35GL", "35K", "36F"],
+        "2025": ["33C", "35GL", "35K", "36F"],
+        "2026": ["33C", "35GL", "35K", "36F"],
+        "2027": ["33C", "35GL", "35K", "36F"]
       },
       lengthRange: [
         33,
@@ -27153,7 +27165,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2026,
+          to: 2027,
           engine: "Ford 7.3L V8 Godzilla 350HP",
           horsepower: 350,
           chassis: "Ford F53"
@@ -27162,8 +27174,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Invicta: {
       type: "Class A Gas",
-      floorplans: ["32A", "34P", "36A", "34RB", "36TX", "36U"],
+      floorplans: ["32A", "34P", "36A", "32RW", "33HB", "34MB", "36T", "36Y", "35R"],
       floorplansByYear: {
+        // 2010–2019 invent scrub is out of scope this pack.
         "2010": ["32A", "34P", "36A"],
         "2011": ["32A", "34P", "36A"],
         "2012": ["32A", "34P", "36A"],
@@ -27178,9 +27191,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2021": ["32A", "34P", "36A"],
         "2022": ["32A", "34P"],
         "2023": ["32A", "34P"],
-        "2024": ["32A", "34P"],
-        "2025": ["32A", "34P"],
-        "2026": ["32A", "34P", "34RB", "36TX", "36U"]
+        // LOCK holidayrambler.com/models/2024-invicta/ + 2025-invicta +
+        // library 2025-Holiday-Rambler-Invicta.pdf (INVICTA25F1): 32RW | 33HB | 34MB | 36Y.
+        "2024": ["32RW", "33HB", "34MB", "36Y"],
+        "2025": ["32RW", "33HB", "34MB", "36Y"],
+        // LOCK 2026-invicta + library 2026-Holiday-Rambler-Invicta.pdf (INVICTA26F1, 4/25):
+        // 32RW | 33HB | 34MB | 36T | 36Y. Dropped invent 32A / 34P / 34RB / 36TX / 36U.
+        "2026": ["32RW", "33HB", "34MB", "36T", "36Y"],
+        // LOCK 2027-invicta + library 2027-Holiday-Rambler-Invicta.pdf (INVICTA27F1, 3/26):
+        // 32RW | 33HB | 34MB | 35R | 36Y. 35R is MY27-new; do not copy 36T onto 2027.
+        "2027": ["32RW", "33HB", "34MB", "35R", "36Y"]
       },
       lengthRange: [
         32,
@@ -27232,7 +27252,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2026,
+          to: 2027,
           engine: "Ford 7.3L V8 Godzilla",
           horsepower: 350,
           chassis: "Ford F53"
@@ -27243,6 +27263,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["25M", "29M", "31M", "26ME", "32DBH"],
       floorplansByYear: {
+        // GAP 2027 — no dated Augusta OEM/PDF. Living Class C is Incline (separate key).
+        // Do not map Augusta 25M/29M/31M onto Incline 27U/29H/31W.
         "2010": ["25M", "29M", "31M"],
         "2011": ["25M", "29M", "31M"],
         "2012": ["25M", "29M", "31M"],
@@ -27330,6 +27352,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["19CB", "24CB", "28A", "28B"],
       floorplansByYear: {
+        // GAP 2027 — no dated Xpedition OEM/PDF year card. Do not copy 2026 forward.
         "2024": ["19CB", "24CB"],
         "2025": ["19CB", "24CB"],
         "2026": ["19CB", "24CB", "28A", "28B"]
@@ -27373,6 +27396,295 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Sprinter turbodiesel or ProMaster gas",
           horsepower: 208,
           chassis: "Van chassis"
+        }
+      ]
+    },
+    Admiral: {
+      type: "Class A Gas",
+      floorplans: ["28A", "29M", "32N", "34J"],
+      floorplansByYear: {
+        // LOCK holidayrambler.com/models/2026-admiral/ + library 2026-Holiday-Rambler-Admiral.pdf
+        // (ADMIRAL26F1, 4/25) and 2027-admiral + 2027-Holiday-Rambler-Admiral.pdf (ADMIRAL27F1, 3/26).
+        "2026": ["28A", "29M", "32N", "34J"],
+        "2027": ["28A", "29M", "32N", "34J"]
+      },
+      lengthRange: [29, 35],
+      weightRange: [16000, 22000],
+      slideouts: 2,
+      sleeps: 6,
+      msrpRange: [160000, 220000],
+      engine: "Ford 7.3L V8 335HP",
+      horsepower: 335,
+      torqueLbFt: 468,
+      chassis: "Ford F53",
+      transmission: "Ford 6-Speed Automatic w/Overdrive",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.25,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 8000,
+      freshWater: 50,
+      grayWater: 37,
+      blackWater: 37,
+      fuelCapacityGal: 80,
+      generator: "Onan gas",
+      awningLength: 14,
+      ceilingHeight: 82,
+      founded: 1953,
+      warrantyYears: 1,
+      yearStart: 2026,
+      description: "Holiday Rambler Admiral — entry Class A gas on Ford F53. Dated MY26–27 OEM/PDF: 28A / 29M / 32N / 34J. Brochure Ford 7.3L 335 HP / 468 lb-ft.",
+      powertrainByYear: [
+        {
+          from: 2026,
+          to: 2027,
+          engine: "Ford 7.3L V8 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "Ford 6-Speed Automatic w/Overdrive",
+          notes: "ADMIRAL27F1 / ADMIRAL26F1 — 335 HP / 468 lb-ft"
+        }
+      ]
+    },
+    Endeavor: {
+      type: "Class A Diesel",
+      floorplans: ["38K", "38N", "38W"],
+      floorplansByYear: {
+        // LOCK holidayrambler.com/models/2026-endeavor/: 38N | 38W.
+        "2026": ["38N", "38W"],
+        // LOCK 2027-endeavor OEM lists 38L; PDF 2027-Holiday-Rambler-Endeavor.pdf
+        // (ENDEAVOR27F1, 3/26) is 38K | 38N | 38W only — omit 38L.
+        "2027": ["38K", "38N", "38W"]
+      },
+      lengthRange: [38, 41],
+      weightRange: [28000, 36000],
+      slideouts: 3,
+      sleeps: 8,
+      msrpRange: [450000, 530000],
+      engine: "Cummins ISB 6.7L 360HP",
+      horsepower: 360,
+      torqueLbFt: 800,
+      chassis: "Freightliner XCR Titan Bridge",
+      transmission: "Allison 3000 MH 6-Speed",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.5,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 10000,
+      freshWater: 105,
+      grayWater: 75,
+      blackWater: 50,
+      fuelCapacityGal: 100,
+      generator: "Onan Diesel",
+      awningLength: 18,
+      ceilingHeight: 84,
+      founded: 1953,
+      warrantyYears: 1,
+      yearStart: 2026,
+      description: "Holiday Rambler Endeavor — diesel Class A (REV). MY27 PDF 38K / 38N / 38W (omit OEM-page 38L). MY26 OEM 38N / 38W. Cummins ISB 6.7 360 HP / 800 lb-ft. Not Navigator.",
+      powertrainByYear: [
+        {
+          from: 2026,
+          to: 2027,
+          engine: "Cummins ISB 6.7L 360HP",
+          horsepower: 360,
+          torqueLbFt: 800,
+          chassis: "Freightliner XCR Titan Bridge",
+          transmission: "Allison 3000 MH 6-Speed",
+          notes: "ENDEAVOR27F1 — 360 HP / 800 lb-ft. Do not absorb Navigator codes."
+        }
+      ]
+    },
+    Nautica: {
+      type: "Class A Diesel",
+      floorplans: ["33TL", "34RX", "37S"],
+      floorplansByYear: {
+        // LOCK holidayrambler.com/models/2026-nautica/ + 2027-nautica
+        // + library 2027-Holiday-Rambler-Nautica.pdf (NAUTICA27F1, 3/26): 33TL | 34RX | 37S.
+        "2026": ["33TL", "34RX", "37S"],
+        "2027": ["33TL", "34RX", "37S"]
+      },
+      lengthRange: [35, 39],
+      weightRange: [26000, 34000],
+      slideouts: 2,
+      sleeps: 6,
+      msrpRange: [380000, 450000],
+      engine: "Cummins 6.7L 340HP",
+      horsepower: 340,
+      torqueLbFt: 700,
+      chassis: "Freightliner XCR Delta Foundation / Titan Bridge",
+      transmission: "Allison 2500 MH 6-Speed",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.45,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 10000,
+      freshWater: 96,
+      grayWater: 65,
+      blackWater: 45,
+      fuelCapacityGal: 100,
+      generator: "Onan Diesel",
+      awningLength: 18,
+      ceilingHeight: 84,
+      founded: 1953,
+      warrantyYears: 1,
+      yearStart: 2026,
+      description: "Holiday Rambler Nautica — mid-diesel Class A. Dated MY26–27 OEM/PDF: 33TL / 34RX / 37S. Brochure Cummins 6.7 340 HP / 700 lb-ft on Freightliner XCR.",
+      powertrainByYear: [
+        {
+          from: 2026,
+          to: 2027,
+          engine: "Cummins 6.7L 340HP",
+          horsepower: 340,
+          torqueLbFt: 700,
+          chassis: "Freightliner XCR Delta Foundation / Titan Bridge",
+          transmission: "Allison 2500 MH 6-Speed",
+          notes: "NAUTICA27F1 spec table 340 HP / 700 lb-ft"
+        }
+      ]
+    },
+    Incline: {
+      type: "Class C",
+      floorplans: ["27U", "29H", "31W"],
+      floorplansByYear: {
+        // LOCK holidayrambler.com/models/2026-incline/ + 2027-incline
+        // + library 2027-Holiday-Rambler-Incline.pdf (ALTITUDE27F1 / Incline sheet, 3/26).
+        // 27U | 29H | 31W. Do not map Augusta 25M/29M/31M onto this key.
+        "2026": ["27U", "29H", "31W"],
+        "2027": ["27U", "29H", "31W"]
+      },
+      lengthRange: [29, 33],
+      weightRange: [12000, 14500],
+      slideouts: 1,
+      sleeps: 6,
+      msrpRange: [145000, 185000],
+      engine: "Ford 7.3L Premium 325HP",
+      horsepower: 325,
+      torqueLbFt: 450,
+      chassis: "Ford E-450",
+      transmission: "Electronic 6-speed automatic",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.3,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 7500,
+      freshWater: 50,
+      grayWater: 36,
+      blackWater: 36,
+      fuelCapacityGal: 55,
+      generator: "Onan gas",
+      awningLength: 20,
+      ceilingHeight: 84,
+      founded: 1953,
+      warrantyYears: 1,
+      yearStart: 2026,
+      gvwrLbs: 14500,
+      description: "Holiday Rambler Incline — Ford E-450 Class C gas. Dated MY26–27 OEM/PDF: 27U / 29H / 31W. Brochure 7.3L Premium 325 HP / 450 lb-ft. Not Augusta.",
+      powertrainByYear: [
+        {
+          from: 2026,
+          to: 2027,
+          engine: "Ford 7.3L Premium 325HP",
+          horsepower: 325,
+          torqueLbFt: 450,
+          chassis: "Ford E-450",
+          transmission: "Electronic 6-speed automatic",
+          towingCapacity: 7500,
+          gvwrLbs: 14500,
+          notes: "Incline MY27 PDF E-450 325/450 — not F53 335/468, not Augusta"
+        }
+      ]
+    },
+    "Incline FS550": {
+      type: "Super C",
+      floorplans: ["30SB", "30WM", "32AW"],
+      floorplansByYear: {
+        // LOCK holidayrambler.com/models/2026-incline-fs550/ + 2027-incline-fs550
+        // + library 2027-Holiday-Rambler-Incline-FS550.pdf (INCLINE FS550 27F1, 3/26).
+        "2026": ["30SB", "30WM", "32AW"],
+        "2027": ["30SB", "30WM", "32AW"]
+      },
+      lengthRange: [30, 35],
+      weightRange: [16000, 22000],
+      slideouts: 2,
+      sleeps: 6,
+      msrpRange: [200000, 250000],
+      engine: "Ford 7.3L V8 335HP",
+      horsepower: 335,
+      torqueLbFt: 468,
+      chassis: "Ford F-550 (4x2 or 4x4)",
+      transmission: "Electronic 10-speed automatic",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 12000,
+      freshWater: 50,
+      grayWater: 37,
+      blackWater: 37,
+      fuelCapacityGal: 40,
+      generator: "Onan gas",
+      awningLength: 12,
+      ceilingHeight: 84,
+      founded: 1953,
+      warrantyYears: 1,
+      yearStart: 2026,
+      gvwrLbs: 22000,
+      description: "Holiday Rambler Incline FS550 — Super C gas on Ford F-550. Dated MY26–27 OEM/PDF: 30SB / 30WM / 32AW. Brochure 7.3 335 HP / 468 lb-ft. Separate from E-450 Incline.",
+      powertrainByYear: [
+        {
+          from: 2026,
+          to: 2027,
+          engine: "Ford 7.3L V8 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F-550 (4x2 or 4x4)",
+          transmission: "Electronic 10-speed automatic",
+          notes: "FS550 Super C — not E-450 Incline 325/450"
+        }
+      ]
+    },
+    "Incline FS600D": {
+      type: "Super C",
+      floorplans: ["36CS", "36FW"],
+      floorplansByYear: {
+        // LOCK holidayrambler.com/models/2026-incline-fs600d/ + 2027-incline-fs600d.
+        "2026": ["36CS", "36FW"],
+        "2027": ["36CS", "36FW"]
+      },
+      lengthRange: [36, 37],
+      weightRange: [18000, 24000],
+      slideouts: 2,
+      sleeps: 6,
+      msrpRange: [290000, 350000],
+      engine: "Ford 6.7L Power Stroke 330HP",
+      horsepower: 330,
+      torqueLbFt: 950,
+      chassis: "Ford F-600 4x4",
+      transmission: "10-speed automatic",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.5,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 15000,
+      generator: "Onan diesel",
+      awningLength: 16,
+      ceilingHeight: 84,
+      founded: 1953,
+      warrantyYears: 1,
+      yearStart: 2026,
+      description: "Holiday Rambler Incline FS600D — Super C diesel on Ford F-600 4x4. Dated MY26–27 OEM: 36CS / 36FW. Brochure 6.7L Power Stroke 330 HP / 950 lb-ft.",
+      powertrainByYear: [
+        {
+          from: 2026,
+          to: 2027,
+          engine: "Ford 6.7L Power Stroke 330HP",
+          horsepower: 330,
+          torqueLbFt: 950,
+          chassis: "Ford F-600 4x4",
+          transmission: "10-speed automatic",
+          notes: "FS600D Super C diesel — not FS550 gas, not E-450 Incline"
         }
       ]
     }
