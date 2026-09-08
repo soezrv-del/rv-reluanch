@@ -191,3 +191,19 @@ test("RvTowApp wires honest match and no longer invents custom GCWR", () => {
   assert.equal(src.includes("maxTow+payload+5000"), false);
   assert.equal(/payload \+ 5000/.test(src), false);
 });
+
+test("RvTowApp glance layout: hero guides, compact checks, collapsed Details", () => {
+  const src = readFileSync(join(root, "../../components/rvtow/RvTowApp.tsx"), "utf8");
+  const heroCall = src.indexOf("<HitchGuideHero");
+  const vehicleLabel = src.indexOf("Tow Vehicle");
+  const handoff = src.indexOf("<SuiteHandoffCard");
+  const details = src.indexOf("<MatchDetailsBlock");
+  assert.ok(heroCall > 0 && heroCall < vehicleLabel, "hero guides sit above the vehicle form");
+  assert.ok(handoff > 0 && details > handoff, "Details sits under the Trips handoff");
+  assert.match(src, /<details /);
+  assert.doesNotMatch(src, /<details[^>]*\sopen\b/);
+
+  const checkRow = src.slice(src.indexOf("function CheckRow"), src.indexOf("function fmtK"));
+  assert.doesNotMatch(checkRow, /check\.detail/);
+  assert.match(checkRow, /value/);
+});

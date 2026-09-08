@@ -733,6 +733,36 @@ export function RvTowApp() {
           </div>
         )}
 
+        {!toadMode && !reverseMode ? (
+          <>
+            {hasVehicle || gvwrN > 0 ? (
+              <p className="px-0.5 text-[12px] font-semibold leading-snug text-white/80">
+                {hasVehicle
+                  ? `${year || "—"} ${make} ${model}`
+                  : "No truck yet"}
+                {gvwrN > 0
+                  ? ` · ${gvwrN.toLocaleString()} lb ${
+                      rvType === "Fifth Wheel" ? "5th" : "TT"
+                    }`
+                  : ""}
+              </p>
+            ) : null}
+            <HitchGuideHero
+              rvType={rvType}
+              hitchLbs={pinEst}
+              showHitchLbs={hasVehicle && pinEst > 0}
+            />
+            {hasVehicle ? (
+              <MatchVerdictBlock
+                verdict={verdict}
+                recommendedTow={recommendedTow}
+                maxTow={rating.maxTow}
+                gvwrLbs={gvwrN}
+              />
+            ) : null}
+          </>
+        ) : null}
+
         {reverseMode ? null : (
         <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
           <p className="mb-1 flex items-center gap-1.5 text-[12px] font-bold text-blue">
@@ -933,11 +963,6 @@ export function RvTowApp() {
                     </p>
                   </div>
                 </div>
-                <p className="mt-2 text-[10px] font-medium leading-relaxed text-white">
-                  OEM max is the tested ceiling (e.g. SAE J2807 when equipped).
-                  Most guides plan trailers around ~80% of max tow so hills,
-                  wind, passengers, and gear stay inside a comfort margin.
-                </p>
               </div>
 
               <p className="mt-2 text-[12px] font-semibold text-white">
@@ -1091,22 +1116,6 @@ export function RvTowApp() {
             />
           )}
 
-          {hasVehicle && !reverseMode ? (
-            <MatchVerdictBlock
-              verdict={verdict}
-              recommendedTow={recommendedTow}
-              maxTow={rating.maxTow}
-            />
-          ) : null}
-
-          {hasVehicle && !reverseMode && rating.kind === "suv" && gvwrN > 8000 ? (
-            <p className="mt-2 flex gap-1.5 text-[11px] leading-relaxed text-amber">
-              <Info className="mt-0.5 size-3.5 shrink-0" />
-              Heavy trailers on SUVs need careful weight distribution, brake
-              controller, and payload check (passengers + gear count against
-              payload).
-            </p>
-          ) : null}
         </section>
         )}
 
@@ -1143,39 +1152,6 @@ export function RvTowApp() {
           </>
         ) : null}
 
-        {rvType === "Fifth Wheel" && vehicleIsTruck && !toadMode && !reverseMode && (
-          <section className="glass-surface rounded-[var(--radius-xl)] p-3.5">
-            <p className="mb-3 text-[13px] font-bold text-blue">
-              5th Wheel: Pin Weight & Hitch Guide
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <GuideCard
-                title="5th Wheel"
-                sub="Pin Weight"
-                pct="18–25%"
-                pros={[
-                  "More stable at speed",
-                  "Higher weight limits",
-                  "Lower center of gravity",
-                ]}
-                cons={["Bed hitch required", "Bed access reduced"]}
-                active
-              />
-              <GuideCard
-                title="Travel Trailer"
-                sub="Tongue Weight"
-                pct="10–15%"
-                pros={[
-                  "No bed modification",
-                  "Ball hitch (universal)",
-                  "Full bed access kept",
-                ]}
-                cons={["Lower weight limit", "More sway risk"]}
-              />
-            </div>
-          </section>
-        )}
-
         <SuiteHandoffCard
           saved={deviceSaved}
           hasVehicle={hasVehicle}
@@ -1185,6 +1161,18 @@ export function RvTowApp() {
           }
           onOpenTrips={openTripsProfile}
         />
+
+        {!toadMode && !reverseMode ? (
+          <MatchDetailsBlock
+            verdict={verdict}
+            recommendedTow={recommendedTow}
+            maxTow={rating.maxTow}
+            hasVehicle={hasVehicle}
+            suvHeavy={
+              hasVehicle && rating.kind === "suv" && gvwrN > 8000
+            }
+          />
+        ) : null}
 
         <SuiteDisclaimer />
 
@@ -1475,86 +1463,142 @@ function BedAdvisory({
   return (
     <div className={cn("mt-2 rounded-[var(--radius-md)] border px-3 py-2.5", tone)}>
       <p className="text-[12px] font-bold">{fit.title}</p>
-      <p className="mt-1 text-[11px] font-medium leading-relaxed text-white/85">
-        {fit.detail}
-      </p>
     </div>
   );
+}
+
+function glanceTitle(check: TowCheck, hitchKind: TowMatchVerdict["hitchKind"]) {
+  const hitch = hitchKind === "pin" ? "Pin" : "Tongue";
+  if (check.id === "tow") {
+    if (check.level === "skip") return "Need trailer GVWR";
+    if (check.level === "fail") {
+      return check.title.includes("No max") ? "No max tow" : "Trailer over max tow";
+    }
+    if (check.level === "warn") return "Max tow · thin margin";
+    return "Max tow";
+  }
+  if (check.id === "hitch") {
+    if (check.level === "skip") return `${hitch} vs payload`;
+    if (check.level === "fail") return `${hitch} over payload`;
+    if (check.level === "warn") return `${hitch} · above 85%`;
+    return hitch;
+  }
+  if (check.id === "gcwr") {
+    if (check.level === "fail") return check.title;
+    return "GCWR";
+  }
+  return check.title;
+}
+
+function glanceValue(
+  check: TowCheck,
+  verdict: TowMatchVerdict,
+  maxTow: number,
+  gvwrLbs: number,
+) {
+  if (check.id === "tow") {
+    if (!(maxTow > 0) || !(gvwrLbs > 0)) return "—";
+    const margin = maxTow - gvwrLbs;
+    return `${margin > 0 ? "+" : ""}${margin.toLocaleString()}`;
+  }
+  if (check.id === "hitch") {
+    return verdict.hitchLoad > 0 ? verdict.hitchLoad.toLocaleString() : "—";
+  }
+  if (check.id === "gcwr") {
+    return verdict.combined
+      ? verdict.combined.combinedLbs.toLocaleString()
+      : "—";
+  }
+  return "";
 }
 
 function MatchVerdictBlock({
   verdict,
   recommendedTow,
   maxTow,
+  gvwrLbs,
 }: {
   verdict: TowMatchVerdict;
   recommendedTow: number;
   maxTow: number;
+  gvwrLbs: number;
 }) {
   const hard = verdict.checks.filter((c) => c.id !== "bed");
   const firstFail = hard.find((c) => c.level === "fail");
   return (
-    <div className="mt-3 space-y-2">
+    <section className="glass-surface space-y-2 rounded-[var(--radius-xl)] p-3.5">
       <div
         className={cn(
-          "rounded-[var(--radius-md)] border px-3 py-3 text-sm font-semibold",
+          "flex min-h-11 items-center rounded-[var(--radius-md)] border px-3 text-sm font-semibold",
           verdict.overallOk
             ? "border-green/40 bg-green/10 text-green"
             : "border-ruby-border bg-ruby-soft text-ruby",
         )}
       >
         {verdict.overallOk
-          ? "✓ Tow, hitch, and GCWR clear — confirm the door sticker"
+          ? "✓ Match clear"
           : firstFail
-            ? `⚠ Match fails — ${firstFail.title}`
+            ? `⚠ ${firstFail.title}`
             : "⚠ Match incomplete"}
       </div>
       {hard.map((check) => (
-        <CheckRow key={check.id} check={check} />
+        <CheckRow
+          key={check.id}
+          title={glanceTitle(check, verdict.hitchKind)}
+          value={glanceValue(check, verdict, maxTow, gvwrLbs)}
+          level={check.level}
+        />
       ))}
       {verdict.overallOk && verdict.withinRecommended ? (
-        <div className="rounded-[var(--radius-md)] border border-emerald-400/35 bg-emerald-500/10 px-3 py-2.5 text-[12px] font-semibold text-emerald-100">
-          ✓ Within recommended planning weight (≤{" "}
-          {recommendedTow.toLocaleString()} lbs / 80% of max)
-        </div>
+        <CheckRow
+          title="Planning"
+          value={recommendedTow.toLocaleString()}
+          level="pass"
+        />
       ) : null}
       {verdict.towOk && verdict.overRecommendedUnderMax ? (
-        <div className="rounded-[var(--radius-md)] border border-amber/40 bg-amber/10 px-3 py-2.5 text-[12px] font-semibold leading-relaxed text-amber">
-          ⚠ Above recommended {recommendedTow.toLocaleString()} lbs but under OEM
-          max {maxTow.toLocaleString()} lbs — legal when equipped, but little
-          margin for hills, wind, or gear. Prefer a lighter trailer or
-          higher-rated truck.
-        </div>
+        <CheckRow
+          title="Planning · thin"
+          value={recommendedTow.toLocaleString()}
+          level="warn"
+        />
       ) : null}
-    </div>
+    </section>
   );
 }
 
-function CheckRow({ check }: { check: TowCheck }) {
+function CheckRow({
+  title,
+  value,
+  level,
+}: {
+  title: string;
+  value: string;
+  level: TowCheck["level"];
+}) {
   const tone =
-    check.level === "fail"
+    level === "fail"
       ? "border-ruby-border bg-ruby-soft/60 text-ruby"
-      : check.level === "warn"
+      : level === "warn"
         ? "border-amber/40 bg-amber/10 text-amber"
-        : check.level === "skip"
+        : level === "skip"
           ? "border-white/15 bg-black/25 text-white/80"
           : "border-white/15 bg-black/20 text-white";
   const mark =
-    check.level === "fail"
-      ? "⚠"
-      : check.level === "warn"
-        ? "⚠"
-        : check.level === "skip"
-          ? "·"
-          : "✓";
+    level === "fail" || level === "warn" ? "⚠" : level === "skip" ? "·" : "✓";
   return (
-    <div className={cn("rounded-[var(--radius-md)] border px-3 py-2.5", tone)}>
-      <p className="text-[12px] font-semibold">
-        {mark} {check.title}
+    <div
+      className={cn(
+        "flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-md)] border px-3",
+        tone,
+      )}
+    >
+      <p className="min-w-0 truncate text-[13px] font-semibold">
+        {mark} {title}
       </p>
-      <p className="mt-1 text-[11px] font-medium leading-relaxed text-white/80">
-        {check.detail}
-      </p>
+      {value ? (
+        <p className="shrink-0 text-[18px] font-black tabular-nums">{value}</p>
+      ) : null}
     </div>
   );
 }
@@ -1624,44 +1668,186 @@ function Stat({ value, sub }: { value: string; sub: string }) {
   );
 }
 
+function HitchGuideHero({
+  rvType,
+  hitchLbs,
+  showHitchLbs,
+}: {
+  rvType: string;
+  hitchLbs: number;
+  showHitchLbs: boolean;
+}) {
+  const fifth = rvType === "Fifth Wheel";
+  return (
+    <section className="glass-surface rounded-[var(--radius-xl)] p-4">
+      <p className="text-[10px] font-bold tracking-[0.14em] text-blue">
+        PIN WEIGHT & HITCH GUIDE
+      </p>
+      <p className="mt-1 text-[15px] font-bold text-white">
+        {fifth ? "5th-wheel pin" : "Bumper-pull tongue"}
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-2.5">
+        <GuideCard
+          title="5th Wheel"
+          sub="Pin Weight"
+          pct="18–25%"
+          hitchLbs={fifth && showHitchLbs ? hitchLbs : undefined}
+          active={fifth}
+        />
+        <GuideCard
+          title="Travel Trailer"
+          sub="Tongue Weight"
+          pct="10–15%"
+          hitchLbs={!fifth && showHitchLbs ? hitchLbs : undefined}
+          active={!fifth}
+        />
+      </div>
+    </section>
+  );
+}
+
 function GuideCard({
   title,
   sub,
   pct,
-  pros,
-  cons,
+  hitchLbs,
   active,
 }: {
   title: string;
   sub: string;
   pct: string;
-  pros: string[];
-  cons: string[];
+  hitchLbs?: number;
   active?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "rounded-[var(--radius-md)] border px-2.5 py-3",
-        active ? "border-blue/40 bg-blue/10" : "border-border bg-black/30",
+        "rounded-[var(--radius-lg)] border px-2.5 py-4",
+        active
+          ? "border-blue/50 bg-blue/15 shadow-[0_0_22px_rgba(77,166,255,0.2)]"
+          : "border-border bg-black/30",
       )}
     >
-      <p className="text-center text-[12px] font-bold text-blue">{title}</p>
-      <p className="text-center text-[10px] text-white">{sub}</p>
-      <p className="mt-1 text-center text-xl font-bold text-blue">{pct}</p>
-      <p className="text-center text-[9px] text-white">of trailer GVWR</p>
-      <ul className="mt-2 space-y-1">
-        {pros.map((p) => (
-          <li key={p} className="text-[10px] text-green">
-            ✓ {p}
-          </li>
-        ))}
-        {cons.map((c) => (
-          <li key={c} className="text-[10px] text-amber">
-            ⚠ {c}
+      <p className="text-center text-[11px] font-bold tracking-[0.12em] text-blue">
+        {title}
+      </p>
+      <p className="mt-0.5 text-center text-[12px] font-semibold text-white">
+        {sub}
+      </p>
+      <p
+        className={cn(
+          "mt-2 text-center font-black tabular-nums leading-none text-blue",
+          active ? "text-4xl" : "text-3xl",
+        )}
+      >
+        {pct}
+      </p>
+      <p className="mt-1.5 text-center text-[11px] text-white/75">
+        of trailer GVWR
+      </p>
+      {active && hitchLbs && hitchLbs > 0 ? (
+        <p className="mt-3 text-center text-[22px] font-black tabular-nums text-white">
+          {hitchLbs.toLocaleString()}
+          <span className="ml-1 text-[12px] font-semibold text-white/65">
+            lbs
+          </span>
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+type DetailItem = { title: string; body: string };
+
+function collectMatchDetails({
+  verdict,
+  recommendedTow,
+  maxTow,
+  hasVehicle,
+  suvHeavy,
+}: {
+  verdict: TowMatchVerdict;
+  recommendedTow: number;
+  maxTow: number;
+  hasVehicle: boolean;
+  suvHeavy: boolean;
+}): DetailItem[] {
+  const items: DetailItem[] = [];
+  for (const check of verdict.checks) {
+    if (check.detail) items.push({ title: check.title, body: check.detail });
+  }
+  if (verdict.overallOk && verdict.withinRecommended) {
+    items.push({
+      title: "Within recommended planning weight",
+      body: `Within recommended planning weight (≤ ${recommendedTow.toLocaleString()} lbs / 80% of max).`,
+    });
+  }
+  if (verdict.towOk && verdict.overRecommendedUnderMax) {
+    items.push({
+      title: "Thin planning margin",
+      body: `Above recommended ${recommendedTow.toLocaleString()} lbs but under OEM max ${maxTow.toLocaleString()} lbs — legal when equipped, but little margin for hills, wind, or gear. Prefer a lighter trailer or higher-rated truck.`,
+    });
+  }
+  if (suvHeavy) {
+    items.push({
+      title: "Heavy trailer on an SUV",
+      body: "Heavy trailers on SUVs need careful weight distribution, brake controller, and payload check (passengers + gear count against payload).",
+    });
+  }
+  if (hasVehicle) {
+    items.push({
+      title: "Recommended tow (planning)",
+      body: "OEM max is the tested ceiling (e.g. SAE J2807 when equipped). Most guides plan trailers around ~80% of max tow so hills, wind, passengers, and gear stay inside a comfort margin.",
+    });
+  }
+  items.push({
+    title: "5th Wheel · Pin Weight 18–25%",
+    body: "More stable at speed. Higher weight limits. Lower center of gravity. Bed hitch required; bed access reduced.",
+  });
+  items.push({
+    title: "Travel Trailer · Tongue Weight 10–15%",
+    body: "No bed modification. Ball hitch (universal). Full bed access kept. Lower weight limit; more sway risk.",
+  });
+  return items;
+}
+
+function MatchDetailsBlock({
+  verdict,
+  recommendedTow,
+  maxTow,
+  hasVehicle,
+  suvHeavy,
+}: {
+  verdict: TowMatchVerdict;
+  recommendedTow: number;
+  maxTow: number;
+  hasVehicle: boolean;
+  suvHeavy: boolean;
+}) {
+  const items = collectMatchDetails({
+    verdict,
+    recommendedTow,
+    maxTow,
+    hasVehicle,
+    suvHeavy,
+  });
+  if (items.length === 0) return null;
+  return (
+    <details className="glass-surface group rounded-[var(--radius-xl)] p-3.5">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-[13px] font-bold text-white [&::-webkit-details-marker]:hidden">
+        Details
+        <ChevronDown className="size-4 shrink-0 text-blue transition-transform group-open:rotate-180" />
+      </summary>
+      <ul className="mt-3 space-y-3 border-t border-white/10 pt-3">
+        {items.map((item) => (
+          <li key={item.title}>
+            <p className="text-[12px] font-semibold text-white">{item.title}</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-white/75">
+              {item.body}
+            </p>
           </li>
         ))}
       </ul>
-    </div>
+    </details>
   );
 }
