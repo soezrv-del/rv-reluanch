@@ -4,10 +4,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const src = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), "../../components/rvcal/RvCalApp.tsx"),
-  "utf8",
-);
+const root = dirname(fileURLToPath(import.meta.url));
+const src = readFileSync(join(root, "../../components/rvcal/RvCalApp.tsx"), "utf8");
+const header = readFileSync(join(root, "../../components/shell/SapphireHeader.tsx"), "utf8");
+const constants = readFileSync(join(root, "../../components/shell/shellConstants.ts"), "utf8");
 
 test("rvCAL keeps one screen-bottom disclaimer and no per-card fine print", () => {
   const disclaimers = src.match(/<SuiteDisclaimer[\s\S]*?<\/SuiteDisclaimer>/g) ?? [];
@@ -37,4 +37,16 @@ test("rvCAL keeps one screen-bottom disclaimer and no per-card fine print", () =
   assert.match(src, /not a loan offer or prequalification/);
   assert.match(src, /Preview \/ demo rates, not live RateAPI/);
   assert.match(src, /not live offers or a loan commitment/);
+});
+
+test("rvCAL header drops the ZIP/lender subtitle and keeps the verified mark", () => {
+  const calCopy = constants.match(/rvcal:\s*\{[\s\S]*?\n  \},/);
+  assert.ok(calCopy?.[0], "Cal PAGE_COPY block");
+  assert.match(calCopy[0], /title:\s*"RvCAL"/);
+  assert.match(calCopy[0], /line:\s*""/);
+  assert.doesNotMatch(calCopy[0], /ZIP-based calculator with lender comparisons/);
+  assert.doesNotMatch(constants, /ZIP-based calculator/);
+  assert.doesNotMatch(constants, /lender comparisons/);
+  assert.match(header, /\{copy\.line \? \(/);
+  assert.match(header, /<MetalVerifiedTrue/);
 });
