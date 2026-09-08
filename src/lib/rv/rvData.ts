@@ -9606,20 +9606,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       floorplansByYear: {
         // LOCK MY2010 — 10_Catalina_TT.pdf CreationDate 2010-04-29 + RVUSA 2010 year page.
         // Exact-match only. Do not copy 2009 or 2011 → 2010.
-        "2010": [
-          "20RD",
-          "21BH",
-          "22FB",
-          "24FBS",
-          "26BH",
-          "27BHS",
-          "28BHS",
-          "29RLS",
-          "29RKS",
-          "30BHS",
-          "32BHDS",
-          "38BHDS"
-        ],
+        "2010": ["20RD", "21BH", "22FB", "24FBS", "26BH", "27BHS", "28BHS", "29RLS", "29RKS", "30BHS", "32BHDS", "38BHDS"],
         "2012": ["243RBS", "261BH", "263BHS", "283RKS"],
         "2013": ["243RBS", "261BH", "263BHS", "283RKS"],
         "2014": ["243RBS", "261BH", "263BHS", "263FKDS", "283RKS"],
