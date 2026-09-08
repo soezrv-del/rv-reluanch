@@ -3,10 +3,11 @@ import {
   ShellNavContext,
   type ShellNavValue,
   type CalSeed,
+  type FactsTowHandoff,
   type TripsHandoff,
 } from "./ShellNavContext";
 
-export type { ShellNavValue, CalSeed, TripsHandoff };
+export type { ShellNavValue, CalSeed, FactsTowHandoff, TripsHandoff };
 
 /** Provider only — hooks live in `ShellNavContext.ts` for Fast Refresh. */
 export function ShellNavProvider({

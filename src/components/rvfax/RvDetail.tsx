@@ -13,6 +13,7 @@ import {
   MoreHorizontal,
   Printer,
   Sparkles,
+  Truck,
 } from "lucide-react";
 import type { RVResult } from "@/lib/rv/catalog";
 import {
@@ -547,6 +548,27 @@ export function RvDetail({
     floorplan: floorplan || "",
   });
 
+  const factsCoachOffer = () =>
+    snapshotActiveCoach({
+      year,
+      make,
+      model,
+      floorplan,
+      rvType: displayType,
+      price: financePrice,
+      gvwr: specs.gvwr,
+      uvw: specs.uvw,
+      towingCapacityLbs: data.towingCapacity,
+    });
+
+  const openCheckTow = () => {
+    shellNav?.openTowWithCoach(factsCoachOffer());
+  };
+
+  const openCheckPayment = (price = financePrice, label = coachChip) => {
+    shellNav?.openCalWithPrice(price, label);
+  };
+
   const setActiveCoach = shellNav?.setActiveCoach;
   useEffect(() => {
     setActiveCoach?.(
@@ -855,9 +877,19 @@ export function RvDetail({
                   {shellNav ? (
                     <OverflowItem
                       icon={<Calculator className="size-3.5" />}
-                      label="Finance"
+                      label="Check payment"
                       onClick={() => {
-                        shellNav.openCalWithPrice(financePrice, coachChip);
+                        openCheckPayment();
+                        setMoreOpen(false);
+                      }}
+                    />
+                  ) : null}
+                  {shellNav ? (
+                    <OverflowItem
+                      icon={<Truck className="size-3.5" />}
+                      label="Check tow"
+                      onClick={() => {
+                        openCheckTow();
                         setMoreOpen(false);
                       }}
                     />
@@ -1144,6 +1176,18 @@ export function RvDetail({
                 Trade was capped at retail low — confirm comps.
               </p>
             ) : null}
+            {shellNav ? (
+              <button
+                type="button"
+                data-facts-check-payment
+                onClick={() => openCheckPayment()}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-gold/40 bg-gold/15 py-2.5 text-[12px] font-bold text-gold-bright"
+              >
+                <Calculator className="size-3.5" />
+                Check payment
+                {financePrice > 0 ? ` · ${formatMoney(financePrice)}` : ""}
+              </button>
+            ) : null}
             {factors.length ? (
               <ul className="mt-2 space-y-1">
                 {factors.map((f) => (
@@ -1268,7 +1312,7 @@ export function RvDetail({
               <button
                 type="button"
                 onClick={() =>
-                  shellNav.openCalWithPrice(
+                  openCheckPayment(
                     invMedian,
                     `${year} ${make} ${model} · local median`,
                   )
@@ -1276,7 +1320,7 @@ export function RvDetail({
                 className="mt-2 flex w-full items-center justify-center gap-2 rounded-full border border-gold/40 bg-gold/15 py-2.5 text-[12px] font-bold text-gold-bright"
               >
                 <Calculator className="size-3.5" />
-                Finance at local median · {formatMoney(invMedian)}
+                Check payment · local median · {formatMoney(invMedian)}
               </button>
             ) : null}
           </section>
@@ -1336,6 +1380,17 @@ export function RvDetail({
             <SpecRow label="UVW" value={specs.uvw} />
             <SpecRow label="CCC" value={specs.ccc} />
             <SpecRow label="WARRANTY" value={specs.warranty} />
+            {shellNav ? (
+              <button
+                type="button"
+                data-facts-check-tow
+                onClick={openCheckTow}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-sky-300/40 bg-sky-500/20 py-2.5 text-[12px] font-bold text-white"
+              >
+                <Truck className="size-3.5" />
+                Check tow
+              </button>
+            ) : null}
 
             <p className="mb-3 mt-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-white">
               Tanks

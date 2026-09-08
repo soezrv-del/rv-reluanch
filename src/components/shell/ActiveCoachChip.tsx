@@ -3,7 +3,8 @@ import { formatActiveCoachChip } from "@/lib/rv/activeCoach";
 
 /**
  * Shared “2023 American Coach American Dream · 45A · change” strip.
- * Lives under suite headers so Cal / Tow follow the open Facts coach.
+ * Facts last-selected coach only. “change” opens the clean Facts picker.
+ * Dock tabs must not treat this chip as a silent handoff.
  */
 export function ActiveCoachChip({
   className,

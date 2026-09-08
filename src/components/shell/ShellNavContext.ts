@@ -16,6 +16,12 @@ export type TripsHandoff = {
   offer: TowHandoffOffer | null;
 };
 
+/** One-shot Facts → Tow. Dock tab / swipe never sets this. */
+export type FactsTowHandoff = {
+  token: number;
+  offer: ActiveCoach | null;
+};
+
 export type ShellNavValue = {
   tab: AppTab;
   setTab: (tab: AppTab) => void;
@@ -26,10 +32,10 @@ export type ShellNavValue = {
   calSeed: CalSeed | null;
   openCalWithPrice: (price: number, label?: string) => void;
   clearCalSeed: () => void;
-  /** Last Facts coach — Cal / Tow / chip / Grok grounding */
+  /** Last Facts coach for the chip. Other tabs must not auto-read this on dock entry. */
   activeCoach: ActiveCoach | null;
   setActiveCoach: (sel: ActiveCoachInput | null) => void;
-  /** Close a Facts report and show the catalog picker */
+  /** Dock Facts / chip “change”: clean catalog search (factsPickerToken). */
   openFactsPicker: () => void;
   factsPickerToken: number;
   /** Open the active (or last saved) Facts report and scroll to Share */
@@ -39,6 +45,10 @@ export type ShellNavValue = {
   tripsHandoff: TripsHandoff | null;
   openTripsProfile: (offer?: TowHandoffOffer | null) => void;
   clearTripsHandoff: () => void;
+  /** One-shot Facts → Tow (Check tow). Dock setTab("rvtow") must not set this. */
+  towHandoff: FactsTowHandoff | null;
+  openTowWithCoach: (offer?: ActiveCoachInput | null) => void;
+  clearTowHandoff: () => void;
 };
 
 export const ShellNavContext = createContext<ShellNavValue | null>(null);

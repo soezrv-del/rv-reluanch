@@ -15,9 +15,15 @@ import { dockTabOrder, PAGE_ACCENT } from "./shellConstants";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
 import { OPEN_SOLD_EVENT } from "@/lib/rv/soldDeals";
 import { Launchpad } from "./Launchpad";
-import { ShellNavProvider, type CalSeed, type TripsHandoff } from "./ShellNav";
+import {
+  ShellNavProvider,
+  type CalSeed,
+  type FactsTowHandoff,
+  type TripsHandoff,
+} from "./ShellNav";
 import type { TowHandoffOffer } from "@/lib/trips/towHandoff";
 import {
+  normalizeActiveCoach,
   readActiveCoach,
   writeActiveCoach,
   type ActiveCoach,
@@ -120,6 +126,7 @@ export function AppShell() {
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
   const [calSeed, setCalSeed] = useState<CalSeed | null>(null);
   const [tripsHandoff, setTripsHandoff] = useState<TripsHandoff | null>(null);
+  const [towHandoff, setTowHandoff] = useState<FactsTowHandoff | null>(null);
   const [activeCoach, setActiveCoachState] = useState<ActiveCoach | null>(() =>
     readActiveCoach(),
   );
@@ -135,6 +142,7 @@ export function AppShell() {
   const launchDoneRef = useRef(false);
   const calTokenRef = useRef(0);
   const tripsTokenRef = useRef(0);
+  const towTokenRef = useRef(0);
   const kb = useKeyboardInset();
   useFocusScrollIntoView(true);
   useDockSafeInset();
@@ -215,6 +223,22 @@ export function AppShell() {
 
   const clearTripsHandoff = useCallback(() => setTripsHandoff(null), []);
 
+  /** Facts “Check tow” only — dock / swipe / launchpad must not set this. */
+  const openTowWithCoach = useCallback(
+    (offer?: ActiveCoachInput | null) => {
+      towTokenRef.current += 1;
+      setTowHandoff({
+        token: towTokenRef.current,
+        offer: normalizeActiveCoach(offer ? { ...offer, updatedAt: "" } : null),
+      });
+      setTab("rvtow");
+      markVisited("rvtow");
+    },
+    [markVisited],
+  );
+
+  const clearTowHandoff = useCallback(() => setTowHandoff(null), []);
+
   const setActiveCoach = useCallback((sel: ActiveCoachInput | null) => {
     const next = writeActiveCoach(sel);
     setActiveCoachState(next);
@@ -238,12 +262,18 @@ export function AppShell() {
         openFactsShare();
         return;
       }
+      // Dock / swipe / More → Facts always lands on clean catalog search.
+      // Chip “change” uses the same openFactsPicker token.
+      if (next === "rvfax") {
+        openFactsPicker();
+        return;
+      }
       if (next === "rvsold" && !isProfessionalTier()) return;
       setTab(next);
       markVisited(next);
       if (next !== "rvgrok") setGrokSplashPlaying(false);
     },
-    [markVisited, openFactsShare],
+    [markVisited, openFactsShare, openFactsPicker],
   );
 
   const isPro = isProfessionalTier();
@@ -297,6 +327,9 @@ export function AppShell() {
       tripsHandoff,
       openTripsProfile,
       clearTripsHandoff,
+      towHandoff,
+      openTowWithCoach,
+      clearTowHandoff,
     }),
     [
       tab,
@@ -315,6 +348,9 @@ export function AppShell() {
       tripsHandoff,
       openTripsProfile,
       clearTripsHandoff,
+      towHandoff,
+      openTowWithCoach,
+      clearTowHandoff,
     ],
   );
 
