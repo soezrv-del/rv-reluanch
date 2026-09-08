@@ -1,3 +1,9 @@
+import {
+  matchCatalogModelName,
+  parseCoachFromText,
+} from "../rvgrok/parseCoach.ts";
+import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
+
 /**
  * Facts picker ↔ report handoff.
  *
@@ -23,6 +29,75 @@ export type ResultLike = {
   rvType?: string | null;
   custom?: boolean;
 };
+
+/** First-run example chips — exact labels; each tap runs catalog search. */
+export const FACTS_EXAMPLE_CHIPS = [
+  "2023 Entegra Cornerstone",
+  "Newmar Dutch Star",
+  "Tiffin Allegro Bus",
+] as const;
+
+/** "Entegra" → catalog "Entegra Coach". Exact match wins; no invent. */
+export function matchCatalogMake(
+  parsed: string,
+  makes: readonly string[],
+): string {
+  const n = parsed.trim().toLowerCase();
+  if (!n) return "";
+  const exact = makes.find((m) => m.toLowerCase() === n);
+  if (exact) return exact;
+  const prefixed = makes.filter((m) => m.toLowerCase().startsWith(`${n} `));
+  if (prefixed.length === 1) return prefixed[0]!;
+  return parsed.trim();
+}
+
+export function parseExampleChip(label: string): FactsCascadeSel {
+  const parsed = parseCoachFromText(label);
+  return {
+    year: parsed.year,
+    make: parsed.make,
+    model: parsed.model,
+    floorplan: parsed.floorplan,
+  };
+}
+
+/**
+ * Resolve a first-run chip onto the year → make → model cascade.
+ * Missing year uses the newest catalog year already listed for that model.
+ */
+export function selFromExampleChip(label: string): FactsCascadeSel {
+  const parsed = parseExampleChip(label);
+  const makes = Object.keys(CATALOG_INDEX);
+  const make = matchCatalogMake(parsed.make, makes);
+  const models = make ? Object.keys(CATALOG_INDEX[make] ?? {}) : [];
+  const y = parseInt(parsed.year, 10);
+  const inYear =
+    parsed.year && Number.isFinite(y)
+      ? models.filter((m) => {
+          const years = CATALOG_INDEX[make]?.[m]?.years;
+          return !years?.length || years.includes(y);
+        })
+      : models;
+  const model = parsed.model
+    ? matchCatalogModelName(
+        parsed.model,
+        inYear.length ? inYear : models.length ? models : [parsed.model],
+      )
+    : "";
+  let year = parsed.year;
+  if (!year && make && model) {
+    const listed = [...(CATALOG_INDEX[make]?.[model]?.years ?? [])].sort(
+      (a, b) => b - a,
+    );
+    year = listed[0] != null ? String(listed[0]) : "";
+  }
+  return {
+    year,
+    make,
+    model,
+    floorplan: parsed.floorplan,
+  };
+}
 
 export function cascadeFromResult(r: ResultLike): FactsCascadeSel {
   return {

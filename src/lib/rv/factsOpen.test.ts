@@ -5,8 +5,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   cascadeFromResult,
+  FACTS_EXAMPLE_CHIPS,
+  matchCatalogMake,
+  parseExampleChip,
   pickerCoachWrite,
   resolveShareOpenSel,
+  selFromExampleChip,
   shouldOpenSingleHitReport,
 } from "./factsOpen.ts";
 
@@ -20,6 +24,48 @@ const dream = {
   rvType: "Class A Diesel",
   data: { type: "Class A Diesel" },
 };
+
+test("first-run example chips are exactly the three diesel coaches", () => {
+  assert.deepEqual([...FACTS_EXAMPLE_CHIPS], [
+    "2023 Entegra Cornerstone",
+    "Newmar Dutch Star",
+    "Tiffin Allegro Bus",
+  ]);
+  assert.equal(FACTS_EXAMPLE_CHIPS.length, 3);
+  const joined = FACTS_EXAMPLE_CHIPS.join(" | ");
+  assert.doesNotMatch(joined, /F-250/);
+  assert.doesNotMatch(joined, /Keystone Cougar/);
+  assert.doesNotMatch(joined, /Winnebago Vista/);
+});
+
+test("example chip parse + Entegra maps onto catalog Entegra Coach", () => {
+  const parsed = parseExampleChip("2023 Entegra Cornerstone");
+  assert.equal(parsed.year, "2023");
+  assert.equal(parsed.make, "Entegra");
+  assert.equal(parsed.model, "Cornerstone");
+  assert.equal(
+    matchCatalogMake("Entegra", ["Entegra Coach", "Newmar", "Tiffin"]),
+    "Entegra Coach",
+  );
+  assert.equal(matchCatalogMake("Newmar", ["Entegra Coach", "Newmar"]), "Newmar");
+});
+
+test("example chips resolve onto the year make model cascade for a real search", () => {
+  const cornerstone = selFromExampleChip("2023 Entegra Cornerstone");
+  assert.equal(cornerstone.year, "2023");
+  assert.equal(cornerstone.make, "Entegra Coach");
+  assert.equal(cornerstone.model, "Cornerstone");
+
+  const dutch = selFromExampleChip("Newmar Dutch Star");
+  assert.equal(dutch.make, "Newmar");
+  assert.equal(dutch.model, "Dutch Star");
+  assert.ok(dutch.year, "year-less chip must pick a catalog year");
+
+  const bus = selFromExampleChip("Tiffin Allegro Bus");
+  assert.equal(bus.make, "Tiffin");
+  assert.equal(bus.model, "Allegro Bus");
+  assert.ok(bus.year, "year-less chip must pick a catalog year");
+});
 
 test("saved / result open restores year make model floorplan cascade", () => {
   const empty = { year: "", make: "", model: "", floorplan: "" };
@@ -205,4 +251,31 @@ test("Facts app restores cascade on every open path and skips coach clear mid-re
   assert.match(tokenEffect![0], /setDetail\(null\)/);
   assert.doesNotMatch(tokenEffect![0], /resetFax/);
   assert.doesNotMatch(tokenEffect![0], /applySel\(\{ year: ""/);
+});
+
+test("Facts first-run hero, year+make default, and chip search stay on the cascade", () => {
+  const fax = readFileSync(join(root, "../../components/rvfax/RvFaxApp.tsx"), "utf8");
+  assert.match(fax, /Know before you buy,/);
+  assert.match(fax, /FACTS_EXAMPLE_CHIPS/);
+  assert.match(fax, /selFromExampleChip/);
+  assert.match(fax, /runExampleChip/);
+  assert.match(fax, /runSearchNow\(sel\)/);
+  assert.match(fax, /revealModelTrim/);
+  assert.match(fax, /data-facts-example-chip/);
+  assert.match(fax, /label="Year"/);
+  assert.match(fax, /label="Make"/);
+  assert.match(fax, /label="Model"/);
+  assert.match(fax, /label="Trim"/);
+  assert.match(fax, /year → make → model → trim/);
+  assert.doesNotMatch(fax, /F-250/);
+  assert.doesNotMatch(fax, /Keystone Cougar/);
+  assert.doesNotMatch(fax, /Winnebago Vista/);
+  // Required year + make stay on the first-run form — not inside revealModelTrim
+  const yearAt = fax.indexOf('label="Year"');
+  const makeAt = fax.indexOf('label="Make"');
+  const revealAt = fax.indexOf("{revealModelTrim ? (");
+  const modelAt = fax.indexOf('label="Model"');
+  assert.ok(yearAt > 0 && makeAt > yearAt);
+  assert.ok(revealAt > makeAt, "year and make stay visible before the tail");
+  assert.ok(modelAt > revealAt, "model/trim reveal after the first result");
 });
