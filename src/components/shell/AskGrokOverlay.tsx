@@ -12,7 +12,7 @@ import type { AppTab } from "./BottomTabs";
  *
  * GROK MOUNT POINT — do not fork chat:
  *   import { RvGrokApp } from "@/components/rvgrok/RvGrokApp"
- *   <RvGrokApp active={panelOpen} seedPrompt={seedPrompt} onSeedConsumed={onSeedConsumed} />
+ *   <RvGrokApp variant="embedded" active={panelOpen} seedPrompt={seedPrompt} onSeedConsumed={onSeedConsumed} />
  */
 const RvGrokApp = lazy(() =>
   import("@/components/rvgrok/RvGrokApp").then((m) => ({ default: m.RvGrokApp })),
@@ -131,6 +131,7 @@ export function AskGrokOverlay({
                 }
               >
                 <RvGrokApp
+                  variant="embedded"
                   active={panelOpen}
                   seedPrompt={seedPrompt}
                   onSeedConsumed={onSeedConsumed}

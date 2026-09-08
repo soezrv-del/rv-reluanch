@@ -34,6 +34,7 @@ test("Ask Grok chrome mounts overlay-only and hides on the Grok route", () => {
 test("GROK MOUNT POINT is RvGrokApp — chrome does not fork chat", () => {
   const overlay = read("../../components/shell/AskGrokOverlay.tsx");
   assert.match(overlay, /@\/components\/rvgrok\/RvGrokApp/);
+  assert.match(overlay, /<RvGrokApp[\s\S]*variant="embedded"/);
   assert.match(overlay, /<RvGrokApp[\s\S]*active=\{panelOpen\}/);
   assert.match(overlay, /seedPrompt=\{seedPrompt\}/);
   assert.match(overlay, /onSeedConsumed=\{onSeedConsumed\}/);
