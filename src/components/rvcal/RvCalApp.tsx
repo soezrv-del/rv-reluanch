@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   LENDERS_CATALOG,
-  SIMULATE_BADGE_LABEL,
   SIMULATE_LOOKUP_MS,
-  lendersSourceLine,
+  formatLenderAsOf,
   parseLenderRateSource,
   type Lender,
   type LenderQuote,
@@ -22,8 +21,6 @@ import {
   Landmark,
   MapPin,
   SlidersHorizontal,
-  Sparkles,
-  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
@@ -35,7 +32,6 @@ import {
   aprForCredit,
   buildPdfReportHtml,
   computeLoan,
-  creditHint,
   creditLabel,
   formatMoney,
   formatPct,
@@ -141,6 +137,26 @@ function clampCreditScore(n: number) {
 function clampTermYears(n: number) {
   if (!Number.isFinite(n)) return 20;
   return Math.min(40, Math.max(5, Math.round(n)));
+}
+
+/** Single Cal-screen legal line — source honesty lives here, not on cards. */
+function calScreenDisclaimer(
+  meta: {
+    source: LenderRateSource;
+    asOf: string;
+    state: string | null;
+  } | null,
+): string {
+  if (meta?.source === "rateapi") {
+    const where = meta.state ? ` in ${meta.state}` : "";
+    const asOf = meta.asOf ? formatLenderAsOf(meta.asOf) : "";
+    const when = asOf ? ` as of ${asOf}` : "";
+    return `Estimates only — not a loan offer or prequalification. Published credit-union RV rates${where}${when}; membership and credit still apply. Confirm with the credit union before you buy.`;
+  }
+  if (meta?.source === "simulate") {
+    return "Estimates only — not a loan offer or prequalification. Preview / demo rates, not live RateAPI. Confirm rates with a lender before you buy.";
+  }
+  return "Estimates only — not live offers or a loan commitment. Confirm rates with a lender before you buy.";
 }
 
 export function RvCalApp() {
@@ -661,15 +677,14 @@ export function RvCalApp() {
       pullLabel="Release to reset RvCal · pull down"
       adaptiveGlass={false}
     >
-    <div className="landscape-content mx-auto w-full max-w-lg space-y-4 px-3 pb-10 pt-3 sm:px-4">
-      {coachLabel ? <p className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-center text-[11px] font-semibold text-gold-bright">
-  Market avg · 
+    <div className="landscape-content mx-auto w-full max-w-lg space-y-3 px-3 pb-10 pt-3 sm:px-4">
+      {coachLabel ? <p className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-center text-[12px] font-semibold text-gold-bright">
   {coachLabel}
 </p> : null}
       <section className="glass-prestige-gold rounded-[var(--radius-xl)] px-4 py-5 text-center">
         <div className="mb-2 flex items-center justify-center">
           <p className="text-[11px] font-bold tracking-[0.16em] text-amber">
-            {paymentDriven ? "TARGET MONTHLY · PRICE ADJUSTED" : "EST. MONTHLY PAYMENT"}
+            {paymentDriven ? "TARGET /MO" : "MONTHLY"}
           </p>
         </div>
         <div className="relative mx-auto flex max-w-[16rem] items-center justify-center">
@@ -699,42 +714,30 @@ export function RvCalApp() {
               if (!Number.isFinite(n) || n <= 0) return;
               applyTargetPayment(n);
             }}
-            className="w-full bg-transparent py-1 pl-9 pr-2 text-center text-[40px] font-bold leading-none tabular-nums text-white outline-none"
+            className="w-full bg-transparent py-1 pl-9 pr-2 text-center text-[44px] font-bold leading-none tabular-nums text-white outline-none sm:text-[48px]"
             inputMode="numeric"
             enterKeyHint="done"
             aria-label="Target monthly payment"
             placeholder="0"
           />
         </div>
-        <p className="mt-2 text-[12px] text-white">
-          {termMonths}
-           mo · 
-          {formatPct(apr)}
-           APR · 
-          {formatPct(downPct, 0)}
-          down
+        <p className="mt-2 text-[13px] font-semibold tabular-nums text-white">
+          {termMonths} mo · {formatPct(apr)} APR · {formatPct(downPct, 0)} down
         </p>
-        <p className="mt-1 text-[11px] text-white">
-          Financed 
-          {formatMoney(loan.amountFinanced)}
-          {paymentDriven ? ` · coach needs ~${formatMoney(price)}` : ""}
-        </p>
-        <p className="mt-2 text-[10px] leading-relaxed text-white/75">
-          Type a monthly payment to reverse-solve purchase price from term, APR, down, tax, and fees.
+        <p className="mt-1 text-[12px] font-semibold tabular-nums text-white/85">
+          Financed {formatMoney(loan.amountFinanced)}
+          {paymentDriven ? ` · sticker ${formatMoney(price)}` : ""}
         </p>
       </section>
       <section className="glass-prestige rounded-[var(--radius-xl)] p-3.5">
-        <p className="mb-3 flex items-center gap-1.5 text-caption font-bold tracking-[0.12em] text-gold">
-          <Car className="size-3.5" />
-          VEHICLE DETAILS
-        </p>
         <div>
           <div className="mb-1.5 flex items-center justify-between gap-2">
-            <span className="text-[10px] font-bold tracking-[0.12em] text-white">
-              {priceMode === "finance" ? "AMOUNT financed" : "purchase price"}
+            <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-gold">
+              <Car className="size-3.5" />
+              {priceMode === "finance" ? "FINANCED" : "PRICE"}
             </span>
             <div
-              className="inline-flex rounded-full border border-white/20 bg-black/35 p-0.5"
+              className="inline-flex rounded-full border border-white/25 bg-white/10 p-0.5"
               role="group"
               aria-label="Price input mode"
             >
@@ -748,7 +751,7 @@ export function RvCalApp() {
                   setPriceDraft("");
                 }}
                 className={cn(
-                  "rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide transition",
+                  "min-h-9 rounded-full px-3 text-[11px] font-bold tracking-wide transition",
                   priceMode === "purchase"
                     ? "bg-gold/25 text-gold-bright"
                     : "text-white/70",
@@ -770,13 +773,13 @@ export function RvCalApp() {
                   }
                 }}
                 className={cn(
-                  "rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide transition",
+                  "min-h-9 rounded-full px-3 text-[11px] font-bold tracking-wide transition",
                   priceMode === "finance"
                     ? "bg-blue/30 text-white"
                     : "text-white/70",
                 )}
               >
-                Amount financed
+                Financed
               </button>
             </div>
           </div>
@@ -833,35 +836,17 @@ export function RvCalApp() {
             />
           </div>
 
-          <p className="mt-1.5 text-[10px] text-white/75">
-            {priceMode === "finance" ? (
-              <>
-                Type the loan amount. Purchase price updates from down %, tax, trade, and fees.
-                {price > 0 ? (
-                  <span className="font-semibold text-gold">
-                    {" "}
-                    · sticker ~{formatMoney(price)}
-                  </span>
-                ) : null}
-              </>
-            ) : (
-              <>
-                Type sticker, set a target payment above, or open Finance from a Facts report. Pull down to reset.
-                {financeDriven ? null : price > 0 ? (
-                  <span className="text-white/60">
-                    {" "}
-                    · financed {formatMoney(loan.amountFinanced)}
-                  </span>
-                ) : null}
-              </>
-            )}
-          </p>
+          {price > 0 ? (
+            <p className="mt-1.5 text-[12px] font-semibold tabular-nums text-gold">
+              {priceMode === "finance"
+                ? `Sticker ${formatMoney(price)}`
+                : `Financed ${formatMoney(loan.amountFinanced)}`}
+            </p>
+          ) : null}
         </div>
-      </section>
-      <section className="glass-prestige rounded-[var(--radius-xl)] p-3.5">
-        <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="mt-3 flex items-center justify-between gap-2">
           <p className="text-[10px] font-bold tracking-[0.12em] text-gold">
-            {loanEntryMode === "roll" ? "QUICK LOAN · SELECT" : "QUICK LOAN · MANUAL ENTRY"}
+            LOAN
           </p>
           <button type="button" onClick={() => {
                     setLoanEntryMode((m) => {
@@ -872,14 +857,15 @@ export function RvCalApp() {
                   setCredit(creditScoreToBand(creditScore));
                   return "roll";
                 });
-                  }} className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold transition", loanEntryMode === "manual" ? "border-blue/50 bg-blue/25 text-white" : "border-white/20 bg-black/30 text-white/85")} aria-label={loanEntryMode === "roll" ? "Switch to manual entry" : "Switch to dropdowns"} title={loanEntryMode === "roll" ? "Manual entry" : "Dropdowns"}>
+                  }} className={cn("inline-flex min-h-9 items-center gap-1 rounded-full border px-3 text-[11px] font-bold transition", loanEntryMode === "manual" ? "border-blue/50 bg-blue/25 text-white" : "border-white/25 bg-white/10 text-white/85")} aria-label={loanEntryMode === "roll" ? "Switch to manual entry" : "Switch to dropdowns"} title={loanEntryMode === "roll" ? "Manual entry" : "Dropdowns"}>
             <SlidersHorizontal className="size-3.5" />
             {loanEntryMode === "manual" ? "Select" : "Manual"}
           </button>
         </div>
+        <div className="mt-2">
         {loanEntryMode === "roll" ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
   <div className="min-w-0">
-    <p className="mb-1.5 text-center text-[9px] font-bold tracking-[0.1em] text-white">
+    <p className="mb-1.5 text-center text-[10px] font-bold tracking-[0.1em] text-white">
       CREDIT
     </p>
     <NativeCalSelect
@@ -899,10 +885,10 @@ export function RvCalApp() {
   </div>
   <div className="min-w-0">
     <div className="mb-1.5 flex items-center justify-center gap-1">
-      <span className="text-[9px] font-bold tracking-[0.1em] text-white">
+      <span className="text-[10px] font-bold tracking-[0.1em] text-white">
         APR
       </span>
-      {aprManual ? <button type="button" onClick={useAutoApr} className="text-[8px] font-bold text-blue">
+      {aprManual ? <button type="button" onClick={useAutoApr} className="text-[10px] font-bold text-blue">
   Auto
 </button> : null}
     </div>
@@ -918,7 +904,7 @@ export function RvCalApp() {
     />
   </div>
   <div className="min-w-0">
-    <p className="mb-1.5 text-center text-[9px] font-bold tracking-[0.1em] text-white">
+    <p className="mb-1.5 text-center text-[10px] font-bold tracking-[0.1em] text-white">
       TERM
     </p>
     <NativeCalSelect
@@ -930,7 +916,7 @@ export function RvCalApp() {
     />
   </div>
   <div className="min-w-0">
-    <p className="mb-1.5 text-center text-[9px] font-bold tracking-[0.1em] text-white">
+    <p className="mb-1.5 text-center text-[10px] font-bold tracking-[0.1em] text-white">
       DOWN
     </p>
     <NativeCalSelect
@@ -943,19 +929,19 @@ export function RvCalApp() {
   </div>
 </div> : <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
   <label className="block min-w-0">
-    <span className="mb-1 block text-[9px] font-bold tracking-[0.1em] text-white">
+    <span className="mb-1 block text-[10px] font-bold tracking-[0.1em] text-white">
       CREDIT
     </span>
     <input value={creditScore} onChange={(e) => {
                         const n = parseInt(e.target.value.replace(/\D/g, ""), 10);
                         if (Number.isFinite(n)) applyCreditScore(n);
                         else if (e.target.value === "") setCreditScore(0);
-                      }} className="glass-field w-full rounded-[var(--radius-md)] px-2 py-2.5 text-center text-[14px] font-bold tabular-nums text-white outline-none" inputMode="numeric" enterKeyHint="done" aria-label="Credit score" placeholder="850" />
+                      }} className="glass-field min-h-11 w-full rounded-[var(--radius-md)] px-2 py-2.5 text-center text-[14px] font-bold tabular-nums text-white outline-none" inputMode="numeric" enterKeyHint="done" aria-label="Credit score" placeholder="850" />
   </label>
   <label className="block min-w-0">
-    <span className="mb-1 flex items-center justify-between text-[9px] font-bold tracking-[0.1em] text-white">
+    <span className="mb-1 flex items-center justify-between text-[10px] font-bold tracking-[0.1em] text-white">
       APR %
-      {aprManual ? <button type="button" onClick={useAutoApr} className="text-[8px] font-bold text-blue">
+      {aprManual ? <button type="button" onClick={useAutoApr} className="text-[10px] font-bold text-blue">
   Auto
 </button> : null}
     </span>
@@ -978,82 +964,58 @@ export function RvCalApp() {
                         setAprDraft(raw);
                         const n = parseFloat(raw);
                         if (Number.isFinite(n)) setAprFromControl(n);
-                      }} className="glass-field w-full rounded-[var(--radius-md)] px-2 py-2.5 text-center text-[14px] font-bold tabular-nums text-white outline-none" inputMode="decimal" enterKeyHint="done" aria-label="APR percent" />
+                      }} className="glass-field min-h-11 w-full rounded-[var(--radius-md)] px-2 py-2.5 text-center text-[14px] font-bold tabular-nums text-white outline-none" inputMode="decimal" enterKeyHint="done" aria-label="APR percent" />
   </label>
   <label className="block min-w-0">
-    <span className="mb-1 block text-[9px] font-bold tracking-[0.1em] text-white">
+    <span className="mb-1 block text-[10px] font-bold tracking-[0.1em] text-white">
       TERM (YRS)
     </span>
     <input value={Math.round(termMonths / 12)} onChange={(e) => {
                         const n = parseInt(e.target.value.replace(/\D/g, ""), 10);
                         if (Number.isFinite(n)) applyTermYears(n);
-                      }} className="glass-field w-full rounded-[var(--radius-md)] px-2 py-2.5 text-center text-[14px] font-bold tabular-nums text-white outline-none" inputMode="numeric" enterKeyHint="done" aria-label="Term years" placeholder="20" />
+                      }} className="glass-field min-h-11 w-full rounded-[var(--radius-md)] px-2 py-2.5 text-center text-[14px] font-bold tabular-nums text-white outline-none" inputMode="numeric" enterKeyHint="done" aria-label="Term years" placeholder="20" />
   </label>
   <label className="block min-w-0">
-    <span className="mb-1 block text-[9px] font-bold tracking-[0.1em] text-white">
+    <span className="mb-1 block text-[10px] font-bold tracking-[0.1em] text-white">
       DOWN %
     </span>
     <input value={Number.isInteger(downPct) ? String(downPct) : String(Math.round(downPct * 10) / 10)} onChange={(e) => {
                         const n = parseFloat(e.target.value.replace(/[^\d.]/g, ""));
                         if (Number.isFinite(n)) applyDownPct(n);
-                      }} className="glass-field w-full rounded-[var(--radius-md)] px-2 py-2.5 text-center text-[14px] font-bold tabular-nums text-white outline-none" inputMode="decimal" enterKeyHint="done" aria-label="Down payment percent" placeholder="20" />
+                      }} className="glass-field min-h-11 w-full rounded-[var(--radius-md)] px-2 py-2.5 text-center text-[14px] font-bold tabular-nums text-white outline-none" inputMode="decimal" enterKeyHint="done" aria-label="Down payment percent" placeholder="20" />
   </label>
 </div>}
-        <p className="mt-2 text-[10px] leading-relaxed text-white/75">
-          {creditHint(credit)}
-        </p>
+        </div>
       </section>
       <section className="glass-prestige rounded-[var(--radius-xl)] p-3.5">
-        <div className="mb-1.5">
-          <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-amber">
-            <ArrowLeftRight className="size-3.5" />
-            TRADE-IN
-          </p>
-        </div>
-        <p className="mb-3 text-[11px] leading-relaxed text-white/80">
-          Trade equity always lowers amount financed (and payment). Sticker price does not change.
-          {tradeTaxCredit ? <span className="text-emerald-200">
-  {stateAbbr || "This state"}
-  : sales tax is on (price − trade value).
-</span> : <span className="text-amber">
-  {stateAbbr || "This state"}
-  : sales tax is on full selling price (no trade deduction on tax).
-</span>}
+        <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-amber">
+          <ArrowLeftRight className="size-3.5" />
+          TRADE
         </p>
         <div className="grid grid-cols-2 gap-2">
           <label className="block">
             <span className="mb-1 block text-[10px] font-bold tracking-[0.12em] text-white">
-              TRADE VALUE
+              VALUE
             </span>
             <input value={tradeValue || ""} onChange={(e) => {
                       setPaymentDriven(false);
                       setTradeValue(parseInt(e.target.value.replace(/\D/g, ""), 10) || 0);
-                    }} className="glass-field w-full rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-semibold text-white outline-none" inputMode="numeric" placeholder="0" />
+                    }} className="glass-field min-h-11 w-full rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-semibold text-white outline-none" inputMode="numeric" placeholder="0" />
           </label>
           <label className="block">
             <span className="mb-1 block text-[10px] font-bold tracking-[0.12em] text-white">
-              TRADE PAYOFF
+              PAYOFF
             </span>
             <input value={tradePayoff || ""} onChange={(e) => {
                       setPaymentDriven(false);
                       setTradePayoff(parseInt(e.target.value.replace(/\D/g, ""), 10) || 0);
-                    }} className="glass-field w-full rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-semibold text-white outline-none" inputMode="numeric" placeholder="0" />
+                    }} className="glass-field min-h-11 w-full rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-semibold text-white outline-none" inputMode="numeric" placeholder="0" />
           </label>
         </div>
-      </section>
-      <section className="glass-prestige rounded-[var(--radius-xl)] p-3.5">
-        <p className="mb-3 flex items-center gap-1.5 text-caption font-bold tracking-[0.12em] text-gold">
-          <MapPin className="size-3.5" />
-          LOCATION & TAX
-        </p>
-        <label className="block">
-          <span className="mb-1 flex items-center justify-between text-[10px] font-bold tracking-[0.12em] text-white">
-            <span>CUSTOMER ZIP CODE</span>
-            <span className="font-semibold tracking-normal text-white/60">
-              {zipCheck.status === "valid" && zipCheck.digits.length > 5
-                ? "ZIP+4"
-                : "5-digit US"}
-            </span>
+        <label className="mt-3 block">
+          <span className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-gold">
+            <MapPin className="size-3.5" />
+            ZIP
           </span>
           <input
             value={zip}
@@ -1062,18 +1024,21 @@ export function RvCalApp() {
             inputMode="numeric"
             autoComplete="postal-code"
             enterKeyHint="done"
-            placeholder="85001 or 85001-1234"
+            placeholder="85001"
             aria-label="Customer ZIP code"
             aria-invalid={zipCheck.status === "invalid"}
             aria-describedby="zip-status"
             className={cn(
-              "glass-field w-full rounded-[var(--radius-md)] px-3 py-3 font-mono text-sm font-semibold tracking-wider text-white outline-none",
+              "glass-field min-h-11 w-full rounded-[var(--radius-md)] px-3 py-3 font-mono text-sm font-semibold tracking-wider text-white outline-none",
               zipCheck.status === "valid" && "border-gold/50",
               zipCheck.status === "invalid" && "border-amber/70",
             )}
           />
         </label>
-        <div id="zip-status" className="mt-2.5">
+        <div
+          id="zip-status"
+          className={zipCheck.status === "empty" ? "sr-only" : "mt-2.5"}
+        >
           {zipCheck.status === "valid" && zipInfo ? (
             <div className="rounded-[var(--radius-md)] border border-gold/30 bg-gold/10 px-3 py-2.5">
               <p className="flex items-center gap-1.5 text-[13px] font-bold text-gold">
@@ -1091,24 +1056,18 @@ export function RvCalApp() {
               <CircleAlert className="size-3.5 shrink-0" />
               {zipCheck.message}
             </p>
-          ) : (
-            <p className="text-[11px] text-white/60">
-              Enter a 5-digit US ZIP to fill sales tax. ZIP+4 is optional.
-            </p>
-          )}
+          ) : null}
         </div>
         <label className="mt-3 block">
-          <div className="mb-1 flex items-center justify-between">
+          <div className="mb-1 flex min-h-5 items-center justify-between">
             <span className="text-[10px] font-bold tracking-[0.12em] text-white">
-              SALES TAX RATE (%)
+              TAX %
             </span>
             {taxManual ? (
-              <button type="button" onClick={() => setTaxManual(false)} className="text-[10px] font-bold text-blue">
-                Reset from ZIP
+              <button type="button" onClick={() => setTaxManual(false)} className="text-[11px] font-bold text-blue">
+                Reset
               </button>
-            ) : (
-              <span className="text-[10px] text-white">auto from ZIP</span>
-            )}
+            ) : null}
           </div>
           <input
             type="number"
@@ -1118,24 +1077,24 @@ export function RvCalApp() {
               setTaxManual(true);
               setTaxRate(Number(e.target.value) || 0);
             }}
-            className="glass-field w-full rounded-[var(--radius-md)] px-3 py-3 text-sm font-semibold text-white outline-none"
+            className="glass-field min-h-11 w-full rounded-[var(--radius-md)] px-3 py-3 text-sm font-semibold text-white outline-none"
           />
         </label>
       </section>
       <section className="glass-prestige rounded-[var(--radius-xl)] p-3.5">
-        <p className="mb-2 flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-white">
+        <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-white">
           <DollarSign className="size-3.5 text-gold" />
-          PAYMENT BREAKDOWN
+          BREAKDOWN
         </p>
         <div className="space-y-1.5">
-          <Row label="Vehicle price" value={formatMoney(price)} />
-          <Row label={tradeTaxCredit && loan.tradeValue > 0 ? `Sales tax ${formatPct(taxRate)} (price − trade)` : `Sales tax (${formatPct(taxRate)})`} value={formatMoney(loan.taxAmount)} />
-          <Row label="Registration / fees" value={formatMoney(registrationFees)} />
-          {loan.negativeEquity > 0 ? <Row label="Negative equity rolled in" value={formatMoney(loan.negativeEquity)} warn /> : null}
-          {loan.equity > 0 ? <Row label="Trade equity applied" value={`−${formatMoney(loan.equity)}`} accent /> : null}
-          <Row label={`Down payment (${Number.isInteger(downPct) ? downPct : downPct.toFixed(1)}%)`} value={`−${formatMoney(loan.downPayment)}`} accent />
+          <Row label="Price" value={formatMoney(price)} />
+          <Row label={`Tax ${formatPct(taxRate)}`} value={formatMoney(loan.taxAmount)} />
+          <Row label="Fees" value={formatMoney(registrationFees)} />
+          {loan.negativeEquity > 0 ? <Row label="Neg. equity" value={formatMoney(loan.negativeEquity)} warn /> : null}
+          {loan.equity > 0 ? <Row label="Trade equity" value={`−${formatMoney(loan.equity)}`} accent /> : null}
+          <Row label={`Down ${Number.isInteger(downPct) ? downPct : downPct.toFixed(1)}%`} value={`−${formatMoney(loan.downPayment)}`} accent />
         </div>
-        <button type="button" onClick={openPdf} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-black/30 py-2.5 text-[13px] font-bold text-white">
+        <button type="button" onClick={openPdf} className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 text-[13px] font-bold text-white">
           <FileText className="size-4" />
           Payment report
         </button>
@@ -1151,32 +1110,13 @@ export function RvCalApp() {
                     if (next) setLenderRevealKey((k) => k + 1);
                     return next;
                   });
-                }} className="flex w-full items-center justify-between gap-2" aria-expanded={lendersOpen} aria-controls="lender-options-panel">
+                }} className="flex min-h-11 w-full items-center justify-between gap-2" aria-expanded={lendersOpen} aria-controls="lender-options-panel">
           <span className="flex min-w-0 items-center gap-2">
-            <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full border border-gold/45 bg-gold/15">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-gold/45 bg-gold/15">
               <Landmark className="size-3.5 text-gold-bright" />
-              <Sparkles className="absolute -right-0.5 -top-0.5 size-3 text-gold-bright" />
             </span>
-            <span className="min-w-0 text-left">
-              <span className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[11px] font-bold tracking-[0.12em] text-gold-bright">
-                  LENDER OPTIONS
-                </span>
-                <span className="exclusive-badge inline-flex items-center gap-0.5 rounded-full border border-gold/50 bg-gold/20 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.14em] text-gold-bright">
-                  <Star className="size-2.5 fill-gold-bright text-gold-bright" />
-                  Exclusive
-                </span>
-                {lendersMeta?.source === "simulate" ? (
-                  <span className="inline-flex items-center rounded-full border border-white/25 bg-black/40 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-white/85">
-                    Preview
-                  </span>
-                ) : null}
-              </span>
-              <span className="mt-0.5 block text-[10px] font-medium leading-snug text-white/80">
-                {lendersMeta?.source === "simulate"
-                  ? SIMULATE_BADGE_LABEL
-                  : "Your broker edge — match the deal, then let them choose you"}
-              </span>
+            <span className="text-[11px] font-bold tracking-[0.12em] text-gold-bright">
+              LENDERS
             </span>
           </span>
           <ChevronDown className="exclusive-chevron size-4 shrink-0 text-gold-bright" data-open={lendersOpen ? "true" : "false"} aria-hidden />
@@ -1184,23 +1124,12 @@ export function RvCalApp() {
         <div id="lender-options-panel" className="exclusive-reveal" data-open={lendersOpen ? "true" : "false"}>
           <div className="exclusive-reveal-inner">
             <div className="exclusive-reveal-content mt-2.5 space-y-2">
-              <p className="exclusive-lender-row rounded-lg border border-gold/25 bg-gold/10 px-2.5 py-2 text-[10px] leading-relaxed text-white/90" style={{ ["--lender-delay" as string]: "0ms" }}>
-                <span className="font-bold text-gold-bright">
-                  Show this list. Close the loan.
-                </span>
-                Credit-aware options for
-                <span className="font-bold">
-                  {activeBand?.range ?? creditLabel(credit)}
-                </span>
-                · 
-                {formatMoney(loan.amountFinanced, 0)}
-                 financed ·
-                {termMonths}
-                 mo. Estimates to start the conversation — you broker the best real offer.
+              <p className="exclusive-lender-row text-[12px] font-semibold tabular-nums text-white/85" style={{ ["--lender-delay" as string]: "0ms" }}>
+                {activeBand?.range ?? creditLabel(credit)} · {formatMoney(loan.amountFinanced, 0)} · {termMonths} mo
               </p>
               {lendersLookingUp ? (
                 <div
-                  className="exclusive-lender-row flex items-center gap-3 rounded-xl border border-gold/25 bg-black/35 px-3 py-3"
+                  className="exclusive-lender-row flex items-center gap-3 rounded-xl border border-white/30 bg-white/10 px-3 py-3"
                   role="status"
                   aria-live="polite"
                   style={{ ["--lender-delay" as string]: "0ms" }}
@@ -1217,38 +1146,32 @@ export function RvCalApp() {
                 lendersList.map((L: Lender | LenderQuote, i: number) => {
                       const quote = "estimatedApr" in L ? L : null;
                       const eligible = quote ? quote.eligible !== false : true;
-                      const reason = quote?.ineligibilityReason;
                       const monthly = quote ? quote.estimatedMonthly : lenderMonthly(L, loan.amountFinanced, termMonths, credit);
                       const aprShow = quote ? quote.estimatedApr : lenderApr(L, credit);
                       const range =
-                        quote?.rateNote
-                          ? quote.rateNote
-                          : L.aprLow === L.aprHigh
-                            ? `${formatPct(L.aprLow)} published`
-                            : `${L.aprLow}%–${L.aprHigh}%`;
+                        L.aprLow === L.aprHigh
+                          ? formatPct(L.aprLow)
+                          : `${L.aprLow}%–${L.aprHigh}%`;
                       const delayMs = (i + 1) * 1e3;
                       return (
-                  <a key={`${L.id}-${lenderRevealKey}`} href={L.url || "#"} target="_blank" rel="noopener noreferrer" className={cn("exclusive-lender-row flex items-center gap-3 rounded-xl border px-3 py-2.5 transition", eligible ? "border-gold/25 bg-black/35 hover:border-gold/45 hover:bg-gold/10" : "border-white/10 bg-black/20 opacity-70")} style={{ ["--lender-delay" as string]: `${delayMs}ms` }}>
+                  <a key={`${L.id}-${lenderRevealKey}`} href={L.url || "#"} target="_blank" rel="noopener noreferrer" className={cn("exclusive-lender-row flex min-h-14 items-center gap-3 rounded-xl border px-3 py-3 transition", eligible ? "border-white/30 bg-white/10 hover:border-gold/45 hover:bg-gold/10" : "border-white/15 bg-white/5 opacity-70")} style={{ ["--lender-delay" as string]: `${delayMs}ms` }}>
   <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-full", eligible ? "bg-gold/15" : "bg-white/10")}>
     <Building2 className={cn("size-4", eligible ? "text-gold-bright" : "text-white")} />
   </div>
   <div className="min-w-0 flex-1">
-    <p className="truncate text-[13px] font-bold text-white">
+    <p className="truncate text-[14px] font-bold text-white">
       {L.name}
-      {!eligible ? <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wide text-amber">
-  unlikely
-</span> : null}
     </p>
-    <p className="text-[10px] leading-snug text-white/85">
-      {eligible ? range : reason || "Credit / loan size limit"}
+    <p className="text-[12px] font-semibold tabular-nums text-white/80">
+      {eligible ? range : "—"}
     </p>
   </div>
   <div className="text-right">
-    <p className="text-[14px] font-bold tabular-nums text-gold-bright">
+    <p className="text-[18px] font-bold tabular-nums leading-none text-gold-bright">
       {eligible && monthly != null ? formatMoney(monthly) : "—"}
     </p>
-    <p className="text-[10px] text-white/85">
-      {eligible ? `/mo · ${formatPct(aprShow)}` : "n/a"}
+    <p className="mt-0.5 text-[12px] font-semibold tabular-nums text-white/80">
+      {eligible ? `/mo · ${formatPct(aprShow)}` : ""}
     </p>
   </div>
   <ExternalLink className="size-3.5 shrink-0 text-white" />
@@ -1256,15 +1179,12 @@ export function RvCalApp() {
                 );
               })
               )}
-              <p className="px-0.5 text-[10px] leading-relaxed text-white/70">
-                {lendersSourceLine(lendersMeta)}
-              </p>
             </div>
           </div>
         </div>
       </section>
       <SuiteDisclaimer>
-        Estimates only — confirm rates with a lender before you buy.
+        {calScreenDisclaimer(lendersMeta)}
       </SuiteDisclaimer>
     </div>
     </SuitePage>
@@ -1290,7 +1210,7 @@ function Row({
       <span
         className={cn(
           "min-w-0 flex-1 leading-snug text-white",
-          bold ? "text-[13px] font-bold" : "text-[12px]",
+          bold ? "text-[14px] font-bold" : "text-[13px]",
         )}
       >
         {label}
@@ -1298,7 +1218,7 @@ function Row({
       <span
         className={cn(
           "shrink-0 tabular-nums",
-          bold ? "text-[13px] font-bold" : "text-[12px] font-semibold",
+          bold ? "text-[15px] font-bold" : "text-[14px] font-semibold",
           warn && "text-amber",
           accent && "text-gold",
           !warn && !accent && "text-white",
