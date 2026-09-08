@@ -93,7 +93,7 @@ test("Grok catalog injection helpers do not lock horsepower: 450 alone", () => {
   assert.match(grounding, /engineAmbiguous/);
 });
 
-test("American Dream catalog source does not lock horsepower: 450 on 2020–2026 band", () => {
+test("American Dream catalog source does not lock horsepower: 450 on 2020–2027 band", () => {
   const block = src("rvData.ts");
   const start = block.indexOf('"American Dream"');
   assert.ok(start > 0);
@@ -101,7 +101,7 @@ test("American Dream catalog source does not lock horsepower: 450 on 2020–2026
   const dream = block.slice(start, next > start ? next : start + 2500);
   assert.match(dream, /Cummins L9 450 std \/ X15 605 opt/);
   const bandAt = dream.lastIndexOf("from: 2020");
-  assert.ok(bandAt >= 0, "expected 2020–2026 Dream year-band");
+  assert.ok(bandAt >= 0, "expected 2020–2027 Dream year-band");
   const band = dream.slice(bandAt, bandAt + 400);
   assert.match(band, /X15 605 opt/);
   assert.doesNotMatch(band, /horsepower:\s*450/);
@@ -15323,4 +15323,37 @@ test("Fleetwood MY2027 OEM+PDF floorplans + Insight GAP", () => {
   assert.doesNotMatch(fw.slice(fw.indexOf("    Discovery: {"), fw.indexOf('    "Discovery LXE": {')), /"38L"/);
   assert.doesNotMatch(fw.slice(fw.indexOf("    Fortis: {"), fw.indexOf("    Flex: {")), /"2027": .*"36T"/);
   assert.doesNotMatch(fw.slice(fw.indexOf("    Insight: {"), fw.indexOf('    "Altitude FS550": {')), /"2027":/);
+});
+
+test("American Coach MY2027 OEM+PDF floorplans + Tradition GAP", () => {
+  const idx = CATALOG_INDEX["American Coach"];
+  assert.ok(idx);
+
+  assert.equal(idx["American Dream"]?.type, "Class A Diesel");
+  assert.equal(idx["American Dream"]?.years?.includes(2027), true);
+  assert.equal(idx["American Eagle"]?.type, "Class A Diesel");
+  assert.equal(idx["American Eagle"]?.years?.includes(2027), true);
+
+  assert.equal(idx["American Tradition"]?.type, "Class A Diesel");
+  assert.equal(idx["American Tradition"]?.years?.includes(2026), true);
+  assert.equal(idx["American Tradition"]?.years?.includes(2027), false);
+
+  const block = src("rvData.ts");
+  const a0 = block.indexOf('\n  "American Coach": {');
+  const a1 = block.indexOf('\n  "Entegra Coach": {');
+  const ac = block.slice(a0, a1);
+  assert.match(ac, /"2027": \["42Q", "45A", "45P"\]/);
+  assert.match(ac, /"2027": \["45FW", "45J", "45K"\]/);
+
+  const dream = ac.slice(ac.indexOf('    "American Dream": {'));
+  assert.doesNotMatch(dream, /"45Q"/);
+  assert.doesNotMatch(dream, /"2027": .*"45B"/);
+  assert.doesNotMatch(dream, /"2026": .*"42Q"/);
+
+  const eagle = ac.slice(ac.indexOf('    "American Eagle": {'), ac.indexOf('    "American Dream": {'));
+  assert.doesNotMatch(eagle, /"2027": .*"45B"/);
+  assert.doesNotMatch(eagle, /"2026": .*"45FW"/);
+
+  const tradition = ac.slice(ac.indexOf('    "American Tradition": {'), ac.indexOf('    "American Eagle": {'));
+  assert.doesNotMatch(tradition, /"2027":/);
 });

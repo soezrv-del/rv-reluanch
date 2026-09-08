@@ -24172,6 +24172,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2024": ["42Q", "42V"],
         "2025": ["42Q", "42V"],
         "2026": ["42Q", "42V", "42B", "42X", "45T"]
+        // GAP MY27: OEM 2027-american-tradition 404 / library 2027-American-Coach-American-Tradition.pdf 403. Do not invent or copy 2026 forward.
       },
       lengthRange: [
         42,
@@ -24207,7 +24208,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1991,
       warrantyYears: 1,
       yearStart: 2000,
-      description: "American Coach American Tradition — high-line diesel. 2021-era L9 450 / Liberty Bridge common; verify floorplan (42Q/42V etc.).",
+      description: "American Coach American Tradition — high-line diesel. 2021-era L9 450 / Liberty Bridge common; verify floorplan (42Q/42V etc.). GAP MY27 (OEM 404 / library 403) — do not invent or copy 2026 forward.",
       powertrainByYear: [
         {
           from: 2005,
@@ -24246,7 +24247,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "American Eagle": {
       type: "Class A Diesel",
-      floorplans: ["45B", "45J", "45N", "42X", "45A", "45T"],
+      floorplans: ["45B", "45J", "45N", "42X", "45A", "45T", "45FW", "45K"],
       floorplansByYear: {
         "2005": ["45B", "45J", "45N"],
         "2006": ["45B", "45J", "45N"],
@@ -24269,7 +24270,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["45B", "45J"],
         "2024": ["45B", "45J"],
         "2025": ["45B", "45J"],
-        "2026": ["45B", "45J", "42X", "45A", "45T"]
+        "2026": ["45B", "45J", "42X", "45A", "45T"],
+        // LOCK americancoach.com/models/2027-american-eagle/ + library 2027-American-Coach-American-Eagle.pdf
+        // PDF MODELS order: 45FW | 45J | 45K. Do not copy 2026 45B/42X/45A/45T forward.
+        "2027": ["45FW", "45J", "45K"]
       },
       lengthRange: [
         45,
@@ -24304,7 +24308,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1991,
       warrantyYears: 1,
       yearStart: 2000,
-      description: "American Coach American Eagle — luxury diesel above Tradition. Powertrain options can include higher Cummins ratings.",
+      description: "American Coach American Eagle — luxury diesel above Tradition. Powertrain options can include higher Cummins ratings. MY27 OEM+PDF: 45FW / 45J / 45K.",
       powertrainByYear: [
         {
           from: 2005,
@@ -24331,17 +24335,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2026,
+          to: 2027,
           engine: "Cummins L9 / X15 (by option)",
           horsepower: 450,
-          chassis: "Spartan / Freightliner high-line"
+          chassis: "Spartan / Freightliner high-line",
+          notes: "MY27 OEM+PDF: 45FW | 45J | 45K. Do not copy 2026 45B/42X/45A/45T onto 2027."
         },
         
       ]
     },
     "American Dream": {
       type: "Class A Diesel",
-      floorplans: ["42G", "45A", "45B", "42C", "44Q"],
+      floorplans: ["42G", "45A", "45B", "42C", "44Q", "42Q", "45P"],
       floorplansByYear: {
         "2005": ["42G", "45A", "45B"],
         "2006": ["42G", "45A", "45B"],
@@ -24364,7 +24369,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["45A", "45B"],
         "2024": ["45A", "45B"],
         "2025": ["45A", "45B"],
-        "2026": ["45A", "45B", "42C", "44Q"]
+        "2026": ["45A", "45B", "42C", "44Q"],
+        // LOCK americancoach.com/models/2027-american-dream/ + library 2027-American-Coach-American-Dream.pdf (DREAM27F1, 3/26)
+        // PDF MODELS: 42Q | 45A | 45P. Omit option-text-only 45Q. Do not copy 2026 45B/42C/44Q forward.
+        "2027": ["42Q", "45A", "45P"]
       },
       lengthRange: [
         42,
@@ -24397,7 +24405,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1991,
       warrantyYears: 1,
       yearStart: 2000,
-      description: "American Coach American Dream — flagship diesel. Often Spartan + L9/X15; 605 HP is optional not universal.",
+      description: "American Coach American Dream — flagship diesel. Often Spartan + L9/X15; 605 HP is optional not universal. MY27 OEM+PDF: 42Q / 45A / 45P — omit option-text 45Q.",
       powertrainByYear: [
         {
           from: 2005,
@@ -24424,10 +24432,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2026,
+          to: 2027,
           engine: "Cummins L9 450 std / X15 605 opt",
           chassis: "Spartan K3",
-          notes: "L9 450 standard / X15 605 optional — HP and torque are option-band, not a locked 450 / 1,250. Confirm door sticker."
+          notes: "L9 450 standard / X15 605 optional — HP and torque are option-band, not a locked 450 / 1,250. Confirm door sticker. MY27 OEM+PDF: 42Q | 45A | 45P — omit option-text 45Q."
         },
         
       ]
