@@ -6,6 +6,10 @@ import {
   mapboxReverseUrl,
   readMapboxToken,
 } from "@/lib/trips/mapbox";
+import {
+  filterRvDestinations,
+  RV_DESTINATIONS,
+} from "@/lib/trips/rvDestinations";
 
 /**
  * GET /api/geocode?q=address
@@ -24,74 +28,18 @@ type GeoHit = {
 const cache = new Map<string, { at: number; hits: GeoHit[] }>();
 const TTL = 30 * 60 * 1000;
 
-/** Curated US RV destinations when network fails or for instant pick */
-const PRESETS: GeoHit[] = [
-  {
-    label: "Glacier National Park, MT",
-    lat: 48.7596,
-    lng: -113.787,
-    kind: "park",
-  },
-  {
-    label: "Yellowstone National Park, WY",
-    lat: 44.428,
-    lng: -110.5885,
-    kind: "park",
-  },
-  {
-    label: "Grand Canyon Village, AZ",
-    lat: 36.0544,
-    lng: -112.1401,
-    kind: "park",
-  },
-  {
-    label: "Zion National Park, UT",
-    lat: 37.2982,
-    lng: -113.0263,
-    kind: "park",
-  },
-  {
-    label: "Las Vegas, NV",
-    lat: 36.1699,
-    lng: -115.1398,
-    kind: "city",
-  },
-  {
-    label: "Salt Lake City, UT",
-    lat: 40.7608,
-    lng: -111.891,
-    kind: "city",
-  },
-  {
-    label: "Seattle, WA",
-    lat: 47.6062,
-    lng: -122.3321,
-    kind: "city",
-  },
-  {
-    label: "Denver, CO",
-    lat: 39.7392,
-    lng: -104.9903,
-    kind: "city",
-  },
-  {
-    label: "Quartzsite, AZ",
-    lat: 33.6639,
-    lng: -114.2297,
-    kind: "rv",
-  },
-  {
-    label: "Puyallup, WA",
-    lat: 47.1854,
-    lng: -122.2929,
-    kind: "city",
-  },
-];
+/** Curated RV destinations when network fails or for instant pick */
+const PRESETS: GeoHit[] = RV_DESTINATIONS.map((d) => ({
+  label: d.label,
+  lat: d.lat,
+  lng: d.lng,
+  kind: d.kind,
+}));
 
 function matchPresets(q: string): GeoHit[] {
   const n = q.toLowerCase().trim();
-  if (!n) return PRESETS.slice(0, 6);
-  return PRESETS.filter((p) => p.label.toLowerCase().includes(n)).slice(0, 8);
+  if (!n) return PRESETS.slice(0, 8);
+  return filterRvDestinations(n).slice(0, 8);
 }
 
 function nearestPreset(lat: number, lng: number): GeoHit {

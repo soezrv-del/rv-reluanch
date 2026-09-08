@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Bookmark,
+  ChevronDown,
   Droplets,
   ExternalLink,
   Loader2,
@@ -106,12 +107,15 @@ import {
   MAX_VIAS,
   newViaId,
   originIsDevice,
-  PLAN_DEST_CHIPS,
   PLAN_VIA_CHIPS,
   saveLastKnownOrigin,
   shouldTypeahead,
   type PlanPlace,
 } from "@/lib/trips/planTrip";
+import {
+  mergeDestSuggestions,
+  rvDestinationKindLabel,
+} from "@/lib/trips/rvDestinations";
 import {
   deleteSavedTrip,
   loadSavedTrips,
@@ -250,6 +254,10 @@ export function RvTripsApp() {
   const [destText, setDestText] = useState("");
   const [originPlace, setOriginPlace] = useState<PlaceHit | null>(bootOrigin);
   const [destPlace, setDestPlace] = useState<PlaceHit | null>(null);
+  const [destMenuOpen, setDestMenuOpen] = useState(false);
+  const [destHighlight, setDestHighlight] = useState(0);
+  const destWrapRef = useRef<HTMLDivElement | null>(null);
+  const destMenuRef = useRef<HTMLDivElement | null>(null);
   const [vias, setVias] = useState<ViaDraft[]>([]);
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>(() => {
     try {
@@ -972,9 +980,40 @@ export function RvTripsApp() {
     [dumpQuery, dumpState, dumpNearLat, dumpNearLng],
   );
 
+  const destSuggestions = useMemo(
+    () =>
+      mergeDestSuggestions(
+        destPlace && destPlace.label === destText ? "" : destText,
+        geoFor === "dest" ? geoHits : [],
+      ),
+    [destText, destPlace, geoFor, geoHits],
+  );
+
+  useEffect(() => {
+    if (!destMenuOpen) return;
+    const onDown = (event: PointerEvent) => {
+      const root = destWrapRef.current;
+      if (root && !root.contains(event.target as Node)) {
+        setDestMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [destMenuOpen]);
+
+  useEffect(() => {
+    if (!destMenuOpen) return;
+    const active = destMenuRef.current?.querySelector('[data-dest-active="1"]');
+    if (active instanceof HTMLElement) {
+      active.scrollIntoView({ block: "nearest" });
+    }
+  }, [destHighlight, destMenuOpen, destSuggestions.length]);
+
   const pickDest = (hit: PlaceHit) => {
     setDestPlace(hit);
     setDestText(hit.label);
+    setDestMenuOpen(false);
+    setDestHighlight(0);
     setGeoHits([]);
     setGeoFor(null);
     setNavArmed(false);
@@ -1022,6 +1061,7 @@ export function RvTripsApp() {
     );
     setDestPlace(trip.dest);
     setDestText(trip.dest.label);
+    setDestMenuOpen(false);
     setGeoHits([]);
     setGeoFor(null);
     setNavArmed(false);
@@ -1527,24 +1567,135 @@ export function RvTripsApp() {
                   </button>
                 ) : null}
 
-                <input
-                  value={destText}
-                  onChange={(e) => {
-                    setDestText(e.target.value);
-                    setDestPlace(null);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && canRoute) {
-                      e.preventDefault();
-                      void geocodeAndRoute();
-                    }
-                  }}
-                  placeholder="Where to?"
-                  className="glass-field min-h-11 w-full rounded-xl px-3 py-2.5 text-[15px] font-semibold text-white outline-none placeholder:text-white/65"
-                  aria-label="Destination"
-                />
+                <div ref={destWrapRef} className="relative">
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      value={destText}
+                      onChange={(e) => {
+                        setDestText(e.target.value);
+                        setDestPlace(null);
+                        setDestMenuOpen(true);
+                        setDestHighlight(0);
+                      }}
+                      onFocus={() => setDestMenuOpen(true)}
+                      onKeyDown={(e) => {
+                        if (destMenuOpen && destSuggestions.length) {
+                          if (e.key === "ArrowDown") {
+                            e.preventDefault();
+                            setDestHighlight((i) =>
+                              Math.min(i + 1, destSuggestions.length - 1),
+                            );
+                            return;
+                          }
+                          if (e.key === "ArrowUp") {
+                            e.preventDefault();
+                            setDestHighlight((i) => Math.max(i - 1, 0));
+                            return;
+                          }
+                          if (e.key === "Enter") {
+                            const hit = destSuggestions[destHighlight];
+                            if (hit) {
+                              e.preventDefault();
+                              pickDest(hit);
+                              return;
+                            }
+                          }
+                          if (e.key === "Escape") {
+                            e.preventDefault();
+                            setDestMenuOpen(false);
+                            return;
+                          }
+                        }
+                        if (e.key === "Enter" && canRoute) {
+                          e.preventDefault();
+                          void geocodeAndRoute();
+                        }
+                      }}
+                      placeholder="Where to?"
+                      className="glass-field min-h-11 w-full rounded-xl px-3 py-2.5 text-[15px] font-semibold text-white outline-none placeholder:text-white/65"
+                      aria-label="Destination"
+                      aria-expanded={destMenuOpen}
+                      aria-controls="dest-suggest-list"
+                      aria-autocomplete="list"
+                      role="combobox"
+                    />
+                    <button
+                      type="button"
+                      aria-label={
+                        destMenuOpen
+                          ? "Hide destination list"
+                          : "Show destination list"
+                      }
+                      aria-expanded={destMenuOpen}
+                      aria-controls="dest-suggest-list"
+                      onClick={() => setDestMenuOpen((open) => !open)}
+                      className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-black/30 text-white"
+                    >
+                      <ChevronDown
+                        className={cn(
+                          "size-4 transition-transform",
+                          destMenuOpen && "rotate-180",
+                        )}
+                      />
+                    </button>
+                  </div>
 
-                {geoFor && (geoLoading || geoHits.length > 0) ? (
+                  {destMenuOpen ? (
+                    <div
+                      ref={destMenuRef}
+                      id="dest-suggest-list"
+                      data-dest-suggest
+                      role="listbox"
+                      aria-label="RV destination suggestions"
+                      className="glass-prestige-deep mt-1.5 max-h-60 overflow-y-auto overscroll-contain rounded-xl p-1.5"
+                    >
+                      <p className="px-2.5 py-1.5 text-[10px] font-bold tracking-[0.12em] text-white/70">
+                        {geoLoading && destText.trim().length >= 2
+                          ? "SEARCHING…"
+                          : destText.trim() &&
+                              !(destPlace && destPlace.label === destText)
+                            ? "MATCHING DESTINATIONS"
+                            : "POPULAR RV DESTINATIONS"}
+                      </p>
+                      {destSuggestions.map((h, index) => (
+                        <button
+                          key={`${h.lat},${h.lng},${h.label}`}
+                          type="button"
+                          role="option"
+                          aria-selected={index === destHighlight}
+                          data-dest-active={index === destHighlight ? "1" : "0"}
+                          onMouseEnter={() => setDestHighlight(index)}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => pickDest(h)}
+                          className={cn(
+                            "flex min-h-11 w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left",
+                            index === destHighlight
+                              ? "bg-white/12"
+                              : "hover:bg-white/10",
+                          )}
+                        >
+                          <MapPin className="mt-0.5 size-3.5 shrink-0 text-blue" />
+                          <span className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-white">
+                            {h.label}
+                          </span>
+                          <span className="shrink-0 pt-0.5 text-[10px] font-semibold tracking-wide text-white/55">
+                            {rvDestinationKindLabel(h.kind)}
+                          </span>
+                        </button>
+                      ))}
+                      {destSuggestions.length === 0 ? (
+                        <p className="px-2.5 py-2 text-[12px] text-white/80">
+                          No matching destinations — keep typing to search the
+                          map.
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+
+                {geoFor &&
+                geoFor !== "dest" &&
+                (geoLoading || geoHits.length > 0) ? (
                   <div className="max-h-48 space-y-1 overflow-y-auto rounded-xl border border-white/15 bg-black/50 p-1.5">
                     {geoLoading ? (
                       <p className="px-2 py-2 text-[12px] text-white">
@@ -1568,18 +1719,20 @@ export function RvTripsApp() {
                   </div>
                 ) : null}
 
-                <div className="flex flex-wrap gap-1.5">
-                  {(destPlace && emptyVia ? PLAN_VIA_CHIPS : PLAN_DEST_CHIPS).map((chip) => (
-                    <button
-                      key={chip.label}
-                      type="button"
-                      onClick={() => pickChip(chip)}
-                      className="min-h-11 rounded-full border border-white/20 bg-black/30 px-3 py-2 text-[11px] font-semibold text-white"
-                    >
-                      {chip.label.split(",")[0]}
-                    </button>
-                  ))}
-                </div>
+                {destPlace && emptyVia ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {PLAN_VIA_CHIPS.map((chip) => (
+                      <button
+                        key={chip.label}
+                        type="button"
+                        onClick={() => pickChip(chip)}
+                        className="min-h-11 rounded-full border border-white/20 bg-black/30 px-3 py-2 text-[11px] font-semibold text-white"
+                      >
+                        {chip.label.split(",")[0]}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
 
                 <button
                   type="button"
@@ -1866,7 +2019,7 @@ export function RvTripsApp() {
                 </section>
               ) : !hasRoutePoints ? (
                 <p className="px-1 py-2 text-[13px] text-white/80">
-                  Type a destination — or tap a city — then{" "}
+                  Type a destination — or pick from the list — then{" "}
                   <span className="font-bold text-white">Route</span>.
                 </p>
               ) : null}
