@@ -75,12 +75,26 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(css, /\.bottom-tab-etch-core[\s\S]*background-clip:\s*text/);
   assert.match(css, /\.bottom-tab-etch-face[\s\S]*#ffffff/);
   assert.match(css, /drop-shadow\(0 -0\.55px 0 #ffffff\)/);
-  assert.match(css, /0 0 16px rgba\(110, 190, 255, 0\.45\)/);
+  assert.match(css, /--dock-etch-under-hue:\s*rgba\(168, 208, 242, 0\.18\)/);
+  assert.match(css, /--dock-etch-under-hue-grok:\s*rgba\(255, 186, 198, 0\.14\)/);
+  assert.match(css, /--dock-etch-under-shift:\s*1px/);
+  assert.match(
+    css,
+    /\.bottom-tab-label\.is-etched-active \.bottom-tab-etch-halo[\s\S]*?var\(--dock-etch-under-hue\)/,
+  );
+  assert.match(
+    css,
+    /\.bottom-tab-label-grok\.is-etched-active \.bottom-tab-etch-halo[\s\S]*?var\(--dock-etch-under-hue-grok\)/,
+  );
   assert.match(css, /\.bottom-tab-label\.is-etched-active \.bottom-tab-etch-core/);
   assert.match(tabs, /bottom-tab-label-sold/);
   assert.match(tabs, /bottom-tab-label-sold-owed/);
   assert.doesNotMatch(css, /--color-dock-etch:/);
   assert.doesNotMatch(css, /Milky frosted body/);
   assert.doesNotMatch(css, /rgba\(176, 202, 232, 0\.28\)/);
+  assert.doesNotMatch(css, /0 0 16px rgba\(110, 190, 255, 0\.45\)/);
+  assert.doesNotMatch(css, /0 0 20px rgba\(120, 200, 255, 0\.52\)/);
+  assert.doesNotMatch(css, /drop-shadow\(0 0 5px rgba\(140, 210, 255/);
+  assert.doesNotMatch(css, /drop-shadow\(0 0 7px rgba\(160, 220, 255/);
   assert.doesNotMatch(css, /\.bottom-tab-etch-face[\s\S]{0,180}-webkit-text-stroke/);
 });
