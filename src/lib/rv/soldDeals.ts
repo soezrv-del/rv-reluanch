@@ -1,7 +1,9 @@
 /**
  * Professional Sold book — device-local deals from Facts saved coaches.
  * Lot-desk net: 25% of gross for a whole deal, then × share
- * (whole 1 / half 0.5 / quarter 0.25). Never typed. No delete in v1.
+ * (whole 1 / half 0.5 / quarter 0.25). Never typed.
+ * Swipe/Delete drops the row from `rvfax_sold_v1` only — does not put the
+ * coach back on Saved. For test deals and fallen-through / went-backwards.
  */
 
 import {
@@ -96,6 +98,32 @@ export function formatSoldMoney(n: number): string {
   return n < 0 ? `-$${formatted}` : `$${formatted}`;
 }
 
+/** Compact owed figure for the pro dock tab — always the unpaid net. */
+export function formatSoldDockMoney(n: number): string {
+  if (!Number.isFinite(n)) return "$0";
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(Math.round(n));
+  if (abs >= 1_000_000) {
+    const m = abs / 1_000_000;
+    const s = m >= 10 ? String(Math.round(m)) : trimDockDecimal(m);
+    return `${sign}$${s}M`;
+  }
+  if (abs >= 10_000) {
+    const k = abs / 1000;
+    const s = Number.isInteger(k) ? String(k) : trimDockDecimal(k);
+    return `${sign}$${s}k`;
+  }
+  return formatSoldMoney(n);
+}
+
+function trimDockDecimal(n: number): string {
+  return n.toFixed(1).replace(/\.0$/, "");
+}
+
+export function readOwedNet(): number {
+  return soldTotals(loadSoldDeals()).owedNet;
+}
+
 /** Optional name — empty is valid and must never block a deal. */
 export function normalizeCustomerName(raw: unknown): string {
   return clean(raw);
@@ -129,6 +157,11 @@ export function soldTotals(deals: SoldDeal[]): SoldTotals {
     else owedNet += net;
   }
   return { totalGross, owedNet, paidNet };
+}
+
+/** More-row / book subtitle — gross + unpaid net. */
+export function soldFactsSummary(totals: SoldTotals): string {
+  return `${formatSoldMoney(totals.totalGross)} gross · ${formatSoldMoney(totals.owedNet)} owed`;
 }
 
 export function normalizeSoldDeal(raw: unknown): SoldDeal | null {
@@ -198,6 +231,16 @@ export function persistSoldDeals(deals: SoldDeal[]): SoldDeal[] {
 
 export function toggleDealPaid(deals: SoldDeal[], id: string): SoldDeal[] {
   return deals.map((d) => (d.id === id ? { ...d, paid: !d.paid } : d));
+}
+
+/**
+ * Drop one deal from Sold only. Does not touch Saved — no unwind / restore.
+ * Empty id is a no-op.
+ */
+export function removeSoldDeal(deals: SoldDeal[], id: string): SoldDeal[] {
+  const want = typeof id === "string" ? id.trim() : "";
+  if (!want) return deals;
+  return deals.filter((d) => d.id !== want);
 }
 
 function newDealId(): string {
