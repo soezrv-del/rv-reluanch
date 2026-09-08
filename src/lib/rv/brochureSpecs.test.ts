@@ -15422,3 +15422,58 @@ test("Renegade RV MY2027 OEM+PDF floorplans + Villagio reopen + Villager/Ikon GA
   const ikon = rg.slice(rg.indexOf("    Ikon: {"), rg.indexOf("    Villagio: {"));
   assert.doesNotMatch(ikon, /"2027":/);
 });
+
+test("Midwest Automotive Designs MY2027 OEM+RVUSA locks + Passage/Weekender GAP", () => {
+  const idx = CATALOG_INDEX["Midwest Automotive Designs"];
+  assert.ok(idx);
+
+  assert.equal(idx.Patriot?.type, "Class B Diesel");
+  assert.equal(idx.Patriot?.years?.includes(2027), true);
+  assert.equal(idx.Heritage?.type, "Class B Diesel");
+  assert.equal(idx.Heritage?.years?.includes(2027), true);
+  assert.equal(idx["Luxe Cruiser"]?.type, "Class B Diesel");
+  assert.equal(idx["Luxe Cruiser"]?.years?.includes(2027), true);
+
+  assert.equal(idx.Passage?.years?.includes(2026), true);
+  assert.equal(idx.Passage?.years?.includes(2027), false);
+  assert.equal(idx["Passage Daycruiser"]?.years?.includes(2026), true);
+  assert.equal(idx["Passage Daycruiser"]?.years?.includes(2027), false);
+  assert.equal(idx.Weekender?.years?.includes(2026), true);
+  assert.equal(idx.Weekender?.years?.includes(2027), false);
+
+  assert.equal(idx.Legend, undefined);
+  assert.equal(idx["Patriot Cruiser"], undefined);
+
+  const block = src("rvData.ts");
+  const m0 = block.indexOf('\n  "Midwest Automotive Designs": {');
+  const m1 = block.indexOf('\n  "Outdoors RV": {');
+  const mw = block.slice(m0, m1);
+  assert.match(mw, /"2027": \["FD2", "MD2", "MD2S", "MD3", "MD4"\]/);
+  assert.match(mw, /"2027": \["FD2", "MD2", "MD3", "MD4"\]/);
+  assert.match(mw, /"2027": \["D4", "D6", "LD4", "S5"\]/);
+
+  const passage = mw.slice(mw.indexOf("    Passage: {"), mw.indexOf("    Weekender: {"));
+  assert.doesNotMatch(passage, /"2027":/);
+  const weekender = mw.slice(mw.indexOf("    Weekender: {"), mw.indexOf('    "Passage Daycruiser": {'));
+  assert.doesNotMatch(weekender, /"2027":/);
+  const day = mw.slice(mw.indexOf('    "Passage Daycruiser": {'), mw.indexOf("    Heritage: {"));
+  assert.doesNotMatch(day, /"2027":/);
+  assert.doesNotMatch(day, /"D4"/);
+
+  const heritage = mw.slice(mw.indexOf("    Heritage: {"), mw.indexOf('    "Luxe Cruiser": {'));
+  assert.match(heritage, /type: "Class B Diesel"/);
+  assert.doesNotMatch(heritage, /"MD2S"/);
+  assert.doesNotMatch(heritage, /"2026":/);
+
+  const luxe = mw.slice(mw.indexOf('    "Luxe Cruiser": {'), mw.indexOf("    Patriot: {"));
+  assert.match(luxe, /type: "Class B Diesel"/);
+  assert.doesNotMatch(luxe, /"D6 Full Partition"/);
+  assert.doesNotMatch(luxe, /"D6 Arched Partition"/);
+  assert.doesNotMatch(luxe, /"d6-full-partition"/);
+  assert.doesNotMatch(luxe, /"2026":/);
+
+  const patriot = mw.slice(mw.indexOf("    Patriot: {"));
+  assert.match(patriot, /type: "Class B Diesel"/);
+  assert.match(patriot, /"MD2S"/);
+  assert.doesNotMatch(patriot, /"2026":/);
+});
