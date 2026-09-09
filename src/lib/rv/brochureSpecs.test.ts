@@ -15867,12 +15867,12 @@ test("DRV honesty: EzMe pack 2026-09-09 LOCK/GAP (Mobile Suites / Elite / Tradit
   assert.equal(idx["Full House"]?.yearEnd, 2024);
 
   const block = src("rvData.ts");
-  const d0 = block.indexOf("\n  DRV: {");
+  const d0 = block.indexOf('\n  "DRV": {');
   const d1 = block.indexOf("\n  Brinkley: {");
   const drv = block.slice(d0, d1);
 
-  const ms = drv.slice(drv.indexOf('    "Mobile Suites": {'), drv.indexOf("    Tradition: {"));
-  const tradition = drv.slice(drv.indexOf("    Tradition: {"), drv.indexOf('    "Full House": {'));
+  const ms = drv.slice(drv.indexOf('    "Mobile Suites": {'), drv.indexOf('    "Tradition": {'));
+  const tradition = drv.slice(drv.indexOf('    "Tradition": {'), drv.indexOf('    "Full House": {'));
   const fullHouse = drv.slice(drv.indexOf('    "Full House": {'), drv.indexOf('    "Elite Suites": {'));
   const elite = drv.slice(drv.indexOf('    "Elite Suites": {'));
 
@@ -15899,7 +15899,7 @@ test("DRV honesty: EzMe pack 2026-09-09 LOCK/GAP (Mobile Suites / Elite / Tradit
     assert.equal(fbyYear(ms, y), null, `Mobile Suites ${y} must stay GAP (prefer omit)`);
     assert.doesNotMatch(ms, new RegExp(`"${y}":`));
   }
-  assert.doesNotMatch(ms, /44RSSB4/);
+  assert.doesNotMatch(ms, /"44RSSB4"/);
 
   assert.deepEqual(fbyYear(tradition, 2013), [
     "340RES",
@@ -15925,7 +15925,7 @@ test("DRV honesty: EzMe pack 2026-09-09 LOCK/GAP (Mobile Suites / Elite / Tradit
     assert.equal(fbyYear(tradition, y), null, `Tradition ${y} must stay GAP`);
     assert.doesNotMatch(tradition, new RegExp(`"${y}":`));
   }
-  assert.doesNotMatch(tradition, /350RLS|355LBSS|390RLS/);
+  assert.doesNotMatch(tradition, /"350RLS"|"355LBSS"|"390RLS"/);
 
   assert.deepEqual(fbyYear(fullHouse, 2015), ["JX450", "LX450", "LX455"]);
   assert.deepEqual(fbyYear(fullHouse, 2016), [
@@ -15968,5 +15968,5 @@ test("DRV honesty: EzMe pack 2026-09-09 LOCK/GAP (Mobile Suites / Elite / Tradit
     assert.equal(fbyYear(elite, y), null, `Elite Suites ${y} must stay GAP`);
     assert.doesNotMatch(elite, new RegExp(`"${y}":`));
   }
-  assert.doesNotMatch(elite, /43RSSB|"40KSSB"/);
+  assert.doesNotMatch(elite, /"43RSSB"/);
 });

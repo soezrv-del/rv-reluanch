@@ -34340,7 +34340,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       description: "The Regency Ultra Brougham is the most luxurious Class B conversion available — hand-built in limited production on the Sprinter 170 EXT with a full-width slideout, genuine hardwood cabinetry, heated Italian tile floors, and a residential wet bath. A 400Ah lithium bank and 600W solar run everything indefinitely off-grid. Waiting list typically 8-12 months."
     }
   },
-  DRV: {
+  "DRV": {
     "Mobile Suites": {
       type: "Fifth Wheel",
       floorplans: ["32RS3", "32TK3", "34RESA", "34RESA3", "34RLSB3", "36KSSB3", "36RESB3", "36RK3", "36RKSB", "36RS3", "36RSSB3", "36TK3", "36TKSB3", "36TKSB4", "38KSSB", "38PS3", "38REPS3", "38RESB3", "38RLSB3", "38RSB3", "38RSSA", "38RSSB3", "38TKSB3", "39DBRS3", "39RBSB4", "39RESB3", "39RKTS", "40BHSB3", "40FBRL", "40KSSB4", "41FKMB", "41FKRB", "41RKDB", "41RKSB4", "41RSSB4", "ATLANTA", "CINCINNATI", "CUMBERLAND", "DALLAS", "DENVER", "HOUSTON", "LAFAYETTE", "MANHATTAN", "MEMPHIS", "NASHVILLE", "ORLANDO", "SANTA FE"],
@@ -34397,7 +34397,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2008,
       description: "The DRV Mobile Suites is the gold standard for luxury residential fifth wheels — a 9-ft ceiling height, hardwood cabinetry, king master suite, washer/dryer, and build quality that competes directly with entry-level Class A motorhomes. Dated EzMe pack 2026-09-09 OEM/owners brochures. GAP 2013 and 2026 — do not invent or copy adjacent years. MY2027 is 39RKTS / 40FBRL only."
     },
-    Tradition: {
+    "Tradition": {
       type: "Fifth Wheel",
       floorplans: ["340RES", "360RSS", "365LKS", "370TKS", "375KPS", "380RES", "384RSS", "385RSS", "390FLS", "390RESS", "399BHQS"],
       floorplansByYear: {
