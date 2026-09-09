@@ -15835,3 +15835,138 @@ test("Midwest Automotive Designs MY2027 OEM+RVUSA locks + Passage/Weekender GAP"
   assert.match(patriot, /"MD2S"/);
   assert.doesNotMatch(patriot, /"2026":/);
 });
+
+test("DRV honesty: EzMe pack 2026-09-09 LOCK/GAP (Mobile Suites / Elite / Tradition / Full House)", () => {
+  const idx = CATALOG_INDEX.DRV;
+  assert.ok(idx);
+
+  assert.deepEqual(idx["Mobile Suites"]?.years, [
+    2008, 2009, 2010, 2011, 2012, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021,
+    2022, 2023, 2024, 2025, 2027,
+  ]);
+  assert.equal(idx["Mobile Suites"]?.yearStart, 2008);
+  assert.equal(idx["Mobile Suites"]?.yearEnd, undefined);
+  assert.equal(idx["Mobile Suites"]?.type, "Fifth Wheel");
+  assert.equal(idx["Mobile Suites"]?.years?.includes(2013), false);
+  assert.equal(idx["Mobile Suites"]?.years?.includes(2026), false);
+
+  assert.deepEqual(idx["Elite Suites"]?.years, [
+    2008, 2009, 2010, 2011, 2012, 2016, 2017, 2018, 2019, 2020,
+  ]);
+  assert.equal(idx["Elite Suites"]?.yearStart, 2008);
+  assert.equal(idx["Elite Suites"]?.yearEnd, 2020);
+
+  assert.deepEqual(idx.Tradition?.years, [2013, 2014, 2015]);
+  assert.equal(idx.Tradition?.yearStart, 2013);
+  assert.equal(idx.Tradition?.yearEnd, 2015);
+
+  assert.deepEqual(idx["Full House"]?.years, [
+    2015, 2016, 2017, 2018, 2019, 2021, 2022, 2023, 2024,
+  ]);
+  assert.equal(idx["Full House"]?.yearStart, 2015);
+  assert.equal(idx["Full House"]?.yearEnd, 2024);
+
+  const block = src("rvData.ts");
+  const d0 = block.indexOf('\n  "DRV": {');
+  const d1 = block.indexOf("\n  Brinkley: {");
+  const drv = block.slice(d0, d1);
+
+  const ms = drv.slice(drv.indexOf('    "Mobile Suites": {'), drv.indexOf('    "Tradition": {'));
+  const tradition = drv.slice(drv.indexOf('    "Tradition": {'), drv.indexOf('    "Full House": {'));
+  const fullHouse = drv.slice(drv.indexOf('    "Full House": {'), drv.indexOf('    "Elite Suites": {'));
+  const elite = drv.slice(drv.indexOf('    "Elite Suites": {'));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  assert.deepEqual(fbyYear(ms, 2008), ["34RLSB3", "36RESB3", "36RK3", "36TK3", "36TKSB3"]);
+  assert.deepEqual(fbyYear(ms, 2025), [
+    "36RSSB3",
+    "39DBRS3",
+    "40KSSB4",
+    "41FKRB",
+    "41RKDB",
+    "HOUSTON",
+    "MANHATTAN",
+    "NASHVILLE",
+    "ORLANDO",
+  ]);
+  assert.deepEqual(fbyYear(ms, 2027), ["39RKTS", "40FBRL"]);
+  for (const y of [2005, 2006, 2007, 2013, 2026]) {
+    assert.equal(fbyYear(ms, y), null, `Mobile Suites ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(ms, new RegExp(`"${y}":`));
+  }
+  assert.doesNotMatch(ms, /"44RSSB4"/);
+
+  assert.deepEqual(fbyYear(tradition, 2013), [
+    "340RES",
+    "360RSS",
+    "370TKS",
+    "380RES",
+    "385RSS",
+    "390FLS",
+    "399BHQS",
+  ]);
+  assert.deepEqual(fbyYear(tradition, 2015), [
+    "340RES",
+    "360RSS",
+    "365LKS",
+    "375KPS",
+    "380RES",
+    "384RSS",
+    "385RSS",
+    "390FLS",
+    "390RESS",
+  ]);
+  for (const y of [2008, 2009, 2010, 2011, 2012, 2016, 2020, 2025, 2026]) {
+    assert.equal(fbyYear(tradition, y), null, `Tradition ${y} must stay GAP`);
+    assert.doesNotMatch(tradition, new RegExp(`"${y}":`));
+  }
+  assert.doesNotMatch(tradition, /"350RLS"|"355LBSS"|"390RLS"/);
+
+  assert.deepEqual(fbyYear(fullHouse, 2015), ["JX450", "LX450", "LX455"]);
+  assert.deepEqual(fbyYear(fullHouse, 2016), [
+    "JX450",
+    "LX410",
+    "LX450",
+    "LX455",
+    "TX500",
+    "ZX350",
+  ]);
+  assert.deepEqual(fbyYear(fullHouse, 2021), ["JX450", "LX450", "LX455", "MX450"]);
+  assert.deepEqual(fbyYear(fullHouse, 2024), ["JX450", "LX455", "MX450"]);
+  for (const y of [2010, 2011, 2012, 2013, 2014, 2020, 2025, 2026, 2027]) {
+    assert.equal(fbyYear(fullHouse, y), null, `Full House ${y} must stay GAP`);
+    assert.doesNotMatch(fullHouse, new RegExp(`"${y}":`));
+  }
+  for (const y of [2015, 2016, 2017, 2018, 2019]) {
+    const plans = fbyYear(fullHouse, y) ?? [];
+    assert.equal(plans.includes("MX450"), false, `Full House ${y} must not backfill MX450`);
+  }
+
+  assert.deepEqual(fbyYear(elite, 2008), ["36TK3", "36TKSB3"]);
+  assert.deepEqual(fbyYear(elite, 2020), [
+    "36RKSB",
+    "36RSSB3",
+    "38KSSB",
+    "38RSSA",
+    "38RSSB3",
+    "39DBRS3",
+    "40KSSB4",
+    "41RKSB4",
+    "ATLANTA",
+    "HOUSTON",
+    "MANHATTAN",
+    "MEMPHIS",
+    "NASHVILLE",
+    "SANTA FE",
+  ]);
+  for (const y of [2013, 2014, 2015, 2021, 2022, 2023, 2024, 2025, 2026]) {
+    assert.equal(fbyYear(elite, y), null, `Elite Suites ${y} must stay GAP`);
+    assert.doesNotMatch(elite, new RegExp(`"${y}":`));
+  }
+  assert.doesNotMatch(elite, /"43RSSB"/);
+});

@@ -34340,34 +34340,36 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       description: "The Regency Ultra Brougham is the most luxurious Class B conversion available — hand-built in limited production on the Sprinter 170 EXT with a full-width slideout, genuine hardwood cabinetry, heated Italian tile floors, and a residential wet bath. A 400Ah lithium bank and 600W solar run everything indefinitely off-grid. Waiting list typically 8-12 months."
     }
   },
-  DRV: {
+  "DRV": {
     "Mobile Suites": {
       type: "Fifth Wheel",
-      floorplans: ["36RSSB3", "38RSSB3", "41RSSB4", "44RSSB4"],
+      floorplans: ["32RS3", "32TK3", "34RESA", "34RESA3", "34RLSB3", "36KSSB3", "36RESB3", "36RK3", "36RKSB", "36RS3", "36RSSB3", "36TK3", "36TKSB3", "36TKSB4", "38KSSB", "38PS3", "38REPS3", "38RESB3", "38RLSB3", "38RSB3", "38RSSA", "38RSSB3", "38TKSB3", "39DBRS3", "39RBSB4", "39RESB3", "39RKTS", "40BHSB3", "40FBRL", "40KSSB4", "41FKMB", "41FKRB", "41RKDB", "41RKSB4", "41RSSB4", "ATLANTA", "CINCINNATI", "CUMBERLAND", "DALLAS", "DENVER", "HOUSTON", "LAFAYETTE", "MANHATTAN", "MEMPHIS", "NASHVILLE", "ORLANDO", "SANTA FE"],
       floorplansByYear: {
-        "2008": ["36RSSB3"],
-        "2009": ["36RSSB3"],
-        "2010": ["36RSSB3"],
-        "2011": ["36RSSB3"],
-        "2012": ["36RSSB3"],
-        "2013": ["36RSSB3", "38RSSB3"],
-        "2014": ["36RSSB3", "38RSSB3"],
-        "2015": ["36RSSB3", "38RSSB3"],
-        "2016": ["36RSSB3", "38RSSB3"],
-        "2017": ["36RSSB3", "38RSSB3"],
-        "2018": ["36RSSB3", "38RSSB3", "41RSSB4", "44RSSB4"],
-        "2019": ["36RSSB3", "38RSSB3", "41RSSB4", "44RSSB4"],
-        "2020": ["36RSSB3", "38RSSB3", "41RSSB4", "44RSSB4"],
-        "2021": ["36RSSB3", "38RSSB3", "41RSSB4", "44RSSB4"],
-        "2022": ["36RSSB3", "38RSSB3", "41RSSB4", "44RSSB4"],
-        "2023": ["36RSSB3", "38RSSB3", "41RSSB4", "44RSSB4"],
-        "2024": ["36RSSB3", "38RSSB3", "41RSSB4", "44RSSB4"],
-        "2025": ["36RSSB3", "38RSSB3", "41RSSB4", "44RSSB4"],
-        "2026": ["36RSSB3", "38RSSB3", "41RSSB4", "44RSSB4"]
+        // LOCK EzMe pack 2026-09-09 dated OEM / owners brochures.
+        // GAP 2005–2007 / 2013 / 2026 — prefer omit; do not invent or copy adjacent years.
+        // MY2027 is 39RKTS / 40FBRL only — do not overwrite 2025 with 2027. Drop 44RSSB4 invent.
+        "2008": ["34RLSB3", "36RESB3", "36RK3", "36TK3", "36TKSB3"],
+        "2009": ["32RS3", "32TK3", "34RLSB3", "36RESB3", "36RS3", "36RSSB3", "36TK3", "36TKSB3", "38RLSB3", "38TKSB3"],
+        "2010": ["32RS3", "32TK3", "34RLSB3", "36RESB3", "36RSSB3", "36TK3", "36TKSB3", "36TKSB4", "38RLSB3", "DENVER"],
+        "2011": ["32RS3", "32TK3", "36KSSB3", "36RSSB3", "36TK3", "36TKSB3", "36TKSB4", "38REPS3", "38RESB3", "38RSSB3", "38TKSB3", "40BHSB3", "DALLAS", "DENVER"],
+        "2012": ["32RS3", "32TK3", "36TK3", "36TKSB3", "36TKSB4", "38REPS3", "38RESB3", "38TKSB3", "DALLAS", "DENVER"],
+        "2014": ["32RS3", "32TK3", "36TKSB4", "38PS3", "38RESB3", "38RSSB3", "38TKSB3", "39RBSB4", "39RESB3", "CINCINNATI", "DALLAS", "DENVER"],
+        "2015": ["32RS3", "34RESA", "38RSSA", "39DBRS3", "41RSSB4", "CINCINNATI", "DENVER", "HOUSTON"],
+        "2016": ["32RS3", "34RESA3", "36RSSB3", "38PS3", "38RSB3", "38RSSA", "38RSSB3", "39DBRS3", "39RESB3", "40KSSB4", "41RSSB4", "ATLANTA", "CUMBERLAND", "DALLAS", "HOUSTON", "LAFAYETTE", "MANHATTAN", "MEMPHIS"],
+        "2017": ["36RSSB3", "38KSSB", "38RSB3", "38RSSA", "38RSSB3", "39DBRS3", "39RESB3", "40KSSB4", "41RSSB4", "ATLANTA", "CUMBERLAND", "DALLAS", "HOUSTON", "MANHATTAN", "MEMPHIS", "NASHVILLE"],
+        "2018": ["36RSSB3", "38KSSB", "38RSB3", "38RSSA", "38RSSB3", "39DBRS3", "39RESB3", "40KSSB4", "ATLANTA", "CUMBERLAND", "DALLAS", "HOUSTON", "MANHATTAN", "MEMPHIS", "NASHVILLE"],
+        "2019": ["36RSSB3", "38KSSB", "38RSB3", "38RSSA", "38RSSB3", "39DBRS3", "39RESB3", "40KSSB4", "41RKSB4", "ATLANTA", "CUMBERLAND", "HOUSTON", "MANHATTAN", "MEMPHIS", "NASHVILLE", "SANTA FE"],
+        "2020": ["36RKSB", "36RSSB3", "38KSSB", "38RSSA", "38RSSB3", "39DBRS3", "40KSSB4", "41RKSB4", "ATLANTA", "HOUSTON", "MANHATTAN", "MEMPHIS", "NASHVILLE", "SANTA FE"],
+        "2021": ["36RKSB", "36RSSB3", "38RSSA", "38RSSB3", "39DBRS3", "40KSSB4", "41FKMB", "41RKDB", "41RKSB4", "ATLANTA", "HOUSTON", "MANHATTAN", "MEMPHIS", "NASHVILLE", "SANTA FE"],
+        "2022": ["36RSSB3", "38RSSA", "39DBRS3", "40KSSB4", "41FKMB", "41RKDB", "41RKSB4", "HOUSTON", "MANHATTAN", "NASHVILLE", "SANTA FE"],
+        "2023": ["36RSSB3", "39DBRS3", "40KSSB4", "41FKMB", "41RKDB", "HOUSTON", "MANHATTAN", "NASHVILLE", "ORLANDO"],
+        "2024": ["36RSSB3", "39DBRS3", "40KSSB4", "41FKMB", "41RKDB", "HOUSTON", "MANHATTAN", "NASHVILLE", "ORLANDO"],
+        "2025": ["36RSSB3", "39DBRS3", "40KSSB4", "41FKRB", "41RKDB", "HOUSTON", "MANHATTAN", "NASHVILLE", "ORLANDO"],
+        "2027": ["39RKTS", "40FBRL"],
       },
       lengthRange: [
-        36,
-        44
+        32,
+        41
       ],
       weightRange: [
         18000,
@@ -34393,34 +34395,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2002,
       warrantyYears: 2,
       yearStart: 2008,
-      description: "The DRV Mobile Suites is the gold standard for luxury residential fifth wheels — a 9-ft ceiling height, hardwood cabinetry, king master suite, washer/dryer, and build quality that competes directly with entry-level Class A motorhomes."
+      description: "The DRV Mobile Suites is the gold standard for luxury residential fifth wheels — a 9-ft ceiling height, hardwood cabinetry, king master suite, washer/dryer, and build quality that competes directly with entry-level Class A motorhomes. Dated EzMe pack 2026-09-09 OEM/owners brochures. GAP 2013 and 2026 — do not invent or copy adjacent years. MY2027 is 39RKTS / 40FBRL only."
     },
-    Tradition: {
+    "Tradition": {
       type: "Fifth Wheel",
-      floorplans: ["350RLS", "355LBSS", "390RLS"],
+      floorplans: ["340RES", "360RSS", "365LKS", "370TKS", "375KPS", "380RES", "384RSS", "385RSS", "390FLS", "390RESS", "399BHQS"],
       floorplansByYear: {
-        "2008": ["350RLS"],
-        "2009": ["350RLS"],
-        "2010": ["350RLS"],
-        "2011": ["350RLS"],
-        "2012": ["350RLS"],
-        "2013": ["350RLS", "355LBSS"],
-        "2014": ["350RLS", "355LBSS"],
-        "2015": ["350RLS", "355LBSS"],
-        "2016": ["350RLS", "355LBSS"],
-        "2017": ["350RLS", "355LBSS"],
-        "2018": ["350RLS", "355LBSS", "390RLS"],
-        "2019": ["350RLS", "355LBSS", "390RLS"],
-        "2020": ["350RLS", "355LBSS", "390RLS"],
-        "2021": ["350RLS", "355LBSS", "390RLS"],
-        "2022": ["350RLS", "355LBSS", "390RLS"],
-        "2023": ["350RLS", "355LBSS", "390RLS"],
-        "2024": ["350RLS", "355LBSS", "390RLS"],
-        "2025": ["350RLS", "355LBSS", "390RLS"],
-        "2026": ["350RLS", "355LBSS", "390RLS"]
+        // LOCK EzMe pack 2026-09-09 dated OEM / owners brochures — MY2013–2015 only.
+        // Drop yearStart 2008 span and ghost 350RLS / 355LBSS / 390RLS. All other years omitted.
+        "2013": ["340RES", "360RSS", "370TKS", "380RES", "385RSS", "390FLS", "399BHQS"],
+        "2014": ["340RES", "360RSS", "365LKS", "370TKS", "375KPS", "380RES", "384RSS", "385RSS", "390FLS", "390RESS"],
+        "2015": ["340RES", "360RSS", "365LKS", "375KPS", "380RES", "384RSS", "385RSS", "390FLS", "390RESS"],
       },
       lengthRange: [
-        35,
+        34,
         40
       ],
       weightRange: [
@@ -34446,30 +34434,25 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 86,
       founded: 2002,
       warrantyYears: 2,
-      yearStart: 2008,
-      description: "The DRV Tradition is the entry to the DRV luxury lineup — 8.5-ft ceilings, triple slideouts, solid surface counters, and a residential master bath that makes every competing fifth wheel feel ordinary."
+      yearStart: 2013,
+      yearEnd: 2015,
+      description: "The DRV Tradition is the entry to the DRV luxury lineup — 8.5-ft ceilings, triple slideouts, solid surface counters, and a residential master bath. Dated EzMe pack 2026-09-09 OEM/owners brochures lock MY2013–2015 only. Ghost 350RLS / 355LBSS / 390RLS removed. Do not invent later years."
     },
     "Full House": {
       type: "Toy Hauler",
-      floorplans: ["LX455", "LX450", "MX450"],
+      floorplans: ["JX390", "JX450", "LX410", "LX450", "LX455", "MX450", "TX500", "ZX350"],
       floorplansByYear: {
-        "2010": ["LX455"],
-        "2011": ["LX455"],
-        "2012": ["LX455"],
-        "2013": ["LX455"],
-        "2014": ["LX455", "LX450"],
-        "2015": ["LX455", "LX450"],
-        "2016": ["LX455", "LX450"],
-        "2017": ["LX455", "LX450"],
-        "2018": ["LX455", "LX450"],
-        "2019": ["LX455", "LX450", "MX450"],
-        "2020": ["LX455", "LX450", "MX450"],
-        "2021": ["LX455", "LX450", "MX450"],
-        "2022": ["LX455", "LX450", "MX450"],
-        "2023": ["LX455", "LX450", "MX450"],
-        "2024": ["LX455", "LX450", "MX450"],
-        "2025": ["LX455", "LX450", "MX450"],
-        "2026": ["LX455", "LX450", "MX450"]
+        // LOCK EzMe pack 2026-09-09 dated OEM / owners brochures from MY2015.
+        // GAP ≤2014 / 2020 / ≥2025 — prefer omit. MX450 only from MY2021+. Include JX/LX/TX/ZX as dated.
+        "2015": ["JX450", "LX450", "LX455"],
+        "2016": ["JX450", "LX410", "LX450", "LX455", "TX500", "ZX350"],
+        "2017": ["JX450", "LX410", "LX450", "LX455"],
+        "2018": ["JX390", "JX450", "LX450", "LX455"],
+        "2019": ["JX390", "JX450", "LX450", "LX455"],
+        "2021": ["JX450", "LX450", "LX455", "MX450"],
+        "2022": ["JX450", "LX455", "MX450"],
+        "2023": ["JX450", "LX455", "MX450"],
+        "2024": ["JX450", "LX455", "MX450"],
       },
       lengthRange: [
         42,
@@ -34498,7 +34481,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 102,
       founded: 2002,
       warrantyYears: 2,
-      yearStart: 2010,
+      yearStart: 2015,
+      yearEnd: 2024,
       generator: "Onan 5500–8000W Gas/Diesel package",
       garageLengthFt: 14,
       garageWidthFt: 8.4,
@@ -34508,31 +34492,28 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       fuelStationGal: 40,
       generatorFuelGal: 40,
       garageFits: "2 full-size UTVs + workshop",
-      description: "DRV Full House is a luxury toy hauler fifth wheel — residential DRV quality with a true cargo garage for toys and living."
+      description: "DRV Full House is a luxury toy hauler fifth wheel — residential DRV quality with a true cargo garage for toys and living. Dated EzMe pack 2026-09-09 OEM/owners brochures lock MY2015–2019 and MY2021–2024. GAP 2020 and ≥2025. MX450 from MY2021 only — do not backfill."
     },
     "Elite Suites": {
       type: "Fifth Wheel",
-      floorplans: ["38RSSA", "40KSSB", "43RSSB"],
+      floorplans: ["32RS3", "32TK3", "34RESA3", "36RKSB", "36RSSB3", "36TK3", "36TKSB3", "36TKSB4", "38KSSB", "38PS3", "38RSB3", "38RSSA", "38RSSB3", "38TKSB3", "39DBRS3", "39RESB3", "40KSSB4", "41RKSB4", "41RSSB4", "ATLANTA", "CUMBERLAND", "DALLAS", "HOUSTON", "LAFAYETTE", "MANHATTAN", "MEMPHIS", "NASHVILLE", "SANTA FE"],
       floorplansByYear: {
-        "2012": ["38RSSA"],
-        "2013": ["38RSSA"],
-        "2014": ["38RSSA"],
-        "2015": ["38RSSA"],
-        "2016": ["38RSSA", "40KSSB"],
-        "2017": ["38RSSA", "40KSSB"],
-        "2018": ["38RSSA", "40KSSB"],
-        "2019": ["38RSSA", "40KSSB"],
-        "2020": ["38RSSA", "40KSSB", "43RSSB"],
-        "2021": ["38RSSA", "40KSSB", "43RSSB"],
-        "2022": ["38RSSA", "40KSSB", "43RSSB"],
-        "2023": ["38RSSA", "40KSSB", "43RSSB"],
-        "2024": ["38RSSA", "40KSSB", "43RSSB"],
-        "2025": ["38RSSA", "40KSSB", "43RSSB"],
-        "2026": ["38RSSA", "40KSSB", "43RSSB"]
+        // LOCK EzMe pack 2026-09-09 dated OEM / owners brochures. Soft end after MY2020.
+        // GAP 2013–2015 and 2021–2026 — prefer omit; do not keep the line through 2026.
+        "2008": ["36TK3", "36TKSB3"],
+        "2009": ["32TK3", "36TK3", "36TKSB3", "38TKSB3"],
+        "2010": ["32TK3", "36TK3", "36TKSB3", "36TKSB4"],
+        "2011": ["32TK3", "36TK3", "36TKSB3", "36TKSB4", "38TKSB3"],
+        "2012": ["32TK3", "36TK3", "36TKSB3", "36TKSB4", "38TKSB3"],
+        "2016": ["32RS3", "34RESA3", "36RSSB3", "38PS3", "38RSB3", "38RSSA", "38RSSB3", "39DBRS3", "39RESB3", "40KSSB4", "41RSSB4", "ATLANTA", "CUMBERLAND", "DALLAS", "HOUSTON", "LAFAYETTE", "MANHATTAN", "MEMPHIS"],
+        "2017": ["36RSSB3", "38KSSB", "38RSB3", "38RSSA", "38RSSB3", "39DBRS3", "39RESB3", "40KSSB4", "41RSSB4", "ATLANTA", "CUMBERLAND", "DALLAS", "HOUSTON", "MANHATTAN", "MEMPHIS", "NASHVILLE"],
+        "2018": ["36RSSB3", "38KSSB", "38RSB3", "38RSSA", "38RSSB3", "39DBRS3", "39RESB3", "40KSSB4", "ATLANTA", "CUMBERLAND", "DALLAS", "HOUSTON", "MANHATTAN", "MEMPHIS", "NASHVILLE"],
+        "2019": ["36RSSB3", "38KSSB", "38RSB3", "38RSSA", "38RSSB3", "39DBRS3", "39RESB3", "40KSSB4", "41RKSB4", "ATLANTA", "CUMBERLAND", "HOUSTON", "MANHATTAN", "MEMPHIS", "NASHVILLE", "SANTA FE"],
+        "2020": ["36RKSB", "36RSSB3", "38KSSB", "38RSSA", "38RSSB3", "39DBRS3", "40KSSB4", "41RKSB4", "ATLANTA", "HOUSTON", "MANHATTAN", "MEMPHIS", "NASHVILLE", "SANTA FE"],
       },
       lengthRange: [
-        38,
-        44
+        32,
+        41
       ],
       weightRange: [
         16000,
@@ -34557,8 +34538,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 102,
       founded: 2002,
       warrantyYears: 2,
-      yearStart: 2012,
-      description: "Elite Suites sits in the DRV luxury ladder with residential height, hardwood, and long-term full-time design."
+      yearStart: 2008,
+      yearEnd: 2020,
+      description: "Elite Suites sits in the DRV luxury ladder with residential height, hardwood, and long-term full-time design. Dated EzMe pack 2026-09-09 OEM/owners brochures lock MY2008–2012 and MY2016–2020. GAP 2013–2015. Retired after MY2020 — do not copy forward through 2026."
     }
   },
   Brinkley: {
