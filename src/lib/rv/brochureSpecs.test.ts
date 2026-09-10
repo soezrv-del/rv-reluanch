@@ -4083,7 +4083,7 @@ test("Winnebago 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(so, /"2025": .*"36A"/);
 
   const pk0 = wgo.indexOf('    "Solis Pocket": {');
-  const pk = wgo.slice(pk0, wgo.indexOf("    Elora: {"));
+  const pk = wgo.slice(pk0, wgo.indexOf("    Rialta: {"));
   assert.match(pk, /"2025": \["36A", "36B"\]/);
   assert.match(pk, /"2026": \["36A"\]/);
   assert.doesNotMatch(pk, /"2026": .*"36B"/);
@@ -4293,7 +4293,7 @@ test("Winnebago 2023–2024 OEM year-first floorplans + powertrain pins", () => 
   assert.doesNotMatch(so, /"2023": .*"59PO"/);
   assert.doesNotMatch(so, /"2023": .*"36A"/);
 
-  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Elora: {"));
+  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Rialta: {"));
   assert.match(pk, /"2023": \["36A"\]/);
   assert.match(pk, /"2024": \["36A", "36B"\]/);
   assert.doesNotMatch(pk, /"2023": .*"36B"/);
@@ -4504,7 +4504,7 @@ test("Winnebago 2021–2022 OEM year-first floorplans + powertrain pins", () => 
   assert.doesNotMatch(so, /"2021": .*"59PO"/);
   assert.doesNotMatch(so, /"2022": .*"36A"/);
 
-  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Elora: {"));
+  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Rialta: {"));
   assert.match(pk, /"2022": \["36A"\]/);
   assert.doesNotMatch(pk, /"2021":/);
   assert.doesNotMatch(pk, /"2022": .*"36B"/);
@@ -4773,7 +4773,7 @@ test("Winnebago 2019–2020 OEM year-first floorplans + powertrain pins", () => 
   assert.doesNotMatch(so, /"2020": .*"59PX"/);
   assert.match(so, /yearStart:\s*2020/);
 
-  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Elora: {"));
+  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Rialta: {"));
   assert.doesNotMatch(pk, /"2019":/);
   assert.doesNotMatch(pk, /"2020":/);
   assert.match(pk, /yearStart:\s*2022/);
@@ -5072,7 +5072,7 @@ test("Winnebago 2017–2018 OEM year-first floorplans + powertrain pins", () => 
   assert.doesNotMatch(so, /"2018":/);
   assert.match(so, /yearStart:\s*2020/);
 
-  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Elora: {"));
+  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Rialta: {"));
   assert.doesNotMatch(pk, /"2017":/);
   assert.doesNotMatch(pk, /"2018":/);
   assert.match(pk, /yearStart:\s*2022/);
@@ -5363,7 +5363,7 @@ test("Winnebago 2015–2016 OEM year-first floorplans + powertrain pins", () => 
   assert.doesNotMatch(so, /"2015":/);
   assert.doesNotMatch(so, /"2016":/);
 
-  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Elora: {"));
+  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Rialta: {"));
   assert.doesNotMatch(pk, /"2015":/);
   assert.doesNotMatch(pk, /"2016":/);
 
@@ -5644,7 +5644,7 @@ test("Winnebago 2013–2014 OEM year-first floorplans + powertrain pins", () => 
   assert.doesNotMatch(so, /"2013":/);
   assert.doesNotMatch(so, /"2014":/);
 
-  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Elora: {"));
+  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Rialta: {"));
   assert.doesNotMatch(pk, /"2013":/);
   assert.doesNotMatch(pk, /"2014":/);
 
@@ -5974,7 +5974,7 @@ test("Winnebago 2010–2012 OEM year-first floorplans + powertrain pins", () => 
   assert.doesNotMatch(so, /"2011":/);
   assert.doesNotMatch(so, /"2012":/);
 
-  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Elora: {"));
+  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Rialta: {"));
   assert.doesNotMatch(pk, /"2010":/);
   assert.doesNotMatch(pk, /"2011":/);
   assert.doesNotMatch(pk, /"2012":/);
@@ -16163,4 +16163,103 @@ test("Leisure Travel Vans Class B MY2000 honesty: Unity yearStart 2010 + MY2010 
   assert.doesNotMatch(ltv, /\n    Libero: \{|\n    "Libero": \{/);
   assert.doesNotMatch(ltv, /\n    "Free Spirit": \{/);
   assert.doesNotMatch(ltv, /\n    "Free Flight": \{/);
+});
+
+test("Winnebago Class B MY2000 honesty: EzMe pack 2026-09-09 (Era / Rialta / no pre-intro fills)", () => {
+  const idx = CATALOG_INDEX.Winnebago;
+  assert.ok(idx);
+
+  assert.equal(idx.Era?.type, "Class B");
+  assert.equal(idx.Era?.yearStart, 2009);
+  assert.equal(idx.Era?.yearEnd, 2021);
+  assert.equal(idx.Era?.years?.includes(2009), true);
+  assert.equal(idx.Era?.years?.includes(2010), true);
+  assert.equal(idx.Era?.years?.includes(2011) ?? false, false);
+  assert.equal(idx.Era?.years?.includes(2012), true);
+  for (const y of [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008]) {
+    assert.equal(idx.Era?.years?.includes(y) ?? false, false, `Era must omit ${y}`);
+  }
+
+  assert.ok(idx.Rialta, "Rialta is a new historic Class B key — do not stuff 22* into Era");
+  assert.equal(idx.Rialta?.type, "Class B");
+  assert.equal(idx.Rialta?.yearStart, 2000);
+  assert.equal(idx.Rialta?.yearEnd, 2005);
+  assert.deepEqual(idx.Rialta?.years, [2000, 2001, 2002, 2003, 2004, 2005]);
+
+  assert.equal(idx.Travato?.yearStart, 2014);
+  assert.equal(idx.Revel?.yearStart, 2018);
+  assert.equal(idx.Solis?.yearStart, 2020);
+  assert.equal(idx.Boldt?.yearStart, 2020);
+  assert.equal(idx["Solis Pocket"]?.yearStart, 2022);
+  assert.equal(idx["Revel Sport"]?.yearStart, 2025);
+  for (const key of ["Travato", "Revel", "Solis", "Boldt", "Solis Pocket", "Revel Sport"]) {
+    for (const y of [2000, 2005, 2006, 2007, 2008, 2009]) {
+      assert.equal(idx[key]?.years?.includes(y) ?? false, false, `${key} must omit ${y} (no pre-intro fill)`);
+    }
+  }
+
+  const block = src("rvData.ts");
+  const w0 = block.indexOf("  Winnebago: {");
+  const w1 = block.indexOf('  "Forest River": {');
+  const wgo = block.slice(w0, w1);
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  const era = wgo.slice(wgo.indexOf("    Era: {"), wgo.indexOf("    View: {"));
+  assert.deepEqual(fbyYear(era, 2009), ["170RT", "170RL", "170XT", "170XL", "144U"]);
+  assert.deepEqual(fbyYear(era, 2010), ["170R", "170X"]);
+  assert.equal(fbyYear(era, 2011), null);
+  assert.deepEqual(fbyYear(era, 2012), ["70X"]);
+  assert.match(era, /yearStart:\s*2009/);
+  assert.doesNotMatch(era, /"2009": .*"70A"/);
+  assert.doesNotMatch(era, /"2009": .*"70B"/);
+  assert.doesNotMatch(era, /"2010": .*"70A"/);
+  assert.doesNotMatch(era, /"2012": .*"70A"/);
+  assert.doesNotMatch(era, /"2012": .*"70B"/);
+  for (const y of [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008]) {
+    assert.equal(fbyYear(era, y), null, `Era ${y} must stay GAP`);
+    assert.doesNotMatch(era, new RegExp(`"${y}":`));
+  }
+  assert.doesNotMatch(era, /"22QD"|"22HD"|"22FD"/);
+
+  const rialta = wgo.slice(wgo.indexOf("    Rialta: {"), wgo.indexOf("    Elora: {"));
+  assert.match(rialta, /type: "Class B"/);
+  assert.match(rialta, /yearStart:\s*2000/);
+  assert.match(rialta, /yearEnd:\s*2005/);
+  for (const y of [2000, 2001, 2002, 2003, 2004, 2005]) {
+    assert.deepEqual(fbyYear(rialta, y), ["22QD", "22HD", "22FD"]);
+  }
+  for (const y of [2006, 2007, 2008, 2009, 2010]) {
+    assert.equal(fbyYear(rialta, y), null, `Rialta ${y} must stay GAP`);
+    assert.doesNotMatch(rialta, new RegExp(`"${y}":`));
+  }
+  assert.doesNotMatch(rialta, /"70A"|"70B"|"170R"|"170X"|"170RT"|"44E"|"59G"|"59P"|"36A"/);
+
+  const tr = wgo.slice(wgo.indexOf("    Travato: {"), wgo.indexOf("    Solis: {"));
+  const rv = wgo.slice(wgo.indexOf("    Revel: {"), wgo.indexOf("    Travato: {"));
+  const so = wgo.slice(wgo.indexOf("    Solis: {"), wgo.indexOf("    Boldt: {"));
+  const bl = wgo.slice(wgo.indexOf("    Boldt: {"), wgo.indexOf("    Era: {"));
+  const rsp = wgo.slice(wgo.indexOf('    "Revel Sport": {'), wgo.indexOf('    "Solis Pocket": {'));
+  const pk = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Rialta: {"));
+  for (const [name, body] of [
+    ["Travato", tr],
+    ["Revel", rv],
+    ["Solis", so],
+    ["Boldt", bl],
+    ["Revel Sport", rsp],
+    ["Solis Pocket", pk],
+  ] as const) {
+    for (const y of [2000, 2005, 2006, 2007, 2008, 2009]) {
+      assert.doesNotMatch(body, new RegExp(`"${y}":`), `${name} must omit ${y}`);
+    }
+    assert.doesNotMatch(body, /"22QD"|"22HD"|"22FD"/, `${name} must not absorb Rialta 22*`);
+  }
+  assert.doesNotMatch(rv, /"44N"|"44C"/);
+  assert.doesNotMatch(rsp, /"44E"/);
+  assert.doesNotMatch(so, /"36A"|"36B"/);
+  assert.doesNotMatch(pk, /"59P"|"59PX"/);
 });
