@@ -29329,6 +29329,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["SS-Agile", "SS Agile"],
       floorplansByYear: {
+        // LOCK EzMe pack 2026-09-09 — Class B MY2000 walk-back. SS-Agile 2007–2008 only.
+        // 2008 chassis / 2009/08 print PDF quarantined: LOCK 2008 only. GAP 2009.
+        // Do not invent 2009 from 2008 or 2010. Do not copy 2011 hyphen onto 2009–2010.
+        "2007": ["SS-Agile"],
+        "2008": ["SS-Agile"],
+        // 2009–2010 GAP: no year-true dated brochure this pack.
         // LOCK library.rvusa.com/brochure/Roadtrek_Brochure2011_chassis_model_year.pdf
         // 2011 STANDARD MOTORHOME FEATURES line: SS-Agile // SS-Ideal on 2011 Sprinter 2500 “Short” Van.
         "2011": ["SS-Agile"],
@@ -29388,7 +29394,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 75,
       founded: 1974,
       warrantyYears: 2,
-      yearStart: 2011,
+      yearStart: 2007,
       powertrainByYear: [
         {
           from: 2011,
@@ -29507,8 +29513,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["CS Adventurous"],
       floorplansByYear: {
-        // 2008–2013 GAP: yearStart 2008 already chipped. 2011 / 2012–2013 chassis-year brochures
-        // list RS-Adventurous / SS-Agile, not CS Adventurous. Do not invent pre-2014 fills.
+        // 2000–2013 GAP: CS Adventurous ≠ RS-Adventurous. EzMe pack 2026-09-09 locks
+        // the RS sibling 2005–2008 only — never map those codes onto this CS key.
+        // Keep CS empty for 2000–2009 (and #187 empty through 2013). yearStart 2008
+        // stays the #187 chip; do not invent pre-2014 fills.
+        // 2011 / 2012–2013 chassis-year brochures list the RS sibling / SS-Agile, not CS.
         // LOCK library.rvusa.com/brochure/2014-Roadtrek-CS-Adventurous.pdf
         "2014": ["CS Adventurous"],
         // 2015 GAP: no extractable year-true library PDF.
@@ -29579,10 +29588,23 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Popular: {
       type: "Class B",
-      floorplans: ["190-Popular", "210-Popular", "190 Popular", "210 Popular"],
+      floorplans: ["170-Popular", "190-Popular", "200-Popular", "210-Popular", "190 Popular", "210 Popular"],
       floorplansByYear: {
-        // 2005–2010 GAP: yearStart 2005 already chipped. 2008 chassis-year brochure is pre-2010 —
-        // do not invent 2008–2010 fills (170-Popular stays off this pass).
+        // LOCK EzMe pack 2026-09-09 — Class B MY2000 walk-back. Popular-named codes only.
+        // Versatile siblings (190-Versatile / 200-Versatile / 210-Versatile) stay off this key.
+        // 200-* is 2000–2003 only; 210-* is 2004+. Do not cross-copy rename.
+        // 2008 chassis / 2009/08 print PDF quarantined: LOCK 2008 only. GAP 2009.
+        // Do not invent 2009 from 2008 or 2010. #187 2011+ hyphen/space locks unchanged.
+        "2000": ["170-Popular", "190-Popular", "200-Popular"],
+        "2001": ["170-Popular", "190-Popular", "200-Popular"],
+        "2002": ["170-Popular", "190-Popular", "200-Popular"],
+        "2003": ["170-Popular", "190-Popular", "200-Popular"],
+        "2004": ["170-Popular", "190-Popular", "210-Popular"],
+        "2005": ["170-Popular", "190-Popular", "210-Popular"],
+        "2006": ["170-Popular", "190-Popular", "210-Popular"],
+        "2007": ["170-Popular", "190-Popular", "210-Popular"],
+        "2008": ["170-Popular", "190-Popular", "210-Popular"],
+        // 2009–2010 GAP: no year-true dated brochure this pack. Do not copy 2008 or 2011.
         // LOCK library.rvusa.com/brochure/Roadtrek_Brochure2011_chassis_model_year.pdf
         // 190-Popular // 210-Popular on 2011 Chevrolet Express.
         "2011": ["190-Popular", "210-Popular"],
@@ -29627,7 +29649,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 72,
       founded: 1974,
       warrantyYears: 2,
-      yearStart: 2005,
+      yearStart: 2000,
       yearEnd: 2018,
       powertrainByYear: [
         {
@@ -29648,7 +29670,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           notes: "LOCK 2017-Roadtrek-190-Popular.pdf / 2017-Roadtrek-210-Popular.pdf — Fuel type Gas · Power 224 kW/323 HP."
         }
       ],
-      description: "Roadtrek Popular — Chevrolet Express Class B (190 / 210). Floorplans locked from dated library brochures. Hyphen vs space follows the year’s brochure characters."
+      description: "Roadtrek Popular — Chevrolet Express Class B (170 / 190 / 200 / 210). Floorplans locked from dated library brochures. Hyphen vs space follows the year’s brochure characters. Versatile siblings stay off this key."
     }
   },
   "Nexus RV": {
