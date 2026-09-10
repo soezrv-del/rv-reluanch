@@ -15970,3 +15970,95 @@ test("DRV honesty: EzMe pack 2026-09-09 LOCK/GAP (Mobile Suites / Elite / Tradit
   }
   assert.doesNotMatch(elite, /"43RSSB"/);
 });
+
+test("Pleasure-Way Class B MY2000 honesty: Plateau nameplate LOCK years empty; Plateau TS / Lexor / Ascent stay GAP", () => {
+  const idx = CATALOG_INDEX["Pleasure-Way"];
+  assert.ok(idx);
+
+  // Plateau: yearStart 2004 = first dated nameplate LOCK. FBY stays empty
+  // 2004–2011 (no letter chips). MY2010 GAP boundary from prior pack.
+  assert.equal(idx.Plateau?.yearStart, 2004);
+  assert.equal(idx.Plateau?.type, "Class B");
+  assert.equal(idx.Plateau?.fuelType, "Diesel");
+  assert.deepEqual(idx.Plateau?.years, [
+    2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,
+    2025, 2026,
+  ]);
+  for (const y of [2000, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011]) {
+    assert.equal(idx.Plateau?.years?.includes(y), false, `Plateau index must omit ${y}`);
+  }
+
+  // Plateau TS: zero LOCKs 2000–2010. Separate key. yearStart 2012 = first coded year.
+  assert.ok(idx["Plateau TS"], "Plateau TS must stay a separate catalog key");
+  assert.equal(idx["Plateau TS"]?.yearStart, 2012);
+  assert.equal(idx["Plateau TS"]?.type, "Class B");
+  assert.deepEqual(idx["Plateau TS"]?.years, [
+    2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,
+    2025, 2026,
+  ]);
+  for (const y of [2000, 2004, 2005, 2007, 2008, 2009, 2010, 2011]) {
+    assert.equal(idx["Plateau TS"]?.years?.includes(y), false, `Plateau TS index must omit ${y}`);
+  }
+
+  // Catalog Lexor / Ascent honesty floors — no historic name-reuse walk-back.
+  assert.equal(idx.Lexor?.yearStart, 2014);
+  assert.equal(idx.Lexor?.years?.[0], 2014);
+  assert.equal(idx.Lexor?.years?.includes(2000), false);
+  assert.equal(idx.Lexor?.years?.includes(2007), false);
+  assert.equal(idx.Lexor?.years?.includes(2008), false);
+  assert.equal(idx.Lexor?.years?.includes(2009), false);
+  assert.equal(idx.Ascent?.yearStart, 2018);
+  assert.equal(idx.Ascent?.years?.[0], 2018);
+  assert.equal(idx.Ascent?.years?.includes(2008), false);
+  assert.equal(idx.Excel, undefined, "Excel is historic-only — no catalog key");
+  assert.equal(idx.Traverse, undefined, "Traverse is historic-only — no catalog key");
+
+  const block = src("rvData.ts");
+  const p0 = block.indexOf('\n  "Pleasure-Way": {');
+  const p1 = block.indexOf("\n  Roadtrek: {");
+  assert.ok(p0 > 0 && p1 > p0, "Pleasure-Way block");
+  const pw = block.slice(p0, p1);
+  const plateau = pw.slice(pw.indexOf("    Plateau: {"), pw.indexOf('    "Plateau TS": {'));
+  const plateauTs = pw.slice(pw.indexOf('    "Plateau TS": {'), pw.indexOf("    Ascent: {"));
+  const ascent = pw.slice(pw.indexOf("    Ascent: {"), pw.indexOf("    Lexor: {"));
+  const lexor = pw.slice(pw.indexOf("    Lexor: {"), pw.indexOf("    Ontour: {"));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  assert.match(plateau, /yearStart:\s*2004/);
+  assert.match(plateauTs, /yearStart:\s*2012/);
+  assert.match(lexor, /yearStart:\s*2014/);
+  assert.match(ascent, /yearStart:\s*2018/);
+
+  // Prefer omit 2000–2011. Do not invent TD/TS/FL/RB/245 letter chips.
+  for (const y of [2000, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011]) {
+    assert.equal(fbyYear(plateau, y), null, `Plateau ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(plateau, new RegExp(`"${y}":`));
+    assert.equal(fbyYear(plateauTs, y), null, `Plateau TS ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(plateauTs, new RegExp(`"${y}":`));
+  }
+  assert.doesNotMatch(plateau, /from:\s*2005/);
+  assert.doesNotMatch(plateauTs, /from:\s*2005/);
+  assert.doesNotMatch(plateau, /"TD"|"RD"|"RL"|"MP"|"245"/);
+  assert.doesNotMatch(plateauTs, /"TD"|"RD"|"RL"|"MP"|"245"/);
+
+  // 2012+ coded years stay; do not stamp early invent onto them.
+  assert.deepEqual(fbyYear(plateau, 2012), ["TS", "TS Bench", "TS Twin"]);
+  assert.deepEqual(fbyYear(plateauTs, 2012), ["TS", "TS Bench", "TS Twin"]);
+
+  for (const y of [2000, 2006, 2007, 2008, 2009]) {
+    assert.equal(fbyYear(lexor, y), null, `Lexor ${y} must not backfill historic Chevy nameplate`);
+    assert.doesNotMatch(lexor, new RegExp(`"${y}":`));
+  }
+  for (const y of [2000, 2008, 2009, 2010, 2017]) {
+    assert.equal(fbyYear(ascent, y), null, `Ascent ${y} must not back-date historic Dodge nameplate`);
+    assert.doesNotMatch(ascent, new RegExp(`"${y}":`));
+  }
+
+  assert.doesNotMatch(pw, /\n    Excel: \{|\n    "Excel": \{/);
+  assert.doesNotMatch(pw, /\n    Traverse: \{|\n    "Traverse": \{/);
+});

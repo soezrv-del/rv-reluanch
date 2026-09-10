@@ -28729,11 +28729,25 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ]
     }
   },
+  // Pleasure-Way (Saskatoon, 1986). Class B keys only. Empty/GAP > invent.
+  // Dated brochure > undated OEM. Soft JD Power ≠ LOCK. EzMe pack 2026-09-09
+  // Class B MY2000 walk-back. Prior pack GAP'd MY2010 Plateau + Plateau TS —
+  // keep that boundary. Do not invent letter chips (TD/TS/RD/RL/MP/245/FL/RB)
+  // on 2000–2009. Do not merge Plateau into Plateau TS. Historic Chevy Lexor
+  // (MY2000 brochures) ≠ catalog Lexor (yearStart 2014). Historic Dodge Ascent
+  // (~2008 soft) ≠ catalog Ascent (yearStart 2018). Excel / Traverse are
+  // historic-only — no catalog keys this pass.
   "Pleasure-Way": {
     Plateau: {
       type: "Class B",
       floorplans: ["FL", "RB", "TS", "TS Bench", "TS Twin", "TW", "XLFL", "XLRB", "FLTB", "FLTS", "XL", "XLBS", "XLTS"],
       floorplansByYear: {
+        // LOCK EzMe pack 2026-09-09: dated Plateau nameplate 2004 / 2007 / 2009.
+        // No extractable letter codes — TD/TS/FL/RB/245 stay GAP. Prefer omit
+        // over nameplate-only chips (schema forbids empty []). yearStart 2004 =
+        // first LOCK window, not a 2005 ghost. GAP 2005–2006, 2008, 2010–2011.
+        // MY2010 stays GAP (prior pack; misdated “2010” PDFs are 2009 lineup).
+        // Do not merge Plateau TS. Do not invent Excel / Traverse keys.
         "2012": ["TS", "TS Bench", "TS Twin"],
         "2013": ["TS", "TS Bench", "TS Twin"],
         "2014": ["FL", "TS", "TS Bench", "TS Twin"],
@@ -28779,7 +28793,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 74,
       founded: 1986,
       warrantyYears: 3,
-      yearStart: 2005,
+      yearStart: 2004,
       mpgHighwayEst: 16,
       description: "Pleasure-Way Plateau — flagship Sprinter Class B (TS / FL / RB / TW / XL). Hand-built Canadian quality. Live Grok fills exact UVW.",
       powertrainByYear: [
@@ -28797,14 +28811,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 188,
           chassis: "Mercedes Sprinter",
           notes: "Confirm engine code on door sticker"
-        },
-        {
-          from: 2005,
-          to: 2005,
-          engine: "Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3)",
-          horsepower: 154,
-          chassis: "Mercedes-Benz Sprinter",
-          notes: "Early Sprinter era — ~154–188 HP by year"
         }
       ]
     },
@@ -28812,6 +28818,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["TS", "TS Bench", "TS Twin"],
       floorplansByYear: {
+        // GAP empty all 2000–2010. Soft JD / classifieds Plateau-TS ≠ LOCK.
+        // Keep separate from Plateau — never merge, never invent TS chips from
+        // soft sources. yearStart 2012 = first coded FBY year (zero LOCKs
+        // 2000–2009). MY2010 stays GAP (prior pack).
         "2012": ["TS", "TS Bench", "TS Twin"],
         "2013": ["TS", "TS Bench", "TS Twin"],
         "2014": ["TS", "TS Bench", "TS Twin"],
@@ -28858,7 +28868,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 74,
       founded: 1986,
       warrantyYears: 3,
-      yearStart: 2005,
+      yearStart: 2012,
       powertrainByYear: [
         {
           from: 2012,
@@ -28867,14 +28877,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 188,
           chassis: "Mercedes-Benz Sprinter",
           notes: "Sprinter OM642 / era diesel ~188 HP class"
-        },
-        {
-          from: 2005,
-          to: 2005,
-          engine: "Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3)",
-          horsepower: 154,
-          chassis: "Mercedes-Benz Sprinter",
-          notes: "Early Sprinter era — ~154–188 HP by year"
         }
       ],
       description: "Pleasure-Way Plateau TS — twin/sofa living signature layout under the Plateau family."
