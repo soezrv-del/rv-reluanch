@@ -16062,3 +16062,105 @@ test("Pleasure-Way Class B MY2000 honesty: Plateau nameplate LOCK years empty; P
   assert.doesNotMatch(pw, /\n    Excel: \{|\n    "Excel": \{/);
   assert.doesNotMatch(pw, /\n    Traverse: \{|\n    "Traverse": \{/);
 });
+
+test("Leisure Travel Vans Class B MY2000 honesty: Unity yearStart 2010 + MY2010 LOCK; Serenity/Free stay GAP", () => {
+  const idx = CATALOG_INDEX["Leisure Travel Vans"];
+  assert.ok(idx);
+
+  // Unity: OEM “All New Unity” is MY2010. yearStart 2010, not 1993.
+  // Prior pack LOCK MY2010 U24MB/U24CB. GAP 2000–2009. 2011 omit.
+  assert.equal(idx.Unity?.yearStart, 2010);
+  assert.equal(idx.Unity?.type, "Class B+");
+  assert.equal(idx.Unity?.fuelType, "Diesel");
+  assert.deepEqual(idx.Unity?.years, [
+    2010, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023,
+    2024, 2025, 2026,
+  ]);
+  for (const y of [2000, 2003, 2006, 2008, 2009, 2011]) {
+    assert.equal(idx.Unity?.years?.includes(y), false, `Unity index must omit ${y}`);
+  }
+
+  // Serenity: yearStart 2010 honest; empty until 2012 chips. MY2010 GAP.
+  assert.equal(idx.Serenity?.yearStart, 2010);
+  assert.equal(idx.Serenity?.type, "Class B");
+  assert.equal(idx.Serenity?.fuelType, "Diesel");
+  assert.deepEqual(idx.Serenity?.years, [
+    2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,
+    2025, 2026,
+  ]);
+  for (const y of [2000, 2006, 2008, 2009, 2010]) {
+    assert.equal(idx.Serenity?.years?.includes(y), false, `Serenity index must omit ${y}`);
+  }
+
+  // Free / Wonder / Wonder XL honesty floors — no Spirit/Flight mapping.
+  assert.equal(idx.Free?.yearStart, 2018);
+  assert.equal(idx.Free?.years?.[0], 2018);
+  assert.equal(idx.Free?.years?.includes(2003), false);
+  assert.equal(idx.Free?.years?.includes(2008), false);
+  assert.equal(idx.Free?.years?.includes(2009), false);
+  assert.equal(idx.Wonder?.yearStart, 2015);
+  assert.equal(idx.Wonder?.years?.[0], 2015);
+  assert.equal(idx["Wonder XL"]?.yearStart, 2018);
+  assert.equal(idx.Freedom, undefined, "Freedom is historic-only — no catalog key");
+  assert.equal(idx["Freedom II"], undefined, "Freedom II is historic-only — no catalog key");
+  assert.equal(idx.Libero, undefined, "Libero is historic-only — no catalog key");
+  assert.equal(idx["Free Spirit"], undefined, "Free Spirit is historic-only — no catalog key");
+  assert.equal(idx["Free Flight"], undefined, "Free Flight is historic-only — no catalog key");
+
+  const block = src("rvData.ts");
+  const l0 = block.indexOf('\n  "Leisure Travel Vans": {');
+  const l1 = block.indexOf('\n  "Renegade RV": {');
+  assert.ok(l0 > 0 && l1 > l0, "Leisure Travel Vans block");
+  const ltv = block.slice(l0, l1);
+  const unity = ltv.slice(ltv.indexOf("    Unity: {"), ltv.indexOf("    Wonder: {"));
+  const wonder = ltv.slice(ltv.indexOf("    Wonder: {"), ltv.indexOf('    "Wonder XL": {'));
+  const wonderXl = ltv.slice(ltv.indexOf('    "Wonder XL": {'), ltv.indexOf("    Serenity: {"));
+  const serenity = ltv.slice(ltv.indexOf("    Serenity: {"), ltv.indexOf("    Free: {"));
+  const free = ltv.slice(ltv.indexOf("    Free: {"));
+
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  assert.match(unity, /yearStart:\s*2010/);
+  assert.doesNotMatch(unity, /yearStart:\s*1993/);
+  assert.match(serenity, /yearStart:\s*2010/);
+  assert.match(free, /yearStart:\s*2018/);
+  assert.match(wonder, /yearStart:\s*2015/);
+  assert.match(wonderXl, /yearStart:\s*2018/);
+
+  assert.deepEqual(fbyYear(unity, 2010), ["U24MB", "U24CB"]);
+  assert.deepEqual(fbyYear(unity, 2012), ["24CB", "24MB", "24TB"]);
+  for (const y of [2000, 2003, 2006, 2008, 2009, 2011]) {
+    assert.equal(fbyYear(unity, y), null, `Unity ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(unity, new RegExp(`"${y}":`));
+  }
+  assert.doesNotMatch(unity, /from:\s*2000/);
+  assert.doesNotMatch(fbyYear(unity, 2010)!.join(" "), /U24IB|U24TB|U24RL|U24FX/);
+
+  for (const y of [2000, 2006, 2008, 2009, 2010]) {
+    assert.equal(fbyYear(serenity, y), null, `Serenity ${y} must stay GAP (prefer omit)`);
+    assert.doesNotMatch(serenity, new RegExp(`"${y}":`));
+  }
+  assert.deepEqual(fbyYear(serenity, 2012), ["24CB"]);
+
+  for (const y of [2000, 2003, 2005, 2006, 2008, 2009, 2017]) {
+    assert.equal(fbyYear(free, y), null, `Free ${y} must not backfill Spirit/Flight`);
+    assert.doesNotMatch(free, new RegExp(`"${y}":`));
+  }
+  assert.doesNotMatch(free, /"210A"|"210B"|"LSS"/);
+  assert.deepEqual(fbyYear(free, 2018), ["25TBS"]);
+
+  for (const y of [2000, 2008, 2009]) {
+    assert.equal(fbyYear(wonder, y), null, `Wonder ${y} must stay omitted`);
+    assert.equal(fbyYear(wonderXl, y), null, `Wonder XL ${y} must stay omitted`);
+  }
+
+  assert.doesNotMatch(ltv, /\n    Freedom: \{|\n    "Freedom": \{/);
+  assert.doesNotMatch(ltv, /\n    "Freedom II": \{/);
+  assert.doesNotMatch(ltv, /\n    Libero: \{|\n    "Libero": \{/);
+  assert.doesNotMatch(ltv, /\n    "Free Spirit": \{/);
+  assert.doesNotMatch(ltv, /\n    "Free Flight": \{/);
+});

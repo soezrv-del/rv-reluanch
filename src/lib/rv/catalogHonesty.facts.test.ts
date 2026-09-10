@@ -902,3 +902,38 @@ test("Midwest Automotive Designs Facts SoT: MY2027 OEM+RVUSA locks; GAP Passage/
   assert.doesNotMatch(patriot, /"2026":/);
 });
 
+test("Leisure Travel Vans Facts SoT: Unity yearStart 2010 + MY2010 U24MB/U24CB; Serenity/Free GAP", () => {
+  const block = src("rvData.ts");
+  const l0 = block.indexOf('\n  "Leisure Travel Vans": {');
+  const l1 = block.indexOf('\n  "Renegade RV": {');
+  assert.ok(l0 > 0 && l1 > l0, "expected Leisure Travel Vans block");
+  const ltv = block.slice(l0, l1);
+
+  assert.doesNotMatch(ltv, /\n    Freedom: \{/);
+  assert.doesNotMatch(ltv, /\n    "Freedom II": \{/);
+  assert.doesNotMatch(ltv, /\n    Libero: \{/);
+  assert.doesNotMatch(ltv, /\n    "Free Spirit": \{/);
+  assert.doesNotMatch(ltv, /\n    "Free Flight": \{/);
+
+  const unity = ltv.slice(ltv.indexOf("    Unity: {"), ltv.indexOf("    Wonder: {"));
+  assert.match(unity, /type: "Class B\+"/);
+  assert.match(unity, /fuelType: "Diesel"/);
+  assert.match(unity, /yearStart:\s*2010/);
+  assert.doesNotMatch(unity, /yearStart:\s*1993/);
+  assert.match(unity, /"2010": \[\s*"U24MB",\s*"U24CB"\s*\]/);
+  assert.match(unity, /"2012": \[\s*"24CB",\s*"24MB",\s*"24TB"\s*\]/);
+  assert.doesNotMatch(unity, /"2000":|"2009":|"2011":/);
+  assert.doesNotMatch(unity, /from:\s*2000/);
+
+  const serenity = ltv.slice(ltv.indexOf("    Serenity: {"), ltv.indexOf("    Free: {"));
+  assert.match(serenity, /type: "Class B"/);
+  assert.match(serenity, /yearStart:\s*2010/);
+  assert.match(serenity, /"2012": \[\s*"24CB"\s*\]/);
+  assert.doesNotMatch(serenity, /"2000":|"2006":|"2008":|"2009":|"2010":/);
+
+  const free = ltv.slice(ltv.indexOf("    Free: {"));
+  assert.match(free, /yearStart:\s*2018/);
+  assert.match(free, /"2018": \[\s*"25TBS"\s*\]/);
+  assert.doesNotMatch(free, /"2003":|"2008":|"2009":|"210A"|"210B"|"LSS"/);
+});
+

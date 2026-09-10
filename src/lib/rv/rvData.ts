@@ -31529,11 +31529,23 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       description: "Dutchmen Infinity — residential fifth wheel with large living areas and family bunk layouts."
     }
   },
+  // Leisure Travel Vans (Winkler, MB). Class B / B+ keys only. Empty/GAP > invent.
+  // EzMe pack 2026-09-09 Class B MY2000 walk-back. OEM “All New Unity” is MY2010
+  // — yearStart 2010, not 1993. Prior pack LOCK Unity MY2010 U24MB/U24CB; GAP
+  // Serenity MY2010. Do not invent 2000–2009 Unity FBY. Do not invent
+  // U24IB/TB/RL/FX into pre-2010. Free Spirit / Free Flight ≠ catalog Free
+  // (yearStart 2018). Freedom II Serenity ≠ invent Serenity letter chips.
+  // Historic-only nameplates this pass (no catalog keys): Freedom / Freedom II /
+  // Libero / Free Spirit / Free Flight.
   "Leisure Travel Vans": {
     Unity: {
       type: "Class B+",
-      floorplans: ["24CB", "24FX", "24IB", "24MB", "24RL", "24TB", "U24CB", "U24FX"],
+      floorplans: ["24CB", "24FX", "24IB", "24MB", "24RL", "24TB", "U24CB", "U24FX", "U24MB"],
       floorplansByYear: {
+        // LOCK prior pack + EzMe 2026-09-09: OEM “All New Unity” MY2010.
+        // Codes U24MB / U24CB only. GAP 2000–2009. Do not invent U24IB/TB/RL/FX
+        // into pre-2010. Do not copy 2009/2011 → 2010. 2011 stays omit.
+        "2010": ["U24MB", "U24CB"],
         "2012": ["24CB", "24MB", "24TB"],
         "2013": ["24CB", "24MB", "24TB"],
         "2014": ["24CB", "24MB", "24RL", "24TB"],
@@ -31579,7 +31591,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 78,
       founded: 1965,
       warrantyYears: 2,
-      yearStart: 1993,
+      yearStart: 2010,
       mpgHighwayEst: 15,
       description: "LTV Unity — flagship Class B+ on Sprinter. Corner Bed (CB), FX Murphy, Island Bed (IB), Twin Bed (TB), Rear Lounge (RL). Canadian hand-built. Live Grok fills exact UVW/payload.",
       powertrainByYear: [
@@ -31597,14 +31609,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 188,
           chassis: "Mercedes Sprinter 3500",
           notes: "Confirm door sticker for I4 vs V6 era"
-        },
-        {
-          from: 2000,
-          to: 2005,
-          engine: "Mercedes-Benz turbodiesel (Sprinter / early T1N–NCV3)",
-          horsepower: 154,
-          chassis: "Mercedes-Benz Sprinter",
-          notes: "Early Sprinter era — ~154–188 HP by year"
         }
       ]
     },
@@ -31723,6 +31727,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["24CB", "S24"],
       floorplansByYear: {
+        // GAP empty all 2000–2010. Freedom II Serenity nameplate (2006/2008/2009)
+        // ≠ invent 24CB / S24 / U24* letter chips. Keep MY2010 Serenity GAP
+        // (prior pack). yearStart 2010 is honest (empty until 2012 chips).
         "2012": ["24CB"],
         "2013": ["24CB"],
         "2014": ["24CB"],
@@ -31786,6 +31793,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class B",
       floorplans: ["25TBS", "25RL"],
       floorplansByYear: {
+        // Free yearStart 2018. Free Spirit / Free Flight ≠ catalog Free —
+        // never backfill Spirit/Flight (210A / 210B / LSS) onto this key.
         "2018": ["25TBS"],
         "2019": ["25TBS", "25RL"],
         "2020": ["25TBS", "25RL"],

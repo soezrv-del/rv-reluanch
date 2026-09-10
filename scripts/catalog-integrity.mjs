@@ -323,6 +323,18 @@ const FORBIDDEN_FLOORPLANS = {
     codes: ["190", "210", "170D", "170P", "190P", "Popular 190", "Popular 210", "190-Versatile", "200-Versatile", "210-Versatile"],
     reason: "Bare length codes, reversed Popular 190 names, and Versatile siblings stay off; brochure Popular key is 170/190/200/210-Popular",
   },
+  "Leisure Travel Vans|Unity": {
+    codes: ["U24IB", "U24TB", "U24RL"],
+    reason: "Do not invent U24IB/TB/RL onto Unity; pre-2010 stays empty except LOCK MY2010 U24MB/U24CB",
+  },
+  "Leisure Travel Vans|Serenity": {
+    codes: ["U24MB", "U24CB", "U24FX", "U24IB", "2A", "2B", "4M", "AE"],
+    reason: "Freedom II Serenity nameplate ≠ invent Unity/Freedom letter chips on Serenity",
+  },
+  "Leisure Travel Vans|Free": {
+    codes: ["210A", "210B", "210A 3S", "210B 3S", "LSS", "Free Spirit", "Free Flight"],
+    reason: "Free Spirit / Free Flight siblings stay off catalog Free (yearStart 2018)",
+  },
 };
 
 /** Series expected type substring (case-insensitive). */
@@ -6358,6 +6370,139 @@ function main() {
       if (chIdx.Maverick?.yearStart !== 2022) fail("Chinook|Maverick index yearStart must be 2022");
       if (chIdx.Bayside?.yearStart !== 2021) fail("Chinook|Bayside index yearStart must be 2021");
       if (chIdx.Concourse?.yearStart !== 2026) fail("Chinook|Concourse index yearStart must be 2026");
+    }
+  }
+
+  // Leisure Travel Vans Class B MY2000 walk-back (EzMe pack 2026-09-09).
+  // Make key is quoted (`"Leisure Travel Vans": {`). Empty/GAP > invent.
+  // Unity yearStart 2010 (OEM “All New Unity”); LOCK MY2010 U24MB/U24CB.
+  // Serenity empty 2000–2010 (MY2010 GAP). Free yearStart 2018 — no Spirit/Flight.
+  // Historic Freedom / Freedom II / Libero / Free Spirit / Free Flight — no keys.
+  {
+    const l0 = src.indexOf('\n  "Leisure Travel Vans": {');
+    const l1 = src.indexOf('\n  "Renegade RV": {');
+    if (l0 < 0 || l1 < l0) {
+      fail('Leisure Travel Vans block not found between "Leisure Travel Vans": and "Renegade RV":');
+    } else {
+      const ltv = src.slice(l0, l1);
+      const slice = (a, b) => {
+        const i =
+          ltv.indexOf(`    "${a}": {`) >= 0
+            ? ltv.indexOf(`    "${a}": {`)
+            : ltv.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? ltv.length
+            : ltv.indexOf(`    "${b}": {`) >= 0
+              ? ltv.indexOf(`    "${b}": {`)
+              : ltv.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? ltv.slice(i, j) : ltv.slice(i);
+      };
+
+      for (const ghost of ["Freedom", "Freedom II", "Libero", "Free Spirit", "Free Flight"]) {
+        if (new RegExp(`\\n    ${ghost}: \\{`).test(ltv) || new RegExp(`\\n    "${ghost}": \\{`).test(ltv)) {
+          fail(`Leisure Travel Vans|${ghost} must not be added (historic-only — no catalog key this pass)`);
+        }
+      }
+
+      const unity = slice("Unity", "Wonder");
+      if (!/type: "Class B\+"/.test(unity) || !/fuelType: "Diesel"/.test(unity)) {
+        fail("Leisure Travel Vans|Unity must be Class B+ / Diesel");
+      }
+      if (!/yearStart:\s*2010/.test(unity)) {
+        fail("Leisure Travel Vans|Unity yearStart must be 2010 (OEM All New Unity — not 1993)");
+      }
+      if (/yearStart:\s*1993/.test(unity)) {
+        fail("Leisure Travel Vans|Unity must not keep invent yearStart 1993");
+      }
+      if (!/"2010": \[\s*"U24MB",\s*"U24CB"\s*\]/.test(unity)) {
+        fail("Leisure Travel Vans|Unity MY2010 LOCK U24MB/U24CB missing");
+      }
+      if (/"2000":|"2001":|"2002":|"2003":|"2004":|"2005":|"2006":|"2007":|"2008":|"2009":|"2011":/.test(unity)) {
+        fail("Leisure Travel Vans|Unity must omit 2000–2009 / 2011 FBY (GAP; no 2009/2011→2010 copy)");
+      }
+      if (/"2010": \[[^\]]*"U24IB"|"2010": \[[^\]]*"U24TB"|"2010": \[[^\]]*"U24RL"|"2010": \[[^\]]*"U24FX"/.test(unity)) {
+        fail("Leisure Travel Vans|Unity must not invent U24IB/TB/RL/FX onto MY2010");
+      }
+      if (/from:\s*2000/.test(unity)) {
+        fail("Leisure Travel Vans|Unity must not keep the invent 2000–2005 powertrain band");
+      }
+
+      const serenity = slice("Serenity", "Free");
+      if (!/type: "Class B"/.test(serenity) || !/fuelType: "Diesel"/.test(serenity)) {
+        fail("Leisure Travel Vans|Serenity must be Class B / Diesel");
+      }
+      if (!/yearStart:\s*2010/.test(serenity)) {
+        fail("Leisure Travel Vans|Serenity yearStart must stay 2010 (honest; empty until 2012 chips)");
+      }
+      if (/"2000":|"2006":|"2008":|"2009":|"2010":/.test(serenity)) {
+        fail("Leisure Travel Vans|Serenity must omit 2000–2010 FBY (MY2010 GAP; no Freedom II letter invent)");
+      }
+
+      const free = slice("Free", null);
+      if (!/yearStart:\s*2018/.test(free)) {
+        fail("Leisure Travel Vans|Free yearStart must stay 2018 (no Free Spirit / Free Flight walk-back)");
+      }
+      if (/"2000":|"2003":|"2005":|"2006":|"2007":|"2008":|"2009":|"2010":|"2017":/.test(free)) {
+        fail("Leisure Travel Vans|Free must not backfill Spirit/Flight years onto catalog Free");
+      }
+      if (/"210A"|"210B"|"LSS"/.test(free)) {
+        fail("Leisure Travel Vans|Free must not map Free Spirit codes onto catalog Free");
+      }
+
+      const wonder = slice("Wonder", "Wonder XL");
+      if (/"2000":|"2008":|"2009":/.test(wonder)) {
+        fail("Leisure Travel Vans|Wonder must not gain pre-2010 FBY this pass");
+      }
+      const wonderXl = slice("Wonder XL", "Serenity");
+      if (/"2000":|"2008":|"2009":/.test(wonderXl)) {
+        fail("Leisure Travel Vans|Wonder XL must not gain pre-2010 FBY this pass");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const ltvIdx = catalogIndex["Leisure Travel Vans"];
+      if (!ltvIdx) fail("Leisure Travel Vans missing from CATALOG_INDEX");
+      if (ltvIdx.Unity?.yearStart !== 2010) {
+        fail("Leisure Travel Vans|Unity index yearStart must be 2010");
+      }
+      if (!ltvIdx.Unity?.years?.includes(2010)) {
+        fail("Leisure Travel Vans|Unity index must chip LOCK MY2010");
+      }
+      if (ltvIdx.Unity?.years?.includes(2011)) {
+        fail("Leisure Travel Vans|Unity index must omit 2011 (GAP; no 2011→2010 copy)");
+      }
+      for (const y of [2000, 2003, 2006, 2008, 2009]) {
+        if (ltvIdx.Unity?.years?.includes(y)) {
+          fail(`Leisure Travel Vans|Unity index must omit ${y} (GAP)`);
+        }
+      }
+      if (ltvIdx.Serenity?.yearStart !== 2010) {
+        fail("Leisure Travel Vans|Serenity index yearStart must stay 2010");
+      }
+      if (ltvIdx.Serenity?.years?.includes(2010) || ltvIdx.Serenity?.years?.includes(2009)) {
+        fail("Leisure Travel Vans|Serenity index must omit 2009–2010 (GAP)");
+      }
+      if (ltvIdx.Free?.yearStart !== 2018) {
+        fail("Leisure Travel Vans|Free index yearStart must stay 2018");
+      }
+      if (ltvIdx.Free?.years?.includes(2008) || ltvIdx.Free?.years?.includes(2009)) {
+        fail("Leisure Travel Vans|Free index must not include Spirit/Flight years");
+      }
+      if (ltvIdx.Wonder?.yearStart !== 2015) {
+        fail("Leisure Travel Vans|Wonder index yearStart must stay 2015");
+      }
+      if (ltvIdx["Wonder XL"]?.yearStart !== 2018) {
+        fail("Leisure Travel Vans|Wonder XL index yearStart must stay 2018");
+      }
+      for (const ghost of ["Freedom", "Freedom II", "Libero", "Free Spirit", "Free Flight"]) {
+        if (ltvIdx[ghost]) {
+          fail(`Leisure Travel Vans must not add ${ghost} catalog key this pass`);
+        }
+      }
     }
   }
 
