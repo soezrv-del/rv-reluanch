@@ -12613,8 +12613,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Era: {
       type: "Class B",
-      floorplans: ["70A", "70B", "170M", "170X", "70M", "70C", "70X", "170R"],
+      floorplans: ["70A", "70B", "170M", "170X", "70M", "70C", "70X", "170R", "170RT", "170RL", "170XT", "170XL", "144U"],
       floorplansByYear: {
+        // LOCK EzMe pack 2026-09-09 at winnebago-class-b.
+        // GAP 2000–2008 except MY2009 LOCK. Never invent Era into 2000–2008. Never invent 70A/70B onto 2009.
+        // GAP 2006–2008 Class B nameplate window — empty (Rialta ends 2005; Era LOCK starts 2009).
+        // LOCK 2009 Era: 170RT | 170RL | 170XT | 170XL | 144U. Do not invent leftover 70A/70B.
+        "2009": ["170RT", "170RL", "170XT", "170XL", "144U"],
         // OEM 2010 Era + 2010 wiring: 170R | 170X · Sprinter. HP unprinted → 0. Do not invent leftover 70A/70B.
         "2010": ["170R", "170X"],
         // No 2011 Era card (not on 2011 wiring; archive 2012 then 2010). Do not invent leftover 70A/70B.
@@ -12670,9 +12675,18 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 74,
       founded: 1958,
       warrantyYears: 2,
-      yearStart: 2010,
+      yearStart: 2009,
       yearEnd: 2021,
       powertrainByYear: [
+        {
+          from: 2009,
+          to: 2009,
+          engine: "Mercedes-Benz Sprinter (HP not printed)",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          notes: "LOCK EzMe pack 2026-09-09 Era MY2009: 170RT | 170RL | 170XT | 170XL | 144U. HP not printed — do not invent leftover 70A/70B or leftover 180/188. Not Rialta 22*."
+        },
         {
           from: 2010,
           to: 2010,
@@ -12764,7 +12778,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           notes: "OEM 2021 Era brochure: 70A | 70B | 70X · Sprinter 3.0 188-hp. No year-true 2022 card."
         }
       ],
-      description: "Winnebago Era — earlier Sprinter Class B generation. Last year-true OEM card 2021."
+      description: "Winnebago Era — earlier Sprinter Class B generation. EzMe pack 2026-09-09 LOCK MY2009 (170RT/170RL/170XT/170XL/144U) then OEM 2010 170R/170X. Not Rialta. Last year-true OEM card 2021."
     },
     View: {
       type: "Class C",
@@ -14029,6 +14043,49 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         { from: 2022, to: 2024, engine: "RAM ProMaster 3.6L V6 280HP", horsepower: 280, chassis: "RAM ProMaster", transmission: "9-speed automatic", fuelType: "Gas", notes: "OEM 2022 Solis series card: Pocket 36A. OEM 2023: 36A. OEM 2024: 36A | 36B. ProMaster 280. Not Solis 59P/59PX." },
         { from: 2025, to: 2025, engine: "RAM ProMaster 3.6L V6 280HP", horsepower: 280, chassis: "RAM ProMaster", transmission: "9-speed automatic", fuelType: "Gas", notes: "OEM 2025 Solis series card: ProMaster 280-hp 3.6. Pocket 36A/36B, 136\" WB." },
         { from: 2026, to: 2026, engine: "RAM ProMaster 3.6L V6 gas", horsepower: 0, chassis: "RAM ProMaster", fuelType: "Gas", notes: "OEM 2026 Solis flyer Pocket: 36A. HP not printed." },
+      ],
+    },
+    Rialta: {
+      type: "Class B",
+      floorplans: ["22QD", "22HD", "22FD"],
+      floorplansByYear: {
+        // LOCK EzMe pack 2026-09-09 at winnebago-class-b: 2000–2005 → 22QD, 22HD, 22FD.
+        // GAP 2006–2008 Class B nameplate window — empty. Do not copy 22* onto Era / Travato / Revel.
+        // Never invent Era 70*/170* onto this key. Not Travato. Not Revel.
+        "2000": ["22QD", "22HD", "22FD"],
+        "2001": ["22QD", "22HD", "22FD"],
+        "2002": ["22QD", "22HD", "22FD"],
+        "2003": ["22QD", "22HD", "22FD"],
+        "2004": ["22QD", "22HD", "22FD"],
+        "2005": ["22QD", "22HD", "22FD"],
+      },
+      lengthRange: [21, 23],
+      weightRange: [7000, 9000],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [69000, 99000],
+      engine: "Confirm brochure (HP not printed)",
+      horsepower: 0,
+      chassis: "Volkswagen",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.3,
+      image: RV_CARD_IMAGE,
+      founded: 1958,
+      warrantyYears: 1,
+      yearStart: 2000,
+      yearEnd: 2005,
+      description: "Winnebago Rialta — historic Class B. EzMe pack 2026-09-09 LOCK MY2000–2005: 22QD / 22HD / 22FD. Not Era. GAP 2006–2008 empty. HP not printed — do not invent.",
+      powertrainByYear: [
+        {
+          from: 2000,
+          to: 2005,
+          engine: "Confirm brochure (HP not printed)",
+          horsepower: 0,
+          chassis: "Volkswagen",
+          fuelType: "Gas",
+          notes: "LOCK EzMe pack 2026-09-09 Rialta MY2000–2005: 22QD | 22HD | 22FD. HP not printed — do not invent. Not Era 170*/70*. GAP 2006–2008.",
+        },
       ],
     },
     Elora: {

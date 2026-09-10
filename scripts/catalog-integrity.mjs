@@ -2048,6 +2048,8 @@ function main() {
         "Travato",
         "Solis",
         "Solis Pocket",
+        "Era",
+        "Rialta",
         "View",
         "Navion",
         "EKKO",
@@ -2381,11 +2383,72 @@ function main() {
       if (era2011) {
         fail("Winnebago|Era must not list 2011 (not on 2011 wiring; no 2011 brochure)");
       }
+      if (!/"2009": \["170RT", "170RL", "170XT", "170XL", "144U"\]/.test(era)) {
+        fail("Winnebago|Era MY09 LOCK missing (170RT/170RL/170XT/170XL/144U — EzMe pack 2026-09-09)");
+      }
+      if (/"2009": .*"70A"/.test(era) || /"2009": .*"70B"/.test(era)) {
+        fail("Winnebago|Era must not invent 70A/70B onto 2009");
+      }
+      if (!/yearStart:\s*2009/.test(era)) {
+        fail("Winnebago|Era yearStart must be 2009 (LOCK MY2009; do not keep 2010 and invent 70* into 2009)");
+      }
+      if (/"2000":/.test(era) || /"2001":/.test(era) || /"2002":/.test(era) || /"2003":/.test(era) || /"2004":/.test(era) || /"2005":/.test(era) || /"2006":/.test(era) || /"2007":/.test(era) || /"2008":/.test(era)) {
+        fail("Winnebago|Era must not list 2000–2008 (never invent Era into 2000–2008; Rialta is a separate key)");
+      }
+      if (/"22QD"/.test(era) || /"22HD"/.test(era) || /"22FD"/.test(era)) {
+        fail("Winnebago|Era must not absorb Rialta 22QD/22HD/22FD");
+      }
       if (!/"2010": \["170R", "170X"\]/.test(era)) {
         fail("Winnebago|Era MY10 OEM plans missing (170R/170X)");
       }
       if (!/"2012": \["70X"\]/.test(era)) {
         fail("Winnebago|Era MY12 OEM plans missing (70X)");
+      }
+      const rialta0 = wgo.indexOf("    Rialta: {");
+      const rialta1 = wgo.indexOf("    Elora: {");
+      const rialta = rialta0 >= 0 && rialta1 > rialta0 ? wgo.slice(rialta0, rialta1) : "";
+      if (!rialta) {
+        fail("Winnebago|Rialta missing (historic Class B key — do not stuff 22* into Era/Travato/Revel)");
+      }
+      if (!/type: "Class B"/.test(rialta)) {
+        fail("Winnebago|Rialta must be Class B");
+      }
+      if (!/yearStart:\s*2000/.test(rialta) || !/yearEnd:\s*2005/.test(rialta)) {
+        fail("Winnebago|Rialta yearStart must be 2000 / yearEnd 2005 (EzMe pack 2026-09-09)");
+      }
+      for (const y of ["2000", "2001", "2002", "2003", "2004", "2005"]) {
+        if (!new RegExp(`"${y}": \\["22QD", "22HD", "22FD"\\]`).test(rialta)) {
+          fail(`Winnebago|Rialta MY${y} LOCK missing (22QD/22HD/22FD — EzMe pack 2026-09-09)`);
+        }
+      }
+      if (/"2006":/.test(rialta) || /"2007":/.test(rialta) || /"2008":/.test(rialta) || /"2009":/.test(rialta)) {
+        fail("Winnebago|Rialta must omit 2006–2009 (GAP 2006–2008 Class B nameplate window; Era is a separate key)");
+      }
+      if (/"70A"/.test(rialta) || /"70B"/.test(rialta) || /"170R"/.test(rialta) || /"170X"/.test(rialta) || /"170RT"/.test(rialta)) {
+        fail("Winnebago|Rialta must not absorb Era 70*/170* codes");
+      }
+      if (/"44E"/.test(rialta) || /"59G"/.test(rialta) || /"59P"/.test(rialta) || /"36A"/.test(rialta)) {
+        fail("Winnebago|Rialta must not absorb Travato/Revel/Solis codes");
+      }
+      if (/"2010":/.test(rv) || /"2006":/.test(rv) || /"2007":/.test(rv) || /"2008":/.test(rv) || /"2009":/.test(rv)) {
+        fail("Winnebago|Revel must not list 2006–2012 (first year-true card 2018; GAP 2006–2008 empty)");
+      }
+      if (/"2006":/.test(tr) || /"2007":/.test(tr) || /"2008":/.test(tr) || /"2009":/.test(tr) || /"22QD"/.test(tr)) {
+        fail("Winnebago|Travato must not list 2006–2009 or absorb Rialta 22* (first year-true card 2014)");
+      }
+      const soClassB = wgo.slice(wgo.indexOf("    Solis: {"), wgo.indexOf("    Boldt: {"));
+      const blClassB = wgo.slice(wgo.indexOf("    Boldt: {"), wgo.indexOf("    Era: {"));
+      const rspClassB = wgo.slice(wgo.indexOf('    "Revel Sport": {'), wgo.indexOf('    "Solis Pocket": {'));
+      const pkClassB = wgo.slice(wgo.indexOf('    "Solis Pocket": {'), wgo.indexOf("    Rialta: {"));
+      for (const [name, body] of [
+        ["Solis", soClassB],
+        ["Boldt", blClassB],
+        ["Revel Sport", rspClassB],
+        ["Solis Pocket", pkClassB],
+      ]) {
+        if (/"2006":/.test(body) || /"2007":/.test(body) || /"2008":/.test(body)) {
+          fail(`Winnebago|${name} must omit 2006–2008 (GAP Class B nameplate window — empty)`);
+        }
       }
       const accTt0 = wgo.indexOf("    Access: {");
       const accTt1 = wgo.indexOf("    Thrive: {");
@@ -2455,6 +2518,42 @@ function main() {
       }
       if (/\n    "Grand Design": \{/.test(wgo) || /\n    Keystone: \{/.test(wgo)) {
         fail("Winnebago block must not absorb other-make keys");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const wgIdx = catalogIndex.Winnebago;
+      if (!wgIdx) fail("Winnebago missing from CATALOG_INDEX");
+      if (wgIdx.Era?.yearStart !== 2009) {
+        fail("Winnebago|Era index yearStart must be 2009 (EzMe pack MY2009 LOCK)");
+      }
+      if (!wgIdx.Era?.years?.includes(2009) || !wgIdx.Era?.years?.includes(2010)) {
+        fail("Winnebago|Era index must include 2009 and 2010");
+      }
+      if (wgIdx.Era?.years?.includes(2011)) {
+        fail("Winnebago|Era index must omit 2011 (GAP)");
+      }
+      for (const y of [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008]) {
+        if (wgIdx.Era?.years?.includes(y)) {
+          fail(`Winnebago|Era index must omit ${y} (never invent Era into 2000–2008)`);
+        }
+      }
+      if (!wgIdx.Rialta) {
+        fail("Winnebago|Rialta missing from CATALOG_INDEX (historic Class B key)");
+      }
+      if (wgIdx.Rialta?.type !== "Class B") {
+        fail("Winnebago|Rialta index must be Class B");
+      }
+      if (wgIdx.Rialta?.yearStart !== 2000 || wgIdx.Rialta?.yearEnd !== 2005) {
+        fail("Winnebago|Rialta index yearStart must be 2000 / yearEnd 2005");
+      }
+      if (JSON.stringify(wgIdx.Rialta?.years) !== JSON.stringify([2000, 2001, 2002, 2003, 2004, 2005])) {
+        fail("Winnebago|Rialta index years must be 2000–2005 only (GAP 2006–2008 empty)");
+      }
+      if (wgIdx.Travato?.years?.includes(2009) || wgIdx.Revel?.years?.includes(2009)) {
+        fail("Winnebago|Travato/Revel index must omit 2009 (no pre-intro fill; never map Rialta into those keys)");
       }
     }
   }
