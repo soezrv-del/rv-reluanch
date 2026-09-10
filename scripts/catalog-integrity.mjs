@@ -6361,6 +6361,129 @@ function main() {
     }
   }
 
+  // Pleasure-Way Class B MY2000 walk-back (EzMe pack 2026-09-09).
+  // Make key is quoted (`"Pleasure-Way": {`). Empty/GAP > invent.
+  // Plateau nameplate LOCK 2004/2007/2009 — no letter chips. MY2010 GAP.
+  // Plateau TS stays separate and empty 2000–2010. Lexor yearStart 2014 /
+  // Ascent yearStart 2018 honesty floors — no historic name-reuse walk-back.
+  {
+    const p0 = src.indexOf('\n  "Pleasure-Way": {');
+    const p1 = src.indexOf("\n  Roadtrek: {");
+    if (p0 < 0 || p1 < p0) {
+      fail('Pleasure-Way block not found between "Pleasure-Way": and Roadtrek:');
+    } else {
+      const pw = src.slice(p0, p1);
+      const slice = (a, b) => {
+        const i =
+          pw.indexOf(`    "${a}": {`) >= 0
+            ? pw.indexOf(`    "${a}": {`)
+            : pw.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? pw.length
+            : pw.indexOf(`    "${b}": {`) >= 0
+              ? pw.indexOf(`    "${b}": {`)
+              : pw.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? pw.slice(i, j) : pw.slice(i);
+      };
+
+      if (/\n    Excel: \{/.test(pw) || /\n    "Excel": \{/.test(pw)) {
+        fail("Pleasure-Way|Excel must not be added (historic-only — no catalog key this pass)");
+      }
+      if (/\n    Traverse: \{/.test(pw) || /\n    "Traverse": \{/.test(pw)) {
+        fail("Pleasure-Way|Traverse must not be added (historic-only — no catalog key this pass)");
+      }
+
+      const plateau = slice("Plateau", "Plateau TS");
+      if (!/type: "Class B"/.test(plateau) || !/fuelType: "Diesel"/.test(plateau)) {
+        fail("Pleasure-Way|Plateau must be Class B / Diesel");
+      }
+      if (!/yearStart:\s*2004/.test(plateau)) {
+        fail("Pleasure-Way|Plateau yearStart must be 2004 (first LOCK nameplate window)");
+      }
+      if (/"2000":|"2004":|"2005":|"2006":|"2007":|"2008":|"2009":|"2010":|"2011":/.test(plateau)) {
+        fail("Pleasure-Way|Plateau must omit 2000–2011 FBY (empty/GAP; no letter chips; MY2010 GAP)");
+      }
+      if (/from:\s*2005/.test(plateau)) {
+        fail("Pleasure-Way|Plateau must not keep the invent 2005 powertrain band");
+      }
+
+      const plateauTs = slice("Plateau TS", "Ascent");
+      if (!plateauTs) {
+        fail("Pleasure-Way|Plateau TS must stay a separate catalog key (do not merge into Plateau)");
+      } else {
+        if (!/type: "Class B"/.test(plateauTs) || !/fuelType: "Diesel"/.test(plateauTs)) {
+          fail("Pleasure-Way|Plateau TS must be Class B / Diesel");
+        }
+        if (!/yearStart:\s*2012/.test(plateauTs)) {
+          fail("Pleasure-Way|Plateau TS yearStart must be 2012 (zero LOCKs 2000–2010)");
+        }
+        if (/"2000":|"2004":|"2005":|"2007":|"2008":|"2009":|"2010":|"2011":/.test(plateauTs)) {
+          fail("Pleasure-Way|Plateau TS must omit 2000–2011 FBY (soft JD ≠ LOCK; MY2010 GAP)");
+        }
+        if (/from:\s*2005/.test(plateauTs)) {
+          fail("Pleasure-Way|Plateau TS must not keep the invent 2005 powertrain band");
+        }
+      }
+
+      const lexor = slice("Lexor", "Ontour");
+      if (!/yearStart:\s*2014/.test(lexor)) {
+        fail("Pleasure-Way|Lexor yearStart must stay 2014 (no historic Chevy Lexor walk-back)");
+      }
+      if (/"2000":|"2006":|"2007":|"2008":|"2009":/.test(lexor)) {
+        fail("Pleasure-Way|Lexor must not backfill 2000–2009 historic Chevy nameplate years");
+      }
+
+      const ascent = slice("Ascent", "Lexor");
+      if (!/yearStart:\s*2018/.test(ascent)) {
+        fail("Pleasure-Way|Ascent yearStart must stay 2018 (no historic Dodge Ascent walk-back)");
+      }
+      if (/"2000":|"2008":|"2009":|"2010":|"2017":/.test(ascent)) {
+        fail("Pleasure-Way|Ascent must not back-date historic Dodge nameplate years");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const pwIdx = catalogIndex["Pleasure-Way"];
+      if (!pwIdx) fail("Pleasure-Way missing from CATALOG_INDEX");
+      if (!pwIdx.Plateau || !pwIdx["Plateau TS"]) {
+        fail("Pleasure-Way index must keep Plateau and Plateau TS as separate keys");
+      }
+      if (pwIdx.Plateau?.yearStart !== 2004) {
+        fail("Pleasure-Way|Plateau index yearStart must be 2004");
+      }
+      if (pwIdx["Plateau TS"]?.yearStart !== 2012) {
+        fail("Pleasure-Way|Plateau TS index yearStart must be 2012");
+      }
+      if (pwIdx.Lexor?.yearStart !== 2014) {
+        fail("Pleasure-Way|Lexor index yearStart must stay 2014");
+      }
+      if (pwIdx.Ascent?.yearStart !== 2018) {
+        fail("Pleasure-Way|Ascent index yearStart must stay 2018");
+      }
+      for (const y of [2000, 2004, 2005, 2007, 2009, 2010, 2011]) {
+        if (pwIdx.Plateau?.years?.includes(y)) {
+          fail(`Pleasure-Way|Plateau index must omit ${y} (GAP / no letter chips)`);
+        }
+        if (pwIdx["Plateau TS"]?.years?.includes(y)) {
+          fail(`Pleasure-Way|Plateau TS index must omit ${y} (GAP)`);
+        }
+      }
+      if (pwIdx.Lexor?.years?.includes(2000) || pwIdx.Lexor?.years?.includes(2007)) {
+        fail("Pleasure-Way|Lexor index must not include historic Chevy years");
+      }
+      if (pwIdx.Ascent?.years?.includes(2008)) {
+        fail("Pleasure-Way|Ascent index must not include historic Dodge years");
+      }
+      if (pwIdx.Excel || pwIdx.Traverse) {
+        fail("Pleasure-Way must not add Excel / Traverse catalog keys this pass");
+      }
+    }
+  }
+
   // Roadtrek honesty lock. Make key is unquoted (`Roadtrek: {`).
   // Dated library.rvusa.com/brochure/{Year}-Roadtrek-*.pdf + RVUSA year cards.
   // MY2027 locked only where year-labeled RVUSA pages have Base cards; else GAP.
