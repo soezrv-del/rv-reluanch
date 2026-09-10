@@ -320,8 +320,8 @@ const FORBIDDEN_FLOORPLANS = {
     reason: "Dated PDFs print CS Adventurous — not split CS / Adventurous codes",
   },
   "Roadtrek|Popular": {
-    codes: ["190", "210", "170D", "170P", "190P", "Popular 190", "Popular 210"],
-    reason: "Bare length codes and reversed Popular 190 names stay off; brochure is 190-Popular / 190 Popular",
+    codes: ["190", "210", "170D", "170P", "190P", "Popular 190", "Popular 210", "190-Versatile", "200-Versatile", "210-Versatile"],
+    reason: "Bare length codes, reversed Popular 190 names, and Versatile siblings stay off; brochure Popular key is 170/190/200/210-Popular",
   },
 };
 
@@ -6445,14 +6445,17 @@ function main() {
       if (!/type: "Class B"/.test(agile) || !/fuelType: "Diesel"/.test(agile)) {
         fail("Roadtrek|SS Agile must be Class B / Diesel (Sprinter) — not ProMaster gas");
       }
-      if (!/yearStart:\s*2011/.test(agile)) {
-        fail("Roadtrek|SS Agile yearStart must be 2011 (first MY2010+ dated lock)");
+      if (!/yearStart:\s*2007/.test(agile)) {
+        fail("Roadtrek|SS Agile yearStart must be 2007 (EzMe 2026-09-09 MY2000 walk-back)");
+      }
+      if (!/"2007": \[\s*"SS-Agile"\s*\]/.test(agile) || !/"2008": \[\s*"SS-Agile"\s*\]/.test(agile)) {
+        fail("Roadtrek|SS Agile 2007–2008 hyphen walk-back lock missing");
       }
       if (!/"2011": \[\s*"SS-Agile"\s*\]/.test(agile) || !/"2025": \[\s*"SS Agile"\s*\]/.test(agile) || !/"2026": \[\s*"SS Agile"\s*\]/.test(agile)) {
         fail("Roadtrek|SS Agile 2011 hyphen / 2025–2026 space lock missing");
       }
-      if (/"2020":|"2023":|"2024":|"2027":|"Agile"|"170"/.test(agile)) {
-        fail("Roadtrek|SS Agile must omit GAP years and bare Agile/170");
+      if (/"2009":|"2010":|"2020":|"2023":|"2024":|"2027":|"Agile"|"170"/.test(agile)) {
+        fail("Roadtrek|SS Agile must omit GAP years (incl. 2009–2010) and bare Agile/170");
       }
 
       const chase = slice("Chase", "CS Adventurous");
@@ -6479,22 +6482,31 @@ function main() {
       if (!/"2014": \[\s*"CS Adventurous"\s*\]/.test(cs) || !/"2019": \[\s*"CS Adventurous"\s*\]/.test(cs)) {
         fail("Roadtrek|CS Adventurous MY14 / MY19 brochure lock missing");
       }
-      if (/"2010":|"2011":|"2015":|"2020":|"2026":|"2027":/.test(cs)) {
-        fail("Roadtrek|CS Adventurous must omit pre-2014 / 2015 / post-2019 GAP years");
+      if (/"2000":|"2005":|"2008":|"2009":|"2010":|"2011":|"2015":|"2020":|"2026":|"2027":/.test(cs)) {
+        fail("Roadtrek|CS Adventurous must omit 2000–2013 / 2015 / post-2019 GAP years (no RS→CS)");
       }
 
       const popular = slice("Popular", null);
       if (!/type: "Class B"/.test(popular) || !/fuelType: "Gas"/.test(popular)) {
         fail("Roadtrek|Popular must be Class B / Gas (Chevy Express) — not dual-fuel invent");
       }
-      if (!/yearStart:\s*2005/.test(popular) || !/yearEnd:\s*2018/.test(popular)) {
-        fail("Roadtrek|Popular yearStart 2005 / yearEnd 2018");
+      if (!/yearStart:\s*2000/.test(popular) || !/yearEnd:\s*2018/.test(popular)) {
+        fail("Roadtrek|Popular yearStart 2000 / yearEnd 2018");
+      }
+      if (!/"2000": \[\s*"170-Popular",\s*"190-Popular",\s*"200-Popular"\s*\]/.test(popular)) {
+        fail("Roadtrek|Popular MY2000–03 must be 170/190/200-Popular (not 210)");
+      }
+      if (!/"2004": \[\s*"170-Popular",\s*"190-Popular",\s*"210-Popular"\s*\]/.test(popular)) {
+        fail("Roadtrek|Popular MY2004 must be 170/190/210-Popular (not 200-*)");
+      }
+      if (!/"2008": \[\s*"170-Popular",\s*"190-Popular",\s*"210-Popular"\s*\]/.test(popular)) {
+        fail("Roadtrek|Popular MY2005–08 must be 170/190/210-Popular (not Versatile)");
       }
       if (!/"2011": \[\s*"190-Popular",\s*"210-Popular"\s*\]/.test(popular) || !/"2017": \[\s*"190 Popular",\s*"210 Popular"\s*\]/.test(popular)) {
         fail("Roadtrek|Popular MY11 hyphen / MY17 space brochure lock missing");
       }
-      if (/"2010":|"2014":|"2015":|"2016":|"2019":|"2026":|"170D"|"170P"/.test(popular)) {
-        fail("Roadtrek|Popular must omit GAP years and 170D/170P ghosts");
+      if (/"2009":|"2010":|"2014":|"2015":|"2016":|"2019":|"2026":|"170D"|"170P"|"190-Versatile"|"200-Versatile"|"210-Versatile"/.test(popular)) {
+        fail("Roadtrek|Popular must omit GAP years (incl. 2009) and 170D/170P / Versatile");
       }
 
       const idxSrc = readFileSync(INDEX, "utf8");
@@ -6518,15 +6530,27 @@ function main() {
       if (rtIdx["SS Agile"]?.years?.includes(2027)) {
         fail("Roadtrek|SS Agile index must omit 2027 (GAP)");
       }
-      if (rtIdx.Popular?.years?.includes(2026) || rtIdx.Popular?.years?.includes(2010)) {
-        fail("Roadtrek|Popular index must omit 2010 and 2026 (GAP)");
+      if (rtIdx.Popular?.yearStart !== 2000) {
+        fail("Roadtrek|Popular index yearStart must be 2000");
       }
-      if (rtIdx["CS Adventurous"]?.years?.includes(2026)) {
-        fail("Roadtrek|CS Adventurous index must omit 2026 (GAP)");
+      if (!rtIdx.Popular?.years?.includes(2000) || !rtIdx.Popular?.years?.includes(2008)) {
+        fail("Roadtrek|Popular index must chip LOCK 2000–2008 walk-back years");
+      }
+      if (rtIdx.Popular?.years?.includes(2009) || rtIdx.Popular?.years?.includes(2010) || rtIdx.Popular?.years?.includes(2026)) {
+        fail("Roadtrek|Popular index must omit 2009 / 2010 / 2026 (GAP)");
+      }
+      if (rtIdx["CS Adventurous"]?.years?.includes(2026) || rtIdx["CS Adventurous"]?.years?.includes(2008) || rtIdx["CS Adventurous"]?.years?.includes(2009)) {
+        fail("Roadtrek|CS Adventurous index must omit 2008–2009 / 2026 (GAP; no RS→CS)");
       }
       if (rtIdx.Zion?.yearStart !== 2015) fail("Roadtrek|Zion index yearStart must be 2015");
       if (rtIdx["Zion Slumber"]?.yearStart !== 2021) fail("Roadtrek|Zion Slumber index yearStart must be 2021");
-      if (rtIdx["SS Agile"]?.yearStart !== 2011) fail("Roadtrek|SS Agile index yearStart must be 2011");
+      if (rtIdx["SS Agile"]?.yearStart !== 2007) fail("Roadtrek|SS Agile index yearStart must be 2007");
+      if (!rtIdx["SS Agile"]?.years?.includes(2007) || !rtIdx["SS Agile"]?.years?.includes(2008)) {
+        fail("Roadtrek|SS Agile index must chip LOCK 2007–2008");
+      }
+      if (rtIdx["SS Agile"]?.years?.includes(2009) || rtIdx["SS Agile"]?.years?.includes(2010)) {
+        fail("Roadtrek|SS Agile index must omit 2009–2010 (GAP)");
+      }
     }
   }
 

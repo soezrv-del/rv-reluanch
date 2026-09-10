@@ -570,10 +570,12 @@ test("Roadtrek Facts SoT: dated library PDFs + RVUSA year cards; ghosts quaranti
 
   const agile = roadtrek.slice(roadtrek.indexOf('    "SS Agile": {'), roadtrek.indexOf("    Chase: {"));
   assert.match(agile, /fuelType: "Diesel"/);
-  assert.match(agile, /yearStart:\s*2011/);
+  assert.match(agile, /yearStart:\s*2007/);
+  assert.match(agile, /"2007": \[\s*"SS-Agile"\s*\]/);
+  assert.match(agile, /"2008": \[\s*"SS-Agile"\s*\]/);
   assert.match(agile, /"2011": \[\s*"SS-Agile"\s*\]/);
   assert.match(agile, /"2026": \[\s*"SS Agile"\s*\]/);
-  assert.doesNotMatch(agile, /"2027":|"2020":|"2023":/);
+  assert.doesNotMatch(agile, /"2009":|"2010":|"2027":|"2020":|"2023":/);
 
   const chase = roadtrek.slice(roadtrek.indexOf("    Chase: {"), roadtrek.indexOf('    "CS Adventurous": {'));
   assert.match(chase, /fuelType: "Gas"/);
@@ -584,16 +586,21 @@ test("Roadtrek Facts SoT: dated library PDFs + RVUSA year cards; ghosts quaranti
 
   const cs = roadtrek.slice(roadtrek.indexOf('    "CS Adventurous": {'), roadtrek.indexOf("    Popular: {"));
   assert.match(cs, /fuelType: "Diesel"/);
+  assert.match(cs, /yearStart:\s*2008/);
   assert.match(cs, /yearEnd:\s*2019/);
   assert.match(cs, /"2019": \[\s*"CS Adventurous"\s*\]/);
-  assert.doesNotMatch(cs, /"2010":|"2026":|"2027":/);
+  assert.doesNotMatch(cs, /"2000":|"2005":|"2008":|"2009":|"2010":|"2026":|"2027":/);
 
   const popular = roadtrek.slice(roadtrek.indexOf("    Popular: {"));
   assert.match(popular, /fuelType: "Gas"/);
+  assert.match(popular, /yearStart:\s*2000/);
   assert.match(popular, /yearEnd:\s*2018/);
+  assert.match(popular, /"2000": \[\s*"170-Popular",\s*"190-Popular",\s*"200-Popular"\s*\]/);
+  assert.match(popular, /"2004": \[\s*"170-Popular",\s*"190-Popular",\s*"210-Popular"\s*\]/);
+  assert.match(popular, /"2008": \[\s*"170-Popular",\s*"190-Popular",\s*"210-Popular"\s*\]/);
   assert.match(popular, /"2011": \[\s*"190-Popular",\s*"210-Popular"\s*\]/);
   assert.match(popular, /"2017": \[\s*"190 Popular",\s*"210 Popular"\s*\]/);
-  assert.doesNotMatch(popular, /"2010":|"2026":|"170D"/);
+  assert.doesNotMatch(popular, /"2009":|"2010":|"2026":|"170D"|"190-Versatile"|"200-Versatile"|"210-Versatile"/);
 });
 
 test("Holiday Rambler Facts SoT: MY2027 OEM+PDF locks; GAP Ambassador/Navigator/Augusta/Xpedition", () => {
