@@ -15836,16 +15836,22 @@ test("Midwest Automotive Designs MY2027 OEM+RVUSA locks + Passage/Weekender GAP"
   assert.doesNotMatch(patriot, /"2026":/);
 });
 
-test("Monaco Coach MY2027 GAP Camelot/Dynasty + Knight skip", () => {
+test("Monaco Coach yearEnd 2019 Camelot/Dynasty + Knight skip", () => {
   const idx = CATALOG_INDEX["Monaco Coach"];
   assert.ok(idx);
 
   assert.equal(idx.Camelot?.type, "Class A Diesel");
-  assert.equal(idx.Camelot?.years?.includes(2026), true);
+  assert.equal(idx.Camelot?.yearEnd, 2019);
+  assert.equal(idx.Camelot?.years?.includes(2019), true);
+  assert.equal(idx.Camelot?.years?.includes(2020), false);
+  assert.equal(idx.Camelot?.years?.includes(2026), false);
   assert.equal(idx.Camelot?.years?.includes(2027), false);
 
   assert.equal(idx.Dynasty?.type, "Class A Diesel");
-  assert.equal(idx.Dynasty?.years?.includes(2026), true);
+  assert.equal(idx.Dynasty?.yearEnd, 2019);
+  assert.equal(idx.Dynasty?.years?.includes(2019), true);
+  assert.equal(idx.Dynasty?.years?.includes(2020), false);
+  assert.equal(idx.Dynasty?.years?.includes(2026), false);
   assert.equal(idx.Dynasty?.years?.includes(2027), false);
 
   assert.equal(idx.Knight?.type, "Class A Diesel");
@@ -15862,14 +15868,16 @@ test("Monaco Coach MY2027 GAP Camelot/Dynasty + Knight skip", () => {
   const mc = block.slice(m0, m1);
 
   const dynasty = mc.slice(mc.indexOf("    Dynasty: {"), mc.indexOf("    Camelot: {"));
-  assert.doesNotMatch(dynasty, /"2027":/);
-  assert.match(dynasty, /"2026": \["38P", "42P", "44BT", "44SE", "44TQ"\]/);
-  assert.doesNotMatch(dynasty, /"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"/);
+  assert.match(dynasty, /yearEnd:\s*2019/);
+  assert.match(dynasty, /"2019": \["36P", "38P", "42P"\]/);
+  assert.doesNotMatch(dynasty, /"2020":|"2026":|"2027":/);
+  assert.doesNotMatch(dynasty, /"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"|"44BT"|"44SE"|"44TQ"/);
 
   const camelot = mc.slice(mc.indexOf("    Camelot: {"), mc.indexOf("    Knight: {"));
-  assert.doesNotMatch(camelot, /"2027":/);
-  assert.match(camelot, /"2026": \["40M", "40PRDQ", "42PDQ"\]/);
-  assert.doesNotMatch(camelot, /"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"/);
+  assert.match(camelot, /yearEnd:\s*2019/);
+  assert.match(camelot, /"2019": \["36M", "40M"\]/);
+  assert.doesNotMatch(camelot, /"2020":|"2026":|"2027":/);
+  assert.doesNotMatch(camelot, /"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"|"40PRDQ"|"42PDQ"/);
 
   const knight = mc.slice(mc.indexOf("    Knight: {"));
   assert.doesNotMatch(knight, /"2027":/);

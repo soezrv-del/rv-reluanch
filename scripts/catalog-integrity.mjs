@@ -1864,10 +1864,10 @@ function main() {
     }
   }
 
-  // Monaco Coach MY2027 pack. Make key is quoted (`"Monaco Coach": {`).
-  // EzMe pack 2026-09-07: 0 LOCK / GAP Camelot + Dynasty. OEM discontinued manufacturing.
-  // Knight skip (yearEnd 2023). Classic Signature/Windsor out of scope (separate make).
-  // Do not invent 2027 chips. Do not copy 2026→2027. Do not map American Coach codes.
+  // Monaco Coach yearEnd trim. Make key is quoted (`"Monaco Coach": {`).
+  // invent-risk #3 (LOT_DESK_MY2027): last Monaco-branded coaches ~2019; OEM discontinued.
+  // Camelot + Dynasty yearEnd 2019. Knight skip (yearEnd 2023). Classic out of scope.
+  // Do not invent 2020–2026 chips. Do not map American Coach codes.
   {
     const m0 = src.indexOf('\n  "Monaco Coach": {');
     const m1 = src.indexOf('\n  "Holiday Rambler": {');
@@ -1891,19 +1891,25 @@ function main() {
       };
 
       const dynasty = slice("Dynasty", "Camelot");
-      if (/"2027":/.test(dynasty)) {
-        fail("Monaco Coach|Dynasty must omit 2027 (GAP — EzMe pack 2026-09-07 0 LOCK; OEM discontinued)");
+      if (!/yearEnd:\s*2019/.test(dynasty)) {
+        fail("Monaco Coach|Dynasty must set yearEnd 2019 (invent-risk #3 — last Monaco-branded ~2019)");
       }
-      if (/"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"/.test(dynasty)) {
-        fail("Monaco Coach|Dynasty must not map American Coach codes");
+      if (/"2020":|"2021":|"2022":|"2023":|"2024":|"2025":|"2026":|"2027":/.test(dynasty)) {
+        fail("Monaco Coach|Dynasty must omit years after yearEnd 2019 (do not invent 2020–2026 chips)");
+      }
+      if (/"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"|"44BT"|"44SE"|"44TQ"/.test(dynasty)) {
+        fail("Monaco Coach|Dynasty must not map American Coach codes or keep post-2019 invent chips");
       }
 
       const camelot = slice("Camelot", "Knight");
-      if (/"2027":/.test(camelot)) {
-        fail("Monaco Coach|Camelot must omit 2027 (GAP — EzMe pack 2026-09-07 0 LOCK; OEM discontinued)");
+      if (!/yearEnd:\s*2019/.test(camelot)) {
+        fail("Monaco Coach|Camelot must set yearEnd 2019 (invent-risk #3 — last Monaco-branded ~2019)");
       }
-      if (/"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"/.test(camelot)) {
-        fail("Monaco Coach|Camelot must not map American Coach codes");
+      if (/"2020":|"2021":|"2022":|"2023":|"2024":|"2025":|"2026":|"2027":/.test(camelot)) {
+        fail("Monaco Coach|Camelot must omit years after yearEnd 2019 (do not invent 2020–2026 chips)");
+      }
+      if (/"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"|"40PRDQ"|"42PDQ"/.test(camelot)) {
+        fail("Monaco Coach|Camelot must not map American Coach codes or keep post-2019 invent chips");
       }
 
       const knight = slice("Knight");
@@ -1925,8 +1931,11 @@ function main() {
       const mcIdx = catalogIndex["Monaco Coach"];
       if (!mcIdx) fail("Monaco Coach missing from CATALOG_INDEX");
       for (const gap of ["Camelot", "Dynasty"]) {
-        if (mcIdx[gap]?.years?.includes(2027)) {
-          fail(`Monaco Coach|${gap} index must omit 2027 (GAP)`);
+        if (mcIdx[gap]?.yearEnd !== 2019) {
+          fail(`Monaco Coach|${gap} index must set yearEnd 2019`);
+        }
+        if (mcIdx[gap]?.years?.some((y) => y > 2019)) {
+          fail(`Monaco Coach|${gap} index must omit years after yearEnd 2019`);
         }
         if (mcIdx[gap]?.type !== "Class A Diesel") {
           fail(`Monaco Coach|${gap} index type must be Class A Diesel`);
