@@ -93,13 +93,18 @@ test("picker must not publish null Active Coach while a report is open", () => {
   assert.equal(pickerCoachWrite(empty, { reportOpen: false }), null);
 });
 
-test("Type is the first cascade step — Year stays locked until Type", () => {
-  assert.equal(revealFactsYear({ rvType: "" }), false);
-  assert.equal(revealFactsYear({ rvType: "   " }), false);
+test("Type is optional — Year unlocks with or without Type", () => {
+  assert.equal(
+    revealFactsYear({ rvType: "" }),
+    true,
+    "empty Type must not lock Year",
+  );
+  assert.equal(revealFactsYear({ rvType: "   " }), true);
+  assert.equal(revealFactsYear({}), true);
   assert.equal(
     revealFactsYear({ rvType: "class-a" }),
     true,
-    "Class A unlocks Year",
+    "Class A still unlocks Year (optional filter)",
   );
   assert.equal(revealFactsYear({ rvType: "class-a-diesel" }), true);
   assert.equal(revealFactsYear({ rvType: "fifth-wheel" }), true);
@@ -385,7 +390,7 @@ test("Facts first-run hero and year+make default stay on the cascade — no exam
     /year && make \? \([\s\S]*?\{cascade\.canSearch \? "Open report" : "Search"\}/,
     "Search / Open report stays as the year+make override",
   );
-  // Progressive unlock: Type → Year → Make → Model → Floorplan
+  // Progressive unlock: Type (optional) → Year → Make → Model → Floorplan
   const typeAt = fax.indexOf('label="Type"');
   const yearAt = fax.indexOf('label="Year"');
   const makeAt = fax.indexOf('label="Make"');
@@ -393,7 +398,7 @@ test("Facts first-run hero and year+make default stay on the cascade — no exam
   const modelAt = fax.indexOf('label="Model"');
   const revealFloorplanAt = fax.indexOf("{revealFloorplan ? (");
   const floorplanAt = fax.indexOf('label="Floorplan"');
-  assert.ok(typeAt > 0 && yearAt > typeAt, "Type is the first cascade field");
+  assert.ok(typeAt > 0 && yearAt > typeAt, "Type stays visible as the first field");
   assert.ok(makeAt > yearAt);
   assert.ok(revealModelAt > makeAt, "year and make stay visible before Model");
   assert.ok(modelAt > revealModelAt, "Model follows year+make, not a Search click");
@@ -404,7 +409,22 @@ test("Facts first-run hero and year+make default stay on the cascade — no exam
   assert.ok(floorplanAt > revealFloorplanAt);
   assert.match(fax, /yearUnlocked && setSheet\("year"\)/);
   assert.match(fax, /disabled=\{!yearUnlocked\}/);
-  assert.match(fax, /Pick a type first/);
+  assert.match(
+    fax,
+    /label="Type"[\s\S]*?placeholder="Optional"[\s\S]*?label="Year"/,
+    "Type FieldButton is optional — empty Type allowed",
+  );
+  assert.doesNotMatch(
+    fax,
+    /label="Type"[\s\S]*?required[\s\S]*?label="Year"/,
+    "Type must not be required",
+  );
+  assert.doesNotMatch(fax, /Pick a type first/);
+  assert.doesNotMatch(fax, /Required · first step/);
+  assert.match(
+    fax,
+    /open=\{sheet === "rvType"\}[\s\S]*?subtitle="Optional · filters Year → Floorplan"/,
+  );
   assert.doesNotMatch(fax, /label="RV Type"/);
   assert.doesNotMatch(fax, /All types/);
   assert.doesNotMatch(

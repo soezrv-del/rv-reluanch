@@ -477,8 +477,9 @@ export function RvFaxApp({
     [runSearchNow],
   );
 
-  // Type unlocks Year. Year + Make unlocks Model. Model unlocks Floorplan.
-  // Search is not the gate — year+make is the override path.
+  // Type is optional. Year is unlocked without it. Year + Make unlocks
+  // Model. Model unlocks Floorplan. Search is not the gate — year+make
+  // is the override path. Set Type to narrow lists by class.
   const yearUnlocked = revealFactsYear({ rvType });
   const revealModel = revealFactsModel({
     year,
@@ -751,15 +752,14 @@ export function RvFaxApp({
               <FieldButton
                 label="Type"
                 value={factsTypeLabel(rvType) || (rvType ? rvClassLabel(rvType) : "")}
-                placeholder="Required"
-                required
+                placeholder="Optional"
                 onClick={() => setSheet("rvType")}
                 sapphire
               />
               <FieldButton
                 label="Year"
                 value={year}
-                placeholder={yearUnlocked ? "Required" : "Pick a type first"}
+                placeholder="Required"
                 required
                 disabled={!yearUnlocked}
                 onClick={() => yearUnlocked && setSheet("year")}
@@ -1033,7 +1033,7 @@ export function RvFaxApp({
       <SelectSheet
         open={sheet === "rvType"}
         title="Type"
-        subtitle="Required · first step"
+        subtitle="Optional · filters Year → Floorplan"
         items={typeItems}
         selected={rvType}
         onSelect={(v) => onCascadeSelect("rvType", v)}

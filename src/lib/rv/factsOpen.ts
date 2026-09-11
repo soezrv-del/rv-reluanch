@@ -31,7 +31,8 @@ export type ResultLike = {
 /**
  * Facts Type-first cascade labels. Map onto catalog class ids only —
  * Class A is any Class A (`class-a`); Class A Diesel is diesel-only.
- * No All / Class A Gas on this step. Type is required to enter the cascade.
+ * No All / Class A Gas on this step. Type is an optional filter —
+ * empty Type means type-agnostic Year → Make → Model → Floorplan lists.
  */
 export const FACTS_TYPE_OPTIONS = [
   { id: "class-a", label: "Class A" },
@@ -56,10 +57,11 @@ export function isFactsTypeId(v: string | undefined | null): v is FactsTypeId {
 }
 
 /**
- * Year unlocks after Type. Cascade path cannot skip Type.
+ * Year is always unlocked. Type is an optional narrow, not a gate.
+ * Empty Type still shows type-agnostic Year → Make → Model → Floorplan.
  */
-export function revealFactsYear(sel: { rvType?: string | null }): boolean {
-  return Boolean(sel.rvType?.trim());
+export function revealFactsYear(_sel?: { rvType?: string | null }): boolean {
+  return true;
 }
 
 /**
