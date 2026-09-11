@@ -26765,10 +26765,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   "Monaco Coach": {
     Dynasty: {
       type: "Class A Diesel",
-      floorplans: ["36P", "38P", "42P", "44BT", "44SE", "44TQ"],
+      floorplans: ["36P", "38P", "42P"],
       floorplansByYear: {
-        // GAP 2027 — EzMe pack 2026-09-07: 0 LOCK. OEM discontinued manufacturing.
-        // Leave max 2026. Do not invent 2027 chips/codes. Do not copy 2026→2027.
+        // yearEnd 2019 — invent-risk #3 (LOT_DESK_MY2027): public trail last
+        // Monaco-branded coaches ~2019; OEM discontinued. Index max 2026 was
+        // over-extended. Empty/GAP > invent. Do not invent 2020–2026 chips.
         // Do not map American Coach codes onto Monaco.
         "2005": ["36P", "38P", "42P"],
         "2006": ["36P", "38P", "42P"],
@@ -26784,14 +26785,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["36P", "38P", "42P"],
         "2017": ["36P", "38P", "42P"],
         "2018": ["36P", "38P", "42P"],
-        "2019": ["36P", "38P", "42P"],
-        "2020": ["36P", "38P", "42P"],
-        "2021": ["36P", "38P", "42P"],
-        "2022": ["38P", "42P"],
-        "2023": ["38P", "42P"],
-        "2024": ["38P", "42P"],
-        "2025": ["38P", "42P"],
-        "2026": ["38P", "42P", "44BT", "44SE", "44TQ"]
+        "2019": ["36P", "38P", "42P"]
       },
       lengthRange: [
         36,
@@ -26826,6 +26820,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 1,
       yearStart: 2000,
+      yearEnd: 2019,
       description: "Monaco Dynasty — diesel Class A under REV Monaco Coach. Confirm chassis/engine on sticker; lineup thinner post-bankruptcy revival.",
       powertrainByYear: [
         {
@@ -26851,22 +26846,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 400,
           chassis: "Freightliner / Spartan"
         },
-        {
-          from: 2020,
-          to: 2026,
-          engine: "Cummins L9 450HP class",
-          horsepower: 450,
-          chassis: "Freightliner XC"
-        },
         
       ]
     },
     Camelot: {
       type: "Class A Diesel",
-      floorplans: ["36M", "40M", "40PRDQ", "42PDQ"],
+      floorplans: ["36M", "40M"],
       floorplansByYear: {
-        // GAP 2027 — EzMe pack 2026-09-07: 0 LOCK. OEM discontinued manufacturing.
-        // Leave max 2026. Do not invent 2027 chips/codes. Do not copy 2026→2027.
+        // yearEnd 2019 — invent-risk #3 (LOT_DESK_MY2027): public trail last
+        // Monaco-branded coaches ~2019; OEM discontinued. Index max 2026 was
+        // over-extended. Empty/GAP > invent. Do not invent 2020–2026 chips.
         // Do not map American Coach codes onto Monaco.
         "2005": ["36M", "40M"],
         "2006": ["36M", "40M"],
@@ -26882,14 +26871,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["36M", "40M"],
         "2017": ["36M", "40M"],
         "2018": ["36M", "40M"],
-        "2019": ["36M", "40M"],
-        "2020": ["36M", "40M"],
-        "2021": ["36M", "40M"],
-        "2022": ["36M", "40M"],
-        "2023": ["36M", "40M"],
-        "2024": ["36M", "40M"],
-        "2025": ["40M"],
-        "2026": ["40M", "40PRDQ", "42PDQ"]
+        "2019": ["36M", "40M"]
       },
       lengthRange: [
         36,
@@ -26922,6 +26904,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1968,
       warrantyYears: 1,
       yearStart: 2005,
+      yearEnd: 2019,
       description: "Monaco Camelot — mid-diesel Class A (REV era).",
       powertrainByYear: [
         {
@@ -26942,7 +26925,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2016,
-          to: 2026,
+          to: 2019,
           engine: "Cummins B6.7 / L9 class",
           horsepower: 360,
           chassis: "Freightliner XC"
