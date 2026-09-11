@@ -26767,6 +26767,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["36P", "38P", "42P", "44BT", "44SE", "44TQ"],
       floorplansByYear: {
+        // GAP 2027 — EzMe pack 2026-09-07: 0 LOCK. OEM discontinued manufacturing.
+        // Leave max 2026. Do not invent 2027 chips/codes. Do not copy 2026→2027.
+        // Do not map American Coach codes onto Monaco.
         "2005": ["36P", "38P", "42P"],
         "2006": ["36P", "38P", "42P"],
         "2007": ["36P", "38P", "42P"],
@@ -26862,6 +26865,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["36M", "40M", "40PRDQ", "42PDQ"],
       floorplansByYear: {
+        // GAP 2027 — EzMe pack 2026-09-07: 0 LOCK. OEM discontinued manufacturing.
+        // Leave max 2026. Do not invent 2027 chips/codes. Do not copy 2026→2027.
+        // Do not map American Coach codes onto Monaco.
         "2005": ["36M", "40M"],
         "2006": ["36M", "40M"],
         "2007": ["36M", "40M"],
@@ -26948,6 +26954,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["36P", "40P", "40DFT", "40PDQ", "44DFT"],
       floorplansByYear: {
+        // Skip / RETIRE MY2027 — yearEnd 2023. Do not extend.
         "2008": ["36P", "40P"],
         "2009": ["36P", "40P"],
         "2010": ["36P", "40P"],

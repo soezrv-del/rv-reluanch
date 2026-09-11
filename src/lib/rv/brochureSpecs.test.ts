@@ -15836,6 +15836,46 @@ test("Midwest Automotive Designs MY2027 OEM+RVUSA locks + Passage/Weekender GAP"
   assert.doesNotMatch(patriot, /"2026":/);
 });
 
+test("Monaco Coach MY2027 GAP Camelot/Dynasty + Knight skip", () => {
+  const idx = CATALOG_INDEX["Monaco Coach"];
+  assert.ok(idx);
+
+  assert.equal(idx.Camelot?.type, "Class A Diesel");
+  assert.equal(idx.Camelot?.years?.includes(2026), true);
+  assert.equal(idx.Camelot?.years?.includes(2027), false);
+
+  assert.equal(idx.Dynasty?.type, "Class A Diesel");
+  assert.equal(idx.Dynasty?.years?.includes(2026), true);
+  assert.equal(idx.Dynasty?.years?.includes(2027), false);
+
+  assert.equal(idx.Knight?.type, "Class A Diesel");
+  assert.equal(idx.Knight?.yearEnd, 2023);
+  assert.equal(idx.Knight?.years?.includes(2023), true);
+  assert.equal(idx.Knight?.years?.includes(2027), false);
+
+  assert.equal(idx.Signature, undefined);
+  assert.equal(idx.Windsor, undefined);
+
+  const block = src("rvData.ts");
+  const m0 = block.indexOf('\n  "Monaco Coach": {');
+  const m1 = block.indexOf('\n  "Holiday Rambler": {');
+  const mc = block.slice(m0, m1);
+
+  const dynasty = mc.slice(mc.indexOf("    Dynasty: {"), mc.indexOf("    Camelot: {"));
+  assert.doesNotMatch(dynasty, /"2027":/);
+  assert.match(dynasty, /"2026": \["38P", "42P", "44BT", "44SE", "44TQ"\]/);
+  assert.doesNotMatch(dynasty, /"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"/);
+
+  const camelot = mc.slice(mc.indexOf("    Camelot: {"), mc.indexOf("    Knight: {"));
+  assert.doesNotMatch(camelot, /"2027":/);
+  assert.match(camelot, /"2026": \["40M", "40PRDQ", "42PDQ"\]/);
+  assert.doesNotMatch(camelot, /"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"/);
+
+  const knight = mc.slice(mc.indexOf("    Knight: {"));
+  assert.doesNotMatch(knight, /"2027":/);
+  assert.match(knight, /yearEnd:\s*2023/);
+});
+
 test("DRV honesty: EzMe pack 2026-09-09 LOCK/GAP (Mobile Suites / Elite / Tradition / Full House)", () => {
   const idx = CATALOG_INDEX.DRV;
   assert.ok(idx);
