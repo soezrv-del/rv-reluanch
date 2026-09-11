@@ -1864,6 +1864,89 @@ function main() {
     }
   }
 
+  // Monaco Coach MY2027 pack. Make key is quoted (`"Monaco Coach": {`).
+  // EzMe pack 2026-09-07: 0 LOCK / GAP Camelot + Dynasty. OEM discontinued manufacturing.
+  // Knight skip (yearEnd 2023). Classic Signature/Windsor out of scope (separate make).
+  // Do not invent 2027 chips. Do not copy 2026→2027. Do not map American Coach codes.
+  {
+    const m0 = src.indexOf('\n  "Monaco Coach": {');
+    const m1 = src.indexOf('\n  "Holiday Rambler": {');
+    if (m0 < 0 || m1 < m0) {
+      fail('Monaco Coach block not found between "Monaco Coach": and "Holiday Rambler":');
+    } else {
+      const mc = src.slice(m0, m1);
+      const slice = (a, b) => {
+        const i =
+          mc.indexOf(`    "${a}": {`) >= 0
+            ? mc.indexOf(`    "${a}": {`)
+            : mc.indexOf(`    ${a}: {`);
+        const j =
+          b == null
+            ? mc.length
+            : mc.indexOf(`    "${b}": {`) >= 0
+              ? mc.indexOf(`    "${b}": {`)
+              : mc.indexOf(`    ${b}: {`);
+        if (i < 0) return "";
+        return j > i ? mc.slice(i, j) : mc.slice(i);
+      };
+
+      const dynasty = slice("Dynasty", "Camelot");
+      if (/"2027":/.test(dynasty)) {
+        fail("Monaco Coach|Dynasty must omit 2027 (GAP — EzMe pack 2026-09-07 0 LOCK; OEM discontinued)");
+      }
+      if (/"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"/.test(dynasty)) {
+        fail("Monaco Coach|Dynasty must not map American Coach codes");
+      }
+
+      const camelot = slice("Camelot", "Knight");
+      if (/"2027":/.test(camelot)) {
+        fail("Monaco Coach|Camelot must omit 2027 (GAP — EzMe pack 2026-09-07 0 LOCK; OEM discontinued)");
+      }
+      if (/"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"/.test(camelot)) {
+        fail("Monaco Coach|Camelot must not map American Coach codes");
+      }
+
+      const knight = slice("Knight");
+      if (/"2027":/.test(knight)) {
+        fail("Monaco Coach|Knight must omit 2027 (skip / RETIRE — yearEnd 2023)");
+      }
+      if (!/yearEnd:\s*2023/.test(knight)) {
+        fail("Monaco Coach|Knight must keep yearEnd 2023 (do not extend)");
+      }
+
+      if (/\n    Signature: \{/.test(mc) || /\n    Windsor: \{/.test(mc)) {
+        fail("Monaco Coach must skip Classic Signature / Windsor (separate make)");
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const mcIdx = catalogIndex["Monaco Coach"];
+      if (!mcIdx) fail("Monaco Coach missing from CATALOG_INDEX");
+      for (const gap of ["Camelot", "Dynasty"]) {
+        if (mcIdx[gap]?.years?.includes(2027)) {
+          fail(`Monaco Coach|${gap} index must omit 2027 (GAP)`);
+        }
+        if (mcIdx[gap]?.type !== "Class A Diesel") {
+          fail(`Monaco Coach|${gap} index type must be Class A Diesel`);
+        }
+      }
+      if (mcIdx.Knight?.years?.includes(2027)) {
+        fail("Monaco Coach|Knight index must omit 2027 (skip / RETIRE)");
+      }
+      if (mcIdx.Knight?.yearEnd !== 2023) {
+        fail("Monaco Coach|Knight index must keep yearEnd 2023");
+      }
+      const extra = Object.keys(mcIdx).filter(
+        (k) => !["Camelot", "Dynasty", "Knight"].includes(k),
+      );
+      if (extra.length) {
+        fail(`Monaco Coach must not add new nameplates (${extra.join(", ")})`);
+      }
+    }
+  }
+
   // Newmar block is unquoted (`Newmar: {`) so the quoted-make parser misses it.
   // Scan the raw Newmar…Tiffin slice for recent-years OEM gates.
   {
