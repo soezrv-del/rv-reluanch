@@ -1864,10 +1864,12 @@ function main() {
     }
   }
 
-  // Monaco Coach yearEnd trim. Make key is quoted (`"Monaco Coach": {`).
+  // Monaco Coach MY2010–2019 honesty + NEW KEYS (Cayman / Diplomat / Marquis / Monarch).
+  // Make key is quoted (`"Monaco Coach": {`).
   // invent-risk #3 (LOT_DESK_MY2027): last Monaco-branded coaches ~2019; OEM discontinued.
   // Camelot + Dynasty yearEnd 2019. Knight skip (yearEnd 2023). Classic out of scope.
-  // Do not invent 2020–2026 chips. Do not map American Coach codes.
+  // Do not invent 2020–2027 chips. Do not map American Coach codes.
+  // Cayman ≠ Knight — shared 2011 alphanumeric set is not a merge.
   {
     const m0 = src.indexOf('\n  "Monaco Coach": {');
     const m1 = src.indexOf('\n  "Holiday Rambler": {');
@@ -1890,6 +1892,84 @@ function main() {
         return j > i ? mc.slice(i, j) : mc.slice(i);
       };
 
+      const cayman = slice("Cayman", "Diplomat");
+      if (!cayman) fail("Monaco Coach|Cayman NEW KEY missing (2011 demo Facts miss)");
+      if (!/type: "Class A Diesel"/.test(cayman)) {
+        fail("Monaco Coach|Cayman must be Class A Diesel");
+      }
+      if (!/yearStart:\s*2002/.test(cayman) || !/yearEnd:\s*2011/.test(cayman)) {
+        fail("Monaco Coach|Cayman must set yearStart 2002 / yearEnd 2011");
+      }
+      if (!/"2011": \["36PBD", "36PFT", "40PBT", "40PBQ"\]/.test(cayman)) {
+        fail("Monaco Coach|Cayman must LOCK 2011 36PBD/36PFT/40PBT/40PBQ");
+      }
+      if (!/"2010": \[\]/.test(cayman)) {
+        fail("Monaco Coach|Cayman must GAP 2010 empty");
+      }
+      if (/"2012":|"2019":|"2020":|"2027":/.test(cayman)) {
+        fail("Monaco Coach|Cayman must omit years after yearEnd 2011 (do not invent 2012–2027)");
+      }
+
+      const diplomat = slice("Diplomat", "Marquis");
+      if (!diplomat) fail("Monaco Coach|Diplomat NEW KEY missing");
+      if (!/yearEnd:\s*2017/.test(diplomat)) {
+        fail("Monaco Coach|Diplomat must set yearEnd 2017");
+      }
+      if (!/"2010": \["38PDQ", "42PAQ", "42SKQ"\]/.test(diplomat)) {
+        fail("Monaco Coach|Diplomat must LOCK 2010 38PDQ/42PAQ/42SKQ");
+      }
+      if (!/"2011": \["42PAQ", "43DFT", "43PD5", "43PKQ"\]/.test(diplomat)) {
+        fail("Monaco Coach|Diplomat must LOCK 2011 42PAQ/43DFT/43PD5/43PKQ");
+      }
+      if (!/"2013": \["36PFT", "40PDQ", "43DFT", "43PDQ", "43PKQ", "43RFT"\]/.test(diplomat)) {
+        fail("Monaco Coach|Diplomat must LOCK 2013 36PFT/40PDQ/43DFT/43PDQ/43PKQ/43RFT");
+      }
+      if (!/"2017": \["43D", "43G", "43Q", "43S"\]/.test(diplomat)) {
+        fail("Monaco Coach|Diplomat must LOCK 2017 43D/43G/43Q/43S");
+      }
+      if (!/"2012": \[\]/.test(diplomat) || !/"2014": \[\]/.test(diplomat) || !/"2016": \[\]/.test(diplomat)) {
+        fail("Monaco Coach|Diplomat must GAP non-LOCK 2010–2017 years empty");
+      }
+      if (/"2018":|"2019":|"2020":|"2027":/.test(diplomat)) {
+        fail("Monaco Coach|Diplomat must omit years after yearEnd 2017");
+      }
+
+      const marquis = slice("Marquis", "Monarch");
+      if (!marquis) fail("Monaco Coach|Marquis NEW KEY missing");
+      if (!/yearStart:\s*2018/.test(marquis) || !/yearEnd:\s*2019/.test(marquis)) {
+        fail("Monaco Coach|Marquis must set yearStart 2018 / yearEnd 2019");
+      }
+      if (!/"2018": \[\]/.test(marquis)) {
+        fail("Monaco Coach|Marquis must GAP_CODES 2018 empty (soft≠LOCK)");
+      }
+      if (!/"2019": \["40J", "40L", "44B", "44M"\]/.test(marquis)) {
+        fail("Monaco Coach|Marquis must LOCK 2019 40J/40L/44B/44M");
+      }
+      if (/"2010":|"2017":|"2020":|"2027":/.test(marquis)) {
+        fail("Monaco Coach|Marquis must omit 2010–2017 and post-2019 years");
+      }
+
+      const monarch = slice("Monarch", "Dynasty");
+      if (!monarch) fail("Monaco Coach|Monarch NEW KEY missing");
+      if (!/type: "Class A Gas"/.test(monarch)) {
+        fail("Monaco Coach|Monarch must be Class A Gas");
+      }
+      if (!/yearEnd:\s*2014/.test(monarch)) {
+        fail("Monaco Coach|Monarch must set yearEnd 2014");
+      }
+      if (!/"2010": \["30SFS", "33SDD", "33SFS", "34SBD", "35SFD"\]/.test(monarch)) {
+        fail("Monaco Coach|Monarch must LOCK 2010 30SFS/33SDD/33SFS/34SBD/35SFD");
+      }
+      if (!/"2011": \["30SFS", "33SDD", "33SFS", "34SBD", "35SFD"\]/.test(monarch)) {
+        fail("Monaco Coach|Monarch must LOCK 2011 same five codes");
+      }
+      if (!/"2012": \[\]/.test(monarch) || !/"2014": \[\]/.test(monarch)) {
+        fail("Monaco Coach|Monarch must GAP_CODES 2012–2014 empty");
+      }
+      if (/"2015":|"2019":|"2020":|"2027":/.test(monarch)) {
+        fail("Monaco Coach|Monarch must omit years after yearEnd 2014");
+      }
+
       const dynasty = slice("Dynasty", "Camelot");
       if (!/yearEnd:\s*2019/.test(dynasty)) {
         fail("Monaco Coach|Dynasty must set yearEnd 2019 (invent-risk #3 — last Monaco-branded ~2019)");
@@ -1897,7 +1977,25 @@ function main() {
       if (/"2020":|"2021":|"2022":|"2023":|"2024":|"2025":|"2026":|"2027":/.test(dynasty)) {
         fail("Monaco Coach|Dynasty must omit years after yearEnd 2019 (do not invent 2020–2026 chips)");
       }
-      if (/"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"|"44BT"|"44SE"|"44TQ"/.test(dynasty)) {
+      if (/"2019": \["36P", "38P", "42P"\]/.test(dynasty) || /"2010": \["36P"/.test(dynasty)) {
+        fail("Monaco Coach|Dynasty must reject invent 36P/38P/42P for 2010–2019");
+      }
+      if (!/"2010": \["Cheshire IV", "Majestic V", "Regal IV", "Yorkshire IV"\]/.test(dynasty)) {
+        fail("Monaco Coach|Dynasty must LOCK 2010 named Cheshire IV/Majestic V/Regal IV/Yorkshire IV");
+      }
+      if (!/"2011": \["Majestic V", "Regal IV", "Yorkshire IV"\]/.test(dynasty)) {
+        fail("Monaco Coach|Dynasty must LOCK 2011 Majestic V/Regal IV/Yorkshire IV");
+      }
+      if (!/"2014": \["44PDQ", "44RFT"\]/.test(dynasty)) {
+        fail("Monaco Coach|Dynasty must LOCK 2014 44PDQ/44RFT");
+      }
+      if (!/"2016": \["45D", "45P"\]/.test(dynasty)) {
+        fail("Monaco Coach|Dynasty must LOCK 2016 45D/45P");
+      }
+      if (/"2010": \[[^\]]*44PDQ/.test(dynasty) || /"2011": \[[^\]]*44PDQ/.test(dynasty)) {
+        fail("Monaco Coach|Dynasty must not back-port 44* into 2010–11");
+      }
+      if (/"42Q"|"45A"|"45FW"|"45J"|"45K"|"44BT"|"44SE"|"44TQ"/.test(dynasty)) {
         fail("Monaco Coach|Dynasty must not map American Coach codes or keep post-2019 invent chips");
       }
 
@@ -1908,7 +2006,19 @@ function main() {
       if (/"2020":|"2021":|"2022":|"2023":|"2024":|"2025":|"2026":|"2027":/.test(camelot)) {
         fail("Monaco Coach|Camelot must omit years after yearEnd 2019 (do not invent 2020–2026 chips)");
       }
-      if (/"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"|"40PRDQ"|"42PDQ"/.test(camelot)) {
+      if (/"2019": \["36M", "40M"\]/.test(camelot) || /"2010": \["36M"/.test(camelot)) {
+        fail("Monaco Coach|Camelot must reject invent 36M/40M for 2010–2019");
+      }
+      if (!/"2010": \["38PDQ", "42DFT", "42PDQ"\]/.test(camelot)) {
+        fail("Monaco Coach|Camelot must LOCK 2010 38PDQ/42DFT/42PDQ");
+      }
+      if (!/"2011": \["43DFT", "43PKQ"\]/.test(camelot)) {
+        fail("Monaco Coach|Camelot must LOCK 2011 43DFT/43PKQ");
+      }
+      if (!/"2012": \[\]/.test(camelot) || !/"2019": \[\]/.test(camelot)) {
+        fail("Monaco Coach|Camelot must GAP 2012–2019 empty");
+      }
+      if (/"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"|"40PRDQ"/.test(camelot)) {
         fail("Monaco Coach|Camelot must not map American Coach codes or keep post-2019 invent chips");
       }
 
@@ -1919,9 +2029,21 @@ function main() {
       if (!/yearEnd:\s*2023/.test(knight)) {
         fail("Monaco Coach|Knight must keep yearEnd 2023 (do not extend)");
       }
+      if (/36PBD|36PFT|40PBT|40PBQ/.test(knight)) {
+        fail("Monaco Coach|Knight must not absorb Cayman 2011 LOCK codes (separate keys)");
+      }
 
       if (/\n    Signature: \{/.test(mc) || /\n    Windsor: \{/.test(mc)) {
         fail("Monaco Coach must skip Classic Signature / Windsor (separate make)");
+      }
+      if (
+        /\n    "La Palma": \{/.test(mc) ||
+        /\n    Montclair: \{/.test(mc) ||
+        /\n    Riptide: \{/.test(mc) ||
+        /\n    Vesta: \{/.test(mc) ||
+        /\n    Executive: \{/.test(mc)
+      ) {
+        fail("Monaco Coach must skip La Palma / Montclair / Riptide / Vesta / Executive this PR");
       }
 
       const idxSrc = readFileSync(INDEX, "utf8");
@@ -1941,17 +2063,39 @@ function main() {
           fail(`Monaco Coach|${gap} index type must be Class A Diesel`);
         }
       }
+      if (mcIdx.Cayman?.yearEnd !== 2011 || mcIdx.Cayman?.type !== "Class A Diesel") {
+        fail("Monaco Coach|Cayman index must be Class A Diesel yearEnd 2011");
+      }
+      if (!mcIdx.Cayman?.years?.includes(2011) || mcIdx.Cayman?.years?.some((y) => y > 2011)) {
+        fail("Monaco Coach|Cayman index must include 2011 and omit years after yearEnd 2011");
+      }
+      if (mcIdx.Diplomat?.yearEnd !== 2017 || mcIdx.Diplomat?.type !== "Class A Diesel") {
+        fail("Monaco Coach|Diplomat index must be Class A Diesel yearEnd 2017");
+      }
+      if (mcIdx.Marquis?.yearStart !== 2018 || mcIdx.Marquis?.yearEnd !== 2019) {
+        fail("Monaco Coach|Marquis index must set yearStart 2018 / yearEnd 2019");
+      }
+      if (mcIdx.Monarch?.type !== "Class A Gas" || mcIdx.Monarch?.yearEnd !== 2014) {
+        fail("Monaco Coach|Monarch index must be Class A Gas yearEnd 2014");
+      }
       if (mcIdx.Knight?.years?.includes(2027)) {
         fail("Monaco Coach|Knight index must omit 2027 (skip / RETIRE)");
       }
       if (mcIdx.Knight?.yearEnd !== 2023) {
         fail("Monaco Coach|Knight index must keep yearEnd 2023");
       }
-      const extra = Object.keys(mcIdx).filter(
-        (k) => !["Camelot", "Dynasty", "Knight"].includes(k),
-      );
+      const allowed = [
+        "Camelot",
+        "Cayman",
+        "Diplomat",
+        "Dynasty",
+        "Knight",
+        "Marquis",
+        "Monarch",
+      ];
+      const extra = Object.keys(mcIdx).filter((k) => !allowed.includes(k));
       if (extra.length) {
-        fail(`Monaco Coach must not add new nameplates (${extra.join(", ")})`);
+        fail(`Monaco Coach must not add skip nameplates (${extra.join(", ")})`);
       }
     }
   }
