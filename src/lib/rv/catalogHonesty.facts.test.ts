@@ -902,7 +902,7 @@ test("Midwest Automotive Designs Facts SoT: MY2027 OEM+RVUSA locks; GAP Passage/
   assert.doesNotMatch(patriot, /"2026":/);
 });
 
-test("Monaco Coach Facts SoT: Camelot/Dynasty yearEnd 2019; Knight skip; no AC map", () => {
+test("Monaco Coach Facts SoT: Cayman NEW KEY 2011 LOCK; Camelot/Dynasty MY2010–2019 honesty; Knight skip", () => {
   const block = src("rvData.ts");
   const m0 = block.indexOf('\n  "Monaco Coach": {');
   const m1 = block.indexOf('\n  "Holiday Rambler": {');
@@ -914,25 +914,107 @@ test("Monaco Coach Facts SoT: Camelot/Dynasty yearEnd 2019; Knight skip; no AC m
   assert.doesNotMatch(mc, /\n    "Holiday Rambler": \{/);
   assert.doesNotMatch(mc, /\n    Signature: \{/);
   assert.doesNotMatch(mc, /\n    Windsor: \{/);
+  assert.doesNotMatch(mc, /\n    "La Palma": \{/);
+  assert.doesNotMatch(mc, /\n    Montclair: \{/);
+  assert.doesNotMatch(mc, /\n    Riptide: \{/);
+  assert.doesNotMatch(mc, /\n    Vesta: \{/);
+  assert.doesNotMatch(mc, /\n    Executive: \{/);
+
+  const cayman = mc.slice(mc.indexOf("    Cayman: {"), mc.indexOf("    Diplomat: {"));
+  assert.match(cayman, /type: "Class A Diesel"/);
+  assert.match(cayman, /fuelType: "Diesel"/);
+  assert.match(cayman, /yearStart:\s*2002/);
+  assert.match(cayman, /yearEnd:\s*2011/);
+  assert.match(cayman, /"2010": \[\]/);
+  assert.match(
+    cayman,
+    /"2011": \["36PBD", "36PFT", "40PBT", "40PBQ"\]/,
+  );
+  assert.doesNotMatch(cayman, /"2012":|"2019":|"2020":|"2027":/);
+
+  const diplomat = mc.slice(mc.indexOf("    Diplomat: {"), mc.indexOf("    Marquis: {"));
+  assert.match(diplomat, /type: "Class A Diesel"/);
+  assert.match(diplomat, /yearStart:\s*2005/);
+  assert.match(diplomat, /yearEnd:\s*2017/);
+  assert.match(diplomat, /"2010": \["38PDQ", "42PAQ", "42SKQ"\]/);
+  assert.match(diplomat, /"2011": \["42PAQ", "43DFT", "43PD5", "43PKQ"\]/);
+  assert.match(diplomat, /"2012": \[\]/);
+  assert.match(
+    diplomat,
+    /"2013": \["36PFT", "40PDQ", "43DFT", "43PDQ", "43PKQ", "43RFT"\]/,
+  );
+  assert.match(diplomat, /"2014": \[\]/);
+  assert.match(diplomat, /"2015": \[\]/);
+  assert.match(diplomat, /"2016": \[\]/);
+  assert.match(diplomat, /"2017": \["43D", "43G", "43Q", "43S"\]/);
+  assert.doesNotMatch(diplomat, /"2018":|"2019":|"2020":|"2027":/);
+
+  const marquis = mc.slice(mc.indexOf("    Marquis: {"), mc.indexOf("    Monarch: {"));
+  assert.match(marquis, /type: "Class A Diesel"/);
+  assert.match(marquis, /yearStart:\s*2018/);
+  assert.match(marquis, /yearEnd:\s*2019/);
+  assert.match(marquis, /"2018": \[\]/);
+  assert.match(marquis, /"2019": \["40J", "40L", "44B", "44M"\]/);
+  assert.doesNotMatch(marquis, /"2010":|"2017":|"2020":|"2027":/);
+
+  const monarch = mc.slice(mc.indexOf("    Monarch: {"), mc.indexOf("    Dynasty: {"));
+  assert.match(monarch, /type: "Class A Gas"/);
+  assert.match(monarch, /fuelType: "Gas"/);
+  assert.match(monarch, /yearEnd:\s*2014/);
+  assert.match(
+    monarch,
+    /"2010": \["30SFS", "33SDD", "33SFS", "34SBD", "35SFD"\]/,
+  );
+  assert.match(
+    monarch,
+    /"2011": \["30SFS", "33SDD", "33SFS", "34SBD", "35SFD"\]/,
+  );
+  assert.match(monarch, /"2012": \[\]/);
+  assert.match(monarch, /"2013": \[\]/);
+  assert.match(monarch, /"2014": \[\]/);
+  assert.doesNotMatch(monarch, /"2015":|"2019":|"2020":|"2027":/);
 
   const dynasty = mc.slice(mc.indexOf("    Dynasty: {"), mc.indexOf("    Camelot: {"));
   assert.match(dynasty, /type: "Class A Diesel"/);
   assert.match(dynasty, /yearEnd:\s*2019/);
-  assert.match(dynasty, /"2019": \["36P", "38P", "42P"\]/);
+  assert.match(
+    dynasty,
+    /"2010": \["Cheshire IV", "Majestic V", "Regal IV", "Yorkshire IV"\]/,
+  );
+  assert.match(dynasty, /"2011": \["Majestic V", "Regal IV", "Yorkshire IV"\]/);
+  assert.match(dynasty, /"2012": \[\]/);
+  assert.match(dynasty, /"2013": \[\]/);
+  assert.match(dynasty, /"2014": \["44PDQ", "44RFT"\]/);
+  assert.match(dynasty, /"2015": \[\]/);
+  assert.match(dynasty, /"2016": \["45D", "45P"\]/);
+  assert.match(dynasty, /"2017": \[\]/);
+  assert.match(dynasty, /"2018": \[\]/);
+  assert.match(dynasty, /"2019": \[\]/);
+  assert.doesNotMatch(dynasty, /"2010": \["36P"/);
+  assert.doesNotMatch(dynasty, /"2011": \["36P"/);
+  assert.doesNotMatch(dynasty, /"2019": \["36P", "38P", "42P"\]/);
+  assert.doesNotMatch(dynasty, /"2010": \[[^\]]*44PDQ/);
+  assert.doesNotMatch(dynasty, /"2011": \[[^\]]*44PDQ/);
   assert.doesNotMatch(dynasty, /"2020":|"2021":|"2022":|"2023":|"2024":|"2025":|"2026":|"2027":/);
-  assert.doesNotMatch(dynasty, /"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"|"44BT"|"44SE"|"44TQ"/);
+  assert.doesNotMatch(dynasty, /"42Q"|"45A"|"45FW"|"45J"|"45K"|"44BT"|"44SE"|"44TQ"/);
 
   const camelot = mc.slice(mc.indexOf("    Camelot: {"), mc.indexOf("    Knight: {"));
   assert.match(camelot, /type: "Class A Diesel"/);
   assert.match(camelot, /yearEnd:\s*2019/);
-  assert.match(camelot, /"2019": \["36M", "40M"\]/);
+  assert.match(camelot, /"2010": \["38PDQ", "42DFT", "42PDQ"\]/);
+  assert.match(camelot, /"2011": \["43DFT", "43PKQ"\]/);
+  assert.match(camelot, /"2012": \[\]/);
+  assert.match(camelot, /"2019": \[\]/);
+  assert.doesNotMatch(camelot, /"2010": \["36M"/);
+  assert.doesNotMatch(camelot, /"2019": \["36M", "40M"\]/);
   assert.doesNotMatch(camelot, /"2020":|"2021":|"2022":|"2023":|"2024":|"2025":|"2026":|"2027":/);
-  assert.doesNotMatch(camelot, /"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"|"40PRDQ"|"42PDQ"/);
+  assert.doesNotMatch(camelot, /"42Q"|"45A"|"45P"|"45FW"|"45J"|"45K"|"40PRDQ"/);
 
   const knight = mc.slice(mc.indexOf("    Knight: {"));
   assert.match(knight, /type: "Class A Diesel"/);
   assert.match(knight, /yearEnd:\s*2023/);
   assert.doesNotMatch(knight, /"2027":/);
+  assert.doesNotMatch(knight, /36PBD|36PFT|40PBT|40PBQ/);
 });
 
 test("Leisure Travel Vans Facts SoT: Unity yearStart 2010 + MY2010 U24MB/U24CB; Serenity/Free GAP", () => {

@@ -26763,33 +26763,257 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
   },
   "Monaco Coach": {
+    Cayman: {
+      type: "Class A Diesel",
+      floorplans: ["36PBD", "36PFT", "40PBT", "40PBQ"],
+      floorplansByYear: {
+        // NEW KEY. Cayman ≠ Knight — shared 2011 alphanumeric set is not a merge.
+        // yearStart 2002 (pack). yearEnd 2011. LOCK 2011 only.
+        // GAP 2010 empty. GAP 2012–2019 omit (after yearEnd — do not invent).
+        "2010": [],
+        "2011": ["36PBD", "36PFT", "40PBT", "40PBQ"]
+      },
+      lengthRange: [
+        36,
+        40
+      ],
+      weightRange: [
+        30000,
+        40000
+      ],
+      slideouts: 2,
+      sleeps: 6,
+      msrpRange: [
+        249000,
+        379000
+      ],
+      engine: "Cummins ISL / ISB diesel (era)",
+      horsepower: 380,
+      chassis: "Freightliner XC-Series",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 10000,
+      freshWater: 80,
+      grayWater: 45,
+      blackWater: 45,
+      generator: "Onan Diesel / Gas",
+      awningLength: 16,
+      ceilingHeight: 82,
+      founded: 1968,
+      warrantyYears: 1,
+      yearStart: 2002,
+      yearEnd: 2011,
+      description: "Monaco Cayman — diesel Class A. Separate key from Knight; do not merge the 2011 alphanumeric set.",
+      powertrainByYear: [
+        {
+          from: 2010,
+          to: 2011,
+          engine: "Cummins ISL / ISB diesel (era)",
+          horsepower: 380,
+          chassis: "Freightliner XC-Series",
+          notes: "2010–2011 diesel Class A — confirm build sheet. Cayman is not Knight."
+        }
+      ]
+    },
+    Diplomat: {
+      type: "Class A Diesel",
+      floorplans: ["38PDQ", "42PAQ", "42SKQ", "43DFT", "43PD5", "43PKQ", "36PFT", "40PDQ", "43PDQ", "43RFT", "43D", "43G", "43Q", "43S"],
+      floorplansByYear: {
+        // NEW KEY. yearStart 2005 (pack). yearEnd 2017.
+        // LOCK 2010 / 2011 / 2013 / 2017. GAP other 2010–2019 (empty in-range; omit after yearEnd).
+        "2010": ["38PDQ", "42PAQ", "42SKQ"],
+        "2011": ["42PAQ", "43DFT", "43PD5", "43PKQ"],
+        "2012": [],
+        "2013": ["36PFT", "40PDQ", "43DFT", "43PDQ", "43PKQ", "43RFT"],
+        "2014": [],
+        "2015": [],
+        "2016": [],
+        "2017": ["43D", "43G", "43Q", "43S"]
+      },
+      lengthRange: [
+        36,
+        43
+      ],
+      weightRange: [
+        32000,
+        44000
+      ],
+      slideouts: 3,
+      sleeps: 6,
+      msrpRange: [
+        279000,
+        449000
+      ],
+      engine: "Cummins ISL / L9 class",
+      horsepower: 400,
+      chassis: "Freightliner / Spartan (by year)",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.45,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 10000,
+      freshWater: 80,
+      grayWater: 45,
+      blackWater: 45,
+      generator: "Onan Diesel / Gas",
+      awningLength: 16,
+      ceilingHeight: 82,
+      founded: 1968,
+      warrantyYears: 1,
+      yearStart: 2005,
+      yearEnd: 2017,
+      description: "Monaco Diplomat — diesel Class A. Floorplans locked 2010 / 2011 / 2013 / 2017 only.",
+      powertrainByYear: [
+        {
+          from: 2010,
+          to: 2017,
+          engine: "Cummins ISL / L9 class",
+          horsepower: 400,
+          chassis: "Freightliner / Spartan (by year)",
+          notes: "2010–2017 diesel Class A — confirm build sheet. GAP years stay empty."
+        }
+      ]
+    },
+    Marquis: {
+      type: "Class A Diesel",
+      floorplans: ["40J", "40L", "44B", "44M"],
+      floorplansByYear: {
+        // NEW KEY. yearStart 2018. yearEnd 2019.
+        // GAP 2010–2017 omit (before yearStart). GAP_CODES 2018 empty (soft≠LOCK).
+        // LOCK 2019 only.
+        "2018": [],
+        "2019": ["40J", "40L", "44B", "44M"]
+      },
+      lengthRange: [
+        40,
+        44
+      ],
+      weightRange: [
+        34000,
+        46000
+      ],
+      slideouts: 3,
+      sleeps: 6,
+      msrpRange: [
+        299000,
+        499000
+      ],
+      engine: "Cummins ISL / L9 class",
+      horsepower: 400,
+      chassis: "Freightliner / Spartan",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.5,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 10000,
+      freshWater: 80,
+      grayWater: 45,
+      blackWater: 45,
+      generator: "Onan Diesel / Gas",
+      awningLength: 16,
+      ceilingHeight: 82,
+      founded: 1968,
+      warrantyYears: 1,
+      yearStart: 2018,
+      yearEnd: 2019,
+      description: "Monaco Marquis — diesel Class A (2018–2019 nameplate). 2018 GAP_CODES empty; LOCK 2019.",
+      powertrainByYear: [
+        {
+          from: 2018,
+          to: 2019,
+          engine: "Cummins ISL / L9 class",
+          horsepower: 400,
+          chassis: "Freightliner / Spartan",
+          notes: "2018 GAP_CODES empty (soft≠LOCK). LOCK 2019 floorplans only."
+        }
+      ]
+    },
+    Monarch: {
+      type: "Class A Gas",
+      floorplans: ["30SFS", "33SDD", "33SFS", "34SBD", "35SFD"],
+      floorplansByYear: {
+        // NEW KEY. Class A Gas. yearEnd 2014.
+        // LOCK 2010 / 2011 (same five codes). GAP_CODES 2012–2014 empty preferred.
+        // GAP 2015–2019 omit (after yearEnd — do not invent).
+        "2010": ["30SFS", "33SDD", "33SFS", "34SBD", "35SFD"],
+        "2011": ["30SFS", "33SDD", "33SFS", "34SBD", "35SFD"],
+        "2012": [],
+        "2013": [],
+        "2014": []
+      },
+      lengthRange: [
+        30,
+        35
+      ],
+      weightRange: [
+        18000,
+        26000
+      ],
+      slideouts: 2,
+      sleeps: 6,
+      msrpRange: [
+        149000,
+        229000
+      ],
+      engine: "Gas V8 / V10 (confirm sticker)",
+      chassis: "Ford / Workhorse (by year)",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 5000,
+      freshWater: 70,
+      grayWater: 40,
+      blackWater: 40,
+      generator: "Onan Gas",
+      awningLength: 16,
+      ceilingHeight: 82,
+      founded: 1968,
+      warrantyYears: 1,
+      yearStart: 2010,
+      yearEnd: 2014,
+      description: "Monaco Monarch — gas Class A. Floorplans locked 2010–2011; 2012–2014 GAP_CODES empty.",
+      powertrainByYear: [
+        {
+          from: 2010,
+          to: 2014,
+          engine: "Gas V8 / V10 (confirm sticker)",
+          chassis: "Ford / Workhorse (by year)",
+          fuelType: "Gas",
+          notes: "LOCK 2010–2011 floorplans. GAP_CODES 2012–2014 empty — do not invent."
+        }
+      ]
+    },
     Dynasty: {
       type: "Class A Diesel",
-      floorplans: ["36P", "38P", "42P"],
+      floorplans: ["36P", "38P", "42P", "Cheshire IV", "Majestic V", "Regal IV", "Yorkshire IV", "44PDQ", "44RFT", "45D", "45P"],
       floorplansByYear: {
         // yearEnd 2019 — invent-risk #3 (LOT_DESK_MY2027): public trail last
         // Monaco-branded coaches ~2019; OEM discontinued. Index max 2026 was
         // over-extended. Empty/GAP > invent. Do not invent 2020–2026 chips.
         // Do not map American Coach codes onto Monaco.
+        // MY2010–2019 honesty: REJECT invent 36P/38P/42P. Do not back-port 44* into 2010–11.
         "2005": ["36P", "38P", "42P"],
         "2006": ["36P", "38P", "42P"],
         "2007": ["36P", "38P", "42P"],
         "2008": ["36P", "38P", "42P"],
         "2009": ["36P", "38P", "42P"],
-        "2010": ["36P", "38P", "42P"],
-        "2011": ["36P", "38P", "42P"],
-        "2012": ["36P", "38P", "42P"],
-        "2013": ["36P", "38P", "42P"],
-        "2014": ["36P", "38P", "42P"],
-        "2015": ["36P", "38P", "42P"],
-        "2016": ["36P", "38P", "42P"],
-        "2017": ["36P", "38P", "42P"],
-        "2018": ["36P", "38P", "42P"],
-        "2019": ["36P", "38P", "42P"]
+        "2010": ["Cheshire IV", "Majestic V", "Regal IV", "Yorkshire IV"],
+        "2011": ["Majestic V", "Regal IV", "Yorkshire IV"],
+        "2012": [],
+        "2013": [],
+        "2014": ["44PDQ", "44RFT"],
+        "2015": [],
+        "2016": ["45D", "45P"],
+        "2017": [],
+        "2018": [],
+        "2019": []
       },
       lengthRange: [
         36,
-        42
+        45
       ],
       weightRange: [
         34000,
@@ -26851,31 +27075,32 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Camelot: {
       type: "Class A Diesel",
-      floorplans: ["36M", "40M"],
+      floorplans: ["36M", "40M", "38PDQ", "42DFT", "42PDQ", "43DFT", "43PKQ"],
       floorplansByYear: {
         // yearEnd 2019 — invent-risk #3 (LOT_DESK_MY2027): public trail last
         // Monaco-branded coaches ~2019; OEM discontinued. Index max 2026 was
         // over-extended. Empty/GAP > invent. Do not invent 2020–2026 chips.
         // Do not map American Coach codes onto Monaco.
+        // MY2010–2019 honesty: REJECT invent 36M/40M. LOCK 2010 / 2011. GAP 2012–2019 empty.
         "2005": ["36M", "40M"],
         "2006": ["36M", "40M"],
         "2007": ["36M", "40M"],
         "2008": ["36M", "40M"],
         "2009": ["36M", "40M"],
-        "2010": ["36M", "40M"],
-        "2011": ["36M", "40M"],
-        "2012": ["36M", "40M"],
-        "2013": ["36M", "40M"],
-        "2014": ["36M", "40M"],
-        "2015": ["36M", "40M"],
-        "2016": ["36M", "40M"],
-        "2017": ["36M", "40M"],
-        "2018": ["36M", "40M"],
-        "2019": ["36M", "40M"]
+        "2010": ["38PDQ", "42DFT", "42PDQ"],
+        "2011": ["43DFT", "43PKQ"],
+        "2012": [],
+        "2013": [],
+        "2014": [],
+        "2015": [],
+        "2016": [],
+        "2017": [],
+        "2018": [],
+        "2019": []
       },
       lengthRange: [
         36,
-        40
+        43
       ],
       weightRange: [
         30000,
