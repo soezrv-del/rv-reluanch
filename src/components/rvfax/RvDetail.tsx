@@ -1182,9 +1182,6 @@ export function RvDetail({
                 </div>
               </div>
             )}
-            <p className="mt-2 text-[11px] italic leading-snug text-white/55">
-              {PUBLIC_SOLD_DISCLAIMER}
-            </p>
             {shellNav ? (
               <button
                 type="button"
@@ -1778,6 +1775,9 @@ export function RvDetail({
             </FactsCollapse>
           </div>
 
+          <p className="px-1 text-[11px] italic leading-snug text-white/55">
+            {PUBLIC_SOLD_DISCLAIMER}
+          </p>
           <SuiteDisclaimer className="pb-6" />
         </div>
         </div>

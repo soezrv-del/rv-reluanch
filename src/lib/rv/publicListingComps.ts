@@ -51,8 +51,9 @@ export const MAX_PLAUSIBLE_MILES = 500_000;
 
 export const SOLD_COMPS_LABEL = "Sold comps";
 export const ASKING_COMPS_LABEL = "Asking comps";
+/** One Facts-detail footer — never appended to per-comp notes or line items. */
 export const PUBLIC_SOLD_DISCLAIMER =
-  "Public sold prices, not book value. Not JD Power or NADA.";
+  "Values are estimates from public listings. Not JD Power or NADA book value.";
 export const LOW_CONFIDENCE_LISTINGS_MESSAGE = "Not enough public listings";
 
 export type ListingPriceKind = "sold" | "asking";
@@ -433,9 +434,9 @@ function sampleNotes(
       return `Only ${usedCount} public sold price${usedCount === 1 ? "" : "s"} across ${yearRange.from}–${yearRange.to}. ${LOW_CONFIDENCE_LISTINGS_MESSAGE}.`;
     }
     if (confidence === "medium") {
-      return `${usedCount} public sold prices for the same coach across ${yearRange.from}–${yearRange.to}. Medium confidence — wider range. ${PUBLIC_SOLD_DISCLAIMER}`;
+      return `${usedCount} public sold prices for the same coach across ${yearRange.from}–${yearRange.to}. Medium confidence — wider range.`;
     }
-    return `${usedCount} public sold prices for the same coach across ${yearRange.from}–${yearRange.to}. ${PUBLIC_SOLD_DISCLAIMER}`;
+    return `${usedCount} public sold prices for the same coach across ${yearRange.from}–${yearRange.to}.`;
   }
   return `${usedCount} public asking price${usedCount === 1 ? "" : "s"} only — no confirmed sold comps. ${LOW_CONFIDENCE_LISTINGS_MESSAGE}. Asking prices are not sold prices.`;
 }

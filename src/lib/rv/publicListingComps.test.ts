@@ -68,7 +68,7 @@ test("labels: Sold comps, Catalog estimate, low-confidence copy, disclaimer", ()
   assert.equal(LOW_CONFIDENCE_LISTINGS_MESSAGE, "Not enough public listings");
   assert.equal(
     PUBLIC_SOLD_DISCLAIMER,
-    "Public sold prices, not book value. Not JD Power or NADA.",
+    "Values are estimates from public listings. Not JD Power or NADA book value.",
   );
 });
 
@@ -277,6 +277,8 @@ test("confidence tiers: High ≥5, Medium 2–4, Low <2 sold", () => {
   assert.ok(medium);
   assert.equal(medium.confidence, "medium");
   assert.equal(prefersPublicComps(medium), true);
+  assert.match(medium.notes, /Medium confidence — wider range/);
+  assert.doesNotMatch(medium.notes, /JD Power|NADA|book value/i);
 
   const high = reducePublicComps(
     [
@@ -291,6 +293,9 @@ test("confidence tiers: High ≥5, Medium 2–4, Low <2 sold", () => {
   assert.ok(high);
   assert.equal(high.confidence, "high");
   assert.equal(prefersPublicComps(high), true);
+  assert.match(high.notes, /public sold prices for the same coach/);
+  assert.doesNotMatch(high.notes, /JD Power|NADA|book value/i);
+  assert.doesNotMatch(low.notes, /JD Power|NADA|book value/i);
 });
 
 test("medium confidence uses a wider retail spread than high", () => {
@@ -406,4 +411,21 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
   assert.match(detail, /compsConfidenceLabel/);
   assert.match(detail, /prefersPublicComps/);
   assert.doesNotMatch(detail, /Public listing asks/);
+  const disclaimerHits = detail.match(/PUBLIC_SOLD_DISCLAIMER/g) ?? [];
+  assert.equal(disclaimerHits.length, 2, "import + one footer");
+  assert.match(
+    detail,
+    /PUBLIC_SOLD_DISCLAIMER[\s\S]{0,160}<SuiteDisclaimer/,
+    "values footer sits once, above SuiteDisclaimer",
+  );
+});
+
+test("sample notes never append the book-value disclaimer", () => {
+  const compsSrc = src("publicListingComps.ts");
+  const sampleNotes = compsSrc.slice(
+    compsSrc.indexOf("function sampleNotes"),
+    compsSrc.indexOf("export function reducePublicComps"),
+  );
+  assert.doesNotMatch(sampleNotes, /PUBLIC_SOLD_DISCLAIMER/);
+  assert.doesNotMatch(sampleNotes, /JD Power|NADA|book value/);
 });
