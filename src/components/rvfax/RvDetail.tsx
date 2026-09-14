@@ -1111,6 +1111,7 @@ export function RvDetail({
 
           <FactsCollapse
             title="Market value"
+            defaultOpen
             headline={
               marketUpdating
                 ? "Updating…"
