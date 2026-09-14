@@ -474,6 +474,7 @@ test("Facts first-run hero and year+make default stay on the cascade — no exam
 
 test("Facts landing uses the showroom motorhome behind glass, cards stay put", () => {
   const fax = readFileSync(join(root, "../../components/rvfax/RvFaxApp.tsx"), "utf8");
+  const sheet = readFileSync(join(root, "../../components/rvfax/SelectSheet.tsx"), "utf8");
   const prestige = readFileSync(join(root, "../../assets/prestige.ts"), "utf8");
   const css = readFileSync(join(root, "../../styles.css"), "utf8");
   const asset = join(root, "../../../public/assets/facts-landing-motorhome.jpg");
@@ -489,6 +490,30 @@ test("Facts landing uses the showroom motorhome behind glass, cards stay put", (
   assert.match(fax, /VIN Decoder/);
   assert.match(fax, /Scan or type a VIN · NHTSA decode/);
   assert.ok(existsSync(asset), "facts-landing-motorhome.jpg is in public/assets");
+
+  // #2 — Model / Floorplan clear the dock (scroll pad + stage scroll-margin)
+  assert.match(fax, /data-facts-cascade-scroll/);
+  assert.match(fax, /facts-cascade-scroll-pad/);
+  assert.match(fax, /data-facts-cascade-stage="model"/);
+  assert.match(fax, /data-facts-cascade-stage="floorplan"/);
+  assert.match(fax, /scrollIntoView/);
+  assert.match(css, /--facts-cascade-dock-clear/);
+  assert.match(css, /scroll-padding-bottom: var\(--facts-cascade-dock-clear\)/);
+  assert.match(css, /scroll-margin-bottom: var\(--facts-cascade-dock-clear\)/);
+  assert.match(sheet, /7\.25rem \+ env\(safe-area-inset-bottom/);
+
+  // #5 — opaque plate behind Type · Year · Make; Type stays Optional
+  assert.match(fax, /data-facts-cascade-core/);
+  assert.match(fax, /facts-cascade-core/);
+  assert.match(css, /\.facts-cascade-core/);
+  assert.match(
+    fax,
+    /label="Type"[\s\S]*?placeholder="Optional"[\s\S]*?label="Year"/,
+  );
+  assert.doesNotMatch(
+    fax,
+    /label="Type"[\s\S]*?required[\s\S]*?label="Year"/,
+  );
 });
 
 test("dock Facts tab always opens clean search via openFactsPicker", () => {

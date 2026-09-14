@@ -410,7 +410,7 @@ export function SelectSheet({
         paddingBottom:
           kbPad > 0
             ? `max(0.75rem, ${kbPad + 12}px)`
-            : "calc(5.75rem + env(safe-area-inset-bottom, 0px))",
+            : "calc(7.25rem + env(safe-area-inset-bottom, 0px))",
       }}
     >
       <button

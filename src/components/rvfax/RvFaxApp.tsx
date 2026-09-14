@@ -163,6 +163,7 @@ export function RvFaxApp({
   const [compareOpen, setCompareOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestHit[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const cascadeCoreRef = useRef<HTMLDivElement | null>(null);
   const adaptiveGlass = useAdaptiveGlass(PRESTIGE_BACKDROP, scrollRef);
   const kb = useKeyboardInset();
   const nav = useShellNavOptional();
@@ -494,6 +495,30 @@ export function RvFaxApp({
     floorplan,
   });
 
+  // #2 — newly revealed Model / Floorplan sit above the dock, not under it.
+  useEffect(() => {
+    if (!revealModel && !revealFloorplan) return;
+    const root = cascadeCoreRef.current;
+    if (!root) return;
+    const stage = root.querySelector(
+      revealFloorplan
+        ? '[data-facts-cascade-stage="floorplan"]'
+        : '[data-facts-cascade-stage="model"]',
+    );
+    if (!(stage instanceof HTMLElement)) return;
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const t = window.setTimeout(() => {
+      stage.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+        behavior: reduce ? "auto" : "smooth",
+      });
+    }, 40);
+    return () => window.clearTimeout(t);
+  }, [revealModel, revealFloorplan]);
+
   const onCascadeSelect = useCallback(
     (field: CascadeField, value: string) => {
       setSuggestions([]);
@@ -647,10 +672,11 @@ export function RvFaxApp({
       <div
         ref={scrollRef}
         data-app-scroll
-        className="rv-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        data-facts-cascade-scroll=""
+        className="rv-scroll facts-cascade-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain"
         style={{
           paddingBottom: kb.open
-            ? `max(7rem, ${kb.inset + 112}px)`
+            ? `max(var(--facts-cascade-dock-clear), ${kb.inset + 112}px)`
             : undefined,
         }}
       >
@@ -661,7 +687,7 @@ export function RvFaxApp({
         <ScrollSuiteHeader tab="rvfax" />
         <ActiveCoachChip />
 
-        <div className="mx-auto w-full max-w-lg space-y-3.5 px-3 pb-28 pt-0 sm:px-4">
+        <div className="facts-cascade-scroll-pad mx-auto w-full max-w-lg space-y-3.5 px-3 pt-0 sm:px-4">
           <section className="facts-hero-panel glass-prestige rounded-[var(--radius-xl)] px-4 py-4 sm:px-5">
             <p className="text-[26px] font-extrabold tracking-tight text-white sm:text-[28px]">
               Know before you buy,
@@ -750,7 +776,11 @@ export function RvFaxApp({
               </div>
             ) : null}
 
-            <div className="space-y-3 border-t border-white/10 pt-4">
+            <div
+              ref={cascadeCoreRef}
+              className="facts-cascade-core space-y-3 p-3"
+              data-facts-cascade-core=""
+            >
               <FieldButton
                 label="Type"
                 value={factsTypeLabel(rvType) || (rvType ? rvClassLabel(rvType) : "")}
@@ -780,29 +810,33 @@ export function RvFaxApp({
                 sapphire
               />
               {revealModel ? (
-                <FieldButton
-                  label="Model"
-                  value={model}
-                  placeholder={cascade.locks.model || "Required"}
-                  required
-                  disabled={!make || Boolean(cascade.locks.model)}
-                  custom={cascade.custom.model}
-                  onClick={() => make && !cascade.locks.model && setSheet("model")}
-                  sapphire
-                />
+                <div data-facts-cascade-stage="model">
+                  <FieldButton
+                    label="Model"
+                    value={model}
+                    placeholder={cascade.locks.model || "Required"}
+                    required
+                    disabled={!make || Boolean(cascade.locks.model)}
+                    custom={cascade.custom.model}
+                    onClick={() => make && !cascade.locks.model && setSheet("model")}
+                    sapphire
+                  />
+                </div>
               ) : null}
               {revealFloorplan ? (
-                <FieldButton
-                  label="Floorplan"
-                  value={floorplan}
-                  placeholder={cascade.locks.floorplan || "Optional"}
-                  disabled={!model || Boolean(cascade.locks.floorplan)}
-                  custom={cascade.custom.floorplan}
-                  onClick={() =>
-                    model && !cascade.locks.floorplan && setSheet("floorplan")
-                  }
-                  sapphire
-                />
+                <div data-facts-cascade-stage="floorplan">
+                  <FieldButton
+                    label="Floorplan"
+                    value={floorplan}
+                    placeholder={cascade.locks.floorplan || "Optional"}
+                    disabled={!model || Boolean(cascade.locks.floorplan)}
+                    custom={cascade.custom.floorplan}
+                    onClick={() =>
+                      model && !cascade.locks.floorplan && setSheet("floorplan")
+                    }
+                    sapphire
+                  />
+                </div>
               ) : null}
             </div>
 
