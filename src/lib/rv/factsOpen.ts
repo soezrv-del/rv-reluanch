@@ -94,6 +94,17 @@ export function revealFactsFloorplan(sel: {
 }
 
 /**
+ * Search is always on the empty RV Search landing (Type / Year / Make).
+ * Clickable only when year + make can actually search. Type is not a gate.
+ */
+export function factsSearchEnabled(sel: {
+  year?: string | null;
+  make?: string | null;
+}): boolean {
+  return Boolean(sel.year?.trim() && sel.make?.trim());
+}
+
+/**
  * Auto-fetch / auto-open fires on Floorplan, never on Model alone.
  * Concrete floorplan → search (single-hit opens the report).
  * Explicit "Any floorplan" (empty value + field === "floorplan") → fetch the

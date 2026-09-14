@@ -44,13 +44,22 @@ test("Facts report sections collapse by default with title+headline", () => {
   assert.match(collapse, /aria-expanded=\{open\}/);
   assert.match(collapse, /defaultOpen = false/);
   assert.match(detail, /FactsCollapse/);
-  assert.match(detail, /title="Market value"/);
+  assert.match(
+    detail,
+    /<FactsCollapse\s+title="Market value"\s+defaultOpen/,
+    "Market value opens by default so Sold comps sit above the fold",
+  );
   assert.match(detail, /title="Local inventory"/);
   assert.match(detail, /title="Vehicle specifications"/);
   assert.match(detail, /title="Sample owner notes"/);
   assert.match(detail, /title="NHTSA safety"/);
   assert.match(detail, /title="Share kit"/);
-  assert.doesNotMatch(detail, /defaultOpen/);
+  const defaultOpenCount = (detail.match(/defaultOpen/g) || []).length;
+  assert.equal(
+    defaultOpenCount,
+    1,
+    "only Market value is default-open — do not force-open every section",
+  );
 });
 
 test("Facts landing + detail strip inline disclaimers; RV Search name-only options", () => {

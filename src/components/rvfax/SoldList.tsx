@@ -51,6 +51,9 @@ export function SoldList({
             Open a saved coach and tap Sold. Three steps — name (optional),
             gross, then quarter / half / whole.
           </p>
+          <p className="mt-2 text-[12px] leading-relaxed text-white/65">
+            Comps: open a coach → Market value (Sold comps).
+          </p>
         </section>
       ) : (
         <section className="space-y-2.5">

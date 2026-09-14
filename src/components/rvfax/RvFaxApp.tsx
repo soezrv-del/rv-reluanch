@@ -45,6 +45,7 @@ import {
   factsTypeLabel,
   pickerCoachWrite,
   resolveShareOpenSel,
+  factsSearchEnabled,
   revealFactsFloorplan,
   revealFactsModel,
   revealFactsYear,
@@ -487,6 +488,7 @@ export function RvFaxApp({
     model,
     floorplan,
   });
+  const searchEnabled = factsSearchEnabled({ year, make });
   const revealFloorplan = revealFactsFloorplan({
     model,
     floorplan,
@@ -809,16 +811,22 @@ export function RvFaxApp({
                 <Loader2 className="size-3.5 animate-spin" />
                 Opening report…
               </p>
-            ) : year && make ? (
+            ) : (
               <button
                 type="button"
                 onClick={runSearch}
-                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border border-gold-border/50 bg-gold-dim/25 py-2.5 text-[15px] font-bold text-gold-bright active:scale-[0.99]"
+                disabled={!searchEnabled}
+                className={cn(
+                  "flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border py-2.5 text-[15px] font-bold",
+                  searchEnabled
+                    ? "border-gold-border/50 bg-gold-dim/25 text-gold-bright active:scale-[0.99]"
+                    : "cursor-not-allowed border-white/15 bg-white/5 text-white/40",
+                )}
               >
                 <Search className="size-3.5" />
                 {cascade.canSearch ? "Open report" : "Search"}
               </button>
-            ) : null}
+            )}
           </section>
 
           {/* Did you mean */}

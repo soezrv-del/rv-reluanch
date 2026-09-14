@@ -8,6 +8,7 @@ import {
   pickerCoachWrite,
   resolveShareOpenSel,
   FACTS_TYPE_OPTIONS,
+  factsSearchEnabled,
   factsTypeLabel,
   revealFactsFloorplan,
   revealFactsModel,
@@ -142,6 +143,26 @@ test("Type is optional — Year unlocks with or without Type", () => {
   assert.ok(
     !typeIds.includes("class-a-gas") && !typeIds.includes(""),
     "Type step has no All / Class A Gas",
+  );
+});
+
+test("Search is always on empty landing — enabled at year+make, Type optional", () => {
+  assert.equal(factsSearchEnabled({ year: "", make: "" }), false);
+  assert.equal(factsSearchEnabled({ year: "2023", make: "" }), false);
+  assert.equal(factsSearchEnabled({ year: "", make: "Newmar" }), false);
+  assert.equal(
+    factsSearchEnabled({ year: "2023", make: "Newmar" }),
+    true,
+    "year + make can search — Type is not required",
+  );
+  const fax = readFileSync(join(root, "../../components/rvfax/RvFaxApp.tsx"), "utf8");
+  assert.match(fax, /factsSearchEnabled/);
+  assert.match(fax, /disabled=\{!searchEnabled\}/);
+  assert.match(fax, /\{cascade\.canSearch \? "Open report" : "Search"\}/);
+  assert.doesNotMatch(
+    fax,
+    /year && make \? \([\s\S]*?\{cascade\.canSearch \? "Open report" : "Search"\}[\s\S]*?\) : null/,
+    "Search must stay visible on empty landing — not gated on Make",
   );
 });
 
@@ -387,7 +408,12 @@ test("Facts first-run hero and year+make default stay on the cascade — no exam
   );
   assert.match(
     fax,
-    /year && make \? \([\s\S]*?\{cascade\.canSearch \? "Open report" : "Search"\}/,
+    /disabled=\{!searchEnabled\}/,
+    "Search stays visible; year+make only enables the control",
+  );
+  assert.match(
+    fax,
+    /\{cascade\.canSearch \? "Open report" : "Search"\}/,
     "Search / Open report stays as the year+make override",
   );
   // Progressive unlock: Type (optional) → Year → Make → Model → Floorplan
