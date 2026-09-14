@@ -17,10 +17,7 @@ test("Facts / Grok / Sold / Trips / More wire a real pull handler", () => {
   assert.match(fax, /usePullToReset\(scrollRef, refreshFax\)/);
   assert.doesNotMatch(fax, /enabled:\s*false/);
   assert.match(fax, /loadSavedUnits\(\)/);
-  assert.match(
-    grok,
-    /usePullToReset\(listRef, startNewChat, \{ enabled: !embedded \}\)/,
-  );
+  assert.match(grok, /usePullToReset\(listRef, startNewChat\)/);
   assert.match(sold, /usePullToReset\(scrollRef, refreshSold\)/);
   assert.match(trips, /usePullToReset\(scrollRef, refreshTrips\)/);
   assert.match(more, /onPullReset=\{\(\) => setRefreshTick/);

@@ -13,10 +13,14 @@ function read(rel: string) {
 test("Ask Grok floating badge and overlay chrome are gone", () => {
   const overlayPath = join(root, "../../components/shell/AskGrokOverlay.tsx");
   const shell = read("../../components/shell/AppShell.tsx");
+  const css = read("../../styles.css");
 
   assert.equal(existsSync(overlayPath), false, "AskGrokOverlay.tsx deleted");
   assert.doesNotMatch(shell, /AskGrokOverlay/);
   assert.doesNotMatch(shell, /data-ask-grok/);
+  assert.doesNotMatch(css, /\.ask-grok-/);
+  assert.doesNotMatch(css, /--z-ask-grok-/);
+  assert.doesNotMatch(css, /--shadow-ask-grok/);
 });
 
 test("LIVE! dock tab still opens the Grok page as today", () => {

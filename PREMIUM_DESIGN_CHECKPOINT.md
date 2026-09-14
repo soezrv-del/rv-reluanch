@@ -2,6 +2,8 @@
 
 **Mark / restore point** before (and documenting after) the full “top designer apps” recommendation set.
 
+The `checkpoints/premium-pre-2026-08-02/` snapshot was removed 2026-09-14 (audit #253 — unused archive; live `src/` is the product). Historical notes below stay for context.
+
 ## Restore code from this mark
 
 ```bash

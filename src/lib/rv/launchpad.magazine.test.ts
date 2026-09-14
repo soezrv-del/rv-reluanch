@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,6 +17,22 @@ test("cold open plays David’s muted book video, then lands on Facts", () => {
   const css = read("../../styles.css");
 
   assert.match(media, /DAVID_BOOK_SPLASH = "\/assets\/splash\/david-book-splash\.mp4"/);
+  assert.doesNotMatch(media, /RVFOX_LAUNCH_SEAL/);
+  assert.equal(
+    existsSync(join(root, "../../../public/assets/splash/david-book-splash.mp4")),
+    true,
+    "David-book splash stays",
+  );
+  assert.equal(
+    existsSync(join(root, "../../../public/assets/splash/rvfox-launch-seal.mp4")),
+    false,
+    "old seal splash removed",
+  );
+  assert.equal(
+    existsSync(join(root, "../../../public/assets/splash/rvfox-cover-seal.jpg")),
+    false,
+    "old cover seal removed",
+  );
   assert.match(launch, /DAVID_BOOK_SPLASH/);
   assert.match(launch, /data-david-book-splash/);
   assert.match(launch, /muted/);

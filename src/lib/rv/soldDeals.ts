@@ -98,17 +98,6 @@ export function formatSoldMoney(n: number): string {
   return n < 0 ? `-$${formatted}` : `$${formatted}`;
 }
 
-/**
- * Dock owed figure — bare digits only. No `$`, no “owed”, no compact k/M.
- * Glance-safe for a phone on the lot: `9,375` never `$9,375`.
- */
-export function formatSoldDockMoney(n: number): string {
-  if (!Number.isFinite(n)) return "0";
-  const rounded = Math.round(n);
-  const formatted = Math.abs(rounded).toLocaleString("en-US");
-  return rounded < 0 ? `-${formatted}` : formatted;
-}
-
 /** Screen-reader / title only — visible dock chrome must not use this. */
 export function formatSoldDockAria(n: number): string {
   const rounded = Number.isFinite(n) ? Math.round(n) : 0;

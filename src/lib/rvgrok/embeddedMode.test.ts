@@ -10,28 +10,20 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("RvGrokApp defaults to page variant and gates suite chrome for embedded", () => {
+test("RvGrokApp is page-only — no overlay embedded variant or leftover splash/nav props", () => {
   const app = read("../../components/rvgrok/RvGrokApp.tsx");
 
-  assert.match(app, /export type RvGrokVariant = "page" \| "embedded"/);
-  assert.match(app, /variant = "page"/);
-  assert.match(app, /variant\?: RvGrokVariant/);
-  assert.match(app, /const embedded = variant === "embedded"/);
-  assert.match(app, /data-rvgrok-variant=\{variant\}/);
+  assert.doesNotMatch(app, /RvGrokVariant/);
+  assert.doesNotMatch(app, /variant\?:/);
+  assert.doesNotMatch(app, /embedded/);
+  assert.doesNotMatch(app, /onSplashPlayingChange/);
+  assert.doesNotMatch(app, /onNavigate/);
+  assert.doesNotMatch(app, /data-rvgrok-variant/);
 
-  assert.match(app, /!embedded && <SuiteBackdrop \/>/);
-  assert.match(
-    app,
-    /!embedded && \(\s*<ScrollSuiteHeader tab="rvgrok"/,
-  );
-  assert.match(
-    app,
-    /usePullToReset\(listRef, startNewChat, \{ enabled: !embedded \}\)/,
-  );
-  assert.match(
-    app,
-    /embedded \? \(\s*startersOrThread\s*\) : \(\s*<PullRefreshLayer/,
-  );
+  assert.match(app, /<SuiteBackdrop \/>/);
+  assert.match(app, /<ScrollSuiteHeader tab="rvgrok"/);
+  assert.match(app, /usePullToReset\(listRef, startNewChat\)/);
+  assert.match(app, /<PullRefreshLayer/);
 
   assert.match(app, /<HistoryPanel/);
   assert.match(app, /<VoicePanel/);
@@ -49,6 +41,8 @@ test("Grok tab stays default page variant", () => {
   )?.[0];
   assert.ok(pageMount, "Grok tab still mounts RvGrokApp");
   assert.doesNotMatch(pageMount, /variant=/);
+  assert.doesNotMatch(pageMount, /onSplashPlayingChange/);
+  assert.doesNotMatch(pageMount, /onNavigate=/);
   assert.match(pageMount, /active=\{tab === "rvgrok" && !launchOpen\}/);
   assert.match(pageMount, /entryToken=\{grokEntryToken\}/);
   assert.match(pageMount, /seedPrompt=\{grokSeed\}/);
