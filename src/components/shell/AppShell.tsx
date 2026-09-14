@@ -14,7 +14,6 @@ import { BottomTabs, type AppTab } from "./BottomTabs";
 import { dockTabOrder, PAGE_ACCENT } from "./shellConstants";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
 import { OPEN_SOLD_EVENT } from "@/lib/rv/soldDeals";
-import { Launchpad } from "./Launchpad";
 import {
   ShellNavProvider,
   type CalSeed,
@@ -45,8 +44,8 @@ import {
 } from "@/lib/rvgrok/tabEntry";
 
 /**
- * Code-split suite tools — iOS cold start was parsing all apps under splash.
- * Launchpad stays eager; tools load only when visited.
+ * Code-split suite tools — tools load only when visited.
+ * Cold open lands on Facts; no splash / chooser gate.
  */
 const RvFaxApp = lazy(() =>
   import("@/components/rvfax/RvFaxApp").then((m) => ({ default: m.RvFaxApp })),
@@ -142,13 +141,13 @@ export function AppShell() {
   );
   const [factsPickerToken, setFactsPickerToken] = useState(0);
   const [factsShareToken, setFactsShareToken] = useState(0);
-  const [launchOpen, setLaunchOpen] = useState(true);
-  const [launchFading, setLaunchFading] = useState(false);
-  const [suiteReady, setSuiteReady] = useState(false);
-  const [visited, setVisited] = useState<Set<AppTab>>(() => new Set());
+  const launchOpen = false;
+  const suiteReady = true;
+  const [visited, setVisited] = useState<Set<AppTab>>(
+    () => new Set<AppTab>(["rvfax"]),
+  );
   const mainRef = useRef<HTMLElement | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
-  const launchDoneRef = useRef(false);
   const calTokenRef = useRef(0);
   const tripsTokenRef = useRef(0);
   const towTokenRef = useRef(0);
@@ -165,32 +164,11 @@ export function AppShell() {
     });
   }, []);
 
-  const finishLaunch = useCallback(
-    (nextTab?: AppTab) => {
-      if (launchDoneRef.current) return;
-      launchDoneRef.current = true;
-      const dest = nextTab === "rvshare" ? "rvfax" : (nextTab ?? "rvfax");
-      setTab(dest);
-      markVisited(dest);
-      if (dest === "rvcal") {
-        setCalSeed(null);
-        setCalCleanToken((n) => n + 1);
-      }
-      if (nextTab === "rvshare") {
-        setFactsShareToken((n) => n + 1);
-      }
-      setSuiteReady(true);
-      setLaunchFading(true);
-      window.setTimeout(() => {
-        setLaunchOpen(false);
-        setLaunchFading(false);
-      }, 280);
-    },
-    [markVisited],
-  );
-
-  // Absolute safety: never leave native splash forever if Launchpad fails
+  // Hide native Capacitor splash immediately — no in-app video gate.
   useEffect(() => {
+    void import("@capacitor/splash-screen")
+      .then((m) => m.SplashScreen.hide({ fadeOutDuration: 200 }))
+      .catch(() => undefined);
     const t = window.setTimeout(() => {
       void import("@capacitor/splash-screen")
         .then((m) => m.SplashScreen.hide({ fadeOutDuration: 150 }))
@@ -393,19 +371,6 @@ export function AppShell() {
           overscrollBehavior: "none",
         }}
       >
-        {launchOpen ? (
-          <div
-            className={`fixed inset-0 z-[100] transition-opacity duration-300 ${
-              launchFading ? "pointer-events-none opacity-0" : "opacity-100"
-            }`}
-          >
-            <Launchpad
-              onSelect={(t) => finishLaunch(t)}
-              onSkip={() => finishLaunch("rvfax")}
-            />
-          </div>
-        ) : null}
-
         <main
           ref={mainRef}
           className="suite-swipe-viewport relative min-h-0 flex-1 overflow-hidden"
