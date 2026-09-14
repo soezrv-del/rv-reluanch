@@ -1776,49 +1776,6 @@
   margin: 0 4px 2px;
 }
 
-/* ─── David book video splash ─── */
-.lp-launch {
-  background: var(--color-bg);
-  color: var(--color-fg);
-}
-
-.lp-video-stage {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  background: var(--color-bg);
-}
-
-.lp-video {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  background: var(--color-bg);
-  pointer-events: none;
-}
-
-.lp-video-skip {
-  position: absolute;
-  top: max(0.85rem, env(safe-area-inset-top));
-  right: max(0.85rem, env(safe-area-inset-right));
-  z-index: 5;
-  min-height: 44px;
-  min-width: 44px;
-  padding: 0.55rem 0.95rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-bg) 72%, transparent);
-  color: var(--color-fg);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
 /* RvTow answer numbers — max tow + pin, first glance on a phone */
 .rvtow-screen .rvtow-hero-pct {
   font-size: clamp(1.55rem, 6.6vw, 2.05rem);

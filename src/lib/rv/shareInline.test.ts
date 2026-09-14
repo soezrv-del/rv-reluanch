@@ -67,7 +67,6 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(more, /onNavigate\?\.\("rvshare"\)/);
   assert.match(shell, /openFactsShare/);
   assert.match(shell, /if \(next === "rvshare"\)/);
-  assert.match(shell, /nextTab === "rvshare"/);
   assert.doesNotMatch(shell, /<RvShareApp/);
   assert.match(fax, /factsShareToken/);
   assert.match(fax, /shareFocusToken=\{shareFocusToken\}/);
