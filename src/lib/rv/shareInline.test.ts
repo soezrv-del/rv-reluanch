@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -38,8 +38,14 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   const launch = read("../../components/shell/Launchpad.tsx");
   const more = read("../../components/more/MoreApp.tsx");
   const fax = read("../../components/rvfax/RvFaxApp.tsx");
-  const shareApp = read("../../components/rvshare/RvShareApp.tsx");
+  const shareAppPath = join(root, "../../components/rvshare/RvShareApp.tsx");
   const css = read("../../styles.css");
+
+  assert.equal(
+    existsSync(shareAppPath),
+    false,
+    "RvShareApp.tsx deleted — Share is Facts inline",
+  );
 
   assert.match(tabs, /\| "rvshare"/);
   assert.doesNotMatch(tabs, /id: "rvshare"/);
@@ -65,8 +71,6 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.doesNotMatch(shell, /<RvShareApp/);
   assert.match(fax, /factsShareToken/);
   assert.match(fax, /shareFocusToken=\{shareFocusToken\}/);
-  assert.match(shareApp, /openFactsShare/);
-  assert.match(shareApp, /Opening the coach report to Share/);
   assert.match(css, /--dock-label-size:\s*1rem/);
   assert.match(css, /\.bottom-tabs-dock \{/);
   assert.match(css, /backdrop-filter:\s*blur\(20px\) saturate\(180%\)/);

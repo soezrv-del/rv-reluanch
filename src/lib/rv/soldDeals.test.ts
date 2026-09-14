@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   formatSoldDockAria,
-  formatSoldDockMoney,
   formatSoldMoney,
   formatUnitLabel,
   loadSoldDeals,
@@ -49,22 +48,7 @@ const montana = unit(
   "3855BR",
 );
 
-test("dock owed label is bare digits — no dollar, no owed, no compact suffix", () => {
-  assert.equal(formatSoldDockMoney(0), "0");
-  assert.equal(formatSoldDockMoney(250), "250");
-  assert.equal(formatSoldDockMoney(1250), "1,250");
-  assert.equal(formatSoldDockMoney(9375), "9,375");
-  assert.equal(formatSoldDockMoney(10000), "10,000");
-  assert.equal(formatSoldDockMoney(12500), "12,500");
-  assert.equal(formatSoldDockMoney(25000), "25,000");
-  assert.equal(formatSoldDockMoney(100000), "100,000");
-  assert.equal(formatSoldDockMoney(2_000_000), "2,000,000");
-  assert.equal(formatSoldDockMoney(-1250), "-1,250");
-  assert.equal(formatSoldDockMoney(Number.NaN), "0");
-  for (const n of [0, 9375, 12500, 2_000_000]) {
-    assert.doesNotMatch(formatSoldDockMoney(n), /\$/);
-    assert.doesNotMatch(formatSoldDockMoney(n), /owed/i);
-  }
+test("dock owed aria is screen-reader only — visible chrome does not format money", () => {
   assert.equal(formatSoldDockAria(9375), "Sold · 9375 owed");
   assert.equal(formatSoldDockAria(0), "Sold · 0 owed");
 });

@@ -56,7 +56,6 @@ import {
 } from "@/lib/rvgrok/vision";
 import { planGrokTabEntry } from "@/lib/rvgrok/tabEntry";
 import { cn, uid } from "@/lib/utils";
-import type { AppTab } from "@/components/shell/BottomTabs";
 import { MessageBubble } from "./MessageBubble";
 import { HistoryPanel } from "./HistoryPanel";
 import { VoicePanel } from "./VoicePanel";
@@ -95,31 +94,18 @@ const GROK_STARTERS: {
   },
 ];
 
-export type RvGrokVariant = "page" | "embedded";
-
 export function RvGrokApp({
   seedPrompt,
   onSeedConsumed,
   active = true,
   entryToken = 0,
-  variant = "page",
-  onNavigate: _onNavigate,
-  onSplashPlayingChange: _onSplashPlayingChange,
 }: {
   seedPrompt?: string;
   onSeedConsumed?: () => void;
   active?: boolean;
   /** Bumps on every Grok tab entry (dock tap included) so a remounted pane resets. */
   entryToken?: number;
-  /**
-   * `page` (default) — Grok tab: suite backdrop, sapphire header, pull-to-reset.
-   * `embedded` — Ask Grok overlay mount: same chat stack, no suite-page chrome.
-   */
-  variant?: RvGrokVariant;
-  onNavigate?: (tab: AppTab) => void;
-  onSplashPlayingChange?: (playing: boolean) => void;
 } = {}) {
-  const embedded = variant === "embedded";
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -317,7 +303,7 @@ export function RvGrokApp({
     liveCamRef.current = false;
   }, []);
 
-  const pull = usePullToReset(listRef, startNewChat, { enabled: !embedded });
+  const pull = usePullToReset(listRef, startNewChat);
 
   const handleStop = () => {
     abortRef.current?.abort();
@@ -1313,14 +1299,9 @@ export function RvGrokApp({
     );
 
   return (
-    <div
-      className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden text-fg"
-      data-rvgrok-variant={variant}
-    >
-      {!embedded && <SuiteBackdrop />}
-      {!embedded && (
-        <ScrollSuiteHeader tab="rvgrok" className="relative z-10 shrink-0" />
-      )}
+    <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden text-fg">
+      <SuiteBackdrop />
+      <ScrollSuiteHeader tab="rvgrok" className="relative z-10 shrink-0" />
 
 
       <header className="relative z-10 flex shrink-0 items-center gap-2 border-b border-white/10 bg-black/20 px-3 py-1.5 sm:px-4">
@@ -1399,16 +1380,12 @@ export function RvGrokApp({
           paddingBottom: kb.open ? 12 : undefined,
         }}
       >
-        {embedded ? (
-          startersOrThread
-        ) : (
-          <PullRefreshLayer
-            state={pull}
-            label="Release to refresh Grok · new chat"
-          >
-            {startersOrThread}
-          </PullRefreshLayer>
-        )}
+        <PullRefreshLayer
+          state={pull}
+          label="Release to refresh Grok · new chat"
+        >
+          {startersOrThread}
+        </PullRefreshLayer>
       </div>
 
       <div className="relative z-20 shrink-0 border-t border-white/10 bg-bg px-3 py-2 sm:px-4">

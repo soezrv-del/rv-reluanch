@@ -145,7 +145,6 @@ export function AppShell() {
   const [launchOpen, setLaunchOpen] = useState(true);
   const [launchFading, setLaunchFading] = useState(false);
   const [suiteReady, setSuiteReady] = useState(false);
-  const [grokSplashPlaying, setGrokSplashPlaying] = useState(false);
   const [visited, setVisited] = useState<Set<AppTab>>(() => new Set());
   const mainRef = useRef<HTMLElement | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
@@ -303,7 +302,6 @@ export function AppShell() {
       setTab(next);
       markVisited(next);
       if (next === "rvcal") requestCleanCal();
-      if (next !== "rvgrok") setGrokSplashPlaying(false);
     },
     [markVisited, openFactsShare, openFactsPicker, requestCleanCal],
   );
@@ -311,8 +309,7 @@ export function AppShell() {
   const isPro = isProfessionalTier();
   const dockOrder = useMemo(() => dockTabOrder(isPro), [isPro]);
   const swipeIndex = Math.max(0, dockOrder.indexOf(tab));
-  const swipeArmed =
-    !launchOpen && !grokSplashPlaying && dockOrder.includes(tab);
+  const swipeArmed = !launchOpen && dockOrder.includes(tab);
 
   useEffect(() => {
     const openSold = () => {
@@ -339,14 +336,12 @@ export function AppShell() {
     onPeek: peekTab,
   });
 
-  const hideDock = launchOpen || grokSplashPlaying || kb.open;
+  const hideDock = launchOpen || kb.open;
 
   const nav = useMemo(
     () => ({
       tab,
       setTab: onTabChange,
-      splashPlaying: launchOpen || grokSplashPlaying,
-      setSplashPlaying: setGrokSplashPlaying,
       calSeed,
       calCleanToken,
       openCalWithPrice,
@@ -367,8 +362,6 @@ export function AppShell() {
     [
       tab,
       onTabChange,
-      launchOpen,
-      grokSplashPlaying,
       calSeed,
       calCleanToken,
       openCalWithPrice,
@@ -458,8 +451,6 @@ export function AppShell() {
                         entryToken={grokEntryToken}
                         seedPrompt={grokSeed}
                         onSeedConsumed={() => setGrokSeed(undefined)}
-                        onNavigate={onTabChange}
-                        onSplashPlayingChange={setGrokSplashPlaying}
                       />
                     ) : id === "rvtow" ? (
                       <RvTowApp />

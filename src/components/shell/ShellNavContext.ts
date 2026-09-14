@@ -22,9 +22,6 @@ export type FactsTowHandoff = {
 export type ShellNavValue = {
   tab: AppTab;
   setTab: (tab: AppTab) => void;
-  /** Grok opening splash video — hide bottom tabs while playing */
-  splashPlaying: boolean;
-  setSplashPlaying: (playing: boolean) => void;
   /** One-shot Facts Check payment seed — consume then drop */
   calSeed: CalSeed | null;
   /** Bumps on every plain Cal tab / swipe / launch open (not Check payment) */
