@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { RVSpec } from "./rvTypes.ts";
 import {
+  CATALOG_ESTIMATE_LABEL,
   brandTierRetainFactor,
   detectMarketSegment,
   estimateMarket,
@@ -66,7 +67,9 @@ test("estimateMarket: same MSRP, Class B holds more than gas A at 5 and 10 years
   assert.ok(b5.retailHigh > g5.retailHigh);
   assert.ok(b10.retailHigh > g10.retailHigh);
   assert.equal(b5.source, "catalog");
+  assert.equal(b5.sourceLabel, CATALOG_ESTIMATE_LABEL);
   assert.equal(b5.sourceLabel, "Catalog estimate");
+  assert.equal(b5.confidence, undefined);
 });
 
 test("estimateMarket: trade < retailLow < retailHigh", () => {
@@ -105,4 +108,12 @@ test("brand tier bump uses rating tables only and stays mild", () => {
 test("toy hauler retain is weaker than fifth wheel at the same age", () => {
   assert.ok(retainForAge(5, "fifth-wheel") > retainForAge(5, "toy-hauler"));
   assert.ok(retainForAge(10, "fifth-wheel") > retainForAge(10, "toy-hauler"));
+});
+
+test("catalog path label stays Catalog estimate — never sold comps or a book", () => {
+  assert.equal(CATALOG_ESTIMATE_LABEL, "Catalog estimate");
+  const s = spec({ type: "Class B", fuelType: "Diesel" });
+  const m = estimateMarket(s, "2022", undefined, { asOfYear: ASOF });
+  assert.equal(m.sourceLabel, "Catalog estimate");
+  assert.notEqual(m.sourceLabel, "Sold comps");
 });

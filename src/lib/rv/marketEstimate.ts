@@ -23,6 +23,12 @@ import type { RVSpec } from "./rvTypes.ts";
 
 export type MarketValueSource = "catalog" | "public_listings" | "live_dossier";
 
+/** Sold-comps confidence on the public listings ladder. Catalog has none. */
+export type MarketConfidence = "high" | "medium" | "low";
+
+/** Honest catalog path label — never "Sold comps" or a book brand. */
+export const CATALOG_ESTIMATE_LABEL = "Catalog estimate";
+
 export type MarketEstimate = {
   tradeIn: number;
   retailLow: number;
@@ -37,6 +43,8 @@ export type MarketEstimate = {
   source?: MarketValueSource;
   /** Honest UI label — never NADA / J.D. Power / MarketCheck. */
   sourceLabel?: string;
+  /** Set only when source is public_listings sold comps. */
+  confidence?: MarketConfidence;
 };
 
 /**
@@ -280,7 +288,7 @@ export function estimateMarket(
       segment: curve.label,
       ageYears: age,
       source: "catalog",
-      sourceLabel: "Catalog estimate",
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
     };
   }
 
@@ -305,6 +313,6 @@ export function estimateMarket(
     ageYears: age,
     tradeCappedAtRetailLow: trade.capped || undefined,
     source: "catalog",
-    sourceLabel: "Catalog estimate",
+    sourceLabel: CATALOG_ESTIMATE_LABEL,
   };
 }

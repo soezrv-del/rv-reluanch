@@ -67,7 +67,13 @@ import {
   type LiveDossier,
 } from "@/lib/rv/liveDossier";
 import {
+  CATALOG_ESTIMATE_LABEL,
+  LOW_CONFIDENCE_LISTINGS_MESSAGE,
+  PUBLIC_SOLD_DISCLAIMER,
+  SOLD_COMPS_LABEL,
+  compsConfidenceLabel,
   fetchPublicListingComps,
+  prefersPublicComps,
   resolvePrimaryMarket,
   type PublicListingComps,
 } from "@/lib/rv/publicListingComps";
@@ -348,7 +354,7 @@ export function RvDetail({
     };
   }, [year, make, model, floorplan, liveRetry, brochure, data.fuelType, data.type]);
 
-  // Public year-range listing asks — primary market ladder when sample is enough.
+  // Public year-range sold comps — primary market ladder when sold sample is enough.
   // Independent of MarketCheck inventory search.
   useEffect(() => {
     const ctrl = new AbortController();
@@ -517,6 +523,12 @@ export function RvDetail({
     [catalogMarket, liveLadder, publicComps],
   );
   const marketUpdating = liveLoading || compsLoading;
+  const showSoldRange = prefersPublicComps(publicComps);
+  const soldConfidence = publicComps?.confidence ?? "low";
+  const soldConfidenceLabel = compsConfidenceLabel(soldConfidence);
+  const marketSourceLabel = showSoldRange
+    ? SOLD_COMPS_LABEL
+    : (market.sourceLabel ?? CATALOG_ESTIMATE_LABEL);
 
   const displayType =
     (powertrainGuard.hard.fuelType === "Diesel"
@@ -1100,27 +1112,79 @@ export function RvDetail({
           <FactsCollapse
             title="Market value"
             headline={
-              marketUpdating ? "Updating…" : factsMoneyHeadline(financePrice)
+              marketUpdating
+                ? "Updating…"
+                : showSoldRange
+                  ? factsMoneyHeadline(financePrice)
+                  : LOW_CONFIDENCE_LISTINGS_MESSAGE
             }
           >
-            <div className="grid grid-cols-2 gap-2">
-              <MarketTile
-                label="Market value"
-                value={factsMoneyHeadline(financePrice)}
-              />
-              <MarketTile
-                label="Trade-in"
-                value={formatMoney(market.tradeIn)}
-              />
-              <MarketTile
-                label="Retail low"
-                value={formatMoney(market.retailLow)}
-              />
-              <MarketTile
-                label="Retail high"
-                value={formatMoney(market.retailHigh)}
-              />
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[12px] font-semibold text-white">
+                {SOLD_COMPS_LABEL}
+              </p>
+              <Chip
+                tone={
+                  soldConfidence === "high"
+                    ? "green"
+                    : soldConfidence === "medium"
+                      ? "blue"
+                      : undefined
+                }
+              >
+                {soldConfidenceLabel}
+              </Chip>
             </div>
+            {showSoldRange ? (
+              <div className="grid grid-cols-2 gap-2">
+                <MarketTile
+                  label="Market value"
+                  value={factsMoneyHeadline(financePrice)}
+                />
+                <MarketTile
+                  label="Trade-in"
+                  value={formatMoney(market.tradeIn)}
+                />
+                <MarketTile
+                  label="Retail low"
+                  value={formatMoney(market.retailLow)}
+                />
+                <MarketTile
+                  label="Retail high"
+                  value={formatMoney(market.retailHigh)}
+                />
+              </div>
+            ) : (
+              <div>
+                <p className="text-[13px] leading-snug text-white/85">
+                  {LOW_CONFIDENCE_LISTINGS_MESSAGE}
+                </p>
+                <p className="mt-3 text-[12px] font-semibold text-white">
+                  {marketSourceLabel}
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <MarketTile
+                    label="Market value"
+                    value={factsMoneyHeadline(financePrice)}
+                  />
+                  <MarketTile
+                    label="Trade-in"
+                    value={formatMoney(market.tradeIn)}
+                  />
+                  <MarketTile
+                    label="Retail low"
+                    value={formatMoney(market.retailLow)}
+                  />
+                  <MarketTile
+                    label="Retail high"
+                    value={formatMoney(market.retailHigh)}
+                  />
+                </div>
+              </div>
+            )}
+            <p className="mt-2 text-[11px] italic leading-snug text-white/55">
+              {PUBLIC_SOLD_DISCLAIMER}
+            </p>
             {shellNav ? (
               <button
                 type="button"
