@@ -18,23 +18,19 @@ test("document title and share card are public RvFOX, not Mark Class", () => {
   assert.doesNotMatch(site.title, /Mark Class/);
 });
 
-test("splash feature tiles call pickTool on click and expose data-launch-tool", () => {
+test("cold open has no splash tiles, chooser, or launch-tool gate", () => {
   const src = readFileSync(
     join(root, "src/components/shell/Launchpad.tsx"),
     "utf8",
   );
-  assert.match(src, /data-launch-tool=\{item\.id\}/);
-  assert.match(src, /onClick=\{\(\) => pickTool\(item\.id\)\}/);
-  assert.match(src, /onPointerUp=\{\(e\) => onToolPointerUp\(item\.id, e\)\}/);
-  for (const id of [
-    "rvfax",
-    "rvcal",
-    "rvtow",
-    "rvtrips",
-    "rvshare",
-    "rvgrok",
-    "more",
-  ]) {
-    assert.match(src, new RegExp(`id: "${id}"`));
-  }
+  const shell = readFileSync(
+    join(root, "src/components/shell/AppShell.tsx"),
+    "utf8",
+  );
+  assert.doesNotMatch(src, /data-launch-tool/);
+  assert.doesNotMatch(src, /pickTool/);
+  assert.doesNotMatch(src, /onToolPointerUp/);
+  assert.doesNotMatch(src, /export function Launchpad/);
+  assert.doesNotMatch(shell, /<Launchpad/);
+  assert.match(src, /export function MetalVerifiedTrue/);
 });
