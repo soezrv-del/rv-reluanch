@@ -42,7 +42,7 @@ export function SapphireHeader({ tab }: { tab: AppTab }) {
 
   return (
     <header
-      className="sapphire-header relative z-30 shrink-0 px-3 pb-1.5 pt-[max(0.35rem,env(safe-area-inset-top))] sm:px-4"
+      className="sapphire-header relative z-30 shrink-0 px-3 pb-1.5 sm:px-4"
       data-page-accent={accent}
     >
       <div

@@ -1,3 +1,4 @@
+/// <reference types="@capacitor/status-bar" />
 import type { CapacitorConfig } from "@capacitor/cli";
 
 /**
@@ -49,7 +50,10 @@ const config: CapacitorConfig = {
       splashImmersive: true,
     },
     StatusBar: {
-      style: "DARK",
+      // Draw under the status bar so CSS env(safe-area-inset-*) is live.
+      // LIGHT = light clock/signal on this dark shell (matches Info.plist).
+      overlaysWebView: true,
+      style: "LIGHT",
       backgroundColor: "#050508",
     },
     Keyboard: {

@@ -116,9 +116,8 @@ export function BottomTabs({
       data-no-swipe
       data-active-tab={tab}
       style={{
-        // iOS/web keep the tight inset (home-indicator taps still work).
-        // html.android-native overrides this with --dock-safe-bottom.
-        paddingBottom: "min(10px, max(6px, env(safe-area-inset-bottom, 0px)))",
+        // Bottom inset lives in CSS (.bottom-tabs-nav) so env() + the
+        // phone fallback floor win. html.android-native uses --dock-safe-bottom.
         touchAction: "manipulation",
       }}
     >
