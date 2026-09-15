@@ -1184,7 +1184,7 @@ export function RvTripsApp() {
           className="relative z-40 isolate pointer-events-auto px-3 pb-2 sm:px-4"
         >
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-100/80">
+            <p className="text-[10px] font-bold tracking-[0.18em] text-sky-100">
               RvFOX
             </p>
             <h1 className="text-[22px] font-bold tracking-tight text-white">
