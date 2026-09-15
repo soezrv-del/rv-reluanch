@@ -291,7 +291,7 @@
   }
 
   .sapphire-header {
-    padding-top: max(0.15rem, env(safe-area-inset-top)) !important;
+    padding-top: max(0.15rem, env(safe-area-inset-top, 0px)) !important;
     padding-bottom: 0.2rem !important;
   }
 
@@ -319,7 +319,7 @@
 
   .bottom-tabs-nav {
     padding-top: 0.2rem !important;
-    padding-bottom: max(0.2rem, env(safe-area-inset-bottom)) !important;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .bottom-tabs-dock {
@@ -358,7 +358,7 @@
 /* Short portrait — phone + Grok preview iframe */
 @media (max-height: 780px) {
   .sapphire-header {
-    padding-top: 0.25rem !important;
+    padding-top: max(0.25rem, env(safe-area-inset-top, 0px)) !important;
     padding-bottom: 0.35rem !important;
   }
   .sapphire-header-inner {
@@ -376,7 +376,7 @@
   }
   .bottom-tabs-nav {
     padding-top: 0.2rem !important;
-    padding-bottom: 6px !important;
+    padding-bottom: max(2.125rem, env(safe-area-inset-bottom, 0px)) !important;
   }
   html.android-native .bottom-tabs-nav {
     padding-bottom: var(--dock-safe-bottom, 48px) !important;
@@ -789,6 +789,13 @@
 .bottom-tabs-nav {
   z-index: 80;
   touch-action: manipulation;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+}
+@media (max-width: 639px) {
+  /* Home indicator ~34px — keep tabs tappable when env() is 0. */
+  .bottom-tabs-nav {
+    padding-bottom: max(2.125rem, env(safe-area-inset-bottom, 0px));
+  }
 }
 .bottom-tabs-dock {
   background: rgba(15, 23, 42, 0.55);
@@ -1231,6 +1238,11 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 12px rgba(201, 184, 150, 0.35));
+}
+
+/* Suite sapphire banner — CSS env owns the notch (Capacitor contentInset never). */
+.sapphire-header {
+  padding-top: max(0.35rem, env(safe-area-inset-top, 0px));
 }
 
 /* RvFACTS: keep catalog dropdowns close to the header */
@@ -1745,6 +1757,17 @@
   z-index: 40;
   isolation: isolate;
   pointer-events: auto;
+}
+
+/* Trips title + coach sit below the island / clock — not in the status-bar row.
+   Floor holds when env(safe-area-inset-top) is 0 (WKWebView / in-app preview). */
+[data-trips-header] {
+  padding-top: max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.4rem));
+}
+@media (max-width: 639px) {
+  [data-trips-header] {
+    padding-top: max(4.25rem, calc(env(safe-area-inset-top, 0px) + 0.5rem));
+  }
 }
 
 [data-route-basemap] {

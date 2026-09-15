@@ -1180,67 +1180,67 @@ export function RvTripsApp() {
         <PullRefreshLayer state={pull} label="Release to refresh Trips">
         <header
           data-trips-chrome
-          className="relative z-40 isolate pointer-events-auto px-3 pb-2 pt-2 sm:px-4"
+          data-trips-header
+          className="relative z-40 isolate pointer-events-auto px-3 pb-2 sm:px-4"
         >
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2.5">
-              <img
-                src="/assets/brand/icon-rvtrips.png"
-                alt=""
-                className="size-10 object-contain drop-shadow-md"
-              />
-              <div>
-                <h1 className="text-[22px] font-bold tracking-tight text-white">
-                  RvTrips
-                </h1>
-                {coachLine ? (
-                  <p className="text-[11px] font-medium text-white/80">{coachLine}</p>
-                ) : null}
-              </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-2" data-trips-tools>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-100/80">
+              RvFOX
+            </p>
+            <h1 className="text-[22px] font-bold tracking-tight text-white">
+              RvTrips
+            </h1>
+            {coachLine ? (
+              <p className="mt-0.5 text-[11px] font-medium leading-snug text-white/80">
+                {coachLine}
+              </p>
+            ) : null}
+          </div>
+          <div
+            className="mt-2 flex flex-wrap items-center gap-2"
+            data-trips-tools
+          >
+            <button
+              type="button"
+              onClick={() => setTool("dumps")}
+              className="min-h-11 px-1 text-[11px] font-semibold text-white/45"
+            >
+              Dumps
+            </button>
+            <button
+              type="button"
+              onClick={() => setTool("pack")}
+              className="min-h-11 px-1 text-[11px] font-semibold text-white/45"
+            >
+              Pack
+            </button>
+            {displayCoach ? (
               <button
                 type="button"
-                onClick={() => setTool("dumps")}
-                className="min-h-11 px-1 text-[11px] font-semibold text-white/45"
+                onClick={() => setTool("profile")}
+                className={cn(
+                  "inline-flex min-h-11 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide",
+                  locked
+                    ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
+                    : "border-sky-400/40 bg-sky-500/15 text-sky-200",
+                )}
               >
-                Dumps
+                {locked ? <Lock className="size-3" /> : <Unlock className="size-3" />}
+                {profileBadge}
               </button>
+            ) : (
               <button
                 type="button"
-                onClick={() => setTool("pack")}
-                className="min-h-11 px-1 text-[11px] font-semibold text-white/45"
+                onClick={() => setTool("profile")}
+                className="min-h-11 text-[11px] font-semibold text-white/55"
               >
-                Pack
+                Profile
               </button>
-              {displayCoach ? (
-                <button
-                  type="button"
-                  onClick={() => setTool("profile")}
-                  className={cn(
-                    "inline-flex min-h-11 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide",
-                    locked
-                      ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
-                      : "border-sky-400/40 bg-sky-500/15 text-sky-200",
-                  )}
-                >
-                  {locked ? <Lock className="size-3" /> : <Unlock className="size-3" />}
-                  {profileBadge}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setTool("profile")}
-                  className="min-h-11 text-[11px] font-semibold text-white/55"
-                >
-                  Profile
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-lg space-y-3 px-3 pb-16 pt-2 sm:px-4">
+        <div className="mx-auto w-full max-w-lg space-y-3 px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] pt-2 sm:px-4">
           {/* ── PROFILE ── */}
           {tool === "profile" ? (
             <section className="glass-prestige space-y-3 rounded-[1.25rem] p-3.5">
