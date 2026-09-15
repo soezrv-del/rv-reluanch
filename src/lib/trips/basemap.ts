@@ -24,7 +24,10 @@ export type BasemapPinKind =
   | "fuel"
   | "truck-stop"
   | "campground"
-  | "rv-park";
+  | "rv-park"
+  | "dump-free"
+  | "dump-paid"
+  | "dump-unknown";
 
 export type BasemapPin = BasemapLngLat & {
   id: string;

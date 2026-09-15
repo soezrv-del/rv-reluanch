@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  DUMP_FEE_LEGEND,
+  type DumpFee,
+} from "@/lib/trips/dumpStations";
 
 export type DumpMapPoint = {
   id: string;
@@ -8,7 +12,63 @@ export type DumpMapPoint = {
   name: string;
   city?: string;
   state?: string;
+  fee?: DumpFee;
 };
+
+export function dumpFeeDotClass(fee: DumpFee, on = false): string {
+  if (fee === "free") return on ? "bg-emerald-400" : "bg-emerald-400";
+  if (fee === "paid") return on ? "bg-amber" : "bg-amber";
+  return on ? "bg-slate-400" : "bg-slate-400";
+}
+
+export function DumpFeeLegend({
+  className,
+  tone = "light",
+}: {
+  className?: string;
+  tone?: "light" | "on-map";
+}) {
+  return (
+    <div
+      data-dump-legend
+      className={cn(
+        "flex flex-wrap items-center gap-x-2.5 gap-y-1",
+        className,
+      )}
+    >
+      <span
+        className={cn(
+          "text-[9px] font-extrabold tracking-[0.14em]",
+          tone === "on-map" ? "text-white/90" : "text-white/70",
+        )}
+      >
+        DUMPS
+      </span>
+      {DUMP_FEE_LEGEND.map((row) => (
+        <span
+          key={row.fee}
+          className="inline-flex items-center gap-1"
+          data-dump-legend-fee={row.fee}
+        >
+          <span
+            className={cn(
+              "size-2 rounded-full border border-white/90",
+              dumpFeeDotClass(row.fee),
+            )}
+          />
+          <span
+            className={cn(
+              "text-[10px] font-bold",
+              tone === "on-map" ? "text-white" : "text-white/85",
+            )}
+          >
+            {row.label}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+}
 
 function project(lat: number, lng: number, z: number) {
   const n = 2 ** z;
@@ -165,17 +225,19 @@ export function DumpMap({
 
       {pins.map((p) => {
         const on = p.id === selectedId;
+        const fee: DumpFee = p.fee ?? "free";
         return (
           <button
             key={p.id}
             type="button"
-            title={`${p.name}${p.city ? ` · ${p.city}, ${p.state}` : ""}`}
+            data-dump-pin-fee={fee}
+            title={`${p.name}${p.city ? ` · ${p.city}, ${p.state}` : ""} · ${fee === "unknown" ? "Fee unknown" : fee === "paid" ? "Paid" : "Free"}`}
             onClick={() => onSelect?.(p.id)}
             className={cn(
               "absolute z-[3] -translate-x-1/2 -translate-y-full rounded-full border text-[10px] font-bold shadow-lg",
               on
-                ? "border-white bg-sky-500 px-1.5 py-1 text-white"
-                : "size-3.5 border-white/90 bg-sky-300 hover:scale-125",
+                ? cn("border-white px-1.5 py-1 text-white", dumpFeeDotClass(fee, true))
+                : cn("size-3.5 border-white/90 hover:scale-125", dumpFeeDotClass(fee)),
             )}
             style={{ left: p.left, top: p.top }}
           >
@@ -183,6 +245,11 @@ export function DumpMap({
           </button>
         );
       })}
+
+      <DumpFeeLegend
+        tone="on-map"
+        className="absolute bottom-5 left-2 z-[4] rounded-md bg-black/55 px-2 py-1"
+      />
 
       <p className="absolute bottom-1 right-2 z-[4] text-[9px] font-medium text-white/80">
         © OpenStreetMap

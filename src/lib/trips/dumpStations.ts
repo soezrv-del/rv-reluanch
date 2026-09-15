@@ -1,5 +1,48 @@
 /** Curated public / no-fee RV sewer dumps for RvTrips.
- *  Hours and access change — confirm locally before you pull in. */
+ *  Hours and access change — confirm locally before you pull in.
+ *  Fee honesty: never invent a price. OSM fee=yes → paid, fee=no → free,
+ *  missing / other → unknown. This curated list is known-free only. */
+
+export type DumpFee = "free" | "paid" | "unknown";
+
+export const DUMP_FEE_LABEL: Record<DumpFee, string> = {
+  free: "Free",
+  paid: "Paid",
+  unknown: "Fee unknown",
+};
+
+/** Pin / legend copy — free vs paid in ~2 seconds, no dollar amounts. */
+export const DUMP_FEE_LEGEND: ReadonlyArray<{
+  fee: DumpFee;
+  label: string;
+}> = [
+  { fee: "free", label: "Free" },
+  { fee: "paid", label: "Paid" },
+  { fee: "unknown", label: "Fee unknown" },
+];
+
+/**
+ * Map OSM `fee=` to free / paid / unknown.
+ * Only `fee=yes` (or a documented amount) is paid. Never invent pricing.
+ */
+export function feeFromOsmTags(
+  tags: Record<string, string> | null | undefined,
+): DumpFee {
+  const raw = String(tags?.fee ?? "")
+    .trim()
+    .toLowerCase();
+  if (!raw) return "unknown";
+  if (/^(no|false|0|free)$/.test(raw)) return "free";
+  if (/^(yes|true)$/.test(raw)) return "paid";
+  // A tagged amount means a fee exists — label Paid, do not surface the figure.
+  if (/^\d/.test(raw) || /\$|usd|eur|gbp|cad/.test(raw)) return "paid";
+  return "unknown";
+}
+
+/** Curated western list is known-free when we actually plot that row. */
+export function curatedDumpFee(): DumpFee {
+  return "free";
+}
 
 export type DumpKind =
   | "rest-area"
@@ -566,4 +609,22 @@ export function filterDumpStations(
     );
   }
   return list;
+}
+
+/** Match a live Overpass dump to a curated known-free row (~0.4 mi). */
+export function nearestCuratedDump(
+  lat: number,
+  lng: number,
+  maxMiles = 0.4,
+): DumpStation | null {
+  let best: DumpStation | null = null;
+  let bestMi = maxMiles;
+  for (const s of FREE_DUMP_STATIONS) {
+    const mi = haversineMiles({ lat, lng }, s);
+    if (mi <= bestMi) {
+      best = s;
+      bestMi = mi;
+    }
+  }
+  return best;
 }

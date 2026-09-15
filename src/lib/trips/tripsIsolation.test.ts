@@ -32,6 +32,8 @@ function tripsRuntimeFiles(): string[] {
     join(root, "../../components/rvtrips/RvTripsApp.tsx"),
     join(root, "../../components/rvtrips/RouteBasemap.tsx"),
     join(root, "../../components/rvtrips/RouteMapboxGl.tsx"),
+    join(root, "../../components/rvtrips/DumpsAlongRoute.tsx"),
+    join(root, "../../components/rvtrips/DumpMap.tsx"),
   ];
 }
 
