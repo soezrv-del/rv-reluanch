@@ -3,6 +3,9 @@ import { cn } from "@/lib/utils";
 import type { OsrmLineString } from "@/lib/trips/osrm";
 import type { FuelStop } from "@/lib/trips/corridorFuel";
 import type { CampStop } from "@/lib/trips/corridorCamps";
+import type { DumpStop } from "@/lib/trips/corridorDumps";
+import { dumpPinKind } from "@/lib/trips/corridorDumps";
+import { DumpFeeLegend } from "@/components/rvtrips/DumpMap";
 import {
   bboxFromGeometry,
   bboxFromPoints,
@@ -24,6 +27,7 @@ import {
 
 const MAX_FUEL_PINS = 12;
 const MAX_CAMP_PINS = 10;
+const MAX_DUMP_PINS = 12;
 const ROUTE_SRC = "rv-route";
 const ROUTE_CASING = "rv-route-casing";
 const ROUTE_LINE = "rv-route-line";
@@ -61,6 +65,15 @@ function pinClass(kind: BasemapPin["kind"], on: boolean): string {
   }
   if (kind === "rv-park") {
     return cn("rv-map-dot rv-map-dot-park", on && "rv-map-dot-on");
+  }
+  if (kind === "dump-free") {
+    return cn("rv-map-dot rv-map-dot-dump-free", on && "rv-map-dot-on");
+  }
+  if (kind === "dump-paid") {
+    return cn("rv-map-dot rv-map-dot-dump-paid", on && "rv-map-dot-on");
+  }
+  if (kind === "dump-unknown") {
+    return cn("rv-map-dot rv-map-dot-dump-unknown", on && "rv-map-dot-on");
   }
   return cn("rv-map-dot rv-map-dot-camp", on && "rv-map-dot-on");
 }
@@ -130,6 +143,9 @@ export function RouteMapboxGl({
   campStops,
   selectedCampId,
   onSelectCamp,
+  dumpStops,
+  selectedDumpId,
+  onSelectDump,
   follow,
   followActive,
   followStatus = "off",
@@ -146,6 +162,9 @@ export function RouteMapboxGl({
   campStops?: CampStop[];
   selectedCampId?: string | null;
   onSelectCamp?: (id: string) => void;
+  dumpStops?: DumpStop[];
+  selectedDumpId?: string | null;
+  onSelectDump?: (id: string) => void;
   follow?: Pick<GeoFix, "lat" | "lng" | "heading"> | null;
   followActive?: boolean;
   followStatus?: FollowStatus;
@@ -222,8 +241,18 @@ export function RouteMapboxGl({
         label: s.name,
       });
     }
+    for (const s of (dumpStops ?? []).slice(0, MAX_DUMP_PINS)) {
+      if (!finiteLngLat(s)) continue;
+      rows.push({
+        id: s.id,
+        kind: dumpPinKind(s.fee),
+        lat: s.lat,
+        lng: s.lng,
+        label: `${s.name} · ${s.feeLabel}`,
+      });
+    }
     return rows;
-  }, [originPt, destPt, viaPts, fuelStops, campStops]);
+  }, [originPt, destPt, viaPts, fuelStops, campStops, dumpStops]);
 
   const followPt = useMemo(() => {
     if (!followActive || !follow || !finiteLngLat(follow)) return null;
@@ -359,20 +388,36 @@ export function RouteMapboxGl({
     for (const pin of pins) {
       const fuel = pin.kind === "fuel" || pin.kind === "truck-stop";
       const camp = pin.kind === "campground" || pin.kind === "rv-park";
+      const dump =
+        pin.kind === "dump-free" ||
+        pin.kind === "dump-paid" ||
+        pin.kind === "dump-unknown";
       const on =
         (fuel && pin.id === selectedFuelId) ||
-        (camp && pin.id === selectedCampId);
-      const node = document.createElement(fuel || camp ? "button" : "span");
+        (camp && pin.id === selectedCampId) ||
+        (dump && pin.id === selectedDumpId);
+      const node = document.createElement(fuel || camp || dump ? "button" : "span");
       if (node instanceof HTMLButtonElement) node.type = "button";
       node.className = pinClass(pin.kind, on);
       node.title = pin.label || pin.kind;
       node.textContent = pinMark(pin);
-      if (fuel || camp) {
+      if (dump) {
+        node.setAttribute(
+          "data-dump-pin-fee",
+          pin.kind === "dump-free"
+            ? "free"
+            : pin.kind === "dump-paid"
+              ? "paid"
+              : "unknown",
+        );
+      }
+      if (fuel || camp || dump) {
         node.addEventListener("click", (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
           if (fuel) onSelectFuel?.(on ? "" : pin.id);
-          else onSelectCamp?.(on ? "" : pin.id);
+          else if (camp) onSelectCamp?.(on ? "" : pin.id);
+          else onSelectDump?.(on ? "" : pin.id);
         });
       }
       const marker = new mapboxgl.Marker({ element: node, anchor: "bottom" })
@@ -380,7 +425,7 @@ export function RouteMapboxGl({
         .addTo(map);
       markersRef.current.push(marker);
     }
-  }, [pins, ready, selectedFuelId, selectedCampId, onSelectFuel, onSelectCamp]);
+  }, [pins, ready, selectedFuelId, selectedCampId, selectedDumpId, onSelectFuel, onSelectCamp, onSelectDump]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -505,6 +550,13 @@ export function RouteMapboxGl({
           Satellite
         </button>
       </div>
+
+      {(dumpStops ?? []).length > 0 ? (
+        <DumpFeeLegend
+          tone="on-map"
+          className="pointer-events-none absolute bottom-10 left-2 z-[6] rounded-md bg-black/55 px-2 py-1"
+        />
+      ) : null}
 
       {followActive ? (
         <p

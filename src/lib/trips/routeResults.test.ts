@@ -128,8 +128,10 @@ test("Navigate results sheet uses live stats and live camps — not DEMO pads", 
   assert.match(ui, /showSampleCamps/);
   assert.doesNotMatch(ui, /label: "Demo camps"/);
   assert.match(ui, /FuelAlongRoute/);
+  assert.match(ui, /DumpsAlongRoute/);
   assert.match(ui, /RouteBasemap/);
   assert.match(ui, /\/api\/fuel/);
+  assert.match(ui, /\/api\/dumps/);
   assert.doesNotMatch(ui, /role="tablist"/);
   assert.doesNotMatch(ui, /GUIDANCE · STEP/);
   assert.doesNotMatch(ui, />\s*Next\s*</);

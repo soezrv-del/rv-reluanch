@@ -3,6 +3,9 @@ import { cn } from "@/lib/utils";
 import type { OsrmLineString } from "@/lib/trips/osrm";
 import type { FuelStop } from "@/lib/trips/corridorFuel";
 import type { CampStop } from "@/lib/trips/corridorCamps";
+import type { DumpStop } from "@/lib/trips/corridorDumps";
+import { dumpPinKind } from "@/lib/trips/corridorDumps";
+import { DumpFeeLegend } from "@/components/rvtrips/DumpMap";
 import {
   attributionFor,
   bboxFromGeometry,
@@ -34,6 +37,7 @@ import { RouteMapboxGl } from "@/components/rvtrips/RouteMapboxGl";
 
 const MAX_FUEL_PINS = 12;
 const MAX_CAMP_PINS = 10;
+const MAX_DUMP_PINS = 12;
 
 function asPlace(
   p: { lat: number; lng: number; label?: string } | null | undefined,
@@ -53,6 +57,9 @@ export function RouteBasemap({
   campStops,
   selectedCampId,
   onSelectCamp,
+  dumpStops,
+  selectedDumpId,
+  onSelectDump,
   follow,
   followActive,
   followStatus = "off",
@@ -67,6 +74,9 @@ export function RouteBasemap({
   campStops?: CampStop[];
   selectedCampId?: string | null;
   onSelectCamp?: (id: string) => void;
+  dumpStops?: DumpStop[];
+  selectedDumpId?: string | null;
+  onSelectDump?: (id: string) => void;
   follow?: Pick<GeoFix, "lat" | "lng" | "heading"> | null;
   followActive?: boolean;
   followStatus?: FollowStatus;
@@ -254,8 +264,18 @@ export function RouteBasemap({
         label: s.name,
       });
     }
+    for (const s of (dumpStops ?? []).slice(0, MAX_DUMP_PINS)) {
+      if (!finiteLngLat(s)) continue;
+      push({
+        id: s.id,
+        kind: dumpPinKind(s.fee),
+        lat: s.lat,
+        lng: s.lng,
+        label: `${s.name} · ${s.feeLabel}`,
+      });
+    }
     return rows;
-  }, [view, originPt, destPt, viaPts, fuelStops, campStops]);
+  }, [view, originPt, destPt, viaPts, fuelStops, campStops, dumpStops]);
 
   const puck = useMemo(() => {
     if (!view || !followPt) return null;
@@ -327,6 +347,9 @@ export function RouteBasemap({
         campStops={campStops}
         selectedCampId={selectedCampId}
         onSelectCamp={onSelectCamp}
+        dumpStops={dumpStops}
+        selectedDumpId={selectedDumpId}
+        onSelectDump={onSelectDump}
         follow={follow}
         followActive={followActive}
         followStatus={followStatus}
@@ -398,17 +421,33 @@ export function RouteBasemap({
       {pins.map((p) => {
         const fuel = p.kind === "fuel" || p.kind === "truck-stop";
         const camp = p.kind === "campground" || p.kind === "rv-park";
+        const dump =
+          p.kind === "dump-free" ||
+          p.kind === "dump-paid" ||
+          p.kind === "dump-unknown";
         const on =
-          (fuel && p.id === selectedFuelId) || (camp && p.id === selectedCampId);
-        if (fuel || camp) {
+          (fuel && p.id === selectedFuelId) ||
+          (camp && p.id === selectedCampId) ||
+          (dump && p.id === selectedDumpId);
+        if (fuel || camp || dump) {
           return (
             <button
               key={p.id}
               type="button"
               title={p.label}
+              data-dump-pin-fee={
+                p.kind === "dump-free"
+                  ? "free"
+                  : p.kind === "dump-paid"
+                    ? "paid"
+                    : p.kind === "dump-unknown"
+                      ? "unknown"
+                      : undefined
+              }
               onClick={() => {
                 if (fuel) onSelectFuel?.(on ? "" : p.id);
-                else onSelectCamp?.(on ? "" : p.id);
+                else if (camp) onSelectCamp?.(on ? "" : p.id);
+                else onSelectDump?.(on ? "" : p.id);
               }}
               className={cn(
                 "absolute z-[3] flex size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center",
@@ -423,8 +462,12 @@ export function RouteBasemap({
                   p.kind === "fuel" && "bg-white/85",
                   p.kind === "rv-park" && "bg-emerald-400",
                   p.kind === "campground" && "bg-emerald-200",
+                  p.kind === "dump-free" && "bg-emerald-400",
+                  p.kind === "dump-paid" && "bg-amber",
+                  p.kind === "dump-unknown" && "bg-slate-400",
                   on && fuel && "size-3.5 bg-amber",
                   on && camp && "size-3.5 bg-emerald-300",
+                  on && dump && "size-3.5",
                 )}
               />
             </button>
@@ -477,6 +520,13 @@ export function RouteBasemap({
             </span>
           </div>
         </div>
+      ) : null}
+
+      {(dumpStops ?? []).length > 0 ? (
+        <DumpFeeLegend
+          tone="on-map"
+          className="pointer-events-none absolute bottom-6 left-2 z-[6] rounded-md bg-black/55 px-2 py-1"
+        />
       ) : null}
 
       {followActive ? (

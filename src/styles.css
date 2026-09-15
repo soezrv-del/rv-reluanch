@@ -1725,6 +1725,15 @@
 .rv-map-dot-camp {
   background: #a7f3d0;
 }
+.rv-map-dot-dump-free {
+  background: #34d399;
+}
+.rv-map-dot-dump-paid {
+  background: var(--color-amber);
+}
+.rv-map-dot-dump-unknown {
+  background: #94a3b8;
+}
 .rv-map-dot-on {
   width: 18px;
   height: 18px;

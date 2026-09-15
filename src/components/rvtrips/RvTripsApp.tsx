@@ -77,12 +77,14 @@ import {
   DUMP_KIND_LABEL,
   DUMP_STATES,
   FREE_DUMP_STATIONS,
+  curatedDumpFee,
   filterDumpStations,
   mapsUrl,
 } from "@/lib/trips/dumpStations";
 import { DumpMap } from "@/components/rvtrips/DumpMap";
 import { FuelAlongRoute } from "@/components/rvtrips/FuelAlongRoute";
 import { CampsAlongRoute } from "@/components/rvtrips/CampsAlongRoute";
+import { DumpsAlongRoute } from "@/components/rvtrips/DumpsAlongRoute";
 import { RouteBasemap } from "@/components/rvtrips/RouteBasemap";
 import {
   buildFuelQuery,
@@ -96,6 +98,11 @@ import {
   type CampSearchResult,
   type CampStop,
 } from "@/lib/trips/corridorCamps";
+import {
+  buildDumpsQuery,
+  type DumpSearchResult,
+  type DumpStop,
+} from "@/lib/trips/corridorDumps";
 import {
   canSubmitPlan,
   defaultTripName,
@@ -281,6 +288,11 @@ export function RvTripsApp() {
     "idle" | "loading" | "live" | "error"
   >("idle");
   const [campFocusId, setCampFocusId] = useState<string | null>(null);
+  const [dumps, setDumps] = useState<DumpSearchResult | null>(null);
+  const [dumpsStatus, setDumpsStatus] = useState<
+    "idle" | "loading" | "live" | "error"
+  >("idle");
+  const [dumpPoiFocusId, setDumpPoiFocusId] = useState<string | null>(null);
   const [showSampleCamps, setShowSampleCamps] = useState(false);
 
   const applySeedIdentity = useCallback((p: CoachProfile, source: CoachSeedSource) => {
@@ -593,6 +605,50 @@ export function RvTripsApp() {
         if (e instanceof DOMException && e.name === "AbortError") return;
         setCamps(null);
         setCampsStatus("error");
+      });
+    return () => ctrl.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeStatus, osrm, originPlace, destPlace, viaSig]);
+
+  useEffect(() => {
+    if (routeStatus !== "live" || !originPlace || !destPlace) {
+      setDumps(null);
+      setDumpsStatus("idle");
+      setDumpPoiFocusId(null);
+      return;
+    }
+    const ctrl = new AbortController();
+    setDumpsStatus("loading");
+    setDumpPoiFocusId(null);
+    const path = osrm?.geometry?.coordinates?.length
+      ? osrm.geometry.coordinates.map(([lng, lat]) => ({ lng, lat }))
+      : [originPlace, ...viaPlaces, destPlace];
+    const qs = buildDumpsQuery({
+      from: { lng: originPlace.lng, lat: originPlace.lat },
+      to: { lng: destPlace.lng, lat: destPlace.lat },
+      via: viaPlaces.map((p) => ({ lng: p.lng, lat: p.lat })),
+      path: downsampleByDistance(path, 24),
+      widthMi: 15,
+    });
+    fetch(`/api/dumps?${qs}`, {
+      signal: ctrl.signal,
+      headers: { Accept: "application/json" },
+    })
+      .then(async (res) => {
+        const json = (await res.json()) as DumpSearchResult & { error?: string };
+        if (ctrl.signal.aborted) return;
+        if (!res.ok) {
+          setDumps(null);
+          setDumpsStatus("error");
+          return;
+        }
+        setDumps(json);
+        setDumpsStatus("live");
+      })
+      .catch((e) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setDumps(null);
+        setDumpsStatus("error");
       });
     return () => ctrl.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1047,7 +1103,10 @@ export function RvTripsApp() {
   };
 
   const routeViaPoi = (
-    stop: Pick<FuelStop | CampStop, "name" | "city" | "state" | "lat" | "lng" | "kind">,
+    stop: Pick<
+      FuelStop | CampStop | DumpStop,
+      "name" | "city" | "state" | "lat" | "lng" | "kind"
+    >,
   ) => {
     const hit: PlaceHit = {
       label: stop.city
@@ -1100,6 +1159,7 @@ export function RvTripsApp() {
     });
     setFuelFocusId(null);
     setCampFocusId(null);
+    setDumpPoiFocusId(null);
     setNavArmed(false);
     setTool(null);
   };
@@ -1818,6 +1878,9 @@ export function RvTripsApp() {
                     campStops={camps?.camps}
                     selectedCampId={campFocusId}
                     onSelectCamp={(id) => setCampFocusId(id || null)}
+                    dumpStops={dumps?.dumps}
+                    selectedDumpId={dumpPoiFocusId}
+                    onSelectDump={(id) => setDumpPoiFocusId(id || null)}
                     follow={follow.fix}
                     followActive={navArmed}
                     followStatus={follow.status}
@@ -1929,6 +1992,16 @@ export function RvTripsApp() {
                     onRouteVia={routeViaPoi}
                     viaDisabled={viaSlotsFull}
                     limit={6}
+                  />
+
+                  <DumpsAlongRoute
+                    status={dumpsStatus}
+                    result={dumps}
+                    selectedId={dumpPoiFocusId}
+                    onSelect={(id) => setDumpPoiFocusId(id || null)}
+                    onRouteVia={routeViaPoi}
+                    viaDisabled={viaSlotsFull}
+                    limit={8}
                   />
 
                   <div className="pt-0.5">
@@ -2110,7 +2183,10 @@ export function RvTripsApp() {
               </p>
 
               <DumpMap
-                stations={dumpList}
+                stations={dumpList.map((s) => ({
+                  ...s,
+                  fee: curatedDumpFee(),
+                }))}
                 selectedId={dumpFocusId}
                 onSelect={(id) => {
                   setDumpFocusId(id);

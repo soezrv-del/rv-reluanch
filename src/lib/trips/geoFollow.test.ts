@@ -163,6 +163,8 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(ui, /campStops=\{camps\?\.camps\}/);
   assert.match(ui, /FuelAlongRoute/);
   assert.match(ui, /fuelStops=\{fuel\?\.stops\}/);
+  assert.match(ui, /DumpsAlongRoute/);
+  assert.match(ui, /dumpStops=\{dumps\?\.dumps\}/);
   assert.doesNotMatch(ui, /GUIDANCE · STEP/);
   assert.doesNotMatch(ui, /navStepIdx/);
   assert.doesNotMatch(ui, />\s*Next\s*</);
@@ -177,6 +179,7 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(map, /shouldRecenterFollow/);
   assert.match(map, /campStops/);
   assert.match(map, /fuelStops/);
+  assert.match(map, /dumpStops/);
   assert.match(map, /RouteMapboxGl/);
   assert.doesNotMatch(map, /["'`]\/api\/route/);
 
@@ -187,6 +190,7 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(gl, /data-follow-puck/);
   assert.match(gl, /shouldRecenterFollow/);
   assert.match(gl, /easeTo/);
+  assert.match(gl, /dumpStops/);
   assert.doesNotMatch(gl, /["'`]\/api\/route/);
 
   assert.match(follow, /FOLLOW_WATCH_OPTIONS/);
