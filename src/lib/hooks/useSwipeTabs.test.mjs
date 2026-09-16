@@ -14,7 +14,9 @@ test("swipe capture ignores the bottom dock", () => {
 test("swipe writes interactive --swipe-dx and peeks the next pane", () => {
   assert.match(src, /--swipe-dx/);
   assert.match(src, /data-swipe-dragging/);
+  assert.match(src, /data-swipe-busy/);
   assert.match(src, /onPeek/);
   assert.match(src, /swipeFollowDx/);
   assert.match(src, /\[data-map-engine\]/);
+  assert.match(src, /flushSync/);
 });
