@@ -38283,6 +38283,172 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       description: "The Newmar Scottsdale was the company entry-level gas Class A during the early 2000s — bringing Newmar hand-crafted cabinetry and tight construction standards to the Ford F53 gas chassis at an accessible price. Discontinued 2005 when Newmar consolidated its gas lineup under the Kountry Star nameplate."
     }
+  },
+  // Prevost (Sainte-Claire, QC). Shell keys only — EzMe pack 2026-09-15.
+  // MY2020 year floor. Nameplate LOCK / floorplansByYear EMPTY all years
+  // (Pleasure-Way-style nameplate-only; schema forbids empty [] year lists —
+  // prefer omit). Never invent letter codes. Never copy LOCK years into GAP
+  // years. X3-45 VIP ≠ X3-45 VIP Entertainer. H3-45 / X3-45 passenger-highway
+  // coaches are not primary keys. Shell ≠ converter — Marathon / Liberty /
+  // Newell / Millennium / Foretravel / Featherlite / Loki / Emerald stay out.
+  // Do not merge Ascension / Le Mirage. Do not start Newell this pass.
+  "Prevost": {
+    "H3-45 VIP": {
+      type: "Class A Diesel",
+      // Nameplate alias only — not a letter-code floorplan. Integrity needs a
+      // non-empty floorplans[]; year chips stay empty (FBY omitted).
+      floorplans: ["H3-45 VIP"],
+      floorplansByYear: {
+        // NEW KEY. Class A diesel conversion shell. yearStart 2020. yearEnd open.
+        // Nameplate LOCK 2020 / 2021 / 2022 / 2023 — empty FBY (no extractable
+        // letter codes). GAP chips 2024–2026 — never invent codes; never copy
+        // 2023 → 2024+. H3-45 passenger/highway ≠ this key. Shell ≠ converter.
+      },
+      lengthRange: [
+        45,
+        45
+      ],
+      weightRange: [
+        48000,
+        54000
+      ],
+      slideouts: 0,
+      sleeps: 6,
+      msrpRange: [
+        900000,
+        2200000
+      ],
+      engine: "Volvo / Detroit diesel (Prevost coach)",
+      chassis: "Prevost H3-45",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.7,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 10000,
+      freshWater: 100,
+      grayWater: 50,
+      blackWater: 50,
+      generator: "Onan Diesel (conversion)",
+      awningLength: 20,
+      ceilingHeight: 84,
+      founded: 1924,
+      warrantyYears: 1,
+      yearStart: 2020,
+      description: "Prevost H3-45 VIP — Class A diesel conversion shell. Nameplate-only this pass (no letter-code floorplans). Not the H3-45 highway coach; converters stay on their own makes.",
+      powertrainByYear: [
+        {
+          from: 2020,
+          to: 2026,
+          engine: "Volvo / Detroit diesel (Prevost coach)",
+          chassis: "Prevost H3-45",
+          fuelType: "Diesel",
+          notes: "Nameplate LOCK 2020–2023. Empty FBY — no letter chips. GAP 2024–2026 chips. Confirm build sheet. Shell ≠ converter."
+        }
+      ]
+    },
+    "X3-45 VIP": {
+      type: "Class A Diesel",
+      floorplans: ["X3-45 VIP"],
+      floorplansByYear: {
+        // NEW KEY. Class A diesel conversion shell. yearStart 2020. yearEnd 2023
+        // (hard). Nameplate LOCK 2020–2023 — empty FBY. GAP 2024+ via yearEnd.
+        // ≠ X3-45 VIP Entertainer (separate key). X3-45 passenger ≠ this key.
+        // Shell ≠ converter. Never invent letter codes.
+      },
+      lengthRange: [
+        45,
+        45
+      ],
+      weightRange: [
+        48000,
+        54000
+      ],
+      slideouts: 0,
+      sleeps: 6,
+      msrpRange: [
+        900000,
+        2200000
+      ],
+      engine: "Volvo / Detroit diesel (Prevost coach)",
+      chassis: "Prevost X3-45",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.7,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 10000,
+      freshWater: 100,
+      grayWater: 50,
+      blackWater: 50,
+      generator: "Onan Diesel (conversion)",
+      awningLength: 20,
+      ceilingHeight: 84,
+      founded: 1924,
+      warrantyYears: 1,
+      yearStart: 2020,
+      yearEnd: 2023,
+      description: "Prevost X3-45 VIP — Class A diesel conversion shell. Separate from X3-45 VIP Entertainer. Not the X3-45 passenger coach. Nameplate-only this pass (no letter-code floorplans).",
+      powertrainByYear: [
+        {
+          from: 2020,
+          to: 2023,
+          engine: "Volvo / Detroit diesel (Prevost coach)",
+          chassis: "Prevost X3-45",
+          fuelType: "Diesel",
+          notes: "Nameplate LOCK 2020–2023. Empty FBY. yearEnd 2023 — GAP 2024+. Not Entertainer. Confirm build sheet."
+        }
+      ]
+    },
+    "X3-45 VIP Entertainer": {
+      type: "Class A Diesel",
+      floorplans: ["X3-45 VIP Entertainer"],
+      floorplansByYear: {
+        // NEW KEY. Class A diesel entertainer/tour shell. yearStart 2023.
+        // yearEnd open. Nameplate LOCK 2023 / 2024 — empty FBY. GAP ≤2022
+        // (before yearStart) and 2025–2026 chips. ≠ X3-45 VIP. Never invent
+        // letter codes. Never copy 2024 → 2025+. Shell ≠ converter.
+      },
+      lengthRange: [
+        45,
+        45
+      ],
+      weightRange: [
+        48000,
+        54000
+      ],
+      slideouts: 0,
+      sleeps: 8,
+      msrpRange: [
+        1200000,
+        2800000
+      ],
+      engine: "Volvo / Detroit diesel (Prevost coach)",
+      chassis: "Prevost X3-45",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.7,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 10000,
+      freshWater: 100,
+      grayWater: 50,
+      blackWater: 50,
+      generator: "Onan Diesel (conversion)",
+      awningLength: 20,
+      ceilingHeight: 84,
+      founded: 1924,
+      warrantyYears: 1,
+      yearStart: 2023,
+      description: "Prevost X3-45 VIP Entertainer — Class A diesel entertainer/tour shell. Separate from X3-45 VIP. Nameplate-only this pass (no letter-code floorplans).",
+      powertrainByYear: [
+        {
+          from: 2023,
+          to: 2026,
+          engine: "Volvo / Detroit diesel (Prevost coach)",
+          chassis: "Prevost X3-45",
+          fuelType: "Diesel",
+          notes: "Nameplate LOCK 2023–2024. Empty FBY — no letter chips. GAP ≤2022 and 2025–2026 chips. Not X3-45 VIP. Confirm build sheet."
+        }
+      ]
+    }
   }
 };
 
