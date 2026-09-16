@@ -16490,3 +16490,54 @@ test("Newell NEW MAKE honesty: P50 only; empty 2020–2022/2027; 030623 chips 20
   assert.doesNotMatch(planLists, /"F40"|"V2"|"M3"|"2020P"/);
   assert.doesNotMatch(nw, /\n    "2020P": \{|\n    Marathon: \{|\n    "Liberty": \{/);
 });
+
+test("Liberty Coach NEW MAKE honesty: Elegant Lady only; exact FBY; no Prevost/Newell bleed", () => {
+  const idx = CATALOG_INDEX["Liberty Coach"];
+  assert.ok(idx, "Liberty Coach must be in CATALOG_INDEX");
+  assert.equal(idx["Elegant Lady"]?.type, "Class A Diesel");
+  assert.equal(idx["Elegant Lady"]?.fuelType, "Diesel");
+  assert.equal(idx["Elegant Lady"]?.yearStart, 2020);
+  assert.equal(idx["Elegant Lady"]?.yearEnd, undefined);
+  assert.deepEqual(idx["Elegant Lady"]?.years, [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027]);
+
+  assert.equal(idx["H3-45 VIP"], undefined);
+  assert.equal(idx["X3-45 VIP"], undefined);
+  assert.equal(idx["X3-45 VIP Entertainer"], undefined);
+  assert.equal(idx.P50, undefined);
+  assert.equal(idx.Marathon, undefined);
+  assert.equal(idx.Veneto, undefined);
+
+  const pv = CATALOG_INDEX.Prevost;
+  assert.ok(pv, "Prevost stays its own make");
+  assert.equal(pv["Elegant Lady"], undefined, "Elegant Lady must not bleed into Prevost");
+  const nw = CATALOG_INDEX.Newell;
+  assert.ok(nw, "Newell stays its own make");
+  assert.equal(nw["Elegant Lady"], undefined, "Elegant Lady must not bleed into Newell");
+
+  const block = src("rvData.ts");
+  const l0 = block.indexOf('\n  "Liberty Coach": {');
+  const l1 = block.indexOf('\n  "Newell": {');
+  assert.ok(l0 > 0 && l1 > l0, "Liberty Coach block");
+  const lc = block.slice(l0, l1);
+  const el = lc.slice(lc.indexOf('    "Elegant Lady": {'));
+
+  assert.match(el, /type: "Class A Diesel"/);
+  assert.match(el, /fuelType: "Diesel"/);
+  assert.match(el, /yearStart:\s*2020/);
+  assert.doesNotMatch(el, /yearEnd:\s*\d+/);
+  assert.match(el, /"2020": \["Avellino", "Serrado-B"\]/);
+  assert.match(el, /"2021": \["Serrado-B"\]/);
+  assert.match(el, /"2022": \[\]/);
+  assert.match(el, /"2023": \[\]/);
+  assert.match(el, /"2024": \["Serrado-B"\]/);
+  assert.match(el, /"2025": \["Serrado-B", "Calabria"\]/);
+  assert.match(el, /"2026": \["Ravello-B"\]/);
+  assert.match(el, /"2027": \[\]/);
+
+  const planLists = [
+    el.match(/\n      floorplans: \[[^\]]*\]/)?.[0] || "",
+    ...(el.match(/"20\d{2}": \[[^\]]*\]/g) || []),
+  ].join("\n");
+  assert.doesNotMatch(planLists, /"H3-45 VIP"|"X3-45 VIP"|Entertainer|"P50"|"2020P"|"Marathon"|"Veneto"/);
+  assert.doesNotMatch(lc, /\n    "H3-45 VIP": \{|\n    "P50": \{|\n    Marathon: \{|\n    "Veneto": \{/);
+});
