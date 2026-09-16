@@ -4,7 +4,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
+  DUMP_MAX_QUERY_CENTERS,
+  OVERPASS_ENDPOINTS,
   buildDumpsQuery,
+  chunkDumpCenters,
   curatedStopsOnCorridor,
   dedupDumps,
   dumpPinKind,
@@ -14,10 +17,12 @@ import {
   finalizeDumps,
   mergeDumpStops,
   normalizeOverpassDumps,
+  sampleDumpCenters,
   type DumpOverpassEl,
   type DumpStop,
 } from "./corridorDumps.ts";
 import { feeFromOsmTags } from "./dumpStations.ts";
+import { resolveMapPoi } from "./mapPoi.ts";
 import type { OsrmLngLat } from "./osrm.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -132,6 +137,69 @@ test("dump pin kinds and labels stay color-honest", () => {
   assert.equal(dumpSourceLabel("overpass"), "OpenStreetMap Overpass");
   assert.match(dumpSourceNote("overpass"), /Fee unknown/);
   assert.doesNotMatch(dumpSourceNote("overpass"), /\$\d/);
+  assert.match(dumpSourceNote("curated"), /Overpass was unavailable/);
+  assert.match(dumpSourceNote("curated"), /known-free/);
+  assert.doesNotMatch(dumpSourceNote("curated"), /Sample pads/i);
+  assert.doesNotMatch(dumpSourceNote("curated"), /\$\d/);
+});
+
+test("sampleDumpCenters covers a 1000+ mi corridor with enough Overpass centers", () => {
+  const long: OsrmLngLat[] = [
+    { lng: -122.2, lat: 47.98 },
+    { lng: -102.2, lat: 44.6 },
+  ];
+  const pts = sampleDumpCenters(long);
+  assert.ok(pts.length >= 10, `expected ≥10 centers, got ${pts.length}`);
+  assert.ok(pts.length <= DUMP_MAX_QUERY_CENTERS);
+  assert.ok(pts[0]!.lng < -121);
+  assert.ok(pts[pts.length - 1]!.lng > -104);
+  const batches = chunkDumpCenters(pts, 8);
+  assert.ok(batches.length >= 2);
+  assert.ok(batches.every((b) => b.length <= 8));
+});
+
+test("resolveMapPoi names the tapped pin — dump vs campground", () => {
+  const rye = dump({
+    id: "curated:wa-ryegrass",
+    name: "Ryegrass Rest Area · I-90",
+    city: "Vantage",
+    state: "WA",
+    fee: "free",
+    feeLabel: "Free",
+    source: "curated",
+  });
+  const dumpHit = resolveMapPoi({
+    dumpStops: [rye],
+    selectedDumpId: rye.id,
+  });
+  assert.equal(dumpHit?.typeLabel, "Dump");
+  assert.equal(dumpHit?.name, rye.name);
+  assert.match(dumpHit?.meta || "", /Vantage/);
+  assert.match(dumpHit?.meta || "", /Free/);
+
+  const campHit = resolveMapPoi({
+    campStops: [
+      {
+        id: "camp-1",
+        name: "Lakeside RV Park",
+        lat: 47.97,
+        lng: -122.2,
+        kind: "rv-park",
+        city: "Everett",
+        state: "WA",
+        address: "",
+        milesOff: 2.5,
+        progress: 0.05,
+        nearDest: false,
+        amenityHint: "",
+      },
+    ],
+    selectedCampId: "camp-1",
+  });
+  assert.equal(campHit?.typeLabel, "RV park");
+  assert.equal(campHit?.name, "Lakeside RV Park");
+  assert.match(campHit?.meta || "", /Everett/);
+  assert.equal(resolveMapPoi({}), null);
 });
 
 test("dedup / finalize prefer along-route and drop far dupes", () => {
@@ -202,8 +270,15 @@ test("GET /api/dumps stays on Overpass — no HERE / Places / paid APIs", () => 
     join(root, "../../components/rvtrips/DumpMap.tsx"),
     "utf8",
   );
+  const css = readFileSync(join(root, "../../styles.css"), "utf8");
   assert.match(api, /createFileRoute\("\/api\/dumps"\)/);
+  const lib = readFileSync(join(root, "corridorDumps.ts"), "utf8");
   assert.match(api, /overpass-api\.de/);
+  assert.match(api, /sampleDumpCenters/);
+  assert.match(api, /OVERPASS_ENDPOINTS/);
+  assert.match(lib, /overpass-api\.de/);
+  assert.match(lib, /overpass\.kumi\.systems/);
+  assert.match(lib, /overpass\.osm\.ch/);
   assert.match(api, /amenity"="sanitary_dump_station/);
   assert.match(api, /never invents stations or prices/i);
   assert.match(api, /no HERE Places/);
@@ -211,14 +286,38 @@ test("GET /api/dumps stays on Overpass — no HERE / Places / paid APIs", () => 
   assert.doesNotMatch(api, /maps\.googleapis\.com|places\.googleapis\.com/i);
   assert.doesNotMatch(api, /marketcheck/i);
   assert.doesNotMatch(api, /\/api\/route/);
+  assert.equal(OVERPASS_ENDPOINTS.length, 3);
   assert.match(app, /\/api\/dumps/);
   assert.match(app, /DumpsAlongRoute/);
   assert.match(app, /dumpStops=/);
+  assert.match(app, /onRouteVia=\{routeViaPoi\}/);
+  assert.match(app, /data-camp-sample-toggle/);
+  assert.ok(
+    app.indexOf("data-camp-sample-toggle") < app.indexOf("<DumpsAlongRoute"),
+    "Sample pads belongs under camps, not dumps",
+  );
+  assert.ok(
+    app.indexOf("Sample pads — not live") < app.indexOf("<DumpsAlongRoute"),
+  );
+  const dumpsBlock = app.slice(app.indexOf("<DumpsAlongRoute"));
+  assert.doesNotMatch(dumpsBlock, /Sample pads/);
   assert.match(ui, /data-dumps-along-route/);
   assert.match(ui, /DumpFeeLegend/);
   assert.match(ui, /DUMPS ALONG ROUTE/);
+  assert.doesNotMatch(ui, /Sample pads/);
   assert.match(map, /dumpStops/);
+  assert.match(map, /data-map-poi-detail|MapPoiDetailChip/);
+  assert.match(map, /RouteLayerLegend/);
+  assert.match(map, /rv-map-dot-camp/);
+  assert.match(map, /rv-map-dot-dump-free/);
   assert.match(gl, /dumpStops/);
+  assert.match(gl, /MapPoiDetailChip/);
+  assert.match(gl, /data-map-pin/);
+  assert.match(gl, /rv-map-dot-camp/);
+  assert.match(gl, /rv-map-dot-dump-free/);
   assert.match(dumpMap, /data-dump-legend/);
+  assert.match(css, /\.rv-map-dot-camp\s*\{[^}]*sapphire/s);
+  assert.match(css, /\.rv-map-dot-dump-free\s*\{[^}]*--color-green/s);
+  assert.match(css, /\.rv-map-dot-camp\s*\{[^}]*border-radius: 3px/s);
   assert.doesNotMatch(api, /RATEAPI_MODE|rvData/);
 });

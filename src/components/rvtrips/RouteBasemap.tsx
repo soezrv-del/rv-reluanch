@@ -5,7 +5,12 @@ import type { FuelStop } from "@/lib/trips/corridorFuel";
 import type { CampStop } from "@/lib/trips/corridorCamps";
 import type { DumpStop } from "@/lib/trips/corridorDumps";
 import { dumpPinKind } from "@/lib/trips/corridorDumps";
-import { DumpFeeLegend } from "@/components/rvtrips/DumpMap";
+import {
+  MapPoiDetailChip,
+  RouteLayerLegend,
+  resolveMapPoi,
+  type MapPoiStop,
+} from "@/components/rvtrips/RoutePoiChrome";
 import {
   attributionFor,
   bboxFromGeometry,
@@ -60,6 +65,8 @@ export function RouteBasemap({
   dumpStops,
   selectedDumpId,
   onSelectDump,
+  onRouteVia,
+  viaDisabled,
   follow,
   followActive,
   followStatus = "off",
@@ -77,6 +84,8 @@ export function RouteBasemap({
   dumpStops?: DumpStop[];
   selectedDumpId?: string | null;
   onSelectDump?: (id: string) => void;
+  onRouteVia?: (stop: MapPoiStop) => void;
+  viaDisabled?: boolean;
   follow?: Pick<GeoFix, "lat" | "lng" | "heading"> | null;
   followActive?: boolean;
   followStatus?: FollowStatus;
@@ -285,6 +294,26 @@ export function RouteBasemap({
     };
   }, [view, followPt]);
 
+  const selectedPoi = useMemo(
+    () =>
+      resolveMapPoi({
+        fuelStops,
+        campStops,
+        dumpStops,
+        selectedFuelId,
+        selectedCampId,
+        selectedDumpId,
+      }),
+    [
+      fuelStops,
+      campStops,
+      dumpStops,
+      selectedFuelId,
+      selectedCampId,
+      selectedDumpId,
+    ],
+  );
+
   const status: FollowStatus =
     followStatus !== "off"
       ? followStatus
@@ -350,6 +379,8 @@ export function RouteBasemap({
         dumpStops={dumpStops}
         selectedDumpId={selectedDumpId}
         onSelectDump={onSelectDump}
+        onRouteVia={onRouteVia}
+        viaDisabled={viaDisabled}
         follow={follow}
         followActive={followActive}
         followStatus={followStatus}
@@ -435,6 +466,8 @@ export function RouteBasemap({
               key={p.id}
               type="button"
               title={p.label}
+              data-map-pin={p.kind}
+              data-camp-pin={camp ? p.kind : undefined}
               data-dump-pin-fee={
                 p.kind === "dump-free"
                   ? "free"
@@ -457,17 +490,15 @@ export function RouteBasemap({
             >
               <span
                 className={cn(
-                  "size-2.5 rounded-full border border-white/90 shadow",
-                  p.kind === "truck-stop" && "bg-amber",
-                  p.kind === "fuel" && "bg-white/85",
-                  p.kind === "rv-park" && "bg-emerald-400",
-                  p.kind === "campground" && "bg-emerald-200",
-                  p.kind === "dump-free" && "bg-emerald-400",
-                  p.kind === "dump-paid" && "bg-amber",
-                  p.kind === "dump-unknown" && "bg-slate-400",
-                  on && fuel && "size-3.5 bg-amber",
-                  on && camp && "size-3.5 bg-emerald-300",
-                  on && dump && "size-3.5",
+                  "rv-map-dot",
+                  p.kind === "truck-stop" && "rv-map-dot-truck",
+                  p.kind === "fuel" && "rv-map-dot-fuel",
+                  p.kind === "rv-park" && "rv-map-dot-park",
+                  p.kind === "campground" && "rv-map-dot-camp",
+                  p.kind === "dump-free" && "rv-map-dot-dump-free",
+                  p.kind === "dump-paid" && "rv-map-dot-dump-paid",
+                  p.kind === "dump-unknown" && "rv-map-dot-dump-unknown",
+                  on && "rv-map-dot-on",
                 )}
               />
             </button>
@@ -522,8 +553,20 @@ export function RouteBasemap({
         </div>
       ) : null}
 
-      {(dumpStops ?? []).length > 0 ? (
-        <DumpFeeLegend
+      {selectedPoi ? (
+        <div className="absolute bottom-14 left-2 right-14 z-[7] max-w-[280px]">
+          <MapPoiDetailChip
+            poi={selectedPoi}
+            onRouteVia={onRouteVia}
+            viaDisabled={viaDisabled}
+          />
+        </div>
+      ) : null}
+
+      {(campStops ?? []).length > 0 || (dumpStops ?? []).length > 0 ? (
+        <RouteLayerLegend
+          showCamps={(campStops ?? []).length > 0}
+          showDumps={(dumpStops ?? []).length > 0}
           tone="on-map"
           className="pointer-events-none absolute bottom-6 left-2 z-[6] rounded-md bg-black/55 px-2 py-1"
         />

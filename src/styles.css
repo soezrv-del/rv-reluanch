@@ -1719,20 +1719,23 @@
 .rv-map-dot-truck {
   background: var(--color-amber);
 }
+/* Camps: sapphire square — never the same emerald circle as a free dump. */
 .rv-map-dot-park {
-  background: #34d399;
+  background: var(--color-blue);
+  border-radius: 3px;
 }
 .rv-map-dot-camp {
-  background: #a7f3d0;
+  background: var(--color-sapphire);
+  border-radius: 3px;
 }
 .rv-map-dot-dump-free {
-  background: #34d399;
+  background: var(--color-green);
 }
 .rv-map-dot-dump-paid {
   background: var(--color-amber);
 }
 .rv-map-dot-dump-unknown {
-  background: #94a3b8;
+  background: var(--color-dim);
 }
 .rv-map-dot-on {
   width: 18px;

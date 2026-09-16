@@ -16,9 +16,9 @@ export type DumpMapPoint = {
 };
 
 export function dumpFeeDotClass(fee: DumpFee, on = false): string {
-  if (fee === "free") return on ? "bg-emerald-400" : "bg-emerald-400";
+  if (fee === "free") return on ? "bg-green" : "bg-green";
   if (fee === "paid") return on ? "bg-amber" : "bg-amber";
-  return on ? "bg-slate-400" : "bg-slate-400";
+  return on ? "bg-dim" : "bg-dim";
 }
 
 export function DumpFeeLegend({

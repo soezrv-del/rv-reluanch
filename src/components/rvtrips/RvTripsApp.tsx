@@ -1874,13 +1874,33 @@ export function RvTripsApp() {
                     vias={viaPlaces}
                     fuelStops={fuel?.stops}
                     selectedFuelId={fuelFocusId}
-                    onSelectFuel={(id) => setFuelFocusId(id || null)}
                     campStops={camps?.camps}
                     selectedCampId={campFocusId}
-                    onSelectCamp={(id) => setCampFocusId(id || null)}
                     dumpStops={dumps?.dumps}
                     selectedDumpId={dumpPoiFocusId}
-                    onSelectDump={(id) => setDumpPoiFocusId(id || null)}
+                    onSelectFuel={(id) => {
+                      setFuelFocusId(id || null);
+                      if (id) {
+                        setCampFocusId(null);
+                        setDumpPoiFocusId(null);
+                      }
+                    }}
+                    onSelectCamp={(id) => {
+                      setCampFocusId(id || null);
+                      if (id) {
+                        setFuelFocusId(null);
+                        setDumpPoiFocusId(null);
+                      }
+                    }}
+                    onSelectDump={(id) => {
+                      setDumpPoiFocusId(id || null);
+                      if (id) {
+                        setFuelFocusId(null);
+                        setCampFocusId(null);
+                      }
+                    }}
+                    onRouteVia={routeViaPoi}
+                    viaDisabled={viaSlotsFull}
                     follow={follow.fix}
                     followActive={navArmed}
                     followStatus={follow.status}
@@ -1994,17 +2014,7 @@ export function RvTripsApp() {
                     limit={6}
                   />
 
-                  <DumpsAlongRoute
-                    status={dumpsStatus}
-                    result={dumps}
-                    selectedId={dumpPoiFocusId}
-                    onSelect={(id) => setDumpPoiFocusId(id || null)}
-                    onRouteVia={routeViaPoi}
-                    viaDisabled={viaSlotsFull}
-                    limit={8}
-                  />
-
-                  <div className="pt-0.5">
+                  <div className="pt-0.5" data-camp-sample-toggle>
                     <button
                       type="button"
                       onClick={() => setShowSampleCamps((v) => !v)}
@@ -2045,6 +2055,16 @@ export function RvTripsApp() {
                       </div>
                     ) : null}
                   </div>
+
+                  <DumpsAlongRoute
+                    status={dumpsStatus}
+                    result={dumps}
+                    selectedId={dumpPoiFocusId}
+                    onSelect={(id) => setDumpPoiFocusId(id || null)}
+                    onRouteVia={routeViaPoi}
+                    viaDisabled={viaSlotsFull}
+                    limit={8}
+                  />
                 </section>
               ) : !hasRoutePoints ? (
                 <p className="px-1 py-2 text-[13px] text-white/80">
