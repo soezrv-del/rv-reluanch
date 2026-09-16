@@ -16386,7 +16386,8 @@ test("Prevost NEW MAKE honesty: H3-45 VIP / X3-45 VIP / Entertainer; empty FBY; 
   assert.equal(idx.Emerald, undefined);
   assert.equal(idx.Ascension, undefined);
   assert.equal(idx["Le Mirage"], undefined);
-  assert.equal(CATALOG_INDEX.Newell, undefined, "do not start Newell this pass");
+  assert.ok(CATALOG_INDEX.Newell?.P50, "Newell P50 is a sibling make — not a Prevost key");
+  assert.equal(idx.P50, undefined, "P50 must not land under Prevost");
 
   const block = src("rvData.ts");
   const p0 = block.indexOf('\n  "Prevost": {');
@@ -16420,4 +16421,72 @@ test("Prevost NEW MAKE honesty: H3-45 VIP / X3-45 VIP / Entertainer; empty FBY; 
   assert.doesNotMatch(pv, /\n    Marathon: \{|\n    "Marathon": \{/);
   assert.doesNotMatch(pv, /\n    Newell: \{|\n    "Newell": \{/);
   assert.doesNotMatch(pv, /\n    Ascension: \{|\n    "Le Mirage": \{/);
+});
+
+const NEWELL_P50_CODES = [
+  "M1",
+  "M2",
+  "F1",
+  "F2",
+  "F3",
+  "F4",
+  "F5",
+  "F6",
+  "F7",
+  "B2",
+  "H1",
+  "V1",
+  "X1",
+];
+
+test("Newell NEW MAKE honesty: P50 only; empty 2020–2022/2027; 030623 chips 2023–2026; no Prevost bleed", () => {
+  const idx = CATALOG_INDEX.Newell;
+  assert.ok(idx, "Newell must be in CATALOG_INDEX");
+  assert.equal(idx.P50?.type, "Class A Diesel");
+  assert.equal(idx.P50?.fuelType, "Diesel");
+  assert.equal(idx.P50?.yearStart, 2020);
+  assert.equal(idx.P50?.yearEnd, undefined);
+  assert.deepEqual(idx.P50?.years, [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027]);
+
+  assert.equal(idx["2020P"], undefined, "2020P is not a living key");
+  assert.equal(idx.Marathon, undefined);
+  assert.equal(idx.Liberty, undefined);
+  assert.equal(idx["H3-45 VIP"], undefined);
+  assert.equal(idx["X3-45 VIP"], undefined);
+  assert.equal(idx["X3-45 VIP Entertainer"], undefined);
+
+  const pv = CATALOG_INDEX.Prevost;
+  assert.ok(pv, "Prevost stays its own make");
+  assert.equal(pv.P50, undefined, "P50 must not bleed into Prevost");
+
+  const block = src("rvData.ts");
+  const n0 = block.indexOf('\n  "Newell": {');
+  const n1 = block.indexOf('\n  "Prevost": {');
+  assert.ok(n0 > 0 && n1 > n0, "Newell block");
+  const nw = block.slice(n0, n1);
+  const p50 = nw.slice(nw.indexOf('    "P50": {'));
+
+  assert.match(p50, /type: "Class A Diesel"/);
+  assert.match(p50, /fuelType: "Diesel"/);
+  assert.match(p50, /yearStart:\s*2020/);
+  assert.doesNotMatch(p50, /yearEnd:\s*\d+/);
+  assert.match(p50, /"2020": \[\]/);
+  assert.match(p50, /"2021": \[\]/);
+  assert.match(p50, /"2022": \[\]/);
+  assert.match(p50, /"2027": \[\]/);
+
+  for (const y of ["2023", "2024", "2025", "2026"]) {
+    assert.match(
+      p50,
+      new RegExp(`"${y}": \\[\\s*${NEWELL_P50_CODES.map((c) => `"${c}"`).join("\\s*,\\s*")}\\s*\\]`),
+    );
+  }
+
+  const planLists = [
+    p50.match(/\n      floorplans: \[[^\]]*\]/)?.[0] || "",
+    ...(p50.match(/"20\d{2}": \[[^\]]*\]/g) || []),
+  ].join("\n");
+  assert.doesNotMatch(planLists, /"H3-45 VIP"|"X3-45 VIP"|Entertainer/);
+  assert.doesNotMatch(planLists, /"F40"|"V2"|"M3"|"2020P"/);
+  assert.doesNotMatch(nw, /\n    "2020P": \{|\n    Marathon: \{|\n    "Liberty": \{/);
 });

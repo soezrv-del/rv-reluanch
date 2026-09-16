@@ -335,6 +335,21 @@ const FORBIDDEN_FLOORPLANS = {
     codes: ["210A", "210B", "210A 3S", "210B 3S", "LSS", "Free Spirit", "Free Flight"],
     reason: "Free Spirit / Free Flight siblings stay off catalog Free (yearStart 2018)",
   },
+  "Newell|P50": {
+    codes: [
+      "H3-45 VIP",
+      "X3-45 VIP",
+      "X3-45 VIP Entertainer",
+      "Entertainer",
+      "2020P",
+      "F40",
+      "V2",
+      "M3",
+      "Liberty",
+      "Marathon",
+    ],
+    reason: "P50 ≠ Prevost VIP shells / 2020P / invented F40 V2 M3 / Marathon-Liberty",
+  },
 };
 
 /** Series expected type substring (case-insensitive). */
@@ -411,6 +426,7 @@ const EXPECTED_TYPE = {
   "Prevost|H3-45 VIP": "diesel",
   "Prevost|X3-45 VIP": "diesel",
   "Prevost|X3-45 VIP Entertainer": "diesel",
+  "Newell|P50": "diesel",
 };
 
 /** Phantom / non-OEM series that must not exist. */
@@ -432,7 +448,22 @@ const BANNED_SERIES = [
   "Prevost|Emerald",
   "Prevost|Ascension",
   "Prevost|Le Mirage",
+  // Newell: P50 only (EzMe pack 2026-09-15). Prevost VIP shells, 2020P prior
+  // gen, and Marathon / Liberty conversions are not Newell catalog keys.
+  "Newell|H3-45 VIP",
+  "Newell|X3-45 VIP",
+  "Newell|X3-45 VIP Entertainer",
+  "Newell|2020P",
+  "Newell|Liberty",
+  "Newell|Liberty Coach",
+  "Newell|Marathon",
+  "Newell|Prevost",
 ];
+
+/** Empty FBY year lists allowed for nameplate LOCK / codes GAP (not invent). */
+const EMPTY_FBY_OK = {
+  "Newell|P50": new Set(["2020", "2021", "2022", "2027"]),
+};
 
 const errors = [];
 const warnings = [];
@@ -552,7 +583,10 @@ function main() {
           fail(`${key}: year ${y} is before brand epoch ${make}=${epoch} (company did not build yet)`);
         }
         if (!spec.floorplansByYear[yStr].length) {
-          fail(`${key}: empty plan list for ${y}`);
+          const okEmpty = EMPTY_FBY_OK[key];
+          if (!okEmpty || !okEmpty.has(yStr)) {
+            fail(`${key}: empty plan list for ${y}`);
+          }
         }
       }
 
@@ -7287,13 +7321,97 @@ function main() {
         fail("Prevost index must not add passenger / converter / merge keys");
       }
     }
-    if (makes.has("Newell")) {
-      fail("Newell must not be started this pass (Prevost-only)");
+  }
+
+  // Newell NEW MAKE (EzMe pack 2026-09-15). Quoted make. P50 only.
+  // yearStart 2020 / yearEnd open. Empty FBY 2020–2022 + 2027. Effective
+  // 030623 chips 2023–2026. No Prevost / 2020P / Liberty / Marathon bleed.
+  {
+    const n0 = src.indexOf('\n  "Newell": {');
+    const n1 = src.indexOf('\n  "Prevost": {');
+    if (n0 < 0 || n1 < n0) {
+      fail('Newell block not found between "Newell": and "Prevost":');
+    } else {
+      const nw = src.slice(n0, n1);
+      const i = nw.indexOf('    "P50": {');
+      if (i < 0) fail("Newell|P50 NEW KEY missing");
+      const p50 = i >= 0 ? nw.slice(i) : "";
+      if (!/type: "Class A Diesel"/.test(p50) || !/fuelType: "Diesel"/.test(p50)) {
+        fail("Newell|P50 must be Class A Diesel / Diesel");
+      }
+      if (!/yearStart:\s*2020/.test(p50)) {
+        fail("Newell|P50 yearStart must be 2020 (MY2020 floor)");
+      }
+      if (/yearEnd:\s*\d+/.test(p50)) {
+        fail("Newell|P50 yearEnd must stay open/null");
+      }
+      if (!/"2020": \[\]/.test(p50) || !/"2021": \[\]/.test(p50) || !/"2022": \[\]/.test(p50)) {
+        fail("Newell|P50 FBY 2020–2022 must stay empty (nameplate LOCK, codes GAP)");
+      }
+      if (!/"2027": \[\]/.test(p50)) {
+        fail("Newell|P50 FBY 2027 must stay empty (NHTSA nameplate only)");
+      }
+      const lockCodes = '["M1", "M2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "B2", "H1", "V1", "X1"]';
+      for (const y of ["2023", "2024", "2025", "2026"]) {
+        if (!p50.includes(`"${y}": ${lockCodes}`)) {
+          fail(`Newell|P50 FBY ${y} must be Effective 030623 list (M1 M2 F1–F7 B2 H1 V1 X1)`);
+        }
+      }
+      if (/"2020": \[[^\]]+"|"2021": \[[^\]]+"|"2022": \[[^\]]+"|"2027": \[[^\]]+"/.test(p50)) {
+        fail("Newell|P50 must not copy 2023+ codes onto 2020–2022 or 2027");
+      }
+      const planLists = [
+        p50.match(/\n      floorplans: \[[^\]]*\]/)?.[0] || "",
+        ...(p50.match(/"20\d{2}": \[[^\]]*\]/g) || []),
+      ].join("\n");
+      if (/"F40"|"V2"|"M3"|"2020P"/.test(planLists)) {
+        fail("Newell|P50 must not invent F40 / V2 / M3 or add 2020P as a floorplan");
+      }
+      if (/"H3-45 VIP"|"X3-45 VIP"|Entertainer/.test(planLists)) {
+        fail("Newell|P50 must not absorb Prevost H3-45 VIP / X3-45 VIP / Entertainer as floorplans");
+      }
+
+      for (const ghost of [
+        "H3-45 VIP",
+        "X3-45 VIP",
+        "X3-45 VIP Entertainer",
+        "2020P",
+        "Marathon",
+        "Liberty",
+        "Liberty Coach",
+        "Prevost",
+      ]) {
+        if (new RegExp(`\\n    "${ghost}": \\{|\\n    ${ghost}: \\{`).test(nw)) {
+          fail(`Newell|${ghost} must not be added (Prevost / 2020P / converter stay out)`);
+        }
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const nwIdx = catalogIndex.Newell;
+      if (!nwIdx) fail("Newell missing from CATALOG_INDEX");
+      if (!nwIdx.P50) fail("Newell index must keep P50 as the living key");
+      if (nwIdx.P50?.yearStart !== 2020 || nwIdx.P50?.yearEnd != null) {
+        fail("Newell|P50 index must be yearStart 2020 / yearEnd open");
+      }
+      if (nwIdx.P50?.type !== "Class A Diesel" || nwIdx.P50?.fuelType !== "Diesel") {
+        fail("Newell|P50 index must be Class A Diesel / Diesel");
+      }
+      const wantYears = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027];
+      const gotYears = nwIdx.P50?.years || [];
+      if (JSON.stringify(gotYears) !== JSON.stringify(wantYears)) {
+        fail("Newell|P50 index years must be 2020–2027 (empty LOCK/GAP years stay as keys)");
+      }
+      if (nwIdx["2020P"] || nwIdx.Marathon || nwIdx.Liberty || nwIdx["H3-45 VIP"] || nwIdx["X3-45 VIP"]) {
+        fail("Newell index must not add 2020P / Marathon / Liberty / Prevost VIP keys");
+      }
     }
   }
 
   // New makes must stay present once added
-  for (const make of ["Prime Time", "East to West", "Chinook", "Prevost"]) {
+  for (const make of ["Prime Time", "East to West", "Chinook", "Prevost", "Newell"]) {
     if (!makes.has(make)) fail(`Missing make after expansion: ${make}`);
   }
   if (makes.has("Prime Time")) {
@@ -7312,6 +7430,12 @@ function main() {
     }
     if (makes.get("Prevost").has("H3-45") || makes.get("Prevost").has("X3-45")) {
       fail("Prevost must not add H3-45 / X3-45 passenger as primary keys");
+    }
+  }
+  if (makes.has("Newell")) {
+    if (!makes.get("Newell").has("P50")) fail("Newell missing: P50");
+    for (const ghost of ["2020P", "Liberty", "Marathon", "H3-45 VIP", "X3-45 VIP", "X3-45 VIP Entertainer"]) {
+      if (makes.get("Newell").has(ghost)) fail(`Newell must not add ${ghost}`);
     }
   }
   if (makes.has("Chinook")) {
