@@ -38284,6 +38284,79 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       description: "The Newmar Scottsdale was the company entry-level gas Class A during the early 2000s — bringing Newmar hand-crafted cabinetry and tight construction standards to the Ford F53 gas chassis at an accessible price. Discontinued 2005 when Newmar consolidated its gas lineup under the Kountry Star nameplate."
     }
   },
+  // Newell (Miami, OK). NEW MAKE + NEW KEY P50 — EzMe pack 2026-09-15.
+  // Aliases: p50 / Newell P50 / Newell p50 Edition. Class A diesel luxury
+  // coachbuilder on a proprietary chassis (≠ Prevost VIP shells, ≠ 2020P
+  // prior-gen body, ≠ Marathon / Liberty conversions). yearStart 2020.
+  // yearEnd open. MY2020–2022 nameplate LOCK / codes GAP (empty chips).
+  // MY2023–2026 Effective 030623: M1 M2 F1 F2 F3 F4 F5 F6 F7 B2 H1 V1 X1
+  // (X1 = custom flag only — do not mint customer layouts). MY2027 NHTSA
+  // nameplate only — empty chips. Do not invent F40 / V2 / M3. Do not copy
+  // 2023+ codes onto 2020–2022 or 2027. Do not start Liberty. Do not merge.
+  "Newell": {
+    "P50": {
+      type: "Class A Diesel",
+      // Aliases: p50 / Newell P50 / Newell p50 Edition. Integrity needs a
+      // non-empty floorplans[] (Effective 030623 union). Empty FBY years are
+      // nameplate LOCK / GAP — do not copy chips onto those years.
+      floorplans: ["M1", "M2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "B2", "H1", "V1", "X1"],
+      floorplansByYear: {
+        // NEW KEY P50. yearStart 2020. yearEnd open.
+        // 2020–2022: nameplate LOCK, codes GAP — empty (do not invent / copy).
+        // 2023–2026: Effective 030623 list. X1 = custom flag only.
+        // 2027: NHTSA nameplate only — empty (do not invent chips).
+        "2020": [],
+        "2021": [],
+        "2022": [],
+        "2023": ["M1", "M2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "B2", "H1", "V1", "X1"],
+        "2024": ["M1", "M2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "B2", "H1", "V1", "X1"],
+        "2025": ["M1", "M2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "B2", "H1", "V1", "X1"],
+        "2026": ["M1", "M2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "B2", "H1", "V1", "X1"],
+        "2027": []
+      },
+      lengthRange: [
+        45,
+        45
+      ],
+      weightRange: [
+        48000,
+        56000
+      ],
+      slideouts: 4,
+      sleeps: 6,
+      msrpRange: [
+        1500000,
+        2800000
+      ],
+      engine: "Diesel (Newell proprietary chassis)",
+      chassis: "Newell proprietary",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.8,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 15000,
+      freshWater: 100,
+      grayWater: 50,
+      blackWater: 50,
+      generator: "Onan Diesel (coach)",
+      awningLength: 20,
+      ceilingHeight: 84,
+      founded: 1967,
+      warrantyYears: 1,
+      yearStart: 2020,
+      description: "Newell P50 — Class A diesel luxury coachbuilder on a proprietary chassis. Aliases: p50 / Newell P50 / Newell p50 Edition. Not a Prevost H3-45 VIP / X3-45 VIP / Entertainer shell. Not the 2020P prior-gen body. Not a Marathon or Liberty conversion. X1 is a custom flag only.",
+      powertrainByYear: [
+        {
+          from: 2020,
+          to: 2027,
+          engine: "Diesel (Newell proprietary chassis)",
+          chassis: "Newell proprietary",
+          fuelType: "Diesel",
+          notes: "P50 nameplate LOCK 2020–2022 (codes GAP). Effective 030623 chips 2023–2026. MY2027 NHTSA nameplate only. Not Prevost VIP / 2020P / Marathon / Liberty. Confirm build sheet."
+        }
+      ]
+    }
+  },
   // Prevost (Sainte-Claire, QC). Shell keys only — EzMe pack 2026-09-15.
   // MY2020 year floor. Nameplate LOCK / floorplansByYear EMPTY all years
   // (Pleasure-Way-style nameplate-only; schema forbids empty [] year lists —
