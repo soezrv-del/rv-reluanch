@@ -350,6 +350,19 @@ const FORBIDDEN_FLOORPLANS = {
     ],
     reason: "P50 ≠ Prevost VIP shells / 2020P / invented F40 V2 M3 / Marathon-Liberty",
   },
+  "Liberty Coach|Elegant Lady": {
+    codes: [
+      "H3-45 VIP",
+      "X3-45 VIP",
+      "X3-45 VIP Entertainer",
+      "Entertainer",
+      "P50",
+      "2020P",
+      "Marathon",
+      "Veneto",
+    ],
+    reason: "Elegant Lady ≠ Prevost VIP keys / Newell P50 / Marathon / invent Veneto",
+  },
 };
 
 /** Series expected type substring (case-insensitive). */
@@ -427,6 +440,7 @@ const EXPECTED_TYPE = {
   "Prevost|X3-45 VIP": "diesel",
   "Prevost|X3-45 VIP Entertainer": "diesel",
   "Newell|P50": "diesel",
+  "Liberty Coach|Elegant Lady": "diesel",
 };
 
 /** Phantom / non-OEM series that must not exist. */
@@ -458,11 +472,22 @@ const BANNED_SERIES = [
   "Newell|Liberty Coach",
   "Newell|Marathon",
   "Newell|Prevost",
+  // Liberty Coach: Elegant Lady only (EzMe pack 2026-09-15). Prevost VIP
+  // shells, Newell P50, Marathon, and invent Veneto stay off this make.
+  "Liberty Coach|H3-45 VIP",
+  "Liberty Coach|X3-45 VIP",
+  "Liberty Coach|X3-45 VIP Entertainer",
+  "Liberty Coach|P50",
+  "Liberty Coach|Marathon",
+  "Liberty Coach|Veneto",
+  "Liberty Coach|Newell",
+  "Liberty Coach|Prevost",
 ];
 
 /** Empty FBY year lists allowed for nameplate LOCK / codes GAP (not invent). */
 const EMPTY_FBY_OK = {
   "Newell|P50": new Set(["2020", "2021", "2022", "2027"]),
+  "Liberty Coach|Elegant Lady": new Set(["2022", "2023", "2027"]),
 };
 
 const errors = [];
@@ -7323,6 +7348,103 @@ function main() {
     }
   }
 
+  // Liberty Coach NEW MAKE (EzMe pack 2026-09-15). Quoted make. Elegant Lady
+  // only. yearStart 2020 / yearEnd open. Exact FBY: 2020 Avellino/Serrado-B;
+  // 2021 Serrado-B; 2022–2023 empty; 2024 Serrado-B; 2025 Serrado-B/Calabria;
+  // 2026 Ravello-B; 2027 empty. No Prevost VIP / Newell P50 / Marathon / Veneto.
+  {
+    const l0 = src.indexOf('\n  "Liberty Coach": {');
+    const l1 = src.indexOf('\n  "Newell": {');
+    if (l0 < 0 || l1 < l0) {
+      fail('Liberty Coach block not found between "Liberty Coach": and "Newell":');
+    } else {
+      const lc = src.slice(l0, l1);
+      const i = lc.indexOf('    "Elegant Lady": {');
+      if (i < 0) fail("Liberty Coach|Elegant Lady NEW KEY missing");
+      const el = i >= 0 ? lc.slice(i) : "";
+      if (!/type: "Class A Diesel"/.test(el) || !/fuelType: "Diesel"/.test(el)) {
+        fail("Liberty Coach|Elegant Lady must be Class A Diesel / Diesel");
+      }
+      if (!/yearStart:\s*2020/.test(el)) {
+        fail("Liberty Coach|Elegant Lady yearStart must be 2020 (MY2020 floor)");
+      }
+      if (/yearEnd:\s*\d+/.test(el)) {
+        fail("Liberty Coach|Elegant Lady yearEnd must stay open/null");
+      }
+      if (!/"2020": \["Avellino", "Serrado-B"\]/.test(el)) {
+        fail("Liberty Coach|Elegant Lady FBY 2020 must be Avellino, Serrado-B");
+      }
+      if (!/"2021": \["Serrado-B"\]/.test(el)) {
+        fail("Liberty Coach|Elegant Lady FBY 2021 must be Serrado-B");
+      }
+      if (!/"2022": \[\]/.test(el) || !/"2023": \[\]/.test(el)) {
+        fail("Liberty Coach|Elegant Lady FBY 2022–2023 must stay empty (GAP)");
+      }
+      if (!/"2024": \["Serrado-B"\]/.test(el)) {
+        fail("Liberty Coach|Elegant Lady FBY 2024 must be Serrado-B");
+      }
+      if (!/"2025": \["Serrado-B", "Calabria"\]/.test(el)) {
+        fail("Liberty Coach|Elegant Lady FBY 2025 must be Serrado-B, Calabria");
+      }
+      if (!/"2026": \["Ravello-B"\]/.test(el)) {
+        fail("Liberty Coach|Elegant Lady FBY 2026 must be Ravello-B");
+      }
+      if (!/"2027": \[\]/.test(el)) {
+        fail("Liberty Coach|Elegant Lady FBY 2027 must stay empty (GAP)");
+      }
+      if (/"2022": \[[^\]]+"|"2023": \[[^\]]+"|"2027": \[[^\]]+"/.test(el)) {
+        fail("Liberty Coach|Elegant Lady must not copy LOCK chips onto GAP 2022 / 2023 / 2027");
+      }
+      const planLists = [
+        el.match(/\n      floorplans: \[[^\]]*\]/)?.[0] || "",
+        ...(el.match(/"20\d{2}": \[[^\]]*\]/g) || []),
+      ].join("\n");
+      if (/"Veneto"/.test(planLists)) {
+        fail("Liberty Coach|Elegant Lady must not invent Veneto without a year-PDF");
+      }
+      if (/"H3-45 VIP"|"X3-45 VIP"|Entertainer|"P50"|"2020P"|"Marathon"/.test(planLists)) {
+        fail("Liberty Coach|Elegant Lady must not absorb Prevost VIP / Newell P50 / Marathon as floorplans");
+      }
+
+      for (const ghost of [
+        "H3-45 VIP",
+        "X3-45 VIP",
+        "X3-45 VIP Entertainer",
+        "P50",
+        "Marathon",
+        "Veneto",
+        "Newell",
+        "Prevost",
+      ]) {
+        if (new RegExp(`\\n    "${ghost}": \\{|\\n    ${ghost}: \\{`).test(lc)) {
+          fail(`Liberty Coach|${ghost} must not be added (Prevost / Newell / Marathon stay out)`);
+        }
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const lcIdx = catalogIndex["Liberty Coach"];
+      if (!lcIdx) fail("Liberty Coach missing from CATALOG_INDEX");
+      if (!lcIdx["Elegant Lady"]) fail("Liberty Coach index must keep Elegant Lady as the living key");
+      if (lcIdx["Elegant Lady"]?.yearStart !== 2020 || lcIdx["Elegant Lady"]?.yearEnd != null) {
+        fail("Liberty Coach|Elegant Lady index must be yearStart 2020 / yearEnd open");
+      }
+      if (lcIdx["Elegant Lady"]?.type !== "Class A Diesel" || lcIdx["Elegant Lady"]?.fuelType !== "Diesel") {
+        fail("Liberty Coach|Elegant Lady index must be Class A Diesel / Diesel");
+      }
+      const wantYears = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027];
+      const gotYears = lcIdx["Elegant Lady"]?.years || [];
+      if (JSON.stringify(gotYears) !== JSON.stringify(wantYears)) {
+        fail("Liberty Coach|Elegant Lady index years must be 2020–2027 (empty GAP years stay as keys)");
+      }
+      if (lcIdx["H3-45 VIP"] || lcIdx["X3-45 VIP"] || lcIdx.P50 || lcIdx.Marathon || lcIdx.Veneto) {
+        fail("Liberty Coach index must not add Prevost VIP / Newell P50 / Marathon / Veneto keys");
+      }
+    }
+  }
+
   // Newell NEW MAKE (EzMe pack 2026-09-15). Quoted make. P50 only.
   // yearStart 2020 / yearEnd open. Empty FBY 2020–2022 + 2027. Effective
   // 030623 chips 2023–2026. No Prevost / 2020P / Liberty / Marathon bleed.
@@ -7411,7 +7533,7 @@ function main() {
   }
 
   // New makes must stay present once added
-  for (const make of ["Prime Time", "East to West", "Chinook", "Prevost", "Newell"]) {
+  for (const make of ["Prime Time", "East to West", "Chinook", "Prevost", "Newell", "Liberty Coach"]) {
     if (!makes.has(make)) fail(`Missing make after expansion: ${make}`);
   }
   if (makes.has("Prime Time")) {
@@ -7436,6 +7558,12 @@ function main() {
     if (!makes.get("Newell").has("P50")) fail("Newell missing: P50");
     for (const ghost of ["2020P", "Liberty", "Marathon", "H3-45 VIP", "X3-45 VIP", "X3-45 VIP Entertainer"]) {
       if (makes.get("Newell").has(ghost)) fail(`Newell must not add ${ghost}`);
+    }
+  }
+  if (makes.has("Liberty Coach")) {
+    if (!makes.get("Liberty Coach").has("Elegant Lady")) fail("Liberty Coach missing: Elegant Lady");
+    for (const ghost of ["H3-45 VIP", "X3-45 VIP", "X3-45 VIP Entertainer", "P50", "Marathon", "Veneto"]) {
+      if (makes.get("Liberty Coach").has(ghost)) fail(`Liberty Coach must not add ${ghost}`);
     }
   }
   if (makes.has("Chinook")) {

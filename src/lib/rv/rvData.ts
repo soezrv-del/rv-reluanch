@@ -38284,6 +38284,81 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       description: "The Newmar Scottsdale was the company entry-level gas Class A during the early 2000s — bringing Newmar hand-crafted cabinetry and tight construction standards to the Ford F53 gas chassis at an accessible price. Discontinued 2005 when Newmar consolidated its gas lineup under the Kountry Star nameplate."
     }
   },
+  // Liberty Coach. NEW MAKE + NEW KEY Elegant Lady — EzMe pack 2026-09-15.
+  // Aliases: Elegant Ladies / Liberty Elegant Lady / Elegant Lady Edition.
+  // Class A diesel luxury Prevost conversion (converter on Prevost shells ≠
+  // Prevost H3-45 VIP / X3-45 VIP / Entertainer keys under Liberty). ≠ Newell
+  // P50. ≠ Marathon. yearStart 2020. yearEnd open. MY2020 floor. Italian
+  // editions are FBY chips only when year-PDF LOCK. Do not invent Veneto
+  // without a year-PDF. Do not copy chips across GAP 2022 / 2023 / 2027.
+  // Do not invent coach numbers as codes. Do not start Marathon. Do not merge.
+  "Liberty Coach": {
+    "Elegant Lady": {
+      type: "Class A Diesel",
+      // Aliases: Elegant Ladies / Liberty Elegant Lady / Elegant Lady Edition.
+      // Integrity needs a non-empty floorplans[] (year-PDF LOCK union). Empty
+      // FBY years are GAP — do not copy chips onto those years.
+      floorplans: ["Avellino", "Serrado-B", "Calabria", "Ravello-B"],
+      floorplansByYear: {
+        // NEW KEY Elegant Lady. yearStart 2020. yearEnd open.
+        // 2020: Avellino, Serrado-B (year-PDF LOCK).
+        // 2021: Serrado-B (year-PDF LOCK).
+        // 2022–2023: GAP — empty (do not invent / copy).
+        // 2024: Serrado-B (year-PDF LOCK).
+        // 2025: Serrado-B, Calabria (year-PDF LOCK).
+        // 2026: Ravello-B (year-PDF LOCK).
+        // 2027: GAP — empty (do not invent chips).
+        "2020": ["Avellino", "Serrado-B"],
+        "2021": ["Serrado-B"],
+        "2022": [],
+        "2023": [],
+        "2024": ["Serrado-B"],
+        "2025": ["Serrado-B", "Calabria"],
+        "2026": ["Ravello-B"],
+        "2027": []
+      },
+      lengthRange: [
+        45,
+        45
+      ],
+      weightRange: [
+        48000,
+        54000
+      ],
+      slideouts: 4,
+      sleeps: 6,
+      msrpRange: [
+        900000,
+        2200000
+      ],
+      engine: "Diesel (Prevost conversion)",
+      chassis: "Prevost conversion shell",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.7,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 10000,
+      freshWater: 100,
+      grayWater: 50,
+      blackWater: 50,
+      generator: "Onan Diesel (conversion)",
+      awningLength: 20,
+      ceilingHeight: 84,
+      warrantyYears: 1,
+      yearStart: 2020,
+      description: "Liberty Coach Elegant Lady — Class A diesel luxury Prevost conversion. Aliases: Elegant Ladies / Liberty Elegant Lady / Elegant Lady Edition. Converter on Prevost shells — not a Prevost H3-45 VIP / X3-45 VIP / Entertainer catalog key. Not Newell P50. Not Marathon. Italian editions are year-PDF LOCK chips only.",
+      powertrainByYear: [
+        {
+          from: 2020,
+          to: 2027,
+          engine: "Diesel (Prevost conversion)",
+          chassis: "Prevost conversion shell",
+          fuelType: "Diesel",
+          notes: "Elegant Lady nameplate LOCK from MY2020. Year-PDF chips: 2020 Avellino/Serrado-B; 2021 Serrado-B; 2024 Serrado-B; 2025 Serrado-B/Calabria; 2026 Ravello-B. GAP 2022–2023 and 2027 empty — do not copy. Not Prevost VIP / Newell P50 / Marathon. Confirm build sheet."
+        }
+      ]
+    }
+  },
   // Newell (Miami, OK). NEW MAKE + NEW KEY P50 — EzMe pack 2026-09-15.
   // Aliases: p50 / Newell P50 / Newell p50 Edition. Class A diesel luxury
   // coachbuilder on a proprietary chassis (≠ Prevost VIP shells, ≠ 2020P
