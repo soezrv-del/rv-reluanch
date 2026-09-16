@@ -1141,3 +1141,33 @@ test("Liberty Coach Facts SoT: NEW MAKE Elegant Lady; exact FBY; no Prevost/Newe
   assert.doesNotMatch(lc, /\n    "H3-45 VIP": \{|\n    "P50": \{|\n    Marathon: \{|\n    "Veneto": \{/);
 });
 
+test("Marathon Coach Facts SoT: NEW MAKE brand-as-model; exact FBY; no sibling bleed", () => {
+  const block = src("rvData.ts");
+  const m0 = block.indexOf('\n  "Marathon Coach": {');
+  const m1 = block.indexOf('\n  "Liberty Coach": {');
+  assert.ok(m0 > 0 && m1 > m0, "expected Marathon Coach block before Liberty Coach");
+  const mc = block.slice(m0, m1);
+  const body = mc.slice(mc.indexOf('    "Marathon Coach": {'));
+
+  assert.match(body, /type: "Class A Diesel"/);
+  assert.match(body, /fuelType: "Diesel"/);
+  assert.match(body, /yearStart:\s*2020/);
+  assert.doesNotMatch(body, /yearEnd:\s*\d+/);
+  assert.match(body, /"2020": \[\]/);
+  assert.match(body, /"2021": \["Jupiter"\]/);
+  assert.match(body, /"2022": \[\]/);
+  assert.match(body, /"2024": \[\]/);
+  assert.match(body, /"2027": \[\]/);
+  assert.match(
+    body,
+    /"2023": \["Breckenridge", "Palm Beach", "Newport Beach", "Monterey", "Bel Air", "Jupiter", "Malibu", "Napa", "Grand Cayman", "Bandon", "Jackson Hole", "Kauai", "Boca Raton", "Juneau"\]/,
+  );
+  const planLists = [
+    body.match(/\n      floorplans: \[[^\]]*\]/)?.[0] || "",
+    ...(body.match(/"20\d{2}": \[[^\]]*\]/g) || []),
+  ].join("\n");
+  assert.doesNotMatch(planLists, /"H3-45 VIP"|"X3-45 VIP"|Entertainer/);
+  assert.doesNotMatch(planLists, /"P50"|"Elegant Lady"|"X2-C"|"X2-M"/);
+  assert.doesNotMatch(mc, /\n    "H3-45 VIP": \{|\n    "P50": \{|\n    "Elegant Lady": \{/);
+});
+
