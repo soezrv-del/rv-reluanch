@@ -24809,6 +24809,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Spartan K3",
           transmission: "Allison 4000 MH"
         },
+        {
+          from: 2024,
+          to: 2024,
+          floorplans: ["45B"],
+          engine: "Cummins X15 605HP",
+          horsepower: 605,
+          torqueLbFt: 1950,
+          chassis: "Spartan K3",
+          transmission: "Allison 4000 MH",
+          freshWater: 100,
+          grayWater: 62,
+          blackWater: 41,
+          notes: "OEM MY24 Cornerstone brochure (©2023 Entegra Coach; ALL-plan table incl. 45B): 100 / 62 / 41 fresh/gray/black. Do not copy to unverified years."
+        },
         
       ]
     },
@@ -25016,6 +25030,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Spartan K2",
           transmission: "Allison 3000 MH",
           notes: "OEM MY23–24 Anthem: L9 450 / 1,250 · Spartan K2 · hitch 15k. Do not copy MY25 10k-on-37K backward."
+        },
+        {
+          from: 2024,
+          to: 2024,
+          floorplans: ["44B"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan K2",
+          transmission: "Allison 3000 MH",
+          freshWater: 100,
+          grayWater: 62,
+          blackWater: 41,
+          notes: "OEM MY24 Anthem brochure (©2023 Entegra Coach; 44B group): 100 / 62 / 41 fresh/gray/black. Do not copy to unverified years. L9 450 / 1,250 · Spartan K2 · hitch 15k."
         },
         {
           from: 2025,
@@ -25237,6 +25265,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           notes: "OEM MY23–24 Aspire: L9 450 / 1,250 · Spartan K2 · hitch 15k (10k on 40P)"
         },
         {
+          from: 2024,
+          to: 2024,
+          floorplans: ["44B"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan K2",
+          transmission: "Allison 3000 MH",
+          freshWater: 100,
+          grayWater: 62,
+          blackWater: 41,
+          notes: "OEM MY24 Aspire brochure (©2023 Entegra Coach; 44B group): 100 / 62 / 41 fresh/gray/black. Do not copy to unverified years. L9 450 / 1,250 · Spartan K2 · hitch 15k (10k on 40P)."
+        },
+        {
           from: 2025,
           to: 2026,
           engine: "Cummins L9 450HP",
@@ -25386,6 +25428,29 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         {
           from: 2020,
+          to: 2023,
+          engine: "Cummins L9 380HP",
+          horsepower: 380,
+          torqueLbFt: 1150,
+          chassis: "Spartan K2",
+          transmission: "Allison 3000 MH",
+          notes: "OEM MY20–25 Reatta XL: L9 380 / 1,150 · Spartan K2 · hitch 10k. MY20–21 40Q2; MY22+ 40Q3. Not Reatta B6.7 / K1."
+        },
+        {
+          from: 2024,
+          to: 2024,
+          engine: "Cummins L9 380HP",
+          horsepower: 380,
+          torqueLbFt: 1150,
+          chassis: "Spartan K2",
+          transmission: "Allison 3000 MH",
+          freshWater: 100,
+          grayWater: 62,
+          blackWater: 41,
+          notes: "MY2024 Reatta XL holding tanks 100 / 62 / 41. Do not copy to unverified years. L9 380 / 1,150 · Spartan K2 · hitch 10k. Not Reatta B6.7 / K1."
+        },
+        {
+          from: 2025,
           to: 2025,
           engine: "Cummins L9 380HP",
           horsepower: 380,

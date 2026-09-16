@@ -9499,6 +9499,153 @@ test("Entegra 2023–2024 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(findPowertrainCorrection("2024", "Entegra Coach", "Arc", "18C"), null);
 });
 
+test("Entegra Coach MY2024 tank pins: Aspire 44B / Anthem 44B / Reatta XL / Cornerstone 45B are 100/62/41; adjacent years not copied", () => {
+  const block = src("rvData.ts");
+  const e0 = block.indexOf('  "Entegra Coach": {');
+  const e1 = block.indexOf('  "Monaco Coach": {');
+  assert.ok(e0 > 0 && e1 > e0, "expected Entegra Coach block");
+  const entegra = block.slice(e0, e1);
+
+  const cornerstone = entegra.slice(
+    entegra.indexOf('    "Cornerstone": {'),
+    entegra.indexOf('    "Anthem": {'),
+  );
+  const anthem = entegra.slice(
+    entegra.indexOf('    "Anthem": {'),
+    entegra.indexOf('    "Aspire": {'),
+  );
+  const aspire = entegra.slice(
+    entegra.indexOf('    "Aspire": {'),
+    entegra.indexOf('    "Reatta": {'),
+  );
+  const reattaXl = entegra.slice(
+    entegra.indexOf('    "Reatta XL": {'),
+    entegra.indexOf('    "Vision": {'),
+  );
+
+  assert.match(aspire, /freshWater: 60/);
+  assert.match(aspire, /grayWater: 40/);
+  assert.match(aspire, /blackWater: 40/);
+  assert.match(anthem, /freshWater: 60/);
+  assert.match(anthem, /grayWater: 40/);
+  assert.match(anthem, /blackWater: 40/);
+  assert.match(reattaXl, /freshWater: 60/);
+  assert.match(reattaXl, /grayWater: 40/);
+  assert.match(reattaXl, /blackWater: 40/);
+  assert.match(cornerstone, /freshWater: 100/);
+  assert.match(cornerstone, /grayWater: 60/);
+  assert.match(cornerstone, /blackWater: 50/);
+
+  assert.match(
+    aspire,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["44B"\][\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41,[\s\S]*?OEM MY24 Aspire brochure/,
+  );
+  assert.match(
+    anthem,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["44B"\][\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41,[\s\S]*?OEM MY24 Anthem brochure/,
+  );
+  assert.match(
+    cornerstone,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["45B"\][\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41,[\s\S]*?OEM MY24 Cornerstone brochure/,
+  );
+  assert.match(
+    reattaXl,
+    /from: 2024,\s*to: 2024,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41,/,
+  );
+
+  assert.equal((aspire.match(/grayWater: 62/g) || []).length, 1);
+  assert.equal((anthem.match(/grayWater: 62/g) || []).length, 1);
+  assert.equal((cornerstone.match(/grayWater: 62/g) || []).length, 1);
+  assert.equal((reattaXl.match(/grayWater: 62/g) || []).length, 1);
+
+  const bandBefore = (slice: string, fromToken: string, untilToken: string) => {
+    const start = slice.lastIndexOf(fromToken);
+    const end = slice.lastIndexOf(untilToken);
+    assert.ok(start >= 0 && end > start, `expected ${fromToken} before ${untilToken}`);
+    return slice.slice(start, end);
+  };
+  const bandAfter = (slice: string, fromToken: string) => {
+    const start = slice.lastIndexOf(fromToken);
+    assert.ok(start >= 0, `expected ${fromToken}`);
+    return slice.slice(start);
+  };
+
+  assert.doesNotMatch(bandBefore(aspire, "from: 2023", "from: 2024"), /grayWater: 62/);
+  assert.doesNotMatch(bandAfter(aspire, "from: 2025"), /grayWater: 62/);
+  assert.doesNotMatch(bandBefore(anthem, "from: 2023", "from: 2024"), /grayWater: 62/);
+  assert.doesNotMatch(bandAfter(anthem, "from: 2025"), /grayWater: 62/);
+  assert.doesNotMatch(bandBefore(cornerstone, "from: 2023", "from: 2024"), /grayWater: 62/);
+  assert.doesNotMatch(bandBefore(reattaXl, "from: 2020", "from: 2024"), /grayWater: 62/);
+  assert.doesNotMatch(bandAfter(reattaXl, "from: 2025"), /grayWater: 62/);
+
+  type TankBand = {
+    from: number;
+    to: number;
+    floorplans?: string[];
+    freshWater?: number;
+    grayWater?: number;
+    blackWater?: number;
+  };
+
+  const resolveTanks = (
+    defaults: { freshWater: number; grayWater: number; blackWater: number },
+    bands: TankBand[],
+    year: number,
+    floorplan: string,
+  ) => {
+    const inYear = bands.filter((b) => year >= b.from && year <= b.to);
+    const fpHit = inYear.find((b) => b.floorplans?.includes(floorplan));
+    const wide = inYear.find((b) => !b.floorplans?.length);
+    const band = fpHit ?? wide;
+    return {
+      freshWater: band?.freshWater ?? defaults.freshWater,
+      grayWater: band?.grayWater ?? defaults.grayWater,
+      blackWater: band?.blackWater ?? defaults.blackWater,
+    };
+  };
+
+  const pin = { freshWater: 100, grayWater: 62, blackWater: 41 };
+  const inherited604040 = { freshWater: 60, grayWater: 40, blackWater: 40 };
+  const inherited1006050 = { freshWater: 100, grayWater: 60, blackWater: 50 };
+
+  const aspireBands: TankBand[] = [
+    { from: 2023, to: 2024 },
+    { from: 2024, to: 2024, floorplans: ["44B"], ...pin },
+    { from: 2025, to: 2026 },
+  ];
+  const anthemBands: TankBand[] = [
+    { from: 2023, to: 2024 },
+    { from: 2024, to: 2024, floorplans: ["44B"], ...pin },
+    { from: 2025, to: 2026 },
+  ];
+  const cornerstoneBands: TankBand[] = [
+    { from: 2023, to: 2026 },
+    { from: 2024, to: 2024, floorplans: ["45B"], ...pin },
+  ];
+  const reattaXlBands: TankBand[] = [
+    { from: 2020, to: 2023 },
+    { from: 2024, to: 2024, ...pin },
+    { from: 2025, to: 2025 },
+  ];
+
+  assert.deepEqual(resolveTanks(inherited604040, aspireBands, 2024, "44B"), pin);
+  assert.deepEqual(resolveTanks(inherited604040, anthemBands, 2024, "44B"), pin);
+  assert.deepEqual(resolveTanks(inherited1006050, cornerstoneBands, 2024, "45B"), pin);
+  assert.deepEqual(resolveTanks(inherited604040, reattaXlBands, 2024, "37K"), pin);
+
+  assert.deepEqual(resolveTanks(inherited604040, aspireBands, 2023, "44B"), inherited604040);
+  assert.deepEqual(resolveTanks(inherited604040, aspireBands, 2025, "44B"), inherited604040);
+  assert.deepEqual(resolveTanks(inherited604040, aspireBands, 2024, "40P"), inherited604040);
+  assert.deepEqual(resolveTanks(inherited604040, anthemBands, 2023, "44B"), inherited604040);
+  assert.deepEqual(resolveTanks(inherited604040, anthemBands, 2025, "44B"), inherited604040);
+  assert.deepEqual(resolveTanks(inherited604040, anthemBands, 2024, "37K"), inherited604040);
+  assert.deepEqual(resolveTanks(inherited1006050, cornerstoneBands, 2023, "45B"), inherited1006050);
+  assert.deepEqual(resolveTanks(inherited1006050, cornerstoneBands, 2025, "45B"), inherited1006050);
+  assert.deepEqual(resolveTanks(inherited1006050, cornerstoneBands, 2024, "45D"), inherited1006050);
+  assert.deepEqual(resolveTanks(inherited604040, reattaXlBands, 2023, "37K"), inherited604040);
+  assert.deepEqual(resolveTanks(inherited604040, reattaXlBands, 2025, "37K"), inherited604040);
+});
+
 test("Entegra 2021–2022 OEM year-first floorplans + powertrain pins", () => {
   const eg = CATALOG_INDEX["Entegra Coach"];
   assert.ok(eg);
