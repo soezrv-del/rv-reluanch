@@ -10,6 +10,7 @@ import {
   Loader2,
   MapPin,
   MoreHorizontal,
+  Store,
   Printer,
   Sparkles,
   Truck,
@@ -84,11 +85,24 @@ import { exportVehicleReport } from "@/lib/rv/exportReport";
 import { hydrateShareCoachResult, kitStrengths, lifestylePitch } from "@/lib/rv/shareKit";
 import { RvShareKit } from "@/components/rvshare/RvShareKit";
 import {
+  fetchAutocomplete,
+  fetchListingDetail,
   fetchLocalInventory,
+  fetchNearbyDealers,
   loadInventoryZip,
   saveInventoryZip,
 } from "@/lib/marketcheck/client";
-import type { McListingCard, McYearRange } from "@/lib/marketcheck/types";
+import type {
+  McAutocompleteTerm,
+  McDealerCard,
+  McListingCard,
+  McListingDetail,
+  McYearRange,
+} from "@/lib/marketcheck/types";
+import {
+  AUTOCOMPLETE_DEBOUNCE_MS,
+  shouldFetchAutocomplete,
+} from "@/lib/marketcheck/guards";
 import {
   DEFAULT_YEAR_PAD,
   medianListingPrice,
@@ -215,11 +229,27 @@ export function RvDetail({
   const [invZip, setInvZip] = useState(() => loadInventoryZip() || "98402");
   const [invRadius, setInvRadius] = useState(100);
   const [invYearPad, setInvYearPad] = useState(DEFAULT_YEAR_PAD);
+  const [invMake, setInvMake] = useState(make);
+  const [invModel, setInvModel] = useState(model);
   const [invLoading, setInvLoading] = useState(false);
   const [invError, setInvError] = useState<string | null>(null);
   const [invListings, setInvListings] = useState<McListingCard[]>([]);
   const [invSearched, setInvSearched] = useState(false);
   const [invQueryRange, setInvQueryRange] = useState<McYearRange | null>(null);
+  const [acFocus, setAcFocus] = useState<"make" | "model" | null>(null);
+  const [acTerms, setAcTerms] = useState<McAutocompleteTerm[]>([]);
+  const [dealers, setDealers] = useState<McDealerCard[]>([]);
+  const [dealersLoading, setDealersLoading] = useState(false);
+  const [selectedDealer, setSelectedDealer] = useState<McDealerCard | null>(
+    null,
+  );
+  const [lotWide, setLotWide] = useState(false);
+  const [openListingId, setOpenListingId] = useState<string | null>(null);
+  const [listingDetail, setListingDetail] = useState<McListingDetail | null>(
+    null,
+  );
+  const [listingLoading, setListingLoading] = useState(false);
+  const [listingError, setListingError] = useState<string | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement | null>(null);
   const [saveFlash, setSaveFlash] = useState<string | null>(null);
@@ -240,6 +270,45 @@ export function RvDetail({
     }, 80);
     return () => window.clearTimeout(t);
   }, [shareFocusToken]);
+
+  useEffect(() => {
+    setInvMake(make);
+    setInvModel(model);
+    setSelectedDealer(null);
+    setLotWide(false);
+    setOpenListingId(null);
+    setListingDetail(null);
+    setAcFocus(null);
+    setAcTerms([]);
+  }, [year, make, model]);
+
+  useEffect(() => {
+    if (!acFocus) {
+      setAcTerms([]);
+      return;
+    }
+    const input = acFocus === "make" ? invMake : invModel;
+    if (!shouldFetchAutocomplete(input)) {
+      setAcTerms([]);
+      return;
+    }
+    const ctrl = new AbortController();
+    const t = window.setTimeout(() => {
+      void fetchAutocomplete({
+        field: acFocus,
+        input,
+        make: acFocus === "model" ? invMake : undefined,
+        signal: ctrl.signal,
+      }).then((res) => {
+        if (ctrl.signal.aborted || !res.ok) return;
+        setAcTerms(res.terms);
+      });
+    }, AUTOCOMPLETE_DEBOUNCE_MS);
+    return () => {
+      ctrl.abort();
+      window.clearTimeout(t);
+    };
+  }, [acFocus, invMake, invModel]);
 
   useEffect(() => {
     if (saved && !wasSavedRef.current) {
@@ -677,40 +746,107 @@ export function RvDetail({
       .slice(0, 6);
   }, [live, powertrainPin, year, make, model, floorplan]);
 
-  const runInventorySearch = async () => {
+  const mcError = (res: { code?: string; error?: string }) =>
+    res.code === "missing_key"
+      ? "MarketCheck not configured on server"
+      : res.error || "Inventory search unavailable";
+
+  const runInventorySearch = async (opts?: {
+    dealerId?: string;
+    allDealerInventory?: boolean;
+  }) => {
     const zip = invZip.trim();
     if (!/^\d{5}$/.test(zip)) {
       setInvError("Enter a 5-digit ZIP");
       return;
     }
     saveInventoryZip(zip);
+    const dealerId = opts?.dealerId ?? selectedDealer?.id;
+    const allDealer = opts?.allDealerInventory ?? lotWide;
+    setLotWide(allDealer);
     setInvLoading(true);
     setInvError(null);
     setInvSearched(true);
+    setOpenListingId(null);
+    setListingDetail(null);
     const res = await fetchLocalInventory({
       year,
-      make,
-      model,
+      make: invMake.trim() || make,
+      model: invModel.trim() || model,
       zip,
       radius: invRadius,
       yearPad: invYearPad,
+      dealerId,
+      allDealerInventory: Boolean(dealerId && allDealer),
     });
     setInvLoading(false);
     if (!res.ok) {
       setInvListings([]);
       setInvQueryRange(null);
-      setInvError(
-        res.code === "missing_key"
-          ? "MarketCheck not configured on server"
-          : res.error || "Inventory search unavailable",
-      );
+      setInvError(mcError(res));
       return;
     }
     setInvListings(res.listings || []);
     setInvQueryRange(res.query?.yearRange ?? yearRangeFromCenter(Number(year), invYearPad));
     if (!res.listings?.length) {
-      setInvError("No local listings found");
+      setInvError(
+        dealerId
+          ? allDealer
+            ? "No listings at this lot"
+            : "No matching units at this lot"
+          : "No local listings found",
+      );
     }
+  };
+
+  const runDealerSearch = async () => {
+    const zip = invZip.trim();
+    if (!/^\d{5}$/.test(zip)) {
+      setInvError("Enter a 5-digit ZIP");
+      return;
+    }
+    saveInventoryZip(zip);
+    setDealersLoading(true);
+    setInvError(null);
+    const res = await fetchNearbyDealers({
+      zip,
+      radius: invRadius,
+    });
+    setDealersLoading(false);
+    if (!res.ok) {
+      setDealers([]);
+      setInvError(mcError(res));
+      return;
+    }
+    setDealers(res.dealers || []);
+    if (!res.dealers?.length) setInvError("No RV dealers nearby");
+  };
+
+  const pickDealer = (dealer: McDealerCard) => {
+    setSelectedDealer(dealer);
+    setLotWide(false);
+    void runInventorySearch({ dealerId: dealer.id, allDealerInventory: false });
+  };
+
+  const openShortlistCard = (card: McListingCard) => {
+    if (openListingId === card.id) {
+      setOpenListingId(null);
+      setListingError(null);
+      return;
+    }
+    setOpenListingId(card.id);
+    setListingError(null);
+    setListingLoading(true);
+    setListingDetail(null);
+    void fetchListingDetail({ listingId: card.id }).then((res) => {
+      setListingLoading(false);
+      if (!res.ok) {
+        setListingDetail(null);
+        setListingError(mcError(res));
+        return;
+      }
+      setListingDetail(res.listing);
+    });
   };
 
   const invYearWindow = useMemo(
@@ -1261,38 +1397,229 @@ export function RvDetail({
               >
                 {invLoading ? "…" : "Search"}
               </button>
+              <button
+                type="button"
+                onClick={() => void runDealerSearch()}
+                disabled={dealersLoading}
+                className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[12px] font-bold text-white disabled:opacity-50"
+              >
+                {dealersLoading ? "…" : "Lots"}
+              </button>
+            </div>
+            <div className="relative mt-2 grid grid-cols-2 gap-2">
+              <label className="rounded-full border border-white/15 bg-black/30 px-3 py-1.5">
+                <span className="sr-only">Make</span>
+                <input
+                  value={invMake}
+                  onChange={(e) => setInvMake(e.target.value)}
+                  onFocus={() => setAcFocus("make")}
+                  onBlur={() => window.setTimeout(() => setAcFocus((f) => (f === "make" ? null : f)), 180)}
+                  placeholder="Make"
+                  autoComplete="off"
+                  className="w-full bg-transparent text-[12px] font-semibold text-white outline-none placeholder:text-white/40"
+                />
+              </label>
+              <label className="rounded-full border border-white/15 bg-black/30 px-3 py-1.5">
+                <span className="sr-only">Model</span>
+                <input
+                  value={invModel}
+                  onChange={(e) => setInvModel(e.target.value)}
+                  onFocus={() => setAcFocus("model")}
+                  onBlur={() => window.setTimeout(() => setAcFocus((f) => (f === "model" ? null : f)), 180)}
+                  placeholder="Model"
+                  autoComplete="off"
+                  className="w-full bg-transparent text-[12px] font-semibold text-white outline-none placeholder:text-white/40"
+                />
+              </label>
+              {acFocus && acTerms.length ? (
+                <ul className="absolute top-full z-20 mt-1 max-h-40 w-full overflow-auto rounded-xl border border-white/15 bg-black py-1 shadow-lg">
+                  {acTerms.map((t) => (
+                    <li key={t.term}>
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-between px-3 py-2 text-left text-[12px] font-semibold text-white hover:bg-white/10"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          if (acFocus === "make") setInvMake(t.term);
+                          else setInvModel(t.term);
+                          setAcTerms([]);
+                          setAcFocus(null);
+                        }}
+                      >
+                        <span>{t.term}</span>
+                        {t.count != null ? (
+                          <span className="text-[11px] text-white/45">{t.count}</span>
+                        ) : null}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
             <p className="mt-2 text-[11px] text-white/55">
               Years {invYearWindow.min}–{invYearWindow.max} · {invRadiusShown} mi
+              {selectedDealer ? ` · ${selectedDealer.name}` : ""}
             </p>
+            {selectedDealer ? (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/80">
+                  <Store className="size-3" />
+                  {selectedDealer.name}
+                  <button
+                    type="button"
+                    className="ml-1 text-white/50"
+                    onClick={() => {
+                      setSelectedDealer(null);
+                      setLotWide(false);
+                    }}
+                    aria-label="Clear dealer"
+                  >
+                    ×
+                  </button>
+                </span>
+                {!lotWide ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void runInventorySearch({
+                        dealerId: selectedDealer.id,
+                        allDealerInventory: true,
+                      })
+                    }
+                    className="text-[11px] font-semibold text-blue"
+                  >
+                    Show all units at this lot
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+            {dealers.length ? (
+              <ul className="mt-2 space-y-1.5">
+                {dealers.slice(0, 6).map((d) => (
+                  <li key={d.id}>
+                    <button
+                      type="button"
+                      onClick={() => pickDealer(d)}
+                      className={cn(
+                        "flex w-full items-start justify-between gap-2 rounded-xl border px-3 py-2 text-left",
+                        selectedDealer?.id === d.id
+                          ? "border-blue/40 bg-blue/15"
+                          : "border-white/10 bg-black/25",
+                      )}
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-[12px] font-bold text-white">
+                          {d.name}
+                        </span>
+                        <span className="block text-[11px] text-white/60">
+                          {[d.city, d.state, d.listingCount != null ? `${d.listingCount} listed` : ""]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-[11px] font-semibold text-white/55">
+                        {d.distanceMi != null ? `${Math.round(d.distanceMi)} mi` : "Lot"}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             {invError ? (
               <p className="mt-2 text-[11px] text-amber">{invError}</p>
             ) : null}
             {invListings.length ? (
               <ul className="mt-2 space-y-1.5">
-                {invListings.slice(0, 5).map((l, i) => (
-                  <li
-                    key={l.id || i}
-                    className="rounded-xl border border-white/10 bg-black/25 px-3 py-2"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-[12px] font-bold text-white">
-                          {l.heading ||
-                            `${l.year || year} ${l.make || make} ${l.model || model}`}
+                {invListings.slice(0, 5).map((l, i) => {
+                  const open = openListingId === l.id;
+                  const detail = open ? listingDetail : null;
+                  return (
+                    <li
+                      key={l.id || i}
+                      className="rounded-xl border border-white/10 bg-black/25 px-3 py-2"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => openShortlistCard(l)}
+                        className="flex w-full items-start justify-between gap-2 text-left"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-[12px] font-bold text-white">
+                            {l.heading ||
+                              `${l.year || year} ${l.make || make} ${l.model || model}`}
+                          </p>
+                          <p className="text-[11px] text-white/60">
+                            {[l.dealerName, l.city, l.state]
+                              .filter(Boolean)
+                              .join(" · ") || "Dealer listing"}
+                          </p>
+                        </div>
+                        <p className="shrink-0 text-[13px] font-bold tabular-nums text-gold-bright">
+                          {l.price ? formatMoney(l.price) : "—"}
                         </p>
-                        <p className="text-[11px] text-white/60">
-                          {[l.dealerName, l.city, l.state]
-                            .filter(Boolean)
-                            .join(" · ") || "Dealer listing"}
-                        </p>
-                      </div>
-                      <p className="shrink-0 text-[13px] font-bold tabular-nums text-gold-bright">
-                        {l.price ? formatMoney(l.price) : "—"}
-                      </p>
-                    </div>
-                  </li>
-                ))}
+                      </button>
+                      {open ? (
+                        <div className="mt-2 border-t border-white/10 pt-2">
+                          {listingLoading ? (
+                            <p className="flex items-center gap-1.5 text-[11px] text-white/55">
+                              <Loader2 className="size-3 animate-spin" />
+                              Loading listing…
+                            </p>
+                          ) : null}
+                          {listingError ? (
+                            <p className="text-[11px] text-amber">{listingError}</p>
+                          ) : null}
+                          {detail ? (
+                            <div className="space-y-1.5">
+                              {detail.photoUrls[0] ? (
+                                <img
+                                  src={detail.photoUrls[0]}
+                                  alt=""
+                                  className="h-28 w-full rounded-lg object-cover"
+                                />
+                              ) : null}
+                              <p className="text-[11px] text-white/70">
+                                {[
+                                  detail.miles != null
+                                    ? `${detail.miles.toLocaleString()} mi`
+                                    : null,
+                                  detail.inventoryType,
+                                  detail.exteriorColor,
+                                  detail.vin ? `VIN ${detail.vin}` : null,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </p>
+                              {detail.dealerStreet || detail.dealerPhone ? (
+                                <p className="text-[11px] text-white/60">
+                                  {[
+                                    detail.dealerStreet,
+                                    detail.city,
+                                    detail.state,
+                                    detail.dealerPhone,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                                </p>
+                              ) : null}
+                              {detail.vdpUrl ? (
+                                <a
+                                  href={detail.vdpUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue"
+                                >
+                                  Dealer page
+                                  <ExternalLink className="size-3" />
+                                </a>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </li>
+                  );
+                })}
               </ul>
             ) : invSearched && !invLoading && !invError ? (
               <p className="mt-2 text-[11px] text-white/55">No listings nearby.</p>

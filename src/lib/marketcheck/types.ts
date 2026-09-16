@@ -30,6 +30,8 @@ export type McSearchQuery = {
   model: string;
   /** Inclusive MarketCheck `year_range` actually sent (or exact year as min=max). */
   yearRange: McYearRange;
+  /** Present when inventory was scoped to one lot. */
+  dealerId?: string | null;
 };
 
 export type McSearchResult = {
@@ -47,4 +49,62 @@ export type McSearchError = {
   ok: false;
   error: string;
   code?: "missing_key" | "bad_request" | "upstream" | "empty";
+};
+
+/** Free-tier RV autocomplete fields we proxy. ZIP is numeric — use city for place hints. */
+export type McAutocompleteField = "make" | "model" | "city";
+
+export type McAutocompleteTerm = {
+  term: string;
+  count: number | null;
+};
+
+export type McAutocompleteResult = {
+  ok: true;
+  field: McAutocompleteField;
+  input: string;
+  terms: McAutocompleteTerm[];
+  cached: boolean;
+};
+
+export type McDealerCard = {
+  id: string;
+  name: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string;
+  listingCount: number | null;
+  distanceMi: number | null;
+  inventoryUrl: string | null;
+};
+
+export type McDealersResult = {
+  ok: true;
+  numFound: number;
+  dealers: McDealerCard[];
+  radius: number;
+  zip: string;
+  cached: boolean;
+};
+
+/** Full listing — fetch only when the user opens a shortlisted card. */
+export type McListingDetail = McListingCard & {
+  dealerId: string;
+  dealerStreet: string;
+  dealerZip: string;
+  sellerType: string;
+  exteriorColor: string;
+  interiorColor: string;
+  fuelType: string;
+  transmission: string;
+  photoUrls: string[];
+  description: string;
+};
+
+export type McListingResult = {
+  ok: true;
+  listing: McListingDetail;
+  cached: boolean;
 };

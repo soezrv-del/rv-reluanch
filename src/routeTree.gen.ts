@@ -20,6 +20,9 @@ import { Route as ApiMapTilesRouteImport } from './routes/api/map-tiles'
 import { Route as ApiOsrmRouteImport } from './routes/api/osrm'
 import { Route as ApiRvVideosRouteImport } from './routes/api/rv-videos'
 import { Route as ApiRvgrokRouteImport } from './routes/api/rvgrok'
+import { Route as ApiMarketcheckAutocompleteRouteImport } from './routes/api/marketcheck.autocomplete'
+import { Route as ApiMarketcheckDealersRouteImport } from './routes/api/marketcheck.dealers'
+import { Route as ApiMarketcheckListingRouteImport } from './routes/api/marketcheck.listing'
 import { Route as ApiMarketcheckSearchRouteImport } from './routes/api/marketcheck.search'
 import { Route as ApiNhtsaRecallsRouteImport } from './routes/api/nhtsa.recalls'
 import { Route as ApiNhtsaVinRouteImport } from './routes/api/nhtsa.vin'
@@ -85,6 +88,22 @@ const ApiRvgrokRoute = ApiRvgrokRouteImport.update({
   path: '/rvgrok',
   getParentRoute: () => ApiRouteRoute,
 } as any)
+const ApiMarketcheckAutocompleteRoute =
+  ApiMarketcheckAutocompleteRouteImport.update({
+    id: '/marketcheck/autocomplete',
+    path: '/marketcheck/autocomplete',
+    getParentRoute: () => ApiRouteRoute,
+  } as any)
+const ApiMarketcheckDealersRoute = ApiMarketcheckDealersRouteImport.update({
+  id: '/marketcheck/dealers',
+  path: '/marketcheck/dealers',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
+const ApiMarketcheckListingRoute = ApiMarketcheckListingRouteImport.update({
+  id: '/marketcheck/listing',
+  path: '/marketcheck/listing',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
 const ApiMarketcheckSearchRoute = ApiMarketcheckSearchRouteImport.update({
   id: '/marketcheck/search',
   path: '/marketcheck/search',
@@ -143,6 +162,9 @@ export interface FileRoutesByFullPath {
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/api/marketcheck/autocomplete': typeof ApiMarketcheckAutocompleteRoute
+  '/api/marketcheck/dealers': typeof ApiMarketcheckDealersRoute
+  '/api/marketcheck/listing': typeof ApiMarketcheckListingRoute
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
   '/api/nhtsa/recalls': typeof ApiNhtsaRecallsRoute
   '/api/nhtsa/vin': typeof ApiNhtsaVinRoute
@@ -165,6 +187,9 @@ export interface FileRoutesByTo {
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/api/marketcheck/autocomplete': typeof ApiMarketcheckAutocompleteRoute
+  '/api/marketcheck/dealers': typeof ApiMarketcheckDealersRoute
+  '/api/marketcheck/listing': typeof ApiMarketcheckListingRoute
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
   '/api/nhtsa/recalls': typeof ApiNhtsaRecallsRoute
   '/api/nhtsa/vin': typeof ApiNhtsaVinRoute
@@ -188,6 +213,9 @@ export interface FileRoutesById {
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/api/marketcheck/autocomplete': typeof ApiMarketcheckAutocompleteRoute
+  '/api/marketcheck/dealers': typeof ApiMarketcheckDealersRoute
+  '/api/marketcheck/listing': typeof ApiMarketcheckListingRoute
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
   '/api/nhtsa/recalls': typeof ApiNhtsaRecallsRoute
   '/api/nhtsa/vin': typeof ApiNhtsaVinRoute
@@ -212,6 +240,9 @@ export interface FileRouteTypes {
     | '/api/osrm'
     | '/api/rv-videos'
     | '/api/rvgrok'
+    | '/api/marketcheck/autocomplete'
+    | '/api/marketcheck/dealers'
+    | '/api/marketcheck/listing'
     | '/api/marketcheck/search'
     | '/api/nhtsa/recalls'
     | '/api/nhtsa/vin'
@@ -234,6 +265,9 @@ export interface FileRouteTypes {
     | '/api/osrm'
     | '/api/rv-videos'
     | '/api/rvgrok'
+    | '/api/marketcheck/autocomplete'
+    | '/api/marketcheck/dealers'
+    | '/api/marketcheck/listing'
     | '/api/marketcheck/search'
     | '/api/nhtsa/recalls'
     | '/api/nhtsa/vin'
@@ -256,6 +290,9 @@ export interface FileRouteTypes {
     | '/api/osrm'
     | '/api/rv-videos'
     | '/api/rvgrok'
+    | '/api/marketcheck/autocomplete'
+    | '/api/marketcheck/dealers'
+    | '/api/marketcheck/listing'
     | '/api/marketcheck/search'
     | '/api/nhtsa/recalls'
     | '/api/nhtsa/vin'
@@ -351,6 +388,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRvgrokRouteImport
       parentRoute: typeof ApiRouteRoute
     }
+    '/api/marketcheck/autocomplete': {
+      id: '/api/marketcheck/autocomplete'
+      path: '/marketcheck/autocomplete'
+      fullPath: '/api/marketcheck/autocomplete'
+      preLoaderRoute: typeof ApiMarketcheckAutocompleteRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/marketcheck/dealers': {
+      id: '/api/marketcheck/dealers'
+      path: '/marketcheck/dealers'
+      fullPath: '/api/marketcheck/dealers'
+      preLoaderRoute: typeof ApiMarketcheckDealersRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/marketcheck/listing': {
+      id: '/api/marketcheck/listing'
+      path: '/marketcheck/listing'
+      fullPath: '/api/marketcheck/listing'
+      preLoaderRoute: typeof ApiMarketcheckListingRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
     '/api/marketcheck/search': {
       id: '/api/marketcheck/search'
       path: '/marketcheck/search'
@@ -441,6 +499,9 @@ interface ApiRouteRouteChildren {
   ApiOsrmRoute: typeof ApiOsrmRoute
   ApiRvVideosRoute: typeof ApiRvVideosRoute
   ApiRvgrokRoute: typeof ApiRvgrokRouteWithChildren
+  ApiMarketcheckAutocompleteRoute: typeof ApiMarketcheckAutocompleteRoute
+  ApiMarketcheckDealersRoute: typeof ApiMarketcheckDealersRoute
+  ApiMarketcheckListingRoute: typeof ApiMarketcheckListingRoute
   ApiMarketcheckSearchRoute: typeof ApiMarketcheckSearchRoute
   ApiNhtsaRecallsRoute: typeof ApiNhtsaRecallsRoute
   ApiNhtsaVinRoute: typeof ApiNhtsaVinRoute
@@ -460,6 +521,9 @@ const ApiRouteRouteChildren: ApiRouteRouteChildren = {
   ApiOsrmRoute: ApiOsrmRoute,
   ApiRvVideosRoute: ApiRvVideosRoute,
   ApiRvgrokRoute: ApiRvgrokRouteWithChildren,
+  ApiMarketcheckAutocompleteRoute: ApiMarketcheckAutocompleteRoute,
+  ApiMarketcheckDealersRoute: ApiMarketcheckDealersRoute,
+  ApiMarketcheckListingRoute: ApiMarketcheckListingRoute,
   ApiMarketcheckSearchRoute: ApiMarketcheckSearchRoute,
   ApiNhtsaRecallsRoute: ApiNhtsaRecallsRoute,
   ApiNhtsaVinRoute: ApiNhtsaVinRoute,

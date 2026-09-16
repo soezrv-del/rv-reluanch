@@ -142,7 +142,8 @@ test("proxy sends year_range without year when a range is present", () => {
   assert.match(src, /else if \(years\.year\)/);
   assert.match(src, /yearRange: years\.range/);
   assert.match(src, /medianListingPrice/);
-  assert.match(src, /Math\.min\(\s*100/);
+  assert.match(src, /clampRadius|Math\.min\(\s*100/);
+  assert.match(src, /dealer_id/);
 });
 
 test("Facts client builds year_range from coach year ± pad", () => {
