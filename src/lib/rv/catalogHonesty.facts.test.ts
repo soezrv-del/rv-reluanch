@@ -1052,3 +1052,37 @@ test("Leisure Travel Vans Facts SoT: Unity yearStart 2010 + MY2010 U24MB/U24CB; 
   assert.doesNotMatch(free, /"2003":|"2008":|"2009":|"210A"|"210B"|"LSS"/);
 });
 
+test("Prevost Facts SoT: NEW MAKE shell keys; empty FBY; X3-45 VIP ≠ Entertainer", () => {
+  const block = src("rvData.ts");
+  const p0 = block.indexOf('\n  "Prevost": {');
+  const p1 = block.indexOf("\nexport const MAKES");
+  assert.ok(p0 > 0 && p1 > p0, "expected Prevost block");
+  const pv = block.slice(p0, p1);
+
+  assert.doesNotMatch(pv, /\n    "H3-45": \{/);
+  assert.doesNotMatch(pv, /\n    "X3-45": \{/);
+  assert.doesNotMatch(pv, /\n    Marathon: \{|\n    "Marathon": \{/);
+  assert.doesNotMatch(pv, /\n    Newell: \{|\n    "Newell": \{/);
+  assert.doesNotMatch(pv, /\n    Ascension: \{|\n    "Le Mirage": \{/);
+
+  const h3 = pv.slice(pv.indexOf('    "H3-45 VIP": {'), pv.indexOf('    "X3-45 VIP": {'));
+  assert.match(h3, /type: "Class A Diesel"/);
+  assert.match(h3, /fuelType: "Diesel"/);
+  assert.match(h3, /yearStart:\s*2020/);
+  assert.doesNotMatch(h3, /yearEnd:\s*\d+/);
+  assert.doesNotMatch(h3, /"20\d{2}":/);
+
+  const x3 = pv.slice(pv.indexOf('    "X3-45 VIP": {'), pv.indexOf('    "X3-45 VIP Entertainer": {'));
+  assert.match(x3, /type: "Class A Diesel"/);
+  assert.match(x3, /yearStart:\s*2020/);
+  assert.match(x3, /yearEnd:\s*2023/);
+  assert.doesNotMatch(x3, /"20\d{2}":/);
+  assert.doesNotMatch(x3, /floorplans: \["X3-45 VIP Entertainer"\]/);
+
+  const ent = pv.slice(pv.indexOf('    "X3-45 VIP Entertainer": {'));
+  assert.match(ent, /type: "Class A Diesel"/);
+  assert.match(ent, /yearStart:\s*2023/);
+  assert.doesNotMatch(ent, /yearEnd:\s*\d+/);
+  assert.doesNotMatch(ent, /"20\d{2}":/);
+});
+

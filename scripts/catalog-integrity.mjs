@@ -408,12 +408,30 @@ const EXPECTED_TYPE = {
   "Roadtrek|Chase": "class b",
   "Roadtrek|CS Adventurous": "class b",
   "Roadtrek|Popular": "class b",
+  "Prevost|H3-45 VIP": "diesel",
+  "Prevost|X3-45 VIP": "diesel",
+  "Prevost|X3-45 VIP Entertainer": "diesel",
 };
 
 /** Phantom / non-OEM series that must not exist. */
 const BANNED_SERIES = [
   // Brinkley Model Z Expand / Model T Air are historical GAP keys (yearEnd 2026),
   // not phantoms — keep them. Do not copy Model I / Ix / 2027 Z codes onto them.
+  // Prevost: shell keys only (EzMe pack 2026-09-15). Passenger coaches and
+  // converters are not Prevost catalog keys this pass.
+  "Prevost|H3-45",
+  "Prevost|X3-45",
+  "Prevost|Marathon",
+  "Prevost|Liberty",
+  "Prevost|Liberty Coach",
+  "Prevost|Newell",
+  "Prevost|Millennium",
+  "Prevost|Foretravel",
+  "Prevost|Featherlite",
+  "Prevost|Loki",
+  "Prevost|Emerald",
+  "Prevost|Ascension",
+  "Prevost|Le Mirage",
 ];
 
 const errors = [];
@@ -7157,8 +7175,125 @@ function main() {
     }
   }
 
+  // Prevost NEW MAKE (EzMe pack 2026-09-15). Quoted make. Shell keys only.
+  // Nameplate LOCK / empty FBY. MY2020 year floor. X3-45 VIP ≠ Entertainer.
+  // Passenger H3-45 / X3-45 and converters stay out.
+  {
+    const p0 = src.indexOf('\n  "Prevost": {');
+    const p1 = src.indexOf("\nexport const MAKES");
+    if (p0 < 0 || p1 < p0) {
+      fail('Prevost block not found between "Prevost": and export const MAKES');
+    } else {
+      const pv = src.slice(p0, p1);
+      const slice = (a, b) => {
+        const i = pv.indexOf(`    "${a}": {`);
+        const j = b == null ? pv.length : pv.indexOf(`    "${b}": {`);
+        if (i < 0) return "";
+        return j > i ? pv.slice(i, j) : pv.slice(i);
+      };
+
+      const h3 = slice("H3-45 VIP", "X3-45 VIP");
+      if (!h3) fail("Prevost|H3-45 VIP NEW KEY missing");
+      if (!/type: "Class A Diesel"/.test(h3) || !/fuelType: "Diesel"/.test(h3)) {
+        fail("Prevost|H3-45 VIP must be Class A Diesel / Diesel");
+      }
+      if (!/yearStart:\s*2020/.test(h3)) {
+        fail("Prevost|H3-45 VIP yearStart must be 2020 (MY2020 floor)");
+      }
+      if (/yearEnd:\s*\d+/.test(h3)) {
+        fail("Prevost|H3-45 VIP yearEnd must stay open/null");
+      }
+      if (/"20\d{2}":/.test(h3)) {
+        fail("Prevost|H3-45 VIP FBY must stay empty all years (nameplate LOCK; no letter chips)");
+      }
+
+      const x3 = slice("X3-45 VIP", "X3-45 VIP Entertainer");
+      if (!x3) fail("Prevost|X3-45 VIP NEW KEY missing");
+      if (!/type: "Class A Diesel"/.test(x3) || !/fuelType: "Diesel"/.test(x3)) {
+        fail("Prevost|X3-45 VIP must be Class A Diesel / Diesel");
+      }
+      if (!/yearStart:\s*2020/.test(x3) || !/yearEnd:\s*2023/.test(x3)) {
+        fail("Prevost|X3-45 VIP must set yearStart 2020 / yearEnd 2023");
+      }
+      if (/"20\d{2}":/.test(x3)) {
+        fail("Prevost|X3-45 VIP FBY must stay empty all years (nameplate LOCK 2020–2023; GAP 2024+ via yearEnd)");
+      }
+      if (/Entertainer/.test(x3) && /floorplans: \["X3-45 VIP Entertainer"\]/.test(x3)) {
+        fail("Prevost|X3-45 VIP must not absorb Entertainer (separate key)");
+      }
+
+      const ent = slice("X3-45 VIP Entertainer", null);
+      if (!ent) fail("Prevost|X3-45 VIP Entertainer NEW KEY missing");
+      if (!/type: "Class A Diesel"/.test(ent) || !/fuelType: "Diesel"/.test(ent)) {
+        fail("Prevost|X3-45 VIP Entertainer must be Class A Diesel / Diesel");
+      }
+      if (!/yearStart:\s*2023/.test(ent)) {
+        fail("Prevost|X3-45 VIP Entertainer yearStart must be 2023");
+      }
+      if (/yearEnd:\s*\d+/.test(ent)) {
+        fail("Prevost|X3-45 VIP Entertainer yearEnd must stay open/null");
+      }
+      if (/"20\d{2}":/.test(ent)) {
+        fail("Prevost|X3-45 VIP Entertainer FBY must stay empty all years (LOCK 2023–2024; GAP ≤2022 and 2025–2026)");
+      }
+
+      for (const ghost of [
+        "H3-45",
+        "X3-45",
+        "Marathon",
+        "Liberty",
+        "Liberty Coach",
+        "Newell",
+        "Millennium",
+        "Foretravel",
+        "Featherlite",
+        "Loki",
+        "Emerald",
+        "Ascension",
+        "Le Mirage",
+      ]) {
+        if (new RegExp(`\\n    "${ghost}": \\{|\\n    ${ghost}: \\{`).test(pv)) {
+          fail(`Prevost|${ghost} must not be added (passenger / converter / merge stay out)`);
+        }
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const pvIdx = catalogIndex.Prevost;
+      if (!pvIdx) fail("Prevost missing from CATALOG_INDEX");
+      if (!pvIdx["H3-45 VIP"] || !pvIdx["X3-45 VIP"] || !pvIdx["X3-45 VIP Entertainer"]) {
+        fail("Prevost index must keep H3-45 VIP / X3-45 VIP / X3-45 VIP Entertainer as separate keys");
+      }
+      if (pvIdx["H3-45 VIP"]?.yearStart !== 2020 || pvIdx["H3-45 VIP"]?.yearEnd != null) {
+        fail("Prevost|H3-45 VIP index must be yearStart 2020 / yearEnd open");
+      }
+      if (pvIdx["H3-45 VIP"]?.type !== "Class A Diesel" || pvIdx["H3-45 VIP"]?.fuelType !== "Diesel") {
+        fail("Prevost|H3-45 VIP index must be Class A Diesel / Diesel");
+      }
+      if (pvIdx["X3-45 VIP"]?.yearStart !== 2020 || pvIdx["X3-45 VIP"]?.yearEnd !== 2023) {
+        fail("Prevost|X3-45 VIP index must be yearStart 2020 / yearEnd 2023");
+      }
+      if (pvIdx["X3-45 VIP Entertainer"]?.yearStart !== 2023 || pvIdx["X3-45 VIP Entertainer"]?.yearEnd != null) {
+        fail("Prevost|X3-45 VIP Entertainer index must be yearStart 2023 / yearEnd open");
+      }
+      for (const key of ["H3-45 VIP", "X3-45 VIP", "X3-45 VIP Entertainer"]) {
+        if (pvIdx[key]?.years?.length) {
+          fail(`Prevost|${key} index must omit years (empty FBY — no letter chips)`);
+        }
+      }
+      if (pvIdx["H3-45"] || pvIdx["X3-45"] || pvIdx.Marathon || pvIdx.Newell || pvIdx.Ascension) {
+        fail("Prevost index must not add passenger / converter / merge keys");
+      }
+    }
+    if (makes.has("Newell")) {
+      fail("Newell must not be started this pass (Prevost-only)");
+    }
+  }
+
   // New makes must stay present once added
-  for (const make of ["Prime Time", "East to West", "Chinook"]) {
+  for (const make of ["Prime Time", "East to West", "Chinook", "Prevost"]) {
     if (!makes.has(make)) fail(`Missing make after expansion: ${make}`);
   }
   if (makes.has("Prime Time")) {
@@ -7169,6 +7304,14 @@ function main() {
   if (makes.has("East to West")) {
     for (const required of ["Della Terra", "Alta", "Tandara", "Ahara"]) {
       if (!makes.get("East to West").has(required)) fail(`East to West missing: ${required}`);
+    }
+  }
+  if (makes.has("Prevost")) {
+    for (const required of ["H3-45 VIP", "X3-45 VIP", "X3-45 VIP Entertainer"]) {
+      if (!makes.get("Prevost").has(required)) fail(`Prevost missing: ${required}`);
+    }
+    if (makes.get("Prevost").has("H3-45") || makes.get("Prevost").has("X3-45")) {
+      fail("Prevost must not add H3-45 / X3-45 passenger as primary keys");
     }
   }
   if (makes.has("Chinook")) {

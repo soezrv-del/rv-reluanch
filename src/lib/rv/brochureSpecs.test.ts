@@ -16351,3 +16351,73 @@ test("Winnebago Class B MY2000 honesty: EzMe pack 2026-09-09 (Era / Rialta / no 
   assert.doesNotMatch(so, /"36A"|"36B"/);
   assert.doesNotMatch(pk, /"59P"|"59PX"/);
 });
+
+test("Prevost NEW MAKE honesty: H3-45 VIP / X3-45 VIP / Entertainer; empty FBY; no converter bleed", () => {
+  const idx = CATALOG_INDEX.Prevost;
+  assert.ok(idx, "Prevost must be in CATALOG_INDEX");
+
+  assert.equal(idx["H3-45 VIP"]?.type, "Class A Diesel");
+  assert.equal(idx["H3-45 VIP"]?.fuelType, "Diesel");
+  assert.equal(idx["H3-45 VIP"]?.yearStart, 2020);
+  assert.equal(idx["H3-45 VIP"]?.yearEnd, undefined);
+  assert.equal(idx["H3-45 VIP"]?.years, undefined);
+
+  assert.equal(idx["X3-45 VIP"]?.type, "Class A Diesel");
+  assert.equal(idx["X3-45 VIP"]?.fuelType, "Diesel");
+  assert.equal(idx["X3-45 VIP"]?.yearStart, 2020);
+  assert.equal(idx["X3-45 VIP"]?.yearEnd, 2023);
+  assert.equal(idx["X3-45 VIP"]?.years, undefined);
+
+  assert.equal(idx["X3-45 VIP Entertainer"]?.type, "Class A Diesel");
+  assert.equal(idx["X3-45 VIP Entertainer"]?.fuelType, "Diesel");
+  assert.equal(idx["X3-45 VIP Entertainer"]?.yearStart, 2023);
+  assert.equal(idx["X3-45 VIP Entertainer"]?.yearEnd, undefined);
+  assert.equal(idx["X3-45 VIP Entertainer"]?.years, undefined);
+
+  assert.equal(idx["H3-45"], undefined, "H3-45 passenger is not a primary key");
+  assert.equal(idx["X3-45"], undefined, "X3-45 passenger is not a primary key");
+  assert.equal(idx.Marathon, undefined);
+  assert.equal(idx.Liberty, undefined);
+  assert.equal(idx.Newell, undefined);
+  assert.equal(idx.Millennium, undefined);
+  assert.equal(idx.Foretravel, undefined);
+  assert.equal(idx.Featherlite, undefined);
+  assert.equal(idx.Loki, undefined);
+  assert.equal(idx.Emerald, undefined);
+  assert.equal(idx.Ascension, undefined);
+  assert.equal(idx["Le Mirage"], undefined);
+  assert.equal(CATALOG_INDEX.Newell, undefined, "do not start Newell this pass");
+
+  const block = src("rvData.ts");
+  const p0 = block.indexOf('\n  "Prevost": {');
+  const p1 = block.indexOf("\nexport const MAKES");
+  assert.ok(p0 > 0 && p1 > p0, "Prevost block");
+  const pv = block.slice(p0, p1);
+
+  const h3 = pv.slice(pv.indexOf('    "H3-45 VIP": {'), pv.indexOf('    "X3-45 VIP": {'));
+  const x3 = pv.slice(pv.indexOf('    "X3-45 VIP": {'), pv.indexOf('    "X3-45 VIP Entertainer": {'));
+  const ent = pv.slice(pv.indexOf('    "X3-45 VIP Entertainer": {'));
+
+  assert.match(h3, /type: "Class A Diesel"/);
+  assert.match(h3, /fuelType: "Diesel"/);
+  assert.match(h3, /yearStart:\s*2020/);
+  assert.doesNotMatch(h3, /yearEnd:\s*\d+/);
+  assert.doesNotMatch(h3, /"20\d{2}":/);
+
+  assert.match(x3, /type: "Class A Diesel"/);
+  assert.match(x3, /yearStart:\s*2020/);
+  assert.match(x3, /yearEnd:\s*2023/);
+  assert.doesNotMatch(x3, /"20\d{2}":/);
+  assert.doesNotMatch(x3, /floorplans: \["X3-45 VIP Entertainer"\]/);
+
+  assert.match(ent, /type: "Class A Diesel"/);
+  assert.match(ent, /yearStart:\s*2023/);
+  assert.doesNotMatch(ent, /yearEnd:\s*\d+/);
+  assert.doesNotMatch(ent, /"20\d{2}":/);
+
+  assert.doesNotMatch(pv, /\n    "H3-45": \{|\n    H3-45: \{/);
+  assert.doesNotMatch(pv, /\n    "X3-45": \{|\n    X3-45: \{/);
+  assert.doesNotMatch(pv, /\n    Marathon: \{|\n    "Marathon": \{/);
+  assert.doesNotMatch(pv, /\n    Newell: \{|\n    "Newell": \{/);
+  assert.doesNotMatch(pv, /\n    Ascension: \{|\n    "Le Mirage": \{/);
+});
