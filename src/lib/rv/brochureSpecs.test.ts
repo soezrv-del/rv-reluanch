@@ -16541,3 +16541,78 @@ test("Liberty Coach NEW MAKE honesty: Elegant Lady only; exact FBY; no Prevost/N
   assert.doesNotMatch(planLists, /"H3-45 VIP"|"X3-45 VIP"|Entertainer|"P50"|"2020P"|"Marathon"|"Veneto"/);
   assert.doesNotMatch(lc, /\n    "H3-45 VIP": \{|\n    "P50": \{|\n    Marathon: \{|\n    "Veneto": \{/);
 });
+
+const MARATHON_2023 = [
+  "Breckenridge",
+  "Palm Beach",
+  "Newport Beach",
+  "Monterey",
+  "Bel Air",
+  "Jupiter",
+  "Malibu",
+  "Napa",
+  "Grand Cayman",
+  "Bandon",
+  "Jackson Hole",
+  "Kauai",
+  "Boca Raton",
+  "Juneau",
+];
+
+test("Marathon Coach NEW MAKE honesty: brand-as-model; exact FBY; no sibling bleed", () => {
+  const idx = CATALOG_INDEX["Marathon Coach"];
+  assert.ok(idx, "Marathon Coach must be in CATALOG_INDEX");
+  assert.equal(idx["Marathon Coach"]?.type, "Class A Diesel");
+  assert.equal(idx["Marathon Coach"]?.fuelType, "Diesel");
+  assert.equal(idx["Marathon Coach"]?.yearStart, 2020);
+  assert.equal(idx["Marathon Coach"]?.yearEnd, undefined);
+  assert.deepEqual(idx["Marathon Coach"]?.years, [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027]);
+
+  assert.equal(idx["H3-45 VIP"], undefined);
+  assert.equal(idx["X3-45 VIP"], undefined);
+  assert.equal(idx["X3-45 VIP Entertainer"], undefined);
+  assert.equal(idx.P50, undefined);
+  assert.equal(idx["Elegant Lady"], undefined);
+  assert.equal(idx["X2-C"], undefined);
+  assert.equal(idx["X2-M"], undefined);
+
+  const pv = CATALOG_INDEX.Prevost;
+  assert.ok(pv, "Prevost stays its own make");
+  assert.equal(pv["Marathon Coach"], undefined);
+  assert.equal(pv.Marathon, undefined);
+  assert.ok(CATALOG_INDEX.Newell?.P50, "Newell P50 is a sibling make — not a Marathon key");
+  assert.equal(CATALOG_INDEX.Newell?.["Marathon Coach"], undefined);
+  assert.ok(CATALOG_INDEX["Liberty Coach"]?.["Elegant Lady"], "Liberty Elegant Lady stays its own make");
+  assert.equal(CATALOG_INDEX["Liberty Coach"]?.["Marathon Coach"], undefined);
+
+  const block = src("rvData.ts");
+  const m0 = block.indexOf('\n  "Marathon Coach": {');
+  const m1 = block.indexOf('\n  "Liberty Coach": {');
+  assert.ok(m0 > 0 && m1 > m0, "Marathon Coach block");
+  const mc = block.slice(m0, m1);
+  const body = mc.slice(mc.indexOf('    "Marathon Coach": {'));
+
+  assert.match(body, /type: "Class A Diesel"/);
+  assert.match(body, /fuelType: "Diesel"/);
+  assert.match(body, /yearStart:\s*2020/);
+  assert.doesNotMatch(body, /yearEnd:\s*\d+/);
+  assert.match(body, /"2020": \[\]/);
+  assert.match(body, /"2021": \["Jupiter"\]/);
+  assert.match(body, /"2022": \[\]/);
+  assert.match(body, /"2024": \[\]/);
+  assert.match(body, /"2025": \[\]/);
+  assert.match(body, /"2026": \[\]/);
+  assert.match(body, /"2027": \[\]/);
+  assert.match(
+    body,
+    new RegExp(`"2023": \\[\\s*${MARATHON_2023.map((c) => `"${c}"`).join("\\s*,\\s*")}\\s*\\]`),
+  );
+
+  const planLists = [
+    body.match(/\n      floorplans: \[[^\]]*\]/)?.[0] || "",
+    ...(body.match(/"20\d{2}": \[[^\]]*\]/g) || []),
+  ].join("\n");
+  assert.doesNotMatch(planLists, /"H3-45 VIP"|"X3-45 VIP"|Entertainer/);
+  assert.doesNotMatch(planLists, /"P50"|"Elegant Lady"|"X2-C"|"X2-M"/);
+  assert.doesNotMatch(mc, /\n    "H3-45 VIP": \{|\n    "P50": \{|\n    "Elegant Lady": \{/);
+});

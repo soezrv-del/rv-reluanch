@@ -441,6 +441,7 @@ const EXPECTED_TYPE = {
   "Prevost|X3-45 VIP Entertainer": "diesel",
   "Newell|P50": "diesel",
   "Liberty Coach|Elegant Lady": "diesel",
+  "Marathon Coach|Marathon Coach": "diesel",
 };
 
 /** Phantom / non-OEM series that must not exist. */
@@ -471,6 +472,7 @@ const BANNED_SERIES = [
   "Newell|Liberty",
   "Newell|Liberty Coach",
   "Newell|Marathon",
+  "Newell|Marathon Coach",
   "Newell|Prevost",
   // Liberty Coach: Elegant Lady only (EzMe pack 2026-09-15). Prevost VIP
   // shells, Newell P50, Marathon, and invent Veneto stay off this make.
@@ -479,15 +481,31 @@ const BANNED_SERIES = [
   "Liberty Coach|X3-45 VIP Entertainer",
   "Liberty Coach|P50",
   "Liberty Coach|Marathon",
+  "Liberty Coach|Marathon Coach",
   "Liberty Coach|Veneto",
   "Liberty Coach|Newell",
   "Liberty Coach|Prevost",
+  // Marathon Coach: brand-as-model only (EzMe pack 2026-09-15). Prevost VIP
+  // shells, Newell P50, Liberty Elegant Lady, and invented X2 chips stay out.
+  "Marathon Coach|H3-45 VIP",
+  "Marathon Coach|X3-45 VIP",
+  "Marathon Coach|X3-45 VIP Entertainer",
+  "Marathon Coach|P50",
+  "Marathon Coach|Elegant Lady",
+  "Marathon Coach|Liberty",
+  "Marathon Coach|Liberty Coach",
+  "Marathon Coach|Newell",
+  "Marathon Coach|Prevost",
+  "Marathon Coach|X2-C",
+  "Marathon Coach|X2-M",
+  "Prevost|Marathon Coach",
 ];
 
 /** Empty FBY year lists allowed for nameplate LOCK / codes GAP (not invent). */
 const EMPTY_FBY_OK = {
   "Newell|P50": new Set(["2020", "2021", "2022", "2027"]),
   "Liberty Coach|Elegant Lady": new Set(["2022", "2023", "2027"]),
+  "Marathon Coach|Marathon Coach": new Set(["2020", "2022", "2024", "2025", "2026", "2027"]),
 };
 
 const errors = [];
@@ -7526,14 +7544,102 @@ function main() {
       if (JSON.stringify(gotYears) !== JSON.stringify(wantYears)) {
         fail("Newell|P50 index years must be 2020–2027 (empty LOCK/GAP years stay as keys)");
       }
-      if (nwIdx["2020P"] || nwIdx.Marathon || nwIdx.Liberty || nwIdx["H3-45 VIP"] || nwIdx["X3-45 VIP"]) {
+      if (nwIdx["2020P"] || nwIdx.Marathon || nwIdx["Marathon Coach"] || nwIdx.Liberty || nwIdx["H3-45 VIP"] || nwIdx["X3-45 VIP"]) {
         fail("Newell index must not add 2020P / Marathon / Liberty / Prevost VIP keys");
       }
     }
   }
 
+  // Marathon Coach NEW MAKE (EzMe pack 2026-09-15). Quoted make. Brand-as-model
+  // key only. yearStart 2020 / yearEnd open. Empty FBY 2020 / 2022 / 2024–2027.
+  // Jupiter 2021. Place-name LOCK 2023. No Prevost / Newell / Liberty bleed.
+  {
+    const m0 = src.indexOf('\n  "Marathon Coach": {');
+    const m1 = src.indexOf('\n  "Liberty Coach": {');
+    if (m0 < 0 || m1 < m0) {
+      fail('Marathon Coach block not found between "Marathon Coach": and "Liberty Coach":');
+    } else {
+      const mc = src.slice(m0, m1);
+      const i = mc.indexOf('    "Marathon Coach": {');
+      if (i < 0) fail("Marathon Coach|Marathon Coach NEW KEY missing");
+      const body = i >= 0 ? mc.slice(i) : "";
+      if (!/type: "Class A Diesel"/.test(body) || !/fuelType: "Diesel"/.test(body)) {
+        fail("Marathon Coach|Marathon Coach must be Class A Diesel / Diesel");
+      }
+      if (!/yearStart:\s*2020/.test(body)) {
+        fail("Marathon Coach|Marathon Coach yearStart must be 2020 (MY2020 floor)");
+      }
+      if (/yearEnd:\s*\d+/.test(body)) {
+        fail("Marathon Coach|Marathon Coach yearEnd must stay open/null");
+      }
+      if (!/"2020": \[\]/.test(body) || !/"2022": \[\]/.test(body)) {
+        fail("Marathon Coach|Marathon Coach FBY 2020 / 2022 must stay empty");
+      }
+      if (!/"2024": \[\]/.test(body) || !/"2025": \[\]/.test(body) || !/"2026": \[\]/.test(body) || !/"2027": \[\]/.test(body)) {
+        fail("Marathon Coach|Marathon Coach FBY 2024–2027 must stay empty (do not copy 2023)");
+      }
+      if (!/"2021": \["Jupiter"\]/.test(body)) {
+        fail("Marathon Coach|Marathon Coach FBY 2021 must be Jupiter only");
+      }
+      const lock2023 = '["Breckenridge", "Palm Beach", "Newport Beach", "Monterey", "Bel Air", "Jupiter", "Malibu", "Napa", "Grand Cayman", "Bandon", "Jackson Hole", "Kauai", "Boca Raton", "Juneau"]';
+      if (!body.includes(`"2023": ${lock2023}`)) {
+        fail("Marathon Coach|Marathon Coach FBY 2023 must be the place-name LOCK list");
+      }
+      if (/"2020": \[[^\]]+"|"2022": \[[^\]]+"|"2024": \[[^\]]+"|"2025": \[[^\]]+"|"2026": \[[^\]]+"|"2027": \[[^\]]+"/.test(body)) {
+        fail("Marathon Coach|Marathon Coach must not copy 2023 place-names onto empty years");
+      }
+      const planLists = [
+        body.match(/\n      floorplans: \[[^\]]*\]/)?.[0] || "",
+        ...(body.match(/"20\d{2}": \[[^\]]*\]/g) || []),
+      ].join("\n");
+      if (/"H3-45 VIP"|"X3-45 VIP"|Entertainer|"P50"|"Elegant Lady"|"X2-C"|"X2-M"/.test(planLists)) {
+        fail("Marathon Coach|Marathon Coach must not absorb Prevost VIP / Newell P50 / Liberty Elegant Lady / X2 chips as floorplans");
+      }
+
+      for (const ghost of [
+        "H3-45 VIP",
+        "X3-45 VIP",
+        "X3-45 VIP Entertainer",
+        "P50",
+        "Elegant Lady",
+        "Liberty",
+        "Liberty Coach",
+        "Newell",
+        "Prevost",
+        "X2-C",
+        "X2-M",
+      ]) {
+        if (new RegExp(`\\n    "${ghost}": \\{|\\n    ${ghost}: \\{`).test(mc)) {
+          fail(`Marathon Coach|${ghost} must not be added (Prevost / Newell / Liberty / invented chips stay out)`);
+        }
+      }
+
+      const idxSrc = readFileSync(INDEX, "utf8");
+      const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+      if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+      const catalogIndex = JSON.parse(idxM[1]);
+      const mcIdx = catalogIndex["Marathon Coach"];
+      if (!mcIdx) fail("Marathon Coach missing from CATALOG_INDEX");
+      if (!mcIdx["Marathon Coach"]) fail("Marathon Coach index must keep Marathon Coach as the living key");
+      if (mcIdx["Marathon Coach"]?.yearStart !== 2020 || mcIdx["Marathon Coach"]?.yearEnd != null) {
+        fail("Marathon Coach|Marathon Coach index must be yearStart 2020 / yearEnd open");
+      }
+      if (mcIdx["Marathon Coach"]?.type !== "Class A Diesel" || mcIdx["Marathon Coach"]?.fuelType !== "Diesel") {
+        fail("Marathon Coach|Marathon Coach index must be Class A Diesel / Diesel");
+      }
+      const wantYears = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027];
+      const gotYears = mcIdx["Marathon Coach"]?.years || [];
+      if (JSON.stringify(gotYears) !== JSON.stringify(wantYears)) {
+        fail("Marathon Coach|Marathon Coach index years must be 2020–2027 (empty LOCK/GAP years stay as keys)");
+      }
+      if (mcIdx.P50 || mcIdx["H3-45 VIP"] || mcIdx["X3-45 VIP"] || mcIdx["Elegant Lady"] || mcIdx["X2-C"] || mcIdx["X2-M"]) {
+        fail("Marathon Coach index must not add Prevost VIP / Newell P50 / Liberty / X2 keys");
+      }
+    }
+  }
+
   // New makes must stay present once added
-  for (const make of ["Prime Time", "East to West", "Chinook", "Prevost", "Newell", "Liberty Coach"]) {
+  for (const make of ["Prime Time", "East to West", "Chinook", "Prevost", "Newell", "Liberty Coach", "Marathon Coach"]) {
     if (!makes.has(make)) fail(`Missing make after expansion: ${make}`);
   }
   if (makes.has("Prime Time")) {
@@ -7556,14 +7662,20 @@ function main() {
   }
   if (makes.has("Newell")) {
     if (!makes.get("Newell").has("P50")) fail("Newell missing: P50");
-    for (const ghost of ["2020P", "Liberty", "Marathon", "H3-45 VIP", "X3-45 VIP", "X3-45 VIP Entertainer"]) {
+    for (const ghost of ["2020P", "Liberty", "Marathon", "Marathon Coach", "H3-45 VIP", "X3-45 VIP", "X3-45 VIP Entertainer"]) {
       if (makes.get("Newell").has(ghost)) fail(`Newell must not add ${ghost}`);
     }
   }
   if (makes.has("Liberty Coach")) {
     if (!makes.get("Liberty Coach").has("Elegant Lady")) fail("Liberty Coach missing: Elegant Lady");
-    for (const ghost of ["H3-45 VIP", "X3-45 VIP", "X3-45 VIP Entertainer", "P50", "Marathon", "Veneto"]) {
+    for (const ghost of ["H3-45 VIP", "X3-45 VIP", "X3-45 VIP Entertainer", "P50", "Marathon", "Marathon Coach", "Veneto"]) {
       if (makes.get("Liberty Coach").has(ghost)) fail(`Liberty Coach must not add ${ghost}`);
+    }
+  }
+  if (makes.has("Marathon Coach")) {
+    if (!makes.get("Marathon Coach").has("Marathon Coach")) fail("Marathon Coach missing: Marathon Coach");
+    for (const ghost of ["H3-45 VIP", "X3-45 VIP", "X3-45 VIP Entertainer", "P50", "Elegant Lady", "Liberty", "X2-C", "X2-M"]) {
+      if (makes.get("Marathon Coach").has(ghost)) fail(`Marathon Coach must not add ${ghost}`);
     }
   }
   if (makes.has("Chinook")) {

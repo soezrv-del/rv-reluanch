@@ -38284,6 +38284,75 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       description: "The Newmar Scottsdale was the company entry-level gas Class A during the early 2000s — bringing Newmar hand-crafted cabinetry and tight construction standards to the Ford F53 gas chassis at an accessible price. Discontinued 2005 when Newmar consolidated its gas lineup under the Kountry Star nameplate."
     }
   },
+  // Marathon Coach. NEW MAKE + NEW KEY Marathon Coach (brand-as-model) —
+  // EzMe pack 2026-09-15. Aliases: Marathon. Class A diesel luxury Prevost
+  // conversion (≠ Prevost H3-45 VIP / X3-45 VIP / Entertainer shells,
+  // ≠ Newell P50, ≠ Liberty Elegant Lady). yearStart 2020. yearEnd open.
+  // Place-name floorplans LOCK only on years listed — never copy-forward
+  // or back. MY2020 floor. Do not invent X2-C / X2-M chips. Do not invent
+  // coach numbers as codes. Do not merge.
+  "Marathon Coach": {
+    "Marathon Coach": {
+      type: "Class A Diesel",
+      // Aliases: Marathon. Integrity needs a non-empty floorplans[]
+      // (union of LOCK years). Empty FBY years are nameplate LOCK / GAP —
+      // do not copy 2023 place-names onto those years.
+      floorplans: ["Breckenridge", "Palm Beach", "Newport Beach", "Monterey", "Bel Air", "Jupiter", "Malibu", "Napa", "Grand Cayman", "Bandon", "Jackson Hole", "Kauai", "Boca Raton", "Juneau"],
+      floorplansByYear: {
+        // NEW KEY Marathon Coach. yearStart 2020. yearEnd open.
+        // 2020 / 2022 / 2024–2027: empty (do not invent / copy).
+        // 2021: Jupiter only. 2023: place-name LOCK list.
+        "2020": [],
+        "2021": ["Jupiter"],
+        "2022": [],
+        "2023": ["Breckenridge", "Palm Beach", "Newport Beach", "Monterey", "Bel Air", "Jupiter", "Malibu", "Napa", "Grand Cayman", "Bandon", "Jackson Hole", "Kauai", "Boca Raton", "Juneau"],
+        "2024": [],
+        "2025": [],
+        "2026": [],
+        "2027": []
+      },
+      lengthRange: [
+        45,
+        45
+      ],
+      weightRange: [
+        48000,
+        54000
+      ],
+      slideouts: 0,
+      sleeps: 6,
+      msrpRange: [
+        900000,
+        2200000
+      ],
+      engine: "Diesel (Prevost conversion)",
+      chassis: "Prevost conversion",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.7,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 10000,
+      freshWater: 100,
+      grayWater: 50,
+      blackWater: 50,
+      generator: "Onan Diesel (conversion)",
+      awningLength: 20,
+      ceilingHeight: 84,
+      warrantyYears: 1,
+      yearStart: 2020,
+      description: "Marathon Coach — Class A diesel luxury Prevost conversion (brand-as-model). Alias: Marathon. Not a Prevost H3-45 VIP / X3-45 VIP / Entertainer shell. Not a Newell P50. Not a Liberty Elegant Lady. Place-name floorplans lock only on listed years.",
+      powertrainByYear: [
+        {
+          from: 2020,
+          to: 2027,
+          engine: "Diesel (Prevost conversion)",
+          chassis: "Prevost conversion",
+          fuelType: "Diesel",
+          notes: "Marathon Coach nameplate LOCK 2020. Jupiter 2021 only. Place-name LOCK 2023. Empty 2022 / 2024–2027 — do not copy-forward/back. Not Prevost VIP / Newell P50 / Liberty Elegant Lady. Confirm build sheet."
+        }
+      ]
+    }
+  },
   // Liberty Coach. NEW MAKE + NEW KEY Elegant Lady — EzMe pack 2026-09-15.
   // Aliases: Elegant Ladies / Liberty Elegant Lady / Elegant Lady Edition.
   // Class A diesel luxury Prevost conversion (converter on Prevost shells ≠
