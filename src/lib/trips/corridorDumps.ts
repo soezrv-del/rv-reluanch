@@ -7,6 +7,7 @@ import {
   encodePathParam,
   finitePlace,
   haversineMiles,
+  sampleCorridorPoints,
   type FuelOverpassEl,
 } from "./corridorFuel.ts";
 import { keepCampPoi } from "./corridorCamps.ts";
@@ -22,9 +23,40 @@ import type { OsrmLngLat } from "./osrm.ts";
 
 export const DEFAULT_DUMP_WIDTH_MI = 15;
 export const MAX_DUMPS = 20;
-export const DUMP_QUERY_RADIUS_M = 22_000;
-export const DUMP_DEST_QUERY_RADIUS_M = 28_000;
+/** ~20 mi — pairs with 40 mi center spacing so 1000+ mi corridors stay covered. */
+export const DUMP_QUERY_RADIUS_M = 32_000;
+export const DUMP_DEST_QUERY_RADIUS_M = 36_000;
+export const DUMP_SAMPLE_SPACING_MI = 40;
+export const DUMP_MAX_QUERY_CENTERS = 16;
+export const DUMP_QUERY_BATCH = 8;
 export const CURATED_MATCH_MI = 0.4;
+
+/** Public OSM Overpass interpreters — free, no key. Primary then mirrors. */
+export const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.osm.ch/api/interpreter",
+] as const;
+
+export function sampleDumpCenters(corridor: OsrmLngLat[]): OsrmLngLat[] {
+  return sampleCorridorPoints(corridor, {
+    targetSpacingMiles: DUMP_SAMPLE_SPACING_MI,
+    maxPoints: DUMP_MAX_QUERY_CENTERS,
+    minPoints: 3,
+  });
+}
+
+export function chunkDumpCenters(
+  centers: OsrmLngLat[],
+  size = DUMP_QUERY_BATCH,
+): OsrmLngLat[][] {
+  const n = Math.max(1, Math.floor(size));
+  const out: OsrmLngLat[][] = [];
+  for (let i = 0; i < centers.length; i += n) {
+    out.push(centers.slice(i, i + n));
+  }
+  return out;
+}
 
 export type DumpKind = "dump";
 export type DumpSource = "overpass" | "curated";

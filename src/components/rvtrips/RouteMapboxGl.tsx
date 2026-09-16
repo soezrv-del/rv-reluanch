@@ -3,9 +3,13 @@ import { cn } from "@/lib/utils";
 import type { OsrmLineString } from "@/lib/trips/osrm";
 import type { FuelStop } from "@/lib/trips/corridorFuel";
 import type { CampStop } from "@/lib/trips/corridorCamps";
-import type { DumpStop } from "@/lib/trips/corridorDumps";
-import { dumpPinKind } from "@/lib/trips/corridorDumps";
-import { DumpFeeLegend } from "@/components/rvtrips/DumpMap";
+import { dumpPinKind, type DumpStop } from "@/lib/trips/corridorDumps";
+import {
+  MapPoiDetailChip,
+  RouteLayerLegend,
+  resolveMapPoi,
+  type MapPoiStop,
+} from "@/components/rvtrips/RoutePoiChrome";
 import {
   bboxFromGeometry,
   bboxFromPoints,
@@ -146,6 +150,8 @@ export function RouteMapboxGl({
   dumpStops,
   selectedDumpId,
   onSelectDump,
+  onRouteVia,
+  viaDisabled,
   follow,
   followActive,
   followStatus = "off",
@@ -165,6 +171,8 @@ export function RouteMapboxGl({
   dumpStops?: DumpStop[];
   selectedDumpId?: string | null;
   onSelectDump?: (id: string) => void;
+  onRouteVia?: (stop: MapPoiStop) => void;
+  viaDisabled?: boolean;
   follow?: Pick<GeoFix, "lat" | "lng" | "heading"> | null;
   followActive?: boolean;
   followStatus?: FollowStatus;
@@ -401,6 +409,8 @@ export function RouteMapboxGl({
       node.className = pinClass(pin.kind, on);
       node.title = pin.label || pin.kind;
       node.textContent = pinMark(pin);
+      node.setAttribute("data-map-pin", pin.kind);
+      if (camp) node.setAttribute("data-camp-pin", pin.kind);
       if (dump) {
         node.setAttribute(
           "data-dump-pin-fee",
@@ -496,6 +506,26 @@ export function RouteMapboxGl({
     }
   }, [followPt, ready]);
 
+  const selectedPoi = useMemo(
+    () =>
+      resolveMapPoi({
+        fuelStops,
+        campStops,
+        dumpStops,
+        selectedFuelId,
+        selectedCampId,
+        selectedDumpId,
+      }),
+    [
+      fuelStops,
+      campStops,
+      dumpStops,
+      selectedFuelId,
+      selectedCampId,
+      selectedDumpId,
+    ],
+  );
+
   const status: FollowStatus =
     followStatus !== "off"
       ? followStatus
@@ -551,8 +581,20 @@ export function RouteMapboxGl({
         </button>
       </div>
 
-      {(dumpStops ?? []).length > 0 ? (
-        <DumpFeeLegend
+      {selectedPoi ? (
+        <div className="pointer-events-auto absolute bottom-16 left-2 right-14 z-[7] max-w-[280px]">
+          <MapPoiDetailChip
+            poi={selectedPoi}
+            onRouteVia={onRouteVia}
+            viaDisabled={viaDisabled}
+          />
+        </div>
+      ) : null}
+
+      {(campStops ?? []).length > 0 || (dumpStops ?? []).length > 0 ? (
+        <RouteLayerLegend
+          showCamps={(campStops ?? []).length > 0}
+          showDumps={(dumpStops ?? []).length > 0}
           tone="on-map"
           className="pointer-events-none absolute bottom-10 left-2 z-[6] rounded-md bg-black/55 px-2 py-1"
         />

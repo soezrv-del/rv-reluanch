@@ -6,12 +6,13 @@ import {
   encodePathParam,
   parsePathParam,
   resolveCorridor,
-  sampleCorridorPoints,
 } from "@/lib/trips/corridorFuel";
 import {
   DEFAULT_DUMP_WIDTH_MI,
   DUMP_DEST_QUERY_RADIUS_M,
   DUMP_QUERY_RADIUS_M,
+  OVERPASS_ENDPOINTS,
+  chunkDumpCenters,
   curatedStopsOnCorridor,
   dumpSourceLabel,
   dumpSourceNote,
@@ -19,6 +20,7 @@ import {
   finalizeDumps,
   mergeDumpStops,
   normalizeOverpassDumps,
+  sampleDumpCenters,
   type DumpOverpassEl,
   type DumpSearchResult,
   type DumpSource,
@@ -30,6 +32,7 @@ import {
  *
  * Sanitary dump / sewer stations near the planned corridor and dest.
  * OpenStreetMap Overpass only — no HERE Places, no paid dump APIs.
+ * Interpreters: overpass-api.de, then overpass.kumi.systems + overpass.osm.ch.
  * Empty list on failure — never invents stations or prices.
  *
  * from,to = lng,lat
@@ -37,7 +40,7 @@ import {
  * widthMi = corridor half-width (default 15)
  */
 
-const OVERPASS_TIMEOUT_MS = 20_000;
+const OVERPASS_TIMEOUT_MS = 12_000;
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
 const cache = new Map<string, { at: number; data: DumpSearchResult }>();
@@ -70,21 +73,22 @@ function overpassQuery(centers: OsrmLngLat[], dest?: OsrmLngLat): string {
       ];
     })
     .join("\n  ");
-  return `[out:json][timeout:18];
+  return `[out:json][timeout:10];
 (
   ${clauses}
 );
 out center tags 80;`;
 }
 
-async function fetchOverpass(
+async function fetchOverpassOnce(
+  url: string,
   centers: OsrmLngLat[],
   dest?: OsrmLngLat,
 ): Promise<DumpOverpassEl[]> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), OVERPASS_TIMEOUT_MS);
   try {
-    const resp = await fetch("https://overpass-api.de/api/interpreter", {
+    const resp = await fetch(url, {
       method: "POST",
       signal: ctrl.signal,
       headers: {
@@ -94,17 +98,63 @@ async function fetchOverpass(
       },
       body: `data=${encodeURIComponent(overpassQuery(centers, dest))}`,
     });
-    const json = (await resp.json()) as {
-      elements?: DumpOverpassEl[];
-      remark?: string;
-    };
+    const text = await resp.text();
     if (!resp.ok) {
       throw new Error(`Overpass HTTP ${resp.status}`);
     }
+    let json: { elements?: DumpOverpassEl[]; remark?: string };
+    try {
+      json = JSON.parse(text) as { elements?: DumpOverpassEl[]; remark?: string };
+    } catch {
+      throw new Error("Overpass non-JSON");
+    }
+    if (json.remark && /timeout|error|abort/i.test(json.remark)) {
+      throw new Error(`Overpass ${json.remark}`);
+    }
     return Array.isArray(json.elements) ? json.elements : [];
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") {
+      throw new Error("Overpass timeout");
+    }
+    throw e;
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * Prefer a live Overpass answer over curated-only.
+ * Tries public mirrors if overpass-api.de fails/times out/aborts.
+ * Long corridors are queried in batches so one timeout does not wipe coverage.
+ */
+async function fetchOverpass(
+  centers: OsrmLngLat[],
+  dest?: OsrmLngLat,
+): Promise<DumpOverpassEl[]> {
+  const batches = chunkDumpCenters(centers);
+  let lastError: unknown;
+  let partial: DumpOverpassEl[] = [];
+
+  for (const url of OVERPASS_ENDPOINTS) {
+    try {
+      const all: DumpOverpassEl[] = [];
+      for (let i = 0; i < batches.length; i++) {
+        const destForBatch =
+          dest && i === batches.length - 1 ? dest : undefined;
+        const els = await fetchOverpassOnce(url, batches[i]!, destForBatch);
+        all.push(...els);
+        partial = all;
+      }
+      return all;
+    } catch (e) {
+      lastError = e;
+    }
+  }
+
+  if (partial.length > 0) return partial;
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Overpass unavailable");
 }
 
 function packResult(
@@ -145,7 +195,7 @@ export const Route = createFileRoute("/api/dumps")({
         }
 
         const widthMi = effectiveCorridorWidthMi(requestedWidth, corridor.length);
-        const centers = sampleCorridorPoints(corridor);
+        const centers = sampleDumpCenters(corridor);
         const dest = corridor[corridor.length - 1];
         const cacheKey = `${encodePathParam(centers)}|w${widthMi}|d`;
         const cached = cache.get(cacheKey);
