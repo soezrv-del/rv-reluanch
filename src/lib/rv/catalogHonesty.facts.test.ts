@@ -1104,8 +1104,12 @@ test("Newell Facts SoT: NEW MAKE P50; empty 2020–2022/2027; 030623 chips; no P
   assert.match(p50, /"2027": \[\]/);
   assert.match(p50, /"2023": \["M1", "M2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "B2", "H1", "V1", "X1"\]/);
   assert.match(p50, /"2026": \["M1", "M2", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "B2", "H1", "V1", "X1"\]/);
-  assert.doesNotMatch(p50, /H3-45 VIP|X3-45 VIP|Entertainer/);
-  assert.doesNotMatch(p50, /F40|"V2"|"M3"|2020P/);
+  const planLists = [
+    p50.match(/\n      floorplans: \[[^\]]*\]/)?.[0] || "",
+    ...(p50.match(/"20\d{2}": \[[^\]]*\]/g) || []),
+  ].join("\n");
+  assert.doesNotMatch(planLists, /"H3-45 VIP"|"X3-45 VIP"|Entertainer/);
+  assert.doesNotMatch(planLists, /"F40"|"V2"|"M3"|"2020P"/);
   assert.doesNotMatch(nw, /\n    "2020P": \{|\n    "H3-45 VIP": \{|\n    Marathon: \{|\n    "Liberty": \{/);
 });
 

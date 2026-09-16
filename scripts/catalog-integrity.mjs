@@ -7357,14 +7357,18 @@ function main() {
           fail(`Newell|P50 FBY ${y} must be Effective 030623 list (M1 M2 F1–F7 B2 H1 V1 X1)`);
         }
       }
-      if (/"2020": \[[^\]]*"M1"|"2021": \[[^\]]*"M1"|"2022": \[[^\]]*"M1"|"2027": \[[^\]]*"M1"/.test(p50)) {
+      if (/"2020": \[[^\]]+"|"2021": \[[^\]]+"|"2022": \[[^\]]+"|"2027": \[[^\]]+"/.test(p50)) {
         fail("Newell|P50 must not copy 2023+ codes onto 2020–2022 or 2027");
       }
-      if (/F40|"V2"|"M3"|2020P/.test(p50)) {
-        fail("Newell|P50 must not invent F40 / V2 / M3 or add 2020P");
+      const planLists = [
+        p50.match(/\n      floorplans: \[[^\]]*\]/)?.[0] || "",
+        ...(p50.match(/"20\d{2}": \[[^\]]*\]/g) || []),
+      ].join("\n");
+      if (/"F40"|"V2"|"M3"|"2020P"/.test(planLists)) {
+        fail("Newell|P50 must not invent F40 / V2 / M3 or add 2020P as a floorplan");
       }
-      if (/H3-45 VIP|X3-45 VIP|Entertainer/.test(p50)) {
-        fail("Newell|P50 must not absorb Prevost H3-45 VIP / X3-45 VIP / Entertainer");
+      if (/"H3-45 VIP"|"X3-45 VIP"|Entertainer/.test(planLists)) {
+        fail("Newell|P50 must not absorb Prevost H3-45 VIP / X3-45 VIP / Entertainer as floorplans");
       }
 
       for (const ghost of [

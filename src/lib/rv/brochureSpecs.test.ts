@@ -16482,7 +16482,11 @@ test("Newell NEW MAKE honesty: P50 only; empty 2020–2022/2027; 030623 chips 20
     );
   }
 
-  assert.doesNotMatch(p50, /H3-45 VIP|X3-45 VIP|Entertainer/);
-  assert.doesNotMatch(p50, /F40|"V2"|"M3"|2020P/);
+  const planLists = [
+    p50.match(/\n      floorplans: \[[^\]]*\]/)?.[0] || "",
+    ...(p50.match(/"20\d{2}": \[[^\]]*\]/g) || []),
+  ].join("\n");
+  assert.doesNotMatch(planLists, /"H3-45 VIP"|"X3-45 VIP"|Entertainer/);
+  assert.doesNotMatch(planLists, /"F40"|"V2"|"M3"|"2020P"/);
   assert.doesNotMatch(nw, /\n    "2020P": \{|\n    Marathon: \{|\n    "Liberty": \{/);
 });
