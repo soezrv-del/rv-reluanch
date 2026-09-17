@@ -141,6 +141,7 @@ export function AppShell() {
   );
   const [factsPickerToken, setFactsPickerToken] = useState(0);
   const [factsShareToken, setFactsShareToken] = useState(0);
+  const [factsMarketToken, setFactsMarketToken] = useState(0);
   const launchOpen = false;
   const suiteReady = true;
   const [visited, setVisited] = useState<Set<AppTab>>(
@@ -259,6 +260,12 @@ export function AppShell() {
     markVisited("rvfax");
   }, [markVisited]);
 
+  const openFactsMarket = useCallback(() => {
+    setFactsMarketToken((n) => n + 1);
+    setTab("rvfax");
+    markVisited("rvfax");
+  }, [markVisited]);
+
   const onTabChange = useCallback(
     (next: AppTab) => {
       if (next === "rvshare") {
@@ -330,6 +337,8 @@ export function AppShell() {
       factsPickerToken,
       openFactsShare,
       factsShareToken,
+      openFactsMarket,
+      factsMarketToken,
       tripsHandoff,
       openTripsProfile,
       clearTripsHandoff,
@@ -350,6 +359,8 @@ export function AppShell() {
       factsPickerToken,
       openFactsShare,
       factsShareToken,
+      openFactsMarket,
+      factsMarketToken,
       tripsHandoff,
       openTripsProfile,
       clearTripsHandoff,

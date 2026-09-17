@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent } from "react";
-import { ChevronLeft, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hapticLight, hapticWarn } from "@/lib/haptics";
 import {
@@ -18,11 +18,13 @@ export function SoldList({
   onBack,
   onTogglePaid,
   onRemove,
+  onOpenMarket,
 }: {
   deals: SoldDeal[];
   onBack: () => void;
   onTogglePaid: (id: string) => void;
   onRemove: (id: string) => void;
+  onOpenMarket?: () => void;
 }) {
   const totals = soldTotals(deals);
 
@@ -51,9 +53,18 @@ export function SoldList({
             Open a saved coach and tap Sold. Three steps — name (optional),
             gross, then quarter / half / whole.
           </p>
-          <p className="mt-2 text-[12px] leading-relaxed text-white/65">
-            Comps: open a coach → Market value (Sold comps).
-          </p>
+          <button
+            type="button"
+            onClick={() => {
+              void hapticLight();
+              onOpenMarket?.();
+            }}
+            className="mt-2 flex min-h-[44px] w-full items-center justify-between gap-2 rounded-2xl border border-white/20 bg-black/30 px-3 py-2 text-left text-[12px] font-bold leading-relaxed text-white"
+            aria-label="Open Facts Market value (Sold comps)"
+          >
+            <span>Comps: open a coach → Market value (Sold comps).</span>
+            <ChevronRight className="size-3.5 shrink-0 text-white/70" aria-hidden />
+          </button>
         </section>
       ) : (
         <section className="space-y-2.5">

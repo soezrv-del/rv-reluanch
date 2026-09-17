@@ -137,6 +137,7 @@ import {
 export function RvDetail({
   result,
   shareFocusToken = 0,
+  marketFocusToken = 0,
   onBack,
   saved,
   onToggleSave,
@@ -149,6 +150,7 @@ export function RvDetail({
 }: {
   result: RVResult;
   shareFocusToken?: number;
+  marketFocusToken?: number;
   onBack: () => void;
   saved: boolean;
   onToggleSave: () => void;
@@ -214,6 +216,7 @@ export function RvDetail({
   const [exportBusy, setExportBusy] = useState(false);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [marketOpen, setMarketOpen] = useState(true);
   const [correctOpen, setCorrectOpen] = useState(false);
   const [correctEngine, setCorrectEngine] = useState("");
   const [correctHp, setCorrectHp] = useState("");
@@ -270,6 +273,20 @@ export function RvDetail({
     }, 80);
     return () => window.clearTimeout(t);
   }, [shareFocusToken]);
+
+  useEffect(() => {
+    if (!marketFocusToken) return;
+    const root = scrollRef.current;
+    if (!root) return;
+    setMarketOpen(true);
+    const t = window.setTimeout(() => {
+      const el = root.querySelector("[data-facts-market-value]");
+      if (el instanceof HTMLElement) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 80);
+    return () => window.clearTimeout(t);
+  }, [marketFocusToken]);
 
   useEffect(() => {
     setInvMake(make);
@@ -1245,9 +1262,12 @@ export function RvDetail({
           </section>
 
 
+          <div data-facts-market-value>
           <FactsCollapse
             title="Market value"
             defaultOpen
+            open={marketOpen}
+            onOpenChange={setMarketOpen}
             headline={
               marketUpdating
                 ? "Updating…"
@@ -1332,6 +1352,7 @@ export function RvDetail({
               </button>
             ) : null}
           </FactsCollapse>
+          </div>
 
           {shouldShowRvVideoPrompt({
             year,

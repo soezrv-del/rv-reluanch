@@ -253,6 +253,49 @@ test("Open report opens a single non-custom hit and not a multi/custom list", ()
   assert.equal(shouldOpenSingleHitReport([]), false);
 });
 
+test("Sold empty comps line opens Facts Market value via openFactsMarket", () => {
+  const nav = readFileSync(
+    join(root, "../../components/shell/ShellNavContext.ts"),
+    "utf8",
+  );
+  const shell = readFileSync(
+    join(root, "../../components/shell/AppShell.tsx"),
+    "utf8",
+  );
+  const fax = readFileSync(
+    join(root, "../../components/rvfax/RvFaxApp.tsx"),
+    "utf8",
+  );
+  const detail = readFileSync(
+    join(root, "../../components/rvfax/RvDetail.tsx"),
+    "utf8",
+  );
+  const list = readFileSync(
+    join(root, "../../components/rvfax/SoldList.tsx"),
+    "utf8",
+  );
+  const book = readFileSync(
+    join(root, "../../components/rvfax/SoldBookApp.tsx"),
+    "utf8",
+  );
+
+  assert.match(nav, /openFactsMarket/);
+  assert.match(nav, /factsMarketToken/);
+  assert.match(shell, /openFactsMarket/);
+  assert.match(shell, /setFactsMarketToken/);
+  assert.match(shell, /setTab\("rvfax"\)/);
+  assert.match(fax, /factsMarketToken/);
+  assert.match(fax, /setMarketFocusToken/);
+  assert.match(fax, /resolveShareOpenSel/);
+  assert.match(detail, /marketFocusToken/);
+  assert.match(detail, /data-facts-market-value/);
+  assert.match(detail, /querySelector\("\[data-facts-market-value\]"\)/);
+  assert.match(list, /onOpenMarket/);
+  assert.match(list, /Open Facts Market value \(Sold comps\)/);
+  assert.match(book, /openFactsMarket/);
+  assert.doesNotMatch(list, /SoldTotalsChip/);
+});
+
 test("Share opens the on-screen report, else Active Coach, else first saved", () => {
   const saved = [
     { year: "2021", make: "Keystone", model: "Montana", floorplan: "3855BR" },
