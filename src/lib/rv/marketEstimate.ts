@@ -14,7 +14,10 @@
  * Trade is then clamped so it never sits above retail low.
  */
 
-import { clampTradeToRetailLow } from "./marketClamp.ts";
+import {
+  clampTradeToRetailLow,
+  tightenRetailBandTowardMid,
+} from "./marketClamp.ts";
 import {
   getModelTier,
   MANUFACTURER_BASE_SCORES,
@@ -45,6 +48,13 @@ export type MarketEstimate = {
   sourceLabel?: string;
   /** Set only when source is public_listings sold comps. */
   confidence?: MarketConfidence;
+  /**
+   * Primary desk number. Sold median when Med/High public comps win;
+   * catalog free-path midpoint when sold comps are Low / thin.
+   */
+  marketValue?: number;
+  /** Low / thin sold comps — do not paint Retail High as a wide band. */
+  hideRetailHigh?: boolean;
 };
 
 /**
@@ -314,5 +324,31 @@ export function estimateMarket(
     tradeCappedAtRetailLow: trade.capped || undefined,
     source: "catalog",
     sourceLabel: CATALOG_ESTIMATE_LABEL,
+  };
+}
+
+/**
+ * Low / thin sold comps: collapse a fat catalog (or live) retail band toward
+ * a single free-path midpoint and hide Retail High as desk truth.
+ * Does not invent sold prices and does not call JD Power / NADA.
+ */
+export function applyThinCompCatalogPolicy(est: MarketEstimate): MarketEstimate {
+  const tight = tightenRetailBandTowardMid(
+    est.retailLow,
+    est.retailHigh,
+    est.tradeIn,
+  );
+  return {
+    ...est,
+    tradeIn: tight.tradeIn,
+    retailLow: tight.retailLow,
+    retailHigh: tight.retailHigh,
+    tradeCappedAtRetailLow:
+      tight.tradeCappedAtRetailLow || est.tradeCappedAtRetailLow,
+    marketValue: tight.midpoint > 0 ? tight.midpoint : est.marketValue,
+    hideRetailHigh: true,
+    confidence: est.confidence ?? "low",
+    source: est.source ?? "catalog",
+    sourceLabel: est.sourceLabel ?? CATALOG_ESTIMATE_LABEL,
   };
 }

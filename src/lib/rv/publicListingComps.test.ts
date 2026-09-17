@@ -28,7 +28,12 @@ import {
   soldCompsConfidence,
   weightedMedianUsd,
 } from "./publicListingComps.ts";
-import { estimateMarket } from "./marketEstimate.ts";
+import {
+  applyThinCompCatalogPolicy,
+  estimateMarket,
+  type MarketEstimate,
+} from "./marketEstimate.ts";
+import { THIN_COMP_MAX_RETAIL_BAND_USD } from "./marketClamp.ts";
 import type { RVSpec } from "./rvTypes.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -76,6 +81,7 @@ test("valuation modules never import the MarketCheck client", () => {
   for (const name of [
     "publicListingComps.ts",
     "marketEstimate.ts",
+    "marketClamp.ts",
     "researchPublicComps.ts",
   ]) {
     const text = src(name);
@@ -347,6 +353,8 @@ test("resolvePrimaryMarket prefers sold comps over live and catalog", () => {
   assert.equal(resolved.sourceLabel, SOLD_COMPS_LABEL);
   assert.equal(resolved.confidence, "medium");
   assert.equal(resolved.retailHigh, comps!.retailHigh);
+  assert.equal(resolved.marketValue, comps!.medianAsk);
+  assert.equal(resolved.hideRetailHigh, false);
 });
 
 test("resolvePrimaryMarket falls back to catalog when sold comps are thin", () => {
@@ -356,7 +364,11 @@ test("resolvePrimaryMarket falls back to catalog when sold comps are thin", () =
   assert.equal(resolved.source, "catalog");
   assert.equal(resolved.sourceLabel, CATALOG_ESTIMATE_LABEL);
   assert.equal(resolved.sourceLabel, "Catalog estimate");
-  assert.equal(resolved.tradeIn, catalog.tradeIn);
+  assert.equal(resolved.hideRetailHigh, true);
+  assert.ok(resolved.tradeIn <= resolved.retailLow);
+  assert.ok(
+    resolved.retailHigh - resolved.retailLow <= THIN_COMP_MAX_RETAIL_BAND_USD,
+  );
 });
 
 test("asking-only does not win the primary market over catalog", () => {
@@ -410,6 +422,12 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
   assert.match(detail, /PUBLIC_SOLD_DISCLAIMER/);
   assert.match(detail, /compsConfidenceLabel/);
   assert.match(detail, /prefersPublicComps/);
+  assert.match(detail, /hideRetailHigh/);
+  assert.match(detail, /deskMarketValue/);
+  assert.match(detail, /!hideRetailHigh \? \(/);
+  assert.match(detail, /label="Retail high"/);
+  assert.match(detail, /: "ruby"/);
+  assert.match(detail, /font-bold tracking-wide text-gold-bright/);
   assert.doesNotMatch(detail, /Public listing asks/);
   const disclaimerHits = detail.match(/PUBLIC_SOLD_DISCLAIMER/g) ?? [];
   assert.equal(disclaimerHits.length, 2, "import + one footer");
@@ -418,6 +436,134 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
     /PUBLIC_SOLD_DISCLAIMER[\s\S]{0,160}<SuiteDisclaimer/,
     "values footer sits once, above SuiteDisclaimer",
   );
+});
+
+test("Med/High sold comps: Market value hugs sold median, not Catalog estimate", () => {
+  const catalog = estimateMarket(spec(), "2022", undefined, { asOfYear: 2026 });
+  // 2021 Dutch Star-style: us ~$301k — primary number must hug sold, not catalog.
+  const dutchStar = reducePublicComps(
+    [sold(2020, 290000), sold(2021, 301000), sold(2022, 310000)],
+    { from: 2019, to: 2023 },
+  );
+  assert.ok(dutchStar);
+  assert.equal(dutchStar.confidence, "medium");
+  const dutchResolved = resolvePrimaryMarket({
+    catalog,
+    liveLadder: { tradeIn: 180000, retailLow: 200000, retailHigh: 270000 },
+    comps: dutchStar,
+  });
+  assert.equal(dutchResolved.source, "public_listings");
+  assert.equal(dutchResolved.sourceLabel, SOLD_COMPS_LABEL);
+  assert.equal(dutchResolved.marketValue, dutchStar.medianAsk);
+  assert.equal(dutchResolved.marketValue, 301000);
+  assert.notEqual(dutchResolved.marketValue, catalog.retailHigh);
+  assert.notEqual(dutchResolved.marketValue, catalog.retailLow);
+  assert.equal(dutchResolved.hideRetailHigh, false);
+
+  // 2020 Phaeton-style: us ~$202k — High comps still hug sold median.
+  const phaeton = reducePublicComps(
+    [
+      sold(2018, 190000),
+      sold(2019, 198000),
+      sold(2020, 202000),
+      sold(2021, 210000),
+      sold(2022, 218000),
+    ],
+    { from: 2018, to: 2022 },
+  );
+  assert.ok(phaeton);
+  assert.equal(phaeton.confidence, "high");
+  const phaetonResolved = resolvePrimaryMarket({ catalog, comps: phaeton });
+  assert.equal(phaetonResolved.marketValue, phaeton.medianAsk);
+  assert.equal(phaetonResolved.marketValue, 202000);
+  assert.equal(phaetonResolved.hideRetailHigh, false);
+});
+
+test("Low comps: fat catalog Retail High is capped — Palazzo-style band is not desk truth", () => {
+  const fatCatalog: MarketEstimate = {
+    tradeIn: 180000,
+    retailLow: 200000,
+    retailHigh: 270000,
+    msrpLo: 320000,
+    msrpHi: 420000,
+    segment: "Diesel Class A",
+    ageYears: 5,
+    source: "catalog",
+    sourceLabel: CATALOG_ESTIMATE_LABEL,
+  };
+  assert.equal(fatCatalog.retailHigh - fatCatalog.retailLow, 70000);
+
+  const thin = reducePublicComps(
+    [sold(2021, 208000)],
+    { from: 2019, to: 2023 },
+  );
+  assert.ok(thin);
+  assert.equal(thin.confidence, "low");
+  assert.equal(prefersPublicComps(thin), false);
+
+  const resolved = resolvePrimaryMarket({ catalog: fatCatalog, comps: thin });
+  assert.equal(resolved.source, "catalog");
+  assert.equal(resolved.sourceLabel, CATALOG_ESTIMATE_LABEL);
+  assert.equal(resolved.hideRetailHigh, true);
+  assert.ok(
+    resolved.retailHigh - resolved.retailLow <= THIN_COMP_MAX_RETAIL_BAND_USD,
+    `band ${resolved.retailHigh - resolved.retailLow} must not stay a $60k+ fantasy`,
+  );
+  assert.ok(resolved.retailHigh < 230000);
+  assert.ok(resolved.marketValue && resolved.marketValue > 0);
+  assert.notEqual(resolved.source, "public_listings");
+  assert.ok(resolved.tradeIn <= resolved.retailLow);
+});
+
+test("asking-only and empty comps tighten catalog — Low beats invent", () => {
+  const fatCatalog: MarketEstimate = {
+    tradeIn: 180000,
+    retailLow: 200000,
+    retailHigh: 270000,
+    msrpLo: 320000,
+    msrpHi: 420000,
+    segment: "Diesel Class A",
+    ageYears: 5,
+    source: "catalog",
+    sourceLabel: CATALOG_ESTIMATE_LABEL,
+  };
+  const asks = reducePublicComps(
+    [
+      { year: 2021, askUsd: 210000, kind: "asking" },
+      { year: 2022, askUsd: 220000, kind: "asking" },
+    ],
+    { from: 2020, to: 2024 },
+  );
+  const fromAsks = resolvePrimaryMarket({ catalog: fatCatalog, comps: asks });
+  const fromEmpty = resolvePrimaryMarket({ catalog: fatCatalog });
+  for (const resolved of [fromAsks, fromEmpty]) {
+    assert.equal(resolved.source, "catalog");
+    assert.equal(resolved.hideRetailHigh, true);
+    assert.ok(
+      resolved.retailHigh - resolved.retailLow <= THIN_COMP_MAX_RETAIL_BAND_USD,
+    );
+  }
+});
+
+test("applyThinCompCatalogPolicy collapses a $70k catalog band toward one midpoint", () => {
+  const fat: MarketEstimate = {
+    tradeIn: 180000,
+    retailLow: 200000,
+    retailHigh: 270000,
+    msrpLo: 320000,
+    msrpHi: 420000,
+    segment: "Diesel Class A",
+    ageYears: 5,
+    source: "catalog",
+    sourceLabel: CATALOG_ESTIMATE_LABEL,
+  };
+  const tight = applyThinCompCatalogPolicy(fat);
+  assert.equal(tight.hideRetailHigh, true);
+  assert.equal(tight.confidence, "low");
+  assert.ok(tight.retailHigh - tight.retailLow <= THIN_COMP_MAX_RETAIL_BAND_USD);
+  assert.equal(tight.marketValue, tight.retailHigh);
+  assert.ok(tight.marketValue && tight.marketValue < fat.retailHigh);
+  assert.ok(tight.tradeIn <= tight.retailLow);
 });
 
 test("sample notes never append the book-value disclaimer", () => {

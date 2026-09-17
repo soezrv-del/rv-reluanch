@@ -19,6 +19,7 @@
 
 import { clampTradeToRetailLow } from "./marketClamp.ts";
 import {
+  applyThinCompCatalogPolicy,
   CATALOG_ESTIMATE_LABEL,
   type MarketConfidence,
   type MarketEstimate,
@@ -523,6 +524,9 @@ export function resolvePrimaryMarket(opts: {
       source: "public_listings",
       sourceLabel: publicCompsSourceLabel(comps),
       confidence: comps.confidence,
+      /** Hug the public sold median — not the Catalog estimate seed. */
+      marketValue: comps.medianAsk,
+      hideRetailHigh: false,
     };
   }
 
@@ -535,7 +539,7 @@ export function resolvePrimaryMarket(opts: {
         liveLadder.retailHigh > 0 ? liveLadder.retailHigh : catalog.retailHigh,
     };
     const trade = clampTradeToRetailLow(merged.tradeIn, merged.retailLow);
-    return {
+    return applyThinCompCatalogPolicy({
       tradeIn: trade.tradeIn,
       retailLow: merged.retailLow,
       retailHigh: merged.retailHigh,
@@ -546,14 +550,14 @@ export function resolvePrimaryMarket(opts: {
       tradeCappedAtRetailLow: trade.capped || catalog.tradeCappedAtRetailLow,
       source: "live_dossier",
       sourceLabel: "Live research estimate",
-    };
+    });
   }
 
-  return {
+  return applyThinCompCatalogPolicy({
     ...catalog,
     source: catalog.source ?? "catalog",
     sourceLabel: catalog.sourceLabel ?? CATALOG_ESTIMATE_LABEL,
-  };
+  });
 }
 
 export function buildListingCompsPrompt(input: {
