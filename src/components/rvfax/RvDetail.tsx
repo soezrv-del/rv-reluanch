@@ -610,6 +610,7 @@ export function RvDetail({
   );
   const marketUpdating = liveLoading || compsLoading;
   const showSoldRange = prefersPublicComps(publicComps);
+  const hideRetailHigh = !showSoldRange || Boolean(market.hideRetailHigh);
   const soldConfidence = publicComps?.confidence ?? "low";
   const soldConfidenceLabel = compsConfidenceLabel(soldConfidence);
   const marketSourceLabel = showSoldRange
@@ -642,6 +643,10 @@ export function RvDetail({
   );
 
   const financePrice = bestCalPrice(market);
+  const deskMarketValue =
+    market.marketValue && market.marketValue > 0
+      ? market.marketValue
+      : financePrice;
   const coachChip = formatActiveCoachChip({
     year,
     make,
@@ -1140,7 +1145,7 @@ export function RvDetail({
                 value={
                   marketUpdating
                     ? "Updating…"
-                    : factsMoneyHeadline(financePrice)
+                    : factsMoneyHeadline(deskMarketValue)
                 }
                 accent
               />
@@ -1272,7 +1277,7 @@ export function RvDetail({
               marketUpdating
                 ? "Updating…"
                 : showSoldRange
-                  ? factsMoneyHeadline(financePrice)
+                  ? factsMoneyHeadline(deskMarketValue)
                   : LOW_CONFIDENCE_LISTINGS_MESSAGE
             }
           >
@@ -1286,7 +1291,7 @@ export function RvDetail({
                     ? "green"
                     : soldConfidence === "medium"
                       ? "blue"
-                      : undefined
+                      : "ruby"
                 }
               >
                 {soldConfidenceLabel}
@@ -1296,7 +1301,7 @@ export function RvDetail({
               <div className="grid grid-cols-2 gap-2">
                 <MarketTile
                   label="Market value"
-                  value={factsMoneyHeadline(financePrice)}
+                  value={factsMoneyHeadline(deskMarketValue)}
                 />
                 <MarketTile
                   label="Trade-in"
@@ -1306,23 +1311,25 @@ export function RvDetail({
                   label="Retail low"
                   value={formatMoney(market.retailLow)}
                 />
-                <MarketTile
-                  label="Retail high"
-                  value={formatMoney(market.retailHigh)}
-                />
+                {!hideRetailHigh ? (
+                  <MarketTile
+                    label="Retail high"
+                    value={formatMoney(market.retailHigh)}
+                  />
+                ) : null}
               </div>
             ) : (
               <div>
-                <p className="text-[13px] leading-snug text-white/85">
+                <p className="text-[13px] font-semibold leading-snug text-white">
                   {LOW_CONFIDENCE_LISTINGS_MESSAGE}
                 </p>
-                <p className="mt-3 text-[12px] font-semibold text-white">
+                <p className="mt-4 text-[13px] font-bold tracking-wide text-gold-bright">
                   {marketSourceLabel}
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <MarketTile
                     label="Market value"
-                    value={factsMoneyHeadline(financePrice)}
+                    value={factsMoneyHeadline(deskMarketValue)}
                   />
                   <MarketTile
                     label="Trade-in"
@@ -1332,10 +1339,12 @@ export function RvDetail({
                     label="Retail low"
                     value={formatMoney(market.retailLow)}
                   />
-                  <MarketTile
-                    label="Retail high"
-                    value={formatMoney(market.retailHigh)}
-                  />
+                  {!hideRetailHigh ? (
+                    <MarketTile
+                      label="Retail high"
+                      value={formatMoney(market.retailHigh)}
+                    />
+                  ) : null}
                 </div>
               </div>
             )}

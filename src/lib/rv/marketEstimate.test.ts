@@ -3,11 +3,13 @@ import test from "node:test";
 import type { RVSpec } from "./rvTypes.ts";
 import {
   CATALOG_ESTIMATE_LABEL,
+  applyThinCompCatalogPolicy,
   brandTierRetainFactor,
   detectMarketSegment,
   estimateMarket,
   retainForAge,
 } from "./marketEstimate.ts";
+import { THIN_COMP_MAX_RETAIL_BAND_USD } from "./marketClamp.ts";
 
 const ASOF = 2026;
 
@@ -116,4 +118,32 @@ test("catalog path label stays Catalog estimate — never sold comps or a book",
   const m = estimateMarket(s, "2022", undefined, { asOfYear: ASOF });
   assert.equal(m.sourceLabel, "Catalog estimate");
   assert.notEqual(m.sourceLabel, "Sold comps");
+});
+
+test("thin-comp catalog policy shrinks a fat diesel-A band toward one midpoint", () => {
+  const diesel = spec({
+    type: "Class A Diesel",
+    fuelType: "Diesel",
+    msrpRange: [320000, 420000],
+  });
+  const raw = estimateMarket(diesel, "2021", "33.5", {
+    asOfYear: ASOF,
+    make: "Thor",
+    model: "Palazzo",
+  });
+  assert.ok(
+    raw.retailHigh - raw.retailLow >= 40_000,
+    `catalog seed band ${raw.retailHigh - raw.retailLow} should be wide before clamp`,
+  );
+  const tight = applyThinCompCatalogPolicy(raw);
+  assert.equal(tight.sourceLabel, "Catalog estimate");
+  assert.equal(tight.hideRetailHigh, true);
+  assert.equal(tight.confidence, "low");
+  assert.ok(
+    tight.retailHigh - tight.retailLow <= THIN_COMP_MAX_RETAIL_BAND_USD,
+    `clamped band ${tight.retailHigh - tight.retailLow}`,
+  );
+  assert.ok(tight.marketValue && tight.marketValue > 0);
+  assert.ok(tight.tradeIn <= tight.retailLow);
+  assert.ok(tight.retailHigh <= raw.retailHigh);
 });
