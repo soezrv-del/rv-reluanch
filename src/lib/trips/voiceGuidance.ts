@@ -74,12 +74,15 @@ export function emptyVoiceMemory(): VoiceMemory {
   };
 }
 
+/** Quieter TBT default — on until the driver mutes. Imperial prompts only. */
 export function loadVoicePref(): boolean {
-  if (typeof localStorage === "undefined") return false;
+  if (typeof localStorage === "undefined") return true;
   try {
-    return localStorage.getItem(VOICE_PREF_KEY) === "on";
+    const raw = localStorage.getItem(VOICE_PREF_KEY);
+    if (raw == null) return true;
+    return raw === "on";
   } catch {
-    return false;
+    return true;
   }
 }
 

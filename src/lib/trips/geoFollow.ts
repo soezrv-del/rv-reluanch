@@ -26,16 +26,44 @@ export const FOLLOW_DISTANCE_FILTER_M = 15;
 export const FOLLOW_RECENTER_M = 45;
 /** Light lag so WKWebView is not retiling every tick. */
 export const FOLLOW_RECENTER_MS = 2000;
-export const FOLLOW_MAX_AGE_MS = 8000;
-export const FOLLOW_TIMEOUT_MS = 20_000;
+/** Accept a slightly stale puck so TBT is not stuck on “Finding GPS…”. */
+export const FOLLOW_MAX_AGE_MS = 30_000;
+export const FOLLOW_TIMEOUT_MS = 25_000;
 /** Street-ish zoom — still under MAX_TILES on a phone-width map. */
 export const FOLLOW_ZOOM = 13;
+
+/** Cached / network first — Capacitor WebView high-accuracy often times out. */
+export const ORIGIN_FAST_OPTIONS: PositionOptions = {
+  enableHighAccuracy: false,
+  timeout: 10_000,
+  maximumAge: 5 * 60_000,
+};
+export const ORIGIN_ACCURATE_OPTIONS: PositionOptions = {
+  enableHighAccuracy: true,
+  timeout: 18_000,
+  maximumAge: 30_000,
+};
+
+export const FOLLOW_PRIME_OPTIONS: PositionOptions = {
+  enableHighAccuracy: false,
+  timeout: 12_000,
+  maximumAge: 120_000,
+};
 
 export const FOLLOW_WATCH_OPTIONS: PositionOptions = {
   enableHighAccuracy: true,
   timeout: FOLLOW_TIMEOUT_MS,
   maximumAge: FOLLOW_MAX_AGE_MS,
 };
+
+export const FOLLOW_WATCH_FALLBACK: PositionOptions = {
+  enableHighAccuracy: false,
+  timeout: 15_000,
+  maximumAge: 60_000,
+};
+
+/** Reverse-geocode must not block committing auto-origin coords. */
+export const REVERSE_GEOCODE_MS = 2500;
 
 const EARTH_M = 6_371_000;
 
@@ -124,19 +152,71 @@ export function followTileView(
   };
 }
 
-export function followErrorMessage(err: unknown): string {
+export function geoErrorCode(err: unknown): number | null {
   if (err && typeof err === "object" && "code" in err) {
     const code = Number((err as GeolocationPositionError).code);
-    if (code === 1) {
-      return "Location permission denied — map stays on the route.";
-    }
-    if (code === 2) {
-      return "GPS unavailable — map stays on the route.";
-    }
-    if (code === 3) {
-      return "Waiting for GPS…";
-    }
+    return Number.isFinite(code) ? code : null;
+  }
+  return null;
+}
+
+export function isPermissionDenied(err: unknown): boolean {
+  return geoErrorCode(err) === 1;
+}
+
+export function followErrorMessage(err: unknown): string {
+  const code = geoErrorCode(err);
+  if (code === 1) {
+    return "Location permission denied — map stays on the route.";
+  }
+  if (code === 2) {
+    return "GPS unavailable — map stays on the route.";
+  }
+  if (code === 3) {
+    return "Waiting for GPS…";
   }
   if (err instanceof Error && err.message) return err.message;
   return "Location unavailable — map stays on the route.";
+}
+
+/** Honest copy: permission denied is the only hard fail. Timeout keeps retrying. */
+export function originErrorMessage(err: unknown): string | null {
+  if (isPermissionDenied(err)) {
+    return "Location permission denied — allow location, or type your address.";
+  }
+  return null;
+}
+
+function getCurrentPosition(
+  options: PositionOptions,
+): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      reject(new Error("Location is not available on this device."));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(resolve, reject, options);
+  });
+}
+
+/**
+ * One-shot origin for Plan trip / Use my location.
+ * Fast cached/network first, then high-accuracy — Capacitor WebView
+ * often times out if we only ask for a fresh GPS lock.
+ */
+export async function readDevicePosition(): Promise<GeolocationPosition> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) {
+    throw new Error("Location is not available on this device.");
+  }
+  try {
+    return await getCurrentPosition(ORIGIN_FAST_OPTIONS);
+  } catch (fastErr) {
+    if (isPermissionDenied(fastErr)) throw fastErr;
+    try {
+      return await getCurrentPosition(ORIGIN_ACCURATE_OPTIONS);
+    } catch (accurateErr) {
+      if (isPermissionDenied(accurateErr)) throw accurateErr;
+      throw accurateErr;
+    }
+  }
 }

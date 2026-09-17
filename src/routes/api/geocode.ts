@@ -27,6 +27,8 @@ type GeoHit = {
 
 const cache = new Map<string, { at: number; hits: GeoHit[] }>();
 const TTL = 30 * 60 * 1000;
+/** Keep upstream short — typeahead + reverse must not hang Plan trip. */
+const GEOCODE_UPSTREAM_MS = 4000;
 
 /** Curated RV destinations when network fails or for instant pick */
 const PRESETS: GeoHit[] = RV_DESTINATIONS.map((d) => ({
@@ -157,7 +159,7 @@ export const Route = createFileRoute("/api/geocode")({
             try {
               const json = await fetchJson(
                 mapboxReverseUrl(lng, lat, token),
-                8000,
+                GEOCODE_UPSTREAM_MS,
                 "RVFAX-RvTrips/1.0 (geocode; +https://rvfax.app)",
               );
               const mapped = hitFromMapboxReverse(json, lat, lng);
@@ -181,7 +183,7 @@ export const Route = createFileRoute("/api/geocode")({
           }
 
           const ctrl = new AbortController();
-          const timer = setTimeout(() => ctrl.abort(), 8000);
+          const timer = setTimeout(() => ctrl.abort(), GEOCODE_UPSTREAM_MS);
           try {
             const nom = new URL("https://nominatim.openstreetmap.org/reverse");
             nom.searchParams.set("lat", String(lat));
@@ -264,7 +266,7 @@ export const Route = createFileRoute("/api/geocode")({
           try {
             const json = await fetchJson(
               mapboxForwardUrl(q, token),
-              8000,
+              GEOCODE_UPSTREAM_MS,
               "RVFAX-RvTrips/1.0 (geocode; +https://rvfax.app)",
             );
             const hits = hitsFromMapboxForward(json, q);
@@ -291,7 +293,7 @@ export const Route = createFileRoute("/api/geocode")({
         }
 
         const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 8000);
+        const timer = setTimeout(() => ctrl.abort(), GEOCODE_UPSTREAM_MS);
         try {
           const nom = new URL("https://nominatim.openstreetmap.org/search");
           nom.searchParams.set("q", q);
