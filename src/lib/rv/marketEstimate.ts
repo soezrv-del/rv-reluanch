@@ -15,6 +15,7 @@
  */
 
 import {
+  clampRetailHighToMarketValue,
   clampTradeToRetailLow,
   tightenRetailBandTowardMid,
 } from "./marketClamp.ts";
@@ -337,17 +338,24 @@ export function applyThinCompCatalogPolicy(est: MarketEstimate): MarketEstimate 
     est.retailLow,
     est.retailHigh,
     est.tradeIn,
+    est.marketValue,
+  );
+  const marketValue =
+    tight.midpoint > 0 ? tight.midpoint : est.marketValue;
+  const pinned = clampRetailHighToMarketValue(
+    tight.retailHigh,
+    marketValue ?? 0,
   );
   return {
     ...est,
     tradeIn: tight.tradeIn,
     retailLow: tight.retailLow,
-    retailHigh: tight.retailHigh,
+    retailHigh: pinned.retailHigh,
     tradeCappedAtRetailLow:
       tight.tradeCappedAtRetailLow || est.tradeCappedAtRetailLow,
-    marketValue: tight.midpoint > 0 ? tight.midpoint : est.marketValue,
+    marketValue,
     hideRetailHigh: true,
-    confidence: est.confidence ?? "low",
+    confidence: "low",
     source: est.source ?? "catalog",
     sourceLabel: est.sourceLabel ?? CATALOG_ESTIMATE_LABEL,
   };

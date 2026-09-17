@@ -78,6 +78,7 @@ import {
   resolvePrimaryMarket,
   type PublicListingComps,
 } from "@/lib/rv/publicListingComps";
+import { hideRetailHighForDesk } from "@/lib/rv/marketClamp";
 import { fetchRecallsViaApi } from "@/lib/nhtsa/recalls";
 import type { NhtsaComplaint, NhtsaRecall } from "@/lib/nhtsa/recalls";
 import { buildReportId, valueFactors } from "@/lib/rv/reportMeta";
@@ -610,8 +611,14 @@ export function RvDetail({
   );
   const marketUpdating = liveLoading || compsLoading;
   const showSoldRange = prefersPublicComps(publicComps);
-  const hideRetailHigh = !showSoldRange || Boolean(market.hideRetailHigh);
   const soldConfidence = publicComps?.confidence ?? "low";
+  const hideRetailHigh =
+    soldConfidence === "low" ||
+    hideRetailHighForDesk({
+      soldConfidence,
+      showSoldRange,
+      hideRetailHigh: market.hideRetailHigh,
+    });
   const soldConfidenceLabel = compsConfidenceLabel(soldConfidence);
   const marketSourceLabel = showSoldRange
     ? SOLD_COMPS_LABEL
@@ -1339,12 +1346,6 @@ export function RvDetail({
                     label="Retail low"
                     value={formatMoney(market.retailLow)}
                   />
-                  {!hideRetailHigh ? (
-                    <MarketTile
-                      label="Retail high"
-                      value={formatMoney(market.retailHigh)}
-                    />
-                  ) : null}
                 </div>
               </div>
             )}
