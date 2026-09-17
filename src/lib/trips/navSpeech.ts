@@ -56,9 +56,9 @@ export function speakNavPrompt(text: string): boolean {
     const syn = window.speechSynthesis;
     syn.cancel();
     const u = new SpeechSynthesisUtterance(line);
-    u.rate = 1;
+    u.rate = 0.92;
     u.lang = "en-US";
-    u.volume = 1;
+    u.volume = 0.72;
     const voice = pickEnglishVoice();
     if (voice) u.voice = voice;
     syn.speak(u);

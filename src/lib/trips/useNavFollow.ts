@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import {
+  FOLLOW_PRIME_OPTIONS,
+  FOLLOW_WATCH_FALLBACK,
   FOLLOW_WATCH_OPTIONS,
   fixFromCoords,
   followErrorMessage,
+  geoErrorCode,
   shouldAcceptFix,
   type FollowStatus,
   type GeoFix,
@@ -34,6 +37,7 @@ export function useNavFollow(armed: boolean): {
 
     let last: GeoFix | null = null;
     let cancelled = false;
+    let watchId: number | null = null;
     setError(null);
     setDenied(false);
 
@@ -47,32 +51,60 @@ export function useNavFollow(armed: boolean): {
       setDenied(false);
     };
 
-    // Prime the first puck from a real fix — watch can be slow in WKWebView.
-    // Origin / Plan trip still owns its own one-shot; this is guidance-only.
-    navigator.geolocation.getCurrentPosition(applyFix, () => {
-      /* watchPosition owns denied / unavailable */
-    }, FOLLOW_WATCH_OPTIONS);
+    const onWatchError = (err: GeolocationPositionError) => {
+      if (cancelled) return;
+      if (err.code === 1) {
+        last = null;
+        setFix(null);
+        setDenied(true);
+        setError(followErrorMessage(err));
+        return;
+      }
+      // Timeout / unavailable: keep any puck we have and retry without
+      // high-accuracy so Capacitor WebView is not stuck on “Finding GPS…”.
+      if (last) {
+        setError(null);
+        return;
+      }
+      if (geoErrorCode(err) === 3) {
+        setError(null);
+        return;
+      }
+      setError(followErrorMessage(err));
+    };
 
-    const id = navigator.geolocation.watchPosition(
+    const startWatch = (opts: PositionOptions) => {
+      if (watchId != null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+      watchId = navigator.geolocation.watchPosition(
+        applyFix,
+        onWatchError,
+        opts,
+      );
+    };
+
+    // Prime from a cached/network fix — watch + high-accuracy can be slow
+    // in WKWebView. Origin / Plan trip still owns its own one-shot.
+    navigator.geolocation.getCurrentPosition(
       applyFix,
-      (err) => {
-        if (cancelled) return;
-        const msg = followErrorMessage(err);
-        if (err.code === 1) {
-          last = null;
-          setFix(null);
-          setDenied(true);
-          setError(msg);
-          return;
-        }
-        setError(msg);
+      () => {
+        /* watchPosition owns denied / unavailable */
       },
-      FOLLOW_WATCH_OPTIONS,
+      FOLLOW_PRIME_OPTIONS,
     );
+
+    startWatch(FOLLOW_WATCH_OPTIONS);
+
+    const fallbackTimer = window.setTimeout(() => {
+      if (cancelled || last) return;
+      startWatch(FOLLOW_WATCH_FALLBACK);
+    }, 8_000);
 
     return () => {
       cancelled = true;
-      navigator.geolocation.clearWatch(id);
+      window.clearTimeout(fallbackTimer);
+      if (watchId != null) navigator.geolocation.clearWatch(watchId);
       last = null;
       setFix(null);
       setError(null);

@@ -142,6 +142,12 @@ test("Navigate results sheet uses live stats and live camps — not DEMO pads", 
   assert.doesNotMatch(ui, /useState\(DEMO_ROUTE\)/);
   assert.doesNotMatch(ui, /\.\.\.DEMO_ROUTE/);
   assert.doesNotMatch(ui, /RVTRIPS_MAP_PANEL/);
+  assert.doesNotMatch(ui, /RVTRIPS_AMERICA_BACKDROP/);
+  assert.doesNotMatch(ui, /rvtrips-america/);
+  assert.doesNotMatch(ui, /SHARED_PRESTIGE_BACKDROP/);
+  assert.doesNotMatch(ui, /SuiteBackdrop/);
+  assert.doesNotMatch(ui, /MetalVerifiedTrue/);
+  assert.match(ui, /data-trips-route-clean/);
   assert.doesNotMatch(ui, /DEMO_ALERTS/);
   assert.doesNotMatch(ui, /DEMO_DIRECTIONS/);
   assert.doesNotMatch(ui, /clearance DB/);

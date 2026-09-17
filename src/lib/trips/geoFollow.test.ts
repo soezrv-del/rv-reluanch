@@ -7,16 +7,23 @@ import { pointToPixel } from "./basemap.ts";
 import {
   FOLLOW_DISTANCE_FILTER_M,
   FOLLOW_MAX_AGE_MS,
+  FOLLOW_PRIME_OPTIONS,
   FOLLOW_RECENTER_M,
   FOLLOW_RECENTER_MS,
   FOLLOW_TIMEOUT_MS,
+  FOLLOW_WATCH_FALLBACK,
   FOLLOW_WATCH_OPTIONS,
   FOLLOW_ZOOM,
+  ORIGIN_ACCURATE_OPTIONS,
+  ORIGIN_FAST_OPTIONS,
+  REVERSE_GEOCODE_MS,
   fixFromCoords,
   followErrorMessage,
   followTileView,
   haversineMeters,
   headingDeg,
+  isPermissionDenied,
+  originErrorMessage,
   shouldAcceptFix,
   shouldRecenterFollow,
   type GeoFix,
@@ -124,6 +131,21 @@ test("watch options are high-accuracy and battery-aware", () => {
   assert.ok(FOLLOW_DISTANCE_FILTER_M >= 10);
 });
 
+test("origin + follow prefer a cached fix before high-accuracy timeout", () => {
+  assert.equal(ORIGIN_FAST_OPTIONS.enableHighAccuracy, false);
+  assert.ok((ORIGIN_FAST_OPTIONS.maximumAge ?? 0) >= 60_000);
+  assert.equal(ORIGIN_ACCURATE_OPTIONS.enableHighAccuracy, true);
+  assert.equal(FOLLOW_PRIME_OPTIONS.enableHighAccuracy, false);
+  assert.ok((FOLLOW_PRIME_OPTIONS.maximumAge ?? 0) >= 60_000);
+  assert.equal(FOLLOW_WATCH_FALLBACK.enableHighAccuracy, false);
+  assert.ok(REVERSE_GEOCODE_MS <= 3000);
+  assert.equal(isPermissionDenied({ code: 1 }), true);
+  assert.equal(isPermissionDenied({ code: 3 }), false);
+  assert.match(originErrorMessage({ code: 1 }) || "", /permission denied/i);
+  assert.equal(originErrorMessage({ code: 3 }), null);
+  assert.equal(originErrorMessage({ code: 2 }), null);
+});
+
 test("followErrorMessage is honest — no fake motion copy", () => {
   assert.match(
     followErrorMessage({ code: 1 }),
@@ -148,8 +170,19 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   const reroute = readFileSync(join(root, "useOffRouteReroute.ts"), "utf8");
 
   assert.match(ui, /useNavFollow\(navArmed\)/);
-  assert.match(ui, /getCurrentPosition/);
   assert.match(ui, /readDevicePosition/);
+  assert.match(ui, /shouldShowOriginField/);
+  assert.match(ui, /pendingDestRef/);
+  assert.match(ui, /data-plan-go/);
+  assert.match(ui, /data-nav-eta/);
+  assert.match(ui, /data-trips-navigating/);
+  assert.match(ui, /data-trips-tools/);
+  assert.match(ui, /data-origin-chip/);
+  assert.match(ui, /data-trips-route-clean/);
+  assert.doesNotMatch(ui, /RVTRIPS_AMERICA_BACKDROP/);
+  assert.doesNotMatch(ui, /SHARED_PRESTIGE_BACKDROP/);
+  assert.doesNotMatch(ui, /SuiteBackdrop/);
+  assert.doesNotMatch(ui, /MetalVerifiedTrue/);
   assert.match(ui, /follow=\{follow\.fix\}/);
   assert.match(ui, /followActive=\{navArmed\}/);
   assert.match(ui, /followStatus=\{follow\.status\}/);
@@ -203,6 +236,11 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(hook, /getCurrentPosition/);
   assert.match(hook, /clearWatch/);
   assert.match(hook, /FOLLOW_WATCH_OPTIONS/);
+  assert.match(hook, /FOLLOW_PRIME_OPTIONS/);
+  assert.match(hook, /FOLLOW_WATCH_FALLBACK/);
+  assert.match(follow, /readDevicePosition/);
+  assert.match(follow, /ORIGIN_FAST_OPTIONS/);
+  assert.match(follow, /getCurrentPosition/);
   assert.doesNotMatch(hook, /["'`]\/api\/route/);
 
   assert.match(reroute, /fetchNavigateRoute/);

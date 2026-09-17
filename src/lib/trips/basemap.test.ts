@@ -178,6 +178,8 @@ test("Navigate wires RouteBasemap and never /api/route or stock map photo", () =
   assert.doesNotMatch(ui, /["'`]\/api\/route/);
   assert.doesNotMatch(ui, /RouteLinePreview/);
   assert.doesNotMatch(ui, /RVTRIPS_MAP_PANEL/);
+  assert.doesNotMatch(ui, /RVTRIPS_AMERICA_BACKDROP/);
+  assert.doesNotMatch(ui, /rvtrips-america/);
   assert.match(map, /data-route-basemap/);
   assert.match(map, /data-tile-source/);
   assert.match(map, /data-follow-puck/);

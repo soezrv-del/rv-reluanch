@@ -18,7 +18,6 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { RVTRIPS_AMERICA_BACKDROP } from "@/assets/tripMedia";
 import {
   SAMPLE_CAMPS,
   SAMPLE_PACK,
@@ -113,6 +112,7 @@ import {
   originIsDevice,
   PLAN_VIA_CHIPS,
   saveLastKnownOrigin,
+  shouldShowOriginField,
   shouldTypeahead,
   type PlanPlace,
 } from "@/lib/trips/planTrip";
@@ -130,6 +130,11 @@ import {
 import { useNavFollow } from "@/lib/trips/useNavFollow";
 import { useOffRouteReroute } from "@/lib/trips/useOffRouteReroute";
 import { useNavVoice } from "@/lib/trips/useNavVoice";
+import {
+  originErrorMessage,
+  readDevicePosition,
+  REVERSE_GEOCODE_MS,
+} from "@/lib/trips/geoFollow";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
 import {
@@ -161,37 +166,6 @@ type NavStep = {
   maneuver: string;
 };
 
-
-function readDevicePosition(): Promise<GeolocationPosition> {
-  return new Promise((resolve, reject) => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      reject(new Error("Location is not available on this device."));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
-      timeout: 15_000,
-      maximumAge: 60_000,
-    });
-  });
-}
-
-function geoErrorMessage(err: unknown): string {
-  if (err && typeof err === "object" && "code" in err) {
-    const code = Number((err as GeolocationPositionError).code);
-    if (code === 1) {
-      return "Location permission denied — allow location, or type your address.";
-    }
-    if (code === 2) {
-      return "Location unavailable — check GPS/signal, or type your address.";
-    }
-    if (code === 3) {
-      return "Location timed out — try again, or type your address.";
-    }
-  }
-  if (err instanceof Error && err.message) return err.message;
-  return "Could not get current location — type your address instead.";
-}
 
 export function RvTripsApp() {
   const [tool, setTool] = useState<ToolPane>(null);
@@ -257,7 +231,7 @@ export function RvTripsApp() {
       return [];
     }
   });
-  const [originOpen, setOriginOpen] = useState(!bootOrigin);
+  const [originOpen, setOriginOpen] = useState(false);
   const [geoHits, setGeoHits] = useState<PlaceHit[]>([]);
   const [geoFor, setGeoFor] = useState<GeoTarget | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
@@ -265,6 +239,7 @@ export function RvTripsApp() {
   const [locateError, setLocateError] = useState<string | null>(null);
   const geoAbortRef = useRef<AbortController | null>(null);
   const didAutoLocate = useRef(false);
+  const pendingDestRef = useRef<PlaceHit | null>(null);
 
   const [route, setRoute] = useState<TripRoute | null>(null);
   const [osrm, setOsrm] = useState<OsrmRouteResult | null>(null);
@@ -509,6 +484,13 @@ export function RvTripsApp() {
     [locked],
   );
 
+  const originSig = originPlace
+    ? `${originPlace.lng.toFixed(4)},${originPlace.lat.toFixed(4)}`
+    : "";
+  const destSig = destPlace
+    ? `${destPlace.lng.toFixed(4)},${destPlace.lat.toFixed(4)}`
+    : "";
+
   useEffect(() => {
     if (!originPlace || !destPlace) return;
     return runRoute(
@@ -519,8 +501,9 @@ export function RvTripsApp() {
       viaPlaces,
     );
     // viaSig tracks filled stops; empty via rows do not retrigger.
+    // Label-only origin refine (reverse geocode) must not re-fetch the route.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [originPlace, destPlace, viaSig, routeKey, runRoute]);
+  }, [originSig, destSig, viaSig, routeKey, runRoute]);
 
   useEffect(() => {
     if (routeStatus !== "live" || !originPlace || !destPlace) {
@@ -706,12 +689,21 @@ export function RvTripsApp() {
     setOriginOpen(false);
     saveLastKnownOrigin(hit);
     setNavArmed(false);
+    const queued = pendingDestRef.current;
+    if (queued) {
+      pendingDestRef.current = null;
+      setDestPlace(queued);
+      setDestText(queued.label);
+      setDestMenuOpen(false);
+      setRouteKey((k) => k + 1);
+    }
   }, []);
 
   const searchPlace = async (q: string, which: GeoTarget) => {
     geoAbortRef.current?.abort();
     const ctrl = new AbortController();
     geoAbortRef.current = ctrl;
+    const geoTimer = window.setTimeout(() => ctrl.abort(), 6_000);
     setGeoFor(which);
     setGeoLoading(true);
     if (which === "origin") setLocateError(null);
@@ -727,6 +719,7 @@ export function RvTripsApp() {
       if (e instanceof DOMException && e.name === "AbortError") return;
       setGeoHits([]);
     } finally {
+      window.clearTimeout(geoTimer);
       if (!ctrl.signal.aborted) setGeoLoading(false);
     }
   };
@@ -767,20 +760,42 @@ export function RvTripsApp() {
           throw new Error("Invalid coordinates from device.");
         }
 
-        let label = "Current location";
+        // Coords first — reverse label is decorative and must not block Go.
+        commitOrigin({ label: "Current location", lat, lng, kind: "current" });
+        setLocateError(null);
+
+        const ctrl = new AbortController();
+        const timer = window.setTimeout(() => ctrl.abort(), REVERSE_GEOCODE_MS);
         try {
           const res = await fetch(
             `/api/geocode?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`,
+            { signal: ctrl.signal },
           );
           const json = (await res.json()) as { hits?: PlaceHit[] };
-          if (json.hits?.[0]?.label) label = json.hits[0].label;
+          const label = json.hits?.[0]?.label;
+          if (label) {
+            const refined = { label, lat, lng, kind: "current" as const };
+            setOriginPlace((prev) =>
+              prev && prev.lat === lat && prev.lng === lng ? refined : prev,
+            );
+            setOriginText((prev) =>
+              prev === "Current location" || !prev ? label : prev,
+            );
+            saveLastKnownOrigin(refined);
+          }
         } catch {
           /* coords still route even if reverse geocode fails */
+        } finally {
+          window.clearTimeout(timer);
         }
-
-        commitOrigin({ label, lat, lng, kind: "current" });
       } catch (err) {
-        if (!quiet) setLocateError(geoErrorMessage(err));
+        const denied = originErrorMessage(err);
+        if (denied) {
+          setLocateError(denied);
+          setOriginOpen(true);
+        } else if (!quiet) {
+          setLocateError(null);
+        }
       } finally {
         setLocating(false);
       }
@@ -791,8 +806,8 @@ export function RvTripsApp() {
   useEffect(() => {
     if (didAutoLocate.current) return;
     didAutoLocate.current = true;
-    void useCurrentLocation({ quiet: Boolean(bootOrigin) });
-  }, [bootOrigin, useCurrentLocation]);
+    void useCurrentLocation({ quiet: true });
+  }, [useCurrentLocation]);
 
   useEffect(() => {
     if (!shouldTypeahead(destText, destPlace)) return;
@@ -1011,7 +1026,13 @@ export function RvTripsApp() {
     setGeoHits([]);
     setGeoFor(null);
     setNavArmed(false);
-    if (originPlace) setRouteKey((k) => k + 1);
+    if (originPlace) {
+      pendingDestRef.current = null;
+      setRouteKey((k) => k + 1);
+      return;
+    }
+    pendingDestRef.current = hit;
+    if (!locating) void useCurrentLocation({ quiet: true });
   };
 
   const emptyVia = vias.find((v) => !v.place);
@@ -1177,6 +1198,18 @@ export function RvTripsApp() {
     destPlace,
     destText,
   });
+  const permissionDenied = Boolean(locateError);
+  const showOriginField = shouldShowOriginField({
+    userOpened: originOpen,
+    permissionDenied,
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (navArmed) root.setAttribute("data-trips-navigating", "1");
+    else root.removeAttribute("data-trips-navigating");
+    return () => root.removeAttribute("data-trips-navigating");
+  }, [navArmed]);
   const hasRoutePoints = Boolean(originPlace && destPlace);
   const canLock = profileIsComplete(draft) && !locked;
   const dimsReady = Boolean((year && make && model) || draft.lengthFt > 0);
@@ -1216,21 +1249,11 @@ export function RvTripsApp() {
   return (
     <div
       className="relative flex h-full flex-col overflow-hidden bg-bg text-white"
+      data-trips-screen
+      data-trips-route-clean={
+        routeStatus === "live" || navArmed ? "1" : undefined
+      }
     >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <img
-          src={RVTRIPS_AMERICA_BACKDROP}
-          alt=""
-          className="absolute inset-0 size-full scale-110 object-cover object-[center_42%] brightness-110 contrast-105 saturate-115"
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(2,10,28,0.72) 0%, rgba(4,14,36,0.45) 28%, rgba(6,18,40,0.35) 55%, rgba(2,8,22,0.78) 100%)",
-          }}
-        />
-      </div>
 
       <div
         ref={scrollRef}
@@ -1257,8 +1280,12 @@ export function RvTripsApp() {
             ) : null}
           </div>
           <div
-            className="mt-2 flex flex-wrap items-center gap-2"
+            className={cn(
+              "mt-2 flex flex-wrap items-center gap-2",
+              navArmed && "hidden",
+            )}
             data-trips-tools
+            hidden={navArmed}
           >
             <button
               type="button"
@@ -1473,14 +1500,15 @@ export function RvTripsApp() {
                 data-trips-chrome
                 className="glass-prestige relative z-40 isolate pointer-events-auto space-y-2.5 rounded-[1.25rem] p-3.5"
               >
-                {originPlace && !originOpen ? (
+                {!showOriginField ? (
                   <button
                     type="button"
                     onClick={() => setOriginOpen(true)}
                     className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-white/12 bg-black/30 px-3 py-2.5 text-left"
                     aria-label="Change starting point"
+                    data-origin-chip
                   >
-                    {locating ? (
+                    {locating || !originPlace ? (
                       <Loader2 className="size-4 shrink-0 animate-spin text-sky-200" />
                     ) : (
                       <LocateFixed
@@ -1493,7 +1521,8 @@ export function RvTripsApp() {
                       />
                     )}
                     <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-white">
-                      {originPlace.label}
+                      {originPlace?.label ||
+                        (locating ? "Finding your location…" : "Use my location")}
                     </span>
                     <span className="text-[11px] font-bold text-blue">Change</span>
                   </button>
@@ -1752,12 +1781,15 @@ export function RvTripsApp() {
 
                 <button
                   type="button"
-                  disabled={!canRoute}
+                  disabled={!canRoute && !(destPlace && locating)}
                   onClick={() => void geocodeAndRoute()}
                   className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue px-3 py-3 text-[15px] font-bold text-white disabled:opacity-40"
+                  data-plan-go
                 >
                   <Navigation className="size-4" />
-                  Route
+                  {destPlace && locating && !originPlace
+                    ? "Getting location…"
+                    : "Go"}
                 </button>
                 {routeError ? (
                   <p className="text-[12px] text-amber">{routeError}</p>
@@ -1828,7 +1860,13 @@ export function RvTripsApp() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div
+                    className={cn(
+                      "flex flex-wrap items-center gap-2",
+                      navArmed && "hidden",
+                    )}
+                    hidden={navArmed}
+                  >
                     <span className="rounded-full border border-white/20 bg-black/35 px-3 py-1.5 text-[12px] font-bold text-white">
                       {engineChip}
                     </span>
@@ -1861,7 +1899,7 @@ export function RvTripsApp() {
                     </p>
                   ) : null}
 
-                  {providerNote ? (
+                  {providerNote && !navArmed ? (
                     <p className="text-[12px] leading-snug text-white/75">
                       {providerNote}
                     </p>
@@ -1931,16 +1969,19 @@ export function RvTripsApp() {
                   {navArmed ? (
                     <div
                       data-nav-voice
-                      className="glass-prestige relative z-10 flex items-center gap-2 rounded-[1.25rem] px-3.5 py-3 pointer-events-auto"
+                      className="glass-prestige relative z-10 flex items-center gap-2 rounded-[1.25rem] px-3.5 py-3.5 pointer-events-auto"
                     >
                       <div className="min-w-0 flex-1">
                         <p
                           data-nav-prompt
-                          className="text-[14px] font-bold leading-snug text-white"
+                          className="font-bold leading-snug text-white"
                         >
                           {guidance?.step.instruction || "Following the route"}
                         </p>
-                        <p className="mt-0.5 text-[11px] font-semibold text-white/80">
+                        <p
+                          data-nav-eta
+                          className="mt-1 font-semibold tabular-nums text-white/90"
+                        >
                           {guidance
                             ? formatRemainLabel(guidance.remainM)
                             : follow.status === "live"
@@ -1995,6 +2036,7 @@ export function RvTripsApp() {
                     )
                   ) : null}
 
+                  {navArmed ? null : (
                   <FuelAlongRoute
                     status={fuelStatus}
                     result={fuel}
@@ -2003,7 +2045,9 @@ export function RvTripsApp() {
                     onRouteVia={routeViaPoi}
                     viaDisabled={viaSlotsFull}
                   />
+                  )}
 
+                  {navArmed ? null : (
                   <CampsAlongRoute
                     status={campsStatus}
                     result={camps}
@@ -2013,7 +2057,9 @@ export function RvTripsApp() {
                     viaDisabled={viaSlotsFull}
                     limit={6}
                   />
+                  )}
 
+                  {navArmed ? null : (
                   <div className="pt-0.5" data-camp-sample-toggle>
                     <button
                       type="button"
@@ -2055,7 +2101,9 @@ export function RvTripsApp() {
                       </div>
                     ) : null}
                   </div>
+                  )}
 
+                  {navArmed ? null : (
                   <DumpsAlongRoute
                     status={dumpsStatus}
                     result={dumps}
@@ -2065,15 +2113,16 @@ export function RvTripsApp() {
                     viaDisabled={viaSlotsFull}
                     limit={8}
                   />
+                  )}
                 </section>
               ) : !hasRoutePoints ? (
                 <p className="px-1 py-2 text-[13px] text-white/80">
-                  Type a destination — or pick from the list — then{" "}
-                  <span className="font-bold text-white">Route</span>.
+                  Pick a destination to{" "}
+                  <span className="font-bold text-white">Go</span>.
                 </p>
               ) : null}
 
-              {routeStatus === "live" && !displayCoach ? (
+              {routeStatus === "live" && !displayCoach && !navArmed ? (
                 <button
                   type="button"
                   onClick={() => setTool("profile")}
@@ -2087,6 +2136,7 @@ export function RvTripsApp() {
               originPlace &&
               destPlace &&
               osrm &&
+              !navArmed &&
               (alerts.length > 0 || saferIntent !== "none") ? (
                 <div className="space-y-3">
                   {alerts.length > 0 ? (

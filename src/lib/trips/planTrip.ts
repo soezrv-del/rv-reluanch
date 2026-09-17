@@ -112,6 +112,17 @@ export function originIsDevice(place: PlanPlace | null): boolean {
   return place?.kind === "current";
 }
 
+/**
+ * From field stays closed while auto-origin is working.
+ * Only permission-denied or an explicit Change tap opens typing.
+ */
+export function shouldShowOriginField(opts: {
+  userOpened: boolean;
+  permissionDenied: boolean;
+}): boolean {
+  return Boolean(opts.userOpened || opts.permissionDenied);
+}
+
 /** City-first label for chips and saved-trip names. */
 export function shortPlaceLabel(place: Pick<PlanPlace, "label">): string {
   const raw = place.label.trim();

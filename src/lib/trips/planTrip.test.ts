@@ -15,6 +15,7 @@ import {
   PLAN_DEST_CHIPS,
   PLAN_VIA_CHIPS,
   saveLastKnownOrigin,
+  shouldShowOriginField,
   shouldTypeahead,
   defaultTripName,
   MAX_VIAS,
@@ -173,6 +174,21 @@ test("originIsDevice is current-location only", () => {
   assert.equal(originIsDevice(null), false);
 });
 
+test("shouldShowOriginField stays closed unless Change or permission denied", () => {
+  assert.equal(
+    shouldShowOriginField({ userOpened: false, permissionDenied: false }),
+    false,
+  );
+  assert.equal(
+    shouldShowOriginField({ userOpened: true, permissionDenied: false }),
+    true,
+  );
+  assert.equal(
+    shouldShowOriginField({ userOpened: false, permissionDenied: true }),
+    true,
+  );
+});
+
 test("via chips and default trip name stay lean", () => {
   assert.ok(MAX_VIAS >= 1 && MAX_VIAS <= 4);
   assert.ok(PLAN_VIA_CHIPS.some((c) => c.label.startsWith("Boise")));
@@ -205,22 +221,33 @@ test("Navigate plan-trip: dest-first, profile after route, no Search tap require
   assert.match(ui, /saveLastKnownOrigin/);
   assert.match(ui, /canSubmitPlan/);
   assert.match(ui, /shouldTypeahead/);
+  assert.match(ui, /shouldShowOriginField/);
+  assert.match(ui, /pendingDestRef/);
   assert.match(ui, /data-dest-suggest/);
+  assert.match(ui, /data-plan-go/);
   assert.match(ui, /mergeDestSuggestions/);
   assert.match(ui, /Use my location/);
   assert.match(ui, /Add an RV profile\?/);
   assert.match(ui, /Where to\?/);
+  assert.match(ui, /data-trips-route-clean/);
+  assert.doesNotMatch(ui, /RVTRIPS_AMERICA_BACKDROP/);
+  assert.doesNotMatch(ui, /rvtrips-america/);
+  assert.doesNotMatch(ui, /SHARED_PRESTIGE_BACKDROP/);
+  assert.doesNotMatch(ui, /SuiteBackdrop/);
+  assert.doesNotMatch(ui, /MetalVerifiedTrue/);
   assert.doesNotMatch(ui, /SET PROFILE/);
   assert.doesNotMatch(ui, /Set your RV profile first/);
   assert.doesNotMatch(ui, /Calculate RV Route/);
   assert.doesNotMatch(ui, /Search origin/);
   assert.doesNotMatch(ui, /Search destination/);
+  assert.doesNotMatch(ui, /Location timed out — try again, or type your address/);
 
-  const routeBtn = ui.search(/\n\s+Route\n/);
+  const goBtn = ui.indexOf("data-plan-go");
   const profilePrompt = ui.indexOf("Add an RV profile?");
   const startTbt = ui.indexOf("Start Turn-by-Turn");
-  assert.ok(routeBtn > 0, "Route button");
-  assert.ok(profilePrompt > routeBtn, "profile prompt after Route");
+  assert.ok(goBtn > 0, "Go button");
+  assert.match(ui, /:\s*"Go"/);
+  assert.ok(profilePrompt > goBtn, "profile prompt after Go");
   assert.ok(profilePrompt > startTbt, "profile prompt after Start Turn-by-Turn");
   assert.ok(
     ui.includes('routeStatus === "live" && !displayCoach'),

@@ -128,6 +128,8 @@ test("Trips wires Mapbox as visual layer; truck routing stays HERE", () => {
   assert.match(tiles, /mapboxPublicToken/);
   assert.match(geo, /mapboxForwardUrl/);
   assert.match(geo, /Nominatim/);
+  assert.match(geo, /GEOCODE_UPSTREAM_MS/);
+  assert.match(geo, /const GEOCODE_UPSTREAM_MS = 4000/);
   assert.doesNotMatch(nav, /mapbox/i);
   assert.doesNotMatch(here, /mapbox/i);
   assert.match(env, /MAPBOX_ACCESS_TOKEN=/);
