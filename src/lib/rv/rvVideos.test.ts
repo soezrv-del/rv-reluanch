@@ -24,6 +24,9 @@ import {
   shareVideoForCoach,
   shouldShowRvVideoPrompt,
   scoreTitleOverlap,
+  titleHasCompetingMake,
+  titleHasExactMake,
+  titleQualifiesForRvMake,
   tokenizeCoachQuery,
   youtubeWatchUrl,
 } from "./rvVideos.ts";
@@ -185,6 +188,7 @@ test("title overlap ranks real matches and drops unrelated titles", () => {
       { title: "2021 Newmar Dutch Star" },
     ],
     q,
+    "Tiffin",
   );
   assert.equal(ranked[0]!.title, "2023 Tiffin Allegro Bus 45OPP walkthrough");
   assert.equal(ranked[1]!.title, "Tiffin Allegro Bus tour");
@@ -197,6 +201,70 @@ test("title overlap ranks real matches and drops unrelated titles", () => {
     false,
   );
   assert.ok(scoreTitleOverlap("2023 Tiffin Allegro Bus", tokenizeCoachQuery(q)) > 0);
+});
+
+test("Liberty Coach search hard-rejects American Coach and generic coach titles", () => {
+  const make = "Liberty Coach";
+  const q = "2024 Liberty Coach Signature";
+  const american = "2024 American Coach American Dream 45A Walkthrough";
+  const genericLuxury = "2024 Luxury Motorhome Coach Tour";
+  const genericCoach = "Coach walkthrough Class A";
+  const yearOnly = "2024 Class A Diesel Pusher";
+  const liberty = "2024 Liberty Coach Signature 45 Walkthrough";
+  const libertyWs = "2024 Liberty   Coach Signature";
+
+  assert.equal(titleHasExactMake(liberty, make), true);
+  assert.equal(titleHasExactMake(libertyWs, make), true);
+  assert.equal(titleHasExactMake(american, make), false);
+  assert.equal(titleHasExactMake(genericLuxury, make), false);
+  assert.equal(titleHasExactMake(genericCoach, make), false);
+  assert.equal(titleHasExactMake(yearOnly, make), false);
+
+  assert.equal(titleHasCompetingMake(american, make), true);
+  assert.equal(titleHasCompetingMake(liberty, make), false);
+
+  assert.equal(titleQualifiesForRvMake(liberty, make), true);
+  assert.equal(titleQualifiesForRvMake(american, make), false);
+  assert.equal(titleQualifiesForRvMake(genericLuxury, make), false);
+  assert.equal(titleQualifiesForRvMake(genericCoach, make), false);
+
+  const ranked = rankRvVideos(
+    [
+      { title: american },
+      { title: genericLuxury },
+      { title: genericCoach },
+      { title: yearOnly },
+      { title: liberty },
+      { title: libertyWs },
+    ],
+    q,
+    make,
+  );
+  assert.equal(ranked.length, 2);
+  assert.equal(
+    ranked.some((v) => v.title === liberty),
+    true,
+  );
+  assert.equal(
+    ranked.some((v) => v.title === libertyWs),
+    true,
+  );
+});
+
+test("year + coach token overlap is not enough without the exact make", () => {
+  const ranked = rankRvVideos(
+    [{ title: "2024 American Coach American Dream 45A" }],
+    "2024 Liberty Coach",
+    "Liberty Coach",
+  );
+  assert.equal(ranked.length, 0);
+  assert.ok(
+    scoreTitleOverlap(
+      "2024 American Coach American Dream 45A",
+      tokenizeCoachQuery("2024 Liberty Coach"),
+    ) > 0,
+    "token overlap still exists — the make gate must drop it",
+  );
 });
 
 test("watch URL is YouTube, not an invented Facts spec", () => {
@@ -259,6 +327,8 @@ test("Facts report only fetches videos after opt-in; key stays server-side", () 
   assert.equal(RV_VIDEO_LIBRARY_CHANNEL_ID, "UCaAH7nANvUhdPWN93uQ6mcA");
   assert.equal(RV_VIDEO_LIBRARY_HANDLE, "RVVideoLibrary");
   assert.match(api, /MISSING_KEY_MESSAGE/);
+  assert.match(api, /filterRvVideosByMake/);
+  assert.match(api, /rankRvVideos\(hits, query, make\)/);
   assert.doesNotMatch(api, /VITE_YOUTUBE/);
 
   assert.match(client, /\/api\/rv-videos/);

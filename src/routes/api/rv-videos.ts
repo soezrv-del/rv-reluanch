@@ -4,6 +4,7 @@ import {
   buildRvVideoQuery,
   calmVideoLookupError,
   EMPTY_MATCH_MESSAGE,
+  filterRvVideosByMake,
   isRvVideoLibraryYear,
   MISSING_KEY_MESSAGE,
   rankRvVideos,
@@ -209,11 +210,11 @@ export const Route = createFileRoute("/api/rv-videos")({
         }
 
         try {
-          let hits = await searchChannel(apiKey, query);
+          let hits = filterRvVideosByMake(await searchChannel(apiKey, query), make);
           if (!hits.length && core && core !== query) {
-            hits = await searchChannel(apiKey, core);
+            hits = filterRvVideosByMake(await searchChannel(apiKey, core), make);
           }
-          const ranked = rankRvVideos(hits, query).slice(0, SHOW_RESULTS);
+          const ranked = rankRvVideos(hits, query, make).slice(0, SHOW_RESULTS);
           const data = payload(query, ranked, false);
           cache.set(cacheKey, { at: Date.now(), data });
           return Response.json(data, {

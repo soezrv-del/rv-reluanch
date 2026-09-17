@@ -182,6 +182,92 @@ export function tokenizeCoachQuery(q: string): string[] {
     .filter((t) => t.length >= 2 && !QUERY_STOP.has(t));
 }
 
+/**
+ * Small competing-make list for the hard title gate.
+ * Multi-word * Coach brands plus major makes used in tests — not the catalog.
+ */
+export const RV_VIDEO_KNOWN_MAKES = [
+  "American Coach",
+  "Liberty Coach",
+  "Entegra Coach",
+  "Thor Motor Coach",
+  "Tiffin",
+  "Newmar",
+  "Winnebago",
+  "Keystone",
+] as const;
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function makePhraseRe(make: string): RegExp | null {
+  const parts = clean(make)
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(escapeRegExp);
+  if (!parts.length) return null;
+  // Exact manufacturer phrase; flexible whitespace; not a weak token like "coach".
+  return new RegExp(`(?:^|[^a-z0-9])${parts.join("\\s+")}(?![a-z0-9])`, "i");
+}
+
+function sameMakeFamily(searched: string, known: string): boolean {
+  const a = clean(searched).toLowerCase();
+  const b = clean(known).toLowerCase();
+  if (!a || !b) return false;
+  if (a === b) return true;
+  return b.startsWith(`${a} `) || a.startsWith(`${b} `);
+}
+
+/** Title contains the exact searched make (case-insensitive, flexible whitespace). */
+export function titleHasExactMake(title: string, make: string): boolean {
+  const re = makePhraseRe(make);
+  if (!re) return false;
+  return re.test(clean(title));
+}
+
+/** Title names a different known make than the one searched. */
+export function titleHasCompetingMake(title: string, make: string): boolean {
+  const searched = clean(make);
+  if (!searched) return false;
+  const hay = clean(title);
+  if (!hay) return false;
+  for (const known of RV_VIDEO_KNOWN_MAKES) {
+    if (sameMakeFamily(searched, known)) continue;
+    if (titleHasExactMake(hay, known)) return true;
+  }
+  return false;
+}
+
+/**
+ * David 2026-09-17: every returned video must contain the exact manufacturer
+ * name. Generic coach/luxury/year tokens are not enough; competing makes fail.
+ */
+export function titleQualifiesForRvMake(title: string, make: string): boolean {
+  if (!titleHasExactMake(title, make)) return false;
+  if (titleHasCompetingMake(title, make)) return false;
+  return true;
+}
+
+export function filterRvVideosByMake<T extends { title: string }>(
+  videos: T[],
+  make: string,
+): T[] {
+  return videos.filter((v) => titleQualifiesForRvMake(v.title, make));
+}
+
+function resolveRankMake(query: string, make?: string | null): string {
+  const explicit = clean(make);
+  if (explicit) return explicit;
+  const hay = clean(query);
+  if (!hay) return "";
+  const known = [...RV_VIDEO_KNOWN_MAKES].sort((a, b) => b.length - a.length);
+  for (const name of known) {
+    if (titleHasExactMake(hay, name)) return name;
+  }
+  return "";
+}
+
 export function scoreTitleOverlap(title: string, tokens: string[]): number {
   const hay = clean(title).toLowerCase();
   if (!hay || !tokens.length) return 0;
@@ -194,13 +280,19 @@ export function scoreTitleOverlap(title: string, tokens: string[]): number {
   return score;
 }
 
-/** Rank by title overlap. Zero-overlap rows are dropped — no invented matches. */
+/**
+ * Rank by title overlap after the hard make-in-title gate.
+ * Zero-overlap / wrong-make rows are dropped — no invented matches.
+ */
 export function rankRvVideos<T extends { title: string }>(
   videos: T[],
   query: string,
+  make?: string | null,
 ): T[] {
+  const requiredMake = resolveRankMake(query, make);
+  const gated = requiredMake ? filterRvVideosByMake(videos, requiredMake) : [];
   const tokens = tokenizeCoachQuery(query);
-  return videos
+  return gated
     .map((v) => ({ v, score: scoreTitleOverlap(v.title, tokens) }))
     .filter((row) => row.score > 0)
     .sort((a, b) => b.score - a.score || a.v.title.localeCompare(b.v.title))
