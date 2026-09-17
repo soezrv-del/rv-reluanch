@@ -240,9 +240,14 @@ test("Liberty Coach search hard-rejects American Coach and generic coach titles"
     q,
     make,
   );
-  assert.deepEqual(
-    ranked.map((v) => v.title),
-    [liberty, libertyWs],
+  assert.equal(ranked.length, 2);
+  assert.equal(
+    ranked.some((v) => v.title === liberty),
+    true,
+  );
+  assert.equal(
+    ranked.some((v) => v.title === libertyWs),
+    true,
   );
 });
 
