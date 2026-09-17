@@ -120,6 +120,7 @@ npm run cap:open:android
 | Chat fails | Deploy worker + app; open the same URL in Safari first |
 | Mic denied | Settings → RVFAX → Microphone ON |
 | Live Voice silent / no talk-back on iPhone | New TestFlight with this `AppDelegate` (play + record). Force-quit, tap mic, Allow Microphone. |
+| Signing error | Pick correct Team; unique Bundle ID |
 | Xcode: AppPlugin `String?` → `Any`, or Keyboard `identifier`/`jsName`/`pluginMethods` synthesis | Upstream Capacitor (no Podfile; iOS is SPM). `npm install` applies `patches/@capacitor+*.patch`. Then Clean Build Folder. |
 | Old UI in TestFlight | Bump **Build** number; re-Archive |
 
