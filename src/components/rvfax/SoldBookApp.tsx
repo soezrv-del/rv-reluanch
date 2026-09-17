@@ -67,6 +67,7 @@ export function SoldBookApp() {
             onBack={() => nav?.setTab("rvfax")}
             onTogglePaid={(id) => persistDeals(toggleDealPaid(deals, id))}
             onRemove={(id) => persistDeals(removeSoldDeal(deals, id))}
+            onOpenMarket={() => nav?.openFactsMarket()}
           />
         </PullRefreshLayer>
       </div>

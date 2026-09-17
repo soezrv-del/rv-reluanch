@@ -157,6 +157,7 @@ export function RvFaxApp({
   const isPro = isProfessionalTier();
   const [detail, setDetail] = useState<RVResult | null>(null);
   const [shareFocusToken, setShareFocusToken] = useState(0);
+  const [marketFocusToken, setMarketFocusToken] = useState(0);
   const [vinOpen, setVinOpen] = useState(false);
   const [comparePick, setComparePick] = useState<RVResult[]>([]);
   const { ready: catalogReady, gen: catalogGen } = useCatalogReady();
@@ -289,6 +290,7 @@ export function RvFaxApp({
   const setActiveCoach = nav?.setActiveCoach;
   const factsPickerToken = nav?.factsPickerToken ?? 0;
   const factsShareToken = nav?.factsShareToken ?? 0;
+  const factsMarketToken = nav?.factsMarketToken ?? 0;
   const detailRef = useRef(detail);
   detailRef.current = detail;
 
@@ -350,6 +352,48 @@ export function RvFaxApp({
       cancelled = true;
     };
   }, [factsShareToken, openFactsUnit, nav?.activeCoach]);
+
+  useEffect(() => {
+    if (!factsMarketToken) return;
+    let cancelled = false;
+    setCompareOpen(false);
+    setVinOpen(false);
+
+    const focusMarket = (r?: RVResult) => {
+      if (cancelled) return;
+      if (r) openFactsUnit(r);
+      setMarketFocusToken((n) => n + 1);
+    };
+
+    if (detailRef.current) {
+      focusMarket();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void (async () => {
+      await ensureCatalogLoaded();
+      if (cancelled) return;
+      const sel = resolveShareOpenSel({
+        detail: detailRef.current,
+        active: nav?.activeCoach ?? null,
+        saved: savedRef.current,
+      });
+      if (!sel) return;
+      const found = searchCatalog(sel);
+      const hit =
+        found.find((r) => (r.floorplan || "") === (sel.floorplan || "")) ??
+        found[0] ??
+        savedRef.current[0] ??
+        null;
+      if (hit) focusMarket(hit);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [factsMarketToken, openFactsUnit, nav?.activeCoach]);
 
   const yearsForEra = useMemo(() => {
     const e = YEAR_ERAS.find((x) => x.id === era) ?? YEAR_ERAS[0]!;
@@ -637,6 +681,7 @@ export function RvFaxApp({
         <RvDetail
           result={detail}
           shareFocusToken={shareFocusToken}
+          marketFocusToken={marketFocusToken}
           onBack={() => setDetail(null)}
           onToggleSave={() => toggleSave(detail)}
           saved={isSavedUnit(saved, detail)}
