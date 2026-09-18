@@ -18,12 +18,16 @@ import {
   Volume2,
   X,
   CircleDollarSign,
+  KeyRound,
+  Phone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import type { AppTab } from "@/components/shell/BottomTabs";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
+import { useAccess } from "@/components/access/AccessProvider";
+import { AccessBrowseBanner } from "@/components/access/AccessSheets";
 import {
   loadSoldDeals,
   OPEN_SOLD_EVENT,
@@ -75,6 +79,7 @@ export function MoreApp({
 }: {
   onNavigate?: (tab: AppTab) => void;
 }) {
+  const access = useAccess();
   const [sheet, setSheet] = useState<SheetId>(null);
   const [refreshTick, setRefreshTick] = useState(0);
   const [recallYear, setRecallYear] = useState("2024");
@@ -167,6 +172,12 @@ export function MoreApp({
       pullLabel="Release to refresh Premium"
     >
         <div className="mx-auto w-full max-w-lg space-y-5 px-3 pb-12 pt-3 sm:px-4">
+          <AccessBrowseBanner
+            allowed={access.allowed}
+            status={access.status}
+            onPhone={access.openPhone}
+            onRequest={access.openRequest}
+          />
           <header className="flex items-center justify-between gap-3">
             {onNavigate ? (
               <button
@@ -250,6 +261,7 @@ export function MoreApp({
                   title="Sold"
                   sub={stats.soldLine}
                   onClick={() => {
+                    if (!access.guard()) return;
                     try {
                       window.dispatchEvent(new Event(OPEN_SOLD_EVENT));
                     } catch {
@@ -270,7 +282,24 @@ export function MoreApp({
           </section>
 
           {/* No IAP prices (Apple 3.1.1) */}
-          <section className="glass-prestige-gold relative overflow-hidden rounded-[1.25rem] p-4">
+          <section
+            className="glass-prestige-gold relative overflow-hidden rounded-[1.25rem] p-4"
+            onContextMenu={(e) => {
+              e.preventDefault();
+              access.openAdmin();
+            }}
+            onPointerDown={(e) => {
+              const t = window.setTimeout(() => access.openAdmin(), 700);
+              const clear = () => window.clearTimeout(t);
+              e.currentTarget.addEventListener("pointerup", clear, { once: true });
+              e.currentTarget.addEventListener("pointercancel", clear, {
+                once: true,
+              });
+              e.currentTarget.addEventListener("pointerleave", clear, {
+                once: true,
+              });
+            }}
+          >
             <p className="text-[10px] font-bold tracking-[0.16em] text-amber">
               FULL SUITE
             </p>
@@ -447,6 +476,32 @@ export function MoreApp({
                 </span>
                 <ChevronRight className="size-4 shrink-0 text-white" />
               </a>
+              <RowLink
+                icon={<Phone className="size-4 text-blue" />}
+                title="Your phone"
+                sub={
+                  access.phone
+                    ? access.allowed
+                      ? "Full access"
+                      : "Browse only — tap to change"
+                    : "Saved on this device"
+                }
+                onClick={access.openPhone}
+              />
+              {!access.allowed ? (
+                <RowLink
+                  icon={<KeyRound className="size-4 text-amber" />}
+                  title="Request access"
+                  sub="Name + phone — David adds you"
+                  onClick={access.openRequest}
+                />
+              ) : null}
+              <RowLink
+                icon={<KeyRound className="size-4 text-white/70" />}
+                title="Access admin"
+                sub="Password-protected whitelist"
+                onClick={access.openAdmin}
+              />
               <RowLink
                 icon={<FileText className="size-4 text-white" />}
                 title="Terms & Copyright"

@@ -604,6 +604,11 @@ export const Route = createFileRoute("/api/rvgrok")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const { denyUnlessWhitelisted } = await import(
+          "@/lib/access/requireAccess.server"
+        );
+        const blocked = await denyUnlessWhitelisted(request);
+        if (blocked) return blocked;
         let body: Body = {};
         try {
           body = (await request.json()) as Body;

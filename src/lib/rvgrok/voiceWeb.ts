@@ -168,9 +168,13 @@ export async function fetchVoiceWebResearchNotes(opts: {
   signal?: AbortSignal;
 }): Promise<WebSearchNotes> {
   try {
+    const { accessPhoneHeaders } = await import("@/lib/access/devicePhone");
     const res = await fetch("/api/rvgrok/web-research", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: accessPhoneHeaders({
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      }),
       body: JSON.stringify({
         query: opts.query,
         catalogContext: opts.catalogContext || undefined,

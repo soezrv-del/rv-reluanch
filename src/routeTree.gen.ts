@@ -15,6 +15,9 @@ import { Route as ApiCampsRouteImport } from './routes/api/camps'
 import { Route as ApiDumpsRouteImport } from './routes/api/dumps'
 import { Route as ApiFuelRouteImport } from './routes/api/fuel'
 import { Route as ApiGeocodeRouteImport } from './routes/api/geocode'
+import { Route as ApiAccessAdminRouteImport } from './routes/api/access.admin'
+import { Route as ApiAccessRequestRouteImport } from './routes/api/access.request'
+import { Route as ApiAccessStatusRouteImport } from './routes/api/access.status'
 import { Route as ApiLendersRouteImport } from './routes/api/lenders'
 import { Route as ApiMapTilesRouteImport } from './routes/api/map-tiles'
 import { Route as ApiOsrmRouteImport } from './routes/api/osrm'
@@ -61,6 +64,21 @@ const ApiFuelRoute = ApiFuelRouteImport.update({
 const ApiGeocodeRoute = ApiGeocodeRouteImport.update({
   id: '/geocode',
   path: '/geocode',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
+const ApiAccessAdminRoute = ApiAccessAdminRouteImport.update({
+  id: '/access/admin',
+  path: '/access/admin',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
+const ApiAccessRequestRoute = ApiAccessRequestRouteImport.update({
+  id: '/access/request',
+  path: '/access/request',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
+const ApiAccessStatusRoute = ApiAccessStatusRouteImport.update({
+  id: '/access/status',
+  path: '/access/status',
   getParentRoute: () => ApiRouteRoute,
 } as any)
 const ApiLendersRoute = ApiLendersRouteImport.update({
@@ -158,6 +176,9 @@ export interface FileRoutesByFullPath {
   '/api/fuel': typeof ApiFuelRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/lenders': typeof ApiLendersRoute
+  '/api/access/admin': typeof ApiAccessAdminRoute
+  '/api/access/request': typeof ApiAccessRequestRoute
+  '/api/access/status': typeof ApiAccessStatusRoute
   '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
@@ -183,6 +204,9 @@ export interface FileRoutesByTo {
   '/api/fuel': typeof ApiFuelRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/lenders': typeof ApiLendersRoute
+  '/api/access/admin': typeof ApiAccessAdminRoute
+  '/api/access/request': typeof ApiAccessRequestRoute
+  '/api/access/status': typeof ApiAccessStatusRoute
   '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
@@ -209,6 +233,9 @@ export interface FileRoutesById {
   '/api/fuel': typeof ApiFuelRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/lenders': typeof ApiLendersRoute
+  '/api/access/admin': typeof ApiAccessAdminRoute
+  '/api/access/request': typeof ApiAccessRequestRoute
+  '/api/access/status': typeof ApiAccessStatusRoute
   '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
@@ -236,6 +263,9 @@ export interface FileRouteTypes {
     | '/api/fuel'
     | '/api/geocode'
     | '/api/lenders'
+    | '/api/access/admin'
+    | '/api/access/request'
+    | '/api/access/status'
     | '/api/map-tiles'
     | '/api/osrm'
     | '/api/rv-videos'
@@ -261,6 +291,9 @@ export interface FileRouteTypes {
     | '/api/fuel'
     | '/api/geocode'
     | '/api/lenders'
+    | '/api/access/admin'
+    | '/api/access/request'
+    | '/api/access/status'
     | '/api/map-tiles'
     | '/api/osrm'
     | '/api/rv-videos'
@@ -286,6 +319,9 @@ export interface FileRouteTypes {
     | '/api/fuel'
     | '/api/geocode'
     | '/api/lenders'
+    | '/api/access/admin'
+    | '/api/access/request'
+    | '/api/access/status'
     | '/api/map-tiles'
     | '/api/osrm'
     | '/api/rv-videos'
@@ -358,6 +394,27 @@ declare module '@tanstack/react-router' {
       path: '/lenders'
       fullPath: '/api/lenders'
       preLoaderRoute: typeof ApiLendersRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/access/admin': {
+      id: '/api/access/admin'
+      path: '/access/admin'
+      fullPath: '/api/access/admin'
+      preLoaderRoute: typeof ApiAccessAdminRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/access/request': {
+      id: '/api/access/request'
+      path: '/access/request'
+      fullPath: '/api/access/request'
+      preLoaderRoute: typeof ApiAccessRequestRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/access/status': {
+      id: '/api/access/status'
+      path: '/access/status'
+      fullPath: '/api/access/status'
+      preLoaderRoute: typeof ApiAccessStatusRouteImport
       parentRoute: typeof ApiRouteRoute
     }
     '/api/map-tiles': {
@@ -495,6 +552,9 @@ interface ApiRouteRouteChildren {
   ApiFuelRoute: typeof ApiFuelRoute
   ApiGeocodeRoute: typeof ApiGeocodeRoute
   ApiLendersRoute: typeof ApiLendersRoute
+  ApiAccessAdminRoute: typeof ApiAccessAdminRoute
+  ApiAccessRequestRoute: typeof ApiAccessRequestRoute
+  ApiAccessStatusRoute: typeof ApiAccessStatusRoute
   ApiMapTilesRoute: typeof ApiMapTilesRoute
   ApiOsrmRoute: typeof ApiOsrmRoute
   ApiRvVideosRoute: typeof ApiRvVideosRoute
@@ -517,6 +577,9 @@ const ApiRouteRouteChildren: ApiRouteRouteChildren = {
   ApiFuelRoute: ApiFuelRoute,
   ApiGeocodeRoute: ApiGeocodeRoute,
   ApiLendersRoute: ApiLendersRoute,
+  ApiAccessAdminRoute: ApiAccessAdminRoute,
+  ApiAccessRequestRoute: ApiAccessRequestRoute,
+  ApiAccessStatusRoute: ApiAccessStatusRoute,
   ApiMapTilesRoute: ApiMapTilesRoute,
   ApiOsrmRoute: ApiOsrmRoute,
   ApiRvVideosRoute: ApiRvVideosRoute,

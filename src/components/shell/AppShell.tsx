@@ -14,6 +14,7 @@ import { BottomTabs, type AppTab } from "./BottomTabs";
 import { AskGrokOverlay } from "./AskGrokOverlay";
 import { dockTabOrder, PAGE_ACCENT } from "./shellConstants";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
+import { AccessProvider, useAccess } from "@/components/access/AccessProvider";
 import { OPEN_SOLD_EVENT } from "@/lib/rv/soldDeals";
 import {
   ShellNavProvider,
@@ -130,6 +131,15 @@ class SuiteErrorBoundary extends Component<
 }
 
 export function AppShell() {
+  return (
+    <AccessProvider>
+      <AppShellInner />
+    </AccessProvider>
+  );
+}
+
+function AppShellInner() {
+  const access = useAccess();
   const [tab, setTab] = useState<AppTab>("rvfax");
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
   const [grokEntryToken, setGrokEntryToken] = useState(0);
@@ -302,7 +312,13 @@ export function AppShell() {
         openFactsPicker();
         return;
       }
-      if (next === "rvsold" && !isProfessionalTier()) return;
+      if (next === "rvsold") {
+        if (!isProfessionalTier()) return;
+        if (!access.allowed) {
+          access.requestFunctional();
+          return;
+        }
+      }
       if (next === "rvgrok") {
         // Dock tap / swipe / More — never restore a leftover Ask-Grok seed.
         setGrokSeed(clearGrokSeedOnDockTap());
@@ -312,7 +328,7 @@ export function AppShell() {
       markVisited(next);
       if (next === "rvcal") requestCleanCal();
     },
-    [markVisited, openFactsShare, openFactsPicker, requestCleanCal],
+    [access, markVisited, openFactsShare, openFactsPicker, requestCleanCal],
   );
 
   const isPro = isProfessionalTier();
@@ -323,11 +339,15 @@ export function AppShell() {
   useEffect(() => {
     const openSold = () => {
       if (!isProfessionalTier()) return;
+      if (!access.allowed) {
+        access.requestFunctional();
+        return;
+      }
       onTabChange("rvsold");
     };
     window.addEventListener(OPEN_SOLD_EVENT, openSold);
     return () => window.removeEventListener(OPEN_SOLD_EVENT, openSold);
-  }, [onTabChange]);
+  }, [access, onTabChange]);
 
   const peekTab = useCallback((next: AppTab) => {
     markVisited(next);

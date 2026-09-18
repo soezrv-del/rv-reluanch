@@ -149,12 +149,16 @@ export async function fetchEphemeralToken(
   let lastErr = "Voice token failed";
   for (const attempt of attempts) {
     try {
+      const { accessPhoneHeaders } = await import("@/lib/access/devicePhone");
       const res = await fetch(attempt.url, {
         method: attempt.method,
         headers:
           attempt.method === "POST"
-            ? { "Content-Type": "application/json", Accept: "application/json" }
-            : { Accept: "application/json" },
+            ? accessPhoneHeaders({
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              })
+            : accessPhoneHeaders({ Accept: "application/json" }),
         body: attempt.method === "POST" ? JSON.stringify({}) : undefined,
         signal,
       });
