@@ -257,6 +257,16 @@ test("client fetch timeout/abort falls back without claiming a lookup", async ()
   assert.equal(voiceInjectionClaimsLookedUp(injection), false);
 });
 
+test("origin / who-built asks answer now — no research hold", () => {
+  const q = "Who built this app and what's the mission?";
+  assert.equal(
+    decideVoiceWebResearch({ transcript: q, specs: null }).action,
+    "pass",
+  );
+  assert.equal(shouldSpeakVoiceResearchHold(q), false);
+  assert.equal(VOICE_RESEARCH_HOLD_PHRASE, "give me one second");
+});
+
 test("generic asks and catalog compares do not speak a research hold", () => {
   const casualAsk = "What's a good Class A diesel for weekends?";
   assert.equal(shouldSpeakVoiceResearchHold(casualAsk), false);

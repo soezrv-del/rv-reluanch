@@ -51,6 +51,11 @@ test("chat, agent, and voice prompts share David's answer-now / give me one seco
     speech,
     /I'm RV Grok, here to help you with all your RV needs/,
   );
+  assert.match(speech, /Verified & True \/ Know before you buy/);
+  assert.match(src("originStory.ts"), /David Hansen/);
+  assert.match(src("originStory.ts"), /buyer-first/);
+  assert.match(prompts, /ABOUT_RVFOX/);
+  assert.match(voice, /ABOUT_RVFOX/);
   assert.match(speech, /Never stay silent/);
   assert.match(speech, /Never say \$\{FORBIDDEN_STALLS\}/);
   assert.doesNotMatch(speech, /Only say "Let me check that"/);

@@ -19,6 +19,7 @@ import {
   looksLikeLiveResearchQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeOffCatalogQuestion,
+  looksLikeOriginQuestion,
   looksLikeSpecQuestion,
   needsWebFallback,
   type WebFallbackSpecs,
@@ -70,6 +71,7 @@ export function shouldSpeakVoiceResearchHold(
   const t = (transcript || "").trim();
   if (!t) return false;
   if (looksLikeCasualNonResearch(t) || looksLikeImageOnlyAsk(t)) return false;
+  if (looksLikeOriginQuestion(t)) return false;
   // Forum / repair / manual still hold even when both coaches are known.
   if (looksLikeLiveResearchQuestion(t)) return true;
   if (looksLikeCatalogAnswerableCoachCompare(t)) return false;

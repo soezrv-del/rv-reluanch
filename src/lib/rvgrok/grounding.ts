@@ -35,6 +35,10 @@ import {
   parseCoachFromText,
 } from "./parseCoach";
 import type { RVSpec } from "../rv/rvTypes";
+import {
+  formatOriginGroundingBlock,
+  looksLikeOriginQuestion,
+} from "./originStory";
 import { needsWebFallback } from "./webIntent";
 import {
   findComparableCatalogCoaches,
@@ -64,6 +68,10 @@ export {
   normalizeAskText,
 } from "./webIntent";
 export { looksLikeCoachCompareQuestion } from "./parseCoach";
+export {
+  looksLikeOriginQuestion,
+  formatOriginGroundingBlock,
+} from "./originStory";
 export {
   findComparableCatalogCoaches,
   looksLikeForumOrManualCompare,
@@ -532,6 +540,19 @@ function compareCatalogBlock(hits: ComparableCatalogCoach[]): {
   return { identity: primary.identity, specs: primary, catalog };
 }
 
+function withOriginBlock(
+  query: string,
+  block: string,
+  needsWeb: boolean,
+): { block: string; needsWeb: boolean } {
+  if (!looksLikeOriginQuestion(query)) return { block, needsWeb };
+  const origin = formatOriginGroundingBlock();
+  return {
+    block: block ? `${origin}\n\n${block}` : origin,
+    needsWeb: false,
+  };
+}
+
 function repairBlockFor(
   query: string,
   identity: CoachIdentity | null,
@@ -574,11 +595,16 @@ export function buildChatGrounding(opts: {
       false,
       opts.facts,
     );
+    const merged = withOriginBlock(
+      opts.query,
+      repair ? `${compare.catalog}\n\n${repair}` : compare.catalog,
+      needsWebFallback(compare.specs, opts.query, webOpts),
+    );
     return {
       identity: compare.identity,
       specs: compare.specs,
-      block: repair ? `${compare.catalog}\n\n${repair}` : compare.catalog,
-      needsWeb: needsWebFallback(compare.specs, opts.query, webOpts),
+      block: merged.block,
+      needsWeb: merged.needsWeb,
       repairMode,
     };
   }
@@ -589,22 +615,32 @@ export function buildChatGrounding(opts: {
   );
   if (!identity) {
     const repair = repairBlockFor(opts.query, null, null, false, opts.facts);
+    const merged = withOriginBlock(
+      opts.query,
+      repair,
+      needsWebFallback(null, opts.query, webOpts),
+    );
     return {
       identity: null,
       specs: null,
-      block: repair,
-      needsWeb: needsWebFallback(null, opts.query, webOpts),
+      block: merged.block,
+      needsWeb: merged.needsWeb,
       repairMode,
     };
   }
   const specs = lookupGroundedSpecs(identity);
   const catalog = `${formatCatalogGroundingBlock(specs)}\n\n${GROUNDING_RULES}`;
   const repair = repairBlockFor(opts.query, identity, specs, false, opts.facts);
+  const merged = withOriginBlock(
+    opts.query,
+    repair ? `${catalog}\n\n${repair}` : catalog,
+    needsWebFallback(specs, opts.query, webOpts),
+  );
   return {
     identity,
     specs,
-    block: repair ? `${catalog}\n\n${repair}` : catalog,
-    needsWeb: needsWebFallback(specs, opts.query, webOpts),
+    block: merged.block,
+    needsWeb: merged.needsWeb,
     repairMode,
   };
 }
@@ -632,6 +668,10 @@ export function buildVoiceGrounding(opts: {
   const identity = resolveCoachIdentity(query, opts.facts, "");
   const specs = identity ? lookupGroundedSpecs(identity) : null;
   const repair = repairBlockFor(query, identity, specs, true, opts.facts);
+  if (looksLikeOriginQuestion(query)) {
+    const origin = formatOriginGroundingBlock();
+    return repair ? `${origin}\n\n${repair}` : origin;
+  }
   if (!identity) {
     const base =
       "CATALOG GAP — no verified row is loaded. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Never invent HP, engine, chassis, or fuel.";
