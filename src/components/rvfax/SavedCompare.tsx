@@ -34,8 +34,8 @@ export function SavedCompare({
     >
       <SuiteBackdrop src={FACTS_LANDING_BACKDROP} objectPosition="center 42%" />
       <div className="relative z-10 flex h-full min-h-0 flex-col">
-        <div className="shrink-0 border-b border-white/10 bg-[#070b14]/95 backdrop-blur-md">
-          <div className="mx-auto flex w-full max-w-3xl items-center gap-1.5 px-3 py-2 sm:px-5">
+        <div className="rvfax-report-chrome shrink-0 border-b border-white/10 bg-[#070b14]/95 backdrop-blur-md">
+          <div className="mx-auto flex w-full max-w-3xl items-center gap-1.5 px-3 pb-2 sm:px-5">
             <button
               type="button"
               onClick={onBack}
