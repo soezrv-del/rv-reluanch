@@ -10,6 +10,7 @@ import {
   Shield,
   X,
 } from "lucide-react";
+import { useAccessOptional } from "@/components/access/AccessProvider";
 import { cn } from "@/lib/utils";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import {
@@ -76,6 +77,7 @@ export function VinDecoder({
   open: boolean;
   onClose: () => void;
 }) {
+  const access = useAccessOptional();
   const kb = useKeyboardInset();
   const [vin, setVin] = useState("");
   const [loading, setLoading] = useState(false);
@@ -106,6 +108,12 @@ export function VinDecoder({
   }, [open, kb.open, kb.inset, kb.vvHeight]);
 
   const runDecode = async (override?: string) => {
+    if (
+      access &&
+      !access.guard(undefined, "VIN decode is limited to the approved list.")
+    ) {
+      return;
+    }
     const cleaned = normalizeVin(override ?? vin);
     setVin(cleaned);
     setError(null);

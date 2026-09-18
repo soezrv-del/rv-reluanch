@@ -20,6 +20,9 @@ import { Route as ApiMapTilesRouteImport } from './routes/api/map-tiles'
 import { Route as ApiOsrmRouteImport } from './routes/api/osrm'
 import { Route as ApiRvVideosRouteImport } from './routes/api/rv-videos'
 import { Route as ApiRvgrokRouteImport } from './routes/api/rvgrok'
+import { Route as ApiAccessAdminRouteImport } from './routes/api/access.admin'
+import { Route as ApiAccessCheckRouteImport } from './routes/api/access.check'
+import { Route as ApiAccessRequestRouteImport } from './routes/api/access.request'
 import { Route as ApiMarketcheckAutocompleteRouteImport } from './routes/api/marketcheck.autocomplete'
 import { Route as ApiMarketcheckDealersRouteImport } from './routes/api/marketcheck.dealers'
 import { Route as ApiMarketcheckListingRouteImport } from './routes/api/marketcheck.listing'
@@ -86,6 +89,21 @@ const ApiRvVideosRoute = ApiRvVideosRouteImport.update({
 const ApiRvgrokRoute = ApiRvgrokRouteImport.update({
   id: '/rvgrok',
   path: '/rvgrok',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
+const ApiAccessAdminRoute = ApiAccessAdminRouteImport.update({
+  id: '/access/admin',
+  path: '/access/admin',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
+const ApiAccessCheckRoute = ApiAccessCheckRouteImport.update({
+  id: '/access/check',
+  path: '/access/check',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
+const ApiAccessRequestRoute = ApiAccessRequestRouteImport.update({
+  id: '/access/request',
+  path: '/access/request',
   getParentRoute: () => ApiRouteRoute,
 } as any)
 const ApiMarketcheckAutocompleteRoute =
@@ -162,6 +180,9 @@ export interface FileRoutesByFullPath {
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/api/access/admin': typeof ApiAccessAdminRoute
+  '/api/access/check': typeof ApiAccessCheckRoute
+  '/api/access/request': typeof ApiAccessRequestRoute
   '/api/marketcheck/autocomplete': typeof ApiMarketcheckAutocompleteRoute
   '/api/marketcheck/dealers': typeof ApiMarketcheckDealersRoute
   '/api/marketcheck/listing': typeof ApiMarketcheckListingRoute
@@ -187,6 +208,9 @@ export interface FileRoutesByTo {
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/api/access/admin': typeof ApiAccessAdminRoute
+  '/api/access/check': typeof ApiAccessCheckRoute
+  '/api/access/request': typeof ApiAccessRequestRoute
   '/api/marketcheck/autocomplete': typeof ApiMarketcheckAutocompleteRoute
   '/api/marketcheck/dealers': typeof ApiMarketcheckDealersRoute
   '/api/marketcheck/listing': typeof ApiMarketcheckListingRoute
@@ -213,6 +237,9 @@ export interface FileRoutesById {
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/api/access/admin': typeof ApiAccessAdminRoute
+  '/api/access/check': typeof ApiAccessCheckRoute
+  '/api/access/request': typeof ApiAccessRequestRoute
   '/api/marketcheck/autocomplete': typeof ApiMarketcheckAutocompleteRoute
   '/api/marketcheck/dealers': typeof ApiMarketcheckDealersRoute
   '/api/marketcheck/listing': typeof ApiMarketcheckListingRoute
@@ -240,6 +267,9 @@ export interface FileRouteTypes {
     | '/api/osrm'
     | '/api/rv-videos'
     | '/api/rvgrok'
+    | '/api/access/admin'
+    | '/api/access/check'
+    | '/api/access/request'
     | '/api/marketcheck/autocomplete'
     | '/api/marketcheck/dealers'
     | '/api/marketcheck/listing'
@@ -265,6 +295,9 @@ export interface FileRouteTypes {
     | '/api/osrm'
     | '/api/rv-videos'
     | '/api/rvgrok'
+    | '/api/access/admin'
+    | '/api/access/check'
+    | '/api/access/request'
     | '/api/marketcheck/autocomplete'
     | '/api/marketcheck/dealers'
     | '/api/marketcheck/listing'
@@ -290,6 +323,9 @@ export interface FileRouteTypes {
     | '/api/osrm'
     | '/api/rv-videos'
     | '/api/rvgrok'
+    | '/api/access/admin'
+    | '/api/access/check'
+    | '/api/access/request'
     | '/api/marketcheck/autocomplete'
     | '/api/marketcheck/dealers'
     | '/api/marketcheck/listing'
@@ -386,6 +422,27 @@ declare module '@tanstack/react-router' {
       path: '/rvgrok'
       fullPath: '/api/rvgrok'
       preLoaderRoute: typeof ApiRvgrokRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/access/admin': {
+      id: '/api/access/admin'
+      path: '/access/admin'
+      fullPath: '/api/access/admin'
+      preLoaderRoute: typeof ApiAccessAdminRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/access/check': {
+      id: '/api/access/check'
+      path: '/access/check'
+      fullPath: '/api/access/check'
+      preLoaderRoute: typeof ApiAccessCheckRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/access/request': {
+      id: '/api/access/request'
+      path: '/access/request'
+      fullPath: '/api/access/request'
+      preLoaderRoute: typeof ApiAccessRequestRouteImport
       parentRoute: typeof ApiRouteRoute
     }
     '/api/marketcheck/autocomplete': {
@@ -499,6 +556,9 @@ interface ApiRouteRouteChildren {
   ApiOsrmRoute: typeof ApiOsrmRoute
   ApiRvVideosRoute: typeof ApiRvVideosRoute
   ApiRvgrokRoute: typeof ApiRvgrokRouteWithChildren
+  ApiAccessAdminRoute: typeof ApiAccessAdminRoute
+  ApiAccessCheckRoute: typeof ApiAccessCheckRoute
+  ApiAccessRequestRoute: typeof ApiAccessRequestRoute
   ApiMarketcheckAutocompleteRoute: typeof ApiMarketcheckAutocompleteRoute
   ApiMarketcheckDealersRoute: typeof ApiMarketcheckDealersRoute
   ApiMarketcheckListingRoute: typeof ApiMarketcheckListingRoute
@@ -521,6 +581,9 @@ const ApiRouteRouteChildren: ApiRouteRouteChildren = {
   ApiOsrmRoute: ApiOsrmRoute,
   ApiRvVideosRoute: ApiRvVideosRoute,
   ApiRvgrokRoute: ApiRvgrokRouteWithChildren,
+  ApiAccessAdminRoute: ApiAccessAdminRoute,
+  ApiAccessCheckRoute: ApiAccessCheckRoute,
+  ApiAccessRequestRoute: ApiAccessRequestRoute,
   ApiMarketcheckAutocompleteRoute: ApiMarketcheckAutocompleteRoute,
   ApiMarketcheckDealersRoute: ApiMarketcheckDealersRoute,
   ApiMarketcheckListingRoute: ApiMarketcheckListingRoute,

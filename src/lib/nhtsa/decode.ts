@@ -211,9 +211,10 @@ export async function decodeVinViaApi(
   }
 
   try {
+    const { accessHeaders } = await import("@/lib/access/client");
     const resp = await fetch(`/api/nhtsa/vin?vin=${encodeURIComponent(vin)}`, {
       method: "GET",
-      headers: { Accept: "application/json" },
+      headers: accessHeaders({ Accept: "application/json" }),
       signal,
     });
     const json = (await resp.json()) as

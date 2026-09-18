@@ -18,6 +18,15 @@ const databaseUrl =
  */
 export const dbSource: DbSource = databaseUrl ? "neon" : "pglite";
 
+/** Built Vercel output does not ship PGLite's wasm/data files. */
+function pgliteRuntimeSupported(): boolean {
+  try {
+    return !String(import.meta.url ?? "").includes(".vercel/output");
+  } catch {
+    return true;
+  }
+}
+
 /**
  * Minimal shared SQL surface, satisfied by both Neon and PGLite. Both the
  * tagged-template and `.query()` forms resolve to an array of row objects:
@@ -46,7 +55,7 @@ export interface Sql {
  */
 const globalRef = globalThis as typeof globalThis & {
   __pgSqlPromise__?: Promise<Sql>;
-  __pgliteInstance__?: Promise<import("@electric-sql/pglite").PGlite>;
+  __pgliteInstance__?: Promise<import("@electric-sql/pglite").PGlite | null>;
   __pgliteMigrateChain__?: Promise<void>;
 };
 
@@ -106,6 +115,11 @@ function createNeonSql(): Promise<Sql> {
 }
 
 async function createPgliteSql(): Promise<Sql> {
+  if (!pgliteRuntimeSupported()) {
+    throw new Error(
+      "PGLite is not bundled in the Vercel runtime. Set DATABASE_URL.",
+    );
+  }
   // Embedded Postgres, imported on demand so it never loads on the Neon path.
   // One in-memory instance per process, shared across HMR module instances, so
   // data survives source edits (it resets on dev-server restart).
@@ -125,9 +139,15 @@ async function createPgliteSql(): Promise<Sql> {
     return pg;
   })().catch((err) => {
     globalRef.__pgliteInstance__ = undefined;
-    throw err;
+    console.error("[db] PGLite instance failed:", err);
+    return null;
   });
   const pg = await globalRef.__pgliteInstance__;
+  if (!pg) {
+    throw new Error(
+      "PGLite is unavailable in this runtime. Set DATABASE_URL for Neon.",
+    );
+  }
 
   // Apply migrations/ (the single schema source) so preview matches production.
   // SQL is inlined by the bundler via import.meta.glob (no runtime fs); applied
@@ -229,10 +249,15 @@ export function ensureDbReady(): Promise<void> {
 const globalBoot = globalThis as typeof globalThis & {
   __pgBootstrapPromise__?: Promise<void>;
 };
-if (typeof window === "undefined" && dbSource === "pglite") {
+if (
+  typeof window === "undefined" &&
+  dbSource === "pglite" &&
+  pgliteRuntimeSupported()
+) {
   globalBoot.__pgBootstrapPromise__ ??= ensureDbReady().catch((err) => {
     globalBoot.__pgBootstrapPromise__ = undefined;
     console.error("[db] PGLite bootstrap failed:", err);
-    throw err;
+    // Do not rethrow — an uncaught boot must not take down the process.
+    // getSql() retries on the next request.
   });
 }

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
 import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
 import { appendGrounding, buildChatGrounding } from "@/lib/rvgrok/grounding";
@@ -604,6 +605,8 @@ export const Route = createFileRoute("/api/rvgrok")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const denied = await denyUnlessWhitelisted(request);
+        if (denied) return denied;
         let body: Body = {};
         try {
           body = (await request.json()) as Body;

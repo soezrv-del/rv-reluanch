@@ -13,6 +13,7 @@ import {
 import { BottomTabs, type AppTab } from "./BottomTabs";
 import { AskGrokOverlay } from "./AskGrokOverlay";
 import { dockTabOrder, PAGE_ACCENT } from "./shellConstants";
+import { useAccess } from "@/components/access/AccessProvider";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
 import { OPEN_SOLD_EVENT } from "@/lib/rv/soldDeals";
 import {
@@ -130,6 +131,7 @@ class SuiteErrorBoundary extends Component<
 }
 
 export function AppShell() {
+  const access = useAccess();
   const [tab, setTab] = useState<AppTab>("rvfax");
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
   const [grokEntryToken, setGrokEntryToken] = useState(0);
@@ -189,6 +191,9 @@ export function AppShell() {
 
   /** Facts Ask Grok — overlay + seed. Dock tap still opens a clean Grok tab. */
   const openGrok = (prompt?: string) => {
+    if (!access.guard(undefined, "Ask Grok is limited to the approved list.")) {
+      return;
+    }
     blurSuiteFocus();
     setOverlaySeed(grokSeedFromAskHandoff(prompt));
     setOverlayEntryToken((n) => n + 1);
@@ -274,10 +279,13 @@ export function AppShell() {
   }, [markVisited]);
 
   const openFactsShare = useCallback(() => {
+    if (!access.guard(undefined, "Share is limited to the approved list.")) {
+      return;
+    }
     setFactsShareToken((n) => n + 1);
     setTab("rvfax");
     markVisited("rvfax");
-  }, [markVisited]);
+  }, [access, markVisited]);
 
   const openFactsMarket = useCallback(() => {
     setFactsMarketToken((n) => n + 1);

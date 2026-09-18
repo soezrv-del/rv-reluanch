@@ -132,9 +132,10 @@ export async function streamChat(opts: {
   catalogContext?: string;
   wantsWebFallback?: boolean;
 }) {
+  const { accessHeaders } = await import("@/lib/access/client");
   const response = await fetch("/api/rvgrok", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: accessHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({
       messages: opts.messages as MultimodalMessage[],
       agentMode: opts.agentMode,

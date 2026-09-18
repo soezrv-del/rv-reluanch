@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
 import {
   executeWebResearch,
   webResearchJsonResponse,
@@ -58,7 +59,11 @@ async function handleResearch(request: Request): Promise<Response> {
 export const Route = createFileRoute("/api/rvgrok/web-research")({
   server: {
     handlers: {
-      POST: async ({ request }) => handleResearch(request),
+      POST: async ({ request }) => {
+        const denied = await denyUnlessWhitelisted(request);
+        if (denied) return denied;
+        return handleResearch(request);
+      },
     },
   },
 });

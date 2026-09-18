@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import { Sparkles, X } from "lucide-react";
+import { useAccessOptional } from "@/components/access/AccessProvider";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import type { AppTab } from "./BottomTabs";
@@ -52,6 +53,7 @@ export function AskGrokOverlay({
   onSeedConsumed?: () => void;
   entryToken?: number;
 }) {
+  const access = useAccessOptional();
   const [chatMounted, setChatMounted] = useState(false);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const badgeRef = useRef<HTMLButtonElement | null>(null);
@@ -120,6 +122,12 @@ export function AskGrokOverlay({
   }, [open]);
 
   const openPanel = () => {
+    if (
+      access &&
+      !access.guard(undefined, "Ask Grok is limited to the approved list.")
+    ) {
+      return;
+    }
     void hapticLight();
     setChatMounted(true);
     onOpenChange(true);
