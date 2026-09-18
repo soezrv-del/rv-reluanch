@@ -124,7 +124,22 @@ test("Grok dock tab uses the same Einstein asset as RvGrok; other tabs are icon-
     tabs,
     /icon-rvfax|icon-rvcal|icon-rvtow|icon-rvtrips|icon-rvshare|icon-premium/,
   );
+  assert.match(
+    tabs,
+    /isLive \? \([\s\S]*bottom-tab-einstein[\s\S]*\) : \([\s\S]*<DockLabel/,
+  );
+  assert.doesNotMatch(tabs, /bottom-tab-live flex-col/);
+  const liveBranch = tabs.match(/isLive \? \([\s\S]*?\) : \(/)?.[0];
+  assert.ok(liveBranch, "Live tab is a dedicated Einstein branch");
+  assert.doesNotMatch(liveBranch, /DockLabel/);
+  assert.doesNotMatch(liveBranch, />Grok</);
+  assert.doesNotMatch(liveBranch, /text=\{short\}/);
+  assert.match(tabs, /aria-label=\{isSold \? soldLabel : label\}/);
+  assert.match(tabs, /title=\{isSold \? soldLabel : label\}/);
   assert.match(css, /\.bottom-tab-einstein/);
+  assert.match(css, /--dock-icon-size:\s*3\.25rem/);
+  assert.match(css, /width:\s*var\(--dock-icon-size\)/);
+  assert.doesNotMatch(css, /\.bottom-tab-einstein \{[\s\S]*?width:\s*1\.\d+rem/);
 });
 
 test("Ask Grok overlay does not rewrite dock glass or Facts/Tow internals", () => {
