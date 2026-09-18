@@ -1229,7 +1229,7 @@ export function RvTripsApp() {
         data-app-scroll
         className="rv-scroll relative z-10 h-full overflow-y-auto overscroll-y-contain"
       >
-        <PullRefreshLayer state={pull} label="Release to refresh Trips">
+        <PullRefreshLayer state={pull} label="Release to refresh RV GPS">
         <header
           data-trips-chrome
           data-trips-header
@@ -1240,7 +1240,7 @@ export function RvTripsApp() {
               RvFOX
             </p>
             <h1 className="text-[22px] font-bold tracking-tight text-white">
-              RvTrips
+              RV GPS
             </h1>
             {coachLine && !navArmed ? (
               <p className="mt-0.5 text-[11px] font-medium leading-snug text-white/80">
