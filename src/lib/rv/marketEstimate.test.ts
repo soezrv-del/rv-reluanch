@@ -10,7 +10,11 @@ import {
   retainForAge,
   type MarketEstimate,
 } from "./marketEstimate.ts";
-import { THIN_COMP_MAX_RETAIL_BAND_USD } from "./marketClamp.ts";
+import {
+  applyLowThinFreePathHaircut,
+  freePathMidpoint,
+  THIN_COMP_MAX_RETAIL_BAND_USD,
+} from "./marketClamp.ts";
 
 const ASOF = 2026;
 
@@ -147,27 +151,55 @@ test("thin-comp catalog policy shrinks a fat diesel-A band toward one midpoint",
   assert.ok(tight.marketValue && tight.marketValue > 0);
   assert.ok(tight.tradeIn <= tight.retailLow);
   assert.ok(tight.retailHigh <= raw.retailHigh);
+  const rawMid = freePathMidpoint(raw.retailLow, raw.retailHigh);
+  assert.equal(tight.marketValue, applyLowThinFreePathHaircut(rawMid));
+  assert.ok(tight.marketValue < rawMid);
 });
 
-test("Palazzo-style Low: catalog Retail High 267k pins to Market 208k", () => {
+test("Palazzo-style Low: catalog mid 219k haircuts to 145k — High stays hidden", () => {
+  const palazzo = spec({
+    type: "Class A Diesel",
+    fuelType: "Diesel",
+    msrpRange: [249000, 389000],
+  });
+  const raw = estimateMarket(palazzo, "2021", "33.5", {
+    asOfYear: ASOF,
+    make: "Thor",
+    model: "Palazzo",
+  });
+  assert.equal(raw.retailLow, 208000);
+  assert.equal(raw.retailHigh, 267000);
+  assert.equal(freePathMidpoint(raw.retailLow, raw.retailHigh), 219000);
+
+  const tight = applyThinCompCatalogPolicy(raw);
+  assert.equal(tight.sourceLabel, "Catalog estimate");
+  assert.equal(tight.hideRetailHigh, true);
+  assert.equal(tight.confidence, "low");
+  assert.equal(tight.marketValue, 145000);
+  assert.equal(tight.retailHigh, 145000);
+  assert.ok(tight.marketValue < 219000);
+  assert.ok(tight.retailHigh - (tight.marketValue ?? 0) <= THIN_COMP_MAX_RETAIL_BAND_USD);
+  assert.ok(tight.tradeIn <= tight.retailLow);
+});
+
+test("Palazzo-style Low: a fat lone sold cannot keep Market at 208k", () => {
   const fat: MarketEstimate = {
-    tradeIn: 180000,
-    retailLow: 200000,
+    tradeIn: 186000,
+    retailLow: 208000,
     retailHigh: 267000,
-    msrpLo: 320000,
-    msrpHi: 420000,
+    msrpLo: 250200,
+    msrpHi: 390200,
     segment: "Diesel Class A",
     ageYears: 5,
     source: "catalog",
     sourceLabel: CATALOG_ESTIMATE_LABEL,
     marketValue: 208000,
   };
-  assert.equal(fat.retailHigh - 208000, 59000);
   const tight = applyThinCompCatalogPolicy(fat);
   assert.equal(tight.hideRetailHigh, true);
   assert.equal(tight.confidence, "low");
-  assert.equal(tight.marketValue, 208000);
-  assert.equal(tight.retailHigh, 208000);
+  assert.equal(tight.marketValue, 145000);
+  assert.equal(tight.retailHigh, 145000);
   assert.ok(tight.retailHigh - (tight.marketValue ?? 0) <= THIN_COMP_MAX_RETAIL_BAND_USD);
   assert.ok(tight.tradeIn <= tight.retailLow);
 });

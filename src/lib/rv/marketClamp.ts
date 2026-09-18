@@ -15,9 +15,25 @@ export function clampTradeToRetailLow(
  */
 export const THIN_COMP_MAX_RETAIL_BAND_USD = 20_000;
 
+/**
+ * Low / thin sold comps: the catalog retain-curve mid is optimistic vs
+ * public book (Palazzo-style ~$219k vs ~$145k). Haircut the free-path
+ * midpoint only — do not invent sold prices, do not call JD Power / NADA.
+ * Med/High never enter this path (they hug sold median).
+ *
+ * 0.66 × $219k → $145k after $1k rounding. Documented factor, not a silent invent.
+ */
+export const LOW_THIN_FREE_PATH_HAIRCUT = 0.66;
+
 export function roundClampUsd(n: number): number {
   if (!Number.isFinite(n) || n <= 0) return 0;
   return Math.round(n / 1000) * 1000;
+}
+
+/** Low-only conservative mid. Empty / 0 stays 0 — GAP beats invent. */
+export function applyLowThinFreePathHaircut(midpoint: number): number {
+  if (!Number.isFinite(midpoint) || midpoint <= 0) return 0;
+  return roundClampUsd(midpoint * LOW_THIN_FREE_PATH_HAIRCUT);
 }
 
 /**
@@ -82,8 +98,28 @@ export function freePathMidpoint(retailLow: number, retailHigh: number): number 
 }
 
 /**
- * Collapse a fat catalog retail band toward a single free-path midpoint.
+ * Low-only desk mid: conservative free-path, optionally capped by a
+ * confirmed thin sold. Never invent a sold price and never invent UP
+ * from a cheaper sold — a fat lone sold cannot keep Market optimistic.
+ */
+export function conservativeLowMidpoint(
+  retailLow: number,
+  retailHigh: number,
+  marketValue?: number,
+): number {
+  const freeMid = freePathMidpoint(retailLow, retailHigh);
+  const conservativeFree = applyLowThinFreePathHaircut(freeMid);
+  if (marketValue && marketValue > 0) {
+    const sold = roundClampUsd(marketValue);
+    return conservativeFree > 0 ? Math.min(sold, conservativeFree) : sold;
+  }
+  return conservativeFree;
+}
+
+/**
+ * Collapse a fat catalog retail band toward a conservative free-path mid.
  * Always flags hideRetailHigh — Low comps must not lead with Retail High.
+ * Rebuilds the band around the haircut mid so Low cannot keep a fat $219k.
  */
 export function tightenRetailBandTowardMid(
   retailLow: number,
@@ -98,10 +134,7 @@ export function tightenRetailBandTowardMid(
   hideRetailHigh: boolean;
   midpoint: number;
 } {
-  const midpoint =
-    marketValue && marketValue > 0
-      ? roundClampUsd(marketValue)
-      : freePathMidpoint(retailLow, retailHigh);
+  const midpoint = conservativeLowMidpoint(retailLow, retailHigh, marketValue);
   if (midpoint <= 0) {
     return {
       retailLow,
@@ -109,20 +142,6 @@ export function tightenRetailBandTowardMid(
       tradeIn,
       hideRetailHigh: true,
       midpoint: 0,
-    };
-  }
-
-  const band = Math.max(0, retailHigh - retailLow);
-  if (band > 0 && band <= THIN_COMP_MAX_RETAIL_BAND_USD) {
-    const lo = retailLow > 0 ? retailLow : midpoint;
-    const trade = clampTradeToRetailLow(tradeIn, lo);
-    return {
-      retailLow: lo,
-      retailHigh: midpoint,
-      tradeIn: trade.tradeIn,
-      tradeCappedAtRetailLow: trade.capped || undefined,
-      hideRetailHigh: true,
-      midpoint,
     };
   }
 

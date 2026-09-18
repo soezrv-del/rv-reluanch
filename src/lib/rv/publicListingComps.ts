@@ -531,9 +531,10 @@ export function resolvePrimaryMarket(opts: {
   }
 
   /**
-   * Low / not-enough-listings: one confirmed sold ask is desk Market,
-   * never a sold range. Asking-only is not a sold price — leave Market
-   * on the catalog / live midpoint. Never invent sold prices.
+   * Low / not-enough-listings: asking-only is not a sold price. One
+   * confirmed sold ask may pull Market down; a fat lone sold cannot
+   * keep the catalog mid optimistic. applyThinCompCatalogPolicy applies
+   * the Low free-path haircut. Never invent sold prices.
    */
   const thinSoldMarket =
     comps &&

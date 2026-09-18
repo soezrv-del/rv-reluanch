@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  LOW_THIN_FREE_PATH_HAIRCUT,
   THIN_COMP_MAX_RETAIL_BAND_USD,
+  applyLowThinFreePathHaircut,
   clampRetailHighToMarketValue,
   clampTradeToRetailLow,
+  conservativeLowMidpoint,
   freePathMidpoint,
   hideRetailHighForDesk,
   tightenRetailBandTowardMid,
@@ -27,6 +30,12 @@ test("freePathMidpoint prefers retain-curve mid on a fat catalog band", () => {
   assert.ok(mid < (200_000 + 270_000) / 2, "not the ask-weighted band center");
 });
 
+test("Low thin-comp haircut is a documented 0.66 factor — 219k → 145k", () => {
+  assert.equal(LOW_THIN_FREE_PATH_HAIRCUT, 0.66);
+  assert.equal(applyLowThinFreePathHaircut(219_000), 145_000);
+  assert.equal(applyLowThinFreePathHaircut(0), 0);
+});
+
 test("tightenRetailBandTowardMid hides Retail High and kills a $70k band", () => {
   const tight = tightenRetailBandTowardMid(200_000, 270_000, 180_000);
   assert.equal(tight.hideRetailHigh, true);
@@ -34,20 +43,29 @@ test("tightenRetailBandTowardMid hides Retail High and kills a $70k band", () =>
   assert.equal(tight.retailHigh, tight.midpoint);
   assert.ok(tight.tradeIn <= tight.retailLow);
   assert.ok(tight.midpoint < 270_000);
+  assert.equal(tight.midpoint, applyLowThinFreePathHaircut(freePathMidpoint(200_000, 270_000)));
 });
 
-test("Palazzo-style: Retail High cannot sit $60k above Market 208k", () => {
-  const pinned = clampRetailHighToMarketValue(267_000, 208_000);
-  assert.equal(pinned.retailHigh, 208_000);
+test("Palazzo-style: catalog mid 219k haircuts to 145k; High stays pinned", () => {
+  const pinned = clampRetailHighToMarketValue(267_000, 145_000);
+  assert.equal(pinned.retailHigh, 145_000);
   assert.equal(pinned.clamped, true);
-  assert.ok(pinned.retailHigh - 208_000 <= THIN_COMP_MAX_RETAIL_BAND_USD);
+  assert.ok(pinned.retailHigh - 145_000 <= THIN_COMP_MAX_RETAIL_BAND_USD);
 
-  const tight = tightenRetailBandTowardMid(200_000, 267_000, 180_000, 208_000);
+  const tight = tightenRetailBandTowardMid(208_000, 267_000, 186_000);
   assert.equal(tight.hideRetailHigh, true);
-  assert.equal(tight.midpoint, 208_000);
-  assert.equal(tight.retailHigh, 208_000);
+  assert.equal(freePathMidpoint(208_000, 267_000), 219_000);
+  assert.equal(tight.midpoint, 145_000);
+  assert.equal(tight.retailHigh, 145_000);
   assert.ok(tight.retailHigh - tight.midpoint <= THIN_COMP_MAX_RETAIL_BAND_USD);
   assert.ok(tight.tradeIn <= tight.retailLow);
+  assert.ok(tight.midpoint < 219_000);
+});
+
+test("Low: a cheaper thin sold can pull Market below the haircut mid — never invent UP", () => {
+  assert.equal(conservativeLowMidpoint(208_000, 267_000, 120_000), 120_000);
+  assert.equal(conservativeLowMidpoint(208_000, 267_000, 208_000), 145_000);
+  assert.equal(conservativeLowMidpoint(208_000, 267_000), 145_000);
 });
 
 test("hideRetailHighForDesk keys Low confidence — flag cannot miss", () => {
