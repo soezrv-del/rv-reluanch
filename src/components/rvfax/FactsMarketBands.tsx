@@ -31,7 +31,7 @@ export function FactsMarketBands({
   soldSampleSize?: number;
   sampleSize?: number;
   thinSampleMessage: string;
-  /** Average source cue — blend / Catalog estimate / never a paid book brand. */
+  /** Average source cue — blend / JD-only / Catalog GAP / never a paid book brand. */
   averageCaption?: string;
   tradeIn?: string;
 }) {
