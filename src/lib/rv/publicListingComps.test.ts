@@ -143,6 +143,87 @@ test("extractListingAsks: SOLD lines are sold; ASK lines stay asking", () => {
   );
 });
 
+test("ASK + STATUS=sold stays asking — do not relabel an ask as sold", () => {
+  const rows = extractListingAsks(
+    [
+      "ASK: YEAR=2021 MAKE=Thor MODEL=Palazzo PRICE=164900 STATUS=sold SOURCE=mckeerv.com",
+      "ASK: YEAR=2022 MAKE=Thor MODEL=Palazzo PRICE=179995 STATUS=sold SOURCE=campersinn.com",
+    ].join("\n"),
+  );
+  assert.equal(rows.length, 2);
+  assert.ok(rows.every((r) => r.kind === "asking"));
+  const comps = reducePublicComps(rows, { from: 2019, to: 2023 });
+  assert.ok(comps);
+  assert.equal(comps.priceKind, "asking");
+  assert.equal(comps.soldSampleSize, 0);
+  assert.equal(comps.confidence, "low");
+  assert.equal(prefersPublicComps(comps), false);
+});
+
+test("Palazzo prod notes: New + listed Sale Price are asks — not Medium solds", () => {
+  // Cached www.rvmax.app /api/rvfax/public-comps for 2021 Thor Palazzo 33.5
+  // (tip 4846e38). Median 177650 = (159985+195315)/2 → Medium + High 199000.
+  const prodNotes = [
+    "**RESEARCH NOTES**",
+    "",
+    "SOLD: YEAR=2019 MAKE=Thor MODEL=Palazzo FLOORPLAN=33.5 PRICE=159985 MILES=- CONDITION=New SOURCE=Lazydays (Tucson, AZ dealer page marked Sold with listed Sale Price)[[1]](https://www.lazydays.com/rvs/tucson-az/class-a/thor-motor-coach-palazzo-21031278)",
+    "",
+    "SOLD: YEAR=2023 MAKE=Thor MODEL=Palazzo FLOORPLAN=33.5 PRICE=195315 MILES=- CONDITION=New SOURCE=Lazydays (Knoxville, TN dealer page marked Sold with listed Sale Price)",
+  ].join("\n");
+  const rows = extractListingAsks(prodNotes);
+  assert.equal(rows.length, 2);
+  assert.ok(
+    rows.every((r) => r.kind === "asking"),
+    "listed Sale Price / CONDITION=New must not count as sold",
+  );
+  assert.ok(rows.some((r) => r.askUsd === 159985));
+  assert.ok(rows.some((r) => r.askUsd === 195315));
+
+  const comps = reducePublicComps(rows, { from: 2019, to: 2023 });
+  assert.ok(comps);
+  assert.equal(comps.priceKind, "asking");
+  assert.equal(comps.soldSampleSize, 0);
+  assert.equal(comps.confidence, "low");
+  assert.equal(prefersPublicComps(comps), false);
+
+  const fatCatalog: MarketEstimate = {
+    tradeIn: 186000,
+    retailLow: 208000,
+    retailHigh: 267000,
+    msrpLo: 250200,
+    msrpHi: 390200,
+    segment: "Diesel Class A",
+    ageYears: 5,
+    source: "catalog",
+    sourceLabel: CATALOG_ESTIMATE_LABEL,
+  };
+  const resolved = resolvePrimaryMarket({ catalog: fatCatalog, comps });
+  assert.equal(resolved.source, "catalog");
+  assert.equal(resolved.sourceLabel, CATALOG_ESTIMATE_LABEL);
+  assert.equal(resolved.confidence, "low");
+  assert.equal(resolved.hideRetailHigh, true);
+  assert.notEqual(resolved.marketValue, 177650);
+  assert.notEqual(resolved.retailHigh, 199000);
+  assert.ok(resolved.marketValue && resolved.marketValue < 177650);
+});
+
+test("used SOLD + sold-for still count — New-unit demote is not a blanket skip", () => {
+  const notes = [
+    "SOLD: YEAR=2021 MAKE=Thor MODEL=Palazzo FLOORPLAN=33.5 PRICE=142000 MILES=28000 CONDITION=Used SOURCE=rvtrader.com",
+    "SOLD: YEAR=2022 MAKE=Thor MODEL=Palazzo FLOORPLAN=33.5 PRICE=148000 MILES=19000 CONDITION=Like new SOURCE=rvusa.com",
+    "A 2020 Palazzo 33.5 sold for $138,500 at a dealer.",
+  ].join("\n");
+  const rows = extractListingAsks(notes);
+  const solds = rows.filter((r) => r.kind === "sold");
+  assert.ok(solds.length >= 2);
+  const comps = reducePublicComps(rows, { from: 2019, to: 2023 });
+  assert.ok(comps);
+  assert.equal(comps.priceKind, "sold");
+  assert.ok(comps.soldSampleSize >= 2);
+  assert.equal(comps.confidence, "medium");
+  assert.equal(prefersPublicComps(comps), true);
+});
+
 test("extractListingAsks: never invents miles", () => {
   const rows = extractListingAsks(
     "SOLD: YEAR=2022 MAKE=Winnebago MODEL=Revel PRICE=119900 MILES=- SOURCE=rvtrader.com",
@@ -414,6 +495,9 @@ test("listing prompt demands sold lines and forbids inventing or paid books", ()
   assert.match(p.system, /SOLD:/);
   assert.match(p.system, /Do NOT invent sold prices/);
   assert.match(p.system, /Never invent miles/);
+  assert.match(p.system, /Never write STATUS=sold/);
+  assert.match(p.system, /listed Sale Price is ASK, not SOLD/);
+  assert.match(p.system, /CONDITION=New/);
   assert.match(p.system, /MarketCheck/);
   assert.match(p.system, /NADA/);
   assert.match(p.system, /J\.D\. Power/);

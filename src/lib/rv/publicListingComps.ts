@@ -229,12 +229,27 @@ export function compsConfidenceLabel(
   return "Low";
 }
 
+/** New-unit inventory is not a used sold. "Like new" stays eligible. */
+function isNewUnitCondition(chunk: string): boolean {
+  return /CONDITION\s*=\s*(?!like\s)(?:brand\s+)?new\b/i.test(chunk);
+}
+
+/**
+ * Dealer Sold badge + listed Sale Price is still an ask.
+ * "sold for $X" is a transaction and stays eligible.
+ */
+function looksLikeListedSaleNotSold(chunk: string): boolean {
+  if (/\bsold\s+for\b/i.test(chunk)) return false;
+  return /listed\s+sale\s+price/i.test(chunk) || /marked\s+sold\b/i.test(chunk);
+}
+
 function inferKind(chunk: string, explicit?: ListingPriceKind): ListingPriceKind {
-  if (explicit === "sold") return "sold";
-  if (explicit === "asking") {
-    if (/STATUS\s*=\s*sold\b/i.test(chunk)) return "sold";
+  // ASK: is sticky — STATUS=sold must not relabel an asking price as sold.
+  if (explicit === "asking") return "asking";
+  if (looksLikeListedSaleNotSold(chunk) || isNewUnitCondition(chunk)) {
     return "asking";
   }
+  if (explicit === "sold") return "sold";
   if (/STATUS\s*=\s*sold\b/i.test(chunk)) return "sold";
   if (/\bsold\s+for\b/i.test(chunk)) return "sold";
   return "asking";
@@ -593,6 +608,9 @@ export function buildListingCompsPrompt(input: {
     "PRICE is the public sold price in USD. Do NOT invent sold prices. If you did not see a sold price, do not write a SOLD line.",
     "MILES only when the listing shows an odometer. Never invent miles. Use MILES=- when unknown.",
     "If a listing is asking-only (not sold), use ASK: … not SOLD:. Do not relabel an ask as sold.",
+    "Never write STATUS=sold. ASK: stays asking even on a dealer Sold badge.",
+    "A dealer page marked Sold with a listed Sale Price is ASK, not SOLD. CONDITION=New / new-unit inventory is not a used sold.",
+    "Only write SOLD when you saw a public sold-for / completed transaction price — not a leftover Sale Price.",
     "ASK: YEAR=<yyyy> MAKE=<make> MODEL=<model> PRICE=<usd> MILES=<n or -> SOURCE=<site>",
     "Include ASK lines only as fallback when sold-status is unavailable.",
     "Never use MarketCheck, NADA, J.D. Power, or any paid book as a price.",
