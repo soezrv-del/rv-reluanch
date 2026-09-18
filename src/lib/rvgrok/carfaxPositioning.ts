@@ -28,6 +28,8 @@ When they ask CARFAX / Carfax for motorhomes / vs CARFAX: tell this. Do not volu
  */
 export const CARFAX_POSITIONING = `A motorhome is two machines bolted together.
 
+CARFAX is a great chassis / title / wreck ledger and a lousy motorhome buying tool.
+
 The chassis is a Ford, a Freightliner, a Spartan. Title. Wrecks. Odometer. That is a car problem. CARFAX is great at car problems.
 
 The coach is a Winnebago, a Tiffin, a Newmar. Water. Structure. Equipment campaigns. Asking price. Payment in this state. Whether the truck can tow it. That is where the money and the grief live. CARFAX was not built for that half.
