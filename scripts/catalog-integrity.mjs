@@ -1640,6 +1640,18 @@ function main() {
       if (/"2026": .*"42Q"/.test(dream)) {
         fail("American Coach|American Dream must not stamp 42Q onto 2026");
       }
+      if (!/"2023": \["45A", "45B", "42Q"\]/.test(dream)) {
+        fail("American Coach|American Dream MY23 must include sourced 42Q (42-foot) with 45A/45B");
+      }
+      if (/Cummins L9 450 std \/ X15 605 opt/.test(dream)) {
+        fail("American Coach|American Dream must not leak L9/X15 option-band across floorplans");
+      }
+      if (!/floorplans: \["45A"\][\s\S]*?engine: "Cummins X15 605HP"[\s\S]*?horsepower: 605[\s\S]*?torqueLbFt: 1950/.test(dream)) {
+        fail("American Coach|American Dream 45A must lock X15 605 / 1,950");
+      }
+      if (!/floorplans: \["42Q"\][\s\S]*?engine: "Cummins L9 450HP"[\s\S]*?horsepower: 450[\s\S]*?torqueLbFt: 1250/.test(dream)) {
+        fail("American Coach|American Dream 42Q must lock L9 450 / 1,250");
+      }
 
       const eagle = slice("American Eagle", "American Dream");
       if (!/"2027": \["45FW", "45J", "45K"\]/.test(eagle) || !/type: "Class A Diesel"/.test(eagle)) {

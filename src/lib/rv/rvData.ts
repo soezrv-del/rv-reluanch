@@ -24752,8 +24752,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         799000
       ],
       engine: "Cummins L9 / X15 (by option)",
-      horsepower: 450,
-      torqueLbFt: 1250,
       chassis: "Spartan / Freightliner high-line",
       transmission: "Allison 3000/4000",
       fuelType: "Diesel",
@@ -24797,11 +24795,47 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         },
         {
           from: 2020,
-          to: 2027,
-          engine: "Cummins L9 / X15 (by option)",
-          horsepower: 450,
+          to: 2020,
+          engine: "Cummins ISX 605HP",
+          horsepower: 605,
+          torqueLbFt: 1950,
           chassis: "Spartan / Freightliner high-line",
-          notes: "MY27 OEM+PDF: 45FW | 45J | 45K. Do not copy 2026 45B/42X/45A/45T onto 2027."
+          transmission: "Allison 4000 MH",
+          notes: "RVUSA 2020 Eagle: ISX 605 / 1,950. Not L9 450 / 1,250."
+        },
+        {
+          from: 2021,
+          to: 2023,
+          engine: "Cummins L9 / X15 (by option)",
+          chassis: "Spartan / Freightliner high-line",
+          notes: "No year-true single HP/torque extract for 2021–23 Eagle — do not invent 450/605 or copy 2020/2024 X15. GAP torque."
+        },
+        {
+          from: 2024,
+          to: 2025,
+          engine: "Cummins X15 605HP",
+          horsepower: 605,
+          torqueLbFt: 1950,
+          chassis: "Spartan / Freightliner high-line",
+          transmission: "Allison 4000 MH",
+          notes: "RVUSA 2024–2025 Eagle PDF: X15 605 / 1,950. Not L9."
+        },
+        {
+          from: 2026,
+          to: 2026,
+          engine: "Cummins L9 / X15 (by option)",
+          chassis: "Spartan / Freightliner high-line",
+          notes: "2026 Eagle brochure was image-only — do not invent 450/605 or copy 2025 X15. GAP torque."
+        },
+        {
+          from: 2027,
+          to: 2027,
+          engine: "Cummins ISX15 605HP",
+          horsepower: 605,
+          torqueLbFt: 1950,
+          chassis: "Spartan / Freightliner high-line",
+          transmission: "Allison 4000 MH",
+          notes: "OEM 2027 Eagle: ISX15 605 / 1,950. MY27 OEM+PDF: 45FW | 45J | 45K. Do not copy 2026 45B/42X/45A/45T onto 2027."
         },
         
       ]
@@ -24824,13 +24858,16 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["42G", "45A", "45B"],
         "2017": ["42G", "45A", "45B"],
         "2018": ["42G", "45A", "45B"],
-        "2019": ["42G", "45A", "45B"],
+        // RVUSA 2019 Dream brochure: 42B | 42Q | 42S | 45A. Keep existing 42G/45B chips; add sourced 42Q (42-foot L9). Do not invent 42B/42S onto the year row.
+        "2019": ["42G", "45A", "45B", "42Q"],
         "2020": ["42G", "45A", "45B"],
         "2021": ["42G", "45A", "45B"],
         "2022": ["45A", "45B"],
-        "2023": ["45A", "45B"],
-        "2024": ["45A", "45B"],
-        "2025": ["45A", "45B"],
+        // RVUSA 2023 Dream year index lists 42Q (42' 11"). Do not stamp 42Q onto 2026.
+        "2023": ["45A", "45B", "42Q"],
+        "2024": ["45A", "45B", "42Q"],
+        // 2025 dealer spec table CHASSIS: 42Q | 45A | 45D | 45P. Keep 45B chip; add sourced 42Q. Do not invent 45D onto this row.
+        "2025": ["45A", "45B", "42Q"],
         "2026": ["45A", "45B", "42C", "44Q"],
         // LOCK americancoach.com/models/2027-american-dream/ + library 2027-American-Coach-American-Dream.pdf (DREAM27F1, 3/26)
         // PDF MODELS: 42Q | 45A | 45P. Omit option-text-only 45Q. Do not copy 2026 45B/42C/44Q forward.
@@ -24850,7 +24887,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         549000,
         899000
       ],
-      engine: "Cummins L9 450 std / X15 605 opt",
+      engine: "Cummins diesel (by floorplan)",
       chassis: "Spartan K3 (typical high-line)",
       transmission: "Allison 3000/4000",
       fuelType: "Diesel",
@@ -24867,7 +24904,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1991,
       warrantyYears: 1,
       yearStart: 2000,
-      description: "American Coach American Dream — flagship diesel. Often Spartan + L9/X15; 605 HP is optional not universal. MY27 OEM+PDF: 42Q / 45A / 45P — omit option-text 45Q.",
+      description: "American Coach American Dream — flagship diesel. Engine is floorplan-true: 42Q is L9 450 / 1,250; 45A is X15 605 / 1,950. Do not leak 45A X15 onto 42Q or L9 onto 45A. MY27 OEM+PDF: 42Q / 45A / 45P — omit option-text 45Q.",
       powertrainByYear: [
         {
           from: 2005,
@@ -24875,31 +24912,160 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Cummins ISL / ISB diesel (era)",
           horsepower: 350,
           chassis: "Spartan K3 (typical high-line)",
-          notes: "2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)"
+          notes: "2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM). Torque unprinted — do not invent."
         },
-                {
+        {
           from: 2010,
           to: 2015,
           engine: "Cummins ISL / ISB 300–450HP (era)",
           horsepower: 380,
           chassis: "Spartan K3 (typical high-line)",
-          notes: "2010–2015 mid/high diesel Class A"
+          notes: "2010–2015 mid/high diesel Class A. Torque unprinted — do not invent."
         },
         {
           from: 2016,
-          to: 2019,
+          to: 2016,
           engine: "Cummins L9 / ISX class",
           horsepower: 450,
-          chassis: "Spartan K3"
+          chassis: "Spartan K3",
+          notes: "No 2016 Dream brochure extract for a floorplan split. Torque unprinted — do not invent 1,250/1,950 or copy 2017 42G/45A engines."
+        },
+        {
+          from: 2017,
+          to: 2017,
+          floorplans: ["42G", "42M"],
+          engine: "Cummins ISL9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner XCM",
+          transmission: "Allison 3000 MH",
+          notes: "RVUSA 2017_American Coach_American Dream: ISL9 450 / 1,250 on 42G & 42M. Not 45A ISX15."
+        },
+        {
+          from: 2017,
+          to: 2017,
+          floorplans: ["45A", "45T"],
+          engine: "Cummins ISX15 600HP",
+          horsepower: 600,
+          torqueLbFt: 1950,
+          chassis: "Freightliner SLM",
+          transmission: "Allison 4000 MH",
+          notes: "RVUSA 2017 Dream: ISX15 600 / 1,950 on 45A & 45T. Not 42G L9."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          floorplans: ["42G"],
+          engine: "Cummins ISL9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner XCM",
+          transmission: "Allison 3000 MH",
+          notes: "RVUSA 2018_American Coach_American Dream: ISL9 450 / 1,250 on 42G. Not 45A ISX15."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          floorplans: ["45A", "45T"],
+          engine: "Cummins ISX15 600HP",
+          horsepower: 600,
+          torqueLbFt: 1950,
+          chassis: "Freightliner SLM",
+          transmission: "Allison 4000 MH",
+          notes: "RVUSA 2018 Dream: ISX15 600 / 1,950 on 45A & 45T. Not 42G L9."
+        },
+        {
+          from: 2019,
+          to: 2019,
+          floorplans: ["42B", "42Q", "42S"],
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Freightliner XCM",
+          transmission: "Allison 3000 MH",
+          notes: "RVUSA 2019 Dream brochure: ISL 450 / 1,250 on 42B | 42Q | 42S. L9-class only on 42-foot plans. Not 45A X15."
+        },
+        {
+          from: 2019,
+          to: 2019,
+          floorplans: ["45A"],
+          engine: "Cummins ISX15 605HP",
+          horsepower: 605,
+          torqueLbFt: 1950,
+          chassis: "Freightliner SLM",
+          transmission: "Allison 4000 MH",
+          notes: "RVUSA 2019 Dream: ISX15 605 / 1,950 on 45A. Not 42Q L9."
         },
         {
           from: 2020,
-          to: 2027,
-          engine: "Cummins L9 450 std / X15 605 opt",
+          to: 2020,
+          floorplans: ["42V"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
           chassis: "Spartan K3",
-          notes: "L9 450 standard / X15 605 optional — HP and torque are option-band, not a locked 450 / 1,250. Confirm door sticker. MY27 OEM+PDF: 42Q | 45A | 45P — omit option-text 45Q."
+          notes: "RVUSA 2020 Dream PDF: 42V — 450HP. Torque unprinted — do not invent 1,250. Not 45A X15."
         },
-        
+        {
+          from: 2020,
+          to: 2020,
+          floorplans: ["45A"],
+          engine: "Cummins X15 605HP",
+          horsepower: 605,
+          chassis: "Spartan K3",
+          notes: "RVUSA 2020 Dream PDF: 45A — 605HP. Torque unprinted — do not invent 1,950. Not 42Q L9."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          engine: "Confirm brochure (HP not printed)",
+          horsepower: 0,
+          chassis: "Spartan K3",
+          notes: "No year-true 2021 Dream engine extract — do not copy 2018 42G, 2020 42V/45A, or 2022 45A X15. Torque GAP."
+        },
+        {
+          from: 2022,
+          to: 2026,
+          floorplans: ["45A"],
+          engine: "Cummins X15 605HP",
+          horsepower: 605,
+          torqueLbFt: 1950,
+          chassis: "Spartan K3",
+          transmission: "Allison 4000 MH",
+          notes: "RVUSA 2022–2024 45A year pages (X15 605 / 1,950) + FCCC 2026 Dream spec sheet 45A X15 605 / 1,950. Not L9. Not 42Q."
+        },
+        {
+          from: 2023,
+          to: 2025,
+          floorplans: ["42Q"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan K3",
+          transmission: "Allison 3000 MH",
+          notes: "L9 only on 42Q. 2024 American Coach Source 42Q + 2025 dealer spec table: L9 450 / 1,250. 2023 RVUSA lists 42Q. Do not copy 45A X15. Do not stamp 42Q onto 2026."
+        },
+        {
+          from: 2027,
+          to: 2027,
+          floorplans: ["42Q"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Spartan K3",
+          transmission: "Allison 3000 MH",
+          notes: "RV Guide 2027 Dream 42Q: L9 450 / 1,250 (8.9L). Not 45A X15. MY27 OEM+PDF: 42Q | 45A | 45P — omit option-text 45Q."
+        },
+        {
+          from: 2027,
+          to: 2027,
+          floorplans: ["45A"],
+          engine: "Cummins X15 605HP",
+          horsepower: 605,
+          torqueLbFt: 1950,
+          chassis: "Spartan K3",
+          transmission: "Allison 4000 MH",
+          notes: "2023–27 45A year-true X15 605 / 1,950. Not 42Q L9. Do not copy onto 45P without a year-true 45P pin."
+        },
       ]
     }
   },
