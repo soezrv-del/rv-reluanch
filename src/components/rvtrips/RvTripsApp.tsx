@@ -35,6 +35,7 @@ import {
   fetchNavigateRoute,
   mergeLiveLegs,
   routeEngineLabel,
+  rvSafeChipLabel,
 } from "@/lib/trips/navigateRoute";
 import {
   liveProviderNote,
@@ -1191,6 +1192,7 @@ export function RvTripsApp() {
   const liveStats = liveRouteStats(osrm);
   const engineChip = routeStatus === "live" ? routeEngineLabel(osrm) : "";
   const providerNote = liveProviderNote(osrm);
+  const rvSafeChip = rvSafeChipLabel(locked);
 
   const canRoute = canSubmitPlan({
     originPlace,
@@ -1273,7 +1275,7 @@ export function RvTripsApp() {
             <h1 className="text-[22px] font-bold tracking-tight text-white">
               RvTrips
             </h1>
-            {coachLine ? (
+            {coachLine && !navArmed ? (
               <p className="mt-0.5 text-[11px] font-medium leading-snug text-white/80">
                 {coachLine}
               </p>
@@ -1859,6 +1861,18 @@ export function RvTripsApp() {
                       </p>
                     </div>
                   </div>
+
+                  {rvSafeChip ? (
+                    <button
+                      type="button"
+                      data-rv-safe-chip
+                      onClick={() => setTool("profile")}
+                      aria-label={`${rvSafeChip}. Open profile to confirm or edit.`}
+                      className="inline-flex max-w-full min-h-11 items-center rounded-full border border-emerald-400/35 bg-emerald-500/12 px-2.5 text-[11px] font-semibold text-emerald-200"
+                    >
+                      {rvSafeChip}
+                    </button>
+                  ) : null}
 
                   <div
                     className={cn(

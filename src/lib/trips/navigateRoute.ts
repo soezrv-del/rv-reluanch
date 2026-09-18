@@ -37,6 +37,41 @@ export function canUseRvSafe(coach: RvSafeCoachInput | null | undefined): boolea
   return positive(coach.heightFt) && positive(coach.lengthFt) && positive(coach.weightLbs);
 }
 
+function formatFtChip(n: number): string {
+  return `${n}′`;
+}
+
+function formatLbChip(n: number): string {
+  return `${Math.round(n).toLocaleString("en-US")} lb`;
+}
+
+/**
+ * Compact imperial dims for the navigate chip: height × weight, plus
+ * length/width when the locked profile already has them.
+ */
+export function formatRvSafeChipDims(coach: RvSafeCoachInput): string | null {
+  if (!positive(coach.heightFt) || !positive(coach.weightLbs)) return null;
+  const left = [formatFtChip(coach.heightFt)];
+  if (positive(coach.lengthFt) || positive(coach.widthFt)) {
+    left[0] = `${formatFtChip(coach.heightFt)}H`;
+  }
+  if (positive(coach.lengthFt)) left.push(`${formatFtChip(coach.lengthFt)}L`);
+  if (positive(coach.widthFt)) left.push(`${formatFtChip(coach.widthFt)}W`);
+  return `${left.join(" · ")} × ${formatLbChip(coach.weightLbs)}`;
+}
+
+/**
+ * One-line navigate chip. Only when HERE Truck `rv_safe` can actually run
+ * (locked + height/length/weight). Null otherwise — no invented defaults.
+ */
+export function rvSafeChipLabel(
+  coach: RvSafeCoachInput | null | undefined,
+): string | null {
+  if (!canUseRvSafe(coach) || !coach) return null;
+  const dims = formatRvSafeChipDims(coach);
+  return dims ? `RV safe · ${dims}` : null;
+}
+
 /** Query string for GET /api — existing params only. */
 export function buildRvSafeQuery(
   from: OsrmLngLat,

@@ -107,6 +107,7 @@ test("Trips runtime never reads Facts / Tow / Cal / Grok session stores", () => 
       assert.match(src, /tripsHandoff/, "one-shot Tow→Trips param stays");
       assert.match(src, /decideTowHandoff/);
       assert.match(src, /loadLockedProfile/);
+      assert.match(src, /rvSafeChipLabel\(locked\)/);
       assert.doesNotMatch(src, /loadTowHandoffOffer|saveTowHandoffOffer/);
     }
   }

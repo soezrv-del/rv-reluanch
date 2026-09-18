@@ -7,10 +7,12 @@ import {
   buildRvSafeQuery,
   canUseRvSafe,
   fetchNavigateRoute,
+  formatRvSafeChipDims,
   mergeLiveLegs,
   routeEngineLabel,
   routeEngineNote,
   routeStopOrder,
+  rvSafeChipLabel,
   type RvSafeCoachInput,
 } from "./navigateRoute.ts";
 import type { OsrmLngLat, OsrmRouteResult } from "./osrm.ts";
@@ -84,6 +86,26 @@ test("buildRvSafeQuery: mode=rv_safe + profile dims, no invented defaults", () =
   assert.equal(slim.get("widthFt"), null);
   assert.equal(slim.get("coachType"), null);
   assert.equal(slim.get("heightFt"), "12");
+});
+
+test("rvSafeChipLabel: locked dims only — height × weight, plus used L/W", () => {
+  assert.equal(rvSafeChipLabel(null), null);
+  assert.equal(rvSafeChipLabel({ ...LOCKED, locked: false }), null);
+  assert.equal(rvSafeChipLabel({ ...LOCKED, heightFt: 0 }), null);
+  assert.equal(rvSafeChipLabel({ ...LOCKED, lengthFt: 0 }), null);
+  assert.equal(rvSafeChipLabel({ ...LOCKED, weightLbs: 0 }), null);
+  assert.equal(
+    rvSafeChipLabel(LOCKED),
+    "RV safe · 13.5′H · 45′L · 8.5′W × 44,000 lb",
+  );
+  assert.equal(
+    rvSafeChipLabel({ ...LOCKED, widthFt: 0 }),
+    "RV safe · 13.5′H · 45′L × 44,000 lb",
+  );
+  assert.equal(
+    formatRvSafeChipDims({ heightFt: 12, weightLbs: 18000 }),
+    "12′ × 18,000 lb",
+  );
 });
 
 test("routeEngineLabel: Truck vs car fallback vs OSRM", () => {
@@ -467,4 +489,32 @@ test("Navigate wires fetchNavigateRoute and honest engine labels", () => {
   assert.match(ui, /liveRouteStats/);
   assert.doesNotMatch(ui, /["']OSRM live["']/);
   assert.doesNotMatch(ui, /\/api\/route/);
+});
+
+test("Navigate route card surfaces locked RV-safe dims via Profile deep-link", () => {
+  const ui = readFileSync(
+    join(root, "../../components/rvtrips/RvTripsApp.tsx"),
+    "utf8",
+  );
+  const css = readFileSync(
+    join(root, "../../styles.css"),
+    "utf8",
+  );
+  assert.match(ui, /rvSafeChipLabel\(locked\)/);
+  assert.match(ui, /data-rv-safe-chip/);
+  assert.match(ui, /data-route-results/);
+  assert.ok(
+    ui.indexOf("data-rv-safe-chip") > ui.indexOf("data-route-results"),
+    "chip lives on the route card, not the header tools dock",
+  );
+  assert.ok(
+    ui.indexOf("data-rv-safe-chip") < ui.indexOf("Start Turn-by-Turn"),
+    "chip is on the route card path above TBT",
+  );
+  const chipStart = ui.indexOf("data-rv-safe-chip");
+  const chipBlock = ui.slice(chipStart, ui.indexOf("</button>", chipStart));
+  assert.match(chipBlock, /setTool\("profile"\)/);
+  assert.doesNotMatch(chipBlock, /hidden=\{navArmed\}/);
+  assert.match(css, /\[data-rv-safe-chip\]/);
+  assert.doesNotMatch(ui, /engraved|MetalVerifiedTrue|RVTRIPS_AMERICA/);
 });

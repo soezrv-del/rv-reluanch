@@ -179,6 +179,7 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(ui, /data-trips-tools/);
   assert.match(ui, /data-origin-chip/);
   assert.match(ui, /data-trips-route-clean/);
+  assert.match(ui, /data-rv-safe-chip/);
   assert.doesNotMatch(ui, /RVTRIPS_AMERICA_BACKDROP/);
   assert.doesNotMatch(ui, /SHARED_PRESTIGE_BACKDROP/);
   assert.doesNotMatch(ui, /SuiteBackdrop/);
