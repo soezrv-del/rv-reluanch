@@ -16,6 +16,7 @@ import {
   YEAR_MIN,
   buildListingCompsPrompt,
   coachYearRange,
+  COMPS_PARSER_VERSION,
   compsConfidenceLabel,
   extractListingAsks,
   filterAsksForRange,
@@ -25,11 +26,13 @@ import {
   mileageBand,
   prefersPublicComps,
   reducePublicComps,
+  reReduceCachedComps,
   resolvePrimaryMarket,
   selectCompListings,
   soldCompsConfidence,
   thinSoldAskUsd,
   weightedMedianUsd,
+  type PublicListingComps,
 } from "./publicListingComps.ts";
 import {
   applyThinCompCatalogPolicy,
@@ -206,6 +209,120 @@ test("Palazzo prod notes: New + listed Sale Price are asks — not Medium solds"
   assert.notEqual(resolved.marketValue, 177650);
   assert.notEqual(resolved.retailHigh, 199000);
   assert.ok(resolved.marketValue && resolved.marketValue < 177650);
+});
+
+test("warm cache HIT re-parses Palazzo New + listed Sale Price off Medium 177650", () => {
+  // Pre-#282 already-reduced payload still sitting in the 6h in-memory cache.
+  const staleNotes = [
+    "**RESEARCH NOTES**",
+    "SOLD: YEAR=2019 MAKE=Thor MODEL=Palazzo FLOORPLAN=33.5 PRICE=159985 MILES=- CONDITION=New SOURCE=Lazydays (Tucson, AZ dealer page marked Sold with listed Sale Price)[[1]](https://www.lazydays.com/rvs/tucson-az/class-a/thor-motor-coach-palazzo-21031278)",
+    "SOLD: YEAR=2023 MAKE=Thor MODEL=Palazzo FLOORPLAN=33.5 PRICE=195315 MILES=- CONDITION=New SOURCE=Lazydays (Knoxville, TN dealer page marked Sold with listed Sale Price)",
+    "2 public sold prices for the same coach across 2019–2023. Medium confidence — wider range.",
+  ].join("\n");
+  const stale: PublicListingComps = {
+    source: "public_listings",
+    yearRange: { from: 2019, to: 2023 },
+    sampleSize: 2,
+    soldSampleSize: 2,
+    askingSampleSize: 0,
+    priceKind: "sold",
+    confidence: "medium",
+    medianAsk: 177650,
+    privateMid: 160000,
+    tradeIn: 128000,
+    retailLow: 142000,
+    retailHigh: 199000,
+    notes: staleNotes,
+  };
+  assert.equal(stale.confidence, "medium");
+  assert.equal(prefersPublicComps(stale), true);
+
+  const fresh = reReduceCachedComps(stale);
+  assert.ok(fresh);
+  assert.equal(fresh.confidence, "low");
+  assert.equal(prefersPublicComps(fresh), false);
+  assert.equal(fresh.priceKind, "asking");
+  assert.equal(fresh.soldSampleSize, 0);
+
+  const fatCatalog: MarketEstimate = {
+    tradeIn: 186000,
+    retailLow: 208000,
+    retailHigh: 267000,
+    msrpLo: 250200,
+    msrpHi: 390200,
+    segment: "Diesel Class A",
+    ageYears: 5,
+    source: "catalog",
+    sourceLabel: CATALOG_ESTIMATE_LABEL,
+  };
+  const resolved = resolvePrimaryMarket({ catalog: fatCatalog, comps: fresh });
+  assert.equal(resolved.source, "catalog");
+  assert.equal(resolved.sourceLabel, CATALOG_ESTIMATE_LABEL);
+  assert.equal(resolved.hideRetailHigh, true);
+  assert.notEqual(resolved.marketValue, 177650);
+  assert.notEqual(resolved.retailHigh, 199000);
+});
+
+test("warm cache HIT keeps honest used sold-for; GAP when notes have no prices", () => {
+  const kept = reReduceCachedComps({
+    source: "public_listings",
+    yearRange: { from: 2019, to: 2023 },
+    sampleSize: 3,
+    soldSampleSize: 3,
+    askingSampleSize: 0,
+    priceKind: "sold",
+    confidence: "medium",
+    medianAsk: 177650,
+    privateMid: 160000,
+    tradeIn: 128000,
+    retailLow: 142000,
+    retailHigh: 199000,
+    notes: [
+      "SOLD: YEAR=2021 MAKE=Thor MODEL=Palazzo FLOORPLAN=33.5 PRICE=142000 MILES=28000 CONDITION=Used SOURCE=rvtrader.com",
+      "A 2020 Palazzo 33.5 sold for $138,500 at a dealer.",
+      "SOLD: YEAR=2019 MAKE=Thor MODEL=Palazzo PRICE=159985 CONDITION=New SOURCE=Lazydays listed Sale Price",
+    ].join("\n"),
+  });
+  assert.ok(kept);
+  assert.equal(kept.priceKind, "sold");
+  assert.equal(kept.soldSampleSize, 2);
+  assert.equal(kept.confidence, "medium");
+  assert.equal(prefersPublicComps(kept), true);
+  assert.notEqual(kept.medianAsk, 177650);
+  assert.ok(kept.medianAsk < 150000);
+
+  const gap = reReduceCachedComps({
+    source: "public_listings",
+    yearRange: { from: 2019, to: 2023 },
+    sampleSize: 2,
+    soldSampleSize: 2,
+    askingSampleSize: 0,
+    priceKind: "sold",
+    confidence: "medium",
+    medianAsk: 177650,
+    privateMid: 160000,
+    tradeIn: 128000,
+    retailLow: 142000,
+    retailHigh: 199000,
+    notes: "2 public sold prices for the same coach across 2019–2023. Medium confidence — wider range.",
+  });
+  assert.equal(gap, null);
+});
+
+test("public-comps cache HIT re-parses notes and versions the key", () => {
+  const api = readFileSync(
+    join(root, "../../routes/api/rvfax.public-comps.ts"),
+    "utf8",
+  );
+  assert.equal(COMPS_PARSER_VERSION, "v2");
+  assert.match(api, /COMPS_PARSER_VERSION/);
+  assert.match(api, /reReduceCachedComps/);
+  assert.match(api, /!fresh && hit/);
+  assert.match(
+    api,
+    /cacheKey[\s\S]*COMPS_PARSER_VERSION/,
+    "cache key must include parser version so pre-#282 entries miss",
+  );
 });
 
 test("used SOLD + sold-for still count — New-unit demote is not a blanket skip", () => {
