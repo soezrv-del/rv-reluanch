@@ -32253,6 +32253,90 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Freightliner Super C"
         },
         {
+          from: 2018,
+          to: 2018,
+          floorplans: ["38BB", "38RW"],
+          engine: "Cummins ISB / B6.7 Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2018_Renegade_Valencia.pdf (2018 VALENCIA): Fresh/Grey/Black 150/75/75. Do not copy to other years."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["35MB", "38BB", "38RB", "38RW"],
+          engine: "Cummins ISB / B6.7 Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2021-Renegade-RV-Valencia.pdf (MY2021): 150/75/75 fresh/gray/black. Do not copy to other years."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["35MB", "38BB", "38RB", "38RW"],
+          engine: "Cummins ISB / B6.7 Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2022-Renegade-RV-Valencia.pdf (2022): 150/75/75 fresh/gray/black. Do not copy to other years."
+        },
+        {
+          from: 2023,
+          to: 2023,
+          floorplans: ["36SB", "38BB", "38RB", "38RW"],
+          engine: "Cummins ISB / B6.7 Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2023-Renegade-RV-Valencia.pdf (2023): 150/75/75 fresh/gray/black. Do not copy to other years."
+        },
+        {
+          from: 2024,
+          to: 2024,
+          floorplans: ["36SB", "38BB", "38RB", "38RW"],
+          engine: "Cummins ISB / B6.7 Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "OEM MY24 Valencia Brochure (renegaderv.com MY24-Valencia-Brochure.pdf / library 2024-Renegade-RV-Valencia.pdf): 150/75/75 fresh/gray/black. Do not copy leftover 35MB or other years."
+        },
+        {
+          from: 2025,
+          to: 2025,
+          floorplans: ["36SB", "38BB", "38RB", "38RW"],
+          engine: "Cummins ISB / B6.7 Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "OEM 2025 VALENCIA Version 2025.1 • 9/12/2024 (renegaderv.com 2025-Renegade-RV-Valencia): 150/75/75. Do not copy leftover 35MB or other years."
+        },
+        {
+          from: 2026,
+          to: 2026,
+          floorplans: ["36SB", "39BB", "39RB"],
+          engine: "Cummins ISB / B6.7 Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "OEM 2026 VALENCIA Version 2026.1 • 9/04/2025 (36SB/39BB/39RB): 150/75/75. Do not copy 39FW or leftover 35MB/38RW forward/back."
+        },
+        {
           from: 2027,
           to: 2027,
           engine: "Cummins ISB 6.7L 360HP",
@@ -32262,7 +32346,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           transmission: "9-speed Auto (2909MH)",
           towingCapacity: 12000,
           generator: "Onan 8kW Quiet Diesel",
-          notes: "MY27 OEM+PDF: 36SB | 39BB | 39FW | 39RB. Do not copy 2026 35MB/38RW/38RBB/40RBB/45RB/45RBB onto 2027."
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "MY27 OEM+PDF / library 2027-Renegade-RV-Valencia.pdf (2027 VALENCIA 36SB|39BB|39FW|39RB): 150/75/75. Do not copy 2026 35MB/38RW/38RBB/40RBB/45RB/45RBB onto 2027."
         }
       ]
     },
@@ -32339,6 +32426,90 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Freightliner Super C"
         },
         {
+          from: 2018,
+          to: 2018,
+          floorplans: ["36VSB", "40VBH", "40VRB"],
+          engine: "Cummins Super C diesel 340–360HP",
+          horsepower: 360,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2018_Renegade_Verona.pdf (2018 VERONA): Fresh/Grey/Black 150/75/75. Do not copy to other years."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["34VQB", "36VSB", "40VBH", "40VRB"],
+          engine: "Cummins Super C diesel 340–360HP",
+          horsepower: 360,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2021-Renegade-RV-Verona.pdf (MY2021): 150/75/75. Do not copy to other years."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["34VQB", "36VSB", "40VBH", "40VRB"],
+          engine: "Cummins Super C diesel 340–360HP",
+          horsepower: 360,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2022-Renegade-RV-Verona.pdf (2022): 150/75/75. Do not copy to other years."
+        },
+        {
+          from: 2023,
+          to: 2023,
+          floorplans: ["36VSB", "40VBH", "40VRB"],
+          engine: "Cummins Super C diesel 340–360HP",
+          horsepower: 360,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2023-Renegade-RV-Verona.pdf (2023): 150/75/75. Do not copy 40VTS backward."
+        },
+        {
+          from: 2024,
+          to: 2024,
+          floorplans: ["36VSB", "40VBH", "40VRB"],
+          engine: "Cummins Super C diesel 340–360HP",
+          horsepower: 360,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "OEM MY24 Verona Brochure (renegaderv.com MY24-Verona-Brochure-Print-PDF.pdf): 150/75/75. Do not copy 40VTS backward or leftover 35RBB."
+        },
+        {
+          from: 2025,
+          to: 2025,
+          floorplans: ["36VSB", "40VBH", "40VRB", "40VTS"],
+          engine: "Cummins Super C diesel 340–360HP",
+          horsepower: 360,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "OEM 2025 VERONA Version 2025.2 • 1/2/2025: 150/75/75 (36VSB/40VRB/40VBH/40VTS). Do not copy leftover 35RBB/36RBB/38RBB."
+        },
+        {
+          from: 2026,
+          to: 2026,
+          floorplans: ["36VSB", "40VBH", "40VRB", "40VTS"],
+          engine: "Cummins Super C diesel 340–360HP",
+          horsepower: 360,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "OEM 2026 VERONA Version 2026.1 • 9/04/2025: 150/75/75 (36VSB/40VRB/40VBH/40VTS). Do not copy 40VTB/40VTR or leftover 35RBB."
+        },
+        {
           from: 2027,
           to: 2027,
           engine: "Cummins L9 360HP",
@@ -32348,7 +32519,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           transmission: "Allison 6-speed Auto (3200TRV)",
           towingCapacity: 20000,
           generator: "Onan 8kW Quiet Diesel",
-          notes: "MY27 OEM+PDF: 36VSB | 40VTB | 40VTR | 40VTS. Do not merge with Verona LE (38LDG / 40LBH / 40LRB / 40LTS)."
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "MY27 OEM+PDF / library 2027-Renegade-RV-Verona.pdf (36VSB|40VTB|40VTR|40VTS): 150/75/75. Do not merge with Verona LE (38LDG / 40LBH / 40LRB / 40LTS)."
         }
       ]
     },
@@ -32410,6 +32584,78 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Freightliner Super C"
         },
         {
+          from: 2021,
+          to: 2021,
+          floorplans: ["37LMB", "38LDG", "40LRB", "40LTS"],
+          engine: "Cummins Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2021-Renegade-RV-Verona-LE.pdf (MY2021): 150/75/75. Do not copy 40LBH backward or other years."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["37LMB", "38LDG", "40LRB", "40LTS"],
+          engine: "Cummins Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2022-Renegade-RV-Verona-LE.pdf (2022): 150/75/75. Do not copy 40LBH backward."
+        },
+        {
+          from: 2023,
+          to: 2023,
+          floorplans: ["37LMB", "38LDG", "40LRB", "40LTS"],
+          engine: "Cummins Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2023-Renegade-RV-Verona-LE.pdf (2023): 150/75/75. Do not copy 40LBH backward."
+        },
+        {
+          from: 2024,
+          to: 2024,
+          floorplans: ["37LMB", "38LDG", "40LRB", "40LTS"],
+          engine: "Cummins Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "OEM MY24 Verona LE (library 2024-Renegade-RV-Verona-LE.pdf): 150/75/75. Do not copy 40LBH backward or leftover 36VSB/40VRB."
+        },
+        {
+          from: 2025,
+          to: 2025,
+          floorplans: ["38LDG", "40LRB", "40LTS"],
+          engine: "Cummins Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "OEM 2025 VERONA LE Version 2025.3 • 12/18/2024: 150/75/75 (38LDG/40LRB/40LTS). Do not copy 40LBH backward."
+        },
+        {
+          from: 2026,
+          to: 2026,
+          floorplans: ["38LDG", "40LBH", "40LRB", "40LTS"],
+          engine: "Cummins Super C diesel",
+          horsepower: 340,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "OEM 2026 VERONA LE Version 2026.1 • 9/04/2025: 150/75/75 (38LDG/40LBH/40LRB/40LTS). Do not copy leftover 36VSB/40VRB/37RB/38RB."
+        },
+        {
           from: 2027,
           to: 2027,
           engine: "Cummins L9 360HP",
@@ -32419,7 +32665,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           transmission: "Allison 6-speed Auto (3200TRV / 3000HS)",
           towingCapacity: 20000,
           generator: "Onan 8kW Quiet Diesel",
-          notes: "MY27 OEM+PDF: 38LDG | 40LBH | 40LRB | 40LTS. Do not merge with Verona (36VSB / 40VTB / 40VTR / 40VTS)."
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "MY27 OEM+PDF / library 2027-Renegade-RV-Verona-LE.pdf (38LDG|40LBH|40LRB|40LTS): 150/75/75. Do not merge with Verona (36VSB / 40VTB / 40VTR / 40VTS)."
         }
       ]
     },
@@ -32497,12 +32746,75 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Freightliner Super C"
         },
         {
+          from: 2021,
+          to: 2021,
+          floorplans: ["37CTS", "38CSB", "41CRB", "41CRW", "45CBF", "45CBH", "45CBQ", "45CMB", "45CMR", "45CRS"],
+          engine: "Cummins Super C diesel",
+          horsepower: 360,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2021-Renegade-RV-Classic.pdf (MY2021 motorhome): 150/75/75. Do not copy to unverified years."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["37CTS", "38CSB", "41CRB", "41CRW", "45CBF", "45CBH", "45CBQ", "45CMB", "45CMR", "45CRS"],
+          engine: "Cummins Super C diesel",
+          horsepower: 360,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2022-Renegade-RV-Classic.pdf (2022): 150/75/75. Do not copy to unverified years."
+        },
+        {
+          from: 2023,
+          to: 2023,
+          floorplans: ["41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"],
+          engine: "Cummins Super C diesel",
+          horsepower: 360,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2023-Renegade-RV-Classic.pdf (2023 CLASSIC): 150/75/75. Do not copy 38CSB/41CMB onto 2023."
+        },
+        {
+          from: 2024,
+          to: 2024,
+          floorplans: ["38CSB", "41CMB", "41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"],
+          engine: "Cummins Super C diesel",
+          horsepower: 360,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "OEM MY24 Classic Brochure (renegaderv.com MY24-Classic-Brochure-Print-PDF.pdf): 150/75/75. Do not copy leftover 38FSB/40FSB or other years."
+        },
+        {
+          from: 2025,
+          to: 2025,
+          floorplans: ["38CSB", "41CMB", "41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"],
+          engine: "Cummins Super C diesel",
+          horsepower: 360,
+          chassis: "Freightliner Super C",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "OEM 2025 CLASSIC Version 2025.1 • 9/12/2024: 150/75/75. Do not copy leftover 38FSB/40FSB or invent 2026."
+        },
+        {
           from: 2027,
           to: 2027,
           engine: "Freightliner Cascadia DD13 525 / DD16 600 / Peterbilt X15 605 (by chassis)",
           chassis: "Freightliner Cascadia / Volvo VNR-VNL / Western Star / Peterbilt (by option)",
           towingCapacity: 20000,
-          notes: "MY27 OEM+PDF motorhome only: 38CSB | 41CMB | 41CRB | 41CRW | 43CMD | 45CBF | 45CME | 45CMR | 45CRS. Chassis-specific HP — do not lock a lone 360. Omit toter CS150/CS170/CS172 and garage 2509/2509GS/2609. 20,000-lb hitch single axle / 30,000-lb tandem."
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "MY27 OEM+PDF motorhome only / library 2027-Renegade-RV-Classic.pdf: 150/75/75 on 38CSB|41CMB|41CRB|41CRW|43CMD|45CBF|45CME|45CMR|45CRS. Chassis-specific HP — do not lock a lone 360. Omit toter CS150/CS170/CS172 and garage 2509/2509GS/2609. 20,000-lb hitch single axle / 30,000-lb tandem."
         }
       ]
     },
@@ -32561,6 +32873,42 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           engine: "Super C diesel (Ford 6.7 or Cummins by chassis)",
           horsepower: 330,
           chassis: "Super C platform"
+        },
+        {
+          from: 2018,
+          to: 2018,
+          floorplans: ["34MB", "34MF", "34RF", "34RM", "34RX"],
+          engine: "Super C diesel (Ford 6.7 or Cummins by chassis)",
+          horsepower: 330,
+          chassis: "Super C platform",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2018_Renegade_Ikon.pdf (2018 IKON): 150 fresh / 75 grey / 75 black. Do not copy leftover 28DSB/32DSB or other years. 2019 library PDF reprints 2018 — GAP 2019."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["i4534RQ", "i4534RX", "i4534MM"],
+          engine: "Super C diesel (Ford 6.7 or Cummins by chassis)",
+          horsepower: 330,
+          chassis: "Super C platform",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2021-Renegade-RV-Ikon.pdf (MY2021): 150/75/75. Brochure plans i4534RQ/RX/MM — do not stamp leftover 28DSB/32DSB."
+        },
+        {
+          from: 2023,
+          to: 2023,
+          floorplans: ["i4534RQ", "i4534RX", "i4534MM"],
+          engine: "Super C diesel (Ford 6.7 or Cummins by chassis)",
+          horsepower: 330,
+          chassis: "Super C platform",
+          freshWater: 150,
+          grayWater: 75,
+          blackWater: 75,
+          notes: "library.rvusa.com/brochure/2023-Renegade-RV-Ikon.pdf (2023): 150/75/75. Brochure plans i4534RQ/RX/MM — do not stamp leftover 28DSB/32DSB or invent 2022/2024–26."
         }
       ]
     },
@@ -32627,6 +32975,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           notes: "Villagio — Sprinter cowl OM642. Not a Cummins pusher.",
         },
         {
+          from: 2018,
+          to: 2018,
+          floorplans: ["25MBS", "25QRS", "25UCB"],
+          engine: "Mercedes-Benz OM642 3.0L V6 turbodiesel",
+          horsepower: 188,
+          torqueLbFt: 325,
+          chassis: "Mercedes-Benz Sprinter 3500 cowl",
+          transmission: "5-speed automatic",
+          freshWater: 34,
+          grayWater: 29,
+          blackWater: 29,
+          notes: "library.rvusa.com/brochure/2018_Renegade_Villagio.pdf (2018 VILLAGIO): 34/29/29 fresh/gray/black. Do not copy leftover 24FW/24RB.",
+        },
+        {
           from: 2019,
           to: 2021,
           engine: "Mercedes-Benz 3.0L V6 turbodiesel",
@@ -32635,12 +32997,38 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Mercedes-Benz Sprinter cowl",
         },
         {
+          from: 2021,
+          to: 2021,
+          floorplans: ["25FWC", "25FWS", "25RMC", "25RML"],
+          engine: "Mercedes-Benz 3.0L V6 turbodiesel",
+          horsepower: 188,
+          torqueLbFt: 325,
+          chassis: "Mercedes-Benz Sprinter cowl",
+          freshWater: 34,
+          grayWater: 29,
+          blackWater: 29,
+          notes: "library.rvusa.com/brochure/2021-Renegade-RV-Villagio.pdf (MY2021): 34/29/29. Do not copy leftover 24FW/24RB or invent 2020 (library 2020 file reprints 2019).",
+        },
+        {
           from: 2022,
           to: 2024,
           engine: "Mercedes-Benz 2.0L I4 turbodiesel",
           horsepower: 208,
           torqueLbFt: 332,
           chassis: "Mercedes-Benz Sprinter cowl",
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["25FWC", "25FWS", "25RMC", "25RML"],
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          horsepower: 208,
+          torqueLbFt: 332,
+          chassis: "Mercedes-Benz Sprinter cowl",
+          freshWater: 34,
+          grayWater: 29,
+          blackWater: 29,
+          notes: "library.rvusa.com/brochure/2022-Renegade-RV-Villagio.pdf (2022): 34/29/29. Do not copy leftover 24FW/24RB or invent 2023–26.",
         },
         {
           from: 2027,
@@ -32652,7 +33040,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           transmission: "9-speed automatic",
           towingCapacity: 4200,
           generator: "Onan 3.6kW LP",
-          notes: "MY27 OEM+PDF Class C Diesel: 25FWC | 25RMC | 25TBC. Prefer PDF codes over OEM shorts 25FW/25RM/25TB. Not a Cummins pusher. 2025–26 GAP — do not invent.",
+          freshWater: 34,
+          grayWater: 29,
+          blackWater: 29,
+          notes: "MY27 OEM+PDF Class C Diesel / library 2027-Renegade-RV-Villagio.pdf (25FWC|25RMC|25TBC): 34/29/29. Prefer PDF codes over OEM shorts 25FW/25RM/25TB. Not a Cummins pusher. 2025–26 GAP — do not invent.",
         },
       ]
     },
@@ -32790,6 +33181,78 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Super C platform"
         },
         {
+          from: 2021,
+          to: 2021,
+          floorplans: ["25VFWC", "25VFWS", "25VRLC", "25VRLN", "25VRMC", "25VRML"],
+          engine: "Super C diesel",
+          horsepower: 330,
+          chassis: "Super C platform",
+          freshWater: 34,
+          grayWater: 29,
+          blackWater: 29,
+          notes: "library.rvusa.com/brochure/2021-Renegade-RV-Vienna.pdf (MY2021): 34/29/29. Do not copy leftover 25VRB/28VRB. 2020 library gallons unread — GAP."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["25VFWC", "25VFWS", "25VRMC", "25VRML"],
+          engine: "Super C diesel",
+          horsepower: 330,
+          chassis: "Super C platform",
+          freshWater: 34,
+          grayWater: 29,
+          blackWater: 29,
+          notes: "library.rvusa.com/brochure/2022-Renegade-RV-Vienna.pdf (2022): 34/29/29. Do not copy leftover 25VRB/28VRB."
+        },
+        {
+          from: 2023,
+          to: 2023,
+          floorplans: ["25FWC", "25FWS", "25RMC", "25RML", "25TBC", "25TBN"],
+          engine: "Super C diesel",
+          horsepower: 330,
+          chassis: "Super C platform",
+          freshWater: 34,
+          grayWater: 29,
+          blackWater: 29,
+          notes: "library.rvusa.com/brochure/2023-Renegade-RV-Vienna.pdf (2023): 34/29/29. Do not copy leftover 25VRB/28VRB."
+        },
+        {
+          from: 2024,
+          to: 2024,
+          floorplans: ["25FWC", "25FWS", "25RMC", "25RML", "25TBC", "25TBN"],
+          engine: "Super C diesel",
+          horsepower: 330,
+          chassis: "Super C platform",
+          freshWater: 34,
+          grayWater: 29,
+          blackWater: 29,
+          notes: "OEM MY24 Vienna Brochure (renegaderv.com MY24-Vienna-Brochure-Print-PDF.pdf): 34/29/29. Do not copy leftover 25VRB/28VRB."
+        },
+        {
+          from: 2025,
+          to: 2025,
+          floorplans: ["25DLC", "25DLN", "25FWC", "25FWS", "25RMC", "25RML", "25TBC", "25TBN"],
+          engine: "Super C diesel",
+          horsepower: 330,
+          chassis: "Super C platform",
+          freshWater: 34,
+          grayWater: 29,
+          blackWater: 29,
+          notes: "OEM 2025 VIENNA Version 2025.1 • 9/12/2024: 34/29/29. Do not copy leftover 25VRB/28VRB/34RB/37RB."
+        },
+        {
+          from: 2026,
+          to: 2026,
+          floorplans: ["25DLC", "25DLN", "25FWC", "25RMC", "25RML", "25TBC", "25TBN"],
+          engine: "Super C diesel",
+          horsepower: 330,
+          chassis: "Super C platform",
+          freshWater: 34,
+          grayWater: 29,
+          blackWater: 29,
+          notes: "OEM 2026 VIENNA Version 2026.1 • 9/04/2025: 34/29/29. 25FWS not readable on the 2026 card — GAP that code. Do not copy leftover 25VRB/28VRB/34RB/37RB."
+        },
+        {
           from: 2027,
           to: 2027,
           engine: "Mercedes-Benz 2.0L I4 turbodiesel 208HP",
@@ -32799,7 +33262,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           transmission: "9-speed automatic",
           towingCapacity: 4200,
           generator: "Onan 3.6kW LP",
-          notes: "MY27 OEM+PDF Class C Diesel: 25DLC | 25DLN | 25FWC | 25FWS | 25RMC | 25RML | 25TBC | 25TBN. Prefer OEM 25DLN — omit PDF typo 25DNL."
+          freshWater: 34,
+          grayWater: 29,
+          blackWater: 29,
+          notes: "MY27 OEM+PDF Class C Diesel / library 2027-Renegade-RV-Vienna.pdf: 34/29/29 on 25DLC|25DLN|25FWC|25FWS|25RMC|25RML|25TBC|25TBN. Prefer OEM 25DLN — omit PDF typo 25DNL."
         }
       ]
     },
