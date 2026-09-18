@@ -14,7 +14,11 @@ import { BottomTabs, type AppTab } from "./BottomTabs";
 import { AskGrokOverlay } from "./AskGrokOverlay";
 import { dockTabOrder, PAGE_ACCENT } from "./shellConstants";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
-import { AccessProvider, useAccess } from "@/components/access/AccessProvider";
+import {
+  AccessGateSheets,
+  AccessProvider,
+  useAccess,
+} from "@/components/access/AccessProvider";
 import { OPEN_SOLD_EVENT } from "@/lib/rv/soldDeals";
 import {
   ShellNavProvider,
@@ -519,6 +523,7 @@ function AppShellInner() {
             <BottomTabs tab={tab} onChange={onTabChange} />
           </div>
         ) : null}
+        <AccessGateSheets />
       </div>
     </ShellNavProvider>
   );

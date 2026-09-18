@@ -71,7 +71,16 @@ export function AccessProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const sync = () => setPhoneState(readDevicePhone());
     window.addEventListener(ACCESS_CHANGED_EVENT, sync);
-    return () => window.removeEventListener(ACCESS_CHANGED_EVENT, sync);
+    const open = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      if (id === "phone" || id === "request" || id === "admin") setSheet(id);
+      if (id === "close") setSheet(null);
+    };
+    window.addEventListener("rvfox-access-open", open);
+    return () => {
+      window.removeEventListener(ACCESS_CHANGED_EVENT, sync);
+      window.removeEventListener("rvfox-access-open", open);
+    };
   }, []);
 
   useEffect(() => {
@@ -161,26 +170,29 @@ export function AccessProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <AccessContext.Provider value={value}>
-      <div className="relative h-full min-h-0 w-full">
-      {children}
-      <AccessSheets
-        sheet={sheet}
-        phone={phone}
-        allowed={allowed}
-        status={status}
-        onClose={closeSheet}
-        onSavePhone={(raw) => {
-          const n = normalizePhoneE164(raw);
-          if (!n) return false;
-          setPhone(n);
-          return true;
-        }}
-        onRequested={() => {
-          refresh();
-        }}
-      />
-      </div>
-    </AccessContext.Provider>
+    <AccessContext.Provider value={value}>{children}</AccessContext.Provider>
+  );
+}
+
+/** Mount inside `.app-shell` so sheets cover the suite, not a new height wrapper. */
+export function AccessGateSheets() {
+  const access = useAccess();
+  return (
+    <AccessSheets
+      sheet={access.sheet}
+      phone={access.phone}
+      allowed={access.allowed}
+      status={access.status}
+      onClose={access.closeSheet}
+      onSavePhone={(raw) => {
+        const n = normalizePhoneE164(raw);
+        if (!n) return false;
+        access.setPhone(n);
+        return true;
+      }}
+      onRequested={() => {
+        access.refresh();
+      }}
+    />
   );
 }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Shield, X } from "lucide-react";
 import { formatPhoneDisplay, normalizePhoneE164 } from "@/lib/access/phone";
-import { ACCESS_POLICY } from "@/lib/access/policy";
 
 export type AccessSheetId = "phone" | "request" | "admin" | null;
 
@@ -38,7 +37,10 @@ export function AccessSheets({
 }) {
   if (!sheet) return null;
   return (
-    <div className="absolute inset-0 z-[90] flex flex-col bg-black/70 backdrop-blur-md">
+    <div
+      data-access-sheet={sheet}
+      className="absolute inset-0 z-[90] flex flex-col bg-black/70 backdrop-blur-md"
+    >
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <h2 className="text-[16px] font-bold text-white">
           {sheet === "admin"
@@ -142,7 +144,8 @@ function PhoneForm({
       </button>
       {!allowed ? (
         <p className="text-[11px] leading-relaxed text-white/60">
-          Functional tools: {ACCESS_POLICY.functional.join(" · ")}
+          Save, compare, Sold, Grok, and VIN stay locked until your number
+          is on the list.
         </p>
       ) : null}
     </div>
