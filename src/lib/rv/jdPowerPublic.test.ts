@@ -213,7 +213,10 @@ test("thin JD × sold: hide High, blend Average, do not haircut JD by 0.66", () 
   assert.equal(desk.soldSampleSize, 1);
   assert.equal(desk.marketValue, 176_000);
   assert.equal(desk.retailHigh, 176_000);
-  assert.ok(desk.marketValue !== 145_000, "must not apply catalog 0.66 haircut on real JD");
+  assert.ok(
+    (desk.marketValue ?? 0) > 145_000,
+    "must not apply catalog 0.66 haircut on real JD",
+  );
   assert.ok(isJdPowerMarketSource(desk.source));
 });
 
