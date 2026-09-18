@@ -9,16 +9,22 @@
  *   marketValue   → Average (else midpoint of retailLow / retailHigh)
  *   retailHigh    → High, omitted when hideRetailHigh
  *   confidence    → thin-sample when "low" (or public sample < 2)
- *   sourceLabel   → Catalog estimate on thin; blend sublabel when present
+ *   sourceLabel   → blend cue when source is jd_power_blend; Catalog estimate on GAP
  */
 
-import type { JdPowerPublicEstimate } from "./jdPowerPublic.ts";
+import {
+  JD_POWER_BLEND_LABEL,
+  JD_POWER_PUBLIC_LABEL,
+  jdPowerSourceLabel,
+  type JdPowerPublicEstimate,
+} from "./jdPowerPublic.ts";
 import {
   CATALOG_ESTIMATE_LABEL,
   PUBLIC_COMPS_MIN_SAMPLE,
   SOLD_COMPS_LABEL,
   type PublicListingComps,
 } from "./publicListingComps.ts";
+import type { MarketValueSource } from "./marketEstimate.ts";
 
 export const MARKET_BAND_LOW_LABEL = "Low";
 export const MARKET_BAND_AVERAGE_LABEL = "Average";
@@ -73,20 +79,31 @@ export function factsMarketIsBareJdPower(label?: string): boolean {
 }
 
 /**
- * Average caption: Catalog estimate on thin/low; blend sublabel when the
- * response sent one. Never a bare J.D. Power title.
+ * Average caption: blend cue when the JD × sold ladder is active;
+ * Catalog estimate on JD GAP / thin catalog. Never a bare J.D. Power title.
+ *
+ * `source` wins over a leftover Catalog estimate `sourceLabel` — that is
+ * why the Average tile still read Catalog estimate after #283 blended.
  */
 export function factsMarketAverageCaption(input: {
   confidence?: "high" | "medium" | "low";
+  source?: MarketValueSource | string | null;
   sourceLabel?: string;
   thin?: boolean;
 }): string | undefined {
   const thin = input.thin || input.confidence === "low";
-  const label = input.sourceLabel?.trim();
+  const fromSource = jdPowerSourceLabel(input.source);
+  const label = (fromSource || input.sourceLabel)?.trim();
+  if (input.source === "jd_power_blend" || label === JD_POWER_BLEND_LABEL) {
+    return JD_POWER_BLEND_LABEL;
+  }
+  if (input.source === "jd_power_public" || label === JD_POWER_PUBLIC_LABEL) {
+    return JD_POWER_PUBLIC_LABEL;
+  }
   if (label && factsMarketIsBareJdPower(label)) {
     return thin ? CATALOG_ESTIMATE_LABEL : undefined;
   }
-  if (thin) return label || CATALOG_ESTIMATE_LABEL;
+  if (thin) return input.sourceLabel?.trim() || CATALOG_ESTIMATE_LABEL;
   if (
     label &&
     label !== SOLD_COMPS_LABEL &&

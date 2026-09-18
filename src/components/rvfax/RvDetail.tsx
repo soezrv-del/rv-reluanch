@@ -704,9 +704,6 @@ export function RvDetail({
     showSoldRange || isJdPowerMarketSource(market.source)
       ? market
       : paintedLowDesk;
-  const marketSourceLabel = showSoldRange
-    ? (market.sourceLabel ?? SOLD_COMPS_LABEL)
-    : (deskMarket.sourceLabel ?? CATALOG_ESTIMATE_LABEL);
   const financePrice = bestCalPrice(deskMarket);
   /** Average tile: marketValue, else midpoint of retailLow / retailHigh. */
   const bandAverage = factsMarketAverageUsd(deskMarket);
@@ -726,9 +723,14 @@ export function RvDetail({
   });
   const averageCaption = factsMarketAverageCaption({
     confidence: marketConfidence,
+    source: deskMarket.source,
     sourceLabel: deskMarket.sourceLabel,
     thin: thinSample,
   });
+  /** Gold Low heading must match the Average cue — not a stale Catalog chip. */
+  const marketSourceLabel =
+    averageCaption ??
+    (showSoldRange ? SOLD_COMPS_LABEL : CATALOG_ESTIMATE_LABEL);
   const coachChip = formatActiveCoachChip({
     year,
     make,

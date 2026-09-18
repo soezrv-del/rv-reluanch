@@ -9,6 +9,10 @@ import {
   SOLD_COMPS_LABEL,
 } from "./publicListingComps.ts";
 import {
+  JD_POWER_BLEND_LABEL,
+  JD_POWER_PUBLIC_LABEL,
+} from "./jdPowerPublic.ts";
+import {
   FACTS_MARKET_ERROR_MESSAGE,
   FACTS_MARKET_IDLE_HEADLINE,
   FACTS_MARKET_LOADING_MESSAGE,
@@ -128,9 +132,11 @@ test("caption: Catalog estimate on thin; blend sublabel; never bare J.D. Power",
   assert.equal(factsMarketIsBareJdPower("J.D. Power"), true);
   assert.equal(factsMarketIsBareJdPower("JD Power"), true);
   assert.equal(factsMarketIsBareJdPower("Catalog estimate"), false);
+  assert.equal(factsMarketIsBareJdPower(JD_POWER_BLEND_LABEL), false);
   assert.equal(
     factsMarketAverageCaption({
       confidence: "low",
+      source: "catalog",
       sourceLabel: CATALOG_ESTIMATE_LABEL,
     }),
     "Catalog estimate",
@@ -162,6 +168,75 @@ test("caption: Catalog estimate on thin; blend sublabel; never bare J.D. Power",
       sourceLabel: "Sold comps + public book",
     }),
     "Sold comps + public book",
+  );
+});
+
+test("caption: blend active → blend cue even when sourceLabel is still Catalog estimate", () => {
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "low",
+      thin: true,
+      source: "jd_power_blend",
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+    }),
+    JD_POWER_BLEND_LABEL,
+  );
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "medium",
+      source: "jd_power_blend",
+      sourceLabel: JD_POWER_BLEND_LABEL,
+    }),
+    JD_POWER_BLEND_LABEL,
+  );
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "low",
+      source: "jd_power_public",
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+    }),
+    JD_POWER_PUBLIC_LABEL,
+  );
+  assert.notEqual(
+    factsMarketAverageCaption({
+      source: "jd_power_blend",
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+    }),
+    "J.D. Power",
+  );
+  assert.notEqual(
+    factsMarketAverageCaption({
+      source: "jd_power_blend",
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+    }),
+    "NADA",
+  );
+});
+
+test("caption: JD GAP → Catalog estimate (or comps-only when that is the path)", () => {
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "low",
+      thin: true,
+      source: "catalog",
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+    }),
+    CATALOG_ESTIMATE_LABEL,
+  );
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "low",
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+    }),
+    "Catalog estimate",
+  );
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "medium",
+      source: "public_listings",
+      sourceLabel: SOLD_COMPS_LABEL,
+    }),
+    undefined,
   );
 });
 
@@ -200,6 +275,7 @@ test("Facts bands UI + detail wire the locked MarketEstimate fields", () => {
   assert.match(detail, /sampleSize=\{compsSample\}/);
   assert.match(detail, /thinSampleMessage=\{LOW_CONFIDENCE_LISTINGS_MESSAGE\}/);
   assert.match(detail, /deskMarket\.sourceLabel/);
+  assert.match(detail, /source: deskMarket\.source/);
   assert.match(detail, /PUBLIC_SOLD_DISCLAIMER/);
   assert.match(detail, /fetchFactsMarketLive/);
   assert.match(detail, /if \(!marketOpen\) return/);

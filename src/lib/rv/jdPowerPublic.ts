@@ -66,6 +66,19 @@ export function isJdPowerMarketSource(
   return source === "jd_power_public" || source === "jd_power_blend";
 }
 
+/**
+ * Locked Average sublabel from the ladder source. Prefer this over a
+ * leftover Catalog estimate chip — #283 can set `source` to the blend
+ * while `sourceLabel` still reads Catalog estimate on the thin desk.
+ */
+export function jdPowerSourceLabel(
+  source?: MarketValueSource | string | null,
+): string | undefined {
+  if (source === "jd_power_blend") return JD_POWER_BLEND_LABEL;
+  if (source === "jd_power_public") return JD_POWER_PUBLIC_LABEL;
+  return undefined;
+}
+
 /** 33.5 → m-33-5 (JD Power used-values slug). */
 export function jdPowerFloorplanSlug(floorplan: string): string | null {
   const t = floorplan.trim();
@@ -336,7 +349,7 @@ export function applyJdPowerDeskMarket(input: {
     tradeCappedAtRetailLow:
       bands.tradeCapped || comps?.tradeCappedAtRetailLow || undefined,
     source: soldOk ? "jd_power_blend" : "jd_power_public",
-    sourceLabel: soldOk ? JD_POWER_BLEND_LABEL : JD_POWER_PUBLIC_LABEL,
+    sourceLabel: jdPowerSourceLabel(soldOk ? "jd_power_blend" : "jd_power_public"),
     confidence: prefersSoldRange && comps ? comps.confidence : "low",
     marketValue: bands.marketValue,
     hideRetailHigh,
