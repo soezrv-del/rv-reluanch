@@ -20,10 +20,14 @@ import {
   loadOwnLotSnapshot,
   looksLikeOwnLotStockQuestion,
   OWN_LOT_MODEL,
+  OWN_LOT_PUBLIC_URL_PATH,
   ownLotHasHit,
+  ownLotIsUnavailable,
+  ownLotPublicFileCandidates,
   parseOwnLotAsk,
   parseOwnLotCsv,
   parseOwnLotUnits,
+  sameOriginOwnLotUrls,
   shouldSkipWebForOwnLot,
   snapshotFromJson,
   type OwnLotSnapshot,
@@ -251,6 +255,20 @@ test("formatOwnLotBlock is honest about the missing fuel field and never invents
   assert.match(missing, /No own-lot hit/);
   assert.match(missing, /WEB RESEARCH should run/i);
   assert.match(missing, /I don't know/i);
+  assert.match(missing, /Do not answer a stock count of 0/);
+  assert.doesNotMatch(missing, /Lot total:\s*0/);
+  assert.doesNotMatch(missing, /Diesel \(Class A Diesel \+ Class Super C\):\s*0/);
+  assert.doesNotMatch(missing, /\b0 diesels?\b/i);
+  assert.equal(ownLotIsUnavailable({
+    ok: false,
+    reason: "Own-lot snapshot not loaded (ENOENT).",
+    asOf: "",
+    source: "own",
+    dealer: "RV Country",
+    fuelFieldPresent: false,
+    pathTried: DEFAULT_OWN_LOT_JSON_PATH,
+    units: [],
+  }), true);
 });
 
 test("JSON + CSV parsers accept the scrape field names", () => {
@@ -367,6 +385,171 @@ test("in-app chat and voice research are wired; DialaBot stays out", () => {
   assert.match(telemetry, /OWN_LOT_MODEL/);
   assert.match(prompts, /OWN-LOT STOCK/);
   assert.match(src(".", "ownLotInventory.ts"), /DEFAULT_OWN_LOT_JSON_PATH/);
+  assert.match(src(".", "ownLotInventory.ts"), /OWN_LOT_PUBLIC_URL_PATH/);
+  assert.match(src(".", "ownLotInventory.ts"), /sameOriginOwnLotUrls/);
+  assert.match(api, /requestOrigin/);
   assert.doesNotMatch(api, /[Dd]ialaBot/);
   assert.doesNotMatch(telemetry, /[Dd]ialaBot/);
+});
+
+function withOwnLotEnv(
+  patch: Record<string, string | undefined>,
+  fn: () => Promise<void>,
+): Promise<void> {
+  const keys = [
+    "OWN_LOT_INVENTORY_URL",
+    "OWN_LOT_INVENTORY_PATH",
+    "VERCEL",
+    "VERCEL_URL",
+    "VERCEL_PROJECT_PRODUCTION_URL",
+  ];
+  const prev: Record<string, string | undefined> = {};
+  for (const k of keys) prev[k] = process.env[k];
+  for (const [k, v] of Object.entries(patch)) {
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
+  return fn().finally(() => {
+    for (const k of keys) {
+      if (prev[k] === undefined) delete process.env[k];
+      else process.env[k] = prev[k];
+    }
+    clearOwnLotCache();
+  });
+}
+
+test("unset URL falls back to deploy-bundled public/inventory snapshot", async () => {
+  await withOwnLotEnv(
+    {
+      OWN_LOT_INVENTORY_URL: undefined,
+      OWN_LOT_INVENTORY_PATH: undefined,
+    },
+    async () => {
+      clearOwnLotCache();
+      const candidates = ownLotPublicFileCandidates();
+      assert.ok(
+        candidates.some((p) => p.endsWith("public/inventory/own-lot-latest.json")),
+        candidates.join(", "),
+      );
+      const snap = await loadOwnLotSnapshot();
+      assert.equal(snap.ok, true, snap.reason);
+      assert.ok(snap.units.length >= 1000, `units ${snap.units.length}`);
+      assert.match(snap.pathTried, /inventory\/own-lot-latest/);
+      const diesel = snap.units.filter((u) =>
+        /class a diesel|class super c/i.test(u.body_type),
+      ).length;
+      assert.ok(diesel > 0, "bundled snapshot has diesel body_types");
+      const block = formatOwnLotBlock(
+        snap,
+        "how many diesels do we have in stock?",
+      );
+      assert.doesNotMatch(block, /UNAVAILABLE/);
+      assert.match(block, /Diesel \(Class A Diesel \+ Class Super C\): [1-9]/);
+    },
+  );
+});
+
+test("Vercel same-origin public URL is tried when files are skipped", async () => {
+  await withOwnLotEnv(
+    {
+      OWN_LOT_INVENTORY_URL: undefined,
+      OWN_LOT_INVENTORY_PATH: "/tmp/own-lot-missing-box-only.json",
+      VERCEL: "1",
+      VERCEL_URL: "rv-reluanch.vercel.app",
+    },
+    async () => {
+      const urls = sameOriginOwnLotUrls({
+        requestOrigin: "https://www.rvmax.app",
+      });
+      assert.deepEqual(urls, [
+        "https://www.rvmax.app/inventory/own-lot-latest.json",
+        "https://rv-reluanch.vercel.app/inventory/own-lot-latest.json",
+      ]);
+      assert.equal(OWN_LOT_PUBLIC_URL_PATH, "/inventory/own-lot-latest.json");
+
+      const originalFetch = globalThis.fetch;
+      const calls: string[] = [];
+      globalThis.fetch = (async (input: RequestInfo | URL) => {
+        const href = String(input);
+        calls.push(href);
+        return new Response(
+          JSON.stringify({
+            source: "own",
+            dealer: "RV Country",
+            units: FIXTURE_UNITS,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }) as typeof fetch;
+      try {
+        clearOwnLotCache();
+        const snap = await loadOwnLotSnapshot({
+          requestOrigin: "https://www.rvmax.app",
+          skipFiles: true,
+        });
+        assert.equal(snap.ok, true, snap.reason);
+        assert.equal(snap.units.length, 5);
+        assert.equal(calls[0], "https://www.rvmax.app/inventory/own-lot-latest.json");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    },
+  );
+});
+
+test("OWN_LOT_INVENTORY_URL stays an exclusive override", async () => {
+  await withOwnLotEnv(
+    {
+      OWN_LOT_INVENTORY_URL: "https://override.example/lot.json",
+      VERCEL_URL: "rv-reluanch.vercel.app",
+    },
+    async () => {
+      const originalFetch = globalThis.fetch;
+      const calls: string[] = [];
+      globalThis.fetch = (async (input: RequestInfo | URL) => {
+        calls.push(String(input));
+        return new Response("nope", { status: 503 });
+      }) as typeof fetch;
+      try {
+        clearOwnLotCache();
+        const snap = await loadOwnLotSnapshot({ skipFiles: true });
+        assert.equal(snap.ok, false);
+        assert.equal(ownLotIsUnavailable(snap), true);
+        assert.deepEqual(calls, ["https://override.example/lot.json"]);
+        const block = formatOwnLotBlock(
+          snap,
+          "how many diesels do we have in stock?",
+        );
+        assert.match(block, /UNAVAILABLE/);
+        assert.doesNotMatch(block, /Lot total:\s*0/);
+        assert.doesNotMatch(block, /Diesel \(Class A Diesel \+ Class Super C\):\s*0/);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    },
+  );
+});
+
+test("failed or empty snapshot never answers a fake stock count of 0", () => {
+  const emptyOk: OwnLotSnapshot = {
+    ok: true,
+    asOf: "",
+    source: "own",
+    dealer: "RV Country",
+    fuelFieldPresent: false,
+    pathTried: DEFAULT_OWN_LOT_JSON_PATH,
+    units: [],
+  };
+  assert.equal(ownLotHasHit(emptyOk), false);
+  assert.equal(ownLotIsUnavailable(emptyOk), true);
+  const block = formatOwnLotBlock(
+    emptyOk,
+    "how many diesels do we have in stock?",
+  );
+  assert.match(block, /UNAVAILABLE/);
+  assert.match(block, /never a fake zero/i);
+  assert.doesNotMatch(block, /Lot total:\s*0/);
+  assert.doesNotMatch(block, /Matched:\s*0/);
+  assert.doesNotMatch(block, /Diesel \(Class A Diesel \+ Class Super C\):\s*0/);
+  assert.doesNotMatch(block, /:\s*0\b/);
 });

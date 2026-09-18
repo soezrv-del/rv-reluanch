@@ -652,7 +652,13 @@ export const Route = createFileRoute("/api/rvgrok")({
         let ownLotNotes: string | undefined;
         let skipWebForLot = false;
         if (looksLikeOwnLotStockQuestion(lastPlain)) {
-          const snapshot = await loadOwnLotSnapshot();
+          let requestOrigin = "";
+          try {
+            requestOrigin = new URL(request.url).origin;
+          } catch {
+            requestOrigin = "";
+          }
+          const snapshot = await loadOwnLotSnapshot({ requestOrigin });
           ownLotNotes = formatOwnLotBlock(snapshot, lastPlain);
           skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
         }

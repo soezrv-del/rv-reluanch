@@ -52,6 +52,8 @@ export type ExecuteWebResearchOpts = {
   skipGate?: boolean;
   /** Test / caller-provided own-lot snapshot. When omitted, load on stock asks. */
   ownLotSnapshot?: OwnLotSnapshot;
+  /** Same-origin host for the deploy-bundled public snapshot. */
+  requestOrigin?: string;
 };
 
 const LOG_TAG = "rvgrok.web_research";
@@ -161,7 +163,9 @@ export async function executeWebResearch(
 
   let ownLotSnapshot = opts.ownLotSnapshot;
   if (!ownLotSnapshot && looksLikeOwnLotStockQuestion(query)) {
-    ownLotSnapshot = await loadOwnLotSnapshot();
+    ownLotSnapshot = await loadOwnLotSnapshot({
+      requestOrigin: opts.requestOrigin,
+    });
   }
   if (shouldSkipWebForOwnLot(query, ownLotSnapshot)) {
     const notes = formatOwnLotBlock(ownLotSnapshot!, query);

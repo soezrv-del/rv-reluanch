@@ -8,10 +8,16 @@
  * File has no fuel field. Diesel ≈ body_type "Class A Diesel" + "Class Super C".
  *
  * Path default: /home/box/agent-data/projects/rvfox/inventory/own-lot-latest.json
- * Override: OWN_LOT_INVENTORY_PATH or OWN_LOT_INVENTORY_URL (Vercel / remote).
+ * Override: OWN_LOT_INVENTORY_URL (exclusive) or OWN_LOT_INVENTORY_PATH.
+ * When URL is unset, Vercel/serverless tries the deploy-bundled public file
+ * (createRequire / fileURL / cwd) then same-origin /inventory/own-lot-latest.json
+ * BEFORE failing. A failed snapshot is UNAVAILABLE — never a stock count of 0.
  */
 
 import { readFile, stat } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseCoachFromText } from "./parseCoach.ts";
 import {
   looksLikeInventoryOrCountQuestion,
@@ -24,6 +30,13 @@ export const OWN_LOT_MODEL = "own-lot-inventory";
 
 export const DEFAULT_OWN_LOT_JSON_PATH =
   "/home/box/agent-data/projects/rvfox/inventory/own-lot-latest.json";
+
+/** Deploy-bundled snapshot (Vite copies public/ to the site root). */
+export const OWN_LOT_PUBLIC_URL_PATH = "/inventory/own-lot-latest.json";
+export const OWN_LOT_BUNDLED_RELATIVE = "public/inventory/own-lot-latest.json";
+/** Relative to this module — createRequire / fileURL resolve it in-repo. */
+export const OWN_LOT_MODULE_PUBLIC_SPEC =
+  "../../../public/inventory/own-lot-latest.json";
 
 /** body_type labels that count as diesel when the scrape has no fuel field. */
 export const DIESEL_BODY_TYPES = ["Class A Diesel", "Class Super C"] as const;
@@ -90,6 +103,13 @@ export function looksLikeOwnLotStockQuestion(text: string): boolean {
 /** Snapshot loaded with units — we can answer lot counts from the file. */
 export function ownLotHasHit(snapshot: OwnLotSnapshot | null | undefined): boolean {
   return Boolean(snapshot?.ok && snapshot.units.length > 0);
+}
+
+/** Failed or empty load — never treat as a real zero-unit lot. */
+export function ownLotIsUnavailable(
+  snapshot: OwnLotSnapshot | null | undefined,
+): boolean {
+  return !ownLotHasHit(snapshot);
 }
 
 /**
@@ -456,20 +476,26 @@ function filterLabel(filter: OwnLotFilter): string {
   return bits.length ? bits.join(" · ") : "all units";
 }
 
+export function formatOwnLotUnavailable(snapshot: OwnLotSnapshot): string {
+  return [
+    "OWN-LOT INVENTORY UNAVAILABLE.",
+    snapshot.reason || "Own-lot snapshot could not be read.",
+    snapshot.pathTried ? `Tried: ${snapshot.pathTried}` : "",
+    "Do not answer a stock count of 0. Do not say we have zero diesels or zero units.",
+    "Say UNAVAILABLE only — never a fake zero from a failed snapshot.",
+    "No own-lot hit. Do not invent a diesel count, VIN, stock number, or unit, and do not claim these are our lot counts from the public web.",
+    "WEB RESEARCH should run this turn — then answer. Do not stop at I don't know. Never send the user to check a website themselves.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 export function formatOwnLotBlock(
   snapshot: OwnLotSnapshot,
   query: string,
 ): string {
-  if (!snapshot.ok) {
-    return [
-      "OWN-LOT INVENTORY UNAVAILABLE.",
-      snapshot.reason || "Own-lot snapshot could not be read.",
-      snapshot.pathTried ? `Tried: ${snapshot.pathTried}` : "",
-      "No own-lot hit. Do not invent a diesel count, VIN, stock number, or unit, and do not claim these are our lot counts from the public web.",
-      "WEB RESEARCH should run this turn — then answer. Do not stop at I don't know. Never send the user to check a website themselves.",
-    ]
-      .filter(Boolean)
-      .join("\n");
+  if (ownLotIsUnavailable(snapshot)) {
+    return formatOwnLotUnavailable(snapshot);
   }
 
   const locations = [
@@ -528,6 +554,52 @@ function ownLotPath(): string {
   );
 }
 
+export function ownLotPublicFileCandidates(): string[] {
+  const out: string[] = [];
+  try {
+    out.push(fileURLToPath(new URL(OWN_LOT_MODULE_PUBLIC_SPEC, import.meta.url)));
+  } catch {
+    // ignore invalid URL resolution in odd bundles
+  }
+  const cwd = process.cwd();
+  out.push(join(cwd, OWN_LOT_BUNDLED_RELATIVE));
+  out.push(join(cwd, OWN_LOT_PUBLIC_URL_PATH.replace(/^\//, "")));
+  return [...new Set(out.filter(Boolean))];
+}
+
+export function sameOriginOwnLotUrls(opts?: { requestOrigin?: string }): string[] {
+  const urls: string[] = [];
+  const origin = (opts?.requestOrigin || "").trim().replace(/\/$/, "");
+  if (origin && /^https?:\/\//i.test(origin)) {
+    urls.push(`${origin}${OWN_LOT_PUBLIC_URL_PATH}`);
+  }
+  for (const raw of [
+    process.env.VERCEL_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  ]) {
+    const host = (raw || "").trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
+    if (host) urls.push(`https://${host}${OWN_LOT_PUBLIC_URL_PATH}`);
+  }
+  return [...new Set(urls)];
+}
+
+function unavailableSnapshot(reason: string, pathTried: string): OwnLotSnapshot {
+  return {
+    ok: false,
+    reason,
+    asOf: "",
+    source: "own",
+    dealer: "RV Country",
+    fuelFieldPresent: false,
+    pathTried,
+    units: [],
+  };
+}
+
+function snapshotIfPopulated(snapshot: OwnLotSnapshot): OwnLotSnapshot | null {
+  return snapshot.units.length > 0 ? snapshot : null;
+}
+
 async function readJsonOrCsvFile(
   jsonPath: string,
 ): Promise<{ text: string; asOf: string; kind: "json" | "csv"; path: string }> {
@@ -557,44 +629,19 @@ async function readJsonOrCsvFile(
   }
 }
 
-export async function loadOwnLotSnapshot(opts?: {
-  path?: string;
-  url?: string;
-  json?: unknown;
-}): Promise<OwnLotSnapshot> {
-  if (opts?.json !== undefined) {
-    return snapshotFromJson(opts.json, { pathTried: "inline" });
-  }
-
-  const url = (opts?.url ?? ownLotUrl()).trim();
-  const path = (opts?.path ?? ownLotPath()).trim();
-  const cacheKey = url ? `url:${url}` : `path:${path}`;
-  const hit = cache.get(cacheKey);
-  if (hit && Date.now() - hit.at < OWN_LOT_CACHE_TTL_MS) {
-    return hit.snapshot;
-  }
-
-  if (url) {
-    try {
-      const resp = await fetch(url, {
-        signal: AbortSignal.timeout(8_000),
-        headers: { Accept: "application/json,text/csv,text/plain" },
-      });
-      if (!resp.ok) {
-        return {
-          ok: false,
-          reason: `Own-lot URL HTTP ${resp.status}`,
-          asOf: "",
-          source: "own",
-          dealer: "RV Country",
-          fuelFieldPresent: false,
-          pathTried: url,
-          units: [],
-        };
-      }
-      const ctype = resp.headers.get("content-type") || "";
-      const text = await resp.text();
-      const snapshot = ctype.includes("csv") || url.endsWith(".csv")
+async function fetchOwnLotUrl(url: string): Promise<OwnLotSnapshot> {
+  try {
+    const resp = await fetch(url, {
+      signal: AbortSignal.timeout(8_000),
+      headers: { Accept: "application/json,text/csv,text/plain" },
+    });
+    if (!resp.ok) {
+      return unavailableSnapshot(`Own-lot URL HTTP ${resp.status}`, url);
+    }
+    const ctype = resp.headers.get("content-type") || "";
+    const text = await resp.text();
+    const snapshot =
+      ctype.includes("csv") || url.endsWith(".csv")
         ? snapshotFromJson({ units: parseOwnLotCsv(text) }, {
             pathTried: url,
             asOf: new Date().toISOString(),
@@ -602,60 +649,145 @@ export async function loadOwnLotSnapshot(opts?: {
         : snapshotFromJson(JSON.parse(text) as unknown, {
             pathTried: url,
           });
-      if (!snapshot.asOf) snapshot.asOf = new Date().toISOString();
-      cache.set(cacheKey, { at: Date.now(), mtimeMs: Date.now(), snapshot });
-      return snapshot;
-    } catch (e) {
-      const reason = e instanceof Error ? e.message : "own-lot URL fetch failed";
-      return {
-        ok: false,
-        reason,
-        asOf: "",
-        source: "own",
-        dealer: "RV Country",
-        fuelFieldPresent: false,
-        pathTried: url,
-        units: [],
-      };
-    }
+    if (!snapshot.asOf) snapshot.asOf = new Date().toISOString();
+    return snapshotIfPopulated(snapshot) ??
+      unavailableSnapshot("Own-lot URL returned no units.", url);
+  } catch (e) {
+    const reason = e instanceof Error ? e.message : "own-lot URL fetch failed";
+    return unavailableSnapshot(reason, url);
+  }
+}
+
+async function readOwnLotFile(path: string): Promise<OwnLotSnapshot> {
+  const file = await readJsonOrCsvFile(path);
+  const snapshot =
+    file.kind === "csv"
+      ? snapshotFromJson({ units: parseOwnLotCsv(file.text) }, {
+          pathTried: file.path,
+          asOf: file.asOf,
+        })
+      : snapshotFromJson(JSON.parse(file.text) as unknown, {
+          pathTried: file.path,
+          asOf: file.asOf,
+        });
+  if (!snapshot.asOf) snapshot.asOf = file.asOf;
+  return snapshotIfPopulated(snapshot) ??
+    unavailableSnapshot("Own-lot file had no units.", file.path);
+}
+
+function tryRequireBundledPublic(): OwnLotSnapshot | null {
+  try {
+    const require = createRequire(import.meta.url);
+    const json = require(OWN_LOT_MODULE_PUBLIC_SPEC) as unknown;
+    const snapshot = snapshotFromJson(json, {
+      pathTried: `require:${OWN_LOT_MODULE_PUBLIC_SPEC}`,
+    });
+    return snapshotIfPopulated(snapshot);
+  } catch {
+    return null;
+  }
+}
+
+function remember(cacheKey: string, snapshot: OwnLotSnapshot, mtimeMs = Date.now()): OwnLotSnapshot {
+  cache.set(cacheKey, { at: Date.now(), mtimeMs, snapshot });
+  return snapshot;
+}
+
+export async function loadOwnLotSnapshot(opts?: {
+  path?: string;
+  url?: string;
+  json?: unknown;
+  requestOrigin?: string;
+  /** Test-only: skip disk/require so same-origin fetch can be asserted. */
+  skipFiles?: boolean;
+}): Promise<OwnLotSnapshot> {
+  if (opts?.json !== undefined) {
+    const snapshot = snapshotFromJson(opts.json, { pathTried: "inline" });
+    return snapshotIfPopulated(snapshot) ??
+      unavailableSnapshot("Inline own-lot JSON had no units.", "inline");
   }
 
-  try {
-    const file = await readJsonOrCsvFile(path);
-    if (hit && hit.mtimeMs === Date.parse(file.asOf)) {
-      hit.at = Date.now();
-      return hit.snapshot;
-    }
-    const snapshot =
-      file.kind === "csv"
-        ? snapshotFromJson({ units: parseOwnLotCsv(file.text) }, {
-            pathTried: file.path,
-            asOf: file.asOf,
-          })
-        : snapshotFromJson(JSON.parse(file.text) as unknown, {
-            pathTried: file.path,
-            asOf: file.asOf,
-          });
-    if (!snapshot.asOf) snapshot.asOf = file.asOf;
-    cache.set(cacheKey, {
-      at: Date.now(),
-      mtimeMs: Date.parse(file.asOf) || Date.now(),
-      snapshot,
-    });
-    return snapshot;
-  } catch (e) {
-    const reason = e instanceof Error ? e.message : "own-lot file unreadable";
-    return {
-      ok: false,
-      reason: `Own-lot snapshot not loaded (${reason}).`,
-      asOf: "",
-      source: "own",
-      dealer: "RV Country",
-      fuelFieldPresent: false,
-      pathTried: path,
-      units: [],
-    };
+  const url = (opts?.url ?? ownLotUrl()).trim();
+  const explicitPath = (opts?.path || "").trim();
+  const path = (explicitPath || ownLotPath()).trim();
+  const cacheKey = url
+    ? `url:${url}`
+    : explicitPath
+      ? `path:${explicitPath}`
+      : "default";
+  const hit = cache.get(cacheKey);
+  if (hit && Date.now() - hit.at < OWN_LOT_CACHE_TTL_MS) {
+    return hit.snapshot;
   }
+
+  // Exclusive override — do not mix with the public fallback.
+  if (url) {
+    const snapshot = await fetchOwnLotUrl(url);
+    if (snapshot.ok) return remember(cacheKey, snapshot);
+    return snapshot;
+  }
+
+  const tried: string[] = [];
+
+  if (!opts?.skipFiles) {
+    if (explicitPath) {
+      try {
+        const snapshot = await readOwnLotFile(explicitPath);
+        if (snapshot.ok) {
+          return remember(cacheKey, snapshot, Date.parse(snapshot.asOf) || Date.now());
+        }
+        return snapshot;
+      } catch (e) {
+        const reason = e instanceof Error ? e.message : "own-lot file unreadable";
+        return unavailableSnapshot(
+          `Own-lot snapshot not loaded (${reason}).`,
+          explicitPath,
+        );
+      }
+    }
+
+    try {
+      const snapshot = await readOwnLotFile(path);
+      if (snapshot.ok) {
+        return remember(cacheKey, snapshot, Date.parse(snapshot.asOf) || Date.now());
+      }
+      tried.push(snapshot.pathTried || path);
+    } catch (e) {
+      const reason = e instanceof Error ? e.message : "own-lot file unreadable";
+      tried.push(`${path} (${reason})`);
+    }
+
+    const required = tryRequireBundledPublic();
+    if (required) return remember(cacheKey, required);
+
+    for (const candidate of ownLotPublicFileCandidates()) {
+      if (candidate === path) continue;
+      try {
+        const snapshot = await readOwnLotFile(candidate);
+        if (snapshot.ok) {
+          return remember(cacheKey, snapshot, Date.parse(snapshot.asOf) || Date.now());
+        }
+        tried.push(snapshot.pathTried || candidate);
+      } catch (e) {
+        const reason = e instanceof Error ? e.message : "unreadable";
+        tried.push(`${candidate} (${reason})`);
+      }
+    }
+  } else {
+    tried.push("files skipped");
+  }
+
+  const publicUrls = sameOriginOwnLotUrls({ requestOrigin: opts?.requestOrigin });
+  for (const publicUrl of publicUrls) {
+    const snapshot = await fetchOwnLotUrl(publicUrl);
+    if (snapshot.ok) return remember(cacheKey, snapshot);
+    tried.push(snapshot.pathTried || publicUrl);
+  }
+
+  return unavailableSnapshot(
+    `Own-lot snapshot not loaded (public fallback missed). ${tried.join(" → ")}`,
+    tried.join(" | ") || path,
+  );
 }
 
 /** Grounding block for chat / voice. Loads the latest file unless a snapshot is passed. */

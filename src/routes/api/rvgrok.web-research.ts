@@ -34,6 +34,13 @@ async function handleResearch(request: Request): Promise<Response> {
     return Response.json({ error: "query is required" }, { status: 400 });
   }
 
+  let requestOrigin = "";
+  try {
+    requestOrigin = new URL(request.url).origin;
+  } catch {
+    requestOrigin = "";
+  }
+
   const researched = await executeWebResearch({
     query,
     catalogBlock:
@@ -42,6 +49,7 @@ async function handleResearch(request: Request): Promise<Response> {
     timeoutMs: VOICE_WEB_SEARCH_TIMEOUT_MS,
     models: VOICE_WEB_SEARCH_MODELS,
     profile: "voice",
+    requestOrigin,
   });
 
   return webResearchJsonResponse(researched);
