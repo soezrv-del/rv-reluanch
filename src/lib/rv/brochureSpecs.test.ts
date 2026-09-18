@@ -17,6 +17,11 @@ import {
 } from "./catalogHonesty.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
+import {
+  isPlaceholderTankTrio,
+  omitPlaceholderCatalogTanks,
+  resolveHonestTanks,
+} from "./placeholderTanks.ts";
 
 const DREAM_ENGINE = "Cummins L9 450 std / X15 605 opt";
 const root = dirname(fileURLToPath(import.meta.url));
@@ -166,6 +171,112 @@ test("seeded filler is gone: tanks / MPG / fuel / PDF-only fields say Confirm br
   assert.match(spec, /mpgOverride && mpgOverride > 0/);
   assert.match(spec, /Tow vehicle dependent/);
   assert.doesNotMatch(spec, /eco\.fuelGal/);
+  assert.match(spec, /resolveHonestTanks/);
+  assert.match(spec, /const catalogTanks = resolveHonestTanks\(spec, band\)/);
+  assert.match(spec, /freshWater:\s*catalogTanks\.freshWater/);
+  assert.match(spec, /grayWater:\s*catalogTanks\.grayWater/);
+  assert.match(spec, /blackWater:\s*catalogTanks\.blackWater/);
+});
+
+const CONFIRM_BROCHURE = "Confirm brochure";
+
+function tankOrConfirm(n?: number | null): string {
+  return n != null && n > 0 ? `${Math.round(n)} gal` : CONFIRM_BROCHURE;
+}
+
+function displayTanks(
+  spec: { freshWater?: number; grayWater?: number; blackWater?: number },
+  band?: { freshWater?: number; grayWater?: number; blackWater?: number } | null,
+  oem?: { freshWater?: number; grayWater?: number; blackWater?: number } | null,
+) {
+  const gallons = resolveHonestTanks(spec, band, oem);
+  return {
+    freshWater: tankOrConfirm(gallons.freshWater),
+    grayWater: tankOrConfirm(gallons.grayWater),
+    blackWater: tankOrConfirm(gallons.blackWater),
+  };
+}
+
+test("isPlaceholderTankTrio only matches the cloned 60/40/40 seed", () => {
+  assert.equal(isPlaceholderTankTrio(60, 40, 40), true);
+  assert.equal(isPlaceholderTankTrio(60, 40, 41), false);
+  assert.equal(isPlaceholderTankTrio(91, 51, 51), false);
+  assert.equal(isPlaceholderTankTrio(80, 50, 40), false);
+  assert.equal(isPlaceholderTankTrio(undefined, 40, 40), false);
+  assert.deepEqual(omitPlaceholderCatalogTanks({
+    freshWater: 60,
+    grayWater: 40,
+    blackWater: 40,
+  }), {});
+  assert.deepEqual(omitPlaceholderCatalogTanks({
+    freshWater: 80,
+    grayWater: 50,
+    blackWater: 40,
+  }), { freshWater: 80, grayWater: 50, blackWater: 40 });
+});
+
+test("Facts tanks: model-level 60/40/40 seed is GAP, not confirmed gallons", () => {
+  const spec = { freshWater: 60, grayWater: 40, blackWater: 40 };
+  const snap = resolveHonestTanks(spec, null);
+  assert.equal(snap.freshWater, undefined);
+  assert.equal(snap.grayWater, undefined);
+  assert.equal(snap.blackWater, undefined);
+
+  const out = displayTanks(spec, null);
+  assert.equal(out.freshWater, CONFIRM_BROCHURE);
+  assert.equal(out.grayWater, CONFIRM_BROCHURE);
+  assert.equal(out.blackWater, CONFIRM_BROCHURE);
+  assert.doesNotMatch(
+    `${out.freshWater} / ${out.grayWater} / ${out.blackWater}`,
+    /60\s*\/\s*40\s*\/\s*40/,
+  );
+  assert.doesNotMatch(out.freshWater, /^60\s*gal$/i);
+  assert.doesNotMatch(out.grayWater, /^40\s*gal$/i);
+  assert.doesNotMatch(out.blackWater, /^40\s*gal$/i);
+});
+
+test("Facts tanks: year-scoped overlay wins over 60/40/40 seed (Aria pattern)", () => {
+  const spec = { freshWater: 60, grayWater: 40, blackWater: 40 };
+  const overlay = { freshWater: 91, grayWater: 51, blackWater: 51 };
+
+  const pinned = displayTanks(spec, overlay);
+  assert.equal(pinned.freshWater, "91 gal");
+  assert.equal(pinned.grayWater, "51 gal");
+  assert.equal(pinned.blackWater, "51 gal");
+
+  // Year band without tank fields stays on the untrusted seed → GAP.
+  const gap = displayTanks(spec, { freshWater: undefined, grayWater: undefined, blackWater: undefined });
+  assert.equal(gap.freshWater, CONFIRM_BROCHURE);
+  assert.equal(gap.grayWater, CONFIRM_BROCHURE);
+  assert.equal(gap.blackWater, CONFIRM_BROCHURE);
+});
+
+test("Facts tanks: non-placeholder catalog trio and explicit year 60/40/40 pin still paint", () => {
+  const catalogOut = displayTanks({
+    freshWater: 80,
+    grayWater: 50,
+    blackWater: 40,
+  });
+  assert.equal(catalogOut.freshWater, "80 gal");
+  assert.equal(catalogOut.grayWater, "50 gal");
+  assert.equal(catalogOut.blackWater, "40 gal");
+
+  const pinned = displayTanks(
+    { freshWater: 60, grayWater: 40, blackWater: 40 },
+    { freshWater: 60, grayWater: 40, blackWater: 40 },
+  );
+  assert.equal(pinned.freshWater, "60 gal");
+  assert.equal(pinned.grayWater, "40 gal");
+  assert.equal(pinned.blackWater, "40 gal");
+
+  const oemWins = displayTanks(
+    { freshWater: 60, grayWater: 40, blackWater: 40 },
+    null,
+    { freshWater: 100, grayWater: 62, blackWater: 41 },
+  );
+  assert.equal(oemWins.freshWater, "100 gal");
+  assert.equal(oemWins.grayWater, "62 gal");
+  assert.equal(oemWins.blackWater, "41 gal");
 });
 
 test("gas chassis rewrites Diesel/Gas generator; diesel does not get gas-only", () => {
