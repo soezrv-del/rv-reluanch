@@ -207,3 +207,100 @@ test("sample lookups for AZ prefixes are not the 5.60 AZ fallback", () => {
     assert.notEqual(info.zipPrefix, "850-865");
   }
 });
+
+const WA_ZIP3 = [
+  "980", "981", "982", "983", "984", "985", "986", "987",
+  "988", "989", "990", "991", "992", "993", "994",
+] as const;
+
+const ADDED_WA_ZIP3 = ["987"] as const;
+
+const CORRECTED_WA = [
+  ["980", 10.3],
+  ["981", 10.55],
+  ["982", 9.9],
+  ["983", 10.3],
+  ["984", 10.5],
+  ["985", 10],
+  ["986", 8.9],
+  ["988", 9],
+  ["989", 8.6],
+  ["990", 9],
+  ["991", 8.2],
+  ["992", 9.1],
+  ["994", 8.5],
+] as const;
+
+const KEPT_WA = [["993", 8.9]] as const;
+
+const SAMPLE_WA_ZIPS = [
+  ["98004", 10.3],
+  ["98101", 10.55],
+  ["98201", 9.9],
+  ["98371", 10.3],
+  ["98402", 10.5],
+  ["98501", 10],
+  ["98660", 8.9],
+  ["98701", 10.55],
+  ["98801", 9],
+  ["98901", 8.6],
+  ["99016", 9],
+  ["99163", 8.2],
+  ["99201", 9.1],
+  ["99301", 8.9],
+  ["99403", 8.5],
+] as const;
+
+test("every WA ZIP3 980-994 resolves via ZIP_TO_STATE, not the 10.25 range fallback", () => {
+  assert.equal(WA_ZIP3.length, 15);
+  for (const prefix of WA_ZIP3) {
+    const info = lookupTaxByZip(`${prefix}01`);
+    assert.ok(info, `${prefix} should resolve`);
+    assert.equal(info.abbr, "WA");
+    assert.equal(info.zipPrefix, prefix, `${prefix} must not fall through to 980-994`);
+    assert.notEqual(info.zipPrefix, "980-994");
+    assert.ok(info.registrationFees > 0);
+  }
+});
+
+test("added WA ZIP3 987 hits ZIP_TO_STATE at the Seattle SCF combined rate", () => {
+  assert.equal(ADDED_WA_ZIP3.length, 1);
+  const info = lookupTaxByZip("98701");
+  assert.ok(info, "987 should resolve");
+  assert.equal(info.abbr, "WA");
+  assert.equal(info.zipPrefix, "987");
+  assert.equal(info.taxRate, 10.55);
+  assert.notEqual(info.zipPrefix, "980-994");
+});
+
+test("WA ZIP3s stuck on a flat were corrected to the primary-metro combined rate", () => {
+  assert.equal(CORRECTED_WA.length, 13);
+  for (const [prefix, tax] of CORRECTED_WA) {
+    const info = lookupTaxByZip(`${prefix}01`);
+    assert.ok(info, `${prefix} should resolve`);
+    assert.equal(info.abbr, "WA");
+    assert.equal(info.taxRate, tax);
+    assert.equal(info.zipPrefix, prefix);
+  }
+});
+
+test("WA ZIP3 993 Pasco rate that already matched DOR stays unchanged", () => {
+  for (const [prefix, tax] of KEPT_WA) {
+    const info = lookupTaxByZip(`${prefix}01`);
+    assert.ok(info, `${prefix} should resolve`);
+    assert.equal(info.abbr, "WA");
+    assert.equal(info.taxRate, tax);
+    assert.equal(info.zipPrefix, prefix);
+  }
+});
+
+test("sample lookups for WA prefixes are not the 10.25 WA fallback", () => {
+  for (const [zip, tax] of SAMPLE_WA_ZIPS) {
+    const info = lookupTaxByZip(zip);
+    assert.ok(info, `${zip} should resolve`);
+    assert.equal(info.abbr, "WA");
+    assert.equal(info.zipPrefix, zip.slice(0, 3));
+    assert.equal(info.taxRate, tax);
+    assert.notEqual(info.zipPrefix, "980-994");
+  }
+});
