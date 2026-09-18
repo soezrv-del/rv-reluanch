@@ -1129,25 +1129,58 @@ export function RvFaxApp({
 
           {/* Saved */}
           {savedRows.length > 0 ? (
-            <section className="space-y-2.5">
-              <div className="flex items-center justify-between px-0.5">
+            <section className="space-y-2.5" data-saved-compare-list="">
+              <div className="flex items-center justify-between gap-2 px-0.5">
                 <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-white">
                   <Bookmark className="size-3.5" />
                   SAVED UNITS
                 </p>
-                <button
-                  type="button"
-                  onClick={() => persistSaved([])}
-                  className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
-                >
-                  <Trash2 className="size-3" />
-                  Clear
-                </button>
+                <div className="flex items-center gap-1.5">
+                  {comparePick.length >= 2 ? (
+                    <button
+                      type="button"
+                      data-saved-compare-open=""
+                      onClick={() => setCompareOpen(true)}
+                      className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-sky-400/45 bg-sky-500/20 px-3 py-1.5 text-[11px] font-bold text-white"
+                    >
+                      <GitCompare className="size-3.5" />
+                      Compare {comparePick.length}
+                    </button>
+                  ) : null}
+                  {comparePick.length >= 1 ? (
+                    <button
+                      type="button"
+                      data-saved-compare-clear=""
+                      aria-label="Clear compare selection"
+                      onClick={() => setComparePick([])}
+                      className="inline-flex min-h-[36px] items-center px-1.5 text-[11px] font-semibold text-white/80"
+                    >
+                      Deselect
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => persistSaved([])}
+                    className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
+                  >
+                    <Trash2 className="size-3" />
+                    Clear
+                  </button>
+                </div>
               </div>
-              {savedRows.map((r) => (
+              {savedRows.map((r) => {
+                const key = compareSelectionKey(r);
+                const comparing = comparePick.some(
+                  (c) => compareSelectionKey(c) === key,
+                );
+                return (
                 <div
-                  key={`saved-${compareSelectionKey(r)}`}
-                  className="glass-prestige flex min-h-[52px] w-full items-center gap-1 rounded-xl pr-1"
+                  key={`saved-${key}`}
+                  data-saved-compare-row={comparing ? "on" : "off"}
+                  className={cn(
+                    "glass-prestige flex min-h-[52px] w-full items-center gap-1 rounded-xl pr-1",
+                    comparing && "ring-2 ring-sky-400/70 bg-sky-500/15",
+                  )}
                 >
                   <button
                     type="button"
@@ -1163,6 +1196,31 @@ export function RvFaxApp({
                       </p>
                     </div>
                     <ChevronDown className="size-4 -rotate-90 shrink-0 text-white" />
+                  </button>
+                  <button
+                    type="button"
+                    data-saved-compare=""
+                    aria-label={
+                      comparing
+                        ? `Remove ${r.year} ${r.make} ${r.model} from compare`
+                        : `Compare ${r.year} ${r.make} ${r.model}`
+                    }
+                    aria-pressed={comparing}
+                    disabled={!comparing && comparePick.length >= 3}
+                    onClick={() => toggleCompare(r)}
+                    className={cn(
+                      "inline-flex size-11 shrink-0 items-center justify-center rounded-full border",
+                      comparing
+                        ? "border-sky-400/50 bg-sky-500/25 text-white"
+                        : "border-white/20 bg-white/5 text-white/80",
+                      !comparing && comparePick.length >= 3 && "opacity-40",
+                    )}
+                  >
+                    {comparing ? (
+                      <Check className="size-4" />
+                    ) : (
+                      <GitCompare className="size-4" />
+                    )}
                   </button>
                   {isPro ? (
                     <button
@@ -1187,7 +1245,8 @@ export function RvFaxApp({
                     <X className="size-4" />
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </section>
           ) : null}
 
