@@ -114,7 +114,10 @@ function BandTile({
         {value}
       </p>
       {caption ? (
-        <p className="mt-1 text-[10px] font-semibold leading-snug text-white/55">
+        <p
+          data-average-source-caption
+          className="mt-1.5 text-[11px] font-semibold leading-snug text-white"
+        >
           {caption}
         </p>
       ) : null}

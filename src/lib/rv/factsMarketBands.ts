@@ -79,11 +79,11 @@ export function factsMarketIsBareJdPower(label?: string): boolean {
 }
 
 /**
- * Average caption: blend cue when the JD × live-asks ladder is active;
- * Catalog estimate on JD GAP / thin catalog. Never a bare J.D. Power title.
- *
- * `source` wins over a leftover Catalog estimate `sourceLabel` — that is
- * why the Average tile still read Catalog estimate after #283 blended.
+ * Average caption: locked cue from `source` when the ladder set one.
+ *   jd_power_blend  → Avg of public J.D. Power estimate + asking comps
+ *   jd_power_public → Public J.D. Power estimate
+ *   catalog         → Catalog estimate (JD GAP / thin haircut)
+ * Never a bare J.D. Power title. `source` wins a leftover Catalog chip.
  */
 export function factsMarketAverageCaption(input: {
   confidence?: "high" | "medium" | "low";
@@ -93,17 +93,15 @@ export function factsMarketAverageCaption(input: {
 }): string | undefined {
   const thin = input.thin || input.confidence === "low";
   const fromSource = jdPowerSourceLabel(input.source);
-  const label = (fromSource || input.sourceLabel)?.trim();
-  if (input.source === "jd_power_blend" || label === JD_POWER_BLEND_LABEL) {
-    return JD_POWER_BLEND_LABEL;
-  }
-  if (input.source === "jd_power_public" || label === JD_POWER_PUBLIC_LABEL) {
-    return JD_POWER_PUBLIC_LABEL;
-  }
+  if (fromSource) return fromSource;
+  if (input.source === "catalog") return CATALOG_ESTIMATE_LABEL;
+  const label = input.sourceLabel?.trim();
+  if (label === JD_POWER_BLEND_LABEL) return JD_POWER_BLEND_LABEL;
+  if (label === JD_POWER_PUBLIC_LABEL) return JD_POWER_PUBLIC_LABEL;
   if (label && factsMarketIsBareJdPower(label)) {
     return thin ? CATALOG_ESTIMATE_LABEL : undefined;
   }
-  if (thin) return input.sourceLabel?.trim() || CATALOG_ESTIMATE_LABEL;
+  if (thin) return label || CATALOG_ESTIMATE_LABEL;
   if (
     label &&
     label !== SOLD_COMPS_LABEL &&
