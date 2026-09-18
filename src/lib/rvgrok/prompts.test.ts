@@ -1,8 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { AGENT_SYSTEM_PROMPT, RV_SYSTEM_PROMPT } from "./prompts.ts";
-import { RV_VOICE_INSTRUCTIONS } from "./voice.ts";
-import { VOICE_RESEARCH_HOLD_INSTRUCTIONS } from "./voiceWeb.ts";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = dirname(fileURLToPath(import.meta.url));
+
+function src(name: string) {
+  return readFileSync(join(root, name), "utf8");
+}
 
 function assertAnswerPolicy(prompt: string, label: string) {
   assert.match(
@@ -29,32 +35,32 @@ function assertAnswerPolicy(prompt: string, label: string) {
 }
 
 test("chat, agent, and voice prompts share David's answer-now / Let me check that policy", () => {
-  assertAnswerPolicy(RV_SYSTEM_PROMPT, "RV_SYSTEM_PROMPT");
-  assertAnswerPolicy(AGENT_SYSTEM_PROMPT, "AGENT_SYSTEM_PROMPT");
-  assertAnswerPolicy(RV_VOICE_INSTRUCTIONS, "RV_VOICE_INSTRUCTIONS");
+  const prompts = src("prompts.ts");
+  const voice = src("voice.ts");
+  const voiceWeb = src("voiceWeb.ts");
+
+  assertAnswerPolicy(prompts, "prompts.ts");
+  assertAnswerPolicy(voice, "voice.ts");
 
   assert.match(
-    RV_SYSTEM_PROMPT,
+    prompts,
     /first user-visible line/,
-    "chat: hold line is first, then search, then answer in the same response",
+    "chat/agent: hold line is first, then search, then answer in the same response",
   );
   assert.match(
-    AGENT_SYSTEM_PROMPT,
+    prompts,
     /same final response/,
     "agent: search then complete answer in the same final response",
   );
   assert.match(
-    VOICE_RESEARCH_HOLD_INSTRUCTIONS,
+    voiceWeb,
     /Let me check that/,
     "voice hold beat still speaks the same line when a search is actually running",
   );
 
-  for (const [label, prompt] of [
-    ["RV_SYSTEM_PROMPT", RV_SYSTEM_PROMPT],
-    ["AGENT_SYSTEM_PROMPT", AGENT_SYSTEM_PROMPT],
-  ] as const) {
-    assert.match(prompt, /WEB RESEARCH/, `${label} keeps WEB RESEARCH notes`);
-    assert.match(prompt, /Do not invent/, `${label} still forbids invented specs`);
-    assert.match(prompt, /REPAIR/, `${label} keeps the repair playbook`);
-  }
+  assert.match(prompts, /WEB RESEARCH notes/);
+  assert.match(prompts, /Do not invent/);
+  assert.match(prompts, /REPAIR \/ DIAGNOSE/);
+  assert.match(voice, /WEB RESEARCH notes/);
+  assert.match(voice, /REPAIR PLAYBOOK/);
 });
