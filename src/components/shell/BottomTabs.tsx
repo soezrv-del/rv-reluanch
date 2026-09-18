@@ -163,21 +163,23 @@ export function BottomTabs({
                 "bottom-tab-btn group relative z-[3] flex min-h-[48px] w-full items-center justify-center rounded-none px-0.5 py-2 sm:min-h-[52px]",
                 "transition-[transform,opacity] duration-200 ease-out",
                 "pointer-events-auto active:scale-[0.94] touch-manipulation select-none",
-                isLive && "bottom-tab-live flex-col gap-0.5 py-1.5",
+                isLive && "bottom-tab-live",
                 active && "is-active",
               )}
             >
               {isLive ? (
+                /* Live slot: Einstein icon only — no Grok / Live / RvGROK text. */
                 <img
                   src="/assets/brand/icon-rvgrok.png"
                   alt=""
                   className="bottom-tab-einstein"
                 />
-              ) : null}
-              <DockLabel
-                text={short}
-                className={isSold ? "bottom-tab-label-sold" : undefined}
-              />
+              ) : (
+                <DockLabel
+                  text={short}
+                  className={isSold ? "bottom-tab-label-sold" : undefined}
+                />
+              )}
             </button>
           );
         })}
