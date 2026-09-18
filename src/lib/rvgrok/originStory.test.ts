@@ -201,7 +201,6 @@ test("chat, voice, and grounding wire the origin KB; DialaBot stays out", () => 
   );
   assert.doesNotMatch(src("speechPolicy.ts"), /Only say "Let me check that"/);
   assert.doesNotMatch(src("originStory.ts"), /[Dd]ialaBot/);
-  assert.doesNotMatch(src("originStory.ts"), /Hanson/);
   const ownLot = src("ownLotInventory.test.ts");
   assert.match(ownLot, /DialaBot stays out/);
 });

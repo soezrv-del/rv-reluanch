@@ -2,7 +2,7 @@
  * Official RvFOX origin story — standing knowledge for RV Grok.
  * Source: David Hansen / official narration. Do not invent a different
  * founder, tagline, or mission. Empty / GAP still beats inventing specs.
- * Spelling SoT: Hansen (never Hanson).
+ * Spelling SoT: Hansen.
  */
 
 export const RVFOX_FOUNDER = "David Hansen";
