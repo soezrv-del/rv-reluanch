@@ -36,7 +36,7 @@ export function RequestAccessSheet({
   };
 
   return (
-    <div className="absolute inset-0 z-[120] flex flex-col bg-black/70 backdrop-blur-md">
+    <div className="fixed inset-0 z-[120] flex flex-col bg-black/70 backdrop-blur-md">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <h2 className="text-[16px] font-bold text-white">Access restricted</h2>
         <button
