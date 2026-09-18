@@ -53,7 +53,7 @@ export const PAGE_COPY: Record<
     badge: "LIVE",
   },
   rvtrips: {
-    title: "RvTRIPS",
+    title: "RV GPS",
     line: "RV GPS with campgrounds, dump stations, and more.",
     badge: "LIVE",
   },

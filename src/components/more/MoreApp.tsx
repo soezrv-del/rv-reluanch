@@ -205,8 +205,8 @@ export function MoreApp({
                 onClick={() => onNavigate?.("rvfax")}
               />
               <ActivityTile
-                label="Trips"
-                sub="RvTrips"
+                label="RV GPS"
+                sub="Map"
                 icon={<Route className="size-5 text-emerald-400" />}
                 accent="green"
                 onClick={() => onNavigate?.("rvtrips")}
@@ -609,7 +609,7 @@ const SHEETS: Record<
       "RvFax — Year → make → model → floorplan search with brochure-style specs and class filters.",
       "RvCal — Purchase price slider, ZIP tax, credit bands (650–800+), and credit-aware lenders.",
       "RvTow — Truck/SUV catalog + NHTSA VIN decode for tow capacity checks.",
-      "RvTrips — Lock your coach profile, enter addresses, route with OSRM, find free sewer dumps, and only see restrictions that match the path.",
+      "RV GPS — Lock your coach profile, enter addresses, route with OSRM, find free sewer dumps, and only see restrictions that match the path.",
       "Swipe left/right between tabs. Scroll up to hide header & footer chrome on iPhone.",
     ],
   },
