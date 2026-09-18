@@ -41,7 +41,7 @@ export function NdaGate({ children }: { children: ReactNode }) {
           </h1>
         </div>
         <div data-app-scroll className="rv-scroll flex-1 overflow-y-auto px-4 py-4">
-          <div className="mx-auto max-w-lg space-y-4">
+          <div className="mx-auto max-w-lg">
             <div className="glass-prestige rounded-[1.25rem] p-4">
               <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-gold-dim">
                 <Scale className="size-5 text-gold" />
@@ -50,7 +50,11 @@ export function NdaGate({ children }: { children: ReactNode }) {
                 {NDA_TEXT}
               </p>
             </div>
-            <label className="glass-prestige flex cursor-pointer items-start gap-3 rounded-[1.25rem] p-4">
+          </div>
+        </div>
+        <div className="border-t border-border px-4 py-3">
+          <div className="mx-auto max-w-lg space-y-3">
+            <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
                 checked={checked}
