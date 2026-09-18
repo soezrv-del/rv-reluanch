@@ -7269,9 +7269,9 @@ function main() {
   // Passenger H3-45 / X3-45 and converters stay out.
   {
     const p0 = src.indexOf('\n  "Prevost": {');
-    const p1 = src.indexOf("\nexport const MAKES");
+    const p1 = src.indexOf('\n  "Tiffin Bus": {');
     if (p0 < 0 || p1 < p0) {
-      fail('Prevost block not found between "Prevost": and export const MAKES');
+      fail('Prevost block not found between "Prevost": and "Tiffin Bus":');
     } else {
       const pv = src.slice(p0, p1);
       const slice = (a, b) => {
