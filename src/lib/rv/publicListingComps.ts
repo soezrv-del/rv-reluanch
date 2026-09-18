@@ -14,10 +14,17 @@
  *
  * This module is the reducer + client fetch only. It must NEVER import
  * MarketCheck. Paid inventory search stays a separate side panel and
- * does not feed this ladder. Not JD Power. Not NADA.
+ * does not feed this ladder. Palazzo-first may blend an on-demand free
+ * public J.D. Power estimate — never invent book dollars, never a paid
+ * Price Guide.
  */
 
 import { clampTradeToRetailLow } from "./marketClamp.ts";
+import {
+  applyJdPowerDeskMarket,
+  isJdPowerBlendEligible,
+  type JdPowerPublicEstimate,
+} from "./jdPowerPublic.ts";
 import {
   CATALOG_ESTIMATE_LABEL,
   paintFactsLowDeskMarket,
@@ -59,7 +66,7 @@ export const SOLD_COMPS_LABEL = "Sold comps";
 export const ASKING_COMPS_LABEL = "Asking comps";
 /** One Facts-detail footer — never appended to per-comp notes or line items. */
 export const PUBLIC_SOLD_DISCLAIMER =
-  "Values are estimates from public listings. Not JD Power or NADA book value.";
+  "Not a paid J.D. Power/NADA guide. Public estimate + sold comps; confirm with a dealer.";
 export const LOW_CONFIDENCE_LISTINGS_MESSAGE = "Not enough public listings";
 /** Med/High Market tile — sold median. Low uses Catalog estimate instead. */
 export const SOLD_MARKET_TILE_LABEL = "Market value";
@@ -562,8 +569,26 @@ export function resolvePrimaryMarket(opts: {
   catalog: MarketEstimate;
   liveLadder?: LiveMarketLadder;
   comps?: PublicListingComps | null;
+  /** On-demand public J.D. Power parse. Null / GAP → existing path. */
+  jdPower?: JdPowerPublicEstimate | null;
 }): MarketEstimate {
-  const { catalog, liveLadder, comps } = opts;
+  const { catalog, liveLadder, comps, jdPower } = opts;
+  const jd =
+    jdPower &&
+    jdPower.lowRetail > 0 &&
+    jdPower.averageRetail > 0 &&
+    isJdPowerBlendEligible(jdPower.make, jdPower.model)
+      ? jdPower
+      : null;
+  if (jd) {
+    return applyJdPowerDeskMarket({
+      catalog,
+      jd,
+      comps: comps ?? null,
+      prefersSoldRange: prefersPublicComps(comps),
+    });
+  }
+
   if (prefersPublicComps(comps) && comps) {
     const trade = clampTradeToRetailLow(comps.tradeIn, comps.retailLow);
     return {
@@ -582,6 +607,7 @@ export function resolvePrimaryMarket(opts: {
       /** Hug the public sold median — not the Catalog estimate seed. */
       marketValue: comps.medianAsk,
       hideRetailHigh: false,
+      soldSampleSize: comps.soldSampleSize,
     };
   }
 
@@ -591,10 +617,13 @@ export function resolvePrimaryMarket(opts: {
    * pull Market down; a fat lone sold / tight $219k mid cannot keep
    * Catalog optimistic. Asking-only is not a sold price. Never invent.
    */
-  return paintFactsLowDeskMarket(catalog, {
-    thinSoldUsd: thinSoldAskUsd(comps),
-    live: liveLadder,
-  });
+  return {
+    ...paintFactsLowDeskMarket(catalog, {
+      thinSoldUsd: thinSoldAskUsd(comps),
+      live: liveLadder,
+    }),
+    soldSampleSize: comps?.soldSampleSize ?? 0,
+  };
 }
 
 /** One confirmed sold ask on a Low / thin ladder — not asking, not invent. */
@@ -653,7 +682,16 @@ export function buildListingCompsPrompt(input: {
   return { system, user };
 }
 
-export async function fetchPublicListingComps(
+export type PublicMarketSources = {
+  comps: PublicListingComps | null;
+  jdPower: JdPowerPublicEstimate | null;
+};
+
+/**
+ * On-demand Market value fetch: public sold comps + Palazzo-first
+ * public J.D. Power. Never invents JD dollars — jdPower is null on GAP.
+ */
+export async function fetchPublicMarketSources(
   input: {
     year: string;
     make: string;
@@ -661,9 +699,9 @@ export async function fetchPublicListingComps(
     floorplan?: string;
   },
   signal?: AbortSignal,
-): Promise<PublicListingComps | null> {
+): Promise<PublicMarketSources> {
   if (!input.year.trim() || !input.make.trim() || !input.model.trim()) {
-    return null;
+    return { comps: null, jdPower: null };
   }
   try {
     const resp = await fetch("/api/rvfax/public-comps", {
@@ -680,16 +718,38 @@ export async function fetchPublicListingComps(
       }),
       signal,
     });
-    if (!resp.ok) return null;
+    if (!resp.ok) return { comps: null, jdPower: null };
     const json = (await resp.json()) as {
       data?: PublicListingComps;
-      ok?: boolean;
+      jdPower?: JdPowerPublicEstimate | null;
     };
-    if (json?.data?.source === "public_listings" && json.data.medianAsk > 0) {
-      return json.data;
-    }
-    return null;
+    const comps =
+      json?.data?.source === "public_listings" && json.data.medianAsk > 0
+        ? json.data
+        : null;
+    const jd = json?.jdPower;
+    const jdPower =
+      jd &&
+      jd.source === "jd_power_public" &&
+      jd.lowRetail > 0 &&
+      jd.averageRetail > 0
+        ? jd
+        : null;
+    return { comps, jdPower };
   } catch {
-    return null;
+    return { comps: null, jdPower: null };
   }
+}
+
+export async function fetchPublicListingComps(
+  input: {
+    year: string;
+    make: string;
+    model: string;
+    floorplan?: string;
+  },
+  signal?: AbortSignal,
+): Promise<PublicListingComps | null> {
+  const { comps } = await fetchPublicMarketSources(input, signal);
+  return comps;
 }

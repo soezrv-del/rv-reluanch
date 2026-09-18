@@ -3,8 +3,9 @@
  *
  * One retain curve for every RV was wrong: Class B vans hold, gas Class A/C
  * drop hard in the first years, toy haulers lag fifth wheels. This module
- * is a segment-aware *catalog estimate* — not NADA, not J.D. Power, not
- * MarketCheck.
+ * is a segment-aware *catalog estimate* — not a paid NADA / J.D. Power
+ * Price Guide, not MarketCheck. Free public J.D. Power (Palazzo-first)
+ * is a separate on-demand ladder.
  *
  * Shape:
  *   private-party fair mid = MSRP_mid × retain(age, segment) × brandTier
@@ -26,7 +27,12 @@ import {
 } from "./ratingSystem.ts";
 import type { RVSpec } from "./rvTypes.ts";
 
-export type MarketValueSource = "catalog" | "public_listings" | "live_dossier";
+export type MarketValueSource =
+  | "catalog"
+  | "public_listings"
+  | "live_dossier"
+  | "jd_power_public"
+  | "jd_power_blend";
 
 /** Sold-comps confidence on the public listings ladder. Catalog has none. */
 export type MarketConfidence = "high" | "medium" | "low";
@@ -46,17 +52,24 @@ export type MarketEstimate = {
   tradeCappedAtRetailLow?: boolean;
   /** Which ladder produced these numbers. Default catalog. */
   source?: MarketValueSource;
-  /** Honest UI label — never NADA / J.D. Power / MarketCheck. */
+  /**
+   * Honest UI label — never a bare "J.D. Power" / "NADA" desk title.
+   * Locked strings: Catalog estimate, Sold comps, Public J.D. Power
+   * estimate, Avg of public J.D. Power estimate + sold comps.
+   */
   sourceLabel?: string;
-  /** Set only when source is public_listings sold comps. */
+  /** Set when sold comps or a JD public blend produced these numbers. */
   confidence?: MarketConfidence;
   /**
    * Primary desk number. Sold median when Med/High public comps win;
-   * catalog free-path midpoint when sold comps are Low / thin.
+   * catalog free-path midpoint when sold comps are Low / thin and JD
+   * public is GAP; blend Average when public JD × sold both exist.
    */
   marketValue?: number;
   /** Low / thin sold comps — do not paint Retail High as a wide band. */
   hideRetailHigh?: boolean;
+  /** Confirmed sold listing count feeding the public comps ladder. */
+  soldSampleSize?: number;
 };
 
 /**
