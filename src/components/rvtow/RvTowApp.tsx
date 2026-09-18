@@ -38,6 +38,10 @@ import {
   type TowCheck,
   type TowMatchVerdict,
 } from "@/lib/tow/towMatch";
+import {
+  buildTowObjections,
+  type TowObjectionLine,
+} from "@/lib/tow/towObjections";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
@@ -383,6 +387,27 @@ export function RvTowApp() {
   const recommendedPayload = verdict.recommendedPayload;
   const pinEst = verdict.hitchLoad;
 
+  const objectionLines = useMemo(() => {
+    if (prefill.kind !== "towable") return [];
+    return buildTowObjections({
+      gvwrLbs: gvwrN,
+      rvType,
+      hitchLbs: pinN > 0 ? pinN : undefined,
+      maxTow: hasVehicle ? rating.maxTow : undefined,
+      payload: hasVehicle ? rating.payload : undefined,
+      gcwr: hasVehicle ? rating.gcwr : undefined,
+    });
+  }, [
+    prefill.kind,
+    gvwrN,
+    rvType,
+    pinN,
+    hasVehicle,
+    rating.maxTow,
+    rating.payload,
+    rating.gcwr,
+  ]);
+
   // Non-truck vehicles (SUV / car-class) → travel trailer only
   useEffect(() => {
     if (kindFilter === "suv" || (hasVehicle && rating.kind === "suv")) {
@@ -590,6 +615,9 @@ export function RvTowApp() {
 
   const reverseMode = shopMode === "reverse" && !toadMode;
   const pinHeroActive = /fifth/i.test(rvType);
+  const lotDeskTowable = prefill.kind === "towable" && !toadMode;
+  const fitGlance =
+    lotDeskTowable && hasVehicle && reveal.answer && !reverseMode;
 
   const detailLines = useMemo(() => {
     const lines: string[] = [];
@@ -1008,14 +1036,38 @@ export function RvTowApp() {
                 onPick={applyReversePick}
               />
             ) : reveal.answer ? (
-              <AnswerHero
-                maxTow={rating.maxTow}
-                hitchLbs={pinEst}
-                hitchKind={/fifth/i.test(rvType) ? "pin" : "tongue"}
-              />
+              <>
+                <AnswerHero
+                  maxTow={rating.maxTow}
+                  hitchLbs={pinEst}
+                  hitchKind={/fifth/i.test(rvType) ? "pin" : "tongue"}
+                />
+                {fitGlance ? (
+                  <div data-tow-fit-glance className="space-y-2">
+                    <GlanceChecks
+                      verdict={verdict}
+                      gvwrN={gvwrN}
+                      maxTow={rating.maxTow}
+                    />
+                    {verdict.bed ? (
+                      <p
+                        data-tow-bed-note
+                        className="text-[12px] leading-snug text-white/80"
+                      >
+                        <span className="font-bold text-white">
+                          {verdict.bed.title}.
+                        </span>{" "}
+                        {verdict.bed.detail}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </>
             ) : null}
           </>
         )}
+
+        {lotDeskTowable ? <LotDeskWeight lines={objectionLines} /> : null}
 
         <section className="glass-surface rounded-[var(--radius-xl)] p-1.5">
           <button
@@ -1160,11 +1212,13 @@ export function RvTowApp() {
                       sub={`REC. TOW\n${recommendedTow.toLocaleString()} lbs`}
                     />
                   </div>
-                  <GlanceChecks
-                    verdict={verdict}
-                    gvwrN={gvwrN}
-                    maxTow={rating.maxTow}
-                  />
+                  {fitGlance ? null : (
+                    <GlanceChecks
+                      verdict={verdict}
+                      gvwrN={gvwrN}
+                      maxTow={rating.maxTow}
+                    />
+                  )}
                 </>
               ) : !reverseMode ? (
                 <div className="rounded-[var(--radius-md)] border border-dashed border-white/20 bg-black/25 px-3 py-4 text-center">
@@ -1497,6 +1551,40 @@ function glanceMark(level: TowCheck["level"]): string {
   if (level === "fail" || level === "warn") return "⚠";
   if (level === "skip") return "·";
   return "✓";
+}
+
+function LotDeskWeight({ lines }: { lines: TowObjectionLine[] }) {
+  if (!lines.length) return null;
+  return (
+    <section
+      data-tow-lot-desk
+      className="glass-surface rounded-[var(--radius-xl)] px-3 py-2.5"
+      aria-label="Lot desk weight"
+    >
+      <p className="mb-1.5 text-[10px] font-bold tracking-[0.12em] text-sky-200">
+        Lot desk · weight
+      </p>
+      <ul className="space-y-1.5">
+        {lines.map((line) => (
+          <li
+            key={line.id}
+            data-tow-objection={line.id}
+            data-gap={line.gap ? "true" : undefined}
+          >
+            <p className="text-[12px] font-bold text-white">{line.q}</p>
+            <p
+              className={cn(
+                "text-[12px] leading-snug",
+                line.gap ? "text-amber" : "text-white/80",
+              )}
+            >
+              {line.a}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }
 
 function GlanceChecks({
