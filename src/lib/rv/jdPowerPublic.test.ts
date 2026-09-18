@@ -77,6 +77,10 @@ function sold(year: number, askUsd: number) {
   return { year, askUsd, kind: "sold" as const };
 }
 
+function ask(year: number, askUsd: number) {
+  return { year, askUsd, kind: "asking" as const };
+}
+
 test("Palazzo-first gate: Thor Palazzo only — not GT, not Aria", () => {
   assert.equal(isJdPowerBlendEligible("Thor", "Palazzo"), true);
   assert.equal(isJdPowerBlendEligible("thor", "palazzo"), true);
@@ -191,6 +195,47 @@ test("blend JD-only: no sold → public JD Low/Average, no invented High", () =>
   assert.equal(bands.marketValue, 145_000);
   assert.equal(bands.retailLow, 120_000);
   assert.equal(bands.retailHigh, 145_000);
+});
+
+test("thin JD × asking: blend source + caption — asking is the live nationwide path", () => {
+  const catalog = estimateMarket(dieselSpec(), "2021", "33.5", {
+    asOfYear: 2026,
+    make: "Thor",
+    model: "Palazzo",
+  });
+  const asking = reducePublicComps(
+    [ask(2021, 164_900), ask(2022, 179_995)],
+    { from: 2019, to: 2023 },
+  );
+  assert.ok(asking);
+  assert.equal(asking.priceKind, "asking");
+  assert.equal(asking.confidence, "low");
+  assert.equal(prefersPublicComps(asking), false);
+
+  const desk = applyJdPowerDeskMarket({
+    catalog,
+    jd: palazzoJd,
+    comps: asking,
+    prefersSoldRange: false,
+  });
+  assert.equal(desk.source, "jd_power_blend");
+  assert.equal(desk.sourceLabel, JD_POWER_BLEND_LABEL);
+  assert.equal(desk.confidence, "low");
+  assert.equal(desk.hideRetailHigh, true);
+  assert.equal(
+    desk.marketValue,
+    roundJdPublicUsd((144_800 + asking.medianAsk) / 2),
+  );
+  assert.notEqual(desk.marketValue, 145_000, "must not stay on catalog 0.66 haircut");
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: desk.confidence,
+      source: desk.source,
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+      thin: true,
+    }),
+    JD_POWER_BLEND_LABEL,
+  );
 });
 
 test("thin JD × sold: hide High, blend Average, do not haircut JD by 0.66", () => {
@@ -332,6 +377,36 @@ test("resolvePrimaryMarket: JD GAP + thin Palazzo still Catalog estimate 145k", 
   assert.equal(isJdPowerMarketSource(resolved.source), false);
 });
 
+test("resolvePrimaryMarket: JD × asking Palazzo paints the blend cue, not Catalog", () => {
+  const catalog = estimateMarket(dieselSpec(), "2021", "33.5", {
+    asOfYear: 2026,
+    make: "Thor",
+    model: "Palazzo",
+  });
+  const asking = reducePublicComps(
+    [ask(2020, 159_900), ask(2021, 164_900)],
+    { from: 2019, to: 2023 },
+  );
+  assert.ok(asking);
+  const blended = resolvePrimaryMarket({
+    catalog,
+    comps: asking,
+    jdPower: palazzoJd,
+  });
+  assert.equal(blended.source, "jd_power_blend");
+  assert.equal(blended.sourceLabel, JD_POWER_BLEND_LABEL);
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: blended.confidence,
+      source: blended.source,
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+      thin: true,
+    }),
+    JD_POWER_BLEND_LABEL,
+  );
+  assert.ok(isJdPowerMarketSource(blended.source));
+});
+
 test("resolvePrimaryMarket: JD-only Palazzo uses public estimate, not Catalog", () => {
   const catalog = estimateMarket(dieselSpec(), "2021", "33.5", {
     asOfYear: 2026,
@@ -348,6 +423,15 @@ test("resolvePrimaryMarket: JD-only Palazzo uses public estimate, not Catalog", 
   assert.equal(resolved.hideRetailHigh, true);
   assert.equal(resolved.marketValue, 145_000);
   assert.equal(resolved.retailLow, 120_000);
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: resolved.confidence,
+      source: resolved.source,
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+      thin: true,
+    }),
+    JD_POWER_PUBLIC_LABEL,
+  );
 });
 
 test("ineligible make/model ignores a leaked JD payload — never invent for Aria", () => {

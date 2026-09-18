@@ -236,11 +236,12 @@ export type BlendJdPowerBandsInput = {
 
 /**
  * Blend formula (Facts Low / Average / High):
- *   Average = mean(JD average retail, sold median) when both exist
- *   Low     = mean(JD low retail, sold retailLow) when both exist
- *   High    = mean(JD high retail, sold retailHigh) when JD high exists;
+ *   Average = mean(JD average retail, comps median) when both exist
+ *             (sold or on-demand asking — nationwide asks are not sold)
+ *   Low     = mean(JD low retail, comps retailLow) when both exist
+ *   High    = mean(JD high retail, comps retailHigh) when JD high exists;
  *             else the available source only — never invent a JD high
- *   Trade   = sold trade when present, else 0.85 × Average, clamped to Low
+ *   Trade   = comps trade when present, else 0.85 × Average, clamped to Low
  * Dollars round to the nearest $1,000 like the rest of Facts.
  */
 export function blendJdPowerPublicBands(input: BlendJdPowerBandsInput): {
@@ -313,18 +314,20 @@ export function applyJdPowerDeskMarket(input: {
   prefersSoldRange: boolean;
 }): MarketEstimate {
   const { catalog, jd, comps, prefersSoldRange } = input;
-  const soldOk =
+  // On-demand nationwide comps are asks; sold still blends when present.
+  // Asking-only must not stay JD-only or the Average cue never leaves Catalog.
+  const compsOk =
     Boolean(comps) &&
-    comps!.priceKind === "sold" &&
+    (comps!.priceKind === "sold" || comps!.priceKind === "asking") &&
     comps!.medianAsk >= MIN_BOOK_USD;
   const bands = blendJdPowerPublicBands({
     jdLow: jd.lowRetail,
     jdAverage: jd.averageRetail,
     jdHigh: jd.highRetail,
-    soldMedian: soldOk ? comps!.medianAsk : undefined,
-    compsRetailLow: soldOk ? comps!.retailLow : undefined,
-    compsRetailHigh: soldOk ? comps!.retailHigh : undefined,
-    compsTradeIn: soldOk ? comps!.tradeIn : undefined,
+    soldMedian: compsOk ? comps!.medianAsk : undefined,
+    compsRetailLow: compsOk ? comps!.retailLow : undefined,
+    compsRetailHigh: compsOk ? comps!.retailHigh : undefined,
+    compsTradeIn: compsOk ? comps!.tradeIn : undefined,
   });
 
   const thin = !prefersSoldRange;
@@ -348,8 +351,8 @@ export function applyJdPowerDeskMarket(input: {
     ageYears: catalog.ageYears,
     tradeCappedAtRetailLow:
       bands.tradeCapped || comps?.tradeCappedAtRetailLow || undefined,
-    source: soldOk ? "jd_power_blend" : "jd_power_public",
-    sourceLabel: jdPowerSourceLabel(soldOk ? "jd_power_blend" : "jd_power_public"),
+    source: compsOk ? "jd_power_blend" : "jd_power_public",
+    sourceLabel: jdPowerSourceLabel(compsOk ? "jd_power_blend" : "jd_power_public"),
     confidence: prefersSoldRange && comps ? comps.confidence : "low",
     marketValue: bands.marketValue,
     hideRetailHigh,
