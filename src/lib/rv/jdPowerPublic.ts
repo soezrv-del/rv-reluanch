@@ -34,9 +34,11 @@ export const JD_POWER_PUBLIC_ORIGIN = "https://www.jdpower.com";
 /** Public HTML reader — origin CF 403s datacenter fetches; same page, live parse. */
 export const JD_POWER_PUBLIC_READER_ORIGIN = "https://r.jina.ai";
 
-/** Browser-like UA — the bot UA is CF-blocked on www. */
-export const JD_POWER_PUBLIC_USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+/**
+ * Short Mozilla UA. The old bot UA and a full Chrome UA both get
+ * Cloudflare 403 / Just a moment on the public HTML reader from Node.
+ */
+export const JD_POWER_PUBLIC_USER_AGENT = "Mozilla/5.0";
 
 export type JdPowerPublicEstimate = {
   source: "jd_power_public";
