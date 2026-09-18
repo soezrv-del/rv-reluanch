@@ -7,6 +7,7 @@ import {
   brandTierRetainFactor,
   detectMarketSegment,
   estimateMarket,
+  paintFactsLowDeskMarket,
   retainForAge,
   type MarketEstimate,
 } from "./marketEstimate.ts";
@@ -180,6 +181,54 @@ test("Palazzo-style Low: catalog mid 219k haircuts to 145k — High stays hidden
   assert.ok(tight.marketValue < 219000);
   assert.ok(tight.retailHigh - (tight.marketValue ?? 0) <= THIN_COMP_MAX_RETAIL_BAND_USD);
   assert.ok(tight.tradeIn <= tight.retailLow);
+});
+
+test("Facts Low desk paint: Palazzo display dollars move 219k → 145k", () => {
+  const palazzo = spec({
+    type: "Class A Diesel",
+    fuelType: "Diesel",
+    msrpRange: [249000, 389000],
+  });
+  const catalog = estimateMarket(palazzo, "2021", "33.5", {
+    asOfYear: ASOF,
+    make: "Thor",
+    model: "Palazzo",
+  });
+  assert.equal(catalog.tradeIn, 186000);
+  assert.equal(catalog.retailLow, 208000);
+  assert.equal(catalog.retailHigh, 267000);
+  assert.equal(freePathMidpoint(catalog.retailLow, catalog.retailHigh), 219000);
+  assert.equal(catalog.marketValue, undefined, "raw catalog must not pre-set Market");
+
+  // What prod painted after #275/#276: tightened mid, no haircut on the tiles.
+  const staleTight: MarketEstimate = {
+    ...catalog,
+    marketValue: 219000,
+    retailLow: 212000,
+    retailHigh: 219000,
+    tradeIn: 186000,
+    hideRetailHigh: true,
+    confidence: "low",
+  };
+  assert.equal(staleTight.marketValue, 219000);
+
+  const painted = paintFactsLowDeskMarket(catalog);
+  assert.equal(painted.marketValue, 145000);
+  assert.equal(painted.retailHigh, 145000);
+  assert.equal(painted.hideRetailHigh, true);
+  assert.equal(painted.confidence, "low");
+  assert.equal(painted.sourceLabel, CATALOG_ESTIMATE_LABEL);
+  assert.ok(painted.retailLow < 212000, `Retail Low ${painted.retailLow} must leave the $212k tight mid`);
+  assert.ok(painted.tradeIn <= painted.retailLow);
+  assert.notEqual(painted.marketValue, staleTight.marketValue);
+  assert.notEqual(painted.marketValue, 219000);
+  assert.notEqual(painted.tradeIn, 186000);
+
+  // Tight live / stale resolved rungs must not win — fat catalog is the source.
+  const fromStaleLive = paintFactsLowDeskMarket(catalog, {
+    live: { tradeIn: 186000, retailLow: 212000, retailHigh: 219000 },
+  });
+  assert.equal(fromStaleLive.marketValue, 145000);
 });
 
 test("Palazzo-style Low: a fat lone sold cannot keep Market at 208k", () => {

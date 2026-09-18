@@ -76,9 +76,11 @@ import {
   fetchPublicListingComps,
   prefersPublicComps,
   resolvePrimaryMarket,
+  thinSoldAskUsd,
   type PublicListingComps,
 } from "@/lib/rv/publicListingComps";
 import { hideRetailHighForDesk } from "@/lib/rv/marketClamp";
+import { paintFactsLowDeskMarket } from "@/lib/rv/marketEstimate";
 import { fetchRecallsViaApi } from "@/lib/nhtsa/recalls";
 import type { NhtsaComplaint, NhtsaRecall } from "@/lib/nhtsa/recalls";
 import { buildReportId, valueFactors } from "@/lib/rv/reportMeta";
@@ -620,9 +622,6 @@ export function RvDetail({
       hideRetailHigh: market.hideRetailHigh,
     });
   const soldConfidenceLabel = compsConfidenceLabel(soldConfidence);
-  const marketSourceLabel = showSoldRange
-    ? SOLD_COMPS_LABEL
-    : (market.sourceLabel ?? CATALOG_ESTIMATE_LABEL);
 
   const displayType =
     (powertrainGuard.hard.fuelType === "Diesel"
@@ -649,10 +648,23 @@ export function RvDetail({
     [displayType],
   );
 
-  const financePrice = bestCalPrice(market);
+  const paintedLowDesk = useMemo(
+    () =>
+      paintFactsLowDeskMarket(catalogMarket, {
+        thinSoldUsd: thinSoldAskUsd(publicComps),
+        live: liveLadder,
+      }),
+    [catalogMarket, publicComps, liveLadder],
+  );
+  /** Low tiles must use the haircut paint — not raw catalog retain / $219k mid. */
+  const deskMarket = showSoldRange ? market : paintedLowDesk;
+  const marketSourceLabel = showSoldRange
+    ? SOLD_COMPS_LABEL
+    : (deskMarket.sourceLabel ?? CATALOG_ESTIMATE_LABEL);
+  const financePrice = bestCalPrice(deskMarket);
   const deskMarketValue =
-    market.marketValue && market.marketValue > 0
-      ? market.marketValue
+    deskMarket.marketValue && deskMarket.marketValue > 0
+      ? deskMarket.marketValue
       : financePrice;
   const coachChip = formatActiveCoachChip({
     year,
@@ -905,9 +917,9 @@ export function RvDetail({
           make,
           model,
           floorplan: floorplan || undefined,
-          tradeIn: formatMoney(market.tradeIn),
-          retailLow: formatMoney(market.retailLow),
-          retailHigh: formatMoney(market.retailHigh),
+          tradeIn: formatMoney(deskMarket.tradeIn),
+          retailLow: formatMoney(deskMarket.retailLow),
+          retailHigh: formatMoney(deskMarket.retailHigh),
           rating: displayRating.toFixed(1),
           type: displayType,
           recallCount: recallLoading ? 0 : recallCount,
@@ -920,7 +932,7 @@ export function RvDetail({
           length: specs.lengthFt,
           slideouts: specs.slideouts,
           sleeps: specs.sleeps,
-          tradeCappedAtRetailLow: Boolean(market.tradeCappedAtRetailLow),
+          tradeCappedAtRetailLow: Boolean(deskMarket.tradeCappedAtRetailLow),
           strengths: productStrengths,
           lifestyle: lifestyleLine,
         },
@@ -1312,16 +1324,16 @@ export function RvDetail({
                 />
                 <MarketTile
                   label="Trade-in"
-                  value={formatMoney(market.tradeIn)}
+                  value={formatMoney(deskMarket.tradeIn)}
                 />
                 <MarketTile
                   label="Retail low"
-                  value={formatMoney(market.retailLow)}
+                  value={formatMoney(deskMarket.retailLow)}
                 />
                 {!hideRetailHigh ? (
                   <MarketTile
                     label="Retail high"
-                    value={formatMoney(market.retailHigh)}
+                    value={formatMoney(deskMarket.retailHigh)}
                   />
                 ) : null}
               </div>
@@ -1340,11 +1352,11 @@ export function RvDetail({
                   />
                   <MarketTile
                     label="Trade-in"
-                    value={formatMoney(market.tradeIn)}
+                    value={formatMoney(deskMarket.tradeIn)}
                   />
                   <MarketTile
                     label="Retail low"
-                    value={formatMoney(market.retailLow)}
+                    value={formatMoney(deskMarket.retailLow)}
                   />
                 </div>
               </div>

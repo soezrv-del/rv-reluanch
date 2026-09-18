@@ -26,13 +26,16 @@ import {
   resolvePrimaryMarket,
   selectCompListings,
   soldCompsConfidence,
+  thinSoldAskUsd,
   weightedMedianUsd,
 } from "./publicListingComps.ts";
 import {
   applyThinCompCatalogPolicy,
   estimateMarket,
+  paintFactsLowDeskMarket,
   type MarketEstimate,
 } from "./marketEstimate.ts";
+import { factsMoneyHeadline } from "./factsCollapse.ts";
 import {
   applyLowThinFreePathHaircut,
   freePathMidpoint,
@@ -428,6 +431,11 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
   assert.match(detail, /prefersPublicComps/);
   assert.match(detail, /hideRetailHigh/);
   assert.match(detail, /deskMarketValue/);
+  assert.match(detail, /paintFactsLowDeskMarket/);
+  assert.match(detail, /thinSoldAskUsd/);
+  assert.match(detail, /deskMarket\.tradeIn/);
+  assert.match(detail, /deskMarket\.retailLow/);
+  assert.match(detail, /showSoldRange \? market : paintedLowDesk/);
   assert.match(detail, /soldConfidence === "low"/);
   assert.match(detail, /hideRetailHighForDesk/);
   assert.match(detail, /!hideRetailHigh \? \(/);
@@ -549,6 +557,31 @@ test("Low comps: Palazzo-style catalog mid 219k haircuts to 145k — High stays 
   assert.equal(withLive.marketValue, 145000);
   assert.equal(withLive.retailHigh, 145000);
   assert.equal(withLive.sourceLabel, "Live research estimate");
+});
+
+test("Facts Low tiles: displayed dollars are haircut 145k, not catalog 219k", () => {
+  const fatCatalog: MarketEstimate = {
+    tradeIn: 186000,
+    retailLow: 208000,
+    retailHigh: 267000,
+    msrpLo: 250200,
+    msrpHi: 390200,
+    segment: "Diesel Class A",
+    ageYears: 5,
+    source: "catalog",
+    sourceLabel: CATALOG_ESTIMATE_LABEL,
+  };
+  const painted = paintFactsLowDeskMarket(fatCatalog, {
+    thinSoldUsd: thinSoldAskUsd(
+      reducePublicComps([sold(2021, 208000)], { from: 2019, to: 2023 }),
+    ),
+  });
+  assert.equal(painted.marketValue, 145000);
+  assert.equal(factsMoneyHeadline(painted.marketValue ?? 0), "$145,000");
+  assert.notEqual(factsMoneyHeadline(219000), factsMoneyHeadline(painted.marketValue ?? 0));
+  assert.ok(painted.tradeIn < 186000);
+  assert.ok(painted.retailLow < 212000);
+  assert.equal(painted.hideRetailHigh, true);
 });
 
 test("Low: a cheaper thin sold pulls Market down — never invent UP to the haircut", () => {

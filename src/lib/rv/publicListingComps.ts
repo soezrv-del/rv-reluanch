@@ -19,8 +19,8 @@
 
 import { clampTradeToRetailLow } from "./marketClamp.ts";
 import {
-  applyThinCompCatalogPolicy,
   CATALOG_ESTIMATE_LABEL,
+  paintFactsLowDeskMarket,
   type MarketConfidence,
   type MarketEstimate,
 } from "./marketEstimate.ts";
@@ -531,53 +531,30 @@ export function resolvePrimaryMarket(opts: {
   }
 
   /**
-   * Low / not-enough-listings: asking-only is not a sold price. One
-   * confirmed sold ask may pull Market down; a fat lone sold cannot
-   * keep the catalog mid optimistic. applyThinCompCatalogPolicy applies
-   * the Low free-path haircut. Never invent sold prices.
+   * Low / not-enough-listings: paint from the fat catalog band via
+   * paintFactsLowDeskMarket (0.66 haircut). A confirmed thin sold may
+   * pull Market down; a fat lone sold / tight $219k mid cannot keep
+   * Catalog optimistic. Asking-only is not a sold price. Never invent.
    */
-  const thinSoldMarket =
+  return paintFactsLowDeskMarket(catalog, {
+    thinSoldUsd: thinSoldAskUsd(comps),
+    live: liveLadder,
+  });
+}
+
+/** One confirmed sold ask on a Low / thin ladder — not asking, not invent. */
+export function thinSoldAskUsd(
+  comps: PublicListingComps | null | undefined,
+): number | undefined {
+  if (
     comps &&
     (comps.confidence === "low" || !prefersPublicComps(comps)) &&
     comps.priceKind === "sold" &&
     comps.medianAsk >= MIN_ASK_USD
-      ? comps.medianAsk
-      : undefined;
-
-  if (liveLadder) {
-    const merged = {
-      tradeIn: liveLadder.tradeIn > 0 ? liveLadder.tradeIn : catalog.tradeIn,
-      retailLow:
-        liveLadder.retailLow > 0 ? liveLadder.retailLow : catalog.retailLow,
-      retailHigh:
-        liveLadder.retailHigh > 0 ? liveLadder.retailHigh : catalog.retailHigh,
-    };
-    const trade = clampTradeToRetailLow(merged.tradeIn, merged.retailLow);
-    return applyThinCompCatalogPolicy({
-      tradeIn: trade.tradeIn,
-      retailLow: merged.retailLow,
-      retailHigh: merged.retailHigh,
-      msrpLo: liveLadder.msrpLo ?? catalog.msrpLo,
-      msrpHi: liveLadder.msrpHi ?? catalog.msrpHi,
-      segment: catalog.segment,
-      ageYears: catalog.ageYears,
-      tradeCappedAtRetailLow: trade.capped || catalog.tradeCappedAtRetailLow,
-      source: "live_dossier",
-      sourceLabel: "Live research estimate",
-      confidence: "low",
-      hideRetailHigh: true,
-      marketValue: thinSoldMarket,
-    });
+  ) {
+    return comps.medianAsk;
   }
-
-  return applyThinCompCatalogPolicy({
-    ...catalog,
-    source: catalog.source ?? "catalog",
-    sourceLabel: catalog.sourceLabel ?? CATALOG_ESTIMATE_LABEL,
-    confidence: "low",
-    hideRetailHigh: true,
-    marketValue: thinSoldMarket,
-  });
+  return undefined;
 }
 
 export function buildListingCompsPrompt(input: {
