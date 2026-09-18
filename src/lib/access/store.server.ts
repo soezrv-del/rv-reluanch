@@ -1,6 +1,11 @@
-import { getSql } from "@/lib/db";
 import { normalizePhoneE164 } from "./phone.ts";
 import { ACCESS_WHITELIST_SEED } from "./seedData.server.ts";
+
+/** Lazy so the Vercel preview server can boot without loading PGLite at import. */
+async function getAccessSql() {
+  const { getSql } = await import("@/lib/db");
+  return getSql();
+}
 
 export type AccessWhitelistRow = {
   id: string;
@@ -26,7 +31,7 @@ function newId(): string {
 
 /** Apply CSV seed once (missing sentinel). Safe to call on every request. */
 export async function ensureAccessSeeded(): Promise<void> {
-  const sql = await getSql();
+  const sql = await getAccessSql();
   const meta = await sql<{ id: string }>`
     select id from access_seed_meta where id = 'v1' limit 1
   `;
@@ -60,7 +65,7 @@ export async function lookupWhitelist(
   await ensureAccessSeeded();
   const e164 = normalizePhoneE164(phone);
   if (!e164) return null;
-  const sql = await getSql();
+  const sql = await getAccessSql();
   const rows = await sql<AccessWhitelistRow>`
     select id, phone_e164, contact_name, notes, invited_at::text, created_at::text
     from access_whitelist
@@ -76,7 +81,7 @@ export async function isPhoneOnWhitelist(phone: string): Promise<boolean> {
 
 export async function listWhitelist(): Promise<AccessWhitelistRow[]> {
   await ensureAccessSeeded();
-  const sql = await getSql();
+  const sql = await getAccessSql();
   return sql<AccessWhitelistRow>`
     select id, phone_e164, contact_name, notes, invited_at::text, created_at::text
     from access_whitelist
@@ -92,7 +97,7 @@ export async function addWhitelist(input: {
   await ensureAccessSeeded();
   const e164 = normalizePhoneE164(input.phone);
   if (!e164) throw new Error("Enter a valid phone number.");
-  const sql = await getSql();
+  const sql = await getAccessSql();
   const existing = await lookupWhitelist(e164);
   if (existing) return existing;
   const id = newId();
@@ -111,7 +116,7 @@ export async function addWhitelist(input: {
 export async function removeWhitelist(id: string): Promise<boolean> {
   const clean = id.trim();
   if (!clean) return false;
-  const sql = await getSql();
+  const sql = await getAccessSql();
   const rows = await sql<{ id: string }>`
     delete from access_whitelist where id = ${clean} returning id
   `;
@@ -131,7 +136,7 @@ export async function createAccessRequest(input: {
   if (await isPhoneOnWhitelist(e164)) {
     return { id: "", alreadyAllowed: true, normalized: e164 };
   }
-  const sql = await getSql();
+  const sql = await getAccessSql();
   const pending = await sql<{ id: string }>`
     select id from access_requests
     where phone_e164 = ${e164} and status = 'pending'
@@ -163,7 +168,7 @@ export async function listRequests(
   status = "pending",
 ): Promise<AccessRequestRow[]> {
   await ensureAccessSeeded();
-  const sql = await getSql();
+  const sql = await getAccessSql();
   return sql<AccessRequestRow>`
     select id, phone_e164, contact_name, note, status, created_at::text
     from access_requests
@@ -175,7 +180,7 @@ export async function listRequests(
 export async function approveRequest(
   id: string,
 ): Promise<AccessWhitelistRow | null> {
-  const sql = await getSql();
+  const sql = await getAccessSql();
   const rows = await sql<AccessRequestRow>`
     select id, phone_e164, contact_name, note, status, created_at::text
     from access_requests
@@ -196,7 +201,7 @@ export async function approveRequest(
 }
 
 export async function dismissRequest(id: string): Promise<boolean> {
-  const sql = await getSql();
+  const sql = await getAccessSql();
   const rows = await sql<{ id: string }>`
     update access_requests
     set status = 'dismissed'
