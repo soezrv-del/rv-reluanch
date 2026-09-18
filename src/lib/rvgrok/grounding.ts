@@ -36,6 +36,10 @@ import {
 } from "./parseCoach";
 import type { RVSpec } from "../rv/rvTypes";
 import {
+  formatCarfaxGroundingBlock,
+  looksLikeCarfaxQuestion,
+} from "./carfaxPositioning";
+import {
   formatOriginGroundingBlock,
   looksLikeOriginQuestion,
 } from "./originStory";
@@ -68,6 +72,10 @@ export {
   normalizeAskText,
 } from "./webIntent";
 export { looksLikeCoachCompareQuestion } from "./parseCoach";
+export {
+  looksLikeCarfaxQuestion,
+  formatCarfaxGroundingBlock,
+} from "./carfaxPositioning";
 export {
   looksLikeOriginQuestion,
   formatOriginGroundingBlock,
@@ -540,15 +548,22 @@ function compareCatalogBlock(hits: ComparableCatalogCoach[]): {
   return { identity: primary.identity, specs: primary, catalog };
 }
 
+function standingKnowledgeBlocks(query: string): string {
+  const parts: string[] = [];
+  if (looksLikeOriginQuestion(query)) parts.push(formatOriginGroundingBlock());
+  if (looksLikeCarfaxQuestion(query)) parts.push(formatCarfaxGroundingBlock());
+  return parts.join("\n\n");
+}
+
 function withOriginBlock(
   query: string,
   block: string,
   needsWeb: boolean,
 ): { block: string; needsWeb: boolean } {
-  if (!looksLikeOriginQuestion(query)) return { block, needsWeb };
-  const origin = formatOriginGroundingBlock();
+  const standing = standingKnowledgeBlocks(query);
+  if (!standing) return { block, needsWeb };
   return {
-    block: block ? `${origin}\n\n${block}` : origin,
+    block: block ? `${standing}\n\n${block}` : standing,
     needsWeb: false,
   };
 }
@@ -663,14 +678,16 @@ export function buildVoiceGrounding(opts: {
       true,
       opts.facts,
     );
-    return `${compare.catalog}\nSpeak those locked numbers. If UNKNOWN, say so in one breath — do not guess.\n\n${repair}`;
+    const body = `${compare.catalog}\nSpeak those locked numbers. If UNKNOWN, say so in one breath — do not guess.\n\n${repair}`;
+    const standing = standingKnowledgeBlocks(query);
+    return standing ? `${standing}\n\n${body}` : body;
   }
   const identity = resolveCoachIdentity(query, opts.facts, "");
   const specs = identity ? lookupGroundedSpecs(identity) : null;
   const repair = repairBlockFor(query, identity, specs, true, opts.facts);
-  if (looksLikeOriginQuestion(query)) {
-    const origin = formatOriginGroundingBlock();
-    return repair ? `${origin}\n\n${repair}` : origin;
+  const standing = standingKnowledgeBlocks(query);
+  if (standing) {
+    return repair ? `${standing}\n\n${repair}` : standing;
   }
   if (!identity) {
     const base =
