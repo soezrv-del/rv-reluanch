@@ -1,3 +1,4 @@
+import { RV_GROK_ATTITUDE } from "./attitude";
 import { CARFAX_VS_RVFOX } from "./carfaxPositioning";
 import { ABOUT_RVFOX } from "./originStory";
 import {
@@ -79,6 +80,8 @@ ${ANSWER_NOW_POLICY} ${SESSION_INTRO_POLICY} If you must stall for a live search
 ${ABOUT_RVFOX}
 
 ${CARFAX_VS_RVFOX}
+
+${RV_GROK_ATTITUDE}
 
 ACCURACY FIRST:
 - YOU answer. No hedging. Never "check with the dealer", "see the website", "confirm the brochure", or "look at the door sticker."
