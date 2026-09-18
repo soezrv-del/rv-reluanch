@@ -49,6 +49,28 @@ test("admin CRUD is password-gated and separate from VITE_AUTH_ENABLED", () => {
   assert.doesNotMatch(env, /"VITE_AUTH_ENABLED": "true"/);
 });
 
+test("NDA gate wraps the suite and does not grant functional access", () => {
+  const index = read("src/routes/index.tsx");
+  assert.match(index, /NdaGate/);
+  assert.match(index, /<NdaGate>/);
+  assert.match(index, /<AppShell \/>/);
+  const ndaFirst = index.indexOf("<NdaGate>");
+  const shell = index.indexOf("<AppShell");
+  assert.ok(ndaFirst >= 0 && ndaFirst < shell);
+
+  const gate = read("src/components/access/NdaGate.tsx");
+  assert.match(gate, /hasAcceptedNda/);
+  assert.match(gate, /acceptNda/);
+  assert.match(gate, /NDA_TEXT/);
+  assert.match(gate, /does not\s+unlock restricted tools/);
+  assert.doesNotMatch(gate, /allowed:\s*true/);
+
+  const ndaText = read("src/lib/access/ndaText.ts");
+  assert.match(ndaText, /src\/lib\/access\/ndaText\.ts/);
+  assert.match(ndaText, /NDA_TEXT/);
+  assert.match(ndaText, /does not grant access to restricted tools/);
+});
+
 test("founder KB stays Hansen; whitelist seed uses Hanson", () => {
   const origin = read("src/lib/rvgrok/originStory.ts");
   assert.match(origin, /David Hansen/);

@@ -13,6 +13,8 @@ export const HARD_ADMIN = {
 
 export const ACCESS_PHONE_STORAGE_KEY = "rvfox_access_phone_v1";
 export const ACCESS_ADMIN_TOKEN_KEY = "rvfox_access_admin_token_v1";
+/** Device-local one-time NDA accept. Bump NDA_VERSION in ndaText.ts to re-prompt. */
+export const NDA_STORAGE_KEY = "rvfox_nda_accepted_v1";
 export const ACCESS_PHONE_HEADER = "x-access-phone";
 export const ACCESS_ADMIN_COOKIE = "rvfox_wl_admin";
 export const ACCESS_REQUEST_EVENT = "rvfox-access-required";
