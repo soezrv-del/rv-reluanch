@@ -1,16 +1,25 @@
 import type { RVResult } from "./catalog";
-import { compareSelectionKey, getSpec } from "./catalog";
+import {
+  compareSelectionKey,
+  getFloorplansForYear,
+  getSpec,
+  relatedModelsWithFloorplansInYear,
+} from "./catalog";
 import { hydrateShareCoachResult } from "./shareCoachHydrate";
 import { buildBrochureSpecs } from "./brochureSpecs";
 import { findOemFloorplanSpec } from "./floorplanSpecs";
 import { unverifiedLayoutLabel } from "./promptRules";
 import { estimateMarket, formatMoney, ratingFor } from "./catalog";
+import { bestCalPrice } from "./activeCoach";
 import type { LiveDossier } from "./liveDossier";
 import { liveMarketLadder, mergeLiveIntoDisplay } from "./liveDossier";
 import {
+  CATALOG_ESTIMATE_LABEL,
   resolvePrimaryMarket,
   type PublicListingComps,
 } from "./publicListingComps";
+import { hideRetailHighForDesk } from "./marketClamp";
+import type { MarketConfidence, MarketEstimate } from "./marketEstimate";
 import {
   formatHardHorsepower,
   formatHardTorque,
@@ -51,7 +60,74 @@ export type CompareColumn = {
   /** Live Grok filled this column */
   live?: boolean;
   rating: number;
+  /** Desk Market value — resolvePrimaryMarket, never invented. */
+  marketValue: number;
+  retailLow: number;
+  retailHigh: number;
+  tradeIn: number;
+  sourceLabel: string;
+  hideRetailHigh: boolean;
+  confidence: MarketConfidence | null;
 };
+
+/** Lot Desk Market rows — Low/Avg/High + honesty label. */
+export const COMPARE_MARKET_ROW_IDS = [
+  "marketValue",
+  "retailLo",
+  "retailHi",
+  "trade",
+  "valueSource",
+] as const;
+
+/** Lean key Facts — not the whole brochure. */
+export const COMPARE_KEY_FACT_ROW_IDS = [
+  "rating",
+  "type",
+  "length",
+  "gvwr",
+  "uvw",
+  "sleeps",
+] as const;
+
+export type CompareRowSection = "market" | "facts" | "more";
+
+export function compareRowSection(id: string): CompareRowSection {
+  if ((COMPARE_MARKET_ROW_IDS as readonly string[]).includes(id)) return "market";
+  if ((COMPARE_KEY_FACT_ROW_IDS as readonly string[]).includes(id)) return "facts";
+  return "more";
+}
+
+/** Bare book titles are not desk labels — Catalog estimate wins (#275–#285). */
+const BARE_BOOK_TITLE =
+  /^(j\.?\s*d\.?\s*power|jd\s*power|nada)(\s+(value|estimate|book))?$/i;
+
+export function compareHonestSourceLabel(label?: string | null): string {
+  const t = String(label || "").trim();
+  if (!t || BARE_BOOK_TITLE.test(t)) return CATALOG_ESTIMATE_LABEL;
+  return t;
+}
+
+export function compareDeskHideRetailHigh(market: MarketEstimate): boolean {
+  const soldConfidence = market.confidence ?? "low";
+  const showSoldRange =
+    market.source === "public_listings" && soldConfidence !== "low";
+  return hideRetailHighForDesk({
+    soldConfidence,
+    showSoldRange,
+    hideRetailHigh: market.hideRetailHigh,
+  });
+}
+
+/** Same desk number as Facts — marketValue, else Low (never invent High on Low). */
+export function compareDeskMarketValue(market: MarketEstimate): number {
+  if (market.marketValue && market.marketValue > 0) return market.marketValue;
+  return bestCalPrice({
+    retailLow: market.retailLow,
+    retailHigh: compareDeskHideRetailHigh(market) ? 0 : market.retailHigh,
+    msrpLo: market.msrpLo,
+    msrpHi: market.msrpHi,
+  });
+}
 
 export type CompareReport = {
   columns: CompareColumn[];
@@ -272,7 +348,7 @@ export function buildCompareReport(
   liveMap?: LiveMap,
   compsMap?: CompsMap,
 ): CompareReport {
-  const cols = items.slice(0, 3).map((raw) => {
+  const cols = capCompareItems(items).map((raw) => {
     const r = hydrateShareCoachResult(raw, getSpec);
     const key = keyOf(r);
     const live = liveMap?.[key] ?? null;
@@ -357,6 +433,11 @@ export function buildCompareReport(
       liveLadder: ladder,
       comps: compsMap?.[key] ?? null,
     });
+    const hideRetailHigh = compareDeskHideRetailHigh(market);
+    const deskValue = compareDeskMarketValue(market);
+    const valueSource = compareHonestSourceLabel(
+      market.sourceLabel || CATALOG_ESTIMATE_LABEL,
+    );
 
     const rawRating = ratingFor(r.make, r.model, r.year);
 
@@ -380,12 +461,14 @@ export function buildCompareReport(
       },
       hpRaw: hpMeta.raw,
       market,
+      deskValue,
+      hideRetailHigh,
       rawRating,
       typeLabel,
       fuelLabel,
       live: Boolean(live?.live),
       key,
-      valueSource: market.sourceLabel || "Catalog estimate",
+      valueSource,
       prestige: prestigeScore(r.make, r.model),
       layoutNote: oem?.layoutNote || "",
       oemSleeps: oem?.sleeps ?? null,
@@ -407,7 +490,17 @@ export function buildCompareReport(
   const lowestRatingIndex = badges.lowest;
 
   const columns: CompareColumn[] = colsWithRating.map(
-    ({ r, rating, live, typeLabel, key }) => ({
+    ({
+      r,
+      rating,
+      live,
+      typeLabel,
+      key,
+      deskValue,
+      hideRetailHigh,
+      market,
+      valueSource,
+    }) => ({
       key,
       year: r.year,
       make: r.make,
@@ -418,10 +511,62 @@ export function buildCompareReport(
       result: r,
       live,
       rating,
+      marketValue: deskValue,
+      retailLow: market.retailLow,
+      retailHigh: hideRetailHigh ? 0 : market.retailHigh,
+      tradeIn: market.tradeIn,
+      sourceLabel: valueSource,
+      hideRetailHigh,
+      confidence: market.confidence ?? null,
     }),
   );
 
   const rows: CompareRow[] = [
+    row(
+      "marketValue",
+      "Market value",
+      "higher",
+      colsWithRating.map((c) => ({
+        display: formatMoney(c.deskValue),
+        raw: c.deskValue > 0 ? c.deskValue : null,
+      })),
+    ),
+    row(
+      "retailLo",
+      "Retail Low",
+      "lower",
+      colsWithRating.map((c) => ({
+        display: formatMoney(c.market.retailLow),
+        raw: c.market.retailLow > 0 ? c.market.retailLow : null,
+      })),
+    ),
+    row(
+      "retailHi",
+      "Retail High",
+      "lower",
+      colsWithRating.map((c) => ({
+        display: c.hideRetailHigh ? "—" : formatMoney(c.market.retailHigh),
+        raw: c.hideRetailHigh || c.market.retailHigh <= 0 ? null : c.market.retailHigh,
+      })),
+    ),
+    row(
+      "trade",
+      "Trade-in",
+      "higher",
+      colsWithRating.map((c) => ({
+        display: formatMoney(c.market.tradeIn),
+        raw: c.market.tradeIn > 0 ? c.market.tradeIn : null,
+      })),
+    ),
+    row(
+      "valueSource",
+      "Value source",
+      "neutral",
+      colsWithRating.map((c) => ({
+        display: c.valueSource,
+        raw: null,
+      })),
+    ),
     row(
       "rating",
       "RVFAX Rating",
@@ -438,6 +583,44 @@ export function buildCompareReport(
       colsWithRating.map((c) => ({
         display: c.typeLabel,
         raw: null,
+      })),
+    ),
+    row(
+      "length",
+      "Length",
+      "neutral",
+      colsWithRating.map((c) => ({
+        display: c.brochure.lengthFt,
+        raw:
+          parseRangeMid(c.brochure.lengthFt) ??
+          parseNum(c.brochure.lengthFt),
+      })),
+    ),
+    row(
+      "gvwr",
+      "GVWR",
+      "neutral",
+      colsWithRating.map((c) => ({
+        display: c.brochure.gvwr,
+        raw: parseRangeMid(c.brochure.gvwr),
+      })),
+    ),
+    row(
+      "uvw",
+      "UVW",
+      "neutral",
+      colsWithRating.map((c) => ({
+        display: c.brochure.uvw,
+        raw: parseRangeMid(c.brochure.uvw),
+      })),
+    ),
+    row(
+      "sleeps",
+      "Sleeps",
+      "higher",
+      colsWithRating.map((c) => ({
+        display: c.oemSleeps != null ? String(c.oemSleeps) : c.brochure.sleeps,
+        raw: c.oemSleeps ?? parseNum(c.brochure.sleeps),
       })),
     ),
     row(
@@ -478,26 +661,6 @@ export function buildCompareReport(
       })),
     ),
     row(
-      "length",
-      "Length",
-      "neutral",
-      colsWithRating.map((c) => ({
-        display: c.brochure.lengthFt,
-        raw:
-          parseRangeMid(c.brochure.lengthFt) ??
-          parseNum(c.brochure.lengthFt),
-      })),
-    ),
-    row(
-      "gvwr",
-      "GVWR",
-      "neutral",
-      colsWithRating.map((c) => ({
-        display: c.brochure.gvwr,
-        raw: parseRangeMid(c.brochure.gvwr),
-      })),
-    ),
-    row(
       "ccc",
       "Cargo Carrying (CCC)",
       "higher",
@@ -514,15 +677,6 @@ export function buildCompareReport(
         display:
           c.oemSlides != null ? String(c.oemSlides) : c.brochure.slideouts,
         raw: c.oemSlides ?? parseNum(c.brochure.slideouts),
-      })),
-    ),
-    row(
-      "sleeps",
-      "Sleeps",
-      "higher",
-      colsWithRating.map((c) => ({
-        display: c.oemSleeps != null ? String(c.oemSleeps) : c.brochure.sleeps,
-        raw: c.oemSleeps ?? parseNum(c.brochure.sleeps),
       })),
     ),
     row(
@@ -580,42 +734,6 @@ export function buildCompareReport(
       })),
     ),
     row(
-      "valueSource",
-      "Value source",
-      "neutral",
-      colsWithRating.map((c) => ({
-        display: c.valueSource,
-        raw: null,
-      })),
-    ),
-    row(
-      "trade",
-      "Trade-in (est.)",
-      "higher",
-      colsWithRating.map((c) => ({
-        display: formatMoney(c.market.tradeIn),
-        raw: c.market.tradeIn,
-      })),
-    ),
-    row(
-      "retailLo",
-      "Retail Low (est.)",
-      "lower",
-      colsWithRating.map((c) => ({
-        display: formatMoney(c.market.retailLow),
-        raw: c.market.retailLow,
-      })),
-    ),
-    row(
-      "retailHi",
-      "Retail High (est.)",
-      "lower",
-      colsWithRating.map((c) => ({
-        display: formatMoney(c.market.retailHigh),
-        raw: c.market.retailHigh,
-      })),
-    ),
-    row(
       "msrp",
       "When-new MSRP ref.",
       "neutral",
@@ -637,4 +755,74 @@ export function buildCompareReport(
     lowestRatingIndex,
     liveCount: colsWithRating.filter((c) => c.live).length,
   };
+}
+
+const COMPARE_MAX = 3;
+
+/** Cap Lot Desk compare at 3 columns — never invent a fourth. */
+export function capCompareItems(items: RVResult[]): RVResult[] {
+  const seen = new Set<string>();
+  const out: RVResult[] = [];
+  for (const r of items) {
+    const k = keyOf(r);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(r);
+    if (out.length >= COMPARE_MAX) break;
+  }
+  return out;
+}
+
+function catalogPeer(
+  year: string,
+  make: string,
+  model: string,
+  floorplan: string,
+): RVResult | null {
+  const data = getSpec(make, model);
+  if (!data) return null;
+  return {
+    year,
+    make,
+    model,
+    floorplan,
+    rvType: data.type,
+    data,
+  };
+}
+
+/**
+ * Peers for one-tap Facts compare: saved / search extras first, then same-year
+ * catalog floorplans and related models. Never invent a custom coach.
+ */
+export function suggestComparePeers(
+  anchor: RVResult,
+  extras: RVResult[] = [],
+  limit = 8,
+): RVResult[] {
+  const seen = new Set([keyOf(anchor)]);
+  const out: RVResult[] = [];
+  const push = (r: RVResult | null | undefined) => {
+    if (!r || out.length >= limit) return;
+    const k = keyOf(r);
+    if (seen.has(k)) return;
+    seen.add(k);
+    out.push(r);
+  };
+
+  for (const r of extras) push(r);
+
+  const year = anchor.year;
+  const make = anchor.make;
+  const model = anchor.model;
+  for (const fp of getFloorplansForYear(year, make, model)) {
+    if (fp && fp !== (anchor.floorplan || "")) {
+      push(catalogPeer(year, make, model, fp));
+    }
+  }
+  for (const name of relatedModelsWithFloorplansInYear(make, model, year)) {
+    const fps = getFloorplansForYear(year, make, name);
+    if (fps[0]) push(catalogPeer(year, make, name, fps[0]));
+  }
+  return out;
 }

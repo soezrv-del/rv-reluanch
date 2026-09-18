@@ -9,7 +9,18 @@ import {
   Trophy,
 } from "lucide-react";
 import type { RVResult } from "@/lib/rv/catalog";
-import { buildCompareReport, compareSelectionKey, type CompsMap, type CompareCell, type CompareReport, type LiveMap } from "@/lib/rv/compare";
+import {
+  buildCompareReport,
+  capCompareItems,
+  compareRowSection,
+  compareSelectionKey,
+  type CompsMap,
+  type CompareCell,
+  type CompareReport,
+  type CompareRow,
+  type LiveMap,
+} from "@/lib/rv/compare";
+import { CATALOG_ESTIMATE_LABEL } from "@/lib/rv/publicListingComps";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import { hydrateShareCoachResult } from "@/lib/rv/shareKit";
 import { fetchLiveDossier, peekVerifiedDossier } from "@/lib/rv/liveDossier";
@@ -65,14 +76,14 @@ export function RvCompare({
 
     // Seed from verified cache so columns aren't wrong while live runs
     const seed: LiveMap = {};
-    for (const r of items.slice(0, 3)) {
+    for (const r of capCompareItems(items)) {
       const peek = peekVerifiedDossier(r.year, r.make, r.model, r.floorplan);
       if (peek) seed[compareSelectionKey(r)] = peek;
     }
     if (Object.keys(seed).length) setLiveMap(seed);
 
     Promise.all(
-      items.slice(0, 3).map(async (raw) => {
+      capCompareItems(items).map(async (raw) => {
         const r = hydrateShareCoachResult(raw);
         const br = buildBrochureSpecs(
           r.data,
@@ -122,7 +133,7 @@ export function RvCompare({
   useEffect(() => {
     const ctrl = new AbortController();
     Promise.all(
-      items.slice(0, 3).map(async (r) => {
+      capCompareItems(items).map(async (r) => {
         const data = await fetchPublicListingComps(
           {
             year: r.year,
@@ -307,6 +318,7 @@ export function RvCompare({
         </div>
         <div
           id="rvfax-compare-report"
+          data-lot-desk-compare=""
           className="mx-auto w-full max-w-2xl space-y-3 px-3 pb-20 pt-3 sm:px-4"
         >
           {exportMsg ? (
@@ -335,9 +347,9 @@ export function RvCompare({
                 {titleLine}
               </p>
               <p className="mt-2 text-[11px] leading-snug text-white/50">
-                Market figures prefer public listing asks for the same coach
-                (year ±2), then live research, then a catalog estimate — not
-                NADA, J.D. Power, or MarketCheck.
+                Market prefers sold comps when they exist, then live research,
+                then a {CATALOG_ESTIMATE_LABEL.toLowerCase()}. Low comps hide
+                Retail High. Not a paid book.
               </p>
               {liveLoading ? (
                 <p className="mt-2 flex items-center gap-2 text-[12px] text-white/50">
@@ -422,62 +434,31 @@ export function RvCompare({
             ))}
           </div>
 
-          <section className="overflow-hidden rounded-[1.15rem] border border-white/12 bg-black/40">
-            <div className="border-b border-white/10 bg-black/55 px-3 py-2">
-              <p className="text-[11px] font-bold tracking-wide text-white">
-                Specs & ratings
-              </p>
-            </div>
-            <div className="divide-y divide-white/10">
-              {report.rows.map((r) => {
-                const isRating = r.id === "rating";
-                return (
-                  <div
-                    key={r.id}
-                    className={cn(
-                      "grid gap-1.5 px-2 py-2.5 sm:px-3",
-                      gridCols,
-                      isRating && "bg-white/[0.03]",
-                    )}
-                  >
-                    {/* Label column — plain text, no sticky overlay */}
-                    <div className="flex items-center pr-1">
-                      <p className="w-full whitespace-normal break-words text-[10px] font-bold leading-snug tracking-wide text-white/80 print:text-slate-700">
-                        {r.label}
-                      </p>
-                    </div>
-                    {r.cells.map((cell, i) => (
-                      <div
-                        key={`${r.id}-${i}`}
-                        className={cn(
-                          "min-w-0 rounded-lg border px-1.5 py-1.5 text-[10px] font-semibold leading-snug sm:px-2 sm:text-[11px]",
-                          toneClass(cell.tone, isRating),
-                          isRating && "text-[13px] font-black sm:text-[14px]",
-                        )}
-                      >
-                        {cell.tone === "better" ? (
-                          <span className="mb-0.5 flex items-center gap-0.5 text-[8px] font-bold uppercase tracking-wide opacity-90 sm:text-[9px]">
-                            <Trophy className="size-2.5 shrink-0" />{" "}
-                            {isRating ? "Highest" : "Best"}
-                          </span>
-                        ) : null}
-                        {cell.tone === "worse" && isRating ? (
-                          <span className="mb-0.5 block text-[8px] font-bold uppercase tracking-wide opacity-90 sm:text-[9px]">
-                            Lowest
-                          </span>
-                        ) : cell.tone === "worse" && !isRating ? (
-                          <span className="mb-0.5 block text-[8px] font-bold uppercase tracking-wide opacity-80 sm:text-[9px]">
-                            Lower
-                          </span>
-                        ) : null}
-                        <span className="break-words">{cell.value || "—"}</span>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
+          {(["market", "facts", "more"] as const).map((section) => {
+            const rows = report.rows.filter((r) => {
+              if (compareRowSection(r.id) !== section) return false;
+              if (r.id === "retailHi" && report.columns.every((c) => c.hideRetailHigh)) {
+                return false;
+              }
+              return true;
+            });
+            if (!rows.length) return null;
+            const title =
+              section === "market"
+                ? "Market"
+                : section === "facts"
+                  ? "Key Facts"
+                  : "More specs";
+            return (
+              <CompareRowSectionTable
+                key={section}
+                section={section}
+                title={title}
+                rows={rows}
+                gridCols={gridCols}
+              />
+            );
+          })}
 
           <section className="overflow-hidden rounded-[1.15rem] border border-white/12 bg-black/40">
             <div className="flex items-center gap-2 border-b border-white/10 bg-black/55 px-3.5 py-2">
@@ -529,5 +510,78 @@ export function RvCompare({
         </div>
       </div>
     </div>
+  );
+}
+
+function CompareRowSectionTable({
+  section,
+  title,
+  rows,
+  gridCols,
+}: {
+  section: "market" | "facts" | "more";
+  title: string;
+  rows: CompareRow[];
+  gridCols: string;
+}) {
+  return (
+    <section
+      data-compare-section={section}
+      className="overflow-hidden rounded-[1.15rem] border border-white/12 bg-black/40"
+    >
+      <div className="border-b border-white/10 bg-black/55 px-3 py-2">
+        <p className="text-[11px] font-bold tracking-wide text-white">{title}</p>
+      </div>
+      <div className="divide-y divide-white/10">
+        {rows.map((r) => {
+          const isRating = r.id === "rating";
+          const isMarketValue = r.id === "marketValue";
+          return (
+            <div
+              key={r.id}
+              className={cn(
+                "grid gap-1.5 px-2 py-2.5 sm:px-3",
+                gridCols,
+                (isRating || isMarketValue) && "bg-white/[0.03]",
+              )}
+            >
+              <div className="flex items-center pr-1">
+                <p className="w-full whitespace-normal break-words text-[10px] font-bold leading-snug tracking-wide text-white/80 print:text-slate-700">
+                  {r.label}
+                </p>
+              </div>
+              {r.cells.map((cell, i) => (
+                <div
+                  key={`${r.id}-${i}`}
+                  className={cn(
+                    "min-w-0 rounded-lg border px-1.5 py-1.5 text-[10px] font-semibold leading-snug sm:px-2 sm:text-[11px]",
+                    toneClass(cell.tone, isRating || isMarketValue),
+                    (isRating || isMarketValue) &&
+                      "text-[13px] font-black tabular-nums sm:text-[14px]",
+                  )}
+                >
+                  {cell.tone === "better" ? (
+                    <span className="mb-0.5 flex items-center gap-0.5 text-[8px] font-bold uppercase tracking-wide opacity-90 sm:text-[9px]">
+                      <Trophy className="size-2.5 shrink-0" />{" "}
+                      {isRating ? "Highest" : "Best"}
+                    </span>
+                  ) : null}
+                  {cell.tone === "worse" && isRating ? (
+                    <span className="mb-0.5 block text-[8px] font-bold uppercase tracking-wide opacity-90 sm:text-[9px]">
+                      Lowest
+                    </span>
+                  ) : cell.tone === "worse" && !isRating ? (
+                    <span className="mb-0.5 block text-[8px] font-bold uppercase tracking-wide opacity-80 sm:text-[9px]">
+                      Lower
+                    </span>
+                  ) : null}
+                  <span className="break-words">{cell.value || "—"}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
