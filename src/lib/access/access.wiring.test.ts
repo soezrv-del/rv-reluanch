@@ -71,6 +71,16 @@ test("NDA gate wraps the suite and does not grant functional access", () => {
   assert.match(ndaText, /does not grant access to restricted tools/);
 });
 
+test("http gate short-circuits hard admin and stays on rvgrok", () => {
+  const gate = read("src/lib/access/httpGate.ts");
+  assert.match(gate, /isHardAdminPhone/);
+  assert.match(gate, /from "\.\/gate\.ts"/);
+  assert.match(gate, /if \(isHardAdminPhone\(phone\)\) return null/);
+  assert.doesNotMatch(gate, /ACCESS_GATE_DISABLED/);
+  const rvgrok = read("src/routes/api/rvgrok.ts");
+  assert.match(rvgrok, /denyUnlessWhitelisted/);
+});
+
 test("founder KB stays Hansen; whitelist seed uses Hanson", () => {
   const origin = read("src/lib/rvgrok/originStory.ts");
   assert.match(origin, /David Hansen/);
