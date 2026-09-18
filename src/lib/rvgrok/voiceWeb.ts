@@ -27,7 +27,7 @@ export const VOICE_RESEARCH_HOLD_INSTRUCTIONS =
   "Say only this one short beat, then stop: Let me check that. Do not answer the question. Do not guess a location or spec.";
 
 export const VOICE_RESEARCH_ANSWER_INSTRUCTIONS =
-  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Use WEB RESEARCH notes if they are present and successful. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a market value / pricing ask: speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample inventory CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
+  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Use WEB RESEARCH notes if they are present and successful. If an OWN-LOT INVENTORY block is a hit, speak those lot counts — diesel is Class A Diesel + Class Super C (no fuel field); do not invent a VIN or unit. If catalog is UNKNOWN / GAP or own-lot missed, use the browse notes — do not guess, do not stop at I don't know. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a market value / pricing ask: speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample inventory CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
 
 export type VoiceWebDecision =
   | { action: "pass" }
@@ -70,6 +70,14 @@ export function stripNotesForSpeech(notes: string): string {
 }
 
 export function formatVoiceWebSearchInjection(result: WebSearchNotes): string {
+  if (result.ok && /own-lot/i.test(result.model || "")) {
+    return [
+      "OWN-LOT INVENTORY (RV Country source=own snapshot):",
+      stripNotesForSpeech(result.notes),
+      "Speak the counts. Diesel is Class A Diesel + Class Super C (no fuel field).",
+      "Do not invent a VIN, stock number, or unit. Brochure catalog is not the lot.",
+    ].join("\n");
+  }
   if (result.ok) {
     return [
       "WEB RESEARCH NOTES (live this turn — you DID look this up):",

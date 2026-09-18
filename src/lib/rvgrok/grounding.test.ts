@@ -23,6 +23,7 @@ import {
   looksLikeMarketValueQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeOffCatalogQuestion,
+  catalogGapNeedsWeb,
   needsWebFallback,
 } from "./webIntent.ts";
 import { findComparableCatalogCoaches } from "./coachCompare.ts";
@@ -472,7 +473,8 @@ test("system prompts never deflect to website / OEM / dealer — unconditional",
   assert.match(grounding, /check the website/);
   assert.match(grounding, /look it up yourself/);
   assert.match(grounding, /go check the OEM site/);
-  assert.match(grounding, /verify-after only/);
+  assert.doesNotMatch(grounding, /verify-after only/);
+  assert.match(grounding, /Never send them to a brochure, door sticker, dealer, or website/);
   assert.doesNotMatch(
     grounding,
     /never the whole answer when research notes are present/,
@@ -609,12 +611,13 @@ test("unresolved named coach about-ask still fires web instead of a dealer dead-
   assert.match(api, /serverGrounded/);
 });
 
-test("inventory / diesel count asks browse even when catalog is locked", () => {
+test("inventory / diesel count asks still trip the detector when catalog is locked", () => {
   const locked = { missingHard: false };
   const inventory = "How many diesel Newmar Dutch Stars are in inventory?";
   const dieselCount = "What's the diesel count for 2024 Tiffin Allegro?";
   const lot = "Any Entegra inventory near Dallas?";
-  for (const q of [inventory, dieselCount, lot]) {
+  const weHave = "How many diesels do we have in stock?";
+  for (const q of [inventory, dieselCount, lot, weHave]) {
     assert.equal(looksLikeInventoryOrCountQuestion(q), true, q);
     assert.equal(needsWebFallback(locked, q), true, q);
     assert.equal(needsWebFallback(null, q), true, q);
@@ -636,6 +639,41 @@ test("inventory / diesel count asks browse even when catalog is locked", () => {
     false,
     "locked fuel/engine spec still does not browse",
   );
+  const api = src(join(root, "../../routes/api"), "rvgrok.ts");
+  assert.match(api, /loadOwnLotSnapshot/);
+  assert.match(api, /shouldSkipWebForOwnLot/);
+  assert.match(api, /OWN-LOT INVENTORY/);
+});
+
+test("unknown / catalog GAP always browses — locked specs still do not", () => {
+  assert.equal(catalogGapNeedsWeb(null), true);
+  assert.equal(catalogGapNeedsWeb({ missingHard: true }), true);
+  assert.equal(catalogGapNeedsWeb({ missingHard: false }), false);
+  assert.equal(
+    needsWebFallback(null, "What hitch rating does a 2019 XYZ Phantom have?"),
+    true,
+    "no catalog row → search",
+  );
+  assert.equal(
+    needsWebFallback(
+      { missingHard: true },
+      "What engine does a 2026 Lineage Series E have?",
+    ),
+    true,
+    "UNKNOWN hard fields → search",
+  );
+  assert.equal(
+    needsWebFallback(
+      { missingHard: false },
+      "What engine and HP does a 2023 Entegra Vision have?",
+    ),
+    false,
+    "locked catalog still answers without browse",
+  );
+  assert.equal(needsWebFallback(null, "hi"), false);
+  const intent = src(root, "webIntent.ts");
+  assert.match(intent, /catalogGapNeedsWeb/);
+  assert.match(intent, /unknown \/ catalog GAP/i);
 });
 
 test("catalog miss fires web without about-phrasing", () => {

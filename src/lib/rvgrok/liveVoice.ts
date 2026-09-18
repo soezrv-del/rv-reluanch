@@ -156,7 +156,7 @@ export function buildRealtimeSessionUpdate(
   const extra = (catalogContext || "").trim();
   const instructions = extra
     ? `${RV_VOICE_INSTRUCTIONS}\n\n${extra}`
-    : `${RV_VOICE_INSTRUCTIONS}\n\nNo verified catalog row is loaded. If they name a year/make/model and you do not have locked numbers, say unknown / EST. — never invent HP, engine, chassis, or fuel.`;
+    : `${RV_VOICE_INSTRUCTIONS}\n\nCATALOG GAP — no verified row is loaded. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Never invent HP, engine, chassis, or fuel.`;
   return {
     type: "session.update",
     session: {

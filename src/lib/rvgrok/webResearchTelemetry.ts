@@ -8,6 +8,14 @@
 
 import { needsWebFallback } from "./webIntent.ts";
 import {
+  formatOwnLotBlock,
+  loadOwnLotSnapshot,
+  looksLikeOwnLotStockQuestion,
+  OWN_LOT_MODEL,
+  shouldSkipWebForOwnLot,
+  type OwnLotSnapshot,
+} from "./ownLotInventory.ts";
+import {
   fetchWebSearchNotes,
   readWebSearchCache,
   researchCacheKey,
@@ -42,6 +50,8 @@ export type ExecuteWebResearchOpts = {
   profile: WebSearchProfile;
   /** When true, skip needsWebFallback and always attempt research. */
   skipGate?: boolean;
+  /** Test / caller-provided own-lot snapshot. When omitted, load on stock asks. */
+  ownLotSnapshot?: OwnLotSnapshot;
 };
 
 const LOG_TAG = "rvgrok.web_research";
@@ -148,6 +158,28 @@ export async function executeWebResearch(
 ): Promise<WebResearchApiBody> {
   const t0 = Date.now();
   const query = (opts.query || "").trim();
+
+  let ownLotSnapshot = opts.ownLotSnapshot;
+  if (!ownLotSnapshot && looksLikeOwnLotStockQuestion(query)) {
+    ownLotSnapshot = await loadOwnLotSnapshot();
+  }
+  if (shouldSkipWebForOwnLot(query, ownLotSnapshot)) {
+    const notes = formatOwnLotBlock(ownLotSnapshot!, query);
+    const durationMs = Date.now() - t0;
+    const body = toApiBody(
+      { ok: true, notes, model: OWN_LOT_MODEL },
+      { kind: "success", durationMs },
+    );
+    logWebResearchEvent({
+      kind: "success",
+      profile: opts.profile,
+      durationMs,
+      ok: true,
+      query,
+      model: OWN_LOT_MODEL,
+    });
+    return body;
+  }
 
   if (!opts.skipGate && !needsWebFallback(null, query)) {
     const durationMs = Date.now() - t0;
