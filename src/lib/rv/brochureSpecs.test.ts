@@ -9646,6 +9646,151 @@ test("Entegra Coach MY2024 tank pins: Aspire 44B / Anthem 44B / Reatta XL / Corn
   assert.deepEqual(resolveTanks(inherited604040, reattaXlBands, 2025, "37K"), inherited604040);
 });
 
+test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 3702 not copied", () => {
+  const block = src("rvData.ts");
+  const t0 = block.indexOf("    Aria: {");
+  const t1 = block.indexOf("    ACE: {");
+  assert.ok(t0 > 0 && t1 > t0, "expected Thor Aria block");
+  const aria = block.slice(t0, t1);
+
+  assert.match(aria, /freshWater: 60/);
+  assert.match(aria, /grayWater: 40/);
+  assert.match(aria, /blackWater: 40/);
+  assert.doesNotMatch(aria, /freshWater: 100/);
+  assert.doesNotMatch(aria, /grayWater: 62/);
+  assert.doesNotMatch(aria, /blackWater: 41/);
+
+  const pin5151 = /freshWater: 91,\s*grayWater: 51,\s*blackWater: 51/g;
+  const pin7051 = /freshWater: 91,\s*grayWater: 70,\s*blackWater: 51/g;
+
+  assert.match(aria, /from: 2017,\s*to: 2017,\s*floorplans: \["3601", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,[\s\S]*?OEM MY17 Aria OH 10\/01\/16 V2/);
+  assert.match(aria, /from: 2018,\s*to: 2018,\s*floorplans: \["3401", "3601", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2018,\s*to: 2018,\s*floorplans: \["4000"\][\s\S]*?freshWater: 91,\s*grayWater: 70,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2019,\s*to: 2019,\s*floorplans: \["3401", "3601", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2019,\s*to: 2019,\s*floorplans: \["4000"\][\s\S]*?freshWater: 91,\s*grayWater: 70,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2020,\s*to: 2020,\s*floorplans: \["3401", "3601", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2020,\s*to: 2020,\s*floorplans: \["3902", "4000"\][\s\S]*?freshWater: 91,\s*grayWater: 70,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2021,\s*to: 2021,\s*floorplans: \["3401", "3701", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2021,\s*to: 2021,\s*floorplans: \["4000"\][\s\S]*?freshWater: 91,\s*grayWater: 70,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2022,\s*to: 2022,\s*floorplans: \["3401", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2022,\s*to: 2022,\s*floorplans: \["3701", "4000"\][\s\S]*?freshWater: 91,\s*grayWater: 70,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2023,\s*to: 2023,\s*floorplans: \["3401", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2023,\s*to: 2023,\s*floorplans: \["4000"\][\s\S]*?freshWater: 91,\s*grayWater: 70,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2024,\s*to: 2024,\s*floorplans: \["3401", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,[\s\S]*?OEM MY24 Aria OH 04\/01\/2023/);
+  assert.match(aria, /from: 2024,\s*to: 2024,\s*floorplans: \["4000"\][\s\S]*?freshWater: 91,\s*grayWater: 70,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2025,\s*to: 2025,\s*floorplans: \["3401", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2025,\s*to: 2025,\s*floorplans: \["4000"\][\s\S]*?freshWater: 91,\s*grayWater: 70,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2026,\s*to: 2026,\s*floorplans: \["3702", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2026,\s*to: 2026,\s*floorplans: \["4000"\][\s\S]*?freshWater: 91,\s*grayWater: 70,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2027,\s*to: 2027,\s*floorplans: \["3702", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,/);
+  assert.match(aria, /from: 2027,\s*to: 2027,\s*floorplans: \["4000"\][\s\S]*?freshWater: 91,\s*grayWater: 70,\s*blackWater: 51,/);
+
+  const wideNotes = (from: number, to: number) => {
+    const re = new RegExp(`from: ${from},\\s*to: ${to},[\\s\\S]*?notes: "[^"]*"`);
+    const m = aria.match(re);
+    assert.ok(m, `expected wide band ${from}-${to}`);
+    return m[0];
+  };
+  assert.doesNotMatch(wideNotes(2017, 2018), /freshWater: 91/);
+  assert.doesNotMatch(wideNotes(2019, 2020), /freshWater: 91/);
+  assert.doesNotMatch(wideNotes(2021, 2022), /freshWater: 91/);
+  assert.doesNotMatch(wideNotes(2023, 2024), /freshWater: 91/);
+  assert.doesNotMatch(wideNotes(2025, 2027), /freshWater: 91/);
+  assert.doesNotMatch(aria, /from: 2025,\s*to: 2025,\s*floorplans: \[[^\]]*3702/);
+  assert.equal((aria.match(pin5151) || []).length, 11);
+  assert.equal((aria.match(pin7051) || []).length, 10);
+
+  type TankBand = {
+    from: number;
+    to: number;
+    floorplans?: string[];
+    freshWater?: number;
+    grayWater?: number;
+    blackWater?: number;
+  };
+  const resolveTanks = (
+    defaults: { freshWater: number; grayWater: number; blackWater: number },
+    bands: TankBand[],
+    year: number,
+    floorplan: string,
+  ) => {
+    const inYear = bands.filter((b) => year >= b.from && year <= b.to);
+    const fpHit = inYear.find((b) => b.floorplans?.includes(floorplan));
+    const wide = inYear.find((b) => !b.floorplans?.length);
+    const band = fpHit ?? wide;
+    return {
+      freshWater: band?.freshWater ?? defaults.freshWater,
+      grayWater: band?.grayWater ?? defaults.grayWater,
+      blackWater: band?.blackWater ?? defaults.blackWater,
+    };
+  };
+
+  const oem5151 = { freshWater: 91, grayWater: 51, blackWater: 51 };
+  const oem7051 = { freshWater: 91, grayWater: 70, blackWater: 51 };
+  const seed = { freshWater: 60, grayWater: 40, blackWater: 40 };
+  const ariaBands: TankBand[] = [
+    { from: 2017, to: 2018 },
+    { from: 2017, to: 2017, floorplans: ["3601", "3901"], ...oem5151 },
+    { from: 2018, to: 2018, floorplans: ["3401", "3601", "3901"], ...oem5151 },
+    { from: 2018, to: 2018, floorplans: ["4000"], ...oem7051 },
+    { from: 2019, to: 2020 },
+    { from: 2019, to: 2019, floorplans: ["3401", "3601", "3901"], ...oem5151 },
+    { from: 2019, to: 2019, floorplans: ["4000"], ...oem7051 },
+    { from: 2020, to: 2020, floorplans: ["3401", "3601", "3901"], ...oem5151 },
+    { from: 2020, to: 2020, floorplans: ["3902", "4000"], ...oem7051 },
+    { from: 2021, to: 2022 },
+    { from: 2021, to: 2021, floorplans: ["3401", "3701", "3901"], ...oem5151 },
+    { from: 2021, to: 2021, floorplans: ["4000"], ...oem7051 },
+    { from: 2022, to: 2022, floorplans: ["3401", "3901"], ...oem5151 },
+    { from: 2022, to: 2022, floorplans: ["3701", "4000"], ...oem7051 },
+    { from: 2023, to: 2024 },
+    { from: 2023, to: 2023, floorplans: ["3401", "3901"], ...oem5151 },
+    { from: 2023, to: 2023, floorplans: ["4000"], ...oem7051 },
+    { from: 2024, to: 2024, floorplans: ["3401", "3901"], ...oem5151 },
+    { from: 2024, to: 2024, floorplans: ["4000"], ...oem7051 },
+    { from: 2025, to: 2027 },
+    { from: 2025, to: 2025, floorplans: ["3401", "3901"], ...oem5151 },
+    { from: 2025, to: 2025, floorplans: ["4000"], ...oem7051 },
+    { from: 2026, to: 2026, floorplans: ["3702", "3901"], ...oem5151 },
+    { from: 2026, to: 2026, floorplans: ["4000"], ...oem7051 },
+    { from: 2027, to: 2027, floorplans: ["3702", "3901"], ...oem5151 },
+    { from: 2027, to: 2027, floorplans: ["4000"], ...oem7051 },
+  ];
+  const tanks = (year: number, floorplan: string) =>
+    resolveTanks(seed, ariaBands, year, floorplan);
+
+  assert.deepEqual(tanks(2017, "3601"), oem5151);
+  assert.deepEqual(tanks(2017, "3901"), oem5151);
+  assert.deepEqual(tanks(2018, "3401"), oem5151);
+  assert.deepEqual(tanks(2018, "4000"), oem7051);
+  assert.deepEqual(tanks(2019, "3901"), oem5151);
+  assert.deepEqual(tanks(2019, "4000"), oem7051);
+  assert.deepEqual(tanks(2020, "3601"), oem5151);
+  assert.deepEqual(tanks(2020, "3902"), oem7051);
+  assert.deepEqual(tanks(2021, "3701"), oem5151);
+  assert.deepEqual(tanks(2021, "4000"), oem7051);
+  assert.deepEqual(tanks(2022, "3701"), oem7051);
+  assert.deepEqual(tanks(2022, "3901"), oem5151);
+  assert.deepEqual(tanks(2023, "3401"), oem5151);
+  assert.deepEqual(tanks(2023, "4000"), oem7051);
+  assert.deepEqual(tanks(2024, "3901"), oem5151);
+  assert.deepEqual(tanks(2024, "4000"), oem7051);
+  assert.deepEqual(tanks(2025, "3401"), oem5151);
+  assert.deepEqual(tanks(2025, "4000"), oem7051);
+  assert.deepEqual(tanks(2026, "3702"), oem5151);
+  assert.deepEqual(tanks(2026, "4000"), oem7051);
+  assert.deepEqual(tanks(2027, "3702"), oem5151);
+  assert.deepEqual(tanks(2027, "4000"), oem7051);
+
+  // Adjacent / unverified: do not copy 3701 gray 70 back, or 3702 tanks onto 2025.
+  assert.deepEqual(tanks(2025, "3702"), seed);
+  assert.deepEqual(tanks(2021, "3702"), seed);
+  assert.deepEqual(tanks(2024, "3702"), seed);
+  assert.deepEqual(tanks(2017, "4000"), seed);
+  assert.deepEqual(tanks(2019, "3902"), seed);
+  assert.deepEqual(tanks(2024, "44B"), seed);
+});
+
 test("Entegra 2021–2022 OEM year-first floorplans + powertrain pins", () => {
   const eg = CATALOG_INDEX["Entegra Coach"];
   assert.ok(eg);
