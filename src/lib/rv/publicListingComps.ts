@@ -71,10 +71,18 @@ export const LOW_CONFIDENCE_LISTINGS_MESSAGE = "Not enough public listings";
 /** Med/High Market tile — sold median. Low uses Catalog estimate instead. */
 export const SOLD_MARKET_TILE_LABEL = "Market value";
 
+/** Bare paid-book desk titles Catalog forbids — never paint these on Low. */
+export function isBareBookDeskTitle(label?: string): boolean {
+  return /^(j\.?\s*d\.?\s*power(?:\s+value)?|nada(?:\s+(?:value|book|guide))?)$/i.test(
+    String(label || "").trim(),
+  );
+}
+
 /**
- * Facts Market tile caption. Low desk paints Catalog estimate (or the
- * live estimate label) so the haircut mid is not read as sold book.
- * Med/High stay "Market value".
+ * Facts Market tile caption. Med/High title is "Market value".
+ * Thin / Low never returns "Market value" or a bare J.D. Power / NADA
+ * title — locked chips only (Catalog estimate, Public J.D. Power
+ * estimate, or the blend sourceLabel).
  */
 export function factsDeskMarketTileLabel(
   showSoldRange: boolean,
@@ -82,7 +90,14 @@ export function factsDeskMarketTileLabel(
 ): string {
   if (showSoldRange) return SOLD_MARKET_TILE_LABEL;
   const label = sourceLabel?.trim();
-  return label || CATALOG_ESTIMATE_LABEL;
+  if (
+    !label ||
+    label === SOLD_MARKET_TILE_LABEL ||
+    isBareBookDeskTitle(label)
+  ) {
+    return CATALOG_ESTIMATE_LABEL;
+  }
+  return label;
 }
 
 export type ListingPriceKind = "sold" | "asking";
