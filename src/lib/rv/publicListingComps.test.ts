@@ -86,7 +86,7 @@ test("labels: Sold comps, Catalog estimate, low-confidence copy, disclaimer", ()
   assert.equal(LOW_CONFIDENCE_LISTINGS_MESSAGE, "Not enough public listings");
   assert.equal(
     PUBLIC_SOLD_DISCLAIMER,
-    "Values are estimates from public listings. Not JD Power or NADA book value.",
+    "Not a paid J.D. Power/NADA guide. Public estimate + sold comps; confirm with a dealer.",
   );
   assert.equal(factsDeskMarketTileLabel(true), "Market value");
   assert.equal(factsDeskMarketTileLabel(false), "Catalog estimate");
@@ -105,6 +105,7 @@ test("valuation modules never import the MarketCheck client", () => {
     "marketClamp.ts",
     "researchPublicComps.ts",
     "factsMarketBands.ts",
+    "jdPowerPublic.ts",
   ]) {
     const text = src(name);
     assert.doesNotMatch(
@@ -651,7 +652,11 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
   assert.match(detail, /thinSoldAskUsd/);
   assert.match(detail, /deskMarket\.tradeIn/);
   assert.match(detail, /deskMarket\.retailLow/);
-  assert.match(detail, /showSoldRange \? market : paintedLowDesk/);
+  assert.match(detail, /isJdPowerMarketSource/);
+  assert.match(
+    detail,
+    /showSoldRange \|\| isJdPowerMarketSource\(market\.source\)/,
+  );
   assert.match(detail, /soldConfidence === "low"/);
   assert.match(detail, /hideRetailHighForDesk/);
   assert.match(detail, /FactsMarketBands/);

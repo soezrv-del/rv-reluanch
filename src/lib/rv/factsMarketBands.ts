@@ -12,6 +12,7 @@
  *   sourceLabel   → Catalog estimate on thin; blend sublabel when present
  */
 
+import type { JdPowerPublicEstimate } from "./jdPowerPublic.ts";
 import {
   CATALOG_ESTIMATE_LABEL,
   PUBLIC_COMPS_MIN_SAMPLE,
@@ -97,9 +98,17 @@ export function factsMarketAverageCaption(input: {
 }
 
 export type FactsMarketLiveResult =
-  | { status: "ready"; comps: PublicListingComps }
-  | { status: "gap"; comps: null }
-  | { status: "error"; comps: null; error: string };
+  | {
+      status: "ready";
+      comps: PublicListingComps;
+      jdPower: JdPowerPublicEstimate | null;
+    }
+  | {
+      status: "gap";
+      comps: null;
+      jdPower: JdPowerPublicEstimate | null;
+    }
+  | { status: "error"; comps: null; jdPower: null; error: string };
 
 /**
  * Live comps + free public path — user open/ask only.
@@ -115,7 +124,7 @@ export async function fetchFactsMarketLive(
   signal?: AbortSignal,
 ): Promise<FactsMarketLiveResult> {
   if (!input.year.trim() || !input.make.trim() || !input.model.trim()) {
-    return { status: "gap", comps: null };
+    return { status: "gap", comps: null, jdPower: null };
   }
   try {
     const resp = await fetch("/api/rvfax/public-comps", {
@@ -142,21 +151,31 @@ export async function fetchFactsMarketLive(
       } catch {
         /* keep default */
       }
-      return { status: "error", comps: null, error };
+      return { status: "error", comps: null, jdPower: null, error };
     }
     const json = (await resp.json()) as {
       data?: PublicListingComps;
+      jdPower?: JdPowerPublicEstimate | null;
       ok?: boolean;
     };
+    const jd = json?.jdPower;
+    const jdPower =
+      jd &&
+      jd.source === "jd_power_public" &&
+      jd.lowRetail > 0 &&
+      jd.averageRetail > 0
+        ? jd
+        : null;
     if (json?.data?.source === "public_listings" && json.data.medianAsk > 0) {
-      return { status: "ready", comps: json.data };
+      return { status: "ready", comps: json.data, jdPower };
     }
-    return { status: "gap", comps: null };
+    return { status: "gap", comps: null, jdPower };
   } catch (e) {
     if (e instanceof Error && e.name === "AbortError") throw e;
     return {
       status: "error",
       comps: null,
+      jdPower: null,
       error:
         e instanceof Error && e.message.trim()
           ? e.message

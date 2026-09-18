@@ -78,6 +78,10 @@ import {
   thinSoldAskUsd,
   type PublicListingComps,
 } from "@/lib/rv/publicListingComps";
+import {
+  isJdPowerMarketSource,
+  type JdPowerPublicEstimate,
+} from "@/lib/rv/jdPowerPublic";
 import { hideRetailHighForDesk } from "@/lib/rv/marketClamp";
 import { paintFactsLowDeskMarket } from "@/lib/rv/marketEstimate";
 import {
@@ -224,6 +228,7 @@ export function RvDetail({
   const [publicComps, setPublicComps] = useState<PublicListingComps | null>(
     null,
   );
+  const [jdPower, setJdPower] = useState<JdPowerPublicEstimate | null>(null);
   const [compsLoading, setCompsLoading] = useState(false);
   const [marketLive, setMarketLive] = useState<FactsMarketLiveStatus>("idle");
   const [compsError, setCompsError] = useState<string | null>(null);
@@ -465,16 +470,19 @@ export function RvDetail({
     setMarketLive("loading");
     setCompsError(null);
     setPublicComps(null);
+    setJdPower(null);
     fetchFactsMarketLive({ year, make, model, floorplan }, ctrl.signal)
       .then((res) => {
         if (cancelled) return;
         if (res.status === "error") {
           setPublicComps(null);
+          setJdPower(null);
           setCompsError(res.error);
           setMarketLive("error");
           return;
         }
         setPublicComps(res.comps);
+        setJdPower(res.jdPower);
         setCompsError(null);
         setMarketLive(res.status);
       })
@@ -482,6 +490,7 @@ export function RvDetail({
         if (cancelled) return;
         if (e instanceof Error && e.name === "AbortError") return;
         setPublicComps(null);
+        setJdPower(null);
         setCompsError(
           e instanceof Error && e.message.trim()
             ? e.message
@@ -640,8 +649,9 @@ export function RvDetail({
         catalog: catalogMarket,
         liveLadder,
         comps: publicComps,
+        jdPower,
       }),
-    [catalogMarket, liveLadder, publicComps],
+    [catalogMarket, liveLadder, publicComps, jdPower],
   );
   const marketUpdating = compsLoading || marketLive === "loading";
   const marketPainted = marketLive === "ready" || marketLive === "gap";
@@ -689,10 +699,13 @@ export function RvDetail({
       }),
     [catalogMarket, publicComps, liveLadder],
   );
-  /** Low tiles must use the haircut paint — not raw catalog retain / $219k mid. */
-  const deskMarket = showSoldRange ? market : paintedLowDesk;
+  /** Low tiles use catalog haircut unless an on-demand public JD parse won. */
+  const deskMarket =
+    showSoldRange || isJdPowerMarketSource(market.source)
+      ? market
+      : paintedLowDesk;
   const marketSourceLabel = showSoldRange
-    ? SOLD_COMPS_LABEL
+    ? (market.sourceLabel ?? SOLD_COMPS_LABEL)
     : (deskMarket.sourceLabel ?? CATALOG_ESTIMATE_LABEL);
   const financePrice = bestCalPrice(deskMarket);
   /** Average tile: marketValue, else midpoint of retailLow / retailHigh. */
