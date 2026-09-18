@@ -1,6 +1,6 @@
 import sharedPrestige from "@/assets/backdrops/shared-prestige.jpg";
 
-/** Suite default backdrop — Fax, Cal, Tow, Premium, Grok chrome */
+/** Suite default backdrop — Scandinavian truth mark (Raidho-style glyph), not a letter R. */
 export const SHARED_PRESTIGE_BACKDROP = sharedPrestige;
 
 /** Facts landing / picker — luxury Class A showroom, public URL */

@@ -14,7 +14,7 @@ import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 
-/** Soft-scrim prestige backdrop — single stack (image + scrim only). */
+/** Soft-scrim suite backdrop — truth-mark watermark by default (image + scrim). */
 export function SuiteBackdrop({
   src = SHARED_PRESTIGE_BACKDROP,
   objectPosition = "center",

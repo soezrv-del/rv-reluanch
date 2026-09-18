@@ -1399,16 +1399,17 @@
 }
 
 /*
- * Tool / report screens: keep the chrome R on launch + sapphire headers,
- * but never sit TYPE / LENGTH / ENGINE (or Cal/Tow fields) on that seal.
+ * Tool / report screens: whisper the Scandinavian truth mark in the gutters,
+ * never a bright chrome seal under TYPE / LENGTH / ENGINE (or Cal fields).
+ * Cards stay solid below. Facts / Tow landings keep their photo overrides.
  * Launchpad is not [data-readable-cards].
  */
 [data-readable-cards] .page-backdrop-bright {
-  opacity: 0.03;
-  filter: brightness(1.02) contrast(1) saturate(0.7);
+  opacity: 0.82;
+  filter: brightness(1.04) contrast(1) saturate(0.85);
 }
 [data-readable-cards] .page-scrim-soft {
-  background: rgb(4, 8, 16);
+  background: rgba(4, 8, 16, 0.28);
 }
 [data-readable-cards] .glass-prestige,
 [data-readable-cards] .glass-prestige-deep,
@@ -1823,9 +1824,9 @@
   border-bottom: 9px solid var(--color-blue);
   transform: translateX(-50%);
 }
-/* Quiet Trips field — no engraved-R / VERIFIED AND TRUE / America décor
+/* Quiet Trips field — no truth-mark / VERIFIED AND TRUE / America décor
    behind the map + route card. Isolation stops swipe-sibling SuiteBackdrop
-   (shared-prestige R) from bleeding through glass. */
+   (shared-prestige truth mark) from bleeding through glass. */
 [data-suite-pane="rvtrips"],
 [data-trips-screen] {
   background: #050b16;
