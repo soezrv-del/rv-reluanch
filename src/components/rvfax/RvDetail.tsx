@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   Calculator,
+  Check,
   CheckCircle2,
   ExternalLink,
   GitCompare,
@@ -164,6 +165,7 @@ export function RvDetail({
   compareFull = false,
   onToggleCompare,
   onOpenCompare,
+  onOpenSavedCompare,
   onStartCompare,
   onAskGrok,
 }: {
@@ -178,6 +180,7 @@ export function RvDetail({
   compareFull?: boolean;
   onToggleCompare?: () => void;
   onOpenCompare?: () => void;
+  onOpenSavedCompare?: () => void;
   onStartCompare?: () => void;
   onAskGrok: () => void;
 }) {
@@ -1128,7 +1131,11 @@ export function RvDetail({
                           : "Compare with peers"
                       }
                       onClick={() => {
-                        onStartCompare();
+                        if (compareCount >= 2 && onOpenSavedCompare) {
+                          onOpenSavedCompare();
+                        } else {
+                          onStartCompare();
+                        }
                         setMoreOpen(false);
                       }}
                     />
@@ -1181,22 +1188,74 @@ export function RvDetail({
               ) : null}
             </div>
           </div>
-          {onStartCompare ? (
+          {onToggleCompare || onStartCompare ? (
             <div
-              className="mx-auto w-full max-w-lg px-3 pb-2 sm:px-5"
+              className="mx-auto flex w-full max-w-lg items-center gap-2 px-3 pb-2 sm:px-5"
               data-facts-compare-entry=""
             >
-              <button
-                type="button"
-                data-facts-compare=""
-                onClick={onStartCompare}
-                className="flex w-full min-h-11 items-center justify-center gap-1.5 rounded-full border border-sky-400/50 bg-sky-500/25 px-4 text-[13px] font-bold text-white"
-              >
-                <GitCompare className="size-3.5" />
-                {compareCount >= 2
-                  ? `Compare ${compareCount} units`
-                  : "Compare with another unit"}
-              </button>
+              {onToggleCompare ? (
+                <button
+                  type="button"
+                  data-saved-compare-toggle=""
+                  aria-pressed={comparing}
+                  aria-label={
+                    comparing
+                      ? "Remove this unit from compare"
+                      : compareFull
+                        ? "Compare full"
+                        : "Add this unit to compare"
+                  }
+                  disabled={!comparing && compareFull}
+                  onClick={onToggleCompare}
+                  className={cn(
+                    "inline-flex size-11 shrink-0 items-center justify-center rounded-full border",
+                    comparing
+                      ? "border-sky-400/70 bg-sky-500 text-white"
+                      : "border-white/20 bg-black/50 text-white",
+                    !comparing && compareFull && "opacity-40",
+                  )}
+                >
+                  {comparing ? (
+                    <Check className="size-4" />
+                  ) : (
+                    <GitCompare className="size-4" />
+                  )}
+                </button>
+              ) : null}
+              {onStartCompare ? (
+                <button
+                  type="button"
+                  data-facts-compare=""
+                  data-saved-compare-open={compareCount >= 2 ? "" : undefined}
+                  onClick={() => {
+                    if (compareCount >= 2) {
+                      if (onOpenSavedCompare) {
+                        onOpenSavedCompare();
+                        return;
+                      }
+                      onOpenCompare?.();
+                      return;
+                    }
+                    onStartCompare();
+                  }}
+                  className="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border border-sky-400/50 bg-sky-500/25 px-4 text-[13px] font-bold text-white"
+                >
+                  <GitCompare className="size-3.5" />
+                  {compareCount >= 2
+                    ? `Compare ${compareCount} units`
+                    : "Compare with another unit"}
+                </button>
+              ) : onOpenSavedCompare && compareCount >= 2 ? (
+                <button
+                  type="button"
+                  data-saved-compare-open=""
+                  onClick={onOpenSavedCompare}
+                  className="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border border-sky-400/50 bg-sky-500/25 px-4 text-[13px] font-bold text-white"
+                >
+                  <GitCompare className="size-3.5" />
+                  Compare {compareCount}
+                </button>
+              ) : null}
             </div>
           ) : null}
         </div>

@@ -44,6 +44,12 @@ import {
   suggestComparePeers,
 } from "@/lib/rv/compare";
 import {
+  canOpenSavedCompare,
+  clearSavedCompare,
+  removeSavedCompare,
+  toggleSavedCompare,
+} from "@/lib/rv/savedCompare";
+import {
   cascadeFromResult,
   FACTS_TYPE_OPTIONS,
   factsTypeLabel,
@@ -98,6 +104,9 @@ const RvDetail = lazy(() =>
 );
 const RvCompare = lazy(() =>
   import("./RvCompare").then((m) => ({ default: m.RvCompare })),
+);
+const SavedCompare = lazy(() =>
+  import("./SavedCompare").then((m) => ({ default: m.SavedCompare })),
 );
 const VinDecoder = lazy(() =>
   import("./VinDecoder").then((m) => ({ default: m.VinDecoder })),
@@ -172,6 +181,7 @@ export function RvFaxApp({
   const [comparePick, setComparePick] = useState<RVResult[]>([]);
   const { ready: catalogReady, gen: catalogGen } = useCatalogReady();
   const [compareOpen, setCompareOpen] = useState(false);
+  const [savedCompareOpen, setSavedCompareOpen] = useState(false);
   const [peerPickOpen, setPeerPickOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestHit[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -196,6 +206,7 @@ export function RvFaxApp({
     setVinOpen(false);
     setComparePick([]);
     setCompareOpen(false);
+    setSavedCompareOpen(false);
     setSuggestions([]);
     try {
       scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -637,7 +648,11 @@ export function RvFaxApp({
   );
 
   const toggleSave = (r: RVResult) => {
-    persistSaved(toggleSavedUnit(saved, r));
+    const next = toggleSavedUnit(saved, r);
+    persistSaved(next);
+    if (!isSavedUnit(next, r)) {
+      setComparePick((prev) => removeSavedCompare(prev, r));
+    }
   };
 
   const beginSell = (r: RVResult) => {
@@ -665,6 +680,7 @@ export function RvFaxApp({
     );
     persistSaved(result.saved);
     persistDeals(result.deals);
+    setComparePick((prev) => removeSavedCompare(prev, sellUnit));
     setSellUnit(null);
     setSoldFlash({
       key: flashKey,
@@ -691,14 +707,7 @@ export function RvFaxApp({
   }, [saved, soldFlash]);
 
   const toggleCompare = (r: RVResult) => {
-    const key = compareSelectionKey(r);
-    const idx = comparePick.findIndex((c) => compareSelectionKey(c) === key);
-    if (idx >= 0) {
-      setComparePick(comparePick.filter((_, i) => i !== idx));
-      return;
-    }
-    if (comparePick.length >= 3) return;
-    setComparePick([...comparePick, r]);
+    setComparePick((prev) => toggleSavedCompare(prev, r));
   };
 
   const includeInCompare = (r: RVResult) => {
@@ -764,6 +773,30 @@ export function RvFaxApp({
       />
     ) : null;
 
+  if (savedCompareOpen && canOpenSavedCompare(comparePick)) {
+    return (
+      <Suspense fallback={<PanelFallback />}>
+        <SavedCompare
+          items={comparePick}
+          onBack={() => setSavedCompareOpen(false)}
+          onClear={() => {
+            setComparePick(clearSavedCompare());
+            setSavedCompareOpen(false);
+          }}
+          onRemove={(r) => {
+            const next = removeSavedCompare(comparePick, r);
+            setComparePick(next);
+            if (!canOpenSavedCompare(next)) setSavedCompareOpen(false);
+          }}
+          onOpen={(r) => {
+            setSavedCompareOpen(false);
+            openFactsUnit(r);
+          }}
+        />
+      </Suspense>
+    );
+  }
+
   if (compareOpen && comparePick.length >= 2) {
     return (
       <Suspense fallback={<PanelFallback />}>
@@ -798,6 +831,9 @@ export function RvFaxApp({
             onToggleCompare={() => toggleCompare(detail)}
             onOpenCompare={() => {
               if (comparePick.length >= 2) setCompareOpen(true);
+            }}
+            onOpenSavedCompare={() => {
+              if (canOpenSavedCompare(comparePick)) setSavedCompareOpen(true);
             }}
             onStartCompare={() => startCompareFromFacts(detail)}
             onAskGrok={() =>
@@ -1129,25 +1165,64 @@ export function RvFaxApp({
 
           {/* Saved */}
           {savedRows.length > 0 ? (
-            <section className="space-y-2.5">
-              <div className="flex items-center justify-between px-0.5">
+            <section className="space-y-2.5" data-saved-units="">
+              <div className="flex items-center justify-between gap-2 px-0.5">
                 <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-white">
                   <Bookmark className="size-3.5" />
                   SAVED UNITS
                 </p>
-                <button
-                  type="button"
-                  onClick={() => persistSaved([])}
-                  className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
-                >
-                  <Trash2 className="size-3" />
-                  Clear
-                </button>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {canOpenSavedCompare(comparePick) ? (
+                    <button
+                      type="button"
+                      data-saved-compare-open=""
+                      onClick={() => setSavedCompareOpen(true)}
+                      className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-sky-400/45 bg-sky-500/20 px-2.5 text-[11px] font-bold text-white"
+                    >
+                      <GitCompare className="size-3" />
+                      Compare {comparePick.length}
+                    </button>
+                  ) : null}
+                  {comparePick.length > 0 ? (
+                    <button
+                      type="button"
+                      data-saved-compare-clear=""
+                      onClick={() => setComparePick(clearSavedCompare())}
+                      className="inline-flex min-h-[36px] items-center text-[11px] font-semibold text-white"
+                    >
+                      Clear compare
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const keys = new Set(saved.map((s) => compareSelectionKey(s)));
+                      persistSaved([]);
+                      setComparePick((prev) =>
+                        prev.filter((c) => !keys.has(compareSelectionKey(c))),
+                      );
+                    }}
+                    className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
+                  >
+                    <Trash2 className="size-3" />
+                    Clear
+                  </button>
+                </div>
               </div>
-              {savedRows.map((r) => (
+              {savedRows.map((r) => {
+                const key = compareSelectionKey(r);
+                const comparing = comparePick.some(
+                  (c) => compareSelectionKey(c) === key,
+                );
+                const compareFull = comparePick.length >= 3;
+                return (
                 <div
-                  key={`saved-${compareSelectionKey(r)}`}
-                  className="glass-prestige flex min-h-[52px] w-full items-center gap-1 rounded-xl pr-1"
+                  key={`saved-${key}`}
+                  data-saved-compare-row={comparing ? "on" : "off"}
+                  className={cn(
+                    "glass-prestige flex min-h-[52px] w-full items-center gap-1 rounded-xl pr-1",
+                    comparing && "border border-sky-400/50 bg-sky-500/15",
+                  )}
                 >
                   <button
                     type="button"
@@ -1164,15 +1239,40 @@ export function RvFaxApp({
                     </div>
                     <ChevronDown className="size-4 -rotate-90 shrink-0 text-white" />
                   </button>
+                  <button
+                    type="button"
+                    data-saved-compare-toggle=""
+                    aria-pressed={comparing}
+                    aria-label={
+                      comparing
+                        ? `Remove ${r.year} ${r.make} ${r.model} from compare`
+                        : `Add ${r.year} ${r.make} ${r.model} to compare`
+                    }
+                    disabled={!comparing && compareFull}
+                    onClick={() => toggleCompare(r)}
+                    className={cn(
+                      "inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition-colors",
+                      comparing
+                        ? "border-sky-400/70 bg-sky-500 text-white"
+                        : "border-white/20 bg-black/40 text-white",
+                      !comparing && compareFull && "opacity-40",
+                    )}
+                  >
+                    {comparing ? (
+                      <Check className="size-4" />
+                    ) : (
+                      <GitCompare className="size-4" />
+                    )}
+                  </button>
                   {isPro ? (
                     <button
                       type="button"
                       aria-label={`Sold ${r.year} ${r.make} ${r.model}`}
                       onClick={() => beginSell(r)}
-                      disabled={soldFlash?.key === compareSelectionKey(r)}
+                      disabled={soldFlash?.key === key}
                       className={cn(
                         "inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition-colors",
-                        soldFlash?.key === compareSelectionKey(r)
+                        soldFlash?.key === key
                           ? "border-ruby-border bg-ruby"
                           : "border-green/50 bg-green",
                       )}
@@ -1187,7 +1287,8 @@ export function RvFaxApp({
                     <X className="size-4" />
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </section>
           ) : null}
 
