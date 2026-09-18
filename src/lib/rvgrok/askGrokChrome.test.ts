@@ -106,6 +106,27 @@ test("dock is hidden while the overlay is open — not keyed on kb.open", () => 
   assert.match(shell, /enabled: swipeArmed && !askGrokOpen/);
 });
 
+test("Grok dock tab uses the same Einstein asset as RvGrok; other tabs are icon-free", () => {
+  const tabs = read("../../components/shell/BottomTabs.tsx");
+  const bubble = read("../../components/rvgrok/MessageBubble.tsx");
+  const css = read("../../styles.css");
+
+  const grokSrc = bubble.match(/src="(\/assets\/brand\/icon-rvgrok\.png)"/)?.[1];
+  assert.equal(grokSrc, "/assets/brand/icon-rvgrok.png");
+  assert.match(tabs, /id === "rvgrok"/);
+  assert.match(tabs, /src="\/assets\/brand\/icon-rvgrok\.png"/);
+  assert.equal(
+    (tabs.match(/<img\b/g) || []).length,
+    1,
+    "dock renders one img — Grok/Live Einstein only",
+  );
+  assert.doesNotMatch(
+    tabs,
+    /icon-rvfax|icon-rvcal|icon-rvtow|icon-rvtrips|icon-rvshare|icon-premium/,
+  );
+  assert.match(css, /\.bottom-tab-einstein/);
+});
+
 test("Ask Grok overlay does not rewrite dock glass or Facts/Tow internals", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const css = read("../../styles.css");

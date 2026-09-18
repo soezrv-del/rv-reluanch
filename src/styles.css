@@ -376,6 +376,11 @@
     letter-spacing: 0.5px !important;
   }
 
+  .bottom-tab-einstein {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
   .landscape-content {
     max-width: 48rem !important;
   }
@@ -1153,6 +1158,13 @@
 }
 .bottom-tab-label-sold {
   letter-spacing: 0.5px;
+}
+.bottom-tab-einstein {
+  width: 1.375rem;
+  height: 1.375rem;
+  flex-shrink: 0;
+  pointer-events: none;
+  object-fit: contain;
 }
 /* Header banner — single sheen */
 .sapphire-banner-ambient {
