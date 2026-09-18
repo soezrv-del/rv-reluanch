@@ -85,6 +85,7 @@ import {
 import { hideRetailHighForDesk } from "@/lib/rv/marketClamp";
 import { paintFactsLowDeskMarket } from "@/lib/rv/marketEstimate";
 import {
+  CATALOG_GAP_LABEL,
   FACTS_MARKET_ERROR_MESSAGE,
   FACTS_MARKET_IDLE_HEADLINE,
   FACTS_MARKET_LOADING_MESSAGE,
@@ -727,10 +728,12 @@ export function RvDetail({
     sourceLabel: deskMarket.sourceLabel,
     thin: thinSample,
   });
-  /** Gold Low heading must match the Average cue — not a stale Catalog chip. */
+  /** Gold Low heading stays Catalog estimate on GAP; Average cue is Catalog GAP. */
   const marketSourceLabel =
-    averageCaption ??
-    (showSoldRange ? SOLD_COMPS_LABEL : CATALOG_ESTIMATE_LABEL);
+    averageCaption === CATALOG_GAP_LABEL
+      ? CATALOG_ESTIMATE_LABEL
+      : (averageCaption ??
+        (showSoldRange ? SOLD_COMPS_LABEL : CATALOG_ESTIMATE_LABEL));
   const coachChip = formatActiveCoachChip({
     year,
     make,

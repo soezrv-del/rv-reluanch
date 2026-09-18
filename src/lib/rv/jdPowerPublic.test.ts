@@ -29,7 +29,10 @@ import {
   reducePublicComps,
   resolvePrimaryMarket,
 } from "./publicListingComps.ts";
-import { factsMarketAverageCaption } from "./factsMarketBands.ts";
+import {
+  CATALOG_GAP_LABEL,
+  factsMarketAverageCaption,
+} from "./factsMarketBands.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -307,7 +310,7 @@ test("resolvePrimaryMarket: JD + Med sold blends; JD GAP keeps sold / catalog", 
   assert.equal(noJd.hideRetailHigh, false);
 });
 
-test("Average caption: blend source wins over leftover Catalog estimate; GAP stays Catalog", () => {
+test("Average caption: blend source wins over leftover Catalog estimate; GAP is Catalog GAP", () => {
   const catalog = estimateMarket(dieselSpec(), "2021", "33.5", {
     asOfYear: 2026,
     make: "Thor",
@@ -347,6 +350,7 @@ test("Average caption: blend source wins over leftover Catalog estimate; GAP sta
 
   const thinGap = resolvePrimaryMarket({ catalog });
   assert.equal(thinGap.source, "catalog");
+  assert.equal(thinGap.sourceLabel, CATALOG_ESTIMATE_LABEL);
   assert.equal(
     factsMarketAverageCaption({
       confidence: thinGap.confidence ?? "low",
@@ -354,7 +358,7 @@ test("Average caption: blend source wins over leftover Catalog estimate; GAP sta
       sourceLabel: thinGap.sourceLabel,
       thin: true,
     }),
-    CATALOG_ESTIMATE_LABEL,
+    CATALOG_GAP_LABEL,
   );
 });
 

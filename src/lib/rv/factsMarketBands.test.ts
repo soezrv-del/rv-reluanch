@@ -8,11 +8,13 @@ import {
   LOW_CONFIDENCE_LISTINGS_MESSAGE,
   SOLD_COMPS_LABEL,
 } from "./publicListingComps.ts";
+import { paintFactsLowDeskMarket } from "./marketEstimate.ts";
 import {
   JD_POWER_BLEND_LABEL,
   JD_POWER_PUBLIC_LABEL,
 } from "./jdPowerPublic.ts";
 import {
+  CATALOG_GAP_LABEL,
   FACTS_MARKET_ERROR_MESSAGE,
   FACTS_MARKET_IDLE_HEADLINE,
   FACTS_MARKET_LOADING_MESSAGE,
@@ -128,10 +130,11 @@ test("hideRetailHigh is the only High gate — low confidence still flags thin",
   });
 });
 
-test("caption: Catalog estimate on thin; blend sublabel; never bare J.D. Power", () => {
+test("caption: Catalog GAP on thin; blend sublabel; never bare J.D. Power", () => {
   assert.equal(factsMarketIsBareJdPower("J.D. Power"), true);
   assert.equal(factsMarketIsBareJdPower("JD Power"), true);
   assert.equal(factsMarketIsBareJdPower("Catalog estimate"), false);
+  assert.equal(factsMarketIsBareJdPower(CATALOG_GAP_LABEL), false);
   assert.equal(factsMarketIsBareJdPower(JD_POWER_BLEND_LABEL), false);
   assert.equal(
     JD_POWER_BLEND_LABEL,
@@ -144,14 +147,14 @@ test("caption: Catalog estimate on thin; blend sublabel; never bare J.D. Power",
       source: "catalog",
       sourceLabel: CATALOG_ESTIMATE_LABEL,
     }),
-    "Catalog estimate",
+    CATALOG_GAP_LABEL,
   );
   assert.equal(
     factsMarketAverageCaption({
       confidence: "low",
       sourceLabel: "J.D. Power",
     }),
-    "Catalog estimate",
+    CATALOG_GAP_LABEL,
   );
   assert.equal(
     factsMarketAverageCaption({
@@ -218,7 +221,7 @@ test("caption: blend active → blend cue even when sourceLabel is still Catalog
   );
 });
 
-test("caption: Average cue is blend / JD-only / Catalog when source is set", () => {
+test("caption: Average cue is blend / JD-only / Catalog GAP when source is set", () => {
   assert.equal(
     factsMarketAverageCaption({ source: "jd_power_blend" }),
     JD_POWER_BLEND_LABEL,
@@ -229,7 +232,7 @@ test("caption: Average cue is blend / JD-only / Catalog when source is set", () 
   );
   assert.equal(
     factsMarketAverageCaption({ source: "catalog" }),
-    CATALOG_ESTIMATE_LABEL,
+    CATALOG_GAP_LABEL,
   );
   assert.equal(
     factsMarketAverageCaption({
@@ -254,7 +257,7 @@ test("caption: Average cue is blend / JD-only / Catalog when source is set", () 
       sourceLabel: CATALOG_ESTIMATE_LABEL,
       thin: true,
     }),
-    CATALOG_ESTIMATE_LABEL,
+    CATALOG_GAP_LABEL,
   );
   assert.notEqual(
     factsMarketAverageCaption({ source: "jd_power_blend" }),
@@ -264,9 +267,13 @@ test("caption: Average cue is blend / JD-only / Catalog when source is set", () 
     factsMarketAverageCaption({ source: "catalog" }),
     undefined,
   );
+  assert.notEqual(
+    factsMarketAverageCaption({ source: "catalog" }),
+    CATALOG_ESTIMATE_LABEL,
+  );
 });
 
-test("caption: JD GAP → Catalog estimate (or comps-only when that is the path)", () => {
+test("caption: JD GAP → Catalog GAP (or comps-only when that is the path)", () => {
   assert.equal(
     factsMarketAverageCaption({
       confidence: "low",
@@ -274,14 +281,14 @@ test("caption: JD GAP → Catalog estimate (or comps-only when that is the path)
       source: "catalog",
       sourceLabel: CATALOG_ESTIMATE_LABEL,
     }),
-    CATALOG_ESTIMATE_LABEL,
+    CATALOG_GAP_LABEL,
   );
   assert.equal(
     factsMarketAverageCaption({
       confidence: "low",
       sourceLabel: CATALOG_ESTIMATE_LABEL,
     }),
-    "Catalog estimate",
+    CATALOG_GAP_LABEL,
   );
   assert.equal(
     factsMarketAverageCaption({
@@ -291,6 +298,34 @@ test("caption: JD GAP → Catalog estimate (or comps-only when that is the path)
     }),
     undefined,
   );
+});
+
+test("Low catalog-haircut desk → Average caption is Catalog GAP, not missing", () => {
+  const painted = paintFactsLowDeskMarket({
+    tradeIn: 186000,
+    retailLow: 208000,
+    retailHigh: 267000,
+    msrpLo: 250200,
+    msrpHi: 390200,
+    segment: "Diesel Class A",
+    ageYears: 5,
+    source: "catalog",
+    sourceLabel: CATALOG_ESTIMATE_LABEL,
+  });
+  assert.equal(painted.source, "catalog");
+  assert.equal(painted.sourceLabel, CATALOG_ESTIMATE_LABEL);
+  assert.equal(painted.confidence, "low");
+  const caption = factsMarketAverageCaption({
+    confidence: painted.confidence,
+    source: painted.source,
+    sourceLabel: painted.sourceLabel,
+    thin: true,
+  });
+  assert.equal(caption, CATALOG_GAP_LABEL);
+  assert.equal(caption, "Catalog GAP");
+  assert.ok(caption && caption.length > 0);
+  assert.notEqual(caption, CATALOG_ESTIMATE_LABEL);
+  assert.notEqual(caption, undefined);
 });
 
 test("Facts bands UI + detail wire the locked MarketEstimate fields", () => {
@@ -316,6 +351,9 @@ test("Facts bands UI + detail wire the locked MarketEstimate fields", () => {
   assert.match(bands, /slots\.thinSample/);
   assert.match(bands, /data-average-source-caption/);
   assert.match(bands, /caption=\{averageCaption\}/);
+  assert.equal(CATALOG_GAP_LABEL, "Catalog GAP");
+  assert.match(detail, /CATALOG_GAP_LABEL/);
+  assert.match(detail, /averageCaption=\{averageCaption\}/);
   assert.doesNotMatch(bands, /JD Power|J\.D\. Power|NADA|MarketCheck/);
   assert.doesNotMatch(bands, /estimateMarket|retailHighMult|LOW_THIN_FREE_PATH/);
 

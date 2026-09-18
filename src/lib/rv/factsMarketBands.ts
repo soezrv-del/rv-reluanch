@@ -9,7 +9,7 @@
  *   marketValue   → Average (else midpoint of retailLow / retailHigh)
  *   retailHigh    → High, omitted when hideRetailHigh
  *   confidence    → thin-sample when "low" (or public sample < 2)
- *   source         → Average caption: blend / JD-only / Catalog estimate on GAP
+ *   source         → Average caption: blend / JD-only / Catalog GAP on miss
  *   sourceLabel   → leftover chip; source wins when the JD ladder is set
  */
 
@@ -35,6 +35,8 @@ export const THIN_SAMPLE_FLAG_LABEL = "Thin sample";
 export const FACTS_MARKET_LOADING_MESSAGE = "Loading";
 export const FACTS_MARKET_ERROR_MESSAGE = "Live market lookup failed";
 export const FACTS_MARKET_IDLE_HEADLINE = "Tap to check";
+/** Average cue when JD missed — distinct from the gold Catalog estimate heading. */
+export const CATALOG_GAP_LABEL = "Catalog GAP";
 export type FactsMarketLiveStatus =
   | "idle"
   | "loading"
@@ -83,7 +85,8 @@ export function factsMarketIsBareJdPower(label?: string): boolean {
  * Average caption: locked cue from `source` when the ladder set one.
  *   jd_power_blend  → Avg of public J.D. Power estimate + asking comps
  *   jd_power_public → Public J.D. Power estimate
- *   catalog         → Catalog estimate (JD GAP / thin haircut)
+ *   catalog / JD miss / Low haircut → Catalog GAP (never a leftover
+ *     "Catalog estimate" chip — that string is the gold Low heading)
  * Never a bare J.D. Power title. `source` wins a leftover Catalog chip.
  */
 export function factsMarketAverageCaption(input: {
@@ -95,18 +98,25 @@ export function factsMarketAverageCaption(input: {
   const thin = input.thin || input.confidence === "low";
   const fromSource = jdPowerSourceLabel(input.source);
   if (fromSource) return fromSource;
-  if (input.source === "catalog") return CATALOG_ESTIMATE_LABEL;
+  if (input.source === "catalog") return CATALOG_GAP_LABEL;
   const label = input.sourceLabel?.trim();
   if (label === JD_POWER_BLEND_LABEL) return JD_POWER_BLEND_LABEL;
   if (label === JD_POWER_PUBLIC_LABEL) return JD_POWER_PUBLIC_LABEL;
   if (label && factsMarketIsBareJdPower(label)) {
-    return thin ? CATALOG_ESTIMATE_LABEL : undefined;
+    return thin ? CATALOG_GAP_LABEL : undefined;
   }
-  if (thin) return label || CATALOG_ESTIMATE_LABEL;
+  if (thin) {
+    return label &&
+      label !== CATALOG_ESTIMATE_LABEL &&
+      label !== CATALOG_GAP_LABEL
+      ? label
+      : CATALOG_GAP_LABEL;
+  }
   if (
     label &&
     label !== SOLD_COMPS_LABEL &&
-    label !== MARKET_BAND_AVERAGE_LABEL
+    label !== MARKET_BAND_AVERAGE_LABEL &&
+    label !== CATALOG_ESTIMATE_LABEL
   ) {
     return label;
   }
