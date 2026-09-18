@@ -56,6 +56,22 @@ export const ASKING_COMPS_LABEL = "Asking comps";
 export const PUBLIC_SOLD_DISCLAIMER =
   "Values are estimates from public listings. Not JD Power or NADA book value.";
 export const LOW_CONFIDENCE_LISTINGS_MESSAGE = "Not enough public listings";
+/** Med/High Market tile — sold median. Low uses Catalog estimate instead. */
+export const SOLD_MARKET_TILE_LABEL = "Market value";
+
+/**
+ * Facts Market tile caption. Low desk paints Catalog estimate (or the
+ * live estimate label) so the haircut mid is not read as sold book.
+ * Med/High stay "Market value".
+ */
+export function factsDeskMarketTileLabel(
+  showSoldRange: boolean,
+  sourceLabel?: string,
+): string {
+  if (showSoldRange) return SOLD_MARKET_TILE_LABEL;
+  const label = sourceLabel?.trim();
+  return label || CATALOG_ESTIMATE_LABEL;
+}
 
 export type ListingPriceKind = "sold" | "asking";
 export type MileageBand = "low" | "mid" | "high" | "neutral";

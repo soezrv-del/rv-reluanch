@@ -73,6 +73,7 @@ import {
   PUBLIC_SOLD_DISCLAIMER,
   SOLD_COMPS_LABEL,
   compsConfidenceLabel,
+  factsDeskMarketTileLabel,
   fetchPublicListingComps,
   prefersPublicComps,
   resolvePrimaryMarket,
@@ -1301,7 +1302,13 @@ export function RvDetail({
             }
           >
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[12px] font-semibold text-white">
+              <p
+                className={
+                  showSoldRange
+                    ? "text-[12px] font-semibold text-white"
+                    : "text-[12px] font-semibold text-white/55"
+                }
+              >
                 {SOLD_COMPS_LABEL}
               </p>
               <Chip
@@ -1319,7 +1326,7 @@ export function RvDetail({
             {showSoldRange ? (
               <div className="grid grid-cols-2 gap-2">
                 <MarketTile
-                  label="Market value"
+                  label={factsDeskMarketTileLabel(true)}
                   value={factsMoneyHeadline(deskMarketValue)}
                 />
                 <MarketTile
@@ -1342,12 +1349,12 @@ export function RvDetail({
                 <p className="text-[13px] font-semibold leading-snug text-white">
                   {LOW_CONFIDENCE_LISTINGS_MESSAGE}
                 </p>
-                <p className="mt-4 text-[13px] font-bold tracking-wide text-gold-bright">
+                <p className="mt-4 text-[15px] font-extrabold uppercase tracking-[0.16em] text-gold-bright">
                   {marketSourceLabel}
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <MarketTile
-                    label="Market value"
+                    label={factsDeskMarketTileLabel(false, marketSourceLabel)}
                     value={factsMoneyHeadline(deskMarketValue)}
                   />
                   <MarketTile

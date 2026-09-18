@@ -11,6 +11,8 @@ import {
   PUBLIC_SOLD_DISCLAIMER,
   SOLD_COMPS_HIGH_SAMPLE,
   SOLD_COMPS_LABEL,
+  SOLD_MARKET_TILE_LABEL,
+  factsDeskMarketTileLabel,
   YEAR_MIN,
   buildListingCompsPrompt,
   coachYearRange,
@@ -76,12 +78,21 @@ function sold(
 test("labels: Sold comps, Catalog estimate, low-confidence copy, disclaimer", () => {
   assert.equal(SOLD_COMPS_LABEL, "Sold comps");
   assert.equal(CATALOG_ESTIMATE_LABEL, "Catalog estimate");
+  assert.equal(SOLD_MARKET_TILE_LABEL, "Market value");
   assert.equal(ASKING_COMPS_LABEL, "Asking comps");
   assert.equal(LOW_CONFIDENCE_LISTINGS_MESSAGE, "Not enough public listings");
   assert.equal(
     PUBLIC_SOLD_DISCLAIMER,
     "Values are estimates from public listings. Not JD Power or NADA book value.",
   );
+  assert.equal(factsDeskMarketTileLabel(true), "Market value");
+  assert.equal(factsDeskMarketTileLabel(false), "Catalog estimate");
+  assert.equal(
+    factsDeskMarketTileLabel(false, CATALOG_ESTIMATE_LABEL),
+    "Catalog estimate",
+  );
+  assert.notEqual(factsDeskMarketTileLabel(false), SOLD_COMPS_LABEL);
+  assert.notEqual(factsDeskMarketTileLabel(false), "Market value");
 });
 
 test("valuation modules never import the MarketCheck client", () => {
@@ -425,6 +436,7 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
   );
   assert.match(detail, /SOLD_COMPS_LABEL/);
   assert.match(detail, /CATALOG_ESTIMATE_LABEL/);
+  assert.match(detail, /factsDeskMarketTileLabel/);
   assert.match(detail, /LOW_CONFIDENCE_LISTINGS_MESSAGE/);
   assert.match(detail, /PUBLIC_SOLD_DISCLAIMER/);
   assert.match(detail, /compsConfidenceLabel/);
@@ -441,7 +453,13 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
   assert.match(detail, /!hideRetailHigh \? \(/);
   assert.match(detail, /label="Retail high"/);
   assert.match(detail, /: "ruby"/);
-  assert.match(detail, /font-bold tracking-wide text-gold-bright/);
+  assert.match(detail, /factsDeskMarketTileLabel\(true\)/);
+  assert.match(detail, /factsDeskMarketTileLabel\(false, marketSourceLabel\)/);
+  assert.match(
+    detail,
+    /font-extrabold uppercase tracking-\[0\.16em\] text-gold-bright/,
+  );
+  assert.match(detail, /text-white\/55/);
   const lowCopy = detail.lastIndexOf("LOW_CONFIDENCE_LISTINGS_MESSAGE");
   const lowBranch = detail.slice(
     lowCopy,
