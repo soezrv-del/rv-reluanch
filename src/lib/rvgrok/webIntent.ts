@@ -16,10 +16,12 @@
  */
 
 import { parseCoachFromText } from "./parseCoach.ts";
+import { looksLikeCarfaxQuestion } from "./carfaxPositioning.ts";
 import { looksLikeOriginQuestion } from "./originStory.ts";
 import { looksLikeRepairQuestion } from "./repairMode.ts";
 import { looksLikeCatalogAnswerableCoachCompare } from "./coachCompare.ts";
 
+export { looksLikeCarfaxQuestion } from "./carfaxPositioning.ts";
 export { looksLikeOriginQuestion } from "./originStory.ts";
 
 export { looksLikeRepairQuestion } from "./repairMode.ts";
@@ -207,6 +209,7 @@ export function needsWebFallback(
 ): boolean {
   if (looksLikeCasualNonResearch(userText)) return false;
   if (looksLikeOriginQuestion(userText)) return false;
+  if (looksLikeCarfaxQuestion(userText)) return false;
   if (looksLikeImageOnlyAsk(userText)) return false;
   if (looksLikeLiveResearchQuestion(userText)) return true;
   if (looksLikeInventoryOrCountQuestion(userText)) return true;
