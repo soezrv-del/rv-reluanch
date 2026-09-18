@@ -1181,26 +1181,25 @@ export function RvDetail({
               ) : null}
             </div>
           </div>
-        </div>
-        {onStartCompare ? (
-          <div
-            className="border-b border-white/10 bg-[#070b14]/95 px-3 py-2 sm:px-5"
-            data-facts-compare-entry=""
-            data-no-export
-          >
-            <button
-              type="button"
-              data-facts-compare=""
-              onClick={onStartCompare}
-              className="mx-auto flex w-full max-w-lg min-h-11 items-center justify-center gap-1.5 rounded-full border border-sky-400/50 bg-sky-500/25 px-4 text-[13px] font-bold text-white"
+          {onStartCompare ? (
+            <div
+              className="mx-auto w-full max-w-lg px-3 pb-2 sm:px-5"
+              data-facts-compare-entry=""
             >
-              <GitCompare className="size-3.5" />
-              {compareCount >= 2
-                ? `Compare ${compareCount} units`
-                : "Compare with another unit"}
-            </button>
-          </div>
-        ) : null}
+              <button
+                type="button"
+                data-facts-compare=""
+                onClick={onStartCompare}
+                className="flex w-full min-h-11 items-center justify-center gap-1.5 rounded-full border border-sky-400/50 bg-sky-500/25 px-4 text-[13px] font-bold text-white"
+              >
+                <GitCompare className="size-3.5" />
+                {compareCount >= 2
+                  ? `Compare ${compareCount} units`
+                  : "Compare with another unit"}
+              </button>
+            </div>
+          ) : null}
+        </div>
         <div className="bg-[#070b14]">
         <div
           id="rvfax-vehicle-report"
