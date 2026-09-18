@@ -45,15 +45,12 @@ function DockLabel({
   return (
     <span
       className={cn(
-        "bottom-tab-label metal-hammered pointer-events-none text-center uppercase leading-none",
+        "bottom-tab-label pointer-events-none text-center uppercase leading-none",
         className,
       )}
       data-label={text}
     >
-      <span aria-hidden className="metal-hammered-strike">
-        {text}
-      </span>
-      <span className="metal-hammered-face">{text}</span>
+      {text}
     </span>
   );
 }
