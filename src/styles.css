@@ -1803,6 +1803,14 @@
   font-weight: 600;
 }
 
+/* Compact RV-safe dim chip on the route card — one line, no dock clutter. */
+[data-rv-safe-chip] {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Fade the app dock while Turn-by-Turn is armed — Route/Stop stay. */
 html[data-trips-navigating] [data-bottom-dock] {
   opacity: 0.28;
