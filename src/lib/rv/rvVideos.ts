@@ -22,14 +22,6 @@ export const EMPTY_MATCH_MESSAGE =
   "No RV Video Library videos matched this coach.";
 export const RELATED_NOTE =
   "Related walkthroughs from RV Video Library on YouTube — not a confirmed match for this exact unit.";
-export const NEAR_YEAR_NOTE =
-  "Related walkthroughs from nearby model years on RV Video Library — not a confirmed match for this exact unit.";
-
-/** Exact year first; then |Δ| 1–3 (prefer closer; band is ±2–±3); then |Δ| 4–5. */
-export const RV_VIDEO_NEAR_YEAR_MAX = 3;
-export const RV_VIDEO_WIDE_YEAR_MAX = 5;
-
-export type RvVideoYearTier = "exact" | "near" | "wide";
 
 /** After-tap only. Never surface raw YouTube / key errors. */
 export function calmVideoLookupError(raw: string): {
@@ -86,7 +78,6 @@ export type RvVideosOk = {
   videos: RvVideoHit[];
   cached: boolean;
   note: string;
-  yearTier?: RvVideoYearTier | null;
 };
 
 export type RvVideosErr = {
@@ -184,11 +175,6 @@ export function buildRvVideoCoreQuery(coach: RvVideoCoach): string {
   ]).join(" ");
 }
 
-/** Make + model only — year-tier fallback search. Never invents another make. */
-export function buildRvVideoMakeModelQuery(coach: RvVideoCoach): string {
-  return uniqueParts([clean(coach.make), clean(coach.model)]).join(" ");
-}
-
 export function tokenizeCoachQuery(q: string): string[] {
   return clean(q)
     .toLowerCase()
@@ -209,11 +195,6 @@ export const RV_VIDEO_KNOWN_MAKES = [
   "Newmar",
   "Winnebago",
   "Keystone",
-  "Renegade RV",
-  "Renegade",
-  "Gulf Stream Coach",
-  "Gulf Stream",
-  "Gulfstream",
 ] as const;
 
 function escapeRegExp(s: string): string {
@@ -238,31 +219,11 @@ function sameMakeFamily(searched: string, known: string): boolean {
   return b.startsWith(`${a} `) || a.startsWith(`${b} `);
 }
 
-/**
- * Manufacturer phrases accepted in a title: the full make, plus a stem if the
- * catalog name ends in RV / Coach (Renegade RV → Renegade). Never a lone
- * "Coach" token — that is how American Coach leaked onto Liberty.
- */
-function makeAcceptPhrases(make: string): string[] {
-  const full = clean(make);
-  if (!full) return [];
-  const phrases = [full];
-  const stem = full.replace(/\s+(rv|coach)$/i, "").trim();
-  if (stem.length >= 5 && stem.toLowerCase() !== full.toLowerCase()) {
-    phrases.push(stem);
-  }
-  return phrases;
-}
-
 /** Title contains the exact searched make (case-insensitive, flexible whitespace). */
 export function titleHasExactMake(title: string, make: string): boolean {
-  const hay = clean(title);
-  if (!hay) return false;
-  for (const phrase of makeAcceptPhrases(make)) {
-    const re = makePhraseRe(phrase);
-    if (re?.test(hay)) return true;
-  }
-  return false;
+  const re = makePhraseRe(make);
+  if (!re) return false;
+  return re.test(clean(title));
 }
 
 /** Title names a different known make than the one searched. */
@@ -293,169 +254,6 @@ export function filterRvVideosByMake<T extends { title: string }>(
   make: string,
 ): T[] {
   return videos.filter((v) => titleQualifiesForRvMake(v.title, make));
-}
-
-/** Every model token must appear as a whole word. Make alone is not enough. */
-export function titleHasRequiredModel(title: string, model: string): boolean {
-  const tokens = tokenizeCoachQuery(model);
-  if (!tokens.length) return false;
-  const hay = clean(title);
-  return tokens.every((t) => {
-    const re = new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(t)}(?![a-z0-9])`, "i");
-    return re.test(hay);
-  });
-}
-
-export function titleQualifiesForRvCoach(
-  title: string,
-  make: string,
-  model: string,
-): boolean {
-  if (!clean(make) || !clean(model)) return false;
-  if (!titleQualifiesForRvMake(title, make)) return false;
-  return titleHasRequiredModel(title, model);
-}
-
-export function filterRvVideosByCoach<T extends { title: string }>(
-  videos: T[],
-  make: string,
-  model: string,
-): T[] {
-  return videos.filter((v) => titleQualifiesForRvCoach(v.title, make, model));
-}
-
-/** First 20xx model year in the title (channel coverage band). */
-export function extractTitleModelYear(title: string): number | null {
-  const years = [...clean(title).matchAll(/\b(20\d{2})\b/g)]
-    .map((m) => Number(m[1]))
-    .filter((y) => y >= 2010 && y <= 2035);
-  return years[0] ?? null;
-}
-
-export function classifyRvVideoYearDelta(
-  delta: number,
-): RvVideoYearTier | null {
-  if (!Number.isFinite(delta) || delta < 0) return null;
-  if (delta === 0) return "exact";
-  if (delta <= RV_VIDEO_NEAR_YEAR_MAX) return "near";
-  if (delta <= RV_VIDEO_WIDE_YEAR_MAX) return "wide";
-  return null;
-}
-
-export function classifyRvVideoYear(
-  title: string,
-  coachYear: number,
-): { tier: RvVideoYearTier; delta: number } | null {
-  const titleYear = extractTitleModelYear(title);
-  if (titleYear == null) return null;
-  const delta = Math.abs(titleYear - coachYear);
-  const tier = classifyRvVideoYearDelta(delta);
-  if (!tier) return null;
-  return { tier, delta };
-}
-
-export function rvVideoMatchNote(
-  tier: RvVideoYearTier | null,
-  count: number,
-): string {
-  if (!count) return EMPTY_MATCH_MESSAGE;
-  if (tier === "exact") return RELATED_NOTE;
-  return NEAR_YEAR_NOTE;
-}
-
-export type RvVideoMatch<T extends { title: string } = RvVideoHit> = {
-  videos: T[];
-  tier: RvVideoYearTier | null;
-  query: string;
-  note: string;
-};
-
-function rankByYearThenOverlap<T extends { title: string }>(
-  videos: T[],
-  query: string,
-  coachYear: number | null,
-): T[] {
-  const tokens = tokenizeCoachQuery(query);
-  return videos
-    .map((v) => {
-      const yearHit = coachYear != null ? classifyRvVideoYear(v.title, coachYear) : null;
-      return {
-        v,
-        delta: yearHit?.delta ?? 99,
-        score: scoreTitleOverlap(v.title, tokens),
-      };
-    })
-    .filter((row) => row.score > 0)
-    .sort(
-      (a, b) =>
-        a.delta - b.delta ||
-        b.score - a.score ||
-        a.v.title.localeCompare(b.v.title),
-    )
-    .map((row) => row.v);
-}
-
-/**
- * Make + model hard gate, then year tiers: exact → ±2–±3 (closer first) → ±5.
- * Never crosses brand. Titles without a parseable year are dropped.
- */
-export function matchRvVideos<T extends { title: string }>(
-  videos: T[],
-  coach: RvVideoCoach,
-): RvVideoMatch<T> {
-  const make = clean(coach.make);
-  const model = clean(coach.model);
-  const query = buildRvVideoQuery(coach);
-  const empty = (): RvVideoMatch<T> => ({
-    videos: [],
-    tier: null,
-    query,
-    note: EMPTY_MATCH_MESSAGE,
-  });
-  if (!make || !model) return empty();
-
-  const gated = filterRvVideosByCoach(videos, make, model);
-  const coachYear = parseCoachModelYear(coach.year);
-  if (coachYear == null) return empty();
-
-  const scored = gated
-    .map((v) => {
-      const yearHit = classifyRvVideoYear(v.title, coachYear);
-      return yearHit ? { v, ...yearHit } : null;
-    })
-    .filter((row): row is { v: T; tier: RvVideoYearTier; delta: number } => row != null);
-
-  const pick = (tier: RvVideoYearTier): T[] =>
-    rankByYearThenOverlap(
-      scored.filter((row) => row.tier === tier).map((row) => row.v),
-      query,
-      coachYear,
-    );
-
-  const exact = pick("exact");
-  if (exact.length) {
-    return { videos: exact, tier: "exact", query, note: rvVideoMatchNote("exact", exact.length) };
-  }
-  const near = pick("near");
-  if (near.length) {
-    return { videos: near, tier: "near", query, note: rvVideoMatchNote("near", near.length) };
-  }
-  const wide = pick("wide");
-  if (wide.length) {
-    return { videos: wide, tier: "wide", query, note: rvVideoMatchNote("wide", wide.length) };
-  }
-  return empty();
-}
-
-/** True when the match already satisfies this tier or a tighter one. */
-export function rvVideoTierSatisfied(
-  tier: RvVideoYearTier | null,
-  needed: RvVideoYearTier,
-): boolean {
-  if (!tier) return false;
-  if (needed === "exact") return tier === "exact";
-  if (needed === "near") return tier === "exact" || tier === "near";
-  return true;
 }
 
 function resolveRankMake(query: string, make?: string | null): string {
