@@ -37,16 +37,16 @@ function toneClass(tone: CompareCell["tone"], emphasis?: boolean) {
   switch (tone) {
     case "better":
       return emphasis
-        ? "bg-emerald-500/35 text-emerald-50 border-emerald-400/70 ring-1 ring-emerald-400/40 print:bg-emerald-100 print:text-emerald-900 print:border-emerald-400"
-        : "bg-emerald-500/20 text-emerald-100 border-emerald-400/45 print:bg-emerald-50 print:text-emerald-900 print:border-emerald-300";
+        ? "bg-emerald-500/35 text-white border-emerald-400/70 ring-1 ring-emerald-400/40 print:bg-emerald-100 print:text-emerald-900 print:border-emerald-400"
+        : "bg-emerald-500/20 text-white border-emerald-400/45 print:bg-emerald-50 print:text-emerald-900 print:border-emerald-300";
     case "worse":
       return emphasis
-        ? "bg-ruby/35 text-ruby border-ruby/70 ring-1 ring-ruby/50 print:bg-red-100 print:text-red-900 print:border-red-400"
-        : "bg-ruby/20 text-ruby border-ruby/45 print:bg-red-50 print:text-red-800 print:border-red-300";
+        ? "bg-ruby/35 text-white border-ruby/70 ring-1 ring-ruby/50 print:bg-red-100 print:text-red-900 print:border-red-400"
+        : "bg-ruby/20 text-white border-ruby/45 print:bg-red-50 print:text-red-800 print:border-red-300";
     case "equal":
-      return "bg-black/25 text-white border-white/12 print:bg-slate-50 print:text-slate-800 print:border-slate-200";
+      return "bg-black/40 text-white border-white/12 print:bg-slate-50 print:text-slate-800 print:border-slate-200";
     default:
-      return "bg-black/15 text-white/70 border-white/10 print:bg-white print:text-slate-600";
+      return "bg-black/30 text-white border-white/10 print:bg-white print:text-slate-600";
   }
 }
 
@@ -331,8 +331,8 @@ export function RvCompare({
             </div>
           ) : null}
 
-          <header className="overflow-hidden rounded-[1.25rem] border border-white/15 bg-black/50">
-            <div className="flex items-center gap-2 border-b border-white/10 bg-black/55 px-3.5 py-2.5">
+          <header className="overflow-hidden rounded-[1.25rem] border border-white/15 bg-black/60">
+            <div className="flex items-center gap-2 border-b border-white/10 bg-black/65 px-3.5 py-2.5">
               <span className="rounded bg-white px-1.5 py-0.5 text-[9px] font-black text-slate-900">
                 RVFAX
               </span>
@@ -342,17 +342,17 @@ export function RvCompare({
               <GitCompare className="ml-auto size-4 text-sky-300" />
             </div>
             <div className="p-3.5">
-              <p className="text-[11px] text-white/55">{report.generatedAt}</p>
+              <p className="text-[11px] text-white">{report.generatedAt}</p>
               <p className="mt-1 text-[13px] font-semibold text-white">
                 {titleLine}
               </p>
-              <p className="mt-2 text-[11px] leading-snug text-white/50">
+              <p className="mt-2 text-[11px] leading-snug text-white">
                 Market prefers sold comps when they exist, then live research,
                 then a {CATALOG_ESTIMATE_LABEL.toLowerCase()}. Low comps hide
                 Retail High. Not a paid book.
               </p>
               {liveLoading ? (
-                <p className="mt-2 flex items-center gap-2 text-[12px] text-white/50">
+                <p className="mt-2 flex items-center gap-2 text-[12px] text-white">
                   <Loader2 className="size-3.5 animate-spin" />
                   Refreshing figures…
                 </p>
@@ -374,11 +374,11 @@ export function RvCompare({
                   className={cn(
                     "rounded-xl border px-2 py-2 text-center",
                     isHi &&
-                      "border-emerald-400/60 bg-emerald-500/25 text-emerald-50",
-                    isLo && "border-ruby/60 bg-ruby/25 text-ruby",
+                      "border-emerald-400/60 bg-emerald-500/25 text-white",
+                    isLo && "border-ruby/60 bg-ruby/25 text-white",
                     !isHi &&
                       !isLo &&
-                      "border-white/12 bg-black/35 text-white",
+                      "border-white/12 bg-black/55 text-white",
                   )}
                 >
                   {isHi ? (
@@ -387,7 +387,7 @@ export function RvCompare({
                     </p>
                   ) : null}
                   {isLo ? (
-                    <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wide text-ruby">
+                    <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
                       Lowest
                     </p>
                   ) : null}
@@ -415,7 +415,7 @@ export function RvCompare({
                     ? "border-emerald-400/50 bg-emerald-500/15"
                     : i === lo && hi !== lo
                       ? "border-ruby/40 bg-ruby/10"
-                      : "border-white/15 bg-black/40",
+                      : "border-white/15 bg-black/60",
                 )}
               >
                 <p className="text-[9px] font-bold tracking-wide text-sky-300">
@@ -425,11 +425,11 @@ export function RvCompare({
                 <p className="mt-0.5 text-[12px] font-bold leading-snug text-white">
                   {c.year} {c.make}
                 </p>
-                <p className="text-[12px] font-semibold text-white/90">
+                <p className="text-[12px] font-semibold text-white">
                   {c.model}
                   {c.floorplan ? ` · ${c.floorplan}` : ""}
                 </p>
-                <p className="mt-1 text-[10px] text-white/50">{c.type}</p>
+                <p className="mt-1 text-[10px] text-white">{c.type}</p>
               </button>
             ))}
           </div>
@@ -460,32 +460,32 @@ export function RvCompare({
             );
           })}
 
-          <section className="overflow-hidden rounded-[1.15rem] border border-white/12 bg-black/40">
-            <div className="flex items-center gap-2 border-b border-white/10 bg-black/55 px-3.5 py-2">
-              <Sparkles className="size-3.5 text-ruby" />
+          <section className="overflow-hidden rounded-[1.15rem] border border-white/12 bg-black/60">
+            <div className="flex items-center gap-2 border-b border-white/10 bg-black/65 px-3.5 py-2">
+              <Sparkles className="size-3.5 text-white" />
               <p className="text-[11px] font-bold tracking-wide text-white">
                 AI difference summary
               </p>
               {summaryLive ? (
-                <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/50">
+                <span className="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white">
                   Compared
                 </span>
               ) : null}
             </div>
             <div className="p-3.5">
               {liveLoading || loadingSummary ? (
-                <p className="flex items-center gap-2 text-[13px] text-white/70">
+                <p className="flex items-center gap-2 text-[13px] text-white">
                   <Loader2 className="size-4 animate-spin text-sky-300" />
                   Grok is comparing these coaches…
                 </p>
               ) : summaryError ? (
-                <p className="text-[13px] text-amber">{summaryError}</p>
+                <p className="text-[13px] text-white">{summaryError}</p>
               ) : summary ? (
-                <div className="whitespace-pre-wrap text-[13px] leading-relaxed text-white/90">
+                <div className="whitespace-pre-wrap text-[13px] leading-relaxed text-white">
                   {summary}
                 </div>
               ) : (
-                <p className="text-[13px] text-white/60">No summary yet.</p>
+                <p className="text-[13px] text-white">No summary yet.</p>
               )}
             </div>
           </section>
@@ -527,9 +527,9 @@ function CompareRowSectionTable({
   return (
     <section
       data-compare-section={section}
-      className="overflow-hidden rounded-[1.15rem] border border-white/12 bg-black/40"
+      className="overflow-hidden rounded-[1.15rem] border border-white/12 bg-black/60"
     >
-      <div className="border-b border-white/10 bg-black/55 px-3 py-2">
+      <div className="border-b border-white/10 bg-black/65 px-3 py-2">
         <p className="text-[11px] font-bold tracking-wide text-white">{title}</p>
       </div>
       <div className="divide-y divide-white/10">
@@ -546,7 +546,7 @@ function CompareRowSectionTable({
               )}
             >
               <div className="flex items-center pr-1">
-                <p className="w-full whitespace-normal break-words text-[10px] font-bold leading-snug tracking-wide text-white/80 print:text-slate-700">
+                <p className="w-full whitespace-normal break-words text-[10px] font-bold leading-snug tracking-wide text-white print:text-slate-700">
                   {r.label}
                 </p>
               </div>
