@@ -1,11 +1,11 @@
 import sharedPrestige from "@/assets/backdrops/shared-prestige.jpg";
-import truthMark from "@/assets/backdrops/truth-mark.jpg";
+import verifiedTrueR from "@/assets/backdrops/verified-true-r.jpg";
 
 /** Suite default backdrop — Fax, Cal, Tow, Premium, Grok chrome */
 export const SHARED_PRESTIGE_BACKDROP = sharedPrestige;
 
-/** Quiet empty-page watermark — Scandinavian truth mark (Raidho), not a letter R */
-export const TRUTH_MARK_BACKDROP = truthMark;
+/** Quiet empty-page watermark — Celtic-engraved letter R, VERIFIED AND TRUE */
+export const TRUTH_MARK_BACKDROP = verifiedTrueR;
 
 /** Facts landing / picker — luxury Class A showroom, public URL */
 export const FACTS_LANDING_BACKDROP = "/assets/facts-landing-motorhome.jpg";
