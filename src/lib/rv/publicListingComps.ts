@@ -603,6 +603,7 @@ export function buildListingCompsPrompt(input: {
     "ASK: YEAR=<yyyy> MAKE=<make> MODEL=<model> PRICE=<usd> MILES=<n or -> SOURCE=<site>",
     "Include ASK lines only as fallback when sold-status is unavailable.",
     "Never use MarketCheck, NADA, J.D. Power, or any paid book as a price.",
+    "Never use a nightly competitor scrape, RVcountry competitor-latest, sample inventory CSV, or a frozen overnight comps table as a price. Live public listings this turn only.",
     "Never output guidebook / wholesale book values.",
     "Ignore junk under $1000, parts, junkyard, and obvious outliers (wrong class).",
     "If you cannot find two real SOLD listings, say INSUFFICIENT and list only what you found. Do not guess sold prices.",

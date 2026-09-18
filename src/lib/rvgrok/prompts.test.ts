@@ -64,3 +64,36 @@ test("chat, agent, and voice prompts share David's answer-now / Let me check tha
   assert.match(voice, /WEB RESEARCH notes/);
   assert.match(voice, /REPAIR PLAYBOOK/);
 });
+
+test("market value / pricing is live nationwide year±2 asking Low/Avg/High — never nightly scrape", () => {
+  const prompts = src("prompts.ts");
+  const voice = src("voice.ts");
+  const voiceWeb = src("voiceWeb.ts");
+  const webSearch = src("webSearch.ts");
+  const webIntent = src("webIntent.ts");
+
+  for (const [label, text] of [
+    ["prompts.ts", prompts],
+    ["voice.ts", voice],
+    ["webSearch.ts", webSearch],
+  ] as const) {
+    assert.match(text, /year ±2/, `${label} uses year ±2`);
+    assert.match(text, /Low \/ Average \/ High/, `${label} returns Low/Avg/High`);
+    assert.match(text, /competitor-latest/, `${label} kills competitor-latest`);
+    assert.match(text, /nightly/, `${label} kills nightly scrape`);
+    assert.match(text, /sample inventory CSV/, `${label} kills sample inventory CSV`);
+    assert.match(text, /NADA/, `${label} forbids NADA as a book`);
+  }
+
+  assert.match(prompts, /Let me check that/);
+  assert.match(prompts, /Facts public-listing comps/);
+  assert.match(voice, /Let me check that/);
+  assert.match(voiceWeb, /Low \/ Average \/ High/);
+  assert.match(voiceWeb, /competitor-latest/);
+  assert.match(webIntent, /looksLikeMarketValueQuestion/);
+  assert.match(webIntent, /year ±2/);
+  assert.doesNotMatch(
+    prompts,
+    /treat.{0,40}competitor-latest.{0,40}as.{0,20}live/i,
+  );
+});

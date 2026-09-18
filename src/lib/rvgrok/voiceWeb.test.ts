@@ -87,6 +87,18 @@ test("catalog miss and fishing browse without about-phrasing", () => {
   );
 });
 
+test("spoken market-value questions research even when the catalog is locked", () => {
+  assert.equal(
+    decideVoiceWebResearch({
+      transcript: "What's the market value of a 2019 Newmar Dutch Star?",
+      specs: { missingHard: false },
+    }).action,
+    "research",
+  );
+  assert.match(VOICE_RESEARCH_ANSWER_INSTRUCTIONS, /Low \/ Average \/ High/);
+  assert.match(VOICE_RESEARCH_ANSWER_INSTRUCTIONS, /competitor-latest/);
+});
+
 test("spoken greeting and lifestyle questions do not fire voice web research", () => {
   const casual = [
     "hi",

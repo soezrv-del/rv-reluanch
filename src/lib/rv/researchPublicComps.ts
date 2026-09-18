@@ -4,6 +4,9 @@
  * Prefer sold / sold-status listings (RV Trader, RVUSA, public classifieds).
  * Asking-only notes are parsed as asks — never rewritten as sold prices.
  * Never imports MarketCheck. Never claims NADA / J.D. Power.
+ * Never treats a nightly competitor scrape, RVcountry competitor-latest,
+ * or sample inventory CSV as live pricing SoT — this path is on-demand
+ * public listings this turn (coach year ±2).
  * Callers must treat a missing key or failed search as "no comps"
  * and fall back to live dossier / catalog estimate.
  */

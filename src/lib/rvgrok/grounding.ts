@@ -46,6 +46,7 @@ export {
   looksLikeCasualNonResearch,
   looksLikeImageOnlyAsk,
   looksLikeLiveResearchQuestion,
+  looksLikeMarketValueQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeOffCatalogQuestion,
   looksLikePureLifestyleOrPayment,
