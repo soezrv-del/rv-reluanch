@@ -76,7 +76,12 @@ export async function checkAccessPhone(
 export async function submitAccessRequest(input: {
   name: string;
   phone: string;
-}): Promise<{ requested: true; granted: false; message: string }> {
+}): Promise<{
+  requested: boolean;
+  granted: boolean;
+  alreadyAdmin?: boolean;
+  message: string;
+}> {
   const res = await fetch("/api/access/request", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -85,6 +90,7 @@ export async function submitAccessRequest(input: {
   const data = (await res.json()) as {
     requested?: boolean;
     granted?: boolean;
+    alreadyAdmin?: boolean;
     message?: string;
     error?: string;
   };
@@ -92,11 +98,14 @@ export async function submitAccessRequest(input: {
     throw new Error(data.error || "Could not send the request.");
   }
   return {
-    requested: true,
-    granted: false,
+    requested: Boolean(data.requested),
+    granted: Boolean(data.granted),
+    alreadyAdmin: data.alreadyAdmin,
     message:
       data.message ||
-      "Request sent. Access stays locked until it is added on the admin list.",
+      (data.alreadyAdmin
+        ? "Already admin — use Premium → Access with this number."
+        : "Request sent. Access stays locked until it is added on the admin list."),
   };
 }
 

@@ -71,6 +71,42 @@ test("NDA gate wraps the suite and does not grant functional access", () => {
   assert.match(ndaText, /does not grant access to restricted tools/);
 });
 
+test("access check and request short-circuit hard admin before getSql", () => {
+  const store = read("src/lib/access/store.ts");
+  const checkBlock = store.slice(
+    store.indexOf("export async function checkPhoneAccess"),
+    store.indexOf("function toAccessRow"),
+  );
+  assert.match(checkBlock, /hardAdminAccessResult/);
+  assert.ok(
+    checkBlock.indexOf("hardAdminAccessResult") <
+      checkBlock.indexOf("ensureAdminSeed"),
+  );
+  assert.ok(
+    checkBlock.indexOf("hardAdminAccessResult") <
+      checkBlock.indexOf("findWhitelistByPhone"),
+  );
+
+  const createBlock = store.slice(
+    store.indexOf("export async function createAccessRequest"),
+    store.indexOf("export async function listWhitelist"),
+  );
+  assert.match(createBlock, /hardAdminRequestResult/);
+  assert.ok(
+    createBlock.indexOf("hardAdminRequestResult") <
+      createBlock.indexOf("ensureAdminSeed"),
+  );
+  assert.ok(
+    createBlock.indexOf("hardAdminRequestResult") <
+      createBlock.indexOf("getSql"),
+  );
+
+  const requestApi = read("src/routes/api/access.request.ts");
+  assert.match(requestApi, /alreadyAdmin/);
+  assert.match(requestApi, /Already admin/);
+  assert.match(requestApi, /status: result.unavailable \? 503 : 400/);
+});
+
 test("http gate short-circuits hard admin and stays on rvgrok", () => {
   const gate = read("src/lib/access/httpGate.ts");
   assert.match(gate, /isHardAdminPhone/);

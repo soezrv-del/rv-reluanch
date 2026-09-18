@@ -22,7 +22,20 @@ export const Route = createFileRoute("/api/access/request")({
           phone: String(body.phone ?? ""),
         });
         if (!result.ok) {
-          return Response.json({ error: result.error }, { status: 400 });
+          return Response.json(
+            { error: result.error },
+            { status: result.unavailable ? 503 : 400 },
+          );
+        }
+        if ("alreadyAdmin" in result && result.alreadyAdmin) {
+          return Response.json({
+            ok: true,
+            requested: false,
+            granted: true,
+            alreadyAdmin: true,
+            message:
+              "Already admin — use Premium → Access with this number.",
+          });
         }
         return Response.json({
           requested: true,

@@ -1,6 +1,12 @@
 import { getSql } from "@/lib/db";
 import { HARD_ADMIN } from "./constants";
-import { isHardAdminPhone, resolveAccess, type AccessRow } from "./gate";
+import {
+  hardAdminAccessResult,
+  hardAdminRequestResult,
+  isHardAdminPhone,
+  resolveAccess,
+  type AccessRow,
+} from "./gate";
 import { normalizePhone } from "./phone";
 
 export type WhitelistEntry = {
@@ -105,8 +111,10 @@ export async function findWhitelistByPhone(
   return rows[0] ? mapWhitelist(rows[0]) : null;
 }
 
+/** Hard admin is offline-allow so Neon/PGLite being unset cannot 500 check. */
 export async function checkPhoneAccess(raw: string) {
-  await ensureAdminSeed();
+  const offline = hardAdminAccessResult(raw);
+  if (offline) return offline;
   const n = normalizePhone(raw);
   if (!n) {
     return {
@@ -114,6 +122,7 @@ export async function checkPhoneAccess(raw: string) {
       error: "Enter a valid US phone number.",
     };
   }
+  await ensureAdminSeed();
   const row = await findWhitelistByPhone(n.e164);
   const decision = resolveAccess(n.e164, row ? toAccessRow(row) : null);
   return {
@@ -143,24 +152,41 @@ export async function createAccessRequest(input: {
   phone: string;
 }): Promise<
   | { ok: true; requested: true; granted: false; phoneE164: string }
-  | { ok: false; error: string }
+  | {
+      ok: true;
+      requested: false;
+      granted: true;
+      alreadyAdmin: true;
+      phoneE164: string;
+    }
+  | { ok: false; error: string; unavailable?: boolean }
 > {
-  await ensureAdminSeed();
+  const offline = hardAdminRequestResult(input.phone);
+  if (offline) return offline;
   const n = normalizePhone(input.phone);
   if (!n) return { ok: false, error: "Enter a valid US phone number." };
   const name = String(input.name ?? "").trim().slice(0, 80);
-  const sql = await getSql();
-  const id = newId("req");
-  await sql`
-    insert into access_requests (id, name, phone_digits, phone_e164, status)
-    values (${id}, ${name}, ${n.digits}, ${n.e164}, 'pending')
-    on conflict (phone_digits) do update set
-      name = excluded.name,
-      phone_e164 = excluded.phone_e164,
-      status = 'pending',
-      created_at = now()
-  `;
-  return { ok: true, requested: true, granted: false, phoneE164: n.e164 };
+  try {
+    await ensureAdminSeed();
+    const sql = await getSql();
+    const id = newId("req");
+    await sql`
+      insert into access_requests (id, name, phone_digits, phone_e164, status)
+      values (${id}, ${name}, ${n.digits}, ${n.e164}, 'pending')
+      on conflict (phone_digits) do update set
+        name = excluded.name,
+        phone_e164 = excluded.phone_e164,
+        status = 'pending',
+        created_at = now()
+    `;
+    return { ok: true, requested: true, granted: false, phoneE164: n.e164 };
+  } catch {
+    return {
+      ok: false,
+      error: "Access list is temporarily unavailable. Try again shortly.",
+      unavailable: true,
+    };
+  }
 }
 
 export async function listWhitelist(): Promise<WhitelistEntry[]> {
