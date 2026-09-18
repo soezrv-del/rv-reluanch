@@ -9,7 +9,8 @@
  *   marketValue   → Average (else midpoint of retailLow / retailHigh)
  *   retailHigh    → High, omitted when hideRetailHigh
  *   confidence    → thin-sample when "low" (or public sample < 2)
- *   sourceLabel   → blend cue when source is jd_power_blend; Catalog estimate on GAP
+ *   source         → Average caption: blend / JD-only / Catalog estimate on GAP
+ *   sourceLabel   → leftover chip; source wins when the JD ladder is set
  */
 
 import {
