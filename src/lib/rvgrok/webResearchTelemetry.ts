@@ -8,9 +8,12 @@
 
 import { needsWebFallback } from "./webIntent.ts";
 import {
-  formatOwnLotInjection,
+  formatOwnLotBlock,
+  loadOwnLotSnapshot,
+  looksLikeOwnLotStockQuestion,
   OWN_LOT_MODEL,
   shouldSkipWebForOwnLot,
+  type OwnLotSnapshot,
 } from "./ownLotInventory.ts";
 import {
   fetchWebSearchNotes,
@@ -47,6 +50,8 @@ export type ExecuteWebResearchOpts = {
   profile: WebSearchProfile;
   /** When true, skip needsWebFallback and always attempt research. */
   skipGate?: boolean;
+  /** Test / caller-provided own-lot snapshot. When omitted, load on stock asks. */
+  ownLotSnapshot?: OwnLotSnapshot;
 };
 
 const LOG_TAG = "rvgrok.web_research";
@@ -154,8 +159,12 @@ export async function executeWebResearch(
   const t0 = Date.now();
   const query = (opts.query || "").trim();
 
-  if (shouldSkipWebForOwnLot(query)) {
-    const notes = await formatOwnLotInjection(query);
+  let ownLotSnapshot = opts.ownLotSnapshot;
+  if (!ownLotSnapshot && looksLikeOwnLotStockQuestion(query)) {
+    ownLotSnapshot = await loadOwnLotSnapshot();
+  }
+  if (shouldSkipWebForOwnLot(query, ownLotSnapshot)) {
+    const notes = formatOwnLotBlock(ownLotSnapshot!, query);
     const durationMs = Date.now() - t0;
     const body = toApiBody(
       { ok: true, notes, model: OWN_LOT_MODEL },

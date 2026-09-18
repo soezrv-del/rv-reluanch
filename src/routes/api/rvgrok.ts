@@ -3,7 +3,9 @@ import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
 import { appendGrounding, buildChatGrounding } from "@/lib/rvgrok/grounding";
 import {
-  formatOwnLotInjection,
+  formatOwnLotBlock,
+  loadOwnLotSnapshot,
+  looksLikeOwnLotStockQuestion,
   shouldSkipWebForOwnLot,
 } from "@/lib/rvgrok/ownLotInventory";
 import {
@@ -646,17 +648,21 @@ export const Route = createFileRoute("/api/rvgrok")({
         });
         const catalogContext =
           serverGrounded.block || body.catalogContext || "";
-        const skipWebForLot = shouldSkipWebForOwnLot(lastPlain);
-        const wantsWebFallback =
-          !skipWebForLot &&
-          (serverGrounded.identity
-            ? serverGrounded.needsWeb
-            : Boolean(body.wantsWebFallback));
 
         let ownLotNotes: string | undefined;
-        if (skipWebForLot) {
-          ownLotNotes = await formatOwnLotInjection(lastPlain);
+        let skipWebForLot = false;
+        if (looksLikeOwnLotStockQuestion(lastPlain)) {
+          const snapshot = await loadOwnLotSnapshot();
+          ownLotNotes = formatOwnLotBlock(snapshot, lastPlain);
+          skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
         }
+
+        // Unknown / catalog GAP / own-lot miss → browse. Locked identity
+        // still uses server needsWeb so a pin is not overwritten.
+        const wantsWebFallback =
+          !skipWebForLot &&
+          (serverGrounded.needsWeb ||
+            (!serverGrounded.identity && Boolean(body.wantsWebFallback)));
 
         let webNotes: string | undefined;
         if (wantsWebFallback) {

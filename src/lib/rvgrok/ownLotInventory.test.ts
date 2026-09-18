@@ -20,11 +20,13 @@ import {
   loadOwnLotSnapshot,
   looksLikeOwnLotStockQuestion,
   OWN_LOT_MODEL,
+  ownLotHasHit,
   parseOwnLotAsk,
   parseOwnLotCsv,
   parseOwnLotUnits,
   shouldSkipWebForOwnLot,
   snapshotFromJson,
+  type OwnLotSnapshot,
   type OwnLotUnit,
 } from "./ownLotInventory.ts";
 import { executeWebResearch } from "./webResearchTelemetry.ts";
@@ -109,11 +111,30 @@ test("David's own-lot stock asks hit intent; specs and nights do not", () => {
     "how many Super C are on our lot",
     "our inventory of Class A",
   ];
+  const hit: OwnLotSnapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units: FIXTURE_UNITS,
+  });
+  const miss: OwnLotSnapshot = {
+    ok: false,
+    reason: "missing",
+    asOf: "",
+    source: "own",
+    dealer: "RV Country",
+    fuelFieldPresent: false,
+    pathTried: DEFAULT_OWN_LOT_JSON_PATH,
+    units: [],
+  };
   for (const q of yes) {
     assert.equal(looksLikeOwnLotStockQuestion(q), true, q);
     assert.equal(looksLikeInventoryOrCountQuestion(q), true, q);
-    assert.equal(shouldSkipWebForOwnLot(q), true, q);
+    assert.equal(shouldSkipWebForOwnLot(q, hit), true, `${q} skips web on hit`);
+    assert.equal(shouldSkipWebForOwnLot(q, miss), false, `${q} browses on miss`);
+    assert.equal(shouldSkipWebForOwnLot(q), false, `${q} no snapshot yet → do not skip`);
   }
+  assert.equal(ownLotHasHit(hit), true);
+  assert.equal(ownLotHasHit(miss), false);
   assert.equal(
     looksLikeOwnLotStockQuestion("How many slides does a 2023 Dream have?"),
     false,
@@ -227,7 +248,9 @@ test("formatOwnLotBlock is honest about the missing fuel field and never invents
   );
   assert.match(missing, /UNAVAILABLE/);
   assert.match(missing, /Do not invent/);
-  assert.match(missing, /own-lot snapshot is not loaded/i);
+  assert.match(missing, /No own-lot hit/);
+  assert.match(missing, /WEB RESEARCH should run/i);
+  assert.match(missing, /I don't know/i);
 });
 
 test("JSON + CSV parsers accept the scrape field names", () => {
@@ -283,7 +306,7 @@ test("loadOwnLotSnapshot reads a local json path and caches", async () => {
   clearOwnLotCache();
 });
 
-test("formatOwnLotInjection + voice/chat research short-circuit to own-lot, not web", async () => {
+test("own-lot hit short-circuits research; miss falls through to web", async () => {
   const notes = await formatOwnLotInjection(
     "how many diesels do we have in stock?",
     {
@@ -292,25 +315,52 @@ test("formatOwnLotInjection + voice/chat research short-circuit to own-lot, not 
   );
   assert.match(notes, /Diesel \(Class A Diesel \+ Class Super C\): 3/);
 
+  const hit = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units: FIXTURE_UNITS,
+  });
   const researched = await executeWebResearch({
     query: "how many diesels do we have in stock?",
     apiKey: undefined,
     timeoutMs: 50,
     profile: "chat",
+    ownLotSnapshot: hit,
   });
   assert.equal(researched.ok, true);
   if (researched.ok) {
     assert.equal(researched.model, OWN_LOT_MODEL);
-    assert.match(researched.notes, /own-lot|Class A Diesel/i);
+    assert.match(researched.notes, /Class A Diesel/);
     assert.doesNotMatch(researched.notes, /WEB SEARCH NOT AVAILABLE/);
   }
+
+  const miss = await executeWebResearch({
+    query: "how many diesels do we have in stock?",
+    apiKey: undefined,
+    timeoutMs: 50,
+    profile: "chat",
+    ownLotSnapshot: {
+      ok: false,
+      reason: "missing",
+      asOf: "",
+      source: "own",
+      dealer: "RV Country",
+      fuelFieldPresent: false,
+      pathTried: DEFAULT_OWN_LOT_JSON_PATH,
+      units: [],
+    },
+  });
+  assert.equal(miss.ok, false);
+  assert.equal(miss.kind, "missing_key");
+  assert.match(miss.reason!, /no XAI_API_KEY/);
 });
 
 test("in-app chat and voice research are wired; DialaBot stays out", () => {
   const api = src("../../routes/api", "rvgrok.ts");
   const telemetry = src(".", "webResearchTelemetry.ts");
   const prompts = src(".", "prompts.ts");
-  assert.match(api, /formatOwnLotInjection/);
+  assert.match(api, /loadOwnLotSnapshot/);
+  assert.match(api, /formatOwnLotBlock/);
   assert.match(api, /shouldSkipWebForOwnLot/);
   assert.match(api, /OWN-LOT INVENTORY \(RV Country\)/);
   assert.match(telemetry, /shouldSkipWebForOwnLot/);

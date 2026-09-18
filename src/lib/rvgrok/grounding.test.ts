@@ -23,6 +23,7 @@ import {
   looksLikeMarketValueQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeOffCatalogQuestion,
+  catalogGapNeedsWeb,
   needsWebFallback,
 } from "./webIntent.ts";
 import { findComparableCatalogCoaches } from "./coachCompare.ts";
@@ -638,9 +639,40 @@ test("inventory / diesel count asks still trip the detector when catalog is lock
     "locked fuel/engine spec still does not browse",
   );
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
-  assert.match(api, /formatOwnLotInjection/);
+  assert.match(api, /loadOwnLotSnapshot/);
   assert.match(api, /shouldSkipWebForOwnLot/);
   assert.match(api, /OWN-LOT INVENTORY/);
+});
+
+test("unknown / catalog GAP always browses — locked specs still do not", () => {
+  assert.equal(catalogGapNeedsWeb(null), true);
+  assert.equal(catalogGapNeedsWeb({ missingHard: true }), true);
+  assert.equal(catalogGapNeedsWeb({ missingHard: false }), false);
+  assert.equal(
+    needsWebFallback(null, "What hitch rating does a 2019 XYZ Phantom have?"),
+    true,
+    "no catalog row → search",
+  );
+  assert.equal(
+    needsWebFallback(
+      { missingHard: true },
+      "What engine does a 2026 Lineage Series E have?",
+    ),
+    true,
+    "UNKNOWN hard fields → search",
+  );
+  assert.equal(
+    needsWebFallback(
+      { missingHard: false },
+      "What engine and HP does a 2023 Entegra Vision have?",
+    ),
+    false,
+    "locked catalog still answers without browse",
+  );
+  assert.equal(needsWebFallback(null, "hi"), false);
+  const intent = src(root, "webIntent.ts");
+  assert.match(intent, /catalogGapNeedsWeb/);
+  assert.match(intent, /unknown \/ catalog GAP/i);
 });
 
 test("catalog miss fires web without about-phrasing", () => {

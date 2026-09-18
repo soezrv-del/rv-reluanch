@@ -87,13 +87,24 @@ export function looksLikeOwnLotStockQuestion(text: string): boolean {
   return looksLikeInventoryOrCountQuestion(text);
 }
 
-/** Own-lot answers the ask — do not burn a public-web search. */
-export function shouldSkipWebForOwnLot(text: string): boolean {
-  return (
-    looksLikeOwnLotStockQuestion(text) &&
-    !looksLikeMarketValueQuestion(text) &&
-    !looksLikeRepairQuestion(text)
-  );
+/** Snapshot loaded with units — we can answer lot counts from the file. */
+export function ownLotHasHit(snapshot: OwnLotSnapshot | null | undefined): boolean {
+  return Boolean(snapshot?.ok && snapshot.units.length > 0);
+}
+
+/**
+ * Skip public web only when own-lot actually answered.
+ * Miss / UNAVAILABLE / empty → browse, then answer. Pricing + repair still browse.
+ */
+export function shouldSkipWebForOwnLot(
+  text: string,
+  snapshot?: OwnLotSnapshot | null,
+): boolean {
+  if (!looksLikeOwnLotStockQuestion(text)) return false;
+  if (looksLikeMarketValueQuestion(text) || looksLikeRepairQuestion(text)) {
+    return false;
+  }
+  return ownLotHasHit(snapshot);
 }
 
 function norm(s: string | null | undefined): string {
@@ -454,7 +465,8 @@ export function formatOwnLotBlock(
       "OWN-LOT INVENTORY UNAVAILABLE.",
       snapshot.reason || "Own-lot snapshot could not be read.",
       snapshot.pathTried ? `Tried: ${snapshot.pathTried}` : "",
-      "Do not invent a diesel count, VIN, stock number, or unit. Say the RV Country own-lot snapshot is not loaded this turn.",
+      "No own-lot hit. Do not invent a diesel count, VIN, stock number, or unit, and do not claim these are our lot counts from the public web.",
+      "WEB RESEARCH should run this turn — then answer. Do not stop at I don't know. Never send the user to check a website themselves.",
     ]
       .filter(Boolean)
       .join("\n");
