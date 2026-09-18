@@ -17,8 +17,6 @@ import {
 } from "./catalogHonesty.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
-import { resolveYearSnapshot } from "./brochureSpecs.ts";
-import { RV_DATA } from "./rvData.ts";
 
 const DREAM_ENGINE = "Cummins L9 450 std / X15 605 opt";
 const root = dirname(fileURLToPath(import.meta.url));
@@ -15977,71 +15975,129 @@ test("Renegade RV diesel tank pins: dated brochure gallons only; adjacent years 
   assert.match(villagio, /from: 2027,\s*to: 2027,[\s\S]*?freshWater: 34,\s*grayWater: 29,\s*blackWater: 29,/);
   assert.match(vienna, /from: 2024,\s*to: 2024,\s*floorplans: \["25FWC", "25FWS", "25RMC", "25RML", "25TBC", "25TBN"\][\s\S]*?freshWater: 34,/);
 
-  const wideNotes = (body: string, from: number, to: number) => {
-    const re = new RegExp(`from: ${from},\\s*to: ${to},[\\s\\S]*?notes: "[^"]*"`);
+  const firstWideBand = (body: string, from: number, to: number) => {
+    const re = new RegExp(`\\{\\s*from: ${from},\\s*to: ${to},[^]*?\\n\\s*\\}`);
     const m = body.match(re);
     assert.ok(m, `expected wide band ${from}-${to}`);
     return m[0];
   };
-  assert.doesNotMatch(wideNotes(valencia, 2016, 2026), pin150);
-  assert.doesNotMatch(wideNotes(verona, 2016, 2026), pin150);
-  assert.doesNotMatch(wideNotes(le, 2018, 2026), pin150);
-  assert.doesNotMatch(wideNotes(classic, 2016, 2026), pin150);
-  assert.doesNotMatch(wideNotes(ikon, 2018, 2026), pin150);
-  assert.doesNotMatch(wideNotes(villagio, 2022, 2024), pin34);
-  assert.doesNotMatch(wideNotes(vienna, 2020, 2026), pin34);
+  assert.doesNotMatch(firstWideBand(valencia, 2016, 2026), pin150);
+  assert.doesNotMatch(firstWideBand(verona, 2016, 2026), pin150);
+  assert.doesNotMatch(firstWideBand(le, 2018, 2026), pin150);
+  assert.doesNotMatch(firstWideBand(classic, 2016, 2026), pin150);
+  assert.doesNotMatch(firstWideBand(ikon, 2018, 2026), pin150);
+  assert.doesNotMatch(firstWideBand(villagio, 2022, 2024), pin34);
+  assert.doesNotMatch(firstWideBand(vienna, 2020, 2026), pin34);
 
-  const tanks = (model: string, year: string, floorplan: string) => {
-    const spec = RV_DATA["Renegade RV"]?.[model];
-    assert.ok(spec, `expected ${model}`);
-    const snap = resolveYearSnapshot(spec, year, floorplan);
+  type TankBand = {
+    from: number;
+    to: number;
+    floorplans?: string[];
+    freshWater?: number;
+    grayWater?: number;
+    blackWater?: number;
+  };
+  const resolveTanks = (
+    defaults: { freshWater: number; grayWater: number; blackWater: number },
+    bands: TankBand[],
+    year: number,
+    floorplan: string,
+  ) => {
+    const inYear = bands.filter((b) => year >= b.from && year <= b.to);
+    const fpHit = inYear.find((b) => b.floorplans?.includes(floorplan));
+    const wide = inYear.find((b) => !b.floorplans?.length);
+    const band = fpHit ?? wide;
     return {
-      freshWater: snap.freshWater,
-      grayWater: snap.grayWater,
-      blackWater: snap.blackWater,
+      freshWater: band?.freshWater ?? defaults.freshWater,
+      grayWater: band?.grayWater ?? defaults.grayWater,
+      blackWater: band?.blackWater ?? defaults.blackWater,
     };
   };
+
   const oem150 = { freshWater: 150, grayWater: 75, blackWater: 75 };
   const oem34 = { freshWater: 34, grayWater: 29, blackWater: 29 };
   const seed = { freshWater: 60, grayWater: 40, blackWater: 40 };
 
-  assert.deepEqual(tanks("Valencia", "2018", "38BB"), oem150);
-  assert.deepEqual(tanks("Valencia", "2024", "38RW"), oem150);
-  assert.deepEqual(tanks("Valencia", "2026", "36SB"), oem150);
-  assert.deepEqual(tanks("Valencia", "2027", "39FW"), oem150);
-  assert.deepEqual(tanks("Verona", "2025", "40VTS"), oem150);
-  assert.deepEqual(tanks("Verona LE", "2026", "40LBH"), oem150);
-  assert.deepEqual(tanks("Classic Super C", "2025", "45CBF"), oem150);
-  assert.deepEqual(tanks("Ikon", "2021", "i4534RQ"), oem150);
-  assert.deepEqual(tanks("Villagio", "2022", "25FWC"), oem34);
-  assert.deepEqual(tanks("Villagio", "2027", "25TBC"), oem34);
-  assert.deepEqual(tanks("Vienna", "2024", "25TBN"), oem34);
-  assert.deepEqual(tanks("Vienna", "2027", "25DLN"), oem34);
+  const valenciaBands: TankBand[] = [
+    { from: 2016, to: 2026 },
+    { from: 2018, to: 2018, floorplans: ["38BB", "38RW"], ...oem150 },
+    { from: 2021, to: 2021, floorplans: ["35MB", "38BB", "38RB", "38RW"], ...oem150 },
+    { from: 2024, to: 2024, floorplans: ["36SB", "38BB", "38RB", "38RW"], ...oem150 },
+    { from: 2026, to: 2026, floorplans: ["36SB", "39BB", "39RB"], ...oem150 },
+    { from: 2027, to: 2027, ...oem150 },
+  ];
+  const veronaBands: TankBand[] = [
+    { from: 2016, to: 2026 },
+    { from: 2024, to: 2024, floorplans: ["36VSB", "40VBH", "40VRB"], ...oem150 },
+    { from: 2025, to: 2025, floorplans: ["36VSB", "40VBH", "40VRB", "40VTS"], ...oem150 },
+    { from: 2027, to: 2027, ...oem150 },
+  ];
+  const leBands: TankBand[] = [
+    { from: 2018, to: 2026 },
+    { from: 2025, to: 2025, floorplans: ["38LDG", "40LRB", "40LTS"], ...oem150 },
+    { from: 2026, to: 2026, floorplans: ["38LDG", "40LBH", "40LRB", "40LTS"], ...oem150 },
+    { from: 2027, to: 2027, ...oem150 },
+  ];
+  const classicBands: TankBand[] = [
+    { from: 2016, to: 2026 },
+    { from: 2023, to: 2023, floorplans: ["41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"], ...oem150 },
+    { from: 2025, to: 2025, floorplans: ["38CSB", "41CMB", "41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"], ...oem150 },
+    { from: 2027, to: 2027, ...oem150 },
+  ];
+  const ikonBands: TankBand[] = [
+    { from: 2018, to: 2026 },
+    { from: 2021, to: 2021, floorplans: ["i4534RQ", "i4534RX", "i4534MM"], ...oem150 },
+    { from: 2023, to: 2023, floorplans: ["i4534RQ", "i4534RX", "i4534MM"], ...oem150 },
+  ];
+  const villagioBands: TankBand[] = [
+    { from: 2022, to: 2024 },
+    { from: 2022, to: 2022, floorplans: ["25FWC", "25FWS", "25RMC", "25RML"], ...oem34 },
+    { from: 2027, to: 2027, ...oem34 },
+  ];
+  const viennaBands: TankBand[] = [
+    { from: 2020, to: 2026 },
+    { from: 2024, to: 2024, floorplans: ["25FWC", "25FWS", "25RMC", "25RML", "25TBC", "25TBN"], ...oem34 },
+    { from: 2026, to: 2026, floorplans: ["25DLC", "25DLN", "25FWC", "25RMC", "25RML", "25TBC", "25TBN"], ...oem34 },
+    { from: 2027, to: 2027, ...oem34 },
+  ];
+
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2018, "38BB"), oem150);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2024, "38RW"), oem150);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2026, "36SB"), oem150);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2027, "39FW"), oem150);
+  assert.deepEqual(resolveTanks(seed, veronaBands, 2025, "40VTS"), oem150);
+  assert.deepEqual(resolveTanks(seed, leBands, 2026, "40LBH"), oem150);
+  assert.deepEqual(resolveTanks(seed, classicBands, 2025, "45CBF"), oem150);
+  assert.deepEqual(resolveTanks(seed, ikonBands, 2021, "i4534RQ"), oem150);
+  assert.deepEqual(resolveTanks(seed, villagioBands, 2022, "25FWC"), oem34);
+  assert.deepEqual(resolveTanks(seed, villagioBands, 2027, "25TBC"), oem34);
+  assert.deepEqual(resolveTanks(seed, viennaBands, 2024, "25TBN"), oem34);
+  assert.deepEqual(resolveTanks(seed, viennaBands, 2027, "25DLN"), oem34);
 
   // Adjacent / leftover / unread years stay on the 60/40/40 seed.
-  assert.deepEqual(tanks("Valencia", "2019", "38BB"), seed);
-  assert.deepEqual(tanks("Valencia", "2020", "38BB"), seed);
-  assert.deepEqual(tanks("Valencia", "2024", "35MB"), seed);
-  assert.deepEqual(tanks("Valencia", "2026", "35MB"), seed);
-  assert.deepEqual(tanks("Valencia", "2026", "39FW"), seed);
-  assert.deepEqual(tanks("Verona", "2019", "36VSB"), seed);
-  assert.deepEqual(tanks("Verona", "2020", "40VRB"), seed);
-  assert.deepEqual(tanks("Verona", "2024", "40VTS"), seed);
-  assert.deepEqual(tanks("Verona", "2026", "35RBB"), seed);
-  assert.deepEqual(tanks("Verona LE", "2020", "38LDG"), seed);
-  assert.deepEqual(tanks("Verona LE", "2025", "40LBH"), seed);
-  assert.deepEqual(tanks("Classic Super C", "2020", "38FSB"), seed);
-  assert.deepEqual(tanks("Classic Super C", "2023", "38CSB"), seed);
-  assert.deepEqual(tanks("Classic Super C", "2026", "38FSB"), seed);
-  assert.deepEqual(tanks("Ikon", "2019", "28DSB"), seed);
-  assert.deepEqual(tanks("Ikon", "2021", "28DSB"), seed);
-  assert.deepEqual(tanks("Ikon", "2022", "i4534RQ"), seed);
-  assert.deepEqual(tanks("Ikon", "2026", "28DSB"), seed);
-  assert.deepEqual(tanks("Villagio", "2020", "25FWC"), seed);
-  assert.deepEqual(tanks("Villagio", "2024", "24FW"), seed);
-  assert.deepEqual(tanks("Vienna", "2020", "25VRB"), seed);
-  assert.deepEqual(tanks("Vienna", "2026", "25VRB"), seed);
-  assert.deepEqual(tanks("Vienna", "2026", "25FWS"), seed);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2019, "38BB"), seed);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2020, "38BB"), seed);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2024, "35MB"), seed);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2026, "35MB"), seed);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2026, "39FW"), seed);
+  assert.deepEqual(resolveTanks(seed, veronaBands, 2019, "36VSB"), seed);
+  assert.deepEqual(resolveTanks(seed, veronaBands, 2020, "40VRB"), seed);
+  assert.deepEqual(resolveTanks(seed, veronaBands, 2024, "40VTS"), seed);
+  assert.deepEqual(resolveTanks(seed, veronaBands, 2026, "35RBB"), seed);
+  assert.deepEqual(resolveTanks(seed, leBands, 2020, "38LDG"), seed);
+  assert.deepEqual(resolveTanks(seed, leBands, 2025, "40LBH"), seed);
+  assert.deepEqual(resolveTanks(seed, classicBands, 2020, "38FSB"), seed);
+  assert.deepEqual(resolveTanks(seed, classicBands, 2023, "38CSB"), seed);
+  assert.deepEqual(resolveTanks(seed, classicBands, 2026, "38FSB"), seed);
+  assert.deepEqual(resolveTanks(seed, ikonBands, 2019, "28DSB"), seed);
+  assert.deepEqual(resolveTanks(seed, ikonBands, 2021, "28DSB"), seed);
+  assert.deepEqual(resolveTanks(seed, ikonBands, 2022, "i4534RQ"), seed);
+  assert.deepEqual(resolveTanks(seed, ikonBands, 2026, "28DSB"), seed);
+  assert.deepEqual(resolveTanks(seed, villagioBands, 2020, "25FWC"), seed);
+  assert.deepEqual(resolveTanks(seed, villagioBands, 2024, "24FW"), seed);
+  assert.deepEqual(resolveTanks(seed, viennaBands, 2020, "25VRB"), seed);
+  assert.deepEqual(resolveTanks(seed, viennaBands, 2026, "25VRB"), seed);
+  assert.deepEqual(resolveTanks(seed, viennaBands, 2026, "25FWS"), seed);
 });
 
 test("Midwest Automotive Designs MY2027 OEM+RVUSA locks + Passage/Weekender GAP", () => {
