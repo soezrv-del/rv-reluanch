@@ -1065,7 +1065,7 @@ test("Leisure Travel Vans Facts SoT: Unity yearStart 2010 + MY2010 U24MB/U24CB; 
 test("Prevost Facts SoT: NEW MAKE shell keys; empty FBY; X3-45 VIP ≠ Entertainer", () => {
   const block = src("rvData.ts");
   const p0 = block.indexOf('\n  "Prevost": {');
-  const p1 = block.indexOf("\nexport const MAKES");
+  const p1 = block.indexOf('\n  "Tiffin Bus": {');
   assert.ok(p0 > 0 && p1 > p0, "expected Prevost block");
   const pv = block.slice(p0, p1);
 

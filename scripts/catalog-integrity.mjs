@@ -7269,9 +7269,9 @@ function main() {
   // Passenger H3-45 / X3-45 and converters stay out.
   {
     const p0 = src.indexOf('\n  "Prevost": {');
-    const p1 = src.indexOf("\nexport const MAKES");
+    const p1 = src.indexOf('\n  "Tiffin Bus": {');
     if (p0 < 0 || p1 < p0) {
-      fail('Prevost block not found between "Prevost": and export const MAKES');
+      fail('Prevost block not found between "Prevost": and "Tiffin Bus":');
     } else {
       const pv = src.slice(p0, p1);
       const slice = (a, b) => {
@@ -7650,8 +7650,81 @@ function main() {
     }
   }
 
+  // Tiffin Bus naming cleanup. Quoted make. Brand key is exactly "Tiffin Bus".
+  // OEM nameplate stays Allegro Bus. 45 OPP is a floorplan, never a model key.
+  // Collapsed Tiffin|Allegro Bus 45OPP and Tiffin|Allegro 45OPP. No invent.
+  {
+    const tb0 = src.indexOf('\n  "Tiffin Bus": {');
+    const tb1 = src.indexOf("\nexport const MAKES");
+    if (tb0 < 0 || tb1 < tb0) {
+      fail('Tiffin Bus block not found ("Tiffin Bus": before MAKES)');
+    } else {
+      const tb = src.slice(tb0, tb1);
+      if (!/\n    "Allegro Bus": \{/.test(tb)) {
+        fail("Tiffin Bus|Allegro Bus living key missing");
+      }
+      if (!/type: "Class A Diesel"/.test(tb) || !/fuelType: "Diesel"/.test(tb)) {
+        fail("Tiffin Bus|Allegro Bus must stay Class A Diesel / Diesel");
+      }
+      if (!/yearStart:\s*2000/.test(tb)) {
+        fail("Tiffin Bus|Allegro Bus yearStart must stay 2000 (do not invent a new floor)");
+      }
+      if (/yearEnd:\s*\d+/.test(tb)) {
+        fail("Tiffin Bus|Allegro Bus yearEnd must stay open (parent had no yearEnd)");
+      }
+      if (!/"2027": \["36AP", "40IP", "45OPP", "45BP"\]/.test(tb)) {
+        fail("Tiffin Bus|Allegro Bus must keep OEM MY27 36 AP / 40 IP / 45 OPP / 45 BP");
+      }
+      if (!/"2009": \["37AP", "40AP", "45LP", "45OPP"\]/.test(tb)) {
+        fail("Tiffin Bus|Allegro Bus must keep 2009 45OPP on the floorplan field");
+      }
+      for (const ghost of [
+        "Allegro Bus 45OPP",
+        "Allegro 45OPP",
+        "Tiffin Bus 45 OPP",
+        "Tiffin Bus 45OPP",
+        "Tiffin Bus",
+      ]) {
+        if (ghost === "Tiffin Bus") continue;
+        if (new RegExp(`\\n    "${ghost}": \\{`).test(tb)) {
+          fail(`Tiffin Bus|${ghost} must not be a model key (floorplan stays on Allegro Bus)`);
+        }
+      }
+      if (/\n    "Tiffin Bus": \{/.test(tb)) {
+        fail("Tiffin Bus must not add a brand-as-model key — OEM nameplate is Allegro Bus");
+      }
+
+      const tiffinSlice = src.slice(src.indexOf("\n  Tiffin: {"), src.indexOf("\n  Thor: {"));
+      for (const ghost of ["Allegro Bus", "Allegro Bus 45OPP", "Allegro 45OPP", "Tiffin Bus 45 OPP"]) {
+        if (new RegExp(`\\n    "${ghost}": \\{`).test(tiffinSlice)) {
+          fail(`Tiffin|${ghost} must not remain (Bus brand collision — use Tiffin Bus)`);
+        }
+      }
+    }
+
+    const idxSrc = readFileSync(INDEX, "utf8");
+    const idxM = idxSrc.match(/export const CATALOG_INDEX[^=]*=\s*(\{[\s\S]*\});/);
+    if (!idxM) fail("Could not parse rvCatalogIndex.ts");
+    const catalogIndex = JSON.parse(idxM[1]);
+    if (catalogIndex["Tiffin bus"] || catalogIndex["Tiffin Bus 45 OPP"] || catalogIndex["Tiffin Bus 45OPP"]) {
+      fail("Catalog index must not add Tiffin bus / Tiffin Bus 45 OPP split brands");
+    }
+    const tbIdx = catalogIndex["Tiffin Bus"];
+    if (!tbIdx) fail("Tiffin Bus missing from CATALOG_INDEX");
+    if (!tbIdx["Allegro Bus"]) fail("Tiffin Bus index must keep Allegro Bus as the living key");
+    if (tbIdx["Allegro Bus 45OPP"] || tbIdx["Allegro 45OPP"] || tbIdx["Tiffin Bus 45 OPP"]) {
+      fail("Tiffin Bus index must not keep collapsed 45 OPP model keys");
+    }
+    if (tbIdx["Allegro Bus"]?.type !== "Class A Diesel" || tbIdx["Allegro Bus"]?.fuelType !== "Diesel") {
+      fail("Tiffin Bus|Allegro Bus index must stay Class A Diesel / Diesel");
+    }
+    if (catalogIndex.Tiffin?.["Allegro Bus"] || catalogIndex.Tiffin?.["Allegro Bus 45OPP"] || catalogIndex.Tiffin?.["Allegro 45OPP"]) {
+      fail("Tiffin index must not keep Bus / 45OPP model keys after the brand split");
+    }
+  }
+
   // New makes must stay present once added
-  for (const make of ["Prime Time", "East to West", "Chinook", "Prevost", "Newell", "Liberty Coach", "Marathon Coach"]) {
+  for (const make of ["Prime Time", "East to West", "Chinook", "Prevost", "Newell", "Liberty Coach", "Marathon Coach", "Tiffin Bus"]) {
     if (!makes.has(make)) fail(`Missing make after expansion: ${make}`);
   }
   if (makes.has("Prime Time")) {
@@ -7688,6 +7761,12 @@ function main() {
     if (!makes.get("Marathon Coach").has("Marathon Coach")) fail("Marathon Coach missing: Marathon Coach");
     for (const ghost of ["H3-45 VIP", "X3-45 VIP", "X3-45 VIP Entertainer", "P50", "Elegant Lady", "Liberty", "X2-C", "X2-M"]) {
       if (makes.get("Marathon Coach").has(ghost)) fail(`Marathon Coach must not add ${ghost}`);
+    }
+  }
+  if (makes.has("Tiffin Bus")) {
+    if (!makes.get("Tiffin Bus").has("Allegro Bus")) fail("Tiffin Bus missing: Allegro Bus");
+    for (const ghost of ["Allegro Bus 45OPP", "Allegro 45OPP", "Tiffin Bus 45 OPP", "Tiffin Bus 45OPP", "Tiffin Bus"]) {
+      if (makes.get("Tiffin Bus").has(ghost)) fail(`Tiffin Bus must not add ${ghost} (45 OPP is a floorplan)`);
     }
   }
   if (makes.has("Chinook")) {

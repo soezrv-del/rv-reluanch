@@ -3336,9 +3336,16 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(tf.Allegro?.years?.includes(2025), false);
   assert.equal(tf["Wayfarer 25"]?.yearEnd, 2024);
   assert.equal(tf["Wayfarer 25"]?.years?.includes(2025), false);
-  assert.equal(tf["Allegro Bus 45OPP"]?.yearEnd, 2026);
-  assert.equal(tf["Allegro 45OPP"]?.yearEnd, 2026);
-  assert.equal(tf["Allegro 45OPP"]?.years?.includes(2027), false);
+  assert.equal(tf["Allegro Bus"], undefined);
+  assert.equal(tf["Allegro Bus 45OPP"], undefined);
+  assert.equal(tf["Allegro 45OPP"], undefined);
+  const tiffinBus = CATALOG_INDEX["Tiffin Bus"]?.["Allegro Bus"];
+  assert.ok(tiffinBus);
+  assert.equal(tiffinBus?.yearEnd, undefined);
+  assert.equal(tiffinBus?.years?.includes(2026), true);
+  assert.equal(tiffinBus?.years?.includes(2027), true);
+  assert.equal(CATALOG_INDEX["Tiffin Bus"]?.["Allegro Bus 45OPP"], undefined);
+  assert.equal(CATALOG_INDEX["Tiffin Bus"]?.["Tiffin Bus 45 OPP"], undefined);
 
   assert.equal(tf["Allegro Bay"]?.type, "Super C");
   assert.equal(tf["Allegro Bay"]?.fuelType, "Diesel");
@@ -3357,7 +3364,7 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
   const tiffin = block.slice(t0, t1);
 
   const ze0 = tiffin.indexOf("    Zephyr: {");
-  const ze = tiffin.slice(ze0, tiffin.indexOf('    "Allegro Bus": {'));
+  const ze = tiffin.slice(ze0, tiffin.indexOf("    Phaeton: {"));
   assert.match(ze, /"2025": \["45FZ", "45PZ"\]/);
   assert.match(ze, /"2026": \["45FZ", "45PZ"\]/);
   assert.match(ze, /"2027": \["45FZ", "45PZ"\]/);
@@ -3369,8 +3376,7 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(ze, /"2023": \["45NZ"/);
   assert.doesNotMatch(ze, /"2024": \["45NZ"/);
 
-  const bus0 = tiffin.indexOf('    "Allegro Bus": {');
-  const bus = tiffin.slice(bus0, tiffin.indexOf('    "Allegro Bus 45OPP"'));
+  const bus = block.slice(block.indexOf('\n  "Tiffin Bus": {'), block.indexOf("\nexport const MAKES"));
   assert.match(bus, /"2023": \["35CP", "40IP", "45FP", "45OPP"\]/);
   assert.match(bus, /"2024": \["35CP", "40IP", "45FP", "45OPP"\]/);
   assert.match(bus, /"2025": \["35CP", "40IP", "45FP", "45OPP", "45BTP"\]/);
@@ -3460,6 +3466,51 @@ test("Tiffin 2025–2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(bay27!.torqueLbFt, 800);
   const ot27 = findPowertrainCorrection("2027", "Tiffin", "Open Trail", "25CO");
   assert.equal(ot27!.horsepower, 208);
+});
+
+test("Tiffin Bus brand is exact; 45 OPP is a floorplan not a model key", () => {
+  assert.equal(CATALOG_INDEX.Tiffin?.["Allegro Bus"], undefined);
+  assert.equal(CATALOG_INDEX.Tiffin?.["Allegro Bus 45OPP"], undefined);
+  assert.equal(CATALOG_INDEX.Tiffin?.["Allegro 45OPP"], undefined);
+  assert.equal(CATALOG_INDEX["Tiffin bus"], undefined);
+  assert.equal(CATALOG_INDEX["Tiffin Bus 45 OPP"], undefined);
+  assert.equal(CATALOG_INDEX["Tiffin Bus 45OPP"], undefined);
+
+  const brand = CATALOG_INDEX["Tiffin Bus"];
+  assert.ok(brand);
+  assert.deepEqual(Object.keys(brand), ["Allegro Bus"]);
+  const bus = brand["Allegro Bus"];
+  assert.equal(bus?.type, "Class A Diesel");
+  assert.equal(bus?.fuelType, "Diesel");
+  assert.equal(bus?.yearStart, 2000);
+  assert.equal(bus?.yearEnd, undefined);
+  assert.equal(bus?.years?.includes(2009), true);
+  assert.equal(bus?.years?.includes(2017), true);
+  assert.equal(bus?.years?.includes(2027), true);
+
+  const block = src("rvData.ts");
+  const makes = [...block.matchAll(/\n  (?:"([^"]+)"|([A-Za-z][A-Za-z0-9 ]*)): \{/g)].map(
+    (m) => m[1] || m[2],
+  );
+  assert.ok(makes.includes("Tiffin Bus"));
+  assert.ok(!makes.includes("Tiffin bus"));
+  assert.ok(!makes.includes("Tiffin Bus 45 OPP"));
+  assert.ok(!makes.includes("Tiffin Bus 45OPP"));
+
+  const tb = block.slice(
+    block.indexOf('\n  "Tiffin Bus": {'),
+    block.indexOf("\nexport const MAKES"),
+  );
+  assert.match(tb, /\n    "Allegro Bus": \{/);
+  assert.doesNotMatch(tb, /\n    "Allegro Bus 45OPP": \{/);
+  assert.doesNotMatch(tb, /\n    "Allegro 45OPP": \{/);
+  assert.doesNotMatch(tb, /\n    "Tiffin Bus 45 OPP": \{/);
+  assert.doesNotMatch(tb, /\n    "Tiffin Bus": \{/);
+  assert.match(tb, /"2027": \["36AP", "40IP", "45OPP", "45BP"\]/);
+  assert.match(tb, /freshWater:\s*96/);
+  assert.match(tb, /grayWater:\s*91/);
+  assert.match(tb, /blackWater:\s*53/);
+  assert.match(tb, /Catalog brand is Tiffin Bus/);
 });
 
 test("Entegra 2025–2027 OEM year-first floorplans + yearEnds", () => {
@@ -11087,14 +11138,14 @@ test("Tiffin 2021–2022 OEM year-first floorplans + powertrain pins", () => {
   const t1 = block.indexOf("  Thor: {");
   const tiffin = block.slice(t0, t1);
 
-  const ze = tiffin.slice(tiffin.indexOf("    Zephyr: {"), tiffin.indexOf('    "Allegro Bus": {'));
+  const ze = tiffin.slice(tiffin.indexOf("    Zephyr: {"), tiffin.indexOf("    Phaeton: {"));
   assert.match(ze, /"2022": \["45PZ"\]/);
   assert.doesNotMatch(ze, /"2021":/);
   assert.doesNotMatch(ze, /"2022": \["45NZ"/);
   assert.doesNotMatch(ze, /"2022": \["45FZ"/);
   assert.match(ze, /"2023": \["45FZ"\]/);
 
-  const bus = tiffin.slice(tiffin.indexOf('    "Allegro Bus": {'), tiffin.indexOf('    "Allegro Bus 45OPP"'));
+  const bus = block.slice(block.indexOf('\n  "Tiffin Bus": {'), block.indexOf("\nexport const MAKES"));
   assert.match(bus, /"2021": \["35CP", "37AP", "40AP", "40IP", "45OPP"\]/);
   assert.match(bus, /"2022": \["35CP", "37AP", "40AP", "40IP", "45OPP", "45FP"\]/);
   assert.doesNotMatch(bus, /"2021": \["37TS"/);
@@ -11227,13 +11278,13 @@ test("Tiffin 2017–2018 OEM year-first floorplans + powertrain pins", () => {
   const t1 = block.indexOf("  Thor: {");
   const tiffin = block.slice(t0, t1);
 
-  const ze = tiffin.slice(tiffin.indexOf("    Zephyr: {"), tiffin.indexOf('    "Allegro Bus": {'));
+  const ze = tiffin.slice(tiffin.indexOf("    Zephyr: {"), tiffin.indexOf("    Phaeton: {"));
   assert.match(ze, /"2017": \["45OZ"\]/);
   assert.doesNotMatch(ze, /"2018":/);
   assert.doesNotMatch(ze, /"2017": \["45NZ"/);
   assert.match(ze, /"2019": \["45MZ", "45PZ"\]/);
 
-  const bus = tiffin.slice(tiffin.indexOf('    "Allegro Bus": {'), tiffin.indexOf('    "Allegro Bus 45OPP"'));
+  const bus = block.slice(block.indexOf('\n  "Tiffin Bus": {'), block.indexOf("\nexport const MAKES"));
   assert.match(bus, /"2017": \["37AP", "40AP", "40SP", "45OP", "45OPP"\]/);
   assert.match(bus, /"2018": \["37AP", "40AP", "40SP", "45OP", "45OPP", "45MP"\]/);
   assert.doesNotMatch(bus, /"2017": \["37AP", "40AP", "45LP"/);
@@ -11376,13 +11427,13 @@ test("Tiffin 2015–2016 OEM year-first floorplans + powertrain pins", () => {
   const t1 = block.indexOf("  Thor: {");
   const tiffin = block.slice(t0, t1);
 
-  const ze = tiffin.slice(tiffin.indexOf("    Zephyr: {"), tiffin.indexOf('    "Allegro Bus": {'));
+  const ze = tiffin.slice(tiffin.indexOf("    Zephyr: {"), tiffin.indexOf("    Phaeton: {"));
   assert.match(ze, /"2015": \["45DZ", "45TZ"\]/);
   assert.doesNotMatch(ze, /"2016":/);
   assert.doesNotMatch(ze, /"2015": \["45NZ"/);
   assert.match(ze, /"2017": \["45OZ"\]/);
 
-  const bus = tiffin.slice(tiffin.indexOf('    "Allegro Bus": {'), tiffin.indexOf('    "Allegro Bus 45OPP"'));
+  const bus = block.slice(block.indexOf('\n  "Tiffin Bus": {'), block.indexOf("\nexport const MAKES"));
   assert.match(bus, /"2015": \["37AP", "40SP", "45LP"\]/);
   assert.match(bus, /"2016": \["37AP", "40AP", "40SP", "45LP", "45OP", "45UP"\]/);
   assert.doesNotMatch(bus, /"2015": \["37AP", "40AP"/);
@@ -11520,8 +11571,9 @@ test("Tiffin 2013–2014 OEM year-first floorplans + powertrain pins", () => {
 
   assert.equal(tf.Zephyr?.years?.includes(2013), true);
   assert.equal(tf.Zephyr?.years?.includes(2014), true);
-  assert.equal(tf["Allegro Bus"]?.years?.includes(2013), false);
-  assert.equal(tf["Allegro Bus"]?.years?.includes(2014), true);
+  assert.equal(tf["Allegro Bus"], undefined);
+  assert.equal(CATALOG_INDEX["Tiffin Bus"]?.["Allegro Bus"]?.years?.includes(2013), false);
+  assert.equal(CATALOG_INDEX["Tiffin Bus"]?.["Allegro Bus"]?.years?.includes(2014), true);
   assert.equal(tf["Allegro Breeze"]?.years?.includes(2013), true);
   assert.equal(tf["Allegro Breeze"]?.years?.includes(2014), true);
   assert.equal(tf["Allegro Red 340"]?.yearStart, 2019);
@@ -11542,14 +11594,14 @@ test("Tiffin 2013–2014 OEM year-first floorplans + powertrain pins", () => {
   const t1 = block.indexOf("  Thor: {");
   const tiffin = block.slice(t0, t1);
 
-  const ze = tiffin.slice(tiffin.indexOf("    Zephyr: {"), tiffin.indexOf('    "Allegro Bus": {'));
+  const ze = tiffin.slice(tiffin.indexOf("    Zephyr: {"), tiffin.indexOf("    Phaeton: {"));
   assert.match(ze, /"2013": \["45LZ", "45TZ"\]/);
   assert.match(ze, /"2014": \["45LZ", "45TZ"\]/);
   assert.doesNotMatch(ze, /"2013": \["45NZ"/);
   assert.doesNotMatch(ze, /"2014": \["45NZ"/);
   assert.match(ze, /"2015": \["45DZ", "45TZ"\]/);
 
-  const bus = tiffin.slice(tiffin.indexOf('    "Allegro Bus": {'), tiffin.indexOf('    "Allegro Bus 45OPP"'));
+  const bus = block.slice(block.indexOf('\n  "Tiffin Bus": {'), block.indexOf("\nexport const MAKES"));
   assert.doesNotMatch(bus, /"2013":/);
   assert.match(bus, /"2014": \["37AP", "40QBP", "43QGP", "45LP"\]/);
   assert.doesNotMatch(bus, /"2014": \["37AP", "40AP"/);
@@ -11683,17 +11735,19 @@ test("Tiffin 2010–2012 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(tf.Zephyr?.years?.includes(2010), true);
   assert.equal(tf.Zephyr?.years?.includes(2011), true);
   assert.equal(tf.Zephyr?.years?.includes(2012), false);
-  assert.equal(tf["Allegro Bus"]?.years?.includes(2010), true);
-  assert.equal(tf["Allegro Bus"]?.years?.includes(2011), true);
-  assert.equal(tf["Allegro Bus"]?.years?.includes(2012), true);
-  assert.equal(tf["Allegro Bus 45OPP"]?.yearStart, 2017);
-  assert.equal(tf["Allegro Bus 45OPP"]?.years?.includes(2010), false);
-  assert.equal(tf["Allegro Bus 45OPP"]?.years?.includes(2011), false);
-  assert.equal(tf["Allegro Bus 45OPP"]?.years?.includes(2012), false);
-  assert.equal(tf["Allegro 45OPP"]?.years?.includes(2009), true);
-  assert.equal(tf["Allegro 45OPP"]?.years?.includes(2010), false);
-  assert.equal(tf["Allegro 45OPP"]?.years?.includes(2011), false);
-  assert.equal(tf["Allegro 45OPP"]?.years?.includes(2012), false);
+  assert.equal(tf["Allegro Bus"], undefined);
+  assert.equal(tf["Allegro Bus 45OPP"], undefined);
+  assert.equal(tf["Allegro 45OPP"], undefined);
+  assert.equal(CATALOG_INDEX["Tiffin Bus"]?.["Allegro Bus"]?.years?.includes(2010), true);
+  assert.equal(CATALOG_INDEX["Tiffin Bus"]?.["Allegro Bus"]?.years?.includes(2011), true);
+  assert.equal(CATALOG_INDEX["Tiffin Bus"]?.["Allegro Bus"]?.years?.includes(2012), true);
+  assert.equal(CATALOG_INDEX["Tiffin Bus"]?.["Allegro Bus 45OPP"], undefined);
+  assert.equal(CATALOG_INDEX["Tiffin Bus"]?.["Allegro Bus"]?.years?.includes(2017), true);
+  assert.equal(CATALOG_INDEX["Tiffin Bus"]?.["Allegro Bus"]?.years?.includes(2009), true);
+  assert.equal(
+    CATALOG_INDEX["Tiffin Bus"]?.["Allegro Bus"]?.years?.includes(2010),
+    true,
+  );
   assert.equal(tf["Allegro Breeze"]?.years?.includes(2010), false);
   assert.equal(tf["Allegro Breeze"]?.years?.includes(2011), true);
   assert.equal(tf["Allegro Breeze"]?.years?.includes(2012), true);
@@ -11727,7 +11781,7 @@ test("Tiffin 2010–2012 OEM year-first floorplans + powertrain pins", () => {
   const t1 = block.indexOf("  Thor: {");
   const tiffin = block.slice(t0, t1);
 
-  const ze = tiffin.slice(tiffin.indexOf("    Zephyr: {"), tiffin.indexOf('    "Allegro Bus": {'));
+  const ze = tiffin.slice(tiffin.indexOf("    Zephyr: {"), tiffin.indexOf("    Phaeton: {"));
   assert.match(ze, /"2010": \["45QBZ", "45QEZ"\]/);
   assert.match(ze, /"2011": \["45QBZ"\]/);
   assert.doesNotMatch(ze, /"2012":/);
@@ -11736,7 +11790,7 @@ test("Tiffin 2010–2012 OEM year-first floorplans + powertrain pins", () => {
   assert.match(ze, /"2009": \["45NZ", "45FZ"\]/);
   assert.match(ze, /"2013": \["45LZ", "45TZ"\]/);
 
-  const bus = tiffin.slice(tiffin.indexOf('    "Allegro Bus": {'), tiffin.indexOf('    "Allegro Bus 45OPP"'));
+  const bus = block.slice(block.indexOf('\n  "Tiffin Bus": {'), block.indexOf("\nexport const MAKES"));
   assert.match(bus, /"2010": \["36QSP", "40QXP", "43QBP", "43QGP", "43QRP"\]/);
   assert.match(bus, /"2011": \["36QSP", "40QXP", "43QBP", "43QGP", "43QRP"\]/);
   assert.match(bus, /"2012": \["36QSP", "40QBP", "40QXP", "43QGP", "43QRP"\]/);
@@ -17080,7 +17134,7 @@ test("Prevost NEW MAKE honesty: H3-45 VIP / X3-45 VIP / Entertainer; empty FBY; 
 
   const block = src("rvData.ts");
   const p0 = block.indexOf('\n  "Prevost": {');
-  const p1 = block.indexOf("\nexport const MAKES");
+  const p1 = block.indexOf('\n  "Tiffin Bus": {');
   assert.ok(p0 > 0 && p1 > p0, "Prevost block");
   const pv = block.slice(p0, p1);
 

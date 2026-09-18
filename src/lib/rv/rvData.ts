@@ -1962,511 +1962,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         }
       ]
     },
-    "Allegro Bus": {
-      type: "Class A Diesel",
-      floorplans: ["37AP", "40AP", "45LP", "45OPP", "45CP", "37TS", "40IP", "45BQ", "35CP", "45FP", "45BTP", "36AP", "45BP", "45MP", "40SP", "45OP", "45UP", "40QBP", "43QGP", "36QSP", "40QXP", "43QBP", "43QRP"],
-      floorplansByYear: {
-        "2005": ["37AP", "40AP", "45LP"],
-        "2006": ["37AP", "40AP", "45LP"],
-        "2007": ["37AP", "40AP", "45LP"],
-        "2008": ["37AP", "40AP", "45LP"],
-        "2009": ["37AP", "40AP", "45LP", "45OPP"],
-        // Brochure 2010_Allegro-Bus: 36 QSP | 40 QXP | 43 QBP | 43 QGP | 43 QRP — ISL 425 · PowerGlide or Spartan/Freightliner. No 37 AP / 40 AP / 45 LP / 45 OPP.
-        "2010": ["36QSP", "40QXP", "43QBP", "43QGP", "43QRP"],
-        // Archived OEM 2011_Allegro-Bus spec sheet: 36 QSP | 40 QXP | 43 QBP | 43 QGP | 43 QRP — ISL 450 / 1,250. Current Tiffin 2011 PDF is lifestyle-only.
-        "2011": ["36QSP", "40QXP", "43QBP", "43QGP", "43QRP"],
-        // Brochure 2012_Allegro-Bus: 36 QSP | 40 QBP | 40 QXP | 43 QGP | 43 QRP — ISL 450 / 1,250. 43 QBP dropped; 40 QBP new. No 45 OPP.
-        "2012": ["36QSP", "40QBP", "40QXP", "43QGP", "43QRP"],
-        // No MY13 Allegro Bus brochure on the current Tiffin resources index (2012 and 2014 exist; owner manual is not a brochure) — omit key.
-        // Brochure 2014_Allegro-Bus: 37 AP | 40 QBP | 43 QGP | 45 LP — PowerGlide ISL 450 / 1250. No 40 AP / 45 OPP.
-        "2014": ["37AP", "40QBP", "43QGP", "45LP"],
-        // Brochure 2015_Allegro-Bus: 37 AP | 40 SP | 45 LP — ISL 450 / 1250 PowerGlide. No 40 AP / 45 OPP / 45 OP.
-        "2015": ["37AP", "40SP", "45LP"],
-        // Brochure 2016_Allegro-Bus: 37 AP | 40 AP | 40 SP | 45 LP | 45 OP | 45 UP — ISL 450 / 1250 std; Freightliner ISL 600 / 1950 opt on 45 OP / 45 UP only.
-        "2016": ["37AP", "40AP", "40SP", "45LP", "45OP", "45UP"],
-        // Brochure 2017_Allegro-Bus: 37 AP | 40 AP | 40 SP | 45 OP | 45 OPP — ISL 450 / 1250; ISX15 600 opt (not on 45' Freightliner)
-        "2017": ["37AP", "40AP", "40SP", "45OP", "45OPP"],
-        // Brochure 2018_Allegro-Bus: 37 AP | 40 AP | 40 SP | 45 OP | 45 OPP | 45 MP — ISL9 450 / 1250; X15 605 opt
-        "2018": ["37AP", "40AP", "40SP", "45OP", "45OPP", "45MP"],
-        // Brochure 2019_Allegro-Bus: 37 AP | 40 AP | 40 IP | 45 OPP | 45 MP — Cummins ISL9 450 / 1250
-        "2019": ["37AP", "40AP", "40IP", "45OPP", "45MP"],
-        // Brochure 2020_Allegro-Bus: 37 AP | 40 AP | 40 IP | 45 OPP | 45 MP — ISL9 450 / 1250
-        "2020": ["37AP", "40AP", "40IP", "45OPP", "45MP"],
-        // OEM MY21 Bus: 35 CP | 37 AP | 40 AP | 40 IP | 45 OPP — L9 450; X15 605 opt on 45 OPP
-        "2021": ["35CP", "37AP", "40AP", "40IP", "45OPP"],
-        // OEM MY22 Bus: 35 CP | 37 AP | 40 AP | 40 IP | 45 OPP | 45 FP — L9 450; X15 605 opt on 45'
-        "2022": ["35CP", "37AP", "40AP", "40IP", "45OPP", "45FP"],
-        // OEM MY23 / MY24 Bus: 35 CP | 40 IP | 45 FP | 45 OPP (37 AP / 40 AP no longer available)
-        "2023": ["35CP", "40IP", "45FP", "45OPP"],
-        "2024": ["35CP", "40IP", "45FP", "45OPP"],
-        // OEM MY25-BUS specs: 35 CP | 40 IP | 45 FP | 45 OPP | 45 BTP — not 36 AP / not 45 BP
-        "2025": ["35CP", "40IP", "45FP", "45OPP", "45BTP"],
-        // OEM MY26 / MY27 Allegro Bus: 36 AP | 40 IP | 45 OPP | 45 BP (45 BP is new — do not copy onto 2025)
-        "2026": ["36AP", "40IP", "45OPP", "45BP"],
-        "2027": ["36AP", "40IP", "45OPP", "45BP"]
-      },
-      lengthRange: [
-        37,
-        45
-      ],
-      weightRange: [
-        40000,
-        52000
-      ],
-      slideouts: 4,
-      sleeps: 6,
-      msrpRange: [
-        449000,
-        699000
-      ],
-      engine: "Cummins L9 450HP (X15 605 opt on 45' MY26–27)",
-      horsepower: 450,
-      torqueLbFt: 1250,
-      chassis: "Tiffin PowerGlide XC",
-      transmission: "Allison 3000 MH",
-      fuelType: "Diesel",
-      recalls: 0,
-      rating: 4.7,
-      image: RV_CARD_IMAGE,
-      towingCapacity: 15000,
-      freshWater: 96,
-      grayWater: 91,
-      blackWater: 53,
-      fuelCapacityGal: 150,
-      generator: "Onan 10kW Quiet Diesel",
-      awningLength: 18,
-      ceilingHeight: 83,
-      founded: 1972,
-      warrantyYears: 2,
-      yearStart: 2000,
-      description: "Tiffin Allegro Bus — PowerGlide high-line diesel. 45 OPP is a floorplan of Allegro Bus, not a separate brand. OEM MY25: 35 CP / 40 IP / 45 FP / 45 OPP / 45 BTP, L9 450. OEM MY26–27: 36 AP / 40 IP / 45 OPP / 45 BP; L9 450 / 1,250 std; X15 605 / 1,950 opt on 45' (PowerGlide SL).",
-      powertrainByYear: [
-        {
-          from: 2005,
-          to: 2009,
-          engine: "Cummins ISL / ISB diesel (era)",
-          horsepower: 350,
-          chassis: "Tiffin PowerGlide",
-          notes: "2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)"
-        },
-        {
-          from: 2010,
-          to: 2010,
-          engine: "Cummins ISL 425HP",
-          horsepower: 425,
-          chassis: "Tiffin PowerGlide / Spartan / Freightliner (by option)",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 8.0kW / 10.0kW Quiet Diesel",
-          notes: "OEM 2010_Allegro-Bus: Cummins ISL 425 · PowerGlide or Spartan/Freightliner · Allison 3000 MH. Brochure does not print torque — do not invent 1,250. Not 450 (MY11+)."
-        },
-        {
-          from: 2011,
-          to: 2012,
-          engine: "Cummins ISL 450HP",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide / Freightliner (by option)",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 8.0kW / 10.0kW Quiet Diesel",
-          notes: "OEM 2011_Allegro-Bus spec / 2012_Allegro-Bus: ISL 450 / 1,250 · PowerGlide or Freightliner · Allison 3000 MH. No Freightliner 600 option. No 45 OPP. No MY13 Bus brochure."
-        },
-        {
-          from: 2014,
-          to: 2014,
-          engine: "Cummins ISL 450HP",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10.0kW Quiet Diesel",
-          notes: "OEM 2014_Allegro-Bus: PowerGlide · ISL 450 / 1,250 · Allison 3000 MH · Onan 10 kW. No Freightliner 600 option. 37 AP / 40 QBP / 43 QGP / 45 LP."
-        },
-        {
-          from: 2015,
-          to: 2015,
-          engine: "Cummins ISL 450HP",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10.0kW Quiet Diesel",
-          notes: "OEM 2015_Allegro-Bus: PowerGlide · ISL 450 / 1,250 · Allison 3000 MH · Onan 10 kW. No Freightliner 600 option on this brochure."
-        },
-        {
-          from: 2016,
-          to: 2016,
-          floorplans: ["45OP", "45 OP", "45UP", "45 UP"],
-          engine: "Cummins ISL 450HP std / ISL 600HP opt",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide (Freightliner if ISL 600)",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10.0kW Quiet Diesel",
-          notes: "OEM 2016_Allegro-Bus 45 OP / 45 UP: PowerGlide ISL 450 / 1,250 std; Freightliner ISL 600 / 1,950 optional."
-        },
-        {
-          from: 2016,
-          to: 2016,
-          floorplans: ["37AP", "37 AP", "40AP", "40 AP", "40SP", "40 SP", "45LP", "45 LP"],
-          engine: "Cummins ISL 450HP",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10.0kW Quiet Diesel",
-          notes: "OEM 2016_Allegro-Bus 37 AP / 40 AP / 40 SP / 45 LP: PowerGlide ISL 450 / 1,250 only. Freightliner ISL 600 not available."
-        },
-        {
-          from: 2016,
-          to: 2016,
-          engine: "Cummins ISL 450HP (ISL 600 opt on 45 OP / 45 UP)",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10.0kW Quiet Diesel",
-          notes: "OEM 2016_Allegro-Bus default: ISL 450 std; Freightliner ISL 600 only on 45 OP / 45 UP. Do not stamp MY17 ISX15."
-        },
-        {
-          from: 2017,
-          to: 2017,
-          floorplans: ["45OP", "45 OP", "45OPP", "45 OPP"],
-          engine: "Cummins ISL 450HP",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM 2017_Allegro-Bus 45 OP / 45 OPP: ISL 450 / 1,250 on PowerGlide. Freightliner ISX15 600 not available on these plans."
-        },
-        {
-          from: 2017,
-          to: 2017,
-          floorplans: ["37AP", "37 AP", "40AP", "40 AP", "40SP", "40 SP"],
-          engine: "Cummins ISL 450HP std / ISX15 600HP opt",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide (Freightliner if ISX15)",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM 2017_Allegro-Bus 37 AP / 40 AP / 40 SP: ISL 450 / 1,250 std; Freightliner ISX15 600 / 1,950 optional."
-        },
-        {
-          from: 2017,
-          to: 2017,
-          engine: "Cummins ISL 450HP (ISX15 600 opt on 37–40')",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM 2017_Allegro-Bus default: ISL 450 std; ISX15 600 only as Freightliner option on 37–40' (not 45 OP / 45 OPP)."
-        },
-        {
-          from: 2018,
-          to: 2018,
-          engine: "Cummins ISL9 450HP std / X15 605HP opt",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide / Freightliner (if X15)",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM 2018_Allegro-Bus: ISL9 450 / 1,250 std; PowerGlide/Freightliner X15 605 / 1,950 optional. Do not stamp L9-only onto 2018."
-        },
-        {
-          from: 2019,
-          to: 2020,
-          engine: "Cummins L9 450HP",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XC",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "MY19–20 Bus default L9 450. 2021–2022 walk-back locks X15 opt on 45' from OEM brochure."
-        },
-        {
-          from: 2021,
-          to: 2021,
-          floorplans: ["35CP", "35 CP", "37AP", "37 AP", "40AP", "40 AP", "40IP", "40 IP"],
-          engine: "Cummins L9 450HP",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XSP",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM MY21 Bus 35 CP / 37 AP / 40 AP / 40 IP — L9 450 / 1,250 only (no X15)."
-        },
-        {
-          from: 2021,
-          to: 2021,
-          floorplans: ["45OPP", "45 OPP"],
-          engine: "Cummins L9 450HP std / X15 605HP opt",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XSP (Allison 4000 if X15)",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM MY21 45 OPP: L9 450 / 1,250 std; X15 605 / 1,950 opt."
-        },
-        {
-          from: 2021,
-          to: 2021,
-          engine: "Cummins L9 450HP (X15 605 opt on 45')",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XSP",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM MY21 Bus default: L9 450 std; X15 605 only on 45 OPP."
-        },
-        {
-          from: 2022,
-          to: 2022,
-          floorplans: ["35CP", "35 CP", "37AP", "37 AP", "40AP", "40 AP", "40IP", "40 IP"],
-          engine: "Cummins L9 450HP",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XSP",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM MY22 Bus 35 CP / 37 AP / 40 AP / 40 IP — L9 450 / 1,250 only (no X15)."
-        },
-        {
-          from: 2022,
-          to: 2022,
-          floorplans: ["45OPP", "45 OPP", "45FP", "45 FP"],
-          engine: "Cummins L9 450HP std / X15 605HP opt",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XSP (Allison 4000 if X15)",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM MY22 45 OPP / 45 FP: L9 450 / 1,250 std; X15 605 / 1,950 opt."
-        },
-        {
-          from: 2022,
-          to: 2022,
-          engine: "Cummins L9 450HP (X15 605 opt on 45')",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XSP",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM MY22 Bus default: L9 450 std; X15 605 only on 45 OPP / 45 FP."
-        },
-        {
-          from: 2023,
-          to: 2024,
-          floorplans: ["35CP", "35 CP", "40IP", "40 IP"],
-          engine: "Cummins L9 450HP",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XC",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM MY23 / MY24 Bus 35 CP / 40 IP — L9 450 / 1,250 only (no X15)."
-        },
-        {
-          from: 2023,
-          to: 2024,
-          floorplans: ["45FP", "45 FP", "45OPP", "45 OPP"],
-          engine: "Cummins L9 450HP std / X15 605HP opt",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XC (Allison 4000 / tag if X15)",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM MY23 / MY24 45 FP / 45 OPP: L9 450 / 1,250 std; X15 605 / 1,950 opt."
-        },
-        {
-          from: 2023,
-          to: 2024,
-          engine: "Cummins L9 450HP (X15 605 opt on 45')",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XC",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM MY23 / MY24 Bus default: L9 450 std; X15 605 only on 45 FP / 45 OPP."
-        },
-        {
-          from: 2025,
-          to: 2025,
-          engine: "Cummins L9 450HP",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XC",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM MY25-BUS: L9 450 / 1,250 on all listed plans. X15 option is MY26–27 45' only — do not copy onto 2025."
-        },
-        {
-          from: 2026,
-          to: 2027,
-          floorplans: ["36AP", "36 AP", "40IP", "40 IP"],
-          engine: "Cummins L9 450HP",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XC",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM MY26–27 Bus 36 AP / 40 IP — L9 450 / 1,250 only (no X15)."
-        },
-        {
-          from: 2026,
-          to: 2027,
-          floorplans: ["45OPP", "45 OPP", "45BP", "45 BP"],
-          engine: "Cummins L9 450HP std / X15 605HP opt",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XC (SL if X15)",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel",
-          notes: "OEM MY26–27 45' Bus: L9 450 / 1,250 std; X15 605 / 1,950 opt moves chassis to PowerGlide SL."
-        },
-        {
-          from: 2026,
-          to: 2027,
-          engine: "Cummins L9 450HP (X15 605 opt on 45')",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide XC",
-          transmission: "Allison 3000 MH",
-          generator: "Onan 10kW Quiet Diesel"
-        }
-      ]
-    },
-    "Allegro Bus 45OPP": {
-      type: "Class A Diesel",
-      floorplans: ["45OPP"],
-      floorplansByYear: {
-        // 45 OPP is not on OEM 2010–2012 Allegro Bus brochures (36/40/43 Q-series). Omit keys.
-        // No MY13 Bus brochure. OEM 2014_Allegro-Bus is 37 AP / 40 QBP / 43 QGP / 45 LP — 45 OPP not listed. Omit 2013–2014.
-        // 45 OPP is not on the OEM 2015_Allegro-Bus (37 AP / 40 SP / 45 LP) or 2016_Allegro-Bus (45 OP / 45 UP) brochures — omit keys.
-        "2017": ["45OPP"],
-        "2018": ["45OPP"],
-        "2019": ["45OPP"],
-        "2020": ["45OPP"],
-        "2021": ["45OPP"],
-        "2022": ["45OPP"],
-        "2023": ["45OPP"],
-        "2024": ["45OPP"],
-        "2025": ["45OPP"],
-        "2026": ["45OPP"]
-      },
-      lengthRange: [
-        45,
-        45
-      ],
-      weightRange: [
-        48000,
-        56000
-      ],
-      slideouts: 4,
-      sleeps: 6,
-      msrpRange: [
-        480000,
-        720000
-      ],
-      engine: "Cummins L9 450HP (X12 optional)",
-      horsepower: 450,
-      torqueLbFt: 1250,
-      chassis: "Tiffin PowerGlide",
-      transmission: "Allison 3000 MH",
-      fuelType: "Diesel",
-      recalls: 0,
-      rating: 4.7,
-      image: RV_CARD_IMAGE,
-      towingCapacity: 15000,
-      freshWater: 100,
-      grayWater: 55,
-      blackWater: 50,
-      fuelCapacityGal: 100,
-      generator: "Onan 10kW Quiet Diesel",
-      awningLength: 18,
-      ceilingHeight: 84,
-      founded: 1972,
-      warrantyYears: 2,
-      yearStart: 2017,
-      yearEnd: 2026,
-      description: "Legacy search alias for Allegro Bus floorplan 45 OPP — yearStart 2017 (not on OEM 2010–2016 Bus brochures) · yearEnd 2026. Prefer Allegro Bus + 45OPP. Kept so older saved units still cascade.",
-      powertrainByYear: [
-        {
-          from: 2017,
-          to: 2026,
-          engine: "Cummins L9 450HP",
-          horsepower: 450,
-          chassis: "Tiffin PowerGlide"
-        },
-        
-      ]
-    },
-    "Allegro 45OPP": {
-      type: "Class A Diesel",
-      floorplans: ["45OPP"],
-      floorplansByYear: {
-        "2009": ["45OPP"],
-        // 45 OPP is not on OEM 2010–2012 Allegro Bus brochures (36/40/43 Q-series). Omit keys — do not copy 2009 forward.
-        // No MY13 Bus brochure. OEM 2014_Allegro-Bus is 37 AP / 40 QBP / 43 QGP / 45 LP — 45 OPP not listed. Omit 2013–2014.
-        // 45 OPP is not on the OEM 2015_Allegro-Bus (37 AP / 40 SP / 45 LP) or 2016_Allegro-Bus (45 OP / 45 UP) brochures — omit keys.
-        "2017": ["45OPP"],
-        "2018": ["45OPP"],
-        "2019": ["45OPP"],
-        "2020": ["45OPP"],
-        "2021": ["45OPP"],
-        "2022": ["45OPP"],
-        "2023": ["45OPP"],
-        "2024": ["45OPP"],
-        "2025": ["45OPP"],
-        "2026": ["45OPP"]
-      },
-      lengthRange: [45, 45],
-      weightRange: [46000, 56000],
-      slideouts: 4,
-      sleeps: 4,
-      msrpRange: [389900, 720000],
-      engine: "Cummins L9 450HP (X12 optional)",
-      horsepower: 450,
-      torqueLbFt: 1250,
-      chassis: "Tiffin PowerGlide",
-      transmission: "Allison 3000 MH",
-      fuelType: "Diesel",
-      recalls: 0,
-      rating: 4.8,
-      image: RV_CARD_IMAGE,
-      towingCapacity: 15000,
-      freshWater: 100,
-      grayWater: 55,
-      blackWater: 50,
-      fuelCapacityGal: 100,
-      generator: "Onan 10kW Quiet Diesel",
-      awningLength: 22,
-      ceilingHeight: 84,
-      founded: 1972,
-      warrantyYears: 2,
-      yearStart: 2009,
-      yearEnd: 2026,
-      description: "Legacy search alias for Allegro Bus 45 OPP (8/28 ezrv name). yearEnd 2026 — use Allegro Bus + 45OPP for MY27. Same PowerGlide L9 platform; not a separate make.",
-      powertrainByYear: [
-        {
-          from: 2009,
-          to: 2009,
-          engine: "Cummins ISL / ISB 300–450HP (era)",
-          horsepower: 380,
-          chassis: "Tiffin PowerGlide",
-          notes: "2009 alias leftover — 45 OPP is not on OEM 2010–2012 / 2014–2016 Bus brochures. Do not copy onto 2010–2012."
-        },
-        {
-          from: 2017,
-          to: 2026,
-          engine: "Cummins L9 450HP (X12 optional)",
-          horsepower: 450,
-          torqueLbFt: 1250,
-          chassis: "Tiffin PowerGlide",
-          transmission: "Allison 3000 MH"
-        }
-      ]
-    },
     Phaeton: {
       type: "Class A Diesel",
       floorplans: [
@@ -39378,7 +38873,388 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         }
       ]
     }
+  },
+  // Tiffin Bus — naming cleanup only. Brand key is exactly "Tiffin Bus".
+  // OEM nameplate stays Allegro Bus. Floorplans (45 OPP / 45OPP, 40 IP, …)
+  // stay on the floorplan field — never concatenated into brand or model.
+  // Collapsed Tiffin|Allegro Bus 45OPP and Tiffin|Allegro 45OPP into this make.
+  "Tiffin Bus": {
+    "Allegro Bus": {
+      type: "Class A Diesel",
+      floorplans: ["37AP", "40AP", "45LP", "45OPP", "45CP", "37TS", "40IP", "45BQ", "35CP", "45FP", "45BTP", "36AP", "45BP", "45MP", "40SP", "45OP", "45UP", "40QBP", "43QGP", "36QSP", "40QXP", "43QBP", "43QRP"],
+      floorplansByYear: {
+        "2005": ["37AP", "40AP", "45LP"],
+        "2006": ["37AP", "40AP", "45LP"],
+        "2007": ["37AP", "40AP", "45LP"],
+        "2008": ["37AP", "40AP", "45LP"],
+        "2009": ["37AP", "40AP", "45LP", "45OPP"],
+        // Brochure 2010_Allegro-Bus: 36 QSP | 40 QXP | 43 QBP | 43 QGP | 43 QRP — ISL 425 · PowerGlide or Spartan/Freightliner. No 37 AP / 40 AP / 45 LP / 45 OPP.
+        "2010": ["36QSP", "40QXP", "43QBP", "43QGP", "43QRP"],
+        // Archived OEM 2011_Allegro-Bus spec sheet: 36 QSP | 40 QXP | 43 QBP | 43 QGP | 43 QRP — ISL 450 / 1,250. Current Tiffin 2011 PDF is lifestyle-only.
+        "2011": ["36QSP", "40QXP", "43QBP", "43QGP", "43QRP"],
+        // Brochure 2012_Allegro-Bus: 36 QSP | 40 QBP | 40 QXP | 43 QGP | 43 QRP — ISL 450 / 1,250. 43 QBP dropped; 40 QBP new. No 45 OPP.
+        "2012": ["36QSP", "40QBP", "40QXP", "43QGP", "43QRP"],
+        // No MY13 Allegro Bus brochure on the current Tiffin resources index (2012 and 2014 exist; owner manual is not a brochure) — omit key.
+        // Brochure 2014_Allegro-Bus: 37 AP | 40 QBP | 43 QGP | 45 LP — PowerGlide ISL 450 / 1250. No 40 AP / 45 OPP.
+        "2014": ["37AP", "40QBP", "43QGP", "45LP"],
+        // Brochure 2015_Allegro-Bus: 37 AP | 40 SP | 45 LP — ISL 450 / 1250 PowerGlide. No 40 AP / 45 OPP / 45 OP.
+        "2015": ["37AP", "40SP", "45LP"],
+        // Brochure 2016_Allegro-Bus: 37 AP | 40 AP | 40 SP | 45 LP | 45 OP | 45 UP — ISL 450 / 1250 std; Freightliner ISL 600 / 1950 opt on 45 OP / 45 UP only.
+        "2016": ["37AP", "40AP", "40SP", "45LP", "45OP", "45UP"],
+        // Brochure 2017_Allegro-Bus: 37 AP | 40 AP | 40 SP | 45 OP | 45 OPP — ISL 450 / 1250; ISX15 600 opt (not on 45' Freightliner)
+        "2017": ["37AP", "40AP", "40SP", "45OP", "45OPP"],
+        // Brochure 2018_Allegro-Bus: 37 AP | 40 AP | 40 SP | 45 OP | 45 OPP | 45 MP — ISL9 450 / 1250; X15 605 opt
+        "2018": ["37AP", "40AP", "40SP", "45OP", "45OPP", "45MP"],
+        // Brochure 2019_Allegro-Bus: 37 AP | 40 AP | 40 IP | 45 OPP | 45 MP — Cummins ISL9 450 / 1250
+        "2019": ["37AP", "40AP", "40IP", "45OPP", "45MP"],
+        // Brochure 2020_Allegro-Bus: 37 AP | 40 AP | 40 IP | 45 OPP | 45 MP — ISL9 450 / 1250
+        "2020": ["37AP", "40AP", "40IP", "45OPP", "45MP"],
+        // OEM MY21 Bus: 35 CP | 37 AP | 40 AP | 40 IP | 45 OPP — L9 450; X15 605 opt on 45 OPP
+        "2021": ["35CP", "37AP", "40AP", "40IP", "45OPP"],
+        // OEM MY22 Bus: 35 CP | 37 AP | 40 AP | 40 IP | 45 OPP | 45 FP — L9 450; X15 605 opt on 45'
+        "2022": ["35CP", "37AP", "40AP", "40IP", "45OPP", "45FP"],
+        // OEM MY23 / MY24 Bus: 35 CP | 40 IP | 45 FP | 45 OPP (37 AP / 40 AP no longer available)
+        "2023": ["35CP", "40IP", "45FP", "45OPP"],
+        "2024": ["35CP", "40IP", "45FP", "45OPP"],
+        // OEM MY25-BUS specs: 35 CP | 40 IP | 45 FP | 45 OPP | 45 BTP — not 36 AP / not 45 BP
+        "2025": ["35CP", "40IP", "45FP", "45OPP", "45BTP"],
+        // OEM MY26 / MY27 Allegro Bus: 36 AP | 40 IP | 45 OPP | 45 BP (45 BP is new — do not copy onto 2025)
+        "2026": ["36AP", "40IP", "45OPP", "45BP"],
+        "2027": ["36AP", "40IP", "45OPP", "45BP"]
+      },
+      lengthRange: [
+        37,
+        45
+      ],
+      weightRange: [
+        40000,
+        52000
+      ],
+      slideouts: 4,
+      sleeps: 6,
+      msrpRange: [
+        449000,
+        699000
+      ],
+      engine: "Cummins L9 450HP (X15 605 opt on 45' MY26–27)",
+      horsepower: 450,
+      torqueLbFt: 1250,
+      chassis: "Tiffin PowerGlide XC",
+      transmission: "Allison 3000 MH",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.7,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 15000,
+      freshWater: 96,
+      grayWater: 91,
+      blackWater: 53,
+      fuelCapacityGal: 150,
+      generator: "Onan 10kW Quiet Diesel",
+      awningLength: 18,
+      ceilingHeight: 83,
+      founded: 1972,
+      warrantyYears: 2,
+      yearStart: 2000,
+      description: "Tiffin Bus — Allegro Bus PowerGlide high-line diesel. Catalog brand is Tiffin Bus (not Tiffin bus, not Tiffin Bus 45 OPP). 45 OPP is a floorplan field, not a model or brand key. OEM MY25: 35 CP / 40 IP / 45 FP / 45 OPP / 45 BTP, L9 450. OEM MY26–27: 36 AP / 40 IP / 45 OPP / 45 BP; L9 450 / 1,250 std; X15 605 / 1,950 opt on 45' (PowerGlide SL).",
+      powertrainByYear: [
+        {
+          from: 2005,
+          to: 2009,
+          engine: "Cummins ISL / ISB diesel (era)",
+          horsepower: 350,
+          chassis: "Tiffin PowerGlide",
+          notes: "2005–2009 diesel Class A — confirm build sheet (ISL/ISB/Cat by OEM)"
+        },
+        {
+          from: 2010,
+          to: 2010,
+          engine: "Cummins ISL 425HP",
+          horsepower: 425,
+          chassis: "Tiffin PowerGlide / Spartan / Freightliner (by option)",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 8.0kW / 10.0kW Quiet Diesel",
+          notes: "OEM 2010_Allegro-Bus: Cummins ISL 425 · PowerGlide or Spartan/Freightliner · Allison 3000 MH. Brochure does not print torque — do not invent 1,250. Not 450 (MY11+)."
+        },
+        {
+          from: 2011,
+          to: 2012,
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide / Freightliner (by option)",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 8.0kW / 10.0kW Quiet Diesel",
+          notes: "OEM 2011_Allegro-Bus spec / 2012_Allegro-Bus: ISL 450 / 1,250 · PowerGlide or Freightliner · Allison 3000 MH. No Freightliner 600 option. No 45 OPP. No MY13 Bus brochure."
+        },
+        {
+          from: 2014,
+          to: 2014,
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10.0kW Quiet Diesel",
+          notes: "OEM 2014_Allegro-Bus: PowerGlide · ISL 450 / 1,250 · Allison 3000 MH · Onan 10 kW. No Freightliner 600 option. 37 AP / 40 QBP / 43 QGP / 45 LP."
+        },
+        {
+          from: 2015,
+          to: 2015,
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10.0kW Quiet Diesel",
+          notes: "OEM 2015_Allegro-Bus: PowerGlide · ISL 450 / 1,250 · Allison 3000 MH · Onan 10 kW. No Freightliner 600 option on this brochure."
+        },
+        {
+          from: 2016,
+          to: 2016,
+          floorplans: ["45OP", "45 OP", "45UP", "45 UP"],
+          engine: "Cummins ISL 450HP std / ISL 600HP opt",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide (Freightliner if ISL 600)",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10.0kW Quiet Diesel",
+          notes: "OEM 2016_Allegro-Bus 45 OP / 45 UP: PowerGlide ISL 450 / 1,250 std; Freightliner ISL 600 / 1,950 optional."
+        },
+        {
+          from: 2016,
+          to: 2016,
+          floorplans: ["37AP", "37 AP", "40AP", "40 AP", "40SP", "40 SP", "45LP", "45 LP"],
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10.0kW Quiet Diesel",
+          notes: "OEM 2016_Allegro-Bus 37 AP / 40 AP / 40 SP / 45 LP: PowerGlide ISL 450 / 1,250 only. Freightliner ISL 600 not available."
+        },
+        {
+          from: 2016,
+          to: 2016,
+          engine: "Cummins ISL 450HP (ISL 600 opt on 45 OP / 45 UP)",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10.0kW Quiet Diesel",
+          notes: "OEM 2016_Allegro-Bus default: ISL 450 std; Freightliner ISL 600 only on 45 OP / 45 UP. Do not stamp MY17 ISX15."
+        },
+        {
+          from: 2017,
+          to: 2017,
+          floorplans: ["45OP", "45 OP", "45OPP", "45 OPP"],
+          engine: "Cummins ISL 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM 2017_Allegro-Bus 45 OP / 45 OPP: ISL 450 / 1,250 on PowerGlide. Freightliner ISX15 600 not available on these plans."
+        },
+        {
+          from: 2017,
+          to: 2017,
+          floorplans: ["37AP", "37 AP", "40AP", "40 AP", "40SP", "40 SP"],
+          engine: "Cummins ISL 450HP std / ISX15 600HP opt",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide (Freightliner if ISX15)",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM 2017_Allegro-Bus 37 AP / 40 AP / 40 SP: ISL 450 / 1,250 std; Freightliner ISX15 600 / 1,950 optional."
+        },
+        {
+          from: 2017,
+          to: 2017,
+          engine: "Cummins ISL 450HP (ISX15 600 opt on 37–40')",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM 2017_Allegro-Bus default: ISL 450 std; ISX15 600 only as Freightliner option on 37–40' (not 45 OP / 45 OPP)."
+        },
+        {
+          from: 2018,
+          to: 2018,
+          engine: "Cummins ISL9 450HP std / X15 605HP opt",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide / Freightliner (if X15)",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM 2018_Allegro-Bus: ISL9 450 / 1,250 std; PowerGlide/Freightliner X15 605 / 1,950 optional. Do not stamp L9-only onto 2018."
+        },
+        {
+          from: 2019,
+          to: 2020,
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XC",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "MY19–20 Bus default L9 450. 2021–2022 walk-back locks X15 opt on 45' from OEM brochure."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["35CP", "35 CP", "37AP", "37 AP", "40AP", "40 AP", "40IP", "40 IP"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSP",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY21 Bus 35 CP / 37 AP / 40 AP / 40 IP — L9 450 / 1,250 only (no X15)."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["45OPP", "45 OPP"],
+          engine: "Cummins L9 450HP std / X15 605HP opt",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSP (Allison 4000 if X15)",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY21 45 OPP: L9 450 / 1,250 std; X15 605 / 1,950 opt."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          engine: "Cummins L9 450HP (X15 605 opt on 45')",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSP",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY21 Bus default: L9 450 std; X15 605 only on 45 OPP."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["35CP", "35 CP", "37AP", "37 AP", "40AP", "40 AP", "40IP", "40 IP"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSP",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY22 Bus 35 CP / 37 AP / 40 AP / 40 IP — L9 450 / 1,250 only (no X15)."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["45OPP", "45 OPP", "45FP", "45 FP"],
+          engine: "Cummins L9 450HP std / X15 605HP opt",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSP (Allison 4000 if X15)",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY22 45 OPP / 45 FP: L9 450 / 1,250 std; X15 605 / 1,950 opt."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          engine: "Cummins L9 450HP (X15 605 opt on 45')",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XSP",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY22 Bus default: L9 450 std; X15 605 only on 45 OPP / 45 FP."
+        },
+        {
+          from: 2023,
+          to: 2024,
+          floorplans: ["35CP", "35 CP", "40IP", "40 IP"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XC",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY23 / MY24 Bus 35 CP / 40 IP — L9 450 / 1,250 only (no X15)."
+        },
+        {
+          from: 2023,
+          to: 2024,
+          floorplans: ["45FP", "45 FP", "45OPP", "45 OPP"],
+          engine: "Cummins L9 450HP std / X15 605HP opt",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XC (Allison 4000 / tag if X15)",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY23 / MY24 45 FP / 45 OPP: L9 450 / 1,250 std; X15 605 / 1,950 opt."
+        },
+        {
+          from: 2023,
+          to: 2024,
+          engine: "Cummins L9 450HP (X15 605 opt on 45')",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XC",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY23 / MY24 Bus default: L9 450 std; X15 605 only on 45 FP / 45 OPP."
+        },
+        {
+          from: 2025,
+          to: 2025,
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XC",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY25-BUS: L9 450 / 1,250 on all listed plans. X15 option is MY26–27 45' only — do not copy onto 2025."
+        },
+        {
+          from: 2026,
+          to: 2027,
+          floorplans: ["36AP", "36 AP", "40IP", "40 IP"],
+          engine: "Cummins L9 450HP",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XC",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY26–27 Bus 36 AP / 40 IP — L9 450 / 1,250 only (no X15)."
+        },
+        {
+          from: 2026,
+          to: 2027,
+          floorplans: ["45OPP", "45 OPP", "45BP", "45 BP"],
+          engine: "Cummins L9 450HP std / X15 605HP opt",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XC (SL if X15)",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel",
+          notes: "OEM MY26–27 45' Bus: L9 450 / 1,250 std; X15 605 / 1,950 opt moves chassis to PowerGlide SL."
+        },
+        {
+          from: 2026,
+          to: 2027,
+          engine: "Cummins L9 450HP (X15 605 opt on 45')",
+          horsepower: 450,
+          torqueLbFt: 1250,
+          chassis: "Tiffin PowerGlide XC",
+          transmission: "Allison 3000 MH",
+          generator: "Onan 10kW Quiet Diesel"
+        }
+      ]
+    },
   }
+
 };
 
 
