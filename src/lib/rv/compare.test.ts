@@ -67,7 +67,7 @@ test("Lot Desk compare UI: Market + key Facts + one-tap Facts entry", () => {
   assert.match(fax, /setCompareOpen\(false\);\s*openFactsUnit\(r\)/);
 });
 
-test("Facts saved list selects into existing Lot Desk compare — no new compare UI", () => {
+test("Facts saved list: [green Sold | compare] → toggleCompare → RvCompare", () => {
   const fax = readFileSync(
     join(root, "../../components/rvfax/RvFaxApp.tsx"),
     "utf8",
@@ -77,15 +77,14 @@ test("Facts saved list selects into existing Lot Desk compare — no new compare
     "utf8",
   );
 
-  assert.match(fax, /data-saved-compare-list/);
+  assert.match(fax, /data-saved-sold-compare/);
   assert.match(fax, /data-saved-compare=""/);
-  assert.match(fax, /data-saved-compare-open/);
-  assert.match(fax, /data-saved-compare-clear/);
-  assert.match(fax, /onClick=\{\(\) => toggleCompare\(r\)\}/);
-  assert.match(fax, /onClick=\{\(\) => setCompareOpen\(true\)\}/);
-  assert.match(fax, /onClick=\{\(\) => setComparePick\(\[\]\)\}/);
+  assert.match(fax, /toggleSavedCompare/);
+  assert.match(fax, /toggleCompare\(r\)/);
+  assert.match(fax, /setCompareOpen\(true\)/);
+  assert.match(fax, /comparePick\.length \+ 1 >= 2/);
   assert.match(fax, /comparePick\.length >= 3/);
-  assert.match(fax, /Compare \{comparePick\.length\}/);
+  assert.match(fax, /border-green\/50 bg-green[\s\S]*data-saved-compare=""/);
   assert.match(fax, /capCompareItems\(comparePick\)/);
   assert.match(compareUi, /data-lot-desk-compare/);
   assert.doesNotMatch(fax, /function SavedCompare/);
