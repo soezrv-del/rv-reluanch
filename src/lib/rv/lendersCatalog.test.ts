@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  LENDERS_CATALOG,
   SIMULATE_SOURCE_LINE,
   buildLendersResponse,
   buildSimulateLendersResponse,
   lendersSourceLine,
   parseCreditBand,
   parseLenderRateSource,
+  sortLenderQuotes,
+  sortLendersForCompare,
+  type LenderQuote,
 } from "./lendersCatalog.ts";
 
 test("parseCreditBand normalizes and defaults to excellent", () => {
@@ -116,14 +120,76 @@ test("curated quotes sort eligible then lowest APR first", () => {
   assert.equal(body.query.state, "NY");
   const eligible = body.lenders.filter((l) => l.eligible);
   assert.ok(eligible.length >= 2);
+  assert.equal(eligible[0]?.id, "alliant");
+  assert.ok(eligible[0]!.estimatedApr < LENDERS_CATALOG[0]!.aprLow);
   for (let i = 1; i < eligible.length; i++) {
-    assert.ok(
-      eligible[i].estimatedApr >= eligible[i - 1].estimatedApr,
-      `${eligible[i].name} APR should be >= ${eligible[i - 1].name}`,
-    );
+    const prev = eligible[i - 1]!;
+    const next = eligible[i]!;
+    if (next.estimatedApr !== prev.estimatedApr) {
+      assert.ok(
+        next.estimatedApr > prev.estimatedApr,
+        `${next.name} APR should be > ${prev.name}`,
+      );
+      continue;
+    }
+    const prevMo = prev.estimatedMonthly ?? 1e12;
+    const nextMo = next.estimatedMonthly ?? 1e12;
+    if (nextMo !== prevMo) {
+      assert.ok(nextMo > prevMo, `${next.name} monthly should be >= ${prev.name}`);
+    }
   }
   const firstIneligible = body.lenders.findIndex((l) => !l.eligible);
   if (firstIneligible >= 0) {
     assert.ok(body.lenders.slice(0, firstIneligible).every((l) => l.eligible));
+  }
+});
+
+function quoteStub(partial: Partial<LenderQuote> & Pick<LenderQuote, "id" | "estimatedApr" | "eligible">): LenderQuote {
+  return {
+    name: partial.id,
+    aprLow: partial.estimatedApr,
+    aprHigh: partial.estimatedApr,
+    termMin: 12,
+    termMax: 120,
+    minLoan: 0,
+    minBand: "fair",
+    perks: [],
+    url: "",
+    estimatedMonthly: null,
+    termUsed: 120,
+    ...partial,
+  };
+}
+
+test("sortLenderQuotes ranks APR then lower monthly then longer term", () => {
+  const sorted = sortLenderQuotes([
+    quoteStub({ id: "a", estimatedApr: 8, estimatedMonthly: 400, termUsed: 120, termMax: 120, eligible: true }),
+    quoteStub({ id: "b", estimatedApr: 8, estimatedMonthly: 400, termUsed: 180, termMax: 180, eligible: true }),
+    quoteStub({ id: "c", estimatedApr: 8, estimatedMonthly: 350, termUsed: 84, termMax: 84, eligible: true }),
+    quoteStub({ id: "d", estimatedApr: 7, estimatedMonthly: 500, termUsed: 60, termMax: 60, eligible: true }),
+    quoteStub({ id: "e", estimatedApr: 7, estimatedMonthly: 500, termUsed: 60, termMax: 60, eligible: false }),
+  ]);
+  assert.deepEqual(
+    sorted.map((l) => l.id),
+    ["d", "c", "b", "a", "e"],
+  );
+});
+
+test("sortLendersForCompare never leaves raw catalog insertion order", () => {
+  assert.equal(LENDERS_CATALOG[0]?.id, "lightstream");
+  const ui = sortLendersForCompare(LENDERS_CATALOG, {
+    credit: "excellent",
+    amount: 40_000,
+    termMonths: 120,
+  });
+  const fromApi = sortLendersForCompare(
+    [...ui].reverse(),
+    { credit: "excellent", amount: 40_000, termMonths: 120 },
+  );
+  assert.equal(ui[0]?.id, "alliant");
+  assert.equal(fromApi[0]?.id, "alliant");
+  const eligible = ui.filter((l) => l.eligible);
+  for (let i = 1; i < eligible.length; i++) {
+    assert.ok(eligible[i]!.estimatedApr >= eligible[i - 1]!.estimatedApr);
   }
 });

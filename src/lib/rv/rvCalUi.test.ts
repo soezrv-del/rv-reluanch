@@ -39,6 +39,16 @@ test("rvCAL keeps one screen-bottom disclaimer and no per-card fine print", () =
   assert.match(src, /not live offers or a loan commitment/);
 });
 
+test("rvCAL compare always sorts via sortLendersForCompare, including catalog fallback", () => {
+  assert.match(src, /sortLendersForCompare/);
+  assert.match(src, /sortLendersForCompare\(apiLenders/);
+  assert.match(src, /setApiLenders\(sortLendersForCompare/);
+  assert.match(
+    src,
+    /sortLendersForCompare\(apiLenders\?\.length \? apiLenders : LENDERS_CATALOG/,
+  );
+});
+
 test("rvCAL header drops the ZIP/lender subtitle and keeps the verified mark", () => {
   const calCopy = constants.match(/rvcal:\s*\{[\s\S]*?\n  \},/);
   assert.ok(calCopy?.[0], "Cal PAGE_COPY block");

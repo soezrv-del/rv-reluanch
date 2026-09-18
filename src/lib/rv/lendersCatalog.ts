@@ -388,15 +388,78 @@ export function normalizeLendersQuery(
   return { amount, termMonths, credit, zip, state };
 }
 
-/** Eligible first, then lowest APR, then lowest monthly. */
+/**
+ * Compare rank: eligible first, then lowest APR, then better terms.
+ * After APR, lower estimatedMonthly wins; if monthly is equal (or both
+ * missing), prefer the longer termMax / termUsed.
+ */
 export function sortLenderQuotes(quotes: LenderQuote[]): LenderQuote[] {
   return [...quotes].sort((a, b) => {
     if (a.eligible !== b.eligible) return a.eligible ? -1 : 1;
     if (a.estimatedApr !== b.estimatedApr) return a.estimatedApr - b.estimatedApr;
     const am = a.estimatedMonthly ?? 1e12;
     const bm = b.estimatedMonthly ?? 1e12;
-    return am - bm;
+    if (am !== bm) return am - bm;
+    const at = Math.max(a.termMax ?? 0, a.termUsed ?? 0);
+    const bt = Math.max(b.termMax ?? 0, b.termUsed ?? 0);
+    return bt - at;
   });
+}
+
+export function isLenderQuote(l: Lender | LenderQuote): l is LenderQuote {
+  return (
+    "estimatedApr" in l &&
+    typeof (l as LenderQuote).estimatedApr === "number" &&
+    "eligible" in l &&
+    "termUsed" in l
+  );
+}
+
+/** Quote a raw catalog row with the same APR / eligibility / monthly as GET /api/lenders. */
+export function quoteFromLender(
+  lender: Lender,
+  credit: CreditBand,
+  amount: number | null,
+  termMonths: number | null,
+): LenderQuote {
+  const termUsed = termMonths
+    ? Math.min(lender.termMax, Math.max(lender.termMin, termMonths))
+    : lender.termMax;
+  const estimatedApr = lenderApr(lender, credit);
+  const gate = evaluateLenderEligibility(lender, credit, amount);
+  let estimatedMonthly: number | null = null;
+  if (gate.eligible && amount != null) {
+    estimatedMonthly = monthlyPayment(amount, estimatedApr, termUsed);
+  }
+  return {
+    ...lender,
+    estimatedApr,
+    estimatedMonthly,
+    termUsed,
+    eligible: gate.eligible,
+    ineligibilityReason: gate.reason,
+  };
+}
+
+/**
+ * Client + server compare order. Always run this before showing lenders —
+ * never catalog insertion order, and re-sort API rows in case a path skipped it.
+ */
+export function sortLendersForCompare(
+  lenders: Array<Lender | LenderQuote>,
+  opts?: {
+    credit?: CreditBand;
+    amount?: number | null;
+    termMonths?: number | null;
+  },
+): LenderQuote[] {
+  const credit = opts?.credit ?? "excellent";
+  const amount = opts?.amount ?? null;
+  const termMonths = opts?.termMonths ?? null;
+  const quotes = lenders.map((l) =>
+    isLenderQuote(l) ? l : quoteFromLender(l, credit, amount, termMonths),
+  );
+  return badgeLowestApr(sortLenderQuotes(quotes));
 }
 
 export function badgeLowestApr(quotes: LenderQuote[]): LenderQuote[] {
@@ -417,29 +480,11 @@ export function buildLendersResponse(
 ): LendersLookupResponse {
   const { amount, termMonths, credit, zip, state } = normalizeLendersQuery(query);
 
-  const lenders: LenderQuote[] = LENDERS_CATALOG.map((lender) => {
-    const termUsed = termMonths
-      ? Math.min(lender.termMax, Math.max(lender.termMin, termMonths))
-      : lender.termMax;
-    const estimatedApr = lenderApr(lender, credit);
-    const gate = evaluateLenderEligibility(lender, credit, amount);
+  const lenders: LenderQuote[] = LENDERS_CATALOG.map((lender) =>
+    quoteFromLender(lender, credit, amount, termMonths),
+  );
 
-    let estimatedMonthly: number | null = null;
-    if (gate.eligible && amount != null) {
-      estimatedMonthly = monthlyPayment(amount, estimatedApr, termUsed);
-    }
-
-    return {
-      ...lender,
-      estimatedApr,
-      estimatedMonthly,
-      termUsed,
-      eligible: gate.eligible,
-      ineligibilityReason: gate.reason,
-    };
-  });
-
-  const sorted = badgeLowestApr(sortLenderQuotes(lenders));
+  const sorted = sortLendersForCompare(lenders);
   const stateBit = state ? ` ZIP maps to ${state}.` : "";
 
   return {
