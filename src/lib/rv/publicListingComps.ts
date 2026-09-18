@@ -530,6 +530,19 @@ export function resolvePrimaryMarket(opts: {
     };
   }
 
+  /**
+   * Low / not-enough-listings: one confirmed sold ask is desk Market,
+   * never a sold range. Asking-only is not a sold price — leave Market
+   * on the catalog / live midpoint. Never invent sold prices.
+   */
+  const thinSoldMarket =
+    comps &&
+    (comps.confidence === "low" || !prefersPublicComps(comps)) &&
+    comps.priceKind === "sold" &&
+    comps.medianAsk >= MIN_ASK_USD
+      ? comps.medianAsk
+      : undefined;
+
   if (liveLadder) {
     const merged = {
       tradeIn: liveLadder.tradeIn > 0 ? liveLadder.tradeIn : catalog.tradeIn,
@@ -550,6 +563,9 @@ export function resolvePrimaryMarket(opts: {
       tradeCappedAtRetailLow: trade.capped || catalog.tradeCappedAtRetailLow,
       source: "live_dossier",
       sourceLabel: "Live research estimate",
+      confidence: "low",
+      hideRetailHigh: true,
+      marketValue: thinSoldMarket,
     });
   }
 
@@ -557,6 +573,9 @@ export function resolvePrimaryMarket(opts: {
     ...catalog,
     source: catalog.source ?? "catalog",
     sourceLabel: catalog.sourceLabel ?? CATALOG_ESTIMATE_LABEL,
+    confidence: "low",
+    hideRetailHigh: true,
+    marketValue: thinSoldMarket,
   });
 }
 

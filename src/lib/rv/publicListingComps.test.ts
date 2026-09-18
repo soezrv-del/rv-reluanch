@@ -424,10 +424,22 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
   assert.match(detail, /prefersPublicComps/);
   assert.match(detail, /hideRetailHigh/);
   assert.match(detail, /deskMarketValue/);
+  assert.match(detail, /soldConfidence === "low"/);
+  assert.match(detail, /hideRetailHighForDesk/);
   assert.match(detail, /!hideRetailHigh \? \(/);
   assert.match(detail, /label="Retail high"/);
   assert.match(detail, /: "ruby"/);
   assert.match(detail, /font-bold tracking-wide text-gold-bright/);
+  const lowCopy = detail.lastIndexOf("LOW_CONFIDENCE_LISTINGS_MESSAGE");
+  const lowBranch = detail.slice(
+    lowCopy,
+    detail.indexOf("data-facts-check-payment", lowCopy),
+  );
+  assert.doesNotMatch(
+    lowBranch,
+    /label="Retail high"/,
+    "Low branch must not contain a Retail High tile — flag cannot miss",
+  );
   assert.doesNotMatch(detail, /Public listing asks/);
   const disclaimerHits = detail.match(/PUBLIC_SOLD_DISCLAIMER/g) ?? [];
   assert.equal(disclaimerHits.length, 2, "import + one footer");
@@ -483,7 +495,7 @@ test("Low comps: fat catalog Retail High is capped — Palazzo-style band is not
   const fatCatalog: MarketEstimate = {
     tradeIn: 180000,
     retailLow: 200000,
-    retailHigh: 270000,
+    retailHigh: 267000,
     msrpLo: 320000,
     msrpHi: 420000,
     segment: "Diesel Class A",
@@ -491,7 +503,7 @@ test("Low comps: fat catalog Retail High is capped — Palazzo-style band is not
     source: "catalog",
     sourceLabel: CATALOG_ESTIMATE_LABEL,
   };
-  assert.equal(fatCatalog.retailHigh - fatCatalog.retailLow, 70000);
+  assert.equal(fatCatalog.retailHigh - 208000, 59000);
 
   const thin = reducePublicComps(
     [sold(2021, 208000)],
@@ -500,19 +512,37 @@ test("Low comps: fat catalog Retail High is capped — Palazzo-style band is not
   assert.ok(thin);
   assert.equal(thin.confidence, "low");
   assert.equal(prefersPublicComps(thin), false);
+  assert.equal(thin.medianAsk, 208000);
 
   const resolved = resolvePrimaryMarket({ catalog: fatCatalog, comps: thin });
   assert.equal(resolved.source, "catalog");
   assert.equal(resolved.sourceLabel, CATALOG_ESTIMATE_LABEL);
+  assert.equal(resolved.confidence, "low");
   assert.equal(resolved.hideRetailHigh, true);
+  assert.equal(resolved.marketValue, 208000);
+  assert.equal(resolved.retailHigh, 208000);
   assert.ok(
     resolved.retailHigh - resolved.retailLow <= THIN_COMP_MAX_RETAIL_BAND_USD,
     `band ${resolved.retailHigh - resolved.retailLow} must not stay a $60k+ fantasy`,
   );
+  assert.ok(
+    resolved.retailHigh - (resolved.marketValue ?? 0) <= THIN_COMP_MAX_RETAIL_BAND_USD,
+    "Retail High cannot sit a fat band above Market",
+  );
   assert.ok(resolved.retailHigh < 230000);
-  assert.ok(resolved.marketValue && resolved.marketValue > 0);
+  assert.notEqual(resolved.retailHigh, 267000);
   assert.notEqual(resolved.source, "public_listings");
   assert.ok(resolved.tradeIn <= resolved.retailLow);
+
+  const withLive = resolvePrimaryMarket({
+    catalog: fatCatalog,
+    liveLadder: { tradeIn: 180000, retailLow: 208000, retailHigh: 267000 },
+    comps: thin,
+  });
+  assert.equal(withLive.hideRetailHigh, true);
+  assert.equal(withLive.confidence, "low");
+  assert.equal(withLive.marketValue, 208000);
+  assert.equal(withLive.retailHigh, 208000);
 });
 
 test("asking-only and empty comps tighten catalog — Low beats invent", () => {

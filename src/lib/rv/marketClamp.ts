@@ -21,6 +21,46 @@ export function roundClampUsd(n: number): number {
 }
 
 /**
+ * Facts Market value — hide Retail High when Sold comps are Low or the
+ * public ladder did not win. Keyed on soldConfidence === "low" so a
+ * missing hideRetailHigh flag cannot paint the fat catalog ask.
+ */
+export function hideRetailHighForDesk(input: {
+  soldConfidence?: "high" | "medium" | "low" | null;
+  showSoldRange?: boolean;
+  hideRetailHigh?: boolean;
+}): boolean {
+  if (input.soldConfidence === "low" || input.soldConfidence == null) {
+    return true;
+  }
+  if (!input.showSoldRange) return true;
+  return Boolean(input.hideRetailHigh);
+}
+
+/**
+ * Low-confidence desk truth: Retail High cannot sit a fat band above
+ * Market value / midpoint. Pin High to the desk number — do not invent
+ * a sold price and do not keep a $60k catalog ask.
+ */
+export function clampRetailHighToMarketValue(
+  retailHigh: number,
+  marketValue: number,
+): { retailHigh: number; clamped: boolean } {
+  const mid = roundClampUsd(marketValue);
+  if (mid <= 0) {
+    return {
+      retailHigh: roundClampUsd(retailHigh),
+      clamped: false,
+    };
+  }
+  const hi = retailHigh > 0 ? retailHigh : mid;
+  if (hi - mid > THIN_COMP_MAX_RETAIL_BAND_USD || hi > mid) {
+    return { retailHigh: mid, clamped: hi !== mid };
+  }
+  return { retailHigh: hi, clamped: false };
+}
+
+/**
  * Recover the catalog private-party midpoint from a retail band.
  *
  * Catalog tiles use retailLow ≈ 0.95 × private mid and a dealer-ask
@@ -49,6 +89,7 @@ export function tightenRetailBandTowardMid(
   retailLow: number,
   retailHigh: number,
   tradeIn: number,
+  marketValue?: number,
 ): {
   retailLow: number;
   retailHigh: number;
@@ -57,7 +98,10 @@ export function tightenRetailBandTowardMid(
   hideRetailHigh: boolean;
   midpoint: number;
 } {
-  const midpoint = freePathMidpoint(retailLow, retailHigh);
+  const midpoint =
+    marketValue && marketValue > 0
+      ? roundClampUsd(marketValue)
+      : freePathMidpoint(retailLow, retailHigh);
   if (midpoint <= 0) {
     return {
       retailLow,
