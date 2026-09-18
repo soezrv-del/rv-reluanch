@@ -1405,11 +1405,11 @@
  * Launchpad is not [data-readable-cards].
  */
 [data-readable-cards] .page-backdrop-bright {
-  opacity: 0.82;
-  filter: brightness(1.04) contrast(1) saturate(0.85);
+  opacity: 0.95;
+  filter: brightness(1.14) contrast(1.02) saturate(0.92);
 }
 [data-readable-cards] .page-scrim-soft {
-  background: rgba(4, 8, 16, 0.28);
+  background: rgba(4, 8, 16, 0.1);
 }
 [data-readable-cards] .glass-prestige,
 [data-readable-cards] .glass-prestige-deep,
