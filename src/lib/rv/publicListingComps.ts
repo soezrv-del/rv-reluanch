@@ -14,7 +14,7 @@
  *
  * This module is the reducer + client fetch only. It must NEVER import
  * MarketCheck. Paid inventory search stays a separate side panel and
- * does not feed this ladder. Palazzo-first may blend an on-demand free
+ * does not feed this ladder. Any coach may blend an on-demand free
  * public J.D. Power estimate — never invent book dollars, never a paid
  * Price Guide.
  */
@@ -22,7 +22,6 @@
 import { clampTradeToRetailLow } from "./marketClamp.ts";
 import {
   applyJdPowerDeskMarket,
-  isJdPowerBlendEligible,
   type JdPowerPublicEstimate,
 } from "./jdPowerPublic.ts";
 import {
@@ -575,9 +574,9 @@ export function resolvePrimaryMarket(opts: {
   const { catalog, liveLadder, comps, jdPower } = opts;
   const jd =
     jdPower &&
+    jdPower.source === "jd_power_public" &&
     jdPower.lowRetail > 0 &&
-    jdPower.averageRetail > 0 &&
-    isJdPowerBlendEligible(jdPower.make, jdPower.model)
+    jdPower.averageRetail > 0
       ? jdPower
       : null;
   if (jd) {
@@ -655,7 +654,7 @@ export function buildListingCompsPrompt(input: {
     "You research PUBLIC SOLD prices for one RV coach. Return RESEARCH NOTES only — no JSON.",
     "Find concrete USED sold / sold-status listings for the SAME make + model (and floorplan when given).",
     `Year window: ${input.yearRange.from}–${input.yearRange.to} (coach year ±2).`,
-    "Prefer RV Trader, RVUSA, dealer sold pages, and public classifieds that mark the unit SOLD.",
+    "Prefer RV Trader / RVTrader, Facebook Marketplace, RVUSA, dealer sold pages, and public classifieds that mark the unit SOLD. Nationwide — do not restrict to one state or region.",
     "Each confirmed SOLD listing MUST be a line:",
     "SOLD: YEAR=<yyyy> MAKE=<make> MODEL=<model> FLOORPLAN=<code or -> PRICE=<usd> MILES=<n or -> CONDITION=<or -> SOURCE=<site>",
     "PRICE is the public sold price in USD. Do NOT invent sold prices. If you did not see a sold price, do not write a SOLD line.",
@@ -688,8 +687,8 @@ export type PublicMarketSources = {
 };
 
 /**
- * On-demand Market value fetch: public sold comps + Palazzo-first
- * public J.D. Power. Never invents JD dollars — jdPower is null on GAP.
+ * On-demand Market value fetch: public sold comps + public J.D. Power
+ * for any coach. Never invents JD dollars — jdPower is null on GAP.
  */
 export async function fetchPublicMarketSources(
   input: {

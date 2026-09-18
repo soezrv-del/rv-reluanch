@@ -1,9 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  fetchJdPowerPublicEstimate,
-  isJdPowerBlendEligible,
-  type JdPowerPublicEstimate,
-} from "@/lib/rv/jdPowerPublic";
+import { fetchJdPowerPublicEstimate } from "@/lib/rv/jdPowerPublic";
 import { researchPublicListingComps } from "@/lib/rv/researchPublicComps";
 import {
   COMPS_PARSER_VERSION,
@@ -15,7 +11,7 @@ import {
  * POST /api/rvfax/public-comps
  *
  * On-demand Market value: public sold listings (year ±2) plus a
- * Palazzo-first free public J.D. Power parse. Facts opens send
+ * free public J.D. Power parse for any coach. Facts opens send
  * `fresh: true` so this is not a nightly/stale band. JD is always
  * fetched live. Cache HIT re-parses `data.notes` with the current
  * extractor so a parser deploy takes effect on warm instances.
@@ -117,13 +113,12 @@ export const Route = createFileRoute("/api/rvfax/public-comps")({
           };
         })();
 
-        const jdPromise = isJdPowerBlendEligible(make, model)
-          ? fetchJdPowerPublicEstimate({ year, make, model, floorplan })
-          : Promise.resolve({
-              ok: false as const,
-              reason: "J.D. Power public blend is Palazzo-first",
-              data: null as JdPowerPublicEstimate | null,
-            });
+        const jdPromise = fetchJdPowerPublicEstimate({
+          year,
+          make,
+          model,
+          floorplan,
+        });
 
         try {
           const [compsResult, jdResult] = await Promise.all([

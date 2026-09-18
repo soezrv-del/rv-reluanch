@@ -4,7 +4,7 @@
  * One retain curve for every RV was wrong: Class B vans hold, gas Class A/C
  * drop hard in the first years, toy haulers lag fifth wheels. This module
  * is a segment-aware *catalog estimate* — not a paid NADA / J.D. Power
- * Price Guide, not MarketCheck. Free public J.D. Power (Palazzo-first)
+ * Price Guide, not MarketCheck. Free public J.D. Power (any coach)
  * is a separate on-demand ladder.
  *
  * Shape:

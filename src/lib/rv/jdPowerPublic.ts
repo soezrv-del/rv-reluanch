@@ -1,5 +1,5 @@
 /**
- * On-demand free public J.D. Power RV values — Palazzo-first test path.
+ * On-demand free public J.D. Power RV values — every coach, same two-leg path.
  *
  * Fetched when Facts opens Market value. No cron, no nightly batch, no
  * stored dollar snapshots. Dollars come only from a live public HTML
@@ -7,7 +7,7 @@
  * values, never a paid J.D. Power Price Guide / NADA API.
  *
  * Public source: jdpower.com/rvs values pages
- * (e.g. 2021 Thor Palazzo 33.5 Freightliner).
+ * (e.g. 2021 Thor Palazzo 33.5, 2022 American Dream 45A, 2022 Allegro Bus 37AP).
  */
 
 import { clampRetailHighToMarketValue, clampTradeToRetailLow } from "./marketClamp.ts";
@@ -19,6 +19,7 @@ export const JD_POWER_PUBLIC_LABEL = "Public J.D. Power estimate";
 export const JD_POWER_BLEND_LABEL =
   "Avg of public J.D. Power estimate + asking comps";
 
+/** Verified public values page — shortcut only, not an exclusivity gate. */
 export const PALAZZO_JD_POWER_TEST_UNIT = {
   year: 2021,
   make: "Thor",
@@ -53,12 +54,17 @@ export type JdPowerFetchResult =
 const MIN_BOOK_USD = 1_000;
 const MAX_BOOK_USD = 2_500_000;
 
-export function isJdPowerBlendEligible(make?: string, model?: string): boolean {
-  return (
-    /^thor$/i.test((make || "").trim()) &&
-    /^palazzo$/i.test((model || "").trim())
-  );
-}
+/** Listing-path tokens that are too generic to fetch on their own. */
+const GENERIC_LISTING_SLUGS = new Set([
+  "american",
+  "coach",
+  "motor",
+  "new",
+  "super",
+  "the",
+  "rv",
+  "series",
+]);
 
 export function isJdPowerMarketSource(
   source?: MarketValueSource | string | null,
@@ -79,12 +85,78 @@ export function jdPowerSourceLabel(
   return undefined;
 }
 
-/** 33.5 → m-33-5 (JD Power used-values slug). */
+/** JD public path segment: "Thor Motor Coach" → thor-motor-coach. */
+export function jdPowerPathSlug(raw: string): string {
+  return String(raw || "")
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * Public listing-page slugs for a catalog make + model.
+ * JD brand segments are inconsistent (thor-motor-coach, american-dream,
+ * allegro) — we try derived slugs, never a fabricated values-page id.
+ */
+export function jdPowerListingSlugs(make?: string, model?: string): string[] {
+  const slugs: string[] = [];
+  const push = (slug: string) => {
+    if (!slug || GENERIC_LISTING_SLUGS.has(slug) || slugs.includes(slug)) return;
+    slugs.push(slug);
+  };
+
+  const modelSlug = jdPowerPathSlug(model || "");
+  const makeSlug = jdPowerPathSlug(make || "");
+  push(modelSlug);
+
+  const modelTokens = String(model || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (modelTokens.length > 1) {
+    push(jdPowerPathSlug(modelTokens[0]!));
+  }
+
+  if (/^thor(\s+motor(\s+coach)?)?$/i.test(String(make || "").trim())) {
+    push("thor-motor-coach");
+  }
+  push(makeSlug);
+  return slugs;
+}
+
+/**
+ * Floorplan prefixes used on JD values paths.
+ * 33.5 → m-33-5; 45A → m-45a; 37AP → m-37ap; 45OPP → m-45opp + m-45op.
+ */
+export function jdPowerFloorplanSlugs(floorplan: string): string[] {
+  const raw = String(floorplan || "")
+    .trim()
+    .replace(/^m[-\s.]?/i, "");
+  if (!raw) return [];
+  const slugs = new Set<string>();
+  const dotted = raw.match(/^(\d{2})\.(\d)$/);
+  if (dotted) slugs.add(`m-${dotted[1]}-${dotted[2]}`);
+
+  const compact = raw.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (compact) {
+    slugs.add(`m-${compact}`);
+    const split = compact.match(/^(\d{2,3})([a-z]{1,6})$/);
+    if (split) {
+      slugs.add(`m-${split[1]}-${split[2]}`);
+      if (split[2].length >= 3) {
+        slugs.add(`m-${split[1]}${split[2].slice(0, 2)}`);
+      }
+    }
+  }
+  return [...slugs];
+}
+
+/** 33.5 → m-33-5 (JD Power used-values slug). Other plans use {@link jdPowerFloorplanSlugs}. */
 export function jdPowerFloorplanSlug(floorplan: string): string | null {
-  const t = floorplan.trim();
-  const m = t.match(/^(\d{2})\.(\d)$/);
-  if (!m) return null;
-  return `m-${m[1]}-${m[2]}`;
+  return jdPowerFloorplanSlugs(floorplan)[0] ?? null;
 }
 
 export function roundJdPublicUsd(n: number): number {
@@ -141,21 +213,38 @@ export function parseJdPowerPublicHtml(html: string): {
   return { lowRetail, averageRetail, highRetail };
 }
 
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Discover a public values URL from a year listing page.
+ * Matches any brand/model segment — not Thor Motor Coach only.
+ * Never invents the numeric id; GAP when the floorplan is absent.
+ */
 export function discoverJdPowerValuesUrl(
   listingHtml: string,
   year: number,
   floorplan: string,
 ): string | null {
-  const slug = jdPowerFloorplanSlug(floorplan);
-  if (!slug) return null;
+  const prefixes = jdPowerFloorplanSlugs(floorplan);
+  if (!prefixes.length) return null;
+  const prefixRe = prefixes.map(escapeRe).join("|");
   const re = new RegExp(
-    `/rvs/${year}/thor-motor-coach/${slug}[-a-z0-9]*/(\\d+)(?:/values)?`,
-    "i",
+    `/rvs/${year}/[a-z0-9-]+/(${prefixRe})[-a-z0-9]*/(\\d+)(?:/values)?`,
+    "gi",
   );
-  const m = listingHtml.match(re);
-  if (!m?.[0]) return null;
-  const path = m[0].replace(/\/values$/i, "") + "/values";
-  return `${JD_POWER_PUBLIC_ORIGIN}${path.startsWith("/") ? path : `/${path}`}`;
+  let best: { path: string; prefixLen: number } | null = null;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(listingHtml))) {
+    const prefix = (m[1] || "").toLowerCase();
+    const path = m[0].replace(/\/values$/i, "") + "/values";
+    if (!best || prefix.length > best.prefixLen) {
+      best = { path, prefixLen: prefix.length };
+    }
+  }
+  if (!best) return null;
+  return `${JD_POWER_PUBLIC_ORIGIN}${best.path.startsWith("/") ? best.path : `/${best.path}`}`;
 }
 
 export function knownPalazzoJdPowerValuesUrl(
@@ -173,11 +262,33 @@ export function knownPalazzoJdPowerValuesUrl(
   return null;
 }
 
-function listingUrlsFor(year: number): string[] {
-  return [
-    `${JD_POWER_PUBLIC_ORIGIN}/rvs/${year}/used/thor-motor-coach`,
-    `${JD_POWER_PUBLIC_ORIGIN}/rvs/${year}/thor-motor-coach`,
-  ];
+/** Verified Palazzo shortcut only when the unit is that coach — not a make gate. */
+export function knownJdPowerValuesUrl(
+  year: string | number,
+  make: string,
+  model: string,
+  floorplan?: string,
+): string | null {
+  if (
+    /^thor$/i.test(make.trim()) &&
+    /^palazzo$/i.test(model.trim())
+  ) {
+    return knownPalazzoJdPowerValuesUrl(year, floorplan);
+  }
+  return null;
+}
+
+export function candidateJdPowerListingUrls(
+  year: number,
+  make: string,
+  model: string,
+): string[] {
+  const urls: string[] = [];
+  for (const slug of jdPowerListingSlugs(make, model)) {
+    urls.push(`${JD_POWER_PUBLIC_ORIGIN}/rvs/${year}/${slug}`);
+    urls.push(`${JD_POWER_PUBLIC_ORIGIN}/rvs/${year}/used/${slug}`);
+  }
+  return urls;
 }
 
 async function fetchPublicHtml(
@@ -358,7 +469,8 @@ export function applyJdPowerDeskMarket(input: {
 }
 
 /**
- * Live public fetch. Palazzo-first. Never invents dollars on GAP.
+ * Live public fetch for any year/make/model/floorplan. Never invents
+ * dollars on GAP. Does not restrict to Thor Palazzo.
  */
 export async function fetchJdPowerPublicEstimate(
   input: {
@@ -369,10 +481,12 @@ export async function fetchJdPowerPublicEstimate(
   },
   signal?: AbortSignal,
 ): Promise<JdPowerFetchResult> {
-  if (!isJdPowerBlendEligible(input.make, input.model)) {
+  const make = input.make.trim();
+  const model = input.model.trim();
+  if (!make || !model) {
     return {
       ok: false,
-      reason: "J.D. Power public blend is Palazzo-first",
+      reason: "make and model are required for a public J.D. Power lookup",
       data: null,
     };
   }
@@ -391,7 +505,7 @@ export async function fetchJdPowerPublicEstimate(
 
   const tried = new Set<string>();
   const queue: string[] = [];
-  const known = knownPalazzoJdPowerValuesUrl(yearNum, floorplan);
+  const known = knownJdPowerValuesUrl(yearNum, make, model, floorplan);
   if (known) queue.push(known);
 
   const takeParsed = (
@@ -403,8 +517,8 @@ export async function fetchJdPowerPublicEstimate(
     return {
       source: "jd_power_public",
       year: yearNum,
-      make: input.make.trim(),
-      model: input.model.trim(),
+      make,
+      model,
       floorplan,
       lowRetail: parsed.lowRetail,
       averageRetail: parsed.averageRetail,
@@ -423,7 +537,7 @@ export async function fetchJdPowerPublicEstimate(
     if (parsed) return { ok: true, data: parsed };
   }
 
-  for (const listing of listingUrlsFor(yearNum)) {
+  for (const listing of candidateJdPowerListingUrls(yearNum, make, model)) {
     if (signal?.aborted) break;
     const page = await fetchPublicHtml(listing, 8_000, signal);
     if (!page.ok) continue;

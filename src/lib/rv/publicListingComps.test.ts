@@ -324,6 +324,9 @@ test("public-comps cache HIT re-parses notes and versions the key", () => {
     /cacheKey[\s\S]*COMPS_PARSER_VERSION/,
     "cache key must include parser version so pre-#282 entries miss",
   );
+  assert.doesNotMatch(api, /isJdPowerBlendEligible/);
+  assert.doesNotMatch(api, /Palazzo-first/);
+  assert.match(api, /fetchJdPowerPublicEstimate/);
 });
 
 test("used SOLD + sold-for still count — New-unit demote is not a blanket skip", () => {
@@ -621,6 +624,9 @@ test("listing prompt demands sold lines and forbids inventing or paid books", ()
   assert.match(p.system, /NADA/);
   assert.match(p.system, /J\.D\. Power/);
   assert.match(p.system, /ASK:/);
+  assert.match(p.system, /RV Trader/);
+  assert.match(p.system, /Facebook Marketplace/);
+  assert.match(p.system, /Nationwide/);
 });
 
 test("research fetch path prefers sold and does not invent prices", () => {
