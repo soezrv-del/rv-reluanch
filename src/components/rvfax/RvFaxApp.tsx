@@ -40,6 +40,10 @@ import {
   YEARS,
 } from "@/lib/rv/catalog";
 import {
+  capCompareItems,
+  suggestComparePeers,
+} from "@/lib/rv/compare";
+import {
   cascadeFromResult,
   FACTS_TYPE_OPTIONS,
   factsTypeLabel,
@@ -162,6 +166,7 @@ export function RvFaxApp({
   const [comparePick, setComparePick] = useState<RVResult[]>([]);
   const { ready: catalogReady, gen: catalogGen } = useCatalogReady();
   const [compareOpen, setCompareOpen] = useState(false);
+  const [peerPickOpen, setPeerPickOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestHit[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const cascadeCoreRef = useRef<HTMLDivElement | null>(null);
@@ -656,15 +661,74 @@ export function RvFaxApp({
     setComparePick([...comparePick, r]);
   };
 
+  const includeInCompare = (r: RVResult) => {
+    const key = compareSelectionKey(r);
+    if (comparePick.some((c) => compareSelectionKey(c) === key)) {
+      return comparePick;
+    }
+    if (comparePick.length >= 3) {
+      return capCompareItems([...comparePick.slice(0, 2), r]);
+    }
+    return capCompareItems([...comparePick, r]);
+  };
+
+  const startCompareFromFacts = (unit: RVResult) => {
+    const next = includeInCompare(unit);
+    setComparePick(next);
+    if (next.length >= 2) {
+      setPeerPickOpen(false);
+      setCompareOpen(true);
+      return;
+    }
+    setPeerPickOpen(true);
+  };
+
+  const addPeerAndMaybeOpen = (peer: RVResult) => {
+    const key = compareSelectionKey(peer);
+    const idx = comparePick.findIndex((c) => compareSelectionKey(c) === key);
+    if (idx >= 0) {
+      setComparePick(comparePick.filter((_, i) => i !== idx));
+      return;
+    }
+    const next = includeInCompare(peer);
+    setComparePick(next);
+    if (next.length >= 2) {
+      setPeerPickOpen(false);
+      setCompareOpen(true);
+    }
+  };
+
   const eraLabel =
     YEAR_ERAS.find((e) => e.id === era)?.label ?? "All Years";
   const eraSub = YEAR_ERAS.find((e) => e.id === era)?.sub ?? "";
+
+  const compareAnchor = detail ?? comparePick[0] ?? null;
+  const comparePeers = compareAnchor
+    ? suggestComparePeers(compareAnchor, [...results, ...saved])
+    : [];
+
+  const peerSheet =
+    peerPickOpen && compareAnchor ? (
+      <ComparePeerPicker
+        anchor={compareAnchor}
+        peers={comparePeers}
+        selected={comparePick}
+        onToggle={addPeerAndMaybeOpen}
+        onClose={() => setPeerPickOpen(false)}
+        onOpen={() => {
+          if (comparePick.length >= 2) {
+            setPeerPickOpen(false);
+            setCompareOpen(true);
+          }
+        }}
+      />
+    ) : null;
 
   if (compareOpen && comparePick.length >= 2) {
     return (
       <Suspense fallback={<PanelFallback />}>
         <RvCompare
-          items={comparePick}
+          items={capCompareItems(comparePick)}
           onBack={() => setCompareOpen(false)}
           onOpen={(r) => {
             setCompareOpen(false);
@@ -677,30 +741,34 @@ export function RvFaxApp({
 
   if (detail) {
     return (
-      <Suspense fallback={<PanelFallback />}>
-        <RvDetail
-          result={detail}
-          shareFocusToken={shareFocusToken}
-          marketFocusToken={marketFocusToken}
-          onBack={() => setDetail(null)}
-          onToggleSave={() => toggleSave(detail)}
-          saved={isSavedUnit(saved, detail)}
-          comparing={comparePick.some(
-            (c) => compareSelectionKey(c) === compareSelectionKey(detail),
-          )}
-          compareCount={comparePick.length}
-          compareFull={comparePick.length >= 3}
-          onToggleCompare={() => toggleCompare(detail)}
-          onOpenCompare={() => {
-            if (comparePick.length >= 2) setCompareOpen(true);
-          }}
-          onAskGrok={() =>
-            onOpenGrok?.(
-              `Tell me about the ${detail.year} ${detail.make} ${detail.model}${detail.floorplan ? ` floorplan ${detail.floorplan}` : ""} — factory specs, used market, reliability, recalls, and service issues.`,
-            )
-          }
-        />
-      </Suspense>
+      <>
+        <Suspense fallback={<PanelFallback />}>
+          <RvDetail
+            result={detail}
+            shareFocusToken={shareFocusToken}
+            marketFocusToken={marketFocusToken}
+            onBack={() => setDetail(null)}
+            onToggleSave={() => toggleSave(detail)}
+            saved={isSavedUnit(saved, detail)}
+            comparing={comparePick.some(
+              (c) => compareSelectionKey(c) === compareSelectionKey(detail),
+            )}
+            compareCount={comparePick.length}
+            compareFull={comparePick.length >= 3}
+            onToggleCompare={() => toggleCompare(detail)}
+            onOpenCompare={() => {
+              if (comparePick.length >= 2) setCompareOpen(true);
+            }}
+            onStartCompare={() => startCompareFromFacts(detail)}
+            onAskGrok={() =>
+              onOpenGrok?.(
+                `Tell me about the ${detail.year} ${detail.make} ${detail.model}${detail.floorplan ? ` floorplan ${detail.floorplan}` : ""} — factory specs, used market, reliability, recalls, and service issues.`,
+              )
+            }
+          />
+        </Suspense>
+        {peerSheet}
+      </>
     );
   }
 
@@ -951,14 +1019,19 @@ export function RvFaxApp({
                 <p className="text-[11px] font-bold tracking-[0.12em] text-white">
                   {results.length} RESULT{results.length === 1 ? "" : "S"}
                 </p>
-                {comparePick.length >= 2 ? (
+                {comparePick.length >= 1 ? (
                   <button
                     type="button"
-                    onClick={() => setCompareOpen(true)}
+                    onClick={() => {
+                      if (comparePick.length >= 2) setCompareOpen(true);
+                      else setPeerPickOpen(true);
+                    }}
                     className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-sky-400/45 bg-sky-500/20 px-3 py-1.5 text-[11px] font-bold text-white"
                   >
                     <GitCompare className="size-3.5" />
-                    Compare {comparePick.length}
+                    {comparePick.length >= 2
+                      ? `Compare ${comparePick.length}`
+                      : "Compare"}
                   </button>
                 ) : null}
               </div>
@@ -1186,6 +1259,7 @@ export function RvFaxApp({
           <VinDecoder open={vinOpen} onClose={() => setVinOpen(false)} />
         </Suspense>
       ) : null}
+      {peerSheet}
     </div>
   );
 }
@@ -1389,5 +1463,112 @@ function Chip({ icon, label }: { icon: ReactNode; label: string }) {
       {icon}
       {label}
     </span>
+  );
+}
+
+function ComparePeerPicker({
+  anchor,
+  peers,
+  selected,
+  onToggle,
+  onClose,
+  onOpen,
+}: {
+  anchor: RVResult;
+  peers: RVResult[];
+  selected: RVResult[];
+  onToggle: (r: RVResult) => void;
+  onClose: () => void;
+  onOpen: () => void;
+}) {
+  const ready = selected.length >= 2;
+  return (
+    <div
+      className="fixed inset-0 z-40 flex flex-col justify-end bg-black/70"
+      data-compare-peer-picker=""
+    >
+      <button
+        type="button"
+        aria-label="Close compare picker"
+        className="absolute inset-0"
+        onClick={onClose}
+      />
+      <div className="relative z-10 max-h-[78%] overflow-hidden rounded-t-3xl border-t border-white/15 bg-[#0a1220] px-4 pb-6 pt-3">
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/25" />
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-bold tracking-[0.14em] text-white/55">
+              COMPARE
+            </p>
+            <p className="mt-0.5 text-[16px] font-bold text-white">
+              Add 1–2 units
+            </p>
+            <p className="mt-1 text-[12px] text-white/70">
+              {anchor.year} {anchor.make} {anchor.model}
+              {anchor.floorplan ? ` ${anchor.floorplan}` : ""} is in.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex size-11 items-center justify-center rounded-full border border-white/20 text-white"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+        <ul className="mt-3 max-h-[46vh] space-y-2 overflow-y-auto overscroll-contain">
+          {peers.length === 0 ? (
+            <li className="rounded-xl border border-white/10 bg-black/30 px-3 py-4 text-[13px] text-white/70">
+              No catalog peers here. Open another unit from search or Saved,
+              tap Compare on that card, then Compare again.
+            </li>
+          ) : (
+            peers.map((r) => {
+              const key = compareSelectionKey(r);
+              const on = selected.some((c) => compareSelectionKey(c) === key);
+              const full = !on && selected.length >= 3;
+              return (
+                <li key={key}>
+                  <button
+                    type="button"
+                    disabled={full}
+                    onClick={() => onToggle(r)}
+                    className={cn(
+                      "flex min-h-[52px] w-full items-center justify-between gap-2 rounded-xl border px-3.5 py-3 text-left disabled:opacity-40",
+                      on
+                        ? "border-sky-400/50 bg-sky-500/20"
+                        : "border-white/12 bg-black/35",
+                    )}
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-bold text-white">
+                        {r.year} {r.make} {r.model}
+                      </p>
+                      <p className="text-[11px] text-white/70">
+                        {r.floorplan || r.data.type}
+                      </p>
+                    </div>
+                    {on ? (
+                      <Check className="size-4 shrink-0 text-sky-200" />
+                    ) : (
+                      <GitCompare className="size-4 shrink-0 text-white/50" />
+                    )}
+                  </button>
+                </li>
+              );
+            })
+          )}
+        </ul>
+        <button
+          type="button"
+          disabled={!ready}
+          onClick={onOpen}
+          className="mt-4 flex w-full min-h-12 items-center justify-center gap-1.5 rounded-full border border-sky-400/50 bg-sky-500/25 text-[13px] font-bold text-white disabled:opacity-40"
+        >
+          <GitCompare className="size-3.5" />
+          {ready ? `Compare ${selected.length}` : "Pick a unit"}
+        </button>
+      </div>
+    </div>
   );
 }

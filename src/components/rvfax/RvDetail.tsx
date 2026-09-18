@@ -164,6 +164,7 @@ export function RvDetail({
   compareFull = false,
   onToggleCompare,
   onOpenCompare,
+  onStartCompare,
   onAskGrok,
 }: {
   result: RVResult;
@@ -177,6 +178,7 @@ export function RvDetail({
   compareFull?: boolean;
   onToggleCompare?: () => void;
   onOpenCompare?: () => void;
+  onStartCompare?: () => void;
   onAskGrok: () => void;
 }) {
   const { ready: catalogReady } = useCatalogReady();
@@ -1117,7 +1119,20 @@ export function RvDetail({
                       }}
                     />
                   ) : null}
-                  {onOpenCompare && compareCount >= 2 ? (
+                  {onStartCompare ? (
+                    <OverflowItem
+                      icon={<GitCompare className="size-3.5" />}
+                      label={
+                        compareCount >= 2
+                          ? `Compare ${compareCount} units`
+                          : "Compare with peers"
+                      }
+                      onClick={() => {
+                        onStartCompare();
+                        setMoreOpen(false);
+                      }}
+                    />
+                  ) : onOpenCompare && compareCount >= 2 ? (
                     <OverflowItem
                       icon={<GitCompare className="size-3.5" />}
                       label="Open compare"
@@ -1166,6 +1181,24 @@ export function RvDetail({
               ) : null}
             </div>
           </div>
+          {onStartCompare ? (
+            <div
+              className="mx-auto w-full max-w-lg px-3 pb-2 sm:px-5"
+              data-facts-compare-entry=""
+            >
+              <button
+                type="button"
+                data-facts-compare=""
+                onClick={onStartCompare}
+                className="flex w-full min-h-11 items-center justify-center gap-1.5 rounded-full border border-sky-400/50 bg-sky-500/25 px-4 text-[13px] font-bold text-white"
+              >
+                <GitCompare className="size-3.5" />
+                {compareCount >= 2
+                  ? `Compare ${compareCount} units`
+                  : "Compare with another unit"}
+              </button>
+            </div>
+          ) : null}
         </div>
         <div className="bg-[#070b14]">
         <div
