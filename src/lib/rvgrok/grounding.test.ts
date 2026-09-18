@@ -19,6 +19,7 @@ import {
   looksLikeImageOnlyAsk,
   looksLikeInventoryOrCountQuestion,
   looksLikeLiveResearchQuestion,
+  looksLikeMarketValueQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeOffCatalogQuestion,
   needsWebFallback,
@@ -240,6 +241,30 @@ test("looksLikeLiveResearchQuestion is true for troubleshooting and lookup", () 
   }
 });
 
+test("market value / pricing asks fire live research even when catalog is locked", () => {
+  const yes = [
+    "What's the market value of a 2019 Newmar Dutch Star?",
+    "What is a 2015 Newmar Ventana worth?",
+    "Pricing on a 2018 Keystone Passport",
+    "How much is a used 2020 Entegra Aspire?",
+    "What are they asking for a 2016 Tiffin Phaeton?",
+  ];
+  const locked = { missingHard: false };
+  for (const q of yes) {
+    assert.equal(looksLikeMarketValueQuestion(q), true, q);
+    assert.equal(looksLikeLiveResearchQuestion(q), true, q);
+    assert.equal(needsWebFallback(null, q), true, q);
+    assert.equal(needsWebFallback(locked, q), true, q);
+  }
+  assert.equal(looksLikeMarketValueQuestion("Is full-timing worth it?"), false);
+  assert.equal(
+    looksLikeMarketValueQuestion(
+      "What's the monthly payment on $80000 at 7% for 15 years?",
+    ),
+    false,
+  );
+});
+
 test("looksLikeLiveResearchQuestion is false for lifestyle, payment, and hi", () => {
   const casual = [
     "hi",
@@ -349,6 +374,9 @@ test("troubleshooting web prompt asks for symptoms and bulletins", () => {
   const packed = JSON.stringify(body);
   assert.match(packed, /symptoms|bulletin|TSB|troubleshooting/i);
   assert.match(packed, /slide won't retract/i);
+  assert.match(packed, /Market value \/ pricing/);
+  assert.match(packed, /competitor-latest/);
+  assert.match(packed, /year ±2/);
   assert.deepEqual(body.tools, [{ type: "web_search" }]);
   const input = body.input as Array<{ role: string; content: string }>;
   assert.equal(input.length, 1);
