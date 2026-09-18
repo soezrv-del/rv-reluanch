@@ -5,15 +5,19 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   buildRvVideoCoreQuery,
+  buildRvVideoMakeModelQuery,
   buildRvVideoQuery,
   calmVideoLookupError,
+  classifyRvVideoYearDelta,
   clearRvVideoSession,
   EMPTY_MATCH_MESSAGE,
   fetchRvVideos,
   formatShareVideoBlock,
   isRvVideoLibraryYear,
   LOOKUP_FAILED_MESSAGE,
+  matchRvVideos,
   MISSING_KEY_MESSAGE,
+  NEAR_YEAR_NOTE,
   parseCoachModelYear,
   rankRvVideos,
   RELATED_NOTE,
@@ -21,11 +25,15 @@ import {
   RV_VIDEO_LIBRARY_CHANNEL_ID,
   RV_VIDEO_LIBRARY_HANDLE,
   RV_VIDEO_LIBRARY_MIN_YEAR,
+  RV_VIDEO_NEAR_YEAR_MAX,
+  RV_VIDEO_WIDE_YEAR_MAX,
   shareVideoForCoach,
   shouldShowRvVideoPrompt,
   scoreTitleOverlap,
   titleHasCompetingMake,
   titleHasExactMake,
+  titleHasRequiredModel,
+  titleQualifiesForRvCoach,
   titleQualifiesForRvMake,
   tokenizeCoachQuery,
   youtubeWatchUrl,
@@ -166,6 +174,15 @@ test("query is year + make + model and optional series/floorplan, no invent", ()
       floorplan: "45A",
     }),
     "2023 American Coach American Dream",
+  );
+  assert.equal(
+    buildRvVideoMakeModelQuery({
+      year: "2023",
+      make: "American Coach",
+      model: "American Dream",
+      floorplan: "45A",
+    }),
+    "American Coach American Dream",
   );
   assert.equal(
     buildRvVideoQuery({
@@ -317,6 +334,7 @@ test("Facts report only fetches videos after opt-in; key stays server-side", () 
   assert.doesNotMatch(resetEffect![0], /fetchRvVideos/);
   assert.match(card, /MISSING_KEY_MESSAGE/);
   assert.match(card, /RELATED_NOTE/);
+  assert.match(client, /NEAR_YEAR_NOTE/);
 
   assert.match(api, /YOUTUBE_API_KEY/);
   assert.match(api, /process\.env\.YOUTUBE_API_KEY/);
@@ -327,8 +345,10 @@ test("Facts report only fetches videos after opt-in; key stays server-side", () 
   assert.equal(RV_VIDEO_LIBRARY_CHANNEL_ID, "UCaAH7nANvUhdPWN93uQ6mcA");
   assert.equal(RV_VIDEO_LIBRARY_HANDLE, "RVVideoLibrary");
   assert.match(api, /MISSING_KEY_MESSAGE/);
-  assert.match(api, /filterRvVideosByMake/);
-  assert.match(api, /rankRvVideos\(hits, query, make\)/);
+  assert.match(api, /matchRvVideos/);
+  assert.match(api, /buildRvVideoMakeModelQuery/);
+  assert.match(api, /rvVideoTierSatisfied/);
+  assert.doesNotMatch(api, /year\s*[+-]\s*[1235]|for\s*\(\s*let\s+delta/);
   assert.doesNotMatch(api, /VITE_YOUTUBE/);
 
   assert.match(client, /\/api\/rv-videos/);
@@ -472,4 +492,203 @@ test("session cache hides Share toggle when key is missing or there is no match"
     globalThis.fetch = prior;
     clearRvVideoSession();
   }
+});
+
+test("year tiers are exact, then ±2–±3 (closer first), then ±5", () => {
+  assert.equal(RV_VIDEO_NEAR_YEAR_MAX, 3);
+  assert.equal(RV_VIDEO_WIDE_YEAR_MAX, 5);
+  assert.equal(classifyRvVideoYearDelta(0), "exact");
+  assert.equal(classifyRvVideoYearDelta(1), "near");
+  assert.equal(classifyRvVideoYearDelta(2), "near");
+  assert.equal(classifyRvVideoYearDelta(3), "near");
+  assert.equal(classifyRvVideoYearDelta(4), "wide");
+  assert.equal(classifyRvVideoYearDelta(5), "wide");
+  assert.equal(classifyRvVideoYearDelta(6), null);
+});
+
+test("Dutch Star (Newmar): exact year wins; near-year only when exact is absent", () => {
+  const coach = {
+    year: "2023",
+    make: "Newmar",
+    model: "Dutch Star",
+  };
+  const exact = { title: "2023 Newmar Dutch Star 4081 Walkthrough" };
+  const nearCloser = { title: "2021 Newmar Dutch Star 4081 Walkthrough" };
+  const nearFarther = { title: "2020 Newmar Dutch Star 4081 Walkthrough" };
+  const wide = { title: "2018 Newmar Dutch Star 3736 Walkthrough" };
+  const beyond = { title: "2017 Newmar Dutch Star Walkthrough" };
+  const ventana = { title: "2023 Newmar Ventana 4037 Walkthrough" };
+
+  const withExact = matchRvVideos(
+    [wide, nearFarther, exact, nearCloser, ventana, beyond],
+    coach,
+  );
+  assert.equal(withExact.tier, "exact");
+  assert.deepEqual(
+    withExact.videos.map((v) => v.title),
+    [exact.title],
+  );
+  assert.equal(withExact.note, RELATED_NOTE);
+
+  const nearOnly = matchRvVideos(
+    [wide, nearFarther, nearCloser, ventana, beyond],
+    coach,
+  );
+  assert.equal(nearOnly.tier, "near");
+  assert.equal(nearOnly.videos[0]!.title, nearCloser.title);
+  assert.equal(
+    nearOnly.videos.some((v) => v.title === nearFarther.title),
+    true,
+  );
+  assert.equal(
+    nearOnly.videos.some((v) => v.title === wide.title),
+    false,
+  );
+  assert.equal(nearOnly.note, NEAR_YEAR_NOTE);
+
+  const wideOnly = matchRvVideos([wide, ventana, beyond], coach);
+  assert.equal(wideOnly.tier, "wide");
+  assert.deepEqual(
+    wideOnly.videos.map((v) => v.title),
+    [wide.title],
+  );
+  assert.equal(wideOnly.note, NEAR_YEAR_NOTE);
+
+  const none = matchRvVideos([ventana, beyond], coach);
+  assert.equal(none.tier, null);
+  assert.equal(none.videos.length, 0);
+  assert.equal(none.note, EMPTY_MATCH_MESSAGE);
+});
+
+test("Renegade Verona: make+model required; year tiers do not invent a model", () => {
+  const coach = {
+    year: "2022",
+    make: "Renegade RV",
+    model: "Verona",
+  };
+  assert.equal(buildRvVideoMakeModelQuery(coach), "Renegade RV Verona");
+  assert.equal(titleHasRequiredModel("2022 Renegade RV Valencia 38RW", "Verona"), false);
+  assert.equal(titleHasRequiredModel("2022 Renegade RV Verona 40VRB", "Verona"), true);
+  assert.equal(
+    titleQualifiesForRvCoach("2022 Renegade Verona 40VRB Walkthrough", "Renegade RV", "Verona"),
+    true,
+  );
+
+  const valencia = { title: "2022 Renegade RV Valencia 38RW Walkthrough" };
+  const makeOnly = { title: "2022 Renegade Super C tour" };
+  const modelOnly = { title: "2022 Verona 40VRB Walkthrough" };
+  const exact = { title: "2022 Renegade RV Verona 40VRB Walkthrough" };
+  const near = { title: "2020 Renegade RV Verona 40VRB Walkthrough" };
+  const wide = { title: "2017 Renegade RV Verona Walkthrough" };
+
+  assert.equal(matchRvVideos([valencia, makeOnly, modelOnly], coach).videos.length, 0);
+  assert.equal(matchRvVideos([valencia, makeOnly, modelOnly], { ...coach, model: "" }).videos.length, 0);
+
+  const exactHit = matchRvVideos([valencia, makeOnly, modelOnly, exact, near, wide], coach);
+  assert.equal(exactHit.tier, "exact");
+  assert.deepEqual(
+    exactHit.videos.map((v) => v.title),
+    [exact.title],
+  );
+
+  const nearHit = matchRvVideos([valencia, near, wide], coach);
+  assert.equal(nearHit.tier, "near");
+  assert.deepEqual(
+    nearHit.videos.map((v) => v.title),
+    [near.title],
+  );
+
+  const wideHit = matchRvVideos([valencia, wide], coach);
+  assert.equal(wideHit.tier, "wide");
+  assert.deepEqual(
+    wideHit.videos.map((v) => v.title),
+    [wide.title],
+  );
+});
+
+test("Gulf Stream / Gulfstream: no invent cross-make", () => {
+  const coach = {
+    year: "2022",
+    make: "Gulf Stream",
+    model: "Conquest",
+  };
+  const gulfstreamSpelling = { title: "2022 Gulfstream Conquest 63111 Walkthrough" };
+  const otherMakes = [
+    { title: "2022 Newmar Dutch Star 4081 Walkthrough" },
+    { title: "2022 Tiffin Allegro Bus 45OPP Walkthrough" },
+    { title: "2022 American Coach American Dream 45A Walkthrough" },
+    { title: "2022 Liberty Coach Signature Walkthrough" },
+    { title: "2020 Gulf Breeze Class C tour" },
+  ];
+  const invented = matchRvVideos([...otherMakes, gulfstreamSpelling], coach);
+  assert.equal(invented.videos.length, 0);
+  assert.equal(invented.tier, null);
+  assert.equal(titleHasExactMake(gulfstreamSpelling.title, "Gulf Stream"), false);
+  assert.equal(titleHasCompetingMake(gulfstreamSpelling.title, "Gulf Stream"), true);
+
+  const exact = { title: "2022 Gulf Stream Conquest 63111 Walkthrough" };
+  const hit = matchRvVideos([...otherMakes, gulfstreamSpelling, exact], coach);
+  assert.equal(hit.tier, "exact");
+  assert.deepEqual(
+    hit.videos.map((v) => v.title),
+    [exact.title],
+  );
+});
+
+test("Liberty: American Coach titles hard-rejected at every year tier", () => {
+  const coach = {
+    year: "2023",
+    make: "Liberty Coach",
+    model: "Signature",
+  };
+  const americanExact = { title: "2023 American Coach American Dream 45A Walkthrough" };
+  const americanNear = { title: "2021 American Coach American Dream 45A Walkthrough" };
+  const americanWide = { title: "2018 American Coach Revolution Walkthrough" };
+  const generic = { title: "2023 Luxury Motorhome Coach Tour" };
+  const libertyNear = { title: "2021 Liberty Coach Signature 45 Walkthrough" };
+  const libertyWide = { title: "2018 Liberty Coach Signature Walkthrough" };
+  const libertyExact = { title: "2023 Liberty Coach Signature 45 Walkthrough" };
+
+  for (const title of [americanExact, americanNear, americanWide, generic]) {
+    assert.equal(titleQualifiesForRvMake(title.title, "Liberty Coach"), false);
+    assert.equal(
+      titleQualifiesForRvCoach(title.title, "Liberty Coach", "Signature"),
+      false,
+    );
+  }
+
+  assert.equal(
+    matchRvVideos([americanExact, americanNear, americanWide, generic], coach).videos.length,
+    0,
+  );
+
+  const near = matchRvVideos(
+    [americanExact, americanNear, americanWide, generic, libertyNear],
+    coach,
+  );
+  assert.equal(near.tier, "near");
+  assert.deepEqual(
+    near.videos.map((v) => v.title),
+    [libertyNear.title],
+  );
+
+  const wide = matchRvVideos(
+    [americanExact, americanNear, americanWide, generic, libertyWide],
+    coach,
+  );
+  assert.equal(wide.tier, "wide");
+  assert.deepEqual(
+    wide.videos.map((v) => v.title),
+    [libertyWide.title],
+  );
+
+  const exact = matchRvVideos(
+    [americanExact, americanNear, libertyExact, libertyNear],
+    coach,
+  );
+  assert.equal(exact.tier, "exact");
+  assert.deepEqual(
+    exact.videos.map((v) => v.title),
+    [libertyExact.title],
+  );
 });

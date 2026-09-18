@@ -1,18 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   buildRvVideoCoreQuery,
+  buildRvVideoMakeModelQuery,
   buildRvVideoQuery,
   calmVideoLookupError,
   EMPTY_MATCH_MESSAGE,
-  filterRvVideosByMake,
   isRvVideoLibraryYear,
+  matchRvVideos,
   MISSING_KEY_MESSAGE,
-  rankRvVideos,
   RELATED_NOTE,
   RV_VIDEO_LIBRARY_CHANNEL_ID,
   RV_VIDEO_LIBRARY_URL,
+  rvVideoTierSatisfied,
   youtubeWatchUrl,
+  type RvVideoCoach,
   type RvVideoHit,
+  type RvVideoYearTier,
   type RvVideosOk,
 } from "@/lib/rv/rvVideos";
 
@@ -24,6 +27,14 @@ import {
  * (channel coverage is ~2016+). Unknown year is allowed through.
  * YouTube Data API v3 search.list scoped to the fixed @RVVideoLibrary
  * channelId UCaAH7nANvUhdPWN93uQ6mcA (David-confirmed). No handle resolve.
+ *
+ * Year-tier lookup (credit-tight — at most 3 searches, never per-year spam):
+ * 1. Exact: year + make + model (+ optional series/floorplan)
+ * 2. If no exact: core year + make + model, then one make+model search
+ *    (no year) so title-year ±2–±3 can surface. Prefer closer years.
+ * 3. If still none: accept title-year ±5 from those hits.
+ * Make + model always required. Hard make-in-title + competing-make reject
+ * at every tier — American Coach never wins for Liberty.
  *
  * Server-only key: process.env.YOUTUBE_API_KEY (Vercel Production + Preview).
  * Never VITE_ — that would leak the key to the client.
@@ -129,6 +140,8 @@ function payload(
   query: string,
   videos: RvVideoHit[],
   cached: boolean,
+  note = videos.length ? RELATED_NOTE : EMPTY_MATCH_MESSAGE,
+  yearTier: RvVideoYearTier | null = null,
 ): RvVideosOk {
   return {
     ok: true,
@@ -137,8 +150,22 @@ function payload(
     query,
     videos,
     cached,
-    note: videos.length ? RELATED_NOTE : EMPTY_MATCH_MESSAGE,
+    note,
+    yearTier,
   };
+}
+
+function mergeHits(...lists: RvVideoHit[][]): RvVideoHit[] {
+  const out: RvVideoHit[] = [];
+  const seen = new Set<string>();
+  for (const list of lists) {
+    for (const hit of list) {
+      if (seen.has(hit.videoId)) continue;
+      seen.add(hit.videoId);
+      out.push(hit);
+    }
+  }
+  return out;
 }
 
 export const Route = createFileRoute("/api/rv-videos")({
@@ -197,9 +224,10 @@ export const Route = createFileRoute("/api/rv-videos")({
           );
         }
 
-        const coach = { year, make, model, floorplan, series };
+        const coach: RvVideoCoach = { year, make, model, floorplan, series };
         const query = buildRvVideoQuery(coach);
         const core = buildRvVideoCoreQuery(coach);
+        const makeModel = buildRvVideoMakeModelQuery(coach);
         const cacheKey = `${year}|${make}|${model}|${floorplan}|${series}`.toLowerCase();
         const hit = cache.get(cacheKey);
         if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
@@ -210,12 +238,34 @@ export const Route = createFileRoute("/api/rv-videos")({
         }
 
         try {
-          let hits = filterRvVideosByMake(await searchChannel(apiKey, query), make);
-          if (!hits.length && core && core !== query) {
-            hits = filterRvVideosByMake(await searchChannel(apiKey, core), make);
+          let pool: RvVideoHit[] = [];
+          const take = (needed: RvVideoYearTier) => {
+            const matched = matchRvVideos(pool, coach);
+            return rvVideoTierSatisfied(matched.tier, needed) ? matched : null;
+          };
+
+          pool = mergeHits(pool, await searchChannel(apiKey, query));
+          let matched = take("exact");
+          if (!matched && core && core !== query) {
+            pool = mergeHits(pool, await searchChannel(apiKey, core));
+            matched = take("exact");
           }
-          const ranked = rankRvVideos(hits, query, make).slice(0, SHOW_RESULTS);
-          const data = payload(query, ranked, false);
+          if (!matched) matched = take("near");
+          if (!matched && makeModel && makeModel !== query && makeModel !== core) {
+            pool = mergeHits(pool, await searchChannel(apiKey, makeModel));
+            matched =
+              take("exact") ?? take("near") ?? take("wide");
+          }
+          if (!matched) matched = matchRvVideos(pool, coach);
+
+          const ranked = matched.videos.slice(0, SHOW_RESULTS);
+          const data = payload(
+            query,
+            ranked,
+            false,
+            matched.note,
+            matched.tier,
+          );
           cache.set(cacheKey, { at: Date.now(), data });
           return Response.json(data, {
             headers: { "Cache-Control": "private, max-age=300" },
