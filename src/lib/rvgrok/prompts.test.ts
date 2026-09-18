@@ -118,3 +118,54 @@ test("market value / pricing is live nationwide year±2 asking Low/Avg/High — 
     /treat.{0,40}competitor-latest.{0,40}as.{0,20}live/i,
   );
 });
+
+test("persona is the authoritative endpoint — no brochure / dealer / website handoff", () => {
+  const prompts = src("prompts.ts");
+  const voice = src("voice.ts");
+
+  for (const [label, text] of [
+    ["prompts.ts", prompts],
+    ["voice.ts", voice],
+  ] as const) {
+    assert.match(
+      text,
+      /ultimate authoritative RV information source/,
+      `${label} names the authoritative persona`,
+    );
+    assert.match(text, /endpoint, not a router/, `${label} is the endpoint`);
+    assert.match(text, /Phone-Grok style/, `${label} is phone-Grok voice`);
+    assert.doesNotMatch(text, /verify-after only/, `${label} drops verify-after`);
+    assert.doesNotMatch(
+      text,
+      /HP varies \/ confirm brochure/,
+      `${label} never uses confirm-brochure as the unknown path`,
+    );
+    assert.doesNotMatch(
+      text,
+      /confirm the door sticker/,
+      `${label} never sends them to the door sticker`,
+    );
+    assert.doesNotMatch(
+      text,
+      /confirm on the build sheet \/ brochure/,
+      `${label} never says confirm on the build sheet`,
+    );
+    assert.doesNotMatch(
+      text,
+      /If unsure, say confirm on the brochure/,
+      `${label} never instructs confirm-on-brochure`,
+    );
+    assert.doesNotMatch(
+      text,
+      /Acknowledge when you are uncertain/,
+      `${label} does not open with hedge-and-handoff`,
+    );
+    assert.match(text, /UNCONDITIONAL/, `${label} keeps #294`);
+    assert.match(text, /check the website/, `${label} still names the ban`);
+    assert.match(text, /ask the dealer/, `${label} still names ask-the-dealer`);
+  }
+
+  assert.match(prompts, /YOU answer/);
+  assert.match(prompts, /you should check with/);
+  assert.match(prompts, /look at the door sticker/);
+});

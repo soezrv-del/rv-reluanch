@@ -116,7 +116,7 @@ export const CHAT_MAY_WRITE_FACTS_CACHE = false;
 export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - The CATALOG / BROCHURE block in this request is source-of-truth for engine, horsepower, chassis, transmission, and fuel.
 - If a field has a number or name, USE THAT EXACT VALUE. Do not substitute a sibling model, a later year, or a "typical" HP (never invent 450).
-- If a field is marked UNKNOWN, do not stop at "I don't know." Prefer WEB RESEARCH notes this turn, then answer. Do not guess. Brochure / door sticker / dealer is verify-after only — never the whole answer, whether or not research notes are present. Never say "check the website", "look it up yourself", or "go check the OEM site".
+- If a field is marked UNKNOWN, do not stop at "I don't know." Prefer WEB RESEARCH notes this turn, then YOU answer. Do not guess. Never send them to a brochure, door sticker, dealer, or website. Never say "check the website", "look it up yourself", or "go check the OEM site".
 - Do not invent a "no catalog data — check the OEM site" dead-end. If this block names locked numbers, the coach IS in the catalog — never say it is missing, not in catalogs, or to wait for a brochure. Answer from locked numbers and/or WEB RESEARCH notes. Never invent HP, engine, chassis, or fuel. Never send the user to the OEM site, a website, or a dealer as the answer.
 - WEB RESEARCH notes must not override a locked catalog row or invent a fifth-wheel / towable class when this block names a motorized class.
 - Floorplan letters (BH, K, L, FS, …) are labels only — never decode bunks or a half-bath from the code.
@@ -125,7 +125,7 @@ export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - Chat is not the Facts report. Do not write these answers into Facts cache.`;
 
 export const UNKNOWN_POWERTRAIN_LINE =
-  "UNKNOWN / GAP — do not invent. Prefer WEB RESEARCH notes this turn, then answer. Do not stop at I don't know if browse can help. Closest verified data / EST. only after notes. Brochure / door sticker is verify-after only — never send the user to the OEM site as the answer.";
+  "UNKNOWN / GAP — do not invent. Prefer WEB RESEARCH notes this turn, then YOU answer. Do not stop at I don't know if browse can help. Closest verified data / EST. after notes. Never send the user to a brochure, door sticker, dealer, or the OEM site as the answer.";
 
 export const COMPARE_GROUNDING_RULES = `COMPARE THIS TURN (catalog-answerable):
 - Answer both coaches from the VERIFIED CATALOG locks below in THIS turn.

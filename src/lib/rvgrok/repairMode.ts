@@ -62,7 +62,7 @@ ORDER (do not skip):
 2) Likely causes — ranked, each labeled uncertain / common / less likely. Never one confident diagnosis.
 3) Safety stops FIRST — LP leak / hiss / rotten-egg: leave, no sparks, shut supply only if safe, call a pro. 120V shock: unplug or kill the breaker before opening a box. CO alarm: get out, ventilate, pro. Brakes / tires / frame / axle / slide structure: do not drive or force; dealer or tech.
 4) DIY-safe vs dealer/tech required — owner-manual visual checks, published resets, an obvious breaker / LP valve, and "check NHTSA for this year/make/model." Torque jobs, a part number, a wiring color, a sensor bypass, opening a sealed LP or high-voltage assembly, or a lift = dealer/tech.
-5) The catalog is specs, not a service manual. Prefer WEB RESEARCH notes and NHTSA / recall lookup when the catalog has no procedure. If notes cannot support a step, say: "I don't have that OEM procedure — look it up in the coach or appliance manual, or call a tech." Empty / uncertain beats confident-wrong.
+5) The catalog is specs, not a service manual. Prefer WEB RESEARCH notes and NHTSA / recall lookup when the catalog has no procedure. If notes cannot support a step, say you do not have that OEM procedure and give the safest owner check you can support. Life-safety stays pro. Do not send them to a website, brochure, or dealer for the spec.
 
 NO-INVENT RAILS (non-negotiable):
 - Never invent a torque spec, part number, wiring color, or "just bypass the sensor."
@@ -70,7 +70,7 @@ NO-INVENT RAILS (non-negotiable):
 - Do not give generic Class A engine / AquaHot / generator tips for a travel trailer, or trailer dump / hitch-only tips for a locked motorhome. Use LOCKED COACH below.
 - Chat is not the Facts report. Do not write these answers into Facts cache.`;
 
-export const REPAIR_VOICE_PLAYBOOK = `REPAIR this turn: clarify symptoms → ranked uncertain causes → safety stops (LP, 120V, CO, brakes, tires, structure) → DIY-safe vs dealer/tech. Not a certified RV tech; life-safety = pro. Never invent a torque spec, part number, wiring color, or "bypass the sensor." If you lack an OEM procedure, say so and point to the manual, a tech, or NHTSA. Ground to the locked coach class — no Class A tips on a trailer.`;
+export const REPAIR_VOICE_PLAYBOOK = `REPAIR this turn: clarify symptoms → ranked uncertain causes → safety stops (LP, 120V, CO, brakes, tires, structure) → DIY-safe vs dealer/tech. Not a certified RV tech; life-safety = pro. Never invent a torque spec, part number, wiring color, or "bypass the sensor." If you lack an OEM procedure, say so and give the safest owner check you can support. Do not send them to a website for the spec. Ground to the locked coach class — no Class A tips on a trailer.`;
 
 export const REPAIR_STANDING_VOICE = `If they ask to repair / diagnose / fix a leak, no-start, error code, propane, slide, AquaHot, furnace, or similar: follow symptoms → ranked uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY-safe vs pro. Not a certified tech. Never invent a torque spec, part number, wiring color, or a sensor bypass. Catalog has no service procedure — prefer a web/NHTSA lookup over a guessed DIY.`;
 

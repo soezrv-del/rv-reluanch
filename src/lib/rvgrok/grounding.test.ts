@@ -473,7 +473,8 @@ test("system prompts never deflect to website / OEM / dealer — unconditional",
   assert.match(grounding, /check the website/);
   assert.match(grounding, /look it up yourself/);
   assert.match(grounding, /go check the OEM site/);
-  assert.match(grounding, /verify-after only/);
+  assert.doesNotMatch(grounding, /verify-after only/);
+  assert.match(grounding, /Never send them to a brochure, door sticker, dealer, or website/);
   assert.doesNotMatch(
     grounding,
     /never the whole answer when research notes are present/,
