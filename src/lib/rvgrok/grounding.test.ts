@@ -74,37 +74,43 @@ test("parses David’s test coach from a spec question", () => {
   assert.equal(p.floorplan, "45A");
 });
 
-test("2023 American Dream pin is an option band — not a single invented HP", () => {
+test("2023 American Dream 45A pin is X15 605 / 1,950 — not L9 option-band", () => {
   const pin = findPowertrainCorrection(
     "2023",
     "American Coach",
     "American Dream",
     "45A",
   );
-  assert.ok(pin, "expected a brochure pin for American Dream");
+  assert.ok(pin, "expected a brochure pin for American Dream 45A");
   assert.equal(pin!.fuelType, "Diesel");
-  assert.match(pin!.engine, /L9/);
-  assert.match(pin!.engine, /X15|605|opt/i);
+  assert.match(pin!.engine, /X15/);
+  assert.doesNotMatch(pin!.engine, /\bL9\b/);
   assert.match(pin!.chassis || "", /Spartan/i);
   assert.doesNotMatch(pin!.engine, /Liberty Bridge|F-?53|Godzilla/i);
-  assert.equal(isAmbiguousCatalogValue(pin!.engine), true);
-  assert.ok(
-    pin!.horsepower <= 0,
-    "Dream pin must not lock horsepower at 450",
-  );
-  assert.equal(
-    pin!.torqueLbFt == null || pin!.torqueLbFt <= 0,
-    true,
-    "Dream pin must not lock L9-only torque",
-  );
+  assert.equal(isAmbiguousCatalogValue(pin!.engine), false);
+  assert.equal(pin!.horsepower, 605);
+  assert.equal(pin!.torqueLbFt, 1950);
 
   const hp = honestHorsepowerLabel({
     engine: pin!.engine,
-    horsepower: 450,
+    horsepower: pin!.horsepower,
   });
-  assert.match(hp || "", /450/);
-  assert.match(hp || "", /605|opt/i);
-  assert.doesNotMatch(hp || "", /^450 HP$/);
+  assert.equal(hp, "605 HP");
+});
+
+test("2023 American Dream 42Q pin is L9 450 / 1,250 — not 45A X15", () => {
+  const pin = findPowertrainCorrection(
+    "2023",
+    "American Coach",
+    "American Dream",
+    "42Q",
+  );
+  assert.ok(pin, "expected a brochure pin for American Dream 42Q");
+  assert.match(pin!.engine, /L9/);
+  assert.doesNotMatch(pin!.engine, /X15/);
+  assert.equal(pin!.horsepower, 450);
+  assert.equal(pin!.torqueLbFt, 1250);
+  assert.equal(isAmbiguousCatalogValue(pin!.engine), false);
 });
 
 test("sibling American Tradition pin is not applied to a Dream", () => {

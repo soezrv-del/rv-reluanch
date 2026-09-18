@@ -759,9 +759,19 @@ test("American Coach Facts SoT: MY2027 OEM+PDF locks; GAP Tradition", () => {
   assert.match(dream, /type: "Class A Diesel"/);
   assert.match(dream, /"2027": \["42Q", "45A", "45P"\]/);
   assert.match(dream, /"2026": \["45A", "45B", "42C", "44Q"\]/);
+  assert.match(dream, /"2023": \["45A", "45B", "42Q"\]/);
   assert.doesNotMatch(dream, /"45Q"/);
   assert.doesNotMatch(dream, /"2027": .*"45B"/);
   assert.doesNotMatch(dream, /"2026": .*"42Q"/);
+  assert.doesNotMatch(dream, /Cummins L9 450 std \/ X15 605 opt/);
+  assert.match(
+    dream,
+    /floorplans: \["45A"\][\s\S]*?engine: "Cummins X15 605HP"[\s\S]*?horsepower: 605[\s\S]*?torqueLbFt: 1950/,
+  );
+  assert.match(
+    dream,
+    /floorplans: \["42Q"\][\s\S]*?engine: "Cummins L9 450HP"[\s\S]*?horsepower: 450[\s\S]*?torqueLbFt: 1250/,
+  );
 
   const eagle = ac.slice(ac.indexOf('    "American Eagle": {'), ac.indexOf('    "American Dream": {'));
   assert.match(eagle, /type: "Class A Diesel"/);

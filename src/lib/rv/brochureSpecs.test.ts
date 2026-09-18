@@ -68,7 +68,7 @@ test("honestTorqueLabel does not pretend L9-only when X15 opt exists", () => {
   assert.equal(tq, null);
 });
 
-test("Grok catalog injection helpers do not lock horsepower: 450 alone", () => {
+test("2023 American Dream 45A pin is X15 605 / 1,950 — not L9", () => {
   const pin = findPowertrainCorrection(
     "2023",
     "American Coach",
@@ -76,18 +76,21 @@ test("Grok catalog injection helpers do not lock horsepower: 450 alone", () => {
     "45A",
   );
   assert.ok(pin);
-  const hp = honestHorsepowerLabel({
+  assert.match(pin!.engine, /X15/);
+  assert.doesNotMatch(pin!.engine, /\bL9\b/);
+  assert.equal(pin!.horsepower, 605);
+  assert.equal(pin!.torqueLbFt, 1950);
+  assert.equal(honestHorsepowerLabel({
     engine: pin!.engine,
-    horsepower: 450,
-  });
-  const tq = honestTorqueLabel({
-    engine: pin!.engine,
-    torqueLbFt: 1250,
-  });
-  assert.doesNotMatch(hp || "", /^450 HP$/);
-  assert.match(hp || "", /450/);
-  assert.match(hp || "", /605|opt/i);
-  assert.doesNotMatch(tq || "", /^1,?250 lb-ft$/);
+    horsepower: pin!.horsepower,
+  }), "605 HP");
+  assert.match(
+    honestTorqueLabel({
+      engine: pin!.engine,
+      torqueLbFt: pin!.torqueLbFt,
+    }) || "",
+    /1,?950 lb-ft/,
+  );
 
   const grounding = readFileSync(
     join(root, "../rvgrok/grounding.ts"),
@@ -98,18 +101,38 @@ test("Grok catalog injection helpers do not lock horsepower: 450 alone", () => {
   assert.match(grounding, /engineAmbiguous/);
 });
 
-test("American Dream catalog source does not lock horsepower: 450 on 2020–2027 band", () => {
+test("2023 American Dream 42Q pin is L9 450 / 1,250 — not 45A X15", () => {
+  const pin = findPowertrainCorrection(
+    "2023",
+    "American Coach",
+    "American Dream",
+    "42Q",
+  );
+  assert.ok(pin);
+  assert.match(pin!.engine, /L9/);
+  assert.doesNotMatch(pin!.engine, /X15/);
+  assert.equal(pin!.horsepower, 450);
+  assert.equal(pin!.torqueLbFt, 1250);
+});
+
+test("American Dream catalog source pins 45A X15 and 42Q L9 — no leaked option band", () => {
   const block = src("rvData.ts");
   const start = block.indexOf('"American Dream"');
   assert.ok(start > 0);
   const next = block.indexOf('"Entegra Coach"', start);
-  const dream = block.slice(start, next > start ? next : start + 2500);
-  assert.match(dream, /Cummins L9 450 std \/ X15 605 opt/);
-  const bandAt = dream.lastIndexOf("from: 2020");
-  assert.ok(bandAt >= 0, "expected 2020–2027 Dream year-band");
-  const band = dream.slice(bandAt, bandAt + 400);
-  assert.match(band, /X15 605 opt/);
-  assert.doesNotMatch(band, /horsepower:\s*450/);
+  const dream = block.slice(start, next > start ? next : start + 8000);
+  assert.doesNotMatch(dream, /Cummins L9 450 std \/ X15 605 opt/);
+  assert.match(dream, /"2023": \["45A", "45B", "42Q"\]/);
+  assert.match(dream, /"2027": \["42Q", "45A", "45P"\]/);
+  assert.doesNotMatch(dream, /"2026": .*"42Q"/);
+  assert.match(
+    dream,
+    /floorplans: \["45A"\][\s\S]*?engine: "Cummins X15 605HP"[\s\S]*?horsepower: 605[\s\S]*?torqueLbFt: 1950/,
+  );
+  assert.match(
+    dream,
+    /floorplans: \["42Q"\][\s\S]*?engine: "Cummins L9 450HP"[\s\S]*?horsepower: 450[\s\S]*?torqueLbFt: 1250/,
+  );
 });
 
 test("Class C never hash-picks bus tires or triple 15k A/C", () => {
@@ -16110,6 +16133,8 @@ test("American Coach MY2027 OEM+PDF floorplans + Tradition GAP", () => {
   assert.doesNotMatch(dream, /"45Q"/);
   assert.doesNotMatch(dream, /"2027": .*"45B"/);
   assert.doesNotMatch(dream, /"2026": .*"42Q"/);
+  assert.match(dream, /"2023": \["45A", "45B", "42Q"\]/);
+  assert.doesNotMatch(dream, /Cummins L9 450 std \/ X15 605 opt/);
 
   const eagle = ac.slice(ac.indexOf('    "American Eagle": {'), ac.indexOf('    "American Dream": {'));
   assert.doesNotMatch(eagle, /"2027": .*"45B"/);
