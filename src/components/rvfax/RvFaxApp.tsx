@@ -26,6 +26,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { useAccessOptional } from "@/components/access/AccessProvider";
 import type { CascadeField, RVResult } from "@/lib/rv/catalog";
 import {
   applyCascadeChange,
@@ -144,6 +145,7 @@ export function RvFaxApp({
 }: {
   onOpenGrok?: (prompt?: string) => void;
 }) {
+  const access = useAccessOptional();
   const [year, setYear] = useState("");
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
@@ -268,7 +270,7 @@ export function RvFaxApp({
   useEffect(() => {
     if (!detail) return;
     const { next, added } = autoSaveFactsUnit(savedRef.current, detail);
-    if (added) persistSaved(next);
+    if (added && access?.allowed !== false) persistSaved(next);
   }, [detail]);
 
   const cascade = useMemo(
@@ -637,6 +639,9 @@ export function RvFaxApp({
   );
 
   const toggleSave = (r: RVResult) => {
+    if (access && !access.guard(undefined, "Saved RVs are limited to the approved list.")) {
+      return;
+    }
     persistSaved(toggleSavedUnit(saved, r));
   };
 

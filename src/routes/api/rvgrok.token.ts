@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
 
 const XAI_CLIENT_SECRETS = "https://api.x.ai/v1/realtime/client_secrets";
@@ -100,8 +101,16 @@ async function mintEphemeralToken(method: "GET" | "POST") {
 export const Route = createFileRoute("/api/rvgrok/token")({
   server: {
     handlers: {
-      GET: async () => mintEphemeralToken("GET"),
-      POST: async () => mintEphemeralToken("POST"),
+      GET: async ({ request }) => {
+        const denied = await denyUnlessWhitelisted(request);
+        if (denied) return denied;
+        return mintEphemeralToken("GET");
+      },
+      POST: async ({ request }) => {
+        const denied = await denyUnlessWhitelisted(request);
+        if (denied) return denied;
+        return mintEphemeralToken("POST");
+      },
     },
   },
 });

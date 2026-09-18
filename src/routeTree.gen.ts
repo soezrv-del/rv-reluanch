@@ -32,6 +32,9 @@ import { Route as ApiRvfaxDossierRouteImport } from './routes/api/rvfax.dossier'
 import { Route as ApiRvfaxPublicCompsRouteImport } from './routes/api/rvfax.public-comps'
 import { Route as ApiRvgrokTokenRouteImport } from './routes/api/rvgrok.token'
 import { Route as ApiRvgrokWebResearchRouteImport } from './routes/api/rvgrok.web-research'
+import { Route as ApiAccessAdminRouteImport } from './routes/api/access.admin'
+import { Route as ApiAccessCheckRouteImport } from './routes/api/access.check'
+import { Route as ApiAccessRequestRouteImport } from './routes/api/access.request'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -149,6 +152,21 @@ const ApiRvgrokWebResearchRoute = ApiRvgrokWebResearchRouteImport.update({
   path: '/web-research',
   getParentRoute: () => ApiRvgrokRoute,
 } as any)
+const ApiAccessAdminRoute = ApiAccessAdminRouteImport.update({
+  id: '/access/admin',
+  path: '/access/admin',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
+const ApiAccessCheckRoute = ApiAccessCheckRouteImport.update({
+  id: '/access/check',
+  path: '/access/check',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
+const ApiAccessRequestRoute = ApiAccessRequestRouteImport.update({
+  id: '/access/request',
+  path: '/access/request',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -161,6 +179,9 @@ export interface FileRoutesByFullPath {
   '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
+  '/api/access/admin': typeof ApiAccessAdminRoute
+  '/api/access/check': typeof ApiAccessCheckRoute
+  '/api/access/request': typeof ApiAccessRequestRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
   '/api/marketcheck/autocomplete': typeof ApiMarketcheckAutocompleteRoute
   '/api/marketcheck/dealers': typeof ApiMarketcheckDealersRoute
@@ -186,6 +207,9 @@ export interface FileRoutesByTo {
   '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
+  '/api/access/admin': typeof ApiAccessAdminRoute
+  '/api/access/check': typeof ApiAccessCheckRoute
+  '/api/access/request': typeof ApiAccessRequestRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
   '/api/marketcheck/autocomplete': typeof ApiMarketcheckAutocompleteRoute
   '/api/marketcheck/dealers': typeof ApiMarketcheckDealersRoute
@@ -212,6 +236,9 @@ export interface FileRoutesById {
   '/api/map-tiles': typeof ApiMapTilesRoute
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
+  '/api/access/admin': typeof ApiAccessAdminRoute
+  '/api/access/check': typeof ApiAccessCheckRoute
+  '/api/access/request': typeof ApiAccessRequestRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
   '/api/marketcheck/autocomplete': typeof ApiMarketcheckAutocompleteRoute
   '/api/marketcheck/dealers': typeof ApiMarketcheckDealersRoute
@@ -239,6 +266,9 @@ export interface FileRouteTypes {
     | '/api/map-tiles'
     | '/api/osrm'
     | '/api/rv-videos'
+    | '/api/access/admin'
+    | '/api/access/check'
+    | '/api/access/request'
     | '/api/rvgrok'
     | '/api/marketcheck/autocomplete'
     | '/api/marketcheck/dealers'
@@ -264,6 +294,9 @@ export interface FileRouteTypes {
     | '/api/map-tiles'
     | '/api/osrm'
     | '/api/rv-videos'
+    | '/api/access/admin'
+    | '/api/access/check'
+    | '/api/access/request'
     | '/api/rvgrok'
     | '/api/marketcheck/autocomplete'
     | '/api/marketcheck/dealers'
@@ -289,6 +322,9 @@ export interface FileRouteTypes {
     | '/api/map-tiles'
     | '/api/osrm'
     | '/api/rv-videos'
+    | '/api/access/admin'
+    | '/api/access/check'
+    | '/api/access/request'
     | '/api/rvgrok'
     | '/api/marketcheck/autocomplete'
     | '/api/marketcheck/dealers'
@@ -379,6 +415,27 @@ declare module '@tanstack/react-router' {
       path: '/rv-videos'
       fullPath: '/api/rv-videos'
       preLoaderRoute: typeof ApiRvVideosRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/access/admin': {
+      id: '/api/access/admin'
+      path: '/access/admin'
+      fullPath: '/api/access/admin'
+      preLoaderRoute: typeof ApiAccessAdminRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/access/check': {
+      id: '/api/access/check'
+      path: '/access/check'
+      fullPath: '/api/access/check'
+      preLoaderRoute: typeof ApiAccessCheckRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
+    '/api/access/request': {
+      id: '/api/access/request'
+      path: '/access/request'
+      fullPath: '/api/access/request'
+      preLoaderRoute: typeof ApiAccessRequestRouteImport
       parentRoute: typeof ApiRouteRoute
     }
     '/api/rvgrok': {
@@ -490,6 +547,9 @@ const ApiRvgrokRouteWithChildren = ApiRvgrokRoute._addFileChildren(
 )
 
 interface ApiRouteRouteChildren {
+  ApiAccessAdminRoute: typeof ApiAccessAdminRoute
+  ApiAccessCheckRoute: typeof ApiAccessCheckRoute
+  ApiAccessRequestRoute: typeof ApiAccessRequestRoute
   ApiCampsRoute: typeof ApiCampsRoute
   ApiDumpsRoute: typeof ApiDumpsRoute
   ApiFuelRoute: typeof ApiFuelRoute
@@ -512,6 +572,9 @@ interface ApiRouteRouteChildren {
 }
 
 const ApiRouteRouteChildren: ApiRouteRouteChildren = {
+  ApiAccessAdminRoute: ApiAccessAdminRoute,
+  ApiAccessCheckRoute: ApiAccessCheckRoute,
+  ApiAccessRequestRoute: ApiAccessRequestRoute,
   ApiCampsRoute: ApiCampsRoute,
   ApiDumpsRoute: ApiDumpsRoute,
   ApiFuelRoute: ApiFuelRoute,

@@ -31,6 +31,7 @@ import {
   soldTotals,
 } from "@/lib/rv/soldDeals";
 import { NhtsaRecallsPanel } from "@/components/nhtsa/NhtsaRecallsPanel";
+import { AccessMoreSection } from "@/components/access/AccessMoreSection";
 import { VoicePanel } from "@/components/rvgrok/VoicePanel";
 import type { GrokVoice } from "@/lib/rvgrok/voice";
 import {
@@ -284,6 +285,8 @@ export function MoreApp({
               <Star className="size-4 text-amber" />
             </div>
           </section>
+
+          <AccessMoreSection />
 
           {/* SUPPORT */}
           <section>

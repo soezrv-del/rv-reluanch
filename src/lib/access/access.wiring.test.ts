@@ -1,0 +1,59 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = dirname(fileURLToPath(import.meta.url));
+const workspace = join(root, "../../..");
+
+function read(rel: string) {
+  return readFileSync(join(workspace, rel), "utf8");
+}
+
+test("seed is admin-only David Hanson 702-266-5918 — no CSV preload", () => {
+  const sql = read("migrations/0002_access_whitelist.sql");
+  assert.match(sql, /7022665918/);
+  assert.match(sql, /\+17022665918/);
+  assert.match(sql, /David Hanson/);
+  assert.match(sql, /is_admin/);
+  assert.doesNotMatch(sql, /15412858791|5594861000|phone-whitelist-seed/);
+  const store = read("src/lib/access/store.ts");
+  assert.match(store, /Never seeds the CSV list/);
+  assert.match(store, /ensureAdminSeed/);
+});
+
+test("request path is notify-only and cannot grant access", () => {
+  const store = read("src/lib/access/store.ts");
+  assert.match(store, /insert into access_requests/);
+  assert.match(store, /Never inserts into access_whitelist/);
+  assert.match(store, /granted: false/);
+  const createBlock = store.slice(
+    store.indexOf("export async function createAccessRequest"),
+    store.indexOf("export async function listWhitelist"),
+  );
+  assert.doesNotMatch(createBlock, /insert into access_whitelist/);
+  const api = read("src/routes/api/access.request.ts");
+  assert.match(api, /granted: false/);
+  assert.match(api, /Never inserts into access_whitelist/);
+});
+
+test("admin CRUD is password-gated and separate from VITE_AUTH_ENABLED", () => {
+  const admin = read("src/routes/api/access.admin.ts");
+  assert.match(admin, /WHITELIST_ADMIN_PASSWORD/);
+  assert.match(admin, /verifyAdminPassword/);
+  assert.match(admin, /action === "add"/);
+  assert.match(admin, /action === "remove"/);
+  const env = read(".grok/app-env.json");
+  assert.match(env, /"VITE_AUTH_ENABLED": "false"/);
+  assert.doesNotMatch(env, /"VITE_AUTH_ENABLED": "true"/);
+});
+
+test("founder KB stays Hansen; whitelist seed uses Hanson", () => {
+  const origin = read("src/lib/rvgrok/originStory.ts");
+  assert.match(origin, /David Hansen/);
+  assert.doesNotMatch(origin, /David Hanson/);
+  const constants = read("src/lib/access/constants.ts");
+  assert.match(constants, /David Hanson/);
+  assert.match(constants, /Founder KB \/ origin story stay "David Hansen"/);
+});

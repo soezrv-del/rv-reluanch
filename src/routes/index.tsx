@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AccessProvider } from "@/components/access/AccessProvider";
 import { AppShell } from "@/components/shell/AppShell";
 
 export const Route = createFileRoute("/")({
@@ -6,5 +7,9 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  return <AppShell />;
+  return (
+    <AccessProvider>
+      <AppShell />
+    </AccessProvider>
+  );
 }

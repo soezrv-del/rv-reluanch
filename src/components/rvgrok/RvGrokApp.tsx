@@ -55,6 +55,7 @@ import {
   startVideoFramePump,
 } from "@/lib/rvgrok/vision";
 import { planGrokTabEntry } from "@/lib/rvgrok/tabEntry";
+import { useAccessOptional } from "@/components/access/AccessProvider";
 import { cn, uid } from "@/lib/utils";
 import { MessageBubble } from "./MessageBubble";
 import { HistoryPanel } from "./HistoryPanel";
@@ -116,6 +117,7 @@ export function RvGrokApp({
   variant?: RvGrokVariant;
 } = {}) {
   const embedded = variant === "embedded";
+  const access = useAccessOptional();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -405,6 +407,12 @@ export function RvGrokApp({
 
   const sendMessage = useCallback(
     async (text?: string, opts?: { fromVoice?: boolean; image?: string; liveFrame?: boolean }) => {
+      if (
+        access &&
+        !access.guard(undefined, "Ask Grok is limited to the approved list.")
+      ) {
+        return;
+      }
       const messageText = (text ?? input).trim();
       const image = opts?.image ?? (opts?.liveFrame ? null : pendingImage);
       if ((!messageText && !image) || (isLoadingRef.current && !opts?.liveFrame))
@@ -696,6 +704,7 @@ export function RvGrokApp({
       }
     },
     [
+      access,
       input,
       pendingImage,
       agentMode,

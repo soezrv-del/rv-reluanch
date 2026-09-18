@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
 import {
   buildVinStructure,
   type NhtsaDecodeResult,
@@ -251,6 +252,8 @@ export const Route = createFileRoute("/api/nhtsa/vin")({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        const denied = await denyUnlessWhitelisted(request);
+        if (denied) return denied;
         const url = new URL(request.url);
         const raw = url.searchParams.get("vin") ?? "";
         const vin = normalizeVin(raw);
