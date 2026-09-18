@@ -21,6 +21,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "catalog:check": "node scripts/catalog-integrity.mjs",
+    "lenders:refresh": "node scripts/refresh-lender-catalog.mjs",
     "catalog:index": "node --experimental-strip-types --experimental-transform-types scripts/build-catalog-index.mjs",
     "verify": "npm run typecheck && npm run catalog:check",
     "cap:prepare": "node scripts/prepare-capacitor.mjs",

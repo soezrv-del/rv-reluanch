@@ -85,6 +85,29 @@ test("pickPreferredRow uses closest term then lowest APR", () => {
   assert.equal(row?.apr, 6.49);
 });
 
+test("RateAPI rows arriving high-APR-first still return eligible APR ascending", () => {
+  const reversed: RateApiPayload = {
+    as_of: "2026-09-04T12:00:00Z",
+    rates: [
+      { lender: "High APR CU", state: "WA", apr: 9.99, term_months: 180 },
+      { lender: "Mid APR CU", state: "WA", apr: 8.1, term_months: 180 },
+      { lender: "Low APR CU", state: "WA", apr: 6.2, term_months: 180 },
+    ],
+  };
+  const body = buildRateApiResponse(
+    { amount: 150_000, termMonths: 180, credit: "excellent", zip: "98001" },
+    reversed,
+  );
+  assert.ok(body);
+  assert.equal(body.source, "rateapi");
+  const eligible = body.lenders.filter((l) => l.eligible);
+  assert.equal(eligible[0]?.name, "Low APR CU");
+  assert.equal(eligible[0]?.estimatedApr, 6.2);
+  for (let i = 1; i < eligible.length; i++) {
+    assert.ok(eligible[i]!.estimatedApr >= eligible[i - 1]!.estimatedApr);
+  }
+});
+
 test("mapRateApiRowsToQuotes sorts lowest APR first and labels CU honesty", () => {
   const quotes = mapRateApiRowsToQuotes(mockPayload(), {
     amount: 80_000,
@@ -170,6 +193,10 @@ test("resolveLendersResponse maps a live RateAPI payload", async () => {
   assert.equal(body.source, "rateapi");
   assert.equal(body.lenders[0]?.estimatedApr, 6.49);
   assert.equal(body.query.state, "TX");
+  const eligible = body.lenders.filter((l) => l.eligible);
+  for (let i = 1; i < eligible.length; i++) {
+    assert.ok(eligible[i]!.estimatedApr >= eligible[i - 1]!.estimatedApr);
+  }
 });
 
 test("resolveLendersResponse caches RateAPI and does not refetch", async () => {

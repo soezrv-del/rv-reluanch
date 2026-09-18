@@ -30,6 +30,7 @@ import {
 export type RateApiMode = "live" | "simulate" | "off";
 
 export const RATEAPI_BASE = "https://api.rateapi.dev";
+/** 24h is fresh enough between weekly Boss Ops probes (`scripts/refresh-lender-catalog.mjs`). */
 export const RATEAPI_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 export const RATEAPI_EMPTY_TTL_MS = 6 * 60 * 60 * 1000;
 export const RATEAPI_RATE_LIMIT_TTL_MS = 12 * 60 * 60 * 1000;
@@ -308,7 +309,8 @@ export function buildRateApiResponse(
     disclaimer:
       `Live credit-union RV rates from RateAPI for ${normalized.state}. Not a loan offer or prequalification. ${CU_PUBLISHED_RATE_NOTE}. Confirm the current rate with the credit union.`,
     query: normalized,
-    lenders,
+    // mapRateApiRowsToQuotes already sorts; sort again so live + weekly refresh stay ranked.
+    lenders: sortLenderQuotes(lenders),
   };
 }
 

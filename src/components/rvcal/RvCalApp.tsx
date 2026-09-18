@@ -4,6 +4,7 @@ import {
   SIMULATE_LOOKUP_MS,
   formatLenderAsOf,
   parseLenderRateSource,
+  sortLendersForCompare,
   type Lender,
   type LenderQuote,
   type LenderRateSource,
@@ -460,7 +461,7 @@ export function RvCalApp() {
       const apply = () => {
         if (ctrl.signal.aborted) return;
         lendersSourceRef.current = source;
-        setApiLenders(j.lenders);
+        setApiLenders(sortLendersForCompare(j.lenders));
         setLendersMeta(meta);
         setLendersLookingUp(false);
       };
@@ -471,7 +472,7 @@ export function RvCalApp() {
         const remain = Math.max(0, SIMULATE_LOOKUP_MS - (Date.now() - started));
         timeoutBox.id = setTimeout(() => {
           if (ctrl.signal.aborted) return;
-          setApiLenders(j.lenders);
+          setApiLenders(sortLendersForCompare(j.lenders));
           setLendersLookingUp(false);
         }, remain);
         return;
@@ -599,7 +600,15 @@ export function RvCalApp() {
       w.document.close();
     }
   };
-  const lendersList = apiLenders?.length ? apiLenders : LENDERS_CATALOG;
+  const lendersList = useMemo(
+    () =>
+      sortLendersForCompare(apiLenders?.length ? apiLenders : LENDERS_CATALOG, {
+        credit,
+        amount: loan.amountFinanced,
+        termMonths,
+      }),
+    [apiLenders, credit, loan.amountFinanced, termMonths],
+  );
   /** While Lender Options expands, keep the card in view with a smooth upward scroll */
   useEffect(() => {
     if (!lendersOpen) return;
