@@ -101,6 +101,7 @@ test("valuation modules never import the MarketCheck client", () => {
     "marketEstimate.ts",
     "marketClamp.ts",
     "researchPublicComps.ts",
+    "factsMarketBands.ts",
   ]) {
     const text = src(name);
     assert.doesNotMatch(
