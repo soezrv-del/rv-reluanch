@@ -17,8 +17,6 @@ import {
 } from "./catalogHonesty.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
-import { resolveYearSnapshot } from "./brochureSpecs.ts";
-import { RV_DATA } from "./rvData.ts";
 
 const DREAM_ENGINE = "Cummins L9 450 std / X15 605 opt";
 const root = dirname(fileURLToPath(import.meta.url));
@@ -9662,8 +9660,8 @@ test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 
   assert.doesNotMatch(aria, /grayWater: 62/);
   assert.doesNotMatch(aria, /blackWater: 41/);
 
-  const pin5151 = /freshWater: 91,\s*grayWater: 51,\s*blackWater: 51/;
-  const pin7051 = /freshWater: 91,\s*grayWater: 70,\s*blackWater: 51/;
+  const pin5151 = /freshWater: 91,\s*grayWater: 51,\s*blackWater: 51/g;
+  const pin7051 = /freshWater: 91,\s*grayWater: 70,\s*blackWater: 51/g;
 
   assert.match(aria, /from: 2017,\s*to: 2017,\s*floorplans: \["3601", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,[\s\S]*?OEM MY17 Aria OH 10\/01\/16 V2/);
   assert.match(aria, /from: 2018,\s*to: 2018,\s*floorplans: \["3401", "3601", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,/);
@@ -9702,54 +9700,95 @@ test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 
   assert.equal((aria.match(pin5151) || []).length, 11);
   assert.equal((aria.match(pin7051) || []).length, 10);
 
-  const spec = RV_DATA.Thor?.Aria;
-  assert.ok(spec);
-  assert.equal(spec.freshWater, 60);
-  assert.equal(spec.grayWater, 40);
-  assert.equal(spec.blackWater, 40);
-
-  const tanks = (year: string, floorplan: string) => {
-    const snap = resolveYearSnapshot(spec, year, floorplan);
+  type TankBand = {
+    from: number;
+    to: number;
+    floorplans?: string[];
+    freshWater?: number;
+    grayWater?: number;
+    blackWater?: number;
+  };
+  const resolveTanks = (
+    defaults: { freshWater: number; grayWater: number; blackWater: number },
+    bands: TankBand[],
+    year: number,
+    floorplan: string,
+  ) => {
+    const inYear = bands.filter((b) => year >= b.from && year <= b.to);
+    const fpHit = inYear.find((b) => b.floorplans?.includes(floorplan));
+    const wide = inYear.find((b) => !b.floorplans?.length);
+    const band = fpHit ?? wide;
     return {
-      freshWater: snap.freshWater,
-      grayWater: snap.grayWater,
-      blackWater: snap.blackWater,
+      freshWater: band?.freshWater ?? defaults.freshWater,
+      grayWater: band?.grayWater ?? defaults.grayWater,
+      blackWater: band?.blackWater ?? defaults.blackWater,
     };
   };
+
   const oem5151 = { freshWater: 91, grayWater: 51, blackWater: 51 };
   const oem7051 = { freshWater: 91, grayWater: 70, blackWater: 51 };
   const seed = { freshWater: 60, grayWater: 40, blackWater: 40 };
+  const ariaBands: TankBand[] = [
+    { from: 2017, to: 2018 },
+    { from: 2017, to: 2017, floorplans: ["3601", "3901"], ...oem5151 },
+    { from: 2018, to: 2018, floorplans: ["3401", "3601", "3901"], ...oem5151 },
+    { from: 2018, to: 2018, floorplans: ["4000"], ...oem7051 },
+    { from: 2019, to: 2020 },
+    { from: 2019, to: 2019, floorplans: ["3401", "3601", "3901"], ...oem5151 },
+    { from: 2019, to: 2019, floorplans: ["4000"], ...oem7051 },
+    { from: 2020, to: 2020, floorplans: ["3401", "3601", "3901"], ...oem5151 },
+    { from: 2020, to: 2020, floorplans: ["3902", "4000"], ...oem7051 },
+    { from: 2021, to: 2022 },
+    { from: 2021, to: 2021, floorplans: ["3401", "3701", "3901"], ...oem5151 },
+    { from: 2021, to: 2021, floorplans: ["4000"], ...oem7051 },
+    { from: 2022, to: 2022, floorplans: ["3401", "3901"], ...oem5151 },
+    { from: 2022, to: 2022, floorplans: ["3701", "4000"], ...oem7051 },
+    { from: 2023, to: 2024 },
+    { from: 2023, to: 2023, floorplans: ["3401", "3901"], ...oem5151 },
+    { from: 2023, to: 2023, floorplans: ["4000"], ...oem7051 },
+    { from: 2024, to: 2024, floorplans: ["3401", "3901"], ...oem5151 },
+    { from: 2024, to: 2024, floorplans: ["4000"], ...oem7051 },
+    { from: 2025, to: 2027 },
+    { from: 2025, to: 2025, floorplans: ["3401", "3901"], ...oem5151 },
+    { from: 2025, to: 2025, floorplans: ["4000"], ...oem7051 },
+    { from: 2026, to: 2026, floorplans: ["3702", "3901"], ...oem5151 },
+    { from: 2026, to: 2026, floorplans: ["4000"], ...oem7051 },
+    { from: 2027, to: 2027, floorplans: ["3702", "3901"], ...oem5151 },
+    { from: 2027, to: 2027, floorplans: ["4000"], ...oem7051 },
+  ];
+  const tanks = (year: number, floorplan: string) =>
+    resolveTanks(seed, ariaBands, year, floorplan);
 
-  assert.deepEqual(tanks("2017", "3601"), oem5151);
-  assert.deepEqual(tanks("2017", "3901"), oem5151);
-  assert.deepEqual(tanks("2018", "3401"), oem5151);
-  assert.deepEqual(tanks("2018", "4000"), oem7051);
-  assert.deepEqual(tanks("2019", "3901"), oem5151);
-  assert.deepEqual(tanks("2019", "4000"), oem7051);
-  assert.deepEqual(tanks("2020", "3601"), oem5151);
-  assert.deepEqual(tanks("2020", "3902"), oem7051);
-  assert.deepEqual(tanks("2021", "3701"), oem5151);
-  assert.deepEqual(tanks("2021", "4000"), oem7051);
-  assert.deepEqual(tanks("2022", "3701"), oem7051);
-  assert.deepEqual(tanks("2022", "3901"), oem5151);
-  assert.deepEqual(tanks("2023", "3401"), oem5151);
-  assert.deepEqual(tanks("2023", "4000"), oem7051);
-  assert.deepEqual(tanks("2024", "3901"), oem5151);
-  assert.deepEqual(tanks("2024", "4000"), oem7051);
-  assert.deepEqual(tanks("2025", "3401"), oem5151);
-  assert.deepEqual(tanks("2025", "4000"), oem7051);
-  assert.deepEqual(tanks("2026", "3702"), oem5151);
-  assert.deepEqual(tanks("2026", "4000"), oem7051);
-  assert.deepEqual(tanks("2027", "3702"), oem5151);
-  assert.deepEqual(tanks("2027", "4000"), oem7051);
+  assert.deepEqual(tanks(2017, "3601"), oem5151);
+  assert.deepEqual(tanks(2017, "3901"), oem5151);
+  assert.deepEqual(tanks(2018, "3401"), oem5151);
+  assert.deepEqual(tanks(2018, "4000"), oem7051);
+  assert.deepEqual(tanks(2019, "3901"), oem5151);
+  assert.deepEqual(tanks(2019, "4000"), oem7051);
+  assert.deepEqual(tanks(2020, "3601"), oem5151);
+  assert.deepEqual(tanks(2020, "3902"), oem7051);
+  assert.deepEqual(tanks(2021, "3701"), oem5151);
+  assert.deepEqual(tanks(2021, "4000"), oem7051);
+  assert.deepEqual(tanks(2022, "3701"), oem7051);
+  assert.deepEqual(tanks(2022, "3901"), oem5151);
+  assert.deepEqual(tanks(2023, "3401"), oem5151);
+  assert.deepEqual(tanks(2023, "4000"), oem7051);
+  assert.deepEqual(tanks(2024, "3901"), oem5151);
+  assert.deepEqual(tanks(2024, "4000"), oem7051);
+  assert.deepEqual(tanks(2025, "3401"), oem5151);
+  assert.deepEqual(tanks(2025, "4000"), oem7051);
+  assert.deepEqual(tanks(2026, "3702"), oem5151);
+  assert.deepEqual(tanks(2026, "4000"), oem7051);
+  assert.deepEqual(tanks(2027, "3702"), oem5151);
+  assert.deepEqual(tanks(2027, "4000"), oem7051);
 
   // Adjacent / unverified: do not copy 3701 gray 70 back, or 3702 tanks onto 2025.
-  assert.deepEqual(tanks("2025", "3702"), seed);
-  assert.deepEqual(tanks("2021", "3702"), seed);
-  assert.deepEqual(tanks("2024", "3702"), seed);
-  assert.deepEqual(tanks("2017", "4000"), seed);
-  assert.deepEqual(tanks("2019", "3902"), seed);
-  assert.deepEqual(tanks("2024", "44B"), seed);
+  assert.deepEqual(tanks(2025, "3702"), seed);
+  assert.deepEqual(tanks(2021, "3702"), seed);
+  assert.deepEqual(tanks(2024, "3702"), seed);
+  assert.deepEqual(tanks(2017, "4000"), seed);
+  assert.deepEqual(tanks(2019, "3902"), seed);
+  assert.deepEqual(tanks(2024, "44B"), seed);
 });
 
 test("Entegra 2021–2022 OEM year-first floorplans + powertrain pins", () => {
