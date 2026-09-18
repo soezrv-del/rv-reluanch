@@ -55,6 +55,7 @@ export function FactsMarketBands({
           value={slots.average.value}
           caption={averageCaption}
           accent
+          captionAttr
         />
         {slots.high ? (
           <BandTile label={slots.high.label} value={slots.high.value} />
@@ -94,11 +95,13 @@ function BandTile({
   value,
   caption,
   accent,
+  captionAttr,
 }: {
   label: string;
   value: string;
   caption?: string;
   accent?: boolean;
+  captionAttr?: boolean;
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-black/25 px-2 py-3 text-center">
@@ -114,7 +117,10 @@ function BandTile({
         {value}
       </p>
       {caption ? (
-        <p className="mt-1 text-[10px] font-semibold leading-snug text-white/55">
+        <p
+          data-average-caption={captionAttr ? caption : undefined}
+          className="mt-1 text-[10px] font-semibold leading-snug text-white/70"
+        >
           {caption}
         </p>
       ) : null}

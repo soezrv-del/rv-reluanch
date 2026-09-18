@@ -218,6 +218,70 @@ test("caption: blend active → blend cue even when sourceLabel is still Catalog
   );
 });
 
+test("Average caption string paints for blend / JD-only / Catalog — including thin", () => {
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "low",
+      thin: true,
+      source: "jd_power_blend",
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+    }),
+    JD_POWER_BLEND_LABEL,
+  );
+  assert.ok(
+    factsMarketAverageCaption({
+      source: "jd_power_blend",
+      thin: true,
+    }),
+  );
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "low",
+      thin: true,
+      source: "jd_power_public",
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+    }),
+    JD_POWER_PUBLIC_LABEL,
+  );
+  assert.ok(
+    factsMarketAverageCaption({
+      source: "jd_power_public",
+      thin: true,
+    }),
+  );
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "low",
+      thin: true,
+      source: "catalog",
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+    }),
+    CATALOG_ESTIMATE_LABEL,
+  );
+  assert.equal(
+    factsMarketAverageCaption({
+      source: "catalog",
+      thin: true,
+    }),
+    CATALOG_ESTIMATE_LABEL,
+  );
+  assert.notEqual(
+    factsMarketAverageCaption({
+      source: "jd_power_blend",
+      thin: true,
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+    }),
+    undefined,
+  );
+  assert.notEqual(
+    factsMarketAverageCaption({
+      source: "jd_power_public",
+      thin: true,
+    }),
+    "",
+  );
+});
+
 test("caption: JD GAP → Catalog estimate (or comps-only when that is the path)", () => {
   assert.equal(
     factsMarketAverageCaption({
@@ -266,6 +330,9 @@ test("Facts bands UI + detail wire the locked MarketEstimate fields", () => {
   assert.match(bands, /sampleSize/);
   assert.match(bands, /slots\.high \?/);
   assert.match(bands, /slots\.thinSample/);
+  assert.match(bands, /caption=\{averageCaption\}/);
+  assert.match(bands, /data-average-caption/);
+  assert.doesNotMatch(bands, /thin && !averageCaption/);
   assert.doesNotMatch(bands, /JD Power|J\.D\. Power|NADA|MarketCheck/);
   assert.doesNotMatch(bands, /estimateMarket|retailHighMult|LOW_THIN_FREE_PATH/);
 
@@ -281,6 +348,9 @@ test("Facts bands UI + detail wire the locked MarketEstimate fields", () => {
   assert.match(detail, /thinSampleMessage=\{LOW_CONFIDENCE_LISTINGS_MESSAGE\}/);
   assert.match(detail, /deskMarket\.sourceLabel/);
   assert.match(detail, /source: deskMarket\.source/);
+  assert.match(detail, /jdPowerSourceLabel\(deskMarket\.source\)/);
+  assert.match(detail, /thinSample \|\| deskMarket\.source === "catalog"/);
+  assert.match(detail, /averageCaption=\{averageCaption\}/);
   assert.match(detail, /PUBLIC_SOLD_DISCLAIMER/);
   assert.match(detail, /fetchFactsMarketLive/);
   assert.match(detail, /if \(!marketOpen\) return/);

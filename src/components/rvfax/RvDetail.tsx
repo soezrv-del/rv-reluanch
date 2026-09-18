@@ -80,6 +80,7 @@ import {
 } from "@/lib/rv/publicListingComps";
 import {
   isJdPowerMarketSource,
+  jdPowerSourceLabel,
   type JdPowerPublicEstimate,
 } from "@/lib/rv/jdPowerPublic";
 import { hideRetailHighForDesk } from "@/lib/rv/marketClamp";
@@ -721,12 +722,17 @@ export function RvDetail({
     soldSampleSize: compsSoldSample,
     sampleSize: compsSample,
   });
-  const averageCaption = factsMarketAverageCaption({
-    confidence: marketConfidence,
-    source: deskMarket.source,
-    sourceLabel: deskMarket.sourceLabel,
-    thin: thinSample,
-  });
+  const averageCaption =
+    factsMarketAverageCaption({
+      confidence: marketConfidence,
+      source: deskMarket.source,
+      sourceLabel: deskMarket.sourceLabel,
+      thin: thinSample,
+    }) ??
+    jdPowerSourceLabel(deskMarket.source) ??
+    (thinSample || deskMarket.source === "catalog"
+      ? CATALOG_ESTIMATE_LABEL
+      : undefined);
   /** Gold Low heading must match the Average cue — not a stale Catalog chip. */
   const marketSourceLabel =
     averageCaption ??

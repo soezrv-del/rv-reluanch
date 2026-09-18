@@ -31,6 +31,12 @@ export const PALAZZO_33_5_2021_VALUES_URL =
   "https://www.jdpower.com/rvs/2021/thor-motor-coach/m-33-5-freightliner/6606180/values";
 
 export const JD_POWER_PUBLIC_ORIGIN = "https://www.jdpower.com";
+/** Public HTML reader — origin CF 403s datacenter fetches; same page, live parse. */
+export const JD_POWER_PUBLIC_READER_ORIGIN = "https://r.jina.ai";
+
+/** Browser-like UA — the bot UA is CF-blocked on www. */
+export const JD_POWER_PUBLIC_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
 export type JdPowerPublicEstimate = {
   source: "jd_power_public";
@@ -77,6 +83,25 @@ export function jdPowerSourceLabel(
   if (source === "jd_power_blend") return JD_POWER_BLEND_LABEL;
   if (source === "jd_power_public") return JD_POWER_PUBLIC_LABEL;
   return undefined;
+}
+
+export function jdPowerPublicReaderUrl(url: string): string {
+  const t = url.trim();
+  if (!t) return "";
+  if (t.startsWith(`${JD_POWER_PUBLIC_READER_ORIGIN}/`)) return t;
+  return `${JD_POWER_PUBLIC_READER_ORIGIN}/${t}`;
+}
+
+/** Cloudflare challenge / 403 body — not a values page. Never parse as book. */
+export function isCloudflareChallengeHtml(html: string): boolean {
+  const t = String(html || "");
+  return (
+    /attention required!\s*\|\s*cloudflare/i.test(t) ||
+    /sorry, you have been blocked/i.test(t) ||
+    /cf-error-details/i.test(t) ||
+    /you are unable to access/i.test(t) ||
+    /<title>\s*just a moment/i.test(t)
+  );
 }
 
 /** 33.5 → m-33-5 (JD Power used-values slug). */
@@ -128,6 +153,7 @@ export function parseJdPowerPublicHtml(html: string): {
   averageRetail: number;
   highRetail: number | null;
 } | null {
+  if (isCloudflareChallengeHtml(html)) return null;
   const text = htmlToPlainText(html);
   if (!text) return null;
   const lowRetail = labeledUsd(text, /low\s+retail\s+value/);
@@ -180,7 +206,101 @@ function listingUrlsFor(year: number): string[] {
   ];
 }
 
-async function fetchPublicHtml(
+function isSafePublicHttpUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" || u.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Node fetch is CF-fingerprinted (403 / Just a moment). curl's TLS
+ * stack often still reaches the public HTML reader. Same live page —
+ * never a stored dollar snapshot. Dynamic import keeps this off the
+ * Facts client bundle.
+ */
+async function fetchPublicHtmlViaCurl(
+  url: string,
+  timeoutMs: number,
+  signal?: AbortSignal,
+): Promise<{ ok: true; html: string } | { ok: false; reason: string }> {
+  if (!isSafePublicHttpUrl(url)) {
+    return { ok: false, reason: "invalid public J.D. Power URL" };
+  }
+  if (signal?.aborted) {
+    return { ok: false, reason: "public J.D. Power fetch aborted" };
+  }
+  try {
+    const { spawn } = await import("node:child_process");
+    const maxSec = Math.max(2, Math.ceil(timeoutMs / 1000));
+    const html = await new Promise<string>((resolve, reject) => {
+      const child = spawn(
+        "curl",
+        [
+          "-sS",
+          "-L",
+          "--max-time",
+          String(maxSec),
+          "-A",
+          "Mozilla/5.0",
+          url,
+        ],
+        { stdio: ["ignore", "pipe", "pipe"] },
+      );
+      const chunks: Buffer[] = [];
+      const errChunks: Buffer[] = [];
+      const timer = setTimeout(() => {
+        child.kill("SIGTERM");
+        reject(new Error("public J.D. Power curl timed out"));
+      }, timeoutMs + 500);
+      const onAbort = () => {
+        child.kill("SIGTERM");
+        reject(new Error("public J.D. Power fetch aborted"));
+      };
+      signal?.addEventListener("abort", onAbort, { once: true });
+      child.stdout.on("data", (c: Buffer) => chunks.push(c));
+      child.stderr.on("data", (c: Buffer) => errChunks.push(c));
+      child.on("error", (e) => {
+        clearTimeout(timer);
+        signal?.removeEventListener("abort", onAbort);
+        reject(e);
+      });
+      child.on("close", (code) => {
+        clearTimeout(timer);
+        signal?.removeEventListener("abort", onAbort);
+        if (code === 0) resolve(Buffer.concat(chunks).toString("utf8"));
+        else {
+          reject(
+            new Error(
+              errChunks.join("").trim() ||
+                `public J.D. Power curl exited ${code ?? "null"}`,
+            ),
+          );
+        }
+      });
+    });
+    if (!html.trim()) return { ok: false, reason: "empty public J.D. Power page" };
+    if (isCloudflareChallengeHtml(html)) {
+      return {
+        ok: false,
+        reason: "public J.D. Power page blocked by Cloudflare",
+      };
+    }
+    return { ok: true, html };
+  } catch (e) {
+    if (signal?.aborted || (e instanceof Error && /aborted/i.test(e.message))) {
+      return { ok: false, reason: "public J.D. Power fetch aborted" };
+    }
+    return {
+      ok: false,
+      reason: e instanceof Error ? e.message : "public J.D. Power curl failed",
+    };
+  }
+}
+
+async function fetchPublicHtmlOnce(
   url: string,
   timeoutMs: number,
   signal?: AbortSignal,
@@ -194,34 +314,75 @@ async function fetchPublicHtml(
       method: "GET",
       redirect: "follow",
       headers: {
-        Accept: "text/html,application/xhtml+xml",
-        "User-Agent":
-          "Mozilla/5.0 (compatible; RVFaxFacts/1.0; +https://www.rvmax.app)",
+        Accept: "text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "User-Agent": JD_POWER_PUBLIC_USER_AGENT,
       },
       signal: ctrl.signal,
     });
     if (!resp.ok) {
-      return {
-        ok: false,
+      const blocked = {
+        ok: false as const,
         reason: `public J.D. Power page returned ${resp.status}`,
       };
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+      if (signal?.aborted) return blocked;
+      const viaCurl = await fetchPublicHtmlViaCurl(url, timeoutMs, signal);
+      return viaCurl.ok ? viaCurl : blocked;
     }
     const html = await resp.text();
     if (!html.trim()) return { ok: false, reason: "empty public J.D. Power page" };
+    if (isCloudflareChallengeHtml(html)) {
+      const blocked = {
+        ok: false as const,
+        reason: "public J.D. Power page blocked by Cloudflare",
+      };
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+      if (signal?.aborted) return blocked;
+      const viaCurl = await fetchPublicHtmlViaCurl(url, timeoutMs, signal);
+      return viaCurl.ok ? viaCurl : blocked;
+    }
     return { ok: true, html };
   } catch (e) {
     if (signal?.aborted || (e instanceof Error && e.name === "AbortError")) {
       return { ok: false, reason: "public J.D. Power fetch aborted" };
     }
-    return {
-      ok: false,
+    const failed = {
+      ok: false as const,
       reason:
         e instanceof Error ? e.message : "public J.D. Power fetch failed",
     };
+    if (signal?.aborted) return failed;
+    const viaCurl = await fetchPublicHtmlViaCurl(url, timeoutMs, signal);
+    return viaCurl.ok ? viaCurl : failed;
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener("abort", onAbort);
   }
+}
+
+/**
+ * Live public HTML. Origin often 403s from datacenter IPs (Cloudflare).
+ * Retry the same URL through the public HTML reader — still a live parse,
+ * never a stored dollar snapshot.
+ */
+async function fetchPublicHtml(
+  url: string,
+  timeoutMs: number,
+  readerTimeoutMs = timeoutMs,
+  signal?: AbortSignal,
+): Promise<{ ok: true; html: string } | { ok: false; reason: string }> {
+  const direct = await fetchPublicHtmlOnce(url, timeoutMs, signal);
+  if (direct.ok) return direct;
+  if (signal?.aborted) return direct;
+  if (url.startsWith(`${JD_POWER_PUBLIC_READER_ORIGIN}/`)) return direct;
+  const readerUrl = jdPowerPublicReaderUrl(url);
+  if (!readerUrl || readerUrl === url) return direct;
+  const viaReader = await fetchPublicHtmlOnce(readerUrl, readerTimeoutMs, signal);
+  if (viaReader.ok) return viaReader;
+  return direct;
 }
 
 export type BlendJdPowerBandsInput = {
@@ -236,11 +397,11 @@ export type BlendJdPowerBandsInput = {
 
 /**
  * Blend formula (Facts Low / Average / High):
- *   Average = mean(JD average retail, sold median) when both exist
- *   Low     = mean(JD low retail, sold retailLow) when both exist
- *   High    = mean(JD high retail, sold retailHigh) when JD high exists;
+ *   Average = mean(JD average retail, asking/sold median) when both exist
+ *   Low     = mean(JD low retail, comps retailLow) when both exist
+ *   High    = mean(JD high retail, comps retailHigh) when JD high exists;
  *             else the available source only — never invent a JD high
- *   Trade   = sold trade when present, else 0.85 × Average, clamped to Low
+ *   Trade   = comps trade when present, else 0.85 × Average, clamped to Low
  * Dollars round to the nearest $1,000 like the rest of Facts.
  */
 export function blendJdPowerPublicBands(input: BlendJdPowerBandsInput): {
@@ -313,18 +474,20 @@ export function applyJdPowerDeskMarket(input: {
   prefersSoldRange: boolean;
 }): MarketEstimate {
   const { catalog, jd, comps, prefersSoldRange } = input;
-  const soldOk =
+  // Live nationwide comps are asking (coach ±2yr). Sold still blends when
+  // present. Asking-only must not fall through to Catalog haircut.
+  const compsOk =
     Boolean(comps) &&
-    comps!.priceKind === "sold" &&
+    (comps!.priceKind === "sold" || comps!.priceKind === "asking") &&
     comps!.medianAsk >= MIN_BOOK_USD;
   const bands = blendJdPowerPublicBands({
     jdLow: jd.lowRetail,
     jdAverage: jd.averageRetail,
     jdHigh: jd.highRetail,
-    soldMedian: soldOk ? comps!.medianAsk : undefined,
-    compsRetailLow: soldOk ? comps!.retailLow : undefined,
-    compsRetailHigh: soldOk ? comps!.retailHigh : undefined,
-    compsTradeIn: soldOk ? comps!.tradeIn : undefined,
+    soldMedian: compsOk ? comps!.medianAsk : undefined,
+    compsRetailLow: compsOk ? comps!.retailLow : undefined,
+    compsRetailHigh: compsOk ? comps!.retailHigh : undefined,
+    compsTradeIn: compsOk ? comps!.tradeIn : undefined,
   });
 
   const thin = !prefersSoldRange;
@@ -348,8 +511,8 @@ export function applyJdPowerDeskMarket(input: {
     ageYears: catalog.ageYears,
     tradeCappedAtRetailLow:
       bands.tradeCapped || comps?.tradeCappedAtRetailLow || undefined,
-    source: soldOk ? "jd_power_blend" : "jd_power_public",
-    sourceLabel: jdPowerSourceLabel(soldOk ? "jd_power_blend" : "jd_power_public"),
+    source: compsOk ? "jd_power_blend" : "jd_power_public",
+    sourceLabel: jdPowerSourceLabel(compsOk ? "jd_power_blend" : "jd_power_public"),
     confidence: prefersSoldRange && comps ? comps.confidence : "low",
     marketValue: bands.marketValue,
     hideRetailHigh,
@@ -417,7 +580,7 @@ export async function fetchJdPowerPublicEstimate(
   for (const url of queue) {
     if (tried.has(url) || signal?.aborted) continue;
     tried.add(url);
-    const page = await fetchPublicHtml(url, 8_000, signal);
+    const page = await fetchPublicHtml(url, 8_000, 16_000, signal);
     if (!page.ok) continue;
     const parsed = takeParsed(page.html, url);
     if (parsed) return { ok: true, data: parsed };
@@ -425,12 +588,12 @@ export async function fetchJdPowerPublicEstimate(
 
   for (const listing of listingUrlsFor(yearNum)) {
     if (signal?.aborted) break;
-    const page = await fetchPublicHtml(listing, 8_000, signal);
+    const page = await fetchPublicHtml(listing, 8_000, 16_000, signal);
     if (!page.ok) continue;
     const found = discoverJdPowerValuesUrl(page.html, yearNum, floorplan);
     if (!found || tried.has(found)) continue;
     tried.add(found);
-    const values = await fetchPublicHtml(found, 8_000, signal);
+    const values = await fetchPublicHtml(found, 8_000, 16_000, signal);
     if (!values.ok) continue;
     const parsed = takeParsed(values.html, found);
     if (parsed) return { ok: true, data: parsed };

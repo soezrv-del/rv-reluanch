@@ -11,12 +11,15 @@ import {
   blendJdPowerPublicBands,
   discoverJdPowerValuesUrl,
   htmlToPlainText,
+  isCloudflareChallengeHtml,
   isJdPowerBlendEligible,
   isJdPowerMarketSource,
   jdPowerFloorplanSlug,
+  jdPowerPublicReaderUrl,
   jdPowerSourceLabel,
   JD_POWER_BLEND_LABEL,
   JD_POWER_PUBLIC_LABEL,
+  JD_POWER_PUBLIC_READER_ORIGIN,
   knownPalazzoJdPowerValuesUrl,
   PALAZZO_33_5_2021_VALUES_URL,
   PALAZZO_JD_POWER_TEST_UNIT,
@@ -77,6 +80,10 @@ function sold(year: number, askUsd: number) {
   return { year, askUsd, kind: "sold" as const };
 }
 
+function ask(year: number, askUsd: number) {
+  return { year, askUsd, kind: "asking" as const };
+}
+
 test("Palazzo-first gate: Thor Palazzo only — not GT, not Aria", () => {
   assert.equal(isJdPowerBlendEligible("Thor", "Palazzo"), true);
   assert.equal(isJdPowerBlendEligible("thor", "palazzo"), true);
@@ -124,6 +131,36 @@ test("parse: High only when the public page prints it", () => {
   `);
   assert.ok(parsed);
   assert.equal(parsed.highRetail, 140_000);
+});
+
+test("parse jina-style public reader text: Low 120200 / Avg 144800 — no invented High", () => {
+  const parsed = parseJdPowerPublicHtml(`
+    Title: 2021 Thor Motor Coach Palazzo Series M-33.5 Freightliner Prices
+    Low Retail Value$120,200
+    Average Retail Value$144,800
+  `);
+  assert.ok(parsed);
+  assert.equal(parsed.lowRetail, 120_200);
+  assert.equal(parsed.averageRetail, 144_800);
+  assert.equal(parsed.highRetail, null);
+});
+
+test("Cloudflare challenge HTML is GAP — never a book parse", () => {
+  const cf = `<title>Attention Required! | Cloudflare</title>
+    <h1>Sorry, you have been blocked</h1>
+    <div id="cf-error-details">You are unable to access jdpower.com</div>`;
+  assert.equal(isCloudflareChallengeHtml(cf), true);
+  assert.equal(parseJdPowerPublicHtml(cf), null);
+  assert.equal(
+    isCloudflareChallengeHtml(
+      `<title>Just a moment...</title><meta http-equiv="refresh"`,
+    ),
+    true,
+  );
+  assert.equal(
+    jdPowerPublicReaderUrl(PALAZZO_33_5_2021_VALUES_URL),
+    `${JD_POWER_PUBLIC_READER_ORIGIN}/${PALAZZO_33_5_2021_VALUES_URL}`,
+  );
 });
 
 test("parse GAP: missing labels never invent dollars", () => {
@@ -227,6 +264,52 @@ test("thin JD × sold: hide High, blend Average, do not haircut JD by 0.66", () 
   assert.ok(isJdPowerMarketSource(desk.source));
 });
 
+test("thin JD × asking: blend Average, hide High, do not haircut JD by 0.66", () => {
+  const catalog = estimateMarket(dieselSpec(), "2021", "33.5", {
+    asOfYear: 2026,
+    make: "Thor",
+    model: "Palazzo",
+  });
+  const asks = reducePublicComps(
+    [ask(2019, 159_985), ask(2023, 195_315)],
+    { from: 2019, to: 2023 },
+  );
+  assert.ok(asks);
+  assert.equal(asks.priceKind, "asking");
+  assert.equal(asks.confidence, "low");
+  assert.equal(prefersPublicComps(asks), false);
+
+  const desk = applyJdPowerDeskMarket({
+    catalog,
+    jd: palazzoJd,
+    comps: asks,
+    prefersSoldRange: false,
+  });
+  assert.equal(desk.source, "jd_power_blend");
+  assert.equal(desk.sourceLabel, JD_POWER_BLEND_LABEL);
+  assert.equal(desk.confidence, "low");
+  assert.equal(desk.hideRetailHigh, true);
+  assert.equal(
+    desk.marketValue,
+    roundJdPublicUsd((144_800 + asks.medianAsk) / 2),
+  );
+  assert.notEqual(desk.marketValue, 145_000);
+  assert.ok(
+    (desk.marketValue ?? 0) > 145_000,
+    "must not apply catalog 0.66 haircut when public JD × asking won",
+  );
+  assert.ok(isJdPowerMarketSource(desk.source));
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: desk.confidence,
+      source: desk.source,
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+      thin: true,
+    }),
+    JD_POWER_BLEND_LABEL,
+  );
+});
+
 test("resolvePrimaryMarket: JD + Med sold blends; JD GAP keeps sold / catalog", () => {
   const catalog = estimateMarket(dieselSpec(), "2021", "33.5", {
     asOfYear: 2026,
@@ -260,6 +343,50 @@ test("resolvePrimaryMarket: JD + Med sold blends; JD GAP keeps sold / catalog", 
   assert.equal(noJd.sourceLabel, "Sold comps");
   assert.equal(noJd.marketValue, med.medianAsk);
   assert.equal(noJd.hideRetailHigh, false);
+});
+
+test("resolvePrimaryMarket: asking comps + JD blend — not leftover Catalog 145k", () => {
+  const catalog = estimateMarket(dieselSpec(), "2021", "33.5", {
+    asOfYear: 2026,
+    make: "Thor",
+    model: "Palazzo",
+  });
+  const asks = reducePublicComps(
+    [ask(2019, 159_985), ask(2023, 195_315)],
+    { from: 2019, to: 2023 },
+  );
+  assert.ok(asks);
+  const blended = resolvePrimaryMarket({
+    catalog,
+    comps: asks,
+    jdPower: palazzoJd,
+  });
+  assert.equal(blended.source, "jd_power_blend");
+  assert.equal(blended.sourceLabel, JD_POWER_BLEND_LABEL);
+  assert.notEqual(blended.marketValue, 145_000);
+  assert.equal(isJdPowerMarketSource(blended.source), true);
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "low",
+      source: blended.source,
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+      thin: true,
+    }),
+    JD_POWER_BLEND_LABEL,
+  );
+
+  const gapAsks = resolvePrimaryMarket({ catalog, comps: asks });
+  assert.equal(gapAsks.source, "catalog");
+  assert.equal(gapAsks.marketValue, 145_000);
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "low",
+      source: gapAsks.source,
+      sourceLabel: gapAsks.sourceLabel,
+      thin: true,
+    }),
+    CATALOG_ESTIMATE_LABEL,
+  );
 });
 
 test("Average caption: blend source wins over leftover Catalog estimate; GAP stays Catalog", () => {
@@ -373,5 +500,11 @@ test("module never imports MarketCheck and never ships invented snapshot dollars
   assert.match(src, /never invent/i);
   assert.match(src, /On-demand/);
   assert.match(src, /No cron, no nightly batch/);
+  assert.match(src, /r\.jina\.ai/);
+  assert.match(src, /Cloudflare/);
+  assert.match(src, /node:child_process/);
+  assert.match(src, /"Mozilla\/5\.0"/);
+  assert.match(src, /priceKind === "asking"/);
+  assert.doesNotMatch(src, /lowRetail:\s*120_?200/);
   assert.match(htmlToPlainText("<b>Low Retail Value</b> $120,200"), /Low Retail Value \$120,200/);
 });

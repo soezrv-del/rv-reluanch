@@ -103,7 +103,10 @@ export function factsMarketAverageCaption(input: {
   if (label && factsMarketIsBareJdPower(label)) {
     return thin ? CATALOG_ESTIMATE_LABEL : undefined;
   }
-  if (thin) return input.sourceLabel?.trim() || CATALOG_ESTIMATE_LABEL;
+  // Thin / catalog GAP must still paint under Average — never hide the cue.
+  if (thin || input.source === "catalog") {
+    return input.sourceLabel?.trim() || CATALOG_ESTIMATE_LABEL;
+  }
   if (
     label &&
     label !== SOLD_COMPS_LABEL &&
