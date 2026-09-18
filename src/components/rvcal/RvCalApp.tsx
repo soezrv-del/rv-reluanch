@@ -32,7 +32,9 @@ import {
   TERM_PRESETS,
   aprForCredit,
   buildPdfReportHtml,
+  closePaymentReport,
   computeLoan,
+  openPaymentReport,
   creditLabel,
   formatMoney,
   formatPct,
@@ -594,12 +596,9 @@ export function RvCalApp() {
       stateLabel,
       credit: creditLabel(credit)
     });
-    const w = window.open("", "_blank");
-    if (w) {
-      w.document.write(html);
-      w.document.close();
-    }
+    openPaymentReport(html);
   };
+  useEffect(() => () => closePaymentReport(), []);
   const lendersList = useMemo(
     () =>
       sortLendersForCompare(apiLenders?.length ? apiLenders : LENDERS_CATALOG, {

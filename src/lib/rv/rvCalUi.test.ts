@@ -49,6 +49,14 @@ test("rvCAL compare always sorts via sortLendersForCompare, including catalog fa
   );
 });
 
+test("rvCAL payment report opens in-app — not window.open / document.write", () => {
+  assert.match(src, /openPaymentReport\(/);
+  assert.match(src, /closePaymentReport/);
+  assert.doesNotMatch(src, /window\.open\(/);
+  assert.doesNotMatch(src, /document\.write\(/);
+  assert.match(src, /Payment report/);
+});
+
 test("rvCAL header drops the ZIP/lender subtitle and keeps the verified mark", () => {
   const calCopy = constants.match(/rvcal:\s*\{[\s\S]*?\n  \},/);
   assert.ok(calCopy?.[0], "Cal PAGE_COPY block");
