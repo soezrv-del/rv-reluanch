@@ -101,6 +101,7 @@ test("valuation modules never import the MarketCheck client", () => {
     "marketEstimate.ts",
     "marketClamp.ts",
     "researchPublicComps.ts",
+    "factsMarketBands.ts",
   ]) {
     const text = src(name);
     assert.doesNotMatch(
@@ -520,7 +521,7 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
   );
   assert.match(detail, /SOLD_COMPS_LABEL/);
   assert.match(detail, /CATALOG_ESTIMATE_LABEL/);
-  assert.match(detail, /factsDeskMarketTileLabel/);
+  assert.match(detail, /deskMarket\.sourceLabel/);
   assert.match(detail, /LOW_CONFIDENCE_LISTINGS_MESSAGE/);
   assert.match(detail, /PUBLIC_SOLD_DISCLAIMER/);
   assert.match(detail, /compsConfidenceLabel/);
@@ -534,25 +535,36 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
   assert.match(detail, /showSoldRange \? market : paintedLowDesk/);
   assert.match(detail, /soldConfidence === "low"/);
   assert.match(detail, /hideRetailHighForDesk/);
-  assert.match(detail, /!hideRetailHigh \? \(/);
-  assert.match(detail, /label="Retail high"/);
+  assert.match(detail, /FactsMarketBands/);
+  assert.match(detail, /hideRetailHigh=\{hideRetailHigh\}/);
+  assert.match(detail, /thinSampleMessage=\{LOW_CONFIDENCE_LISTINGS_MESSAGE\}/);
   assert.match(detail, /: "ruby"/);
-  assert.match(detail, /factsDeskMarketTileLabel\(true\)/);
-  assert.match(detail, /factsDeskMarketTileLabel\(false, marketSourceLabel\)/);
+  assert.match(detail, /factsMarketAverageUsd\(deskMarket\)/);
+  assert.match(detail, /soldSampleSize=\{compsSoldSample\}/);
+  assert.match(detail, /averageCaption=\{averageCaption\}/);
   assert.match(
     detail,
     /font-extrabold uppercase tracking-\[0\.16em\] text-gold-bright/,
   );
   assert.match(detail, /text-white\/55/);
-  const lowCopy = detail.lastIndexOf("LOW_CONFIDENCE_LISTINGS_MESSAGE");
+  const lowCopy = detail.lastIndexOf(
+    "font-extrabold uppercase tracking-[0.16em] text-gold-bright",
+  );
   const lowBranch = detail.slice(
     lowCopy,
     detail.indexOf("data-facts-check-payment", lowCopy),
   );
+  assert.match(lowBranch, /hideRetailHigh=\{hideRetailHigh\}/);
+  assert.match(lowBranch, /thinSampleMessage=\{LOW_CONFIDENCE_LISTINGS_MESSAGE\}/);
   assert.doesNotMatch(
     lowBranch,
     /label="Retail high"/,
     "Low branch must not contain a Retail High tile — flag cannot miss",
+  );
+  assert.doesNotMatch(
+    lowBranch,
+    /label="High"/,
+    "Low branch must not paint a High dollar tile — thin-sample flag instead",
   );
   assert.doesNotMatch(detail, /Public listing asks/);
   const disclaimerHits = detail.match(/PUBLIC_SOLD_DISCLAIMER/g) ?? [];

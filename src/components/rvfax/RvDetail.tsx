@@ -73,7 +73,6 @@ import {
   PUBLIC_SOLD_DISCLAIMER,
   SOLD_COMPS_LABEL,
   compsConfidenceLabel,
-  factsDeskMarketTileLabel,
   fetchPublicListingComps,
   prefersPublicComps,
   resolvePrimaryMarket,
@@ -82,6 +81,7 @@ import {
 } from "@/lib/rv/publicListingComps";
 import { hideRetailHighForDesk } from "@/lib/rv/marketClamp";
 import { paintFactsLowDeskMarket } from "@/lib/rv/marketEstimate";
+import { factsMarketAverageUsd } from "@/lib/rv/factsMarketBands";
 import { fetchRecallsViaApi } from "@/lib/nhtsa/recalls";
 import type { NhtsaComplaint, NhtsaRecall } from "@/lib/nhtsa/recalls";
 import { buildReportId, valueFactors } from "@/lib/rv/reportMeta";
@@ -125,6 +125,7 @@ import { sanitizeUnverifiedLayout } from "@/lib/rv/promptRules";
 import { shouldShowRvVideoPrompt } from "@/lib/rv/rvVideos";
 import { RvVideoLibraryCard } from "./RvVideoLibraryCard";
 import { FactsCollapse } from "./FactsCollapse";
+import { FactsMarketBands } from "./FactsMarketBands";
 import {
   factsInventoryHeadline,
   factsMoneyHeadline,
@@ -667,6 +668,21 @@ export function RvDetail({
     deskMarket.marketValue && deskMarket.marketValue > 0
       ? deskMarket.marketValue
       : financePrice;
+  /** Average tile: marketValue, else midpoint of retailLow / retailHigh. */
+  const bandAverage = factsMarketAverageUsd(deskMarket);
+  const compsSoldSample =
+    publicComps?.source === "public_listings"
+      ? publicComps.soldSampleSize
+      : undefined;
+  const compsSample =
+    publicComps?.source === "public_listings"
+      ? publicComps.sampleSize
+      : undefined;
+  const marketConfidence = deskMarket.confidence ?? soldConfidence;
+  const averageCaption =
+    marketConfidence === "low"
+      ? (deskMarket.sourceLabel ?? CATALOG_ESTIMATE_LABEL)
+      : undefined;
   const coachChip = formatActiveCoachChip({
     year,
     make,
@@ -1323,51 +1339,28 @@ export function RvDetail({
                 {soldConfidenceLabel}
               </Chip>
             </div>
-            {showSoldRange ? (
-              <div className="grid grid-cols-2 gap-2">
-                <MarketTile
-                  label={factsDeskMarketTileLabel(true)}
-                  value={factsMoneyHeadline(deskMarketValue)}
-                />
-                <MarketTile
-                  label="Trade-in"
-                  value={formatMoney(deskMarket.tradeIn)}
-                />
-                <MarketTile
-                  label="Retail low"
-                  value={formatMoney(deskMarket.retailLow)}
-                />
-                {!hideRetailHigh ? (
-                  <MarketTile
-                    label="Retail high"
-                    value={formatMoney(deskMarket.retailHigh)}
-                  />
-                ) : null}
-              </div>
-            ) : (
-              <div>
+            {!showSoldRange ? (
+              <div className="mb-2">
                 <p className="text-[13px] font-semibold leading-snug text-white">
                   {LOW_CONFIDENCE_LISTINGS_MESSAGE}
                 </p>
                 <p className="mt-4 text-[15px] font-extrabold uppercase tracking-[0.16em] text-gold-bright">
                   {marketSourceLabel}
                 </p>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <MarketTile
-                    label={factsDeskMarketTileLabel(false, marketSourceLabel)}
-                    value={factsMoneyHeadline(deskMarketValue)}
-                  />
-                  <MarketTile
-                    label="Trade-in"
-                    value={formatMoney(deskMarket.tradeIn)}
-                  />
-                  <MarketTile
-                    label="Retail low"
-                    value={formatMoney(deskMarket.retailLow)}
-                  />
-                </div>
               </div>
-            )}
+            ) : null}
+            <FactsMarketBands
+              retailLow={formatMoney(deskMarket.retailLow)}
+              average={factsMoneyHeadline(bandAverage)}
+              retailHigh={formatMoney(deskMarket.retailHigh)}
+              hideRetailHigh={hideRetailHigh}
+              confidence={marketConfidence}
+              soldSampleSize={compsSoldSample}
+              sampleSize={compsSample}
+              thinSampleMessage={LOW_CONFIDENCE_LISTINGS_MESSAGE}
+              averageCaption={averageCaption}
+              tradeIn={formatMoney(deskMarket.tradeIn)}
+            />
             {shellNav ? (
               <button
                 type="button"
@@ -2342,25 +2335,6 @@ function Chip({
     >
       {children}
     </span>
-  );
-}
-
-function MarketTile({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 px-2.5 py-3 text-center">
-      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-[15px] font-semibold tabular-nums text-white">
-        {value}
-      </p>
-    </div>
   );
 }
 
