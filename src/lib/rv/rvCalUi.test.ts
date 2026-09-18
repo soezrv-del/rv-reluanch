@@ -57,6 +57,15 @@ test("rvCAL payment report opens in-app — not window.open / document.write", (
   assert.match(src, /Payment report/);
 });
 
+test("rvCAL payment report trigger is a tiny muted text link, not a primary button", () => {
+  assert.match(src, /text-\[11px\].*text-white\/35/);
+  assert.doesNotMatch(src, /FileText/);
+  assert.doesNotMatch(
+    src,
+    /onClick=\{openPdf\} className="mt-3 flex min-h-11 w-full/,
+  );
+});
+
 test("rvCAL header drops the ZIP/lender subtitle and keeps the verified mark", () => {
   const calCopy = constants.match(/rvcal:\s*\{[\s\S]*?\n  \},/);
   assert.ok(calCopy?.[0], "Cal PAGE_COPY block");

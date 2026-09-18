@@ -38,4 +38,6 @@ test("payment report opener uses srcdoc overlay, not popup write", () => {
   assert.match(app, /openPaymentReport\(html\)/);
   assert.doesNotMatch(app, /window\.open\(/);
   assert.doesNotMatch(app, /document\.write\(/);
+  assert.match(app, /text-\[11px\] font-medium text-white\/35/);
+  assert.doesNotMatch(app, /FileText/);
 });
