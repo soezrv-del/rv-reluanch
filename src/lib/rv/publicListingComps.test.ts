@@ -527,7 +527,9 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
   assert.match(detail, /compsConfidenceLabel/);
   assert.match(detail, /prefersPublicComps/);
   assert.match(detail, /hideRetailHigh/);
-  assert.match(detail, /deskMarketValue/);
+  assert.match(detail, /bandAverage/);
+  assert.match(detail, /fetchFactsMarketLive/);
+  assert.match(detail, /if \(!marketOpen\) return/);
   assert.match(detail, /paintFactsLowDeskMarket/);
   assert.match(detail, /thinSoldAskUsd/);
   assert.match(detail, /deskMarket\.tradeIn/);

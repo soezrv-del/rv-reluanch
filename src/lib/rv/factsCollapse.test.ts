@@ -44,10 +44,11 @@ test("Facts report sections collapse by default with title+headline", () => {
   assert.match(collapse, /aria-expanded=\{open\}/);
   assert.match(collapse, /defaultOpen = false/);
   assert.match(detail, /FactsCollapse/);
-  assert.match(
+  assert.match(detail, /title="Market value"/);
+  assert.doesNotMatch(
     detail,
     /<FactsCollapse\s+title="Market value"\s+defaultOpen/,
-    "Market value opens by default so Sold comps sit above the fold",
+    "Market value is on-demand — do not prefetch nightly bands",
   );
   assert.match(detail, /title="Local inventory"/);
   assert.match(detail, /title="Vehicle specifications"/);
@@ -57,8 +58,8 @@ test("Facts report sections collapse by default with title+headline", () => {
   const defaultOpenCount = (detail.match(/defaultOpen/g) || []).length;
   assert.equal(
     defaultOpenCount,
-    1,
-    "only Market value is default-open — do not force-open every section",
+    0,
+    "no section default-open — Market value waits for user open/ask",
   );
 });
 
