@@ -17,6 +17,7 @@
 import {
   clampRetailHighToMarketValue,
   clampTradeToRetailLow,
+  THIN_COMP_MAX_RETAIL_BAND_USD,
   tightenRetailBandTowardMid,
 } from "./marketClamp.ts";
 import {
@@ -359,5 +360,60 @@ export function applyThinCompCatalogPolicy(est: MarketEstimate): MarketEstimate 
     confidence: "low",
     source: est.source ?? "catalog",
     sourceLabel: est.sourceLabel ?? CATALOG_ESTIMATE_LABEL,
+  };
+}
+
+export type LiveDeskRungs = {
+  tradeIn: number;
+  retailLow: number;
+  retailHigh: number;
+  msrpLo?: number;
+  msrpHi?: number;
+};
+
+/**
+ * Facts Low tiles must paint this — not raw `estimateMarket` retain and not a
+ * #275-style tightened-but-unhaircut mid ($219k / $212k / $186k).
+ *
+ * Always starts from the fat catalog (or a still-fat live band). Never treats
+ * an already-tight midpoint as a sold price. Med/High must not call this.
+ */
+export function paintFactsLowDeskMarket(
+  catalog: MarketEstimate,
+  opts?: {
+    thinSoldUsd?: number;
+    live?: LiveDeskRungs | null;
+  },
+): MarketEstimate {
+  const live = opts?.live;
+  const liveBand = live ? Math.max(0, live.retailHigh - live.retailLow) : 0;
+  const catalogBand = Math.max(0, catalog.retailHigh - catalog.retailLow);
+  const useLive =
+    Boolean(live) &&
+    liveBand >= THIN_COMP_MAX_RETAIL_BAND_USD &&
+    liveBand >= catalogBand;
+  const painted = applyThinCompCatalogPolicy({
+    ...catalog,
+    tradeIn:
+      useLive && live && live.tradeIn > 0 ? live.tradeIn : catalog.tradeIn,
+    retailLow:
+      useLive && live && live.retailLow > 0 ? live.retailLow : catalog.retailLow,
+    retailHigh:
+      useLive && live && live.retailHigh > 0
+        ? live.retailHigh
+        : catalog.retailHigh,
+    msrpLo: useLive && live?.msrpLo ? live.msrpLo : catalog.msrpLo,
+    msrpHi: useLive && live?.msrpHi ? live.msrpHi : catalog.msrpHi,
+    /** Only a confirmed thin sold — never the unhaircut catalog mid. */
+    marketValue:
+      opts?.thinSoldUsd && opts.thinSoldUsd > 0 ? opts.thinSoldUsd : undefined,
+    confidence: "low",
+    hideRetailHigh: true,
+  });
+  if (!useLive) return painted;
+  return {
+    ...painted,
+    source: "live_dossier",
+    sourceLabel: "Live research estimate",
   };
 }
