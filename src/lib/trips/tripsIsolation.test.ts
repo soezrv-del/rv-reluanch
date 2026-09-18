@@ -34,6 +34,7 @@ function tripsRuntimeFiles(): string[] {
     join(root, "../../components/rvtrips/RouteMapboxGl.tsx"),
     join(root, "../../components/rvtrips/DumpsAlongRoute.tsx"),
     join(root, "../../components/rvtrips/DumpMap.tsx"),
+    join(root, "../../components/rvtrips/CampsAlongRoute.tsx"),
   ];
 }
 
@@ -90,6 +91,18 @@ test("Trips runtime never reads Facts / Tow / Cal / Grok session stores", () => 
       src,
       new RegExp(TOW_SESSION_KEY),
       `${file} must not persist/read a Tow session key`,
+    );
+    if (!file.endsWith("towHandoff.ts")) {
+      assert.doesNotMatch(
+        src,
+        /@\/lib\/tow\/|towMatch|GlanceChecks|hitchLoadLbs/,
+        `${file} must not re-implement Tow Fit-truck math`,
+      );
+    }
+    assert.doesNotMatch(
+      src,
+      /familySize|campsiteFit/,
+      `${file} must not invent family size or campsite Fit`,
     );
     if (file.endsWith("RvTripsApp.tsx")) {
       assert.doesNotMatch(

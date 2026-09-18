@@ -135,3 +135,47 @@ test("Trips Profile consumes Tow handoff without auto-locking", () => {
   assert.match(ui, /Unlock to replace/);
   assert.doesNotMatch(ui, /saveLockedProfile\(incoming\)/);
 });
+
+test("Tow→Trips offer strips Fit-truck / family extras — identity + weights only", () => {
+  const offer = normalizeTowHandoffOffer({
+    ...montana,
+    hitchLbs: 2800,
+    pinLbs: 2800,
+    gcwr: 30000,
+    sleeps: 8,
+    familySize: 4,
+    garageFits: "2 RZR",
+  } as typeof montana & Record<string, unknown>);
+  assert.ok(offer);
+  assert.equal(offer.year, "2022");
+  assert.equal(offer.make, "Keystone");
+  assert.equal(offer.model, "Montana");
+  assert.equal(offer.gvwrLbs, 16500);
+  assert.equal("hitchLbs" in offer, false);
+  assert.equal("pinLbs" in offer, false);
+  assert.equal("gcwr" in offer, false);
+  assert.equal("sleeps" in offer, false);
+  assert.equal("familySize" in offer, false);
+  assert.equal("garageFits" in offer, false);
+  assert.equal("heightFt" in offer, false);
+});
+
+test("Trips chrome does not double-build Tow Fit or campsite Fit", () => {
+  const ui = readFileSync(
+    join(root, "../../components/rvtrips/RvTripsApp.tsx"),
+    "utf8",
+  );
+  const camps = readFileSync(
+    join(root, "../../components/rvtrips/CampsAlongRoute.tsx"),
+    "utf8",
+  );
+  const handoff = readFileSync(join(root, "towHandoff.ts"), "utf8");
+  assert.match(ui, /decideTowHandoff/);
+  assert.match(ui, /rvSafeChipLabel\(locked\)/);
+  assert.doesNotMatch(ui, /@\/lib\/tow\//);
+  assert.doesNotMatch(ui, /towMatch|GlanceChecks|hitchLoadLbs/);
+  assert.doesNotMatch(camps, /towMatch|GlanceChecks|familySize|campsiteFit|garageFits/);
+  assert.doesNotMatch(handoff, /towMatch|GlanceChecks|hitchLoadLbs|familySize/);
+  assert.match(handoff, /identity \+ known weights only/);
+  assert.match(handoff, /Fit-truck/);
+});

@@ -7,6 +7,10 @@
  * labeled class heuristic).
  *
  * A locked Trips coach is never overwritten here — the UI must confirm.
+ *
+ * Fit-truck (pin / combo rating / door-sticker glance) stays in Tow — do not
+ * re-implement here. Campsite Fit is a follow-on; this module never invents
+ * family size or pad "fits".
  */
 
 import {
