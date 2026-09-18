@@ -54,8 +54,8 @@ export type MarketEstimate = {
   source?: MarketValueSource;
   /**
    * Honest UI label — never a bare "J.D. Power" / "NADA" desk title.
-   * Locked strings: Catalog estimate, Sold comps, Public J.D. Power
-   * estimate, Avg of public J.D. Power estimate + sold comps.
+   * Locked strings: Catalog estimate, Sold comps, Asking comps, Public J.D. Power
+   * estimate, Avg of public J.D. Power estimate + asking comps.
    */
   sourceLabel?: string;
   /** Set when sold comps or a JD public blend produced these numbers. */

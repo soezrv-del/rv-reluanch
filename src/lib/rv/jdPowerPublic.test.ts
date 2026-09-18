@@ -14,6 +14,7 @@ import {
   isJdPowerBlendEligible,
   isJdPowerMarketSource,
   jdPowerFloorplanSlug,
+  jdPowerSourceLabel,
   JD_POWER_BLEND_LABEL,
   JD_POWER_PUBLIC_LABEL,
   knownPalazzoJdPowerValuesUrl,
@@ -28,6 +29,7 @@ import {
   reducePublicComps,
   resolvePrimaryMarket,
 } from "./publicListingComps.ts";
+import { factsMarketAverageCaption } from "./factsMarketBands.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -93,12 +95,17 @@ test("locked Catalog honesty labels — never a bare book title", () => {
   assert.equal(JD_POWER_PUBLIC_LABEL, "Public J.D. Power estimate");
   assert.equal(
     JD_POWER_BLEND_LABEL,
-    "Avg of public J.D. Power estimate + sold comps",
+    "Avg of public J.D. Power estimate + asking comps",
   );
+  assert.match(JD_POWER_BLEND_LABEL, /asking comps/);
+  assert.doesNotMatch(JD_POWER_BLEND_LABEL, /sold comps/i);
   assert.notEqual(JD_POWER_PUBLIC_LABEL, "J.D. Power");
   assert.notEqual(JD_POWER_PUBLIC_LABEL, "JD Power value");
   assert.notEqual(JD_POWER_PUBLIC_LABEL, "NADA");
   assert.notEqual(JD_POWER_BLEND_LABEL, "J.D. Power");
+  assert.equal(jdPowerSourceLabel("jd_power_blend"), JD_POWER_BLEND_LABEL);
+  assert.equal(jdPowerSourceLabel("jd_power_public"), JD_POWER_PUBLIC_LABEL);
+  assert.equal(jdPowerSourceLabel("catalog"), undefined);
 });
 
 test("parse fixture: 2021 Palazzo 33.5 Low 120200 / Avg 144800 — no invented High", () => {
@@ -253,6 +260,57 @@ test("resolvePrimaryMarket: JD + Med sold blends; JD GAP keeps sold / catalog", 
   assert.equal(noJd.sourceLabel, "Sold comps");
   assert.equal(noJd.marketValue, med.medianAsk);
   assert.equal(noJd.hideRetailHigh, false);
+});
+
+test("Average caption: blend source wins over leftover Catalog estimate; GAP stays Catalog", () => {
+  const catalog = estimateMarket(dieselSpec(), "2021", "33.5", {
+    asOfYear: 2026,
+    make: "Thor",
+    model: "Palazzo",
+  });
+  const med = reducePublicComps(
+    [sold(2020, 140_000), sold(2021, 145_000), sold(2022, 150_000)],
+    { from: 2019, to: 2023 },
+  );
+  assert.ok(med);
+  const blended = resolvePrimaryMarket({
+    catalog,
+    comps: med,
+    jdPower: palazzoJd,
+  });
+  assert.equal(blended.source, "jd_power_blend");
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: blended.confidence,
+      source: blended.source,
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+      thin: false,
+    }),
+    JD_POWER_BLEND_LABEL,
+  );
+
+  const gap = resolvePrimaryMarket({ catalog, comps: med });
+  assert.equal(gap.source, "public_listings");
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: gap.confidence,
+      source: gap.source,
+      sourceLabel: gap.sourceLabel,
+    }),
+    undefined,
+  );
+
+  const thinGap = resolvePrimaryMarket({ catalog });
+  assert.equal(thinGap.source, "catalog");
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: thinGap.confidence ?? "low",
+      source: thinGap.source,
+      sourceLabel: thinGap.sourceLabel,
+      thin: true,
+    }),
+    CATALOG_ESTIMATE_LABEL,
+  );
 });
 
 test("resolvePrimaryMarket: JD GAP + thin Palazzo still Catalog estimate 145k", () => {

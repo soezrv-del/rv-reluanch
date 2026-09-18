@@ -15,9 +15,9 @@ import type { MarketEstimate, MarketValueSource } from "./marketEstimate.ts";
 
 /** Locked Catalog chip — never bare "J.D. Power" / "NADA" as a desk title. */
 export const JD_POWER_PUBLIC_LABEL = "Public J.D. Power estimate";
-/** Locked blend sub/sourceLabel when public JD × sold comps both exist. */
+/** Locked blend sub/sourceLabel when public JD × live nationwide asks both exist. */
 export const JD_POWER_BLEND_LABEL =
-  "Avg of public J.D. Power estimate + sold comps";
+  "Avg of public J.D. Power estimate + asking comps";
 
 export const PALAZZO_JD_POWER_TEST_UNIT = {
   year: 2021,
@@ -64,6 +64,19 @@ export function isJdPowerMarketSource(
   source?: MarketValueSource | string | null,
 ): boolean {
   return source === "jd_power_public" || source === "jd_power_blend";
+}
+
+/**
+ * Locked Average sublabel from the ladder source. Prefer this over a
+ * leftover Catalog estimate chip — #283 can set `source` to the blend
+ * while `sourceLabel` still reads Catalog estimate on the thin desk.
+ */
+export function jdPowerSourceLabel(
+  source?: MarketValueSource | string | null,
+): string | undefined {
+  if (source === "jd_power_blend") return JD_POWER_BLEND_LABEL;
+  if (source === "jd_power_public") return JD_POWER_PUBLIC_LABEL;
+  return undefined;
 }
 
 /** 33.5 → m-33-5 (JD Power used-values slug). */
@@ -336,7 +349,7 @@ export function applyJdPowerDeskMarket(input: {
     tradeCappedAtRetailLow:
       bands.tradeCapped || comps?.tradeCappedAtRetailLow || undefined,
     source: soldOk ? "jd_power_blend" : "jd_power_public",
-    sourceLabel: soldOk ? JD_POWER_BLEND_LABEL : JD_POWER_PUBLIC_LABEL,
+    sourceLabel: jdPowerSourceLabel(soldOk ? "jd_power_blend" : "jd_power_public"),
     confidence: prefersSoldRange && comps ? comps.confidence : "low",
     marketValue: bands.marketValue,
     hideRetailHigh,
