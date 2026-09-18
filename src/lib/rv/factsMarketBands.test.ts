@@ -134,6 +134,11 @@ test("caption: Catalog estimate on thin; blend sublabel; never bare J.D. Power",
   assert.equal(factsMarketIsBareJdPower("Catalog estimate"), false);
   assert.equal(factsMarketIsBareJdPower(JD_POWER_BLEND_LABEL), false);
   assert.equal(
+    JD_POWER_BLEND_LABEL,
+    "Avg of public J.D. Power estimate + asking comps",
+  );
+  assert.doesNotMatch(JD_POWER_BLEND_LABEL, /sold comps/i);
+  assert.equal(
     factsMarketAverageCaption({
       confidence: "low",
       source: "catalog",

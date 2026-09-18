@@ -79,7 +79,7 @@ export function factsMarketIsBareJdPower(label?: string): boolean {
 }
 
 /**
- * Average caption: blend cue when the JD × sold ladder is active;
+ * Average caption: blend cue when the JD × live-asks ladder is active;
  * Catalog estimate on JD GAP / thin catalog. Never a bare J.D. Power title.
  *
  * `source` wins over a leftover Catalog estimate `sourceLabel` — that is

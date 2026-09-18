@@ -15,9 +15,9 @@ import type { MarketEstimate, MarketValueSource } from "./marketEstimate.ts";
 
 /** Locked Catalog chip — never bare "J.D. Power" / "NADA" as a desk title. */
 export const JD_POWER_PUBLIC_LABEL = "Public J.D. Power estimate";
-/** Locked blend sub/sourceLabel when public JD × sold comps both exist. */
+/** Locked blend sub/sourceLabel when public JD × live nationwide asks both exist. */
 export const JD_POWER_BLEND_LABEL =
-  "Avg of public J.D. Power estimate + sold comps";
+  "Avg of public J.D. Power estimate + asking comps";
 
 export const PALAZZO_JD_POWER_TEST_UNIT = {
   year: 2021,

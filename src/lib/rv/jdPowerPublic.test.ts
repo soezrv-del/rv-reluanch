@@ -95,8 +95,10 @@ test("locked Catalog honesty labels — never a bare book title", () => {
   assert.equal(JD_POWER_PUBLIC_LABEL, "Public J.D. Power estimate");
   assert.equal(
     JD_POWER_BLEND_LABEL,
-    "Avg of public J.D. Power estimate + sold comps",
+    "Avg of public J.D. Power estimate + asking comps",
   );
+  assert.match(JD_POWER_BLEND_LABEL, /asking comps/);
+  assert.doesNotMatch(JD_POWER_BLEND_LABEL, /sold comps/i);
   assert.notEqual(JD_POWER_PUBLIC_LABEL, "J.D. Power");
   assert.notEqual(JD_POWER_PUBLIC_LABEL, "JD Power value");
   assert.notEqual(JD_POWER_PUBLIC_LABEL, "NADA");
