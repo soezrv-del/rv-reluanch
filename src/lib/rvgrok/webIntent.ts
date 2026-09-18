@@ -5,6 +5,8 @@
  * Standing rule: browse whenever the catalog cannot answer the ask,
  * plus inventory / diesel-count asks the catalog never stores.
  * Skip only hi / lifestyle / payment / image-only turns.
+ * Market value / pricing always browses (live nationwide asking, year ±2)
+ * — catalog, nightly scrape, and competitor-latest are not price SoT.
  */
 
 import { parseCoachFromText } from "./parseCoach.ts";
@@ -41,6 +43,13 @@ const CASUAL_CHAT_RE =
 
 const AGENT_EXTRA_LOOKUP_RE =
   /\b(look(?:\s+(?:this|it))?\s+up|search|research|forum|owners?\s+say|latest|current|compare reviews|what(?:'s|\s+is) the (?:latest|current|word))\b/i;
+
+/**
+ * Used-market / asking-price asks — not lifestyle "worth it", not loan math.
+ * These must browse live nationwide listings (year ±2). Catalog has no live asks.
+ */
+const MARKET_VALUE_RE =
+  /\b(market\s+value|used\s+(?:market\s+)?(?:price|values?|pricing)|asking\s+pric(?:e|es|ing)|fair\s+(?:market\s+)?(?:price|value)|street\s+price|going\s+for|sell(?:s|ing)?\s+for|comparables?|\bcomps?\b|book\s+value|retail\s+(?:low|high|value|price)|trade[- ]?in\s+(?:value|price)|pric(?:e|ing)\s+(?:on|for|of)|value\s+of\s+(?:a|an|my|this|the)|what(?:'s|\s+is)\s+(?:it|this|that|a|an|my|the)\b.{0,80}\bworth\b|how\s+much\s+(?:is|are)\s+(?:a|an|my|this|that|the)\b.{0,80}\b(?:worth|asking|going|sell|used|price)|how\s+much\s+(?:should|would|does|do).{0,60}\b(?:sell|ask|go(?:ing)?\s+for|worth)|what\s+(?:are|is)\s+(?:they\s+)?asking|go(?:es|ing)?\s+for)\b/i;
 
 /** "tell me about / what about / I'd like to know about [coach]" — not spec keywords. */
 const PRODUCT_ABOUT_RE =
@@ -115,6 +124,24 @@ export function looksLikeInventoryOrCountQuestion(text: string): boolean {
 }
 
 /**
+ * Market value / used pricing — live nationwide asking prices, year ±2.
+ * Lifestyle "is it worth it" is stripped so it does not fire a price search.
+ */
+export function looksLikeMarketValueQuestion(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim()) return false;
+  const pricingText = t.replace(/\bworth\s+it\b/gi, " ");
+  if (MARKET_VALUE_RE.test(pricingText)) return true;
+  if (
+    /\bhow\s+much\s+(?:is|are)\s+(?:a|an|my|this|that|the)\b/i.test(pricingText)
+  ) {
+    const parsed = parseCoachFromText(t);
+    if (parsed.year || parsed.make) return true;
+  }
+  return false;
+}
+
+/**
  * Troubleshooting, how-to, error codes, TSB/recall research, OEM/forum
  * lookup — anything that needs live web beyond a locked catalog row.
  */
@@ -124,6 +151,8 @@ export function looksLikeLiveResearchQuestion(text: string): boolean {
   if (looksLikePureLifestyleOrPayment(t)) return false;
   // Repair / diagnose always needs live notes — catalog has no procedure.
   if (looksLikeRepairQuestion(t)) return true;
+  // Market value always needs live listings — catalog / nightly scrape is not SoT.
+  if (looksLikeMarketValueQuestion(t)) return true;
   if (!LIVE_RESEARCH_RE.test(t)) return false;
   return true;
 }

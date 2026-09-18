@@ -658,6 +658,9 @@ test("listing prompt demands sold lines and forbids inventing or paid books", ()
   assert.match(p.system, /NADA/);
   assert.match(p.system, /J\.D\. Power/);
   assert.match(p.system, /ASK:/);
+  assert.match(p.system, /competitor-latest/);
+  assert.match(p.system, /nightly competitor scrape/);
+  assert.match(p.system, /sample inventory CSV/);
 });
 
 test("research fetch path prefers sold and does not invent prices", () => {
@@ -667,6 +670,8 @@ test("research fetch path prefers sold and does not invent prices", () => {
   assert.match(text, /reducePublicComps/);
   assert.match(text, /never rewritten as sold prices/i);
   assert.match(text, /Never claims NADA \/ J\.D\. Power/);
+  assert.match(text, /competitor-latest/);
+  assert.match(text, /nightly competitor scrape/);
 });
 
 test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
