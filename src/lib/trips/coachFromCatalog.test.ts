@@ -10,9 +10,12 @@ import {
   coachIsReady,
   dimsFromKnownSources,
   EMPTY_COACH_PROFILE,
+  formatRvSafeNavigateChipDims,
   loadLockedProfile,
   profileIsComplete,
   resolveTripsProfileSeed,
+  RV_SAFE_CHIP_GAP,
+  rvSafeNavigateChipLabel,
   saveLockedProfile,
   type CoachProfile,
   type SuggestCoachFn,
@@ -356,4 +359,35 @@ test("loadLockedProfile keeps a coach without floorplan", () => {
   } finally {
     restore();
   }
+});
+
+test("rvSafeNavigateChipLabel: GAP when empty, real height × weight when saved", () => {
+  assert.equal(RV_SAFE_CHIP_GAP, "GAP");
+  assert.equal(formatRvSafeNavigateChipDims(null), "GAP × GAP");
+  assert.equal(rvSafeNavigateChipLabel(null), "RV safe · GAP × GAP");
+  assert.equal(
+    rvSafeNavigateChipLabel(EMPTY_COACH_PROFILE),
+    "RV safe · GAP × GAP",
+  );
+  assert.equal(
+    rvSafeNavigateChipLabel({ heightFt: 12, weightLbs: 0 }),
+    "RV safe · 12′ × GAP",
+  );
+  assert.equal(
+    rvSafeNavigateChipLabel({ heightFt: 0, weightLbs: 18000 }),
+    "RV safe · GAP × 18,000 lb",
+  );
+  assert.equal(
+    rvSafeNavigateChipLabel({ heightFt: 12, weightLbs: 18000 }),
+    "RV safe · 12′ × 18,000 lb",
+  );
+  assert.equal(
+    rvSafeNavigateChipLabel({
+      heightFt: 13.5,
+      widthFt: 8.5,
+      lengthFt: 45,
+      weightLbs: 44000,
+    }),
+    "RV safe · 13.5′H · 45′L · 8.5′W × 44,000 lb",
+  );
 });

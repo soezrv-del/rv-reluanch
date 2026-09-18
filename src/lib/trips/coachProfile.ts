@@ -327,6 +327,55 @@ export function coachIsReady(p: CoachProfile | null | undefined): boolean {
   return Boolean(p.make && p.model && p.lengthFt > 0 && p.heightFt > 0);
 }
 
+/** Display-only when height or weight is unknown. Never sent to HERE Truck. */
+export const RV_SAFE_CHIP_GAP = "GAP";
+
+function formatFtChip(n: number): string {
+  return `${n}′`;
+}
+
+function formatLbChip(n: number): string {
+  return `${Math.round(n).toLocaleString("en-US")} lb`;
+}
+
+export type RvSafeChipDims = {
+  heightFt?: number;
+  widthFt?: number;
+  lengthFt?: number;
+  weightLbs?: number;
+};
+
+/**
+ * One-line height × weight for the navigate chip.
+ * Real saved dims when present; GAP/placeholder when the profile is empty.
+ * Does not require a locked coach — routing still uses canUseRvSafe separately.
+ */
+export function formatRvSafeNavigateChipDims(
+  coach: RvSafeChipDims | null | undefined,
+): string {
+  const hasH = positive(coach?.heightFt);
+  const hasW = positive(coach?.weightLbs);
+  if (hasH && hasW && coach) {
+    const left = [formatFtChip(coach.heightFt!)];
+    if (positive(coach.lengthFt) || positive(coach.widthFt)) {
+      left[0] = `${formatFtChip(coach.heightFt!)}H`;
+    }
+    if (positive(coach.lengthFt)) left.push(`${formatFtChip(coach.lengthFt)}L`);
+    if (positive(coach.widthFt)) left.push(`${formatFtChip(coach.widthFt)}W`);
+    return `${left.join(" · ")} × ${formatLbChip(coach.weightLbs!)}`;
+  }
+  const height = hasH && coach ? formatFtChip(coach.heightFt!) : RV_SAFE_CHIP_GAP;
+  const weight = hasW && coach ? formatLbChip(coach.weightLbs!) : RV_SAFE_CHIP_GAP;
+  return `${height} × ${weight}`;
+}
+
+/** Always a one-line navigate label — never null, never waits on lock/save. */
+export function rvSafeNavigateChipLabel(
+  coach: RvSafeChipDims | null | undefined,
+): string {
+  return `RV safe · ${formatRvSafeNavigateChipDims(coach)}`;
+}
+
 export function profileIsComplete(p: CoachProfile): boolean {
   return Boolean(
     p.year &&

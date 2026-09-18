@@ -56,6 +56,7 @@ import {
   type CoachSeedSource,
   type DimSource,
 } from "@/lib/trips/coachFromCatalog";
+import { rvSafeNavigateChipLabel } from "@/lib/trips/coachProfile";
 import { decideTowHandoff } from "@/lib/trips/towHandoff";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
@@ -1192,7 +1193,8 @@ export function RvTripsApp() {
   const liveStats = liveRouteStats(osrm);
   const engineChip = routeStatus === "live" ? routeEngineLabel(osrm) : "";
   const providerNote = liveProviderNote(osrm);
-  const rvSafeChip = rvSafeChipLabel(locked);
+  const rvSafeChip =
+    rvSafeChipLabel(locked) ?? rvSafeNavigateChipLabel(locked);
 
   const canRoute = canSubmitPlan({
     originPlace,
@@ -1483,6 +1485,17 @@ export function RvTripsApp() {
           {/* ── NAVIGATE ── */}
           {!tool ? (
             <>
+              {routeStatus !== "live" ? (
+                <button
+                  type="button"
+                  data-rv-safe-chip
+                  onClick={() => setTool("profile")}
+                  aria-label={`${rvSafeChip}. Open profile to confirm or edit.`}
+                  className="inline-flex max-w-full min-h-11 items-center rounded-full border border-emerald-400/35 bg-emerald-500/12 px-2.5 text-[11px] font-semibold text-emerald-200"
+                >
+                  {rvSafeChip}
+                </button>
+              ) : null}
               {routeStatus === "live" && !planOpen ? (
                 <button
                   type="button"
@@ -1862,17 +1875,15 @@ export function RvTripsApp() {
                     </div>
                   </div>
 
-                  {rvSafeChip ? (
-                    <button
-                      type="button"
-                      data-rv-safe-chip
-                      onClick={() => setTool("profile")}
-                      aria-label={`${rvSafeChip}. Open profile to confirm or edit.`}
-                      className="inline-flex max-w-full min-h-11 items-center rounded-full border border-emerald-400/35 bg-emerald-500/12 px-2.5 text-[11px] font-semibold text-emerald-200"
-                    >
-                      {rvSafeChip}
-                    </button>
-                  ) : null}
+                  <button
+                    type="button"
+                    data-rv-safe-chip
+                    onClick={() => setTool("profile")}
+                    aria-label={`${rvSafeChip}. Open profile to confirm or edit.`}
+                    className="inline-flex max-w-full min-h-11 items-center rounded-full border border-emerald-400/35 bg-emerald-500/12 px-2.5 text-[11px] font-semibold text-emerald-200"
+                  >
+                    {rvSafeChip}
+                  </button>
 
                   <div
                     className={cn(

@@ -501,18 +501,23 @@ test("Navigate route card surfaces locked RV-safe dims via Profile deep-link", (
     "utf8",
   );
   assert.match(ui, /rvSafeChipLabel\(locked\)/);
+  assert.match(ui, /rvSafeNavigateChipLabel\(locked\)/);
   assert.match(ui, /data-rv-safe-chip/);
   assert.match(ui, /data-route-results/);
+  const toolsDock = ui.indexOf("data-trips-tools");
+  const firstChip = ui.indexOf("data-rv-safe-chip");
+  const cardChip = ui.indexOf("data-rv-safe-chip", ui.indexOf("data-route-results"));
+  assert.ok(firstChip > toolsDock, "chip is on navigate, not the header tools dock");
   assert.ok(
-    ui.indexOf("data-rv-safe-chip") > ui.indexOf("data-route-results"),
-    "chip lives on the route card, not the header tools dock",
+    firstChip < ui.indexOf("data-route-results"),
+    "empty-profile chip is on navigate before a live route",
   );
+  assert.ok(cardChip > ui.indexOf("data-route-results"), "live route card still has the chip");
   assert.ok(
-    ui.indexOf("data-rv-safe-chip") < ui.indexOf("Start Turn-by-Turn"),
+    cardChip < ui.indexOf("Start Turn-by-Turn"),
     "chip is on the route card path above TBT",
   );
-  const chipStart = ui.indexOf("data-rv-safe-chip");
-  const chipBlock = ui.slice(chipStart, ui.indexOf("</button>", chipStart));
+  const chipBlock = ui.slice(firstChip, ui.indexOf("</button>", firstChip));
   assert.match(chipBlock, /setTool\("profile"\)/);
   assert.doesNotMatch(chipBlock, /hidden=\{navArmed\}/);
   assert.match(css, /\[data-rv-safe-chip\]/);
