@@ -94,18 +94,28 @@ const GROK_STARTERS: {
   },
 ];
 
+export type RvGrokVariant = "page" | "embedded";
+
 export function RvGrokApp({
   seedPrompt,
   onSeedConsumed,
   active = true,
   entryToken = 0,
+  variant = "page",
 }: {
   seedPrompt?: string;
   onSeedConsumed?: () => void;
   active?: boolean;
   /** Bumps on every Grok tab entry (dock tap included) so a remounted pane resets. */
   entryToken?: number;
+  /**
+   * `page` (default) — Grok tab: suite backdrop, sapphire header, pull-to-reset.
+   * `embedded` — Ask Grok overlay mount: same chat stack, no suite-page chrome
+   * and no History/Agent/Voice toolbar (overlay owns the one header).
+   */
+  variant?: RvGrokVariant;
 } = {}) {
+  const embedded = variant === "embedded";
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -303,7 +313,7 @@ export function RvGrokApp({
     liveCamRef.current = false;
   }, []);
 
-  const pull = usePullToReset(listRef, startNewChat);
+  const pull = usePullToReset(listRef, startNewChat, { enabled: !embedded });
 
   const handleStop = () => {
     abortRef.current?.abort();
@@ -1259,25 +1269,25 @@ export function RvGrokApp({
 
   const startersOrThread =
     messages.length === 0 ? (
-      <div className="mx-auto flex max-w-xl flex-col px-0.5 pb-4 pt-6">
-        <p className="text-center text-[13px] leading-relaxed text-white/75">
+      <div className="grok-starters mx-auto flex max-w-xl flex-col px-0.5 pb-4 pt-6">
+        <p className="grok-starters-kicker text-center text-[13px] leading-relaxed text-white/75">
           Tap a prompt or type below.
         </p>
 
-        <div className="mt-4 flex flex-col gap-2.5">
+        <div className="grok-starters-list mt-4 flex flex-col gap-2.5">
           {GROK_STARTERS.map((s) => (
             <button
               key={s.title}
               type="button"
               onClick={() => void sendMessage(s.prompt)}
-              className="glass-prestige flex min-h-[4.25rem] items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition hover:border-white/25"
+              className="grok-starter glass-prestige flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition hover:border-white/25"
             >
-              <s.Icon className="size-5 shrink-0 text-sky-100" />
+              <s.Icon className="grok-starter-icon size-5 shrink-0 text-sky-100" />
               <span className="min-w-0">
-                <span className="block text-[15px] font-semibold leading-snug text-white">
+                <span className="grok-starter-title block text-[15px] font-semibold leading-snug text-white">
                   {s.title}
                 </span>
-                <span className="mt-0.5 block text-[12px] leading-snug text-white/70">
+                <span className="grok-starter-line mt-0.5 block text-[12px] leading-snug text-white/70">
                   {s.line}
                 </span>
               </span>
@@ -1299,11 +1309,16 @@ export function RvGrokApp({
     );
 
   return (
-    <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden text-fg">
-      <SuiteBackdrop />
-      <ScrollSuiteHeader tab="rvgrok" className="relative z-10 shrink-0" />
+    <div
+      className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden text-fg"
+      data-rvgrok-variant={variant}
+    >
+      {!embedded && <SuiteBackdrop />}
+      {!embedded && (
+        <ScrollSuiteHeader tab="rvgrok" className="relative z-10 shrink-0" />
+      )}
 
-
+      {!embedded && (
       <header className="relative z-10 flex shrink-0 items-center gap-2 border-b border-white/10 bg-black/20 px-3 py-1.5 sm:px-4">
         <button
           type="button"
@@ -1371,6 +1386,7 @@ export function RvGrokApp({
           )}
         </div>
       </header>
+      )}
 
       <div
         ref={listRef}
@@ -1380,12 +1396,16 @@ export function RvGrokApp({
           paddingBottom: kb.open ? 12 : undefined,
         }}
       >
-        <PullRefreshLayer
-          state={pull}
-          label="Release to refresh Grok · new chat"
-        >
-          {startersOrThread}
-        </PullRefreshLayer>
+        {embedded ? (
+          startersOrThread
+        ) : (
+          <PullRefreshLayer
+            state={pull}
+            label="Release to refresh Grok · new chat"
+          >
+            {startersOrThread}
+          </PullRefreshLayer>
+        )}
       </div>
 
       <div className="relative z-20 shrink-0 border-t border-white/10 bg-bg px-3 py-2 sm:px-4">

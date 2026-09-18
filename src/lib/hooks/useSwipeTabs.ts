@@ -1,4 +1,5 @@
 import { useEffect, type RefObject } from "react";
+import { flushSync } from "react-dom";
 import { hapticLight } from "@/lib/haptics";
 import {
   IOS_SWIPE_MS,
@@ -25,10 +26,13 @@ function writeSwipeVars(
   el: HTMLElement,
   dx: number,
   dragging: boolean,
+  busy = dragging || dx !== 0,
 ) {
   el.style.setProperty("--swipe-dx", `${dx}px`);
   if (dragging) el.setAttribute("data-swipe-dragging", "1");
   else el.removeAttribute("data-swipe-dragging");
+  if (busy) el.setAttribute("data-swipe-busy", "1");
+  else el.removeAttribute("data-swipe-busy");
 }
 
 /**
@@ -90,15 +94,19 @@ export function useSwipeTabs<T extends string>({
 
     const commit = (next: T, destDx: number) => {
       finishing = true;
-      writeSwipeVars(el, destDx, false);
+      writeSwipeVars(el, destDx, false, true);
       const finish = () => {
         window.clearTimeout(finishTimer);
         el.removeEventListener("transitionend", onEndTransition);
-        writeSwipeVars(el, 0, true);
+        // Apply the new --pane-shift before zeroing --swipe-dx so the
+        // destination pane does not flash at the old offset for a frame.
+        flushSync(() => {
+          onChange(next);
+        });
+        writeSwipeVars(el, 0, true, true);
         void hapticLight();
-        onChange(next);
         requestAnimationFrame(() => {
-          writeSwipeVars(el, 0, false);
+          writeSwipeVars(el, 0, false, false);
           finishing = false;
         });
       };

@@ -10,40 +10,71 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("RvGrokApp is page-only — no overlay embedded variant or leftover splash/nav props", () => {
+test("RvGrokApp defaults to page variant and gates suite chrome for embedded", () => {
   const app = read("../../components/rvgrok/RvGrokApp.tsx");
 
-  assert.doesNotMatch(app, /RvGrokVariant/);
-  assert.doesNotMatch(app, /variant\?:/);
-  assert.doesNotMatch(app, /embedded/);
-  assert.doesNotMatch(app, /onSplashPlayingChange/);
-  assert.doesNotMatch(app, /onNavigate/);
-  assert.doesNotMatch(app, /data-rvgrok-variant/);
+  assert.match(app, /export type RvGrokVariant = "page" \| "embedded"/);
+  assert.match(app, /variant = "page"/);
+  assert.match(app, /variant\?: RvGrokVariant/);
+  assert.match(app, /const embedded = variant === "embedded"/);
+  assert.match(app, /data-rvgrok-variant=\{variant\}/);
 
-  assert.match(app, /<SuiteBackdrop \/>/);
-  assert.match(app, /<ScrollSuiteHeader tab="rvgrok"/);
-  assert.match(app, /usePullToReset\(listRef, startNewChat\)/);
-  assert.match(app, /<PullRefreshLayer/);
+  assert.match(app, /!embedded && <SuiteBackdrop \/>/);
+  assert.match(
+    app,
+    /!embedded && \(\s*<ScrollSuiteHeader tab="rvgrok"/,
+  );
+  assert.match(
+    app,
+    /usePullToReset\(listRef, startNewChat, \{ enabled: !embedded \}\)/,
+  );
+  assert.match(
+    app,
+    /embedded \? \(\s*startersOrThread\s*\) : \(\s*<PullRefreshLayer/,
+  );
 
+  // One header: overlay title/close. Embedded hides History/Agent/Voice.
+  assert.match(app, /!embedded && \(\s*<header className="relative z-10 flex shrink-0/);
   assert.match(app, /<HistoryPanel/);
   assert.match(app, /<VoicePanel/);
   assert.match(app, /Ask RV Grok/);
   assert.match(app, /GROK_STARTERS/);
   assert.match(app, /planGrokTabEntry/);
   assert.match(app, /onSeedConsumed/);
+  assert.match(app, /Live Voice/);
 });
 
-test("Grok tab stays default page variant", () => {
+test("Ask Grok overlay passes variant=embedded; Grok tab stays default page", () => {
+  const overlay = read("../../components/shell/AskGrokOverlay.tsx");
   const shell = read("../../components/shell/AppShell.tsx");
+
+  assert.match(
+    overlay,
+    /<RvGrokApp[\s\S]*variant="embedded"[\s\S]*active=\{open\}/,
+  );
+  assert.match(overlay, /seedPrompt=\{seedPrompt\}/);
+  assert.match(overlay, /onSeedConsumed=\{onSeedConsumed\}/);
+  assert.doesNotMatch(overlay, /streamChat|GrokRealtimeSession|sendMessage/);
 
   const pageMount = shell.match(
     /id === "rvgrok" \? \([\s\S]*?<RvGrokApp[\s\S]*?\/>/,
   )?.[0];
   assert.ok(pageMount, "Grok tab still mounts RvGrokApp");
   assert.doesNotMatch(pageMount, /variant=/);
-  assert.doesNotMatch(pageMount, /onSplashPlayingChange/);
-  assert.doesNotMatch(pageMount, /onNavigate=/);
   assert.match(pageMount, /active=\{tab === "rvgrok" && !launchOpen\}/);
   assert.match(pageMount, /entryToken=\{grokEntryToken\}/);
   assert.match(pageMount, /seedPrompt=\{grokSeed\}/);
+});
+
+test("GROK_STARTERS densify on short viewports with ≥44px tap targets", () => {
+  const app = read("../../components/rvgrok/RvGrokApp.tsx");
+  const css = read("../../styles.css");
+
+  assert.match(app, /className="grok-starters /);
+  assert.match(app, /className="grok-starter /);
+  assert.match(app, /min-h-11/);
+  assert.match(css, /@media \(max-height: 740px\)/);
+  assert.match(css, /\.grok-starter \{/);
+  assert.match(css, /min-height:\s*44px/);
+  assert.match(css, /\.grok-starters-list \{/);
 });
