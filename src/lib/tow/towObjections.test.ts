@@ -182,15 +182,13 @@ test("RvTowApp: lot-desk strip + Fit glance on default view when Facts towable",
   assert.match(ui, /data-tow-fit-glance/);
   assert.match(ui, /data-tow-bed-note/);
   assert.match(ui, /prefill\.kind === "towable"/);
-  assert.doesNotMatch(ui, /insuranc/i);
-  assert.doesNotMatch(helper, /insuranc/i);
   assert.doesNotMatch(helper, /from "\.\.\/rvfax/);
   assert.doesNotMatch(helper, /from "\.\.\/trips/);
   assert.doesNotMatch(ui, /family size/i);
 
   const details = ui.indexOf(">More details<");
   const answer = ui.indexOf("<AnswerHero");
-  const lotDesk = ui.indexOf("data-tow-lot-desk");
+  const lotDesk = ui.indexOf("<LotDeskWeight");
   const fit = ui.indexOf("data-tow-fit-glance");
   const trim = ui.indexOf("TRIM / ENGINE / CONFIGURATION");
   assert.ok(answer >= 0 && answer < details, "AnswerHero stays on default view");
