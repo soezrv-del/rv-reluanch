@@ -37,6 +37,11 @@ import {
 import type { RVSpec } from "../rv/rvTypes";
 import { needsWebFallback } from "./webIntent";
 import {
+  findComparableCatalogCoaches,
+  looksLikeCoachCompareQuestion,
+  type ComparableCatalogCoach,
+} from "./coachCompare";
+import {
   formatRepairGroundingBlock,
   looksLikeRepairQuestion,
   repairCoachLockFromGrounded,
@@ -52,10 +57,16 @@ export {
   looksLikeOffCatalogQuestion,
   looksLikePureLifestyleOrPayment,
   looksLikeRepairQuestion,
+  looksLikeCatalogAnswerableCoachCompare,
   looksLikeSpecQuestion,
   needsWebFallback,
   normalizeAskText,
 } from "./webIntent";
+export { looksLikeCoachCompareQuestion } from "./parseCoach";
+export {
+  findComparableCatalogCoaches,
+  looksLikeForumOrManualCompare,
+} from "./coachCompare";
 export type { WebFallbackOpts, WebFallbackSpecs } from "./webIntent";
 
 export type CoachIdentity = {
@@ -114,6 +125,12 @@ export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 
 export const UNKNOWN_POWERTRAIN_LINE =
   "UNKNOWN — do not invent. Say unknown / EST. and the closest verified data. Brochure / door sticker is verify-after only — never send the user to the OEM site as the answer.";
+
+export const COMPARE_GROUNDING_RULES = `COMPARE THIS TURN (catalog-answerable):
+- Answer both coaches from the VERIFIED CATALOG locks below in THIS turn.
+- Lead with class and powertrain. Do not say "Let me check that" or stall for a search.
+- Do not invent HP, engine, chassis, or fuel. UNKNOWN / EST stays unknown / EST.
+- NEVER send the user to a website, OEM site, or dealer as the answer.`;
 
 const MAKE_ALIASES: Record<string, string> = {
   entegra: "Entegra Coach",
@@ -298,6 +315,7 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
   );
   if (!hasYearRow) {
     const empty = field(null, "empty");
+    const noYear = !year;
     return {
       identity,
       engine: empty,
@@ -305,9 +323,13 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
       torque: empty,
       chassis: empty,
       transmission: empty,
-      fuelType: empty,
+      fuelType: noYear
+        ? pickField({ value: index?.fuelType, trust: "index" })
+        : empty,
       rvType: pickField({ value: index?.type, trust: "index" }),
-      note: "No locked catalog row for this model year. Answer from WEB RESEARCH notes and/or closest verified data — do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.",
+      note: noYear
+        ? "No model year in the ask — class and fuel are from the catalog index. Do not invent HP, engine, chassis, or a year. Never send the user to the OEM site, a website, or a dealer as the answer."
+        : "No locked catalog row for this model year. Answer from WEB RESEARCH notes and/or closest verified data — do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.",
       weightBand: null,
       hasHardLock: false,
       missingHard: true,
@@ -480,6 +502,35 @@ export function formatVoiceCatalogAddendum(specs: GroundedSpecs): string {
   return `\n\n${formatCatalogGroundingBlock(specs)}\nSpeak those locked numbers. If UNKNOWN, say so in one breath — do not guess.`;
 }
 
+function identityFromCompareHit(hit: ComparableCatalogCoach): CoachIdentity {
+  return {
+    year: hit.year,
+    make: hit.make,
+    model: hit.model,
+    floorplan: hit.floorplan,
+    source: "message",
+  };
+}
+
+function compareCatalogBlock(hits: ComparableCatalogCoach[]): {
+  identity: CoachIdentity;
+  specs: GroundedSpecs;
+  catalog: string;
+} | null {
+  if (hits.length < 2) return null;
+  const specsList = hits.slice(0, 3).map((hit) =>
+    lookupGroundedSpecs(identityFromCompareHit(hit)),
+  );
+  const primary = specsList[0];
+  if (!primary) return null;
+  const catalog = [
+    COMPARE_GROUNDING_RULES,
+    ...specsList.map((specs) => formatCatalogGroundingBlock(specs)),
+    GROUNDING_RULES,
+  ].join("\n\n");
+  return { identity: primary.identity, specs: primary, catalog };
+}
+
 function repairBlockFor(
   query: string,
   identity: CoachIdentity | null,
@@ -510,6 +561,26 @@ export function buildChatGrounding(opts: {
 } {
   const webOpts = { agentMode: opts.agentMode };
   const repairMode = looksLikeRepairQuestion(opts.query);
+  const compareHits = looksLikeCoachCompareQuestion(opts.query)
+    ? findComparableCatalogCoaches(opts.query)
+    : [];
+  const compare = compareCatalogBlock(compareHits);
+  if (compare) {
+    const repair = repairBlockFor(
+      opts.query,
+      compare.identity,
+      compare.specs,
+      false,
+      opts.facts,
+    );
+    return {
+      identity: compare.identity,
+      specs: compare.specs,
+      block: repair ? `${compare.catalog}\n\n${repair}` : compare.catalog,
+      needsWeb: needsWebFallback(compare.specs, opts.query, webOpts),
+      repairMode,
+    };
+  }
   const identity = resolveCoachIdentity(
     opts.query,
     opts.facts,
@@ -543,6 +614,20 @@ export function buildVoiceGrounding(opts: {
   facts?: ActiveCoach | null;
 }): string {
   const query = opts.query || "";
+  const compareHits = looksLikeCoachCompareQuestion(query)
+    ? findComparableCatalogCoaches(query)
+    : [];
+  const compare = compareCatalogBlock(compareHits);
+  if (compare) {
+    const repair = repairBlockFor(
+      query,
+      compare.identity,
+      compare.specs,
+      true,
+      opts.facts,
+    );
+    return `${compare.catalog}\nSpeak those locked numbers. If UNKNOWN, say so in one breath — do not guess.\n\n${repair}`;
+  }
   const identity = resolveCoachIdentity(query, opts.facts, "");
   const specs = identity ? lookupGroundedSpecs(identity) : null;
   const repair = repairBlockFor(query, identity, specs, true, opts.facts);

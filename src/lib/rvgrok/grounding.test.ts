@@ -16,6 +16,7 @@ import {
 } from "./parseCoach.ts";
 import {
   looksLikeCasualNonResearch,
+  looksLikeCatalogAnswerableCoachCompare,
   looksLikeImageOnlyAsk,
   looksLikeInventoryOrCountQuestion,
   looksLikeLiveResearchQuestion,
@@ -24,6 +25,7 @@ import {
   looksLikeOffCatalogQuestion,
   needsWebFallback,
 } from "./webIntent.ts";
+import { findComparableCatalogCoaches } from "./coachCompare.ts";
 import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
 import {
   WEB_SEARCH_MODELS,
@@ -662,4 +664,34 @@ test("catalog miss fires web without about-phrasing", () => {
     ),
     true,
   );
+});
+
+test("David voice compare: Allegro Bus vs American Dream locks both, skips web hold", () => {
+  const q = "Compare the Allegro Bus to the American Dream.";
+  assert.equal(looksLikeCatalogAnswerableCoachCompare(q), true);
+  assert.equal(needsWebFallback(null, q), false);
+  const hits = findComparableCatalogCoaches(q);
+  assert.equal(hits.length, 2);
+  const models = hits.map((h) => h.model).sort();
+  assert.deepEqual(models, ["Allegro Bus", "American Dream"]);
+  assert.equal(
+    hits.find((h) => h.model === "Allegro Bus")?.make,
+    "Tiffin Bus",
+  );
+  assert.equal(
+    hits.find((h) => h.model === "American Dream")?.make,
+    "American Coach",
+  );
+  const tiffin = CATALOG_INDEX["Tiffin Bus"]?.["Allegro Bus"];
+  const dream = CATALOG_INDEX["American Coach"]?.["American Dream"];
+  assert.equal(tiffin?.type, "Class A Diesel");
+  assert.equal(dream?.type, "Class A Diesel");
+  const grounding = src(root, "grounding.ts");
+  assert.match(grounding, /COMPARE_GROUNDING_RULES/);
+  assert.match(grounding, /COMPARE THIS TURN/);
+  assert.match(grounding, /findComparableCatalogCoaches/);
+  assert.match(grounding, /Let me check that/);
+  assert.match(grounding, /NEVER send the user to a website/);
+  assert.match(src(root, "webIntent.ts"), /looksLikeCatalogAnswerableCoachCompare/);
+  assert.match(src(root, "voiceWeb.ts"), /Let me check that/);
 });

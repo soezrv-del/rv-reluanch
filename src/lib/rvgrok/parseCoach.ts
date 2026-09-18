@@ -210,3 +210,20 @@ export function parseCoachFromText(text: string): {
   }
   return { year, make, model, floorplan };
 }
+
+/**
+ * Coach-vs-coach / product compare phrasing. Lifestyle "vs hotels"
+ * stays a pitch, not a catalog compare.
+ */
+const COACH_COMPARE_RE =
+  /\b(compare|comparison|comparing|vs\.?|versus|side[- ]by[- ]side|difference(?:s)?\s+between|which\s+(?:is|one(?:'s|\s+is))\s+better|better\s+than)\b/i;
+
+const LIFESTYLE_VS_RE =
+  /\b(vs\.?\s+hotels?|van\s+life\s+vs|lifestyle\s+vs|worth\s+it)\b/i;
+
+export function looksLikeCoachCompareQuestion(text: string): boolean {
+  const t = (text || "").replace(/[\u2018\u2019\u201B\u2032]/g, "'").trim();
+  if (!t) return false;
+  if (LIFESTYLE_VS_RE.test(t)) return false;
+  return COACH_COMPARE_RE.test(t);
+}
