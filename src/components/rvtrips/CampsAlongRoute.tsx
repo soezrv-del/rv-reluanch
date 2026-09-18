@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronDown, ExternalLink, Navigation, Tent } from "lucide-react";
+import { CalendarDays, ChevronDown, ExternalLink, Navigation, Tent } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   campMapsUrl,
@@ -126,6 +126,19 @@ export function CampsAlongRoute({
                         </span>
                       </span>
                     </button>
+                    {c.website ? (
+                      <a
+                        href={c.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-reserve-space
+                        aria-label={`Reserve a space at ${c.name}`}
+                        className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-black/35 text-[12px] font-bold text-white"
+                      >
+                        <CalendarDays className="size-3.5" />
+                        Reserve a Space
+                      </a>
+                    ) : null}
                     {on ? (
                       <div className="mt-2 flex gap-2">
                         <button
@@ -140,7 +153,7 @@ export function CampsAlongRoute({
                         <a
                           href={campMapsUrl(c)}
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener noreferrer"
                           className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-black/35 text-[12px] font-bold text-white"
                         >
                           <ExternalLink className="size-3.5" />
