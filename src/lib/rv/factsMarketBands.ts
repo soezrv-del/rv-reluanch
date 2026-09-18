@@ -1,23 +1,38 @@
 /**
  * Facts Market value field contract — display only.
  *
- * Paints MarketEstimate fields already on the desk. Does not invent
- * dollars, does not call JD Power / NADA, and does not change scrape math.
+ * On-demand paint: fetch on user open/ask. No nightly book, no cached
+ * bands, no pre-warmed catalog dollars. Does not invent prices and does
+ * not use a bare J.D. Power title.
  *
  *   retailLow     → Low
  *   marketValue   → Average (else midpoint of retailLow / retailHigh)
  *   retailHigh    → High, omitted when hideRetailHigh
  *   confidence    → thin-sample when "low" (or public sample < 2)
- *   sourceLabel   → Average caption when confidence is low
+ *   sourceLabel   → Catalog estimate on thin; blend sublabel when present
  */
 
-import { PUBLIC_COMPS_MIN_SAMPLE } from "./publicListingComps.ts";
+import {
+  CATALOG_ESTIMATE_LABEL,
+  PUBLIC_COMPS_MIN_SAMPLE,
+  SOLD_COMPS_LABEL,
+  type PublicListingComps,
+} from "./publicListingComps.ts";
 
 export const MARKET_BAND_LOW_LABEL = "Low";
 export const MARKET_BAND_AVERAGE_LABEL = "Average";
 export const MARKET_BAND_HIGH_LABEL = "High";
 /** Visible when sold comps are Low / thin — never a guessed High dollar. */
 export const THIN_SAMPLE_FLAG_LABEL = "Thin sample";
+export const FACTS_MARKET_LOADING_MESSAGE = "Loading";
+export const FACTS_MARKET_ERROR_MESSAGE = "Live market lookup failed";
+export const FACTS_MARKET_IDLE_HEADLINE = "Tap to check";
+export type FactsMarketLiveStatus =
+  | "idle"
+  | "loading"
+  | "ready"
+  | "error"
+  | "gap";
 
 export type FactsMarketBandSlot = {
   label:
@@ -51,10 +66,105 @@ export function factsMarketAverageUsd(est: {
   return lo || hi || 0;
 }
 
+/** Bare paid-book title — never the Market value heading or caption. */
+export function factsMarketIsBareJdPower(label?: string): boolean {
+  return /^j\.?\s*d\.?\s*power$/i.test(String(label || "").trim());
+}
+
 /**
- * Thin-sample: MarketEstimate confidence "low", or public_listings
- * soldSampleSize / sampleSize under the existing 2-comp bar.
+ * Average caption: Catalog estimate on thin/low; blend sublabel when the
+ * response sent one. Never a bare J.D. Power title.
  */
+export function factsMarketAverageCaption(input: {
+  confidence?: "high" | "medium" | "low";
+  sourceLabel?: string;
+  thin?: boolean;
+}): string | undefined {
+  const thin = input.thin || input.confidence === "low";
+  const label = input.sourceLabel?.trim();
+  if (label && factsMarketIsBareJdPower(label)) {
+    return thin ? CATALOG_ESTIMATE_LABEL : undefined;
+  }
+  if (thin) return label || CATALOG_ESTIMATE_LABEL;
+  if (
+    label &&
+    label !== SOLD_COMPS_LABEL &&
+    label !== MARKET_BAND_AVERAGE_LABEL
+  ) {
+    return label;
+  }
+  return undefined;
+}
+
+export type FactsMarketLiveResult =
+  | { status: "ready"; comps: PublicListingComps }
+  | { status: "gap"; comps: null }
+  | { status: "error"; comps: null; error: string };
+
+/**
+ * Live comps + free public path — user open/ask only.
+ * `fresh: true` so this open is not a nightly/cached band.
+ */
+export async function fetchFactsMarketLive(
+  input: {
+    year: string;
+    make: string;
+    model: string;
+    floorplan?: string;
+  },
+  signal?: AbortSignal,
+): Promise<FactsMarketLiveResult> {
+  if (!input.year.trim() || !input.make.trim() || !input.model.trim()) {
+    return { status: "gap", comps: null };
+  }
+  try {
+    const resp = await fetch("/api/rvfax/public-comps", {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        year: input.year.trim(),
+        make: input.make.trim(),
+        model: input.model.trim(),
+        floorplan: input.floorplan?.trim() || undefined,
+        fresh: true,
+      }),
+      signal,
+    });
+    if (!resp.ok) {
+      let error = FACTS_MARKET_ERROR_MESSAGE;
+      try {
+        const json = (await resp.json()) as { error?: string };
+        if (json?.error?.trim()) error = json.error.trim();
+      } catch {
+        /* keep default */
+      }
+      return { status: "error", comps: null, error };
+    }
+    const json = (await resp.json()) as {
+      data?: PublicListingComps;
+      ok?: boolean;
+    };
+    if (json?.data?.source === "public_listings" && json.data.medianAsk > 0) {
+      return { status: "ready", comps: json.data };
+    }
+    return { status: "gap", comps: null };
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") throw e;
+    return {
+      status: "error",
+      comps: null,
+      error:
+        e instanceof Error && e.message.trim()
+          ? e.message
+          : FACTS_MARKET_ERROR_MESSAGE,
+    };
+  }
+}
+
 export function factsMarketIsThinSample(input: {
   confidence?: "high" | "medium" | "low";
   soldSampleSize?: number;

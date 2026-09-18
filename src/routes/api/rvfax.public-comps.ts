@@ -34,6 +34,7 @@ export const Route = createFileRoute("/api/rvfax/public-comps")({
           make?: string;
           model?: string;
           floorplan?: string;
+          fresh?: boolean;
         } = {};
         try {
           body = (await request.json()) as typeof body;
@@ -52,9 +53,11 @@ export const Route = createFileRoute("/api/rvfax/public-comps")({
           );
         }
 
+        const fresh = Boolean(body.fresh);
         const key = cacheKey({ year, make, model, floorplan });
         const hit = cache.get(key);
-        if (hit && Date.now() - hit.at < TTL_MS) {
+        // On-demand Facts opens send fresh — do not serve a nightly/stale band.
+        if (!fresh && hit && Date.now() - hit.at < TTL_MS) {
           return Response.json({
             ok: true,
             data: hit.data,

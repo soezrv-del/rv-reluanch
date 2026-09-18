@@ -6,10 +6,16 @@ import test from "node:test";
 import {
   CATALOG_ESTIMATE_LABEL,
   LOW_CONFIDENCE_LISTINGS_MESSAGE,
+  SOLD_COMPS_LABEL,
 } from "./publicListingComps.ts";
 import {
+  FACTS_MARKET_ERROR_MESSAGE,
+  FACTS_MARKET_IDLE_HEADLINE,
+  FACTS_MARKET_LOADING_MESSAGE,
+  factsMarketAverageCaption,
   factsMarketAverageUsd,
   factsMarketBandSlots,
+  factsMarketIsBareJdPower,
   factsMarketIsThinSample,
   MARKET_BAND_AVERAGE_LABEL,
   MARKET_BAND_HIGH_LABEL,
@@ -118,6 +124,47 @@ test("hideRetailHigh is the only High gate — low confidence still flags thin",
   });
 });
 
+test("caption: Catalog estimate on thin; blend sublabel; never bare J.D. Power", () => {
+  assert.equal(factsMarketIsBareJdPower("J.D. Power"), true);
+  assert.equal(factsMarketIsBareJdPower("JD Power"), true);
+  assert.equal(factsMarketIsBareJdPower("Catalog estimate"), false);
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "low",
+      sourceLabel: CATALOG_ESTIMATE_LABEL,
+    }),
+    "Catalog estimate",
+  );
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "low",
+      sourceLabel: "J.D. Power",
+    }),
+    "Catalog estimate",
+  );
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "high",
+      sourceLabel: "J.D. Power",
+    }),
+    undefined,
+  );
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "medium",
+      sourceLabel: SOLD_COMPS_LABEL,
+    }),
+    undefined,
+  );
+  assert.equal(
+    factsMarketAverageCaption({
+      confidence: "medium",
+      sourceLabel: "Sold comps + public book",
+    }),
+    "Sold comps + public book",
+  );
+});
+
 test("Facts bands UI + detail wire the locked MarketEstimate fields", () => {
   const bands = readFileSync(
     join(root, "../../components/rvfax/FactsMarketBands.tsx"),
@@ -127,6 +174,7 @@ test("Facts bands UI + detail wire the locked MarketEstimate fields", () => {
     join(root, "../../components/rvfax/RvDetail.tsx"),
     "utf8",
   );
+  const live = readFileSync(join(root, "factsMarketBands.ts"), "utf8");
   assert.match(bands, /data-facts-market-bands/);
   assert.match(bands, /data-thin-sample/);
   assert.match(bands, /MARKET_BAND_LOW_LABEL/);
@@ -153,9 +201,35 @@ test("Facts bands UI + detail wire the locked MarketEstimate fields", () => {
   assert.match(detail, /thinSampleMessage=\{LOW_CONFIDENCE_LISTINGS_MESSAGE\}/);
   assert.match(detail, /deskMarket\.sourceLabel/);
   assert.match(detail, /PUBLIC_SOLD_DISCLAIMER/);
+  assert.match(detail, /fetchFactsMarketLive/);
+  assert.match(detail, /if \(!marketOpen\) return/);
+  assert.match(live, /fresh: true/);
+  assert.match(live, /cache: "no-store"/);
+  assert.match(detail, /data-facts-market-loading/);
+  assert.match(detail, /data-facts-market-error/);
+  assert.match(detail, /data-facts-market-gap/);
+  assert.match(detail, /FACTS_MARKET_LOADING_MESSAGE/);
+  assert.match(detail, /FACTS_MARKET_ERROR_MESSAGE/);
+  assert.match(detail, /FACTS_MARKET_IDLE_HEADLINE/);
+  assert.match(detail, /useState\(false\)/);
+  assert.doesNotMatch(detail, /Updating…/);
+  assert.doesNotMatch(detail, /nightly/);
+  assert.doesNotMatch(detail, /cached bands/i);
+  assert.doesNotMatch(detail, /book refresh/i);
+  assert.doesNotMatch(detail, /title="J\.D\. Power"/);
   assert.doesNotMatch(detail, /factsDeskMarketTileLabel/);
   assert.doesNotMatch(detail, /label="Retail low"/);
   assert.doesNotMatch(detail, /label="Retail high"/);
   assert.doesNotMatch(detail, /JD Power|J\.D\. Power|NADA book/);
   assert.equal(CATALOG_ESTIMATE_LABEL, "Catalog estimate");
+  assert.equal(FACTS_MARKET_LOADING_MESSAGE, "Loading");
+  assert.equal(FACTS_MARKET_ERROR_MESSAGE, "Live market lookup failed");
+  assert.equal(FACTS_MARKET_IDLE_HEADLINE, "Tap to check");
+
+  const api = readFileSync(
+    join(root, "../../routes/api/rvfax.public-comps.ts"),
+    "utf8",
+  );
+  assert.match(api, /fresh/);
+  assert.match(api, /!fresh && hit/);
 });

@@ -73,7 +73,6 @@ import {
   PUBLIC_SOLD_DISCLAIMER,
   SOLD_COMPS_LABEL,
   compsConfidenceLabel,
-  fetchPublicListingComps,
   prefersPublicComps,
   resolvePrimaryMarket,
   thinSoldAskUsd,
@@ -81,7 +80,16 @@ import {
 } from "@/lib/rv/publicListingComps";
 import { hideRetailHighForDesk } from "@/lib/rv/marketClamp";
 import { paintFactsLowDeskMarket } from "@/lib/rv/marketEstimate";
-import { factsMarketAverageUsd } from "@/lib/rv/factsMarketBands";
+import {
+  FACTS_MARKET_ERROR_MESSAGE,
+  FACTS_MARKET_IDLE_HEADLINE,
+  FACTS_MARKET_LOADING_MESSAGE,
+  factsMarketAverageCaption,
+  factsMarketAverageUsd,
+  factsMarketIsThinSample,
+  fetchFactsMarketLive,
+  type FactsMarketLiveStatus,
+} from "@/lib/rv/factsMarketBands";
 import { fetchRecallsViaApi } from "@/lib/nhtsa/recalls";
 import type { NhtsaComplaint, NhtsaRecall } from "@/lib/nhtsa/recalls";
 import { buildReportId, valueFactors } from "@/lib/rv/reportMeta";
@@ -216,12 +224,15 @@ export function RvDetail({
   const [publicComps, setPublicComps] = useState<PublicListingComps | null>(
     null,
   );
-  const [compsLoading, setCompsLoading] = useState(true);
+  const [compsLoading, setCompsLoading] = useState(false);
+  const [marketLive, setMarketLive] = useState<FactsMarketLiveStatus>("idle");
+  const [compsError, setCompsError] = useState<string | null>(null);
+  const [marketRetry, setMarketRetry] = useState(0);
 
   const [exportBusy, setExportBusy] = useState(false);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
-  const [marketOpen, setMarketOpen] = useState(true);
+  const [marketOpen, setMarketOpen] = useState(false);
   const [correctOpen, setCorrectOpen] = useState(false);
   const [correctEngine, setCorrectEngine] = useState("");
   const [correctHp, setCorrectHp] = useState("");
@@ -445,19 +456,38 @@ export function RvDetail({
     };
   }, [year, make, model, floorplan, liveRetry, brochure, data.fuelType, data.type]);
 
-  // Public year-range sold comps — primary market ladder when sold sample is enough.
-  // Independent of MarketCheck inventory search.
+  // Market value is on-demand — user open / ask only. Do not prefetch.
   useEffect(() => {
+    if (!marketOpen) return;
     const ctrl = new AbortController();
     let cancelled = false;
     setCompsLoading(true);
+    setMarketLive("loading");
+    setCompsError(null);
     setPublicComps(null);
-    fetchPublicListingComps(
-      { year, make, model, floorplan },
-      ctrl.signal,
-    )
-      .then((data) => {
-        if (!cancelled) setPublicComps(data);
+    fetchFactsMarketLive({ year, make, model, floorplan }, ctrl.signal)
+      .then((res) => {
+        if (cancelled) return;
+        if (res.status === "error") {
+          setPublicComps(null);
+          setCompsError(res.error);
+          setMarketLive("error");
+          return;
+        }
+        setPublicComps(res.comps);
+        setCompsError(null);
+        setMarketLive(res.status);
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        if (e instanceof Error && e.name === "AbortError") return;
+        setPublicComps(null);
+        setCompsError(
+          e instanceof Error && e.message.trim()
+            ? e.message
+            : FACTS_MARKET_ERROR_MESSAGE,
+        );
+        setMarketLive("error");
       })
       .finally(() => {
         if (!cancelled) setCompsLoading(false);
@@ -466,7 +496,7 @@ export function RvDetail({
       cancelled = true;
       ctrl.abort();
     };
-  }, [year, make, model, floorplan, liveRetry]);
+  }, [marketOpen, year, make, model, floorplan, marketRetry]);
 
   // Instant catalog brochure → live Grok overwrites fields when ready
   const catalogSpecs = useMemo(
@@ -613,7 +643,8 @@ export function RvDetail({
       }),
     [catalogMarket, liveLadder, publicComps],
   );
-  const marketUpdating = liveLoading || compsLoading;
+  const marketUpdating = compsLoading || marketLive === "loading";
+  const marketPainted = marketLive === "ready" || marketLive === "gap";
   const showSoldRange = prefersPublicComps(publicComps);
   const soldConfidence = publicComps?.confidence ?? "low";
   const hideRetailHigh =
@@ -664,10 +695,6 @@ export function RvDetail({
     ? SOLD_COMPS_LABEL
     : (deskMarket.sourceLabel ?? CATALOG_ESTIMATE_LABEL);
   const financePrice = bestCalPrice(deskMarket);
-  const deskMarketValue =
-    deskMarket.marketValue && deskMarket.marketValue > 0
-      ? deskMarket.marketValue
-      : financePrice;
   /** Average tile: marketValue, else midpoint of retailLow / retailHigh. */
   const bandAverage = factsMarketAverageUsd(deskMarket);
   const compsSoldSample =
@@ -679,10 +706,16 @@ export function RvDetail({
       ? publicComps.sampleSize
       : undefined;
   const marketConfidence = deskMarket.confidence ?? soldConfidence;
-  const averageCaption =
-    marketConfidence === "low"
-      ? (deskMarket.sourceLabel ?? CATALOG_ESTIMATE_LABEL)
-      : undefined;
+  const thinSample = factsMarketIsThinSample({
+    confidence: marketConfidence,
+    soldSampleSize: compsSoldSample,
+    sampleSize: compsSample,
+  });
+  const averageCaption = factsMarketAverageCaption({
+    confidence: marketConfidence,
+    sourceLabel: deskMarket.sourceLabel,
+    thin: thinSample,
+  });
   const coachChip = formatActiveCoachChip({
     year,
     make,
@@ -1180,8 +1213,10 @@ export function RvDetail({
                 label="Used market"
                 value={
                   marketUpdating
-                    ? "Updating…"
-                    : factsMoneyHeadline(deskMarketValue)
+                    ? FACTS_MARKET_LOADING_MESSAGE
+                    : marketPainted
+                      ? factsMoneyHeadline(bandAverage)
+                      : "—"
                 }
                 accent
               />
@@ -1306,73 +1341,107 @@ export function RvDetail({
           <div data-facts-market-value>
           <FactsCollapse
             title="Market value"
-            defaultOpen
             open={marketOpen}
             onOpenChange={setMarketOpen}
             headline={
               marketUpdating
-                ? "Updating…"
-                : showSoldRange
-                  ? factsMoneyHeadline(deskMarketValue)
-                  : LOW_CONFIDENCE_LISTINGS_MESSAGE
+                ? FACTS_MARKET_LOADING_MESSAGE
+                : marketLive === "error"
+                  ? FACTS_MARKET_ERROR_MESSAGE
+                  : marketPainted
+                    ? showSoldRange
+                      ? factsMoneyHeadline(bandAverage)
+                      : LOW_CONFIDENCE_LISTINGS_MESSAGE
+                    : FACTS_MARKET_IDLE_HEADLINE
             }
           >
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            {marketLive === "loading" ? (
               <p
-                className={
-                  showSoldRange
-                    ? "text-[12px] font-semibold text-white"
-                    : "text-[12px] font-semibold text-white/55"
-                }
+                data-facts-market-loading
+                className="text-[13px] font-semibold text-white"
               >
-                {SOLD_COMPS_LABEL}
+                {FACTS_MARKET_LOADING_MESSAGE}
               </p>
-              <Chip
-                tone={
-                  soldConfidence === "high"
-                    ? "green"
-                    : soldConfidence === "medium"
-                      ? "blue"
-                      : "ruby"
-                }
-              >
-                {soldConfidenceLabel}
-              </Chip>
-            </div>
-            {!showSoldRange ? (
-              <div className="mb-2">
+            ) : marketLive === "error" ? (
+              <div data-facts-market-error>
                 <p className="text-[13px] font-semibold leading-snug text-white">
-                  {LOW_CONFIDENCE_LISTINGS_MESSAGE}
+                  {compsError || FACTS_MARKET_ERROR_MESSAGE}
                 </p>
-                <p className="mt-4 text-[15px] font-extrabold uppercase tracking-[0.16em] text-gold-bright">
-                  {marketSourceLabel}
-                </p>
+                <button
+                  type="button"
+                  onClick={() => setMarketRetry((n) => n + 1)}
+                  className="mt-2 text-[12px] font-bold text-white underline underline-offset-2"
+                >
+                  Retry
+                </button>
               </div>
-            ) : null}
-            <FactsMarketBands
-              retailLow={formatMoney(deskMarket.retailLow)}
-              average={factsMoneyHeadline(bandAverage)}
-              retailHigh={formatMoney(deskMarket.retailHigh)}
-              hideRetailHigh={hideRetailHigh}
-              confidence={marketConfidence}
-              soldSampleSize={compsSoldSample}
-              sampleSize={compsSample}
-              thinSampleMessage={LOW_CONFIDENCE_LISTINGS_MESSAGE}
-              averageCaption={averageCaption}
-              tradeIn={formatMoney(deskMarket.tradeIn)}
-            />
-            {shellNav ? (
-              <button
-                type="button"
-                data-facts-check-payment
-                onClick={() => openCheckPayment()}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-gold/40 bg-gold/15 py-2.5 text-[12px] font-bold text-gold-bright"
+            ) : marketPainted ? (
+              <>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <p
+                    className={
+                      showSoldRange
+                        ? "text-[12px] font-semibold text-white"
+                        : "text-[12px] font-semibold text-white/55"
+                    }
+                  >
+                    {SOLD_COMPS_LABEL}
+                  </p>
+                  <Chip
+                    tone={
+                      soldConfidence === "high"
+                        ? "green"
+                        : soldConfidence === "medium"
+                          ? "blue"
+                          : "ruby"
+                    }
+                  >
+                    {soldConfidenceLabel}
+                  </Chip>
+                </div>
+                {thinSample ? (
+                  <div className="mb-2">
+                    <p className="text-[13px] font-semibold leading-snug text-white">
+                      {LOW_CONFIDENCE_LISTINGS_MESSAGE}
+                    </p>
+                    <p className="mt-4 text-[15px] font-extrabold uppercase tracking-[0.16em] text-gold-bright">
+                      {marketSourceLabel}
+                    </p>
+                  </div>
+                ) : null}
+                <FactsMarketBands
+                  retailLow={formatMoney(deskMarket.retailLow)}
+                  average={factsMoneyHeadline(bandAverage)}
+                  retailHigh={formatMoney(deskMarket.retailHigh)}
+                  hideRetailHigh={hideRetailHigh}
+                  confidence={marketConfidence}
+                  soldSampleSize={compsSoldSample}
+                  sampleSize={compsSample}
+                  thinSampleMessage={LOW_CONFIDENCE_LISTINGS_MESSAGE}
+                  averageCaption={averageCaption}
+                  tradeIn={formatMoney(deskMarket.tradeIn)}
+                />
+                {shellNav ? (
+                  <button
+                    type="button"
+                    data-facts-check-payment
+                    onClick={() => openCheckPayment()}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-gold/40 bg-gold/15 py-2.5 text-[12px] font-bold text-gold-bright"
+                  >
+                    <Calculator className="size-3.5" />
+                    Check payment
+                    {financePrice > 0 ? ` · ${formatMoney(financePrice)}` : ""}
+                  </button>
+                ) : null}
+              </>
+            ) : (
+              <p
+                data-facts-market-gap
+                className="text-[13px] font-semibold text-white"
               >
-                <Calculator className="size-3.5" />
-                Check payment
-                {financePrice > 0 ? ` · ${formatMoney(financePrice)}` : ""}
-              </button>
-            ) : null}
+                {FACTS_MARKET_IDLE_HEADLINE}
+              </p>
+            )}
           </FactsCollapse>
           </div>
 
