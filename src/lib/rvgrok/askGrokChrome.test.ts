@@ -139,7 +139,15 @@ test("Grok dock tab uses the same Einstein asset as RvGrok; other tabs are icon-
   assert.match(css, /\.bottom-tab-einstein/);
   assert.match(css, /--dock-icon-size:\s*3\.25rem/);
   assert.match(css, /width:\s*var\(--dock-icon-size\)/);
-  assert.doesNotMatch(css, /\.bottom-tab-einstein \{[\s\S]*?width:\s*1\.\d+rem/);
+  const einsteinBlocks = [...css.matchAll(/\.bottom-tab-einstein \{[^}]+\}/g)].map(
+    (m) => m[0],
+  );
+  assert.ok(einsteinBlocks.length >= 1, "Einstein size rules present");
+  for (const block of einsteinBlocks) {
+    assert.doesNotMatch(block, /width:\s*1\.\d+rem/);
+    assert.doesNotMatch(block, /height:\s*1\.\d+rem/);
+    assert.match(block, /width:\s*(var\(--dock-icon-size\)|2\.75rem)/);
+  }
 });
 
 test("Ask Grok overlay does not rewrite dock glass or Facts/Tow internals", () => {
