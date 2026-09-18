@@ -1662,7 +1662,7 @@ export function RvGrokApp({
                   : pendingImage
                     ? "Ask about this photo…"
                     : agentMode
-                      ? "Ask Agent to research anything..."
+                      ? "ask anything"
                       : "Ask RV Grok"
             }
             className="max-h-28 min-h-11 flex-1 resize-none bg-transparent px-1.5 py-2.5 text-[15px] text-white outline-none placeholder:text-white/50 sm:px-2"
