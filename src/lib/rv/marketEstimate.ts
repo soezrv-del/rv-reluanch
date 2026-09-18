@@ -330,8 +330,9 @@ export function estimateMarket(
 
 /**
  * Low / thin sold comps: collapse a fat catalog (or live) retail band toward
- * a single free-path midpoint and hide Retail High as desk truth.
- * Does not invent sold prices and does not call JD Power / NADA.
+ * a conservative free-path midpoint (`LOW_THIN_FREE_PATH_HAIRCUT`) and hide
+ * Retail High as desk truth. Does not invent sold prices and does not call
+ * JD Power / NADA. Med/High must not use this path.
  */
 export function applyThinCompCatalogPolicy(est: MarketEstimate): MarketEstimate {
   const tight = tightenRetailBandTowardMid(

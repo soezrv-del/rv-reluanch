@@ -33,7 +33,11 @@ import {
   estimateMarket,
   type MarketEstimate,
 } from "./marketEstimate.ts";
-import { THIN_COMP_MAX_RETAIL_BAND_USD } from "./marketClamp.ts";
+import {
+  applyLowThinFreePathHaircut,
+  freePathMidpoint,
+  THIN_COMP_MAX_RETAIL_BAND_USD,
+} from "./marketClamp.ts";
 import type { RVSpec } from "./rvTypes.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -491,19 +495,20 @@ test("Med/High sold comps: Market value hugs sold median, not Catalog estimate",
   assert.equal(phaetonResolved.hideRetailHigh, false);
 });
 
-test("Low comps: fat catalog Retail High is capped — Palazzo-style band is not desk truth", () => {
+test("Low comps: Palazzo-style catalog mid 219k haircuts to 145k — High stays hidden", () => {
   const fatCatalog: MarketEstimate = {
-    tradeIn: 180000,
-    retailLow: 200000,
+    tradeIn: 186000,
+    retailLow: 208000,
     retailHigh: 267000,
-    msrpLo: 320000,
-    msrpHi: 420000,
+    msrpLo: 250200,
+    msrpHi: 390200,
     segment: "Diesel Class A",
     ageYears: 5,
     source: "catalog",
     sourceLabel: CATALOG_ESTIMATE_LABEL,
   };
-  assert.equal(fatCatalog.retailHigh - 208000, 59000);
+  assert.equal(freePathMidpoint(fatCatalog.retailLow, fatCatalog.retailHigh), 219000);
+  assert.equal(applyLowThinFreePathHaircut(219000), 145000);
 
   const thin = reducePublicComps(
     [sold(2021, 208000)],
@@ -519,8 +524,9 @@ test("Low comps: fat catalog Retail High is capped — Palazzo-style band is not
   assert.equal(resolved.sourceLabel, CATALOG_ESTIMATE_LABEL);
   assert.equal(resolved.confidence, "low");
   assert.equal(resolved.hideRetailHigh, true);
-  assert.equal(resolved.marketValue, 208000);
-  assert.equal(resolved.retailHigh, 208000);
+  assert.equal(resolved.marketValue, 145000);
+  assert.equal(resolved.retailHigh, 145000);
+  assert.ok(resolved.marketValue < 219000);
   assert.ok(
     resolved.retailHigh - resolved.retailLow <= THIN_COMP_MAX_RETAIL_BAND_USD,
     `band ${resolved.retailHigh - resolved.retailLow} must not stay a $60k+ fantasy`,
@@ -529,20 +535,45 @@ test("Low comps: fat catalog Retail High is capped — Palazzo-style band is not
     resolved.retailHigh - (resolved.marketValue ?? 0) <= THIN_COMP_MAX_RETAIL_BAND_USD,
     "Retail High cannot sit a fat band above Market",
   );
-  assert.ok(resolved.retailHigh < 230000);
   assert.notEqual(resolved.retailHigh, 267000);
   assert.notEqual(resolved.source, "public_listings");
   assert.ok(resolved.tradeIn <= resolved.retailLow);
 
   const withLive = resolvePrimaryMarket({
     catalog: fatCatalog,
-    liveLadder: { tradeIn: 180000, retailLow: 208000, retailHigh: 267000 },
+    liveLadder: { tradeIn: 186000, retailLow: 208000, retailHigh: 267000 },
     comps: thin,
   });
   assert.equal(withLive.hideRetailHigh, true);
   assert.equal(withLive.confidence, "low");
-  assert.equal(withLive.marketValue, 208000);
-  assert.equal(withLive.retailHigh, 208000);
+  assert.equal(withLive.marketValue, 145000);
+  assert.equal(withLive.retailHigh, 145000);
+  assert.equal(withLive.sourceLabel, "Live research estimate");
+});
+
+test("Low: a cheaper thin sold pulls Market down — never invent UP to the haircut", () => {
+  const fatCatalog: MarketEstimate = {
+    tradeIn: 186000,
+    retailLow: 208000,
+    retailHigh: 267000,
+    msrpLo: 250200,
+    msrpHi: 390200,
+    segment: "Diesel Class A",
+    ageYears: 5,
+    source: "catalog",
+    sourceLabel: CATALOG_ESTIMATE_LABEL,
+  };
+  const cheap = reducePublicComps(
+    [sold(2021, 120000)],
+    { from: 2019, to: 2023 },
+  );
+  assert.ok(cheap);
+  assert.equal(cheap.confidence, "low");
+  const resolved = resolvePrimaryMarket({ catalog: fatCatalog, comps: cheap });
+  assert.equal(resolved.marketValue, 120000);
+  assert.equal(resolved.hideRetailHigh, true);
+  assert.equal(resolved.sourceLabel, CATALOG_ESTIMATE_LABEL);
+  assert.notEqual(resolved.source, "public_listings");
 });
 
 test("asking-only and empty comps tighten catalog — Low beats invent", () => {
@@ -566,9 +597,16 @@ test("asking-only and empty comps tighten catalog — Low beats invent", () => {
   );
   const fromAsks = resolvePrimaryMarket({ catalog: fatCatalog, comps: asks });
   const fromEmpty = resolvePrimaryMarket({ catalog: fatCatalog });
+  const emptyMid = applyLowThinFreePathHaircut(
+    freePathMidpoint(fatCatalog.retailLow, fatCatalog.retailHigh),
+  );
   for (const resolved of [fromAsks, fromEmpty]) {
     assert.equal(resolved.source, "catalog");
     assert.equal(resolved.hideRetailHigh, true);
+    assert.equal(resolved.sourceLabel, CATALOG_ESTIMATE_LABEL);
+    assert.equal(resolved.confidence, "low");
+    assert.equal(resolved.marketValue, emptyMid);
+    assert.ok(resolved.marketValue && resolved.marketValue < 219000);
     assert.ok(
       resolved.retailHigh - resolved.retailLow <= THIN_COMP_MAX_RETAIL_BAND_USD,
     );
@@ -592,6 +630,10 @@ test("applyThinCompCatalogPolicy collapses a $70k catalog band toward one midpoi
   assert.equal(tight.confidence, "low");
   assert.ok(tight.retailHigh - tight.retailLow <= THIN_COMP_MAX_RETAIL_BAND_USD);
   assert.equal(tight.marketValue, tight.retailHigh);
+  assert.equal(
+    tight.marketValue,
+    applyLowThinFreePathHaircut(freePathMidpoint(fat.retailLow, fat.retailHigh)),
+  );
   assert.ok(tight.marketValue && tight.marketValue < fat.retailHigh);
   assert.ok(tight.tradeIn <= tight.retailLow);
 });
