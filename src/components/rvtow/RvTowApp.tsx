@@ -687,7 +687,7 @@ export function RvTowApp() {
       );
     }
     lines.push(
-      "Opens Trips Profile. A locked coach stays locked until you unlock.",
+      "Opens RV GPS Profile. A locked coach stays locked until you unlock.",
     );
     return lines;
   }, [

@@ -32,7 +32,7 @@ const TABS: {
   { id: "rvcal", label: "RvCAL", short: "Cal" },
   { id: "rvgrok", label: "RvGROK", short: "Grok" },
   { id: "rvtow", label: "RvTOW", short: "Tow" },
-  { id: "rvtrips", label: "RvTRIPS", short: "Trips" },
+  { id: "rvtrips", label: "RV GPS", short: "RV GPS" },
 ];
 
 function DockLabel({

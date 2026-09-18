@@ -441,7 +441,7 @@ export function AppShell() {
                             : id === "rvtow"
                               ? "RvTOW"
                               : id === "rvtrips"
-                                ? "RvTRIPS"
+                                ? "RV GPS"
                                 : id === "rvsold"
                                   ? "Sold"
                                   : "Suite"
