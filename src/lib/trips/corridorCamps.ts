@@ -40,6 +40,8 @@ export type CampStop = {
   progress: number;
   nearDest: boolean;
   amenityHint: string;
+  /** Official booking / park site when the source already has one. Never invented. */
+  website?: string;
 };
 
 export type CampSearchResult = {
@@ -51,8 +53,16 @@ export type CampSearchResult = {
   error?: string;
 };
 
-export type CampHereItem = FuelHereItem;
+export type CampHereContact = {
+  www?: { value?: string }[];
+};
+
+export type CampHereItem = FuelHereItem & {
+  contacts?: CampHereContact[];
+};
 export type CampOverpassEl = FuelOverpassEl;
+
+const CAMP_WEBSITE_TAG_KEYS = ["website", "contact:website", "url"] as const;
 
 const RV_NAME_RE =
   /\b(rv park|rv resort|rv campground|koa|thousand trails|good sam|sun outdoors|caravan park|holiday park)\b/i;
@@ -106,6 +116,51 @@ export function classifyCampKind(opts: {
   return looksLikeRvPark(opts) ? "rv-park" : "campground";
 }
 
+/**
+ * Honest website only — OSM `website` / `contact:website` / `url`,
+ * or HERE `contacts[].www[].value`. No generated booking search URLs.
+ */
+export function normalizeCampWebsite(
+  raw: string | undefined | null,
+): string | undefined {
+  const s = (raw || "").trim();
+  if (!s || /\s/.test(s)) return undefined;
+  let candidate = s;
+  if (!/^https?:\/\//i.test(candidate)) {
+    if (!/^[\w.-]+\.[a-z]{2,}([/:?#].*)?$/i.test(candidate)) return undefined;
+    candidate = `https://${candidate}`;
+  }
+  try {
+    const u = new URL(candidate);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return undefined;
+    if (!u.hostname.includes(".")) return undefined;
+    return u.toString();
+  } catch {
+    return undefined;
+  }
+}
+
+export function campWebsiteFromTags(
+  tags: Record<string, string> | undefined,
+): string | undefined {
+  if (!tags) return undefined;
+  for (const key of CAMP_WEBSITE_TAG_KEYS) {
+    const found = normalizeCampWebsite(tags[key]);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+export function campWebsiteFromHere(item: CampHereItem): string | undefined {
+  for (const contact of item.contacts ?? []) {
+    for (const www of contact.www ?? []) {
+      const found = normalizeCampWebsite(www.value);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}
+
 export function amenityHintFromTags(tags: Record<string, string>): string {
   const bits: string[] = [];
   if (
@@ -154,6 +209,7 @@ export function normalizeHereCamps(
       .filter(Boolean);
     const kept = keepCampPoi({ lat, lng }, corridor, widthMi);
     if (!kept) continue;
+    const website = campWebsiteFromHere(item);
     camps.push({
       id: String(item.id || `here-camp:${lat.toFixed(4)},${lng.toFixed(4)}`),
       name,
@@ -167,6 +223,7 @@ export function normalizeHereCamps(
       progress: kept.progress,
       nearDest: kept.nearDest,
       amenityHint: "",
+      ...(website ? { website } : {}),
     });
   }
   return camps;
@@ -189,6 +246,7 @@ export function normalizeOverpassCamps(
     if (!name || looksLikeResidentialPark(name)) continue;
     const kept = keepCampPoi({ lat, lng }, corridor, widthMi);
     if (!kept) continue;
+    const website = campWebsiteFromTags(tags);
     camps.push({
       id: `osm-camp:${el.type || "n"}:${el.id ?? `${lat.toFixed(4)},${lng.toFixed(4)}`}`,
       name,
@@ -206,6 +264,7 @@ export function normalizeOverpassCamps(
       progress: kept.progress,
       nearDest: kept.nearDest,
       amenityHint: amenityHintFromTags(tags),
+      ...(website ? { website } : {}),
     });
   }
   return camps;

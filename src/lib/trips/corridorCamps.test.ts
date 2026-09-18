@@ -8,6 +8,8 @@ import {
   buildCampsQuery,
   campSourceLabel,
   campSourceNote,
+  campWebsiteFromHere,
+  campWebsiteFromTags,
   classifyCampKind,
   dedupCamps,
   emptyCampResult,
@@ -17,6 +19,7 @@ import {
   HERE_RV_PARK_CATEGORY,
   keepCampPoi,
   looksLikeRvPark,
+  normalizeCampWebsite,
   normalizeHereCamps,
   normalizeOverpassCamps,
   type CampOverpassEl,
@@ -83,6 +86,7 @@ test("normalizeHereCamps keeps corridor RV parks, drops far / nameless", () => {
       position: { lat: 43.58, lng: -116.18 },
       address: { city: "Boise", stateCode: "ID", label: "KOA, Boise, ID" },
       categories: [{ id: HERE_RV_PARK_CATEGORY, primary: true }],
+      contacts: [{ www: [{ value: "https://koa.com/campgrounds/boise/" }] }],
     },
     {
       id: "here:miami",
@@ -101,6 +105,7 @@ test("normalizeHereCamps keeps corridor RV parks, drops far / nameless", () => {
   assert.equal(camps.length, 1);
   assert.equal(camps[0]!.kind, "rv-park");
   assert.equal(camps[0]!.name, "Boise KOA Journey");
+  assert.equal(camps[0]!.website, "https://koa.com/campgrounds/boise/");
 });
 
 test("normalizeOverpassCamps requires a name and corridor / dest filter", () => {
@@ -114,6 +119,7 @@ test("normalizeOverpassCamps requires a name and corridor / dest filter", () => 
         tourism: "caravan_site",
         name: "Fiesta RV Park",
         sanitary_dump_station: "yes",
+        website: "https://fiestarv.example/book",
       },
     },
     {
@@ -143,6 +149,11 @@ test("normalizeOverpassCamps requires a name and corridor / dest filter", () => 
   assert.equal(camps[0]!.kind, "rv-park");
   assert.equal(camps[0]!.name, "Fiesta RV Park");
   assert.match(camps[0]!.amenityHint, /dump tagged/);
+  assert.equal(camps[0]!.website, "https://fiestarv.example/book");
+  assert.equal(
+    camps.find((c) => c.name === "Golden Gardens Camp")?.website,
+    undefined,
+  );
   assert.ok(camps.some((c) => c.name === "Golden Gardens Camp" && c.nearDest));
 });
 
@@ -265,6 +276,63 @@ test("normalize drops mobile-home parks that are not RV", () => {
   const camps = normalizeHereCamps(items, CORRIDOR, 15);
   assert.equal(camps.length, 1);
   assert.equal(camps[0]!.name, "Reno KOA");
+  assert.equal(camps[0]!.website, undefined);
+});
+
+test("normalizeCampWebsite only keeps real http(s) sites", () => {
+  assert.equal(normalizeCampWebsite(""), undefined);
+  assert.equal(normalizeCampWebsite("   "), undefined);
+  assert.equal(normalizeCampWebsite("javascript:alert(1)"), undefined);
+  assert.equal(normalizeCampWebsite("data:text/html,hi"), undefined);
+  assert.equal(normalizeCampWebsite("/local/path"), undefined);
+  assert.equal(normalizeCampWebsite("not a url"), undefined);
+  assert.equal(
+    normalizeCampWebsite("https://fiestarv.example/book"),
+    "https://fiestarv.example/book",
+  );
+  assert.equal(
+    normalizeCampWebsite("www.nps.gov/glac/planyourvisit/camping.htm"),
+    "https://www.nps.gov/glac/planyourvisit/camping.htm",
+  );
+});
+
+test("campWebsiteFromTags prefers website, then contact:website, then url", () => {
+  assert.equal(campWebsiteFromTags({}), undefined);
+  assert.equal(
+    campWebsiteFromTags({
+      website: "https://park.example/",
+      "contact:website": "https://other.example/",
+      url: "https://third.example/",
+    }),
+    "https://park.example/",
+  );
+  assert.equal(
+    campWebsiteFromTags({
+      "contact:website": "https://contact.example/",
+      url: "https://third.example/",
+    }),
+    "https://contact.example/",
+  );
+  assert.equal(
+    campWebsiteFromTags({ url: "https://only-url.example/" }),
+    "https://only-url.example/",
+  );
+});
+
+test("campWebsiteFromHere reads contacts.www.value only", () => {
+  assert.equal(campWebsiteFromHere({}), undefined);
+  assert.equal(
+    campWebsiteFromHere({
+      contacts: [{ www: [{ value: "javascript:void(0)" }] }],
+    }),
+    undefined,
+  );
+  assert.equal(
+    campWebsiteFromHere({
+      contacts: [{ www: [{ value: "https://koa.com/campgrounds/reno/" }] }],
+    }),
+    "https://koa.com/campgrounds/reno/",
+  );
 });
 
 test("amenityHintFromTags never invents hookups", () => {
@@ -347,8 +415,22 @@ test("GET /api/camps stays on HERE/Overpass and never /api/route", () => {
   assert.match(ui, /data-camps-along-route/);
   assert.match(ui, /data-along-open/);
   assert.match(ui, /useState\(false\)/);
+  assert.match(ui, /Reserve a Space/);
+  assert.match(ui, /data-reserve-space/);
+  assert.match(ui, /c\.website \?/);
+  assert.match(ui, /noopener noreferrer/);
   assert.doesNotMatch(ui, /DEMO_CAMPS/);
+  assert.doesNotMatch(ui, /recreation\.gov|reserveamerica|koa\.com\/search/i);
   assert.doesNotMatch(api, /RATEAPI_MODE|rvData/);
+});
+
+test("camp website helpers never invent booking search URLs", () => {
+  const src = readFileSync(join(root, "corridorCamps.ts"), "utf8");
+  assert.match(src, /contact:website/);
+  assert.match(src, /item\.contacts/);
+  assert.match(src, /contact\.www/);
+  assert.match(src, /contacts\[\]\.www\[\]\.value/);
+  assert.doesNotMatch(src, /recreation\.gov|reserveamerica|koa\.com\/search/i);
 });
 
 test("DEMO_CAMPS is quarantined behind sample — not the default camps path", () => {
