@@ -8,6 +8,11 @@
 
 import { needsWebFallback } from "./webIntent.ts";
 import {
+  formatOwnLotInjection,
+  OWN_LOT_MODEL,
+  shouldSkipWebForOwnLot,
+} from "./ownLotInventory.ts";
+import {
   fetchWebSearchNotes,
   readWebSearchCache,
   researchCacheKey,
@@ -148,6 +153,24 @@ export async function executeWebResearch(
 ): Promise<WebResearchApiBody> {
   const t0 = Date.now();
   const query = (opts.query || "").trim();
+
+  if (shouldSkipWebForOwnLot(query)) {
+    const notes = await formatOwnLotInjection(query);
+    const durationMs = Date.now() - t0;
+    const body = toApiBody(
+      { ok: true, notes, model: OWN_LOT_MODEL },
+      { kind: "success", durationMs },
+    );
+    logWebResearchEvent({
+      kind: "success",
+      profile: opts.profile,
+      durationMs,
+      ok: true,
+      query,
+      model: OWN_LOT_MODEL,
+    });
+    return body;
+  }
 
   if (!opts.skipGate && !needsWebFallback(null, query)) {
     const durationMs = Date.now() - t0;

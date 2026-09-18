@@ -609,12 +609,13 @@ test("unresolved named coach about-ask still fires web instead of a dealer dead-
   assert.match(api, /serverGrounded/);
 });
 
-test("inventory / diesel count asks browse even when catalog is locked", () => {
+test("inventory / diesel count asks still trip the detector when catalog is locked", () => {
   const locked = { missingHard: false };
   const inventory = "How many diesel Newmar Dutch Stars are in inventory?";
   const dieselCount = "What's the diesel count for 2024 Tiffin Allegro?";
   const lot = "Any Entegra inventory near Dallas?";
-  for (const q of [inventory, dieselCount, lot]) {
+  const weHave = "How many diesels do we have in stock?";
+  for (const q of [inventory, dieselCount, lot, weHave]) {
     assert.equal(looksLikeInventoryOrCountQuestion(q), true, q);
     assert.equal(needsWebFallback(locked, q), true, q);
     assert.equal(needsWebFallback(null, q), true, q);
@@ -636,6 +637,10 @@ test("inventory / diesel count asks browse even when catalog is locked", () => {
     false,
     "locked fuel/engine spec still does not browse",
   );
+  const api = src(join(root, "../../routes/api"), "rvgrok.ts");
+  assert.match(api, /formatOwnLotInjection/);
+  assert.match(api, /shouldSkipWebForOwnLot/);
+  assert.match(api, /OWN-LOT INVENTORY/);
 });
 
 test("catalog miss fires web without about-phrasing", () => {

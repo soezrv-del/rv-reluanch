@@ -3,6 +3,10 @@ import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
 import { appendGrounding, buildChatGrounding } from "@/lib/rvgrok/grounding";
 import {
+  formatOwnLotInjection,
+  shouldSkipWebForOwnLot,
+} from "@/lib/rvgrok/ownLotInventory";
+import {
   CHAT_WEB_SEARCH_TIMEOUT_MS,
   formatWebSearchInjection,
 } from "@/lib/rvgrok/webSearch";
@@ -64,10 +68,19 @@ function appendFeedback(system: string, ctx?: string) {
 
 function withGrounding(
   system: string,
-  opts?: { feedbackContext?: string; catalogContext?: string; webNotes?: string },
+  opts?: {
+    feedbackContext?: string;
+    catalogContext?: string;
+    webNotes?: string;
+    ownLotNotes?: string;
+  },
 ) {
   let out = appendGrounding(system, opts?.catalogContext);
   out = appendFeedback(out, opts?.feedbackContext);
+  const lot = (opts?.ownLotNotes || "").trim();
+  if (lot) {
+    out = `${out}\n\n═══════════════════════════════════════\nOWN-LOT INVENTORY (RV Country)\n═══════════════════════════════════════\n${lot}`;
+  }
   const web = (opts?.webNotes || "").trim();
   if (web) {
     out = `${out}\n\n═══════════════════════════════════════\nWEB RESEARCH\n═══════════════════════════════════════\n${web}`;
@@ -415,6 +428,7 @@ async function tryXaiDirect(
   feedbackContext?: string,
   catalogContext?: string,
   webNotes?: string,
+  ownLotNotes?: string,
 ): Promise<Response | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return null;
@@ -435,7 +449,7 @@ async function tryXaiDirect(
       (forceImageTool
         ? "\n\nThe user asked for a generated image. You MUST call the generate_image tool with a detailed visual prompt. Do not write a JSON tool call in your content."
         : ""),
-    { feedbackContext, catalogContext, webNotes },
+    { feedbackContext, catalogContext, webNotes, ownLotNotes },
   );
   const fullMessages: ChatMessage[] = [
     { role: "system", content: system },
@@ -469,6 +483,7 @@ async function tryCloudflareWorker(
   feedbackContext?: string,
   catalogContext?: string,
   webNotes?: string,
+  ownLotNotes?: string,
 ): Promise<Response | null> {
   const base = workerBase();
   const candidates = agentMode
@@ -492,7 +507,7 @@ async function tryCloudflareWorker(
               content: withGrounding(
                 (agentMode ? AGENT_SYSTEM_PROMPT : RV_SYSTEM_PROMPT) +
                   systemExtra,
-                { feedbackContext, catalogContext, webNotes },
+                { feedbackContext, catalogContext, webNotes, ownLotNotes },
               ),
             },
             ...messages,
@@ -631,9 +646,17 @@ export const Route = createFileRoute("/api/rvgrok")({
         });
         const catalogContext =
           serverGrounded.block || body.catalogContext || "";
-        const wantsWebFallback = serverGrounded.identity
-          ? serverGrounded.needsWeb
-          : Boolean(body.wantsWebFallback);
+        const skipWebForLot = shouldSkipWebForOwnLot(lastPlain);
+        const wantsWebFallback =
+          !skipWebForLot &&
+          (serverGrounded.identity
+            ? serverGrounded.needsWeb
+            : Boolean(body.wantsWebFallback));
+
+        let ownLotNotes: string | undefined;
+        if (skipWebForLot) {
+          ownLotNotes = await formatOwnLotInjection(lastPlain);
+        }
 
         let webNotes: string | undefined;
         if (wantsWebFallback) {
@@ -655,6 +678,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           feedbackContext,
           catalogContext,
           webNotes,
+          ownLotNotes,
         );
         if (fromXai) return fromXai;
         const fromWorker = await tryCloudflareWorker(
@@ -663,6 +687,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           feedbackContext,
           catalogContext,
           webNotes,
+          ownLotNotes,
         );
         if (fromWorker) return fromWorker;
 

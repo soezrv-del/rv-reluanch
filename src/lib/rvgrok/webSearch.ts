@@ -253,6 +253,9 @@ export function extractResponsesText(data: unknown): string {
 }
 
 export function formatWebSearchInjection(result: WebSearchNotes): string {
+  if (result.ok && /own-lot/i.test(result.model || "")) {
+    return result.notes.slice(0, 3500);
+  }
   if (result.ok) {
     return [
       "WEB RESEARCH NOTES (xAI web_search — may be incomplete):",

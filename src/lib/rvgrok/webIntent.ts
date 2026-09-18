@@ -3,8 +3,9 @@
  * Spec-catalog-free (no rvData). Coach-vs-coach compare skip uses the
  * thin CATALOG_INDEX names in coachCompare.ts.
  *
- * Standing rule: browse whenever the catalog cannot answer the ask,
- * plus inventory / diesel-count asks the catalog never stores.
+ * Standing rule: browse whenever the catalog cannot answer the ask.
+ * Inventory / diesel-count / in-stock still trip this detector so
+ * voice+chat can inject the own-lot snapshot; a *hit* skips public web.
  * Skip only hi / lifestyle / payment / image-only turns, and
  * catalog-answerable coach-vs-coach compares (both makes/models known).
  * Market value / pricing always browses (live nationwide asking, year ±2)
@@ -70,9 +71,9 @@ const IMAGE_ONLY_RE =
 const OFF_CATALOG_RE =
   /\b(fish(?:ing)?|campgrounds?|rv parks?|dump stations?|boondock(?:ing)?|national parks?|state parks?|lakes?|rivers?|piers?|hiking|trailheads?|weather|road closures?|propane stations?)\b/i;
 
-/** Live lot / diesel-count asks — catalog has no inventory. Always browse. */
+/** Own-lot / diesel-count / in-stock — catalog has no inventory. */
 const INVENTORY_OR_COUNT_RE =
-  /\b(inventor(?:y|ies)|in stock|on (?:the )?lot|units? available|diesel counts?|(?:how many|count of)\s+(?:\w+\s+){0,6}(?:diesel|gas|coaches?|units?|rvs?|pushers?|motorhomes?|are there|in stock|on (?:the )?lot))\b/i;
+  /\b(inventor(?:y|ies)|in stock|on (?:the |our )?lot|on hand|units? available|our (?:lot|inventory|stock)|diesel counts?|(?:how many|count of)\s+(?:\w+\s+){0,8}(?:diesels?|gas|coaches?|units?|rvs?|pushers?|motorhomes?|class\s*a|super\s*c?s?|are there|in stock|on (?:the )?lot|do we have))\b/i;
 
 /** Curly quotes in “won’t” / “how do I” from phones. */
 export function normalizeAskText(text: string): string {

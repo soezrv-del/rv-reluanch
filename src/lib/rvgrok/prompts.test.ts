@@ -59,6 +59,9 @@ test("chat, agent, and voice prompts share David's answer-now / Let me check tha
   );
 
   assert.match(prompts, /WEB RESEARCH notes/);
+  assert.match(prompts, /OWN-LOT INVENTORY/);
+  assert.match(prompts, /Class A Diesel/);
+  assert.match(prompts, /Class Super C/);
   assert.match(prompts, /Do not invent/);
   assert.match(prompts, /REPAIR \/ DIAGNOSE/);
   assert.match(voice, /WEB RESEARCH notes/);
