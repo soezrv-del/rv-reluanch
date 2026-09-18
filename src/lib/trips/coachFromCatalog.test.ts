@@ -316,7 +316,7 @@ test("Trips Navigate no longer forces SET PROFILE when a coach is known", () => 
   );
 });
 
-test("Profile labels brochure/catalog/estimate; Pack is sample-opt-in", () => {
+test("Profile labels brochure/catalog/estimate; Pack is gone; Dumps is a chip", () => {
   const ui = readFileSync(
     join(root, "../../components/rvtrips/RvTripsApp.tsx"),
     "utf8",
@@ -325,16 +325,31 @@ test("Profile labels brochure/catalog/estimate; Pack is sample-opt-in", () => {
   assert.match(ui, /["']catalog["']/);
   assert.match(ui, /["']brochure["']/);
   assert.match(ui, /["']estimate["']/);
-  assert.match(ui, /SAMPLE_PACK/);
-  assert.match(ui, /showSamplePack/);
-  assert.match(ui, /Sample list — not your gear/);
-  assert.match(ui, /setTool\("pack"\)/);
-  assert.match(ui, /tool === "pack"/);
+  assert.doesNotMatch(ui, /SAMPLE_PACK/);
+  assert.doesNotMatch(ui, /showSamplePack/);
+  assert.doesNotMatch(ui, /Sample list — not your gear/);
+  assert.doesNotMatch(ui, /setTool\("pack"\)/);
+  assert.doesNotMatch(ui, /tool === "pack"/);
   assert.doesNotMatch(ui, /Pack List/);
   assert.doesNotMatch(ui, /DEMO_PACK/);
   assert.doesNotMatch(ui, /useState\(DEMO_PACK\)/);
+  assert.doesNotMatch(ui, /type PackRow/);
+  assert.doesNotMatch(ui, />\s*Pack\s*</);
   assert.doesNotMatch(ui, /role="tablist"/);
   assert.doesNotMatch(ui, /SUB_TABS/);
+
+  const dumpsChip = ui.slice(
+    ui.indexOf("data-trips-dumps-chip"),
+    ui.indexOf("</button>", ui.indexOf("data-trips-dumps-chip")) + 10,
+  );
+  assert.match(dumpsChip, /Dumps/);
+  assert.match(
+    dumpsChip,
+    /inline-flex min-h-11 items-center gap-1 rounded-full border px-2.5 py-1 text-\[10px\] font-bold tracking-wide/,
+  );
+  assert.match(dumpsChip, /border-sapphire/);
+  assert.match(dumpsChip, /bg-sapphire/);
+  assert.match(dumpsChip, /<Droplets/);
 });
 
 test("loadLockedProfile keeps a coach without floorplan", () => {

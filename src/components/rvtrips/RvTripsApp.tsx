@@ -20,7 +20,6 @@ import {
 import { cn } from "@/lib/utils";
 import {
   SAMPLE_CAMPS,
-  SAMPLE_PACK,
   formatDrive,
   formatMiles,
   type TripAlert,
@@ -144,10 +143,8 @@ import {
   resolveUpcomingGuidance,
 } from "@/lib/trips/voiceGuidance";
 
-type ToolPane = "profile" | "dumps" | "pack" | null;
+type ToolPane = "profile" | "dumps" | null;
 type SheetId = "year" | "make" | "model" | "floorplan" | null;
-
-type PackRow = { id: string; item: string; done: boolean; sample?: boolean };
 
 function dimSourceTag(source?: DimSource): { text: string; className: string } | null {
   if (source === "estimate") return { text: "estimate", className: "text-amber" };
@@ -171,9 +168,6 @@ type NavStep = {
 
 export function RvTripsApp() {
   const [tool, setTool] = useState<ToolPane>(null);
-  const [pack, setPack] = useState<PackRow[]>([]);
-  const [showSamplePack, setShowSamplePack] = useState(false);
-  const [packDraft, setPackDraft] = useState("");
   const [navArmed, setNavArmed] = useState(false);
   const [planOpen, setPlanOpen] = useState(true);
   const follow = useNavFollow(navArmed);
@@ -408,34 +402,6 @@ export function RvTripsApp() {
     const fp = displayCoach.floorplan ? ` · ${displayCoach.floorplan}` : "";
     return `${y}${displayCoach.make} ${displayCoach.model}${fp} · ${displayCoach.heightFt}′H · ${displayCoach.lengthFt}′L`;
   }, [displayCoach]);
-
-  const toggleSamplePack = () => {
-    setShowSamplePack((on) => {
-      const next = !on;
-      if (next) {
-        setPack((list) => {
-          if (list.some((row) => row.sample)) return list;
-          return [
-            ...SAMPLE_PACK.map((row) => ({ ...row, sample: true, done: false })),
-            ...list,
-          ];
-        });
-      } else {
-        setPack((list) => list.filter((row) => !row.sample));
-      }
-      return next;
-    });
-  };
-
-  const addPackItem = () => {
-    const item = packDraft.trim();
-    if (!item) return;
-    setPack((list) => [
-      ...list,
-      { id: `u-${Date.now()}`, item, done: false },
-    ]);
-    setPackDraft("");
-  };
 
   const runRoute = useCallback(
     (
@@ -974,7 +940,6 @@ export function RvTripsApp() {
     }
   };
 
-  const packDone = pack.filter((p) => p.done).length;
   const dumpNearLat = originPlace?.lat ?? destPlace?.lat ?? null;
   const dumpNearLng = originPlace?.lng ?? destPlace?.lng ?? null;
 
@@ -1294,16 +1259,17 @@ export function RvTripsApp() {
             <button
               type="button"
               onClick={() => setTool("dumps")}
-              className="min-h-11 px-1 text-[11px] font-semibold text-white/45"
+              aria-pressed={tool === "dumps"}
+              data-trips-dumps-chip
+              className={cn(
+                "inline-flex min-h-11 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide",
+                tool === "dumps"
+                  ? "border-sapphire/60 bg-sapphire/25 text-sky-100"
+                  : "border-sapphire/40 bg-sapphire/15 text-sapphire-glow",
+              )}
             >
+              <Droplets className="size-3" />
               Dumps
-            </button>
-            <button
-              type="button"
-              onClick={() => setTool("pack")}
-              className="min-h-11 px-1 text-[11px] font-semibold text-white/45"
-            >
-              Pack
             </button>
             {displayCoach ? (
               <button
@@ -2357,105 +2323,6 @@ export function RvTripsApp() {
                   </div>
                 ))
               )}
-            </section>
-          ) : null}
-
-          {tool === "pack" ? (
-            <section className="glass-prestige space-y-2 rounded-[1.25rem] p-3.5">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-[13px] font-bold tracking-[0.12em] text-white">
-                  PACK
-                </h2>
-                <div className="flex items-center gap-3">
-                  {pack.length > 0 ? (
-                    <span className="text-[11px] text-white/70">
-                      {packDone}/{pack.length}
-                    </span>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => setTool(null)}
-                    className="min-h-11 text-[12px] font-bold text-blue"
-                  >
-                    Back
-                  </button>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  value={packDraft}
-                  onChange={(e) => setPackDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addPackItem();
-                    }
-                  }}
-                  placeholder="Add an item"
-                  className="glass-field min-h-11 min-w-0 flex-1 rounded-xl px-3 py-2 text-[14px] text-white outline-none placeholder:text-white/55"
-                  aria-label="Add pack item"
-                />
-                <button
-                  type="button"
-                  onClick={addPackItem}
-                  disabled={!packDraft.trim()}
-                  className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue text-white disabled:opacity-40"
-                  aria-label="Add to pack list"
-                >
-                  <Plus className="size-4" />
-                </button>
-              </div>
-              {pack.length === 0 ? (
-                <p className="text-[12px] text-white/55">Your list.</p>
-              ) : (
-                pack.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() =>
-                      setPack((list) =>
-                        list.map((x) =>
-                          x.id === p.id ? { ...x, done: !x.done } : x,
-                        ),
-                      )
-                    }
-                    className="flex w-full items-center gap-3 rounded-xl border border-white/12 bg-black/30 px-3 py-2.5 text-left"
-                  >
-                    <span
-                      className={cn(
-                        "flex size-5 items-center justify-center rounded border text-[10px] font-bold",
-                        p.done
-                          ? "border-emerald-400 bg-emerald-500 text-black"
-                          : "border-white/30 text-transparent",
-                      )}
-                    >
-                      ✓
-                    </span>
-                    <span
-                      className={cn(
-                        "min-w-0 flex-1 text-[13px] font-semibold text-white",
-                        p.done && "line-through opacity-60",
-                      )}
-                    >
-                      {p.item}
-                    </span>
-                    {p.sample ? (
-                      <span className="rounded-full border border-white/20 px-1.5 py-px text-[9px] font-bold text-white/50">
-                        SAMPLE
-                      </span>
-                    ) : null}
-                  </button>
-                ))
-              )}
-              <button
-                type="button"
-                onClick={toggleSamplePack}
-                className="pt-1 text-[11px] font-semibold text-white/50 underline-offset-2 hover:text-white/75 hover:underline"
-              >
-                {showSamplePack
-                  ? "Hide sample list"
-                  : "Sample list — not your gear"}
-              </button>
             </section>
           ) : null}
         </div>
