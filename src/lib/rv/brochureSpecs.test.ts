@@ -17,6 +17,16 @@ import {
 } from "./catalogHonesty.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
+import {
+  buildBrochureSpecs,
+  CONFIRM_BROCHURE,
+  resolveYearSnapshot,
+} from "./brochureSpecs.ts";
+import {
+  isPlaceholderTankTrio,
+  omitPlaceholderCatalogTanks,
+} from "./placeholderTanks.ts";
+import type { RVSpec } from "./rvTypes.ts";
 
 const DREAM_ENGINE = "Cummins L9 450 std / X15 605 opt";
 const root = dirname(fileURLToPath(import.meta.url));
@@ -166,6 +176,158 @@ test("seeded filler is gone: tanks / MPG / fuel / PDF-only fields say Confirm br
   assert.match(spec, /mpgOverride && mpgOverride > 0/);
   assert.match(spec, /Tow vehicle dependent/);
   assert.doesNotMatch(spec, /eco\.fuelGal/);
+  assert.match(spec, /omitPlaceholderCatalogTanks/);
+  assert.match(spec, /band\?\.freshWater \?\? catalogTanks\.freshWater/);
+  assert.match(spec, /band\?\.grayWater \?\? catalogTanks\.grayWater/);
+  assert.match(spec, /band\?\.blackWater \?\? catalogTanks\.blackWater/);
+});
+
+function tankFixture(partial: Partial<RVSpec>): RVSpec {
+  return {
+    type: "Class A Diesel",
+    floorplans: ["3601"],
+    lengthRange: [34, 40],
+    weightRange: [28000, 36000],
+    slideouts: 3,
+    sleeps: 6,
+    msrpRange: [200000, 300000],
+    engine: "Cummins ISB-XT 6.7 360HP",
+    horsepower: 360,
+    chassis: "Freightliner XCR",
+    fuelType: "Diesel",
+    recalls: 0,
+    rating: 4.4,
+    image: "",
+    ...partial,
+  };
+}
+
+test("isPlaceholderTankTrio only matches the cloned 60/40/40 seed", () => {
+  assert.equal(isPlaceholderTankTrio(60, 40, 40), true);
+  assert.equal(isPlaceholderTankTrio(60, 40, 41), false);
+  assert.equal(isPlaceholderTankTrio(91, 51, 51), false);
+  assert.equal(isPlaceholderTankTrio(80, 50, 40), false);
+  assert.equal(isPlaceholderTankTrio(undefined, 40, 40), false);
+  assert.deepEqual(omitPlaceholderCatalogTanks({
+    freshWater: 60,
+    grayWater: 40,
+    blackWater: 40,
+  }), {});
+  assert.deepEqual(omitPlaceholderCatalogTanks({
+    freshWater: 80,
+    grayWater: 50,
+    blackWater: 40,
+  }), { freshWater: 80, grayWater: 50, blackWater: 40 });
+});
+
+test("Facts tanks: model-level 60/40/40 seed is GAP, not confirmed gallons", () => {
+  const spec = tankFixture({
+    freshWater: 60,
+    grayWater: 40,
+    blackWater: 40,
+  });
+  const snap = resolveYearSnapshot(spec, "2020", "3601");
+  assert.equal(snap.freshWater, undefined);
+  assert.equal(snap.grayWater, undefined);
+  assert.equal(snap.blackWater, undefined);
+
+  const out = buildBrochureSpecs(spec, "2020", "TestCo", "SeedCoach", "3601");
+  assert.equal(out.freshWater, CONFIRM_BROCHURE);
+  assert.equal(out.grayWater, CONFIRM_BROCHURE);
+  assert.equal(out.blackWater, CONFIRM_BROCHURE);
+  assert.doesNotMatch(
+    `${out.freshWater} / ${out.grayWater} / ${out.blackWater}`,
+    /60\s*\/\s*40\s*\/\s*40/,
+  );
+  assert.doesNotMatch(out.freshWater, /^60\s*gal$/i);
+  assert.doesNotMatch(out.grayWater, /^40\s*gal$/i);
+  assert.doesNotMatch(out.blackWater, /^40\s*gal$/i);
+});
+
+test("Facts tanks: year-scoped overlay wins over 60/40/40 seed (Aria pattern)", () => {
+  const spec = tankFixture({
+    freshWater: 60,
+    grayWater: 40,
+    blackWater: 40,
+    powertrainByYear: [
+      {
+        from: 2017,
+        to: 2018,
+        engine: "Cummins ISB-XT 6.7 360HP",
+        horsepower: 360,
+        chassis: "Freightliner XCR",
+        fuelType: "Diesel",
+      },
+      {
+        from: 2017,
+        to: 2017,
+        floorplans: ["3601", "3901"],
+        engine: "Cummins ISB-XT 6.7 360HP",
+        horsepower: 360,
+        chassis: "Freightliner XCR",
+        fuelType: "Diesel",
+        freshWater: 91,
+        grayWater: 51,
+        blackWater: 51,
+      },
+    ],
+  });
+
+  const pinned = buildBrochureSpecs(spec, "2017", "TestCo", "AriaPattern", "3601");
+  assert.equal(pinned.freshWater, "91 gal");
+  assert.equal(pinned.grayWater, "51 gal");
+  assert.equal(pinned.blackWater, "51 gal");
+
+  // Floorplan without a year pin stays on the untrusted seed → GAP, never 60/40/40.
+  const gap = buildBrochureSpecs(spec, "2017", "TestCo", "AriaPattern", "4000");
+  assert.equal(gap.freshWater, CONFIRM_BROCHURE);
+  assert.equal(gap.grayWater, CONFIRM_BROCHURE);
+  assert.equal(gap.blackWater, CONFIRM_BROCHURE);
+});
+
+test("Facts tanks: non-placeholder catalog trio and explicit year 60/40/40 pin still paint", () => {
+  const catalogTrue = tankFixture({
+    freshWater: 80,
+    grayWater: 50,
+    blackWater: 40,
+  });
+  const catalogOut = buildBrochureSpecs(
+    catalogTrue,
+    "2020",
+    "TestCo",
+    "TrueTanks",
+    "3601",
+  );
+  assert.equal(catalogOut.freshWater, "80 gal");
+  assert.equal(catalogOut.grayWater, "50 gal");
+  assert.equal(catalogOut.blackWater, "40 gal");
+
+  const yearPin = tankFixture({
+    freshWater: 60,
+    grayWater: 40,
+    blackWater: 40,
+    powertrainByYear: [
+      {
+        from: 2020,
+        to: 2020,
+        engine: "Cummins ISB-XT 6.7 360HP",
+        horsepower: 360,
+        freshWater: 60,
+        grayWater: 40,
+        blackWater: 40,
+      },
+    ],
+  });
+  const pinned = buildBrochureSpecs(
+    yearPin,
+    "2020",
+    "TestCo",
+    "YearPinTanks",
+    "3601",
+  );
+  assert.equal(pinned.freshWater, "60 gal");
+  assert.equal(pinned.grayWater, "40 gal");
+  assert.equal(pinned.blackWater, "40 gal");
 });
 
 test("gas chassis rewrites Diesel/Gas generator; diesel does not get gas-only", () => {

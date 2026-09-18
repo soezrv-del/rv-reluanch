@@ -26,8 +26,13 @@ import {
   horsepowerIsOptionBand,
   parseHp,
 } from "./catalogHonesty";
+import { omitPlaceholderCatalogTanks } from "./placeholderTanks";
 
 export { parseHp } from "./catalogHonesty";
+export {
+  isPlaceholderTankTrio,
+  omitPlaceholderCatalogTanks,
+} from "./placeholderTanks";
 
 /** Full brochure-style specification sheet (derived + source fields) */
 export interface BrochureSpecs {
@@ -265,6 +270,9 @@ export function resolveYearSnapshot(
 
   // Year-true: band fields win. Top-level only fills gaps when no band.
   const yearTruePowertrain = !!band;
+  // Model-level 60/40/40 is an untrusted catalog clone — not brochure truth.
+  // Year-band / OEM tanks still win when they actually set gallons.
+  const catalogTanks = omitPlaceholderCatalogTanks(spec);
 
   return {
     engine: band?.engine ?? spec.engine,
@@ -288,9 +296,9 @@ export function resolveYearSnapshot(
     exteriorHeightIn: band?.exteriorHeightIn ?? spec.exteriorHeightIn,
     exteriorWidthIn: band?.exteriorWidthIn ?? spec.exteriorWidthIn,
     overallLengthIn: band?.overallLengthIn ?? spec.overallLengthIn,
-    freshWater: band?.freshWater ?? spec.freshWater,
-    grayWater: band?.grayWater ?? spec.grayWater,
-    blackWater: band?.blackWater ?? spec.blackWater,
+    freshWater: band?.freshWater ?? catalogTanks.freshWater,
+    grayWater: band?.grayWater ?? catalogTanks.grayWater,
+    blackWater: band?.blackWater ?? catalogTanks.blackWater,
     ceilingHeight: band?.ceilingHeight ?? spec.ceilingHeight,
     slideouts: band?.slideouts ?? spec.slideouts,
     sleeps: band?.sleeps ?? spec.sleeps,
