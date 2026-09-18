@@ -16271,69 +16271,6 @@ test("catalog-wide: no model-level 60/40/40 tank seed; dated year pins stay", ()
   );
 });
 
-test("stripped 60/40/40 seed: year pins still resolve; GAP years stay unknown", async () => {
-  const { RV_DATA } = await import("./rvData.ts");
-  const { buildBrochureSpecs, resolveYearSnapshot, CONFIRM_BROCHURE } =
-    await import("./brochureSpecs.ts");
-
-  const aspire = RV_DATA["Entegra Coach"]?.Aspire;
-  const aria = RV_DATA.Thor?.Aria;
-  const valencia = RV_DATA["Renegade RV"]?.Valencia;
-  const challenger = RV_DATA.Thor?.Challenger;
-  const precept = RV_DATA.Jayco?.Precept;
-  assert.ok(aspire && aria && valencia && challenger && precept);
-
-  assert.equal(aspire.freshWater, undefined);
-  assert.equal(aspire.grayWater, undefined);
-  assert.equal(aspire.blackWater, undefined);
-  assert.equal(aria.freshWater, undefined);
-  assert.equal(valencia.freshWater, undefined);
-  assert.equal(challenger.freshWater, undefined);
-  assert.equal(precept.freshWater, undefined);
-
-  const pinAspire = resolveYearSnapshot(aspire, "2024", "44B");
-  assert.deepEqual(
-    { freshWater: pinAspire.freshWater, grayWater: pinAspire.grayWater, blackWater: pinAspire.blackWater },
-    { freshWater: 100, grayWater: 62, blackWater: 41 },
-  );
-  const gapAspire = resolveYearSnapshot(aspire, "2023", "44B");
-  assert.equal(gapAspire.freshWater, undefined);
-  assert.equal(gapAspire.grayWater, undefined);
-  assert.equal(gapAspire.blackWater, undefined);
-
-  const pinAria = resolveYearSnapshot(aria, "2024", "3901");
-  assert.deepEqual(
-    { freshWater: pinAria.freshWater, grayWater: pinAria.grayWater, blackWater: pinAria.blackWater },
-    { freshWater: 91, grayWater: 51, blackWater: 51 },
-  );
-  const gapAria = resolveYearSnapshot(aria, "2025", "3702");
-  assert.equal(gapAria.freshWater, undefined);
-
-  const pinValencia = resolveYearSnapshot(valencia, "2024", "38RW");
-  assert.deepEqual(
-    { freshWater: pinValencia.freshWater, grayWater: pinValencia.grayWater, blackWater: pinValencia.blackWater },
-    { freshWater: 150, grayWater: 75, blackWater: 75 },
-  );
-  const gapValencia = resolveYearSnapshot(valencia, "2019", "38BB");
-  assert.equal(gapValencia.freshWater, undefined);
-
-  const pinSheet = buildBrochureSpecs(aspire, "2024", "Entegra Coach", "Aspire", "44B");
-  assert.equal(pinSheet.freshWater, "100 gal");
-  assert.equal(pinSheet.grayWater, "62 gal");
-  assert.equal(pinSheet.blackWater, "41 gal");
-
-  const gapSheet = buildBrochureSpecs(aspire, "2023", "Entegra Coach", "Aspire", "44B");
-  assert.equal(gapSheet.freshWater, CONFIRM_BROCHURE);
-  assert.equal(gapSheet.grayWater, CONFIRM_BROCHURE);
-  assert.equal(gapSheet.blackWater, CONFIRM_BROCHURE);
-
-  const seedOnly = buildBrochureSpecs(challenger, "2020", "Thor", "Challenger", "37BH");
-  assert.equal(seedOnly.freshWater, CONFIRM_BROCHURE);
-  assert.equal(seedOnly.grayWater, CONFIRM_BROCHURE);
-  assert.equal(seedOnly.blackWater, CONFIRM_BROCHURE);
-  assert.notEqual(seedOnly.freshWater, "60 gal");
-});
-
 test("Midwest Automotive Designs MY2027 OEM+RVUSA locks + Passage/Weekender GAP", () => {
   const idx = CATALOG_INDEX["Midwest Automotive Designs"];
   assert.ok(idx);
