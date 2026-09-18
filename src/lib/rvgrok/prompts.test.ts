@@ -84,8 +84,11 @@ test("chat, agent, and voice prompts share David's answer-now / give me one seco
 
   assert.match(prompts, /WEB RESEARCH notes/);
   assert.match(prompts, /OWN-LOT INVENTORY/);
+  assert.match(prompts, /UNAVAILABLE/);
+  assert.match(prompts, /Never report 0 diesels or 0 units/);
   assert.match(prompts, /Class A Diesel/);
   assert.match(prompts, /Class Super C/);
+  assert.match(voice, /never speak 0 as a stock count/);
   assert.match(prompts, /UNKNOWN \/ CATALOG GAP/);
   assert.match(prompts, /I don't know/);
   assert.match(prompts, /Do not invent/);
