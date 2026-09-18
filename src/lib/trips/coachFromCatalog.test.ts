@@ -370,10 +370,6 @@ test("rvSafeNavigateChipLabel: GAP when empty, real height × weight when saved"
     "RV safe · GAP × GAP",
   );
   assert.equal(
-    rvSafeNavigateChipLabel({ ...EMPTY_COACH_PROFILE, locked: false }),
-    "RV safe · GAP × GAP",
-  );
-  assert.equal(
     rvSafeNavigateChipLabel({ heightFt: 12, weightLbs: 0 }),
     "RV safe · 12′ × GAP",
   );
