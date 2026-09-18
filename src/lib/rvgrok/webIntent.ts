@@ -1,18 +1,26 @@
 /**
  * When chat should fire the xAI web_search sidecar.
- * Kept catalog-free so tests and the sidecar prompt can import it.
+ * Spec-catalog-free (no rvData). Coach-vs-coach compare skip uses the
+ * thin CATALOG_INDEX names in coachCompare.ts.
  *
  * Standing rule: browse whenever the catalog cannot answer the ask,
  * plus inventory / diesel-count asks the catalog never stores.
- * Skip only hi / lifestyle / payment / image-only turns.
+ * Skip only hi / lifestyle / payment / image-only turns, and
+ * catalog-answerable coach-vs-coach compares (both makes/models known).
  * Market value / pricing always browses (live nationwide asking, year ±2)
  * — catalog, nightly scrape, and competitor-latest are not price SoT.
+ * Repair / forum / manual asks still browse even on a compare.
  */
 
 import { parseCoachFromText } from "./parseCoach.ts";
 import { looksLikeRepairQuestion } from "./repairMode.ts";
+import { looksLikeCatalogAnswerableCoachCompare } from "./coachCompare.ts";
 
 export { looksLikeRepairQuestion } from "./repairMode.ts";
+export {
+  looksLikeCatalogAnswerableCoachCompare,
+  looksLikeCoachCompareQuestion,
+} from "./coachCompare.ts";
 
 export type WebFallbackSpecs = {
   missingHard: boolean;
@@ -192,6 +200,9 @@ export function needsWebFallback(
   if (looksLikeImageOnlyAsk(userText)) return false;
   if (looksLikeLiveResearchQuestion(userText)) return true;
   if (looksLikeInventoryOrCountQuestion(userText)) return true;
+  // Both coaches identifiable — answer class / powertrain from catalog
+  // now. Do not stall for a web hold. Forum / repair already returned true.
+  if (looksLikeCatalogAnswerableCoachCompare(userText)) return false;
   // Resolved hard row → do not browse. A "no catalog" web note must not
   // overwrite a pin the catalog already answered (Lineage Series M, etc.).
   if (specs && !specs.missingHard) {

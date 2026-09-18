@@ -3,6 +3,8 @@
  *
  * Detection is NOT forked: `decideVoiceWebResearch` calls `needsWebFallback`
  * from `webIntent.ts` (same function chat uses via `buildChatGrounding`).
+ * Catalog-answerable coach compares skip research there, so this hold is
+ * never spoken for "Compare Allegro Bus to American Dream."
  * This module only shapes notes for speech, bounds latency, and fetches.
  */
 

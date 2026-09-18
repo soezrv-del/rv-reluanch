@@ -5,6 +5,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   looksLikeCasualNonResearch,
+  looksLikeCatalogAnswerableCoachCompare,
+  looksLikeCoachCompareQuestion,
   looksLikeLiveResearchQuestion,
   needsWebFallback,
 } from "./webIntent.ts";
@@ -97,6 +99,54 @@ test("spoken market-value questions research even when the catalog is locked", (
   );
   assert.match(VOICE_RESEARCH_ANSWER_INSTRUCTIONS, /Low \/ Average \/ High/);
   assert.match(VOICE_RESEARCH_ANSWER_INSTRUCTIONS, /competitor-latest/);
+});
+
+const COMPARE_Q = "Compare the Allegro Bus to the American Dream.";
+
+test("catalog-answerable coach compare skips research hold — answer from catalog now", () => {
+  assert.equal(looksLikeCoachCompareQuestion(COMPARE_Q), true);
+  assert.equal(looksLikeCatalogAnswerableCoachCompare(COMPARE_Q), true);
+  assert.equal(looksLikeLiveResearchQuestion(COMPARE_Q), false);
+  assert.equal(needsWebFallback(null, COMPARE_Q), false);
+  assert.equal(
+    decideVoiceWebResearch({ transcript: COMPARE_Q, specs: null }).action,
+    "pass",
+  );
+  assert.equal(
+    decideVoiceWebResearch({
+      transcript: "Allegro Bus vs American Dream",
+      specs: { missingHard: true },
+    }).action,
+    "pass",
+  );
+  assert.match(VOICE_RESEARCH_HOLD_INSTRUCTIONS, /Let me check that/);
+  const voiceWeb = src("voiceWeb.ts");
+  assert.match(voiceWeb, /needsWebFallback/);
+  assert.match(voiceWeb, /Catalog-answerable coach compares skip research/);
+});
+
+test("repair / forum / manual compares still research — hold may speak", () => {
+  const repair =
+    "Compare the Allegro Bus to the American Dream — the slide won't retract, what should I check?";
+  assert.equal(looksLikeLiveResearchQuestion(repair), true);
+  assert.equal(needsWebFallback(null, repair), true);
+  assert.equal(
+    decideVoiceWebResearch({ transcript: repair, specs: null }).action,
+    "research",
+  );
+
+  const forum =
+    "What do owners say when they compare the Allegro Bus to the American Dream?";
+  assert.equal(needsWebFallback(null, forum), true);
+  assert.equal(decideVoiceWebResearch({ transcript: forum }).action, "research");
+
+  const manual =
+    "Look up the service manual differences between the Allegro Bus and the American Dream";
+  assert.equal(needsWebFallback(null, manual), true);
+  assert.equal(
+    decideVoiceWebResearch({ transcript: manual }).action,
+    "research",
+  );
 });
 
 test("spoken greeting and lifestyle questions do not fire voice web research", () => {
