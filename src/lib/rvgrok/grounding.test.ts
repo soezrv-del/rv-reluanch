@@ -17,6 +17,7 @@ import {
 import {
   looksLikeCasualNonResearch,
   looksLikeImageOnlyAsk,
+  looksLikeInventoryOrCountQuestion,
   looksLikeLiveResearchQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeOffCatalogQuestion,
@@ -391,17 +392,37 @@ test("repair-mode playbook is wired through chat, voice, and browse", () => {
   assert.match(api, /buildChatGrounding/);
 });
 
-test("system prompts know injected web research is live internet", () => {
+test("system prompts never deflect to website / OEM / dealer — unconditional", () => {
   const prompts = src(root, "prompts.ts");
   assert.match(prompts, /WEB RESEARCH notes/);
   assert.match(prompts, /no internet/i);
   assert.match(prompts, /WEB SEARCH NOT AVAILABLE/);
   assert.match(prompts, /no catalog data/i);
-  assert.match(prompts, /OEM site or a dealer/);
+  assert.match(prompts, /OEM site, or dealer/);
+  assert.match(prompts, /UNCONDITIONAL/);
+  assert.match(prompts, /check the website/);
+  assert.match(prompts, /look it up yourself/);
+  assert.match(prompts, /go check the OEM site/);
+  assert.match(prompts, /ask the dealer/);
+  assert.match(prompts, /facts and numbers first/);
+  assert.doesNotMatch(
+    prompts,
+    /as the primary answer when WEB RESEARCH notes are present/,
+  );
+  assert.doesNotMatch(
+    prompts,
+    /as the primary answer when notes are present/,
+  );
   const voice = src(root, "voice.ts");
   assert.match(voice, /WEB RESEARCH notes/);
   assert.match(voice, /WEB SEARCH NOT AVAILABLE/);
   assert.match(voice, /no catalog data/i);
+  assert.match(voice, /UNCONDITIONAL/);
+  assert.match(voice, /check the website/);
+  assert.doesNotMatch(
+    voice,
+    /as the whole answer when WEB RESEARCH notes are present/,
+  );
   const live = src(root, "liveVoice.ts");
   assert.doesNotMatch(live, /wantsWebFallback/);
   const realtime = src(root, "realtime.ts");
@@ -411,13 +432,22 @@ test("system prompts know injected web research is live internet", () => {
   assert.match(realtime, /maybeEnrichWithWebResearch/);
   const grounding = src(root, "grounding.ts");
   assert.match(grounding, /no catalog data/i);
-  assert.match(grounding, /do not send the user to the OEM site/i);
+  assert.match(grounding, /never send the user to the OEM site/i);
+  assert.match(grounding, /check the website/);
+  assert.match(grounding, /look it up yourself/);
+  assert.match(grounding, /go check the OEM site/);
+  assert.match(grounding, /verify-after only/);
+  assert.doesNotMatch(
+    grounding,
+    /never the whole answer when research notes are present/,
+  );
   assert.match(grounding, /IS in the verified catalog/);
   assert.match(grounding, /fromQuery/);
   assert.match(src(root, "webIntent.ts"), /Resolved hard row/);
   assert.match(src(root, "webIntent.ts"), /looksLikeNamedCoachProductQuestion/);
   assert.match(src(root, "webIntent.ts"), /catalogGapNeedsWeb/);
   assert.match(src(root, "webIntent.ts"), /looksLikeOffCatalogQuestion/);
+  assert.match(src(root, "webIntent.ts"), /looksLikeInventoryOrCountQuestion/);
   assert.match(src(root, "grounding.ts"), /catalogYearIsListed/);
   assert.match(src(root, "grounding.ts"), /hasYearRow/);
 });
@@ -535,12 +565,41 @@ test("unresolved named coach about-ask still fires web instead of a dealer dead-
   assert.equal(needsWebFallback({ missingHard: true }, q), true);
   const grounding = src(root, "grounding.ts");
   assert.match(grounding, /WEB RESEARCH notes/i);
-  assert.match(grounding, /do not send the user to the OEM site/i);
+  assert.match(grounding, /never send the user to the OEM site/i);
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(api, /wantsWebFallback/);
   assert.match(api, /executeWebResearch/);
   assert.match(api, /buildChatGrounding/);
   assert.match(api, /serverGrounded/);
+});
+
+test("inventory / diesel count asks browse even when catalog is locked", () => {
+  const locked = { missingHard: false };
+  const inventory = "How many diesel Newmar Dutch Stars are in inventory?";
+  const dieselCount = "What's the diesel count for 2024 Tiffin Allegro?";
+  const lot = "Any Entegra inventory near Dallas?";
+  for (const q of [inventory, dieselCount, lot]) {
+    assert.equal(looksLikeInventoryOrCountQuestion(q), true, q);
+    assert.equal(needsWebFallback(locked, q), true, q);
+    assert.equal(needsWebFallback(null, q), true, q);
+  }
+  assert.equal(
+    looksLikeInventoryOrCountQuestion("How many slides does a 2023 Dream have?"),
+    false,
+    "slide count is a spec, not lot inventory",
+  );
+  assert.equal(
+    looksLikeInventoryOrCountQuestion("How many nights should we plan?"),
+    false,
+  );
+  assert.equal(
+    needsWebFallback(
+      locked,
+      "What engine and HP does a 2023 Entegra Vision have?",
+    ),
+    false,
+    "locked fuel/engine spec still does not browse",
+  );
 });
 
 test("catalog miss fires web without about-phrasing", () => {

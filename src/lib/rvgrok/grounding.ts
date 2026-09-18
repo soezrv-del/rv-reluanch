@@ -45,6 +45,7 @@ import {
 export {
   looksLikeCasualNonResearch,
   looksLikeImageOnlyAsk,
+  looksLikeInventoryOrCountQuestion,
   looksLikeLiveResearchQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeOffCatalogQuestion,
@@ -102,8 +103,8 @@ export const CHAT_MAY_WRITE_FACTS_CACHE = false;
 export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - The CATALOG / BROCHURE block in this request is source-of-truth for engine, horsepower, chassis, transmission, and fuel.
 - If a field has a number or name, USE THAT EXACT VALUE. Do not substitute a sibling model, a later year, or a "typical" HP (never invent 450).
-- If a field is marked UNKNOWN, say unknown or EST. Prefer WEB RESEARCH notes for those gaps. Brochure / door sticker / dealer is a verify-after — never the whole answer when research notes are present or this turn can browse.
-- Do not invent a "no catalog data — check the OEM site" dead-end. If this block names locked numbers, the coach IS in the catalog — never say it is missing, not in catalogs, or to wait for a brochure. Answer from locked numbers and/or WEB RESEARCH notes. Never invent HP, engine, chassis, or fuel.
+- If a field is marked UNKNOWN, say unknown or EST. Prefer WEB RESEARCH notes for those gaps. Brochure / door sticker / dealer is verify-after only — never the whole answer, whether or not research notes are present. Never say "check the website", "look it up yourself", or "go check the OEM site".
+- Do not invent a "no catalog data — check the OEM site" dead-end. If this block names locked numbers, the coach IS in the catalog — never say it is missing, not in catalogs, or to wait for a brochure. Answer from locked numbers and/or WEB RESEARCH notes. Never invent HP, engine, chassis, or fuel. Never send the user to the OEM site, a website, or a dealer as the answer.
 - WEB RESEARCH notes must not override a locked catalog row or invent a fifth-wheel / towable class when this block names a motorized class.
 - Floorplan letters (BH, K, L, FS, …) are labels only — never decode bunks or a half-bath from the code.
 - Entegra Vision = gas Ford F-53 / 7.3 Godzilla — not diesel.
@@ -111,7 +112,7 @@ export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - Chat is not the Facts report. Do not write these answers into Facts cache.`;
 
 export const UNKNOWN_POWERTRAIN_LINE =
-  "UNKNOWN — do not invent. Say unknown / EST. and what to verify (door sticker or OEM brochure).";
+  "UNKNOWN — do not invent. Say unknown / EST. and the closest verified data. Brochure / door sticker is verify-after only — never send the user to the OEM site as the answer.";
 
 const MAKE_ALIASES: Record<string, string> = {
   entegra: "Entegra Coach",
@@ -305,7 +306,7 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
       transmission: empty,
       fuelType: empty,
       rvType: pickField({ value: index?.type, trust: "index" }),
-      note: "No locked catalog row for this model year. Use WEB RESEARCH notes if present — do not invent specs or send the user to the OEM site as the primary answer.",
+      note: "No locked catalog row for this model year. Answer from WEB RESEARCH notes and/or closest verified data — do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.",
       weightBand: null,
       hasHardLock: false,
       missingHard: true,
@@ -468,7 +469,7 @@ export function formatCatalogGroundingBlock(specs: GroundedSpecs): string {
     specs.weightBand ? `- weights: ${specs.weightBand}` : null,
     specs.hasHardLock
       ? "This coach IS in the verified catalog. Use the locked numbers above. Do not say it is missing, not in catalogs, or to wait for a brochure. If a line is UNKNOWN, say unknown / EST. — never invent HP, engine, chassis, or fuel."
-      : "No locked catalog numbers for this identity. If WEB RESEARCH notes are present this turn, answer from those notes. Do not invent specs. Do not send the user to the OEM site or a dealer as the primary answer.",
+      : "No locked catalog numbers for this identity. Answer from WEB RESEARCH notes and/or closest verified data. Do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.",
   ]
     .filter(Boolean)
     .join("\n");
