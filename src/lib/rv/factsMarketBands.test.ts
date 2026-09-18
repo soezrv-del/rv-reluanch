@@ -3,9 +3,14 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
-import { LOW_CONFIDENCE_LISTINGS_MESSAGE } from "./publicListingComps.ts";
 import {
+  CATALOG_ESTIMATE_LABEL,
+  LOW_CONFIDENCE_LISTINGS_MESSAGE,
+} from "./publicListingComps.ts";
+import {
+  factsMarketAverageUsd,
   factsMarketBandSlots,
+  factsMarketIsThinSample,
   MARKET_BAND_AVERAGE_LABEL,
   MARKET_BAND_HIGH_LABEL,
   MARKET_BAND_LOW_LABEL,
@@ -21,6 +26,45 @@ test("band labels are Low / Average / High — not paid book brands", () => {
   assert.equal(THIN_SAMPLE_FLAG_LABEL, "Thin sample");
 });
 
+test("Average is marketValue; absent uses retailLow/retailHigh midpoint", () => {
+  assert.equal(
+    factsMarketAverageUsd({
+      marketValue: 150000,
+      retailLow: 140000,
+      retailHigh: 165000,
+    }),
+    150000,
+  );
+  assert.equal(
+    factsMarketAverageUsd({
+      retailLow: 140000,
+      retailHigh: 160000,
+    }),
+    150000,
+  );
+  assert.equal(
+    factsMarketAverageUsd({
+      marketValue: 0,
+      retailLow: 100000,
+      retailHigh: 120000,
+    }),
+    110000,
+  );
+});
+
+test("thin-sample: confidence low or public sample < 2", () => {
+  assert.equal(factsMarketIsThinSample({ confidence: "low" }), true);
+  assert.equal(factsMarketIsThinSample({ confidence: "medium" }), false);
+  assert.equal(factsMarketIsThinSample({ confidence: "high" }), false);
+  assert.equal(factsMarketIsThinSample({ soldSampleSize: 1 }), true);
+  assert.equal(factsMarketIsThinSample({ sampleSize: 0 }), true);
+  assert.equal(factsMarketIsThinSample({ soldSampleSize: 2 }), false);
+  assert.equal(
+    factsMarketIsThinSample({ confidence: "medium", soldSampleSize: 3 }),
+    false,
+  );
+});
+
 test("Med/High sold comps paint the existing Low / Average / High dollars", () => {
   const slots = factsMarketBandSlots({
     retailLow: "$140,000",
@@ -28,6 +72,7 @@ test("Med/High sold comps paint the existing Low / Average / High dollars", () =
     retailHigh: "$165,000",
     hideRetailHigh: false,
     confidence: "medium",
+    soldSampleSize: 3,
     thinSampleMessage: LOW_CONFIDENCE_LISTINGS_MESSAGE,
   });
   assert.deepEqual(slots.low, { label: "Low", value: "$140,000" });
@@ -36,13 +81,14 @@ test("Med/High sold comps paint the existing Low / Average / High dollars", () =
   assert.equal(slots.thinSample, null);
 });
 
-test("Low / thin comps hide High and show the thin-sample flag", () => {
+test("hideRetailHigh omits High; low confidence shows thin-sample copy", () => {
   const slots = factsMarketBandSlots({
     retailLow: "$141,000",
     average: "$145,000",
     retailHigh: "$219,000",
     hideRetailHigh: true,
     confidence: "low",
+    soldSampleSize: 1,
     thinSampleMessage: LOW_CONFIDENCE_LISTINGS_MESSAGE,
   });
   assert.equal(slots.low.label, "Low");
@@ -54,10 +100,9 @@ test("Low / thin comps hide High and show the thin-sample flag", () => {
     label: "Thin sample",
     message: LOW_CONFIDENCE_LISTINGS_MESSAGE,
   });
-  assert.notEqual(slots.thinSample?.message, slots.high?.value);
 });
 
-test("Low confidence hides High even if hideRetailHigh is missing", () => {
+test("hideRetailHigh is the only High gate — low confidence still flags thin", () => {
   const slots = factsMarketBandSlots({
     retailLow: "$90,000",
     average: "$95,000",
@@ -66,14 +111,14 @@ test("Low confidence hides High even if hideRetailHigh is missing", () => {
     confidence: "low",
     thinSampleMessage: LOW_CONFIDENCE_LISTINGS_MESSAGE,
   });
-  assert.equal(slots.high, null, "flag cannot miss — do not invent High");
+  assert.deepEqual(slots.high, { label: "High", value: "$160,000" });
   assert.deepEqual(slots.thinSample, {
     label: "Thin sample",
     message: LOW_CONFIDENCE_LISTINGS_MESSAGE,
   });
 });
 
-test("Facts bands UI + detail wire existing fields only", () => {
+test("Facts bands UI + detail wire the locked MarketEstimate fields", () => {
   const bands = readFileSync(
     join(root, "../../components/rvfax/FactsMarketBands.tsx"),
     "utf8",
@@ -89,20 +134,28 @@ test("Facts bands UI + detail wire existing fields only", () => {
   assert.match(bands, /MARKET_BAND_HIGH_LABEL/);
   assert.match(bands, /THIN_SAMPLE_FLAG_LABEL/);
   assert.match(bands, /factsMarketBandSlots/);
+  assert.match(bands, /soldSampleSize/);
+  assert.match(bands, /sampleSize/);
   assert.match(bands, /slots\.high \?/);
   assert.match(bands, /slots\.thinSample/);
   assert.doesNotMatch(bands, /JD Power|J\.D\. Power|NADA|MarketCheck/);
   assert.doesNotMatch(bands, /estimateMarket|retailHighMult|LOW_THIN_FREE_PATH/);
 
   assert.match(detail, /FactsMarketBands/);
+  assert.match(detail, /factsMarketAverageUsd\(deskMarket\)/);
   assert.match(detail, /retailLow=\{formatMoney\(deskMarket\.retailLow\)\}/);
-  assert.match(detail, /average=\{factsMoneyHeadline\(deskMarketValue\)\}/);
+  assert.match(detail, /average=\{factsMoneyHeadline\(bandAverage\)\}/);
   assert.match(detail, /retailHigh=\{formatMoney\(deskMarket\.retailHigh\)\}/);
   assert.match(detail, /hideRetailHigh=\{hideRetailHigh\}/);
-  assert.match(detail, /confidence=\{soldConfidence\}/);
+  assert.match(detail, /confidence=\{marketConfidence\}/);
+  assert.match(detail, /soldSampleSize=\{compsSoldSample\}/);
+  assert.match(detail, /sampleSize=\{compsSample\}/);
   assert.match(detail, /thinSampleMessage=\{LOW_CONFIDENCE_LISTINGS_MESSAGE\}/);
-  assert.match(detail, /factsDeskMarketTileLabel\(true\)/);
-  assert.match(detail, /factsDeskMarketTileLabel\(\s*false,\s*marketSourceLabel/);
+  assert.match(detail, /deskMarket\.sourceLabel/);
+  assert.match(detail, /PUBLIC_SOLD_DISCLAIMER/);
+  assert.doesNotMatch(detail, /factsDeskMarketTileLabel/);
   assert.doesNotMatch(detail, /label="Retail low"/);
   assert.doesNotMatch(detail, /label="Retail high"/);
+  assert.doesNotMatch(detail, /JD Power|J\.D\. Power|NADA book/);
+  assert.equal(CATALOG_ESTIMATE_LABEL, "Catalog estimate");
 });

@@ -9,7 +9,7 @@ import {
 
 /**
  * Facts Market value Low / Average / High trio.
- * Parent supplies already-formatted desk fields — no new valuation math.
+ * Parent supplies already-formatted MarketEstimate fields — no new math.
  */
 export function FactsMarketBands({
   retailLow,
@@ -17,6 +17,8 @@ export function FactsMarketBands({
   retailHigh,
   hideRetailHigh,
   confidence,
+  soldSampleSize,
+  sampleSize,
   thinSampleMessage,
   averageCaption,
   tradeIn,
@@ -26,8 +28,10 @@ export function FactsMarketBands({
   retailHigh: string;
   hideRetailHigh: boolean;
   confidence?: "high" | "medium" | "low";
+  soldSampleSize?: number;
+  sampleSize?: number;
   thinSampleMessage: string;
-  /** Sold comps vs Catalog estimate — never a paid book brand. */
+  /** sourceLabel when confidence is low — never a paid book brand. */
   averageCaption?: string;
   tradeIn?: string;
 }) {
@@ -37,6 +41,8 @@ export function FactsMarketBands({
     retailHigh,
     hideRetailHigh,
     confidence,
+    soldSampleSize,
+    sampleSize,
     thinSampleMessage,
   });
 
@@ -59,6 +65,14 @@ export function FactsMarketBands({
           />
         ) : null}
       </div>
+      {slots.high && slots.thinSample ? (
+        <div className="mt-2">
+          <ThinSampleFlag
+            label={slots.thinSample.label}
+            message={slots.thinSample.message}
+          />
+        </div>
+      ) : null}
       {tradeIn ? (
         <div className="mt-2 grid grid-cols-2 gap-2">
           <BandTile label="Trade-in" value={tradeIn} />

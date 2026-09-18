@@ -73,7 +73,6 @@ import {
   PUBLIC_SOLD_DISCLAIMER,
   SOLD_COMPS_LABEL,
   compsConfidenceLabel,
-  factsDeskMarketTileLabel,
   fetchPublicListingComps,
   prefersPublicComps,
   resolvePrimaryMarket,
@@ -82,6 +81,7 @@ import {
 } from "@/lib/rv/publicListingComps";
 import { hideRetailHighForDesk } from "@/lib/rv/marketClamp";
 import { paintFactsLowDeskMarket } from "@/lib/rv/marketEstimate";
+import { factsMarketAverageUsd } from "@/lib/rv/factsMarketBands";
 import { fetchRecallsViaApi } from "@/lib/nhtsa/recalls";
 import type { NhtsaComplaint, NhtsaRecall } from "@/lib/nhtsa/recalls";
 import { buildReportId, valueFactors } from "@/lib/rv/reportMeta";
@@ -668,6 +668,21 @@ export function RvDetail({
     deskMarket.marketValue && deskMarket.marketValue > 0
       ? deskMarket.marketValue
       : financePrice;
+  /** Average tile: marketValue, else midpoint of retailLow / retailHigh. */
+  const bandAverage = factsMarketAverageUsd(deskMarket);
+  const compsSoldSample =
+    publicComps?.source === "public_listings"
+      ? publicComps.soldSampleSize
+      : undefined;
+  const compsSample =
+    publicComps?.source === "public_listings"
+      ? publicComps.sampleSize
+      : undefined;
+  const marketConfidence = deskMarket.confidence ?? soldConfidence;
+  const averageCaption =
+    marketConfidence === "low"
+      ? (deskMarket.sourceLabel ?? CATALOG_ESTIMATE_LABEL)
+      : undefined;
   const coachChip = formatActiveCoachChip({
     year,
     make,
@@ -1324,42 +1339,28 @@ export function RvDetail({
                 {soldConfidenceLabel}
               </Chip>
             </div>
-            {showSoldRange ? (
-              <FactsMarketBands
-                retailLow={formatMoney(deskMarket.retailLow)}
-                average={factsMoneyHeadline(deskMarketValue)}
-                retailHigh={formatMoney(deskMarket.retailHigh)}
-                hideRetailHigh={hideRetailHigh}
-                confidence={soldConfidence}
-                thinSampleMessage={LOW_CONFIDENCE_LISTINGS_MESSAGE}
-                averageCaption={factsDeskMarketTileLabel(true)}
-                tradeIn={formatMoney(deskMarket.tradeIn)}
-              />
-            ) : (
-              <div>
+            {!showSoldRange ? (
+              <div className="mb-2">
                 <p className="text-[13px] font-semibold leading-snug text-white">
                   {LOW_CONFIDENCE_LISTINGS_MESSAGE}
                 </p>
                 <p className="mt-4 text-[15px] font-extrabold uppercase tracking-[0.16em] text-gold-bright">
                   {marketSourceLabel}
                 </p>
-                <div className="mt-2">
-                  <FactsMarketBands
-                    retailLow={formatMoney(deskMarket.retailLow)}
-                    average={factsMoneyHeadline(deskMarketValue)}
-                    retailHigh={formatMoney(deskMarket.retailHigh)}
-                    hideRetailHigh={hideRetailHigh}
-                    confidence={soldConfidence}
-                    thinSampleMessage={LOW_CONFIDENCE_LISTINGS_MESSAGE}
-                    averageCaption={factsDeskMarketTileLabel(
-                      false,
-                      marketSourceLabel,
-                    )}
-                    tradeIn={formatMoney(deskMarket.tradeIn)}
-                  />
-                </div>
               </div>
-            )}
+            ) : null}
+            <FactsMarketBands
+              retailLow={formatMoney(deskMarket.retailLow)}
+              average={factsMoneyHeadline(bandAverage)}
+              retailHigh={formatMoney(deskMarket.retailHigh)}
+              hideRetailHigh={hideRetailHigh}
+              confidence={marketConfidence}
+              soldSampleSize={compsSoldSample}
+              sampleSize={compsSample}
+              thinSampleMessage={LOW_CONFIDENCE_LISTINGS_MESSAGE}
+              averageCaption={averageCaption}
+              tradeIn={formatMoney(deskMarket.tradeIn)}
+            />
             {shellNav ? (
               <button
                 type="button"

@@ -437,7 +437,7 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
   );
   assert.match(detail, /SOLD_COMPS_LABEL/);
   assert.match(detail, /CATALOG_ESTIMATE_LABEL/);
-  assert.match(detail, /factsDeskMarketTileLabel/);
+  assert.match(detail, /deskMarket\.sourceLabel/);
   assert.match(detail, /LOW_CONFIDENCE_LISTINGS_MESSAGE/);
   assert.match(detail, /PUBLIC_SOLD_DISCLAIMER/);
   assert.match(detail, /compsConfidenceLabel/);
@@ -455,11 +455,9 @@ test("Facts detail market UX: sold comps labels, confidence, low copy", () => {
   assert.match(detail, /hideRetailHigh=\{hideRetailHigh\}/);
   assert.match(detail, /thinSampleMessage=\{LOW_CONFIDENCE_LISTINGS_MESSAGE\}/);
   assert.match(detail, /: "ruby"/);
-  assert.match(detail, /factsDeskMarketTileLabel\(true\)/);
-  assert.match(
-    detail,
-    /factsDeskMarketTileLabel\(\s*false,\s*marketSourceLabel/,
-  );
+  assert.match(detail, /factsMarketAverageUsd\(deskMarket\)/);
+  assert.match(detail, /soldSampleSize=\{compsSoldSample\}/);
+  assert.match(detail, /averageCaption=\{averageCaption\}/);
   assert.match(
     detail,
     /font-extrabold uppercase tracking-\[0\.16em\] text-gold-bright/,
