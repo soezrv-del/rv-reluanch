@@ -729,7 +729,9 @@ test("David voice compare: Allegro Bus vs American Dream locks both, skips web h
   assert.match(grounding, /COMPARE THIS TURN/);
   assert.match(grounding, /findComparableCatalogCoaches/);
   assert.match(grounding, /Let me check that/);
+  assert.match(grounding, /give me one second/);
   assert.match(grounding, /NEVER send the user to a website/);
   assert.match(src(root, "webIntent.ts"), /looksLikeCatalogAnswerableCoachCompare/);
-  assert.match(src(root, "voiceWeb.ts"), /Let me check that/);
+  assert.doesNotMatch(src(root, "voiceWeb.ts"), /Let me check that/);
+  assert.match(src(root, "speechPolicy.ts"), /give me one second/);
 });

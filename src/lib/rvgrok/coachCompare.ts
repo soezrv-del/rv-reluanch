@@ -3,7 +3,7 @@
  *
  * webIntent stays free of full specs — this module only matches thin
  * CATALOG_INDEX make/model names so a compare can skip web research
- * (and the Live Voice "Let me check that" hold) when both coaches
+ * (and the Live Voice research hold) when both coaches
  * are identifiable. Repair / forum / manual asks still browse.
  */
 

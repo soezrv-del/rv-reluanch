@@ -39,7 +39,7 @@ export const CHAT_WEB_SEARCH_TIMEOUT_MS = 12_000;
  * NOT the old "raise timeout to fake a pass" move (60s of dead air is
  * unacceptable in speech). Post–#116 production cold calls land ~5–7s on
  * grok-4-1-fast-reasoning; 10s covers normal upstream variance while the
- * existing "let me check that" hold keeps the pause conversational (~phone
+ * existing "give me one second" hold keeps the pause conversational (~phone
  * lookup time). Chat keeps CHAT_WEB_SEARCH_TIMEOUT_MS (12s).
  */
 export const VOICE_WEB_SEARCH_TIMEOUT_MS = 10_000;

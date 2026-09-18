@@ -11,6 +11,10 @@
  * API allow. AVAudioSession playAndRecord lives in AppDelegate (TestFlight).
  */
 
+import {
+  RV_GROK_SESSION_INTRO,
+  VOICE_SESSION_INTRO_INSTRUCTIONS,
+} from "./speechPolicy";
 import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS } from "./voice";
 
 export type LiveVoicePrewarm = {
@@ -154,9 +158,10 @@ export function buildRealtimeSessionUpdate(
 ): Record<string, unknown> {
   const clamped = Math.min(1.5, Math.max(0.7, speed));
   const extra = (catalogContext || "").trim();
-  const instructions = extra
-    ? `${RV_VOICE_INSTRUCTIONS}\n\n${extra}`
-    : `${RV_VOICE_INSTRUCTIONS}\n\nCATALOG GAP — no verified row is loaded. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Never invent HP, engine, chassis, or fuel.`;
+  const gap = extra
+    ? extra
+    : "CATALOG GAP — no verified row is loaded. Answer from what you know first. Web search is last resort. Do not stall. Do not guess. Never invent HP, engine, chassis, or fuel.";
+  const instructions = `${RV_VOICE_INSTRUCTIONS}\n\n${gap}\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${RV_GROK_SESSION_INTRO} Then listen. Never repeat this intro.`;
   return {
     type: "session.update",
     session: {
@@ -177,6 +182,17 @@ export function buildRealtimeSessionUpdate(
           speed: clamped,
         },
       },
+    },
+  };
+}
+
+/** First-turn Live Voice cue — spoken once when the session opens. */
+export function buildSessionIntroResponse(): Record<string, unknown> {
+  return {
+    type: "response.create",
+    response: {
+      modalities: ["text", "audio"],
+      instructions: VOICE_SESSION_INTRO_INSTRUCTIONS,
     },
   };
 }

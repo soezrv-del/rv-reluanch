@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 /**
  * Live Grok Voice contracts. Node cannot exercise WKWebView getUserMedia;
@@ -130,6 +133,23 @@ test("iPhone mic denial is not treated as an xAI account 403", () => {
     classifyLiveVoiceError("WebSocket failed to open").kind,
     "network",
   );
+});
+
+test("Live Voice session start introduces RV Grok once — not the old stall", () => {
+  const root = dirname(fileURLToPath(import.meta.url));
+  const live = readFileSync(join(root, "liveVoice.ts"), "utf8");
+  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
+  const policy = readFileSync(join(root, "speechPolicy.ts"), "utf8");
+  assert.match(
+    policy,
+    /I'm RV Grok, here to help you with all your RV needs/,
+  );
+  assert.match(live, /buildSessionIntroResponse/);
+  assert.match(live, /RV_GROK_SESSION_INTRO/);
+  assert.match(realtime, /maybeSpeakSessionIntro/);
+  assert.match(realtime, /buildSessionIntroResponse/);
+  assert.doesNotMatch(live, /Let me check that/);
+  assert.doesNotMatch(realtime, /Let me check that/);
 });
 
 test("session.update uses xAI audio PCM, not OpenAI whisper-1 leftovers", () => {

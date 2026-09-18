@@ -10,6 +10,7 @@ import {
 import {
   beginLiveVoiceFromUserGesture,
   buildRealtimeSessionUpdate,
+  buildSessionIntroResponse,
   getRetainedLiveCapture,
   releaseLiveCapture,
   retainLiveCapture,
@@ -81,6 +82,7 @@ export class GrokRealtimeSession {
     "idle";
   private pendingResearchInjection: string | null = null;
   private lastResearchTranscript = "";
+  private introSpoken = false;
 
   constructor(
     handlers: RealtimeHandlers,
@@ -109,6 +111,7 @@ export class GrokRealtimeSession {
     this.finishedAssistantOnce = false;
     this.earlyPcm = [];
     this.resetResearchTurn();
+    this.introSpoken = false;
 
     this.handlers.onStatus("connecting", "Allow microphone if the phone asks…");
 
@@ -331,6 +334,7 @@ export class GrokRealtimeSession {
     switch (type) {
       case "session.created":
       case "session.updated":
+        this.maybeSpeakSessionIntro();
         break;
 
       case "input_audio_buffer.speech_started":
@@ -693,7 +697,7 @@ export class GrokRealtimeSession {
    * fetch web notes with a 10s bound on the fast research model, then answer
    * from the notes (or honestly fall back if the lookup is slow or fails).
    * Do not stretch the hold toward 60s — a spoken miss is better than dead air.
-   * The immediate "let me check that" acknowledgement makes ~10s tolerable.
+   * True research speaks "give me one second"; everything else answers now.
    */
   private async maybeEnrichWithWebResearch(transcript: string) {
     const grounded = buildChatGrounding({
@@ -717,11 +721,16 @@ export class GrokRealtimeSession {
     this.researchAbort?.abort();
     this.researchAbort = new AbortController();
     this.pendingResearchInjection = null;
-    this.researchPhase = "holding";
 
     this.cancelAutoResponseForResearch();
-    this.handlers.onStatus("thinking", "Looking that up…");
-    this.speakResearchHold();
+    if (decision.speakHold) {
+      this.researchPhase = "holding";
+      this.handlers.onStatus("thinking", "Researching…");
+      this.speakResearchHold();
+    } else {
+      this.researchPhase = "searching";
+      this.handlers.onStatus("thinking", "Answering…");
+    }
 
     const result = await fetchVoiceWebResearchNotes({
       query: decision.query,
@@ -739,6 +748,19 @@ export class GrokRealtimeSession {
     }
     this.researchPhase = "answering";
     this.flushResearchAnswer(injection);
+  }
+
+  /** Once per Live Voice connect — not every user turn. */
+  private maybeSpeakSessionIntro() {
+    if (this.introSpoken || this.closed || this.intentionalStop) return;
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    this.introSpoken = true;
+    try {
+      ws.send(JSON.stringify(buildSessionIntroResponse()));
+    } catch {
+      this.introSpoken = false;
+    }
   }
 
   private cancelAutoResponseForResearch() {

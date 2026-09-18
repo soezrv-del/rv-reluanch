@@ -18,12 +18,19 @@ import {
   decideVoiceWebResearch,
   fetchVoiceWebResearchNotes,
   formatVoiceWebSearchInjection,
+  shouldSpeakVoiceResearchHold,
   stripNotesForSpeech,
   voiceInjectionClaimsLookedUp,
   VOICE_RESEARCH_ANSWER_INSTRUCTIONS,
   VOICE_RESEARCH_HOLD_INSTRUCTIONS,
+  VOICE_RESEARCH_HOLD_PHRASE,
   VOICE_WEB_SEARCH_CLIENT_BUDGET_MS,
 } from "./voiceWeb.ts";
+import {
+  isForbiddenResearchHold,
+  RV_GROK_SESSION_INTRO,
+  VOICE_SESSION_INTRO_INSTRUCTIONS,
+} from "./speechPolicy.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -54,7 +61,9 @@ test("spoken troubleshooting uses the same detector as chat and wants research",
   assert.equal(decision.action, "research");
   if (decision.action === "research") {
     assert.match(decision.query, /battery disconnect/i);
+    assert.equal(decision.speakHold, true);
   }
+  assert.equal(shouldSpeakVoiceResearchHold(ADVENTURER_Q), true);
 });
 
 test("named coach about-ask researches when catalog is missing", () => {
@@ -119,10 +128,13 @@ test("catalog-answerable coach compare skips research hold — answer from catal
     }).action,
     "pass",
   );
-  assert.match(VOICE_RESEARCH_HOLD_INSTRUCTIONS, /Let me check that/);
+  assert.equal(VOICE_RESEARCH_HOLD_PHRASE, "give me one second");
+  assert.match(VOICE_RESEARCH_HOLD_INSTRUCTIONS, /give me one second/);
+  assert.equal(isForbiddenResearchHold(VOICE_RESEARCH_HOLD_INSTRUCTIONS), false);
+  assert.equal(isForbiddenResearchHold("Let me check that"), true);
   const voiceWeb = src("voiceWeb.ts");
   assert.match(voiceWeb, /needsWebFallback/);
-  assert.match(voiceWeb, /Catalog-answerable coach compares skip research/);
+  assert.match(voiceWeb, /shouldSpeakVoiceResearchHold/);
 });
 
 test("repair / forum / manual compares still research — hold may speak", () => {
@@ -205,7 +217,8 @@ test("successful voice notes stay spoken-shaped and forbid no-internet claims", 
   assert.doesNotMatch(ok, /https?:\/\//);
   assert.doesNotMatch(ok, /\[forum\]/);
   assert.match(VOICE_RESEARCH_ANSWER_INSTRUCTIONS, /WEB SEARCH NOT AVAILABLE/);
-  assert.match(VOICE_RESEARCH_HOLD_INSTRUCTIONS, /Let me check that/);
+  assert.equal(VOICE_RESEARCH_HOLD_PHRASE, "give me one second");
+  assert.doesNotMatch(VOICE_RESEARCH_HOLD_INSTRUCTIONS, /let me check that/i);
 });
 
 test("stripNotesForSpeech drops URLs and markdown without adding facts", () => {
@@ -226,7 +239,8 @@ test("voice research budget is 10s server / 11s client — conversational hold, 
   assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
   assert.match(webSearch, /NOT the old "raise timeout to fake a pass"/);
   assert.match(webSearch, /60s of dead air/);
-  assert.match(webSearch, /let me check that/);
+  assert.match(webSearch, /give me one second/);
+  assert.doesNotMatch(webSearch, /let me check that/i);
   assert.doesNotMatch(webSearch, /VOICE_WEB_SEARCH_TIMEOUT_MS = 7_000/);
 });
 
@@ -241,6 +255,52 @@ test("client fetch timeout/abort falls back without claiming a lookup", async ()
   }
   const injection = formatVoiceWebSearchInjection(result);
   assert.equal(voiceInjectionClaimsLookedUp(injection), false);
+});
+
+test("generic asks and catalog compares do not speak a research hold", () => {
+  const casualAsk = "What's a good Class A diesel for weekends?";
+  assert.equal(shouldSpeakVoiceResearchHold(casualAsk), false);
+  assert.equal(
+    decideVoiceWebResearch({ transcript: casualAsk, specs: null }).action,
+    "pass",
+  );
+
+  const inventory = "How many diesels do we have on the lot?";
+  assert.equal(shouldSpeakVoiceResearchHold(inventory), false);
+  const lot = decideVoiceWebResearch({ transcript: inventory, specs: null });
+  assert.equal(lot.action, "research");
+  if (lot.action === "research") assert.equal(lot.speakHold, false);
+
+  assert.equal(shouldSpeakVoiceResearchHold(COMPARE_Q), false);
+});
+
+test("hold string is exactly give me one second — never Let me check that", () => {
+  assert.equal(VOICE_RESEARCH_HOLD_PHRASE, "give me one second");
+  assert.match(VOICE_RESEARCH_HOLD_INSTRUCTIONS, /give me one second/);
+  assert.doesNotMatch(VOICE_RESEARCH_HOLD_INSTRUCTIONS, /let me check that/i);
+  assert.doesNotMatch(VOICE_RESEARCH_HOLD_INSTRUCTIONS, /i'?ll look that up/i);
+  assert.doesNotMatch(VOICE_RESEARCH_HOLD_INSTRUCTIONS, /stand by/i);
+  assert.doesNotMatch(VOICE_RESEARCH_HOLD_INSTRUCTIONS, /let me search/i);
+  assert.equal(isForbiddenResearchHold(VOICE_RESEARCH_HOLD_INSTRUCTIONS), false);
+  assert.equal(isForbiddenResearchHold("Let me check that"), true);
+  assert.equal(isForbiddenResearchHold("I'll look that up"), true);
+
+  const realtime = src("realtime.ts");
+  assert.match(realtime, /buildSessionIntroResponse/);
+  assert.match(realtime, /maybeSpeakSessionIntro/);
+  assert.match(realtime, /decision\.speakHold/);
+  assert.doesNotMatch(realtime, /Let me check that/);
+
+  const live = src("liveVoice.ts");
+  assert.match(live, /buildSessionIntroResponse/);
+  assert.match(live, /RV_GROK_SESSION_INTRO/);
+  assert.match(VOICE_SESSION_INTRO_INSTRUCTIONS, new RegExp(
+    RV_GROK_SESSION_INTRO.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+  ));
+  assert.match(
+    VOICE_SESSION_INTRO_INSTRUCTIONS,
+    /I'm RV Grok, here to help you with all your RV needs/,
+  );
 });
 
 test("voice research reuses webIntent — no second detector", () => {

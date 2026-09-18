@@ -129,7 +129,7 @@ export const UNKNOWN_POWERTRAIN_LINE =
 
 export const COMPARE_GROUNDING_RULES = `COMPARE THIS TURN (catalog-answerable):
 - Answer both coaches from the VERIFIED CATALOG locks below in THIS turn.
-- Lead with class and powertrain. Do not say "Let me check that" or stall for a search.
+- Lead with class and powertrain. Answer now — no stall, no "give me one second," no "Let me check that."
 - Do not invent HP, engine, chassis, or fuel. UNKNOWN / EST stays unknown / EST.
 - NEVER send the user to a website, OEM site, or dealer as the answer.`;
 

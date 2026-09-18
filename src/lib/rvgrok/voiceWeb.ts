@@ -3,40 +3,90 @@
  *
  * Detection is NOT forked: `decideVoiceWebResearch` calls `needsWebFallback`
  * from `webIntent.ts` (same function chat uses via `buildChatGrounding`).
- * Catalog-answerable coach compares skip research there, so this hold is
- * never spoken for "Compare Allegro Bus to American Dream."
- * This module only shapes notes for speech, bounds latency, and fetches.
+ * The spoken hold is narrower than browse: only true last-resort research
+ * (repair / market / off-catalog / named-coach or spec + catalog GAP)
+ * speaks VOICE_RESEARCH_HOLD_PHRASE ("give me one second"). Catalog
+ * compares, inventory/own-lot inject, and generic "what's a good Class A"
+ * answers now — no stall.
  */
 
-import { needsWebFallback, type WebFallbackSpecs } from "./webIntent.ts";
+import {
+  catalogGapNeedsWeb,
+  looksLikeCatalogAnswerableCoachCompare,
+  looksLikeCasualNonResearch,
+  looksLikeImageOnlyAsk,
+  looksLikeInventoryOrCountQuestion,
+  looksLikeLiveResearchQuestion,
+  looksLikeNamedCoachProductQuestion,
+  looksLikeOffCatalogQuestion,
+  looksLikeSpecQuestion,
+  needsWebFallback,
+  type WebFallbackSpecs,
+} from "./webIntent.ts";
 import {
   type WebSearchNotes,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
 } from "./webSearch.ts";
+import {
+  VOICE_RESEARCH_HOLD_INSTRUCTIONS,
+  VOICE_RESEARCH_HOLD_PHRASE,
+} from "./speechPolicy.ts";
 
 export {
   VOICE_WEB_SEARCH_MODELS,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
 } from "./webSearch.ts";
 
+export {
+  VOICE_RESEARCH_HOLD_INSTRUCTIONS,
+  VOICE_RESEARCH_HOLD_PHRASE,
+} from "./speechPolicy.ts";
+
 /** Client abort slightly above the server voice budget so we receive an honest body. */
 export const VOICE_WEB_SEARCH_CLIENT_BUDGET_MS =
   VOICE_WEB_SEARCH_TIMEOUT_MS + 1_000;
-
-export const VOICE_RESEARCH_HOLD_INSTRUCTIONS =
-  "Say only this one short beat, then stop: Let me check that. Do not answer the question. Do not guess a location or spec.";
 
 export const VOICE_RESEARCH_ANSWER_INSTRUCTIONS =
   "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Use WEB RESEARCH notes if they are present and successful. If an OWN-LOT INVENTORY block is a hit, speak those lot counts — diesel is Class A Diesel + Class Super C (no fuel field); do not invent a VIN or unit. If catalog is UNKNOWN / GAP or own-lot missed, use the browse notes — do not guess, do not stop at I don't know. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a market value / pricing ask: speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample inventory CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
 
 export type VoiceWebDecision =
   | { action: "pass" }
-  | { action: "research"; query: string; catalogBlock: string };
+  | {
+      action: "research";
+      query: string;
+      catalogBlock: string;
+      speakHold: boolean;
+    };
+
+/**
+ * Spoken hold only when Grok genuinely does not know and must wait on
+ * a web search. Inventory / own-lot still fetches (no public web) but
+ * does not stall. Generic catalog-gap small talk answers now.
+ */
+export function shouldSpeakVoiceResearchHold(
+  transcript: string,
+  specs?: WebFallbackSpecs,
+): boolean {
+  const t = (transcript || "").trim();
+  if (!t) return false;
+  if (looksLikeCasualNonResearch(t) || looksLikeImageOnlyAsk(t)) return false;
+  // Forum / repair / manual still hold even when both coaches are known.
+  if (looksLikeLiveResearchQuestion(t)) return true;
+  if (looksLikeCatalogAnswerableCoachCompare(t)) return false;
+  if (looksLikeOffCatalogQuestion(t)) return true;
+  if (catalogGapNeedsWeb(specs ?? null)) {
+    if (looksLikeNamedCoachProductQuestion(t) || looksLikeSpecQuestion(t)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * Same trigger as text chat: `needsWebFallback` from `webIntent.ts`.
  * Callers pass specs from `buildChatGrounding` when a coach is in context.
  * Greetings / lifestyle / payment stay on the catalog-only voice path.
+ * Non-true-research asks (except inventory inject) pass — answer now.
  */
 export function decideVoiceWebResearch(opts: {
   transcript: string;
@@ -48,10 +98,16 @@ export function decideVoiceWebResearch(opts: {
   if (!needsWebFallback(opts.specs ?? null, transcript)) {
     return { action: "pass" };
   }
+  const speakHold = shouldSpeakVoiceResearchHold(transcript, opts.specs);
+  const inventory = looksLikeInventoryOrCountQuestion(transcript);
+  if (!speakHold && !inventory) {
+    return { action: "pass" };
+  }
   return {
     action: "research",
     query: transcript.slice(0, 400),
     catalogBlock: (opts.catalogBlock || "").trim(),
+    speakHold,
   };
 }
 
