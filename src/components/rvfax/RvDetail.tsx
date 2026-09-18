@@ -125,6 +125,7 @@ import { sanitizeUnverifiedLayout } from "@/lib/rv/promptRules";
 import { shouldShowRvVideoPrompt } from "@/lib/rv/rvVideos";
 import { RvVideoLibraryCard } from "./RvVideoLibraryCard";
 import { FactsCollapse } from "./FactsCollapse";
+import { FactsMarketBands } from "./FactsMarketBands";
 import {
   factsInventoryHeadline,
   factsMoneyHeadline,
@@ -1324,26 +1325,16 @@ export function RvDetail({
               </Chip>
             </div>
             {showSoldRange ? (
-              <div className="grid grid-cols-2 gap-2">
-                <MarketTile
-                  label={factsDeskMarketTileLabel(true)}
-                  value={factsMoneyHeadline(deskMarketValue)}
-                />
-                <MarketTile
-                  label="Trade-in"
-                  value={formatMoney(deskMarket.tradeIn)}
-                />
-                <MarketTile
-                  label="Retail low"
-                  value={formatMoney(deskMarket.retailLow)}
-                />
-                {!hideRetailHigh ? (
-                  <MarketTile
-                    label="Retail high"
-                    value={formatMoney(deskMarket.retailHigh)}
-                  />
-                ) : null}
-              </div>
+              <FactsMarketBands
+                retailLow={formatMoney(deskMarket.retailLow)}
+                average={factsMoneyHeadline(deskMarketValue)}
+                retailHigh={formatMoney(deskMarket.retailHigh)}
+                hideRetailHigh={hideRetailHigh}
+                confidence={soldConfidence}
+                thinSampleMessage={LOW_CONFIDENCE_LISTINGS_MESSAGE}
+                averageCaption={factsDeskMarketTileLabel(true)}
+                tradeIn={formatMoney(deskMarket.tradeIn)}
+              />
             ) : (
               <div>
                 <p className="text-[13px] font-semibold leading-snug text-white">
@@ -1352,18 +1343,19 @@ export function RvDetail({
                 <p className="mt-4 text-[15px] font-extrabold uppercase tracking-[0.16em] text-gold-bright">
                   {marketSourceLabel}
                 </p>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <MarketTile
-                    label={factsDeskMarketTileLabel(false, marketSourceLabel)}
-                    value={factsMoneyHeadline(deskMarketValue)}
-                  />
-                  <MarketTile
-                    label="Trade-in"
-                    value={formatMoney(deskMarket.tradeIn)}
-                  />
-                  <MarketTile
-                    label="Retail low"
-                    value={formatMoney(deskMarket.retailLow)}
+                <div className="mt-2">
+                  <FactsMarketBands
+                    retailLow={formatMoney(deskMarket.retailLow)}
+                    average={factsMoneyHeadline(deskMarketValue)}
+                    retailHigh={formatMoney(deskMarket.retailHigh)}
+                    hideRetailHigh={hideRetailHigh}
+                    confidence={soldConfidence}
+                    thinSampleMessage={LOW_CONFIDENCE_LISTINGS_MESSAGE}
+                    averageCaption={factsDeskMarketTileLabel(
+                      false,
+                      marketSourceLabel,
+                    )}
+                    tradeIn={formatMoney(deskMarket.tradeIn)}
                   />
                 </div>
               </div>
@@ -2342,25 +2334,6 @@ function Chip({
     >
       {children}
     </span>
-  );
-}
-
-function MarketTile({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 px-2.5 py-3 text-center">
-      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-white">
-        {label}
-      </p>
-      <p className="mt-1 text-[15px] font-semibold tabular-nums text-white">
-        {value}
-      </p>
-    </div>
   );
 }
 
