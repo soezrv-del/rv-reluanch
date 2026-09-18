@@ -38,6 +38,11 @@ export type LiveMarketLadder = {
 
 export const DEFAULT_YEAR_PAD = 2;
 export const YEAR_MIN = 1990;
+/**
+ * Bump when extractListingAsks / inferKind rules change so in-memory
+ * public-comps cache entries miss instead of serving a pre-parser ladder.
+ */
+export const COMPS_PARSER_VERSION = "v2";
 /** Medium / prefer bar — two confirmed sold comps. */
 export const PUBLIC_COMPS_MIN_SAMPLE = 2;
 /** High confidence — five confirmed sold comps. */
@@ -511,6 +516,25 @@ export function reducePublicComps(
       .filter(Boolean)
       .join(" "),
   };
+}
+
+/**
+ * Re-run the current parser on a cached payload.
+ * Warm serverless instances keep already-reduced comps for 6h; a parser
+ * deploy must take effect on HIT without waiting TTL. Does not invent
+ * prices — GAP when notes yield no usable asks.
+ */
+export function reReduceCachedComps(
+  cached: PublicListingComps | null | undefined,
+  opts?: { asOfYear?: number },
+): PublicListingComps | null {
+  if (!cached?.notes?.trim() || !cached.yearRange) return null;
+  const from = Number(cached.yearRange.from);
+  const to = Number(cached.yearRange.to);
+  if (!Number.isFinite(from) || !Number.isFinite(to)) return null;
+  const yearRange: YearRange = { from, to };
+  const asks = extractListingAsks(cached.notes);
+  return reducePublicComps(asks, yearRange, cached.notes, opts);
 }
 
 export function prefersPublicComps(

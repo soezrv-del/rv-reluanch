@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { researchPublicListingComps } from "@/lib/rv/researchPublicComps";
-import type { PublicListingComps } from "@/lib/rv/publicListingComps";
+import {
+  COMPS_PARSER_VERSION,
+  reReduceCachedComps,
+  type PublicListingComps,
+} from "@/lib/rv/publicListingComps";
 
 /**
  * POST /api/rvfax/public-comps
@@ -8,6 +12,10 @@ import type { PublicListingComps } from "@/lib/rv/publicListingComps";
  * Free public listing research for the same coach across year ±2.
  * Used as the primary market-value ladder on Facts / Compare.
  * Does not call MarketCheck. Degrades honestly when XAI_API_KEY is missing.
+ *
+ * Cache HIT re-parses `data.notes` with the current extractor so a parser
+ * deploy (e.g. #282 sold-demote) takes effect on warm instances. Key is
+ * versioned so pre-parser entries miss entirely.
  */
 
 const cache = new Map<
@@ -22,7 +30,7 @@ function cacheKey(input: {
   model: string;
   floorplan?: string;
 }) {
-  return `${input.year}|${input.make}|${input.model}|${input.floorplan || ""}`.toLowerCase();
+  return `${COMPS_PARSER_VERSION}|${input.year}|${input.make}|${input.model}|${input.floorplan || ""}`.toLowerCase();
 }
 
 export const Route = createFileRoute("/api/rvfax/public-comps")({
@@ -57,10 +65,22 @@ export const Route = createFileRoute("/api/rvfax/public-comps")({
         const key = cacheKey({ year, make, model, floorplan });
         const hit = cache.get(key);
         // On-demand Facts opens send fresh — do not serve a nightly/stale band.
+        // Warm HIT still re-parses notes so a parser deploy is not TTL-blocked.
         if (!fresh && hit && Date.now() - hit.at < TTL_MS) {
+          const reduced = reReduceCachedComps(hit.data);
+          if (!reduced) {
+            cache.delete(key);
+            return Response.json({
+              ok: false,
+              data: null,
+              error: "no usable public sold or asking prices in the year window",
+              meta: { cached: true, source: "public_listings" },
+            });
+          }
+          cache.set(key, { at: hit.at, data: reduced });
           return Response.json({
             ok: true,
-            data: hit.data,
+            data: reduced,
             meta: { cached: true, source: "public_listings" },
           });
         }
