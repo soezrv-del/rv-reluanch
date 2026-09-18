@@ -82,6 +82,8 @@ import {
   loadSavedUnits,
 } from "@/lib/rv/shareKit";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
+import { useAccess } from "@/components/access/AccessProvider";
+import { AccessBrowseBanner } from "@/components/access/AccessSheets";
 import {
   loadSoldDeals,
   OPEN_SOLD_EVENT,
@@ -179,6 +181,7 @@ export function RvFaxApp({
   const adaptiveGlass = useAdaptiveGlass(PRESTIGE_BACKDROP, scrollRef);
   const kb = useKeyboardInset();
   const nav = useShellNavOptional();
+  const access = useAccess();
 
   const resetFax = useCallback(() => {
     setYear("");
@@ -268,8 +271,8 @@ export function RvFaxApp({
   useEffect(() => {
     if (!detail) return;
     const { next, added } = autoSaveFactsUnit(savedRef.current, detail);
-    if (added) persistSaved(next);
-  }, [detail]);
+    if (added && access.allowed) persistSaved(next);
+  }, [access.allowed, detail]);
 
   const cascade = useMemo(
     () =>
@@ -637,11 +640,13 @@ export function RvFaxApp({
   );
 
   const toggleSave = (r: RVResult) => {
+    if (!access.guard()) return;
     persistSaved(toggleSavedUnit(saved, r));
   };
 
   const beginSell = (r: RVResult) => {
     if (!isPro) return;
+    if (!access.guard()) return;
     if (soldFlash) return;
     setSellUnit(r);
   };
@@ -691,6 +696,7 @@ export function RvFaxApp({
   }, [saved, soldFlash]);
 
   const toggleCompare = (r: RVResult) => {
+    if (!access.guard()) return;
     const key = compareSelectionKey(r);
     const idx = comparePick.findIndex((c) => compareSelectionKey(c) === key);
     if (idx >= 0) {
@@ -854,6 +860,12 @@ export function RvFaxApp({
         <ActiveCoachChip />
 
         <div className="facts-cascade-scroll-pad mx-auto w-full max-w-lg space-y-3.5 px-3 pt-0 sm:px-4">
+          <AccessBrowseBanner
+            allowed={access.allowed}
+            status={access.status}
+            onPhone={access.openPhone}
+            onRequest={access.openRequest}
+          />
           <section className="facts-hero-panel glass-prestige rounded-[var(--radius-xl)] px-4 py-4 sm:px-5">
             <p className="text-[26px] font-extrabold tracking-tight text-white sm:text-[28px]">
               Know before you buy,
@@ -1150,7 +1162,10 @@ export function RvFaxApp({
                 </p>
                 <button
                   type="button"
-                  onClick={() => persistSaved([])}
+                  onClick={() => {
+                    if (!access.guard()) return;
+                    persistSaved([]);
+                  }}
                   className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
                 >
                   <Trash2 className="size-3" />

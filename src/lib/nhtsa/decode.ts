@@ -211,9 +211,10 @@ export async function decodeVinViaApi(
   }
 
   try {
+    const { accessPhoneHeaders } = await import("@/lib/access/devicePhone");
     const resp = await fetch(`/api/nhtsa/vin?vin=${encodeURIComponent(vin)}`, {
       method: "GET",
-      headers: { Accept: "application/json" },
+      headers: accessPhoneHeaders({ Accept: "application/json" }),
       signal,
     });
     const json = (await resp.json()) as

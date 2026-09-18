@@ -25,6 +25,7 @@ import {
   upsertSession,
 } from "@/lib/rvgrok/history";
 import { streamChat } from "@/lib/rvgrok/stream";
+import { useAccess } from "@/components/access/AccessProvider";
 import { GrokRealtimeSession } from "@/lib/rvgrok/realtime";
 import { buildChatGrounding, buildVoiceGrounding } from "@/lib/rvgrok/grounding";
 import { formatFeedbackContext } from "@/lib/rvgrok/answerFeedback";
@@ -116,6 +117,7 @@ export function RvGrokApp({
   variant?: RvGrokVariant;
 } = {}) {
   const embedded = variant === "embedded";
+  const access = useAccess();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -405,6 +407,10 @@ export function RvGrokApp({
 
   const sendMessage = useCallback(
     async (text?: string, opts?: { fromVoice?: boolean; image?: string; liveFrame?: boolean }) => {
+      if (!access.allowed) {
+        access.requestFunctional();
+        return;
+      }
       const messageText = (text ?? input).trim();
       const image = opts?.image ?? (opts?.liveFrame ? null : pendingImage);
       if ((!messageText && !image) || (isLoadingRef.current && !opts?.liveFrame))
@@ -696,6 +702,7 @@ export function RvGrokApp({
       }
     },
     [
+      access,
       input,
       pendingImage,
       agentMode,
@@ -809,6 +816,10 @@ export function RvGrokApp({
   }, []);
 
   const startLiveSession = useCallback(async (prewarm?: LiveVoicePrewarm | null) => {
+    if (!access.allowed) {
+      access.requestFunctional();
+      return;
+    }
     if (startingLiveRef.current) return;
     if (realtimeRef.current?.isActive) return;
 
@@ -992,7 +1003,7 @@ export function RvGrokApp({
     } finally {
       startingLiveRef.current = false;
     }
-  }, [selectedVoice, scrollToBottom, reconnectAttempt, playbackSpeed]);
+  }, [access, selectedVoice, scrollToBottom, reconnectAttempt, playbackSpeed]);
 
   useEffect(() => {
     startLiveSessionRef.current = startLiveSession;

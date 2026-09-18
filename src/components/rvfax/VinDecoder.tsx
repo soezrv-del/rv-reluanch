@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAccess } from "@/components/access/AccessProvider";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import {
   scrollFieldIntoVisibleArea,
@@ -77,6 +78,7 @@ export function VinDecoder({
   onClose: () => void;
 }) {
   const kb = useKeyboardInset();
+  const access = useAccess();
   const [vin, setVin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,6 +108,7 @@ export function VinDecoder({
   }, [open, kb.open, kb.inset, kb.vvHeight]);
 
   const runDecode = async (override?: string) => {
+    if (!access.guard()) return;
     const cleaned = normalizeVin(override ?? vin);
     setVin(cleaned);
     setError(null);

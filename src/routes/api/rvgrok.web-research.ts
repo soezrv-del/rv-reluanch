@@ -58,7 +58,14 @@ async function handleResearch(request: Request): Promise<Response> {
 export const Route = createFileRoute("/api/rvgrok/web-research")({
   server: {
     handlers: {
-      POST: async ({ request }) => handleResearch(request),
+      POST: async ({ request }) => {
+        const { denyUnlessWhitelisted } = await import(
+          "@/lib/access/requireAccess.server"
+        );
+        const blocked = await denyUnlessWhitelisted(request);
+        if (blocked) return blocked;
+        return handleResearch(request);
+      },
     },
   },
 });

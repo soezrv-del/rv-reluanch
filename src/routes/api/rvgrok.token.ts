@@ -100,8 +100,22 @@ async function mintEphemeralToken(method: "GET" | "POST") {
 export const Route = createFileRoute("/api/rvgrok/token")({
   server: {
     handlers: {
-      GET: async () => mintEphemeralToken("GET"),
-      POST: async () => mintEphemeralToken("POST"),
+      GET: async ({ request }) => {
+        const { denyUnlessWhitelisted } = await import(
+          "@/lib/access/requireAccess.server"
+        );
+        const blocked = await denyUnlessWhitelisted(request);
+        if (blocked) return blocked;
+        return mintEphemeralToken("GET");
+      },
+      POST: async ({ request }) => {
+        const { denyUnlessWhitelisted } = await import(
+          "@/lib/access/requireAccess.server"
+        );
+        const blocked = await denyUnlessWhitelisted(request);
+        if (blocked) return blocked;
+        return mintEphemeralToken("POST");
+      },
     },
   },
 });

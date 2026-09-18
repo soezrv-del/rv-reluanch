@@ -251,6 +251,11 @@ export const Route = createFileRoute("/api/nhtsa/vin")({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        const { denyUnlessWhitelisted } = await import(
+          "@/lib/access/requireAccess.server"
+        );
+        const blocked = await denyUnlessWhitelisted(request);
+        if (blocked) return blocked;
         const url = new URL(request.url);
         const raw = url.searchParams.get("vin") ?? "";
         const vin = normalizeVin(raw);
