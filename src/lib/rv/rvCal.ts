@@ -458,6 +458,14 @@ export type ScenarioSnapshot = {
   createdAt: number;
 };
 
+function escapeReportText(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export function buildPdfReportHtml(opts: {
   price: number;
   loan: LoanResult;
@@ -479,19 +487,25 @@ export function buildPdfReportHtml(opts: {
   }
   eqParts.push(`− ${formatMoney(loan.downPayment, 0)} down`);
   const equation = `${eqParts.join(" ")} = ${formatMoney(loan.amountFinanced, 0)} financed`;
+  const termYears = loan.termMonths / 12;
+  const termLabel = Number.isInteger(termYears)
+    ? `${loan.termMonths} months (${termYears} yr)`
+    : `${loan.termMonths} months`;
+  const generated = escapeReportText(new Date().toLocaleString());
 
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>RvCal Report</title>
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>RvCal Payment Report</title>
   <style>
     body{font-family:system-ui,sans-serif;background:#0a0a0a;color:#fff;padding:32px;max-width:720px;margin:0 auto}
-    h1{color:#c9a227} .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333}
+    h1{color:#c9a227} .row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid #333}
     .muted{color:#aaa;font-size:13px} .big{font-size:42px;font-weight:700}
     .eq{margin-top:16px;padding:12px;border:1px solid #444;border-radius:10px;font-family:ui-monospace,monospace;font-size:12px;line-height:1.5;color:#ddd}
     .warn{color:#f5a623}
+    @media print{body{background:#fff;color:#111} h1{color:#8a7010} .muted{color:#555} .eq{color:#222} .warn{color:#a15c00}}
   </style></head><body>
   <h1>RvCal Payment Report</h1>
-  <p class="muted">${stateLabel} · Credit: ${credit} · Generated ${new Date().toLocaleString()}</p>
-  <p class="big">${formatMoney(loan.monthlyPayment)}<span class="muted"> /mo</span></p>
-  <p class="muted">${loan.termMonths} months · ${formatPct(loan.apr)} APR · ${downPct}% down</p>
+  <p class="muted">${escapeReportText(stateLabel)} · Credit: ${escapeReportText(credit)} · Generated ${generated}</p>
+  <p class="big">${formatMoney(loan.monthlyPayment, 2)}<span class="muted"> /mo</span></p>
+  <p class="muted">${termLabel} · ${formatPct(loan.apr)} APR · ${downPct}% down</p>
   <div class="row"><span>Vehicle Price</span><span>${formatMoney(price)}</span></div>
   <div class="row"><span>Sales Tax</span><span>${formatMoney(loan.taxAmount)}</span></div>
   <div class="row"><span>Registration</span><span>${formatMoney(loan.registrationFees)}</span></div>
@@ -499,9 +513,87 @@ export function buildPdfReportHtml(opts: {
   <div class="row"><span>Trade Equity Applied</span><span>${loan.equity > 0 ? "−" + formatMoney(loan.equity) : formatMoney(0)}</span></div>
   <div class="row"><span>Down Payment</span><span>−${formatMoney(loan.downPayment)}</span></div>
   <div class="row"><span><strong>Amount Financed</strong></span><span><strong>${formatMoney(loan.amountFinanced)}</strong></span></div>
-  <div class="row"><span><strong>Est. Monthly</strong></span><span><strong>${formatMoney(loan.monthlyPayment)}</strong></span></div>
+  <div class="row"><span>Term</span><span>${termLabel}</span></div>
+  <div class="row"><span>APR</span><span>${formatPct(loan.apr)}</span></div>
+  <div class="row"><span><strong>Est. Monthly</strong></span><span><strong>${formatMoney(loan.monthlyPayment, 2)}</strong></span></div>
+  <div class="row"><span>Total of Payments</span><span>${formatMoney(loan.totalPaid, 2)}</span></div>
+  <div class="row"><span><strong>Total Interest</strong></span><span><strong>${formatMoney(loan.totalInterest, 2)}</strong></span></div>
   <div class="eq">${equation}</div>
   ${loan.negativeEquity > 0 ? `<p class="muted" style="margin-top:12px">Negative equity: trade payoff exceeds trade value. That balance is rolled into the amount financed.</p>` : ""}
   <p class="muted" style="margin-top:24px">Estimates only — not a credit offer. Confirm rates and fees with a dealer or lender.</p>
   </body></html>`;
+}
+
+const PAYMENT_REPORT_OVERLAY_ID = "rvcal-payment-report-overlay";
+
+let paymentReportEscape: ((e: KeyboardEvent) => void) | null = null;
+
+/** Close the in-app payment report (idempotent). */
+export function closePaymentReport(): void {
+  if (typeof document === "undefined") return;
+  if (paymentReportEscape) {
+    document.removeEventListener("keydown", paymentReportEscape);
+    paymentReportEscape = null;
+  }
+  document.getElementById(PAYMENT_REPORT_OVERLAY_ID)?.remove();
+}
+
+/**
+ * Show the printable payment breakdown in-app.
+ * `window.open` + `document.write` is a no-op in Capacitor / WKWebView
+ * and is often blocked in the web preview — do not use that path.
+ */
+export function openPaymentReport(html: string): boolean {
+  if (typeof document === "undefined") return false;
+  closePaymentReport();
+
+  const overlay = document.createElement("div");
+  overlay.id = PAYMENT_REPORT_OVERLAY_ID;
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-label", "Payment report");
+  overlay.style.cssText =
+    "position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;background:#0a0a0a;";
+
+  const iframe = document.createElement("iframe");
+  iframe.title = "RvCal Payment Report";
+  iframe.style.cssText =
+    "flex:1 1 auto;min-height:0;width:100%;border:0;background:#0a0a0a;";
+  iframe.srcdoc = html;
+
+  const bar = document.createElement("div");
+  bar.style.cssText =
+    "display:flex;gap:8px;padding:12px 14px;padding-bottom:max(12px,env(safe-area-inset-bottom));background:#111;border-top:1px solid rgba(255,255,255,.12);";
+
+  const mk = (label: string, primary?: boolean) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.style.cssText = primary
+      ? "flex:1;min-height:44px;border:0;border-radius:12px;font-weight:800;background:#c9a227;color:#0a0a0a;font-size:14px;"
+      : "min-height:44px;padding:0 16px;border:0;border-radius:12px;font-weight:800;background:rgba(255,255,255,.12);color:#fff;font-size:14px;";
+    return b;
+  };
+
+  const printBtn = mk("Print", true);
+  const doneBtn = mk("Done");
+  printBtn.onclick = () => {
+    try {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    } catch {
+      /* print may be unavailable in some WebViews; the overlay still shows the breakdown */
+    }
+  };
+  doneBtn.onclick = () => closePaymentReport();
+  bar.append(printBtn, doneBtn);
+
+  overlay.append(iframe, bar);
+  document.body.append(overlay);
+
+  paymentReportEscape = (e: KeyboardEvent) => {
+    if (e.key === "Escape") closePaymentReport();
+  };
+  document.addEventListener("keydown", paymentReportEscape);
+  return true;
 }

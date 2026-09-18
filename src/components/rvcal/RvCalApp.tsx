@@ -18,7 +18,6 @@ import {
   CircleAlert,
   DollarSign,
   ExternalLink,
-  FileText,
   Landmark,
   MapPin,
   SlidersHorizontal,
@@ -32,7 +31,9 @@ import {
   TERM_PRESETS,
   aprForCredit,
   buildPdfReportHtml,
+  closePaymentReport,
   computeLoan,
+  openPaymentReport,
   creditLabel,
   formatMoney,
   formatPct,
@@ -594,12 +595,9 @@ export function RvCalApp() {
       stateLabel,
       credit: creditLabel(credit)
     });
-    const w = window.open("", "_blank");
-    if (w) {
-      w.document.write(html);
-      w.document.close();
-    }
+    openPaymentReport(html);
   };
+  useEffect(() => () => closePaymentReport(), []);
   const lendersList = useMemo(
     () =>
       sortLendersForCompare(apiLenders?.length ? apiLenders : LENDERS_CATALOG, {
@@ -1085,10 +1083,15 @@ export function RvCalApp() {
           {loan.equity > 0 ? <Row label="Trade equity" value={`−${formatMoney(loan.equity)}`} accent /> : null}
           <Row label={`Down ${Number.isInteger(downPct) ? downPct : downPct.toFixed(1)}%`} value={`−${formatMoney(loan.downPayment)}`} accent />
         </div>
-        <button type="button" onClick={openPdf} className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 text-[13px] font-bold text-white">
-          <FileText className="size-4" />
-          Payment report
-        </button>
+        <div className="mt-2 flex justify-end">
+          <button
+            type="button"
+            onClick={openPdf}
+            className="min-h-9 px-0.5 text-left text-[11px] font-medium text-white/35 underline-offset-2 hover:text-white/55 hover:underline"
+          >
+            Payment report
+          </button>
+        </div>
       </section>
       <section ref={lendersSectionRef} className={cn("glass-prestige exclusive-card rounded-[var(--radius-xl)] p-3.5", lendersPulse && "exclusive-card-pulse-once")}>
         <div className="exclusive-card-shine" aria-hidden>
