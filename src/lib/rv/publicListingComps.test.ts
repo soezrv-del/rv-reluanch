@@ -13,6 +13,7 @@ import {
   SOLD_COMPS_LABEL,
   SOLD_MARKET_TILE_LABEL,
   factsDeskMarketTileLabel,
+  isBareBookDeskTitle,
   YEAR_MIN,
   buildListingCompsPrompt,
   coachYearRange,
@@ -96,6 +97,42 @@ test("labels: Sold comps, Catalog estimate, low-confidence copy, disclaimer", ()
   );
   assert.notEqual(factsDeskMarketTileLabel(false), SOLD_COMPS_LABEL);
   assert.notEqual(factsDeskMarketTileLabel(false), "Market value");
+});
+
+test("Catalog lock: never bare book titles; thin/low never Market value", () => {
+  assert.equal(isBareBookDeskTitle("J.D. Power"), true);
+  assert.equal(isBareBookDeskTitle("JD Power"), true);
+  assert.equal(isBareBookDeskTitle("JD Power value"), true);
+  assert.equal(isBareBookDeskTitle("NADA"), true);
+  assert.equal(isBareBookDeskTitle("NADA value"), true);
+  assert.equal(isBareBookDeskTitle("Public J.D. Power estimate"), false);
+  assert.equal(
+    isBareBookDeskTitle("Avg of public J.D. Power estimate + sold comps"),
+    false,
+  );
+
+  assert.equal(factsDeskMarketTileLabel(true), "Market value");
+  assert.equal(factsDeskMarketTileLabel(false, "J.D. Power"), "Catalog estimate");
+  assert.equal(factsDeskMarketTileLabel(false, "NADA"), "Catalog estimate");
+  assert.equal(
+    factsDeskMarketTileLabel(false, "JD Power value"),
+    "Catalog estimate",
+  );
+  assert.equal(
+    factsDeskMarketTileLabel(false, "Market value"),
+    "Catalog estimate",
+  );
+  assert.equal(
+    factsDeskMarketTileLabel(false, "Public J.D. Power estimate"),
+    "Public J.D. Power estimate",
+  );
+  assert.equal(
+    factsDeskMarketTileLabel(
+      false,
+      "Avg of public J.D. Power estimate + sold comps",
+    ),
+    "Avg of public J.D. Power estimate + sold comps",
+  );
 });
 
 test("valuation modules never import the MarketCheck client", () => {
