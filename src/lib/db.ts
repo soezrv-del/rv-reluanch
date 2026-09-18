@@ -46,7 +46,7 @@ export interface Sql {
  */
 const globalRef = globalThis as typeof globalThis & {
   __pgSqlPromise__?: Promise<Sql>;
-  __pgliteInstance__?: Promise<import("@electric-sql/pglite").PGlite>;
+  __pgliteInstance__?: Promise<import("@electric-sql/pglite").PGlite | null>;
   __pgliteMigrateChain__?: Promise<void>;
 };
 
@@ -125,9 +125,15 @@ async function createPgliteSql(): Promise<Sql> {
     return pg;
   })().catch((err) => {
     globalRef.__pgliteInstance__ = undefined;
-    throw err;
+    console.error("[db] PGLite instance failed:", err);
+    return null;
   });
   const pg = await globalRef.__pgliteInstance__;
+  if (!pg) {
+    throw new Error(
+      "PGLite is unavailable in this runtime. Set DATABASE_URL for Neon.",
+    );
+  }
 
   // Apply migrations/ (the single schema source) so preview matches production.
   // SQL is inlined by the bundler via import.meta.glob (no runtime fs); applied
