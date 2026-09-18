@@ -16073,6 +16073,178 @@ test("Renegade RV MY2027 OEM+PDF floorplans + Villagio reopen + Villager/Ikon GA
   assert.doesNotMatch(ikon, /"2027":/);
 });
 
+test("Renegade RV diesel tank pins: dated brochure gallons only; adjacent years and leftover codes not copied", () => {
+  const block = src("rvData.ts");
+  const r0 = block.indexOf('\n  "Renegade RV": {');
+  const r1 = block.indexOf("\n  Dynamax: {");
+  assert.ok(r0 > 0 && r1 > r0, "expected Renegade RV block");
+  const rg = block.slice(r0, r1);
+
+  const slice = (startToken: string, endToken: string) => {
+    const start = rg.indexOf(startToken);
+    const end = endToken ? rg.indexOf(endToken) : rg.length;
+    assert.ok(start >= 0 && end > start, `expected ${startToken} before ${endToken}`);
+    return rg.slice(start, end);
+  };
+
+  const valencia = slice("    Valencia: {", "    Verona: {");
+  const verona = slice("    Verona: {", '    "Verona LE": {');
+  const le = slice('    "Verona LE": {', '    "Classic Super C": {');
+  const classic = slice('    "Classic Super C": {', "    Ikon: {");
+  const ikon = slice("    Ikon: {", "    Villagio: {");
+  const villagio = slice("    Villagio: {", "    Villager: {");
+  const vienna = slice("    Vienna: {", "    XL: {");
+
+  for (const [name, body] of [
+    ["Valencia", valencia],
+    ["Verona", verona],
+    ["Verona LE", le],
+    ["Classic Super C", classic],
+    ["Ikon", ikon],
+    ["Villagio", villagio],
+    ["Vienna", vienna],
+  ] as const) {
+    assert.match(body, /freshWater: 60/, `${name} model-wide fresh stays seed`);
+    assert.match(body, /grayWater: 40/, `${name} model-wide gray stays seed`);
+    assert.match(body, /blackWater: 40/, `${name} model-wide black stays seed`);
+  }
+
+  const pin150 = /freshWater: 150,\s*grayWater: 75,\s*blackWater: 75/;
+  const pin34 = /freshWater: 34,\s*grayWater: 29,\s*blackWater: 29/;
+  assert.match(valencia, /from: 2024,\s*to: 2024,\s*floorplans: \["36SB", "38BB", "38RB", "38RW"\][\s\S]*?freshWater: 150,\s*grayWater: 75,\s*blackWater: 75,/);
+  assert.match(valencia, /from: 2026,\s*to: 2026,\s*floorplans: \["36SB", "39BB", "39RB"\][\s\S]*?freshWater: 150,/);
+  assert.match(valencia, /from: 2027,\s*to: 2027,[\s\S]*?freshWater: 150,\s*grayWater: 75,\s*blackWater: 75,/);
+  assert.match(verona, /from: 2024,\s*to: 2024,\s*floorplans: \["36VSB", "40VBH", "40VRB"\][\s\S]*?freshWater: 150,/);
+  assert.match(le, /from: 2025,\s*to: 2025,\s*floorplans: \["38LDG", "40LRB", "40LTS"\][\s\S]*?freshWater: 150,/);
+  assert.match(classic, /from: 2024,\s*to: 2024,\s*floorplans: \["38CSB", "41CMB", "41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"\][\s\S]*?freshWater: 150,/);
+  assert.match(villagio, /from: 2027,\s*to: 2027,[\s\S]*?freshWater: 34,\s*grayWater: 29,\s*blackWater: 29,/);
+  assert.match(vienna, /from: 2024,\s*to: 2024,\s*floorplans: \["25FWC", "25FWS", "25RMC", "25RML", "25TBC", "25TBN"\][\s\S]*?freshWater: 34,/);
+
+  const firstWideBand = (body: string, from: number, to: number) => {
+    const re = new RegExp(`\\{\\s*from: ${from},\\s*to: ${to},[^]*?\\n\\s*\\}`);
+    const m = body.match(re);
+    assert.ok(m, `expected wide band ${from}-${to}`);
+    return m[0];
+  };
+  assert.doesNotMatch(firstWideBand(valencia, 2016, 2026), pin150);
+  assert.doesNotMatch(firstWideBand(verona, 2016, 2026), pin150);
+  assert.doesNotMatch(firstWideBand(le, 2018, 2026), pin150);
+  assert.doesNotMatch(firstWideBand(classic, 2016, 2026), pin150);
+  assert.doesNotMatch(firstWideBand(ikon, 2018, 2026), pin150);
+  assert.doesNotMatch(firstWideBand(villagio, 2022, 2024), pin34);
+  assert.doesNotMatch(firstWideBand(vienna, 2020, 2026), pin34);
+
+  type TankBand = {
+    from: number;
+    to: number;
+    floorplans?: string[];
+    freshWater?: number;
+    grayWater?: number;
+    blackWater?: number;
+  };
+  const resolveTanks = (
+    defaults: { freshWater: number; grayWater: number; blackWater: number },
+    bands: TankBand[],
+    year: number,
+    floorplan: string,
+  ) => {
+    const inYear = bands.filter((b) => year >= b.from && year <= b.to);
+    const fpHit = inYear.find((b) => b.floorplans?.includes(floorplan));
+    const wide = inYear.find((b) => !b.floorplans?.length);
+    const band = fpHit ?? wide;
+    return {
+      freshWater: band?.freshWater ?? defaults.freshWater,
+      grayWater: band?.grayWater ?? defaults.grayWater,
+      blackWater: band?.blackWater ?? defaults.blackWater,
+    };
+  };
+
+  const oem150 = { freshWater: 150, grayWater: 75, blackWater: 75 };
+  const oem34 = { freshWater: 34, grayWater: 29, blackWater: 29 };
+  const seed = { freshWater: 60, grayWater: 40, blackWater: 40 };
+
+  const valenciaBands: TankBand[] = [
+    { from: 2016, to: 2026 },
+    { from: 2018, to: 2018, floorplans: ["38BB", "38RW"], ...oem150 },
+    { from: 2021, to: 2021, floorplans: ["35MB", "38BB", "38RB", "38RW"], ...oem150 },
+    { from: 2024, to: 2024, floorplans: ["36SB", "38BB", "38RB", "38RW"], ...oem150 },
+    { from: 2026, to: 2026, floorplans: ["36SB", "39BB", "39RB"], ...oem150 },
+    { from: 2027, to: 2027, ...oem150 },
+  ];
+  const veronaBands: TankBand[] = [
+    { from: 2016, to: 2026 },
+    { from: 2024, to: 2024, floorplans: ["36VSB", "40VBH", "40VRB"], ...oem150 },
+    { from: 2025, to: 2025, floorplans: ["36VSB", "40VBH", "40VRB", "40VTS"], ...oem150 },
+    { from: 2027, to: 2027, ...oem150 },
+  ];
+  const leBands: TankBand[] = [
+    { from: 2018, to: 2026 },
+    { from: 2025, to: 2025, floorplans: ["38LDG", "40LRB", "40LTS"], ...oem150 },
+    { from: 2026, to: 2026, floorplans: ["38LDG", "40LBH", "40LRB", "40LTS"], ...oem150 },
+    { from: 2027, to: 2027, ...oem150 },
+  ];
+  const classicBands: TankBand[] = [
+    { from: 2016, to: 2026 },
+    { from: 2023, to: 2023, floorplans: ["41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"], ...oem150 },
+    { from: 2025, to: 2025, floorplans: ["38CSB", "41CMB", "41CRB", "41CRW", "43CMD", "45CBF", "45CME", "45CMR", "45CRS"], ...oem150 },
+    { from: 2027, to: 2027, ...oem150 },
+  ];
+  const ikonBands: TankBand[] = [
+    { from: 2018, to: 2026 },
+    { from: 2021, to: 2021, floorplans: ["i4534RQ", "i4534RX", "i4534MM"], ...oem150 },
+    { from: 2023, to: 2023, floorplans: ["i4534RQ", "i4534RX", "i4534MM"], ...oem150 },
+  ];
+  const villagioBands: TankBand[] = [
+    { from: 2022, to: 2024 },
+    { from: 2022, to: 2022, floorplans: ["25FWC", "25FWS", "25RMC", "25RML"], ...oem34 },
+    { from: 2027, to: 2027, ...oem34 },
+  ];
+  const viennaBands: TankBand[] = [
+    { from: 2020, to: 2026 },
+    { from: 2024, to: 2024, floorplans: ["25FWC", "25FWS", "25RMC", "25RML", "25TBC", "25TBN"], ...oem34 },
+    { from: 2026, to: 2026, floorplans: ["25DLC", "25DLN", "25FWC", "25RMC", "25RML", "25TBC", "25TBN"], ...oem34 },
+    { from: 2027, to: 2027, ...oem34 },
+  ];
+
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2018, "38BB"), oem150);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2024, "38RW"), oem150);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2026, "36SB"), oem150);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2027, "39FW"), oem150);
+  assert.deepEqual(resolveTanks(seed, veronaBands, 2025, "40VTS"), oem150);
+  assert.deepEqual(resolveTanks(seed, leBands, 2026, "40LBH"), oem150);
+  assert.deepEqual(resolveTanks(seed, classicBands, 2025, "45CBF"), oem150);
+  assert.deepEqual(resolveTanks(seed, ikonBands, 2021, "i4534RQ"), oem150);
+  assert.deepEqual(resolveTanks(seed, villagioBands, 2022, "25FWC"), oem34);
+  assert.deepEqual(resolveTanks(seed, villagioBands, 2027, "25TBC"), oem34);
+  assert.deepEqual(resolveTanks(seed, viennaBands, 2024, "25TBN"), oem34);
+  assert.deepEqual(resolveTanks(seed, viennaBands, 2027, "25DLN"), oem34);
+
+  // Adjacent / leftover / unread years stay on the 60/40/40 seed.
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2019, "38BB"), seed);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2020, "38BB"), seed);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2024, "35MB"), seed);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2026, "35MB"), seed);
+  assert.deepEqual(resolveTanks(seed, valenciaBands, 2026, "39FW"), seed);
+  assert.deepEqual(resolveTanks(seed, veronaBands, 2019, "36VSB"), seed);
+  assert.deepEqual(resolveTanks(seed, veronaBands, 2020, "40VRB"), seed);
+  assert.deepEqual(resolveTanks(seed, veronaBands, 2024, "40VTS"), seed);
+  assert.deepEqual(resolveTanks(seed, veronaBands, 2026, "35RBB"), seed);
+  assert.deepEqual(resolveTanks(seed, leBands, 2020, "38LDG"), seed);
+  assert.deepEqual(resolveTanks(seed, leBands, 2025, "40LBH"), seed);
+  assert.deepEqual(resolveTanks(seed, classicBands, 2020, "38FSB"), seed);
+  assert.deepEqual(resolveTanks(seed, classicBands, 2023, "38CSB"), seed);
+  assert.deepEqual(resolveTanks(seed, classicBands, 2026, "38FSB"), seed);
+  assert.deepEqual(resolveTanks(seed, ikonBands, 2019, "28DSB"), seed);
+  assert.deepEqual(resolveTanks(seed, ikonBands, 2021, "28DSB"), seed);
+  assert.deepEqual(resolveTanks(seed, ikonBands, 2022, "i4534RQ"), seed);
+  assert.deepEqual(resolveTanks(seed, ikonBands, 2026, "28DSB"), seed);
+  assert.deepEqual(resolveTanks(seed, villagioBands, 2020, "25FWC"), seed);
+  assert.deepEqual(resolveTanks(seed, villagioBands, 2024, "24FW"), seed);
+  assert.deepEqual(resolveTanks(seed, viennaBands, 2020, "25VRB"), seed);
+  assert.deepEqual(resolveTanks(seed, viennaBands, 2026, "25VRB"), seed);
+  assert.deepEqual(resolveTanks(seed, viennaBands, 2026, "25FWS"), seed);
+});
+
 test("Midwest Automotive Designs MY2027 OEM+RVUSA locks + Passage/Weekender GAP", () => {
   const idx = CATALOG_INDEX["Midwest Automotive Designs"];
   assert.ok(idx);
