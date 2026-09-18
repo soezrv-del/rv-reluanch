@@ -701,6 +701,19 @@ export function RvFaxApp({
     setComparePick([...comparePick, r]);
   };
 
+  /** Saved-list compare: same toggleCompare pick, then open existing RvCompare at 2–3. */
+  const toggleSavedCompare = (r: RVResult) => {
+    const key = compareSelectionKey(r);
+    const selected = comparePick.some((c) => compareSelectionKey(c) === key);
+    if (selected) {
+      toggleCompare(r);
+      return;
+    }
+    if (comparePick.length >= 3) return;
+    toggleCompare(r);
+    if (comparePick.length + 1 >= 2) setCompareOpen(true);
+  };
+
   const includeInCompare = (r: RVResult) => {
     const key = compareSelectionKey(r);
     if (comparePick.some((c) => compareSelectionKey(c) === key)) {
@@ -1130,43 +1143,19 @@ export function RvFaxApp({
           {/* Saved */}
           {savedRows.length > 0 ? (
             <section className="space-y-2.5" data-saved-compare-list="">
-              <div className="flex items-center justify-between gap-2 px-0.5">
+              <div className="flex items-center justify-between px-0.5">
                 <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-white">
                   <Bookmark className="size-3.5" />
                   SAVED UNITS
                 </p>
-                <div className="flex items-center gap-1.5">
-                  {comparePick.length >= 2 ? (
-                    <button
-                      type="button"
-                      data-saved-compare-open=""
-                      onClick={() => setCompareOpen(true)}
-                      className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-sky-400/45 bg-sky-500/20 px-3 py-1.5 text-[11px] font-bold text-white"
-                    >
-                      <GitCompare className="size-3.5" />
-                      Compare {comparePick.length}
-                    </button>
-                  ) : null}
-                  {comparePick.length >= 1 ? (
-                    <button
-                      type="button"
-                      data-saved-compare-clear=""
-                      aria-label="Clear compare selection"
-                      onClick={() => setComparePick([])}
-                      className="inline-flex min-h-[36px] items-center px-1.5 text-[11px] font-semibold text-white/80"
-                    >
-                      Deselect
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => persistSaved([])}
-                    className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
-                  >
-                    <Trash2 className="size-3" />
-                    Clear
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => persistSaved([])}
+                  className="inline-flex min-h-[36px] items-center gap-1 text-[11px] font-semibold text-white"
+                >
+                  <Trash2 className="size-3" />
+                  Clear
+                </button>
               </div>
               {savedRows.map((r) => {
                 const key = compareSelectionKey(r);
@@ -1197,45 +1186,50 @@ export function RvFaxApp({
                     </div>
                     <ChevronDown className="size-4 -rotate-90 shrink-0 text-white" />
                   </button>
-                  <button
-                    type="button"
-                    data-saved-compare=""
-                    aria-label={
-                      comparing
-                        ? `Remove ${r.year} ${r.make} ${r.model} from compare`
-                        : `Compare ${r.year} ${r.make} ${r.model}`
-                    }
-                    aria-pressed={comparing}
-                    disabled={!comparing && comparePick.length >= 3}
-                    onClick={() => toggleCompare(r)}
-                    className={cn(
-                      "inline-flex size-11 shrink-0 items-center justify-center rounded-full border",
-                      comparing
-                        ? "border-sky-400/50 bg-sky-500/25 text-white"
-                        : "border-white/20 bg-white/5 text-white/80",
-                      !comparing && comparePick.length >= 3 && "opacity-40",
-                    )}
+                  <div
+                    className="flex shrink-0 items-center gap-1"
+                    data-saved-sold-compare=""
                   >
-                    {comparing ? (
-                      <Check className="size-4" />
-                    ) : (
-                      <GitCompare className="size-4" />
-                    )}
-                  </button>
-                  {isPro ? (
+                    {isPro ? (
+                      <button
+                        type="button"
+                        aria-label={`Sold ${r.year} ${r.make} ${r.model}`}
+                        onClick={() => beginSell(r)}
+                        disabled={soldFlash?.key === compareSelectionKey(r)}
+                        className={cn(
+                          "inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition-colors",
+                          soldFlash?.key === compareSelectionKey(r)
+                            ? "border-ruby-border bg-ruby"
+                            : "border-green/50 bg-green",
+                        )}
+                      />
+                    ) : null}
                     <button
                       type="button"
-                      aria-label={`Sold ${r.year} ${r.make} ${r.model}`}
-                      onClick={() => beginSell(r)}
-                      disabled={soldFlash?.key === compareSelectionKey(r)}
+                      data-saved-compare=""
+                      aria-label={
+                        comparing
+                          ? `Remove ${r.year} ${r.make} ${r.model} from compare`
+                          : `Compare ${r.year} ${r.make} ${r.model}`
+                      }
+                      aria-pressed={comparing}
+                      disabled={!comparing && comparePick.length >= 3}
+                      onClick={() => toggleSavedCompare(r)}
                       className={cn(
-                        "inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition-colors",
-                        soldFlash?.key === compareSelectionKey(r)
-                          ? "border-ruby-border bg-ruby"
-                          : "border-green/50 bg-green",
+                        "inline-flex size-11 shrink-0 items-center justify-center rounded-full border",
+                        comparing
+                          ? "border-sky-400/50 bg-sky-500/25 text-white"
+                          : "border-white/20 bg-white/5 text-white/80",
+                        !comparing && comparePick.length >= 3 && "opacity-40",
                       )}
-                    />
-                  ) : null}
+                    >
+                      {comparing ? (
+                        <Check className="size-4" />
+                      ) : (
+                        <GitCompare className="size-4" />
+                      )}
+                    </button>
+                  </div>
                   <button
                     type="button"
                     aria-label={`Remove ${r.year} ${r.make} ${r.model} from saved`}
