@@ -158,6 +158,12 @@ export function RvFaxApp({
   const [saved, setSaved] = useState<RVResult[]>([]);
   const [deals, setDeals] = useState<SoldDeal[]>([]);
   const [sellUnit, setSellUnit] = useState<RVResult | null>(null);
+  const [soldFlash, setSoldFlash] = useState<{
+    key: string;
+    unit: RVResult;
+    index: number;
+  } | null>(null);
+  const soldFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPro = isProfessionalTier();
   const [detail, setDetail] = useState<RVResult | null>(null);
   const [shareFocusToken, setShareFocusToken] = useState(0);
@@ -224,6 +230,14 @@ export function RvFaxApp({
     window.addEventListener(SOLD_CHANGED_EVENT, syncDeals);
     return () => {
       window.removeEventListener(SOLD_CHANGED_EVENT, syncDeals);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (soldFlashTimer.current != null) {
+        window.clearTimeout(soldFlashTimer.current);
+      }
     };
   }, []);
 
@@ -628,6 +642,7 @@ export function RvFaxApp({
 
   const beginSell = (r: RVResult) => {
     if (!isPro) return;
+    if (soldFlash) return;
     setSellUnit(r);
   };
 
@@ -644,11 +659,36 @@ export function RvFaxApp({
       split: input.split,
     });
     if (!result.ok) return;
+    const flashKey = compareSelectionKey(sellUnit);
+    const flashIndex = saved.findIndex(
+      (row) => compareSelectionKey(row) === flashKey,
+    );
     persistSaved(result.saved);
     persistDeals(result.deals);
     setSellUnit(null);
-    openSoldBook();
+    setSoldFlash({
+      key: flashKey,
+      unit: sellUnit,
+      index: flashIndex < 0 ? saved.length : flashIndex,
+    });
+    if (soldFlashTimer.current != null) {
+      window.clearTimeout(soldFlashTimer.current);
+    }
+    soldFlashTimer.current = window.setTimeout(() => {
+      setSoldFlash(null);
+      openSoldBook();
+    }, 450);
   };
+
+  const savedRows = useMemo(() => {
+    if (!soldFlash) return saved;
+    if (saved.some((row) => compareSelectionKey(row) === soldFlash.key)) {
+      return saved;
+    }
+    const next = saved.slice();
+    next.splice(Math.min(soldFlash.index, next.length), 0, soldFlash.unit);
+    return next;
+  }, [saved, soldFlash]);
 
   const toggleCompare = (r: RVResult) => {
     const key = compareSelectionKey(r);
@@ -1088,7 +1128,7 @@ export function RvFaxApp({
           ) : null}
 
           {/* Saved */}
-          {saved.length > 0 ? (
+          {savedRows.length > 0 ? (
             <section className="space-y-2.5">
               <div className="flex items-center justify-between px-0.5">
                 <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] text-white">
@@ -1104,7 +1144,7 @@ export function RvFaxApp({
                   Clear
                 </button>
               </div>
-              {saved.map((r) => (
+              {savedRows.map((r) => (
                 <div
                   key={`saved-${compareSelectionKey(r)}`}
                   className="glass-prestige flex min-h-[52px] w-full items-center gap-1 rounded-xl pr-1"
@@ -1129,10 +1169,14 @@ export function RvFaxApp({
                       type="button"
                       aria-label={`Sold ${r.year} ${r.make} ${r.model}`}
                       onClick={() => beginSell(r)}
-                      className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-gold-border/50 bg-gold-dim/30 px-2.5 text-[11px] font-bold text-gold-bright"
-                    >
-                      Sold
-                    </button>
+                      disabled={soldFlash?.key === compareSelectionKey(r)}
+                      className={cn(
+                        "inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition-colors",
+                        soldFlash?.key === compareSelectionKey(r)
+                          ? "border-ruby-border bg-ruby"
+                          : "border-green/50 bg-green",
+                      )}
+                    />
                   ) : null}
                   <button
                     type="button"

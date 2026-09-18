@@ -124,3 +124,18 @@ test("Facts / More / dock gate Sold to isProfessionalTier — visual SOLD, owed 
   assert.doesNotMatch(list, /Remove this deal\?/);
   assert.doesNotMatch(list, /unwind|put the coach back|restore.*[Ss]aved/);
 });
+
+test("Facts saved-unit sold trigger is unlabeled green, aria Sold, flashes ruby then drops", () => {
+  const fax = readFileSync(
+    join(root, "../../components/rvfax/RvFaxApp.tsx"),
+    "utf8",
+  );
+  assert.match(fax, /aria-label=\{`Sold \$\{r\.year\}/);
+  assert.match(fax, /border-green\/50 bg-green/);
+  assert.match(fax, /border-ruby-border bg-ruby/);
+  assert.match(fax, /soldFlash/);
+  assert.match(fax, /beginSell/);
+  assert.match(fax, /sellSavedCoach/);
+  assert.match(fax, /SoldPrompt/);
+  assert.doesNotMatch(fax, />\s*Sold\s*</);
+});
