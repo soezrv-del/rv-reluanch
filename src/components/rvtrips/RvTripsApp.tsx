@@ -1225,7 +1225,10 @@ export function RvTripsApp() {
         routeStatus === "live" || navArmed ? "1" : undefined
       }
     >
-      <SuiteBackdrop src={TRUTH_MARK_BACKDROP} />
+      <SuiteBackdrop
+        src={TRUTH_MARK_BACKDROP}
+        objectPosition="center center"
+      />
 
       <div
         ref={scrollRef}

@@ -233,8 +233,14 @@ test("Navigate plan-trip: dest-first, profile after route, no Search tap require
   assert.doesNotMatch(ui, /RVTRIPS_AMERICA_BACKDROP/);
   assert.doesNotMatch(ui, /rvtrips-america/);
   assert.doesNotMatch(ui, /SHARED_PRESTIGE_BACKDROP/);
+  const prestige = readFileSync(
+    join(root, "../../assets/prestige.ts"),
+    "utf8",
+  );
   assert.match(ui, /TRUTH_MARK_BACKDROP/);
-  assert.match(ui, /<SuiteBackdrop src=\{TRUTH_MARK_BACKDROP\} \/>/);
+  assert.match(ui, /objectPosition="center center"/);
+  assert.match(prestige, /verified-true-r\.jpg/);
+  assert.doesNotMatch(prestige, /truth-mark\.jpg/);
   assert.doesNotMatch(ui, /MetalVerifiedTrue/);
   assert.doesNotMatch(ui, /SET PROFILE/);
   assert.doesNotMatch(ui, /Set your RV profile first/);
