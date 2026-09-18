@@ -526,9 +526,15 @@ export function buildPdfReportHtml(opts: {
 
 const PAYMENT_REPORT_OVERLAY_ID = "rvcal-payment-report-overlay";
 
+let paymentReportEscape: ((e: KeyboardEvent) => void) | null = null;
+
 /** Close the in-app payment report (idempotent). */
 export function closePaymentReport(): void {
   if (typeof document === "undefined") return;
+  if (paymentReportEscape) {
+    document.removeEventListener("keydown", paymentReportEscape);
+    paymentReportEscape = null;
+  }
   document.getElementById(PAYMENT_REPORT_OVERLAY_ID)?.remove();
 }
 
@@ -584,11 +590,9 @@ export function openPaymentReport(html: string): boolean {
   overlay.append(iframe, bar);
   document.body.append(overlay);
 
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key !== "Escape") return;
-    closePaymentReport();
-    document.removeEventListener("keydown", onKey);
+  paymentReportEscape = (e: KeyboardEvent) => {
+    if (e.key === "Escape") closePaymentReport();
   };
-  document.addEventListener("keydown", onKey);
+  document.addEventListener("keydown", paymentReportEscape);
   return true;
 }
