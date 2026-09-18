@@ -3,6 +3,8 @@ import test from "node:test";
 import { HARD_ADMIN } from "./constants.ts";
 import {
   canRemoveWhitelistRow,
+  hardAdminAccessResult,
+  hardAdminRequestResult,
   isHardAdminPhone,
   requestGrantsAccess,
   resolveAccess,
@@ -20,6 +22,33 @@ test("hard admin number is always admin + full access", () => {
     assert.equal(d.allowed, true, raw);
     assert.equal(d.isAdmin, true, raw);
   }
+});
+
+test("hard-admin check result is offline — no store or SQL", () => {
+  for (const raw of ["702-266-5918", "7022665918", "+17022665918"]) {
+    const result = hardAdminAccessResult(raw);
+    assert.ok(result, raw);
+    assert.equal(result.ok, true);
+    assert.equal(result.allowed, true);
+    assert.equal(result.isAdmin, true);
+    assert.equal(result.name, HARD_ADMIN.name);
+    assert.equal(result.phoneDigits, HARD_ADMIN.digits);
+    assert.equal(result.phoneE164, HARD_ADMIN.e164);
+  }
+  assert.equal(hardAdminAccessResult("555-123-4567"), null);
+  assert.equal(hardAdminAccessResult("+17022665915"), null);
+  assert.equal(hardAdminAccessResult(""), null);
+});
+
+test("hard-admin request result is already approved without a DB insert", () => {
+  const result = hardAdminRequestResult("702-266-5918");
+  assert.ok(result);
+  assert.equal(result.ok, true);
+  assert.equal(result.requested, false);
+  assert.equal(result.granted, true);
+  assert.equal(result.alreadyAdmin, true);
+  assert.equal(result.phoneE164, HARD_ADMIN.e164);
+  assert.equal(hardAdminRequestResult("555-000-1111"), null);
 });
 
 test("CSV David number +17022665915 is not the admin seed", () => {

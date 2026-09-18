@@ -13,7 +13,18 @@ export const Route = createFileRoute("/api/access/check")({
         } catch {
           return Response.json({ error: "Invalid JSON body" }, { status: 400 });
         }
-        const result = await checkPhoneAccess(String(body.phone ?? ""));
+        let result: Awaited<ReturnType<typeof checkPhoneAccess>>;
+        try {
+          result = await checkPhoneAccess(String(body.phone ?? ""));
+        } catch {
+          return Response.json(
+            {
+              error:
+                "Access list is temporarily unavailable. Try again shortly.",
+            },
+            { status: 503 },
+          );
+        }
         if (!result.ok) {
           return Response.json({ error: result.error }, { status: 400 });
         }

@@ -18,6 +18,10 @@ export function RequestAccessSheet({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
+  const [sentTitle, setSentTitle] = useState("Request sent");
+  const [sentMessage, setSentMessage] = useState(
+    "Still browse-only. Access stays locked until the number is added on the admin screen.",
+  );
 
   if (!open) return null;
 
@@ -26,7 +30,20 @@ export function RequestAccessSheet({
     setError("");
     setBusy(true);
     try {
-      await submitAccessRequest({ name, phone });
+      const result = await submitAccessRequest({ name, phone });
+      if (result.alreadyAdmin) {
+        setSentTitle("Already approved");
+        setSentMessage(
+          result.message ||
+            "Already admin — use Premium → Access with this number.",
+        );
+      } else {
+        setSentTitle("Request sent");
+        setSentMessage(
+          result.message ||
+            "Still browse-only. Access stays locked until the number is added on the admin screen.",
+        );
+      }
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send request.");
@@ -65,10 +82,9 @@ export function RequestAccessSheet({
 
           {sent ? (
             <div className="glass-prestige rounded-[1.25rem] p-4">
-              <p className="text-[15px] font-bold text-white">Request sent</p>
+              <p className="text-[15px] font-bold text-white">{sentTitle}</p>
               <p className="mt-2 text-[13px] leading-relaxed text-white/80">
-                Still browse-only. Access stays locked until the number is
-                added on the admin screen.
+                {sentMessage}
               </p>
               <button
                 type="button"
