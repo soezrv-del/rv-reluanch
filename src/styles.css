@@ -1823,13 +1823,16 @@
   border-bottom: 9px solid var(--color-blue);
   transform: translateX(-50%);
 }
-/* Quiet Trips field — no engraved-R / VERIFIED AND TRUE / America décor
-   behind the map + route card. Isolation stops swipe-sibling SuiteBackdrop
-   (shared-prestige R) from bleeding through glass. */
+/* Quiet GPS field — truth-mark whisper only. Isolation stops swipe-sibling
+   SuiteBackdrop (shared-prestige) from bleeding through glass. America décor stays off. */
 [data-suite-pane="rvtrips"],
 [data-trips-screen] {
   background: #050b16;
   isolation: isolate;
+}
+[data-trips-screen] .page-backdrop-bright {
+  opacity: 0.28;
+  filter: none;
 }
 [data-trips-route-clean] [data-trips-decor],
 [data-trips-screen] [data-trips-decor] {
