@@ -58,9 +58,11 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.38),
     inset 0 -1px 0 rgba(255, 255, 255, 0.06);
 
-  --dock-label-size: 1rem;
-  --dock-label-size-sm: 1.0625rem;
+  --dock-label-size: 1.125rem;
+  --dock-label-size-sm: 1.1875rem;
   --dock-label-track: 0.5px;
+  --dock-label-color: #f3f5f8;
+  --dock-label-color-active: #ffffff;
 
   --z-ask-grok-badge: 90;
   --z-ask-grok-panel: 70;
@@ -372,8 +374,8 @@
   }
 
   .bottom-tab-label {
-    font-size: 0.9375rem !important;
-    letter-spacing: 0.5px !important;
+    font-size: var(--dock-label-size) !important;
+    letter-spacing: var(--dock-label-track) !important;
   }
 
   .bottom-tab-einstein {
@@ -1121,39 +1123,34 @@
     drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4));
 }
 
-/* Dock labels — same steel, dialed down for small type. Weight 600. */
+/* Dock labels — Lot Desk #1: bright solid type, no metal fill. */
 .bottom-tab-label {
   position: relative;
   display: inline-block;
   overflow: visible;
   font-size: var(--dock-label-size);
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  letter-spacing: var(--dock-label-track);
   line-height: 1;
-  color: transparent;
+  color: var(--dock-label-color);
+  background: none;
+  background-image: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  -webkit-text-fill-color: var(--dock-label-color);
+  -webkit-text-stroke: 0;
   text-shadow: none;
+  filter: none;
 }
-.bottom-tab-label .metal-hammered-strike {
-  transform: translate(0.55px, 0.75px);
-  filter: blur(0.2px);
-  color: rgba(4, 6, 10, 0.36);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.26);
-}
-.bottom-tab-label .metal-hammered-face {
-  background-image: linear-gradient(
-    180deg,
-    #c8ced8 0%,
-    #8f98a6 40%,
-    #717986 100%
-  );
-  -webkit-text-stroke: 0.2px rgba(12, 14, 20, 0.2);
-  filter: drop-shadow(0 -0.35px 0 rgba(255, 255, 255, 0.18))
-    drop-shadow(0 0.65px 0 rgba(0, 0, 0, 0.3));
+.bottom-tab-btn.is-active .bottom-tab-label,
+.bottom-tab-btn[aria-current="page"] .bottom-tab-label {
+  color: var(--dock-label-color-active);
+  -webkit-text-fill-color: var(--dock-label-color-active);
 }
 @media (min-width: 640px) {
   .bottom-tab-label {
     font-size: var(--dock-label-size-sm);
-    letter-spacing: 0.5px;
+    letter-spacing: var(--dock-label-track);
   }
 }
 .bottom-tab-label-sold {
