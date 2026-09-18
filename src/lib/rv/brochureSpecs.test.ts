@@ -9523,15 +9523,15 @@ test("Entegra Coach MY2024 tank pins: Aspire 44B / Anthem 44B / Reatta XL / Corn
     entegra.indexOf('    "Vision": {'),
   );
 
-  assert.match(aspire, /freshWater: 60/);
-  assert.match(aspire, /grayWater: 40/);
-  assert.match(aspire, /blackWater: 40/);
-  assert.match(anthem, /freshWater: 60/);
-  assert.match(anthem, /grayWater: 40/);
-  assert.match(anthem, /blackWater: 40/);
-  assert.match(reattaXl, /freshWater: 60/);
-  assert.match(reattaXl, /grayWater: 40/);
-  assert.match(reattaXl, /blackWater: 40/);
+  assert.doesNotMatch(aspire, /freshWater: 60/);
+  assert.doesNotMatch(aspire, /grayWater: 40/);
+  assert.doesNotMatch(aspire, /blackWater: 40/);
+  assert.doesNotMatch(anthem, /freshWater: 60/);
+  assert.doesNotMatch(anthem, /grayWater: 40/);
+  assert.doesNotMatch(anthem, /blackWater: 40/);
+  assert.doesNotMatch(reattaXl, /freshWater: 60/);
+  assert.doesNotMatch(reattaXl, /grayWater: 40/);
+  assert.doesNotMatch(reattaXl, /blackWater: 40/);
   assert.match(cornerstone, /freshWater: 100/);
   assert.match(cornerstone, /grayWater: 60/);
   assert.match(cornerstone, /blackWater: 50/);
@@ -9588,7 +9588,7 @@ test("Entegra Coach MY2024 tank pins: Aspire 44B / Anthem 44B / Reatta XL / Corn
   };
 
   const resolveTanks = (
-    defaults: { freshWater: number; grayWater: number; blackWater: number },
+    defaults: { freshWater?: number; grayWater?: number; blackWater?: number },
     bands: TankBand[],
     year: number,
     floorplan: string,
@@ -9605,7 +9605,7 @@ test("Entegra Coach MY2024 tank pins: Aspire 44B / Anthem 44B / Reatta XL / Corn
   };
 
   const pin = { freshWater: 100, grayWater: 62, blackWater: 41 };
-  const inherited604040 = { freshWater: 60, grayWater: 40, blackWater: 40 };
+  const gap = { freshWater: undefined, grayWater: undefined, blackWater: undefined };
   const inherited1006050 = { freshWater: 100, grayWater: 60, blackWater: 50 };
 
   const aspireBands: TankBand[] = [
@@ -9628,22 +9628,22 @@ test("Entegra Coach MY2024 tank pins: Aspire 44B / Anthem 44B / Reatta XL / Corn
     { from: 2025, to: 2025 },
   ];
 
-  assert.deepEqual(resolveTanks(inherited604040, aspireBands, 2024, "44B"), pin);
-  assert.deepEqual(resolveTanks(inherited604040, anthemBands, 2024, "44B"), pin);
+  assert.deepEqual(resolveTanks(gap, aspireBands, 2024, "44B"), pin);
+  assert.deepEqual(resolveTanks(gap, anthemBands, 2024, "44B"), pin);
   assert.deepEqual(resolveTanks(inherited1006050, cornerstoneBands, 2024, "45B"), pin);
-  assert.deepEqual(resolveTanks(inherited604040, reattaXlBands, 2024, "37K"), pin);
+  assert.deepEqual(resolveTanks(gap, reattaXlBands, 2024, "37K"), pin);
 
-  assert.deepEqual(resolveTanks(inherited604040, aspireBands, 2023, "44B"), inherited604040);
-  assert.deepEqual(resolveTanks(inherited604040, aspireBands, 2025, "44B"), inherited604040);
-  assert.deepEqual(resolveTanks(inherited604040, aspireBands, 2024, "40P"), inherited604040);
-  assert.deepEqual(resolveTanks(inherited604040, anthemBands, 2023, "44B"), inherited604040);
-  assert.deepEqual(resolveTanks(inherited604040, anthemBands, 2025, "44B"), inherited604040);
-  assert.deepEqual(resolveTanks(inherited604040, anthemBands, 2024, "37K"), inherited604040);
+  assert.deepEqual(resolveTanks(gap, aspireBands, 2023, "44B"), gap);
+  assert.deepEqual(resolveTanks(gap, aspireBands, 2025, "44B"), gap);
+  assert.deepEqual(resolveTanks(gap, aspireBands, 2024, "40P"), gap);
+  assert.deepEqual(resolveTanks(gap, anthemBands, 2023, "44B"), gap);
+  assert.deepEqual(resolveTanks(gap, anthemBands, 2025, "44B"), gap);
+  assert.deepEqual(resolveTanks(gap, anthemBands, 2024, "37K"), gap);
   assert.deepEqual(resolveTanks(inherited1006050, cornerstoneBands, 2023, "45B"), inherited1006050);
   assert.deepEqual(resolveTanks(inherited1006050, cornerstoneBands, 2025, "45B"), inherited1006050);
   assert.deepEqual(resolveTanks(inherited1006050, cornerstoneBands, 2024, "45D"), inherited1006050);
-  assert.deepEqual(resolveTanks(inherited604040, reattaXlBands, 2023, "37K"), inherited604040);
-  assert.deepEqual(resolveTanks(inherited604040, reattaXlBands, 2025, "37K"), inherited604040);
+  assert.deepEqual(resolveTanks(gap, reattaXlBands, 2023, "37K"), gap);
+  assert.deepEqual(resolveTanks(gap, reattaXlBands, 2025, "37K"), gap);
 });
 
 test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 3702 not copied", () => {
@@ -9653,9 +9653,9 @@ test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 
   assert.ok(t0 > 0 && t1 > t0, "expected Thor Aria block");
   const aria = block.slice(t0, t1);
 
-  assert.match(aria, /freshWater: 60/);
-  assert.match(aria, /grayWater: 40/);
-  assert.match(aria, /blackWater: 40/);
+  assert.doesNotMatch(aria, /freshWater: 60/);
+  assert.doesNotMatch(aria, /grayWater: 40/);
+  assert.doesNotMatch(aria, /blackWater: 40/);
   assert.doesNotMatch(aria, /freshWater: 100/);
   assert.doesNotMatch(aria, /grayWater: 62/);
   assert.doesNotMatch(aria, /blackWater: 41/);
@@ -9709,7 +9709,7 @@ test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 
     blackWater?: number;
   };
   const resolveTanks = (
-    defaults: { freshWater: number; grayWater: number; blackWater: number },
+    defaults: { freshWater?: number; grayWater?: number; blackWater?: number },
     bands: TankBand[],
     year: number,
     floorplan: string,
@@ -9727,7 +9727,7 @@ test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 
 
   const oem5151 = { freshWater: 91, grayWater: 51, blackWater: 51 };
   const oem7051 = { freshWater: 91, grayWater: 70, blackWater: 51 };
-  const seed = { freshWater: 60, grayWater: 40, blackWater: 40 };
+  const gap = { freshWater: undefined, grayWater: undefined, blackWater: undefined };
   const ariaBands: TankBand[] = [
     { from: 2017, to: 2018 },
     { from: 2017, to: 2017, floorplans: ["3601", "3901"], ...oem5151 },
@@ -9757,7 +9757,7 @@ test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 
     { from: 2027, to: 2027, floorplans: ["4000"], ...oem7051 },
   ];
   const tanks = (year: number, floorplan: string) =>
-    resolveTanks(seed, ariaBands, year, floorplan);
+    resolveTanks(gap, ariaBands, year, floorplan);
 
   assert.deepEqual(tanks(2017, "3601"), oem5151);
   assert.deepEqual(tanks(2017, "3901"), oem5151);
@@ -9782,13 +9782,13 @@ test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 
   assert.deepEqual(tanks(2027, "3702"), oem5151);
   assert.deepEqual(tanks(2027, "4000"), oem7051);
 
-  // Adjacent / unverified: do not copy 3701 gray 70 back, or 3702 tanks onto 2025.
-  assert.deepEqual(tanks(2025, "3702"), seed);
-  assert.deepEqual(tanks(2021, "3702"), seed);
-  assert.deepEqual(tanks(2024, "3702"), seed);
-  assert.deepEqual(tanks(2017, "4000"), seed);
-  assert.deepEqual(tanks(2019, "3902"), seed);
-  assert.deepEqual(tanks(2024, "44B"), seed);
+  // Adjacent / unverified: GAP — do not invent gallons or copy neighbor pins.
+  assert.deepEqual(tanks(2025, "3702"), gap);
+  assert.deepEqual(tanks(2021, "3702"), gap);
+  assert.deepEqual(tanks(2024, "3702"), gap);
+  assert.deepEqual(tanks(2017, "4000"), gap);
+  assert.deepEqual(tanks(2019, "3902"), gap);
+  assert.deepEqual(tanks(2024, "44B"), gap);
 });
 
 test("Entegra 2021–2022 OEM year-first floorplans + powertrain pins", () => {
@@ -16104,9 +16104,9 @@ test("Renegade RV diesel tank pins: dated brochure gallons only; adjacent years 
     ["Villagio", villagio],
     ["Vienna", vienna],
   ] as const) {
-    assert.match(body, /freshWater: 60/, `${name} model-wide fresh stays seed`);
-    assert.match(body, /grayWater: 40/, `${name} model-wide gray stays seed`);
-    assert.match(body, /blackWater: 40/, `${name} model-wide black stays seed`);
+    assert.doesNotMatch(body, /freshWater: 60/, `${name} model-wide fresh is not the fake 60/40/40 seed`);
+    assert.doesNotMatch(body, /grayWater: 40/, `${name} model-wide gray is not the fake 60/40/40 seed`);
+    assert.doesNotMatch(body, /blackWater: 40/, `${name} model-wide black is not the fake 60/40/40 seed`);
   }
 
   const pin150 = /freshWater: 150,\s*grayWater: 75,\s*blackWater: 75/;
@@ -16143,7 +16143,7 @@ test("Renegade RV diesel tank pins: dated brochure gallons only; adjacent years 
     blackWater?: number;
   };
   const resolveTanks = (
-    defaults: { freshWater: number; grayWater: number; blackWater: number },
+    defaults: { freshWater?: number; grayWater?: number; blackWater?: number },
     bands: TankBand[],
     year: number,
     floorplan: string,
@@ -16161,7 +16161,7 @@ test("Renegade RV diesel tank pins: dated brochure gallons only; adjacent years 
 
   const oem150 = { freshWater: 150, grayWater: 75, blackWater: 75 };
   const oem34 = { freshWater: 34, grayWater: 29, blackWater: 29 };
-  const seed = { freshWater: 60, grayWater: 40, blackWater: 40 };
+  const gap = { freshWater: undefined, grayWater: undefined, blackWater: undefined };
 
   const valenciaBands: TankBand[] = [
     { from: 2016, to: 2026 },
@@ -16206,43 +16206,132 @@ test("Renegade RV diesel tank pins: dated brochure gallons only; adjacent years 
     { from: 2027, to: 2027, ...oem34 },
   ];
 
-  assert.deepEqual(resolveTanks(seed, valenciaBands, 2018, "38BB"), oem150);
-  assert.deepEqual(resolveTanks(seed, valenciaBands, 2024, "38RW"), oem150);
-  assert.deepEqual(resolveTanks(seed, valenciaBands, 2026, "36SB"), oem150);
-  assert.deepEqual(resolveTanks(seed, valenciaBands, 2027, "39FW"), oem150);
-  assert.deepEqual(resolveTanks(seed, veronaBands, 2025, "40VTS"), oem150);
-  assert.deepEqual(resolveTanks(seed, leBands, 2026, "40LBH"), oem150);
-  assert.deepEqual(resolveTanks(seed, classicBands, 2025, "45CBF"), oem150);
-  assert.deepEqual(resolveTanks(seed, ikonBands, 2021, "i4534RQ"), oem150);
-  assert.deepEqual(resolveTanks(seed, villagioBands, 2022, "25FWC"), oem34);
-  assert.deepEqual(resolveTanks(seed, villagioBands, 2027, "25TBC"), oem34);
-  assert.deepEqual(resolveTanks(seed, viennaBands, 2024, "25TBN"), oem34);
-  assert.deepEqual(resolveTanks(seed, viennaBands, 2027, "25DLN"), oem34);
+  assert.deepEqual(resolveTanks(gap, valenciaBands, 2018, "38BB"), oem150);
+  assert.deepEqual(resolveTanks(gap, valenciaBands, 2024, "38RW"), oem150);
+  assert.deepEqual(resolveTanks(gap, valenciaBands, 2026, "36SB"), oem150);
+  assert.deepEqual(resolveTanks(gap, valenciaBands, 2027, "39FW"), oem150);
+  assert.deepEqual(resolveTanks(gap, veronaBands, 2025, "40VTS"), oem150);
+  assert.deepEqual(resolveTanks(gap, leBands, 2026, "40LBH"), oem150);
+  assert.deepEqual(resolveTanks(gap, classicBands, 2025, "45CBF"), oem150);
+  assert.deepEqual(resolveTanks(gap, ikonBands, 2021, "i4534RQ"), oem150);
+  assert.deepEqual(resolveTanks(gap, villagioBands, 2022, "25FWC"), oem34);
+  assert.deepEqual(resolveTanks(gap, villagioBands, 2027, "25TBC"), oem34);
+  assert.deepEqual(resolveTanks(gap, viennaBands, 2024, "25TBN"), oem34);
+  assert.deepEqual(resolveTanks(gap, viennaBands, 2027, "25DLN"), oem34);
 
-  // Adjacent / leftover / unread years stay on the 60/40/40 seed.
-  assert.deepEqual(resolveTanks(seed, valenciaBands, 2019, "38BB"), seed);
-  assert.deepEqual(resolveTanks(seed, valenciaBands, 2020, "38BB"), seed);
-  assert.deepEqual(resolveTanks(seed, valenciaBands, 2024, "35MB"), seed);
-  assert.deepEqual(resolveTanks(seed, valenciaBands, 2026, "35MB"), seed);
-  assert.deepEqual(resolveTanks(seed, valenciaBands, 2026, "39FW"), seed);
-  assert.deepEqual(resolveTanks(seed, veronaBands, 2019, "36VSB"), seed);
-  assert.deepEqual(resolveTanks(seed, veronaBands, 2020, "40VRB"), seed);
-  assert.deepEqual(resolveTanks(seed, veronaBands, 2024, "40VTS"), seed);
-  assert.deepEqual(resolveTanks(seed, veronaBands, 2026, "35RBB"), seed);
-  assert.deepEqual(resolveTanks(seed, leBands, 2020, "38LDG"), seed);
-  assert.deepEqual(resolveTanks(seed, leBands, 2025, "40LBH"), seed);
-  assert.deepEqual(resolveTanks(seed, classicBands, 2020, "38FSB"), seed);
-  assert.deepEqual(resolveTanks(seed, classicBands, 2023, "38CSB"), seed);
-  assert.deepEqual(resolveTanks(seed, classicBands, 2026, "38FSB"), seed);
-  assert.deepEqual(resolveTanks(seed, ikonBands, 2019, "28DSB"), seed);
-  assert.deepEqual(resolveTanks(seed, ikonBands, 2021, "28DSB"), seed);
-  assert.deepEqual(resolveTanks(seed, ikonBands, 2022, "i4534RQ"), seed);
-  assert.deepEqual(resolveTanks(seed, ikonBands, 2026, "28DSB"), seed);
-  assert.deepEqual(resolveTanks(seed, villagioBands, 2020, "25FWC"), seed);
-  assert.deepEqual(resolveTanks(seed, villagioBands, 2024, "24FW"), seed);
-  assert.deepEqual(resolveTanks(seed, viennaBands, 2020, "25VRB"), seed);
-  assert.deepEqual(resolveTanks(seed, viennaBands, 2026, "25VRB"), seed);
-  assert.deepEqual(resolveTanks(seed, viennaBands, 2026, "25FWS"), seed);
+  // Adjacent / leftover / unread years stay GAP — no invented gallons.
+  assert.deepEqual(resolveTanks(gap, valenciaBands, 2019, "38BB"), gap);
+  assert.deepEqual(resolveTanks(gap, valenciaBands, 2020, "38BB"), gap);
+  assert.deepEqual(resolveTanks(gap, valenciaBands, 2024, "35MB"), gap);
+  assert.deepEqual(resolveTanks(gap, valenciaBands, 2026, "35MB"), gap);
+  assert.deepEqual(resolveTanks(gap, valenciaBands, 2026, "39FW"), gap);
+  assert.deepEqual(resolveTanks(gap, veronaBands, 2019, "36VSB"), gap);
+  assert.deepEqual(resolveTanks(gap, veronaBands, 2020, "40VRB"), gap);
+  assert.deepEqual(resolveTanks(gap, veronaBands, 2024, "40VTS"), gap);
+  assert.deepEqual(resolveTanks(gap, veronaBands, 2026, "35RBB"), gap);
+  assert.deepEqual(resolveTanks(gap, leBands, 2020, "38LDG"), gap);
+  assert.deepEqual(resolveTanks(gap, leBands, 2025, "40LBH"), gap);
+  assert.deepEqual(resolveTanks(gap, classicBands, 2020, "38FSB"), gap);
+  assert.deepEqual(resolveTanks(gap, classicBands, 2023, "38CSB"), gap);
+  assert.deepEqual(resolveTanks(gap, classicBands, 2026, "38FSB"), gap);
+  assert.deepEqual(resolveTanks(gap, ikonBands, 2019, "28DSB"), gap);
+  assert.deepEqual(resolveTanks(gap, ikonBands, 2021, "28DSB"), gap);
+  assert.deepEqual(resolveTanks(gap, ikonBands, 2022, "i4534RQ"), gap);
+  assert.deepEqual(resolveTanks(gap, ikonBands, 2026, "28DSB"), gap);
+  assert.deepEqual(resolveTanks(gap, villagioBands, 2020, "25FWC"), gap);
+  assert.deepEqual(resolveTanks(gap, villagioBands, 2024, "24FW"), gap);
+  assert.deepEqual(resolveTanks(gap, viennaBands, 2020, "25VRB"), gap);
+  assert.deepEqual(resolveTanks(gap, viennaBands, 2026, "25VRB"), gap);
+  assert.deepEqual(resolveTanks(gap, viennaBands, 2026, "25FWS"), gap);
+});
+
+test("catalog-wide: no model-level 60/40/40 tank seed; dated year pins stay", () => {
+  const block = src("rvData.ts");
+  const modelTrio =
+    block.match(/\n      freshWater: 60,\n      grayWater: 40,\n      blackWater: 40,/g) ||
+    [];
+  assert.equal(
+    modelTrio.length,
+    0,
+    "fake 60/40/40 must not remain as a model-wide seed",
+  );
+  assert.equal((block.match(/\n          freshWater: 60,\n          grayWater: 40,\n          blackWater: 40,/g) || []).length, 0);
+
+  assert.match(
+    block,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["44B"\][\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41,/,
+  );
+  assert.match(
+    block,
+    /from: 2017,\s*to: 2017,\s*floorplans: \["3601", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51,/,
+  );
+  assert.match(
+    block,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["36SB", "38BB", "38RB", "38RW"\][\s\S]*?freshWater: 150,\s*grayWater: 75,\s*blackWater: 75,/,
+  );
+});
+
+test("stripped 60/40/40 seed: year pins still resolve; GAP years stay unknown", async () => {
+  const { RV_DATA } = await import("./rvData.ts");
+  const { buildBrochureSpecs, resolveYearSnapshot, CONFIRM_BROCHURE } =
+    await import("./brochureSpecs.ts");
+
+  const aspire = RV_DATA["Entegra Coach"]?.Aspire;
+  const aria = RV_DATA.Thor?.Aria;
+  const valencia = RV_DATA["Renegade RV"]?.Valencia;
+  const challenger = RV_DATA.Thor?.Challenger;
+  const precept = RV_DATA.Jayco?.Precept;
+  assert.ok(aspire && aria && valencia && challenger && precept);
+
+  assert.equal(aspire.freshWater, undefined);
+  assert.equal(aspire.grayWater, undefined);
+  assert.equal(aspire.blackWater, undefined);
+  assert.equal(aria.freshWater, undefined);
+  assert.equal(valencia.freshWater, undefined);
+  assert.equal(challenger.freshWater, undefined);
+  assert.equal(precept.freshWater, undefined);
+
+  const pinAspire = resolveYearSnapshot(aspire, "2024", "44B");
+  assert.deepEqual(
+    { freshWater: pinAspire.freshWater, grayWater: pinAspire.grayWater, blackWater: pinAspire.blackWater },
+    { freshWater: 100, grayWater: 62, blackWater: 41 },
+  );
+  const gapAspire = resolveYearSnapshot(aspire, "2023", "44B");
+  assert.equal(gapAspire.freshWater, undefined);
+  assert.equal(gapAspire.grayWater, undefined);
+  assert.equal(gapAspire.blackWater, undefined);
+
+  const pinAria = resolveYearSnapshot(aria, "2024", "3901");
+  assert.deepEqual(
+    { freshWater: pinAria.freshWater, grayWater: pinAria.grayWater, blackWater: pinAria.blackWater },
+    { freshWater: 91, grayWater: 51, blackWater: 51 },
+  );
+  const gapAria = resolveYearSnapshot(aria, "2025", "3702");
+  assert.equal(gapAria.freshWater, undefined);
+
+  const pinValencia = resolveYearSnapshot(valencia, "2024", "38RW");
+  assert.deepEqual(
+    { freshWater: pinValencia.freshWater, grayWater: pinValencia.grayWater, blackWater: pinValencia.blackWater },
+    { freshWater: 150, grayWater: 75, blackWater: 75 },
+  );
+  const gapValencia = resolveYearSnapshot(valencia, "2019", "38BB");
+  assert.equal(gapValencia.freshWater, undefined);
+
+  const pinSheet = buildBrochureSpecs(aspire, "2024", "Entegra Coach", "Aspire", "44B");
+  assert.equal(pinSheet.freshWater, "100 gal");
+  assert.equal(pinSheet.grayWater, "62 gal");
+  assert.equal(pinSheet.blackWater, "41 gal");
+
+  const gapSheet = buildBrochureSpecs(aspire, "2023", "Entegra Coach", "Aspire", "44B");
+  assert.equal(gapSheet.freshWater, CONFIRM_BROCHURE);
+  assert.equal(gapSheet.grayWater, CONFIRM_BROCHURE);
+  assert.equal(gapSheet.blackWater, CONFIRM_BROCHURE);
+
+  const seedOnly = buildBrochureSpecs(challenger, "2020", "Thor", "Challenger", "37BH");
+  assert.equal(seedOnly.freshWater, CONFIRM_BROCHURE);
+  assert.equal(seedOnly.grayWater, CONFIRM_BROCHURE);
+  assert.equal(seedOnly.blackWater, CONFIRM_BROCHURE);
+  assert.notEqual(seedOnly.freshWater, "60 gal");
 });
 
 test("Midwest Automotive Designs MY2027 OEM+RVUSA locks + Passage/Weekender GAP", () => {
