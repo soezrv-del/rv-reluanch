@@ -355,3 +355,34 @@ export function evaluateTowMatch(input: TowMatchInput): TowMatchVerdict {
     checks,
   };
 }
+
+/** Thin pass/fail snapshot for Facts / Trips consumers. No new math. */
+export type TruckFitSummary = {
+  overallOk: boolean;
+  towOk: boolean;
+  hitchOk: boolean;
+  hitchSkipped: boolean;
+  gcwrOk: boolean;
+  gcwrSkipped: boolean;
+  withinRecommended: boolean;
+  overRecommendedUnderMax: boolean;
+  hitchKind: HitchKind;
+  hitchLoad: number;
+  hitchEstimated: boolean;
+};
+
+export function summarizeTruckFit(verdict: TowMatchVerdict): TruckFitSummary {
+  return {
+    overallOk: verdict.overallOk,
+    towOk: verdict.towOk,
+    hitchOk: verdict.hitchOk,
+    hitchSkipped: verdict.hitchSkipped,
+    gcwrOk: verdict.gcwrOk,
+    gcwrSkipped: verdict.gcwrSkipped,
+    withinRecommended: verdict.withinRecommended,
+    overRecommendedUnderMax: verdict.overRecommendedUnderMax,
+    hitchKind: verdict.hitchKind,
+    hitchLoad: verdict.hitchLoad,
+    hitchEstimated: verdict.hitchEstimated,
+  };
+}

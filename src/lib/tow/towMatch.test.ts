@@ -12,6 +12,7 @@ import {
   estimateCombinedLbs,
   evaluateTowMatch,
   hitchKindForRvType,
+  summarizeTruckFit,
 } from "./towMatch.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -192,6 +193,22 @@ test("RvTowApp wires honest match and no longer invents custom GCWR", () => {
   assert.equal(/payload \+ 5000/.test(src), false);
 });
 
+test("summarizeTruckFit is a thin snapshot of evaluateTowMatch — no new math", () => {
+  const v = defaultFifth();
+  const s = summarizeTruckFit(v);
+  assert.equal(s.overallOk, v.overallOk);
+  assert.equal(s.towOk, v.towOk);
+  assert.equal(s.hitchOk, v.hitchOk);
+  assert.equal(s.hitchSkipped, v.hitchSkipped);
+  assert.equal(s.gcwrOk, v.gcwrOk);
+  assert.equal(s.gcwrSkipped, v.gcwrSkipped);
+  assert.equal(s.withinRecommended, v.withinRecommended);
+  assert.equal(s.overRecommendedUnderMax, v.overRecommendedUnderMax);
+  assert.equal(s.hitchKind, v.hitchKind);
+  assert.equal(s.hitchLoad, v.hitchLoad);
+  assert.equal(s.hitchEstimated, v.hitchEstimated);
+});
+
 test("RvTowApp salesman default: truck + coach + two numbers, More details collapsed", () => {
   const src = readFileSync(join(root, "../../components/rvtow/RvTowApp.tsx"), "utf8");
   const truck = src.indexOf("data-tow-truck");
@@ -228,9 +245,15 @@ test("RvTowApp salesman default: truck + coach + two numbers, More details colla
     "typed pin/tongue field lives in More details",
   );
   assert.ok(
-    src.indexOf("<GlanceChecks") > details,
-    "GlanceChecks stay behind More details",
+    src.indexOf("data-tow-fit-glance") < details,
+    "Fit-truck GlanceChecks promote onto the default view for Facts towable",
   );
+  assert.ok(
+    src.lastIndexOf("<GlanceChecks") > details,
+    "standalone GlanceChecks stay behind More details",
+  );
+  assert.match(src, /data-tow-lot-desk/);
+  assert.match(src, /buildTowObjections/);
   assert.ok(
     src.indexOf("<GuideHero") > details,
     "percentage hitch guides stay behind More details",
