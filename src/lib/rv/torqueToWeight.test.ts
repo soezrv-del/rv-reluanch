@@ -10,6 +10,7 @@ import {
   isTowableForTorqueRating,
   parseGvwrLb,
   parseTorqueLbFt,
+  parseUvwLb,
   scoreFromTorqueToWeightRatio,
   torqueToWeightRatio,
 } from "./torqueToWeight.ts";
@@ -24,12 +25,13 @@ function assertNear(actual: number | null, expected: number, tol = 0.15) {
   );
 }
 
-test("ratio is lb-ft per 1,000 lb GVWR (never UVW)", () => {
+test("ratio is lb-ft per 1,000 lb weight (never HP)", () => {
   assert.equal(torqueToWeightRatio(468, 24_000), 19.5);
   assert.ok(
     Math.abs((torqueToWeightRatio(800, 31_000) ?? 0) - 25.806451612903224) <
       1e-9,
   );
+  assert.ok(Math.abs((torqueToWeightRatio(468, 20_000) ?? 0) - 23.4) < 1e-9);
   assert.equal(torqueToWeightRatio(0, 22_000), null);
   assert.equal(torqueToWeightRatio(468, 0), null);
 });
@@ -56,7 +58,8 @@ test("must-pass 1–10 anchors (±0.15)", () => {
   });
   assertNear(seneca.ratio, 25.8, 0.05);
   assertNear(seneca.score, 6.0);
-  assert.equal(seneca.color, "green");
+  assert.equal(seneca.weightBasis, "GVWR");
+  assert.equal(seneca.color, "yellow");
 
   const p31 = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -65,7 +68,7 @@ test("must-pass 1–10 anchors (±0.15)", () => {
   });
   assertNear(p31.ratio, 21.3, 0.05);
   assertNear(p31.score, 5.0);
-  assert.equal(p31.color, "green");
+  assert.equal(p31.color, "red");
 
   const p36 = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -74,7 +77,7 @@ test("must-pass 1–10 anchors (±0.15)", () => {
   });
   assertNear(p36.ratio, 19.5, 0.05);
   assertNear(p36.score, 4.5);
-  assert.equal(p36.color, "green");
+  assert.equal(p36.color, "red");
 
   const cornerstone = computeTorqueToWeight({
     torqueLbFt: 1950,
@@ -119,19 +122,50 @@ test("must-pass 1–10 anchors (±0.15)", () => {
   });
   assertNear(isb.ratio, 23.3, 0.05);
   assertNear(isb.score, 5.5);
-  assert.equal(isb.color, "green");
+  assert.equal(isb.color, "red");
 });
 
-test("bar color: red < 3.0, yellow [3.0, 4.0), green ≥ 4.0", () => {
-  assert.equal(barColorFromScore(2.99), "red");
-  assert.equal(barColorFromScore(3.0), "yellow");
-  assert.equal(barColorFromScore(3.9), "yellow");
-  assert.equal(barColorFromScore(4.0), "green");
-  assert.equal(barColorFromScore(4.5), "green");
+test("bar color: red < 6.0, yellow [6.0, 7.5), green ≥ 7.5", () => {
+  assert.equal(barColorFromScore(5.99), "red");
+  assert.equal(barColorFromScore(6.0), "yellow");
+  assert.equal(barColorFromScore(7.0), "yellow");
+  assert.equal(barColorFromScore(7.4), "yellow");
+  assert.equal(barColorFromScore(7.49), "yellow");
+  assert.equal(barColorFromScore(7.5), "green");
+  assert.equal(barColorFromScore(8.0), "green");
   assert.equal(barColorFromScore(null), null);
 });
 
-test("missing torque|GVWR → GAP; towables N/A", () => {
+test("prefer UVW; fall back to GVWR; GAP if torque or both weights missing", () => {
+  const preferUvw = computeTorqueToWeight({
+    torqueLbFt: 468,
+    uvwLbs: 20_000,
+    gvwrLbs: 24_000,
+    rvType: "Class A Gas",
+  });
+  assert.equal(preferUvw.weightBasis, "UVW");
+  assert.equal(preferUvw.weightLb, 20_000);
+  assert.ok(Math.abs((preferUvw.ratio ?? 0) - 23.4) < 1e-9);
+  assert.match(formatTorqueToWeightScore(preferUvw), /^[0-9.]+\/10 · UVW$/);
+
+  const unloadedRaw = computeTorqueToWeight({
+    torqueLbFt: 468,
+    uvwRaw: "18,000 lbs unloaded",
+    gvwrLbs: 22_000,
+    rvType: "Class A Gas",
+  });
+  assert.equal(unloadedRaw.weightBasis, "UVW");
+  assert.equal(unloadedRaw.weightLb, 18_000);
+
+  const gvwrFallback = computeTorqueToWeight({
+    torqueLbFt: 800,
+    gvwrLbs: 31_000,
+    rvType: "Class A Gas",
+  });
+  assert.equal(gvwrFallback.weightBasis, "GVWR");
+  assert.equal(gvwrFallback.weightLb, 31_000);
+  assert.equal(formatTorqueToWeightScore(gvwrFallback), "6.0/10 · GVWR");
+
   assert.equal(formatTorqueToWeightScore(computeTorqueToWeight({})), "GAP");
   assert.equal(
     formatTorqueToWeightScore(computeTorqueToWeight({ torqueLbFt: 468 })),
@@ -141,10 +175,18 @@ test("missing torque|GVWR → GAP; towables N/A", () => {
     formatTorqueToWeightScore(computeTorqueToWeight({ gvwrLbs: 22_000 })),
     "GAP",
   );
+  assert.equal(
+    formatTorqueToWeightScore(computeTorqueToWeight({ uvwLbs: 18_000 })),
+    "GAP",
+  );
+});
+
+test("missing torque|weight → GAP; towables N/A", () => {
   assert.equal(isTowableForTorqueRating("Travel Trailer"), true);
   assert.equal(isTowableForTorqueRating("Class A Diesel"), false);
   const tt = computeTorqueToWeight({
     torqueLbFt: 800,
+    uvwLbs: 20_000,
     gvwrLbs: 31_000,
     rvType: "Travel Trailer",
   });
@@ -153,23 +195,29 @@ test("missing torque|GVWR → GAP; towables N/A", () => {
   assert.equal(formatTorqueToWeightScore(tt), "N/A");
 });
 
-test("never uses horsepower as torque; UVW is not the denominator", () => {
+test("never uses horsepower as torque; UVW labeled vs GVWR labeled", () => {
   assert.equal(parseTorqueLbFt("450 HP"), null);
   assert.equal(parseTorqueLbFt("450 HP / 1,250 lb-ft"), 1250);
+  assert.equal(parseUvwLb("18,000 lbs UVW"), 18_000);
+  assert.equal(parseUvwLb("18,000 lbs unloaded"), 18_000);
+  assert.equal(parseUvwLb("22,000 lbs GVWR"), null);
   assert.equal(parseGvwrLb("22,000 lbs GVWR"), 22_000);
   assert.equal(parseGvwrLb("18,000 lbs UVW"), null);
+  assert.equal(parseGvwrLb("18,000 lbs unloaded"), null);
   assert.equal(
-    computeTorqueToWeight({ torqueRaw: "450 HP", gvwrLbs: 22_000 }).gap,
+    computeTorqueToWeight({ torqueRaw: "450 HP", uvwLbs: 20_000 }).gap,
     true,
   );
 });
 
-test("Facts Ratings: Torque-to-Weight bar + X/10; other rows keep stars", () => {
+test("Facts Ratings: Torque-to-Weight bar + X/10 · UVW|GVWR; other rows keep stars", () => {
   const src = readFileSync(join(root, "torqueToWeight.ts"), "utf8");
-  assert.match(src, /torqueLbFt \/ gvwrLb/);
-  assert.doesNotMatch(src, /torqueLbFt \/ uvwLb/);
-  assert.match(src, /score < 3/);
-  assert.match(src, /score < 4/);
+  assert.match(src, /torqueLbFt \/ weightLb/);
+  assert.match(src, /uvwLb \?\? gvwrLb/);
+  assert.match(src, /score < 6/);
+  assert.match(src, /score < 7\.5/);
+  assert.doesNotMatch(src, /score < 3/);
+  assert.doesNotMatch(src, /score < 4[^.0-9]/);
 
   const detail = readFileSync(
     join(root, "../../components/rvfax/RvDetail.tsx"),
@@ -179,6 +227,10 @@ test("Facts Ratings: Torque-to-Weight bar + X/10; other rows keep stars", () => 
   assert.match(detail, /formatTorqueToWeightScore/);
   assert.match(detail, /data-testid="facts-tqwt-bar"/);
   assert.match(detail, /score \/ 10/);
+  assert.match(detail, /uvwLbs:\s*live\?\.uvwLbs/);
+  assert.match(detail, /uvwRaw:\s*specs\.uvw/);
+  assert.match(detail, /gvwrLbs:\s*live\?\.gvwrLbs/);
+  assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
   assert.doesNotMatch(detail, /torqueToWeight\.stars/);
   assert.match(detail, /label:\s*"Quality"/);
   assert.match(detail, /ratingStars\(row\.stars\)/);

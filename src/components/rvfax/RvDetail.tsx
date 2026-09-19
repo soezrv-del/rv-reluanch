@@ -650,6 +650,8 @@ export function RvDetail({
       computeTorqueToWeight({
         torqueLbFt: powertrainGuard.hard.torqueLbFt,
         torqueRaw: specs.torque,
+        uvwLbs: live?.uvwLbs ?? null,
+        uvwRaw: specs.uvw,
         gvwrLbs: live?.gvwrLbs ?? null,
         gvwrRaw: specs.gvwr,
         rvType: data.type,
@@ -658,7 +660,9 @@ export function RvDetail({
     [
       powertrainGuard.hard.torqueLbFt,
       specs.torque,
+      specs.uvw,
       specs.gvwr,
+      live?.uvwLbs,
       live?.gvwrLbs,
       data.type,
       data.fuelType,
