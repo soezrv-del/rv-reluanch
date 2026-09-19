@@ -7,6 +7,12 @@
  * powertrainGuard / brochure hard torque when present; else parse
  * specs.torque. Torque is lb-ft only — never horsepower.
  *
+ * Range-only GVWR (display band / weightRange [lo,hi], e.g.
+ * "39,500–44,005 lbs"): for **TTW scoring only**, use the **HIGH**
+ * number. Heavier published weight → lower (more conservative) score.
+ * A single published pin (oem.gvwrLbs / findOemGvwrLbs / snap.gvwrLbs /
+ * live.gvwrLbs) still wins over the range. Do not invent UVW.
+ *
  * Ratio: r = (torqueLbFt / gvwrLb) * 1000  →  lb-ft per 1,000 lb GVWR
  *
  * Continuous 1–10 (piecewise-linear on the David envelope):
@@ -43,7 +49,16 @@ export type TorqueToWeightInput = {
   uvwRaw?: string | number | null;
   /** Numeric published OEM GVWR pounds (live.gvwrLbs). Required for a score. */
   gvwrLbs?: number | null;
-  /** Display / specs.gvwr string (commas + units stripped). Required for a score. */
+  /**
+   * Display / specs.gvwr string (commas + units stripped), or a [lo,hi]
+   * band. Two-number ranges use the HIGH end for TTW only.
+   */
+  gvwrRaw?: string | number | readonly [number, number] | null;
+  /**
+   * Catalog weightRange [lo,hi] when the listing shows a band and no
+   * single published GVWR. HIGH end only; published gvwrLbs still wins.
+   */
+  weightRange?: readonly [number, number] | null;
   /** Coach type / fuel — towables are N/A (no engine torque rating). */
   rvType?: string | null;
   fuelType?: string | null;
@@ -132,13 +147,44 @@ export function parseUvwLb(
 }
 
 /**
- * Parse GVWR pounds. Strips commas/units. A weight *range* (two numbers)
- * or a UVW / unloaded-labeled string is unparseable → null (GAP).
+ * Parse GVWR pounds for TTW. Strips commas/units. UVW / unloaded-labeled
+ * strings stay unparseable → null (GAP).
+ *
+ * A two-number range ("39500-44005", "39,500–44,005 lbs", or [lo,hi])
+ * uses **Math.max(lo, hi)** — the high end — so the score is not
+ * inflated. Three-or-more numbers stay GAP. A single published figure
+ * ("47000") is unchanged. Callers still prefer oem / findOem / snap /
+ * live numeric pins over this parse.
  */
 export function parseGvwrLb(
-  raw: string | number | null | undefined,
+  raw: string | number | readonly [number, number] | null | undefined,
 ): number | null {
-  return parseSingleWeightLb(raw, /\buvw\b|\bunloaded\b/i);
+  if (raw == null || raw === "") return null;
+  if (typeof raw === "number") return positiveInt(raw);
+  if (
+    Array.isArray(raw) &&
+    raw.length === 2 &&
+    Number.isFinite(raw[0]) &&
+    Number.isFinite(raw[1]) &&
+    raw[0] > 0 &&
+    raw[1] > 0
+  ) {
+    return Math.round(Math.max(raw[0], raw[1]));
+  }
+  if (typeof raw !== "string") return null;
+  const s = raw.trim();
+  if (!s || EMPTY.test(s) || /^n\/a\b/i.test(s) || /\buvw\b|\bunloaded\b/i.test(s)) {
+    return null;
+  }
+
+  const compact = s.replace(/,/g, "").replace(/lbs?\.?/gi, " ");
+  const nums = [...compact.matchAll(/(\d+(?:\.\d+)?)/g)]
+    .map((m) => Number(m[1]))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  if (nums.length === 1) return Math.round(nums[0]!);
+  // TTW-only: high end of a two-number band. Conservative — heavier GVWR.
+  if (nums.length === 2) return Math.round(Math.max(nums[0]!, nums[1]!));
+  return null;
 }
 
 export function torqueToWeightRatio(
@@ -214,7 +260,11 @@ export function computeTorqueToWeight(
   const torqueLbFt =
     positiveInt(input.torqueLbFt ?? 0) ?? parseTorqueLbFt(input.torqueRaw);
   const uvwLb = positiveInt(input.uvwLbs ?? 0) ?? parseUvwLb(input.uvwRaw);
-  const gvwrLb = positiveInt(input.gvwrLbs ?? 0) ?? parseGvwrLb(input.gvwrRaw);
+  // Published numeric pin wins. Range string / weightRange → high end only.
+  const gvwrLb =
+    positiveInt(input.gvwrLbs ?? 0) ??
+    parseGvwrLb(input.gvwrRaw) ??
+    parseGvwrLb(input.weightRange);
   // GVWR-only scoring. UVW is retained for honesty/display — never the basis.
   const weightLb = gvwrLb;
   const weightBasis: TorqueWeightBasis | null = gvwrLb != null ? "GVWR" : null;

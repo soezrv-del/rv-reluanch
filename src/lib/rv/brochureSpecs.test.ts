@@ -219,6 +219,23 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   assert.equal(ttwVxl.weightLb, 24000);
   assert.equal(ttwVxl.weightBasis, "GVWR");
   assert.notEqual(ttwVxl.uvwLb, 24000);
+
+  // Range-only listing (no oem/snap pin): TTW uses HIGH end, not mid/low.
+  const ttwRange = computeTorqueToWeight({
+    torqueLbFt: 1250,
+    gvwrRaw: "39,500–44,005 lbs",
+    rvType: "Class A Diesel",
+  });
+  assert.equal(ttwRange.weightLb, 44005);
+  assert.equal(ttwRange.weightBasis, "GVWR");
+  // Published pin still beats the catalog/display band.
+  const ttwPin = computeTorqueToWeight({
+    torqueLbFt: 1250,
+    gvwrLbs: findOemGvwrLbs("2025", "Jayco", "Precept", "31UL"),
+    gvwrRaw: "39,500–44,005 lbs",
+    rvType: "Class A Gas",
+  });
+  assert.equal(ttwPin.weightLb, 22000);
 });
 
 test("brochureSpecs source no longer hash-seeds tanks, MPG, heater, construction, wheelbase, propane", () => {
