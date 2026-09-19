@@ -80,7 +80,11 @@ const OFF_CATALOG_RE =
 
 /** Own-lot / diesel-count / in-stock — catalog has no inventory. */
 const INVENTORY_OR_COUNT_RE =
-  /\b(inventor(?:y|ies)|in stock|on (?:the |our )?lot|on hand|units? available|our (?:lot|inventory|stock)|diesel counts?|(?:how many|count of)\s+(?:\w+\s+){0,8}(?:diesels?|gas|coaches?|units?|rvs?|pushers?|motorhomes?|class\s*a|super\s*c?s?|are there|in stock|on (?:the )?lot|do we have))\b/i;
+  /\b(inventor(?:y|ies)|in stock|on (?:the |our )?lot|on hand|units? available|our (?:lot|inventory|stock)|diesel counts?|(?:how many|count of)\s+(?:\w+\s+){0,8}(?:diesels?|gas|coaches?|units?|rvs?|pushers?|motorhomes?|class\s*a|super\s*c?s?|are there|in stock|on (?:the )?lot|do we have)|(?:stock(?:\s*(?:#|number|no\.?|num))?|stk)\s*[:#-]?\s*[A-Za-z0-9-]{3,12})\b/i;
+
+/** Bare lot stock # ("45282") — not a model year. */
+const BARE_STOCK_NUMBER_RE = /^\s*#?\s*([A-Za-z]{0,4}\d{4,7}[A-Za-z]{0,3})\s*$/;
+const YEAR_ONLY_RE = /^\s*(?:19[89]\d|20[0-2]\d)\s*$/;
 
 /** Curly quotes in “won’t” / “how do I” from phones. */
 export function normalizeAskText(text: string): string {
@@ -136,7 +140,11 @@ export function looksLikeOffCatalogQuestion(text: string): boolean {
 export function looksLikeInventoryOrCountQuestion(text: string): boolean {
   const t = normalizeAskText(text);
   if (!t.trim() || looksLikeCasualNonResearch(t)) return false;
-  return INVENTORY_OR_COUNT_RE.test(t);
+  if (INVENTORY_OR_COUNT_RE.test(t)) return true;
+  if (BARE_STOCK_NUMBER_RE.test(t.trim()) && !YEAR_ONLY_RE.test(t.trim())) {
+    return true;
+  }
+  return false;
 }
 
 /**

@@ -25,13 +25,17 @@ import {
   ownLotHasHit,
   ownLotIsUnavailable,
   ownLotPublicFileCandidates,
+  looksLikeOwnLotUnitListQuestion,
   parseOwnLotAsk,
   parseOwnLotBudget,
   parseOwnLotCsv,
+  parseOwnLotStockNumber,
   parseOwnLotUnits,
+  parseSpelledThousands,
   pickOwnLotPrice,
   queryOwnLotUnits,
   sameOriginOwnLotUrls,
+  sanitizeOwnLotParsedModel,
   shouldSkipWebForOwnLot,
   snapshotFromJson,
   type OwnLotSnapshot,
@@ -725,7 +729,12 @@ test("own-lot and prompt text cannot claim no price data when prices exist", () 
   assert.match(impl, /Never say it has no price data/);
   assert.match(impl, /price_current \/ price_hidden \/ price_lowest \/ price_msrp/);
   assert.match(prompts, /Never say the snapshot has no price data/);
+  assert.match(prompts, /can't pull specific units/);
+  assert.match(prompts, /doesn't break out a list/);
   assert.match(voice, /Never say the snapshot has no price data/);
+  assert.match(voice, /can't pull specific units/);
+  assert.match(voice, /doesn't break out a list/);
+  assert.match(src(".", "voiceWeb.ts"), /can't pull specific units/);
   assert.doesNotMatch(impl, /doesn't include price data/);
   assert.doesNotMatch(impl, /hasn't come through/);
 
@@ -736,4 +745,250 @@ test("own-lot and prompt text cannot claim no price data when prices exist", () 
   );
   assert.match(emptyPrices, /No priced units in this matched set/);
   assert.doesNotMatch(emptyPrices, /Listing prices ARE in this snapshot/);
+});
+
+function pricedUnit(partial: Partial<OwnLotUnit> & Pick<OwnLotUnit, "stock_number">): OwnLotUnit {
+  return {
+    year: "2026",
+    make: "Entegra Coach",
+    model: "Vision",
+    trim: "29S",
+    body_type: "Class A Gas",
+    location: "Fresno CA",
+    vin: "",
+    source: "own",
+    dealer: "RV Country",
+    price: 189000,
+    ...partial,
+  };
+}
+
+const ENTEGRA_FRESNO_UNITS: OwnLotUnit[] = [
+  pricedUnit({
+    year: "2026",
+    make: "Entegra Coach",
+    model: "Cornerstone",
+    trim: "45D",
+    body_type: "Class A Diesel",
+    location: "Fresno CA",
+    stock_number: "45282",
+    price: 729995,
+  }),
+  pricedUnit({ stock_number: "47592", model: "Vision", body_type: "Class A" }),
+  pricedUnit({ stock_number: "47648", model: "Odyssey SE", body_type: "Class C" }),
+  pricedUnit({ stock_number: "47621", model: "Odyssey SE", body_type: "Class C" }),
+  pricedUnit({ stock_number: "47588", model: "Odyssey", body_type: "Class C" }),
+  pricedUnit({ stock_number: "47001", model: "Aspire", body_type: "Class A Diesel" }),
+  pricedUnit({ stock_number: "47002", model: "Anthem", body_type: "Class A Diesel" }),
+  pricedUnit({ stock_number: "47003", model: "Reatta", body_type: "Class A" }),
+  pricedUnit({ stock_number: "47004", model: "Esteem", body_type: "Class C" }),
+  pricedUnit({ stock_number: "47005", model: "Expanse", body_type: "Class C" }),
+  pricedUnit({ stock_number: "47006", model: "Launch", body_type: "Class B" }),
+  pricedUnit({ stock_number: "47007", model: "Qwest", body_type: "Class Super C" }),
+];
+
+const TOY_HAULER_UNITS: OwnLotUnit[] = [
+  pricedUnit({
+    year: "2022",
+    make: "Grand Design",
+    model: "Momentum",
+    trim: "351TH",
+    body_type: "Fifth Wheel Toy Hauler",
+    location: "Wilsonville",
+    stock_number: "TH501",
+    price: 49995,
+  }),
+  pricedUnit({
+    year: "2021",
+    make: "Heartland",
+    model: "Cyclone",
+    trim: "4007",
+    body_type: "Fifth Wheel Toy Hauler",
+    location: "Fresno CA",
+    stock_number: "TH502",
+    price: 52900,
+  }),
+  pricedUnit({
+    year: "2020",
+    make: "Keystone",
+    model: "Fuzion",
+    trim: "419",
+    body_type: "Fifth Wheel",
+    location: "Harrisburg",
+    stock_number: "FW601",
+    price: 48900,
+  }),
+  pricedUnit({
+    year: "2024",
+    make: "Forest River",
+    model: "XLR Nitro",
+    trim: "41G14",
+    body_type: "Fifth Wheel Toy Hauler",
+    location: "Fresno CA",
+    stock_number: "TH900",
+    price: 124995,
+  }),
+];
+
+test("stock-number ask matches that unit and injects a priced listing", () => {
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units: [...ENTEGRA_FRESNO_UNITS, ...TOY_HAULER_UNITS, ...FIXTURE_UNITS],
+  });
+  for (const ask of [
+    "45282",
+    "stock number 45282",
+    "stock #45282",
+    "do we have stock 45282",
+    "is stock number 45282 on the lot",
+  ]) {
+    assert.equal(parseOwnLotStockNumber(ask), "45282", ask);
+    assert.equal(looksLikeOwnLotStockQuestion(ask), true, ask);
+    const filter = parseOwnLotAsk(ask, ["Fresno CA", "Wilsonville"]);
+    assert.equal(filter.stockNumber, "45282", ask);
+    assert.equal(filter.model, undefined, `${ask} must not invent a model`);
+    const counts = aggregateOwnLot(snapshot.units, filter);
+    assert.equal(counts.matched, 1, ask);
+    const rows = queryOwnLotUnits(snapshot.units, filter, 12);
+    assert.equal(rows[0]?.stock_number, "45282", ask);
+    assert.equal(rows[0]?.make, "Entegra Coach", ask);
+    assert.equal(rows[0]?.model, "Cornerstone", ask);
+    assert.equal(rows[0]?.trim, "45D", ask);
+    assert.equal(rows[0]?.location, "Fresno CA", ask);
+    assert.equal(rows[0]?.price, 729995, ask);
+    const block = formatOwnLotBlock(snapshot, ask);
+    assert.match(block, /stk 45282/);
+    assert.match(block, /\$729,995/);
+    assert.match(block, /Cornerstone/);
+    assert.match(block, /Matching units/);
+    assert.match(block, /Specific units ARE listed/);
+    assert.doesNotMatch(block, /can't pull specific units/);
+    assert.doesNotMatch(block, /doesn't break out/);
+  }
+});
+
+test("Entegra + Fresno make+location is 12 matches with listings, not a ghost model zero", () => {
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units: [
+      ...ENTEGRA_FRESNO_UNITS,
+      pricedUnit({
+        stock_number: "99901",
+        make: "Entegra Coach",
+        location: "Harrisburg",
+        model: "Vision",
+      }),
+      pricedUnit({
+        stock_number: "99902",
+        make: "Newmar",
+        location: "Fresno CA",
+        model: "Dutch Star",
+      }),
+    ],
+  });
+  assert.equal(
+    sanitizeOwnLotParsedModel("es in Fresno", ["Fresno CA", "Harrisburg"]),
+    undefined,
+  );
+  assert.equal(sanitizeOwnLotParsedModel("Dutch Star", ["Fresno CA"]), "dutch star");
+
+  for (const ask of [
+    "How many Entegra coaches in Fresno?",
+    "How many Entegra coaches do we have in Fresno?",
+  ]) {
+    const filter = parseOwnLotAsk(ask, ["Fresno CA", "Harrisburg"]);
+    assert.equal(filter.make, "Entegra Coach", ask);
+    assert.equal(filter.location, "Fresno CA", ask);
+    assert.equal(filter.model, undefined, `${ask} ghost model was ${filter.model}`);
+    const counts = aggregateOwnLot(snapshot.units, filter);
+    assert.equal(counts.matched, 12, ask);
+    assert.ok(counts.matched > 0, ask);
+    const block = formatOwnLotBlock(snapshot, ask);
+    assert.match(block, /Matched: 12/);
+    assert.match(block, /stk 45282/);
+    assert.match(block, /Matching units/);
+    assert.match(block, /Specific units ARE listed/);
+    assert.doesNotMatch(block, /Matched: 0/);
+  }
+});
+
+test("fifth-wheel toy hauler around / fifty thousand dollar injects priced listing lines", () => {
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units: [...TOY_HAULER_UNITS, ...FIXTURE_UNITS],
+  });
+  assert.equal(parseSpelledThousands("fifty thousand dollar"), 50000);
+  assert.deepEqual(parseOwnLotBudget("fifty thousand dollar fifth-wheel"), {
+    aroundPrice: 50000,
+  });
+  assert.deepEqual(parseOwnLotBudget("around fifty thousand"), {
+    aroundPrice: 50000,
+  });
+  assert.equal(
+    looksLikeOwnLotUnitListQuestion(
+      "deep dive into the inventory and get me a list of fifty thousand dollar fifth-wheel toy haulers",
+    ),
+    true,
+  );
+
+  for (const ask of [
+    "list of fifty thousand dollar fifth-wheel toy haulers",
+    "Yeah, I want you to deep dive into the inventory and see if you can get me a list of fifty thousand dollar fifth-wheel toy haulers.",
+    "fifth-wheel toy haulers around $50k",
+  ]) {
+    const filter = parseOwnLotAsk(ask, ["Fresno CA", "Wilsonville"]);
+    assert.equal(filter.bodyType, "Fifth Wheel", ask);
+    assert.equal(filter.toyHauler, true, ask);
+    assert.equal(filter.aroundPrice, 50000, ask);
+    const counts = aggregateOwnLot(snapshot.units, filter);
+    assert.equal(counts.matched, 2, ask);
+    const block = formatOwnLotBlock(snapshot, ask);
+    assert.match(block, /Matching units/);
+    assert.match(block, /\$49,995|\$52,900/);
+    assert.match(block, /stk TH501|stk TH502/);
+    assert.match(block, /Specific units ARE listed/);
+    assert.doesNotMatch(block, /Too many matched units to list/);
+    assert.doesNotMatch(block, /can't pull specific units/);
+    assert.doesNotMatch(block, /doesn't break out a list/);
+    assert.doesNotMatch(block, /stk TH900/, `${ask} must not list the $124k toy hauler`);
+    assert.doesNotMatch(block, /stk FW601/, `${ask} regular fifth wheel is not a toy hauler`);
+  }
+});
+
+test("bundled snapshot: stock 45282, Entegra Fresno, and $50k fifth-wheel toy haulers list rows", () => {
+  const snap = snapshotFromJson(
+    JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
+  );
+  assert.ok(snap.units.length >= 1000);
+
+  const stock = formatOwnLotBlock(snap, "stock number 45282");
+  assert.match(stock, /Matched: 1/);
+  assert.match(stock, /stk 45282/);
+  assert.match(stock, /Entegra Coach/);
+  assert.match(stock, /Cornerstone/);
+  assert.match(stock, /45D/);
+  assert.match(stock, /Fresno CA/);
+  assert.match(stock, /\$729,995/);
+  assert.match(stock, /Matching units/);
+
+  const loc = formatOwnLotBlock(snap, "How many Entegra coaches do we have in Fresno?");
+  assert.match(loc, /Filter: Entegra Coach · Fresno CA/);
+  assert.doesNotMatch(loc, /es in Fresno/);
+  assert.match(loc, /Matched: 1[0-9]/);
+  assert.match(loc, /Matching units/);
+  assert.match(loc, /stk 45282/);
+
+  const list = formatOwnLotBlock(
+    snap,
+    "deep dive into the inventory and get me a list of fifty thousand dollar fifth-wheel toy haulers",
+  );
+  assert.match(list, /toy hauler/);
+  assert.match(list, /around \$50,000/);
+  assert.match(list, /Matching units/);
+  assert.match(list, /\$[0-9]/);
+  assert.match(list, /Specific units ARE listed/);
+  assert.doesNotMatch(list, /Matched: 0/);
 });

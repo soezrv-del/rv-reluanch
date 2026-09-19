@@ -83,6 +83,10 @@ export type OwnLotFilter = {
   dieselOnly?: boolean;
   gasOnly?: boolean;
   bodyType?: string;
+  /** Match body_type / model / trim that look like a toy hauler. */
+  toyHauler?: boolean;
+  /** Snapshot `stock_number` — exact, case-insensitive. */
+  stockNumber?: string;
   minPrice?: number;
   maxPrice?: number;
   aroundPrice?: number;
@@ -134,7 +138,11 @@ export function clearOwnLotCache(): void {
  * market-value comps (those stay on looksLikeMarketValueQuestion).
  */
 const OWN_LOT_LISTING_PRICE_RE =
-  /\b((?:show|include|have|with|see|need|want|any|should).{0,40}prices?|prices?\s+(?:too|data|as well|also|included|please)|(?:unit|listing|lot|inventory|stock|our)\s+prices?|prices?\s+(?:on|for|of|in|from)\b|(?:around|about|near|approx(?:imately)?|under|below|over|above|less\s+than|more\s+than|up\s+to)\s+\$?\s*\d|budget\b|\$\d|\d{2,3}\s*k\b)/i;
+  /\b((?:show|include|have|with|see|need|want|any|should).{0,40}prices?|prices?\s+(?:too|data|as well|also|included|please)|(?:unit|listing|lot|inventory|stock|our)\s+prices?|prices?\s+(?:on|for|of|in|from)\b|(?:around|about|near|approx(?:imately)?|under|below|over|above|less\s+than|more\s+than|up\s+to)\s+\$?\s*\d|budget\b|\$\d|\d{2,3}\s*k\b|(?:around|about|near|approx(?:imately)?)\s+(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|one|two|three|four|five|six|seven|eight|nine|ten)\s+thousand|\b(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\s+thousand\s+dollars?)\b/i;
+
+/** "list / deep dive / show me / which ones" — inject concrete rows, not counts only. */
+const OWN_LOT_UNIT_LIST_RE =
+  /\b(list(?:ing|s)?|deep[- ]?dive|show\s+me|which\s+ones|specific\s+units?|name\s+them|what\s+units|pull\s+(?:me\s+)?(?:a\s+|the\s+)?(?:specific\s+)?(?:units?|list))\b/i;
 
 export function looksLikeOwnLotListingPriceQuestion(text: string): boolean {
   const t = normalizeAskText(text);
@@ -142,10 +150,17 @@ export function looksLikeOwnLotListingPriceQuestion(text: string): boolean {
   return OWN_LOT_LISTING_PRICE_RE.test(t);
 }
 
+export function looksLikeOwnLotUnitListQuestion(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim()) return false;
+  return OWN_LOT_UNIT_LIST_RE.test(t);
+}
+
 export function looksLikeOwnLotStockQuestion(text: string): boolean {
   return (
     looksLikeInventoryOrCountQuestion(text) ||
-    looksLikeOwnLotListingPriceQuestion(text)
+    looksLikeOwnLotListingPriceQuestion(text) ||
+    Boolean(parseOwnLotStockNumber(text))
   );
 }
 
@@ -444,6 +459,113 @@ export function snapshotFromJson(
   };
 }
 
+/** Catalog leftover after matching "Entegra Coach" against "Entegra coaches". */
+const OWN_LOT_MODEL_JUNK = new Set([
+  "es",
+  "s",
+  "in",
+  "at",
+  "near",
+  "on",
+  "the",
+  "a",
+  "an",
+  "our",
+  "we",
+  "do",
+  "have",
+  "has",
+  "how",
+  "many",
+  "lot",
+  "inventory",
+  "stock",
+  "unit",
+  "units",
+  "coach",
+  "coaches",
+  "ones",
+  "any",
+  "some",
+  "available",
+  "from",
+  "with",
+  "for",
+  "there",
+  "here",
+  "this",
+  "that",
+  "those",
+  "these",
+  "what",
+  "which",
+  "where",
+  "your",
+  "you",
+  "me",
+  "my",
+  "please",
+  "thanks",
+]);
+
+function isYearToken(raw: string): boolean {
+  return /^(?:19[89]\d|20[0-2]\d)$/.test(raw.trim());
+}
+
+/**
+ * Stock # from the ask. "45282", "stock number 45282", "stk #45282".
+ * Does not treat a model year as a stock number.
+ */
+export function parseOwnLotStockNumber(text: string): string | undefined {
+  const t = normalizeAskText(text);
+  if (!t.trim()) return undefined;
+  const explicit = t.match(
+    /\b(?:stock(?:\s*(?:#|number|no\.?|num))?|stk)\s*[:#-]?\s*([A-Za-z0-9-]{3,12})\b/i,
+  );
+  if (explicit?.[1] && !isYearToken(explicit[1])) return explicit[1];
+  const hashed = t.match(/#\s*([A-Za-z0-9-]{3,12})\b/);
+  if (hashed?.[1] && !isYearToken(hashed[1])) return hashed[1];
+  const bare = t.trim().match(/^#?\s*([A-Za-z]{0,4}\d{4,7}[A-Za-z]{0,3})\s*$/);
+  if (bare?.[1] && !isYearToken(bare[1])) return bare[1];
+  return undefined;
+}
+
+function locationTokenSet(locations: string[]): Set<string> {
+  const out = new Set<string>();
+  for (const loc of locations) {
+    const n = norm(loc);
+    if (!n) continue;
+    out.add(n);
+    for (const part of n.split(/[\s,]+/)) {
+      if (part.length >= 3) out.add(part);
+    }
+  }
+  return out;
+}
+
+/**
+ * Drop parseCoach leftovers ("es in Fresno" after "Entegra coaches") so
+ * make+location asks are not zeroed by a ghost model.
+ */
+export function sanitizeOwnLotParsedModel(
+  model: string,
+  locations: string[] = [],
+): string | undefined {
+  const tokens = norm(model).split(/\s+/).filter(Boolean);
+  if (!tokens.length) return undefined;
+  const locTokens = locationTokenSet(locations);
+  const kept = tokens.filter(
+    (tok) => !OWN_LOT_MODEL_JUNK.has(tok) && !locTokens.has(tok),
+  );
+  return kept.length ? kept.join(" ") : undefined;
+}
+
+function unitLooksLikeToyHauler(unit: OwnLotUnit): boolean {
+  return /toy\s*haul/i.test(
+    [unit.body_type, unit.model, unit.trim, unit.make].join(" "),
+  );
+}
+
 export function parseOwnLotAsk(
   text: string,
   locations: string[] = [],
@@ -453,10 +575,17 @@ export function parseOwnLotAsk(
   const filter: OwnLotFilter = {};
   if (parsed.year) filter.year = parsed.year;
   if (parsed.make) filter.make = parsed.make;
-  if (parsed.model) filter.model = parsed.model;
+  const model = sanitizeOwnLotParsedModel(parsed.model, locations);
+  if (model) filter.model = model;
+
+  const stockNumber = parseOwnLotStockNumber(t);
+  if (stockNumber) filter.stockNumber = stockNumber;
 
   if (/\b(diesels?|pusher|pushers)\b/i.test(t)) filter.dieselOnly = true;
   if (/\bgas\b/i.test(t) && !filter.dieselOnly) filter.gasOnly = true;
+
+  const toyHauler = /\btoy[- ]?haul(?:er|ers)?\b/i.test(t);
+  if (toyHauler) filter.toyHauler = true;
 
   if (/\bsuper\s*c\b/i.test(t)) filter.bodyType = "Class Super C";
   else if (/\bclass\s*a\s*diesel\b/i.test(t)) filter.bodyType = "Class A Diesel";
@@ -501,9 +630,91 @@ function parseMoneyMatch(m: RegExpMatchArray): number | null {
 const OWN_LOT_MONEY_CHUNK =
   "\\$?\\s*(\\d{1,3}(?:,\\d{3})+|\\d+(?:\\.\\d+)?)(\\s*k)?\\b";
 
+const SPELLED_ONES: Record<string, number> = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+  thirteen: 13,
+  fourteen: 14,
+  fifteen: 15,
+  sixteen: 16,
+  seventeen: 17,
+  eighteen: 18,
+  nineteen: 19,
+};
+
+const SPELLED_TENS: Record<string, number> = {
+  twenty: 20,
+  thirty: 30,
+  forty: 40,
+  fifty: 50,
+  sixty: 60,
+  seventy: 70,
+  eighty: 80,
+  ninety: 90,
+};
+
+function parseSpelledSmallNumber(raw: string): number | null {
+  const t = raw.toLowerCase().replace(/-/g, " ").replace(/\s+/g, " ").trim();
+  if (!t) return null;
+  if (SPELLED_ONES[t] != null) return SPELLED_ONES[t]!;
+  if (SPELLED_TENS[t] != null) return SPELLED_TENS[t]!;
+  const parts = t.split(" ");
+  if (
+    parts.length === 2 &&
+    SPELLED_TENS[parts[0]!] != null &&
+    SPELLED_ONES[parts[1]!] != null
+  ) {
+    return SPELLED_TENS[parts[0]!]! + SPELLED_ONES[parts[1]!]!;
+  }
+  if (/^\d{1,3}$/.test(t)) return Number(t);
+  return null;
+}
+
+const SPELLED_THOUSANDS_RE =
+  /\b((?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?:[-\s]+(?:one|two|three|four|five|six|seven|eight|nine))?|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|one|two|three|four|five|six|seven|eight|nine|\d{1,3})\s+thousand\b/i;
+
+/** "fifty thousand" / "fifty-thousand" / "80 thousand" → 50000 / 80000. */
+export function parseSpelledThousands(text: string): number | null {
+  const m = normalizeAskText(text).match(SPELLED_THOUSANDS_RE);
+  if (!m?.[1]) return null;
+  const n = parseSpelledSmallNumber(m[1]);
+  return n != null && n > 0 ? n * 1000 : null;
+}
+
+function budgetFromAmount(
+  t: string,
+  amount: number,
+): Pick<OwnLotFilter, "minPrice" | "maxPrice" | "aroundPrice"> {
+  if (
+    /(?:under|below|less\s+than|up\s+to|max(?:imum)?)\s+(?:\$\s*)?(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d)/i.test(
+      t,
+    )
+  ) {
+    return { maxPrice: amount };
+  }
+  if (
+    /(?:over|above|more\s+than|at\s+least|min(?:imum)?)\s+(?:\$\s*)?(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d)/i.test(
+      t,
+    )
+  ) {
+    return { minPrice: amount };
+  }
+  return { aroundPrice: amount };
+}
+
 /**
  * Budget / "around $X" from the ask. Years (2024) are not money unless
- * they carry $ or k.
+ * they carry $ or k. Spelled "fifty thousand dollar" counts as around $50k.
  */
 export function parseOwnLotBudget(text: string): Pick<
   OwnLotFilter,
@@ -540,6 +751,8 @@ export function parseOwnLotBudget(text: string): Pick<
     const n = parseMoneyMatch(over);
     if (n != null) return { minPrice: n };
   }
+  const spelled = parseSpelledThousands(t);
+  if (spelled != null) return budgetFromAmount(t, spelled);
   return {};
 }
 
@@ -582,6 +795,11 @@ export function unitMatchesFilter(
   unit: OwnLotUnit,
   filter: OwnLotFilter,
 ): boolean {
+  if (filter.stockNumber) {
+    const us = norm(unit.stock_number).replace(/^#/, "");
+    const fs = norm(filter.stockNumber).replace(/^#/, "");
+    if (!us || us !== fs) return false;
+  }
   if (filter.year && unit.year && unit.year !== filter.year) return false;
   if (filter.year && !unit.year) return false;
   if (filter.make) {
@@ -604,6 +822,7 @@ export function unitMatchesFilter(
   if (filter.bodyType && !bodyTypeMatches(unit.body_type, filter.bodyType)) {
     return false;
   }
+  if (filter.toyHauler && !unitLooksLikeToyHauler(unit)) return false;
   if (filter.maxPrice != null) {
     if (unit.price == null || unit.price > filter.maxPrice) return false;
   }
@@ -736,10 +955,12 @@ function formatCountMap(map: Record<string, number>, max = 12): string {
 
 function filterLabel(filter: OwnLotFilter): string {
   const bits = [
+    filter.stockNumber ? `stk ${filter.stockNumber}` : "",
     filter.year,
     filter.make,
     filter.model,
     filter.bodyType,
+    filter.toyHauler ? "toy hauler" : "",
     filter.location,
     filter.dieselOnly ? "diesel (body_type proxy)" : "",
     filter.gasOnly ? "gas (body_type label)" : "",
@@ -847,6 +1068,8 @@ export function formatOwnLotBlock(
   );
 
   const listingAsk = looksLikeOwnLotListingPriceQuestion(query);
+  const listAsk = looksLikeOwnLotUnitListQuestion(query);
+  const stockAsk = Boolean(filter.stockNumber);
   const narrowIdentity = Boolean(
     filter.make || filter.model || filter.year || filter.location,
   );
@@ -855,15 +1078,18 @@ export function formatOwnLotBlock(
     filter.maxPrice != null ||
     filter.aroundPrice != null;
   const classFilter = Boolean(
-    filter.dieselOnly || filter.gasOnly || filter.bodyType,
+    filter.dieselOnly ||
+      filter.gasOnly ||
+      filter.bodyType ||
+      filter.toyHauler,
   );
   const wantListings =
     counts.matched > 0 &&
-    (
+    (stockAsk ||
+      listAsk ||
       ((listingAsk || budgetFilter) &&
         (narrowIdentity || classFilter || budgetFilter)) ||
-      (narrowIdentity && counts.matched <= MATCH_LIST_MAX)
-    );
+      (narrowIdentity && counts.matched <= MATCH_LIST_MAX));
 
   if (wantListings) {
     const rows = queryOwnLotUnits(snapshot.units, filter, MATCH_LIST_MAX);
@@ -871,12 +1097,21 @@ export function formatOwnLotBlock(
       lines.push(
         `Matching units (from file only, ${rows.length} of ${counts.matched}; year/make/model/trim/stock/location/price):`,
         ...rows.map(formatUnitListing),
+        "Specific units ARE listed above. Never say you cannot pull specific units, that the snapshot does not break out a list or count, or that you cannot list units when these rows are present (or when Matched > 0 with listing prices).",
       );
     }
-  } else if (listingAsk && counts.matched > MATCH_LIST_MAX) {
-    lines.push(
-      "Too many matched units to list. Narrow by location, class, make, or budget for specific priced units.",
-    );
+  } else if (
+    (listingAsk || listAsk || budgetFilter) &&
+    counts.matched > MATCH_LIST_MAX
+  ) {
+    const rows = queryOwnLotUnits(snapshot.units, filter, MATCH_LIST_MAX);
+    if (rows.length) {
+      lines.push(
+        `Matching units (from file only, first ${rows.length} of ${counts.matched}; year/make/model/trim/stock/location/price):`,
+        ...rows.map(formatUnitListing),
+        "Specific units ARE listed above. Never say you cannot pull specific units or that the snapshot does not break out a list.",
+      );
+    }
   }
 
   return lines.join("\n");
