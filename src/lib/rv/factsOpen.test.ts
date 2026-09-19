@@ -10,6 +10,7 @@ import {
   FACTS_TYPE_OPTIONS,
   factsSearchEnabled,
   factsTypeLabel,
+  hasConcreteFloorplan,
   revealFactsFloorplan,
   revealFactsModel,
   revealFactsYear,
@@ -196,6 +197,43 @@ test("Floorplan reveal is its own step after Model — not with Make", () => {
     true,
     "restored floorplan still shows the field",
   );
+});
+
+test("hasConcreteFloorplan rejects empty / Any floorplan sentinels", () => {
+  assert.equal(hasConcreteFloorplan(""), false);
+  assert.equal(hasConcreteFloorplan("   "), false);
+  assert.equal(hasConcreteFloorplan(null), false);
+  assert.equal(hasConcreteFloorplan(undefined), false);
+  assert.equal(hasConcreteFloorplan("Any floorplan"), false);
+  assert.equal(hasConcreteFloorplan("any floorplan"), false);
+  assert.equal(hasConcreteFloorplan("Any"), false);
+  assert.equal(hasConcreteFloorplan("45A"), true);
+  assert.equal(hasConcreteFloorplan(" 4551 "), true);
+  assert.equal(hasConcreteFloorplan("3855BR"), true);
+});
+
+test("Vehicle specifications card is gated on a concrete floorplan", () => {
+  const detail = readFileSync(
+    join(root, "../../components/rvfax/RvDetail.tsx"),
+    "utf8",
+  );
+  assert.match(detail, /hasConcreteFloorplan/);
+  assert.match(
+    detail,
+    /hasConcreteFloorplan\(floorplan\) \? \([\s\S]*?title="Vehicle specifications"/,
+    "Vehicle specifications FactsCollapse must wait for a concrete floorplan",
+  );
+  assert.match(detail, /honestReportRatingRows\(reportRatings\)/);
+  assert.match(detail, /Owner reviews/);
+  assert.match(
+    detail,
+    /three identical bars pretending independence/,
+    "ratings helper documents the honesty collapse",
+  );
+  // Distinct Insider labels stay in source for when scores/captions differ
+  assert.match(detail, /label:\s*"Reliability"/);
+  assert.match(detail, /label:\s*"Customer satisfaction"/);
+  assert.match(detail, /Torque-to-Weight/);
 });
 
 test("cascade auto-search fires on floorplan, never on model alone", () => {
