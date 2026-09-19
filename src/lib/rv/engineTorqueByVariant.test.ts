@@ -57,6 +57,27 @@ test("conflicting published ratings stay GAP — no invent", () => {
   );
 });
 
+test("Power Stroke 300/750 is FLAG'd — lookup stays GAP, never 750/660/725", () => {
+  assert.equal(ENGINE_TORQUE_BY_VARIANT["ford-ps-6.7|300"], undefined);
+  assert.equal(ENGINE_TORQUE_BY_VARIANT["ford-6.7|300"], undefined);
+  for (const [key, pin] of Object.entries(ENGINE_TORQUE_BY_VARIANT)) {
+    assert.doesNotMatch(key, /ford-ps-6\.7\|300|ford-6\.7\|300/);
+    assert.doesNotMatch(pin.source, /300\s*\/\s*750/);
+    if (/ford-ps-6\.7\|300/.test(key)) {
+      assert.notEqual(pin.torqueLbFt, 750);
+    }
+  }
+  const ps300 = "Ford 6.7L Power Stroke V8 300HP";
+  assert.equal(lookupPublishedEngineTorque(ps300, 300), null);
+  const applied = applyPublishedEngineTorque({
+    engine: ps300,
+    horsepower: 300,
+    note: "Omni MY19-shaped Super C — do not invent 300/750",
+  });
+  assert.equal(applied.torqueLbFt, undefined);
+  assert.doesNotMatch(JSON.stringify(ENGINE_TORQUE_BY_VARIANT), /300 \/ 750/);
+});
+
 test("unnamed / mixed Cummins strings do not guess a family", () => {
   assert.equal(engineVariantKey("Cummins 500HP", 500), null);
   assert.equal(engineVariantKey("Cummins diesel 425HP", 425), null);

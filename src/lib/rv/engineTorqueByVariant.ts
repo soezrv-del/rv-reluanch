@@ -6,6 +6,8 @@
  * Conflicts (ISB 340 660/700/800, ISB 360 800/1000, ISL 380 1050/1150,
  * Power Stroke 330 750/825/950, OM642 188 260/325) stay GAP — never invent
  * and never stamp one rating on an option band (L9 450 / X15 605).
+ * Power Stroke 300/750 is FLAG'd (no clean OEM) — do not backfill 750,
+ * and do not guess 300/660 or 300/725 without a matching year/application.
  */
 
 import {
@@ -251,10 +253,6 @@ export const ENGINE_TORQUE_BY_VARIANT: Record<string, PublishedEngineTorque> = {
     torqueLbFt: 468,
     source: "OEM MY21–22 Greyhawk Prestige / Precept: 7.3 350 / 468",
   },
-  "ford-ps-6.7|300": {
-    torqueLbFt: 750,
-    source: "OEM MY19 Omni: F-550 Power Stroke 300 / 750",
-  },
   "gm-6.0|342": {
     torqueLbFt: 373,
     source: "OEM MY21 Redhawk SE flyer: 6.0 Vortec 342 / 373",
@@ -289,10 +287,23 @@ export const ENGINE_TORQUE_BY_VARIANT: Record<string, PublishedEngineTorque> = {
   },
 };
 
+function isFlaggedPowerStroke300(
+  engine: string | null | undefined,
+  horsepower: number,
+): boolean {
+  if (Math.round(horsepower) !== 300) return false;
+  const e = (engine || "").toLowerCase();
+  return /power\s*stroke/.test(e) && /6\.7/.test(e);
+}
+
 export function lookupPublishedEngineTorque(
   engine: string | null | undefined,
   horsepower: number,
 ): (PublishedEngineTorque & { key: string }) | null {
+  // Boss discrete table FLAGS 300/750 (no clean OEM). 300/660 (2011–16
+  // chassis cab) and 300/725 (F-650 99E) need year + application — this
+  // lookup has neither, so Power Stroke 300 stays GAP.
+  if (isFlaggedPowerStroke300(engine, horsepower)) return null;
   const key = engineVariantKey(engine, horsepower);
   if (!key) return null;
   const pin = ENGINE_TORQUE_BY_VARIANT[key];
