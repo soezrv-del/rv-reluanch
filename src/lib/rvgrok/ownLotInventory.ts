@@ -6,6 +6,9 @@
  * inventory / in-stock — never stuffed into every chat turn.
  *
  * File has no fuel field. Diesel ≈ body_type "Class A Diesel" + "Class Super C".
+ * Listing prices are on the scrape (`price`, then price_current / price_hidden /
+ * price_lowest / price_msrp). Grounding must pass those through — never tell
+ * the model the snapshot has no price data when priced units exist.
  *
  * Path default: /home/box/agent-data/projects/rvfox/inventory/own-lot-latest.json
  * Override: OWN_LOT_INVENTORY_URL (exclusive) or OWN_LOT_INVENTORY_PATH.
