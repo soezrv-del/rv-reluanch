@@ -9,8 +9,13 @@
  *   overallQuality, livability, floorplan, drivingTowing, factoryWarranty
  * There is no named Reliability or Customer Satisfaction sub-score.
  *
- * Factory warranty is factory support — not RVDA DSI, not owner reliability.
- * It is stored for audit only and is never shown as "Dealer support index".
+ * Facts slot map (combined at most once — see ownerReviewRatings.ts):
+ *   Quality      ← overallQuality only. Null → GAP (no silent combined).
+ *   Reliability  ← GAP. Do not paint combined here.
+ *   Satisfaction ← combined header average, labeled "(combined)".
+ * livability / floorplan / drivingTowing stay unused — never relabeled as
+ * Reliability or Satisfaction. factoryWarranty is factory support — not
+ * RVDA DSI, not owner reliability, not satisfaction — audit only.
  *
  * Do not invent numbers. Do not copy a brand row onto a different make.
  */

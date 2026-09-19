@@ -41,12 +41,17 @@ test("mapReportRatings: unknown make is GAP; seeded brand is owner reviews", () 
 
   const forest = mapReportRatings({ make: "Forest River", model: "Georgetown" });
   assert.equal(forest.quality.score, 3.1);
-  assert.equal(forest.reliability.score, 3.6);
+  assert.equal(forest.reliability.score, null);
+  assert.equal(forest.reliability.stars, null);
   assert.equal(forest.customerSatisfaction.score, 3.6);
   assert.equal(forest.quality.grain, "brand");
   assert.match(forest.quality.caption ?? "", /Owner reviews · overall quality · brand-level/);
-  assert.match(forest.reliability.caption ?? "", /Owner reviews \(combined\) · brand-level/);
-  assert.match(forest.customerSatisfaction.caption ?? "", /Owner reviews · brand-level/);
+  assert.equal(forest.reliability.caption, null);
+  assert.match(
+    forest.customerSatisfaction.caption ?? "",
+    /Owner reviews \(combined\) · brand-level/,
+  );
+  assert.notEqual(forest.quality.score, forest.customerSatisfaction.score);
 });
 
 test("Facts Ratings section wires owner reviews and does not invent from live/warranty", () => {
@@ -62,6 +67,7 @@ test("Facts Ratings section wires owner reviews and does not invent from live/wa
   assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
   assert.match(detail, /OWNER_REVIEW_FOOTER/);
   assert.match(detail, /formatOwnerReviewScore/);
+  assert.match(detail, /R = GAP \(no Insider category\)/);
   assert.doesNotMatch(detail, /qualityScore:\s*live\?\.live\s*\?\s*live\.ratingEstimate/);
   assert.doesNotMatch(detail, /qualityScore:\s*displayRating/);
   assert.doesNotMatch(detail, /reliabilityScore:\s*data\.warrantyYears/);

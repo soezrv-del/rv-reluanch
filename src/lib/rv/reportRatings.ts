@@ -3,7 +3,9 @@
  *
  * Quality / Reliability / Customer satisfaction come from the dated
  * RV Insider owner-review snapshot (see ownerReviewRatings.ts).
- * Missing / below sample floor / unknown brand → GAP.
+ * Quality = overallQuality or GAP. Reliability is always GAP (no Insider
+ * category). Satisfaction = combined, painted once. Missing / below
+ * sample floor / unknown brand → GAP.
  *
  * Do not invent from warranty years, NHTSA counts, mock reviews,
  * RvFOX editorial scores, Grok ratingEstimate, or ownerSentiment prose.
