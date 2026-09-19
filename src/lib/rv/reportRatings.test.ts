@@ -27,48 +27,50 @@ test("groundedStars maps existing 1–5 scores only — no invented bands", () =
   assert.equal(formatStarsOrGap(null), "GAP");
 });
 
-test("mapReportRatings: quality from ratingEstimate; others GAP unless a numeric score is passed", () => {
+test("mapReportRatings: unknown make is GAP; seeded brand is owner reviews", () => {
   const empty = mapReportRatings({});
-  assert.deepEqual(empty, {
-    quality: null,
-    reliability: null,
-    customerSatisfaction: null,
-  });
+  assert.equal(empty.quality.score, null);
+  assert.equal(empty.reliability.score, null);
+  assert.equal(empty.customerSatisfaction.score, null);
 
-  const liveQuality = mapReportRatings({ qualityScore: 4.2 });
-  assert.equal(liveQuality.quality, 4);
-  assert.equal(liveQuality.reliability, null);
-  assert.equal(liveQuality.customerSatisfaction, null);
+  const unknown = mapReportRatings({ make: "Palomino", model: "SolAire" });
+  assert.equal(unknown.quality.score, null);
+  assert.equal(unknown.reliability.score, null);
+  assert.equal(unknown.customerSatisfaction.score, null);
+  assert.equal(unknown.quality.caption, null);
 
-  const allGrounded = mapReportRatings({
-    qualityScore: 4,
-    reliabilityScore: 3,
-    satisfactionScore: 5,
-  });
-  assert.deepEqual(allGrounded, {
-    quality: 4,
-    reliability: 3,
-    customerSatisfaction: 5,
-  });
+  const forest = mapReportRatings({ make: "Forest River", model: "Georgetown" });
+  assert.equal(forest.quality.score, 3.1);
+  assert.equal(forest.reliability.score, 3.6);
+  assert.equal(forest.customerSatisfaction.score, 3.6);
+  assert.equal(forest.quality.grain, "brand");
+  assert.match(forest.quality.caption ?? "", /Owner reviews · overall quality · brand-level/);
+  assert.match(forest.reliability.caption ?? "", /Owner reviews \(combined\) · brand-level/);
+  assert.match(forest.customerSatisfaction.caption ?? "", /Owner reviews · brand-level/);
 });
 
-test("Facts Ratings section shows four rows and does not invent reliability/satisfaction", () => {
+test("Facts Ratings section wires owner reviews and does not invent from live/warranty", () => {
   const detail = readFileSync(
     join(root, "../../components/rvfax/RvDetail.tsx"),
     "utf8",
   );
-  assert.match(detail, /mapReportRatings/);
-  assert.match(detail, /qualityScore:\s*live\?\.live\s*\?\s*live\.ratingEstimate/);
+  assert.match(detail, /mapReportRatings\(\{\s*make,\s*model\s*\}\)/);
   assert.match(detail, /label:\s*"Quality"/);
   assert.match(detail, /label:\s*"Reliability"/);
   assert.match(detail, /label:\s*"Customer satisfaction"/);
   assert.match(detail, /Torque-to-Weight/);
   assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
-  // Do not invent from warranty / NHTSA / mock reviews / RvFOX displayRating.
-  assert.doesNotMatch(
-    detail,
-    /qualityScore:\s*displayRating/,
-  );
+  assert.match(detail, /OWNER_REVIEW_FOOTER/);
+  assert.match(detail, /formatOwnerReviewScore/);
+  assert.doesNotMatch(detail, /qualityScore:\s*live\?\.live\s*\?\s*live\.ratingEstimate/);
+  assert.doesNotMatch(detail, /qualityScore:\s*displayRating/);
   assert.doesNotMatch(detail, /reliabilityScore:\s*data\.warrantyYears/);
   assert.doesNotMatch(detail, /satisfactionScore:\s*displayRating/);
+  const ratingsBlock = detail.slice(
+    detail.indexOf('data-testid="facts-ratings"'),
+    detail.indexOf('data-facts-market-value'),
+  );
+  assert.doesNotMatch(ratingsBlock, /J\.D\. Power/);
+  assert.doesNotMatch(ratingsBlock, /Consumer Reports/);
+  assert.doesNotMatch(ratingsBlock, /Dealer support index/);
 });

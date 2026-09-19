@@ -41,7 +41,11 @@ import {
   formatTorqueToWeightScore,
   computeTorqueToWeight,
 } from "@/lib/rv/torqueToWeight";
-import { mapReportRatings } from "@/lib/rv/reportRatings";
+import {
+  OWNER_REVIEW_FOOTER,
+  formatOwnerReviewScore,
+  mapReportRatings,
+} from "@/lib/rv/reportRatings";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import {
   findPowertrainCorrection,
@@ -670,28 +674,33 @@ export function RvDetail({
   );
 
   const reportRatings = useMemo(
-    () =>
-      mapReportRatings({
-        qualityScore: live?.live ? live.ratingEstimate : null,
-      }),
-    [live],
+    () => mapReportRatings({ make, model }),
+    [make, model],
   );
 
   const ratingsRows: Array<{
     key: string;
     label: string;
-    stars: 1 | 2 | 3 | 4 | 5 | null;
+    score: number | null;
+    caption: string | null;
   }> = [
-    { key: "quality", label: "Quality", stars: reportRatings.quality },
+    {
+      key: "quality",
+      label: "Quality",
+      score: reportRatings.quality.score,
+      caption: reportRatings.quality.caption,
+    },
     {
       key: "reliability",
       label: "Reliability",
-      stars: reportRatings.reliability,
+      score: reportRatings.reliability.score,
+      caption: reportRatings.reliability.caption,
     },
     {
       key: "satisfaction",
       label: "Customer satisfaction",
-      stars: reportRatings.customerSatisfaction,
+      score: reportRatings.customerSatisfaction.score,
+      caption: reportRatings.customerSatisfaction.caption,
     },
   ];
 
@@ -1444,21 +1453,37 @@ export function RvDetail({
               {ratingsRows.map((row) => (
                 <li
                   key={row.key}
-                  className="flex items-center justify-between gap-3 py-3 first:pt-1 last:pb-0"
+                  className="flex items-start justify-between gap-3 py-3 first:pt-1 last:pb-0"
+                  data-testid={`facts-ratings-${row.key}`}
                 >
-                  <span className="text-[14px] font-medium text-white">
-                    {row.label}
-                  </span>
-                  {row.stars == null ? (
-                    <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                  <div className="min-w-0">
+                    <span className="text-[14px] font-medium text-white">
+                      {row.label}
+                    </span>
+                    {row.caption ? (
+                      <p
+                        className="mt-0.5 text-[11px] leading-snug text-white/45"
+                        data-testid={`facts-ratings-${row.key}-caption`}
+                      >
+                        {row.caption}
+                      </p>
+                    ) : null}
+                  </div>
+                  {row.score == null ? (
+                    <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
                       GAP
                     </span>
                   ) : (
                     <span
-                      className="text-[13px] tracking-wide text-amber-200/90"
-                      aria-label={`${row.stars} stars`}
+                      className="flex shrink-0 items-baseline gap-2 text-amber-200/90"
+                      aria-label={`${formatOwnerReviewScore(row.score)} owner reviews`}
                     >
-                      {ratingStars(row.stars)}
+                      <span className="text-[13px] font-semibold tabular-nums text-white">
+                        {formatOwnerReviewScore(row.score)}
+                      </span>
+                      <span className="text-[13px] tracking-wide">
+                        {ratingStars(row.score)}
+                      </span>
                     </span>
                   )}
                 </li>
@@ -1498,8 +1523,7 @@ export function RvDetail({
               </li>
             </ul>
             <p className="mt-3 text-[11px] leading-relaxed text-white/45">
-              Grounded scores only. GAP means the field is missing — not a
-              guessed star.
+              {OWNER_REVIEW_FOOTER}
             </p>
           </section>
 
