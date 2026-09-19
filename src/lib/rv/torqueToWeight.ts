@@ -1,21 +1,20 @@
 /**
  * Torque-to-weight rating for the Facts report Ratings section.
  *
- * Weight metric: UVW in pounds (empty/dry coach weight).
+ * Weight metric: UVW in pounds (empty/dry coach weight) — never GVWR.
  * Prefer numeric powertrainGuard / brochure hard torque when present;
- * else parse specs.torque. Parse UVW from specs.uvw (strip commas/units).
- *
- * Torque is lb-ft only — never horsepower.
+ * else parse specs.torque. Parse UVW from specs.uvw / uvwLbs
+ * (strip commas/units). Torque is lb-ft only — never horsepower.
  *
  * Ratio: r = (torqueLbFt / uvwLb) * 1000  →  lb-ft per 1,000 lb UVW
  *
- * Stars (integer 1–5):
- *   GAP  torque missing OR uvw missing OR ≤0
- *   5    r ≥ 40
- *   4    r ≥ 32
- *   3    r ≥ 24
- *   2    r ≥ 16
- *   1    r < 16
+ * Motorhome bands (half-open):
+ *   GAP / N/A  torque missing OR uvw missing OR ≤0 OR towable
+ *   1★  [0, 10)
+ *   2★  [10, 18)
+ *   3★  [18, 30)
+ *   4★  [30, 50)
+ *   5★  [50, ∞)
  */
 
 export type TorqueToWeightStars = 1 | 2 | 3 | 4 | 5;
@@ -29,6 +28,9 @@ export type TorqueToWeightInput = {
   uvwLbs?: number | null;
   /** Display / specs.uvw string (commas + units stripped). */
   uvwRaw?: string | number | null;
+  /** Coach type / fuel — towables are N/A (no engine torque rating). */
+  rvType?: string | null;
+  fuelType?: string | null;
 };
 
 export type TorqueToWeightResult = {
@@ -38,6 +40,8 @@ export type TorqueToWeightResult = {
   ratio: number | null;
   stars: TorqueToWeightStars | null;
   gap: boolean;
+  /** Towable (trailer / fifth wheel) — N/A, not a motorhome score. */
+  na: boolean;
 };
 
 const EMPTY = /^[—–\-]$/;
@@ -56,7 +60,7 @@ export function parseTorqueLbFt(
   if (raw == null || raw === "") return null;
   if (typeof raw === "number") return positiveInt(raw);
   const s = String(raw).trim();
-  if (!s || EMPTY.test(s)) return null;
+  if (!s || EMPTY.test(s) || /^n\/a\b/i.test(s)) return null;
 
   const compact = s.replace(/,/g, "");
   const labeled = compact.match(
@@ -81,7 +85,9 @@ export function parseUvwLb(
   if (raw == null || raw === "") return null;
   if (typeof raw === "number") return positiveInt(raw);
   const s = String(raw).trim();
-  if (!s || EMPTY.test(s)) return null;
+  if (!s || EMPTY.test(s) || /^n\/a\b/i.test(s) || /\bgvwr\b/i.test(s)) {
+    return null;
+  }
 
   const compact = s.replace(/,/g, "").replace(/lbs?\.?/gi, " ");
   const nums = [...compact.matchAll(/(\d+(?:\.\d+)?)/g)]
@@ -99,20 +105,49 @@ export function torqueToWeightRatio(
   return (torqueLbFt / uvwLb) * 1000;
 }
 
+/**
+ * Towables have no coach engine torque. Motorized Class C toy haulers
+ * stay rateable; a bare "Toy Hauler" / fifth wheel / TT is N/A.
+ */
+export function isTowableForTorqueRating(
+  rvType?: string | null,
+  fuelType?: string | null,
+): boolean {
+  const t = `${rvType || ""} ${fuelType || ""}`.toLowerCase();
+  if (!t.trim()) return false;
+  if (/class\s*[abc]|super\s*c|motorhome|diesel\s*pusher/.test(t)) {
+    return false;
+  }
+  return /travel\s*trailer|fifth\s*wheel|5th\s*wheel|toy\s*hauler|truck\s*camper|pop-?up|teardrop|\btowable\b/.test(
+    t,
+  );
+}
+
 export function starsFromTorqueToWeightRatio(
   ratio: number | null | undefined,
 ): TorqueToWeightStars | null {
-  if (ratio == null || !Number.isFinite(ratio)) return null;
-  if (ratio >= 40) return 5;
-  if (ratio >= 32) return 4;
-  if (ratio >= 24) return 3;
-  if (ratio >= 16) return 2;
+  if (ratio == null || !Number.isFinite(ratio) || ratio < 0) return null;
+  if (ratio >= 50) return 5;
+  if (ratio >= 30) return 4;
+  if (ratio >= 18) return 3;
+  if (ratio >= 10) return 2;
   return 1;
 }
 
 export function computeTorqueToWeight(
   input: TorqueToWeightInput,
 ): TorqueToWeightResult {
+  const na = isTowableForTorqueRating(input.rvType, input.fuelType);
+  if (na) {
+    return {
+      torqueLbFt: null,
+      uvwLb: null,
+      ratio: null,
+      stars: null,
+      gap: true,
+      na: true,
+    };
+  }
   const torqueLbFt =
     positiveInt(input.torqueLbFt ?? 0) ?? parseTorqueLbFt(input.torqueRaw);
   const uvwLb = positiveInt(input.uvwLbs ?? 0) ?? parseUvwLb(input.uvwRaw);
@@ -127,6 +162,7 @@ export function computeTorqueToWeight(
     ratio,
     stars,
     gap: stars == null,
+    na: false,
   };
 }
 
@@ -134,6 +170,7 @@ export function computeTorqueToWeight(
 export function formatTorqueToWeightStars(
   result: TorqueToWeightResult,
 ): string {
+  if (result.na) return "N/A";
   if (result.gap || result.stars == null) return "GAP";
   return "★".repeat(result.stars) + "☆".repeat(5 - result.stars);
 }

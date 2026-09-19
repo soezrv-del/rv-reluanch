@@ -649,8 +649,17 @@ export function RvDetail({
         torqueRaw: specs.torque,
         uvwLbs: live?.uvwLbs ?? null,
         uvwRaw: specs.uvw,
+        rvType: data.type,
+        fuelType: data.fuelType,
       }),
-    [powertrainGuard.hard.torqueLbFt, specs.torque, specs.uvw, live?.uvwLbs],
+    [
+      powertrainGuard.hard.torqueLbFt,
+      specs.torque,
+      specs.uvw,
+      live?.uvwLbs,
+      data.type,
+      data.fuelType,
+    ],
   );
 
   const reportRatings = useMemo(
@@ -1450,7 +1459,9 @@ export function RvDetail({
                   </span>
                   {row.stars == null ? (
                     <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
-                      GAP
+                      {row.key === "torque-to-weight" && torqueToWeight.na
+                        ? "N/A"
+                        : "GAP"}
                     </span>
                   ) : (
                     <span
