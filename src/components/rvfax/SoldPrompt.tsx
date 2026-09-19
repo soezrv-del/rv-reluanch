@@ -44,6 +44,8 @@ export function SoldPrompt({
   const nameRef = useRef<HTMLInputElement | null>(null);
   const grossRef = useRef<HTMLInputElement | null>(null);
   const flatRef = useRef<HTMLInputElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   const kb = useKeyboardInset();
   const unitLabel = formatUnitLabel(unit);
   const stepIndex = STEPS.indexOf(step);
@@ -73,6 +75,53 @@ export function SoldPrompt({
     }
     if (step === "gross") grossRef.current?.focus();
   }, [flatOn, step]);
+
+  // Dismiss without logging. Skip/Back on the name step used to advance
+  // (or loop back to name) so the only escape was "Log deal" or the X.
+  const dismiss = () => {
+    void hapticLight();
+    onCloseRef.current();
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      onCloseRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Own a history entry so chrome / hardware Back pops the overlay
+  // instead of no-oping at the preview history root.
+  useEffect(() => {
+    let closedByPop = false;
+    const prev = window.history.state;
+    const marker =
+      prev !== null && typeof prev === "object"
+        ? { ...prev, soldPrompt: true }
+        : { soldPrompt: true };
+    window.history.pushState(marker, "");
+    const onPop = () => {
+      closedByPop = true;
+      onCloseRef.current();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      const state = window.history.state;
+      if (
+        !closedByPop &&
+        state !== null &&
+        typeof state === "object" &&
+        "soldPrompt" in state &&
+        Boolean((state as { soldPrompt?: unknown }).soldPrompt)
+      ) {
+        window.history.back();
+      }
+    };
+  }, []);
 
   const go = (next: Step) => {
     void hapticLight();
@@ -142,7 +191,8 @@ export function SoldPrompt({
             <section className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4">
               <p className="text-[15px] font-bold text-white">Customer name</p>
               <p className="text-[12px] text-white/65">
-                Optional — skip anytime. Never blocks the deal.
+                Optional. Skip or Back returns to Facts without logging a
+                deal. Next continues with or without a name.
               </p>
               <input
                 ref={nameRef}
@@ -155,16 +205,24 @@ export function SoldPrompt({
               <div className="flex gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    setName("");
-                    go("gross");
-                  }}
+                  data-sold-name-back=""
+                  onClick={dismiss}
+                  className="inline-flex min-h-[48px] items-center gap-1 rounded-full border border-white/20 bg-black/40 px-4 text-[13px] font-bold text-white"
+                >
+                  <ChevronLeft className="size-4" />
+                  Back
+                </button>
+                <button
+                  type="button"
+                  data-sold-skip=""
+                  onClick={dismiss}
                   className="min-h-[48px] flex-1 rounded-full border border-white/20 bg-black/40 px-4 text-[13px] font-bold text-white"
                 >
                   Skip
                 </button>
                 <button
                   type="button"
+                  data-sold-name-next=""
                   onClick={() => go("gross")}
                   className="min-h-[48px] flex-1 rounded-full bg-blue px-4 text-[13px] font-bold text-white"
                 >

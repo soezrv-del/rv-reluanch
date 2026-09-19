@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   dealPayable,
   formatSoldDockAria,
@@ -24,6 +27,8 @@ import {
   removeSavedUnit,
   type SavedUnitLike,
 } from "./savedUnits.ts";
+
+const root = dirname(fileURLToPath(import.meta.url));
 
 function unit(
   year: string,
@@ -145,6 +150,30 @@ test("optional customer name never blocks a sell", () => {
   assert.equal(named.ok, true);
   if (!named.ok) return;
   assert.equal(named.deal.customerName, "Pat");
+});
+
+test("SoldPrompt name Skip/Back dismiss to Facts — they do not advance or log", () => {
+  const prompt = readFileSync(
+    join(root, "../../components/rvfax/SoldPrompt.tsx"),
+    "utf8",
+  );
+  assert.match(prompt, /data-sold-skip=""/);
+  assert.match(prompt, /data-sold-name-back=""/);
+  assert.match(prompt, /data-sold-name-next=""/);
+  assert.match(prompt, /const dismiss = \(\) => \{/);
+  assert.match(prompt, /onCloseRef\.current\(\)/);
+  assert.match(prompt, /addEventListener\("popstate"/);
+  assert.match(prompt, /soldPrompt: true/);
+  assert.doesNotMatch(
+    prompt,
+    /setName\(""\);\s*go\("gross"\)/,
+    "Skip must not advance into the deal wizard",
+  );
+  assert.match(
+    prompt,
+    /data-sold-name-next=""\s*onClick=\{\(\) => go\("gross"\)\}/,
+  );
+  assert.match(prompt, /Log deal/);
 });
 
 test("sell removes the coach from saved and keeps other units", () => {
