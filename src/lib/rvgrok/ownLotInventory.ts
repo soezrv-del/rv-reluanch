@@ -459,7 +459,11 @@ export function snapshotFromJson(
   };
 }
 
-/** Catalog leftover after matching "Entegra Coach" against "Entegra coaches". */
+/**
+ * parseCoach leftover / question-tail tokens. "Entegra Coach" is a substring
+ * of "Entegra coaches", so the model parser sees `"es do we have in Fresno?"`
+ * and keeps first word `es`. That is a plural leftover, not a floorplan.
+ */
 const OWN_LOT_MODEL_JUNK = new Set([
   "es",
   "s",
@@ -508,6 +512,9 @@ const OWN_LOT_MODEL_JUNK = new Set([
   "thanks",
 ]);
 
+/** Series letters parseCoach must keep (Lineage M). Not plural leftovers. */
+const OWN_LOT_SERIES_LETTER = /^[mef]$/;
+
 function isYearToken(raw: string): boolean {
   return /^(?:19[89]\d|20[0-2]\d)$/.test(raw.trim());
 }
@@ -544,20 +551,73 @@ function locationTokenSet(locations: string[]): Set<string> {
 }
 
 /**
- * Drop parseCoach leftovers ("es in Fresno" after "Entegra coaches") so
- * make+location asks are not zeroed by a ghost model.
+ * "Entegra Coach" / "American Coach" / "Coachmen" matched as a prefix of
+ * the spoken plural — leftover `es` / `s` is not a model.
+ */
+export function stripCoachBrandPluralLeftover(
+  make: string,
+  model: string,
+): string {
+  const mk = norm(make);
+  const mo = norm(model);
+  if (!mo) return "";
+  if (/(?:coach|men)$/.test(mk) && /^(e?s)(?:\s|$)/.test(mo)) {
+    return mo.replace(/^(e?s)\s*/, "").trim();
+  }
+  return mo;
+}
+
+/** 1–2 letter junk (`es`) or a leftover plural — not a lot/catalog model. */
+export function looksLikeGhostOwnLotModel(model: string): boolean {
+  const n = norm(model);
+  if (!n) return true;
+  if (/^(e?s)$/.test(n)) return true;
+  if (n.length <= 2 && !OWN_LOT_SERIES_LETTER.test(n)) return true;
+  const tokens = n.split(/\s+/);
+  return tokens.every(
+    (tok) => OWN_LOT_MODEL_JUNK.has(tok) || (tok.length <= 2 && !OWN_LOT_SERIES_LETTER.test(tok)),
+  );
+}
+
+function lotHasModel(units: OwnLotUnit[], model: string): boolean {
+  const fm = norm(model);
+  if (!fm || !units.length) return false;
+  return units.some((u) => {
+    const um = norm(u.model);
+    return Boolean(um && (um.includes(fm) || fm.includes(um)));
+  });
+}
+
+/**
+ * Drop parseCoach leftovers ("es" after "Entegra coaches") so make+location
+ * asks are not zeroed by a ghost model that no lot row actually has.
  */
 export function sanitizeOwnLotParsedModel(
   model: string,
   locations: string[] = [],
+  opts?: { make?: string; units?: OwnLotUnit[] },
 ): string | undefined {
-  const tokens = norm(model).split(/\s+/).filter(Boolean);
+  const stripped = stripCoachBrandPluralLeftover(opts?.make || "", model);
+  const tokens = norm(stripped).split(/\s+/).filter(Boolean);
   if (!tokens.length) return undefined;
   const locTokens = locationTokenSet(locations);
   const kept = tokens.filter(
-    (tok) => !OWN_LOT_MODEL_JUNK.has(tok) && !locTokens.has(tok),
+    (tok) =>
+      !OWN_LOT_MODEL_JUNK.has(tok) &&
+      !locTokens.has(tok) &&
+      !(tok.length <= 2 && !OWN_LOT_SERIES_LETTER.test(tok)),
   );
-  return kept.length ? kept.join(" ") : undefined;
+  if (!kept.length) return undefined;
+  const cleaned = kept.join(" ");
+  if (looksLikeGhostOwnLotModel(cleaned)) return undefined;
+  const units = opts?.units || [];
+  if (units.length && !lotHasModel(units, cleaned) && looksLikeGhostOwnLotModel(cleaned)) {
+    return undefined;
+  }
+  if (units.length && !lotHasModel(units, cleaned) && cleaned.length <= 3) {
+    return undefined;
+  }
+  return cleaned;
 }
 
 function unitLooksLikeToyHauler(unit: OwnLotUnit): boolean {
@@ -569,13 +629,17 @@ function unitLooksLikeToyHauler(unit: OwnLotUnit): boolean {
 export function parseOwnLotAsk(
   text: string,
   locations: string[] = [],
+  units: OwnLotUnit[] = [],
 ): OwnLotFilter {
   const t = normalizeAskText(text);
   const parsed = parseCoachFromText(t);
   const filter: OwnLotFilter = {};
   if (parsed.year) filter.year = parsed.year;
   if (parsed.make) filter.make = parsed.make;
-  const model = sanitizeOwnLotParsedModel(parsed.model, locations);
+  const model = sanitizeOwnLotParsedModel(parsed.model, locations, {
+    make: parsed.make,
+    units,
+  });
   if (model) filter.model = model;
 
   const stockNumber = parseOwnLotStockNumber(t);
@@ -1046,7 +1110,7 @@ export function formatOwnLotBlock(
   const locations = [
     ...new Set(snapshot.units.map((u) => u.location).filter(Boolean)),
   ];
-  const filter = parseOwnLotAsk(query, locations);
+  const filter = parseOwnLotAsk(query, locations, snapshot.units);
   const counts = aggregateOwnLot(snapshot.units, filter);
   const asOf = snapshot.asOf || "unknown (no timestamp on file)";
   const dieselNote = snapshot.fuelFieldPresent

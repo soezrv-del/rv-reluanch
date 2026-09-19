@@ -25,6 +25,7 @@ import {
   ownLotHasHit,
   ownLotIsUnavailable,
   ownLotPublicFileCandidates,
+  looksLikeGhostOwnLotModel,
   looksLikeOwnLotUnitListQuestion,
   parseOwnLotAsk,
   parseOwnLotBudget,
@@ -38,9 +39,11 @@ import {
   sanitizeOwnLotParsedModel,
   shouldSkipWebForOwnLot,
   snapshotFromJson,
+  stripCoachBrandPluralLeftover,
   type OwnLotSnapshot,
   type OwnLotUnit,
 } from "./ownLotInventory.ts";
+import { parseCoachFromText } from "./parseCoach.ts";
 import { executeWebResearch } from "./webResearchTelemetry.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -848,6 +851,7 @@ test("stock-number ask matches that unit and injects a priced listing", () => {
   });
   for (const ask of [
     "45282",
+    "stk 45282",
     "stock number 45282",
     "stock #45282",
     "do we have stock 45282",
@@ -898,8 +902,30 @@ test("Entegra + Fresno make+location is 12 matches with listings, not a ghost mo
       }),
     ],
   });
+  const coachGhost = parseCoachFromText(
+    "How many Entegra coaches do we have in Fresno?",
+  );
+  assert.equal(coachGhost.make, "Entegra Coach");
   assert.equal(
-    sanitizeOwnLotParsedModel("es in Fresno", ["Fresno CA", "Harrisburg"]),
+    coachGhost.model,
+    "es",
+    "parseCoach leftover after Entegra Coach ⊂ Entegra coaches",
+  );
+  assert.equal(looksLikeGhostOwnLotModel("es"), true);
+  assert.equal(looksLikeGhostOwnLotModel("s"), true);
+  assert.equal(looksLikeGhostOwnLotModel("m"), false);
+  assert.equal(
+    stripCoachBrandPluralLeftover("Entegra Coach", "es do we have in Fresno"),
+    "do we have in fresno",
+  );
+  assert.equal(
+    sanitizeOwnLotParsedModel("es", ["Fresno CA"], { make: "Entegra Coach" }),
+    undefined,
+  );
+  assert.equal(
+    sanitizeOwnLotParsedModel("es in Fresno", ["Fresno CA", "Harrisburg"], {
+      make: "Entegra Coach",
+    }),
     undefined,
   );
   assert.equal(sanitizeOwnLotParsedModel("Dutch Star", ["Fresno CA"]), "dutch star");
@@ -908,7 +934,7 @@ test("Entegra + Fresno make+location is 12 matches with listings, not a ghost mo
     "How many Entegra coaches in Fresno?",
     "How many Entegra coaches do we have in Fresno?",
   ]) {
-    const filter = parseOwnLotAsk(ask, ["Fresno CA", "Harrisburg"]);
+    const filter = parseOwnLotAsk(ask, ["Fresno CA", "Harrisburg"], snapshot.units);
     assert.equal(filter.make, "Entegra Coach", ask);
     assert.equal(filter.location, "Fresno CA", ask);
     assert.equal(filter.model, undefined, `${ask} ghost model was ${filter.model}`);
