@@ -1,4 +1,5 @@
 import { seriesAliasEquals } from "../rvgrok/parseCoach.ts";
+import { applyPublishedEngineTorque } from "./engineTorqueByVariant.ts";
 
 /**
  * Hard brochure corrections for known catalog / Live Grok mistakes.
@@ -12373,7 +12374,9 @@ export function findPowertrainCorrection(
     return b.modelIncludes.length - a.modelIncludes.length;
   });
 
-  return hits[0] ?? null;
+  const hit = hits[0];
+  if (!hit) return null;
+  return applyPublishedEngineTorque(hit);
 }
 
 /** True when Live Grok engine text conflicts with a brochure pin. */

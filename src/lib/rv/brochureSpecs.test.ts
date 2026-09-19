@@ -4396,7 +4396,7 @@ test("Winnebago 2025–2027 OEM year-first floorplans + yearEnds", () => {
 
   const spPin = findPowertrainCorrection("2025", "Winnebago", "Spirit", "22M");
   assert.equal(spPin!.horsepower, 350);
-  assert.equal(spPin!.torqueLbFt, undefined);
+  assert.equal(spPin!.torqueLbFt, 468);
   const mwPin = findPowertrainCorrection("2025", "Winnebago", "Minnie Winnie", "22R");
   assert.equal(mwPin!.horsepower, 350);
 
@@ -4827,7 +4827,7 @@ test("Winnebago 2021–2022 OEM year-first floorplans + powertrain pins", () => 
   assert.equal(sp21!.torqueLbFt, 468);
   const sp22 = findPowertrainCorrection("2022", "Winnebago", "Spirit", "22R");
   assert.equal(sp22!.horsepower, 350);
-  assert.equal(sp22!.torqueLbFt, undefined);
+  assert.equal(sp22!.torqueLbFt, 468);
   const mw21 = findPowertrainCorrection("2021", "Winnebago", "Minnie Winnie", "31K");
   assert.equal(mw21!.horsepower, 350);
   assert.equal(mw21!.torqueLbFt, 468);
@@ -5339,7 +5339,7 @@ test("Winnebago 2017–2018 OEM year-first floorplans + powertrain pins", () => 
   assert.equal(findPowertrainCorrection("2017", "Winnebago", "Horizon", "40A"), null);
   const hz18 = findPowertrainCorrection("2018", "Winnebago", "Horizon", "42Q");
   assert.equal(hz18!.horsepower, 450);
-  assert.equal(hz18!.torqueLbFt, undefined);
+  assert.equal(hz18!.torqueLbFt, 1250);
 
   const gt17 = findPowertrainCorrection("2017", "Winnebago", "Grand Tour", "45RL");
   assert.equal(gt17!.horsepower, 450);
@@ -9219,7 +9219,7 @@ test("Jayco 2013–2014 OEM year-first floorplans + powertrain pins", () => {
 
   const gh13 = findPowertrainCorrection("2013", "Jayco", "Greyhawk", "29KS");
   assert.equal(gh13!.horsepower, 305);
-  assert.equal(gh13!.torqueLbFt, undefined);
+  assert.equal(gh13!.torqueLbFt, 420);
   assert.equal(gh13!.fuelType, "Gas");
   const gh14 = findPowertrainCorrection("2014", "Jayco", "Greyhawk", "29MV");
   assert.equal(gh14!.horsepower, 305);
@@ -9241,7 +9241,7 @@ test("Jayco 2013–2014 OEM year-first floorplans + powertrain pins", () => {
 
   const mb13 = findPowertrainCorrection("2013", "Jayco", "Melbourne", "29D");
   assert.equal(mb13!.horsepower, 305);
-  assert.equal(mb13!.torqueLbFt, undefined);
+  assert.equal(mb13!.torqueLbFt, 420);
   assert.match(mb13!.engine, /Ford|Triton|6\.8/);
   assert.equal(mb13!.fuelType, "Gas");
   const mb14 = findPowertrainCorrection("2014", "Jayco", "Melbourne", "26A");
@@ -9454,16 +9454,16 @@ test("Jayco 2010–2012 OEM year-first floorplans + powertrain pins", () => {
 
   const gh10 = findPowertrainCorrection("2010", "Jayco", "Greyhawk", "31FK");
   assert.equal(gh10!.horsepower, 305);
-  assert.equal(gh10!.torqueLbFt, undefined);
+  assert.equal(gh10!.torqueLbFt, 420);
   assert.equal(gh10!.chassis, undefined);
   assert.equal(gh10!.fuelType, "Gas");
   const gh11 = findPowertrainCorrection("2011", "Jayco", "Greyhawk", "26DS");
   assert.equal(gh11!.horsepower, 305);
-  assert.equal(gh11!.torqueLbFt, undefined);
+  assert.equal(gh11!.torqueLbFt, 420);
   assert.match(gh11!.chassis || "", /E-450/);
   const gh12 = findPowertrainCorrection("2012", "Jayco", "Greyhawk", "31SS");
   assert.equal(gh12!.horsepower, 305);
-  assert.equal(gh12!.torqueLbFt, undefined);
+  assert.equal(gh12!.torqueLbFt, 420);
   assert.equal(findPowertrainCorrection("2010", "Jayco", "Greyhawk Prestige", "29MVP"), null);
   assert.equal(findPowertrainCorrection("2012", "Jayco", "Greyhawk XL", "32U"), null);
 
@@ -9474,12 +9474,12 @@ test("Jayco 2010–2012 OEM year-first floorplans + powertrain pins", () => {
 
   const mb10 = findPowertrainCorrection("2010", "Jayco", "Melbourne", "24E");
   assert.equal(mb10!.horsepower, 305);
-  assert.equal(mb10!.torqueLbFt, undefined);
+  assert.equal(mb10!.torqueLbFt, 420);
   assert.match(mb10!.engine, /Ford|Triton|6\.8/);
   assert.equal(mb10!.fuelType, "Gas");
   const mb12 = findPowertrainCorrection("2012", "Jayco", "Melbourne", "28F");
   assert.equal(mb12!.horsepower, 305);
-  assert.equal(mb12!.torqueLbFt, undefined);
+  assert.equal(mb12!.torqueLbFt, 420);
   assert.equal(mb12!.fuelType, "Gas");
   assert.doesNotMatch(mb12!.engine, /Mercedes|188|Sprinter/);
   assert.equal(findPowertrainCorrection("2010", "Jayco", "Melbourne Prestige", "24KP"), null);
@@ -11873,7 +11873,7 @@ test("Tiffin 2010–2012 OEM year-first floorplans + powertrain pins", () => {
 
   const bus10 = findPowertrainCorrection("2010", "Tiffin", "Allegro Bus", "36QSP");
   assert.equal(bus10!.horsepower, 425);
-  assert.equal(bus10!.torqueLbFt, undefined);
+  assert.equal(bus10!.torqueLbFt, 1200);
   assert.match(bus10!.engine, /ISL 425/);
   assert.doesNotMatch(bus10!.engine, /450|600|ISX|X15|L9/);
   const bus11 = findPowertrainCorrection("2011", "Tiffin", "Allegro Bus", "40QXP");
