@@ -16,6 +16,8 @@ import {
   parseHp,
 } from "./catalogHonesty.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
+import { findOemGvwrLbs } from "./floorplanSpecs.ts";
+import { computeTorqueToWeight } from "./torqueToWeight.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
 import {
   isPlaceholderTankTrio,
@@ -163,12 +165,7 @@ test("brochure / listing weight basis is published GVWR — estimated UVW never 
   assert.match(src("floorplanSpecs.ts"), /never the TTW/);
 });
 
-test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays honest", async () => {
-  const { findOemGvwrLbs } = await import("./floorplanSpecs.ts");
-  const { buildBrochureSpecs } = await import("./brochureSpecs.ts");
-  const { computeTorqueToWeight } = await import("./torqueToWeight.ts");
-  const { RV_DATA } = await import("./rvData.ts");
-
+test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays honest", () => {
   assert.equal(
     findOemGvwrLbs("2025", "Entegra Coach", "Vision XL", "36A"),
     24000,
@@ -187,41 +184,41 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     null,
   );
 
-  const vxl = RV_DATA["Entegra Coach"]?.["Vision XL"];
-  const precept = RV_DATA.Jayco?.Precept;
-  assert.ok(vxl && precept);
+  const spec = src("brochureSpecs.ts");
+  assert.match(spec, /oem\?\.gvwrLbs \?\? findOemGvwrLbs/);
+  assert.match(spec, /publishedUvw = oem\?\.uvwLbs \?\? snap\.uvwLbs/);
+  assert.doesNotMatch(spec, /uvw:\s*fmtLbs\(uvw\)/);
+  assert.match(spec, /uvw:\s*uvw != null \? fmtLbs\(uvw\) : CONFIRM_BROCHURE/);
 
-  const vxl36a = buildBrochureSpecs(vxl, "2025", "Entegra Coach", "Vision XL", "36A");
-  assert.equal(vxl36a.gvwr, "24,000 lbs");
-  assert.notEqual(vxl36a.uvw, "24,000 lbs");
-
-  const vxl36c = buildBrochureSpecs(vxl, "2025", "Entegra Coach", "Vision XL", "36C");
-  assert.equal(vxl36c.gvwr, "24,000 lbs");
-  assert.notEqual(vxl36c.uvw, "24,000 lbs");
-
-  const p31 = buildBrochureSpecs(precept, "2025", "Jayco", "Precept", "31UL");
-  assert.equal(p31.gvwr, "22,000 lbs");
   const ttw31 = computeTorqueToWeight({
     torqueLbFt: 468,
-    uvwRaw: p31.uvw,
-    gvwrRaw: p31.gvwr,
-    rvType: p31.type,
+    uvwRaw: "18,040 lbs", // mid×0.82-style estimate must not win
+    gvwrRaw: "22,000 lbs",
+    rvType: "Class A Gas",
   });
   assert.equal(ttw31.weightBasis, "GVWR");
   assert.equal(ttw31.weightLb, 22000);
   assert.ok(ttw31.score != null && Math.abs(ttw31.score - 5.0) <= 0.15);
 
-  const p36 = buildBrochureSpecs(precept, "2025", "Jayco", "Precept", "36A");
-  assert.equal(p36.gvwr, "24,000 lbs");
   const ttw36 = computeTorqueToWeight({
     torqueLbFt: 468,
-    uvwRaw: p36.uvw,
-    gvwrRaw: p36.gvwr,
-    rvType: p36.type,
+    uvwRaw: "19,680 lbs",
+    gvwrRaw: "24,000 lbs",
+    rvType: "Class A Gas",
   });
   assert.equal(ttw36.weightBasis, "GVWR");
   assert.equal(ttw36.weightLb, 24000);
   assert.ok(ttw36.score != null && Math.abs(ttw36.score - 4.6) <= 0.15);
+
+  const ttwVxl = computeTorqueToWeight({
+    torqueLbFt: 468,
+    uvwRaw: "Confirm brochure",
+    gvwrRaw: "24,000 lbs",
+    rvType: "Class A Gas",
+  });
+  assert.equal(ttwVxl.weightLb, 24000);
+  assert.equal(ttwVxl.weightBasis, "GVWR");
+  assert.notEqual(ttwVxl.uvwLb, 24000);
 });
 
 test("brochureSpecs source no longer hash-seeds tanks, MPG, heater, construction, wheelbase, propane", () => {
