@@ -127,6 +127,19 @@ export function shouldCascadeAutoSearch(
   return field === "floorplan";
 }
 
+/**
+ * Concrete floorplan = a real trim string after trim.
+ * Year + make + model alone is not enough. The picker sentinel for
+ * "Any floorplan" is an empty value — also reject that label if it
+ * ever lands in the field.
+ */
+export function hasConcreteFloorplan(floorplan?: string | null): boolean {
+  const fp = String(floorplan ?? "").trim();
+  if (!fp) return false;
+  if (/^any(\s+floorplan)?$/i.test(fp)) return false;
+  return true;
+}
+
 export function cascadeFromResult(r: ResultLike): FactsCascadeSel {
   return {
     year: String(r.year ?? "").trim(),

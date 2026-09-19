@@ -46,6 +46,7 @@ import {
   formatOwnerReviewScore,
   mapReportRatings,
 } from "@/lib/rv/reportRatings";
+import { hasConcreteFloorplan } from "@/lib/rv/factsOpen";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import {
   findPowertrainCorrection,
@@ -155,6 +156,118 @@ import {
   factsRecallHeadline,
   factsSpecsHeadline,
 } from "@/lib/rv/factsCollapse";
+
+type ReportRatingSlotLite = {
+  score: number | null;
+  caption: string | null;
+  basis?: string | null;
+};
+
+type HonestRatingRow = {
+  key: string;
+  label: string;
+  score: number | null;
+  caption: string | null;
+};
+
+function sameRatingScore(
+  a: { score: number | null },
+  b: { score: number | null },
+): boolean {
+  if (a.score == null && b.score == null) return true;
+  if (a.score == null || b.score == null) return false;
+  return a.score === b.score;
+}
+
+function isCombinedReviewSlot(slot: ReportRatingSlotLite): boolean {
+  return slot.basis === "combined" || /\(combined\)/i.test(slot.caption ?? "");
+}
+
+/**
+ * Paint only honest owner-review rows from mapReportRatings slots.
+ * Quality always. Reliability / Customer satisfaction only when those
+ * slots are distinct Insider categories (score and caption differ).
+ * Combined remaps collapse to at most one Owner-reviews row — never
+ * three identical bars pretending independence.
+ */
+function honestReportRatingRows(ratings: {
+  quality: ReportRatingSlotLite;
+  reliability: ReportRatingSlotLite;
+  customerSatisfaction: ReportRatingSlotLite;
+}): HonestRatingRow[] {
+  const { quality, reliability, customerSatisfaction } = ratings;
+  const rows: HonestRatingRow[] = [
+    {
+      key: "quality",
+      label: "Quality",
+      score: quality.score,
+      caption: quality.caption,
+    },
+  ];
+
+  const relEqualsQuality = sameRatingScore(reliability, quality);
+  const satEqualsQuality = sameRatingScore(customerSatisfaction, quality);
+  const relCaptionDiffers = (reliability.caption ?? "") !== (quality.caption ?? "");
+  const satCaptionDiffers =
+    (customerSatisfaction.caption ?? "") !== (quality.caption ?? "");
+  const relSatSameScore = sameRatingScore(reliability, customerSatisfaction);
+  const relSatSameCaption =
+    (reliability.caption ?? "") === (customerSatisfaction.caption ?? "");
+  const relCombined = isCombinedReviewSlot(reliability);
+  const satCombined = isCombinedReviewSlot(customerSatisfaction);
+
+  const relDistinct = !relEqualsQuality && relCaptionDiffers;
+  const satDistinct = !satEqualsQuality && satCaptionDiffers;
+  const relSatDistinct = !relSatSameScore && !relSatSameCaption;
+
+  if (relDistinct && satDistinct && relSatDistinct && !relCombined && !satCombined) {
+    rows.push({
+      key: "reliability",
+      label: "Reliability",
+      score: reliability.score,
+      caption: reliability.caption,
+    });
+    rows.push({
+      key: "satisfaction",
+      label: "Customer satisfaction",
+      score: customerSatisfaction.score,
+      caption: customerSatisfaction.caption,
+    });
+    return rows;
+  }
+
+  const combined = relCombined
+    ? reliability
+    : satCombined
+      ? customerSatisfaction
+      : relSatSameScore
+        ? reliability
+        : null;
+  if (combined && !sameRatingScore(combined, quality) && combined.score != null) {
+    rows.push({
+      key: "combined",
+      label: "Owner reviews",
+      score: combined.score,
+      caption: combined.caption,
+    });
+  } else if (relDistinct && !satDistinct) {
+    rows.push({
+      key: "reliability",
+      label: relCombined ? "Owner reviews" : "Reliability",
+      score: reliability.score,
+      caption: reliability.caption,
+    });
+  } else if (satDistinct && !relDistinct) {
+    rows.push({
+      key: "satisfaction",
+      label: satCombined ? "Owner reviews" : "Customer satisfaction",
+      score: customerSatisfaction.score,
+      caption: customerSatisfaction.caption,
+    });
+  }
+
+  return rows;
+}
 
 /**
  * Vehicle History Report — catalog paints instantly; Live Grok updates soft fields.
@@ -678,32 +791,10 @@ export function RvDetail({
     [make, model],
   );
 
-  // Q = overallQuality or GAP. R = GAP (no Insider category). S = combined once.
-  const ratingsRows: Array<{
-    key: string;
-    label: string;
-    score: number | null;
-    caption: string | null;
-  }> = [
-    {
-      key: "quality",
-      label: "Quality",
-      score: reportRatings.quality.score,
-      caption: reportRatings.quality.caption,
-    },
-    {
-      key: "reliability",
-      label: "Reliability",
-      score: reportRatings.reliability.score,
-      caption: reportRatings.reliability.caption,
-    },
-    {
-      key: "satisfaction",
-      label: "Customer satisfaction",
-      score: reportRatings.customerSatisfaction.score,
-      caption: reportRatings.customerSatisfaction.caption,
-    },
-  ];
+  const ratingsRows = useMemo(
+    () => honestReportRatingRows(reportRatings),
+    [reportRatings],
+  );
 
   const torqueBarPct =
     torqueToWeight.score == null
@@ -1528,6 +1619,7 @@ export function RvDetail({
             </p>
           </section>
 
+          {hasConcreteFloorplan(floorplan) ? (
           <FactsCollapse
             title="Vehicle specifications"
             headline={factsSpecsHeadline({
@@ -1649,6 +1741,7 @@ export function RvDetail({
               ) : null}
             </details>
           </FactsCollapse>
+          ) : null}
 
           <div data-facts-market-value>
           <FactsCollapse
