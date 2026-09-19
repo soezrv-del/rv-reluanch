@@ -102,6 +102,10 @@ test("save prefers flat gross override when set", () => {
   assert.equal(totals.totalGross, 40000);
   assert.equal(totals.owedNet, 1500);
 
+  const mixed = soldTotals([calculated.deal, flat.deal]);
+  assert.equal(mixed.totalGross, 80000);
+  assert.equal(mixed.owedNet, 10000 + 1500);
+
   const ignored = sellSavedCoach([dream], [], {
     unit: dream,
     gross: 40000,

@@ -260,7 +260,7 @@ export function SoldPrompt({
                 </button>
                 <button
                   type="button"
-                  disabled={gross == null || (flatOn && flatGross == null)}
+                  disabled={gross == null}
                   onClick={() => go("split")}
                   className="min-h-[48px] flex-1 rounded-full bg-blue px-4 text-[13px] font-bold text-white disabled:opacity-40"
                 >
