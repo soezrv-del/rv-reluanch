@@ -11,10 +11,10 @@
  * Motorhome bands (half-open):
  *   GAP / N/A  torque missing OR gvwr missing OR ≤0 OR towable
  *   1★  [0, 10)
- *   2★  [10, 15)
- *   3★  [15, 20)
- *   4★  [20, 30)
- *   5★  [30, ∞)
+ *   2★  [10, 17)
+ *   3★  [17, 28)   Seneca 800/31000 ≈ 25.8 is the 3★ anchor
+ *   4★  [28, 45)
+ *   5★  [45, ∞)
  */
 
 export type TorqueToWeightStars = 1 | 2 | 3 | 4 | 5;
@@ -127,9 +127,9 @@ export function starsFromTorqueToWeightRatio(
   ratio: number | null | undefined,
 ): TorqueToWeightStars | null {
   if (ratio == null || !Number.isFinite(ratio) || ratio < 0) return null;
-  if (ratio >= 30) return 5;
-  if (ratio >= 20) return 4;
-  if (ratio >= 15) return 3;
+  if (ratio >= 45) return 5;
+  if (ratio >= 28) return 4;
+  if (ratio >= 17) return 3;
   if (ratio >= 10) return 2;
   return 1;
 }

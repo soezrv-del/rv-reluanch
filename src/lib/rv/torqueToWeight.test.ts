@@ -22,16 +22,16 @@ test("ratio is lb-ft per 1,000 lb GVWR (never UVW)", () => {
   assert.equal(torqueToWeightRatio(468, 0), null);
 });
 
-test("tightened motorhome bands are half-open: 10 / 15 / 20 / 30", () => {
+test("rebuilt motorhome bands are half-open: 10 / 17 / 28 / 45", () => {
   assert.equal(starsFromTorqueToWeightRatio(0), 1);
   assert.equal(starsFromTorqueToWeightRatio(9.999), 1);
   assert.equal(starsFromTorqueToWeightRatio(10), 2);
-  assert.equal(starsFromTorqueToWeightRatio(14.999), 2);
-  assert.equal(starsFromTorqueToWeightRatio(15), 3);
-  assert.equal(starsFromTorqueToWeightRatio(19.999), 3);
-  assert.equal(starsFromTorqueToWeightRatio(20), 4);
-  assert.equal(starsFromTorqueToWeightRatio(29.999), 4);
-  assert.equal(starsFromTorqueToWeightRatio(30), 5);
+  assert.equal(starsFromTorqueToWeightRatio(16.999), 2);
+  assert.equal(starsFromTorqueToWeightRatio(17), 3);
+  assert.equal(starsFromTorqueToWeightRatio(27.999), 3);
+  assert.equal(starsFromTorqueToWeightRatio(28), 4);
+  assert.equal(starsFromTorqueToWeightRatio(44.999), 4);
+  assert.equal(starsFromTorqueToWeightRatio(45), 5);
   assert.equal(starsFromTorqueToWeightRatio(80), 5);
   assert.equal(starsFromTorqueToWeightRatio(null), null);
   assert.equal(starsFromTorqueToWeightRatio(undefined), null);
@@ -39,7 +39,20 @@ test("tightened motorhome bands are half-open: 10 / 15 / 20 / 30", () => {
   assert.equal(starsFromTorqueToWeightRatio(Number.NaN), null);
 });
 
-test("2026 Precept 31UL: 468 / 22000 ≈ 21.27 → 4★", () => {
+test("Seneca 800/31000 ≈ 25.81 → 3★ (must not exceed 3★)", () => {
+  const r = computeTorqueToWeight({
+    torqueLbFt: 800,
+    gvwrLbs: 31_000,
+    rvType: "Class A Gas",
+  });
+  assert.equal(r.gap, false);
+  assert.ok(Math.abs((r.ratio ?? 0) - 25.81) < 0.01);
+  assert.equal(r.stars, 3);
+  assert.ok((r.stars ?? 5) <= 3);
+  assert.equal(formatTorqueToWeightStars(r), "★★★☆☆");
+});
+
+test("Precept 31UL 468/22000 ≈ 21.27 → 3★", () => {
   const r = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrLbs: 22_000,
@@ -50,11 +63,11 @@ test("2026 Precept 31UL: 468 / 22000 ≈ 21.27 → 4★", () => {
   assert.equal(r.gvwrLb, 22_000);
   assert.equal(r.torqueLbFt, 468);
   assert.ok(Math.abs((r.ratio ?? 0) - 21.27) < 0.01);
-  assert.equal(r.stars, 4);
-  assert.equal(formatTorqueToWeightStars(r), "★★★★☆");
+  assert.equal(r.stars, 3);
+  assert.equal(formatTorqueToWeightStars(r), "★★★☆☆");
 });
 
-test("2026 Precept 36A/36C: 468 / 24000 ≈ 19.5 → 3★", () => {
+test("Precept 36 468/24000 ≈ 19.5 → 3★", () => {
   const a = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrLbs: 24_000,
@@ -73,6 +86,28 @@ test("2026 Precept 36A/36C: 468 / 24000 ≈ 19.5 → 3★", () => {
   assert.equal(formatTorqueToWeightStars(a), "★★★☆☆");
 });
 
+test("Diesel 1250/32000 ≈ 39.06 → 4★", () => {
+  const r = computeTorqueToWeight({
+    torqueLbFt: 1250,
+    gvwrLbs: 32_000,
+    rvType: "Class A Diesel",
+  });
+  assert.ok(Math.abs((r.ratio ?? 0) - 39.06) < 0.01);
+  assert.equal(r.stars, 4);
+  assert.equal(formatTorqueToWeightStars(r), "★★★★☆");
+});
+
+test("Diesel 700/29000 ≈ 24.14 → 3★", () => {
+  const r = computeTorqueToWeight({
+    torqueLbFt: 700,
+    gvwrLbs: 29_000,
+    rvType: "Class A Diesel",
+  });
+  assert.ok(Math.abs((r.ratio ?? 0) - 24.14) < 0.01);
+  assert.equal(r.stars, 3);
+  assert.equal(formatTorqueToWeightStars(r), "★★★☆☆");
+});
+
 test("computeTorqueToWeight prefers hard torque, parses GVWR specs, GAP when missing", () => {
   const five = computeTorqueToWeight({
     torqueLbFt: 1250,
@@ -83,12 +118,12 @@ test("computeTorqueToWeight prefers hard torque, parses GVWR specs, GAP when mis
   assert.equal(five.ratio, 50);
   assert.equal(formatTorqueToWeightStars(five), "★★★★★");
 
-  const fiveFromRatio = computeTorqueToWeight({
+  const four = computeTorqueToWeight({
     torqueLbFt: 800,
     gvwrLbs: 20_000,
   });
-  assert.equal(fiveFromRatio.ratio, 40);
-  assert.equal(fiveFromRatio.stars, 5);
+  assert.equal(four.ratio, 40);
+  assert.equal(four.stars, 4);
 
   const one = computeTorqueToWeight({
     torqueLbFt: 150,
@@ -160,13 +195,14 @@ test("towables are N/A / GAP — not a motorhome torque rating", () => {
 test("Facts Ratings section wires GVWR (not UVW) and is not MiniStat chips", () => {
   const src = readFileSync(join(root, "torqueToWeight.ts"), "utf8");
   assert.match(src, /torqueLbFt \/ gvwrLb/);
-  assert.match(src, /\[10, 15\)/);
-  assert.match(src, /\[15, 20\)/);
-  assert.match(src, /\[20, 30\)/);
-  assert.match(src, /\[30, ∞\)/);
+  assert.match(src, /\[10, 17\)/);
+  assert.match(src, /\[17, 28\)/);
+  assert.match(src, /\[28, 45\)/);
+  assert.match(src, /\[45, ∞\)/);
   assert.doesNotMatch(src, /torqueLbFt \/ uvwLb/);
   assert.doesNotMatch(src, /parseUvwLb/);
-  assert.doesNotMatch(src, /\[10, 18\)/);
+  assert.doesNotMatch(src, /\[10, 15\)/);
+  assert.doesNotMatch(src, /\[20, 30\)/);
 
   const detail = readFileSync(
     join(root, "../../components/rvfax/RvDetail.tsx"),
