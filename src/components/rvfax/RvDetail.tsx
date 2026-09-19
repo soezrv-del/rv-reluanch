@@ -1373,16 +1373,6 @@ export function RvDetail({
                 ) : null}
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   <Chip>{displayType}</Chip>
-                  {recallLoading ? (
-                    <Chip>Checking recalls…</Chip>
-                  ) : recallCount > 0 ? (
-                    <Chip tone="ruby">
-                      <AlertTriangle className="size-3" /> {recallCount}{" "}
-                      {recallCount === 1 ? "recall" : "recalls"}
-                    </Chip>
-                  ) : (
-                    <Chip tone="green">No open recalls</Chip>
-                  )}
                 </div>
               </div>
               <div className="shrink-0 text-right">
@@ -1398,7 +1388,7 @@ export function RvDetail({
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-4 gap-2">
+            <div className="mt-5 grid grid-cols-3 gap-2">
               <MiniStat label="LENGTH" value={specs.lengthFt || "—"} />
               {specs.isToyHauler ? (
                 <MiniStat
@@ -1413,17 +1403,6 @@ export function RvDetail({
                 <MiniStat label="SLIDEOUTS" value={specs.slideouts || "—"} />
               )}
               <MiniStat label="SLEEPS" value={specs.sleeps || "—"} />
-              <MiniStat
-                label="RECALLS"
-                value={
-                  recallLoading
-                    ? "…"
-                    : recallCount > 0
-                      ? String(recallCount)
-                      : "0"
-                }
-                warn={recallCount > 0}
-              />
             </div>
 
             {featureChips.length ? (
@@ -1523,6 +1502,128 @@ export function RvDetail({
               guessed star.
             </p>
           </section>
+
+          <FactsCollapse
+            title="Vehicle specifications"
+            headline={factsSpecsHeadline({
+              length: specs.lengthFt,
+              engine: specs.engine,
+            })}
+          >
+            <SpecRow label="LENGTH" value={specs.lengthFt} accent />
+            <SpecRow label="WIDTH" value={specs.exteriorWidth} />
+            <SpecRow label="HEIGHT" value={specs.exteriorHeight} />
+            <SpecRow label="CEILING" value={specs.interiorHeight} />
+            <SpecRow label="SLIDEOUTS" value={specs.slideouts} />
+            <SpecRow label="SLEEPS" value={specs.sleeps} />
+
+            {specs.isToyHauler ? (
+              <>
+                <SpecRow label="GARAGE DEPTH" value={specs.garageLength} accent />
+                <SpecRow label="GARAGE WIDTH" value={specs.garageWidth} />
+                <SpecRow label="GARAGE HEIGHT" value={specs.garageHeight} />
+                <SpecRow label="RAMP DOOR" value={specs.rampWidth} />
+                <SpecRow label="CARGO RATING" value={specs.garageCapacity} />
+                <SpecRow label="FITS" value={specs.garageFits} />
+                <SpecRow label="FUEL STATION" value={specs.fuelStation} />
+              </>
+            ) : null}
+
+            <SpecRow label="FUEL" value={displayFuel} />
+            <SpecRow label="ENGINE" value={specs.engine} accent />
+            <SpecRow label="HORSEPOWER" value={specs.horsepower} accent />
+            <SpecRow label="TORQUE" value={specs.torque} />
+            <SpecRow label="TRANSMISSION" value={specs.transmission} />
+            <SpecRow label="CHASSIS" value={specs.chassis} accent />
+            <SpecRow label="TOW CAPACITY" value={specs.hitchOrPin} />
+            <SpecRow label="GENERATOR" value={brochure.generator} />
+            <SpecRow label="A/C" value={brochure.acUnits} />
+            <SpecRow label="TIRES" value={brochure.tireSize} />
+            <SpecRow label="HIGHWAY MPG" value={specs.mpgHighway} />
+            <SpecRow label="FUEL CAPACITY" value={specs.fuelCapacity} />
+            <SpecRow label="GVWR" value={specs.gvwr} accent />
+            <SpecRow label="UVW" value={specs.uvw} />
+            <SpecRow label="CCC" value={specs.ccc} />
+            <SpecRow label="WARRANTY" value={specs.warranty} />
+            {shellNav ? (
+              <button
+                type="button"
+                data-facts-check-tow
+                onClick={openCheckTow}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-sky-300/40 bg-sky-500/20 py-2.5 text-[12px] font-bold text-white"
+              >
+                <Truck className="size-3.5" />
+                Check tow
+              </button>
+            ) : null}
+
+            <SpecRow label="FRESH WATER" value={specs.freshWater} />
+            <SpecRow label="GRAY WATER" value={specs.grayWater} />
+            <SpecRow label="BLACK WATER" value={specs.blackWater} />
+
+            <details className="mt-5 border-t border-white/10 pt-3" data-no-export>
+              <summary className="cursor-pointer list-none text-[11px] font-medium text-white/35">
+                Something look off? Tap to correct
+              </summary>
+              <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setCorrectEngine(specs.engine || "");
+                  setCorrectHp(
+                    String(specs.horsepower || "").replace(/[^\d].*$/, "") || "",
+                  );
+                  setCorrectTorque(
+                    String(specs.torque || "").replace(/[^\d].*$/, "") || "",
+                  );
+                  setCorrectChassis(specs.chassis || "");
+                  setCorrectTrans(specs.transmission || "");
+                  setCorrectFuel(displayFuel || data.fuelType || "");
+                  setCorrectNote("");
+                  setCorrectMsg(null);
+                  setCorrectOpen(true);
+                }}
+                className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/70"
+              >
+                Correct this spec
+              </button>
+              {powertrainTrust === "local" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cur = findLocalSpecOverride(
+                      year,
+                      make,
+                      model,
+                      floorplan,
+                    );
+                    if (cur) removeLocalSpecOverride(cur.id);
+                    setCorrectBump((n) => n + 1);
+                    setCorrectMsg("Local correction removed.");
+                  }}
+                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/70"
+                >
+                  Clear correction
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  refreshCoachDossierCache(year, make, model, floorplan);
+                  setLive(null);
+                  setLiveError(null);
+                  setLiveRetry((n) => n + 1);
+                }}
+                className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/70"
+              >
+                Refresh report
+              </button>
+              </div>
+              {correctMsg ? (
+                <p className="mt-2 text-[11px] text-white/50">{correctMsg}</p>
+              ) : null}
+            </details>
+          </FactsCollapse>
 
           <div data-facts-market-value>
           <FactsCollapse
@@ -1938,128 +2039,6 @@ export function RvDetail({
               </button>
             ) : null}
             </div>
-          </FactsCollapse>
-
-          <FactsCollapse
-            title="Vehicle specifications"
-            headline={factsSpecsHeadline({
-              length: specs.lengthFt,
-              engine: specs.engine,
-            })}
-          >
-            <SpecRow label="LENGTH" value={specs.lengthFt} accent />
-            <SpecRow label="WIDTH" value={specs.exteriorWidth} />
-            <SpecRow label="HEIGHT" value={specs.exteriorHeight} />
-            <SpecRow label="CEILING" value={specs.interiorHeight} />
-            <SpecRow label="SLIDEOUTS" value={specs.slideouts} />
-            <SpecRow label="SLEEPS" value={specs.sleeps} />
-
-            {specs.isToyHauler ? (
-              <>
-                <SpecRow label="GARAGE DEPTH" value={specs.garageLength} accent />
-                <SpecRow label="GARAGE WIDTH" value={specs.garageWidth} />
-                <SpecRow label="GARAGE HEIGHT" value={specs.garageHeight} />
-                <SpecRow label="RAMP DOOR" value={specs.rampWidth} />
-                <SpecRow label="CARGO RATING" value={specs.garageCapacity} />
-                <SpecRow label="FITS" value={specs.garageFits} />
-                <SpecRow label="FUEL STATION" value={specs.fuelStation} />
-              </>
-            ) : null}
-
-            <SpecRow label="FUEL" value={displayFuel} />
-            <SpecRow label="ENGINE" value={specs.engine} accent />
-            <SpecRow label="HORSEPOWER" value={specs.horsepower} accent />
-            <SpecRow label="TORQUE" value={specs.torque} />
-            <SpecRow label="TRANSMISSION" value={specs.transmission} />
-            <SpecRow label="CHASSIS" value={specs.chassis} accent />
-            <SpecRow label="TOW CAPACITY" value={specs.hitchOrPin} />
-            <SpecRow label="GENERATOR" value={brochure.generator} />
-            <SpecRow label="A/C" value={brochure.acUnits} />
-            <SpecRow label="TIRES" value={brochure.tireSize} />
-            <SpecRow label="HIGHWAY MPG" value={specs.mpgHighway} />
-            <SpecRow label="FUEL CAPACITY" value={specs.fuelCapacity} />
-            <SpecRow label="GVWR" value={specs.gvwr} accent />
-            <SpecRow label="UVW" value={specs.uvw} />
-            <SpecRow label="CCC" value={specs.ccc} />
-            <SpecRow label="WARRANTY" value={specs.warranty} />
-            {shellNav ? (
-              <button
-                type="button"
-                data-facts-check-tow
-                onClick={openCheckTow}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-sky-300/40 bg-sky-500/20 py-2.5 text-[12px] font-bold text-white"
-              >
-                <Truck className="size-3.5" />
-                Check tow
-              </button>
-            ) : null}
-
-            <SpecRow label="FRESH WATER" value={specs.freshWater} />
-            <SpecRow label="GRAY WATER" value={specs.grayWater} />
-            <SpecRow label="BLACK WATER" value={specs.blackWater} />
-
-            <details className="mt-5 border-t border-white/10 pt-3" data-no-export>
-              <summary className="cursor-pointer list-none text-[11px] font-medium text-white/35">
-                Something look off? Tap to correct
-              </summary>
-              <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setCorrectEngine(specs.engine || "");
-                  setCorrectHp(
-                    String(specs.horsepower || "").replace(/[^\d].*$/, "") || "",
-                  );
-                  setCorrectTorque(
-                    String(specs.torque || "").replace(/[^\d].*$/, "") || "",
-                  );
-                  setCorrectChassis(specs.chassis || "");
-                  setCorrectTrans(specs.transmission || "");
-                  setCorrectFuel(displayFuel || data.fuelType || "");
-                  setCorrectNote("");
-                  setCorrectMsg(null);
-                  setCorrectOpen(true);
-                }}
-                className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/70"
-              >
-                Correct this spec
-              </button>
-              {powertrainTrust === "local" ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const cur = findLocalSpecOverride(
-                      year,
-                      make,
-                      model,
-                      floorplan,
-                    );
-                    if (cur) removeLocalSpecOverride(cur.id);
-                    setCorrectBump((n) => n + 1);
-                    setCorrectMsg("Local correction removed.");
-                  }}
-                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/70"
-                >
-                  Clear correction
-                </button>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => {
-                  refreshCoachDossierCache(year, make, model, floorplan);
-                  setLive(null);
-                  setLiveError(null);
-                  setLiveRetry((n) => n + 1);
-                }}
-                className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/70"
-              >
-                Refresh report
-              </button>
-              </div>
-              {correctMsg ? (
-                <p className="mt-2 text-[11px] text-white/50">{correctMsg}</p>
-              ) : null}
-            </details>
           </FactsCollapse>
 
           {live?.live &&
