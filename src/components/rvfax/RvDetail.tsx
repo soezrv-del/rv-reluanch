@@ -37,6 +37,8 @@ import {
   getRatingMetadata,
   ratingStars,
 } from "@/lib/rv/ratingSystem";
+import { computeTorqueToWeight } from "@/lib/rv/torqueToWeight";
+import { mapReportRatings } from "@/lib/rv/reportRatings";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import {
   findPowertrainCorrection,
@@ -639,6 +641,48 @@ export function RvDetail({
   }, [catalogSpecs, live, brochurePinned, powertrainGuard]);
 
   const displayRating = ratingMeta.score;
+
+  const torqueToWeight = useMemo(
+    () =>
+      computeTorqueToWeight({
+        torqueLbFt: powertrainGuard.hard.torqueLbFt,
+        torqueRaw: specs.torque,
+        uvwLbs: live?.uvwLbs ?? null,
+        uvwRaw: specs.uvw,
+      }),
+    [powertrainGuard.hard.torqueLbFt, specs.torque, specs.uvw, live?.uvwLbs],
+  );
+
+  const reportRatings = useMemo(
+    () =>
+      mapReportRatings({
+        qualityScore: live?.live ? live.ratingEstimate : null,
+      }),
+    [live],
+  );
+
+  const ratingsRows: Array<{
+    key: string;
+    label: string;
+    stars: 1 | 2 | 3 | 4 | 5 | null;
+  }> = [
+    { key: "quality", label: "Quality", stars: reportRatings.quality },
+    {
+      key: "reliability",
+      label: "Reliability",
+      stars: reportRatings.reliability,
+    },
+    {
+      key: "satisfaction",
+      label: "Customer satisfaction",
+      stars: reportRatings.customerSatisfaction,
+    },
+    {
+      key: "torque-to-weight",
+      label: "Torque-to-weight",
+      stars: torqueToWeight.stars,
+    },
+  ];
 
   const ownerReviews = useMemo(
     () => getMockReviews(make, model, displayRating),
@@ -1388,6 +1432,42 @@ export function RvDetail({
             </div>
           </section>
 
+          <section
+            className="glass-prestige overflow-hidden rounded-[1.15rem] px-5 py-5"
+            data-testid="facts-ratings"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
+              Ratings
+            </p>
+            <ul className="mt-3 divide-y divide-white/10">
+              {ratingsRows.map((row) => (
+                <li
+                  key={row.key}
+                  className="flex items-center justify-between gap-3 py-3 first:pt-1 last:pb-0"
+                >
+                  <span className="text-[14px] font-medium text-white">
+                    {row.label}
+                  </span>
+                  {row.stars == null ? (
+                    <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                      GAP
+                    </span>
+                  ) : (
+                    <span
+                      className="text-[13px] tracking-wide text-amber-200/90"
+                      aria-label={`${row.stars} stars`}
+                    >
+                      {ratingStars(row.stars)}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-[11px] leading-relaxed text-white/45">
+              Grounded scores only. GAP means the field is missing — not a
+              guessed star.
+            </p>
+          </section>
 
           <div data-facts-market-value>
           <FactsCollapse
