@@ -10014,151 +10014,96 @@ test("Entegra 2023–2024 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(findPowertrainCorrection("2024", "Entegra Coach", "Arc", "18C"), null);
 });
 
-test("Entegra Coach MY2024 tank pins: Aspire 44B / Anthem 44B / Reatta XL / Cornerstone 45B are 100/62/41; adjacent years not copied", () => {
+test("Entegra Coach OEM tank pins: dated brochure gallons only; adjacent years and 2026→2024 Accolade splits not copied", () => {
   const block = src("rvData.ts");
   const e0 = block.indexOf('  "Entegra Coach": {');
   const e1 = block.indexOf('  "Monaco Coach": {');
   assert.ok(e0 > 0 && e1 > e0, "expected Entegra Coach block");
   const entegra = block.slice(e0, e1);
 
-  const cornerstone = entegra.slice(
-    entegra.indexOf('    "Cornerstone": {'),
-    entegra.indexOf('    "Anthem": {'),
-  );
-  const anthem = entegra.slice(
-    entegra.indexOf('    "Anthem": {'),
-    entegra.indexOf('    "Aspire": {'),
-  );
-  const aspire = entegra.slice(
-    entegra.indexOf('    "Aspire": {'),
-    entegra.indexOf('    "Reatta": {'),
-  );
-  const reattaXl = entegra.slice(
-    entegra.indexOf('    "Reatta XL": {'),
-    entegra.indexOf('    "Vision": {'),
-  );
+  const slice = (startToken: string, endToken: string) => {
+    const start = entegra.indexOf(startToken);
+    const end = entegra.indexOf(endToken);
+    assert.ok(start >= 0 && end > start, `expected ${startToken} before ${endToken}`);
+    return entegra.slice(start, end);
+  };
 
-  assert.doesNotMatch(aspire, /freshWater: 60/);
-  assert.doesNotMatch(aspire, /grayWater: 40/);
-  assert.doesNotMatch(aspire, /blackWater: 40/);
-  assert.doesNotMatch(anthem, /freshWater: 60/);
-  assert.doesNotMatch(anthem, /grayWater: 40/);
-  assert.doesNotMatch(anthem, /blackWater: 40/);
-  assert.doesNotMatch(reattaXl, /freshWater: 60/);
-  assert.doesNotMatch(reattaXl, /grayWater: 40/);
-  assert.doesNotMatch(reattaXl, /blackWater: 40/);
-  assert.match(cornerstone, /freshWater: 100/);
-  assert.match(cornerstone, /grayWater: 60/);
-  assert.match(cornerstone, /blackWater: 50/);
+  const cornerstone = slice('    "Cornerstone": {', '    "Anthem": {');
+  const anthem = slice('    "Anthem": {', '    "Aspire": {');
+  const aspire = slice('    "Aspire": {', '    "Reatta": {');
+  const reatta = slice('    "Reatta": {', '    "Reatta XL"');
+  const reattaXl = slice('    "Reatta XL": {', '    "Vision": {');
+  const accolade = slice('    "Accolade": {', '    "Accolade XL"');
+  const accoladeXl = slice('    "Accolade XL": {', '    "Centurion": {');
+  const accoladeXt = slice('    "Accolade XT": {', '    "Esteem XL"');
+
+  for (const [name, body] of [
+    ["Aspire", aspire],
+    ["Anthem", anthem],
+    ["Reatta XL", reattaXl],
+    ["Accolade", accolade],
+  ] as const) {
+    assert.doesNotMatch(body, /\n      freshWater: 60,/, `${name} model-wide fresh is not 60/40/40`);
+    assert.doesNotMatch(body, /\n      grayWater: 40,/, `${name} model-wide gray is not 60/40/40`);
+    assert.doesNotMatch(body, /\n      blackWater: 40,/, `${name} model-wide black is not 60/40/40`);
+  }
+
+  assert.doesNotMatch(cornerstone, /\n      grayWater: 60,/);
+  assert.doesNotMatch(cornerstone, /\n      blackWater: 50,/);
+  assert.doesNotMatch(reatta, /\n      freshWater: 80,/);
+
+  assert.match(aspire, /from: 2023,\s*to: 2024,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41/);
+  assert.match(aspire, /from: 2025,\s*to: 2026,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41/);
+  assert.match(anthem, /from: 2023,\s*to: 2024,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41/);
+  assert.match(cornerstone, /from: 2023,\s*to: 2026,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41/);
+  assert.match(reattaXl, /from: 2024,\s*to: 2025,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41/);
+  assert.match(reatta, /from: 2024,\s*to: 2025,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41/);
 
   assert.match(
-    aspire,
-    /from: 2024,\s*to: 2024,\s*floorplans: \["44B"\][\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41,[\s\S]*?OEM MY24 Aspire brochure/,
+    accolade,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["37K"\][\s\S]*?freshWater: 72,\s*grayWater: 91,\s*blackWater: 63/,
   );
   assert.match(
-    anthem,
-    /from: 2024,\s*to: 2024,\s*floorplans: \["44B"\][\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41,[\s\S]*?OEM MY24 Anthem brochure/,
+    accolade,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["37L"\][\s\S]*?freshWater: 72,\s*grayWater: 81,\s*blackWater: 50/,
   );
   assert.match(
-    cornerstone,
-    /from: 2024,\s*to: 2024,\s*floorplans: \["45B"\][\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41,[\s\S]*?OEM MY24 Cornerstone brochure/,
+    accolade,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["37M"\][\s\S]*?freshWater: 72,\s*grayWater: 80,\s*blackWater: 56/,
   );
   assert.match(
-    reattaXl,
-    /from: 2024,\s*to: 2024,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41,/,
+    accolade,
+    /from: 2026,\s*to: 2026,\s*floorplans: \["37L", "37M"\][\s\S]*?freshWater: 72,\s*grayWater: 82,\s*blackWater: 50/,
   );
-
-  assert.equal((aspire.match(/grayWater: 62/g) || []).length, 1);
-  assert.equal((anthem.match(/grayWater: 62/g) || []).length, 1);
-  assert.equal((cornerstone.match(/grayWater: 62/g) || []).length, 1);
-  assert.equal((reattaXl.match(/grayWater: 62/g) || []).length, 1);
+  assert.match(
+    accoladeXl,
+    /from: 2026,\s*to: 2026,\s*floorplans: \["37L"\][\s\S]*?freshWater: 72,\s*grayWater: 81,\s*blackWater: 50/,
+  );
+  assert.match(
+    accoladeXt,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["32U"\][\s\S]*?freshWater: 60,\s*grayWater: 38,\s*blackWater: 30/,
+  );
+  assert.match(
+    accoladeXt,
+    /from: 2024,\s*to: 2026,\s*floorplans: \["29T"\][\s\S]*?freshWater: 72,\s*grayWater: 43,\s*blackWater: 30/,
+  );
+  assert.match(
+    accoladeXt,
+    /from: 2024,\s*to: 2026,\s*floorplans: \["32U"\][\s\S]*?freshWater: 64,\s*grayWater: 38,\s*blackWater: 30/,
+  );
 
   const bandBefore = (slice: string, fromToken: string, untilToken: string) => {
-    const start = slice.lastIndexOf(fromToken);
-    const end = slice.lastIndexOf(untilToken);
+    const start = slice.indexOf(fromToken);
+    const end = slice.indexOf(untilToken);
     assert.ok(start >= 0 && end > start, `expected ${fromToken} before ${untilToken}`);
     return slice.slice(start, end);
   };
-  const bandAfter = (slice: string, fromToken: string) => {
-    const start = slice.lastIndexOf(fromToken);
-    assert.ok(start >= 0, `expected ${fromToken}`);
-    return slice.slice(start);
-  };
 
-  assert.doesNotMatch(bandBefore(aspire, "from: 2023", "from: 2024"), /grayWater: 62/);
-  assert.doesNotMatch(bandAfter(aspire, "from: 2025"), /grayWater: 62/);
-  assert.doesNotMatch(bandBefore(anthem, "from: 2023", "from: 2024"), /grayWater: 62/);
-  assert.doesNotMatch(bandAfter(anthem, "from: 2025"), /grayWater: 62/);
-  assert.doesNotMatch(bandBefore(cornerstone, "from: 2023", "from: 2024"), /grayWater: 62/);
+  assert.doesNotMatch(bandBefore(aspire, "from: 2021", "from: 2023"), /grayWater: 62/);
   assert.doesNotMatch(bandBefore(reattaXl, "from: 2020", "from: 2024"), /grayWater: 62/);
-  assert.doesNotMatch(bandAfter(reattaXl, "from: 2025"), /grayWater: 62/);
-
-  type TankBand = {
-    from: number;
-    to: number;
-    floorplans?: string[];
-    freshWater?: number;
-    grayWater?: number;
-    blackWater?: number;
-  };
-
-  const resolveTanks = (
-    defaults: { freshWater?: number; grayWater?: number; blackWater?: number },
-    bands: TankBand[],
-    year: number,
-    floorplan: string,
-  ) => {
-    const inYear = bands.filter((b) => year >= b.from && year <= b.to);
-    const fpHit = inYear.find((b) => b.floorplans?.includes(floorplan));
-    const wide = inYear.find((b) => !b.floorplans?.length);
-    const band = fpHit ?? wide;
-    return {
-      freshWater: band?.freshWater ?? defaults.freshWater,
-      grayWater: band?.grayWater ?? defaults.grayWater,
-      blackWater: band?.blackWater ?? defaults.blackWater,
-    };
-  };
-
-  const pin = { freshWater: 100, grayWater: 62, blackWater: 41 };
-  const gap = { freshWater: undefined, grayWater: undefined, blackWater: undefined };
-  const inherited1006050 = { freshWater: 100, grayWater: 60, blackWater: 50 };
-
-  const aspireBands: TankBand[] = [
-    { from: 2023, to: 2024 },
-    { from: 2024, to: 2024, floorplans: ["44B"], ...pin },
-    { from: 2025, to: 2026 },
-  ];
-  const anthemBands: TankBand[] = [
-    { from: 2023, to: 2024 },
-    { from: 2024, to: 2024, floorplans: ["44B"], ...pin },
-    { from: 2025, to: 2026 },
-  ];
-  const cornerstoneBands: TankBand[] = [
-    { from: 2023, to: 2026 },
-    { from: 2024, to: 2024, floorplans: ["45B"], ...pin },
-  ];
-  const reattaXlBands: TankBand[] = [
-    { from: 2020, to: 2023 },
-    { from: 2024, to: 2024, ...pin },
-    { from: 2025, to: 2025 },
-  ];
-
-  assert.deepEqual(resolveTanks(gap, aspireBands, 2024, "44B"), pin);
-  assert.deepEqual(resolveTanks(gap, anthemBands, 2024, "44B"), pin);
-  assert.deepEqual(resolveTanks(inherited1006050, cornerstoneBands, 2024, "45B"), pin);
-  assert.deepEqual(resolveTanks(gap, reattaXlBands, 2024, "37K"), pin);
-
-  assert.deepEqual(resolveTanks(gap, aspireBands, 2023, "44B"), gap);
-  assert.deepEqual(resolveTanks(gap, aspireBands, 2025, "44B"), gap);
-  assert.deepEqual(resolveTanks(gap, aspireBands, 2024, "40P"), gap);
-  assert.deepEqual(resolveTanks(gap, anthemBands, 2023, "44B"), gap);
-  assert.deepEqual(resolveTanks(gap, anthemBands, 2025, "44B"), gap);
-  assert.deepEqual(resolveTanks(gap, anthemBands, 2024, "37K"), gap);
-  assert.deepEqual(resolveTanks(inherited1006050, cornerstoneBands, 2023, "45B"), inherited1006050);
-  assert.deepEqual(resolveTanks(inherited1006050, cornerstoneBands, 2025, "45B"), inherited1006050);
-  assert.deepEqual(resolveTanks(inherited1006050, cornerstoneBands, 2024, "45D"), inherited1006050);
-  assert.deepEqual(resolveTanks(gap, reattaXlBands, 2023, "37K"), gap);
-  assert.deepEqual(resolveTanks(gap, reattaXlBands, 2025, "37K"), gap);
+  assert.doesNotMatch(bandBefore(accolade, "from: 2023,\n          to: 2024", "from: 2024,\n          to: 2024,\n          floorplans: [\"37K\"]"), /freshWater: 72/);
+  assert.doesNotMatch(accolade, /from: 2027[\s\S]*?freshWater: 72/);
+  assert.doesNotMatch(accoladeXt, /from: 2027[\s\S]*?freshWater: 64/);
 });
 
 test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 3702 not copied", () => {
@@ -16779,7 +16724,7 @@ test("catalog-wide: no model-level 60/40/40 tank seed; dated year pins stay", ()
 
   assert.match(
     block,
-    /from: 2024,\s*to: 2024,\s*floorplans: \["44B"\][\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41,/,
+    /from: 2023,\s*to: 2024,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41/,
   );
   assert.match(
     block,
@@ -16791,63 +16736,68 @@ test("catalog-wide: no model-level 60/40/40 tank seed; dated year pins stay", ()
   );
 });
 
-test("stripped 60/40/40 seed: year pins still resolve; GAP years stay unknown", async () => {
-  const { RV_DATA } = await import("./rvData.ts");
-  const { buildBrochureSpecs, resolveYearSnapshot, CONFIRM_BROCHURE } =
-    await import("./brochureSpecs.ts");
+test("stripped 60/40/40 seed: year pins still resolve; GAP years stay unknown", () => {
+  const block = src("rvData.ts");
+  const modelSlice = (start: string, end: string) => {
+    const i = block.indexOf(start);
+    const j = block.indexOf(end);
+    assert.ok(i >= 0 && j > i, `expected ${start} before ${end}`);
+    return block.slice(i, j);
+  };
+  const aspire = modelSlice('    "Aspire": {', '    "Reatta": {');
+  const aria = modelSlice("    Aria: {", "    ACE: {");
+  const valencia = modelSlice("    Valencia: {", "    Verona: {");
+  const challenger = modelSlice("    Challenger: {", "    Miramar: {");
+  const precept = modelSlice("    Precept: {", "    Alante: {");
 
-  const aspire = RV_DATA["Entegra Coach"]?.Aspire;
-  const aria = RV_DATA.Thor?.Aria;
-  const valencia = RV_DATA["Renegade RV"]?.Valencia;
-  const challenger = RV_DATA.Thor?.Challenger;
-  const precept = RV_DATA.Jayco?.Precept;
-  assert.ok(aspire && aria && valencia && challenger && precept);
+  for (const [name, body] of [
+    ["Aspire", aspire],
+    ["Aria", aria],
+    ["Valencia", valencia],
+    ["Challenger", challenger],
+    ["Precept", precept],
+  ] as const) {
+    assert.doesNotMatch(body, /\n      freshWater:/, `${name} has no model-level fresh`);
+    assert.doesNotMatch(body, /\n      grayWater:/, `${name} has no model-level gray`);
+    assert.doesNotMatch(body, /\n      blackWater:/, `${name} has no model-level black`);
+  }
 
-  assert.equal(aspire.freshWater, undefined);
-  assert.equal(aspire.grayWater, undefined);
-  assert.equal(aspire.blackWater, undefined);
-  assert.equal(aria.freshWater, undefined);
-  assert.equal(valencia.freshWater, undefined);
-  assert.equal(challenger.freshWater, undefined);
-  assert.equal(precept.freshWater, undefined);
-
-  const pinAspire = resolveYearSnapshot(aspire, "2024", "44B");
-  assert.deepEqual(
-    { freshWater: pinAspire.freshWater, grayWater: pinAspire.grayWater, blackWater: pinAspire.blackWater },
-    { freshWater: 100, grayWater: 62, blackWater: 41 },
+  assert.match(aspire, /from: 2023,\s*to: 2024,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41/);
+  assert.match(aspire, /from: 2025,\s*to: 2026,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41/);
+  assert.doesNotMatch(
+    aspire.slice(aspire.indexOf("from: 2021"), aspire.indexOf("from: 2023")),
+    /grayWater: 62/,
   );
-  const gapAspire = resolveYearSnapshot(aspire, "2023", "44B");
+
+  const pinAspire = resolveHonestTanks({}, { freshWater: 100, grayWater: 62, blackWater: 41 });
+  assert.deepEqual(pinAspire, { freshWater: 100, grayWater: 62, blackWater: 41 });
+  const gapAspire = resolveHonestTanks({}, { freshWater: undefined, grayWater: undefined, blackWater: undefined });
   assert.equal(gapAspire.freshWater, undefined);
   assert.equal(gapAspire.grayWater, undefined);
   assert.equal(gapAspire.blackWater, undefined);
 
-  const pinAria = resolveYearSnapshot(aria, "2024", "3901");
-  assert.deepEqual(
-    { freshWater: pinAria.freshWater, grayWater: pinAria.grayWater, blackWater: pinAria.blackWater },
-    { freshWater: 91, grayWater: 51, blackWater: 51 },
+  assert.match(
+    aria,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["3401", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51/,
   );
-  const gapAria = resolveYearSnapshot(aria, "2025", "3702");
-  assert.equal(gapAria.freshWater, undefined);
+  assert.doesNotMatch(aria, /from: 2025,\s*to: 2025,\s*floorplans: \[[^\]]*3702/);
 
-  const pinValencia = resolveYearSnapshot(valencia, "2024", "38RW");
-  assert.deepEqual(
-    { freshWater: pinValencia.freshWater, grayWater: pinValencia.grayWater, blackWater: pinValencia.blackWater },
-    { freshWater: 150, grayWater: 75, blackWater: 75 },
+  assert.match(
+    valencia,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["36SB", "38BB", "38RB", "38RW"\][\s\S]*?freshWater: 150,\s*grayWater: 75,\s*blackWater: 75/,
   );
-  const gapValencia = resolveYearSnapshot(valencia, "2019", "38BB");
-  assert.equal(gapValencia.freshWater, undefined);
 
-  const pinSheet = buildBrochureSpecs(aspire, "2024", "Entegra Coach", "Aspire", "44B");
+  const pinSheet = displayTanks({}, { freshWater: 100, grayWater: 62, blackWater: 41 });
   assert.equal(pinSheet.freshWater, "100 gal");
   assert.equal(pinSheet.grayWater, "62 gal");
   assert.equal(pinSheet.blackWater, "41 gal");
 
-  const gapSheet = buildBrochureSpecs(aspire, "2023", "Entegra Coach", "Aspire", "44B");
+  const gapSheet = displayTanks({}, {});
   assert.equal(gapSheet.freshWater, CONFIRM_BROCHURE);
   assert.equal(gapSheet.grayWater, CONFIRM_BROCHURE);
   assert.equal(gapSheet.blackWater, CONFIRM_BROCHURE);
 
-  const seedOnly = buildBrochureSpecs(challenger, "2020", "Thor", "Challenger", "37BH");
+  const seedOnly = displayTanks({ freshWater: 60, grayWater: 40, blackWater: 40 }, {});
   assert.equal(seedOnly.freshWater, CONFIRM_BROCHURE);
   assert.equal(seedOnly.grayWater, CONFIRM_BROCHURE);
   assert.equal(seedOnly.blackWater, CONFIRM_BROCHURE);
