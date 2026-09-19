@@ -11,7 +11,6 @@ import {
   type ReactNode,
 } from "react";
 import { BottomTabs, type AppTab } from "./BottomTabs";
-import { AskGrokOverlay } from "./AskGrokOverlay";
 import { dockTabOrder, PAGE_ACCENT } from "./shellConstants";
 import { useAccess } from "@/components/access/AccessProvider";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
@@ -135,9 +134,6 @@ export function AppShell() {
   const [tab, setTab] = useState<AppTab>("rvfax");
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
   const [grokEntryToken, setGrokEntryToken] = useState(0);
-  const [askGrokOpen, setAskGrokOpen] = useState(false);
-  const [overlaySeed, setOverlaySeed] = useState<string | undefined>();
-  const [overlayEntryToken, setOverlayEntryToken] = useState(0);
   const [calSeed, setCalSeed] = useState<CalSeed | null>(null);
   const [calCleanToken, setCalCleanToken] = useState(0);
   const [tripsHandoff, setTripsHandoff] = useState<TripsHandoff | null>(null);
@@ -189,25 +185,17 @@ export function AppShell() {
     if (el instanceof HTMLElement && el !== document.body) el.blur();
   };
 
-  /** Facts Ask Grok — overlay + seed. Dock tap still opens a clean Grok tab. */
+  /** Facts Ask Grok — seed the Grok tab. Dock tap still opens a clean chat. */
   const openGrok = (prompt?: string) => {
     if (!access.guard(undefined, "Ask Grok is limited to the approved list.")) {
       return;
     }
     blurSuiteFocus();
-    setOverlaySeed(grokSeedFromAskHandoff(prompt));
-    setOverlayEntryToken((n) => n + 1);
-    setAskGrokOpen(true);
+    setGrokSeed(grokSeedFromAskHandoff(prompt));
+    setGrokEntryToken((n) => n + 1);
+    setTab("rvgrok");
+    markVisited("rvgrok");
   };
-
-  const onAskGrokOpenChange = useCallback((next: boolean) => {
-    setAskGrokOpen(next);
-    if (next) {
-      setOverlayEntryToken((n) => n + 1);
-    } else {
-      setOverlaySeed(undefined);
-    }
-  }, []);
 
   const requestCleanCal = useCallback(() => {
     setCalSeed(null);
@@ -298,8 +286,6 @@ export function AppShell() {
       // Hidden Grok composer can keep focus after a swipe — that sticks
       // html.kb-open and used to unmount the dock on re-entry.
       blurSuiteFocus();
-      setAskGrokOpen(false);
-      setOverlaySeed(undefined);
       if (next === "rvshare") {
         openFactsShare();
         return;
@@ -349,15 +335,14 @@ export function AppShell() {
     // the shell eat Android WebView clicks on Facts/Cal/Tow/Trips/Grok.
     targetRef: mainRef,
     threshold: 24,
-    enabled: swipeArmed && !askGrokOpen,
+    enabled: swipeArmed,
     onPeek: peekTab,
   });
 
-  // Overlay covers the suite — dock must not stay tappable underneath.
   // Do NOT key this on kb.open: a focused composer in a hidden Grok pane
   // used to leave hideDock true after leaving Grok (dock gone on re-entry).
   // Keyboard still fades the dock via html.kb-open CSS.
-  const hideDock = launchOpen || askGrokOpen;
+  const hideDock = launchOpen;
 
   const nav = useMemo(
     () => ({
@@ -487,15 +472,6 @@ export function AppShell() {
               </Suspense>
             </div>
           ) : null}
-          <AskGrokOverlay
-            tab={tab}
-            launchOpen={launchOpen}
-            open={askGrokOpen}
-            onOpenChange={onAskGrokOpenChange}
-            seedPrompt={overlaySeed}
-            onSeedConsumed={() => setOverlaySeed(undefined)}
-            entryToken={overlayEntryToken}
-          />
         </main>
 
         {!hideDock ? (

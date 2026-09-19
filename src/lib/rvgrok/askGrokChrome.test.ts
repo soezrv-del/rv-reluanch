@@ -10,80 +10,51 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("Ask Grok chrome mounts overlay-only and hides on the Grok route", () => {
+test("Ask Grok floating badge and overlay chrome are gone", () => {
   const overlayPath = join(root, "../../components/shell/AskGrokOverlay.tsx");
-  const overlay = read("../../components/shell/AskGrokOverlay.tsx");
   const shell = read("../../components/shell/AppShell.tsx");
   const css = read("../../styles.css");
 
-  assert.equal(existsSync(overlayPath), true, "AskGrokOverlay.tsx restored");
-  assert.match(overlay, /data-ask-grok-badge/);
-  assert.match(overlay, /data-ask-grok-panel/);
-  assert.match(overlay, /data-ask-grok-close/);
-  assert.match(overlay, /data-ask-grok-mount/);
-  assert.match(overlay, /const onGrokRoute = tab === "rvgrok"/);
-  assert.match(overlay, /showBadge = !onGrokRoute && !launchOpen/);
-  assert.match(overlay, /Ask Grok/);
-  assert.match(overlay, /aria-expanded=\{open\}/);
-  assert.match(shell, /<AskGrokOverlay/);
-  assert.match(shell, /tab=\{tab\}/);
-  assert.match(shell, /launchOpen=\{launchOpen\}/);
-  assert.match(css, /\.ask-grok-badge \{/);
-  assert.match(css, /position:\s*fixed/);
-  assert.match(css, /--z-ask-grok-badge:\s*90/);
-  assert.match(css, /--z-ask-grok-panel:\s*70/);
-  assert.match(css, /z-index:\s*var\(--z-ask-grok-badge\)/);
-  assert.match(css, /z-index:\s*var\(--z-ask-grok-panel\)/);
+  assert.equal(existsSync(overlayPath), false, "AskGrokOverlay.tsx deleted");
+  assert.doesNotMatch(shell, /AskGrokOverlay/);
+  assert.doesNotMatch(shell, /data-ask-grok/);
+  assert.doesNotMatch(shell, /askGrokOpen|overlaySeed|setAskGrokOpen/);
+  assert.doesNotMatch(css, /ask-grok/);
+  assert.doesNotMatch(css, /--z-ask-grok/);
+  assert.doesNotMatch(css, /--shadow-ask-grok/);
 });
 
-test("GROK MOUNT POINT is RvGrokApp — chrome does not fork chat", () => {
-  const overlay = read("../../components/shell/AskGrokOverlay.tsx");
-  assert.match(overlay, /@\/components\/rvgrok\/RvGrokApp/);
-  assert.match(overlay, /<RvGrokApp[\s\S]*variant="embedded"/);
-  assert.match(overlay, /<RvGrokApp[\s\S]*active=\{open\}/);
-  assert.match(overlay, /seedPrompt=\{seedPrompt\}/);
-  assert.match(overlay, /onSeedConsumed=\{onSeedConsumed\}/);
-  assert.doesNotMatch(overlay, /streamChat|GrokRealtimeSession|sendMessage/);
-  assert.doesNotMatch(overlay, /setTab\(|onNavigate/);
-});
-
-test("overlay a11y: focus trap, restore badge, no hidden/display:none mid-transition", () => {
-  const overlay = read("../../components/shell/AskGrokOverlay.tsx");
-  const css = read("../../styles.css");
-
-  assert.match(overlay, /aria-expanded=\{open\}/);
-  assert.match(overlay, /aria-hidden=\{!open\}/);
-  assert.match(overlay, /aria-modal="true"/);
-  assert.match(overlay, /e\.key === "Escape"/);
-  assert.match(overlay, /e\.key !== "Tab"/);
-  assert.match(overlay, /badgeRef\.current/);
-  assert.match(overlay, /target\.focus\(\)/);
-  assert.doesNotMatch(overlay, / hidden=\{/);
-  assert.doesNotMatch(overlay, /[^a-]hidden=\{!open\}/);
-  assert.doesNotMatch(css, /\.ask-grok-layer\[hidden\]/);
-  assert.match(css, /\.ask-grok-layer \{/);
-  assert.match(css, /visibility:\s*hidden/);
-  assert.match(css, /pointer-events:\s*none/);
-  assert.match(css, /\.ask-grok-layer\.is-open \{/);
-  assert.match(css, /never toggle hidden/);
-});
-
-test("Facts Ask Grok seeds the overlay; dock Grok tab stays a clean page", () => {
+test("Grok dock tab still opens the Grok page as today", () => {
+  const tabs = read("../../components/shell/BottomTabs.tsx");
   const shell = read("../../components/shell/AppShell.tsx");
-  const overlay = read("../../components/shell/AskGrokOverlay.tsx");
+
+  assert.match(tabs, /\{ id: "rvgrok", label: "RvGROK", short: "Grok" \}/);
+
+  const pageMount = shell.match(
+    /id === "rvgrok" \? \([\s\S]*?<RvGrokApp[\s\S]*?\/>/,
+  )?.[0];
+  assert.ok(pageMount, "Grok tab still mounts RvGrokApp");
+  assert.doesNotMatch(pageMount, /variant=/);
+  assert.match(pageMount, /active=\{tab === "rvgrok" && !launchOpen\}/);
+  assert.match(pageMount, /entryToken=\{grokEntryToken\}/);
+  assert.match(pageMount, /seedPrompt=\{grokSeed\}/);
+});
+
+test("Facts Ask Grok seeds the Grok tab; dock tap stays a clean page", () => {
+  const shell = read("../../components/shell/AppShell.tsx");
   const tabs = read("../../components/shell/BottomTabs.tsx");
 
-  assert.match(shell, /setOverlaySeed\(grokSeedFromAskHandoff\(prompt\)\)/);
-  assert.match(shell, /setAskGrokOpen\(true\)/);
-  assert.match(shell, /seedPrompt=\{overlaySeed\}/);
-  assert.match(overlay, /seedPrompt=\{seedPrompt\}/);
+  assert.match(shell, /setGrokSeed\(grokSeedFromAskHandoff\(prompt\)\)/);
+  assert.match(shell, /setTab\("rvgrok"\)/);
+  assert.doesNotMatch(shell, /setAskGrokOpen|overlaySeed|AskGrokOverlay/);
 
   const openGrok = shell.match(
     /const openGrok = \(prompt\?: string\) => \{[\s\S]*?\n  \};/,
   )?.[0];
   assert.ok(openGrok, "openGrok present");
-  assert.doesNotMatch(openGrok, /setTab\(/);
-  assert.doesNotMatch(openGrok, /setGrokSeed\(/);
+  assert.match(openGrok, /setGrokSeed\(grokSeedFromAskHandoff\(prompt\)\)/);
+  assert.match(openGrok, /setTab\("rvgrok"\)/);
+  assert.match(openGrok, /markVisited\("rvgrok"\)/);
 
   const pageMount = shell.match(
     /id === "rvgrok" \? \([\s\S]*?<RvGrokApp[\s\S]*?\/>/,
@@ -98,12 +69,13 @@ test("Facts Ask Grok seeds the overlay; dock Grok tab stays a clean page", () =>
   assert.doesNotMatch(tabs, /short: "LIVE!"/);
 });
 
-test("dock is hidden while the overlay is open — not keyed on kb.open", () => {
+test("dock is not keyed on overlay open or kb.open", () => {
   const shell = read("../../components/shell/AppShell.tsx");
-  assert.match(shell, /hideDock = launchOpen \|\| askGrokOpen/);
+  assert.match(shell, /hideDock = launchOpen/);
+  assert.doesNotMatch(shell, /askGrokOpen/);
   assert.doesNotMatch(shell, /hideDock = launchOpen \|\| kb\.open/);
   assert.match(shell, /blurSuiteFocus/);
-  assert.match(shell, /enabled: swipeArmed && !askGrokOpen/);
+  assert.match(shell, /enabled: swipeArmed,/);
 });
 
 test("Grok dock tab uses the same Einstein asset as RvGrok; other tabs are icon-free", () => {
@@ -150,17 +122,15 @@ test("Grok dock tab uses the same Einstein asset as RvGrok; other tabs are icon-
   }
 });
 
-test("Ask Grok overlay does not rewrite dock glass or Facts/Tow internals", () => {
+test("Removing overlay chrome does not rewrite dock glass or Facts/Tow internals", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const css = read("../../styles.css");
   const fax = read("../../components/rvfax/RvFaxApp.tsx");
   const tow = read("../../components/rvtow/RvTowApp.tsx");
-  const overlay = read("../../components/shell/AskGrokOverlay.tsx");
 
   assert.match(tabs, /\{ id: "rvgrok", label: "RvGROK", short: "Grok" \}/);
   assert.match(css, /backdrop-filter:\s*blur\(20px\) saturate\(180%\)/);
   assert.match(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
-  assert.doesNotMatch(overlay, /onOpenGrok|openTowWithCoach|setGrokSeed/);
   assert.doesNotMatch(fax, /AskGrokOverlay|setPanelOpen/);
   assert.doesNotMatch(tow, /AskGrokOverlay|setPanelOpen/);
 });
