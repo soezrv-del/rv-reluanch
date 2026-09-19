@@ -1,35 +1,42 @@
 /**
  * Facts report Ratings rows other than torque-to-weight.
  *
- * Maps existing grounded 1–5 numeric fields → integer stars.
- * Missing / unparseable / out of range → GAP.
+ * Quality / Reliability / Customer satisfaction come from the dated
+ * RV Insider owner-review snapshot (see ownerReviewRatings.ts).
+ * Missing / below sample floor / unknown brand → GAP.
  *
- * No invented bands. Warranty years, NHTSA recall counts, mock reviews,
- * ownerSentiment prose, and reliabilitySummary prose are not scores.
- *
- * Grounded fields on the live dossier today:
- *   quality              live.ratingEstimate (1–5) when present
- *   reliability          none (narrative only) → GAP
- *   customerSatisfaction none (ownerSentiment is prose) → GAP
+ * Do not invent from warranty years, NHTSA counts, mock reviews,
+ * RvFOX editorial scores, Grok ratingEstimate, or ownerSentiment prose.
+ * Factory warranty is not Reliability and is not "Dealer support index".
  */
+
+import {
+  formatOwnerReviewScore,
+  resolveOwnerReviewRatings,
+  type OwnerReviewRatings,
+  type OwnerReviewSlot,
+} from "./ownerReviewRatings.ts";
 
 export type GroundedStars = 1 | 2 | 3 | 4 | 5;
 
 export type GroundedScore = number | null | undefined;
 
 export type ReportRatingsInput = {
-  /** Live dossier ratingEstimate — only existing numeric quality-ish score. */
-  qualityScore?: GroundedScore;
-  /** No numeric reliability field on catalog / live dossier today. */
-  reliabilityScore?: GroundedScore;
-  /** No numeric satisfaction field (ownerSentiment is prose). */
-  satisfactionScore?: GroundedScore;
+  make?: string | null;
+  model?: string | null;
+};
+
+export type ReportRatingSlot = OwnerReviewSlot & {
+  /** Nearest integer star for compact display. Null on GAP. */
+  stars: GroundedStars | null;
 };
 
 export type ReportRatings = {
-  quality: GroundedStars | null;
-  reliability: GroundedStars | null;
-  customerSatisfaction: GroundedStars | null;
+  quality: ReportRatingSlot;
+  reliability: ReportRatingSlot;
+  customerSatisfaction: ReportRatingSlot;
+  snapshotAsOf: string | null;
+  matchedName: string | null;
 };
 
 /**
@@ -44,11 +51,21 @@ export function groundedStars(score: GroundedScore): GroundedStars | null {
   return n as GroundedStars;
 }
 
+function withStars(slot: OwnerReviewSlot): ReportRatingSlot {
+  return { ...slot, stars: groundedStars(slot.score) };
+}
+
 export function mapReportRatings(input: ReportRatingsInput): ReportRatings {
+  const resolved: OwnerReviewRatings = resolveOwnerReviewRatings(
+    input.make,
+    input.model,
+  );
   return {
-    quality: groundedStars(input.qualityScore),
-    reliability: groundedStars(input.reliabilityScore),
-    customerSatisfaction: groundedStars(input.satisfactionScore),
+    quality: withStars(resolved.quality),
+    reliability: withStars(resolved.reliability),
+    customerSatisfaction: withStars(resolved.customerSatisfaction),
+    snapshotAsOf: resolved.snapshotAsOf,
+    matchedName: resolved.matchedName,
   };
 }
 
@@ -56,3 +73,6 @@ export function formatStarsOrGap(stars: GroundedStars | null): string {
   if (stars == null) return "GAP";
   return "★".repeat(stars) + "☆".repeat(5 - stars);
 }
+
+export { formatOwnerReviewScore };
+export { OWNER_REVIEW_FOOTER } from "./ownerReviewRatings.ts";

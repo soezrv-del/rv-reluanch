@@ -304,5 +304,5 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 · GVWR; other rows keep stars"
   assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
   assert.doesNotMatch(detail, /torqueToWeight\.stars/);
   assert.match(detail, /label:\s*"Quality"/);
-  assert.match(detail, /ratingStars\(row\.stars\)/);
+  assert.match(detail, /ratingStars\(row\.score\)/);
 });
