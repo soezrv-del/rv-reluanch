@@ -6,6 +6,7 @@ import {
   formatInchesAsFtIn,
   weightForFloorplan,
   findOemFloorplanSpec,
+  findOemGvwrLbs,
 } from "./floorplanSpecs";
 import { findPowertrainCorrection } from "./powertrainCorrections";
 import {
@@ -450,12 +451,21 @@ export function buildBrochureSpecs(
     make,
     model,
   });
-  const gvwrMid = oem?.gvwrLbs ?? snap.gvwrLbs ?? w.mid;
-  const uvw = oem?.uvwLbs ?? snap.uvwLbs ?? w.uvwEst;
+  // Listing / TTW weight basis is published OEM GVWR only.
+  // Do not let estimated UVW (mid×0.82) win, and never copy GVWR onto UVW.
+  const publishedGvwr =
+    oem?.gvwrLbs ?? findOemGvwrLbs(year, make, model, floorplan) ?? snap.gvwrLbs;
+  const publishedUvw = oem?.uvwLbs ?? snap.uvwLbs;
+  const gvwrMid = publishedGvwr ?? w.mid;
+  const uvw = publishedUvw;
   const ccc =
     oem != null
       ? Math.max(800, oem.gvwrLbs - oem.uvwLbs)
-      : (snap.cccLbs ?? w.cccEst);
+      : snap.cccLbs != null
+        ? snap.cccLbs
+        : publishedGvwr != null && uvw != null
+          ? Math.max(800, publishedGvwr - uvw)
+          : null;
 
   const lenMid =
     fpInches != null
@@ -569,13 +579,11 @@ export function buildBrochureSpecs(
             ? fmtInchesAsFtIn(spec.lengthRange[0] * 12)
             : `${spec.lengthRange[0]}–${spec.lengthRange[1]} ft`;
 
-  const gvwrDisplay = oem?.gvwrLbs
-    ? fmtLbs(oem.gvwrLbs)
-    : snap.gvwrLbs
-      ? fmtLbs(snap.gvwrLbs)
-      : floorplan
-        ? w.gvwr
-        : `${spec.weightRange[0].toLocaleString()}–${spec.weightRange[1].toLocaleString()} lbs`;
+  const gvwrDisplay = publishedGvwr
+    ? fmtLbs(publishedGvwr)
+    : floorplan
+      ? w.gvwr
+      : `${spec.weightRange[0].toLocaleString()}–${spec.weightRange[1].toLocaleString()} lbs`;
 
 
   // Clean engine labels for year (drop "or prior…" parenthetical noise when year is clear)
@@ -652,8 +660,8 @@ export function buildBrochureSpecs(
     wheelbase: isTowable ? "N/A (towable)" : CONFIRM_BROCHURE,
 
     gvwr: gvwrDisplay,
-    uvw: fmtLbs(uvw),
-    ccc: fmtLbs(ccc),
+    uvw: uvw != null ? fmtLbs(uvw) : CONFIRM_BROCHURE,
+    ccc: ccc != null ? fmtLbs(ccc) : CONFIRM_BROCHURE,
     gcwr: isTowable
       ? "Set by tow vehicle"
       : fmtLbs(gvwrMid + (towCap || (diesel ? 10000 : 5000))),

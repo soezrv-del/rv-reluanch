@@ -68,6 +68,7 @@ test("must-pass 1–10 anchors (±0.15)", () => {
   });
   assertNear(p31.ratio, 21.3, 0.05);
   assertNear(p31.score, 5.0);
+  assert.equal(p31.weightBasis, "GVWR");
   assert.equal(p31.color, "red");
 
   const p36 = computeTorqueToWeight({
@@ -76,7 +77,8 @@ test("must-pass 1–10 anchors (±0.15)", () => {
     rvType: "Class A Gas",
   });
   assertNear(p36.ratio, 19.5, 0.05);
-  assertNear(p36.score, 4.5);
+  assertNear(p36.score, 4.6);
+  assert.equal(p36.weightBasis, "GVWR");
   assert.equal(p36.color, "red");
 
   const cornerstone = computeTorqueToWeight({
@@ -136,17 +138,19 @@ test("bar color: red < 6.0, yellow [6.0, 7.5), green ≥ 7.5", () => {
   assert.equal(barColorFromScore(null), null);
 });
 
-test("prefer UVW; fall back to GVWR; GAP if torque or both weights missing", () => {
-  const preferUvw = computeTorqueToWeight({
+test("GVWR-only basis; UVW never wins; GAP if torque or GVWR missing", () => {
+  const ignoreUvw = computeTorqueToWeight({
     torqueLbFt: 468,
     uvwLbs: 20_000,
     gvwrLbs: 24_000,
     rvType: "Class A Gas",
   });
-  assert.equal(preferUvw.weightBasis, "UVW");
-  assert.equal(preferUvw.weightLb, 20_000);
-  assert.ok(Math.abs((preferUvw.ratio ?? 0) - 23.4) < 1e-9);
-  assert.match(formatTorqueToWeightScore(preferUvw), /^[0-9.]+\/10 · UVW$/);
+  assert.equal(ignoreUvw.weightBasis, "GVWR");
+  assert.equal(ignoreUvw.weightLb, 24_000);
+  assert.equal(ignoreUvw.uvwLb, 20_000);
+  assert.ok(Math.abs((ignoreUvw.ratio ?? 0) - 19.5) < 1e-9);
+  assert.match(formatTorqueToWeightScore(ignoreUvw), /^[0-9.]+\/10 · GVWR$/);
+  assert.doesNotMatch(formatTorqueToWeightScore(ignoreUvw), /UVW/);
 
   const unloadedRaw = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -154,17 +158,19 @@ test("prefer UVW; fall back to GVWR; GAP if torque or both weights missing", () 
     gvwrLbs: 22_000,
     rvType: "Class A Gas",
   });
-  assert.equal(unloadedRaw.weightBasis, "UVW");
-  assert.equal(unloadedRaw.weightLb, 18_000);
+  assert.equal(unloadedRaw.weightBasis, "GVWR");
+  assert.equal(unloadedRaw.weightLb, 22_000);
+  assert.equal(unloadedRaw.uvwLb, 18_000);
+  assertNear(unloadedRaw.score, 5.0);
 
-  const gvwrFallback = computeTorqueToWeight({
+  const gvwrOnly = computeTorqueToWeight({
     torqueLbFt: 800,
     gvwrLbs: 31_000,
     rvType: "Class A Gas",
   });
-  assert.equal(gvwrFallback.weightBasis, "GVWR");
-  assert.equal(gvwrFallback.weightLb, 31_000);
-  assert.equal(formatTorqueToWeightScore(gvwrFallback), "6.0/10 · GVWR");
+  assert.equal(gvwrOnly.weightBasis, "GVWR");
+  assert.equal(gvwrOnly.weightLb, 31_000);
+  assert.equal(formatTorqueToWeightScore(gvwrOnly), "6.0/10 · GVWR");
 
   assert.equal(formatTorqueToWeightScore(computeTorqueToWeight({})), "GAP");
   assert.equal(
@@ -175,8 +181,15 @@ test("prefer UVW; fall back to GVWR; GAP if torque or both weights missing", () 
     formatTorqueToWeightScore(computeTorqueToWeight({ gvwrLbs: 22_000 })),
     "GAP",
   );
+  // UVW alone is not a weight basis — missing GVWR is GAP.
   assert.equal(
     formatTorqueToWeightScore(computeTorqueToWeight({ uvwLbs: 18_000 })),
+    "GAP",
+  );
+  assert.equal(
+    formatTorqueToWeightScore(
+      computeTorqueToWeight({ torqueLbFt: 468, uvwLbs: 18_000 }),
+    ),
     "GAP",
   );
 });
@@ -210,10 +223,11 @@ test("never uses horsepower as torque; UVW labeled vs GVWR labeled", () => {
   );
 });
 
-test("Facts Ratings: Torque-to-Weight bar + X/10 · UVW|GVWR; other rows keep stars", () => {
+test("Facts Ratings: Torque-to-Weight bar + X/10 · GVWR; other rows keep stars", () => {
   const src = readFileSync(join(root, "torqueToWeight.ts"), "utf8");
-  assert.match(src, /torqueLbFt \/ weightLb/);
-  assert.match(src, /uvwLb \?\? gvwrLb/);
+  assert.match(src, /torqueLbFt \/ gvwrLb/);
+  assert.match(src, /weightLb = gvwrLb/);
+  assert.doesNotMatch(src, /uvwLb \?\? gvwrLb/);
   assert.match(src, /score < 6/);
   assert.match(src, /score < 7\.5/);
   assert.doesNotMatch(src, /score < 3/);

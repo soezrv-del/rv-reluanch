@@ -16,6 +16,8 @@ import {
   parseHp,
 } from "./catalogHonesty.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
+import { findOemGvwrLbs } from "./floorplanSpecs.ts";
+import { computeTorqueToWeight } from "./torqueToWeight.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
 import {
   isPlaceholderTankTrio,
@@ -151,6 +153,72 @@ test("Class C never hash-picks bus tires or triple 15k A/C", () => {
   assert.doesNotMatch(spec, /"3 × 15,000 BTU"/);
   assert.match(spec, /honestTireSize/);
   assert.match(spec, /honestAcUnits/);
+});
+
+test("brochure / listing weight basis is published GVWR — estimated UVW never wins", () => {
+  const spec = src("brochureSpecs.ts");
+  assert.match(spec, /findOemGvwrLbs/);
+  assert.match(spec, /publishedGvwr/);
+  assert.match(spec, /publishedUvw/);
+  assert.doesNotMatch(spec, /oem\?\.uvwLbs \?\? snap\.uvwLbs \?\? w\.uvwEst/);
+  assert.match(src("floorplanSpecs.ts"), /findOemGvwrLbs/);
+  assert.match(src("floorplanSpecs.ts"), /never the TTW/);
+});
+
+test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays honest", () => {
+  assert.equal(
+    findOemGvwrLbs("2025", "Entegra Coach", "Vision XL", "36A"),
+    24000,
+  );
+  assert.equal(
+    findOemGvwrLbs("2025", "Entegra Coach", "Vision XL", "36C"),
+    24000,
+  );
+  assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "31UL"), 22000);
+  assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "36A"), 24000);
+  assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "36C"), 24000);
+  // Do not leak Vision XL pins onto bare Vision or Precept Prestige.
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Vision", "36A"), null);
+  assert.equal(
+    findOemGvwrLbs("2025", "Jayco", "Precept Prestige", "36A"),
+    null,
+  );
+
+  const spec = src("brochureSpecs.ts");
+  assert.match(spec, /oem\?\.gvwrLbs \?\? findOemGvwrLbs/);
+  assert.match(spec, /publishedUvw = oem\?\.uvwLbs \?\? snap\.uvwLbs/);
+  assert.doesNotMatch(spec, /uvw:\s*fmtLbs\(uvw\)/);
+  assert.match(spec, /uvw:\s*uvw != null \? fmtLbs\(uvw\) : CONFIRM_BROCHURE/);
+
+  const ttw31 = computeTorqueToWeight({
+    torqueLbFt: 468,
+    uvwRaw: "18,040 lbs", // mid×0.82-style estimate must not win
+    gvwrRaw: "22,000 lbs",
+    rvType: "Class A Gas",
+  });
+  assert.equal(ttw31.weightBasis, "GVWR");
+  assert.equal(ttw31.weightLb, 22000);
+  assert.ok(ttw31.score != null && Math.abs(ttw31.score - 5.0) <= 0.15);
+
+  const ttw36 = computeTorqueToWeight({
+    torqueLbFt: 468,
+    uvwRaw: "19,680 lbs",
+    gvwrRaw: "24,000 lbs",
+    rvType: "Class A Gas",
+  });
+  assert.equal(ttw36.weightBasis, "GVWR");
+  assert.equal(ttw36.weightLb, 24000);
+  assert.ok(ttw36.score != null && Math.abs(ttw36.score - 4.6) <= 0.15);
+
+  const ttwVxl = computeTorqueToWeight({
+    torqueLbFt: 468,
+    uvwRaw: "Confirm brochure",
+    gvwrRaw: "24,000 lbs",
+    rvType: "Class A Gas",
+  });
+  assert.equal(ttwVxl.weightLb, 24000);
+  assert.equal(ttwVxl.weightBasis, "GVWR");
+  assert.notEqual(ttwVxl.uvwLb, 24000);
 });
 
 test("brochureSpecs source no longer hash-seeds tanks, MPG, heater, construction, wheelbase, propane", () => {
