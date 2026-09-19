@@ -37,7 +37,10 @@ import {
   getRatingMetadata,
   ratingStars,
 } from "@/lib/rv/ratingSystem";
-import { computeTorqueToWeight } from "@/lib/rv/torqueToWeight";
+import {
+  formatTorqueToWeightScore,
+  computeTorqueToWeight,
+} from "@/lib/rv/torqueToWeight";
 import { mapReportRatings } from "@/lib/rv/reportRatings";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import {
@@ -686,12 +689,18 @@ export function RvDetail({
       label: "Customer satisfaction",
       stars: reportRatings.customerSatisfaction,
     },
-    {
-      key: "torque-to-weight",
-      label: "Torque-to-weight",
-      stars: torqueToWeight.stars,
-    },
   ];
+
+  const torqueBarPct =
+    torqueToWeight.score == null
+      ? 0
+      : (torqueToWeight.score / 10) * 100;
+  const torqueBarColor =
+    torqueToWeight.color === "red"
+      ? "var(--color-ruby)"
+      : torqueToWeight.color === "yellow"
+        ? "var(--color-amber)"
+        : "var(--color-green)";
 
   const ownerReviews = useMemo(
     () => getMockReviews(make, model, displayRating),
@@ -1459,9 +1468,7 @@ export function RvDetail({
                   </span>
                   {row.stars == null ? (
                     <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
-                      {row.key === "torque-to-weight" && torqueToWeight.na
-                        ? "N/A"
-                        : "GAP"}
+                      GAP
                     </span>
                   ) : (
                     <span
@@ -1473,6 +1480,39 @@ export function RvDetail({
                   )}
                 </li>
               ))}
+              <li className="flex items-center justify-between gap-3 py-3 last:pb-0">
+                <span className="shrink-0 text-[14px] font-medium text-white">
+                  Torque-to-Weight
+                </span>
+                {torqueToWeight.score == null ? (
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                    {formatTorqueToWeightScore(torqueToWeight)}
+                  </span>
+                ) : (
+                  <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
+                    <div
+                      className="h-2 w-[7.5rem] overflow-hidden rounded-full bg-white/12 sm:w-[9.5rem]"
+                      data-testid="facts-tqwt-bar"
+                      role="meter"
+                      aria-label={`Torque-to-Weight ${formatTorqueToWeightScore(torqueToWeight)}`}
+                      aria-valuemin={1}
+                      aria-valuemax={10}
+                      aria-valuenow={Number(torqueToWeight.score.toFixed(1))}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${torqueBarPct}%`,
+                          backgroundColor: torqueBarColor,
+                        }}
+                      />
+                    </div>
+                    <span className="shrink-0 text-[13px] font-semibold tabular-nums text-white">
+                      {formatTorqueToWeightScore(torqueToWeight)}
+                    </span>
+                  </div>
+                )}
+              </li>
             </ul>
             <p className="mt-3 text-[11px] leading-relaxed text-white/45">
               Grounded scores only. GAP means the field is missing — not a

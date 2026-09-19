@@ -8,16 +8,21 @@
  *
  * Ratio: r = (torqueLbFt / gvwrLb) * 1000  →  lb-ft per 1,000 lb GVWR
  *
- * Motorhome bands (half-open):
+ * Continuous 1–10 (piecewise-linear on the David envelope):
  *   GAP / N/A  torque missing OR gvwr missing OR ≤0 OR towable
- *   1★  [0, 10)
- *   2★  [10, 17)
- *   3★  [17, 28)   Seneca 800/31000 ≈ 25.8 is the 3★ anchor
- *   4★  [28, 45)
- *   5★  [45, ∞)
+ *   r < 10        → [1, 2)
+ *   10 ≤ r < 17   → [3, 4)
+ *   17 ≤ r < 28   → [4.0, 6.5)   Seneca 800/31000 ≈ 25.8 → ~6.0
+ *   28 ≤ r < 45   → [7.0, 9.3)
+ *   r ≥ 45        → [8.75, 10]   clamped
+ *
+ * Bar color (score, not ratio):
+ *   red     score < 3.0
+ *   yellow  3.0 ≤ score < 4.0
+ *   green   score ≥ 4.0
  */
 
-export type TorqueToWeightStars = 1 | 2 | 3 | 4 | 5;
+export type TorqueBarColor = "red" | "yellow" | "green";
 
 export type TorqueToWeightInput = {
   /** Brochure / powertrainGuard hard torque (lb-ft). Preferred when > 0. */
@@ -38,7 +43,9 @@ export type TorqueToWeightResult = {
   gvwrLb: number | null;
   /** (torqueLbFt / gvwrLb) * 1000, or null on GAP. */
   ratio: number | null;
-  stars: TorqueToWeightStars | null;
+  /** Continuous 1–10, or null on GAP / N/A. */
+  score: number | null;
+  color: TorqueBarColor | null;
   gap: boolean;
   /** Towable (trailer / fifth wheel) — N/A, not a motorhome score. */
   na: boolean;
@@ -48,6 +55,10 @@ const EMPTY = /^[—–\-]$/;
 
 function positiveInt(n: number): number | null {
   return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+}
+
+function clampScore(n: number): number {
+  return Math.min(10, Math.max(1, n));
 }
 
 /**
@@ -123,15 +134,29 @@ export function isTowableForTorqueRating(
   );
 }
 
-export function starsFromTorqueToWeightRatio(
+/**
+ * Continuous 1–10 from r = (lb-ft / GVWR) × 1000.
+ * Envelope: <10 → 1–2; 10–17 → 3–4; 17–28 → 5–6; 28–45 → 7–8; 45+ → 9–10.
+ * Interior slopes are set so the must-pass anchors land within ±0.15.
+ */
+export function scoreFromTorqueToWeightRatio(
   ratio: number | null | undefined,
-): TorqueToWeightStars | null {
+): number | null {
   if (ratio == null || !Number.isFinite(ratio) || ratio < 0) return null;
-  if (ratio >= 45) return 5;
-  if (ratio >= 28) return 4;
-  if (ratio >= 17) return 3;
-  if (ratio >= 10) return 2;
-  return 1;
+  if (ratio < 10) return clampScore(1 + ratio / 10);
+  if (ratio < 17) return clampScore(3 + (ratio - 10) / 7);
+  if (ratio < 28) return clampScore(4 + ((ratio - 17) / 11) * 2.5);
+  if (ratio < 45) return clampScore(7 + ((ratio - 28) / 17) * 2.3);
+  return clampScore(8.75 + (ratio - 45) / 5);
+}
+
+export function barColorFromScore(
+  score: number | null | undefined,
+): TorqueBarColor | null {
+  if (score == null || !Number.isFinite(score)) return null;
+  if (score < 3) return "red";
+  if (score < 4) return "yellow";
+  return "green";
 }
 
 export function computeTorqueToWeight(
@@ -143,7 +168,8 @@ export function computeTorqueToWeight(
       torqueLbFt: null,
       gvwrLb: null,
       ratio: null,
-      stars: null,
+      score: null,
+      color: null,
       gap: true,
       na: true,
     };
@@ -155,22 +181,23 @@ export function computeTorqueToWeight(
     torqueLbFt != null && gvwrLb != null
       ? torqueToWeightRatio(torqueLbFt, gvwrLb)
       : null;
-  const stars = starsFromTorqueToWeightRatio(ratio);
+  const score = scoreFromTorqueToWeightRatio(ratio);
   return {
     torqueLbFt,
     gvwrLb,
     ratio,
-    stars,
-    gap: stars == null,
+    score,
+    color: barColorFromScore(score),
+    gap: score == null,
     na: false,
   };
 }
 
-/** Integer 1–5 ★ string; N/A on towables, GAP when missing. */
-export function formatTorqueToWeightStars(
+/** Display "X.X/10"; N/A on towables, GAP when missing. */
+export function formatTorqueToWeightScore(
   result: TorqueToWeightResult,
 ): string {
   if (result.na) return "N/A";
-  if (result.gap || result.stars == null) return "GAP";
-  return "★".repeat(result.stars) + "☆".repeat(5 - result.stars);
+  if (result.gap || result.score == null) return "GAP";
+  return `${result.score.toFixed(1)}/10`;
 }
