@@ -1013,7 +1013,7 @@ const OEM_FLOORPLAN_ROWS: Array<{
     makeIncludes: "newmar",
     modelIncludes: "dutch star",
     yearMin: 2020,
-    yearMax: 2026,
+    yearMax: 2024,
     floorplan: "4081",
     spec: {
       lengthDisplay: `40' 10"`,
@@ -2082,20 +2082,43 @@ export function formatFloorplanLength(
   return `${lengthRange[0]}–${lengthRange[1]} ft`;
 }
 
-/**
- * Published OEM GVWR pins for listing / torque-to-weight scoring.
- * GVWR only — never copy these onto UVW display fields.
- * Missing GVWR stays GAP; do not invent from UVW or mid×0.82.
- */
-const OEM_GVWR_PINS: Array<{
+type OemGvwrPin = {
   makeIncludes: string;
   modelIncludes: string;
   yearMin: number;
   yearMax: number;
   floorplan: string;
   gvwrLbs: number;
-}> = [
-  // Entegra Vision XL — F53 24k on 36A/36C; 22k on 31UL
+};
+
+/** Expand one brochure GVWR across the floorplans that table lists at that number. */
+function gvwrPins(
+  makeIncludes: string,
+  modelIncludes: string,
+  yearMin: number,
+  yearMax: number,
+  floorplans: readonly string[],
+  gvwrLbs: number,
+): OemGvwrPin[] {
+  return floorplans.map((floorplan) => ({
+    makeIncludes,
+    modelIncludes,
+    yearMin,
+    yearMax,
+    floorplan,
+    gvwrLbs,
+  }));
+}
+
+/**
+ * Published OEM GVWR pins for listing / torque-to-weight scoring.
+ * GVWR only — never copy these onto UVW display fields.
+ * Missing GVWR stays GAP; do not invent from UVW or mid×0.82.
+ * Only pin when a dated brochure / OEM table prints a single floorplan GVWR.
+ */
+const OEM_GVWR_PINS: OemGvwrPin[] = [
+  // Entegra Vision XL — F53 24k on 36A/36C; 22k on 31UL/34B/34G
+  // RVUSA 2023–2025 Vision XL brochures + 2026 Vision XL flyer table.
   {
     makeIncludes: "entegra",
     modelIncludes: "vision xl",
@@ -2120,7 +2143,25 @@ const OEM_GVWR_PINS: Array<{
     floorplan: "31UL",
     gvwrLbs: 22000,
   },
-  // Jayco Precept — F53 22k on 31UL; 24k on 36A/36C. Not Precept Prestige.
+  ...gvwrPins("entegra", "vision xl", 2023, 2027, ["34B", "34G"], 22000),
+  // Entegra Vision (not XL / SE) — 2025–2026 OEM Vision brochure table.
+  ...gvwrPins("entegra", "vision", 2024, 2027, ["27A", "29F", "29S"], 18000),
+  // Entegra Aspire — 2024–2025 Aspire brochure weights table (same split on 2023 card).
+  ...gvwrPins("entegra", "aspire", 2023, 2025, ["40P"], 41000),
+  ...gvwrPins("entegra", "aspire", 2023, 2025, ["44B", "44D", "44R", "44W", "44Z"], 49000),
+  // Entegra Odyssey — 2026 Odyssey brochure weights table (all listed E-450 14,500). Not Odyssey SE / Esteem.
+  ...gvwrPins(
+    "entegra",
+    "odyssey",
+    2025,
+    2026,
+    ["24B", "25R", "26M", "27U", "29V", "30Z", "31F"],
+    14500,
+  ),
+  // Entegra Emblem — 2025–2026 RVUSA Emblem cards + 2027 OEM Emblem page: F53 24,000.
+  ...gvwrPins("entegra", "emblem", 2025, 2027, ["36B", "36H", "36U"], 24000),
+  // Jayco Precept — F53 22k on 31UL/34B/34G; 24k on 36A/36C. Not Precept Prestige.
+  // Jayco 2026–2027 Precept flyer + 2024 Precept brochure chassis line.
   {
     makeIncludes: "jayco",
     modelIncludes: "precept",
@@ -2145,7 +2186,145 @@ const OEM_GVWR_PINS: Array<{
     floorplan: "36C",
     gvwrLbs: 24000,
   },
+  ...gvwrPins("jayco", "precept", 2022, 2027, ["34B", "34G"], 22000),
+  // Jayco Greyhawk — 2026 Greyhawk brochure / floorplan pages: E-450 14,500 all current plans.
+  ...gvwrPins("jayco", "greyhawk", 2025, 2027, ["27U", "29MV", "30Z", "31F"], 14500),
+  // Jayco Alante — 2025 + 2026 Alante brochures: 27A / 29F / 29S all F53 18,000. Not Alante SE.
+  ...gvwrPins("jayco", "alante", 2025, 2026, ["27A", "29F", "29S"], 18000),
+  // Jayco Alante SE — 2025 Alante SE brochure + 2026 Alante SE brochure: 27ASE F53 18,000.
+  ...gvwrPins("jayco", "alante se", 2025, 2026, ["27ASE"], 18000),
+  // Jayco Redhawk — 2026 Redhawk brochure / floorplan pages: E-450 14,500. Not Redhawk SE. MY27 27G unprinted.
+  ...gvwrPins("jayco", "redhawk", 2025, 2026, ["24B", "26M", "29XK", "31F"], 14500),
+  // Jayco Melbourne — 2025 + 2026 Melbourne brochures: 24L / 24R both Sprinter 11,030. Not Melbourne Prestige.
+  ...gvwrPins("jayco", "melbourne", 2025, 2026, ["24L", "24R"], 11030),
+  // Jayco Granite Ridge — 2026 Granite Ridge brochure: 22T Transit 11,000; 23S Sprinter 11,030.
+  ...gvwrPins("jayco", "granite ridge", 2026, 2026, ["22T"], 11000),
+  ...gvwrPins("jayco", "granite ridge", 2026, 2026, ["23S"], 11030),
+  // American Coach American Tradition — 2021 Tradition brochure + later reprint table.
+  // 42Q/42V = 47,000; 37S = 41,000. Catalog weightRange mid for 42' is ~39.5–44k — wrong.
+  ...gvwrPins("american coach", "american tradition", 2021, 2026, ["42Q", "42V"], 47000),
+  ...gvwrPins("american coach", "american tradition", 2021, 2023, ["37S"], 41000),
+  // American Dream — 2019 RVUSA Dream table + later brochure + 2025 Fleetwood dealer spec table.
+  ...gvwrPins("american coach", "american dream", 2019, 2025, ["42Q"], 47000),
+  ...gvwrPins("american coach", "american dream", 2020, 2022, ["42V"], 47000),
+  ...gvwrPins("american coach", "american dream", 2019, 2022, ["45A"], 51000),
+  ...gvwrPins("american coach", "american dream", 2025, 2025, ["45A", "45D", "45P"], 54000),
+  // American Eagle — 2015 American Eagle brochure weights & measures (51k all four 45' plans).
+  ...gvwrPins("american coach", "american eagle", 2015, 2015, ["45A", "45B", "45N", "45T"], 51000),
+  // Thor ACE — 2026 ACE brochure spec table (same 29D/29G/30C/32B codes MY23–27).
+  ...gvwrPins("thor", "ace", 2023, 2027, ["29D", "29G", "30C"], 18000),
+  ...gvwrPins("thor", "ace", 2023, 2027, ["32B"], 22000),
+  // Thor Hurricane — 2026 Hurricane brochure table. 36H prints on that card; 35A (MY27) unprinted.
+  ...gvwrPins("thor", "hurricane", 2025, 2027, ["29L"], 18000),
+  ...gvwrPins("thor", "hurricane", 2025, 2026, ["35G", "35R"], 22000),
+  ...gvwrPins("thor", "hurricane", 2025, 2027, ["35J"], 22000),
+  ...gvwrPins("thor", "hurricane", 2026, 2027, ["36H"], 24000),
+  // Thor Windsport — 2026 Windsport brochure table (no 36H on that card).
+  ...gvwrPins("thor", "windsport", 2025, 2027, ["29L"], 18000),
+  ...gvwrPins("thor", "windsport", 2025, 2026, ["35G", "35R"], 22000),
+  ...gvwrPins("thor", "windsport", 2025, 2027, ["35J"], 22000),
+  // Thor Four Winds — 2026 Four Winds brochure Ford E-450 block only (skip Ford/Chevy dual-GVWR E-specs).
+  ...gvwrPins("thor", "four winds", 2026, 2027, ["28Z", "29K", "31E", "31H"], 14500),
+  // Thor Palazzo GT — 2026 Palazzo GT brochure spec table. Not bare Palazzo.
+  ...gvwrPins("thor", "palazzo gt", 2024, 2026, ["33.5", "33.6"], 26000),
+  ...gvwrPins("thor", "palazzo gt", 2024, 2026, ["37.4", "37.5"], 32350),
+  // Thor Vegas — 2026 Vegas brochure spec table (OH 09/10/2025). 24.1 is E-350 12,500; others E-450 14,500.
+  ...gvwrPins("thor", "vegas", 2026, 2027, ["24.1"], 12500),
+  ...gvwrPins("thor", "vegas", 2026, 2027, ["26.1", "26.2", "28.1"], 14500),
+  // Thor Axis — 2026 Axis brochure spec table (twin of Vegas; own card).
+  ...gvwrPins("thor", "axis", 2026, 2027, ["24.1"], 12500),
+  ...gvwrPins("thor", "axis", 2026, 2027, ["26.1", "26.2", "28.1"], 14500),
+  // Thor Quantum — 2026 Quantum brochure Ford-only rows. Dual Ford/Chevy LC21/LZ22/LZ25/LZ28 stay GAP.
+  ...gvwrPins("thor", "quantum", 2026, 2027, ["LC19"], 11500),
+  ...gvwrPins("thor", "quantum", 2026, 2027, ["LC28", "KW29", "LF31", "HS31"], 14500),
+  // Thor Chateau Sprinter — 2026 Chateau Sprinter brochure: 24LT / 24LV US 12,125. Not gas Chateau.
+  ...gvwrPins("thor", "chateau sprinter", 2026, 2027, ["24LT", "24LV"], 12125),
+  // Winnebago Vista — OEM 2025 Vista spec table.
+  ...gvwrPins("winnebago", "vista", 2025, 2025, ["29V"], 18000),
+  ...gvwrPins("winnebago", "vista", 2025, 2025, ["31B", "33K", "34R"], 22000),
+  // Winnebago Sunstar — 2025 Vista//Sunstar twin brochure + Sunstar spec PDF.
+  // 29V / 33K / 34R agree at 18k / 22k / 22k. 31B prints 20,500 vs 22,000 — leave GAP.
+  ...gvwrPins("winnebago", "sunstar", 2025, 2025, ["29V"], 18000),
+  ...gvwrPins("winnebago", "sunstar", 2025, 2025, ["33K", "34R"], 22000),
+  // Winnebago Adventurer — 2024–2025 Adventurer brochure weights & measures.
+  ...gvwrPins("winnebago", "adventurer", 2024, 2025, ["34W", "35F"], 22000),
+  ...gvwrPins("winnebago", "adventurer", 2024, 2025, ["36Z"], 24000),
+  // Winnebago Forza — 2025 Forza brochure weights & measures.
+  ...gvwrPins("winnebago", "forza", 2025, 2025, ["34T"], 26000),
+  ...gvwrPins("winnebago", "forza", 2025, 2025, ["36H"], 27910),
+  ...gvwrPins("winnebago", "forza", 2025, 2025, ["38W"], 29410),
+  // Winnebago Minnie Winnie — Feb 2025 Minnie Winnie brochure. 22M/22R print 14,500 A / 12,500 B — leave GAP.
+  ...gvwrPins("winnebago", "minnie winnie", 2025, 2025, ["25B", "26T", "31H", "31K"], 14500),
+  // Winnebago View — 2025 View//Navion brochure: 24D / 24J / 24V = 11,030. MY26 24R/24T print 11,030 vs 12,125 — leave GAP.
+  ...gvwrPins("winnebago", "view", 2025, 2025, ["24D", "24J", "24V"], 11030),
+  // Forest River FR3 — 2026 FR3 OEM floorplan pages (31DS is the 18k F53; others 22k).
+  ...gvwrPins("forest river", "fr3", 2025, 2026, ["31DS"], 18000),
+  ...gvwrPins("forest river", "fr3", 2025, 2026, ["30DS", "34DS", "35DS"], 22000),
+  // Forest River Georgetown 5 Series — 2026 GT5 OEM floorplan cards + Aug 2024 Georgetown combo table.
+  // Catalog 36B5 / 36D5 / 36F5 key mismatch — leave GAP. Not bare Georgetown / Georgetown XL.
+  ...gvwrPins("forest river", "georgetown 5 series", 2025, 2026, ["31L5"], 22000),
+  ...gvwrPins("forest river", "georgetown 5 series", 2026, 2026, ["34H5"], 22000),
+  // Forest River Sunseeker — 2026 Sunseeker brochure Full Feature Ford block. Not LE / Classic / 4X4 / MBS.
+  ...gvwrPins(
+    "forest river",
+    "sunseeker",
+    2025,
+    2026,
+    ["2440DS", "2500TS", "2860DS", "3010DS", "3050S"],
+    14500,
+  ),
+  // Coachmen Leprechaun — 2025 Leprechaun brochure Ford-only rows (skip Ford/Chevy dual GVWR).
+  ...gvwrPins("coachmen", "leprechaun", 2025, 2025, ["260DS", "298KB", "319MB"], 14500),
+  // Coachmen Freelander — 2025 Freelander flyer Ford-only 26DS = 14,500 (skip dual Ford/Chevy 22XG / 27QB).
+  ...gvwrPins("coachmen", "freelander", 2025, 2026, ["26DS"], 14500),
+  // Coachmen Pursuit — OEM site Pursuit 29SS = 18,000 (31BH / 33BH unprinted on that table).
+  ...gvwrPins("coachmen", "pursuit", 2024, 2026, ["29SS"], 18000),
+  // Coachmen Mirada — 2024 Mirada brochure: 29FW = 18,000.
+  ...gvwrPins("coachmen", "mirada", 2024, 2026, ["29FW"], 18000),
+  ...gvwrPins("coachmen", "mirada", 2012, 2022, ["35OS"], 22000),
+  // Newmar Bay Star — 2026 Bay Star brochure chassis table (all listed plans 26,000).
+  ...gvwrPins(
+    "newmar",
+    "bay star",
+    2026,
+    2027,
+    ["3114", "3225", "3609", "3626", "3629", "3811"],
+    26000,
+  ),
+  ...gvwrPins("newmar", "bay star", 2026, 2026, ["3826"], 26000),
+  // Newmar Canyon Star — 2026 Canyon Star brochure: 3947 = 32,000.
+  ...gvwrPins("newmar", "canyon star", 2025, 2026, ["3947"], 32000),
+  // Newmar Bay Star Sport — 2026 Bay Star Sport DigiBrochure chassis table. Not Bay Star.
+  ...gvwrPins("newmar", "bay star sport", 2026, 2026, ["2813"], 20500),
+  ...gvwrPins("newmar", "bay star sport", 2026, 2026, ["3014", "3225"], 22000),
+  // Newmar Dutch Star — 2025–2026 brochure. Pin only plans whose Spartan + Freightliner GVWR match.
+  // 43' tag plans differ 51k vs 52k by chassis — leave GAP.
+  ...gvwrPins("newmar", "dutch star", 2025, 2026, ["3836"], 41000),
+  ...gvwrPins("newmar", "dutch star", 2025, 2026, ["4071", "4081"], 49000),
+  // Tiffin Open Road — MY25 Open Road Product Update brochure weights & measures.
+  ...gvwrPins("tiffin", "open road", 2025, 2025, ["32FA", "32SA"], 24000),
+  ...gvwrPins("tiffin", "open road", 2025, 2025, ["34PA", "36LA", "36UA"], 26000),
+  // Tiffin Allegro RED — MY25 RED brochure / 2025 OEM spec page (not Red 340 / 360).
+  ...gvwrPins("tiffin", "allegro red", 2025, 2027, ["33AA", "37BA", "38KA"], 38320),
+  // Tiffin Phaeton — 2025 OEM Phaeton spec page vs MY26 Phaeton Product Update brochure (2.10.26).
+  // 2025 and 2026 print different GVWR — do not merge year bands. MY27 unprinted.
+  ...gvwrPins("tiffin", "phaeton", 2025, 2025, ["35CH", "37BH", "40IH"], 39660),
+  ...gvwrPins("tiffin", "phaeton", 2025, 2025, ["44OH"], 45660),
+  ...gvwrPins("tiffin", "phaeton", 2026, 2026, ["35CH", "37BH", "40IH"], 40000),
+  ...gvwrPins("tiffin", "phaeton", 2026, 2026, ["44OH"], 46000),
+  // Grand Design Lineage Class C / Super C — OEM Class C brochure + year-band cards.
+  ...gvwrPins("grand design", "lineage series e", 2027, 2027, ["30DC"], 14500),
+  ...gvwrPins("grand design", "lineage series m", 2025, 2027, ["25FW"], 12125),
+  ...gvwrPins("grand design", "lineage series m", 2025, 2026, ["25TK"], 12125),
+  ...gvwrPins("grand design", "lineage series m", 2027, 2027, ["25MD"], 12125),
+  ...gvwrPins("grand design", "lineage series f", 2025, 2027, ["31ZW"], 22000),
+  ...gvwrPins("grand design", "lineage series f", 2025, 2027, ["31ZW5"], 19500),
 ];
+
+/** Pin count for coverage reports / tests. */
+export function oemGvwrPinCount(): number {
+  return OEM_GVWR_PINS.length;
+}
 
 function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
   if (
@@ -2160,6 +2339,107 @@ function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
     modelIncludes === "precept" &&
     modelNorm.includes("prestige") &&
     !modelIncludes.includes("prestige")
+  ) {
+    return true;
+  }
+  if (modelIncludes === "alante" && modelNorm.includes("se") && !modelIncludes.includes("se")) {
+    return true;
+  }
+  if (modelIncludes === "redhawk" && modelNorm.includes("se") && !modelIncludes.includes("se")) {
+    return true;
+  }
+  if (
+    modelIncludes === "melbourne" &&
+    modelNorm.includes("prestige") &&
+    !modelIncludes.includes("prestige")
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "quantum" &&
+    modelNorm.includes("sprinter") &&
+    !modelIncludes.includes("sprinter")
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "chateau" &&
+    modelNorm.includes("sprinter") &&
+    !modelIncludes.includes("sprinter")
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "sunseeker" &&
+    (modelNorm.includes("sunseeker le") ||
+      modelNorm.includes("classic") ||
+      modelNorm.includes("4x4") ||
+      modelNorm.includes("mbs") ||
+      modelNorm.includes("sunseeker pm") ||
+      modelNorm.includes("sunseeker ts"))
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "georgetown" &&
+    (modelNorm.includes("5 series") || modelNorm.includes("xl")) &&
+    !modelIncludes.includes("5 series") &&
+    !modelIncludes.includes("xl")
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "odyssey" &&
+    (modelNorm.includes("odyssey se") || modelNorm.includes("esteem"))
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "four winds" &&
+    (modelNorm.includes("majestic") ||
+      modelNorm.includes("siesta") ||
+      modelNorm.includes("sprinter"))
+  ) {
+    return true;
+  }
+  if (modelIncludes === "palazzo" && modelNorm.includes("gt") && !modelIncludes.includes("gt")) {
+    return true;
+  }
+  if (modelIncludes === "bay star" && modelNorm.includes("sport") && !modelIncludes.includes("sport")) {
+    return true;
+  }
+  if (
+    modelIncludes === "leprechaun" &&
+    modelNorm.includes("premier") &&
+    !modelIncludes.includes("premier")
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "greyhawk" &&
+    (modelNorm.includes("prestige") || modelNorm.includes("xl")) &&
+    !modelIncludes.includes("prestige") &&
+    !modelIncludes.includes("xl")
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "allegro red" &&
+    (modelNorm.includes("340") || modelNorm.includes("360")) &&
+    !modelIncludes.includes("340") &&
+    !modelIncludes.includes("360")
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "open road" &&
+    (modelNorm.includes("allegro red") || modelNorm.includes("allegro breeze"))
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes.startsWith("lineage series") &&
+    !modelNorm.includes(modelIncludes)
   ) {
     return true;
   }
