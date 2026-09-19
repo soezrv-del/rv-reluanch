@@ -10,7 +10,9 @@ import {
   FACTS_TYPE_OPTIONS,
   factsSearchEnabled,
   factsTypeLabel,
+  concreteFloorplanOrEmpty,
   hasConcreteFloorplan,
+  resultForFactsPicker,
   revealFactsFloorplan,
   revealFactsModel,
   revealFactsYear,
@@ -210,11 +212,36 @@ test("hasConcreteFloorplan rejects empty / Any floorplan sentinels", () => {
   assert.equal(hasConcreteFloorplan("45A"), true);
   assert.equal(hasConcreteFloorplan(" 4551 "), true);
   assert.equal(hasConcreteFloorplan("3855BR"), true);
+  assert.equal(concreteFloorplanOrEmpty("Any floorplan"), "");
+  assert.equal(concreteFloorplanOrEmpty("any"), "");
+  assert.equal(concreteFloorplanOrEmpty(" 45A "), "45A");
+});
+
+test("Any floorplan picker must not keep a stuffed catalog floorplan", () => {
+  const stuffed = {
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+  };
+  assert.equal(resultForFactsPicker(stuffed, "").floorplan, "");
+  assert.equal(resultForFactsPicker(stuffed, "Any floorplan").floorplan, "");
+  assert.equal(resultForFactsPicker(stuffed, "any").floorplan, "");
+  assert.equal(resultForFactsPicker(stuffed, "45A").floorplan, "45A");
+  assert.equal(
+    cascadeFromResult({ ...dream, floorplan: "Any floorplan" }).floorplan,
+    "",
+  );
+  assert.equal(cascadeFromResult(dream).floorplan, "45A");
 });
 
 test("Vehicle specifications card is gated on a concrete floorplan", () => {
   const detail = readFileSync(
     join(root, "../../components/rvfax/RvDetail.tsx"),
+    "utf8",
+  );
+  const fax = readFileSync(
+    join(root, "../../components/rvfax/RvFaxApp.tsx"),
     "utf8",
   );
   assert.match(detail, /hasConcreteFloorplan/);
@@ -223,14 +250,19 @@ test("Vehicle specifications card is gated on a concrete floorplan", () => {
     /hasConcreteFloorplan\(floorplan\) \? \([\s\S]*?title="Vehicle specifications"/,
     "Vehicle specifications FactsCollapse must wait for a concrete floorplan",
   );
-  assert.match(detail, /honestReportRatingRows\(reportRatings\)/);
-  assert.match(detail, /Owner reviews/);
+  assert.match(fax, /resultForFactsPicker/);
   assert.match(
-    detail,
-    /three identical bars pretending independence/,
-    "ratings helper documents the honesty collapse",
+    fax,
+    /resultForFactsPicker\(r,\s*sel\.floorplan\)/,
+    "Any floorplan search must strip catalog fps[0] before Open report",
   );
-  // Distinct Insider labels stay in source for when scores/captions differ
+  // #350 ratings contract — exact Q / R-GAP / S rows, no collapse helper
+  assert.doesNotMatch(detail, /honestReportRatingRows/);
+  assert.doesNotMatch(detail, /three identical bars pretending independence/);
+  assert.match(detail, /Q = overallQuality or GAP/);
+  assert.match(detail, /R = GAP \(no Insider category\)/);
+  assert.match(detail, /S = combined once/);
+  assert.match(detail, /label:\s*"Quality"/);
   assert.match(detail, /label:\s*"Reliability"/);
   assert.match(detail, /label:\s*"Customer satisfaction"/);
   assert.match(detail, /Torque-to-Weight/);
