@@ -223,11 +223,68 @@ test("never uses horsepower as torque; UVW labeled vs GVWR labeled", () => {
   );
 });
 
+test("TTW range GVWR uses HIGH end; published pin wins over range", () => {
+  // Range-only catalog/display band → max(lo,hi). Conservative (heavier).
+  assert.equal(parseGvwrLb("39500-44005"), 44005);
+  assert.equal(parseGvwrLb("39,500–44,005 lbs"), 44005);
+  assert.equal(parseGvwrLb("39,500—44,005 lbs GVWR"), 44005);
+  assert.equal(parseGvwrLb([39_500, 44_005]), 44005);
+  assert.equal(parseGvwrLb([44_005, 39_500]), 44005);
+  // Single published figure unchanged.
+  assert.equal(parseGvwrLb("47000"), 47000);
+  assert.equal(parseGvwrLb("47,000 lbs GVWR"), 47000);
+  // UVW still never parsed as GVWR; messy 3-number strings stay GAP.
+  assert.equal(parseGvwrLb("39,500–44,005 lbs UVW"), null);
+  assert.equal(parseUvwLb("39,500–44,005 lbs"), null);
+
+  const rangeOnly = computeTorqueToWeight({
+    torqueLbFt: 1250,
+    gvwrRaw: "39500-44005",
+    rvType: "Class A Diesel",
+  });
+  assert.equal(rangeOnly.weightLb, 44005);
+  assert.equal(rangeOnly.gvwrLb, 44005);
+  assert.equal(rangeOnly.weightBasis, "GVWR");
+  assert.match(formatTorqueToWeightScore(rangeOnly), /^[0-9.]+\/10 · GVWR$/);
+  assert.doesNotMatch(formatTorqueToWeightScore(rangeOnly), /UVW|range/i);
+
+  const displayBand = computeTorqueToWeight({
+    torqueLbFt: 1250,
+    gvwrRaw: "39,500–44,005 lbs",
+    rvType: "Class A Diesel",
+  });
+  assert.equal(displayBand.weightLb, 44005);
+
+  const tupleBand = computeTorqueToWeight({
+    torqueLbFt: 1250,
+    weightRange: [39_500, 44_005],
+    rvType: "Class A Diesel",
+  });
+  assert.equal(tupleBand.weightLb, 44005);
+
+  // Published OEM pin (e.g. Tradition 42Q/42V brochure 47,000) wins the
+  // catalog/display band. Pinning 42V→47000 in catalog is a separate task.
+  const publishedWins = computeTorqueToWeight({
+    torqueLbFt: 1250,
+    gvwrLbs: 47_000,
+    gvwrRaw: "39,500–44,005 lbs",
+    weightRange: [39_500, 44_005],
+    rvType: "Class A Diesel",
+  });
+  assert.equal(publishedWins.weightLb, 47_000);
+  assert.equal(publishedWins.gvwrLb, 47_000);
+  assert.equal(publishedWins.weightBasis, "GVWR");
+  assert.match(formatTorqueToWeightScore(publishedWins), /^[0-9.]+\/10 · GVWR$/);
+});
+
 test("Facts Ratings: Torque-to-Weight bar + X/10 · GVWR; other rows keep stars", () => {
   const src = readFileSync(join(root, "torqueToWeight.ts"), "utf8");
   assert.match(src, /torqueLbFt \/ gvwrLb/);
   assert.match(src, /weightLb = gvwrLb/);
   assert.doesNotMatch(src, /uvwLb \?\? gvwrLb/);
+  assert.match(src, /Math\.max\(nums\[0]!, nums\[1]!\)/);
+  assert.match(src, /HIGH end/);
+  assert.doesNotMatch(src, /Math\.min\(nums\[0]!, nums\[1]!\)/);
   assert.match(src, /score < 6/);
   assert.match(src, /score < 7\.5/);
   assert.doesNotMatch(src, /score < 3/);
