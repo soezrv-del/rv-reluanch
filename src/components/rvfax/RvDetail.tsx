@@ -678,6 +678,7 @@ export function RvDetail({
     [make, model],
   );
 
+  // Q = overallQuality or GAP. R = GAP (no Insider category). S = combined once.
   const ratingsRows: Array<{
     key: string;
     label: string;

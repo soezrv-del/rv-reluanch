@@ -7,9 +7,11 @@ import {
   OWNER_REVIEW_BRAND_FLOOR,
   OWNER_REVIEW_FOOTER,
   OWNER_REVIEW_MODEL_FLOOR,
+  countCombinedPaints,
   formatOwnerReviewScore,
   lookupOwnerReviewBrand,
   lookupOwnerReviewModel,
+  mapOwnerReviewSlots,
   resolveOwnerReviewRatings,
 } from "./ownerReviewRatings.ts";
 import {
@@ -67,23 +69,65 @@ test("catalog aliases resolve without inventing a second brand", () => {
   assert.equal(lookupOwnerReviewModel("Forest River", "Georgetown"), null);
 });
 
-test("resolve: Quality uses overall quality; R/S use combined with honest labels", () => {
+test("resolve: Quality = overallQuality; Satisfaction = combined once; Reliability GAP", () => {
   const tiffin = resolveOwnerReviewRatings("Tiffin", "Phaeton");
   assert.equal(tiffin.quality.score, 4.4);
   assert.equal(tiffin.quality.basis, "overall_quality");
   assert.match(tiffin.quality.caption ?? "", /Owner reviews · overall quality · brand-level/);
-  assert.equal(tiffin.reliability.score, 4.3);
-  assert.equal(tiffin.reliability.basis, "combined");
-  assert.match(tiffin.reliability.caption ?? "", /Owner reviews \(combined\) · brand-level/);
+  assert.equal(tiffin.reliability.score, null);
+  assert.equal(tiffin.reliability.basis, null);
+  assert.equal(tiffin.reliability.caption, null);
   assert.equal(tiffin.customerSatisfaction.score, 4.3);
-  assert.match(tiffin.customerSatisfaction.caption ?? "", /Owner reviews · brand-level/);
+  assert.equal(tiffin.customerSatisfaction.basis, "combined");
+  assert.match(
+    tiffin.customerSatisfaction.caption ?? "",
+    /Owner reviews \(combined\) · brand-level/,
+  );
   assert.equal(tiffin.matchedName, "Tiffin");
+  assert.equal(countCombinedPaints(tiffin), 1);
+  assert.notEqual(tiffin.quality.score, tiffin.customerSatisfaction.score);
 
   const gap = resolveOwnerReviewRatings("Alliance RV", "Paradigm");
   assert.equal(gap.quality.score, null);
   assert.equal(gap.reliability.score, null);
   assert.equal(gap.customerSatisfaction.score, null);
   assert.equal(gap.quality.caption, null);
+  assert.equal(countCombinedPaints(gap), 0);
+});
+
+test("Quality GAPs when overallQuality is null — no silent combined fallback", () => {
+  const row = {
+    ...OWNER_REVIEW_BRAND_SEED[0]!,
+    name: "Null Quality Brand",
+    overallQuality: null,
+    combined: 3.9,
+  };
+  const slots = mapOwnerReviewSlots(row);
+  assert.equal(slots.quality.score, null);
+  assert.equal(slots.quality.basis, null);
+  assert.equal(slots.quality.caption, null);
+  assert.equal(slots.reliability.score, null);
+  assert.equal(slots.customerSatisfaction.score, 3.9);
+  assert.equal(slots.customerSatisfaction.basis, "combined");
+  assert.match(
+    slots.customerSatisfaction.caption ?? "",
+    /Owner reviews \(combined\) · brand-level/,
+  );
+  assert.equal(countCombinedPaints(slots), 1);
+});
+
+test("seeded brands never paint combined on more than one slot", () => {
+  for (const row of OWNER_REVIEW_BRAND_SEED) {
+    const slots = mapOwnerReviewSlots(row);
+    assert.equal(countCombinedPaints(slots), 1, row.name);
+    assert.equal(slots.reliability.score, null, row.name);
+    assert.notEqual(slots.quality.basis, "combined", row.name);
+    if (row.overallQuality != null) {
+      assert.equal(slots.quality.score, row.overallQuality, row.name);
+      assert.equal(slots.quality.basis, "overall_quality", row.name);
+    }
+    assert.equal(slots.customerSatisfaction.score, row.combined, row.name);
+  }
 });
 
 test("thin brand below floor is GAP — never a silent number", () => {
@@ -111,6 +155,8 @@ test("footer and Facts UI never claim J.D. Power or Consumer Reports", () => {
 
   const src = readFileSync(join(root, "ownerReviewRatings.ts"), "utf8");
   assert.doesNotMatch(src, /displayRating|ratingEstimate|computeRating/);
+  assert.doesNotMatch(src, /overallQuality \?\? row\.combined|qualityScore \?\? row\.combined/);
+  assert.doesNotMatch(src, /row\.factoryWarranty|livability|drivingTowing/);
   assert.match(src, /Owner reviews \(combined\)/);
 });
 
