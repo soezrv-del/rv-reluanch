@@ -39,6 +39,11 @@ export type SoldDeal = {
   unitLabel: string;
   gross: number;
   split: DealSplitId;
+  /**
+   * Manual flat / override payable. When set, this is what the salesman
+   * made — used for owed / paid instead of calculated `salesmanNet`.
+   */
+  flatGross?: number;
   paid: boolean;
   soldAt: string;
 };
@@ -84,12 +89,29 @@ export function splitPercentLabel(split: DealSplitId): string {
 }
 
 /**
- * Salesman net — always auto-calculated, never a typed field.
- * `round(gross × 0.25 × share)` — whole / half / quarter share is 1 / 0.5 / 0.25.
+ * Calculated salesman net — `round(gross × 0.25 × share)`.
+ * Whole / half / quarter share is 1 / 0.5 / 0.25. Default payable;
+ * a deal may override this with `flatGross`.
  */
 export function salesmanNet(gross: number, split: DealSplitId): number {
   if (!Number.isFinite(gross) || gross <= 0) return 0;
   return Math.round(gross * WHOLE_DEAL_COMMISSION * splitShare(split));
+}
+
+/** Positive dollar amount for a typed flat / override, or null. */
+export function parseFlatGross(raw: unknown): number | null {
+  return parseGrossAmount(raw);
+}
+
+/**
+ * Gross payable for a deal — prefers a persisted flat override when set.
+ */
+export function dealPayable(
+  deal: Pick<SoldDeal, "gross" | "split" | "flatGross">,
+): number {
+  const flat = parseFlatGross(deal.flatGross);
+  if (flat != null) return flat;
+  return salesmanNet(deal.gross, deal.split);
 }
 
 export function formatSoldMoney(n: number): string {
@@ -135,7 +157,7 @@ export function soldTotals(deals: SoldDeal[]): SoldTotals {
   let owedNet = 0;
   let paidNet = 0;
   for (const d of deals) {
-    const net = salesmanNet(d.gross, d.split);
+    const net = dealPayable(d);
     totalGross += d.gross;
     if (d.paid) paidNet += net;
     else owedNet += net;
@@ -161,6 +183,7 @@ export function normalizeSoldDeal(raw: unknown): SoldDeal | null {
   if (!isDealSplitId(row.split)) return null;
   const gross = parseGrossAmount(row.gross);
   if (gross == null) return null;
+  const flatGross = parseFlatGross(row.flatGross);
   const id = clean(row.id) || `sold-${year}-${make}-${model}-${Date.now()}`;
   const unit: SoldUnit = {
     year,
@@ -176,6 +199,7 @@ export function normalizeSoldDeal(raw: unknown): SoldDeal | null {
     unitLabel: clean(row.unitLabel) || formatUnitLabel(unit),
     gross,
     split: row.split,
+    ...(flatGross != null ? { flatGross } : {}),
     paid: row.paid === true,
     soldAt:
       typeof row.soldAt === "string" && row.soldAt
@@ -243,6 +267,8 @@ export type SellCoachInput = {
   customerName?: string | null;
   gross: number;
   split: DealSplitId;
+  /** When set, persists as the deal's payable instead of calculated net. */
+  flatGross?: number | null;
 };
 
 export type SellCoachResult<T extends SavedUnitIdentity> =
@@ -250,8 +276,8 @@ export type SellCoachResult<T extends SavedUnitIdentity> =
   | { ok: false; error: string };
 
 /**
- * Log a deal, auto-calc net, move the unit out of Saved into Sold.
- * Customer name is optional — empty never blocks.
+ * Log a deal, auto-calc net (or persist a typed flat), move the unit
+ * out of Saved into Sold. Customer name is optional — empty never blocks.
  */
 export function sellSavedCoach<T extends SavedUnitIdentity>(
   saved: T[],
@@ -271,6 +297,7 @@ export function sellSavedCoach<T extends SavedUnitIdentity>(
   if (!year || !make || !model) {
     return { ok: false, error: "Need a saved coach to sell." };
   }
+  const flatGross = parseFlatGross(input.flatGross);
   const unit: SoldUnit = {
     year,
     make,
@@ -285,6 +312,7 @@ export function sellSavedCoach<T extends SavedUnitIdentity>(
     unitLabel: formatUnitLabel(unit),
     gross,
     split: input.split,
+    ...(flatGross != null ? { flatGross } : {}),
     paid: false,
     soldAt: new Date().toISOString(),
   };

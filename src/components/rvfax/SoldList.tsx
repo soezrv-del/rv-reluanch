@@ -3,8 +3,8 @@ import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hapticLight, hapticWarn } from "@/lib/haptics";
 import {
+  dealPayable,
   formatSoldMoney,
-  salesmanNet,
   soldTotals,
   splitLabel,
   type SoldDeal,
@@ -116,7 +116,8 @@ function SoldDealRow({
   onTogglePaid: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
-  const net = salesmanNet(deal.gross, deal.split);
+  const payable = dealPayable(deal);
+  const isFlat = deal.flatGross != null;
   const [offset, setOffset] = useState(0);
   const offsetRef = useRef(0);
   const start = useRef<{
@@ -264,9 +265,21 @@ function SoldDealRow({
             </p>
           </div>
           <div>
-            <p className="font-bold tracking-wide text-white/55">NET</p>
-            <p className="text-[13px] font-bold text-sky-200">
-              {formatSoldMoney(net)}
+            <p
+              className={cn(
+                "font-bold tracking-wide",
+                isFlat ? "text-amber" : "text-white/55",
+              )}
+            >
+              {isFlat ? "FLAT" : "NET"}
+            </p>
+            <p
+              className={cn(
+                "text-[13px] font-bold",
+                isFlat ? "text-amber" : "text-sky-200",
+              )}
+            >
+              {formatSoldMoney(payable)}
             </p>
           </div>
         </div>

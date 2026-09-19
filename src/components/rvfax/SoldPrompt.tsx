@@ -6,8 +6,10 @@ import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import {
   DEAL_SPLIT_IDS,
   DEAL_SPLITS,
+  dealPayable,
   formatSoldMoney,
   formatUnitLabel,
+  parseFlatGross,
   parseGrossAmount,
   salesmanNet,
   splitPercentLabel,
@@ -30,37 +32,72 @@ export function SoldPrompt({
     customerName: string;
     gross: number;
     split: DealSplitId;
+    flatGross?: number;
   }) => void;
 }) {
   const [step, setStep] = useState<Step>("name");
   const [name, setName] = useState("");
   const [grossDraft, setGrossDraft] = useState("");
   const [split, setSplit] = useState<DealSplitId | null>(null);
+  const [flatOn, setFlatOn] = useState(false);
+  const [flatDraft, setFlatDraft] = useState("");
   const nameRef = useRef<HTMLInputElement | null>(null);
   const grossRef = useRef<HTMLInputElement | null>(null);
+  const flatRef = useRef<HTMLInputElement | null>(null);
   const kb = useKeyboardInset();
   const unitLabel = formatUnitLabel(unit);
   const stepIndex = STEPS.indexOf(step);
   const gross = parseGrossAmount(grossDraft);
-  const net = useMemo(
+  const flatGross = flatOn ? parseFlatGross(flatDraft) : null;
+  const calculatedNet = useMemo(
     () => (gross != null && split ? salesmanNet(gross, split) : null),
     [gross, split],
   );
+  const payable = useMemo(() => {
+    if (gross == null || !split) return null;
+    return dealPayable({
+      gross,
+      split,
+      flatGross: flatGross ?? undefined,
+    });
+  }, [flatGross, gross, split]);
 
   useEffect(() => {
-    if (step === "name") nameRef.current?.focus();
+    if (step === "name") {
+      nameRef.current?.focus();
+      return;
+    }
+    if (flatOn && (step === "gross" || step === "split")) {
+      flatRef.current?.focus();
+      return;
+    }
     if (step === "gross") grossRef.current?.focus();
-  }, [step]);
+  }, [flatOn, step]);
 
   const go = (next: Step) => {
     void hapticLight();
     setStep(next);
   };
 
+  const toggleFlat = () => {
+    void hapticLight();
+    setFlatOn((on) => {
+      const next = !on;
+      if (!next) setFlatDraft("");
+      return next;
+    });
+  };
+
   const submit = () => {
     if (gross == null || !split) return;
+    if (flatOn && flatGross == null) return;
     void hapticSuccess();
-    onSubmit({ customerName: name, gross, split });
+    onSubmit({
+      customerName: name,
+      gross,
+      split,
+      ...(flatGross != null ? { flatGross } : {}),
+    });
   };
 
   return (
@@ -139,22 +176,78 @@ export function SoldPrompt({
 
           {step === "gross" ? (
             <section className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4">
-              <p className="text-[15px] font-bold text-white">Gross amount</p>
-              <p className="text-[12px] text-white/65">Required. Dollars only.</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[15px] font-bold text-white">
+                    Gross amount
+                  </p>
+                  <p className="text-[12px] text-white/65">
+                    Required. Dollars only.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-pressed={flatOn}
+                  aria-label={
+                    flatOn
+                      ? "Use calculated gross payable"
+                      : "Override with a flat gross"
+                  }
+                  onClick={toggleFlat}
+                  className={cn(
+                    "min-h-[44px] shrink-0 rounded-full border px-3.5 text-[12px] font-bold",
+                    flatOn
+                      ? "border-amber/50 bg-amber/20 text-amber"
+                      : "border-white/20 bg-black/40 text-white",
+                  )}
+                >
+                  Flat
+                </button>
+              </div>
               <input
                 ref={grossRef}
                 value={grossDraft}
                 onChange={(e) => setGrossDraft(e.target.value)}
                 inputMode="decimal"
                 placeholder="$0"
+                aria-label="Deal gross"
                 className="glass-field w-full rounded-[var(--radius-md)] px-3.5 py-3 text-[22px] font-extrabold text-white outline-none"
               />
               {gross != null ? (
                 <p className="text-[12px] font-semibold text-sky-200">
-                  {formatSoldMoney(gross)}
+                  Deal {formatSoldMoney(gross)}
                 </p>
               ) : grossDraft.trim() ? (
                 <p className="text-[12px] text-ruby">Enter a gross above zero.</p>
+              ) : null}
+              {flatOn ? (
+                <div className="space-y-2 rounded-[var(--radius-md)] border border-amber/40 bg-amber/10 px-3.5 py-3">
+                  <p className="text-[12px] font-bold text-amber">
+                    Flat gross payable
+                  </p>
+                  <input
+                    ref={flatRef}
+                    value={flatDraft}
+                    onChange={(e) => setFlatDraft(e.target.value)}
+                    inputMode="decimal"
+                    placeholder="$0"
+                    aria-label="Flat gross payable"
+                    className="glass-field w-full rounded-[var(--radius-md)] border border-amber/40 px-3.5 py-3 text-[22px] font-extrabold text-amber outline-none"
+                  />
+                  {flatGross != null ? (
+                    <p className="text-[12px] font-semibold text-amber">
+                      Flat {formatSoldMoney(flatGross)} — this is what saves
+                    </p>
+                  ) : flatDraft.trim() ? (
+                    <p className="text-[12px] text-ruby">
+                      Enter a flat above zero.
+                    </p>
+                  ) : (
+                    <p className="text-[12px] text-amber/80">
+                      Type the flat you made instead of calculated payable.
+                    </p>
+                  )}
+                </div>
               ) : null}
               <div className="flex gap-2 pt-1">
                 <button
@@ -181,7 +274,8 @@ export function SoldPrompt({
             <section className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4">
               <p className="text-[15px] font-bold text-white">Deal split</p>
               <p className="text-[12px] text-white/65">
-                Dropdown only — quarter, half, or whole. Net is automatic.
+                Dropdown only — quarter, half, or whole. Payable is
+                calculated, or tap Flat to type a fixed amount.
               </p>
               <div className="space-y-2" role="listbox" aria-label="Deal split">
                 {DEAL_SPLIT_IDS.map((id) => {
@@ -218,11 +312,64 @@ export function SoldPrompt({
                   );
                 })}
               </div>
-              {net != null ? (
-                <p className="text-[13px] font-bold text-sky-200">
-                  Your net {formatSoldMoney(net)}
-                </p>
-              ) : null}
+              <div className="space-y-2 rounded-[var(--radius-md)] border border-white/15 bg-black/25 px-3.5 py-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[13px] font-bold text-white">
+                    Gross payable
+                  </p>
+                  <button
+                    type="button"
+                    aria-pressed={flatOn}
+                    aria-label={
+                      flatOn
+                        ? "Use calculated gross payable"
+                        : "Override with a flat gross"
+                    }
+                    onClick={toggleFlat}
+                    className={cn(
+                      "min-h-[44px] rounded-full border px-3.5 text-[12px] font-bold",
+                      flatOn
+                        ? "border-amber/50 bg-amber/20 text-amber"
+                        : "border-white/20 bg-black/40 text-white",
+                    )}
+                  >
+                    Flat
+                  </button>
+                </div>
+                {flatOn ? (
+                  <>
+                    <input
+                      ref={flatRef}
+                      value={flatDraft}
+                      onChange={(e) => setFlatDraft(e.target.value)}
+                      inputMode="decimal"
+                      placeholder="$0"
+                      aria-label="Flat gross payable"
+                      className="glass-field w-full rounded-[var(--radius-md)] border border-amber/40 px-3.5 py-3 text-[22px] font-extrabold text-amber outline-none"
+                    />
+                    {flatGross != null ? (
+                      <p className="text-[12px] font-semibold text-amber">
+                        Flat {formatSoldMoney(flatGross)}
+                        {calculatedNet != null
+                          ? ` · calculated ${formatSoldMoney(calculatedNet)}`
+                          : ""}
+                      </p>
+                    ) : flatDraft.trim() ? (
+                      <p className="text-[12px] text-ruby">
+                        Enter a flat above zero.
+                      </p>
+                    ) : (
+                      <p className="text-[12px] text-amber/80">
+                        Type the flat gross you made. This is what saves.
+                      </p>
+                    )}
+                  </>
+                ) : payable != null ? (
+                  <p className="text-[13px] font-bold text-sky-200">
+                    Calculated {formatSoldMoney(payable)}
+                  </p>
+                ) : null}
+              </div>
               <div className="flex gap-2 pt-1">
                 <button
                   type="button"
@@ -234,7 +381,7 @@ export function SoldPrompt({
                 </button>
                 <button
                   type="button"
-                  disabled={!split || gross == null}
+                  disabled={!split || gross == null || (flatOn && flatGross == null)}
                   onClick={submit}
                   className="min-h-[48px] flex-1 rounded-full bg-blue px-4 text-[13px] font-bold text-white disabled:opacity-40"
                 >

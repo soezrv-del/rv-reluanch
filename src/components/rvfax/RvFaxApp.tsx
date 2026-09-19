@@ -655,6 +655,7 @@ export function RvFaxApp({
     customerName: string;
     gross: number;
     split: DealSplitId;
+    flatGross?: number;
   }) => {
     if (!sellUnit) return;
     const result = sellSavedCoach(saved, deals, {
@@ -662,6 +663,7 @@ export function RvFaxApp({
       customerName: input.customerName,
       gross: input.gross,
       split: input.split,
+      flatGross: input.flatGross,
     });
     if (!result.ok) return;
     const flashKey = compareSelectionKey(sellUnit);
