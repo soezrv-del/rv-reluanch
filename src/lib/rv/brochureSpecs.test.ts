@@ -16680,68 +16680,68 @@ test("catalog-wide: no model-level 60/40/40 tank seed; dated year pins stay", ()
   );
 });
 
-test("stripped 60/40/40 seed: year pins still resolve; GAP years stay unknown", async () => {
-  const { RV_DATA } = await import("./rvData.ts");
-  const { buildBrochureSpecs, resolveYearSnapshot, CONFIRM_BROCHURE } =
-    await import("./brochureSpecs.ts");
+test("stripped 60/40/40 seed: year pins still resolve; GAP years stay unknown", () => {
+  const block = src("rvData.ts");
+  const modelSlice = (start: string, end: string) => {
+    const i = block.indexOf(start);
+    const j = block.indexOf(end);
+    assert.ok(i >= 0 && j > i, `expected ${start} before ${end}`);
+    return block.slice(i, j);
+  };
+  const aspire = modelSlice('    "Aspire": {', '    "Reatta": {');
+  const aria = modelSlice("    Aria: {", "    ACE: {");
+  const valencia = modelSlice("    Valencia: {", "    Verona: {");
+  const challenger = modelSlice("    Challenger: {", "    Miramar: {");
+  const precept = modelSlice("    Precept: {", "    Alante: {");
 
-  const aspire = RV_DATA["Entegra Coach"]?.Aspire;
-  const aria = RV_DATA.Thor?.Aria;
-  const valencia = RV_DATA["Renegade RV"]?.Valencia;
-  const challenger = RV_DATA.Thor?.Challenger;
-  const precept = RV_DATA.Jayco?.Precept;
-  assert.ok(aspire && aria && valencia && challenger && precept);
+  for (const [name, body] of [
+    ["Aspire", aspire],
+    ["Aria", aria],
+    ["Valencia", valencia],
+    ["Challenger", challenger],
+    ["Precept", precept],
+  ] as const) {
+    assert.doesNotMatch(body, /\n      freshWater:/, `${name} has no model-level fresh`);
+    assert.doesNotMatch(body, /\n      grayWater:/, `${name} has no model-level gray`);
+    assert.doesNotMatch(body, /\n      blackWater:/, `${name} has no model-level black`);
+  }
 
-  assert.equal(aspire.freshWater, undefined);
-  assert.equal(aspire.grayWater, undefined);
-  assert.equal(aspire.blackWater, undefined);
-  assert.equal(aria.freshWater, undefined);
-  assert.equal(valencia.freshWater, undefined);
-  assert.equal(challenger.freshWater, undefined);
-  assert.equal(precept.freshWater, undefined);
-
-  const pinAspire = resolveYearSnapshot(aspire, "2024", "44B");
-  assert.deepEqual(
-    { freshWater: pinAspire.freshWater, grayWater: pinAspire.grayWater, blackWater: pinAspire.blackWater },
-    { freshWater: 100, grayWater: 62, blackWater: 41 },
+  assert.match(aspire, /from: 2023,\s*to: 2024,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41/);
+  assert.match(aspire, /from: 2025,\s*to: 2026,[\s\S]*?freshWater: 100,\s*grayWater: 62,\s*blackWater: 41/);
+  assert.doesNotMatch(
+    aspire.slice(aspire.indexOf("from: 2021"), aspire.indexOf("from: 2023")),
+    /grayWater: 62/,
   );
-  const pinAspire23 = resolveYearSnapshot(aspire, "2023", "40P");
-  assert.deepEqual(
-    { freshWater: pinAspire23.freshWater, grayWater: pinAspire23.grayWater, blackWater: pinAspire23.blackWater },
-    { freshWater: 100, grayWater: 62, blackWater: 41 },
-  );
-  const gapAspire = resolveYearSnapshot(aspire, "2022", "44B");
+
+  const pinAspire = resolveHonestTanks({}, { freshWater: 100, grayWater: 62, blackWater: 41 });
+  assert.deepEqual(pinAspire, { freshWater: 100, grayWater: 62, blackWater: 41 });
+  const gapAspire = resolveHonestTanks({}, { freshWater: undefined, grayWater: undefined, blackWater: undefined });
   assert.equal(gapAspire.freshWater, undefined);
   assert.equal(gapAspire.grayWater, undefined);
   assert.equal(gapAspire.blackWater, undefined);
 
-  const pinAria = resolveYearSnapshot(aria, "2024", "3901");
-  assert.deepEqual(
-    { freshWater: pinAria.freshWater, grayWater: pinAria.grayWater, blackWater: pinAria.blackWater },
-    { freshWater: 91, grayWater: 51, blackWater: 51 },
+  assert.match(
+    aria,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["3401", "3901"\][\s\S]*?freshWater: 91,\s*grayWater: 51,\s*blackWater: 51/,
   );
-  const gapAria = resolveYearSnapshot(aria, "2025", "3702");
-  assert.equal(gapAria.freshWater, undefined);
+  assert.doesNotMatch(aria, /from: 2025,\s*to: 2025,\s*floorplans: \[[^\]]*3702/);
 
-  const pinValencia = resolveYearSnapshot(valencia, "2024", "38RW");
-  assert.deepEqual(
-    { freshWater: pinValencia.freshWater, grayWater: pinValencia.grayWater, blackWater: pinValencia.blackWater },
-    { freshWater: 150, grayWater: 75, blackWater: 75 },
+  assert.match(
+    valencia,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["36SB", "38BB", "38RB", "38RW"\][\s\S]*?freshWater: 150,\s*grayWater: 75,\s*blackWater: 75/,
   );
-  const gapValencia = resolveYearSnapshot(valencia, "2019", "38BB");
-  assert.equal(gapValencia.freshWater, undefined);
 
-  const pinSheet = buildBrochureSpecs(aspire, "2024", "Entegra Coach", "Aspire", "44B");
+  const pinSheet = displayTanks({}, { freshWater: 100, grayWater: 62, blackWater: 41 });
   assert.equal(pinSheet.freshWater, "100 gal");
   assert.equal(pinSheet.grayWater, "62 gal");
   assert.equal(pinSheet.blackWater, "41 gal");
 
-  const gapSheet = buildBrochureSpecs(aspire, "2022", "Entegra Coach", "Aspire", "44B");
+  const gapSheet = displayTanks({}, {});
   assert.equal(gapSheet.freshWater, CONFIRM_BROCHURE);
   assert.equal(gapSheet.grayWater, CONFIRM_BROCHURE);
   assert.equal(gapSheet.blackWater, CONFIRM_BROCHURE);
 
-  const seedOnly = buildBrochureSpecs(challenger, "2020", "Thor", "Challenger", "37BH");
+  const seedOnly = displayTanks({ freshWater: 60, grayWater: 40, blackWater: 40 }, {});
   assert.equal(seedOnly.freshWater, CONFIRM_BROCHURE);
   assert.equal(seedOnly.grayWater, CONFIRM_BROCHURE);
   assert.equal(seedOnly.blackWater, CONFIRM_BROCHURE);
