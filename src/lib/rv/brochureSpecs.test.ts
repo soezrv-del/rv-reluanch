@@ -16,7 +16,12 @@ import {
   parseHp,
 } from "./catalogHonesty.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
-import { findOemGvwrLbs } from "./floorplanSpecs.ts";
+import {
+  findOemFloorplanSpec,
+  findOemGvwrLbs,
+  oemGvwrPinCount,
+  weightForFloorplan,
+} from "./floorplanSpecs.ts";
 import { computeTorqueToWeight } from "./torqueToWeight.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
 import {
@@ -219,6 +224,121 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   assert.equal(ttwVxl.weightLb, 24000);
   assert.equal(ttwVxl.weightBasis, "GVWR");
   assert.notEqual(ttwVxl.uvwLb, 24000);
+});
+
+test("Tradition 42V/42Q brochure GVWR is 47,000 — not catalog weightRange mid", () => {
+  assert.ok(oemGvwrPinCount() > 7, "new brochure pins must land after #342's 7");
+  assert.equal(
+    findOemGvwrLbs("2025", "American Coach", "American Tradition", "42V"),
+    47000,
+  );
+  assert.equal(
+    findOemGvwrLbs("2025", "American Coach", "American Tradition", "42Q"),
+    47000,
+  );
+  assert.equal(
+    findOemGvwrLbs("2021", "American Coach", "American Tradition", "37S"),
+    41000,
+  );
+  // Sibling isolation — Dream 42Q is its own pin; Tradition must not leak.
+  assert.equal(
+    findOemGvwrLbs("2025", "American Coach", "American Dream", "42Q"),
+    47000,
+  );
+  assert.equal(
+    findOemGvwrLbs("2025", "American Coach", "American Dream", "45A"),
+    54000,
+  );
+  assert.equal(
+    findOemGvwrLbs("2020", "American Coach", "American Dream", "45A"),
+    51000,
+  );
+  assert.equal(
+    findOemGvwrLbs("2023", "American Coach", "American Dream", "45A"),
+    null,
+  );
+  assert.equal(
+    findOemGvwrLbs("2025", "American Coach", "American Eagle", "45J"),
+    null,
+  );
+
+  // Catalog American Tradition is 42–45 ft / 42,000–50,000 lbs. 42' interpolates
+  // to a ~39.5–44.5k band — that must not become the TTW basis.
+  const interpolated = weightForFloorplan("42V", [42000, 50000], [42, 45]);
+  assert.match(interpolated.gvwr, /39,500|44,500|–/);
+  assert.ok(interpolated.mid < 45000, "catalog mid for 42' is well under 47k");
+  assert.equal(CATALOG_INDEX["American Coach"]?.["American Tradition"]?.years?.includes(2025), true);
+
+  const spec = src("brochureSpecs.ts");
+  assert.match(spec, /oem\?\.gvwrLbs \?\? findOemGvwrLbs/);
+
+  const ttw = computeTorqueToWeight({
+    torqueLbFt: 1250,
+    uvwRaw: "Confirm brochure",
+    gvwrRaw: "47,000 lbs",
+    rvType: "Class A Diesel",
+  });
+  assert.equal(ttw.weightBasis, "GVWR");
+  assert.equal(ttw.weightLb, 47000);
+});
+
+test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Vision XL", "34B"), 22000);
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Vision XL", "34G"), 22000);
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Vision", "29S"), 18000);
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Vision", "36A"), null);
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Vision SE", "29S"), null);
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Aspire", "40P"), 41000);
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Aspire", "44W"), 49000);
+  assert.equal(findOemGvwrLbs("2026", "Entegra Coach", "Aspire", "44V"), null);
+
+  assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "34B"), 22000);
+  assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "34G"), 22000);
+  assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept Prestige", "34B"), null);
+  assert.equal(findOemGvwrLbs("2026", "Jayco", "Greyhawk", "27U"), 14500);
+  assert.equal(findOemGvwrLbs("2026", "Jayco", "Greyhawk Prestige", "27U"), null);
+
+  assert.equal(findOemGvwrLbs("2026", "Thor", "ACE", "29D"), 18000);
+  assert.equal(findOemGvwrLbs("2026", "Thor", "ACE", "32B"), 22000);
+  assert.equal(findOemGvwrLbs("2026", "Thor", "Hurricane", "29L"), 18000);
+  assert.equal(findOemGvwrLbs("2026", "Thor", "Hurricane", "35G"), 22000);
+  assert.equal(findOemGvwrLbs("2027", "Thor", "Hurricane", "36H"), 24000);
+  assert.equal(findOemGvwrLbs("2027", "Thor", "Hurricane", "35A"), null);
+  assert.equal(findOemGvwrLbs("2026", "Thor", "Windsport", "35J"), 22000);
+  assert.equal(findOemGvwrLbs("2026", "Thor", "Four Winds", "28Z"), 14500);
+  assert.equal(findOemGvwrLbs("2026", "Thor", "Four Winds Sprinter", "28Z"), null);
+  assert.equal(findOemGvwrLbs("2026", "Thor", "Palazzo GT", "33.5"), 26000);
+  assert.equal(findOemGvwrLbs("2026", "Thor", "Palazzo", "33.5"), null);
+
+  assert.equal(findOemGvwrLbs("2025", "Winnebago", "Vista", "29V"), 18000);
+  assert.equal(findOemGvwrLbs("2025", "Winnebago", "Adventurer", "36Z"), 24000);
+  assert.equal(findOemGvwrLbs("2025", "Winnebago", "Forza", "34T"), 26000);
+
+  assert.equal(findOemGvwrLbs("2026", "Forest River", "FR3", "31DS"), 18000);
+  assert.equal(findOemGvwrLbs("2026", "Forest River", "FR3", "34DS"), 22000);
+
+  assert.equal(findOemGvwrLbs("2025", "Coachmen", "Leprechaun", "319MB"), 14500);
+  assert.equal(findOemGvwrLbs("2025", "Coachmen", "Leprechaun Premier", "319MB"), null);
+  assert.equal(findOemGvwrLbs("2025", "Coachmen", "Pursuit", "29SS"), 18000);
+  assert.equal(findOemGvwrLbs("2025", "Holiday Rambler", "Pursuit", "29SS"), null);
+
+  assert.equal(findOemGvwrLbs("2026", "Newmar", "Bay Star", "3114"), 26000);
+  assert.equal(findOemGvwrLbs("2026", "Newmar", "Bay Star Sport", "3114"), null);
+  assert.equal(findOemGvwrLbs("2026", "Newmar", "Canyon Star", "3947"), 32000);
+  assert.equal(findOemGvwrLbs("2026", "Newmar", "Dutch Star", "4081"), 49000);
+  assert.equal(findOemGvwrLbs("2026", "Newmar", "Dutch Star", "4369"), null);
+  assert.equal(findOemFloorplanSpec("2022", "Newmar", "Dutch Star", "4081")?.gvwrLbs, 44460);
+
+  assert.equal(findOemGvwrLbs("2025", "Tiffin", "Open Road", "32FA"), 24000);
+  assert.equal(findOemGvwrLbs("2025", "Tiffin", "Open Road", "36LA"), 26000);
+  assert.equal(findOemGvwrLbs("2025", "Tiffin", "Allegro Red", "33AA"), 38320);
+  assert.equal(findOemGvwrLbs("2025", "Tiffin", "Allegro Red 340", "33AA"), null);
+
+  assert.equal(findOemGvwrLbs("2027", "Grand Design", "Lineage Series E", "30DC"), 14500);
+  assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series M", "25FW"), 12125);
+  assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series F", "31ZW"), 22000);
+  assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series F", "31ZW5"), 19500);
+  assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series E", "25FW"), null);
 });
 
 test("brochureSpecs source no longer hash-seeds tanks, MPG, heater, construction, wheelbase, propane", () => {

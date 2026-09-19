@@ -1013,7 +1013,7 @@ const OEM_FLOORPLAN_ROWS: Array<{
     makeIncludes: "newmar",
     modelIncludes: "dutch star",
     yearMin: 2020,
-    yearMax: 2026,
+    yearMax: 2024,
     floorplan: "4081",
     spec: {
       lengthDisplay: `40' 10"`,
@@ -2082,20 +2082,43 @@ export function formatFloorplanLength(
   return `${lengthRange[0]}–${lengthRange[1]} ft`;
 }
 
-/**
- * Published OEM GVWR pins for listing / torque-to-weight scoring.
- * GVWR only — never copy these onto UVW display fields.
- * Missing GVWR stays GAP; do not invent from UVW or mid×0.82.
- */
-const OEM_GVWR_PINS: Array<{
+type OemGvwrPin = {
   makeIncludes: string;
   modelIncludes: string;
   yearMin: number;
   yearMax: number;
   floorplan: string;
   gvwrLbs: number;
-}> = [
-  // Entegra Vision XL — F53 24k on 36A/36C; 22k on 31UL
+};
+
+/** Expand one brochure GVWR across the floorplans that table lists at that number. */
+function gvwrPins(
+  makeIncludes: string,
+  modelIncludes: string,
+  yearMin: number,
+  yearMax: number,
+  floorplans: readonly string[],
+  gvwrLbs: number,
+): OemGvwrPin[] {
+  return floorplans.map((floorplan) => ({
+    makeIncludes,
+    modelIncludes,
+    yearMin,
+    yearMax,
+    floorplan,
+    gvwrLbs,
+  }));
+}
+
+/**
+ * Published OEM GVWR pins for listing / torque-to-weight scoring.
+ * GVWR only — never copy these onto UVW display fields.
+ * Missing GVWR stays GAP; do not invent from UVW or mid×0.82.
+ * Only pin when a dated brochure / OEM table prints a single floorplan GVWR.
+ */
+const OEM_GVWR_PINS: OemGvwrPin[] = [
+  // Entegra Vision XL — F53 24k on 36A/36C; 22k on 31UL/34B/34G
+  // RVUSA 2023–2025 Vision XL brochures + 2026 Vision XL flyer table.
   {
     makeIncludes: "entegra",
     modelIncludes: "vision xl",
@@ -2120,7 +2143,14 @@ const OEM_GVWR_PINS: Array<{
     floorplan: "31UL",
     gvwrLbs: 22000,
   },
-  // Jayco Precept — F53 22k on 31UL; 24k on 36A/36C. Not Precept Prestige.
+  ...gvwrPins("entegra", "vision xl", 2023, 2027, ["34B", "34G"], 22000),
+  // Entegra Vision (not XL / SE) — 2025–2026 OEM Vision brochure table.
+  ...gvwrPins("entegra", "vision", 2024, 2027, ["27A", "29F", "29S"], 18000),
+  // Entegra Aspire — 2024–2025 Aspire brochure weights table (same split on 2023 card).
+  ...gvwrPins("entegra", "aspire", 2023, 2025, ["40P"], 41000),
+  ...gvwrPins("entegra", "aspire", 2023, 2025, ["44B", "44D", "44R", "44W", "44Z"], 49000),
+  // Jayco Precept — F53 22k on 31UL/34B/34G; 24k on 36A/36C. Not Precept Prestige.
+  // Jayco 2026–2027 Precept flyer + 2024 Precept brochure chassis line.
   {
     makeIncludes: "jayco",
     modelIncludes: "precept",
@@ -2145,7 +2175,91 @@ const OEM_GVWR_PINS: Array<{
     floorplan: "36C",
     gvwrLbs: 24000,
   },
+  ...gvwrPins("jayco", "precept", 2022, 2027, ["34B", "34G"], 22000),
+  // Jayco Greyhawk — 2026 Greyhawk brochure / floorplan pages: E-450 14,500 all current plans.
+  ...gvwrPins("jayco", "greyhawk", 2025, 2027, ["27U", "29MV", "30Z", "31F"], 14500),
+  // American Coach American Tradition — 2021 Tradition brochure + later reprint table.
+  // 42Q/42V = 47,000; 37S = 41,000. Catalog weightRange mid for 42' is ~39.5–44k — wrong.
+  ...gvwrPins("american coach", "american tradition", 2021, 2026, ["42Q", "42V"], 47000),
+  ...gvwrPins("american coach", "american tradition", 2021, 2023, ["37S"], 41000),
+  // American Dream — 2019 RVUSA Dream table + later brochure + 2025 Fleetwood dealer spec table.
+  ...gvwrPins("american coach", "american dream", 2019, 2025, ["42Q"], 47000),
+  ...gvwrPins("american coach", "american dream", 2020, 2022, ["42V"], 47000),
+  ...gvwrPins("american coach", "american dream", 2019, 2022, ["45A"], 51000),
+  ...gvwrPins("american coach", "american dream", 2025, 2025, ["45A", "45D", "45P"], 54000),
+  // American Eagle — 2015 American Eagle brochure weights & measures (51k all four 45' plans).
+  ...gvwrPins("american coach", "american eagle", 2015, 2015, ["45A", "45B", "45N", "45T"], 51000),
+  // Thor ACE — 2026 ACE brochure spec table (same 29D/29G/30C/32B codes MY23–27).
+  ...gvwrPins("thor", "ace", 2023, 2027, ["29D", "29G", "30C"], 18000),
+  ...gvwrPins("thor", "ace", 2023, 2027, ["32B"], 22000),
+  // Thor Hurricane — 2026 Hurricane brochure table. 36H prints on that card; 35A (MY27) unprinted.
+  ...gvwrPins("thor", "hurricane", 2025, 2027, ["29L"], 18000),
+  ...gvwrPins("thor", "hurricane", 2025, 2026, ["35G", "35R"], 22000),
+  ...gvwrPins("thor", "hurricane", 2025, 2027, ["35J"], 22000),
+  ...gvwrPins("thor", "hurricane", 2026, 2027, ["36H"], 24000),
+  // Thor Windsport — 2026 Windsport brochure table (no 36H on that card).
+  ...gvwrPins("thor", "windsport", 2025, 2027, ["29L"], 18000),
+  ...gvwrPins("thor", "windsport", 2025, 2026, ["35G", "35R"], 22000),
+  ...gvwrPins("thor", "windsport", 2025, 2027, ["35J"], 22000),
+  // Thor Four Winds — 2026 Four Winds brochure Ford E-450 block only (skip Ford/Chevy dual-GVWR E-specs).
+  ...gvwrPins("thor", "four winds", 2026, 2027, ["28Z", "29K", "31E", "31H"], 14500),
+  // Thor Palazzo GT — 2026 Palazzo GT brochure spec table. Not bare Palazzo.
+  ...gvwrPins("thor", "palazzo gt", 2024, 2026, ["33.5", "33.6"], 26000),
+  ...gvwrPins("thor", "palazzo gt", 2024, 2026, ["37.4", "37.5"], 32350),
+  // Winnebago Vista — OEM 2025 Vista spec table.
+  ...gvwrPins("winnebago", "vista", 2025, 2025, ["29V"], 18000),
+  ...gvwrPins("winnebago", "vista", 2025, 2025, ["31B", "33K", "34R"], 22000),
+  // Winnebago Adventurer — 2024–2025 Adventurer brochure weights & measures.
+  ...gvwrPins("winnebago", "adventurer", 2024, 2025, ["34W", "35F"], 22000),
+  ...gvwrPins("winnebago", "adventurer", 2024, 2025, ["36Z"], 24000),
+  // Winnebago Forza — 2025 Forza brochure weights & measures.
+  ...gvwrPins("winnebago", "forza", 2025, 2025, ["34T"], 26000),
+  ...gvwrPins("winnebago", "forza", 2025, 2025, ["36H"], 27910),
+  ...gvwrPins("winnebago", "forza", 2025, 2025, ["38W"], 29410),
+  // Forest River FR3 — 2026 FR3 OEM floorplan pages (31DS is the 18k F53; others 22k).
+  ...gvwrPins("forest river", "fr3", 2025, 2026, ["31DS"], 18000),
+  ...gvwrPins("forest river", "fr3", 2025, 2026, ["30DS", "34DS", "35DS"], 22000),
+  // Coachmen Leprechaun — 2025 Leprechaun brochure Ford-only rows (skip Ford/Chevy dual GVWR).
+  ...gvwrPins("coachmen", "leprechaun", 2025, 2025, ["260DS", "298KB", "319MB"], 14500),
+  // Coachmen Pursuit — OEM site Pursuit 29SS = 18,000 (31BH / 33BH unprinted on that table).
+  ...gvwrPins("coachmen", "pursuit", 2024, 2026, ["29SS"], 18000),
+  // Coachmen Mirada — 2024 Mirada brochure: 29FW = 18,000.
+  ...gvwrPins("coachmen", "mirada", 2024, 2026, ["29FW"], 18000),
+  ...gvwrPins("coachmen", "mirada", 2012, 2022, ["35OS"], 22000),
+  // Newmar Bay Star — 2026 Bay Star brochure chassis table (all listed plans 26,000).
+  ...gvwrPins(
+    "newmar",
+    "bay star",
+    2026,
+    2027,
+    ["3114", "3225", "3609", "3626", "3629", "3811"],
+    26000,
+  ),
+  ...gvwrPins("newmar", "bay star", 2026, 2026, ["3826"], 26000),
+  // Newmar Canyon Star — 2026 Canyon Star brochure: 3947 = 32,000.
+  ...gvwrPins("newmar", "canyon star", 2025, 2026, ["3947"], 32000),
+  // Newmar Dutch Star — 2025–2026 brochure. Pin only plans whose Spartan + Freightliner GVWR match.
+  // 43' tag plans differ 51k vs 52k by chassis — leave GAP.
+  ...gvwrPins("newmar", "dutch star", 2025, 2026, ["3836"], 41000),
+  ...gvwrPins("newmar", "dutch star", 2025, 2026, ["4071", "4081"], 49000),
+  // Tiffin Open Road — MY25 Open Road Product Update brochure weights & measures.
+  ...gvwrPins("tiffin", "open road", 2025, 2025, ["32FA", "32SA"], 24000),
+  ...gvwrPins("tiffin", "open road", 2025, 2025, ["34PA", "36LA", "36UA"], 26000),
+  // Tiffin Allegro RED — MY25 RED brochure / 2025 OEM spec page (not Red 340 / 360).
+  ...gvwrPins("tiffin", "allegro red", 2025, 2027, ["33AA", "37BA", "38KA"], 38320),
+  // Grand Design Lineage Class C / Super C — OEM Class C brochure + year-band cards.
+  ...gvwrPins("grand design", "lineage series e", 2027, 2027, ["30DC"], 14500),
+  ...gvwrPins("grand design", "lineage series m", 2025, 2027, ["25FW"], 12125),
+  ...gvwrPins("grand design", "lineage series m", 2025, 2026, ["25TK"], 12125),
+  ...gvwrPins("grand design", "lineage series m", 2027, 2027, ["25MD"], 12125),
+  ...gvwrPins("grand design", "lineage series f", 2025, 2027, ["31ZW"], 22000),
+  ...gvwrPins("grand design", "lineage series f", 2025, 2027, ["31ZW5"], 19500),
 ];
+
+/** Pin count for coverage reports / tests. */
+export function oemGvwrPinCount(): number {
+  return OEM_GVWR_PINS.length;
+}
 
 function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
   if (
@@ -2160,6 +2274,55 @@ function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
     modelIncludes === "precept" &&
     modelNorm.includes("prestige") &&
     !modelIncludes.includes("prestige")
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "four winds" &&
+    (modelNorm.includes("majestic") ||
+      modelNorm.includes("siesta") ||
+      modelNorm.includes("sprinter"))
+  ) {
+    return true;
+  }
+  if (modelIncludes === "palazzo" && modelNorm.includes("gt") && !modelIncludes.includes("gt")) {
+    return true;
+  }
+  if (modelIncludes === "bay star" && modelNorm.includes("sport") && !modelIncludes.includes("sport")) {
+    return true;
+  }
+  if (
+    modelIncludes === "leprechaun" &&
+    modelNorm.includes("premier") &&
+    !modelIncludes.includes("premier")
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "greyhawk" &&
+    (modelNorm.includes("prestige") || modelNorm.includes("xl")) &&
+    !modelIncludes.includes("prestige") &&
+    !modelIncludes.includes("xl")
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "allegro red" &&
+    (modelNorm.includes("340") || modelNorm.includes("360")) &&
+    !modelIncludes.includes("340") &&
+    !modelIncludes.includes("360")
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "open road" &&
+    (modelNorm.includes("allegro red") || modelNorm.includes("allegro breeze"))
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes.startsWith("lineage series") &&
+    !modelNorm.includes(modelIncludes)
   ) {
     return true;
   }
