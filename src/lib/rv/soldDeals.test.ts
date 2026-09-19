@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  dealPayable,
   formatSoldDockAria,
   formatSoldMoney,
   formatUnitLabel,
   loadSoldDeals,
   normalizeCustomerName,
+  parseFlatGross,
   parseGrossAmount,
   persistSoldDeals,
   removeSoldDeal,
@@ -63,6 +65,53 @@ test("salesman net is 25% of gross for a whole deal, then × share", () => {
   assert.equal(salesmanNet(39999, "quarter"), 2500);
   assert.equal(salesmanNet(0, "whole"), 0);
   assert.equal(salesmanNet(-100, "half"), 0);
+});
+
+test("save prefers flat gross override when set", () => {
+  assert.equal(parseFlatGross("$1,500"), 1500);
+  assert.equal(parseFlatGross(0), null);
+
+  const calculated = sellSavedCoach([dream], [], {
+    unit: dream,
+    customerName: "Pat",
+    gross: 40000,
+    split: "whole",
+  });
+  assert.equal(calculated.ok, true);
+  if (!calculated.ok) return;
+  assert.equal(calculated.deal.flatGross, undefined);
+  assert.equal(calculated.deal.gross, 40000);
+  assert.equal(salesmanNet(calculated.deal.gross, calculated.deal.split), 10000);
+  assert.equal(dealPayable(calculated.deal), 10000);
+
+  const flat = sellSavedCoach([dream], [], {
+    unit: dream,
+    customerName: "Pat",
+    gross: 40000,
+    split: "whole",
+    flatGross: 1500,
+  });
+  assert.equal(flat.ok, true);
+  if (!flat.ok) return;
+  assert.equal(flat.deal.gross, 40000);
+  assert.equal(flat.deal.flatGross, 1500);
+  assert.equal(salesmanNet(flat.deal.gross, flat.deal.split), 10000);
+  assert.equal(dealPayable(flat.deal), 1500);
+
+  const totals = soldTotals([flat.deal]);
+  assert.equal(totals.totalGross, 40000);
+  assert.equal(totals.owedNet, 1500);
+
+  const ignored = sellSavedCoach([dream], [], {
+    unit: dream,
+    gross: 40000,
+    split: "half",
+    flatGross: 0,
+  });
+  assert.equal(ignored.ok, true);
+  if (!ignored.ok) return;
+  assert.equal(ignored.deal.flatGross, undefined);
+  assert.equal(dealPayable(ignored.deal), 5000);
 });
 
 test("optional customer name never blocks a sell", () => {
@@ -277,8 +326,22 @@ test("sold deals persist on the same device localStorage as saved units", () => 
     const loaded = loadSoldDeals();
     assert.equal(loaded.length, 1);
     assert.equal(loaded[0]!.gross, 9000);
+    assert.equal(loaded[0]!.flatGross, undefined);
     assert.equal(salesmanNet(loaded[0]!.gross, loaded[0]!.split), 563);
+    assert.equal(dealPayable(loaded[0]!), 563);
     assert.equal(formatSoldMoney(563), "$563");
+
+    persistSoldDeals([{ ...sold, id: "d2", flatGross: 400 }]);
+    const flatLoaded = loadSoldDeals();
+    assert.equal(flatLoaded.length, 1);
+    assert.equal(flatLoaded[0]!.gross, 9000);
+    assert.equal(flatLoaded[0]!.flatGross, 400);
+    assert.equal(dealPayable(flatLoaded[0]!), 400);
+
+    persistSoldDeals([{ ...sold, id: "d3", flatGross: 0 }]);
+    const dropped = loadSoldDeals();
+    assert.equal(dropped[0]!.flatGross, undefined);
+    assert.equal(dealPayable(dropped[0]!), 563);
   } finally {
     if (prev) {
       Object.defineProperty(globalThis, "localStorage", {
