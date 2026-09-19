@@ -18,6 +18,7 @@ import {
   isDieselBodyType,
   isGasBodyType,
   loadOwnLotSnapshot,
+  looksLikeOwnLotListingPriceQuestion,
   looksLikeOwnLotStockQuestion,
   OWN_LOT_MODEL,
   OWN_LOT_PUBLIC_URL_PATH,
@@ -25,8 +26,11 @@ import {
   ownLotIsUnavailable,
   ownLotPublicFileCandidates,
   parseOwnLotAsk,
+  parseOwnLotBudget,
   parseOwnLotCsv,
   parseOwnLotUnits,
+  pickOwnLotPrice,
+  queryOwnLotUnits,
   sameOriginOwnLotUrls,
   shouldSkipWebForOwnLot,
   snapshotFromJson,
@@ -53,6 +57,7 @@ const FIXTURE_UNITS: OwnLotUnit[] = [
     vin: "",
     source: "own",
     dealer: "RV Country",
+    price: 389000,
   },
   {
     year: "2023",
@@ -65,6 +70,7 @@ const FIXTURE_UNITS: OwnLotUnit[] = [
     vin: "",
     source: "own",
     dealer: "RV Country",
+    price: 412000,
   },
   {
     year: "2025",
@@ -77,6 +83,7 @@ const FIXTURE_UNITS: OwnLotUnit[] = [
     vin: "",
     source: "own",
     dealer: "RV Country",
+    price: 275000,
   },
   {
     year: "2024",
@@ -89,6 +96,7 @@ const FIXTURE_UNITS: OwnLotUnit[] = [
     vin: "",
     source: "own",
     dealer: "RV Country",
+    price: 189000,
   },
   {
     year: "2022",
@@ -101,6 +109,62 @@ const FIXTURE_UNITS: OwnLotUnit[] = [
     vin: "",
     source: "own",
     dealer: "RV Country",
+    price: 72000,
+  },
+];
+
+const FRESNO_PRICED_UNITS: OwnLotUnit[] = [
+  {
+    year: "2022",
+    make: "Newmar",
+    model: "Dutch Star",
+    trim: "4369",
+    body_type: "Class A Diesel",
+    location: "Fresno CA",
+    stock_number: "F2201",
+    vin: "",
+    source: "own",
+    dealer: "RV Country",
+    price: 98900,
+  },
+  {
+    year: "2021",
+    make: "Tiffin",
+    model: "Allegro Bus",
+    trim: "45 OP",
+    body_type: "Class A Diesel",
+    location: "Fresno CA",
+    stock_number: "F2108",
+    vin: "",
+    source: "own",
+    dealer: "RV Country",
+    price: 104500,
+  },
+  {
+    year: "2024",
+    make: "Dynamax",
+    model: "Dynaquest",
+    trim: "XL",
+    body_type: "Class Super C",
+    location: "Fresno CA",
+    stock_number: "F2502",
+    vin: "",
+    source: "own",
+    dealer: "RV Country",
+    price: 219000,
+  },
+  {
+    year: "2023",
+    make: "Grand Design",
+    model: "Reflection",
+    trim: "337RLS",
+    body_type: "Fifth Wheel",
+    location: "Fresno CA",
+    stock_number: "F2219",
+    vin: "",
+    source: "own",
+    dealer: "RV Country",
+    price: 68900,
   },
 ];
 
@@ -155,6 +219,18 @@ test("David's own-lot stock asks hit intent; specs and nights do not", () => {
   assert.equal(looksLikeOwnLotStockQuestion(priced), true);
   assert.equal(looksLikeMarketValueQuestion(priced), true);
   assert.equal(shouldSkipWebForOwnLot(priced), false, "pricing still browses");
+
+  const lotPrices = [
+    "and it should show prices too",
+    "Fresno inventory — any diesels around 100k?",
+    "show prices on the Fresno lot",
+  ];
+  for (const q of lotPrices) {
+    assert.equal(looksLikeOwnLotListingPriceQuestion(q), true, q);
+    assert.equal(looksLikeOwnLotStockQuestion(q), true, q);
+    assert.equal(looksLikeMarketValueQuestion(q), false, q);
+    assert.equal(shouldSkipWebForOwnLot(q, hit), true, `${q} stays on own-lot`);
+  }
 });
 
 test("diesel proxy is Class A Diesel + Class Super C only — no invented fuel", () => {
@@ -197,6 +273,11 @@ test("count aggregation by body_type / make / location", () => {
   const gas = aggregateOwnLot(FIXTURE_UNITS, { gasOnly: true });
   assert.equal(gas.matched, 1);
   assert.equal(gas.byMake["Entegra Coach"], 1);
+
+  assert.equal(all.priced, 5);
+  assert.ok(all.priceBand);
+  assert.equal(all.priceBand!.low, 72000);
+  assert.equal(all.priceBand!.high, 412000);
 });
 
 test("parseOwnLotAsk pulls make / diesel / location from the question", () => {
@@ -216,6 +297,14 @@ test("parseOwnLotAsk pulls make / diesel / location from the question", () => {
     "Harrisburg",
   ]);
   assert.equal(loc.location, "Wilsonville");
+
+  const fresno = parseOwnLotAsk("Fresno inventory — any diesels around 100k?", [
+    "Fresno CA",
+    "Fife WA",
+  ]);
+  assert.equal(fresno.location, "Fresno CA");
+  assert.equal(fresno.dieselOnly, true);
+  assert.equal(fresno.aroundPrice, 100000);
 });
 
 test("formatOwnLotBlock is honest about the missing fuel field and never invents VINs", () => {
@@ -236,6 +325,8 @@ test("formatOwnLotBlock is honest about the missing fuel field and never invents
   assert.match(block, /source=own/);
   assert.doesNotMatch(block, /\bVIN\b.*[A-HJ-NPR-Z0-9]{11,}/i);
   assert.doesNotMatch(block, /invented/i);
+  assert.match(block, /Listing prices ARE in this snapshot/);
+  assert.match(block, /\$275,000|\$389,000|\$412,000/);
 
   const missing = formatOwnLotBlock(
     {
@@ -284,12 +375,14 @@ test("JSON + CSV parsers accept the scrape field names", () => {
         body_type: "Class A Diesel",
         location: "Wilsonville",
         stock_number: "N2401",
+        price: 389000,
       },
     ],
   });
   assert.equal(fromJson.length, 1);
   assert.equal(fromJson[0]!.body_type, "Class A Diesel");
   assert.equal(fromJson[0]!.stock_number, "N2401");
+  assert.equal(fromJson[0]!.price, 389000);
 
   const csv = parseOwnLotCsv(
     [
@@ -384,6 +477,7 @@ test("in-app chat and voice research are wired; DialaBot stays out", () => {
   assert.match(telemetry, /shouldSkipWebForOwnLot/);
   assert.match(telemetry, /OWN_LOT_MODEL/);
   assert.match(prompts, /OWN-LOT STOCK/);
+  assert.match(prompts, /Never say the snapshot has no price data/);
   assert.match(src(".", "ownLotInventory.ts"), /DEFAULT_OWN_LOT_JSON_PATH/);
   assert.match(src(".", "ownLotInventory.ts"), /OWN_LOT_PUBLIC_URL_PATH/);
   assert.match(src(".", "ownLotInventory.ts"), /sameOriginOwnLotUrls/);
@@ -445,6 +539,12 @@ test("unset URL falls back to deploy-bundled public/inventory snapshot", async (
       );
       assert.doesNotMatch(block, /UNAVAILABLE/);
       assert.match(block, /Diesel \(Class A Diesel \+ Class Super C\): [1-9]/);
+      const pricedUnits = snap.units.filter((u) => u.price != null && u.price > 0);
+      assert.ok(pricedUnits.length > 0, "bundled snapshot has listing prices");
+      assert.match(block, /Listing prices ARE in this snapshot/);
+      assert.match(block, /\$[0-9]/);
+      assert.doesNotMatch(block, /doesn't include price data/i);
+      assert.doesNotMatch(block, /hasn't come through/i);
     },
   );
 });
@@ -552,4 +652,88 @@ test("failed or empty snapshot never answers a fake stock count of 0", () => {
   assert.doesNotMatch(block, /Matched:\s*0/);
   assert.doesNotMatch(block, /Diesel \(Class A Diesel \+ Class Super C\):\s*0/);
   assert.doesNotMatch(block, /:\s*0\b/);
+});
+
+test("pickOwnLotPrice uses price then scraper fallbacks — never invents", () => {
+  assert.equal(pickOwnLotPrice({ price: 110111.3, price_msrp: 999 }), 110111.3);
+  assert.equal(
+    pickOwnLotPrice({
+      price: null,
+      price_current: null,
+      price_hidden: null,
+      price_lowest: null,
+      price_msrp: 86924,
+    }),
+    86924,
+  );
+  assert.equal(pickOwnLotPrice({ price_current: "104,500" }), 104500);
+  assert.equal(pickOwnLotPrice({ price: 0, price_hidden: 72000 }), 72000);
+  assert.equal(pickOwnLotPrice({ price: 0, price_msrp: 0 }), null);
+  assert.equal(pickOwnLotPrice({ make: "Newmar" }), null);
+});
+
+test("summarizer and query helper return listing prices when present", () => {
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units: [...FIXTURE_UNITS, ...FRESNO_PRICED_UNITS],
+  });
+  const ask = "Fresno inventory — any diesels around 100k?";
+  const filter = parseOwnLotAsk(ask, ["Fresno CA", "Wilsonville", "Harrisburg"]);
+  assert.equal(filter.location, "Fresno CA");
+  assert.equal(filter.dieselOnly, true);
+  assert.equal(filter.aroundPrice, 100000);
+  assert.deepEqual(parseOwnLotBudget(ask), { aroundPrice: 100000 });
+  assert.deepEqual(parseOwnLotBudget("units under $80k"), { maxPrice: 80000 });
+
+  const counts = aggregateOwnLot(snapshot.units, filter);
+  assert.equal(counts.matched, 2, "two Fresno diesels near 100k");
+  assert.equal(counts.priced, 2);
+  assert.ok(counts.priceBand);
+  assert.equal(counts.priceBand!.low, 98900);
+  assert.equal(counts.priceBand!.high, 104500);
+
+  const rows = queryOwnLotUnits(snapshot.units, filter, 12);
+  assert.equal(rows.length, 2);
+  assert.ok(rows.every((u) => u.price != null && u.price > 0));
+  assert.ok(rows.some((u) => u.price === 98900));
+  assert.ok(rows.some((u) => u.stock_number === "F2201"));
+
+  const block = formatOwnLotBlock(snapshot, ask);
+  assert.match(block, /Listing prices ARE in this snapshot/);
+  assert.match(block, /\$98,900/);
+  assert.match(block, /\$104,500/);
+  assert.match(block, /stk F2201/);
+  assert.match(block, /Fresno CA/);
+  assert.doesNotMatch(block, /doesn't include price data/i);
+  assert.doesNotMatch(block, /haven't come through/i);
+  assert.doesNotMatch(block, /has not come through/i);
+  assert.doesNotMatch(block, /hasn't come through/i);
+
+  const showPrices = formatOwnLotBlock(snapshot, "and it should show prices too");
+  assert.match(showPrices, /Listing prices ARE in this snapshot/);
+  assert.match(showPrices, /Low \$/);
+  assert.doesNotMatch(showPrices, /doesn't include price data/i);
+  assert.doesNotMatch(showPrices, /hasn't come through/i);
+});
+
+test("own-lot and prompt text cannot claim no price data when prices exist", () => {
+  const impl = src(".", "ownLotInventory.ts");
+  const prompts = src(".", "prompts.ts");
+  const voice = src(".", "voice.ts");
+  assert.match(impl, /Listing prices ARE in this snapshot/);
+  assert.match(impl, /Never say it has no price data/);
+  assert.match(impl, /price_current \/ price_hidden \/ price_lowest \/ price_msrp/);
+  assert.match(prompts, /Never say the snapshot has no price data/);
+  assert.match(voice, /Never say the snapshot has no price data/);
+  assert.doesNotMatch(impl, /doesn't include price data/);
+  assert.doesNotMatch(impl, /hasn't come through/);
+
+  const unpriced: OwnLotUnit[] = FIXTURE_UNITS.map((u) => ({ ...u, price: null }));
+  const emptyPrices = formatOwnLotBlock(
+    snapshotFromJson({ source: "own", dealer: "RV Country", units: unpriced }),
+    "how many diesels do we have in stock?",
+  );
+  assert.match(emptyPrices, /No priced units in this matched set/);
+  assert.doesNotMatch(emptyPrices, /Listing prices ARE in this snapshot/);
 });
