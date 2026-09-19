@@ -299,6 +299,62 @@ test("Tradition 42V/42Q brochure GVWR is 47,000 — not catalog weightRange mid"
   assert.equal(ttw.weightLb, 47000);
 });
 
+test("Anthem 44R/37K brochure GVWR pins beat catalog weightRange mid", () => {
+  // 2025 Anthem brochure: 37K 44,000; 44B/D/W/R/Z 52,000. David saw the model band instead.
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Anthem", "44R"), 52000);
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Anthem", "37K"), 44000);
+  assert.equal(findOemGvwrLbs("2025", "Entegra", "Anthem", "44R"), 52000);
+  assert.equal(findOemGvwrLbs("2025", "Entegra", "Anthem", "37K"), 44000);
+  assert.equal(findOemGvwrLbs("2024", "Entegra Coach", "Anthem", "37K"), 44000);
+  assert.equal(findOemGvwrLbs("2024", "Entegra Coach", "Anthem", "44B"), 52000);
+  assert.equal(findOemGvwrLbs("2023", "Entegra Coach", "Anthem", "44R"), 52000);
+  assert.equal(findOemGvwrLbs("2026", "Entegra Coach", "Anthem", "37K"), 41000);
+  assert.equal(findOemGvwrLbs("2026", "Entegra Coach", "Anthem", "44V"), 52000);
+  assert.equal(findOemGvwrLbs("2026", "Entegra Coach", "Anthem", "44R"), 52000);
+  // GAP: unprinted year / plan. Do not invent or copy a band.
+  assert.equal(findOemGvwrLbs("2023", "Entegra Coach", "Anthem", "37K"), null);
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Anthem", "44V"), null);
+  assert.equal(findOemGvwrLbs("2022", "Entegra Coach", "Anthem", "44R"), null);
+  assert.equal(findOemGvwrLbs("2027", "Entegra Coach", "Anthem", "44R"), null);
+
+  // Sibling isolation — Anthem ≠ Aspire ≠ Cornerstone ≠ Accolade.
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Aspire", "44R"), 49000);
+  assert.notEqual(findOemGvwrLbs("2025", "Entegra Coach", "Aspire", "44R"), 52000);
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Cornerstone", "44R"), null);
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Cornerstone", "45R"), null);
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Accolade", "37K"), null);
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Accolade", "44R"), null);
+
+  // Catalog Anthem is 42–45 ft / 42,000–52,000 lbs. 44R interpolates under 52k;
+  // 37K leading digits miss the length span so the mid is 47k — neither is the pin.
+  const interpolated44 = weightForFloorplan("44R", [42000, 52000], [42, 45]);
+  assert.match(interpolated44.gvwr, /–/);
+  assert.ok(interpolated44.mid < 52000, "catalog mid for 44' is under the 52k brochure pin");
+  const interpolated37 = weightForFloorplan("37K", [42000, 52000], [42, 45]);
+  assert.equal(interpolated37.mid, 47000);
+  assert.notEqual(interpolated37.mid, 44000);
+
+  const ttw44 = computeTorqueToWeight({
+    torqueLbFt: 1250,
+    gvwrLbs: findOemGvwrLbs("2025", "Entegra Coach", "Anthem", "44R"),
+    gvwrRaw: "42,000–52,000 lbs",
+    weightRange: [42000, 52000],
+    rvType: "Class A Diesel",
+  });
+  assert.equal(ttw44.weightBasis, "GVWR");
+  assert.equal(ttw44.weightLb, 52000);
+
+  const ttw37 = computeTorqueToWeight({
+    torqueLbFt: 1250,
+    gvwrLbs: findOemGvwrLbs("2025", "Entegra Coach", "Anthem", "37K"),
+    gvwrRaw: interpolated37.gvwr,
+    weightRange: [42000, 52000],
+    rvType: "Class A Diesel",
+  });
+  assert.equal(ttw37.weightLb, 44000);
+  assert.notEqual(ttw37.weightLb, interpolated37.mid);
+});
+
 test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Vision XL", "34B"), 22000);
   assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Vision XL", "34G"), 22000);

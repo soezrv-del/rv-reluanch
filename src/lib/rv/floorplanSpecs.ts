@@ -2149,6 +2149,12 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   // Entegra Aspire — 2024–2025 Aspire brochure weights table (same split on 2023 card).
   ...gvwrPins("entegra", "aspire", 2023, 2025, ["40P"], 41000),
   ...gvwrPins("entegra", "aspire", 2023, 2025, ["44B", "44D", "44R", "44W", "44Z"], 49000),
+  // Entegra Anthem — dated RVUSA Anthem brochures. Not Aspire (49k) / Cornerstone / Accolade.
+  // MY23 ALL-row 52,000 (44B/D/R/W/Z). MY24–25: 37K 44,000; 44' 52,000. MY26: 37K 41,000 + 44V.
+  ...gvwrPins("entegra", "anthem", 2023, 2026, ["44B", "44D", "44R", "44W", "44Z"], 52000),
+  ...gvwrPins("entegra", "anthem", 2026, 2026, ["44V"], 52000),
+  ...gvwrPins("entegra", "anthem", 2024, 2025, ["37K"], 44000),
+  ...gvwrPins("entegra", "anthem", 2026, 2026, ["37K"], 41000),
   // Entegra Odyssey — 2026 Odyssey brochure weights table (all listed E-450 14,500). Not Odyssey SE / Esteem.
   ...gvwrPins(
     "entegra",
