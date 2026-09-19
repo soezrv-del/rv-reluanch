@@ -1,20 +1,20 @@
 /**
  * Torque-to-weight rating for the Facts report Ratings section.
  *
- * Weight metric: UVW in pounds (empty/dry coach weight) — never GVWR.
+ * Weight metric: GVWR in pounds — never UVW (often unpublished).
  * Prefer numeric powertrainGuard / brochure hard torque when present;
- * else parse specs.torque. Parse UVW from specs.uvw / uvwLbs
+ * else parse specs.torque. Parse GVWR from specs.gvwr / gvwrLbs
  * (strip commas/units). Torque is lb-ft only — never horsepower.
  *
- * Ratio: r = (torqueLbFt / uvwLb) * 1000  →  lb-ft per 1,000 lb UVW
+ * Ratio: r = (torqueLbFt / gvwrLb) * 1000  →  lb-ft per 1,000 lb GVWR
  *
  * Motorhome bands (half-open):
- *   GAP / N/A  torque missing OR uvw missing OR ≤0 OR towable
+ *   GAP / N/A  torque missing OR gvwr missing OR ≤0 OR towable
  *   1★  [0, 10)
- *   2★  [10, 18)
- *   3★  [18, 30)
- *   4★  [30, 50)
- *   5★  [50, ∞)
+ *   2★  [10, 15)
+ *   3★  [15, 20)
+ *   4★  [20, 30)
+ *   5★  [30, ∞)
  */
 
 export type TorqueToWeightStars = 1 | 2 | 3 | 4 | 5;
@@ -24,10 +24,10 @@ export type TorqueToWeightInput = {
   torqueLbFt?: number | null;
   /** Display / specs.torque string (may include "lb-ft"). Never HP. */
   torqueRaw?: string | number | null;
-  /** Numeric UVW pounds when already parsed (live.uvwLbs). */
-  uvwLbs?: number | null;
-  /** Display / specs.uvw string (commas + units stripped). */
-  uvwRaw?: string | number | null;
+  /** Numeric GVWR pounds when already parsed (live.gvwrLbs). */
+  gvwrLbs?: number | null;
+  /** Display / specs.gvwr string (commas + units stripped). */
+  gvwrRaw?: string | number | null;
   /** Coach type / fuel — towables are N/A (no engine torque rating). */
   rvType?: string | null;
   fuelType?: string | null;
@@ -35,8 +35,8 @@ export type TorqueToWeightInput = {
 
 export type TorqueToWeightResult = {
   torqueLbFt: number | null;
-  uvwLb: number | null;
-  /** (torqueLbFt / uvwLb) * 1000, or null on GAP. */
+  gvwrLb: number | null;
+  /** (torqueLbFt / gvwrLb) * 1000, or null on GAP. */
   ratio: number | null;
   stars: TorqueToWeightStars | null;
   gap: boolean;
@@ -76,16 +76,16 @@ export function parseTorqueLbFt(
 }
 
 /**
- * Parse UVW pounds. Strips commas/units. A weight *range* (two numbers) is
- * unparseable → null (GAP), not an average.
+ * Parse GVWR pounds. Strips commas/units. A weight *range* (two numbers)
+ * or a UVW-labeled string is unparseable → null (GAP).
  */
-export function parseUvwLb(
+export function parseGvwrLb(
   raw: string | number | null | undefined,
 ): number | null {
   if (raw == null || raw === "") return null;
   if (typeof raw === "number") return positiveInt(raw);
   const s = String(raw).trim();
-  if (!s || EMPTY.test(s) || /^n\/a\b/i.test(s) || /\bgvwr\b/i.test(s)) {
+  if (!s || EMPTY.test(s) || /^n\/a\b/i.test(s) || /\buvw\b/i.test(s)) {
     return null;
   }
 
@@ -99,10 +99,10 @@ export function parseUvwLb(
 
 export function torqueToWeightRatio(
   torqueLbFt: number,
-  uvwLb: number,
+  gvwrLb: number,
 ): number | null {
-  if (!(torqueLbFt > 0) || !(uvwLb > 0)) return null;
-  return (torqueLbFt / uvwLb) * 1000;
+  if (!(torqueLbFt > 0) || !(gvwrLb > 0)) return null;
+  return (torqueLbFt / gvwrLb) * 1000;
 }
 
 /**
@@ -127,9 +127,9 @@ export function starsFromTorqueToWeightRatio(
   ratio: number | null | undefined,
 ): TorqueToWeightStars | null {
   if (ratio == null || !Number.isFinite(ratio) || ratio < 0) return null;
-  if (ratio >= 50) return 5;
-  if (ratio >= 30) return 4;
-  if (ratio >= 18) return 3;
+  if (ratio >= 30) return 5;
+  if (ratio >= 20) return 4;
+  if (ratio >= 15) return 3;
   if (ratio >= 10) return 2;
   return 1;
 }
@@ -141,7 +141,7 @@ export function computeTorqueToWeight(
   if (na) {
     return {
       torqueLbFt: null,
-      uvwLb: null,
+      gvwrLb: null,
       ratio: null,
       stars: null,
       gap: true,
@@ -150,15 +150,15 @@ export function computeTorqueToWeight(
   }
   const torqueLbFt =
     positiveInt(input.torqueLbFt ?? 0) ?? parseTorqueLbFt(input.torqueRaw);
-  const uvwLb = positiveInt(input.uvwLbs ?? 0) ?? parseUvwLb(input.uvwRaw);
+  const gvwrLb = positiveInt(input.gvwrLbs ?? 0) ?? parseGvwrLb(input.gvwrRaw);
   const ratio =
-    torqueLbFt != null && uvwLb != null
-      ? torqueToWeightRatio(torqueLbFt, uvwLb)
+    torqueLbFt != null && gvwrLb != null
+      ? torqueToWeightRatio(torqueLbFt, gvwrLb)
       : null;
   const stars = starsFromTorqueToWeightRatio(ratio);
   return {
     torqueLbFt,
-    uvwLb,
+    gvwrLb,
     ratio,
     stars,
     gap: stars == null,
@@ -166,7 +166,7 @@ export function computeTorqueToWeight(
   };
 }
 
-/** Integer 1–5 ★ string; GAP when missing. Matches ratingStars() for whole stars. */
+/** Integer 1–5 ★ string; N/A on towables, GAP when missing. */
 export function formatTorqueToWeightStars(
   result: TorqueToWeightResult,
 ): string {
