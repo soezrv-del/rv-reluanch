@@ -281,6 +281,17 @@ test("generic asks and catalog compares do not speak a research hold", () => {
   assert.equal(lot.action, "research");
   if (lot.action === "research") assert.equal(lot.speakHold, false);
 
+  for (const q of [
+    "stock number 45282",
+    "45282",
+    "How many Entegra coaches do we have in Fresno?",
+  ]) {
+    assert.equal(shouldSpeakVoiceResearchHold(q), false, q);
+    const decided = decideVoiceWebResearch({ transcript: q, specs: null });
+    assert.equal(decided.action, "research", q);
+    if (decided.action === "research") assert.equal(decided.speakHold, false, q);
+  }
+
   assert.equal(shouldSpeakVoiceResearchHold(COMPARE_Q), false);
 });
 

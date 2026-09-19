@@ -617,7 +617,10 @@ test("inventory / diesel count asks still trip the detector when catalog is lock
   const dieselCount = "What's the diesel count for 2024 Tiffin Allegro?";
   const lot = "Any Entegra inventory near Dallas?";
   const weHave = "How many diesels do we have in stock?";
-  for (const q of [inventory, dieselCount, lot, weHave]) {
+  const stock = "stock number 45282";
+  const bareStock = "45282";
+  const entegraFresno = "How many Entegra coaches do we have in Fresno?";
+  for (const q of [inventory, dieselCount, lot, weHave, stock, bareStock, entegraFresno]) {
     assert.equal(looksLikeInventoryOrCountQuestion(q), true, q);
     assert.equal(needsWebFallback(locked, q), true, q);
     assert.equal(needsWebFallback(null, q), true, q);
