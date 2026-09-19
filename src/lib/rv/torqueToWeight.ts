@@ -1,20 +1,26 @@
 /**
  * Torque-to-weight rating for the Facts report Ratings section.
  *
- * Weight metric: UVW (unloaded) when available; GVWR only when UVW is
- * missing. GAP if torque is missing or both weights are missing.
- * Prefer numeric powertrainGuard / brochure hard torque when present;
- * else parse specs.torque. Torque is lb-ft only — never horsepower.
+ * Weight metric: published OEM **GVWR only**. Never prefer UVW, never
+ * use estimated UVW (weightForFloorplan mid×0.82). GAP if torque is
+ * missing or GVWR is missing — do not invent a weight. Prefer numeric
+ * powertrainGuard / brochure hard torque when present; else parse
+ * specs.torque. Torque is lb-ft only — never horsepower.
  *
- * Ratio: r = (torqueLbFt / weightLb) * 1000  →  lb-ft per 1,000 lb
+ * Ratio: r = (torqueLbFt / gvwrLb) * 1000  →  lb-ft per 1,000 lb GVWR
  *
  * Continuous 1–10 (piecewise-linear on the David envelope):
- *   GAP / N/A  torque missing OR both weights missing OR ≤0 OR towable
+ *   GAP / N/A  torque missing OR GVWR missing OR ≤0 OR towable
  *   r < 10        → [1, 2)
  *   10 ≤ r < 17   → [3, 4)
  *   17 ≤ r < 28   → [4.0, 6.5)   Seneca 800/31000 ≈ 25.8 → ~6.0
  *   28 ≤ r < 45   → [7.0, 9.3)
  *   r ≥ 45        → [8.75, 10]   clamped
+ *
+ * Must-pass GVWR anchors:
+ *   Precept 31UL  468 / 22,000 → ~5.0
+ *   Precept 36    468 / 24,000 → ~4.6
+ *   Seneca        800 / 31,000 → ~6.0
  *
  * Bar color (score, not ratio):
  *   red     score < 6.0
@@ -31,14 +37,13 @@ export type TorqueToWeightInput = {
   torqueLbFt?: number | null;
   /** Display / specs.torque string (may include "lb-ft"). Never HP. */
   torqueRaw?: string | number | null;
-  /** Numeric UVW / unloaded pounds when already parsed (live.uvwLbs). */
+  /** Numeric UVW / unloaded pounds — display/honesty only, never the TTW basis. */
   uvwLbs?: number | null;
-  /** Display / specs.uvw string (commas + units stripped). */
+  /** Display / specs.uvw string — display/honesty only, never the TTW basis. */
   uvwRaw?: string | number | null;
-  /** Numeric GVWR pounds when already parsed (live.gvwrLbs). Fallback. */
+  /** Numeric published OEM GVWR pounds (live.gvwrLbs). Required for a score. */
   gvwrLbs?: number | null;
-  /** Display / specs.gvwr string (commas + units stripped). Fallback. */
-  gvwrRaw?: string | number | null;
+  /** Display / specs.gvwr string (commas + units stripped). Required for a score. */
   /** Coach type / fuel — towables are N/A (no engine torque rating). */
   rvType?: string | null;
   fuelType?: string | null;
@@ -48,10 +53,11 @@ export type TorqueToWeightResult = {
   torqueLbFt: number | null;
   uvwLb: number | null;
   gvwrLb: number | null;
-  /** UVW when present, otherwise GVWR. Null on GAP / N/A. */
+  /** GVWR pounds used for the score. Null on GAP / N/A. */
   weightLb: number | null;
+  /** Always "GVWR" when scored. Null on GAP / N/A — never "UVW". */
   weightBasis: TorqueWeightBasis | null;
-  /** (torqueLbFt / weightLb) * 1000, or null on GAP. */
+  /** (torqueLbFt / gvwrLb) * 1000, or null on GAP. */
   ratio: number | null;
   /** Continuous 1–10, or null on GAP / N/A. */
   score: number | null;
@@ -209,9 +215,9 @@ export function computeTorqueToWeight(
     positiveInt(input.torqueLbFt ?? 0) ?? parseTorqueLbFt(input.torqueRaw);
   const uvwLb = positiveInt(input.uvwLbs ?? 0) ?? parseUvwLb(input.uvwRaw);
   const gvwrLb = positiveInt(input.gvwrLbs ?? 0) ?? parseGvwrLb(input.gvwrRaw);
-  const weightLb = uvwLb ?? gvwrLb;
-  const weightBasis: TorqueWeightBasis | null =
-    uvwLb != null ? "UVW" : gvwrLb != null ? "GVWR" : null;
+  // GVWR-only scoring. UVW is retained for honesty/display — never the basis.
+  const weightLb = gvwrLb;
+  const weightBasis: TorqueWeightBasis | null = gvwrLb != null ? "GVWR" : null;
   const ratio =
     torqueLbFt != null && weightLb != null
       ? torqueToWeightRatio(torqueLbFt, weightLb)
@@ -231,7 +237,7 @@ export function computeTorqueToWeight(
   };
 }
 
-/** Display "X.X/10 · UVW" or "· GVWR"; N/A on towables, GAP when missing. */
+/** Display "X.X/10 · GVWR"; N/A on towables, GAP when torque or GVWR missing. */
 export function formatTorqueToWeightScore(
   result: TorqueToWeightResult,
 ): string {

@@ -1950,6 +1950,21 @@ export function findOemFloorplanSpec(
       continue;
     }
     if (
+      row.modelIncludes === "vision" &&
+      (md.includes("xl") || md.includes("se")) &&
+      !row.modelIncludes.includes("xl") &&
+      !row.modelIncludes.includes("se")
+    ) {
+      continue;
+    }
+    if (
+      row.modelIncludes === "precept" &&
+      md.includes("prestige") &&
+      !row.modelIncludes.includes("prestige")
+    ) {
+      continue;
+    }
+    if (
       row.modelIncludes === "cougar" &&
       (md.includes("half") || md.includes("5th") || md.includes("fifth")) &&
       row.modelIncludes === "cougar"
@@ -2067,7 +2082,125 @@ export function formatFloorplanLength(
   return `${lengthRange[0]}–${lengthRange[1]} ft`;
 }
 
-/** Weight estimate narrowed by floorplan length position in range. */
+/**
+ * Published OEM GVWR pins for listing / torque-to-weight scoring.
+ * GVWR only — never copy these onto UVW display fields.
+ * Missing GVWR stays GAP; do not invent from UVW or mid×0.82.
+ */
+const OEM_GVWR_PINS: Array<{
+  makeIncludes: string;
+  modelIncludes: string;
+  yearMin: number;
+  yearMax: number;
+  floorplan: string;
+  gvwrLbs: number;
+}> = [
+  // Entegra Vision XL — F53 24k on 36A/36C; 22k on 31UL
+  {
+    makeIncludes: "entegra",
+    modelIncludes: "vision xl",
+    yearMin: 2020,
+    yearMax: 2027,
+    floorplan: "36A",
+    gvwrLbs: 24000,
+  },
+  {
+    makeIncludes: "entegra",
+    modelIncludes: "vision xl",
+    yearMin: 2022,
+    yearMax: 2027,
+    floorplan: "36C",
+    gvwrLbs: 24000,
+  },
+  {
+    makeIncludes: "entegra",
+    modelIncludes: "vision xl",
+    yearMin: 2024,
+    yearMax: 2027,
+    floorplan: "31UL",
+    gvwrLbs: 22000,
+  },
+  // Jayco Precept — F53 22k on 31UL; 24k on 36A/36C. Not Precept Prestige.
+  {
+    makeIncludes: "jayco",
+    modelIncludes: "precept",
+    yearMin: 2014,
+    yearMax: 2027,
+    floorplan: "31UL",
+    gvwrLbs: 22000,
+  },
+  {
+    makeIncludes: "jayco",
+    modelIncludes: "precept",
+    yearMin: 2019,
+    yearMax: 2027,
+    floorplan: "36A",
+    gvwrLbs: 24000,
+  },
+  {
+    makeIncludes: "jayco",
+    modelIncludes: "precept",
+    yearMin: 2022,
+    yearMax: 2027,
+    floorplan: "36C",
+    gvwrLbs: 24000,
+  },
+];
+
+function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
+  if (
+    modelIncludes === "vision" &&
+    (modelNorm.includes("xl") || modelNorm.includes("se")) &&
+    !modelIncludes.includes("xl") &&
+    !modelIncludes.includes("se")
+  ) {
+    return true;
+  }
+  if (
+    modelIncludes === "precept" &&
+    modelNorm.includes("prestige") &&
+    !modelIncludes.includes("prestige")
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** Published OEM GVWR for a year/make/model/floorplan. Null → GAP (do not invent). */
+export function findOemGvwrLbs(
+  year: string | number,
+  make: string,
+  model: string,
+  floorplan: string,
+): number | null {
+  if (!floorplan?.trim()) return null;
+  const y = typeof year === "number" ? year : parseInt(String(year), 10);
+  if (!Number.isFinite(y)) return null;
+  const mk = make.toLowerCase();
+  const md = model.toLowerCase();
+  const fp = floorplan.trim().toUpperCase().replace(/\s+/g, "");
+
+  let best: number | null = null;
+  let bestScore = -1;
+  for (const row of OEM_GVWR_PINS) {
+    if (y < row.yearMin || y > row.yearMax) continue;
+    if (!mk.includes(row.makeIncludes)) continue;
+    if (!md.includes(row.modelIncludes)) continue;
+    if (modelPinBlocked(row.modelIncludes, md)) continue;
+    const rowFp = row.floorplan.toUpperCase().replace(/\s+/g, "");
+    if (rowFp !== fp) continue;
+    const score = row.modelIncludes.length * 10 + row.makeIncludes.length;
+    if (score > bestScore) {
+      bestScore = score;
+      best = row.gvwrLbs;
+    }
+  }
+  return best;
+}
+
+/** Weight estimate narrowed by floorplan length position in range.
+ *  `uvwEst` (mid×0.82) is a CCC heuristic only — never the TTW / listing basis.
+ */
 export function weightForFloorplan(
   floorplan: string | undefined,
   weightRange: [number, number],

@@ -63,6 +63,7 @@ test("Facts Ratings section shows four rows and does not invent reliability/sati
   assert.match(detail, /label:\s*"Reliability"/);
   assert.match(detail, /label:\s*"Customer satisfaction"/);
   assert.match(detail, /Torque-to-Weight/);
+  assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
   // Do not invent from warranty / NHTSA / mock reviews / RvFOX displayRating.
   assert.doesNotMatch(
     detail,
