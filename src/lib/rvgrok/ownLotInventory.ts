@@ -48,9 +48,9 @@ export const OWN_LOT_CACHE_TTL_MS = 5 * 60 * 1000;
 const MATCH_LIST_MAX = 12;
 /** Same cap as listings — bands stay compact even on a 1k-unit lot. */
 const PRICE_BAND_MAP_MAX = 8;
-/** "around $100k" window: ±20%, never tighter than $10k. */
+/** "around $100k" window: ±20%, never tighter than $15k (lot $50k asks). */
 const AROUND_PRICE_PCT = 0.2;
-const AROUND_PRICE_MIN_WINDOW = 10_000;
+const AROUND_PRICE_MIN_WINDOW = 15_000;
 
 export const OWN_LOT_PRICE_KEYS = [
   "price",
@@ -585,7 +585,10 @@ export function parseOwnLotAsk(
   if (/\bgas\b/i.test(t) && !filter.dieselOnly) filter.gasOnly = true;
 
   const toyHauler = /\btoy[- ]?haul(?:er|ers)?\b/i.test(t);
-  if (toyHauler) filter.toyHauler = true;
+  const fifthWheel = /\bfifth[- ]?wheels?\b/i.test(t);
+  const travelTrailer = /\btravel\s+trailers?\b/i.test(t);
+  // Snapshot body_type is distinct: "Fifth Wheel" ≠ "Fifth Wheel Toy Hauler".
+  if (toyHauler && !fifthWheel && !travelTrailer) filter.toyHauler = true;
 
   if (/\bsuper\s*c\b/i.test(t)) filter.bodyType = "Class Super C";
   else if (/\bclass\s*a\s*diesel\b/i.test(t)) filter.bodyType = "Class A Diesel";
@@ -593,8 +596,15 @@ export function parseOwnLotAsk(
   else if (/\bclass\s*b\b/i.test(t)) filter.bodyType = "Class B";
   else if (/\bclass\s*c\b/i.test(t) && !/\bsuper\s*c\b/i.test(t)) {
     filter.bodyType = "Class C";
-  } else if (/\bfifth[- ]?wheels?\b/i.test(t)) filter.bodyType = "Fifth Wheel";
-  else if (/\btravel\s+trailers?\b/i.test(t)) filter.bodyType = "Travel Trailer";
+  } else if (fifthWheel && toyHauler) {
+    filter.bodyType = "Fifth Wheel Toy Hauler";
+  } else if (fifthWheel) {
+    filter.bodyType = "Fifth Wheel";
+  } else if (travelTrailer && toyHauler) {
+    filter.bodyType = "Travel Trailer Toy Hauler";
+  } else if (travelTrailer) {
+    filter.bodyType = "Travel Trailer";
+  }
 
   const fromList = matchLocationFromAsk(t, locations);
   if (fromList) filter.location = fromList;
@@ -784,11 +794,18 @@ export function matchLocationFromAsk(
   return best;
 }
 
+function bodyLooksLikeToyHauler(s: string): boolean {
+  return /toy\s*haul/.test(norm(s));
+}
+
 function bodyTypeMatches(unitType: string, wanted: string): boolean {
   const u = norm(unitType);
   const w = norm(wanted);
   if (!u || !w) return false;
-  return u === w || u.includes(w) || w.includes(u);
+  if (u === w) return true;
+  // Distinct scrape labels — do not let "Fifth Wheel" swallow "Fifth Wheel Toy Hauler".
+  if (bodyLooksLikeToyHauler(u) !== bodyLooksLikeToyHauler(w)) return false;
+  return u.includes(w) || w.includes(u);
 }
 
 export function unitMatchesFilter(

@@ -828,6 +828,16 @@ const TOY_HAULER_UNITS: OwnLotUnit[] = [
     stock_number: "TH900",
     price: 124995,
   }),
+  pricedUnit({
+    year: "2023",
+    make: "Forest River",
+    model: "Work and Play",
+    trim: "18TH",
+    body_type: "Travel Trailer Toy Hauler",
+    location: "Fresno CA",
+    stock_number: "TT501",
+    price: 47995,
+  }),
 ];
 
 test("stock-number ask matches that unit and injects a priced listing", () => {
@@ -940,13 +950,17 @@ test("fifth-wheel toy hauler around / fifty thousand dollar injects priced listi
     "fifth-wheel toy haulers around $50k",
   ]) {
     const filter = parseOwnLotAsk(ask, ["Fresno CA", "Wilsonville"]);
-    assert.equal(filter.bodyType, "Fifth Wheel", ask);
-    assert.equal(filter.toyHauler, true, ask);
+    assert.equal(filter.bodyType, "Fifth Wheel Toy Hauler", ask);
+    assert.equal(filter.toyHauler, undefined, ask);
     assert.equal(filter.aroundPrice, 50000, ask);
     const counts = aggregateOwnLot(snapshot.units, filter);
     assert.equal(counts.matched, 2, ask);
+    const rows = queryOwnLotUnits(snapshot.units, filter, 12);
+    assert.ok(rows.every((u) => u.body_type === "Fifth Wheel Toy Hauler"), ask);
     const block = formatOwnLotBlock(snapshot, ask);
+    assert.match(block, /Filter: Fifth Wheel Toy Hauler/);
     assert.match(block, /Matching units/);
+    assert.match(block, /Fifth Wheel Toy Hauler/);
     assert.match(block, /\$49,995|\$52,900/);
     assert.match(block, /stk TH501|stk TH502/);
     assert.match(block, /Specific units ARE listed/);
@@ -954,8 +968,29 @@ test("fifth-wheel toy hauler around / fifty thousand dollar injects priced listi
     assert.doesNotMatch(block, /can't pull specific units/);
     assert.doesNotMatch(block, /doesn't break out a list/);
     assert.doesNotMatch(block, /stk TH900/, `${ask} must not list the $124k toy hauler`);
-    assert.doesNotMatch(block, /stk FW601/, `${ask} regular fifth wheel is not a toy hauler`);
+    assert.doesNotMatch(block, /stk FW601/, `${ask} plain Fifth Wheel must not match`);
+    assert.doesNotMatch(block, /stk TT501/, `${ask} TT toy hauler is a different body_type`);
   }
+
+  const ttAsk = "travel trailer toy haulers around $50k";
+  const ttFilter = parseOwnLotAsk(ttAsk, ["Fresno CA"]);
+  assert.equal(ttFilter.bodyType, "Travel Trailer Toy Hauler");
+  assert.equal(ttFilter.aroundPrice, 50000);
+  const ttCounts = aggregateOwnLot(snapshot.units, ttFilter);
+  assert.equal(ttCounts.matched, 1);
+  const ttBlock = formatOwnLotBlock(snapshot, ttAsk);
+  assert.match(ttBlock, /Filter: Travel Trailer Toy Hauler/);
+  assert.match(ttBlock, /stk TT501/);
+  assert.match(ttBlock, /\$47,995/);
+  assert.doesNotMatch(ttBlock, /stk TH501/);
+
+  const plainFw = parseOwnLotAsk("fifth wheels around $50k", ["Fresno CA"]);
+  assert.equal(plainFw.bodyType, "Fifth Wheel");
+  assert.equal(plainFw.toyHauler, undefined);
+  const plainRows = queryOwnLotUnits(snapshot.units, plainFw, 12);
+  assert.ok(plainRows.every((u) => u.body_type === "Fifth Wheel"));
+  assert.ok(plainRows.some((u) => u.stock_number === "FW601"));
+  assert.ok(!plainRows.some((u) => u.body_type.includes("Toy Hauler")));
 });
 
 test("bundled snapshot: stock 45282, Entegra Fresno, and $50k fifth-wheel toy haulers list rows", () => {
@@ -981,14 +1016,27 @@ test("bundled snapshot: stock 45282, Entegra Fresno, and $50k fifth-wheel toy ha
   assert.match(loc, /Matching units/);
   assert.match(loc, /stk 45282/);
 
-  const list = formatOwnLotBlock(
-    snap,
-    "deep dive into the inventory and get me a list of fifty thousand dollar fifth-wheel toy haulers",
-  );
-  assert.match(list, /toy hauler/);
+  const listAsk =
+    "deep dive into the inventory and get me a list of fifty thousand dollar fifth-wheel toy haulers";
+  const listFilter = parseOwnLotAsk(listAsk, [
+    ...new Set(snap.units.map((u) => u.location).filter(Boolean)),
+  ]);
+  assert.equal(listFilter.bodyType, "Fifth Wheel Toy Hauler");
+  assert.equal(listFilter.aroundPrice, 50000);
+  const listCounts = aggregateOwnLot(snap.units, listFilter);
+  assert.ok(listCounts.matched > 0, "FW toy haulers around $50k exist on the lot");
+  assert.ok(listCounts.matched <= 15, `window too wide: ${listCounts.matched}`);
+  const listRows = queryOwnLotUnits(snap.units, listFilter, 12);
+  assert.ok(listRows.every((u) => u.body_type === "Fifth Wheel Toy Hauler"));
+  assert.ok(listRows.every((u) => u.price != null && Math.abs(u.price - 50000) <= 15000));
+
+  const list = formatOwnLotBlock(snap, listAsk);
+  assert.match(list, /Filter: Fifth Wheel Toy Hauler/);
   assert.match(list, /around \$50,000/);
   assert.match(list, /Matching units/);
+  assert.match(list, /Fifth Wheel Toy Hauler/);
   assert.match(list, /\$[0-9]/);
   assert.match(list, /Specific units ARE listed/);
   assert.doesNotMatch(list, /Matched: 0/);
+  assert.doesNotMatch(list, /Reflection 100 Series/);
 });
