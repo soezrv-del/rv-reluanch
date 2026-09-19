@@ -61,7 +61,7 @@ test("Grok pane consumes active + entryToken so a remounted-hidden chat resets",
   assert.match(app, /sendMessageRef\.current\(seed\)/);
 });
 
-test("shell: dock tap clears seed; Facts Ask Grok seeds the overlay", () => {
+test("shell: dock tap clears seed; Facts Ask Grok seeds the Grok tab", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   assert.match(shell, /clearGrokSeedOnDockTap/);
   assert.match(shell, /grokSeedFromAskHandoff/);
@@ -70,18 +70,18 @@ test("shell: dock tap clears seed; Facts Ask Grok seeds the overlay", () => {
     shell,
     /if \(next === "rvgrok"\) \{[\s\S]*setGrokSeed\(clearGrokSeedOnDockTap\(\)\)/,
   );
-  assert.match(shell, /setOverlaySeed\(grokSeedFromAskHandoff\(prompt\)\)/);
-  assert.match(shell, /setAskGrokOpen\(true\)/);
+  assert.match(shell, /setGrokSeed\(grokSeedFromAskHandoff\(prompt\)\)/);
   assert.match(shell, /entryToken=\{grokEntryToken\}/);
   assert.match(shell, /seedPrompt=\{grokSeed\}/);
-  assert.match(shell, /seedPrompt=\{overlaySeed\}/);
   assert.match(shell, /active=\{tab === "rvgrok" && !launchOpen\}/);
+  assert.doesNotMatch(shell, /AskGrokOverlay|setAskGrokOpen|overlaySeed/);
 
   const openGrok = shell.match(
     /const openGrok = \(prompt\?: string\) => \{[\s\S]*?\n  \};/,
   )?.[0];
   assert.ok(openGrok, "openGrok present");
-  assert.doesNotMatch(openGrok, /setTab\(/);
+  assert.match(openGrok, /setTab\("rvgrok"\)/);
+  assert.match(openGrok, /setGrokSeed\(grokSeedFromAskHandoff\(prompt\)\)/);
 });
 
 test("Cal / Tow / Trips / More do not seed or open Grok chat", () => {
