@@ -734,17 +734,7 @@ export function computeTorqueToWeight(
   };
 }
 
-function basisLabel(result: TorqueToWeightResult): string {
-  if (result.weightBasis == null) return "";
-  if (result.weightEstimated || result.weightBasis === "UVW_EST") {
-    return UVW_ESTIMATE_LABEL;
-  }
-  return result.weightOverridden
-    ? `${result.weightBasis} override`
-    : result.weightBasis;
-}
-
-/** Display "X.X/10 · UVW"; N/A on towables, GAP when torque or weight missing. */
+/** Display "X.X/10"; N/A on towables, GAP when torque or weight missing. */
 export function formatTorqueToWeightScore(
   result: TorqueToWeightResult,
 ): string {
@@ -752,17 +742,15 @@ export function formatTorqueToWeightScore(
   if (result.gap || result.score == null || result.weightBasis == null) {
     return "GAP";
   }
-  return `${result.score.toFixed(1)}/10 · ${basisLabel(result)}`;
+  return `${result.score.toFixed(1)}/10`;
 }
 
-/** Short Ratings-card chip: UVW / estimated via tiered GVWR formula / GVWR / Override. */
+/**
+ * Retired from UI — weight basis / estimate method is internal.
+ * Kept so existing call sites can stay null-safe.
+ */
 export function formatTorqueWeightBasisChip(
-  result: TorqueToWeightResult,
+  _result: TorqueToWeightResult,
 ): string | null {
-  if (result.na || result.gap || result.weightBasis == null) return null;
-  if (result.weightOverridden) return "Override";
-  if (result.weightEstimated || result.weightBasis === "UVW_EST") {
-    return UVW_ESTIMATE_LABEL;
-  }
-  return result.weightBasis;
+  return null;
 }
