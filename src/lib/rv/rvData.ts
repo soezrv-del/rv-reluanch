@@ -19647,6 +19647,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         { from: 2027, to: 2027, engine: "Ford 7.3L V8 gas 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford Econoline E-450 DRW", transmission: "6-speed TorqShift", towingCapacity: 7500, gvwrLbs: 14500, notes: "RVUSA m12200-y2027 + RV-Pro MY2027: E-450 7.3 gas 325/450 · hitch 7,500. First gas Lineage Class C. Not Sprinter / not Series M." },
       ],
+      // Brochure backfill — electrical. Model-level (30DC).
+      solarWatts: 180,
+      lithiumAh: 310,
+      batteryType: "Lithionics 310Ah",
+      inverterWatts: 1800,
+      keyFeatures: ["180W solar", "Lithionics 310Ah", "1800W inverter"],
+      electricalNotes: "Brochure backfill — OEM Lineage Class C: 180W Merlin solar (prep for additional), Lithionics 310Ah, 1800W Xantrex inverter. 30DC.",
     },
     "Lineage Series M": {
       type: "Class C",
@@ -19693,6 +19700,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         { from: 2025, to: 2027, engine: "Mercedes-Benz 2.0L twin-turbo diesel 208HP", horsepower: 208, torqueLbFt: 332, chassis: "Mercedes-Benz Sprinter 4500 (MORryde Halo)", transmission: "9G-Tronic automatic", towingCapacity: 3500, gvwrLbs: 12125, notes: "OEM Class C brochure MY25–26 + RV-Pro MY2027 25MD / year-labeled 2027 25FW: Mercedes 4500 2.0 twin-turbo 208HP / 332 lb-ft. Towing 3,500. GVWR 12,125." },
       ],
+      // Brochure backfill — electrical. Model-level (25FW / 25MD / 25TK). Latest single-310Ah, not early dual-130Ah.
+      solarWatts: 540,
+      lithiumAh: 310,
+      batteryType: "Lithionics 310Ah",
+      inverterWatts: 1800,
+      keyFeatures: ["540W solar", "Lithionics 310Ah", "1800W inverter"],
+      electricalNotes: "Brochure backfill — OEM Lineage Class C / latest Lineage card: 540W solar (3 × 180W Merlin), Lithionics 310Ah (single pack, not early dual-130Ah), 1800W Xantrex inverter. 25FW / 25MD / 25TK share electrical.",
     },
     "Lineage Series F": {
       type: "Super C",
@@ -19737,6 +19751,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         { from: 2025, to: 2027, floorplans: ["31ZW5"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F-550 Super Duty 4x4", towingCapacity: 10000, gvwrLbs: 19500, notes: "F-550 twin — do not stamp F-600 15k hitch." },
         { from: 2025, to: 2027, engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford Super Duty 4x4 (F-600 / F-550)" },
       ],
+      // Brochure backfill — electrical. Model-level (31ZW F-600 / 31ZW5 F-550).
+      solarWatts: 900,
+      lithiumAh: 310,
+      batteryType: "Lithionics 310Ah",
+      inverterWatts: 2000,
+      keyFeatures: ["900W solar", "Lithionics 310Ah", "2000W inverter"],
+      electricalNotes: "Brochure backfill — OEM Lineage Class C: 900W solar (5 × 180W Merlin; brochure also markets up to 1000W — catalog stores sourced 900W, not the marketing ceiling), Lithionics 310Ah (1), 2000W Xantrex inverter. 31ZW / 31ZW5 share electrical.",
     },
     "Lineage Series VT": {
       type: "Class B",
@@ -19778,6 +19799,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         { from: 2026, to: 2027, engine: "Ford 3.5L EcoBoost V6 310HP", horsepower: 310, torqueLbFt: 400, chassis: "Ford Transit 350 AWD", transmission: "10-speed automatic", gvwrLbs: 9950, notes: "OEM Lineage Class B Brochure 2026 + RVUSA m10877-y2027: Transit Cargo AWD 3.5 EcoBoost 310/400. LVT1 + LVT2. Gas — not diesel." },
       ],
+      // Brochure backfill — electrical. Model-level (LVT1 / LVT2). solarWatts GAP — do not invent.
+      lithiumWh: 8448,
+      batteryType: "Lithionics 51V",
+      inverterWatts: 3000,
+      keyFeatures: ["8448Wh Lithionics", "3000W inverter"],
+      electricalNotes: "Brochure backfill — OEM Lineage Class B: Lithionics 8448Wh 51V house bank (5120Wh with pop-top option — standard 8448Wh documented unless floorplan-specific), 3000W Lithionics 51V inverter. GAP: solarWatts unsourced on OEM Class B brochure / RVUSA — left empty; do not invent.",
     },
     "Lineage Series VP": {
       type: "Class B",
@@ -19819,6 +19846,14 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       powertrainByYear: [
         { from: 2027, to: 2027, engine: "Ram 3.6L V6 24V VVT 276HP", horsepower: 276, torqueLbFt: 250, chassis: "Ram ProMaster 3500 Super High Roof Ext (159 WB)", transmission: "TorqueFlite 9-speed 948TE", gvwrLbs: 9350, notes: "RVUSA m11835-y2027: ProMaster 3500 3.6 V6 24V VVT · TorqueFlite 9-spd. HP/torque 276/250 from year-labeled 2027 listings (same Pentastar rating). LVP1 + LVP2. Gas — not diesel. Not Series VT Transit." },
       ],
+      // Brochure backfill — electrical. Model-level (LVP1 / LVP2).
+      solarWatts: 180,
+      lithiumAh: 310,
+      lithiumWh: 3968,
+      batteryType: "Lithionics 12V",
+      inverterWatts: 3000,
+      keyFeatures: ["180W solar", "3968Wh Lithionics", "3000W inverter"],
+      electricalNotes: "Brochure backfill — OEM Lineage Class B / RVUSA: 180W Merlin solar standard, Lithionics ~3968Wh 12V (~310Ah class), 3000W inverter. LVP1 / LVP2 share electrical.",
     }
   },
   Fleetwood: {
