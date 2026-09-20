@@ -28,7 +28,7 @@
  *
  * Four motorized coach types each score against their own champion ratio
  * R* (the 10.0 ceiling). Same piecewise shape as the global envelope;
- * thresholds scale by R*/45 (global high breakpoint was 45):
+ * thresholds scale by R-star over 45 (global high breakpoint was 45):
  *   t1 = 0.222 * R*     → [1, 2)
  *   t2 = 0.378 * R*     → [3, 4)
  *   t3 = 0.622 * R*     → [4.0, 6.5)
@@ -177,7 +177,7 @@ export type TorqueScoreFormula =
 
 /**
  * Locked champion ratios R* (lb-ft per 1,000 lb GVWR).
- * Scale thresholds by R*/45 from the global 10/17/28/45 breakpoints.
+ * Scale thresholds by R-star over 45 from the global 10/17/28/45 breakpoints.
  */
 export const TORQUE_SCORE_CHAMPIONS = {
   "class-a-diesel": 38.2,
@@ -557,6 +557,11 @@ export function scoreFromTorqueToWeightRatio(
   if (ratio < t1) return clampScore(1 + ratio / t1);
   if (ratio < t2) return clampScore(3 + (ratio - t1) / (t2 - t1));
   if (ratio < t3) return clampScore(4 + ((ratio - t2) / (t3 - t2)) * 2.5);
+  if (formula !== "global") {
+    // Locked R* is one-decimal. Published champion pairs can sit just
+    // under that (950/22000 = 43.1818 vs 43.2). Treat ±0.05 as 10.0.
+    if (ratio + 0.05 >= t4) return 10;
+  }
   if (ratio < t4) return clampScore(7 + ((ratio - t3) / (t4 - t3)) * 2.3);
   if (formula === "global") {
     return clampScore(8.75 + (ratio - t4) / 5);

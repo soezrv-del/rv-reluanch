@@ -75,10 +75,13 @@ function bandCoversYear(band: PowertrainYearBand, year: number): boolean {
   return year >= band.from && year <= band.to;
 }
 
-function torqueForYear(spec: RVSpec, year: number, floorplan?: string): number | null {
+function matchingBands(
+  spec: RVSpec,
+  year: number,
+  floorplan?: string,
+): PowertrainYearBand[] {
   const fp = floorplan?.trim().toUpperCase();
-  const bands = spec.powertrainByYear ?? [];
-  const matching = bands.filter((b) => {
+  return (spec.powertrainByYear ?? []).filter((b) => {
     if (!bandCoversYear(b, year)) return false;
     if (b.floorplans?.length) {
       if (!fp) return false;
@@ -89,9 +92,20 @@ function torqueForYear(spec: RVSpec, year: number, floorplan?: string): number |
     }
     return true;
   });
-  for (const b of matching) {
-    const t = positive(b.torqueLbFt);
-    if (t != null) return t;
+}
+
+/**
+ * Year-true torque only. If a band covers the year and torque is
+ * unprinted, return null — do not copy a later series default backward.
+ */
+function torqueForYear(spec: RVSpec, year: number, floorplan?: string): number | null {
+  const matching = matchingBands(spec, year, floorplan);
+  if (matching.length) {
+    for (const b of matching) {
+      const t = positive(b.torqueLbFt);
+      if (t != null) return t;
+    }
+    return null;
   }
   return positive(spec.torqueLbFt);
 }
@@ -180,10 +194,12 @@ export function listCatalogTorqueToWeightScores(
       }
 
       for (const band of spec.powertrainByYear ?? []) {
-        const t = positive(band.torqueLbFt) ?? seriesTorque;
-        const g = positive(band.gvwrLbs) ?? seriesGvwr;
-        if (positive(band.torqueLbFt) != null) publishedTorque = true;
-        if (positive(band.gvwrLbs) != null) publishedGvwr = true;
+        const t = positive(band.torqueLbFt);
+        const g = positive(band.gvwrLbs);
+        if (t != null) publishedTorque = true;
+        if (g != null) publishedGvwr = true;
+        // Same-band pair only. Do not backfill series torque onto an
+        // older GVWR (or the reverse) — that invents a year-true combo.
         if (t == null || g == null) continue;
         const fps = band.floorplans?.length ? band.floorplans : [undefined];
         for (const fp of fps) {

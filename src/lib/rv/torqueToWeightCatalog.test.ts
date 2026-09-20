@@ -7,14 +7,12 @@ import {
   formatCatalogTorqueScoreMarkdown,
   listCatalogTorqueToWeightScores,
 } from "./torqueToWeightCatalog.ts";
-import type { RVSpec } from "./rvTypes.ts";
+import { loadLiveCatalog } from "../../../scripts/load-live-catalog.mjs";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
 test("catalog helper scores published torque+GVWR only; champions ~10.0", async () => {
-  const { RV_DATA } = (await import("./rvData.ts")) as {
-    RV_DATA: Record<string, Record<string, RVSpec>>;
-  };
+  const { RV_DATA } = await loadLiveCatalog();
   const report = listCatalogTorqueToWeightScores(RV_DATA);
 
   assert.ok(report.motorized > 0, "expected motorized catalog models");
