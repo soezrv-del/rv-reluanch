@@ -3,11 +3,13 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { countCombinedPaints } from "./ownerReviewRatings.ts";
 import {
   formatStarsOrGap,
   groundedStars,
   mapReportRatings,
 } from "./reportRatings.ts";
+import { UNKNOWN_MAKE_BASE, computeRating } from "./ratingSystem.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -27,31 +29,96 @@ test("groundedStars maps existing 1–5 scores only — no invented bands", () =
   assert.equal(formatStarsOrGap(null), "GAP");
 });
 
-test("mapReportRatings: unknown make is GAP; seeded brand is owner reviews", () => {
+test("mapReportRatings: Q/S from owner reviews; Reliability from reputation", () => {
   const empty = mapReportRatings({});
   assert.equal(empty.quality.score, null);
   assert.equal(empty.reliability.score, null);
   assert.equal(empty.customerSatisfaction.score, null);
 
-  const unknown = mapReportRatings({ make: "Palomino", model: "SolAire" });
+  const unknown = mapReportRatings({
+    make: "Mystery Coach",
+    model: "Phantom",
+  });
   assert.equal(unknown.quality.score, null);
   assert.equal(unknown.reliability.score, null);
+  assert.equal(unknown.reliability.stars, null);
+  assert.equal(unknown.reliability.caption, null);
   assert.equal(unknown.customerSatisfaction.score, null);
-  assert.equal(unknown.quality.caption, null);
+  assert.notEqual(unknown.reliability.score, UNKNOWN_MAKE_BASE);
+
+  const palomino = mapReportRatings({ make: "Palomino", model: "SolAire" });
+  assert.equal(palomino.quality.score, null);
+  assert.equal(palomino.customerSatisfaction.score, null);
+  assert.equal(palomino.reliability.score, computeRating("Palomino", "SolAire", ""));
+  assert.equal(palomino.reliability.basis, "reputation");
+  assert.equal(palomino.reliability.caption, "RvFOX reputation · brand");
+  assert.doesNotMatch(palomino.reliability.caption ?? "", /Owner reviews/);
 
   const forest = mapReportRatings({ make: "Forest River", model: "Georgetown" });
   assert.equal(forest.quality.score, 3.1);
-  assert.equal(forest.reliability.score, null);
-  assert.equal(forest.reliability.stars, null);
+  assert.equal(
+    forest.reliability.score,
+    computeRating("Forest River", "Georgetown", ""),
+  );
+  assert.ok(forest.reliability.stars != null);
+  assert.equal(forest.reliability.basis, "reputation");
+  assert.match(
+    forest.reliability.caption ?? "",
+    /RvFOX reputation · Georgetown · Standard/,
+  );
+  assert.doesNotMatch(forest.reliability.caption ?? "", /Owner reviews/);
   assert.equal(forest.customerSatisfaction.score, 3.6);
   assert.equal(forest.quality.grain, "brand");
   assert.match(forest.quality.caption ?? "", /Owner reviews · overall quality · brand-level/);
-  assert.equal(forest.reliability.caption, null);
   assert.match(
     forest.customerSatisfaction.caption ?? "",
     /Owner reviews \(combined\) · brand-level/,
   );
   assert.notEqual(forest.quality.score, forest.customerSatisfaction.score);
+  assert.equal(countCombinedPaints(forest), 1);
+  assert.notEqual(forest.reliability.basis, "combined");
+});
+
+test("mapReportRatings: known brands get numeric Reliability; year uses computeRating", () => {
+  const tiffin = mapReportRatings({ make: "Tiffin", model: "Phaeton" });
+  assert.equal(tiffin.quality.score, 4.4);
+  assert.equal(tiffin.quality.basis, "overall_quality");
+  assert.equal(tiffin.reliability.score, computeRating("Tiffin", "Phaeton", ""));
+  assert.equal(tiffin.reliability.basis, "reputation");
+  assert.match(
+    tiffin.reliability.caption ?? "",
+    /RvFOX reputation · Phaeton · Upper Mid-Range/,
+  );
+  assert.equal(tiffin.customerSatisfaction.score, 4.3);
+  assert.equal(tiffin.customerSatisfaction.basis, "combined");
+  assert.equal(countCombinedPaints(tiffin), 1);
+
+  const tiffinYear = mapReportRatings({
+    make: "Tiffin",
+    model: "Phaeton",
+    year: "2022",
+  });
+  assert.equal(
+    tiffinYear.reliability.score,
+    computeRating("Tiffin", "Phaeton", "2022"),
+  );
+  assert.notEqual(tiffinYear.reliability.score, tiffin.reliability.score);
+  assert.equal(tiffinYear.quality.score, 4.4);
+  assert.equal(tiffinYear.customerSatisfaction.score, 4.3);
+
+  const newmar = mapReportRatings({
+    make: "Newmar",
+    model: "Dutch Star",
+    year: "2019",
+  });
+  assert.equal(
+    newmar.reliability.score,
+    computeRating("Newmar", "Dutch Star", "2019"),
+  );
+  assert.match(
+    newmar.reliability.caption ?? "",
+    /RvFOX reputation · Dutch Star · Upper Mid-Range/,
+  );
 });
 
 test("Facts Ratings section wires owner reviews and does not invent from live/warranty", () => {
@@ -59,7 +126,8 @@ test("Facts Ratings section wires owner reviews and does not invent from live/wa
     join(root, "../../components/rvfax/RvDetail.tsx"),
     "utf8",
   );
-  assert.match(detail, /mapReportRatings\(\{\s*make,\s*model\s*\}\)/);
+  assert.match(detail, /mapReportRatings\(\{\s*make,\s*model,\s*year\s*\}\)/);
+  assert.match(detail, /score:\s*reportRatings\.reliability\.score/);
   assert.match(detail, /label:\s*"Quality"/);
   assert.match(detail, /label:\s*"Reliability"/);
   assert.match(detail, /label:\s*"Customer satisfaction"/);
@@ -68,7 +136,7 @@ test("Facts Ratings section wires owner reviews and does not invent from live/wa
   assert.match(detail, /overrideUvwLbs/);
   assert.match(detail, /OWNER_REVIEW_FOOTER/);
   assert.match(detail, /formatOwnerReviewScore/);
-  assert.match(detail, /R = GAP \(no Insider category\)/);
+  assert.match(detail, /R = RvFOX reputation/);
   assert.doesNotMatch(detail, /qualityScore:\s*live\?\.live\s*\?\s*live\.ratingEstimate/);
   assert.doesNotMatch(detail, /qualityScore:\s*displayRating/);
   assert.doesNotMatch(detail, /reliabilityScore:\s*data\.warrantyYears/);
@@ -80,4 +148,10 @@ test("Facts Ratings section wires owner reviews and does not invent from live/wa
   assert.doesNotMatch(ratingsBlock, /J\.D\. Power/);
   assert.doesNotMatch(ratingsBlock, /Consumer Reports/);
   assert.doesNotMatch(ratingsBlock, /Dealer support index/);
+
+  const reportSrc = readFileSync(join(root, "reportRatings.ts"), "utf8");
+  assert.match(reportSrc, /getRatingMetadata/);
+  assert.match(reportSrc, /isKnownManufacturer/);
+  assert.doesNotMatch(reportSrc, /ratingEstimate|ownerSentiment|getMockReviews/);
+  assert.doesNotMatch(reportSrc, /row\.factoryWarranty|row\.livability/);
 });

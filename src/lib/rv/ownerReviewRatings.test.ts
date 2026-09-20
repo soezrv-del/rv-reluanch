@@ -69,7 +69,7 @@ test("catalog aliases resolve without inventing a second brand", () => {
   assert.equal(lookupOwnerReviewModel("Forest River", "Georgetown"), null);
 });
 
-test("resolve: Quality = overallQuality; Satisfaction = combined once; Reliability GAP", () => {
+test("Insider helper: Quality = overallQuality; Satisfaction = combined once; Reliability GAP", () => {
   const tiffin = resolveOwnerReviewRatings("Tiffin", "Phaeton");
   assert.equal(tiffin.quality.score, 4.4);
   assert.equal(tiffin.quality.basis, "overall_quality");
@@ -147,6 +147,8 @@ test("footer and Facts UI never claim J.D. Power or Consumer Reports", () => {
   assert.match(OWNER_REVIEW_FOOTER, /n≥15 brand/);
   assert.match(OWNER_REVIEW_FOOTER, /n≥8 model/);
   assert.match(OWNER_REVIEW_FOOTER, /[Bb]rand-level/);
+  assert.match(OWNER_REVIEW_FOOTER, /Reliability is RvFOX reputation/);
+  assert.doesNotMatch(OWNER_REVIEW_FOOTER, /Reliability is an Insider/);
   assert.doesNotMatch(OWNER_REVIEW_FOOTER, /J\.D\. Power/);
   assert.doesNotMatch(OWNER_REVIEW_FOOTER, /Consumer Reports/);
   assert.doesNotMatch(OWNER_REVIEW_FOOTER, /Dealer support/);

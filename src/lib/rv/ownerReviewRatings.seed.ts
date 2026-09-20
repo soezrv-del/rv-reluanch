@@ -11,7 +11,8 @@
  *
  * Facts slot map (combined at most once — see ownerReviewRatings.ts):
  *   Quality      ← overallQuality only. Null → GAP (no silent combined).
- *   Reliability  ← GAP. Do not paint combined here.
+ *   Reliability  ← not from this seed. Facts uses RvFOX reputation
+ *                  (ratingSystem.ts). Do not paint combined here.
  *   Satisfaction ← combined header average, labeled "(combined)".
  * livability / floorplan / drivingTowing stay unused — never relabeled as
  * Reliability or Satisfaction. factoryWarranty is factory support — not

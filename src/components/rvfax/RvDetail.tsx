@@ -721,11 +721,11 @@ export function RvDetail({
   );
 
   const reportRatings = useMemo(
-    () => mapReportRatings({ make, model }),
-    [make, model],
+    () => mapReportRatings({ make, model, year }),
+    [make, model, year],
   );
 
-  // Q = overallQuality or GAP. R = GAP (no Insider category). S = combined once.
+  // Q = overallQuality or GAP. R = RvFOX reputation (GAP if make unknown). S = combined once.
   const ratingsRows: Array<{
     key: string;
     label: string;
@@ -741,7 +741,7 @@ export function RvDetail({
     {
       key: "reliability",
       label: "Reliability",
-      score: null,
+      score: reportRatings.reliability.score,
       caption: reportRatings.reliability.caption,
     },
     {
@@ -1549,7 +1549,7 @@ export function RvDetail({
                   ) : (
                     <span
                       className="flex shrink-0 items-baseline gap-2 text-amber-200/90"
-                      aria-label={`${formatOwnerReviewScore(row.score)} owner reviews`}
+                      aria-label={`${row.label} ${formatOwnerReviewScore(row.score)}`}
                     >
                       <span className="text-[13px] font-semibold tabular-nums text-white">
                         {formatOwnerReviewScore(row.score)}

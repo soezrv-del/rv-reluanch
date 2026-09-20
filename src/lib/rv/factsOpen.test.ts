@@ -305,11 +305,11 @@ test("Vehicle specifications card is gated on a concrete floorplan", () => {
     /resultForFactsPicker\(r,\s*sel\.floorplan\)/,
     "Any floorplan search must strip catalog fps[0] before Open report",
   );
-  // #350 ratings contract — exact Q / R-GAP / S rows, no collapse helper
+  // #350 ratings contract — exact Q / R / S rows, no collapse helper
   assert.doesNotMatch(detail, /honestReportRatingRows/);
   assert.doesNotMatch(detail, /three identical bars pretending independence/);
   assert.match(detail, /Q = overallQuality or GAP/);
-  assert.match(detail, /R = GAP \(no Insider category\)/);
+  assert.match(detail, /R = RvFOX reputation/);
   assert.match(detail, /S = combined once/);
   assert.match(detail, /label:\s*"Quality"/);
   assert.match(detail, /label:\s*"Reliability"/);
