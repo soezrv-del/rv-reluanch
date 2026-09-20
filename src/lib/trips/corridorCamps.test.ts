@@ -17,11 +17,14 @@ import {
   HERE_CAMP_CATEGORIES,
   HERE_CAMPGROUND_CATEGORY,
   HERE_RV_PARK_CATEGORY,
+  OSM_SITE_LENGTH_KEYS,
   keepCampPoi,
   looksLikeRvPark,
   normalizeCampWebsite,
   normalizeHereCamps,
   normalizeOverpassCamps,
+  parseOsmLengthToFt,
+  siteLengthFtFromTags,
   type CampOverpassEl,
   type CampStop,
 } from "./corridorCamps.ts";
@@ -106,6 +109,8 @@ test("normalizeHereCamps keeps corridor RV parks, drops far / nameless", () => {
   assert.equal(camps[0]!.kind, "rv-park");
   assert.equal(camps[0]!.name, "Boise KOA Journey");
   assert.equal(camps[0]!.website, "https://koa.com/campgrounds/boise/");
+  assert.equal(camps[0]!.siteLengthFt, undefined);
+  assert.equal(camps[0]!.amenityHint, "");
 });
 
 test("normalizeOverpassCamps requires a name and corridor / dest filter", () => {
@@ -119,6 +124,7 @@ test("normalizeOverpassCamps requires a name and corridor / dest filter", () => 
         tourism: "caravan_site",
         name: "Fiesta RV Park",
         sanitary_dump_station: "yes",
+        "maxlength:motorhome": "12 m",
         website: "https://fiestarv.example/book",
       },
     },
@@ -148,10 +154,16 @@ test("normalizeOverpassCamps requires a name and corridor / dest filter", () => 
   assert.equal(camps.length, 2);
   assert.equal(camps[0]!.kind, "rv-park");
   assert.equal(camps[0]!.name, "Fiesta RV Park");
+  assert.equal(camps[0]!.siteLengthFt, 39);
   assert.match(camps[0]!.amenityHint, /dump tagged/);
+  assert.doesNotMatch(camps[0]!.amenityHint, /fee tagged|08:00/);
   assert.equal(camps[0]!.website, "https://fiestarv.example/book");
   assert.equal(
     camps.find((c) => c.name === "Golden Gardens Camp")?.website,
+    undefined,
+  );
+  assert.equal(
+    camps.find((c) => c.name === "Golden Gardens Camp")?.siteLengthFt,
     undefined,
   );
   assert.ok(camps.some((c) => c.name === "Golden Gardens Camp" && c.nearDest));
@@ -338,10 +350,51 @@ test("campWebsiteFromHere reads contacts.www.value only", () => {
 test("amenityHintFromTags never invents hookups", () => {
   assert.equal(amenityHintFromTags({}), "");
   assert.equal(amenityHintFromTags({ hookups: "full" }), "");
+  assert.equal(amenityHintFromTags({ fee: "customers" }), "");
   assert.equal(
     amenityHintFromTags({ sanitary_dump_station: "yes", power_supply: "yes" }),
     "dump tagged · power tagged",
   );
+});
+
+test("parseOsmLengthToFt is honest — units only, no invented pad feet", () => {
+  assert.equal(parseOsmLengthToFt(""), undefined);
+  assert.equal(parseOsmLengthToFt("   "), undefined);
+  assert.equal(parseOsmLengthToFt("40 ft"), 40);
+  assert.equal(parseOsmLengthToFt("40ft"), 40);
+  assert.equal(parseOsmLengthToFt("12 m"), 39);
+  assert.equal(parseOsmLengthToFt("12"), 39);
+  assert.equal(parseOsmLengthToFt("45"), undefined);
+  assert.equal(parseOsmLengthToFt("10-12"), undefined);
+  assert.equal(parseOsmLengthToFt("12; motorhome"), undefined);
+  assert.equal(parseOsmLengthToFt("huge"), undefined);
+  assert.equal(parseOsmLengthToFt("200 ft"), undefined);
+});
+
+test("siteLengthFtFromTags prefers RV-specific maxlength and never invents", () => {
+  assert.deepEqual(OSM_SITE_LENGTH_KEYS, [
+    "maxlength:motorhome",
+    "maxlength:motor_caravan",
+    "maxlength:motorcaravan",
+    "maxlength:rv",
+    "maxlength:caravans",
+    "maxlength",
+  ]);
+  assert.equal(siteLengthFtFromTags({}), undefined);
+  assert.equal(siteLengthFtFromTags({ site_length: "40 ft" }), undefined);
+  assert.equal(siteLengthFtFromTags({ pad: "60" }), undefined);
+  assert.equal(siteLengthFtFromTags({ capacity: "40" }), undefined);
+  assert.equal(siteLengthFtFromTags({ tents: "yes" }), undefined);
+  assert.equal(siteLengthFtFromTags({ length: "40 ft", width: "12 ft" }), undefined);
+  assert.equal(
+    siteLengthFtFromTags({
+      maxlength: "10 m",
+      "maxlength:motorhome": "40 ft",
+    }),
+    40,
+  );
+  assert.equal(siteLengthFtFromTags({ maxlength: "12 m" }), 39);
+  assert.equal(siteLengthFtFromTags({ "maxlength:rv": "45 ft" }), 45);
 });
 
 test("emptyCampResult never invents pads", () => {
@@ -418,6 +471,8 @@ test("GET /api/camps stays on HERE/Overpass and never /api/route", () => {
   assert.match(ui, /Reserve a Space/);
   assert.match(ui, /data-reserve-space/);
   assert.match(ui, /c\.website \?/);
+  assert.match(ui, /c\.siteLengthFt/);
+  assert.match(ui, /max \$\{c\.siteLengthFt\} ft/);
   assert.match(ui, /noopener noreferrer/);
   assert.doesNotMatch(ui, /DEMO_CAMPS/);
   assert.doesNotMatch(ui, /recreation\.gov|reserveamerica|koa\.com\/search/i);
