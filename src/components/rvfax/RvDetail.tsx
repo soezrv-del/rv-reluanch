@@ -50,7 +50,6 @@ import { hasConcreteFloorplan } from "@/lib/rv/factsOpen";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import {
   findPowertrainCorrection,
-  sanitizeFeaturesForPin,
   sanitizeNarrativeForPin,
 } from "@/lib/rv/powertrainCorrections";
 import {
@@ -144,7 +143,7 @@ import { SuiteBackdrop } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { cn } from "@/lib/utils";
 import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
-import { sanitizeUnverifiedLayout } from "@/lib/rv/promptRules";
+import { standoutFeatureChips } from "@/lib/rv/catalogFeatureChips";
 import { shouldShowRvVideoPrompt } from "@/lib/rv/rvVideos";
 import { RvVideoLibraryCard } from "./RvVideoLibraryCard";
 import { FactsCollapse } from "./FactsCollapse";
@@ -925,17 +924,14 @@ export function RvDetail({
   }, [year]);
 
   const featureChips = useMemo(() => {
-    if (!live?.live || !live.keyFeatures?.length) return [];
     const oem = findOemFloorplanSpec(year, make, model, floorplan || "");
-    const verified = [oem?.layoutNote, oem?.note];
-    const base = powertrainPin
-      ? sanitizeFeaturesForPin(powertrainPin, live.keyFeatures)
-      : live.keyFeatures;
-    return base
-      .map((f) => sanitizeUnverifiedLayout(f, verified))
-      .filter((f) => f && !/^layout details unconfirmed/i.test(f))
-      .slice(0, 6);
-  }, [live, powertrainPin, year, make, model, floorplan]);
+    return standoutFeatureChips({
+      liveFeatures: live?.live ? live.keyFeatures : [],
+      spec: data,
+      pin: powertrainPin,
+      verifiedNotes: [oem?.layoutNote, oem?.note],
+    });
+  }, [live, powertrainPin, data, year, make, model, floorplan]);
 
   const mcError = (res: { code?: string; error?: string }) =>
     res.code === "missing_key"

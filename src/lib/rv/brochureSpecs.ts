@@ -646,6 +646,7 @@ export function buildBrochureSpecs(
         : dataSource === "oem-year"
           ? `Year-true OEM facts for ${yearLabel}${floorplan ? ` · floorplan ${floorplan}` : ""}${correction ? " · verified powertrain patch" : ""}${snap.band ? ` · band ${snap.band.from}–${snap.band.to}` : ""}${oem?.source ? ` · ${oem.source}` : ""}.`
           : `Catalog brochure fields for ${yearLabel}.`),
+    spec.electricalNotes || null,
     oem?.tireSize ? null : typicalGearNote,
   ]
     .filter(Boolean)

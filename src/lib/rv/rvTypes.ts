@@ -94,6 +94,29 @@ export interface RVSpec {
   exteriorWidthIn?: number;
   overallLengthIn?: number;
   mpgHighwayEst?: number;
+  /**
+   * Brochure-sourced house solar array watts (total). Omit when unsourced (GAP).
+   * Optional so non-backfilled coaches stay untouched.
+   */
+  solarWatts?: number;
+  /** House lithium Ah when the brochure publishes Ah. */
+  lithiumAh?: number;
+  /** House lithium Wh when the brochure publishes Wh (prefer over guessed Ah). */
+  lithiumWh?: number;
+  /** Brand / chemistry string, e.g. "Lithionics 310Ah" or "Lithionics 12V". */
+  batteryType?: string;
+  /** Brochure-sourced inverter output watts. */
+  inverterWatts?: number;
+  /**
+   * Short standout chips (solar / lithium / inverter). Catalog fills Facts
+   * chips when live research is empty; never invent.
+   */
+  keyFeatures?: string[];
+  /**
+   * Source / GAP note for electrical backfill. Feeds Facts accuracyNote.
+   * Tag "brochure backfill" — never year-matrix or guessed watts.
+   */
+  electricalNotes?: string;
 }
 
 /**
