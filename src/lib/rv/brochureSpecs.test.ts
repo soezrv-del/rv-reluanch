@@ -11558,7 +11558,12 @@ test("Tiffin 2021–2022 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(ph22_44!.horsepower, 450);
   const ph21_40 = findPowertrainCorrection("2021", "Tiffin", "Phaeton", "40IH");
   assert.equal(ph21_40!.horsepower, 0);
+  assert.equal(ph21_40!.torqueLbFt, 1150);
   assert.match(ph21_40!.engine, /450/);
+  const ph23_40 = findPowertrainCorrection("2023", "Tiffin", "Phaeton", "40IH");
+  assert.equal(ph23_40!.horsepower, 0);
+  assert.equal(ph23_40!.torqueLbFt, 1150);
+  assert.match(ph23_40!.engine, /380HP std \/ L9 450HP opt/);
 
   const red340_21 = findPowertrainCorrection("2021", "Tiffin", "Allegro Red 340", "38LL");
   assert.equal(red340_21!.horsepower, 340);

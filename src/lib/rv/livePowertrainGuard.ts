@@ -383,16 +383,20 @@ export function resolveHardPowertrain(opts: {
   // Pin always wins hard fields. horsepower 0 / dual-rating engine = not a
   // single locked HP. "by year" on the engine label is not a wipe — catalog
   // numbers stay when the pin/catalog actually has them.
+  // Explicit pin torque (OEM standard, e.g. Phaeton 40IH L9 380 / 1,150)
+  // still reaches TTW. engineOmitsLoneTorque only wipes a *lone catalog*
+  // figure on true L9/X15 option bands — never an explicit published pin.
   if (pin) {
     const dualRating = extractOptionHpClasses(pin.engine).length >= 2;
     const pinHp = pin.horsepower > 0 && !dualRating ? pin.horsepower : null;
+    const pinTorque =
+      pin.torqueLbFt != null && pin.torqueLbFt > 0 ? pin.torqueLbFt : null;
     return {
       hard: {
         engine: pin.engine,
         horsepower: pinHp,
-        torqueLbFt: engineOmitsLoneTorque(pin.engine)
-          ? null
-          : (pin.torqueLbFt ?? base.torqueLbFt),
+        torqueLbFt: pinTorque
+          ?? (engineOmitsLoneTorque(pin.engine) ? null : base.torqueLbFt),
         chassis: pin.chassis ?? base.chassis,
         transmission: pin.transmission ?? base.transmission,
         fuelType: pin.fuelType ?? base.fuelType,
