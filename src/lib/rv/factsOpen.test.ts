@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   cascadeFromResult,
   pickerCoachWrite,
+  prepareFactsOpen,
   resolveShareOpenSel,
   FACTS_TYPE_OPTIONS,
   factsSearchEnabled,
@@ -235,6 +236,54 @@ test("Any floorplan picker must not keep a stuffed catalog floorplan", () => {
   assert.equal(cascadeFromResult(dream).floorplan, "45A");
 });
 
+test("open path must not promote catalog fps[0] when picker is Any", () => {
+  const stuffed = {
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+  };
+  // Catalog single-hit under Any still has r.floorplan === "45A"
+  assert.equal(stuffed.floorplan, "45A");
+  assert.equal(cascadeFromResult(stuffed).floorplan, "45A");
+
+  const anyOpen = prepareFactsOpen(stuffed, "");
+  assert.equal(anyOpen.unit.floorplan, "");
+  assert.equal(anyOpen.sel.floorplan, "");
+  assert.equal(hasConcreteFloorplan(anyOpen.unit.floorplan), false);
+  assert.equal(hasConcreteFloorplan(anyOpen.sel.floorplan), false);
+
+  const anyLabel = prepareFactsOpen(stuffed, "Any floorplan");
+  assert.equal(anyLabel.unit.floorplan, "");
+  assert.equal(anyLabel.sel.floorplan, "");
+
+  const concrete = prepareFactsOpen(stuffed, "45A");
+  assert.equal(concrete.unit.floorplan, "45A");
+  assert.equal(concrete.sel.floorplan, "45A");
+  assert.equal(hasConcreteFloorplan(concrete.sel.floorplan), true);
+
+  const fax = readFileSync(
+    join(root, "../../components/rvfax/RvFaxApp.tsx"),
+    "utf8",
+  );
+  assert.match(fax, /prepareFactsOpen/);
+  assert.doesNotMatch(
+    fax,
+    /floorplan:\s*cascadeFromResult\(r\)\.floorplan/,
+    "openFactsUnit must use picker FP, not the catalog row's",
+  );
+  assert.match(
+    fax,
+    /shouldOpenSingleHitReport\(found\)[\s\S]{0,160}openFactsUnit\(found\[0]!, sel\.floorplan\)/,
+    "single-hit Open report must pass the picker floorplan",
+  );
+  assert.match(
+    fax,
+    /setDetail\(\(prev\) => \(prev \? resultForFactsPicker\(prev, fp\) : prev\)\)/,
+    "Any selection while a report is open must clear coach.floorplan",
+  );
+});
+
 test("Vehicle specifications card is gated on a concrete floorplan", () => {
   const detail = readFileSync(
     join(root, "../../components/rvfax/RvDetail.tsx"),
@@ -448,7 +497,7 @@ test("Facts app restores cascade on every open path and skips coach clear mid-re
     "utf8",
   );
 
-  assert.match(fax, /cascadeFromResult/);
+  assert.match(fax, /prepareFactsOpen/);
   assert.match(fax, /pickerCoachWrite/);
   assert.match(fax, /shouldOpenSingleHitReport/);
   assert.match(fax, /openFactsUnit/);
@@ -459,10 +508,13 @@ test("Facts app restores cascade on every open path and skips coach clear mid-re
   assert.match(fax, /if \(!isCatalogLoaded\(\)\) return/);
 
   // Saved row, result card, compare, and single-hit Open report share openFactsUnit
-  assert.match(fax, /setCompareOpen\(false\);\s*openFactsUnit\(r\)/);
+  assert.match(fax, /setCompareOpen\(false\);\s*openFactsUnit\(r,\s*r\.floorplan\)/);
   assert.match(fax, /onOpen=\{\(\) => openFactsUnit\(r\)\}/);
-  assert.match(fax, /onClick=\{\(\) => openFactsUnit\(r\)\}/);
-  assert.match(fax, /shouldOpenSingleHitReport\(found\)[\s\S]{0,80}openFactsUnit\(found\[0\]!\)/);
+  assert.match(fax, /onClick=\{\(\) => openFactsUnit\(r,\s*r\.floorplan\)\}/);
+  assert.match(
+    fax,
+    /shouldOpenSingleHitReport\(found\)[\s\S]{0,160}openFactsUnit\(found\[0]!, sel\.floorplan\)/,
+  );
 
   // Chip “change” and dock Facts share openFactsPicker → resetFax (clean search)
   assert.match(chip, /openFactsPicker/);

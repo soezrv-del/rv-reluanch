@@ -149,6 +149,8 @@ export function concreteFloorplanOrEmpty(floorplan?: string | null): string {
 /**
  * Catalog search fills `fps[0]` when the picker is Any. Facts must not
  * treat that as a chosen floorplan — specs / header stay model-only.
+ * The picker value wins. Result / catalog floorplan is never promoted
+ * when the picker is empty / "Any".
  */
 export function resultForFactsPicker<T extends { floorplan?: string | null }>(
   result: T,
@@ -158,6 +160,19 @@ export function resultForFactsPicker<T extends { floorplan?: string | null }>(
     return { ...result, floorplan: "" };
   }
   return { ...result, floorplan: String(pickerFloorplan).trim() };
+}
+
+/**
+ * Open-report handoff: picker floorplan, not the catalog row's.
+ * Single-hit Any still arrives as `r.floorplan === "45A"` (fps[0]).
+ * `cascadeFromResult(r)` would keep that — this strips it first.
+ */
+export function prepareFactsOpen<T extends ResultLike>(
+  result: T,
+  pickerFloorplan?: string | null,
+): { sel: FactsCascadeSel; unit: T } {
+  const unit = resultForFactsPicker(result, pickerFloorplan);
+  return { sel: cascadeFromResult(unit), unit };
 }
 
 export function cascadeFromResult(r: ResultLike): FactsCascadeSel {

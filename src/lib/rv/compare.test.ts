@@ -64,7 +64,7 @@ test("Lot Desk compare UI: Market + key Facts + one-tap Facts entry", () => {
   assert.match(fax, /data-compare-peer-picker/);
   assert.match(fax, /onStartCompare=\{\(\) => startCompareFromFacts\(detail\)\}/);
   assert.match(fax, /capCompareItems\(comparePick\)/);
-  assert.match(fax, /setCompareOpen\(false\);\s*openFactsUnit\(r\)/);
+  assert.match(fax, /setCompareOpen\(false\);\s*openFactsUnit\(r,\s*r\.floorplan\)/);
 });
 
 test("Facts saved list: [green Sold | compare] → toggleCompare → RvCompare", () => {
