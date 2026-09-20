@@ -98,17 +98,29 @@ test("live-only chips still work when catalog electrical is empty", () => {
   );
 });
 
-test("chip cap stays at 6; pin sanitizer still drops wrong-engine chips", () => {
+test("chip cap stays at 6", () => {
   const chips = standoutFeatureChips({
     liveFeatures: [
-      "Cummins X15 605",
       "King bed",
       "Outdoor shower",
       "Theater seats",
       "Washer dryer",
       "Fireplace",
       "Extra leftover",
+      "Seventh live chip",
     ],
+    spec: {
+      solarWatts: 180,
+      inverterWatts: 1800,
+    },
+  });
+  assert.equal(chips.length, 6);
+  assert.ok(!chips.includes("Seventh live chip"));
+});
+
+test("pin sanitizer still drops wrong-engine chips; catalog solar fills", () => {
+  const chips = standoutFeatureChips({
+    liveFeatures: ["Cummins X15 605", "King bed"],
     spec: {
       solarWatts: 180,
       inverterWatts: 1800,
@@ -124,12 +136,14 @@ test("chip cap stays at 6; pin sanitizer still drops wrong-engine chips", () => 
     },
   });
   assert.ok(!chips.some((c) => /x15|cummins/i.test(c)));
-  assert.ok(chips.length <= 6);
+  assert.ok(chips.includes("King bed"));
   assert.ok(chips.includes("180W solar"));
+  assert.ok(chips.includes("1800W inverter"));
+  assert.ok(chips.length <= 6);
 });
 
 test("RvDetail Facts chips call standoutFeatureChips (not live-only)", () => {
-  const detail = src("../components/rvfax/RvDetail.tsx");
+  const detail = src("../../components/rvfax/RvDetail.tsx");
   assert.match(detail, /standoutFeatureChips/);
   assert.match(detail, /liveFeatures:\s*live\?\.live \? live\.keyFeatures : \[\]/);
   assert.match(detail, /spec:\s*data/);

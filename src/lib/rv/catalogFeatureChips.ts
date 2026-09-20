@@ -6,12 +6,12 @@
  * Powertrain honesty still runs through sanitizeFeaturesForPin.
  */
 
-import { sanitizeUnverifiedLayout } from "./promptRules";
+import { sanitizeUnverifiedLayout } from "./promptRules.ts";
 import {
   sanitizeFeaturesForPin,
   type PowertrainCorrection,
-} from "./powertrainCorrections";
-import type { RVSpec } from "./rvTypes";
+} from "./powertrainCorrections.ts";
+import type { RVSpec } from "./rvTypes.ts";
 
 export const FEATURE_CHIP_CAP = 6;
 
