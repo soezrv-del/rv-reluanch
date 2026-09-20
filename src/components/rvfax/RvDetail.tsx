@@ -38,6 +38,7 @@ import {
   ratingStars,
 } from "@/lib/rv/ratingSystem";
 import {
+  THIN_CCC_FLAG,
   UVW_ESTIMATE_LABEL,
   formatTorqueToWeightScore,
   formatTorqueWeightBasisChip,
@@ -682,20 +683,29 @@ export function RvDetail({
         overrideGvwrLbs: weightOverride?.gvwrLbs ?? null,
         rvType: data.type,
         fuelType: data.fuelType,
+        chassis: brochure.chassis ?? specs.chassis ?? data.chassis,
+        cccLbs: brochure.cccLbs ?? live?.cccLbs ?? null,
+        cccRaw: specs.ccc,
       }),
     [
       powertrainGuard.hard.torqueLbFt,
       specs.torque,
       specs.uvw,
       specs.gvwr,
+      specs.ccc,
+      specs.chassis,
       brochure.uvwLbs,
       brochure.gvwrLbs,
+      brochure.cccLbs,
+      brochure.chassis,
       live?.uvwLbs,
       live?.gvwrLbs,
+      live?.cccLbs,
       weightOverride?.uvwLbs,
       weightOverride?.gvwrLbs,
       data.type,
       data.fuelType,
+      data.chassis,
     ],
   );
 
@@ -1529,6 +1539,15 @@ export function RvDetail({
                       {formatTorqueWeightBasisChip(torqueToWeight)}
                     </span>
                   ) : null}
+                  {torqueToWeight.thinCcc ? (
+                    <span
+                      className="inline-flex w-fit items-center rounded-full border border-amber-300/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-100"
+                      data-testid="facts-tqwt-thin-ccc"
+                      title="CCC/OCCC/NCC under 3,000 lbs — 20–24k gas UVW ratio may actually run ~0.89"
+                    >
+                      {THIN_CCC_FLAG}
+                    </span>
+                  ) : null}
                 </span>
                 {torqueToWeight.score == null ? (
                   <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
@@ -1659,7 +1678,15 @@ export function RvDetail({
                 setCorrectBump((n) => n + 1);
               }}
             />
-            <SpecRow label="CCC" value={specs.ccc} />
+            <SpecRow
+              label="CCC"
+              value={
+                torqueToWeight.thinCcc &&
+                !String(specs.ccc || "").includes(THIN_CCC_FLAG)
+                  ? `${specs.ccc} · ${THIN_CCC_FLAG}`
+                  : specs.ccc
+              }
+            />
             <SpecRow label="WARRANTY" value={specs.warranty} />
             {shellNav ? (
               <button

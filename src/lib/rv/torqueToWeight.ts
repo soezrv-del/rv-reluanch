@@ -10,7 +10,7 @@
  * Active weight (first hit wins):
  *   1. Manual UVW override
  *   2. Published / pinned UVW (oem pin, OEM floorplan, catalog snap)
- *   3. Estimated UVW = round(GVWR × 0.835 / 100) × 100
+ *   3. Estimated UVW via the tiered GVWR formula (nearest 100 lb)
  *      when a usable single GVWR exists (OEM pin, parseable single,
  *      or already-resolved HIGH-of-range). Never overwrites a pin.
  *   4. Manual GVWR override (raw — only if no GVWR to estimate from)
@@ -19,7 +19,7 @@
  *   7. GAP
  *
  * Range-only GVWR (e.g. "39,500–44,005 lbs"): for **TTW scoring only**,
- * use the **HIGH** number as the GVWR source for the 0.835 estimate
+ * use the **HIGH** number as the GVWR source for the tiered estimate
  * (or as raw GVWR if the estimate cannot run). Heavier published
  * weight → lower (more conservative) score. A single published GVWR
  * pin still wins over the range. Do not invent UVW from mid×0.82.
@@ -34,11 +34,11 @@
  *   28 ≤ r < 45   → [7.0, 9.3)
  *   r ≥ 45        → [8.75, 10]   clamped
  *
- * Must-pass anchors when a published UVW is missing now score on
- * UVW_est = round(GVWR × 0.835 / 100) × 100 (bands unchanged):
- *   Precept 31UL  468 / 18,400 est → ~5.9
- *   Anthem 44R    1250 / 43,400 est → ~7.1
- *   2022 Dream 39RK stays pinned 39,237 (not 39,200).
+ * Must-pass anchors when a published UVW is missing now score on the
+ * tiered estimate (bands unchanged):
+ *   Precept 31UL  468 / 18,000 est (22k gas ×0.82) → ~6.0
+ *   Anthem 44R    1250 / 43,400 est (diesel ×0.835) → ~7.1
+ *   2022 Dream 39RK stays pinned 39,237 (not estimated).
  *
  * Bar color (score, not ratio) — unchanged bands:
  *   red     score < 6.0
@@ -50,11 +50,50 @@ export type TorqueBarColor = "red" | "yellow" | "green";
 
 export type TorqueWeightBasis = "UVW" | "UVW_EST" | "GVWR";
 
-/** Verified 2022 American Dream 39RK: 39,237 / 47,000 ≈ 0.835. */
-export const UVW_FROM_GVWR_RATIO = 0.835;
+/** Diesel-pusher (Freightliner / Spartan) factor. Same as the old flat formula. */
+export const UVW_FROM_GVWR_DIESEL_PUSHER = 0.835;
+
+/** @deprecated Use UVW_FROM_GVWR_DIESEL_PUSHER. Kept as the diesel-pusher alias. */
+export const UVW_FROM_GVWR_RATIO = UVW_FROM_GVWR_DIESEL_PUSHER;
+
+export const UVW_FROM_GVWR_GAS_UNDER_20K = 0.88;
+export const UVW_FROM_GVWR_GAS_20K_24K = 0.82;
+export const UVW_FROM_GVWR_GAS_26K_UP = 0.87;
+
+/** Gas 20–24k CCC/OCCC/NCC under this many pounds → thin-CCC flag (still ×0.82). */
+export const THIN_CCC_THRESHOLD_LB = 3000;
+
+export const THIN_CCC_FLAG = "thin-CCC";
 
 /** Specs / Ratings tag — distinct from OEM pin / sticker / salesman override. */
-export const UVW_ESTIMATE_LABEL = "estimated via GVWR×0.835";
+export const UVW_ESTIMATE_LABEL = "estimated via tiered GVWR formula";
+
+export type UvwEstimateTier =
+  | "diesel-pusher"
+  | "gas-under-20k"
+  | "gas-20k-24k"
+  | "gas-26k-up";
+
+export type UvwEstimateHint = {
+  chassis?: string | null;
+  fuelType?: string | null;
+  rvType?: string | null;
+  /** CCC / OCCC / NCC pounds when known — used only for the thin-CCC flag. */
+  cccLbs?: number | null;
+};
+
+export type UvwEstimateDetail = {
+  uvwLbs: number;
+  factor: number;
+  tier: UvwEstimateTier;
+  thinCcc: boolean;
+  /**
+   * True when GVWR sat in the unpublished 24,001–25,999 gas gap and we
+   * snapped to a published tier (no silent fourth factor).
+   */
+  gapBand: boolean;
+  gvwrLbs: number;
+};
 
 export type TorqueToWeightInput = {
   /** Brochure / powertrainGuard hard torque (lb-ft). Preferred when > 0. */
@@ -84,6 +123,12 @@ export type TorqueToWeightInput = {
   /** Coach type / fuel — towables are N/A (no engine torque rating). */
   rvType?: string | null;
   fuelType?: string | null;
+  /** Chassis string — Freightliner / Spartan keep the diesel-pusher factor. */
+  chassis?: string | null;
+  /** CCC / OCCC / NCC pounds — thin-CCC flag on 20–24k gas estimates. */
+  cccLbs?: number | null;
+  /** Display / specs.ccc string when a numeric CCC is not already resolved. */
+  cccRaw?: string | number | null;
 };
 
 export type TorqueToWeightResult = {
@@ -96,8 +141,12 @@ export type TorqueToWeightResult = {
   weightBasis: TorqueWeightBasis | null;
   /** True when the active weight came from a manual override. */
   weightOverridden: boolean;
-  /** True when the active UVW is round(GVWR × 0.835 / 100) × 100. */
+  /** True when the active UVW is the tiered GVWR estimate. */
   weightEstimated: boolean;
+  /** True when a 20–24k gas estimate has CCC/OCCC/NCC under 3,000 lb. */
+  thinCcc: boolean;
+  /** Tier used for an estimated UVW. Null when not estimated. */
+  uvwEstimateTier: UvwEstimateTier | null;
   /** (torqueLbFt / weightLb) * 1000, or null on GAP. */
   ratio: number | null;
   /** Continuous 1–10, or null on GAP / N/A. */
@@ -116,6 +165,138 @@ function positiveInt(n: number): number | null {
 
 function clampScore(n: number): number {
   return Math.min(10, Math.max(1, n));
+}
+
+function hintFromInput(input: TorqueToWeightInput): UvwEstimateHint {
+  return {
+    chassis: input.chassis,
+    fuelType: input.fuelType,
+    rvType: input.rvType,
+    cccLbs: positiveInt(input.cccLbs ?? 0) ?? parseCccLb(input.cccRaw),
+  };
+}
+
+/**
+ * Gas / van / cutaway chassis — never the diesel-pusher factor, even
+ * when the coach is diesel-fueled (Sprinter) or the type string is vague.
+ */
+export function isGasOrVanChassis(
+  chassis?: string | null,
+  extra?: string | null,
+): boolean {
+  const s = `${chassis || ""} ${extra || ""}`.toLowerCase();
+  return /f-?53|\bf53\b|godzilla|e-?350|e-?450|e-?550|sprinter|promaster|transit|chevy\s*3500|chevy\s*4500|chevrolet\s*3500|chevrolet\s*4500/.test(
+    s,
+  );
+}
+
+/**
+ * Diesel pushers: Freightliner or Spartan chassis, or Class A Diesel /
+ * "diesel pusher" without a gas/van chassis. Sprinter / F-53 / cutaway
+ * stay on the gas/other tiers.
+ */
+export function isDieselPusherForUvwEstimate(
+  hint?: UvwEstimateHint | null,
+): boolean {
+  if (!hint) return false;
+  if (isGasOrVanChassis(hint.chassis, hint.rvType)) return false;
+  if (/freightliner|spartan/i.test(hint.chassis || "")) return true;
+  const type = `${hint.rvType || ""} ${hint.fuelType || ""}`.toLowerCase();
+  if (/diesel\s*pusher/.test(type)) return true;
+  if (/class\s*a/.test(type) && /diesel/.test(type)) return true;
+  return false;
+}
+
+function roundUvwNearest100(gvwrLb: number, factor: number): number {
+  return Math.round((gvwrLb * factor) / 100) * 100;
+}
+
+/**
+ * Legacy flat 0.835 stand-in — delta reports only. Not the live formula.
+ */
+export function estimateUvwFromGvwrFlat835(
+  gvwrLb: number | null | undefined,
+): number | null {
+  const g = positiveInt(gvwrLb ?? 0);
+  if (g == null) return null;
+  return roundUvwNearest100(g, UVW_FROM_GVWR_DIESEL_PUSHER);
+}
+
+/**
+ * Catalog-wide UVW stand-in when no published / pinned / sticker UVW exists.
+ * Nearest 100 lb. Null when GVWR is missing or not a usable single figure.
+ *
+ * Diesel pushers (Freightliner / Spartan, or Class A Diesel without a
+ * gas/van chassis): GVWR × 0.835.
+ *
+ * Gas / other (Ford F-53, Sprinter, cutaway, unlabeled):
+ *   GVWR < 20,000            → × 0.88
+ *   GVWR 20,000–24,000       → × 0.82  (thin-CCC if CCC < 3,000)
+ *   GVWR 26,000+             → × 0.87
+ *   GVWR 24,001–25,000       → × 0.82  (nearest published tier; 25k noted)
+ *   GVWR 25,001–25,999       → × 0.87  (nearest published tier)
+ */
+export function estimateUvwFromGvwrDetailed(
+  gvwrLb: number | null | undefined,
+  hint?: UvwEstimateHint | null,
+): UvwEstimateDetail | null {
+  const g = positiveInt(gvwrLb ?? 0);
+  if (g == null) return null;
+
+  if (isDieselPusherForUvwEstimate(hint)) {
+    return {
+      uvwLbs: roundUvwNearest100(g, UVW_FROM_GVWR_DIESEL_PUSHER),
+      factor: UVW_FROM_GVWR_DIESEL_PUSHER,
+      tier: "diesel-pusher",
+      thinCcc: false,
+      gapBand: false,
+      gvwrLbs: g,
+    };
+  }
+
+  let factor: number;
+  let tier: UvwEstimateTier;
+  let gapBand = false;
+  if (g < 20_000) {
+    factor = UVW_FROM_GVWR_GAS_UNDER_20K;
+    tier = "gas-under-20k";
+  } else if (g <= 24_000) {
+    factor = UVW_FROM_GVWR_GAS_20K_24K;
+    tier = "gas-20k-24k";
+  } else if (g <= 25_000) {
+    // 24,001–25,000 inclusive: stay on the 20–24k published tier. Exactly
+    // 25,000 is documented as ×0.82 — no silent fourth factor.
+    factor = UVW_FROM_GVWR_GAS_20K_24K;
+    tier = "gas-20k-24k";
+    gapBand = g > 24_000;
+  } else if (g < 26_000) {
+    factor = UVW_FROM_GVWR_GAS_26K_UP;
+    tier = "gas-26k-up";
+    gapBand = true;
+  } else {
+    factor = UVW_FROM_GVWR_GAS_26K_UP;
+    tier = "gas-26k-up";
+  }
+
+  const ccc = positiveInt(hint?.cccLbs ?? 0);
+  const thinCcc =
+    tier === "gas-20k-24k" && ccc != null && ccc < THIN_CCC_THRESHOLD_LB;
+
+  return {
+    uvwLbs: roundUvwNearest100(g, factor),
+    factor,
+    tier,
+    thinCcc,
+    gapBand,
+    gvwrLbs: g,
+  };
+}
+
+export function estimateUvwFromGvwr(
+  gvwrLb: number | null | undefined,
+  hint?: UvwEstimateHint | null,
+): number | null {
+  return estimateUvwFromGvwrDetailed(gvwrLb, hint)?.uvwLbs ?? null;
 }
 
 /**
@@ -173,6 +354,15 @@ export function parseUvwLb(
 }
 
 /**
+ * Parse CCC / OCCC / NCC pounds. Confirm-brochure / range strings → null.
+ */
+export function parseCccLb(
+  raw: string | number | null | undefined,
+): number | null {
+  return parseSingleWeightLb(raw, /\bgvwr\b|\buvw\b|\bunloaded\b/i);
+}
+
+/**
  * Parse GVWR pounds for TTW. Strips commas/units. UVW / unloaded-labeled
  * strings stay unparseable → null (GAP).
  *
@@ -182,18 +372,6 @@ export function parseUvwLb(
  * ("47000") is unchanged. Callers still prefer oem / findOem / snap /
  * live numeric pins over this parse.
  */
-/**
- * Catalog-wide UVW stand-in when no published / pinned / sticker UVW exists.
- * Nearest 100 lb. Null when GVWR is missing or not a usable single figure.
- */
-export function estimateUvwFromGvwr(
-  gvwrLb: number | null | undefined,
-): number | null {
-  const g = positiveInt(gvwrLb ?? 0);
-  if (g == null) return null;
-  return Math.round((g * UVW_FROM_GVWR_RATIO) / 100) * 100;
-}
-
 export function parseGvwrLb(
   raw: string | number | readonly [number, number] | null | undefined,
 ): number | null {
@@ -284,6 +462,8 @@ const NA_RESULT: TorqueToWeightResult = {
   weightBasis: null,
   weightOverridden: false,
   weightEstimated: false,
+  thinCcc: false,
+  uvwEstimateTier: null,
   ratio: null,
   score: null,
   color: null,
@@ -298,11 +478,13 @@ export type ResolvedTorqueWeight = {
   weightBasis: TorqueWeightBasis | null;
   weightOverridden: boolean;
   weightEstimated: boolean;
+  thinCcc: boolean;
+  uvwEstimateTier: UvwEstimateTier | null;
 };
 
 /**
  * Pick the TTW weight: override UVW → published UVW → estimated UVW
- * (GVWR×0.835) → override GVWR → published GVWR → GAP.
+ * (tiered GVWR formula) → override GVWR → published GVWR → GAP.
  * Callers must not pass mid×0.82 estimates as UVW.
  */
 export function resolveTorqueWeight(
@@ -317,7 +499,8 @@ export function resolveTorqueWeight(
     parseGvwrLb(input.gvwrRaw) ??
     parseGvwrLb(input.weightRange);
   const gvwrLb = overrideGvwr ?? publishedGvwr;
-  const estimatedUvw = estimateUvwFromGvwr(gvwrLb);
+  const estimated = estimateUvwFromGvwrDetailed(gvwrLb, hintFromInput(input));
+  const estimatedUvw = estimated?.uvwLbs ?? null;
   const uvwLb = overrideUvw ?? publishedUvw ?? estimatedUvw;
 
   if (overrideUvw != null) {
@@ -328,6 +511,8 @@ export function resolveTorqueWeight(
       weightBasis: "UVW",
       weightOverridden: true,
       weightEstimated: false,
+      thinCcc: false,
+      uvwEstimateTier: null,
     };
   }
   if (publishedUvw != null) {
@@ -338,6 +523,8 @@ export function resolveTorqueWeight(
       weightBasis: "UVW",
       weightOverridden: false,
       weightEstimated: false,
+      thinCcc: false,
+      uvwEstimateTier: null,
     };
   }
   if (estimatedUvw != null) {
@@ -348,6 +535,8 @@ export function resolveTorqueWeight(
       weightBasis: "UVW_EST",
       weightOverridden: false,
       weightEstimated: true,
+      thinCcc: estimated?.thinCcc ?? false,
+      uvwEstimateTier: estimated?.tier ?? null,
     };
   }
   if (overrideGvwr != null) {
@@ -358,6 +547,8 @@ export function resolveTorqueWeight(
       weightBasis: "GVWR",
       weightOverridden: true,
       weightEstimated: false,
+      thinCcc: false,
+      uvwEstimateTier: null,
     };
   }
   if (publishedGvwr != null) {
@@ -368,6 +559,8 @@ export function resolveTorqueWeight(
       weightBasis: "GVWR",
       weightOverridden: false,
       weightEstimated: false,
+      thinCcc: false,
+      uvwEstimateTier: null,
     };
   }
   return {
@@ -377,6 +570,8 @@ export function resolveTorqueWeight(
     weightBasis: null,
     weightOverridden: false,
     weightEstimated: false,
+    thinCcc: false,
+    uvwEstimateTier: null,
   };
 }
 
@@ -402,6 +597,8 @@ export function computeTorqueToWeight(
     weightBasis: resolved.weightBasis,
     weightOverridden: resolved.weightOverridden,
     weightEstimated: resolved.weightEstimated,
+    thinCcc: resolved.thinCcc,
+    uvwEstimateTier: resolved.uvwEstimateTier,
     ratio,
     score,
     color: barColorFromScore(score),
@@ -431,7 +628,7 @@ export function formatTorqueToWeightScore(
   return `${result.score.toFixed(1)}/10 · ${basisLabel(result)}`;
 }
 
-/** Short Ratings-card chip: UVW / estimated via GVWR×0.835 / GVWR / Override. */
+/** Short Ratings-card chip: UVW / estimated via tiered GVWR formula / GVWR / Override. */
 export function formatTorqueWeightBasisChip(
   result: TorqueToWeightResult,
 ): string | null {

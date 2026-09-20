@@ -31,7 +31,8 @@ import {
 import { resolveHonestTanks } from "./placeholderTanks";
 import {
   UVW_ESTIMATE_LABEL,
-  estimateUvwFromGvwr,
+  estimateUvwFromGvwrDetailed,
+  THIN_CCC_FLAG,
 } from "./torqueToWeight";
 
 export { parseHp } from "./catalogHonesty";
@@ -54,10 +55,14 @@ export interface BrochureSpecs {
   /** Published / pinned pounds when known — never mid×0.82. */
   gvwrLbs?: number | null;
   uvwLbs?: number | null;
-  /** Runtime GVWR×0.835 stand-in when published UVW is missing. */
+  /** Runtime tiered-GVWR stand-in when published UVW is missing. */
   estimatedUvwLbs?: number | null;
-  /** True when `uvw` is the 0.835 estimate, not an OEM / sticker pin. */
+  /** True when `uvw` is the tiered estimate, not an OEM / sticker pin. */
   uvwEstimated?: boolean;
+  /** True when a 20–24k gas estimate has CCC/OCCC/NCC under 3,000 lb. */
+  thinCcc?: boolean;
+  /** Numeric CCC / OCCC / NCC when known. */
+  cccLbs?: number | null;
   ccc: string;
   gcwr: string;
   hitchOrPin: string;
@@ -464,7 +469,7 @@ export function buildBrochureSpecs(
     model,
   });
   // Listing / TTW: UVW pin when published; else OEM floorplan / snap UVW;
-  // else runtime GVWR×0.835 estimate (never mid×0.82). Never copy GVWR
+  // else runtime tiered GVWR estimate (never mid×0.82). Never copy GVWR
   // onto published UVW fields.
   const publishedGvwr =
     oem?.gvwrLbs ?? findOemGvwrLbs(year, make, model, floorplan) ?? snap.gvwrLbs;
@@ -666,8 +671,19 @@ export function buildBrochureSpecs(
     .filter(Boolean)
     .join(" · ");
 
-  const estimatedUvwLbs =
-    !isTowable && uvw == null ? estimateUvwFromGvwr(publishedGvwr) : null;
+  const estimated = !isTowable && uvw == null
+    ? estimateUvwFromGvwrDetailed(publishedGvwr, {
+        chassis: snap.chassis ?? spec.chassis,
+        fuelType: resolvedFuel,
+        rvType: resolvedType,
+        cccLbs: ccc,
+      })
+    : null;
+  const estimatedUvwLbs = estimated?.uvwLbs ?? null;
+  const thinCcc = estimated?.thinCcc ?? false;
+  const thinCccNote = thinCcc
+    ? `${THIN_CCC_FLAG}: CCC/OCCC/NCC under 3,000 lbs on a 20–24k gas coach — UVW ratio may actually run ~0.89.`
+    : null;
 
   return {
     lengthFt: lengthDisplay,
@@ -683,12 +699,19 @@ export function buildBrochureSpecs(
       uvw != null
         ? fmtLbs(uvw)
         : estimatedUvwLbs != null
-          ? `${fmtLbs(estimatedUvwLbs)} (${UVW_ESTIMATE_LABEL})`
+          ? `${fmtLbs(estimatedUvwLbs)} (${UVW_ESTIMATE_LABEL}${thinCcc ? ` · ${THIN_CCC_FLAG}` : ""})`
           : CONFIRM_BROCHURE,
     uvwLbs: uvw ?? null,
     estimatedUvwLbs,
     uvwEstimated: estimatedUvwLbs != null,
-    ccc: ccc != null ? fmtLbs(ccc) : CONFIRM_BROCHURE,
+    thinCcc,
+    cccLbs: ccc,
+    ccc:
+      ccc != null
+        ? `${fmtLbs(ccc)}${thinCcc ? ` · ${THIN_CCC_FLAG}` : ""}`
+        : thinCcc
+          ? `${CONFIRM_BROCHURE} · ${THIN_CCC_FLAG}`
+          : CONFIRM_BROCHURE,
     gcwr: isTowable
       ? "Set by tow vehicle"
       : fmtLbs(gvwrMid + (towCap || (diesel ? 10000 : 5000))),
@@ -811,7 +834,7 @@ export function buildBrochureSpecs(
       ? `${spec.warrantyYears}-yr limited / structural varies`
       : CONFIRM_BROCHURE,
     construction: CONFIRM_BROCHURE,
-    accuracyNote,
+    accuracyNote: [accuracyNote, thinCccNote].filter(Boolean).join(" · "),
     dataSource,
 
     isToyHauler,

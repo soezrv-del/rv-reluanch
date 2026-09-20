@@ -74,17 +74,18 @@ test("override UVW wins over published UVW and GVWR for TTW", () => {
   );
 });
 
-test("override GVWR feeds the 0.835 estimate; published UVW still wins", () => {
+test("override GVWR feeds the tiered estimate; published UVW still wins", () => {
   const gvwrOverride = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrLbs: 24_000,
     overrideGvwrLbs: 22_000,
     rvType: "Class A Gas",
+    chassis: "Ford F-53",
   });
   assert.equal(gvwrOverride.weightBasis, "UVW_EST");
   assert.equal(gvwrOverride.weightEstimated, true);
   assert.equal(gvwrOverride.weightOverridden, false);
-  assert.equal(gvwrOverride.weightLb, 18_400);
+  assert.equal(gvwrOverride.weightLb, 18_000);
   assert.equal(gvwrOverride.gvwrLb, 22_000);
 
   const uvwStillWins = computeTorqueToWeight({

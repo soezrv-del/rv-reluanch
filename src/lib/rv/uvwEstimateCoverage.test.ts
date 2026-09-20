@@ -12,7 +12,7 @@ import {
   scoreEstimatedTtw,
 } from "./uvwEstimateCoverage.ts";
 
-test("39RK Family RVing pin stays 39,237 and is not the 0.835 estimate", () => {
+test("39RK Family RVing pin stays 39,237 and is not the diesel-pusher estimate", () => {
   const pin = americanDream39rkPin();
   assert.equal(pin.uvwLbs, 39_237);
   assert.equal(pin.estimateFrom47000, 39_200);
@@ -27,21 +27,24 @@ test("39RK Family RVing pin stays 39,237 and is not the 0.835 estimate", () => {
     uvwLbs: 39_237,
     gvwrLbs: 47_000,
     rvType: "Class A Diesel",
+    chassis: "Spartan",
   });
   assert.equal(ttw.weightLb, 39_237);
   assert.equal(ttw.weightEstimated, false);
   assert.equal(ttw.weightBasis, "UVW");
 });
 
-test("Anthem 44R / Precept 31UL receive estimated UVW; bands unchanged", () => {
+test("Anthem 44R / Precept 31UL / Alante / Open Road 34PA use the tiered formula", () => {
   assert.equal(findOemUvwLbs("2025", "Entegra Coach", "Anthem", "44R"), null);
   assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Anthem", "44R"), 52_000);
   const anthem = scoreEstimatedTtw({
     torqueLbFt: 1250,
     gvwrLbs: 52_000,
     rvType: "Class A Diesel",
+    chassis: "Spartan K2",
   });
   assert.equal(anthem.estimatedUvwLbs, 43_400);
+  assert.equal(anthem.tier, "diesel-pusher");
   assert.ok(anthem.score != null && Math.abs(anthem.score - 7.11) <= 0.15);
   assert.equal(anthem.color, "yellow");
 
@@ -51,10 +54,30 @@ test("Anthem 44R / Precept 31UL receive estimated UVW; bands unchanged", () => {
     torqueLbFt: 468,
     gvwrLbs: 22_000,
     rvType: "Class A Gas",
+    chassis: "Ford F-53",
   });
-  assert.equal(precept.estimatedUvwLbs, 18_400);
-  assert.ok(precept.score != null && Math.abs(precept.score - 5.92) <= 0.15);
-  assert.equal(precept.color, "red");
+  assert.equal(precept.estimatedUvwLbs, 18_000);
+  assert.equal(precept.tier, "gas-20k-24k");
+  assert.ok(precept.score != null && Math.abs(precept.score - 6.05) <= 0.15);
+  assert.equal(precept.color, "yellow");
+
+  const alante = scoreEstimatedTtw({
+    torqueLbFt: 468,
+    gvwrLbs: 18_000,
+    rvType: "Class A Gas",
+    chassis: "Ford F-53",
+  });
+  assert.equal(alante.estimatedUvwLbs, 15_800);
+  assert.equal(alante.tier, "gas-under-20k");
+
+  const openRoad = scoreEstimatedTtw({
+    torqueLbFt: 468,
+    gvwrLbs: 26_000,
+    rvType: "Class A Gas",
+    chassis: "Ford F-53",
+  });
+  assert.equal(openRoad.estimatedUvwLbs, 22_600);
+  assert.equal(openRoad.tier, "gas-26k-up");
 });
 
 test("GVWR-pin coverage: estimates skip published UVW pins; missing GVWR stays unset", () => {
@@ -70,12 +93,29 @@ test("GVWR-pin coverage: estimates skip published UVW pins; missing GVWR stays u
   );
   assert.ok(anthem44);
   assert.equal(anthem44!.estimatedUvwLbs, 43_400);
+  assert.equal(anthem44!.tier, "diesel-pusher");
 
   const precept31 = estimated.find(
     (r) => r.modelIncludes === "precept" && r.floorplan.toUpperCase() === "31UL",
   );
   assert.ok(precept31);
-  assert.equal(precept31!.estimatedUvwLbs, 18_400);
+  assert.equal(precept31!.estimatedUvwLbs, 18_000);
+  assert.equal(precept31!.tier, "gas-20k-24k");
+
+  const alante27 = estimated.find(
+    (r) => r.modelIncludes === "alante" && r.floorplan.toUpperCase() === "27A",
+  );
+  assert.ok(alante27);
+  assert.equal(alante27!.estimatedUvwLbs, 15_800);
+  assert.equal(alante27!.tier, "gas-under-20k");
+
+  const openRoad34 = estimated.find(
+    (r) =>
+      r.modelIncludes === "open road" && r.floorplan.toUpperCase() === "34PA",
+  );
+  assert.ok(openRoad34);
+  assert.equal(openRoad34!.estimatedUvwLbs, 22_600);
+  assert.equal(openRoad34!.tier, "gas-26k-up");
 
   const dutch3836 = estimated.find(
     (r) =>
@@ -92,5 +132,5 @@ test("GVWR-pin coverage: estimates skip published UVW pins; missing GVWR stays u
   assert.equal(dream39, undefined, "39RK is a UVW pin, not an estimate row");
 
   assert.equal(estimateUvwFromGvwr(null), null);
-  assert.equal(UVW_ESTIMATE_LABEL, "estimated via GVWR×0.835");
+  assert.equal(UVW_ESTIMATE_LABEL, "estimated via tiered GVWR formula");
 });

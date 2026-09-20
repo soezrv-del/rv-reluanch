@@ -2579,7 +2579,7 @@ export type OemUvwPinRow = {
   source: string;
 };
 
-/** Brochure / sticker UVW pins. Never overwrite these with the 0.835 estimate. */
+/** Brochure / sticker UVW pins. Never overwrite these with the tiered GVWR estimate. */
 export function listOemUvwPins(): readonly OemUvwPinRow[] {
   return OEM_UVW_PINS;
 }
@@ -2736,7 +2736,7 @@ export function findOemGvwrLbs(
   return best;
 }
 
-/** Published OEM UVW for a year/make/model/floorplan. Null → runtime 0.835 estimate when GVWR is known (do not invent mid×0.82). */
+/** Published OEM UVW for a year/make/model/floorplan. Null → runtime tiered GVWR estimate when GVWR is known (do not invent mid×0.82). */
 export function findOemUvwLbs(
   year: string | number,
   make: string,

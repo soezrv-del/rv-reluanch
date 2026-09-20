@@ -4,12 +4,16 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  THIN_CCC_FLAG,
   UVW_ESTIMATE_LABEL,
   barColorFromScore,
   computeTorqueToWeight,
   estimateUvwFromGvwr,
+  estimateUvwFromGvwrDetailed,
+  estimateUvwFromGvwrFlat835,
   formatTorqueToWeightScore,
   formatTorqueWeightBasisChip,
+  isDieselPusherForUvwEstimate,
   isTowableForTorqueRating,
   parseGvwrLb,
   parseTorqueLbFt,
@@ -59,34 +63,39 @@ test("must-pass 1–10 anchors (±0.15) use estimated UVW when published UVW is 
     torqueLbFt: 800,
     gvwrLbs: 31_000,
     rvType: "Class A Gas",
+    chassis: "Ford F-53",
   });
-  assert.equal(seneca.weightLb, 25_900);
+  assert.equal(seneca.weightLb, 27_000);
   assert.equal(seneca.weightBasis, "UVW_EST");
   assert.equal(seneca.weightEstimated, true);
-  assertNear(seneca.ratio, 30.89, 0.05);
-  assertNear(seneca.score, 7.39);
+  assert.equal(seneca.uvwEstimateTier, "gas-26k-up");
+  assertNear(seneca.ratio, 29.63, 0.05);
+  assertNear(seneca.score, 7.22);
   assert.equal(seneca.color, "yellow");
 
   const p31 = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrLbs: 22_000,
     rvType: "Class A Gas",
+    chassis: "Ford F-53",
   });
-  assert.equal(p31.weightLb, 18_400);
+  assert.equal(p31.weightLb, 18_000);
   assert.equal(p31.weightBasis, "UVW_EST");
-  assertNear(p31.ratio, 25.43, 0.05);
-  assertNear(p31.score, 5.92);
-  assert.equal(p31.color, "red");
+  assert.equal(p31.uvwEstimateTier, "gas-20k-24k");
+  assertNear(p31.ratio, 26.0, 0.05);
+  assertNear(p31.score, 6.05);
+  assert.equal(p31.color, "yellow");
 
   const p36 = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrLbs: 24_000,
     rvType: "Class A Gas",
+    chassis: "Ford F-53",
   });
-  assert.equal(p36.weightLb, 20_000);
+  assert.equal(p36.weightLb, 19_700);
   assert.equal(p36.weightBasis, "UVW_EST");
-  assertNear(p36.ratio, 23.4, 0.05);
-  assertNear(p36.score, 5.45);
+  assertNear(p36.ratio, 23.76, 0.05);
+  assertNear(p36.score, 5.54);
   assert.equal(p36.color, "red");
 
   const cornerstone = computeTorqueToWeight({
@@ -127,9 +136,10 @@ test("must-pass 1–10 anchors (±0.15) use estimated UVW when published UVW is 
     gvwrLbs: 10_000,
     rvType: "Class C",
   });
-  assert.equal(classC.weightLb, 8_400);
+  assert.equal(classC.weightLb, 8_800);
   assert.equal(classC.weightBasis, "UVW_EST");
-  assertNear(classC.ratio, 55.71, 0.05);
+  assert.equal(classC.uvwEstimateTier, "gas-under-20k");
+  assertNear(classC.ratio, 53.18, 0.05);
   assertNear(classC.score, 10.0);
   assert.equal(classC.color, "green");
 
@@ -189,7 +199,7 @@ test("UVW preferred over GVWR; GAP if torque and both weights missing", () => {
   });
   assert.equal(gvwrOnly.weightBasis, "UVW_EST");
   assert.equal(gvwrOnly.weightEstimated, true);
-  assert.equal(gvwrOnly.weightLb, 25_900);
+  assert.equal(gvwrOnly.weightLb, 27_000);
   assert.equal(
     formatTorqueToWeightScore(gvwrOnly),
     `${gvwrOnly.score?.toFixed(1)}/10 · ${UVW_ESTIMATE_LABEL}`,
@@ -244,14 +254,20 @@ test("override preference: UVW override → UVW → estimated UVW → GVWR → G
   const estimated = resolveTorqueWeight({
     overrideGvwrLbs: 21_000,
     gvwrLbs: 22_000,
+    rvType: "Class A Gas",
+    chassis: "Ford F-53",
   });
-  assert.equal(estimated.weightLb, 17_500);
+  assert.equal(estimated.weightLb, 17_200);
   assert.equal(estimated.weightBasis, "UVW_EST");
   assert.equal(estimated.weightEstimated, true);
   assert.equal(estimated.weightOverridden, false);
 
-  const publishedGvwr = resolveTorqueWeight({ gvwrLbs: 22_000 });
-  assert.equal(publishedGvwr.weightLb, 18_400);
+  const publishedGvwr = resolveTorqueWeight({
+    gvwrLbs: 22_000,
+    rvType: "Class A Gas",
+    chassis: "Ford F-53",
+  });
+  assert.equal(publishedGvwr.weightLb, 18_000);
   assert.equal(publishedGvwr.weightBasis, "UVW_EST");
   assert.equal(publishedGvwr.weightEstimated, true);
 
@@ -352,12 +368,30 @@ test("TTW range GVWR uses HIGH end; published pin wins over range", () => {
   assert.equal(publishedWins.weightBasis, "UVW_EST");
 });
 
-test("estimateUvwFromGvwr is nearest 100 lb at 0.835; missing GVWR stays unset", () => {
-  assert.equal(estimateUvwFromGvwr(52_000), 43_400);
-  assert.equal(estimateUvwFromGvwr(22_000), 18_400);
-  assert.equal(estimateUvwFromGvwr(47_000), 39_200);
+test("estimateUvwFromGvwr uses the three-tier formula; missing GVWR stays unset", () => {
+  assert.equal(
+    estimateUvwFromGvwr(52_000, { rvType: "Class A Diesel", chassis: "Spartan" }),
+    43_400,
+  );
+  assert.equal(
+    estimateUvwFromGvwr(22_000, { rvType: "Class A Gas", chassis: "Ford F-53" }),
+    18_000,
+  );
+  assert.equal(
+    estimateUvwFromGvwr(18_000, { rvType: "Class A Gas", chassis: "Ford F-53" }),
+    15_800,
+  );
+  assert.equal(
+    estimateUvwFromGvwr(26_000, { rvType: "Class A Gas", chassis: "Ford F-53" }),
+    22_600,
+  );
+  assert.equal(
+    estimateUvwFromGvwr(47_000, { rvType: "Class A Diesel", chassis: "Spartan" }),
+    39_200,
+  );
   assert.equal(estimateUvwFromGvwr(0), null);
   assert.equal(estimateUvwFromGvwr(null), null);
+  assert.equal(estimateUvwFromGvwrFlat835(22_000), 18_400);
 });
 
 test("2022 American Dream 39RK stays pinned 39,237 — not re-estimated", () => {
@@ -376,7 +410,10 @@ test("2022 American Dream 39RK stays pinned 39,237 — not re-estimated", () => 
   assert.equal(pinned.color, "green");
   assert.equal(formatTorqueWeightBasisChip(pinned), "UVW");
 
-  const wouldEstimate = estimateUvwFromGvwr(47_000);
+  const wouldEstimate = estimateUvwFromGvwr(47_000, {
+    rvType: "Class A Diesel",
+    chassis: "Spartan",
+  });
   assert.equal(wouldEstimate, 39_200);
   assert.notEqual(pinned.weightLb, wouldEstimate);
 });
@@ -386,6 +423,7 @@ test("Anthem 44R sample: 52,000 × 0.835 → 43,400 at 1,250 lb-ft", () => {
     torqueLbFt: 1250,
     gvwrLbs: 52_000,
     rvType: "Class A Diesel",
+    chassis: "Spartan K2",
   });
   assert.equal(anthem.weightLb, 43_400);
   assert.equal(anthem.weightBasis, "UVW_EST");
@@ -400,7 +438,10 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 · UVW|GVWR; other rows keep st
   const src = readFileSync(join(root, "torqueToWeight.ts"), "utf8");
   assert.match(src, /override UVW → published UVW → estimated UVW/);
   assert.match(src, /0\.835/);
-  assert.match(src, /estimated via GVWR/);
+  assert.match(src, /0\.88/);
+  assert.match(src, /0\.82/);
+  assert.match(src, /0\.87/);
+  assert.match(src, /estimated via tiered GVWR formula/);
   assert.match(src, /torqueLbFt \/ weightLb/);
   assert.match(src, /Math\.max\(nums\[0]!, nums\[1]!\)/);
   assert.match(src, /HIGH end/);
@@ -424,8 +465,102 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 · UVW|GVWR; other rows keep st
   assert.match(detail, /overrideGvwrLbs:\s*weightOverride\?\.gvwrLbs/);
   assert.match(detail, /WeightOverrideRow/);
   assert.match(detail, /UVW_ESTIMATE_LABEL/);
+  assert.match(detail, /THIN_CCC_FLAG/);
+  assert.match(detail, /facts-tqwt-thin-ccc/);
   assert.match(detail, /estimatedLbs/);
   assert.doesNotMatch(detail, /torqueToWeight\.stars/);
   assert.match(detail, /label:\s*"Quality"/);
   assert.match(detail, /ratingStars\(row\.score\)/);
+});
+
+test("tiered UVW: diesel pusher vs gas/other; 25k gap; thin-CCC", () => {
+  assert.equal(
+    isDieselPusherForUvwEstimate({ chassis: "Freightliner XC", rvType: "Class A" }),
+    true,
+  );
+  assert.equal(
+    isDieselPusherForUvwEstimate({ chassis: "Spartan K2", rvType: "Class A Diesel" }),
+    true,
+  );
+  assert.equal(
+    isDieselPusherForUvwEstimate({ chassis: "Ford F-53", rvType: "Class A Diesel" }),
+    false,
+  );
+  assert.equal(
+    isDieselPusherForUvwEstimate({
+      chassis: "Mercedes-Benz Sprinter 3500XD",
+      rvType: "Class C",
+      fuelType: "Diesel",
+    }),
+    false,
+  );
+
+  const diesel = estimateUvwFromGvwrDetailed(52_000, {
+    chassis: "Freightliner",
+    rvType: "Class A Diesel",
+  });
+  assert.equal(diesel?.tier, "diesel-pusher");
+  assert.equal(diesel?.factor, 0.835);
+  assert.equal(diesel?.uvwLbs, 43_400);
+
+  const under20 = estimateUvwFromGvwrDetailed(18_000, {
+    chassis: "Ford F-53",
+    rvType: "Class A Gas",
+  });
+  assert.equal(under20?.tier, "gas-under-20k");
+  assert.equal(under20?.factor, 0.88);
+  assert.equal(under20?.uvwLbs, 15_800);
+
+  const midGas = estimateUvwFromGvwrDetailed(22_000, {
+    chassis: "Ford F-53",
+    rvType: "Class A Gas",
+    cccLbs: 2_400,
+  });
+  assert.equal(midGas?.tier, "gas-20k-24k");
+  assert.equal(midGas?.factor, 0.82);
+  assert.equal(midGas?.uvwLbs, 18_000);
+  assert.equal(midGas?.thinCcc, true);
+
+  const midGasRoomy = estimateUvwFromGvwrDetailed(22_000, {
+    chassis: "Ford F-53",
+    rvType: "Class A Gas",
+    cccLbs: 4_000,
+  });
+  assert.equal(midGasRoomy?.thinCcc, false);
+
+  const heavyGas = estimateUvwFromGvwrDetailed(26_000, {
+    chassis: "Ford F-53",
+    rvType: "Class A Gas",
+  });
+  assert.equal(heavyGas?.tier, "gas-26k-up");
+  assert.equal(heavyGas?.factor, 0.87);
+  assert.equal(heavyGas?.uvwLbs, 22_600);
+
+  const exactly25k = estimateUvwFromGvwrDetailed(25_000, {
+    chassis: "Ford F-53",
+    rvType: "Class A Gas",
+  });
+  assert.equal(exactly25k?.factor, 0.82);
+  assert.equal(exactly25k?.tier, "gas-20k-24k");
+  assert.equal(exactly25k?.gapBand, true);
+  assert.equal(exactly25k?.uvwLbs, 20_500);
+
+  const justOver25k = estimateUvwFromGvwrDetailed(25_001, {
+    chassis: "Ford F-53",
+    rvType: "Class A Gas",
+  });
+  assert.equal(justOver25k?.factor, 0.87);
+  assert.equal(justOver25k?.tier, "gas-26k-up");
+  assert.equal(justOver25k?.gapBand, true);
+
+  const thinScored = computeTorqueToWeight({
+    torqueLbFt: 468,
+    gvwrLbs: 22_000,
+    rvType: "Class A Gas",
+    chassis: "Ford F-53",
+    cccLbs: 2_800,
+  });
+  assert.equal(thinScored.thinCcc, true);
+  assert.equal(thinScored.weightLb, 18_000);
+  assert.equal(THIN_CCC_FLAG, "thin-CCC");
 });

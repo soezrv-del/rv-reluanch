@@ -162,7 +162,7 @@ test("Class C never hash-picks bus tires or triple 15k A/C", () => {
   assert.match(spec, /honestAcUnits/);
 });
 
-test("brochure / listing weight basis is published UVW then 0.835 estimate — mid×0.82 never wins", () => {
+test("brochure / listing weight basis is published UVW then tiered estimate — mid×0.82 never wins", () => {
   const spec = src("brochureSpecs.ts");
   assert.match(spec, /findOemGvwrLbs/);
   assert.match(spec, /findOemUvwLbs/);
@@ -205,19 +205,21 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     torqueLbFt: 468,
     gvwrRaw: "22,000 lbs",
     rvType: "Class A Gas",
+    chassis: "Ford F-53",
   });
   assert.equal(ttw31.weightBasis, "UVW_EST");
-  assert.equal(ttw31.weightLb, 18400);
-  assert.ok(ttw31.score != null && Math.abs(ttw31.score - 5.92) <= 0.15);
+  assert.equal(ttw31.weightLb, 18000);
+  assert.ok(ttw31.score != null && Math.abs(ttw31.score - 6.05) <= 0.15);
 
   const ttw36 = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrRaw: "24,000 lbs",
     rvType: "Class A Gas",
+    chassis: "Ford F-53",
   });
   assert.equal(ttw36.weightBasis, "UVW_EST");
-  assert.equal(ttw36.weightLb, 20000);
-  assert.ok(ttw36.score != null && Math.abs(ttw36.score - 5.45) <= 0.15);
+  assert.equal(ttw36.weightLb, 19700);
+  assert.ok(ttw36.score != null && Math.abs(ttw36.score - 5.54) <= 0.15);
 
   const ttwPublishedUvw = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -234,7 +236,7 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     gvwrRaw: "24,000 lbs",
     rvType: "Class A Gas",
   });
-  assert.equal(ttwVxl.weightLb, 20000);
+  assert.equal(ttwVxl.weightLb, 19700);
   assert.equal(ttwVxl.weightBasis, "UVW_EST");
   assert.notEqual(ttwVxl.uvwLb, 24000);
 
@@ -255,7 +257,7 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     rvType: "Class A Gas",
   });
   assert.equal(ttwPin.gvwrLb, 22000);
-  assert.equal(ttwPin.weightLb, 18400);
+  assert.equal(ttwPin.weightLb, 18000);
 });
 
 test("Tradition 42V/42Q brochure GVWR is 47,000 — not catalog weightRange mid", () => {

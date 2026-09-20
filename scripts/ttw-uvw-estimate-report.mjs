@@ -6,60 +6,24 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { listEstimatedUvwFromGvwrPins } from "../src/lib/rv/uvwEstimateCoverage.ts";
+import {
+  americanDream39rkPin,
+  findCatalogMakeModel,
+  listEstimatedUvwFromGvwrPins,
+} from "../src/lib/rv/uvwEstimateCoverage.ts";
 import {
   computeTorqueToWeight,
+  estimateUvwFromGvwrDetailed,
+  estimateUvwFromGvwrFlat835,
   parseTorqueLbFt,
+  scoreFromTorqueToWeightRatio,
+  torqueToWeightRatio,
 } from "../src/lib/rv/torqueToWeight.ts";
 import { findOemGvwrLbs } from "../src/lib/rv/floorplanSpecs.ts";
 import { CATALOG_INDEX } from "../src/lib/rv/rvCatalogIndex.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const rvData = readFileSync(join(root, "src/lib/rv/rvData.ts"), "utf8");
-
-function siblingBlocked(modelIncludes, modelNorm) {
-  const md = modelIncludes;
-  if (md === "vision" && (modelNorm.includes("xl") || modelNorm.includes("se"))) return true;
-  if (md === "precept" && modelNorm.includes("prestige")) return true;
-  if (md === "alante" && modelNorm.includes("se") && !md.includes("se")) return true;
-  if (md === "redhawk" && modelNorm.includes("se")) return true;
-  if (md === "melbourne" && modelNorm.includes("prestige")) return true;
-  if (md === "greyhawk" && (modelNorm.includes("prestige") || modelNorm.includes("xl"))) return true;
-  if (md === "bay star" && modelNorm.includes("sport") && !md.includes("sport")) return true;
-  if (md === "odyssey" && (modelNorm.includes("odyssey se") || modelNorm.includes("esteem"))) return true;
-  if (md === "four winds" && /majestic|siesta|sprinter/.test(modelNorm)) return true;
-  if (md === "quantum" && modelNorm.includes("sprinter") && !md.includes("sprinter")) return true;
-  if (md === "chateau" && modelNorm.includes("sprinter") && !md.includes("sprinter")) return true;
-  if (md === "sunseeker" && /sunseeker le|classic|4x4|mbs|sunseeker pm|sunseeker ts/.test(modelNorm)) return true;
-  if (md === "leprechaun" && modelNorm.includes("premier")) return true;
-  if (md === "freelander" && modelNorm.includes(" le")) return true;
-  if (md === "allegro red" && (modelNorm.includes("340") || modelNorm.includes("360"))) return true;
-  if (md === "sunstar" && modelNorm.includes("itasca")) return true;
-  return false;
-}
-
-function findCatalogMakeModel(makeIncludes, modelIncludes) {
-  const mk = makeIncludes.toLowerCase();
-  const md = modelIncludes.toLowerCase();
-  let best = null;
-  let bestScore = -1;
-  for (const [make, models] of Object.entries(CATALOG_INDEX)) {
-    if (!make.toLowerCase().includes(mk)) continue;
-    for (const [model, spec] of Object.entries(models)) {
-      const ml = model.toLowerCase();
-      if (!ml.includes(md)) continue;
-      if (siblingBlocked(md, ml)) continue;
-      // Prefer the shortest catalog model that still contains the pin token
-      // so "Odyssey" wins over "Odyssey Esteem Edition".
-      const score = 1000 - model.length + make.length;
-      if (score > bestScore) {
-        bestScore = score;
-        best = { make, model, spec };
-      }
-    }
-  }
-  return best;
-}
 
 function extractModelBlock(make, model) {
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -82,21 +46,33 @@ function extractModelBlock(make, model) {
   return slice.slice(start, end);
 }
 
-function torqueFromBlock(block, year) {
+function fieldFromBlock(block, year, field) {
   if (!block) return null;
-  const bands = [
-    ...block.matchAll(
-      /from:\s*(\d{4})[\s\S]{0,800}?to:\s*(\d{4})[\s\S]{0,1200}?torqueLbFt:\s*(\d+)/g,
-    ),
-  ];
+  const re = new RegExp(
+    `from:\\s*(\\d{4})[\\s\\S]{0,800}?to:\\s*(\\d{4})[\\s\\S]{0,1200}?${field}:\\s*([^,\\n]+)`,
+    "g",
+  );
+  const bands = [...block.matchAll(re)];
   const y = Number(year);
   for (const m of bands) {
     const a = Number(m[1]);
     const b = Number(m[2]);
-    if (y >= a && y <= b) return Number(m[3]);
+    if (y >= a && y <= b) return String(m[3]).replace(/^["']|["']$/g, "").trim();
   }
-  const top = block.match(/torqueLbFt:\s*(\d+)/);
-  return top ? Number(top[1]) : null;
+  const top = block.match(new RegExp(`${field}:\\s*([^,\\n]+)`));
+  return top ? String(top[1]).replace(/^["']|["']$/g, "").trim() : null;
+}
+
+function torqueFromBlock(block, year) {
+  const raw = fieldFromBlock(block, year, "torqueLbFt");
+  if (raw == null) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+function chassisFromBlock(block, year) {
+  const raw = fieldFromBlock(block, year, "chassis");
+  return raw && raw !== "undefined" ? raw : null;
 }
 
 function rvTypeFromSpec(spec) {
@@ -111,32 +87,62 @@ function isTowable(type, fuel) {
   );
 }
 
+function titleModel(modelIncludes) {
+  return modelIncludes
+    .split(" ")
+    .map((w) => (w.length <= 2 ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)))
+    .join(" ");
+}
+
+function scoreAtWeight(torqueLbFt, weightLb) {
+  if (torqueLbFt == null || weightLb == null) return { score: null, color: null };
+  const ratio = torqueToWeightRatio(torqueLbFt, weightLb);
+  const score = scoreFromTorqueToWeightRatio(ratio);
+  return {
+    score,
+    color:
+      score == null ? null : score < 6 ? "red" : score < 7.5 ? "yellow" : "green",
+  };
+}
+
 const estimated = listEstimatedUvwFromGvwrPins();
 const table = [];
 for (const row of estimated) {
   const hit = findCatalogMakeModel(row.makeIncludes, row.modelIncludes);
   const block = hit ? extractModelBlock(hit.make, hit.model) : "";
   const torqueLbFt = torqueFromBlock(block, row.yearMax);
+  const chassis = chassisFromBlock(block, row.yearMax);
   const parsed = parseTorqueLbFt(torqueLbFt);
-  const rvType = rvTypeFromSpec(hit?.spec);
+  const rvType = rvTypeFromSpec(hit?.spec) ?? row.rvType;
+  const fuelType = hit?.spec?.fuelType ?? row.fuelType;
+  const hint = { rvType, fuelType, chassis };
+  const detail = estimateUvwFromGvwrDetailed(row.gvwrLbs, hint);
   const scored = computeTorqueToWeight({
     torqueLbFt: parsed,
     gvwrLbs: row.gvwrLbs,
     rvType,
+    fuelType,
+    chassis,
   });
+  const oldUvw = estimateUvwFromGvwrFlat835(row.gvwrLbs);
+  const oldScored = scoreAtWeight(scored.torqueLbFt, oldUvw);
   table.push({
     make: hit?.make ?? row.makeIncludes,
-    model: row.modelIncludes
-      .split(" ")
-      .map((w) => (w.length <= 2 ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)))
-      .join(" "),
+    model: titleModel(row.modelIncludes),
     floorplan: row.floorplan,
     years: row.yearMin === row.yearMax ? String(row.yearMin) : `${row.yearMin}–${row.yearMax}`,
     gvwrLbs: row.gvwrLbs,
-    estimatedUvwLbs: row.estimatedUvwLbs,
+    estimatedUvwLbs: scored.uvwLb ?? row.estimatedUvwLbs,
+    oldEstimatedUvwLbs: oldUvw,
+    tier: scored.uvwEstimateTier ?? detail?.tier ?? row.tier,
+    factor: detail?.factor ?? row.factor,
+    thinCcc: scored.thinCcc,
+    chassis,
     torqueLbFt: scored.torqueLbFt,
     score: scored.score == null ? "GAP" : scored.score.toFixed(1),
     color: scored.color ?? "—",
+    oldScore: oldScored.score == null ? "GAP" : oldScored.score.toFixed(1),
+    oldColor: oldScored.color ?? "—",
   });
 }
 
@@ -186,7 +192,7 @@ for (const [make, models] of Object.entries(CATALOG_INDEX)) {
 
 const grouped = new Map();
 for (const row of table) {
-  const key = `${row.make}|${row.model}|${row.years}|${row.gvwrLbs}|${row.estimatedUvwLbs}|${row.torqueLbFt}|${row.score}|${row.color}`;
+  const key = `${row.make}|${row.model}|${row.years}|${row.gvwrLbs}|${row.estimatedUvwLbs}|${row.tier}|${row.torqueLbFt}|${row.score}|${row.color}`;
   const prev = grouped.get(key);
   if (prev) {
     prev.floorplans.push(row.floorplan);
@@ -202,18 +208,47 @@ const condensed = [...grouped.values()].map((r) => ({
   years: r.years,
   gvwrLbs: r.gvwrLbs,
   estimatedUvwLbs: r.estimatedUvwLbs,
+  oldEstimatedUvwLbs: r.oldEstimatedUvwLbs,
+  tier: r.tier,
+  factor: r.factor,
+  thinCcc: r.thinCcc,
+  chassis: r.chassis,
   torqueLbFt: r.torqueLbFt,
   score: r.score,
   color: r.color,
+  oldScore: r.oldScore,
+  oldColor: r.oldColor,
 }));
+
+const delta = condensed.filter(
+  (r) => r.oldEstimatedUvwLbs != null && r.oldEstimatedUvwLbs !== r.estimatedUvwLbs,
+);
+
+const pin39 = americanDream39rkPin();
 
 const out = {
   estimatedRowCount: table.length,
   condensedGroupCount: condensed.length,
+  deltaGroupCount: delta.length,
   unscoreableModelCount: unscoreable.length,
-  anthem44r: table.filter((r) => /anthem/i.test(r.model) && r.floorplan === "44R"),
-  precept31ul: table.filter((r) => /precept/i.test(r.model) && r.floorplan === "31UL"),
+  samples: {
+    anthem44r: table.filter((r) => /anthem/i.test(r.model) && r.floorplan === "44R"),
+    precept31ul: table.filter((r) => /precept/i.test(r.model) && r.floorplan === "31UL"),
+    alante27a: table.filter((r) => /alante/i.test(r.model) && r.floorplan === "27A"),
+    openRoad34pa: table.filter(
+      (r) => /open road/i.test(r.model) && r.floorplan === "34PA",
+    ),
+    americanDream39rk: {
+      pinnedUvwLbs: pin39.uvwLbs,
+      dieselEstimateFrom47000: pin39.estimateFrom47000,
+    },
+    exactly25kGas: estimateUvwFromGvwrDetailed(25_000, {
+      rvType: "Class A Gas",
+      chassis: "Ford F-53",
+    }),
+  },
   condensed,
+  delta,
   unscoreable,
 };
 
@@ -224,9 +259,9 @@ process.stdout.write(
     {
       estimatedRowCount: out.estimatedRowCount,
       condensedGroupCount: out.condensedGroupCount,
+      deltaGroupCount: out.deltaGroupCount,
       unscoreableModelCount: out.unscoreableModelCount,
-      anthem44r: out.anthem44r,
-      precept31ul: out.precept31ul,
+      samples: out.samples,
     },
     null,
     2,
