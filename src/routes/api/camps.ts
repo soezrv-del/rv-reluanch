@@ -19,6 +19,8 @@ import {
   finalizeCamps,
   normalizeHereCamps,
   normalizeOverpassCamps,
+  osmSiteLengthOverpassQuery,
+  withOsmSiteLengthOrUnchanged,
   type CampHereItem,
   type CampOverpassEl,
   type CampSearchResult,
@@ -31,6 +33,7 @@ import {
  *
  * Live campground / RV-park POIs near the planned corridor and dest.
  * HERE Places when HERE_API_KEY is set; else OpenStreetMap Overpass.
+ * HERE rows may pick up nearby OSM maxlength* (soft-fail, batched).
  * Empty list on failure — never invents pads.
  *
  * from,to = lng,lat
@@ -40,6 +43,8 @@ import {
 
 const HERE_TIMEOUT_MS = 8_000;
 const OVERPASS_TIMEOUT_MS = 20_000;
+/** Short budget so OSM maxlength enrichment never stalls the HERE list. */
+const OSM_LENGTH_TIMEOUT_MS = 7_000;
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
 const cache = new Map<string, { at: number; data: CampSearchResult }>();
@@ -141,6 +146,49 @@ function overpassQuery(centers: OsrmLngLat[], dest?: OsrmLngLat): string {
 out center tags 80;`;
 }
 
+/**
+ * One batched Overpass lookup for maxlength* near finalized HERE camps.
+ * Soft-fail at the caller — never invents, never replaces HERE names.
+ */
+async function fetchOsmSiteLengthNearCamps(
+  camps: CampStop[],
+): Promise<CampOverpassEl[]> {
+  const query = osmSiteLengthOverpassQuery(camps);
+  if (!query) return [];
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), OSM_LENGTH_TIMEOUT_MS);
+  try {
+    const resp = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      signal: ctrl.signal,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "User-Agent": "RVFAX-RvTrips/1.0 (here camp maxlength; +https://rvfax.app)",
+      },
+      body: `data=${encodeURIComponent(query)}`,
+    });
+    const json = (await resp.json()) as {
+      elements?: CampOverpassEl[];
+      remark?: string;
+    };
+    if (!resp.ok) {
+      throw new Error(`Overpass HTTP ${resp.status}`);
+    }
+    const elements = Array.isArray(json.elements) ? json.elements : [];
+    if (
+      elements.length === 0 &&
+      json.remark &&
+      /timeout|error|abort/i.test(json.remark)
+    ) {
+      throw new Error(`Overpass ${json.remark}`);
+    }
+    return elements;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function fetchOverpass(
   centers: OsrmLngLat[],
   dest?: OsrmLngLat,
@@ -222,11 +270,14 @@ export const Route = createFileRoute("/api/camps")({
           if (key) {
             try {
               const items = await fetchHereAlongCorridor(centers, dest, key);
-              const data = packResult(
-                "here",
-                widthMi,
+              const hereCamps = finalizeCamps(
                 normalizeHereCamps(items, corridor, widthMi),
               );
+              const camps = await withOsmSiteLengthOrUnchanged(
+                hereCamps,
+                fetchOsmSiteLengthNearCamps,
+              );
+              const data = packResult("here", widthMi, camps);
               cache.set(cacheKey, { at: Date.now(), data });
               return jsonResponse(data, { "X-Camps-Cache": "MISS" });
             } catch (hereErr) {

@@ -42,7 +42,8 @@ export type CampStop = {
   amenityHint: string;
   /**
    * OSM vehicle/site maxlength only (see OSM_SITE_LENGTH_KEYS), in feet.
-   * Omitted when untagged, unparseable, or HERE (Places has no pad length).
+   * Omitted when untagged, unparseable, or no nearby OSM match.
+   * HERE Places has no pad length — filled only from nearby OSM maxlength*.
    * Never from capacity, tents, SAMPLE_CAMPS, or guessed US feet.
    */
   siteLengthFt?: number;
@@ -82,7 +83,7 @@ export function campSourceLabel(source: CampSource): string {
 export function campSourceNote(source: CampSource): string {
   const who =
     source === "here"
-      ? "HERE Places camping / RV parks along this corridor — not live pad inventory."
+      ? "HERE Places camping / RV parks along this corridor — not live pad inventory. Site length from nearby OSM maxlength* when tagged."
       : "OpenStreetMap Overpass (tourism=camp_site / caravan_site) — not live pad inventory.";
   return `${who} Availability, hookups, and site length change; confirm before you pull in.`;
 }
@@ -236,6 +237,130 @@ export function siteLengthFtFromTags(
     if (ft != null) return ft;
   }
   return undefined;
+}
+
+const METERS_PER_MILE = 1609.344;
+
+/** Query halo around each HERE pin so one Overpass call covers nearby OSM amenities. */
+export const OSM_SITE_LENGTH_QUERY_M = 800;
+/** Assign OSM maxlength only when the amenity is this close to the HERE pin. */
+export const OSM_SITE_LENGTH_MATCH_M = 600;
+/** Collapse HERE pins this close so we do not send duplicate around-clauses. */
+export const OSM_SITE_LENGTH_CLUSTER_M = 400;
+
+/** Overpass key regex — only the RV maxlength* tags we actually parse. */
+export const OSM_SITE_LENGTH_KEY_RE =
+  "^maxlength(:motorhome|:motor_caravan|:motorcaravan|:rv|:caravans)?$";
+
+function metersBetween(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number },
+): number {
+  return haversineMiles(a, b) * METERS_PER_MILE;
+}
+
+/**
+ * Keep one query center per cluster so 20 HERE camps do not become 20 arounds
+ * when several parks sit in the same town.
+ */
+export function clusterOsmLengthCenters(
+  camps: Array<{ lat: number; lng: number }>,
+  clusterM = OSM_SITE_LENGTH_CLUSTER_M,
+): Array<{ lat: number; lng: number }> {
+  const out: Array<{ lat: number; lng: number }> = [];
+  for (const c of camps) {
+    if (!finitePlace(c)) continue;
+    if (out.some((kept) => metersBetween(kept, c) <= clusterM)) continue;
+    out.push({ lat: c.lat, lng: c.lng });
+  }
+  return out;
+}
+
+/**
+ * One batched Overpass query: camp_site / caravan_site with maxlength* near
+ * clustered HERE pins. Empty input → empty query (caller skips the fetch).
+ */
+export function osmSiteLengthOverpassQuery(
+  camps: Array<{ lat: number; lng: number }>,
+): string {
+  const centers = clusterOsmLengthCenters(camps);
+  if (centers.length === 0) return "";
+  const keyFilter = `[~"${OSM_SITE_LENGTH_KEY_RE}"~"."]`;
+  const clauses = centers
+    .flatMap((c) => {
+      const around = `(around:${OSM_SITE_LENGTH_QUERY_M},${c.lat},${c.lng})`;
+      return [
+        `node["tourism"~"^(camp_site|caravan_site)$"]${keyFilter}${around};`,
+        `way["tourism"~"^(camp_site|caravan_site)$"]${keyFilter}${around};`,
+      ];
+    })
+    .join("\n  ");
+  return `[out:json][timeout:6];
+(
+  ${clauses}
+);
+out center tags;`;
+}
+
+/**
+ * Closest nearby OSM amenity with a parseable maxlength*. Missing = undefined.
+ * Never invents; never uses capacity / tents / pitch length.
+ */
+export function nearestOsmSiteLengthFt(
+  camp: { lat: number; lng: number },
+  elements: CampOverpassEl[],
+  maxM = OSM_SITE_LENGTH_MATCH_M,
+): number | undefined {
+  if (!finitePlace(camp)) return undefined;
+  let bestFt: number | undefined;
+  let bestM = Infinity;
+  for (const el of elements) {
+    const lat = Number(el.lat ?? el.center?.lat);
+    const lng = Number(el.lon ?? el.center?.lon);
+    if (!finitePlace({ lat, lng })) continue;
+    const ft = siteLengthFtFromTags(el.tags);
+    if (ft == null) continue;
+    const m = metersBetween(camp, { lat, lng });
+    if (m <= maxM && m < bestM) {
+      bestM = m;
+      bestFt = ft;
+    }
+  }
+  return bestFt;
+}
+
+/**
+ * Fill HERE `siteLengthFt` from nearby OSM maxlength*. Never renames the
+ * HERE row. Already-set lengths and misses stay as they are.
+ */
+export function enrichHereCampsWithOsmSiteLength(
+  camps: CampStop[],
+  elements: CampOverpassEl[],
+): CampStop[] {
+  if (camps.length === 0 || elements.length === 0) return camps;
+  return camps.map((camp) => {
+    if (camp.siteLengthFt != null) return camp;
+    const siteLengthFt = nearestOsmSiteLengthFt(camp, elements);
+    if (siteLengthFt == null) return camp;
+    return { ...camp, siteLengthFt };
+  });
+}
+
+/**
+ * Soft-fail wrapper: Overpass timeout / throw leaves HERE camps unchanged.
+ * Does not invent sizes. Does not block on an empty list.
+ */
+export async function withOsmSiteLengthOrUnchanged(
+  camps: CampStop[],
+  fetchElements: (camps: CampStop[]) => Promise<CampOverpassEl[]>,
+): Promise<CampStop[]> {
+  if (camps.length === 0) return camps;
+  try {
+    const els = await fetchElements(camps);
+    return enrichHereCampsWithOsmSiteLength(camps, els);
+  } catch {
+    return camps;
+  }
 }
 
 export function amenityHintFromTags(tags: Record<string, string>): string {

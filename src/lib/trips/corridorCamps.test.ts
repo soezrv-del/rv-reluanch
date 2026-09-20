@@ -17,14 +17,22 @@ import {
   HERE_CAMP_CATEGORIES,
   HERE_CAMPGROUND_CATEGORY,
   HERE_RV_PARK_CATEGORY,
+  OSM_SITE_LENGTH_KEY_RE,
   OSM_SITE_LENGTH_KEYS,
+  OSM_SITE_LENGTH_MATCH_M,
+  OSM_SITE_LENGTH_QUERY_M,
+  clusterOsmLengthCenters,
+  enrichHereCampsWithOsmSiteLength,
   keepCampPoi,
   looksLikeRvPark,
+  nearestOsmSiteLengthFt,
   normalizeCampWebsite,
   normalizeHereCamps,
   normalizeOverpassCamps,
+  osmSiteLengthOverpassQuery,
   parseOsmLengthToFt,
   siteLengthFtFromTags,
+  withOsmSiteLengthOrUnchanged,
   type CampOverpassEl,
   type CampStop,
 } from "./corridorCamps.ts";
@@ -371,6 +379,158 @@ test("parseOsmLengthToFt is honest — units only, no invented pad feet", () => 
   assert.equal(parseOsmLengthToFt("200 ft"), undefined);
 });
 
+test("clusterOsmLengthCenters collapses nearby HERE pins into one around", () => {
+  const clustered = clusterOsmLengthCenters([
+    { lat: 47.98, lng: -122.2 },
+    { lat: 47.9802, lng: -122.2003 },
+    { lat: 47.0, lng: -120.5 },
+  ]);
+  assert.equal(clustered.length, 2);
+  assert.equal(clustered[0]!.lat, 47.98);
+  assert.equal(clustered[1]!.lat, 47.0);
+});
+
+test("osmSiteLengthOverpassQuery batches camp_site/caravan_site maxlength* arounds", () => {
+  assert.equal(osmSiteLengthOverpassQuery([]), "");
+  const q = osmSiteLengthOverpassQuery([
+    { lat: 47.98, lng: -122.2 },
+    { lat: 47.0, lng: -120.5 },
+  ]);
+  assert.match(q, /\[out:json\]\[timeout:6\]/);
+  assert.match(q, /tourism"~"\^\(camp_site\|caravan_site\)\$/);
+  assert.ok(q.includes(OSM_SITE_LENGTH_KEY_RE));
+  assert.match(q, /maxlength:motorhome/);
+  assert.match(q, /around:800,47\.98,-122\.2/);
+  assert.match(q, /around:800,47,-120\.5/);
+  assert.match(q, /out center tags/);
+  assert.doesNotMatch(q, /capacity|tents|SAMPLE_CAMPS/);
+});
+
+test("nearestOsmSiteLengthFt uses nearby tagged amenity only — never invents", () => {
+  const here = { lat: 47.21, lng: -120.99 };
+  const els: CampOverpassEl[] = [
+    {
+      type: "node",
+      id: 10,
+      lat: 47.2102,
+      lon: -120.9902,
+      tags: { tourism: "caravan_site", name: "OSM KOA", "maxlength:motorhome": "40 ft" },
+    },
+    {
+      type: "node",
+      id: 11,
+      lat: 34.05,
+      lon: -118.24,
+      tags: { tourism: "camp_site", name: "LA far", maxlength: "12 m" },
+    },
+    {
+      type: "node",
+      id: 12,
+      lat: 47.2101,
+      lon: -120.9901,
+      tags: { tourism: "camp_site", name: "Closer untagged", capacity: "40" },
+    },
+  ];
+  assert.equal(nearestOsmSiteLengthFt(here, els), 40);
+  assert.equal(nearestOsmSiteLengthFt(here, []), undefined);
+  assert.equal(
+    nearestOsmSiteLengthFt(here, [
+      {
+        type: "node",
+        id: 13,
+        lat: 47.2102,
+        lon: -120.9902,
+        tags: { tourism: "camp_site", capacity: "80", tents: "yes" },
+      },
+    ]),
+    undefined,
+  );
+  assert.ok(OSM_SITE_LENGTH_MATCH_M >= 400);
+  assert.ok(OSM_SITE_LENGTH_QUERY_M >= OSM_SITE_LENGTH_MATCH_M);
+});
+
+test("enrichHereCampsWithOsmSiteLength fills size, keeps HERE name, leaves misses blank", () => {
+  const hereName = "Ellensburg KOA Journey";
+  const camps: CampStop[] = [
+    camp({
+      id: "here:ellensburg",
+      name: hereName,
+      lat: 47.0,
+      lng: -120.54,
+      city: "Ellensburg",
+      state: "WA",
+    }),
+    camp({
+      id: "here:everett",
+      name: "Everett RV Park",
+      lat: 47.98,
+      lng: -122.2,
+      city: "Everett",
+      state: "WA",
+    }),
+  ];
+  const els: CampOverpassEl[] = [
+    {
+      type: "way",
+      id: 99,
+      center: { lat: 47.0003, lon: -120.5402 },
+      tags: {
+        tourism: "caravan_site",
+        name: "Different OSM Name We Must Not Use",
+        maxlength: "12 m",
+        "maxlength:rv": "45 ft",
+      },
+    },
+  ];
+  const out = enrichHereCampsWithOsmSiteLength(camps, els);
+  assert.equal(out[0]!.name, hereName);
+  assert.equal(out[0]!.siteLengthFt, 45);
+  assert.equal(out[1]!.name, "Everett RV Park");
+  assert.equal(out[1]!.siteLengthFt, undefined);
+  assert.equal(enrichHereCampsWithOsmSiteLength(camps, []).length, 2);
+  assert.equal(enrichHereCampsWithOsmSiteLength(camps, [])[0]!.siteLengthFt, undefined);
+  const already = enrichHereCampsWithOsmSiteLength(
+    [{ ...camps[0]!, siteLengthFt: 32 }],
+    els,
+  );
+  assert.equal(already[0]!.siteLengthFt, 32);
+  assert.equal(already[0]!.name, hereName);
+});
+
+test("withOsmSiteLengthOrUnchanged soft-fails — timeout leaves HERE list intact", async () => {
+  const camps: CampStop[] = [
+    camp({
+      id: "here:koa",
+      name: "Boise KOA Journey",
+      lat: 43.58,
+      lng: -116.18,
+    }),
+  ];
+  const ok = await withOsmSiteLengthOrUnchanged(camps, async () => [
+    {
+      type: "node",
+      id: 1,
+      lat: 43.5801,
+      lon: -116.1801,
+      tags: { "maxlength:motorhome": "40 ft" },
+    },
+  ]);
+  assert.equal(ok[0]!.name, "Boise KOA Journey");
+  assert.equal(ok[0]!.siteLengthFt, 40);
+
+  const timedOut = await withOsmSiteLengthOrUnchanged(camps, async () => {
+    throw new Error("Overpass timeout");
+  });
+  assert.equal(timedOut, camps);
+  assert.equal(timedOut[0]!.siteLengthFt, undefined);
+  assert.equal(timedOut[0]!.name, "Boise KOA Journey");
+
+  const empty = await withOsmSiteLengthOrUnchanged([], async () => {
+    throw new Error("should not fetch");
+  });
+  assert.deepEqual(empty, []);
+});
+
 test("siteLengthFtFromTags prefers RV-specific maxlength and never invents", () => {
   assert.deepEqual(OSM_SITE_LENGTH_KEYS, [
     "maxlength:motorhome",
@@ -410,6 +570,7 @@ test("source labels stay honest", () => {
   assert.equal(campSourceLabel("here"), "HERE Places");
   assert.equal(campSourceLabel("overpass"), "OpenStreetMap Overpass");
   assert.match(campSourceNote("here"), /HERE Places/);
+  assert.match(campSourceNote("here"), /nearby OSM maxlength/);
   assert.doesNotMatch(campSourceNote("here"), /DEMO/i);
   assert.match(campSourceNote("overpass"), /tourism=camp_site/);
 });
@@ -443,6 +604,10 @@ test("camp helpers do not invent a pad catalog", () => {
   const src = readFileSync(join(root, "corridorCamps.ts"), "utf8");
   assert.doesNotMatch(src, /DEMO_CAMPS|FAKE_CAMP|invented pad/i);
   assert.match(src, /Never invents pads/);
+  assert.match(src, /enrichHereCampsWithOsmSiteLength/);
+  assert.match(src, /withOsmSiteLengthOrUnchanged/);
+  assert.match(src, /Never renames the/);
+  assert.doesNotMatch(src, /DialaBot/);
 });
 
 test("GET /api/camps stays on HERE/Overpass and never /api/route", () => {
@@ -460,6 +625,10 @@ test("GET /api/camps stays on HERE/Overpass and never /api/route", () => {
   assert.match(api, /overpass-api\.de/);
   assert.match(api, /tourism"="camp_site/);
   assert.match(api, /never invents pads/i);
+  assert.match(api, /withOsmSiteLengthOrUnchanged/);
+  assert.match(api, /fetchOsmSiteLengthNearCamps/);
+  assert.match(api, /osmSiteLengthOverpassQuery/);
+  assert.match(api, /OSM_LENGTH_TIMEOUT_MS/);
   assert.doesNotMatch(api, /\/api\/route/);
   assert.match(app, /\/api\/camps/);
   assert.doesNotMatch(app, /\/api\/route/);
