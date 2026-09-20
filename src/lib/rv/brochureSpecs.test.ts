@@ -19,7 +19,9 @@ import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import {
   findOemFloorplanSpec,
   findOemGvwrLbs,
+  findOemUvwLbs,
   oemGvwrPinCount,
+  oemUvwPinCount,
   weightForFloorplan,
 } from "./floorplanSpecs.ts";
 import { computeTorqueToWeight } from "./torqueToWeight.ts";
@@ -160,13 +162,15 @@ test("Class C never hash-picks bus tires or triple 15k A/C", () => {
   assert.match(spec, /honestAcUnits/);
 });
 
-test("brochure / listing weight basis is published GVWR — estimated UVW never wins", () => {
+test("brochure / listing weight basis is published UVW then GVWR — estimated UVW never wins", () => {
   const spec = src("brochureSpecs.ts");
   assert.match(spec, /findOemGvwrLbs/);
+  assert.match(spec, /findOemUvwLbs/);
   assert.match(spec, /publishedGvwr/);
   assert.match(spec, /publishedUvw/);
   assert.doesNotMatch(spec, /oem\?\.uvwLbs \?\? snap\.uvwLbs \?\? w\.uvwEst/);
   assert.match(src("floorplanSpecs.ts"), /findOemGvwrLbs/);
+  assert.match(src("floorplanSpecs.ts"), /findOemUvwLbs/);
   assert.match(src("floorplanSpecs.ts"), /never the TTW/);
 });
 
@@ -191,13 +195,13 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
 
   const spec = src("brochureSpecs.ts");
   assert.match(spec, /oem\?\.gvwrLbs \?\? findOemGvwrLbs/);
-  assert.match(spec, /publishedUvw = oem\?\.uvwLbs \?\? snap\.uvwLbs/);
+  assert.match(spec, /findOemUvwLbs\(year, make, model, floorplan\) \?\? oem\?\.uvwLbs \?\? snap\.uvwLbs/);
   assert.doesNotMatch(spec, /uvw:\s*fmtLbs\(uvw\)/);
   assert.match(spec, /uvw:\s*uvw != null \? fmtLbs\(uvw\) : CONFIRM_BROCHURE/);
 
+  // Callers must not pass mid×0.82 as uvwRaw. GVWR-only still scores.
   const ttw31 = computeTorqueToWeight({
     torqueLbFt: 468,
-    uvwRaw: "18,040 lbs", // mid×0.82-style estimate must not win
     gvwrRaw: "22,000 lbs",
     rvType: "Class A Gas",
   });
@@ -207,13 +211,21 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
 
   const ttw36 = computeTorqueToWeight({
     torqueLbFt: 468,
-    uvwRaw: "19,680 lbs",
     gvwrRaw: "24,000 lbs",
     rvType: "Class A Gas",
   });
   assert.equal(ttw36.weightBasis, "GVWR");
   assert.equal(ttw36.weightLb, 24000);
   assert.ok(ttw36.score != null && Math.abs(ttw36.score - 4.6) <= 0.15);
+
+  const ttwPublishedUvw = computeTorqueToWeight({
+    torqueLbFt: 468,
+    uvwLbs: findOemUvwLbs("2025", "Jayco", "Seneca", "37K") ?? 26_000,
+    gvwrLbs: 31_000,
+    rvType: "Class C",
+  });
+  assert.equal(ttwPublishedUvw.weightBasis, "UVW");
+  assert.equal(ttwPublishedUvw.weightLb, 26_000);
 
   const ttwVxl = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -334,6 +346,9 @@ test("Anthem 44R/37K brochure GVWR pins beat catalog weightRange mid", () => {
   assert.equal(interpolated37.mid, 47000);
   assert.notEqual(interpolated37.mid, 44000);
 
+  assert.equal(findOemUvwLbs("2025", "Entegra Coach", "Anthem", "44R"), null);
+  assert.equal(findOemUvwLbs("2025", "Jayco", "Precept", "31UL"), null);
+
   const ttw44 = computeTorqueToWeight({
     torqueLbFt: 1250,
     gvwrLbs: findOemGvwrLbs("2025", "Entegra Coach", "Anthem", "44R"),
@@ -353,6 +368,30 @@ test("Anthem 44R/37K brochure GVWR pins beat catalog weightRange mid", () => {
   });
   assert.equal(ttw37.weightLb, 44000);
   assert.notEqual(ttw37.weightLb, interpolated37.mid);
+});
+
+test("OEM UVW pins: sourced Newmar + Seneca; demo coaches without brochure UVW stay GAP", () => {
+  assert.ok(oemUvwPinCount() >= 10);
+  assert.equal(findOemUvwLbs("2025", "Newmar", "Dutch Star", "3836"), 34700);
+  assert.equal(findOemUvwLbs("2026", "Newmar", "Dutch Star", "4071"), 37550);
+  assert.equal(findOemUvwLbs("2025", "Newmar", "Dutch Star", "4081"), 37700);
+  assert.equal(findOemUvwLbs("2026", "Newmar", "Bay Star", "3114"), 20050);
+  assert.equal(findOemUvwLbs("2026", "Newmar", "Bay Star", "3626"), 22600);
+  assert.equal(findOemUvwLbs("2025", "Newmar", "Canyon Star", "3947"), 25950);
+  assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca", "37K"), 26000);
+  assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca", "37L"), 26200);
+  assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca", "37M"), 26500);
+  // Isolation — Bay Star Sport must not inherit Bay Star UVW.
+  assert.equal(findOemUvwLbs("2026", "Newmar", "Bay Star Sport", "3225"), null);
+  // Honest search: Entegra / Jayco Precept / American Coach brochures omit UVW.
+  assert.equal(findOemUvwLbs("2025", "Entegra Coach", "Anthem", "44R"), null);
+  assert.equal(findOemUvwLbs("2025", "Entegra Coach", "Aspire", "44W"), null);
+  assert.equal(findOemUvwLbs("2025", "Jayco", "Precept", "31UL"), null);
+  assert.equal(findOemUvwLbs("2025", "American Coach", "American Dream", "45A"), null);
+  assert.equal(findOemUvwLbs("2025", "American Coach", "American Tradition", "42V"), null);
+  // Unprinted year stays GAP.
+  assert.equal(findOemUvwLbs("2024", "Newmar", "Dutch Star", "3836"), null);
+  assert.equal(findOemUvwLbs("2026", "Newmar", "Canyon Star", "3947"), null);
 });
 
 test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {

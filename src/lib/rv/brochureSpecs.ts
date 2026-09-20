@@ -7,6 +7,7 @@ import {
   weightForFloorplan,
   findOemFloorplanSpec,
   findOemGvwrLbs,
+  findOemUvwLbs,
 } from "./floorplanSpecs";
 import { findPowertrainCorrection } from "./powertrainCorrections";
 import {
@@ -46,6 +47,9 @@ export interface BrochureSpecs {
   wheelbase: string;
   gvwr: string;
   uvw: string;
+  /** Published / pinned pounds when known — never mid×0.82. */
+  gvwrLbs?: number | null;
+  uvwLbs?: number | null;
   ccc: string;
   gcwr: string;
   hitchOrPin: string;
@@ -451,11 +455,13 @@ export function buildBrochureSpecs(
     make,
     model,
   });
-  // Listing / TTW weight basis is published OEM GVWR only.
-  // Do not let estimated UVW (mid×0.82) win, and never copy GVWR onto UVW.
+  // Listing / TTW: UVW pin when published; else OEM floorplan / snap UVW;
+  // else GVWR. Never let estimated UVW (mid×0.82) win, and never copy
+  // GVWR onto UVW.
   const publishedGvwr =
     oem?.gvwrLbs ?? findOemGvwrLbs(year, make, model, floorplan) ?? snap.gvwrLbs;
-  const publishedUvw = oem?.uvwLbs ?? snap.uvwLbs;
+  const publishedUvw =
+    findOemUvwLbs(year, make, model, floorplan) ?? oem?.uvwLbs ?? snap.uvwLbs;
   const gvwrMid = publishedGvwr ?? w.mid;
   const uvw = publishedUvw;
   const ccc =
@@ -661,7 +667,9 @@ export function buildBrochureSpecs(
     wheelbase: isTowable ? "N/A (towable)" : CONFIRM_BROCHURE,
 
     gvwr: gvwrDisplay,
+    gvwrLbs: publishedGvwr ?? null,
     uvw: uvw != null ? fmtLbs(uvw) : CONFIRM_BROCHURE,
+    uvwLbs: uvw ?? null,
     ccc: ccc != null ? fmtLbs(ccc) : CONFIRM_BROCHURE,
     gcwr: isTowable
       ? "Set by tow vehicle"

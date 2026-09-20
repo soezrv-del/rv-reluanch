@@ -1,34 +1,41 @@
 /**
  * Torque-to-weight rating for the Facts report Ratings section.
  *
- * Weight metric: published OEM **GVWR only**. Never prefer UVW, never
- * use estimated UVW (weightForFloorplan mid×0.82). GAP if torque is
- * missing or GVWR is missing — do not invent a weight. Prefer numeric
- * powertrainGuard / brochure hard torque when present; else parse
- * specs.torque. Torque is lb-ft only — never horsepower.
+ * Weight metric — UVW preferred, GVWR fallback. Never invent UVW from
+ * estimated mid×0.82 (weightForFloorplan). GAP if torque is missing or
+ * no usable weight remains. Prefer numeric powertrainGuard / brochure
+ * hard torque when present; else parse specs.torque. Torque is lb-ft
+ * only — never horsepower.
  *
- * Range-only GVWR (display band / weightRange [lo,hi], e.g.
- * "39,500–44,005 lbs"): for **TTW scoring only**, use the **HIGH**
- * number. Heavier published weight → lower (more conservative) score.
- * A single published pin (oem.gvwrLbs / findOemGvwrLbs / snap.gvwrLbs /
- * live.gvwrLbs) still wins over the range. Do not invent UVW.
+ * Active weight (first hit wins):
+ *   1. Manual UVW override
+ *   2. Published / pinned UVW (oem pin, OEM floorplan, catalog snap)
+ *   3. Manual GVWR override
+ *   4. Published GVWR (oem.gvwrLbs / findOemGvwrLbs / snap / live)
+ *   5. Range-only GVWR HIGH end (display band / weightRange [lo,hi])
+ *   6. GAP
  *
- * Ratio: r = (torqueLbFt / gvwrLb) * 1000  →  lb-ft per 1,000 lb GVWR
+ * Range-only GVWR (e.g. "39,500–44,005 lbs"): for **TTW scoring only**,
+ * use the **HIGH** number. Heavier published weight → lower
+ * (more conservative) score. A single published GVWR pin still wins
+ * over the range. Do not invent UVW.
+ *
+ * Ratio: r = (torqueLbFt / weightLb) * 1000  →  lb-ft per 1,000 lb
  *
  * Continuous 1–10 (piecewise-linear on the David envelope):
- *   GAP / N/A  torque missing OR GVWR missing OR ≤0 OR towable
+ *   GAP / N/A  torque missing OR weight missing OR ≤0 OR towable
  *   r < 10        → [1, 2)
  *   10 ≤ r < 17   → [3, 4)
  *   17 ≤ r < 28   → [4.0, 6.5)   Seneca 800/31000 ≈ 25.8 → ~6.0
  *   28 ≤ r < 45   → [7.0, 9.3)
  *   r ≥ 45        → [8.75, 10]   clamped
  *
- * Must-pass GVWR anchors:
+ * Must-pass GVWR anchors (fallback when UVW is missing):
  *   Precept 31UL  468 / 22,000 → ~5.0
  *   Precept 36    468 / 24,000 → ~4.6
  *   Seneca        800 / 31,000 → ~6.0
  *
- * Bar color (score, not ratio):
+ * Bar color (score, not ratio) — unchanged bands:
  *   red     score < 6.0
  *   yellow  6.0 ≤ score < 7.5
  *   green   score ≥ 7.5
@@ -43,11 +50,13 @@ export type TorqueToWeightInput = {
   torqueLbFt?: number | null;
   /** Display / specs.torque string (may include "lb-ft"). Never HP. */
   torqueRaw?: string | number | null;
-  /** Numeric UVW / unloaded pounds — display/honesty only, never the TTW basis. */
+  /** Numeric published / pinned UVW pounds. Preferred over GVWR when > 0. */
   uvwLbs?: number | null;
-  /** Display / specs.uvw string — display/honesty only, never the TTW basis. */
+  /** Display / specs.uvw string — published UVW only, never mid×0.82. */
   uvwRaw?: string | number | null;
-  /** Numeric published OEM GVWR pounds (live.gvwrLbs). Required for a score. */
+  /** Salesman UVW override — wins over published UVW. */
+  overrideUvwLbs?: number | null;
+  /** Numeric published OEM GVWR pounds (live.gvwrLbs). Fallback basis. */
   gvwrLbs?: number | null;
   /**
    * Display / specs.gvwr string (commas + units stripped), or a [lo,hi]
@@ -59,6 +68,8 @@ export type TorqueToWeightInput = {
    * single published GVWR. HIGH end only; published gvwrLbs still wins.
    */
   weightRange?: readonly [number, number] | null;
+  /** Salesman GVWR override — wins over published GVWR; loses to any UVW. */
+  overrideGvwrLbs?: number | null;
   /** Coach type / fuel — towables are N/A (no engine torque rating). */
   rvType?: string | null;
   fuelType?: string | null;
@@ -68,11 +79,13 @@ export type TorqueToWeightResult = {
   torqueLbFt: number | null;
   uvwLb: number | null;
   gvwrLb: number | null;
-  /** GVWR pounds used for the score. Null on GAP / N/A. */
+  /** Pounds used for the score. Null on GAP / N/A. */
   weightLb: number | null;
-  /** Always "GVWR" when scored. Null on GAP / N/A — never "UVW". */
+  /** "UVW" or "GVWR" when scored. Null on GAP / N/A. */
   weightBasis: TorqueWeightBasis | null;
-  /** (torqueLbFt / gvwrLb) * 1000, or null on GAP. */
+  /** True when the active weight came from a manual override. */
+  weightOverridden: boolean;
+  /** (torqueLbFt / weightLb) * 1000, or null on GAP. */
   ratio: number | null;
   /** Continuous 1–10, or null on GAP / N/A. */
   score: number | null;
@@ -244,12 +257,84 @@ const NA_RESULT: TorqueToWeightResult = {
   gvwrLb: null,
   weightLb: null,
   weightBasis: null,
+  weightOverridden: false,
   ratio: null,
   score: null,
   color: null,
   gap: true,
   na: true,
 };
+
+export type ResolvedTorqueWeight = {
+  uvwLb: number | null;
+  gvwrLb: number | null;
+  weightLb: number | null;
+  weightBasis: TorqueWeightBasis | null;
+  weightOverridden: boolean;
+};
+
+/**
+ * Pick the TTW weight: override UVW → published UVW → override GVWR →
+ * published GVWR → GAP. Callers must not pass mid×0.82 estimates as UVW.
+ */
+export function resolveTorqueWeight(
+  input: TorqueToWeightInput,
+): ResolvedTorqueWeight {
+  const overrideUvw = positiveInt(input.overrideUvwLbs ?? 0);
+  const publishedUvw =
+    positiveInt(input.uvwLbs ?? 0) ?? parseUvwLb(input.uvwRaw);
+  const overrideGvwr = positiveInt(input.overrideGvwrLbs ?? 0);
+  const publishedGvwr =
+    positiveInt(input.gvwrLbs ?? 0) ??
+    parseGvwrLb(input.gvwrRaw) ??
+    parseGvwrLb(input.weightRange);
+  const uvwLb = overrideUvw ?? publishedUvw;
+  const gvwrLb = overrideGvwr ?? publishedGvwr;
+
+  if (overrideUvw != null) {
+    return {
+      uvwLb,
+      gvwrLb,
+      weightLb: overrideUvw,
+      weightBasis: "UVW",
+      weightOverridden: true,
+    };
+  }
+  if (publishedUvw != null) {
+    return {
+      uvwLb,
+      gvwrLb,
+      weightLb: publishedUvw,
+      weightBasis: "UVW",
+      weightOverridden: false,
+    };
+  }
+  if (overrideGvwr != null) {
+    return {
+      uvwLb,
+      gvwrLb,
+      weightLb: overrideGvwr,
+      weightBasis: "GVWR",
+      weightOverridden: true,
+    };
+  }
+  if (publishedGvwr != null) {
+    return {
+      uvwLb,
+      gvwrLb,
+      weightLb: publishedGvwr,
+      weightBasis: "GVWR",
+      weightOverridden: false,
+    };
+  }
+  return {
+    uvwLb,
+    gvwrLb,
+    weightLb: null,
+    weightBasis: null,
+    weightOverridden: false,
+  };
+}
 
 export function computeTorqueToWeight(
   input: TorqueToWeightInput,
@@ -259,26 +344,19 @@ export function computeTorqueToWeight(
   }
   const torqueLbFt =
     positiveInt(input.torqueLbFt ?? 0) ?? parseTorqueLbFt(input.torqueRaw);
-  const uvwLb = positiveInt(input.uvwLbs ?? 0) ?? parseUvwLb(input.uvwRaw);
-  // Published numeric pin wins. Range string / weightRange → high end only.
-  const gvwrLb =
-    positiveInt(input.gvwrLbs ?? 0) ??
-    parseGvwrLb(input.gvwrRaw) ??
-    parseGvwrLb(input.weightRange);
-  // GVWR-only scoring. UVW is retained for honesty/display — never the basis.
-  const weightLb = gvwrLb;
-  const weightBasis: TorqueWeightBasis | null = gvwrLb != null ? "GVWR" : null;
+  const resolved = resolveTorqueWeight(input);
   const ratio =
-    torqueLbFt != null && weightLb != null
-      ? torqueToWeightRatio(torqueLbFt, weightLb)
+    torqueLbFt != null && resolved.weightLb != null
+      ? torqueToWeightRatio(torqueLbFt, resolved.weightLb)
       : null;
   const score = scoreFromTorqueToWeightRatio(ratio);
   return {
     torqueLbFt,
-    uvwLb,
-    gvwrLb,
-    weightLb,
-    weightBasis,
+    uvwLb: resolved.uvwLb,
+    gvwrLb: resolved.gvwrLb,
+    weightLb: resolved.weightLb,
+    weightBasis: resolved.weightBasis,
+    weightOverridden: resolved.weightOverridden,
     ratio,
     score,
     color: barColorFromScore(score),
@@ -287,7 +365,14 @@ export function computeTorqueToWeight(
   };
 }
 
-/** Display "X.X/10 · GVWR"; N/A on towables, GAP when torque or GVWR missing. */
+function basisLabel(result: TorqueToWeightResult): string {
+  if (result.weightBasis == null) return "";
+  return result.weightOverridden
+    ? `${result.weightBasis} override`
+    : result.weightBasis;
+}
+
+/** Display "X.X/10 · UVW"; N/A on towables, GAP when torque or weight missing. */
 export function formatTorqueToWeightScore(
   result: TorqueToWeightResult,
 ): string {
@@ -295,5 +380,14 @@ export function formatTorqueToWeightScore(
   if (result.gap || result.score == null || result.weightBasis == null) {
     return "GAP";
   }
-  return `${result.score.toFixed(1)}/10 · ${result.weightBasis}`;
+  return `${result.score.toFixed(1)}/10 · ${basisLabel(result)}`;
+}
+
+/** Short Ratings-card chip: UVW / GVWR / Override. */
+export function formatTorqueWeightBasisChip(
+  result: TorqueToWeightResult,
+): string | null {
+  if (result.na || result.gap || result.weightBasis == null) return null;
+  if (result.weightOverridden) return "Override";
+  return result.weightBasis;
 }

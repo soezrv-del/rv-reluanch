@@ -39,6 +39,7 @@ import {
 } from "@/lib/rv/ratingSystem";
 import {
   formatTorqueToWeightScore,
+  formatTorqueWeightBasisChip,
   computeTorqueToWeight,
 } from "@/lib/rv/torqueToWeight";
 import {
@@ -48,6 +49,11 @@ import {
 } from "@/lib/rv/reportRatings";
 import { hasConcreteFloorplan } from "@/lib/rv/factsOpen";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
+import {
+  clearWeightField,
+  findWeightOverride,
+  saveWeightOverride,
+} from "@/lib/rv/weightOverrides";
 import {
   findPowertrainCorrection,
   sanitizeNarrativeForPin,
@@ -652,15 +658,27 @@ export function RvDetail({
 
   const displayRating = ratingMeta.score;
 
+  const weightOverride = useMemo(
+    () =>
+      floorplan
+        ? findWeightOverride(year, make, model, floorplan)
+        : null,
+    // correctBump refreshes local UVW / GVWR overrides
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [year, make, model, floorplan, correctBump],
+  );
+
   const torqueToWeight = useMemo(
     () =>
       computeTorqueToWeight({
         torqueLbFt: powertrainGuard.hard.torqueLbFt,
         torqueRaw: specs.torque,
-        uvwLbs: live?.uvwLbs ?? null,
+        uvwLbs: brochure.uvwLbs ?? live?.uvwLbs ?? null,
         uvwRaw: specs.uvw,
-        gvwrLbs: live?.gvwrLbs ?? null,
+        overrideUvwLbs: weightOverride?.uvwLbs ?? null,
+        gvwrLbs: brochure.gvwrLbs ?? live?.gvwrLbs ?? null,
         gvwrRaw: specs.gvwr,
+        overrideGvwrLbs: weightOverride?.gvwrLbs ?? null,
         rvType: data.type,
         fuelType: data.fuelType,
       }),
@@ -669,8 +687,12 @@ export function RvDetail({
       specs.torque,
       specs.uvw,
       specs.gvwr,
+      brochure.uvwLbs,
+      brochure.gvwrLbs,
       live?.uvwLbs,
       live?.gvwrLbs,
+      weightOverride?.uvwLbs,
+      weightOverride?.gvwrLbs,
       data.type,
       data.fuelType,
     ],
@@ -1490,8 +1512,18 @@ export function RvDetail({
                 </li>
               ))}
               <li className="flex items-center justify-between gap-3 py-3 last:pb-0">
-                <span className="shrink-0 text-[14px] font-medium text-white">
-                  Torque-to-Weight
+                <span className="flex min-w-0 shrink-0 flex-col gap-1">
+                  <span className="text-[14px] font-medium text-white">
+                    Torque-to-Weight
+                  </span>
+                  {formatTorqueWeightBasisChip(torqueToWeight) ? (
+                    <span
+                      className="inline-flex w-fit items-center rounded-full border border-white/20 bg-black/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/75"
+                      data-testid="facts-tqwt-basis"
+                    >
+                      {formatTorqueWeightBasisChip(torqueToWeight)}
+                    </span>
+                  ) : null}
                 </span>
                 {torqueToWeight.score == null ? (
                   <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
@@ -1567,8 +1599,49 @@ export function RvDetail({
             <SpecRow label="TIRES" value={brochure.tireSize} />
             <SpecRow label="HIGHWAY MPG" value={specs.mpgHighway} />
             <SpecRow label="FUEL CAPACITY" value={specs.fuelCapacity} />
-            <SpecRow label="GVWR" value={specs.gvwr} accent />
-            <SpecRow label="UVW" value={specs.uvw} />
+            <WeightOverrideRow
+              label="GVWR"
+              catalogValue={specs.gvwr}
+              catalogLbs={brochure.gvwrLbs ?? live?.gvwrLbs ?? null}
+              overrideLbs={weightOverride?.gvwrLbs ?? null}
+              accent
+              disabled={!floorplan}
+              onSave={(lbs) => {
+                saveWeightOverride({
+                  year,
+                  make,
+                  model,
+                  floorplan,
+                  gvwrLbs: lbs,
+                });
+                setCorrectBump((n) => n + 1);
+              }}
+              onReset={() => {
+                clearWeightField(year, make, model, floorplan, "gvwrLbs");
+                setCorrectBump((n) => n + 1);
+              }}
+            />
+            <WeightOverrideRow
+              label="UVW"
+              catalogValue={specs.uvw}
+              catalogLbs={brochure.uvwLbs ?? live?.uvwLbs ?? null}
+              overrideLbs={weightOverride?.uvwLbs ?? null}
+              disabled={!floorplan}
+              onSave={(lbs) => {
+                saveWeightOverride({
+                  year,
+                  make,
+                  model,
+                  floorplan,
+                  uvwLbs: lbs,
+                });
+                setCorrectBump((n) => n + 1);
+              }}
+              onReset={() => {
+                clearWeightField(year, make, model, floorplan, "uvwLbs");
+                setCorrectBump((n) => n + 1);
+              }}
+            />
             <SpecRow label="CCC" value={specs.ccc} />
             <SpecRow label="WARRANTY" value={specs.warranty} />
             {shellNav ? (
@@ -2538,6 +2611,121 @@ function OverflowItem({
       {icon}
       {label}
     </button>
+  );
+}
+
+function formatOverrideLbs(n: number): string {
+  return `${n.toLocaleString()} lbs`;
+}
+
+function WeightOverrideRow({
+  label,
+  catalogValue,
+  catalogLbs,
+  overrideLbs,
+  accent,
+  disabled,
+  onSave,
+  onReset,
+}: {
+  label: string;
+  catalogValue?: string | null;
+  catalogLbs?: number | null;
+  overrideLbs?: number | null;
+  accent?: boolean;
+  disabled?: boolean;
+  onSave: (lbs: number) => void;
+  onReset: () => void;
+}) {
+  const published =
+    overrideLbs != null
+      ? formatOverrideLbs(overrideLbs)
+      : catalogValue && String(catalogValue).trim()
+        ? catalogValue
+        : "—";
+  const [draft, setDraft] = useState(
+    overrideLbs != null
+      ? String(overrideLbs)
+      : catalogLbs != null
+        ? String(catalogLbs)
+        : "",
+  );
+  useEffect(() => {
+    setDraft(
+      overrideLbs != null
+        ? String(overrideLbs)
+        : catalogLbs != null
+          ? String(catalogLbs)
+          : "",
+    );
+  }, [overrideLbs, catalogLbs]);
+
+  const commit = () => {
+    const n = Number(String(draft).replace(/[^\d.]/g, ""));
+    if (!Number.isFinite(n) || n <= 0) {
+      setDraft(
+        overrideLbs != null
+          ? String(overrideLbs)
+          : catalogLbs != null
+            ? String(catalogLbs)
+            : "",
+      );
+      return;
+    }
+    if (overrideLbs != null && Math.round(n) === overrideLbs) return;
+    if (overrideLbs == null && catalogLbs != null && Math.round(n) === catalogLbs) {
+      return;
+    }
+    onSave(Math.round(n));
+  };
+
+  return (
+    <div
+      className="flex items-center justify-between gap-3 border-b border-white/[0.07] py-2.5 last:border-0"
+      data-testid={`facts-weight-${label.toLowerCase()}`}
+    >
+      <span className="flex min-w-0 items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-white">
+        {label}
+        {overrideLbs != null ? (
+          <span
+            className="rounded-full border border-amber-300/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-100"
+            data-testid={`facts-weight-${label.toLowerCase()}-override`}
+          >
+            Override
+          </span>
+        ) : null}
+      </span>
+      <div className="flex min-w-0 items-center justify-end gap-2">
+        <input
+          type="text"
+          inputMode="numeric"
+          aria-label={`${label} pounds${overrideLbs != null ? " (override)" : ""}`}
+          disabled={disabled}
+          value={draft}
+          placeholder={published}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.currentTarget.blur();
+            }
+          }}
+          className={cn(
+            "w-[7.5rem] rounded-md border border-white/15 bg-white/5 px-2 py-1.5 text-right text-[14px] font-medium tabular-nums leading-snug text-white outline-none placeholder:text-white/40 focus:border-white/35 disabled:opacity-50",
+            accent && "font-semibold",
+          )}
+        />
+        {overrideLbs != null ? (
+          <button
+            type="button"
+            onClick={onReset}
+            className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/70"
+          >
+            Reset
+          </button>
+        ) : null}
+      </div>
+    </div>
   );
 }
 

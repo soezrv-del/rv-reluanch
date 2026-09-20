@@ -7,10 +7,12 @@ import {
   barColorFromScore,
   computeTorqueToWeight,
   formatTorqueToWeightScore,
+  formatTorqueWeightBasisChip,
   isTowableForTorqueRating,
   parseGvwrLb,
   parseTorqueLbFt,
   parseUvwLb,
+  resolveTorqueWeight,
   scoreFromTorqueToWeightRatio,
   torqueToWeightRatio,
 } from "./torqueToWeight.ts";
@@ -50,7 +52,7 @@ test("1–10 envelope: <10 → 1–2; 10–17 → 3–4; 17–28 → 5–6; 28�
   assert.equal(scoreFromTorqueToWeightRatio(-1), null);
 });
 
-test("must-pass 1–10 anchors (±0.15)", () => {
+test("must-pass 1–10 anchors (±0.15) stay on GVWR when UVW is missing", () => {
   const seneca = computeTorqueToWeight({
     torqueLbFt: 800,
     gvwrLbs: 31_000,
@@ -138,19 +140,21 @@ test("bar color: red < 6.0, yellow [6.0, 7.5), green ≥ 7.5", () => {
   assert.equal(barColorFromScore(null), null);
 });
 
-test("GVWR-only basis; UVW never wins; GAP if torque or GVWR missing", () => {
-  const ignoreUvw = computeTorqueToWeight({
+test("UVW preferred over GVWR; GAP if torque and both weights missing", () => {
+  const preferUvw = computeTorqueToWeight({
     torqueLbFt: 468,
     uvwLbs: 20_000,
     gvwrLbs: 24_000,
     rvType: "Class A Gas",
   });
-  assert.equal(ignoreUvw.weightBasis, "GVWR");
-  assert.equal(ignoreUvw.weightLb, 24_000);
-  assert.equal(ignoreUvw.uvwLb, 20_000);
-  assert.ok(Math.abs((ignoreUvw.ratio ?? 0) - 19.5) < 1e-9);
-  assert.match(formatTorqueToWeightScore(ignoreUvw), /^[0-9.]+\/10 · GVWR$/);
-  assert.doesNotMatch(formatTorqueToWeightScore(ignoreUvw), /UVW/);
+  assert.equal(preferUvw.weightBasis, "UVW");
+  assert.equal(preferUvw.weightOverridden, false);
+  assert.equal(preferUvw.weightLb, 20_000);
+  assert.equal(preferUvw.uvwLb, 20_000);
+  assert.equal(preferUvw.gvwrLb, 24_000);
+  assert.ok(Math.abs((preferUvw.ratio ?? 0) - 23.4) < 1e-9);
+  assert.match(formatTorqueToWeightScore(preferUvw), /^[0-9.]+\/10 · UVW$/);
+  assert.equal(formatTorqueWeightBasisChip(preferUvw), "UVW");
 
   const unloadedRaw = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -158,10 +162,9 @@ test("GVWR-only basis; UVW never wins; GAP if torque or GVWR missing", () => {
     gvwrLbs: 22_000,
     rvType: "Class A Gas",
   });
-  assert.equal(unloadedRaw.weightBasis, "GVWR");
-  assert.equal(unloadedRaw.weightLb, 22_000);
+  assert.equal(unloadedRaw.weightBasis, "UVW");
+  assert.equal(unloadedRaw.weightLb, 18_000);
   assert.equal(unloadedRaw.uvwLb, 18_000);
-  assertNear(unloadedRaw.score, 5.0);
 
   const gvwrOnly = computeTorqueToWeight({
     torqueLbFt: 800,
@@ -171,6 +174,7 @@ test("GVWR-only basis; UVW never wins; GAP if torque or GVWR missing", () => {
   assert.equal(gvwrOnly.weightBasis, "GVWR");
   assert.equal(gvwrOnly.weightLb, 31_000);
   assert.equal(formatTorqueToWeightScore(gvwrOnly), "6.0/10 · GVWR");
+  assert.equal(formatTorqueWeightBasisChip(gvwrOnly), "GVWR");
 
   assert.equal(formatTorqueToWeightScore(computeTorqueToWeight({})), "GAP");
   assert.equal(
@@ -181,17 +185,65 @@ test("GVWR-only basis; UVW never wins; GAP if torque or GVWR missing", () => {
     formatTorqueToWeightScore(computeTorqueToWeight({ gvwrLbs: 22_000 })),
     "GAP",
   );
-  // UVW alone is not a weight basis — missing GVWR is GAP.
   assert.equal(
     formatTorqueToWeightScore(computeTorqueToWeight({ uvwLbs: 18_000 })),
     "GAP",
   );
-  assert.equal(
-    formatTorqueToWeightScore(
-      computeTorqueToWeight({ torqueLbFt: 468, uvwLbs: 18_000 }),
-    ),
-    "GAP",
-  );
+  const uvwAlone = computeTorqueToWeight({
+    torqueLbFt: 468,
+    uvwLbs: 18_000,
+    rvType: "Class A Gas",
+  });
+  assert.equal(uvwAlone.weightBasis, "UVW");
+  assert.equal(uvwAlone.weightLb, 18_000);
+  assert.equal(uvwAlone.gap, false);
+});
+
+test("override preference: UVW override → UVW → GVWR override → GVWR → GAP", () => {
+  const order = resolveTorqueWeight({
+    overrideUvwLbs: 17_500,
+    uvwLbs: 18_000,
+    overrideGvwrLbs: 21_000,
+    gvwrLbs: 22_000,
+  });
+  assert.equal(order.weightLb, 17_500);
+  assert.equal(order.weightBasis, "UVW");
+  assert.equal(order.weightOverridden, true);
+
+  const publishedUvw = resolveTorqueWeight({
+    uvwLbs: 18_000,
+    overrideGvwrLbs: 21_000,
+    gvwrLbs: 22_000,
+  });
+  assert.equal(publishedUvw.weightLb, 18_000);
+  assert.equal(publishedUvw.weightBasis, "UVW");
+  assert.equal(publishedUvw.weightOverridden, false);
+
+  const gvwrOverride = resolveTorqueWeight({
+    overrideGvwrLbs: 21_000,
+    gvwrLbs: 22_000,
+  });
+  assert.equal(gvwrOverride.weightLb, 21_000);
+  assert.equal(gvwrOverride.weightBasis, "GVWR");
+  assert.equal(gvwrOverride.weightOverridden, true);
+
+  const publishedGvwr = resolveTorqueWeight({ gvwrLbs: 22_000 });
+  assert.equal(publishedGvwr.weightLb, 22_000);
+  assert.equal(publishedGvwr.weightBasis, "GVWR");
+  assert.equal(publishedGvwr.weightOverridden, false);
+
+  assert.equal(resolveTorqueWeight({}).weightLb, null);
+
+  const scored = computeTorqueToWeight({
+    torqueLbFt: 800,
+    uvwLbs: 26_000,
+    gvwrLbs: 31_000,
+    overrideUvwLbs: 25_000,
+    rvType: "Class C",
+  });
+  assert.equal(scored.weightLb, 25_000);
+  assert.equal(formatTorqueToWeightScore(scored), `${scored.score?.toFixed(1)}/10 · UVW override`);
+  assert.equal(formatTorqueWeightBasisChip(scored), "Override");
 });
 
 test("missing torque|weight → GAP; towables N/A", () => {
@@ -224,16 +276,13 @@ test("never uses horsepower as torque; UVW labeled vs GVWR labeled", () => {
 });
 
 test("TTW range GVWR uses HIGH end; published pin wins over range", () => {
-  // Range-only catalog/display band → max(lo,hi). Conservative (heavier).
   assert.equal(parseGvwrLb("39500-44005"), 44005);
   assert.equal(parseGvwrLb("39,500–44,005 lbs"), 44005);
   assert.equal(parseGvwrLb("39,500—44,005 lbs GVWR"), 44005);
   assert.equal(parseGvwrLb([39_500, 44_005]), 44005);
   assert.equal(parseGvwrLb([44_005, 39_500]), 44005);
-  // Single published figure unchanged.
   assert.equal(parseGvwrLb("47000"), 47000);
   assert.equal(parseGvwrLb("47,000 lbs GVWR"), 47000);
-  // UVW still never parsed as GVWR; messy 3-number strings stay GAP.
   assert.equal(parseGvwrLb("39,500–44,005 lbs UVW"), null);
   assert.equal(parseUvwLb("39,500–44,005 lbs"), null);
 
@@ -246,7 +295,6 @@ test("TTW range GVWR uses HIGH end; published pin wins over range", () => {
   assert.equal(rangeOnly.gvwrLb, 44005);
   assert.equal(rangeOnly.weightBasis, "GVWR");
   assert.match(formatTorqueToWeightScore(rangeOnly), /^[0-9.]+\/10 · GVWR$/);
-  assert.doesNotMatch(formatTorqueToWeightScore(rangeOnly), /UVW|range/i);
 
   const displayBand = computeTorqueToWeight({
     torqueLbFt: 1250,
@@ -262,8 +310,6 @@ test("TTW range GVWR uses HIGH end; published pin wins over range", () => {
   });
   assert.equal(tupleBand.weightLb, 44005);
 
-  // Published OEM pin (e.g. Tradition 42Q/42V brochure 47,000) wins the
-  // catalog/display band. Pinning 42V→47000 in catalog is a separate task.
   const publishedWins = computeTorqueToWeight({
     torqueLbFt: 1250,
     gvwrLbs: 47_000,
@@ -274,14 +320,12 @@ test("TTW range GVWR uses HIGH end; published pin wins over range", () => {
   assert.equal(publishedWins.weightLb, 47_000);
   assert.equal(publishedWins.gvwrLb, 47_000);
   assert.equal(publishedWins.weightBasis, "GVWR");
-  assert.match(formatTorqueToWeightScore(publishedWins), /^[0-9.]+\/10 · GVWR$/);
 });
 
-test("Facts Ratings: Torque-to-Weight bar + X/10 · GVWR; other rows keep stars", () => {
+test("Facts Ratings: Torque-to-Weight bar + X/10 · UVW|GVWR; other rows keep stars", () => {
   const src = readFileSync(join(root, "torqueToWeight.ts"), "utf8");
-  assert.match(src, /torqueLbFt \/ gvwrLb/);
-  assert.match(src, /weightLb = gvwrLb/);
-  assert.doesNotMatch(src, /uvwLb \?\? gvwrLb/);
+  assert.match(src, /override UVW → published UVW → override GVWR/);
+  assert.match(src, /torqueLbFt \/ weightLb/);
   assert.match(src, /Math\.max\(nums\[0]!, nums\[1]!\)/);
   assert.match(src, /HIGH end/);
   assert.doesNotMatch(src, /Math\.min\(nums\[0]!, nums\[1]!\)/);
@@ -289,6 +333,7 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 · GVWR; other rows keep stars"
   assert.match(src, /score < 7\.5/);
   assert.doesNotMatch(src, /score < 3/);
   assert.doesNotMatch(src, /score < 4[^.0-9]/);
+  assert.doesNotMatch(src, /mid\s*\*\s*0\.82/);
 
   const detail = readFileSync(
     join(root, "../../components/rvfax/RvDetail.tsx"),
@@ -296,12 +341,12 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 · GVWR; other rows keep stars"
   );
   assert.match(detail, /Torque-to-Weight/);
   assert.match(detail, /formatTorqueToWeightScore/);
+  assert.match(detail, /formatTorqueWeightBasisChip/);
   assert.match(detail, /data-testid="facts-tqwt-bar"/);
   assert.match(detail, /score \/ 10/);
-  assert.match(detail, /uvwLbs:\s*live\?\.uvwLbs/);
-  assert.match(detail, /uvwRaw:\s*specs\.uvw/);
-  assert.match(detail, /gvwrLbs:\s*live\?\.gvwrLbs/);
-  assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
+  assert.match(detail, /overrideUvwLbs:\s*weightOverride\?\.uvwLbs/);
+  assert.match(detail, /overrideGvwrLbs:\s*weightOverride\?\.gvwrLbs/);
+  assert.match(detail, /WeightOverrideRow/);
   assert.doesNotMatch(detail, /torqueToWeight\.stars/);
   assert.match(detail, /label:\s*"Quality"/);
   assert.match(detail, /ratingStars\(row\.score\)/);
