@@ -2534,6 +2534,20 @@ const OEM_UVW_PINS: OemUvwPin[] = [
     26500,
     "In-repo OEM floorplan spec (Jayco Seneca OEM Super C specs). Current Jayco 2025–2026 brochure does not reprint UVW.",
   ),
+
+  // 2022 American Dream 39RK — representative UVW for the 39RK line
+  // (all units that year, not one VIN). Do not bleed to 42Q / 42V / 45A
+  // or other model years.
+  // Family RVing road-test door placard: 39,237 UVW / 7,763 OCCC.
+  ...uvwPins(
+    "american coach",
+    "american dream",
+    2022,
+    2022,
+    ["39RK"],
+    39237,
+    "Family RVing road-test door placard for 2022 American Coach American Dream 39RK (39,237 UVW / 7,763 OCCC). Representative UVW for the 39RK line that year — not a single VIN.",
+  ),
 ];
 
 /** Pin count for coverage reports / tests. */

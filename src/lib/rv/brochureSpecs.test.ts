@@ -389,6 +389,20 @@ test("OEM UVW pins: sourced Newmar + Seneca; demo coaches without brochure UVW s
   assert.equal(findOemUvwLbs("2025", "Jayco", "Precept", "31UL"), null);
   assert.equal(findOemUvwLbs("2025", "American Coach", "American Dream", "45A"), null);
   assert.equal(findOemUvwLbs("2025", "American Coach", "American Tradition", "42V"), null);
+  // 2022 Dream 39RK only — Family RVing placard. Sibling plans / years stay GAP.
+  assert.equal(
+    findOemUvwLbs("2022", "American Coach", "American Dream", "39RK"),
+    39237,
+  );
+  assert.equal(findOemUvwLbs("2021", "American Coach", "American Dream", "39RK"), null);
+  assert.equal(findOemUvwLbs("2023", "American Coach", "American Dream", "39RK"), null);
+  assert.equal(findOemUvwLbs("2022", "American Coach", "American Dream", "42Q"), null);
+  assert.equal(findOemUvwLbs("2022", "American Coach", "American Dream", "42V"), null);
+  assert.equal(findOemUvwLbs("2022", "American Coach", "American Dream", "45A"), null);
+  assert.equal(
+    findOemUvwLbs("2022", "American Coach", "American Tradition", "39RK"),
+    null,
+  );
   // Unprinted year stays GAP.
   assert.equal(findOemUvwLbs("2024", "Newmar", "Dutch Star", "3836"), null);
   assert.equal(findOemUvwLbs("2026", "Newmar", "Canyon Star", "3947"), null);
