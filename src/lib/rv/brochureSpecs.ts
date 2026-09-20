@@ -464,9 +464,10 @@ export function buildBrochureSpecs(
     make,
     model,
   });
-  // Listing / TTW: UVW pin when published; else OEM floorplan / snap UVW;
-  // else runtime tiered GVWR estimate (never mid×0.82). Never copy GVWR
-  // onto published UVW fields.
+  // Listing / TTW weight (David #358): published UVW as weightLb directly
+  // (pin / brochure-true OEM floorplan / snap) → else tiered UVW_EST from
+  // GVWR → else raw GVWR. Never mid×0.82. Never copy an estimate onto
+  // published UVW fields — display-only estimate is a separate field.
   const publishedGvwr =
     oem?.gvwrLbs ?? findOemGvwrLbs(year, make, model, floorplan) ?? snap.gvwrLbs;
   const publishedUvw =
@@ -474,7 +475,7 @@ export function buildBrochureSpecs(
   const gvwrMid = publishedGvwr ?? w.mid;
   const uvw = publishedUvw;
   const ccc =
-    oem != null
+    oem != null && oem.uvwLbs != null
       ? Math.max(800, oem.gvwrLbs - oem.uvwLbs)
       : snap.cccLbs != null
         ? snap.cccLbs

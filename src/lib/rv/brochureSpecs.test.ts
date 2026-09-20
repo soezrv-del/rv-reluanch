@@ -162,6 +162,59 @@ test("Class C never hash-picks bus tires or triple 15k A/C", () => {
   assert.match(spec, /honestAcUnits/);
 });
 
+test("Discovery OEM rows keep brochure GVWR and omit invented UVW", () => {
+  for (const fp of ["36Q", "38K", "38N", "38W"] as const) {
+    const oem = findOemFloorplanSpec("2023", "Fleetwood", "Discovery", fp);
+    assert.ok(oem, `Discovery ${fp} OEM row`);
+    assert.equal(oem.gvwrLbs, 33_400);
+    assert.equal(oem.uvwLbs, undefined);
+    assert.equal(findOemUvwLbs("2023", "Fleetwood", "Discovery", fp), null);
+    assert.equal(oem.hitchLbs, 1000);
+    assert.equal(oem.freshWater, 105);
+  }
+  const floorplanSrc = src("floorplanSpecs.ts");
+  assert.doesNotMatch(floorplanSrc, /uvwLbs:\s*24500/);
+  assert.doesNotMatch(floorplanSrc, /uvwLbs:\s*25500/);
+  assert.doesNotMatch(floorplanSrc, /uvwLbs:\s*25200/);
+  assert.doesNotMatch(floorplanSrc, /uvwLbs:\s*25800/);
+
+  // Before: invented 25,500 UVW scored as published → ~8.2.
+  const before = computeTorqueToWeight({
+    torqueLbFt: 800,
+    uvwLbs: 25_500,
+    gvwrLbs: 33_400,
+    rvType: "Class A Diesel",
+    chassis: "Freightliner XC",
+    fuelType: "Diesel",
+  });
+  assert.equal(before.weightBasis, "UVW");
+  assert.equal(before.weightLb, 25_500);
+  assert.ok(
+    before.score != null && Math.abs(before.score - 8.2) <= 0.15,
+    `before score ${before.score}`,
+  );
+
+  // After: no published UVW → diesel-pusher UVW_EST 0.835×33,400 ≈ 27,900 → ~7.8.
+  const after = computeTorqueToWeight({
+    torqueLbFt: 800,
+    gvwrLbs: 33_400,
+    rvType: "Class A Diesel",
+    chassis: "Freightliner XC",
+    fuelType: "Diesel",
+  });
+  assert.equal(after.weightBasis, "UVW_EST");
+  assert.equal(after.weightEstimated, true);
+  assert.equal(after.weightLb, 27_900);
+  assert.ok(
+    after.score != null && after.score >= 7.0 && after.score < 8.0,
+    `after score ${after.score} should be 7.0–7.8, not the old 8.2`,
+  );
+  assert.ok(
+    after.score != null && Math.abs(after.score - 7.8) <= 0.15,
+    `after score ${after.score} should be ~7.8 on UVW_EST`,
+  );
+});
+
 test("brochure / listing weight basis is published UVW then tiered estimate — mid×0.82 never wins", () => {
   const spec = src("brochureSpecs.ts");
   assert.match(spec, /findOemGvwrLbs/);

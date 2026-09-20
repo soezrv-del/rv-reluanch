@@ -14,7 +14,8 @@ export type OemFloorplanSpec = {
   exteriorHeightIn: number;
   exteriorWidthIn: number;
   interiorHeightIn?: number;
-  uvwLbs: number;
+  /** Brochure / sticker UVW only. Omit when the table prints GVWR and not UVW. */
+  uvwLbs?: number;
   gvwrLbs: number;
   hitchLbs: number;
   freshWater?: number;
@@ -310,6 +311,9 @@ const OEM_FLOORPLAN_ROWS: Array<{
 
   // ── 1) Fleetwood Discovery (2020–2024 brochure sheet: 36Q / 38K / 38N / 38W) ──
   // User-verified 2022 brochure table (overall length, height, tanks, hitch, fuel).
+  // Brochure / dealer capacities print GVWR 33,400 — not UVW. Do not invent
+  // UVW (the old 24,500 / 25,500 / 25,200 / 25,800 figures were ~GVWR×0.835
+  // kitchen math). TTW falls through to the tiered UVW_EST / GVWR path.
   {
     makeIncludes: "fleetwood",
     modelIncludes: "discovery",
@@ -322,7 +326,6 @@ const OEM_FLOORPLAN_ROWS: Array<{
       exteriorHeightIn: 12 * 12 + 10,
       exteriorWidthIn: 102,
       interiorHeightIn: 84,
-      uvwLbs: 24500,
       gvwrLbs: 33400,
       hitchLbs: 1000,
       freshWater: 105,
@@ -344,7 +347,6 @@ const OEM_FLOORPLAN_ROWS: Array<{
       exteriorHeightIn: 12 * 12 + 10,
       exteriorWidthIn: 102,
       interiorHeightIn: 84,
-      uvwLbs: 25500,
       gvwrLbs: 33400,
       hitchLbs: 1000,
       freshWater: 105,
@@ -366,7 +368,6 @@ const OEM_FLOORPLAN_ROWS: Array<{
       exteriorHeightIn: 12 * 12 + 10,
       exteriorWidthIn: 102,
       interiorHeightIn: 84,
-      uvwLbs: 25200,
       gvwrLbs: 33400,
       hitchLbs: 1000,
       freshWater: 105,
@@ -387,7 +388,6 @@ const OEM_FLOORPLAN_ROWS: Array<{
       exteriorHeightIn: 12 * 12 + 10,
       exteriorWidthIn: 102,
       interiorHeightIn: 84,
-      uvwLbs: 25800,
       gvwrLbs: 33400,
       hitchLbs: 1000,
       freshWater: 105,

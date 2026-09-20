@@ -675,7 +675,8 @@ export function RvDetail({
         torqueLbFt: powertrainGuard.hard.torqueLbFt,
         torqueRaw: specs.torque,
         uvwLbs: brochure.uvwLbs ?? live?.uvwLbs ?? null,
-        uvwRaw: specs.uvw,
+        // Display UVW may be the tiered estimate — never parse that as published.
+        uvwRaw: brochure.uvwEstimated ? null : specs.uvw,
         overrideUvwLbs: weightOverride?.uvwLbs ?? null,
         gvwrLbs: brochure.gvwrLbs ?? live?.gvwrLbs ?? null,
         gvwrRaw: specs.gvwr,
@@ -702,6 +703,7 @@ export function RvDetail({
       specs.chassis,
       specs.engine,
       brochure.uvwLbs,
+      brochure.uvwEstimated,
       brochure.gvwrLbs,
       brochure.cccLbs,
       brochure.chassis,
