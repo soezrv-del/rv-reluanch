@@ -1,17 +1,23 @@
 /**
  * Catalog inventory for per-type torque-to-weight scores.
  *
- * Only published numeric torque + published numeric GVWR (series, year-band,
- * or OEM floorplan pin). Never invent from weightRange mid / UVW / HP.
- * Towables are N/A. Motorized missing either field is GAP.
+ * Inventory still requires published numeric torque + published numeric
+ * GVWR (series, year-band, or OEM floorplan pin). Never invent from
+ * weightRange mid / HP. Towables are N/A. Motorized missing either
+ * field is GAP.
+ *
+ * Scoring uses the live #358 weight: published UVW → tiered UVW_EST →
+ * GVWR. A published UVW pin / series UVW is passed through; otherwise
+ * computeTorqueToWeight estimates UVW from GVWR.
  */
 
-import { findOemGvwrLbs } from "./floorplanSpecs.ts";
+import { findOemGvwrLbs, findOemUvwLbs } from "./floorplanSpecs.ts";
 import {
   computeTorqueToWeight,
   isTowableForTorqueRating,
   type TorqueScoreFormula,
   type TorqueToWeightResult,
+  type TorqueWeightBasis,
 } from "./torqueToWeight.ts";
 import type { PowertrainYearBand, RVSpec } from "./rvTypes.ts";
 
@@ -23,6 +29,9 @@ export type CatalogTorqueScoreRow = {
   formula: TorqueScoreFormula;
   torqueLbFt: number;
   gvwrLbs: number;
+  /** Pounds actually scored (#358: UVW / UVW_EST / GVWR). */
+  weightLb: number;
+  weightBasis: TorqueWeightBasis;
   ratio: number;
   score: number;
   color: NonNullable<TorqueToWeightResult["color"]>;
@@ -121,17 +130,35 @@ function scoreRow(
   torqueLbFt: number,
   gvwrLbs: number,
   source: string,
-  extras?: { yearFrom?: number; yearTo?: number; floorplan?: string; type?: string; fuel?: string; chassis?: string; engine?: string },
+  extras?: {
+    yearFrom?: number;
+    yearTo?: number;
+    floorplan?: string;
+    type?: string;
+    fuel?: string;
+    chassis?: string;
+    engine?: string;
+    uvwLbs?: number | null;
+  },
 ): CatalogTorqueScoreRow | null {
   const result = computeTorqueToWeight({
     torqueLbFt,
+    uvwLbs: extras?.uvwLbs ?? spec.uvwLbs ?? null,
     gvwrLbs,
     rvType: extras?.type ?? spec.type,
     fuelType: extras?.fuel ?? spec.fuelType,
     chassis: extras?.chassis ?? spec.chassis,
     engine: extras?.engine ?? spec.engine,
   });
-  if (result.na || result.score == null || result.ratio == null || result.color == null || result.formula == null) {
+  if (
+    result.na ||
+    result.score == null ||
+    result.ratio == null ||
+    result.color == null ||
+    result.formula == null ||
+    result.weightLb == null ||
+    result.weightBasis == null
+  ) {
     return null;
   }
   return {
@@ -142,6 +169,8 @@ function scoreRow(
     formula: result.formula,
     torqueLbFt,
     gvwrLbs,
+    weightLb: result.weightLb,
+    weightBasis: result.weightBasis,
     ratio: result.ratio,
     score: result.score,
     color: result.color,
@@ -154,8 +183,9 @@ function scoreRow(
 
 /**
  * Every catalog coach that has published torque + published GVWR, scored
- * with the live per-type formula. GAP rows are motorized models missing
- * one or both fields (no invented weightRange / UVW).
+ * with the live per-type formula on the #358 weight. GAP rows are
+ * motorized models missing one or both published fields (no invented
+ * weightRange mid).
  */
 export function listCatalogTorqueToWeightScores(
   data: Record<string, Record<string, RVSpec>>,
@@ -236,6 +266,7 @@ export function listCatalogTorqueToWeightScores(
               yearFrom: year,
               yearTo: year,
               floorplan: fp,
+              uvwLbs: findOemUvwLbs(year, make, model, fp) ?? spec.uvwLbs ?? null,
             }),
           );
         }
@@ -314,7 +345,7 @@ export function formatCatalogTorqueScoreMarkdown(
   const lines: string[] = [
     "# Per-type torque-to-weight catalog scores",
     "",
-    "Published torque + published GVWR only. Missing either field is GAP. Towables are N/A.",
+    "Published torque + published GVWR to list a row. Score uses #358 weight (published UVW → tiered UVW_EST → GVWR). Missing torque or GVWR is GAP. Towables are N/A.",
     "",
     `| Formula | Models with both fields |`,
     `|---------|-------------------------|`,
@@ -334,13 +365,13 @@ export function formatCatalogTorqueScoreMarkdown(
     if (!rows.length) continue;
     lines.push(`## ${labels[formula]}`, "");
     lines.push(
-      "| Make | Model | Plan / source | Torque | GVWR | r | Score | Color |",
+      "| Make | Model | Plan / source | Torque | GVWR | Weight | Basis | r | Score | Color |",
     );
-    lines.push("|---|---|---|---:|---:|---:|---:|---|");
+    lines.push("|---|---|---|---:|---:|---:|---|---:|---:|---|");
     for (const r of rows) {
       const plan = [r.floorplan, r.source].filter(Boolean).join(" · ");
       lines.push(
-        `| ${r.make} | ${r.model} | ${plan} | ${r.torqueLbFt} | ${r.gvwrLbs.toLocaleString()} | ${r.ratio.toFixed(1)} | ${r.score.toFixed(1)} | ${r.color} |`,
+        `| ${r.make} | ${r.model} | ${plan} | ${r.torqueLbFt} | ${r.gvwrLbs.toLocaleString()} | ${r.weightLb.toLocaleString()} | ${r.weightBasis} | ${r.ratio.toFixed(1)} | ${r.score.toFixed(1)} | ${r.color} |`,
       );
     }
     lines.push("");

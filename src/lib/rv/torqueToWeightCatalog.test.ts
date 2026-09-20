@@ -11,7 +11,7 @@ import { loadLiveCatalog } from "../../../scripts/load-live-catalog.mjs";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-test("catalog helper scores published torque+GVWR only; champions ~10.0", async () => {
+test("catalog helper lists published torque+GVWR; scores #358 weight; champions ~10.0", async () => {
   const { RV_DATA } = await loadLiveCatalog();
   const report = listCatalogTorqueToWeightScores(RV_DATA);
 
