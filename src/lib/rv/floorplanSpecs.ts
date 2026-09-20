@@ -2332,6 +2332,258 @@ export function oemGvwrPinCount(): number {
   return OEM_GVWR_PINS.length;
 }
 
+export type OemGvwrPinRow = {
+  makeIncludes: string;
+  modelIncludes: string;
+  yearMin: number;
+  yearMax: number;
+  floorplan: string;
+  gvwrLbs: number;
+};
+
+/** Brochure GVWR pins used by Facts / TTW. Read-only snapshot for coverage. */
+export function listOemGvwrPins(): readonly OemGvwrPinRow[] {
+  return OEM_GVWR_PINS;
+}
+
+type OemUvwPin = {
+  makeIncludes: string;
+  modelIncludes: string;
+  yearMin: number;
+  yearMax: number;
+  floorplan: string;
+  uvwLbs: number;
+  /** Brochure / OEM / dealer URL or note — required, never invented. */
+  source: string;
+};
+
+function uvwPins(
+  makeIncludes: string,
+  modelIncludes: string,
+  yearMin: number,
+  yearMax: number,
+  floorplans: readonly string[],
+  uvwLbs: number,
+  source: string,
+): OemUvwPin[] {
+  return floorplans.map((floorplan) => ({
+    makeIncludes,
+    modelIncludes,
+    yearMin,
+    yearMax,
+    floorplan,
+    uvwLbs,
+    source,
+  }));
+}
+
+/**
+ * Published OEM UVW pins for torque-to-weight (UVW-preferred scoring).
+ * Mirror GVWR pin shape. Only pin a single floorplan UVW printed by a
+ * dated brochure / OEM table. Missing UVW stays unpinned → GVWR fallback.
+ * Never invent from mid×0.82 or CCC math.
+ */
+const OEM_UVW_PINS: OemUvwPin[] = [
+  // Newmar Dutch Star — 2025 + 2026 OEM brochure APP. UVW tables.
+  // 3836 is Freightliner-only (no Spartan row). 4071/4081 print both
+  // chassis; pin the HEAVIER Spartan APP. UVW (conservative TTW).
+  // https://www.newmarcorp.com/content/dam/newmar/page-assets/model-page-assets/2025-model-year-page-assets/dutch-star/10-brochure__ds25/2025-dutch-star-brochure-final2-combo.pdf
+  // https://www.newmarcorp.com/content/dam/newmar/brochure/2026-newmar-digital-brochures/2026-dutch-star-brochure-final-combo.pdf.coredownload.inline.pdf
+  ...uvwPins(
+    "newmar",
+    "dutch star",
+    2025,
+    2026,
+    ["3836"],
+    34700,
+    "Newmar 2025–2026 Dutch Star brochure Freightliner APP. UVW (34,700). 2026 OEM floorplan page prints 35,000 — brochure table used.",
+  ),
+  ...uvwPins(
+    "newmar",
+    "dutch star",
+    2025,
+    2026,
+    ["4071"],
+    37550,
+    "Newmar 2025–2026 Dutch Star brochure Spartan APP. UVW 37,550 (Freightliner 37,500). Heavier chassis used.",
+  ),
+  ...uvwPins(
+    "newmar",
+    "dutch star",
+    2025,
+    2026,
+    ["4081"],
+    37700,
+    "Newmar 2025–2026 Dutch Star brochure Spartan APP. UVW 37,700 (Freightliner 37,650). Heavier chassis used.",
+  ),
+
+  // Newmar Bay Star — 2025 brochure APP. UVW (Ford F-53).
+  // https://www.newmarcorp.com/content/dam/newmar/page-assets/model-page-assets/2025-model-year-page-assets/bay-star/10-brochure__bs25/2025-bay-star-brochure-final-combo.pdf
+  ...uvwPins(
+    "newmar",
+    "bay star",
+    2025,
+    2025,
+    ["3225"],
+    21450,
+    "Newmar 2025 Bay Star brochure APP. UVW 21,450 (GVWR 24,000 on that card).",
+  ),
+  ...uvwPins(
+    "newmar",
+    "bay star",
+    2025,
+    2025,
+    ["3626"],
+    22600,
+    "Newmar 2025 Bay Star brochure APP. UVW 22,600.",
+  ),
+  ...uvwPins(
+    "newmar",
+    "bay star",
+    2025,
+    2025,
+    ["3629"],
+    22700,
+    "Newmar 2025 Bay Star brochure APP. UVW 22,700.",
+  ),
+  ...uvwPins(
+    "newmar",
+    "bay star",
+    2025,
+    2025,
+    ["3811", "3826"],
+    22850,
+    "Newmar 2025 Bay Star brochure APP. UVW 22,850.",
+  ),
+
+  // Newmar Bay Star — 2026 brochure APP. UVW (all listed plans 26,000 GVWR).
+  // https://www.newmarcorp.com/content/dam/newmar/brochure/2026-newmar-digital-brochures/2026-bay-star-brochure-final-combo.pdf.coredownload.inline.pdf
+  // https://www.newmarcorp.com/models/bay-star/2026-bay-star/floor-plans/3114
+  ...uvwPins(
+    "newmar",
+    "bay star",
+    2026,
+    2026,
+    ["3114"],
+    20050,
+    "Newmar 2026 Bay Star brochure / OEM 3114 page APP. UVW 20,050.",
+  ),
+  ...uvwPins(
+    "newmar",
+    "bay star",
+    2026,
+    2026,
+    ["3225"],
+    21450,
+    "Newmar 2026 Bay Star brochure APP. UVW 21,450.",
+  ),
+  ...uvwPins(
+    "newmar",
+    "bay star",
+    2026,
+    2026,
+    ["3609", "3629"],
+    22700,
+    "Newmar 2026 Bay Star brochure APP. UVW 22,700.",
+  ),
+  ...uvwPins(
+    "newmar",
+    "bay star",
+    2026,
+    2026,
+    ["3626"],
+    22600,
+    "Newmar 2026 Bay Star brochure / OEM 3626 page APP. UVW 22,600.",
+  ),
+  ...uvwPins(
+    "newmar",
+    "bay star",
+    2026,
+    2026,
+    ["3811", "3826"],
+    22850,
+    "Newmar 2026 Bay Star brochure APP. UVW 22,850.",
+  ),
+
+  // Newmar Canyon Star — 2025 brochure + OEM 3947 chassis table.
+  // https://www.newmarcorp.com/content/dam/newmar/page-assets/model-page-assets/2025-model-year-page-assets/canyon-star/10-brochure-25/2025-canyon-star-brochure-final-combo.pdf
+  // https://www.newmarcorp.com/models/canyon-star/2025-canyon-star/floor-plans/3947
+  ...uvwPins(
+    "newmar",
+    "canyon star",
+    2025,
+    2025,
+    ["3947"],
+    25950,
+    "Newmar 2025 Canyon Star brochure / OEM 3947 page APP. UVW 25,950.",
+  ),
+
+  // Jayco Seneca Super C — restates in-repo OEM floorplan UVW so the TTW
+  // pin table owns the number. 2025–2026 Jayco Seneca brochure prints
+  // GVWR 31,000 only (no UVW column). Do not invent a new figure.
+  ...uvwPins(
+    "jayco",
+    "seneca",
+    2021,
+    2027,
+    ["37K"],
+    26000,
+    "In-repo OEM floorplan spec (Jayco Seneca OEM Super C specs). Current Jayco 2025–2026 brochure does not reprint UVW.",
+  ),
+  ...uvwPins(
+    "jayco",
+    "seneca",
+    2021,
+    2027,
+    ["37L"],
+    26200,
+    "In-repo OEM floorplan spec (Jayco Seneca OEM Super C specs). Current Jayco 2025–2026 brochure does not reprint UVW.",
+  ),
+  ...uvwPins(
+    "jayco",
+    "seneca",
+    2021,
+    2027,
+    ["37M"],
+    26500,
+    "In-repo OEM floorplan spec (Jayco Seneca OEM Super C specs). Current Jayco 2025–2026 brochure does not reprint UVW.",
+  ),
+
+  // 2022 American Dream 39RK — representative UVW for the 39RK line
+  // (all units that year, not one VIN). Do not bleed to 42Q / 42V / 45A
+  // or other model years.
+  // Family RVing road-test door placard: 39,237 UVW / 7,763 OCCC.
+  ...uvwPins(
+    "american coach",
+    "american dream",
+    2022,
+    2022,
+    ["39RK"],
+    39237,
+    "Family RVing road-test door placard for 2022 American Coach American Dream 39RK (39,237 UVW / 7,763 OCCC). Representative UVW for the 39RK line that year — not a single VIN.",
+  ),
+];
+
+/** Pin count for coverage reports / tests. */
+export function oemUvwPinCount(): number {
+  return OEM_UVW_PINS.length;
+}
+
+export type OemUvwPinRow = {
+  makeIncludes: string;
+  modelIncludes: string;
+  yearMin: number;
+  yearMax: number;
+  floorplan: string;
+  uvwLbs: number;
+  source: string;
+};
+
+/** Brochure / sticker UVW pins. Never overwrite these with the tiered GVWR estimate. */
+export function listOemUvwPins(): readonly OemUvwPinRow[] {
+  return OEM_UVW_PINS;
+}
+
 function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
   if (
     modelIncludes === "vision" &&
@@ -2479,6 +2731,38 @@ export function findOemGvwrLbs(
     if (score > bestScore) {
       bestScore = score;
       best = row.gvwrLbs;
+    }
+  }
+  return best;
+}
+
+/** Published OEM UVW for a year/make/model/floorplan. Null → runtime tiered GVWR estimate when GVWR is known (do not invent mid×0.82). */
+export function findOemUvwLbs(
+  year: string | number,
+  make: string,
+  model: string,
+  floorplan: string,
+): number | null {
+  if (!floorplan?.trim()) return null;
+  const y = typeof year === "number" ? year : parseInt(String(year), 10);
+  if (!Number.isFinite(y)) return null;
+  const mk = make.toLowerCase();
+  const md = model.toLowerCase();
+  const fp = floorplan.trim().toUpperCase().replace(/\s+/g, "");
+
+  let best: number | null = null;
+  let bestScore = -1;
+  for (const row of OEM_UVW_PINS) {
+    if (y < row.yearMin || y > row.yearMax) continue;
+    if (!mk.includes(row.makeIncludes)) continue;
+    if (!md.includes(row.modelIncludes)) continue;
+    if (modelPinBlocked(row.modelIncludes, md)) continue;
+    const rowFp = row.floorplan.toUpperCase().replace(/\s+/g, "");
+    if (rowFp !== fp) continue;
+    const score = row.modelIncludes.length * 10 + row.makeIncludes.length;
+    if (score > bestScore) {
+      bestScore = score;
+      best = row.uvwLbs;
     }
   }
   return best;

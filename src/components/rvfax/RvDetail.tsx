@@ -38,7 +38,10 @@ import {
   ratingStars,
 } from "@/lib/rv/ratingSystem";
 import {
+  THIN_CCC_FLAG,
+  UVW_ESTIMATE_LABEL,
   formatTorqueToWeightScore,
+  formatTorqueWeightBasisChip,
   computeTorqueToWeight,
 } from "@/lib/rv/torqueToWeight";
 import {
@@ -48,6 +51,11 @@ import {
 } from "@/lib/rv/reportRatings";
 import { hasConcreteFloorplan } from "@/lib/rv/factsOpen";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
+import {
+  clearWeightField,
+  findWeightOverride,
+  saveWeightOverride,
+} from "@/lib/rv/weightOverrides";
 import {
   findPowertrainCorrection,
   sanitizeNarrativeForPin,
@@ -652,27 +660,52 @@ export function RvDetail({
 
   const displayRating = ratingMeta.score;
 
+  const weightOverride = useMemo(
+    () =>
+      floorplan
+        ? findWeightOverride(year, make, model, floorplan)
+        : null,
+    // correctBump refreshes local UVW / GVWR overrides
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [year, make, model, floorplan, correctBump],
+  );
+
   const torqueToWeight = useMemo(
     () =>
       computeTorqueToWeight({
         torqueLbFt: powertrainGuard.hard.torqueLbFt,
         torqueRaw: specs.torque,
-        uvwLbs: live?.uvwLbs ?? null,
+        uvwLbs: brochure.uvwLbs ?? live?.uvwLbs ?? null,
         uvwRaw: specs.uvw,
-        gvwrLbs: live?.gvwrLbs ?? null,
+        overrideUvwLbs: weightOverride?.uvwLbs ?? null,
+        gvwrLbs: brochure.gvwrLbs ?? live?.gvwrLbs ?? null,
         gvwrRaw: specs.gvwr,
+        overrideGvwrLbs: weightOverride?.gvwrLbs ?? null,
         rvType: data.type,
         fuelType: data.fuelType,
+        chassis: brochure.chassis ?? specs.chassis ?? data.chassis,
+        cccLbs: brochure.cccLbs ?? live?.cccLbs ?? null,
+        cccRaw: specs.ccc,
       }),
     [
       powertrainGuard.hard.torqueLbFt,
       specs.torque,
       specs.uvw,
       specs.gvwr,
+      specs.ccc,
+      specs.chassis,
+      brochure.uvwLbs,
+      brochure.gvwrLbs,
+      brochure.cccLbs,
+      brochure.chassis,
       live?.uvwLbs,
       live?.gvwrLbs,
+      live?.cccLbs,
+      weightOverride?.uvwLbs,
+      weightOverride?.gvwrLbs,
       data.type,
       data.fuelType,
+      data.chassis,
     ],
   );
 
@@ -1490,8 +1523,31 @@ export function RvDetail({
                 </li>
               ))}
               <li className="flex items-center justify-between gap-3 py-3 last:pb-0">
-                <span className="shrink-0 text-[14px] font-medium text-white">
-                  Torque-to-Weight
+                <span className="flex min-w-0 shrink-0 flex-col gap-1">
+                  <span className="text-[14px] font-medium text-white">
+                    Torque-to-Weight
+                  </span>
+                  {formatTorqueWeightBasisChip(torqueToWeight) ? (
+                    <span
+                      className={
+                        torqueToWeight.weightEstimated
+                          ? "inline-flex w-fit items-center rounded-full border border-sky-300/35 bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold text-sky-100"
+                          : "inline-flex w-fit items-center rounded-full border border-white/20 bg-black/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/75"
+                      }
+                      data-testid="facts-tqwt-basis"
+                    >
+                      {formatTorqueWeightBasisChip(torqueToWeight)}
+                    </span>
+                  ) : null}
+                  {torqueToWeight.thinCcc ? (
+                    <span
+                      className="inline-flex w-fit items-center rounded-full border border-amber-300/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-100"
+                      data-testid="facts-tqwt-thin-ccc"
+                      title="CCC/OCCC/NCC under 3,000 lbs — 20–24k gas UVW ratio may actually run ~0.89"
+                    >
+                      {THIN_CCC_FLAG}
+                    </span>
+                  ) : null}
                 </span>
                 {torqueToWeight.score == null ? (
                   <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
@@ -1567,9 +1623,70 @@ export function RvDetail({
             <SpecRow label="TIRES" value={brochure.tireSize} />
             <SpecRow label="HIGHWAY MPG" value={specs.mpgHighway} />
             <SpecRow label="FUEL CAPACITY" value={specs.fuelCapacity} />
-            <SpecRow label="GVWR" value={specs.gvwr} accent />
-            <SpecRow label="UVW" value={specs.uvw} />
-            <SpecRow label="CCC" value={specs.ccc} />
+            <WeightOverrideRow
+              label="GVWR"
+              catalogValue={specs.gvwr}
+              catalogLbs={brochure.gvwrLbs ?? live?.gvwrLbs ?? null}
+              overrideLbs={weightOverride?.gvwrLbs ?? null}
+              accent
+              disabled={!floorplan}
+              onSave={(lbs) => {
+                saveWeightOverride({
+                  year,
+                  make,
+                  model,
+                  floorplan,
+                  gvwrLbs: lbs,
+                });
+                setCorrectBump((n) => n + 1);
+              }}
+              onReset={() => {
+                clearWeightField(year, make, model, floorplan, "gvwrLbs");
+                setCorrectBump((n) => n + 1);
+              }}
+            />
+            <WeightOverrideRow
+              label="UVW"
+              catalogValue={specs.uvw}
+              catalogLbs={brochure.uvwLbs ?? live?.uvwLbs ?? null}
+              estimatedLbs={
+                weightOverride?.uvwLbs != null ||
+                brochure.uvwLbs != null ||
+                live?.uvwLbs != null
+                  ? null
+                  : (torqueToWeight.weightEstimated
+                      ? torqueToWeight.weightLb
+                      : null) ??
+                    brochure.estimatedUvwLbs ??
+                    null
+              }
+              estimatedLabel={UVW_ESTIMATE_LABEL}
+              overrideLbs={weightOverride?.uvwLbs ?? null}
+              disabled={!floorplan}
+              onSave={(lbs) => {
+                saveWeightOverride({
+                  year,
+                  make,
+                  model,
+                  floorplan,
+                  uvwLbs: lbs,
+                });
+                setCorrectBump((n) => n + 1);
+              }}
+              onReset={() => {
+                clearWeightField(year, make, model, floorplan, "uvwLbs");
+                setCorrectBump((n) => n + 1);
+              }}
+            />
+            <SpecRow
+              label="CCC"
+              value={
+                torqueToWeight.thinCcc &&
+                !String(specs.ccc || "").includes(THIN_CCC_FLAG)
+                  ? `${specs.ccc} · ${THIN_CCC_FLAG}`
+                  : specs.ccc
+              }
+            />
             <SpecRow label="WARRANTY" value={specs.warranty} />
             {shellNav ? (
               <button
@@ -2538,6 +2655,127 @@ function OverflowItem({
       {icon}
       {label}
     </button>
+  );
+}
+
+function formatOverrideLbs(n: number): string {
+  return `${n.toLocaleString()} lbs`;
+}
+
+function WeightOverrideRow({
+  label,
+  catalogValue,
+  catalogLbs,
+  estimatedLbs,
+  estimatedLabel,
+  overrideLbs,
+  accent,
+  disabled,
+  onSave,
+  onReset,
+}: {
+  label: string;
+  catalogValue?: string | null;
+  catalogLbs?: number | null;
+  estimatedLbs?: number | null;
+  estimatedLabel?: string | null;
+  overrideLbs?: number | null;
+  accent?: boolean;
+  disabled?: boolean;
+  onSave: (lbs: number) => void;
+  onReset: () => void;
+}) {
+  const displayLbs = overrideLbs ?? catalogLbs ?? estimatedLbs ?? null;
+  const published =
+    overrideLbs != null
+      ? formatOverrideLbs(overrideLbs)
+      : catalogValue && String(catalogValue).trim()
+        ? catalogValue
+        : estimatedLbs != null
+          ? formatOverrideLbs(estimatedLbs)
+          : "—";
+  const [draft, setDraft] = useState(
+    displayLbs != null ? String(displayLbs) : "",
+  );
+  useEffect(() => {
+    setDraft(displayLbs != null ? String(displayLbs) : "");
+  }, [displayLbs]);
+
+  const commit = () => {
+    const n = Number(String(draft).replace(/[^\d.]/g, ""));
+    if (!Number.isFinite(n) || n <= 0) {
+      setDraft(displayLbs != null ? String(displayLbs) : "");
+      return;
+    }
+    if (overrideLbs != null && Math.round(n) === overrideLbs) return;
+    if (overrideLbs == null && catalogLbs != null && Math.round(n) === catalogLbs) {
+      return;
+    }
+    if (
+      overrideLbs == null &&
+      catalogLbs == null &&
+      estimatedLbs != null &&
+      Math.round(n) === estimatedLbs
+    ) {
+      return;
+    }
+    onSave(Math.round(n));
+  };
+
+  return (
+    <div
+      className="flex items-center justify-between gap-3 border-b border-white/[0.07] py-2.5 last:border-0"
+      data-testid={`facts-weight-${label.toLowerCase()}`}
+    >
+      <span className="flex min-w-0 items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-white">
+        {label}
+        {overrideLbs != null ? (
+          <span
+            className="rounded-full border border-amber-300/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-100"
+            data-testid={`facts-weight-${label.toLowerCase()}-override`}
+          >
+            Override
+          </span>
+        ) : estimatedLbs != null && estimatedLabel ? (
+          <span
+            className="rounded-full border border-sky-300/35 bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold normal-case tracking-[0.04em] text-sky-100"
+            data-testid={`facts-weight-${label.toLowerCase()}-estimated`}
+          >
+            {estimatedLabel}
+          </span>
+        ) : null}
+      </span>
+      <div className="flex min-w-0 items-center justify-end gap-2">
+        <input
+          type="text"
+          inputMode="numeric"
+          aria-label={`${label} pounds${overrideLbs != null ? " (override)" : ""}`}
+          disabled={disabled}
+          value={draft}
+          placeholder={published}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.currentTarget.blur();
+            }
+          }}
+          className={cn(
+            "w-[7.5rem] rounded-md border border-white/15 bg-white/5 px-2 py-1.5 text-right text-[14px] font-medium tabular-nums leading-snug text-white outline-none placeholder:text-white/40 focus:border-white/35 disabled:opacity-50",
+            accent && "font-semibold",
+          )}
+        />
+        {overrideLbs != null ? (
+          <button
+            type="button"
+            onClick={onReset}
+            className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/70"
+          >
+            Reset
+          </button>
+        ) : null}
+      </div>
+    </div>
   );
 }
 

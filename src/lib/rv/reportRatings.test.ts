@@ -65,6 +65,7 @@ test("Facts Ratings section wires owner reviews and does not invent from live/wa
   assert.match(detail, /label:\s*"Customer satisfaction"/);
   assert.match(detail, /Torque-to-Weight/);
   assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
+  assert.match(detail, /overrideUvwLbs/);
   assert.match(detail, /OWNER_REVIEW_FOOTER/);
   assert.match(detail, /formatOwnerReviewScore/);
   assert.match(detail, /R = GAP \(no Insider category\)/);
