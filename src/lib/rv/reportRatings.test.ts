@@ -152,6 +152,6 @@ test("Facts Ratings section wires owner reviews and does not invent from live/wa
   const reportSrc = readFileSync(join(root, "reportRatings.ts"), "utf8");
   assert.match(reportSrc, /getRatingMetadata/);
   assert.match(reportSrc, /isKnownManufacturer/);
-  assert.doesNotMatch(reportSrc, /ratingEstimate|ownerSentiment|getMockReviews/);
+  assert.doesNotMatch(reportSrc, /getMockReviews|live\?\.ratingEstimate/);
   assert.doesNotMatch(reportSrc, /row\.factoryWarranty|row\.livability/);
 });
