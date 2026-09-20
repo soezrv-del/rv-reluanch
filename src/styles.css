@@ -1436,9 +1436,9 @@
   transform: translate(-50%, -50%);
   object-fit: contain;
   object-position: center;
-  opacity: 0.22;
+  opacity: 0.16;
   mix-blend-mode: screen;
-  filter: brightness(1.08) saturate(0.95);
+  filter: brightness(1.06) saturate(0.92);
 }
 @media (min-width: 640px) {
   .compare-raidho-mark {
