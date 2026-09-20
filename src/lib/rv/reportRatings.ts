@@ -1,14 +1,19 @@
 /**
  * Facts report Ratings rows other than torque-to-weight.
  *
- * Quality / Reliability / Customer satisfaction come from the dated
- * RV Insider owner-review snapshot (see ownerReviewRatings.ts).
- * Quality = overallQuality or GAP. Reliability is always GAP (no Insider
- * category). Satisfaction = combined, painted once. Missing / below
- * sample floor / unknown brand → GAP.
+ * Quality / Customer satisfaction come from the dated RV Insider
+ * owner-review snapshot (see ownerReviewRatings.ts).
+ * Quality = overallQuality or GAP. Satisfaction = combined, painted once.
+ * Missing / below sample floor / unknown Insider brand → GAP for Q/S.
  *
- * Do not invent from warranty years, NHTSA counts, mock reviews,
- * RvFOX editorial scores, Grok ratingEstimate, or ownerSentiment prose.
+ * Reliability comes from the RvFOX editorial reputation tables in
+ * ratingSystem.ts (manufacturer base + model tier + year band when year
+ * is passed). Known make → 1–5 score. Unknown make → GAP — never paint
+ * the silent UNKNOWN_MAKE_BASE 3.5 as if it were reputation.
+ *
+ * Do not invent Reliability from warranty years, NHTSA counts, mock
+ * reviews, livability / floorplan / drivingTowing, combined (again),
+ * Grok ratingEstimate, or ownerSentiment prose.
  * Factory warranty is not Reliability and is not "Dealer support index".
  */
 
@@ -18,6 +23,10 @@ import {
   type OwnerReviewRatings,
   type OwnerReviewSlot,
 } from "./ownerReviewRatings.ts";
+import {
+  getRatingMetadata,
+  isKnownManufacturer,
+} from "./ratingSystem.ts";
 
 export type GroundedStars = 1 | 2 | 3 | 4 | 5;
 
@@ -26,6 +35,8 @@ export type GroundedScore = number | null | undefined;
 export type ReportRatingsInput = {
   make?: string | null;
   model?: string | null;
+  /** Wizard / report year. Empty or omitted → brand + model tier only. */
+  year?: string | null;
 };
 
 export type ReportRatingSlot = OwnerReviewSlot & {
@@ -57,6 +68,48 @@ function withStars(slot: OwnerReviewSlot): ReportRatingSlot {
   return { ...slot, stars: groundedStars(slot.score) };
 }
 
+const GAP_REPUTATION: OwnerReviewSlot = {
+  score: null,
+  grain: null,
+  basis: null,
+  sampleN: null,
+  caption: null,
+  asOf: null,
+  sourceUrl: null,
+};
+
+/**
+ * RvFOX editorial reputation for the Reliability slot.
+ * Unknown make → GAP. Do not surface UNKNOWN_MAKE_BASE.
+ */
+export function reputationReliability(
+  make?: string | null,
+  model?: string | null,
+  year?: string | null,
+): OwnerReviewSlot {
+  const makeStr = make?.trim() ?? "";
+  if (!makeStr || !isKnownManufacturer(makeStr)) return GAP_REPUTATION;
+
+  const yearStr = year?.trim() ?? "";
+  const meta = getRatingMetadata(makeStr, model?.trim() ?? "", yearStr);
+  if (!meta.knownMake) return GAP_REPUTATION;
+
+  const caption =
+    meta.tierMatched && meta.matchedModelKey
+      ? `RvFOX reputation · ${meta.matchedModelKey} · ${meta.tierLabel}`
+      : "RvFOX reputation · brand";
+
+  return {
+    score: meta.score,
+    grain: meta.tierMatched ? "model" : "brand",
+    basis: "reputation",
+    sampleN: null,
+    caption,
+    asOf: null,
+    sourceUrl: null,
+  };
+}
+
 export function mapReportRatings(input: ReportRatingsInput): ReportRatings {
   const resolved: OwnerReviewRatings = resolveOwnerReviewRatings(
     input.make,
@@ -64,7 +117,9 @@ export function mapReportRatings(input: ReportRatingsInput): ReportRatings {
   );
   return {
     quality: withStars(resolved.quality),
-    reliability: withStars(resolved.reliability),
+    reliability: withStars(
+      reputationReliability(input.make, input.model, input.year),
+    ),
     customerSatisfaction: withStars(resolved.customerSatisfaction),
     snapshotAsOf: resolved.snapshotAsOf,
     matchedName: resolved.matchedName,

@@ -1,22 +1,27 @@
 /**
- * Facts Ratings — owner-review Quality / Reliability / Satisfaction.
+ * Facts Ratings — owner-review Quality / Satisfaction (Insider snapshot).
  *
  * Primary source: dated RV Insider manufacturer aggregates (seed snapshot).
- * Not a live scrape. Not J.D. Power. Not Consumer Reports. Not RvFOX editorial.
+ * Not a live scrape. Not J.D. Power. Not Consumer Reports.
  *
  * Mapping (honest — `combined` is painted at most once):
  *   Quality      ← overallQuality only (basis overall_quality, caption
  *                  "Owner reviews · overall quality · brand-level|model-level").
  *                  Null overallQuality → GAP. Do not silently fall back to
  *                  combined on Quality.
- *   Reliability  ← GAP. RV Insider has no Reliability category. Do not
- *                  invent a composite or reuse combined.
+ *   Reliability  ← GAP on this Insider-only helper. RV Insider has no
+ *                  Reliability category. Facts paints Reliability from the
+ *                  RvFOX editorial reputation tables in ratingSystem.ts
+ *                  (see mapReportRatings) — never combined, warranty, or
+ *                  category averages.
  *   Satisfaction ← combined header average (basis combined, caption
  *                  "Owner reviews (combined) · brand-level|model-level").
  *
  * Sample floors: brand n≥15, model n≥8. Below → GAP.
  * Brand score on a model is labeled "brand-level" — never silent.
- * Do not invent R/S from category averages, factoryWarranty, or editorial.
+ * Do not invent Q/S from category averages, factoryWarranty, or editorial.
+ * Do not use this module's Reliability GAP as the Facts UI source when
+ * ratingSystem knows the make.
  */
 
 import {
@@ -38,14 +43,14 @@ export {
   OWNER_REVIEW_SOURCE_NAME,
 };
 
-export type OwnerReviewBasis = "overall_quality" | "combined";
+export type OwnerReviewBasis = "overall_quality" | "combined" | "reputation";
 
 export type OwnerReviewSlot = {
   score: number | null;
   grain: OwnerReviewGrain | null;
   basis: OwnerReviewBasis | null;
   sampleN: number | null;
-  /** Visible source cue. Always includes "Owner reviews". */
+  /** Owner-review slots include "Owner reviews"; reputation slots include "RvFOX reputation". */
   caption: string | null;
   asOf: string | null;
   sourceUrl: string | null;
@@ -71,7 +76,7 @@ const GAP_SLOT: OwnerReviewSlot = {
 };
 
 export const OWNER_REVIEW_FOOTER =
-  "Owner reviews are a dated snapshot of public RV Insider manufacturer averages — not a live scrape of every review. GAP below n≥15 brand or n≥8 model. Brand-level when the model sample is thin. Torque-to-Weight is separate hard math.";
+  "Owner reviews are a dated snapshot of public RV Insider manufacturer averages — not a live scrape of every review. GAP below n≥15 brand or n≥8 model. Brand-level when the model sample is thin. Reliability is RvFOX reputation (brand / model tables), not an Insider category. Torque-to-Weight is separate hard math.";
 
 export function normOwnerReviewName(s: string): string {
   return s
@@ -135,7 +140,7 @@ function grainLabel(grain: OwnerReviewGrain): string {
 }
 
 function captionFor(
-  basis: OwnerReviewBasis,
+  basis: Exclude<OwnerReviewBasis, "reputation">,
   grain: OwnerReviewGrain,
 ): string {
   const grainBit = grainLabel(grain);
@@ -148,7 +153,7 @@ function captionFor(
 function slotFrom(
   row: OwnerReviewSeedRow,
   score: number,
-  basis: OwnerReviewBasis,
+  basis: Exclude<OwnerReviewBasis, "reputation">,
 ): OwnerReviewSlot {
   return {
     score,
@@ -174,7 +179,9 @@ export function countCombinedPaints(slots: {
 
 /**
  * Slot map for one seed row that already cleared the sample floor.
- * Quality never borrows combined. Reliability is always GAP.
+ * Quality never borrows combined. Reliability stays GAP here — Insider
+ * has no Reliability category. Facts overlays RvFOX reputation in
+ * mapReportRatings.
  */
 export function mapOwnerReviewSlots(row: OwnerReviewSeedRow): {
   quality: OwnerReviewSlot;
