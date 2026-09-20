@@ -1,19 +1,23 @@
 /**
  * Torque-to-weight rating for the Facts report Ratings section.
  *
- * Weight metric — UVW preferred, GVWR fallback. Never invent UVW from
- * estimated mid×0.82 (weightForFloorplan). GAP if torque is missing or
- * no usable weight remains. Prefer numeric powertrainGuard / brochure
- * hard torque when present; else parse specs.torque. Torque is lb-ft
- * only — never horsepower.
+ * Weight metric — published UVW preferred, then UVW_EST from GVWR,
+ * then raw GVWR. Never invent UVW from estimated mid×0.82
+ * (weightForFloorplan). GAP if torque is missing or no usable weight
+ * remains. Prefer numeric powertrainGuard / brochure hard torque when
+ * present; else parse specs.torque. Torque is lb-ft only — never
+ * horsepower.
  *
  * Active weight (first hit wins):
  *   1. Manual UVW override
- *   2. Published / pinned UVW (oem pin, OEM floorplan, catalog snap)
+ *   2. Published / pinned UVW (oem pin, brochure-true OEM floorplan,
+ *      catalog snap). Use as weightLb directly — no UVW_EST invent,
+ *      no mid×0.82.
  *   3. Estimated UVW via the tiered GVWR formula (nearest 100 lb)
  *      when a usable single GVWR exists (OEM pin, parseable single,
- *      or already-resolved HIGH-of-range). Never overwrites a pin.
- *   4. Manual GVWR override (raw — only if no GVWR to estimate from)
+ *      or already-resolved HIGH-of-range). Never writes into the
+ *      published uvwLbs field.
+ *   4. Manual GVWR override (raw — only if the estimate cannot run)
  *   5. Published GVWR (oem.gvwrLbs / findOemGvwrLbs / snap / live)
  *   6. Range-only GVWR HIGH end (display band / weightRange [lo,hi])
  *   7. GAP
@@ -610,7 +614,8 @@ export type ResolvedTorqueWeight = {
 /**
  * Pick the TTW weight: override UVW → published UVW → estimated UVW
  * (tiered GVWR formula) → override GVWR → published GVWR → GAP.
- * Callers must not pass mid×0.82 estimates as UVW.
+ * Callers must not pass mid×0.82 estimates or display-only UVW_EST
+ * as published UVW (uvwLbs / uvwRaw).
  */
 export function resolveTorqueWeight(
   input: TorqueToWeightInput,
