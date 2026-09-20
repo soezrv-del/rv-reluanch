@@ -162,7 +162,7 @@ test("Class C never hash-picks bus tires or triple 15k A/C", () => {
   assert.match(spec, /honestAcUnits/);
 });
 
-test("brochure / listing weight basis is published UVW then GVWR — estimated UVW never wins", () => {
+test("brochure / listing weight basis is published UVW then 0.835 estimate — mid×0.82 never wins", () => {
   const spec = src("brochureSpecs.ts");
   assert.match(spec, /findOemGvwrLbs/);
   assert.match(spec, /findOemUvwLbs/);
@@ -196,27 +196,28 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   const spec = src("brochureSpecs.ts");
   assert.match(spec, /oem\?\.gvwrLbs \?\? findOemGvwrLbs/);
   assert.match(spec, /findOemUvwLbs\(year, make, model, floorplan\) \?\? oem\?\.uvwLbs \?\? snap\.uvwLbs/);
-  assert.doesNotMatch(spec, /uvw:\s*fmtLbs\(uvw\)/);
-  assert.match(spec, /uvw:\s*uvw != null \? fmtLbs\(uvw\) : CONFIRM_BROCHURE/);
+  assert.match(spec, /estimateUvwFromGvwr/);
+  assert.match(spec, /UVW_ESTIMATE_LABEL/);
+  assert.match(spec, /uvwLbs: uvw \?\? null/);
 
-  // Callers must not pass mid×0.82 as uvwRaw. GVWR-only still scores.
+  // Callers must not pass mid×0.82 as uvwRaw. GVWR-only now estimates UVW.
   const ttw31 = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrRaw: "22,000 lbs",
     rvType: "Class A Gas",
   });
-  assert.equal(ttw31.weightBasis, "GVWR");
-  assert.equal(ttw31.weightLb, 22000);
-  assert.ok(ttw31.score != null && Math.abs(ttw31.score - 5.0) <= 0.15);
+  assert.equal(ttw31.weightBasis, "UVW_EST");
+  assert.equal(ttw31.weightLb, 18400);
+  assert.ok(ttw31.score != null && Math.abs(ttw31.score - 5.92) <= 0.15);
 
   const ttw36 = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrRaw: "24,000 lbs",
     rvType: "Class A Gas",
   });
-  assert.equal(ttw36.weightBasis, "GVWR");
-  assert.equal(ttw36.weightLb, 24000);
-  assert.ok(ttw36.score != null && Math.abs(ttw36.score - 4.6) <= 0.15);
+  assert.equal(ttw36.weightBasis, "UVW_EST");
+  assert.equal(ttw36.weightLb, 20000);
+  assert.ok(ttw36.score != null && Math.abs(ttw36.score - 5.45) <= 0.15);
 
   const ttwPublishedUvw = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -233,8 +234,8 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     gvwrRaw: "24,000 lbs",
     rvType: "Class A Gas",
   });
-  assert.equal(ttwVxl.weightLb, 24000);
-  assert.equal(ttwVxl.weightBasis, "GVWR");
+  assert.equal(ttwVxl.weightLb, 20000);
+  assert.equal(ttwVxl.weightBasis, "UVW_EST");
   assert.notEqual(ttwVxl.uvwLb, 24000);
 
   // Range-only listing (no oem/snap pin): TTW uses HIGH end, not mid/low.
@@ -243,8 +244,9 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     gvwrRaw: "39,500–44,005 lbs",
     rvType: "Class A Diesel",
   });
-  assert.equal(ttwRange.weightLb, 44005);
-  assert.equal(ttwRange.weightBasis, "GVWR");
+  assert.equal(ttwRange.gvwrLb, 44005);
+  assert.equal(ttwRange.weightLb, 36700);
+  assert.equal(ttwRange.weightBasis, "UVW_EST");
   // Published pin still beats the catalog/display band.
   const ttwPin = computeTorqueToWeight({
     torqueLbFt: 1250,
@@ -252,7 +254,8 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     gvwrRaw: "39,500–44,005 lbs",
     rvType: "Class A Gas",
   });
-  assert.equal(ttwPin.weightLb, 22000);
+  assert.equal(ttwPin.gvwrLb, 22000);
+  assert.equal(ttwPin.weightLb, 18400);
 });
 
 test("Tradition 42V/42Q brochure GVWR is 47,000 — not catalog weightRange mid", () => {
@@ -307,8 +310,9 @@ test("Tradition 42V/42Q brochure GVWR is 47,000 — not catalog weightRange mid"
     gvwrRaw: "47,000 lbs",
     rvType: "Class A Diesel",
   });
-  assert.equal(ttw.weightBasis, "GVWR");
-  assert.equal(ttw.weightLb, 47000);
+  assert.equal(ttw.weightBasis, "UVW_EST");
+  assert.equal(ttw.gvwrLb, 47000);
+  assert.equal(ttw.weightLb, 39200);
 });
 
 test("Anthem 44R/37K brochure GVWR pins beat catalog weightRange mid", () => {
@@ -356,8 +360,9 @@ test("Anthem 44R/37K brochure GVWR pins beat catalog weightRange mid", () => {
     weightRange: [42000, 52000],
     rvType: "Class A Diesel",
   });
-  assert.equal(ttw44.weightBasis, "GVWR");
-  assert.equal(ttw44.weightLb, 52000);
+  assert.equal(ttw44.weightBasis, "UVW_EST");
+  assert.equal(ttw44.gvwrLb, 52000);
+  assert.equal(ttw44.weightLb, 43400);
 
   const ttw37 = computeTorqueToWeight({
     torqueLbFt: 1250,
@@ -366,11 +371,12 @@ test("Anthem 44R/37K brochure GVWR pins beat catalog weightRange mid", () => {
     weightRange: [42000, 52000],
     rvType: "Class A Diesel",
   });
-  assert.equal(ttw37.weightLb, 44000);
+  assert.equal(ttw37.gvwrLb, 44000);
+  assert.equal(ttw37.weightLb, 36700);
   assert.notEqual(ttw37.weightLb, interpolated37.mid);
 });
 
-test("OEM UVW pins: sourced Newmar + Seneca; demo coaches without brochure UVW stay GAP", () => {
+test("OEM UVW pins: sourced Newmar + Seneca + 39RK; demo coaches stay unpinned (estimate at runtime)", () => {
   assert.ok(oemUvwPinCount() >= 10);
   assert.equal(findOemUvwLbs("2025", "Newmar", "Dutch Star", "3836"), 34700);
   assert.equal(findOemUvwLbs("2026", "Newmar", "Dutch Star", "4071"), 37550);

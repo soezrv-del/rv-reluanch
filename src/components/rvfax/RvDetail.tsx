@@ -38,6 +38,7 @@ import {
   ratingStars,
 } from "@/lib/rv/ratingSystem";
 import {
+  UVW_ESTIMATE_LABEL,
   formatTorqueToWeightScore,
   formatTorqueWeightBasisChip,
   computeTorqueToWeight,
@@ -1518,7 +1519,11 @@ export function RvDetail({
                   </span>
                   {formatTorqueWeightBasisChip(torqueToWeight) ? (
                     <span
-                      className="inline-flex w-fit items-center rounded-full border border-white/20 bg-black/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/75"
+                      className={
+                        torqueToWeight.weightEstimated
+                          ? "inline-flex w-fit items-center rounded-full border border-sky-300/35 bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold text-sky-100"
+                          : "inline-flex w-fit items-center rounded-full border border-white/20 bg-black/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/75"
+                      }
                       data-testid="facts-tqwt-basis"
                     >
                       {formatTorqueWeightBasisChip(torqueToWeight)}
@@ -1625,6 +1630,18 @@ export function RvDetail({
               label="UVW"
               catalogValue={specs.uvw}
               catalogLbs={brochure.uvwLbs ?? live?.uvwLbs ?? null}
+              estimatedLbs={
+                weightOverride?.uvwLbs != null ||
+                brochure.uvwLbs != null ||
+                live?.uvwLbs != null
+                  ? null
+                  : (torqueToWeight.weightEstimated
+                      ? torqueToWeight.weightLb
+                      : null) ??
+                    brochure.estimatedUvwLbs ??
+                    null
+              }
+              estimatedLabel={UVW_ESTIMATE_LABEL}
               overrideLbs={weightOverride?.uvwLbs ?? null}
               disabled={!floorplan}
               onSave={(lbs) => {
@@ -2622,6 +2639,8 @@ function WeightOverrideRow({
   label,
   catalogValue,
   catalogLbs,
+  estimatedLbs,
+  estimatedLabel,
   overrideLbs,
   accent,
   disabled,
@@ -2631,49 +2650,46 @@ function WeightOverrideRow({
   label: string;
   catalogValue?: string | null;
   catalogLbs?: number | null;
+  estimatedLbs?: number | null;
+  estimatedLabel?: string | null;
   overrideLbs?: number | null;
   accent?: boolean;
   disabled?: boolean;
   onSave: (lbs: number) => void;
   onReset: () => void;
 }) {
+  const displayLbs = overrideLbs ?? catalogLbs ?? estimatedLbs ?? null;
   const published =
     overrideLbs != null
       ? formatOverrideLbs(overrideLbs)
       : catalogValue && String(catalogValue).trim()
         ? catalogValue
-        : "—";
+        : estimatedLbs != null
+          ? formatOverrideLbs(estimatedLbs)
+          : "—";
   const [draft, setDraft] = useState(
-    overrideLbs != null
-      ? String(overrideLbs)
-      : catalogLbs != null
-        ? String(catalogLbs)
-        : "",
+    displayLbs != null ? String(displayLbs) : "",
   );
   useEffect(() => {
-    setDraft(
-      overrideLbs != null
-        ? String(overrideLbs)
-        : catalogLbs != null
-          ? String(catalogLbs)
-          : "",
-    );
-  }, [overrideLbs, catalogLbs]);
+    setDraft(displayLbs != null ? String(displayLbs) : "");
+  }, [displayLbs]);
 
   const commit = () => {
     const n = Number(String(draft).replace(/[^\d.]/g, ""));
     if (!Number.isFinite(n) || n <= 0) {
-      setDraft(
-        overrideLbs != null
-          ? String(overrideLbs)
-          : catalogLbs != null
-            ? String(catalogLbs)
-            : "",
-      );
+      setDraft(displayLbs != null ? String(displayLbs) : "");
       return;
     }
     if (overrideLbs != null && Math.round(n) === overrideLbs) return;
     if (overrideLbs == null && catalogLbs != null && Math.round(n) === catalogLbs) {
+      return;
+    }
+    if (
+      overrideLbs == null &&
+      catalogLbs == null &&
+      estimatedLbs != null &&
+      Math.round(n) === estimatedLbs
+    ) {
       return;
     }
     onSave(Math.round(n));
@@ -2692,6 +2708,13 @@ function WeightOverrideRow({
             data-testid={`facts-weight-${label.toLowerCase()}-override`}
           >
             Override
+          </span>
+        ) : estimatedLbs != null && estimatedLabel ? (
+          <span
+            className="rounded-full border border-sky-300/35 bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold normal-case tracking-[0.04em] text-sky-100"
+            data-testid={`facts-weight-${label.toLowerCase()}-estimated`}
+          >
+            {estimatedLabel}
           </span>
         ) : null}
       </span>

@@ -29,6 +29,10 @@ import {
   parseHp,
 } from "./catalogHonesty";
 import { resolveHonestTanks } from "./placeholderTanks";
+import {
+  UVW_ESTIMATE_LABEL,
+  estimateUvwFromGvwr,
+} from "./torqueToWeight";
 
 export { parseHp } from "./catalogHonesty";
 export {
@@ -50,6 +54,10 @@ export interface BrochureSpecs {
   /** Published / pinned pounds when known — never mid×0.82. */
   gvwrLbs?: number | null;
   uvwLbs?: number | null;
+  /** Runtime GVWR×0.835 stand-in when published UVW is missing. */
+  estimatedUvwLbs?: number | null;
+  /** True when `uvw` is the 0.835 estimate, not an OEM / sticker pin. */
+  uvwEstimated?: boolean;
   ccc: string;
   gcwr: string;
   hitchOrPin: string;
@@ -456,8 +464,8 @@ export function buildBrochureSpecs(
     model,
   });
   // Listing / TTW: UVW pin when published; else OEM floorplan / snap UVW;
-  // else GVWR. Never let estimated UVW (mid×0.82) win, and never copy
-  // GVWR onto UVW.
+  // else runtime GVWR×0.835 estimate (never mid×0.82). Never copy GVWR
+  // onto published UVW fields.
   const publishedGvwr =
     oem?.gvwrLbs ?? findOemGvwrLbs(year, make, model, floorplan) ?? snap.gvwrLbs;
   const publishedUvw =
@@ -658,6 +666,9 @@ export function buildBrochureSpecs(
     .filter(Boolean)
     .join(" · ");
 
+  const estimatedUvwLbs =
+    !isTowable && uvw == null ? estimateUvwFromGvwr(publishedGvwr) : null;
+
   return {
     lengthFt: lengthDisplay,
     lengthIn: lengthDisplay,
@@ -668,8 +679,15 @@ export function buildBrochureSpecs(
 
     gvwr: gvwrDisplay,
     gvwrLbs: publishedGvwr ?? null,
-    uvw: uvw != null ? fmtLbs(uvw) : CONFIRM_BROCHURE,
+    uvw:
+      uvw != null
+        ? fmtLbs(uvw)
+        : estimatedUvwLbs != null
+          ? `${fmtLbs(estimatedUvwLbs)} (${UVW_ESTIMATE_LABEL})`
+          : CONFIRM_BROCHURE,
     uvwLbs: uvw ?? null,
+    estimatedUvwLbs,
+    uvwEstimated: estimatedUvwLbs != null,
     ccc: ccc != null ? fmtLbs(ccc) : CONFIRM_BROCHURE,
     gcwr: isTowable
       ? "Set by tow vehicle"

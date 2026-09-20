@@ -2332,6 +2332,20 @@ export function oemGvwrPinCount(): number {
   return OEM_GVWR_PINS.length;
 }
 
+export type OemGvwrPinRow = {
+  makeIncludes: string;
+  modelIncludes: string;
+  yearMin: number;
+  yearMax: number;
+  floorplan: string;
+  gvwrLbs: number;
+};
+
+/** Brochure GVWR pins used by Facts / TTW. Read-only snapshot for coverage. */
+export function listOemGvwrPins(): readonly OemGvwrPinRow[] {
+  return OEM_GVWR_PINS;
+}
+
 type OemUvwPin = {
   makeIncludes: string;
   modelIncludes: string;
@@ -2555,6 +2569,21 @@ export function oemUvwPinCount(): number {
   return OEM_UVW_PINS.length;
 }
 
+export type OemUvwPinRow = {
+  makeIncludes: string;
+  modelIncludes: string;
+  yearMin: number;
+  yearMax: number;
+  floorplan: string;
+  uvwLbs: number;
+  source: string;
+};
+
+/** Brochure / sticker UVW pins. Never overwrite these with the 0.835 estimate. */
+export function listOemUvwPins(): readonly OemUvwPinRow[] {
+  return OEM_UVW_PINS;
+}
+
 function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
   if (
     modelIncludes === "vision" &&
@@ -2707,7 +2736,7 @@ export function findOemGvwrLbs(
   return best;
 }
 
-/** Published OEM UVW for a year/make/model/floorplan. Null → GVWR fallback (do not invent). */
+/** Published OEM UVW for a year/make/model/floorplan. Null → runtime 0.835 estimate when GVWR is known (do not invent mid×0.82). */
 export function findOemUvwLbs(
   year: string | number,
   make: string,

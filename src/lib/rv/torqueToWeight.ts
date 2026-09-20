@@ -10,15 +10,19 @@
  * Active weight (first hit wins):
  *   1. Manual UVW override
  *   2. Published / pinned UVW (oem pin, OEM floorplan, catalog snap)
- *   3. Manual GVWR override
- *   4. Published GVWR (oem.gvwrLbs / findOemGvwrLbs / snap / live)
- *   5. Range-only GVWR HIGH end (display band / weightRange [lo,hi])
- *   6. GAP
+ *   3. Estimated UVW = round(GVWR × 0.835 / 100) × 100
+ *      when a usable single GVWR exists (OEM pin, parseable single,
+ *      or already-resolved HIGH-of-range). Never overwrites a pin.
+ *   4. Manual GVWR override (raw — only if no GVWR to estimate from)
+ *   5. Published GVWR (oem.gvwrLbs / findOemGvwrLbs / snap / live)
+ *   6. Range-only GVWR HIGH end (display band / weightRange [lo,hi])
+ *   7. GAP
  *
  * Range-only GVWR (e.g. "39,500–44,005 lbs"): for **TTW scoring only**,
- * use the **HIGH** number. Heavier published weight → lower
- * (more conservative) score. A single published GVWR pin still wins
- * over the range. Do not invent UVW.
+ * use the **HIGH** number as the GVWR source for the 0.835 estimate
+ * (or as raw GVWR if the estimate cannot run). Heavier published
+ * weight → lower (more conservative) score. A single published GVWR
+ * pin still wins over the range. Do not invent UVW from mid×0.82.
  *
  * Ratio: r = (torqueLbFt / weightLb) * 1000  →  lb-ft per 1,000 lb
  *
@@ -30,10 +34,11 @@
  *   28 ≤ r < 45   → [7.0, 9.3)
  *   r ≥ 45        → [8.75, 10]   clamped
  *
- * Must-pass GVWR anchors (fallback when UVW is missing):
- *   Precept 31UL  468 / 22,000 → ~5.0
- *   Precept 36    468 / 24,000 → ~4.6
- *   Seneca        800 / 31,000 → ~6.0
+ * Must-pass anchors when a published UVW is missing now score on
+ * UVW_est = round(GVWR × 0.835 / 100) × 100 (bands unchanged):
+ *   Precept 31UL  468 / 18,400 est → ~5.9
+ *   Anthem 44R    1250 / 43,400 est → ~7.1
+ *   2022 Dream 39RK stays pinned 39,237 (not 39,200).
  *
  * Bar color (score, not ratio) — unchanged bands:
  *   red     score < 6.0
@@ -43,7 +48,13 @@
 
 export type TorqueBarColor = "red" | "yellow" | "green";
 
-export type TorqueWeightBasis = "UVW" | "GVWR";
+export type TorqueWeightBasis = "UVW" | "UVW_EST" | "GVWR";
+
+/** Verified 2022 American Dream 39RK: 39,237 / 47,000 ≈ 0.835. */
+export const UVW_FROM_GVWR_RATIO = 0.835;
+
+/** Specs / Ratings tag — distinct from OEM pin / sticker / salesman override. */
+export const UVW_ESTIMATE_LABEL = "estimated via GVWR×0.835";
 
 export type TorqueToWeightInput = {
   /** Brochure / powertrainGuard hard torque (lb-ft). Preferred when > 0. */
@@ -81,10 +92,12 @@ export type TorqueToWeightResult = {
   gvwrLb: number | null;
   /** Pounds used for the score. Null on GAP / N/A. */
   weightLb: number | null;
-  /** "UVW" or "GVWR" when scored. Null on GAP / N/A. */
+  /** "UVW", "UVW_EST", or "GVWR" when scored. Null on GAP / N/A. */
   weightBasis: TorqueWeightBasis | null;
   /** True when the active weight came from a manual override. */
   weightOverridden: boolean;
+  /** True when the active UVW is round(GVWR × 0.835 / 100) × 100. */
+  weightEstimated: boolean;
   /** (torqueLbFt / weightLb) * 1000, or null on GAP. */
   ratio: number | null;
   /** Continuous 1–10, or null on GAP / N/A. */
@@ -169,6 +182,18 @@ export function parseUvwLb(
  * ("47000") is unchanged. Callers still prefer oem / findOem / snap /
  * live numeric pins over this parse.
  */
+/**
+ * Catalog-wide UVW stand-in when no published / pinned / sticker UVW exists.
+ * Nearest 100 lb. Null when GVWR is missing or not a usable single figure.
+ */
+export function estimateUvwFromGvwr(
+  gvwrLb: number | null | undefined,
+): number | null {
+  const g = positiveInt(gvwrLb ?? 0);
+  if (g == null) return null;
+  return Math.round((g * UVW_FROM_GVWR_RATIO) / 100) * 100;
+}
+
 export function parseGvwrLb(
   raw: string | number | readonly [number, number] | null | undefined,
 ): number | null {
@@ -258,6 +283,7 @@ const NA_RESULT: TorqueToWeightResult = {
   weightLb: null,
   weightBasis: null,
   weightOverridden: false,
+  weightEstimated: false,
   ratio: null,
   score: null,
   color: null,
@@ -271,11 +297,13 @@ export type ResolvedTorqueWeight = {
   weightLb: number | null;
   weightBasis: TorqueWeightBasis | null;
   weightOverridden: boolean;
+  weightEstimated: boolean;
 };
 
 /**
- * Pick the TTW weight: override UVW → published UVW → override GVWR →
- * published GVWR → GAP. Callers must not pass mid×0.82 estimates as UVW.
+ * Pick the TTW weight: override UVW → published UVW → estimated UVW
+ * (GVWR×0.835) → override GVWR → published GVWR → GAP.
+ * Callers must not pass mid×0.82 estimates as UVW.
  */
 export function resolveTorqueWeight(
   input: TorqueToWeightInput,
@@ -288,8 +316,9 @@ export function resolveTorqueWeight(
     positiveInt(input.gvwrLbs ?? 0) ??
     parseGvwrLb(input.gvwrRaw) ??
     parseGvwrLb(input.weightRange);
-  const uvwLb = overrideUvw ?? publishedUvw;
   const gvwrLb = overrideGvwr ?? publishedGvwr;
+  const estimatedUvw = estimateUvwFromGvwr(gvwrLb);
+  const uvwLb = overrideUvw ?? publishedUvw ?? estimatedUvw;
 
   if (overrideUvw != null) {
     return {
@@ -298,6 +327,7 @@ export function resolveTorqueWeight(
       weightLb: overrideUvw,
       weightBasis: "UVW",
       weightOverridden: true,
+      weightEstimated: false,
     };
   }
   if (publishedUvw != null) {
@@ -307,6 +337,17 @@ export function resolveTorqueWeight(
       weightLb: publishedUvw,
       weightBasis: "UVW",
       weightOverridden: false,
+      weightEstimated: false,
+    };
+  }
+  if (estimatedUvw != null) {
+    return {
+      uvwLb: estimatedUvw,
+      gvwrLb,
+      weightLb: estimatedUvw,
+      weightBasis: "UVW_EST",
+      weightOverridden: false,
+      weightEstimated: true,
     };
   }
   if (overrideGvwr != null) {
@@ -316,6 +357,7 @@ export function resolveTorqueWeight(
       weightLb: overrideGvwr,
       weightBasis: "GVWR",
       weightOverridden: true,
+      weightEstimated: false,
     };
   }
   if (publishedGvwr != null) {
@@ -325,6 +367,7 @@ export function resolveTorqueWeight(
       weightLb: publishedGvwr,
       weightBasis: "GVWR",
       weightOverridden: false,
+      weightEstimated: false,
     };
   }
   return {
@@ -333,6 +376,7 @@ export function resolveTorqueWeight(
     weightLb: null,
     weightBasis: null,
     weightOverridden: false,
+    weightEstimated: false,
   };
 }
 
@@ -357,6 +401,7 @@ export function computeTorqueToWeight(
     weightLb: resolved.weightLb,
     weightBasis: resolved.weightBasis,
     weightOverridden: resolved.weightOverridden,
+    weightEstimated: resolved.weightEstimated,
     ratio,
     score,
     color: barColorFromScore(score),
@@ -367,6 +412,9 @@ export function computeTorqueToWeight(
 
 function basisLabel(result: TorqueToWeightResult): string {
   if (result.weightBasis == null) return "";
+  if (result.weightEstimated || result.weightBasis === "UVW_EST") {
+    return UVW_ESTIMATE_LABEL;
+  }
   return result.weightOverridden
     ? `${result.weightBasis} override`
     : result.weightBasis;
@@ -383,11 +431,14 @@ export function formatTorqueToWeightScore(
   return `${result.score.toFixed(1)}/10 · ${basisLabel(result)}`;
 }
 
-/** Short Ratings-card chip: UVW / GVWR / Override. */
+/** Short Ratings-card chip: UVW / estimated via GVWR×0.835 / GVWR / Override. */
 export function formatTorqueWeightBasisChip(
   result: TorqueToWeightResult,
 ): string | null {
   if (result.na || result.gap || result.weightBasis == null) return null;
   if (result.weightOverridden) return "Override";
+  if (result.weightEstimated || result.weightBasis === "UVW_EST") {
+    return UVW_ESTIMATE_LABEL;
+  }
   return result.weightBasis;
 }

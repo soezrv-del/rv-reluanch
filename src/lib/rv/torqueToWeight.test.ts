@@ -4,8 +4,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  UVW_ESTIMATE_LABEL,
   barColorFromScore,
   computeTorqueToWeight,
+  estimateUvwFromGvwr,
   formatTorqueToWeightScore,
   formatTorqueWeightBasisChip,
   isTowableForTorqueRating,
@@ -52,15 +54,17 @@ test("1–10 envelope: <10 → 1–2; 10–17 → 3–4; 17–28 → 5–6; 28�
   assert.equal(scoreFromTorqueToWeightRatio(-1), null);
 });
 
-test("must-pass 1–10 anchors (±0.15) stay on GVWR when UVW is missing", () => {
+test("must-pass 1–10 anchors (±0.15) use estimated UVW when published UVW is missing", () => {
   const seneca = computeTorqueToWeight({
     torqueLbFt: 800,
     gvwrLbs: 31_000,
     rvType: "Class A Gas",
   });
-  assertNear(seneca.ratio, 25.8, 0.05);
-  assertNear(seneca.score, 6.0);
-  assert.equal(seneca.weightBasis, "GVWR");
+  assert.equal(seneca.weightLb, 25_900);
+  assert.equal(seneca.weightBasis, "UVW_EST");
+  assert.equal(seneca.weightEstimated, true);
+  assertNear(seneca.ratio, 30.89, 0.05);
+  assertNear(seneca.score, 7.39);
   assert.equal(seneca.color, "yellow");
 
   const p31 = computeTorqueToWeight({
@@ -68,9 +72,10 @@ test("must-pass 1–10 anchors (±0.15) stay on GVWR when UVW is missing", () =>
     gvwrLbs: 22_000,
     rvType: "Class A Gas",
   });
-  assertNear(p31.ratio, 21.3, 0.05);
-  assertNear(p31.score, 5.0);
-  assert.equal(p31.weightBasis, "GVWR");
+  assert.equal(p31.weightLb, 18_400);
+  assert.equal(p31.weightBasis, "UVW_EST");
+  assertNear(p31.ratio, 25.43, 0.05);
+  assertNear(p31.score, 5.92);
   assert.equal(p31.color, "red");
 
   const p36 = computeTorqueToWeight({
@@ -78,9 +83,10 @@ test("must-pass 1–10 anchors (±0.15) stay on GVWR when UVW is missing", () =>
     gvwrLbs: 24_000,
     rvType: "Class A Gas",
   });
-  assertNear(p36.ratio, 19.5, 0.05);
-  assertNear(p36.score, 4.6);
-  assert.equal(p36.weightBasis, "GVWR");
+  assert.equal(p36.weightLb, 20_000);
+  assert.equal(p36.weightBasis, "UVW_EST");
+  assertNear(p36.ratio, 23.4, 0.05);
+  assertNear(p36.score, 5.45);
   assert.equal(p36.color, "red");
 
   const cornerstone = computeTorqueToWeight({
@@ -88,8 +94,10 @@ test("must-pass 1–10 anchors (±0.15) stay on GVWR when UVW is missing", () =>
     gvwrLbs: 54_000,
     rvType: "Class A Diesel",
   });
-  assertNear(cornerstone.ratio, 36.1, 0.05);
-  assertNear(cornerstone.score, 8.0);
+  assert.equal(cornerstone.weightLb, 45_100);
+  assert.equal(cornerstone.weightBasis, "UVW_EST");
+  assertNear(cornerstone.ratio, 43.24, 0.05);
+  assertNear(cornerstone.score, 9.06);
   assert.equal(cornerstone.color, "green");
 
   const d1250 = computeTorqueToWeight({
@@ -97,8 +105,10 @@ test("must-pass 1–10 anchors (±0.15) stay on GVWR when UVW is missing", () =>
     gvwrLbs: 32_000,
     rvType: "Class A Diesel",
   });
-  assertNear(d1250.ratio, 39.1, 0.05);
-  assertNear(d1250.score, 8.5);
+  assert.equal(d1250.weightLb, 26_700);
+  assert.equal(d1250.weightBasis, "UVW_EST");
+  assertNear(d1250.ratio, 46.82, 0.05);
+  assertNear(d1250.score, 9.11);
   assert.equal(d1250.color, "green");
 
   const d1950 = computeTorqueToWeight({
@@ -106,8 +116,10 @@ test("must-pass 1–10 anchors (±0.15) stay on GVWR when UVW is missing", () =>
     gvwrLbs: 40_000,
     rvType: "Class A Diesel",
   });
-  assertNear(d1950.ratio, 48.8, 0.1);
-  assertNear(d1950.score, 9.5);
+  assert.equal(d1950.weightLb, 33_400);
+  assert.equal(d1950.weightBasis, "UVW_EST");
+  assertNear(d1950.ratio, 58.38, 0.1);
+  assertNear(d1950.score, 10.0);
   assert.equal(d1950.color, "green");
 
   const classC = computeTorqueToWeight({
@@ -115,8 +127,10 @@ test("must-pass 1–10 anchors (±0.15) stay on GVWR when UVW is missing", () =>
     gvwrLbs: 10_000,
     rvType: "Class C",
   });
-  assertNear(classC.ratio, 46.8, 0.05);
-  assertNear(classC.score, 9.0);
+  assert.equal(classC.weightLb, 8_400);
+  assert.equal(classC.weightBasis, "UVW_EST");
+  assertNear(classC.ratio, 55.71, 0.05);
+  assertNear(classC.score, 10.0);
   assert.equal(classC.color, "green");
 
   const isb = computeTorqueToWeight({
@@ -124,9 +138,11 @@ test("must-pass 1–10 anchors (±0.15) stay on GVWR when UVW is missing", () =>
     gvwrLbs: 30_000,
     rvType: "Class A Diesel",
   });
-  assertNear(isb.ratio, 23.3, 0.05);
-  assertNear(isb.score, 5.5);
-  assert.equal(isb.color, "red");
+  assert.equal(isb.weightLb, 25_100);
+  assert.equal(isb.weightBasis, "UVW_EST");
+  assertNear(isb.ratio, 27.89, 0.05);
+  assertNear(isb.score, 6.47);
+  assert.equal(isb.color, "yellow");
 });
 
 test("bar color: red < 6.0, yellow [6.0, 7.5), green ≥ 7.5", () => {
@@ -171,10 +187,14 @@ test("UVW preferred over GVWR; GAP if torque and both weights missing", () => {
     gvwrLbs: 31_000,
     rvType: "Class A Gas",
   });
-  assert.equal(gvwrOnly.weightBasis, "GVWR");
-  assert.equal(gvwrOnly.weightLb, 31_000);
-  assert.equal(formatTorqueToWeightScore(gvwrOnly), "6.0/10 · GVWR");
-  assert.equal(formatTorqueWeightBasisChip(gvwrOnly), "GVWR");
+  assert.equal(gvwrOnly.weightBasis, "UVW_EST");
+  assert.equal(gvwrOnly.weightEstimated, true);
+  assert.equal(gvwrOnly.weightLb, 25_900);
+  assert.equal(
+    formatTorqueToWeightScore(gvwrOnly),
+    `${gvwrOnly.score?.toFixed(1)}/10 · ${UVW_ESTIMATE_LABEL}`,
+  );
+  assert.equal(formatTorqueWeightBasisChip(gvwrOnly), UVW_ESTIMATE_LABEL);
 
   assert.equal(formatTorqueToWeightScore(computeTorqueToWeight({})), "GAP");
   assert.equal(
@@ -199,7 +219,7 @@ test("UVW preferred over GVWR; GAP if torque and both weights missing", () => {
   assert.equal(uvwAlone.gap, false);
 });
 
-test("override preference: UVW override → UVW → GVWR override → GVWR → GAP", () => {
+test("override preference: UVW override → UVW → estimated UVW → GVWR → GAP", () => {
   const order = resolveTorqueWeight({
     overrideUvwLbs: 17_500,
     uvwLbs: 18_000,
@@ -209,6 +229,7 @@ test("override preference: UVW override → UVW → GVWR override → GVWR → G
   assert.equal(order.weightLb, 17_500);
   assert.equal(order.weightBasis, "UVW");
   assert.equal(order.weightOverridden, true);
+  assert.equal(order.weightEstimated, false);
 
   const publishedUvw = resolveTorqueWeight({
     uvwLbs: 18_000,
@@ -218,21 +239,24 @@ test("override preference: UVW override → UVW → GVWR override → GVWR → G
   assert.equal(publishedUvw.weightLb, 18_000);
   assert.equal(publishedUvw.weightBasis, "UVW");
   assert.equal(publishedUvw.weightOverridden, false);
+  assert.equal(publishedUvw.weightEstimated, false);
 
-  const gvwrOverride = resolveTorqueWeight({
+  const estimated = resolveTorqueWeight({
     overrideGvwrLbs: 21_000,
     gvwrLbs: 22_000,
   });
-  assert.equal(gvwrOverride.weightLb, 21_000);
-  assert.equal(gvwrOverride.weightBasis, "GVWR");
-  assert.equal(gvwrOverride.weightOverridden, true);
+  assert.equal(estimated.weightLb, 17_500);
+  assert.equal(estimated.weightBasis, "UVW_EST");
+  assert.equal(estimated.weightEstimated, true);
+  assert.equal(estimated.weightOverridden, false);
 
   const publishedGvwr = resolveTorqueWeight({ gvwrLbs: 22_000 });
-  assert.equal(publishedGvwr.weightLb, 22_000);
-  assert.equal(publishedGvwr.weightBasis, "GVWR");
-  assert.equal(publishedGvwr.weightOverridden, false);
+  assert.equal(publishedGvwr.weightLb, 18_400);
+  assert.equal(publishedGvwr.weightBasis, "UVW_EST");
+  assert.equal(publishedGvwr.weightEstimated, true);
 
   assert.equal(resolveTorqueWeight({}).weightLb, null);
+  assert.equal(resolveTorqueWeight({}).weightEstimated, false);
 
   const scored = computeTorqueToWeight({
     torqueLbFt: 800,
@@ -291,24 +315,30 @@ test("TTW range GVWR uses HIGH end; published pin wins over range", () => {
     gvwrRaw: "39500-44005",
     rvType: "Class A Diesel",
   });
-  assert.equal(rangeOnly.weightLb, 44005);
   assert.equal(rangeOnly.gvwrLb, 44005);
-  assert.equal(rangeOnly.weightBasis, "GVWR");
-  assert.match(formatTorqueToWeightScore(rangeOnly), /^[0-9.]+\/10 · GVWR$/);
+  assert.equal(rangeOnly.weightLb, 36_700);
+  assert.equal(rangeOnly.weightBasis, "UVW_EST");
+  assert.equal(rangeOnly.weightEstimated, true);
+  assert.match(
+    formatTorqueToWeightScore(rangeOnly),
+    new RegExp(`^[0-9.]+/10 · ${UVW_ESTIMATE_LABEL.replace(/[×.]/g, "\\$&")}$`),
+  );
 
   const displayBand = computeTorqueToWeight({
     torqueLbFt: 1250,
     gvwrRaw: "39,500–44,005 lbs",
     rvType: "Class A Diesel",
   });
-  assert.equal(displayBand.weightLb, 44005);
+  assert.equal(displayBand.gvwrLb, 44005);
+  assert.equal(displayBand.weightLb, 36_700);
 
   const tupleBand = computeTorqueToWeight({
     torqueLbFt: 1250,
     weightRange: [39_500, 44_005],
     rvType: "Class A Diesel",
   });
-  assert.equal(tupleBand.weightLb, 44005);
+  assert.equal(tupleBand.gvwrLb, 44005);
+  assert.equal(tupleBand.weightLb, 36_700);
 
   const publishedWins = computeTorqueToWeight({
     torqueLbFt: 1250,
@@ -317,14 +347,60 @@ test("TTW range GVWR uses HIGH end; published pin wins over range", () => {
     weightRange: [39_500, 44_005],
     rvType: "Class A Diesel",
   });
-  assert.equal(publishedWins.weightLb, 47_000);
   assert.equal(publishedWins.gvwrLb, 47_000);
-  assert.equal(publishedWins.weightBasis, "GVWR");
+  assert.equal(publishedWins.weightLb, 39_200);
+  assert.equal(publishedWins.weightBasis, "UVW_EST");
+});
+
+test("estimateUvwFromGvwr is nearest 100 lb at 0.835; missing GVWR stays unset", () => {
+  assert.equal(estimateUvwFromGvwr(52_000), 43_400);
+  assert.equal(estimateUvwFromGvwr(22_000), 18_400);
+  assert.equal(estimateUvwFromGvwr(47_000), 39_200);
+  assert.equal(estimateUvwFromGvwr(0), null);
+  assert.equal(estimateUvwFromGvwr(null), null);
+});
+
+test("2022 American Dream 39RK stays pinned 39,237 — not re-estimated", () => {
+  const pinned = computeTorqueToWeight({
+    torqueLbFt: 1250,
+    uvwLbs: 39_237,
+    gvwrLbs: 47_000,
+    rvType: "Class A Diesel",
+  });
+  assert.equal(pinned.weightLb, 39_237);
+  assert.equal(pinned.uvwLb, 39_237);
+  assert.equal(pinned.weightBasis, "UVW");
+  assert.equal(pinned.weightEstimated, false);
+  assertNear(pinned.ratio, 31.86, 0.02);
+  assertNear(pinned.score, 7.52);
+  assert.equal(pinned.color, "green");
+  assert.equal(formatTorqueWeightBasisChip(pinned), "UVW");
+
+  const wouldEstimate = estimateUvwFromGvwr(47_000);
+  assert.equal(wouldEstimate, 39_200);
+  assert.notEqual(pinned.weightLb, wouldEstimate);
+});
+
+test("Anthem 44R sample: 52,000 × 0.835 → 43,400 at 1,250 lb-ft", () => {
+  const anthem = computeTorqueToWeight({
+    torqueLbFt: 1250,
+    gvwrLbs: 52_000,
+    rvType: "Class A Diesel",
+  });
+  assert.equal(anthem.weightLb, 43_400);
+  assert.equal(anthem.weightBasis, "UVW_EST");
+  assert.equal(anthem.weightEstimated, true);
+  assertNear(anthem.ratio, 28.80, 0.02);
+  assertNear(anthem.score, 7.11);
+  assert.equal(anthem.color, "yellow");
+  assert.equal(formatTorqueWeightBasisChip(anthem), UVW_ESTIMATE_LABEL);
 });
 
 test("Facts Ratings: Torque-to-Weight bar + X/10 · UVW|GVWR; other rows keep stars", () => {
   const src = readFileSync(join(root, "torqueToWeight.ts"), "utf8");
-  assert.match(src, /override UVW → published UVW → override GVWR/);
+  assert.match(src, /override UVW → published UVW → estimated UVW/);
+  assert.match(src, /0\.835/);
+  assert.match(src, /estimated via GVWR/);
   assert.match(src, /torqueLbFt \/ weightLb/);
   assert.match(src, /Math\.max\(nums\[0]!, nums\[1]!\)/);
   assert.match(src, /HIGH end/);
@@ -347,6 +423,8 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 · UVW|GVWR; other rows keep st
   assert.match(detail, /overrideUvwLbs:\s*weightOverride\?\.uvwLbs/);
   assert.match(detail, /overrideGvwrLbs:\s*weightOverride\?\.gvwrLbs/);
   assert.match(detail, /WeightOverrideRow/);
+  assert.match(detail, /UVW_ESTIMATE_LABEL/);
+  assert.match(detail, /estimatedLbs/);
   assert.doesNotMatch(detail, /torqueToWeight\.stars/);
   assert.match(detail, /label:\s*"Quality"/);
   assert.match(detail, /ratingStars\(row\.score\)/);
