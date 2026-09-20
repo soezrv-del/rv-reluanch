@@ -40,6 +40,8 @@ export type CampStop = {
   progress: number;
   nearDest: boolean;
   amenityHint: string;
+  /** OSM maxlength* only, converted to feet. Omitted when untagged or unparseable. */
+  siteLengthFt?: number;
   /** Official booking / park site when the source already has one. Never invented. */
   website?: string;
 };
@@ -161,6 +163,97 @@ export function campWebsiteFromHere(item: CampHereItem): string | undefined {
   return undefined;
 }
 
+const OSM_FT_PER_M = 3.28084;
+const SITE_LENGTH_MIN_FT = 10;
+const SITE_LENGTH_MAX_FT = 90;
+/** OSM default unit is metres. Unitless values above this are not assumed to be feet. */
+const SITE_LENGTH_MAX_UNITLESS_M = 27;
+
+const OSM_LENGTH_RE =
+  /^(\d+(?:\.\d+)?)\s*(ft|feet|foot|'|′|m|meter|meters|metre|metres)?$/i;
+
+const OSM_SITE_LENGTH_KEYS = [
+  "maxlength:motorhome",
+  "maxlength:motor_caravan",
+  "maxlength:motorcaravan",
+  "maxlength:rv",
+  "maxlength:caravans",
+  "maxlength",
+] as const;
+
+/**
+ * Parse one OSM length tag to feet. Never guesses ranges, conditionals,
+ * or unitless US pad-feet (e.g. `45` with no unit is rejected).
+ */
+export function parseOsmLengthToFt(
+  raw: string | undefined | null,
+): number | undefined {
+  const s = String(raw || "")
+    .trim()
+    .toLowerCase()
+    .replace(/,$/, "")
+    .replace(/\.$/, "");
+  if (!s) return undefined;
+  const match = s.match(OSM_LENGTH_RE);
+  if (!match) return undefined;
+  const n = Number(match[1]);
+  if (!Number.isFinite(n) || n <= 0) return undefined;
+  const unit = (match[2] || "").toLowerCase();
+  let ft: number;
+  if (unit === "ft" || unit === "feet" || unit === "foot" || unit === "'" || unit === "′") {
+    ft = n;
+  } else if (
+    unit === "m" ||
+    unit === "meter" ||
+    unit === "meters" ||
+    unit === "metre" ||
+    unit === "metres"
+  ) {
+    ft = n * OSM_FT_PER_M;
+  } else if (!unit) {
+    if (n > SITE_LENGTH_MAX_UNITLESS_M) return undefined;
+    ft = n * OSM_FT_PER_M;
+  } else {
+    return undefined;
+  }
+  const rounded = Math.round(ft);
+  if (rounded < SITE_LENGTH_MIN_FT || rounded > SITE_LENGTH_MAX_FT) return undefined;
+  return rounded;
+}
+
+/** First parseable RV-specific maxlength* tag wins. Missing tags stay omitted. */
+export function siteLengthFtFromTags(
+  tags: Record<string, string> | undefined,
+): number | undefined {
+  if (!tags) return undefined;
+  for (const key of OSM_SITE_LENGTH_KEYS) {
+    const ft = parseOsmLengthToFt(tags[key]);
+    if (ft != null) return ft;
+  }
+  return undefined;
+}
+
+function feeHintFromTags(tags: Record<string, string>): string {
+  const raw = String(tags.fee ?? "")
+    .trim()
+    .toLowerCase();
+  if (!raw) return "";
+  if (/^(no|false|0|free)$/.test(raw)) return "no fee tagged";
+  if (/^(yes|true)$/.test(raw)) return "fee tagged";
+  if (/^\d/.test(raw) || /\$|usd|eur|gbp|cad/.test(raw)) return "fee tagged";
+  return "";
+}
+
+function hoursHintFromTags(tags: Record<string, string>): string {
+  const hours = String(tags.opening_hours ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!hours) return "";
+  if (/^24\/7$/i.test(hours)) return "24/7 tagged";
+  if (hours.length <= 36 && !/[;@]/.test(hours)) return hours;
+  return "hours tagged";
+}
+
 export function amenityHintFromTags(tags: Record<string, string>): string {
   const bits: string[] = [];
   if (
@@ -173,6 +266,10 @@ export function amenityHintFromTags(tags: Record<string, string>): string {
     bits.push("power tagged");
   }
   if (taggedYes(tags.caravans)) bits.push("caravans tagged");
+  const fee = feeHintFromTags(tags);
+  if (fee) bits.push(fee);
+  const hours = hoursHintFromTags(tags);
+  if (hours) bits.push(hours);
   return bits.join(" · ");
 }
 
@@ -247,6 +344,7 @@ export function normalizeOverpassCamps(
     const kept = keepCampPoi({ lat, lng }, corridor, widthMi);
     if (!kept) continue;
     const website = campWebsiteFromTags(tags);
+    const siteLengthFt = siteLengthFtFromTags(tags);
     camps.push({
       id: `osm-camp:${el.type || "n"}:${el.id ?? `${lat.toFixed(4)},${lng.toFixed(4)}`}`,
       name,
@@ -264,6 +362,7 @@ export function normalizeOverpassCamps(
       progress: kept.progress,
       nearDest: kept.nearDest,
       amenityHint: amenityHintFromTags(tags),
+      ...(siteLengthFt != null ? { siteLengthFt } : {}),
       ...(website ? { website } : {}),
     });
   }

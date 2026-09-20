@@ -122,6 +122,9 @@ export function CampsAlongRoute({
                             ? ` · ${c.city}${c.state ? `, ${c.state}` : ""}`
                             : ""}
                           {` · ${c.milesOff < 10 ? c.milesOff.toFixed(1) : Math.round(c.milesOff)} mi off`}
+                          {c.siteLengthFt
+                            ? ` · max ${c.siteLengthFt} ft`
+                            : ""}
                           {c.amenityHint ? ` · ${c.amenityHint}` : ""}
                         </span>
                       </span>
