@@ -399,7 +399,7 @@ test("osmSiteLengthOverpassQuery batches camp_site/caravan_site maxlength* aroun
   assert.match(q, /\[out:json\]\[timeout:6\]/);
   assert.match(q, /tourism"~"\^\(camp_site\|caravan_site\)\$/);
   assert.ok(q.includes(OSM_SITE_LENGTH_KEY_RE));
-  assert.match(q, /maxlength:motorhome/);
+  assert.match(q, /maxlength\(:motorhome/);
   assert.match(q, /around:800,47\.98,-122\.2/);
   assert.match(q, /around:800,47,-120\.5/);
   assert.match(q, /out center tags/);
