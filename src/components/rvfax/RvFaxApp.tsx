@@ -45,11 +45,11 @@ import {
   suggestComparePeers,
 } from "@/lib/rv/compare";
 import {
-  cascadeFromResult,
   concreteFloorplanOrEmpty,
   FACTS_TYPE_OPTIONS,
   factsTypeLabel,
   pickerCoachWrite,
+  prepareFactsOpen,
   resolveShareOpenSel,
   factsSearchEnabled,
   resultForFactsPicker,
@@ -298,20 +298,23 @@ export function RvFaxApp({
     setYear(next.year);
     setMake(next.make);
     setModel(next.model);
-    setFloorplan(concreteFloorplanOrEmpty(next.floorplan));
+    const fp = concreteFloorplanOrEmpty(next.floorplan);
+    setFloorplan(fp);
     if (next.rvType !== undefined) setRvType(next.rvType);
+    // Picker Any while a report is open: drop stuffed fps[0] so specs unmount.
+    setDetail((prev) => (prev ? resultForFactsPicker(prev, fp) : prev));
   }, []);
 
   const openFactsUnit = useCallback(
-    (r: RVResult) => {
-      const opened = {
-        ...r,
-        floorplan: cascadeFromResult(r).floorplan,
-      };
-      applySel(cascadeFromResult(opened));
-      setDetail(hydrateShareCoachResult(opened));
+    (r: RVResult, pickerFloorplan?: string | null) => {
+      const { sel, unit } = prepareFactsOpen(
+        r,
+        pickerFloorplan !== undefined ? pickerFloorplan : floorplan,
+      );
+      applySel(sel);
+      setDetail(hydrateShareCoachResult(unit));
     },
-    [applySel],
+    [applySel, floorplan],
   );
 
   const setActiveCoach = nav?.setActiveCoach;
@@ -344,9 +347,9 @@ export function RvFaxApp({
     setCompareOpen(false);
     setVinOpen(false);
 
-    const focusShare = (r?: RVResult) => {
+    const focusShare = (r?: RVResult, pickerFp?: string | null) => {
       if (cancelled) return;
-      if (r) openFactsUnit(r);
+      if (r) openFactsUnit(r, pickerFp);
       setShareFocusToken((n) => n + 1);
     };
 
@@ -372,7 +375,7 @@ export function RvFaxApp({
         found[0] ??
         savedRef.current[0] ??
         null;
-      if (hit) focusShare(resultForFactsPicker(hit, sel.floorplan));
+      if (hit) focusShare(hit, sel.floorplan);
     })();
 
     return () => {
@@ -386,9 +389,9 @@ export function RvFaxApp({
     setCompareOpen(false);
     setVinOpen(false);
 
-    const focusMarket = (r?: RVResult) => {
+    const focusMarket = (r?: RVResult, pickerFp?: string | null) => {
       if (cancelled) return;
-      if (r) openFactsUnit(r);
+      if (r) openFactsUnit(r, pickerFp);
       setMarketFocusToken((n) => n + 1);
     };
 
@@ -414,7 +417,7 @@ export function RvFaxApp({
         found[0] ??
         savedRef.current[0] ??
         null;
-      if (hit) focusMarket(resultForFactsPicker(hit, sel.floorplan));
+      if (hit) focusMarket(hit, sel.floorplan);
     })();
 
     return () => {
@@ -518,9 +521,11 @@ export function RvFaxApp({
           );
         }
 
-        // Exact single hit → open Vehicle History Report immediately
+        // Exact single hit → open immediately. Pass picker FP so Any
+        // does not promote catalog fps[0] (found[0].floorplan may still
+        // be 45A if a caller skipped resultForFactsPicker).
         if (shouldOpenSingleHitReport(found)) {
-          openFactsUnit(found[0]!);
+          openFactsUnit(found[0]!, sel.floorplan);
         }
       })();
     },
@@ -798,7 +803,7 @@ export function RvFaxApp({
           onBack={() => setCompareOpen(false)}
           onOpen={(r) => {
             setCompareOpen(false);
-            openFactsUnit(r);
+            openFactsUnit(r, r.floorplan);
           }}
         />
       </Suspense>
@@ -1186,7 +1191,7 @@ export function RvFaxApp({
                 >
                   <button
                     type="button"
-                    onClick={() => openFactsUnit(r)}
+                    onClick={() => openFactsUnit(r, r.floorplan)}
                     className="flex min-h-[52px] min-w-0 flex-1 items-center justify-between gap-2 px-3.5 py-3 text-left active:scale-[0.99]"
                   >
                     <div className="min-w-0">
