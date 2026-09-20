@@ -1406,6 +1406,51 @@
 [data-readable-cards] .page-scrim-soft {
   background: rgb(4, 8, 16);
 }
+
+/*
+ * Compare report: Tide-near navy field + contained Raidho R watermark.
+ * Replaces the Class A diesel campfire photo (RV_CARD_MEDIA / SuiteBackdrop
+ * object-cover) so comparison cards stay readable. Black ground of the mark
+ * knocks out via screen blend; the glyph stays a quiet seal, not a photo.
+ */
+[data-compare-view] {
+  background: rgb(6, 12, 22);
+}
+.compare-raidho-field {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 62% 48% at 50% 38%,
+      rgba(16, 38, 78, 0.42) 0%,
+      transparent 72%
+    ),
+    rgb(6, 12, 22);
+}
+.compare-raidho-mark {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: min(18.5rem, 52vw);
+  height: min(26rem, 44vh);
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  object-position: center;
+  opacity: 0.16;
+  mix-blend-mode: screen;
+  filter: brightness(1.06) saturate(0.92);
+}
+@media (min-width: 640px) {
+  .compare-raidho-mark {
+    width: min(20rem, 34vw);
+    height: min(28rem, 46vh);
+  }
+}
+@media print {
+  .compare-raidho-backdrop {
+    display: none;
+  }
+}
 [data-readable-cards] .glass-prestige,
 [data-readable-cards] .glass-prestige-deep,
 [data-readable-cards] .glass-prestige-gold,

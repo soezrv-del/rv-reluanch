@@ -29,9 +29,8 @@ import { fetchPublicListingComps } from "@/lib/rv/publicListingComps";
 
 import { exportVehicleReport } from "@/lib/rv/exportReport";
 import { cn } from "@/lib/utils";
-import { SuiteBackdrop } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
-import { RV_CARD_MEDIA } from "@/assets/typeMedia";
+import { RAIDHO_R_MARK } from "@/assets/prestige";
 
 function toneClass(tone: CompareCell["tone"], emphasis?: boolean) {
   switch (tone) {
@@ -275,8 +274,12 @@ export function RvCompare({
   const lo = report.lowestRatingIndex;
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-bg text-white">
-      <SuiteBackdrop src={RV_CARD_MEDIA} />
+    <div
+      className="relative flex h-full flex-col overflow-hidden text-white"
+      data-readable-cards=""
+      data-compare-view=""
+    >
+      <CompareRaidhoBackdrop />
 
       <div
         data-app-scroll
@@ -509,6 +512,19 @@ export function RvCompare({
           <SuiteDisclaimer className="pb-4" />
         </div>
       </div>
+    </div>
+  );
+}
+
+function CompareRaidhoBackdrop() {
+  return (
+    <div
+      className="compare-raidho-backdrop pointer-events-none absolute inset-0 overflow-hidden"
+      aria-hidden
+      data-no-export
+    >
+      <div className="compare-raidho-field" />
+      <img src={RAIDHO_R_MARK} alt="" className="compare-raidho-mark" />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -89,4 +89,33 @@ test("Facts saved list: [Sold label | compare] → toggleCompare → RvCompare",
   assert.match(fax, /capCompareItems\(comparePick\)/);
   assert.match(compareUi, /data-lot-desk-compare/);
   assert.doesNotMatch(fax, /function SavedCompare/);
+});
+
+test("Compare backdrop is the Raidho R mark, not the campfire lifestyle still", () => {
+  const compareUi = readFileSync(
+    join(root, "../../components/rvfax/RvCompare.tsx"),
+    "utf8",
+  );
+  const prestige = readFileSync(join(root, "../../assets/prestige.ts"), "utf8");
+  const css = readFileSync(join(root, "../../styles.css"), "utf8");
+  const mark = join(root, "../../../public/assets/brand/raidho-r-mark.png");
+
+  assert.match(prestige, /RAIDHO_R_MARK/);
+  assert.match(prestige, /\/assets\/brand\/raidho-r-mark\.png/);
+  assert.ok(existsSync(mark), "raidho-r-mark.png is in public/assets/brand");
+
+  assert.match(compareUi, /RAIDHO_R_MARK/);
+  assert.match(compareUi, /CompareRaidhoBackdrop/);
+  assert.match(compareUi, /data-compare-view/);
+  assert.match(compareUi, /data-readable-cards/);
+  assert.doesNotMatch(compareUi, /SuiteBackdrop/);
+  assert.doesNotMatch(compareUi, /RV_CARD_MEDIA/);
+  assert.doesNotMatch(compareUi, /class-a-diesel/);
+  assert.doesNotMatch(compareUi, /lifestyle/);
+  assert.doesNotMatch(compareUi, /DialaBot/);
+
+  assert.match(css, /\[data-compare-view\]/);
+  assert.match(css, /\.compare-raidho-mark/);
+  assert.match(css, /object-fit:\s*contain/);
+  assert.match(css, /mix-blend-mode:\s*screen/);
 });
