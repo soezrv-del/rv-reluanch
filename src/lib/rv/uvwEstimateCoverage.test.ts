@@ -45,8 +45,9 @@ test("Anthem 44R / Precept 31UL / Alante / Open Road 34PA use the tiered formula
   });
   assert.equal(anthem.estimatedUvwLbs, 43_400);
   assert.equal(anthem.tier, "diesel-pusher");
-  assert.ok(anthem.score != null && Math.abs(anthem.score - 7.11) <= 0.15);
-  assert.equal(anthem.color, "yellow");
+  // Class A Diesel R*=38.2 on 1250/43400 → ~7.80 (was 7.11 on the global curve).
+  assert.ok(anthem.score != null && Math.abs(anthem.score - 7.80) <= 0.15);
+  assert.equal(anthem.color, "green");
 
   assert.equal(findOemUvwLbs("2025", "Jayco", "Precept", "31UL"), null);
   assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "31UL"), 22_000);
@@ -58,8 +59,9 @@ test("Anthem 44R / Precept 31UL / Alante / Open Road 34PA use the tiered formula
   });
   assert.equal(precept.estimatedUvwLbs, 18_000);
   assert.equal(precept.tier, "gas-20k-24k");
-  assert.ok(precept.score != null && Math.abs(precept.score - 6.05) <= 0.15);
-  assert.equal(precept.color, "yellow");
+  // Class A Gas R*=26.0 on 468/18000 → 10.0 (was 6.05 on the global curve).
+  assert.ok(precept.score != null && Math.abs(precept.score - 10.0) <= 0.15);
+  assert.equal(precept.color, "green");
 
   const alante = scoreEstimatedTtw({
     torqueLbFt: 468,

@@ -209,7 +209,8 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   });
   assert.equal(ttw31.weightBasis, "UVW_EST");
   assert.equal(ttw31.weightLb, 18000);
-  assert.ok(ttw31.score != null && Math.abs(ttw31.score - 6.05) <= 0.15);
+  // Class A Gas (R*=26.0) on #358 UVW_EST 18,000: 468/18000 → 10.0.
+  assert.ok(ttw31.score != null && Math.abs(ttw31.score - 10.0) <= 0.15);
 
   const ttw36 = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -219,7 +220,8 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   });
   assert.equal(ttw36.weightBasis, "UVW_EST");
   assert.equal(ttw36.weightLb, 19700);
-  assert.ok(ttw36.score != null && Math.abs(ttw36.score - 5.54) <= 0.15);
+  // Class A Gas (R*=26.0) on #358 UVW_EST 19,700: 468/19700 → ~8.77.
+  assert.ok(ttw36.score != null && Math.abs(ttw36.score - 8.77) <= 0.15);
 
   const ttwPublishedUvw = computeTorqueToWeight({
     torqueLbFt: 468,
