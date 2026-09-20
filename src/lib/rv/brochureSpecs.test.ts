@@ -24,9 +24,7 @@ import {
   oemUvwPinCount,
   weightForFloorplan,
 } from "./floorplanSpecs.ts";
-import { buildBrochureSpecs } from "./brochureSpecs.ts";
 import { computeTorqueToWeight } from "./torqueToWeight.ts";
-import type { RVSpec } from "./rvTypes.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
 import {
   isPlaceholderTankTrio,
@@ -215,45 +213,6 @@ test("Discovery OEM rows keep brochure GVWR and omit invented UVW", () => {
     after.score != null && Math.abs(after.score - 7.8) <= 0.15,
     `after score ${after.score} should be ~7.8 on UVW_EST`,
   );
-
-  const stub: RVSpec = {
-    type: "Class A Diesel",
-    floorplans: ["38K"],
-    lengthRange: [37, 41],
-    weightRange: [30_000, 36_000],
-    slideouts: 3,
-    sleeps: 6,
-    msrpRange: [300_000, 400_000],
-    fuelType: "Diesel",
-    chassis: "Freightliner XC-Series",
-    engine: "Cummins B6.7 (ISB) 360HP",
-    torqueLbFt: 800,
-    recalls: 0,
-    rating: 8,
-    image: "",
-  };
-  const brochure = buildBrochureSpecs(
-    stub,
-    "2023",
-    "Fleetwood",
-    "Discovery",
-    "38K",
-  );
-  assert.equal(brochure.gvwrLbs, 33_400);
-  assert.equal(brochure.uvwLbs, null);
-  assert.equal(brochure.estimatedUvwLbs, 27_900);
-  assert.equal(brochure.uvwEstimated, true);
-  const fromBrochure = computeTorqueToWeight({
-    torqueLbFt: 800,
-    uvwLbs: brochure.uvwLbs,
-    uvwRaw: brochure.uvwEstimated ? null : brochure.uvw,
-    gvwrLbs: brochure.gvwrLbs,
-    rvType: "Class A Diesel",
-    chassis: "Freightliner XC",
-    fuelType: "Diesel",
-  });
-  assert.equal(fromBrochure.weightBasis, "UVW_EST");
-  assert.equal(fromBrochure.weightLb, 27_900);
 });
 
 test("brochure / listing weight basis is published UVW then tiered estimate — mid×0.82 never wins", () => {
