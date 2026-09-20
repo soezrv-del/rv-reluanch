@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   autoSaveFactsUnit,
+  isConcreteFactsCoach,
   isMotorhomeFactsType,
   isSavedUnit,
   loadLatestSavedUnit,
@@ -54,6 +55,7 @@ test("motorhome classifier matches Tow toad mode (Class A/B/C / Super C)", () =>
 });
 
 test("opening a 2023 American Dream Facts report auto-saves once", () => {
+  assert.equal(isConcreteFactsCoach(dream), true);
   assert.equal(shouldAutoSaveFacts(dream), true);
   const first = autoSaveFactsUnit([], dream);
   assert.equal(first.added, true);
@@ -67,28 +69,41 @@ test("opening a 2023 American Dream Facts report auto-saves once", () => {
   assert.equal(again.next, first.next);
 });
 
-test("fifth wheel / travel trailer Facts reports do not auto-save", () => {
-  assert.equal(shouldAutoSaveFacts(montana), false);
+test("fifth wheel / travel trailer Facts reports auto-save once like motorhomes", () => {
+  assert.equal(shouldAutoSaveFacts(montana), true);
   const fw = autoSaveFactsUnit([], montana);
-  assert.equal(fw.added, false);
-  assert.equal(fw.next.length, 0);
+  assert.equal(fw.added, true);
+  assert.equal(fw.next.length, 1);
+  assert.equal(fw.next[0]!.model, "Montana");
+  assert.equal(isSavedUnit(fw.next, montana), true);
 
-  const tt = autoSaveFactsUnit(
-    [],
-    unit("2021", "Jayco", "Jay Feather", "Travel Trailer", "260RKSLE"),
-  );
-  assert.equal(tt.added, false);
-  assert.equal(tt.next.length, 0);
+  const tt = unit("2021", "Jayco", "Jay Feather", "Travel Trailer", "260RKSLE");
+  const savedTt = autoSaveFactsUnit(fw.next, tt);
+  assert.equal(savedTt.added, true);
+  assert.equal(savedTt.next.length, 2);
+  assert.equal(savedTt.next[0]!.model, "Jay Feather");
+  assert.equal(autoSaveFactsUnit(savedTt.next, montana).added, false);
 });
 
-test("Facts report chrome wires auto-save + unsave controls", () => {
+test("empty picker identity does not auto-save", () => {
+  assert.equal(isConcreteFactsCoach({ year: "", make: "", model: "" }), false);
+  assert.equal(shouldAutoSaveFacts({ year: "2023", make: "", model: "Montana" }), false);
+  const empty = autoSaveFactsUnit([], { year: "", make: "Keystone", model: "Montana" });
+  assert.equal(empty.added, false);
+  assert.equal(empty.next.length, 0);
+});
+
+test("Facts report chrome wires auto-save + unsave + Sold log", () => {
   const fax = readFileSync(join(root, "../../components/rvfax/RvFaxApp.tsx"), "utf8");
   const detail = readFileSync(join(root, "../../components/rvfax/RvDetail.tsx"), "utf8");
   assert.match(fax, /autoSaveFactsUnit/);
   assert.match(fax, /Remove \$\{r\.year\}/);
+  assert.match(fax, /onSell=\{isPro \? \(\) => beginSell\(detail\) : undefined\}/);
   assert.match(detail, /Remove from Saved/);
   assert.match(detail, /Save to list/);
   assert.match(detail, /aria-label=\{saved \? "Remove from saved"/);
+  assert.match(detail, /onSell/);
+  assert.match(detail, /Log as Sold/);
 });
 
 test("removeSavedUnit drops a coach without toggling others back in", () => {

@@ -1,6 +1,6 @@
 /**
  * Facts Saved list — same identity + storage the heart / Save toggle uses.
- * Motorhome reports auto-save here; towables stay manual.
+ * Opening a concrete coach report auto-saves it (once); unsave stays manual.
  */
 
 import { coachTowRole } from "./activeCoach.ts";
@@ -44,8 +44,17 @@ export function isMotorhomeFactsType(type?: string | null): boolean {
   return coachTowRole(type) === "motorhome";
 }
 
+/** Year + make + model — a pulled-up report, not an empty picker. */
+export function isConcreteFactsCoach(result: SavedUnitIdentity): boolean {
+  return Boolean(
+    String(result.year ?? "").trim() &&
+      String(result.make ?? "").trim() &&
+      String(result.model ?? "").trim(),
+  );
+}
+
 export function shouldAutoSaveFacts(result: SavedUnitLike): boolean {
-  return isMotorhomeFactsType(result.data?.type);
+  return isConcreteFactsCoach(result);
 }
 
 export function autoSaveFactsUnit<T extends SavedUnitLike>(
