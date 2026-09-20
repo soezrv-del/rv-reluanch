@@ -43,6 +43,7 @@ import {
   computeTorqueToWeight,
 } from "@/lib/rv/torqueToWeight";
 import {
+  OWNER_REVIEW_FOOTER,
   formatOwnerReviewScore,
   mapReportRatings,
 } from "@/lib/rv/reportRatings";
@@ -2529,6 +2530,9 @@ export function RvDetail({
             </FactsCollapse>
           </div>
 
+          <p className="mt-3 text-[11px] leading-relaxed text-white/45">
+            {OWNER_REVIEW_FOOTER}
+          </p>
           <p className="px-1 text-[11px] italic leading-snug text-white/55">
             {PUBLIC_SOLD_DISCLAIMER}
           </p>

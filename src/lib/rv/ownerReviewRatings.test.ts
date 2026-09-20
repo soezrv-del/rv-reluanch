@@ -162,6 +162,37 @@ test("footer and Facts UI never claim J.D. Power or Consumer Reports", () => {
   assert.match(src, /Owner reviews \(combined\)/);
 });
 
+test("OWNER_REVIEW_FOOTER is a Facts report page footer, not Ratings-card copy", () => {
+  const detail = readFileSync(
+    join(root, "../../components/rvfax/RvDetail.tsx"),
+    "utf8",
+  );
+  const footerAt = detail.indexOf("{OWNER_REVIEW_FOOTER}");
+  const ratingsAt = detail.indexOf('data-testid="facts-ratings"');
+  const ratingsEnd = detail.indexOf("</section>", ratingsAt);
+  const shareAt = detail.indexOf('data-share-kit');
+  const soldAt = detail.indexOf("{PUBLIC_SOLD_DISCLAIMER}");
+  const suiteAt = detail.indexOf('<SuiteDisclaimer className="pb-6"');
+  assert.ok(footerAt >= 0, "Facts report mounts OWNER_REVIEW_FOOTER");
+  assert.ok(ratingsAt >= 0 && ratingsEnd > ratingsAt);
+  assert.ok(
+    footerAt > ratingsEnd,
+    "disclaimer sits after the Ratings card, not inside it",
+  );
+  assert.ok(
+    footerAt > shareAt,
+    "disclaimer sits below all report cards including Share kit",
+  );
+  assert.ok(
+    footerAt < soldAt && soldAt < suiteAt,
+    "disclaimer is the first page footer, above sold + suite disclaimers",
+  );
+  assert.match(
+    detail,
+    /<p className="mt-3 text-\[11px\] leading-relaxed text-white\/45">\s*\{OWNER_REVIEW_FOOTER\}/,
+  );
+});
+
 test("DialaBot / Bland / SMS stay out of owner-review ratings", () => {
   const files = [
     "ownerReviewRatings.ts",

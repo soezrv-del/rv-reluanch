@@ -756,11 +756,12 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", (
   assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
   assert.match(detail, /chassis:\s*powertrainGuard\.hard\.chassis/);
   assert.match(detail, /engine:\s*powertrainGuard\.hard\.engine/);
-  assert.doesNotMatch(detail, /OWNER_REVIEW_FOOTER/);
+  assert.match(detail, /OWNER_REVIEW_FOOTER/);
   const ratingsBlock = detail.slice(
     detail.indexOf('data-testid="facts-ratings"'),
     detail.indexOf('title="Vehicle specifications"'),
   );
+  assert.doesNotMatch(ratingsBlock, /OWNER_REVIEW_FOOTER/);
   assert.doesNotMatch(ratingsBlock, /n≥15|n≥8|RV Insider|hard math/);
   assert.doesNotMatch(detail, /formatTorqueWeightBasisChip/);
   assert.doesNotMatch(detail, /UVW_ESTIMATE_LABEL/);
