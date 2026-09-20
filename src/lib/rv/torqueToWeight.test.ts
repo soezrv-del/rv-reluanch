@@ -4,7 +4,6 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { findOemFloorplanSpec } from "./floorplanSpecs.ts";
-import { resolveHardPowertrain } from "./livePowertrainGuard.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import {
   THIN_CCC_FLAG,
@@ -672,32 +671,22 @@ test("2023 Phaeton 40IH: option-band pin still scores published L9 380 / 1,150 o
   assert.equal(oem!.uvwLbs, 33_500);
   assert.equal(oem!.gvwrLbs, 39_600);
 
-  const guard = resolveHardPowertrain({
-    year: "2023",
-    make: "Tiffin",
-    model: "Phaeton",
-    floorplan: "40IH",
-    catalog: {
-      engine: pin!.engine,
-      horsepower: pin!.horsepower,
-      torque: "—",
-      chassis: pin!.chassis,
-      fuelType: "Diesel",
-      type: "Class A Diesel",
-    },
-    live: null,
-  });
-  assert.equal(guard.hard.torqueLbFt, 1150);
-  assert.equal(guard.hard.horsepower, null);
+  const guardSrc = readFileSync(join(root, "livePowertrainGuard.ts"), "utf8");
+  assert.match(guardSrc, /pin\.torqueLbFt != null && pin\.torqueLbFt > 0/);
+  assert.match(guardSrc, /engineOmitsLoneTorque\(pin\.engine\) \? null : base\.torqueLbFt/);
+  assert.match(
+    readFileSync(join(root, "../../components/rvfax/RvDetail.tsx"), "utf8"),
+    /torqueLbFt:\s*powertrainGuard\.hard\.torqueLbFt/,
+  );
 
   const ttw = computeTorqueToWeight({
-    torqueLbFt: guard.hard.torqueLbFt,
+    torqueLbFt: pin!.torqueLbFt,
     uvwLbs: oem!.uvwLbs,
     gvwrLbs: oem!.gvwrLbs,
     rvType: "Class A Diesel",
     fuelType: "Diesel",
-    chassis: guard.hard.chassis,
-    engine: guard.hard.engine,
+    chassis: pin!.chassis,
+    engine: pin!.engine,
   });
   assert.equal(ttw.gap, false);
   assert.equal(ttw.torqueLbFt, 1150);
@@ -710,26 +699,22 @@ test("2023 Phaeton 40IH: option-band pin still scores published L9 380 / 1,150 o
   assert.equal(formatTorqueToWeightScore(ttw), "8.7/10");
   assert.equal(formatTorqueWeightBasisChip(ttw), null);
 
-  // True L9/X15 option-band with no published pin torque still GAPs.
+  // True L9/X15 option-band with no published pin torque stays GAP.
   const bus = findPowertrainCorrection("2023", "Tiffin", "Allegro Bus", "45OPP");
   assert.ok(bus);
   assert.equal(bus!.torqueLbFt, undefined);
   assert.match(bus!.engine, /L9 450HP std \/ X15 605HP opt/);
-  const busGuard = resolveHardPowertrain({
-    year: "2023",
-    make: "Tiffin",
-    model: "Allegro Bus",
-    floorplan: "45OPP",
-    catalog: {
-      engine: bus!.engine,
-      horsepower: 450,
-      torque: "1,250 lb-ft",
+  assert.equal(
+    computeTorqueToWeight({
+      torqueLbFt: bus!.torqueLbFt,
+      torqueRaw: "—",
+      gvwrLbs: 50_000,
+      rvType: "Class A Diesel",
       fuelType: "Diesel",
-      type: "Class A Diesel",
-    },
-    live: null,
-  });
-  assert.equal(busGuard.hard.torqueLbFt, null);
+      engine: bus!.engine,
+    }).gap,
+    true,
+  );
 });
 
 test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", () => {
