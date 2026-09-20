@@ -140,12 +140,32 @@ export function hasConcreteFloorplan(floorplan?: string | null): boolean {
   return true;
 }
 
+/** Concrete code or "" — never keep "Any" / "Any floorplan" in coach state. */
+export function concreteFloorplanOrEmpty(floorplan?: string | null): string {
+  const fp = String(floorplan ?? "").trim();
+  return hasConcreteFloorplan(fp) ? fp : "";
+}
+
+/**
+ * Catalog search fills `fps[0]` when the picker is Any. Facts must not
+ * treat that as a chosen floorplan — specs / header stay model-only.
+ */
+export function resultForFactsPicker<T extends { floorplan?: string | null }>(
+  result: T,
+  pickerFloorplan?: string | null,
+): T {
+  if (!hasConcreteFloorplan(pickerFloorplan)) {
+    return { ...result, floorplan: "" };
+  }
+  return { ...result, floorplan: String(pickerFloorplan).trim() };
+}
+
 export function cascadeFromResult(r: ResultLike): FactsCascadeSel {
   return {
     year: String(r.year ?? "").trim(),
     make: String(r.make ?? "").trim(),
     model: String(r.model ?? "").trim(),
-    floorplan: String(r.floorplan ?? "").trim(),
+    floorplan: concreteFloorplanOrEmpty(r.floorplan),
     // Only a wizard class-tab id belongs here. Catalog type strings
     // ("Class A Diesel") are not picker filters — omit so applySel
     // leaves the current type chip alone.
@@ -179,7 +199,7 @@ export function pickerCoachWrite(
       year: sel.year,
       make: sel.make,
       model: sel.model,
-      floorplan: sel.floorplan,
+      floorplan: concreteFloorplanOrEmpty(sel.floorplan),
       rvType: sel.rvType,
     };
   }

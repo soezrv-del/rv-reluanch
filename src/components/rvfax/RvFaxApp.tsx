@@ -46,11 +46,13 @@ import {
 } from "@/lib/rv/compare";
 import {
   cascadeFromResult,
+  concreteFloorplanOrEmpty,
   FACTS_TYPE_OPTIONS,
   factsTypeLabel,
   pickerCoachWrite,
   resolveShareOpenSel,
   factsSearchEnabled,
+  resultForFactsPicker,
   revealFactsFloorplan,
   revealFactsModel,
   revealFactsYear,
@@ -296,14 +298,18 @@ export function RvFaxApp({
     setYear(next.year);
     setMake(next.make);
     setModel(next.model);
-    setFloorplan(next.floorplan);
+    setFloorplan(concreteFloorplanOrEmpty(next.floorplan));
     if (next.rvType !== undefined) setRvType(next.rvType);
   }, []);
 
   const openFactsUnit = useCallback(
     (r: RVResult) => {
-      applySel(cascadeFromResult(r));
-      setDetail(hydrateShareCoachResult(r));
+      const opened = {
+        ...r,
+        floorplan: cascadeFromResult(r).floorplan,
+      };
+      applySel(cascadeFromResult(opened));
+      setDetail(hydrateShareCoachResult(opened));
     },
     [applySel],
   );
@@ -366,7 +372,7 @@ export function RvFaxApp({
         found[0] ??
         savedRef.current[0] ??
         null;
-      if (hit) focusShare(hit);
+      if (hit) focusShare(resultForFactsPicker(hit, sel.floorplan));
     })();
 
     return () => {
@@ -408,7 +414,7 @@ export function RvFaxApp({
         found[0] ??
         savedRef.current[0] ??
         null;
-      if (hit) focusMarket(hit);
+      if (hit) focusMarket(resultForFactsPicker(hit, sel.floorplan));
     })();
 
     return () => {
@@ -484,7 +490,7 @@ export function RvFaxApp({
           floorplan: sel.floorplan,
           rvType: sel.rvType || undefined,
         }).map((r) => ({
-          ...r,
+          ...resultForFactsPicker(r, sel.floorplan),
           saved: isSavedUnit(saved, r),
         }));
         setResults(found);
@@ -609,7 +615,7 @@ export function RvFaxApp({
       floorplan: cascade.floorplan,
       rvType: cascade.rvType || undefined,
     }).map((r) => ({
-      ...r,
+      ...resultForFactsPicker(r, cascade.floorplan),
       saved: isSavedUnit(saved, r),
     }));
     setResults(found);
