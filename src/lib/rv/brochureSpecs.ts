@@ -29,11 +29,7 @@ import {
   parseHp,
 } from "./catalogHonesty";
 import { resolveHonestTanks } from "./placeholderTanks";
-import {
-  UVW_ESTIMATE_LABEL,
-  estimateUvwFromGvwrDetailed,
-  THIN_CCC_FLAG,
-} from "./torqueToWeight";
+import { estimateUvwFromGvwrDetailed } from "./torqueToWeight";
 
 export { parseHp } from "./catalogHonesty";
 export {
@@ -681,9 +677,6 @@ export function buildBrochureSpecs(
     : null;
   const estimatedUvwLbs = estimated?.uvwLbs ?? null;
   const thinCcc = estimated?.thinCcc ?? false;
-  const thinCccNote = thinCcc
-    ? `${THIN_CCC_FLAG}: CCC/OCCC/NCC under 3,000 lbs on a 20–24k gas coach — UVW ratio may actually run ~0.89.`
-    : null;
 
   return {
     lengthFt: lengthDisplay,
@@ -699,19 +692,14 @@ export function buildBrochureSpecs(
       uvw != null
         ? fmtLbs(uvw)
         : estimatedUvwLbs != null
-          ? `${fmtLbs(estimatedUvwLbs)} (${UVW_ESTIMATE_LABEL}${thinCcc ? ` · ${THIN_CCC_FLAG}` : ""})`
+          ? fmtLbs(estimatedUvwLbs)
           : CONFIRM_BROCHURE,
     uvwLbs: uvw ?? null,
     estimatedUvwLbs,
     uvwEstimated: estimatedUvwLbs != null,
     thinCcc,
     cccLbs: ccc,
-    ccc:
-      ccc != null
-        ? `${fmtLbs(ccc)}${thinCcc ? ` · ${THIN_CCC_FLAG}` : ""}`
-        : thinCcc
-          ? `${CONFIRM_BROCHURE} · ${THIN_CCC_FLAG}`
-          : CONFIRM_BROCHURE,
+    ccc: ccc != null ? fmtLbs(ccc) : CONFIRM_BROCHURE,
     gcwr: isTowable
       ? "Set by tow vehicle"
       : fmtLbs(gvwrMid + (towCap || (diesel ? 10000 : 5000))),
@@ -834,7 +822,7 @@ export function buildBrochureSpecs(
       ? `${spec.warrantyYears}-yr limited / structural varies`
       : CONFIRM_BROCHURE,
     construction: CONFIRM_BROCHURE,
-    accuracyNote: [accuracyNote, thinCccNote].filter(Boolean).join(" · "),
+    accuracyNote,
     dataSource,
 
     isToyHauler,

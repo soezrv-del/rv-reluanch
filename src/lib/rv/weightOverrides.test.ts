@@ -7,7 +7,10 @@ import {
   saveWeightOverride,
   weightOverrideId,
 } from "./weightOverrides.ts";
-import { computeTorqueToWeight } from "./torqueToWeight.ts";
+import {
+  computeTorqueToWeight,
+  formatTorqueToWeightScore,
+} from "./torqueToWeight.ts";
 
 test("weight override id is year|make|model|floorplan", () => {
   assert.equal(
@@ -68,9 +71,9 @@ test("override UVW wins over published UVW and GVWR for TTW", () => {
   assert.equal(scored.weightBasis, "UVW");
   assert.equal(scored.weightOverridden, true);
   assert.equal(scored.weightLb, 17_000);
-  assert.match(
-    `${scored.score?.toFixed(1)}/10 · UVW override`,
-    /UVW override/,
+  assert.equal(
+    formatTorqueToWeightScore(scored),
+    `${scored.score?.toFixed(1)}/10`,
   );
 });
 

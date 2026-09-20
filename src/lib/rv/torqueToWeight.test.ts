@@ -5,7 +5,6 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   THIN_CCC_FLAG,
-  UVW_ESTIMATE_LABEL,
   barColorFromScore,
   computeTorqueToWeight,
   estimateUvwFromGvwr,
@@ -400,8 +399,8 @@ test("UVW preferred over GVWR; GAP if torque and both weights missing", () => {
   assert.equal(preferUvw.uvwLb, 20_000);
   assert.equal(preferUvw.gvwrLb, 24_000);
   assert.ok(Math.abs((preferUvw.ratio ?? 0) - 23.4) < 1e-9);
-  assert.match(formatTorqueToWeightScore(preferUvw), /^[0-9.]+\/10 · UVW$/);
-  assert.equal(formatTorqueWeightBasisChip(preferUvw), "UVW");
+  assert.match(formatTorqueToWeightScore(preferUvw), /^[0-9.]+\/10$/);
+  assert.equal(formatTorqueWeightBasisChip(preferUvw), null);
 
   const unloadedRaw = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -426,9 +425,9 @@ test("UVW preferred over GVWR; GAP if torque and both weights missing", () => {
   assert.equal(gvwrOnly.formula, "super-c");
   assert.equal(
     formatTorqueToWeightScore(gvwrOnly),
-    `${gvwrOnly.score?.toFixed(1)}/10 · ${UVW_ESTIMATE_LABEL}`,
+    `${gvwrOnly.score?.toFixed(1)}/10`,
   );
-  assert.equal(formatTorqueWeightBasisChip(gvwrOnly), UVW_ESTIMATE_LABEL);
+  assert.equal(formatTorqueWeightBasisChip(gvwrOnly), null);
 
   assert.equal(formatTorqueToWeightScore(computeTorqueToWeight({})), "GAP");
   assert.equal(
@@ -506,8 +505,8 @@ test("override preference: UVW override → UVW → estimated UVW → GVWR → G
     rvType: "Class C",
   });
   assert.equal(scored.weightLb, 25_000);
-  assert.equal(formatTorqueToWeightScore(scored), `${scored.score?.toFixed(1)}/10 · UVW override`);
-  assert.equal(formatTorqueWeightBasisChip(scored), "Override");
+  assert.equal(formatTorqueToWeightScore(scored), `${scored.score?.toFixed(1)}/10`);
+  assert.equal(formatTorqueWeightBasisChip(scored), null);
 });
 
 test("missing torque|weight → GAP; towables N/A", () => {
@@ -561,7 +560,7 @@ test("TTW range GVWR uses HIGH end; published pin wins over range", () => {
   assert.equal(rangeOnly.weightEstimated, true);
   assert.match(
     formatTorqueToWeightScore(rangeOnly),
-    new RegExp(`^[0-9.]+/10 · ${UVW_ESTIMATE_LABEL.replace(/[×.]/g, "\\$&")}$`),
+    /^[0-9.]+\/10$/,
   );
 
   const displayBand = computeTorqueToWeight({
@@ -632,7 +631,7 @@ test("2022 American Dream 39RK stays pinned 39,237 — not re-estimated", () => 
   assertNear(pinned.ratio, 31.86, 0.02);
   assertNear(pinned.score, 8.29);
   assert.equal(pinned.color, "green");
-  assert.equal(formatTorqueWeightBasisChip(pinned), "UVW");
+  assert.equal(formatTorqueWeightBasisChip(pinned), null);
 
   const wouldEstimate = estimateUvwFromGvwr(47_000, {
     rvType: "Class A Diesel",
@@ -655,10 +654,10 @@ test("Anthem 44R sample: 52,000 × 0.835 → 43,400 at 1,250 lb-ft", () => {
   assertNear(anthem.ratio, 28.80, 0.02);
   assertNear(anthem.score, 7.80);
   assert.equal(anthem.color, "green");
-  assert.equal(formatTorqueWeightBasisChip(anthem), UVW_ESTIMATE_LABEL);
+  assert.equal(formatTorqueWeightBasisChip(anthem), null);
 });
 
-test("Facts Ratings: Torque-to-Weight bar + X/10 · UVW|GVWR; other rows keep stars", () => {
+test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", () => {
   const src = readFileSync(join(root, "torqueToWeight.ts"), "utf8");
   assert.match(src, /override UVW → published UVW → estimated UVW/);
   assert.match(src, /0\.835/);
@@ -678,6 +677,8 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 · UVW|GVWR; other rows keep st
   assert.doesNotMatch(src, /score < 3/);
   assert.doesNotMatch(src, /score < 4[^.0-9]/);
   assert.doesNotMatch(src, /mid\s*\*\s*0\.82/);
+  assert.match(src, /result\.score\.toFixed\(1\)\}\/10`/);
+  assert.doesNotMatch(src, /\/10 · \$\{/);
 
   const detail = readFileSync(
     join(root, "../../components/rvfax/RvDetail.tsx"),
@@ -685,23 +686,31 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 · UVW|GVWR; other rows keep st
   );
   assert.match(detail, /Torque-to-Weight/);
   assert.match(detail, /formatTorqueToWeightScore/);
-  assert.match(detail, /formatTorqueWeightBasisChip/);
   assert.match(detail, /data-testid="facts-tqwt-bar"/);
   assert.match(detail, /score \/ 10/);
   assert.match(detail, /overrideUvwLbs:\s*weightOverride\?\.uvwLbs/);
   assert.match(detail, /overrideGvwrLbs:\s*weightOverride\?\.gvwrLbs/);
   assert.match(detail, /WeightOverrideRow/);
-  assert.match(detail, /UVW_ESTIMATE_LABEL/);
-  assert.match(detail, /THIN_CCC_FLAG/);
-  assert.match(detail, /facts-tqwt-thin-ccc/);
   assert.match(detail, /estimatedLbs/);
   assert.match(detail, /uvwRaw:\s*specs\.uvw/);
   assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
   assert.match(detail, /chassis:\s*powertrainGuard\.hard\.chassis/);
   assert.match(detail, /engine:\s*powertrainGuard\.hard\.engine/);
+  assert.match(detail, /OWNER_REVIEW_FOOTER/);
+  assert.doesNotMatch(detail, /formatTorqueWeightBasisChip/);
+  assert.doesNotMatch(detail, /UVW_ESTIMATE_LABEL/);
+  assert.doesNotMatch(detail, /THIN_CCC_FLAG/);
+  assert.doesNotMatch(detail, /facts-tqwt-thin-ccc/);
+  assert.doesNotMatch(detail, /facts-tqwt-basis/);
+  assert.doesNotMatch(detail, /estimatedLabel/);
   assert.doesNotMatch(detail, /torqueToWeight\.stars/);
   assert.match(detail, /label:\s*"Quality"/);
   assert.match(detail, /ratingStars\(row\.score\)/);
+
+  const brochure = readFileSync(join(root, "brochureSpecs.ts"), "utf8");
+  assert.doesNotMatch(brochure, /UVW_ESTIMATE_LABEL/);
+  assert.doesNotMatch(brochure, /THIN_CCC_FLAG/);
+  assert.doesNotMatch(brochure, /thinCccNote/);
 });
 
 test("tiered UVW: diesel pusher vs gas/other; 25k gap; thin-CCC", () => {

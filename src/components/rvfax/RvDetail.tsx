@@ -39,10 +39,7 @@ import {
   ratingStars,
 } from "@/lib/rv/ratingSystem";
 import {
-  THIN_CCC_FLAG,
-  UVW_ESTIMATE_LABEL,
   formatTorqueToWeightScore,
-  formatTorqueWeightBasisChip,
   computeTorqueToWeight,
 } from "@/lib/rv/torqueToWeight";
 import {
@@ -1562,31 +1559,8 @@ export function RvDetail({
                 </li>
               ))}
               <li className="flex items-center justify-between gap-3 py-3 last:pb-0">
-                <span className="flex min-w-0 shrink-0 flex-col gap-1">
-                  <span className="text-[14px] font-medium text-white">
-                    Torque-to-Weight
-                  </span>
-                  {formatTorqueWeightBasisChip(torqueToWeight) ? (
-                    <span
-                      className={
-                        torqueToWeight.weightEstimated
-                          ? "inline-flex w-fit items-center rounded-full border border-sky-300/35 bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold text-sky-100"
-                          : "inline-flex w-fit items-center rounded-full border border-white/20 bg-black/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/75"
-                      }
-                      data-testid="facts-tqwt-basis"
-                    >
-                      {formatTorqueWeightBasisChip(torqueToWeight)}
-                    </span>
-                  ) : null}
-                  {torqueToWeight.thinCcc ? (
-                    <span
-                      className="inline-flex w-fit items-center rounded-full border border-amber-300/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-100"
-                      data-testid="facts-tqwt-thin-ccc"
-                      title="CCC/OCCC/NCC under 3,000 lbs — 20–24k gas UVW ratio may actually run ~0.89"
-                    >
-                      {THIN_CCC_FLAG}
-                    </span>
-                  ) : null}
+                <span className="min-w-0 shrink-0 text-[14px] font-medium text-white">
+                  Torque-to-Weight
                 </span>
                 {torqueToWeight.score == null ? (
                   <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
@@ -1699,7 +1673,6 @@ export function RvDetail({
                     brochure.estimatedUvwLbs ??
                     null
               }
-              estimatedLabel={UVW_ESTIMATE_LABEL}
               overrideLbs={weightOverride?.uvwLbs ?? null}
               disabled={!floorplan}
               onSave={(lbs) => {
@@ -1719,12 +1692,7 @@ export function RvDetail({
             />
             <SpecRow
               label="CCC"
-              value={
-                torqueToWeight.thinCcc &&
-                !String(specs.ccc || "").includes(THIN_CCC_FLAG)
-                  ? `${specs.ccc} · ${THIN_CCC_FLAG}`
-                  : specs.ccc
-              }
+              value={specs.ccc}
             />
             <SpecRow label="WARRANTY" value={specs.warranty} />
             {shellNav ? (

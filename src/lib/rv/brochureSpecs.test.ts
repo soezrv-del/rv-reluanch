@@ -197,7 +197,9 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   assert.match(spec, /oem\?\.gvwrLbs \?\? findOemGvwrLbs/);
   assert.match(spec, /findOemUvwLbs\(year, make, model, floorplan\) \?\? oem\?\.uvwLbs \?\? snap\.uvwLbs/);
   assert.match(spec, /estimateUvwFromGvwr/);
-  assert.match(spec, /UVW_ESTIMATE_LABEL/);
+  assert.doesNotMatch(spec, /UVW_ESTIMATE_LABEL/);
+  assert.doesNotMatch(spec, /THIN_CCC_FLAG/);
+  assert.doesNotMatch(spec, /estimated via tiered GVWR formula/);
   assert.match(spec, /uvwLbs: uvw \?\? null/);
 
   // Callers must not pass mid×0.82 as uvwRaw. GVWR-only now estimates UVW.
