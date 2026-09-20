@@ -40,7 +40,11 @@ export type CampStop = {
   progress: number;
   nearDest: boolean;
   amenityHint: string;
-  /** OSM maxlength* only, converted to feet. Omitted when untagged or unparseable. */
+  /**
+   * OSM vehicle/site maxlength only (see OSM_SITE_LENGTH_KEYS), in feet.
+   * Omitted when untagged, unparseable, or HERE (Places has no pad length).
+   * Never from capacity, tents, SAMPLE_CAMPS, or guessed US feet.
+   */
   siteLengthFt?: number;
   /** Official booking / park site when the source already has one. Never invented. */
   website?: string;
@@ -172,7 +176,8 @@ const SITE_LENGTH_MAX_UNITLESS_M = 27;
 const OSM_LENGTH_RE =
   /^(\d+(?:\.\d+)?)\s*(ft|feet|foot|'|′|m|meter|meters|metre|metres)?$/i;
 
-const OSM_SITE_LENGTH_KEYS = [
+/** Honest size sources only — not capacity (site count) or tents (amenity). */
+export const OSM_SITE_LENGTH_KEYS = [
   "maxlength:motorhome",
   "maxlength:motor_caravan",
   "maxlength:motorcaravan",
@@ -233,27 +238,6 @@ export function siteLengthFtFromTags(
   return undefined;
 }
 
-function feeHintFromTags(tags: Record<string, string>): string {
-  const raw = String(tags.fee ?? "")
-    .trim()
-    .toLowerCase();
-  if (!raw) return "";
-  if (/^(no|false|0|free)$/.test(raw)) return "no fee tagged";
-  if (/^(yes|true)$/.test(raw)) return "fee tagged";
-  if (/^\d/.test(raw) || /\$|usd|eur|gbp|cad/.test(raw)) return "fee tagged";
-  return "";
-}
-
-function hoursHintFromTags(tags: Record<string, string>): string {
-  const hours = String(tags.opening_hours ?? "")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!hours) return "";
-  if (/^24\/7$/i.test(hours)) return "24/7 tagged";
-  if (hours.length <= 36 && !/[;@]/.test(hours)) return hours;
-  return "hours tagged";
-}
-
 export function amenityHintFromTags(tags: Record<string, string>): string {
   const bits: string[] = [];
   if (
@@ -266,10 +250,6 @@ export function amenityHintFromTags(tags: Record<string, string>): string {
     bits.push("power tagged");
   }
   if (taggedYes(tags.caravans)) bits.push("caravans tagged");
-  const fee = feeHintFromTags(tags);
-  if (fee) bits.push(fee);
-  const hours = hoursHintFromTags(tags);
-  if (hours) bits.push(hours);
   return bits.join(" · ");
 }
 
