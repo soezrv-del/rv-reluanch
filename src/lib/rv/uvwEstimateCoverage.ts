@@ -10,11 +10,11 @@ import {
   listOemGvwrPins,
   listOemUvwPins,
   type OemGvwrPinRow,
-} from "./floorplanSpecs";
+} from "./floorplanSpecs.ts";
 import {
   computeTorqueToWeight,
   estimateUvwFromGvwr,
-} from "./torqueToWeight";
+} from "./torqueToWeight.ts";
 
 export type EstimatedUvwRow = {
   makeIncludes: string;
