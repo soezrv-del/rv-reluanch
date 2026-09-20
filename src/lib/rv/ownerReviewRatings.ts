@@ -75,6 +75,7 @@ const GAP_SLOT: OwnerReviewSlot = {
   sourceUrl: null,
 };
 
+/** Methodology note — not rendered on the Facts Ratings card (Tide: score + bar only). */
 export const OWNER_REVIEW_FOOTER =
   "Owner reviews are a dated snapshot of public RV Insider manufacturer averages — not a live scrape of every review. GAP below n≥15 brand or n≥8 model. Brand-level when the model sample is thin. Reliability is RvFOX reputation (brand / model tables), not an Insider category. Torque-to-Weight is separate hard math.";
 

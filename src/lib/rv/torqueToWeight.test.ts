@@ -3,6 +3,9 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { findOemFloorplanSpec } from "./floorplanSpecs.ts";
+import { resolveHardPowertrain } from "./livePowertrainGuard.ts";
+import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import {
   THIN_CCC_FLAG,
   barColorFromScore,
@@ -657,6 +660,78 @@ test("Anthem 44R sample: 52,000 × 0.835 → 43,400 at 1,250 lb-ft", () => {
   assert.equal(formatTorqueWeightBasisChip(anthem), null);
 });
 
+test("2023 Phaeton 40IH: option-band pin still scores published L9 380 / 1,150 on OEM UVW", () => {
+  const pin = findPowertrainCorrection("2023", "Tiffin", "Phaeton", "40IH");
+  assert.ok(pin);
+  assert.equal(pin!.horsepower, 0);
+  assert.match(pin!.engine, /380HP std \/ L9 450HP opt/);
+  assert.equal(pin!.torqueLbFt, 1150);
+
+  const oem = findOemFloorplanSpec("2023", "Tiffin", "Phaeton", "40IH");
+  assert.ok(oem);
+  assert.equal(oem!.uvwLbs, 33_500);
+  assert.equal(oem!.gvwrLbs, 39_600);
+
+  const guard = resolveHardPowertrain({
+    year: "2023",
+    make: "Tiffin",
+    model: "Phaeton",
+    floorplan: "40IH",
+    catalog: {
+      engine: pin!.engine,
+      horsepower: pin!.horsepower,
+      torque: "—",
+      chassis: pin!.chassis,
+      fuelType: "Diesel",
+      type: "Class A Diesel",
+    },
+    live: null,
+  });
+  assert.equal(guard.hard.torqueLbFt, 1150);
+  assert.equal(guard.hard.horsepower, null);
+
+  const ttw = computeTorqueToWeight({
+    torqueLbFt: guard.hard.torqueLbFt,
+    uvwLbs: oem!.uvwLbs,
+    gvwrLbs: oem!.gvwrLbs,
+    rvType: "Class A Diesel",
+    fuelType: "Diesel",
+    chassis: guard.hard.chassis,
+    engine: guard.hard.engine,
+  });
+  assert.equal(ttw.gap, false);
+  assert.equal(ttw.torqueLbFt, 1150);
+  assert.equal(ttw.weightLb, 33_500);
+  assert.equal(ttw.weightBasis, "UVW");
+  assert.equal(ttw.formula, "class-a-diesel");
+  assertNear(ttw.ratio, 34.33, 0.02);
+  assertNear(ttw.score, 8.68);
+  assert.equal(ttw.color, "green");
+  assert.equal(formatTorqueToWeightScore(ttw), "8.7/10");
+  assert.equal(formatTorqueWeightBasisChip(ttw), null);
+
+  // True L9/X15 option-band with no published pin torque still GAPs.
+  const bus = findPowertrainCorrection("2023", "Tiffin", "Allegro Bus", "45OPP");
+  assert.ok(bus);
+  assert.equal(bus!.torqueLbFt, undefined);
+  assert.match(bus!.engine, /L9 450HP std \/ X15 605HP opt/);
+  const busGuard = resolveHardPowertrain({
+    year: "2023",
+    make: "Tiffin",
+    model: "Allegro Bus",
+    floorplan: "45OPP",
+    catalog: {
+      engine: bus!.engine,
+      horsepower: 450,
+      torque: "1,250 lb-ft",
+      fuelType: "Diesel",
+      type: "Class A Diesel",
+    },
+    live: null,
+  });
+  assert.equal(busGuard.hard.torqueLbFt, null);
+});
+
 test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", () => {
   const src = readFileSync(join(root, "torqueToWeight.ts"), "utf8");
   assert.match(src, /override UVW → published UVW → estimated UVW/);
@@ -696,7 +771,12 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", (
   assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
   assert.match(detail, /chassis:\s*powertrainGuard\.hard\.chassis/);
   assert.match(detail, /engine:\s*powertrainGuard\.hard\.engine/);
-  assert.match(detail, /OWNER_REVIEW_FOOTER/);
+  assert.doesNotMatch(detail, /OWNER_REVIEW_FOOTER/);
+  const ratingsBlock = detail.slice(
+    detail.indexOf('data-testid="facts-ratings"'),
+    detail.indexOf('title="Vehicle specifications"'),
+  );
+  assert.doesNotMatch(ratingsBlock, /n≥15|n≥8|RV Insider|hard math/);
   assert.doesNotMatch(detail, /formatTorqueWeightBasisChip/);
   assert.doesNotMatch(detail, /UVW_ESTIMATE_LABEL/);
   assert.doesNotMatch(detail, /THIN_CCC_FLAG/);

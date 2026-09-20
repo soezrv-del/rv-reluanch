@@ -43,7 +43,6 @@ import {
   computeTorqueToWeight,
 } from "@/lib/rv/torqueToWeight";
 import {
-  OWNER_REVIEW_FOOTER,
   formatOwnerReviewScore,
   mapReportRatings,
 } from "@/lib/rv/reportRatings";
@@ -1592,9 +1591,6 @@ export function RvDetail({
                 )}
               </li>
             </ul>
-            <p className="mt-3 text-[11px] leading-relaxed text-white/45">
-              {OWNER_REVIEW_FOOTER}
-            </p>
           </section>
 
           {hasConcreteFloorplan(floorplan) ? (
