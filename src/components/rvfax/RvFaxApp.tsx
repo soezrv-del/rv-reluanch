@@ -684,6 +684,7 @@ export function RvFaxApp({
     persistSaved(result.saved);
     persistDeals(result.deals);
     setSellUnit(null);
+    setDetail(null);
     setSoldFlash({
       key: flashKey,
       unit: sellUnit,
@@ -831,6 +832,7 @@ export function RvFaxApp({
               if (comparePick.length >= 2) setCompareOpen(true);
             }}
             onStartCompare={() => startCompareFromFacts(detail)}
+            onSell={isPro ? () => beginSell(detail) : undefined}
             onAskGrok={() =>
               onOpenGrok?.(
                 `Tell me about the ${detail.year} ${detail.make} ${detail.model}${detail.floorplan ? ` floorplan ${detail.floorplan}` : ""} — factory specs, used market, reliability, recalls, and service issues.`,
@@ -839,6 +841,13 @@ export function RvFaxApp({
           />
         </Suspense>
         {peerSheet}
+        {isPro && sellUnit ? (
+          <SoldPrompt
+            unit={sellUnit}
+            onClose={() => setSellUnit(null)}
+            onSubmit={submitSell}
+          />
+        ) : null}
       </>
     );
   }
@@ -1215,12 +1224,14 @@ export function RvFaxApp({
                         onClick={() => beginSell(r)}
                         disabled={soldFlash?.key === compareSelectionKey(r)}
                         className={cn(
-                          "inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition-colors",
+                          "inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border px-3 text-[11px] font-bold transition-colors",
                           soldFlash?.key === compareSelectionKey(r)
-                            ? "border-ruby-border bg-ruby"
-                            : "border-green/50 bg-green",
+                            ? "border-ruby-border bg-ruby text-white"
+                            : "border-green/40 bg-green/15 text-green",
                         )}
-                      />
+                      >
+                        Sold
+                      </button>
                     ) : null}
                     <button
                       type="button"

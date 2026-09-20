@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Calculator,
   CheckCircle2,
+  CircleDollarSign,
   ExternalLink,
   GitCompare,
   Heart,
@@ -182,6 +183,7 @@ export function RvDetail({
   onToggleCompare,
   onOpenCompare,
   onStartCompare,
+  onSell,
   onAskGrok,
 }: {
   result: RVResult;
@@ -196,6 +198,7 @@ export function RvDetail({
   onToggleCompare?: () => void;
   onOpenCompare?: () => void;
   onStartCompare?: () => void;
+  onSell?: () => void;
   onAskGrok: () => void;
 }) {
   const { ready: catalogReady } = useCatalogReady();
@@ -1228,6 +1231,16 @@ export function RvDetail({
                       }}
                     />
                   ) : null}
+                  {onSell ? (
+                    <OverflowItem
+                      icon={<CircleDollarSign className="size-3.5 text-green" />}
+                      label="Log as Sold"
+                      onClick={() => {
+                        onSell();
+                        setMoreOpen(false);
+                      }}
+                    />
+                  ) : null}
                   {onStartCompare ? (
                     <OverflowItem
                       icon={<GitCompare className="size-3.5" />}
@@ -1290,22 +1303,40 @@ export function RvDetail({
               ) : null}
             </div>
           </div>
-          {onStartCompare ? (
+          {onSell || onStartCompare ? (
             <div
-              className="mx-auto w-full max-w-lg px-3 pb-2 sm:px-5"
+              className="mx-auto flex w-full max-w-lg gap-2 px-3 pb-2 sm:px-5"
               data-facts-compare-entry=""
             >
-              <button
-                type="button"
-                data-facts-compare=""
-                onClick={onStartCompare}
-                className="flex w-full min-h-11 items-center justify-center gap-1.5 rounded-full border border-sky-400/50 bg-sky-500/25 px-4 text-[13px] font-bold text-white"
-              >
-                <GitCompare className="size-3.5" />
-                {compareCount >= 2
-                  ? `Compare ${compareCount} units`
-                  : "Compare with another unit"}
-              </button>
+              {onSell ? (
+                <button
+                  type="button"
+                  data-facts-sold=""
+                  onClick={onSell}
+                  className={cn(
+                    "inline-flex min-h-11 items-center justify-center rounded-full border border-green/40 bg-green/15 px-4 text-[13px] font-bold text-green",
+                    onStartCompare ? "flex-1" : "w-full",
+                  )}
+                >
+                  Sold
+                </button>
+              ) : null}
+              {onStartCompare ? (
+                <button
+                  type="button"
+                  data-facts-compare=""
+                  onClick={onStartCompare}
+                  className={cn(
+                    "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-sky-400/50 bg-sky-500/25 px-4 text-[13px] font-bold text-white",
+                    onSell ? "flex-1" : "w-full",
+                  )}
+                >
+                  <GitCompare className="size-3.5" />
+                  {compareCount >= 2
+                    ? `Compare ${compareCount} units`
+                    : "Compare with another unit"}
+                </button>
+              ) : null}
             </div>
           ) : null}
         </div>

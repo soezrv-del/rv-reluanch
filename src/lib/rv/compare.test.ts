@@ -67,7 +67,7 @@ test("Lot Desk compare UI: Market + key Facts + one-tap Facts entry", () => {
   assert.match(fax, /setCompareOpen\(false\);\s*openFactsUnit\(r,\s*r\.floorplan\)/);
 });
 
-test("Facts saved list: [green Sold | compare] → toggleCompare → RvCompare", () => {
+test("Facts saved list: [Sold label | compare] → toggleCompare → RvCompare", () => {
   const fax = readFileSync(
     join(root, "../../components/rvfax/RvFaxApp.tsx"),
     "utf8",
@@ -84,9 +84,9 @@ test("Facts saved list: [green Sold | compare] → toggleCompare → RvCompare",
   assert.match(fax, /setCompareOpen\(true\)/);
   assert.match(fax, /comparePick\.length \+ 1 >= 2/);
   assert.match(fax, /comparePick\.length >= 3/);
-  assert.match(fax, /border-green\/50 bg-green[\s\S]*data-saved-compare=""/);
+  assert.match(fax, /border-green\/40 bg-green\/15 text-green[\s\S]*data-saved-compare=""/);
+  assert.match(fax, />\s*Sold\s*</);
   assert.match(fax, /capCompareItems\(comparePick\)/);
   assert.match(compareUi, /data-lot-desk-compare/);
   assert.doesNotMatch(fax, /function SavedCompare/);
-  assert.doesNotMatch(fax, />\s*Sold\s*</);
 });

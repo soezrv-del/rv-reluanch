@@ -125,17 +125,24 @@ test("Facts / More / dock gate Sold to isProfessionalTier — visual SOLD, owed 
   assert.doesNotMatch(list, /unwind|put the coach back|restore.*[Ss]aved/);
 });
 
-test("Facts saved-unit sold trigger is unlabeled green, aria Sold, flashes ruby then drops", () => {
+test("Facts saved-unit sold trigger is a Sold label, flashes ruby then drops", () => {
   const fax = readFileSync(
     join(root, "../../components/rvfax/RvFaxApp.tsx"),
     "utf8",
   );
+  const detail = readFileSync(
+    join(root, "../../components/rvfax/RvDetail.tsx"),
+    "utf8",
+  );
   assert.match(fax, /aria-label=\{`Sold \$\{r\.year\}/);
-  assert.match(fax, /border-green\/50 bg-green/);
-  assert.match(fax, /border-ruby-border bg-ruby/);
+  assert.match(fax, /border-green\/40 bg-green\/15 text-green/);
+  assert.match(fax, /border-ruby-border bg-ruby text-white/);
   assert.match(fax, /soldFlash/);
   assert.match(fax, /beginSell/);
   assert.match(fax, /sellSavedCoach/);
   assert.match(fax, /SoldPrompt/);
-  assert.doesNotMatch(fax, />\s*Sold\s*</);
+  assert.match(fax, />\s*Sold\s*</);
+  assert.match(fax, /onSell=\{isPro \? \(\) => beginSell\(detail\) : undefined\}/);
+  assert.match(detail, /data-facts-sold=""/);
+  assert.match(detail, /Log as Sold/);
 });
