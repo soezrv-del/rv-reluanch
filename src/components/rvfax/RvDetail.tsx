@@ -2674,7 +2674,6 @@ function WeightOverrideRow({
   catalogValue,
   catalogLbs,
   estimatedLbs,
-  estimatedLabel,
   overrideLbs,
   accent,
   disabled,
@@ -2685,7 +2684,6 @@ function WeightOverrideRow({
   catalogValue?: string | null;
   catalogLbs?: number | null;
   estimatedLbs?: number | null;
-  estimatedLabel?: string | null;
   overrideLbs?: number | null;
   accent?: boolean;
   disabled?: boolean;
@@ -2742,13 +2740,6 @@ function WeightOverrideRow({
             data-testid={`facts-weight-${label.toLowerCase()}-override`}
           >
             Override
-          </span>
-        ) : estimatedLbs != null && estimatedLabel ? (
-          <span
-            className="rounded-full border border-sky-300/35 bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold normal-case tracking-[0.04em] text-sky-100"
-            data-testid={`facts-weight-${label.toLowerCase()}-estimated`}
-          >
-            {estimatedLabel}
           </span>
         ) : null}
       </span>
