@@ -683,17 +683,25 @@ export function RvDetail({
         overrideGvwrLbs: weightOverride?.gvwrLbs ?? null,
         rvType: data.type,
         fuelType: data.fuelType,
-        chassis: brochure.chassis ?? specs.chassis ?? data.chassis,
+        chassis:
+          powertrainGuard.hard.chassis ||
+          brochure.chassis ||
+          specs.chassis ||
+          data.chassis,
+        engine: powertrainGuard.hard.engine || specs.engine,
         cccLbs: brochure.cccLbs ?? live?.cccLbs ?? null,
         cccRaw: specs.ccc,
       }),
     [
       powertrainGuard.hard.torqueLbFt,
+      powertrainGuard.hard.chassis,
+      powertrainGuard.hard.engine,
       specs.torque,
       specs.uvw,
       specs.gvwr,
       specs.ccc,
       specs.chassis,
+      specs.engine,
       brochure.uvwLbs,
       brochure.gvwrLbs,
       brochure.cccLbs,

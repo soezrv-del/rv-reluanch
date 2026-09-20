@@ -26,19 +26,25 @@
  *
  * Ratio: r = (torqueLbFt / weightLb) * 1000  →  lb-ft per 1,000 lb
  *
- * Continuous 1–10 (piecewise-linear on the David envelope):
- *   GAP / N/A  torque missing OR weight missing OR ≤0 OR towable
- *   r < 10        → [1, 2)
- *   10 ≤ r < 17   → [3, 4)
- *   17 ≤ r < 28   → [4.0, 6.5)   Seneca 800/31000 ≈ 25.8 → ~6.0
- *   28 ≤ r < 45   → [7.0, 9.3)
- *   r ≥ 45        → [8.75, 10]   clamped
+ * Four motorized coach types each score against their own champion ratio
+ * R* (the 10.0 ceiling). Same piecewise shape as the global envelope;
+ * thresholds scale by R*/45 (global high breakpoint was 45):
+ *   t1 = 0.222 * R*     → [1, 2)
+ *   t2 = 0.378 * R*     → [3, 4)
+ *   t3 = 0.622 * R*     → [4.0, 6.5)
+ *   t4 = R*             → [7.0, 9.3) then 10.0 at/above champion
  *
- * Must-pass anchors when a published UVW is missing now score on the
- * tiered estimate (bands unchanged):
- *   Precept 31UL  468 / 18,000 est (22k gas ×0.82) → ~6.0
- *   Anthem 44R    1250 / 43,400 est (diesel ×0.835) → ~7.1
- *   2022 Dream 39RK stays pinned 39,237 (not estimated).
+ * Locked champions (do not recompute from catalog drift):
+ *   Class A Diesel  American Dream 45A X15     R* = 38.2  (1950 / 51000)
+ *   Class A Gas     Jayco Alante 27A           R* = 26.0  (468 / 18000)
+ *   Super C         Grand Design Lineage F 31ZW R* = 43.2  (950 / 22000)
+ *   Class C         Forest River Sunseeker TS  R* = 38.6  (400 / 10360)
+ *
+ * Class B / unknown motorized: GLOBAL curve (unscaled 10/17/28/45,
+ * including 8.75 + (r−45)/5 above 45). Towables stay N/A.
+ *
+ * Score uses the active #358 weight (published UVW → tiered UVW_EST →
+ * GVWR). 2022 Dream 39RK stays pinned 39,237 (not estimated).
  *
  * Bar color (score, not ratio) — unchanged bands:
  *   red     score < 6.0
@@ -123,8 +129,10 @@ export type TorqueToWeightInput = {
   /** Coach type / fuel — towables are N/A (no engine torque rating). */
   rvType?: string | null;
   fuelType?: string | null;
-  /** Chassis string — Freightliner / Spartan keep the diesel-pusher factor. */
+  /** Chassis — diesel-pusher UVW factor and per-type formula hints. */
   chassis?: string | null;
+  /** Engine hint (Cummins L9/X15/ISB, Godzilla, …) for type detection. */
+  engine?: string | null;
   /** CCC / OCCC / NCC pounds — thin-CCC flag on 20–24k gas estimates. */
   cccLbs?: number | null;
   /** Display / specs.ccc string when a numeric CCC is not already resolved. */
@@ -152,10 +160,114 @@ export type TorqueToWeightResult = {
   /** Continuous 1–10, or null on GAP / N/A. */
   score: number | null;
   color: TorqueBarColor | null;
+  /** Which piecewise envelope produced the score. Null on GAP / N/A. */
+  formula: TorqueScoreFormula | null;
   gap: boolean;
   /** Towable (trailer / fifth wheel) — N/A, not a motorhome score. */
   na: boolean;
 };
+
+/** Per-type TTW envelope. `global` is the unscaled 10/17/28/45 fallback. */
+export type TorqueScoreFormula =
+  | "class-a-diesel"
+  | "class-a-gas"
+  | "super-c"
+  | "class-c"
+  | "global";
+
+/**
+ * Locked champion ratios R* (lb-ft per 1,000 lb GVWR).
+ * Scale thresholds by R*/45 from the global 10/17/28/45 breakpoints.
+ */
+export const TORQUE_SCORE_CHAMPIONS = {
+  "class-a-diesel": 38.2,
+  "class-a-gas": 26.0,
+  "super-c": 43.2,
+  "class-c": 38.6,
+} as const satisfies Record<Exclude<TorqueScoreFormula, "global">, number>;
+
+/** Global (Class B / unknown) breakpoints — do not scale these. */
+export const GLOBAL_TORQUE_BREAKPOINTS = {
+  t1: 10,
+  t2: 17,
+  t3: 28,
+  t4: 45,
+} as const;
+
+const THRESHOLD_T1 = 0.222;
+const THRESHOLD_T2 = 0.378;
+const THRESHOLD_T3 = 0.622;
+
+export type TorqueScoreThresholds = {
+  t1: number;
+  t2: number;
+  t3: number;
+  t4: number;
+};
+
+/** Scaled breakpoints for a champion ratio. t4 = R* (score 10.0). */
+export function torqueScoreThresholds(
+  championRatio: number,
+): TorqueScoreThresholds {
+  return {
+    t1: THRESHOLD_T1 * championRatio,
+    t2: THRESHOLD_T2 * championRatio,
+    t3: THRESHOLD_T3 * championRatio,
+    t4: championRatio,
+  };
+}
+
+export function thresholdsForFormula(
+  formula: TorqueScoreFormula,
+): TorqueScoreThresholds {
+  if (formula === "global") return { ...GLOBAL_TORQUE_BREAKPOINTS };
+  return torqueScoreThresholds(TORQUE_SCORE_CHAMPIONS[formula]);
+}
+
+/**
+ * Pick the per-type envelope.
+ * Super C (including diesel Super C) wins over Class C / Class A.
+ * Class A + diesel / diesel pusher / Freightliner / Spartan /
+ * Cummins L9, X15, ISB → Class A Diesel.
+ * Class A + gas / F53 → Class A Gas.
+ * Class B and unknown motorized → global fallback.
+ */
+export function resolveTorqueScoreFormula(
+  input: Pick<
+    TorqueToWeightInput,
+    "rvType" | "fuelType" | "chassis" | "engine"
+  >,
+): TorqueScoreFormula {
+  const type = `${input.rvType || ""}`.toLowerCase();
+  const fuel = `${input.fuelType || ""}`.toLowerCase();
+  const chassis = `${input.chassis || ""}`.toLowerCase();
+  const engine = `${input.engine || ""}`.toLowerCase();
+  const blob = `${type} ${fuel} ${chassis} ${engine}`;
+
+  if (/super\s*c/.test(blob)) return "super-c";
+  if (/class\s*c/.test(blob)) return "class-c";
+
+  const isClassA = /class\s*a/.test(type) || /diesel\s*pusher/.test(blob);
+  if (isClassA) {
+    const namedGas = /class\s*a\s*gas/.test(type);
+    const namedDiesel = /class\s*a\s*diesel/.test(type);
+    const dieselHint =
+      namedDiesel ||
+      /diesel/.test(fuel) ||
+      /diesel\s*pusher/.test(blob) ||
+      /freightliner|spartan/.test(chassis) ||
+      /cummins\s*(l9|x15|isb)|\bl9\b|\bx15\b|\bisb\b/.test(engine);
+    const gasHint =
+      namedGas ||
+      /gas|gasoline/.test(fuel) ||
+      /f-?53|godzilla|triton/.test(`${chassis} ${engine}`);
+    if (dieselHint && !namedGas) return "class-a-diesel";
+    if (gasHint) return "class-a-gas";
+    return "global";
+  }
+
+  return "global";
+}
 
 const EMPTY = /^[—–\-]$/;
 
@@ -431,18 +543,25 @@ export function isTowableForTorqueRating(
 
 /**
  * Continuous 1–10 from r = (lb-ft / weight) × 1000.
- * Envelope: <10 → 1–2; 10–17 → 3–4; 17–28 → 5–6; 28–45 → 7–8; 45+ → 9–10.
- * Interior slopes are set so the must-pass anchors land within ±0.15.
+ * Default `global` envelope: <10 → 1–2; 10–17 → 3–4; 17–28 → 5–6;
+ * 28–45 → 7–8; 45+ → 9–10 (8.75 + (r−45)/5).
+ * Typed formulas use the same interior slopes on scaled t1..t4, and
+ * score 10.0 at/above the champion ratio R*.
  */
 export function scoreFromTorqueToWeightRatio(
   ratio: number | null | undefined,
+  formula: TorqueScoreFormula = "global",
 ): number | null {
   if (ratio == null || !Number.isFinite(ratio) || ratio < 0) return null;
-  if (ratio < 10) return clampScore(1 + ratio / 10);
-  if (ratio < 17) return clampScore(3 + (ratio - 10) / 7);
-  if (ratio < 28) return clampScore(4 + ((ratio - 17) / 11) * 2.5);
-  if (ratio < 45) return clampScore(7 + ((ratio - 28) / 17) * 2.3);
-  return clampScore(8.75 + (ratio - 45) / 5);
+  const { t1, t2, t3, t4 } = thresholdsForFormula(formula);
+  if (ratio < t1) return clampScore(1 + ratio / t1);
+  if (ratio < t2) return clampScore(3 + (ratio - t1) / (t2 - t1));
+  if (ratio < t3) return clampScore(4 + ((ratio - t2) / (t3 - t2)) * 2.5);
+  if (ratio < t4) return clampScore(7 + ((ratio - t3) / (t4 - t3)) * 2.3);
+  if (formula === "global") {
+    return clampScore(8.75 + (ratio - t4) / 5);
+  }
+  return 10;
 }
 
 export function barColorFromScore(
@@ -467,6 +586,7 @@ const NA_RESULT: TorqueToWeightResult = {
   ratio: null,
   score: null,
   color: null,
+  formula: null,
   gap: true,
   na: true,
 };
@@ -588,7 +708,8 @@ export function computeTorqueToWeight(
     torqueLbFt != null && resolved.weightLb != null
       ? torqueToWeightRatio(torqueLbFt, resolved.weightLb)
       : null;
-  const score = scoreFromTorqueToWeightRatio(ratio);
+  const formula = resolveTorqueScoreFormula(input);
+  const score = scoreFromTorqueToWeightRatio(ratio, formula);
   return {
     torqueLbFt,
     uvwLb: resolved.uvwLb,
@@ -602,6 +723,7 @@ export function computeTorqueToWeight(
     ratio,
     score,
     color: barColorFromScore(score),
+    formula: score == null ? null : formula,
     gap: score == null,
     na: false,
   };
