@@ -15060,7 +15060,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       engine: "Ford 7.3L V8 gas 325HP (E-450)", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-450",
       transmission: "6-speed TorqShift", fuelType: "Gas", recalls: 0, rating: 4.25, image: RV_CARD_IMAGE,
       towingCapacity: 7500, freshWater: 44, grayWater: 39, blackWater: 39, fuelCapacityGal: 55,
-      generator: "Onan / Generac 4kW gas", awningLength: 16, ceilingHeight: 80, founded: 1996, warrantyYears: 1, yearStart: 2005, gvwrLbs: 14500,
+      generator: "Onan / Generac 4kW gas", awningLength: 16, ceilingHeight: 80, founded: 1996, warrantyYears: 1, yearStart: 2005,
       description: "Forest River Sunseeker — full-feature Ford E-450 Class C (also sold as Classic). OEM 2026–27: 7.3 325/450, hitch 7,500, GVWR 14,500. Plans 2440DS, 2500TS, 2860DS, 3010DS, 3050S, 3150S.",
       powertrainByYear: [
         { from: 2005, to: 2015, engine: "Ford 6.8L V10 / 6.2L V8 (by year)", horsepower: 305, chassis: "Ford E-450 / E-350" },
@@ -21604,7 +21604,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2000,
       yearEnd: 2016,
-      gvwrLbs: 14500,
       description: "Fleetwood Jamboree — discontinued Ford cutaway Class C (last catalog year 2016). This catalog key is Jamboree Sport, not Searcher. MY10 OEM Sport (2010_jas_f / JASP10F1): 23B / 25G / 26Q / 28Y / 31M / 31N / 31W on E-450 Triton V10 305/420. MY11 OEM Sport (2011_jas_f / JAMSP11F1): 24L / 25G / 28Y / 31M / 31N / 31W, same 305/420. MY12 OEM Sport (2012_jas_f / JASPT12F2): 25G / 28Y / 28Z / 31M / 31N / 31W. MY13 OEM Sport (2013_jas_f / JASP13F1): 25G / 28Y / 28Z / 31M / 31N / 31W on E-450 Triton V10 305/420. MY14 OEM Sport (2014_jas_f / JASP_JAS14F1): 25G / 28Z / 31A / 31D / 31M on E-450 305/420. Jamboree Searcher (MY14 card 23B / 25K / 31M, mixed E-350 255/350 / E-450 305/420) is a separate trim, not merged here. MY15–16 this key is Jamboree Sport only (25G / 31A / 31D / 31M on Ford E-450 Triton V10). Current Fleetwood Class C is Altitude (gas) / Insight (diesel).",
       powertrainByYear: [
         {
@@ -21706,7 +21705,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2000,
       yearEnd: 2016,
-      gvwrLbs: 14500,
       description: "Fleetwood Tioga — discontinued Ford cutaway Class C (last catalog year 2016). MY10 OEM Tioga (2010_ti_f / TIO10F1, 7/09): 25G / 28Y / 30U / 31M / 31N / 31W — regular Tioga, not Ranger, not Montara, not Jamboree (do not merge Ranger-only 23B/26Q). Later years on this key are Montara, not Ranger. MY11 OEM Montara (2011_tim_f / TI11F2): 22C / 23B on Ford E-350 5.4 Triton (255 hp / 350 lb-ft). MY12 OEM Montara (2012_tim_f / TIM12F1): 22C / 23B / 25K — E-350 5.4 255 hp on 22C/23B, E-450 6.8 305 hp on 25K (option-band HP 0). MY13 OEM Montara (2013_tim_f / TIM13F1): 23B / 25K on mixed E-350 5.4 255/350 / E-450 6.8 305/420 (line HP 0). MY14 OEM Montara (2014_tim_f / TIRGR_TIM14F1): 23B / 25K / 31M, same mixed chassis (line HP 0). MY15–16 OEM/RV Guide lists are the Montara rebadge: 23B / 25K / 29A / 31M on mixed Ford E-350 5.4 / E-450 Triton V10 (HP not printed — do not invent). Not Tioga Ranger. Current Fleetwood Class C is Altitude (gas) / Insight (diesel).",
       powertrainByYear: [
         {
@@ -39096,8 +39094,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         450000,
         800000
       ],
-      engine: "Cummins X15 605HP",
-      horsepower: 605,
+      engine: "Cummins ISC/ISL class (confirm brochure)",
       chassis: "Country Coach Custom Stainless",
       fuelType: "Diesel",
       recalls: 0,
@@ -39118,13 +39115,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
                 {
           from: 2000,
           to: 2008,
-          engine: "Cummins ISX 600HP class",
-          horsepower: 600,
+          engine: "Cummins ISC/ISL class (confirm brochure)",
           chassis: "Spartan / Freightliner (by model)",
-          notes: "Flagship diesel era — ISX 600 class (pre-X15 naming)"
+          notes: "Era engines were Cummins ISC/ISL class — not X15, not ISX 600. Confirm brochure. Do not invent HP."
         }
       ],
-      description: "The Country Coach Intrigue was the company flagship — a 45-foot tour de force built on an entirely proprietary stainless-steel frame with the Cummins X15 powerplant. Every Intrigue was essentially one-of-a-kind, configured to order with materials and layouts unavailable from any production manufacturer. Pre-owned Intrigues command $200,000–$400,000 on the secondary market despite being 15+ years old."
+      description: "The Country Coach Intrigue was the company flagship — a 45-foot tour de force built on an entirely proprietary stainless-steel frame with a Cummins ISC/ISL-class powerplant (confirm brochure). Every Intrigue was essentially one-of-a-kind, configured to order with materials and layouts unavailable from any production manufacturer. Pre-owned Intrigues command $200,000–$400,000 on the secondary market despite being 15+ years old."
     },
     Allure: {
       type: "Class A Diesel",
