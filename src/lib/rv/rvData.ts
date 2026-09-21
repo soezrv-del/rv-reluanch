@@ -21659,7 +21659,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["31UL", "34B", "34G", "36A", "36C"],
         "2024": ["31UL", "34B", "34G", "36A", "36C"],
         // OEM MY25–27 Precept floorplans page: 31UL | 34B | 34G | 36A | 36C · F53 7.3 335/468. Do not copy 29V / drop 34B+36C.
-        // MY26–27 tanks GAP — no dated Precept brochure in pack. Do not copy MY23–25 gallons forward.
+        // MY26 tanks are additive year-coverage pins (RVUSA 2026-Jayco-Precept.pdf Printed 2/26 ©2026 2033098). MY27 tanks GAP — no dated 2027 Precept brochure. Do not copy MY23–25 or MY26 gallons onto MY27.
         "2025": ["31UL", "34B", "34G", "36A", "36C"],
         "2026": ["31UL", "34B", "34G", "36A", "36C"],
         "2027": ["31UL", "34B", "34G", "36A", "36C"],
