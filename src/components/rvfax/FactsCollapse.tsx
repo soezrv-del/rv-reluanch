@@ -14,6 +14,7 @@ export function FactsCollapse({
   open: openControlled,
   onOpenChange,
   className,
+  "data-testid": dataTestId,
 }: {
   title: string;
   headline?: ReactNode;
@@ -22,6 +23,7 @@ export function FactsCollapse({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   className?: string;
+  "data-testid"?: string;
 }) {
   const [uncontrolled, setUncontrolled] = useState(defaultOpen);
   const open = openControlled ?? uncontrolled;
@@ -31,7 +33,10 @@ export function FactsCollapse({
   };
 
   return (
-    <section className={cn("glass-prestige rounded-[1.25rem]", className)}>
+    <section
+      className={cn("glass-prestige rounded-[1.25rem]", className)}
+      data-testid={dataTestId}
+    >
       <button
         type="button"
         aria-expanded={open}
