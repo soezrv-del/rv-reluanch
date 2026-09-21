@@ -61,11 +61,17 @@ function escapeBrandRe(s: string): string {
 }
 
 /**
- * Floorplan / trim token: 27A, 27ASE, 45A, 337RLS, 25FW.
+ * Floorplan / trim token: 27A, 27ASE, 45A, 337RLS, 25FW, 4369, 4020T.
+ * 4-digit Newmar-style codes are floorplans, not years (2018 / 2022 stay years).
  * Skips budget leftovers like 50k so a price ask is not a floorplan.
  */
 const FLOORPLAN_TOKEN_RE =
-  /\b(\d{2,3}\s?[A-Za-z]{1,4}|[A-Za-z]{1,3}\d{2,3}[A-Za-z]?)\b/g;
+  /\b(\d{2,3}\s?[A-Za-z]{1,4}|[A-Za-z]{1,3}\d{2,3}[A-Za-z]?|(?!19[89]\d\b)(?!20[0-2]\d\b)\d{4}[A-Za-z]?)\b/g;
+
+/** Model years — never treat these as a 4-digit floorplan. */
+export function isModelYearToken(token: string): boolean {
+  return /^(?:19[89]\d|20[0-2]\d)$/.test((token || "").trim());
+}
 
 /** Spoken plural "27As" / "27A's" → 27A. Leaves 27ASE / 29S alone. */
 export function normalizeFloorplanToken(token: string): string {
@@ -371,6 +377,54 @@ function formatSeriesModel(series: { family: string; code: string }): string {
   return `${series.code} series`;
 }
 
+/**
+ * Spoken series that uniquely imply a catalog make — catalog-free.
+ * Longer phrases first so "Bay Star Sport" wins over "Bay Star".
+ * Last mention wins when someone self-corrects Ventana → Dutch Star.
+ */
+export const SERIES_MAKE_HINTS: ReadonlyArray<{
+  re: RegExp;
+  make: string;
+  model: string;
+}> = [
+  { re: /\bbay\s+star\s+sports?\b/i, make: "Newmar", model: "Bay Star Sport" },
+  { re: /\bmountain\s+aires?\b/i, make: "Newmar", model: "Mountain Aire" },
+  { re: /\blondon\s+aires?\b/i, make: "Newmar", model: "London Aire" },
+  { re: /\bcanyon\s+stars?\b/i, make: "Newmar", model: "Canyon Star" },
+  { re: /\bdutch\s+stars?\b/i, make: "Newmar", model: "Dutch Star" },
+  { re: /\bking\s+aires?\b/i, make: "Newmar", model: "King Aire" },
+  { re: /\bkountry\s+stars?\b/i, make: "Newmar", model: "Kountry Star" },
+  { re: /\bnorthern\s+stars?\b/i, make: "Newmar", model: "Northern Star" },
+  { re: /\bnew\s+aires?\b/i, make: "Newmar", model: "New Aire" },
+  { re: /\bventana\s+l\.?e\.?\b/i, make: "Newmar", model: "Ventana LE" },
+  { re: /\bventanas?\b/i, make: "Newmar", model: "Ventana" },
+  { re: /\bbay\s+stars?\b/i, make: "Newmar", model: "Bay Star" },
+];
+
+/** Last named known series in the ask (Ventana, then Dutch Star → Dutch Star). */
+export function findKnownSeries(
+  text: string,
+): { make: string; model: string } | null {
+  const raw = text || "";
+  let best: { make: string; model: string; index: number; len: number } | null =
+    null;
+  for (const row of SERIES_MAKE_HINTS) {
+    const re = new RegExp(row.re.source, "ig");
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(raw))) {
+      const len = (m[0] || "").length;
+      if (
+        !best ||
+        m.index > best.index ||
+        (m.index === best.index && len > best.len)
+      ) {
+        best = { make: row.make, model: row.model, index: m.index, len };
+      }
+    }
+  }
+  return best ? { make: best.make, model: best.model } : null;
+}
+
 /** Floorplan + brand/model/series — salesman designation, not a spec sentence. */
 export function looksLikeCoachDesignationAsk(text: string): boolean {
   const n = normalizeCoachAsk(text);
@@ -516,7 +570,7 @@ function collectModelWords(after: string, floorplan: string): string {
     ) {
       break;
     }
-    if (/^\d{4}$/.test(w)) continue;
+    if (isModelYearToken(w)) continue;
     const lowerW = w.toLowerCase();
     if (skip.has(lowerW)) continue;
     if (words.length > 0 && stopAfterModel.has(lowerW)) break;
@@ -584,6 +638,22 @@ export function normalizeCoachAsk(text: string): NormalizedCoachAsk {
   // Entegra Vision is the catalog family — infer make when speech omitted it.
   if (!make && /^vision\b/i.test(model)) {
     make = "Entegra Coach";
+  }
+
+  // Brandless "2022 Dutch Star 4369" / last-mention series (Ventana → Dutch Star).
+  const known = findKnownSeries(raw);
+  if (known) {
+    if (!make) make = known.make;
+    if (!model) {
+      model = known.model;
+    } else if (
+      known.model &&
+      !normName(model).includes(normName(known.model)) &&
+      !normName(known.model).includes(normName(model))
+    ) {
+      // "Ventana, no, Dutch Star" — leftover model must not keep Ventana.
+      model = known.model;
+    }
   }
 
   return {

@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 import { parseCoachFromText } from "./parseCoach.ts";
 import {
   askNamesCoachIdentity,
+  formatCatalogPresenceNote,
+  inspectCatalogPresence,
   namedCoachConflictsLock,
   resolveCatalogMake,
   resolveCoachIdentity,
@@ -123,6 +125,104 @@ test("spoken Integras / 27A Vision inventory asks break a Lineage lock", () => {
   }
 });
 
+const VENTANA_LOCK = {
+  year: "2018",
+  make: "Newmar",
+  model: "Ventana",
+  floorplan: "4369",
+  updatedAt: "2018-06-01T00:00:00.000Z",
+};
+
+test("4-digit Newmar floorplans parse; Dutch Star is not a year", () => {
+  const q = parseCoachFromText("look up 2022 Dutch Star 4369");
+  assert.equal(q.year, "2022");
+  assert.equal(q.make, "Newmar");
+  assert.match(q.model, /dutch star/i);
+  assert.equal(q.floorplan, "4369");
+  assert.equal(askNamesCoachIdentity(q), true);
+  assert.doesNotMatch(q.model, /ventana/i);
+});
+
+test("after a Ventana 4369 report, Dutch Star 4369 does not return Ventana", () => {
+  const history =
+    "Give me a report on the 2018 Newmar Ventana 4369.\nVERIFIED CATALOG LOCK is 2018 Newmar Ventana 4369.";
+
+  for (const q of [
+    "look up 2022 Dutch Star 4369",
+    "2022 Newmar Dutch Star 4369",
+    "Newmar Dutch Star 4369",
+  ]) {
+    const parsed = parseCoachFromText(q);
+    assert.equal(askNamesCoachIdentity(parsed), true, q);
+    assert.equal(namedCoachConflictsLock(parsed, VENTANA_LOCK), true, q);
+    const id = resolveCoachIdentity(q, VENTANA_LOCK, history);
+    assert.ok(id, q);
+    assert.match(id!.make, /Newmar/i, q);
+    assert.match(id!.model, /dutch star/i, q);
+    assert.doesNotMatch(id!.model, /ventana/i, q);
+    assert.equal(id!.source, "message", q);
+    if (/2022/.test(q)) assert.equal(id!.year, "2022", q);
+    if (/4369/.test(q)) assert.equal(id!.floorplan, "4369", q);
+    assert.doesNotMatch(catalogLabel(id!), /Ventana/i, q);
+  }
+
+  const yearless = resolveCoachIdentity(
+    "Newmar Dutch Star 4369",
+    VENTANA_LOCK,
+    "look up 2022 Dutch Star 4369",
+  );
+  assert.ok(yearless);
+  assert.match(yearless!.model, /dutch star/i);
+  assert.equal(yearless!.year, "2022");
+  assert.doesNotMatch(yearless!.model, /ventana/i);
+  assert.notEqual(yearless!.year, "2018");
+});
+
+test("catalog presence is honest: Dutch Star is not a missing Ventana", () => {
+  const ds = inspectCatalogPresence({
+    year: "2022",
+    make: "Newmar",
+    model: "Dutch Star",
+    floorplan: "4369",
+  });
+  assert.notEqual(ds.status, "missing-series");
+  assert.match(ds.model, /dutch star/i);
+  assert.doesNotMatch(ds.model, /ventana/i);
+  const dsNote = formatCatalogPresenceNote(ds);
+  assert.doesNotMatch(dsNote, /ventana/i);
+  assert.doesNotMatch(dsNote, /SERIES MISSING/i);
+
+  const yearless = inspectCatalogPresence({
+    year: "",
+    make: "Newmar",
+    model: "Dutch Star",
+    floorplan: "4369",
+  });
+  assert.ok(yearless.status === "series" || yearless.status === "missing-year");
+  const yearlessNote = formatCatalogPresenceNote(yearless);
+  assert.match(yearlessNote, /YEAR MISSING/i);
+  assert.doesNotMatch(yearlessNote, /SERIES MISSING/i);
+  assert.doesNotMatch(yearlessNote, /ventana/i);
+
+  const vent = inspectCatalogPresence({
+    year: "2018",
+    make: "Newmar",
+    model: "Ventana",
+    floorplan: "4369",
+  });
+  assert.notEqual(vent.status, "missing-series");
+  assert.match(vent.model, /ventana/i);
+  assert.doesNotMatch(vent.model, /dutch star/i);
+});
+
+test("Ventana follow-up without renaming keeps the Ventana lock", () => {
+  const hp = resolveCoachIdentity("What's the HP on this coach?", VENTANA_LOCK);
+  assert.ok(hp);
+  assert.equal(hp!.year, "2018");
+  assert.match(hp!.model, /ventana/i);
+  assert.equal(hp!.source, "facts");
+});
+
 test("lock-break is wired through chat, voice, and the API stream", () => {
   const identity = src(root, "coachIdentity.ts");
   const grounding = src(root, "grounding.ts");
@@ -137,4 +237,7 @@ test("lock-break is wired through chat, voice, and the API stream", () => {
   assert.match(api, /askNamesCoachIdentity/);
   const realtime = src(root, "realtime.ts");
   assert.match(realtime, /namedCoachConflictsLock/);
+  assert.match(realtime, /pushCatalogLockToSession/);
+  assert.match(realtime, /flushLockBreakAnswer/);
+  assert.match(realtime, /onDeskSheet/);
 });
