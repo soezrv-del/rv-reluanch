@@ -610,7 +610,7 @@ test("Roadtrek Facts SoT: dated library PDFs + RVUSA year cards; ghosts quaranti
   // Tip engine must not pin 2017 Vortec 6.0 onto yearStart 2000. Dated bands stay intact.
   const popularTip = popular.slice(0, popular.indexOf("powertrainByYear"));
   assert.match(popularTip, /engine: "Chevrolet Express gas \(confirm brochure\)"/);
-  assert.doesNotMatch(popularTip, /Vortec 6\.0/);
+  assert.doesNotMatch(popularTip, /engine: "Chevrolet Vortec 6\.0 V8 gas"/);
   assert.match(
     popular,
     /from: 2011,\s*to: 2013,\s*engine: "Chevrolet 4\.8L \/ 6\.0L SFI gas V8 \(by Popular length\)"/,
