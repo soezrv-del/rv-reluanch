@@ -1541,7 +1541,7 @@
 }
 
 /*
- * Thick sapphire frost — Facts RV Search + RV Cal share this recipe.
+ * Thick sapphire frost — Facts RV Search + RV Cal + RV Tow share this recipe.
  * Overrides the readable-cards solid plate so the Raidho field shows through.
  */
 [data-readable-cards] [data-rv-search-card].glass-prestige,
@@ -1549,7 +1549,12 @@
 [data-readable-cards][data-cal-screen] .glass-prestige-deep,
 [data-readable-cards][data-cal-screen] .glass-prestige-gold,
 [data-readable-cards][data-cal-screen] .glass-panel,
-[data-readable-cards][data-cal-screen] .glass-surface {
+[data-readable-cards][data-cal-screen] .glass-surface,
+[data-readable-cards][data-tow-landing] .glass-prestige,
+[data-readable-cards][data-tow-landing] .glass-prestige-deep,
+[data-readable-cards][data-tow-landing] .glass-prestige-gold,
+[data-readable-cards][data-tow-landing] .glass-panel,
+[data-readable-cards][data-tow-landing] .glass-surface {
   background: linear-gradient(
     160deg,
     rgba(255, 255, 255, 0.2) 0%,

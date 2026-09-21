@@ -128,21 +128,24 @@ test("Facts, Tow, and coach detail are full-bleed Raidho — no leftover photo l
   assert.doesNotMatch(css, /DialaBot/);
 });
 
-test("Facts RV Search and RV Cal share thick sapphire frost — not solid black", () => {
+test("Facts RV Search, RV Cal, and RV Tow share thick sapphire frost — not solid black", () => {
   const fax = read("../../components/rvfax/RvFaxApp.tsx");
   const cal = read("../../components/rvcal/RvCalApp.tsx");
+  const tow = read("../../components/rvtow/RvTowApp.tsx");
   const suite = read("../../components/shell/SuitePage.tsx");
   const css = read("../../styles.css");
 
   assert.match(fax, /data-rv-search-card=""/);
   assert.match(suite, /data-cal-screen=\{tab === "rvcal"/);
   assert.match(cal, /SuitePage/);
+  assert.match(tow, /landing="tow"/);
   assert.match(css, /\[data-readable-cards\] \[data-rv-search-card\]\.glass-prestige/);
   assert.match(css, /\[data-readable-cards\]\[data-cal-screen\] \.glass-prestige/);
+  assert.match(css, /\[data-readable-cards\]\[data-tow-landing\] \.glass-prestige/);
   assert.match(css, /backdrop-filter:\s*blur\(28px\) saturate\(1\.7\)/);
   assert.doesNotMatch(
     css,
-    /\[data-readable-cards\] \[data-rv-search-card\][\s\S]*?background:\s*#0a101c/,
+    /\[data-readable-cards\]\[data-tow-landing\][\s\S]*?background:\s*#0a101c/,
   );
   assert.doesNotMatch(css, /DialaBot/);
 });
