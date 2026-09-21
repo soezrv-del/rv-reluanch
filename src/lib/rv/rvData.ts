@@ -21655,9 +21655,11 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // OEM MY22 Precept flyer: 31UL | 34B | 34G | 36A | 36C · F53 7.3 350/468. Do not copy 29V forward or 36C onto 2021.
         "2022": ["31UL", "34B", "34G", "36A", "36C"],
         // OEM MY23–24 Precept floorplans: 31UL | 34B | 34G | 36A | 36C · F53 7.3 335/468. Do not keep leftover 36T / do not drop 34B+36C.
+        // OEM MY23–25 Precept spec tables (2023-Precept.pdf / 2024-Precept.pdf / 2025-Precept.pdf): holding tanks floorplan-pinned below. Dual prints → sums. Not Prestige.
         "2023": ["31UL", "34B", "34G", "36A", "36C"],
         "2024": ["31UL", "34B", "34G", "36A", "36C"],
         // OEM MY25–27 Precept floorplans page: 31UL | 34B | 34G | 36A | 36C · F53 7.3 335/468. Do not copy 29V / drop 34B+36C.
+        // MY26–27 tanks GAP — no dated Precept brochure in pack. Do not copy MY23–25 gallons forward.
         "2025": ["31UL", "34B", "34G", "36A", "36C"],
         "2026": ["31UL", "34B", "34G", "36A", "36C"],
         "2027": ["31UL", "34B", "34G", "36A", "36C"],
@@ -21764,7 +21766,82 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Ford F53",
           transmission: "TorqShift 6-speed automatic",
           towingCapacity: 5000,
-          notes: "OEM MY23–27 Precept year page: F53 7.3 335 / 468 · hitch 5k"
+          notes: "OEM MY23–27 Precept year page: F53 7.3 335 / 468 · hitch 5k. MY23–25 holding tanks are floorplan-pinned below. MY14–22 and MY26–27 tanks GAP — no dated card. Not Precept Prestige."
+        },
+        {
+          from: 2023,
+          to: 2025,
+          floorplans: ["31UL"],
+          engine: "Ford 7.3L V8 Godzilla 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift 6-speed automatic",
+          towingCapacity: 5000,
+          freshWater: 72,
+          grayWater: 40,
+          blackWater: 50,
+          notes: "OEM MY23–25 Precept 31UL (2023-Precept.pdf / 2024-Precept.pdf / 2025-Precept.pdf): 72 · grey 40 · black 50. Dual prints → sums. Not Precept Prestige. Do not copy onto MY14–22 or MY26–27."
+        },
+        {
+          from: 2023,
+          to: 2025,
+          floorplans: ["34B"],
+          engine: "Ford 7.3L V8 Godzilla 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift 6-speed automatic",
+          towingCapacity: 5000,
+          freshWater: 72,
+          grayWater: 40,
+          blackWater: 40,
+          notes: "OEM MY23–25 Precept 34B (2023-Precept.pdf / 2024-Precept.pdf / 2025-Precept.pdf): 72 · grey 40 · black 40. Dual prints → sums. Not Precept Prestige. Do not copy onto MY14–22 or MY26–27."
+        },
+        {
+          from: 2023,
+          to: 2025,
+          floorplans: ["34G"],
+          engine: "Ford 7.3L V8 Godzilla 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift 6-speed automatic",
+          towingCapacity: 5000,
+          freshWater: 72,
+          grayWater: 40,
+          blackWater: 50,
+          notes: "OEM MY23–25 Precept 34G (2023-Precept.pdf / 2024-Precept.pdf / 2025-Precept.pdf): 72 · grey 40 · black 50. Dual prints → sums. Not Precept Prestige. Do not copy onto MY14–22 or MY26–27."
+        },
+        {
+          from: 2023,
+          to: 2025,
+          floorplans: ["36A"],
+          engine: "Ford 7.3L V8 Godzilla 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift 6-speed automatic",
+          towingCapacity: 5000,
+          freshWater: 72,
+          grayWater: 72,
+          blackWater: 72,
+          notes: "OEM MY23–25 Precept 36A (2023-Precept.pdf / 2024-Precept.pdf / 2025-Precept.pdf): 72 · grey 40/32 → 72 · black 40/32 → 72. Dual prints → sums. Not Precept Prestige. Do not copy onto MY14–22 or MY26–27."
+        },
+        {
+          from: 2023,
+          to: 2025,
+          floorplans: ["36C"],
+          engine: "Ford 7.3L V8 Godzilla 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift 6-speed automatic",
+          towingCapacity: 5000,
+          freshWater: 72,
+          grayWater: 72,
+          blackWater: 72,
+          notes: "OEM MY23–25 Precept 36C (2023-Precept.pdf / 2024-Precept.pdf / 2025-Precept.pdf): 72 · grey 40/32 → 72 · black 40/32 → 72. Dual prints → sums. Not Precept Prestige. Do not copy onto MY14–22 or MY26–27."
         },
       ]
     },
