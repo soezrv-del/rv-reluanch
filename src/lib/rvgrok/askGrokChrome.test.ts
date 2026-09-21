@@ -123,7 +123,7 @@ test("Grok dock tab uses the same Einstein asset as RvGrok; other tabs are icon-
   }
 });
 
-test("Removing overlay chrome does not rewrite dock glass or Facts/Tow internals", () => {
+test("Removing overlay chrome does not rewrite dock plate or Facts/Tow internals", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const css = read("../../styles.css");
   const fax = read("../../components/rvfax/RvFaxApp.tsx");

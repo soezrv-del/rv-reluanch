@@ -80,6 +80,8 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?box-shadow:\s*none/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?backdrop-filter:\s*none/);
   assert.doesNotMatch(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
+  assert.doesNotMatch(css, /backdrop-filter:\s*blur\(20px\) saturate\(180%\)/);
+  assert.doesNotMatch(css, /box-shadow:\s*0 8px 32px rgba\(0, 0, 0, 0\.37\)/);
   assert.doesNotMatch(css, /--dock-surface:\s*color-mix\(in srgb, var\(--color-sapphire\)/);
   assert.match(css, /\.metal-hammered-face/);
   assert.match(css, /linear-gradient\(\s*180deg/);
@@ -116,6 +118,26 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.doesNotMatch(css, /0 0 20px rgba\(120, 200, 255, 0\.52\)/);
   assert.doesNotMatch(css, /drop-shadow\(0 0 5px rgba\(140, 210, 255/);
   assert.doesNotMatch(css, /drop-shadow\(0 0 7px rgba\(160, 220, 255/);
+});
+
+test("dock plate and safe-area fill match Raidho R black ground", () => {
+  const tabs = read("../../components/shell/BottomTabs.tsx");
+  const css = read("../../styles.css");
+  const shell = read("../../components/shell/AppShell.tsx");
+
+  assert.match(css, /--dock-surface:\s*#000000/);
+  assert.match(
+    css,
+    /\.bottom-tabs-nav,\s*\[data-bottom-dock\] \{\s*background:\s*var\(--dock-surface\)/,
+  );
+  assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?background:\s*var\(--dock-surface\)/);
+  assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?backdrop-filter:\s*none/);
+  assert.match(css, /--dock-label-color:\s*#f3f5f8/);
+  assert.match(css, /--dock-label-color-active:\s*#ffffff/);
+  assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
+  assert.doesNotMatch(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
+  assert.doesNotMatch(tabs, /DialaBot/);
+  assert.doesNotMatch(shell, /DialaBot/);
 });
 
 test("dock labels are bright solid type — no metal gradient", () => {
