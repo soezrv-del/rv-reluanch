@@ -10228,7 +10228,7 @@ test("Entegra Coach OEM tank pins: dated brochure gallons only; adjacent years a
   assert.doesNotMatch(accoladeXt, /from: 2027[\s\S]*?freshWater: 64/);
 });
 
-test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / MY14–22 / MY26–27 GAP", async () => {
+test("Jayco Precept OEM tank pins: MY23–25 brochure gallons kept; MY26 additive; Prestige / MY27 GAP", async () => {
   const block = src("rvData.ts");
   const j0 = block.indexOf("  Jayco: {");
   const j1 = block.indexOf('  "American Coach": {');
@@ -10249,9 +10249,6 @@ test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / M
   assert.doesNotMatch(precept, /\n      grayWater: 40,/);
   assert.doesNotMatch(precept, /\n      blackWater: 40,/);
   assert.doesNotMatch(precept, /\n      freshWater: 72,/);
-  assert.doesNotMatch(prestige, /freshWater:\s*\d+/);
-  assert.doesNotMatch(prestige, /grayWater:\s*\d+/);
-  assert.doesNotMatch(prestige, /blackWater:\s*\d+/);
 
   assert.match(
     precept,
@@ -10273,13 +10270,20 @@ test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / M
     precept,
     /from: 2023,\s*to: 2025,\s*floorplans: \["36C"\][\s\S]*?freshWater: 72,\s*grayWater: 72,\s*blackWater: 72,[\s\S]*?40\/32 → 72/,
   );
+  assert.match(
+    precept,
+    /from: 2026,\s*to: 2026,\s*floorplans: \["31UL"\][\s\S]*?freshWater: 72,\s*grayWater: 40,\s*blackWater: 50/,
+  );
+  assert.match(
+    precept,
+    /from: 2026,\s*to: 2026,\s*floorplans: \["34G"\][\s\S]*?freshWater: 72,\s*grayWater: 73,\s*blackWater: 50/,
+  );
+  assert.match(precept, /40\/33 → 73/);
   const wideStart = precept.indexOf("from: 2023,\n          to: 2027,");
   const pinStart = precept.indexOf('floorplans: ["31UL"]');
   assert.ok(wideStart >= 0 && pinStart > wideStart, "model-wide MY23–27 band before 31UL pin");
   assert.doesNotMatch(precept.slice(wideStart, pinStart), /freshWater:\s*\d+/);
-  assert.doesNotMatch(precept, /from: 2026,/);
   assert.doesNotMatch(precept, /from: 2027,/);
-  assert.doesNotMatch(precept, /to: 2026,/);
 
   const { RV_DATA } = await loadLiveCatalog();
   const spec = RV_DATA.Jayco.Precept;
@@ -10341,6 +10345,12 @@ test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / M
     }, `Precept ${year} 36C`);
   }
 
+  assert.deepEqual(trio(2026, "31UL"), { freshWater: 72, grayWater: 40, blackWater: 50 }, "Precept 2026 31UL");
+  assert.deepEqual(trio(2026, "34B"), { freshWater: 72, grayWater: 40, blackWater: 40 }, "Precept 2026 34B");
+  assert.deepEqual(trio(2026, "34G"), { freshWater: 72, grayWater: 73, blackWater: 50 }, "Precept 2026 34G");
+  assert.deepEqual(trio(2026, "36A"), { freshWater: 72, grayWater: 72, blackWater: 72 }, "Precept 2026 36A");
+  assert.deepEqual(trio(2026, "36C"), { freshWater: 72, grayWater: 72, blackWater: 72 }, "Precept 2026 36C");
+
   const facts2025 = displayTanks(spec, pickBand(spec, 2025, "31UL"));
   assert.equal(facts2025.freshWater, "72 gal");
   assert.equal(facts2025.grayWater, "40 gal");
@@ -10350,7 +10360,6 @@ test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / M
     [2014, "31UL"],
     [2021, "31UL"],
     [2022, "31UL"],
-    [2026, "31UL"],
     [2027, "31UL"],
     [2025, ""],
   ] as const) {
@@ -10360,17 +10369,20 @@ test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / M
     assert.equal(out.blackWater, undefined, `GAP ${year} ${floorplan || "(no FP)"} black`);
   }
 
-  const facts2026 = displayTanks(spec, pickBand(spec, 2026, "31UL"));
-  assert.equal(facts2026.freshWater, CONFIRM_BROCHURE);
-  assert.equal(facts2026.grayWater, CONFIRM_BROCHURE);
-  assert.equal(facts2026.blackWater, CONFIRM_BROCHURE);
+  const facts2027 = displayTanks(spec, pickBand(spec, 2027, "31UL"));
+  assert.equal(facts2027.freshWater, CONFIRM_BROCHURE);
+  assert.equal(facts2027.grayWater, CONFIRM_BROCHURE);
+  assert.equal(facts2027.blackWater, CONFIRM_BROCHURE);
 
-  for (const year of [2023, 2025, 2027]) {
-    const out = trio(year, "36B", prestigeSpec);
-    assert.equal(out.freshWater, undefined, `Prestige ${year} 36B GAP`);
-    assert.equal(out.grayWater, undefined, `Prestige ${year} 36B GAP`);
-    assert.equal(out.blackWater, undefined, `Prestige ${year} 36B GAP`);
-  }
+  assert.deepEqual(trio(2025, "36B", prestigeSpec), {
+    freshWater: 72,
+    grayWater: 91,
+    blackWater: 72,
+  }, "Prestige 2025 36B");
+  const prestige2027 = trio(2027, "36B", prestigeSpec);
+  assert.equal(prestige2027.freshWater, undefined, "Prestige 2027 36B GAP");
+  assert.equal(prestige2027.grayWater, undefined, "Prestige 2027 36B GAP");
+  assert.equal(prestige2027.blackWater, undefined, "Prestige 2027 36B GAP");
 
   const wide2025 = pickBand(spec, 2025);
   assert.ok(wide2025);
@@ -10379,6 +10391,290 @@ test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / M
   assert.equal(wide2025!.engine, "Ford 7.3L V8 Godzilla 335HP");
   assert.equal(spec.fuelType, "Gas");
   assert.doesNotMatch(spec.engine || "", /diesel|X15|ISB/i);
+});
+
+test("Jayco OEM tank pins wave 1: dated brochure gallons only; Prestige/XL/SE do not bleed; 2027 GAP", () => {
+  const block = src("rvData.ts");
+  const j0 = block.indexOf("  Jayco: {");
+  const j1 = block.indexOf('  "American Coach": {');
+  assert.ok(j0 > 0 && j1 > j0, "expected Jayco block");
+  const jayco = block.slice(j0, j1);
+
+  const slice = (startToken: string, endToken: string) => {
+    const start = jayco.indexOf(startToken);
+    const end = jayco.indexOf(endToken);
+    assert.ok(start >= 0 && end > start, `expected ${startToken} before ${endToken}`);
+    return jayco.slice(start, end);
+  };
+
+  const precept = slice("    Precept: {", "    Alante: {");
+  const alante = slice("    Alante: {", "    Embark: {");
+  const greyhawk = slice("    Greyhawk: {", '    "Greyhawk Prestige"');
+  const greyhawkPrestige = slice('    "Greyhawk Prestige": {', "    Redhawk: {");
+  const redhawk = slice("    Redhawk: {", "    Melbourne: {");
+  const melbourne = slice("    Melbourne: {", '    "Melbourne Prestige"');
+  const melbournePrestige = slice('    "Melbourne Prestige": {', '    "Alante SE"');
+  const alanteSe = slice('    "Alante SE": {', '    "Precept Prestige"');
+  const preceptPrestige = slice('    "Precept Prestige": {', '    "Embark Super C"');
+  const greyhawkXl = slice('    "Greyhawk XL": {', '    "Granite Ridge"');
+  const senecaXt = slice('    "Seneca XT": {', '    "Seneca Prestige"');
+  const redhawkSe = slice('    "Redhawk SE": {', '    "Greyhawk XL"');
+  const seneca = slice("    Seneca: {", '    "Seneca Super C"');
+
+  for (const [name, body] of [
+    ["Precept", precept],
+    ["Alante", alante],
+    ["Greyhawk", greyhawk],
+    ["Greyhawk Prestige", greyhawkPrestige],
+    ["Redhawk", redhawk],
+    ["Melbourne", melbourne],
+    ["Melbourne Prestige", melbournePrestige],
+    ["Alante SE", alanteSe],
+    ["Precept Prestige", preceptPrestige],
+    ["Greyhawk XL", greyhawkXl],
+    ["Seneca XT", senecaXt],
+  ] as const) {
+    assert.doesNotMatch(body, /\n      freshWater: 60,/, `${name} model-wide fresh is not 60/40/40`);
+    assert.doesNotMatch(body, /\n      grayWater: 40,/, `${name} model-wide gray is not 60/40/40`);
+    assert.doesNotMatch(body, /\n      blackWater: 40,/, `${name} model-wide black is not 60/40/40`);
+  }
+
+  assert.match(
+    precept,
+    /from: 2023,\s*to: 2025,\s*floorplans: \["31UL"\][\s\S]*?freshWater: 72,\s*grayWater: 40,\s*blackWater: 50/,
+  );
+  assert.match(
+    precept,
+    /from: 2026,\s*to: 2026,\s*floorplans: \["31UL"\][\s\S]*?freshWater: 72,\s*grayWater: 40,\s*blackWater: 50/,
+  );
+  assert.match(
+    precept,
+    /from: 2023,\s*to: 2025,\s*floorplans: \["34B"\][\s\S]*?freshWater: 72,\s*grayWater: 40,\s*blackWater: 40/,
+  );
+  assert.match(
+    precept,
+    /from: 2023,\s*to: 2025,\s*floorplans: \["34G"\][\s\S]*?freshWater: 72,\s*grayWater: 40,\s*blackWater: 50/,
+  );
+  assert.match(
+    precept,
+    /from: 2026,\s*to: 2026,\s*floorplans: \["34G"\][\s\S]*?freshWater: 72,\s*grayWater: 73,\s*blackWater: 50/,
+  );
+  assert.match(
+    precept,
+    /from: 2023,\s*to: 2025,\s*floorplans: \["36A"\][\s\S]*?freshWater: 72,\s*grayWater: 72,\s*blackWater: 72/,
+  );
+  assert.match(
+    precept,
+    /from: 2023,\s*to: 2025,\s*floorplans: \["36C"\][\s\S]*?freshWater: 72,\s*grayWater: 72,\s*blackWater: 72/,
+  );
+  assert.match(
+    precept,
+    /from: 2026,\s*to: 2026,\s*floorplans: \["36A", "36C"\][\s\S]*?freshWater: 72,\s*grayWater: 72,\s*blackWater: 72/,
+  );
+  assert.match(precept, /40\/33 → 73/);
+  assert.doesNotMatch(precept, /from: 2027[\s\S]*?freshWater: 72/);
+
+  assert.match(
+    alante,
+    /from: 2023,\s*to: 2026,\s*floorplans: \["27A"\][\s\S]*?freshWater: 72,\s*grayWater: 50,\s*blackWater: 49/,
+  );
+  assert.match(
+    alante,
+    /from: 2023,\s*to: 2026,\s*floorplans: \["29F"\][\s\S]*?freshWater: 72,\s*grayWater: 40,\s*blackWater: 49/,
+  );
+  assert.match(
+    alante,
+    /from: 2023,\s*to: 2026,\s*floorplans: \["29S"\][\s\S]*?freshWater: 72,\s*grayWater: 49,\s*blackWater: 50/,
+  );
+  assert.match(alante, /40\/9 → 49/);
+  assert.doesNotMatch(alante, /from: 2027[\s\S]*?freshWater: 72/);
+  assert.doesNotMatch(alante, /27ASE/);
+
+  assert.match(
+    alanteSe,
+    /from: 2025,\s*to: 2026,\s*floorplans: \["27ASE"\][\s\S]*?freshWater: 72,\s*grayWater: 50,\s*blackWater: 49/,
+  );
+  assert.doesNotMatch(alanteSe, /from: 2027[\s\S]*?freshWater: 72/);
+  assert.doesNotMatch(alanteSe, /floorplans: \["27A"\]/);
+
+  assert.match(
+    preceptPrestige,
+    /from: 2023,\s*to: 2026,\s*floorplans: \["36B"\][\s\S]*?freshWater: 72,\s*grayWater: 91,\s*blackWater: 72/,
+  );
+  assert.match(
+    preceptPrestige,
+    /from: 2023,\s*to: 2025,\s*floorplans: \["36H"\][\s\S]*?freshWater: 72,\s*grayWater: 90,\s*blackWater: 40/,
+  );
+  assert.match(
+    preceptPrestige,
+    /from: 2026,\s*to: 2026,\s*floorplans: \["36H"\][\s\S]*?freshWater: 72,\s*grayWater: 80,\s*blackWater: 30/,
+  );
+  assert.match(
+    preceptPrestige,
+    /from: 2023,\s*to: 2026,\s*floorplans: \["36U"\][\s\S]*?freshWater: 72,\s*grayWater: 50,\s*blackWater: 72/,
+  );
+  assert.match(preceptPrestige, /50\/41 → 91/);
+  assert.match(preceptPrestige, /30\/50 → 80/);
+  assert.doesNotMatch(preceptPrestige, /from: 2027[\s\S]*?freshWater: 72/);
+  assert.doesNotMatch(preceptPrestige, /floorplans: \["31UL"\]/);
+  assert.doesNotMatch(preceptPrestige, /floorplans: \["36A"/);
+
+  assert.match(
+    greyhawk,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["27U"\][\s\S]*?freshWater: 43,\s*grayWater: 41,\s*blackWater: 31/,
+  );
+  assert.match(
+    greyhawk,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["27U"\][\s\S]*?freshWater: 43,\s*grayWater: 41,\s*blackWater: 31/,
+  );
+  assert.match(
+    greyhawk,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["29MV"\][\s\S]*?freshWater: 47,\s*grayWater: 41,\s*blackWater: 32/,
+  );
+  assert.match(
+    greyhawk,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["30Z"\][\s\S]*?freshWater: 44,\s*grayWater: 41,\s*blackWater: 31/,
+  );
+  assert.match(
+    greyhawk,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["31F"\][\s\S]*?freshWater: 47,\s*grayWater: 41,\s*blackWater: 31/,
+  );
+  assert.doesNotMatch(greyhawk, /from: 2025[\s\S]*?freshWater: 43/);
+  assert.doesNotMatch(greyhawk, /from: 2027[\s\S]*?freshWater: 43/);
+  assert.doesNotMatch(greyhawk, /floorplans: \["29MVP"\]/);
+  assert.doesNotMatch(greyhawk, /freshWater: 42[^.]/);
+
+  assert.match(
+    greyhawkPrestige,
+    /from: 2022,\s*to: 2022,\s*floorplans: \["29MVP"\][\s\S]*?freshWater: 47,\s*grayWater: 41,\s*blackWater: 32/,
+  );
+  assert.match(
+    greyhawkPrestige,
+    /from: 2022,\s*to: 2022,\s*floorplans: \["30XP", "31FP"\][\s\S]*?freshWater: 47,\s*grayWater: 41,\s*blackWater: 31/,
+  );
+  assert.doesNotMatch(
+    greyhawkPrestige.slice(
+      greyhawkPrestige.indexOf("from: 2021"),
+      greyhawkPrestige.indexOf('floorplans: ["29MVP"]'),
+    ),
+    /freshWater/,
+  );
+  assert.doesNotMatch(greyhawkPrestige, /floorplans: \["27U"\]/);
+  assert.doesNotMatch(greyhawkPrestige, /floorplans: \["29MV"\]/);
+
+  assert.match(
+    redhawk,
+    /from: 2023,\s*to: 2024,\s*floorplans: \["24B"\][\s\S]*?freshWater: 43,\s*grayWater: 40,\s*blackWater: 31/,
+  );
+  assert.match(
+    redhawk,
+    /from: 2023,\s*to: 2024,\s*floorplans: \["26M", "29XK"\][\s\S]*?freshWater: 44,\s*grayWater: 41,\s*blackWater: 32/,
+  );
+  assert.match(
+    redhawk,
+    /from: 2023,\s*to: 2024,\s*floorplans: \["26XD"\][\s\S]*?freshWater: 44,\s*grayWater: 40,\s*blackWater: 31/,
+  );
+  assert.match(
+    redhawk,
+    /from: 2023,\s*to: 2024,\s*floorplans: \["31F"\][\s\S]*?freshWater: 47,\s*grayWater: 41,\s*blackWater: 31/,
+  );
+  assert.doesNotMatch(redhawk, /from: 2025[\s\S]*?freshWater: 43/);
+  assert.doesNotMatch(redhawk, /from: 2027[\s\S]*?freshWater: 43/);
+  assert.doesNotMatch(redhawk, /floorplans: \["27G"\][\s\S]*?freshWater/);
+
+  assert.match(
+    melbourne,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["24L", "24T"\][\s\S]*?freshWater: 43,\s*grayWater: 31,\s*blackWater: 31/,
+  );
+  assert.match(
+    melbourne,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["24R"\][\s\S]*?freshWater: 35,\s*grayWater: 31,\s*blackWater: 31/,
+  );
+  assert.match(
+    melbourne,
+    /from: 2024,\s*to: 2026,\s*floorplans: \["24L"\][\s\S]*?freshWater: 43,\s*grayWater: 31,\s*blackWater: 31/,
+  );
+  assert.match(
+    melbourne,
+    /from: 2024,\s*to: 2026,\s*floorplans: \["24R"\][\s\S]*?freshWater: 35,\s*grayWater: 31,\s*blackWater: 31/,
+  );
+  assert.match(
+    melbourne,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["24T"\][\s\S]*?freshWater: 43,\s*grayWater: 31,\s*blackWater: 31/,
+  );
+  assert.doesNotMatch(melbourne, /from: 2027[\s\S]*?freshWater: 43/);
+  assert.doesNotMatch(melbourne, /floorplans: \["25L"/);
+  assert.doesNotMatch(melbourne, /24LP/);
+
+  assert.match(
+    melbournePrestige,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["24LP", "24RP"\][\s\S]*?freshWater: 43,\s*grayWater: 31,\s*blackWater: 31/,
+  );
+  assert.match(
+    melbournePrestige,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["24NP"\][\s\S]*?freshWater: 35,\s*grayWater: 31,\s*blackWater: 31/,
+  );
+  assert.match(
+    melbournePrestige,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["24TP"\][\s\S]*?freshWater: 29,\s*grayWater: 31,\s*blackWater: 31/,
+  );
+  assert.match(
+    melbournePrestige,
+    /from: 2025,\s*to: 2025,\s*floorplans: \["24LP", "24RP"\][\s\S]*?freshWater: 43,\s*grayWater: 31,\s*blackWater: 31/,
+  );
+  assert.match(
+    melbournePrestige,
+    /from: 2026,\s*to: 2026,\s*floorplans: \["25LP", "25RP"\][\s\S]*?freshWater: 43,\s*grayWater: 31,\s*blackWater: 31/,
+  );
+  assert.match(
+    melbournePrestige,
+    /from: 2026,\s*to: 2026,\s*floorplans: \["25MP"\][\s\S]*?freshWater: 35,\s*grayWater: 31,\s*blackWater: 31/,
+  );
+  assert.match(melbournePrestige, /958-Melbourne-Prestige-Brochure-2025/);
+  assert.doesNotMatch(melbournePrestige, /from: 2027[\s\S]*?freshWater: 43/);
+  assert.doesNotMatch(melbournePrestige, /floorplans: \["24L"/);
+
+  assert.match(
+    greyhawkXl,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["32U"\][\s\S]*?freshWater: 42\.5,\s*grayWater: 31,\s*blackWater: 31/,
+  );
+  assert.doesNotMatch(greyhawkXl, /from: 2025[\s\S]*?freshWater: 42/);
+  assert.doesNotMatch(greyhawkXl, /from: 2027[\s\S]*?freshWater: 42/);
+  assert.doesNotMatch(greyhawkXl, /freshWater: 64/);
+  assert.doesNotMatch(greyhawkXl, /freshWater: 60/);
+
+  assert.match(
+    senecaXt,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["32U"\][\s\S]*?freshWater: 60,\s*grayWater: 38,\s*blackWater: 30/,
+  );
+  assert.match(
+    senecaXt,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["35L"\][\s\S]*?freshWater: 60,\s*grayWater: 30,\s*blackWater: 30/,
+  );
+  assert.match(
+    senecaXt,
+    /from: 2024,\s*to: 2026,\s*floorplans: \["29T"\][\s\S]*?freshWater: 72,\s*grayWater: 43,\s*blackWater: 43/,
+  );
+  assert.match(
+    senecaXt,
+    /from: 2024,\s*to: 2025,\s*floorplans: \["32U"\][\s\S]*?freshWater: 64,\s*grayWater: 38,\s*blackWater: 30/,
+  );
+  assert.match(
+    senecaXt,
+    /from: 2026,\s*to: 2026,\s*floorplans: \["32U"\][\s\S]*?freshWater: 64,\s*grayWater: 30,\s*blackWater: 30/,
+  );
+  assert.match(
+    senecaXt,
+    /from: 2024,\s*to: 2026,\s*floorplans: \["35L"\][\s\S]*?freshWater: 64,\s*grayWater: 30,\s*blackWater: 30/,
+  );
+  assert.match(senecaXt, /42\/22/);
+  assert.doesNotMatch(senecaXt, /from: 2027[\s\S]*?freshWater: 64/);
+  assert.doesNotMatch(senecaXt, /from: 2027[\s\S]*?freshWater: 60/);
+  assert.doesNotMatch(senecaXt, /freshWater: 42\.5/);
+
+  assert.doesNotMatch(redhawkSe, /from: 2023[\s\S]*?freshWater: 43/);
+  assert.doesNotMatch(seneca, /from: 2023[\s\S]*?freshWater: 60/);
+  assert.doesNotMatch(seneca, /from: 2024[\s\S]*?freshWater: 64/);
 });
 
 test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 3702 not copied", () => {
