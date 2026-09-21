@@ -401,33 +401,11 @@ function LotUnitCard({
             </p>
           </div>
         </div>
-        <div className="space-y-3 px-4 py-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 space-y-1">
-              <p className="text-[13px] font-semibold text-sapphire-glow">
-                {year}
-              </p>
-              <p className="text-[20px] font-bold leading-snug text-white">
-                {title}
-              </p>
-              <p className="text-[13px] text-white/75">
-                {trim === "GAP" ? "Trim GAP" : trim}
-              </p>
-            </div>
-            <div className="shrink-0 pt-0.5 text-right">
-              <p
-                className={cn(
-                  "text-[20px] font-bold leading-none tabular-nums text-white",
-                  stock === "GAP" && "text-white/45",
-                )}
-              >
-                {stock}
-              </p>
-              <p className="mt-1 text-[10px] font-bold tracking-[0.16em] text-white/50">
-                STOCK
-              </p>
-            </div>
-          </div>
+        <div className="space-y-2.5 px-4 py-3">
+          <p className="truncate text-[13px] text-white/75">
+            {trim === "GAP" ? "Trim GAP" : trim}
+            {stock !== "GAP" ? ` · #${stock}` : ""}
+          </p>
           <dl className="lot-pills">
             <Pill label="Stock" value={stock} />
             <Pill label="Location" value={location} />
