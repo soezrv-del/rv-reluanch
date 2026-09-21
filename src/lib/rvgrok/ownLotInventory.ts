@@ -21,7 +21,7 @@ import { readFile, stat } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseCoachFromText } from "./parseCoach.ts";
+import { extractFloorplanToken, parseCoachFromText } from "./parseCoach.ts";
 import {
   looksLikeInventoryOrCountQuestion,
   looksLikeMarketValueQuestion,
@@ -79,6 +79,8 @@ export type OwnLotFilter = {
   year?: string;
   make?: string;
   model?: string;
+  /** Spoken floorplan / trim (27A, 27ASE). Matched against unit.trim. */
+  trim?: string;
   location?: string;
   dieselOnly?: boolean;
   gasOnly?: boolean;
@@ -641,6 +643,12 @@ export function parseOwnLotAsk(
     units,
   });
   if (model) filter.model = model;
+  const trim =
+    (parsed.floorplan || "").replace(/\s+/g, "") ||
+    extractFloorplanToken(t);
+  if (trim && (filter.make || filter.model || parsed.make)) {
+    filter.trim = trim;
+  }
 
   const stockNumber = parseOwnLotStockNumber(t);
   if (stockNumber) filter.stockNumber = stockNumber;
@@ -872,6 +880,41 @@ function bodyTypeMatches(unitType: string, wanted: string): boolean {
   return u.includes(w) || w.includes(u);
 }
 
+export function compactFloorplanToken(s: string): string {
+  return (s || "").toLowerCase().replace(/[\s-]+/g, "");
+}
+
+/**
+ * 27A ↔ 27ASE: ask is a prefix of the unit trim (or the reverse) and the
+ * leftover is trailing series letters only (SE, XL). Do not invent plans.
+ */
+export function floorplanTokensAlign(ask: string, unitToken: string): boolean {
+  const a = compactFloorplanToken(ask);
+  const u = compactFloorplanToken(unitToken);
+  if (!a || !u) return false;
+  if (a === u) return true;
+  if (u.startsWith(a) && /^[a-z]+$/.test(u.slice(a.length))) return true;
+  if (a.startsWith(u) && /^[a-z]+$/.test(a.slice(u.length))) return true;
+  return false;
+}
+
+function unitTrimMatchesAsk(unit: OwnLotUnit, ask: string): boolean {
+  if (floorplanTokensAlign(ask, unit.trim)) return true;
+  const blob = `${unit.model} ${unit.trim}`.trim();
+  const blobFp = extractFloorplanToken(blob);
+  if (blobFp && floorplanTokensAlign(ask, blobFp)) return true;
+  return false;
+}
+
+function unitModelMatchesAsk(unit: OwnLotUnit, wanted: string): boolean {
+  const um = norm(unit.model);
+  const fm = norm(wanted);
+  if (!fm) return true;
+  if (um && (um.includes(fm) || fm.includes(um))) return true;
+  const blob = norm(`${unit.model} ${unit.trim}`);
+  return Boolean(blob && (blob.includes(fm) || fm.includes(blob)));
+}
+
 export function unitMatchesFilter(
   unit: OwnLotUnit,
   filter: OwnLotFilter,
@@ -888,11 +931,8 @@ export function unitMatchesFilter(
     const fm = norm(filter.make);
     if (!um || (!um.includes(fm) && !fm.includes(um))) return false;
   }
-  if (filter.model) {
-    const um = norm(unit.model);
-    const fm = norm(filter.model);
-    if (!um || (!um.includes(fm) && !fm.includes(um))) return false;
-  }
+  if (filter.model && !unitModelMatchesAsk(unit, filter.model)) return false;
+  if (filter.trim && !unitTrimMatchesAsk(unit, filter.trim)) return false;
   if (filter.location) {
     const ul = norm(unit.location);
     const fl = norm(filter.location);
@@ -1040,6 +1080,7 @@ function filterLabel(filter: OwnLotFilter): string {
     filter.year,
     filter.make,
     filter.model,
+    filter.trim,
     filter.bodyType,
     filter.toyHauler ? "toy hauler" : "",
     filter.location,
@@ -1152,7 +1193,7 @@ export function formatOwnLotBlock(
   const listAsk = looksLikeOwnLotUnitListQuestion(query);
   const stockAsk = Boolean(filter.stockNumber);
   const narrowIdentity = Boolean(
-    filter.make || filter.model || filter.year || filter.location,
+    filter.make || filter.model || filter.trim || filter.year || filter.location,
   );
   const budgetFilter =
     filter.minPrice != null ||

@@ -40,10 +40,15 @@ import {
   shouldSkipWebForOwnLot,
   snapshotFromJson,
   stripCoachBrandPluralLeftover,
+  floorplanTokensAlign,
   type OwnLotSnapshot,
   type OwnLotUnit,
 } from "./ownLotInventory.ts";
-import { parseCoachFromText } from "./parseCoach.ts";
+import {
+  COACH_BRANDS,
+  extractFloorplanToken,
+  parseCoachFromText,
+} from "./parseCoach.ts";
 import { executeWebResearch } from "./webResearchTelemetry.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -1065,4 +1070,162 @@ test("bundled snapshot: stock 45282, Entegra Fresno, and $50k fifth-wheel toy ha
   assert.match(list, /Specific units ARE listed/);
   assert.doesNotMatch(list, /Matched: 0/);
   assert.doesNotMatch(list, /Reflection 100 Series/);
+
+  const locations = [
+    ...new Set(snap.units.map((u) => u.location).filter(Boolean)),
+  ];
+  const integraStocks = ["46222", "47033", "47034"];
+  for (const ask of [
+    "27A Integra Vision",
+    "Integra Vision 27A",
+    "Entegra Vision 27ASE",
+    "Entegra Vision SE 27A",
+  ]) {
+    const filter = parseOwnLotAsk(ask, locations, snap.units);
+    const rows = queryOwnLotUnits(snap.units, filter, 12);
+    assert.deepEqual(
+      rows.map((r) => r.stock_number).sort(),
+      integraStocks,
+      ask,
+    );
+    const block = formatOwnLotBlock(snap, ask);
+    assert.match(block, /Matched: 3/, ask);
+    assert.match(block, /stk 47034/, ask);
+    assert.match(block, /stk 47033/, ask);
+    assert.match(block, /stk 46222/, ask);
+  }
+});
+
+const VISION_27ASE_UNITS: OwnLotUnit[] = [
+  pricedUnit({
+    year: "2026",
+    make: "Entegra Coach",
+    model: "Vision SE",
+    trim: "27ASE",
+    body_type: "Class A Gas",
+    location: "Fife WA",
+    stock_number: "47034",
+    price: 109995,
+  }),
+  pricedUnit({
+    year: "2026",
+    make: "Entegra Coach",
+    model: "Vision SE",
+    trim: "27ASE",
+    body_type: "Class A Gas",
+    location: "Sparks NV",
+    stock_number: "47033",
+    price: 118190,
+  }),
+  pricedUnit({
+    year: "2026",
+    make: "Entegra Coach",
+    model: "Vision SE",
+    trim: "27ASE",
+    body_type: "Class A Gas",
+    location: "Sparks NV",
+    stock_number: "46222",
+    price: 180436,
+  }),
+];
+
+const VISION_FAMILY_DECOYS: OwnLotUnit[] = [
+  pricedUnit({
+    year: "2024",
+    make: "Entegra Coach",
+    model: "Vision",
+    trim: "29S",
+    body_type: "Class A Gas",
+    location: "Harrisburg",
+    stock_number: "E2411",
+    price: 189000,
+  }),
+  pricedUnit({
+    year: "2026",
+    make: "Entegra Coach",
+    model: "Vision XL",
+    trim: "36C",
+    body_type: "Class A Gas",
+    location: "Fife WA",
+    stock_number: "XL360",
+    price: 199000,
+  }),
+];
+
+test("Integra alias + 27A trim match the three Vision SE 27ASE units", () => {
+  assert.ok(!COACH_BRANDS.includes("Integra"), "Integra is an alias, not a brand");
+  assert.ok(!COACH_BRANDS.includes("Integra Coach"));
+  assert.equal(extractFloorplanToken("27A Integra Vision"), "27A");
+  assert.equal(extractFloorplanToken("around $50k Newmar"), "");
+  assert.equal(floorplanTokensAlign("27A", "27ASE"), true);
+  assert.equal(floorplanTokensAlign("27ASE", "27ASE"), true);
+  assert.equal(floorplanTokensAlign("27A", "29S"), false);
+  assert.equal(floorplanTokensAlign("27ASE", "36C"), false);
+
+  const before = parseCoachFromText("27A Integra Vision");
+  assert.equal(before.make, "Entegra Coach");
+  assert.match(before.model, /vision/i);
+  assert.equal(before.floorplan, "27A");
+
+  const after = parseCoachFromText("Integra Vision 27A");
+  assert.equal(after.make, "Entegra Coach");
+  assert.match(after.model, /vision/i);
+  assert.equal(after.floorplan, "27A");
+
+  const coachAlias = parseCoachFromText("Integra Coach Vision 27ASE");
+  assert.equal(coachAlias.make, "Entegra Coach");
+  assert.match(coachAlias.model, /vision/i);
+  assert.equal(coachAlias.floorplan, "27ASE");
+
+  const units = [
+    ...VISION_27ASE_UNITS,
+    ...VISION_FAMILY_DECOYS,
+    ...ENTEGRA_FRESNO_UNITS,
+  ];
+  const locations = [
+    ...new Set(units.map((u) => u.location).filter(Boolean)),
+  ];
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units,
+  });
+  const expected = ["46222", "47033", "47034"];
+
+  for (const ask of [
+    "27A Integra Vision",
+    "Integra Vision 27A",
+    "Entegra Vision 27ASE",
+    "Entegra Vision SE 27A",
+  ]) {
+    const parsed = parseCoachFromText(ask);
+    assert.match(parsed.make, /Entegra/i, ask);
+    assert.notEqual(parsed.make, "Integra", ask);
+    assert.match(parsed.model, /vision/i, ask);
+    assert.match(parsed.floorplan, /27A/i, ask);
+
+    const filter = parseOwnLotAsk(ask, locations, units);
+    assert.match(filter.make || "", /Entegra/i, ask);
+    assert.match(filter.model || "", /vision/i, ask);
+    assert.match(filter.trim || "", /27A/i, ask);
+
+    const counts = aggregateOwnLot(units, filter);
+    assert.equal(counts.matched, 3, ask);
+    const rows = queryOwnLotUnits(units, filter, 12);
+    assert.deepEqual(
+      rows.map((r) => r.stock_number).sort(),
+      expected,
+      ask,
+    );
+    assert.ok(rows.every((u) => u.model === "Vision SE" && u.trim === "27ASE"), ask);
+    assert.ok(!rows.some((u) => u.stock_number === "E2411" || u.stock_number === "XL360"), ask);
+
+    const block = formatOwnLotBlock(snapshot, ask);
+    assert.match(block, /Matched: 3/, ask);
+    assert.match(block, /stk 47034/, ask);
+    assert.match(block, /stk 47033/, ask);
+    assert.match(block, /stk 46222/, ask);
+    assert.doesNotMatch(block, /stk E2411/, ask);
+    assert.doesNotMatch(block, /stk XL360/, ask);
+  }
 });
