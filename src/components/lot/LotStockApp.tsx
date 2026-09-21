@@ -124,14 +124,11 @@ export function LotStockApp() {
               <PremiumMenuButton size="sm" />
             </header>
 
-            <section className="lot-hero max-w-xl space-y-3 pt-2">
-              <div className="lot-hero-coach" aria-hidden>
-                <LotTypeMark type="Class A Diesel" featured />
-              </div>
-              <h1 className="relative text-balance text-[clamp(2.25rem,9vw,3.45rem)] font-bold leading-[1.02] tracking-tight text-fg">
+            <section className="max-w-xl space-y-3 pt-2">
+              <h1 className="text-balance text-[clamp(2.25rem,9vw,3.45rem)] font-bold leading-[1.02] tracking-tight text-fg">
                 On the lot.
               </h1>
-              <p className="relative max-w-md text-[15px] leading-relaxed text-muted">
+              <p className="max-w-md text-[15px] leading-relaxed text-muted">
                 In-stock RV Country inventory. Not the brochure catalog.
               </p>
             </section>

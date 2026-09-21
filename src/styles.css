@@ -2138,17 +2138,6 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
       var(--color-lot-void) 36%
     );
 }
-.lot-hero {
-  position: relative;
-}
-.lot-hero-coach {
-  position: absolute;
-  right: -18%;
-  top: -2.5rem;
-  width: min(72%, 22rem);
-  opacity: 0.2;
-  pointer-events: none;
-}
 .lot-search {
   background: var(--color-lot-chip);
   border: 1px solid color-mix(in srgb, var(--color-fg) 8%, transparent);
@@ -2209,9 +2198,9 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
     linear-gradient(
       180deg,
       var(--color-lot-dusk-high) 0%,
-      var(--color-lot-dusk-mid) 46%,
-      var(--color-lot-dusk-sun) 74%,
-      var(--color-lot-dusk-ground) 74.4%,
+      var(--color-lot-dusk-mid) 42%,
+      var(--color-lot-dusk-sun) 70%,
+      var(--color-lot-dusk-ground) 71%,
       var(--color-lot-studio) 100%
     );
 }

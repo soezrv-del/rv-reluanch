@@ -95,19 +95,19 @@ function QuarterCoach({ family }: { family: LotTypeFamily }) {
         <g>
           <path
             className="lot-mark-shade"
-            d="M128 46h188c14 0 22 10 22 22v52c0 8-6 12-16 12H128c-10 0-16-6-16-14V58c0-8 6-12 16-12z"
+            d="M136 58h180c14 0 22 10 22 22v40c0 8-6 12-16 12H136c-10 0-16-6-16-14V70c0-8 6-12 16-12z"
           />
           <path
             className="lot-mark-body"
-            d="M122 48h180c12 0 20 8 20 20v48c0 6-4 10-14 10H122c-8 0-14-4-14-12V58c0-6 4-10 14-10z"
+            d="M130 60h172c12 0 20 8 20 18v38c0 6-4 10-14 10H130c-8 0-14-4-14-12V70c0-6 4-10 14-10z"
           />
           <path
             className="lot-mark-body"
-            d="M92 48h34v74H100c-8 0-12-8-12-16V60c0-8 4-12 12-12z"
+            d="M96 36h40v86H104c-8 0-12-8-12-18V50c0-10 4-14 12-14z"
           />
           <path
             className="lot-mark-shade"
-            d="M44 102h52v16H54c-10 0-16-4-16-8 0-6 2-8 6-8z"
+            d="M40 104h60v16H50c-10 0-16-4-16-8 0-6 2-8 6-8z"
           />
           <rect className="lot-mark-glass" x="144" y="60" width="32" height="18" rx="3" />
           <rect className="lot-mark-glass" x="184" y="58" width="34" height="18" rx="3" />
