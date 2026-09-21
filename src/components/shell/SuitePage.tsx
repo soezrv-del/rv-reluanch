@@ -120,6 +120,7 @@ export function SuitePage({
         className,
       )}
       data-readable-cards=""
+      data-suite-scan=""
       style={rootStyle}
       data-glass-l={
         adaptiveGlass ? glass.luminance.toFixed(3) : undefined

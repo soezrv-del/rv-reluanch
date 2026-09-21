@@ -73,17 +73,26 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(css, /--dock-label-size:\s*1\.125rem/);
   assert.match(css, /--dock-label-size-sm:\s*1\.1875rem/);
   assert.match(css, /\.bottom-tabs-dock \{/);
-  assert.match(css, /backdrop-filter:\s*blur\(20px\) saturate\(180%\)/);
-  assert.match(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
-  assert.match(css, /border:\s*1px solid rgba\(255, 255, 255, 0\.12\)/);
+  assert.match(css, /backdrop-filter:\s*blur\(20px\) saturate\(115%\)/);
+  assert.match(
+    css,
+    /background:\s*color-mix\(in srgb, var\(--color-tiimo-surface\) 70%, transparent\)/,
+  );
+  assert.match(
+    css,
+    /border:\s*1px solid color-mix\(in srgb, var\(--color-tiimo-foam\) 14%, transparent\)/,
+  );
   assert.match(css, /border-radius:\s*16px/);
-  assert.match(css, /box-shadow:\s*0 8px 32px rgba\(0, 0, 0, 0\.37\)/);
+  assert.match(
+    css,
+    /box-shadow:\s*0 8px 28px color-mix\(in srgb, var\(--color-tiimo-bg\) 40%, transparent\)/,
+  );
   assert.match(css, /\.metal-hammered-face/);
   assert.match(css, /linear-gradient\(\s*180deg/);
   assert.match(css, /\.bottom-tab-label \{[\s\S]*?font-weight:\s*700/);
   assert.match(css, /letter-spacing:\s*var\(--dock-label-track\)/);
   assert.match(css, /border-top:\s*2px solid transparent/);
-  assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
+  assert.match(css, /border-top-color:\s*var\(--color-tiimo-mint\)/);
   assert.doesNotMatch(tabs, /metal-hammered/);
   assert.match(launch, /metal-hammered-face/);
   assert.doesNotMatch(css, /linear-gradient\(\s*162deg/);
@@ -121,15 +130,15 @@ test("dock labels are bright solid type — no metal gradient", () => {
 
   assert.match(css, /--dock-label-size:\s*1\.125rem/);
   assert.match(css, /--dock-label-size-sm:\s*1\.1875rem/);
-  assert.match(css, /--dock-label-color:\s*#f3f5f8/);
-  assert.match(css, /--dock-label-color-active:\s*#ffffff/);
+  assert.match(css, /--dock-label-color:\s*var\(--color-tiimo-foam\)/);
+  assert.match(css, /--dock-label-color-active:\s*var\(--color-tiimo-ink\)/);
   assert.match(css, /\.bottom-tab-label \{[\s\S]*?font-weight:\s*700/);
   assert.match(css, /\.bottom-tab-label \{[\s\S]*?color:\s*var\(--dock-label-color\)/);
   assert.match(
     css,
     /\.bottom-tab-btn\.is-active \.bottom-tab-label[\s\S]*?color:\s*var\(--dock-label-color-active\)/,
   );
-  assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
+  assert.match(css, /border-top-color:\s*var\(--color-tiimo-mint\)/);
 
   const labelBlock = css.match(
     /\/\* Dock labels[\s\S]*?\.bottom-tab-label-sold \{/,

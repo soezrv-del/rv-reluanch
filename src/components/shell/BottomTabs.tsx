@@ -56,8 +56,9 @@ function DockLabel({
 }
 
 /**
- * Floating true-glass dock — 2026-09-08 tokens (blur/saturate plate,
- * 16px radius, 2px brand-blue top rule on the active tab).
+ * Floating Tiimo dock — soft-color glass plate, 16px radius,
+ * thin mint top rule on the active tab. Tab order / Sold rules
+ * unchanged.
  *
  * Android WebView: do NOT put pointer-events-none on this nav. Parent
  * none + child auto + backdrop-filter fails hit-testing on Chromium

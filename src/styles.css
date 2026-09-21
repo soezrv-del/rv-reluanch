@@ -82,8 +82,8 @@
   --dock-label-size: 1.125rem;
   --dock-label-size-sm: 1.1875rem;
   --dock-label-track: 0.5px;
-  --dock-label-color: #f3f5f8;
-  --dock-label-color-active: #ffffff;
+  --dock-label-color: var(--color-tiimo-foam);
+  --dock-label-color-active: var(--color-tiimo-ink);
   --dock-icon-size: 3.25rem;
 }
 
@@ -847,7 +847,7 @@
   );
 }
 
-/* Dock — true glassmorphism (David 2026-09-08). Exact tokens win. */
+/* Dock — Tiimo scan-first plate. Soft glass, thin mint rule, no disco saturate. */
 .bottom-tabs-nav {
   z-index: 80;
   touch-action: manipulation;
@@ -860,12 +860,12 @@
   }
 }
 .bottom-tabs-dock {
-  background: rgba(15, 23, 42, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, var(--color-tiimo-surface) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-tiimo-foam) 14%, transparent);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--color-tiimo-bg) 40%, transparent);
+  backdrop-filter: blur(20px) saturate(115%);
+  -webkit-backdrop-filter: blur(20px) saturate(115%);
 }
 .bottom-tab-btn {
   background: transparent;
@@ -874,7 +874,7 @@
 .bottom-tab-btn.is-active,
 .bottom-tab-btn[aria-current="page"] {
   background: transparent;
-  border-top-color: var(--color-sapphire);
+  border-top-color: var(--color-tiimo-mint);
 }
 /* Single sheen only — header chrome, not the dock plate */
 .bottom-tabs-shine {
@@ -1194,14 +1194,14 @@
     height: 2.75rem;
   }
 }
-/* Header banner — single sheen */
+/* Header banner — quiet Tiimo wash, no specular sweep */
 .sapphire-banner-ambient {
   background: radial-gradient(
     ellipse 80% 70% at 50% 0%,
-    rgba(80, 140, 255, 0.18) 0%,
+    color-mix(in srgb, var(--color-tiimo-lavender) 14%, transparent) 0%,
     transparent 55%
   );
-  opacity: 0.55;
+  opacity: 0.4;
 }
 .sapphire-banner-edge {
   background: linear-gradient(
@@ -1319,19 +1319,66 @@
 
 /* Suite sapphire banner — CSS env owns the notch (Capacitor contentInset never). */
 .sapphire-header {
-  padding-top: max(0.35rem, env(safe-area-inset-top, 0px));
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
 }
 
-/* RvFACTS: keep catalog dropdowns close to the header */
+.sapphire-header-inner {
+  background: color-mix(in srgb, var(--color-tiimo-surface) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-tiimo-foam) 14%, transparent);
+  box-shadow:
+    0 10px 32px color-mix(in srgb, var(--color-tiimo-bg) 28%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--color-tiimo-foam) 16%, transparent);
+  backdrop-filter: blur(20px) saturate(1.12);
+  -webkit-backdrop-filter: blur(20px) saturate(1.12);
+}
+
+.sapphire-header-title {
+  color: var(--color-tiimo-ink);
+}
+
+.sapphire-header-badge {
+  border: 1px solid color-mix(in srgb, var(--color-tiimo-lavender) 32%, transparent);
+  background: color-mix(in srgb, var(--color-tiimo-lavender) 14%, transparent);
+  color: var(--color-tiimo-foam);
+}
+
+.sapphire-header-line {
+  color: color-mix(in srgb, var(--color-tiimo-foam) 78%, transparent);
+}
+
+.sapphire-header .premium-menu-btn {
+  border-color: color-mix(in srgb, var(--color-tiimo-foam) 22%, transparent);
+  background: color-mix(in srgb, var(--color-tiimo-bg) 42%, transparent);
+  box-shadow: none;
+}
+
+/* Verified mark stays, but the header plate is not brushed steel. */
+.sapphire-header .metal-hammered-face {
+  background-image: linear-gradient(
+    180deg,
+    var(--color-tiimo-foam) 0%,
+    var(--color-tiimo-lavender) 62%,
+    color-mix(in srgb, var(--color-tiimo-lavender) 55%, var(--color-tiimo-bg)) 100%
+  );
+  -webkit-text-stroke: 0;
+  filter: none;
+}
+.sapphire-header .metal-hammered-strike {
+  color: color-mix(in srgb, var(--color-tiimo-bg) 45%, transparent);
+  filter: blur(0.2px);
+  text-shadow: none;
+}
+
+/* RvFACTS: catalog still close, but the banner gets a little air. */
 .rvfax-screen .sapphire-header {
-  padding-bottom: 0.15rem;
+  padding-bottom: 0.5rem;
 }
 .rvfax-screen .sapphire-header-inner {
-  padding-top: 0.55rem;
-  padding-bottom: 0.55rem;
+  padding-top: 0.85rem;
+  padding-bottom: 0.85rem;
 }
 .rvfax-screen .sapphire-header-line {
-  margin-top: 0.35rem;
+  margin-top: 0.6rem;
 }
 
 /* Vehicle History Report chrome — clear iPhone clock / Dynamic Island
@@ -1345,17 +1392,21 @@
   }
 }
 
-/* Gold header variant for RvCAL */
+/* Gold header variant — peach wash, not metal plate */
 [data-page-accent="gold"] .sapphire-header-inner {
   box-shadow:
-    0 16px 48px rgba(20, 12, 0, 0.5),
-    inset 0 1px 0 rgba(232, 220, 192, 0.28),
-    inset 0 -1px 0 rgba(120, 90, 40, 0.2) !important;
+    0 10px 32px color-mix(in srgb, var(--color-tiimo-bg) 28%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--color-tiimo-peach) 22%, transparent) !important;
+}
+[data-page-accent="gold"] .sapphire-header-badge {
+  border-color: color-mix(in srgb, var(--color-tiimo-peach) 36%, transparent);
+  background: color-mix(in srgb, var(--color-tiimo-peach) 12%, transparent);
+  color: var(--color-tiimo-foam);
 }
 [data-page-accent="gold"] .sapphire-banner-ambient {
   background: radial-gradient(
     ellipse 80% 70% at 50% 0%,
-    rgba(201, 184, 150, 0.16) 0%,
+    color-mix(in srgb, var(--color-tiimo-peach) 16%, transparent) 0%,
     transparent 55%
   );
 }
@@ -1374,6 +1425,21 @@
   .sapphire-title-sheen {
     animation: none !important;
   }
+}
+
+/*
+ * Suite scan-first: Facts / Cal / Tow / Trips section cards read as
+ * glanceable day chunks — more air between plates, no new hubs.
+ */
+[data-readable-cards][data-suite-scan] {
+  --suite-chunk-gap: 1.5rem;
+}
+[data-readable-cards][data-suite-scan] .facts-cascade-scroll-pad.space-y-3\.5 > :not([hidden]) ~ :not([hidden]),
+[data-readable-cards][data-suite-scan] .landscape-content.space-y-3 > :not([hidden]) ~ :not([hidden]),
+[data-readable-cards][data-suite-scan] .landscape-content.space-y-2\.5 > :not([hidden]) ~ :not([hidden]),
+[data-readable-cards][data-suite-scan] .mx-auto.w-full.max-w-lg.space-y-3 > :not([hidden]) ~ :not([hidden]),
+[data-readable-cards][data-suite-scan] .mx-auto.w-full.max-w-2xl.space-y-3 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--suite-chunk-gap);
 }
 
 
