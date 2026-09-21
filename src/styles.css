@@ -325,6 +325,57 @@
     scroll-margin-bottom: calc(var(--kb-inset, 0px) + 48px);
   }
 
+  /*
+   * NDA accept: native checkbox is a11y-only (clipped). The visible
+   * 36px glyph + full-width row is the phone tap target. Dark
+   * color-scheme must not paint the box invisible.
+   */
+  [data-nda-gate] .nda-accept-check {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+    color-scheme: light;
+    accent-color: #4a86f0;
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: none;
+  }
+
+  [data-nda-gate] .nda-accept-glyph {
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 2.5px solid #e2d8c4;
+    border-radius: 0.5rem;
+    background-color: #f7f5f9;
+    color-scheme: light;
+  }
+
+  [data-nda-gate] .nda-accept-glyph[data-checked="true"] {
+    background-color: #4a86f0;
+    border-color: #8ec5ff;
+  }
+
+  [data-nda-gate] [data-nda-agree-row]:focus-visible {
+    outline: 2px solid #8ec5ff;
+    outline-offset: 2px;
+  }
+
+  [data-nda-gate] .nda-accept-bar {
+    padding-bottom: max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 1rem));
+  }
+
+  @media (max-width: 480px) {
+    [data-nda-gate] .nda-accept-bar {
+      padding-bottom: max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem));
+    }
+  }
+
   html.kb-open [data-app-scroll],
   html.kb-open .rv-scroll {
     scroll-padding-bottom: calc(var(--kb-inset, 0px) + 72px);
