@@ -1070,6 +1070,30 @@ test("bundled snapshot: stock 45282, Entegra Fresno, and $50k fifth-wheel toy ha
   assert.match(list, /Specific units ARE listed/);
   assert.doesNotMatch(list, /Matched: 0/);
   assert.doesNotMatch(list, /Reflection 100 Series/);
+
+  const locations = [
+    ...new Set(snap.units.map((u) => u.location).filter(Boolean)),
+  ];
+  const integraStocks = ["46222", "47033", "47034"];
+  for (const ask of [
+    "27A Integra Vision",
+    "Integra Vision 27A",
+    "Entegra Vision 27ASE",
+    "Entegra Vision SE 27A",
+  ]) {
+    const filter = parseOwnLotAsk(ask, locations, snap.units);
+    const rows = queryOwnLotUnits(snap.units, filter, 12);
+    assert.deepEqual(
+      rows.map((r) => r.stock_number).sort(),
+      integraStocks,
+      ask,
+    );
+    const block = formatOwnLotBlock(snap, ask);
+    assert.match(block, /Matched: 3/, ask);
+    assert.match(block, /stk 47034/, ask);
+    assert.match(block, /stk 47033/, ask);
+    assert.match(block, /stk 46222/, ask);
+  }
 });
 
 const VISION_27ASE_UNITS: OwnLotUnit[] = [
