@@ -1502,10 +1502,11 @@ export function RvDetail({
             </div>
           </section>
 
+          {/* #383: specs under the hero start expanded. Keep across theme rebases. */}
           {hasConcreteFloorplan(floorplan) ? (
           <FactsCollapse
             title="Vehicle specifications"
-            defaultOpen
+            defaultOpen={true}
             data-testid="facts-specs"
             headline={factsSpecsHeadline({
               length: specs.lengthFt,
