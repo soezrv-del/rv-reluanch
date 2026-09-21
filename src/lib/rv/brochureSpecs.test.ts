@@ -10677,6 +10677,179 @@ test("Jayco OEM tank pins wave 1: dated brochure gallons only; Prestige/XL/SE do
   assert.doesNotMatch(seneca, /from: 2024[\s\S]*?freshWater: 64/);
 });
 
+test("Thor OEM tank pins: dated brochure gallons only; leftover aliases and Jayco Seneca stay GAP", () => {
+  const block = src("rvData.ts");
+  const t0 = block.indexOf("  Thor: {");
+  const t1 = block.indexOf("  Coachmen: {");
+  assert.ok(t0 > 0 && t1 > t0, "expected Thor block");
+  const thor = block.slice(t0, t1);
+
+  const slice = (startToken: string, endToken: string) => {
+    const start = thor.indexOf(startToken);
+    const end = thor.indexOf(endToken);
+    assert.ok(start >= 0 && end > start, `expected ${startToken} before ${endToken}`);
+    return thor.slice(start, end);
+  };
+
+  const challenger = slice("    Challenger: {", "    Miramar: {");
+  const miramar = slice("    Miramar: {", "    Magnitude: {");
+  const magnitudeXg = slice('    "Magnitude XG": {', "    Seneca: {");
+  const seneca = slice("    Seneca: {", '    "Four Winds": {');
+  const siesta = slice('    "Four Winds Siesta": {', "    Geneva: {");
+  const geneva = slice("    Geneva: {", "    Outlaw: {");
+  const outlaw = slice("    Outlaw: {", "    Sequence: {");
+  const sanctuary = slice("    Sanctuary: {", "    Gemini: {");
+  const gemini = slice("    Gemini: {", "    Rize: {");
+  const rize = slice("    Rize: {", '    "Rize Plus": {');
+
+  for (const [name, body] of [
+    ["Challenger", challenger],
+    ["Miramar", miramar],
+    ["Gemini", gemini],
+    ["Sanctuary", sanctuary],
+    ["Rize", rize],
+    ["Geneva", geneva],
+    ["Outlaw", outlaw],
+  ] as const) {
+    assert.doesNotMatch(body, /\n      freshWater: 60,/, `${name} model-wide fresh is not 60/40/40`);
+    assert.doesNotMatch(body, /\n      grayWater: 40,/, `${name} model-wide gray is not 60/40/40`);
+    assert.doesNotMatch(body, /\n      blackWater: 40,/, `${name} model-wide black is not 60/40/40`);
+  }
+
+  assert.match(
+    challenger,
+    /from: 2023,\s*to: 2024,\s*floorplans: \["35MQ"\][\s\S]*?freshWater: 100,\s*grayWater: 70,\s*blackWater: 40/,
+  );
+  assert.match(
+    challenger,
+    /from: 2023,\s*to: 2024,\s*floorplans: \["36FA"\][\s\S]*?freshWater: 100,\s*grayWater: 40,\s*blackWater: 40/,
+  );
+  assert.match(
+    challenger,
+    /from: 2023,\s*to: 2024,\s*floorplans: \["37DS", "37FH"\][\s\S]*?freshWater: 100,\s*grayWater: 80,\s*blackWater: 80/,
+  );
+  assert.match(challenger, /40F-30R → 100\/70\/40/);
+  assert.match(challenger, /40F-40R\/40F-40R → 100\/80\/80/);
+  assert.doesNotMatch(challenger, /from: 2025,\s*to: 2025[\s\S]{0,220}?freshWater: 100/);
+  assert.doesNotMatch(challenger, /floorplans: \["37YT"\]/);
+
+  assert.match(
+    miramar,
+    /from: 2022,\s*to: 2022,\s*floorplans: \["34.6"\][\s\S]*?freshWater: 100,\s*grayWater: 40,\s*blackWater: 40/,
+  );
+  assert.match(
+    miramar,
+    /from: 2022,\s*to: 2022,\s*floorplans: \["35.2"\][\s\S]*?freshWater: 100,\s*grayWater: 70,\s*blackWater: 40/,
+  );
+  assert.match(
+    miramar,
+    /from: 2022,\s*to: 2022,\s*floorplans: \["37.1"\][\s\S]*?freshWater: 100,\s*grayWater: 80,\s*blackWater: 80/,
+  );
+  assert.doesNotMatch(miramar, /from: 2021,\s*to: 2021,\s*floorplans: \["34.6"\]/);
+  assert.doesNotMatch(miramar, /from: 2023,\s*to: 2023[\s\S]{0,220}?freshWater: 100/);
+
+  assert.match(
+    gemini,
+    /from: 2023,\s*to: 2024,\s*floorplans: \["23TE", "23TW"\][\s\S]*?freshWater: 31,\s*grayWater: 37,\s*blackWater: 19.5/,
+  );
+  assert.match(
+    gemini,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["24KB"\][\s\S]*?freshWater: 31,\s*grayWater: 25.5,\s*blackWater: 18.5/,
+  );
+  assert.match(
+    gemini,
+    /from: 2025,\s*to: 2026,\s*floorplans: \["23TW", "24JG"\][\s\S]*?freshWater: 31,\s*grayWater: 37,\s*blackWater: 19,/,
+  );
+  assert.match(
+    gemini,
+    /from: 2025,\s*to: 2026,\s*floorplans: \["24KB"\][\s\S]*?freshWater: 31,\s*grayWater: 27,\s*blackWater: 20/,
+  );
+  assert.doesNotMatch(gemini, /from: 2023,\s*to: 2023,\s*floorplans: \["24KB"\]/);
+  assert.doesNotMatch(gemini, /from: 2027,\s*to: 2027[\s\S]{0,220}?freshWater: 31/);
+  assert.doesNotMatch(gemini, /floorplans: \["22MT"\]/);
+
+  assert.match(
+    sanctuary,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["19L"\][\s\S]*?freshWater: 24.8,\s*grayWater: 20,\s*blackWater: 6/,
+  );
+  assert.match(
+    sanctuary,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["19P"\][\s\S]*?freshWater: 19,\s*grayWater: 20,\s*blackWater: 4.75/,
+  );
+  assert.match(
+    sanctuary,
+    /from: 2025,\s*to: 2025,\s*floorplans: \["19A", "19M"\][\s\S]*?freshWater: 22,\s*grayWater: 20,\s*blackWater: 4.75/,
+  );
+  assert.match(
+    sanctuary,
+    /from: 2026,\s*to: 2026,\s*floorplans: \["19A"\][\s\S]*?freshWater: 25,\s*grayWater: 26,\s*blackWater: 4.75/,
+  );
+  assert.match(
+    sanctuary,
+    /from: 2027,\s*to: 2027,\s*floorplans: \["19A"\][\s\S]*?freshWater: 25,\s*grayWater: 20,\s*blackWater: 4.75/,
+  );
+  assert.doesNotMatch(sanctuary, /from: 2024,\s*to: 2024,\s*floorplans: \["19A"/);
+  assert.doesNotMatch(sanctuary, /from: 2024,\s*to: 2024,\s*floorplans: \["19L"\][\s\S]*?freshWater/);
+  assert.doesNotMatch(sanctuary, /from: 2024,\s*to: 2024,\s*floorplans: \["19M"/);
+  assert.doesNotMatch(sanctuary, /from: 2024,\s*to: 2024[\s\S]{0,220}?freshWater: 22/);
+  assert.doesNotMatch(sanctuary, /from: 2024,\s*to: 2024[\s\S]{0,220}?freshWater: 24\.8/);
+
+  assert.match(
+    rize,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["18A"\][\s\S]*?freshWater: 19,\s*grayWater: 11,\s*blackWater: 5.5/,
+  );
+  assert.match(
+    rize,
+    /from: 2023,\s*to: 2027,\s*floorplans: \["18M"\][\s\S]*?freshWater: 18,\s*grayWater: 20,\s*blackWater: 4.75/,
+  );
+  assert.match(
+    rize,
+    /from: 2024,\s*to: 2025,\s*floorplans: \["18G"\][\s\S]*?freshWater: 20,\s*grayWater: 20,\s*blackWater: 4.75/,
+  );
+  assert.match(
+    rize,
+    /from: 2027,\s*to: 2027,\s*floorplans: \["18Z"\][\s\S]*?freshWater: 16,\s*grayWater: 15,\s*blackWater: 4.75/,
+  );
+  assert.doesNotMatch(rize, /from: 2023,\s*to: 2023,\s*floorplans: \["18G"\]/);
+  assert.doesNotMatch(rize, /from: 2026,\s*to: 2026,\s*floorplans: \["18Z"\]/);
+
+  assert.match(
+    geneva,
+    /from: 2024,\s*to: 2024,\s*floorplans: \["28VT"\][\s\S]*?freshWater: 40,\s*grayWater: 40,\s*blackWater: 26/,
+  );
+  assert.doesNotMatch(geneva, /from: 2023,\s*to: 2023[\s\S]{0,220}?freshWater: 40/);
+  assert.doesNotMatch(geneva, /floorplans: \["25VT"\][\s\S]{0,220}?freshWater/);
+  assert.doesNotMatch(geneva, /floorplans: \["28VA"\]/);
+
+  assert.match(
+    outlaw,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["29J"\][\s\S]*?freshWater: 40,\s*grayWater: 34.5,\s*blackWater: 30/,
+  );
+  assert.doesNotMatch(outlaw, /from: 2024[\s\S]*?freshWater: 40/);
+  assert.doesNotMatch(outlaw, /from: 2023[\s\S]*?floorplans: \["29T"\][\s\S]*?freshWater/);
+  assert.doesNotMatch(outlaw, /freshWater: 150/);
+
+  assert.doesNotMatch(magnitudeXg, /freshWater:/);
+  assert.doesNotMatch(seneca, /freshWater:/);
+  assert.doesNotMatch(siesta, /freshWater:/);
+  assert.doesNotMatch(siesta, /floorplans: \["22B"\]/);
+  assert.match(siesta, /Four Winds Ford C \(22B\/28Z/);
+
+  const j0 = block.indexOf("  Jayco: {");
+  const j1 = block.indexOf('  "American Coach": {');
+  assert.ok(j0 > 0 && j1 > j0, "expected Jayco block untouched");
+  const jayco = block.slice(j0, j1);
+  const senecaXt = jayco.slice(jayco.indexOf('    "Seneca XT": {'), jayco.indexOf('    "Seneca Prestige"'));
+  assert.match(
+    senecaXt,
+    /from: 2023,\s*to: 2023,\s*floorplans: \["32U"\][\s\S]*?freshWater: 60,\s*grayWater: 38,\s*blackWater: 30/,
+  );
+  assert.match(
+    senecaXt,
+    /from: 2024,\s*to: 2026,\s*floorplans: \["29T"\][\s\S]*?freshWater: 72,\s*grayWater: 43,\s*blackWater: 43/,
+  );
+});
+
 test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 3702 not copied", () => {
   const block = src("rvData.ts");
   const t0 = block.indexOf("    Aria: {");
