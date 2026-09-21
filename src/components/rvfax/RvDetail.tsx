@@ -1515,26 +1515,26 @@ export function RvDetail({
           </section>
 
           <section
-            className="glass-prestige overflow-hidden rounded-[1.15rem] px-5 py-5"
+            className="glass-prestige facts-ratings overflow-hidden rounded-[1.15rem] px-5 py-6"
             data-testid="facts-ratings"
           >
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
+            <p className="facts-ratings-title text-[11px] font-semibold uppercase tracking-[0.18em]">
               Ratings
             </p>
-            <ul className="mt-3 divide-y divide-white/10">
+            <ul className="mt-5 divide-y divide-tide-foam/12">
               {ratingsRows.map((row) => (
                 <li
                   key={row.key}
-                  className="flex items-start justify-between gap-3 py-3 first:pt-1 last:pb-0"
+                  className="flex items-start justify-between gap-4 py-4 first:pt-2 last:pb-0"
                   data-testid={`facts-ratings-${row.key}`}
                 >
                   <div className="min-w-0">
-                    <span className="text-[14px] font-medium text-white">
+                    <span className="text-[14px] font-medium text-tide-ink">
                       {row.label}
                     </span>
                     {row.caption ? (
                       <p
-                        className="mt-0.5 text-[11px] leading-snug text-white/45"
+                        className="mt-1 text-[11px] leading-snug text-tide-foam/50"
                         data-testid={`facts-ratings-${row.key}-caption`}
                       >
                         {row.caption}
@@ -1542,36 +1542,36 @@ export function RvDetail({
                     ) : null}
                   </div>
                   {row.score == null ? (
-                    <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                    <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.14em] text-tide-foam/40">
                       GAP
                     </span>
                   ) : (
                     <span
-                      className="flex shrink-0 items-baseline gap-2 text-amber-200/90"
+                      className="flex shrink-0 items-baseline gap-2"
                       aria-label={`${row.label} ${formatOwnerReviewScore(row.score)}`}
                     >
-                      <span className="text-[13px] font-semibold tabular-nums text-white">
+                      <span className="facts-ratings-score text-[16px]">
                         {formatOwnerReviewScore(row.score)}
                       </span>
-                      <span className="text-[13px] tracking-wide">
+                      <span className="text-[11px] tracking-wide text-tide-aqua/45">
                         {ratingStars(row.score)}
                       </span>
                     </span>
                   )}
                 </li>
               ))}
-              <li className="flex items-center justify-between gap-3 py-3 last:pb-0">
-                <span className="min-w-0 shrink-0 text-[14px] font-medium text-white">
+              <li className="flex items-center justify-between gap-4 py-4 last:pb-0">
+                <span className="min-w-0 shrink-0 text-[14px] font-medium text-tide-ink">
                   Torque-to-Weight
                 </span>
                 {torqueToWeight.score == null ? (
-                  <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-tide-foam/40">
                     {formatTorqueToWeightScore(torqueToWeight)}
                   </span>
                 ) : (
-                  <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
+                  <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
                     <div
-                      className="h-2 w-[7.5rem] overflow-hidden rounded-full bg-white/12 sm:w-[9.5rem]"
+                      className="facts-ratings-bar"
                       data-testid="facts-tqwt-bar"
                       role="meter"
                       aria-label={`Torque-to-Weight ${formatTorqueToWeightScore(torqueToWeight)}`}
@@ -1580,14 +1580,14 @@ export function RvDetail({
                       aria-valuenow={Number(torqueToWeight.score.toFixed(1))}
                     >
                       <div
-                        className="h-full rounded-full"
+                        className="facts-ratings-bar-fill"
                         style={{
                           width: `${torqueBarPct}%`,
                           backgroundColor: torqueBarColor,
                         }}
                       />
                     </div>
-                    <span className="shrink-0 text-[13px] font-semibold tabular-nums text-white">
+                    <span className="facts-ratings-score shrink-0 text-[16px]">
                       {formatTorqueToWeightScore(torqueToWeight)}
                     </span>
                   </div>

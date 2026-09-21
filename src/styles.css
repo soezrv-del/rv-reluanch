@@ -2019,3 +2019,37 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   line-height: 0.95;
   letter-spacing: -0.03em;
 }
+
+/* Facts Ratings — Tide chrome + TTW zone bar. Visual only. */
+.facts-ratings {
+  border-color: color-mix(in srgb, var(--color-tide-aqua) 44%, transparent);
+  box-shadow:
+    var(--shadow-glass),
+    inset 0 1px 0 color-mix(in srgb, var(--color-tide-aqua) 22%, transparent);
+}
+
+.facts-ratings-title {
+  color: var(--color-tide-aqua);
+}
+
+.facts-ratings-score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-tide-ink);
+}
+
+.facts-ratings-bar {
+  height: 0.7rem;
+  flex: 1 1 10rem;
+  max-width: 14.5rem;
+  min-width: 8.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-tide-foam) 14%, transparent);
+}
+
+.facts-ratings-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+}
