@@ -1650,7 +1650,12 @@
 [data-readable-cards][data-premium-screen] .glass-prestige-deep,
 [data-readable-cards][data-premium-screen] .glass-prestige-gold,
 [data-readable-cards][data-premium-screen] .glass-panel,
-[data-readable-cards][data-premium-screen] .glass-surface {
+[data-readable-cards][data-premium-screen] .glass-surface,
+[data-readable-cards][data-compare-view] .glass-prestige,
+[data-readable-cards][data-compare-view] .glass-prestige-deep,
+[data-readable-cards][data-compare-view] .glass-prestige-gold,
+[data-readable-cards][data-compare-view] .glass-panel,
+[data-readable-cards][data-compare-view] .glass-surface {
   background: linear-gradient(
     160deg,
     rgba(255, 255, 255, 0.2) 0%,
@@ -1660,6 +1665,19 @@
   backdrop-filter: blur(28px) saturate(1.7);
   -webkit-backdrop-filter: blur(28px) saturate(1.7);
   border-color: rgba(255, 255, 255, 0.34);
+}
+
+/* Report chrome — frost, not a solid #070b14 plate over Raidho. */
+[data-coach-detail] .rvfax-report-chrome,
+[data-compare-view] .rvfax-report-chrome {
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(22, 72, 200, 0.16) 40%,
+    rgba(6, 18, 40, 0.34) 100%
+  );
+  backdrop-filter: blur(28px) saturate(1.7);
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
 }
 [data-rv-search-card] .facts-cascade-core {
   background: transparent;

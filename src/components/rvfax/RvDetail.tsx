@@ -1141,9 +1141,10 @@ export function RvDetail({
 
   return (
     <div
-      className="relative flex h-full flex-col overflow-hidden bg-bg text-white"
+      className="rvfax-screen relative flex h-full flex-col overflow-hidden bg-bg text-white"
       data-readable-cards=""
       data-coach-detail=""
+      data-raidho-only=""
     >
       <SuiteRaidhoBackdrop bleed />
 
@@ -1156,7 +1157,7 @@ export function RvDetail({
         <PullRefreshLayer state={pull} label="Release to go back">
         {/* Sticky under the iPhone clock / Dynamic Island */}
         <div
-          className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/10 bg-[#070b14]/95 backdrop-blur-md"
+          className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/15"
           data-no-export
         >
           <div className="mx-auto flex w-full max-w-lg items-center gap-1.5 px-3 pb-2 sm:px-5">
@@ -1346,7 +1347,6 @@ export function RvDetail({
             </div>
           ) : null}
         </div>
-        <div className="bg-[#070b14]">
         <div
           id="rvfax-vehicle-report"
           className="mx-auto w-full max-w-lg space-y-5 px-4 pb-32 pt-3 sm:px-5"
@@ -2524,7 +2524,6 @@ export function RvDetail({
             {PUBLIC_SOLD_DISCLAIMER}
           </p>
           <SuiteDisclaimer className="pb-6" />
-        </div>
         </div>
         </PullRefreshLayer>
       </div>

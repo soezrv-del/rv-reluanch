@@ -62,7 +62,7 @@ test("Raidho sapphire mark sits behind suite, compare, GPS, and NDA", () => {
   assert.match(suite, /export function SuiteRaidhoBackdrop/);
   assert.match(suite, /suite-raidho-mark/);
   assert.match(suite, /RAIDHO_R_MARK/);
-  assert.match(compare, /CompareRaidhoBackdrop/);
+  assert.match(compare, /<SuiteRaidhoBackdrop bleed \/>/);
   assert.match(trips, /SuiteRaidhoBackdrop/);
   assert.doesNotMatch(trips, /TRUTH_MARK_BACKDROP/);
   assert.match(nda, /SuiteRaidhoBackdrop/);
@@ -121,8 +121,10 @@ test("Facts, Tow, Cal, Sold, Premium, and coach detail are full-bleed Raidho —
   assert.doesNotMatch(fax, /FACTS_LANDING_BACKDROP/);
   assert.doesNotMatch(fax, /SuiteBackdrop/);
   assert.match(detail, /data-coach-detail=""/);
+  assert.match(detail, /data-raidho-only=""/);
   assert.match(detail, /<SuiteRaidhoBackdrop bleed \/>/);
   assert.match(detail, /data-coach-overview=""/);
+  assert.doesNotMatch(detail, /bg-\[#070b14\]/);
   assert.doesNotMatch(detail, /SuiteBackdrop/);
   assert.doesNotMatch(detail, /SHARED_PRESTIGE_BACKDROP/);
   assert.doesNotMatch(detail, /resolveCardImage/);
