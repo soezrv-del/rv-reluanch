@@ -495,8 +495,8 @@ const OEM_FLOORPLAN_ROWS: Array<{
     yearMax: 2026,
     floorplan: "303RLS",
     spec: {
-      lengthDisplay: `34' 2"`,
-      overallLengthIn: 34 * 12 + 2,
+      lengthDisplay: `32' 10"`,
+      overallLengthIn: 32 * 12 + 10,
       exteriorHeightIn: 12 * 12 + 3,
       exteriorWidthIn: 96,
       interiorHeightIn: 81,
@@ -507,7 +507,8 @@ const OEM_FLOORPLAN_ROWS: Array<{
       grayWater: 78,
       blackWater: 43,
       propaneLbs: 60,
-      source: "Grand Design Reflection 150 Series brochure class",
+      source:
+        "Grand Design Reflection 2026 brochure fifth-wheel table: 303RLS hitch-to-rear (LENGTH) 32' 10\"",
     },
   },
 
@@ -742,8 +743,8 @@ const OEM_FLOORPLAN_ROWS: Array<{
     yearMax: 2026,
     floorplan: "26DBH",
     spec: {
-      lengthDisplay: `31' 4"`,
-      overallLengthIn: 31 * 12 + 4,
+      lengthDisplay: `31' 9"`,
+      overallLengthIn: 31 * 12 + 9,
       exteriorHeightIn: 11 * 12 + 2,
       exteriorWidthIn: 96,
       interiorHeightIn: 80,
@@ -754,7 +755,8 @@ const OEM_FLOORPLAN_ROWS: Array<{
       grayWater: 38,
       blackWater: 28,
       propaneLbs: 40,
-      source: "Forest River Cherokee Grey Wolf brochure class (26DBH)",
+      source:
+        "2025 Forest River Cherokee Grey Wolf brochure: 26DBH Exterior Length 31' 9\"",
     },
   },
   {
@@ -764,8 +766,8 @@ const OEM_FLOORPLAN_ROWS: Array<{
     yearMax: 2026,
     floorplan: "26DBH",
     spec: {
-      lengthDisplay: `31' 4"`,
-      overallLengthIn: 31 * 12 + 4,
+      lengthDisplay: `31' 9"`,
+      overallLengthIn: 31 * 12 + 9,
       exteriorHeightIn: 11 * 12 + 2,
       exteriorWidthIn: 96,
       interiorHeightIn: 80,
@@ -776,7 +778,8 @@ const OEM_FLOORPLAN_ROWS: Array<{
       grayWater: 38,
       blackWater: 28,
       propaneLbs: 40,
-      source: "Forest River Cherokee Grey Wolf brochure class (26DBH)",
+      source:
+        "2025 Forest River Cherokee Grey Wolf brochure: 26DBH Exterior Length 31' 9\"",
     },
   },
   {
@@ -1877,8 +1880,8 @@ const OEM_FLOORPLAN_ROWS: Array<{
     yearMax: 2026,
     floorplan: "44OH",
     spec: {
-      lengthDisplay: `44' 0"`,
-      overallLengthIn: 44 * 12,
+      lengthDisplay: `45' 0"`,
+      overallLengthIn: 45 * 12,
       exteriorHeightIn: 13 * 12 + 3,
       exteriorWidthIn: 101,
       interiorHeightIn: 83,
@@ -1888,8 +1891,9 @@ const OEM_FLOORPLAN_ROWS: Array<{
       freshWater: 100,
       grayWater: 100,
       blackWater: 55,
-      note: "Tag axle · WB 310 · GAWR-tag 10,000 · 450 HP option common — confirm build",
-      source: "Tiffin Phaeton OEM brochure weights & measures",
+      note: "Tag axle · WB 310 · GAWR-tag 10,000 · MY25/MY26 Overall Length 45' · 450 HP option common — confirm build",
+      source:
+        "Tiffin MY25/MY26 Phaeton brochure weights & measures: 44 OH Overall Length 45' (WB 310\")",
     },
   },
 ];
