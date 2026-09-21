@@ -100,7 +100,7 @@ test("intro, stall, origin, CARFAX, Hansen stay intact; DialaBot stays out", () 
 
   assert.match(
     speech,
-    /I'm RV Grok — give me year, make, and model, and I'll speak the spec report on that exact coach/,
+    /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
   );
   assert.match(speech, /VOICE_RESEARCH_HOLD_PHRASE = "give me one second"/);
   assert.doesNotMatch(speech, /Only say "Let me check that"/);
