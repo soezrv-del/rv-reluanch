@@ -9,6 +9,8 @@ import { CATALOG_INDEX, MAKES } from "../rv/rvCatalogIndex.ts";
 import { peekCatalog } from "../rv/catalogLoad.ts";
 import type { ActiveCoach } from "../rv/activeCoach.ts";
 import {
+  catalogYearIsListed,
+  findKnownSeries,
   matchCatalogModelName,
   parseCoachFromText,
   seriesAliasEquals,
@@ -94,9 +96,181 @@ function modelsAlign(a: string, b: string): boolean {
   const na = norm(a);
   const nb = norm(b);
   if (!na || !nb) return false;
+  if (distinctKnownSeries(a, b)) return false;
   if (na === nb) return true;
   if (seriesAliasEquals(a, b)) return true;
   return na.includes(nb) || nb.includes(na);
+}
+
+/** Ventana ≠ Dutch Star even when both are Newmar 4369. */
+function distinctKnownSeries(a: string, b: string): boolean {
+  const sa = findKnownSeries(a);
+  const sb = findKnownSeries(b);
+  if (!sa?.model || !sb?.model) return false;
+  return norm(sa.model) !== norm(sb.model);
+}
+
+/**
+ * Year from earlier turns only when that history named THIS series.
+ * Never inherit 2018 Ventana onto a Dutch Star ask.
+ */
+export function yearFromSameSeriesHistory(
+  extraText: string,
+  make: string,
+  model: string,
+): string {
+  if (!extraText?.trim() || !model?.trim()) return "";
+  let year = "";
+  for (const chunk of extraText.split(/[\n.!?]+/)) {
+    const p = parseCoachFromText(chunk);
+    if (!p.year || !p.model) continue;
+    if (
+      make &&
+      p.make &&
+      norm(resolveCatalogMake(p.make)) !== norm(resolveCatalogMake(make))
+    ) {
+      continue;
+    }
+    if (
+      modelsAlign(p.model, model) ||
+      modelsAlign(resolveCatalogModel(make || p.make, p.model), model)
+    ) {
+      year = p.year;
+    }
+  }
+  return year;
+}
+
+export type CatalogPresence =
+  | {
+      status: "exact";
+      year: string;
+      make: string;
+      model: string;
+      floorplan: string;
+    }
+  | {
+      status: "year-series";
+      year: string;
+      make: string;
+      model: string;
+      floorplan: string;
+    }
+  | {
+      status: "floorplan-gap";
+      year: string;
+      make: string;
+      model: string;
+      floorplan: string;
+    }
+  | {
+      status: "series";
+      make: string;
+      model: string;
+      years: number[];
+    }
+  | {
+      status: "missing-year";
+      make: string;
+      model: string;
+      floorplan: string;
+      askedYear?: string;
+    }
+  | { status: "missing-series"; make: string; model: string };
+
+function compactFp(s: string): string {
+  return (s || "").toLowerCase().replace(/[\s-]+/g, "");
+}
+
+function floorplanListed(
+  listed: readonly string[] | undefined,
+  floorplan: string,
+): boolean {
+  const want = compactFp(floorplan);
+  if (!want || !listed?.length) return false;
+  return listed.some((fp) => compactFp(fp) === want);
+}
+
+/**
+ * Honest catalog presence — never substitute a sibling series because
+ * a floorplan code collides (4369 on Ventana and Dutch Star).
+ */
+export function inspectCatalogPresence(
+  identity: Pick<CoachIdentity, "year" | "make" | "model" | "floorplan">,
+): CatalogPresence {
+  const make = resolveCatalogMake(identity.make || "");
+  const model = identity.model
+    ? resolveCatalogModel(make, identity.model)
+    : "";
+  const year = (identity.year || "").trim();
+  const floorplan = (identity.floorplan || "").trim();
+  if (!make || !model) {
+    return { status: "missing-series", make: identity.make || "", model };
+  }
+
+  const live = peekCatalog()?.RV_DATA?.[make]?.[model];
+  const index = CATALOG_INDEX[make]?.[model];
+  const years = [
+    ...(index?.years || []),
+    ...Object.keys(live?.floorplansByYear || {}).map((y) => parseInt(y, 10)),
+  ].filter((y) => Number.isFinite(y));
+  const uniqueYears = [...new Set(years)].sort((a, b) => a - b);
+  const seriesKnown = Boolean(live || index);
+
+  if (!seriesKnown) {
+    return { status: "missing-series", make, model };
+  }
+  if (!year) {
+    return uniqueYears.length
+      ? { status: "series", make, model, years: uniqueYears }
+      : { status: "missing-year", make, model, floorplan };
+  }
+
+  const yearListed =
+    catalogYearIsListed(year, index?.years) ||
+    Boolean(live?.floorplansByYear?.[year]);
+  if (!yearListed && uniqueYears.length && !uniqueYears.includes(parseInt(year, 10))) {
+    return { status: "missing-year", make, model, floorplan, askedYear: year };
+  }
+
+  if (floorplan) {
+    const byYear = live?.floorplansByYear?.[year];
+    if (byYear?.length) {
+      if (floorplanListed(byYear, floorplan)) {
+        return { status: "exact", year, make, model, floorplan };
+      }
+      return { status: "floorplan-gap", year, make, model, floorplan };
+    }
+    if (floorplanListed(live?.floorplans, floorplan)) {
+      return { status: "exact", year, make, model, floorplan };
+    }
+  }
+
+  return { status: "year-series", year, make, model, floorplan };
+}
+
+export function formatCatalogPresenceNote(presence: CatalogPresence): string {
+  switch (presence.status) {
+    case "exact":
+      return "";
+    case "year-series":
+      return "";
+    case "floorplan-gap":
+      return `FLOORPLAN GAP — ${presence.year} ${presence.make} ${presence.model} is in the catalog; ${presence.floorplan} is not listed for that year. Say the floorplan is unverified. Do not substitute a sibling series that shares the code.`;
+    case "series":
+      return `YEAR MISSING — ${presence.make} ${presence.model} is in the catalog. Ask which year. Do not substitute a sibling series.`;
+    case "missing-year":
+      if (presence.askedYear) {
+        return `YEAR GAP — ${presence.askedYear} ${presence.make} ${presence.model} is not a catalog year for that series. Do not say the series is missing. Do not substitute a sibling series.`;
+      }
+      return presence.floorplan
+        ? `YEAR MISSING — ${presence.make} ${presence.model} ${presence.floorplan} needs a model year. Do not say the series is missing. Do not substitute a sibling series.`
+        : `YEAR MISSING — ${presence.make} ${presence.model} is a known series. Ask which year. Do not substitute a sibling series.`;
+    case "missing-series":
+      return `SERIES MISSING — ${[presence.make, presence.model].filter(Boolean).join(" ") || "that series"} is not in the verified catalog. Say the series is missing. Do not substitute another series.`;
+    default:
+      return "";
+  }
 }
 
 /**
@@ -170,7 +344,15 @@ export function resolveCoachIdentity(
   );
 
   if (queryNamesCoach && namedCoachConflictsLock(fromQuery, facts)) {
-    return identityFromAsk(fromQuery, "message");
+    const asked = identityFromAsk(fromQuery, "message");
+    if (!asked.year) {
+      asked.year = yearFromSameSeriesHistory(
+        extraText,
+        asked.make,
+        asked.model,
+      );
+    }
+    return asked;
   }
 
   if (parsed.year && parsed.make && parsed.model) {
@@ -201,8 +383,13 @@ export function resolveCoachIdentity(
       Boolean(sameMake) &&
       (modelsAlign(catalogModel, facts!.model) ||
         modelsAlign(parsed.model, facts!.model));
+    const year =
+      parsed.year ||
+      (sameModel
+        ? facts!.year
+        : yearFromSameSeriesHistory(extraText, parsed.make, catalogModel));
     return {
-      year: parsed.year || (sameModel ? facts!.year : ""),
+      year,
       make: resolveCatalogMake(parsed.make),
       model: catalogModel,
       floorplan:

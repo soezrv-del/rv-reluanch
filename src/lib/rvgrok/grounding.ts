@@ -43,7 +43,10 @@ import {
   looksLikeOriginQuestion,
 } from "./originStory";
 import {
+  looksLikeCasualNonResearch,
   looksLikeInventoryOrCountQuestion,
+  looksLikeNamedCoachProductQuestion,
+  looksLikeSpecQuestion,
   needsWebFallback,
 } from "./webIntent";
 import {
@@ -57,11 +60,45 @@ import {
   repairCoachLockFromGrounded,
 } from "./repairMode";
 import {
+  askNamesCoachIdentity,
   type CoachIdentity,
+  formatCatalogPresenceNote,
+  inspectCatalogPresence,
   resolveCatalogMake,
   resolveCatalogModel,
   resolveCoachIdentity,
 } from "./coachIdentity";
+function withDeskSheetSpeechRule(
+  block: string,
+  query: string,
+  identity: CoachIdentity | null | undefined,
+): string {
+  const extra =
+    identity && shouldMountDeskSheetLocal(query, identity)
+      ? `DESK SPEC SHEET MOUNTED for ${[identity.year, identity.make, identity.model, identity.floorplan].filter(Boolean).join(" ")}. You may say exactly: "Spec sheet is on the desk." Speak THIS coach — never a prior series. Incomplete fields show as GAP on the sheet; do not invent UVW, GVWR, or torque.`
+      : `DESK SPEC SHEET NOT MOUNTED. Never say the spec sheet / report is on the desk, or that a sheet is visible. Speak the answer only.`;
+  const body = (block || "").trim();
+  return body ? `${body}\n\n${extra}` : extra;
+}
+
+function shouldMountDeskSheetLocal(
+  query: string,
+  identity: CoachIdentity,
+): boolean {
+  if (!identity.make?.trim() || !identity.model?.trim()) return false;
+  const q = query || "";
+  if (looksLikeCasualNonResearch(q) && !askNamesCoachIdentity(identity)) {
+    return false;
+  }
+  if (askNamesCoachIdentity(identity)) return true;
+  if (looksLikeSpecQuestion(q) || looksLikeNamedCoachProductQuestion(q)) {
+    return true;
+  }
+  if (/\blook(?:ing)?\s+up\b|\breport\b|\bspec(?:s| sheet)?\b/i.test(q)) {
+    return true;
+  }
+  return identity.source === "facts" && Boolean(q.trim());
+}
 
 export {
   looksLikeCasualNonResearch,
@@ -96,10 +133,13 @@ export type { WebFallbackOpts, WebFallbackSpecs } from "./webIntent";
 export type { CoachIdentity } from "./coachIdentity";
 export {
   askNamesCoachIdentity,
+  formatCatalogPresenceNote,
+  inspectCatalogPresence,
   namedCoachConflictsLock,
   resolveCatalogMake,
   resolveCatalogModel,
   resolveCoachIdentity,
+  yearFromSameSeriesHistory,
 } from "./coachIdentity";
 
 export type GroundedField = {
@@ -138,6 +178,7 @@ export const CHAT_MAY_WRITE_FACTS_CACHE = false;
 
 export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - The CATALOG / BROCHURE block in this request is THIS turn's lock. If the user named a different year / make / model / floorplan, this block is that coach — never keep narrating a prior session coach as still locked.
+- Series change clears the prior lock. Dutch Star is not Ventana because both use 4369. Prefer exact year + make + model + floorplan. If a field is missing, say which field (year vs series) — never substitute a sibling series.
 - The CATALOG / BROCHURE block in this request is source-of-truth for engine, horsepower, chassis, transmission, and fuel.
 - If a field has a number or name, USE THAT EXACT VALUE. Do not substitute a sibling model, a later year, or a "typical" HP (never invent 450).
 - If a field is marked UNKNOWN, do not stop at "I don't know." Prefer WEB RESEARCH notes this turn, then YOU answer. Do not guess. Never send them to a brochure, door sticker, dealer, or website. Never say "check the website", "look it up yourself", or "go check the OEM site".
@@ -245,9 +286,15 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
         ? pickField({ value: index?.fuelType, trust: "index" })
         : empty,
       rvType: pickField({ value: index?.type, trust: "index" }),
-      note: noYear
-        ? "No model year in the ask — class and fuel are from the catalog index. Do not invent HP, engine, chassis, or a year. Never send the user to the OEM site, a website, or a dealer as the answer."
-        : "CATALOG GAP — no locked row for this model year. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.",
+      note: (() => {
+        const presence = formatCatalogPresenceNote(
+          inspectCatalogPresence(identity),
+        );
+        if (presence) return presence;
+        return noYear
+          ? "No model year in the ask — class and fuel are from the catalog index. Do not invent HP, engine, chassis, or a year. Never send the user to the OEM site, a website, or a dealer as the answer."
+          : "CATALOG GAP — no locked row for this model year. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.";
+      })(),
       weightBand: null,
       hasHardLock: false,
       missingHard: true,
@@ -403,9 +450,14 @@ export function formatCatalogGroundingBlock(
     .filter(Boolean)
     .join(" ");
   const inventoryAsk = Boolean(opts?.inventoryAsk);
-  const lockLine = specs.hasHardLock
-    ? "This coach IS in the verified catalog. Use the locked numbers above. Do not say it is missing, not in catalogs, or to wait for a brochure. If a line is UNKNOWN / GAP, use WEB RESEARCH notes this turn — do not stop at I don't know, never invent HP, engine, chassis, or fuel."
-    : "CATALOG GAP — no locked numbers for this identity. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.";
+  const presenceNote = formatCatalogPresenceNote(
+    inspectCatalogPresence(id),
+  );
+  const lockLine = presenceNote
+    ? presenceNote
+    : specs.hasHardLock
+      ? "This coach IS in the verified catalog. Use the locked numbers above. Do not say it is missing, not in catalogs, or to wait for a brochure. If a line is UNKNOWN / GAP, use WEB RESEARCH notes this turn — do not stop at I don't know, never invent HP, engine, chassis, or fuel."
+      : "CATALOG GAP — no locked numbers for this identity. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.";
   return [
     `VERIFIED CATALOG / BROCHURE for ${coach} (source: ${id.source}):`,
     line("engine", specs.engine),
@@ -415,7 +467,7 @@ export function formatCatalogGroundingBlock(
     line("transmission", specs.transmission),
     line("fuel", specs.fuelType),
     line("class / type", specs.rvType),
-    inventoryAsk ? null : specs.note ? `- note: ${specs.note}` : null,
+    inventoryAsk ? null : presenceNote ? `- note: ${presenceNote}` : specs.note ? `- note: ${specs.note}` : null,
     specs.weightBand ? `- weights: ${specs.weightBand}` : null,
     inventoryAsk ? INVENTORY_WINS_OVER_GAP : lockLine,
   ]
@@ -533,7 +585,11 @@ export function buildChatGrounding(opts: {
     return {
       identity: compare.identity,
       specs: compare.specs,
-      block: merged.block,
+      block: withDeskSheetSpeechRule(
+        merged.block,
+        opts.query,
+        compare.identity,
+      ),
       needsWeb: merged.needsWeb,
       repairMode,
     };
@@ -556,7 +612,7 @@ export function buildChatGrounding(opts: {
     return {
       identity: null,
       specs: null,
-      block: merged.block,
+      block: withDeskSheetSpeechRule(merged.block, opts.query, null),
       needsWeb: merged.needsWeb,
       repairMode,
     };
@@ -572,7 +628,7 @@ export function buildChatGrounding(opts: {
   return {
     identity,
     specs,
-    block: merged.block,
+    block: withDeskSheetSpeechRule(merged.block, opts.query, identity),
     needsWeb: merged.needsWeb,
     repairMode,
   };
@@ -612,9 +668,14 @@ export function buildVoiceGrounding(opts: {
     const base = inventoryAsk
       ? INVENTORY_WINS_OVER_GAP
       : "CATALOG GAP — no verified row is loaded. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Never invent HP, engine, chassis, or fuel.";
-    return repair ? `${base}\n\n${repair}` : base;
+    const body = repair ? `${base}\n\n${repair}` : base;
+    return withDeskSheetSpeechRule(body, query, null);
   }
-  return `${formatVoiceCatalogAddendum(specs!, { inventoryAsk })}\n\n${repair}`;
+  return withDeskSheetSpeechRule(
+    `${formatVoiceCatalogAddendum(specs!, { inventoryAsk })}\n\n${repair}`,
+    query,
+    identity,
+  );
 }
 
 export function appendGrounding(system: string, catalogContext?: string): string {

@@ -19,6 +19,10 @@ import {
 import type { ActiveCoach } from "../rv/activeCoach";
 import { buildChatGrounding, namedCoachConflictsLock } from "./grounding";
 import { parseCoachFromText } from "./parseCoach";
+import {
+  resolveDeskSheet,
+  type DeskSheetPayload,
+} from "./deskSheet";
 import { looksLikeRepairQuestion, REPAIR_VOICE_PLAYBOOK } from "./repairMode";
 import {
   decideVoiceWebResearch,
@@ -44,6 +48,8 @@ export type RealtimeHandlers = {
   onError: (message: string) => void;
   /** Fired when the socket drops unexpectedly (not after intentional stop) */
   onDisconnected?: (reason: string) => void;
+  /** CarFax-style desk sheet for the coach this turn — or null to hide. */
+  onDeskSheet?: (sheet: DeskSheetPayload | null) => void;
 };
 
 /**
@@ -692,6 +698,76 @@ export class GrokRealtimeSession {
     }
   }
 
+  private factsFromIdentity(
+    id: {
+      year: string;
+      make: string;
+      model: string;
+      floorplan: string;
+    } | null,
+  ): ActiveCoach | null {
+    if (!id?.make?.trim() || !id.model?.trim()) return null;
+    return {
+      year: id.year || "",
+      make: id.make,
+      model: id.model,
+      floorplan: id.floorplan || "",
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  /** Push THIS turn's catalog lock into the live session so VAD cannot keep Ventana. */
+  private pushCatalogLockToSession(block: string) {
+    const ws = this.ws;
+    const text = (block || "").trim();
+    if (!ws || ws.readyState !== WebSocket.OPEN || !text) return;
+    try {
+      ws.send(
+        JSON.stringify(
+          buildRealtimeSessionUpdate(this.voiceId, this.speed, text),
+        ),
+      );
+      ws.send(
+        JSON.stringify({
+          type: "conversation.item.create",
+          item: {
+            type: "message",
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: `THIS turn's lock — prior series is dead. Speak only this coach:\n${text}`,
+              },
+            ],
+          },
+        }),
+      );
+    } catch {
+      /* session can still run */
+    }
+  }
+
+  private flushLockBreakAnswer(block: string) {
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    this.suppressMic = true;
+    this.handlers.onStatus("thinking", "Updating coach…");
+    const lock = (block || "").trim().slice(0, 1800);
+    try {
+      ws.send(
+        JSON.stringify({
+          type: "response.create",
+          response: {
+            modalities: ["text", "audio"],
+            instructions: `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nTHIS turn named a different series than the prior lock. Speak the new year / make / model / floorplan only. Never reuse the previous series because a floorplan code matches.\n${lock}`,
+          },
+        }),
+      );
+    } catch {
+      this.suppressMic = false;
+    }
+  }
+
   /**
    * Pre-turn enrichment: `buildChatGrounding` + shared `needsWebFallback`
    * (same detector as text chat). Cancel the VAD auto-reply, speak a short hold,
@@ -699,35 +775,44 @@ export class GrokRealtimeSession {
    * from the notes (or honestly fall back if the lookup is slow or fails).
    * Do not stretch the hold toward 60s — a spoken miss is better than dead air.
    * True research speaks "give me one second"; everything else answers now.
+   * A series change (Ventana → Dutch Star) always cancels the stale lock reply.
    */
   private async maybeEnrichWithWebResearch(transcript: string) {
     const grounded = buildChatGrounding({
       query: transcript,
       facts: this.facts,
     });
-    if (
-      grounded.identity &&
-      namedCoachConflictsLock(parseCoachFromText(transcript), this.facts)
-    ) {
+    const parsed = parseCoachFromText(transcript);
+    const lockBroke = Boolean(
+      grounded.identity && namedCoachConflictsLock(parsed, this.facts),
+    );
+    if (grounded.identity && (lockBroke || !this.facts?.model)) {
       this.catalogContext = grounded.block || this.catalogContext;
-      const id = grounded.identity;
-      this.facts =
-        id.year && id.make && id.model
-          ? {
-              year: id.year,
-              make: id.make,
-              model: id.model,
-              floorplan: id.floorplan,
-              updatedAt: new Date().toISOString(),
-            }
-          : null;
+      this.facts = this.factsFromIdentity(grounded.identity);
+    } else if (grounded.identity && grounded.block) {
+      this.catalogContext = grounded.block;
+    }
+    const sheet = resolveDeskSheet({
+      query: transcript,
+      identity: grounded.identity,
+      specs: grounded.specs,
+    });
+    this.handlers.onDeskSheet?.(sheet);
+    if (lockBroke && grounded.block) {
+      this.pushCatalogLockToSession(grounded.block);
     }
     const decision = decideVoiceWebResearch({
       transcript,
       specs: grounded.specs,
       catalogBlock: grounded.block || this.catalogContext,
     });
-    if (decision.action !== "research") return;
+    if (decision.action !== "research") {
+      if (lockBroke) {
+        this.cancelAutoResponseForResearch();
+        this.flushLockBreakAnswer(grounded.block);
+      }
+      return;
+    }
     if (this.closed || this.intentionalStop) return;
 
     const key = transcript.trim();

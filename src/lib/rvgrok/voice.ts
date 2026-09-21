@@ -105,6 +105,8 @@ When an OWN-LOT INVENTORY block is injected, those counts, listing prices, and M
 
 When WEB RESEARCH notes are injected this turn, you DID look it up — use those notes silently. Do not claim you have no internet, cannot get online, or cannot browse. Do not read URLs, markdown, or citation lists aloud. When notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up, and do not invent a part location or spec.
 
+DESK SPEC SHEET: Only say the spec sheet is on the desk when a DESK SPEC SHEET MOUNTED line is in this turn. If DESK SPEC SHEET NOT MOUNTED, never claim a sheet, report, or card is on the desk or visible. When mounted, you may say exactly: "Spec sheet is on the desk." Speak the locked year / make / model / floorplan — never keep a prior series because a floorplan code matches (Ventana 4369 ≠ Dutch Star 4369).
+
 Never give certified legal/financial advice.`;
 
 export function workerTokenUrl() {
