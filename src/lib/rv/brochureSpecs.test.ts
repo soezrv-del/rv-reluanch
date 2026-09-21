@@ -652,6 +652,15 @@ test("Audit B Phase 3+ length pins match dated brochures (44OH / 303RLS / 26DBH)
   assert.equal(cherokee?.overallLengthIn, 31 * 12 + 9);
 });
 
+test("Audit B optional: Grey Wolf 26DBH exterior height matches 2025 brochure", () => {
+  // 2025 Forest River Cherokee Grey Wolf brochure: 26DBH Exterior Height w/A/C 10' 6" (126 in).
+  // Both Grey Wolf and Cherokee modelIncludes rows share this floorplan pin.
+  const greyWolf = findOemFloorplanSpec("2025", "Forest River", "Grey Wolf", "26DBH");
+  const cherokee = findOemFloorplanSpec("2025", "Forest River", "Cherokee", "26DBH");
+  assert.equal(greyWolf?.exteriorHeightIn, 10 * 12 + 6);
+  assert.equal(cherokee?.exteriorHeightIn, 10 * 12 + 6);
+});
+
 test("FR3 31DS catalog GVWR aligns to OEM 18k; Sunseeker Classic 2025–26 GAPs", async () => {
   const { RV_DATA } = await loadLiveCatalog();
   const fr3 = RV_DATA["Forest River"]?.FR3;

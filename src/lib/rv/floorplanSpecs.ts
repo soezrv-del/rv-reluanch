@@ -745,7 +745,7 @@ const OEM_FLOORPLAN_ROWS: Array<{
     spec: {
       lengthDisplay: `31' 9"`,
       overallLengthIn: 31 * 12 + 9,
-      exteriorHeightIn: 11 * 12 + 2,
+      exteriorHeightIn: 10 * 12 + 6,
       exteriorWidthIn: 96,
       interiorHeightIn: 80,
       uvwLbs: 6120,
@@ -756,7 +756,7 @@ const OEM_FLOORPLAN_ROWS: Array<{
       blackWater: 28,
       propaneLbs: 40,
       source:
-        "2025 Forest River Cherokee Grey Wolf brochure: 26DBH Exterior Length 31' 9\"",
+        "2025 Forest River Cherokee Grey Wolf brochure: 26DBH Exterior Length 31' 9\"; Exterior Height w/A/C 10' 6\"",
     },
   },
   {
@@ -768,7 +768,7 @@ const OEM_FLOORPLAN_ROWS: Array<{
     spec: {
       lengthDisplay: `31' 9"`,
       overallLengthIn: 31 * 12 + 9,
-      exteriorHeightIn: 11 * 12 + 2,
+      exteriorHeightIn: 10 * 12 + 6,
       exteriorWidthIn: 96,
       interiorHeightIn: 80,
       uvwLbs: 6120,
@@ -779,7 +779,7 @@ const OEM_FLOORPLAN_ROWS: Array<{
       blackWater: 28,
       propaneLbs: 40,
       source:
-        "2025 Forest River Cherokee Grey Wolf brochure: 26DBH Exterior Length 31' 9\"",
+        "2025 Forest River Cherokee Grey Wolf brochure: 26DBH Exterior Length 31' 9\"; Exterior Height w/A/C 10' 6\"",
     },
   },
   {
