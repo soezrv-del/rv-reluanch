@@ -122,15 +122,17 @@ test("Grok dock tab uses the same Einstein asset as RvGrok; other tabs are icon-
   }
 });
 
-test("Removing overlay chrome does not rewrite dock glass or Facts/Tow internals", () => {
+test("Removing overlay chrome does not rewrite dock plate or Facts/Tow internals", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const css = read("../../styles.css");
   const fax = read("../../components/rvfax/RvFaxApp.tsx");
   const tow = read("../../components/rvtow/RvTowApp.tsx");
 
   assert.match(tabs, /\{ id: "rvgrok", label: "RvGROK", short: "Grok" \}/);
-  assert.match(css, /backdrop-filter:\s*blur\(20px\) saturate\(180%\)/);
-  assert.match(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
+  assert.match(css, /--dock-surface:\s*#000000/);
+  assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?background:\s*var\(--dock-surface\)/);
+  assert.doesNotMatch(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
+  assert.doesNotMatch(css, /background:\s*rgba\(5, 5, 8, 0\.55\)/);
   assert.doesNotMatch(fax, /AskGrokOverlay|setPanelOpen/);
   assert.doesNotMatch(tow, /AskGrokOverlay|setPanelOpen/);
 });

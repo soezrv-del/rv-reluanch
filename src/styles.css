@@ -100,6 +100,8 @@
   --dock-label-color: #f3f5f8;
   --dock-label-color-active: #ffffff;
   --dock-icon-size: 3.25rem;
+  /* Raidho R mark ground — dock + home-indicator, not #374 frost plate. */
+  --dock-surface: #000000;
 }
 
 @layer base {
@@ -862,7 +864,11 @@
   );
 }
 
-/* Dock — true glassmorphism (David 2026-09-08). Exact tokens win. */
+/* Dock — Raidho R black ground so the icon plate blends (not #374 frost). */
+.bottom-tabs-nav,
+[data-bottom-dock] {
+  background: var(--dock-surface);
+}
 .bottom-tabs-nav {
   z-index: 80;
   touch-action: manipulation;
@@ -875,12 +881,12 @@
   }
 }
 .bottom-tabs-dock {
-  background: rgba(5, 5, 8, 0.55);
-  border: 1px solid color-mix(in srgb, var(--color-sapphire) 18%, rgba(255, 255, 255, 0.1));
+  background: var(--dock-surface);
+  border: 1px solid var(--dock-surface);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 .bottom-tab-btn {
   background: transparent;
