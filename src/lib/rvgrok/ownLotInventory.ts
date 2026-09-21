@@ -1,9 +1,10 @@
 /**
  * RV Country own-lot stock for in-app RV Grok.
  *
- * Brochure catalog (`rvData`) is not lot stock. The midnight own-lot scrape
- * (source=own) is the count SoT. Loaded only when the ask looks like
- * inventory / in-stock — never stuffed into every chat turn.
+ * Brochure catalog (`rvData`) is the default SoT for year/make/model reports.
+ * The midnight own-lot scrape (source=own) is SoT only for explicit stock
+ * asks ("do we have", on the lot, in stock, inventory, diesel count). Never
+ * treat a coach designation as a lot miss.
  *
  * File has no fuel field. Diesel ≈ body_type "Class A Diesel" + "Class Super C".
  * Listing prices are on the scrape (`price`, then price_current / price_hidden /
@@ -23,7 +24,6 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   extractFloorplanToken,
-  looksLikeCoachDesignationAsk,
   normalizeCoachAsk,
   parseCoachFromText,
   parseSeriesAlias,
@@ -34,7 +34,6 @@ import {
   looksLikeInventoryOrCountQuestion,
   looksLikeMarketValueQuestion,
   looksLikeRepairQuestion,
-  looksLikeSpecQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
 
@@ -167,7 +166,13 @@ export function looksLikeOwnLotUnitListQuestion(text: string): boolean {
   return OWN_LOT_UNIT_LIST_RE.test(t);
 }
 
+const EXPLICIT_WE_HAVE_STOCK_RE =
+  /\b(?:do|did|does)\s+we\s+have\b|\bhave\s+we\s+got\b|\bwe\s+have\s+any\b/i;
+
 export function looksLikeOwnLotStockQuestion(text: string): boolean {
+  // Explicit stock only — "do we have" / on the lot / in stock / inventory /
+  // diesel count / stock # / lot listing prices. A year+make+model+floorplan
+  // designation is a CATALOG report, not an own-lot probe.
   if (
     looksLikeInventoryOrCountQuestion(text) ||
     looksLikeOwnLotListingPriceQuestion(text) ||
@@ -175,17 +180,7 @@ export function looksLikeOwnLotStockQuestion(text: string): boolean {
   ) {
     return true;
   }
-  // "M series 25FW" / "Lineage M 25FW" / "27A Integra Vision" — designation
-  // stock probe. Spec / repair / market-value still go those paths.
-  if (
-    looksLikeCoachDesignationAsk(text) &&
-    !looksLikeSpecQuestion(text) &&
-    !looksLikeRepairQuestion(text) &&
-    !looksLikeMarketValueQuestion(text)
-  ) {
-    return true;
-  }
-  return false;
+  return EXPLICIT_WE_HAVE_STOCK_RE.test(normalizeAskText(text));
 }
 
 /** Snapshot loaded with units — we can answer lot counts from the file. */
@@ -1240,12 +1235,13 @@ export function formatOwnLotBlock(
 
   lines.push(
     "Answer from these counts and listing prices. Never invent a VIN, stock number, unit, or price that is not in this snapshot. Brochure catalog is not lot stock. Own-lot listing prices are what WE ask on the lot — not nationwide market-value comps.",
-    "This is an inventory / in-stock ask. Catalog GAP does not apply. Never say catalog gap. Never say check your own lot listing. Never ask them to share a year for inventory.",
+    "This is an explicit inventory / in-stock ask only. Year/make/model reports use the big brochure catalog — not this block. Catalog GAP does not apply to stock counts. Never say catalog gap. Never say check your own lot listing. Never ask them to share a year for inventory.",
+    "Never substitute a sibling series because a floorplan code matches (Dutch Star 4369 ≠ Ventana 4369). Never say a catalog-known coach is not in listings.",
   );
 
   if (counts.matched === 0) {
     lines.push(
-      "No own-lot hit for this ask. Say none of that coach is on our lot snapshot this turn. Do not mention catalog gap. Do not send them to check their own lot listing.",
+      "No own-lot hit for this exact series. Say we do not have that coach on the lot snapshot this turn — briefly. Do not say it is missing from the catalog or not in listings. Do not mention catalog gap. Do not send them to check their own lot listing. Do not swap in a sibling series that shares the floorplan code.",
     );
   }
 
