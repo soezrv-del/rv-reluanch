@@ -80,7 +80,7 @@ const OFF_CATALOG_RE =
 
 /** Own-lot / diesel-count / in-stock — catalog has no inventory. */
 const INVENTORY_OR_COUNT_RE =
-  /\b(inventor(?:y|ies)|in stock|on (?:the |our )?lot|on hand|units? available|our (?:lot|inventory|stock)|diesel counts?|(?:how many|count of)\s+(?:\w+\s+){0,8}(?:diesels?|gas|coaches?|units?|rvs?|pushers?|motorhomes?|class\s*a|super\s*c?s?|are there|in stock|on (?:the )?lot|do we have)|(?:stock(?:\s*(?:#|number|no\.?|num))?|stk)\s*[:#-]?\s*[A-Za-z0-9-]{3,12})\b/i;
+  /\b(inventor(?:y|ies)|in stock|on (?:the |our )?lot|on hand|units? available|our (?:lot|inventory|stock)|diesel counts?|(?:how many|count of)\s+(?:\w+\s+){0,8}(?:diesels?|gas|coaches?|units?|rvs?|pushers?|motorhomes?|class\s*a|super\s*c?s?|are there|in stock|on (?:the )?lot|do we have)|(?:look|check|search|pull|find)\s+(?:\w+\s+){0,6}in(?:\s+(?:my|our|the))?\s+inventory|(?:stock(?:\s*(?:#|number|no\.?|num))?|stk)\s*[:#-]?\s*[A-Za-z0-9-]{3,12})\b/i;
 
 /** Bare lot stock # ("45282") — not a model year. */
 const BARE_STOCK_NUMBER_RE = /^\s*#?\s*([A-Za-z]{0,4}\d{4,7}[A-Za-z]{0,3})\s*$/;

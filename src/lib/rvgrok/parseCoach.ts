@@ -67,11 +67,21 @@ function escapeBrandRe(s: string): string {
 const FLOORPLAN_TOKEN_RE =
   /\b(\d{2,3}\s?[A-Za-z]{1,4}|[A-Za-z]{1,3}\d{2,3}[A-Za-z]?)\b/g;
 
+/** Spoken plural "27As" / "27A's" → 27A. Leaves 27ASE / 29S alone. */
+export function normalizeFloorplanToken(token: string): string {
+  const t = (token || "").replace(/\s+/g, "").replace(/['’]/g, "");
+  if (!t) return "";
+  if (/^\d{2,3}[A-Za-z]s$/i.test(t) && !/se$/i.test(t)) {
+    return t.slice(0, -1);
+  }
+  return t;
+}
+
 export function extractFloorplanToken(text: string): string {
   if (!text) return "";
   const re = new RegExp(FLOORPLAN_TOKEN_RE.source, "g");
   for (const m of text.matchAll(re)) {
-    const token = (m[1] || "").replace(/\s+/g, "");
+    const token = normalizeFloorplanToken(m[1] || "");
     if (!token) continue;
     if (/k$/i.test(token)) continue;
     return token;
@@ -183,18 +193,40 @@ function fuzzyBrandFromText(lower: string): { make: string; spoken: string } {
   return { make: "", spoken: "" };
 }
 
+/** Brand / alias plus a spoken plural (Integras, Entegra Coaches). */
+function brandMentionRe(name: string): RegExp {
+  return new RegExp(`\\b${escapeBrandRe(name)}(?:es|s)?\\b`, "i");
+}
+
 function findSpokenBrand(lower: string): { make: string; spoken: string } {
   // Integra → Entegra Coach stays an exact fast path (fuzzy would land on Entegra).
+  // Match the spoken token (Integras) so leftover "s" is not a ghost model.
   for (const [alias, canonical] of COACH_BRAND_ALIASES) {
-    const re = new RegExp(`\\b${escapeBrandRe(alias)}\\b`, "i");
-    if (re.test(lower)) return { make: canonical, spoken: alias };
+    const m = lower.match(brandMentionRe(alias));
+    if (m?.[0]) return { make: canonical, spoken: m[0] };
   }
   for (const b of COACH_BRANDS) {
-    if (lower.includes(b.toLowerCase())) {
-      return { make: b, spoken: b };
-    }
+    const m = lower.match(brandMentionRe(b));
+    if (m?.[0]) return { make: b, spoken: m[0] };
   }
   return fuzzyBrandFromText(lower);
+}
+
+/**
+ * Speech: "E Vision" / "SE Vision" / "Vision E" → Vision SE.
+ * Bare "Vision" stays Vision (matches Vision SE on the lot).
+ */
+export function normalizeVisionSpeech(model: string): string {
+  const t = normName(model);
+  if (!t || !/\bvisions?\b/.test(t)) return (model || "").trim();
+  if (
+    /\b(?:s\s*e|se)\b/.test(t) ||
+    /\be\s+visions?\b/.test(t) ||
+    /\bvisions?\s+e\b/.test(t)
+  ) {
+    return "Vision SE";
+  }
+  return "Vision";
 }
 
 export type NormalizedCoachAsk = {
@@ -240,6 +272,66 @@ const SERIES_FAMILY_STOP = new Set([
   "gas",
 ]);
 
+const MODEL_NEAR_FLOORPLAN_SKIP = new Set([
+  ...SERIES_FAMILY_STOP,
+  "look",
+  "need",
+  "know",
+  "can",
+  "you",
+  "if",
+  "inventory",
+  "inventories",
+  "stock",
+  "lot",
+  "units",
+  "unit",
+  "coach",
+  "coaches",
+  "please",
+  "series",
+]);
+
+/**
+ * Brandless "27A Vision" / "E Vision 27As" — model sits next to the floorplan.
+ */
+export function collectModelNearFloorplan(
+  raw: string,
+  floorplan: string,
+): string {
+  const compactFp = normalizeFloorplanToken(floorplan).toLowerCase();
+  if (!compactFp) return "";
+  const tokens = raw.replace(/[.,;:!?]/g, " ").split(/\s+/).filter(Boolean);
+  const idx = tokens.findIndex((w) => {
+    const n = normalizeFloorplanToken(w).toLowerCase();
+    return n === compactFp;
+  });
+  if (idx < 0) return "";
+
+  const after: string[] = [];
+  for (let i = idx + 1; i < tokens.length && after.length < 2; i++) {
+    const w = tokens[i] || "";
+    const lowerW = w.toLowerCase();
+    if (MODEL_NEAR_FLOORPLAN_SKIP.has(lowerW)) {
+      if (after.length) break;
+      continue;
+    }
+    if (!/^[A-Za-z][A-Za-z0-9-]*$/.test(w)) break;
+    after.push(w);
+  }
+  if (after.length) return normalizeVisionSpeech(after.join(" "));
+
+  const before: string[] = [];
+  for (let i = idx - 1; i >= 0 && before.length < 2; i--) {
+    const w = tokens[i] || "";
+    const lowerW = w.toLowerCase();
+    if (MODEL_NEAR_FLOORPLAN_SKIP.has(lowerW)) break;
+    if (!/^[A-Za-z][A-Za-z0-9-]*$/.test(w)) break;
+    before.unshift(w);
+  }
+  return normalizeVisionSpeech(before.join(" "));
+}
+
 /**
  * Series phrase in a full ask or a model string.
  * Empty family is a code-only wildcard ("M series") so Series M ≠ Series E.
@@ -265,6 +357,11 @@ export function parseSpokenSeries(
   m = t.match(/\b([a-z][a-z0-9]+)\s+([a-z]{1,3})(?=\s+\d{2,3}[a-z])/);
   if (m?.[1] && m[2] && !SERIES_FAMILY_STOP.has(m[1])) {
     return { family: m[1], code: m[2] };
+  }
+  // "E Vision 27As" — spoken SE letter before the family + floorplan.
+  m = t.match(/\b([a-z]{1,3})\s+([a-z][a-z0-9]+)(?=\s+\d{2,3}[a-z])/);
+  if (m?.[1] && m[2] && !SERIES_FAMILY_STOP.has(m[2])) {
+    return { family: m[2], code: m[1] };
   }
   return null;
 }
@@ -444,7 +541,7 @@ export function normalizeCoachAsk(text: string): NormalizedCoachAsk {
   const year = yearM?.[1] ?? "";
   const lower = raw.toLowerCase();
   const brand = findSpokenBrand(lower);
-  const make = brand.make;
+  let make = brand.make;
   const spokenBrand = brand.spoken;
   let model = "";
   let floorplan = "";
@@ -457,15 +554,37 @@ export function normalizeCoachAsk(text: string): NormalizedCoachAsk {
     // "27A Integra Vision" / "36L Tifin Phaeton" — floorplan sits before the brand.
     if (!floorplan) floorplan = extractFloorplanToken(raw);
     model = collectModelWords(after, floorplan);
+    if (/\bvisions?\b/i.test(model) || /\bvisions?\b/i.test(after)) {
+      model = normalizeVisionSpeech(model || collectModelNearFloorplan(after, floorplan));
+    }
   } else {
     floorplan = extractFloorplanToken(raw);
+    model = collectModelNearFloorplan(raw, floorplan);
   }
 
   const series =
+    parseSpokenSeries(raw) ||
     parseSpokenSeries(model) ||
-    parseSeriesAlias(normName(model)) ||
-    parseSpokenSeries(raw);
-  if (!model && series) model = formatSeriesModel(series);
+    parseSeriesAlias(normName(model));
+  if (series) {
+    const fromSeries = formatSeriesModel(series);
+    const leftoverSeries = /^(?:[a-z]{1,3}\s+series|series\s+[a-z]{1,3})$/i.test(
+      model,
+    );
+    if (!model || leftoverSeries) {
+      model = fromSeries;
+    } else if (
+      series.family &&
+      !normName(model).includes(series.family)
+    ) {
+      model = fromSeries;
+    }
+  }
+  if (/\bvisions?\b/i.test(model)) model = normalizeVisionSpeech(model);
+  // Entegra Vision is the catalog family — infer make when speech omitted it.
+  if (!make && /^vision\b/i.test(model)) {
+    make = "Entegra Coach";
+  }
 
   return {
     year,

@@ -25,6 +25,7 @@ import {
   needsWebFallback,
   type WebFallbackSpecs,
 } from "./webIntent.ts";
+import { looksLikeOwnLotStockQuestion } from "./ownLotInventory.ts";
 import {
   type WebSearchNotes,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
@@ -49,7 +50,7 @@ export const VOICE_WEB_SEARCH_CLIENT_BUDGET_MS =
   VOICE_WEB_SEARCH_TIMEOUT_MS + 1_000;
 
 export const VOICE_RESEARCH_ANSWER_INSTRUCTIONS =
-  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Use WEB RESEARCH notes if they are present and successful. If an OWN-LOT INVENTORY block is a hit, speak those lot counts, any listing prices / Low-Avg-High, and Matching units rows printed there — diesel is Class A Diesel + Class Super C (no fuel field); do not invent a VIN, unit, or price; never say the snapshot has no price data when prices are in the block; never say you can't pull specific units or that the snapshot doesn't break out a list when Matching units rows are present or Matched > 0 with prices. If the block says UNAVAILABLE, say unavailable — never speak 0 as a stock count. If catalog is UNKNOWN / GAP or own-lot missed, use the browse notes — do not guess, do not stop at I don't know. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a nationwide market value ask (not our own-lot listing prices): speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample inventory CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
+  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Use WEB RESEARCH notes if they are present and successful. If an OWN-LOT INVENTORY block is a hit, speak those lot counts, any listing prices / Low-Avg-High, and Matching units rows printed there — diesel is Class A Diesel + Class Super C (no fuel field); do not invent a VIN, unit, or price; never say the snapshot has no price data when prices are in the block; never say you can't pull specific units or that the snapshot doesn't break out a list when Matching units rows are present or Matched > 0 with prices. Catalog GAP does not apply to inventory / in-stock asks — never say catalog gap, never say check your own lot listing, never ask them to share a year. If Matched is 0, say none on our lot snapshot. If the block says UNAVAILABLE, say unavailable — never speak 0 as a stock count. If catalog is UNKNOWN / GAP on a specs ask (not inventory) or own-lot missed, use the browse notes — do not guess, do not stop at I don't know. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a nationwide market value ask (not our own-lot listing prices): speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample inventory CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
 
 export type VoiceWebDecision =
   | { action: "pass" }
@@ -74,6 +75,9 @@ export function shouldSpeakVoiceResearchHold(
   if (looksLikeCasualNonResearch(t) || looksLikeImageOnlyAsk(t)) return false;
   if (looksLikeOriginQuestion(t)) return false;
   if (looksLikeCarfaxQuestion(t)) return false;
+  if (looksLikeOwnLotStockQuestion(t) || looksLikeInventoryOrCountQuestion(t)) {
+    return false;
+  }
   // Forum / repair / manual still hold even when both coaches are known.
   if (looksLikeLiveResearchQuestion(t)) return true;
   if (looksLikeCatalogAnswerableCoachCompare(t)) return false;
@@ -103,7 +107,9 @@ export function decideVoiceWebResearch(opts: {
     return { action: "pass" };
   }
   const speakHold = shouldSpeakVoiceResearchHold(transcript, opts.specs);
-  const inventory = looksLikeInventoryOrCountQuestion(transcript);
+  const inventory =
+    looksLikeInventoryOrCountQuestion(transcript) ||
+    looksLikeOwnLotStockQuestion(transcript);
   if (!speakHold && !inventory) {
     return { action: "pass" };
   }
@@ -135,6 +141,7 @@ export function formatVoiceWebSearchInjection(result: WebSearchNotes): string {
       "OWN-LOT INVENTORY (RV Country source=own snapshot):",
       stripNotesForSpeech(result.notes),
       "Speak the counts, listing prices, and Matching units rows when present. Diesel is Class A Diesel + Class Super C (no fuel field).",
+      "Catalog GAP does not apply. Never say catalog gap. Never say check your own lot listing. Never ask them to share a year for inventory.",
       "Do not invent a VIN, stock number, or unit. Never say you can't pull specific units or that the snapshot doesn't break out a list when Matching units rows are present. Brochure catalog is not the lot.",
     ].join("\n");
   }

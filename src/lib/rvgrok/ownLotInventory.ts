@@ -153,7 +153,7 @@ const OWN_LOT_LISTING_PRICE_RE =
 
 /** "list / deep dive / show me / which ones" — inject concrete rows, not counts only. */
 const OWN_LOT_UNIT_LIST_RE =
-  /\b(list(?:ing|s)?|deep[- ]?dive|show\s+me|which\s+ones|specific\s+units?|name\s+them|what\s+units|pull\s+(?:me\s+)?(?:a\s+|the\s+)?(?:specific\s+)?(?:units?|list))\b/i;
+  /\b(list(?:ing|s)?|deep[- ]?dive|show\s+me|which\s+ones|specific\s+units?|name\s+them|what\s+units|pull\s+(?:me\s+)?(?:a\s+|the\s+)?(?:specific\s+)?(?:units?|list)|look(?:\s+\w+){0,6}\s+in(?:\s+(?:my|our|the))?\s+inventory|(?:do|did|does)\s+we\s+have|any\s+\w[\w\s]{0,40}\bin(?:ventory)?\b)\b/i;
 
 export function looksLikeOwnLotListingPriceQuestion(text: string): boolean {
   const t = normalizeAskText(text);
@@ -948,12 +948,21 @@ function seriesCodesAlign(ask: string, unitModel: string): boolean {
   return spoken.family === unit.family;
 }
 
+function visionSpeechAligns(unitModel: string, ask: string): boolean {
+  const u = norm(unitModel);
+  const a = norm(ask);
+  if (!u || !a) return false;
+  if (!/\bvision\b/.test(u)) return false;
+  return /\b(?:s?e\s+)?visions?(?:\s+s?e)?\b/.test(a) || /\be\s+visions?\b/.test(a);
+}
+
 function unitModelMatchesAsk(unit: OwnLotUnit, wanted: string): boolean {
   const um = norm(unit.model);
   const fm = norm(wanted);
   if (!fm) return true;
   if (um && (um.includes(fm) || fm.includes(um))) return true;
   if (seriesAliasEquals(um, fm) || seriesCodesAlign(fm, um)) return true;
+  if (visionSpeechAligns(um, fm)) return true;
   const blob = norm(`${unit.model} ${unit.trim}`);
   if (blob && (blob.includes(fm) || fm.includes(blob))) return true;
   return false;
@@ -1231,7 +1240,14 @@ export function formatOwnLotBlock(
 
   lines.push(
     "Answer from these counts and listing prices. Never invent a VIN, stock number, unit, or price that is not in this snapshot. Brochure catalog is not lot stock. Own-lot listing prices are what WE ask on the lot — not nationwide market-value comps.",
+    "This is an inventory / in-stock ask. Catalog GAP does not apply. Never say catalog gap. Never say check your own lot listing. Never ask them to share a year for inventory.",
   );
+
+  if (counts.matched === 0) {
+    lines.push(
+      "No own-lot hit for this ask. Say none of that coach is on our lot snapshot this turn. Do not mention catalog gap. Do not send them to check their own lot listing.",
+    );
+  }
 
   const listingAsk = looksLikeOwnLotListingPriceQuestion(query);
   const listAsk = looksLikeOwnLotUnitListQuestion(query);
