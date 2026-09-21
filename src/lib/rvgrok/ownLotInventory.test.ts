@@ -1191,6 +1191,8 @@ test("Integra alias + 27A trim match the three Vision SE 27ASE units", () => {
   assert.ok(!COACH_BRANDS.includes("Integra Coach"));
   assert.equal(extractFloorplanToken("27A Integra Vision"), "27A");
   assert.equal(extractFloorplanToken("around $50k Newmar"), "");
+  assert.equal(extractFloorplanToken("2019 Grand Design Solitude 310GK"), "310GK");
+  assert.equal(extractFloorplanToken("Solitude 310GK"), "310GK");
   assert.equal(floorplanTokensAlign("27A", "27ASE"), true);
   assert.equal(floorplanTokensAlign("27ASE", "27ASE"), true);
   assert.equal(floorplanTokensAlign("27A", "29S"), false);

@@ -143,6 +143,26 @@ test("4-digit Newmar floorplans parse; Dutch Star is not a year", () => {
   assert.doesNotMatch(q.model, /ventana/i);
 });
 
+test("2019 Grand Design Solitude 310GK parses floorplan 310GK — not a $50k leftover", () => {
+  for (const q of [
+    "2019 Grand Design Solitude 310GK",
+    "Give me the spec report on the 2019 Grand Design Solitude 310GK. Name the year, make, model, and floorplan.",
+  ]) {
+    const parsed = parseCoachFromText(q);
+    assert.equal(parsed.year, "2019", q);
+    assert.equal(parsed.make, "Grand Design", q);
+    assert.match(parsed.model, /solitude/i, q);
+    assert.equal(parsed.floorplan, "310GK", q);
+    const id = resolveCoachIdentity(q, null, "");
+    assert.ok(id, q);
+    assert.equal(id!.year, "2019", q);
+    assert.equal(id!.make, "Grand Design", q);
+    assert.match(id!.model, /solitude/i, q);
+    assert.equal(id!.floorplan, "310GK", q);
+    assert.equal(id!.source, "message", q);
+  }
+});
+
 test("after a Ventana 4369 report, Dutch Star 4369 does not return Ventana", () => {
   const history =
     "Give me a report on the 2018 Newmar Ventana 4369.\nVERIFIED CATALOG LOCK is 2018 Newmar Ventana 4369.";

@@ -5,10 +5,16 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveCoachIdentity } from "./coachIdentity.ts";
 import {
+  findOemFloorplanSpec,
+  findOemGvwrLbs,
+  findOemUvwLbs,
+} from "../rv/floorplanSpecs.ts";
+import {
   DESK_SHEET_FORBIDDEN_LINE,
   DESK_SHEET_PHRASE,
   buildDeskSheetPayload,
   claimsDeskSpecSheet,
+  deskSheetIsTowable,
   resolveDeskSheet,
   shouldMountDeskSheet,
   withDeskSheetSpeechRule,
@@ -99,6 +105,68 @@ test("spoken desk claim still mounts a sheet so speech never lies", () => {
   });
   assert.ok(sheet);
   assert.match(sheet!.title, /Ventana/);
+});
+
+test("2019 Grand Design Solitude 310GK mounts desk sheet with floorplan; towable motors N/A", () => {
+  const q =
+    "Give me the spec report on the 2019 Grand Design Solitude 310GK. Name the year, make, model, and floorplan. Put the spec sheet on the desk.";
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  assert.equal(identity!.floorplan, "310GK");
+  assert.equal(identity!.year, "2019");
+  assert.equal(identity!.make, "Grand Design");
+  assert.match(identity!.model, /solitude/i);
+  assert.equal(shouldMountDeskSheet(q, identity), true);
+
+  assert.equal(
+    findOemFloorplanSpec("2019", "Grand Design", "Solitude", "310GK"),
+    null,
+    "Solitude OEM weight pins are not in the book yet",
+  );
+  assert.equal(findOemGvwrLbs("2019", "Grand Design", "Solitude", "310GK"), null);
+  assert.equal(findOemUvwLbs("2019", "Grand Design", "Solitude", "310GK"), null);
+  assert.ok(findOemFloorplanSpec("2024", "Grand Design", "Imagine", "2800BH"));
+  assert.ok(findOemFloorplanSpec("2023", "Grand Design", "Reflection", "260RD"));
+  assert.ok(
+    findOemGvwrLbs("2026", "Grand Design", "Lineage Series M", "25FW"),
+  );
+
+  const specs = {
+    rvType: { value: "Fifth Wheel", trust: "catalog" as const },
+    fuelType: { value: "N/A (towable)", trust: "catalog" as const },
+    chassis: { value: "N/A (towable)", trust: "catalog" as const },
+    engine: { value: null, trust: "empty" as const },
+    horsepower: { value: null, trust: "empty" as const },
+    torque: { value: null, trust: "empty" as const },
+    transmission: { value: null, trust: "empty" as const },
+  };
+  assert.equal(deskSheetIsTowable(identity!, specs), true);
+
+  const sheet = resolveDeskSheet({
+    query: q,
+    identity,
+    specs,
+  });
+  assert.ok(sheet);
+  assert.equal(sheet!.floorplan, "310GK");
+  assert.match(sheet!.title, /310GK/);
+  assert.match(sheet!.title, /2019 Grand Design Solitude/);
+  const engine = sheet!.rows.find((r) => r.label === "Engine");
+  const hp = sheet!.rows.find((r) => r.label === "Horsepower");
+  const torque = sheet!.rows.find((r) => r.label === "Torque");
+  const trans = sheet!.rows.find((r) => r.label === "Transmission");
+  const gvwr = sheet!.rows.find((r) => r.label === "GVWR");
+  const uvw = sheet!.rows.find((r) => r.label === "UVW");
+  assert.equal(engine?.value, "N/A");
+  assert.equal(engine?.gap, false);
+  assert.equal(hp?.value, "N/A");
+  assert.equal(hp?.gap, false);
+  assert.equal(torque?.value, "N/A");
+  assert.equal(torque?.gap, false);
+  assert.equal(trans?.value, "N/A");
+  assert.equal(trans?.gap, false);
+  assert.ok(gvwr?.gap, "Solitude 310GK GVWR is GAP — no OEM pin");
+  assert.ok(uvw?.gap, "Solitude 310GK UVW is GAP — no OEM pin");
 });
 
 test("desk sheet still renders with GAP rows when powertrain is thin", () => {

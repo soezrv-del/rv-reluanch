@@ -6,11 +6,15 @@
  */
 
 import { findOemGvwrLbs, findOemUvwLbs } from "../rv/floorplanSpecs.ts";
+import { isTowableForTorqueRating } from "../rv/torqueToWeight.ts";
 import {
   formatCatalogPresenceNote,
   inspectCatalogPresence,
+  resolveCatalogMake,
+  resolveCatalogModel,
   type CoachIdentity,
 } from "./coachIdentity.ts";
+import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
 import {
   claimsDeskSpecSheet,
   shouldMountDeskSheet,
@@ -68,6 +72,36 @@ function rowFromField(label: string, field?: SheetField | null): DeskSheetRow {
   return { label, value, gap: false };
 }
 
+/** Fifth wheel / TT / toy hauler — motor rows are N/A, not GAP. */
+export function deskSheetIsTowable(
+  identity: CoachIdentity,
+  specs: SheetSpecs,
+): boolean {
+  if (isTowableForTorqueRating(specs?.rvType?.value, specs?.fuelType?.value)) {
+    return true;
+  }
+  const make = resolveCatalogMake(identity.make || "");
+  const model = identity.model
+    ? resolveCatalogModel(make, identity.model)
+    : "";
+  const index = make && model ? CATALOG_INDEX[make]?.[model] : null;
+  return isTowableForTorqueRating(index?.type, index?.fuelType);
+}
+
+function motorRow(
+  label: string,
+  field: SheetField | null | undefined,
+  towable: boolean,
+): DeskSheetRow {
+  if (towable) {
+    const value = (field?.value || "").trim();
+    if (!value || field?.trust === "empty" || /towable/i.test(value)) {
+      return { label, value: "N/A", gap: false };
+    }
+  }
+  return rowFromField(label, field);
+}
+
 function lbsLabel(n: number | null): DeskSheetRow {
   if (n == null || !Number.isFinite(n) || n <= 0) {
     return { label: "", value: "GAP", gap: true };
@@ -96,13 +130,14 @@ export function buildDeskSheetPayload(
     findOemUvwLbs(identity.year, identity.make, identity.model, identity.floorplan),
   );
 
+  const towable = deskSheetIsTowable(identity, specs);
   const rows: DeskSheetRow[] = [
     rowFromField("Class", specs?.rvType),
-    rowFromField("Engine", specs?.engine),
-    rowFromField("Horsepower", specs?.horsepower),
-    rowFromField("Torque", specs?.torque),
+    motorRow("Engine", specs?.engine, towable),
+    motorRow("Horsepower", specs?.horsepower, towable),
+    motorRow("Torque", specs?.torque, towable),
     rowFromField("Chassis", specs?.chassis),
-    rowFromField("Transmission", specs?.transmission),
+    motorRow("Transmission", specs?.transmission, towable),
     rowFromField("Fuel", specs?.fuelType),
     { label: "GVWR", value: gvwr.value, gap: gvwr.gap },
     { label: "UVW", value: uvw.value, gap: uvw.gap },
