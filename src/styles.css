@@ -1521,7 +1521,7 @@
  */
 .rvfax-screen[data-facts-landing][data-readable-cards] .page-backdrop-bright {
   opacity: 0.46;
-  filter: brightness(0.58) contrast(1.04) saturate(0.82);
+  filter: brightness(0.42) contrast(1.04) saturate(0.75);
 }
 .rvfax-screen[data-facts-landing][data-readable-cards] .page-scrim-soft {
   background: linear-gradient(
