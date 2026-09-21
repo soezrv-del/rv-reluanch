@@ -51,7 +51,7 @@ Published torque + published GVWR to list a row. Score uses #358 weight (publish
 | Entegra Coach | Vision XL | 34B · oem-pin 2023 34B | 468 | 22,000 | 20,200 | GVWR | 23.2 | 8.1 | green |
 | Entegra Coach | Vision XL | 36A · oem-pin 2021 36A | 468 | 24,000 | 22,200 | GVWR | 21.1 | 7.7 | green |
 | Fleetwood | Fortis | series | 468 | 26,000 | 24,200 | GVWR | 19.3 | 7.3 | yellow |
-| Forest River | FR3 | 31DS · oem-pin 2025 31DS | 468 | 18,000 | 16,200 | GVWR | 28.9 | 10.0 | green |
+| Forest River | FR3 | 31DS · year-band 2025–2026 | 468 | 18,000 | 16,200 | GVWR | 28.9 | 10.0 | green |
 | Forest River | FR3 | series | 468 | 22,000 | 20,200 | GVWR | 23.2 | 8.1 | green |
 | Forest River | Georgetown 5 Series | 31L5 · oem-pin 2025 31L5 | 468 | 22,000 | 20,200 | GVWR | 23.2 | 8.1 | green |
 | Jayco | Alante | 27A · oem-pin 2025 27A | 468 | 18,000 | 16,200 | GVWR | 28.9 | 10.0 | green |
@@ -102,7 +102,7 @@ Published torque + published GVWR to list a row. Score uses #358 weight (publish
 | Fleetwood | Insight | series | 332 | 11,030 | 9,700 | UVW_EST | 34.2 | 8.6 | green |
 | Forest River | Sunseeker | year-band 2020–2027 | 450 | 14,500 | 12,800 | UVW_EST | 35.2 | 8.8 | green |
 | Forest River | Sunseeker 4X4 | series | 450 | 14,500 | 12,800 | UVW_EST | 35.2 | 8.8 | green |
-| Forest River | Sunseeker Classic | series | 450 | 14,500 | 12,800 | UVW_EST | 35.2 | 8.8 | green |
+| Forest River | Sunseeker Classic | year-band 2020–2024 | 450 | 14,500 | 12,800 | UVW_EST | 35.2 | 8.8 | green |
 | Forest River | Sunseeker LE | series | 450 | 12,500 | 11,000 | UVW_EST | 40.9 | 10.0 | green |
 | Forest River | Sunseeker LE | 2550DSLE · year-band 2020–2027 | 450 | 14,500 | 12,800 | UVW_EST | 35.2 | 8.8 | green |
 | Forest River | Sunseeker MBS | series | 332 | 11,030 | 9,700 | UVW_EST | 34.2 | 8.6 | green |

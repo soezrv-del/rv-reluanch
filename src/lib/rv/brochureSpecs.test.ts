@@ -25,6 +25,7 @@ import {
   weightForFloorplan,
 } from "./floorplanSpecs.ts";
 import { computeTorqueToWeight } from "./torqueToWeight.ts";
+import { resolveYearSnapshot } from "./brochureSpecs.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
 import {
   isPlaceholderTankTrio,
@@ -583,6 +584,7 @@ test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2026", "Winnebago", "View", "24R"), null);
   assert.equal(findOemGvwrLbs("2025", "Winnebago", "Navion", "24D"), null);
 
+  assert.equal(findOemGvwrLbs("2025", "Forest River", "FR3", "31DS"), 18000);
   assert.equal(findOemGvwrLbs("2026", "Forest River", "FR3", "31DS"), 18000);
   assert.equal(findOemGvwrLbs("2026", "Forest River", "FR3", "34DS"), 22000);
   assert.equal(findOemGvwrLbs("2026", "Forest River", "Georgetown 5 Series", "31L5"), 22000);
@@ -627,6 +629,36 @@ test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series F", "31ZW"), 22000);
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series F", "31ZW5"), 19500);
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series E", "25FW"), null);
+});
+
+test("FR3 31DS catalog GVWR aligns to OEM 18k; Sunseeker Classic 2025–26 GAPs", async () => {
+  const { RV_DATA } = await loadLiveCatalog();
+  const fr3 = RV_DATA["Forest River"]?.FR3;
+  assert.ok(fr3, "expected Forest River FR3");
+  const snap31 = resolveYearSnapshot(fr3, "2026", "31DS");
+  assert.equal(snap31.gvwrLbs, 18000);
+  assert.equal(resolveYearSnapshot(fr3, "2025", "31DS").gvwrLbs, 18000);
+  // Other FR3 plans keep the 22k series / pin — do not rewrite them to 18k.
+  assert.equal(resolveYearSnapshot(fr3, "2026", "34DS").gvwrLbs, 22000);
+  assert.equal(findOemGvwrLbs("2026", "Forest River", "FR3", "31DS"), 18000);
+
+  const classic = RV_DATA["Forest River"]?.["Sunseeker Classic"];
+  assert.ok(classic, "expected Sunseeker Classic");
+  assert.equal(classic.gvwrLbs, undefined);
+  assert.equal(resolveYearSnapshot(classic, "2025", "2440DS").gvwrLbs, undefined);
+  assert.equal(resolveYearSnapshot(classic, "2026", "3010DS").gvwrLbs, undefined);
+  assert.equal(findOemGvwrLbs("2025", "Forest River", "Sunseeker Classic", "2440DS"), null);
+  assert.equal(findOemGvwrLbs("2026", "Forest River", "Sunseeker Classic", "3010DS"), null);
+
+  const srcClassic = src("rvData.ts");
+  const classicBlock = srcClassic.slice(
+    srcClassic.indexOf('    "Sunseeker Classic": {'),
+    srcClassic.indexOf('    "Sunseeker 4X4": {'),
+  );
+  assert.doesNotMatch(classicBlock, /yearStart:\s*2008,\s*gvwrLbs:\s*14500/);
+  assert.doesNotMatch(classicBlock, /from:\s*2025,[\s\S]*?gvwrLbs:\s*14500/);
+  assert.doesNotMatch(classicBlock, /14050/);
+  assert.match(classicBlock, /GVWR unprinted — GAP/);
 });
 
 test("brochureSpecs source no longer hash-seeds tanks, MPG, heater, construction, wheelbase, propane", () => {
