@@ -102,7 +102,7 @@ export type SuitePageProps = {
   style?: CSSProperties;
   /** Landing chrome hook (Tow). Photo landings are gone — Raidho only. */
   landing?: "tow";
-  /** Facts / Tow: full-bleed Raidho logo, no photo stack. */
+  /** Full-bleed Raidho logo, no family / camping photo plate. Default on. */
   raidhoOnly?: boolean;
 };
 
@@ -128,7 +128,7 @@ export function SuitePage({
   scrollRef: scrollRefProp,
   style,
   landing,
-  raidhoOnly = false,
+  raidhoOnly = true,
 }: SuitePageProps) {
   const localRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = scrollRefProp ?? localRef;

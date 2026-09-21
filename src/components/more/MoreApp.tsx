@@ -163,6 +163,7 @@ export function MoreApp({
     <>
     <SuitePage
       tab="more"
+      raidhoOnly
       adaptiveGlass={false}
       onPullReset={() => setRefreshTick((n) => n + 1)}
       pullLabel="Release to refresh Premium"

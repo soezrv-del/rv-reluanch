@@ -30,6 +30,7 @@ export function SoldBookApp() {
   return (
     <SuitePage
       tab="rvsold"
+      raidhoOnly
       adaptiveGlass={false}
       onPullReset={() => setDeals(loadSoldDeals())}
       pullLabel="Release to refresh Sold"

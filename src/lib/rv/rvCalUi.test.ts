@@ -73,6 +73,7 @@ test("rvCAL shares the Facts search thick frost — not a solid black plate", ()
   );
   const css = readFileSync(join(root, "../../styles.css"), "utf8");
   assert.match(suite, /data-cal-screen=\{tab === "rvcal"/);
+  assert.match(src, /raidhoOnly/);
   assert.match(css, /\[data-readable-cards\]\[data-cal-screen\] \.glass-prestige/);
   assert.match(css, /backdrop-filter:\s*blur\(28px\) saturate\(1\.7\)/);
 });

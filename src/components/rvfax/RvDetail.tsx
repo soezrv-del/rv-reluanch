@@ -143,7 +143,6 @@ import {
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
-import { resolveCardImage } from "@/assets/typeMedia";
 import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { cn } from "@/lib/utils";
@@ -1421,22 +1420,11 @@ export function RvDetail({
             </div>
           </section>
 
-          {/* Overview */}
-          <section className="glass-prestige overflow-hidden rounded-[1.15rem]">
-            <div className="relative aspect-[16/9] w-full overflow-hidden">
-              <img
-                src={resolveCardImage({ ...data, type: displayType })}
-                alt={`${displayType} — ${year} ${make} ${model}`}
-                className="size-full object-cover object-[center_42%]"
-                crossOrigin="anonymous"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute bottom-2.5 left-3 right-3 flex flex-wrap items-end justify-between gap-2">
-                <span className="rounded-full bg-blue px-2.5 py-1 text-[10px] font-bold text-white shadow-lg">
-                  {displayType}
-                </span>
-              </div>
-            </div>
+          {/* Overview — frost on Raidho. No family / camping plate. */}
+          <section
+            className="glass-prestige overflow-hidden rounded-[1.15rem]"
+            data-coach-overview=""
+          >
             <div className="px-5 pb-6 pt-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
               Vehicle Overview

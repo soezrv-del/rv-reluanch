@@ -1505,7 +1505,16 @@
 .rvtow-screen[data-tow-landing] .suite-raidho-field,
 [data-coach-detail] .page-backdrop-bright,
 [data-coach-detail] .page-scrim-soft,
-[data-coach-detail] .suite-raidho-field {
+[data-coach-detail] .suite-raidho-field,
+[data-cal-screen] .page-backdrop-bright,
+[data-cal-screen] .page-scrim-soft,
+[data-cal-screen] .suite-raidho-field,
+[data-sold-book] .page-backdrop-bright,
+[data-sold-book] .page-scrim-soft,
+[data-sold-book] .suite-raidho-field,
+[data-premium-screen] .page-backdrop-bright,
+[data-premium-screen] .page-scrim-soft,
+[data-premium-screen] .suite-raidho-field {
   display: none;
 }
 
@@ -1541,7 +1550,7 @@
 }
 
 /*
- * Thick sapphire frost — Facts RV Search + RV Cal + RV Tow share this recipe.
+ * Thick sapphire frost — Facts search, Cal, Tow, coach detail, Sold, Premium.
  * Overrides the readable-cards solid plate so the Raidho field shows through.
  */
 [data-readable-cards] [data-rv-search-card].glass-prestige,
@@ -1554,7 +1563,22 @@
 [data-readable-cards][data-tow-landing] .glass-prestige-deep,
 [data-readable-cards][data-tow-landing] .glass-prestige-gold,
 [data-readable-cards][data-tow-landing] .glass-panel,
-[data-readable-cards][data-tow-landing] .glass-surface {
+[data-readable-cards][data-tow-landing] .glass-surface,
+[data-readable-cards][data-coach-detail] .glass-prestige,
+[data-readable-cards][data-coach-detail] .glass-prestige-deep,
+[data-readable-cards][data-coach-detail] .glass-prestige-gold,
+[data-readable-cards][data-coach-detail] .glass-panel,
+[data-readable-cards][data-coach-detail] .glass-surface,
+[data-readable-cards][data-sold-book] .glass-prestige,
+[data-readable-cards][data-sold-book] .glass-prestige-deep,
+[data-readable-cards][data-sold-book] .glass-prestige-gold,
+[data-readable-cards][data-sold-book] .glass-panel,
+[data-readable-cards][data-sold-book] .glass-surface,
+[data-readable-cards][data-premium-screen] .glass-prestige,
+[data-readable-cards][data-premium-screen] .glass-prestige-deep,
+[data-readable-cards][data-premium-screen] .glass-prestige-gold,
+[data-readable-cards][data-premium-screen] .glass-panel,
+[data-readable-cards][data-premium-screen] .glass-surface {
   background: linear-gradient(
     160deg,
     rgba(255, 255, 255, 0.2) 0%,
