@@ -142,7 +142,7 @@ test("Live Voice session start introduces RV Grok once — not the old stall", (
   const policy = readFileSync(join(root, "speechPolicy.ts"), "utf8");
   assert.match(
     policy,
-    /I'm RV Grok, here to help you with all your RV needs/,
+    /I'm RV Grok — give me year, make, and model, and I'll speak the spec report on that exact coach/,
   );
   assert.match(live, /buildSessionIntroResponse/);
   assert.match(live, /RV_GROK_SESSION_INTRO/);

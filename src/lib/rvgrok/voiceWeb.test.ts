@@ -336,7 +336,7 @@ test("hold string is exactly give me one second — never Let me check that", ()
   ));
   assert.match(
     VOICE_SESSION_INTRO_INSTRUCTIONS,
-    /I'm RV Grok, here to help you with all your RV needs/,
+    /I'm RV Grok — give me year, make, and model, and I'll speak the spec report on that exact coach/,
   );
 });
 
