@@ -155,9 +155,11 @@ export function RvVideoLibraryCard(coach: RvVideoCoach) {
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-[11px] leading-snug text-white/50">
-            {note || RELATED_NOTE}
-          </p>
+          {note && note !== RELATED_NOTE ? (
+            <p className="mt-2 text-[11px] leading-snug text-white/50">
+              {note}
+            </p>
+          ) : null}
         </>
       ) : null}
     </section>

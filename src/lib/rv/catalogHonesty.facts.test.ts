@@ -39,21 +39,25 @@ function assertCustomerFacts(hp: string, tq: string) {
   assert.equal(isInventPolicyProse(tq), false);
 }
 
-test("Facts: catalog HP on a 'by year' engine shows the SoT number (David screenshot)", () => {
+test("Facts: dual-band 'by year' engine is GAP — not a lone typical painted as this coach", () => {
   const hp = formatFactsHorsepower({
     engine: BY_YEAR_ENGINE,
     horsepower: 350,
   });
   const tq = formatFactsTorque({
     engine: BY_YEAR_ENGINE,
-    torqueLbFt: null,
+    torqueLbFt: 468,
   });
-  assert.equal(hp, "350 HP");
+  assert.equal(hp, "—");
   assert.equal(tq, "—");
   assertCustomerFacts(hp, tq);
-  assert.notEqual(
+  assert.equal(
     honestHorsepowerLabel({ engine: BY_YEAR_ENGINE, horsepower: 350 }),
-    "HP varies / confirm brochure — do not invent a single number",
+    null,
+  );
+  assert.doesNotMatch(
+    String(honestHorsepowerLabel({ engine: BY_YEAR_ENGINE, horsepower: 350 })),
+    /HP varies \/ confirm brochure — do not invent a single number/,
   );
 });
 
@@ -189,7 +193,9 @@ test("Coachmen Pursuit catalog still has SoT 350 on the by-year engine (screensh
     engine: "Ford 7.3L V8 Godzilla",
     torqueLbFt: 468,
   });
-  assert.equal(shown, "350 HP");
+  // Catalog may still store 350 on the dual-band label; Facts must not
+  // paint that typical as this coach. A single-family Godzilla pin keeps torque.
+  assert.equal(shown, "—");
   assert.equal(shownTq, "468 lb-ft");
   assert.doesNotMatch(shown, POLICY);
   assert.doesNotMatch(shownTq, POLICY);

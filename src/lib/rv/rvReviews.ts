@@ -703,10 +703,33 @@ const BRAND_REVIEW_POOLS: Record<string, ReviewTemplate[]> = {
   ],
 };
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Whole-phrase model mention — never a brand dump of a sibling coach. */
+export function reviewMentionsModel(
+  review: { title?: string; body?: string },
+  model: string,
+): boolean {
+  const phrase = String(model || "").trim();
+  if (!phrase) return false;
+  const parts = phrase.split(/\s+/).filter(Boolean).map(escapeRegExp);
+  if (!parts.length) return false;
+  const re = new RegExp(`(?:^|[^a-z0-9])${parts.join("\\s+")}(?![a-z0-9])`, "i");
+  return re.test(`${review.title || ""}\n${review.body || ""}`);
+}
+
 export function getMockReviews(make: string, model: string, rating: number): RVReview[] {
   const combinedKey = `${make} ${model}`;
-  const pool = BRAND_REVIEW_POOLS[combinedKey] ?? BRAND_REVIEW_POOLS[make];
-  if (!pool?.length) return [];
+  const exact = BRAND_REVIEW_POOLS[combinedKey];
+  const brand = BRAND_REVIEW_POOLS[make];
+  // Exact make+model pool is already about this coach. Brand pool is a dump
+  // unless the note names this model — never Navigator blurbs on Ambassador.
+  const pool = exact?.length
+    ? exact
+    : (brand || []).filter((r) => reviewMentionsModel(r, model));
+  if (!pool.length) return [];
 
   const modelHash = model.split('').reduce((acc, c, i) => acc + c.charCodeAt(0) * (i + 1), 0);
   const selected: ReviewTemplate[] = [];

@@ -4,7 +4,6 @@ import {
   lengthFtFromFloorplan,
   overallInchesFromFloorplan,
   formatInchesAsFtIn,
-  weightForFloorplan,
   findOemFloorplanSpec,
   findOemGvwrLbs,
   findOemUvwLbs,
@@ -21,11 +20,12 @@ import {
 import {
   honestAcUnits,
   honestElectricalService,
-  honestGenerator,
+  honestEngineLabel,
   honestHorsepowerForCoach,
   honestTireSize,
   honestTorqueForCoach,
   horsepowerIsOptionBand,
+  isExactEnginePin,
   parseHp,
 } from "./catalogHonesty";
 import { resolveHonestTanks } from "./placeholderTanks";
@@ -179,8 +179,7 @@ function bandMatchesFloorplan(b: YearBand, floorplan: string): boolean {
  * Pick the powertrain year band for a model year (+ optional floorplan).
  * 1) Floorplan-specific exact year match (preferred)
  * 2) Model-wide exact year match
- * 3) Nearest band within 3 years (floorplan-specific first)
- * Never silently invents a modern top-level engine as "this year".
+ * Missing year row → null. Never steal a neighboring year's engine.
  */
 export function pickPowertrainBand(
   spec: RVSpec,
@@ -224,21 +223,7 @@ export function pickPowertrainBand(
     if (wide.length) return wide[0]!;
   }
 
-  // Nearest band by distance — floorplan-aware
-  let best: YearBand | null = null;
-  let bestDist = Infinity;
-  let bestScore = -1; // higher = more specific
-  for (const b of usable) {
-    if (!bandMatchesFloorplan(b, floorplan || "")) continue;
-    const dist = y < b.from ? b.from - y : y > b.to ? y - b.to : 0;
-    const score = b.floorplans?.length ? 2 : 1;
-    if (dist < bestDist || (dist === bestDist && score > bestScore)) {
-      bestDist = dist;
-      bestScore = score;
-      best = b;
-    }
-  }
-  if (best && bestDist <= 3 && bandFitsCoach(spec, best)) return best;
+  // No in-year band → GAP. Do not inherit a neighboring year's pin.
   return null;
 }
 
@@ -283,25 +268,52 @@ export function resolveYearSnapshot(
   const resolvedYear = Number.isFinite(y) && y >= 1980 && y <= 2100 ? y : 2020;
   const band = pickPowertrainBand(spec, resolvedYear, floorplan);
 
-  // Year-true: band fields win. Top-level only fills gaps when no band.
-  const yearTruePowertrain = !!band;
+  // Year-true only when the in-year band is a single OEM engine pin.
+  // Dual-family / class / era / by-year blends are not this coach.
+  const bandEngine = band?.engine;
+  const bandPinned = isExactEnginePin(bandEngine);
+  const specPinned = isExactEnginePin(spec.engine);
+  const yearTruePowertrain = bandPinned;
   // Model-level 60/40/40 is an untrusted catalog clone — not brochure truth.
   // Year-band tanks still win when they actually set gallons.
   const catalogTanks = resolveHonestTanks(spec, band);
 
+  // Thin in-year band: do not inherit the modern top-level engine / HP.
+  const engine = bandPinned
+    ? bandEngine
+    : !band
+      ? specPinned
+        ? spec.engine
+        : undefined
+      : undefined;
+  const horsepower = bandPinned
+    ? band?.horsepower != null && band.horsepower > 0
+      ? band.horsepower
+      : specPinned && spec.horsepower != null && spec.horsepower > 0
+        ? spec.horsepower
+        : undefined
+    : !band
+      ? specPinned && spec.horsepower != null && spec.horsepower > 0
+        ? spec.horsepower
+        : undefined
+      : undefined;
+  const torqueLbFt = bandPinned
+    ? band?.torqueLbFt != null && band.torqueLbFt > 0
+      ? band.torqueLbFt
+      : specPinned && spec.torqueLbFt != null && spec.torqueLbFt > 0
+        ? spec.torqueLbFt
+        : undefined
+    : !band
+      ? specPinned && spec.torqueLbFt != null && spec.torqueLbFt > 0
+        ? spec.torqueLbFt
+        : undefined
+      : undefined;
+
   return {
-    engine: band?.engine ?? spec.engine,
+    engine,
     chassis: band?.chassis ?? spec.chassis,
-    // Band wins when it sets a value; otherwise fall through to catalog top-level
-    // (old bug: band without torqueLbFt wiped catalog 800 → invent 936)
-    horsepower:
-      band?.horsepower != null && band.horsepower > 0
-        ? band.horsepower
-        : spec.horsepower,
-    torqueLbFt:
-      band?.torqueLbFt != null && band.torqueLbFt > 0
-        ? band.torqueLbFt
-        : spec.torqueLbFt,
+    horsepower,
+    torqueLbFt,
     transmission: band?.transmission ?? spec.transmission,
     towingCapacity: band?.towingCapacity ?? spec.towingCapacity,
     fuelCapacityGal: band?.fuelCapacityGal ?? spec.fuelCapacityGal,
@@ -460,19 +472,13 @@ export function buildBrochureSpecs(
         model,
         type: spec.type,
       });
-  const w = weightForFloorplan(floorplan, spec.weightRange, spec.lengthRange, {
-    make,
-    model,
-  });
-  // Listing / TTW weight (David #358): published UVW as weightLb directly
-  // (pin / brochure-true OEM floorplan / snap) → else tiered UVW_EST from
-  // GVWR → else raw GVWR. Never mid×0.82. Never copy an estimate onto
-  // published UVW fields — display-only estimate is a separate field.
+  // Never interpolate catalog weightRange as this coach's GVWR.
+  // Published OEM / year-band pin only — missing pin is Confirm brochure.
   const publishedGvwr =
     oem?.gvwrLbs ?? findOemGvwrLbs(year, make, model, floorplan) ?? snap.gvwrLbs;
   const publishedUvw =
     findOemUvwLbs(year, make, model, floorplan) ?? oem?.uvwLbs ?? snap.uvwLbs;
-  const gvwrMid = publishedGvwr ?? w.mid;
+  const gvwrMid = publishedGvwr ?? null;
   const uvw = publishedUvw;
   const ccc =
     oem != null && oem.uvwLbs != null
@@ -549,7 +555,9 @@ export function buildBrochureSpecs(
   const hitch = oem?.hitchLbs
     ? oem.hitchLbs
     : isTowable
-      ? gvwrMid * hitchPct
+      ? gvwrMid != null
+        ? gvwrMid * hitchPct
+        : 0
       : towCap;
 
   const eco = economy(spec, snap.mpgHighwayEst);
@@ -595,16 +603,13 @@ export function buildBrochureSpecs(
             ? fmtInchesAsFtIn(spec.lengthRange[0] * 12)
             : `${spec.lengthRange[0]}–${spec.lengthRange[1]} ft`;
 
-  const gvwrDisplay = publishedGvwr
-    ? fmtLbs(publishedGvwr)
-    : floorplan
-      ? w.gvwr
-      : `${spec.weightRange[0].toLocaleString()}–${spec.weightRange[1].toLocaleString()} lbs`;
+  const gvwrDisplay = publishedGvwr ? fmtLbs(publishedGvwr) : CONFIRM_BROCHURE;
 
-
-  // Clean engine labels for year (drop "or prior…" parenthetical noise when year is clear)
-  let engineLabel =
-    snap.engine ?? (isTowable ? "N/A (towable)" : "See chassis");
+  // Exact pin only. Dual-family / class / by-year blends → Confirm brochure.
+  const honestEngine = honestEngineLabel(snap.engine);
+  let engineLabel = isTowable
+    ? "N/A (towable)"
+    : honestEngine.text ?? CONFIRM_BROCHURE;
   if (engineLabel.includes("(or prior") && parseInt(year, 10) >= 2021) {
     engineLabel = engineLabel.replace(/\s*\(or prior[^)]*\)/i, "").trim();
   }
@@ -633,34 +638,34 @@ export function buildBrochureSpecs(
       ? "oem-year"
       : correction
         ? "oem-year"
-        : snap.band
+        : snap.yearTruePowertrain
           ? "oem-year"
-          : snap.engine || snap.fuelCapacityGal || snap.gvwrLbs
+          : honestEngine.locked || publishedGvwr
             ? "catalog"
             : "estimated";
 
   const yearLabel = String(snap.resolvedYear || year);
-  const noBandNote =
+  const thinPinNote =
     !isTowable &&
-    !snap.band &&
+    !snap.yearTruePowertrain &&
     !correction &&
-    snap.engine
-      ? `No year-band powertrain for ${yearLabel} — showing catalog default; confirm brochure for this model year.`
+    !oem
+      ? `No OEM pin for ${yearLabel}${floorplan ? ` · ${floorplan}` : ""} — confirm brochure. Catalog class / year-band averages are not this coach.`
       : null;
 
   const typicalGearNote =
     "Tire / A/C / generator are class-typical when no brochure pin — confirm door sticker.";
   const accuracyNote = [
     oem?.note ||
-      snap.notes ||
+      (snap.yearTruePowertrain ? snap.notes : null) ||
       (local
         ? `Local correction for ${yearLabel}${local.note ? ` · ${local.note}` : ""} · exportable pin.`
         : null) ||
-      noBandNote ||
+      thinPinNote ||
       (dataSource === "estimated"
-        ? "Some fields estimated from class averages — verify against OEM brochure / VIN."
+        ? "Confirm brochure — do not treat catalog class averages as this coach."
         : dataSource === "oem-year"
-          ? `Year-true OEM facts for ${yearLabel}${floorplan ? ` · floorplan ${floorplan}` : ""}${correction ? " · verified powertrain patch" : ""}${snap.band ? ` · band ${snap.band.from}–${snap.band.to}` : ""}${oem?.source ? ` · ${oem.source}` : ""}.`
+          ? `Year-true OEM facts for ${yearLabel}${floorplan ? ` · floorplan ${floorplan}` : ""}${correction ? " · verified powertrain patch" : ""}${snap.band && snap.yearTruePowertrain ? ` · band ${snap.band.from}–${snap.band.to}` : ""}${oem?.source ? ` · ${oem.source}` : ""}.`
           : `Catalog brochure fields for ${yearLabel}.`),
     spec.electricalNotes || null,
     oem?.tireSize ? null : typicalGearNote,
@@ -703,9 +708,13 @@ export function buildBrochureSpecs(
     ccc: ccc != null ? fmtLbs(ccc) : CONFIRM_BROCHURE,
     gcwr: isTowable
       ? "Set by tow vehicle"
-      : fmtLbs(gvwrMid + (towCap || (diesel ? 10000 : 5000))),
+      : gvwrMid != null
+        ? fmtLbs(gvwrMid + (towCap || (diesel ? 10000 : 5000)))
+        : CONFIRM_BROCHURE,
     hitchOrPin: isTowable
-      ? fmtLbs(hitch)
+      ? hitch
+        ? fmtLbs(hitch)
+        : CONFIRM_BROCHURE
       : towCap
         ? fmtLbs(towCap)
         : "—",
@@ -804,9 +813,11 @@ export function buildBrochureSpecs(
       : oem?.axles
       ? oem.axles
       : isTowable
-        ? gvwrMid > 10000
+        ? gvwrMid != null && gvwrMid > 10000
           ? "Triple axle"
-          : "Tandem axle"
+          : gvwrMid != null
+            ? "Tandem axle"
+            : CONFIRM_BROCHURE
         : /class b/i.test(spec.type)
           ? "Single rear"
           : /class c/i.test(spec.type) && !/super/i.test(spec.type)
