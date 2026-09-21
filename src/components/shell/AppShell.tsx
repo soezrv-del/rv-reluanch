@@ -46,7 +46,7 @@ import {
 
 /**
  * Code-split suite tools — tools load only when visited.
- * Cold open lands on Facts; no splash / chooser gate.
+ * Cold open lands on RV Grok; no splash / chooser gate.
  */
 const RvFaxApp = lazy(() =>
   import("@/components/rvfax/RvFaxApp").then((m) => ({ default: m.RvFaxApp })),
@@ -135,7 +135,7 @@ class SuiteErrorBoundary extends Component<
 }
 
 export function AppShell({
-  initialTab = "rvfax",
+  initialTab = "rvgrok",
 }: {
   initialTab?: AppTab;
 }) {
@@ -156,7 +156,7 @@ export function AppShell({
   const launchOpen = false;
   const suiteReady = true;
   const [visited, setVisited] = useState<Set<AppTab>>(
-    () => new Set<AppTab>([initialTab === "rvlot" ? "rvlot" : "rvfax"]),
+    () => new Set<AppTab>([initialTab]),
   );
   const mainRef = useRef<HTMLElement | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
