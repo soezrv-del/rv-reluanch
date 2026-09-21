@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RAIDHO_R_MARK } from "@/assets/prestige";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
   fetchLotSnapshot,
   filterLotBrowse,
-  LOT_CAMP_SCENE,
   lotPriceOrGap,
   lotTextOrGap,
   lotTypeChips,
@@ -97,6 +97,7 @@ export function LotStockApp() {
     <SuitePage
       tab="rvlot"
       className="lot-stock-screen"
+      raidhoOnly
       onPullReset={load}
       pullLabel="Release to refresh lot"
       noSwipeScroll
@@ -366,14 +367,23 @@ function LotUnitCard({
             "lot-well relative overflow-hidden",
             featured ? "is-featured" : "is-rail",
           )}
-          data-lot-scene={photo ? "photo" : "camp"}
+          data-lot-scene={photo ? "photo" : "empty"}
         >
-          <img
-            src={photo ?? LOT_CAMP_SCENE}
-            alt=""
-            className="lot-photo"
-            data-lot-photo={photo ? "unit" : "camp"}
-          />
+          {photo ? (
+            <img
+              src={photo}
+              alt=""
+              className="lot-photo"
+              data-lot-photo="unit"
+            />
+          ) : (
+            <img
+              src={RAIDHO_R_MARK}
+              alt=""
+              className="lot-well-mark"
+              data-lot-photo="raidho"
+            />
+          )}
           <span className="absolute left-3 top-3 rounded-full bg-sapphire px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
             {shortLotTypeLabel(unit.body_type)}
           </span>

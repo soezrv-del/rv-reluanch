@@ -6,7 +6,6 @@
 
 export const LOT_SNAPSHOT_URL = "/inventory/own-lot-latest.json";
 export const LOT_GAP = "GAP";
-export const LOT_CAMP_SCENE = "/lot/camp-scene.png";
 
 const PRICE_KEYS = [
   "price",
