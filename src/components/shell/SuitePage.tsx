@@ -100,9 +100,9 @@ export type SuitePageProps = {
   /** Expose scroll node to parent (lenders, focus, etc.). */
   scrollRef?: RefObject<HTMLDivElement | null>;
   style?: CSSProperties;
-  /** Landing photo/glass override (Tow beach, Facts showroom). */
+  /** Landing chrome hook (Tow). Photo landings are gone — Raidho only. */
   landing?: "tow";
-  /** Lot (and #390 Facts/Tow): full-bleed Raidho logo, no photo stack. */
+  /** Full-bleed Raidho logo, no family / camping photo plate. Default on. */
   raidhoOnly?: boolean;
 };
 
@@ -128,7 +128,7 @@ export function SuitePage({
   scrollRef: scrollRefProp,
   style,
   landing,
-  raidhoOnly = false,
+  raidhoOnly = true,
 }: SuitePageProps) {
   const localRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = scrollRefProp ?? localRef;
@@ -160,6 +160,9 @@ export function SuitePage({
       }
       data-no-swipe-scroll={noSwipeScroll ? "" : undefined}
       data-tow-landing={landing === "tow" ? "" : undefined}
+      data-sold-book={tab === "rvsold" ? "" : undefined}
+      data-premium-screen={tab === "more" ? "" : undefined}
+      data-cal-screen={tab === "rvcal" ? "" : undefined}
       data-raidho-only={raidhoOnly ? "" : undefined}
     >
       {raidhoOnly ? (

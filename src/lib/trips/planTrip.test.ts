@@ -237,8 +237,8 @@ test("Navigate plan-trip: dest-first, profile after route, no Search tap require
     join(root, "../../assets/prestige.ts"),
     "utf8",
   );
-  assert.match(ui, /TRUTH_MARK_BACKDROP/);
-  assert.match(ui, /objectPosition="center center"/);
+  assert.match(ui, /SuiteRaidhoBackdrop/);
+  assert.doesNotMatch(ui, /TRUTH_MARK_BACKDROP/);
   assert.match(prestige, /verified-true-r\.jpg/);
   assert.doesNotMatch(prestige, /truth-mark\.jpg/);
   assert.doesNotMatch(ui, /MetalVerifiedTrue/);

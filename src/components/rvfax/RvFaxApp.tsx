@@ -61,11 +61,9 @@ import {
 } from "@/lib/rv/factsOpen";
 import { didYouMean, type SuggestHit } from "@/lib/rv/suggest";
 import { cn } from "@/lib/utils";
-import { FACTS_LANDING_BACKDROP } from "@/assets/prestige";
 import { resolveCardImage } from "@/assets/typeMedia";
 import { ScrollSuiteHeader } from "@/components/shell/ScrollChrome";
-import { SuiteBackdrop } from "@/components/shell/SuitePage";
-import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
+import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
@@ -113,8 +111,6 @@ function PanelFallback() {
     </div>
   );
 }
-
-const PRESTIGE_BACKDROP = FACTS_LANDING_BACKDROP;
 
 type YearEra = "all" | "classic" | "recent" | "modern" | "newer17";
 
@@ -180,7 +176,6 @@ export function RvFaxApp({
   const [suggestions, setSuggestions] = useState<SuggestHit[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const cascadeCoreRef = useRef<HTMLDivElement | null>(null);
-  const adaptiveGlass = useAdaptiveGlass(PRESTIGE_BACKDROP, scrollRef);
   const kb = useKeyboardInset();
   const nav = useShellNavOptional();
 
@@ -854,13 +849,12 @@ export function RvFaxApp({
 
   return (
     <div
-      className="rvfax-screen adaptive-glass relative flex h-full min-h-0 flex-col overflow-hidden bg-bg text-white"
-      style={adaptiveGlass.style}
-      data-glass-l={adaptiveGlass.luminance.toFixed(3)}
+      className="rvfax-screen relative flex h-full min-h-0 flex-col overflow-hidden bg-bg text-white"
       data-readable-cards=""
       data-facts-landing=""
+      data-raidho-only=""
     >
-      <SuiteBackdrop src={PRESTIGE_BACKDROP} objectPosition="center 42%" />
+      <SuiteRaidhoBackdrop bleed />
 
       <div
         ref={scrollRef}
@@ -891,7 +885,10 @@ export function RvFaxApp({
           </section>
 
           {/* Cascading dropdown search — type → year → make → model → floorplan */}
-          <section className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4 sm:p-5">
+          <section
+            className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4 sm:p-5"
+            data-rv-search-card=""
+          >
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-[20px] font-extrabold tracking-tight text-white sm:text-[22px]">

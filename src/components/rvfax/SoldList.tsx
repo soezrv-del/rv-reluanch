@@ -79,10 +79,10 @@ export function SoldList({
         </section>
       )}
 
-      <section className="glass-prestige-gold rounded-[var(--radius-xl)] p-4">
+      <section className="glass-prestige rounded-[var(--radius-xl)] p-4">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-[10px] font-bold tracking-[0.16em] text-amber">
+            <p className="text-[10px] font-bold tracking-[0.16em] text-sky-200">
               TOTAL GROSS
             </p>
             <p className="mt-1 text-[20px] font-extrabold text-white">
@@ -90,7 +90,7 @@ export function SoldList({
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] font-bold tracking-[0.16em] text-amber">
+            <p className="text-[10px] font-bold tracking-[0.16em] text-sky-200">
               OWED
             </p>
             <p className="mt-1 text-[20px] font-extrabold text-white">

@@ -58,8 +58,7 @@ import {
 import { rvSafeNavigateChipLabel } from "@/lib/trips/coachProfile";
 import { decideTowHandoff } from "@/lib/trips/towHandoff";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
-import { TRUTH_MARK_BACKDROP } from "@/assets/prestige";
-import { SuiteBackdrop } from "@/components/shell/SuitePage";
+import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
 import {
   analyzeRouteRestrictions,
   saferAppliedNote,
@@ -1225,10 +1224,7 @@ export function RvTripsApp() {
         routeStatus === "live" || navArmed ? "1" : undefined
       }
     >
-      <SuiteBackdrop
-        src={TRUTH_MARK_BACKDROP}
-        objectPosition="center center"
-      />
+      <SuiteRaidhoBackdrop />
 
       <div
         ref={scrollRef}

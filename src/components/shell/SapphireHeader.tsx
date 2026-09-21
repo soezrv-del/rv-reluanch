@@ -12,13 +12,15 @@ const VERIFIED_TABS = new Set<AppTab>([
   "rvtrips",
   "rvshare",
   "rvgrok",
+  "rvsold",
   "rvlot",
+  "more",
 ]);
 
 export function SapphireHeader({ tab }: { tab: AppTab }) {
   const copy = PAGE_COPY[tab] ?? PAGE_COPY.rvgrok;
   const showVerified = VERIFIED_TABS.has(tab);
-  // Main suite tools → sapphire; Premium (more) → gold
+  // Suite tools + Sold + Premium share the sapphire shell
   const accent = showVerified ? "sapphire" : (PAGE_ACCENT[tab] ?? "sapphire");
 
   const shellGlow =

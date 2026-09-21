@@ -73,11 +73,14 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(css, /--dock-label-size:\s*1\.125rem/);
   assert.match(css, /--dock-label-size-sm:\s*1\.1875rem/);
   assert.match(css, /\.bottom-tabs-dock \{/);
-  assert.match(css, /backdrop-filter:\s*blur\(20px\) saturate\(180%\)/);
-  assert.match(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
-  assert.match(css, /border:\s*1px solid rgba\(255, 255, 255, 0\.12\)/);
+  assert.match(css, /--dock-surface:\s*#000000/);
+  assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?background:\s*var\(--dock-surface\)/);
+  assert.match(css, /border:\s*1px solid var\(--dock-surface\)/);
   assert.match(css, /border-radius:\s*16px/);
-  assert.match(css, /box-shadow:\s*0 8px 32px rgba\(0, 0, 0, 0\.37\)/);
+  assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?box-shadow:\s*none/);
+  assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?backdrop-filter:\s*none/);
+  assert.doesNotMatch(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
+  assert.doesNotMatch(css, /--dock-surface:\s*color-mix\(in srgb, var\(--color-sapphire\)/);
   assert.match(css, /\.metal-hammered-face/);
   assert.match(css, /linear-gradient\(\s*180deg/);
   assert.match(css, /\.bottom-tab-label \{[\s\S]*?font-weight:\s*700/);
@@ -101,9 +104,10 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.doesNotMatch(css, /--dock-etch-under-hue/);
   assert.doesNotMatch(css, /\.bottom-tab-indicator-sapphire/);
   assert.doesNotMatch(css, /border-radius:\s*1\.45rem/);
-  assert.match(tabs, /bottom-tab-label-sold/);
+  assert.doesNotMatch(tabs, /bottom-tab-label-sold/);
   assert.doesNotMatch(tabs, /bottom-tab-label-sold-owed/);
   assert.doesNotMatch(tabs, /formatSoldDockMoney/);
+  assert.doesNotMatch(css, /\.bottom-tab-label-sold/);
   assert.doesNotMatch(css, /\.bottom-tab-label-sold-owed/);
   assert.doesNotMatch(css, /--color-dock-etch:/);
   assert.doesNotMatch(css, /Milky frosted body/);
@@ -132,7 +136,7 @@ test("dock labels are bright solid type — no metal gradient", () => {
   assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
 
   const labelBlock = css.match(
-    /\/\* Dock labels[\s\S]*?\.bottom-tab-label-sold \{/,
+    /\/\* Dock labels[\s\S]*?\.bottom-tab-btn\.bottom-tab-live \{/,
   )?.[0];
   assert.ok(labelBlock, "dock label CSS block present");
   assert.doesNotMatch(labelBlock, /linear-gradient/);

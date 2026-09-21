@@ -444,9 +444,7 @@ export function AppShell({
                               ? "RvTOW"
                               : id === "rvtrips"
                                 ? "RV GPS"
-                                : id === "rvsold"
-                                  ? "Sold"
-                                  : "Suite"
+                                : "Suite"
                     }
                   >
                     {id === "rvfax" ? (
@@ -464,8 +462,6 @@ export function AppShell({
                       <RvTowApp />
                     ) : id === "rvtrips" ? (
                       <RvTripsApp />
-                    ) : id === "rvsold" && isPro ? (
-                      <SoldBookApp />
                     ) : null}
                   </SuiteErrorBoundary>
                 </Suspense>
@@ -477,6 +473,15 @@ export function AppShell({
               <Suspense fallback={<SuiteFallback />}>
                 <SuiteErrorBoundary name="More">
                   <MoreApp onNavigate={onTabChange} />
+                </SuiteErrorBoundary>
+              </Suspense>
+            </div>
+          ) : null}
+          {show("rvsold") && isPro ? (
+            <div className={tab === "rvsold" ? TAB_PANE_ON : "hidden"}>
+              <Suspense fallback={<SuiteFallback />}>
+                <SuiteErrorBoundary name="Sold">
+                  <SoldBookApp />
                 </SuiteErrorBoundary>
               </Suspense>
             </div>

@@ -164,6 +164,7 @@ export function MoreApp({
     <>
     <SuitePage
       tab="more"
+      raidhoOnly
       adaptiveGlass={false}
       onPullReset={() => setRefreshTick((n) => n + 1)}
       pullLabel="Release to refresh Premium"
@@ -254,7 +255,7 @@ export function MoreApp({
               />
               {isPro ? (
                 <RowLink
-                  icon={<CircleDollarSign className="size-4 text-gold-bright" />}
+                  icon={<CircleDollarSign className="size-4 text-blue" />}
                   title="Sold"
                   sub={stats.soldLine}
                   onClick={() => {
@@ -278,8 +279,8 @@ export function MoreApp({
           </section>
 
           {/* No IAP prices (Apple 3.1.1) */}
-          <section className="glass-prestige-gold relative overflow-hidden rounded-[1.25rem] p-4">
-            <p className="text-[10px] font-bold tracking-[0.16em] text-amber">
+          <section className="glass-prestige relative overflow-hidden rounded-[1.25rem] p-4">
+            <p className="text-[10px] font-bold tracking-[0.16em] text-sky-200">
               FULL SUITE
             </p>
             <p className="mt-1.5 text-[17px] font-bold leading-snug text-white">
@@ -288,8 +289,8 @@ export function MoreApp({
             <p className="mt-1 text-[12px] leading-relaxed text-white/80">
               Full suite included — no in-app purchases.
             </p>
-            <div className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full border border-amber/40 bg-amber/15">
-              <Star className="size-4 text-amber" />
+            <div className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full border border-sky-300/35 bg-white/8">
+              <Star className="size-4 text-sky-100" />
             </div>
           </section>
 

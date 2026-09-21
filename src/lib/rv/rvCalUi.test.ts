@@ -66,6 +66,18 @@ test("rvCAL payment report trigger is a tiny muted text link, not a primary butt
   );
 });
 
+test("rvCAL shares the Facts search thick frost — not a solid black plate", () => {
+  const suite = readFileSync(
+    join(root, "../../components/shell/SuitePage.tsx"),
+    "utf8",
+  );
+  const css = readFileSync(join(root, "../../styles.css"), "utf8");
+  assert.match(suite, /data-cal-screen=\{tab === "rvcal"/);
+  assert.match(src, /raidhoOnly/);
+  assert.match(css, /\[data-readable-cards\]\[data-cal-screen\] \.glass-prestige/);
+  assert.match(css, /backdrop-filter:\s*blur\(28px\) saturate\(1\.7\)/);
+});
+
 test("rvCAL header drops the ZIP/lender subtitle and keeps the verified mark", () => {
   const calCopy = constants.match(/rvcal:\s*\{[\s\S]*?\n  \},/);
   assert.ok(calCopy?.[0], "Cal PAGE_COPY block");
