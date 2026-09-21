@@ -40,9 +40,13 @@ import {
   looksLikeOriginQuestion,
 } from "./originStory";
 import {
+  looksLikeCasualNonResearch,
   looksLikeInventoryOrCountQuestion,
+  looksLikeNamedCoachProductQuestion,
+  looksLikeSpecQuestion,
   needsWebFallback,
 } from "./webIntent";
+import { findOemGvwrLbs, findOemUvwLbs } from "../rv/floorplanSpecs";
 import {
   findComparableCatalogCoaches,
   looksLikeCoachCompareQuestion,
@@ -54,6 +58,7 @@ import {
   repairCoachLockFromGrounded,
 } from "./repairMode";
 import {
+  askNamesCoachIdentity,
   type CoachIdentity,
   formatCatalogPresenceNote,
   inspectCatalogPresence,
@@ -61,11 +66,76 @@ import {
   resolveCatalogModel,
   resolveCoachIdentity,
 } from "./coachIdentity";
-import { withDeskSheetSpeechRule } from "./deskSheet";
-import {
-  formatLockedWeightsBlock,
-  resolveLockedOemWeights,
-} from "./lockedWeights";
+
+function resolveLockedOemWeights(identity: CoachIdentity): {
+  gvwrLbs: number | null;
+  uvwLbs: number | null;
+} {
+  return {
+    gvwrLbs: findOemGvwrLbs(
+      identity.year,
+      identity.make,
+      identity.model,
+      identity.floorplan,
+    ),
+    uvwLbs: findOemUvwLbs(
+      identity.year,
+      identity.make,
+      identity.model,
+      identity.floorplan,
+    ),
+  };
+}
+
+function formatLockedWeightsBlock(identity: CoachIdentity): string {
+  const w = resolveLockedOemWeights(identity);
+  const gvwr =
+    w.gvwrLbs != null && w.gvwrLbs > 0
+      ? `- VERIFIED GVWR ${Math.round(w.gvwrLbs)} from OEM pin`
+      : `- GVWR: GAP — no OEM pin (do not invent)`;
+  const uvw =
+    w.uvwLbs != null && w.uvwLbs > 0
+      ? `- VERIFIED UVW ${Math.round(w.uvwLbs)} from OEM pin`
+      : `- UVW: GAP — no OEM pin (do not invent)`;
+  return [
+    "LOCKED WEIGHTS (OEM pin — speak these; never claim GAP for a VERIFIED field):",
+    gvwr,
+    uvw,
+    "Never claim you lack a VERIFIED or non-GAP desk field. Speak every VERIFIED number (e.g. GVWR 49000). Do not say you lack GVWR when a VERIFIED GVWR line is present. UVW may stay GAP if there is no OEM UVW pin.",
+  ].join("\n");
+}
+
+function withDeskSheetSpeechRule(
+  block: string,
+  query: string,
+  identity: CoachIdentity | null | undefined,
+): string {
+  const extra =
+    identity && shouldMountDeskSheetLocal(query, identity)
+      ? `DESK SPEC SHEET MOUNTED for ${[identity.year, identity.make, identity.model, identity.floorplan].filter(Boolean).join(" ")}. You may say exactly: "Spec sheet is on the desk." Speak THIS coach — never a prior series. Incomplete fields show as GAP on the sheet; do not invent UVW, GVWR, or torque. If a field is non-GAP on the sheet or VERIFIED in LOCKED WEIGHTS, speak that number — never claim you lack it.\n\n${formatLockedWeightsBlock(identity)}\n\nWRITTEN SPEC SHEET: the structured desk sheet already mounted is the only written sheet. Do not output a second markdown Spec Sheet, Weight ratings table, or GVWR/GCWR/UVW/NCC: GAP block that re-GAPs a VERIFIED field.`
+      : `DESK SPEC SHEET NOT MOUNTED. Never say the spec sheet / report is on the desk, or that a sheet is visible. Speak the answer only.`;
+  const body = (block || "").trim();
+  return body ? `${body}\n\n${extra}` : extra;
+}
+
+function shouldMountDeskSheetLocal(
+  query: string,
+  identity: CoachIdentity,
+): boolean {
+  if (!identity.make?.trim() || !identity.model?.trim()) return false;
+  const q = query || "";
+  if (looksLikeCasualNonResearch(q) && !askNamesCoachIdentity(identity)) {
+    return false;
+  }
+  if (askNamesCoachIdentity(identity)) return true;
+  if (looksLikeSpecQuestion(q) || looksLikeNamedCoachProductQuestion(q)) {
+    return true;
+  }
+  if (/\blook(?:ing)?\s+up\b|\breport\b|\bspec(?:s| sheet)?\b/i.test(q)) {
+    return true;
+  }
+  return identity.source === "facts" && Boolean(q.trim());
+}
 
 export {
   looksLikeCasualNonResearch,

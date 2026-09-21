@@ -213,12 +213,12 @@ test("2025 Entegra Aspire 44R pins GVWR 49000 — desk and speech never GAP it; 
   assert.match(locked, /LOCKED WEIGHTS/);
   assert.match(locked, /VERIFIED GVWR 49000 from OEM pin/);
   assert.match(locked, /UVW: GAP — no OEM pin/);
-  assert.match(locked, /Never say you don't have GVWR/i);
+  assert.match(locked, /Do not say you lack GVWR/i);
 
   const spoken = withDeskSheetSpeechRule("CATALOG", q, identity);
   assert.match(spoken, /DESK SPEC SHEET MOUNTED/);
   assert.match(spoken, /VERIFIED GVWR 49000 from OEM pin/);
-  assert.match(spoken, /never say you don't have/i);
+  assert.match(spoken, /Do not say you lack GVWR/i);
   assert.match(spoken, /do not output a second markdown Spec Sheet/i);
   assert.doesNotMatch(
     spoken,
@@ -261,6 +261,12 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(prompts, /LOCKED WEIGHTS/);
   assert.match(grounding, /withDeskSheetSpeechRule/);
   assert.match(grounding, /formatLockedWeightsBlock/);
+  assert.match(grounding, /findOemGvwrLbs/);
+  assert.match(grounding, /VERIFIED GVWR/);
+  assert.match(grounding, /Do not say you lack GVWR/);
   assert.match(src(root, "lockedWeights.ts"), /VERIFIED GVWR/);
+  assert.match(src(root, "liveVoice.ts"), /never say you don't have GVWR/i);
+  assert.match(src(root, "voice.ts"), /LOCKED WEIGHTS/);
+  assert.match(src(root, "speechPolicy.ts"), /LOCKED WEIGHTS/);
   assert.doesNotMatch(src(root, "deskSheet.ts"), /[Dd]ialaBot/);
 });

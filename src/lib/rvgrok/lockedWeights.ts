@@ -45,7 +45,7 @@ export function formatLockedWeightLine(
 
 /** Standing rule injected whenever a desk sheet mounts or a catalog lock exists. */
 export const LOCKED_WEIGHTS_SPEECH_RULE =
-  'Never say you don\'t have / lack a field that is VERIFIED or non-GAP on the desk sheet or in LOCKED WEIGHTS. Speak every VERIFIED number (e.g. GVWR 49000). Never say "I don\'t have GVWR" when VERIFIED GVWR is present. UVW may stay GAP if there is no OEM UVW pin.';
+  "Never claim you lack a VERIFIED or non-GAP desk field. Speak every VERIFIED number (e.g. GVWR 49000). Do not say you lack GVWR when a VERIFIED GVWR line is present. UVW may stay GAP if there is no OEM UVW pin.";
 
 export const NO_DUPLICATE_MARKDOWN_SHEET =
   "WRITTEN SPEC SHEET: the structured desk sheet already mounted is the only written sheet. Do not output a second markdown Spec Sheet, Weight ratings table, or GVWR/GCWR/UVW/NCC: GAP block that re-GAPs a VERIFIED field.";

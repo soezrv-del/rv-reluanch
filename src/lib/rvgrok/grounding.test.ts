@@ -853,7 +853,7 @@ test("2025 Aspire 44R grounding injects VERIFIED GVWR 49000 — never teach I-do
   assert.equal(chat.specs?.oemGvwrLbs, 49000);
   assert.match(chat.block, /VERIFIED GVWR 49000 from OEM pin/);
   assert.match(chat.block, /LOCKED WEIGHTS/);
-  assert.match(chat.block, /never say you don't have GVWR/i);
+  assert.match(chat.block, /Do not say you lack GVWR/i);
   assert.match(chat.block, /UVW: GAP — no OEM pin/);
 
   const voice = buildVoiceGrounding({ query: q });
