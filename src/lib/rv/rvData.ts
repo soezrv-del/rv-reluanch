@@ -22720,7 +22720,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           freshWater: 47,
           grayWater: 41,
           blackWater: 32,
-          notes: "OEM MY23 Greyhawk 29MV (RVUSA 2023-Jayco-Greyhawk.pdf): 47 · grey 41 · black 32. Not Greyhawk Prestige 29MVP."
+          notes: "OEM MY23 Greyhawk 29MV (RVUSA 2023-Jayco-Greyhawk.pdf): 47 · grey 41 · black 32. Not Greyhawk Prestige."
         },
         {
           from: 2023,
@@ -22752,7 +22752,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           freshWater: 47,
           grayWater: 41,
           blackWater: 31,
-          notes: "OEM MY23 Greyhawk 31F (RVUSA 2023-Jayco-Greyhawk.pdf): 47 · grey 41 · black 31. Not Greyhawk Prestige 31FP."
+          notes: "OEM MY23 Greyhawk 31F (RVUSA 2023-Jayco-Greyhawk.pdf): 47 · grey 41 · black 31. Not Greyhawk Prestige."
         },
         {
           from: 2024,
@@ -22796,7 +22796,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           freshWater: 47,
           grayWater: 41,
           blackWater: 32,
-          notes: "OEM MY24 Greyhawk 29MV (RVUSA 2024-Jayco-Greyhawk.pdf): 47 · grey 41 · black 32. Not Greyhawk Prestige 29MVP."
+          notes: "OEM MY24 Greyhawk 29MV (RVUSA 2024-Jayco-Greyhawk.pdf): 47 · grey 41 · black 32. Not Greyhawk Prestige."
         },
         {
           from: 2024,
@@ -22828,7 +22828,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           freshWater: 47,
           grayWater: 41,
           blackWater: 31,
-          notes: "OEM MY24 Greyhawk 31F (RVUSA 2024-Jayco-Greyhawk.pdf): 47 · grey 41 · black 31. Not Greyhawk Prestige 31FP."
+          notes: "OEM MY24 Greyhawk 31F (RVUSA 2024-Jayco-Greyhawk.pdf): 47 · grey 41 · black 31. Not Greyhawk Prestige."
         },
       ]
     },
