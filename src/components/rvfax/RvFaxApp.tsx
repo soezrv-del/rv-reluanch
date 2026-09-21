@@ -61,11 +61,9 @@ import {
 } from "@/lib/rv/factsOpen";
 import { didYouMean, type SuggestHit } from "@/lib/rv/suggest";
 import { cn } from "@/lib/utils";
-import { FACTS_LANDING_BACKDROP } from "@/assets/prestige";
 import { resolveCardImage } from "@/assets/typeMedia";
 import { ScrollSuiteHeader } from "@/components/shell/ScrollChrome";
-import { SuiteBackdrop } from "@/components/shell/SuitePage";
-import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
+import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
@@ -113,8 +111,6 @@ function PanelFallback() {
     </div>
   );
 }
-
-const PRESTIGE_BACKDROP = FACTS_LANDING_BACKDROP;
 
 type YearEra = "all" | "classic" | "recent" | "modern" | "newer17";
 
@@ -180,7 +176,6 @@ export function RvFaxApp({
   const [suggestions, setSuggestions] = useState<SuggestHit[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const cascadeCoreRef = useRef<HTMLDivElement | null>(null);
-  const adaptiveGlass = useAdaptiveGlass(PRESTIGE_BACKDROP, scrollRef);
   const kb = useKeyboardInset();
   const nav = useShellNavOptional();
 
@@ -854,13 +849,12 @@ export function RvFaxApp({
 
   return (
     <div
-      className="rvfax-screen adaptive-glass relative flex h-full min-h-0 flex-col overflow-hidden bg-bg text-white"
-      style={adaptiveGlass.style}
-      data-glass-l={adaptiveGlass.luminance.toFixed(3)}
+      className="rvfax-screen relative flex h-full min-h-0 flex-col overflow-hidden bg-bg text-white"
       data-readable-cards=""
       data-facts-landing=""
+      data-raidho-only=""
     >
-      <SuiteBackdrop src={PRESTIGE_BACKDROP} objectPosition="center 42%" />
+      <SuiteRaidhoBackdrop bleed />
 
       <div
         ref={scrollRef}
@@ -891,7 +885,10 @@ export function RvFaxApp({
           </section>
 
           {/* Cascading dropdown search — type → year → make → model → floorplan */}
-          <section className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4 sm:p-5">
+          <section
+            className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4 sm:p-5"
+            data-rv-search-card=""
+          >
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-[20px] font-extrabold tracking-tight text-white sm:text-[22px]">
@@ -905,7 +902,7 @@ export function RvFaxApp({
                   "inline-flex min-h-[44px] items-center gap-1 rounded-full border px-3 py-1.5 text-left transition active:scale-[0.98]",
                   filtersOpen || era !== "all"
                     ? "border-sapphire/50 bg-sapphire/20"
-                    : "border-white/20 bg-black/30",
+                    : "glass-field",
                 )}
                 aria-expanded={filtersOpen}
                 aria-controls="rvfax-optional-filters"
@@ -933,7 +930,7 @@ export function RvFaxApp({
             {filtersOpen ? (
               <div
                 id="rvfax-optional-filters"
-                className="space-y-2.5 rounded-[var(--radius-md)] border border-white/10 bg-black/25 p-2.5"
+                className="glass-field space-y-2.5 rounded-[var(--radius-md)] p-2.5"
               >
                 <div className="flex items-center justify-between gap-2 px-0.5">
                   <p className="rvfax-sapphire-label text-[10px] font-bold tracking-[0.12em]">
@@ -1072,7 +1069,7 @@ export function RvFaxApp({
                     <button
                       type="button"
                       onClick={() => applySuggestion(hit)}
-                      className="flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl border border-white/12 bg-black/35 px-3 py-2.5 text-left transition active:scale-[0.99]"
+                      className="glass-field flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left transition active:scale-[0.99]"
                     >
                       <div>
                         <p className="text-[13px] font-bold text-white">
@@ -1431,8 +1428,8 @@ function FieldButton({
           "flex min-h-[52px] w-full items-center justify-between gap-2 rounded-[var(--radius-md)] border px-3.5 py-3.5 text-left text-[16px] font-semibold text-white touch-manipulation active:scale-[0.99] disabled:opacity-100",
           value && !custom && "border-gold-border/60 bg-gold-dim/25",
           value && custom && "border-blue/50 bg-blue/10",
-          !value && "border-white/35 bg-white/[0.04]",
-          disabled && "border-white/25 bg-white/[0.03]",
+          !value && "glass-field",
+          disabled && "glass-field opacity-80",
         )}
       >
         <span className="min-w-0 flex-1 truncate text-white">
@@ -1644,7 +1641,7 @@ function ComparePeerPicker({
         </div>
         <ul className="mt-3 max-h-[46vh] space-y-2 overflow-y-auto overscroll-contain">
           {peers.length === 0 ? (
-            <li className="rounded-xl border border-white/10 bg-black/30 px-3 py-4 text-[13px] text-white/70">
+            <li className="glass-field rounded-xl px-3 py-4 text-[13px] text-white/70">
               No catalog peers here. Open another unit from search or Saved,
               tap Compare on that card, then Compare again.
             </li>
@@ -1663,7 +1660,7 @@ function ComparePeerPicker({
                       "flex min-h-[52px] w-full items-center justify-between gap-2 rounded-xl border px-3.5 py-3 text-left disabled:opacity-40",
                       on
                         ? "border-sky-400/50 bg-sky-500/20"
-                        : "border-white/12 bg-black/35",
+                        : "glass-field",
                     )}
                   >
                     <div className="min-w-0">

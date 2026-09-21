@@ -1,38 +1,54 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap");
 
 @theme {
   /*
-   * SoT = Tiimo soft-color planner (iPhone App of the Year 2025 /
-   * ADA Inclusivity 2024). Glanceable day chunks, calm scan-first
-   * hierarchy, low chrome. Tide tokens superseded as primary —
-   * aliases remain, remapped to Tiimo slate-lavender-mint.
+   * SoT = Raidho sapphire / cobalt (David voice 2026-09-21).
+   * App chrome + field are sapphire-navy, not Tiimo slate-lavender
+   * (#372). Dock plate matches the Raidho mark ground exactly
+   * (#000000 sampled from public/assets/brand/raidho-r-mark.png)
+   * so the tab square disappears into the icon — not a contrasting
+   * sapphire plate. Mark itself stays glossy sapphire + champagne-gold
+   * on that black. One highlight.
    */
-  --color-tiimo-bg: #1c1b26;
-  --color-tiimo-surface: #2a2836;
-  --color-tiimo-mint: #8fc9b6;
-  --color-tiimo-lavender: #b5a8d0;
-  --color-tiimo-peach: #e0b4a4;
-  --color-tiimo-foam: #f0eef4;
-  --color-tiimo-ink: #f7f5f9;
+  --color-ink-black: #061228;
+  --color-ink-elevated: #0a1834;
+  --color-ink-surface: #0c1c40;
+  --color-ink-surface-2: #12244e;
+  --color-ink-foam: #e8eef8;
+  --color-ink-ink: #f4f7fb;
 
-  --color-tide-bg: var(--color-tiimo-bg);
-  --color-tide-surface: var(--color-tiimo-surface);
-  --color-tide-aqua: var(--color-tiimo-mint);
-  --color-tide-foam: var(--color-tiimo-foam);
-  --color-tide-ink: var(--color-tiimo-ink);
+  --color-sapphire: #1648c8;
+  --color-sapphire-deep: #0a2a8a;
+  --color-sapphire-glow: #3d6ee0;
 
-  --color-bg: var(--color-tiimo-bg);
-  --color-bg-elevated: #242230;
-  --color-surface: var(--color-tiimo-surface);
-  --color-surface-2: #353342;
-  --color-fg: var(--color-tiimo-ink);
-  --color-muted: color-mix(in srgb, var(--color-tiimo-foam) 78%, transparent);
-  --color-dim: color-mix(in srgb, var(--color-tiimo-foam) 52%, transparent);
-  --color-accent: var(--color-tiimo-mint);
+  /* Leftover Tide / Tiimo aliases remap onto sapphire so nothing leaks purple. */
+  --color-tiimo-bg: var(--color-ink-black);
+  --color-tiimo-surface: var(--color-ink-surface);
+  --color-tiimo-mint: var(--color-sapphire-glow);
+  --color-tiimo-lavender: var(--color-sapphire);
+  --color-tiimo-peach: #d4c08a;
+  --color-tiimo-foam: var(--color-ink-foam);
+  --color-tiimo-ink: var(--color-ink-ink);
 
-  --color-border: color-mix(in srgb, var(--color-tiimo-foam) 16%, transparent);
-  --color-border-strong: color-mix(in srgb, var(--color-tiimo-foam) 26%, transparent);
+  --color-tide-bg: var(--color-ink-black);
+  --color-tide-surface: var(--color-ink-surface);
+  --color-tide-aqua: var(--color-sapphire-glow);
+  --color-tide-foam: var(--color-ink-foam);
+  --color-tide-ink: var(--color-ink-ink);
+
+  --color-bg: var(--color-ink-black);
+  --color-bg-elevated: var(--color-ink-elevated);
+  --color-surface: var(--color-ink-surface);
+  --color-surface-2: var(--color-ink-surface-2);
+  --color-fg: var(--color-ink-ink);
+  --color-muted: color-mix(in srgb, var(--color-ink-foam) 78%, transparent);
+  --color-dim: color-mix(in srgb, var(--color-ink-foam) 52%, transparent);
+  --color-accent: var(--color-sapphire);
+
+  --color-border: color-mix(in srgb, var(--color-ink-foam) 16%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--color-ink-foam) 26%, transparent);
 
   --color-ruby: #d42535;
   --color-ruby-deep: #c01f2e;
@@ -46,21 +62,29 @@
   --color-green: #3dba8a;
   --color-amber: #e0a04a;
 
-  --color-gold: #c2b6a0;
-  --color-gold-bright: #e2d8c4;
-  --color-gold-dim: rgba(194, 182, 160, 0.14);
-  --color-gold-border: rgba(194, 182, 160, 0.32);
+  --color-gold: #d0be8a;
+  --color-gold-bright: #e8d6a4;
+  --color-gold-dim: rgba(208, 190, 138, 0.16);
+  --color-gold-border: rgba(208, 190, 138, 0.36);
 
-  --color-sapphire: #4a86f0;
-  --color-sapphire-deep: #0a1e5c;
-  --color-sapphire-glow: #8ec5ff;
+  --color-lot-void: #07080d;
+  --color-lot-plate: #11141c;
+  --color-lot-well: #0a0c12;
+  --color-lot-chip: #181c26;
+  --color-lot-studio: #05070b;
+  --color-lot-tire: #1a1d24;
+  --color-lot-dusk-high: #12151c;
+  --color-lot-dusk-mid: #3c322f;
+  --color-lot-dusk-sun: #c4a078;
+  --color-lot-dusk-ground: #161410;
 
   --page-accent: var(--color-sapphire);
-  --page-accent-soft: rgba(74, 134, 240, 0.16);
-  --page-accent-border: rgba(74, 134, 240, 0.4);
-  --page-accent-glow: rgba(74, 134, 240, 0.35);
+  --page-accent-soft: color-mix(in srgb, var(--color-sapphire) 16%, transparent);
+  --page-accent-border: color-mix(in srgb, var(--color-sapphire) 40%, transparent);
+  --page-accent-glow: color-mix(in srgb, var(--color-sapphire) 35%, transparent);
 
   --font-sans: "SF Pro Display", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --radius-sm: 8px;
@@ -71,22 +95,21 @@
   --radius-pill: 999px;
 
   --shadow-glow-ruby: 0 0 28px rgba(212, 37, 53, 0.4);
-  --shadow-glow-gold: 0 0 32px rgba(194, 182, 160, 0.18);
-  --shadow-glow-sapphire: 0 0 36px rgba(80, 160, 255, 0.35);
-  --shadow-panel: 0 16px 48px rgba(18, 16, 28, 0.26);
+  --shadow-glow-gold: 0 0 28px rgba(208, 190, 138, 0.22);
+  --shadow-glow-sapphire: 0 0 36px color-mix(in srgb, var(--color-sapphire) 35%, transparent);
+  --shadow-panel: 0 16px 48px rgba(4, 12, 32, 0.36);
   --shadow-glass:
-    0 12px 36px rgba(18, 16, 28, 0.2),
-    inset 0 1px 0 color-mix(in srgb, var(--color-tiimo-foam) 26%, transparent),
-    inset 0 -1px 0 color-mix(in srgb, var(--color-tiimo-mint) 6%, transparent);
+    0 12px 36px rgba(4, 12, 32, 0.28),
+    inset 0 1px 0 color-mix(in srgb, var(--color-ink-foam) 22%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--color-sapphire) 8%, transparent);
 
+  --dock-surface: #000000;
   --dock-label-size: 1.125rem;
   --dock-label-size-sm: 1.1875rem;
   --dock-label-track: 0.5px;
   --dock-label-color: #f3f5f8;
   --dock-label-color-active: #ffffff;
   --dock-icon-size: 3.25rem;
-  /* Raidho R (ᚱ) mark ground — dock + home-indicator fill, not Tiimo frost. */
-  --dock-surface: #000000;
 }
 
 @layer base {
@@ -310,6 +333,57 @@
     font-size: max(16px, 1em);
     scroll-margin-top: 96px;
     scroll-margin-bottom: calc(var(--kb-inset, 0px) + 48px);
+  }
+
+  /*
+   * NDA accept: native checkbox is a11y-only (clipped). The visible
+   * 36px glyph + full-width row is the phone tap target. Dark
+   * color-scheme must not paint the box invisible.
+   */
+  [data-nda-gate] .nda-accept-check {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+    color-scheme: light;
+    accent-color: #4a86f0;
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: none;
+  }
+
+  [data-nda-gate] .nda-accept-glyph {
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 2.5px solid #e2d8c4;
+    border-radius: 0.5rem;
+    background-color: #f7f5f9;
+    color-scheme: light;
+  }
+
+  [data-nda-gate] .nda-accept-glyph[data-checked="true"] {
+    background-color: #4a86f0;
+    border-color: #8ec5ff;
+  }
+
+  [data-nda-gate] [data-nda-agree-row]:focus-visible {
+    outline: 2px solid #8ec5ff;
+    outline-offset: 2px;
+  }
+
+  [data-nda-gate] .nda-accept-bar {
+    padding-bottom: max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 1rem));
+  }
+
+  @media (max-width: 480px) {
+    [data-nda-gate] .nda-accept-bar {
+      padding-bottom: max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem));
+    }
   }
 
   html.kb-open [data-app-scroll],
@@ -816,9 +890,9 @@
 
 [data-page-accent="sapphire"] {
   --page-accent: var(--color-sapphire);
-  --page-accent-soft: rgba(74, 134, 240, 0.16);
-  --page-accent-border: rgba(74, 134, 240, 0.42);
-  --page-accent-glow: rgba(74, 134, 240, 0.32);
+  --page-accent-soft: color-mix(in srgb, var(--color-sapphire) 16%, transparent);
+  --page-accent-border: color-mix(in srgb, var(--color-sapphire) 42%, transparent);
+  --page-accent-glow: color-mix(in srgb, var(--color-sapphire) 32%, transparent);
 }
 [data-page-accent="ruby"] {
   --page-accent: var(--color-ruby);
@@ -849,7 +923,11 @@
   );
 }
 
-/* Dock — Raidho R black ground so the icon plate blends (not Tide/Tiimo frost). */
+/* Dock — Raidho mark ground (David voice 2026-09-21, binding).
+ * Sampled #000000 from raidho-r-mark.png corners. Plate + nav +
+ * safe-area are that hex so the tab square disappears into the
+ * icon ground. No contrasting sapphire plate. One highlight:
+ * 2px --color-sapphire top rule on the active tab. */
 .bottom-tabs-nav,
 [data-bottom-dock] {
   background: var(--dock-surface);
@@ -1177,9 +1255,6 @@
     letter-spacing: var(--dock-label-track);
   }
 }
-.bottom-tab-label-sold {
-  letter-spacing: 0.5px;
-}
 .bottom-tab-btn.bottom-tab-live {
   padding-top: 0.1rem;
   padding-bottom: 0.1rem;
@@ -1431,53 +1506,103 @@
   filter: brightness(1.02) contrast(1) saturate(0.7);
 }
 [data-readable-cards] .page-scrim-soft {
-  background: rgb(4, 8, 16);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-ink-black) 72%, transparent) 0%,
+    color-mix(in srgb, var(--color-ink-black) 18%, transparent) 38%,
+    color-mix(in srgb, var(--color-ink-black) 10%, transparent) 58%,
+    color-mix(in srgb, var(--color-ink-black) 62%, transparent) 100%
+  );
 }
 
 /*
- * Compare report: Tide-near navy field + contained Raidho R watermark.
- * Replaces the Class A diesel campfire photo (RV_CARD_MEDIA / SuiteBackdrop
- * object-cover) so comparison cards stay readable. Black ground of the mark
- * knocks out via screen blend; the glyph stays a quiet seal, not a photo.
+ * Suite + compare Raidho R watermark.
+ * Full-viewport sapphire glyph; PNG black knocks out via screen blend.
+ * Same seal as public/assets/brand/raidho-r-mark.png. No rune glow.
  */
-[data-compare-view] {
-  background: rgb(6, 12, 22);
-}
+.suite-raidho-field,
 .compare-raidho-field {
   position: absolute;
   inset: 0;
   background:
     radial-gradient(
-      ellipse 62% 48% at 50% 38%,
-      rgba(16, 38, 78, 0.42) 0%,
-      transparent 72%
+      ellipse 92% 78% at 50% 46%,
+      color-mix(in srgb, var(--color-sapphire-deep) 22%, transparent) 0%,
+      transparent 70%
     ),
-    rgb(6, 12, 22);
+    var(--color-ink-black);
 }
+.suite-raidho-mark,
 .compare-raidho-mark {
   position: absolute;
+  z-index: 1;
   left: 50%;
-  top: 40%;
-  width: min(18.5rem, 52vw);
-  height: min(26rem, 44vh);
-  transform: translate(-50%, -50%);
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  /* PNG is a padded seal — zoom so the rune fills the viewport. */
+  transform: translate(-50%, -50%) scale(1.9);
   object-fit: contain;
   object-position: center;
-  opacity: 0.16;
+  opacity: 0.38;
   mix-blend-mode: screen;
-  filter: brightness(1.06) saturate(0.92);
 }
-@media (min-width: 640px) {
-  .compare-raidho-mark {
-    width: min(20rem, 34vw);
-    height: min(28rem, 46vh);
-  }
+
+/*
+ * Facts + Tow: logo only, full-bleed. No photo, field, scrim, or blend.
+ */
+.suite-raidho-bleed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+.rvfax-screen[data-facts-landing] .page-backdrop-bright,
+.rvfax-screen[data-facts-landing] .page-scrim-soft,
+.rvfax-screen[data-facts-landing] .suite-raidho-field,
+.rvtow-screen[data-tow-landing] .page-backdrop-bright,
+.rvtow-screen[data-tow-landing] .page-scrim-soft,
+.rvtow-screen[data-tow-landing] .suite-raidho-field,
+[data-coach-detail] .page-backdrop-bright,
+[data-coach-detail] .page-scrim-soft,
+[data-coach-detail] .suite-raidho-field,
+[data-cal-screen] .page-backdrop-bright,
+[data-cal-screen] .page-scrim-soft,
+[data-cal-screen] .suite-raidho-field,
+[data-sold-book] .page-backdrop-bright,
+[data-sold-book] .page-scrim-soft,
+[data-sold-book] .suite-raidho-field,
+[data-premium-screen] .page-backdrop-bright,
+[data-premium-screen] .page-scrim-soft,
+[data-premium-screen] .suite-raidho-field {
+  display: none;
+}
+
+[data-compare-view] {
+  background: var(--color-ink-black);
 }
 @media print {
-  .compare-raidho-backdrop {
+  .compare-raidho-backdrop,
+  .suite-raidho-backdrop {
     display: none;
   }
 }
+
+[data-sold-book] .suite-raidho-field,
+[data-premium-screen] .suite-raidho-field {
+  background:
+    radial-gradient(
+      ellipse 92% 78% at 50% 46%,
+      color-mix(in srgb, var(--color-sapphire-deep) 22%, transparent) 0%,
+      transparent 70%
+    ),
+    var(--color-ink-black);
+}
+
 [data-readable-cards] .glass-prestige,
 [data-readable-cards] .glass-prestige-deep,
 [data-readable-cards] .glass-prestige-gold,
@@ -1487,62 +1612,84 @@
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
+.suite-raidho-bleed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 1;
+  mix-blend-mode: normal;
+}
 
 /*
- * Facts landing: same SuiteBackdrop stack, but keep the Class A photo
- * visible (~45%) so glass-prestige / glass-prestige-gold sit on it.
+ * Thick sapphire frost — Facts search, Cal, Tow, coach detail, Sold, Premium.
+ * Overrides the readable-cards solid plate so the Raidho field shows through.
  */
-.rvfax-screen[data-facts-landing][data-readable-cards] .page-backdrop-bright {
-  opacity: 0.46;
-  filter: brightness(1.06) contrast(1.03) saturate(1.08);
-}
-.rvfax-screen[data-facts-landing][data-readable-cards] .page-scrim-soft {
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.38) 0%,
-    rgba(0, 0, 0, 0.14) 22%,
-    rgba(0, 0, 0, 0.08) 48%,
-    rgba(0, 0, 0, 0.2) 76%,
-    rgba(0, 0, 0, 0.42) 100%
-  );
-}
-.rvfax-screen[data-facts-landing][data-readable-cards] .glass-prestige,
-.rvfax-screen[data-facts-landing][data-readable-cards] .glass-prestige-deep,
-.rvfax-screen[data-facts-landing][data-readable-cards] .glass-prestige-gold,
-.rvfax-screen[data-facts-landing][data-readable-cards] .glass-panel,
-.rvfax-screen[data-facts-landing][data-readable-cards] .glass-surface {
+[data-readable-cards] [data-rv-search-card].glass-prestige,
+[data-readable-cards][data-cal-screen] .glass-prestige,
+[data-readable-cards][data-cal-screen] .glass-prestige-deep,
+[data-readable-cards][data-cal-screen] .glass-prestige-gold,
+[data-readable-cards][data-cal-screen] .glass-panel,
+[data-readable-cards][data-cal-screen] .glass-surface,
+[data-readable-cards][data-tow-landing] .glass-prestige,
+[data-readable-cards][data-tow-landing] .glass-prestige-deep,
+[data-readable-cards][data-tow-landing] .glass-prestige-gold,
+[data-readable-cards][data-tow-landing] .glass-panel,
+[data-readable-cards][data-tow-landing] .glass-surface,
+[data-readable-cards][data-coach-detail] .glass-prestige,
+[data-readable-cards][data-coach-detail] .glass-prestige-deep,
+[data-readable-cards][data-coach-detail] .glass-prestige-gold,
+[data-readable-cards][data-coach-detail] .glass-panel,
+[data-readable-cards][data-coach-detail] .glass-surface,
+[data-readable-cards][data-sold-book] .glass-prestige,
+[data-readable-cards][data-sold-book] .glass-prestige-deep,
+[data-readable-cards][data-sold-book] .glass-prestige-gold,
+[data-readable-cards][data-sold-book] .glass-panel,
+[data-readable-cards][data-sold-book] .glass-surface,
+[data-readable-cards][data-premium-screen] .glass-prestige,
+[data-readable-cards][data-premium-screen] .glass-prestige-deep,
+[data-readable-cards][data-premium-screen] .glass-prestige-gold,
+[data-readable-cards][data-premium-screen] .glass-panel,
+[data-readable-cards][data-premium-screen] .glass-surface,
+[data-readable-cards][data-compare-view] .glass-prestige,
+[data-readable-cards][data-compare-view] .glass-prestige-deep,
+[data-readable-cards][data-compare-view] .glass-prestige-gold,
+[data-readable-cards][data-compare-view] .glass-panel,
+[data-readable-cards][data-compare-view] .glass-surface {
   background: linear-gradient(
     160deg,
-    rgba(255, 255, 255, 0.14) 0%,
-    rgba(255, 255, 255, 0.05) 45%,
-    rgba(8, 12, 28, 0.12) 100%
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(22, 72, 200, 0.18) 38%,
+    rgba(6, 18, 40, 0.42) 100%
   );
-  backdrop-filter: blur(12px) saturate(1.7);
-  -webkit-backdrop-filter: blur(12px) saturate(1.7);
+  backdrop-filter: blur(28px) saturate(1.7);
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  border-color: rgba(255, 255, 255, 0.34);
 }
-.rvfax-screen[data-facts-landing][data-readable-cards] .glass-prestige-gold {
+
+/* Report chrome — frost, not a solid #070b14 plate over Raidho. */
+[data-coach-detail] .rvfax-report-chrome,
+[data-compare-view] .rvfax-report-chrome {
   background: linear-gradient(
-    155deg,
-    rgba(240, 215, 140, 0.14) 0%,
-    rgba(255, 255, 255, 0.08) 36%,
-    rgba(10, 8, 6, 0.18) 100%
+    160deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(22, 72, 200, 0.16) 40%,
+    rgba(6, 18, 40, 0.34) 100%
   );
-  backdrop-filter: blur(14px) saturate(1.55);
-  -webkit-backdrop-filter: blur(14px) saturate(1.55);
+  backdrop-filter: blur(28px) saturate(1.7);
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
 }
-.rvfax-screen[data-facts-landing][data-readable-cards] .glass-prestige-deep {
-  background: linear-gradient(
-    180deg,
-    rgba(20, 28, 56, 0.38) 0%,
-    rgba(8, 12, 28, 0.48) 100%
-  );
-  backdrop-filter: blur(22px) saturate(1.5);
-  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+[data-rv-search-card] .facts-cascade-core {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
 }
 
 /*
  * Facts landing cascade chrome (#2 dock clear, #5 sun-readable Type·Year·Make).
- * Photo stay at ~46% above; only the cascade field plate is more opaque.
  */
 .rvfax-screen[data-facts-landing] {
   --facts-cascade-dock-clear: calc(10.5rem + env(safe-area-inset-bottom, 0px));
@@ -1557,69 +1704,8 @@
   scroll-margin-bottom: var(--facts-cascade-dock-clear);
 }
 .rvfax-screen[data-facts-landing] .facts-cascade-core {
-  background: linear-gradient(
-    180deg,
-    rgba(6, 10, 20, 0.88) 0%,
-    rgba(6, 10, 18, 0.82) 100%
-  );
-  backdrop-filter: blur(20px) saturate(1.3);
-  -webkit-backdrop-filter: blur(20px) saturate(1.3);
-  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-md);
 }
-
-/*
- * Tow landing: same SuiteBackdrop + glass-prestige stack as Facts,
- * beach truck / fifth-wheel still at ~46% so hero and cards sit on it.
- */
-.rvtow-screen[data-tow-landing][data-readable-cards] .page-backdrop-bright {
-  opacity: 0.46;
-  filter: brightness(1.06) contrast(1.03) saturate(1.08);
-}
-.rvtow-screen[data-tow-landing][data-readable-cards] .page-scrim-soft {
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.38) 0%,
-    rgba(0, 0, 0, 0.14) 22%,
-    rgba(0, 0, 0, 0.08) 48%,
-    rgba(0, 0, 0, 0.2) 76%,
-    rgba(0, 0, 0, 0.42) 100%
-  );
-}
-.rvtow-screen[data-tow-landing][data-readable-cards] .glass-prestige,
-.rvtow-screen[data-tow-landing][data-readable-cards] .glass-prestige-deep,
-.rvtow-screen[data-tow-landing][data-readable-cards] .glass-prestige-gold,
-.rvtow-screen[data-tow-landing][data-readable-cards] .glass-panel,
-.rvtow-screen[data-tow-landing][data-readable-cards] .glass-surface {
-  background: linear-gradient(
-    160deg,
-    rgba(255, 255, 255, 0.14) 0%,
-    rgba(255, 255, 255, 0.05) 45%,
-    rgba(8, 12, 28, 0.12) 100%
-  );
-  backdrop-filter: blur(12px) saturate(1.7);
-  -webkit-backdrop-filter: blur(12px) saturate(1.7);
-}
-.rvtow-screen[data-tow-landing][data-readable-cards] .glass-prestige-gold {
-  background: linear-gradient(
-    155deg,
-    rgba(240, 215, 140, 0.14) 0%,
-    rgba(255, 255, 255, 0.08) 36%,
-    rgba(10, 8, 6, 0.18) 100%
-  );
-  backdrop-filter: blur(14px) saturate(1.55);
-  -webkit-backdrop-filter: blur(14px) saturate(1.55);
-}
-.rvtow-screen[data-tow-landing][data-readable-cards] .glass-prestige-deep {
-  background: linear-gradient(
-    180deg,
-    rgba(20, 28, 56, 0.38) 0%,
-    rgba(8, 12, 28, 0.48) 100%
-  );
-  backdrop-filter: blur(22px) saturate(1.5);
-  -webkit-backdrop-filter: blur(22px) saturate(1.5);
-}
-
 
 /* Live field upgrade flash */
 @keyframes live-field-flash {
@@ -1891,11 +1977,11 @@
   border-bottom: 9px solid var(--color-blue);
   transform: translateX(-50%);
 }
-/* Quiet GPS field — Celtic R whisper only. Isolation stops swipe-sibling
-   SuiteBackdrop (shared-prestige) from bleeding through glass. America décor stays off. */
+/* Quiet GPS field — shared sapphire Raidho mark (not the Celtic photo).
+   Isolation stops swipe-sibling SuiteBackdrop from bleeding through glass. */
 [data-suite-pane="rvtrips"],
 [data-trips-screen] {
-  background: #050b16;
+  background: var(--color-ink-black);
   isolation: isolate;
 }
 [data-trips-screen] .page-backdrop-bright {
@@ -2033,4 +2119,327 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   font-size: clamp(1.55rem, 6.6vw, 2.05rem);
   line-height: 0.95;
   letter-spacing: -0.03em;
+}
+
+/* Lot stock — SuitePage + Raidho field + thick sapphire frost; own-lot only */
+.lot-stock-screen[data-readable-cards] .glass-prestige,
+.lot-stock-screen[data-readable-cards] .glass-prestige-deep,
+.lot-stock-screen[data-readable-cards] .glass-panel,
+.lot-stock-screen[data-readable-cards] .glass-surface {
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.05) 45%,
+    rgba(8, 12, 28, 0.1) 100%
+  );
+  backdrop-filter: blur(28px) saturate(1.7);
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  border-color: rgba(255, 255, 255, 0.34);
+}
+.lot-search:focus {
+  border-color: color-mix(in srgb, var(--color-sapphire-glow) 55%, transparent);
+  outline: none;
+}
+.lot-chip-rail {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-sapphire-glow) 35%, transparent)
+    transparent;
+  padding-bottom: 0.55rem;
+}
+.lot-chip-rail::-webkit-scrollbar {
+  height: 3px;
+}
+.lot-chip-rail::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-sapphire-glow) 35%, transparent);
+  border-radius: 99px;
+}
+.lot-chip.is-on {
+  background: var(--color-sapphire);
+  border-color: color-mix(in srgb, var(--color-sapphire-glow) 55%, transparent);
+  color: #fff;
+}
+.lot-well {
+  background:
+    radial-gradient(
+      ellipse 70% 60% at 50% 42%,
+      color-mix(in srgb, var(--color-sapphire-deep) 34%, transparent) 0%,
+      transparent 72%
+    ),
+    rgb(6, 12, 22);
+}
+.lot-well-mark {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: min(7.5rem, 36%);
+  height: min(9rem, 56%);
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  opacity: 0.22;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.lot-well.is-featured {
+  min-height: 8.25rem;
+}
+@media (min-width: 640px) {
+  .lot-well.is-featured {
+    min-height: 9.5rem;
+  }
+}
+.lot-well.is-rail {
+  min-height: 7rem;
+}
+.lot-well-id {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  padding: 2.1rem 0.85rem 0.7rem;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(4, 10, 28, 0.82)
+  );
+}
+.lot-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+}
+.lot-well::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4.5rem;
+  background: linear-gradient(
+    180deg,
+    rgba(4, 10, 28, 0.45),
+    transparent
+  );
+  pointer-events: none;
+}
+.lot-well > span {
+  z-index: 1;
+}
+.lot-pills {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+.lot-pill {
+  min-width: 0;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 0.65rem 0.3rem 0.55rem;
+  text-align: center;
+}
+.lot-pill-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+}
+.lot-pill-value.is-gap {
+  color: rgba(255, 255, 255, 0.45);
+}
+.lot-pill-label {
+  margin-top: 0.2rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lot-card,
+  .lot-chip {
+    transition: none;
+  }
+}
+
+/* ── RV Grok Lot-wingman chrome (#390/#391 frost, Raidho field) ── */
+[data-rvgrok-wingman] {
+  --color-grok-mic: #e8893a;
+  --color-grok-mic-fg: #1a0f08;
+  font-family: "Figtree", var(--font-sans);
+  background: var(--color-ink-black);
+  isolation: isolate;
+}
+/*
+ * Raidho R is a BACKGROUND field behind frost — not a front brand lockup,
+ * header plate, or competing chrome. Field + screen-blend rune fill the
+ * viewport; glass sits on top.
+ */
+[data-rvgrok-wingman] .grok-raidho-field,
+[data-rvgrok-wingman] .suite-raidho-backdrop {
+  z-index: 0;
+}
+[data-rvgrok-wingman] .suite-raidho-field {
+  background:
+    radial-gradient(
+      ellipse 92% 78% at 50% 46%,
+      color-mix(in srgb, var(--color-sapphire-deep) 26%, transparent) 0%,
+      transparent 70%
+    ),
+    var(--color-ink-black);
+}
+[data-rvgrok-wingman] .suite-raidho-mark {
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%) scale(2.2);
+  object-fit: contain;
+  opacity: 0.36;
+  mix-blend-mode: screen;
+}
+[data-rvgrok-wingman] .suite-raidho-bleed,
+[data-rvgrok-wingman] .page-backdrop-bright,
+[data-rvgrok-wingman] .page-scrim-soft,
+[data-rvgrok-wingman] .sapphire-header {
+  display: none;
+}
+.app-shell [data-rvgrok-wingman] .text-muted,
+.app-shell [data-rvgrok-wingman] .grok-status-word,
+.app-shell [data-rvgrok-wingman] .placeholder\:text-muted::placeholder {
+  color: color-mix(in srgb, var(--color-ink-foam) 70%, transparent) !important;
+}
+.grok-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+}
+.grok-frost {
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(22, 72, 200, 0.18) 38%,
+    rgba(6, 18, 40, 0.42) 100%
+  );
+  backdrop-filter: blur(28px) saturate(1.7);
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  box-shadow: var(--shadow-glass);
+  color: var(--color-fg);
+}
+[data-readable-cards][data-rvgrok-wingman] .grok-frost,
+[data-rvgrok-wingman][data-readable-cards] .glass-prestige,
+[data-rvgrok-wingman][data-readable-cards] .glass-prestige-deep,
+[data-rvgrok-wingman][data-readable-cards] .glass-panel,
+[data-rvgrok-wingman][data-readable-cards] .glass-surface {
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(22, 72, 200, 0.18) 38%,
+    rgba(6, 18, 40, 0.42) 100%
+  );
+  backdrop-filter: blur(28px) saturate(1.7);
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  border-color: rgba(255, 255, 255, 0.34);
+}
+.grok-landing-card {
+  border-radius: 2rem;
+}
+.grok-avatar-ring {
+  background:
+    linear-gradient(210deg, var(--color-sapphire-glow), var(--color-gold), var(--color-sapphire));
+  box-shadow:
+    0 12px 32px rgba(4, 12, 32, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.grok-avatar-well {
+  background: #05070c;
+}
+.grok-avatar-speak {
+  animation: speak-glow 1.8s ease-in-out infinite;
+}
+.grok-status-word {
+  letter-spacing: 0.22em;
+}
+.grok-mic-btn {
+  background: var(--color-grok-mic);
+  color: var(--color-grok-mic-fg);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--color-grok-mic) 38%, transparent);
+}
+.grok-mic-btn.is-live,
+.grok-mic-btn.is-rec {
+  background: var(--color-sapphire);
+  color: #fff;
+  box-shadow: var(--shadow-glow-sapphire);
+}
+.grok-mic-btn.is-armed {
+  outline: 2px solid color-mix(in srgb, var(--color-grok-mic) 70%, white);
+  outline-offset: 2px;
+}
+.grok-send-btn.is-ready {
+  background: color-mix(in srgb, var(--color-ink-foam) 88%, transparent);
+  color: var(--color-ink-black);
+}
+.grok-send-btn.is-idle {
+  background: color-mix(in srgb, var(--color-ink-foam) 18%, transparent);
+  color: var(--color-ink-foam);
+}
+.grok-composer-pill {
+  background: rgba(6, 12, 24, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+}
+.grok-chip,
+.grok-lot-chip {
+  background: rgba(6, 12, 24, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.grok-lot-dot {
+  background: var(--color-grok-mic);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-grok-mic) 22%, transparent);
+}
+.grok-report-pill {
+  background: rgba(6, 12, 24, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.grok-report-note {
+  border-color: color-mix(in srgb, var(--color-amber) 40%, transparent);
+}
+
+@keyframes speak-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-sapphire-glow) 35%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+@media (max-height: 740px) {
+  .grok-landing-card {
+    padding-top: 1.4rem;
+    padding-bottom: 1.1rem;
+  }
+  .grok-landing .grok-display {
+    font-size: 1.55rem;
+  }
+  .grok-starters-list {
+    margin-top: 0.45rem;
+    gap: 0.4rem;
+  }
+  .grok-starter {
+    min-height: 44px;
+    padding: 0.45rem 0.85rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grok-avatar-speak {
+    animation: none;
+  }
 }

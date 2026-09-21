@@ -1,21 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Camera,
-  Fish,
   History,
-  Loader2,
-  Mic,
   Plus,
   Radio,
-  Send,
   Sparkles,
   Square,
   SwitchCamera,
-  Users,
-  Video,
   Volume2,
-  Wrench,
-  X,
 } from "lucide-react";
 import type { AgentStep, ChatSession, Message } from "@/lib/rvgrok/types";
 import { AGENT_MODE_KEY } from "@/lib/rvgrok/types";
@@ -27,6 +18,12 @@ import {
 import { streamChat } from "@/lib/rvgrok/stream";
 import { GrokRealtimeSession } from "@/lib/rvgrok/realtime";
 import { buildChatGrounding, buildVoiceGrounding } from "@/lib/rvgrok/grounding";
+import {
+  claimsDeskSpecSheet,
+  resolveDeskSheet,
+  type DeskSheetPayload,
+} from "@/lib/rvgrok/deskSheet";
+import { DeskSpecSheet } from "./DeskSpecSheet";
 import { formatFeedbackContext } from "@/lib/rvgrok/answerFeedback";
 import { readActiveCoach } from "@/lib/rv/activeCoach";
 import { ensureCatalogLoaded } from "@/lib/rv/catalogLoad";
@@ -60,36 +57,36 @@ import { cn, uid } from "@/lib/utils";
 import { MessageBubble } from "./MessageBubble";
 import { HistoryPanel } from "./HistoryPanel";
 import { VoicePanel } from "./VoicePanel";
+import { GrokComposer } from "./GrokComposer";
+import {
+  GrokLanding,
+  GrokStatusWord,
+  GrokToolbarButton,
+  grokStatusLabel,
+  type GrokStarter,
+} from "./GrokLanding";
+import { GrokAvatar } from "./GrokAvatar";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
-import { ScrollSuiteHeader } from "@/components/shell/ScrollChrome";
-import { SuiteBackdrop } from "@/components/shell/SuitePage";
+import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
 
-const GROK_STARTERS: {
-  title: string;
-  line: string;
-  prompt: string;
-  Icon: typeof Users;
-}[] = [
+const GROK_STARTERS: GrokStarter[] = [
   {
-    title: "Match Me to a Coach",
+    title: "2019 Grand Design Solitude 310GK",
+    line: "Fifth wheel · spec report",
+    prompt:
+      "Give me the spec report on the 2019 Grand Design Solitude 310GK. Name the year, make, model, and floorplan. Put the spec sheet on the desk. Do not invent weights or a dealer listing.",
+  },
+  {
+    title: "Match me to a coach",
     line: "Budget, who travels, nights out",
-    Icon: Users,
     prompt:
       "Match me to an RV. Ask only what you still need: budget, who travels (kids/pets), ZIP, nights vs full-time, and whether I already have a truck. Then recommend 2–3 coach CLASSES with one example year/make/model each I can look up in RvFACTS. Do not invent a dealer listing or say a unit is for sale. EST. payment if I gave a price. If I have a truck, say what to check in RvTow.",
   },
   {
-    title: "Hot fishing spots",
-    line: "Lakes and access near my ZIP",
-    Icon: Fish,
-    prompt:
-      "Hot fishing spot locator based on my ZIP code. Ask me for the ZIP if I have not given it. Rank nearby lakes, rivers, and piers for an RV traveler — access, coach parking if known, and what is typically biting this time of year.",
-  },
-  {
-    title: "Troubleshooting my RV",
+    title: "Troubleshoot my RV",
     line: "Symptom first — then a safe next step",
-    Icon: Wrench,
     prompt:
       "Help me troubleshoot my RV. Ask what is going wrong (symptom, when it started, year/make/model if I know it). If a photo would help, tell me to use the camera. Give a short, safe diagnosis path: likely cause, what to check first, and when to stop and call a tech. Do not guess a recall or invent a parts number. Keep steps I can do at a campsite without specialty tools.",
   },
@@ -147,6 +144,9 @@ export function RvGrokApp({
     "environment",
   );
   const [keepShowing, setKeepShowing] = useState(false);
+  const [liveDeskSheet, setLiveDeskSheet] = useState<DeskSheetPayload | null>(
+    null,
+  );
   const [frameBusy, setFrameBusy] = useState(false);
   const [lastSentFrame, setLastSentFrame] = useState<string | null>(null);
 
@@ -167,6 +167,7 @@ export function RvGrokApp({
   const realtimeRef = useRef<GrokRealtimeSession | null>(null);
   const liveUserMsgId = useRef<string | null>(null);
   const liveAsstMsgId = useRef<string | null>(null);
+  const liveDeskSheetRef = useRef<DeskSheetPayload | null>(null);
   const voiceModeRef = useRef(voiceMode);
   const liveVoiceRef = useRef(liveVoice);
   const liveCamRef = useRef(false);
@@ -520,6 +521,19 @@ export function RvGrokApp({
           extraText,
           agentMode,
         });
+        const deskSheet = resolveDeskSheet({
+          query: messageText,
+          identity: grounded.identity,
+          specs: grounded.specs,
+        });
+        if (deskSheet) {
+          setLiveDeskSheet(deskSheet);
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsgId ? { ...m, deskSheet } : m,
+            ),
+          );
+        }
 
         await streamChat({
           messages: history,
@@ -861,6 +875,18 @@ export function RvGrokApp({
           setRealtimeStatus(s);
           setRealtimeDetail(detail ?? null);
         },
+        onDeskSheet: (sheet) => {
+          liveDeskSheetRef.current = sheet;
+          setLiveDeskSheet(sheet);
+          const asstId = liveAsstMsgId.current;
+          if (asstId && sheet) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === asstId ? { ...m, deskSheet: sheet } : m,
+              ),
+            );
+          }
+        },
         onUserTranscript: (text) => {
           const uidMsg = liveUserMsgId.current;
           if (uidMsg) {
@@ -935,9 +961,19 @@ export function RvGrokApp({
           const asstId = liveAsstMsgId.current;
           if (asstId) {
             setMessages((prev) => {
+              const sheet = liveDeskSheetRef.current;
               const updated = prev.map((m) =>
                 m.id === asstId
-                  ? { ...m, content: text, streaming: false }
+                  ? {
+                      ...m,
+                      content: text,
+                      streaming: false,
+                      deskSheet:
+                        m.deskSheet ||
+                        (claimsDeskSpecSheet(text) ? sheet : null) ||
+                        sheet ||
+                        undefined,
+                    }
                   : m,
               );
               const { sessions: next, id } = upsertSession(
@@ -1279,126 +1315,216 @@ export function RvGrokApp({
     !isLoading &&
     !liveActive;
 
-  const startersOrThread =
-    messages.length === 0 ? (
-      <div className="grok-starters mx-auto flex max-w-xl flex-col px-0.5 pb-4 pt-6">
-        <p className="grok-starters-kicker text-center text-[13px] leading-relaxed text-white/75">
-          Tap a prompt or type below.
-        </p>
+  const threadAlreadyHasDesk = messages.some(
+    (m) =>
+      m.deskSheet &&
+      m.deskSheet.title === liveDeskSheet?.title &&
+      m.deskSheet.year === liveDeskSheet?.year,
+  );
+  const reportSheet =
+    liveDeskSheet ||
+    messages.find((m) => m.deskSheet)?.deskSheet ||
+    null;
+  const deskOnThread =
+    liveVoice && liveDeskSheet && !threadAlreadyHasDesk && !reportSheet ? (
+      <div className="mx-auto w-full max-w-2xl px-0.5 pb-1 pt-2">
+        <DeskSpecSheet sheet={liveDeskSheet} />
+      </div>
+    ) : null;
 
-        <div className="grok-starters-list mt-4 flex flex-col gap-2.5">
-          {GROK_STARTERS.map((s) => (
-            <button
-              key={s.title}
-              type="button"
-              onClick={() => void sendMessage(s.prompt)}
-              className="grok-starter glass-prestige flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition hover:border-white/25"
-            >
-              <s.Icon className="grok-starter-icon size-5 shrink-0 text-sky-100" />
-              <span className="min-w-0">
-                <span className="grok-starter-title block text-[15px] font-semibold leading-snug text-white">
-                  {s.title}
-                </span>
-                <span className="grok-starter-line mt-0.5 block text-[12px] leading-snug text-white/70">
-                  {s.line}
-                </span>
-              </span>
-            </button>
-          ))}
+  const wingmanStatus = grokStatusLabel({
+    liveActive,
+    realtimeStatus,
+    isRecording,
+    isLoading,
+    speaking: Boolean(speakingId),
+  });
+  const isLanding = messages.length === 0 && !liveDeskSheet;
+  const composerPlaceholder = isRecording
+    ? "Listening… keep talking"
+    : liveActive
+      ? "Live continuous — just speak"
+      : pendingImage
+        ? "Ask about this photo…"
+        : "Ask RV Grok — or name a year, make, and model";
+  const nextUnit = GROK_STARTERS.find(
+    (s) => s.title !== reportSheet?.title,
+  ) ?? GROK_STARTERS[0];
+
+  const composer = (
+    <GrokComposer
+      displayInput={displayInput}
+      onChange={setInput}
+      onKeyDown={onKeyDown}
+      onSend={() => void sendMessage()}
+      onMic={handleMicPress}
+      canSend={canSend}
+      isLoading={isLoading}
+      isRecording={isRecording}
+      liveActive={liveActive}
+      waitingToResumeLive={waitingToResumeLive}
+      pendingImage={pendingImage}
+      onClearImage={() => setPendingImage(null)}
+      placeholder={composerPlaceholder}
+      density={isLanding ? "landing" : "thread"}
+      cameraInputRef={cameraInputRef}
+      libraryInputRef={libraryInputRef}
+      onPickImage={(file) => void onPickImage(file)}
+      imageBusy={imageBusy}
+      liveCam={liveCam}
+      onToggleLiveCam={() =>
+        liveCam ? stopLiveCamera() : void startLiveCamera()
+      }
+    />
+  );
+
+  const wingmanToolbar = !embedded ? (
+    <>
+      <GrokToolbarButton
+        label="Chat history"
+        onClick={() => setHistoryOpen(true)}
+        badge={
+          sessions.length > 0
+            ? sessions.length > 9
+              ? "9+"
+              : String(sessions.length)
+            : undefined
+        }
+      >
+        <History className="size-4" />
+      </GrokToolbarButton>
+      <GrokToolbarButton
+        label="Agent"
+        onClick={toggleAgentMode}
+        active={agentMode}
+      >
+        <Sparkles className="size-3.5" />
+      </GrokToolbarButton>
+      <GrokToolbarButton
+        label="Voice settings"
+        onClick={() => setVoicePanelOpen(true)}
+        active={liveVoice || voiceMode}
+      >
+        <Volume2 className="size-4" />
+      </GrokToolbarButton>
+      {!isLanding ? (
+        <GrokToolbarButton label="New chat" onClick={startNewChat}>
+          <Plus className="size-4" />
+        </GrokToolbarButton>
+      ) : null}
+    </>
+  ) : null;
+
+  const thread = (
+    <div
+      className={cn(
+        "mx-auto flex w-full flex-col gap-3 pb-4 pt-3",
+        reportSheet ? "max-w-6xl" : "max-w-2xl",
+      )}
+    >
+      {deskOnThread}
+      {reportSheet ? (
+        <div
+          data-rvgrok-report=""
+          className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:items-start"
+        >
+          <section className="grok-frost grok-report-voice flex flex-col items-center rounded-[var(--radius-2xl)] px-5 py-6 text-center">
+            <GrokAvatar
+              size="md"
+              speaking={realtimeStatus === "speaking" || Boolean(speakingId)}
+            />
+            <p className="grok-display mt-4 text-[1.2rem] font-semibold text-fg">
+              Grok
+            </p>
+            <GrokStatusWord label={wingmanStatus} />
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <button
+                type="button"
+                onClick={handleStop}
+                className="grok-chip inline-flex min-h-11 items-center rounded-full px-4 text-[13px] font-semibold"
+              >
+                Pause
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const prompt = nextUnit.prompt;
+                  startNewChat();
+                  window.setTimeout(() => {
+                    void sendMessageRef.current(prompt);
+                  }, 0);
+                }}
+                className="grok-chip inline-flex min-h-11 items-center rounded-full px-4 text-[13px] font-semibold"
+              >
+                Next unit
+              </button>
+            </div>
+          </section>
+          <DeskSpecSheet sheet={reportSheet} />
         </div>
-      </div>
-    ) : (
-      <div className="mx-auto flex max-w-2xl flex-col gap-3 pb-4 pt-3">
-        {messages.map((m) => (
-          <MessageBubble
-            key={m.id}
-            message={m}
-            onSpeak={handleSpeak}
-            speakingId={speakingId}
-          />
-        ))}
-      </div>
-    );
+      ) : null}
+      {messages.map((m) => (
+        <MessageBubble
+          key={m.id}
+          message={{
+            ...m,
+            deskSheet: reportSheet ? undefined : m.deskSheet,
+          }}
+          onSpeak={handleSpeak}
+          speakingId={speakingId}
+        />
+      ))}
+    </div>
+  );
+
+  const startersOrThread = isLanding ? (
+    <GrokLanding
+      status={wingmanStatus}
+      speaking={realtimeStatus === "speaking" || Boolean(speakingId)}
+      lotChip={GROK_STARTERS[0] ?? null}
+      starters={GROK_STARTERS}
+      onChip={(prompt) => void sendMessage(prompt)}
+      toolbar={wingmanToolbar}
+      composer={composer}
+      hint={
+        liveActive
+          ? realtimeDetail || "Hands-free · tap mic to end"
+          : waitingToResumeLive
+            ? "Live Voice armed · tap mic"
+            : undefined
+      }
+    />
+  ) : (
+    thread
+  );
 
   return (
     <div
       className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden text-fg"
       data-rvgrok-variant={variant}
+      data-rvgrok-wingman=""
+      data-readable-cards=""
     >
-      {!embedded && <SuiteBackdrop />}
       {!embedded && (
-        <ScrollSuiteHeader tab="rvgrok" className="relative z-10 shrink-0" />
+        <SuiteRaidhoBackdrop className="grok-raidho-field" />
       )}
 
-      {!embedded && (
-      <header className="relative z-10 flex shrink-0 items-center gap-2 border-b border-white/10 bg-black/20 px-3 py-1.5 sm:px-4">
-        <button
-          type="button"
-          onClick={() => setHistoryOpen(true)}
-          className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white transition hover:bg-white/10"
-          aria-label="Chat history"
-        >
-          <History className="size-5" />
-          {sessions.length > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-sky-500 text-[9px] font-bold text-white">
-              {sessions.length > 9 ? "9+" : sessions.length}
-            </span>
-          )}
-        </button>
-
-        <p className="min-w-0 flex-1 truncate text-[12px] font-medium text-white/80">
-          {liveActive
-            ? "Live Voice"
-            : isRecording
-              ? "Listening…"
-              : agentMode
-                ? "Agent"
-                : activeModel
-                  ? modelLabel
-                  : "Ready"}
-        </p>
-
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            onClick={toggleAgentMode}
-            className={cn(
-              "inline-flex h-11 items-center gap-1 rounded-full border px-3 text-[12px] font-semibold transition",
-              agentMode
-                ? "border-sky-300/45 bg-sky-500/25 text-sky-50"
-                : "border-white/15 bg-black/40 text-white",
-            )}
-          >
-            <Sparkles className="size-3.5" />
-            Agent
-          </button>
-          <button
-            type="button"
-            onClick={() => setVoicePanelOpen(true)}
-            className={cn(
-              "flex size-11 items-center justify-center rounded-full border transition",
-              liveVoice || voiceMode
-                ? "border-sky-300/45 bg-sky-500/20 text-sky-100"
-                : "border-white/15 bg-black/40 text-white hover:bg-white/10",
-            )}
-            aria-label="Voice settings"
-            title="Voice settings"
-          >
-            <Volume2 className="size-4" />
-          </button>
-          {messages.length > 0 && (
-            <button
-              type="button"
-              onClick={startNewChat}
-              className="flex size-11 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white transition hover:bg-white/10"
-              aria-label="New chat"
-            >
-              <Plus className="size-4" />
-            </button>
-          )}
-        </div>
-      </header>
-      )}
+      {!embedded && !isLanding ? (
+        <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 py-1.5 sm:px-4">
+          <p className="min-w-0 flex-1 truncate text-[12px] font-medium text-muted">
+            {liveActive
+              ? "Live Voice"
+              : isRecording
+                ? "Listening…"
+                : agentMode
+                  ? "Agent"
+                  : activeModel
+                    ? modelLabel
+                    : "Ready"}
+          </p>
+          <div className="flex shrink-0 items-center gap-1">{wingmanToolbar}</div>
+        </header>
+      ) : null}
 
       <div
         ref={listRef}
@@ -1420,7 +1546,12 @@ export function RvGrokApp({
         )}
       </div>
 
-      <div className="relative z-20 shrink-0 border-t border-white/10 bg-bg px-3 py-2 sm:px-4">
+      <div
+        className={cn(
+          "relative z-20 shrink-0 px-3 py-2 sm:px-4",
+          isLanding ? "hidden" : "border-t border-white/10",
+        )}
+      >
         {(isLoading ||
           messages.some((m) => m.streaming) ||
           isRecording ||
@@ -1559,169 +1690,10 @@ export function RvGrokApp({
           </p>
         )}
 
-        {pendingImage && (
-          <div className="mx-auto mb-2 flex max-w-2xl items-center gap-2 rounded-[var(--radius-md)] border border-sky-300/35 bg-black/40 px-2 py-2">
-            <img
-              src={pendingImage}
-              alt="Ready to send"
-              className="size-14 shrink-0 rounded-md object-cover"
-            />
-            <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-semibold text-sky-100">
-                Photo ready
-              </p>
-              <p className="text-[11px] text-white/65">
-                Add a question or send to analyze
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setPendingImage(null)}
-              className="flex size-8 items-center justify-center rounded-full border border-white/20 text-white/80 hover:bg-white/10"
-              aria-label="Remove photo"
-            >
-              <X className="size-3.5" />
-            </button>
-          </div>
-        )}
-
-        <div
-          className={cn(
-            "relative mx-auto flex max-w-2xl items-end gap-1 rounded-[var(--radius-xl)] border bg-surface/90 px-1.5 py-1.5 shadow-[var(--shadow-panel)] focus-within:border-sky-300/40 sm:gap-1.5 sm:px-2",
-            isRecording || liveActive
-              ? "border-sky-300/40"
-              : "border-border-strong",
-          )}
-        >
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="pointer-events-none absolute size-px overflow-hidden opacity-0"
-            tabIndex={-1}
-            aria-hidden
-            onChange={(e) => {
-              const f = e.target.files?.[0] ?? null;
-              void onPickImage(f);
-            }}
-          />
-          <input
-            ref={libraryInputRef}
-            type="file"
-            accept="image/*"
-            className="pointer-events-none absolute size-px overflow-hidden opacity-0"
-            tabIndex={-1}
-            aria-hidden
-            onChange={(e) => {
-              const f = e.target.files?.[0] ?? null;
-              void onPickImage(f);
-            }}
-          />
-          <button
-            type="button"
-            disabled={liveActive || imageBusy}
-            onClick={() => cameraInputRef.current?.click()}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              if (liveActive || imageBusy) return;
-              libraryInputRef.current?.click();
-            }}
-            className={cn(
-              "mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-full transition",
-              pendingImage
-                ? "bg-sky-500/25 text-sky-100"
-                : "text-white hover:bg-white/5",
-              (liveActive || imageBusy) && "opacity-40",
-            )}
-            aria-label="Take a photo for Grok"
-            title="Take photo · hold for library"
-          >
-            {imageBusy ? (
-              <Loader2 className="size-5 animate-spin" />
-            ) : (
-              <Camera className="size-5" />
-            )}
-          </button>
-          <button
-            type="button"
-            disabled={imageBusy}
-            onClick={() =>
-              liveCam ? stopLiveCamera() : void startLiveCamera()
-            }
-            className={cn(
-              "mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-full transition",
-              liveCam ? "bg-ruby/80 text-white" : "text-white hover:bg-white/5",
-            )}
-            aria-label={liveCam ? "Close live camera" : "Live camera with Grok"}
-            title="Live camera"
-          >
-            <Video className="size-5" />
-          </button>
-          <textarea
-            value={displayInput}
-            onChange={(e) => {
-              if (!isRecording) setInput(e.target.value);
-            }}
-            onKeyDown={onKeyDown}
-            rows={1}
-            maxLength={2000}
-            placeholder={
-              isRecording
-                ? "Listening… keep talking"
-                : liveActive
-                  ? "Live continuous — just speak"
-                  : pendingImage
-                    ? "Ask about this photo…"
-                    : agentMode
-                      ? "ask anything"
-                      : "Ask RV Grok"
-            }
-            className="max-h-28 min-h-11 flex-1 resize-none bg-transparent px-1.5 py-2.5 text-[15px] text-white outline-none placeholder:text-white/50 sm:px-2"
-            readOnly={isRecording || liveActive}
-          />
-          <button
-            type="button"
-            onClick={handleMicPress}
-            className={cn(
-              "mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-full transition",
-              liveActive
-                ? "bg-sky-500 text-white shadow-[0_0_14px_rgba(80,160,255,0.55)]"
-                : waitingToResumeLive
-                  ? "bg-sky-500/20 text-sky-100"
-                  : "text-white/80 hover:bg-white/5 hover:text-white",
-            )}
-            aria-label={liveActive ? "Stop live voice" : "Start live voice"}
-            title={liveActive ? "Stop Live Voice" : "Start Live Voice"}
-          >
-            {liveActive ? (
-              <Radio className="size-5 animate-pulse" />
-            ) : (
-              <Mic className="size-5" />
-            )}
-          </button>
-          <button
-            type="button"
-            disabled={!canSend}
-            onClick={() => void sendMessage()}
-            className={cn(
-              "mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-full border transition",
-              canSend
-                ? "border-sky-300/40 bg-sky-500 text-white hover:bg-sky-400"
-                : "border-border text-dim",
-            )}
-            aria-label="Send"
-          >
-            {isLoading ? (
-              <Loader2 className="size-4 animate-spin text-sky-100" />
-            ) : (
-              <Send className="size-4" />
-            )}
-          </button>
-        </div>
+        {isLanding ? null : <div className="mx-auto max-w-2xl">{composer}</div>}
 
         {liveActive || waitingToResumeLive || pendingImage ? (
-          <p className="mx-auto mt-1.5 max-w-2xl text-center text-[11px] text-white/60">
+          <p className="mx-auto mt-1.5 max-w-2xl text-center text-[11px] text-muted">
             {liveActive
               ? "Hands-free · tap mic to end"
               : waitingToResumeLive

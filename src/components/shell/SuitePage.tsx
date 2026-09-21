@@ -5,7 +5,7 @@ import {
   type RefObject,
 } from "react";
 import { cn } from "@/lib/utils";
-import { SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
+import { RAIDHO_R_MARK, SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
 import type { AppTab } from "./BottomTabs";
 import { ScrollSuiteHeader } from "./ScrollChrome";
 import { ActiveCoachChip } from "./ActiveCoachChip";
@@ -14,7 +14,35 @@ import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 
-/** Soft-scrim prestige backdrop — single stack (image + scrim only). */
+/** Full-viewport Raidho R watermark — same seal as compare, suite-wide. */
+export function SuiteRaidhoBackdrop({
+  className,
+  bleed,
+}: {
+  className?: string;
+  /** Logo only, full-bleed — no photo, field, or scrim. */
+  bleed?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "suite-raidho-backdrop pointer-events-none absolute inset-0 overflow-hidden",
+        className,
+      )}
+      aria-hidden
+      data-raidho-bleed={bleed ? "" : undefined}
+    >
+      {bleed ? null : <div className="suite-raidho-field" />}
+      <img
+        src={RAIDHO_R_MARK}
+        alt=""
+        className={bleed ? "suite-raidho-bleed" : "suite-raidho-mark"}
+      />
+    </div>
+  );
+}
+
+/** Soft-scrim prestige backdrop — photo + Raidho R watermark + scrim. */
 export function SuiteBackdrop({
   src = SHARED_PRESTIGE_BACKDROP,
   objectPosition = "center",
@@ -38,7 +66,9 @@ export function SuiteBackdrop({
         className="page-backdrop-bright absolute inset-0 size-full object-cover"
         style={{ objectPosition }}
       />
+      <div className="suite-raidho-field" />
       <div className="page-scrim-soft" />
+      <img src={RAIDHO_R_MARK} alt="" className="suite-raidho-mark" />
     </div>
   );
 }
@@ -70,8 +100,10 @@ export type SuitePageProps = {
   /** Expose scroll node to parent (lenders, focus, etc.). */
   scrollRef?: RefObject<HTMLDivElement | null>;
   style?: CSSProperties;
-  /** Landing photo/glass override (Tow beach, Facts showroom). */
+  /** Landing chrome hook (Tow). Photo landings are gone — Raidho only. */
   landing?: "tow";
+  /** Full-bleed Raidho logo, no family / camping photo plate. Default on. */
+  raidhoOnly?: boolean;
 };
 
 /**
@@ -96,6 +128,7 @@ export function SuitePage({
   scrollRef: scrollRefProp,
   style,
   landing,
+  raidhoOnly = true,
 }: SuitePageProps) {
   const localRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = scrollRefProp ?? localRef;
@@ -107,8 +140,9 @@ export function SuitePage({
     { enabled: Boolean(onPullReset) },
   );
 
+  const usePhotoGlass = adaptiveGlass && !raidhoOnly;
   const rootStyle: CSSProperties = {
-    ...(adaptiveGlass ? glass.style : null),
+    ...(usePhotoGlass ? glass.style : null),
     ...style,
   };
 
@@ -116,18 +150,26 @@ export function SuitePage({
     <div
       className={cn(
         "relative flex h-full min-h-0 flex-col overflow-hidden bg-bg text-white",
-        adaptiveGlass && "adaptive-glass",
+        usePhotoGlass && "adaptive-glass",
         className,
       )}
       data-readable-cards=""
       style={rootStyle}
       data-glass-l={
-        adaptiveGlass ? glass.luminance.toFixed(3) : undefined
+        usePhotoGlass ? glass.luminance.toFixed(3) : undefined
       }
       data-no-swipe-scroll={noSwipeScroll ? "" : undefined}
       data-tow-landing={landing === "tow" ? "" : undefined}
+      data-sold-book={tab === "rvsold" ? "" : undefined}
+      data-premium-screen={tab === "more" ? "" : undefined}
+      data-cal-screen={tab === "rvcal" ? "" : undefined}
+      data-raidho-only={raidhoOnly ? "" : undefined}
     >
-      <SuiteBackdrop src={backdrop} objectPosition={objectPosition} />
+      {raidhoOnly ? (
+        <SuiteRaidhoBackdrop bleed />
+      ) : (
+        <SuiteBackdrop src={backdrop} objectPosition={objectPosition} />
+      )}
       {topSlot}
       <div
         ref={scrollRef}

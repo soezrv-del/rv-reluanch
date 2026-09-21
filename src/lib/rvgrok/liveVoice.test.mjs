@@ -142,10 +142,15 @@ test("Live Voice session start introduces RV Grok once — not the old stall", (
   const policy = readFileSync(join(root, "speechPolicy.ts"), "utf8");
   assert.match(
     policy,
-    /I'm RV Grok, here to help you with all your RV needs/,
+    /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
   );
   assert.match(live, /buildSessionIntroResponse/);
   assert.match(live, /RV_GROK_SESSION_INTRO/);
+  assert.match(live, /sales-floor wingman/);
+  assert.match(live, /SALES_MISSION_POLICY/);
+  assert.match(live, /HONESTY_STANDING_POLICY/);
+  assert.doesNotMatch(live, /redirect off-topic/);
+  assert.doesNotMatch(live, /Not a search tool or general assistant/);
   assert.match(realtime, /maybeSpeakSessionIntro/);
   assert.match(realtime, /buildSessionIntroResponse/);
   assert.doesNotMatch(live, /Let me check that/);

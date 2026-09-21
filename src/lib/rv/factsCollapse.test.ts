@@ -58,8 +58,34 @@ test("Facts report sections collapse by default with title+headline", () => {
   const defaultOpenCount = (detail.match(/defaultOpen/g) || []).length;
   assert.equal(
     defaultOpenCount,
-    0,
-    "no section default-open — Market value waits for user open/ask",
+    1,
+    "only Vehicle specifications defaults open — Market value still waits",
+  );
+  assert.match(
+    detail,
+    /title="Vehicle specifications"\s+defaultOpen(?:=\{true\})?/,
+    "#383: Vehicle specifications under the hero default expanded — keep across theme rebases",
+  );
+});
+
+test("Facts detail order is hero, then specs (open), then ratings", () => {
+  const detail = readFileSync(
+    join(root, "../../components/rvfax/RvDetail.tsx"),
+    "utf8",
+  );
+  const heroAt = detail.indexOf("Vehicle Overview");
+  const specsAt = detail.indexOf('title="Vehicle specifications"');
+  const ratingsAt = detail.indexOf('data-testid="facts-ratings"');
+  const marketAt = detail.lastIndexOf("data-facts-market-value");
+  assert.ok(heroAt >= 0 && specsAt >= 0 && ratingsAt >= 0);
+  assert.ok(heroAt < specsAt, "specs sit directly under the coach hero");
+  assert.ok(specsAt < ratingsAt, "ratings stay below specs");
+  assert.ok(ratingsAt < marketAt, "market stays below ratings");
+  const betweenHeroAndSpecs = detail.slice(heroAt, specsAt);
+  assert.doesNotMatch(
+    betweenHeroAndSpecs,
+    /data-testid="facts-ratings"/,
+    "ratings must not sit between hero and specs",
   );
 });
 

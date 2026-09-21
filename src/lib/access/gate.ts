@@ -1,3 +1,4 @@
+import { findBetaSeed } from "./betaWhitelist.ts";
 import { HARD_ADMIN } from "./constants.ts";
 import { normalizePhone } from "./phone.ts";
 
@@ -71,8 +72,39 @@ export function hardAdminRequestResult(
   };
 }
 
+export type BetaSeedAccessResult = {
+  ok: true;
+  allowed: true;
+  isAdmin: false;
+  name: string;
+  phoneDigits: string;
+  phoneE164: string;
+};
+
 /**
- * Resolve access from a stored whitelist row (or none).
+ * Offline static beta-seed identity. Call after hard-admin, before getSql /
+ * ensureAdminSeed so Neon being unset cannot 503 a seeded tester.
+ * Never admin — HARD_ADMIN is the only admin short-circuit.
+ */
+export function betaSeedAccessResult(
+  raw: string,
+): BetaSeedAccessResult | null {
+  const n = normalizePhone(raw);
+  if (!n || isHardAdminPhone(n.digits)) return null;
+  const seed = findBetaSeed(n.digits);
+  if (!seed) return null;
+  return {
+    ok: true,
+    allowed: true,
+    isAdmin: false,
+    name: seed.contactName,
+    phoneDigits: n.digits,
+    phoneE164: n.e164,
+  };
+}
+
+/**
+ * Resolve access from hard-admin, the static beta seed, or a stored row.
  * Self-service requests are NOT a row and never reach this helper.
  */
 export function resolveAccess(
@@ -81,6 +113,9 @@ export function resolveAccess(
 ): AccessDecision {
   if (isHardAdminPhone(rawPhone)) {
     return { allowed: true, isAdmin: true, matched: true };
+  }
+  if (findBetaSeed(rawPhone)) {
+    return { allowed: true, isAdmin: false, matched: true };
   }
   if (!row) {
     return { allowed: false, isAdmin: false, matched: false };

@@ -1,16 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import {
   isAndroidNativeWebView,
   isStationaryDockTap,
 } from "@/lib/hooks/nativeWebView";
-import { isProfessionalTier } from "@/lib/rv/proEntitlement";
-import {
-  formatSoldDockAria,
-  readOwedNet,
-  SOLD_CHANGED_EVENT,
-} from "@/lib/rv/soldDeals";
 
 export type AppTab =
   | "rvgrok"
@@ -20,11 +14,12 @@ export type AppTab =
   | "rvtrips"
   | "rvshare"
   | "rvsold"
+  | "rvlot"
   | "more";
 
-/** Dock tabs only — Share is inline on Facts; Premium lives in ⋯ */
+/** Dock tabs only — Share is inline on Facts; Sold, Lot stock, and Premium live in ⋯ */
 const TABS: {
-  id: Exclude<AppTab, "more" | "rvshare" | "rvsold">;
+  id: Exclude<AppTab, "more" | "rvshare" | "rvsold" | "rvlot">;
   label: string;
   short: string;
 }[] = [
@@ -56,13 +51,14 @@ function DockLabel({
 }
 
 /**
- * Bottom dock — Raidho R black ground so the icon plate blends.
- * 16px radius, 2px sapphire top rule on the active tab (one highlight).
+ * Dock blends into the Raidho mark ground (#000000) so the tab
+ * square disappears. One highlight: 2px --color-sapphire top rule
+ * on the active tab.
  *
  * Android WebView: do NOT put pointer-events-none on this nav. Parent
- * none + child auto historically failed hit-testing on Chromium
- * WebView (worse with backdrop-filter). Facts/Cal/Tow/Trips/Grok
- * never fire. iOS still uses onClick only (no extra pointer path).
+ * none + child auto + backdrop-filter fails hit-testing on Chromium
+ * WebView, so Facts/Cal/Tow/Trips/Grok never fire. iOS still uses
+ * onClick only (no extra pointer path).
  */
 export function BottomTabs({
   tab,
@@ -71,30 +67,6 @@ export function BottomTabs({
   tab: AppTab;
   onChange: (t: AppTab) => void;
 }) {
-  const pro = isProfessionalTier();
-  const [owedNet, setOwedNet] = useState(0);
-  useEffect(() => {
-    const sync = () => setOwedNet(readOwedNet());
-    sync();
-    window.addEventListener(SOLD_CHANGED_EVENT, sync);
-    return () => window.removeEventListener(SOLD_CHANGED_EVENT, sync);
-  }, []);
-
-  const tabs: {
-    id: Exclude<AppTab, "more" | "rvshare">;
-    label: string;
-    short: string;
-  }[] = pro
-    ? [
-        ...TABS,
-        {
-          id: "rvsold",
-          label: "Sold",
-          short: "Sold",
-        },
-      ]
-    : TABS;
-
   const lastFire = useRef({ id: "" as AppTab | "", at: 0 });
   const press = useRef<{ id: AppTab; x: number; y: number } | null>(null);
 
@@ -119,23 +91,17 @@ export function BottomTabs({
       }}
     >
       <div
-        className={cn(
-          "bottom-tabs-dock pointer-events-auto relative isolate mx-auto grid w-full max-w-lg items-stretch gap-0 overflow-hidden rounded-[16px] p-1",
-          pro ? "grid-cols-6" : "grid-cols-5",
-        )}
+        className="bottom-tabs-dock pointer-events-auto relative isolate mx-auto grid w-full max-w-lg grid-cols-5 items-stretch gap-0 overflow-hidden rounded-[16px] p-1"
         style={{ touchAction: "manipulation" }}
       >
-        {tabs.map(({ id, label, short }) => {
+        {TABS.map(({ id, label, short }) => {
           const active = tab === id;
-          const isSold = id === "rvsold";
           const isLive = id === "rvgrok";
-          const soldLabel = formatSoldDockAria(owedNet);
           return (
             <button
               key={id}
               type="button"
               data-bottom-tab={id}
-              data-sold-owed={isSold ? String(owedNet) : undefined}
               onPointerDown={(e) => {
                 if (!isAndroidNativeWebView()) return;
                 press.current = { id, x: e.clientX, y: e.clientY };
@@ -157,8 +123,8 @@ export function BottomTabs({
                 fire(id);
               }}
               aria-current={active ? "page" : undefined}
-              aria-label={isSold ? soldLabel : label}
-              title={isSold ? soldLabel : label}
+              aria-label={label}
+              title={label}
               className={cn(
                 "bottom-tab-btn group relative z-[3] flex min-h-[48px] w-full items-center justify-center rounded-none px-0.5 py-2 sm:min-h-[52px]",
                 "transition-[transform,opacity] duration-200 ease-out",
@@ -175,10 +141,7 @@ export function BottomTabs({
                   className="bottom-tab-einstein"
                 />
               ) : (
-                <DockLabel
-                  text={short}
-                  className={isSold ? "bottom-tab-label-sold" : undefined}
-                />
+                <DockLabel text={short} />
               )}
             </button>
           );

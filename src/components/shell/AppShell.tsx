@@ -46,7 +46,7 @@ import {
 
 /**
  * Code-split suite tools — tools load only when visited.
- * Cold open lands on Facts; no splash / chooser gate.
+ * Cold open lands on RV Grok; no splash / chooser gate.
  */
 const RvFaxApp = lazy(() =>
   import("@/components/rvfax/RvFaxApp").then((m) => ({ default: m.RvFaxApp })),
@@ -71,6 +71,11 @@ const MoreApp = lazy(() =>
 const SoldBookApp = lazy(() =>
   import("@/components/rvfax/SoldBookApp").then((m) => ({
     default: m.SoldBookApp,
+  })),
+);
+const LotStockApp = lazy(() =>
+  import("@/components/lot/LotStockApp").then((m) => ({
+    default: m.LotStockApp,
   })),
 );
 
@@ -129,9 +134,13 @@ class SuiteErrorBoundary extends Component<
   }
 }
 
-export function AppShell() {
+export function AppShell({
+  initialTab = "rvgrok",
+}: {
+  initialTab?: AppTab;
+}) {
   const access = useAccess();
-  const [tab, setTab] = useState<AppTab>("rvfax");
+  const [tab, setTab] = useState<AppTab>(initialTab);
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
   const [grokEntryToken, setGrokEntryToken] = useState(0);
   const [calSeed, setCalSeed] = useState<CalSeed | null>(null);
@@ -147,7 +156,7 @@ export function AppShell() {
   const launchOpen = false;
   const suiteReady = true;
   const [visited, setVisited] = useState<Set<AppTab>>(
-    () => new Set<AppTab>(["rvfax"]),
+    () => new Set<AppTab>([initialTab]),
   );
   const mainRef = useRef<HTMLElement | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
@@ -435,9 +444,7 @@ export function AppShell() {
                               ? "RvTOW"
                               : id === "rvtrips"
                                 ? "RV GPS"
-                                : id === "rvsold"
-                                  ? "Sold"
-                                  : "Suite"
+                                : "Suite"
                     }
                   >
                     {id === "rvfax" ? (
@@ -455,8 +462,6 @@ export function AppShell() {
                       <RvTowApp />
                     ) : id === "rvtrips" ? (
                       <RvTripsApp />
-                    ) : id === "rvsold" && isPro ? (
-                      <SoldBookApp />
                     ) : null}
                   </SuiteErrorBoundary>
                 </Suspense>
@@ -468,6 +473,24 @@ export function AppShell() {
               <Suspense fallback={<SuiteFallback />}>
                 <SuiteErrorBoundary name="More">
                   <MoreApp onNavigate={onTabChange} />
+                </SuiteErrorBoundary>
+              </Suspense>
+            </div>
+          ) : null}
+          {show("rvsold") && isPro ? (
+            <div className={tab === "rvsold" ? TAB_PANE_ON : "hidden"}>
+              <Suspense fallback={<SuiteFallback />}>
+                <SuiteErrorBoundary name="Sold">
+                  <SoldBookApp />
+                </SuiteErrorBoundary>
+              </Suspense>
+            </div>
+          ) : null}
+          {show("rvlot") ? (
+            <div className={tab === "rvlot" ? TAB_PANE_ON : "hidden"}>
+              <Suspense fallback={<SuiteFallback />}>
+                <SuiteErrorBoundary name="Lot stock">
+                  <LotStockApp />
                 </SuiteErrorBoundary>
               </Suspense>
             </div>

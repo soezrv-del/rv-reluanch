@@ -143,9 +143,7 @@ import {
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
-import { SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
-import { resolveCardImage } from "@/assets/typeMedia";
-import { SuiteBackdrop } from "@/components/shell/SuitePage";
+import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { cn } from "@/lib/utils";
 import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
@@ -1143,10 +1141,12 @@ export function RvDetail({
 
   return (
     <div
-      className="relative flex h-full flex-col overflow-hidden bg-bg text-white"
+      className="rvfax-screen relative flex h-full flex-col overflow-hidden bg-bg text-white"
       data-readable-cards=""
+      data-coach-detail=""
+      data-raidho-only=""
     >
-      <SuiteBackdrop src={SHARED_PRESTIGE_BACKDROP} />
+      <SuiteRaidhoBackdrop bleed />
 
       <div
         ref={scrollRef}
@@ -1157,7 +1157,7 @@ export function RvDetail({
         <PullRefreshLayer state={pull} label="Release to go back">
         {/* Sticky under the iPhone clock / Dynamic Island */}
         <div
-          className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/10 bg-[#070b14]/95 backdrop-blur-md"
+          className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/15"
           data-no-export
         >
           <div className="mx-auto flex w-full max-w-lg items-center gap-1.5 px-3 pb-2 sm:px-5">
@@ -1347,7 +1347,6 @@ export function RvDetail({
             </div>
           ) : null}
         </div>
-        <div className="bg-[#070b14]">
         <div
           id="rvfax-vehicle-report"
           className="mx-auto w-full max-w-lg space-y-5 px-4 pb-32 pt-3 sm:px-5"
@@ -1421,22 +1420,11 @@ export function RvDetail({
             </div>
           </section>
 
-          {/* Overview */}
-          <section className="glass-prestige overflow-hidden rounded-[1.15rem]">
-            <div className="relative aspect-[16/9] w-full overflow-hidden">
-              <img
-                src={resolveCardImage({ ...data, type: displayType })}
-                alt={`${displayType} — ${year} ${make} ${model}`}
-                className="size-full object-cover object-[center_42%]"
-                crossOrigin="anonymous"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute bottom-2.5 left-3 right-3 flex flex-wrap items-end justify-between gap-2">
-                <span className="rounded-full bg-blue px-2.5 py-1 text-[10px] font-bold text-white shadow-lg">
-                  {displayType}
-                </span>
-              </div>
-            </div>
+          {/* Overview — frost on Raidho. No family / camping plate. */}
+          <section
+            className="glass-prestige overflow-hidden rounded-[1.15rem]"
+            data-coach-overview=""
+          >
             <div className="px-5 pb-6 pt-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
               Vehicle Overview
@@ -1514,91 +1502,12 @@ export function RvDetail({
             </div>
           </section>
 
-          <section
-            className="glass-prestige overflow-hidden rounded-[1.15rem] px-5 py-5"
-            data-testid="facts-ratings"
-          >
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
-              Ratings
-            </p>
-            <ul className="mt-3 divide-y divide-white/10">
-              {ratingsRows.map((row) => (
-                <li
-                  key={row.key}
-                  className="flex items-start justify-between gap-3 py-3 first:pt-1 last:pb-0"
-                  data-testid={`facts-ratings-${row.key}`}
-                >
-                  <div className="min-w-0">
-                    <span className="text-[14px] font-medium text-white">
-                      {row.label}
-                    </span>
-                    {row.caption ? (
-                      <p
-                        className="mt-0.5 text-[11px] leading-snug text-white/45"
-                        data-testid={`facts-ratings-${row.key}-caption`}
-                      >
-                        {row.caption}
-                      </p>
-                    ) : null}
-                  </div>
-                  {row.score == null ? (
-                    <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
-                      GAP
-                    </span>
-                  ) : (
-                    <span
-                      className="flex shrink-0 items-baseline gap-2 text-amber-200/90"
-                      aria-label={`${row.label} ${formatOwnerReviewScore(row.score)}`}
-                    >
-                      <span className="text-[13px] font-semibold tabular-nums text-white">
-                        {formatOwnerReviewScore(row.score)}
-                      </span>
-                      <span className="text-[13px] tracking-wide">
-                        {ratingStars(row.score)}
-                      </span>
-                    </span>
-                  )}
-                </li>
-              ))}
-              <li className="flex items-center justify-between gap-3 py-3 last:pb-0">
-                <span className="min-w-0 shrink-0 text-[14px] font-medium text-white">
-                  Torque-to-Weight
-                </span>
-                {torqueToWeight.score == null ? (
-                  <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
-                    {formatTorqueToWeightScore(torqueToWeight)}
-                  </span>
-                ) : (
-                  <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
-                    <div
-                      className="h-2 w-[7.5rem] overflow-hidden rounded-full bg-white/12 sm:w-[9.5rem]"
-                      data-testid="facts-tqwt-bar"
-                      role="meter"
-                      aria-label={`Torque-to-Weight ${formatTorqueToWeightScore(torqueToWeight)}`}
-                      aria-valuemin={1}
-                      aria-valuemax={10}
-                      aria-valuenow={Number(torqueToWeight.score.toFixed(1))}
-                    >
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${torqueBarPct}%`,
-                          backgroundColor: torqueBarColor,
-                        }}
-                      />
-                    </div>
-                    <span className="shrink-0 text-[13px] font-semibold tabular-nums text-white">
-                      {formatTorqueToWeightScore(torqueToWeight)}
-                    </span>
-                  </div>
-                )}
-              </li>
-            </ul>
-          </section>
-
+          {/* #383: specs under the hero start expanded. Keep across theme rebases. */}
           {hasConcreteFloorplan(floorplan) ? (
           <FactsCollapse
             title="Vehicle specifications"
+            defaultOpen={true}
+            data-testid="facts-specs"
             headline={factsSpecsHeadline({
               length: specs.lengthFt,
               engine: specs.engine,
@@ -1774,6 +1683,88 @@ export function RvDetail({
             </details>
           </FactsCollapse>
           ) : null}
+
+          <section
+            className="glass-prestige overflow-hidden rounded-[1.15rem] px-5 py-5"
+            data-testid="facts-ratings"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
+              Ratings
+            </p>
+            <ul className="mt-3 divide-y divide-white/10">
+              {ratingsRows.map((row) => (
+                <li
+                  key={row.key}
+                  className="flex items-start justify-between gap-3 py-3 first:pt-1 last:pb-0"
+                  data-testid={`facts-ratings-${row.key}`}
+                >
+                  <div className="min-w-0">
+                    <span className="text-[14px] font-medium text-white">
+                      {row.label}
+                    </span>
+                    {row.caption ? (
+                      <p
+                        className="mt-0.5 text-[11px] leading-snug text-white/45"
+                        data-testid={`facts-ratings-${row.key}-caption`}
+                      >
+                        {row.caption}
+                      </p>
+                    ) : null}
+                  </div>
+                  {row.score == null ? (
+                    <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                      GAP
+                    </span>
+                  ) : (
+                    <span
+                      className="flex shrink-0 items-baseline gap-2 text-amber-200/90"
+                      aria-label={`${row.label} ${formatOwnerReviewScore(row.score)}`}
+                    >
+                      <span className="text-[13px] font-semibold tabular-nums text-white">
+                        {formatOwnerReviewScore(row.score)}
+                      </span>
+                      <span className="text-[13px] tracking-wide">
+                        {ratingStars(row.score)}
+                      </span>
+                    </span>
+                  )}
+                </li>
+              ))}
+              <li className="flex items-center justify-between gap-3 py-3 last:pb-0">
+                <span className="min-w-0 shrink-0 text-[14px] font-medium text-white">
+                  Torque-to-Weight
+                </span>
+                {torqueToWeight.score == null ? (
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                    {formatTorqueToWeightScore(torqueToWeight)}
+                  </span>
+                ) : (
+                  <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
+                    <div
+                      className="h-2 w-[7.5rem] overflow-hidden rounded-full bg-white/12 sm:w-[9.5rem]"
+                      data-testid="facts-tqwt-bar"
+                      role="meter"
+                      aria-label={`Torque-to-Weight ${formatTorqueToWeightScore(torqueToWeight)}`}
+                      aria-valuemin={1}
+                      aria-valuemax={10}
+                      aria-valuenow={Number(torqueToWeight.score.toFixed(1))}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${torqueBarPct}%`,
+                          backgroundColor: torqueBarColor,
+                        }}
+                      />
+                    </div>
+                    <span className="shrink-0 text-[13px] font-semibold tabular-nums text-white">
+                      {formatTorqueToWeightScore(torqueToWeight)}
+                    </span>
+                  </div>
+                )}
+              </li>
+            </ul>
+          </section>
 
           <div data-facts-market-value>
           <FactsCollapse
@@ -2533,7 +2524,6 @@ export function RvDetail({
             {PUBLIC_SOLD_DISCLAIMER}
           </p>
           <SuiteDisclaimer className="pb-6" />
-        </div>
         </div>
         </PullRefreshLayer>
       </div>

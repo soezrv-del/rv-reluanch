@@ -4,6 +4,8 @@ import type { Message } from "@/lib/rvgrok/types";
 import { parseCoachFromText } from "@/lib/rvgrok/answerFeedback";
 import { formatTime, cn } from "@/lib/utils";
 import { AgentBadge, AgentStepsCard } from "./AgentStepsCard";
+import { DeskSpecSheet } from "./DeskSpecSheet";
+import { stripDuplicateMarkdownSpecSheet } from "@/lib/rvgrok/lockedWeights";
 
 function renderContent(text: string) {
   const lines = text.split("\n");
@@ -87,6 +89,10 @@ export function MessageBubble({
   const [savedNote, setSavedNote] = useState(false);
 
   const voted = message.feedback;
+  const displayContent = message.deskSheet
+    ? stripDuplicateMarkdownSpecSheet(message.content || "")
+    : message.content || "";
+  const speakContent = displayContent;
 
   return (
     <div
@@ -96,12 +102,14 @@ export function MessageBubble({
       )}
     >
       {!isUser && (
-        <div className="relative mt-1 size-8 shrink-0 overflow-hidden rounded-full border border-white/15 bg-black">
-          <img
-            src="/assets/brand/icon-rvgrok.png"
-            alt=""
-            className="size-full object-contain"
-          />
+        <div className="grok-avatar-ring relative mt-1 size-8 shrink-0 overflow-hidden rounded-full">
+          <div className="grok-avatar-well absolute inset-[2px] overflow-hidden rounded-full">
+            <img
+              src="/assets/brand/icon-rvgrok.png"
+              alt=""
+              className="size-full object-cover"
+            />
+          </div>
         </div>
       )}
 
@@ -109,8 +117,8 @@ export function MessageBubble({
         className={cn(
           "max-w-[min(100%,28rem)] rounded-[var(--radius-lg)] px-3.5 py-3 text-[14px] leading-relaxed",
           isUser
-            ? "rounded-br-sm bg-ruby text-white shadow-[0_4px_20px_rgba(212,37,53,0.35)]"
-            : "rounded-bl-sm border border-border-strong bg-surface/90 text-white shadow-[var(--shadow-panel)]",
+            ? "rounded-br-sm bg-sapphire text-white shadow-[var(--shadow-glow-sapphire)]"
+            : "grok-frost rounded-bl-sm text-fg",
         )}
       >
         {hasAgentSteps ? (
@@ -153,13 +161,19 @@ export function MessageBubble({
           </p>
         ) : null}
 
-        {message.streaming && !message.content ? (
+        {message.deskSheet ? (
+          <div className="mb-2">
+            <DeskSpecSheet sheet={message.deskSheet} />
+          </div>
+        ) : null}
+
+        {message.streaming && !displayContent ? (
           <p className="flex items-center gap-2 text-white/80">
             <Loader2 className="size-3.5 animate-spin" />
             Thinking…
           </p>
         ) : (
-          renderContent(message.content || "")
+          renderContent(displayContent)
         )}
 
         <div className="mt-2 flex items-center justify-between gap-2">
@@ -170,10 +184,10 @@ export function MessageBubble({
                 : new Date(message.timestamp),
             )}
           </span>
-          {!isUser && message.content && onSpeak ? (
+          {!isUser && speakContent && onSpeak ? (
             <button
               type="button"
-              onClick={() => onSpeak(message.id, message.content)}
+              onClick={() => onSpeak(message.id, speakContent)}
               className="inline-flex items-center gap-1 text-[10px] font-semibold opacity-80 hover:opacity-100"
             >
               {isSpeaking ? (

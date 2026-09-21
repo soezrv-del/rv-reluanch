@@ -55,25 +55,19 @@ test("VITE_RVFOX_PRO true/false maps to a tier when TIER is unset", () => {
   assert.equal(resolveRvfoxTier({ envPro: "false" }), "consumer");
 });
 
-test("consumer dock is five tabs; pro dock appends Sold", () => {
-  assert.deepEqual(dockTabOrder(false), [
+test("consumer and pro dock stay five tabs — Sold is Premium-only", () => {
+  const five = [
     "rvfax",
     "rvcal",
     "rvgrok",
     "rvtow",
     "rvtrips",
-  ]);
-  assert.deepEqual(dockTabOrder(true), [
-    "rvfax",
-    "rvcal",
-    "rvgrok",
-    "rvtow",
-    "rvtrips",
-    "rvsold",
-  ]);
+  ];
+  assert.deepEqual(dockTabOrder(false), five);
+  assert.deepEqual(dockTabOrder(true), five);
 });
 
-test("Facts / More / dock gate Sold to isProfessionalTier — visual SOLD, owed in aria", () => {
+test("Facts / More gate Sold to isProfessionalTier — dock has no Sold square", () => {
   const fax = readFileSync(
     join(root, "../../components/rvfax/RvFaxApp.tsx"),
     "utf8",
@@ -106,17 +100,18 @@ test("Facts / More / dock gate Sold to isProfessionalTier — visual SOLD, owed 
   assert.match(more, /isProfessionalTier/);
   assert.match(more, /soldFactsSummary/);
   assert.match(more, /onNavigate\?\.\("rvsold"\)/);
-  assert.match(dock, /isProfessionalTier/);
-  assert.match(dock, /rvsold/);
+  assert.doesNotMatch(dock, /id: "rvsold"/);
+  assert.doesNotMatch(dock, /short: "Sold"/);
   assert.doesNotMatch(dock, /formatSoldDockMoney/);
-  assert.match(dock, /formatSoldDockAria/);
-  assert.match(dock, /short: "Sold"/);
+  assert.doesNotMatch(dock, /formatSoldDockAria/);
   assert.doesNotMatch(dock, /formatSoldMoney/);
   assert.match(dock, /grid-cols-5/);
-  assert.match(dock, /grid-cols-6/);
+  assert.doesNotMatch(dock, /grid-cols-6/);
   assert.match(shell, /SoldBookApp/);
+  assert.match(shell, /show\("rvsold"\)/);
   assert.match(shell, /dockTabOrder/);
   assert.match(constants, /dockTabOrder/);
+  assert.match(constants, /Sold lives in Premium/);
   assert.doesNotMatch(list, /SoldTotalsChip/);
   assert.doesNotMatch(list, /soldFactsSummary/);
   assert.match(list, /Delete/);

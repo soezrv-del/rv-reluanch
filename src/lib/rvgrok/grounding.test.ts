@@ -16,7 +16,12 @@ import {
   parseCoachFromText,
   seriesAliasEquals,
 } from "./parseCoach.ts";
-import { buildChatGrounding, buildVoiceGrounding } from "./grounding.ts";
+import {
+  buildChatGrounding,
+  buildVoiceGrounding,
+  lookupGroundedSpecs,
+} from "./grounding.ts";
+import { resolveCoachIdentity } from "./coachIdentity.ts";
 import {
   looksLikeCasualNonResearch,
   looksLikeCatalogAnswerableCoachCompare,
@@ -117,12 +122,14 @@ test("catalog GAP tells inventory asks to prefer own-lot over manufacturer", () 
   assert.match(grounding, /OWN-LOT INVENTORY is source-of-truth this turn/);
   assert.match(grounding, /Never say check your own lot listing/);
   assert.match(grounding, /manufacturer for inventory/);
-  const voice = buildVoiceGrounding({ query: "M series 25FW" });
+  const stockAsk = "look in my inventory for a M series 25FW";
+  const voice = buildVoiceGrounding({ query: stockAsk });
   assert.match(voice, /OWN-LOT INVENTORY/);
   assert.match(voice, /manufacturer for inventory/);
-  const chat = buildChatGrounding({ query: "M series 25FW" });
-  assert.equal(chat.identity, null);
+  const chat = buildChatGrounding({ query: stockAsk });
   assert.match(chat.block || "", /manufacturer/i);
+  const catalogAsk = buildChatGrounding({ query: "M series 25FW" });
+  assert.doesNotMatch(catalogAsk.block || "", /INVENTORY \/ IN-STOCK ASK/);
 });
 
 test("2023 American Dream 45A pin is X15 605 / 1,950 — not L9 option-band", () => {
@@ -831,4 +838,48 @@ test("inventory ask with yearless Vision catalog GAP answers from own-lot, not d
     assert.match(specsOnly.block || "", /CATALOG GAP/);
     assert.doesNotMatch(specsOnly.block || "", /INVENTORY \/ IN-STOCK ASK/);
   }
+});
+
+test("2025 Aspire 44R grounding injects VERIFIED GVWR 49000 — never teach I-don't-have GVWR", () => {
+  const q = "2025 Entegra Coach Aspire 44R";
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  const specs = lookupGroundedSpecs(identity!);
+  assert.equal(specs.oemGvwrLbs, 49000);
+  assert.equal(specs.oemUvwLbs, null);
+  assert.match(specs.weightBand || "", /49,000 lbs GVWR/);
+
+  const chat = buildChatGrounding({ query: q });
+  assert.equal(chat.specs?.oemGvwrLbs, 49000);
+  assert.match(chat.block, /VERIFIED GVWR 49000 from OEM pin/);
+  assert.match(chat.block, /LOCKED WEIGHTS/);
+  assert.match(chat.block, /Do not say you lack GVWR/i);
+  assert.match(chat.block, /UVW: GAP — no OEM pin/);
+
+  const voice = buildVoiceGrounding({ query: q });
+  assert.match(voice, /VERIFIED GVWR 49000 from OEM pin/);
+  assert.match(voice, /Never say you don't have a VERIFIED GVWR/i);
+
+  const live = src(root, "liveVoice.ts");
+  const prompts = src(root, "prompts.ts");
+  const voiceSrc = src(root, "voice.ts");
+  const speech = src(root, "speechPolicy.ts");
+  for (const [label, text] of [
+    ["liveVoice.ts", live],
+    ["prompts.ts", prompts],
+    ["voice.ts", voiceSrc],
+    ["speechPolicy.ts", speech],
+  ] as const) {
+    assert.match(
+      text,
+      /never say you don't have/i,
+      `${label} forbids claiming lack of a locked field`,
+    );
+    assert.match(text, /LOCKED WEIGHTS/, `${label} names LOCKED WEIGHTS`);
+  }
+  assert.doesNotMatch(
+    live,
+    /GAP over invent; say "I don't have that\."/,
+    "live voice must not teach blanket I-don't-have when pins exist",
+  );
 });

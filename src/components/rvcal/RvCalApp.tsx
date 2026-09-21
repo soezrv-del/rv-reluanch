@@ -661,6 +661,7 @@ export function RvCalApp() {
   return (
     <SuitePage
       tab="rvcal"
+      raidhoOnly
       scrollRef={scrollRef}
       onPullReset={resetCal}
       pullLabel="Release to reset RvCal · pull down"
