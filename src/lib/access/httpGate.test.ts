@@ -67,6 +67,20 @@ test("random phone is denied when store says no", async () => {
   assert.equal(checkAccess.mock.calls[0]?.arguments[0], "555-123-4567");
 });
 
+test("beta seed phone bypasses without calling store", async () => {
+  const checkAccess = mock.fn(async () => {
+    throw new Error("store should not be called for a seeded tester");
+  });
+  for (const raw of ["5412858791", "+15412858791", "541-285-8791", "7022665915"]) {
+    const denied = await denyUnlessWhitelisted(
+      requestWithPhone(raw),
+      checkAccess,
+    );
+    assert.equal(denied, null, raw);
+  }
+  assert.equal(checkAccess.mock.callCount(), 0);
+});
+
 test("store failure for a non-admin phone is 403 browseOnly", async () => {
   const checkAccess = mock.fn(async () => {
     throw new Error("PGLite is unavailable in this runtime. Set DATABASE_URL for Neon.");

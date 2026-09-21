@@ -1,3 +1,4 @@
+import { isBetaSeedPhone } from "./betaWhitelist.ts";
 import { ACCESS_PHONE_HEADER } from "./constants.ts";
 import { isHardAdminPhone } from "./gate.ts";
 
@@ -38,8 +39,9 @@ export async function denyUnlessWhitelisted(
 ): Promise<Response | null> {
   const phone = phoneFromRequest(request);
   if (!phone) return browseOnlyResponse();
-  // Hard admin is offline-allow so Neon/PGLite being unset cannot 500 the gate.
+  // Hard admin, then static beta seed — Neon/PGLite being unset cannot 500 them.
   if (isHardAdminPhone(phone)) return null;
+  if (isBetaSeedPhone(phone)) return null;
   try {
     const result = await checkAccess(phone);
     if (!result.ok || !result.allowed) return browseOnlyResponse();
