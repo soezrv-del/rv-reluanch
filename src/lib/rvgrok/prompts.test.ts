@@ -214,7 +214,7 @@ test("sales floor: answer whatever they ask — no scope-narrow or sticky lock",
   assert.match(speech, /WHATEVER the customer asks/);
   assert.match(speech, /I only focus on this coach/);
   assert.match(speech, /I only focus on RVs/);
-  assert.match(speech, /That's outside my scope/);
+  assert.match(speech, /That\\?'s outside my scope/);
   assert.match(speech, /sticky lock that ignores a new question/);
   assert.match(speech, /This might take a second to get that for you/);
   assert.match(speech, /VOICE_RESEARCH_HOLD_ALT/);
