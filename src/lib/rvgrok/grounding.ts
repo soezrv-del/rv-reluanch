@@ -31,6 +31,7 @@ import {
 } from "../rv/catalogHonesty";
 import {
   catalogYearIsListed,
+  looksLikeCoachDesignationAsk,
   matchCatalogModelName,
   parseCoachFromText,
 } from "./parseCoach";
@@ -43,7 +44,10 @@ import {
   formatOriginGroundingBlock,
   looksLikeOriginQuestion,
 } from "./originStory";
-import { needsWebFallback } from "./webIntent";
+import {
+  looksLikeInventoryOrCountQuestion,
+  needsWebFallback,
+} from "./webIntent";
 import {
   findComparableCatalogCoaches,
   looksLikeCoachCompareQuestion,
@@ -134,6 +138,7 @@ export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - If a field has a number or name, USE THAT EXACT VALUE. Do not substitute a sibling model, a later year, or a "typical" HP (never invent 450).
 - If a field is marked UNKNOWN, do not stop at "I don't know." Prefer WEB RESEARCH notes this turn, then YOU answer. Do not guess. Never send them to a brochure, door sticker, dealer, or website. Never say "check the website", "look it up yourself", or "go check the OEM site".
 - Do not invent a "no catalog data — check the OEM site" dead-end. If this block names locked numbers, the coach IS in the catalog — never say it is missing, not in catalogs, or to wait for a brochure. Answer from locked numbers and/or WEB RESEARCH notes. Never invent HP, engine, chassis, or fuel. Never send the user to the OEM site, a website, or a dealer as the answer.
+- Inventory / in-stock / designation asks: if an OWN-LOT INVENTORY block this turn matched units, answer lot stock from that block. Do not say the catalog is empty or send them to the manufacturer because the brochure row is missing.
 - WEB RESEARCH notes must not override a locked catalog row or invent a fifth-wheel / towable class when this block names a motorized class.
 - Floorplan letters (BH, K, L, FS, …) are labels only — never decode bunks or a half-bath from the code.
 - Entegra Vision = gas Ford F-53 / 7.3 Godzilla — not diesel.
@@ -142,6 +147,10 @@ export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 
 export const UNKNOWN_POWERTRAIN_LINE =
   "UNKNOWN / GAP — do not invent. Prefer WEB RESEARCH notes this turn, then YOU answer. Do not stop at I don't know if browse can help. Closest verified data / EST. after notes. Never send the user to a brochure, door sticker, dealer, or the OEM site as the answer.";
+
+/** Designation / inventory ask with no catalog identity — own-lot wins over OEM. */
+export const INVENTORY_CATALOG_GAP =
+  "CATALOG GAP — no verified row is loaded. If an OWN-LOT INVENTORY block this turn matched units, answer lot stock from that block — do not say the catalog is empty or send them to the manufacturer for inventory.";
 
 export const COMPARE_GROUNDING_RULES = `COMPARE THIS TURN (catalog-answerable):
 - Answer both coaches from the VERIFIED CATALOG locks below in THIS turn.
@@ -509,7 +518,7 @@ export function formatCatalogGroundingBlock(specs: GroundedSpecs): string {
     specs.weightBand ? `- weights: ${specs.weightBand}` : null,
     specs.hasHardLock
       ? "This coach IS in the verified catalog. Use the locked numbers above. Do not say it is missing, not in catalogs, or to wait for a brochure. If a line is UNKNOWN / GAP, use WEB RESEARCH notes this turn — do not stop at I don't know, never invent HP, engine, chassis, or fuel."
-      : "CATALOG GAP — no locked numbers for this identity. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.",
+      : "CATALOG GAP — no locked numbers for this identity. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer. If an OWN-LOT INVENTORY block this turn matched units, answer lot stock from that block — do not say the catalog is empty or send them to the manufacturer for inventory.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -630,9 +639,15 @@ export function buildChatGrounding(opts: {
   );
   if (!identity) {
     const repair = repairBlockFor(opts.query, null, null, false, opts.facts);
+    const inventoryGap =
+      looksLikeInventoryOrCountQuestion(opts.query) ||
+      looksLikeCoachDesignationAsk(opts.query)
+        ? INVENTORY_CATALOG_GAP
+        : "";
+    const body = [inventoryGap, repair].filter(Boolean).join("\n\n");
     const merged = withOriginBlock(
       opts.query,
-      repair,
+      body,
       needsWebFallback(null, opts.query, webOpts),
     );
     return {
@@ -690,8 +705,12 @@ export function buildVoiceGrounding(opts: {
     return repair ? `${standing}\n\n${repair}` : standing;
   }
   if (!identity) {
-    const base =
-      "CATALOG GAP — no verified row is loaded. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Never invent HP, engine, chassis, or fuel.";
+    const inventoryAsk =
+      looksLikeInventoryOrCountQuestion(query) ||
+      looksLikeCoachDesignationAsk(query);
+    const base = inventoryAsk
+      ? INVENTORY_CATALOG_GAP
+      : "CATALOG GAP — no verified row is loaded. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Never invent HP, engine, chassis, or fuel.";
     return repair ? `${base}\n\n${repair}` : base;
   }
   return `${formatVoiceCatalogAddendum(specs!)}\n\n${repair}`;

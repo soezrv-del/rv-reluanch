@@ -46,7 +46,9 @@ import {
 } from "./ownLotInventory.ts";
 import {
   COACH_BRANDS,
+  consonantBrandShape,
   extractFloorplanToken,
+  looksLikeCoachDesignationAsk,
   parseCoachFromText,
 } from "./parseCoach.ts";
 import { executeWebResearch } from "./webResearchTelemetry.ts";
@@ -1074,6 +1076,33 @@ test("bundled snapshot: stock 45282, Entegra Fresno, and $50k fifth-wheel toy ha
   const locations = [
     ...new Set(snap.units.map((u) => u.location).filter(Boolean)),
   ];
+  const lineage25 = snap.units.filter(
+    (u) =>
+      /lineage series m/i.test(u.model) && /25fw/i.test(u.trim || ""),
+  );
+  assert.ok(lineage25.length >= 3, "bundled lot has Lineage Series M 25FW rows");
+  const lineageStocks = lineage25.map((u) => u.stock_number).sort();
+  for (const ask of [
+    "M series 25FW",
+    "Lineage M 25FW",
+    "Lineage Series M 25FW",
+  ]) {
+    const filter = parseOwnLotAsk(ask, locations, snap.units);
+    const rows = queryOwnLotUnits(snap.units, filter, 12);
+    assert.ok(
+      rows.every((u) => u.model === "Lineage Series M" && u.trim === "25FW"),
+      ask,
+    );
+    assert.deepEqual(
+      rows.map((r) => r.stock_number).sort(),
+      lineageStocks,
+      ask,
+    );
+    const block = formatOwnLotBlock(snap, ask);
+    assert.match(block, new RegExp(`Matched: ${lineage25.length}`), ask);
+    assert.doesNotMatch(block, /Matched: 0/, ask);
+  }
+
   const integraStocks = ["46222", "47033", "47034"];
   for (const ask of [
     "27A Integra Vision",
@@ -1228,4 +1257,242 @@ test("Integra alias + 27A trim match the three Vision SE 27ASE units", () => {
     assert.doesNotMatch(block, /stk E2411/, ask);
     assert.doesNotMatch(block, /stk XL360/, ask);
   }
+});
+
+const LINEAGE_M_25FW_UNITS: OwnLotUnit[] = [
+  pricedUnit({
+    year: "2027",
+    make: "Grand Design",
+    model: "Lineage Series M",
+    trim: "25FW",
+    body_type: "Class C",
+    location: "Mt. Vernon WA",
+    stock_number: "47556",
+    price: 241995,
+  }),
+  pricedUnit({
+    year: "2027",
+    make: "Grand Design",
+    model: "Lineage Series M",
+    trim: "25FW",
+    body_type: "Class C",
+    location: "Mt. Vernon WA",
+    stock_number: "47532",
+    price: 235479,
+  }),
+  pricedUnit({
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series M",
+    trim: "25FW",
+    body_type: "Class C",
+    location: "Wilsonville OR",
+    stock_number: "47499",
+    price: 229995,
+  }),
+  pricedUnit({
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series M",
+    trim: "25FW",
+    body_type: "Class C",
+    location: "Sparks NV",
+    stock_number: "46233",
+    price: 219995,
+  }),
+  pricedUnit({
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series M",
+    trim: "25FW",
+    body_type: "Class C",
+    location: "Fresno CA",
+    stock_number: "46060",
+    price: 214995,
+  }),
+];
+
+const LINEAGE_FAMILY_DECOYS: OwnLotUnit[] = [
+  pricedUnit({
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series M",
+    trim: "25TK",
+    body_type: "Class C",
+    location: "Fife WA",
+    stock_number: "M25TK",
+    price: 209995,
+  }),
+  pricedUnit({
+    year: "2027",
+    make: "Grand Design",
+    model: "Lineage Series E",
+    trim: "30DC",
+    body_type: "Class C",
+    location: "Harrisburg",
+    stock_number: "E30DC",
+    price: 189995,
+  }),
+  pricedUnit({
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series F",
+    trim: "31ZW",
+    body_type: "Class Super C",
+    location: "Wilsonville OR",
+    stock_number: "F31ZW",
+    price: 289995,
+  }),
+];
+
+const TIFFIN_PHAETON_UNITS: OwnLotUnit[] = [
+  pricedUnit({
+    year: "2024",
+    make: "Tiffin",
+    model: "Phaeton",
+    trim: "36LSE",
+    body_type: "Class A Diesel",
+    location: "Harrisburg",
+    stock_number: "TF36L",
+    price: 389000,
+  }),
+  pricedUnit({
+    year: "2023",
+    make: "Tiffin",
+    model: "Phaeton",
+    trim: "40IH",
+    body_type: "Class A Diesel",
+    location: "Fresno CA",
+    stock_number: "TF40Q",
+    price: 412000,
+  }),
+];
+
+test("Lineage M series 25FW spoken asks hit the five own-lot 25FW units", () => {
+  const m = parseCoachFromText("Uh, the M series 25FW");
+  assert.equal(m.make, "");
+  assert.match(m.model, /\bm\b/i);
+  assert.equal(m.floorplan, "25FW");
+  const lineageM = parseCoachFromText("Lineage M 25FW");
+  assert.match(lineageM.model, /lineage/i);
+  assert.match(lineageM.model, /\bm\b/i);
+  assert.equal(lineageM.floorplan, "25FW");
+  const catalog = parseCoachFromText("Lineage Series M 25FW");
+  assert.match(catalog.model, /lineage/i);
+  assert.equal(catalog.floorplan, "25FW");
+  const branded = parseCoachFromText("Grand Design Lineage M 25FW");
+  assert.equal(branded.make, "Grand Design");
+  assert.match(branded.model, /lineage/i);
+  assert.equal(branded.floorplan, "25FW");
+
+  for (const ask of [
+    "M series 25FW",
+    "Uh, the M series 25FW",
+    "Lineage M 25FW",
+    "Lineage Series M 25FW",
+    "Grand Design Lineage M 25FW",
+    "do we have any M series 25FW",
+  ]) {
+    assert.equal(looksLikeCoachDesignationAsk(ask), true, ask);
+    assert.equal(looksLikeOwnLotStockQuestion(ask), true, ask);
+    assert.equal(
+      looksLikeOwnLotStockQuestion(`What engine does a ${ask} have?`),
+      false,
+      `spec still wins over ${ask}`,
+    );
+  }
+
+  const units = [
+    ...LINEAGE_M_25FW_UNITS,
+    ...LINEAGE_FAMILY_DECOYS,
+    ...VISION_27ASE_UNITS,
+    ...FIXTURE_UNITS,
+  ];
+  const locations = [
+    ...new Set(units.map((u) => u.location).filter(Boolean)),
+  ];
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units,
+  });
+  const expected = ["46060", "46233", "47499", "47532", "47556"];
+
+  for (const ask of [
+    "M series 25FW",
+    "Uh, the M series 25FW",
+    "Lineage M 25FW",
+    "Lineage Series M 25FW",
+    "Grand Design Lineage M 25FW",
+  ]) {
+    const filter = parseOwnLotAsk(ask, locations, units);
+    assert.match(filter.model || "", /m/i, ask);
+    assert.match(filter.trim || "", /25fw/i, ask);
+
+    const counts = aggregateOwnLot(units, filter);
+    assert.equal(counts.matched, 5, ask);
+    const rows = queryOwnLotUnits(units, filter, 12);
+    assert.deepEqual(
+      rows.map((r) => r.stock_number).sort(),
+      expected,
+      ask,
+    );
+    assert.ok(
+      rows.every((u) => u.model === "Lineage Series M" && u.trim === "25FW"),
+      ask,
+    );
+    assert.ok(
+      !rows.some((u) =>
+        ["M25TK", "E30DC", "F31ZW"].includes(u.stock_number),
+      ),
+      ask,
+    );
+
+    const block = formatOwnLotBlock(snapshot, ask);
+    assert.match(block, /Matched: 5/, ask);
+    for (const stk of expected) {
+      assert.match(block, new RegExp(`stk ${stk}`), ask);
+    }
+    assert.doesNotMatch(block, /stk M25TK/, ask);
+    assert.doesNotMatch(block, /stk E30DC/, ask);
+    assert.equal(shouldSkipWebForOwnLot(ask, snapshot), true, ask);
+  }
+});
+
+test("Tifin fuzzy brand (not Integra) matches Tiffin Phaeton 36L", () => {
+  assert.equal(consonantBrandShape("Tifin"), consonantBrandShape("Tiffin"));
+  assert.notEqual(consonantBrandShape("integrity"), consonantBrandShape("Entegra"));
+  const parsed = parseCoachFromText("36L Tifin Phaeton");
+  assert.equal(parsed.make, "Tiffin");
+  assert.match(parsed.model, /phaeton/i);
+  assert.equal(parsed.floorplan, "36L");
+  assert.equal(parseCoachFromText("integrity check on the propane").make, "");
+
+  const newmar = parseCoachFromText("Newmr Dutch Star 45OPP");
+  assert.equal(newmar.make, "Newmar");
+  assert.match(newmar.model, /dutch star/i);
+  assert.equal(newmar.floorplan, "45OPP");
+
+  const units = [...TIFFIN_PHAETON_UNITS, ...FIXTURE_UNITS, ...LINEAGE_M_25FW_UNITS];
+  const locations = [
+    ...new Set(units.map((u) => u.location).filter(Boolean)),
+  ];
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units,
+  });
+  const ask = "36L Tifin Phaeton";
+  const filter = parseOwnLotAsk(ask, locations, units);
+  assert.equal(filter.make, "Tiffin");
+  assert.match(filter.model || "", /phaeton/i);
+  assert.match(filter.trim || "", /36l/i);
+  const rows = queryOwnLotUnits(units, filter, 12);
+  assert.deepEqual(rows.map((r) => r.stock_number), ["TF36L"]);
+  assert.equal(rows[0]?.trim, "36LSE");
+  assert.ok(!rows.some((u) => u.stock_number === "TF40Q"));
+  const block = formatOwnLotBlock(snapshot, ask);
+  assert.match(block, /Matched: 1/);
+  assert.match(block, /stk TF36L/);
+  assert.doesNotMatch(block, /stk TF40Q/);
 });

@@ -11,10 +11,12 @@ import { findPowertrainCorrection } from "../rv/powertrainCorrections.ts";
 import {
   catalogYearIsListed,
   COACH_BRANDS,
+  consonantBrandShape,
   matchCatalogModelName,
   parseCoachFromText,
   seriesAliasEquals,
 } from "./parseCoach.ts";
+import { buildChatGrounding, buildVoiceGrounding } from "./grounding.ts";
 import {
   looksLikeCasualNonResearch,
   looksLikeCatalogAnswerableCoachCompare,
@@ -89,6 +91,27 @@ test("Integra is an Entegra Coach alias and 27A still parses before the brand", 
   assert.equal(b.make, "Entegra Coach");
   assert.match(b.model, /vision/i);
   assert.equal(b.floorplan, "27A");
+});
+
+test("fuzzy brand shape maps Tifin → Tiffin and keeps Integra as the alias fast path", () => {
+  assert.equal(consonantBrandShape("Tifin"), consonantBrandShape("Tiffin"));
+  assert.equal(parseCoachFromText("36L Tifin Phaeton").make, "Tiffin");
+  assert.equal(parseCoachFromText("Tifin Allegro Bus").make, "Tiffin");
+  assert.equal(parseCoachFromText("Newmr Dutch Star").make, "Newmar");
+  assert.equal(parseCoachFromText("Integra Vision 27A").make, "Entegra Coach");
+  assert.equal(parseCoachFromText("integrity check on the propane").make, "");
+});
+
+test("catalog GAP tells inventory asks to prefer own-lot over manufacturer", () => {
+  const grounding = src(root, "grounding.ts");
+  assert.match(grounding, /OWN-LOT INVENTORY block this turn matched units/);
+  assert.match(grounding, /do not say the catalog is empty or send them to the manufacturer/);
+  const voice = buildVoiceGrounding({ query: "M series 25FW" });
+  assert.match(voice, /OWN-LOT INVENTORY/);
+  assert.match(voice, /manufacturer for inventory/);
+  const chat = buildChatGrounding({ query: "M series 25FW" });
+  assert.equal(chat.identity, null);
+  assert.match(chat.block || "", /manufacturer/i);
 });
 
 test("2023 American Dream 45A pin is X15 605 / 1,950 — not L9 option-band", () => {
