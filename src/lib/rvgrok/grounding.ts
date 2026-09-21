@@ -346,7 +346,7 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
       rvType: pickField({ value: index?.type, trust: "index" }),
       note: noYear
         ? "No model year in the ask — class and fuel are from the catalog index. Do not invent HP, engine, chassis, or a year. Never send the user to the OEM site, a website, or a dealer as the answer."
-        : "CATALOG GAP — no locked row for this model year. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.",
+        : "CATALOG GAP — no locked row for this model year. If an OWN-LOT INVENTORY block is a hit this turn, answer lot stock from that block — do not say the coach is missing or send them to the manufacturer for inventory. Use WEB RESEARCH notes this turn for specs only when own-lot missed. Do not guess. Do not stop at I don't know. Do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.",
       weightBand: null,
       hasHardLock: false,
       missingHard: true,
@@ -509,7 +509,7 @@ export function formatCatalogGroundingBlock(specs: GroundedSpecs): string {
     specs.weightBand ? `- weights: ${specs.weightBand}` : null,
     specs.hasHardLock
       ? "This coach IS in the verified catalog. Use the locked numbers above. Do not say it is missing, not in catalogs, or to wait for a brochure. If a line is UNKNOWN / GAP, use WEB RESEARCH notes this turn — do not stop at I don't know, never invent HP, engine, chassis, or fuel."
-      : "CATALOG GAP — no locked numbers for this identity. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.",
+      : "CATALOG GAP — no locked numbers for this identity. If an OWN-LOT INVENTORY block is a hit this turn, answer lot stock from that block — do not say the coach is missing or send them to the manufacturer for inventory. Use WEB RESEARCH notes this turn for specs only when own-lot missed. Do not guess. Do not stop at I don't know. Do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -691,7 +691,7 @@ export function buildVoiceGrounding(opts: {
   }
   if (!identity) {
     const base =
-      "CATALOG GAP — no verified row is loaded. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Never invent HP, engine, chassis, or fuel.";
+      "CATALOG GAP — no verified row is loaded. If an OWN-LOT INVENTORY block is a hit this turn, answer lot stock from that block — do not send them to the manufacturer for inventory. Use WEB RESEARCH notes this turn for specs only when own-lot missed. Do not guess. Do not stop at I don't know. Never invent HP, engine, chassis, or fuel.";
     return repair ? `${base}\n\n${repair}` : base;
   }
   return `${formatVoiceCatalogAddendum(specs!)}\n\n${repair}`;

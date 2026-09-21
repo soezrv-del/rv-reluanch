@@ -26,6 +26,7 @@ import {
   ownLotIsUnavailable,
   ownLotPublicFileCandidates,
   looksLikeGhostOwnLotModel,
+  looksLikeCoachDesignationAsk,
   looksLikeOwnLotUnitListQuestion,
   parseOwnLotAsk,
   parseOwnLotBudget,
@@ -47,7 +48,12 @@ import {
 import {
   COACH_BRANDS,
   extractFloorplanToken,
+  floorplanFamiliesMatch,
+  normalizeCoachAsk,
   parseCoachFromText,
+  parseFloorplanParts,
+  resolveCoachBrand,
+  seriesAliasEquals,
 } from "./parseCoach.ts";
 import { executeWebResearch } from "./webResearchTelemetry.ts";
 
@@ -1094,6 +1100,21 @@ test("bundled snapshot: stock 45282, Entegra Fresno, and $50k fifth-wheel toy ha
     assert.match(block, /stk 47033/, ask);
     assert.match(block, /stk 46222/, ask);
   }
+
+  const lineageAsk = "Uh, the M series 25FW";
+  const lineageFilter = parseOwnLotAsk(lineageAsk, locations, snap.units);
+  const lineageRows = queryOwnLotUnits(snap.units, lineageFilter, 12);
+  assert.ok(lineageRows.length >= 3, `Lineage 25FW count ${lineageRows.length}`);
+  assert.ok(
+    lineageRows.every((u) => u.model === "Lineage Series M" && u.trim === "25FW"),
+  );
+  assert.ok(!lineageRows.some((u) => u.trim === "25TK"));
+  for (const stk of ["47532", "46233", "46060"]) {
+    assert.ok(
+      lineageRows.some((u) => u.stock_number === stk),
+      `missing ${stk}`,
+    );
+  }
 });
 
 const VISION_27ASE_UNITS: OwnLotUnit[] = [
@@ -1153,14 +1174,18 @@ const VISION_FAMILY_DECOYS: OwnLotUnit[] = [
 ];
 
 test("Integra alias + 27A trim match the three Vision SE 27ASE units", () => {
-  assert.ok(!COACH_BRANDS.includes("Integra"), "Integra is an alias, not a brand");
+  assert.ok(!COACH_BRANDS.includes("Integra"), "Integra is not a brand");
   assert.ok(!COACH_BRANDS.includes("Integra Coach"));
+  assert.equal(resolveCoachBrand("Integra"), "Entegra Coach");
+  assert.equal(resolveCoachBrand("integrity"), "");
   assert.equal(extractFloorplanToken("27A Integra Vision"), "27A");
   assert.equal(extractFloorplanToken("around $50k Newmar"), "");
   assert.equal(floorplanTokensAlign("27A", "27ASE"), true);
   assert.equal(floorplanTokensAlign("27ASE", "27ASE"), true);
   assert.equal(floorplanTokensAlign("27A", "29S"), false);
   assert.equal(floorplanTokensAlign("27ASE", "36C"), false);
+  assert.equal(parseFloorplanParts("27ASE")?.family, "27A");
+  assert.equal(floorplanFamiliesMatch("27A", "27ASE"), true);
 
   const before = parseCoachFromText("27A Integra Vision");
   assert.equal(before.make, "Entegra Coach");
@@ -1220,12 +1245,219 @@ test("Integra alias + 27A trim match the three Vision SE 27ASE units", () => {
     assert.ok(rows.every((u) => u.model === "Vision SE" && u.trim === "27ASE"), ask);
     assert.ok(!rows.some((u) => u.stock_number === "E2411" || u.stock_number === "XL360"), ask);
 
+    assert.equal(looksLikeCoachDesignationAsk(ask), true, ask);
     const block = formatOwnLotBlock(snapshot, ask);
     assert.match(block, /Matched: 3/, ask);
+    assert.match(block, /OWN-LOT HIT/, ask);
     assert.match(block, /stk 47034/, ask);
     assert.match(block, /stk 47033/, ask);
     assert.match(block, /stk 46222/, ask);
     assert.doesNotMatch(block, /stk E2411/, ask);
     assert.doesNotMatch(block, /stk XL360/, ask);
+  }
+});
+
+const LINEAGE_25FW_UNITS: OwnLotUnit[] = [
+  pricedUnit({
+    year: "2027",
+    make: "Grand Design",
+    model: "Lineage Series M",
+    trim: "25FW",
+    body_type: "Class C",
+    location: "Mt. Vernon WA",
+    stock_number: "47532",
+    price: 235479,
+  }),
+  pricedUnit({
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series M",
+    trim: "25FW",
+    body_type: "Class C",
+    location: "Wilsonville",
+    stock_number: "47556",
+    price: 219995,
+  }),
+  pricedUnit({
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series M",
+    trim: "25FW",
+    body_type: "Class C",
+    location: "Fresno CA",
+    stock_number: "47499",
+    price: 214995,
+  }),
+  pricedUnit({
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series M",
+    trim: "25FW",
+    body_type: "Class C",
+    location: "Sparks NV",
+    stock_number: "46233",
+    price: 209995,
+  }),
+  pricedUnit({
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series M",
+    trim: "25FW",
+    body_type: "Class C",
+    location: "Harrisburg",
+    stock_number: "46060",
+    price: 199995,
+  }),
+];
+
+const LINEAGE_DECOYS: OwnLotUnit[] = [
+  pricedUnit({
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series M",
+    trim: "25TK",
+    body_type: "Class C",
+    location: "Fresno CA",
+    stock_number: "TK250",
+    price: 189995,
+  }),
+  pricedUnit({
+    year: "2027",
+    make: "Grand Design",
+    model: "Lineage Series E",
+    trim: "25FW",
+    body_type: "Class C",
+    location: "Wilsonville",
+    stock_number: "SE250",
+    price: 179995,
+  }),
+];
+
+test("general normalizer is not Vision-hardcoded: Tifin/Newmr + suffix families", () => {
+  assert.equal(resolveCoachBrand("Tifin"), "Tiffin");
+  assert.equal(resolveCoachBrand("Newmr"), "Newmar");
+  assert.equal(resolveCoachBrand("Winabago"), "Winnebago");
+  assert.equal(parseFloorplanParts("36LSE")?.family, "36L");
+  assert.equal(parseFloorplanParts("45OPP")?.family, "45O");
+  assert.equal(floorplanFamiliesMatch("36L", "36LSE"), true);
+  assert.equal(floorplanFamiliesMatch("45OP", "45OPP"), true);
+  assert.equal(floorplanFamiliesMatch("45A", "45OPP"), false);
+
+  const tiffin = parseCoachFromText("36L Tifin Phaeton");
+  assert.equal(tiffin.make, "Tiffin");
+  assert.match(tiffin.model, /phaeton/i);
+  assert.equal(tiffin.floorplan, "36L");
+
+  const newmar = parseCoachFromText("Newmr Dutch Star 45OPP");
+  assert.equal(newmar.make, "Newmar");
+  assert.match(newmar.model, /dutch star/i);
+  assert.match(newmar.floorplan, /45OP/i);
+
+  const units: OwnLotUnit[] = [
+    pricedUnit({
+      make: "Tiffin",
+      model: "Phaeton",
+      trim: "36LSE",
+      body_type: "Class A Diesel",
+      stock_number: "PH360",
+      price: 389000,
+    }),
+    pricedUnit({
+      make: "Tiffin",
+      model: "Phaeton",
+      trim: "40Q",
+      body_type: "Class A Diesel",
+      stock_number: "PH400",
+      price: 412000,
+    }),
+    pricedUnit({
+      make: "Newmar",
+      model: "Dutch Star",
+      trim: "45OPP",
+      body_type: "Class A Diesel",
+      stock_number: "DS450",
+      price: 429000,
+    }),
+    pricedUnit({
+      make: "Newmar",
+      model: "Dutch Star",
+      trim: "4369",
+      body_type: "Class A Diesel",
+      stock_number: "DS436",
+      price: 399000,
+    }),
+  ];
+  const locations = ["Fresno CA", "Wilsonville"];
+
+  const tifinRows = queryOwnLotUnits(
+    units,
+    parseOwnLotAsk("36L Tifin Phaeton", locations, units),
+    12,
+  );
+  assert.deepEqual(tifinRows.map((r) => r.stock_number), ["PH360"]);
+
+  const newmrRows = queryOwnLotUnits(
+    units,
+    parseOwnLotAsk("Newmr Dutch Star 45OPP", locations, units),
+    12,
+  );
+  assert.deepEqual(newmrRows.map((r) => r.stock_number), ["DS450"]);
+});
+
+test("M series 25FW / Lineage M 25FW match Lineage Series M 25FW lot rows", () => {
+  assert.equal(seriesAliasEquals("M series", "Lineage Series M"), true);
+  assert.equal(seriesAliasEquals("Lineage M", "Lineage Series M"), true);
+  assert.equal(seriesAliasEquals("M series", "Lineage Series E"), false);
+  assert.equal(parseFloorplanParts("25FW")?.family, "25F");
+  assert.equal(floorplanFamiliesMatch("25FW", "25FW"), true);
+  assert.equal(floorplanFamiliesMatch("25FW", "25TK"), false);
+
+  const spoken = normalizeCoachAsk("Uh, the M series 25FW");
+  assert.equal(spoken.seriesCode, "m");
+  assert.equal(spoken.floorplan, "25FW");
+  assert.match(spoken.model, /m series/i);
+
+  const lineageM = parseCoachFromText("Lineage M 25FW");
+  assert.match(lineageM.model, /lineage/i);
+  assert.equal(lineageM.floorplan, "25FW");
+
+  const units = [...LINEAGE_25FW_UNITS, ...LINEAGE_DECOYS, ...VISION_27ASE_UNITS];
+  const locations = [
+    ...new Set(units.map((u) => u.location).filter(Boolean)),
+  ];
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units,
+  });
+  const expected = ["46060", "46233", "47499", "47532", "47556"];
+
+  for (const ask of [
+    "Uh, the M series 25FW",
+    "Lineage M 25FW",
+    "Lineage Series M 25FW",
+    "Grand Design Lineage M 25FW",
+  ]) {
+    assert.equal(looksLikeCoachDesignationAsk(ask), true, ask);
+    assert.equal(
+      looksLikeOwnLotStockQuestion("What engine and HP does a 2026 Lineage M have?"),
+      false,
+    );
+    const filter = parseOwnLotAsk(ask, locations, units);
+    assert.match(filter.trim || "", /25FW/i, ask);
+    const rows = queryOwnLotUnits(units, filter, 12);
+    assert.deepEqual(
+      rows.map((r) => r.stock_number).sort(),
+      expected,
+      `${ask} stocks ${rows.map((r) => r.stock_number).join(",")}`,
+    );
+    assert.ok(rows.every((u) => u.model === "Lineage Series M" && u.trim === "25FW"), ask);
+    assert.ok(!rows.some((u) => u.stock_number === "TK250" || u.stock_number === "SE250"), ask);
+    assert.equal(shouldSkipWebForOwnLot(ask, snapshot), true, ask);
+    const block = formatOwnLotBlock(snapshot, ask);
+    assert.match(block, /Matched: 5/, ask);
+    assert.match(block, /OWN-LOT HIT/, ask);
+    assert.match(block, /stk 47556/, ask);
+    assert.doesNotMatch(block, /stk TK250/, ask);
   }
 });

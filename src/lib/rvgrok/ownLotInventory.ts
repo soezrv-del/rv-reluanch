@@ -21,7 +21,14 @@ import { readFile, stat } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { extractFloorplanToken, parseCoachFromText } from "./parseCoach.ts";
+import {
+  coachBrandsMatch,
+  extractFloorplanToken,
+  floorplanFamiliesMatch,
+  normalizeCoachAsk,
+  parseCoachFromText,
+  seriesAliasEquals,
+} from "./parseCoach.ts";
 import {
   looksLikeInventoryOrCountQuestion,
   looksLikeMarketValueQuestion,
@@ -79,8 +86,10 @@ export type OwnLotFilter = {
   year?: string;
   make?: string;
   model?: string;
-  /** Spoken floorplan / trim (27A, 27ASE). Matched against unit.trim. */
+  /** Spoken floorplan / trim (27A, 27ASE, 25FW). Matched by floorplan family. */
   trim?: string;
+  /** Series letter from "M series" / "Lineage Series M" — code-only when family is empty. */
+  seriesCode?: string;
   location?: string;
   dieselOnly?: boolean;
   gasOnly?: boolean;
@@ -158,10 +167,34 @@ export function looksLikeOwnLotUnitListQuestion(text: string): boolean {
   return OWN_LOT_UNIT_LIST_RE.test(t);
 }
 
+/**
+ * Spoken designation with a floorplan (and brand / model / series) and no
+ * spec / repair / market cue — salesman "M series 25FW" / "27A Integra Vision".
+ */
+export function looksLikeCoachDesignationAsk(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim()) return false;
+  if (looksLikeMarketValueQuestion(t) || looksLikeRepairQuestion(t)) {
+    return false;
+  }
+  if (
+    /\b(hp|horsepower|engine|chassis|torque|transmission|fuel|gvwr|gcwr|uvw|ccc|tow|hitch|mpg|length|weight|spec|brochure|powertrain)\b/i.test(
+      t,
+    )
+  ) {
+    return false;
+  }
+  const n = normalizeCoachAsk(t);
+  return Boolean(
+    n.floorplan && (n.make || n.model || n.seriesCode),
+  );
+}
+
 export function looksLikeOwnLotStockQuestion(text: string): boolean {
   return (
     looksLikeInventoryOrCountQuestion(text) ||
     looksLikeOwnLotListingPriceQuestion(text) ||
+    looksLikeCoachDesignationAsk(text) ||
     Boolean(parseOwnLotStockNumber(text))
   );
 }
@@ -190,7 +223,15 @@ export function shouldSkipWebForOwnLot(
   if (looksLikeMarketValueQuestion(text) || looksLikeRepairQuestion(text)) {
     return false;
   }
-  return ownLotHasHit(snapshot);
+  if (!ownLotHasHit(snapshot)) return false;
+  if (looksLikeCoachDesignationAsk(text) && snapshot) {
+    const locations = [
+      ...new Set(snapshot.units.map((u) => u.location).filter(Boolean)),
+    ];
+    const filter = parseOwnLotAsk(text, locations, snapshot.units);
+    return snapshot.units.some((u) => unitMatchesFilter(u, filter));
+  }
+  return true;
 }
 
 function norm(s: string | null | undefined): string {
@@ -586,7 +627,8 @@ function lotHasModel(units: OwnLotUnit[], model: string): boolean {
   if (!fm || !units.length) return false;
   return units.some((u) => {
     const um = norm(u.model);
-    return Boolean(um && (um.includes(fm) || fm.includes(um)));
+    if (um && (um.includes(fm) || fm.includes(um))) return true;
+    return seriesAliasEquals(u.model, model);
   });
 }
 
@@ -636,6 +678,7 @@ export function parseOwnLotAsk(
   const t = normalizeAskText(text);
   const parsed = parseCoachFromText(t);
   const filter: OwnLotFilter = {};
+  const normalized = normalizeCoachAsk(t);
   if (parsed.year) filter.year = parsed.year;
   if (parsed.make) filter.make = parsed.make;
   const model = sanitizeOwnLotParsedModel(parsed.model, locations, {
@@ -643,10 +686,14 @@ export function parseOwnLotAsk(
     units,
   });
   if (model) filter.model = model;
+  if (normalized.seriesCode) filter.seriesCode = normalized.seriesCode;
   const trim =
     (parsed.floorplan || "").replace(/\s+/g, "") ||
     extractFloorplanToken(t);
-  if (trim && (filter.make || filter.model || parsed.make)) {
+  if (
+    trim &&
+    (filter.make || filter.model || filter.seriesCode || parsed.make)
+  ) {
     filter.trim = trim;
   }
 
@@ -884,18 +931,9 @@ export function compactFloorplanToken(s: string): string {
   return (s || "").toLowerCase().replace(/[\s-]+/g, "");
 }
 
-/**
- * 27A ↔ 27ASE: ask is a prefix of the unit trim (or the reverse) and the
- * leftover is trailing series letters only (SE, XL). Do not invent plans.
- */
+/** Floorplan family align — 27A ↔ 27ASE, 25FW ↔ 25FWS, not 27A ↔ 29S. */
 export function floorplanTokensAlign(ask: string, unitToken: string): boolean {
-  const a = compactFloorplanToken(ask);
-  const u = compactFloorplanToken(unitToken);
-  if (!a || !u) return false;
-  if (a === u) return true;
-  if (u.startsWith(a) && /^[a-z]+$/.test(u.slice(a.length))) return true;
-  if (a.startsWith(u) && /^[a-z]+$/.test(a.slice(u.length))) return true;
-  return false;
+  return floorplanFamiliesMatch(ask, unitToken);
 }
 
 function unitTrimMatchesAsk(unit: OwnLotUnit, ask: string): boolean {
@@ -906,11 +944,17 @@ function unitTrimMatchesAsk(unit: OwnLotUnit, ask: string): boolean {
   return false;
 }
 
+function unitSeriesMatchesAsk(unit: OwnLotUnit, code: string): boolean {
+  if (!code) return true;
+  return seriesAliasEquals(`${code} series`, unit.model);
+}
+
 function unitModelMatchesAsk(unit: OwnLotUnit, wanted: string): boolean {
   const um = norm(unit.model);
   const fm = norm(wanted);
   if (!fm) return true;
   if (um && (um.includes(fm) || fm.includes(um))) return true;
+  if (seriesAliasEquals(wanted, unit.model)) return true;
   const blob = norm(`${unit.model} ${unit.trim}`);
   return Boolean(blob && (blob.includes(fm) || fm.includes(blob)));
 }
@@ -926,12 +970,15 @@ export function unitMatchesFilter(
   }
   if (filter.year && unit.year && unit.year !== filter.year) return false;
   if (filter.year && !unit.year) return false;
-  if (filter.make) {
-    const um = norm(unit.make);
-    const fm = norm(filter.make);
-    if (!um || (!um.includes(fm) && !fm.includes(um))) return false;
-  }
+  if (filter.make && !coachBrandsMatch(unit.make, filter.make)) return false;
   if (filter.model && !unitModelMatchesAsk(unit, filter.model)) return false;
+  if (
+    filter.seriesCode &&
+    !filter.model &&
+    !unitSeriesMatchesAsk(unit, filter.seriesCode)
+  ) {
+    return false;
+  }
   if (filter.trim && !unitTrimMatchesAsk(unit, filter.trim)) return false;
   if (filter.location) {
     const ul = norm(unit.location);
@@ -1080,6 +1127,7 @@ function filterLabel(filter: OwnLotFilter): string {
     filter.year,
     filter.make,
     filter.model,
+    filter.seriesCode ? `${filter.seriesCode.toUpperCase()} series` : "",
     filter.trim,
     filter.bodyType,
     filter.toyHauler ? "toy hauler" : "",
@@ -1188,12 +1236,22 @@ export function formatOwnLotBlock(
   lines.push(
     "Answer from these counts and listing prices. Never invent a VIN, stock number, unit, or price that is not in this snapshot. Brochure catalog is not lot stock. Own-lot listing prices are what WE ask on the lot — not nationwide market-value comps.",
   );
+  if (counts.matched > 0) {
+    lines.push(
+      "OWN-LOT HIT. A CATALOG GAP / missing brochure row does NOT mean we do not have this coach. Answer lot stock from these rows. Do not send the user to the manufacturer for inventory.",
+    );
+  }
 
   const listingAsk = looksLikeOwnLotListingPriceQuestion(query);
   const listAsk = looksLikeOwnLotUnitListQuestion(query);
   const stockAsk = Boolean(filter.stockNumber);
   const narrowIdentity = Boolean(
-    filter.make || filter.model || filter.trim || filter.year || filter.location,
+    filter.make ||
+      filter.model ||
+      filter.seriesCode ||
+      filter.trim ||
+      filter.year ||
+      filter.location,
   );
   const budgetFilter =
     filter.minPrice != null ||

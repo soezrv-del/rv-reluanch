@@ -79,7 +79,7 @@ test("parses David’s test coach from a spec question", () => {
   assert.equal(p.floorplan, "45A");
 });
 
-test("Integra is an Entegra Coach alias and 27A still parses before the brand", () => {
+test("Integra is a shape match for Entegra Coach and 27A still parses before the brand", () => {
   assert.ok(!COACH_BRANDS.includes("Integra"));
   const a = parseCoachFromText("27A Integra Vision");
   assert.equal(a.make, "Entegra Coach");
