@@ -30,7 +30,7 @@ import { fetchPublicListingComps } from "@/lib/rv/publicListingComps";
 import { exportVehicleReport } from "@/lib/rv/exportReport";
 import { cn } from "@/lib/utils";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
-import { RAIDHO_R_MARK } from "@/assets/prestige";
+import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
 
 function toneClass(tone: CompareCell["tone"], emphasis?: boolean) {
   switch (tone) {
@@ -275,18 +275,19 @@ export function RvCompare({
 
   return (
     <div
-      className="relative flex h-full flex-col overflow-hidden text-white"
+      className="rvfax-screen relative flex h-full flex-col overflow-hidden text-white"
       data-readable-cards=""
       data-compare-view=""
+      data-raidho-only=""
     >
-      <CompareRaidhoBackdrop />
+      <SuiteRaidhoBackdrop bleed />
 
       <div
         data-app-scroll
         className="rv-scroll relative z-10 h-full overflow-y-auto overscroll-y-contain"
       >
         <div
-          className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/10 bg-black/70 backdrop-blur-md"
+          className="rvfax-report-chrome sticky top-0 z-30 border-b border-white/15"
           data-no-export
         >
           <div className="mx-auto flex w-full max-w-2xl items-center justify-between gap-2 px-3 pb-2.5 sm:px-4">
@@ -334,8 +335,8 @@ export function RvCompare({
             </div>
           ) : null}
 
-          <header className="overflow-hidden rounded-[1.25rem] border border-white/15 bg-black/60">
-            <div className="flex items-center gap-2 border-b border-white/10 bg-black/65 px-3.5 py-2.5">
+          <header className="glass-prestige overflow-hidden rounded-[1.25rem]">
+            <div className="flex items-center gap-2 border-b border-white/10 px-3.5 py-2.5">
               <span className="rounded bg-white px-1.5 py-0.5 text-[9px] font-black text-slate-900">
                 RVFAX
               </span>
@@ -418,7 +419,7 @@ export function RvCompare({
                     ? "border-emerald-400/50 bg-emerald-500/15"
                     : i === lo && hi !== lo
                       ? "border-ruby/40 bg-ruby/10"
-                      : "border-white/15 bg-black/60",
+                      : "border-white/15 bg-white/5",
                 )}
               >
                 <p className="text-[9px] font-bold tracking-wide text-sky-300">
@@ -463,8 +464,8 @@ export function RvCompare({
             );
           })}
 
-          <section className="overflow-hidden rounded-[1.15rem] border border-white/12 bg-black/60">
-            <div className="flex items-center gap-2 border-b border-white/10 bg-black/65 px-3.5 py-2">
+          <section className="glass-prestige overflow-hidden rounded-[1.15rem]">
+            <div className="flex items-center gap-2 border-b border-white/10 px-3.5 py-2">
               <Sparkles className="size-3.5 text-white" />
               <p className="text-[11px] font-bold tracking-wide text-white">
                 AI difference summary
@@ -516,19 +517,6 @@ export function RvCompare({
   );
 }
 
-function CompareRaidhoBackdrop() {
-  return (
-    <div
-      className="compare-raidho-backdrop pointer-events-none absolute inset-0 overflow-hidden"
-      aria-hidden
-      data-no-export
-    >
-      <div className="compare-raidho-field" />
-      <img src={RAIDHO_R_MARK} alt="" className="compare-raidho-mark" />
-    </div>
-  );
-}
-
 function CompareRowSectionTable({
   section,
   title,
@@ -543,9 +531,9 @@ function CompareRowSectionTable({
   return (
     <section
       data-compare-section={section}
-      className="overflow-hidden rounded-[1.15rem] border border-white/12 bg-black/60"
+      className="glass-prestige overflow-hidden rounded-[1.15rem]"
     >
-      <div className="border-b border-white/10 bg-black/65 px-3 py-2">
+      <div className="border-b border-white/10 px-3 py-2">
         <p className="text-[11px] font-bold tracking-wide text-white">{title}</p>
       </div>
       <div className="divide-y divide-white/10">
