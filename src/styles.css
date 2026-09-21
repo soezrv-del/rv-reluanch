@@ -2,16 +2,28 @@
 @import "tw-animate-css";
 
 @theme {
-  --color-bg: #050508;
-  --color-bg-elevated: #0a0a10;
-  --color-surface: #0e0e14;
-  --color-surface-2: #14141c;
-  --color-fg: #ffffff;
-  --color-muted: rgba(245, 248, 255, 0.78);
-  --color-dim: rgba(230, 236, 248, 0.55);
+  /*
+   * Tide visual SoT — tideguide.com / Apple Design Award 2026
+   * Visuals & Graphics. Aquatic, Liquid Glass–adjacent, sky-soft.
+   * Night field is deep navy-teal (tide night), not near-black (#050508).
+   */
+  --color-tide-bg: #0c1a22;
+  --color-tide-surface: #152830;
+  --color-tide-aqua: #86c0b8;
+  --color-tide-foam: #e6f2ef;
+  --color-tide-ink: #f3f8f6;
 
-  --color-border: rgba(255, 255, 255, 0.2);
-  --color-border-strong: rgba(255, 255, 255, 0.34);
+  --color-bg: var(--color-tide-bg);
+  --color-bg-elevated: #12242d;
+  --color-surface: var(--color-tide-surface);
+  --color-surface-2: #1b323c;
+  --color-fg: var(--color-tide-ink);
+  --color-muted: color-mix(in srgb, var(--color-tide-foam) 78%, transparent);
+  --color-dim: color-mix(in srgb, var(--color-tide-foam) 52%, transparent);
+  --color-accent: var(--color-tide-aqua);
+
+  --color-border: color-mix(in srgb, var(--color-tide-foam) 20%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--color-tide-foam) 32%, transparent);
 
   --color-ruby: #d42535;
   --color-ruby-deep: #c01f2e;
@@ -52,11 +64,11 @@
   --shadow-glow-ruby: 0 0 28px rgba(212, 37, 53, 0.4);
   --shadow-glow-gold: 0 0 32px rgba(201, 184, 150, 0.28);
   --shadow-glow-sapphire: 0 0 36px rgba(80, 160, 255, 0.35);
-  --shadow-panel: 0 16px 48px rgba(0, 0, 0, 0.5);
+  --shadow-panel: 0 16px 48px rgba(6, 18, 24, 0.36);
   --shadow-glass:
-    0 12px 40px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.38),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+    0 12px 36px rgba(6, 20, 26, 0.28),
+    inset 0 1px 0 color-mix(in srgb, var(--color-tide-foam) 32%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--color-tide-aqua) 8%, transparent);
 
   --dock-label-size: 1.125rem;
   --dock-label-size-sm: 1.1875rem;
