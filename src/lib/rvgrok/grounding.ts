@@ -9,7 +9,7 @@
  * Chat answers must never be merged into the Facts verified cache.
  */
 
-import { CATALOG_INDEX, MAKES } from "../rv/rvCatalogIndex";
+import { CATALOG_INDEX } from "../rv/rvCatalogIndex";
 import { peekCatalog } from "../rv/catalogLoad";
 import { resolveYearSnapshot } from "../rv/brochureSpecs";
 import {
@@ -32,8 +32,6 @@ import {
 import {
   catalogYearIsListed,
   looksLikeCoachDesignationAsk,
-  matchCatalogModelName,
-  parseCoachFromText,
 } from "./parseCoach";
 import type { RVSpec } from "../rv/rvTypes";
 import {
@@ -58,6 +56,12 @@ import {
   looksLikeRepairQuestion,
   repairCoachLockFromGrounded,
 } from "./repairMode";
+import {
+  type CoachIdentity,
+  resolveCatalogMake,
+  resolveCatalogModel,
+  resolveCoachIdentity,
+} from "./coachIdentity";
 
 export {
   looksLikeCasualNonResearch,
@@ -89,15 +93,14 @@ export {
   looksLikeForumOrManualCompare,
 } from "./coachCompare";
 export type { WebFallbackOpts, WebFallbackSpecs } from "./webIntent";
-
-export type CoachIdentity = {
-  year: string;
-  make: string;
-  model: string;
-  floorplan: string;
-  /** How we picked this coach */
-  source: "message" | "facts" | "mixed";
-};
+export type { CoachIdentity } from "./coachIdentity";
+export {
+  askNamesCoachIdentity,
+  namedCoachConflictsLock,
+  resolveCatalogMake,
+  resolveCatalogModel,
+  resolveCoachIdentity,
+} from "./coachIdentity";
 
 export type GroundedField = {
   value: string | null;
@@ -134,6 +137,7 @@ export const HARD_POWERTRAIN_FIELDS = [
 export const CHAT_MAY_WRITE_FACTS_CACHE = false;
 
 export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
+- The CATALOG / BROCHURE block in this request is THIS turn's lock. If the user named a different year / make / model / floorplan, this block is that coach — never keep narrating a prior session coach as still locked.
 - The CATALOG / BROCHURE block in this request is source-of-truth for engine, horsepower, chassis, transmission, and fuel.
 - If a field has a number or name, USE THAT EXACT VALUE. Do not substitute a sibling model, a later year, or a "typical" HP (never invent 450).
 - If a field is marked UNKNOWN, do not stop at "I don't know." Prefer WEB RESEARCH notes this turn, then YOU answer. Do not guess. Never send them to a brochure, door sticker, dealer, or website. Never say "check the website", "look it up yourself", or "go check the OEM site".
@@ -158,29 +162,6 @@ export const COMPARE_GROUNDING_RULES = `COMPARE THIS TURN (catalog-answerable):
 - Do not invent HP, engine, chassis, or fuel. UNKNOWN / EST stays unknown / EST.
 - NEVER send the user to a website, OEM site, or dealer as the answer.`;
 
-const MAKE_ALIASES: Record<string, string> = {
-  entegra: "Entegra Coach",
-  "entegra coach": "Entegra Coach",
-  "american coach": "American Coach",
-  "forest river": "Forest River",
-  fr: "Forest River",
-  jayco: "Jayco",
-  newmar: "Newmar",
-  tiffin: "Tiffin",
-  winnebago: "Winnebago",
-  thor: "Thor",
-  fleetwood: "Fleetwood",
-  "holiday rambler": "Holiday Rambler",
-  coachmen: "Coachmen",
-  airstream: "Airstream",
-  dynamax: "Dynamax",
-  "grand design": "Grand Design",
-};
-
-function norm(s: string | null | undefined): string {
-  return (s || "").toLowerCase().replace(/\s+/g, " ").trim();
-}
-
 function field(
   value: string | number | null | undefined,
   trust: GroundedField["trust"],
@@ -204,105 +185,6 @@ function pickField(
     if (f.value) return f;
   }
   return { value: null, trust: "empty" };
-}
-
-/** Map a spoken/typed make onto a catalog make key. */
-export function resolveCatalogMake(raw: string): string {
-  const n = norm(raw);
-  if (!n) return raw.trim();
-  if (MAKE_ALIASES[n]) return MAKE_ALIASES[n]!;
-  const exact = MAKES.find((m) => norm(m) === n);
-  if (exact) return exact;
-  const contains = MAKES.find(
-    (m) => norm(m).includes(n) || n.includes(norm(m)),
-  );
-  return contains || raw.trim();
-}
-
-/** Best catalog model name under a make. */
-export function resolveCatalogModel(make: string, rawModel: string): string {
-  const catalogMake = resolveCatalogMake(make);
-  const live = peekCatalog()?.RV_DATA?.[catalogMake];
-  const index = CATALOG_INDEX[catalogMake];
-  return matchCatalogModelName(rawModel, [
-    ...Object.keys(live || {}),
-    ...Object.keys(index || {}),
-  ]);
-}
-
-/**
- * Prefer an explicit year/make/model in the user's words.
- * Fall back to the open Facts selection when the question is "this coach."
- */
-export function resolveCoachIdentity(
-  query: string,
-  facts?: ActiveCoach | null,
-  extraText = "",
-): CoachIdentity | null {
-  // Current ask wins. History/extraText used to steal the last brand mention
-  // ("Grand Design fifth-wheels…") and dump a named Lineage M lock.
-  const fromQuery = parseCoachFromText(query);
-  const parsed =
-    fromQuery.year && fromQuery.make && fromQuery.model
-      ? fromQuery
-      : parseCoachFromText(`${query}\n${extraText}`);
-  const factsOk = Boolean(
-    facts?.year?.trim() && facts.make?.trim() && facts.model?.trim(),
-  );
-
-  if (parsed.year && parsed.make && parsed.model) {
-    const sameFamily =
-      factsOk &&
-      parsed.year === facts!.year &&
-      norm(resolveCatalogMake(parsed.make)) ===
-        norm(resolveCatalogMake(facts!.make));
-    return {
-      year: parsed.year,
-      make: resolveCatalogMake(parsed.make),
-      model: resolveCatalogModel(parsed.make, parsed.model),
-      floorplan:
-        parsed.floorplan ||
-        (sameFamily ? facts!.floorplan || "" : ""),
-      source: sameFamily && !parsed.floorplan && facts!.floorplan ? "mixed" : "message",
-    };
-  }
-
-  if (parsed.year && parsed.make && factsOk && parsed.year === facts!.year) {
-    const sameMake =
-      norm(resolveCatalogMake(parsed.make)) ===
-      norm(resolveCatalogMake(facts!.make));
-    if (sameMake) {
-      return {
-        year: facts!.year,
-        make: resolveCatalogMake(facts!.make),
-        model: facts!.model,
-        floorplan: parsed.floorplan || facts!.floorplan || "",
-        source: "mixed",
-      };
-    }
-  }
-
-  if (factsOk) {
-    return {
-      year: facts!.year,
-      make: resolveCatalogMake(facts!.make),
-      model: facts!.model,
-      floorplan: facts!.floorplan || "",
-      source: "facts",
-    };
-  }
-
-  if (parsed.year && parsed.make) {
-    return {
-      year: parsed.year,
-      make: resolveCatalogMake(parsed.make),
-      model: parsed.model,
-      floorplan: parsed.floorplan,
-      source: "message",
-    };
-  }
-
-  return null;
 }
 
 function specFor(make: string, model: string): RVSpec | null {

@@ -445,6 +445,7 @@ test("RvGROK chat client injects catalog grounding", () => {
   assert.match(app, /catalogContext/);
   assert.match(app, /buildVoiceGrounding/);
   assert.match(app, /agentMode,/);
+  assert.match(app, /filter\(\(m\) => m\.role === "user"\)/);
   assert.match(stream, /catalogContext/);
   assert.match(stream, /wantsWebFallback/);
 });
@@ -516,7 +517,12 @@ test("system prompts never deflect to website / OEM / dealer — unconditional",
     /never the whole answer when research notes are present/,
   );
   assert.match(grounding, /IS in the verified catalog/);
-  assert.match(grounding, /fromQuery/);
+  assert.match(src(root, "coachIdentity.ts"), /fromQuery/);
+  assert.match(src(root, "coachIdentity.ts"), /namedCoachConflictsLock/);
+  assert.match(src(root, "coachIdentity.ts"), /askNamesCoachIdentity/);
+  assert.match(grounding, /namedCoachConflictsLock/);
+  assert.match(grounding, /askNamesCoachIdentity/);
+  assert.match(grounding, /THIS turn's lock/);
   assert.match(src(root, "webIntent.ts"), /Resolved hard row/);
   assert.match(src(root, "webIntent.ts"), /looksLikeNamedCoachProductQuestion/);
   assert.match(src(root, "webIntent.ts"), /catalogGapNeedsWeb/);
@@ -564,8 +570,9 @@ test("Lineage M / Lineage M series resolve to catalog Lineage Series M", () => {
   assert.equal(matchCatalogModelName("Lineage E series", gd), "Lineage Series E");
   assert.notEqual(matchCatalogModelName("Lineage M", gd), "Lineage Series E");
   assert.notEqual(matchCatalogModelName("Lineage M", gd), "Lineage Series F");
-  assert.match(src(root, "grounding.ts"), /matchCatalogModelName/);
-  assert.match(src(root, "grounding.ts"), /fromQuery/);
+  assert.match(src(root, "coachIdentity.ts"), /matchCatalogModelName/);
+  assert.match(src(root, "coachIdentity.ts"), /fromQuery/);
+  assert.match(src(root, "coachIdentity.ts"), /namedCoachConflictsLock/);
 });
 
 function assertLineageSeriesMLock(
@@ -645,6 +652,8 @@ test("unresolved named coach about-ask still fires web instead of a dealer dead-
   assert.match(api, /executeWebResearch/);
   assert.match(api, /buildChatGrounding/);
   assert.match(api, /serverGrounded/);
+  assert.match(api, /lastNamesCoach/);
+  assert.match(api, /askNamesCoachIdentity/);
 });
 
 test("inventory / diesel count asks still trip the detector when catalog is locked", () => {

@@ -495,7 +495,10 @@ export function RvGrokApp({
         );
 
         const facts = readActiveCoach();
+        // User turns only — assistant "catalog locked to Lineage" must not
+        // refill extraText and steal a newly named Integra / Entegra ask.
         const extraText = history
+          .filter((m) => m.role === "user")
           .map((m) => (typeof m.content === "string" ? m.content : ""))
           .join("\n");
         const preview = buildChatGrounding({
