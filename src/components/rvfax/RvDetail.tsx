@@ -1514,91 +1514,11 @@ export function RvDetail({
             </div>
           </section>
 
-          <section
-            className="glass-prestige overflow-hidden rounded-[1.15rem] px-5 py-5"
-            data-testid="facts-ratings"
-          >
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
-              Ratings
-            </p>
-            <ul className="mt-3 divide-y divide-white/10">
-              {ratingsRows.map((row) => (
-                <li
-                  key={row.key}
-                  className="flex items-start justify-between gap-3 py-3 first:pt-1 last:pb-0"
-                  data-testid={`facts-ratings-${row.key}`}
-                >
-                  <div className="min-w-0">
-                    <span className="text-[14px] font-medium text-white">
-                      {row.label}
-                    </span>
-                    {row.caption ? (
-                      <p
-                        className="mt-0.5 text-[11px] leading-snug text-white/45"
-                        data-testid={`facts-ratings-${row.key}-caption`}
-                      >
-                        {row.caption}
-                      </p>
-                    ) : null}
-                  </div>
-                  {row.score == null ? (
-                    <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
-                      GAP
-                    </span>
-                  ) : (
-                    <span
-                      className="flex shrink-0 items-baseline gap-2 text-amber-200/90"
-                      aria-label={`${row.label} ${formatOwnerReviewScore(row.score)}`}
-                    >
-                      <span className="text-[13px] font-semibold tabular-nums text-white">
-                        {formatOwnerReviewScore(row.score)}
-                      </span>
-                      <span className="text-[13px] tracking-wide">
-                        {ratingStars(row.score)}
-                      </span>
-                    </span>
-                  )}
-                </li>
-              ))}
-              <li className="flex items-center justify-between gap-3 py-3 last:pb-0">
-                <span className="min-w-0 shrink-0 text-[14px] font-medium text-white">
-                  Torque-to-Weight
-                </span>
-                {torqueToWeight.score == null ? (
-                  <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
-                    {formatTorqueToWeightScore(torqueToWeight)}
-                  </span>
-                ) : (
-                  <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
-                    <div
-                      className="h-2 w-[7.5rem] overflow-hidden rounded-full bg-white/12 sm:w-[9.5rem]"
-                      data-testid="facts-tqwt-bar"
-                      role="meter"
-                      aria-label={`Torque-to-Weight ${formatTorqueToWeightScore(torqueToWeight)}`}
-                      aria-valuemin={1}
-                      aria-valuemax={10}
-                      aria-valuenow={Number(torqueToWeight.score.toFixed(1))}
-                    >
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${torqueBarPct}%`,
-                          backgroundColor: torqueBarColor,
-                        }}
-                      />
-                    </div>
-                    <span className="shrink-0 text-[13px] font-semibold tabular-nums text-white">
-                      {formatTorqueToWeightScore(torqueToWeight)}
-                    </span>
-                  </div>
-                )}
-              </li>
-            </ul>
-          </section>
-
           {hasConcreteFloorplan(floorplan) ? (
           <FactsCollapse
             title="Vehicle specifications"
+            defaultOpen
+            data-testid="facts-specs"
             headline={factsSpecsHeadline({
               length: specs.lengthFt,
               engine: specs.engine,
@@ -1774,6 +1694,88 @@ export function RvDetail({
             </details>
           </FactsCollapse>
           ) : null}
+
+          <section
+            className="glass-prestige overflow-hidden rounded-[1.15rem] px-5 py-5"
+            data-testid="facts-ratings"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
+              Ratings
+            </p>
+            <ul className="mt-3 divide-y divide-white/10">
+              {ratingsRows.map((row) => (
+                <li
+                  key={row.key}
+                  className="flex items-start justify-between gap-3 py-3 first:pt-1 last:pb-0"
+                  data-testid={`facts-ratings-${row.key}`}
+                >
+                  <div className="min-w-0">
+                    <span className="text-[14px] font-medium text-white">
+                      {row.label}
+                    </span>
+                    {row.caption ? (
+                      <p
+                        className="mt-0.5 text-[11px] leading-snug text-white/45"
+                        data-testid={`facts-ratings-${row.key}-caption`}
+                      >
+                        {row.caption}
+                      </p>
+                    ) : null}
+                  </div>
+                  {row.score == null ? (
+                    <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                      GAP
+                    </span>
+                  ) : (
+                    <span
+                      className="flex shrink-0 items-baseline gap-2 text-amber-200/90"
+                      aria-label={`${row.label} ${formatOwnerReviewScore(row.score)}`}
+                    >
+                      <span className="text-[13px] font-semibold tabular-nums text-white">
+                        {formatOwnerReviewScore(row.score)}
+                      </span>
+                      <span className="text-[13px] tracking-wide">
+                        {ratingStars(row.score)}
+                      </span>
+                    </span>
+                  )}
+                </li>
+              ))}
+              <li className="flex items-center justify-between gap-3 py-3 last:pb-0">
+                <span className="min-w-0 shrink-0 text-[14px] font-medium text-white">
+                  Torque-to-Weight
+                </span>
+                {torqueToWeight.score == null ? (
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                    {formatTorqueToWeightScore(torqueToWeight)}
+                  </span>
+                ) : (
+                  <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
+                    <div
+                      className="h-2 w-[7.5rem] overflow-hidden rounded-full bg-white/12 sm:w-[9.5rem]"
+                      data-testid="facts-tqwt-bar"
+                      role="meter"
+                      aria-label={`Torque-to-Weight ${formatTorqueToWeightScore(torqueToWeight)}`}
+                      aria-valuemin={1}
+                      aria-valuemax={10}
+                      aria-valuenow={Number(torqueToWeight.score.toFixed(1))}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${torqueBarPct}%`,
+                          backgroundColor: torqueBarColor,
+                        }}
+                      />
+                    </div>
+                    <span className="shrink-0 text-[13px] font-semibold tabular-nums text-white">
+                      {formatTorqueToWeightScore(torqueToWeight)}
+                    </span>
+                  </div>
+                )}
+              </li>
+            </ul>
+          </section>
 
           <div data-facts-market-value>
           <FactsCollapse

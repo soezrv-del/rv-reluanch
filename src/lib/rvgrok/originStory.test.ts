@@ -197,7 +197,7 @@ test("chat, voice, and grounding wire the origin KB; DialaBot stays out", () => 
   assert.match(src("speechPolicy.ts"), /Verified & True \/ Know before you buy/);
   assert.match(
     src("speechPolicy.ts"),
-    /I'm RV Grok, here to help you with all your RV needs/,
+    /I'm RV Grok — give me year, make, and model, and I'll speak the spec report on that exact coach/,
   );
   assert.doesNotMatch(src("speechPolicy.ts"), /Only say "Let me check that"/);
   assert.doesNotMatch(src("originStory.ts"), /[Dd]ialaBot/);
