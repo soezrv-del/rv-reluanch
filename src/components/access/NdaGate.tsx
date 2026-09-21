@@ -4,6 +4,14 @@ import { readStoredPhone } from "@/lib/access/client";
 import { acceptNda, hasAcceptedNda } from "@/lib/access/nda";
 import { NDA_TEXT, NDA_TITLE } from "@/lib/access/ndaText";
 
+/**
+ * First-run legal gate. Must stay pinned to the visible viewport.
+ *
+ * html/body are overflow:hidden (suite chrome). The old `min-h-dvh`
+ * column was taller than the preview iframe, so the checkbox + Continue
+ * sat below the fold with no page scroll — David could not accept.
+ * Dark `color-scheme` also painted the native checkbox invisible.
+ */
 export function NdaGate({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -18,7 +26,12 @@ export function NdaGate({ children }: { children: ReactNode }) {
     return (
       <div
         data-nda-state="loading"
-        className="flex h-full min-h-dvh items-center justify-center bg-bg text-fg"
+        className="fixed inset-0 z-[200] flex items-center justify-center bg-bg text-fg"
+        style={{
+          top: "var(--vv-offset-top, 0px)",
+          height: "var(--vv-height, 100%)",
+          maxHeight: "var(--vv-height, 100%)",
+        }}
       >
         <p className="text-[13px] font-semibold text-muted">RvFOX</p>
       </div>
@@ -30,9 +43,14 @@ export function NdaGate({ children }: { children: ReactNode }) {
       <div
         data-nda-gate
         data-nda-state="prompt"
-        className="flex h-full min-h-dvh flex-col bg-bg text-fg"
+        className="fixed inset-0 z-[200] flex flex-col overflow-hidden bg-bg text-fg"
+        style={{
+          top: "var(--vv-offset-top, 0px)",
+          height: "var(--vv-height, 100%)",
+          maxHeight: "var(--vv-height, 100%)",
+        }}
       >
-        <div className="border-b border-border px-4 py-3">
+        <div className="shrink-0 border-b border-border px-4 py-3">
           <p className="text-[10px] font-bold tracking-[0.16em] text-gold">
             REQUIRED
           </p>
@@ -40,7 +58,10 @@ export function NdaGate({ children }: { children: ReactNode }) {
             {NDA_TITLE}
           </h1>
         </div>
-        <div data-app-scroll className="rv-scroll flex-1 overflow-y-auto px-4 py-4">
+        <div
+          data-app-scroll
+          className="rv-scroll min-h-0 flex-1 overflow-y-auto px-4 py-4"
+        >
           <div className="mx-auto max-w-lg">
             <div className="glass-prestige rounded-[1.25rem] p-4">
               <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-gold-dim">
@@ -52,14 +73,24 @@ export function NdaGate({ children }: { children: ReactNode }) {
             </div>
           </div>
         </div>
-        <div className="border-t border-border px-4 py-3">
+        <div
+          data-nda-accept-bar
+          className="shrink-0 border-t border-border bg-bg-elevated px-4 pt-3"
+          style={{
+            paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))",
+          }}
+        >
           <div className="mx-auto max-w-lg space-y-3">
-            <label className="flex cursor-pointer items-start gap-3">
+            <label
+              htmlFor="nda-accept-check"
+              className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-gold-border bg-surface px-3 py-3"
+            >
               <input
+                id="nda-accept-check"
                 type="checkbox"
                 checked={checked}
                 onChange={(e) => setChecked(e.target.checked)}
-                className="mt-1 size-5 shrink-0 accent-sapphire"
+                className="nda-accept-check mt-0.5 size-6 shrink-0"
                 data-nda-checkbox
               />
               <span className="text-[13px] leading-relaxed text-fg">
@@ -75,7 +106,7 @@ export function NdaGate({ children }: { children: ReactNode }) {
                 acceptNda(readStoredPhone());
                 setAccepted(true);
               }}
-              className="w-full rounded-xl bg-sapphire py-3 text-[14px] font-bold text-fg disabled:opacity-50"
+              className="min-h-12 w-full rounded-xl bg-sapphire py-3 text-[15px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-45"
             >
               Continue
             </button>

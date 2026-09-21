@@ -310,6 +310,38 @@
     scroll-margin-bottom: calc(var(--kb-inset, 0px) + 48px);
   }
 
+  /*
+   * NDA accept box: html { color-scheme: dark } paints native checkboxes
+   * dark-on-dark, so the required check is invisible and Continue stays
+   * disabled. Force a light, high-contrast control David can tap.
+   */
+  [data-nda-gate] .nda-accept-check {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0;
+    color-scheme: light;
+    accent-color: #4a86f0;
+    border: 2px solid #e2d8c4;
+    border-radius: 0.4rem;
+    background-color: #f7f5f9;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 0.95rem;
+  }
+
+  [data-nda-gate] .nda-accept-check:checked {
+    background-color: #4a86f0;
+    border-color: #8ec5ff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E");
+  }
+
+  [data-nda-gate] .nda-accept-check:focus-visible {
+    outline: 2px solid #8ec5ff;
+    outline-offset: 2px;
+  }
+
   html.kb-open [data-app-scroll],
   html.kb-open .rv-scroll {
     scroll-padding-bottom: calc(var(--kb-inset, 0px) + 72px);
