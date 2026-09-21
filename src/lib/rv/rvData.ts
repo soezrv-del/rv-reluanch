@@ -20276,7 +20276,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 2012,
       warrantyYears: 2,
       yearStart: 2025,
-      gvwrLbs: 22000,
+      // GVWR GAP — omit series stamp. 31ZW 22k / 31ZW5 19.5k year-bands + OEM pins stay SoT.
       overallLengthIn: 405,
       description: "Grand Design Lineage Series F — Super C 4x4. OEM Class C brochure prints 31ZW on Ford F-600 6.7 diesel, hitch 15,000 (10,000 with 43 package). 31ZW5 is the F-550 twin. Power Stroke ~330/950.",
       powertrainByYear: [
@@ -21517,7 +21517,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1950,
       warrantyYears: 1,
       yearStart: 2020,
-      gvwrLbs: 26000,
+      // GVWR GAP — 2026 RVUSA Fortis chassis table prints GCWR 26,000/30,000 and GAWR, not GVWR.
+      // Do not invent GVWR from GAWR sum or restamp 26,000.
       description: "Fleetwood Fortis — F53 gas Class A. OEM debut MY20: 33HB / 34MB on Triton V10 320/460 (no 32RW / 36DB yet). MY21–22: 32RW / 33HB / 34MB / 36DB; MY23 adds 36Y; MY24–25 drop 36DB; MY26 adds 36T; MY27 OEM+PDF: 32RW / 33HB / 34MB / 35R / 36Y (do not copy 36T). Ford 7.3 is 350/468 in MY21–23 and 335/468 from MY24.",
       powertrainByYear: [
         { from: 2020, to: 2020, engine: "Ford Triton V10 6.8L 320HP", horsepower: 320, torqueLbFt: 460, chassis: "Ford F53", transmission: "Ford 6-speed automatic", towingCapacity: 8000, generator: "Onan 5.5 kW Quiet gas", notes: "Fortis MY20 brochure: 6.8L Triton V10 320/460, Onan 5.5 kW Quiet. Plans 33HB / 34MB only. Not 7.3." },
@@ -37182,8 +37183,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       fuelStationGal: 60,
       generatorFuelGal: 60,
       garageFits: "Full-size UTV(s) by plan — 6.5–17 ft garage/flex",
-      gvwrLbs: 23000,
-      uvwLbs: 18900,
+      // GVWR/UVW GAP — omit model stamps. Dated OEM_FLOORPLAN_ROWS are SoT.
       exteriorHeightIn: 160,
       exteriorWidthIn: 101,
       founded: 2019,
@@ -37275,8 +37275,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       fuelStationGal: 60,
       generatorFuelGal: 60,
       garageFits: "Full-size UTV(s) by plan — 6.5–17 ft garage/flex",
-      gvwrLbs: 23000,
-      uvwLbs: 18900,
+      // GVWR/UVW GAP — omit model stamps. Dated OEM_FLOORPLAN_ROWS are SoT.
       exteriorHeightIn: 160,
       exteriorWidthIn: 101,
       founded: 2019,

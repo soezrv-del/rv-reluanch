@@ -255,6 +255,63 @@ test("yearEnd / last-exact-pin clamp is shared — later FBY cannot steal a pin"
   assert.equal(brochure.horsepower, "—");
 });
 
+test("Brinkley Model G/T 3250: OEM 22k floorplan row wins; no model-level 23k stamp", () => {
+  const g = factsFor("2024", "Brinkley", "Model G", "3250");
+  const t = factsFor("2024", "Brinkley", "Model T", "3250");
+  assert.equal(g.spec.gvwrLbs, undefined);
+  assert.equal(g.spec.uvwLbs, undefined);
+  assert.equal(t.spec.gvwrLbs, undefined);
+  assert.equal(t.spec.uvwLbs, undefined);
+  assert.equal(g.snap.gvwrLbs, undefined);
+  assert.equal(t.snap.gvwrLbs, undefined);
+  // Dated OEM_FLOORPLAN_ROWS (source: "Brinkley Model G 3250 brochure") stay SoT.
+  assert.equal(g.brochure.gvwrLbs, 22_000);
+  assert.equal(t.brochure.gvwrLbs, 22_000);
+  assert.match(g.brochure.gvwr, /22,?000/);
+  assert.match(t.brochure.gvwr, /22,?000/);
+  assert.doesNotMatch(g.brochure.gvwr, /23,?000/);
+  assert.doesNotMatch(t.brochure.gvwr, /23,?000/);
+
+  const gx = RV_DATA.Brinkley?.["Model Gx"];
+  const z = RV_DATA.Brinkley?.["Model Z"];
+  const i = RV_DATA.Brinkley?.["Model I"];
+  const ix = RV_DATA.Brinkley?.["Model Ix"];
+  const tAir = RV_DATA.Brinkley?.["Model T Air"];
+  assert.ok(gx && z && i && ix && tAir);
+  assert.equal(gx.gvwrLbs, undefined);
+  assert.equal(z.gvwrLbs, undefined);
+  assert.equal(i.gvwrLbs, undefined);
+  assert.equal(ix.gvwrLbs, undefined);
+  assert.equal(tAir.gvwrLbs, undefined);
+});
+
+test("Fleetwood Fortis: 26k model stamp is GCWR misread — GAP; KEEP siblings", () => {
+  const fortis = factsFor("2026", "Fleetwood", "Fortis", "32RW");
+  assert.equal(fortis.spec.gvwrLbs, undefined);
+  assert.equal(fortis.snap.gvwrLbs, undefined);
+  assert.equal(fortis.brochure.gvwrLbs, null);
+  assert.equal(fortis.brochure.gvwr, CONFIRM_BROCHURE);
+  assert.doesNotMatch(fortis.brochure.gvwr, /26,?000/);
+  assert.deepEqual(fortis.spec.weightRange, [18000, 26000]);
+
+  // Audit E KEEP — do not clear these stamps in this batch.
+  assert.equal(RV_DATA.Fleetwood?.Altitude?.gvwrLbs, 14500);
+  assert.equal(RV_DATA.Fleetwood?.Insight?.gvwrLbs, 11030);
+  assert.equal(RV_DATA["Holiday Rambler"]?.Incline?.gvwrLbs, 14500);
+});
+
+test("Lineage Series F: no series 22k stamp; 31ZW / 31ZW5 year-bands stay", () => {
+  const spec = RV_DATA["Grand Design"]?.["Lineage Series F"];
+  assert.ok(spec);
+  assert.equal(spec.gvwrLbs, undefined);
+  const zw = factsFor("2026", "Grand Design", "Lineage Series F", "31ZW");
+  const zw5 = factsFor("2026", "Grand Design", "Lineage Series F", "31ZW5");
+  assert.equal(zw.snap.gvwrLbs, 22_000);
+  assert.equal(zw5.snap.gvwrLbs, 19_500);
+  assert.equal(zw.brochure.gvwrLbs, 22_000);
+  assert.equal(zw5.brochure.gvwrLbs, 19_500);
+});
+
 test("resolution path is shared — no coach-specific Ambassador/Jayco/Thor invent", () => {
   const honesty = src("catalogHonesty.ts");
   const brochure = src("brochureSpecs.ts");
