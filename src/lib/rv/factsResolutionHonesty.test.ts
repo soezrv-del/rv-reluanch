@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import {
   CONFIRM_BROCHURE,
   buildBrochureSpecs,
+  pickPowertrainBand,
   resolveYearSnapshot,
 } from "./brochureSpecs.ts";
 import {
@@ -18,8 +19,12 @@ import {
   honestHorsepowerLabel,
   honestTorqueLabel,
   isExactEnginePin,
+  isInventForwardYear,
+  isPastCatalogYearEnd,
   isUnpinnedEngineLabel,
+  lastExactPowertrainYear,
 } from "./catalogHonesty.ts";
+import type { RVSpec } from "./rvTypes.ts";
 import { RV_DATA } from "./rvData.ts";
 import { getMockReviews, reviewMentionsModel } from "./rvReviews.ts";
 import { rankRvVideos } from "./rvVideos.ts";
@@ -91,12 +96,27 @@ test("shared helpers: dual-family / class / by-year labels are unpinned", () => 
   );
 });
 
-test("2023 Holiday Rambler Ambassador 40B: thin pin → GAP, not class blends", () => {
-  const { snap, brochure } = factsFor(
+test("2023 Holiday Rambler Ambassador 40B: invent-forward + dual-band → GAP, not a 2015–16 pin", () => {
+  const { spec, snap, brochure } = factsFor(
     "2023",
     "Holiday Rambler",
     "Ambassador",
     "40B",
+  );
+  // Catalog still lists invented FBY years + L9/B6.7 — we do not coach-patch yearEnd.
+  assert.ok(spec.floorplansByYear?.["2023"]?.includes("40B"));
+  assert.ok(spec.floorplansByYear?.["2026"]);
+  assert.equal(spec.yearEnd, undefined);
+  assert.equal(lastExactPowertrainYear(spec), null);
+  assert.equal(isPastCatalogYearEnd(spec, 2023), false);
+  assert.equal(
+    isInventForwardYear(
+      spec,
+      2023,
+      spec.powertrainByYear?.find((b) => b.from <= 2023 && b.to >= 2023)
+        ?.engine,
+    ),
+    true,
   );
   assert.equal(snap.yearTruePowertrain, false);
   assert.equal(snap.engine, undefined);
@@ -109,6 +129,12 @@ test("2023 Holiday Rambler Ambassador 40B: thin pin → GAP, not class blends", 
   assert.doesNotMatch(brochure.engine, /L9\s*\/\s*B6\.7|B6\.7\s*\/\s*L9/i);
   assert.doesNotMatch(brochure.gvwr, /34,?000|42,?000|34–42|34-42/);
   assert.doesNotMatch(brochure.uvw, /34,?000|42,?000/);
+  // Last dated OEM cards (2015–2016 38DBT/38FST ISB 340/700, GVWR 28k) are
+  // not this 2023 40B — do not invent that pin forward.
+  assert.doesNotMatch(brochure.engine, /ISB|6\.7|340/);
+  assert.doesNotMatch(brochure.horsepower, /340/);
+  assert.doesNotMatch(brochure.gvwr, /28,?000/);
+  assert.doesNotMatch(brochure.lengthFt, /38DBT|38FST/i);
   assert.match(brochure.accuracyNote, /confirm brochure/i);
   assert.doesNotMatch(brochure.accuracyNote, /Year-true OEM facts/);
 
@@ -134,6 +160,7 @@ test("2023 Holiday Rambler Ambassador 40B: thin pin → GAP, not class blends", 
 
 test("2023 Jayco Precept 31UL: exact year pin + OEM GVWR stay; thin 2019 GAPs", () => {
   const pinned = factsFor("2023", "Jayco", "Precept", "31UL");
+  assert.equal(isInventForwardYear(pinned.spec, 2023, pinned.snap.engine), false);
   assert.equal(pinned.snap.yearTruePowertrain, true);
   assert.match(pinned.brochure.engine, /7\.3|Godzilla/i);
   assert.doesNotMatch(pinned.brochure.engine, /V10|by year|class/i);
@@ -159,6 +186,7 @@ test("2023 Jayco Precept 31UL: exact year pin + OEM GVWR stay; thin 2019 GAPs", 
 
 test("2023 Thor ACE 29D: exact year pin + OEM GVWR stay; 2021 option-band GAPs", () => {
   const pinned = factsFor("2023", "Thor", "ACE", "29D");
+  assert.equal(isInventForwardYear(pinned.spec, 2023, pinned.snap.engine), false);
   assert.equal(pinned.snap.yearTruePowertrain, true);
   assert.match(pinned.brochure.engine, /7\.3|Godzilla/i);
   assert.doesNotMatch(pinned.brochure.engine, /V10|option|class/i);
@@ -181,6 +209,52 @@ test("2023 Thor ACE 29D: exact year pin + OEM GVWR stay; 2021 option-band GAPs",
   assert.doesNotMatch(optionYear.brochure.engine, /320|350|V10/);
 });
 
+test("yearEnd / last-exact-pin clamp is shared — later FBY cannot steal a pin", () => {
+  const stub = {
+    type: "Class A Diesel",
+    floorplans: ["40B"],
+    floorplansByYear: {
+      "2016": ["38F"],
+      "2023": ["40B"],
+    },
+    lengthRange: [38, 40] as [number, number],
+    weightRange: [28000, 34000] as [number, number],
+    slideouts: 3,
+    sleeps: 6,
+    msrpRange: [200000, 400000] as [number, number],
+    engine: "Ford 7.3L V8 Godzilla 335HP",
+    horsepower: 335,
+    torqueLbFt: 468,
+    chassis: "Ford F53",
+    fuelType: "Diesel",
+    recalls: 0,
+    rating: 4,
+    image: "",
+    yearEnd: 2016,
+    powertrainByYear: [
+      {
+        from: 2014,
+        to: 2026,
+        engine: "Ford 7.3L V8 Godzilla 335HP",
+        horsepower: 335,
+        torqueLbFt: 468,
+      },
+    ],
+  } satisfies RVSpec;
+
+  assert.equal(isPastCatalogYearEnd(stub, 2016), false);
+  assert.equal(isPastCatalogYearEnd(stub, 2023), true);
+  assert.equal(isInventForwardYear(stub, 2023, stub.powertrainByYear[0]!.engine), true);
+  assert.equal(pickPowertrainBand(stub, 2023, "40B"), null);
+  const snap = resolveYearSnapshot(stub, "2023", "40B");
+  assert.equal(snap.yearTruePowertrain, false);
+  assert.equal(snap.engine, undefined);
+  const brochure = buildBrochureSpecs(stub, "2023", "Stub", "Line", "40B");
+  assert.equal(brochure.engine, CONFIRM_BROCHURE);
+  assert.doesNotMatch(brochure.engine, /Godzilla|335/);
+  assert.equal(brochure.horsepower, "—");
+});
+
 test("resolution path is shared — no coach-specific Ambassador/Jayco/Thor invent", () => {
   const honesty = src("catalogHonesty.ts");
   const brochure = src("brochureSpecs.ts");
@@ -191,7 +265,11 @@ test("resolution path is shared — no coach-specific Ambassador/Jayco/Thor inve
 
   assert.match(honesty, /export function isUnpinnedEngineLabel/);
   assert.match(honesty, /export function isExactEnginePin/);
+  assert.match(honesty, /export function isInventForwardYear/);
+  assert.match(honesty, /export function isPastCatalogYearEnd/);
   assert.match(brochure, /isExactEnginePin/);
+  assert.match(brochure, /isInventForwardYear/);
+  assert.match(brochure, /isPastCatalogYearEnd/);
   assert.match(brochure, /honestEngineLabel/);
   assert.match(brochure, /No in-year band → GAP/);
   assert.match(brochure, /Never interpolate catalog weightRange/);

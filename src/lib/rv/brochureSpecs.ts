@@ -27,6 +27,8 @@ import {
   honestTorqueForCoach,
   horsepowerIsOptionBand,
   isExactEnginePin,
+  isInventForwardYear,
+  isPastCatalogYearEnd,
   isUnpinnedEngineLabel,
   parseHp,
 } from "./catalogHonesty.ts";
@@ -192,6 +194,8 @@ export function pickPowertrainBand(
   if (!bands?.length) return null;
   const y = typeof year === "number" ? year : parseInt(String(year), 10);
   if (!Number.isFinite(y)) return null;
+  // yearEnd is a hard OEM cutoff — do not invent-forward a later FBY / band.
+  if (isPastCatalogYearEnd(spec, y)) return null;
 
   const usable = bands.filter((b) => bandFitsCoach(spec, b));
   if (!usable.length) return null;
@@ -278,44 +282,52 @@ export function resolveYearSnapshot(
   const bandUnpinned = isUnpinnedEngineLabel(bandEngine);
   const specPinned = isExactEnginePin(spec.engine);
   const specUnpinned = isUnpinnedEngineLabel(spec.engine);
-  const yearTruePowertrain = bandPinned;
+  const inventForward = isInventForwardYear(spec, resolvedYear, bandEngine);
+  const yearTruePowertrain = bandPinned && !inventForward;
   // Model-level 60/40/40 is an untrusted catalog clone — not brochure truth.
   // Year-band tanks still win when they actually set gallons.
   const catalogTanks = resolveHonestTanks(spec, band);
 
-  // Thin / class-blend band: do not inherit the modern top-level engine / HP.
-  // Option-band brochure strings (L9 450 std / X15 605 opt) stay for HP.
-  const engine = bandPinned
-    ? bandEngine
-    : bandUnpinned
-      ? undefined
-      : bandEngine || (!band && specPinned && !specUnpinned ? spec.engine : undefined);
-  const horsepower = bandPinned
-    ? band?.horsepower != null && band.horsepower > 0
-      ? band.horsepower
-      : specPinned && spec.horsepower != null && spec.horsepower > 0
-        ? spec.horsepower
-        : undefined
-    : bandUnpinned
-      ? undefined
-      : !band
-        ? specPinned && spec.horsepower != null && spec.horsepower > 0
+  // Thin / class-blend / invent-forward: do not inherit the modern top-level
+  // engine / HP. Option-band brochure strings stay for HP when in-year.
+  const engine = inventForward
+    ? undefined
+    : bandPinned
+      ? bandEngine
+      : bandUnpinned
+        ? undefined
+        : bandEngine ||
+          (!band && specPinned && !specUnpinned ? spec.engine : undefined);
+  const horsepower = inventForward
+    ? undefined
+    : bandPinned
+      ? band?.horsepower != null && band.horsepower > 0
+        ? band.horsepower
+        : specPinned && spec.horsepower != null && spec.horsepower > 0
           ? spec.horsepower
           : undefined
-        : undefined;
-  const torqueLbFt = bandPinned
-    ? band?.torqueLbFt != null && band.torqueLbFt > 0
-      ? band.torqueLbFt
-      : specPinned && spec.torqueLbFt != null && spec.torqueLbFt > 0
-        ? spec.torqueLbFt
-        : undefined
-    : bandUnpinned
-      ? undefined
-      : !band
-        ? specPinned && spec.torqueLbFt != null && spec.torqueLbFt > 0
+      : bandUnpinned
+        ? undefined
+        : !band
+          ? specPinned && spec.horsepower != null && spec.horsepower > 0
+            ? spec.horsepower
+            : undefined
+          : undefined;
+  const torqueLbFt = inventForward
+    ? undefined
+    : bandPinned
+      ? band?.torqueLbFt != null && band.torqueLbFt > 0
+        ? band.torqueLbFt
+        : specPinned && spec.torqueLbFt != null && spec.torqueLbFt > 0
           ? spec.torqueLbFt
           : undefined
-        : undefined;
+      : bandUnpinned
+        ? undefined
+        : !band
+          ? specPinned && spec.torqueLbFt != null && spec.torqueLbFt > 0
+            ? spec.torqueLbFt
+            : undefined
+          : undefined;
 
   return {
     engine,
@@ -435,9 +447,13 @@ export function buildBrochureSpecs(
   const localPin = local ? localOverrideAsPin(local) : null;
   const correction =
     localPin || findPowertrainCorrection(year, make, model, floorplan);
-  // Option-band / class-blend corrections are not a single coach pin.
+  const pastYearEnd = isPastCatalogYearEnd(spec, parseInt(year, 10));
+  // Option-band / class-blend / invent-past-yearEnd catalog patches are not a pin.
+  // Local user overrides still win.
   const correctionPinned = !!(
-    correction && isExactEnginePin(correction.engine)
+    correction &&
+    isExactEnginePin(correction.engine) &&
+    (localPin || !pastYearEnd)
   );
   const snap = correctionPinned
     ? {

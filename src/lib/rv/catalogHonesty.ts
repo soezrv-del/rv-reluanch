@@ -108,6 +108,58 @@ export function isExactEnginePin(
   return true;
 }
 
+type YearBandLike = { from: number; to: number; engine?: string };
+type YearWindowSpec = {
+  yearEnd?: number | null;
+  powertrainByYear?: YearBandLike[] | null;
+};
+
+/** Last `to` year of any exact OEM engine pin. None → null (no pin to copy forward). */
+export function lastExactPowertrainYear(
+  spec: YearWindowSpec | null | undefined,
+): number | null {
+  let last: number | null = null;
+  for (const b of spec?.powertrainByYear || []) {
+    if (!isExactEnginePin(b.engine)) continue;
+    last = last == null ? b.to : Math.max(last, b.to);
+  }
+  return last;
+}
+
+/** Hard catalog end — later FBY / band rows are invent-forward, not this year. */
+export function isPastCatalogYearEnd(
+  spec: YearWindowSpec | null | undefined,
+  year: number,
+): boolean {
+  const end = spec?.yearEnd;
+  return end != null && Number.isFinite(year) && year > end;
+}
+
+/**
+ * Year is past the last dated OEM pin / yearEnd, or only a class/era dump
+ * exists. Do not copy a neighboring year's engine or a dual-family blend
+ * forward (Ambassador FBY through ~2026 + L9/B6.7 is the evidence case).
+ */
+export function isInventForwardYear(
+  spec: YearWindowSpec | null | undefined,
+  year: number,
+  inYearEngine?: string | null,
+): boolean {
+  if (!Number.isFinite(year)) return false;
+  if (isPastCatalogYearEnd(spec, year)) return true;
+  const engine =
+    inYearEngine ??
+    spec?.powertrainByYear?.find((b) => year >= b.from && year <= b.to)
+      ?.engine;
+  if (isExactEnginePin(engine) && !isPastCatalogYearEnd(spec, year)) {
+    return false;
+  }
+  const lastExact = lastExactPowertrainYear(spec);
+  if (lastExact != null && year > lastExact) return true;
+  if (lastExact == null && isUnpinnedEngineLabel(engine)) return true;
+  return false;
+}
+
 export function isAmbiguousCatalogValue(
   text: string | number | null | undefined,
 ): boolean {
