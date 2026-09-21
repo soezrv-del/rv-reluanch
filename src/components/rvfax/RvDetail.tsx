@@ -2363,11 +2363,11 @@ export function RvDetail({
             </FactsCollapse>
           ) : null}
 
+          {ownerReviews.length ? (
           <FactsCollapse
             title="Sample owner notes"
             headline={factsOwnerHeadline(ownerReviews[0] ?? null)}
           >
-            {ownerReviews.length ? (
               <div className="space-y-3">
                 {ownerReviews.map((r) => (
                   <article
@@ -2400,12 +2400,8 @@ export function RvDetail({
                   </article>
                 ))}
               </div>
-            ) : (
-              <p className="text-[13px] leading-relaxed text-white/65">
-                No sample notes for this brand.
-              </p>
-            )}
           </FactsCollapse>
+          ) : null}
 
           <FactsCollapse
             title="NHTSA safety"

@@ -22,6 +22,9 @@ export const EMPTY_MATCH_MESSAGE =
   "No RV Video Library videos matched this coach.";
 export const RELATED_NOTE =
   "Related walkthroughs from RV Video Library on YouTube — not a confirmed match for this exact unit.";
+/** Only used when every returned title names this make + model. */
+export const CONFIRMED_NOTE =
+  "RV Video Library walkthroughs that name this coach.";
 
 /** After-tap only. Never surface raw YouTube / key errors. */
 export function calmVideoLookupError(raw: string): {
@@ -226,6 +229,13 @@ export function titleHasExactMake(title: string, make: string): boolean {
   return re.test(clean(title));
 }
 
+/** Title contains the exact searched model (same phrase rules as make). */
+export function titleHasExactModel(title: string, model: string): boolean {
+  const re = makePhraseRe(model);
+  if (!re) return false;
+  return re.test(clean(title));
+}
+
 /** Title names a different known make than the one searched. */
 export function titleHasCompetingMake(title: string, make: string): boolean {
   const searched = clean(make);
@@ -246,6 +256,18 @@ export function titleHasCompetingMake(title: string, make: string): boolean {
 export function titleQualifiesForRvMake(title: string, make: string): boolean {
   if (!titleHasExactMake(title, make)) return false;
   if (titleHasCompetingMake(title, make)) return false;
+  return true;
+}
+
+/** Confirmed match: exact make + exact model. Brand-only hits are not this coach. */
+export function titleQualifiesForRvCoach(
+  title: string,
+  make: string,
+  model?: string | null,
+): boolean {
+  if (!titleQualifiesForRvMake(title, make)) return false;
+  const requiredModel = clean(model);
+  if (requiredModel && !titleHasExactModel(title, requiredModel)) return false;
   return true;
 }
 
@@ -288,9 +310,15 @@ export function rankRvVideos<T extends { title: string }>(
   videos: T[],
   query: string,
   make?: string | null,
+  model?: string | null,
 ): T[] {
   const requiredMake = resolveRankMake(query, make);
-  const gated = requiredMake ? filterRvVideosByMake(videos, requiredMake) : [];
+  const requiredModel = clean(model);
+  const gated = requiredMake
+    ? videos.filter((v) =>
+        titleQualifiesForRvCoach(v.title, requiredMake, requiredModel),
+      )
+    : [];
   const tokens = tokenizeCoachQuery(query);
   return gated
     .map((v) => ({ v, score: scoreTitleOverlap(v.title, tokens) }))

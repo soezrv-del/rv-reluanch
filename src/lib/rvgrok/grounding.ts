@@ -353,10 +353,12 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
     { value: index?.type, trust: "index" },
   );
 
-  const note = local?.note || pin?.note || snap?.notes || null;
+  const note = local?.note || pin?.note || (snap?.yearTruePowertrain ? snap?.notes : null) || null;
+  // Never paint catalog weightRange as this coach. Published GVWR pin only.
+  const publishedGvwr = snap?.gvwrLbs ?? spec?.gvwrLbs ?? null;
   const weightBand =
-    spec?.weightRange && spec.weightRange.length === 2
-      ? `${spec.weightRange[0].toLocaleString()}–${spec.weightRange[1].toLocaleString()} lbs EST (year-band, not a floorplan GVWR)`
+    publishedGvwr && publishedGvwr > 0
+      ? `${publishedGvwr.toLocaleString()} lbs GVWR`
       : null;
 
   const hardTrusts = [engine, horsepower, chassis, fuelType].map((f) => f.trust);

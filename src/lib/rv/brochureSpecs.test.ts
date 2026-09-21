@@ -62,11 +62,13 @@ test("parseHp: single locked L9 450 still returns 450 HP", () => {
 test("buildBrochureSpecs uses honesty helpers so Facts HP follows the engine option band", () => {
   const spec = src("brochureSpecs.ts");
   assert.match(spec, /honestHorsepowerForCoach/);
+  assert.match(spec, /honestEngineLabel/);
+  assert.match(spec, /isExactEnginePin/);
   assert.match(spec, /honestTireSize/);
   assert.match(spec, /honestAcUnits/);
   assert.match(spec, /honestElectricalService/);
   assert.match(spec, /honestGenerator/);
-  assert.match(spec, /from "\.\/catalogHonesty"/);
+  assert.match(spec, /from "\.\/catalogHonesty(?:\.ts)?"/);
   assert.match(src("catalogHonesty.ts"), /export function parseHp/);
 });
 

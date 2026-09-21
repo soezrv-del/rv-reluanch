@@ -8,7 +8,7 @@ import {
   isRvVideoLibraryYear,
   MISSING_KEY_MESSAGE,
   rankRvVideos,
-  RELATED_NOTE,
+  CONFIRMED_NOTE,
   RV_VIDEO_LIBRARY_CHANNEL_ID,
   RV_VIDEO_LIBRARY_URL,
   youtubeWatchUrl,
@@ -137,7 +137,7 @@ function payload(
     query,
     videos,
     cached,
-    note: videos.length ? RELATED_NOTE : EMPTY_MATCH_MESSAGE,
+    note: videos.length ? CONFIRMED_NOTE : EMPTY_MATCH_MESSAGE,
   };
 }
 
@@ -214,7 +214,10 @@ export const Route = createFileRoute("/api/rv-videos")({
           if (!hits.length && core && core !== query) {
             hits = filterRvVideosByMake(await searchChannel(apiKey, core), make);
           }
-          const ranked = rankRvVideos(hits, query, make).slice(0, SHOW_RESULTS);
+          const ranked = rankRvVideos(hits, query, make, model).slice(
+            0,
+            SHOW_RESULTS,
+          );
           const data = payload(query, ranked, false);
           cache.set(cacheKey, { at: Date.now(), data });
           return Response.json(data, {

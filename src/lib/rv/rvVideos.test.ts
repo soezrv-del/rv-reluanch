@@ -16,6 +16,7 @@ import {
   MISSING_KEY_MESSAGE,
   parseCoachModelYear,
   rankRvVideos,
+  CONFIRMED_NOTE,
   RELATED_NOTE,
   peekRvVideoSession,
   RV_VIDEO_LIBRARY_CHANNEL_ID,
@@ -273,6 +274,7 @@ test("watch URL is YouTube, not an invented Facts spec", () => {
     "https://www.youtube.com/watch?v=abc123",
   );
   assert.match(RELATED_NOTE, /not a confirmed match/i);
+  assert.match(CONFIRMED_NOTE, /name this coach/i);
   assert.match(EMPTY_MATCH_MESSAGE, /No RV Video Library videos matched/i);
   assert.equal(MISSING_KEY_MESSAGE, "Video lookup not configured.");
   assert.equal(
@@ -317,6 +319,9 @@ test("Facts report only fetches videos after opt-in; key stays server-side", () 
   assert.doesNotMatch(resetEffect![0], /fetchRvVideos/);
   assert.match(card, /MISSING_KEY_MESSAGE/);
   assert.match(card, /RELATED_NOTE/);
+  assert.match(card, /note !== RELATED_NOTE/);
+  assert.match(api, /CONFIRMED_NOTE/);
+  assert.match(api, /rankRvVideos\(hits, query, make, model\)/);
 
   assert.match(api, /YOUTUBE_API_KEY/);
   assert.match(api, /process\.env\.YOUTUBE_API_KEY/);
@@ -328,7 +333,6 @@ test("Facts report only fetches videos after opt-in; key stays server-side", () 
   assert.equal(RV_VIDEO_LIBRARY_HANDLE, "RVVideoLibrary");
   assert.match(api, /MISSING_KEY_MESSAGE/);
   assert.match(api, /filterRvVideosByMake/);
-  assert.match(api, /rankRvVideos\(hits, query, make\)/);
   assert.doesNotMatch(api, /VITE_YOUTUBE/);
 
   assert.match(client, /\/api\/rv-videos/);
@@ -428,6 +432,35 @@ test("session cache surfaces one watch-link hit and stays silent without a match
     globalThis.fetch = prior;
     clearRvVideoSession();
   }
+});
+
+test("brand-only sibling walkthroughs are not a confirmed Ambassador match", () => {
+  const ranked = rankRvVideos(
+    [
+      { title: "2023 Holiday Rambler Admiral 32N walkthrough" },
+      { title: "2023 Holiday Rambler Endeavor 38K" },
+      { title: "2023 Holiday Rambler Nautica 34RX" },
+      { title: "2023 Holiday Rambler Ambassador 40B tour" },
+    ],
+    "2023 Holiday Rambler Ambassador 40B",
+    "Holiday Rambler",
+    "Ambassador",
+  );
+  assert.deepEqual(
+    ranked.map((v) => v.title),
+    ["2023 Holiday Rambler Ambassador 40B tour"],
+  );
+  const none = rankRvVideos(
+    [
+      { title: "2023 Holiday Rambler Admiral 32N walkthrough" },
+      { title: "2023 Holiday Rambler Endeavor 38K" },
+      { title: "2023 Holiday Rambler Nautica 34RX" },
+    ],
+    "2023 Holiday Rambler Ambassador 40B",
+    "Holiday Rambler",
+    "Ambassador",
+  );
+  assert.equal(none.length, 0);
 });
 
 test("session cache hides Share toggle when key is missing or there is no match", async () => {

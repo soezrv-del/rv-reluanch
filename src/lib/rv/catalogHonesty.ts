@@ -1,24 +1,44 @@
 /**
  * Catalog honesty for customer Facts.
  *
- * Horsepower / torque on pulled motorhomes come from catalog / brochure SoT.
- * Dual-rating engines (L9 450 std / X15 605 opt) show the brochure option
- * string — never a lone invented 450. "by year" on an engine label is not a
- * reason to wipe a catalog number or emit invent-policy essays.
- * Missing SoT → omit (—). Never invent typicals.
+ * Exact year / floorplan pin → show it. Missing or thin pin → GAP /
+ * Confirm brochure — never brand averages, dual-family class blends,
+ * or a neighboring year's engine painted as this coach.
  *
- * Primary dual-rating example: 2023 American Coach American Dream
- * (Cummins L9 450 std / X15 605 opt — no floorplan-specific OEM pin).
+ * Dual-rating brochure strings (L9 450 std / X15 605 opt) stay in the
+ * HP cell as an option string — never a lone invented 450, never the
+ * blended label as a locked engine fact.
+ * Missing SoT → omit (—). Never invent typicals.
  */
 
 const AMBIGUOUS_RE =
-  /\b(opt(?:ional)?|std|standard|by option|by year|by plan|by build|by chassis|typical|varies|confirm)\b/i;
+  /\b(opt(?:ional)?|std|standard|by option|by year|by plan|by build|by chassis|typical|varies|confirm|class|era)\b/i;
 
-const OPTION_SLASH_RE = /\/\s*(x15|x12|l9|isl|isx|\d{2,4})/i;
+const OPTION_SLASH_RE = /\/\s*(x15|x12|l9|isl|isx|isb|b6\.7|\d{2,4})/i;
 
 const L9_AND_X15_RE = /\b(l9|isl)\b[\s\S]{0,48}\b(x15|x12)\b/i;
 
 const STD_AND_OPT_RE = /\b(?:std|standard)\b/i;
+
+const CLASS_OR_ERA_RE = /\b(class|era)\b/i;
+
+const BY_VARIANT_RE =
+  /\b(by year|by option|by plan|by floorplan|by chassis|by build)\b/i;
+
+/** Distinct powertrain families. Aliases collapse to one id. */
+const ENGINE_FAMILY_DEFS: ReadonlyArray<{ id: string; re: RegExp }> = [
+  { id: "b67", re: /\b(b6\.7l?|isb)\b/i },
+  { id: "l9", re: /\bl9\b/i },
+  { id: "isl", re: /\bisl\b/i },
+  { id: "x15", re: /\b(x15|isx)\b/i },
+  { id: "x12", re: /\bx12\b/i },
+  { id: "godzilla", re: /\b(7\.3l?|godzilla)\b/i },
+  { id: "v10", re: /\b(v10|6\.8l?|triton)\b/i },
+  { id: "v8_62", re: /\b6\.2l?\b/i },
+  { id: "powerstroke", re: /\bpower\s*stroke\b/i },
+  { id: "duramax", re: /\bduramax\b/i },
+  { id: "mercedes", re: /\b(mercedes|sprinter|om\d+)\b/i },
+];
 
 /** HP-class numbers mentioned next to HP / std / opt / engine family. */
 export function extractOptionHpClasses(
@@ -42,6 +62,104 @@ export function extractOptionHpClasses(
   return [...found].sort((a, b) => a - b);
 }
 
+/** Engine families named in a catalog label (L9 + B6.7 → two). */
+export function extractEngineFamilies(
+  engine: string | null | undefined,
+): string[] {
+  const e = (engine || "").trim();
+  if (!e) return [];
+  const found = new Set<string>();
+  for (const { id, re } of ENGINE_FAMILY_DEFS) {
+    if (re.test(e)) found.add(id);
+  }
+  return [...found];
+}
+
+/**
+ * Dual-family / class / era / by-year blend with no single OEM pin.
+ * Brochure std/opt option strings (L9 450 std / X15 605 opt) are not
+ * this — those stay as option-band HP, not a locked engine fact.
+ */
+export function isUnpinnedEngineLabel(
+  engine: string | null | undefined,
+): boolean {
+  const e = (engine || "").trim();
+  if (!e || e === "—") return false;
+  if (CLASS_OR_ERA_RE.test(e)) return true;
+  if (BY_VARIANT_RE.test(e)) return true;
+  const families = extractEngineFamilies(e);
+  if (families.length < 2) return false;
+  const optionBand =
+    extractOptionHpClasses(e).length >= 2 &&
+    STD_AND_OPT_RE.test(e) &&
+    /\b(?:opt|optional)\b/i.test(e);
+  return !optionBand;
+}
+
+/** Single-family catalog engine with no class / era / by-year hedge. */
+export function isExactEnginePin(
+  engine: string | null | undefined,
+): boolean {
+  const e = (engine || "").trim();
+  if (!e || e === "—") return false;
+  if (isInventPolicyProse(e)) return false;
+  if (isUnpinnedEngineLabel(e)) return false;
+  if (isAmbiguousCatalogValue(e)) return false;
+  return true;
+}
+
+type YearBandLike = { from: number; to: number; engine?: string };
+type YearWindowSpec = {
+  yearEnd?: number | null;
+  powertrainByYear?: YearBandLike[] | null;
+};
+
+/** Last `to` year of any exact OEM engine pin. None → null (no pin to copy forward). */
+export function lastExactPowertrainYear(
+  spec: YearWindowSpec | null | undefined,
+): number | null {
+  let last: number | null = null;
+  for (const b of spec?.powertrainByYear || []) {
+    if (!isExactEnginePin(b.engine)) continue;
+    last = last == null ? b.to : Math.max(last, b.to);
+  }
+  return last;
+}
+
+/** Hard catalog end — later FBY / band rows are invent-forward, not this year. */
+export function isPastCatalogYearEnd(
+  spec: YearWindowSpec | null | undefined,
+  year: number,
+): boolean {
+  const end = spec?.yearEnd;
+  return end != null && Number.isFinite(year) && year > end;
+}
+
+/**
+ * Year is past the last dated OEM pin / yearEnd, or only a class/era dump
+ * exists. Do not copy a neighboring year's engine or a dual-family blend
+ * forward (Ambassador FBY through ~2026 + L9/B6.7 is the evidence case).
+ */
+export function isInventForwardYear(
+  spec: YearWindowSpec | null | undefined,
+  year: number,
+  inYearEngine?: string | null,
+): boolean {
+  if (!Number.isFinite(year)) return false;
+  if (isPastCatalogYearEnd(spec, year)) return true;
+  const engine =
+    inYearEngine ??
+    spec?.powertrainByYear?.find((b) => year >= b.from && year <= b.to)
+      ?.engine;
+  if (isExactEnginePin(engine) && !isPastCatalogYearEnd(spec, year)) {
+    return false;
+  }
+  const lastExact = lastExactPowertrainYear(spec);
+  if (lastExact != null && year > lastExact) return true;
+  if (lastExact == null && isUnpinnedEngineLabel(engine)) return true;
+  return false;
+}
+
 export function isAmbiguousCatalogValue(
   text: string | number | null | undefined,
 ): boolean {
@@ -51,6 +169,7 @@ export function isAmbiguousCatalogValue(
   if (OPTION_SLASH_RE.test(s)) return true;
   if (L9_AND_X15_RE.test(s)) return true;
   if (extractOptionHpClasses(s).length >= 2) return true;
+  if (extractEngineFamilies(s).length >= 2) return true;
   return false;
 }
 
@@ -158,6 +277,11 @@ export function honestHorsepowerLabel(opts: {
   horsepower?: string | number | null;
 }): string | null {
   const engine = (opts.engine || "").trim();
+  // Dual-family / class / by-year blend is not a pin — never "320 / 350 HP".
+  // Brochure L9 450 std / X15 605 opt is not unpinned; that stays below.
+  if (isUnpinnedEngineLabel(engine)) {
+    return null;
+  }
   const classes = extractOptionHpClasses(engine);
   if (classes.length >= 2) {
     return brochureOptionHpLabel(engine, classes);
@@ -192,7 +316,7 @@ export function honestTorqueLabel(opts: {
   torqueLbFt?: string | number | null;
 }): string | null {
   const engine = (opts.engine || "").trim();
-  if (engineOmitsLoneTorque(engine)) {
+  if (isUnpinnedEngineLabel(engine) || engineOmitsLoneTorque(engine)) {
     return null;
   }
 
@@ -238,8 +362,10 @@ export function honestEngineLabel(engine: string | null | undefined): {
 } {
   const e = (engine || "").trim();
   if (!e || e === "—") return { text: null, locked: false };
-  if (isAmbiguousCatalogValue(e)) {
-    return { text: `${e} (EST — confirm build sheet)`, locked: false };
+  // Dual-family / class / era / by-year blends are not this coach.
+  // Brochure option-band strings are also not a single locked pin.
+  if (isUnpinnedEngineLabel(e) || isAmbiguousCatalogValue(e)) {
+    return { text: null, locked: false };
   }
   return { text: e, locked: true };
 }
