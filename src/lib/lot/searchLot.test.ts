@@ -9,6 +9,7 @@ import {
   lotTextOrGap,
   lotTypeChips,
   lotTypeFamily,
+  pillLotTypeLabel,
   parseLotSnapshotJson,
   searchLotUnits,
   tokenizeLotQuery,
@@ -143,4 +144,6 @@ test("type chips come from the lot snapshot and filter without catalog bleed", (
   assert.equal(lotTypeFamily("Class Super C"), "c");
   assert.equal(lotTypeFamily("Fifth Wheel Toy Hauler"), "toy");
   assert.equal(lotTypeFamily("Travel Trailer"), "tt");
+  assert.equal(pillLotTypeLabel("Fifth Wheel"), "FW");
+  assert.equal(pillLotTypeLabel("Travel Trailer"), "TT");
 });

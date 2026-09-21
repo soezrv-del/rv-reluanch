@@ -274,6 +274,29 @@ export function shortLotTypeLabel(type: string): string {
   return TYPE_LABELS[t] ?? t;
 }
 
+const PILL_TYPE_LABELS: Record<string, string> = {
+  "Travel Trailer": "TT",
+  "Fifth Wheel": "FW",
+  "Class A Diesel": "Diesel",
+  "Class Super C": "Super C",
+  "Class A": "A",
+  "Class B": "B",
+  "Class C": "C",
+  "Fifth Wheel Toy Hauler": "FW toy",
+  "Travel Trailer Toy Hauler": "TT toy",
+  "Destination Trailer": "Dest",
+  "Truck Camper": "Camper",
+  Popup: "Popup",
+  "Popup Trailer": "Popup",
+  "Expandable Trailer": "Exp",
+};
+
+export function pillLotTypeLabel(type: string): string {
+  const t = type.trim();
+  if (!t) return LOT_GAP;
+  return PILL_TYPE_LABELS[t] ?? shortLotTypeLabel(t);
+}
+
 /** Visual family for lot chrome only — never a catalog class list. */
 export type LotTypeFamily = "a" | "b" | "c" | "fw" | "tt" | "toy" | "camper";
 

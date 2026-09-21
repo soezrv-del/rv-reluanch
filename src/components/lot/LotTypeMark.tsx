@@ -88,19 +88,25 @@ function LotStudioCoach({
         <g>
           <path
             className="lot-mark-body"
-            d="M92 108h200c8 0 12-6 12-12V62c0-12-8-20-20-20H112c-12 0-20 8-22 18l-8 28H92c-6 0-8 4-8 8 0 8 4 12 8 12z"
+            d="M118 44h174c10 0 16 8 16 18v40c0 6-4 10-12 10H118c-8 0-12-4-12-10V54c0-6 4-10 12-10z"
           />
           <path
             className="lot-mark-body"
-            d="M42 92h52c4 0 6 2 6 6v10H48c-8 0-14-4-14-10 0-4 4-6 8-6z"
+            d="M88 44h32v68H96c-6 0-10-6-10-14V56c0-8 4-12 10-12z"
           />
-          <rect className="lot-mark-glass" x="122" y="54" width="36" height="18" rx="3" />
-          <rect className="lot-mark-glass" x="166" y="54" width="36" height="18" rx="3" />
-          <rect className="lot-mark-glass" x="210" y="54" width="36" height="18" rx="3" />
-          <circle className="lot-mark-tire" cx="148" cy="114" r="13" />
-          <circle className="lot-mark-hub" cx="148" cy="114" r="5" />
-          <circle className="lot-mark-tire" cx="248" cy="114" r="13" />
-          <circle className="lot-mark-hub" cx="248" cy="114" r="5" />
+          <path
+            className="lot-mark-body"
+            d="M40 90h50v16H50c-8 0-14-4-14-8 0-5 2-8 4-8z"
+          />
+          <rect className="lot-mark-glass" x="130" y="54" width="34" height="18" rx="3" />
+          <rect className="lot-mark-glass" x="172" y="54" width="34" height="18" rx="3" />
+          <rect className="lot-mark-glass" x="214" y="54" width="34" height="18" rx="3" />
+          <circle className="lot-mark-tire" cx="168" cy="116" r="12" />
+          <circle className="lot-mark-hub" cx="168" cy="116" r="5" />
+          <circle className="lot-mark-tire" cx="204" cy="116" r="12" />
+          <circle className="lot-mark-hub" cx="204" cy="116" r="5" />
+          <circle className="lot-mark-tire" cx="258" cy="116" r="12" />
+          <circle className="lot-mark-hub" cx="258" cy="116" r="5" />
         </g>
       );
     case "toy":

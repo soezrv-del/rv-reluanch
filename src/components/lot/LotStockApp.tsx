@@ -12,6 +12,7 @@ import {
   lotTextOrGap,
   lotTypeChips,
   lotUnitKey,
+  pillLotTypeLabel,
   shortLotTypeLabel,
   type LotSnapshotView,
   type LotUnit,
@@ -128,8 +129,7 @@ export function LotStockApp() {
                 On the lot.
               </h1>
               <p className="max-w-md text-[15px] leading-relaxed text-muted">
-                RV Country in-stock. Search the snapshot — we will not pull the
-                brochure catalog.
+                In-stock RV Country inventory. Not the brochure catalog.
               </p>
             </section>
 
@@ -404,21 +404,21 @@ function LotUnitCard({
             <div className="shrink-0 pt-0.5 text-right">
               <p
                 className={cn(
-                  "text-[18px] font-bold leading-none",
-                  location === "GAP" ? "text-dim" : "text-fg",
+                  "text-[20px] font-bold leading-none tabular-nums",
+                  stock === "GAP" ? "text-dim" : "text-fg",
                 )}
               >
-                {location}
+                {stock}
               </p>
               <p className="mt-1 text-[10px] font-bold tracking-[0.16em] text-dim">
-                LOT
+                STOCK
               </p>
             </div>
           </div>
           <dl className="lot-pills">
             <Pill label="Stock" value={stock} />
             <Pill label="Location" value={location} />
-            <Pill label="Type" value={shortLotTypeLabel(unit.body_type)} />
+            <Pill label="Type" value={pillLotTypeLabel(unit.body_type)} />
             <Pill label="Condition" value={condition} />
           </dl>
           {open ? (
