@@ -10,7 +10,7 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("theme tokens are sapphire / cobalt — not Tiimo lavender or dock-black", () => {
+test("theme tokens are sapphire / cobalt — not Tiimo lavender", () => {
   const css = read("../../styles.css");
 
   assert.match(css, /--color-ink-black:\s*#061228/);
@@ -21,7 +21,7 @@ test("theme tokens are sapphire / cobalt — not Tiimo lavender or dock-black", 
   assert.match(css, /--color-bg:\s*var\(--color-ink-black\)/);
   assert.match(css, /--color-accent:\s*var\(--color-sapphire\)/);
   assert.match(css, /--color-tiimo-lavender:\s*var\(--color-sapphire\)/);
-  assert.match(css, /--dock-surface:\s*color-mix\(in srgb, var\(--color-sapphire\)/);
+  assert.match(css, /--dock-surface:\s*#000000/);
 
   assert.doesNotMatch(css, /--color-tiimo-bg:\s*#1c1b26/);
   assert.doesNotMatch(css, /--color-tiimo-surface:\s*#2a2836/);
@@ -29,20 +29,20 @@ test("theme tokens are sapphire / cobalt — not Tiimo lavender or dock-black", 
   assert.doesNotMatch(css, /--color-bg:\s*#1c1b26/);
   assert.doesNotMatch(css, /--color-accent:\s*#8fc9b6/);
   assert.doesNotMatch(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
-  assert.doesNotMatch(css, /--dock-surface:\s*#000000/);
+  assert.doesNotMatch(css, /--dock-surface:\s*color-mix\(in srgb, var\(--color-sapphire\)/);
 });
 
-test("dock plate is sapphire-aligned glass with one sapphire highlight", () => {
+test("dock plate matches Raidho mark ground so the tab square disappears", () => {
   const css = read("../../styles.css");
   const tabs = read("../../components/shell/BottomTabs.tsx");
 
+  assert.match(css, /--dock-surface:\s*#000000/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?background:\s*var\(--dock-surface\)/);
-  assert.match(
-    css,
-    /border:\s*1px solid color-mix\(in srgb, var\(--color-sapphire\) 42%/,
-  );
+  assert.match(css, /border:\s*1px solid var\(--dock-surface\)/);
+  assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?box-shadow:\s*none/);
+  assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?backdrop-filter:\s*none/);
   assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
-  assert.match(tabs, /sapphire-glass dock/);
+  assert.match(tabs, /Raidho mark ground/);
   assert.doesNotMatch(css, /\.bottom-tab-indicator-sapphire/);
   assert.doesNotMatch(css, /0 0 16px rgba\(110, 190, 255, 0\.45\)/);
 });

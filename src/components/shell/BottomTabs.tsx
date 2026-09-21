@@ -56,8 +56,9 @@ function DockLabel({
 }
 
 /**
- * Floating sapphire-glass dock — sapphire plate + 16px radius +
- * 2px --color-sapphire top rule on the active tab (one highlight).
+ * Dock blends into the Raidho mark ground (#000000) so the tab
+ * square disappears. One highlight: 2px --color-sapphire top rule
+ * on the active tab.
  *
  * Android WebView: do NOT put pointer-events-none on this nav. Parent
  * none + child auto + backdrop-filter fails hit-testing on Chromium

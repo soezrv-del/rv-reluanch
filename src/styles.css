@@ -5,8 +5,11 @@
   /*
    * SoT = Raidho sapphire / cobalt (David voice 2026-09-21).
    * App chrome + field are sapphire-navy, not Tiimo slate-lavender
-   * (#372) and not a black dock plate (#386 / #388). Mark itself
-   * stays glossy sapphire + champagne-gold on black. One highlight.
+   * (#372). Dock plate matches the Raidho mark ground exactly
+   * (#000000 sampled from public/assets/brand/raidho-r-mark.png)
+   * so the tab square disappears into the icon — not a contrasting
+   * sapphire plate. Mark itself stays glossy sapphire + champagne-gold
+   * on that black. One highlight.
    */
   --color-ink-black: #061228;
   --color-ink-elevated: #0a1834;
@@ -87,7 +90,7 @@
     inset 0 1px 0 color-mix(in srgb, var(--color-ink-foam) 22%, transparent),
     inset 0 -1px 0 color-mix(in srgb, var(--color-sapphire) 8%, transparent);
 
-  --dock-surface: color-mix(in srgb, var(--color-sapphire) 48%, #0a1a44);
+  --dock-surface: #000000;
   --dock-label-size: 1.125rem;
   --dock-label-size-sm: 1.1875rem;
   --dock-label-track: 0.5px;
@@ -856,12 +859,14 @@
   );
 }
 
-/* Dock — sapphire-aligned glass (David voice 2026-09-21).
- * One highlight: 2px --color-sapphire top rule on the active tab.
- * Not Tiimo frost, not #000 icon-ground (#386 / #388). */
+/* Dock — Raidho mark ground (David voice 2026-09-21, binding).
+ * Sampled #000000 from raidho-r-mark.png corners. Plate + nav +
+ * safe-area are that hex so the tab square disappears into the
+ * icon ground. No contrasting sapphire plate. One highlight:
+ * 2px --color-sapphire top rule on the active tab. */
 .bottom-tabs-nav,
 [data-bottom-dock] {
-  background: var(--color-bg);
+  background: var(--dock-surface);
 }
 .bottom-tabs-nav {
   z-index: 80;
@@ -876,11 +881,11 @@
 }
 .bottom-tabs-dock {
   background: var(--dock-surface);
-  border: 1px solid color-mix(in srgb, var(--color-sapphire) 42%, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--dock-surface);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(4, 12, 32, 0.37);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 .bottom-tab-btn {
   background: transparent;

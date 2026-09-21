@@ -129,10 +129,11 @@ test("Removing overlay chrome does not rewrite dock glass or Facts/Tow internals
   const tow = read("../../components/rvtow/RvTowApp.tsx");
 
   assert.match(tabs, /\{ id: "rvgrok", label: "RvGROK", short: "Grok" \}/);
-  assert.match(css, /backdrop-filter:\s*blur\(20px\) saturate\(180%\)/);
+  assert.match(css, /--dock-surface:\s*#000000/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?background:\s*var\(--dock-surface\)/);
+  assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?backdrop-filter:\s*none/);
   assert.doesNotMatch(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
-  assert.doesNotMatch(css, /--dock-surface:\s*#000000/);
+  assert.doesNotMatch(css, /--dock-surface:\s*color-mix\(in srgb, var\(--color-sapphire\)/);
   assert.doesNotMatch(fax, /AskGrokOverlay|setPanelOpen/);
   assert.doesNotMatch(tow, /AskGrokOverlay|setPanelOpen/);
 });
