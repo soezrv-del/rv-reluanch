@@ -103,6 +103,26 @@ test("yearless Vision ask without a lock still resolves Vision, not null", () =>
   assert.equal(id!.source, "message");
 });
 
+test("spoken Integras / 27A Vision inventory asks break a Lineage lock", () => {
+  const lineageHistory =
+    "I'd like to know about the 2026 Grand Design Lineage M series.\nVERIFIED CATALOG LOCK is 2026 Grand Design Lineage Series M.";
+  for (const q of [
+    "Can you look in my inventory for a 27A Vision?",
+    "I need to know if we have any Integras with a E Vision 27As in our inventory.",
+  ]) {
+    const parsed = parseCoachFromText(q);
+    assert.equal(askNamesCoachIdentity(parsed), true, q);
+    assert.equal(namedCoachConflictsLock(parsed, LINEAGE_LOCK), true, q);
+    const id = resolveCoachIdentity(q, LINEAGE_LOCK, lineageHistory);
+    assert.ok(id, q);
+    assert.match(id!.make, /Entegra/i, q);
+    assert.match(id!.model, /vision/i, q);
+    assert.doesNotMatch(id!.make, /Grand Design/i, q);
+    assert.doesNotMatch(id!.model, /lineage/i, q);
+    assert.equal(id!.source, "message", q);
+  }
+});
+
 test("lock-break is wired through chat, voice, and the API stream", () => {
   const identity = src(root, "coachIdentity.ts");
   const grounding = src(root, "grounding.ts");

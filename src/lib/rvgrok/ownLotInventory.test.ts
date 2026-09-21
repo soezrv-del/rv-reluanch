@@ -913,10 +913,11 @@ test("Entegra + Fresno make+location is 12 matches with listings, not a ghost mo
     "How many Entegra coaches do we have in Fresno?",
   );
   assert.equal(coachGhost.make, "Entegra Coach");
-  assert.equal(
-    coachGhost.model,
-    "es",
-    "parseCoach leftover after Entegra Coach ⊂ Entegra coaches",
+  assert.ok(
+    !coachGhost.model ||
+      looksLikeGhostOwnLotModel(coachGhost.model) ||
+      /^(?:e?s|do we)\b/i.test(coachGhost.model),
+    `plural Entegra coaches leftover should be ghost-or-empty, got ${coachGhost.model}`,
   );
   assert.equal(looksLikeGhostOwnLotModel("es"), true);
   assert.equal(looksLikeGhostOwnLotModel("s"), true);
@@ -1109,6 +1110,8 @@ test("bundled snapshot: stock 45282, Entegra Fresno, and $50k fifth-wheel toy ha
     "Integra Vision 27A",
     "Entegra Vision 27ASE",
     "Entegra Vision SE 27A",
+    "Can you look in my inventory for a 27A Vision?",
+    "I need to know if we have any Integras with a E Vision 27As in our inventory.",
   ]) {
     const filter = parseOwnLotAsk(ask, locations, snap.units);
     const rows = queryOwnLotUnits(snap.units, filter, 12);
@@ -1495,4 +1498,106 @@ test("Tifin fuzzy brand (not Integra) matches Tiffin Phaeton 36L", () => {
   assert.match(block, /Matched: 1/);
   assert.match(block, /stk TF36L/);
   assert.doesNotMatch(block, /stk TF40Q/);
+});
+
+const DAVID_INVENTORY_ASKS = [
+  "Can you look in my inventory for a 27A Vision?",
+  "I need to know if we have any Integras with a E Vision 27As in our inventory.",
+];
+
+test("David inventory asks list the three 27ASE stocks even with catalog GAP speech", () => {
+  assert.equal(extractFloorplanToken("E Vision 27As"), "27A");
+  assert.equal(extractFloorplanToken("27As"), "27A");
+
+  const integra = parseCoachFromText("any Integras with a E Vision 27As");
+  assert.equal(integra.make, "Entegra Coach");
+  assert.notEqual(integra.make, "Integra");
+  assert.match(integra.model, /vision/i);
+  assert.match(integra.floorplan, /27A/i);
+
+  const brandless = parseCoachFromText("look in my inventory for a 27A Vision");
+  assert.match(brandless.make, /Entegra/i);
+  assert.match(brandless.model, /vision/i);
+  assert.equal(brandless.floorplan, "27A");
+
+  const units = [
+    ...VISION_27ASE_UNITS,
+    ...VISION_FAMILY_DECOYS,
+    ...ENTEGRA_FRESNO_UNITS,
+  ];
+  const locations = [
+    ...new Set(units.map((u) => u.location).filter(Boolean)),
+  ];
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units,
+  });
+  const expected = ["46222", "47033", "47034"];
+
+  for (const ask of DAVID_INVENTORY_ASKS) {
+    assert.equal(looksLikeOwnLotStockQuestion(ask), true, ask);
+    assert.equal(looksLikeInventoryOrCountQuestion(ask), true, ask);
+    const filter = parseOwnLotAsk(ask, locations, units);
+    assert.match(filter.make || "", /Entegra/i, ask);
+    assert.match(filter.model || "", /vision/i, ask);
+    assert.match(filter.trim || "", /27A/i, ask);
+    const rows = queryOwnLotUnits(units, filter, 12);
+    assert.deepEqual(
+      rows.map((r) => r.stock_number).sort(),
+      expected,
+      ask,
+    );
+    assert.ok(
+      rows.every((u) => u.model === "Vision SE" && u.trim === "27ASE"),
+      ask,
+    );
+    const block = formatOwnLotBlock(snapshot, ask);
+    assert.match(block, /Matched: 3/, ask);
+    assert.match(block, /stk 47034/, ask);
+    assert.match(block, /stk 47033/, ask);
+    assert.match(block, /stk 46222/, ask);
+    assert.match(block, /\$109,995/, ask);
+    assert.match(block, /Fife/, ask);
+    assert.match(block, /Sparks/, ask);
+    assert.match(block, /Catalog GAP does not apply/, ask);
+    assert.match(block, /Never say check your own lot listing/, ask);
+    assert.doesNotMatch(block, /stk E2411/, ask);
+    assert.doesNotMatch(block, /stk XL360/, ask);
+  }
+
+  const grounding = src(".", "grounding.ts");
+  const prompts = src(".", "prompts.ts");
+  const voice = src(".", "voice.ts");
+  const voiceWeb = src(".", "voiceWeb.ts");
+  const live = src(".", "liveVoice.ts");
+  for (const [label, text] of [
+    ["grounding", grounding],
+    ["prompts", prompts],
+    ["voice", voice],
+    ["voiceWeb", voiceWeb],
+    ["liveVoice", live],
+  ] as const) {
+    assert.match(text, /check your own lot listing/i, label);
+    assert.match(text, /catalog gap/i, label);
+  }
+  assert.match(grounding, /INVENTORY_WINS_OVER_GAP/);
+  assert.match(grounding, /inventoryAsk/);
+  assert.match(voiceWeb, /looksLikeOwnLotStockQuestion/);
+});
+
+test("own-lot miss is an honest lot miss, not a catalog-gap deflection", () => {
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units: VISION_27ASE_UNITS,
+  });
+  const block = formatOwnLotBlock(
+    snapshot,
+    "look in my inventory for a 45A Anthem",
+  );
+  assert.match(block, /Matched: 0/);
+  assert.match(block, /none of that coach is on our lot snapshot/);
+  assert.match(block, /Do not mention catalog gap/);
+  assert.doesNotMatch(block, /stk 47034/);
 });

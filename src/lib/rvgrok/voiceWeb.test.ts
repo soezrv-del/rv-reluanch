@@ -285,9 +285,25 @@ test("generic asks and catalog compares do not speak a research hold", () => {
     "stock number 45282",
     "45282",
     "How many Entegra coaches do we have in Fresno?",
+    "Can you look in my inventory for a 27A Vision?",
+    "I need to know if we have any Integras with a E Vision 27As in our inventory.",
   ]) {
     assert.equal(shouldSpeakVoiceResearchHold(q), false, q);
     const decided = decideVoiceWebResearch({ transcript: q, specs: null });
+    assert.equal(decided.action, "research", q);
+    if (decided.action === "research") assert.equal(decided.speakHold, false, q);
+  }
+
+  const gapSpecs = { missingHard: true };
+  for (const q of [
+    "Can you look in my inventory for a 27A Vision?",
+    "I need to know if we have any Integras with a E Vision 27As in our inventory.",
+  ]) {
+    assert.equal(shouldSpeakVoiceResearchHold(q, gapSpecs), false, q);
+    const decided = decideVoiceWebResearch({
+      transcript: q,
+      specs: gapSpecs,
+    });
     assert.equal(decided.action, "research", q);
     if (decided.action === "research") assert.equal(decided.speakHold, false, q);
   }

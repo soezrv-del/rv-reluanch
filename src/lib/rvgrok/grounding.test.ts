@@ -91,6 +91,16 @@ test("Integra is an Entegra Coach alias and 27A still parses before the brand", 
   assert.equal(b.make, "Entegra Coach");
   assert.match(b.model, /vision/i);
   assert.equal(b.floorplan, "27A");
+  const plural = parseCoachFromText(
+    "any Integras with a E Vision 27As in our inventory",
+  );
+  assert.equal(plural.make, "Entegra Coach");
+  assert.match(plural.model, /vision/i);
+  assert.match(plural.floorplan, /27A/i);
+  const brandless = parseCoachFromText("look in my inventory for a 27A Vision");
+  assert.match(brandless.make, /Entegra/i);
+  assert.match(brandless.model, /vision/i);
+  assert.equal(brandless.floorplan, "27A");
 });
 
 test("fuzzy brand shape maps Tifin → Tiffin and keeps Integra as the alias fast path", () => {
@@ -104,8 +114,9 @@ test("fuzzy brand shape maps Tifin → Tiffin and keeps Integra as the alias fas
 
 test("catalog GAP tells inventory asks to prefer own-lot over manufacturer", () => {
   const grounding = src(root, "grounding.ts");
-  assert.match(grounding, /OWN-LOT INVENTORY block this turn matched units/);
-  assert.match(grounding, /do not say the catalog is empty or send them to the manufacturer/);
+  assert.match(grounding, /OWN-LOT INVENTORY is source-of-truth this turn/);
+  assert.match(grounding, /Never say check your own lot listing/);
+  assert.match(grounding, /manufacturer for inventory/);
   const voice = buildVoiceGrounding({ query: "M series 25FW" });
   assert.match(voice, /OWN-LOT INVENTORY/);
   assert.match(voice, /manufacturer for inventory/);
@@ -782,4 +793,42 @@ test("David voice compare: Allegro Bus vs American Dream locks both, skips web h
   assert.match(src(root, "webIntent.ts"), /looksLikeCatalogAnswerableCoachCompare/);
   assert.doesNotMatch(src(root, "voiceWeb.ts"), /Let me check that/);
   assert.match(src(root, "speechPolicy.ts"), /give me one second/);
+});
+
+test("inventory ask with yearless Vision catalog GAP answers from own-lot, not deflection", () => {
+  const asks = [
+    "Can you look in my inventory for a 27A Vision?",
+    "I need to know if we have any Integras with a E Vision 27As in our inventory.",
+  ];
+  for (const q of asks) {
+    assert.equal(looksLikeInventoryOrCountQuestion(q), true, q);
+    const chat = buildChatGrounding({ query: q });
+    assert.ok(chat.identity, q);
+    assert.match(chat.identity!.make, /Entegra/i, q);
+    assert.match(chat.identity!.model, /vision/i, q);
+    assert.doesNotMatch(chat.identity!.model, /lineage/i, q);
+    assert.equal(chat.specs?.missingHard, true, q);
+    assert.match(chat.block || "", /INVENTORY \/ IN-STOCK ASK/, q);
+    assert.match(chat.block || "", /Never say catalog gap/, q);
+    assert.match(chat.block || "", /Never say check your own lot listing/, q);
+    assert.doesNotMatch(
+      chat.block || "",
+      /No model year in the ask/,
+      q,
+    );
+    const voice = buildVoiceGrounding({ query: q });
+    assert.match(voice, /INVENTORY \/ IN-STOCK ASK/, q);
+    assert.match(voice, /Never say check your own lot listing/, q);
+  }
+
+  const specsOnly = buildChatGrounding({
+    query: "What engine and HP does a 2027 Entegra Anthem 45W have?",
+  });
+  assert.equal(looksLikeInventoryOrCountQuestion(
+    "What engine and HP does a 2027 Entegra Anthem 45W have?",
+  ), false);
+  if (specsOnly.specs?.missingHard) {
+    assert.match(specsOnly.block || "", /CATALOG GAP/);
+    assert.doesNotMatch(specsOnly.block || "", /INVENTORY \/ IN-STOCK ASK/);
+  }
 });
