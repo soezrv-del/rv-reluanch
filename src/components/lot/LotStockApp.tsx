@@ -11,13 +11,12 @@ import {
   lotPriceOrGap,
   lotTextOrGap,
   lotTypeChips,
-  lotTypeFamily,
   lotUnitKey,
   shortLotTypeLabel,
   type LotSnapshotView,
-  type LotTypeFamily,
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
+import { LotTypeMark } from "@/components/lot/LotTypeMark";
 
 const PAGE_SIZE = 48;
 
@@ -124,15 +123,13 @@ export function LotStockApp() {
               <PremiumMenuButton size="sm" />
             </header>
 
-            <section className="max-w-xl space-y-2 pt-1">
-              <p className="text-[10px] font-bold tracking-[0.2em] text-sapphire-glow">
-                RV COUNTRY
-              </p>
-              <h1 className="text-balance text-[clamp(2rem,8vw,3.15rem)] font-bold leading-[1.05] tracking-tight text-fg">
+            <section className="max-w-xl space-y-3 pt-2">
+              <h1 className="text-balance text-[clamp(2.15rem,9vw,3.35rem)] font-bold leading-[1.02] tracking-tight text-fg">
                 On the lot.
               </h1>
-              <p className="max-w-md text-[14px] leading-relaxed text-muted">
-                In-stock RV Country inventory. Not the brochure catalog.
+              <p className="max-w-md text-[15px] leading-relaxed text-muted">
+                RV Country in-stock. Search the snapshot — we will not pull the
+                brochure catalog.
               </p>
             </section>
 
@@ -187,7 +184,14 @@ export function LotStockApp() {
               </div>
             ) : null}
 
-            <p className="text-[12px] text-muted" data-lot-count>
+            <p
+              className={
+                query.trim() || type
+                  ? "text-[12px] text-muted"
+                  : "sr-only"
+              }
+              data-lot-count
+            >
               {countLine}
               {asOf && !error ? ` · as of ${asOf}` : ""}
             </p>
@@ -215,7 +219,7 @@ export function LotStockApp() {
                 {featured ? (
                   <section className="space-y-2" data-lot-featured>
                     <p className="text-[10px] font-bold tracking-[0.18em] text-dim">
-                      Featured on the lot
+                      FEATURED
                     </p>
                     <LotUnitCard
                       unit={featured}
@@ -233,10 +237,10 @@ export function LotStockApp() {
                 {rail.length ? (
                   <section className="space-y-3">
                     <div className="flex items-end justify-between gap-3">
-                      <h2 className="text-[1.35rem] font-bold tracking-tight text-fg">
+                      <h2 className="text-[1.65rem] font-bold tracking-tight text-fg">
                         On the lot
                       </h2>
-                      <p className="text-[12px] text-muted">
+                      <p className="text-[13px] text-muted">
                         {shown.toLocaleString("en-US")} shown
                       </p>
                     </div>
@@ -352,13 +356,12 @@ function LotUnitCard({
   const price = lotPriceOrGap(unit.price);
   const stock = lotTextOrGap(unit.stock_number);
   const location = lotTextOrGap(unit.location);
-  const type = lotTextOrGap(unit.body_type);
   const year = lotTextOrGap(unit.year);
   const trim = lotTextOrGap(unit.trim);
   const condition = lotTextOrGap(unit.condition);
 
   return (
-    <article className={featured ? undefined : undefined}>
+    <article>
       <button
         type="button"
         onClick={onToggle}
@@ -389,17 +392,34 @@ function LotUnitCard({
           </span>
           <LotTypeMark type={unit.body_type} featured={featured} />
         </div>
-        <div className="space-y-2 px-4 py-3.5">
-          <p className="text-[12px] font-semibold text-muted">{year}</p>
-          <p className="text-[18px] font-bold leading-snug text-fg">{title}</p>
-          <p className="text-[13px] text-muted">
-            {trim === "GAP" ? "Trim GAP" : trim}
-          </p>
-          <dl className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border pt-3 text-[12px] sm:grid-cols-4">
-            <Field label="Stock" value={stock} />
-            <Field label="Location" value={location} />
-            <Field label="Type" value={type} />
-            <Field label="Condition" value={condition} />
+        <div className="space-y-3 px-4 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 space-y-1">
+              <p className="text-[13px] font-semibold text-muted">{year}</p>
+              <p className="text-[20px] font-bold leading-snug text-fg">{title}</p>
+              <p className="text-[13px] text-muted">
+                {trim === "GAP" ? "Trim GAP" : trim}
+              </p>
+            </div>
+            <div className="shrink-0 pt-0.5 text-right">
+              <p
+                className={cn(
+                  "text-[18px] font-bold leading-none",
+                  location === "GAP" ? "text-dim" : "text-fg",
+                )}
+              >
+                {location}
+              </p>
+              <p className="mt-1 text-[10px] font-bold tracking-[0.16em] text-dim">
+                LOT
+              </p>
+            </div>
+          </div>
+          <dl className="lot-pills">
+            <Pill label="Stock" value={stock} />
+            <Pill label="Location" value={location} />
+            <Pill label="Type" value={shortLotTypeLabel(unit.body_type)} />
+            <Pill label="Condition" value={condition} />
           </dl>
           {open ? (
             <dl className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border pt-3 text-[12px]">
@@ -417,149 +437,16 @@ function LotUnitCard({
   );
 }
 
-function LotTypeMark({
-  type,
-  featured,
-}: {
-  type: string;
-  featured?: boolean;
-}) {
-  const family = lotTypeFamily(type);
+function Pill({ label, value }: { label: string; value: string }) {
   return (
-    <svg
-      viewBox="0 0 240 88"
-      className="lot-mark"
-      aria-hidden
-      data-lot-mark={family}
-    >
-      <LotTypePaths family={family} featured={Boolean(featured)} />
-    </svg>
+    <div className="lot-pill" data-lot-pill={label}>
+      <dt className="sr-only">{label}</dt>
+      <dd className={cn("lot-pill-value", value === "GAP" && "is-gap")}>
+        {value}
+      </dd>
+      <p className="lot-pill-label">{label}</p>
+    </div>
   );
-}
-
-function LotTypePaths({
-  family,
-  featured,
-}: {
-  family: LotTypeFamily;
-  featured: boolean;
-}) {
-  const stroke = featured ? 1.6 : 1.4;
-  switch (family) {
-    case "a":
-      return (
-        <g
-          fill="currentColor"
-          fillOpacity="0.18"
-          stroke="currentColor"
-          strokeWidth={stroke}
-        >
-          <path d="M18 62h204l-6 12H24z" />
-          <path d="M22 36h188c8 0 14 6 14 14v12H18V44c0-5 2-8 4-8z" />
-          <rect x="36" y="40" width="28" height="14" rx="2" fillOpacity="0.08" />
-          <rect x="72" y="40" width="36" height="14" rx="2" fillOpacity="0.08" />
-          <rect x="116" y="40" width="36" height="14" rx="2" fillOpacity="0.08" />
-          <circle cx="52" cy="70" r="8" fill="none" />
-          <circle cx="188" cy="70" r="8" fill="none" />
-        </g>
-      );
-    case "b":
-      return (
-        <g
-          fill="currentColor"
-          fillOpacity="0.18"
-          stroke="currentColor"
-          strokeWidth={stroke}
-        >
-          <path d="M48 58h144l-4 12H52z" />
-          <path d="M56 34h112c10 0 22 8 26 16v8H48V48c0-8 4-14 8-14z" />
-          <path d="M164 38c8 2 16 8 20 14h-28V40z" fillOpacity="0.08" />
-          <circle cx="78" cy="68" r="8" fill="none" />
-          <circle cx="168" cy="68" r="8" fill="none" />
-        </g>
-      );
-    case "c":
-      return (
-        <g
-          fill="currentColor"
-          fillOpacity="0.18"
-          stroke="currentColor"
-          strokeWidth={stroke}
-        >
-          <path d="M22 60h196l-6 12H28z" />
-          <path d="M70 32h130c8 0 16 8 16 16v12H54V48c4-10 10-16 16-16z" />
-          <path d="M28 44h32l10 16H22z" />
-          <rect x="86" y="38" width="30" height="12" rx="2" fillOpacity="0.08" />
-          <circle cx="58" cy="70" r="8" fill="none" />
-          <circle cx="186" cy="70" r="8" fill="none" />
-        </g>
-      );
-    case "fw":
-      return (
-        <g
-          fill="currentColor"
-          fillOpacity="0.18"
-          stroke="currentColor"
-          strokeWidth={stroke}
-        >
-          <path d="M58 58h164l-6 12H64z" />
-          <path d="M78 28h130c8 0 14 6 14 14v16H70V42c0-8 4-14 8-14z" />
-          <path d="M34 48h36v10H40c-6 0-10-4-10-8 0-2 2-2 4-2z" />
-          <rect x="96" y="34" width="28" height="12" rx="2" fillOpacity="0.08" />
-          <rect x="132" y="34" width="28" height="12" rx="2" fillOpacity="0.08" />
-          <circle cx="108" cy="68" r="8" fill="none" />
-          <circle cx="188" cy="68" r="8" fill="none" />
-        </g>
-      );
-    case "toy":
-      return (
-        <g
-          fill="currentColor"
-          fillOpacity="0.18"
-          stroke="currentColor"
-          strokeWidth={stroke}
-        >
-          <path d="M28 58h188l-6 12H34z" />
-          <path d="M40 32h150c8 0 14 6 14 14v12H34V42c0-6 2-10 6-10z" />
-          <path d="M196 36l16 22H188V44c0-4 2-8 8-8z" />
-          <rect x="56" y="38" width="26" height="12" rx="2" fillOpacity="0.08" />
-          <circle cx="72" cy="68" r="8" fill="none" />
-          <circle cx="176" cy="68" r="8" fill="none" />
-        </g>
-      );
-    case "camper":
-      return (
-        <g
-          fill="currentColor"
-          fillOpacity="0.18"
-          stroke="currentColor"
-          strokeWidth={stroke}
-        >
-          <path d="M36 56h168l-6 12H42z" />
-          <path d="M86 30h86c6 0 10 4 10 10v16H78V40c0-6 4-10 8-10z" />
-          <path d="M38 44h40v12H38z" />
-          <circle cx="64" cy="66" r="8" fill="none" />
-          <circle cx="176" cy="66" r="8" fill="none" />
-        </g>
-      );
-    default:
-      return (
-        <g
-          fill="currentColor"
-          fillOpacity="0.18"
-          stroke="currentColor"
-          strokeWidth={stroke}
-        >
-          <path d="M34 58h188l-6 12H40z" />
-          <path d="M52 32h154c8 0 12 6 12 12v14H40V44c0-7 5-12 12-12z" />
-          <path d="M22 50h22v8H26z" />
-          <rect x="68" y="38" width="28" height="12" rx="2" fillOpacity="0.08" />
-          <rect x="104" y="38" width="28" height="12" rx="2" fillOpacity="0.08" />
-          <circle cx="86" cy="68" r="8" fill="none" />
-          <circle cx="186" cy="68" r="8" fill="none" />
-        </g>
-      );
-  }
 }
 
 function Field({ label, value }: { label: string; value: string }) {

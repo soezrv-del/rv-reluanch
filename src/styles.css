@@ -74,6 +74,8 @@
   --color-lot-plate: #11141c;
   --color-lot-well: #0a0c12;
   --color-lot-chip: #181c26;
+  --color-lot-studio: #05070b;
+  --color-lot-tire: #1a1d24;
 
   --page-accent: var(--color-sapphire);
   --page-accent-soft: color-mix(in srgb, var(--color-sapphire) 16%, transparent);
@@ -2112,7 +2114,7 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   letter-spacing: -0.03em;
 }
 
-/* Lot stock — grok.me browse energy, own-lot data only */
+/* Lot stock — grok.me browse chrome, own-lot data only */
 .lot-research {
   background: var(--color-lot-void);
   color: var(--color-fg);
@@ -2122,23 +2124,22 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   inset: 0;
   background:
     radial-gradient(
-      ellipse 80% 50% at 80% 0%,
-      color-mix(in srgb, var(--color-sapphire) 14%, transparent),
-      transparent 55%
+      ellipse 70% 42% at 88% -4%,
+      color-mix(in srgb, var(--color-fg) 10%, transparent),
+      transparent 58%
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-lot-plate) 70%, transparent),
-      var(--color-lot-void) 42%
+      color-mix(in srgb, var(--color-lot-plate) 55%, transparent),
+      var(--color-lot-void) 38%
     );
 }
 .lot-search {
-  background: var(--color-lot-plate);
-  border: 1px solid var(--color-border-strong);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-fg) 6%, transparent);
+  background: var(--color-lot-chip);
+  border: 1px solid color-mix(in srgb, var(--color-fg) 8%, transparent);
 }
 .lot-search:focus {
-  border-color: color-mix(in srgb, var(--color-sapphire) 55%, transparent);
+  border-color: color-mix(in srgb, var(--color-fg) 22%, transparent);
   outline: none;
 }
 .lot-chip-rail {
@@ -2156,48 +2157,85 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
 .lot-chip {
   background: var(--color-lot-chip);
   color: var(--color-muted);
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
 }
 .lot-chip.is-on {
-  background: var(--color-tiimo-foam);
+  background: var(--color-fg);
   color: var(--color-lot-void);
-  border-color: transparent;
 }
 .lot-card {
   background: var(--color-lot-plate);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 18px 40px color-mix(in srgb, var(--color-lot-void) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-fg) 6%, transparent);
 }
 .lot-well {
   background:
     radial-gradient(
-      ellipse 70% 80% at 50% 80%,
-      color-mix(in srgb, var(--color-sapphire) 16%, transparent),
-      transparent 62%
+      ellipse 80% 55% at 50% 100%,
+      color-mix(in srgb, var(--color-fg) 8%, transparent),
+      transparent 58%
     ),
-    var(--color-lot-well);
+    var(--color-lot-studio);
 }
 .lot-well.is-featured {
-  min-height: 13.5rem;
+  min-height: 14.5rem;
 }
 @media (min-width: 640px) {
   .lot-well.is-featured {
-    min-height: 16.5rem;
+    min-height: 17.5rem;
   }
 }
 .lot-well.is-rail {
-  min-height: 7.25rem;
+  min-height: 11rem;
 }
 .lot-mark {
-  width: 78%;
-  max-width: 22rem;
-  opacity: 0.62;
-  color: color-mix(in srgb, var(--color-fg) 78%, var(--color-sapphire));
+  width: 88%;
+  max-width: 24rem;
 }
-.lot-well.is-rail .lot-mark {
-  width: 72%;
-  max-width: 14rem;
-  opacity: 0.5;
+.lot-mark-shadow {
+  fill: color-mix(in srgb, var(--color-fg) 16%, transparent);
+}
+.lot-mark-body {
+  fill: color-mix(in srgb, var(--color-fg) 90%, var(--color-sapphire-glow));
+}
+.lot-mark-glass {
+  fill: color-mix(in srgb, var(--color-lot-void) 70%, var(--color-sapphire));
+}
+.lot-mark-tire {
+  fill: var(--color-lot-tire);
+}
+.lot-mark-hub {
+  fill: color-mix(in srgb, var(--color-fg) 38%, var(--color-lot-tire));
+}
+.lot-pills {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+.lot-pill {
+  min-width: 0;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-fg) 6%, var(--color-lot-well));
+  padding: 0.65rem 0.3rem 0.55rem;
+  text-align: center;
+}
+.lot-pill-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-fg);
+}
+.lot-pill-value.is-gap {
+  color: var(--color-dim);
+}
+.lot-pill-label {
+  margin-top: 0.2rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-dim);
 }
 @media (prefers-reduced-motion: reduce) {
   .lot-card,
