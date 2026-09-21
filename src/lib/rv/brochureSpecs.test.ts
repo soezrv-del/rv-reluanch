@@ -31,6 +31,8 @@ import {
   omitPlaceholderCatalogTanks,
   resolveHonestTanks,
 } from "./placeholderTanks.ts";
+import { buildBrochureSpecs, pickPowertrainBand } from "./brochureSpecs.ts";
+import { RV_DATA } from "./rvData.ts";
 
 const DREAM_ENGINE = "Cummins L9 450 std / X15 605 opt";
 const root = dirname(fileURLToPath(import.meta.url));
@@ -10222,6 +10224,141 @@ test("Entegra Coach OEM tank pins: dated brochure gallons only; adjacent years a
   assert.doesNotMatch(bandBefore(accolade, "from: 2023,\n          to: 2024", "from: 2024,\n          to: 2024,\n          floorplans: [\"37K\"]"), /freshWater: 72/);
   assert.doesNotMatch(accolade, /from: 2027[\s\S]*?freshWater: 72/);
   assert.doesNotMatch(accoladeXt, /from: 2027[\s\S]*?freshWater: 64/);
+});
+
+test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / MY14–22 / MY26–27 GAP", () => {
+  const block = src("rvData.ts");
+  const j0 = block.indexOf("  Jayco: {");
+  const j1 = block.indexOf('  "American Coach": {');
+  assert.ok(j0 > 0 && j1 > j0, "expected Jayco block");
+  const jayco = block.slice(j0, j1);
+  const precept = jayco.slice(
+    jayco.indexOf("    Precept: {"),
+    jayco.indexOf("    Alante: {"),
+  );
+  const prestige = jayco.slice(
+    jayco.indexOf('    "Precept Prestige": {'),
+    jayco.indexOf('    "Embark Super C"'),
+  );
+  assert.ok(precept.includes("powertrainByYear"), "expected Precept slice");
+  assert.ok(prestige.includes("powertrainByYear"), "expected Prestige slice");
+
+  assert.doesNotMatch(precept, /\n      freshWater: 60,/);
+  assert.doesNotMatch(precept, /\n      grayWater: 40,/);
+  assert.doesNotMatch(precept, /\n      blackWater: 40,/);
+  assert.doesNotMatch(precept, /\n      freshWater: 72,/);
+  assert.doesNotMatch(prestige, /freshWater:\s*\d+/);
+  assert.doesNotMatch(prestige, /grayWater:\s*\d+/);
+  assert.doesNotMatch(prestige, /blackWater:\s*\d+/);
+
+  assert.match(
+    precept,
+    /from: 2023,\s*to: 2025,\s*floorplans: \["31UL"\][\s\S]*?freshWater: 72,\s*grayWater: 40,\s*blackWater: 50,[\s\S]*?2025-Precept\.pdf/,
+  );
+  assert.match(
+    precept,
+    /from: 2023,\s*to: 2025,\s*floorplans: \["34B"\][\s\S]*?freshWater: 72,\s*grayWater: 40,\s*blackWater: 40,[\s\S]*?2025-Precept\.pdf/,
+  );
+  assert.match(
+    precept,
+    /from: 2023,\s*to: 2025,\s*floorplans: \["34G"\][\s\S]*?freshWater: 72,\s*grayWater: 40,\s*blackWater: 50,[\s\S]*?2025-Precept\.pdf/,
+  );
+  assert.match(
+    precept,
+    /from: 2023,\s*to: 2025,\s*floorplans: \["36A"\][\s\S]*?freshWater: 72,\s*grayWater: 72,\s*blackWater: 72,[\s\S]*?40\/32 → 72/,
+  );
+  assert.match(
+    precept,
+    /from: 2023,\s*to: 2025,\s*floorplans: \["36C"\][\s\S]*?freshWater: 72,\s*grayWater: 72,\s*blackWater: 72,[\s\S]*?40\/32 → 72/,
+  );
+  const wideStart = precept.indexOf("from: 2023,\n          to: 2027,");
+  const pinStart = precept.indexOf('floorplans: ["31UL"]');
+  assert.ok(wideStart >= 0 && pinStart > wideStart, "model-wide MY23–27 band before 31UL pin");
+  assert.doesNotMatch(precept.slice(wideStart, pinStart), /freshWater:\s*\d+/);
+  assert.doesNotMatch(precept, /from: 2026,/);
+  assert.doesNotMatch(precept, /from: 2027,/);
+  assert.doesNotMatch(precept, /to: 2026,/);
+
+  const spec = RV_DATA.Jayco.Precept;
+  const prestigeSpec = RV_DATA.Jayco["Precept Prestige"];
+  assert.ok(spec, "Jayco Precept catalog spec");
+  assert.ok(prestigeSpec, "Jayco Precept Prestige catalog spec");
+
+  const trio = (
+    year: number,
+    floorplan: string,
+    modelSpec = spec,
+  ) => {
+    const band = pickPowertrainBand(modelSpec, year, floorplan);
+    return resolveHonestTanks(modelSpec, band);
+  };
+
+  for (const year of [2023, 2024, 2025]) {
+    assert.deepEqual(trio(year, "31UL"), {
+      freshWater: 72,
+      grayWater: 40,
+      blackWater: 50,
+    }, `Precept ${year} 31UL`);
+    assert.deepEqual(trio(year, "34B"), {
+      freshWater: 72,
+      grayWater: 40,
+      blackWater: 40,
+    }, `Precept ${year} 34B`);
+    assert.deepEqual(trio(year, "34G"), {
+      freshWater: 72,
+      grayWater: 40,
+      blackWater: 50,
+    }, `Precept ${year} 34G`);
+    assert.deepEqual(trio(year, "36A"), {
+      freshWater: 72,
+      grayWater: 72,
+      blackWater: 72,
+    }, `Precept ${year} 36A`);
+    assert.deepEqual(trio(year, "36C"), {
+      freshWater: 72,
+      grayWater: 72,
+      blackWater: 72,
+    }, `Precept ${year} 36C`);
+  }
+
+  const facts2025 = buildBrochureSpecs(spec, "2025", "Jayco", "Precept", "31UL");
+  assert.equal(facts2025.freshWater, "72 gal");
+  assert.equal(facts2025.grayWater, "40 gal");
+  assert.equal(facts2025.blackWater, "50 gal");
+
+  for (const [year, floorplan] of [
+    [2014, "31UL"],
+    [2021, "31UL"],
+    [2022, "31UL"],
+    [2026, "31UL"],
+    [2027, "31UL"],
+    [2025, ""],
+  ] as const) {
+    const out = trio(year, floorplan);
+    assert.equal(out.freshWater, undefined, `GAP ${year} ${floorplan || "(no FP)"} fresh`);
+    assert.equal(out.grayWater, undefined, `GAP ${year} ${floorplan || "(no FP)"} gray`);
+    assert.equal(out.blackWater, undefined, `GAP ${year} ${floorplan || "(no FP)"} black`);
+  }
+
+  const facts2026 = buildBrochureSpecs(spec, "2026", "Jayco", "Precept", "31UL");
+  assert.equal(facts2026.freshWater, CONFIRM_BROCHURE);
+  assert.equal(facts2026.grayWater, CONFIRM_BROCHURE);
+  assert.equal(facts2026.blackWater, CONFIRM_BROCHURE);
+
+  for (const year of [2023, 2025, 2027]) {
+    const out = trio(year, "36B", prestigeSpec);
+    assert.equal(out.freshWater, undefined, `Prestige ${year} 36B GAP`);
+    assert.equal(out.grayWater, undefined, `Prestige ${year} 36B GAP`);
+    assert.equal(out.blackWater, undefined, `Prestige ${year} 36B GAP`);
+  }
+
+  const wide2025 = pickPowertrainBand(spec, 2025);
+  assert.ok(wide2025);
+  assert.equal(wide2025!.floorplans, undefined);
+  assert.equal(wide2025!.freshWater, undefined);
+  assert.equal(wide2025!.engine, "Ford 7.3L V8 Godzilla 335HP");
+  assert.equal(spec.fuelType, "Gas");
+  assert.doesNotMatch(spec.engine || "", /diesel|X15|ISB/i);
 });
 
 test("Thor Aria tank pins: dated brochure gallons only; adjacent years and 2025 3702 not copied", () => {
