@@ -1502,7 +1502,10 @@
 .rvfax-screen[data-facts-landing] .suite-raidho-field,
 .rvtow-screen[data-tow-landing] .page-backdrop-bright,
 .rvtow-screen[data-tow-landing] .page-scrim-soft,
-.rvtow-screen[data-tow-landing] .suite-raidho-field {
+.rvtow-screen[data-tow-landing] .suite-raidho-field,
+[data-coach-detail] .page-backdrop-bright,
+[data-coach-detail] .page-scrim-soft,
+[data-coach-detail] .suite-raidho-field {
   display: none;
 }
 

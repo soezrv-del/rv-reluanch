@@ -143,9 +143,8 @@ import {
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
-import { SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
 import { resolveCardImage } from "@/assets/typeMedia";
-import { SuiteBackdrop } from "@/components/shell/SuitePage";
+import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { cn } from "@/lib/utils";
 import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
@@ -1145,8 +1144,9 @@ export function RvDetail({
     <div
       className="relative flex h-full flex-col overflow-hidden bg-bg text-white"
       data-readable-cards=""
+      data-coach-detail=""
     >
-      <SuiteBackdrop src={SHARED_PRESTIGE_BACKDROP} />
+      <SuiteRaidhoBackdrop bleed />
 
       <div
         ref={scrollRef}

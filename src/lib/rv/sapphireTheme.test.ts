@@ -105,8 +105,9 @@ test("Sold and Premium share sapphire accent + Raidho suite chrome — no dock S
   assert.doesNotMatch(css, /DialaBot/);
 });
 
-test("Facts and Tow landings are full-bleed Raidho — no leftover photo layer", () => {
+test("Facts, Tow, and coach detail are full-bleed Raidho — no leftover photo layer", () => {
   const fax = read("../../components/rvfax/RvFaxApp.tsx");
+  const detail = read("../../components/rvfax/RvDetail.tsx");
   const tow = read("../../components/rvtow/RvTowApp.tsx");
   const suite = read("../../components/shell/SuitePage.tsx");
   const css = read("../../styles.css");
@@ -114,11 +115,16 @@ test("Facts and Tow landings are full-bleed Raidho — no leftover photo layer",
   assert.match(fax, /<SuiteRaidhoBackdrop bleed \/>/);
   assert.doesNotMatch(fax, /FACTS_LANDING_BACKDROP/);
   assert.doesNotMatch(fax, /SuiteBackdrop/);
+  assert.match(detail, /data-coach-detail=""/);
+  assert.match(detail, /<SuiteRaidhoBackdrop bleed \/>/);
+  assert.doesNotMatch(detail, /SuiteBackdrop/);
+  assert.doesNotMatch(detail, /SHARED_PRESTIGE_BACKDROP/);
   assert.match(tow, /raidhoOnly/);
   assert.doesNotMatch(tow, /TOW_LANDING_BACKDROP/);
   assert.match(suite, /raidhoOnly \? \([\s\S]*SuiteRaidhoBackdrop bleed/);
   assert.match(css, /\.suite-raidho-bleed \{[\s\S]*?object-fit:\s*cover/);
   assert.match(css, /\.suite-raidho-bleed \{[\s\S]*?mix-blend-mode:\s*normal/);
+  assert.match(css, /\[data-coach-detail\] \.page-backdrop-bright/);
   assert.doesNotMatch(css, /DialaBot/);
 });
 
