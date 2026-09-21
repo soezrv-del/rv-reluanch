@@ -25,6 +25,7 @@ import {
   weightForFloorplan,
 } from "./floorplanSpecs.ts";
 import { computeTorqueToWeight } from "./torqueToWeight.ts";
+import { resolveYearSnapshot } from "./brochureSpecs.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
 import {
   isPlaceholderTankTrio,
@@ -240,6 +241,12 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     24000,
   );
   assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "31UL"), 22000);
+  assert.equal(findOemGvwrLbs("2018", "Jayco", "Precept", "31UL"), 22000);
+  // MY14–16 OEM brochure is 18k; 22k pin must not stamp backward.
+  assert.equal(findOemGvwrLbs("2014", "Jayco", "Precept", "31UL"), null);
+  assert.equal(findOemGvwrLbs("2015", "Jayco", "Precept", "31UL"), null);
+  assert.equal(findOemGvwrLbs("2016", "Jayco", "Precept", "31UL"), null);
+  assert.equal(findOemGvwrLbs("2017", "Jayco", "Precept", "31UL"), null);
   assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "36A"), 24000);
   assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "36C"), 24000);
   // Do not leak Vision XL pins onto bare Vision or Precept Prestige.
@@ -346,14 +353,30 @@ test("Tradition 42V/42Q brochure GVWR is 47,000 — not catalog weightRange mid"
     findOemGvwrLbs("2025", "American Coach", "American Dream", "45A"),
     54000,
   );
+  // 51k on Dream 45A was Eagle bleed — GAP, do not invent 47,000.
   assert.equal(
     findOemGvwrLbs("2020", "American Coach", "American Dream", "45A"),
-    51000,
+    null,
+  );
+  assert.equal(
+    findOemGvwrLbs("2019", "American Coach", "American Dream", "45A"),
+    null,
+  );
+  assert.equal(
+    findOemGvwrLbs("2022", "American Coach", "American Dream", "45A"),
+    null,
   );
   assert.equal(
     findOemGvwrLbs("2023", "American Coach", "American Dream", "45A"),
     null,
   );
+  assert.equal(
+    findOemGvwrLbs("2015", "American Coach", "American Eagle", "45A"),
+    51000,
+  );
+  // Mirada 35OS stays PIN_ONLY 22k — no dated OEM source in-repo, do not invent.
+  assert.equal(findOemGvwrLbs("2015", "Coachmen", "Mirada", "35OS"), 22000);
+  assert.equal(findOemGvwrLbs("2022", "Coachmen", "Mirada", "35OS"), 22000);
   assert.equal(
     findOemGvwrLbs("2025", "American Coach", "American Eagle", "45J"),
     null,
@@ -561,6 +584,7 @@ test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2026", "Winnebago", "View", "24R"), null);
   assert.equal(findOemGvwrLbs("2025", "Winnebago", "Navion", "24D"), null);
 
+  assert.equal(findOemGvwrLbs("2025", "Forest River", "FR3", "31DS"), 18000);
   assert.equal(findOemGvwrLbs("2026", "Forest River", "FR3", "31DS"), 18000);
   assert.equal(findOemGvwrLbs("2026", "Forest River", "FR3", "34DS"), 22000);
   assert.equal(findOemGvwrLbs("2026", "Forest River", "Georgetown 5 Series", "31L5"), 22000);
@@ -605,6 +629,36 @@ test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series F", "31ZW"), 22000);
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series F", "31ZW5"), 19500);
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series E", "25FW"), null);
+});
+
+test("FR3 31DS catalog GVWR aligns to OEM 18k; Sunseeker Classic 2025–26 GAPs", async () => {
+  const { RV_DATA } = await loadLiveCatalog();
+  const fr3 = RV_DATA["Forest River"]?.FR3;
+  assert.ok(fr3, "expected Forest River FR3");
+  const snap31 = resolveYearSnapshot(fr3, "2026", "31DS");
+  assert.equal(snap31.gvwrLbs, 18000);
+  assert.equal(resolveYearSnapshot(fr3, "2025", "31DS").gvwrLbs, 18000);
+  // Other FR3 plans keep the 22k series / pin — do not rewrite them to 18k.
+  assert.equal(resolveYearSnapshot(fr3, "2026", "34DS").gvwrLbs, 22000);
+  assert.equal(findOemGvwrLbs("2026", "Forest River", "FR3", "31DS"), 18000);
+
+  const classic = RV_DATA["Forest River"]?.["Sunseeker Classic"];
+  assert.ok(classic, "expected Sunseeker Classic");
+  assert.equal(classic.gvwrLbs, undefined);
+  assert.equal(resolveYearSnapshot(classic, "2025", "2440DS").gvwrLbs, undefined);
+  assert.equal(resolveYearSnapshot(classic, "2026", "3010DS").gvwrLbs, undefined);
+  assert.equal(findOemGvwrLbs("2025", "Forest River", "Sunseeker Classic", "2440DS"), null);
+  assert.equal(findOemGvwrLbs("2026", "Forest River", "Sunseeker Classic", "3010DS"), null);
+
+  const srcClassic = src("rvData.ts");
+  const classicBlock = srcClassic.slice(
+    srcClassic.indexOf('    "Sunseeker Classic": {'),
+    srcClassic.indexOf('    "Sunseeker 4X4": {'),
+  );
+  assert.doesNotMatch(classicBlock, /yearStart:\s*2008,\s*gvwrLbs:\s*14500/);
+  assert.doesNotMatch(classicBlock, /from:\s*2025,[\s\S]*?gvwrLbs:\s*14500/);
+  assert.doesNotMatch(classicBlock, /14050/);
+  assert.match(classicBlock, /GVWR unprinted — GAP/);
 });
 
 test("brochureSpecs source no longer hash-seeds tanks, MPG, heater, construction, wheelbase, propane", () => {
@@ -9645,6 +9699,12 @@ test("Jayco 2013–2014 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(pr14!.torqueLbFt, 457);
   assert.match(pr14!.engine, /6\.8|Triton/);
   assert.equal(pr14!.fuelType, "Gas");
+  // Catalog MY14 18k stays; OEM 22k pin must not rewrite this band.
+  assert.match(
+    pr,
+    /from: 2014,\s*to: 2014,[\s\S]*?gvwrLbs: 18000,[\s\S]*?OEM 2014 Precept 14-PRCT-PL: F53 18k GVWR/,
+  );
+  assert.equal(findOemGvwrLbs("2014", "Jayco", "Precept", "31UL"), null);
   assert.equal(findPowertrainCorrection("2013", "Jayco", "Precept Prestige", "36B"), null);
   assert.equal(findPowertrainCorrection("2014", "Jayco", "Precept Prestige", "36U"), null);
 

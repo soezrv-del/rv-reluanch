@@ -14952,6 +14952,21 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           generator: "6kW gas",
           notes:
             "OEM FR3 brochure: Ford F53 · 7.3L V8 · 335 HP · 468 lb-ft · TorqShift 6-spd (not diesel)"
+        },
+        {
+          from: 2025,
+          to: 2026,
+          floorplans: ["31DS"],
+          engine: "Ford 7.3L V8 Godzilla",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift 6-speed automatic",
+          fuelCapacityGal: 80,
+          generator: "6kW gas",
+          gvwrLbs: 18000,
+          notes:
+            "OEM FR3 31DS floorplan page: F53 18,000. Align catalog to that pin — not the 22k series stamp. 30DS/34DS/35DS stay 22k."
         }
       ]
     },
@@ -15112,11 +15127,12 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       engine: "Ford 7.3L V8 gas 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-450",
       transmission: "6-speed TorqShift", fuelType: "Gas", recalls: 0, rating: 4.25, image: RV_CARD_IMAGE,
       towingCapacity: 7500, freshWater: 44, grayWater: 39, blackWater: 39, fuelCapacityGal: 55,
-      generator: "Onan / Generac 4kW gas", awningLength: 16, ceilingHeight: 80, founded: 1996, warrantyYears: 1, yearStart: 2008, gvwrLbs: 14500,
+      generator: "Onan / Generac 4kW gas", awningLength: 16, ceilingHeight: 80, founded: 1996, warrantyYears: 1, yearStart: 2008,
       description: "Forest River Sunseeker Classic — dealer name for full-feature E-450 Sunseeker. Same 7.3 325/450, hitch 7,500. Plans include 2860DS, 3010DS, 3050S.",
       powertrainByYear: [
         { from: 2008, to: 2019, engine: "Ford 6.8L V10 / 6.2L V8 (by year)", horsepower: 305, chassis: "Ford E-450" },
-        { from: 2020, to: 2027, engine: "Ford 7.3L V8 gas 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-450", towingCapacity: 7500, gvwrLbs: 14500 },
+        { from: 2020, to: 2024, engine: "Ford 7.3L V8 gas 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-450", towingCapacity: 7500, gvwrLbs: 14500 },
+        { from: 2025, to: 2027, engine: "Ford 7.3L V8 gas 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-450", towingCapacity: 7500, notes: "Classic 2025–26 brochure lists E-450 floorplans; GVWR unprinted — GAP. Do not invent 14,500 or 14,050." },
       ],
     },
     "Sunseeker 4X4": {

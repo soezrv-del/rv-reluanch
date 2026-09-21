@@ -28,9 +28,19 @@ test("catalog helper lists published torque+GVWR; scores #358 weight; champions 
       /american coach/i.test(r.make) &&
       /american dream/i.test(r.model) &&
       r.torqueLbFt === 1950 &&
-      r.gvwrLbs === 51_000,
+      r.gvwrLbs === 54_000,
   );
-  assert.ok(dream, "American Dream 45A 1950/51000 must score from published pin");
+  assert.ok(dream, "American Dream 45A 1950/54000 must score from dated 2025 pin");
+  assert.equal(
+    report.scored.some(
+      (r) =>
+        /american coach/i.test(r.make) &&
+        /american dream/i.test(r.model) &&
+        r.gvwrLbs === 51_000,
+    ),
+    false,
+    "Dream 45A must not score the Eagle-bleed 51k pin",
+  );
   assert.equal(dream.formula, "class-a-diesel");
   assert.ok(Math.abs(dream.score - 10) <= 0.05, `Dream score ${dream.score}`);
 
