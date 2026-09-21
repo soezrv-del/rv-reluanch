@@ -5,14 +5,14 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Evaluate live rvData.ts in Node (extensionless TS imports are stripped). */
+/** Evaluate live rvData.ts in Node (rvTypes re-exports, with or without .ts, are stripped). */
 export async function loadLiveCatalog() {
   const src = resolve(root, "src/lib/rv/rvData.ts");
   const raw = readFileSync(src, "utf8")
-    .replace(/export \{[\s\S]*?\} from "\.\/rvTypes";\n/, "")
-    .replace(/export type \{[\s\S]*?\} from "\.\/rvTypes";\n/, "")
+    .replace(/export \{[\s\S]*?\} from "\.\/rvTypes(?:\.ts)?";\n/, "")
+    .replace(/export type \{[\s\S]*?\} from "\.\/rvTypes(?:\.ts)?";\n/, "")
     .replace(
-      /import \{ RV_CARD_IMAGE, type RVSpec \} from "\.\/rvTypes";/,
+      /import \{ RV_CARD_IMAGE, type RVSpec \} from "\.\/rvTypes(?:\.ts)?";/,
       "const RV_CARD_IMAGE = \"\";",
     )
     .replace(": Record<string, Record<string, RVSpec>>", "");
