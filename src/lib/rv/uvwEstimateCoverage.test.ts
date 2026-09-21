@@ -59,8 +59,8 @@ test("Anthem 44R / Precept 31UL / Alante / Open Road 34PA use the tiered formula
   });
   assert.equal(precept.estimatedUvwLbs, 18_000);
   assert.equal(precept.tier, "gas-20k-24k");
-  // Class A Gas R*=26.0 on 468/18000 → 10.0 (was 6.05 on the global curve).
-  assert.ok(precept.score != null && Math.abs(precept.score - 10.0) <= 0.15);
+  // Class A Gas R*=28.9 on GVWR−1800 20,200: 468/20200 → ~8.09.
+  assert.ok(precept.score != null && Math.abs(precept.score - 8.09) <= 0.15);
   assert.equal(precept.color, "green");
 
   const alante = scoreEstimatedTtw({

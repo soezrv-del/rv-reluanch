@@ -43,6 +43,8 @@ test("catalog helper lists published torque+GVWR; scores #358 weight; champions 
   );
   assert.ok(alante, "Alante 27A 468/18000 OEM pin");
   assert.equal(alante.formula, "class-a-gas");
+  assert.equal(alante.weightLb, 16_200);
+  assert.equal(alante.weightBasis, "GVWR");
   assert.ok(Math.abs(alante.score - 10) <= 0.05, `Alante score ${alante.score}`);
 
   const lineage = report.scored.find(
@@ -76,6 +78,12 @@ test("catalog helper lists published torque+GVWR; scores #358 weight; champions 
   );
   assert.ok(precept, "Precept 31UL 468/22000 on gas formula");
   assert.equal(precept.formula, "class-a-gas");
+  assert.equal(precept.weightLb, 20_200);
+  assert.equal(precept.weightBasis, "GVWR");
+  assert.ok(
+    precept.score < 10,
+    `Precept 31UL must sit below Alante R* (got ${precept.score})`,
+  );
 
   const seneca = report.scored.filter(
     (r) => /jayco/i.test(r.make) && /^seneca$/i.test(r.model),

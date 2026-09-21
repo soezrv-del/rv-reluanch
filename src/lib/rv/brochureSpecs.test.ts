@@ -262,10 +262,11 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     rvType: "Class A Gas",
     chassis: "Ford F-53",
   });
-  assert.equal(ttw31.weightBasis, "UVW_EST");
-  assert.equal(ttw31.weightLb, 18000);
-  // Class A Gas (R*=26.0) on #358 UVW_EST 18,000: 468/18000 → 10.0.
-  assert.ok(ttw31.score != null && Math.abs(ttw31.score - 10.0) <= 0.15);
+  assert.equal(ttw31.weightBasis, "GVWR");
+  assert.equal(ttw31.weightLb, 20200);
+  assert.equal(ttw31.uvwLb, 18000);
+  // Class A Gas (R*=28.9) on GVWR−1800 20,200: 468/20200 → ~8.09.
+  assert.ok(ttw31.score != null && Math.abs(ttw31.score - 8.09) <= 0.15);
 
   const ttw36 = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -273,10 +274,11 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     rvType: "Class A Gas",
     chassis: "Ford F-53",
   });
-  assert.equal(ttw36.weightBasis, "UVW_EST");
-  assert.equal(ttw36.weightLb, 19700);
-  // Class A Gas (R*=26.0) on #358 UVW_EST 19,700: 468/19700 → ~8.77.
-  assert.ok(ttw36.score != null && Math.abs(ttw36.score - 8.77) <= 0.15);
+  assert.equal(ttw36.weightBasis, "GVWR");
+  assert.equal(ttw36.weightLb, 22200);
+  assert.equal(ttw36.uvwLb, 19700);
+  // Class A Gas (R*=28.9) on GVWR−1800 22,200: 468/22200 → ~7.65.
+  assert.ok(ttw36.score != null && Math.abs(ttw36.score - 7.65) <= 0.15);
 
   const ttwPublishedUvw = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -293,8 +295,9 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     gvwrRaw: "24,000 lbs",
     rvType: "Class A Gas",
   });
-  assert.equal(ttwVxl.weightLb, 19700);
-  assert.equal(ttwVxl.weightBasis, "UVW_EST");
+  assert.equal(ttwVxl.weightLb, 22200);
+  assert.equal(ttwVxl.weightBasis, "GVWR");
+  assert.equal(ttwVxl.uvwLb, 19700);
   assert.notEqual(ttwVxl.uvwLb, 24000);
 
   // Range-only listing (no oem/snap pin): TTW uses HIGH end, not mid/low.
@@ -314,7 +317,7 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     rvType: "Class A Gas",
   });
   assert.equal(ttwPin.gvwrLb, 22000);
-  assert.equal(ttwPin.weightLb, 18000);
+  assert.equal(ttwPin.weightLb, 20200);
 });
 
 test("Tradition 42V/42Q brochure GVWR is 47,000 — not catalog weightRange mid", () => {

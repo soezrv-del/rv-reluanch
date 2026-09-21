@@ -7,7 +7,9 @@ import { findOemFloorplanSpec } from "./floorplanSpecs.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import {
   THIN_CCC_FLAG,
+  CLASS_A_GAS_TTW_WEIGHT_OFFSET_LB,
   barColorFromScore,
+  classAGasScoredWeightLb,
   computeTorqueToWeight,
   estimateUvwFromGvwr,
   estimateUvwFromGvwrDetailed,
@@ -87,30 +89,31 @@ test("1–10 envelope: <10 → 1–2; 10–17 → 3–4; 17–28 → 5–6; 28�
 
 test("locked champion ratios R* (do not drift)", () => {
   assert.equal(TORQUE_SCORE_CHAMPIONS["class-a-diesel"], 38.2);
-  assert.equal(TORQUE_SCORE_CHAMPIONS["class-a-gas"], 26.0);
+  assert.equal(TORQUE_SCORE_CHAMPIONS["class-a-gas"], 28.9);
   assert.equal(TORQUE_SCORE_CHAMPIONS["super-c"], 43.2);
   assert.equal(TORQUE_SCORE_CHAMPIONS["class-c"], 38.6);
-  const gas = torqueScoreThresholds(26.0);
-  assertNear(gas.t1, 0.222 * 26.0, 1e-9);
-  assertNear(gas.t2, 0.378 * 26.0, 1e-9);
-  assertNear(gas.t3, 0.622 * 26.0, 1e-9);
-  assert.equal(gas.t4, 26.0);
+  const gas = torqueScoreThresholds(28.9);
+  assertNear(gas.t1, 0.222 * 28.9, 1e-9);
+  assertNear(gas.t2, 0.378 * 28.9, 1e-9);
+  assertNear(gas.t3, 0.622 * 28.9, 1e-9);
+  assert.equal(gas.t4, 28.9);
 });
 
-test("must-pass 1–10 anchors use estimated UVW; per-type curves score the #358 weight", () => {
+test("must-pass 1–10 anchors: class-a-gas scores GVWR−1800; other types keep #358 UVW_EST", () => {
   const seneca = computeTorqueToWeight({
     torqueLbFt: 800,
     gvwrLbs: 31_000,
     rvType: "Class A Gas",
     chassis: "Ford F-53",
   });
-  assert.equal(seneca.weightLb, 27_000);
-  assert.equal(seneca.weightBasis, "UVW_EST");
-  assert.equal(seneca.weightEstimated, true);
+  assert.equal(seneca.weightLb, 29_200);
+  assert.equal(seneca.weightBasis, "GVWR");
+  assert.equal(seneca.weightEstimated, false);
+  assert.equal(seneca.uvwLb, 27_000);
   assert.equal(seneca.uvwEstimateTier, "gas-26k-up");
   assert.equal(seneca.formula, "class-a-gas");
-  assertNear(seneca.ratio, 29.63, 0.05);
-  assertNear(seneca.score, 10.0);
+  assertNear(seneca.ratio, 27.4, 0.05);
+  assertNear(seneca.score, 8.98);
   assert.equal(seneca.color, "green");
 });
 
@@ -216,9 +219,10 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
     rvType: "Class A Gas",
     chassis: "Ford F53",
   });
-  assert.equal(alante.weightBasis, "UVW_EST");
-  assert.equal(alante.weightLb, 15_800);
-  assertNear(alante.ratio, 29.62, 0.05);
+  assert.equal(alante.weightBasis, "GVWR");
+  assert.equal(alante.weightLb, 16_200);
+  assert.equal(alante.uvwLb, 15_800);
+  assertNear(alante.ratio, 28.89, 0.02);
   assertNear(alante.score, 10.0, 0.05);
   assert.equal(alante.formula, "class-a-gas");
   assert.equal(alante.color, "green");
@@ -251,18 +255,21 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assert.equal(sunseeker.formula, "class-c");
   assert.equal(sunseeker.color, "green");
 
-  // Precept 31UL — Class A Gas on #358 22k×0.82 = 18,000 (hits gas R*).
+  // Precept 31UL — Class A Gas scores 22,000 − 1,800 = 20,200 (below R* 28.9).
   const p31 = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrLbs: 22_000,
     rvType: "Class A Gas",
     chassis: "Ford F-53",
   });
-  assert.equal(p31.weightLb, 18_000);
-  assert.equal(p31.weightBasis, "UVW_EST");
+  assert.equal(p31.weightLb, 20_200);
+  assert.equal(p31.weightBasis, "GVWR");
+  assert.equal(p31.weightEstimated, false);
+  assert.equal(p31.uvwLb, 18_000);
   assert.equal(p31.uvwEstimateTier, "gas-20k-24k");
-  assertNear(p31.ratio, 26.0, 0.05);
-  assertNear(p31.score, 10.0);
+  assertNear(p31.ratio, 23.17, 0.05);
+  assertNear(p31.score, 8.09);
+  assert.ok((p31.score ?? 0) < 10, `Precept must sit below the Alante R* ceiling`);
   assert.equal(p31.formula, "class-a-gas");
   assert.equal(p31.color, "green");
 
@@ -272,10 +279,11 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
     rvType: "Class A Gas",
     chassis: "Ford F-53",
   });
-  assert.equal(p36.weightLb, 19_700);
-  assert.equal(p36.weightBasis, "UVW_EST");
-  assertNear(p36.ratio, 23.76, 0.05);
-  assertNear(p36.score, 8.77);
+  assert.equal(p36.weightLb, 22_200);
+  assert.equal(p36.weightBasis, "GVWR");
+  assert.equal(p36.uvwLb, 19_700);
+  assertNear(p36.ratio, 21.08, 0.05);
+  assertNear(p36.score, 7.65);
   assert.equal(p36.formula, "class-a-gas");
   assert.equal(p36.color, "green");
 
@@ -388,19 +396,19 @@ test("bar color: red < 6.0, yellow [6.0, 7.5), green ≥ 7.5", () => {
   assert.equal(barColorFromScore(null), null);
 });
 
-test("UVW preferred over GVWR; GAP if torque and both weights missing", () => {
+test("UVW preferred over GVWR except class-a-gas; GAP if torque and both weights missing", () => {
   const preferUvw = computeTorqueToWeight({
     torqueLbFt: 468,
     uvwLbs: 20_000,
     gvwrLbs: 24_000,
     rvType: "Class A Gas",
   });
-  assert.equal(preferUvw.weightBasis, "UVW");
+  assert.equal(preferUvw.weightBasis, "GVWR");
   assert.equal(preferUvw.weightOverridden, false);
-  assert.equal(preferUvw.weightLb, 20_000);
+  assert.equal(preferUvw.weightLb, 22_200);
   assert.equal(preferUvw.uvwLb, 20_000);
   assert.equal(preferUvw.gvwrLb, 24_000);
-  assert.ok(Math.abs((preferUvw.ratio ?? 0) - 23.4) < 1e-9);
+  assert.ok(Math.abs((preferUvw.ratio ?? 0) - 21.08108108108108) < 1e-9);
   assert.match(formatTorqueToWeightScore(preferUvw), /^[0-9.]+\/10$/);
   assert.equal(formatTorqueWeightBasisChip(preferUvw), null);
 
@@ -410,10 +418,10 @@ test("UVW preferred over GVWR; GAP if torque and both weights missing", () => {
     gvwrLbs: 22_000,
     rvType: "Class A Gas",
   });
-  assert.equal(unloadedRaw.weightBasis, "UVW");
-  assert.equal(unloadedRaw.weightLb, 18_000);
+  assert.equal(unloadedRaw.weightBasis, "GVWR");
+  assert.equal(unloadedRaw.weightLb, 20_200);
   assert.equal(unloadedRaw.uvwLb, 18_000);
-  assertNear(unloadedRaw.score, 10.0);
+  assertNear(unloadedRaw.score, 8.09);
 
   const gvwrOnly = computeTorqueToWeight({
     torqueLbFt: 800,
@@ -449,9 +457,11 @@ test("UVW preferred over GVWR; GAP if torque and both weights missing", () => {
     uvwLbs: 18_000,
     rvType: "Class A Gas",
   });
-  assert.equal(uvwAlone.weightBasis, "UVW");
-  assert.equal(uvwAlone.weightLb, 18_000);
-  assert.equal(uvwAlone.gap, false);
+  assert.equal(uvwAlone.weightBasis, null);
+  assert.equal(uvwAlone.weightLb, null);
+  assert.equal(uvwAlone.uvwLb, 18_000);
+  assert.equal(uvwAlone.gap, true);
+  assert.equal(formatTorqueToWeightScore(uvwAlone), "GAP");
 });
 
 test("override preference: UVW override → UVW → estimated UVW → GVWR → GAP", () => {
@@ -482,19 +492,21 @@ test("override preference: UVW override → UVW → estimated UVW → GVWR → G
     rvType: "Class A Gas",
     chassis: "Ford F-53",
   });
-  assert.equal(estimated.weightLb, 17_200);
-  assert.equal(estimated.weightBasis, "UVW_EST");
-  assert.equal(estimated.weightEstimated, true);
-  assert.equal(estimated.weightOverridden, false);
+  assert.equal(estimated.weightLb, 19_200);
+  assert.equal(estimated.weightBasis, "GVWR");
+  assert.equal(estimated.weightEstimated, false);
+  assert.equal(estimated.weightOverridden, true);
+  assert.equal(estimated.uvwLb, 17_200);
 
   const publishedGvwr = resolveTorqueWeight({
     gvwrLbs: 22_000,
     rvType: "Class A Gas",
     chassis: "Ford F-53",
   });
-  assert.equal(publishedGvwr.weightLb, 18_000);
-  assert.equal(publishedGvwr.weightBasis, "UVW_EST");
-  assert.equal(publishedGvwr.weightEstimated, true);
+  assert.equal(publishedGvwr.weightLb, 20_200);
+  assert.equal(publishedGvwr.weightBasis, "GVWR");
+  assert.equal(publishedGvwr.weightEstimated, false);
+  assert.equal(publishedGvwr.uvwLb, 18_000);
 
   assert.equal(resolveTorqueWeight({}).weightLb, null);
   assert.equal(resolveTorqueWeight({}).weightEstimated, false);
@@ -720,6 +732,8 @@ test("2023 Phaeton 40IH: option-band pin still scores published L9 380 / 1,150 o
 test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", () => {
   const src = readFileSync(join(root, "torqueToWeight.ts"), "utf8");
   assert.match(src, /override UVW → published UVW → estimated UVW/);
+  assert.match(src, /class-a-gas: scored weightLb is GVWR/);
+  assert.match(src, /CLASS_A_GAS_TTW_WEIGHT_OFFSET_LB = 1800/);
   assert.match(src, /0\.835/);
   assert.match(src, /0\.88/);
   assert.match(src, /0\.82/);
@@ -867,6 +881,59 @@ test("tiered UVW: diesel pusher vs gas/other; 25k gap; thin-CCC", () => {
     cccLbs: 2_800,
   });
   assert.equal(thinScored.thinCcc, true);
-  assert.equal(thinScored.weightLb, 18_000);
+  assert.equal(thinScored.weightLb, 20_200);
+  assert.equal(thinScored.uvwLb, 18_000);
   assert.equal(THIN_CCC_FLAG, "thin-CCC");
+});
+
+test("class-a-gas scores GVWR−1800 across the board; other formulas keep #358 weight", () => {
+  assert.equal(CLASS_A_GAS_TTW_WEIGHT_OFFSET_LB, 1800);
+  assert.equal(classAGasScoredWeightLb(18_000), 16_200);
+  assert.equal(classAGasScoredWeightLb(22_000), 20_200);
+  assert.equal(classAGasScoredWeightLb(1_800), null);
+  assert.equal(classAGasScoredWeightLb(1_000), null);
+  assert.equal(classAGasScoredWeightLb(null), null);
+
+  const gasOverride = computeTorqueToWeight({
+    torqueLbFt: 468,
+    uvwLbs: 18_040,
+    gvwrLbs: 22_000,
+    overrideUvwLbs: 17_000,
+    rvType: "Class A Gas",
+  });
+  assert.equal(gasOverride.weightLb, 20_200);
+  assert.equal(gasOverride.weightBasis, "GVWR");
+  assert.equal(gasOverride.weightEstimated, false);
+  assert.equal(gasOverride.uvwLb, 17_000);
+  assertNear(gasOverride.ratio, 23.17, 0.05);
+
+  const dieselUnchanged = computeTorqueToWeight({
+    torqueLbFt: 1950,
+    gvwrLbs: 51_000,
+    rvType: "Class A Diesel",
+    chassis: "Spartan K3",
+  });
+  assert.equal(dieselUnchanged.weightLb, 42_600);
+  assert.equal(dieselUnchanged.weightBasis, "UVW_EST");
+  assert.equal(dieselUnchanged.formula, "class-a-diesel");
+
+  const classCUnchanged = computeTorqueToWeight({
+    torqueLbFt: 400,
+    gvwrLbs: 10_360,
+    rvType: "Class C",
+    chassis: "Ford Transit",
+  });
+  assert.equal(classCUnchanged.weightLb, 9_100);
+  assert.equal(classCUnchanged.weightBasis, "UVW_EST");
+  assert.equal(classCUnchanged.formula, "class-c");
+
+  const superCUnchanged = computeTorqueToWeight({
+    torqueLbFt: 950,
+    gvwrLbs: 22_000,
+    rvType: "Super C",
+    fuelType: "Diesel",
+  });
+  assert.equal(superCUnchanged.weightLb, 18_000);
+  assert.equal(superCUnchanged.weightBasis, "UVW_EST");
+  assert.equal(superCUnchanged.formula, "super-c");
 });
