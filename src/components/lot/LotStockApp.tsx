@@ -8,16 +8,17 @@ import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
   fetchLotSnapshot,
   filterLotBrowse,
+  LOT_CAMP_SCENE,
   lotPriceOrGap,
   lotTextOrGap,
   lotTypeChips,
   lotUnitKey,
+  lotUnitPhoto,
   pillLotTypeLabel,
   shortLotTypeLabel,
   type LotSnapshotView,
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
-import { LotTypeMark } from "@/components/lot/LotTypeMark";
 
 const PAGE_SIZE = 48;
 
@@ -359,6 +360,7 @@ function LotUnitCard({
   const year = lotTextOrGap(unit.year);
   const trim = lotTextOrGap(unit.trim);
   const condition = lotTextOrGap(unit.condition);
+  const photo = lotUnitPhoto(unit);
 
   return (
     <article>
@@ -374,11 +376,17 @@ function LotUnitCard({
       >
         <div
           className={cn(
-            "lot-well relative flex items-end justify-center px-4 pb-2 pt-12",
+            "lot-well relative overflow-hidden",
             featured ? "is-featured" : "is-rail",
           )}
-          data-lot-scene={featured ? "studio" : "dusk"}
+          data-lot-scene={photo ? "photo" : "camp"}
         >
+          <img
+            src={photo ?? LOT_CAMP_SCENE}
+            alt=""
+            className="lot-photo"
+            data-lot-photo={photo ? "unit" : "camp"}
+          />
           <span className="absolute left-3 top-3 rounded-full bg-fg px-2.5 py-1 text-[11px] font-bold text-lot-void">
             {shortLotTypeLabel(unit.body_type)}
           </span>
@@ -391,7 +399,6 @@ function LotUnitCard({
           >
             {price}
           </span>
-          <LotTypeMark type={unit.body_type} featured={featured} />
         </div>
         <div className="space-y-3 px-4 py-4">
           <div className="flex items-start justify-between gap-3">

@@ -6,6 +6,7 @@
 
 export const LOT_SNAPSHOT_URL = "/inventory/own-lot-latest.json";
 export const LOT_GAP = "GAP";
+export const LOT_CAMP_SCENE = "/lot/camp-scene.png";
 
 const PRICE_KEYS = [
   "price",
@@ -31,6 +32,7 @@ export type LotUnit = {
   condition: string;
   url: string;
   lot_status: string;
+  photo: string;
 };
 
 export type LotSnapshotView = {
@@ -148,6 +150,16 @@ function rowToLotUnit(row: Record<string, unknown>): LotUnit {
     condition: pickStr(row, "condition"),
     url: pickStr(row, "url"),
     lot_status: pickStr(row, "lot_status"),
+    photo: pickStr(
+      row,
+      "photo",
+      "photo_url",
+      "image",
+      "image_url",
+      "thumbnail",
+      "thumb",
+      "img",
+    ),
   };
   if (!unit.title) unit.title = composedTitle(unit);
   return unit;
@@ -192,6 +204,22 @@ export function lotTextOrGap(value: string | null | undefined): string {
 
 export function lotPriceOrGap(price: number | null | undefined): string {
   return price != null && price > 0 ? formatUsd(price) : LOT_GAP;
+}
+
+/** Snapshot photo only — listing page URLs are not images. */
+export function lotUnitPhoto(unit: LotUnit): string | null {
+  const raw = unit.photo.trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw) && !/\.(html?)($|\?)/i.test(raw)) {
+    if (/\.(avif|gif|jpe?g|png|webp)($|\?)/i.test(raw) || /\/image|\/photo|\/media\//i.test(raw)) {
+      return raw;
+    }
+    return null;
+  }
+  if (raw.startsWith("/") && /\.(avif|gif|jpe?g|png|webp)($|\?)/i.test(raw)) {
+    return raw;
+  }
+  return null;
 }
 
 export function lotUnitKey(unit: LotUnit, index: number): string {

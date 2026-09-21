@@ -2176,13 +2176,7 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   border: 1px solid color-mix(in srgb, var(--color-fg) 6%, transparent);
 }
 .lot-well {
-  background:
-    radial-gradient(
-      ellipse 80% 55% at 50% 100%,
-      color-mix(in srgb, var(--color-fg) 8%, transparent),
-      transparent 58%
-    ),
-    var(--color-lot-studio);
+  background: var(--color-lot-studio);
 }
 .lot-well.is-featured {
   min-height: 15.5rem;
@@ -2194,37 +2188,29 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
 }
 .lot-well.is-rail {
   min-height: 12.25rem;
-  background:
-    linear-gradient(
-      180deg,
-      var(--color-lot-dusk-high) 0%,
-      var(--color-lot-dusk-mid) 42%,
-      var(--color-lot-dusk-sun) 70%,
-      var(--color-lot-dusk-ground) 71%,
-      var(--color-lot-studio) 100%
-    );
 }
-.lot-mark {
-  width: 92%;
-  max-width: 26rem;
+.lot-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
 }
-.lot-mark-shadow {
-  fill: color-mix(in srgb, var(--color-lot-void) 55%, transparent);
+.lot-well::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4.5rem;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-lot-void) 42%, transparent),
+    transparent
+  );
+  pointer-events: none;
 }
-.lot-mark-body {
-  fill: color-mix(in srgb, var(--color-fg) 92%, var(--color-sapphire-glow));
-}
-.lot-mark-shade {
-  fill: color-mix(in srgb, var(--color-fg) 72%, var(--color-lot-void));
-}
-.lot-mark-glass {
-  fill: color-mix(in srgb, var(--color-lot-void) 68%, var(--color-sapphire));
-}
-.lot-mark-tire {
-  fill: var(--color-lot-tire);
-}
-.lot-mark-hub {
-  fill: color-mix(in srgb, var(--color-fg) 38%, var(--color-lot-tire));
+.lot-well > span {
+  z-index: 1;
 }
 .lot-pills {
   display: grid;

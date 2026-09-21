@@ -9,6 +9,7 @@ import {
   lotTextOrGap,
   lotTypeChips,
   lotTypeFamily,
+  lotUnitPhoto,
   pillLotTypeLabel,
   parseLotSnapshotJson,
   searchLotUnits,
@@ -146,4 +147,19 @@ test("type chips come from the lot snapshot and filter without catalog bleed", (
   assert.equal(lotTypeFamily("Travel Trailer"), "tt");
   assert.equal(pillLotTypeLabel("Fifth Wheel"), "FW");
   assert.equal(pillLotTypeLabel("Travel Trailer"), "TT");
+  assert.equal(lotUnitPhoto(sample.units[0]!), null);
+  assert.equal(
+    lotUnitPhoto({
+      ...sample.units[0]!,
+      photo: "https://rvcountry.com/inventory/2027-forest-river-impression-318rl-47529",
+    }),
+    null,
+  );
+  assert.equal(
+    lotUnitPhoto({
+      ...sample.units[0]!,
+      photo: "https://cdn.example.com/units/47529.jpg",
+    }),
+    "https://cdn.example.com/units/47529.jpg",
+  );
 });
