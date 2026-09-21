@@ -16,6 +16,7 @@ import {
   Star,
   FileText,
   Volume2,
+  Warehouse,
   X,
   CircleDollarSign,
 } from "lucide-react";
@@ -222,6 +223,12 @@ export function MoreApp({
               TOOLS
             </p>
             <div className="glass-prestige overflow-hidden rounded-[1.25rem]">
+              <RowLink
+                icon={<Warehouse className="size-4 text-accent" />}
+                title="Lot stock"
+                sub="RV Country in-stock — scroll and search our lot"
+                onClick={() => onNavigate?.("rvlot")}
+              />
               <RowLink
                 icon={<Volume2 className="size-4 text-ruby" />}
                 title="RvGrok Voice Settings"

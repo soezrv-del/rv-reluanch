@@ -4,6 +4,7 @@ import type { Message } from "@/lib/rvgrok/types";
 import { parseCoachFromText } from "@/lib/rvgrok/answerFeedback";
 import { formatTime, cn } from "@/lib/utils";
 import { AgentBadge, AgentStepsCard } from "./AgentStepsCard";
+import { DeskSpecSheet } from "./DeskSpecSheet";
 
 function renderContent(text: string) {
   const lines = text.split("\n");
@@ -151,6 +152,12 @@ export function MessageBubble({
           <p className="mb-2 rounded-md border border-amber-400/35 bg-amber-500/15 px-2.5 py-1.5 text-[11px] leading-snug text-amber-100">
             Unverified — confirm specs on the Facts report.
           </p>
+        ) : null}
+
+        {message.deskSheet ? (
+          <div className="mb-2">
+            <DeskSpecSheet sheet={message.deskSheet} />
+          </div>
         ) : null}
 
         {message.streaming && !message.content ? (

@@ -14,11 +14,12 @@ export type AppTab =
   | "rvtrips"
   | "rvshare"
   | "rvsold"
+  | "rvlot"
   | "more";
 
-/** Dock tabs only — Share is inline on Facts; Sold + Premium live in ⋯ */
+/** Dock tabs only — Share is inline on Facts; Sold, Lot stock, and Premium live in ⋯ */
 const TABS: {
-  id: Exclude<AppTab, "more" | "rvshare" | "rvsold">;
+  id: Exclude<AppTab, "more" | "rvshare" | "rvsold" | "rvlot">;
   label: string;
   short: string;
 }[] = [

@@ -486,6 +486,8 @@ test("in-app chat and voice research are wired; DialaBot stays out", () => {
   const prompts = src(".", "prompts.ts");
   assert.match(api, /loadOwnLotSnapshot/);
   assert.match(api, /formatOwnLotBlock/);
+  assert.doesNotMatch(api, /formatOwnLotSidecar/);
+  assert.match(api, /looksLikeOwnLotStockQuestion/);
   assert.match(api, /shouldSkipWebForOwnLot/);
   assert.match(api, /OWN-LOT INVENTORY \(RV Country\)/);
   assert.match(telemetry, /shouldSkipWebForOwnLot/);
@@ -1394,16 +1396,23 @@ test("Lineage M series 25FW spoken asks hit the five own-lot 25FW units", () => 
     "Lineage M 25FW",
     "Lineage Series M 25FW",
     "Grand Design Lineage M 25FW",
-    "do we have any M series 25FW",
   ]) {
     assert.equal(looksLikeCoachDesignationAsk(ask), true, ask);
-    assert.equal(looksLikeOwnLotStockQuestion(ask), true, ask);
+    assert.equal(
+      looksLikeOwnLotStockQuestion(ask),
+      false,
+      `${ask} is a catalog report, not own-lot`,
+    );
     assert.equal(
       looksLikeOwnLotStockQuestion(`What engine does a ${ask} have?`),
       false,
       `spec still wins over ${ask}`,
     );
   }
+  assert.equal(
+    looksLikeOwnLotStockQuestion("do we have any M series 25FW"),
+    true,
+  );
 
   const units = [
     ...LINEAGE_M_25FW_UNITS,
@@ -1458,8 +1467,16 @@ test("Lineage M series 25FW spoken asks hit the five own-lot 25FW units", () => 
     }
     assert.doesNotMatch(block, /stk M25TK/, ask);
     assert.doesNotMatch(block, /stk E30DC/, ask);
-    assert.equal(shouldSkipWebForOwnLot(ask, snapshot), true, ask);
+    assert.equal(
+      shouldSkipWebForOwnLot(ask, snapshot),
+      false,
+      `${ask} is a catalog report — do not skip to own-lot`,
+    );
   }
+  assert.equal(
+    shouldSkipWebForOwnLot("do we have any M series 25FW", snapshot),
+    true,
+  );
 });
 
 test("Tifin fuzzy brand (not Integra) matches Tiffin Phaeton 36L", () => {
@@ -1586,6 +1603,74 @@ test("David inventory asks list the three 27ASE stocks even with catalog GAP spe
   assert.match(voiceWeb, /looksLikeOwnLotStockQuestion/);
 });
 
+test("catalog coach lookup is not an own-lot miss — Dutch Star 4369 reports from the big catalog", () => {
+  const catalogAsks = [
+    "look up 2022 Dutch Star 4369",
+    "2022 Newmar Dutch Star 4369",
+    "Newmar Dutch Star 4369",
+    "Give me a report on the 2018 Newmar Ventana 4369",
+  ];
+  for (const q of catalogAsks) {
+    assert.equal(looksLikeOwnLotStockQuestion(q), false, q);
+    assert.equal(looksLikeInventoryOrCountQuestion(q), false, q);
+  }
+  assert.equal(
+    looksLikeOwnLotStockQuestion("do we have a 2022 Dutch Star 4369"),
+    true,
+  );
+  assert.equal(
+    looksLikeOwnLotStockQuestion("is there a Dutch Star 4369 on the lot"),
+    true,
+  );
+
+  const ventanaOnLot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units: [
+      pricedUnit({
+        year: "2018",
+        make: "Newmar",
+        model: "Ventana",
+        trim: "4369",
+        body_type: "Class A Diesel",
+        location: "Wilsonville",
+        stock_number: "NV4369",
+        price: 289000,
+      }),
+    ],
+  });
+  const lotAsk = formatOwnLotBlock(
+    ventanaOnLot,
+    "do we have a 2022 Dutch Star 4369",
+  );
+  assert.match(lotAsk, /Matched: 0/);
+  assert.match(lotAsk, /do not have that coach on the lot/i);
+  assert.match(lotAsk, /not in listings/);
+  assert.match(lotAsk, /Dutch Star 4369 ≠ Ventana 4369/);
+  assert.doesNotMatch(lotAsk, /stk NV4369/);
+  assert.doesNotMatch(lotAsk, /OWN-LOT SIDECAR/);
+
+  const grounding = src(".", "grounding.ts");
+  const prompts = src(".", "prompts.ts");
+  const voice = src(".", "voice.ts");
+  const api = src("../../routes/api", "rvgrok.ts");
+  const ownLot = src(".", "ownLotInventory.ts");
+  assert.match(grounding, /DEFAULT COACH REPORT/);
+  assert.match(grounding, /big motorhome catalog/);
+  assert.match(grounding, /not in listings/);
+  assert.doesNotMatch(
+    grounding,
+    /looksLikeCoachDesignationAsk\(query\)/,
+  );
+  assert.match(prompts, /DEFAULT COACH REPORT/);
+  assert.match(prompts, /separate salesman page/);
+  assert.match(voice, /big motorhome catalog/);
+  assert.match(api, /looksLikeOwnLotStockQuestion\(lastPlain\)/);
+  assert.doesNotMatch(api, /formatOwnLotSidecar/);
+  assert.doesNotMatch(ownLot, /formatOwnLotSidecar/);
+  assert.doesNotMatch(ownLot, /[Dd]ialaBot/);
+});
+
 test("own-lot miss is an honest lot miss, not a catalog-gap deflection", () => {
   const snapshot = snapshotFromJson({
     source: "own",
@@ -1597,7 +1682,8 @@ test("own-lot miss is an honest lot miss, not a catalog-gap deflection", () => {
     "look in my inventory for a 45A Anthem",
   );
   assert.match(block, /Matched: 0/);
-  assert.match(block, /none of that coach is on our lot snapshot/);
-  assert.match(block, /Do not mention catalog gap/);
+  assert.match(block, /none of that coach is on our lot snapshot|do not have that coach on the lot/i);
+  assert.match(block, /Do not mention catalog gap|not in listings/);
+  assert.match(block, /Never substitute a sibling series|Do not swap in a sibling series/);
   assert.doesNotMatch(block, /stk 47034/);
 });

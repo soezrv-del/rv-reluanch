@@ -24,6 +24,8 @@ export interface Message {
   feedback?: "up" | "down";
   /** Demo / non-xAI fallback — do not treat as catalog truth. */
   unverified?: boolean;
+  /** CarFax-style desk spec sheet for this turn's locked coach. */
+  deskSheet?: import("./deskSheet").DeskSheetPayload;
 }
 
 export interface ChatSession {

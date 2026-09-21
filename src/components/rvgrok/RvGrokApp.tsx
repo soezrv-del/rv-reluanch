@@ -27,6 +27,12 @@ import {
 import { streamChat } from "@/lib/rvgrok/stream";
 import { GrokRealtimeSession } from "@/lib/rvgrok/realtime";
 import { buildChatGrounding, buildVoiceGrounding } from "@/lib/rvgrok/grounding";
+import {
+  claimsDeskSpecSheet,
+  resolveDeskSheet,
+  type DeskSheetPayload,
+} from "@/lib/rvgrok/deskSheet";
+import { DeskSpecSheet } from "./DeskSpecSheet";
 import { formatFeedbackContext } from "@/lib/rvgrok/answerFeedback";
 import { readActiveCoach } from "@/lib/rv/activeCoach";
 import { ensureCatalogLoaded } from "@/lib/rv/catalogLoad";
@@ -147,6 +153,9 @@ export function RvGrokApp({
     "environment",
   );
   const [keepShowing, setKeepShowing] = useState(false);
+  const [liveDeskSheet, setLiveDeskSheet] = useState<DeskSheetPayload | null>(
+    null,
+  );
   const [frameBusy, setFrameBusy] = useState(false);
   const [lastSentFrame, setLastSentFrame] = useState<string | null>(null);
 
@@ -167,6 +176,7 @@ export function RvGrokApp({
   const realtimeRef = useRef<GrokRealtimeSession | null>(null);
   const liveUserMsgId = useRef<string | null>(null);
   const liveAsstMsgId = useRef<string | null>(null);
+  const liveDeskSheetRef = useRef<DeskSheetPayload | null>(null);
   const voiceModeRef = useRef(voiceMode);
   const liveVoiceRef = useRef(liveVoice);
   const liveCamRef = useRef(false);
@@ -520,6 +530,19 @@ export function RvGrokApp({
           extraText,
           agentMode,
         });
+        const deskSheet = resolveDeskSheet({
+          query: messageText,
+          identity: grounded.identity,
+          specs: grounded.specs,
+        });
+        if (deskSheet) {
+          setLiveDeskSheet(deskSheet);
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsgId ? { ...m, deskSheet } : m,
+            ),
+          );
+        }
 
         await streamChat({
           messages: history,
@@ -861,6 +884,18 @@ export function RvGrokApp({
           setRealtimeStatus(s);
           setRealtimeDetail(detail ?? null);
         },
+        onDeskSheet: (sheet) => {
+          liveDeskSheetRef.current = sheet;
+          setLiveDeskSheet(sheet);
+          const asstId = liveAsstMsgId.current;
+          if (asstId && sheet) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === asstId ? { ...m, deskSheet: sheet } : m,
+              ),
+            );
+          }
+        },
         onUserTranscript: (text) => {
           const uidMsg = liveUserMsgId.current;
           if (uidMsg) {
@@ -935,9 +970,19 @@ export function RvGrokApp({
           const asstId = liveAsstMsgId.current;
           if (asstId) {
             setMessages((prev) => {
+              const sheet = liveDeskSheetRef.current;
               const updated = prev.map((m) =>
                 m.id === asstId
-                  ? { ...m, content: text, streaming: false }
+                  ? {
+                      ...m,
+                      content: text,
+                      streaming: false,
+                      deskSheet:
+                        m.deskSheet ||
+                        (claimsDeskSpecSheet(text) ? sheet : null) ||
+                        sheet ||
+                        undefined,
+                    }
                   : m,
               );
               const { sessions: next, id } = upsertSession(
@@ -1279,8 +1324,21 @@ export function RvGrokApp({
     !isLoading &&
     !liveActive;
 
+  const threadAlreadyHasDesk = messages.some(
+    (m) =>
+      m.deskSheet &&
+      m.deskSheet.title === liveDeskSheet?.title &&
+      m.deskSheet.year === liveDeskSheet?.year,
+  );
+  const deskOnThread =
+    liveVoice && liveDeskSheet && !threadAlreadyHasDesk ? (
+    <div className="mx-auto w-full max-w-2xl px-0.5 pb-1 pt-2">
+      <DeskSpecSheet sheet={liveDeskSheet} />
+    </div>
+  ) : null;
+
   const startersOrThread =
-    messages.length === 0 ? (
+    messages.length === 0 && !liveDeskSheet ? (
       <div className="grok-starters mx-auto flex max-w-xl flex-col px-0.5 pb-4 pt-6">
         <p className="grok-starters-kicker text-center text-[13px] leading-relaxed text-white/75">
           Tap a prompt or type below.
@@ -1309,6 +1367,7 @@ export function RvGrokApp({
       </div>
     ) : (
       <div className="mx-auto flex max-w-2xl flex-col gap-3 pb-4 pt-3">
+        {deskOnThread}
         {messages.map((m) => (
           <MessageBubble
             key={m.id}

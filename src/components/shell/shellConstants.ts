@@ -24,6 +24,7 @@ export const PAGE_ACCENT: Record<AppTab, "sapphire" | "ruby" | "gold"> = {
   rvshare: "sapphire",
   rvgrok: "sapphire",
   rvsold: "sapphire",
+  rvlot: "sapphire",
 
   more: "sapphire",
 };
@@ -66,6 +67,11 @@ export const PAGE_COPY: Record<
     title: "SOLD",
     line: "Deals · gross · split · net · owed.",
     badge: "PRO",
+  },
+  rvlot: {
+    title: "LOT",
+    line: "RV Country in-stock — our lot snapshot, not the brochure catalog.",
+    badge: "STOCK",
   },
   more: {
     title: "PREMIUM",
