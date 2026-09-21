@@ -631,6 +631,27 @@ test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series E", "25FW"), null);
 });
 
+test("Audit B Phase 3+ length pins match dated brochures (44OH / 303RLS / 26DBH)", () => {
+  // Tiffin MY25/MY26 Phaeton weights & measures: 44 OH Overall Length 45' (WB 310").
+  const phaeton = findOemFloorplanSpec("2025", "Tiffin", "Phaeton", "44OH");
+  assert.equal(phaeton?.lengthDisplay, `45' 0"`);
+  assert.equal(phaeton?.overallLengthIn, 45 * 12);
+
+  // Grand Design Reflection 2026 brochure fifth-wheel table: 303RLS hitch-to-rear 32' 10".
+  const reflection = findOemFloorplanSpec("2026", "Grand Design", "Reflection", "303RLS");
+  assert.equal(reflection?.lengthDisplay, `32' 10"`);
+  assert.equal(reflection?.overallLengthIn, 32 * 12 + 10);
+
+  // 2025 Forest River Cherokee Grey Wolf brochure: 26DBH Exterior Length 31' 9".
+  // Both Grey Wolf and Cherokee modelIncludes rows share this floorplan pin.
+  const greyWolf = findOemFloorplanSpec("2025", "Forest River", "Grey Wolf", "26DBH");
+  const cherokee = findOemFloorplanSpec("2025", "Forest River", "Cherokee", "26DBH");
+  assert.equal(greyWolf?.lengthDisplay, `31' 9"`);
+  assert.equal(greyWolf?.overallLengthIn, 31 * 12 + 9);
+  assert.equal(cherokee?.lengthDisplay, `31' 9"`);
+  assert.equal(cherokee?.overallLengthIn, 31 * 12 + 9);
+});
+
 test("FR3 31DS catalog GVWR aligns to OEM 18k; Sunseeker Classic 2025–26 GAPs", async () => {
   const { RV_DATA } = await loadLiveCatalog();
   const fr3 = RV_DATA["Forest River"]?.FR3;
