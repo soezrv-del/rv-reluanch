@@ -7,8 +7,9 @@
  * field is GAP.
  *
  * Scoring uses the live #358 weight: published UVW → tiered UVW_EST →
- * GVWR. A published UVW pin / series UVW is passed through; otherwise
- * computeTorqueToWeight estimates UVW from GVWR.
+ * GVWR, except class-a-gas which scores GVWR − 1800. A published UVW
+ * pin / series UVW is still passed through for display / non-gas-A
+ * scoring; computeTorqueToWeight estimates UVW from GVWR when needed.
  */
 
 import { findOemGvwrLbs, findOemUvwLbs } from "./floorplanSpecs.ts";
@@ -29,7 +30,7 @@ export type CatalogTorqueScoreRow = {
   formula: TorqueScoreFormula;
   torqueLbFt: number;
   gvwrLbs: number;
-  /** Pounds actually scored (#358: UVW / UVW_EST / GVWR). */
+  /** Pounds actually scored (#358, or GVWR−1800 on class-a-gas). */
   weightLb: number;
   weightBasis: TorqueWeightBasis;
   ratio: number;
@@ -336,7 +337,7 @@ export function formatCatalogTorqueScoreMarkdown(
   ];
   const labels: Record<TorqueScoreFormula, string> = {
     "class-a-diesel": "Class A Diesel (R* 38.2)",
-    "class-a-gas": "Class A Gas (R* 26.0)",
+    "class-a-gas": "Class A Gas (R* 28.9)",
     "super-c": "Super C (R* 43.2)",
     "class-c": "Class C (R* 38.6)",
     global: "Global fallback (Class B / unknown)",
@@ -345,7 +346,7 @@ export function formatCatalogTorqueScoreMarkdown(
   const lines: string[] = [
     "# Per-type torque-to-weight catalog scores",
     "",
-    "Published torque + published GVWR to list a row. Score uses #358 weight (published UVW → tiered UVW_EST → GVWR). Missing torque or GVWR is GAP. Towables are N/A.",
+    "Published torque + published GVWR to list a row. Score uses #358 weight (published UVW → tiered UVW_EST → GVWR) except Class A Gas, which scores GVWR − 1800. Missing torque or GVWR is GAP. Towables are N/A.",
     "",
     `| Formula | Models with both fields |`,
     `|---------|-------------------------|`,

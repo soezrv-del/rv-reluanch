@@ -60,7 +60,7 @@ test("save / find / clear UVW and GVWR independently", () => {
   assert.equal(findWeightOverride(2025, "Jayco", "Precept", "31UL"), null);
 });
 
-test("override UVW wins over published UVW and GVWR for TTW", () => {
+test("class-a-gas: salesman UVW override edits display UVW, not TTW weight", () => {
   const scored = computeTorqueToWeight({
     torqueLbFt: 468,
     uvwLbs: 18_040,
@@ -68,16 +68,17 @@ test("override UVW wins over published UVW and GVWR for TTW", () => {
     overrideUvwLbs: 17_000,
     rvType: "Class A Gas",
   });
-  assert.equal(scored.weightBasis, "UVW");
-  assert.equal(scored.weightOverridden, true);
-  assert.equal(scored.weightLb, 17_000);
+  assert.equal(scored.weightBasis, "GVWR");
+  assert.equal(scored.weightOverridden, false);
+  assert.equal(scored.weightLb, 20_200);
+  assert.equal(scored.uvwLb, 17_000);
   assert.equal(
     formatTorqueToWeightScore(scored),
     `${scored.score?.toFixed(1)}/10`,
   );
 });
 
-test("override GVWR feeds the tiered estimate; published UVW still wins", () => {
+test("class-a-gas: override GVWR feeds GVWR−1800; published UVW does not win", () => {
   const gvwrOverride = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrLbs: 24_000,
@@ -85,21 +86,23 @@ test("override GVWR feeds the tiered estimate; published UVW still wins", () => 
     rvType: "Class A Gas",
     chassis: "Ford F-53",
   });
-  assert.equal(gvwrOverride.weightBasis, "UVW_EST");
-  assert.equal(gvwrOverride.weightEstimated, true);
-  assert.equal(gvwrOverride.weightOverridden, false);
-  assert.equal(gvwrOverride.weightLb, 18_000);
+  assert.equal(gvwrOverride.weightBasis, "GVWR");
+  assert.equal(gvwrOverride.weightEstimated, false);
+  assert.equal(gvwrOverride.weightOverridden, true);
+  assert.equal(gvwrOverride.weightLb, 20_200);
   assert.equal(gvwrOverride.gvwrLb, 22_000);
+  assert.equal(gvwrOverride.uvwLb, 18_000);
 
-  const uvwStillWins = computeTorqueToWeight({
+  const uvwDoesNotWin = computeTorqueToWeight({
     torqueLbFt: 468,
     uvwLbs: 18_000,
     gvwrLbs: 24_000,
     overrideGvwrLbs: 22_000,
     rvType: "Class A Gas",
   });
-  assert.equal(uvwStillWins.weightBasis, "UVW");
-  assert.equal(uvwStillWins.weightOverridden, false);
-  assert.equal(uvwStillWins.weightEstimated, false);
-  assert.equal(uvwStillWins.weightLb, 18_000);
+  assert.equal(uvwDoesNotWin.weightBasis, "GVWR");
+  assert.equal(uvwDoesNotWin.weightOverridden, true);
+  assert.equal(uvwDoesNotWin.weightEstimated, false);
+  assert.equal(uvwDoesNotWin.weightLb, 20_200);
+  assert.equal(uvwDoesNotWin.uvwLb, 18_000);
 });

@@ -8,7 +8,7 @@
  * present; else parse specs.torque. Torque is lb-ft only — never
  * horsepower.
  *
- * Active weight (first hit wins):
+ * Active weight (first hit wins) for every formula except class-a-gas:
  *   1. Manual UVW override
  *   2. Published / pinned UVW (oem pin, brochure-true OEM floorplan,
  *      catalog snap). Use as weightLb directly — no UVW_EST invent,
@@ -21,6 +21,13 @@
  *   5. Published GVWR (oem.gvwrLbs / findOemGvwrLbs / snap / live)
  *   6. Range-only GVWR HIGH end (display band / weightRange [lo,hi])
  *   7. GAP
+ *
+ * Exception — formula `class-a-gas` only: scored weightLb is always
+ * GVWR − 1800 (salesman / published / range HIGH GVWR). Missing GVWR
+ * or a non-positive remainder → GAP. Published UVW, UVW_EST, and
+ * salesman UVW do not replace that scoring weight. Displayed Facts
+ * UVW / GVWR fields are unchanged (uvwLb / gvwrLb still resolve as
+ * above).
  *
  * Range-only GVWR (e.g. "39,500–44,005 lbs"): for **TTW scoring only**,
  * use the **HIGH** number as the GVWR source for the tiered estimate
@@ -40,7 +47,7 @@
  *
  * Locked champions (do not recompute from catalog drift):
  *   Class A Diesel  American Dream 45A X15     R* = 38.2  (1950 / 51000)
- *   Class A Gas     Jayco Alante 27A           R* = 26.0  (468 / 18000)
+ *   Class A Gas     Jayco Alante 27A           R* = 28.9  (468 / 16200)
  *   Super C         Grand Design Lineage F 31ZW R* = 43.2  (950 / 22000)
  *   Class C         Forest River Sunseeker TS  R* = 38.6  (400 / 10360)
  *
@@ -48,7 +55,8 @@
  * including 8.75 + (r−45)/5 above 45). Towables stay N/A.
  *
  * Score uses the active #358 weight (published UVW → tiered UVW_EST →
- * GVWR). 2022 Dream 39RK stays pinned 39,237 (not estimated).
+ * GVWR) except class-a-gas, which scores GVWR − 1800. 2022 Dream 39RK
+ * stays pinned 39,237 (not estimated).
  *
  * Bar color (score, not ratio) — unchanged bands:
  *   red     score < 6.0
@@ -69,6 +77,14 @@ export const UVW_FROM_GVWR_RATIO = UVW_FROM_GVWR_DIESEL_PUSHER;
 export const UVW_FROM_GVWR_GAS_UNDER_20K = 0.88;
 export const UVW_FROM_GVWR_GAS_20K_24K = 0.82;
 export const UVW_FROM_GVWR_GAS_26K_UP = 0.87;
+
+/**
+ * Class A Gas TTW scoring weight: GVWR − 1800 lb across the board.
+ * Heavier than UVW_EST (e.g. 22k × 0.82 = 18k) so a 22k Precept does
+ * not inherit the Alante 27A champion pair. Displayed Facts UVW / GVWR
+ * are unchanged.
+ */
+export const CLASS_A_GAS_TTW_WEIGHT_OFFSET_LB = 1800;
 
 /** Gas 20–24k CCC/OCCC/NCC under this many pounds → thin-CCC flag (still ×0.82). */
 export const THIN_CCC_THRESHOLD_LB = 3000;
@@ -180,12 +196,13 @@ export type TorqueScoreFormula =
   | "global";
 
 /**
- * Locked champion ratios R* (lb-ft per 1,000 lb GVWR).
+ * Locked champion ratios R* (lb-ft per 1,000 lb scored weight).
+ * Class A Gas R* uses GVWR − 1800 (Alante 27A 468 / 16200).
  * Scale thresholds by R-star over 45 from the global 10/17/28/45 breakpoints.
  */
 export const TORQUE_SCORE_CHAMPIONS = {
   "class-a-diesel": 38.2,
-  "class-a-gas": 26.0,
+  "class-a-gas": 28.9,
   "super-c": 43.2,
   "class-c": 38.6,
 } as const satisfies Record<Exclude<TorqueScoreFormula, "global">, number>;
@@ -281,6 +298,19 @@ function positiveInt(n: number): number | null {
 
 function clampScore(n: number): number {
   return Math.min(10, Math.max(1, n));
+}
+
+/**
+ * Class A Gas scored pounds: GVWR − 1800. Null when GVWR is missing
+ * or the remainder is not > 0 (GAP).
+ */
+export function classAGasScoredWeightLb(
+  gvwrLb: number | null | undefined,
+): number | null {
+  const g = positiveInt(gvwrLb ?? 0);
+  if (g == null) return null;
+  const weightLb = g - CLASS_A_GAS_TTW_WEIGHT_OFFSET_LB;
+  return weightLb > 0 ? weightLb : null;
 }
 
 function hintFromInput(input: TorqueToWeightInput): UvwEstimateHint {
@@ -616,6 +646,10 @@ export type ResolvedTorqueWeight = {
  * (tiered GVWR formula) → override GVWR → published GVWR → GAP.
  * Callers must not pass mid×0.82 estimates or display-only UVW_EST
  * as published UVW (uvwLbs / uvwRaw).
+ *
+ * class-a-gas: scored weightLb is GVWR − 1800 regardless of UVW /
+ * UVW_EST. uvwLb still follows the list above so Facts UVW display
+ * is unchanged. Missing or non-positive remainder → GAP.
  */
 export function resolveTorqueWeight(
   input: TorqueToWeightInput,
@@ -632,6 +666,34 @@ export function resolveTorqueWeight(
   const estimated = estimateUvwFromGvwrDetailed(gvwrLb, hintFromInput(input));
   const estimatedUvw = estimated?.uvwLbs ?? null;
   const uvwLb = overrideUvw ?? publishedUvw ?? estimatedUvw;
+
+  if (resolveTorqueScoreFormula(input) === "class-a-gas") {
+    const weightLb = classAGasScoredWeightLb(gvwrLb);
+    if (weightLb == null) {
+      return {
+        uvwLb,
+        gvwrLb,
+        weightLb: null,
+        weightBasis: null,
+        weightOverridden: false,
+        weightEstimated: false,
+        thinCcc: false,
+        uvwEstimateTier: null,
+      };
+    }
+    const usedEstimate =
+      overrideUvw == null && publishedUvw == null && estimatedUvw != null;
+    return {
+      uvwLb,
+      gvwrLb,
+      weightLb,
+      weightBasis: "GVWR",
+      weightOverridden: overrideGvwr != null,
+      weightEstimated: false,
+      thinCcc: usedEstimate ? (estimated?.thinCcc ?? false) : false,
+      uvwEstimateTier: usedEstimate ? (estimated?.tier ?? null) : null,
+    };
+  }
 
   if (overrideUvw != null) {
     return {
