@@ -1508,10 +1508,10 @@
   background:
     radial-gradient(
       ellipse 88% 72% at 50% 46%,
-      color-mix(in srgb, var(--color-sapphire-deep) 18%, transparent) 0%,
+      color-mix(in srgb, var(--color-sapphire-deep) 16%, transparent) 0%,
       transparent 70%
     ),
-    color-mix(in srgb, var(--color-ink-black) 78%, transparent);
+    color-mix(in srgb, var(--color-ink-black) 68%, transparent);
 }
 
 /*
@@ -1600,16 +1600,16 @@
  */
 .rvtow-screen[data-tow-landing][data-readable-cards] .page-backdrop-bright {
   opacity: 0.46;
-  filter: brightness(0.52) contrast(1.04) saturate(0.78);
+  filter: brightness(0.72) contrast(1.04) saturate(0.88);
 }
 .rvtow-screen[data-tow-landing][data-readable-cards] .page-scrim-soft {
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.68) 0%,
-    rgba(0, 0, 0, 0.32) 22%,
-    rgba(0, 0, 0, 0.22) 48%,
-    rgba(0, 0, 0, 0.42) 76%,
-    rgba(0, 0, 0, 0.76) 100%
+    rgba(0, 0, 0, 0.58) 0%,
+    rgba(0, 0, 0, 0.24) 22%,
+    rgba(0, 0, 0, 0.14) 48%,
+    rgba(0, 0, 0, 0.32) 76%,
+    rgba(0, 0, 0, 0.64) 100%
   );
 }
 .rvtow-screen[data-tow-landing][data-readable-cards] .glass-prestige,
