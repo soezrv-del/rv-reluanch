@@ -45,7 +45,7 @@ export function GrokLanding({
   return (
     <div
       data-rvgrok-landing=""
-      className="grok-landing mx-auto flex w-full max-w-xl flex-col items-stretch px-1 pb-4 pt-2 sm:max-w-2xl"
+      className="grok-landing mx-auto flex w-full max-w-xl flex-col items-stretch px-1 pb-4 sm:max-w-2xl"
     >
       {lotChip ? (
         <aside

@@ -40,6 +40,14 @@ test("Grok tab landing is Lot wingman on Raidho — no family camping plate", ()
   assert.match(css, /\[data-rvgrok-wingman\] \.suite-raidho-field/);
   assert.match(css, /BACKGROUND field behind frost/);
   assert.match(css, /\[data-rvgrok-wingman\] \.sapphire-header \{[\s\S]*?display:\s*none/);
+  assert.match(
+    css,
+    /\[data-rvgrok-landing\] \{[\s\S]*?padding-top:\s*max\(0\.5rem,\s*env\(safe-area-inset-top/,
+  );
+  assert.match(
+    css,
+    /@media \(max-width: 639px\) \{[\s\S]*?\[data-rvgrok-landing\] \{[\s\S]*?padding-top:\s*max\(3\.25rem,\s*env\(safe-area-inset-top/,
+  );
   assert.match(css, /\.grok-frost \{[\s\S]*?blur\(28px\)/);
   assert.match(css, /--color-grok-mic:\s*#e8893a/);
   assert.match(css, /--font-display:\s*"Fraunces"/);

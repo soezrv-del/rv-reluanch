@@ -2345,6 +2345,18 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   -webkit-backdrop-filter: blur(28px) saturate(1.7);
   border-color: rgba(255, 255, 255, 0.34);
 }
+/* Cold-open hero — sapphire header is display:none on the wingman tab, so
+ * this owns the notch. Mirror .bottom-tabs-nav: env() + mobile floor when
+ * env(safe-area-inset-top) is 0 (WKWebView / in-app preview). */
+[data-rvgrok-landing] {
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+}
+@media (max-width: 639px) {
+  /* Status bar / Dynamic Island ~47–59px — keep avatar below the clock. */
+  [data-rvgrok-landing] {
+    padding-top: max(3.25rem, env(safe-area-inset-top, 0px));
+  }
+}
 .grok-landing-card {
   border-radius: 2rem;
 }
