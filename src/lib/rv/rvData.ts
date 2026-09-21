@@ -5645,6 +5645,102 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Ford F53",
           transmission: "TorqShift automatic",
           notes: "OEM MY23–24 Challenger: F-53 7.3 335 / 468. Last brochure year 2024."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["35MQ"],
+          engine: "Ford F-53 6.8L Triton V10 320HP / 7.3L V8 350HP (option)",
+          horsepower: 0,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          freshWater: 100,
+          grayWater: 70,
+          blackWater: 40,
+          notes: "OEM MY21 Challenger 35MQ (RVUSA 2021-Thor-Motor-Coach-Challenger.pdf © MY 08/11/2020): Fresh/Waste/Gray 100/40/40F-30R → 100/70/40 fresh/gray/black. Dual gray 40+30. Not 37YT (off this year's FBY)."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["37DS", "37FH"],
+          engine: "Ford F-53 6.8L Triton V10 320HP / 7.3L V8 350HP (option)",
+          horsepower: 0,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          freshWater: 100,
+          grayWater: 80,
+          blackWater: 80,
+          notes: "OEM MY21 Challenger 37DS / 37FH (RVUSA 2021-Thor-Motor-Coach-Challenger.pdf © MY 08/11/2020): Fresh/Waste/Gray 100/40F-40R/40F-40R → 100/80/80. Dual waste 40+40 and dual gray 40+40."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["35MQ"],
+          engine: "Ford 7.3L V8 Godzilla 350HP",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          freshWater: 100,
+          grayWater: 70,
+          blackWater: 40,
+          notes: "OEM MY22 Challenger 35MQ (RVUSA 2022-Thor-Motor-Coach-Challenger.pdf © MY 03/12/2021): Fresh/Waste/Gray 100/40/40F-30R → 100/70/40. Dual gray 40+30."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["37DS", "37FH"],
+          engine: "Ford 7.3L V8 Godzilla 350HP",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          freshWater: 100,
+          grayWater: 80,
+          blackWater: 80,
+          notes: "OEM MY22 Challenger 37DS / 37FH (RVUSA 2022-Thor-Motor-Coach-Challenger.pdf © MY 03/12/2021): Fresh/Waste/Gray 100/40F-40R/40F-40R → 100/80/80. Dual waste 40+40 and dual gray 40+40."
+        },
+        {
+          from: 2023,
+          to: 2024,
+          floorplans: ["35MQ"],
+          engine: "Ford 7.3L V8 Godzilla 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          freshWater: 100,
+          grayWater: 70,
+          blackWater: 40,
+          notes: "OEM MY23–24 Challenger 35MQ (RVUSA 2023–2024-Thor-Motor-Coach-Challenger.pdf © MY 04/01/2022 / 04/01/2023): Fresh/Waste/Gray 100/40/40F-30R → 100/70/40. Dual gray 40+30."
+        },
+        {
+          from: 2023,
+          to: 2024,
+          floorplans: ["36FA"],
+          engine: "Ford 7.3L V8 Godzilla 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          freshWater: 100,
+          grayWater: 40,
+          blackWater: 40,
+          notes: "OEM MY23–24 Challenger 36FA (RVUSA 2023–2024-Thor-Motor-Coach-Challenger.pdf): Fresh/Waste/Gray 100/40/40 → 100/40/40. Not 35MQ dual-gray."
+        },
+        {
+          from: 2023,
+          to: 2024,
+          floorplans: ["37DS", "37FH"],
+          engine: "Ford 7.3L V8 Godzilla 335HP",
+          horsepower: 335,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          freshWater: 100,
+          grayWater: 80,
+          blackWater: 80,
+          notes: "OEM MY23–24 Challenger 37DS / 37FH (RVUSA 2023–2024-Thor-Motor-Coach-Challenger.pdf): Fresh/Waste/Gray 100/40F-40R/40F-40R → 100/80/80. Dual waste 40+40 and dual gray 40+40."
         }
       ]
     },
@@ -5691,8 +5787,76 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         { from: 2015, to: 2016, engine: "Ford F-53 6.8L Triton V10 362HP", horsepower: 362, torqueLbFt: 457, chassis: "Ford F53", transmission: "TorqShift automatic", fuelType: "Gas", notes: "OEM MY15–16 Miramar: F-53 6.8 V10 362 / 457." },
         { from: 2017, to: 2017, engine: "Ford F-53 6.8L Triton V10 320HP", horsepower: 320, torqueLbFt: 460, chassis: "Ford F53", transmission: "TorqShift automatic", fuelType: "Gas", notes: "OEM MY17 Miramar: F-53 6.8 V10 320 / 460. 2018 PDF is image-only." },
         { from: 2019, to: 2020, engine: "Ford F-53 6.8L Triton V10 320HP", horsepower: 320, torqueLbFt: 460, chassis: "Ford F53", transmission: "TorqShift automatic", fuelType: "Gas", notes: "OEM MY19–20 Miramar: F-53 6.8 V10 320 / 460." },
-        { from: 2021, to: 2021, engine: "Ford F-53 6.8L Triton V10 320HP / 7.3L V8 350HP (option)", horsepower: 0, chassis: "Ford F53", transmission: "TorqShift automatic", notes: "OEM MY21 Miramar: V10 320/460 or 7.3 350/468. Option-band HP 0." },
+        { from: 2021, to: 2021, engine: "Ford F-53 6.8L Triton V10 320HP / 7.3L V8 350HP (option)", horsepower: 0, chassis: "Ford F53", transmission: "TorqShift automatic", notes: "OEM MY21 Miramar: V10 320/460 or 7.3 350/468. Option-band HP 0. 34.6 tanks GAP — RVUSA 2021 card prints 32.2 | 35.2 | 35.4 | 37.1, not 34.6." },
         { from: 2022, to: 2022, engine: "Ford 7.3L V8 Godzilla 350HP", horsepower: 350, torqueLbFt: 468, chassis: "Ford F53", transmission: "TorqShift automatic", notes: "OEM MY22 Miramar: F-53 7.3 350 / 468." },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["35.2"],
+          engine: "Ford F-53 6.8L Triton V10 320HP / 7.3L V8 350HP (option)",
+          horsepower: 0,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          freshWater: 100,
+          grayWater: 70,
+          blackWater: 40,
+          notes: "OEM MY21 Miramar 35.2 (RVUSA 2021-Thor-Motor-Coach-Miramar.pdf © MY 06/04/2020): Fresh/Waste/Gray 100/40/40F-30R → 100/70/40. Dual gray 40+30. 34.6 not on this card."
+        },
+        {
+          from: 2021,
+          to: 2021,
+          floorplans: ["35.4", "37.1"],
+          engine: "Ford F-53 6.8L Triton V10 320HP / 7.3L V8 350HP (option)",
+          horsepower: 0,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          freshWater: 100,
+          grayWater: 80,
+          blackWater: 80,
+          notes: "OEM MY21 Miramar 35.4 / 37.1 (RVUSA 2021-Thor-Motor-Coach-Miramar.pdf © MY 06/04/2020): Fresh/Waste/Gray 100/40F-40R/40F-40R → 100/80/80. Dual waste 40+40 and dual gray 40+40."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["34.6"],
+          engine: "Ford 7.3L V8 Godzilla 350HP",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          freshWater: 100,
+          grayWater: 40,
+          blackWater: 40,
+          notes: "OEM MY22 Miramar 34.6 (RVUSA 2022-Thor-Motor-Coach-Miramar.pdf © MY 03/12/2021): Fresh/Waste/Gray 100/40/40 → 100/40/40."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["35.2"],
+          engine: "Ford 7.3L V8 Godzilla 350HP",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          freshWater: 100,
+          grayWater: 70,
+          blackWater: 40,
+          notes: "OEM MY22 Miramar 35.2 (RVUSA 2022-Thor-Motor-Coach-Miramar.pdf © MY 03/12/2021): Fresh/Waste/Gray 100/40/40F-30R → 100/70/40. Dual gray 40+30."
+        },
+        {
+          from: 2022,
+          to: 2022,
+          floorplans: ["37.1"],
+          engine: "Ford 7.3L V8 Godzilla 350HP",
+          horsepower: 350,
+          torqueLbFt: 468,
+          chassis: "Ford F53",
+          transmission: "TorqShift automatic",
+          freshWater: 100,
+          grayWater: 80,
+          blackWater: 80,
+          notes: "OEM MY22 Miramar 37.1 (RVUSA 2022-Thor-Motor-Coach-Miramar.pdf © MY 03/12/2021): Fresh/Waste/Gray 100/40F-40R/40F-40R → 100/80/80. Dual waste 40+40 and dual gray 40+40."
+        },
       ],
     },
     Magnitude: {
@@ -5858,7 +6022,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           to: 2024,
           engine: "Ford Power Stroke 6.7L Diesel",
           horsepower: 330,
-          chassis: "Ford F-550"
+          chassis: "Ford F-550",
+          notes: "Tanks GAP — no OEM Magnitude XG line brochure any year. XG32 lives on Magnitude. Do not copy Magnitude AX29/XG32/LV35/RS36 gallons onto this alias."
         }
       ]
     },
@@ -5912,7 +6077,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           to: 2024,
           engine: "Super C diesel (Ford 6.7 / Cummins by chassis)",
           horsepower: 330,
-          chassis: "Super C platform"
+          chassis: "Super C platform",
+          notes: "Tanks GAP — no Thor Motor Coach Seneca OEM brochure. Jayco Seneca / Seneca XT are a different make and were not copied."
         }
       ]
     },
@@ -6461,7 +6627,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           to: 2024,
           engine: "Mercedes-Benz 2.0L I4 turbodiesel",
           horsepower: 208,
-          chassis: "Mercedes Sprinter"
+          chassis: "Mercedes Sprinter",
+          notes: "Tanks GAP — no dated Four Winds Siesta OEM card MY21–24. RVUSA 2020/2024-Thor-Motor-Coach-Four-Winds-Siesta.pdf is Four Winds Ford C (22B/28Z…), not Siesta 24MB/24SK/24SS/24ST. Leftover 24SR/25G stay Confirm brochure."
         }
       ]
     },
@@ -6519,7 +6686,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           to: 2024,
           engine: "Ford 7.3L V8",
           horsepower: 350,
-          chassis: "Ford E-450"
+          chassis: "Ford E-450",
+          notes: "OEM MY23 Geneva card is 22VA/25VA/28VA/31VA — leftover 25VT/28VT tanks GAP (VA≠VT). 25VT not on MY24 VT card."
+        },
+        {
+          from: 2024,
+          to: 2024,
+          floorplans: ["28VT"],
+          engine: "Ford 7.3L V8",
+          horsepower: 350,
+          chassis: "Ford E-450",
+          freshWater: 40,
+          grayWater: 40,
+          blackWater: 26,
+          notes: "OEM MY24 Thor Geneva 28VT (RVUSA 2024-Thor-Motor-Coach-Geneva.pdf © OH 09/15/2023): Fresh/Waste/Gray 40/26/40 → 40/40/26. Not 25VT (off this card). Not 22VT/24VT/31VT (not on leftover FBY). Not Geneva Motorhomes."
         }
       ]
     },
@@ -6576,7 +6756,20 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           to: 2024,
           engine: "Ford 7.3L V8 Godzilla",
           horsepower: 350,
-          chassis: "Ford E-450"
+          chassis: "Ford E-450",
+          notes: "Leftover mixed Class C key. MY24 tanks GAP — 2024 Outlaw PDF is Class A 38MB/38KB only. 29T not on MY23 Class C section."
+        },
+        {
+          from: 2023,
+          to: 2023,
+          floorplans: ["29J"],
+          engine: "Ford 7.3L V8 Godzilla",
+          horsepower: 350,
+          chassis: "Ford E-450",
+          freshWater: 40,
+          grayWater: 34.5,
+          blackWater: 30,
+          notes: "OEM MY23 Outlaw Class C 29J (RVUSA 2023-Thor-Motor-Coach-Outlaw.pdf © MY 04/01/2022): Fresh/Waste/Gray 40/30/34.5 → 40/34.5/30. Not 29T (off this card). Not Class A 38MB/38KB 150/40/40. Not Outlaw Class A / Wild West."
         }
       ]
     },
@@ -6707,7 +6900,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 0,
           chassis: "Mercedes-Benz Sprinter",
           fuelType: "Diesel",
-          notes: "OEM MY23–24 Sanctuary Sprinter. HP not printed — do not invent 208/211. Not Sanctuary Transit."
+          notes: "OEM MY23–24 Sanctuary Sprinter. HP not printed — do not invent 208/211. Not Sanctuary Transit. MY24 leftover 19A/19M/19R/24C tanks GAP — RVUSA 2024 file is still 19L/19P (19P pinned; 19L off 2024 FBY)."
         },
         {
           from: 2025,
@@ -6727,6 +6920,218 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
           fuelType: "Diesel",
           notes: "OEM MY27 Sanctuary 19A/24A spec: 2.0 211 / 332. Twin of Tranquility."
+        },
+        {
+          from: 2023,
+          to: 2023,
+          floorplans: ["19L"],
+          engine: "Mercedes-Benz Sprinter 2.0L I4 turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          freshWater: 24.8,
+          grayWater: 20,
+          blackWater: 6,
+          notes: "OEM MY23 Sanctuary 19L (RVUSA 2023-Thor-Motor-Coach-Sanctuary.pdf © MY 06/01/2022): Fresh/Waste/Gray 24.8/6/20 → 24.8/20/6. Twin of Tranquility. Not Sanctuary Transit."
+        },
+        {
+          from: 2023,
+          to: 2023,
+          floorplans: ["19P"],
+          engine: "Mercedes-Benz Sprinter 2.0L I4 turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          freshWater: 19,
+          grayWater: 20,
+          blackWater: 6,
+          notes: "OEM MY23 Sanctuary 19P (RVUSA 2023-Thor-Motor-Coach-Sanctuary.pdf © MY 06/01/2022): Fresh/Waste/Gray 19/6/20 → 19/20/6."
+        },
+        {
+          from: 2024,
+          to: 2024,
+          floorplans: ["19P"],
+          engine: "Mercedes-Benz Sprinter 2.0L I4 turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter",
+          fuelType: "Diesel",
+          freshWater: 19,
+          grayWater: 20,
+          blackWater: 4.75,
+          notes: "OEM MY24 Sanctuary 19P (RVUSA 2024-Thor-Motor-Coach-Sanctuary.pdf © MY 06/06/2023): Fresh/Waste/Gray 19/4.75/20 → 19/20/4.75. Card is still 19L/19P — 19L off 2024 FBY. 19A/19M/19R/24C GAP."
+        },
+        {
+          from: 2025,
+          to: 2025,
+          floorplans: ["19A", "19M"],
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 22,
+          grayWater: 20,
+          blackWater: 4.75,
+          notes: "OEM MY25 Sanctuary 19A / 19M (RVUSA 2025-Thor-Motor-Coach-Sanctuary.pdf © MY 07/10/2024): Fresh/Waste/Gray 22/4.75/20 → 22/20/4.75."
+        },
+        {
+          from: 2025,
+          to: 2025,
+          floorplans: ["19P"],
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 19,
+          grayWater: 20,
+          blackWater: 4.75,
+          notes: "OEM MY25 Sanctuary 19P (RVUSA 2025-Thor-Motor-Coach-Sanctuary.pdf © MY 07/10/2024): Fresh/Waste/Gray 19/4.75/20 → 19/20/4.75."
+        },
+        {
+          from: 2025,
+          to: 2025,
+          floorplans: ["19R"],
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 22,
+          grayWater: 26,
+          blackWater: 4.75,
+          notes: "OEM MY25 Sanctuary 19R (RVUSA 2025-Thor-Motor-Coach-Sanctuary.pdf © MY 07/10/2024): Fresh/Waste/Gray 22/4.75/26 → 22/26/4.75. Do not copy onto MY26 (19R dropped)."
+        },
+        {
+          from: 2025,
+          to: 2025,
+          floorplans: ["24A"],
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 35,
+          grayWater: 27.5,
+          blackWater: 26.5,
+          notes: "OEM MY25 Sanctuary 24A (RVUSA 2025-Thor-Motor-Coach-Sanctuary.pdf © MY 07/10/2024): Fresh/Waste/Gray 35/26.5/27.5 → 35/27.5/26.5. Not MY26 24A 35/33/26.5."
+        },
+        {
+          from: 2025,
+          to: 2026,
+          floorplans: ["24C"],
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 35,
+          grayWater: 20,
+          blackWater: 21,
+          notes: "OEM MY25–26 Sanctuary 24C (RVUSA 2025–2026-Thor-Motor-Coach-Sanctuary.pdf): Fresh/Waste/Gray 35/21/20 → 35/20/21. Do not copy onto MY27 (24C dropped)."
+        },
+        {
+          from: 2026,
+          to: 2026,
+          floorplans: ["19A"],
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 25,
+          grayWater: 26,
+          blackWater: 4.75,
+          notes: "OEM MY26 Sanctuary 19A (RVUSA 2026-Thor-Motor-Coach-Sanctuary.pdf © MY 05/11/2025): Fresh/Waste/Gray 25/4.75/26 → 25/26/4.75. Not MY25 22/20/4.75 or MY27 25/20/4.75."
+        },
+        {
+          from: 2026,
+          to: 2026,
+          floorplans: ["19M"],
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 22,
+          grayWater: 20,
+          blackWater: 4.75,
+          notes: "OEM MY26 Sanctuary 19M (RVUSA 2026-Thor-Motor-Coach-Sanctuary.pdf © MY 05/11/2025): Fresh/Waste/Gray 22/4.75/20 → 22/20/4.75."
+        },
+        {
+          from: 2026,
+          to: 2026,
+          floorplans: ["19P"],
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 19,
+          grayWater: 20,
+          blackWater: 4.75,
+          notes: "OEM MY26 Sanctuary 19P (RVUSA 2026-Thor-Motor-Coach-Sanctuary.pdf © MY 05/11/2025): Fresh/Waste/Gray 19/4.75/20 → 19/20/4.75."
+        },
+        {
+          from: 2026,
+          to: 2026,
+          floorplans: ["24A"],
+          engine: "Mercedes-Benz 2.0L I4 turbodiesel",
+          horsepower: 0,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 35,
+          grayWater: 33,
+          blackWater: 26.5,
+          notes: "OEM MY26 Sanctuary 24A (RVUSA 2026-Thor-Motor-Coach-Sanctuary.pdf © MY 05/11/2025): Fresh/Waste/Gray 35/26.5/33 → 35/33/26.5. Not MY25 35/27.5/26.5."
+        },
+        {
+          from: 2027,
+          to: 2027,
+          floorplans: ["19A"],
+          engine: "Mercedes-Benz 2.0L I4 211HP",
+          horsepower: 211,
+          torqueLbFt: 332,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 25,
+          grayWater: 20,
+          blackWater: 4.75,
+          notes: "OEM MY27 Sanctuary 19A (RVUSA 2027-Thor-Motor-Coach-Sanctuary.pdf © MY 06/25/2026): Fresh/Waste/Gray 25/4.75/20 → 25/20/4.75. Not MY26 25/26/4.75."
+        },
+        {
+          from: 2027,
+          to: 2027,
+          floorplans: ["19M"],
+          engine: "Mercedes-Benz 2.0L I4 211HP",
+          horsepower: 211,
+          torqueLbFt: 332,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 22,
+          grayWater: 20,
+          blackWater: 4.75,
+          notes: "OEM MY27 Sanctuary 19M (RVUSA 2027-Thor-Motor-Coach-Sanctuary.pdf © MY 06/25/2026): Fresh/Waste/Gray 22/4.75/20 → 22/20/4.75."
+        },
+        {
+          from: 2027,
+          to: 2027,
+          floorplans: ["19P"],
+          engine: "Mercedes-Benz 2.0L I4 211HP",
+          horsepower: 211,
+          torqueLbFt: 332,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 19,
+          grayWater: 20,
+          blackWater: 4.75,
+          notes: "OEM MY27 Sanctuary 19P (RVUSA 2027-Thor-Motor-Coach-Sanctuary.pdf © MY 06/25/2026): Fresh/Waste/Gray 19/4.75/20 → 19/20/4.75."
+        },
+        {
+          from: 2027,
+          to: 2027,
+          floorplans: ["24A"],
+          engine: "Mercedes-Benz 2.0L I4 211HP",
+          horsepower: 211,
+          torqueLbFt: 332,
+          chassis: "Mercedes-Benz Sprinter 2500 AWD / 3500 AWD",
+          fuelType: "Diesel",
+          freshWater: 35,
+          grayWater: 33,
+          blackWater: 26.5,
+          notes: "OEM MY27 Sanctuary 24A (RVUSA 2027-Thor-Motor-Coach-Sanctuary.pdf © MY 06/25/2026): Fresh/Waste/Gray 35/26.5/33 → 35/33/26.5."
         }
       ]
     },
@@ -6833,7 +7238,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           horsepower: 0,
           chassis: "Ford Transit AWD",
           fuelType: "Gas",
-          notes: "OEM MY23–24 Gemini AWD: Transit AWD EcoBoost. HP not printed — do not invent 310. Not Gemini TRIP."
+          notes: "OEM MY23–24 Gemini AWD: Transit AWD EcoBoost. HP not printed — do not invent 310. Not Gemini TRIP. 24KB tanks GAP on MY23 (not on 2023 card)."
         },
         {
           from: 2025,
@@ -6844,7 +7249,63 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Ford Transit AWD",
           transmission: "Ford 10R80 10-speed",
           fuelType: "Gas",
-          notes: "OEM MY25–27 Gemini AWD: Transit AWD EcoBoost 310 / 400. Not Gemini TRIP 22MT-only card."
+          notes: "OEM MY25–27 Gemini AWD: Transit AWD EcoBoost 310 / 400. MY27 tanks GAP — no dated 2027 Gemini brochure. Not Gemini TRIP 22MT."
+        },
+        {
+          from: 2023,
+          to: 2024,
+          floorplans: ["23TE", "23TW"],
+          engine: "Ford 3.5L EcoBoost V6 Transit AWD",
+          horsepower: 0,
+          chassis: "Ford Transit AWD",
+          fuelType: "Gas",
+          freshWater: 31,
+          grayWater: 37,
+          blackWater: 19.5,
+          notes: "OEM MY23–24 Gemini AWD 23TE / 23TW (RVUSA 2023–2024-Thor-Motor-Coach-Gemini.pdf © MY 04/01/2022 / 05/01/2023): Fresh/Waste/Gray 31/19.5/37 → 31/37/19.5. Not 24KB. Not Gemini TRIP 22MT."
+        },
+        {
+          from: 2024,
+          to: 2024,
+          floorplans: ["24KB"],
+          engine: "Ford 3.5L EcoBoost V6 Transit AWD",
+          horsepower: 0,
+          chassis: "Ford Transit AWD",
+          fuelType: "Gas",
+          freshWater: 31,
+          grayWater: 25.5,
+          blackWater: 18.5,
+          notes: "OEM MY24 Gemini AWD 24KB (RVUSA 2024-Thor-Motor-Coach-Gemini.pdf © MY 05/01/2023): Fresh/Waste/Gray 31/18.5/25.5 → 31/25.5/18.5. Not MY25 31/20/27. Not Gemini TRIP."
+        },
+        {
+          from: 2025,
+          to: 2026,
+          floorplans: ["23TW", "24JG"],
+          engine: "Ford 3.5L EcoBoost V6 310HP",
+          horsepower: 310,
+          torqueLbFt: 400,
+          chassis: "Ford Transit AWD",
+          transmission: "Ford 10R80 10-speed",
+          fuelType: "Gas",
+          freshWater: 31,
+          grayWater: 37,
+          blackWater: 19,
+          notes: "OEM MY25–26 Gemini AWD 23TW / 24JG (RVUSA 2025–2026-Thor-Motor-Coach-Gemini.pdf): Fresh/Waste/Gray 31/19/37 → 31/37/19. Not MY23–24 19.5 waste. Not Gemini TRIP 22MT 38/20/37."
+        },
+        {
+          from: 2025,
+          to: 2026,
+          floorplans: ["24KB"],
+          engine: "Ford 3.5L EcoBoost V6 310HP",
+          horsepower: 310,
+          torqueLbFt: 400,
+          chassis: "Ford Transit AWD",
+          transmission: "Ford 10R80 10-speed",
+          fuelType: "Gas",
+          freshWater: 31,
+          grayWater: 27,
+          blackWater: 20,
+          notes: "OEM MY25–26 Gemini AWD 24KB (RVUSA 2025–2026-Thor-Motor-Coach-Gemini.pdf): Fresh/Waste/Gray 31/20/27 → 31/27/20. Not MY24 31/18.5/25.5. Not Gemini TRIP."
         }
       ]
     },
@@ -6918,7 +7379,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           torqueLbFt: 250,
           chassis: "RAM ProMaster 1500 XT High Roof",
           fuelType: "Gas",
-          notes: "OEM MY23–24 Rize: ProMaster 1500 276/250 gas. Twin of Scope. Not Rize Plus."
+          notes: "OEM MY23–24 Rize: ProMaster 1500 276/250 gas. Twin of Scope. Not Rize Plus. MY23 18G tanks GAP (not on 2023 18A/18M card)."
         },
         {
           from: 2025,
@@ -6928,7 +7389,63 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           torqueLbFt: 250,
           chassis: "RAM ProMaster 1500 XT High Roof",
           fuelType: "Gas",
-          notes: "OEM MY25 Rize prints 276/250. MY27 18M spec prints 276/250. Twin of Scope. Not Rize Plus towable."
+          notes: "OEM MY25 Rize prints 276/250. MY27 18M spec prints 276/250. Twin of Scope. Not Rize Plus towable. MY26 18Z tanks GAP — May 2026 card is still 18G/18M."
+        },
+        {
+          from: 2023,
+          to: 2023,
+          floorplans: ["18A"],
+          engine: "RAM 3.6L Pentastar V6 276HP",
+          horsepower: 276,
+          torqueLbFt: 250,
+          chassis: "RAM ProMaster 1500 XT High Roof",
+          fuelType: "Gas",
+          freshWater: 19,
+          grayWater: 11,
+          blackWater: 5.5,
+          notes: "OEM MY23 Rize 18A (RVUSA 2023-Thor-Motor-Coach-Rize.pdf © MY 04/01/2022): Fresh/Waste/Gray 19/5.5/11 → 19/11/5.5. Not 18G (off this card). Not Rize Plus."
+        },
+        {
+          from: 2023,
+          to: 2027,
+          floorplans: ["18M"],
+          engine: "RAM 3.6L Pentastar V6 276HP",
+          horsepower: 276,
+          torqueLbFt: 250,
+          chassis: "RAM ProMaster 1500 XT High Roof",
+          fuelType: "Gas",
+          freshWater: 18,
+          grayWater: 20,
+          blackWater: 4.75,
+          notes: "OEM MY23–27 Rize 18M (RVUSA 2023–2027-Thor-Motor-Coach-Rize.pdf): Fresh/Waste/Gray 18/4.75/20 → 18/20/4.75. Twin of Scope. Not Rize Plus / Rory (no catalog key)."
+        },
+        {
+          from: 2024,
+          to: 2025,
+          floorplans: ["18G"],
+          engine: "RAM 3.6L Pentastar V6 276HP",
+          horsepower: 276,
+          torqueLbFt: 250,
+          chassis: "RAM ProMaster 1500 XT High Roof",
+          fuelType: "Gas",
+          freshWater: 20,
+          grayWater: 20,
+          blackWater: 4.75,
+          notes: "OEM MY24–25 Rize 18G (RVUSA 2024–2025-Thor-Motor-Coach-Rize.pdf): Fresh/Waste/Gray 20/4.75/20 → 20/20/4.75. Do not copy onto MY23 or MY26 FBY."
+        },
+        {
+          from: 2027,
+          to: 2027,
+          floorplans: ["18Z"],
+          engine: "RAM 3.6L Pentastar V6 276HP",
+          horsepower: 276,
+          torqueLbFt: 250,
+          chassis: "RAM ProMaster 1500 XT High Roof",
+          fuelType: "Gas",
+          freshWater: 16,
+          grayWater: 15,
+          blackWater: 4.75,
+          notes: "OEM MY27 Rize 18Z (RVUSA 2027-Thor-Motor-Coach-Rize.pdf © MY 06/25/2026): Fresh/Waste/Gray 16/4.75/15 → 16/15/4.75. MY26 18Z GAP."
         }
       ]
     },
