@@ -21,11 +21,20 @@ import { readFile, stat } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { extractFloorplanToken, parseCoachFromText } from "./parseCoach.ts";
+import {
+  extractFloorplanToken,
+  looksLikeCoachDesignationAsk,
+  normalizeCoachAsk,
+  parseCoachFromText,
+  parseSeriesAlias,
+  parseSpokenSeries,
+  seriesAliasEquals,
+} from "./parseCoach.ts";
 import {
   looksLikeInventoryOrCountQuestion,
   looksLikeMarketValueQuestion,
   looksLikeRepairQuestion,
+  looksLikeSpecQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
 
@@ -159,11 +168,24 @@ export function looksLikeOwnLotUnitListQuestion(text: string): boolean {
 }
 
 export function looksLikeOwnLotStockQuestion(text: string): boolean {
-  return (
+  if (
     looksLikeInventoryOrCountQuestion(text) ||
     looksLikeOwnLotListingPriceQuestion(text) ||
     Boolean(parseOwnLotStockNumber(text))
-  );
+  ) {
+    return true;
+  }
+  // "M series 25FW" / "Lineage M 25FW" / "27A Integra Vision" — designation
+  // stock probe. Spec / repair / market-value still go those paths.
+  if (
+    looksLikeCoachDesignationAsk(text) &&
+    !looksLikeSpecQuestion(text) &&
+    !looksLikeRepairQuestion(text) &&
+    !looksLikeMarketValueQuestion(text)
+  ) {
+    return true;
+  }
+  return false;
 }
 
 /** Snapshot loaded with units — we can answer lot counts from the file. */
@@ -582,12 +604,8 @@ export function looksLikeGhostOwnLotModel(model: string): boolean {
 }
 
 function lotHasModel(units: OwnLotUnit[], model: string): boolean {
-  const fm = norm(model);
-  if (!fm || !units.length) return false;
-  return units.some((u) => {
-    const um = norm(u.model);
-    return Boolean(um && (um.includes(fm) || fm.includes(um)));
-  });
+  if (!norm(model) || !units.length) return false;
+  return units.some((u) => unitModelMatchesAsk(u, model));
 }
 
 /**
@@ -635,18 +653,33 @@ export function parseOwnLotAsk(
 ): OwnLotFilter {
   const t = normalizeAskText(text);
   const parsed = parseCoachFromText(t);
+  const normalized = normalizeCoachAsk(t);
   const filter: OwnLotFilter = {};
   if (parsed.year) filter.year = parsed.year;
   if (parsed.make) filter.make = parsed.make;
-  const model = sanitizeOwnLotParsedModel(parsed.model, locations, {
+  const spokenModel =
+    parsed.model ||
+    (normalized.seriesCode
+      ? normalized.seriesFamily
+        ? `${normalized.seriesFamily} ${normalized.seriesCode}`
+        : `${normalized.seriesCode} series`
+      : "");
+  const model = sanitizeOwnLotParsedModel(spokenModel, locations, {
     make: parsed.make,
     units,
   });
   if (model) filter.model = model;
   const trim =
-    (parsed.floorplan || "").replace(/\s+/g, "") ||
+    (parsed.floorplan || normalized.floorplan || "").replace(/\s+/g, "") ||
     extractFloorplanToken(t);
-  if (trim && (filter.make || filter.model || parsed.make)) {
+  if (
+    trim &&
+    (filter.make ||
+      filter.model ||
+      parsed.make ||
+      normalized.seriesCode ||
+      parsed.floorplan)
+  ) {
     filter.trim = trim;
   }
 
@@ -906,13 +939,24 @@ function unitTrimMatchesAsk(unit: OwnLotUnit, ask: string): boolean {
   return false;
 }
 
+function seriesCodesAlign(ask: string, unitModel: string): boolean {
+  const spoken = parseSpokenSeries(ask) || parseSeriesAlias(norm(ask));
+  const unit = parseSeriesAlias(norm(unitModel));
+  if (!spoken?.code || !unit?.code) return false;
+  if (spoken.code !== unit.code) return false;
+  if (!spoken.family || !unit.family) return true;
+  return spoken.family === unit.family;
+}
+
 function unitModelMatchesAsk(unit: OwnLotUnit, wanted: string): boolean {
   const um = norm(unit.model);
   const fm = norm(wanted);
   if (!fm) return true;
   if (um && (um.includes(fm) || fm.includes(um))) return true;
+  if (seriesAliasEquals(um, fm) || seriesCodesAlign(fm, um)) return true;
   const blob = norm(`${unit.model} ${unit.trim}`);
-  return Boolean(blob && (blob.includes(fm) || fm.includes(blob)));
+  if (blob && (blob.includes(fm) || fm.includes(blob))) return true;
+  return false;
 }
 
 export function unitMatchesFilter(
