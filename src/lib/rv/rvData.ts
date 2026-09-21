@@ -37182,8 +37182,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       fuelStationGal: 60,
       generatorFuelGal: 60,
       garageFits: "Full-size UTV(s) by plan — 6.5–17 ft garage/flex",
-      gvwrLbs: 23000,
-      uvwLbs: 18900,
+      // GVWR/UVW GAP — omit model stamps. Dated OEM_FLOORPLAN_ROWS are SoT.
       exteriorHeightIn: 160,
       exteriorWidthIn: 101,
       founded: 2019,
@@ -37275,8 +37274,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       fuelStationGal: 60,
       generatorFuelGal: 60,
       garageFits: "Full-size UTV(s) by plan — 6.5–17 ft garage/flex",
-      gvwrLbs: 23000,
-      uvwLbs: 18900,
+      // GVWR/UVW GAP — omit model stamps. Dated OEM_FLOORPLAN_ROWS are SoT.
       exteriorHeightIn: 160,
       exteriorWidthIn: 101,
       founded: 2019,

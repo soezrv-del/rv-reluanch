@@ -255,6 +255,36 @@ test("yearEnd / last-exact-pin clamp is shared — later FBY cannot steal a pin"
   assert.equal(brochure.horsepower, "—");
 });
 
+test("Brinkley Model G/T 3250: OEM 22k floorplan row wins; no model-level 23k stamp", () => {
+  const g = factsFor("2024", "Brinkley", "Model G", "3250");
+  const t = factsFor("2024", "Brinkley", "Model T", "3250");
+  assert.equal(g.spec.gvwrLbs, undefined);
+  assert.equal(g.spec.uvwLbs, undefined);
+  assert.equal(t.spec.gvwrLbs, undefined);
+  assert.equal(t.spec.uvwLbs, undefined);
+  assert.equal(g.snap.gvwrLbs, undefined);
+  assert.equal(t.snap.gvwrLbs, undefined);
+  // Dated OEM_FLOORPLAN_ROWS (source: "Brinkley Model G 3250 brochure") stay SoT.
+  assert.equal(g.brochure.gvwrLbs, 22_000);
+  assert.equal(t.brochure.gvwrLbs, 22_000);
+  assert.match(g.brochure.gvwr, /22,?000/);
+  assert.match(t.brochure.gvwr, /22,?000/);
+  assert.doesNotMatch(g.brochure.gvwr, /23,?000/);
+  assert.doesNotMatch(t.brochure.gvwr, /23,?000/);
+
+  const gx = RV_DATA.Brinkley?.["Model Gx"];
+  const z = RV_DATA.Brinkley?.["Model Z"];
+  const i = RV_DATA.Brinkley?.["Model I"];
+  const ix = RV_DATA.Brinkley?.["Model Ix"];
+  const tAir = RV_DATA.Brinkley?.["Model T Air"];
+  assert.ok(gx && z && i && ix && tAir);
+  assert.equal(gx.gvwrLbs, undefined);
+  assert.equal(z.gvwrLbs, undefined);
+  assert.equal(i.gvwrLbs, undefined);
+  assert.equal(ix.gvwrLbs, undefined);
+  assert.equal(tAir.gvwrLbs, undefined);
+});
+
 test("resolution path is shared — no coach-specific Ambassador/Jayco/Thor invent", () => {
   const honesty = src("catalogHonesty.ts");
   const brochure = src("brochureSpecs.ts");

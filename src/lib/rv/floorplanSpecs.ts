@@ -54,6 +54,8 @@ const OEM_FLOORPLAN_ROWS: Array<{
   // ── Brinkley Model T / Model G (luxury 5th-wheel toy haulers) ───────────
   // Official OEM site markets the TH line as Model G; catalog also indexes Model T.
   // Specs from Brinkley RV Model G product pages (current brochure numbers).
+  // Model G / Model T catalog stamps (gvwrLbs/uvwLbs) were cleared so these
+  // dated floorplan rows are SoT — do not restamp 23000 onto 22k plans.
   {
     makeIncludes: "brinkley",
     modelIncludes: "model t",
