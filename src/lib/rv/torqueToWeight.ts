@@ -47,6 +47,7 @@
  *
  * Locked champions (do not recompute from catalog drift):
  *   Class A Diesel  American Dream 45A X15     R* = 38.2  (1950 / 51000)
+ *     51k is the locked formula basis, not a live 2019–22 OEM pin (Eagle bleed).
  *   Class A Gas     Jayco Alante 27A           R* = 28.9  (468 / 16200)
  *   Super C         Grand Design Lineage F 31ZW R* = 43.2  (950 / 22000)
  *   Class C         Forest River Sunseeker TS  R* = 38.6  (400 / 10360)

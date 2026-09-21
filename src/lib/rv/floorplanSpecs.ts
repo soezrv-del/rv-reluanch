@@ -2167,11 +2167,13 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   // Entegra Emblem — 2025–2026 RVUSA Emblem cards + 2027 OEM Emblem page: F53 24,000.
   ...gvwrPins("entegra", "emblem", 2025, 2027, ["36B", "36H", "36U"], 24000),
   // Jayco Precept — F53 22k on 31UL/34B/34G; 24k on 36A/36C. Not Precept Prestige.
-  // Jayco 2026–2027 Precept flyer + 2024 Precept brochure chassis line.
+  // 22k pin starts MY18 (first card that prints 22,000). MY14–16 OEM brochure is
+  // 18,000 — catalog powertrain already holds that; do not stamp 22k backward.
+  // Jayco 2026–2027 Precept flyer + 2024 Precept brochure chassis line (22k era).
   {
     makeIncludes: "jayco",
     modelIncludes: "precept",
-    yearMin: 2014,
+    yearMin: 2018,
     yearMax: 2027,
     floorplan: "31UL",
     gvwrLbs: 22000,
@@ -2211,9 +2213,10 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   ...gvwrPins("american coach", "american tradition", 2021, 2026, ["42Q", "42V"], 47000),
   ...gvwrPins("american coach", "american tradition", 2021, 2023, ["37S"], 41000),
   // American Dream — 2019 RVUSA Dream table + later brochure + 2025 Fleetwood dealer spec table.
+  // 42Q / 42V print 47,000. 45A 51,000 was American Eagle bleed — GAP 2019–2022
+  // rather than invent 47,000. Dated 2025 dealer table still pins 45A/45D/45P 54,000.
   ...gvwrPins("american coach", "american dream", 2019, 2025, ["42Q"], 47000),
   ...gvwrPins("american coach", "american dream", 2020, 2022, ["42V"], 47000),
-  ...gvwrPins("american coach", "american dream", 2019, 2022, ["45A"], 51000),
   ...gvwrPins("american coach", "american dream", 2025, 2025, ["45A", "45D", "45P"], 54000),
   // American Eagle — 2015 American Eagle brochure weights & measures (51k all four 45' plans).
   ...gvwrPins("american coach", "american eagle", 2015, 2015, ["45A", "45B", "45N", "45T"], 51000),
@@ -2287,6 +2290,8 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   ...gvwrPins("coachmen", "pursuit", 2024, 2026, ["29SS"], 18000),
   // Coachmen Mirada — 2024 Mirada brochure: 29FW = 18,000.
   ...gvwrPins("coachmen", "mirada", 2024, 2026, ["29FW"], 18000),
+  // Mirada 35OS 22,000 is PIN_ONLY / undated — no dated OEM table in-repo.
+  // Leave the pin; do not invent a brochure year or rewrite the floorplan code.
   ...gvwrPins("coachmen", "mirada", 2012, 2022, ["35OS"], 22000),
   // Newmar Bay Star — 2026 Bay Star brochure chassis table (all listed plans 26,000).
   ...gvwrPins(

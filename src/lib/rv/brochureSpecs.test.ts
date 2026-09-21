@@ -240,6 +240,12 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     24000,
   );
   assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "31UL"), 22000);
+  assert.equal(findOemGvwrLbs("2018", "Jayco", "Precept", "31UL"), 22000);
+  // MY14–16 OEM brochure is 18k; 22k pin must not stamp backward.
+  assert.equal(findOemGvwrLbs("2014", "Jayco", "Precept", "31UL"), null);
+  assert.equal(findOemGvwrLbs("2015", "Jayco", "Precept", "31UL"), null);
+  assert.equal(findOemGvwrLbs("2016", "Jayco", "Precept", "31UL"), null);
+  assert.equal(findOemGvwrLbs("2017", "Jayco", "Precept", "31UL"), null);
   assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "36A"), 24000);
   assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "36C"), 24000);
   // Do not leak Vision XL pins onto bare Vision or Precept Prestige.
@@ -346,14 +352,30 @@ test("Tradition 42V/42Q brochure GVWR is 47,000 — not catalog weightRange mid"
     findOemGvwrLbs("2025", "American Coach", "American Dream", "45A"),
     54000,
   );
+  // 51k on Dream 45A was Eagle bleed — GAP, do not invent 47,000.
   assert.equal(
     findOemGvwrLbs("2020", "American Coach", "American Dream", "45A"),
-    51000,
+    null,
+  );
+  assert.equal(
+    findOemGvwrLbs("2019", "American Coach", "American Dream", "45A"),
+    null,
+  );
+  assert.equal(
+    findOemGvwrLbs("2022", "American Coach", "American Dream", "45A"),
+    null,
   );
   assert.equal(
     findOemGvwrLbs("2023", "American Coach", "American Dream", "45A"),
     null,
   );
+  assert.equal(
+    findOemGvwrLbs("2015", "American Coach", "American Eagle", "45A"),
+    51000,
+  );
+  // Mirada 35OS stays PIN_ONLY 22k — no dated OEM source in-repo, do not invent.
+  assert.equal(findOemGvwrLbs("2015", "Coachmen", "Mirada", "35OS"), 22000);
+  assert.equal(findOemGvwrLbs("2022", "Coachmen", "Mirada", "35OS"), 22000);
   assert.equal(
     findOemGvwrLbs("2025", "American Coach", "American Eagle", "45J"),
     null,
@@ -9645,6 +9667,12 @@ test("Jayco 2013–2014 OEM year-first floorplans + powertrain pins", () => {
   assert.equal(pr14!.torqueLbFt, 457);
   assert.match(pr14!.engine, /6\.8|Triton/);
   assert.equal(pr14!.fuelType, "Gas");
+  // Catalog MY14 18k stays; OEM 22k pin must not rewrite this band.
+  assert.match(
+    pr,
+    /from: 2014,\s*to: 2014,[\s\S]*?gvwrLbs: 18000,[\s\S]*?OEM 2014 Precept 14-PRCT-PL: F53 18k GVWR/,
+  );
+  assert.equal(findOemGvwrLbs("2014", "Jayco", "Precept", "31UL"), null);
   assert.equal(findPowertrainCorrection("2013", "Jayco", "Precept Prestige", "36B"), null);
   assert.equal(findPowertrainCorrection("2014", "Jayco", "Precept Prestige", "36U"), null);
 
