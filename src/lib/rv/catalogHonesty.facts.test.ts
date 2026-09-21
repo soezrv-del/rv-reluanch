@@ -607,6 +607,18 @@ test("Roadtrek Facts SoT: dated library PDFs + RVUSA year cards; ghosts quaranti
   assert.match(popular, /"2011": \[\s*"190-Popular",\s*"210-Popular"\s*\]/);
   assert.match(popular, /"2017": \[\s*"190 Popular",\s*"210 Popular"\s*\]/);
   assert.doesNotMatch(popular, /"2009":|"2010":|"2026":|"170D"|"190-Versatile"|"200-Versatile"|"210-Versatile"/);
+  // Tip engine must not pin 2017 Vortec 6.0 onto yearStart 2000. Dated bands stay intact.
+  const popularTip = popular.slice(0, popular.indexOf("powertrainByYear"));
+  assert.match(popularTip, /engine: "Chevrolet Express gas \(confirm brochure\)"/);
+  assert.doesNotMatch(popularTip, /engine: "Chevrolet Vortec 6\.0 V8 gas"/);
+  assert.match(
+    popular,
+    /from: 2011,\s*to: 2013,\s*engine: "Chevrolet 4\.8L \/ 6\.0L SFI gas V8 \(by Popular length\)"/,
+  );
+  assert.match(
+    popular,
+    /from: 2017,\s*to: 2018,\s*engine: "Chevrolet Vortec 6\.0 V8 gas",\s*horsepower: 323/,
+  );
 });
 
 test("Holiday Rambler Facts SoT: MY2027 OEM+PDF locks; GAP Ambassador/Navigator/Augusta/Xpedition", () => {

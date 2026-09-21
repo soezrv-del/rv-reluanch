@@ -18549,3 +18549,68 @@ test("Marathon Coach NEW MAKE honesty: brand-as-model; exact FBY; no sibling ble
   assert.doesNotMatch(planLists, /"P50"|"Elegant Lady"|"X2-C"|"X2-M"/);
   assert.doesNotMatch(mc, /\n    "H3-45 VIP": \{|\n    "P50": \{|\n    "Elegant Lady": \{/);
 });
+
+test("MY2000–2006 leftovers: Popular tip bleed + fby-before-yearStart + Jamboree/Tioga ghosts", async () => {
+  const { RV_DATA } = await loadLiveCatalog();
+
+  const popular = RV_DATA.Roadtrek?.Popular;
+  assert.ok(popular, "expected Roadtrek Popular");
+  assert.equal(popular.engine, "Chevrolet Express gas (confirm brochure)");
+  const snap2000 = resolveYearSnapshot(popular, "2000", "190-Popular");
+  assert.notEqual(snap2000.engine, "Chevrolet Vortec 6.0 V8 gas");
+  assert.equal(snap2000.horsepower, undefined);
+  const snap2011 = resolveYearSnapshot(popular, "2011", "190-Popular");
+  assert.match(String(snap2011.band?.engine || ""), /4\.8L \/ 6\.0L/);
+  const snap2017 = resolveYearSnapshot(popular, "2017", "190 Popular");
+  assert.equal(snap2017.engine, "Chevrolet Vortec 6.0 V8 gas");
+  assert.equal(snap2017.horsepower, 323);
+
+  const block = src("rvData.ts");
+  function fbyYear(srcBlock: string, year: number): string[] | null {
+    const ym = srcBlock.match(new RegExp(`"${year}": \\[([^\\]]*)\\]`));
+    if (!ym) return null;
+    return [...ym[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  }
+
+  const tropi = block.slice(
+    block.indexOf('    "Tropi-Cal": {'),
+    block.indexOf("\n  \"Gulf Stream Coach\": {"),
+  );
+  assert.match(tropi, /yearStart:\s*2001/);
+  assert.equal(fbyYear(tropi, 1998), null);
+  assert.equal(fbyYear(tropi, 1999), null);
+  assert.equal(fbyYear(tropi, 2000), null);
+  assert.deepEqual(fbyYear(tropi, 2001), ["40PB", "43RQ"]);
+
+  const intrigue = block.slice(
+    block.indexOf("    Intrigue: {"),
+    block.indexOf("    Allure: {"),
+  );
+  assert.match(intrigue, /yearStart:\s*1999/);
+  assert.match(intrigue, /engine: "Cummins ISC\/ISL class \(confirm brochure\)"/);
+  assert.equal(fbyYear(intrigue, 1998), null);
+  assert.deepEqual(fbyYear(intrigue, 1999), ["500"]);
+
+  const providence = block.slice(
+    block.indexOf("    Providence: {"),
+    block.indexOf('\n  "Winnebago Classic": {'),
+  );
+  assert.match(providence, /yearStart:\s*1999/);
+  assert.equal(fbyYear(providence, 1998), null);
+  assert.deepEqual(fbyYear(providence, 1999), ["39D"]);
+
+  const fleet = block.slice(block.indexOf("\n  Fleetwood: {"), block.indexOf("\n  Jayco: {"));
+  const jamboree = fleet.slice(fleet.indexOf("    Jamboree: {"), fleet.indexOf("    Tioga: {"));
+  const tioga = fleet.slice(fleet.indexOf("    Tioga: {"), fleet.indexOf('    "Tioga Ranger"'));
+  // 2006_ja_f — drop ghost 25B only. Keep 29V/31M. Do not rewrite 2007+.
+  assert.deepEqual(fbyYear(jamboree, 2005), ["29V", "31M"]);
+  assert.deepEqual(fbyYear(jamboree, 2006), ["29V", "31M"]);
+  assert.equal((fbyYear(jamboree, 2005) ?? []).includes("25B"), false);
+  assert.deepEqual(fbyYear(jamboree, 2007), ["25B", "29V", "31M"]);
+  // 2006_ti_f — drop ghost 24K/25G. Keep 31M. Do not rewrite 2007+.
+  assert.deepEqual(fbyYear(tioga, 2005), ["31M"]);
+  assert.deepEqual(fbyYear(tioga, 2006), ["31M"]);
+  assert.equal((fbyYear(tioga, 2005) ?? []).includes("24K"), false);
+  assert.equal((fbyYear(tioga, 2005) ?? []).includes("25G"), false);
+  assert.deepEqual(fbyYear(tioga, 2007), ["24K", "25G", "31M"]);
+});
