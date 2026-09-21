@@ -31,8 +31,7 @@ import {
   omitPlaceholderCatalogTanks,
   resolveHonestTanks,
 } from "./placeholderTanks.ts";
-import { buildBrochureSpecs, pickPowertrainBand } from "./brochureSpecs.ts";
-import { RV_DATA } from "./rvData.ts";
+import { loadLiveCatalog } from "../../../scripts/load-live-catalog.mjs";
 
 const DREAM_ENGINE = "Cummins L9 450 std / X15 605 opt";
 const root = dirname(fileURLToPath(import.meta.url));
@@ -10226,7 +10225,7 @@ test("Entegra Coach OEM tank pins: dated brochure gallons only; adjacent years a
   assert.doesNotMatch(accoladeXt, /from: 2027[\s\S]*?freshWater: 64/);
 });
 
-test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / MY14–22 / MY26–27 GAP", () => {
+test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / MY14–22 / MY26–27 GAP", async () => {
   const block = src("rvData.ts");
   const j0 = block.indexOf("  Jayco: {");
   const j1 = block.indexOf('  "American Coach": {');
@@ -10279,19 +10278,37 @@ test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / M
   assert.doesNotMatch(precept, /from: 2027,/);
   assert.doesNotMatch(precept, /to: 2026,/);
 
+  const { RV_DATA } = await loadLiveCatalog();
   const spec = RV_DATA.Jayco.Precept;
   const prestigeSpec = RV_DATA.Jayco["Precept Prestige"];
   assert.ok(spec, "Jayco Precept catalog spec");
   assert.ok(prestigeSpec, "Jayco Precept Prestige catalog spec");
 
-  const trio = (
-    year: number,
-    floorplan: string,
-    modelSpec = spec,
-  ) => {
-    const band = pickPowertrainBand(modelSpec, year, floorplan);
-    return resolveHonestTanks(modelSpec, band);
+  type Band = {
+    from: number;
+    to: number;
+    floorplans?: string[];
+    freshWater?: number;
+    grayWater?: number;
+    blackWater?: number;
+    engine?: string;
   };
+  const pickBand = (
+    modelSpec: { powertrainByYear?: Band[] },
+    year: number,
+    floorplan = "",
+  ): Band | null => {
+    const inYear = (modelSpec.powertrainByYear ?? []).filter(
+      (b) => year >= b.from && year <= b.to,
+    );
+    if (floorplan) {
+      const fpHit = inYear.find((b) => b.floorplans?.includes(floorplan));
+      if (fpHit) return fpHit;
+    }
+    return inYear.find((b) => !b.floorplans?.length) ?? null;
+  };
+  const trio = (year: number, floorplan: string, modelSpec = spec) =>
+    resolveHonestTanks(modelSpec, pickBand(modelSpec, year, floorplan));
 
   for (const year of [2023, 2024, 2025]) {
     assert.deepEqual(trio(year, "31UL"), {
@@ -10321,7 +10338,7 @@ test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / M
     }, `Precept ${year} 36C`);
   }
 
-  const facts2025 = buildBrochureSpecs(spec, "2025", "Jayco", "Precept", "31UL");
+  const facts2025 = displayTanks(spec, pickBand(spec, 2025, "31UL"));
   assert.equal(facts2025.freshWater, "72 gal");
   assert.equal(facts2025.grayWater, "40 gal");
   assert.equal(facts2025.blackWater, "50 gal");
@@ -10340,7 +10357,7 @@ test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / M
     assert.equal(out.blackWater, undefined, `GAP ${year} ${floorplan || "(no FP)"} black`);
   }
 
-  const facts2026 = buildBrochureSpecs(spec, "2026", "Jayco", "Precept", "31UL");
+  const facts2026 = displayTanks(spec, pickBand(spec, 2026, "31UL"));
   assert.equal(facts2026.freshWater, CONFIRM_BROCHURE);
   assert.equal(facts2026.grayWater, CONFIRM_BROCHURE);
   assert.equal(facts2026.blackWater, CONFIRM_BROCHURE);
@@ -10352,7 +10369,7 @@ test("Jayco Precept OEM tank pins: MY23–25 brochure gallons only; Prestige / M
     assert.equal(out.blackWater, undefined, `Prestige ${year} 36B GAP`);
   }
 
-  const wide2025 = pickPowertrainBand(spec, 2025);
+  const wide2025 = pickBand(spec, 2025);
   assert.ok(wide2025);
   assert.equal(wide2025!.floorplans, undefined);
   assert.equal(wide2025!.freshWater, undefined);
