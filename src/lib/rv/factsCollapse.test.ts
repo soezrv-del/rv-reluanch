@@ -63,8 +63,8 @@ test("Facts report sections collapse by default with title+headline", () => {
   );
   assert.match(
     detail,
-    /title="Vehicle specifications"\s+defaultOpen/,
-    "lot-desk specs must be expanded on first view",
+    /title="Vehicle specifications"\s+defaultOpen(?:=\{true\})?/,
+    "#383: Vehicle specifications under the hero default expanded — keep across theme rebases",
   );
 });
 
