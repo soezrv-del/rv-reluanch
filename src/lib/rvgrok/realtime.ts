@@ -17,7 +17,8 @@ import {
   type LiveVoicePrewarm,
 } from "./liveVoice";
 import type { ActiveCoach } from "../rv/activeCoach";
-import { buildChatGrounding } from "./grounding";
+import { buildChatGrounding, namedCoachConflictsLock } from "./grounding";
+import { parseCoachFromText } from "./parseCoach";
 import { looksLikeRepairQuestion, REPAIR_VOICE_PLAYBOOK } from "./repairMode";
 import {
   decideVoiceWebResearch,
@@ -704,6 +705,23 @@ export class GrokRealtimeSession {
       query: transcript,
       facts: this.facts,
     });
+    if (
+      grounded.identity &&
+      namedCoachConflictsLock(parseCoachFromText(transcript), this.facts)
+    ) {
+      this.catalogContext = grounded.block || this.catalogContext;
+      const id = grounded.identity;
+      this.facts =
+        id.year && id.make && id.model
+          ? {
+              year: id.year,
+              make: id.make,
+              model: id.model,
+              floorplan: id.floorplan,
+              updatedAt: new Date().toISOString(),
+            }
+          : null;
+    }
     const decision = decideVoiceWebResearch({
       transcript,
       specs: grounded.specs,

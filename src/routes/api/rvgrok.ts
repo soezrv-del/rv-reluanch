@@ -2,7 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
 import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
-import { appendGrounding, buildChatGrounding } from "@/lib/rvgrok/grounding";
+import {
+  appendGrounding,
+  askNamesCoachIdentity,
+  buildChatGrounding,
+} from "@/lib/rvgrok/grounding";
+import { parseCoachFromText } from "@/lib/rvgrok/parseCoach";
 import {
   formatOwnLotBlock,
   loadOwnLotSnapshot,
@@ -645,12 +650,18 @@ export const Route = createFileRoute("/api/rvgrok")({
         // Server re-grounds the latest ask so a phone/API probe without
         // client catalogContext still locks Lineage Series M (and friends).
         // A resolved hard row must not browse into a "not in catalog" story.
+        // If this turn names a different coach, do not keep a stale client
+        // Lineage (etc.) lock from a previous Facts / session coach.
         const serverGrounded = buildChatGrounding({
           query: lastPlain,
           agentMode,
         });
-        const catalogContext =
-          serverGrounded.block || body.catalogContext || "";
+        const lastNamesCoach = askNamesCoachIdentity(
+          parseCoachFromText(lastPlain),
+        );
+        const catalogContext = lastNamesCoach
+          ? serverGrounded.block || ""
+          : serverGrounded.block || body.catalogContext || "";
 
         let ownLotNotes: string | undefined;
         let skipWebForLot = false;
