@@ -3,27 +3,36 @@
 
 @theme {
   /*
-   * Tide visual SoT — tideguide.com / Apple Design Award 2026
-   * Visuals & Graphics. Aquatic, Liquid Glass–adjacent, sky-soft.
-   * Night field is deep navy-teal (tide night), not near-black (#050508).
+   * SoT = Tiimo soft-color planner (iPhone App of the Year 2025 /
+   * ADA Inclusivity 2024). Glanceable day chunks, calm scan-first
+   * hierarchy, low chrome. Tide tokens superseded as primary —
+   * aliases remain, remapped to Tiimo slate-lavender-mint.
    */
-  --color-tide-bg: #0c1a22;
-  --color-tide-surface: #152830;
-  --color-tide-aqua: #86c0b8;
-  --color-tide-foam: #e6f2ef;
-  --color-tide-ink: #f3f8f6;
+  --color-tiimo-bg: #1c1b26;
+  --color-tiimo-surface: #2a2836;
+  --color-tiimo-mint: #8fc9b6;
+  --color-tiimo-lavender: #b5a8d0;
+  --color-tiimo-peach: #e0b4a4;
+  --color-tiimo-foam: #f0eef4;
+  --color-tiimo-ink: #f7f5f9;
 
-  --color-bg: var(--color-tide-bg);
-  --color-bg-elevated: #12242d;
-  --color-surface: var(--color-tide-surface);
-  --color-surface-2: #1b323c;
-  --color-fg: var(--color-tide-ink);
-  --color-muted: color-mix(in srgb, var(--color-tide-foam) 78%, transparent);
-  --color-dim: color-mix(in srgb, var(--color-tide-foam) 52%, transparent);
-  --color-accent: var(--color-tide-aqua);
+  --color-tide-bg: var(--color-tiimo-bg);
+  --color-tide-surface: var(--color-tiimo-surface);
+  --color-tide-aqua: var(--color-tiimo-mint);
+  --color-tide-foam: var(--color-tiimo-foam);
+  --color-tide-ink: var(--color-tiimo-ink);
 
-  --color-border: color-mix(in srgb, var(--color-tide-foam) 20%, transparent);
-  --color-border-strong: color-mix(in srgb, var(--color-tide-foam) 32%, transparent);
+  --color-bg: var(--color-tiimo-bg);
+  --color-bg-elevated: #242230;
+  --color-surface: var(--color-tiimo-surface);
+  --color-surface-2: #353342;
+  --color-fg: var(--color-tiimo-ink);
+  --color-muted: color-mix(in srgb, var(--color-tiimo-foam) 78%, transparent);
+  --color-dim: color-mix(in srgb, var(--color-tiimo-foam) 52%, transparent);
+  --color-accent: var(--color-tiimo-mint);
+
+  --color-border: color-mix(in srgb, var(--color-tiimo-foam) 16%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--color-tiimo-foam) 26%, transparent);
 
   --color-ruby: #d42535;
   --color-ruby-deep: #c01f2e;
@@ -37,10 +46,10 @@
   --color-green: #3dba8a;
   --color-amber: #e0a04a;
 
-  --color-gold: #c9b896;
-  --color-gold-bright: #e8dcc0;
-  --color-gold-dim: rgba(201, 184, 150, 0.18);
-  --color-gold-border: rgba(201, 184, 150, 0.45);
+  --color-gold: #c2b6a0;
+  --color-gold-bright: #e2d8c4;
+  --color-gold-dim: rgba(194, 182, 160, 0.14);
+  --color-gold-border: rgba(194, 182, 160, 0.32);
 
   --color-sapphire: #4a86f0;
   --color-sapphire-deep: #0a1e5c;
@@ -62,13 +71,13 @@
   --radius-pill: 999px;
 
   --shadow-glow-ruby: 0 0 28px rgba(212, 37, 53, 0.4);
-  --shadow-glow-gold: 0 0 32px rgba(201, 184, 150, 0.28);
+  --shadow-glow-gold: 0 0 32px rgba(194, 182, 160, 0.18);
   --shadow-glow-sapphire: 0 0 36px rgba(80, 160, 255, 0.35);
-  --shadow-panel: 0 16px 48px rgba(6, 18, 24, 0.36);
+  --shadow-panel: 0 16px 48px rgba(18, 16, 28, 0.26);
   --shadow-glass:
-    0 12px 36px rgba(6, 20, 26, 0.28),
-    inset 0 1px 0 color-mix(in srgb, var(--color-tide-foam) 32%, transparent),
-    inset 0 -1px 0 color-mix(in srgb, var(--color-tide-aqua) 8%, transparent);
+    0 12px 36px rgba(18, 16, 28, 0.2),
+    inset 0 1px 0 color-mix(in srgb, var(--color-tiimo-foam) 26%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--color-tiimo-mint) 6%, transparent);
 
   --dock-label-size: 1.125rem;
   --dock-label-size-sm: 1.1875rem;
