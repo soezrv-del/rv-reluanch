@@ -51,13 +51,14 @@ test("Lot stock is a suite page, not a dock tab and not RV Grok", () => {
   assert.match(lot, /fetchLotSnapshot/);
   assert.match(lot, /searchLotUnits/);
   assert.doesNotMatch(lot, /rvData|from "@\/lib\/rv\/catalog"/);
+  assert.doesNotMatch(lot, /ownLotInventory/);
   assert.doesNotMatch(lot, /DialaBot|dialabot/i);
   assert.doesNotMatch(lot, /onOpenGrok|setGrokSeed/);
 
-  assert.match(page, /OWN_LOT_PUBLIC_URL_PATH/);
-  assert.match(page, /rowToUnit/);
+  assert.match(page, /\/inventory\/own-lot-latest\.json/);
+  assert.doesNotMatch(page, /ownLotInventory|from "\.\.\/rvgrok\/ownLotInventory/);
   assert.doesNotMatch(page, /rvData|from "@\/lib\/rv\/catalog"/);
-  assert.doesNotMatch(page, /formatOwnLotBlock|formatOwnLotInjection/);
+  assert.doesNotMatch(page, /node:fs|createRequire|formatOwnLotBlock/);
 });
 
 test("RV Grok prompts and DialaBot stay out of this page", () => {

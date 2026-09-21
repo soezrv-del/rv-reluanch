@@ -101,7 +101,7 @@ export function LotStockApp() {
           <p className="text-[10px] font-bold tracking-[0.16em] text-accent">
             RV COUNTRY
           </p>
-          <h1 className="flex items-center gap-2 text-[28px] font-bold leading-none tracking-tight text-fg">
+          <h1 className="flex items-center gap-2 text-[28px] font-bold leading-snug text-fg">
             <Warehouse className="size-6 text-accent" aria-hidden />
             Lot stock
           </h1>

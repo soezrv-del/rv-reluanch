@@ -10,8 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as LotRouteImport } from './routes/lot'
 import { Route as ApiRouteRouteImport } from './routes/api/route'
+import { Route as LotRouteImport } from './routes/lot'
 import { Route as ApiCampsRouteImport } from './routes/api/camps'
 import { Route as ApiDumpsRouteImport } from './routes/api/dumps'
 import { Route as ApiFuelRouteImport } from './routes/api/fuel'
@@ -42,14 +42,14 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LotRoute = LotRouteImport.update({
-  id: '/lot',
-  path: '/lot',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiRouteRoute = ApiRouteRouteImport.update({
   id: '/api',
   path: '/api',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LotRoute = LotRouteImport.update({
+  id: '/lot',
+  path: '/lot',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCampsRoute = ApiCampsRouteImport.update({
@@ -176,8 +176,8 @@ const ApiRvgrokWebResearchRoute = ApiRvgrokWebResearchRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/lot': typeof LotRoute
   '/api': typeof ApiRouteRouteWithChildren
+  '/lot': typeof LotRoute
   '/api/camps': typeof ApiCampsRoute
   '/api/dumps': typeof ApiDumpsRoute
   '/api/fuel': typeof ApiFuelRoute
@@ -205,8 +205,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/lot': typeof LotRoute
   '/api': typeof ApiRouteRouteWithChildren
+  '/lot': typeof LotRoute
   '/api/camps': typeof ApiCampsRoute
   '/api/dumps': typeof ApiDumpsRoute
   '/api/fuel': typeof ApiFuelRoute
@@ -235,8 +235,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/lot': typeof LotRoute
   '/api': typeof ApiRouteRouteWithChildren
+  '/lot': typeof LotRoute
   '/api/camps': typeof ApiCampsRoute
   '/api/dumps': typeof ApiDumpsRoute
   '/api/fuel': typeof ApiFuelRoute
@@ -266,8 +266,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/lot'
     | '/api'
+    | '/lot'
     | '/api/camps'
     | '/api/dumps'
     | '/api/fuel'
@@ -295,8 +295,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/lot'
     | '/api'
+    | '/lot'
     | '/api/camps'
     | '/api/dumps'
     | '/api/fuel'
@@ -324,8 +324,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/lot'
     | '/api'
+    | '/lot'
     | '/api/camps'
     | '/api/dumps'
     | '/api/fuel'
@@ -354,8 +354,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LotRoute: typeof LotRoute
   ApiRouteRoute: typeof ApiRouteRouteWithChildren
+  LotRoute: typeof LotRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -367,18 +367,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lot': {
-      id: '/lot'
-      path: '/lot'
-      fullPath: '/lot'
-      preLoaderRoute: typeof LotRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api': {
       id: '/api'
       path: '/api'
       fullPath: '/api'
       preLoaderRoute: typeof ApiRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lot': {
+      id: '/lot'
+      path: '/lot'
+      fullPath: '/lot'
+      preLoaderRoute: typeof LotRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/camps': {
@@ -622,8 +622,8 @@ const ApiRouteRouteWithChildren = ApiRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LotRoute: LotRoute,
   ApiRouteRoute: ApiRouteRouteWithChildren,
+  LotRoute: LotRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
