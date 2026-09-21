@@ -49,7 +49,7 @@ test("chat, agent, and voice prompts share David's answer-now / give me one seco
   assert.match(speech, /Web search is last resort/);
   assert.match(
     speech,
-    /I'm RV Grok, here to help you with all your RV needs/,
+    /I'm RV Grok — give me year, make, and model, and I'll speak the spec report on that exact coach/,
   );
   assert.match(speech, /Verified & True \/ Know before you buy/);
   assert.match(src("originStory.ts"), /David Hansen/);

@@ -5,7 +5,7 @@ import {
   type RefObject,
 } from "react";
 import { cn } from "@/lib/utils";
-import { SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
+import { RAIDHO_R_MARK, SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
 import type { AppTab } from "./BottomTabs";
 import { ScrollSuiteHeader } from "./ScrollChrome";
 import { ActiveCoachChip } from "./ActiveCoachChip";
@@ -14,7 +14,23 @@ import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 
-/** Soft-scrim prestige backdrop — single stack (image + scrim only). */
+/** Full-viewport Raidho R watermark — same seal as compare, suite-wide. */
+export function SuiteRaidhoBackdrop({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "suite-raidho-backdrop pointer-events-none absolute inset-0 overflow-hidden",
+        className,
+      )}
+      aria-hidden
+    >
+      <div className="suite-raidho-field" />
+      <img src={RAIDHO_R_MARK} alt="" className="suite-raidho-mark" />
+    </div>
+  );
+}
+
+/** Soft-scrim prestige backdrop — photo + Raidho R watermark + scrim. */
 export function SuiteBackdrop({
   src = SHARED_PRESTIGE_BACKDROP,
   objectPosition = "center",
@@ -38,7 +54,9 @@ export function SuiteBackdrop({
         className="page-backdrop-bright absolute inset-0 size-full object-cover"
         style={{ objectPosition }}
       />
+      <div className="suite-raidho-field" />
       <div className="page-scrim-soft" />
+      <img src={RAIDHO_R_MARK} alt="" className="suite-raidho-mark" />
     </div>
   );
 }
