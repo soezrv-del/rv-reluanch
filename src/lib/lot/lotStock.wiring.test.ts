@@ -38,7 +38,7 @@ test("Lot stock is a suite page, not a dock tab and not RV Grok", () => {
   assert.match(more, /RV Country in-stock/);
 
   assert.match(shell, /LotStockApp/);
-  assert.match(shell, /initialTab = "rvfax"/);
+  assert.match(shell, /initialTab = "rvgrok"/);
   assert.match(shell, /tab === "rvlot"/);
   assert.match(shell, /<LotStockApp \/>/);
 

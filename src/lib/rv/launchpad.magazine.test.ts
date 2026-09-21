@@ -10,7 +10,7 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("cold open skips splash and lands on Facts", () => {
+test("cold open skips splash and lands on RV Grok", () => {
   const launch = read("../../components/shell/Launchpad.tsx");
   const shell = read("../../components/shell/AppShell.tsx");
   const css = read("../../styles.css");
@@ -57,12 +57,9 @@ test("cold open skips splash and lands on Facts", () => {
   assert.doesNotMatch(shell, /from "\.\/Launchpad"/);
   assert.doesNotMatch(shell, /finishLaunch/);
   assert.doesNotMatch(shell, /onSkip=\{\(\) => finishLaunch\("rvfax"\)\}/);
-  assert.match(shell, /initialTab = "rvfax"/);
+  assert.match(shell, /initialTab = "rvgrok"/);
   assert.match(shell, /useState<AppTab>\(initialTab\)/);
-  assert.match(
-    shell,
-    /new Set<AppTab>\(\[initialTab === "rvlot" \? "rvlot" : "rvfax"\]\)/,
-  );
+  assert.match(shell, /new Set<AppTab>\(\[initialTab\]\)/);
   assert.match(shell, /const suiteReady = true/);
   assert.match(shell, /const launchOpen = false/);
 
