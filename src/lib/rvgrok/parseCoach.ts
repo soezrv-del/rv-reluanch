@@ -32,6 +32,16 @@ export const COACH_BRANDS = [
   "Entegra",
 ].sort((a, b) => b.length - a.length);
 
+/**
+ * Spoken/typed names that resolve to a catalog brand. Never a make of their
+ * own — salesmen say "Integra" for Entegra Coach / Vision.
+ * Longer aliases first so "Integra Coach" wins over "Integra".
+ */
+export const COACH_BRAND_ALIASES: ReadonlyArray<readonly [string, string]> = [
+  ["Integra Coach", "Entegra Coach"],
+  ["Integra", "Entegra Coach"],
+];
+
 /** True when this model year is on the thin catalog year list. */
 export function catalogYearIsListed(
   year: string,
@@ -44,6 +54,42 @@ export function catalogYearIsListed(
 
 function normName(s: string): string {
   return (s || "").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function escapeBrandRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Floorplan / trim token: 27A, 27ASE, 45A, 337RLS.
+ * Skips budget leftovers like 50k so a price ask is not a floorplan.
+ */
+const FLOORPLAN_TOKEN_RE =
+  /\b(\d{2,3}\s?[A-Za-z]{1,4}|[A-Za-z]{1,3}\d{2,3}[A-Za-z]?)\b/g;
+
+export function extractFloorplanToken(text: string): string {
+  if (!text) return "";
+  const re = new RegExp(FLOORPLAN_TOKEN_RE.source, "g");
+  for (const m of text.matchAll(re)) {
+    const token = (m[1] || "").replace(/\s+/g, "");
+    if (!token) continue;
+    if (/k$/i.test(token)) continue;
+    return token;
+  }
+  return "";
+}
+
+function findSpokenBrand(lower: string): { make: string; spoken: string } {
+  for (const [alias, canonical] of COACH_BRAND_ALIASES) {
+    const re = new RegExp(`\\b${escapeBrandRe(alias)}\\b`, "i");
+    if (re.test(lower)) return { make: canonical, spoken: alias };
+  }
+  for (const b of COACH_BRANDS) {
+    if (lower.includes(b.toLowerCase())) {
+      return { make: b, spoken: b };
+    }
+  }
+  return { make: "", spoken: "" };
 }
 
 /**
@@ -129,22 +175,17 @@ export function parseCoachFromText(text: string): {
   const yearM = raw.match(/\b(19[89]\d|20[0-2]\d)\b/);
   const year = yearM?.[1] ?? "";
   const lower = raw.toLowerCase();
-  let make = "";
-  for (const b of COACH_BRANDS) {
-    if (lower.includes(b.toLowerCase())) {
-      make = b;
-      break;
-    }
-  }
+  const brand = findSpokenBrand(lower);
+  const make = brand.make;
   let model = "";
   let floorplan = "";
   if (make) {
     // Last mention wins — people self-correct ("Grand Design Limin, uh, Grand Design Lineage M").
-    const after = raw.slice(lower.lastIndexOf(make.toLowerCase()) + make.length);
-    const fp = after.match(
-      /\b(\d{2,3}\s?[A-Z]{1,4}|[A-Z]{1,3}\d{2,3}[A-Z]?)\b/,
-    );
-    if (fp) floorplan = fp[1]!.replace(/\s+/g, "");
+    const spoken = brand.spoken.toLowerCase();
+    const after = raw.slice(lower.lastIndexOf(spoken) + spoken.length);
+    floorplan = extractFloorplanToken(after);
+    // "27A Integra Vision" — floorplan sits before the spoken brand.
+    if (!floorplan) floorplan = extractFloorplanToken(raw);
     const chunk = after
       .replace(/[.,;:!?]/g, " ")
       .split(/\s+/)
@@ -195,7 +236,12 @@ export function parseCoachFromText(text: string): {
     ]);
     const words: string[] = [];
     for (const w of chunk) {
-      if (fp && w.replace(/\s+/g, "") === floorplan) break;
+      if (
+        floorplan &&
+        w.replace(/\s+/g, "").toLowerCase() === floorplan.toLowerCase()
+      ) {
+        break;
+      }
       if (/^\d{4}$/.test(w)) continue;
       const lowerW = w.toLowerCase();
       if (skip.has(lowerW)) continue;

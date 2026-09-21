@@ -10,6 +10,7 @@ import {
 import { findPowertrainCorrection } from "../rv/powertrainCorrections.ts";
 import {
   catalogYearIsListed,
+  COACH_BRANDS,
   matchCatalogModelName,
   parseCoachFromText,
   seriesAliasEquals,
@@ -76,6 +77,18 @@ test("parses David’s test coach from a spec question", () => {
   assert.match(p.model, /american dream/i);
   assert.doesNotMatch(p.model, /\bhave\b/i);
   assert.equal(p.floorplan, "45A");
+});
+
+test("Integra is an Entegra Coach alias and 27A still parses before the brand", () => {
+  assert.ok(!COACH_BRANDS.includes("Integra"));
+  const a = parseCoachFromText("27A Integra Vision");
+  assert.equal(a.make, "Entegra Coach");
+  assert.match(a.model, /vision/i);
+  assert.equal(a.floorplan, "27A");
+  const b = parseCoachFromText("Integra Vision 27A");
+  assert.equal(b.make, "Entegra Coach");
+  assert.match(b.model, /vision/i);
+  assert.equal(b.floorplan, "27A");
 });
 
 test("2023 American Dream 45A pin is X15 605 / 1,950 — not L9 option-band", () => {
