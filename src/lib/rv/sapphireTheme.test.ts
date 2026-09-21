@@ -121,3 +121,22 @@ test("Facts and Tow landings are full-bleed Raidho — no leftover photo layer",
   assert.match(css, /\.suite-raidho-bleed \{[\s\S]*?mix-blend-mode:\s*normal/);
   assert.doesNotMatch(css, /DialaBot/);
 });
+
+test("Facts RV Search and RV Cal share thick sapphire frost — not solid black", () => {
+  const fax = read("../../components/rvfax/RvFaxApp.tsx");
+  const cal = read("../../components/rvcal/RvCalApp.tsx");
+  const suite = read("../../components/shell/SuitePage.tsx");
+  const css = read("../../styles.css");
+
+  assert.match(fax, /data-rv-search-card=""/);
+  assert.match(suite, /data-cal-screen=\{tab === "rvcal"/);
+  assert.match(cal, /SuitePage/);
+  assert.match(css, /\[data-readable-cards\] \[data-rv-search-card\]\.glass-prestige/);
+  assert.match(css, /\[data-readable-cards\]\[data-cal-screen\] \.glass-prestige/);
+  assert.match(css, /backdrop-filter:\s*blur\(28px\) saturate\(1\.7\)/);
+  assert.doesNotMatch(
+    css,
+    /\[data-readable-cards\] \[data-rv-search-card\][\s\S]*?background:\s*#0a101c/,
+  );
+  assert.doesNotMatch(css, /DialaBot/);
+});

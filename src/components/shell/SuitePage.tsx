@@ -162,6 +162,7 @@ export function SuitePage({
       data-tow-landing={landing === "tow" ? "" : undefined}
       data-sold-book={tab === "rvsold" ? "" : undefined}
       data-premium-screen={tab === "more" ? "" : undefined}
+      data-cal-screen={tab === "rvcal" ? "" : undefined}
       data-raidho-only={raidhoOnly ? "" : undefined}
     >
       {raidhoOnly ? (

@@ -885,7 +885,10 @@ export function RvFaxApp({
           </section>
 
           {/* Cascading dropdown search — type → year → make → model → floorplan */}
-          <section className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4 sm:p-5">
+          <section
+            className="glass-prestige space-y-3 rounded-[var(--radius-xl)] p-4 sm:p-5"
+            data-rv-search-card=""
+          >
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-[20px] font-extrabold tracking-tight text-white sm:text-[22px]">
