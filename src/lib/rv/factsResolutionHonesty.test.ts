@@ -20,8 +20,7 @@ import {
   isExactEnginePin,
   isUnpinnedEngineLabel,
 } from "./catalogHonesty.ts";
-import { ensureCatalogLoaded, peekCatalog } from "./catalogLoad.ts";
-import { getSpec } from "./catalog.ts";
+import { RV_DATA } from "./rvData.ts";
 import { getMockReviews, reviewMentionsModel } from "./rvReviews.ts";
 import { rankRvVideos } from "./rvVideos.ts";
 
@@ -31,15 +30,13 @@ function src(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-await ensureCatalogLoaded();
-
 function factsFor(
   year: string,
   make: string,
   model: string,
   floorplan: string,
 ) {
-  const spec = getSpec(make, model);
+  const spec = RV_DATA[make]?.[model];
   assert.ok(spec, `expected catalog spec for ${make} ${model}`);
   return {
     spec,
@@ -50,6 +47,12 @@ function factsFor(
 
 test("shared helpers: dual-family / class / by-year labels are unpinned", () => {
   assert.equal(isUnpinnedEngineLabel("Cummins L9 / B6.7 class"), true);
+  assert.equal(
+    isUnpinnedEngineLabel(
+      "Ford F-53 6.8L Triton V10 320HP / 7.3L V8 350HP (option)",
+    ),
+    true,
+  );
   assert.equal(isExactEnginePin("Cummins L9 / B6.7 class"), false);
   assert.equal(honestEngineLabel("Cummins L9 / B6.7 class").text, null);
   assert.equal(
@@ -200,10 +203,8 @@ test("resolution path is shared — no coach-specific Ambassador/Jayco/Thor inve
   assert.match(detail, /ownerReviews\.length \?/);
   assert.doesNotMatch(detail, /No sample notes for this brand/);
 
-  const catalog = peekCatalog()?.RV_DATA;
-  assert.ok(catalog);
   assert.match(
-    catalog["Holiday Rambler"]?.Ambassador?.powertrainByYear?.find(
+    RV_DATA["Holiday Rambler"]?.Ambassador?.powertrainByYear?.find(
       (b) => b.from <= 2023 && b.to >= 2023,
     )?.engine || "",
     /L9 \/ B6\.7 class/,

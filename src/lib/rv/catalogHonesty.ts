@@ -27,14 +27,14 @@ const BY_VARIANT_RE =
 
 /** Distinct powertrain families. Aliases collapse to one id. */
 const ENGINE_FAMILY_DEFS: ReadonlyArray<{ id: string; re: RegExp }> = [
-  { id: "b67", re: /\b(b6\.7|isb)\b/i },
+  { id: "b67", re: /\b(b6\.7l?|isb)\b/i },
   { id: "l9", re: /\bl9\b/i },
   { id: "isl", re: /\bisl\b/i },
   { id: "x15", re: /\b(x15|isx)\b/i },
   { id: "x12", re: /\bx12\b/i },
-  { id: "godzilla", re: /\b(7\.3|godzilla)\b/i },
-  { id: "v10", re: /\b(v10|6\.8|triton)\b/i },
-  { id: "v8_62", re: /\b6\.2\b/i },
+  { id: "godzilla", re: /\b(7\.3l?|godzilla)\b/i },
+  { id: "v10", re: /\b(v10|6\.8l?|triton)\b/i },
+  { id: "v8_62", re: /\b6\.2l?\b/i },
   { id: "powerstroke", re: /\bpower\s*stroke\b/i },
   { id: "duramax", re: /\bduramax\b/i },
   { id: "mercedes", re: /\b(mercedes|sprinter|om\d+)\b/i },
@@ -225,13 +225,14 @@ export function honestHorsepowerLabel(opts: {
   horsepower?: string | number | null;
 }): string | null {
   const engine = (opts.engine || "").trim();
+  // Dual-family / class / by-year blend is not a pin — never "320 / 350 HP".
+  // Brochure L9 450 std / X15 605 opt is not unpinned; that stays below.
+  if (isUnpinnedEngineLabel(engine)) {
+    return null;
+  }
   const classes = extractOptionHpClasses(engine);
   if (classes.length >= 2) {
     return brochureOptionHpLabel(engine, classes);
-  }
-  // Dual-family / class / by-year blend is not a pin — never a lone typical.
-  if (isUnpinnedEngineLabel(engine)) {
-    return null;
   }
 
   if (typeof opts.horsepower === "string") {

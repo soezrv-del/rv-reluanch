@@ -68,7 +68,7 @@ test("buildBrochureSpecs uses honesty helpers so Facts HP follows the engine opt
   assert.match(spec, /honestAcUnits/);
   assert.match(spec, /honestElectricalService/);
   assert.match(spec, /honestGenerator/);
-  assert.match(spec, /from "\.\/catalogHonesty"/);
+  assert.match(spec, /from "\.\/catalogHonesty(?:\.ts)?"/);
   assert.match(src("catalogHonesty.ts"), /export function parseHp/);
 });
 

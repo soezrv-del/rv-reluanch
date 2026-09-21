@@ -413,7 +413,7 @@ test("catalog HP and torque become POWER lines; missing torque is omitted", () =
   assert.deepEqual(sharePowerLines("", ""), []);
 });
 
-test("Georgetown-shaped catalog HP surfaces in share POWER; missing SoT torque is omitted", () => {
+test("Georgetown-shaped by-year dual family is GAP — not a lone 350 painted as this coach", () => {
   const hp = honestHorsepowerForCoach({
     engine: "Ford 7.3L / V10 (by year)",
     horsepower: 350,
@@ -428,9 +428,11 @@ test("Georgetown-shaped catalog HP surfaces in share POWER; missing SoT torque i
     horsepower: 350,
   });
   const lines = sharePowerLines(hp, tq);
-  assert.match(lines.join("\n"), /350\s*HP/);
+  assert.equal(hp, "—");
+  assert.equal(tq, "—");
+  assert.deepEqual(lines, []);
+  assert.doesNotMatch(lines.join("\n"), /350\s*HP/);
   assert.doesNotMatch(lines.join("\n"), /lb-?ft/i);
-  assert.doesNotMatch(lines.join("\n"), /confirm brochure/i);
   assert.doesNotMatch(lines.join("\n"), /do not invent/i);
 });
 

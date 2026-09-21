@@ -7,14 +7,14 @@ export {
   RV_CARD_IMAGE,
   YEARS,
   getMaintenanceSchedule,
-} from "./rvTypes";
+} from "./rvTypes.ts";
 export type {
   MaintenanceItem,
   PowertrainYearBand,
   RVSpec,
-} from "./rvTypes";
+} from "./rvTypes.ts";
 
-import { RV_CARD_IMAGE, type RVSpec } from "./rvTypes";
+import { RV_CARD_IMAGE, type RVSpec } from "./rvTypes.ts";
 
 export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Newmar: {
