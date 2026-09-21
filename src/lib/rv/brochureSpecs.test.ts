@@ -10832,7 +10832,8 @@ test("Thor OEM tank pins: dated brochure gallons only; leftover aliases and Jayc
   assert.doesNotMatch(magnitudeXg, /freshWater:/);
   assert.doesNotMatch(seneca, /freshWater:/);
   assert.doesNotMatch(siesta, /freshWater:/);
-  assert.doesNotMatch(siesta, /22B/);
+  assert.doesNotMatch(siesta, /floorplans: \["22B"\]/);
+  assert.match(siesta, /Four Winds Ford C \(22B\/28Z/);
 
   const j0 = block.indexOf("  Jayco: {");
   const j1 = block.indexOf('  "American Coach": {');
