@@ -2272,6 +2272,41 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   --color-grok-mic: #e8893a;
   --color-grok-mic-fg: #1a0f08;
   font-family: "Figtree", var(--font-sans);
+  background: var(--color-ink-black);
+  isolation: isolate;
+}
+/*
+ * Raidho R is a BACKGROUND field behind frost — not a front brand lockup,
+ * header plate, or competing chrome. Field + screen-blend rune fill the
+ * viewport; glass sits on top.
+ */
+[data-rvgrok-wingman] .grok-raidho-field,
+[data-rvgrok-wingman] .suite-raidho-backdrop {
+  z-index: 0;
+}
+[data-rvgrok-wingman] .suite-raidho-field {
+  background:
+    radial-gradient(
+      ellipse 92% 78% at 50% 46%,
+      color-mix(in srgb, var(--color-sapphire-deep) 26%, transparent) 0%,
+      transparent 70%
+    ),
+    var(--color-ink-black);
+}
+[data-rvgrok-wingman] .suite-raidho-mark {
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%) scale(2.2);
+  object-fit: contain;
+  opacity: 0.36;
+  mix-blend-mode: screen;
+}
+[data-rvgrok-wingman] .suite-raidho-bleed,
+[data-rvgrok-wingman] .page-backdrop-bright,
+[data-rvgrok-wingman] .page-scrim-soft,
+[data-rvgrok-wingman] .sapphire-header {
+  display: none;
 }
 .app-shell [data-rvgrok-wingman] .text-muted,
 .app-shell [data-rvgrok-wingman] .grok-status-word,

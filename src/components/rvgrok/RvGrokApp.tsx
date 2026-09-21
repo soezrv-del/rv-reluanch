@@ -69,7 +69,6 @@ import { GrokAvatar } from "./GrokAvatar";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
-import { ScrollSuiteHeader } from "@/components/shell/ScrollChrome";
 import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
 
 const GROK_STARTERS: GrokStarter[] = [
@@ -1506,9 +1505,8 @@ export function RvGrokApp({
       data-rvgrok-wingman=""
       data-readable-cards=""
     >
-      {!embedded && <SuiteRaidhoBackdrop bleed />}
       {!embedded && (
-        <ScrollSuiteHeader tab="rvgrok" className="relative z-10 shrink-0" />
+        <SuiteRaidhoBackdrop className="grok-raidho-field" />
       )}
 
       {!embedded && !isLanding ? (
