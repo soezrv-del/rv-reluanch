@@ -12,6 +12,7 @@ const VERIFIED_TABS = new Set<AppTab>([
   "rvtrips",
   "rvshare",
   "rvgrok",
+  "rvlot",
 ]);
 
 export function SapphireHeader({ tab }: { tab: AppTab }) {

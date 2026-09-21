@@ -15,7 +15,14 @@ import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 
 /** Full-viewport Raidho R watermark — same seal as compare, suite-wide. */
-export function SuiteRaidhoBackdrop({ className }: { className?: string }) {
+export function SuiteRaidhoBackdrop({
+  className,
+  bleed,
+}: {
+  className?: string;
+  /** Logo only, full-bleed — no photo, field, or scrim. */
+  bleed?: boolean;
+}) {
   return (
     <div
       className={cn(
@@ -23,9 +30,14 @@ export function SuiteRaidhoBackdrop({ className }: { className?: string }) {
         className,
       )}
       aria-hidden
+      data-raidho-bleed={bleed ? "" : undefined}
     >
-      <div className="suite-raidho-field" />
-      <img src={RAIDHO_R_MARK} alt="" className="suite-raidho-mark" />
+      {bleed ? null : <div className="suite-raidho-field" />}
+      <img
+        src={RAIDHO_R_MARK}
+        alt=""
+        className={bleed ? "suite-raidho-bleed" : "suite-raidho-mark"}
+      />
     </div>
   );
 }
@@ -90,6 +102,8 @@ export type SuitePageProps = {
   style?: CSSProperties;
   /** Landing photo/glass override (Tow beach, Facts showroom). */
   landing?: "tow";
+  /** Lot (and #390 Facts/Tow): full-bleed Raidho logo, no photo stack. */
+  raidhoOnly?: boolean;
 };
 
 /**
@@ -114,6 +128,7 @@ export function SuitePage({
   scrollRef: scrollRefProp,
   style,
   landing,
+  raidhoOnly = false,
 }: SuitePageProps) {
   const localRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = scrollRefProp ?? localRef;
@@ -125,8 +140,9 @@ export function SuitePage({
     { enabled: Boolean(onPullReset) },
   );
 
+  const usePhotoGlass = adaptiveGlass && !raidhoOnly;
   const rootStyle: CSSProperties = {
-    ...(adaptiveGlass ? glass.style : null),
+    ...(usePhotoGlass ? glass.style : null),
     ...style,
   };
 
@@ -134,18 +150,23 @@ export function SuitePage({
     <div
       className={cn(
         "relative flex h-full min-h-0 flex-col overflow-hidden bg-bg text-white",
-        adaptiveGlass && "adaptive-glass",
+        usePhotoGlass && "adaptive-glass",
         className,
       )}
       data-readable-cards=""
       style={rootStyle}
       data-glass-l={
-        adaptiveGlass ? glass.luminance.toFixed(3) : undefined
+        usePhotoGlass ? glass.luminance.toFixed(3) : undefined
       }
       data-no-swipe-scroll={noSwipeScroll ? "" : undefined}
       data-tow-landing={landing === "tow" ? "" : undefined}
+      data-raidho-only={raidhoOnly ? "" : undefined}
     >
-      <SuiteBackdrop src={backdrop} objectPosition={objectPosition} />
+      {raidhoOnly ? (
+        <SuiteRaidhoBackdrop bleed />
+      ) : (
+        <SuiteBackdrop src={backdrop} objectPosition={objectPosition} />
+      )}
       {topSlot}
       <div
         ref={scrollRef}
