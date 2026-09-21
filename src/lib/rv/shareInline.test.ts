@@ -78,7 +78,7 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?background:\s*var\(--dock-surface\)/);
   assert.match(
     css,
-    /border:\s*1px solid color-mix\(in srgb, var\(--color-sapphire\) 34%/,
+    /border:\s*1px solid color-mix\(in srgb, var\(--color-sapphire\) 42%/,
   );
   assert.match(css, /border-radius:\s*16px/);
   assert.match(css, /box-shadow:\s*0 8px 32px rgba\(4, 12, 32, 0\.37\)/);

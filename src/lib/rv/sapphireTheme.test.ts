@@ -39,7 +39,7 @@ test("dock plate is sapphire-aligned glass with one sapphire highlight", () => {
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?background:\s*var\(--dock-surface\)/);
   assert.match(
     css,
-    /border:\s*1px solid color-mix\(in srgb, var\(--color-sapphire\) 34%/,
+    /border:\s*1px solid color-mix\(in srgb, var\(--color-sapphire\) 42%/,
   );
   assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
   assert.match(tabs, /sapphire-glass dock/);
