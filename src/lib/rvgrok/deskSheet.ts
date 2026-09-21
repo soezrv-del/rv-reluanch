@@ -3,6 +3,7 @@
  *
  * Speech may say the sheet is on the desk only when we actually mount it.
  * Missing UVW / GVWR / torque stay GAP — never invent.
+ * When findOem* has a number, speech and any written sheet must use it.
  */
 
 import { findOemGvwrLbs, findOemUvwLbs } from "../rv/floorplanSpecs.ts";
@@ -17,8 +18,14 @@ import {
 import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
 import {
   claimsDeskSpecSheet,
+  DESK_SHEET_FORBIDDEN_LINE,
+  formatDeskSheetMountedLine,
   shouldMountDeskSheet,
 } from "./deskSheetPolicy.ts";
+import {
+  formatLockedWeightsBlock,
+  NO_DUPLICATE_MARKDOWN_SHEET,
+} from "./lockedWeights.ts";
 
 export {
   DESK_SHEET_FORBIDDEN_LINE,
@@ -26,8 +33,31 @@ export {
   claimsDeskSpecSheet,
   formatDeskSheetMountedLine,
   shouldMountDeskSheet,
-  withDeskSheetSpeechRule,
 } from "./deskSheetPolicy.ts";
+export {
+  formatLockedWeightsBlock,
+  LOCKED_WEIGHTS_SPEECH_RULE,
+  NO_DUPLICATE_MARKDOWN_SHEET,
+  resolveLockedOemWeights,
+  stripDuplicateMarkdownSpecSheet,
+} from "./lockedWeights.ts";
+
+/** Mounted desk + OEM pin lock — prefer this over the catalog-free policy helper. */
+export function withDeskSheetSpeechRule(
+  block: string,
+  query: string,
+  identity: CoachIdentity | null | undefined,
+): string {
+  const extra = shouldMountDeskSheet(query, identity)
+    ? [
+        formatDeskSheetMountedLine(identity!),
+        formatLockedWeightsBlock(identity!),
+        NO_DUPLICATE_MARKDOWN_SHEET,
+      ].join("\n\n")
+    : DESK_SHEET_FORBIDDEN_LINE;
+  const body = (block || "").trim();
+  return body ? `${body}\n\n${extra}` : extra;
+}
 
 export type DeskSheetRow = {
   label: string;

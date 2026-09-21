@@ -5,6 +5,7 @@ import { parseCoachFromText } from "@/lib/rvgrok/answerFeedback";
 import { formatTime, cn } from "@/lib/utils";
 import { AgentBadge, AgentStepsCard } from "./AgentStepsCard";
 import { DeskSpecSheet } from "./DeskSpecSheet";
+import { stripDuplicateMarkdownSpecSheet } from "@/lib/rvgrok/lockedWeights";
 
 function renderContent(text: string) {
   const lines = text.split("\n");
@@ -88,6 +89,10 @@ export function MessageBubble({
   const [savedNote, setSavedNote] = useState(false);
 
   const voted = message.feedback;
+  const displayContent = message.deskSheet
+    ? stripDuplicateMarkdownSpecSheet(message.content || "")
+    : message.content || "";
+  const speakContent = displayContent;
 
   return (
     <div
@@ -162,13 +167,13 @@ export function MessageBubble({
           </div>
         ) : null}
 
-        {message.streaming && !message.content ? (
+        {message.streaming && !displayContent ? (
           <p className="flex items-center gap-2 text-white/80">
             <Loader2 className="size-3.5 animate-spin" />
             Thinking…
           </p>
         ) : (
-          renderContent(message.content || "")
+          renderContent(displayContent)
         )}
 
         <div className="mt-2 flex items-center justify-between gap-2">
@@ -179,10 +184,10 @@ export function MessageBubble({
                 : new Date(message.timestamp),
             )}
           </span>
-          {!isUser && message.content && onSpeak ? (
+          {!isUser && speakContent && onSpeak ? (
             <button
               type="button"
-              onClick={() => onSpeak(message.id, message.content)}
+              onClick={() => onSpeak(message.id, speakContent)}
               className="inline-flex items-center gap-1 text-[10px] font-semibold opacity-80 hover:opacity-100"
             >
               {isSpeaking ? (

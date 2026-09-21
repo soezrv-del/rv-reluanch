@@ -40,10 +40,7 @@ import {
   looksLikeOriginQuestion,
 } from "./originStory";
 import {
-  looksLikeCasualNonResearch,
   looksLikeInventoryOrCountQuestion,
-  looksLikeNamedCoachProductQuestion,
-  looksLikeSpecQuestion,
   needsWebFallback,
 } from "./webIntent";
 import {
@@ -57,7 +54,6 @@ import {
   repairCoachLockFromGrounded,
 } from "./repairMode";
 import {
-  askNamesCoachIdentity,
   type CoachIdentity,
   formatCatalogPresenceNote,
   inspectCatalogPresence,
@@ -65,37 +61,11 @@ import {
   resolveCatalogModel,
   resolveCoachIdentity,
 } from "./coachIdentity";
-function withDeskSheetSpeechRule(
-  block: string,
-  query: string,
-  identity: CoachIdentity | null | undefined,
-): string {
-  const extra =
-    identity && shouldMountDeskSheetLocal(query, identity)
-      ? `DESK SPEC SHEET MOUNTED for ${[identity.year, identity.make, identity.model, identity.floorplan].filter(Boolean).join(" ")}. You may say exactly: "Spec sheet is on the desk." Speak THIS coach — never a prior series. Incomplete fields show as GAP on the sheet; do not invent UVW, GVWR, or torque.`
-      : `DESK SPEC SHEET NOT MOUNTED. Never say the spec sheet / report is on the desk, or that a sheet is visible. Speak the answer only.`;
-  const body = (block || "").trim();
-  return body ? `${body}\n\n${extra}` : extra;
-}
-
-function shouldMountDeskSheetLocal(
-  query: string,
-  identity: CoachIdentity,
-): boolean {
-  if (!identity.make?.trim() || !identity.model?.trim()) return false;
-  const q = query || "";
-  if (looksLikeCasualNonResearch(q) && !askNamesCoachIdentity(identity)) {
-    return false;
-  }
-  if (askNamesCoachIdentity(identity)) return true;
-  if (looksLikeSpecQuestion(q) || looksLikeNamedCoachProductQuestion(q)) {
-    return true;
-  }
-  if (/\blook(?:ing)?\s+up\b|\breport\b|\bspec(?:s| sheet)?\b/i.test(q)) {
-    return true;
-  }
-  return identity.source === "facts" && Boolean(q.trim());
-}
+import { withDeskSheetSpeechRule } from "./deskSheet";
+import {
+  formatLockedWeightsBlock,
+  resolveLockedOemWeights,
+} from "./lockedWeights";
 
 export {
   looksLikeCasualNonResearch,
@@ -155,8 +125,12 @@ export type GroundedSpecs = {
   fuelType: GroundedField;
   rvType: GroundedField;
   note: string | null;
-  /** Year-band weight span from catalog — EST, not a floorplan GVWR. */
+  /** Floorplan OEM GVWR pin only — never a catalog year-band span. */
   weightBand: string | null;
+  /** Published OEM GVWR pin (findOemGvwrLbs). Null = GAP, do not invent. */
+  oemGvwrLbs: number | null;
+  /** Published OEM UVW pin (findOemUvwLbs). Null = GAP, do not invent. */
+  oemUvwLbs: number | null;
   /** True when any hard powertrain field is locked (local/pin/catalog). */
   hasHardLock: boolean;
   /** True when HP / engine / chassis / fuel is still unknown or EST-only. */
@@ -178,6 +152,7 @@ export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - Series change clears the prior lock. Dutch Star is not Ventana because both use 4369. Prefer exact year + make + model + floorplan. If a field is missing, say which field (year vs series) — never substitute a sibling series.
 - DEFAULT COACH REPORT: year / make / model / floorplan, specs, power, payload, spoken rundown, and desk sheet ground on this CATALOG / BROCHURE lock ONLY (the big motorhome catalog toward 2000+). If the coach exists here — e.g. 2022 Newmar Dutch Star 4369 — report THAT coach. Do not use RV Country own-lot as grounding. Never say "not in listings" because the lot has no unit or only a sibling series (Ventana 4369 ≠ Dutch Star 4369). Own-lot is only for an explicit "do we have / on the lot" ask, and even then never substitute a different series.
 - The CATALOG / BROCHURE block in this request is source-of-truth for engine, horsepower, chassis, transmission, and fuel.
+- LOCKED WEIGHTS / VERIFIED GVWR (OEM pin) is source-of-truth for that floorplan's GVWR. Speak the number. Never say you don't have GVWR, never GAP a VERIFIED field, and never invent UVW when the UVW line is GAP.
 - If a field has a number or name, USE THAT EXACT VALUE. Do not substitute a sibling model, a later year, or a "typical" HP (never invent 450).
 - If a field is marked UNKNOWN, do not stop at "I don't know." Prefer WEB RESEARCH notes this turn, then YOU answer. Do not guess. Never send them to a brochure, door sticker, dealer, or website. Never say "check the website", "look it up yourself", or "go check the OEM site".
 - Do not invent a "no catalog data — check the OEM site" dead-end. If this block names locked numbers, the coach IS in the catalog — never say it is missing, not in catalogs, or to wait for a brochure. Answer from locked numbers and/or WEB RESEARCH notes. Never invent HP, engine, chassis, or fuel. Never send the user to the OEM site, a website, or a dealer as the answer.
@@ -267,6 +242,12 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
       snap?.yearTruePowertrain ||
       catalogYearIsListed(year, index?.years),
   );
+  const oemWeights = resolveLockedOemWeights(identity);
+  const weightBand =
+    oemWeights.gvwrLbs && oemWeights.gvwrLbs > 0
+      ? `${oemWeights.gvwrLbs.toLocaleString("en-US")} lbs GVWR`
+      : null;
+
   if (!hasYearRow) {
     const empty = field(null, "empty");
     const noYear = !year;
@@ -290,7 +271,9 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
           ? "No model year in the ask — class and fuel are from the catalog index. Do not invent HP, engine, chassis, or a year. Never send the user to the OEM site, a website, or a dealer as the answer."
           : "CATALOG GAP — no locked row for this model year. Use WEB RESEARCH notes this turn, then answer. Do not guess. Do not stop at I don't know. Do not invent specs. Never send the user to the OEM site, a website, or a dealer as the answer.";
       })(),
-      weightBand: null,
+      weightBand,
+      oemGvwrLbs: oemWeights.gvwrLbs,
+      oemUvwLbs: oemWeights.uvwLbs,
       hasHardLock: false,
       missingHard: true,
     };
@@ -396,12 +379,6 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
   );
 
   const note = local?.note || pin?.note || (snap?.yearTruePowertrain ? snap?.notes : null) || null;
-  // Never paint catalog weightRange as this coach. Published GVWR pin only.
-  const publishedGvwr = snap?.gvwrLbs ?? spec?.gvwrLbs ?? null;
-  const weightBand =
-    publishedGvwr && publishedGvwr > 0
-      ? `${publishedGvwr.toLocaleString()} lbs GVWR`
-      : null;
 
   const hardTrusts = [engine, horsepower, chassis, fuelType].map((f) => f.trust);
   const hasHardLock = hardTrusts.some(
@@ -422,6 +399,8 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
     rvType,
     note,
     weightBand,
+    oemGvwrLbs: oemWeights.gvwrLbs,
+    oemUvwLbs: oemWeights.uvwLbs,
     hasHardLock,
     missingHard,
   };
@@ -464,6 +443,7 @@ export function formatCatalogGroundingBlock(
     line("class / type", specs.rvType),
     inventoryAsk ? null : presenceNote ? `- note: ${presenceNote}` : specs.note ? `- note: ${specs.note}` : null,
     specs.weightBand ? `- weights: ${specs.weightBand}` : null,
+    formatLockedWeightsBlock(id),
     inventoryAsk ? INVENTORY_WINS_OVER_GAP : lockLine,
   ]
     .filter(Boolean)
@@ -477,7 +457,7 @@ export function formatVoiceCatalogAddendum(
   const inventoryAsk = Boolean(opts?.inventoryAsk);
   const speak = inventoryAsk
     ? "If an OWN-LOT INVENTORY block matched units, speak those units. Do not say catalog gap or check your own lot listing. Never substitute a sibling series. Never say a catalog-known coach is not in listings."
-    : "Speak those locked numbers. If UNKNOWN, say so in one breath — do not guess.";
+    : "Speak those locked numbers and every VERIFIED LOCKED WEIGHTS field. If a field is UNKNOWN / GAP and not VERIFIED, say so in one breath — do not guess. Never say you don't have a VERIFIED GVWR.";
   return `\n\n${formatCatalogGroundingBlock(specs, { inventoryAsk })}\n${speak}`;
 }
 
@@ -647,9 +627,10 @@ export function buildVoiceGrounding(opts: {
       true,
       opts.facts,
     );
-    const body = `${compare.catalog}\nSpeak those locked numbers. If UNKNOWN, say so in one breath — do not guess.\n\n${repair}`;
+    const body = `${compare.catalog}\nSpeak those locked numbers and every VERIFIED LOCKED WEIGHTS field. If a field is UNKNOWN / GAP and not VERIFIED, say so in one breath — do not guess. Never say you don't have a VERIFIED GVWR.\n\n${repair}`;
     const standing = standingKnowledgeBlocks(query);
-    return standing ? `${standing}\n\n${body}` : body;
+    const merged = standing ? `${standing}\n\n${body}` : body;
+    return withDeskSheetSpeechRule(merged, query, compare.identity);
   }
   const identity = resolveCoachIdentity(query, opts.facts, "");
   const specs = identity ? lookupGroundedSpecs(identity) : null;
