@@ -15,8 +15,10 @@ import {
   buildDeskSheetPayload,
   claimsDeskSpecSheet,
   deskSheetIsTowable,
+  formatLockedWeightsBlock,
   resolveDeskSheet,
   shouldMountDeskSheet,
+  stripDuplicateMarkdownSpecSheet,
   withDeskSheetSpeechRule,
 } from "./deskSheet.ts";
 
@@ -186,6 +188,57 @@ test("desk sheet still renders with GAP rows when powertrain is thin", () => {
   );
 });
 
+test("2025 Entegra Aspire 44R pins GVWR 49000 — desk and speech never GAP it; UVW stays GAP", () => {
+  assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Aspire", "44R"), 49000);
+  assert.equal(findOemUvwLbs("2025", "Entegra Coach", "Aspire", "44R"), null);
+
+  const q = "2025 Entegra Coach Aspire 44R spec report";
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  assert.equal(identity!.year, "2025");
+  assert.match(identity!.make, /entegra/i);
+  assert.match(identity!.model, /aspire/i);
+  assert.equal(identity!.floorplan, "44R");
+
+  const sheet = resolveDeskSheet({ query: q, identity, specs: null });
+  assert.ok(sheet);
+  const gvwr = sheet!.rows.find((r) => r.label === "GVWR");
+  const uvw = sheet!.rows.find((r) => r.label === "UVW");
+  assert.equal(gvwr?.gap, false, "desk payload GVWR must not be GAP");
+  assert.match(gvwr?.value || "", /49,000/);
+  assert.ok(uvw?.gap, "Aspire UVW stays GAP — no OEM UVW pin");
+  assert.equal(uvw?.value, "GAP");
+
+  const locked = formatLockedWeightsBlock(identity!);
+  assert.match(locked, /LOCKED WEIGHTS/);
+  assert.match(locked, /VERIFIED GVWR 49000 from OEM pin/);
+  assert.match(locked, /UVW: GAP — no OEM pin/);
+  assert.match(locked, /Do not say you lack GVWR/i);
+
+  const spoken = withDeskSheetSpeechRule("CATALOG", q, identity);
+  assert.match(spoken, /DESK SPEC SHEET MOUNTED/);
+  assert.match(spoken, /VERIFIED GVWR 49000 from OEM pin/);
+  assert.match(spoken, /Do not say you lack GVWR/i);
+  assert.match(spoken, /do not output a second markdown Spec Sheet/i);
+  assert.doesNotMatch(
+    spoken,
+    /I don't have GVWR/,
+    "spoken instruction must not teach 'I don't have GVWR' when the pin is present",
+  );
+});
+
+test("duplicate markdown spec sheet is stripped when the desk card is the written sheet", () => {
+  const spoken =
+    "The 2025 Aspire 44R is a 49,000 pound GVWR diesel pusher. Spec sheet is on the desk.";
+  const dup = `${spoken}
+
+## Spec Sheet
+Weight ratings GVWR/GCWR/UVW/NCC: GAP
+`;
+  assert.equal(stripDuplicateMarkdownSpecSheet(dup), spoken);
+  assert.equal(stripDuplicateMarkdownSpecSheet(spoken), spoken);
+});
+
 test("desk sheet is wired through chat, live voice, and speech policy", () => {
   const app = src(join(root, "../../components/rvgrok"), "RvGrokApp.tsx");
   const bubble = src(join(root, "../../components/rvgrok"), "MessageBubble.tsx");
@@ -199,11 +252,21 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(app, /liveDeskSheet/);
   assert.match(bubble, /DeskSpecSheet/);
   assert.match(bubble, /deskSheet/);
+  assert.match(bubble, /stripDuplicateMarkdownSpecSheet/);
   assert.match(realtime, /onDeskSheet/);
   assert.match(realtime, /resolveDeskSheet/);
   assert.match(voice, /DESK SPEC SHEET/);
   assert.match(voice, /Spec sheet is on the desk/);
   assert.match(prompts, /DESK SPEC SHEET/);
+  assert.match(prompts, /LOCKED WEIGHTS/);
   assert.match(grounding, /withDeskSheetSpeechRule/);
+  assert.match(grounding, /formatLockedWeightsBlock/);
+  assert.match(grounding, /findOemGvwrLbs/);
+  assert.match(grounding, /VERIFIED GVWR/);
+  assert.match(grounding, /Do not say you lack GVWR/);
+  assert.match(src(root, "lockedWeights.ts"), /VERIFIED GVWR/);
+  assert.match(src(root, "liveVoice.ts"), /never say you don't have GVWR/i);
+  assert.match(src(root, "voice.ts"), /LOCKED WEIGHTS/);
+  assert.match(src(root, "speechPolicy.ts"), /LOCKED WEIGHTS/);
   assert.doesNotMatch(src(root, "deskSheet.ts"), /[Dd]ialaBot/);
 });

@@ -44,7 +44,7 @@ export function formatDeskSheetMountedLine(identity: CoachIdentity): string {
   const coach = [identity.year, identity.make, identity.model, identity.floorplan]
     .filter(Boolean)
     .join(" ");
-  return `DESK SPEC SHEET MOUNTED for ${coach}. You may say exactly: "${DESK_SHEET_PHRASE}." Speak THIS coach — never a prior series. Incomplete fields show as GAP on the sheet; do not invent UVW, GVWR, or torque.`;
+  return `DESK SPEC SHEET MOUNTED for ${coach}. You may say exactly: "${DESK_SHEET_PHRASE}." Speak THIS coach — never a prior series. Incomplete fields show as GAP on the sheet; do not invent UVW, GVWR, or torque. If a field is non-GAP on the sheet or VERIFIED in LOCKED WEIGHTS, speak that number — never say you don't have it.`;
 }
 
 export const DESK_SHEET_FORBIDDEN_LINE = `DESK SPEC SHEET NOT MOUNTED. Never say the spec sheet / report is on the desk, or that a sheet is visible. Speak the answer only.`;
