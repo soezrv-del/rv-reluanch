@@ -244,3 +244,75 @@ export function searchLotUnits(units: LotUnit[], query: string): LotUnit[] {
     return tokens.every((t) => hay.includes(t));
   });
 }
+
+const TYPE_LABELS: Record<string, string> = {
+  "Travel Trailer": "Travel trailer",
+  "Fifth Wheel": "Fifth wheel",
+  "Class A Diesel": "Diesel",
+  "Class Super C": "Super C",
+  "Class A": "Class A",
+  "Class B": "Class B",
+  "Class C": "Class C",
+  "Fifth Wheel Toy Hauler": "FW toy",
+  "Travel Trailer Toy Hauler": "TT toy",
+  "Destination Trailer": "Destination",
+  "Truck Camper": "Camper",
+  Popup: "Popup",
+  "Popup Trailer": "Popup",
+  "Expandable Trailer": "Expandable",
+};
+
+export type LotTypeChip = {
+  type: string;
+  label: string;
+  count: number;
+};
+
+export function shortLotTypeLabel(type: string): string {
+  const t = type.trim();
+  if (!t) return LOT_GAP;
+  return TYPE_LABELS[t] ?? t;
+}
+
+/** Visual family for lot chrome only — never a catalog class list. */
+export type LotTypeFamily = "a" | "b" | "c" | "fw" | "tt" | "toy" | "camper";
+
+export function lotTypeFamily(type: string): LotTypeFamily {
+  const t = type.toLowerCase();
+  if (t.includes("toy")) return "toy";
+  if (t.includes("fifth")) return "fw";
+  if (t.includes("super c") || t.includes("class c")) return "c";
+  if (t.includes("class b") || t.includes("b+")) return "b";
+  if (t.includes("class a") || t.includes("diesel")) return "a";
+  if (t.includes("camper") || t.includes("truck")) return "camper";
+  return "tt";
+}
+
+/** Type chips from the snapshot only — never a brochure class list. */
+export function lotTypeChips(units: LotUnit[]): LotTypeChip[] {
+  const counts = new Map<string, number>();
+  for (const unit of units) {
+    const type = unit.body_type.trim();
+    if (!type) continue;
+    counts.set(type, (counts.get(type) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([type, count]) => ({
+      type,
+      label: shortLotTypeLabel(type),
+      count,
+    }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+export function filterLotBrowse(
+  units: LotUnit[],
+  opts: { query?: string; type?: string } = {},
+): LotUnit[] {
+  let rows = searchLotUnits(units, opts.query ?? "");
+  const type = (opts.type ?? "").trim();
+  if (type) {
+    rows = rows.filter((unit) => unit.body_type === type);
+  }
+  return rows;
+}

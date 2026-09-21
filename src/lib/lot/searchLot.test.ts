@@ -4,8 +4,11 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  filterLotBrowse,
   lotPriceOrGap,
   lotTextOrGap,
+  lotTypeChips,
+  lotTypeFamily,
   parseLotSnapshotJson,
   searchLotUnits,
   tokenizeLotQuery,
@@ -102,4 +105,42 @@ test("bundled own-lot snapshot: empty search is the lot; no catalog bleed", () =
 
   const ghost = searchLotUnits(snap.units, "ZZZNOMATCH-CATALOG-BLEED");
   assert.equal(ghost.length, 0);
+});
+
+test("type chips come from the lot snapshot and filter without catalog bleed", () => {
+  const chips = lotTypeChips(sample.units);
+  assert.deepEqual(
+    chips.map((c) => c.type),
+    ["Class A Diesel", "Fifth Wheel"],
+  );
+  assert.equal(filterLotBrowse(sample.units, { type: "Fifth Wheel" }).length, 1);
+  assert.equal(
+    filterLotBrowse(sample.units, { query: "Entegra", type: "Fifth Wheel" })
+      .length,
+    0,
+  );
+  assert.equal(
+    filterLotBrowse(sample.units, { query: "45282", type: "Class A Diesel" })
+      .length,
+    1,
+  );
+
+  const snap = parseLotSnapshotJson(
+    JSON.parse(
+      readFileSync(
+        join(root, "../../../public/inventory/own-lot-latest.json"),
+        "utf8",
+      ),
+    ),
+  );
+  const lotChips = lotTypeChips(snap.units);
+  assert.ok(lotChips.some((c) => c.type === "Travel Trailer"));
+  assert.ok(lotChips.every((c) => snap.units.some((u) => u.body_type === c.type)));
+  const diesel = filterLotBrowse(snap.units, { type: "Class A Diesel" });
+  assert.ok(diesel.length > 0);
+  assert.ok(diesel.every((u) => u.body_type === "Class A Diesel"));
+  assert.equal(lotTypeFamily("Class A Diesel"), "a");
+  assert.equal(lotTypeFamily("Class Super C"), "c");
+  assert.equal(lotTypeFamily("Fifth Wheel Toy Hauler"), "toy");
+  assert.equal(lotTypeFamily("Travel Trailer"), "tt");
 });

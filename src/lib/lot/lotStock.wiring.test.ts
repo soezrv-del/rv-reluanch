@@ -48,12 +48,19 @@ test("Lot stock is a suite page, not a dock tab and not RV Grok", () => {
 
   assert.match(lot, /data-lot-stock/);
   assert.match(lot, /data-lot-search/);
-  assert.match(lot, /fetchLotSnapshot/);
-  assert.match(lot, /searchLotUnits/);
+  assert.match(lot, /data-lot-chips/);
+  assert.match(lot, /data-lot-featured/);
+  assert.match(lot, /Featured on the lot/);
+  assert.match(lot, /data-lot-mark/);
+  assert.match(lot, /On the lot/);
+  assert.match(lot, /filterLotBrowse/);
+  assert.match(lot, /lotTypeChips/);
   assert.doesNotMatch(lot, /rvData|from "@\/lib\/rv\/catalog"/);
   assert.doesNotMatch(lot, /ownLotInventory/);
   assert.doesNotMatch(lot, /DialaBot|dialabot/i);
   assert.doesNotMatch(lot, /onOpenGrok|setGrokSeed/);
+  assert.doesNotMatch(lot, /GVWR|Length|Slides|Sleeps|RvFAX/);
+  assert.doesNotMatch(lot, /brochure catalog bleed|catalog photo/i);
 
   assert.match(page, /\/inventory\/own-lot-latest\.json/);
   assert.doesNotMatch(page, /ownLotInventory|from "\.\.\/rvgrok\/ownLotInventory/);

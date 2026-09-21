@@ -70,6 +70,11 @@
   --color-sapphire-glow: #3d6ee0;
   --color-accent: var(--color-sapphire);
 
+  --color-lot-void: #07080d;
+  --color-lot-plate: #11141c;
+  --color-lot-well: #0a0c12;
+  --color-lot-chip: #181c26;
+
   --page-accent: var(--color-sapphire);
   --page-accent-soft: color-mix(in srgb, var(--color-sapphire) 16%, transparent);
   --page-accent-border: color-mix(in srgb, var(--color-sapphire) 40%, transparent);
@@ -2105,4 +2110,98 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   font-size: clamp(1.55rem, 6.6vw, 2.05rem);
   line-height: 0.95;
   letter-spacing: -0.03em;
+}
+
+/* Lot stock — grok.me browse energy, own-lot data only */
+.lot-research {
+  background: var(--color-lot-void);
+  color: var(--color-fg);
+}
+.lot-research-wash {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 80% 0%,
+      color-mix(in srgb, var(--color-sapphire) 14%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-lot-plate) 70%, transparent),
+      var(--color-lot-void) 42%
+    );
+}
+.lot-search {
+  background: var(--color-lot-plate);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-fg) 6%, transparent);
+}
+.lot-search:focus {
+  border-color: color-mix(in srgb, var(--color-sapphire) 55%, transparent);
+  outline: none;
+}
+.lot-chip-rail {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 0.15rem;
+}
+.lot-chip-rail::-webkit-scrollbar {
+  display: none;
+}
+.lot-chip {
+  background: var(--color-lot-chip);
+  color: var(--color-muted);
+  border: 1px solid var(--color-border);
+}
+.lot-chip.is-on {
+  background: var(--color-tiimo-foam);
+  color: var(--color-lot-void);
+  border-color: transparent;
+}
+.lot-card {
+  background: var(--color-lot-plate);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--color-lot-void) 55%, transparent);
+}
+.lot-well {
+  background:
+    radial-gradient(
+      ellipse 70% 80% at 50% 80%,
+      color-mix(in srgb, var(--color-sapphire) 16%, transparent),
+      transparent 62%
+    ),
+    var(--color-lot-well);
+}
+.lot-well.is-featured {
+  min-height: 13.5rem;
+}
+@media (min-width: 640px) {
+  .lot-well.is-featured {
+    min-height: 16.5rem;
+  }
+}
+.lot-well.is-rail {
+  min-height: 7.25rem;
+}
+.lot-mark {
+  width: 78%;
+  max-width: 22rem;
+  opacity: 0.62;
+  color: color-mix(in srgb, var(--color-fg) 78%, var(--color-sapphire));
+}
+.lot-well.is-rail .lot-mark {
+  width: 72%;
+  max-width: 14rem;
+  opacity: 0.5;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lot-card,
+  .lot-chip {
+    transition: none;
+  }
 }
