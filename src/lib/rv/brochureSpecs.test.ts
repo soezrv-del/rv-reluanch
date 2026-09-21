@@ -661,6 +661,84 @@ test("FR3 31DS catalog GVWR aligns to OEM 18k; Sunseeker Classic 2025–26 GAPs"
   assert.match(classicBlock, /GVWR unprinted — GAP/);
 });
 
+test("Sunseeker / Classic / LE 2007–13 catalog GVWR stays GAP; no 14050 invent", async () => {
+  const { RV_DATA } = await loadLiveCatalog();
+  const sunseeker = RV_DATA["Forest River"]?.Sunseeker;
+  const classic = RV_DATA["Forest River"]?.["Sunseeker Classic"];
+  const le = RV_DATA["Forest River"]?.["Sunseeker LE"];
+  assert.ok(sunseeker && classic && le, "expected Sunseeker family");
+
+  // #398/#399 already cleared model-level 14500 on Sunseeker / Classic.
+  assert.equal(sunseeker.gvwrLbs, undefined);
+  assert.equal(classic.gvwrLbs, undefined);
+  // Leftover after those PRs: LE model-level 12500 stamped 2012–13.
+  assert.equal(le.gvwrLbs, undefined);
+
+  for (const year of ["2007", "2010", "2013"]) {
+    assert.equal(
+      resolveYearSnapshot(sunseeker, year, "3010DS").gvwrLbs,
+      undefined,
+      `Sunseeker ${year} must GAP — brochure is per-plan/chassis`,
+    );
+    assert.equal(findOemGvwrLbs(year, "Forest River", "Sunseeker", "3010DS"), null);
+  }
+  for (const year of ["2008", "2010", "2013"]) {
+    assert.equal(
+      resolveYearSnapshot(classic, year, "3010DS").gvwrLbs,
+      undefined,
+      `Classic ${year} must GAP`,
+    );
+    assert.equal(
+      findOemGvwrLbs(year, "Forest River", "Sunseeker Classic", "3010DS"),
+      null,
+    );
+  }
+  for (const year of ["2012", "2013"]) {
+    assert.equal(
+      resolveYearSnapshot(le, year, "2250SLE").gvwrLbs,
+      undefined,
+      `Sunseeker LE ${year} must GAP — do not stamp 12500`,
+    );
+    assert.equal(
+      findOemGvwrLbs(year, "Forest River", "Sunseeker LE", "2250SLE"),
+      null,
+    );
+  }
+
+  // Later long-LE E-450 year-band stays. Do not invent 14050.
+  assert.equal(
+    resolveYearSnapshot(le, "2026", "2550DSLE").gvwrLbs,
+    14500,
+  );
+  assert.equal(findOemGvwrLbs("2026", "Forest River", "Sunseeker LE", "2550DSLE"), null);
+
+  // Mirada 35OS stays PIN_ONLY 22k — no dated OEM table in-repo.
+  assert.equal(findOemGvwrLbs("2012", "Coachmen", "Mirada", "35OS"), 22000);
+  assert.equal(findOemGvwrLbs("2013", "Coachmen", "Mirada", "35OS"), 22000);
+
+  const catalog = src("rvData.ts");
+  const sunBlock = catalog.slice(
+    catalog.indexOf("    Sunseeker: {"),
+    catalog.indexOf('    "Sunseeker LE": {'),
+  );
+  const leBlock = catalog.slice(
+    catalog.indexOf('    "Sunseeker LE": {'),
+    catalog.indexOf('    "Sunseeker Classic": {'),
+  );
+  const classicBlock = catalog.slice(
+    catalog.indexOf('    "Sunseeker Classic": {'),
+    catalog.indexOf('    "Sunseeker 4X4": {'),
+  );
+  assert.doesNotMatch(sunBlock, /yearStart:\s*2005,\s*gvwrLbs:\s*14500/);
+  assert.doesNotMatch(leBlock, /yearStart:\s*2012,\s*gvwrLbs:\s*12500/);
+  assert.doesNotMatch(leBlock, /14050/);
+  assert.doesNotMatch(classicBlock, /yearStart:\s*2008,\s*gvwrLbs:\s*14500/);
+  assert.match(leBlock, /brochure per-plan\/chassis — GAP/);
+
+  const pins = src("floorplanSpecs.ts");
+  assert.match(pins, /Mirada 35OS 22,000 is PIN_ONLY/);
+});
+
 test("brochureSpecs source no longer hash-seeds tanks, MPG, heater, construction, wheelbase, propane", () => {
   const spec = src("brochureSpecs.ts");
   assert.doesNotMatch(spec, /function hashSeed/);
