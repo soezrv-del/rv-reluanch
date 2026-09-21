@@ -75,11 +75,19 @@ test("NDA gate wraps the suite and does not grant functional access", () => {
   assert.match(gate, /data-nda-accept/);
   assert.match(gate, /nda-accept-check/);
   assert.match(gate, /disabled=\{!checked\}/);
+  assert.match(gate, /data-nda-agree-row/);
+  assert.match(gate, /min-h-14/);
+  assert.match(gate, /touch-manipulation/);
+  assert.match(gate, /Accept & Continue/);
+  assert.match(gate, /Tap the agreement row/);
 
   const css = read("src/styles.css");
   assert.match(css, /\[data-nda-gate\] \.nda-accept-check/);
+  assert.match(css, /\[data-nda-gate\] \.nda-accept-glyph/);
   assert.match(css, /color-scheme:\s*light/);
   assert.match(css, /-webkit-appearance:\s*none/);
+  assert.match(css, /nda-accept-bar/);
+  assert.match(css, /safe-area-inset-bottom/);
 
   const ndaText = read("src/lib/access/ndaText.ts");
   assert.match(ndaText, /src\/lib\/access\/ndaText\.ts/);
