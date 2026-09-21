@@ -10,7 +10,7 @@ import { join } from "node:path";
 
 const root = process.cwd();
 const out = join(root, "cap-www");
-const brandIcon = join(root, "public/assets/brand/icon-rvfax.png");
+const brandIcon = join(root, "public/assets/brand/raidho-r-mark.png");
 const splashBg = join(root, "src/assets/backdrops/shared-prestige.jpg");
 
 if (existsSync(out)) rmSync(out, { recursive: true, force: true });
