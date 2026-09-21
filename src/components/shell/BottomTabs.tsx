@@ -56,13 +56,13 @@ function DockLabel({
 }
 
 /**
- * Floating true-glass dock — 2026-09-08 tokens (blur/saturate plate,
- * 16px radius, 2px brand-blue top rule on the active tab).
+ * Bottom dock — Raidho R black ground so the icon plate blends.
+ * 16px radius, 2px sapphire top rule on the active tab (one highlight).
  *
  * Android WebView: do NOT put pointer-events-none on this nav. Parent
- * none + child auto + backdrop-filter fails hit-testing on Chromium
- * WebView, so Facts/Cal/Tow/Trips/Grok never fire. iOS still uses
- * onClick only (no extra pointer path).
+ * none + child auto historically failed hit-testing on Chromium
+ * WebView (worse with backdrop-filter). Facts/Cal/Tow/Trips/Grok
+ * never fire. iOS still uses onClick only (no extra pointer path).
  */
 export function BottomTabs({
   tab,
