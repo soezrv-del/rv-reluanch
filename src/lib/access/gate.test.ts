@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { HARD_ADMIN } from "./constants.ts";
 import {
+  betaSeedAccessResult,
   canRemoveWhitelistRow,
   hardAdminAccessResult,
   hardAdminRequestResult,
@@ -51,12 +52,38 @@ test("hard-admin request result is already approved without a DB insert", () => 
   assert.equal(hardAdminRequestResult("555-000-1111"), null);
 });
 
-test("CSV David number +17022665915 is not the admin seed", () => {
+test("CSV David Hansen 702-266-5915 is allowed and not admin", () => {
   assert.equal(isHardAdminPhone("+17022665915"), false);
   assert.equal(isHardAdminPhone("7022665915"), false);
   const d = resolveAccess("+17022665915", null);
-  assert.equal(d.allowed, false);
+  assert.equal(d.allowed, true);
   assert.equal(d.isAdmin, false);
+  assert.equal(d.matched, true);
+  const seed = betaSeedAccessResult("702-266-5915");
+  assert.ok(seed);
+  assert.equal(seed.allowed, true);
+  assert.equal(seed.isAdmin, false);
+  assert.equal(seed.name, "David Hansen");
+  assert.equal(seed.phoneDigits, "7022665915");
+  assert.equal(seed.phoneE164, "+17022665915");
+});
+
+test("CSV seed phone is allowed without Neon and is never admin", () => {
+  for (const raw of ["5412858791", "541-285-8791", "+15412858791"]) {
+    const d = resolveAccess(raw, null);
+    assert.equal(d.allowed, true, raw);
+    assert.equal(d.isAdmin, false, raw);
+    assert.equal(d.matched, true, raw);
+    const seed = betaSeedAccessResult(raw);
+    assert.ok(seed, raw);
+    assert.equal(seed.allowed, true, raw);
+    assert.equal(seed.isAdmin, false, raw);
+    assert.equal(seed.name, "Mark 2", raw);
+    assert.equal(seed.phoneDigits, "5412858791", raw);
+    assert.equal(seed.phoneE164, "+15412858791", raw);
+  }
+  assert.equal(betaSeedAccessResult(HARD_ADMIN.e164), null);
+  assert.equal(betaSeedAccessResult("555-000-1111"), null);
 });
 
 test("listed non-admin gets full access without admin flag", () => {

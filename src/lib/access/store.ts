@@ -1,6 +1,7 @@
 import { getSql } from "@/lib/db";
 import { HARD_ADMIN } from "./constants";
 import {
+  betaSeedAccessResult,
   hardAdminAccessResult,
   hardAdminRequestResult,
   isHardAdminPhone,
@@ -111,7 +112,10 @@ export async function findWhitelistByPhone(
   return rows[0] ? mapWhitelist(rows[0]) : null;
 }
 
-/** Hard admin is offline-allow so Neon/PGLite being unset cannot 500 check. */
+/**
+ * Hard admin offline → static beta seed → Neon SQL if available.
+ * Seeded testers never 503 when DATABASE_URL / PGLite is down.
+ */
 export async function checkPhoneAccess(raw: string) {
   const offline = hardAdminAccessResult(raw);
   if (offline) return offline;
@@ -122,6 +126,8 @@ export async function checkPhoneAccess(raw: string) {
       error: "Enter a valid US phone number.",
     };
   }
+  const seed = betaSeedAccessResult(raw);
+  if (seed) return seed;
   await ensureAdminSeed();
   const row = await findWhitelistByPhone(n.e164);
   const decision = resolveAccess(n.e164, row ? toAccessRow(row) : null);

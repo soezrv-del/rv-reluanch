@@ -11,7 +11,7 @@ function read(rel: string) {
   return readFileSync(join(workspace, rel), "utf8");
 }
 
-test("seed is admin-only David Hanson 702-266-5918 — no CSV preload", () => {
+test("ensureAdminSeed stays admin-only; CSV lives in static seed + 0003", () => {
   const sql = read("migrations/0002_access_whitelist.sql");
   assert.match(sql, /7022665918/);
   assert.match(sql, /\+17022665918/);
@@ -21,6 +21,22 @@ test("seed is admin-only David Hanson 702-266-5918 — no CSV preload", () => {
   const store = read("src/lib/access/store.ts");
   assert.match(store, /Never seeds the CSV list/);
   assert.match(store, /ensureAdminSeed/);
+  assert.match(store, /betaSeedAccessResult/);
+
+  const seed = read("src/lib/access/betaWhitelist.ts");
+  assert.match(seed, /5412858791/);
+  assert.match(seed, /Mark 2/);
+  assert.match(seed, /7022665915/);
+  assert.match(seed, /David Hansen/);
+  assert.doesNotMatch(seed, /7022665918/);
+
+  const m3 = read("migrations/0003_access_beta_seed.sql");
+  assert.match(m3, /5412858791/);
+  assert.match(m3, /7022665915/);
+  assert.match(m3, /on conflict \(phone_digits\) do update set/);
+  assert.match(m3, /contact_name = excluded.contact_name/);
+  assert.match(m3, /notes = excluded.notes/);
+  assert.doesNotMatch(m3, /7022665918/);
 });
 
 test("request path is notify-only and cannot grant access", () => {
@@ -102,12 +118,25 @@ test("access check and request short-circuit hard admin before getSql", () => {
     store.indexOf("function toAccessRow"),
   );
   assert.match(checkBlock, /hardAdminAccessResult/);
+  assert.match(checkBlock, /betaSeedAccessResult/);
+  assert.ok(
+    checkBlock.indexOf("hardAdminAccessResult") <
+      checkBlock.indexOf("betaSeedAccessResult"),
+  );
+  assert.ok(
+    checkBlock.indexOf("betaSeedAccessResult") <
+      checkBlock.indexOf("ensureAdminSeed"),
+  );
   assert.ok(
     checkBlock.indexOf("hardAdminAccessResult") <
       checkBlock.indexOf("ensureAdminSeed"),
   );
   assert.ok(
     checkBlock.indexOf("hardAdminAccessResult") <
+      checkBlock.indexOf("findWhitelistByPhone"),
+  );
+  assert.ok(
+    checkBlock.indexOf("betaSeedAccessResult") <
       checkBlock.indexOf("findWhitelistByPhone"),
   );
 
@@ -134,8 +163,13 @@ test("access check and request short-circuit hard admin before getSql", () => {
 test("http gate short-circuits hard admin and stays on rvgrok", () => {
   const gate = read("src/lib/access/httpGate.ts");
   assert.match(gate, /isHardAdminPhone/);
+  assert.match(gate, /isBetaSeedPhone/);
   assert.match(gate, /from "\.\/gate\.ts"/);
   assert.match(gate, /if \(isHardAdminPhone\(phone\)\) return null/);
+  assert.match(gate, /if \(isBetaSeedPhone\(phone\)\) return null/);
+  assert.ok(
+    gate.indexOf("isHardAdminPhone(phone)") < gate.indexOf("isBetaSeedPhone(phone)"),
+  );
   assert.doesNotMatch(gate, /ACCESS_GATE_DISABLED/);
   const rvgrok = read("src/routes/api/rvgrok.ts");
   assert.match(rvgrok, /denyUnlessWhitelisted/);
