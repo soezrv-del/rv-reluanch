@@ -1235,12 +1235,13 @@ export function formatOwnLotBlock(
 
   lines.push(
     "Answer from these counts and listing prices. Never invent a VIN, stock number, unit, or price that is not in this snapshot. Brochure catalog is not lot stock. Own-lot listing prices are what WE ask on the lot — not nationwide market-value comps.",
-    "This is an inventory / in-stock ask. Catalog GAP does not apply. Never say catalog gap. Never say check your own lot listing. Never ask them to share a year for inventory.",
+    "This is an explicit inventory / in-stock ask only. Year/make/model reports use the big brochure catalog — not this block. Catalog GAP does not apply to stock counts. Never say catalog gap. Never say check your own lot listing. Never ask them to share a year for inventory.",
+    "Never substitute a sibling series because a floorplan code matches (Dutch Star 4369 ≠ Ventana 4369). Never say a catalog-known coach is not in listings.",
   );
 
   if (counts.matched === 0) {
     lines.push(
-      "No own-lot hit for this ask. Say none of that coach is on our lot snapshot this turn. Do not mention catalog gap. Do not send them to check their own lot listing.",
+      "No own-lot hit for this exact series. Say we do not have that coach on the lot snapshot this turn — briefly. Do not say it is missing from the catalog or not in listings. Do not mention catalog gap. Do not send them to check their own lot listing. Do not swap in a sibling series that shares the floorplan code.",
     );
   }
 
@@ -1292,46 +1293,6 @@ export function formatOwnLotBlock(
   }
 
   return lines.join("\n");
-}
-
-/**
- * After a CATALOG coach report — lot hit/miss only. Never the spec SoT.
- * Filter is the locked year/make/model/floorplan so 4369 on Ventana cannot
- * stand in for Dutch Star.
- */
-export function formatOwnLotSidecar(
-  snapshot: OwnLotSnapshot,
-  identity: {
-    year?: string;
-    make?: string;
-    model?: string;
-    floorplan?: string;
-  },
-): string {
-  const coach = [identity.year, identity.make, identity.model, identity.floorplan]
-    .filter(Boolean)
-    .join(" ");
-  const header = `OWN-LOT SIDECAR (not the spec report) for ${coach || "this coach"}.`;
-  const rails = [
-    "Speak the CATALOG / BROCHURE report first. This sidecar is optional lot color only.",
-    "Lot miss ≠ coach missing. Never say not in listings / not in the catalog because the lot has no unit.",
-    "Never substitute a sibling series because a floorplan code matches (Dutch Star 4369 ≠ Ventana 4369).",
-  ];
-  if (ownLotIsUnavailable(snapshot)) {
-    return [header, "Lot snapshot unavailable this turn.", ...rails].join("\n");
-  }
-  const filter: OwnLotFilter = {
-    year: identity.year?.trim() || undefined,
-    make: identity.make?.trim() || undefined,
-    model: identity.model?.trim() || undefined,
-    trim: identity.floorplan?.trim() || undefined,
-  };
-  const counts = aggregateOwnLot(snapshot.units, filter);
-  const lotLine =
-    counts.matched > 0
-      ? `On the RV Country lot snapshot: ${counts.matched} matching unit(s). You may mention that after the catalog report.`
-      : `We do not have this year / make / model / floorplan on the RV Country lot snapshot right now. You may say that AFTER the catalog spec report — never instead of it.`;
-  return [header, lotLine, ...rails].join("\n");
 }
 
 function ownLotUrl(): string {

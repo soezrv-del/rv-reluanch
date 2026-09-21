@@ -117,12 +117,14 @@ test("catalog GAP tells inventory asks to prefer own-lot over manufacturer", () 
   assert.match(grounding, /OWN-LOT INVENTORY is source-of-truth this turn/);
   assert.match(grounding, /Never say check your own lot listing/);
   assert.match(grounding, /manufacturer for inventory/);
-  const voice = buildVoiceGrounding({ query: "M series 25FW" });
+  const stockAsk = "look in my inventory for a M series 25FW";
+  const voice = buildVoiceGrounding({ query: stockAsk });
   assert.match(voice, /OWN-LOT INVENTORY/);
   assert.match(voice, /manufacturer for inventory/);
-  const chat = buildChatGrounding({ query: "M series 25FW" });
-  assert.equal(chat.identity, null);
+  const chat = buildChatGrounding({ query: stockAsk });
   assert.match(chat.block || "", /manufacturer/i);
+  const catalogAsk = buildChatGrounding({ query: "M series 25FW" });
+  assert.doesNotMatch(catalogAsk.block || "", /INVENTORY \/ IN-STOCK ASK/);
 });
 
 test("2023 American Dream 45A pin is X15 605 / 1,950 — not L9 option-band", () => {

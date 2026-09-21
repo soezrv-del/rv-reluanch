@@ -176,12 +176,12 @@ export const CHAT_MAY_WRITE_FACTS_CACHE = false;
 export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - The CATALOG / BROCHURE block in this request is THIS turn's lock. If the user named a different year / make / model / floorplan, this block is that coach — never keep narrating a prior session coach as still locked.
 - Series change clears the prior lock. Dutch Star is not Ventana because both use 4369. Prefer exact year + make + model + floorplan. If a field is missing, say which field (year vs series) — never substitute a sibling series.
-- DEFAULT COACH REPORT: year / make / model / floorplan, specs, power, payload, spoken rundown, and desk sheet ground on this CATALOG / BROCHURE lock first (the big motorhome catalog). If the coach exists here — e.g. 2022 Newmar Dutch Star 4369 — report THAT coach. Never say "not in listings" because RV Country own-lot has no unit. Own-lot is only SoT on explicit stock asks ("do we have", on the lot, in stock, inventory). An OWN-LOT SIDECAR is optional lot color after the catalog report — lot miss ≠ coach missing. Never swap series because a floorplan code matches.
+- DEFAULT COACH REPORT: year / make / model / floorplan, specs, power, payload, spoken rundown, and desk sheet ground on this CATALOG / BROCHURE lock ONLY (the big motorhome catalog toward 2000+). If the coach exists here — e.g. 2022 Newmar Dutch Star 4369 — report THAT coach. Do not use RV Country own-lot as grounding. Never say "not in listings" because the lot has no unit or only a sibling series (Ventana 4369 ≠ Dutch Star 4369). Own-lot is only for an explicit "do we have / on the lot" ask, and even then never substitute a different series.
 - The CATALOG / BROCHURE block in this request is source-of-truth for engine, horsepower, chassis, transmission, and fuel.
 - If a field has a number or name, USE THAT EXACT VALUE. Do not substitute a sibling model, a later year, or a "typical" HP (never invent 450).
 - If a field is marked UNKNOWN, do not stop at "I don't know." Prefer WEB RESEARCH notes this turn, then YOU answer. Do not guess. Never send them to a brochure, door sticker, dealer, or website. Never say "check the website", "look it up yourself", or "go check the OEM site".
 - Do not invent a "no catalog data — check the OEM site" dead-end. If this block names locked numbers, the coach IS in the catalog — never say it is missing, not in catalogs, or to wait for a brochure. Answer from locked numbers and/or WEB RESEARCH notes. Never invent HP, engine, chassis, or fuel. Never send the user to the OEM site, a website, or a dealer as the answer.
-- Inventory / in-stock / "do we have" / "look in my inventory" asks: OWN-LOT INVENTORY is source-of-truth this turn even when this catalog block is a GAP. If that block matched units, list counts and Matching units (year/make/model/trim/stock/price/location). If Matched is 0, say none of that coach is on our lot snapshot. Never say catalog gap. Never say check your own lot listing. Never ask them to share a year for inventory. Do not send them to the manufacturer because the brochure row is missing.
+- Inventory / in-stock / "do we have" / "look in my inventory" asks: OWN-LOT INVENTORY is source-of-truth this turn even when this catalog block is a GAP. If that block matched units, list counts and Matching units (year/make/model/trim/stock/price/location). If Matched is 0, say none of that coach is on our lot snapshot — briefly. Never say catalog gap. Never say check your own lot listing. Never ask them to share a year for inventory. Do not send them to the manufacturer because the brochure row is missing. Never substitute a sibling series (Dutch Star 4369 ≠ Ventana 4369). Never say a catalog-known coach is not in listings.
 - WEB RESEARCH notes must not override a locked catalog row or invent a fifth-wheel / towable class when this block names a motorized class.
 - Floorplan letters (BH, K, L, FS, …) are labels only — never decode bunks or a half-bath from the code.
 - Entegra Vision = gas Ford F-53 / 7.3 Godzilla — not diesel.
@@ -193,7 +193,7 @@ export const UNKNOWN_POWERTRAIN_LINE =
 
 /** Inventory / in-stock ask — own-lot wins even when the brochure row is a GAP. */
 export const INVENTORY_WINS_OVER_GAP =
-  "INVENTORY / IN-STOCK ASK — answer from the OWN-LOT INVENTORY block this turn (counts + Matching units). Catalog GAP does not apply. If that block matched units, list year/make/model/trim/stock/price/location. If Matched is 0, say none of that coach is on our lot snapshot. Never say catalog gap. Never say check your own lot listing. Never ask them to share a year for inventory. Do not send them to the manufacturer for inventory.";
+  "INVENTORY / IN-STOCK ASK — answer from the OWN-LOT INVENTORY block this turn (counts + Matching units). Catalog GAP does not apply. If that block matched units, list year/make/model/trim/stock/price/location. If Matched is 0, say none of that coach is on our lot snapshot — briefly. Never say catalog gap. Never say check your own lot listing. Never ask them to share a year for inventory. Do not send them to the manufacturer for inventory. Never substitute a sibling series (Dutch Star 4369 ≠ Ventana 4369). Never say a catalog-known coach is not in listings.";
 
 /** @deprecated use INVENTORY_WINS_OVER_GAP — kept so older tests/imports resolve. */
 export const INVENTORY_CATALOG_GAP = INVENTORY_WINS_OVER_GAP;
@@ -476,7 +476,7 @@ export function formatVoiceCatalogAddendum(
 ): string {
   const inventoryAsk = Boolean(opts?.inventoryAsk);
   const speak = inventoryAsk
-    ? "If an OWN-LOT INVENTORY block matched units, speak those units. Do not say catalog gap or check your own lot listing."
+    ? "If an OWN-LOT INVENTORY block matched units, speak those units. Do not say catalog gap or check your own lot listing. Never substitute a sibling series. Never say a catalog-known coach is not in listings."
     : "Speak those locked numbers. If UNKNOWN, say so in one breath — do not guess.";
   return `\n\n${formatCatalogGroundingBlock(specs, { inventoryAsk })}\n${speak}`;
 }

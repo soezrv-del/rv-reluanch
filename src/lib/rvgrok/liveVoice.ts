@@ -160,7 +160,7 @@ export function buildRealtimeSessionUpdate(
   const extra = (catalogContext || "").trim();
   const gap = extra
     ? extra
-    : "CATALOG GAP — no verified row is loaded. Answer from what you know first. Web search is last resort. Do not stall. Do not guess. Never invent HP, engine, chassis, or fuel. Year / make / model reports use the big brochure catalog when a lock is present — never own-lot alone. Inventory / in-stock / look-in-my-inventory asks: if an OWN-LOT INVENTORY block is injected, answer from that block — never say catalog gap or check your own lot listing.";
+    : "CATALOG GAP — no verified row is loaded. Answer from what you know first. Web search is last resort. Do not stall. Do not guess. Never invent HP, engine, chassis, or fuel. Year / make / model reports use the big brochure catalog when a lock is present — never own-lot. Inventory / in-stock / look-in-my-inventory / do-we-have asks: if an OWN-LOT INVENTORY block is injected, answer from that block briefly — never say catalog gap, check your own lot listing, not in listings for a catalog-known coach, or swap a sibling series.";
   const instructions = `${RV_VOICE_INSTRUCTIONS}\n\n${gap}\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${RV_GROK_SESSION_INTRO} Then listen. Never repeat this intro.`;
   return {
     type: "session.update",
