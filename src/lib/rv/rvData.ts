@@ -21568,8 +21568,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["23B", "24L", "25B", "25G", "26Q", "28Y", "28Z", "29V", "31A", "31D", "31M", "31N", "31W"],
       floorplansByYear: {
-        "2005": ["25B", "29V", "31M"],
-        "2006": ["25B", "29V", "31M"],
+        // 2006_ja_f OEM weight PDF: 22B/23E/24D/26Q/29V/31M — not 25B. Keep only codes already on this key.
+        "2005": ["29V", "31M"],
+        "2006": ["29V", "31M"],
         "2007": ["25B", "29V", "31M"],
         "2008": ["25B", "29V", "31M"],
         "2009": ["25B", "29V", "31M"],
@@ -21665,8 +21666,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class C",
       floorplans: ["22C", "23B", "24K", "25G", "25K", "28Y", "29A", "30U", "31M", "31N", "31W"],
       floorplansByYear: {
-        "2005": ["24K", "25G", "31M"],
-        "2006": ["24K", "25G", "31M"],
+        // 2006_ti_f OEM weight PDF: 22B/23E/24D/26Q/29V/31M — not 24K/25G. Keep only codes already on this key.
+        "2005": ["31M"],
+        "2006": ["31M"],
         "2007": ["24K", "25G", "31M"],
         "2008": ["24K", "25G", "31M"],
         "2009": ["24K", "25G", "31M"],
@@ -31640,7 +31642,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         80000,
         140000
       ],
-      engine: "Chevrolet Vortec 6.0 V8 gas",
+      // Tip must not pin 2017 Vortec 6.0 onto yearStart 2000 — dated bands stay 2011–2013 / 2017–2018.
+      engine: "Chevrolet Express gas (confirm brochure)",
       chassis: "Chevrolet Express 3500",
       fuelType: "Gas",
       recalls: 0,
@@ -39084,7 +39087,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["500", "510", "530", "540"],
       floorplansByYear: {
-        "1998": ["500"],
         "1999": ["500"],
         "2000": ["500"],
         "2001": ["500", "510"],
@@ -39384,9 +39386,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["40PB", "43RQ", "40RB"],
       floorplansByYear: {
-        "1998": ["40PB"],
-        "1999": ["40PB"],
-        "2000": ["40PB"],
         "2001": ["40PB", "43RQ"],
         "2002": ["40PB", "43RQ"],
         "2003": ["40PB", "43RQ", "40RB"],
@@ -40127,7 +40126,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       type: "Class A Diesel",
       floorplans: ["39D", "43A", "45A"],
       floorplansByYear: {
-        "1998": ["39D"],
         "1999": ["39D"],
         "2000": ["39D", "43A"],
         "2001": ["39D", "43A"],
