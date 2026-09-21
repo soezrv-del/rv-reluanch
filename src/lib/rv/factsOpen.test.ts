@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -637,24 +637,22 @@ test("Facts first-run hero and year+make default stay on the cascade — no exam
   );
 });
 
-test("Facts landing uses the showroom motorhome behind glass, cards stay put", () => {
+test("Facts landing is full-bleed Raidho only — no showroom photo", () => {
   const fax = readFileSync(join(root, "../../components/rvfax/RvFaxApp.tsx"), "utf8");
   const sheet = readFileSync(join(root, "../../components/rvfax/SelectSheet.tsx"), "utf8");
-  const prestige = readFileSync(join(root, "../../assets/prestige.ts"), "utf8");
   const css = readFileSync(join(root, "../../styles.css"), "utf8");
-  const asset = join(root, "../../../public/assets/facts-landing-motorhome.jpg");
-  assert.match(prestige, /FACTS_LANDING_BACKDROP/);
-  assert.match(prestige, /\/assets\/facts-landing-motorhome\.jpg/);
-  assert.match(fax, /FACTS_LANDING_BACKDROP/);
   assert.match(fax, /data-facts-landing/);
   assert.match(fax, /facts-hero-panel/);
-  assert.match(fax, /SuiteBackdrop src=\{PRESTIGE_BACKDROP\}/);
+  assert.match(fax, /SuiteRaidhoBackdrop/);
+  assert.match(fax, /<SuiteRaidhoBackdrop bleed \/>/);
+  assert.doesNotMatch(fax, /FACTS_LANDING_BACKDROP/);
+  assert.doesNotMatch(fax, /SuiteBackdrop src=\{PRESTIGE_BACKDROP\}/);
   assert.match(css, /data-facts-landing/);
-  assert.match(css, /opacity: 0\.46/);
+  assert.match(css, /\.suite-raidho-bleed/);
+  assert.doesNotMatch(css, /\.rvfax-screen\[data-facts-landing\]\[data-readable-cards\] \.page-backdrop-bright/);
   assert.match(fax, /RV Search/);
   assert.match(fax, /VIN Decoder/);
   assert.match(fax, /Scan or type a VIN · NHTSA decode/);
-  assert.ok(existsSync(asset), "facts-landing-motorhome.jpg is in public/assets");
 
   // #2 — Model / Floorplan clear the dock (scroll pad + stage scroll-margin)
   assert.match(fax, /data-facts-cascade-scroll/);

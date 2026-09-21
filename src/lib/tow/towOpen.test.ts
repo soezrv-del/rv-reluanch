@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getTrimsForYear } from "./towYear.ts";
@@ -75,30 +75,29 @@ test("toggle-first cascade: each parent unlocks the next; trim gates the numbers
   assert.equal(inferTowKind("all", "Jeep", "Grand Cherokee"), "suv");
 });
 
-test("Tow landing uses the beach fifth-wheel still behind glass", () => {
+test("Tow landing is full-bleed Raidho only — no beach photo", () => {
   const tow = readFileSync(
     join(root, "../../components/rvtow/RvTowApp.tsx"),
     "utf8",
   );
-  const prestige = readFileSync(join(root, "../../assets/prestige.ts"), "utf8");
   const css = readFileSync(join(root, "../../styles.css"), "utf8");
   const page = readFileSync(
     join(root, "../../components/shell/SuitePage.tsx"),
     "utf8",
   );
-  const asset = join(root, "../../../public/assets/tow-landing-beach.jpg");
-  assert.match(prestige, /TOW_LANDING_BACKDROP/);
-  assert.match(prestige, /\/assets\/tow-landing-beach\.jpg/);
-  assert.match(tow, /TOW_LANDING_BACKDROP/);
+  assert.match(tow, /raidhoOnly/);
   assert.match(tow, /landing="tow"/);
   assert.match(tow, /tow-hero-panel/);
   assert.match(tow, /Know before you hitch,/);
-  assert.match(css, /data-tow-landing/);
-  assert.match(css, /opacity: 0\.46/);
-  assert.match(page, /data-tow-landing/);
+  assert.doesNotMatch(tow, /TOW_LANDING_BACKDROP/);
   assert.doesNotMatch(tow, /facts-landing-motorhome/);
   assert.doesNotMatch(tow, /2027 GMC Sierra/);
-  assert.ok(existsSync(asset), "tow-landing-beach.jpg is in public/assets");
+  assert.match(css, /data-tow-landing/);
+  assert.match(css, /\.suite-raidho-bleed/);
+  assert.doesNotMatch(css, /\.rvtow-screen\[data-tow-landing\]\[data-readable-cards\] \.page-backdrop-bright/);
+  assert.match(page, /data-tow-landing/);
+  assert.match(page, /raidhoOnly/);
+  assert.match(page, /SuiteRaidhoBackdrop bleed/);
 });
 
 test("Tow landing source-lock: no preset chips; toggle-first; trim-gated AnswerHero", () => {

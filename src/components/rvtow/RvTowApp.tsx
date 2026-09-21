@@ -60,7 +60,6 @@ import {
   towPrefillFromOffer,
   type FactsTowHandoffOffer,
 } from "@/lib/tow/factsTowHandoff";
-import { TOW_LANDING_BACKDROP } from "@/assets/prestige";
 import { inferTowKind, towCascadeReveal } from "@/lib/tow/towOpen";
 
 
@@ -716,8 +715,7 @@ export function RvTowApp() {
     <SuitePage
       tab="rvtow"
       className="rvtow-screen"
-      backdrop={TOW_LANDING_BACKDROP}
-      objectPosition="center 32%"
+      raidhoOnly
       landing="tow"
       scrollRef={scrollRef}
       onPullReset={clearVehicle}
