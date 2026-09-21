@@ -104,10 +104,11 @@ test("Compare backdrop is the Raidho R mark, not the campfire lifestyle still", 
   assert.match(prestige, /\/assets\/brand\/raidho-r-mark\.png/);
   assert.ok(existsSync(mark), "raidho-r-mark.png is in public/assets/brand");
 
-  assert.match(compareUi, /RAIDHO_R_MARK/);
-  assert.match(compareUi, /CompareRaidhoBackdrop/);
+  assert.match(compareUi, /<SuiteRaidhoBackdrop bleed \/>/);
   assert.match(compareUi, /data-compare-view/);
   assert.match(compareUi, /data-readable-cards/);
+  assert.match(compareUi, /data-raidho-only/);
+  assert.doesNotMatch(compareUi, /CompareRaidhoBackdrop/);
   assert.doesNotMatch(compareUi, /SuiteBackdrop/);
   assert.doesNotMatch(compareUi, /RV_CARD_MEDIA/);
   assert.doesNotMatch(compareUi, /class-a-diesel/);
@@ -115,7 +116,5 @@ test("Compare backdrop is the Raidho R mark, not the campfire lifestyle still", 
   assert.doesNotMatch(compareUi, /DialaBot/);
 
   assert.match(css, /\[data-compare-view\]/);
-  assert.match(css, /\.compare-raidho-mark/);
-  assert.match(css, /object-fit:\s*contain/);
-  assert.match(css, /mix-blend-mode:\s*screen/);
+  assert.match(css, /\[data-readable-cards\]\[data-compare-view\] \.glass-prestige/);
 });
