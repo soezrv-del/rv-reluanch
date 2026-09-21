@@ -192,6 +192,10 @@ export async function fetchLotSnapshot(): Promise<LotSnapshotView> {
   if (!res.ok) {
     throw new Error("Lot snapshot unavailable");
   }
+  const kind = res.headers.get("content-type") ?? "";
+  if (kind.includes("text/html")) {
+    throw new Error("Lot snapshot unavailable");
+  }
   const json: unknown = await res.json();
   return parseLotSnapshotJson(json);
 }

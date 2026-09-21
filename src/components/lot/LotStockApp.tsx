@@ -103,7 +103,7 @@ export function LotStockApp() {
       noSwipeScroll
     >
       <div
-        className="mx-auto w-full max-w-3xl space-y-5 px-4 pb-12 pt-3 sm:px-6"
+        className="mx-auto w-full max-w-3xl space-y-3 px-4 pb-12 pt-2 sm:px-6"
         data-lot-stock
       >
         <header className="flex items-center justify-between gap-3">
@@ -119,12 +119,6 @@ export function LotStockApp() {
             {snap ? `${total.toLocaleString("en-US")} units` : "Lot"}
           </p>
         </header>
-
-        <section className="max-w-xl space-y-2">
-          <p className="max-w-md text-[15px] leading-relaxed text-white/85">
-            In-stock RV Country inventory. Not the brochure catalog.
-          </p>
-        </section>
 
         <label className="block">
           <span className="sr-only">Search lot stock</span>
@@ -178,11 +172,7 @@ export function LotStockApp() {
         ) : null}
 
         <p
-          className={
-            query.trim() || type
-              ? "text-[12px] text-white/70"
-              : "sr-only"
-          }
+          className="text-[12px] text-white/70"
           data-lot-count
         >
           {countLine}
@@ -208,7 +198,7 @@ export function LotStockApp() {
             empty
           />
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {featured ? (
               <section className="space-y-2" data-lot-featured>
                 <p className="text-[10px] font-bold tracking-[0.18em] text-sapphire-glow">
@@ -396,8 +386,22 @@ function LotUnitCard({
           >
             {price}
           </span>
+          <div className="lot-well-id">
+            <p className="text-[12px] font-semibold text-sapphire-glow">
+              {year}
+            </p>
+            <p
+              className={cn(
+                "font-bold leading-snug text-white",
+                featured ? "text-[18px]" : "text-[16px]",
+              )}
+              data-lot-unit
+            >
+              {title}
+            </p>
+          </div>
         </div>
-        <div className="space-y-3 px-4 py-4">
+        <div className="space-y-3 px-4 py-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 space-y-1">
               <p className="text-[13px] font-semibold text-sapphire-glow">

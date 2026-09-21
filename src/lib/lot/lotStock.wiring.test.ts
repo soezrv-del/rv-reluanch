@@ -56,6 +56,8 @@ test("Lot stock is a suite page, not a dock tab and not RV Grok", () => {
   assert.match(lot, /data-lot-search/);
   assert.match(lot, /data-lot-chips/);
   assert.match(lot, /data-lot-featured/);
+  assert.match(lot, /data-lot-unit/);
+  assert.match(lot, /data-lot-count/);
   assert.match(lot, /FEATURED REPORT/);
   assert.match(lot, /data-lot-pill/);
   assert.match(lot, /data-lot-scene/);

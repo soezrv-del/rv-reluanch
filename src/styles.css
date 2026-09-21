@@ -2181,25 +2181,36 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
 .lot-well-mark {
   position: absolute;
   left: 50%;
-  top: 54%;
-  width: min(11rem, 46%);
-  height: min(14rem, 72%);
+  top: 42%;
+  width: min(7.5rem, 36%);
+  height: min(9rem, 56%);
   transform: translate(-50%, -50%);
   object-fit: contain;
-  opacity: 0.28;
+  opacity: 0.22;
   mix-blend-mode: screen;
   pointer-events: none;
 }
 .lot-well.is-featured {
-  min-height: 15.5rem;
+  min-height: 8.25rem;
 }
 @media (min-width: 640px) {
   .lot-well.is-featured {
-    min-height: 18.5rem;
+    min-height: 9.5rem;
   }
 }
 .lot-well.is-rail {
-  min-height: 12.25rem;
+  min-height: 7rem;
+}
+.lot-well-id {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  padding: 2.1rem 0.85rem 0.7rem;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(4, 10, 28, 0.82)
+  );
 }
 .lot-photo {
   position: absolute;
