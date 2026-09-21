@@ -1191,9 +1191,6 @@
     letter-spacing: var(--dock-label-track);
   }
 }
-.bottom-tab-label-sold {
-  letter-spacing: 0.5px;
-}
 .bottom-tab-btn.bottom-tab-live {
   padding-top: 0.1rem;
   padding-bottom: 0.1rem;
@@ -1495,6 +1492,17 @@
   .suite-raidho-backdrop {
     display: none;
   }
+}
+
+[data-sold-book] .suite-raidho-field,
+[data-premium-screen] .suite-raidho-field {
+  background:
+    radial-gradient(
+      ellipse 92% 78% at 50% 46%,
+      color-mix(in srgb, var(--color-sapphire-deep) 22%, transparent) 0%,
+      transparent 70%
+    ),
+    var(--color-ink-black);
 }
 
 .rvfax-screen[data-facts-landing] .suite-raidho-field,

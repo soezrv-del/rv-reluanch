@@ -72,3 +72,35 @@ test("Raidho sapphire mark sits behind suite, compare, GPS, and NDA", () => {
   assert.match(css, /scale\(1\.9\)/);
   assert.doesNotMatch(css, /DialaBot/);
 });
+
+test("Sold and Premium share sapphire accent + Raidho suite chrome — no dock Sold", () => {
+  const constants = read("../../components/shell/shellConstants.ts");
+  const header = read("../../components/shell/SapphireHeader.tsx");
+  const suite = read("../../components/shell/SuitePage.tsx");
+  const sold = read("../../components/rvfax/SoldBookApp.tsx");
+  const more = read("../../components/more/MoreApp.tsx");
+  const dock = read("../../components/shell/BottomTabs.tsx");
+  const shell = read("../../components/shell/AppShell.tsx");
+  const css = read("../../styles.css");
+
+  assert.match(constants, /rvsold:\s*"sapphire"/);
+  assert.match(constants, /more:\s*"sapphire"/);
+  assert.doesNotMatch(constants, /rvsold:\s*"gold"/);
+  assert.doesNotMatch(constants, /more:\s*"gold"/);
+  assert.match(header, /"rvsold"/);
+  assert.match(header, /"more"/);
+  assert.match(suite, /data-sold-book=\{tab === "rvsold"/);
+  assert.match(suite, /data-premium-screen=\{tab === "more"/);
+  assert.match(sold, /SuitePage/);
+  assert.match(sold, /tab="rvsold"/);
+  assert.match(more, /SuitePage/);
+  assert.match(more, /tab="more"/);
+  assert.match(more, /onNavigate\?\.\("rvsold"\)/);
+  assert.doesNotMatch(dock, /id: "rvsold"/);
+  assert.doesNotMatch(dock, /grid-cols-6/);
+  assert.match(dock, /grid-cols-5/);
+  assert.match(shell, /show\("rvsold"\) && isPro/);
+  assert.match(css, /\[data-sold-book\] \.suite-raidho-field/);
+  assert.match(css, /\[data-premium-screen\] \.suite-raidho-field/);
+  assert.doesNotMatch(css, /DialaBot/);
+});

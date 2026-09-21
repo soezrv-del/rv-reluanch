@@ -104,9 +104,10 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.doesNotMatch(css, /--dock-etch-under-hue/);
   assert.doesNotMatch(css, /\.bottom-tab-indicator-sapphire/);
   assert.doesNotMatch(css, /border-radius:\s*1\.45rem/);
-  assert.match(tabs, /bottom-tab-label-sold/);
+  assert.doesNotMatch(tabs, /bottom-tab-label-sold/);
   assert.doesNotMatch(tabs, /bottom-tab-label-sold-owed/);
   assert.doesNotMatch(tabs, /formatSoldDockMoney/);
+  assert.doesNotMatch(css, /\.bottom-tab-label-sold/);
   assert.doesNotMatch(css, /\.bottom-tab-label-sold-owed/);
   assert.doesNotMatch(css, /--color-dock-etch:/);
   assert.doesNotMatch(css, /Milky frosted body/);
@@ -135,7 +136,7 @@ test("dock labels are bright solid type — no metal gradient", () => {
   assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
 
   const labelBlock = css.match(
-    /\/\* Dock labels[\s\S]*?\.bottom-tab-label-sold \{/,
+    /\/\* Dock labels[\s\S]*?\.bottom-tab-btn\.bottom-tab-live \{/,
   )?.[0];
   assert.ok(labelBlock, "dock label CSS block present");
   assert.doesNotMatch(labelBlock, /linear-gradient/);

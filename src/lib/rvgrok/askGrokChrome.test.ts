@@ -106,8 +106,9 @@ test("Grok dock tab uses the same Einstein asset as RvGrok; other tabs are icon-
   assert.doesNotMatch(liveBranch, /DockLabel/);
   assert.doesNotMatch(liveBranch, />Grok</);
   assert.doesNotMatch(liveBranch, /text=\{short\}/);
-  assert.match(tabs, /aria-label=\{isSold \? soldLabel : label\}/);
-  assert.match(tabs, /title=\{isSold \? soldLabel : label\}/);
+  assert.match(tabs, /aria-label=\{label\}/);
+  assert.match(tabs, /title=\{label\}/);
+  assert.doesNotMatch(tabs, /isSold/);
   assert.match(css, /\.bottom-tab-einstein/);
   assert.match(css, /--dock-icon-size:\s*3\.25rem/);
   assert.match(css, /width:\s*var\(--dock-icon-size\)/);

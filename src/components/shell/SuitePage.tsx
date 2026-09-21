@@ -144,6 +144,8 @@ export function SuitePage({
       }
       data-no-swipe-scroll={noSwipeScroll ? "" : undefined}
       data-tow-landing={landing === "tow" ? "" : undefined}
+      data-sold-book={tab === "rvsold" ? "" : undefined}
+      data-premium-screen={tab === "more" ? "" : undefined}
     >
       <SuiteBackdrop src={backdrop} objectPosition={objectPosition} />
       {topSlot}

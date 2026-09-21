@@ -9,9 +9,9 @@ export const TAB_ORDER = [
   "rvtrips",
 ] as const satisfies readonly AppTab[];
 
-/** Pros get Sold on the dock (owed balance). Consumer stays the 5-tab order. */
-export function dockTabOrder(pro: boolean): readonly AppTab[] {
-  return pro ? [...TAB_ORDER, "rvsold"] : TAB_ORDER;
+/** Dock + swipe — five tools. Sold lives in Premium, never a dock square. */
+export function dockTabOrder(_pro?: boolean): readonly AppTab[] {
+  return TAB_ORDER;
 }
 
 /** One hero accent per page — premium color discipline */
@@ -23,9 +23,9 @@ export const PAGE_ACCENT: Record<AppTab, "sapphire" | "ruby" | "gold"> = {
   rvtrips: "sapphire",
   rvshare: "sapphire",
   rvgrok: "sapphire",
-  rvsold: "gold",
+  rvsold: "sapphire",
 
-  more: "gold",
+  more: "sapphire",
 };
 
 export const PAGE_COPY: Record<
