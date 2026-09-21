@@ -61,9 +61,9 @@ function escapeBrandRe(s: string): string {
 }
 
 /**
- * Floorplan / trim token: 27A, 27ASE, 45A, 337RLS, 25FW, 4369, 4020T.
+ * Floorplan / trim token: 27A, 27ASE, 45A, 337RLS, 25FW, 4369, 4020T, 310GK.
  * 4-digit Newmar-style codes are floorplans, not years (2018 / 2022 stay years).
- * Skips budget leftovers like 50k so a price ask is not a floorplan.
+ * Skips $50k / 80k price leftovers — not alphanumeric FW codes (310GK).
  */
 const FLOORPLAN_TOKEN_RE =
   /\b(\d{2,3}\s?[A-Za-z]{1,4}|[A-Za-z]{1,3}\d{2,3}[A-Za-z]?|(?!19[89]\d\b)(?!20[0-2]\d\b)\d{4}[A-Za-z]?)\b/g;
@@ -83,13 +83,21 @@ export function normalizeFloorplanToken(token: string): string {
   return t;
 }
 
+/**
+ * $50k / 80k asking-price leftovers. 310GK / 25TK stay floorplans.
+ * Only a bare thousands suffix (digits + k) is skipped — not GK / TK codes.
+ */
+export function isBudgetThousandsToken(token: string): boolean {
+  return /^\d{2,4}k$/i.test((token || "").replace(/\s+/g, ""));
+}
+
 export function extractFloorplanToken(text: string): string {
   if (!text) return "";
   const re = new RegExp(FLOORPLAN_TOKEN_RE.source, "g");
   for (const m of text.matchAll(re)) {
     const token = normalizeFloorplanToken(m[1] || "");
     if (!token) continue;
-    if (/k$/i.test(token)) continue;
+    if (isBudgetThousandsToken(token)) continue;
     return token;
   }
   return "";
