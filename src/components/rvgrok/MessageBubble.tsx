@@ -97,12 +97,14 @@ export function MessageBubble({
       )}
     >
       {!isUser && (
-        <div className="relative mt-1 size-8 shrink-0 overflow-hidden rounded-full border border-white/15 bg-black">
-          <img
-            src="/assets/brand/icon-rvgrok.png"
-            alt=""
-            className="size-full object-contain"
-          />
+        <div className="grok-avatar-ring relative mt-1 size-8 shrink-0 overflow-hidden rounded-full">
+          <div className="grok-avatar-well absolute inset-[2px] overflow-hidden rounded-full">
+            <img
+              src="/assets/brand/icon-rvgrok.png"
+              alt=""
+              className="size-full object-cover"
+            />
+          </div>
         </div>
       )}
 
@@ -110,8 +112,8 @@ export function MessageBubble({
         className={cn(
           "max-w-[min(100%,28rem)] rounded-[var(--radius-lg)] px-3.5 py-3 text-[14px] leading-relaxed",
           isUser
-            ? "rounded-br-sm bg-ruby text-white shadow-[0_4px_20px_rgba(212,37,53,0.35)]"
-            : "rounded-bl-sm border border-border-strong bg-surface/90 text-white shadow-[var(--shadow-panel)]",
+            ? "rounded-br-sm bg-sapphire text-white shadow-[var(--shadow-glow-sapphire)]"
+            : "grok-frost rounded-bl-sm text-fg",
         )}
       >
         {hasAgentSteps ? (

@@ -19,7 +19,7 @@ test("RvGrokApp defaults to page variant and gates suite chrome for embedded", (
   assert.match(app, /const embedded = variant === "embedded"/);
   assert.match(app, /data-rvgrok-variant=\{variant\}/);
 
-  assert.match(app, /!embedded && <SuiteBackdrop \/>/);
+  assert.match(app, /!embedded && <SuiteRaidhoBackdrop bleed \/>/);
   assert.match(
     app,
     /!embedded && \(\s*<ScrollSuiteHeader tab="rvgrok"/,
@@ -34,7 +34,7 @@ test("RvGrokApp defaults to page variant and gates suite chrome for embedded", (
   );
 
   // One header: overlay title/close. Embedded hides History/Agent/Voice.
-  assert.match(app, /!embedded && \(\s*<header className="relative z-10 flex shrink-0/);
+  assert.match(app, /!embedded && !isLanding/);
   assert.match(app, /<HistoryPanel/);
   assert.match(app, /<VoicePanel/);
   assert.match(app, /Ask RV Grok/);
@@ -58,12 +58,12 @@ test("Grok tab stays default page variant", () => {
 });
 
 test("GROK_STARTERS densify on short viewports with ≥44px tap targets", () => {
-  const app = read("../../components/rvgrok/RvGrokApp.tsx");
+  const landing = read("../../components/rvgrok/GrokLanding.tsx");
   const css = read("../../styles.css");
 
-  assert.match(app, /className="grok-starters /);
-  assert.match(app, /className="grok-starter /);
-  assert.match(app, /min-h-11/);
+  assert.match(landing, /className="grok-starters /);
+  assert.match(landing, /className="grok-starter /);
+  assert.match(landing, /min-h-11/);
   assert.match(css, /@media \(max-height: 740px\)/);
   assert.match(css, /\.grok-starter \{/);
   assert.match(css, /min-height:\s*44px/);
