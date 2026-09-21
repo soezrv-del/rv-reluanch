@@ -14,7 +14,7 @@ import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 
-/** Contained Raidho R watermark — same seal as compare, suite-wide. */
+/** Full-viewport Raidho R watermark — same seal as compare, suite-wide. */
 export function SuiteRaidhoBackdrop({ className }: { className?: string }) {
   return (
     <div

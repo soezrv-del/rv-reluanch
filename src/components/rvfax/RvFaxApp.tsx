@@ -905,7 +905,7 @@ export function RvFaxApp({
                   "inline-flex min-h-[44px] items-center gap-1 rounded-full border px-3 py-1.5 text-left transition active:scale-[0.98]",
                   filtersOpen || era !== "all"
                     ? "border-sapphire/50 bg-sapphire/20"
-                    : "border-white/20 bg-black/30",
+                    : "glass-field",
                 )}
                 aria-expanded={filtersOpen}
                 aria-controls="rvfax-optional-filters"
@@ -933,7 +933,7 @@ export function RvFaxApp({
             {filtersOpen ? (
               <div
                 id="rvfax-optional-filters"
-                className="space-y-2.5 rounded-[var(--radius-md)] border border-white/10 bg-black/25 p-2.5"
+                className="glass-field space-y-2.5 rounded-[var(--radius-md)] p-2.5"
               >
                 <div className="flex items-center justify-between gap-2 px-0.5">
                   <p className="rvfax-sapphire-label text-[10px] font-bold tracking-[0.12em]">
@@ -1072,7 +1072,7 @@ export function RvFaxApp({
                     <button
                       type="button"
                       onClick={() => applySuggestion(hit)}
-                      className="flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl border border-white/12 bg-black/35 px-3 py-2.5 text-left transition active:scale-[0.99]"
+                      className="glass-field flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left transition active:scale-[0.99]"
                     >
                       <div>
                         <p className="text-[13px] font-bold text-white">
@@ -1431,8 +1431,8 @@ function FieldButton({
           "flex min-h-[52px] w-full items-center justify-between gap-2 rounded-[var(--radius-md)] border px-3.5 py-3.5 text-left text-[16px] font-semibold text-white touch-manipulation active:scale-[0.99] disabled:opacity-100",
           value && !custom && "border-gold-border/60 bg-gold-dim/25",
           value && custom && "border-blue/50 bg-blue/10",
-          !value && "border-white/35 bg-white/[0.04]",
-          disabled && "border-white/25 bg-white/[0.03]",
+          !value && "glass-field",
+          disabled && "glass-field opacity-80",
         )}
       >
         <span className="min-w-0 flex-1 truncate text-white">
@@ -1644,7 +1644,7 @@ function ComparePeerPicker({
         </div>
         <ul className="mt-3 max-h-[46vh] space-y-2 overflow-y-auto overscroll-contain">
           {peers.length === 0 ? (
-            <li className="rounded-xl border border-white/10 bg-black/30 px-3 py-4 text-[13px] text-white/70">
+            <li className="glass-field rounded-xl px-3 py-4 text-[13px] text-white/70">
               No catalog peers here. Open another unit from search or Saved,
               tap Compare on that card, then Compare again.
             </li>
@@ -1663,7 +1663,7 @@ function ComparePeerPicker({
                       "flex min-h-[52px] w-full items-center justify-between gap-2 rounded-xl border px-3.5 py-3 text-left disabled:opacity-40",
                       on
                         ? "border-sky-400/50 bg-sky-500/20"
-                        : "border-white/12 bg-black/35",
+                        : "glass-field",
                     )}
                   >
                     <div className="min-w-0">
