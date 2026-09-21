@@ -103,7 +103,6 @@ Published torque + published GVWR to list a row. Score uses #358 weight (publish
 | Forest River | Sunseeker | year-band 2020–2027 | 450 | 14,500 | 12,800 | UVW_EST | 35.2 | 8.8 | green |
 | Forest River | Sunseeker 4X4 | series | 450 | 14,500 | 12,800 | UVW_EST | 35.2 | 8.8 | green |
 | Forest River | Sunseeker Classic | year-band 2020–2024 | 450 | 14,500 | 12,800 | UVW_EST | 35.2 | 8.8 | green |
-| Forest River | Sunseeker LE | series | 450 | 12,500 | 11,000 | UVW_EST | 40.9 | 10.0 | green |
 | Forest River | Sunseeker LE | 2550DSLE · year-band 2020–2027 | 450 | 14,500 | 12,800 | UVW_EST | 35.2 | 8.8 | green |
 | Forest River | Sunseeker MBS | series | 332 | 11,030 | 9,700 | UVW_EST | 34.2 | 8.6 | green |
 | Forest River | Sunseeker PM | series | 250 | 9,350 | 8,200 | UVW_EST | 30.5 | 8.0 | green |
