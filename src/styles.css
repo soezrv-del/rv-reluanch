@@ -76,6 +76,10 @@
   --color-lot-chip: #181c26;
   --color-lot-studio: #05070b;
   --color-lot-tire: #1a1d24;
+  --color-lot-dusk-high: #12151c;
+  --color-lot-dusk-mid: #3c322f;
+  --color-lot-dusk-sun: #c4a078;
+  --color-lot-dusk-ground: #161410;
 
   --page-accent: var(--color-sapphire);
   --page-accent-soft: color-mix(in srgb, var(--color-sapphire) 16%, transparent);
@@ -2124,15 +2128,26 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   inset: 0;
   background:
     radial-gradient(
-      ellipse 70% 42% at 88% -4%,
-      color-mix(in srgb, var(--color-fg) 10%, transparent),
-      transparent 58%
+      ellipse 64% 46% at 92% 0%,
+      color-mix(in srgb, var(--color-fg) 14%, transparent),
+      transparent 56%
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-lot-plate) 55%, transparent),
-      var(--color-lot-void) 38%
+      color-mix(in srgb, var(--color-lot-plate) 62%, transparent),
+      var(--color-lot-void) 36%
     );
+}
+.lot-hero {
+  position: relative;
+}
+.lot-hero-coach {
+  position: absolute;
+  right: -18%;
+  top: -2.5rem;
+  width: min(72%, 22rem);
+  opacity: 0.2;
+  pointer-events: none;
 }
 .lot-search {
   background: var(--color-lot-chip);
@@ -2147,12 +2162,16 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   gap: 0.5rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding-bottom: 0.15rem;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-fg) 22%, transparent) transparent;
+  padding-bottom: 0.55rem;
 }
 .lot-chip-rail::-webkit-scrollbar {
-  display: none;
+  height: 3px;
+}
+.lot-chip-rail::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-fg) 22%, transparent);
+  border-radius: 99px;
 }
 .lot-chip {
   background: var(--color-lot-chip);
@@ -2177,28 +2196,40 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
     var(--color-lot-studio);
 }
 .lot-well.is-featured {
-  min-height: 14.5rem;
+  min-height: 15.5rem;
 }
 @media (min-width: 640px) {
   .lot-well.is-featured {
-    min-height: 17.5rem;
+    min-height: 18.5rem;
   }
 }
 .lot-well.is-rail {
-  min-height: 11rem;
+  min-height: 12.25rem;
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-lot-dusk-high) 0%,
+      var(--color-lot-dusk-mid) 46%,
+      var(--color-lot-dusk-sun) 74%,
+      var(--color-lot-dusk-ground) 74.4%,
+      var(--color-lot-studio) 100%
+    );
 }
 .lot-mark {
-  width: 88%;
-  max-width: 24rem;
+  width: 92%;
+  max-width: 26rem;
 }
 .lot-mark-shadow {
-  fill: color-mix(in srgb, var(--color-fg) 16%, transparent);
+  fill: color-mix(in srgb, var(--color-lot-void) 55%, transparent);
 }
 .lot-mark-body {
-  fill: color-mix(in srgb, var(--color-fg) 90%, var(--color-sapphire-glow));
+  fill: color-mix(in srgb, var(--color-fg) 92%, var(--color-sapphire-glow));
+}
+.lot-mark-shade {
+  fill: color-mix(in srgb, var(--color-fg) 72%, var(--color-lot-void));
 }
 .lot-mark-glass {
-  fill: color-mix(in srgb, var(--color-lot-void) 70%, var(--color-sapphire));
+  fill: color-mix(in srgb, var(--color-lot-void) 68%, var(--color-sapphire));
 }
 .lot-mark-tire {
   fill: var(--color-lot-tire);

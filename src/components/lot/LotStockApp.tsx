@@ -124,11 +124,14 @@ export function LotStockApp() {
               <PremiumMenuButton size="sm" />
             </header>
 
-            <section className="max-w-xl space-y-3 pt-2">
-              <h1 className="text-balance text-[clamp(2.15rem,9vw,3.35rem)] font-bold leading-[1.02] tracking-tight text-fg">
+            <section className="lot-hero max-w-xl space-y-3 pt-2">
+              <div className="lot-hero-coach" aria-hidden>
+                <LotTypeMark type="Class A Diesel" featured />
+              </div>
+              <h1 className="relative text-balance text-[clamp(2.25rem,9vw,3.45rem)] font-bold leading-[1.02] tracking-tight text-fg">
                 On the lot.
               </h1>
-              <p className="max-w-md text-[15px] leading-relaxed text-muted">
+              <p className="relative max-w-md text-[15px] leading-relaxed text-muted">
                 In-stock RV Country inventory. Not the brochure catalog.
               </p>
             </section>
@@ -219,7 +222,7 @@ export function LotStockApp() {
                 {featured ? (
                   <section className="space-y-2" data-lot-featured>
                     <p className="text-[10px] font-bold tracking-[0.18em] text-dim">
-                      FEATURED
+                      FEATURED REPORT
                     </p>
                     <LotUnitCard
                       unit={featured}
@@ -369,14 +372,15 @@ function LotUnitCard({
         data-lot-featured-card={featured ? "" : undefined}
         aria-expanded={open}
         className={cn(
-          "lot-card w-full overflow-hidden rounded-xl text-left transition duration-200 ease-out active:scale-[0.995]",
+          "lot-card w-full overflow-hidden rounded-2xl text-left transition duration-200 ease-out active:scale-[0.995]",
         )}
       >
         <div
           className={cn(
-            "lot-well relative flex items-end justify-center px-4 pb-3 pt-12",
+            "lot-well relative flex items-end justify-center px-4 pb-2 pt-12",
             featured ? "is-featured" : "is-rail",
           )}
+          data-lot-scene={featured ? "studio" : "dusk"}
         >
           <span className="absolute left-3 top-3 rounded-full bg-fg px-2.5 py-1 text-[11px] font-bold text-lot-void">
             {shortLotTypeLabel(unit.body_type)}

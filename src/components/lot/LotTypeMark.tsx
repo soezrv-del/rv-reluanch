@@ -10,153 +10,182 @@ export function LotTypeMark({
   const family = lotTypeFamily(type);
   return (
     <svg
-      viewBox="0 0 320 150"
+      viewBox="0 0 360 170"
       className="lot-mark"
       aria-hidden
       data-lot-mark={family}
     >
-      <ellipse className="lot-mark-shadow" cx="160" cy="134" rx="120" ry="9" />
-      <LotStudioCoach family={family} featured={Boolean(featured)} />
+      <ellipse className="lot-mark-shadow" cx="188" cy="154" rx="128" ry="10" />
+      <QuarterCoach family={family} />
     </svg>
   );
 }
 
-function LotStudioCoach({
-  family,
-}: {
-  family: LotTypeFamily;
-  featured: boolean;
-}) {
+function QuarterCoach({ family }: { family: LotTypeFamily }) {
   switch (family) {
     case "b":
       return (
         <g>
           <path
+            className="lot-mark-shade"
+            d="M86 128h196c18 0 32-10 38-26 4-12 0-24-10-32L246 44H132c-22 0-40 14-50 34-8 14-12 28-10 40 2 8 8 10 14 10z"
+          />
+          <path
             className="lot-mark-body"
-            d="M58 108h204c8 0 14-6 16-14 3-12-2-22-12-28l-18-10H86c-16 0-28 8-36 20-6 8-10 18-10 24 0 5 4 8 8 8z"
+            d="M78 126h188c16 0 28-8 34-22 4-10-2-22-12-30L234 50H128c-20 0-36 12-46 30-8 14-12 26-10 36 2 6 8 10 16 10z"
           />
           <path
             className="lot-mark-glass"
-            d="M214 62c12 4 22 12 26 22h-48V74c0-6 8-12 22-12z"
+            d="M232 58c16 6 28 16 34 28h-62V70c0-8 10-12 28-12z"
           />
-          <rect className="lot-mark-glass" x="92" y="70" width="36" height="18" rx="3" />
-          <rect className="lot-mark-glass" x="136" y="70" width="36" height="18" rx="3" />
-          <rect className="lot-mark-glass" x="180" y="70" width="22" height="18" rx="3" />
-          <circle className="lot-mark-tire" cx="96" cy="112" r="13" />
-          <circle className="lot-mark-hub" cx="96" cy="112" r="5" />
-          <circle className="lot-mark-tire" cx="228" cy="112" r="13" />
-          <circle className="lot-mark-hub" cx="228" cy="112" r="5" />
+          <rect className="lot-mark-glass" x="118" y="68" width="32" height="20" rx="3" />
+          <rect className="lot-mark-glass" x="156" y="66" width="34" height="20" rx="3" />
+          <rect className="lot-mark-glass" x="196" y="64" width="22" height="20" rx="3" />
+          <circle className="lot-mark-tire" cx="124" cy="130" r="15" />
+          <circle className="lot-mark-hub" cx="124" cy="130" r="6" />
+          <circle className="lot-mark-tire" cx="250" cy="128" r="15" />
+          <circle className="lot-mark-hub" cx="250" cy="128" r="6" />
         </g>
       );
     case "a":
       return (
         <g>
           <path
-            className="lot-mark-body"
-            d="M28 108h268c6 0 10-4 10-10V78c0-16-10-26-24-26H48c-12 0-20 8-24 18v28c0 6 4 10 4 10z"
+            className="lot-mark-shade"
+            d="M48 130h268c12 0 18-8 18-16V78c0-18-12-28-28-28H86c-20 0-34 12-40 28v36c0 10 8 16 12 16z"
           />
-          <rect className="lot-mark-glass" x="44" y="62" width="32" height="20" rx="3" />
-          <rect className="lot-mark-glass" x="86" y="62" width="42" height="20" rx="3" />
-          <rect className="lot-mark-glass" x="136" y="62" width="42" height="20" rx="3" />
-          <rect className="lot-mark-glass" x="186" y="62" width="42" height="20" rx="3" />
-          <rect className="lot-mark-glass" x="236" y="62" width="36" height="20" rx="3" />
-          <circle className="lot-mark-tire" cx="72" cy="114" r="13" />
-          <circle className="lot-mark-hub" cx="72" cy="114" r="5" />
-          <circle className="lot-mark-tire" cx="248" cy="114" r="13" />
-          <circle className="lot-mark-hub" cx="248" cy="114" r="5" />
+          <path
+            className="lot-mark-body"
+            d="M42 128h258c10 0 16-6 16-14V80c0-16-10-26-24-26H82c-18 0-30 10-36 24v36c0 8 6 14 12 14z"
+          />
+          <path className="lot-mark-glass" d="M48 78h36l8 22H46z" />
+          <rect className="lot-mark-glass" x="98" y="64" width="38" height="20" rx="3" />
+          <rect className="lot-mark-glass" x="144" y="62" width="40" height="20" rx="3" />
+          <rect className="lot-mark-glass" x="192" y="62" width="40" height="20" rx="3" />
+          <rect className="lot-mark-glass" x="240" y="64" width="36" height="20" rx="3" />
+          <circle className="lot-mark-tire" cx="92" cy="132" r="15" />
+          <circle className="lot-mark-hub" cx="92" cy="132" r="6" />
+          <circle className="lot-mark-tire" cx="268" cy="130" r="15" />
+          <circle className="lot-mark-hub" cx="268" cy="130" r="6" />
         </g>
       );
     case "c":
       return (
         <g>
           <path
-            className="lot-mark-body"
-            d="M36 108h250c8 0 12-6 12-12V76c0-14-10-22-22-22H92c-10 0-18 6-22 14L54 86H36c-6 0-8 4-8 8 0 8 4 14 8 14z"
+            className="lot-mark-shade"
+            d="M52 130h250c14 0 20-8 20-16V82c0-16-12-26-26-26H118c-16 0-28 10-34 22L68 98H50c-8 0-12 6-12 12 0 12 6 20 14 20z"
           />
-          <path className="lot-mark-glass" d="M36 78h28l12 16H36z" />
-          <rect className="lot-mark-glass" x="102" y="64" width="40" height="18" rx="3" />
-          <rect className="lot-mark-glass" x="150" y="64" width="40" height="18" rx="3" />
-          <rect className="lot-mark-glass" x="198" y="64" width="40" height="18" rx="3" />
-          <circle className="lot-mark-tire" cx="78" cy="114" r="13" />
-          <circle className="lot-mark-hub" cx="78" cy="114" r="5" />
-          <circle className="lot-mark-tire" cx="246" cy="114" r="13" />
-          <circle className="lot-mark-hub" cx="246" cy="114" r="5" />
+          <path
+            className="lot-mark-body"
+            d="M46 128h242c12 0 18-6 18-14V84c0-14-10-24-22-24H114c-14 0-24 8-30 20L64 98H46c-6 0-10 4-10 10 0 12 6 20 10 20z"
+          />
+          <path className="lot-mark-glass" d="M46 86h32l14 18H46z" />
+          <rect className="lot-mark-glass" x="122" y="70" width="36" height="18" rx="3" />
+          <rect className="lot-mark-glass" x="166" y="68" width="36" height="18" rx="3" />
+          <rect className="lot-mark-glass" x="210" y="68" width="36" height="18" rx="3" />
+          <circle className="lot-mark-tire" cx="96" cy="132" r="15" />
+          <circle className="lot-mark-hub" cx="96" cy="132" r="6" />
+          <circle className="lot-mark-tire" cx="262" cy="130" r="15" />
+          <circle className="lot-mark-hub" cx="262" cy="130" r="6" />
         </g>
       );
     case "fw":
       return (
         <g>
           <path
-            className="lot-mark-body"
-            d="M118 44h174c10 0 16 8 16 18v40c0 6-4 10-12 10H118c-8 0-12-4-12-10V54c0-6 4-10 12-10z"
+            className="lot-mark-shade"
+            d="M128 46h188c14 0 22 10 22 22v52c0 8-6 12-16 12H128c-10 0-16-6-16-14V58c0-8 6-12 16-12z"
           />
           <path
             className="lot-mark-body"
-            d="M88 44h32v68H96c-6 0-10-6-10-14V56c0-8 4-12 10-12z"
+            d="M122 48h180c12 0 20 8 20 20v48c0 6-4 10-14 10H122c-8 0-14-4-14-12V58c0-6 4-10 14-10z"
           />
           <path
             className="lot-mark-body"
-            d="M40 90h50v16H50c-8 0-14-4-14-8 0-5 2-8 4-8z"
+            d="M92 48h34v74H100c-8 0-12-8-12-16V60c0-8 4-12 12-12z"
           />
-          <rect className="lot-mark-glass" x="130" y="54" width="34" height="18" rx="3" />
-          <rect className="lot-mark-glass" x="172" y="54" width="34" height="18" rx="3" />
-          <rect className="lot-mark-glass" x="214" y="54" width="34" height="18" rx="3" />
-          <circle className="lot-mark-tire" cx="168" cy="116" r="12" />
-          <circle className="lot-mark-hub" cx="168" cy="116" r="5" />
-          <circle className="lot-mark-tire" cx="204" cy="116" r="12" />
-          <circle className="lot-mark-hub" cx="204" cy="116" r="5" />
-          <circle className="lot-mark-tire" cx="258" cy="116" r="12" />
-          <circle className="lot-mark-hub" cx="258" cy="116" r="5" />
+          <path
+            className="lot-mark-shade"
+            d="M44 102h52v16H54c-10 0-16-4-16-8 0-6 2-8 6-8z"
+          />
+          <rect className="lot-mark-glass" x="144" y="60" width="32" height="18" rx="3" />
+          <rect className="lot-mark-glass" x="184" y="58" width="34" height="18" rx="3" />
+          <rect className="lot-mark-glass" x="226" y="58" width="34" height="18" rx="3" />
+          <circle className="lot-mark-tire" cx="176" cy="134" r="13" />
+          <circle className="lot-mark-hub" cx="176" cy="134" r="5" />
+          <circle className="lot-mark-tire" cx="212" cy="134" r="13" />
+          <circle className="lot-mark-hub" cx="212" cy="134" r="5" />
+          <circle className="lot-mark-tire" cx="278" cy="132" r="13" />
+          <circle className="lot-mark-hub" cx="278" cy="132" r="5" />
         </g>
       );
     case "toy":
       return (
         <g>
           <path
-            className="lot-mark-body"
-            d="M40 108h232c8 0 12-6 12-12V66c0-12-8-20-20-20H62c-12 0-20 8-22 18v32c0 8 6 12 10 12z"
+            className="lot-mark-shade"
+            d="M58 128h236c14 0 20-8 20-16V74c0-16-10-24-24-24H86c-18 0-30 10-34 24v38c0 10 8 16 16 16z"
           />
-          <path className="lot-mark-glass" d="M252 56l20 40h-28V66c0-6 2-10 8-10z" />
-          <rect className="lot-mark-glass" x="72" y="58" width="36" height="18" rx="3" />
-          <rect className="lot-mark-glass" x="116" y="58" width="36" height="18" rx="3" />
-          <rect className="lot-mark-glass" x="160" y="58" width="36" height="18" rx="3" />
-          <circle className="lot-mark-tire" cx="96" cy="114" r="13" />
-          <circle className="lot-mark-hub" cx="96" cy="114" r="5" />
-          <circle className="lot-mark-tire" cx="236" cy="114" r="13" />
-          <circle className="lot-mark-hub" cx="236" cy="114" r="5" />
+          <path
+            className="lot-mark-body"
+            d="M52 126h228c12 0 18-6 18-14V76c0-14-8-22-20-22H82c-16 0-26 8-30 22v36c0 8 6 14 14 14z"
+          />
+          <path className="lot-mark-glass" d="M268 64l22 46h-30V76c0-8 2-12 8-12z" />
+          <rect className="lot-mark-glass" x="88" y="66" width="34" height="18" rx="3" />
+          <rect className="lot-mark-glass" x="130" y="64" width="34" height="18" rx="3" />
+          <rect className="lot-mark-glass" x="172" y="64" width="34" height="18" rx="3" />
+          <circle className="lot-mark-tire" cx="112" cy="132" r="14" />
+          <circle className="lot-mark-hub" cx="112" cy="132" r="5" />
+          <circle className="lot-mark-tire" cx="254" cy="130" r="14" />
+          <circle className="lot-mark-hub" cx="254" cy="130" r="5" />
         </g>
       );
     case "camper":
       return (
         <g>
-          <path className="lot-mark-body" d="M36 100h80v16H44c-6 0-8-4-8-8 0-5 4-8 8-8z" />
+          <path className="lot-mark-body" d="M48 116h88v16H56c-8 0-12-4-12-8 0-6 4-8 8-8z" />
+          <path
+            className="lot-mark-shade"
+            d="M122 128h156c12 0 18-8 18-16V66c0-12-8-18-20-18h-112c-14 0-22 8-24 18v46c0 10 8 16 16 16z"
+          />
           <path
             className="lot-mark-body"
-            d="M104 108h140c8 0 12-6 12-12V58c0-10-8-16-16-16h-98c-10 0-16 6-18 14v40c0 8 6 12 12 12z"
+            d="M118 126h148c10 0 16-6 16-14V68c0-10-6-16-16-16H124c-12 0-18 6-20 16v42c0 8 6 16 14 16z"
           />
-          <rect className="lot-mark-glass" x="128" y="54" width="36" height="18" rx="3" />
-          <rect className="lot-mark-glass" x="172" y="54" width="36" height="18" rx="3" />
-          <circle className="lot-mark-tire" cx="72" cy="114" r="13" />
-          <circle className="lot-mark-hub" cx="72" cy="114" r="5" />
-          <circle className="lot-mark-tire" cx="220" cy="114" r="13" />
-          <circle className="lot-mark-hub" cx="220" cy="114" r="5" />
+          <rect className="lot-mark-glass" x="148" y="62" width="34" height="18" rx="3" />
+          <rect className="lot-mark-glass" x="190" y="60" width="34" height="18" rx="3" />
+          <circle className="lot-mark-tire" cx="86" cy="132" r="14" />
+          <circle className="lot-mark-hub" cx="86" cy="132" r="5" />
+          <circle className="lot-mark-tire" cx="236" cy="130" r="14" />
+          <circle className="lot-mark-hub" cx="236" cy="130" r="5" />
         </g>
       );
     default:
       return (
         <g>
           <path
-            className="lot-mark-body"
-            d="M48 108h236c8 0 12-6 12-12V64c0-12-8-20-20-20H70c-14 0-22 8-24 18v34c0 8 6 12 12 12z"
+            className="lot-mark-shade"
+            d="M72 128h236c16 0 24-8 24-18V72c0-16-10-24-24-24H102c-20 0-34 10-38 26v38c0 10 8 16 18 16z"
           />
-          <path className="lot-mark-body" d="M22 96h28v12H26c-4 0-6-2-6-6s2-6 2-6z" />
-          <rect className="lot-mark-glass" x="80" y="56" width="40" height="20" rx="3" />
-          <rect className="lot-mark-glass" x="128" y="56" width="40" height="20" rx="3" />
-          <rect className="lot-mark-glass" x="176" y="56" width="40" height="20" rx="3" />
-          <circle className="lot-mark-tire" cx="108" cy="114" r="13" />
-          <circle className="lot-mark-hub" cx="108" cy="114" r="5" />
-          <circle className="lot-mark-tire" cx="240" cy="114" r="13" />
-          <circle className="lot-mark-hub" cx="240" cy="114" r="5" />
+          <path
+            className="lot-mark-body"
+            d="M66 126h228c14 0 20-6 20-16V74c0-14-8-22-20-22H98c-18 0-30 8-34 22v36c0 8 6 16 16 16z"
+          />
+          <path className="lot-mark-body" d="M28 112h42v14H34c-6 0-8-2-8-6s2-8 2-8z" />
+          <path
+            className="lot-mark-glass"
+            d="M96 58c10-4 22-4 28 0v28H92V70c0-6 2-10 4-12z"
+          />
+          <rect className="lot-mark-glass" x="134" y="62" width="36" height="20" rx="3" />
+          <rect className="lot-mark-glass" x="178" y="60" width="36" height="20" rx="3" />
+          <rect className="lot-mark-glass" x="222" y="60" width="32" height="20" rx="3" />
+          <circle className="lot-mark-tire" cx="128" cy="132" r="14" />
+          <circle className="lot-mark-hub" cx="128" cy="132" r="5" />
+          <circle className="lot-mark-tire" cx="168" cy="132" r="14" />
+          <circle className="lot-mark-hub" cx="168" cy="132" r="5" />
+          <circle className="lot-mark-tire" cx="262" cy="130" r="14" />
+          <circle className="lot-mark-hub" cx="262" cy="130" r="5" />
         </g>
       );
   }
