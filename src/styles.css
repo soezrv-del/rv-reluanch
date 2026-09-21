@@ -3,36 +3,50 @@
 
 @theme {
   /*
-   * SoT = Tiimo soft-color planner (iPhone App of the Year 2025 /
-   * ADA Inclusivity 2024). Glanceable day chunks, calm scan-first
-   * hierarchy, low chrome. Tide tokens superseded as primary —
-   * aliases remain, remapped to Tiimo slate-lavender-mint.
+   * SoT = sapphire-on-black (David click-test 2026-09-21).
+   * True black / near-black field. Brand accent is glossy sapphire
+   * #1648c8 family (rune interior). Gold is bevel / sun-moon only.
+   * Frosted sapphire glass over the black field. One highlight max.
+   * Tide Guide teal-navy is no longer the primary field.
    */
-  --color-tiimo-bg: #1c1b26;
-  --color-tiimo-surface: #2a2836;
-  --color-tiimo-mint: #8fc9b6;
-  --color-tiimo-lavender: #b5a8d0;
-  --color-tiimo-peach: #e0b4a4;
-  --color-tiimo-foam: #f0eef4;
-  --color-tiimo-ink: #f7f5f9;
+  --color-ink-black: #050508;
+  --color-ink-elevated: #0a0a10;
+  --color-ink-surface: #0c0c14;
+  --color-ink-surface-2: #12121c;
+  --color-ink-foam: #e8eef2;
+  --color-ink-ink: #f3f6f8;
 
-  --color-tide-bg: var(--color-tiimo-bg);
-  --color-tide-surface: var(--color-tiimo-surface);
-  --color-tide-aqua: var(--color-tiimo-mint);
-  --color-tide-foam: var(--color-tiimo-foam);
-  --color-tide-ink: var(--color-tiimo-ink);
+  /* Leftover Tide / Tiimo aliases stay on the black field. */
+  --color-tideguide-bg: var(--color-ink-black);
+  --color-tideguide-surface: var(--color-ink-surface);
+  --color-tideguide-cyan: #6eb4d8;
+  --color-tideguide-foam: var(--color-ink-foam);
+  --color-tideguide-ink: var(--color-ink-ink);
 
-  --color-bg: var(--color-tiimo-bg);
-  --color-bg-elevated: #242230;
-  --color-surface: var(--color-tiimo-surface);
-  --color-surface-2: #353342;
-  --color-fg: var(--color-tiimo-ink);
-  --color-muted: color-mix(in srgb, var(--color-tiimo-foam) 78%, transparent);
-  --color-dim: color-mix(in srgb, var(--color-tiimo-foam) 52%, transparent);
-  --color-accent: var(--color-tiimo-mint);
+  --color-tide-bg: var(--color-ink-black);
+  --color-tide-surface: var(--color-ink-surface);
+  --color-tide-aqua: var(--color-tideguide-cyan);
+  --color-tide-foam: var(--color-ink-foam);
+  --color-tide-ink: var(--color-ink-ink);
 
-  --color-border: color-mix(in srgb, var(--color-tiimo-foam) 16%, transparent);
-  --color-border-strong: color-mix(in srgb, var(--color-tiimo-foam) 26%, transparent);
+  --color-tiimo-bg: var(--color-ink-black);
+  --color-tiimo-surface: var(--color-ink-surface);
+  --color-tiimo-mint: var(--color-tideguide-cyan);
+  --color-tiimo-lavender: var(--color-tideguide-cyan);
+  --color-tiimo-peach: #d4c08a;
+  --color-tiimo-foam: var(--color-ink-foam);
+  --color-tiimo-ink: var(--color-ink-ink);
+
+  --color-bg: var(--color-ink-black);
+  --color-bg-elevated: var(--color-ink-elevated);
+  --color-surface: var(--color-ink-surface);
+  --color-surface-2: var(--color-ink-surface-2);
+  --color-fg: var(--color-ink-ink);
+  --color-muted: color-mix(in srgb, var(--color-ink-foam) 70%, transparent);
+  --color-dim: color-mix(in srgb, var(--color-ink-foam) 46%, transparent);
+
+  --color-border: color-mix(in srgb, var(--color-ink-foam) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--color-ink-foam) 24%, transparent);
 
   --color-ruby: #d42535;
   --color-ruby-deep: #c01f2e;
@@ -46,38 +60,39 @@
   --color-green: #3dba8a;
   --color-amber: #e0a04a;
 
-  --color-gold: #c2b6a0;
-  --color-gold-bright: #e2d8c4;
-  --color-gold-dim: rgba(194, 182, 160, 0.14);
-  --color-gold-border: rgba(194, 182, 160, 0.32);
+  --color-gold: #d0be8a;
+  --color-gold-bright: #e8d6a4;
+  --color-gold-dim: rgba(208, 190, 138, 0.16);
+  --color-gold-border: rgba(208, 190, 138, 0.36);
 
-  --color-sapphire: #4a86f0;
-  --color-sapphire-deep: #0a1e5c;
-  --color-sapphire-glow: #8ec5ff;
+  --color-sapphire: #1648c8;
+  --color-sapphire-deep: #0a2a8a;
+  --color-sapphire-glow: #3d6ee0;
+  --color-accent: var(--color-sapphire);
 
   --page-accent: var(--color-sapphire);
-  --page-accent-soft: rgba(74, 134, 240, 0.16);
-  --page-accent-border: rgba(74, 134, 240, 0.4);
-  --page-accent-glow: rgba(74, 134, 240, 0.35);
+  --page-accent-soft: color-mix(in srgb, var(--color-sapphire) 16%, transparent);
+  --page-accent-border: color-mix(in srgb, var(--color-sapphire) 40%, transparent);
+  --page-accent-glow: color-mix(in srgb, var(--color-sapphire) 28%, transparent);
 
   --font-sans: "SF Pro Display", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-  --radius-xl: 22px;
-  --radius-2xl: 28px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
   --radius-pill: 999px;
 
   --shadow-glow-ruby: 0 0 28px rgba(212, 37, 53, 0.4);
-  --shadow-glow-gold: 0 0 32px rgba(194, 182, 160, 0.18);
-  --shadow-glow-sapphire: 0 0 36px rgba(80, 160, 255, 0.35);
-  --shadow-panel: 0 16px 48px rgba(18, 16, 28, 0.26);
+  --shadow-glow-gold: 0 0 28px rgba(208, 190, 138, 0.22);
+  --shadow-glow-sapphire: 0 0 28px color-mix(in srgb, var(--color-sapphire) 28%, transparent);
+  --shadow-panel: 0 16px 48px rgba(0, 0, 0, 0.36);
   --shadow-glass:
-    0 12px 36px rgba(18, 16, 28, 0.2),
-    inset 0 1px 0 color-mix(in srgb, var(--color-tiimo-foam) 26%, transparent),
-    inset 0 -1px 0 color-mix(in srgb, var(--color-tiimo-mint) 6%, transparent);
+    0 14px 40px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 color-mix(in srgb, var(--color-ink-foam) 16%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--color-sapphire) 8%, transparent);
 
   --dock-label-size: 1.125rem;
   --dock-label-size-sm: 1.1875rem;
@@ -554,27 +569,27 @@
   .glass-prestige {
     background: linear-gradient(
       160deg,
-      rgba(255, 255, 255, 0.14) 0%,
-      rgba(255, 255, 255, 0.05) 45%,
-      rgba(8, 12, 28, 0.12) 100%
+      color-mix(in srgb, var(--color-sapphire) 8%, rgba(255, 255, 255, 0.05)) 0%,
+      rgba(8, 10, 18, 0.1) 42%,
+      color-mix(in srgb, var(--color-sapphire-deep) 8%, rgba(0, 0, 0, 0.16)) 100%
     );
-    border: 1px solid rgba(255, 255, 255, 0.38);
+    border: 1px solid color-mix(in srgb, var(--color-sapphire) 18%, rgba(255, 255, 255, 0.12));
     box-shadow: var(--shadow-glass);
-    backdrop-filter: blur(12px) saturate(1.7);
-    -webkit-backdrop-filter: blur(12px) saturate(1.7);
+    backdrop-filter: blur(22px) saturate(1.3);
+    -webkit-backdrop-filter: blur(22px) saturate(1.3);
     color: #fff;
   }
 
   .glass-prestige-deep {
     background: linear-gradient(
       180deg,
-      rgba(20, 28, 56, 0.38) 0%,
-      rgba(8, 12, 28, 0.48) 100%
+      color-mix(in srgb, var(--color-sapphire) 10%, rgba(0, 0, 0, 0.16)) 0%,
+      color-mix(in srgb, var(--color-sapphire-deep) 12%, rgba(0, 0, 0, 0.22)) 100%
     );
-    border: 1px solid rgba(255, 255, 255, 0.28);
+    border: 1px solid color-mix(in srgb, var(--color-sapphire) 14%, rgba(255, 255, 255, 0.1));
     box-shadow: var(--shadow-glass);
-    backdrop-filter: blur(22px) saturate(1.5);
-    -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    backdrop-filter: blur(24px) saturate(1.25);
+    -webkit-backdrop-filter: blur(24px) saturate(1.25);
     color: #fff;
   }
 
@@ -604,41 +619,41 @@
   }
 
   .glass-field {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: color-mix(in srgb, var(--color-sapphire) 6%, rgba(0, 0, 0, 0.18));
+    border: 1px solid color-mix(in srgb, var(--color-sapphire) 14%, rgba(255, 255, 255, 0.12));
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
   }
 
   .glass-field:focus {
-    border-color: rgba(94, 176, 255, 0.55);
+    border-color: color-mix(in srgb, var(--color-sapphire) 55%, transparent);
     outline: none;
   }
 
   .glass-panel {
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.12) 0%,
-      rgba(10, 14, 28, 0.26) 100%
+      color-mix(in srgb, var(--color-sapphire) 8%, rgba(255, 255, 255, 0.04)) 0%,
+      color-mix(in srgb, var(--color-sapphire-deep) 10%, rgba(0, 0, 0, 0.16)) 100%
     );
-    border: 1px solid rgba(255, 255, 255, 0.34);
+    border: 1px solid color-mix(in srgb, var(--color-sapphire) 20%, rgba(255, 255, 255, 0.14));
     box-shadow: var(--shadow-glass);
-    backdrop-filter: blur(14px) saturate(1.45);
-    -webkit-backdrop-filter: blur(14px) saturate(1.45);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
     color: #fff;
   }
 
   .glass-surface {
     background: linear-gradient(
       165deg,
-      rgba(255, 255, 255, 0.12) 0%,
+      color-mix(in srgb, var(--color-sapphire) 12%, rgba(255, 255, 255, 0.08)) 0%,
       rgba(255, 255, 255, 0.04) 45%,
-      rgba(6, 14, 32, 0.22) 100%
+      color-mix(in srgb, var(--color-sapphire-deep) 20%, transparent) 100%
     );
-    border: 1px solid rgba(255, 255, 255, 0.28);
+    border: 1px solid color-mix(in srgb, var(--color-sapphire) 18%, rgba(255, 255, 255, 0.12));
     box-shadow: var(--shadow-glass);
-    backdrop-filter: blur(14px) saturate(1.5);
-    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
   }
 
   .text-prestige {
@@ -814,9 +829,9 @@
 
 [data-page-accent="sapphire"] {
   --page-accent: var(--color-sapphire);
-  --page-accent-soft: rgba(74, 134, 240, 0.16);
-  --page-accent-border: rgba(74, 134, 240, 0.42);
-  --page-accent-glow: rgba(74, 134, 240, 0.32);
+  --page-accent-soft: color-mix(in srgb, var(--color-sapphire) 16%, transparent);
+  --page-accent-border: color-mix(in srgb, var(--color-sapphire) 42%, transparent);
+  --page-accent-glow: color-mix(in srgb, var(--color-sapphire) 28%, transparent);
 }
 [data-page-accent="ruby"] {
   --page-accent: var(--color-ruby);
@@ -860,8 +875,8 @@
   }
 }
 .bottom-tabs-dock {
-  background: rgba(15, 23, 42, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(5, 5, 8, 0.55);
+  border: 1px solid color-mix(in srgb, var(--color-sapphire) 18%, rgba(255, 255, 255, 0.1));
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
   backdrop-filter: blur(20px) saturate(180%);
@@ -1425,61 +1440,73 @@
   filter: brightness(1.02) contrast(1) saturate(0.7);
 }
 [data-readable-cards] .page-scrim-soft {
-  background: rgb(4, 8, 16);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-ink-black) 72%, transparent) 0%,
+    color-mix(in srgb, var(--color-ink-black) 18%, transparent) 38%,
+    color-mix(in srgb, var(--color-ink-black) 10%, transparent) 58%,
+    color-mix(in srgb, var(--color-ink-black) 62%, transparent) 100%
+  );
 }
 
 /*
- * Compare report: Tide-near navy field + contained Raidho R watermark.
- * Replaces the Class A diesel campfire photo (RV_CARD_MEDIA / SuiteBackdrop
- * object-cover) so comparison cards stay readable. Black ground of the mark
- * knocks out via screen blend; the glyph stays a quiet seal, not a photo.
+ * Suite + compare Raidho R watermark.
+ * GPS-scale: near-full-viewport sapphire glyph on true black.
+ * PNG black knocks out via screen blend. Soft — no rune glow.
+ * Glass stays quieter so the mark is the one highlight.
  */
-[data-compare-view] {
-  background: rgb(6, 12, 22);
-}
+.suite-raidho-field,
 .compare-raidho-field {
   position: absolute;
   inset: 0;
   background:
     radial-gradient(
-      ellipse 62% 48% at 50% 38%,
-      rgba(16, 38, 78, 0.42) 0%,
-      transparent 72%
+      ellipse 92% 78% at 50% 46%,
+      color-mix(in srgb, var(--color-sapphire-deep) 18%, transparent) 0%,
+      transparent 70%
     ),
-    rgb(6, 12, 22);
+    var(--color-ink-black);
 }
+.suite-raidho-mark,
 .compare-raidho-mark {
   position: absolute;
+  z-index: 1;
   left: 50%;
-  top: 40%;
-  width: min(18.5rem, 52vw);
-  height: min(26rem, 44vh);
-  transform: translate(-50%, -50%);
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  /* PNG is a padded seal — zoom so the rune fills the viewport like the GPS SoT. */
+  transform: translate(-50%, -50%) scale(1.9);
   object-fit: contain;
   object-position: center;
-  opacity: 0.16;
+  opacity: 0.38;
   mix-blend-mode: screen;
-  filter: brightness(1.06) saturate(0.92);
 }
-@media (min-width: 640px) {
-  .compare-raidho-mark {
-    width: min(20rem, 34vw);
-    height: min(28rem, 46vh);
-  }
+
+/*
+ * Compare report: same full-field Raidho R as the suite watermark.
+ * Replaces the Class A diesel campfire photo so comparison cards stay readable.
+ */
+[data-compare-view] {
+  background: var(--color-ink-black);
 }
 @media print {
-  .compare-raidho-backdrop {
+  .compare-raidho-backdrop,
+  .suite-raidho-backdrop {
     display: none;
   }
 }
-[data-readable-cards] .glass-prestige,
-[data-readable-cards] .glass-prestige-deep,
-[data-readable-cards] .glass-prestige-gold,
-[data-readable-cards] .glass-panel,
-[data-readable-cards] .glass-surface {
-  background: #0a101c;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+
+/* Landing photos stay under a black wash so the sapphire mark can read. */
+.rvfax-screen[data-facts-landing] .suite-raidho-field,
+.rvtow-screen[data-tow-landing] .suite-raidho-field {
+  background:
+    radial-gradient(
+      ellipse 88% 72% at 50% 46%,
+      color-mix(in srgb, var(--color-sapphire-deep) 16%, transparent) 0%,
+      transparent 70%
+    ),
+    color-mix(in srgb, var(--color-ink-black) 68%, transparent);
 }
 
 /*
@@ -1488,16 +1515,16 @@
  */
 .rvfax-screen[data-facts-landing][data-readable-cards] .page-backdrop-bright {
   opacity: 0.46;
-  filter: brightness(1.06) contrast(1.03) saturate(1.08);
+  filter: brightness(0.42) contrast(1.04) saturate(0.75);
 }
 .rvfax-screen[data-facts-landing][data-readable-cards] .page-scrim-soft {
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.38) 0%,
-    rgba(0, 0, 0, 0.14) 22%,
-    rgba(0, 0, 0, 0.08) 48%,
-    rgba(0, 0, 0, 0.2) 76%,
-    rgba(0, 0, 0, 0.42) 100%
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(0, 0, 0, 0.28) 22%,
+    rgba(0, 0, 0, 0.18) 48%,
+    rgba(0, 0, 0, 0.36) 76%,
+    rgba(0, 0, 0, 0.7) 100%
   );
 }
 .rvfax-screen[data-facts-landing][data-readable-cards] .glass-prestige,
@@ -1507,31 +1534,31 @@
 .rvfax-screen[data-facts-landing][data-readable-cards] .glass-surface {
   background: linear-gradient(
     160deg,
-    rgba(255, 255, 255, 0.14) 0%,
-    rgba(255, 255, 255, 0.05) 45%,
-    rgba(8, 12, 28, 0.12) 100%
+    color-mix(in srgb, var(--color-sapphire) 8%, rgba(255, 255, 255, 0.05)) 0%,
+    rgba(8, 10, 18, 0.1) 42%,
+    color-mix(in srgb, var(--color-sapphire-deep) 8%, rgba(0, 0, 0, 0.16)) 100%
   );
-  backdrop-filter: blur(12px) saturate(1.7);
-  -webkit-backdrop-filter: blur(12px) saturate(1.7);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
 }
 .rvfax-screen[data-facts-landing][data-readable-cards] .glass-prestige-gold {
   background: linear-gradient(
     155deg,
-    rgba(240, 215, 140, 0.14) 0%,
-    rgba(255, 255, 255, 0.08) 36%,
-    rgba(10, 8, 6, 0.18) 100%
+    rgba(240, 215, 140, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 36%,
+    rgba(0, 0, 0, 0.16) 100%
   );
-  backdrop-filter: blur(14px) saturate(1.55);
-  -webkit-backdrop-filter: blur(14px) saturate(1.55);
+  backdrop-filter: blur(16px) saturate(1.35);
+  -webkit-backdrop-filter: blur(16px) saturate(1.35);
 }
 .rvfax-screen[data-facts-landing][data-readable-cards] .glass-prestige-deep {
   background: linear-gradient(
     180deg,
-    rgba(20, 28, 56, 0.38) 0%,
-    rgba(8, 12, 28, 0.48) 100%
+    color-mix(in srgb, var(--color-sapphire) 10%, rgba(0, 0, 0, 0.16)) 0%,
+    color-mix(in srgb, var(--color-sapphire-deep) 12%, rgba(0, 0, 0, 0.22)) 100%
   );
-  backdrop-filter: blur(22px) saturate(1.5);
-  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.25);
+  -webkit-backdrop-filter: blur(24px) saturate(1.25);
 }
 
 /*
@@ -1553,12 +1580,12 @@
 .rvfax-screen[data-facts-landing] .facts-cascade-core {
   background: linear-gradient(
     180deg,
-    rgba(6, 10, 20, 0.88) 0%,
-    rgba(6, 10, 18, 0.82) 100%
+    color-mix(in srgb, var(--color-sapphire) 6%, rgba(0, 0, 0, 0.16)) 0%,
+    rgba(0, 0, 0, 0.2) 100%
   );
-  backdrop-filter: blur(20px) saturate(1.3);
-  -webkit-backdrop-filter: blur(20px) saturate(1.3);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(22px) saturate(1.25);
+  -webkit-backdrop-filter: blur(22px) saturate(1.25);
+  border: 1px solid color-mix(in srgb, var(--color-sapphire) 14%, rgba(255, 255, 255, 0.1));
   border-radius: var(--radius-md);
 }
 
@@ -1568,16 +1595,16 @@
  */
 .rvtow-screen[data-tow-landing][data-readable-cards] .page-backdrop-bright {
   opacity: 0.46;
-  filter: brightness(1.06) contrast(1.03) saturate(1.08);
+  filter: brightness(0.72) contrast(1.04) saturate(0.88);
 }
 .rvtow-screen[data-tow-landing][data-readable-cards] .page-scrim-soft {
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.38) 0%,
-    rgba(0, 0, 0, 0.14) 22%,
-    rgba(0, 0, 0, 0.08) 48%,
-    rgba(0, 0, 0, 0.2) 76%,
-    rgba(0, 0, 0, 0.42) 100%
+    rgba(0, 0, 0, 0.58) 0%,
+    rgba(0, 0, 0, 0.24) 22%,
+    rgba(0, 0, 0, 0.14) 48%,
+    rgba(0, 0, 0, 0.32) 76%,
+    rgba(0, 0, 0, 0.64) 100%
   );
 }
 .rvtow-screen[data-tow-landing][data-readable-cards] .glass-prestige,
@@ -1587,31 +1614,31 @@
 .rvtow-screen[data-tow-landing][data-readable-cards] .glass-surface {
   background: linear-gradient(
     160deg,
-    rgba(255, 255, 255, 0.14) 0%,
-    rgba(255, 255, 255, 0.05) 45%,
-    rgba(8, 12, 28, 0.12) 100%
+    color-mix(in srgb, var(--color-sapphire) 8%, rgba(255, 255, 255, 0.05)) 0%,
+    rgba(8, 10, 18, 0.1) 42%,
+    color-mix(in srgb, var(--color-sapphire-deep) 8%, rgba(0, 0, 0, 0.16)) 100%
   );
-  backdrop-filter: blur(12px) saturate(1.7);
-  -webkit-backdrop-filter: blur(12px) saturate(1.7);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
 }
 .rvtow-screen[data-tow-landing][data-readable-cards] .glass-prestige-gold {
   background: linear-gradient(
     155deg,
-    rgba(240, 215, 140, 0.14) 0%,
-    rgba(255, 255, 255, 0.08) 36%,
-    rgba(10, 8, 6, 0.18) 100%
+    rgba(240, 215, 140, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 36%,
+    rgba(0, 0, 0, 0.16) 100%
   );
-  backdrop-filter: blur(14px) saturate(1.55);
-  -webkit-backdrop-filter: blur(14px) saturate(1.55);
+  backdrop-filter: blur(16px) saturate(1.35);
+  -webkit-backdrop-filter: blur(16px) saturate(1.35);
 }
 .rvtow-screen[data-tow-landing][data-readable-cards] .glass-prestige-deep {
   background: linear-gradient(
     180deg,
-    rgba(20, 28, 56, 0.38) 0%,
-    rgba(8, 12, 28, 0.48) 100%
+    color-mix(in srgb, var(--color-sapphire) 10%, rgba(0, 0, 0, 0.16)) 0%,
+    color-mix(in srgb, var(--color-sapphire-deep) 12%, rgba(0, 0, 0, 0.22)) 100%
   );
-  backdrop-filter: blur(22px) saturate(1.5);
-  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.25);
+  -webkit-backdrop-filter: blur(24px) saturate(1.25);
 }
 
 
@@ -1885,15 +1912,15 @@
   border-bottom: 9px solid var(--color-blue);
   transform: translateX(-50%);
 }
-/* Quiet GPS field — Celtic R whisper only. Isolation stops swipe-sibling
-   SuiteBackdrop (shared-prestige) from bleeding through glass. America décor stays off. */
+/* Quiet GPS field — shared SuiteRaidhoBackdrop only. Hide the competing
+   Celtic truth photo (src string stays in TSX). America décor stays off. */
 [data-suite-pane="rvtrips"],
 [data-trips-screen] {
-  background: #050b16;
+  background: var(--color-ink-black);
   isolation: isolate;
 }
 [data-trips-screen] .page-backdrop-bright {
-  opacity: 0.28;
+  opacity: 0;
   filter: none;
   /* Portrait R + tagline: contain so object-cover cannot crop the mark. */
   object-fit: contain;
@@ -1908,7 +1935,7 @@
 [data-trips-route-clean] .glass-prestige-gold {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  background: rgba(6, 10, 22, 0.96);
+  background: rgba(5, 5, 8, 0.88);
 }
 
 /* Trips chrome above Mapbox GL — phone WebViews let the canvas steal header taps. */
