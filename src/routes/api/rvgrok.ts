@@ -10,6 +10,7 @@ import {
 import { parseCoachFromText } from "@/lib/rvgrok/parseCoach";
 import {
   formatOwnLotBlock,
+  formatOwnLotSidecar,
   loadOwnLotSnapshot,
   looksLikeOwnLotStockQuestion,
   shouldSkipWebForOwnLot,
@@ -659,22 +660,35 @@ export const Route = createFileRoute("/api/rvgrok")({
         const lastNamesCoach = askNamesCoachIdentity(
           parseCoachFromText(lastPlain),
         );
-        const catalogContext = lastNamesCoach
+        let catalogContext = lastNamesCoach
           ? serverGrounded.block || ""
           : serverGrounded.block || body.catalogContext || "";
 
         let ownLotNotes: string | undefined;
         let skipWebForLot = false;
+        let requestOrigin = "";
+        try {
+          requestOrigin = new URL(request.url).origin;
+        } catch {
+          requestOrigin = "";
+        }
         if (looksLikeOwnLotStockQuestion(lastPlain)) {
-          let requestOrigin = "";
-          try {
-            requestOrigin = new URL(request.url).origin;
-          } catch {
-            requestOrigin = "";
-          }
           const snapshot = await loadOwnLotSnapshot({ requestOrigin });
           ownLotNotes = formatOwnLotBlock(snapshot, lastPlain);
           skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
+        } else if (lastNamesCoach && serverGrounded.identity) {
+          try {
+            const snapshot = await loadOwnLotSnapshot({ requestOrigin });
+            const sidecar = formatOwnLotSidecar(
+              snapshot,
+              serverGrounded.identity,
+            );
+            catalogContext = catalogContext
+              ? `${catalogContext}\n\n${sidecar}`
+              : sidecar;
+          } catch {
+            /* catalog report still stands */
+          }
         }
 
         // Unknown / catalog GAP / own-lot miss → browse. Locked identity

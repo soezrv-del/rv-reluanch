@@ -1,9 +1,10 @@
 /**
  * RV Country own-lot stock for in-app RV Grok.
  *
- * Brochure catalog (`rvData`) is not lot stock. The midnight own-lot scrape
- * (source=own) is the count SoT. Loaded only when the ask looks like
- * inventory / in-stock — never stuffed into every chat turn.
+ * Brochure catalog (`rvData`) is the default SoT for year/make/model reports.
+ * The midnight own-lot scrape (source=own) is SoT only for explicit stock
+ * asks ("do we have", on the lot, in stock, inventory, diesel count). Never
+ * treat a coach designation as a lot miss.
  *
  * File has no fuel field. Diesel ≈ body_type "Class A Diesel" + "Class Super C".
  * Listing prices are on the scrape (`price`, then price_current / price_hidden /
@@ -23,7 +24,6 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   extractFloorplanToken,
-  looksLikeCoachDesignationAsk,
   normalizeCoachAsk,
   parseCoachFromText,
   parseSeriesAlias,
@@ -34,7 +34,6 @@ import {
   looksLikeInventoryOrCountQuestion,
   looksLikeMarketValueQuestion,
   looksLikeRepairQuestion,
-  looksLikeSpecQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
 
@@ -167,7 +166,13 @@ export function looksLikeOwnLotUnitListQuestion(text: string): boolean {
   return OWN_LOT_UNIT_LIST_RE.test(t);
 }
 
+const EXPLICIT_WE_HAVE_STOCK_RE =
+  /\b(?:do|did|does)\s+we\s+have\b|\bhave\s+we\s+got\b|\bwe\s+have\s+any\b/i;
+
 export function looksLikeOwnLotStockQuestion(text: string): boolean {
+  // Explicit stock only — "do we have" / on the lot / in stock / inventory /
+  // diesel count / stock # / lot listing prices. A year+make+model+floorplan
+  // designation is a CATALOG report, not an own-lot probe.
   if (
     looksLikeInventoryOrCountQuestion(text) ||
     looksLikeOwnLotListingPriceQuestion(text) ||
@@ -175,17 +180,7 @@ export function looksLikeOwnLotStockQuestion(text: string): boolean {
   ) {
     return true;
   }
-  // "M series 25FW" / "Lineage M 25FW" / "27A Integra Vision" — designation
-  // stock probe. Spec / repair / market-value still go those paths.
-  if (
-    looksLikeCoachDesignationAsk(text) &&
-    !looksLikeSpecQuestion(text) &&
-    !looksLikeRepairQuestion(text) &&
-    !looksLikeMarketValueQuestion(text)
-  ) {
-    return true;
-  }
-  return false;
+  return EXPLICIT_WE_HAVE_STOCK_RE.test(normalizeAskText(text));
 }
 
 /** Snapshot loaded with units — we can answer lot counts from the file. */
@@ -1297,6 +1292,46 @@ export function formatOwnLotBlock(
   }
 
   return lines.join("\n");
+}
+
+/**
+ * After a CATALOG coach report — lot hit/miss only. Never the spec SoT.
+ * Filter is the locked year/make/model/floorplan so 4369 on Ventana cannot
+ * stand in for Dutch Star.
+ */
+export function formatOwnLotSidecar(
+  snapshot: OwnLotSnapshot,
+  identity: {
+    year?: string;
+    make?: string;
+    model?: string;
+    floorplan?: string;
+  },
+): string {
+  const coach = [identity.year, identity.make, identity.model, identity.floorplan]
+    .filter(Boolean)
+    .join(" ");
+  const header = `OWN-LOT SIDECAR (not the spec report) for ${coach || "this coach"}.`;
+  const rails = [
+    "Speak the CATALOG / BROCHURE report first. This sidecar is optional lot color only.",
+    "Lot miss ≠ coach missing. Never say not in listings / not in the catalog because the lot has no unit.",
+    "Never substitute a sibling series because a floorplan code matches (Dutch Star 4369 ≠ Ventana 4369).",
+  ];
+  if (ownLotIsUnavailable(snapshot)) {
+    return [header, "Lot snapshot unavailable this turn.", ...rails].join("\n");
+  }
+  const filter: OwnLotFilter = {
+    year: identity.year?.trim() || undefined,
+    make: identity.make?.trim() || undefined,
+    model: identity.model?.trim() || undefined,
+    trim: identity.floorplan?.trim() || undefined,
+  };
+  const counts = aggregateOwnLot(snapshot.units, filter);
+  const lotLine =
+    counts.matched > 0
+      ? `On the RV Country lot snapshot: ${counts.matched} matching unit(s). You may mention that after the catalog report.`
+      : `We do not have this year / make / model / floorplan on the RV Country lot snapshot right now. You may say that AFTER the catalog spec report — never instead of it.`;
+  return [header, lotLine, ...rails].join("\n");
 }
 
 function ownLotUrl(): string {
