@@ -15100,10 +15100,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       engine: "Ford 7.3L V8 325HP or Chevy 6.6L V8 gas (by chassis)", horsepower: 325, torqueLbFt: 450,
       chassis: "Ford E-350 / E-450 or Chevy 3500", transmission: "6-speed automatic", fuelType: "Gas",
       recalls: 0, rating: 4.2, image: RV_CARD_IMAGE, towingCapacity: 5000, freshWater: 44, grayWater: 32, blackWater: 32,
-      fuelCapacityGal: 55, generator: "Onan 4.0kW gas", awningLength: 14, ceilingHeight: 80, founded: 1996, warrantyYears: 1, yearStart: 2012, gvwrLbs: 12500,
+      fuelCapacityGal: 55, generator: "Onan 4.0kW gas", awningLength: 14, ceilingHeight: 80, founded: 1996, warrantyYears: 1, yearStart: 2012,
       description: "Forest River Sunseeker LE — value Class C Ford or Chevy gas. Short LE (1950LE–2350LE) E-350/Chevy 3500 hitch 5k. Long LE (2550DSLE–3250DSLE) E-450 hitch 7,500 GVWR 14,500. Ford 7.3 is 325 HP not 350.",
       powertrainByYear: [
-        { from: 2012, to: 2019, engine: "Ford 6.2L / 6.8L gas (by year)", horsepower: 305, chassis: "Ford E-350 / E-450" },
+        { from: 2012, to: 2019, engine: "Ford 6.2L / 6.8L gas (by year)", horsepower: 305, chassis: "Ford E-350 / E-450", notes: "Early LE GVWR is brochure per-plan/chassis — GAP. Do not invent 12,500 or 14,050." },
         { from: 2020, to: 2027, floorplans: ["1950LE","2150SLE","2250SLE","2350LE","2530S"], engine: "Ford 7.3L V8 325HP or Chevy 6.6L V8 gas", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-350 / Chevy 3500", towingCapacity: 5000 },
         { from: 2020, to: 2027, floorplans: ["2550DSLE","2850SLE","2950LE","3250DSLE"], engine: "Ford 7.3L V8 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-450", towingCapacity: 7500, gvwrLbs: 14500 },
         { from: 2020, to: 2027, engine: "Ford 7.3L V8 325HP or Chevy 6.6L V8 gas", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-350 / E-450 or Chevy 3500" },
