@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PremiumMenuButton } from "@/components/shell/PremiumMenuButton";
-import { PullRefreshLayer } from "@/components/shell/PullResetHint";
-import { usePullToReset } from "@/lib/hooks/usePullToReset";
+import { SuitePage } from "@/components/shell/SuitePage";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
   fetchLotSnapshot,
@@ -24,7 +22,6 @@ const PAGE_SIZE = 48;
 
 export function LotStockApp() {
   const nav = useShellNavOptional();
-  const scrollRef = useRef<HTMLDivElement | null>(null);
   const [snap, setSnap] = useState<LotSnapshotView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -51,8 +48,6 @@ export function LotStockApp() {
   useEffect(() => {
     load();
   }, []);
-
-  const pull = usePullToReset(scrollRef, load);
 
   const chips = useMemo(() => lotTypeChips(snap?.units ?? []), [snap]);
   const filtered = useMemo(
@@ -82,7 +77,9 @@ export function LotStockApp() {
 
   const featured = filtered[0] ?? null;
   const featuredKey = featured ? lotUnitKey(featured, 0) : "";
-  const rail = featured ? filtered.slice(1, Math.max(1, limit)) : filtered.slice(0, limit);
+  const rail = featured
+    ? filtered.slice(1, Math.max(1, limit))
+    : filtered.slice(0, limit);
   const asOf = snap?.asOf
     ? snap.asOf.replace("T", " ").replace(/-\d{2}:\d{2}$/, "")
     : "";
@@ -97,186 +94,178 @@ export function LotStockApp() {
         : `${total} shown`;
 
   return (
-    <div
-      className="lot-research relative flex h-full min-h-0 flex-col overflow-hidden"
-      data-lot-stock
+    <SuitePage
+      tab="rvlot"
+      className="lot-stock-screen"
+      onPullReset={load}
+      pullLabel="Release to refresh lot"
+      noSwipeScroll
     >
-      <div className="lot-research-wash pointer-events-none" aria-hidden />
       <div
-        ref={scrollRef}
-        data-app-scroll
-        data-no-swipe-scroll=""
-        className="rv-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
+        className="mx-auto w-full max-w-3xl space-y-5 px-4 pb-12 pt-3 sm:px-6"
+        data-lot-stock
       >
-        <PullRefreshLayer state={pull} label="Release to refresh lot">
-          <div className="mx-auto w-full max-w-3xl space-y-5 px-4 pb-12 pt-3 sm:px-6">
-            <header className="flex items-center justify-between gap-3">
+        <header className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => nav?.setTab("more")}
+            className="inline-flex min-h-11 items-center gap-1 rounded-full border border-white/20 bg-black/30 px-3 text-[11px] font-bold text-white"
+          >
+            <ChevronLeft className="size-3.5" />
+            Premium
+          </button>
+          <p className="text-[11px] font-semibold tracking-[0.12em] text-white/70">
+            {snap ? `${total.toLocaleString("en-US")} units` : "Lot"}
+          </p>
+        </header>
+
+        <section className="max-w-xl space-y-2">
+          <p className="max-w-md text-[15px] leading-relaxed text-white/85">
+            In-stock RV Country inventory. Not the brochure catalog.
+          </p>
+        </section>
+
+        <label className="block">
+          <span className="sr-only">Search lot stock</span>
+          <span className="relative block">
+            <Search
+              className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/55"
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Impression, Entegra, 45282, Fife…"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              data-lot-search
+              className="lot-search glass-field min-h-12 w-full rounded-full py-3 pl-11 pr-12 text-[15px] font-medium text-white placeholder:text-white/50"
+            />
+            {query ? (
               <button
                 type="button"
-                onClick={() => nav?.setTab("more")}
-                className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border bg-lot-plate px-3 text-[11px] font-bold text-fg"
+                onClick={() => setQuery("")}
+                className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-white/70"
+                aria-label="Clear search"
               >
-                <ChevronLeft className="size-3.5" />
-                Suite
+                <X className="size-4" />
               </button>
-              <p className="text-[11px] font-semibold tracking-[0.12em] text-muted">
-                {snap ? `${total.toLocaleString("en-US")} units` : "Lot"}
-              </p>
-              <PremiumMenuButton size="sm" />
-            </header>
+            ) : null}
+          </span>
+        </label>
 
-            <section className="max-w-xl space-y-3 pt-2">
-              <h1 className="text-balance text-[clamp(2.25rem,9vw,3.45rem)] font-bold leading-[1.02] tracking-tight text-fg">
-                On the lot.
-              </h1>
-              <p className="max-w-md text-[15px] leading-relaxed text-muted">
-                In-stock RV Country inventory. Not the brochure catalog.
-              </p>
-            </section>
+        {chips.length ? (
+          <div className="lot-chip-rail" data-lot-chips>
+            <Chip
+              label="All"
+              on={type === ""}
+              onClick={() => setType("")}
+            />
+            {chips.map((chip) => (
+              <Chip
+                key={chip.type}
+                label={chip.label}
+                on={type === chip.type}
+                onClick={() =>
+                  setType((cur) => (cur === chip.type ? "" : chip.type))
+                }
+              />
+            ))}
+          </div>
+        ) : null}
 
-            <label className="block">
-              <span className="sr-only">Search lot stock</span>
-              <span className="relative block">
-                <Search
-                  className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-dim"
-                  aria-hidden
-                />
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Impression, Entegra, 45282, Fife…"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  data-lot-search
-                  className="lot-search min-h-12 w-full rounded-full py-3 pl-11 pr-12 text-[15px] font-medium text-fg placeholder:text-dim"
-                />
-                {query ? (
-                  <button
-                    type="button"
-                    onClick={() => setQuery("")}
-                    className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted"
-                    aria-label="Clear search"
-                  >
-                    <X className="size-4" />
-                  </button>
-                ) : null}
-              </span>
-            </label>
+        <p
+          className={
+            query.trim() || type
+              ? "text-[12px] text-white/70"
+              : "sr-only"
+          }
+          data-lot-count
+        >
+          {countLine}
+          {asOf && !error ? ` · as of ${asOf}` : ""}
+        </p>
 
-            {chips.length ? (
-              <div className="lot-chip-rail" data-lot-chips>
-                <Chip
-                  label="All"
-                  on={type === ""}
-                  onClick={() => setType("")}
+        {error ? (
+          <StatusCard
+            title="Snapshot unavailable"
+            body="The own-lot file did not load. Nothing here is invented from the catalog."
+            action="Try again"
+            onAction={load}
+          />
+        ) : !snap ? (
+          <StatusCard
+            title="Loading lot…"
+            body="Reading the RV Country own-lot snapshot."
+          />
+        ) : filtered.length === 0 ? (
+          <StatusCard
+            title="No units match"
+            body="Nothing on this lot snapshot matches that search. Clear the field to see the full lot — we will not pull the brochure catalog."
+            empty
+          />
+        ) : (
+          <div className="space-y-6">
+            {featured ? (
+              <section className="space-y-2" data-lot-featured>
+                <p className="text-[10px] font-bold tracking-[0.18em] text-sapphire-glow">
+                  FEATURED REPORT
+                </p>
+                <LotUnitCard
+                  unit={featured}
+                  featured
+                  open={openKey === featuredKey}
+                  onToggle={() =>
+                    setOpenKey((cur) =>
+                      cur === featuredKey ? null : featuredKey,
+                    )
+                  }
                 />
-                {chips.map((chip) => (
-                  <Chip
-                    key={chip.type}
-                    label={chip.label}
-                    on={type === chip.type}
-                    onClick={() =>
-                      setType((cur) => (cur === chip.type ? "" : chip.type))
-                    }
-                  />
-                ))}
-              </div>
+              </section>
             ) : null}
 
-            <p
-              className={
-                query.trim() || type
-                  ? "text-[12px] text-muted"
-                  : "sr-only"
-              }
-              data-lot-count
-            >
-              {countLine}
-              {asOf && !error ? ` · as of ${asOf}` : ""}
-            </p>
-
-            {error ? (
-              <StatusCard
-                title="Snapshot unavailable"
-                body="The own-lot file did not load. Nothing here is invented from the catalog."
-                action="Try again"
-                onAction={load}
-              />
-            ) : !snap ? (
-              <StatusCard
-                title="Loading lot…"
-                body="Reading the RV Country own-lot snapshot."
-              />
-            ) : filtered.length === 0 ? (
-              <StatusCard
-                title="No units match"
-                body="Nothing on this lot snapshot matches that search. Clear the field to see the full lot — we will not pull the brochure catalog."
-                empty
-              />
-            ) : (
-              <div className="space-y-6">
-                {featured ? (
-                  <section className="space-y-2" data-lot-featured>
-                    <p className="text-[10px] font-bold tracking-[0.18em] text-dim">
-                      FEATURED REPORT
-                    </p>
-                    <LotUnitCard
-                      unit={featured}
-                      featured
-                      open={openKey === featuredKey}
-                      onToggle={() =>
-                        setOpenKey((cur) =>
-                          cur === featuredKey ? null : featuredKey,
-                        )
-                      }
-                    />
-                  </section>
-                ) : null}
-
-                {rail.length ? (
-                  <section className="space-y-3">
-                    <div className="flex items-end justify-between gap-3">
-                      <h2 className="text-[1.65rem] font-bold tracking-tight text-fg">
-                        On the lot
-                      </h2>
-                      <p className="text-[13px] text-muted">
-                        {shown.toLocaleString("en-US")} shown
-                      </p>
-                    </div>
-                    <ul
-                      className="grid grid-cols-1 gap-3 sm:grid-cols-2"
-                      data-lot-list
-                      data-lot-rail
-                    >
-                      {rail.map((unit, i) => {
-                        const key = lotUnitKey(unit, i + 1);
-                        return (
-                          <li key={key}>
-                            <LotUnitCard
-                              unit={unit}
-                              open={openKey === key}
-                              onToggle={() =>
-                                setOpenKey((cur) =>
-                                  cur === key ? null : key,
-                                )
-                              }
-                            />
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </section>
-                ) : null}
-              </div>
-            )}
-
-            <div ref={sentinelRef} className="h-4" aria-hidden />
+            {rail.length ? (
+              <section className="space-y-3">
+                <div className="flex items-end justify-between gap-3">
+                  <h2 className="text-[1.65rem] font-bold tracking-tight text-white">
+                    On the lot
+                  </h2>
+                  <p className="text-[13px] text-white/70">
+                    {shown.toLocaleString("en-US")} shown
+                  </p>
+                </div>
+                <ul
+                  className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                  data-lot-list
+                  data-lot-rail
+                >
+                  {rail.map((unit, i) => {
+                    const key = lotUnitKey(unit, i + 1);
+                    return (
+                      <li key={key}>
+                        <LotUnitCard
+                          unit={unit}
+                          open={openKey === key}
+                          onToggle={() =>
+                            setOpenKey((cur) =>
+                              cur === key ? null : key,
+                            )
+                          }
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ) : null}
           </div>
-        </PullRefreshLayer>
+        )}
+
+        <div ref={sentinelRef} className="h-4" aria-hidden />
       </div>
-    </div>
+    </SuitePage>
   );
 }
 
@@ -296,7 +285,7 @@ function Chip({
       aria-pressed={on}
       onClick={onClick}
       className={cn(
-        "lot-chip shrink-0 rounded-full px-3.5 py-2 text-[13px] font-semibold transition duration-200",
+        "lot-chip glass-chip shrink-0 rounded-full px-3.5 py-2 text-[13px] font-semibold transition duration-200",
         "min-h-11",
         on && "is-on",
       )}
@@ -321,16 +310,16 @@ function StatusCard({
 }) {
   return (
     <section
-      className="lot-card rounded-xl p-4"
+      className="glass-prestige rounded-[var(--radius-xl)] p-4"
       data-lot-empty={empty ? "" : undefined}
     >
-      <p className="text-[15px] font-bold text-fg">{title}</p>
-      <p className="mt-1 text-[13px] leading-relaxed text-muted">{body}</p>
+      <p className="text-[15px] font-bold text-white">{title}</p>
+      <p className="mt-1 text-[13px] leading-relaxed text-white/80">{body}</p>
       {action && onAction ? (
         <button
           type="button"
           onClick={onAction}
-          className="mt-3 min-h-11 rounded-full bg-fg px-4 text-[13px] font-bold text-lot-void"
+          className="mt-3 min-h-11 rounded-full bg-sapphire px-4 text-[13px] font-bold text-white"
         >
           {action}
         </button>
@@ -370,9 +359,7 @@ function LotUnitCard({
         data-lot-card
         data-lot-featured-card={featured ? "" : undefined}
         aria-expanded={open}
-        className={cn(
-          "lot-card w-full overflow-hidden rounded-2xl text-left transition duration-200 ease-out active:scale-[0.995]",
-        )}
+        className="lot-card glass-prestige w-full overflow-hidden rounded-[var(--radius-2xl)] text-left transition duration-200 ease-out active:scale-[0.995]"
       >
         <div
           className={cn(
@@ -387,14 +374,14 @@ function LotUnitCard({
             className="lot-photo"
             data-lot-photo={photo ? "unit" : "camp"}
           />
-          <span className="absolute left-3 top-3 rounded-full bg-fg px-2.5 py-1 text-[11px] font-bold text-lot-void">
+          <span className="absolute left-3 top-3 rounded-full bg-sapphire px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
             {shortLotTypeLabel(unit.body_type)}
           </span>
           <span
             className={cn(
-              "absolute right-3 top-3 text-[15px] font-bold tabular-nums",
+              "absolute right-3 top-3 text-[15px] font-bold tabular-nums text-prestige",
               featured && "text-[17px]",
-              price === "GAP" ? "text-dim" : "text-fg",
+              price === "GAP" && "text-white/55",
             )}
           >
             {price}
@@ -403,22 +390,26 @@ function LotUnitCard({
         <div className="space-y-3 px-4 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 space-y-1">
-              <p className="text-[13px] font-semibold text-muted">{year}</p>
-              <p className="text-[20px] font-bold leading-snug text-fg">{title}</p>
-              <p className="text-[13px] text-muted">
+              <p className="text-[13px] font-semibold text-sapphire-glow">
+                {year}
+              </p>
+              <p className="text-[20px] font-bold leading-snug text-white">
+                {title}
+              </p>
+              <p className="text-[13px] text-white/75">
                 {trim === "GAP" ? "Trim GAP" : trim}
               </p>
             </div>
             <div className="shrink-0 pt-0.5 text-right">
               <p
                 className={cn(
-                  "text-[20px] font-bold leading-none tabular-nums",
-                  stock === "GAP" ? "text-dim" : "text-fg",
+                  "text-[20px] font-bold leading-none tabular-nums text-white",
+                  stock === "GAP" && "text-white/45",
                 )}
               >
                 {stock}
               </p>
-              <p className="mt-1 text-[10px] font-bold tracking-[0.16em] text-dim">
+              <p className="mt-1 text-[10px] font-bold tracking-[0.16em] text-white/50">
                 STOCK
               </p>
             </div>
@@ -430,7 +421,7 @@ function LotUnitCard({
             <Pill label="Condition" value={condition} />
           </dl>
           {open ? (
-            <dl className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border pt-3 text-[12px]">
+            <dl className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-white/15 pt-3 text-[12px]">
               <Field label="Year" value={year} />
               <Field label="Make" value={lotTextOrGap(unit.make)} />
               <Field label="Model" value={lotTextOrGap(unit.model)} />
@@ -460,11 +451,13 @@ function Pill({ label, value }: { label: string; value: string }) {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[10px] font-bold tracking-[0.14em] text-dim">{label}</dt>
+      <dt className="text-[10px] font-bold tracking-[0.14em] text-white/50">
+        {label}
+      </dt>
       <dd
         className={cn(
-          "mt-0.5 font-semibold text-fg",
-          value === "GAP" && "text-dim",
+          "mt-0.5 font-semibold text-white",
+          value === "GAP" && "text-white/45",
         )}
       >
         {value}

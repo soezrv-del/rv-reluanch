@@ -46,6 +46,10 @@ test("Lot stock is a suite page, not a dock tab and not RV Grok", () => {
   assert.match(route, /initialTab="rvlot"/);
   assert.match(route, /NdaGate/);
 
+  assert.match(lot, /<SuitePage/);
+  assert.match(lot, /tab="rvlot"/);
+  assert.match(lot, /lot-stock-screen/);
+  assert.match(lot, /glass-prestige/);
   assert.match(lot, /data-lot-stock/);
   assert.match(lot, /data-lot-search/);
   assert.match(lot, /data-lot-chips/);
@@ -56,6 +60,7 @@ test("Lot stock is a suite page, not a dock tab and not RV Grok", () => {
   assert.match(lot, /data-lot-photo/);
   assert.match(lot, /LOT_CAMP_SCENE|camp-scene/);
   assert.doesNotMatch(lot, /LotTypeMark/);
+  assert.doesNotMatch(lot, /lot-research/);
   assert.match(lot, /On the lot/);
   assert.match(lot, /filterLotBrowse/);
   assert.match(lot, /lotTypeChips/);
@@ -65,6 +70,14 @@ test("Lot stock is a suite page, not a dock tab and not RV Grok", () => {
   assert.doesNotMatch(lot, /onOpenGrok|setGrokSeed/);
   assert.doesNotMatch(lot, /GVWR|Length|Slides|Sleeps|RvFAX/);
   assert.doesNotMatch(lot, /brochure catalog bleed|catalog photo/i);
+
+  const header = read("../../components/shell/SapphireHeader.tsx");
+  assert.match(header, /"rvlot"/);
+
+  const css = read("../../styles.css");
+  assert.match(css, /\.lot-stock-screen\[data-readable-cards\]/);
+  assert.match(css, /backdrop-filter:\s*blur\(12px\)/);
+  assert.doesNotMatch(css, /\.lot-research\s*\{/);
 
   assert.match(page, /\/inventory\/own-lot-latest\.json/);
   assert.doesNotMatch(page, /ownLotInventory|from "\.\.\/rvgrok\/ownLotInventory/);

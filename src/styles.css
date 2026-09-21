@@ -2118,32 +2118,34 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   letter-spacing: -0.03em;
 }
 
-/* Lot stock — grok.me browse chrome, own-lot data only */
-.lot-research {
-  background: var(--color-lot-void);
-  color: var(--color-fg);
+/* Lot stock — SuitePage + sapphire frost; grok.me browse rhythm; own-lot only */
+.lot-stock-screen[data-readable-cards] .page-backdrop-bright {
+  opacity: 0.4;
+  filter: brightness(1.05) contrast(1.03) saturate(1.06);
 }
-.lot-research-wash {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(
-      ellipse 64% 46% at 92% 0%,
-      color-mix(in srgb, var(--color-fg) 14%, transparent),
-      transparent 56%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-lot-plate) 62%, transparent),
-      var(--color-lot-void) 36%
-    );
+.lot-stock-screen[data-readable-cards] .page-scrim-soft {
+  background: linear-gradient(
+    180deg,
+    rgba(4, 10, 28, 0.42) 0%,
+    rgba(4, 10, 28, 0.16) 22%,
+    rgba(4, 10, 28, 0.58) 100%
+  );
 }
-.lot-search {
-  background: var(--color-lot-chip);
-  border: 1px solid color-mix(in srgb, var(--color-fg) 8%, transparent);
+.lot-stock-screen[data-readable-cards] .glass-prestige,
+.lot-stock-screen[data-readable-cards] .glass-prestige-deep,
+.lot-stock-screen[data-readable-cards] .glass-panel,
+.lot-stock-screen[data-readable-cards] .glass-surface {
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.05) 45%,
+    rgba(8, 12, 28, 0.12) 100%
+  );
+  backdrop-filter: blur(12px) saturate(1.7);
+  -webkit-backdrop-filter: blur(12px) saturate(1.7);
 }
 .lot-search:focus {
-  border-color: color-mix(in srgb, var(--color-fg) 22%, transparent);
+  border-color: color-mix(in srgb, var(--color-sapphire-glow) 55%, transparent);
   outline: none;
 }
 .lot-chip-rail {
@@ -2152,31 +2154,24 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--color-fg) 22%, transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--color-sapphire-glow) 35%, transparent)
+    transparent;
   padding-bottom: 0.55rem;
 }
 .lot-chip-rail::-webkit-scrollbar {
   height: 3px;
 }
 .lot-chip-rail::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--color-fg) 22%, transparent);
+  background: color-mix(in srgb, var(--color-sapphire-glow) 35%, transparent);
   border-radius: 99px;
 }
-.lot-chip {
-  background: var(--color-lot-chip);
-  color: var(--color-muted);
-  border: 1px solid transparent;
-}
 .lot-chip.is-on {
-  background: var(--color-fg);
-  color: var(--color-lot-void);
-}
-.lot-card {
-  background: var(--color-lot-plate);
-  border: 1px solid color-mix(in srgb, var(--color-fg) 6%, transparent);
+  background: var(--color-sapphire);
+  border-color: color-mix(in srgb, var(--color-sapphire-glow) 55%, transparent);
+  color: #fff;
 }
 .lot-well {
-  background: var(--color-lot-studio);
+  background: rgb(6, 12, 22);
 }
 .lot-well.is-featured {
   min-height: 15.5rem;
@@ -2204,7 +2199,7 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   height: 4.5rem;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-lot-void) 42%, transparent),
+    rgba(4, 10, 28, 0.45),
     transparent
   );
   pointer-events: none;
@@ -2220,7 +2215,8 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
 .lot-pill {
   min-width: 0;
   border-radius: 1rem;
-  background: color-mix(in srgb, var(--color-fg) 6%, var(--color-lot-well));
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   padding: 0.65rem 0.3rem 0.55rem;
   text-align: center;
 }
@@ -2230,10 +2226,10 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   white-space: nowrap;
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--color-fg);
+  color: #fff;
 }
 .lot-pill-value.is-gap {
-  color: var(--color-dim);
+  color: rgba(255, 255, 255, 0.45);
 }
 .lot-pill-label {
   margin-top: 0.2rem;
@@ -2241,7 +2237,7 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-dim);
+  color: rgba(255, 255, 255, 0.5);
 }
 @media (prefers-reduced-motion: reduce) {
   .lot-card,
