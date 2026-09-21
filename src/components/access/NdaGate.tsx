@@ -45,7 +45,7 @@ export function NdaGate({ children }: { children: ReactNode }) {
             {NDA_TITLE}
           </h1>
         </div>
-        <div data-app-scroll className="rv-scroll flex-1 overflow-y-auto px-4 py-4">
+        <div data-app-scroll className="rv-scroll relative z-10 flex-1 overflow-y-auto px-4 py-4">
           <div className="mx-auto max-w-lg">
             <div className="glass-prestige rounded-[1.25rem] p-4">
               <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-gold-dim">
@@ -57,7 +57,7 @@ export function NdaGate({ children }: { children: ReactNode }) {
             </div>
           </div>
         </div>
-        <div className="border-t border-border px-4 py-3">
+        <div className="relative z-10 border-t border-border px-4 py-3">
           <div className="mx-auto max-w-lg space-y-3">
             <label className="flex cursor-pointer items-start gap-3">
               <input

@@ -74,10 +74,16 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(css, /--dock-label-size-sm:\s*1\.1875rem/);
   assert.match(css, /\.bottom-tabs-dock \{/);
   assert.match(css, /backdrop-filter:\s*blur\(20px\) saturate\(180%\)/);
-  assert.match(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
-  assert.match(css, /border:\s*1px solid rgba\(255, 255, 255, 0\.12\)/);
+  assert.match(css, /--dock-surface:/);
+  assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?background:\s*var\(--dock-surface\)/);
+  assert.match(
+    css,
+    /border:\s*1px solid color-mix\(in srgb, var\(--color-sapphire\) 34%/,
+  );
   assert.match(css, /border-radius:\s*16px/);
-  assert.match(css, /box-shadow:\s*0 8px 32px rgba\(0, 0, 0, 0\.37\)/);
+  assert.match(css, /box-shadow:\s*0 8px 32px rgba\(4, 12, 32, 0\.37\)/);
+  assert.doesNotMatch(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
+  assert.doesNotMatch(css, /--dock-surface:\s*#000000/);
   assert.match(css, /\.metal-hammered-face/);
   assert.match(css, /linear-gradient\(\s*180deg/);
   assert.match(css, /\.bottom-tab-label \{[\s\S]*?font-weight:\s*700/);
