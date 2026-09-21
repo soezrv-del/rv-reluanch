@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LotRouteImport } from './routes/lot'
 import { Route as ApiRouteRouteImport } from './routes/api/route'
 import { Route as ApiCampsRouteImport } from './routes/api/camps'
 import { Route as ApiDumpsRouteImport } from './routes/api/dumps'
@@ -39,6 +40,11 @@ import { Route as ApiRvgrokWebResearchRouteImport } from './routes/api/rvgrok.we
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LotRoute = LotRouteImport.update({
+  id: '/lot',
+  path: '/lot',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRouteRoute = ApiRouteRouteImport.update({
@@ -170,6 +176,7 @@ const ApiRvgrokWebResearchRoute = ApiRvgrokWebResearchRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/lot': typeof LotRoute
   '/api': typeof ApiRouteRouteWithChildren
   '/api/camps': typeof ApiCampsRoute
   '/api/dumps': typeof ApiDumpsRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/lot': typeof LotRoute
   '/api': typeof ApiRouteRouteWithChildren
   '/api/camps': typeof ApiCampsRoute
   '/api/dumps': typeof ApiDumpsRoute
@@ -227,6 +235,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/lot': typeof LotRoute
   '/api': typeof ApiRouteRouteWithChildren
   '/api/camps': typeof ApiCampsRoute
   '/api/dumps': typeof ApiDumpsRoute
@@ -257,6 +266,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/lot'
     | '/api'
     | '/api/camps'
     | '/api/dumps'
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/lot'
     | '/api'
     | '/api/camps'
     | '/api/dumps'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/lot'
     | '/api'
     | '/api/camps'
     | '/api/dumps'
@@ -342,6 +354,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LotRoute: typeof LotRoute
   ApiRouteRoute: typeof ApiRouteRouteWithChildren
 }
 
@@ -352,6 +365,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lot': {
+      id: '/lot'
+      path: '/lot'
+      fullPath: '/lot'
+      preLoaderRoute: typeof LotRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api': {
@@ -602,6 +622,7 @@ const ApiRouteRouteWithChildren = ApiRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LotRoute: LotRoute,
   ApiRouteRoute: ApiRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport

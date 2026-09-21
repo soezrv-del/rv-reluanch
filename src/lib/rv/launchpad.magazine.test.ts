@@ -57,8 +57,12 @@ test("cold open skips splash and lands on Facts", () => {
   assert.doesNotMatch(shell, /from "\.\/Launchpad"/);
   assert.doesNotMatch(shell, /finishLaunch/);
   assert.doesNotMatch(shell, /onSkip=\{\(\) => finishLaunch\("rvfax"\)\}/);
-  assert.match(shell, /useState<AppTab>\("rvfax"\)/);
-  assert.match(shell, /new Set<AppTab>\(\["rvfax"\]\)/);
+  assert.match(shell, /initialTab = "rvfax"/);
+  assert.match(shell, /useState<AppTab>\(initialTab\)/);
+  assert.match(
+    shell,
+    /new Set<AppTab>\(\[initialTab === "rvlot" \? "rvlot" : "rvfax"\]\)/,
+  );
   assert.match(shell, /const suiteReady = true/);
   assert.match(shell, /const launchOpen = false/);
 
