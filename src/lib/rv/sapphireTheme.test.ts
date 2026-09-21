@@ -107,6 +107,18 @@ test("Sold and Premium share sapphire accent + Raidho suite chrome — no dock S
   assert.doesNotMatch(css, /DialaBot/);
 });
 
+test("Grok tab uses Raidho as a background field, not a front brand plate", () => {
+  const app = read("../../components/rvgrok/RvGrokApp.tsx");
+  const css = read("../../styles.css");
+  assert.match(app, /<SuiteRaidhoBackdrop className="grok-raidho-field" \/>/);
+  assert.doesNotMatch(app, /SuiteRaidhoBackdrop bleed/);
+  assert.doesNotMatch(app, /ScrollSuiteHeader/);
+  assert.doesNotMatch(app, /SuiteBackdrop/);
+  assert.match(css, /\[data-rvgrok-wingman\] \.suite-raidho-mark/);
+  assert.match(css, /\.grok-frost \{[\s\S]*?blur\(28px\)/);
+  assert.doesNotMatch(css, /DialaBot/);
+});
+
 test("Facts, Tow, Cal, Sold, Premium, and coach detail are full-bleed Raidho — no leftover photo layer", () => {
   const fax = read("../../components/rvfax/RvFaxApp.tsx");
   const detail = read("../../components/rvfax/RvDetail.tsx");

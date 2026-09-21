@@ -28,7 +28,9 @@ import {
 } from "./voiceWeb.ts";
 import {
   isForbiddenResearchHold,
+  isForbiddenScopeNarrow,
   RV_GROK_SESSION_INTRO,
+  VOICE_RESEARCH_HOLD_ALT,
   VOICE_SESSION_INTRO_INSTRUCTIONS,
 } from "./speechPolicy.ts";
 
@@ -336,8 +338,13 @@ test("hold string is exactly give me one second — never Let me check that", ()
   ));
   assert.match(
     VOICE_SESSION_INTRO_INSTRUCTIONS,
-    /I'm RV Grok — give me year, make, and model, and I'll speak the spec report on that exact coach/,
+    /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
   );
+  assert.equal(VOICE_RESEARCH_HOLD_ALT, "This might take a second to get that for you");
+  assert.equal(isForbiddenScopeNarrow("I only focus on this coach"), true);
+  assert.equal(isForbiddenScopeNarrow("I only focus on RVs"), true);
+  assert.equal(isForbiddenScopeNarrow("That's outside my scope"), true);
+  assert.equal(isForbiddenScopeNarrow(RV_GROK_SESSION_INTRO), false);
 });
 
 test("voice research reuses webIntent — no second detector", () => {

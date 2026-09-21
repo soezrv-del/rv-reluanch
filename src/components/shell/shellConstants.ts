@@ -35,7 +35,7 @@ export const PAGE_COPY: Record<
 > = {
   rvgrok: {
     title: "RvGROK",
-    line: "Your RV expert — from the best fishing spots to troubleshooting your RV.",
+    line: "Name the year, make, and model — spec reports on the lot.",
     badge: "HOME",
   },
   rvfax: {

@@ -49,7 +49,7 @@ test("chat, agent, and voice prompts share David's answer-now / give me one seco
   assert.match(speech, /Web search is last resort/);
   assert.match(
     speech,
-    /I'm RV Grok — give me year, make, and model, and I'll speak the spec report on that exact coach/,
+    /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
   );
   assert.match(speech, /Verified & True \/ Know before you buy/);
   assert.match(src("originStory.ts"), /David Hansen/);
@@ -199,4 +199,53 @@ test("persona is the authoritative endpoint — no brochure / dealer / website h
   assert.match(prompts, /YOU answer/);
   assert.match(prompts, /you should check with/);
   assert.match(prompts, /look at the door sticker/);
+});
+
+test("sales floor: answer whatever they ask — no scope-narrow or sticky lock", () => {
+  const speech = src("speechPolicy.ts");
+  const prompts = src("prompts.ts");
+  const voice = src("voice.ts");
+  const live = src("liveVoice.ts");
+
+  assert.match(speech, /SALES_MISSION_POLICY/);
+  assert.match(speech, /HONESTY_STANDING_POLICY/);
+  assert.match(speech, /This is SALES/);
+  assert.match(speech, /Every question matters/);
+  assert.match(speech, /WHATEVER the customer asks/);
+  assert.match(speech, /I only focus on this coach/);
+  assert.match(speech, /I only focus on RVs/);
+  assert.match(speech, /That\\?'s outside my scope/);
+  assert.match(speech, /sticky lock that ignores a new question/);
+  assert.match(speech, /This might take a second to get that for you/);
+  assert.match(speech, /VOICE_RESEARCH_HOLD_ALT/);
+  assert.match(speech, /GAP over invent/);
+  assert.match(speech, /isForbiddenScopeNarrow/);
+
+  for (const [label, text] of [
+    ["prompts.ts", prompts],
+    ["voice.ts", voice],
+    ["liveVoice.ts", live],
+  ] as const) {
+    assert.match(text, /SALES_MISSION_POLICY/, `${label} interpolates sales mission`);
+    assert.match(text, /HONESTY_STANDING_POLICY/, `${label} interpolates honesty`);
+    assert.doesNotMatch(
+      text,
+      /not a general assistant/i,
+      `${label} must not refuse as a general assistant`,
+    );
+    assert.doesNotMatch(
+      text,
+      /redirect off-topic/i,
+      `${label} must not redirect off-topic`,
+    );
+    assert.doesNotMatch(
+      text,
+      /Redirect lifestyle, classifieds, and general-assistant asks/,
+      `${label} must not redirect lifestyle asks back to the coach`,
+    );
+  }
+
+  assert.match(prompts, /SALES FLOOR — EVERY QUESTION/);
+  assert.match(prompts, /A new question always wins over a prior coach lock/);
+  assert.match(voice, /VOICE_RESEARCH_HOLD_ALT/);
 });
