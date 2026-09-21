@@ -3,6 +3,7 @@ import { Scale } from "lucide-react";
 import { readStoredPhone } from "@/lib/access/client";
 import { acceptNda, hasAcceptedNda } from "@/lib/access/nda";
 import { NDA_TEXT, NDA_TITLE } from "@/lib/access/ndaText";
+import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
 
 export function NdaGate({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -18,9 +19,12 @@ export function NdaGate({ children }: { children: ReactNode }) {
     return (
       <div
         data-nda-state="loading"
-        className="flex h-full min-h-dvh items-center justify-center bg-bg text-fg"
+        className="relative flex h-full min-h-dvh items-center justify-center overflow-hidden bg-bg text-fg"
       >
-        <p className="text-[13px] font-semibold text-muted">RvFOX</p>
+        <SuiteRaidhoBackdrop />
+        <p className="relative z-10 text-[13px] font-semibold text-muted">
+          RvFOX
+        </p>
       </div>
     );
   }
@@ -30,9 +34,10 @@ export function NdaGate({ children }: { children: ReactNode }) {
       <div
         data-nda-gate
         data-nda-state="prompt"
-        className="flex h-full min-h-dvh flex-col bg-bg text-fg"
+        className="relative flex h-full min-h-dvh flex-col overflow-hidden bg-bg text-fg"
       >
-        <div className="border-b border-border px-4 py-3">
+        <SuiteRaidhoBackdrop />
+        <div className="relative z-10 border-b border-border px-4 py-3">
           <p className="text-[10px] font-bold tracking-[0.16em] text-gold">
             REQUIRED
           </p>
