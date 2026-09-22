@@ -344,9 +344,12 @@ test("hold string is exactly give me one second — never Let me check that", ()
   assert.match(VOICE_SESSION_INTRO_INSTRUCTIONS, new RegExp(
     RV_GROK_SESSION_INTRO.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
   ));
-  assert.match(
+  assert.equal(RV_GROK_SESSION_INTRO, "I'm RvGrok");
+  assert.match(VOICE_SESSION_INTRO_INSTRUCTIONS, /I'm RvGrok/);
+  assert.doesNotMatch(VOICE_SESSION_INTRO_INSTRUCTIONS, /ask me anything/);
+  assert.doesNotMatch(
     VOICE_SESSION_INTRO_INSTRUCTIONS,
-    /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
+    /Name a year, make, and model/,
   );
   assert.equal(VOICE_RESEARCH_HOLD_ALT, "This might take a second to get that for you");
   assert.equal(isForbiddenScopeNarrow("I only focus on this coach"), true);
