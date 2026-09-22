@@ -1,5 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  adminAuthFailureBody,
+  ADMIN_PASSWORD_UNSET_CODE,
+  ADMIN_PASSWORD_UNSET_MESSAGE,
+  authorizeAccessAdmin,
+  databaseUrlConfigured,
+} from "@/lib/access/adminAuth";
+import {
   adminCookie,
   adminPasswordConfigured,
   clearAdminCookie,
@@ -25,19 +32,22 @@ type Body = {
   id?: string;
 };
 
-function unauthorized() {
-  return Response.json({ error: "Admin login required." }, { status: 401 });
-}
-
-function requireAdmin(request: Request) {
-  return verifyAdminToken(readAdminToken(request));
+function deny(request: Request) {
+  const auth = authorizeAccessAdmin(request, {
+    tokenValid: verifyAdminToken(readAdminToken(request)),
+    databaseUrl: databaseUrlConfigured(),
+    passwordConfigured: adminPasswordConfigured(),
+  });
+  if (auth.ok) return null;
+  return Response.json(adminAuthFailureBody(auth), { status: auth.status });
 }
 
 export const Route = createFileRoute("/api/access/admin")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        if (!requireAdmin(request)) return unauthorized();
+        const blocked = deny(request);
+        if (blocked) return blocked;
         const [entries, requests] = await Promise.all([
           listWhitelist(),
           listAccessRequests(),
@@ -56,7 +66,12 @@ export const Route = createFileRoute("/api/access/admin")({
         if (action === "login") {
           if (!adminPasswordConfigured()) {
             return Response.json(
-              { error: "WHITELIST_ADMIN_PASSWORD is not set." },
+              {
+                error: "WHITELIST_ADMIN_PASSWORD is not set.",
+                code: ADMIN_PASSWORD_UNSET_CODE,
+                message: ADMIN_PASSWORD_UNSET_MESSAGE,
+                passwordConfigured: false,
+              },
               { status: 503 },
             );
           }
@@ -80,7 +95,8 @@ export const Route = createFileRoute("/api/access/admin")({
           );
         }
 
-        if (!requireAdmin(request)) return unauthorized();
+        const blocked = deny(request);
+        if (blocked) return blocked;
 
         if (action === "add") {
           const result = await addWhitelistEntry({
