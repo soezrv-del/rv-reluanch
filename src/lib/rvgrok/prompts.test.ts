@@ -95,6 +95,26 @@ test("chat, agent, and voice prompts share David's answer-now / give me one seco
   assert.doesNotMatch(voice, /never speak 0 as a stock count/);
   assert.doesNotMatch(voice, /OWN-LOT INVENTORY/);
   assert.doesNotMatch(voice, /on our lot/);
+  assert.match(
+    speech,
+    /ACCURACY_AIM_POLICY =\s*\n\s*"Get as accurate as possible, but not gospel\."/,
+  );
+  assert.match(speech, /HONESTY: \$\{ACCURACY_AIM_POLICY\}/);
+  assert.doesNotMatch(speech, /ACCURACY FIRST/);
+  assert.match(prompts, /Get as accurate as possible, but not gospel\./);
+  assert.doesNotMatch(prompts, /ACCURACY FIRST/);
+  assert.doesNotMatch(prompts, /Always base answers on real data/);
+  assert.doesNotMatch(prompts, /Base answers on real data/);
+  assert.match(prompts, /IMAGE GENERATION/);
+  assert.match(prompts, /generate_image/);
+  assert.match(voice, /Get as accurate as possible, but not gospel\./);
+  assert.doesNotMatch(voice, /ACCURACY FIRST/);
+  assert.match(voice, /GROK_VOICES/);
+  assert.match(voice, /LIVE_VOICE_KEY/);
+  assert.doesNotMatch(prompts, /DialaBot/);
+  assert.doesNotMatch(voice, /DialaBot/);
+  assert.doesNotMatch(speech, /DialaBot/);
+
   assert.match(prompts, /UNKNOWN \/ CATALOG GAP/);
   assert.match(prompts, /I don't know/);
   assert.match(prompts, /Do not invent/);

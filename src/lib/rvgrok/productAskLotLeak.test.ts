@@ -113,5 +113,19 @@ test("system / voice / grounding instruction strings have zero lot vocabulary", 
     assert.doesNotMatch(text, /none of that coach is on our lot/, label);
     assert.doesNotMatch(text, /If Matched is 0, say none/, label);
     assert.doesNotMatch(text, LOT_INSTRUCTION_RE, label);
+    assert.doesNotMatch(text, /ACCURACY FIRST/, label);
+    assert.doesNotMatch(text, /DialaBot/, label);
   }
+
+  const speechFull = src("speechPolicy.ts");
+  assert.match(
+    speechFull,
+    /ACCURACY_AIM_POLICY =\s*\n\s*"Get as accurate as possible, but not gospel\."/,
+  );
+  assert.match(src("prompts.ts"), /Get as accurate as possible, but not gospel\./);
+  assert.match(src("voice.ts"), /Get as accurate as possible, but not gospel\./);
+  assert.match(src("prompts.ts"), /IMAGE GENERATION/);
+  assert.match(src("prompts.ts"), /generate_image/);
+  assert.match(src("voice.ts"), /GROK_VOICES/);
+  assert.match(src("voice.ts"), /LIVE_VOICE_KEY/);
 });
