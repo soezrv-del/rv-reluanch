@@ -350,11 +350,14 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(app, /onDeskSheet/);
   assert.match(app, /DeskSpecSheet/);
   assert.match(app, /liveDeskSheet/);
+  assert.match(app, /deskRevealAfterIndex/);
+  assert.match(app, /data-rvgrok-desk-after-reply/);
   assert.match(src(root, "deskSheetPolicy.ts"), /queryNamesYearMakeModel/);
   assert.doesNotMatch(app, /2019 Grand Design Solitude 310GK/);
   assert.match(bubble, /DeskSpecSheet/);
   assert.match(bubble, /deskSheet/);
   assert.match(bubble, /stripDuplicateMarkdownSpecSheet/);
+  assert.match(bubble, /data-rvgrok-desk-after-reply/);
   assert.match(realtime, /onDeskSheet/);
   assert.match(realtime, /resolveDeskSheet/);
   assert.match(voice, /DESK SPEC SHEET/);
