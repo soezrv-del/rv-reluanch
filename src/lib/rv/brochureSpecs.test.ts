@@ -677,6 +677,25 @@ test("Audit E 2027 OEM GVWR pins: Altitude / Incline / Incline FS550", () => {
   assert.equal(findOemGvwrLbs("2026", "Holiday Rambler", "Incline FS550", "30SB"), null);
 });
 
+test("Audit E 2027 OEM GVWR pins: Forest River Cardinal (printed FPs only)", () => {
+  // RVUSA 2027 Forest River Cardinal brochure.
+  assert.equal(findOemGvwrLbs("2027", "Forest River", "Cardinal", "32CHILL"), 12188);
+  assert.equal(findOemGvwrLbs("2027", "Forest River", "Cardinal", "33CHEF"), 13885);
+  assert.equal(findOemGvwrLbs("2027", "Forest River", "Cardinal", "35CRIB"), 14305);
+  assert.equal(findOemUvwLbs("2027", "Forest River", "Cardinal", "32CHILL"), 9688);
+  assert.equal(findOemUvwLbs("2027", "Forest River", "Cardinal", "33CHEF"), 10558);
+  // 41DUB prints TBD — GAP, do not invent.
+  assert.equal(findOemGvwrLbs("2027", "Forest River", "Cardinal", "41DUB"), null);
+  assert.equal(findOemUvwLbs("2027", "Forest River", "Cardinal", "41DUB"), null);
+  // Isolation — no 2026 bleed; do not stamp Sunseeker / FR3 / other FR lines.
+  assert.equal(findOemGvwrLbs("2026", "Forest River", "Cardinal", "32CHILL"), null);
+  assert.equal(findOemGvwrLbs("2026", "Forest River", "Cardinal", "33CHEF"), null);
+  assert.equal(findOemGvwrLbs("2027", "Forest River", "FR3", "32CHILL"), null);
+  assert.equal(findOemGvwrLbs("2027", "Forest River", "Sunseeker", "32CHILL"), null);
+  assert.equal(findOemGvwrLbs("2027", "Forest River", "Cedar Creek", "32CHILL"), null);
+  assert.equal(findOemGvwrLbs("2027", "Forest River", "Cardinal Luxury", "32CHILL"), null);
+});
+
 test("Audit B Phase 3+ length pins match dated brochures (44OH / 303RLS / 26DBH)", () => {
   // Tiffin MY25/MY26 Phaeton weights & measures: 44 OH Overall Length 45' (WB 310").
   const phaeton = findOemFloorplanSpec("2025", "Tiffin", "Phaeton", "44OH");

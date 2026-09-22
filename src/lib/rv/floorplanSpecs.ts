@@ -2288,6 +2288,16 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
     ["2440DS", "2500TS", "2860DS", "3010DS", "3050S"],
     14500,
   ),
+  // Forest River Cardinal — RVUSA 2027 Forest River Cardinal brochure.
+  // Printed FPs only (yearMin=2027 yearMax=2027). 41DUB prints TBD — leave GAP.
+  // Not Sunseeker / FR3 / Cedar Creek / other FR lines.
+  ...gvwrPins("forest river", "cardinal", 2027, 2027, ["32CHILL"], 12188),
+  ...gvwrPins("forest river", "cardinal", 2027, 2027, ["33CHEF"], 13885),
+  ...gvwrPins("forest river", "cardinal", 2027, 2027, ["35CRIB"], 14305),
+  ...gvwrPins("forest river", "cardinal", 2027, 2027, ["36FL"], 14115),
+  ...gvwrPins("forest river", "cardinal", 2027, 2027, ["36FUN"], 14095),
+  ...gvwrPins("forest river", "cardinal", 2027, 2027, ["37GALLEY"], 14080),
+  ...gvwrPins("forest river", "cardinal", 2027, 2027, ["38DEN"], 14235),
   // Coachmen Leprechaun — 2025 Leprechaun brochure Ford-only rows (skip Ford/Chevy dual GVWR).
   ...gvwrPins("coachmen", "leprechaun", 2025, 2025, ["260DS", "298KB", "319MB"], 14500),
   // Coachmen Freelander — 2025 Freelander flyer Ford-only 26DS = 14,500 (skip dual Ford/Chevy 22XG / 27QB).
@@ -2595,6 +2605,72 @@ const OEM_UVW_PINS: OemUvwPin[] = [
     39237,
     "Family RVing road-test door placard for 2022 American Coach American Dream 39RK (39,237 UVW / 7,763 OCCC). Representative UVW for the 39RK line that year — not a single VIN.",
   ),
+
+  // Forest River Cardinal — RVUSA 2027 Forest River Cardinal brochure.
+  // Printed UVW only. 41DUB prints TBD — leave GAP.
+  ...uvwPins(
+    "forest river",
+    "cardinal",
+    2027,
+    2027,
+    ["32CHILL"],
+    9688,
+    "RVUSA 2027 Forest River Cardinal brochure.",
+  ),
+  ...uvwPins(
+    "forest river",
+    "cardinal",
+    2027,
+    2027,
+    ["33CHEF"],
+    10558,
+    "RVUSA 2027 Forest River Cardinal brochure.",
+  ),
+  ...uvwPins(
+    "forest river",
+    "cardinal",
+    2027,
+    2027,
+    ["35CRIB"],
+    11953,
+    "RVUSA 2027 Forest River Cardinal brochure.",
+  ),
+  ...uvwPins(
+    "forest river",
+    "cardinal",
+    2027,
+    2027,
+    ["36FL"],
+    10708,
+    "RVUSA 2027 Forest River Cardinal brochure.",
+  ),
+  ...uvwPins(
+    "forest river",
+    "cardinal",
+    2027,
+    2027,
+    ["36FUN"],
+    12033,
+    "RVUSA 2027 Forest River Cardinal brochure.",
+  ),
+  ...uvwPins(
+    "forest river",
+    "cardinal",
+    2027,
+    2027,
+    ["37GALLEY"],
+    11123,
+    "RVUSA 2027 Forest River Cardinal brochure.",
+  ),
+  ...uvwPins(
+    "forest river",
+    "cardinal",
+    2027,
+    2027,
+    ["38DEN"],
+    11638,
+    "RVUSA 2027 Forest River Cardinal brochure.",
+  ),
 ];
 
 /** Pin count for coverage reports / tests. */
@@ -2739,6 +2815,10 @@ function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
     (modelNorm.includes("fs550") || modelNorm.includes("fs600")) &&
     !modelIncludes.includes("fs")
   ) {
+    return true;
+  }
+  // Cardinal is a single FR fifth-wheel line — do not match Cardinal Luxury / siblings.
+  if (modelIncludes === "cardinal" && modelNorm.trim() !== "cardinal") {
     return true;
   }
   return false;
