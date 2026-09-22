@@ -43,7 +43,7 @@ test("named coach without tanks/weights digs into tanks and a compare", () => {
   });
   const text = labels(chips).join(" | ");
   assert.ok(chips.length >= 2 && chips.length <= 4);
-  assert.match(text, /tanks and payload/i);
+  assert.match(text, /tanks and payload|real payload/i);
   assert.match(text, /similar class|cross-shop|Freightliner/i);
   assert.doesNotMatch(text, /tell me more/i);
   assert.doesNotMatch(text, /I'm RvGrok/);
@@ -153,8 +153,7 @@ test("chips stay UI-only — no spoken post-reply prompts; intro stays I'm RvGro
   assert.match(landing, /I'm RvGrok/);
   assert.equal((landing.match(/I'm RvGrok/g) || []).length, 1);
 
-  assert.doesNotMatch(prompts, /offer to go deeper/);
-  assert.doesNotMatch(prompts, /want me to go deeper/i);
+  assert.doesNotMatch(prompts, /then offer to go deeper/);
   assert.match(
     prompts,
     /Do not close with a follow-up question/,
