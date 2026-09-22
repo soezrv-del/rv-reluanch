@@ -10,6 +10,8 @@ import {
   formatLabeledEstimate,
   isLabeledEstimateAnswer,
   LABELED_ESTIMATE_RULE,
+  LOW_CONFIDENCE_EST_RULE,
+  mayEmitLabeledEstimate,
   presentsEstimateAsOemPin,
 } from "./estimatePolicy.ts";
 import { ANSWER_NOW_POLICY, HONESTY_STANDING_POLICY } from "./speechPolicy.ts";
@@ -85,8 +87,14 @@ test("estimate answers are labeled, not presented as OEM pin", () => {
   const labeled = formatLabeledEstimate("32,000 lb UVW");
   assert.match(labeled, /EST/);
   assert.match(labeled, /typical class range/);
+  assert.match(labeled, /low confidence/);
   assert.equal(isLabeledEstimateAnswer(labeled), true);
   assert.equal(presentsEstimateAsOemPin(labeled), false);
+  assert.equal(mayEmitLabeledEstimate({ confirmed: true, exhausted: false }), false);
+  assert.equal(mayEmitLabeledEstimate({ confirmed: false, exhausted: false }), false);
+  assert.equal(mayEmitLabeledEstimate({ confirmed: false, exhausted: true }), true);
+  assert.match(LOW_CONFIDENCE_EST_RULE, /low confidence/);
+  assert.match(LABELED_ESTIMATE_RULE, /Never EST after a single miss/);
   assert.equal(
     presentsEstimateAsOemPin("UVW 32000 from OEM pin"),
     true,

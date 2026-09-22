@@ -19,6 +19,7 @@ import {
   fetchWebSearchNotes,
   readWebSearchCache,
   researchCacheKey,
+  WEB_SEARCH_MAX_TOOL_CALLS,
   type WebSearchNotes,
   type WebSearchProfile,
 } from "./webSearch.ts";
@@ -54,6 +55,8 @@ export type ExecuteWebResearchOpts = {
   ownLotSnapshot?: OwnLotSnapshot;
   /** Same-origin host for the deploy-bundled public snapshot. */
   requestOrigin?: string;
+  /** Research-loop attempt cap. Defaults to WEB_SEARCH_MAX_TOOL_CALLS (3). */
+  maxAttempts?: number;
 };
 
 const LOG_TAG = "rvgrok.web_research";
@@ -232,6 +235,7 @@ export async function executeWebResearch(
     timeoutMs: opts.timeoutMs,
     models: opts.models,
     profile: opts.profile,
+    maxAttempts: opts.maxAttempts ?? WEB_SEARCH_MAX_TOOL_CALLS,
   });
 
   const durationMs = Date.now() - t0;

@@ -27,9 +27,11 @@ import {
 } from "./webIntent.ts";
 import { looksLikeOwnLotStockQuestion } from "./ownLotInventory.ts";
 import {
+  evaluateResearchQuality,
   type WebSearchNotes,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
 } from "./webSearch.ts";
+import { LOW_CONFIDENCE_EST_RULE } from "./estimatePolicy.ts";
 import {
   VOICE_RESEARCH_HOLD_INSTRUCTIONS,
   VOICE_RESEARCH_HOLD_PHRASE,
@@ -141,20 +143,30 @@ export function formatVoiceWebSearchInjection(result: WebSearchNotes): string {
       "Do not invent a VIN, stock number, or unit. Never say you can't pull specific units or that the snapshot doesn't break out a list when Matching units rows are present. Brochure catalog is not the lot.",
     ].join("\n");
   }
+  const gate = evaluateResearchQuality({ result, query: result.query });
   if (result.ok) {
+    const estLine = gate.confirmed
+      ? "Notes CONFIRM the queried field — speak that fact. Do not replace it with a labeled EST / typical class range."
+      : gate.allowEstimate
+        ? `Research loop exhausted (${gate.attempts} genuine rephrased attempts, all unconfirmed). ${LOW_CONFIDENCE_EST_RULE}`
+        : "Notes do not confirm the queried field. Do NOT speak a labeled EST / typical class range. Another rephrased search is required.";
     return [
       "WEB RESEARCH NOTES (live this turn — you DID look this up):",
       stripNotesForSpeech(result.notes),
       "Speak a short conversational answer. Do not claim you have no internet.",
       "Do not read URLs, markdown, or citation lists. Catalog lock still wins on numbers.",
-      "If notes do not confirm a fact, speak a labeled EST / typical class range — never as an OEM pin.",
+      estLine,
     ].join("\n");
   }
+  const failEst = gate.allowEstimate
+    ? `Research loop exhausted (${gate.attempts} genuine rephrased attempts). ${LOW_CONFIDENCE_EST_RULE} Do not invent an OEM pin.`
+    : "Do NOT give a labeled EST / typical class range — another rephrased search is required. Do not invent an OEM pin.";
   return [
     `WEB SEARCH NOT AVAILABLE this turn (${result.reason}).`,
     "Do not claim you looked this up or browsed the web.",
     "Do not assert a specific part location you do not have.",
-    "Speak a short honest answer. If a coach field is still missing, give a labeled EST / typical class range — never as an OEM pin. Do not invent an OEM pin.",
+    "Speak a short honest answer.",
+    failEst,
   ].join(" ");
 }
 
