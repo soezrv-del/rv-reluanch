@@ -588,6 +588,7 @@ test("Lineage M / Lineage M series resolve to catalog Lineage Series M", () => {
     assert.equal(seriesAliasEquals(spoken, "Lineage Series M"), true, spoken);
   }
   assert.equal(matchCatalogModelName("Lineage E series", gd), "Lineage Series E");
+  assert.equal(matchCatalogModelName("pheaton", ["Phaeton", "Allegro"]), "Phaeton");
   assert.notEqual(matchCatalogModelName("Lineage M", gd), "Lineage Series E");
   assert.notEqual(matchCatalogModelName("Lineage M", gd), "Lineage Series F");
   assert.match(src(root, "coachIdentity.ts"), /matchCatalogModelName/);

@@ -25,6 +25,8 @@ import {
   rephraseResearchQuery,
   researchCacheKey,
   seedWebSearchCache,
+  normalizeCoachTyposInAsk,
+  coachLabelFromResearchAsk,
 } from "./webSearch.ts";
 import { mayEmitLabeledEstimate } from "./estimatePolicy.ts";
 
@@ -211,6 +213,26 @@ test("rephraseResearchQuery never repeats a prior phrasing", () => {
   assert.notEqual(second.toLowerCase(), original.toLowerCase());
   assert.notEqual(second.toLowerCase(), first.toLowerCase());
   assert.match(first, /OEM brochure|official manufacturer|RVUSA/i);
+});
+
+test("pheaton typo normalizes and first GVWR phrasing is OEM Phaeton", () => {
+  assert.equal(normalizeCoachTyposInAsk("2020 pheaton 40ih"), "2020 Phaeton 40ih");
+  assert.match(
+    coachLabelFromResearchAsk("What's the gvwr of a 2020 pheaton 40ih"),
+    /2020 Tiffin Phaeton 40ih/i,
+  );
+  const original = "What's the gvwr of a 2020 pheaton 40ih";
+  const first = rephraseResearchQuery(original, 0, []);
+  assert.match(first, /Phaeton/);
+  assert.doesNotMatch(first, /pheaton/);
+  assert.match(first, /gvwr of a 2020 Phaeton 40ih/i);
+  const second = rephraseResearchQuery(original, 1, [first]);
+  assert.notEqual(
+    second.toLowerCase().replace(/\s+/g, " "),
+    first.toLowerCase().replace(/\s+/g, " "),
+  );
+  assert.match(second, /Phaeton/);
+  assert.match(second, /factory GVWR|OEM brochure/i);
 });
 
 test("notesConfirmQueriedField requires a real fact, not a miss or EST", () => {
@@ -468,9 +490,20 @@ test("first timeout retries once with a rephrased query then gives up without ES
       assert.equal(result.exhausted, true);
       assert.match(result.reason, /timeout|aborted/i);
     }
-    const injection = formatWebSearchInjection(result);
+    const locked = [
+      "LOCKED WEIGHTS (OEM pin — speak these; never claim GAP for a VERIFIED field):",
+      "- VERIFIED GVWR 39600 from OEM pin",
+      "- VERIFIED UVW 33500 from OEM pin",
+    ].join("\n");
+    const injection = formatWebSearchInjection(result, {
+      query: "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
+      catalogBlock: locked,
+    });
     assert.match(injection, /WEB SEARCH NOT AVAILABLE/);
     assert.match(injection, /Search returned nothing after a retry/);
+    assert.match(injection, /VERIFIED pins still in context: GVWR 39600/);
+    assert.match(injection, /Speak those OEM numbers now/);
+    assert.match(injection, /won't invent that number/);
     assert.doesNotMatch(injection, /You MAY give a labeled EST/);
     const gate = evaluateResearchQuality({
       result,
@@ -515,8 +548,10 @@ test("timeout then confirming retry uses the live hit — no EST", async () => {
     }
     const injection = formatWebSearchInjection(result);
     assert.match(injection, /CONFIRM the queried field/i);
+    assert.match(injection, /live OEM \/ brochure \/ dealer fact/i);
     assert.doesNotMatch(injection, /You MAY give a labeled EST/);
     assert.doesNotMatch(injection, /low confidence — never as an OEM pin/);
+    assert.doesNotMatch(injection, /You MAY give a labeled EST \/ typical class range/);
   } finally {
     globalThis.fetch = prior;
     clearWebSearchCache();

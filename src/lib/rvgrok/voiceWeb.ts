@@ -33,7 +33,10 @@ import {
   type WebSearchNotes,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
 } from "./webSearch.ts";
-import { LOW_CONFIDENCE_EST_RULE } from "./estimatePolicy.ts";
+import {
+  formatCatalogPinWinsSearchMiss,
+  LOW_CONFIDENCE_EST_RULE,
+} from "./estimatePolicy.ts";
 import {
   VOICE_RESEARCH_HOLD_INSTRUCTIONS,
   VOICE_RESEARCH_HOLD_PHRASE,
@@ -137,7 +140,10 @@ export function stripNotesForSpeech(notes: string): string {
     .slice(0, 1200);
 }
 
-export function formatVoiceWebSearchInjection(result: WebSearchNotes): string {
+export function formatVoiceWebSearchInjection(
+  result: WebSearchNotes,
+  opts?: { catalogBlock?: string },
+): string {
   if (result.ok && /own-lot/i.test(result.model || "")) {
     return [
       "OWN-LOT INVENTORY (RV Country source=own snapshot):",
@@ -163,8 +169,8 @@ export function formatVoiceWebSearchInjection(result: WebSearchNotes): string {
     ].join("\n");
   }
   const failEst = gate.exhausted
-    ? `Search returned nothing after a retry. Say so plainly. ${LOW_CONFIDENCE_EST_RULE} Do not invent an OEM pin.`
-    : "Do NOT give a labeled EST / typical class range — another rephrased search is required. Do not invent an OEM pin.";
+    ? `Search returned nothing after a retry. Say so plainly. ${LOW_CONFIDENCE_EST_RULE} Do not invent an OEM pin. ${formatCatalogPinWinsSearchMiss(opts?.catalogBlock)}`
+    : `Do NOT give a labeled EST / typical class range — another rephrased search is required. Do not invent an OEM pin. ${formatCatalogPinWinsSearchMiss(opts?.catalogBlock)}`;
   return [
     `WEB SEARCH NOT AVAILABLE this turn (${result.reason}).`,
     "Do not claim you looked this up or browsed the web.",

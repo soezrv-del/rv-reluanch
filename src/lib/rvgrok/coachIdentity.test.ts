@@ -3,13 +3,18 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseCoachFromText } from "./parseCoach.ts";
+import {
+  fuzzyMatchCatalogName,
+  matchCatalogModelName,
+  parseCoachFromText,
+} from "./parseCoach.ts";
 import {
   askNamesCoachIdentity,
   formatCatalogPresenceNote,
   inspectCatalogPresence,
   namedCoachConflictsLock,
   resolveCatalogMake,
+  resolveCatalogModel,
   resolveCoachIdentity,
 } from "./coachIdentity.ts";
 
@@ -260,4 +265,34 @@ test("lock-break is wired through chat, voice, and the API stream", () => {
   assert.match(realtime, /pushCatalogLockToSession/);
   assert.match(realtime, /flushLockBreakAnswer/);
   assert.match(realtime, /onDeskSheet/);
+});
+
+test("pheaton typo and year+model asks lock 2020 Tiffin Phaeton 40IH", () => {
+  assert.equal(
+    fuzzyMatchCatalogName("pheaton", ["Phaeton", "Allegro", "Zephyr"]),
+    "Phaeton",
+  );
+  assert.equal(matchCatalogModelName("pheaton", ["Phaeton", "Allegro"]), "Phaeton");
+  assert.equal(resolveCatalogModel("Tiffin", "pheaton"), "Phaeton");
+
+  for (const q of [
+    "What's the gvwr of a 2020 pheaton 40ih",
+    "What's the factory GVWR of a 2020 Tiffin Phaeton 40IH?",
+    "2020 pheaton 40IH",
+  ]) {
+    const parsed = parseCoachFromText(q);
+    assert.equal(parsed.year, "2020", q);
+    assert.match(parsed.make, /tiffin/i, q);
+    assert.match(parsed.model, /phaeton/i, q);
+    assert.doesNotMatch(parsed.model, /pheaton/i, q);
+    assert.match(parsed.floorplan, /40ih/i, q);
+    assert.equal(askNamesCoachIdentity(parsed), true, q);
+
+    const id = resolveCoachIdentity(q, null, "");
+    assert.ok(id, q);
+    assert.equal(id!.year, "2020", q);
+    assert.equal(id!.make, "Tiffin", q);
+    assert.equal(id!.model, "Phaeton", q);
+    assert.match(id!.floorplan, /40ih/i, q);
+  }
 });
