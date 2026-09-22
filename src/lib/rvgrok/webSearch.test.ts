@@ -701,7 +701,7 @@ test("fuzzy / shorthand queries expand identity and still research", () => {
     assert.equal(looksLikeNamedCoachProductQuestion(q), true, q);
     assert.equal(looksLikeCoachFactAsk(q), true, q);
     assert.equal(needsWebFallback(locked, q), true, q);
-    assert.equal(skipGeminiForResearchAsk(q), true, q);
+    assert.equal(skipGeminiForResearchAsk(q), false, q);
   }
 
   assert.match(
