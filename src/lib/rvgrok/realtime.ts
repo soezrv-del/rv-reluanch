@@ -844,7 +844,9 @@ export class GrokRealtimeSession {
     if (this.closed || this.intentionalStop) return;
     if (this.researchAbort.signal.aborted) return;
 
-    const injection = formatVoiceWebSearchInjection(result);
+    const injection = formatVoiceWebSearchInjection(result, {
+      catalogBlock: decision.catalogBlock || this.catalogContext,
+    });
     if (this.researchPhase === "holding") {
       this.pendingResearchInjection = injection;
       return;

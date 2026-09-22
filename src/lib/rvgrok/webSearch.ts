@@ -18,7 +18,11 @@
  * never pretend a brochure or bulletin was fetched.
  */
 
-import { LOW_CONFIDENCE_EST_RULE } from "./estimatePolicy.ts";
+import {
+  formatCatalogPinWinsSearchMiss,
+  LOW_CONFIDENCE_EST_RULE,
+} from "./estimatePolicy.ts";
+import { parseCoachFromText } from "./parseCoach.ts";
 import {
   looksLikeLiveResearchQuestion,
   looksLikeMarketValueQuestion,
@@ -358,22 +362,47 @@ export function notesConfirmQueriedField(notes: string, query: string): boolean 
   return false;
 }
 
+/** Common series typos that waste OEM search hits (David: pheaton). */
+export function normalizeCoachTyposInAsk(query: string): string {
+  return (query || "").replace(/\bpheaton\b/gi, "Phaeton");
+}
+
+/** Year / make / model / floorplan from the ask, after typo normalize. */
+export function coachLabelFromResearchAsk(query: string): string {
+  const parsed = parseCoachFromText(normalizeCoachTyposInAsk(query));
+  return [parsed.year, parsed.make, parsed.model, parsed.floorplan]
+    .filter(Boolean)
+    .join(" ");
+}
+
 /**
- * Next phrasing for the research loop. Attempt 0 is the original ask;
- * later attempts must be a genuinely different query, never a repeat.
+ * Next phrasing for the research loop. Attempt 0 is the original ask
+ * (typos normalized). Later attempts must be a genuinely different query.
  */
 export function rephraseResearchQuery(
   original: string,
   attemptIndex: number,
   previousQueries: readonly string[] = [],
 ): string {
-  const base = (original || "").trim();
+  const base = normalizeCoachTyposInAsk(original).trim();
   const field = inferQueriedField(base);
   const label = FIELD_LABEL[field];
+  const coach = coachLabelFromResearchAsk(base);
   const used = new Set(previousQueries.map(normalizeQueryPhrase));
 
   const candidates: string[] = [];
   if (attemptIndex <= 0) candidates.push(base);
+  if (coach) {
+    candidates.push(
+      `${coach} factory ${label} OEM brochure PDF manufacturer spec sheet`,
+      `${coach} published ${label} dealer listing factory weights`,
+    );
+    if (/\btiffin\b/i.test(coach)) {
+      candidates.push(
+        `${coach} factory ${label} Tiffin Motorhomes OEM brochure PDF spec sheet`,
+      );
+    }
+  }
   candidates.push(
     `OEM brochure spec sheet door-sticker published ${label} for ${base}`,
     `official manufacturer ${label} specification ${base} — not an estimate`,
@@ -604,7 +633,7 @@ export function extractResponsesText(data: unknown): string {
 
 export function formatWebSearchInjection(
   result: WebSearchNotes,
-  opts?: { query?: string },
+  opts?: { query?: string; catalogBlock?: string },
 ): string {
   if (result.ok && /own-lot/i.test(result.model || "")) {
     return result.notes.slice(0, 3500);
@@ -613,6 +642,7 @@ export function formatWebSearchInjection(
     result,
     query: opts?.query || result.query,
   });
+  const pinRule = formatCatalogPinWinsSearchMiss(opts?.catalogBlock);
   if (result.ok) {
     if (gate.confirmed) {
       return [
@@ -628,6 +658,7 @@ export function formatWebSearchInjection(
         result.notes.slice(0, 3500),
         "You have live web research this turn — do not claim you have no internet or cannot get online.",
         "Notes do not confirm the queried field. Do NOT give a labeled EST / typical class range. Another rephrased search is required.",
+        pinRule,
       ].join("\n");
     }
     return [
@@ -635,12 +666,13 @@ export function formatWebSearchInjection(
       result.notes.slice(0, 3500),
       "You have live web research this turn — do not claim you have no internet or cannot get online.",
       `Catalog lock still wins if it names a number. Research loop exhausted (${gate.attempts} genuine rephrased attempts, all unconfirmed). Use ONLY what these notes actually contain. ${LOW_CONFIDENCE_EST_RULE} Do not invent brochure numbers from training.`,
+      pinRule,
     ].join("\n");
   }
   if (!gate.exhausted) {
-    return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). Be honest that you could not browse. Do NOT give a labeled EST / typical class range — another rephrased search is required. Do not invent HP, engine, chassis, fuel, a bulletin, or a campaign number as OEM fact.`;
+    return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). Be honest that you could not browse. Do NOT give a labeled EST / typical class range — another rephrased search is required. Do not invent HP, engine, chassis, fuel, a bulletin, or a campaign number as OEM fact. ${pinRule}`;
   }
-  return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). Be honest that you could not browse. Search returned nothing after a retry. Say so plainly. ${LOW_CONFIDENCE_EST_RULE} Do not invent HP, engine, chassis, fuel, a bulletin, or a campaign number as OEM fact.`;
+  return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). Be honest that you could not browse. Search returned nothing after a retry. Say so plainly. ${LOW_CONFIDENCE_EST_RULE} Do not invent HP, engine, chassis, fuel, a bulletin, or a campaign number as OEM fact. ${pinRule}`;
 }
 
 async function postResponses(opts: {
@@ -844,10 +876,7 @@ export async function fetchWebSearchNotes(opts: {
     const remaining = budgetMs - (Date.now() - started);
     if (i > 0 && remaining < WEB_SEARCH_MIN_RETRY_BUDGET_MS) break;
 
-    const phrasing =
-      i === 0
-        ? originalQuery
-        : rephraseResearchQuery(originalQuery, i, queriesUsed);
+    const phrasing = rephraseResearchQuery(originalQuery, i, queriesUsed);
     const unique =
       queriesUsed.some((q) => normalizeQueryPhrase(q) === normalizeQueryPhrase(phrasing))
         ? rephraseResearchQuery(originalQuery, i + queriesUsed.length, queriesUsed)

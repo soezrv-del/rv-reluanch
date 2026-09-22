@@ -5,8 +5,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   CATALOG_MISS_MUST_SEARCH,
+  CATALOG_PIN_WINS_SEARCH_MISS,
   DESK_STAYS_FACTS,
   ESTIMATE_STANDING_POLICY,
+  extractVerifiedPinsFromText,
+  formatCatalogPinWinsSearchMiss,
   formatLabeledEstimate,
   isLabeledEstimateAnswer,
   LABELED_ESTIMATE_RULE,
@@ -22,9 +25,13 @@ import {
   needsWebFallback,
 } from "./webIntent.ts";
 import { decideVoiceWebResearch } from "./voiceWeb.ts";
-import { formatLockedWeightLine } from "./lockedWeights.ts";
+import {
+  formatLockedWeightLine,
+  formatLockedWeightsBlock,
+} from "./lockedWeights.ts";
 import { resolveCoachIdentity } from "./coachIdentity.ts";
 import { resolveDeskSheet } from "./deskSheet.ts";
+import { formatWebSearchInjection } from "./webSearch.ts";
 import { buildBrochureSpecs } from "../rv/brochureSpecs.ts";
 import { installCatalog, peekCatalog } from "../rv/catalogLoad.ts";
 import { loadLiveCatalog } from "../../../scripts/load-live-catalog.mjs";
@@ -124,6 +131,8 @@ test("estimate answers are labeled, not presented as OEM pin", () => {
   assert.match(SPEC_ASK_MUST_SEARCH, /Never answer from training data alone/);
   assert.match(LOW_CONFIDENCE_EST_RULE, /low confidence/);
   assert.match(LOW_CONFIDENCE_EST_RULE, /do not invent brochure numbers from training/i);
+  assert.match(CATALOG_PIN_WINS_SEARCH_MISS, /SEARCH MISS DOES NOT OVERRIDE A CATALOG PIN/);
+  assert.match(HONESTY_STANDING_POLICY, /SEARCH MISS DOES NOT OVERRIDE A CATALOG PIN/);
 
   assert.match(src("speechPolicy.ts"), /ESTIMATE_STANDING_POLICY/);
   assert.match(src("speechPolicy.ts"), /LABELED_ESTIMATE_RULE/);
@@ -171,4 +180,54 @@ test("desk still matches Facts for 2022 Tiffin Phaeton 40IH weights", async () =
   assert.match(DESK_STAYS_FACTS, /Facts brochure snapshot/);
   assert.doesNotMatch(src("deskSheet.ts"), /[Dd]ialaBot/);
   assert.doesNotMatch(src("estimatePolicy.ts"), /[Dd]ialaBot/);
+});
+
+test("search timeout + verified pin speaks the pin — no factory-GVWR refuse", async () => {
+  const live = await loadLiveCatalog();
+  installCatalog({ RV_DATA: live.RV_DATA, MAKES: live.MAKES });
+
+  const q = "What's the gvwr of a 2020 pheaton 40ih";
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  assert.equal(identity!.year, "2020");
+  assert.equal(identity!.make, "Tiffin");
+  assert.equal(identity!.model, "Phaeton");
+  assert.match(identity!.floorplan, /40ih/i);
+
+  const locked = formatLockedWeightsBlock(identity!);
+  assert.match(locked, /VERIFIED GVWR 39600/);
+  assert.match(locked, /VERIFIED UVW 33500/);
+  assert.deepEqual(extractVerifiedPinsFromText(locked), [
+    "GVWR 39600",
+    "UVW 33500",
+  ]);
+
+  const miss = formatCatalogPinWinsSearchMiss(locked);
+  assert.match(miss, /SEARCH MISS DOES NOT OVERRIDE A CATALOG PIN/);
+  assert.match(miss, /GVWR 39600/);
+  assert.match(miss, /never emit/i);
+  assert.match(CATALOG_PIN_WINS_SEARCH_MISS, /won't invent that number/);
+
+  const injection = formatWebSearchInjection(
+    {
+      ok: false,
+      reason: "The operation was aborted due to timeout",
+      confirmed: false,
+      attempts: 2,
+      exhausted: true,
+      query: q,
+    },
+    { query: q, catalogBlock: locked },
+  );
+  assert.match(injection, /WEB SEARCH NOT AVAILABLE/);
+  assert.match(injection, /Search returned nothing after a retry/);
+  assert.match(injection, /VERIFIED pins still in context: GVWR 39600/);
+  assert.match(injection, /Speak those OEM numbers now/);
+  assert.doesNotMatch(injection, /You MAY give a labeled EST/);
+  assert.match(LOW_CONFIDENCE_EST_RULE, /don't have a factory GVWR/);
+
+  const sheet = resolveDeskSheet({ query: q, identity, specs: null });
+  assert.ok(sheet);
+  assert.match(sheet!.rows.find((r) => r.label === "GVWR")?.value || "", /39,?600/);
+  assert.doesNotMatch(sheet!.rows.find((r) => r.label === "GVWR")?.value || "", /\bEST\b/);
 });

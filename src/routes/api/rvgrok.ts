@@ -700,6 +700,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           });
           webNotes = formatWebSearchInjection(researched, {
             query: lastPlain,
+            catalogBlock: catalogContext,
           });
         }
 

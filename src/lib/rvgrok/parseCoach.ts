@@ -407,6 +407,8 @@ export const SERIES_MAKE_HINTS: ReadonlyArray<{
   { re: /\bventana\s+l\.?e\.?\b/i, make: "Newmar", model: "Ventana LE" },
   { re: /\bventanas?\b/i, make: "Newmar", model: "Ventana" },
   { re: /\bbay\s+stars?\b/i, make: "Newmar", model: "Bay Star" },
+  // Brandless / typo: "2020 pheaton 40ih" → Tiffin Phaeton (ea/ae swap).
+  { re: /\bph[ae]{2}tons?\b/i, make: "Tiffin", model: "Phaeton" },
 ];
 
 /** Last named known series in the ask (Ventana, then Dutch Star → Dutch Star). */
@@ -477,6 +479,38 @@ export function seriesAliasEquals(a: string, b: string): boolean {
   return sa.family === sb.family;
 }
 
+/**
+ * Unique fuzzy hit onto a catalog model — "pheaton" → Phaeton.
+ * Same consonant-shape / edit-distance rules as brand typos. Unique only.
+ */
+export function fuzzyMatchCatalogName(
+  raw: string,
+  names: Iterable<string>,
+): string | null {
+  const sLetters = lettersOnly(raw);
+  if (sLetters.length < 5) return null;
+  const sShape = consonantBrandShape(raw);
+  const sFirst = sLetters[0] || "";
+  if (!sFirst) return null;
+  const hits: string[] = [];
+  for (const name of names) {
+    const nLetters = lettersOnly(name);
+    if (nLetters.length < 5) continue;
+    if ((nLetters[0] || "") !== sFirst) continue;
+    const nShape = consonantBrandShape(name);
+    const dist = editDistance(sLetters, nLetters);
+    const maxDist = sLetters.length >= 6 ? 2 : 1;
+    const shapeHit = sShape === nShape && sShape.length >= 4;
+    const editHit =
+      dist > 0 &&
+      dist <= maxDist &&
+      Math.abs(sLetters.length - nLetters.length) <= 2;
+    if (shapeHit || editHit) hits.push(name);
+  }
+  const unique = [...new Set(hits)];
+  return unique.length === 1 ? unique[0]! : null;
+}
+
 /** Pick the catalog model key for a spoken/typed name. Catalog-free. */
 export function matchCatalogModelName(
   rawModel: string,
@@ -518,7 +552,9 @@ export function matchCatalogModelName(
       }
     }
   }
-  return best;
+  if (bestLen >= 0) return best;
+
+  return fuzzyMatchCatalogName(rawModel, list) || rawModel.trim();
 }
 
 function collectModelWords(after: string, floorplan: string): string {
