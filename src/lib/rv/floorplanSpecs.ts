@@ -2342,6 +2342,22 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   ...gvwrPins("holiday rambler", "incline", 2027, 2027, ["27U", "29H", "31W"], 14500),
   // Holiday Rambler Incline FS550 — 2027 Incline FS550 sales sheet (INCLINE FS550 27F1, 3/26): F-550 22,000.
   ...gvwrPins("holiday rambler", "incline fs550", 2027, 2027, ["30SB", "30WM", "32AW"], 22000),
+  // Airstream Trade Wind — 2027 RVUSA Trade Wind brochure compare + spec table
+  // (library.rvusa.com/brochure/2027-Airstream-Trade-Wind). 23FB 6,500; 25FB
+  // 7,600; 27FB 8,300. 27FB is on the Trade Wind floorplans list. Do not map
+  // catalog 28RB / Twin / Dublin Slate — no exact brochure code.
+  ...gvwrPins("airstream", "trade wind", 2027, 2027, ["23FB"], 6500),
+  ...gvwrPins("airstream", "trade wind", 2027, 2027, ["25FB"], 7600),
+  ...gvwrPins("airstream", "trade wind", 2027, 2027, ["27FB"], 8300),
+  // Airstream World Traveler — 2027 RVUSA World Traveler brochure compare +
+  // spec table. 17RB 3,500; 22RB 4,500. Table prints 22RB (ignore marketing 22FB).
+  ...gvwrPins("airstream", "world traveler", 2027, 2027, ["17RB"], 3500),
+  ...gvwrPins("airstream", "world traveler", 2027, 2027, ["22RB"], 4500),
+  // Airstream Classic — 2027 RVUSA Classic brochure compare + spec table.
+  // 28RB 8,800; 30RB 10,000; 33FB 10,000. Twin suffix is a separate catalog
+  // code; findOemGvwrLbs is exact-match and does not strip Twin — leave GAP.
+  ...gvwrPins("airstream", "classic", 2027, 2027, ["28RB"], 8800),
+  ...gvwrPins("airstream", "classic", 2027, 2027, ["30RB", "33FB"], 10000),
 ];
 
 /** Pin count for coverage reports / tests. */

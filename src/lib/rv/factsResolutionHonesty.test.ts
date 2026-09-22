@@ -26,6 +26,7 @@ import {
 } from "./catalogHonesty.ts";
 import type { RVSpec } from "./rvTypes.ts";
 import { RV_DATA } from "./rvData.ts";
+import { findOemGvwrLbs } from "./floorplanSpecs.ts";
 import { getMockReviews, reviewMentionsModel } from "./rvReviews.ts";
 import { rankRvVideos } from "./rvVideos.ts";
 
@@ -316,6 +317,87 @@ test("Audit E 2027 brochure path: Altitude / Incline / Incline FS550 pins", () =
 
   const bleed = factsFor("2027", "Holiday Rambler", "Incline FS550", "27U");
   assert.notEqual(bleed.brochure.gvwrLbs, 14500);
+});
+
+test("Airstream MY2027: model GVWR stamps gone; brochure pins only exact codes", () => {
+  const trade = RV_DATA.Airstream?.["Trade Wind"];
+  const world = RV_DATA.Airstream?.["World Traveler"];
+  const classic = RV_DATA.Airstream?.Classic;
+  assert.ok(trade && world && classic);
+  assert.equal(trade.gvwrLbs, undefined);
+  assert.equal(world.gvwrLbs, undefined);
+  assert.equal(classic.gvwrLbs, undefined);
+
+  // 2027 RVUSA Trade Wind brochure: 23FB 6,500; 25FB 7,600; 27FB 8,300.
+  // 27FB is on the Trade Wind floorplans list — pin it. Twin / Dublin / 28RB GAP.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "23FB"), 6500);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "25FB"), 7600);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "27FB"), 8300);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "25FB Twin"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "25FB Dublin Slate"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "28RB"), null);
+  assert.equal(findOemGvwrLbs("2026", "Airstream", "Trade Wind", "23FB"), null);
+
+  const tw23 = factsFor("2027", "Airstream", "Trade Wind", "23FB");
+  const tw25 = factsFor("2027", "Airstream", "Trade Wind", "25FB");
+  const tw27 = factsFor("2027", "Airstream", "Trade Wind", "27FB");
+  const twTwin = factsFor("2027", "Airstream", "Trade Wind", "25FB Twin");
+  const tw28 = factsFor("2027", "Airstream", "Trade Wind", "28RB");
+  assert.equal(tw23.snap.gvwrLbs, undefined);
+  assert.equal(tw25.snap.gvwrLbs, undefined);
+  assert.equal(tw23.brochure.gvwrLbs, 6500);
+  assert.equal(tw25.brochure.gvwrLbs, 7600);
+  assert.equal(tw27.brochure.gvwrLbs, 8300);
+  assert.equal(twTwin.brochure.gvwrLbs, null);
+  assert.equal(tw28.brochure.gvwrLbs, null);
+  assert.match(tw23.brochure.gvwr, /6,?500/);
+  assert.match(tw25.brochure.gvwr, /7,?600/);
+  assert.doesNotMatch(tw23.brochure.gvwr, /7,?600|8,?300/);
+  assert.doesNotMatch(tw25.brochure.gvwr, /6,?500|8,?300/);
+
+  // 2027 RVUSA World Traveler brochure table: 17RB 3,500; 22RB 4,500.
+  // Marketing copy says 22FB — do not pin the typo.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "World Traveler", "17RB"), 3500);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "World Traveler", "22RB"), 4500);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "World Traveler", "22FB"), null);
+  assert.equal(findOemGvwrLbs("2026", "Airstream", "World Traveler", "22RB"), null);
+  const wt17 = factsFor("2027", "Airstream", "World Traveler", "17RB");
+  const wt22 = factsFor("2027", "Airstream", "World Traveler", "22RB");
+  assert.equal(wt17.snap.gvwrLbs, undefined);
+  assert.equal(wt22.snap.gvwrLbs, undefined);
+  assert.equal(wt17.brochure.gvwrLbs, 3500);
+  assert.equal(wt22.brochure.gvwrLbs, 4500);
+  assert.match(wt17.brochure.gvwr, /3,?500/);
+  assert.match(wt22.brochure.gvwr, /4,?500/);
+  assert.doesNotMatch(wt17.brochure.gvwr, /4,?500/);
+
+  // 2027 RVUSA Classic brochure: 28RB 8,800; 30RB / 33FB 10,000.
+  // Resolver does not strip Twin — Twin stays GAP.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "28RB"), 8800);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "30RB"), 10000);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "33FB"), 10000);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "30RB Twin"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "33FB Twin"), null);
+  assert.equal(findOemGvwrLbs("2026", "Airstream", "Classic", "30RB"), null);
+  const cl28 = factsFor("2027", "Airstream", "Classic", "28RB");
+  const cl30 = factsFor("2027", "Airstream", "Classic", "30RB");
+  const cl33 = factsFor("2027", "Airstream", "Classic", "33FB");
+  const clTwin = factsFor("2027", "Airstream", "Classic", "30RB Twin");
+  assert.equal(cl28.snap.gvwrLbs, undefined);
+  assert.equal(cl30.snap.gvwrLbs, undefined);
+  assert.equal(cl28.brochure.gvwrLbs, 8800);
+  assert.equal(cl30.brochure.gvwrLbs, 10000);
+  assert.equal(cl33.brochure.gvwrLbs, 10000);
+  assert.equal(clTwin.brochure.gvwrLbs, null);
+  assert.match(cl28.brochure.gvwr, /8,?800/);
+  assert.match(cl30.brochure.gvwr, /10,?000/);
+  assert.doesNotMatch(cl28.brochure.gvwr, /10,?000/);
+
+  // Sibling Airstream models — no bleed from these pins.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Flying Cloud", "25FB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "International", "28RB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Bambi", "16RB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Globetrotter", "30RB"), null);
 });
 
 test("Lineage Series F: no series 22k stamp; 31ZW / 31ZW5 year-bands stay", () => {
