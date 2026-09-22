@@ -649,7 +649,7 @@ test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2025", "Tiffin", "Phaeton", "44OH"), 45660);
   assert.equal(findOemGvwrLbs("2026", "Tiffin", "Phaeton", "35CH"), 40000);
   assert.equal(findOemGvwrLbs("2026", "Tiffin", "Phaeton", "44OH"), 46000);
-  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Phaeton", "35CH"), null);
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Phaeton", "35CH"), 40000);
   assert.equal(findOemGvwrLbs("2025", "Tiffin", "Wayfarer", "25XLW"), null);
 
   assert.equal(findOemGvwrLbs("2027", "Grand Design", "Lineage Series E", "30DC"), 14500);
@@ -1015,6 +1015,54 @@ test("Renegade MY27 OEM GVWR pins lock dated brochure singles (Catalog Audit F)"
   assert.equal(findOemGvwrLbs("2026", "Renegade RV", "Valencia", "36SB"), null);
   assert.equal(findOemGvwrLbs("2026", "Renegade RV", "Veracruz", "30VRM"), null);
   assert.equal(findOemGvwrLbs("2026", "Renegade RV", "Explorer TS", "42RB"), null);
+});
+
+test("Tiffin MY27 OEM GVWR pins lock dated OEM Specs PDF singles (Catalog Audit F)", () => {
+  // Phaeton — MY27-Phaeton-Specifications.pdf: 35 CH/37 BH/40 IH 40,000; 44 OH 46,000.
+  // Same as MY26 — existing 2026 pin yearMax extended to 2027.
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Phaeton", "35CH"), 40000);
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Phaeton", "44OH"), 46000);
+  assert.equal(findOemGvwrLbs("2026", "Tiffin", "Phaeton", "35CH"), 40000);
+  assert.equal(findOemGvwrLbs("2026", "Tiffin", "Phaeton", "44OH"), 46000);
+
+  // Allegro Bay — MY27-Allegro-Bay-Specifications-8.13.pdf: 38 AB/38 BB/38 EB/34 DB 33,000.
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Allegro Bay", "38AB"), 33000);
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Allegro Bay", "38EB"), 33000);
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Allegro Bay", "34DB"), 33000);
+
+  // Zephyr — MY27-Zephyr-Specifications-3.30.pdf: 45 FZ/45 PZ 54,000.
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Zephyr", "45FZ"), 54000);
+
+  // Wayfarer — MY27-Wayfarer-Specifications-8.21.pdf: 25 RW/25 XLW/25 PW 12,125.
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Wayfarer", "25RW"), 12125);
+
+  // Open Road — MY27-OPEN-ROAD-Specifications-8.19.pdf: 29 NA 22,000; 34 PA 26,000.
+  // 2027-only row (2025 34PA pin cannot safely bridge 2026).
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Open Road", "29NA"), 22000);
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Open Road", "34PA"), 26000);
+
+  // Allegro Bus — catalog brand is Tiffin Bus. MY27-BUS-Specifications-5.15.26.pdf
+  // 36 AP/40 IP 42,000; 45 BP/45 OPP 52,000 (450HP and 605HP columns same).
+  assert.equal(findOemGvwrLbs("2027", "Tiffin Bus", "Allegro Bus", "36AP"), 42000);
+  assert.equal(findOemGvwrLbs("2027", "Tiffin Bus", "Allegro Bus", "45OPP"), 52000);
+
+  // MATCH left alone — Allegro Red yearMax already 2027.
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Allegro Red", "33AA"), 38320);
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Allegro Red 340", "33AA"), null);
+
+  // GAP — Open Trail has no dated MY27 OEM specs PDF. Do not invent.
+  assert.equal(findOemGvwrLbs("2027", "Tiffin", "Open Trail", "25CO"), null);
+
+  // Year-scoped: MY27-only pins do not invent 2026. 2025 Open Road 34PA stays 2025.
+  assert.equal(findOemGvwrLbs("2026", "Tiffin", "Allegro Bay", "38AB"), null);
+  assert.equal(findOemGvwrLbs("2026", "Tiffin", "Wayfarer", "25RW"), null);
+  assert.equal(findOemGvwrLbs("2026", "Tiffin", "Zephyr", "45FZ"), null);
+  assert.equal(findOemGvwrLbs("2026", "Tiffin", "Open Road", "29NA"), null);
+  assert.equal(findOemGvwrLbs("2026", "Tiffin", "Open Road", "34PA"), null);
+  assert.equal(findOemGvwrLbs("2025", "Tiffin", "Open Road", "34PA"), 26000);
+  assert.equal(findOemGvwrLbs("2026", "Tiffin Bus", "Allegro Bus", "36AP"), null);
+  assert.equal(findOemGvwrLbs("2026", "Tiffin Bus", "Allegro Bus", "45OPP"), null);
+  assert.equal(findOemGvwrLbs("2025", "Tiffin", "Wayfarer", "25XLW"), null);
 });
 
 test("Audit B Phase 3+ length pins match dated brochures (44OH / 303RLS / 26DBH)", () => {
