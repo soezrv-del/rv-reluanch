@@ -4,16 +4,18 @@
  * Detection is NOT forked: `decideVoiceWebResearch` calls `needsWebFallback`
  * from `webIntent.ts` (same function chat uses via `buildChatGrounding`).
  * The spoken hold is narrower than browse: repair / market / off-catalog /
- * named-coach or spec + catalog GAP speaks VOICE_RESEARCH_HOLD_PHRASE
- * ("give me one second"). Catalog compares stay offline. Inventory /
- * own-lot inject researches without a stall. Catalog miss still researches
- * even when the hold is off — search is required, not optional.
+ * specs / GVWR / engine / pricing / year-make-model speak
+ * VOICE_RESEARCH_HOLD_PHRASE ("give me one second") while live search runs.
+ * Catalog compares without spec keywords stay offline. Inventory /
+ * own-lot inject researches without a stall. Spec asks and catalog miss
+ * still research even when the hold is off — search is required, not optional.
  */
 
 import {
   catalogGapNeedsWeb,
   looksLikeCatalogAnswerableCoachCompare,
   looksLikeCasualNonResearch,
+  looksLikeCoachFactAsk,
   looksLikeImageOnlyAsk,
   looksLikeInventoryOrCountQuestion,
   looksLikeLiveResearchQuestion,
@@ -52,7 +54,7 @@ export const VOICE_WEB_SEARCH_CLIENT_BUDGET_MS =
   VOICE_WEB_SEARCH_TIMEOUT_MS + 1_000;
 
 export const VOICE_RESEARCH_ANSWER_INSTRUCTIONS =
-  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Year / make / model reports speak the CATALOG / BROCHURE lock ONLY — never say not in listings because own-lot has no unit or only a sibling series. Use WEB RESEARCH notes if they are present and successful. If an OWN-LOT INVENTORY block is a hit, speak those lot counts, any listing prices / Low-Avg-High, and Matching units rows printed there — diesel is Class A Diesel + Class Super C (no fuel field); do not invent a VIN, unit, or price; never say the snapshot has no price data when prices are in the block; never say you can't pull specific units or that the snapshot doesn't break out a list when Matching units rows are present or Matched > 0 with prices. Catalog GAP does not apply to inventory / in-stock asks — never say catalog gap, never say check your own lot listing, never ask them to share a year. If Matched is 0, say none on our lot snapshot — never not in listings for a catalog-known coach, never swap a sibling series. If the block says UNAVAILABLE, say unavailable — never speak 0 as a stock count. If catalog is UNKNOWN / GAP on a specs ask (not inventory) or own-lot missed, use the browse notes then speak a labeled EST / typical class range if still unpinned — never as an OEM pin. Do not stop at I don't know. Speak every VERIFIED LOCKED WEIGHTS number — never say you don't have a VERIFIED GVWR. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a nationwide market value ask (not our own-lot listing prices): speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample inventory CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
+  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Year / make / model reports synthesize live WEB RESEARCH (OEM / factory brochure / dealer first) plus the CATALOG / BROCHURE lock — never training data alone, never say not in listings because own-lot has no unit or only a sibling series. Use WEB RESEARCH notes if they are present and successful. If an OWN-LOT INVENTORY block is a hit, speak those lot counts, any listing prices / Low-Avg-High, and Matching units rows printed there — diesel is Class A Diesel + Class Super C (no fuel field); do not invent a VIN, unit, or price; never say the snapshot has no price data when prices are in the block; never say you can't pull specific units or that the snapshot doesn't break out a list when Matching units rows are present or Matched > 0 with prices. Catalog GAP does not apply to inventory / in-stock asks — never say catalog gap, never say check your own lot listing, never ask them to share a year. If Matched is 0, say none on our lot snapshot — never not in listings for a catalog-known coach, never swap a sibling series. If the block says UNAVAILABLE, say unavailable — never speak 0 as a stock count. If catalog is UNKNOWN / GAP on a specs ask (not inventory) or own-lot missed, use the browse notes — never EST / low confidence when live notes confirm a fact; if search returned nothing after a retry, say so plainly and do not invent brochure numbers from training. Do not stop at I don't know. Speak every VERIFIED LOCKED WEIGHTS number — never say you don't have a VERIFIED GVWR. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a nationwide market value ask (not our own-lot listing prices): speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample inventory CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
 
 export type VoiceWebDecision =
   | { action: "pass" }
@@ -82,6 +84,8 @@ export function shouldSpeakVoiceResearchHold(
   }
   // Forum / repair / manual still hold even when both coaches are known.
   if (looksLikeLiveResearchQuestion(t)) return true;
+  // Specs / GVWR / engine / pricing / YMM — hold while live search runs.
+  if (looksLikeCoachFactAsk(t)) return true;
   if (looksLikeCatalogAnswerableCoachCompare(t)) return false;
   if (looksLikeOffCatalogQuestion(t)) return true;
   if (catalogGapNeedsWeb(specs ?? null, t)) {
@@ -146,9 +150,9 @@ export function formatVoiceWebSearchInjection(result: WebSearchNotes): string {
   const gate = evaluateResearchQuality({ result, query: result.query });
   if (result.ok) {
     const estLine = gate.confirmed
-      ? "Notes CONFIRM the queried field — speak that fact. Do not replace it with a labeled EST / typical class range."
-      : gate.allowEstimate
-        ? `Research loop exhausted (${gate.attempts} genuine rephrased attempts, all unconfirmed). ${LOW_CONFIDENCE_EST_RULE}`
+      ? "Notes CONFIRM the queried field — speak that live OEM / brochure / dealer fact. Do not replace it with a labeled EST / typical class range / low confidence."
+      : gate.exhausted
+        ? `Research loop exhausted (${gate.attempts} genuine rephrased attempts, all unconfirmed). Use ONLY what these notes actually contain. ${LOW_CONFIDENCE_EST_RULE}`
         : "Notes do not confirm the queried field. Do NOT speak a labeled EST / typical class range. Another rephrased search is required.";
     return [
       "WEB RESEARCH NOTES (live this turn — you DID look this up):",
@@ -158,8 +162,8 @@ export function formatVoiceWebSearchInjection(result: WebSearchNotes): string {
       estLine,
     ].join("\n");
   }
-  const failEst = gate.allowEstimate
-    ? `Research loop exhausted (${gate.attempts} genuine rephrased attempts). ${LOW_CONFIDENCE_EST_RULE} Do not invent an OEM pin.`
+  const failEst = gate.exhausted
+    ? `Search returned nothing after a retry. Say so plainly. ${LOW_CONFIDENCE_EST_RULE} Do not invent an OEM pin.`
     : "Do NOT give a labeled EST / typical class range — another rephrased search is required. Do not invent an OEM pin.";
   return [
     `WEB SEARCH NOT AVAILABLE this turn (${result.reason}).`,

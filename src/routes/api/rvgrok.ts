@@ -650,9 +650,10 @@ export const Route = createFileRoute("/api/rvgrok")({
 
         // Server re-grounds the latest ask so a phone/API probe without
         // client catalogContext still locks Lineage Series M (and friends).
-        // A resolved hard row must not browse into a "not in catalog" story.
-        // If this turn names a different coach, do not keep a stale client
-        // Lineage (etc.) lock from a previous Facts / session coach.
+        // Spec / GVWR / engine / pricing / YMM asks browse first; the
+        // catalog lock is injected so notes cannot invent a "not in catalog"
+        // story. If this turn names a different coach, do not keep a stale
+        // client Lineage (etc.) lock from a previous Facts / session coach.
         const serverGrounded = buildChatGrounding({
           query: lastPlain,
           agentMode,
@@ -678,8 +679,9 @@ export const Route = createFileRoute("/api/rvgrok")({
           skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
         }
 
-        // Catalog miss / GAP / own-lot miss → MUST browse this turn.
-        // Locked identity still uses server needsWeb so a pin is not overwritten.
+        // Specs / GVWR / engine / pricing / YMM / catalog GAP / own-lot
+        // miss → MUST browse this turn. Locked identity still uses server
+        // needsWeb so a pin is confirmed by live notes, not overwritten.
         const wantsWebFallback =
           !skipWebForLot &&
           (serverGrounded.needsWeb ||

@@ -25,6 +25,7 @@ import { resolveCoachIdentity } from "./coachIdentity.ts";
 import {
   looksLikeCasualNonResearch,
   looksLikeCatalogAnswerableCoachCompare,
+  looksLikeCoachFactAsk,
   looksLikeImageOnlyAsk,
   looksLikeInventoryOrCountQuestion,
   looksLikeLiveResearchQuestion,
@@ -368,7 +369,7 @@ test("Passport slide retract wants web even when powertrain is locked", () => {
   assert.equal(needsWebFallback(locked, q), true);
 });
 
-test("spec miss still wants web; locked Vision engine question does not", () => {
+test("spec miss still wants web; locked Vision engine question also searches", () => {
   assert.equal(
     needsWebFallback(null, "What HP does a 2023 American Dream have?"),
     true,
@@ -406,7 +407,8 @@ test("spec miss still wants web; locked Vision engine question does not", () => 
       lockedSpec,
       "What engine and HP does a 2023 Entegra Vision have?",
     ),
-    false,
+    true,
+    "spec ask must search first even when the catalog is locked",
   );
 });
 
@@ -562,8 +564,8 @@ test("know about / what about a named coach wants web when catalog is missing", 
   }
   assert.equal(
     needsWebFallback({ missingHard: false }, q2027),
-    false,
-    "locked catalog should not browse a plain about-this-coach ask",
+    true,
+    "year/make/model coach ask must search first even when the catalog is locked",
   );
   assert.equal(
     looksLikeNamedCoachProductQuestion("Is full-timing worth it?"),
@@ -626,8 +628,8 @@ function assertLineageSeriesMLock(
 
   assert.equal(
     needsWebFallback({ missingHard: false }, q),
-    false,
-    "locked Series M must not browse into a no-catalog narrative",
+    true,
+    "year/make/model or spec ask must search first; catalog lock is injected so notes cannot invent a no-catalog story",
   );
   assert.equal(
     needsWebFallback({ missingHard: true }, q),
@@ -702,8 +704,8 @@ test("inventory / diesel count asks still trip the detector when catalog is lock
       locked,
       "What engine and HP does a 2023 Entegra Vision have?",
     ),
-    false,
-    "locked fuel/engine spec still does not browse",
+    true,
+    "locked fuel/engine spec still must browse — search first",
   );
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(api, /loadOwnLotSnapshot/);
@@ -711,7 +713,7 @@ test("inventory / diesel count asks still trip the detector when catalog is lock
   assert.match(api, /OWN-LOT INVENTORY/);
 });
 
-test("unknown / catalog GAP always browses — locked specs still do not", () => {
+test("unknown / catalog GAP always browses — locked spec asks also browse", () => {
   assert.equal(catalogGapNeedsWeb(null), true);
   assert.equal(catalogGapNeedsWeb({ missingHard: true }), true);
   assert.equal(catalogGapNeedsWeb({ missingHard: false }), false);
@@ -733,13 +735,32 @@ test("unknown / catalog GAP always browses — locked specs still do not", () =>
       { missingHard: false },
       "What engine and HP does a 2023 Entegra Vision have?",
     ),
-    false,
-    "locked catalog still answers without browse",
+    true,
+    "locked spec ask still searches first",
   );
   assert.equal(needsWebFallback(null, "hi"), false);
   const intent = src(root, "webIntent.ts");
   assert.match(intent, /catalogGapNeedsWeb/);
   assert.match(intent, /unknown \/ catalog GAP/i);
+});
+
+test("David spec asks always require live search — even on a locked row", () => {
+  const locked = { missingHard: false, missingOemWeightPin: false };
+  const asks = [
+    "what's the gvwr of A pheaton 40ih",
+    "what's the gvwr of A Newmar Dutch Star 4369",
+    "2022 Tiffin Phaeton 40IH",
+    "What engine and HP does a 2023 Entegra Vision have?",
+    "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
+  ];
+  for (const q of asks) {
+    assert.equal(looksLikeCoachFactAsk(q), true, q);
+    assert.equal(needsWebFallback(null, q), true, q);
+    assert.equal(needsWebFallback(locked, q), true, q);
+    assert.equal(buildChatGrounding({ query: q }).needsWeb, true, q);
+  }
+  assert.equal(looksLikeCoachFactAsk("hi"), false);
+  assert.equal(looksLikeCoachFactAsk("Is full-timing worth it?"), false);
 });
 
 test("catalog miss fires web without about-phrasing", () => {

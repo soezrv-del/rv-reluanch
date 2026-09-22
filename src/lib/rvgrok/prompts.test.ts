@@ -43,8 +43,9 @@ test("chat, agent, and voice prompts share David's answer-now / give me one seco
   assertAnswerPolicy(voice, "voice.ts");
   assert.match(
     speech,
-    /Answer immediately from catalog, injected notes, or already-known facts/,
+    /Answer from live WEB RESEARCH notes and the catalog lock/,
   );
+  assert.match(speech, /SPEC_ASK_MUST_SEARCH/);
   assert.match(speech, /VOICE_RESEARCH_HOLD_PHRASE = "give me one second"/);
   assert.match(speech, /CATALOG_MISS_MUST_SEARCH/);
   assert.match(src("estimatePolicy.ts"), /MUST run WEB RESEARCH this turn before answering/);

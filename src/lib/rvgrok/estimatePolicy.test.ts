@@ -13,10 +13,12 @@ import {
   LOW_CONFIDENCE_EST_RULE,
   mayEmitLabeledEstimate,
   presentsEstimateAsOemPin,
+  SPEC_ASK_MUST_SEARCH,
 } from "./estimatePolicy.ts";
 import { ANSWER_NOW_POLICY, HONESTY_STANDING_POLICY } from "./speechPolicy.ts";
 import {
   catalogGapNeedsWeb,
+  looksLikeCoachFactAsk,
   needsWebFallback,
 } from "./webIntent.ts";
 import { decideVoiceWebResearch } from "./voiceWeb.ts";
@@ -63,8 +65,12 @@ test("catalog miss triggers web-research path (chat + live voice)", () => {
       { missingHard: false, missingOemWeightPin: true },
       "What engine and HP does a 2023 Entegra Vision have?",
     ),
-    false,
-    "locked powertrain ask still does not browse just because UVW is GAP",
+    true,
+    "engine / HP spec ask must browse even when the catalog is locked",
+  );
+  assert.equal(
+    looksLikeCoachFactAsk("What engine and HP does a 2023 Entegra Vision have?"),
+    true,
   );
 
   const api = src(join("..", "..", "routes", "api", "rvgrok.ts"));
@@ -107,13 +113,17 @@ test("estimate answers are labeled, not presented as OEM pin", () => {
   assert.match(gapLine, /never as an OEM pin/);
   assert.doesNotMatch(gapLine, /from OEM pin/);
 
-  assert.match(HONESTY_STANDING_POLICY, /labeled estimate/);
-  assert.match(ANSWER_NOW_POLICY, /MUST run WEB RESEARCH/);
+  assert.match(HONESTY_STANDING_POLICY, /labeled estimate|EST \/ estimate/);
+  assert.match(ANSWER_NOW_POLICY, /MUST run WEB RESEARCH|MUST run live WEB RESEARCH/);
   assert.doesNotMatch(HONESTY_STANDING_POLICY, /GAP over invent/);
   assert.doesNotMatch(ANSWER_NOW_POLICY, /Web search is last resort/);
   assert.match(ESTIMATE_STANDING_POLICY, /EST \/ estimate \/ typical class range/);
   assert.match(LABELED_ESTIMATE_RULE, /Never present an estimate as an OEM pin/);
   assert.match(CATALOG_MISS_MUST_SEARCH, /not last resort/);
+  assert.match(SPEC_ASK_MUST_SEARCH, /BEFORE answering/);
+  assert.match(SPEC_ASK_MUST_SEARCH, /Never answer from training data alone/);
+  assert.match(LOW_CONFIDENCE_EST_RULE, /low confidence/);
+  assert.match(LOW_CONFIDENCE_EST_RULE, /do not invent brochure numbers from training/i);
 
   assert.match(src("speechPolicy.ts"), /ESTIMATE_STANDING_POLICY/);
   assert.match(src("speechPolicy.ts"), /LABELED_ESTIMATE_RULE/);
