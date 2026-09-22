@@ -10,6 +10,7 @@ import { installCatalog } from "../rv/catalogLoad.ts";
 import {
   findOemFloorplanSpec,
   findOemGvwrLbs,
+  findOemHoldingTanks,
   findOemUvwLbs,
 } from "../rv/floorplanSpecs.ts";
 import {
@@ -342,6 +343,49 @@ test("2026 Lineage 31ZW chat prose paints Super C / F-600 / 6.7 / 330 / 950 / ta
   assert.equal(after!.presenceNote, "");
   assert.equal(after!.gaps.length, 0);
   assert.doesNotMatch(after!.presenceNote, /SERIES MISSING|YEAR GAP|FLOORPLAN GAP|GAP over invent/i);
+});
+
+test("2026 Lineage Series F 31ZW pin tanks/fuel paint without live catalog — chat only named GVWR", () => {
+  const tanks = findOemHoldingTanks(
+    "2026",
+    "Grand Design",
+    "Lineage Series F",
+    "31ZW",
+  );
+  assert.equal(tanks.freshWater, 79);
+  assert.equal(tanks.grayWater, 66);
+  assert.equal(tanks.blackWater, 45);
+  assert.equal(tanks.fuelCapacityGal, 66.5);
+  assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series F", "31ZW"), null);
+
+  const q = "2026 Grand Design Lineage 31ZW";
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  assert.equal(identity!.model, "Lineage Series F");
+  assert.equal(identity!.floorplan, "31ZW");
+
+  const chat =
+    "The 2026 Grand Design Lineage 31ZW has a factory GVWR of 22,000 pounds. Web search timed out on this one, but the verified catalog weight is locked in.";
+  const sheet = resolveDeskSheet({
+    query: q,
+    identity,
+    specs: null,
+    chatSpecBlock: chat,
+  });
+  assert.ok(sheet);
+  const val = (label: string) =>
+    sheet!.rows.find((r) => r.label === label)?.value || "";
+  const gap = (label: string) =>
+    sheet!.rows.find((r) => r.label === label)?.gap;
+  assert.match(val("GVWR"), /22,000/);
+  assert.equal(val("Fresh"), "79 gal");
+  assert.equal(val("Gray"), "66 gal");
+  assert.equal(val("Black"), "45 gal");
+  assert.match(val("Fuel capacity"), /67\s*gal/i);
+  assert.equal(gap("Fresh"), false);
+  assert.equal(gap("Fuel capacity"), false);
+  assert.ok(gap("UVW"), "no published UVW — do not invent");
+  assert.equal(val("UVW"), "GAP");
 });
 
 test("2026 Lineage Series F 31ZW catalog tanks/fuel paint when chat only names GVWR", async () => {

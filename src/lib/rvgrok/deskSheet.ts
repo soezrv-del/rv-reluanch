@@ -10,6 +10,7 @@ import { CONFIRM_BROCHURE, type BrochureSpecs } from "../rv/brochureSpecs.ts";
 import {
   findOemFloorplanSpec,
   findOemGvwrLbs,
+  findOemHoldingTanks,
   findOemUvwLbs,
 } from "../rv/floorplanSpecs.ts";
 import { isTowableForTorqueRating } from "../rv/torqueToWeight.ts";
@@ -161,6 +162,13 @@ function lbsLabel(n: number | null): DeskSheetRow {
   };
 }
 
+function galLabel(n: number | null | undefined): DeskSheetRow {
+  if (n == null || !Number.isFinite(n) || n <= 0) {
+    return { label: "", value: "GAP", gap: true };
+  }
+  return { label: "", value: `${Math.round(n)} gal`, gap: false };
+}
+
 function isFactsEmpty(value: string): boolean {
   return (
     !value ||
@@ -259,8 +267,40 @@ function publishedWeightLbs(
       identity.make,
       identity.model,
       identity.floorplan,
-    ) ?? oem?.uvwLbs ?? null
+    )     ?? oem?.uvwLbs ?? null
   );
+}
+
+/** Catalog / OEM pin fills GAP rows chat did not name. Never invent. */
+function fillGapRowsFromOemTanks(
+  rows: DeskSheetRow[],
+  identity: CoachIdentity,
+): DeskSheetRow[] {
+  const tanks = findOemHoldingTanks(
+    identity.year,
+    identity.make,
+    identity.model,
+    identity.floorplan,
+  );
+  const oem = findOemFloorplanSpec(
+    identity.year,
+    identity.make,
+    identity.model,
+    identity.floorplan,
+  );
+  const byLabel: Record<string, DeskSheetRow> = {
+    "Fuel capacity": galLabel(tanks.fuelCapacityGal),
+    Fresh: galLabel(oem?.freshWater ?? tanks.freshWater),
+    Gray: galLabel(oem?.grayWater ?? tanks.grayWater),
+    Black: galLabel(oem?.blackWater ?? tanks.blackWater),
+    UVW: lbsLabel(publishedWeightLbs(identity, "uvw")),
+  };
+  return rows.map((row) => {
+    if (!row.gap) return row;
+    const pinned = byLabel[row.label];
+    if (!pinned || pinned.gap) return row;
+    return { ...row, value: pinned.value, gap: false };
+  });
 }
 
 export function buildDeskSheetPayload(
@@ -274,13 +314,27 @@ export function buildDeskSheetPayload(
     .filter(Boolean)
     .join(" ");
 
-  const figures = extractChatSpecFigures(chatSpecBlock);
-  const brochure = resolveFactsBrochure(identity);
-  const catalogRows: DeskSheetRow[] = brochure
+Wait, I need to be more careful. I was about to insert a function in the middle of buildDeskSheetPayload. Let me read the current function and insert fillGapRowsFromOemTanks as a standalone function before buildDeskSheetPayload, then call it.
     ? payloadFromFactsBrochure(identity, brochure, specs)
     : (() => {
         const gvwr = lbsLabel(publishedWeightLbs(identity, "gvwr"));
         const uvw = lbsLabel(publishedWeightLbs(identity, "uvw"));
+        const tanks = findOemHoldingTanks(
+          identity.year,
+          identity.make,
+          identity.model,
+          identity.floorplan,
+        );
+        const oem = findOemFloorplanSpec(
+          identity.year,
+          identity.make,
+          identity.model,
+          identity.floorplan,
+        );
+        const fuel = galLabel(tanks.fuelCapacityGal);
+        const fresh = galLabel(oem?.freshWater ?? tanks.freshWater);
+        const gray = galLabel(oem?.grayWater ?? tanks.grayWater);
+        const black = galLabel(oem?.blackWater ?? tanks.blackWater);
         const towable = deskSheetIsTowable(identity, specs);
         return [
           rowFromField("Class", specs?.rvType),
@@ -290,17 +344,20 @@ export function buildDeskSheetPayload(
           rowFromField("Chassis", specs?.chassis),
           motorRow("Transmission", specs?.transmission, towable),
           rowFromField("Fuel", specs?.fuelType),
-          { label: "Fuel capacity", value: "GAP", gap: true },
+          { label: "Fuel capacity", value: fuel.value, gap: fuel.gap },
           { label: "GVWR", value: gvwr.value, gap: gvwr.gap },
           { label: "UVW", value: uvw.value, gap: uvw.gap },
-          { label: "Fresh", value: "GAP", gap: true },
-          { label: "Gray", value: "GAP", gap: true },
-          { label: "Black", value: "GAP", gap: true },
+          { label: "Fresh", value: fresh.value, gap: fresh.gap },
+          { label: "Gray", value: gray.value, gap: gray.gap },
+          { label: "Black", value: black.value, gap: black.gap },
         ];
       })();
 
   // Chat reply is source of truth. Catalog is cache. Empty only if both miss.
-  const rows = paintChatSpecOntoRows(catalogRows, figures);
+  const rows = paintChatSpecOntoRows(
+    fillGapRowsFromOemTanks(catalogRows, identity),
+    figures,
+  );
   const chatCovered = chatSpecCoversPaintedFields(figures);
   if (
     chatCovered ||
