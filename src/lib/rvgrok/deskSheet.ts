@@ -35,6 +35,7 @@ import {
   NO_DUPLICATE_MARKDOWN_SHEET,
 } from "./lockedWeights.ts";
 import {
+  chatSpecCoversPaintedFields,
   chatSpecHasNumber,
   extractChatSpecFigures,
   paintChatSpecOntoRows,
@@ -296,15 +297,22 @@ export function buildDeskSheetPayload(
 
   // Chat reply is source of truth. Catalog is cache. Empty only if both miss.
   const rows = paintChatSpecOntoRows(catalogRows, figures);
-  if (chatSpecHasNumber(figures) && /SERIES MISSING/i.test(presenceNote)) {
+  const chatCovered = chatSpecCoversPaintedFields(figures);
+  if (
+    chatCovered ||
+    (chatSpecHasNumber(figures) && /SERIES MISSING/i.test(presenceNote))
+  ) {
     presenceNote = "";
   }
 
-  const gaps = [
-    ...rows.filter((r) => r.gap).map((r) => r.label),
-    ...(!identity.year ? ["Year"] : []),
-    ...(presenceNote ? ["Presence"] : []),
-  ];
+  // Lecture banner only when chat did not already name the painted fields.
+  const gaps = chatCovered
+    ? []
+    : [
+        ...rows.filter((r) => r.gap).map((r) => r.label),
+        ...(!identity.year ? ["Year"] : []),
+        ...(presenceNote ? ["Presence"] : []),
+      ];
 
   return {
     year: identity.year,

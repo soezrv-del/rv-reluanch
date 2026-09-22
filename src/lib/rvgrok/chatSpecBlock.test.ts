@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  chatSpecCoversPaintedFields,
   extractChatSpecFigures,
   paintChatSpecOntoRows,
 } from "./chatSpecBlock.ts";
@@ -65,6 +66,12 @@ test("chat numbers overwrite Confirm brochure; untouched rows stay", () => {
       { label: "Fuel capacity", value: "100 gal", gap: false },
       { label: "CCC", value: "Confirm brochure", gap: true },
       { label: "Class", value: "Class A Diesel", gap: false },
+      { label: "Engine", value: "GAP", gap: true },
+      { label: "Horsepower", value: "GAP", gap: true },
+      { label: "Torque", value: "GAP", gap: true },
+      { label: "Chassis", value: "GAP", gap: true },
+      { label: "Transmission", value: "GAP", gap: true },
+      { label: "Fuel", value: "GAP", gap: true },
     ],
     extractChatSpecFigures(DUTCH_STAR_CHAT),
   );
@@ -73,7 +80,12 @@ test("chat numbers overwrite Confirm brochure; untouched rows stay", () => {
   assert.match(rows.find((r) => r.label === "UVW")?.value || "", /40,000/);
   assert.equal(rows.find((r) => r.label === "Fuel capacity")?.value, "150 gal");
   assert.equal(rows.find((r) => r.label === "CCC")?.value, "Confirm brochure");
-  assert.equal(rows.find((r) => r.label === "Class")?.value, "Class A Diesel");
+  assert.match(rows.find((r) => r.label === "Class")?.value || "", /Class A/i);
+  assert.match(rows.find((r) => r.label === "Engine")?.value || "", /Cummins L9/i);
+  assert.match(rows.find((r) => r.label === "Horsepower")?.value || "", /450/);
+  assert.match(rows.find((r) => r.label === "Torque")?.value || "", /1,250|1250/);
+  assert.match(rows.find((r) => r.label === "Chassis")?.value || "", /Freightliner/i);
+  assert.match(rows.find((r) => r.label === "Transmission")?.value || "", /Allison/i);
 });
 
 test("chat tank gallons overwrite Confirm brochure / GAP on the desk rows", () => {
@@ -95,4 +107,97 @@ test("chat tank gallons overwrite Confirm brochure / GAP on the desk rows", () =
     /Confirm brochure/i,
   );
   assert.equal(rows.find((r) => r.label === "Fuel capacity")?.value, "150 gal");
+});
+
+const LINEAGE_PROSE = `2026 Grand Design Lineage 31ZW is a Super C on a Ford F-600 4x4. 6.7-liter diesel putting out 330 horsepower and 950 pound-feet of torque, 10-speed. GVWR 22,000, GCWR 43,500. Holding tanks: fresh 79, gray 66, black 45.`;
+
+const LINEAGE_LABELED = `2026 Grand Design Lineage 31ZW
+Class: Super C
+Engine: 6.7 diesel
+Horsepower: 330
+Torque: 950 lb-ft
+Chassis: Ford F-600 4x4
+Transmission: 10-speed
+Fuel: Diesel
+GVWR: 22,000
+GCWR: 43,500
+Fresh: 79
+Gray: 66
+Black: 45`;
+
+function assertLineageFigures(figs: ReturnType<typeof extractChatSpecFigures>) {
+  assert.equal(figs.rvClass, "Super C");
+  assert.match(figs.engine || "", /6\.7/);
+  assert.match(figs.engine || "", /diesel/i);
+  assert.match(figs.horsepower || "", /330/);
+  assert.match(figs.torque || "", /950/);
+  assert.match(figs.chassis || "", /F-?600/i);
+  assert.match(figs.chassis || "", /4x4/i);
+  assert.match(figs.transmission || "", /10-speed/i);
+  assert.match(figs.fuel || "", /diesel/i);
+  assert.match(figs.gvwr || "", /22,000/);
+  assert.match(figs.gcwr || "", /43,500/);
+  assert.equal(figs.freshWater, "79 gal");
+  assert.equal(figs.grayWater, "66 gal");
+  assert.equal(figs.blackWater, "45 gal");
+  assert.equal(chatSpecCoversPaintedFields(figs), true);
+}
+
+test("extracts Super C / F-600 / 6.7 diesel / 330 hp / 950 lb-ft / 10-speed from prose", () => {
+  assertLineageFigures(extractChatSpecFigures(LINEAGE_PROSE));
+});
+
+test("extracts the same Lineage figures from labeled rows", () => {
+  assertLineageFigures(extractChatSpecFigures(LINEAGE_LABELED));
+});
+
+test("Lineage chat figures paint every desk field; catalog GAP stays only when unnamed", () => {
+  const rows = paintChatSpecOntoRows(
+    [
+      { label: "Class", value: "GAP", gap: true },
+      { label: "Engine", value: "GAP", gap: true },
+      { label: "Horsepower", value: "GAP", gap: true },
+      { label: "Torque", value: "GAP", gap: true },
+      { label: "Chassis", value: "GAP", gap: true },
+      { label: "Transmission", value: "GAP", gap: true },
+      { label: "Fuel", value: "GAP", gap: true },
+      { label: "GVWR", value: "22,000 lb", gap: false },
+      { label: "UVW", value: "GAP", gap: true },
+      { label: "CCC", value: "Confirm brochure", gap: true },
+      { label: "Fresh", value: "GAP", gap: true },
+      { label: "Gray", value: "GAP", gap: true },
+      { label: "Black", value: "GAP", gap: true },
+    ],
+    extractChatSpecFigures(LINEAGE_PROSE),
+  );
+  const val = (label: string) => rows.find((r) => r.label === label)?.value || "";
+  const gap = (label: string) => rows.find((r) => r.label === label)?.gap;
+  assert.equal(val("Class"), "Super C");
+  assert.equal(gap("Class"), false);
+  assert.match(val("Engine"), /6\.7/);
+  assert.match(val("Horsepower"), /330/);
+  assert.match(val("Torque"), /950/);
+  assert.match(val("Chassis"), /F-?600/i);
+  assert.match(val("Transmission"), /10-speed/i);
+  assert.match(val("Fuel"), /diesel/i);
+  assert.match(val("GVWR"), /22,000/);
+  assert.match(val("GCWR"), /43,500/);
+  assert.equal(gap("GCWR"), false);
+  assert.equal(val("Fresh"), "79 gal");
+  assert.equal(val("Gray"), "66 gal");
+  assert.equal(val("Black"), "45 gal");
+  assert.equal(val("UVW"), "GAP", "chat did not name UVW — do not invent");
+  assert.equal(val("CCC"), "Confirm brochure", "chat did not name CCC — catalog stays");
+});
+
+test("does not invent class / engine / hp from a GVWR-only reply", () => {
+  const figs = extractChatSpecFigures("Live notes put GVWR at 22,000 pounds.");
+  assert.match(figs.gvwr || "", /22,000/);
+  assert.equal(figs.rvClass, undefined);
+  assert.equal(figs.engine, undefined);
+  assert.equal(figs.horsepower, undefined);
+  assert.equal(figs.torque, undefined);
+  assert.equal(figs.chassis, undefined);
+  assert.equal(figs.transmission, undefined);
+  assert.equal(chatSpecCoversPaintedFields(figs), false);
 });

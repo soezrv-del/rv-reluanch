@@ -301,6 +301,49 @@ test("desk paints holding tanks from chat — never Confirm brochure over spoken
   assert.doesNotMatch(val("Gray") || "", /Confirm brochure|GAP/i);
 });
 
+test("2026 Lineage 31ZW chat prose paints Super C / F-600 / 6.7 / 330 / 950 / tanks and hides GAP lecture", () => {
+  const q = "2026 Grand Design Lineage 31ZW";
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  assert.equal(identity!.year, "2026");
+  assert.match(identity!.make, /grand design/i);
+  assert.match(identity!.model, /lineage/i);
+  assert.equal(identity!.floorplan, "31ZW");
+  assert.doesNotMatch(identity!.make, /newmar/i);
+  assert.doesNotMatch(identity!.model, /dutch star/i);
+
+  const chat = `2026 Grand Design Lineage 31ZW is a Super C on a Ford F-600 4x4. 6.7-liter diesel putting out 330 horsepower and 950 pound-feet of torque, 10-speed. GVWR 22,000, GCWR 43,500. Holding tanks: fresh 79, gray 66, black 45.`;
+
+  const after = resolveDeskSheet({
+    query: q,
+    identity,
+    specs: null,
+    chatSpecBlock: chat,
+  });
+  assert.ok(after);
+  const val = (label: string) =>
+    after!.rows.find((r) => r.label === label)?.value || "";
+  const gap = (label: string) =>
+    after!.rows.find((r) => r.label === label)?.gap;
+  assert.equal(val("Class"), "Super C");
+  assert.equal(gap("Class"), false);
+  assert.match(val("Chassis"), /F-?600/i);
+  assert.match(val("Chassis"), /4x4/i);
+  assert.match(val("Engine"), /6\.7/);
+  assert.match(val("Fuel"), /diesel/i);
+  assert.match(val("Horsepower"), /330/);
+  assert.match(val("Torque"), /950/);
+  assert.match(val("Transmission"), /10-speed/i);
+  assert.match(val("GVWR"), /22,000/);
+  assert.match(val("GCWR"), /43,500/);
+  assert.equal(val("Fresh"), "79 gal");
+  assert.equal(val("Gray"), "66 gal");
+  assert.equal(val("Black"), "45 gal");
+  assert.equal(after!.presenceNote, "");
+  assert.equal(after!.gaps.length, 0);
+  assert.doesNotMatch(after!.presenceNote, /SERIES MISSING|YEAR GAP|FLOORPLAN GAP|GAP over invent/i);
+});
+
 test("catalog tank pins stay when chat does not name gallons", () => {
   const q = "2025 Entegra Coach Aspire 44R spec report";
   const identity = resolveCoachIdentity(q, null, "");
