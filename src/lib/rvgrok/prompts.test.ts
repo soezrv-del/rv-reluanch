@@ -3,6 +3,12 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  AGENT_SYSTEM_PROMPT,
+  RV_SYSTEM_PROMPT,
+} from "./prompts.ts";
+import { RV_GROK_LEAN_CORE } from "./speechPolicy.ts";
+import { RV_VOICE_INSTRUCTIONS } from "./voice.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -10,181 +16,91 @@ function src(name: string) {
   return readFileSync(join(root, name), "utf8");
 }
 
-function assertAnswerPolicy(file: string, label: string) {
-  assert.match(
-    file,
-    /ANSWER_NOW_POLICY/,
-    `${label} interpolates the shared answer-now policy`,
+test("chat, agent, and voice share David's lean standing core", () => {
+  assert.equal(RV_SYSTEM_PROMPT, RV_GROK_LEAN_CORE);
+  assert.equal(AGENT_SYSTEM_PROMPT, RV_GROK_LEAN_CORE);
+  assert.ok(
+    RV_VOICE_INSTRUCTIONS.startsWith(RV_GROK_LEAN_CORE),
+    "voice instructions start with the lean core",
   );
-  assert.match(
-    file,
-    /SESSION_INTRO_POLICY/,
-    `${label} interpolates the one-time session intro`,
-  );
-  assert.match(
-    file,
-    /VOICE_RESEARCH_HOLD_PHRASE/,
-    `${label} uses the shared hold phrase`,
-  );
-  assert.doesNotMatch(
-    file,
-    /Only say "Let me check that"/,
-    `${label} must not instruct the old stall`,
-  );
-}
+  assert.match(RV_VOICE_INSTRUCTIONS, /CAMERA: say what is actually in frame/);
 
-test("chat, agent, and voice prompts share David's answer-now / give me one second policy", () => {
   const prompts = src("prompts.ts");
   const voice = src("voice.ts");
-  const voiceWeb = src("voiceWeb.ts");
+  const live = src("liveVoice.ts");
   const speech = src("speechPolicy.ts");
 
-  assertAnswerPolicy(prompts, "prompts.ts");
-  assertAnswerPolicy(voice, "voice.ts");
-  assert.match(
-    speech,
-    /Answer from live WEB RESEARCH notes and the catalog lock/,
-  );
-  assert.match(speech, /SPEC_ASK_MUST_SEARCH/);
-  assert.match(speech, /VOICE_RESEARCH_HOLD_PHRASE = "give me one second"/);
-  assert.match(speech, /CATALOG_MISS_MUST_SEARCH/);
-  assert.match(src("estimatePolicy.ts"), /MUST run WEB RESEARCH this turn before answering/);
-  assert.doesNotMatch(speech, /Web search is last resort/);
-  assert.match(speech, /RV_GROK_SESSION_INTRO = "I'm RvGrok"/);
-  assert.doesNotMatch(
-    speech,
-    /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
-  );
-  assert.match(src("originStory.ts"), /David Hansen/);
-  assert.match(src("originStory.ts"), /buyer-first/);
-  assert.match(prompts, /ABOUT_RVFOX/);
-  assert.match(voice, /ABOUT_RVFOX/);
-  assert.match(prompts, /RV_GROK_ATTITUDE/);
-  assert.match(voice, /RV_GROK_ATTITUDE/);
-  assert.match(speech, /Never stay silent/);
-  assert.match(speech, /Never say \$\{FORBIDDEN_STALLS\}/);
-  assert.doesNotMatch(speech, /Only say "Let me check that"/);
+  assert.match(prompts, /RV_GROK_LEAN_CORE/);
+  assert.match(voice, /RV_GROK_LEAN_CORE/);
+  assert.match(live, /RV_VOICE_INSTRUCTIONS/);
+  assert.match(speech, /RV_GROK_LEAN_CORE/);
+});
 
+test("lean core keeps identity, accuracy, coach report, and answer-anything", () => {
+  assert.match(RV_GROK_LEAN_CORE, /You are RV Grok — the sales-floor wingman/);
   assert.match(
-    prompts,
-    /first user-visible line/,
-    "chat/agent: hold line is first, then search, then answer in the same response",
-  );
-  assert.match(
-    prompts,
-    /same final response/,
-    "agent: search then complete answer in the same final response",
-  );
-  assert.match(speech, /VOICE_RESEARCH_HOLD_PHRASE = "give me one second"/);
-  assert.doesNotMatch(
-    voiceWeb,
-    /Let me check that/,
-    "voice hold must not teach the old stall",
+    RV_GROK_LEAN_CORE,
+    /Answer whatever the customer asks, freely and in detail/,
   );
   assert.match(
-    voiceWeb,
-    /give me one second/,
-    "voice hold beat speaks the new line when a search is actually running",
+    RV_GROK_LEAN_CORE,
+    /Get as accurate as possible, but not gospel\./,
   );
+  assert.match(RV_GROK_LEAN_CORE, /Prefer live web research for coach facts/);
+  assert.match(RV_GROK_LEAN_CORE, /use the catalog lock when it has a pin/);
+  assert.match(RV_GROK_LEAN_CORE, /Never invent OEM numbers/);
+  assert.match(RV_GROK_LEAN_CORE, /check the website/);
+  assert.match(RV_GROK_LEAN_CORE, /ask the dealer/);
+  assert.match(RV_GROK_LEAN_CORE, /look it up yourself/);
+  assert.match(RV_GROK_LEAN_CORE, /CARFAX-style coach report/);
+  assert.match(RV_GROK_LEAN_CORE, /Overview \/ Chassis & powertrain \/ Weights & capacity \/ Layout & amenities/);
+  assert.match(
+    RV_GROK_LEAN_CORE,
+    /camping, fishing, weather, lifestyle, jokes, repairs, payments, travel/,
+  );
+  assert.match(RV_GROK_LEAN_CORE, /go deep/);
+  assert.match(RV_GROK_LEAN_CORE, /No narrowing scope/);
+  assert.match(RV_GROK_LEAN_CORE, /I'm RvGrok is the cold-open greeting only/);
+  assert.match(RV_GROK_LEAN_CORE, /once per new session/);
+});
 
-  assert.match(prompts, /WEB RESEARCH notes/);
-  assert.doesNotMatch(prompts, /OWN-LOT INVENTORY/);
-  assert.doesNotMatch(prompts, /OWN-LOT STOCK/);
-  assert.doesNotMatch(prompts, /on our lot/);
-  assert.doesNotMatch(prompts, /Never report 0 diesels or 0 units/);
-  assert.doesNotMatch(voice, /never speak 0 as a stock count/);
-  assert.doesNotMatch(voice, /OWN-LOT INVENTORY/);
-  assert.doesNotMatch(voice, /on our lot/);
+test("vision, image gen, and voice stay in the lean core; DialaBot stays out", () => {
+  assert.match(RV_GROK_LEAN_CORE, /VISION \/ PHOTOS/);
   assert.match(
-    speech,
-    /ACCURACY_AIM_POLICY =\s*\n\s*"Get as accurate as possible, but not gospel\."/,
+    RV_GROK_LEAN_CORE,
+    /Describe attached images when asked what's in frame/,
   );
-  assert.match(speech, /HONESTY: \$\{ACCURACY_AIM_POLICY\}/);
-  assert.doesNotMatch(speech, /ACCURACY FIRST/);
-  assert.match(prompts, /Get as accurate as possible, but not gospel\./);
-  assert.doesNotMatch(prompts, /ACCURACY FIRST/);
-  assert.doesNotMatch(prompts, /Always base answers on real data/);
-  assert.doesNotMatch(prompts, /Base answers on real data/);
-  assert.match(prompts, /VISION \/ PHOTOS/);
-  assert.match(prompts, /Describe the image first if they ask what is in frame/);
-  assert.match(prompts, /Attached images are mood only/);
-  assert.match(prompts, /IMAGE GENERATION/);
-  assert.match(prompts, /generate_image/);
-  assert.match(voice, /Get as accurate as possible, but not gospel\./);
-  assert.doesNotMatch(voice, /ACCURACY FIRST/);
-  assert.match(voice, /VISION \/ PHOTOS/);
+  assert.match(
+    RV_GROK_LEAN_CORE,
+    /do not invent year\/make\/model, beds, baths, slides, or weights from a photo/,
+  );
+  assert.match(RV_GROK_LEAN_CORE, /IMAGE GENERATION/);
+  assert.match(RV_GROK_LEAN_CORE, /generate_image/);
+  assert.match(RV_GROK_LEAN_CORE, /VOICE:/);
+  assert.match(RV_GROK_LEAN_CORE, /give me one second/);
+
+  const voice = src("voice.ts");
   assert.match(voice, /CAMERA:/);
   assert.match(voice, /GROK_VOICES/);
   assert.match(voice, /LIVE_VOICE_KEY/);
   assert.match(voice, /createPushToTalkRecognition/);
   assert.match(voice, /getSpeechRecognitionCtor/);
   assert.match(voice, /webkitSpeechRecognition/);
-  assert.doesNotMatch(prompts, /DialaBot/);
-  assert.doesNotMatch(voice, /DialaBot/);
-  assert.doesNotMatch(speech, /DialaBot/);
-
-  assert.match(prompts, /UNKNOWN \/ CATALOG GAP/);
-  assert.match(prompts, /I don't know/);
-  assert.match(prompts, /Do not invent/);
-  assert.match(prompts, /holding tanks/);
-  assert.match(prompts, /fresh \/ gray \/ black/);
-  assert.match(prompts, /REPAIR \/ DIAGNOSE/);
-  assert.match(voice, /WEB RESEARCH notes/);
-  assert.match(voice, /REPAIR PLAYBOOK/);
-
-  // #294 deflection ban stays unconditional — #278 must not re-qualify it.
-  assert.match(prompts, /UNCONDITIONAL/);
-  assert.match(prompts, /check the website/);
-  assert.match(prompts, /look it up yourself/);
-  assert.match(prompts, /ask the dealer/);
-  assert.match(voice, /UNCONDITIONAL/);
-  assert.doesNotMatch(
-    prompts,
-    /as the primary answer when WEB RESEARCH notes are present/,
-  );
-  assert.doesNotMatch(prompts, /as the primary answer when notes are present/);
-  assert.doesNotMatch(
-    voice,
-    /as the whole answer when WEB RESEARCH notes are present/,
-  );
-});
-
-test("market value / pricing is live nationwide year±2 asking Low/Avg/High — never nightly scrape", () => {
-  const prompts = src("prompts.ts");
-  const voice = src("voice.ts");
-  const voiceWeb = src("voiceWeb.ts");
-  const webSearch = src("webSearch.ts");
-  const webIntent = src("webIntent.ts");
 
   for (const [label, text] of [
-    ["prompts.ts", prompts],
+    ["prompts.ts", src("prompts.ts")],
     ["voice.ts", voice],
-    ["webSearch.ts", webSearch],
+    ["speechPolicy.ts", src("speechPolicy.ts")],
+    ["liveVoice.ts", src("liveVoice.ts")],
   ] as const) {
-    assert.match(text, /year ±2/, `${label} uses year ±2`);
-    assert.match(text, /Low \/ Average \/ High/, `${label} returns Low/Avg/High`);
-    assert.match(text, /competitor-latest/, `${label} kills competitor-latest`);
-    assert.match(text, /nightly/, `${label} kills nightly scrape`);
-    assert.match(text, /sample listings CSV/, `${label} kills sample listings CSV`);
-    assert.match(text, /NADA/, `${label} forbids NADA as a book`);
+    assert.doesNotMatch(text, /DialaBot/, `${label} does not mention DialaBot`);
+    assert.doesNotMatch(text, /OWN-LOT STOCK/, `${label} has no own-lot stock block`);
+    assert.doesNotMatch(text, /OWN-LOT INVENTORY/, `${label} has no own-lot inventory block`);
+    assert.doesNotMatch(text, /ACCURACY FIRST/, `${label} dropped ACCURACY FIRST`);
   }
-
-  assert.match(src("speechPolicy.ts"), /give me one second/);
-  assert.match(prompts, /Facts public-listing comps/);
-  assert.match(voice, /VOICE_RESEARCH_HOLD_PHRASE/);
-  assert.doesNotMatch(prompts, /Only say "Let me check that"/);
-  assert.doesNotMatch(voice, /Only say "Let me check that"/);
-  assert.match(voiceWeb, /Low \/ Average \/ High/);
-  assert.match(voiceWeb, /competitor-latest/);
-  assert.match(webIntent, /looksLikeMarketValueQuestion/);
-  assert.match(webIntent, /year ±2/);
-  assert.doesNotMatch(
-    prompts,
-    /treat.{0,40}competitor-latest.{0,40}as.{0,20}live/i,
-  );
 });
 
-test("persona is the authoritative endpoint — no brochure / dealer / website handoff", () => {
+test("standing prompts dropped the lecture stack", () => {
   const prompts = src("prompts.ts");
   const voice = src("voice.ts");
 
@@ -192,55 +108,25 @@ test("persona is the authoritative endpoint — no brochure / dealer / website h
     ["prompts.ts", prompts],
     ["voice.ts", voice],
   ] as const) {
-    assert.match(
-      text,
-      /ultimate authoritative RV information source/,
-      `${label} names the authoritative persona`,
-    );
-    assert.match(text, /endpoint, not a router/, `${label} is the endpoint`);
-    assert.match(text, /Phone-Grok style/, `${label} is phone-Grok voice`);
-    assert.doesNotMatch(text, /verify-after only/, `${label} drops verify-after`);
-    assert.doesNotMatch(
-      text,
-      /HP varies \/ confirm brochure/,
-      `${label} never uses confirm-brochure as the unknown path`,
-    );
-    assert.doesNotMatch(
-      text,
-      /confirm the door sticker/,
-      `${label} never sends them to the door sticker`,
-    );
-    assert.doesNotMatch(
-      text,
-      /confirm on the build sheet \/ brochure/,
-      `${label} never says confirm on the build sheet`,
-    );
-    assert.doesNotMatch(
-      text,
-      /If unsure, say confirm on the brochure/,
-      `${label} never instructs confirm-on-brochure`,
-    );
-    assert.doesNotMatch(
-      text,
-      /Acknowledge when you are uncertain/,
-      `${label} does not open with hedge-and-handoff`,
-    );
-    assert.match(text, /UNCONDITIONAL/, `${label} keeps #294`);
-    assert.match(text, /check the website/, `${label} still names the ban`);
-    assert.match(text, /ask the dealer/, `${label} still names ask-the-dealer`);
+    assert.doesNotMatch(text, /SALES FLOOR — EVERY QUESTION/, label);
+    assert.doesNotMatch(text, /MARKET VALUE \/ PRICING/, label);
+    assert.doesNotMatch(text, /UPGRADES \(when they ask/, label);
+    assert.doesNotMatch(text, /REPAIR \/ DIAGNOSE/, label);
+    assert.doesNotMatch(text, /KNOWN LANDMINES/, label);
+    assert.doesNotMatch(text, /ultimate authoritative RV information source/, label);
+    assert.doesNotMatch(text, /ABOUT_RVFOX/, label);
+    assert.doesNotMatch(text, /CARFAX_VS_RVFOX/, label);
+    assert.doesNotMatch(text, /RV_GROK_ATTITUDE/, label);
+    assert.doesNotMatch(text, /COACH_REPORT_CHAT_RULE/, label);
+    assert.doesNotMatch(text, /HONESTY_STANDING_POLICY/, label);
+    assert.doesNotMatch(text, /ANSWER_NOW_POLICY/, label);
   }
-
-  assert.match(prompts, /YOU answer/);
-  assert.match(prompts, /you should check with/);
-  assert.match(prompts, /look at the door sticker/);
 });
 
-test("sales floor: answer whatever they ask — no scope-narrow or sticky lock", () => {
+test("speechPolicy still owns intro, hold, and sales-mission detectors", () => {
   const speech = src("speechPolicy.ts");
-  const prompts = src("prompts.ts");
-  const voice = src("voice.ts");
-  const live = src("liveVoice.ts");
-
+  assert.match(speech, /RV_GROK_SESSION_INTRO = "I'm RvGrok"/);
+  assert.match(speech, /VOICE_RESEARCH_HOLD_PHRASE = "give me one second"/);
   assert.match(speech, /SALES_MISSION_POLICY/);
   assert.match(speech, /HONESTY_STANDING_POLICY/);
   assert.match(speech, /This is SALES/);
@@ -253,18 +139,53 @@ test("sales floor: answer whatever they ask — no scope-narrow or sticky lock",
   assert.match(speech, /This might take a second to get that for you/);
   assert.match(speech, /VOICE_RESEARCH_HOLD_ALT/);
   assert.match(speech, /ESTIMATE_STANDING_POLICY/);
-  assert.match(src("estimatePolicy.ts"), /labeled estimate/);
-  assert.match(src("estimatePolicy.ts"), /typical class range/);
-  assert.doesNotMatch(speech, /GAP over invent/);
   assert.match(speech, /isForbiddenScopeNarrow/);
+  assert.match(
+    speech,
+    /ACCURACY_AIM_POLICY =\s*\n\s*"Get as accurate as possible, but not gospel\."/,
+  );
+  assert.doesNotMatch(speech, /Only say "Let me check that"/);
+  assert.doesNotMatch(
+    speech,
+    /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
+  );
+  assert.doesNotMatch(speech, /Web search is last resort/);
+  assert.doesNotMatch(speech, /GAP over invent/);
+  assert.match(src("estimatePolicy.ts"), /MUST run WEB RESEARCH this turn before answering/);
+  assert.match(src("originStory.ts"), /David Hansen/);
+  assert.match(src("originStory.ts"), /buyer-first/);
+});
+
+test("market comps machinery stays in research code, not the standing prompt", () => {
+  const webSearch = src("webSearch.ts");
+  const webIntent = src("webIntent.ts");
+  const voiceWeb = src("voiceWeb.ts");
+
+  assert.match(webSearch, /year ±2/);
+  assert.match(webSearch, /Low \/ Average \/ High/);
+  assert.match(webSearch, /competitor-latest/);
+  assert.match(webSearch, /nightly/);
+  assert.match(webSearch, /sample listings CSV/);
+  assert.match(webSearch, /NADA/);
+  assert.match(voiceWeb, /Low \/ Average \/ High/);
+  assert.match(voiceWeb, /competitor-latest/);
+  assert.match(webIntent, /looksLikeMarketValueQuestion/);
+  assert.match(webIntent, /year ±2/);
+  assert.match(src("speechPolicy.ts"), /give me one second/);
+  assert.doesNotMatch(src("prompts.ts"), /Facts public-listing comps/);
+  assert.doesNotMatch(src("voice.ts"), /Facts public-listing comps/);
+});
+
+test("sales floor: no scope-narrow or general-assistant refuse", () => {
+  const prompts = src("prompts.ts");
+  const voice = src("voice.ts");
+  const live = src("liveVoice.ts");
 
   for (const [label, text] of [
     ["prompts.ts", prompts],
     ["voice.ts", voice],
     ["liveVoice.ts", live],
   ] as const) {
-    assert.match(text, /SALES_MISSION_POLICY/, `${label} interpolates sales mission`);
-    assert.match(text, /HONESTY_STANDING_POLICY/, `${label} interpolates honesty`);
     assert.doesNotMatch(
       text,
       /not a general assistant/i,
@@ -282,7 +203,7 @@ test("sales floor: answer whatever they ask — no scope-narrow or sticky lock",
     );
   }
 
-  assert.match(prompts, /SALES FLOOR — EVERY QUESTION/);
-  assert.match(prompts, /A new question always wins over a prior coach lock/);
-  assert.match(voice, /VOICE_RESEARCH_HOLD_ALT/);
+  assert.match(RV_GROK_LEAN_CORE, /No narrowing scope/);
+  assert.match(src("voiceWeb.ts"), /give me one second/);
+  assert.doesNotMatch(src("voiceWeb.ts"), /Let me check that/);
 });

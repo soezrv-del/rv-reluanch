@@ -70,25 +70,20 @@ test("attitude is optimistic lot-friend — no doom, protective framing", () => 
   assert.match(RV_GROK_ATTITUDE, /CARFAX/);
 });
 
-test("chat, agent, and voice prompts carry the attitude standing block", () => {
+test("attitude module stays intact; standing prompts stay lean", () => {
   const prompts = src("prompts.ts");
   const voice = src("voice.ts");
-  assert.match(prompts, /RV_GROK_ATTITUDE/, "chat/agent interpolates attitude");
-  assert.match(voice, /RV_GROK_ATTITUDE/, "voice interpolates attitude");
-  assert.match(prompts, /ABOUT_RVFOX/);
-  assert.match(prompts, /CARFAX_VS_RVFOX/);
-  assert.match(voice, /ABOUT_RVFOX/);
-  assert.match(voice, /CARFAX_VS_RVFOX/);
-  assert.equal(
-    (prompts.match(/\$\{RV_GROK_ATTITUDE\}/g) || []).length,
-    2,
-    "chat and agent both interpolate the attitude block",
-  );
-  assert.equal(
-    (voice.match(/\$\{RV_GROK_ATTITUDE\}/g) || []).length,
-    1,
-    "voice interpolates the attitude block once",
-  );
+  assert.match(src("attitude.ts"), /RV_GROK_ATTITUDE/);
+  assert.match(src("originStory.ts"), /ABOUT_RVFOX/);
+  assert.match(src("carfaxPositioning.ts"), /CARFAX_VS_RVFOX/);
+  assert.match(src("grounding.ts"), /formatOriginGroundingBlock/);
+  assert.match(src("grounding.ts"), /formatCarfaxGroundingBlock/);
+  assert.doesNotMatch(prompts, /RV_GROK_ATTITUDE/);
+  assert.doesNotMatch(voice, /RV_GROK_ATTITUDE/);
+  assert.doesNotMatch(prompts, /ABOUT_RVFOX/);
+  assert.doesNotMatch(voice, /ABOUT_RVFOX/);
+  assert.doesNotMatch(prompts, /CARFAX_VS_RVFOX/);
+  assert.doesNotMatch(voice, /CARFAX_VS_RVFOX/);
 });
 
 test("intro, stall, origin, CARFAX, Hansen stay intact; DialaBot stays out", () => {
@@ -110,10 +105,11 @@ test("intro, stall, origin, CARFAX, Hansen stay intact; DialaBot stays out", () 
   assert.match(origin, /Verified & True/);
   assert.match(carfax, /Complements, not substitutes/);
   assert.match(carfax, /lousy motorhome buying tool/);
-  assert.match(prompts, /SESSION_INTRO_POLICY/);
-  assert.match(prompts, /VOICE_RESEARCH_HOLD_PHRASE/);
-  assert.match(voice, /SESSION_INTRO_POLICY/);
-  assert.match(voice, /VOICE_RESEARCH_HOLD_PHRASE/);
+  assert.match(speech, /SESSION_INTRO_POLICY/);
+  assert.match(speech, /VOICE_RESEARCH_HOLD_PHRASE/);
+  assert.match(speech, /RV_GROK_LEAN_CORE/);
+  assert.match(prompts, /RV_GROK_LEAN_CORE/);
+  assert.match(voice, /RV_GROK_LEAN_CORE/);
   assert.doesNotMatch(src("attitude.ts"), /[Dd]ialaBot/);
   assert.doesNotMatch(prompts, /[Dd]ialaBot/);
   assert.doesNotMatch(voice, /[Dd]ialaBot/);

@@ -217,11 +217,10 @@ test("wiring: chat, voice, browse, and Live share the same repair rails", () => 
   assert.match(grounding, /formatRepairGroundingBlock/);
   assert.match(grounding, /repairBlockFor/);
   assert.match(webIntent, /looksLikeRepairQuestion/);
-  assert.match(prompts, /REPAIR \/ DIAGNOSE/);
-  assert.match(prompts, /not a certified RV technician/i);
-  assert.match(prompts, /torque spec/);
-  assert.match(voice, /REPAIR PLAYBOOK|Not a certified RV tech/);
-  assert.match(voice, /torque spec/);
+  assert.match(prompts, /RV_GROK_LEAN_CORE/);
+  assert.match(src("speechPolicy.ts"), /jokes, repairs, payments/);
+  assert.match(voice, /RV_GROK_LEAN_CORE/);
+  assert.match(src("repairMode.ts"), /torque spec|REPAIR PLAYBOOK/);
   assert.match(webSearch, /torque spec, part number, wiring color/);
   assert.match(webSearch, /no OEM procedure/);
   assert.match(voiceWeb, /REPAIR PLAYBOOK|Not a certified RV tech/);

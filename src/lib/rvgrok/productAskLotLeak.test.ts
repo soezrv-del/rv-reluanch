@@ -36,7 +36,15 @@ const BAD_REPLY =
   "None of the 2025 Jayco Seneca 37K on our lot right now. Zero diesel units too.";
 
 const LOT_INSTRUCTION_RE =
-  /OWN-LOT|own-lot|on our lot|our lot|in stock|stock counts?|stock numbers?|Matched is 0|none on our lot|zero diesel|do we have|OWN-LOT INVENTORY/i;
+  /OWN-LOT|own-lot|in stock|stock counts?|stock numbers?|Matched is 0|none on our lot|zero diesel|do we have|OWN-LOT INVENTORY/i;
+
+/** Lean core may name the lot-language ban. That is not own-lot machinery. */
+function stripLeanLotBan(text: string) {
+  return text.replace(
+    /No lot, inventory, stock, or "on our lot" language\. Ever\./g,
+    "",
+  );
+}
 
 test("Tell me about a 2025 Jayco Seneca 37K is a product ask, not inventory", () => {
   assert.equal(looksLikeInventoryOrCountQuestion(SENECA), false);
@@ -98,7 +106,7 @@ test("system / voice / grounding instruction strings have zero lot vocabulary", 
   const voiceWeb = src("voiceWeb.ts");
   const api = src("../../routes/api/rvgrok.ts");
 
-  for (const [label, text] of [
+  for (const [label, raw] of [
     ["prompts.ts", prompts],
     ["voice.ts", voice],
     ["speechPolicy.ts (minus detector)", speech],
@@ -107,6 +115,7 @@ test("system / voice / grounding instruction strings have zero lot vocabulary", 
     ["voiceWeb.ts", voiceWeb],
     ["rvgrok.ts API", api],
   ] as const) {
+    const text = stripLeanLotBan(raw);
     assert.doesNotMatch(text, /OWN-LOT INVENTORY/, label);
     assert.doesNotMatch(text, /OWN-LOT STOCK/, label);
     assert.doesNotMatch(text, /on our lot/, label);
@@ -122,13 +131,15 @@ test("system / voice / grounding instruction strings have zero lot vocabulary", 
     speechFull,
     /ACCURACY_AIM_POLICY =\s*\n\s*"Get as accurate as possible, but not gospel\."/,
   );
-  assert.match(src("prompts.ts"), /Get as accurate as possible, but not gospel\./);
-  assert.match(src("voice.ts"), /Get as accurate as possible, but not gospel\./);
-  assert.match(src("prompts.ts"), /VISION \/ PHOTOS/);
-  assert.match(src("prompts.ts"), /Describe the image first if they ask what is in frame/);
-  assert.match(src("prompts.ts"), /IMAGE GENERATION/);
-  assert.match(src("prompts.ts"), /generate_image/);
-  assert.match(src("voice.ts"), /VISION \/ PHOTOS/);
+  assert.match(speechFull, /Get as accurate as possible, but not gospel\./);
+  assert.match(speechFull, /VISION \/ PHOTOS/);
+  assert.match(
+    speechFull,
+    /Describe attached images when asked what's in frame/,
+  );
+  assert.match(speechFull, /IMAGE GENERATION/);
+  assert.match(speechFull, /generate_image/);
+  assert.match(src("voice.ts"), /RV_GROK_LEAN_CORE/);
   assert.match(src("voice.ts"), /CAMERA:/);
   assert.match(src("voice.ts"), /GROK_VOICES/);
   assert.match(src("voice.ts"), /LIVE_VOICE_KEY/);
