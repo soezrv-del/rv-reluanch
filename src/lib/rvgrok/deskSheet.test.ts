@@ -21,6 +21,7 @@ import {
   deskSheetIsTowable,
   formatLockedWeightsBlock,
   looksLikeDeskSheetAsk,
+  looksLikeLineupOverviewAsk,
   queryNamesYearMakeModel,
   resolveDeskSheet,
   shouldMountDeskSheet,
@@ -219,6 +220,9 @@ test("lineup / series overview does not mount the desk sheet", () => {
     "What's the Grand Design Lineage series overview?",
     "Grand Design Lineage — is that their motorized series?",
     "Grand Design Lineage",
+    "what series are in Grand Design Lineage",
+    "motorized Lineage lineup",
+    "Which series are in the motorized Lineage lineup?",
   ]) {
     assert.equal(looksLikeDeskSheetAsk(q), false, q);
     const identity = resolveCoachIdentity(q, null, "");
@@ -226,6 +230,64 @@ test("lineup / series overview does not mount the desk sheet", () => {
     assert.equal(resolveDeskSheet({ query: q, identity, specs: null }), null, q);
     const speech = withDeskSheetSpeechRule("CATALOG", q, identity);
     assert.match(speech, /DESK SPEC SHEET NOT MOUNTED/);
+  }
+  for (const q of [
+    "what series are in Grand Design Lineage",
+    "motorized Lineage lineup",
+    "Which series are in the motorized Lineage lineup?",
+    "series in Grand Design's motorized lineup",
+  ]) {
+    assert.equal(looksLikeLineupOverviewAsk(q), true, q);
+  }
+});
+
+test("live FAIL: What series are in Grand Design's motorized Lineage lineup? does not mount desk", () => {
+  const q = "What series are in Grand Design's motorized Lineage lineup?";
+  assert.equal(looksLikeLineupOverviewAsk(q), true);
+  assert.equal(looksLikeDeskSheetAsk(q), false);
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity, "make+model extract still names Grand Design Lineage");
+  assert.match(identity!.make, /grand design/i);
+  assert.match(identity!.model, /lineage/i);
+  assert.equal(identity!.year, "");
+  assert.equal(identity!.floorplan, "");
+  assert.equal(shouldMountDeskSheet(q, identity), false);
+  assert.equal(resolveDeskSheet({ query: q, identity, specs: null }), null);
+
+  const sot =
+    "That's the confirmed book: M, F, E, VT, and VP. Class C and Class B. No other Lineage series on the OEM pages. Example weights are a 9,950 GVWR and a 12,600 GCWR. Spec sheet is on the desk.";
+  assert.equal(claimsDeskSpecSheet(sot), true);
+  assert.equal(
+    resolveDeskSheet({
+      query: q,
+      identity,
+      specs: null,
+      spokenText: sot,
+      chatSpecBlock: sot,
+    }),
+    null,
+    "chat SoT / on-the-desk speech must not remount a lineup ask",
+  );
+  const speech = withDeskSheetSpeechRule("CATALOG", q, identity);
+  assert.match(speech, /DESK SPEC SHEET NOT MOUNTED/);
+});
+
+test("explicit spec report / GVWR still mounts the desk after lineup gate", () => {
+  const full =
+    "full specs report for 2021 American Coach American Dream 42Q — GVWR UVW fuel tanks engine";
+  const short = "American Dream 42Q GVWR";
+  for (const q of [full, short]) {
+    assert.equal(looksLikeLineupOverviewAsk(q), false, q);
+    assert.equal(looksLikeDeskSheetAsk(q), true, q);
+    const identity = resolveCoachIdentity(q, null, "");
+    assert.ok(identity, q);
+    assert.match(identity!.make, /american coach/i);
+    assert.match(identity!.model, /american dream/i);
+    assert.equal(shouldMountDeskSheet(q, identity), true, q);
+    const sheet = resolveDeskSheet({ query: q, identity, specs: null });
+    assert.ok(sheet, q);
+    assert.match(sheet!.title, /American Dream/i);
+    assert.ok(sheet!.rows.some((r) => r.label === "GVWR"));
   }
 });
 
@@ -697,7 +759,15 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(app, /data-rvgrok-desk-after-reply/);
   assert.match(src(root, "deskSheetPolicy.ts"), /queryNamesYearMakeModel/);
   assert.match(src(root, "deskSheetPolicy.ts"), /looksLikeDeskSheetAsk/);
+  assert.match(src(root, "deskSheetPolicy.ts"), /looksLikeLineupOverviewAsk/);
   assert.match(src(root, "deskSheetPolicy.ts"), /looksLikeSpecQuestion/);
+  assert.match(src(root, "deskSheet.ts"), /looksLikeLineupOverviewAsk\(query\)/);
+  assert.doesNotMatch(app, /deskSheet: paintedDesk \|\| m\.deskSheet/);
+  assert.doesNotMatch(
+    app,
+    /claimsDeskSpecSheet\(text\) \? sheet/,
+  );
+  assert.doesNotMatch(realtime, /if \(painted\) this\.handlers\.onDeskSheet/);
   assert.doesNotMatch(app, /2019 Grand Design Solitude 310GK/);
   assert.match(bubble, /DeskSpecSheet/);
   assert.match(bubble, /deskSheet/);

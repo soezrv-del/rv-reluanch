@@ -28,6 +28,7 @@ import {
   claimsDeskSpecSheet,
   DESK_SHEET_FORBIDDEN_LINE,
   formatDeskSheetMountedLine,
+  looksLikeLineupOverviewAsk,
   queryNamesYearMakeModel,
   shouldMountDeskSheet,
 } from "./deskSheetPolicy.ts";
@@ -48,6 +49,7 @@ export {
   claimsDeskSpecSheet,
   formatDeskSheetMountedLine,
   looksLikeDeskSheetAsk,
+  looksLikeLineupOverviewAsk,
   queryNamesYearMakeModel,
   shouldMountDeskSheet,
 } from "./deskSheetPolicy.ts";
@@ -406,6 +408,14 @@ export function resolveDeskSheet(opts: {
       ? resolveCoachIdentity(query, null, "")
       : null);
   if (!identity) return null;
+  // Lineup / series-in-lineup stays chat-only. Chat SoT + "on the desk"
+  // speech must not remount a YEAR/FLOORPLAN GAP card.
+  if (
+    looksLikeLineupOverviewAsk(query) &&
+    !shouldMountDeskSheet(query, identity)
+  ) {
+    return null;
+  }
   if (
     shouldMountDeskSheet(query, identity) ||
     claimsDeskSpecSheet(spokenText || "")

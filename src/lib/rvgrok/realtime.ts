@@ -510,7 +510,7 @@ export class GrokRealtimeSession {
         spokenText: text,
         chatSpecBlock: text,
       });
-      if (painted) this.handlers.onDeskSheet?.(painted);
+      this.handlers.onDeskSheet?.(painted);
     }
     if (text) this.handlers.onAssistantDone(text);
   }
