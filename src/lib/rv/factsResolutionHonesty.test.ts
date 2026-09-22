@@ -298,6 +298,24 @@ test("Fleetwood Fortis: 26k model stamp is GCWR misread — GAP; KEEP siblings",
   assert.equal(RV_DATA.Fleetwood?.Altitude?.gvwrLbs, 14500);
   assert.equal(RV_DATA.Fleetwood?.Insight?.gvwrLbs, 11030);
   assert.equal(RV_DATA["Holiday Rambler"]?.Incline?.gvwrLbs, 14500);
+  assert.equal(RV_DATA["Holiday Rambler"]?.["Incline FS550"]?.gvwrLbs, 22000);
+});
+
+test("Audit E 2027 brochure path: Altitude / Incline / Incline FS550 pins", () => {
+  const altitude = factsFor("2027", "Fleetwood", "Altitude", "27U");
+  assert.equal(altitude.brochure.gvwrLbs, 14500);
+  assert.equal(altitude.spec.gvwrLbs, 14500);
+
+  const incline = factsFor("2027", "Holiday Rambler", "Incline", "29H");
+  assert.equal(incline.brochure.gvwrLbs, 14500);
+  assert.equal(incline.spec.gvwrLbs, 14500);
+
+  const fs550 = factsFor("2027", "Holiday Rambler", "Incline FS550", "30WM");
+  assert.equal(fs550.brochure.gvwrLbs, 22000);
+  assert.equal(fs550.spec.gvwrLbs, 22000);
+
+  const bleed = factsFor("2027", "Holiday Rambler", "Incline FS550", "27U");
+  assert.notEqual(bleed.brochure.gvwrLbs, 14500);
 });
 
 test("Lineage Series F: no series 22k stamp; 31ZW / 31ZW5 year-bands stay", () => {
