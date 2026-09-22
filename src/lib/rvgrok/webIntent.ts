@@ -1,5 +1,5 @@
 /**
- * When chat should fire the xAI web_search sidecar.
+ * When chat should fire the web-research sidecar.
  * Spec-catalog-free (no rvData). Coach-vs-coach compare skip uses the
  * thin CATALOG_INDEX names in coachCompare.ts.
  *

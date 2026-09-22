@@ -12,6 +12,21 @@ import { clearWebSearchCache, seedWebSearchCache, researchCacheKey } from "./web
 
 const root = dirname(fileURLToPath(import.meta.url));
 
+const prevGeminiKey = process.env.GEMINI_API_KEY;
+const prevResearchProvider = process.env.RVGROK_RESEARCH_PROVIDER;
+delete process.env.GEMINI_API_KEY;
+delete process.env.RVGROK_RESEARCH_PROVIDER;
+
+test.after(() => {
+  if (prevGeminiKey === undefined) delete process.env.GEMINI_API_KEY;
+  else process.env.GEMINI_API_KEY = prevGeminiKey;
+  if (prevResearchProvider === undefined) {
+    delete process.env.RVGROK_RESEARCH_PROVIDER;
+  } else {
+    process.env.RVGROK_RESEARCH_PROVIDER = prevResearchProvider;
+  }
+});
+
 test("classifyWebResearchFailure distinguishes outage kinds", () => {
   assert.equal(
     classifyWebResearchFailure("The operation was aborted due to timeout"),
@@ -24,6 +39,14 @@ test("classifyWebResearchFailure distinguishes outage kinds", () => {
   assert.equal(
     classifyWebResearchFailure("web search HTTP 400: invalid request"),
     "upstream_error",
+  );
+  assert.equal(
+    classifyWebResearchFailure("gemini research HTTP 503: unavailable"),
+    "upstream_error",
+  );
+  assert.equal(
+    classifyWebResearchFailure("no GEMINI_API_KEY on the server"),
+    "missing_key",
   );
   assert.equal(
     classifyWebResearchFailure("web search returned empty notes"),
