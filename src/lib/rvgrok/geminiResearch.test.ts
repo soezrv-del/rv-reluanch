@@ -96,7 +96,7 @@ test("Gemini request prefers OEM / factory brochure / dealer, not PDF-only", () 
   assert.match(packed, /CONFIRMED: yes/);
   assert.match(packed, /Phaeton 40IH|GVWR 39600/);
   assert.equal(researchNotesSourceLabel("gemini-2.5-flash"), "Gemini Google Search grounding");
-  assert.equal(researchNotesSourceLabel("grok-4-1-fast-reasoning"), "xAI web_search");
+  assert.equal(researchNotesSourceLabel("grok-4.7"), "xAI web_search");
   assert.equal(
     extractGeminiText(geminiNotes("CONFIRMED: yes. GVWR 39,600 lb.")),
     "CONFIRMED: yes. GVWR 39,600 lb.",
@@ -124,7 +124,7 @@ test("Gemini success → notes used (xAI not called)", async () => {
       researchProvider: "auto",
       query: "Where is the battery disconnect on a 2005 Winnebago Adventurer?",
       timeoutMs: 5_000,
-      models: ["grok-4-1-fast-reasoning"],
+      models: ["grok-4.7"],
     });
     assert.equal(result.ok, true);
     assert.equal(urls.length, 1);
@@ -169,7 +169,7 @@ test("Gemini fail/timeout → xAI fallback notes used", async () => {
       researchProvider: "gemini",
       query: "Where is the battery disconnect on a 2005 Winnebago Adventurer?",
       timeoutMs: 8_000,
-      models: ["grok-4-1-fast-reasoning"],
+      models: ["grok-4.7"],
     });
     assert.equal(result.ok, true);
     assert.ok(urls.some(isGeminiResearchUrl));
@@ -205,7 +205,7 @@ test("no Gemini key → xAI only (today's path)", async () => {
       researchProvider: "auto",
       query: "What's the GVWR on a 2019 XYZ Phantom?",
       timeoutMs: 5_000,
-      models: ["grok-4-1-fast-reasoning"],
+      models: ["grok-4.7"],
     });
     assert.equal(result.ok, true);
     assert.equal(urls.length, 1);
@@ -240,7 +240,7 @@ test("catalog pin-wins still spoken when Gemini + xAI both miss", async () => {
       researchProvider: "auto",
       query: "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
       timeoutMs: 8_000,
-      models: ["grok-4-1-fast-reasoning"],
+      models: ["grok-4.7"],
     });
     assert.equal(result.ok, false);
     const locked = [

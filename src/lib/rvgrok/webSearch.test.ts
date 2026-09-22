@@ -50,12 +50,10 @@ test.after(() => {
   }
 });
 
-test("fast research models never include grok-4.6", () => {
-  assert.deepEqual([...WEB_SEARCH_MODELS], [
-    "grok-4-1-fast-reasoning",
-    "grok-4-1-fast-non-reasoning",
-  ]);
-  assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
+test("fast research models use grok-4.7 and never include grok-4.6", () => {
+  assert.deepEqual([...WEB_SEARCH_MODELS], ["grok-4.7"]);
+  assert.equal((WEB_SEARCH_MODELS as readonly string[]).includes("grok-4.6"), false);
+  assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4.7"]);
   assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 24_000);
   assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 36_000);
   assert.equal(WEB_SEARCH_MAX_TOOL_CALLS, 2);
@@ -64,14 +62,14 @@ test("fast research models never include grok-4.6", () => {
 
 test("speed knobs stay off the #113-forbidden fields", () => {
   const extras = buildWebSearchRequest({
-    model: "grok-4-1-fast-reasoning",
+    model: "grok-4.7",
     query: "Where is the battery disconnect on a 2005 Winnebago Adventurer?",
     extras: true,
   });
   assert.equal(extras.max_tool_calls, WEB_SEARCH_TOOL_CALLS_PER_ATTEMPT);
   assert.equal(extras.max_tool_calls, 1);
   assert.equal(extras.tool_choice, "required");
-  assert.equal("reasoning" in extras, false);
+  assert.deepEqual(extras.reasoning, { effort: "low" });
   assert.equal("temperature" in extras, false);
   assert.equal("max_output_tokens" in extras, false);
   assert.equal("search_parameters" in extras, false);
@@ -80,27 +78,27 @@ test("speed knobs stay off the #113-forbidden fields", () => {
   assert.doesNotMatch(JSON.stringify(extras), /"role":"system"/);
 
   const minimal = buildWebSearchRequest({
-    model: "grok-4-1-fast-reasoning",
+    model: "grok-4.7",
     query: "generator won't start",
     extras: false,
   });
   assert.deepEqual(Object.keys(minimal).sort(), ["input", "model", "tools"]);
 
-  const slow = buildWebSearchRequest({
+  const priorLow = buildWebSearchRequest({
     model: "grok-4.6",
     query: "water heater bypass",
   });
-  assert.deepEqual(slow.reasoning, { effort: "low" });
+  assert.deepEqual(priorLow.reasoning, { effort: "low" });
 });
 
 test("voice prompt is 1-3 sentences; chat stays short notes", () => {
   const voice = buildWebSearchRequest({
-    model: "grok-4-1-fast-reasoning",
+    model: "grok-4.7",
     query: "check engine light reset Ford E450",
     profile: "voice",
   });
   const chat = buildWebSearchRequest({
-    model: "grok-4-1-fast-reasoning",
+    model: "grok-4.7",
     query: "check engine light reset Ford E450",
     profile: "chat",
   });
@@ -128,7 +126,7 @@ test("catalog clip drops the long lock-rules essay", () => {
   assert.ok(clipped.length <= 700 || clipped.endsWith("…"));
 
   const body = buildWebSearchRequest({
-    model: "grok-4-1-fast-reasoning",
+    model: "grok-4.7",
     query: "battery disconnect",
     catalogBlock: block,
   });
@@ -154,7 +152,7 @@ test("successful notes cache; failures do not invent a lookup", async () => {
   seedWebSearchCache(key, {
     ok: true,
     notes: "Owners often cite a labeled house-battery disconnect near the entry step or battery bay. Confirm on that coach — layouts vary.",
-    model: "grok-4-1-fast-reasoning",
+    model: "grok-4.7",
   });
   const hit = await fetchWebSearchNotes({
     apiKey: "not-used-when-cached",
@@ -163,7 +161,7 @@ test("successful notes cache; failures do not invent a lookup", async () => {
   assert.equal(hit.ok, true);
   if (hit.ok) {
     assert.match(hit.notes, /house-battery disconnect/i);
-    assert.equal(hit.model, "grok-4-1-fast-reasoning");
+    assert.equal(hit.model, "grok-4.7");
   }
 
   const miss = await fetchWebSearchNotes({
@@ -327,7 +325,7 @@ test("confirming first search does not retry", async () => {
       apiKey: "test-key",
       query: "What's the GVWR on a 2019 XYZ Phantom?",
       timeoutMs: 5_000,
-      models: ["grok-4-1-fast-reasoning"],
+      models: ["grok-4.7"],
     });
     assert.equal(result.ok, true);
     assert.equal(calls, 1);
@@ -369,7 +367,7 @@ test("empty first search then confirming rephrased retry", async () => {
       apiKey: "test-key",
       query: "What's the GVWR on a 2019 XYZ Phantom?",
       timeoutMs: 5_000,
-      models: ["grok-4-1-fast-reasoning"],
+      models: ["grok-4.7"],
     });
     assert.equal(result.ok, true);
     assert.equal(questions.length, 2);
@@ -407,7 +405,7 @@ test("N failed attempts say so plainly — no EST from training", async () => {
       apiKey: "test-key",
       query: "What's the GVWR on a 2019 XYZ Phantom?",
       timeoutMs: 8_000,
-      models: ["grok-4-1-fast-reasoning"],
+      models: ["grok-4.7"],
     });
     assert.equal(result.ok, true);
     assert.equal(calls, WEB_SEARCH_MAX_TOOL_CALLS);
@@ -440,7 +438,7 @@ test("quality gate blocks EST before the loop is exhausted", () => {
   const blocked = formatWebSearchInjection({
     ok: true,
     notes: "Could not find a published GVWR for this coach.",
-    model: "grok-4-1-fast-reasoning",
+    model: "grok-4.7",
     confirmed: false,
     attempts: 1,
     exhausted: false,
@@ -470,7 +468,7 @@ test("live OEM hit injection never labels EST / low confidence", () => {
     ok: true,
     notes:
       "CONFIRMED: yes. Newmar Corp brochure for the 2022 Dutch Star 4369 lists GVWR 51,000 lb, Cummins, Allison, GCWR 67,000 lb.",
-    model: "grok-4-1-fast-reasoning",
+    model: "grok-4.7",
     confirmed: true,
     attempts: 1,
     exhausted: false,
@@ -491,7 +489,7 @@ test("live OEM hit injection never labels EST / low confidence", () => {
     result: {
       ok: true,
       notes: "CONFIRMED: yes. Newmar Corp brochure GVWR 51,000 lb.",
-      model: "grok-4-1-fast-reasoning",
+      model: "grok-4.7",
       confirmed: true,
       exhausted: false,
     },
@@ -556,7 +554,7 @@ test("first timeout retries once with a rephrased query then gives up without ES
       apiKey: "test-key",
       query: "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
       timeoutMs: 8_000,
-      models: ["grok-4-1-fast-reasoning"],
+      models: ["grok-4.7"],
     });
     assert.equal(result.ok, false);
     assert.equal(questions.length, 2);
@@ -616,7 +614,7 @@ test("timeout then confirming retry uses the live hit — no EST", async () => {
       apiKey: "test-key",
       query: "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
       timeoutMs: 8_000,
-      models: ["grok-4-1-fast-reasoning"],
+      models: ["grok-4.7"],
     });
     assert.equal(result.ok, true);
     assert.equal(questions.length, 2);

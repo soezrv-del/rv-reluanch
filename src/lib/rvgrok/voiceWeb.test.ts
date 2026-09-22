@@ -235,7 +235,7 @@ test("successful voice notes stay spoken-shaped and forbid no-internet claims", 
     ok: true,
     notes:
       "Owners often mention a labeled switch. See https://example.com/manual and [forum](https://irv2.example/thread).",
-    model: "grok-4.6",
+    model: "grok-4.7",
   });
   assert.equal(voiceInjectionClaimsLookedUp(ok), true);
   assert.match(ok, /WEB RESEARCH NOTES/);
@@ -262,7 +262,7 @@ test("voice research budget is 24s server / 25s client — OEM window, not 60s d
   assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 24_000);
   assert.equal(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS, 25_000);
   assert.equal(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS, VOICE_WEB_SEARCH_TIMEOUT_MS + 1_000);
-  assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
+  assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4.7"]);
   assert.match(webSearch, /NOT the old "raise timeout to fake a pass"/);
   assert.match(webSearch, /60s of dead air/);
   assert.match(webSearch, /give me one second/);
