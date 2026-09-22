@@ -339,6 +339,38 @@ test("2022 Tiffin Phaeton 40IH: Grok desk paints the same Facts brochure snapsho
   assert.match(src(root, "deskSheet.ts"), /buildBrochureSpecs/);
 });
 
+test("desk remount after Lineage history is not Grand Design Dutch Star", () => {
+  const extra = [
+    "2020 tiffin phaeton 40ih",
+    "2025 grand design lineage 25fw",
+    "what about the holding tanks",
+  ].join("\n");
+  const identity = resolveCoachIdentity(
+    "put the spec sheet on the desk",
+    {
+      year: "2025",
+      make: "Grand Design",
+      model: "Lineage Series M",
+      floorplan: "25FW",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    },
+    extra,
+  );
+  assert.ok(identity);
+  const sheet = resolveDeskSheet({
+    query: "put the spec sheet on the desk",
+    identity,
+    specs: null,
+  });
+  assert.ok(sheet);
+  assert.equal(sheet!.make, "Grand Design");
+  assert.match(sheet!.model, /lineage/i);
+  assert.doesNotMatch(sheet!.title, /Dutch Star/i);
+  assert.doesNotMatch(sheet!.make, /Newmar/i);
+  assert.doesNotMatch(sheet!.title, /Grand Design Dutch Star/i);
+  assert.doesNotMatch(sheet!.presenceNote, /Grand Design Dutch Star/i);
+});
+
 test("desk sheet is wired through chat, live voice, and speech policy", () => {
   const app = src(join(root, "../../components/rvgrok"), "RvGrokApp.tsx");
   const bubble = src(join(root, "../../components/rvgrok"), "MessageBubble.tsx");

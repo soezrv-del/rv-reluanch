@@ -267,7 +267,7 @@ export function formatCatalogPresenceNote(presence: CatalogPresence): string {
         ? `YEAR MISSING — ${presence.make} ${presence.model} ${presence.floorplan} needs a model year. Do not say the series is missing. Do not substitute a sibling series.`
         : `YEAR MISSING — ${presence.make} ${presence.model} is a known series. Ask which year. Do not substitute a sibling series.`;
     case "missing-series":
-      return `SERIES MISSING — ${[presence.make, presence.model].filter(Boolean).join(" ") || "that series"} is not in the verified catalog. Say the series is missing. Do not substitute another series.`;
+      return `SERIES MISSING — ${[presence.make, presence.model].filter(Boolean).join(" ") || "that series"} is not in the verified catalog.`;
     default:
       return "";
   }
@@ -305,12 +305,28 @@ export function namedCoachConflictsLock(
   return false;
 }
 
+/**
+ * Known series is a single tuple. Dutch Star → Newmar only — never keep a
+ * leftover Grand Design (or any other) make on that model.
+ */
+export function lockIdentityTuple(id: CoachIdentity): CoachIdentity {
+  const known =
+    findKnownSeries(id.model) ||
+    findKnownSeries([id.year, id.make, id.model, id.floorplan].filter(Boolean).join(" "));
+  if (!known) return id;
+  return {
+    ...id,
+    make: known.make,
+    model: known.model,
+  };
+}
+
 function identityFromAsk(
   parsed: { year: string; make: string; model: string; floorplan: string },
   source: CoachIdentity["source"],
 ): CoachIdentity {
   const make = parsed.make ? resolveCatalogMake(parsed.make) : "";
-  return {
+  return lockIdentityTuple({
     year: parsed.year,
     make,
     model: parsed.model
@@ -318,7 +334,33 @@ function identityFromAsk(
       : parsed.model,
     floorplan: parsed.floorplan,
     source,
-  };
+  });
+}
+
+/**
+ * History is discrete asks — never one blob that fills year / make / model /
+ * floorplan independently (2020 + Grand Design + Dutch Star + 25FW).
+ * Last complete coach tuple wins.
+ */
+export function lastCompleteParseFromHistory(extraText: string): {
+  year: string;
+  make: string;
+  model: string;
+  floorplan: string;
+} | null {
+  if (!extraText?.trim()) return null;
+  let last: {
+    year: string;
+    make: string;
+    model: string;
+    floorplan: string;
+  } | null = null;
+  for (const chunk of extraText.split(/[\n.!?]+/)) {
+    const parsed = parseCoachFromText(chunk);
+    if (!askNamesCoachIdentity(parsed)) continue;
+    last = parsed;
+  }
+  return last;
 }
 
 /**
@@ -332,13 +374,13 @@ export function resolveCoachIdentity(
   facts?: ActiveCoach | null,
   extraText = "",
 ): CoachIdentity | null {
-  // Current ask wins. History/extraText used to steal the last brand mention
-  // ("Grand Design fifth-wheels…") and dump a named Lineage M lock.
+  // Current ask wins. History is last complete coach tuple — never a blob
+  // that fills year / make / model / floorplan independently.
   const fromQuery = parseCoachFromText(query);
   const queryNamesCoach = askNamesCoachIdentity(fromQuery);
   const parsed = queryNamesCoach
     ? fromQuery
-    : parseCoachFromText(`${query}\n${extraText}`);
+    : lastCompleteParseFromHistory(`${query}\n${extraText}`) || fromQuery;
   const factsOk = Boolean(
     facts?.year?.trim() && facts.make?.trim() && facts.model?.trim(),
   );
@@ -352,7 +394,7 @@ export function resolveCoachIdentity(
         asked.model,
       );
     }
-    return asked;
+    return lockIdentityTuple(asked);
   }
 
   if (parsed.year && parsed.make && parsed.model) {
@@ -361,15 +403,22 @@ export function resolveCoachIdentity(
       parsed.year === facts!.year &&
       norm(resolveCatalogMake(parsed.make)) ===
         norm(resolveCatalogMake(facts!.make));
-    return {
+    const sameModel =
+      Boolean(sameFamily) &&
+      (modelsAlign(
+        resolveCatalogModel(parsed.make, parsed.model),
+        facts!.model,
+      ) ||
+        modelsAlign(parsed.model, facts!.model));
+    return lockIdentityTuple({
       year: parsed.year,
       make: resolveCatalogMake(parsed.make),
       model: resolveCatalogModel(parsed.make, parsed.model),
       floorplan:
         parsed.floorplan ||
-        (sameFamily ? facts!.floorplan || "" : ""),
-      source: sameFamily && !parsed.floorplan && facts!.floorplan ? "mixed" : "message",
-    };
+        (sameModel ? facts!.floorplan || "" : ""),
+      source: sameModel && !parsed.floorplan && facts!.floorplan ? "mixed" : "message",
+    });
   }
 
   // Yearless named coach. Same lock → inherit year; otherwise ground on the ask.
@@ -388,14 +437,14 @@ export function resolveCoachIdentity(
       (sameModel
         ? facts!.year
         : yearFromSameSeriesHistory(extraText, parsed.make, catalogModel));
-    return {
+    return lockIdentityTuple({
       year,
       make: resolveCatalogMake(parsed.make),
       model: catalogModel,
       floorplan:
         parsed.floorplan || (sameModel ? facts!.floorplan || "" : ""),
       source: sameModel && !parsed.year ? "mixed" : "message",
-    };
+    });
   }
 
   if (parsed.year && parsed.make && factsOk && parsed.year === facts!.year) {
@@ -403,34 +452,34 @@ export function resolveCoachIdentity(
       norm(resolveCatalogMake(parsed.make)) ===
       norm(resolveCatalogMake(facts!.make));
     if (sameMake) {
-      return {
+      return lockIdentityTuple({
         year: facts!.year,
         make: resolveCatalogMake(facts!.make),
         model: facts!.model,
         floorplan: parsed.floorplan || facts!.floorplan || "",
         source: "mixed",
-      };
+      });
     }
   }
 
   if (factsOk) {
-    return {
+    return lockIdentityTuple({
       year: facts!.year,
       make: resolveCatalogMake(facts!.make),
       model: facts!.model,
       floorplan: facts!.floorplan || "",
       source: "facts",
-    };
+    });
   }
 
   if (parsed.year && parsed.make) {
-    return {
+    return lockIdentityTuple({
       year: parsed.year,
       make: resolveCatalogMake(parsed.make),
       model: parsed.model,
       floorplan: parsed.floorplan,
       source: "message",
-    };
+    });
   }
 
   if (parsed.make && parsed.floorplan) {
