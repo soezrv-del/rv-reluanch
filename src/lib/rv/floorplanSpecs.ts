@@ -3332,6 +3332,101 @@ function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
   return false;
 }
 
+type OemTankPin = {
+  makeIncludes: string;
+  modelIncludes: string;
+  yearMin: number;
+  yearMax: number;
+  floorplan: string;
+  freshWater?: number;
+  grayWater?: number;
+  blackWater?: number;
+  fuelCapacityGal?: number;
+};
+
+/**
+ * Sourced holding-tank / fuel-cap pins. Catalog series + year-band SoT —
+ * never invent gallons. UVW is not here (no published Series F UVW).
+ */
+const OEM_TANK_PINS: OemTankPin[] = [
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "lineage series f",
+    yearMin: 2025,
+    yearMax: 2027,
+    floorplan: "31ZW",
+    freshWater: 79,
+    grayWater: 66,
+    blackWater: 45,
+    fuelCapacityGal: 66.5,
+  },
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "lineage series f",
+    yearMin: 2025,
+    yearMax: 2027,
+    floorplan: "31ZW5",
+    freshWater: 79,
+    grayWater: 66,
+    blackWater: 45,
+    fuelCapacityGal: 66.5,
+  },
+];
+
+export type OemHoldingTanks = {
+  freshWater: number | null;
+  grayWater: number | null;
+  blackWater: number | null;
+  fuelCapacityGal: number | null;
+};
+
+function emptyHoldingTanks(): OemHoldingTanks {
+  return {
+    freshWater: null,
+    grayWater: null,
+    blackWater: null,
+    fuelCapacityGal: null,
+  };
+}
+
+/** Sourced tanks / fuel cap. Null fields stay GAP — do not invent. */
+export function findOemHoldingTanks(
+  year: string | number,
+  make: string,
+  model: string,
+  floorplan: string,
+): OemHoldingTanks {
+  if (!floorplan?.trim()) return emptyHoldingTanks();
+  const y = typeof year === "number" ? year : parseInt(String(year), 10);
+  if (!Number.isFinite(y)) return emptyHoldingTanks();
+  const mk = make.toLowerCase();
+  const md = model.toLowerCase();
+  const fp = floorplan.trim().toUpperCase().replace(/\s+/g, "");
+
+  let best: OemTankPin | null = null;
+  let bestScore = -1;
+  for (const row of OEM_TANK_PINS) {
+    if (y < row.yearMin || y > row.yearMax) continue;
+    if (!mk.includes(row.makeIncludes)) continue;
+    if (!md.includes(row.modelIncludes)) continue;
+    if (modelPinBlocked(row.modelIncludes, md)) continue;
+    const rowFp = row.floorplan.toUpperCase().replace(/\s+/g, "");
+    if (rowFp !== fp) continue;
+    const score = row.modelIncludes.length * 10 + row.makeIncludes.length;
+    if (score > bestScore) {
+      bestScore = score;
+      best = row;
+    }
+  }
+  if (!best) return emptyHoldingTanks();
+  return {
+    freshWater: best.freshWater ?? null,
+    grayWater: best.grayWater ?? null,
+    blackWater: best.blackWater ?? null,
+    fuelCapacityGal: best.fuelCapacityGal ?? null,
+  };
+}
+
 /** Published OEM GVWR for a year/make/model/floorplan. Null → GAP (do not invent). */
 export function findOemGvwrLbs(
   year: string | number,

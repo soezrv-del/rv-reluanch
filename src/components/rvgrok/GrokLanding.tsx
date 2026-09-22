@@ -90,12 +90,8 @@ export function GrokLanding({
         </div>
 
         <h1 className="grok-display mt-6 max-w-[18ch] text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-fg sm:text-[2.35rem]">
-          Name the year, make, and model — or ask me anything.
+          I'm RvGrok
         </h1>
-        <p className="mt-3 max-w-[36ch] text-[13px] leading-relaxed text-muted sm:text-[14px]">
-          Spec reports on the lot. Anything else, I will look it up and talk you
-          through it.
-        </p>
 
         <div className="mt-7 w-full text-left">{composer}</div>
 

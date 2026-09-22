@@ -50,11 +50,11 @@ test("chat, agent, and voice prompts share David's answer-now / give me one seco
   assert.match(speech, /CATALOG_MISS_MUST_SEARCH/);
   assert.match(src("estimatePolicy.ts"), /MUST run WEB RESEARCH this turn before answering/);
   assert.doesNotMatch(speech, /Web search is last resort/);
-  assert.match(
+  assert.match(speech, /RV_GROK_SESSION_INTRO = "I'm RvGrok"/);
+  assert.doesNotMatch(
     speech,
     /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
   );
-  assert.match(speech, /Verified & True \/ Know before you buy/);
   assert.match(src("originStory.ts"), /David Hansen/);
   assert.match(src("originStory.ts"), /buyer-first/);
   assert.match(prompts, /ABOUT_RVFOX/);

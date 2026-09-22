@@ -20277,8 +20277,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       overallLengthIn: 405,
       description: "Grand Design Lineage Series F — Super C 4x4. OEM Class C brochure prints 31ZW on Ford F-600 6.7 diesel, hitch 15,000 (10,000 with 43 package). 31ZW5 is the F-550 twin. Power Stroke ~330/950.",
       powertrainByYear: [
-        { from: 2025, to: 2027, floorplans: ["31ZW"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F-600 Super Duty 4x4", towingCapacity: 15000, gvwrLbs: 22000, notes: "OEM Class C brochure + RVUSA m10876-y2027: F-600 XLT 6.7L V8 diesel, hitch 15,000. 43 package drops hitch to 10,000." },
-        { from: 2025, to: 2027, floorplans: ["31ZW5"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F-550 Super Duty 4x4", towingCapacity: 10000, gvwrLbs: 19500, notes: "F-550 twin — do not stamp F-600 15k hitch." },
+        { from: 2025, to: 2027, floorplans: ["31ZW"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F-600 Super Duty 4x4", towingCapacity: 15000, gvwrLbs: 22000, freshWater: 79, grayWater: 66, blackWater: 45, fuelCapacityGal: 66.5, notes: "OEM Class C brochure + RVUSA m10876-y2027: F-600 XLT 6.7L V8 diesel, hitch 15,000. 43 package drops hitch to 10,000. Series tanks 79/66/45 + 66.5 gal fuel — no published UVW." },
+        { from: 2025, to: 2027, floorplans: ["31ZW5"], engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford F-550 Super Duty 4x4", towingCapacity: 10000, gvwrLbs: 19500, freshWater: 79, grayWater: 66, blackWater: 45, fuelCapacityGal: 66.5, notes: "F-550 twin — do not stamp F-600 15k hitch. Same sourced tanks/fuel as 31ZW. No published UVW." },
         { from: 2025, to: 2027, engine: "Ford 6.7L Power Stroke 330HP", horsepower: 330, torqueLbFt: 950, chassis: "Ford Super Duty 4x4 (F-600 / F-550)" },
       ],
       // Brochure backfill — electrical. Model-level (31ZW F-600 / 31ZW5 F-550).

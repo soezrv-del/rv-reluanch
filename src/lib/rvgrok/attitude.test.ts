@@ -98,7 +98,8 @@ test("intro, stall, origin, CARFAX, Hansen stay intact; DialaBot stays out", () 
   const prompts = src("prompts.ts");
   const voice = src("voice.ts");
 
-  assert.match(
+  assert.match(speech, /RV_GROK_SESSION_INTRO = "I'm RvGrok"/);
+  assert.doesNotMatch(
     speech,
     /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
   );

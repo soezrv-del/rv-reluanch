@@ -56,8 +56,8 @@ test("fast research models never include grok-4.6", () => {
     "grok-4-1-fast-non-reasoning",
   ]);
   assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
-  assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 10_000);
-  assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 24_000);
+  assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 24_000);
+  assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 36_000);
   assert.equal(WEB_SEARCH_MAX_TOOL_CALLS, 2);
   assert.equal(WEB_SEARCH_TOOL_CALLS_PER_ATTEMPT, 1);
 });
@@ -507,7 +507,7 @@ test("per-attempt timeout reserves budget for one retry", () => {
   assert.equal(retryReserveMs("chat"), CHAT_WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS);
   assert.equal(retryReserveMs("voice"), WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS);
   assert.equal(CHAT_WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS, 8_000);
-  assert.ok(WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS >= 4_000);
+  assert.equal(WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS, 8_000);
 
   const chatFirst = perAttemptTimeoutMs(
     CHAT_WEB_SEARCH_TIMEOUT_MS,
@@ -515,7 +515,7 @@ test("per-attempt timeout reserves budget for one retry", () => {
     WEB_SEARCH_MAX_TOOL_CALLS,
     retryReserveMs("chat"),
   );
-  assert.equal(chatFirst, 16_000, "chat attempt 1 gets ~16s, not a starved 7.5s");
+  assert.equal(chatFirst, 28_000, "chat attempt 1 gets ~28s, not a starved 16s");
   assert.ok(chatFirst < CHAT_WEB_SEARCH_TIMEOUT_MS);
   const chatRetry = perAttemptTimeoutMs(
     CHAT_WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS,
@@ -531,10 +531,10 @@ test("per-attempt timeout reserves budget for one retry", () => {
     WEB_SEARCH_MAX_TOOL_CALLS,
     retryReserveMs("voice"),
   );
-  assert.equal(voiceFirst, 5_500);
+  assert.equal(voiceFirst, 16_000, "voice attempt 1 gets the OEM 8–15s window");
   assert.ok(
-    voiceFirst < 8_000,
-    "voice stays a phone-lookup pause — not a 24s / 60s dead-air raise",
+    voiceFirst >= 16_000 && voiceFirst < 60_000,
+    "voice covers OEM brochure latency — not the old 5.5s starve, not 60s dead air",
   );
   assert.equal(perAttemptTimeoutMs(4_000, 1, 2), 4_000);
   assert.equal(isTimeoutFailureReason("The operation was aborted due to timeout"), true);

@@ -74,16 +74,18 @@ const LINEAGE_UNIQUE_FLOORPLAN_SERIES: Record<string, string> = {
   // Spoken/typed swap: "31W Z" / "31WZ" is the Super C 31ZW.
   "31wz": "Lineage Series F",
   "31wz5": "Lineage Series F",
+  // Typed swap: "312W" is 31ZW (Z/2).
+  "312w": "Lineage Series F",
 };
 
 function compactFp(s: string): string {
   return (s || "").toLowerCase().replace(/[\s-]+/g, "");
 }
 
-/** OEM code is 31ZW. "31W Z" / "31WZ" is the same Super C. */
+/** OEM code is 31ZW. "31W Z" / "31WZ" / "312W" is the same Super C. */
 function canonicalizeLineageFloorplan(floorplan: string): string {
   const n = compactFp(floorplan);
-  if (n === "31wz") return "31ZW";
+  if (n === "31wz" || n === "312w") return "31ZW";
   if (n === "31wz5") return "31ZW5";
   return floorplan;
 }

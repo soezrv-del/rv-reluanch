@@ -66,24 +66,26 @@ export const WEB_SEARCH_MODELS = [
 /**
  * Chat wall-clock budget for the whole research loop (search → one retry).
  *
- * 12s with a 4.5s retry reserve starved attempt 1 at ~7.5s — xAI
- * `web_search` often needs 8–15s for an OEM brochure hit, so Chrome
- * feels instant while we abort. 24s / two attempts: ~16s then ~8s.
- * Not a fake pass, not 60s of silence.
+ * 12s with a 4.5s retry reserve starved attempt 1 at ~7.5s; 24s still
+ * aborted OEM brochure hits that land past the 16s first attempt.
+ * xAI `web_search` often needs 8–15s, and a confirm + one rephrase
+ * needs more. 36s / two attempts: ~28s then ~8s. Same 12s increment
+ * as the last raise. Not a fake pass, not 60s of silence.
  */
-export const CHAT_WEB_SEARCH_TIMEOUT_MS = 24_000;
+export const CHAT_WEB_SEARCH_TIMEOUT_MS = 36_000;
 
 /**
  * Live Voice research wall-clock budget (server-side fetch timeout).
  *
  * NOT the old "raise timeout to fake a pass" move (60s of dead air is
- * unacceptable in speech). Post–#116 production cold calls land ~5–7s on
- * grok-4-1-fast-reasoning; 10s covers normal upstream variance while the
- * existing "give me one second" hold keeps the pause conversational (~phone
- * lookup time). Chat uses CHAT_WEB_SEARCH_TIMEOUT_MS (24s) — do not copy
- * that onto voice.
+ * unacceptable in speech). Production still soft-fails at the old 10s
+ * voice budget (kind=timeout) — OEM brochure `web_search` often needs
+ * 8–15s, and 10s with a 4.5s retry reserve starved attempt 1 at ~5.5s.
+ * Reuse the previously-shipped chat OEM budget (24s) so attempt 1 can
+ * finish before abort. Client abort is this + 1s. The existing
+ * "give me one second" hold stays; do not stretch toward 60s.
  */
-export const VOICE_WEB_SEARCH_TIMEOUT_MS = 10_000;
+export const VOICE_WEB_SEARCH_TIMEOUT_MS = 24_000;
 export const VOICE_WEB_SEARCH_MODELS = [WEB_SEARCH_MODELS[0]] as const;
 
 /**
@@ -100,10 +102,11 @@ export const WEB_SEARCH_TOOL_CALLS_PER_ATTEMPT = 1;
 export const WEB_SEARCH_MIN_RETRY_BUDGET_MS = 2_000;
 
 /**
- * Voice / default retry reserve. Keep this modest so a 10s spoken
- * lookup still spends most of the budget on attempt 1.
+ * Voice / default retry reserve. Same 8s window as chat so a 24s
+ * spoken lookup still spends ~16s on attempt 1 (OEM 8–15s) and
+ * keeps a real rephrase — 4.5s was a doomed second call.
  */
-export const WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS = 4_500;
+export const WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS = 8_000;
 
 /**
  * Chat retry reserve. 8s is enough for one real OEM rephrase after a
@@ -909,7 +912,7 @@ export type FetchWebSearchNotesOpts = {
   catalogBlock?: string;
   /**
    * Shared wall-clock budget for the whole research loop.
-   * Chat default 24s; Live Voice passes 10s. Timeouts do not stack.
+   * Chat default 36s; Live Voice passes 24s. Timeouts do not stack.
    */
   timeoutMs?: number;
   /** Model list to try. Chat default is WEB_SEARCH_MODELS; voice uses one shot. */
@@ -997,7 +1000,7 @@ export async function fetchWebSearchNotes(
   });
 }
 
-/** Existing xAI Responses web_search loop (24s chat / 10s voice, two attempts). */
+/** Existing xAI Responses web_search loop (36s chat / 24s voice, two attempts). */
 export async function fetchXaiWebSearchNotes(
   opts: FetchWebSearchNotesOpts,
 ): Promise<WebSearchNotes> {

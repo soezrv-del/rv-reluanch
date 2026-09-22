@@ -240,10 +240,10 @@ test("stripNotesForSpeech drops URLs and markdown without adding facts", () => {
   assert.doesNotMatch(spoken, /#/);
 });
 
-test("voice research budget is 10s server / 11s client — conversational hold, not 60s dead air", () => {
+test("voice research budget is 24s server / 25s client — OEM window, not 60s dead air", () => {
   const webSearch = src("webSearch.ts");
-  assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 10_000);
-  assert.equal(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS, 11_000);
+  assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 24_000);
+  assert.equal(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS, 25_000);
   assert.equal(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS, VOICE_WEB_SEARCH_TIMEOUT_MS + 1_000);
   assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
   assert.match(webSearch, /NOT the old "raise timeout to fake a pass"/);
@@ -251,6 +251,7 @@ test("voice research budget is 10s server / 11s client — conversational hold, 
   assert.match(webSearch, /give me one second/);
   assert.doesNotMatch(webSearch, /let me check that/i);
   assert.doesNotMatch(webSearch, /VOICE_WEB_SEARCH_TIMEOUT_MS = 7_000/);
+  assert.doesNotMatch(webSearch, /VOICE_WEB_SEARCH_TIMEOUT_MS = 10_000/);
 });
 
 test("client fetch timeout/abort falls back without claiming a lookup", async () => {
@@ -344,9 +345,12 @@ test("hold string is exactly give me one second — never Let me check that", ()
   assert.match(VOICE_SESSION_INTRO_INSTRUCTIONS, new RegExp(
     RV_GROK_SESSION_INTRO.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
   ));
-  assert.match(
+  assert.equal(RV_GROK_SESSION_INTRO, "I'm RvGrok");
+  assert.match(VOICE_SESSION_INTRO_INSTRUCTIONS, /I'm RvGrok/);
+  assert.doesNotMatch(VOICE_SESSION_INTRO_INSTRUCTIONS, /ask me anything/);
+  assert.doesNotMatch(
     VOICE_SESSION_INTRO_INSTRUCTIONS,
-    /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
+    /Name a year, make, and model/,
   );
   assert.equal(VOICE_RESEARCH_HOLD_ALT, "This might take a second to get that for you");
   assert.equal(isForbiddenScopeNarrow("I only focus on this coach"), true);

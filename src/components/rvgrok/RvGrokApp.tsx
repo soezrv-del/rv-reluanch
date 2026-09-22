@@ -900,12 +900,10 @@ export function RvGrokApp({
     const capture = prewarm ?? beginLiveVoiceFromUserGesture();
 
     const facts = readActiveCoach();
-    if (facts?.year && facts.make && facts.model) {
-      try {
-        await ensureCatalogLoaded();
-      } catch {
-        /* pins still ground Dream / Vision */
-      }
+    try {
+      await ensureCatalogLoaded();
+    } catch {
+      /* pins still ground Dream / Vision */
     }
     const catalogContext = buildVoiceGrounding({ facts });
 

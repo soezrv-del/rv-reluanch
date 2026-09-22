@@ -141,7 +141,8 @@ test("Live Voice session start introduces RV Grok once — not the old stall", (
   const live = readFileSync(join(root, "liveVoice.ts"), "utf8");
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   const policy = readFileSync(join(root, "speechPolicy.ts"), "utf8");
-  assert.match(
+  assert.match(policy, /RV_GROK_SESSION_INTRO = "I'm RvGrok"/);
+  assert.doesNotMatch(
     policy,
     /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
   );
