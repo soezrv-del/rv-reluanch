@@ -83,6 +83,7 @@ function buildRealtimeSessionUpdate(voiceId, speed = 1) {
         input: { format: { type: "audio/pcm", rate: 24000 } },
         output: { format: { type: "audio/pcm", rate: 24000 }, speed: clamped },
       },
+      tools: [{ type: "web_search" }],
     },
   };
 }
@@ -167,7 +168,19 @@ test("session.update uses xAI audio PCM, not OpenAI whisper-1 leftovers", () => 
   assert.equal(audio.input.format.type, "audio/pcm");
   assert.equal(audio.input.format.rate, 24000);
   assert.equal(audio.output.speed, 1.25);
+  assert.deepEqual(session.tools, [{ type: "web_search" }]);
   assert.equal(session.modalities, undefined);
   assert.equal(session.input_audio_transcription, undefined);
   assert.equal(session.input_audio_format, undefined);
+});
+
+test("liveVoice.ts session.update payload includes native web_search", () => {
+  const root = dirname(fileURLToPath(import.meta.url));
+  const live = readFileSync(join(root, "liveVoice.ts"), "utf8");
+  assert.match(live, /type: "session\.update"/);
+  assert.match(live, /tools:\s*\[\s*\{\s*type:\s*"web_search"\s*\}\s*\]/);
+  assert.match(live, /REALTIME_SESSION_TOOLS/);
+  assert.match(live, /native web_search/);
+  assert.match(live, /say so and retry once/);
+  assert.doesNotMatch(live, /input_audio_transcription/);
 });
