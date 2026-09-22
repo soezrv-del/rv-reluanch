@@ -1,4 +1,7 @@
 import { pendingMigrations } from "../../scripts/migration-plan.mjs";
+import { pgliteRuntimeSupported } from "./dbRuntime";
+
+export { pgliteRuntimeSupported } from "./dbRuntime";
 
 /** Which database backend is active. */
 export type DbSource = "neon" | "pglite";
@@ -15,17 +18,12 @@ const databaseUrl =
  * sandbox), otherwise a local embedded **PGLite** (Postgres compiled to WASM) so
  * the app has a working database even with nothing configured — the live preview
  * included. Swap in Neon later by just setting `DATABASE_URL`; no code changes.
+ *
+ * On Vercel without DATABASE_URL we still report `pglite` — but
+ * `pgliteRuntimeSupported()` is false, so we never boot WASM. Admin/seed
+ * access stays offline; getSql() throws a clear Neon hint.
  */
 export const dbSource: DbSource = databaseUrl ? "neon" : "pglite";
-
-/** Built Vercel output does not ship PGLite's wasm/data files. */
-function pgliteRuntimeSupported(): boolean {
-  try {
-    return !String(import.meta.url ?? "").includes(".vercel/output");
-  } catch {
-    return true;
-  }
-}
 
 /**
  * Minimal shared SQL surface, satisfied by both Neon and PGLite. Both the
@@ -117,7 +115,7 @@ function createNeonSql(): Promise<Sql> {
 async function createPgliteSql(): Promise<Sql> {
   if (!pgliteRuntimeSupported()) {
     throw new Error(
-      "PGLite is not bundled in the Vercel runtime. Set DATABASE_URL.",
+      "PGLite is not bundled in the Vercel runtime. Set DATABASE_URL for Neon.",
     );
   }
   // Embedded Postgres, imported on demand so it never loads on the Neon path.
@@ -241,6 +239,10 @@ export async function getPglite(): Promise<import("@electric-sql/pglite").PGlite
  */
 export function ensureDbReady(): Promise<void> {
   if (dbSource !== "pglite") return Promise.resolve();
+  // Vercel /var/task has no pglite.data. Booting here used to ENOENT, then an
+  // unhandled rejection killed the isolate (exit 128) and Production logged
+  // 403 on /api/rvgrok/token + /api/rvgrok/web-research.
+  if (!pgliteRuntimeSupported()) return Promise.resolve();
   return getSql().then(() => undefined);
 }
 

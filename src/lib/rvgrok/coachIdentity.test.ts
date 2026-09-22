@@ -374,6 +374,74 @@ test("Dutch Star is Newmar only — never Grand Design + leftover 25FW / 2020", 
   assert.doesNotMatch(ghostNote, /Tell the truth/i);
 });
 
+test("2026 Grand Design Lineage 31ZW keys Lineage Series F — not a family ghost", () => {
+  const q = "2026 Grand Design Lineage 31ZW";
+  const parsed = parseCoachFromText(q);
+  assert.equal(parsed.year, "2026");
+  assert.equal(parsed.make, "Grand Design");
+  assert.match(parsed.model, /^lineage$/i);
+  assert.equal(parsed.floorplan, "31ZW");
+
+  assert.equal(
+    resolveCatalogModel("Grand Design", "Lineage", "31ZW"),
+    "Lineage Series F",
+  );
+  assert.equal(
+    resolveCatalogModel("Grand Design", "Lineage", "31ZW5"),
+    "Lineage Series F",
+  );
+  assert.match(
+    resolveCatalogModel("Grand Design", "Lineage", "25FW"),
+    /^lineage$/i,
+    "25FW is not this Super C pin — do not invent Series M here",
+  );
+  assert.match(
+    resolveCatalogModel("Grand Design", "Lineage Series M", "31ZW"),
+    /lineage series m/i,
+    "spoken Series M stays Series M — floorplan does not steal",
+  );
+
+  const id = resolveCoachIdentity(q, null, "");
+  assert.ok(id);
+  assert.equal(id!.year, "2026");
+  assert.equal(id!.make, "Grand Design");
+  assert.equal(id!.model, "Lineage Series F");
+  assert.equal(id!.floorplan, "31ZW");
+  assert.doesNotMatch(id!.make, /newmar/i);
+  assert.doesNotMatch(id!.model, /dutch star/i);
+
+  const presence = inspectCatalogPresence(id!);
+  assert.notEqual(presence.status, "missing-series");
+  if (presence.status === "exact" || presence.status === "year-series") {
+    assert.equal(presence.model, "Lineage Series F");
+    assert.equal(presence.floorplan, "31ZW");
+  }
+  assert.doesNotMatch(formatCatalogPresenceNote(presence), /SERIES MISSING/i);
+
+  const dutch = resolveCoachIdentity("2022 Dutch Star 4369", null, "");
+  assert.ok(dutch);
+  assert.equal(dutch!.make, "Newmar");
+  assert.match(dutch!.model, /dutch star/i);
+  assert.doesNotMatch(dutch!.make, /Grand Design/i);
+});
+
+test("spoken 31W Z / 31WZ is the Lineage Super C 31ZW", () => {
+  for (const q of [
+    "2026 Grand Design Lineage 31W Z",
+    "2026 Grand Design Lineage 31 WZ",
+    "2026 Grand Design Lineage 31WZ",
+    "2026 Lineage 31W Z",
+  ]) {
+    const parsed = parseCoachFromText(q);
+    assert.match(parsed.floorplan.replace(/\s+/g, ""), /31w/i, q);
+    const id = resolveCoachIdentity(q, null, "");
+    assert.ok(id, q);
+    assert.equal(id!.make, "Grand Design", q);
+    assert.equal(id!.model, "Lineage Series F", q);
+    assert.equal(id!.floorplan, "31ZW", q);
+  }
+});
+
 test("Lineage is Grand Design — never blank make or SERIES MISSING", () => {
   const dutchFacts = {
     year: "2019",

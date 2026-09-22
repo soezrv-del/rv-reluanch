@@ -29,6 +29,7 @@ import {
   seedWebSearchCache,
   normalizeCoachTyposInAsk,
   coachLabelFromResearchAsk,
+  skipGeminiForResearchAsk,
 } from "./webSearch.ts";
 import { mayEmitLabeledEstimate } from "./estimatePolicy.ts";
 
@@ -175,6 +176,38 @@ test("successful notes cache; failures do not invent a lookup", async () => {
   assert.match(injection, /WEB SEARCH NOT AVAILABLE/);
   assert.match(injection, /do not invent/i);
   clearWebSearchCache();
+});
+
+test("sidecar HTTP 403 injects WEB SEARCH NOT AVAILABLE — the spoken Live Voice line", () => {
+  const injection = formatWebSearchInjection({
+    ok: false,
+    reason: "voice web research HTTP 403",
+    confirmed: false,
+    attempts: 2,
+    exhausted: true,
+    queries: ["2026 Lineage 31W Z"],
+    query: "2026 Lineage 31W Z",
+  });
+  assert.match(injection, /WEB SEARCH NOT AVAILABLE this turn/);
+  assert.match(injection, /voice web research HTTP 403/);
+  assert.match(injection, /Search returned nothing after a retry/);
+});
+
+test("Lineage 31ZW spec asks skip Gemini and name Series F Super C", () => {
+  const q = "2026 Grand Design Lineage 31ZW";
+  assert.equal(skipGeminiForResearchAsk(q), true);
+  assert.equal(skipGeminiForResearchAsk("2026 Lineage 31W Z"), true);
+  assert.equal(
+    skipGeminiForResearchAsk(
+      "Where is the battery disconnect on a 2005 Winnebago Adventurer?",
+    ),
+    false,
+  );
+  assert.match(coachLabelFromResearchAsk(q), /2026 Grand Design Lineage Series F 31ZW/i);
+  assert.match(coachLabelFromResearchAsk(q), /Super C/i);
+  const second = rephraseResearchQuery(q, 1, [q]);
+  assert.match(second, /Lineage Series F/i);
+  assert.match(second, /31ZW/);
 });
 
 test("abort/timeout errors stop the model loop", () => {

@@ -63,15 +63,84 @@ export function resolveCatalogMake(raw: string): string {
   return contains || raw.trim();
 }
 
-/** Best catalog model name under a make. */
-export function resolveCatalogModel(make: string, rawModel: string): string {
+/**
+ * Dated unique Lineage floorplans — Super C 31ZW / 31ZW5 are Series F only
+ * (OEM Class C brochure + RVUSA m10876). Bare "Lineage" must not stay a
+ * family ghost when the floorplan already names the series.
+ */
+const LINEAGE_UNIQUE_FLOORPLAN_SERIES: Record<string, string> = {
+  "31zw": "Lineage Series F",
+  "31zw5": "Lineage Series F",
+  // Spoken/typed swap: "31W Z" / "31WZ" is the Super C 31ZW.
+  "31wz": "Lineage Series F",
+  "31wz5": "Lineage Series F",
+};
+
+function compactFp(s: string): string {
+  return (s || "").toLowerCase().replace(/[\s-]+/g, "");
+}
+
+/** OEM code is 31ZW. "31W Z" / "31WZ" is the same Super C. */
+function canonicalizeLineageFloorplan(floorplan: string): string {
+  const n = compactFp(floorplan);
+  if (n === "31wz") return "31ZW";
+  if (n === "31wz5") return "31ZW5";
+  return floorplan;
+}
+
+function isBareLineageFamily(model: string): boolean {
+  const n = norm(model);
+  return n === "lineage" || n === "lineages";
+}
+
+/** Unique sibling series for a family + floorplan. Empty if ambiguous. */
+function uniqueFamilySeriesForFloorplan(
+  make: string,
+  rawModel: string,
+  floorplan: string,
+): string {
+  const fp = compactFp(canonicalizeLineageFloorplan(floorplan));
+  if (!fp || !isBareLineageFamily(rawModel)) return "";
+  const catalogMake = resolveCatalogMake(make || "Grand Design");
+  if (catalogMake && !/grand design/i.test(catalogMake)) return "";
+
+  const dated = LINEAGE_UNIQUE_FLOORPLAN_SERIES[fp];
+  if (dated) return dated;
+
+  const live = peekCatalog()?.RV_DATA?.[catalogMake] || {};
+  const listedFp = canonicalizeLineageFloorplan(floorplan);
+  const hits = lineageFamilyModels(catalogMake).filter((name) => {
+    if (!/^lineage\s+series\b/i.test(name)) return false;
+    const spec = live[name];
+    return (
+      floorplanListed(spec?.floorplans, listedFp) ||
+      Object.values(spec?.floorplansByYear || {}).some((list) =>
+        floorplanListed(list, listedFp),
+      )
+    );
+  });
+  return hits.length === 1 ? hits[0]! : "";
+}
+
+/** Best catalog model name under a make. Floorplan disambiguates a family. */
+export function resolveCatalogModel(
+  make: string,
+  rawModel: string,
+  floorplan = "",
+): string {
   const catalogMake = resolveCatalogMake(make);
   const live = peekCatalog()?.RV_DATA?.[catalogMake];
   const index = CATALOG_INDEX[catalogMake];
-  return matchCatalogModelName(rawModel, [
+  const matched = matchCatalogModelName(rawModel, [
     ...Object.keys(live || {}),
     ...Object.keys(index || {}),
   ]);
+  const pinned = uniqueFamilySeriesForFloorplan(
+    catalogMake,
+    rawModel || matched,
+    floorplan,
+  );
+  return pinned || matched;
 }
 
 /** Current ask has enough identity to ignore history / extraText. */
@@ -133,7 +202,10 @@ export function yearFromSameSeriesHistory(
     }
     if (
       modelsAlign(p.model, model) ||
-      modelsAlign(resolveCatalogModel(make || p.make, p.model), model)
+      modelsAlign(
+        resolveCatalogModel(make || p.make, p.model, p.floorplan),
+        model,
+      )
     ) {
       year = p.year;
     }
@@ -177,10 +249,6 @@ export type CatalogPresence =
       askedYear?: string;
     }
   | { status: "missing-series"; make: string; model: string };
-
-function compactFp(s: string): string {
-  return (s || "").toLowerCase().replace(/[\s-]+/g, "");
-}
 
 function floorplanListed(
   listed: readonly string[] | undefined,
@@ -250,11 +318,13 @@ export function inspectCatalogPresence(
   if (!make && lineageFamilyKnown("", rawModel)) {
     make = "Grand Design";
   }
-  const model = rawModel
-    ? resolveCatalogModel(make, rawModel)
-    : "";
   const year = (identity.year || "").trim();
-  const floorplan = (identity.floorplan || "").trim();
+  const floorplan = canonicalizeLineageFloorplan(
+    (identity.floorplan || "").trim(),
+  );
+  const model = rawModel
+    ? resolveCatalogModel(make, rawModel, floorplan)
+    : "";
   if (!make || !model) {
     if (lineageFamilyKnown(make, rawModel || model)) {
       const familyMake = make || "Grand Design";
@@ -372,8 +442,16 @@ export function namedCoachConflictsLock(
   }
 
   if (parsed.model) {
-    const pModel = resolveCatalogModel(parsed.make || facts.make, parsed.model);
-    const fModel = resolveCatalogModel(facts.make, facts.model);
+    const pModel = resolveCatalogModel(
+      parsed.make || facts.make,
+      parsed.model,
+      parsed.floorplan,
+    );
+    const fModel = resolveCatalogModel(
+      facts.make,
+      facts.model,
+      facts.floorplan,
+    );
     if (!modelsAlign(pModel, fModel) && !modelsAlign(parsed.model, facts.model)) {
       return true;
     }
@@ -410,11 +488,18 @@ export function lockIdentityTuple(id: CoachIdentity): CoachIdentity {
   const known =
     findKnownSeries(id.model) ||
     findKnownSeries([id.year, id.make, id.model, id.floorplan].filter(Boolean).join(" "));
-  if (!known) return id;
+  const model = known
+    ? preferSpecificKnownModel(id.model, known.model)
+    : id.model;
+  const make = known?.make ?? id.make;
+  const lineage = /lineage/i.test(model) || /lineage/i.test(id.model);
   return {
     ...id,
-    make: known.make,
-    model: preferSpecificKnownModel(id.model, known.model),
+    make,
+    model,
+    floorplan: lineage
+      ? canonicalizeLineageFloorplan(id.floorplan)
+      : id.floorplan,
   };
 }
 
@@ -427,7 +512,11 @@ function identityFromAsk(
     year: parsed.year,
     make,
     model: parsed.model
-      ? resolveCatalogModel(parsed.make || make, parsed.model)
+      ? resolveCatalogModel(
+          parsed.make || make,
+          parsed.model,
+          parsed.floorplan,
+        )
       : parsed.model,
     floorplan: parsed.floorplan,
     source,
@@ -503,14 +592,14 @@ export function resolveCoachIdentity(
     const sameModel =
       Boolean(sameFamily) &&
       (modelsAlign(
-        resolveCatalogModel(parsed.make, parsed.model),
+        resolveCatalogModel(parsed.make, parsed.model, parsed.floorplan),
         facts!.model,
       ) ||
         modelsAlign(parsed.model, facts!.model));
     return lockIdentityTuple({
       year: parsed.year,
       make: resolveCatalogMake(parsed.make),
-      model: resolveCatalogModel(parsed.make, parsed.model),
+      model: resolveCatalogModel(parsed.make, parsed.model, parsed.floorplan),
       floorplan:
         parsed.floorplan ||
         (sameModel ? facts!.floorplan || "" : ""),
@@ -524,7 +613,11 @@ export function resolveCoachIdentity(
       factsOk &&
       norm(resolveCatalogMake(parsed.make)) ===
         norm(resolveCatalogMake(facts!.make));
-    const catalogModel = resolveCatalogModel(parsed.make, parsed.model);
+    const catalogModel = resolveCatalogModel(
+      parsed.make,
+      parsed.model,
+      parsed.floorplan,
+    );
     const sameModel =
       Boolean(sameMake) &&
       (modelsAlign(catalogModel, facts!.model) ||

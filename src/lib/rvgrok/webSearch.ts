@@ -29,10 +29,15 @@ import {
   formatCatalogPinWinsSearchMiss,
   LOW_CONFIDENCE_EST_RULE,
 } from "./estimatePolicy.ts";
+import {
+  resolveCatalogMake,
+  resolveCatalogModel,
+} from "./coachIdentity.ts";
 import { parseCoachFromText } from "./parseCoach.ts";
 import {
   looksLikeLiveResearchQuestion,
   looksLikeMarketValueQuestion,
+  looksLikeNamedCoachProductQuestion,
   looksLikeRepairQuestion,
   looksLikeSpecQuestion,
   normalizeAskText,
@@ -281,6 +286,20 @@ const FIELD_PATTERNS: Array<[QueriedResearchField, RegExp]> = [
   ],
 ];
 
+/** Spec / YMM → xAI web_search only. Repair / “where is” may still use Gemini. */
+export function skipGeminiForResearchAsk(query: string): boolean {
+  const t = normalizeAskText(query);
+  if (looksLikeRepairQuestion(t)) return false;
+  // "Where is the battery disconnect on a 2005 Adventurer" is location, not a spec sheet.
+  if (
+    /\b(where(?:'s|\s+is)|how\s+do\s+i|how\s+to)\b/i.test(t) &&
+    !looksLikeSpecQuestion(t)
+  ) {
+    return false;
+  }
+  return looksLikeSpecQuestion(t) || looksLikeNamedCoachProductQuestion(t);
+}
+
 const FIELD_LABEL: Record<QueriedResearchField, string> = {
   gvwr: "GVWR",
   uvw: "UVW",
@@ -419,9 +438,17 @@ export function normalizeCoachTyposInAsk(query: string): string {
 /** Year / make / model / floorplan from the ask, after typo normalize. */
 export function coachLabelFromResearchAsk(query: string): string {
   const parsed = parseCoachFromText(normalizeCoachTyposInAsk(query));
-  return [parsed.year, parsed.make, parsed.model, parsed.floorplan]
+  const make = parsed.make ? resolveCatalogMake(parsed.make) : "";
+  const model = parsed.model
+    ? resolveCatalogModel(make || parsed.make, parsed.model, parsed.floorplan)
+    : parsed.model;
+  const parts = [parsed.year, make || parsed.make, model, parsed.floorplan]
     .filter(Boolean)
     .join(" ");
+  if (/lineage series f/i.test(model || "") && !/super\s*c/i.test(parts)) {
+    return `${parts} Super C`;
+  }
+  return parts;
 }
 
 /**
@@ -919,10 +946,12 @@ export async function fetchWebSearchNotes(
 
   const profile = opts.profile ?? "chat";
   const budgetMs = opts.timeoutMs ?? CHAT_WEB_SEARCH_TIMEOUT_MS;
-  const provider = resolveResearchProvider({
-    provider: opts.researchProvider,
-    geminiApiKey: opts.geminiApiKey,
-  });
+  const provider = skipGeminiForResearchAsk(originalQuery)
+    ? "xai"
+    : resolveResearchProvider({
+        provider: opts.researchProvider,
+        geminiApiKey: opts.geminiApiKey,
+      });
   const started = Date.now();
 
   if (provider === "gemini") {
