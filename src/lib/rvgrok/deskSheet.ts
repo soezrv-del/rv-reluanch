@@ -314,7 +314,9 @@ export function buildDeskSheetPayload(
     .filter(Boolean)
     .join(" ");
 
-Wait, I need to be more careful. I was about to insert a function in the middle of buildDeskSheetPayload. Let me read the current function and insert fillGapRowsFromOemTanks as a standalone function before buildDeskSheetPayload, then call it.
+  const figures = extractChatSpecFigures(chatSpecBlock);
+  const brochure = resolveFactsBrochure(identity);
+  const catalogRows: DeskSheetRow[] = brochure
     ? payloadFromFactsBrochure(identity, brochure, specs)
     : (() => {
         const gvwr = lbsLabel(publishedWeightLbs(identity, "gvwr"));

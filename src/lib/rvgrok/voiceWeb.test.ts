@@ -240,10 +240,10 @@ test("stripNotesForSpeech drops URLs and markdown without adding facts", () => {
   assert.doesNotMatch(spoken, /#/);
 });
 
-test("voice research budget is 10s server / 11s client — conversational hold, not 60s dead air", () => {
+test("voice research budget is 24s server / 25s client — OEM window, not 60s dead air", () => {
   const webSearch = src("webSearch.ts");
-  assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 10_000);
-  assert.equal(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS, 11_000);
+  assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 24_000);
+  assert.equal(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS, 25_000);
   assert.equal(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS, VOICE_WEB_SEARCH_TIMEOUT_MS + 1_000);
   assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
   assert.match(webSearch, /NOT the old "raise timeout to fake a pass"/);
@@ -251,6 +251,7 @@ test("voice research budget is 10s server / 11s client — conversational hold, 
   assert.match(webSearch, /give me one second/);
   assert.doesNotMatch(webSearch, /let me check that/i);
   assert.doesNotMatch(webSearch, /VOICE_WEB_SEARCH_TIMEOUT_MS = 7_000/);
+  assert.doesNotMatch(webSearch, /VOICE_WEB_SEARCH_TIMEOUT_MS = 10_000/);
 });
 
 test("client fetch timeout/abort falls back without claiming a lookup", async () => {
