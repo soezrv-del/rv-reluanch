@@ -2391,6 +2391,19 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   ...gvwrPins("winnebago", "minnie winnie", 2025, 2025, ["25B", "26T", "31H", "31K"], 14500),
   // Winnebago View — 2025 View//Navion brochure: 24D / 24J / 24V = 11,030. MY26 24R/24T print 11,030 vs 12,125 — leave GAP.
   ...gvwrPins("winnebago", "view", 2025, 2025, ["24D", "24J", "24V"], 11030),
+  // Winnebago View / Navion MY27 — View-Navion-27-Brochure.pdf weights & measures
+  // 24R / 24T / 24D GVWR 12,125. Prior 2025 View 24D is 11,030 — do NOT extend yearMax.
+  ...gvwrPins("winnebago", "view", 2027, 2027, ["24D", "24R", "24T"], 12125),
+  ...gvwrPins("winnebago", "navion", 2027, 2027, ["24D", "24R", "24T"], 12125),
+  // Winnebago EKKO MY27 — Operator 2027 27Ekko622A.pdf Specifications and Capacities 22A GVWR 11,000.
+  ...gvwrPins("winnebago", "ekko", 2027, 2027, ["22A"], 11000),
+  // Winnebago Elora MY27 — Operator 2027 27Elora.pdf Specifications and Capacities 19DC GVWR 9,350.
+  ...gvwrPins("winnebago", "elora", 2027, 2027, ["19DC"], 9350),
+  // Winnebago Resa MY27 — Operator 2027 27Resa.pdf Specifications and Capacities 19DC GVWR 9,350.
+  ...gvwrPins("winnebago", "resa", 2027, 2027, ["19DC"], 9350),
+  // Winnebago ARKA MY27 — Operator 2027 27Arka-2702260514.pdf Specifications and Capacities 20Z
+  // GVWR 19,500 (RAM 5500 diesel). No 2026 fill.
+  ...gvwrPins("winnebago", "arka", 2027, 2027, ["20Z"], 19500),
   // Forest River FR3 — 2026 FR3 OEM floorplan pages (31DS is the 18k F53; others 22k).
   ...gvwrPins("forest river", "fr3", 2025, 2026, ["31DS"], 18000),
   ...gvwrPins("forest river", "fr3", 2025, 2026, ["30DS", "34DS", "35DS"], 22000),
