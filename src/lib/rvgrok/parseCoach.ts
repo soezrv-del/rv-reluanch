@@ -393,7 +393,7 @@ function formatSeriesModel(series: { family: string; code: string }): string {
 export const SERIES_MAKE_HINTS: ReadonlyArray<{
   re: RegExp;
   make: string;
-  model: string;
+  model: string | ((m: RegExpExecArray) => string);
 }> = [
   { re: /\bbay\s+star\s+sports?\b/i, make: "Newmar", model: "Bay Star Sport" },
   { re: /\bmountain\s+aires?\b/i, make: "Newmar", model: "Mountain Aire" },
@@ -409,7 +409,32 @@ export const SERIES_MAKE_HINTS: ReadonlyArray<{
   { re: /\bbay\s+stars?\b/i, make: "Newmar", model: "Bay Star" },
   // Brandless / typo: "2020 pheaton 40ih" → Tiffin Phaeton (ea/ae swap).
   { re: /\bph[ae]{2}tons?\b/i, make: "Tiffin", model: "Phaeton" },
+  // Grand Design Lineage is a real family (Series E/F/M/VT/VP). Bare
+  // "Lineage" locks the make — never a ghost / SERIES MISSING.
+  {
+    re: /\blineage\s+series\s+(e|f|m|vt|vp)\b/i,
+    make: "Grand Design",
+    model: (m) => `Lineage Series ${String(m[1] || "").toUpperCase()}`,
+  },
+  {
+    re: /\blineage\s+(e|f|m|vt|vp)\s+series\b/i,
+    make: "Grand Design",
+    model: (m) => `Lineage Series ${String(m[1] || "").toUpperCase()}`,
+  },
+  {
+    re: /\blineage\s+(e|f|m|vt|vp)\b/i,
+    make: "Grand Design",
+    model: (m) => `Lineage Series ${String(m[1] || "").toUpperCase()}`,
+  },
+  { re: /\blineages?\b/i, make: "Grand Design", model: "Lineage" },
 ];
+
+function hintModel(
+  row: (typeof SERIES_MAKE_HINTS)[number],
+  m: RegExpExecArray,
+): string {
+  return typeof row.model === "function" ? row.model(m) : row.model;
+}
 
 /** Last named known series in the ask (Ventana, then Dutch Star → Dutch Star). */
 export function findKnownSeries(
@@ -428,7 +453,12 @@ export function findKnownSeries(
         m.index > best.index ||
         (m.index === best.index && len > best.len)
       ) {
-        best = { make: row.make, model: row.model, index: m.index, len };
+        best = {
+          make: row.make,
+          model: hintModel(row, m),
+          index: m.index,
+          len,
+        };
       }
     }
   }
@@ -539,6 +569,16 @@ export function matchCatalogModelName(
     if (hits.length > 1) {
       return hits.find((h) => /\bseries\b/i.test(h)) || hits[0]!;
     }
+  }
+
+  // Bare family ("Lineage") hits Lineage Series E/F/M/VT/VP — do not
+  // substitute a letter series. Keep the family name.
+  const familyHits = list.filter((name) => {
+    const nn = normName(name);
+    return nn === n || nn.startsWith(`${n} `);
+  });
+  if (familyHits.length > 1 && !spokenSeries?.code) {
+    return rawModel.trim();
   }
 
   let best = rawModel.trim();
@@ -691,8 +731,13 @@ export function normalizeCoachAsk(text: string): NormalizedCoachAsk {
     if (!make || normName(make) !== normName(known.make)) {
       make = known.make;
     }
+    const sameLineageFamily =
+      /\blineage\b/i.test(model) && /\blineage\b/i.test(known.model);
     if (!model) {
       model = known.model;
+    } else if (sameLineageFamily) {
+      // Keep spoken "Lineage M" / "Lineage M series" — catalog resolve
+      // maps that onto Lineage Series M. Do not rewrite the parse.
     } else if (
       known.model &&
       !normName(model).includes(normName(known.model)) &&

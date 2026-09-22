@@ -25,6 +25,7 @@ import {
   stripDuplicateMarkdownSpecSheet,
   withDeskSheetSpeechRule,
 } from "./deskSheet.ts";
+import { extractChatSpecFigures } from "./chatSpecBlock.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -229,6 +230,59 @@ test("desk sheet still renders with GAP rows when powertrain is thin", () => {
   );
 });
 
+test("last assistant spec block paints GVWR/UVW/fuel — never Confirm brochure over a spoken number", () => {
+  const q = "2019 Newmar Dutch Star 4369";
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  const chat = `2019 Newmar Dutch Star 4369 — Class A diesel. Live notes put GVWR at 51,000 pounds, UVW around 40,000 to 40,700, 150-gallon fuel tank, 15,000-pound tow.`;
+  const figs = extractChatSpecFigures(chat);
+  assert.match(figs.gvwr || "", /51,000/);
+
+  const before = resolveDeskSheet({ query: q, identity, specs: null });
+  assert.ok(before);
+  const gvwrBefore = before!.rows.find((r) => r.label === "GVWR");
+  assert.ok(
+    gvwrBefore?.gap || /confirm brochure|gap/i.test(gvwrBefore?.value || ""),
+    "catalog pin is missing — desk starts empty",
+  );
+
+  const after = resolveDeskSheet({
+    query: q,
+    identity,
+    specs: null,
+    chatSpecBlock: chat,
+  });
+  assert.ok(after);
+  const val = (label: string) =>
+    after!.rows.find((r) => r.label === label)?.value;
+  const gap = (label: string) =>
+    after!.rows.find((r) => r.label === label)?.gap;
+  assert.equal(gap("GVWR"), false);
+  assert.match(val("GVWR") || "", /51,000/);
+  assert.doesNotMatch(val("GVWR") || "", /Confirm brochure/i);
+  assert.match(val("UVW") || "", /40,000/);
+  assert.equal(val("Fuel capacity"), "150 gal");
+  assert.doesNotMatch(val("Fuel capacity") || "", /100/);
+  assert.doesNotMatch(after!.presenceNote, /SERIES MISSING/i);
+  assert.doesNotMatch(after!.presenceNote, /Say the series is missing/i);
+  assert.match(src(root, "deskSheet.ts"), /chatSpecBlock/);
+  assert.match(src(root, "chatSpecBlock.ts"), /last assistant/i);
+});
+
+test("no chat spec numbers → do not invent over a catalog miss", () => {
+  const id = {
+    year: "2022",
+    make: "Newmar",
+    model: "Dutch Star",
+    floorplan: "4369",
+    source: "message" as const,
+  };
+  const sheet = buildDeskSheetPayload(id, null, "What do you want to know next?");
+  const gvwr = sheet.rows.find((r) => r.label === "GVWR");
+  assert.ok(gvwr?.gap || /gap|confirm brochure/i.test(gvwr?.value || ""));
+  assert.doesNotMatch(gvwr?.value || "", /51,000/);
+});
+
 test("2025 Entegra Aspire 44R pins GVWR 49000 — desk and speech never GAP it; UVW stays GAP", () => {
   assert.equal(findOemGvwrLbs("2025", "Entegra Coach", "Aspire", "44R"), 49000);
   assert.equal(findOemUvwLbs("2025", "Entegra Coach", "Aspire", "44R"), null);
@@ -382,6 +436,7 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(app, /onDeskSheet/);
   assert.match(app, /DeskSpecSheet/);
   assert.match(app, /liveDeskSheet/);
+  assert.match(app, /chatSpecBlock/);
   assert.match(app, /deskRevealAfterIndex/);
   assert.match(app, /data-rvgrok-desk-after-reply/);
   assert.match(src(root, "deskSheetPolicy.ts"), /queryNamesYearMakeModel/);

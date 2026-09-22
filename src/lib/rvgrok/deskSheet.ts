@@ -34,6 +34,11 @@ import {
   formatLockedWeightsBlock,
   NO_DUPLICATE_MARKDOWN_SHEET,
 } from "./lockedWeights.ts";
+import {
+  chatSpecHasNumber,
+  extractChatSpecFigures,
+  paintChatSpecOntoRows,
+} from "./chatSpecBlock.ts";
 
 export {
   DESK_SHEET_FORBIDDEN_LINE,
@@ -253,15 +258,17 @@ function publishedWeightLbs(
 export function buildDeskSheetPayload(
   identity: CoachIdentity,
   specs: SheetSpecs,
+  chatSpecBlock = "",
 ): DeskSheetPayload {
   const presence = inspectCatalogPresence(identity);
-  const presenceNote = formatCatalogPresenceNote(presence);
+  let presenceNote = formatCatalogPresenceNote(presence);
   const title = [identity.year, identity.make, identity.model, identity.floorplan]
     .filter(Boolean)
     .join(" ");
 
+  const figures = extractChatSpecFigures(chatSpecBlock);
   const brochure = resolveFactsBrochure(identity);
-  const rows: DeskSheetRow[] = brochure
+  const catalogRows: DeskSheetRow[] = brochure
     ? payloadFromFactsBrochure(identity, brochure, specs)
     : (() => {
         const gvwr = lbsLabel(publishedWeightLbs(identity, "gvwr"));
@@ -275,10 +282,17 @@ export function buildDeskSheetPayload(
           rowFromField("Chassis", specs?.chassis),
           motorRow("Transmission", specs?.transmission, towable),
           rowFromField("Fuel", specs?.fuelType),
+          { label: "Fuel capacity", value: "GAP", gap: true },
           { label: "GVWR", value: gvwr.value, gap: gvwr.gap },
           { label: "UVW", value: uvw.value, gap: uvw.gap },
         ];
       })();
+
+  // Chat reply is source of truth. Catalog is cache. Empty only if both miss.
+  const rows = paintChatSpecOntoRows(catalogRows, figures);
+  if (chatSpecHasNumber(figures) && /SERIES MISSING/i.test(presenceNote)) {
+    presenceNote = "";
+  }
 
   const gaps = [
     ...rows.filter((r) => r.gap).map((r) => r.label),
@@ -303,8 +317,11 @@ export function resolveDeskSheet(opts: {
   identity: CoachIdentity | null | undefined;
   specs: SheetSpecs;
   spokenText?: string;
+  /** Last assistant spec block — desk paints numbers from this reply only. */
+  chatSpecBlock?: string;
 }): DeskSheetPayload | null {
   const { query, specs, spokenText } = opts;
+  const specBlock = opts.chatSpecBlock || spokenText || "";
   const identity =
     opts.identity ||
     (queryNamesYearMakeModel(query)
@@ -315,7 +332,7 @@ export function resolveDeskSheet(opts: {
     shouldMountDeskSheet(query, identity) ||
     claimsDeskSpecSheet(spokenText || "")
   ) {
-    return buildDeskSheetPayload(identity, specs);
+    return buildDeskSheetPayload(identity, specs, specBlock);
   }
   return null;
 }

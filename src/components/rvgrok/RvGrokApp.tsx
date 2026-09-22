@@ -656,6 +656,18 @@ export function RvGrokApp({
             ? "Agent completed research. No summary generated."
             : "Unable to generate a response. Please try again.");
 
+        // Chat reply is source of truth — remount desk from the spec block.
+        const paintedDesk = resolveDeskSheet({
+          query: messageText,
+          identity: grounded.identity,
+          specs: grounded.specs,
+          spokenText: finalContent,
+          chatSpecBlock: finalContent,
+        });
+        if (paintedDesk) {
+          setLiveDeskSheet(paintedDesk);
+        }
+
         setMessages((prev) => {
           const updated = prev.map((m) =>
             m.id === assistantMsgId
@@ -667,6 +679,7 @@ export function RvGrokApp({
                   agentSteps: [...liveSteps],
                   generatedImages: [...liveImages],
                   unverified,
+                  deskSheet: paintedDesk || m.deskSheet,
                 }
               : m,
           );

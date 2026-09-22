@@ -191,6 +191,53 @@ function floorplanListed(
   return listed.some((fp) => compactFp(fp) === want);
 }
 
+const PRESENCE_COACHING_RE =
+  /\s*(?:Say the series is missing\.?|Do not substitute[^.]*\.?|Tell the truth[^.]*\.?|\(do not fill in a gap\)\.?)+/gi;
+
+/** Desk banner — honesty label only, never injected coaching copy. */
+export function sanitizePresenceNote(note: string): string {
+  return (note || "")
+    .replace(PRESENCE_COACHING_RE, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function lineageFamilyModels(make: string): string[] {
+  const catalogMake = resolveCatalogMake(make || "Grand Design");
+  const live = peekCatalog()?.RV_DATA?.[catalogMake] || {};
+  const index = CATALOG_INDEX[catalogMake] || {};
+  return [
+    ...new Set([...Object.keys(live), ...Object.keys(index)]),
+  ].filter((n) => /^lineage\b/i.test(n));
+}
+
+/** Grand Design Lineage is a real family even without a Series letter. */
+function lineageFamilyKnown(make: string, model: string): boolean {
+  if (!/lineage/i.test(model || "")) return false;
+  const catalogMake = resolveCatalogMake(make || "Grand Design");
+  if (catalogMake && !/grand design/i.test(catalogMake)) return false;
+  return lineageFamilyModels(catalogMake).length > 0;
+}
+
+function lineageFamilyYears(make: string): number[] {
+  const catalogMake = resolveCatalogMake(make || "Grand Design");
+  const live = peekCatalog()?.RV_DATA?.[catalogMake];
+  const index = CATALOG_INDEX[catalogMake] || {};
+  const years: number[] = [];
+  for (const name of lineageFamilyModels(catalogMake)) {
+    years.push(...(index[name]?.years || []));
+    const byYear = live?.[name]?.floorplansByYear;
+    if (byYear) {
+      years.push(
+        ...Object.keys(byYear).map((y) => parseInt(y, 10)),
+      );
+    }
+  }
+  return [...new Set(years.filter((y) => Number.isFinite(y)))].sort(
+    (a, b) => a - b,
+  );
+}
+
 /**
  * Honest catalog presence — never substitute a sibling series because
  * a floorplan code collides (4369 on Ventana and Dutch Star).
@@ -198,13 +245,34 @@ function floorplanListed(
 export function inspectCatalogPresence(
   identity: Pick<CoachIdentity, "year" | "make" | "model" | "floorplan">,
 ): CatalogPresence {
-  const make = resolveCatalogMake(identity.make || "");
-  const model = identity.model
-    ? resolveCatalogModel(make, identity.model)
+  const rawModel = (identity.model || "").trim();
+  let make = resolveCatalogMake(identity.make || "");
+  if (!make && lineageFamilyKnown("", rawModel)) {
+    make = "Grand Design";
+  }
+  const model = rawModel
+    ? resolveCatalogModel(make, rawModel)
     : "";
   const year = (identity.year || "").trim();
   const floorplan = (identity.floorplan || "").trim();
   if (!make || !model) {
+    if (lineageFamilyKnown(make, rawModel || model)) {
+      const familyMake = make || "Grand Design";
+      const familyModel = rawModel || model || "Lineage";
+      const familyYears = lineageFamilyYears(familyMake);
+      if (year) {
+        return {
+          status: "year-series",
+          year,
+          make: familyMake,
+          model: familyModel,
+          floorplan,
+        };
+      }
+      return familyYears.length
+        ? { status: "series", make: familyMake, model: familyModel, years: familyYears }
+        : { status: "missing-year", make: familyMake, model: familyModel, floorplan };
+    }
     return { status: "missing-series", make: identity.make || "", model };
   }
 
@@ -218,6 +286,15 @@ export function inspectCatalogPresence(
   const seriesKnown = Boolean(live || index);
 
   if (!seriesKnown) {
+    if (lineageFamilyKnown(make, rawModel || model)) {
+      const years = lineageFamilyYears(make);
+      if (!year) {
+        return years.length
+          ? { status: "series", make, model: rawModel || model, years }
+          : { status: "missing-year", make, model: rawModel || model, floorplan };
+      }
+      return { status: "year-series", year, make, model: rawModel || model, floorplan };
+    }
     return { status: "missing-series", make, model };
   }
   if (!year) {
@@ -250,22 +327,26 @@ export function inspectCatalogPresence(
 }
 
 export function formatCatalogPresenceNote(presence: CatalogPresence): string {
+  return sanitizePresenceNote(formatCatalogPresenceNoteRaw(presence));
+}
+
+function formatCatalogPresenceNoteRaw(presence: CatalogPresence): string {
   switch (presence.status) {
     case "exact":
       return "";
     case "year-series":
       return "";
     case "floorplan-gap":
-      return `FLOORPLAN GAP — ${presence.year} ${presence.make} ${presence.model} is in the catalog; ${presence.floorplan} is not listed for that year. Say the floorplan is unverified. Do not substitute a sibling series that shares the code.`;
+      return `FLOORPLAN GAP — ${presence.year} ${presence.make} ${presence.model} is in the catalog; ${presence.floorplan} is not listed for that year.`;
     case "series":
-      return `YEAR MISSING — ${presence.make} ${presence.model} is in the catalog. Ask which year. Do not substitute a sibling series.`;
+      return `YEAR MISSING — ${presence.make} ${presence.model} is in the catalog.`;
     case "missing-year":
       if (presence.askedYear) {
-        return `YEAR GAP — ${presence.askedYear} ${presence.make} ${presence.model} is not a catalog year for that series. Do not say the series is missing. Do not substitute a sibling series.`;
+        return `YEAR GAP — ${presence.askedYear} ${presence.make} ${presence.model} is not a catalog year for that series.`;
       }
       return presence.floorplan
-        ? `YEAR MISSING — ${presence.make} ${presence.model} ${presence.floorplan} needs a model year. Do not say the series is missing. Do not substitute a sibling series.`
-        : `YEAR MISSING — ${presence.make} ${presence.model} is a known series. Ask which year. Do not substitute a sibling series.`;
+        ? `YEAR MISSING — ${presence.make} ${presence.model} ${presence.floorplan} needs a model year.`
+        : `YEAR MISSING — ${presence.make} ${presence.model} is a known series.`;
     case "missing-series":
       return `SERIES MISSING — ${[presence.make, presence.model].filter(Boolean).join(" ") || "that series"} is not in the verified catalog.`;
     default:
@@ -306,8 +387,24 @@ export function namedCoachConflictsLock(
 }
 
 /**
+ * Keep "Lineage Series M" when the hint only locked the family "Lineage".
+ * Dutch Star / Ventana stay the unique series name.
+ */
+function preferSpecificKnownModel(current: string, known: string): string {
+  const c = norm(current);
+  const k = norm(known);
+  if (!c) return known;
+  if (!k) return current;
+  if (c === k) return known;
+  if (c.includes(k) && c.length > k.length) return current.trim();
+  if (k.includes(c) && k.length > c.length) return known;
+  return known;
+}
+
+/**
  * Known series is a single tuple. Dutch Star → Newmar only — never keep a
  * leftover Grand Design (or any other) make on that model.
+ * Lineage → Grand Design — never blank the make or treat the family as a ghost.
  */
 export function lockIdentityTuple(id: CoachIdentity): CoachIdentity {
   const known =
@@ -317,7 +414,7 @@ export function lockIdentityTuple(id: CoachIdentity): CoachIdentity {
   return {
     ...id,
     make: known.make,
-    model: known.model,
+    model: preferSpecificKnownModel(id.model, known.model),
   };
 }
 
