@@ -26,7 +26,7 @@ import {
 } from "./catalogHonesty.ts";
 import type { RVSpec } from "./rvTypes.ts";
 import { RV_DATA } from "./rvData.ts";
-import { findOemGvwrLbs } from "./floorplanSpecs.ts";
+import { findOemFloorplanSpec, findOemGvwrLbs } from "./floorplanSpecs.ts";
 import { getMockReviews, reviewMentionsModel } from "./rvReviews.ts";
 import { rankRvVideos } from "./rvVideos.ts";
 
@@ -513,6 +513,27 @@ test("Audit E 2027 brochure path: Forest River Cardinal pins; 41DUB GAP", () => 
 
   const fr3 = factsFor("2026", "Forest River", "FR3", "31DS");
   assert.notEqual(fr3.brochure.gvwrLbs, 12188);
+});
+
+test("Audit E 2027 brochure path: Jayco Seneca Super C pins; XT GAP", () => {
+  const j = factsFor("2027", "Jayco", "Seneca Super C", "33J");
+  const k = factsFor("2027", "Jayco", "Seneca Super C", "37K");
+  assert.equal(j.brochure.gvwrLbs, 31000);
+  assert.equal(k.brochure.gvwrLbs, 31000);
+  assert.equal(j.brochure.uvwLbs, null);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Super C", "33J"), 31000);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Super C", "37K"), 31000);
+  assert.equal(findOemFloorplanSpec("2027", "Jayco", "Seneca Super C", "33J")?.gvwrLbs, 31000);
+  assert.equal(findOemFloorplanSpec("2027", "Jayco", "Seneca Super C", "33J")?.uvwLbs, undefined);
+
+  const xt = factsFor("2027", "Jayco", "Seneca XT", "32U");
+  assert.equal(xt.brochure.gvwrLbs, null);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca XT", "32U"), null);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca XT", "35L"), null);
+
+  // New GVWR pins do not stamp Prestige (no 2027 Prestige table).
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Prestige", "37K"), null);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Prestige", "33J"), null);
 });
 
 test("Lineage Series F: no series 22k stamp; 31ZW / 31ZW5 year-bands stay", () => {

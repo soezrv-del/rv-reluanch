@@ -781,6 +781,41 @@ test("Audit E 2027 OEM GVWR pins: Forest River Cardinal (printed FPs only)", () 
   assert.equal(findOemGvwrLbs("2027", "Forest River", "Cardinal Luxury", "32CHILL"), null);
 });
 
+test("Audit E 2027 OEM GVWR pins: Jayco Seneca Super C (printed FPs only)", () => {
+  // 2027 Jayco Seneca brochure (Printed 8/26 ©2026 Jayco 2033094).
+  // 33J / 37K / 37L / 37M all print GVWR 31,000. UVW not printed.
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Super C", "33J"), 31000);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Super C", "37K"), 31000);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Super C", "37L"), 31000);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Super C", "37M"), 31000);
+  // Catalog Super C alias.
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca", "33J"), 31000);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca", "37K"), 31000);
+  // Isolation — Seneca XT / Prestige / 2026 stay GAP.
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca XT", "32U"), null);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca XT", "35L"), null);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca XT", "33J"), null);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Prestige", "37K"), null);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Prestige", "33J"), null);
+  assert.equal(findOemGvwrLbs("2026", "Jayco", "Seneca Super C", "33J"), null);
+  assert.equal(findOemGvwrLbs("2026", "Jayco", "Seneca Super C", "37K"), null);
+
+  const j = findOemFloorplanSpec("2027", "Jayco", "Seneca Super C", "33J");
+  assert.ok(j);
+  assert.equal(j?.gvwrLbs, 31000);
+  assert.equal(j?.lengthDisplay, `34' 2"`);
+  assert.equal(j?.overallLengthIn, 34 * 12 + 2);
+  assert.equal(j?.exteriorHeightIn, 13 * 12 + 4);
+  assert.equal(j?.exteriorWidthIn, 101);
+  assert.equal(j?.interiorHeightIn, 84);
+  assert.equal(j?.freshWater, 72);
+  assert.equal(j?.uvwLbs, undefined);
+  assert.equal(findOemFloorplanSpec("2026", "Jayco", "Seneca Super C", "33J"), null);
+  assert.equal(findOemFloorplanSpec("2027", "Jayco", "Seneca XT", "33J"), null);
+  assert.equal(findOemFloorplanSpec("2027", "Jayco", "Seneca XT", "32U"), null);
+  assert.equal(findOemFloorplanSpec("2027", "Jayco", "Seneca Prestige", "33J"), null);
+});
+
 test("Thor MY27 OEM GVWR pins lock dated brochure / OEM singles (Catalog Audit F)", () => {
   assert.equal(findOemGvwrLbs("2027", "Thor", "Hurricane", "35A"), 22000);
   assert.equal(findOemGvwrLbs("2027", "Thor", "Windsport", "35A"), 22000);

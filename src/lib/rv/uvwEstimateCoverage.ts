@@ -39,6 +39,12 @@ export function siblingBlocked(modelIncludes: string, modelNorm: string): boolea
   const md = modelIncludes;
   if (md === "vision" && (modelNorm.includes("xl") || modelNorm.includes("se"))) return true;
   if (md === "precept" && modelNorm.includes("prestige")) return true;
+  if (
+    (md === "seneca" || md === "seneca super c") &&
+    (modelNorm.includes("xt") || modelNorm.includes("prestige"))
+  ) {
+    return true;
+  }
   if (md === "alante" && modelNorm.includes("se") && !md.includes("se")) return true;
   if (md === "redhawk" && modelNorm.includes("se")) return true;
   if (md === "melbourne" && modelNorm.includes("prestige")) return true;

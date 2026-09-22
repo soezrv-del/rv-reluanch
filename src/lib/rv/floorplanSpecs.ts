@@ -1599,6 +1599,27 @@ const OEM_FLOORPLAN_ROWS: Array<{
     },
   },
   // ── Jayco Seneca Super C ───────────────────────────────────────────────
+  // 33J is MY27-new (do not copy backward). 2027 Jayco Seneca brochure
+  // (Printed 8/26 ©2026 Jayco 2033094) prints GVWR/GCWR — not UVW.
+  {
+    makeIncludes: "jayco",
+    modelIncludes: "seneca",
+    yearMin: 2027,
+    yearMax: 2027,
+    floorplan: "33J",
+    spec: {
+      lengthDisplay: `34' 2"`,
+      overallLengthIn: 34 * 12 + 2,
+      exteriorHeightIn: 13 * 12 + 4,
+      exteriorWidthIn: 101,
+      interiorHeightIn: 84,
+      gvwrLbs: 31000,
+      hitchLbs: 12000,
+      freshWater: 72,
+      note: "Seneca Super C 33J · WB 238\" · GCWR 43,000 · 2027 Jayco Seneca brochure (Printed 8/26). UVW not printed — do not invent. Not Seneca XT / not Seneca Prestige.",
+      source: "2027 Jayco Seneca brochure (Printed 8/26 ©2026 Jayco 2033094)",
+    },
+  },
   {
     makeIncludes: "jayco",
     modelIncludes: "seneca",
@@ -1970,6 +1991,22 @@ export function findOemFloorplanSpec(
     ) {
       continue;
     }
+    // Bare "seneca" Super C rows must not fill Seneca XT (32U/35L).
+    if (
+      row.modelIncludes === "seneca" &&
+      md.includes("xt") &&
+      !row.modelIncludes.includes("xt")
+    ) {
+      continue;
+    }
+    // 33J is Seneca Super C MY27 only — Prestige catalog has no 33J.
+    if (
+      row.modelIncludes === "seneca" &&
+      row.floorplan.toUpperCase() === "33J" &&
+      md.includes("prestige")
+    ) {
+      continue;
+    }
     if (
       row.modelIncludes === "cougar" &&
       (md.includes("half") || md.includes("5th") || md.includes("fifth")) &&
@@ -2214,6 +2251,13 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   // Jayco Granite Ridge — 2026 Granite Ridge brochure: 22T Transit 11,000; 23S Sprinter 11,030.
   ...gvwrPins("jayco", "granite ridge", 2026, 2026, ["22T"], 11000),
   ...gvwrPins("jayco", "granite ridge", 2026, 2026, ["23S"], 11030),
+  // Jayco Seneca Super C — 2027 Jayco Seneca brochure (Printed 8/26 ©2026 Jayco 2033094).
+  // 33J / 37K / 37L / 37M all print GVWR 31,000. UVW not printed — do not invent.
+  // "seneca super c" is the 2027 catalog key; "seneca" covers the Super C alias.
+  // modelPinBlocked keeps both off Seneca XT (32U/35L) and Seneca Prestige
+  // (this card is Seneca Super C; Prestige has no 33J and no matching Prestige table).
+  ...gvwrPins("jayco", "seneca super c", 2027, 2027, ["33J", "37K", "37L", "37M"], 31000),
+  ...gvwrPins("jayco", "seneca", 2027, 2027, ["33J", "37K", "37L", "37M"], 31000),
   // American Coach American Tradition — 2021 Tradition brochure + later reprint table.
   // 42Q/42V = 47,000; 37S = 41,000. Catalog weightRange mid for 42' is ~39.5–44k — wrong.
   ...gvwrPins("american coach", "american tradition", 2021, 2026, ["42Q", "42V"], 47000),
@@ -3045,6 +3089,16 @@ function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
   if (
     modelIncludes === "precept" &&
     modelNorm.includes("prestige") &&
+    !modelIncludes.includes("prestige")
+  ) {
+    return true;
+  }
+  // Bare "seneca" / "seneca super c" pins must not stamp Seneca XT or Prestige.
+  // Prestige shares 37K/37L/37M but this 2027 card is Seneca Super C (no Prestige table).
+  if (
+    (modelIncludes === "seneca" || modelIncludes === "seneca super c") &&
+    (modelNorm.includes("xt") || modelNorm.includes("prestige")) &&
+    !modelIncludes.includes("xt") &&
     !modelIncludes.includes("prestige")
   ) {
     return true;
