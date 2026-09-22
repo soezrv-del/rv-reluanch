@@ -605,7 +605,10 @@ test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2025", "Winnebago", "View", "24D"), 11030);
   assert.equal(findOemGvwrLbs("2025", "Winnebago", "View", "24V"), 11030);
   assert.equal(findOemGvwrLbs("2026", "Winnebago", "View", "24R"), null);
+  assert.equal(findOemGvwrLbs("2026", "Winnebago", "View", "24D"), null);
   assert.equal(findOemGvwrLbs("2025", "Winnebago", "Navion", "24D"), null);
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "View", "24D"), 12125);
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "View", "24R"), 12125);
 
   assert.equal(findOemGvwrLbs("2025", "Forest River", "FR3", "31DS"), 18000);
   assert.equal(findOemGvwrLbs("2026", "Forest River", "FR3", "31DS"), 18000);
@@ -1098,6 +1101,41 @@ test("Tiffin MY27 OEM GVWR pins lock dated OEM Specs PDF singles (Catalog Audit 
   assert.equal(findOemGvwrLbs("2026", "Tiffin Bus", "Allegro Bus", "36AP"), null);
   assert.equal(findOemGvwrLbs("2026", "Tiffin Bus", "Allegro Bus", "45OPP"), null);
   assert.equal(findOemGvwrLbs("2025", "Tiffin", "Wayfarer", "25XLW"), null);
+});
+
+test("Winnebago MY27 OEM GVWR pins lock dated brochure / operator-manual singles (Catalog Audit F)", () => {
+  // View / Navion — View-Navion-27-Brochure.pdf weights & measures: 24D/24R/24T 12,125.
+  // 2025 View 24D stays 11,030 — do not extend yearMax (MY27 prints a different GVWR).
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "View", "24D"), 12125);
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "View", "24R"), 12125);
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "Navion", "24T"), 12125);
+  assert.equal(findOemGvwrLbs("2025", "Winnebago", "View", "24D"), 11030);
+
+  // EKKO — Operator 2027 27Ekko622A.pdf Specifications and Capacities 22A: 11,000.
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "EKKO", "22A"), 11000);
+
+  // Elora / Resa — Operator 2027 27Elora.pdf / 27Resa.pdf 19DC: 9,350.
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "Elora", "19DC"), 9350);
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "Resa", "19DC"), 9350);
+
+  // ARKA — Operator 2027 27Arka-2702260514.pdf Specifications and Capacities 20Z: 19,500.
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "ARKA", "20Z"), 19500);
+
+  // Year-scoped: MY27 pins do not invent 2026. 2025 View 11030 stays 2025-only.
+  assert.equal(findOemGvwrLbs("2026", "Winnebago", "View", "24D"), null);
+  assert.equal(findOemGvwrLbs("2026", "Winnebago", "View", "24R"), null);
+  assert.equal(findOemGvwrLbs("2026", "Winnebago", "Navion", "24T"), null);
+  assert.equal(findOemGvwrLbs("2026", "Winnebago", "EKKO", "22A"), null);
+  assert.equal(findOemGvwrLbs("2026", "Winnebago", "Elora", "19DC"), null);
+  assert.equal(findOemGvwrLbs("2026", "Winnebago", "Resa", "19DC"), null);
+  assert.equal(findOemGvwrLbs("2026", "Winnebago", "ARKA", "20Z"), null);
+  assert.equal(findOemGvwrLbs("2025", "Winnebago", "Navion", "24D"), null);
+
+  // Isolation — sibling nameplates must not inherit.
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "Vista", "24D"), null);
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "Travato", "22A"), null);
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "Revel", "19DC"), null);
+  assert.equal(findOemGvwrLbs("2027", "Winnebago", "Access Super C", "20Z"), null);
 });
 
 test("Audit B Phase 3+ length pins match dated brochures (44OH / 303RLS / 26DBH)", () => {
