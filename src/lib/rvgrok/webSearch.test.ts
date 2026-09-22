@@ -11,7 +11,9 @@ import {
   WEB_SEARCH_MODELS,
   WEB_SEARCH_TIMEOUT_RETRIES,
   WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS,
+  CHAT_WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS,
   WEB_SEARCH_TOOL_CALLS_PER_ATTEMPT,
+  retryReserveMs,
   buildWebSearchRequest,
   clipCatalogBlock,
   clearWebSearchCache,
@@ -39,8 +41,8 @@ test("fast research models never include grok-4.6", () => {
   ]);
   assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
   assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 10_000);
-  assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 12_000);
-  assert.equal(WEB_SEARCH_MAX_TOOL_CALLS, 3);
+  assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 24_000);
+  assert.equal(WEB_SEARCH_MAX_TOOL_CALLS, 2);
   assert.equal(WEB_SEARCH_TOOL_CALLS_PER_ATTEMPT, 1);
 });
 
@@ -453,11 +455,40 @@ test("live OEM hit injection never labels EST / low confidence", () => {
 
 test("per-attempt timeout reserves budget for one retry", () => {
   assert.equal(WEB_SEARCH_TIMEOUT_RETRIES, 1);
+  assert.equal(WEB_SEARCH_MAX_TOOL_CALLS, 2);
+  assert.equal(retryReserveMs("chat"), CHAT_WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS);
+  assert.equal(retryReserveMs("voice"), WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS);
+  assert.equal(CHAT_WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS, 8_000);
   assert.ok(WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS >= 4_000);
-  const first = perAttemptTimeoutMs(12_000, 0, 3);
-  assert.ok(first < 12_000, "first attempt must not consume the whole budget");
-  assert.ok(first >= 2_000);
-  assert.equal(perAttemptTimeoutMs(4_000, 2, 3), 4_000);
+
+  const chatFirst = perAttemptTimeoutMs(
+    CHAT_WEB_SEARCH_TIMEOUT_MS,
+    0,
+    WEB_SEARCH_MAX_TOOL_CALLS,
+    retryReserveMs("chat"),
+  );
+  assert.equal(chatFirst, 16_000, "chat attempt 1 gets ~16s, not a starved 7.5s");
+  assert.ok(chatFirst < CHAT_WEB_SEARCH_TIMEOUT_MS);
+  const chatRetry = perAttemptTimeoutMs(
+    CHAT_WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS,
+    1,
+    WEB_SEARCH_MAX_TOOL_CALLS,
+    retryReserveMs("chat"),
+  );
+  assert.equal(chatRetry, 8_000, "chat retry keeps a real OEM window");
+
+  const voiceFirst = perAttemptTimeoutMs(
+    VOICE_WEB_SEARCH_TIMEOUT_MS,
+    0,
+    WEB_SEARCH_MAX_TOOL_CALLS,
+    retryReserveMs("voice"),
+  );
+  assert.equal(voiceFirst, 5_500);
+  assert.ok(
+    voiceFirst < 8_000,
+    "voice stays a phone-lookup pause — not a 24s / 60s dead-air raise",
+  );
+  assert.equal(perAttemptTimeoutMs(4_000, 1, 2), 4_000);
   assert.equal(isTimeoutFailureReason("The operation was aborted due to timeout"), true);
   assert.equal(isTimeoutFailureReason("web search HTTP 400"), false);
 });

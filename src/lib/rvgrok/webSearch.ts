@@ -44,8 +44,15 @@ export const WEB_SEARCH_MODELS = [
   "grok-4-1-fast-non-reasoning",
 ] as const;
 
-/** Chat wall-clock budget for the whole research loop (search → retry). */
-export const CHAT_WEB_SEARCH_TIMEOUT_MS = 12_000;
+/**
+ * Chat wall-clock budget for the whole research loop (search → one retry).
+ *
+ * 12s with a 4.5s retry reserve starved attempt 1 at ~7.5s — xAI
+ * `web_search` often needs 8–15s for an OEM brochure hit, so Chrome
+ * feels instant while we abort. 24s / two attempts: ~16s then ~8s.
+ * Not a fake pass, not 60s of silence.
+ */
+export const CHAT_WEB_SEARCH_TIMEOUT_MS = 24_000;
 
 /**
  * Live Voice research wall-clock budget (server-side fetch timeout).
@@ -54,17 +61,18 @@ export const CHAT_WEB_SEARCH_TIMEOUT_MS = 12_000;
  * unacceptable in speech). Post–#116 production cold calls land ~5–7s on
  * grok-4-1-fast-reasoning; 10s covers normal upstream variance while the
  * existing "give me one second" hold keeps the pause conversational (~phone
- * lookup time). Chat keeps CHAT_WEB_SEARCH_TIMEOUT_MS (12s).
+ * lookup time). Chat uses CHAT_WEB_SEARCH_TIMEOUT_MS (24s) — do not copy
+ * that onto voice.
  */
 export const VOICE_WEB_SEARCH_TIMEOUT_MS = 10_000;
 export const VOICE_WEB_SEARCH_MODELS = [WEB_SEARCH_MODELS[0]] as const;
 
 /**
  * Research-loop attempt cap — easy to tune. Each attempt is one query
- * phrasing (one web_search tool call). A miss rephrases and retries
- * until this many genuine attempts have failed.
+ * phrasing (one web_search tool call). One genuine rephrase (and at most
+ * one timeout retry) beats stacking three dead calls inside a short budget.
  */
-export const WEB_SEARCH_MAX_TOOL_CALLS = 3;
+export const WEB_SEARCH_MAX_TOOL_CALLS = 2;
 
 /** One web_search tool call per phrasing. The loop rephrases across attempts. */
 export const WEB_SEARCH_TOOL_CALLS_PER_ATTEMPT = 1;
@@ -73,11 +81,16 @@ export const WEB_SEARCH_TOOL_CALLS_PER_ATTEMPT = 1;
 export const WEB_SEARCH_MIN_RETRY_BUDGET_MS = 2_000;
 
 /**
- * Hold this much of the shared budget for one rephrased retry so a
- * first-attempt timeout cannot eat the whole turn (David: retry once
- * before giving up — do not jump to EST / training).
+ * Voice / default retry reserve. Keep this modest so a 10s spoken
+ * lookup still spends most of the budget on attempt 1.
  */
 export const WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS = 4_500;
+
+/**
+ * Chat retry reserve. 8s is enough for one real OEM rephrase after a
+ * 16s first attempt — 4.5s was a doomed second call.
+ */
+export const CHAT_WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS = 8_000;
 
 /** At most one timeout retry (rephrased query) before an honest miss. */
 export const WEB_SEARCH_TIMEOUT_RETRIES = 1;
@@ -184,16 +197,24 @@ export function isTimeoutFailureReason(reason: string): boolean {
   );
 }
 
+/** Retry reserve for this profile — chat keeps more time for the OEM hit. */
+export function retryReserveMs(profile: WebSearchProfile = "chat"): number {
+  return profile === "voice"
+    ? WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS
+    : CHAT_WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS;
+}
+
 /** Cap this attempt so a later rephrase still has budget after a timeout. */
 export function perAttemptTimeoutMs(
   remaining: number,
   attemptIndex: number,
   maxAttempts: number,
+  reserveMs = WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS,
 ): number {
   const moreAfter = maxAttempts - attemptIndex - 1;
   if (moreAfter <= 0) return Math.max(remaining, 1);
   const reserve = Math.min(
-    WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS,
+    reserveMs,
     Math.max(WEB_SEARCH_MIN_RETRY_BUDGET_MS, Math.floor(remaining / 2)),
   );
   return Math.max(remaining - reserve, WEB_SEARCH_MIN_RETRY_BUDGET_MS);
@@ -825,7 +846,7 @@ export async function fetchWebSearchNotes(opts: {
   catalogBlock?: string;
   /**
    * Shared wall-clock budget for the whole research loop.
-   * Chat default 12s; Live Voice passes 10s. Timeouts do not stack.
+   * Chat default 24s; Live Voice passes 10s. Timeouts do not stack.
    */
   timeoutMs?: number;
   /** Model list to try. Chat default is WEB_SEARCH_MODELS; voice uses one shot. */
@@ -887,7 +908,12 @@ export async function fetchWebSearchNotes(opts: {
       query: unique,
       originalQuery,
       catalogBlock: opts.catalogBlock,
-      timeoutMs: perAttemptTimeoutMs(remaining, i, maxAttempts),
+      timeoutMs: perAttemptTimeoutMs(
+        remaining,
+        i,
+        maxAttempts,
+        retryReserveMs(profile),
+      ),
       models,
       profile,
       attempt: i + 1,
