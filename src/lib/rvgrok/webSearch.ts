@@ -138,6 +138,7 @@ export type QueriedResearchField =
   | "length"
   | "mpg"
   | "tow"
+  | "tanks"
   | "price"
   | "repair"
   | "generic";
@@ -274,6 +275,10 @@ const FIELD_PATTERNS: Array<[QueriedResearchField, RegExp]> = [
   ["length", /\b(length|feet long|ft long)\b/i],
   ["mpg", /\bmpg\b/i],
   ["tow", /\b(tow(?:ing)? capacity|tow rating)\b/i],
+  [
+    "tanks",
+    /\b(holding\s+tanks?|fresh\s+water|gr[ae]y\s+(?:water|tank)|black\s+(?:water|tank))\b/i,
+  ],
 ];
 
 const FIELD_LABEL: Record<QueriedResearchField, string> = {
@@ -293,6 +298,7 @@ const FIELD_LABEL: Record<QueriedResearchField, string> = {
   length: "length",
   mpg: "MPG",
   tow: "tow rating",
+  tanks: "holding tanks fresh gray black",
   price: "asking price Low / Average / High",
   repair: "procedure or part location",
   generic: "the asked fact",
@@ -381,6 +387,13 @@ export function notesConfirmQueriedField(notes: string, query: string): boolean 
       field === "payload" ||
       field === "tow") &&
     LB_RE.test(n)
+  ) {
+    return true;
+  }
+  if (
+    field === "tanks" &&
+    NUMBER_RE.test(n) &&
+    /\b(fresh|gr[ae]y|black|holding\s+tanks?|gal(?:lon)?s?)\b/i.test(n)
   ) {
     return true;
   }

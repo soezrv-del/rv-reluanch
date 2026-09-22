@@ -11,6 +11,9 @@ export type ChatSpecFigures = {
   uvw?: string;
   fuelCapacity?: string;
   towCapacity?: string;
+  freshWater?: string;
+  grayWater?: string;
+  blackWater?: string;
 };
 
 export const CHAT_SPEC_DESK_LABELS: Record<keyof ChatSpecFigures, string> = {
@@ -18,7 +21,12 @@ export const CHAT_SPEC_DESK_LABELS: Record<keyof ChatSpecFigures, string> = {
   uvw: "UVW",
   fuelCapacity: "Fuel capacity",
   towCapacity: "Tow capacity",
+  freshWater: "Fresh",
+  grayWater: "Gray",
+  blackWater: "Black",
 };
+
+const TANK_KEYS = ["freshWater", "grayWater", "blackWater"] as const;
 
 const EST_NEAR_RE = /\b(EST\.?|typical class range|low confidence)\b/i;
 
@@ -77,6 +85,68 @@ function firstFuelGallons(text: string): string | null {
   return null;
 }
 
+function parseTankGal(raw: string): number | null {
+  const n = Number(String(raw || "").replace(/,/g, ""));
+  if (!Number.isFinite(n) || n < 1 || n > 200) return null;
+  return Math.round(n);
+}
+
+function fmtGal(n: number): string {
+  return `${Math.round(n)} gal`;
+}
+
+function tankLabelRe(kind: "fresh" | "gray" | "black"): string {
+  if (kind === "fresh") return "fresh(?:\\s+water)?(?:\\s+tanks?)?";
+  if (kind === "gray") return "gr[ae]y(?:\\s+water)?(?:\\s+tanks?)?";
+  return "black(?:\\s+water)?(?:\\s+tanks?)?";
+}
+
+/** Skip fuel gallons tagged as fresh, and EST / typical-class guesses. */
+function tankWindowOk(
+  around: string,
+  kind: "fresh" | "gray" | "black",
+): boolean {
+  if (EST_NEAR_RE.test(around)) return false;
+  if (
+    kind === "fresh" &&
+    /\bfuel\b/i.test(around) &&
+    !/\bfresh\s+(?:water|tank)/i.test(around)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function firstTankGallons(
+  text: string,
+  kind: "fresh" | "gray" | "black",
+): string | null {
+  const label = tankLabelRe(kind);
+  const patterns = [
+    new RegExp(
+      `\\b${label}[^\\d\\n]{0,28}~?\\s*(\\d{1,3})(?!\\d)(?!,\\d)(?:\\s*(?:to|[-–—])\\s*(\\d{1,3})(?!\\d)(?!,\\d))?(?:\\s*(?:gal(?:lon)?s?))?`,
+      "ig",
+    ),
+    new RegExp(
+      `(\\d{1,3})(?!\\d)(?!,\\d)\\s*-?\\s*(?:gal(?:lon)?s?)?\\s+${label}`,
+      "ig",
+    ),
+  ];
+  for (const re of patterns) {
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text))) {
+      const around = windowAround(text, m.index, m.index + m[0].length);
+      if (!tankWindowOk(around, kind)) continue;
+      const a = parseTankGal(m[1] || "");
+      const b = parseTankGal(m[2] || "");
+      if (a == null) continue;
+      if (b != null && b !== a) return `${a}–${b} gal`;
+      return fmtGal(a);
+    }
+  }
+  return null;
+}
+
 /** Pull labeled spec numbers from the last assistant reply. Empty = do not invent. */
 export function extractChatSpecFigures(text: string): ChatSpecFigures {
   const raw = (text || "").trim();
@@ -92,6 +162,12 @@ export function extractChatSpecFigures(text: string): ChatSpecFigures {
   if (tow) out.towCapacity = tow.value;
   const fuel = firstFuelGallons(raw);
   if (fuel) out.fuelCapacity = fuel;
+  const fresh = firstTankGallons(raw, "fresh");
+  if (fresh) out.freshWater = fresh;
+  const gray = firstTankGallons(raw, "gray");
+  if (gray) out.grayWater = gray;
+  const black = firstTankGallons(raw, "black");
+  if (black) out.blackWater = black;
   return out;
 }
 
@@ -116,7 +192,13 @@ function firstNumberThenLabelLbs(
 
 export function chatSpecHasNumber(figures: ChatSpecFigures): boolean {
   return Boolean(
-    figures.gvwr || figures.uvw || figures.fuelCapacity || figures.towCapacity,
+    figures.gvwr ||
+      figures.uvw ||
+      figures.fuelCapacity ||
+      figures.towCapacity ||
+      figures.freshWater ||
+      figures.grayWater ||
+      figures.blackWater,
   );
 }
 
@@ -131,7 +213,7 @@ export function paintChatSpecOntoRows<T extends ChatPaintRow>(
   figures: ChatSpecFigures,
 ): T[] {
   if (!chatSpecHasNumber(figures)) return rows;
-  return rows.map((row) => {
+  const painted = rows.map((row) => {
     for (const key of Object.keys(CHAT_SPEC_DESK_LABELS) as Array<
       keyof ChatSpecFigures
     >) {
@@ -142,4 +224,13 @@ export function paintChatSpecOntoRows<T extends ChatPaintRow>(
     }
     return row;
   });
+  // Chat named a tank the catalog row list omitted — append, never invent.
+  for (const key of TANK_KEYS) {
+    const next = (figures[key] || "").trim();
+    if (!next) continue;
+    const label = CHAT_SPEC_DESK_LABELS[key];
+    if (painted.some((row) => row.label === label)) continue;
+    painted.push({ label, value: next, gap: false } as T);
+  }
+  return painted;
 }

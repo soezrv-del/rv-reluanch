@@ -25,6 +25,38 @@ test("does not invent when the reply has no labeled specs", () => {
   assert.equal(est.gvwr, undefined);
 });
 
+const TANK_CHAT =
+  "Holding tanks: fresh ~35, gray/black ~34. 150-gallon fuel tank.";
+
+test("extracts fresh / gray / black from 'fresh ~35, gray/black ~34'", () => {
+  const figs = extractChatSpecFigures(TANK_CHAT);
+  assert.equal(figs.freshWater, "35 gal");
+  assert.equal(figs.grayWater, "34 gal");
+  assert.equal(figs.blackWater, "34 gal");
+  assert.equal(figs.fuelCapacity, "150 gal");
+});
+
+test("grey spelling and labeled gallons still parse; EST tanks stay empty", () => {
+  const spoken = extractChatSpecFigures(
+    "Fresh water 72 gal, grey 40, black 50.",
+  );
+  assert.equal(spoken.freshWater, "72 gal");
+  assert.equal(spoken.grayWater, "40 gal");
+  assert.equal(spoken.blackWater, "50 gal");
+
+  const est = extractChatSpecFigures(
+    "fresh ~35 typical class range (EST), gray/black ~34 typical class range",
+  );
+  assert.equal(est.freshWater, undefined);
+  assert.equal(est.grayWater, undefined);
+  assert.equal(est.blackWater, undefined);
+
+  const fuelOnly = extractChatSpecFigures("150-gallon fuel tank. Nice coach.");
+  assert.equal(fuelOnly.freshWater, undefined);
+  assert.equal(fuelOnly.grayWater, undefined);
+  assert.equal(fuelOnly.blackWater, undefined);
+});
+
 test("chat numbers overwrite Confirm brochure; untouched rows stay", () => {
   const rows = paintChatSpecOntoRows(
     [
@@ -42,4 +74,25 @@ test("chat numbers overwrite Confirm brochure; untouched rows stay", () => {
   assert.equal(rows.find((r) => r.label === "Fuel capacity")?.value, "150 gal");
   assert.equal(rows.find((r) => r.label === "CCC")?.value, "Confirm brochure");
   assert.equal(rows.find((r) => r.label === "Class")?.value, "Class A Diesel");
+});
+
+test("chat tank gallons overwrite Confirm brochure / GAP on the desk rows", () => {
+  const rows = paintChatSpecOntoRows(
+    [
+      { label: "Fresh", value: "Confirm brochure", gap: true },
+      { label: "Gray", value: "GAP", gap: true },
+      { label: "Black", value: "Confirm brochure", gap: true },
+      { label: "Fuel capacity", value: "100 gal", gap: false },
+    ],
+    extractChatSpecFigures(TANK_CHAT),
+  );
+  assert.equal(rows.find((r) => r.label === "Fresh")?.value, "35 gal");
+  assert.equal(rows.find((r) => r.label === "Fresh")?.gap, false);
+  assert.equal(rows.find((r) => r.label === "Gray")?.value, "34 gal");
+  assert.equal(rows.find((r) => r.label === "Black")?.value, "34 gal");
+  assert.doesNotMatch(
+    rows.find((r) => r.label === "Fresh")?.value || "",
+    /Confirm brochure/i,
+  );
+  assert.equal(rows.find((r) => r.label === "Fuel capacity")?.value, "150 gal");
 });
