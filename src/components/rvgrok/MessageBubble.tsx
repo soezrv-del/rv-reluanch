@@ -161,12 +161,6 @@ export function MessageBubble({
           </p>
         ) : null}
 
-        {message.deskSheet ? (
-          <div className="mb-2">
-            <DeskSpecSheet sheet={message.deskSheet} />
-          </div>
-        ) : null}
-
         {message.streaming && !displayContent ? (
           <p className="flex items-center gap-2 text-white/80">
             <Loader2 className="size-3.5 animate-spin" />
@@ -327,6 +321,12 @@ export function MessageBubble({
                 </div>
               </form>
             ) : null}
+          </div>
+        ) : null}
+
+        {message.deskSheet ? (
+          <div className="mt-3" data-rvgrok-desk-after-reply="">
+            <DeskSpecSheet sheet={message.deskSheet} />
           </div>
         ) : null}
       </div>

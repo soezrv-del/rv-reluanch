@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
   History,
   Plus,
@@ -23,6 +23,10 @@ import {
   resolveDeskSheet,
   type DeskSheetPayload,
 } from "@/lib/rvgrok/deskSheet";
+import {
+  deskRevealAfterIndex,
+  shouldShowPendingLiveDesk,
+} from "@/lib/rvgrok/deskSheetLayout";
 import { DeskSpecSheet } from "./DeskSpecSheet";
 import { formatFeedbackContext } from "@/lib/rvgrok/answerFeedback";
 import { readActiveCoach } from "@/lib/rv/activeCoach";
@@ -60,12 +64,10 @@ import { VoicePanel } from "./VoicePanel";
 import { GrokComposer } from "./GrokComposer";
 import {
   GrokLanding,
-  GrokStatusWord,
   GrokToolbarButton,
   grokStatusLabel,
   type GrokStarter,
 } from "./GrokLanding";
-import { GrokAvatar } from "./GrokAvatar";
 import {
   scrollFieldIntoVisibleArea,
   useKeyboardInset,
@@ -341,6 +343,8 @@ export function RvGrokApp({
     if (liveVideoRef.current) liveVideoRef.current.srcObject = null;
     setLiveCam(false);
     liveCamRef.current = false;
+    setLiveDeskSheet(null);
+    liveDeskSheetRef.current = null;
   }, []);
 
   const pull = usePullToReset(listRef, startNewChat, { enabled: !embedded });
@@ -1342,22 +1346,14 @@ export function RvGrokApp({
     !isLoading &&
     !liveActive;
 
-  const threadAlreadyHasDesk = messages.some(
-    (m) =>
-      m.deskSheet &&
-      m.deskSheet.title === liveDeskSheet?.title &&
-      m.deskSheet.year === liveDeskSheet?.year,
-  );
+  const deskAfterIdx = deskRevealAfterIndex(messages);
+  const pendingLiveSheet = shouldShowPendingLiveDesk(messages, liveDeskSheet)
+    ? liveDeskSheet
+    : null;
   const reportSheet =
-    liveDeskSheet ||
-    messages.find((m) => m.deskSheet)?.deskSheet ||
+    (deskAfterIdx >= 0 ? messages[deskAfterIdx].deskSheet : null) ||
+    pendingLiveSheet ||
     null;
-  const deskOnThread =
-    liveVoice && liveDeskSheet && !threadAlreadyHasDesk && !reportSheet ? (
-      <div className="mx-auto w-full max-w-2xl px-0.5 pb-1 pt-2">
-        <DeskSpecSheet sheet={liveDeskSheet} />
-      </div>
-    ) : null;
 
   const wingmanStatus = grokStatusLabel({
     liveActive,
@@ -1366,7 +1362,7 @@ export function RvGrokApp({
     isLoading,
     speaking: Boolean(speakingId),
   });
-  const isLanding = messages.length === 0 && !liveDeskSheet;
+  const isLanding = messages.length === 0;
   const composerPlaceholder = isRecording
     ? "Listening… keep talking"
     : liveActive
@@ -1442,6 +1438,38 @@ export function RvGrokApp({
     </>
   ) : null;
 
+  const deskAfterReply = (sheet: DeskSheetPayload) => (
+    <div
+      data-rvgrok-report=""
+      data-rvgrok-desk-after-reply=""
+      className="w-full"
+    >
+      <DeskSpecSheet sheet={sheet} />
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={handleStop}
+          className="grok-chip inline-flex min-h-11 items-center rounded-full px-4 text-[13px] font-semibold"
+        >
+          Pause
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            const prompt = nextUnit.prompt;
+            startNewChat();
+            window.setTimeout(() => {
+              void sendMessageRef.current(prompt);
+            }, 0);
+          }}
+          className="grok-chip inline-flex min-h-11 items-center rounded-full px-4 text-[13px] font-semibold"
+        >
+          Next unit
+        </button>
+      </div>
+    </div>
+  );
+
   const thread = (
     <div
       className={cn(
@@ -1449,62 +1477,20 @@ export function RvGrokApp({
         reportSheet ? "max-w-6xl" : "max-w-2xl",
       )}
     >
-      {deskOnThread}
-      {reportSheet ? (
-        <div
-          data-rvgrok-report=""
-          className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:items-start"
-        >
-          <section className="grok-frost grok-report-voice flex flex-col items-center rounded-[var(--radius-2xl)] px-5 py-6 text-center">
-            <GrokAvatar
-              size="md"
-              speaking={realtimeStatus === "speaking" || Boolean(speakingId)}
-            />
-            <p className="grok-display mt-4 text-[1.2rem] font-semibold text-fg">
-              Grok
-            </p>
-            <GrokStatusWord label={wingmanStatus} />
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <button
-                type="button"
-                onClick={handleStop}
-                className="grok-chip inline-flex min-h-11 items-center rounded-full px-4 text-[13px] font-semibold"
-              >
-                Pause
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const prompt = nextUnit.prompt;
-                  startNewChat();
-                  window.setTimeout(() => {
-                    void sendMessageRef.current(prompt);
-                  }, 0);
-                }}
-                className="grok-chip inline-flex min-h-11 items-center rounded-full px-4 text-[13px] font-semibold"
-              >
-                Next unit
-              </button>
-            </div>
-          </section>
-          <DeskSpecSheet sheet={reportSheet} />
-        </div>
-      ) : null}
-      {messages.map((m) => {
-        // CARFAX desk is the written reply — do not also dump the assistant prose.
-        if (reportSheet && m.deskSheet) return null;
-        return (
+      {messages.map((m, i) => (
+        <Fragment key={m.id}>
           <MessageBubble
-            key={m.id}
             message={{
               ...m,
-              deskSheet: reportSheet ? undefined : m.deskSheet,
+              deskSheet: undefined,
             }}
             onSpeak={handleSpeak}
             speakingId={speakingId}
           />
-        );
-      })}
+          {i === deskAfterIdx && m.deskSheet ? deskAfterReply(m.deskSheet) : null}
+        </Fragment>
+      ))}
+      {pendingLiveSheet ? deskAfterReply(pendingLiveSheet) : null}
     </div>
   );
 
@@ -1744,6 +1730,8 @@ export function RvGrokApp({
         onClose={() => setHistoryOpen(false)}
         onLoad={(s) => {
           setSessionId(s.id);
+          setLiveDeskSheet(null);
+          liveDeskSheetRef.current = null;
           setMessages(
             (s.messages ?? []).map((m) => ({
               ...m,

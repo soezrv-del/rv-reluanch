@@ -79,7 +79,9 @@ test("Live Voice entry and catalog desk resolve stay wired", () => {
     "cold-open chips must not promo a specific coach",
   );
   assert.match(app, /lotChip=\{null\}/);
-  assert.match(app, /reportSheet && m\.deskSheet/);
+  assert.match(app, /deskRevealAfterIndex/);
+  assert.match(app, /data-rvgrok-desk-after-reply/);
+  assert.doesNotMatch(app, /reportSheet && m\.deskSheet/);
 });
 
 test("Grok wingman does not touch DialaBot, Facts, Tow, or Lot stock", () => {
