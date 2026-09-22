@@ -16,6 +16,7 @@ import {
 } from "@/lib/rvgrok/ownLotInventory";
 import {
   CHAT_WEB_SEARCH_TIMEOUT_MS,
+  WEB_SEARCH_MAX_TOOL_CALLS,
   formatWebSearchInjection,
 } from "@/lib/rvgrok/webSearch";
 import { executeWebResearch } from "@/lib/rvgrok/webResearchTelemetry";
@@ -693,8 +694,11 @@ export const Route = createFileRoute("/api/rvgrok")({
             timeoutMs: CHAT_WEB_SEARCH_TIMEOUT_MS,
             profile: "chat",
             skipGate: true,
+            maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
           });
-          webNotes = formatWebSearchInjection(researched);
+          webNotes = formatWebSearchInjection(researched, {
+            query: lastPlain,
+          });
         }
 
         // xAI first when the key is present so generate_image (and vision) work.

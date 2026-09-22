@@ -10,9 +10,33 @@
 export const CATALOG_MISS_MUST_SEARCH =
   "When the catalog / OEM pin does not have the answer, you MUST run WEB RESEARCH this turn before answering — not optional, not last resort.";
 
-/** After research (or if search fails), still answer — labeled, never silent invent. */
+/**
+ * After the research loop is exhausted (N genuine rephrased attempts, all
+ * unconfirmed) — or search stays unavailable after those attempts — still
+ * answer. Never EST after a single miss.
+ */
 export const LABELED_ESTIMATE_RULE =
-  "After research (or if search is unavailable), YOU still answer with a labeled estimate: mark it EST / estimate / typical class range. Never present an estimate as an OEM pin or brochure fact. Never silent-invent a number as fact.";
+  "A labeled estimate is allowed ONLY after the research loop has exhausted its rephrased attempts without a confirming fact (or search stays unavailable after those attempts): mark it EST / estimate / typical class range, low confidence. Never EST after a single miss. Never present an estimate as an OEM pin or brochure fact. Never silent-invent a number as fact.";
+
+/** Injection / speech line when the loop is exhausted and still unconfirmed. */
+export const LOW_CONFIDENCE_EST_RULE =
+  "You MAY give a labeled EST / typical class range, low confidence — never as an OEM pin. Do not write EST onto the desk.";
+
+export type EstimateGateInput = {
+  /** Accumulated notes confirmed the queried field. */
+  confirmed: boolean;
+  /** Loop cannot start another genuine rephrased attempt. */
+  exhausted: boolean;
+};
+
+/**
+ * EST fallback is gated: a confirming fact wins; a single miss / empty
+ * search / WEB SEARCH NOT AVAILABLE does not unlock EST. Only an
+ * exhausted research loop may fire a labeled low-confidence estimate.
+ */
+export function mayEmitLabeledEstimate(input: EstimateGateInput): boolean {
+  return !input.confirmed && input.exhausted;
+}
 
 /** #419 — desk sheet matches Facts. Estimates stay off the desk. */
 export const DESK_STAYS_FACTS =
@@ -43,7 +67,11 @@ export function presentsEstimateAsOemPin(text: string): boolean {
 export function formatLabeledEstimate(
   value: string,
   kind = "typical class range",
+  confidence: "low" | "normal" = "low",
 ): string {
   const v = (value || "").trim();
+  if (confidence === "low") {
+    return `${v} (EST — ${kind}, low confidence)`;
+  }
   return `${v} (EST — ${kind})`;
 }

@@ -7,6 +7,7 @@ import {
 import {
   VOICE_WEB_SEARCH_MODELS,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
+  WEB_SEARCH_MAX_TOOL_CALLS,
 } from "@/lib/rvgrok/webSearch";
 
 /**
@@ -54,6 +55,7 @@ async function handleResearch(request: Request): Promise<Response> {
     // Live Voice already decided via needsWebFallback — do not re-gate
     // with null specs and skip a catalog miss.
     skipGate: true,
+    maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
   });
 
   return webResearchJsonResponse(researched);

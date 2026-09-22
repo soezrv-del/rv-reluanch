@@ -9,15 +9,20 @@ import {
   VOICE_WEB_SEARCH_TIMEOUT_MS,
   WEB_SEARCH_MAX_TOOL_CALLS,
   WEB_SEARCH_MODELS,
+  WEB_SEARCH_TOOL_CALLS_PER_ATTEMPT,
   buildWebSearchRequest,
   clipCatalogBlock,
   clearWebSearchCache,
+  evaluateResearchQuality,
   fetchWebSearchNotes,
   formatWebSearchInjection,
   isAbortLikeError,
+  notesConfirmQueriedField,
+  rephraseResearchQuery,
   researchCacheKey,
   seedWebSearchCache,
 } from "./webSearch.ts";
+import { mayEmitLabeledEstimate } from "./estimatePolicy.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -29,7 +34,8 @@ test("fast research models never include grok-4.6", () => {
   assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
   assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 10_000);
   assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 12_000);
-  assert.equal(WEB_SEARCH_MAX_TOOL_CALLS, 1);
+  assert.equal(WEB_SEARCH_MAX_TOOL_CALLS, 3);
+  assert.equal(WEB_SEARCH_TOOL_CALLS_PER_ATTEMPT, 1);
 });
 
 test("speed knobs stay off the #113-forbidden fields", () => {
@@ -38,6 +44,7 @@ test("speed knobs stay off the #113-forbidden fields", () => {
     query: "Where is the battery disconnect on a 2005 Winnebago Adventurer?",
     extras: true,
   });
+  assert.equal(extras.max_tool_calls, WEB_SEARCH_TOOL_CALLS_PER_ATTEMPT);
   assert.equal(extras.max_tool_calls, 1);
   assert.equal(extras.tool_choice, "required");
   assert.equal("reasoning" in extras, false);
@@ -77,7 +84,10 @@ test("voice prompt is 1-3 sentences; chat stays short notes", () => {
   const chatText = JSON.stringify(chat);
   assert.match(voiceText, /1–3 spoken sentences|1-3 spoken sentences/);
   assert.match(chatText, /4–8 short bullets|4-8 short bullets/);
-  assert.match(voiceText, /Search ONCE/);
+  assert.match(voiceText, /Research loop/);
+  assert.match(voiceText, /CONFIRMED: yes/);
+  assert.match(chatText, /DIFFERENT query phrasing/);
+  assert.doesNotMatch(voiceText, /Search ONCE, then write/);
 });
 
 test("catalog clip drops the long lock-rules essay", () => {
@@ -161,7 +171,220 @@ test("chat and voice routes pass the new timeout/profile", () => {
   );
   assert.match(chat, /CHAT_WEB_SEARCH_TIMEOUT_MS/);
   assert.match(chat, /profile: "chat"/);
+  assert.match(chat, /maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS/);
   assert.match(voice, /executeWebResearch/);
   assert.match(voice, /webResearchJsonResponse/);
+  assert.match(voice, /maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS/);
   assert.doesNotMatch(voice, /fetchWebSearchNotes/);
+});
+
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function questionFromBody(init?: RequestInit): string {
+  const raw = typeof init?.body === "string" ? init.body : "";
+  try {
+    const parsed = JSON.parse(raw) as {
+      input?: Array<{ content?: string }>;
+    };
+    const content = parsed.input?.[0]?.content || "";
+    const m = content.match(/Question:\s*([\s\S]+)$/);
+    return (m?.[1] || content).trim();
+  } catch {
+    return raw;
+  }
+}
+
+test("rephraseResearchQuery never repeats a prior phrasing", () => {
+  const original = "What's the GVWR on a 2019 XYZ Phantom?";
+  const first = rephraseResearchQuery(original, 1, [original]);
+  const second = rephraseResearchQuery(original, 2, [original, first]);
+  assert.notEqual(first.toLowerCase(), original.toLowerCase());
+  assert.notEqual(second.toLowerCase(), original.toLowerCase());
+  assert.notEqual(second.toLowerCase(), first.toLowerCase());
+  assert.match(first, /OEM brochure|official manufacturer|RVUSA/i);
+});
+
+test("notesConfirmQueriedField requires a real fact, not a miss or EST", () => {
+  const q = "What's the GVWR on a 2019 XYZ Phantom?";
+  assert.equal(
+    notesConfirmQueriedField(
+      "CONFIRMED: yes. OEM brochure lists GVWR 32,000 lb.",
+      q,
+    ),
+    true,
+  );
+  assert.equal(notesConfirmQueriedField("", q), false);
+  assert.equal(
+    notesConfirmQueriedField("WEB SEARCH NOT AVAILABLE this turn", q),
+    false,
+  );
+  assert.equal(
+    notesConfirmQueriedField("Could not find a published GVWR for this coach.", q),
+    false,
+  );
+  assert.equal(
+    notesConfirmQueriedField("32,000 lb typical class range (EST)", q),
+    false,
+  );
+});
+
+test("confirming first search does not retry", async () => {
+  clearWebSearchCache();
+  let calls = 0;
+  const prior = globalThis.fetch;
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    calls += 1;
+    const q = questionFromBody(init);
+    assert.match(q, /GVWR on a 2019 XYZ Phantom/i);
+    return jsonResponse({
+      output_text:
+        "CONFIRMED: yes. OEM brochure lists GVWR 32,000 lb for the 2019 XYZ Phantom.",
+    });
+  }) as typeof fetch;
+  try {
+    const result = await fetchWebSearchNotes({
+      apiKey: "test-key",
+      query: "What's the GVWR on a 2019 XYZ Phantom?",
+      timeoutMs: 5_000,
+      models: ["grok-4-1-fast-reasoning"],
+    });
+    assert.equal(result.ok, true);
+    assert.equal(calls, 1);
+    if (result.ok) {
+      assert.equal(result.confirmed, true);
+      assert.equal(result.attempts, 1);
+      assert.equal(result.exhausted, false);
+      assert.match(result.notes, /32,000/);
+    }
+    const injection = formatWebSearchInjection(result);
+    assert.match(injection, /CONFIRM the queried field/i);
+    assert.doesNotMatch(injection, /You MAY give a labeled EST/);
+    assert.equal(
+      mayEmitLabeledEstimate({ confirmed: true, exhausted: false }),
+      false,
+    );
+  } finally {
+    globalThis.fetch = prior;
+    clearWebSearchCache();
+  }
+});
+
+test("empty first search then confirming rephrased retry", async () => {
+  clearWebSearchCache();
+  const questions: string[] = [];
+  const prior = globalThis.fetch;
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    questions.push(questionFromBody(init));
+    if (questions.length === 1) {
+      return jsonResponse({ output_text: "" });
+    }
+    return jsonResponse({
+      output_text:
+        "CONFIRMED: yes. OEM brochure pin: GVWR 32,000 pounds for the 2019 XYZ Phantom.",
+    });
+  }) as typeof fetch;
+  try {
+    const result = await fetchWebSearchNotes({
+      apiKey: "test-key",
+      query: "What's the GVWR on a 2019 XYZ Phantom?",
+      timeoutMs: 5_000,
+      models: ["grok-4-1-fast-reasoning"],
+    });
+    assert.equal(result.ok, true);
+    assert.equal(questions.length, 2);
+    assert.notEqual(
+      questions[1]!.toLowerCase().replace(/\s+/g, " "),
+      questions[0]!.toLowerCase().replace(/\s+/g, " "),
+    );
+    if (result.ok) {
+      assert.equal(result.confirmed, true);
+      assert.equal(result.attempts, 2);
+      assert.equal(result.exhausted, false);
+      assert.ok(result.queries && result.queries.length === 2);
+    }
+  } finally {
+    globalThis.fetch = prior;
+    clearWebSearchCache();
+  }
+});
+
+test("N failed attempts unlock a labeled low-confidence EST", async () => {
+  clearWebSearchCache();
+  let calls = 0;
+  const questions: string[] = [];
+  const prior = globalThis.fetch;
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    calls += 1;
+    questions.push(questionFromBody(init));
+    return jsonResponse({
+      output_text:
+        "CONFIRMED: no. Could not find a published GVWR for this coach.",
+    });
+  }) as typeof fetch;
+  try {
+    const result = await fetchWebSearchNotes({
+      apiKey: "test-key",
+      query: "What's the GVWR on a 2019 XYZ Phantom?",
+      timeoutMs: 8_000,
+      models: ["grok-4-1-fast-reasoning"],
+    });
+    assert.equal(result.ok, true);
+    assert.equal(calls, WEB_SEARCH_MAX_TOOL_CALLS);
+    assert.equal(new Set(questions.map((q) => q.toLowerCase())).size, calls);
+    if (result.ok) {
+      assert.equal(result.confirmed, false);
+      assert.equal(result.exhausted, true);
+      assert.equal(result.attempts, WEB_SEARCH_MAX_TOOL_CALLS);
+    }
+    const gate = evaluateResearchQuality({
+      result,
+      query: "What's the GVWR on a 2019 XYZ Phantom?",
+    });
+    assert.equal(gate.allowEstimate, true);
+    assert.equal(
+      mayEmitLabeledEstimate({ confirmed: false, exhausted: true }),
+      true,
+    );
+    const injection = formatWebSearchInjection(result);
+    assert.match(injection, /labeled EST \/ typical class range/);
+    assert.match(injection, /low confidence/);
+    assert.match(injection, /Research loop exhausted/);
+  } finally {
+    globalThis.fetch = prior;
+    clearWebSearchCache();
+  }
+});
+
+test("quality gate blocks EST before the loop is exhausted", () => {
+  const blocked = formatWebSearchInjection({
+    ok: true,
+    notes: "Could not find a published GVWR for this coach.",
+    model: "grok-4-1-fast-reasoning",
+    confirmed: false,
+    attempts: 1,
+    exhausted: false,
+    query: "What's the GVWR on a 2019 XYZ Phantom?",
+  });
+  assert.match(blocked, /Do NOT give a labeled EST/);
+  assert.doesNotMatch(blocked, /You MAY give a labeled EST/);
+  assert.equal(
+    mayEmitLabeledEstimate({ confirmed: false, exhausted: false }),
+    false,
+  );
+
+  const emptyBlocked = formatWebSearchInjection({
+    ok: false,
+    reason: "web search returned empty notes",
+    confirmed: false,
+    attempts: 1,
+    exhausted: false,
+    query: "What's the hitch rating on a 2019 XYZ Phantom?",
+  });
+  assert.match(emptyBlocked, /WEB SEARCH NOT AVAILABLE/);
+  assert.match(emptyBlocked, /Do NOT give a labeled EST/);
 });
