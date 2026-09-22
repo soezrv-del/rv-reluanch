@@ -264,12 +264,14 @@ test("prompts and research sidecars teach the four-section report", () => {
   const web = readFileSync(join(root, "webSearch.ts"), "utf8");
   const voice = readFileSync(join(root, "voice.ts"), "utf8");
   const speech = readFileSync(join(root, "speechPolicy.ts"), "utf8");
+  assert.match(prompts, /RV_GROK_LEAN_CORE/);
+  assert.match(voice, /RV_GROK_LEAN_CORE/);
+  assert.match(speech, /CARFAX-style coach report/);
+  assert.match(speech, /Overview \/ Chassis & powertrain \/ Weights & capacity \/ Layout & amenities/);
   for (const [label, text] of [
-    ["prompts.ts", prompts],
     ["grounding.ts", grounding],
     ["geminiResearch.ts", gemini],
     ["webSearch.ts", web],
-    ["voice.ts", voice],
     ["speechPolicy.ts", speech],
   ] as const) {
     assert.match(
@@ -287,5 +289,6 @@ test("prompts and research sidecars teach the four-section report", () => {
     /Do not dump a prose spec report in chat/,
   );
   assert.doesNotMatch(voice, /That card is the written reply/);
-  assert.match(voice, /four-section report/);
+  assert.match(voice, /RV_GROK_LEAN_CORE/);
+  assert.match(speech, /CARFAX-style coach report/);
 });

@@ -1676,9 +1676,9 @@ test("catalog coach lookup is not an own-lot miss — Dutch Star 4369 reports fr
     grounding,
     /looksLikeCoachDesignationAsk\(query\)/,
   );
-  assert.match(prompts, /DEFAULT COACH REPORT/);
+  assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.doesNotMatch(prompts, /separate salesman page/);
-  assert.match(voice, /big motorhome catalog/);
+  assert.match(voice, /RV_GROK_LEAN_CORE/);
   assert.doesNotMatch(api, /looksLikeOwnLotStockQuestion\(lastPlain\)/);
   assert.doesNotMatch(api, /formatOwnLotSidecar/);
   assert.doesNotMatch(ownLot, /formatOwnLotSidecar/);

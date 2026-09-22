@@ -129,8 +129,9 @@ test("CARFAX ask injects official positioning — no invented ledger", () => {
 });
 
 test("chat, voice, and grounding wire CARFAX positioning; DialaBot stays out", () => {
-  assert.match(src("prompts.ts"), /CARFAX_VS_RVFOX/);
-  assert.match(src("voice.ts"), /CARFAX_VS_RVFOX/);
+  assert.match(src("prompts.ts"), /RV_GROK_LEAN_CORE/);
+  assert.match(src("voice.ts"), /RV_GROK_LEAN_CORE/);
+  assert.match(src("speechPolicy.ts"), /CARFAX-style coach report/);
   assert.match(src("grounding.ts"), /formatCarfaxGroundingBlock/);
   assert.match(src("grounding.ts"), /looksLikeCarfaxQuestion/);
   assert.match(src("webIntent.ts"), /looksLikeCarfaxQuestion/);

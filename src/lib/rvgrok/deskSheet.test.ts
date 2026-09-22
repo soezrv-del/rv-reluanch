@@ -775,10 +775,8 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(bubble, /data-rvgrok-desk-after-reply/);
   assert.match(realtime, /onDeskSheet/);
   assert.match(realtime, /resolveDeskSheet/);
-  assert.match(voice, /DESK SPEC SHEET/);
-  assert.match(voice, /Spec sheet is on the desk/);
-  assert.match(prompts, /DESK SPEC SHEET/);
-  assert.match(prompts, /LOCKED WEIGHTS/);
+  assert.match(voice, /RV_GROK_LEAN_CORE/);
+  assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.match(grounding, /withDeskSheetSpeechRule/);
   assert.match(grounding, /formatLockedWeightsBlock/);
   assert.match(grounding, /resolveLockedOemWeights/);
@@ -786,8 +784,7 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(grounding, /never say you don't have GVWR/i);
   assert.match(src(root, "lockedWeights.ts"), /VERIFIED GVWR/);
   assert.match(src(root, "lockedWeights.ts"), /resolveFactsBrochure/);
-  assert.match(src(root, "liveVoice.ts"), /never say you don't have GVWR/i);
-  assert.match(src(root, "voice.ts"), /LOCKED WEIGHTS/);
+  assert.match(src(root, "deskSheetPolicy.ts"), /DESK SPEC SHEET MOUNTED/);
   assert.match(src(root, "speechPolicy.ts"), /LOCKED WEIGHTS/);
   assert.doesNotMatch(src(root, "deskSheet.ts"), /[Dd]ialaBot/);
   assert.match(src(root, "deskSheet.ts"), /brochureRow\("Fresh"/);
@@ -795,7 +792,7 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(src(root, "deskSheet.ts"), /brochureRow\("Black"/);
   assert.match(src(root, "deskSheet.ts"), /uvwLbs != null && !brochure\.uvwEstimated/);
   assert.match(src(root, "chatSpecBlock.ts"), /firstTankGallons/);
-  assert.match(prompts, /holding tanks/);
+  assert.match(src(root, "speechPolicy.ts"), /GVWR\/UVW\/tanks when known/);
   assert.match(realtime, /ensureCatalogLoaded/);
   assert.match(app, /await ensureCatalogLoaded\(\)/);
   assert.doesNotMatch(

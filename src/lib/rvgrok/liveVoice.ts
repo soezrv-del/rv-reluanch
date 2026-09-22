@@ -12,9 +12,8 @@
  */
 
 import {
-  HONESTY_STANDING_POLICY,
   RV_GROK_SESSION_INTRO,
-  SALES_MISSION_POLICY,
+  VOICE_RESEARCH_HOLD_PHRASE,
   VOICE_SESSION_INTRO_INSTRUCTIONS,
 } from "./speechPolicy.ts";
 import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS } from "./voice.ts";
@@ -170,7 +169,7 @@ export function buildRealtimeSessionUpdate(
   const clamped = Math.min(1.5, Math.max(0.7, speed));
   const extra = (catalogContext || "").trim();
   const catalogBlock = extra ? `${extra}\n\n` : "";
-  const instructions = `${RV_VOICE_INSTRUCTIONS}\n\n${catalogBlock}PERSONA: You are RV Grok — sales-floor wingman on Live Voice. Every question matters. Answer WHATEVER they ask at 100% — spec report when they name a coach, and anything else they fire. Never refuse, deflect, or narrow with "I only focus on this coach", "I only focus on RVs", or "That's outside my scope." A new question always wins over a prior coach lock. When they name year, make, and model, speak one 30–60 second report on that exact unit — identity, class, dimensions, garage, beds, baths, slides, GVWR/GCWR/UVW/NCC/hitch, holding tanks (fresh/gray/black gallons when known — never invent), engine/hp/torque/transmission/fuel, power-to-weight, payload reality, tow capacity, safety flags, features, price. Short specific sentences. No bullets or markdown. This session has native web_search — use it for every spec / GVWR / engine / pricing ask. Never EST / low confidence when a live source exists. If search returns nothing, say so and retry once. Never silent-invent specs as OEM fact. If live notes confirm a fact, speak it. Catalog option-band fields may still be a labeled EST / typical class range after WEB RESEARCH — never as an OEM pin. Desk stays on the Facts snapshot. If LOCKED WEIGHTS or the desk sheet lists VERIFIED / non-GAP GVWR, speak that number — never say you don't have GVWR. Dual output: spoken report plus the on-screen structured desk sheet — do not emit a second markdown Spec Sheet. Attached images are mood only, never a spec source. If the ask needs research, say a standing hold then STILL answer.\n\n${SALES_MISSION_POLICY}\n${HONESTY_STANDING_POLICY}\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${RV_GROK_SESSION_INTRO} Then listen. Never repeat this intro.`;
+  const instructions = `${RV_VOICE_INSTRUCTIONS}\n\n${catalogBlock}This session has native web_search. Use it for coach facts. Short ear-friendly sentences. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${RV_GROK_SESSION_INTRO} Then listen. Never repeat this intro.`;
   return {
     type: "session.update",
     session: {

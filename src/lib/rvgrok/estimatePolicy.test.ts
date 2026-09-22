@@ -85,7 +85,7 @@ test("catalog miss triggers web-research path (chat + live voice)", () => {
   assert.match(src("grounding.ts"), /needsWebFallback\(specs/);
   assert.match(api, /serverGrounded\.needsWeb/);
   assert.match(api, /executeWebResearch/);
-  assert.match(api, /MUST browse this turn/);
+  assert.match(src("estimatePolicy.ts"), /MUST run live WEB RESEARCH this turn BEFORE answering/);
   const voiceApi = src(join("..", "..", "routes", "api", "rvgrok.web-research.ts"));
   assert.match(voiceApi, /skipGate: true/);
   const voiceWeb = src("voiceWeb.ts");
@@ -98,8 +98,8 @@ test("catalog miss triggers web-research path (chat + live voice)", () => {
   assert.match(SEARCH_CLAIM_HONESTY, /you did not search/i);
   assert.match(ANSWER_NOW_POLICY, /SEARCH_CLAIM_HONESTY|you did not search/i);
   assert.match(HONESTY_STANDING_POLICY, /you did not search/i);
-  assert.match(src("voice.ts"), /you have not searched/);
-  assert.match(src("prompts.ts"), /you have not searched/);
+  assert.match(src("estimatePolicy.ts"), /you did not search/);
+  assert.match(src("webSearch.ts"), /WEB RESEARCH NOTES/);
   assert.match(src("realtime.ts"), /decideVoiceWebResearch/);
   assert.match(
     src("realtime.ts"),
@@ -148,10 +148,8 @@ test("estimate answers are labeled, not presented as OEM pin", () => {
   assert.match(src("speechPolicy.ts"), /ESTIMATE_STANDING_POLICY/);
   assert.match(src("speechPolicy.ts"), /LABELED_ESTIMATE_RULE/);
   for (const [label, text] of [
-    ["prompts.ts", src("prompts.ts")],
-    ["voice.ts", src("voice.ts")],
-    ["liveVoice.ts", src("liveVoice.ts")],
     ["webSearch.ts", src("webSearch.ts")],
+    ["lockedWeights.ts", src("lockedWeights.ts")],
   ] as const) {
     assert.match(
       text,

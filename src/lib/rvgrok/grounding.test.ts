@@ -235,13 +235,12 @@ test("Live Voice instructions aim for accuracy but not gospel; gesture order unt
   const live = src(root, "liveVoice.ts");
   assert.match(voice, /model=grok-voice-latest/);
   assert.doesNotMatch(voice, /realtime\?model=grok-4\.7/);
-  assert.match(voice, /Get as accurate as possible, but not gospel\./);
+  assert.match(voice, /RV_GROK_LEAN_CORE/);
   assert.doesNotMatch(voice, /ACCURACY FIRST/);
-  assert.match(voice, /VISION \/ PHOTOS/);
   assert.match(voice, /CAMERA:/);
-  assert.match(voice, /never invent/i);
-  assert.match(voice, /American Dream ≠ Tradition/);
-  assert.match(voice, /Comfort Drive/);
+  assert.match(src(root, "speechPolicy.ts"), /Get as accurate as possible, but not gospel\./);
+  assert.match(src(root, "speechPolicy.ts"), /VISION \/ PHOTOS/);
+  assert.match(src(root, "speechPolicy.ts"), /Never invent OEM numbers/);
   assert.doesNotMatch(voice, /You do not have a separate research step/);
   assert.match(live, /liveVoiceStartOrder/);
   assert.match(live, /gesture-capture/);
@@ -508,44 +507,36 @@ test("repair-mode playbook is wired through chat, voice, and browse", () => {
   assert.match(src(root, "grounding.ts"), /repairMode/);
   assert.match(src(root, "grounding.ts"), /formatRepairGroundingBlock/);
   assert.match(src(root, "webIntent.ts"), /looksLikeRepairQuestion/);
-  assert.match(src(root, "prompts.ts"), /REPAIR \/ DIAGNOSE/);
-  assert.match(src(root, "voice.ts"), /Not a certified RV tech/);
+  assert.match(src(root, "prompts.ts"), /RV_GROK_LEAN_CORE/);
+  assert.match(src(root, "speechPolicy.ts"), /jokes, repairs, payments/);
+  assert.match(src(root, "voice.ts"), /RV_GROK_LEAN_CORE/);
   assert.match(src(root, "webSearch.ts"), /torque spec, part number, wiring color/);
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(api, /buildChatGrounding/);
 });
 
 test("system prompts never deflect to website / OEM / dealer — unconditional", () => {
-  const prompts = src(root, "prompts.ts");
-  assert.match(prompts, /WEB RESEARCH notes/);
-  assert.match(prompts, /no internet/i);
-  assert.match(prompts, /WEB SEARCH NOT AVAILABLE/);
-  assert.match(prompts, /no catalog data/i);
-  assert.match(prompts, /OEM site, or dealer/);
-  assert.match(prompts, /UNCONDITIONAL/);
-  assert.match(prompts, /check the website/);
-  assert.match(prompts, /look it up yourself/);
-  assert.match(prompts, /go check the OEM site/);
-  assert.match(prompts, /ask the dealer/);
-  assert.match(prompts, /facts and numbers first/);
+  const speech = src(root, "speechPolicy.ts");
+  assert.match(speech, /check the website/);
+  assert.match(speech, /look it up yourself/);
+  assert.match(speech, /ask the dealer/);
+  assert.match(speech, /Never invent OEM numbers/);
+  assert.match(src(root, "prompts.ts"), /RV_GROK_LEAN_CORE/);
   assert.doesNotMatch(
-    prompts,
+    src(root, "prompts.ts"),
     /as the primary answer when WEB RESEARCH notes are present/,
   );
   assert.doesNotMatch(
-    prompts,
+    src(root, "prompts.ts"),
     /as the primary answer when notes are present/,
   );
   const voice = src(root, "voice.ts");
-  assert.match(voice, /WEB RESEARCH notes/);
-  assert.match(voice, /WEB SEARCH NOT AVAILABLE/);
-  assert.match(voice, /no catalog data/i);
-  assert.match(voice, /UNCONDITIONAL/);
-  assert.match(voice, /check the website/);
+  assert.match(voice, /RV_GROK_LEAN_CORE/);
   assert.doesNotMatch(
     voice,
     /as the whole answer when WEB RESEARCH notes are present/,
   );
+  assert.match(src(root, "webSearch.ts"), /WEB RESEARCH notes|WEB SEARCH NOT AVAILABLE/);
   const live = src(root, "liveVoice.ts");
   assert.doesNotMatch(live, /wantsWebFallback/);
   const realtime = src(root, "realtime.ts");
@@ -943,19 +934,15 @@ test("2025 Aspire 44R grounding injects VERIFIED GVWR 49000 — never teach I-do
   const prompts = src(root, "prompts.ts");
   const voiceSrc = src(root, "voice.ts");
   const speech = src(root, "speechPolicy.ts");
-  for (const [label, text] of [
-    ["liveVoice.ts", live],
-    ["prompts.ts", prompts],
-    ["voice.ts", voiceSrc],
-    ["speechPolicy.ts", speech],
-  ] as const) {
-    assert.match(
-      text,
-      /never say you don't have/i,
-      `${label} forbids claiming lack of a locked field`,
-    );
-    assert.match(text, /LOCKED WEIGHTS/, `${label} names LOCKED WEIGHTS`);
-  }
+  assert.match(prompts, /RV_GROK_LEAN_CORE/);
+  assert.match(voiceSrc, /RV_GROK_LEAN_CORE/);
+  assert.match(live, /RV_VOICE_INSTRUCTIONS/);
+  assert.match(
+    speech,
+    /never say you don't have/i,
+    "speechPolicy forbids claiming lack of a locked field",
+  );
+  assert.match(speech, /LOCKED WEIGHTS/, "speechPolicy names LOCKED WEIGHTS");
   assert.doesNotMatch(
     live,
     /GAP over invent; say "I don't have that\."/,

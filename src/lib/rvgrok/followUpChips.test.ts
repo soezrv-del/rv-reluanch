@@ -154,10 +154,11 @@ test("chips stay UI-only — no spoken post-reply prompts; intro stays I'm RvGro
   assert.equal((landing.match(/I'm RvGrok/g) || []).length, 1);
 
   assert.doesNotMatch(prompts, /then offer to go deeper/);
-  assert.match(
+  assert.doesNotMatch(prompts, /want me to go deeper/);
+  assert.doesNotMatch(
     prompts,
-    /Do not close with a follow-up question/,
-    "chat prompt must not teach spoken post-reply chips",
+    /follow-up question/,
+    "lean standing prompt does not teach spoken post-reply chips",
   );
   assert.doesNotMatch(helper, /streamChat|XAI_API|chat\.completions/);
   assert.doesNotMatch(bubble, /I'm RvGrok/);

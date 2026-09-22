@@ -51,11 +51,10 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.equal(session.audio.output.format.rate, PCM_SAMPLE_RATE);
   assert.equal(session.audio.output.speed, 1.25);
   assert.match(session.instructions, /native web_search/);
-  assert.match(session.instructions, /every spec \/ GVWR \/ engine \/ pricing ask/);
-  assert.match(session.instructions, /Never EST \/ low confidence when a live source exists/);
-  assert.match(session.instructions, /say so and retry once/);
-  assert.match(session.instructions, /labeled EST \/ typical class range/);
-  assert.match(session.instructions, /LOCKED WEIGHTS/);
+  assert.match(session.instructions, /sales-floor wingman/);
+  assert.match(session.instructions, /CARFAX-style coach report/);
+  assert.match(session.instructions, /give me one second/);
+  assert.match(session.instructions, /I'm RvGrok/);
 });
 
 test("catalog lock session.update still ships voice, VAD, audio, and web_search", () => {

@@ -189,8 +189,8 @@ test("origin ask injects the official story — never I don't know", () => {
 });
 
 test("chat, voice, and grounding wire the origin KB; DialaBot stays out", () => {
-  assert.match(src("prompts.ts"), /ABOUT_RVFOX/);
-  assert.match(src("voice.ts"), /ABOUT_RVFOX/);
+  assert.match(src("prompts.ts"), /RV_GROK_LEAN_CORE/);
+  assert.match(src("voice.ts"), /RV_GROK_LEAN_CORE/);
   assert.match(src("grounding.ts"), /withOriginBlock/);
   assert.match(src("grounding.ts"), /looksLikeOriginQuestion/);
   assert.match(src("webIntent.ts"), /looksLikeOriginQuestion/);
