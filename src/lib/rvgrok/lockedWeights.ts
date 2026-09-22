@@ -1,36 +1,63 @@
 /**
- * OEM weight pins for RV Grok speech + desk sheet.
+ * OEM / Facts brochure weights for RV Grok speech + desk sheet.
  *
- * Desk chips already use findOemGvwrLbs / findOemUvwLbs. Spoken report and
- * any model-written "Spec Sheet" must use the same numbers — never claim
- * GAP / "I don't have GVWR" when a pin is present. Unpinned UVW stays GAP.
+ * Same published numbers Facts uses (buildBrochureSpecs gvwrLbs / uvwLbs).
+ * Pin-only findOem* is the fallback when the live catalog is not loaded.
+ * Never claim GAP / "I don't have GVWR" when Facts already shows a number.
  */
 
-import { findOemGvwrLbs, findOemUvwLbs } from "../rv/floorplanSpecs.ts";
+import {
+  findOemFloorplanSpec,
+  findOemGvwrLbs,
+  findOemUvwLbs,
+} from "../rv/floorplanSpecs.ts";
 import type { CoachIdentity } from "./coachIdentity.ts";
+import { resolveFactsBrochure } from "./factsBrochure.ts";
 
 export type LockedOemWeights = {
   gvwrLbs: number | null;
   uvwLbs: number | null;
 };
 
+function publishedWeightsFromPins(
+  identity: Pick<CoachIdentity, "year" | "make" | "model" | "floorplan">,
+): LockedOemWeights {
+  const oem = findOemFloorplanSpec(
+    identity.year,
+    identity.make,
+    identity.model,
+    identity.floorplan,
+  );
+  return {
+    gvwrLbs:
+      oem?.gvwrLbs ??
+      findOemGvwrLbs(
+        identity.year,
+        identity.make,
+        identity.model,
+        identity.floorplan,
+      ),
+    uvwLbs:
+      findOemUvwLbs(
+        identity.year,
+        identity.make,
+        identity.model,
+        identity.floorplan,
+      ) ?? oem?.uvwLbs ?? null,
+  };
+}
+
 export function resolveLockedOemWeights(
   identity: Pick<CoachIdentity, "year" | "make" | "model" | "floorplan">,
 ): LockedOemWeights {
-  return {
-    gvwrLbs: findOemGvwrLbs(
-      identity.year,
-      identity.make,
-      identity.model,
-      identity.floorplan,
-    ),
-    uvwLbs: findOemUvwLbs(
-      identity.year,
-      identity.make,
-      identity.model,
-      identity.floorplan,
-    ),
-  };
+  const brochure = resolveFactsBrochure(identity);
+  if (brochure) {
+    return {
+      gvwrLbs: brochure.gvwrLbs ?? null,
+      uvwLbs: brochure.uvwLbs ?? null,
+    };
+  }
+  return publishedWeightsFromPins(identity);
 }
 
 export function formatLockedWeightLine(
