@@ -20,13 +20,10 @@ export function adminSheetView(input: {
   if (input.authed) return "list";
   if (!input.canOpen) return "blocked";
   if (input.loading) return "loading";
-  if (
-    input.code === ADMIN_PASSWORD_UNSET_CODE ||
-    input.code === DATABASE_UNAVAILABLE_CODE
-  ) {
-    return "blocked";
+  if (input.code === ADMIN_LOGIN_REQUIRED_CODE || !input.code) {
+    return "password";
   }
-  return "password";
+  return "blocked";
 }
 
 export function adminSheetBlockedMessage(code?: string | null): string {

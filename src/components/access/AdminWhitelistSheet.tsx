@@ -73,7 +73,7 @@ export function AdminWhitelistSheet({
       setCode(null);
     } catch (err) {
       setAuthed(false);
-      setCode(ADMIN_PASSWORD_UNSET_CODE);
+      setCode("load_failed");
       setError(err instanceof Error ? err.message : "Could not load the list.");
     } finally {
       setLoading(false);
@@ -247,7 +247,7 @@ export function AdminWhitelistSheet({
           ) : view === "blocked" ? (
             <div className="glass-prestige space-y-3 rounded-[1.25rem] p-4">
               <p className="text-[15px] font-bold text-white">
-                This list is not locked on you.
+                You can close this screen.
               </p>
               <p className="text-[13px] leading-relaxed text-white/80">
                 {error && code !== ADMIN_PASSWORD_UNSET_CODE
@@ -441,7 +441,7 @@ export function AdminWhitelistSheet({
                 type="button"
                 onClick={() => {
                   clearAdminToken();
-                  setAuthed(false);
+                  void load();
                 }}
                 className="w-full rounded-xl border border-white/20 bg-white/5 py-2.5 text-[13px] font-bold text-white"
               >

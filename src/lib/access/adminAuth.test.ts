@@ -121,6 +121,15 @@ test("unset password → blocked dismissible UI, never a stuck form", () => {
       canOpen: true,
       authed: false,
       loading: false,
+      code: "load_failed",
+    }),
+    "blocked",
+  );
+  assert.equal(
+    adminSheetView({
+      canOpen: true,
+      authed: false,
+      loading: false,
       code: ADMIN_PASSWORD_UNSET_CODE,
     }),
     "blocked",
