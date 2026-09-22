@@ -2,7 +2,7 @@ import {
   ACCESS_ADMIN_TOKEN_KEY,
   ACCESS_PHONE_HEADER,
   ACCESS_PHONE_STORAGE_KEY,
-} from "./constants";
+} from "./constants.ts";
 
 export type AccessCheckResult = {
   allowed: boolean;

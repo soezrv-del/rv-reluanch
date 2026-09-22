@@ -224,7 +224,7 @@ export async function fetchVoiceWebResearchNotes(opts: {
 }): Promise<WebSearchNotes> {
   try {
     const { accessHeaders, readStoredPhone } = await import(
-      "@/lib/access/client"
+      "../access/client.ts"
     );
     const phone = (opts.accessPhone || readStoredPhone() || "").trim();
     const post = (phoneForHeader: string) =>
