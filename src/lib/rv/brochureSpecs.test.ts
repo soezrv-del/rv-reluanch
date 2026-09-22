@@ -631,6 +631,34 @@ test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series E", "25FW"), null);
 });
 
+test("Audit E 2027 OEM GVWR pins: Altitude / Incline / Incline FS550", () => {
+  // 2027-Fleetwood-Altitude.pdf — GVWR 14,500 for 27U / 29F / 29H / 31W.
+  for (const fp of ["27U", "29F", "29H", "31W"] as const) {
+    assert.equal(findOemGvwrLbs("2027", "Fleetwood", "Altitude", fp), 14500);
+  }
+  // 2027-Holiday-Rambler-Incline.pdf — GVWR 14,500 for 27U / 29H / 31W.
+  for (const fp of ["27U", "29H", "31W"] as const) {
+    assert.equal(findOemGvwrLbs("2027", "Holiday Rambler", "Incline", fp), 14500);
+  }
+  // 2027-Holiday-Rambler-Incline-FS550.pdf — GVWR 22,000 for 30SB / 30WM / 32AW.
+  for (const fp of ["30SB", "30WM", "32AW"] as const) {
+    assert.equal(
+      findOemGvwrLbs("2027", "Holiday Rambler", "Incline FS550", fp),
+      22000,
+    );
+  }
+  // Isolation — do not bleed E-450 pins onto Super C, or 2027 pins onto 2026.
+  assert.equal(findOemGvwrLbs("2027", "Fleetwood", "Altitude FS550", "27U"), null);
+  assert.equal(findOemGvwrLbs("2027", "Fleetwood", "Altitude FS550", "30SB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Fleetwood", "Altitude FS600D", "27U"), null);
+  assert.equal(findOemGvwrLbs("2027", "Holiday Rambler", "Incline FS550", "27U"), null);
+  assert.equal(findOemGvwrLbs("2027", "Holiday Rambler", "Incline FS600D", "27U"), null);
+  assert.equal(findOemGvwrLbs("2027", "Holiday Rambler", "Incline", "30SB"), null);
+  assert.equal(findOemGvwrLbs("2026", "Fleetwood", "Altitude", "27U"), null);
+  assert.equal(findOemGvwrLbs("2026", "Holiday Rambler", "Incline", "27U"), null);
+  assert.equal(findOemGvwrLbs("2026", "Holiday Rambler", "Incline FS550", "30SB"), null);
+});
+
 test("Audit B Phase 3+ length pins match dated brochures (44OH / 303RLS / 26DBH)", () => {
   // Tiffin MY25/MY26 Phaeton weights & measures: 44 OH Overall Length 45' (WB 310").
   const phaeton = findOemFloorplanSpec("2025", "Tiffin", "Phaeton", "44OH");

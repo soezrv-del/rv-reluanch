@@ -1942,7 +1942,7 @@ export function findOemFloorplanSpec(
       continue;
     }
     if (
-      row.modelIncludes === "altitude" &&
+      (row.modelIncludes === "altitude" || row.modelIncludes === "incline") &&
       (md.includes("fs550") || md.includes("fs600")) &&
       !row.modelIncludes.includes("fs")
     ) {
@@ -2336,6 +2336,12 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   ...gvwrPins("grand design", "lineage series m", 2027, 2027, ["25MD"], 12125),
   ...gvwrPins("grand design", "lineage series f", 2025, 2027, ["31ZW"], 22000),
   ...gvwrPins("grand design", "lineage series f", 2025, 2027, ["31ZW5"], 19500),
+  // Fleetwood Altitude — 2027 Altitude sales sheet (Altitude27F1, 3/25): E-450 14,500 all four. Not FS550 / FS600D.
+  ...gvwrPins("fleetwood", "altitude", 2027, 2027, ["27U", "29F", "29H", "31W"], 14500),
+  // Holiday Rambler Incline — 2027 Incline sales sheet (ALTITUDE27F1 / Incline, 3/26): E-450 14,500. Not FS550.
+  ...gvwrPins("holiday rambler", "incline", 2027, 2027, ["27U", "29H", "31W"], 14500),
+  // Holiday Rambler Incline FS550 — 2027 Incline FS550 sales sheet (INCLINE FS550 27F1, 3/26): F-550 22,000.
+  ...gvwrPins("holiday rambler", "incline fs550", 2027, 2027, ["30SB", "30WM", "32AW"], 22000),
 ];
 
 /** Pin count for coverage reports / tests. */
@@ -2709,6 +2715,13 @@ function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
   if (
     modelIncludes.startsWith("lineage series") &&
     !modelNorm.includes(modelIncludes)
+  ) {
+    return true;
+  }
+  if (
+    (modelIncludes === "altitude" || modelIncludes === "incline") &&
+    (modelNorm.includes("fs550") || modelNorm.includes("fs600")) &&
+    !modelIncludes.includes("fs")
   ) {
     return true;
   }
