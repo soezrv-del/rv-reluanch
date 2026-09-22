@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Check, Loader2, Square, ThumbsDown, ThumbsUp, Volume2 } from "lucide-react";
+import { Check, CornerDownLeft, Loader2, Square, ThumbsDown, ThumbsUp, Volume2 } from "lucide-react";
+import type { FollowUpChip } from "@/lib/rvgrok/followUpChips";
 import type { Message } from "@/lib/rvgrok/types";
 import { parseCoachFromText } from "@/lib/rvgrok/answerFeedback";
 import { formatTime, cn } from "@/lib/utils";
@@ -60,12 +61,16 @@ export function MessageBubble({
   speakingId,
   priorQuery,
   onFeedback,
+  suggestions,
+  onSuggestion,
 }: {
   message: Message;
   onSpeak?: (id: string, text: string) => void;
   speakingId?: string | null;
   priorQuery?: string;
   onFeedback?: (messageId: string, payload: GrokFeedbackPayload) => void;
+  suggestions?: FollowUpChip[];
+  onSuggestion?: (prompt: string) => void;
 }) {
   const isUser = message.role === "user";
   const hasAgentSteps = !isUser && (message.agentSteps?.length ?? 0) > 0;
@@ -113,14 +118,15 @@ export function MessageBubble({
         </div>
       )}
 
-      <div
-        className={cn(
-          "max-w-[min(100%,28rem)] rounded-[var(--radius-lg)] px-3.5 py-3 text-[14px] leading-relaxed",
-          isUser
-            ? "rounded-br-sm bg-sapphire text-white shadow-[var(--shadow-glow-sapphire)]"
-            : "grok-frost rounded-bl-sm text-fg",
-        )}
-      >
+      <div className="flex min-w-0 max-w-[min(100%,28rem)] flex-col">
+        <div
+          className={cn(
+            "rounded-[var(--radius-lg)] px-3.5 py-3 text-[14px] leading-relaxed",
+            isUser
+              ? "rounded-br-sm bg-sapphire text-white shadow-[var(--shadow-glow-sapphire)]"
+              : "grok-frost rounded-bl-sm text-fg",
+          )}
+        >
         {hasAgentSteps ? (
           <div className="mb-2">
             {message.isAgentMode ? <AgentBadge /> : null}
@@ -329,6 +335,32 @@ export function MessageBubble({
             <DeskSpecSheet sheet={message.deskSheet} />
           </div>
         ) : null}
+      </div>
+
+      {!isUser && suggestions && suggestions.length > 0 ? (
+        <div
+          data-rvgrok-followups=""
+          className="mt-1.5 flex flex-col gap-0.5 px-0.5"
+        >
+          {suggestions.map((chip) => (
+            <button
+              key={chip.id}
+              type="button"
+              data-rvgrok-followup={chip.id}
+              onClick={() => onSuggestion?.(chip.label)}
+              className="grok-followup flex min-h-9 w-full items-start gap-2 rounded-lg px-1.5 py-1.5 text-left"
+            >
+              <CornerDownLeft
+                className="mt-0.5 size-3.5 shrink-0 text-white/40"
+                aria-hidden
+              />
+              <span className="text-[13px] leading-snug text-white/70">
+                {chip.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : null}
       </div>
     </div>
   );

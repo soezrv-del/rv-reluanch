@@ -57,6 +57,7 @@ import {
 import { planGrokTabEntry } from "@/lib/rvgrok/tabEntry";
 import { useAccessOptional } from "@/components/access/AccessProvider";
 import { cn, uid } from "@/lib/utils";
+import { followUpChipsForThread } from "@/lib/rvgrok/followUpChips";
 import { MessageBubble } from "./MessageBubble";
 import { HistoryPanel } from "./HistoryPanel";
 import { VoicePanel } from "./VoicePanel";
@@ -1361,6 +1362,9 @@ export function RvGrokApp({
     !isLoading &&
     !liveActive;
 
+  const followUps = liveActive
+    ? { index: -1, chips: [] as const }
+    : followUpChipsForThread(messages);
   const deskAfterIdx = deskRevealAfterIndex(messages);
   const pendingLiveSheet = shouldShowPendingLiveDesk(messages, liveDeskSheet)
     ? liveDeskSheet
@@ -1501,6 +1505,8 @@ export function RvGrokApp({
             }}
             onSpeak={handleSpeak}
             speakingId={speakingId}
+            suggestions={i === followUps.index ? followUps.chips : undefined}
+            onSuggestion={(prompt) => void sendMessage(prompt)}
           />
           {i === deskAfterIdx && m.deskSheet ? deskAfterReply(m.deskSheet) : null}
         </Fragment>
