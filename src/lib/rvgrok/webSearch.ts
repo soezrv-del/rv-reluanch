@@ -14,7 +14,7 @@
  * (410 Gone). The xAI path is POST /v1/responses with { type: "web_search" }.
  *
  * SPEED: grok-4.6 + default reasoning.effort "high" + unbounded tool loops is
- * the 60–70s path. Research uses a fast model, a short prompt, a clipped
+ * the 60–70s path. Research uses grok-4.7 with low reasoning, a short prompt, a clipped
  * catalog lock, a process cache for repeated demo questions, and an
  * application-level research loop (search → confirm → rephrase) bounded by
  * WEB_SEARCH_MAX_TOOL_CALLS. Extra Responses knobs are best-effort — HTTP 400
@@ -53,14 +53,14 @@ import {
 export const WEB_SEARCH_TOOL = { type: "web_search" } as const;
 
 /**
- * Fast Responses + web_search only. grok-4.6 is intentionally absent:
- * docs default its reasoning effort to "high", and one search-and-reason
- * loop was measured at ~60–70s. Do not put it back as a fallback — a
- * timeout there would eat the whole voice/chat budget.
+ * Fast Responses + web_search only. grok-4.7 + low reasoning stays inside
+ * the voice/chat wall-clock. grok-4.6 is intentionally absent: docs default
+ * its reasoning effort to "high", and one search-and-reason loop was
+ * measured at ~60–70s. Do not put 4.6 back as a fallback — a timeout
+ * there would eat the whole voice/chat budget.
  */
 export const WEB_SEARCH_MODELS = [
-  "grok-4-1-fast-reasoning",
-  "grok-4-1-fast-non-reasoning",
+  "grok-4.7",
 ] as const;
 
 /**
@@ -594,7 +594,7 @@ function writeWebSearchCache(
 }
 
 function supportsLowReasoningEffort(model: string): boolean {
-  return /^grok-4\.(5|6)\b/.test(model);
+  return /^grok-4\.(5|6|7)\b/.test(model);
 }
 
 export function buildResearchInstructions(opts: {
@@ -646,7 +646,7 @@ export function buildWebSearchRequest(opts: {
   profile?: WebSearchProfile;
   /**
    * true (default): add documented speed knobs (max_tool_calls, tool_choice,
-   * low reasoning on grok-4.5/4.6). false: #113 minimal shape only.
+   * low reasoning on grok-4.5/4.6/4.7). false: #113 minimal shape only.
    */
   extras?: boolean;
   /** 1-based attempt in the research loop. */

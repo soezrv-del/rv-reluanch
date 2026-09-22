@@ -208,6 +208,8 @@ test("chat must not write Facts cache; Live must not fill hard fields", () => {
 test("Live Voice instructions are accuracy-first; gesture order untouched", () => {
   const voice = src(root, "voice.ts");
   const live = src(root, "liveVoice.ts");
+  assert.match(voice, /model=grok-4\.7/);
+  assert.doesNotMatch(voice, /grok-voice-latest/);
   assert.match(voice, /ACCURACY FIRST/);
   assert.match(voice, /never invent/i);
   assert.match(voice, /American Dream ≠ Tradition/);
@@ -220,11 +222,11 @@ test("Live Voice instructions are accuracy-first; gesture order untouched", () =
 
 test("web search sidecar uses Responses web_search tool", () => {
   const body = buildWebSearchRequest({
-    model: "grok-4.6",
+    model: "grok-4.7",
     query: "2023 American Coach American Dream engine HP chassis",
     catalogBlock: "engine: Cummins L9 450 std / X15 605 opt",
   });
-  assert.equal(body.model, "grok-4.6");
+  assert.equal(body.model, "grok-4.7");
   assert.deepEqual(body.tools, [{ type: "web_search" }]);
   assert.equal("search_parameters" in body, false);
   assert.equal("temperature" in body, false);
@@ -251,17 +253,16 @@ test("web search sidecar uses Responses web_search tool", () => {
 });
 
 test("web search model fallbacks are current Responses + web_search ids", () => {
-  assert.deepEqual([...WEB_SEARCH_MODELS], [
-    "grok-4-1-fast-reasoning",
-    "grok-4-1-fast-non-reasoning",
-  ]);
+  assert.deepEqual([...WEB_SEARCH_MODELS], ["grok-4.7"]);
   assert.equal((WEB_SEARCH_MODELS as readonly string[]).includes("grok-4.6"), false);
-  assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4-1-fast-reasoning"]);
+  assert.deepEqual([...VOICE_WEB_SEARCH_MODELS], ["grok-4.7"]);
   assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 24_000);
   assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 36_000);
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(api, /executeWebResearch/);
   assert.match(api, /CHAT_WEB_SEARCH_TIMEOUT_MS/);
+  assert.match(api, /\["grok-4\.7"/);
+  assert.doesNotMatch(api, /grok-4-1-fast/);
   assert.doesNotMatch(api, /VOICE_WEB_SEARCH/);
 });
 
@@ -427,7 +428,7 @@ test("agent mode can request web for lookup without forcing hi", () => {
 
 test("troubleshooting web prompt asks for symptoms and bulletins", () => {
   const body = buildWebSearchRequest({
-    model: "grok-4.6",
+    model: "grok-4.7",
     query: "My 2018 Keystone Passport slide won't retract — what should I check?",
   });
   const packed = JSON.stringify(body);
@@ -452,7 +453,7 @@ test("web injection stays honest when search fails", () => {
   const ok = formatWebSearchInjection({
     ok: true,
     notes: "Check slide lock pins first.",
-    model: "grok-4.6",
+    model: "grok-4.7",
   });
   assert.match(ok, /WEB RESEARCH NOTES/);
   assert.match(ok, /do not claim you have no internet/i);

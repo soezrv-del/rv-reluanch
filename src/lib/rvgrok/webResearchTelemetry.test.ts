@@ -111,7 +111,7 @@ test("cache hit returns kind=cache_hit with cached flag", async () => {
   seedWebSearchCache(researchCacheKey(query), {
     ok: true,
     notes: "Near the entry step on many Adventurer coaches.",
-    model: "grok-4-1-fast-reasoning",
+    model: "grok-4.7",
   });
   const body = await executeWebResearch({
     query,

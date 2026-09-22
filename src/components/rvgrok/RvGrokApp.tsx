@@ -648,7 +648,7 @@ export function RvGrokApp({
           },
         });
 
-        if (agentMode) setActiveModel((m) => m || "grok-4.5 · Agent");
+        if (agentMode) setActiveModel((m) => m || "grok-4.7 · Agent");
 
         const finalContent =
           fullContent ||
