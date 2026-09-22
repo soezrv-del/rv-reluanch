@@ -55,7 +55,7 @@ export type ExecuteWebResearchOpts = {
   ownLotSnapshot?: OwnLotSnapshot;
   /** Same-origin host for the deploy-bundled public snapshot. */
   requestOrigin?: string;
-  /** Research-loop attempt cap. Defaults to WEB_SEARCH_MAX_TOOL_CALLS (3). */
+  /** Research-loop attempt cap. Defaults to WEB_SEARCH_MAX_TOOL_CALLS (2). */
   maxAttempts?: number;
 };
 
