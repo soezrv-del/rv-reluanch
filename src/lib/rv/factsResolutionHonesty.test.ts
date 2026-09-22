@@ -576,9 +576,66 @@ test("Audit E 2027 brochure path: Jayco Seneca Super C pins; XT GAP", () => {
   assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca XT", "32U"), null);
   assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca XT", "35L"), null);
 
-  // New GVWR pins do not stamp Prestige (no 2027 Prestige table).
-  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Prestige", "37K"), null);
+  // Prestige 37K/37L/37M have their own exact 2027 pin; 33J stays GAP.
+  // Bare-Seneca floorplan UVW must not bleed into Prestige.
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Prestige", "37K"), 31000);
   assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Prestige", "33J"), null);
+  assert.equal(findOemUvwLbs("2027", "Jayco", "Seneca Prestige", "37K"), null);
+  assert.equal(findOemFloorplanSpec("2027", "Jayco", "Seneca Prestige", "37K"), null);
+});
+
+test("Audit E 2027 brochure path: Jayco Solstice / Swift / Terrain / Prestige pins", () => {
+  const so21l = factsFor("2027", "Jayco", "Solstice", "21L");
+  const so21t = factsFor("2027", "Jayco", "Solstice", "21T");
+  const so21b = factsFor("2027", "Jayco", "Solstice", "21B");
+  assert.equal(so21l.brochure.gvwrLbs, 11000);
+  assert.equal(so21t.brochure.gvwrLbs, 11000);
+  assert.equal(so21b.brochure.gvwrLbs, null);
+  assert.equal(so21l.brochure.uvwLbs, null);
+  assert.equal(so21t.brochure.uvwLbs, null);
+  assert.equal(findOemGvwrLbs("2027", "Jayco", "Solstice", "20L"), null);
+  assert.equal(findOemGvwrLbs("2026", "Jayco", "Solstice", "21L"), null);
+
+  const sw20e = factsFor("2027", "Jayco", "Swift", "20E");
+  const sw20t = factsFor("2027", "Jayco", "Swift", "20T");
+  const sw20l = factsFor("2027", "Jayco", "Swift", "20L");
+  assert.equal(sw20e.brochure.gvwrLbs, 9350);
+  assert.equal(sw20t.brochure.gvwrLbs, 9350);
+  assert.equal(sw20l.brochure.gvwrLbs, null);
+  assert.equal(sw20e.brochure.uvwLbs, null);
+  assert.equal(sw20t.brochure.uvwLbs, null);
+  assert.equal(findOemGvwrLbs("2026", "Jayco", "Swift", "20E"), null);
+
+  const te19a = factsFor("2027", "Jayco", "Terrain", "19A");
+  const te19ag = factsFor("2027", "Jayco", "Terrain", "19AG");
+  const te19y = factsFor("2027", "Jayco", "Terrain", "19Y");
+  const te19yg = factsFor("2027", "Jayco", "Terrain", "19YG");
+  assert.equal(te19a.brochure.gvwrLbs, 9050);
+  assert.equal(te19ag.brochure.gvwrLbs, 9050);
+  assert.equal(te19y.brochure.gvwrLbs, 9050);
+  assert.equal(te19yg.brochure.gvwrLbs, 9050);
+  assert.equal(te19a.brochure.uvwLbs, null);
+  assert.equal(te19y.brochure.uvwLbs, null);
+  assert.equal(findOemGvwrLbs("2026", "Jayco", "Terrain", "19A"), null);
+
+  const pk = factsFor("2027", "Jayco", "Seneca Prestige", "37K");
+  const pl = factsFor("2027", "Jayco", "Seneca Prestige", "37L");
+  const pm = factsFor("2027", "Jayco", "Seneca Prestige", "37M");
+  const p33 = factsFor("2027", "Jayco", "Seneca Prestige", "33J");
+  assert.equal(pk.brochure.gvwrLbs, 31000);
+  assert.equal(pl.brochure.gvwrLbs, 31000);
+  assert.equal(pm.brochure.gvwrLbs, 31000);
+  assert.equal(p33.brochure.gvwrLbs, null);
+  assert.equal(pk.brochure.uvwLbs, null);
+  assert.equal(pl.brochure.uvwLbs, null);
+  assert.equal(pm.brochure.uvwLbs, null);
+  assert.equal(findOemGvwrLbs("2026", "Jayco", "Seneca Prestige", "37K"), null);
+
+  // #414 Super C / XT unchanged.
+  const sc = factsFor("2027", "Jayco", "Seneca Super C", "33J");
+  const xt = factsFor("2027", "Jayco", "Seneca XT", "32U");
+  assert.equal(sc.brochure.gvwrLbs, 31000);
+  assert.equal(xt.brochure.gvwrLbs, null);
 });
 
 test("Lineage Series F: no series 22k stamp; 31ZW / 31ZW5 year-bands stay", () => {

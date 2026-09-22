@@ -1991,19 +1991,14 @@ export function findOemFloorplanSpec(
     ) {
       continue;
     }
-    // Bare "seneca" Super C rows must not fill Seneca XT (32U/35L).
+    // Bare "seneca" Super C rows must not fill Seneca XT or Seneca Prestige.
+    // Prestige shares 37K/37L/37M but must not inherit Super C UVW / full spec.
+    // Prestige GVWR comes only from the exact "seneca prestige" 2027 pin.
     if (
       row.modelIncludes === "seneca" &&
-      md.includes("xt") &&
-      !row.modelIncludes.includes("xt")
-    ) {
-      continue;
-    }
-    // 33J is Seneca Super C MY27 only — Prestige catalog has no 33J.
-    if (
-      row.modelIncludes === "seneca" &&
-      row.floorplan.toUpperCase() === "33J" &&
-      md.includes("prestige")
+      (md.includes("xt") || md.includes("prestige")) &&
+      !row.modelIncludes.includes("xt") &&
+      !row.modelIncludes.includes("prestige")
     ) {
       continue;
     }
@@ -2254,10 +2249,27 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   // Jayco Seneca Super C — 2027 Jayco Seneca brochure (Printed 8/26 ©2026 Jayco 2033094).
   // 33J / 37K / 37L / 37M all print GVWR 31,000. UVW not printed — do not invent.
   // "seneca super c" is the 2027 catalog key; "seneca" covers the Super C alias.
-  // modelPinBlocked keeps both off Seneca XT (32U/35L) and Seneca Prestige
-  // (this card is Seneca Super C; Prestige has no 33J and no matching Prestige table).
+  // modelPinBlocked keeps both off Seneca XT and Seneca Prestige. Prestige
+  // 37K/37L/37M use the exact "seneca prestige" 2027 pin below; 33J stays GAP.
   ...gvwrPins("jayco", "seneca super c", 2027, 2027, ["33J", "37K", "37L", "37M"], 31000),
   ...gvwrPins("jayco", "seneca", 2027, 2027, ["33J", "37K", "37L", "37M"], 31000),
+  // Jayco Seneca Prestige — 2027 Jayco Seneca Prestige brochure
+  // (Printed 8/26 ©2026 Jayco 2033095). Table prints 33J + K/L/M at GVWR 31,000.
+  // Catalog Prestige is 37K/37L/37M only — do not pin 33J. UVW not printed —
+  // do not invent or inherit bare-Seneca UVW.
+  ...gvwrPins("jayco", "seneca prestige", 2027, 2027, ["37K", "37L", "37M"], 31000),
+  // Jayco Solstice — 2027 Jayco Solstice brochure (Printed 7/26 ©2025 Jayco 2033084).
+  // Table 21L / 21T GVWR 11,000. Photo caption says 20L — 20L is not an allowed
+  // pin. 21B dropped MY27. UVW not printed.
+  ...gvwrPins("jayco", "solstice", 2027, 2027, ["21L", "21T"], 11000),
+  // Jayco Swift — 2027 Jayco Swift brochure (Printed 8/26 ©2025 Jayco 2033083).
+  // Table includes 20E / 20T / 20L at GVWR 9,350. Catalog MY27 is 20E / 20T
+  // only — do not add 20L. UVW not printed.
+  ...gvwrPins("jayco", "swift", 2027, 2027, ["20E", "20T"], 9350),
+  // Jayco Terrain — 2027 Jayco Terrain brochure (Printed 7/26 ©2025 Jayco 2033085).
+  // Grouped rows 19A/19AG and 19Y/19YG, all GVWR 9,050. Catalog matches — no
+  // source mismatch. UVW not printed.
+  ...gvwrPins("jayco", "terrain", 2027, 2027, ["19A", "19AG", "19Y", "19YG"], 9050),
   // American Coach American Tradition — 2021 Tradition brochure + later reprint table.
   // 42Q/42V = 47,000; 37S = 41,000. Catalog weightRange mid for 42' is ~39.5–44k — wrong.
   ...gvwrPins("american coach", "american tradition", 2021, 2026, ["42Q", "42V"], 47000),
@@ -3131,7 +3143,7 @@ function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
     return true;
   }
   // Bare "seneca" / "seneca super c" pins must not stamp Seneca XT or Prestige.
-  // Prestige shares 37K/37L/37M but this 2027 card is Seneca Super C (no Prestige table).
+  // Prestige 37K/37L/37M use exact "seneca prestige" 2027 pins; 33J stays GAP.
   if (
     (modelIncludes === "seneca" || modelIncludes === "seneca super c") &&
     (modelNorm.includes("xt") || modelNorm.includes("prestige")) &&
