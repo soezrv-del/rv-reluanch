@@ -95,9 +95,13 @@ export function extractFloorplanToken(text: string): string {
   if (!text) return "";
   const re = new RegExp(FLOORPLAN_TOKEN_RE.source, "g");
   for (const m of text.matchAll(re)) {
-    const token = normalizeFloorplanToken(m[1] || "");
+    let token = normalizeFloorplanToken(m[1] || "");
     if (!token) continue;
     if (isBudgetThousandsToken(token)) continue;
+    // Spoken "31W Z" — trailing single letter belongs on the code (31WZ).
+    const after = text.slice((m.index ?? 0) + m[0].length);
+    const glue = after.match(/^\s+([A-Za-z])\b/);
+    if (glue?.[1]) token = normalizeFloorplanToken(token + glue[1]);
     return token;
   }
   return "";
@@ -646,8 +650,25 @@ function collectModelWords(after: string, floorplan: string): string {
     "thanks",
     "thank",
   ]);
+  const compactFloor = (floorplan || "").replace(/\s+/g, "").toLowerCase();
   const words: string[] = [];
-  for (const w of chunk) {
+  for (let i = 0; i < chunk.length; i++) {
+    const w = chunk[i] || "";
+    const rest = chunk
+      .slice(i)
+      .join("")
+      .replace(/\s+/g, "")
+      .toLowerCase();
+    const compactW = w.replace(/\s+/g, "").toLowerCase();
+    if (compactFloor && rest === compactFloor) break;
+    // "31W Z" after glue is 31WZ — stop so "31W" is not kept as model.
+    if (
+      compactFloor &&
+      /^\d/.test(compactW) &&
+      compactFloor.startsWith(compactW)
+    ) {
+      break;
+    }
     if (
       floorplan &&
       w.replace(/\s+/g, "").toLowerCase() === floorplan.toLowerCase()
