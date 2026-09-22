@@ -629,6 +629,24 @@ test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series F", "31ZW"), 22000);
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series F", "31ZW5"), 19500);
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series E", "25FW"), null);
+
+  // Airstream MY2027 RVUSA brochures — exact codes only. Do not open 2026.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "23FB"), 6500);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "25FB"), 7600);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "27FB"), 8300);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "25FB Twin"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "28RB"), null);
+  assert.equal(findOemGvwrLbs("2026", "Airstream", "Trade Wind", "23FB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "World Traveler", "17RB"), 3500);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "World Traveler", "22RB"), 4500);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "World Traveler", "22FB"), null);
+  assert.equal(findOemGvwrLbs("2026", "Airstream", "World Traveler", "22RB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "28RB"), 8800);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "30RB"), 10000);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "33FB"), 10000);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "30RB Twin"), null);
+  assert.equal(findOemGvwrLbs("2026", "Airstream", "Classic", "30RB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Flying Cloud", "25FB"), null);
 });
 
 test("Audit E 2027 OEM GVWR pins: Altitude / Incline / Incline FS550", () => {

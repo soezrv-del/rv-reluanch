@@ -16890,7 +16890,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2026,
       overallLengthIn: 266,
       exteriorWidthIn: 90,
-      gvwrLbs: 4500,
       description: "Airstream World Traveler — 2026 lightweight single-axle (17RB / 22RB). 7'6\" body, V-twin rear bed on 22RB, full mid-bath. Entry Airstream for smaller tow vehicles."
     },
     Bambi: {
@@ -17085,7 +17084,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1931,
       warrantyYears: 3,
       yearStart: 2021,
-      gvwrLbs: 6500,
       description: "Airstream Trade Wind — dual-axle with coastal/resort interior. Pottery Barn collab retired after 2025. 23FB / 25FB / 25FB Twin / 28RB. 23FB GVWR 6,500 lb from 2026. Dublin Slate décor on current 25FB."
     },
     International: {
@@ -17224,7 +17222,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1931,
       warrantyYears: 3,
       yearStart: 2000,
-      gvwrLbs: 10000,
       description: "Airstream Classic — flagship travel trailer. 28RB / 30RB / 30RB Twin / 33FB / 33FB Twin. Highest resale of any production trailer. Dual-motor sofa on 28RB/30RB from 2026."
     },
     "Stetson 6666": {
