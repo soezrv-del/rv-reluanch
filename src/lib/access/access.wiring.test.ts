@@ -188,13 +188,27 @@ test("http gate short-circuits hard admin and stays on rvgrok", () => {
   const rvgrok = read("src/routes/api/rvgrok.ts");
   assert.match(rvgrok, /denyUnlessWhitelisted/);
   const voiceWeb = read("src/lib/rvgrok/voiceWeb.ts");
-  assert.match(voiceWeb, /accessHeaders/);
+  assert.match(voiceWeb, /fetchWithResearchAccess/);
+  assert.match(voiceWeb, /researchAccessHeaders/);
   assert.match(voiceWeb, /accessPhone/);
   assert.match(voiceWeb, /access_required/);
   const token = read("src/lib/rvgrok/voice.ts");
   assert.match(token, /accessHeaders/);
   const chat = read("src/lib/rvgrok/stream.ts");
-  assert.match(chat, /accessHeaders/);
+  assert.match(chat, /fetchWithResearchAccess/);
+  assert.match(chat, /researchAccessHeaders/);
+  assert.match(chat, /accessPhone/);
+  const unlock = read("src/lib/access/researchUnlock.ts");
+  assert.match(unlock, /requestResearchUnlock/);
+  assert.match(unlock, /waitForAccessPhone/);
+  const sheet = read("src/components/access/RequestAccessSheet.tsx");
+  assert.match(sheet, /onIdentify/);
+  assert.match(sheet, /Unlock with this number/);
+  const provider = read("src/components/access/AccessProvider.tsx");
+  assert.match(provider, /if \(result.allowed && cred\) storePhone/);
+  assert.match(provider, /phoneDigits/);
+  const realtime = read("src/lib/rvgrok/realtime.ts");
+  assert.match(realtime, /setAccessPhone/);
 });
 
 test("founder KB stays Hansen; whitelist seed uses Hanson", () => {

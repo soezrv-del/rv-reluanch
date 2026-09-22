@@ -41,6 +41,13 @@ import {
   VOICE_RESEARCH_HOLD_INSTRUCTIONS,
   VOICE_RESEARCH_HOLD_PHRASE,
 } from "./speechPolicy.ts";
+import {
+  fetchWithResearchAccess,
+  isResearchAccessBlocked,
+  readAccessRequiredError,
+  researchAccessHeaders,
+  RESEARCH_ACCESS_BLOCKED_REASON,
+} from "../access/researchUnlock.ts";
 
 export {
   VOICE_WEB_SEARCH_MODELS,
@@ -57,11 +64,10 @@ export const VOICE_WEB_SEARCH_CLIENT_BUDGET_MS =
   VOICE_WEB_SEARCH_TIMEOUT_MS + 1_000;
 
 /** Sidecar 403 `{ error: "access_required" }` — not an empty search. */
-export const VOICE_WEB_ACCESS_BLOCKED_REASON =
-  "voice web research blocked (access required)";
+export const VOICE_WEB_ACCESS_BLOCKED_REASON = RESEARCH_ACCESS_BLOCKED_REASON;
 
 export function isVoiceWebAccessBlocked(reason: string): boolean {
-  return /access required|research blocked/i.test(reason || "");
+  return isResearchAccessBlocked(reason);
 }
 
 export const VOICE_RESEARCH_ANSWER_INSTRUCTIONS =
@@ -206,15 +212,6 @@ export function voiceInjectionClaimsLookedUp(injection: string): boolean {
   );
 }
 
-async function readAccessRequiredError(res: Response): Promise<boolean> {
-  try {
-    const data = (await res.clone().json()) as { error?: string };
-    return data?.error === "access_required";
-  } catch {
-    return false;
-  }
-}
-
 export async function fetchVoiceWebResearchNotes(opts: {
   query: string;
   catalogContext?: string;
@@ -223,14 +220,10 @@ export async function fetchVoiceWebResearchNotes(opts: {
   accessPhone?: string;
 }): Promise<WebSearchNotes> {
   try {
-    const { accessHeaders, readStoredPhone } = await import(
-      "../access/client.ts"
-    );
-    const phone = (opts.accessPhone || readStoredPhone() || "").trim();
     const post = (phoneForHeader: string) =>
       fetch("/api/rvgrok/web-research", {
         method: "POST",
-        headers: accessHeaders(
+        headers: researchAccessHeaders(
           {
             "Content-Type": "application/json",
             Accept: "application/json",
@@ -245,15 +238,12 @@ export async function fetchVoiceWebResearchNotes(opts: {
           opts.signal ?? AbortSignal.timeout(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS),
       });
 
-    let res = await post(phone);
-    if (res.status === 403 && (await readAccessRequiredError(res))) {
-      const retryPhone = (phone || readStoredPhone() || "").trim();
-      if (retryPhone) {
-        res = await post(retryPhone);
-      }
-      if (!res.ok && (await readAccessRequiredError(res))) {
-        return { ok: false, reason: VOICE_WEB_ACCESS_BLOCKED_REASON };
-      }
+    const res = await fetchWithResearchAccess(post, {
+      accessPhone: opts.accessPhone,
+      signal: opts.signal,
+    });
+    if (!res.ok && (await readAccessRequiredError(res))) {
+      return { ok: false, reason: VOICE_WEB_ACCESS_BLOCKED_REASON };
     }
     if (!res.ok) {
       return { ok: false, reason: `voice web research HTTP ${res.status}` };

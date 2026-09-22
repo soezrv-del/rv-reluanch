@@ -18,5 +18,7 @@ export const NDA_STORAGE_KEY = "rvfox_nda_accepted_v1";
 export const ACCESS_PHONE_HEADER = "x-access-phone";
 export const ACCESS_ADMIN_COOKIE = "rvfox_wl_admin";
 export const ACCESS_REQUEST_EVENT = "rvfox-access-required";
+/** Fired after an approved number is written to storage — research waiters retry. */
+export const ACCESS_PHONE_CHANGED_EVENT = "rvfox-access-phone-changed";
 
 export const ACCESS_ADMIN_PASSWORD_ENV = "WHITELIST_ADMIN_PASSWORD";

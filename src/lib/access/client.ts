@@ -1,5 +1,6 @@
 import {
   ACCESS_ADMIN_TOKEN_KEY,
+  ACCESS_PHONE_CHANGED_EVENT,
   ACCESS_PHONE_HEADER,
   ACCESS_PHONE_STORAGE_KEY,
 } from "./constants.ts";
@@ -35,6 +36,12 @@ export function readStoredPhone(): string {
 
 export function storePhone(phone: string) {
   writeStorage(ACCESS_PHONE_STORAGE_KEY, phone);
+  const w = (globalThis as { window?: Window }).window;
+  if (w && phone) {
+    w.dispatchEvent(
+      new CustomEvent(ACCESS_PHONE_CHANGED_EVENT, { detail: { phone } }),
+    );
+  }
 }
 
 export function readAdminToken(): string {

@@ -62,11 +62,13 @@ export function AccessProvider({ children }: { children: ReactNode }) {
   const [requestReason, setRequestReason] = useState("");
 
   const applyResult = useCallback((result: AccessCheckResult, raw: string) => {
-    setPhone(result.phoneE164 || raw);
+    const cred = (result.phoneDigits || result.phoneE164 || raw).trim();
+    setPhone(cred);
     setName(result.name);
     setIsAdmin(result.isAdmin);
     setStatus(statusFrom(result));
-    storePhone(result.phoneE164 || raw);
+    // Only persist an approved number — accessHeaders must be able to send it.
+    if (result.allowed && cred) storePhone(cred);
   }, []);
 
   const identify = useCallback(
@@ -113,7 +115,15 @@ export function AccessProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    const onNeed = () => openRequest();
+    const onNeed = (event: Event) => {
+      const reason =
+        event instanceof CustomEvent &&
+        typeof event.detail?.reason === "string" &&
+        event.detail.reason.trim()
+          ? event.detail.reason.trim()
+          : "Enter your approved number to unlock live research.";
+      openRequest(reason);
+    };
     window.addEventListener(ACCESS_REQUEST_EVENT, onNeed);
     return () => window.removeEventListener(ACCESS_REQUEST_EVENT, onNeed);
   }, [openRequest]);
@@ -154,6 +164,7 @@ export function AccessProvider({ children }: { children: ReactNode }) {
           onClose={closeRequest}
           reason={requestReason}
           defaultPhone={phone}
+          onIdentify={identify}
         />
       </div>
     </AccessContext.Provider>

@@ -1,17 +1,23 @@
 import { useState } from "react";
 import { ShieldAlert, X } from "lucide-react";
-import { submitAccessRequest } from "@/lib/access/client";
+import {
+  submitAccessRequest,
+  type AccessCheckResult,
+} from "@/lib/access/client";
 
 export function RequestAccessSheet({
   open,
   onClose,
   reason,
   defaultPhone,
+  onIdentify,
 }: {
   open: boolean;
   onClose: () => void;
   reason?: string;
   defaultPhone?: string;
+  /** Identity check — stores an approved number so research can retry. */
+  onIdentify?: (phone: string) => Promise<AccessCheckResult>;
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState(defaultPhone || "");
@@ -30,12 +36,24 @@ export function RequestAccessSheet({
     setError("");
     setBusy(true);
     try {
+      if (onIdentify) {
+        const checked = await onIdentify(phone);
+        if (checked.allowed) {
+          onClose();
+          return;
+        }
+      }
       const result = await submitAccessRequest({ name, phone });
       if (result.alreadyAdmin) {
+        if (onIdentify) {
+          await onIdentify(phone).catch(() => undefined);
+          onClose();
+          return;
+        }
         setSentTitle("Already approved");
         setSentMessage(
           result.message ||
-            "Already admin — use Premium → Access with this number.",
+            "Already admin — this number is unlocked on this device.",
         );
       } else {
         setSentTitle("Request sent");
@@ -76,7 +94,7 @@ export function RequestAccessSheet({
             </p>
             <p className="mt-2 text-[13px] leading-relaxed text-white/80">
               {reason ||
-                "You can keep browsing. Sending your number notifies David — it does not unlock anything. Nobody is added unless he puts them on the list."}
+                "Already on the list? Enter that number to unlock this device. Requesting a new number notifies David — it does not unlock anything."}
             </p>
           </div>
 
@@ -133,11 +151,11 @@ export function RequestAccessSheet({
                 disabled={busy}
                 className="w-full rounded-xl bg-blue py-2.5 text-[13px] font-bold text-white disabled:opacity-60"
               >
-                {busy ? "Sending…" : "Send request"}
+                {busy ? "Checking…" : "Unlock with this number"}
               </button>
               <p className="text-[11px] leading-relaxed text-white/60">
-                Submitting never grants access. Already on the list? Enter that
-                number under Premium → Access.
+                Listed numbers unlock research on this device. If you are not
+                on the list, this sends a request — that never grants access.
               </p>
             </form>
           )}

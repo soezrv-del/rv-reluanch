@@ -573,6 +573,7 @@ export function RvGrokApp({
           feedbackContext: formatFeedbackContext(messageText) || undefined,
           catalogContext: grounded.block || undefined,
           wantsWebFallback: grounded.needsWeb,
+          accessPhone: access?.phone,
           handlers: {
             onModel: (m) => {
               setActiveModel(m);
@@ -1087,6 +1088,10 @@ export function RvGrokApp({
   useEffect(() => {
     startLiveSessionRef.current = startLiveSession;
   }, [startLiveSession]);
+
+  useEffect(() => {
+    realtimeRef.current?.setAccessPhone(access?.phone);
+  }, [access?.phone]);
 
   const setLiveVoiceArmed = useCallback(
     (on: boolean) => {
