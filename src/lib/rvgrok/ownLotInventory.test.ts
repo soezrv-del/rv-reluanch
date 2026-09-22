@@ -55,6 +55,21 @@ import { executeWebResearch } from "./webResearchTelemetry.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
+const prevGeminiKey = process.env.GEMINI_API_KEY;
+const prevResearchProvider = process.env.RVGROK_RESEARCH_PROVIDER;
+delete process.env.GEMINI_API_KEY;
+delete process.env.RVGROK_RESEARCH_PROVIDER;
+
+test.after(() => {
+  if (prevGeminiKey === undefined) delete process.env.GEMINI_API_KEY;
+  else process.env.GEMINI_API_KEY = prevGeminiKey;
+  if (prevResearchProvider === undefined) {
+    delete process.env.RVGROK_RESEARCH_PROVIDER;
+  } else {
+    process.env.RVGROK_RESEARCH_PROVIDER = prevResearchProvider;
+  }
+});
+
 function src(rel: string, name: string): string {
   return readFileSync(join(root, rel, name), "utf8");
 }

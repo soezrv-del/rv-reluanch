@@ -57,6 +57,10 @@ export type ExecuteWebResearchOpts = {
   requestOrigin?: string;
   /** Research-loop attempt cap. Defaults to WEB_SEARCH_MAX_TOOL_CALLS (2). */
   maxAttempts?: number;
+  /** Override process.env.GEMINI_API_KEY (tests). */
+  geminiApiKey?: string;
+  /** Override RVGROK_RESEARCH_PROVIDER (auto | gemini | xai). */
+  researchProvider?: string;
 };
 
 const LOG_TAG = "rvgrok.web_research";
@@ -64,11 +68,13 @@ const LOG_TAG = "rvgrok.web_research";
 export function classifyWebResearchFailure(reason: string): WebResearchKind {
   const r = (reason || "").trim();
   if (!r) return "unknown_failure";
-  if (/no XAI_API_KEY/i.test(r)) return "missing_key";
+  if (/no (?:XAI|GEMINI)_API_KEY/i.test(r)) return "missing_key";
   if (/aborted due to timeout|operation was aborted|timed out/i.test(r)) {
     return "timeout";
   }
-  if (/^web search HTTP \d+/i.test(r)) return "upstream_error";
+  if (/^(?:web search|gemini research) HTTP \d+/i.test(r)) {
+    return "upstream_error";
+  }
   if (/returned empty notes/i.test(r)) return "empty_response";
   if (/fetch failed|network|ECONN|ENOTFOUND|socket/i.test(r)) {
     return "network_error";
@@ -236,6 +242,8 @@ export async function executeWebResearch(
     models: opts.models,
     profile: opts.profile,
     maxAttempts: opts.maxAttempts ?? WEB_SEARCH_MAX_TOOL_CALLS,
+    geminiApiKey: opts.geminiApiKey,
+    researchProvider: opts.researchProvider,
   });
 
   const durationMs = Date.now() - t0;

@@ -1,10 +1,17 @@
 /**
- * Required xAI web search sidecar when the catalog cannot answer
+ * Required web-research sidecar when the catalog cannot answer
  * (troubleshooting / OEM / forum / manual, missing hard spec, or a
  * catalog miss). Callers must not skip this path on a catalog miss.
  *
+ * Provider chain (RVGROK_RESEARCH_PROVIDER, default auto):
+ *   1. Gemini + Google Search grounding when GEMINI_API_KEY is set
+ *   2. Existing xAI Responses `web_search` loop (fallback / no Gemini key)
+ *
+ * Chat completions and Live Voice Realtime stay on xAI Grok. Gemini is
+ * browse-only — never greetings, never a Grok replacement.
+ *
  * Confirmed: Live Search `search_parameters` on chat completions is retired
- * (410 Gone). The working path is POST /v1/responses with { type: "web_search" }.
+ * (410 Gone). The xAI path is POST /v1/responses with { type: "web_search" }.
  *
  * SPEED: grok-4.6 + default reasoning.effort "high" + unbounded tool loops is
  * the 60–70s path. Research uses a fast model, a short prompt, a clipped
@@ -30,6 +37,13 @@ import {
   looksLikeSpecQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
+import {
+  fetchGeminiResearchNotes,
+  geminiResearchTimeoutMs,
+  readGeminiApiKey,
+  researchNotesSourceLabel,
+  resolveResearchProvider,
+} from "./geminiResearch.ts";
 
 export const WEB_SEARCH_TOOL = { type: "web_search" } as const;
 
@@ -164,6 +178,7 @@ export function truncateApiErrorBody(
   const cleaned = text
     .replace(/Bearer\s+\S+/gi, "Bearer [redacted]")
     .replace(/xai-[A-Za-z0-9_-]{8,}/gi, "[redacted]")
+    .replace(/AIza[0-9A-Za-z_-]{10,}/g, "[redacted]")
     .replace(/\s+/g, " ")
     .trim();
   return cleaned.slice(0, max);
@@ -539,12 +554,13 @@ function supportsLowReasoningEffort(model: string): boolean {
   return /^grok-4\.(5|6)\b/.test(model);
 }
 
-function researchInstructions(opts: {
+export function buildResearchInstructions(opts: {
   catalog: string;
   profile: WebSearchProfile;
   attempt?: number;
   maxAttempts?: number;
   previousQueries?: string[];
+  style?: "xai-loop" | "gemini";
 }): string {
   const lengthRule =
     opts.profile === "voice"
@@ -553,14 +569,20 @@ function researchInstructions(opts: {
   const attempt = opts.attempt ?? 1;
   const maxAttempts = opts.maxAttempts ?? WEB_SEARCH_MAX_TOOL_CALLS;
   const prior = (opts.previousQueries || []).filter(Boolean);
-  const priorLine = prior.length
-    ? `This is attempt ${attempt} of ${maxAttempts}. Do NOT repeat these queries — rephrase is already applied: ${prior.join(" | ")}`
-    : `This is attempt ${attempt} of ${maxAttempts}. Search with THIS query phrasing only.`;
+  const style = opts.style ?? "xai-loop";
+  const priorLine =
+    style === "gemini"
+      ? "Use Google Search once. Prefer OEM / factory brochure / dealer listings. Open-web hits are allowed — not factory-PDF-only."
+      : prior.length
+        ? `This is attempt ${attempt} of ${maxAttempts}. Do NOT repeat these queries — rephrase is already applied: ${prior.join(" | ")}`
+        : `This is attempt ${attempt} of ${maxAttempts}. Search with THIS query phrasing only.`;
   return [
     "Research ONE RV question for RVFAX. Return short RESEARCH NOTES only — no JSON.",
     "Research loop: search the LIVE web first (OEM / factory brochure / dealer listing), then evaluate whether the results CONFIRM the asked fact (a specific year-matched number, location, procedure, listing band, or OEM pin). Prefer Tiffin, Newmar, Newmar Corp, factory PDF / brochure, and dealer listings over aggregator hedges like 'typically'. If they confirm, write CONFIRMED: yes and the fact plus related specs when found (engine / GCWR / transmission). If they do not confirm, write CONFIRMED: no and what was missing. Do not invent a labeled EST / typical class range / low confidence in these notes — never when a live source exists.",
     priorLine,
-    "Never repeat the same query. A later attempt will retry ONCE with a DIFFERENT query phrasing if this one times out or does not confirm.",
+    style === "gemini"
+      ? "Search once with Google Search. Do not invent a second query loop here — the server falls back to xAI web_search if this miss/times out."
+      : "Never repeat the same query. A later attempt will retry ONCE with a DIFFERENT query phrasing if this one times out or does not confirm.",
     lengthRule,
     "Match the ask:",
     "- Specs/powertrain: search live OEM brochure / factory spec sheet / chassis sheet / dealer listing for THAT year + make + model + floorplan FIRST. Never answer from training data. Never invent horsepower as OEM fact (no silent 450). If a live source exists, quote that year-specific number — never EST / typical class range / low confidence. If not found, write CONFIRMED: no.",
@@ -592,7 +614,7 @@ export function buildWebSearchRequest(opts: {
   const catalog = clipCatalogBlock(opts.catalogBlock);
   const profile = opts.profile ?? "chat";
   const extras = opts.extras !== false;
-  const instructions = researchInstructions({
+  const instructions = buildResearchInstructions({
     catalog,
     profile,
     attempt: opts.attempt,
@@ -664,10 +686,11 @@ export function formatWebSearchInjection(
     query: opts?.query || result.query,
   });
   const pinRule = formatCatalogPinWinsSearchMiss(opts?.catalogBlock);
+  const source = researchNotesSourceLabel(result.ok ? result.model : "");
   if (result.ok) {
     if (gate.confirmed) {
       return [
-        "WEB RESEARCH NOTES (xAI web_search — may be incomplete):",
+        `WEB RESEARCH NOTES (${source} — may be incomplete):`,
         result.notes.slice(0, 3500),
         "You have live web research this turn — do not claim you have no internet or cannot get online.",
         "Catalog lock still wins if it names a number. Notes CONFIRM the queried field — use that live OEM / brochure / dealer fact. Do not replace a confirmed fact with a labeled EST / typical class range / low confidence.",
@@ -675,7 +698,7 @@ export function formatWebSearchInjection(
     }
     if (!gate.exhausted) {
       return [
-        "WEB RESEARCH NOTES (xAI web_search — unconfirmed; do not EST yet):",
+        `WEB RESEARCH NOTES (${source} — unconfirmed; do not EST yet):`,
         result.notes.slice(0, 3500),
         "You have live web research this turn — do not claim you have no internet or cannot get online.",
         "Notes do not confirm the queried field. Do NOT give a labeled EST / typical class range. Another rephrased search is required.",
@@ -683,7 +706,7 @@ export function formatWebSearchInjection(
       ].join("\n");
     }
     return [
-      "WEB RESEARCH NOTES (xAI web_search — unconfirmed after the research loop):",
+      `WEB RESEARCH NOTES (${source} — unconfirmed after the research loop):`,
       result.notes.slice(0, 3500),
       "You have live web research this turn — do not claim you have no internet or cannot get online.",
       `Catalog lock still wins if it names a number. Research loop exhausted (${gate.attempts} genuine rephrased attempts, all unconfirmed). Use ONLY what these notes actually contain. ${LOW_CONFIDENCE_EST_RULE} Do not invent brochure numbers from training.`,
@@ -840,7 +863,7 @@ async function fetchOnePhrasing(opts: {
   };
 }
 
-export async function fetchWebSearchNotes(opts: {
+export type FetchWebSearchNotesOpts = {
   apiKey: string | undefined;
   query: string;
   catalogBlock?: string;
@@ -854,7 +877,88 @@ export async function fetchWebSearchNotes(opts: {
   profile?: WebSearchProfile;
   /** Override WEB_SEARCH_MAX_TOOL_CALLS (tests / callers). */
   maxAttempts?: number;
-}): Promise<WebSearchNotes> {
+  /** Override process.env.GEMINI_API_KEY (tests). */
+  geminiApiKey?: string;
+  /** Override RVGROK_RESEARCH_PROVIDER (auto | gemini | xai). */
+  researchProvider?: string;
+};
+
+/**
+ * Research chain: Gemini Google Search (when key + auto/gemini) then the
+ * existing xAI web_search loop. No Gemini key → xAI only, same as today.
+ */
+export async function fetchWebSearchNotes(
+  opts: FetchWebSearchNotesOpts,
+): Promise<WebSearchNotes> {
+  const originalQuery = opts.query;
+  const key = researchCacheKey(originalQuery, opts.catalogBlock);
+  const cached = readWebSearchCache(key);
+  if (cached?.ok) {
+    const confirmed = notesConfirmQueriedField(cached.notes, originalQuery);
+    return {
+      ...cached,
+      confirmed,
+      attempts: cached.attempts ?? 1,
+      exhausted: !confirmed,
+      query: originalQuery,
+    };
+  }
+
+  const profile = opts.profile ?? "chat";
+  const budgetMs = opts.timeoutMs ?? CHAT_WEB_SEARCH_TIMEOUT_MS;
+  const provider = resolveResearchProvider({
+    provider: opts.researchProvider,
+    geminiApiKey: opts.geminiApiKey,
+  });
+  const started = Date.now();
+
+  if (provider === "gemini") {
+    const geminiKey = readGeminiApiKey(opts.geminiApiKey);
+    if (geminiKey) {
+      const geminiBudget = Math.min(budgetMs, geminiResearchTimeoutMs(profile));
+      const gemini = await fetchGeminiResearchNotes({
+        apiKey: geminiKey,
+        query: originalQuery,
+        catalogBlock: opts.catalogBlock,
+        timeoutMs: geminiBudget,
+        profile,
+      });
+      if (gemini.ok && gemini.notes.trim()) {
+        const confirmed = notesConfirmQueriedField(gemini.notes, originalQuery);
+        const result: Extract<WebSearchNotes, { ok: true }> = {
+          ok: true,
+          notes: gemini.notes,
+          model: gemini.model,
+          confirmed,
+          attempts: gemini.attempts ?? 1,
+          exhausted: !confirmed,
+          queries: gemini.queries ?? [originalQuery],
+          query: originalQuery,
+        };
+        if (confirmed) writeWebSearchCache(key, result);
+        return result;
+      }
+    }
+  }
+
+  const remaining =
+    provider === "gemini"
+      ? Math.max(
+          budgetMs - (Date.now() - started),
+          WEB_SEARCH_MIN_RETRY_BUDGET_MS,
+        )
+      : budgetMs;
+
+  return fetchXaiWebSearchNotes({
+    ...opts,
+    timeoutMs: remaining,
+  });
+}
+
+/** Existing xAI Responses web_search loop (24s chat / 10s voice, two attempts). */
+export async function fetchXaiWebSearchNotes(
+  opts: FetchWebSearchNotesOpts,
+): Promise<WebSearchNotes> {
   const originalQuery = opts.query;
   if (!opts.apiKey) {
     return {
