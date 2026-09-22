@@ -210,7 +210,7 @@ export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - Chat is not the Facts report. Do not write these answers into Facts cache.`;
 
 export const UNKNOWN_POWERTRAIN_LINE =
-  "UNKNOWN / GAP — WEB RESEARCH is required this turn, then YOU answer with a labeled EST / typical class range if still unpinned. Never present that number as an OEM pin. Do not stop at I don't know. Never send the user to a brochure, door sticker, dealer, or the OEM site as the answer.";
+  "UNKNOWN / CATALOG GAP — WEB RESEARCH is required this turn, then YOU answer with a labeled EST / typical class range if still unpinned. Never present that number as an OEM pin. Do not stop at I don't know. Never send the user to a brochure, door sticker, dealer, or the OEM site as the answer.";
 
 /** Inventory / in-stock ask — own-lot wins even when the brochure row is a GAP. */
 export const INVENTORY_WINS_OVER_GAP =
@@ -226,7 +226,7 @@ function isInventoryStockAsk(query: string): boolean {
 export const COMPARE_GROUNDING_RULES = `COMPARE THIS TURN (catalog-answerable):
 - Answer both coaches from the VERIFIED CATALOG locks below in THIS turn.
 - Lead with class and powertrain. Answer now — no stall, no "give me one second," no "Let me check that."
-- Do not silent-invent HP, engine, chassis, or fuel as OEM fact. UNKNOWN / GAP: WEB RESEARCH this turn, then a labeled EST / typical class range.
+- Do not silent-invent HP, engine, chassis, or fuel as OEM fact. UNKNOWN / CATALOG GAP: WEB RESEARCH this turn, then a labeled EST / typical class range.
 - NEVER send the user to a website, OEM site, or dealer as the answer.`;
 
 function field(
@@ -480,7 +480,7 @@ export function formatCatalogGroundingBlock(
   const lockLine = presenceNote
     ? presenceNote
     : specs.hasHardLock
-      ? "This coach IS in the verified catalog. Use the locked numbers above. Do not say it is missing, not in catalogs, or to wait for a brochure. If a line is UNKNOWN / GAP, WEB RESEARCH is required this turn — then a labeled EST / typical class range if still unpinned. Never present that as an OEM pin. Never stop at I don't know."
+      ? "This coach IS in the verified catalog. Use the locked numbers above. Do not say it is missing, not in catalogs, or to wait for a brochure. If a line is UNKNOWN / CATALOG GAP, WEB RESEARCH is required this turn — then a labeled EST / typical class range if still unpinned. Never present that as an OEM pin. Never stop at I don't know."
       : "CATALOG GAP — no locked numbers for this identity. WEB RESEARCH is required this turn, then answer with a labeled EST / typical class range if still unpinned. Never present that as an OEM pin. Do not stop at I don't know. Never send the user to the OEM site, a website, or a dealer as the answer.";
   return [
     `VERIFIED CATALOG / BROCHURE for ${coach} (source: ${id.source}):`,
@@ -507,7 +507,7 @@ export function formatVoiceCatalogAddendum(
   const inventoryAsk = Boolean(opts?.inventoryAsk);
   const speak = inventoryAsk
     ? "If an OWN-LOT INVENTORY block matched units, speak those units. Do not say catalog gap or check your own lot listing. Never substitute a sibling series. Never say a catalog-known coach is not in listings."
-    : "Speak those locked numbers and every VERIFIED LOCKED WEIGHTS field. If a field is UNKNOWN / GAP and not VERIFIED, use WEB RESEARCH notes then speak a labeled EST / typical class range — never as an OEM pin. Never say you don't have a VERIFIED GVWR.";
+    : "Speak those locked numbers and every VERIFIED LOCKED WEIGHTS field. If a field is UNKNOWN / CATALOG GAP and not VERIFIED, use WEB RESEARCH notes then speak a labeled EST / typical class range — never as an OEM pin. Never say you don't have a VERIFIED GVWR.";
   return `\n\n${formatCatalogGroundingBlock(specs, { inventoryAsk })}\n${speak}`;
 }
 
@@ -677,7 +677,7 @@ export function buildVoiceGrounding(opts: {
       true,
       opts.facts,
     );
-    const body = `${compare.catalog}\nSpeak those locked numbers and every VERIFIED LOCKED WEIGHTS field. If a field is UNKNOWN / GAP and not VERIFIED, use WEB RESEARCH notes then speak a labeled EST / typical class range — never as an OEM pin. Never say you don't have a VERIFIED GVWR.\n\n${repair}`;
+    const body = `${compare.catalog}\nSpeak those locked numbers and every VERIFIED LOCKED WEIGHTS field. If a field is UNKNOWN / CATALOG GAP and not VERIFIED, use WEB RESEARCH notes then speak a labeled EST / typical class range — never as an OEM pin. Never say you don't have a VERIFIED GVWR.\n\n${repair}`;
     const standing = standingKnowledgeBlocks(query);
     const merged = standing ? `${standing}\n\n${body}` : body;
     return withDeskSheetSpeechRule(merged, query, compare.identity);
