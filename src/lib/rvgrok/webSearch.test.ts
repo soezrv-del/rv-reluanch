@@ -176,6 +176,19 @@ test("successful notes cache; failures do not invent a lookup", async () => {
   clearWebSearchCache();
 });
 
+test("chat access-blocked injection is not an empty search", () => {
+  const injection = formatWebSearchInjection({
+    ok: false,
+    reason: "research blocked (access required)",
+    confirmed: false,
+    attempts: 1,
+    exhausted: true,
+    query: "2022 American Dream 42Q GVWR",
+  });
+  assert.match(injection, /access or research is blocked/i);
+  assert.doesNotMatch(injection, /Search returned nothing after a retry/);
+});
+
 test("sidecar HTTP 403 injects WEB SEARCH NOT AVAILABLE — the spoken Live Voice line", () => {
   const injection = formatWebSearchInjection({
     ok: false,

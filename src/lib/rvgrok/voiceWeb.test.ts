@@ -504,8 +504,11 @@ test("Live Voice session passes the access phone into the sidecar fetch", () => 
     "utf8",
   );
   assert.match(app, /accessPhone: access\?\.phone/);
+  assert.match(app, /setAccessPhone\(access\?\.phone\)/);
   const voiceWeb = src("voiceWeb.ts");
-  assert.match(voiceWeb, /accessHeaders/);
+  assert.match(voiceWeb, /fetchWithResearchAccess/);
+  assert.match(voiceWeb, /researchAccessHeaders/);
   assert.match(voiceWeb, /accessPhone/);
   assert.match(voiceWeb, /access_required/);
+  assert.match(realtime, /setAccessPhone\(/);
 });

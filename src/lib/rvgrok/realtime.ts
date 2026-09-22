@@ -115,6 +115,11 @@ export class GrokRealtimeSession {
     this.accessPhone = (opts?.accessPhone || "").trim();
   }
 
+  /** AccessProvider may hydrate after Live Voice is already connected. */
+  setAccessPhone(phone?: string) {
+    this.accessPhone = (phone || "").trim();
+  }
+
   get isActive() {
     return Boolean(this.ws && this.ws.readyState === WebSocket.OPEN);
   }

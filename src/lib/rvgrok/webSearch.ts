@@ -730,6 +730,17 @@ export function formatWebSearchInjection(
   });
   const pinRule = formatCatalogPinWinsSearchMiss(opts?.catalogBlock);
   const source = researchNotesSourceLabel(result.ok ? result.model : "");
+  if (
+    !result.ok &&
+    /access required|research blocked/i.test(result.reason || "")
+  ) {
+    return [
+      `WEB SEARCH NOT AVAILABLE this turn (${result.reason}).`,
+      "Do not claim search came back empty or returned nothing after a retry.",
+      "Say access or research is blocked.",
+      `Do not invent an OEM pin. ${pinRule}`,
+    ].join(" ");
+  }
   if (result.ok) {
     if (gate.confirmed) {
       return [

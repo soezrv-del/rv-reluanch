@@ -131,20 +131,32 @@ export async function streamChat(opts: {
   feedbackContext?: string;
   catalogContext?: string;
   wantsWebFallback?: boolean;
+  /** AccessProvider / stored whitelist phone — same credential as Live Voice. */
+  accessPhone?: string;
 }) {
-  const { accessHeaders } = await import("@/lib/access/client");
-  const response = await fetch("/api/rvgrok", {
-    method: "POST",
-    headers: accessHeaders({ "Content-Type": "application/json" }),
-    body: JSON.stringify({
-      messages: opts.messages as MultimodalMessage[],
-      agentMode: opts.agentMode,
-      feedbackContext: opts.feedbackContext || undefined,
-      catalogContext: opts.catalogContext || undefined,
-      wantsWebFallback: opts.wantsWebFallback || undefined,
-    }),
-    signal: opts.signal,
+  const { fetchWithResearchAccess, researchAccessHeaders } = await import(
+    "../access/researchUnlock.ts"
+  );
+  const body = JSON.stringify({
+    messages: opts.messages as MultimodalMessage[],
+    agentMode: opts.agentMode,
+    feedbackContext: opts.feedbackContext || undefined,
+    catalogContext: opts.catalogContext || undefined,
+    wantsWebFallback: opts.wantsWebFallback || undefined,
   });
+  const response = await fetchWithResearchAccess(
+    (phone) =>
+      fetch("/api/rvgrok", {
+        method: "POST",
+        headers: researchAccessHeaders(
+          { "Content-Type": "application/json" },
+          phone,
+        ),
+        body,
+        signal: opts.signal,
+      }),
+    { accessPhone: opts.accessPhone, signal: opts.signal },
+  );
 
   if (!response.ok) {
     let detail = `HTTP ${response.status}`;
