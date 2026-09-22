@@ -15,6 +15,7 @@ import {
   lastCompleteParseFromHistory,
   lockIdentityTuple,
   namedCoachConflictsLock,
+  sanitizePresenceNote,
   resolveCatalogMake,
   resolveCatalogModel,
   resolveCoachIdentity,
@@ -370,4 +371,63 @@ test("Dutch Star is Newmar only — never Grand Design + leftover 25FW / 2020", 
   });
   assert.doesNotMatch(ghostNote, /Say the series is missing/i);
   assert.doesNotMatch(ghostNote, /Do not substitute another series/i);
+  assert.doesNotMatch(ghostNote, /Tell the truth/i);
+});
+
+test("Lineage is Grand Design — never blank make or SERIES MISSING", () => {
+  const dutchFacts = {
+    year: "2019",
+    make: "Newmar",
+    model: "Dutch Star",
+    floorplan: "4369",
+    updatedAt: "2019-06-01T00:00:00.000Z",
+  };
+
+  for (const q of ["Lineage", "Lineage 25FW", "Grand Design Lineage"]) {
+    const parsed = parseCoachFromText(q);
+    assert.equal(parsed.make, "Grand Design", q);
+    assert.match(parsed.model, /lineage/i, q);
+    const id = resolveCoachIdentity(q, dutchFacts, "2019 Newmar Dutch Star 4369");
+    assert.ok(id, q);
+    assert.equal(id!.make, "Grand Design", q);
+    assert.match(id!.model, /lineage/i, q);
+    assert.doesNotMatch(id!.make, /Newmar/i, q);
+    assert.doesNotMatch(id!.model, /dutch star/i, q);
+    if (!/25fw/i.test(q)) {
+      assert.doesNotMatch(id!.floorplan, /4369/, q);
+    }
+    const presence = inspectCatalogPresence(id!);
+    assert.notEqual(presence.status, "missing-series", q);
+    const note = formatCatalogPresenceNote(presence);
+    assert.doesNotMatch(note, /SERIES MISSING/i, q);
+    assert.doesNotMatch(note, /Say the series is missing/i, q);
+    assert.doesNotMatch(note, /Tell the truth/i, q);
+  }
+
+  const blankMake = inspectCatalogPresence({
+    year: "",
+    make: "",
+    model: "Lineage",
+    floorplan: "",
+  });
+  assert.notEqual(blankMake.status, "missing-series");
+  assert.equal(blankMake.make, "Grand Design");
+  assert.match(blankMake.model, /lineage/i);
+
+  const locked = lockIdentityTuple({
+    year: "",
+    make: "",
+    model: "Lineage Series M",
+    floorplan: "25FW",
+    source: "message",
+  });
+  assert.equal(locked.make, "Grand Design");
+  assert.match(locked.model, /lineage series m/i);
+
+  assert.doesNotMatch(
+    sanitizePresenceNote(
+      "SERIES MISSING — Grand Design Lineage is not in the verified catalog. Say the series is missing. Do not substitute another series. Tell the truth (do not fill in a gap).",
+    ),
+    /Say the series is missing|Tell the truth|Do not substitute|do not fill in a gap/i,
+  );
 });

@@ -90,6 +90,10 @@ export class GrokRealtimeSession {
   private pendingResearchInjection: string | null = null;
   private lastResearchTranscript = "";
   private introSpoken = false;
+  private lastDeskQuery = "";
+  private lastDeskIdentity: import("./coachIdentity").CoachIdentity | null =
+    null;
+  private lastDeskSpecs: Parameters<typeof resolveDeskSheet>[0]["specs"] = null;
 
   constructor(
     handlers: RealtimeHandlers,
@@ -489,6 +493,16 @@ export class GrokRealtimeSession {
     }
     if (this.finishedAssistantOnce) return;
     this.finishedAssistantOnce = true;
+    if (text && this.lastDeskQuery) {
+      const painted = resolveDeskSheet({
+        query: this.lastDeskQuery,
+        identity: this.lastDeskIdentity,
+        specs: this.lastDeskSpecs,
+        spokenText: text,
+        chatSpecBlock: text,
+      });
+      if (painted) this.handlers.onDeskSheet?.(painted);
+    }
     if (text) this.handlers.onAssistantDone(text);
   }
 
@@ -792,6 +806,9 @@ export class GrokRealtimeSession {
     } else if (grounded.identity && grounded.block) {
       this.catalogContext = grounded.block;
     }
+    this.lastDeskQuery = transcript;
+    this.lastDeskIdentity = grounded.identity;
+    this.lastDeskSpecs = grounded.specs;
     const sheet = resolveDeskSheet({
       query: transcript,
       identity: grounded.identity,
