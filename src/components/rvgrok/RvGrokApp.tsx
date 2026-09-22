@@ -1362,7 +1362,7 @@ export function RvGrokApp({
     isLoading,
     speaking: Boolean(speakingId),
   });
-  const isLanding = messages.length === 0 && !liveDeskSheet;
+  const isLanding = messages.length === 0;
   const composerPlaceholder = isRecording
     ? "Listening… keep talking"
     : liveActive

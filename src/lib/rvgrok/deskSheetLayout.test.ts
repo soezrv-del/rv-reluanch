@@ -57,7 +57,8 @@ test("desk waits until the assistant reply is finished streaming", () => {
 
 test("pending Live Voice desk sits after the thread, never as a header", () => {
   assert.equal(shouldShowPendingLiveDesk([], null), false);
-  assert.equal(shouldShowPendingLiveDesk([], sheet), true);
+  assert.equal(shouldShowPendingLiveDesk([], sheet), false);
+  assert.equal(shouldShowPendingLiveDesk([{ role: "user" }], sheet), false);
   assert.equal(
     shouldShowPendingLiveDesk(
       [{ role: "user" }, { role: "assistant", streaming: true }],

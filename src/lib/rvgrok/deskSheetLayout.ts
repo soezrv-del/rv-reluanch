@@ -42,6 +42,7 @@ export function shouldShowPendingLiveDesk(
 ): boolean {
   if (!liveDeskSheet) return false;
   if (latestDeskMessageIndex(messages) >= 0) return false;
+  if (messages.length === 0) return false;
   if (messages.some((m) => m.role === "assistant" && m.streaming)) return false;
-  return true;
+  return messages.some((m) => m.role === "assistant" && !m.streaming);
 }
