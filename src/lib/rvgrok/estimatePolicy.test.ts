@@ -16,6 +16,7 @@ import {
   LOW_CONFIDENCE_EST_RULE,
   mayEmitLabeledEstimate,
   presentsEstimateAsOemPin,
+  SEARCH_CLAIM_HONESTY,
   SPEC_ASK_MUST_SEARCH,
 } from "./estimatePolicy.ts";
 import { ANSWER_NOW_POLICY, HONESTY_STANDING_POLICY } from "./speechPolicy.ts";
@@ -93,6 +94,16 @@ test("catalog miss triggers web-research path (chat + live voice)", () => {
     voiceWeb,
     /if \(!speakHold && !inventory\)/,
     "voice must not skip research when the hold is off",
+  );
+  assert.match(SEARCH_CLAIM_HONESTY, /you did not search/i);
+  assert.match(ANSWER_NOW_POLICY, /SEARCH_CLAIM_HONESTY|you did not search/i);
+  assert.match(HONESTY_STANDING_POLICY, /you did not search/i);
+  assert.match(src("voice.ts"), /you have not searched/);
+  assert.match(src("prompts.ts"), /you have not searched/);
+  assert.match(src("realtime.ts"), /decideVoiceWebResearch/);
+  assert.match(
+    src("realtime.ts"),
+    /Search decision \+ VAD cancel \+ hold MUST run before/,
   );
 });
 

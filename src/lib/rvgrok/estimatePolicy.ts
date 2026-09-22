@@ -19,6 +19,12 @@ export const SPEC_ASK_MUST_SEARCH =
   "When the user asks for specs, GVWR, engine, horsepower, chassis, or pricing on any coach — or names a year, make, and model — you MUST run live WEB RESEARCH this turn BEFORE answering. Prefer OEM / factory brochure / dealer listings. Never answer from training data alone. Catalog lock may confirm a live number; it must not skip the search.";
 
 /**
+ * Fake-empty ban: do not say search failed unless this turn actually ran it.
+ */
+export const SEARCH_CLAIM_HONESTY =
+  "Never claim search failed, timed out, came back empty, or returned nothing unless WEB RESEARCH NOTES or WEB SEARCH NOT AVAILABLE were injected this turn — that means search actually ran. If those blocks are absent, you did not search. Do not invent a miss.";
+
+/**
  * After the research loop is exhausted (N genuine rephrased attempts, all
  * unconfirmed) — or search stays unavailable after a retry — say so
  * plainly. Never EST after a single miss. Never EST when a live source

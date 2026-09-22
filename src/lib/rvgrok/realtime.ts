@@ -791,25 +791,13 @@ export class GrokRealtimeSession {
    * Do not stretch the hold toward 60s — a spoken miss is better than dead air.
    * True research speaks "give me one second"; everything else answers now.
    * A series change (Ventana → Dutch Star) always cancels the stale lock reply.
+   *
+   * Search decision + VAD cancel + hold MUST run before `ensureCatalogLoaded`.
+   * First-session YMM/spec asks used to await the catalog import first; VAD
+   * then answered "search empty" without the sidecar (no hold phrase). Catalog
+   * pin may still paint the desk while search runs.
    */
-  private async maybeEnrichWithWebResearch(transcript: string) {
-    let grounded = buildChatGrounding({
-      query: transcript,
-      facts: this.facts,
-    });
-    // Chat already loads the live catalog before desk paint. Voice must too —
-    // otherwise peekCatalog() is empty and tanks/fuel hard-GAP on the pin path.
-    if (grounded.identity) {
-      try {
-        await ensureCatalogLoaded();
-      } catch {
-        /* pin + thin index still ground */
-      }
-      grounded = buildChatGrounding({
-        query: transcript,
-        facts: this.facts,
-      });
-    }
+  private applyVoiceGrounding(transcript: string, grounded: ReturnType<typeof buildChatGrounding>) {
     const parsed = parseCoachFromText(transcript);
     const lockBroke = Boolean(
       grounded.identity && namedCoachConflictsLock(parsed, this.facts),
@@ -832,12 +820,36 @@ export class GrokRealtimeSession {
     if (lockBroke && grounded.block) {
       this.pushCatalogLockToSession(grounded.block);
     }
+    return lockBroke;
+  }
+
+  private async maybeEnrichWithWebResearch(transcript: string) {
+    let grounded = buildChatGrounding({
+      query: transcript,
+      facts: this.facts,
+    });
+    // Decide from the thin index / current lock — do not wait on the live
+    // catalog. A catalog row must not skip search, and the first-session
+    // import must not let VAD claim "search empty" first.
     const decision = decideVoiceWebResearch({
       transcript,
       specs: grounded.specs,
       catalogBlock: grounded.block || this.catalogContext,
     });
+    const catalogReady =
+      grounded.identity || decision.action === "research"
+        ? ensureCatalogLoaded().catch(() => null)
+        : null;
+    let lockBroke = this.applyVoiceGrounding(transcript, grounded);
     if (decision.action !== "research") {
+      if (catalogReady) {
+        await catalogReady;
+        grounded = buildChatGrounding({
+          query: transcript,
+          facts: this.facts,
+        });
+        lockBroke = this.applyVoiceGrounding(transcript, grounded);
+      }
       if (lockBroke) {
         this.cancelAutoResponseForResearch();
         this.flushLockBreakAnswer(grounded.block);
@@ -866,17 +878,30 @@ export class GrokRealtimeSession {
       this.handlers.onStatus("thinking", "Answering…");
     }
 
-    const result = await fetchVoiceWebResearchNotes({
+    const searchReady = fetchVoiceWebResearchNotes({
       query: decision.query,
       catalogContext: decision.catalogBlock || this.catalogContext,
       signal: this.researchAbort.signal,
     });
 
+    if (catalogReady) {
+      await catalogReady;
+      if (!this.closed && !this.intentionalStop) {
+        grounded = buildChatGrounding({
+          query: transcript,
+          facts: this.facts,
+        });
+        this.applyVoiceGrounding(transcript, grounded);
+      }
+    }
+
+    const result = await searchReady;
+
     if (this.closed || this.intentionalStop) return;
     if (this.researchAbort.signal.aborted) return;
 
     const injection = formatVoiceWebSearchInjection(result, {
-      catalogBlock: decision.catalogBlock || this.catalogContext,
+      catalogBlock: grounded.block || decision.catalogBlock || this.catalogContext,
     });
     if (this.researchPhase === "holding") {
       this.pendingResearchInjection = injection;
