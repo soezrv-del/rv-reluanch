@@ -2,7 +2,7 @@ import {
   ACCESS_ADMIN_TOKEN_KEY,
   ACCESS_PHONE_HEADER,
   ACCESS_PHONE_STORAGE_KEY,
-} from "./constants";
+} from "./constants.ts";
 
 export type AccessCheckResult = {
   allowed: boolean;
@@ -49,9 +49,10 @@ export function clearAdminToken() {
   writeStorage(ACCESS_ADMIN_TOKEN_KEY, "");
 }
 
-export function accessHeaders(init?: HeadersInit): Headers {
+/** Same gate chat + `/api/rvgrok/token` send: `x-access-phone`. */
+export function accessHeaders(init?: HeadersInit, phoneOverride?: string): Headers {
   const headers = new Headers(init);
-  const phone = readStoredPhone();
+  const phone = (phoneOverride || readStoredPhone()).trim();
   if (phone && !headers.has(ACCESS_PHONE_HEADER)) {
     headers.set(ACCESS_PHONE_HEADER, phone);
   }

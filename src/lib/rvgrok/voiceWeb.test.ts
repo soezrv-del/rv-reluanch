@@ -14,16 +14,19 @@ import {
   VOICE_WEB_SEARCH_MODELS,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
 } from "./webSearch.ts";
+import { ACCESS_PHONE_HEADER } from "../access/constants.ts";
 import {
   decideVoiceWebResearch,
   fetchVoiceWebResearchNotes,
   formatVoiceWebSearchInjection,
+  isVoiceWebAccessBlocked,
   shouldSpeakVoiceResearchHold,
   stripNotesForSpeech,
   voiceInjectionClaimsLookedUp,
   VOICE_RESEARCH_ANSWER_INSTRUCTIONS,
   VOICE_RESEARCH_HOLD_INSTRUCTIONS,
   VOICE_RESEARCH_HOLD_PHRASE,
+  VOICE_WEB_ACCESS_BLOCKED_REASON,
   VOICE_WEB_SEARCH_CLIENT_BUDGET_MS,
 } from "./voiceWeb.ts";
 import {
@@ -419,4 +422,90 @@ test("voice cancels VAD and decides search before awaiting catalog load", () => 
     cancelAt < searchAt && searchAt < awaitCatalogAt,
     "research path must cancel + start sidecar before await catalogReady",
   );
+});
+
+test("access_required 403 is not an empty search", () => {
+  const injection = formatVoiceWebSearchInjection({
+    ok: false,
+    reason: VOICE_WEB_ACCESS_BLOCKED_REASON,
+  });
+  assert.equal(isVoiceWebAccessBlocked(VOICE_WEB_ACCESS_BLOCKED_REASON), true);
+  assert.equal(voiceInjectionClaimsLookedUp(injection), false);
+  assert.match(injection, /access or research is blocked/i);
+  assert.doesNotMatch(injection, /Search returned nothing after a retry/);
+  assert.match(VOICE_RESEARCH_ANSWER_INSTRUCTIONS, /access or research is blocked/);
+  assert.match(
+    VOICE_RESEARCH_ANSWER_INSTRUCTIONS,
+    /do not claim search came back empty/,
+  );
+});
+
+test("voice web-research fetch sends x-access-phone and retries access_required once", async () => {
+  const prior = globalThis.fetch;
+  const phones: string[] = [];
+  let calls = 0;
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    calls += 1;
+    const headers = new Headers(init?.headers);
+    phones.push(headers.get(ACCESS_PHONE_HEADER) || "");
+    if (calls === 1) {
+      return new Response(
+        JSON.stringify({ error: "access_required", browseOnly: true }),
+        { status: 403, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    return new Response(
+      JSON.stringify({ ok: true, notes: "brochure UVW 22000", model: "grok-4.7" }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }) as typeof fetch;
+  try {
+    const result = await fetchVoiceWebResearchNotes({
+      query: "2026 Grand Design Lineage 31ZW",
+      accessPhone: "7022665918",
+    });
+    assert.equal(calls, 2);
+    assert.deepEqual(phones, ["7022665918", "7022665918"]);
+    assert.equal(result.ok, true);
+  } finally {
+    globalThis.fetch = prior;
+  }
+});
+
+test("bare access_required 403 speaks blocked — not search empty", async () => {
+  const prior = globalThis.fetch;
+  globalThis.fetch = (async () =>
+    new Response(
+      JSON.stringify({ error: "access_required", browseOnly: true }),
+      { status: 403, headers: { "Content-Type": "application/json" } },
+    )) as typeof fetch;
+  try {
+    const result = await fetchVoiceWebResearchNotes({
+      query: "2026 Grand Design Lineage 31ZW",
+    });
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.reason, VOICE_WEB_ACCESS_BLOCKED_REASON);
+    }
+    const injection = formatVoiceWebSearchInjection(result);
+    assert.match(injection, /access or research is blocked/i);
+    assert.doesNotMatch(injection, /Search returned nothing after a retry/);
+  } finally {
+    globalThis.fetch = prior;
+  }
+});
+
+test("Live Voice session passes the access phone into the sidecar fetch", () => {
+  const realtime = src("realtime.ts");
+  assert.match(realtime, /accessPhone\?: string/);
+  assert.match(realtime, /accessPhone: this\.accessPhone/);
+  const app = readFileSync(
+    join(root, "../../components/rvgrok/RvGrokApp.tsx"),
+    "utf8",
+  );
+  assert.match(app, /accessPhone: access\?\.phone/);
+  const voiceWeb = src("voiceWeb.ts");
+  assert.match(voiceWeb, /accessHeaders/);
+  assert.match(voiceWeb, /accessPhone/);
+  assert.match(voiceWeb, /access_required/);
 });
