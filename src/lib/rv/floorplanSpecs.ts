@@ -2487,6 +2487,15 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   ...gvwrPins("airstream", "globetrotter", 2027, 2027, ["25FB"], 7300),
   ...gvwrPins("airstream", "globetrotter", 2027, 2027, ["27FB"], 7600),
   ...gvwrPins("airstream", "globetrotter", 2027, 2027, ["30RB"], 8800),
+  // Renegade RV MY2027 OEM / RVUSA brochure singles (Catalog Audit F).
+  // Printed single GVWR only. Dual-chassis Explorer / Verona LE / XL,
+  // Classic "See sales", Vienna/Villagio unprinted, Ikon/Villager no 2027 — leave GAP.
+  // Not Verona LE (modelPinBlocked). Explorer TS is exact "explorer ts".
+  ...gvwrPins("renegade", "verona", 2027, 2027, ["36VSB", "40VTS", "40VTB", "40VTR"], 37600),
+  ...gvwrPins("renegade", "valencia", 2027, 2027, ["36SB"], 33000),
+  ...gvwrPins("renegade", "valencia", 2027, 2027, ["39BB", "39FW", "39RB"], 35000),
+  ...gvwrPins("renegade", "veracruz", 2027, 2027, ["30VRM", "33VDS", "33VRS"], 22000),
+  ...gvwrPins("renegade", "explorer ts", 2027, 2027, ["42RB"], 58000),
 ];
 
 /** Pin count for coverage reports / tests. */
@@ -3207,6 +3216,10 @@ function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
   }
   // Basecamp 20X pin is the gas/off-road trailer — do not match Basecamp Xe.
   if (modelIncludes === "basecamp" && modelNorm.includes("xe") && !modelIncludes.includes("xe")) {
+    return true;
+  }
+  // Renegade Verona is not Verona LE (dual Freightliner/Peterbilt 37.6K/ — GAP).
+  if (modelIncludes === "verona" && modelNorm.includes("le") && !modelIncludes.includes("le")) {
     return true;
   }
   return false;

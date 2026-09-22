@@ -977,6 +977,46 @@ test("Newmar MY27 OEM GVWR/UVW pins lock dated brochure singles (Catalog Audit F
   assert.equal(findOemUvwLbs("2027", "Newmar", "London Aire", "4540"), null);
 });
 
+test("Renegade MY27 OEM GVWR pins lock dated brochure singles (Catalog Audit F)", () => {
+  // Verona — 2027 Renegade RV Verona brochure (RVUSA) GVWR 37,600.
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Verona", "36VSB"), 37600);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Verona", "40VTS"), 37600);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Verona", "40VTB"), 37600);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Verona", "40VTR"), 37600);
+
+  // Valencia — 2027 Renegade RV Valencia brochure: 36SB 33,000; 39' 35,000.
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Valencia", "36SB"), 33000);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Valencia", "39BB"), 35000);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Valencia", "39FW"), 35000);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Valencia", "39RB"), 35000);
+
+  // Veracruz — 2027 Renegade RV Veracruz brochure GVWR 22,000.
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Veracruz", "30VRM"), 22000);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Veracruz", "33VDS"), 22000);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Veracruz", "33VRS"), 22000);
+
+  // Explorer TS — 2027 Renegade RV Explorer TS brochure GVWR 58,000.
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Explorer TS", "42RB"), 58000);
+
+  // GAP — dual chassis / unprinted / no 2027 brochure. Do not invent.
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Verona LE", "36VSB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Verona LE", "40LTS"), null);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Explorer", "42RB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Explorer", "38EMB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Vienna", "25DLC"), null);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Villagio", "25FWC"), null);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Classic Super C", "38CSB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "XL", "X43DB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Ikon", "25FWC"), null);
+  assert.equal(findOemGvwrLbs("2027", "Renegade RV", "Villager", "25FWC"), null);
+
+  // Year-scoped: MY27 pins do not invent 2026.
+  assert.equal(findOemGvwrLbs("2026", "Renegade RV", "Verona", "36VSB"), null);
+  assert.equal(findOemGvwrLbs("2026", "Renegade RV", "Valencia", "36SB"), null);
+  assert.equal(findOemGvwrLbs("2026", "Renegade RV", "Veracruz", "30VRM"), null);
+  assert.equal(findOemGvwrLbs("2026", "Renegade RV", "Explorer TS", "42RB"), null);
+});
+
 test("Audit B Phase 3+ length pins match dated brochures (44OH / 303RLS / 26DBH)", () => {
   // Tiffin MY25/MY26 Phaeton weights & measures: 44 OH Overall Length 45' (WB 310").
   const phaeton = findOemFloorplanSpec("2025", "Tiffin", "Phaeton", "44OH");
