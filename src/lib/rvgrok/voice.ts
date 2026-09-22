@@ -17,7 +17,7 @@ export const VOICE_SPEED_KEY = "rvgrok_voice_speed";
 export const LIVE_VOICE_KEY = "rvgrok_live_voice";
 
 export const XAI_REALTIME_URL =
-  "wss://api.x.ai/v1/realtime?model=grok-4.7";
+  "wss://api.x.ai/v1/realtime?model=grok-voice-latest";
 
 export const PCM_SAMPLE_RATE = 24000;
 

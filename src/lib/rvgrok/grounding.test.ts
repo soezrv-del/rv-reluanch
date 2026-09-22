@@ -208,8 +208,8 @@ test("chat must not write Facts cache; Live must not fill hard fields", () => {
 test("Live Voice instructions are accuracy-first; gesture order untouched", () => {
   const voice = src(root, "voice.ts");
   const live = src(root, "liveVoice.ts");
-  assert.match(voice, /model=grok-4\.7/);
-  assert.doesNotMatch(voice, /grok-voice-latest/);
+  assert.match(voice, /model=grok-voice-latest/);
+  assert.doesNotMatch(voice, /realtime\?model=grok-4\.7/);
   assert.match(voice, /ACCURACY FIRST/);
   assert.match(voice, /never invent/i);
   assert.match(voice, /American Dream ≠ Tradition/);
