@@ -107,7 +107,7 @@ function firstFuelGallons(text: string): string | null {
   const patterns = [
     /(\d{2,3})\s*-\s*gallon\s+fuel(?:\s+tank)?/i,
     /(\d{2,3})\s*gallon\s+fuel(?:\s+tank)?/i,
-    /fuel(?:\s+tank|\s+capacity)[^.\n]{0,28}(\d{2,3})\s*(?:gal(?:lon)?s?)?/i,
+    /fuel(?:\s+tank|\s+capacity)[^.\n\d]{0,28}(\d{2,3})\s*(?:gal(?:lon)?s?)?/i,
   ];
   for (const re of patterns) {
     const m = text.match(re);

@@ -56,6 +56,9 @@ test("grey spelling and labeled gallons still parse; EST tanks stay empty", () =
   assert.equal(fuelOnly.freshWater, undefined);
   assert.equal(fuelOnly.grayWater, undefined);
   assert.equal(fuelOnly.blackWater, undefined);
+
+  const labeled = extractChatSpecFigures("Fuel tank: 150 gal. Fuel capacity 150.");
+  assert.equal(labeled.fuelCapacity, "150 gal");
 });
 
 test("chat numbers overwrite Confirm brochure; untouched rows stay", () => {

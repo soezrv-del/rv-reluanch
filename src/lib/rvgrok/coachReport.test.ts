@@ -84,6 +84,11 @@ test("report-shape intent: YMM / full specs / CARFAX — not inventory, compare,
     looksLikeCoachReportAsk("Do we have a Dutch Star on the lot?"),
     false,
   );
+  assert.equal(
+    looksLikeCoachReportAsk("check engine light reset Ford E450"),
+    false,
+    "repair / CEL is talk-only — not a four-section coach report",
+  );
   assert.deepEqual(
     [...COACH_REPORT_SECTION_HEADINGS],
     [

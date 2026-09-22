@@ -91,11 +91,7 @@ export function looksLikeCoachReportAsk(text: string): boolean {
   if (looksLikeInventoryOrCountQuestion(t) && !looksLikeSpecQuestion(t)) {
     return false;
   }
-  if (
-    looksLikeRepairQuestion(t) &&
-    !looksLikeSpecQuestion(t) &&
-    !looksLikeNamedCoachProductQuestion(t)
-  ) {
+  if (looksLikeRepairQuestion(t) && !REPORT_PHRASE_RE.test(t)) {
     return false;
   }
   if (
@@ -260,8 +256,6 @@ function overviewLines(
   });
   if (sentences[0]) {
     lines.push(sentences[0]);
-  } else if (identity) {
-    lines.push(identity);
   }
   return lines;
 }
