@@ -2424,6 +2424,19 @@ html.kb-open [data-rvgrok-composer-dock] {
   background: rgba(6, 12, 24, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
+[data-rvgrok-followups] .grok-followup {
+  background: transparent;
+  border: 0;
+  color: inherit;
+}
+[data-rvgrok-followups] .grok-followup:hover,
+[data-rvgrok-followups] .grok-followup:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+}
+[data-rvgrok-followups] .grok-followup:hover span,
+[data-rvgrok-followups] .grok-followup:focus-visible span {
+  color: rgba(255, 255, 255, 0.92);
+}
 .grok-lot-dot {
   background: var(--color-grok-mic);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-grok-mic) 22%, transparent);
