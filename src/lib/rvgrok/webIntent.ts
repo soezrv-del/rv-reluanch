@@ -21,6 +21,7 @@
  * Repair / forum / manual asks still browse even on a compare.
  */
 
+import { askNamesCoachIdentity } from "./coachIdentity.ts";
 import { parseCoachFromText } from "./parseCoach.ts";
 import { looksLikeCarfaxQuestion } from "./carfaxPositioning.ts";
 import { looksLikeOriginQuestion } from "./originStory.ts";
@@ -201,23 +202,33 @@ export function looksLikeCoachFactAsk(text: string): boolean {
   if (!t.trim() || looksLikeCasualNonResearch(t)) return false;
   if (looksLikeSpecQuestion(t)) return true;
   if (looksLikeMarketValueQuestion(t)) return true;
+  // Two known coaches side-by-side stay a catalog compare — not a
+  // single-unit product browse. Repair / spec already returned above.
+  if (looksLikeCatalogAnswerableCoachCompare(t)) return false;
   if (looksLikeNamedCoachProductQuestion(t)) return true;
   return false;
 }
 
 /**
- * Named year/make/model (or about-this-coach phrasing). Catalog miss or
- * missing hard fields should browse — not invent a dealer dead-end.
+ * Named coach ask — salesman shorthand counts. Year/make/model do not
+ * all have to be present or spelled as the OEM string. "American Dream 42Q",
+ * "Phaeton 40IH", "Lineage 31ZW" are product asks. Catalog miss or missing
+ * hard fields should browse — not invent a dealer dead-end.
+ *
+ * Still skip hi / lifestyle. Full year+make+model is enough without
+ * "tell me about". About-phrasing still helps a year+make / make+model
+ * fragment that is not already a designation.
  */
 export function looksLikeNamedCoachProductQuestion(text: string): boolean {
   const t = normalizeAskText(text);
   if (!t.trim() || looksLikeCasualNonResearch(t)) return false;
   const parsed = parseCoachFromText(t);
-  const yearMakeModel = Boolean(parsed.year && parsed.make && parsed.model);
+  // Model+floorplan / make+model / year+make — do not require "tell me about"
+  // or a complete year+make+model tuple.
+  if (askNamesCoachIdentity(parsed)) return true;
   const yearMake = Boolean(parsed.year && parsed.make);
   const makeModel = Boolean(parsed.make && parsed.model);
   if (!yearMake && !makeModel) return false;
-  if (yearMakeModel) return true;
   return PRODUCT_ABOUT_RE.test(t);
 }
 

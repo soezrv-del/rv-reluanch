@@ -8,9 +8,11 @@
 import { CATALOG_INDEX, MAKES } from "../rv/rvCatalogIndex.ts";
 import { peekCatalog } from "../rv/catalogLoad.ts";
 import type { ActiveCoach } from "../rv/activeCoach.ts";
+import { findComparableCatalogCoaches } from "./coachCompare.ts";
 import {
   catalogYearIsListed,
   findKnownSeries,
+  fuzzyMatchCatalogName,
   matchCatalogModelName,
   parseCoachFromText,
   seriesAliasEquals,
@@ -161,6 +163,77 @@ export function askNamesCoachIdentity(parsed: {
   if (year && make) return true;
   if (model && floorplan) return true;
   return false;
+}
+
+type UniqueCatalogHit = { make: string; model: string };
+
+let uniqueCatalogOwner: Map<string, string> | null = null;
+let uniqueCatalogNames: string[] | null = null;
+
+function uniqueCatalogIndex(): { owner: Map<string, string>; names: string[] } {
+  if (uniqueCatalogOwner && uniqueCatalogNames) {
+    return { owner: uniqueCatalogOwner, names: uniqueCatalogNames };
+  }
+  const owner = new Map<string, string>();
+  const names: string[] = [];
+  for (const [make, models] of Object.entries(CATALOG_INDEX)) {
+    for (const model of Object.keys(models || {})) {
+      const key = norm(model);
+      if (!key) continue;
+      names.push(model);
+      const prev = owner.get(key);
+      if (prev && prev !== make) owner.set(key, "");
+      else if (!prev) owner.set(key, make);
+    }
+  }
+  uniqueCatalogOwner = owner;
+  uniqueCatalogNames = names;
+  return { owner, names };
+}
+
+/**
+ * Unique catalog series for a spoken/typed model — "Americn Dream" →
+ * American Coach / American Dream. Ambiguous names stay empty (do not invent).
+ */
+export function findUniqueCatalogCoachFromModel(
+  rawModel: string,
+): UniqueCatalogHit | null {
+  const raw = (rawModel || "").trim();
+  if (!raw) return null;
+  const { owner, names } = uniqueCatalogIndex();
+  const uniqueNames = names.filter((n) => owner.get(norm(n)));
+  const catalogName = matchCatalogModelName(raw, uniqueNames);
+  const listed = uniqueNames.some((n) => norm(n) === norm(catalogName));
+  const matched = listed
+    ? catalogName
+    : fuzzyMatchCatalogName(raw, uniqueNames);
+  if (!matched) return null;
+  const make = owner.get(norm(matched));
+  if (!make) return null;
+  return { make, model: matched };
+}
+
+/** Fill a missing make from a unique catalog / compare hit. Never invent. */
+export function applyUniqueCatalogIdentity<
+  T extends { year?: string; make?: string; model?: string; floorplan?: string },
+>(query: string, parsed: T): T {
+  if ((parsed.make || "").trim() && (parsed.model || "").trim()) return parsed;
+  const hits = findComparableCatalogCoaches(query);
+  if (hits.length === 1) {
+    const hit = hits[0]!;
+    const make = (parsed.make || "").trim() || hit.make;
+    const model = (parsed.model || "").trim()
+      ? resolveCatalogModel(make, parsed.model || "", parsed.floorplan || "")
+      : hit.model;
+    return { ...parsed, make, model };
+  }
+  if ((parsed.model || "").trim() && !(parsed.make || "").trim()) {
+    const unique = findUniqueCatalogCoachFromModel(parsed.model || "");
+    if (unique) {
+      return { ...parsed, make: unique.make, model: unique.model };
+    }
+  }
+  return parsed;
 }
 
 function modelsAlign(a: string, b: string): boolean {
@@ -544,7 +617,7 @@ export function lastCompleteParseFromHistory(extraText: string): {
     floorplan: string;
   } | null = null;
   for (const chunk of extraText.split(/[\n.!?]+/)) {
-    const parsed = parseCoachFromText(chunk);
+    const parsed = applyUniqueCatalogIdentity(chunk, parseCoachFromText(chunk));
     if (!askNamesCoachIdentity(parsed)) continue;
     last = parsed;
   }
@@ -564,7 +637,7 @@ export function resolveCoachIdentity(
 ): CoachIdentity | null {
   // Current ask wins. History is last complete coach tuple — never a blob
   // that fills year / make / model / floorplan independently.
-  const fromQuery = parseCoachFromText(query);
+  const fromQuery = applyUniqueCatalogIdentity(query, parseCoachFromText(query));
   const queryNamesCoach = askNamesCoachIdentity(fromQuery);
   const parsed = queryNamesCoach
     ? fromQuery
@@ -675,6 +748,12 @@ export function resolveCoachIdentity(
   }
 
   if (parsed.make && parsed.floorplan) {
+    return identityFromAsk(parsed, "message");
+  }
+
+  // Salesman shorthand: model + floorplan with a unique catalog series
+  // ("American Dream 42Q") after unique-catalog fill.
+  if (parsed.model && parsed.floorplan) {
     return identityFromAsk(parsed, "message");
   }
 

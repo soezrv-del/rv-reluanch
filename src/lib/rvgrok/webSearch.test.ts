@@ -29,8 +29,15 @@ import {
   seedWebSearchCache,
   normalizeCoachTyposInAsk,
   coachLabelFromResearchAsk,
+  expandResearchAsk,
+  researchIdentityFromParams,
   skipGeminiForResearchAsk,
 } from "./webSearch.ts";
+import {
+  looksLikeCoachFactAsk,
+  looksLikeNamedCoachProductQuestion,
+  needsWebFallback,
+} from "./webIntent.ts";
 import { mayEmitLabeledEstimate } from "./estimatePolicy.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -629,6 +636,162 @@ test("timeout then confirming retry uses the live hit — no EST", async () => {
     assert.doesNotMatch(injection, /You MAY give a labeled EST/);
     assert.doesNotMatch(injection, /low confidence — never as an OEM pin/);
     assert.doesNotMatch(injection, /You MAY give a labeled EST \/ typical class range/);
+  } finally {
+    globalThis.fetch = prior;
+    clearWebSearchCache();
+  }
+});
+
+test("research prompt accepts shorthand / misspelling — does not demand exact YMM", () => {
+  const body = buildWebSearchRequest({
+    model: "grok-4.7",
+    query: "American Dream 42Q",
+    catalogBlock: "VERIFIED CATALOG / BROCHURE for American Coach American Dream 42Q:",
+  });
+  const packed = JSON.stringify(body);
+  assert.match(packed, /Salesman shorthand|THIS coach FIRST/i);
+  assert.match(packed, /do not require every year\/make\/model\/floorplan/i);
+  assert.match(packed, /Never invent OEM numbers/i);
+  assert.match(packed, /Dutch Star is not Ventana/i);
+  assert.doesNotMatch(packed, /THAT year \+ make \+ model \+ floorplan FIRST/);
+  assert.doesNotMatch(packed, /year-matched number/);
+});
+
+test("fuzzy / shorthand queries expand identity and still research", () => {
+  const locked = { missingHard: false };
+  for (const q of [
+    "American Dream 42Q",
+    "Phaeton 40IH",
+    "Lineage 31ZW",
+    "Americn Dream 42Q",
+    "pheaton 40ih",
+  ]) {
+    assert.equal(looksLikeNamedCoachProductQuestion(q), true, q);
+    assert.equal(looksLikeCoachFactAsk(q), true, q);
+    assert.equal(needsWebFallback(locked, q), true, q);
+    assert.equal(skipGeminiForResearchAsk(q), true, q);
+  }
+
+  assert.match(
+    coachLabelFromResearchAsk("American Dream 42Q"),
+    /American Coach American Dream 42Q/i,
+  );
+  assert.match(
+    coachLabelFromResearchAsk("Americn Dream 42Q"),
+    /American Coach American Dream 42Q/i,
+  );
+  assert.match(coachLabelFromResearchAsk("Phaeton 40IH"), /Tiffin Phaeton 40IH/i);
+  assert.match(
+    coachLabelFromResearchAsk("Lineage 31ZW"),
+    /Grand Design Lineage Series F 31ZW/i,
+  );
+  assert.match(normalizeCoachTyposInAsk("Americn Dream 42Q"), /American Dream/i);
+  assert.match(expandResearchAsk("Phaeton 40IH"), /Tiffin Phaeton/i);
+
+  const catalog =
+    "VERIFIED CATALOG / BROCHURE for 2022 Tiffin Phaeton 40IH (source: message):";
+  const fromParams = researchIdentityFromParams("what's the GVWR", catalog);
+  assert.ok(fromParams);
+  assert.equal(fromParams!.make, "Tiffin");
+  assert.equal(fromParams!.model, "Phaeton");
+  assert.match(fromParams!.floorplan, /40ih/i);
+  assert.equal(fromParams!.year, "2022");
+  assert.match(
+    coachLabelFromResearchAsk("what's the GVWR", catalog),
+    /2022 Tiffin Phaeton 40IH/i,
+  );
+
+  const dutchAsk = researchIdentityFromParams(
+    "Dutch Star 4369",
+    "VERIFIED CATALOG / BROCHURE for 2026 Grand Design Lineage Series M 25FW:",
+  );
+  assert.ok(dutchAsk);
+  assert.equal(dutchAsk!.make, "Newmar");
+  assert.match(dutchAsk!.model, /dutch star/i);
+  assert.doesNotMatch(dutchAsk!.make, /Grand Design/i);
+});
+
+test("misspelled American Dream 42Q still researches and confirms — no invent", async () => {
+  clearWebSearchCache();
+  const questions: string[] = [];
+  const prior = globalThis.fetch;
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    questions.push(questionFromBody(init));
+    return jsonResponse({
+      output_text:
+        "CONFIRMED: yes. American Coach brochure for the American Dream 42Q lists GVWR 47,000 lb, Cummins L9.",
+    });
+  }) as typeof fetch;
+  try {
+    const query = "Americn Dream 42Q";
+    const result = await fetchWebSearchNotes({
+      apiKey: "test-key",
+      query,
+      timeoutMs: 5_000,
+      models: ["grok-4.7"],
+    });
+    assert.equal(result.ok, true);
+    assert.ok(questions.length >= 1);
+    assert.match(questions[0] || "", /American Dream|American Coach/i);
+    assert.doesNotMatch(questions[0] || "", /Americn/);
+    if (result.ok) {
+      assert.equal(result.confirmed, true);
+      assert.match(result.notes, /47,000/);
+    }
+    assert.equal(
+      notesConfirmQueriedField(
+        "CONFIRMED: yes. American Coach brochure GVWR 47,000 lb for the Dream 42Q.",
+        query,
+      ),
+      true,
+    );
+    const injection = formatWebSearchInjection(result);
+    assert.match(injection, /CONFIRM the queried field/i);
+    assert.doesNotMatch(injection, /You MAY give a labeled EST/);
+  } finally {
+    globalThis.fetch = prior;
+    clearWebSearchCache();
+  }
+});
+
+test("yearless Phaeton 40IH confirming notes are accepted — no invented OEM", async () => {
+  clearWebSearchCache();
+  const prior = globalThis.fetch;
+  globalThis.fetch = (async () =>
+    jsonResponse({
+      output_text:
+        "CONFIRMED: yes. Tiffin OEM brochure for the Phaeton 40IH lists GVWR 39,600 lb.",
+    })) as typeof fetch;
+  try {
+    const query = "Phaeton 40IH";
+    const result = await fetchWebSearchNotes({
+      apiKey: "test-key",
+      query,
+      timeoutMs: 5_000,
+      models: ["grok-4.7"],
+    });
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.confirmed, true);
+      assert.match(result.notes, /39,600/);
+    }
+    const miss = formatWebSearchInjection({
+      ok: true,
+      notes: "CONFIRMED: no. Could not find a published GVWR for this coach.",
+      model: "grok-4.7",
+      confirmed: false,
+      attempts: 2,
+      exhausted: true,
+      query,
+    });
+    assert.match(miss, /do not invent brochure numbers from training/i);
+    assert.equal(
+      notesConfirmQueriedField(
+        "CONFIRMED: no. Could not find a published GVWR for this coach.",
+        query,
+      ),
+      false,
+    );
   } finally {
     globalThis.fetch = prior;
     clearWebSearchCache();

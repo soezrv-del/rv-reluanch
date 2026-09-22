@@ -9,7 +9,9 @@ import {
   parseCoachFromText,
 } from "./parseCoach.ts";
 import {
+  applyUniqueCatalogIdentity,
   askNamesCoachIdentity,
+  findUniqueCatalogCoachFromModel,
   formatCatalogPresenceNote,
   inspectCatalogPresence,
   lastCompleteParseFromHistory,
@@ -507,4 +509,63 @@ test("Lineage is Grand Design — never blank make or SERIES MISSING", () => {
     ),
     /Say the series is missing|Tell the truth|Do not substitute|do not fill in a gap/i,
   );
+});
+
+test("salesman shorthand American Dream 42Q locks American Coach — not null", () => {
+  const q = "American Dream 42Q";
+  const parsed = parseCoachFromText(q);
+  assert.equal(parsed.make, "American Coach", q);
+  assert.match(parsed.model, /american dream/i, q);
+  assert.equal(parsed.floorplan, "42Q", q);
+  assert.equal(askNamesCoachIdentity(parsed), true, q);
+
+  const id = resolveCoachIdentity(q, null, "");
+  assert.ok(id, q);
+  assert.equal(id!.make, "American Coach");
+  assert.equal(id!.model, "American Dream");
+  assert.equal(id!.floorplan, "42Q");
+  assert.equal(id!.year, "");
+  assert.doesNotMatch(id!.model, /tradition/i);
+});
+
+test("Americn Dream typo uniquely maps to American Coach American Dream", () => {
+  const unique = findUniqueCatalogCoachFromModel("Americn Dream");
+  assert.ok(unique);
+  assert.equal(unique!.make, "American Coach");
+  assert.equal(unique!.model, "American Dream");
+
+  const parsed = applyUniqueCatalogIdentity(
+    "Americn Dream 42Q",
+    parseCoachFromText("Americn Dream 42Q"),
+  );
+  assert.equal(parsed.make, "American Coach");
+  assert.match(parsed.model, /american dream/i);
+
+  const id = resolveCoachIdentity("Americn Dream 42Q", null, "");
+  assert.ok(id);
+  assert.equal(id!.make, "American Coach");
+  assert.equal(id!.model, "American Dream");
+  assert.equal(id!.floorplan, "42Q");
+});
+
+test("yearless Phaeton 40IH / Lineage 31ZW still resolve one identity tuple", () => {
+  const phaeton = resolveCoachIdentity("Phaeton 40IH", null, "");
+  assert.ok(phaeton);
+  assert.equal(phaeton!.make, "Tiffin");
+  assert.equal(phaeton!.model, "Phaeton");
+  assert.match(phaeton!.floorplan, /40ih/i);
+
+  const lineage = resolveCoachIdentity("Lineage 31ZW", null, "");
+  assert.ok(lineage);
+  assert.equal(lineage!.make, "Grand Design");
+  assert.equal(lineage!.model, "Lineage Series F");
+  assert.equal(lineage!.floorplan, "31ZW");
+});
+
+test("unique catalog fill does not steal Dutch Star onto another make", () => {
+  const dutch = resolveCoachIdentity("Dutch Star 4369", null, "");
+  assert.ok(dutch);
+  assert.equal(dutch!.make, "Newmar");
+  assert.match(dutch!.model, /dutch star/i);
+  assert.doesNotMatch(dutch!.make, /Grand Design|American Coach/i);
 });
