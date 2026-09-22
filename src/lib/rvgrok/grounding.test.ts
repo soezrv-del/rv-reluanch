@@ -136,20 +136,24 @@ test("unlocked Live Voice grounding does not stand CATALOG GAP on casual asks", 
   assert.match(specMiss, standing);
   const stockAsk = "look in my inventory for a M series 25FW";
   assert.doesNotMatch(buildVoiceGrounding({ query: stockAsk }), standing);
-  assert.match(buildVoiceGrounding({ query: stockAsk }), /OWN-LOT INVENTORY/);
+  assert.doesNotMatch(buildVoiceGrounding({ query: stockAsk }), /OWN-LOT INVENTORY/);
+  assert.doesNotMatch(buildVoiceGrounding({ query: stockAsk }), /on our lot/);
 });
 
-test("catalog GAP tells inventory asks to prefer own-lot over manufacturer", () => {
+test("chat and voice grounding never inject own-lot stock instructions", () => {
   const grounding = src(root, "grounding.ts");
-  assert.match(grounding, /OWN-LOT INVENTORY is source-of-truth this turn/);
-  assert.match(grounding, /Never say check your own lot listing/);
-  assert.match(grounding, /manufacturer for inventory/);
+  assert.doesNotMatch(grounding, /OWN-LOT INVENTORY is source-of-truth this turn/);
+  assert.doesNotMatch(grounding, /Never say check your own lot listing/);
+  assert.doesNotMatch(grounding, /manufacturer for inventory/);
+  assert.doesNotMatch(grounding, /INVENTORY_WINS_OVER_GAP/);
   const stockAsk = "look in my inventory for a M series 25FW";
   const voice = buildVoiceGrounding({ query: stockAsk });
-  assert.match(voice, /OWN-LOT INVENTORY/);
-  assert.match(voice, /manufacturer for inventory/);
+  assert.doesNotMatch(voice, /OWN-LOT INVENTORY/);
+  assert.doesNotMatch(voice, /on our lot/);
+  assert.doesNotMatch(voice, /INVENTORY \/ IN-STOCK ASK/);
   const chat = buildChatGrounding({ query: stockAsk });
-  assert.match(chat.block || "", /manufacturer/i);
+  assert.doesNotMatch(chat.block || "", /INVENTORY \/ IN-STOCK ASK/);
+  assert.doesNotMatch(chat.block || "", /on our lot/);
   const catalogAsk = buildChatGrounding({ query: "M series 25FW" });
   assert.doesNotMatch(catalogAsk.block || "", /INVENTORY \/ IN-STOCK ASK/);
 });
@@ -731,9 +735,9 @@ test("inventory / diesel count asks still trip the detector when catalog is lock
     "locked fuel/engine spec still must browse — search first",
   );
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
-  assert.match(api, /loadOwnLotSnapshot/);
-  assert.match(api, /shouldSkipWebForOwnLot/);
-  assert.match(api, /OWN-LOT INVENTORY/);
+  assert.doesNotMatch(api, /loadOwnLotSnapshot/);
+  assert.doesNotMatch(api, /shouldSkipWebForOwnLot/);
+  assert.doesNotMatch(api, /OWN-LOT INVENTORY/);
 });
 
 test("unknown / catalog GAP always browses — locked spec asks also browse", () => {
@@ -887,17 +891,17 @@ test("inventory ask with yearless Vision catalog GAP answers from own-lot, not d
     assert.match(chat.identity!.model, /vision/i, q);
     assert.doesNotMatch(chat.identity!.model, /lineage/i, q);
     assert.equal(chat.specs?.missingHard, true, q);
-    assert.match(chat.block || "", /INVENTORY \/ IN-STOCK ASK/, q);
-    assert.match(chat.block || "", /Never say catalog gap/, q);
-    assert.match(chat.block || "", /Never say check your own lot listing/, q);
+    assert.doesNotMatch(chat.block || "", /INVENTORY \/ IN-STOCK ASK/, q);
+    assert.doesNotMatch(chat.block || "", /on our lot/, q);
+    assert.doesNotMatch(chat.block || "", /Never say check your own lot listing/, q);
     assert.doesNotMatch(
       chat.block || "",
       /No model year in the ask/,
       q,
     );
     const voice = buildVoiceGrounding({ query: q });
-    assert.match(voice, /INVENTORY \/ IN-STOCK ASK/, q);
-    assert.match(voice, /Never say check your own lot listing/, q);
+    assert.doesNotMatch(voice, /INVENTORY \/ IN-STOCK ASK/, q);
+    assert.doesNotMatch(voice, /Never say check your own lot listing/, q);
   }
 
   const specsOnly = buildChatGrounding({

@@ -34,7 +34,7 @@ const FORBIDDEN_NARROWS =
 export const SALES_MISSION_POLICY = `This is SALES. Every question matters. Go out of your way to answer WHATEVER the customer asks — give it 100%. Never refuse, deflect, or narrow with ${FORBIDDEN_NARROWS}. If the ask needs research, catalog, web, or a moment, say a standing hold — "${VOICE_RESEARCH_HOLD_ALT}" or exactly "${VOICE_RESEARCH_HOLD_PHRASE}" — then STILL answer. Never leave them with no answer.`;
 
 /** Spec honesty — live search first on specs; OEM/Facts pin wins; desk stays Facts. */
-export const HONESTY_STANDING_POLICY = `HONESTY: ${ESTIMATE_STANDING_POLICY} ${CATALOG_PIN_WINS_SEARCH_MISS} ${SEARCH_CLAIM_HONESTY} If LOCKED WEIGHTS or the desk sheet lists a non-GAP / VERIFIED field (e.g. GVWR), speak that number — never say you don't have it. Year / make / model reports synthesize from live WEB RESEARCH (OEM / factory brochure / dealer first) plus the verified catalog lock — never from training data alone. Own-lot snapshot only for explicit inventory / on-the-lot / do-we-have asks. Desk spec sheet mounts only on an explicit specs / weights / tanks / engine / report ask — never claim a sheet is on the desk unless DESK SPEC SHEET MOUNTED. The chat bubble is the written four-section coach report (Overview · Chassis & powertrain · Weights & capacity · Layout & amenities). The desk copies every number from that bubble. Do not emit a second markdown Spec Sheet that re-GAPs a named or VERIFIED field. Hide GAP / Confirm brochure / SERIES MISSING lecture once chat named the number.`;
+export const HONESTY_STANDING_POLICY = `HONESTY: ${ESTIMATE_STANDING_POLICY} ${CATALOG_PIN_WINS_SEARCH_MISS} ${SEARCH_CLAIM_HONESTY} If LOCKED WEIGHTS or the desk sheet lists a non-GAP / VERIFIED field (e.g. GVWR), speak that number — never say you don't have it. Year / make / model reports synthesize from live WEB RESEARCH (OEM / factory brochure / dealer first) plus the verified catalog lock — never from training data alone. Desk spec sheet mounts only on an explicit specs / weights / tanks / engine / report ask — never claim a sheet is on the desk unless DESK SPEC SHEET MOUNTED. The chat bubble is the written four-section coach report (Overview · Chassis & powertrain · Weights & capacity · Layout & amenities). The desk copies every number from that bubble. Do not emit a second markdown Spec Sheet that re-GAPs a named or VERIFIED field. Hide GAP / Confirm brochure / SERIES MISSING lecture once chat named the number.`;
 
 /** Shared answer-now / spec-search-first / catalog-miss-must-search contract. */
 export const ANSWER_NOW_POLICY = `Answer from live WEB RESEARCH notes and the catalog lock — never from training data alone on specs / GVWR / engine / pricing. No preamble. ${SPEC_ASK_MUST_SEARCH} ${CATALOG_MISS_MUST_SEARCH} ${LABELED_ESTIMATE_RULE} ${SEARCH_CLAIM_HONESTY} Never say ${FORBIDDEN_STALLS}. When you genuinely need research this turn, speak a standing hold ("${VOICE_RESEARCH_HOLD_ALT}" or exactly "${VOICE_RESEARCH_HOLD_PHRASE}"), then deliver the answer in the SAME response. Never stay silent. Never leave the user with only a hold line. Never deflect to a dealer, website, OEM site, or brochure as the answer. ${SALES_MISSION_POLICY}`;
@@ -54,5 +54,14 @@ export function isForbiddenResearchHold(text: string): boolean {
 export function isForbiddenScopeNarrow(text: string): boolean {
   return /i only focus on (this coach|rvs)|that'?s outside my scope|not (?:in )?my parameters|outside my parameters|that'?s not (?:in )?my (?:parameters|scope)/i.test(
     text,
+  );
+}
+
+/** Seneca-style miss: a product ask answered as a stock miss. */
+export function isForbiddenLotFirstDeflection(text: string): boolean {
+  const t = (text || "").replace(/\s+/g, " ");
+  if (!t.trim()) return false;
+  return /on our lot|none of (?:the|that|those).{0,80}on (?:our |the )?lot|zero diesel units|not on our lot right now|none .{0,60}on (?:our |the )?lot/i.test(
+    t,
   );
 }

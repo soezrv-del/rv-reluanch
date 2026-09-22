@@ -88,12 +88,13 @@ test("chat, agent, and voice prompts share David's answer-now / give me one seco
   );
 
   assert.match(prompts, /WEB RESEARCH notes/);
-  assert.match(prompts, /OWN-LOT INVENTORY/);
-  assert.match(prompts, /UNAVAILABLE/);
-  assert.match(prompts, /Never report 0 diesels or 0 units/);
-  assert.match(prompts, /Class A Diesel/);
-  assert.match(prompts, /Class Super C/);
-  assert.match(voice, /never speak 0 as a stock count/);
+  assert.doesNotMatch(prompts, /OWN-LOT INVENTORY/);
+  assert.doesNotMatch(prompts, /OWN-LOT STOCK/);
+  assert.doesNotMatch(prompts, /on our lot/);
+  assert.doesNotMatch(prompts, /Never report 0 diesels or 0 units/);
+  assert.doesNotMatch(voice, /never speak 0 as a stock count/);
+  assert.doesNotMatch(voice, /OWN-LOT INVENTORY/);
+  assert.doesNotMatch(voice, /on our lot/);
   assert.match(prompts, /UNKNOWN \/ CATALOG GAP/);
   assert.match(prompts, /I don't know/);
   assert.match(prompts, /Do not invent/);
@@ -136,7 +137,7 @@ test("market value / pricing is live nationwide year±2 asking Low/Avg/High — 
     assert.match(text, /Low \/ Average \/ High/, `${label} returns Low/Avg/High`);
     assert.match(text, /competitor-latest/, `${label} kills competitor-latest`);
     assert.match(text, /nightly/, `${label} kills nightly scrape`);
-    assert.match(text, /sample inventory CSV/, `${label} kills sample inventory CSV`);
+    assert.match(text, /sample listings CSV/, `${label} kills sample listings CSV`);
     assert.match(text, /NADA/, `${label} forbids NADA as a book`);
   }
 

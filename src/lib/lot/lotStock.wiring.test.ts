@@ -99,7 +99,7 @@ test("RV Grok prompts and DialaBot stay out of this page", () => {
   const prompts = read("../rvgrok/prompts.ts");
   const lot = read("../../components/lot/LotStockApp.tsx");
   const page = read("./ownLotPage.ts");
-  assert.match(prompts, /OWN-LOT INVENTORY/);
+  assert.doesNotMatch(prompts, /OWN-LOT INVENTORY/);
   assert.doesNotMatch(lot, /SYSTEM_PROMPT|OWN-LOT INVENTORY block/);
   assert.doesNotMatch(page, /formatOwnLotBlock/);
   assert.doesNotMatch(lot, /DialaBot/);
