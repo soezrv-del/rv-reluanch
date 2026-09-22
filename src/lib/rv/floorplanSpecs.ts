@@ -2421,14 +2421,34 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   // Tiffin Open Road — MY25 Open Road Product Update brochure weights & measures.
   ...gvwrPins("tiffin", "open road", 2025, 2025, ["32FA", "32SA"], 24000),
   ...gvwrPins("tiffin", "open road", 2025, 2025, ["34PA", "36LA", "36UA"], 26000),
+  // Tiffin Open Road MY27 — MY27-OPEN-ROAD-Specifications-8.19.pdf WEIGHTS AND MEASURES
+  // 29 NA GVWR 22,000; 34 PA GVWR 26,000. 2025 34PA pin stays 2025-only (no 2026 evidence).
+  ...gvwrPins("tiffin", "open road", 2027, 2027, ["29NA"], 22000),
+  ...gvwrPins("tiffin", "open road", 2027, 2027, ["34PA"], 26000),
   // Tiffin Allegro RED — MY25 RED brochure / 2025 OEM spec page (not Red 340 / 360).
+  // MATCH: yearMax already 2027 — do not change.
   ...gvwrPins("tiffin", "allegro red", 2025, 2027, ["33AA", "37BA", "38KA"], 38320),
   // Tiffin Phaeton — 2025 OEM Phaeton spec page vs MY26 Phaeton Product Update brochure (2.10.26).
-  // 2025 and 2026 print different GVWR — do not merge year bands. MY27 unprinted.
+  // 2025 and 2026 print different GVWR — do not merge those year bands.
+  // MY27-Phaeton-Specifications.pdf reprints MY26: 35 CH/37 BH/40 IH GVWR 40,000; 44 OH 46,000.
   ...gvwrPins("tiffin", "phaeton", 2025, 2025, ["35CH", "37BH", "40IH"], 39660),
   ...gvwrPins("tiffin", "phaeton", 2025, 2025, ["44OH"], 45660),
-  ...gvwrPins("tiffin", "phaeton", 2026, 2026, ["35CH", "37BH", "40IH"], 40000),
-  ...gvwrPins("tiffin", "phaeton", 2026, 2026, ["44OH"], 46000),
+  ...gvwrPins("tiffin", "phaeton", 2026, 2027, ["35CH", "37BH", "40IH"], 40000),
+  ...gvwrPins("tiffin", "phaeton", 2026, 2027, ["44OH"], 46000),
+  // Tiffin Allegro Bay — MY27-Allegro-Bay-Specifications-8.13.pdf WEIGHTS AND MEASURES
+  // 38 AB/38 BB/38 EB/34 DB GVWR 33,000 each.
+  ...gvwrPins("tiffin", "allegro bay", 2027, 2027, ["34DB", "38AB", "38BB", "38EB"], 33000),
+  // Tiffin Wayfarer — MY27-Wayfarer-Specifications-8.21.pdf WEIGHTS AND MEASURES
+  // 25 RW/25 XLW/25 PW GVWR 12,125 each.
+  ...gvwrPins("tiffin", "wayfarer", 2027, 2027, ["25RW", "25XLW", "25PW"], 12125),
+  // Tiffin Zephyr — MY27-Zephyr-Specifications-3.30.pdf WEIGHTS AND MEASURES
+  // 45 FZ/45 PZ GVWR 54,000 each.
+  ...gvwrPins("tiffin", "zephyr", 2027, 2027, ["45FZ", "45PZ"], 54000),
+  // Tiffin Bus Allegro Bus — MY27-BUS-Specifications-5.15.26.pdf WEIGHTS AND MEASURES
+  // 36 AP/40 IP GVWR 42,000; 45 BP/45 OPP GVWR 52,000 (450HP and 605HP columns same).
+  // Do not copy older ~50,800 brochure-class into OEM_GVWR_PINS.
+  ...gvwrPins("tiffin bus", "allegro bus", 2027, 2027, ["36AP", "40IP"], 42000),
+  ...gvwrPins("tiffin bus", "allegro bus", 2027, 2027, ["45BP", "45OPP"], 52000),
   // Grand Design Lineage Class C / Super C — OEM Class C brochure + year-band cards.
   ...gvwrPins("grand design", "lineage series e", 2027, 2027, ["30DC"], 14500),
   ...gvwrPins("grand design", "lineage series m", 2025, 2027, ["25FW"], 12125),
