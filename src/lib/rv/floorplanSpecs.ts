@@ -2551,6 +2551,14 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   ...gvwrPins("airstream", "globetrotter", 2027, 2027, ["25FB"], 7300),
   ...gvwrPins("airstream", "globetrotter", 2027, 2027, ["27FB"], 7600),
   ...gvwrPins("airstream", "globetrotter", 2027, 2027, ["30RB"], 8800),
+  // Airstream Caravel — 2027 Airstream Caravel travel-trailer brochure
+  // (compare + spec table; © Airstream 2027). Printed GVWR only:
+  // 16RB 4,300; 20FB 5,000; 22FB 5,000. Exact codes — not Bambi (16RB
+  // is 3,500 on that card) and not Dublin Slate décor variants.
+  // Brochure "Unit Base Weight with LP and Batteries" is not pinned as
+  // UVW: Airstream Audit E waves 1–2 left OEM_UVW_PINS unused.
+  ...gvwrPins("airstream", "caravel", 2027, 2027, ["16RB"], 4300),
+  ...gvwrPins("airstream", "caravel", 2027, 2027, ["20FB", "22FB"], 5000),
   // Renegade RV MY2027 OEM / RVUSA brochure singles (Catalog Audit F).
   // Printed single GVWR only. Dual-chassis Explorer / Verona LE / XL,
   // Classic "See sales", Vienna/Villagio unprinted, Ikon/Villager no 2027 — leave GAP.

@@ -674,8 +674,8 @@ test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "33FB"), 10000);
   assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "30RB Twin"), null);
   assert.equal(findOemGvwrLbs("2026", "Airstream", "Classic", "30RB"), null);
-  // Wave 1 siblings that stay unpinned (Caravel shares Bambi-size codes).
-  assert.equal(findOemGvwrLbs("2027", "Airstream", "Caravel", "16RB"), null);
+  // Wave 1 siblings that stay unpinned here (Caravel is wave 3).
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Interstate", "24GT"), null);
 });
 
 test("Audit E 2027 OEM GVWR pins: Airstream wave 2 (printed FPs only)", () => {
@@ -726,12 +726,36 @@ test("Audit E 2027 OEM GVWR pins: Airstream wave 2 (printed FPs only)", () => {
   assert.equal(findOemGvwrLbs("2027", "Airstream", "Globetrotter", "25FB Barcelona Blue"), null);
   assert.equal(findOemGvwrLbs("2026", "Airstream", "Globetrotter", "30RB"), null);
 
-  // Isolation — wave 1 pins stay; Caravel / Interstate / other makes unopened.
+  // Isolation — wave 1 pins stay; Interstate / other makes unopened (Caravel is wave 3).
   assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "25FB"), 7600);
   assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "28RB"), 8800);
-  assert.equal(findOemGvwrLbs("2027", "Airstream", "Caravel", "16RB"), null);
   assert.equal(findOemGvwrLbs("2027", "Airstream", "Interstate", "24GT"), null);
   assert.equal(findOemGvwrLbs("2027", "Forest River", "Cardinal", "32CHILL"), 12188);
+});
+
+test("Audit E 2027 OEM GVWR pins: Airstream wave 3 Caravel (printed FPs only)", () => {
+  // 2027 Airstream Caravel brochure — 16RB 4,300; 20FB / 22FB 5,000.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Caravel", "16RB"), 4300);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Caravel", "20FB"), 5000);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Caravel", "22FB"), 5000);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Caravel", "16RB Dublin Slate"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Caravel", "20FB Dublin Slate"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Caravel", "22FB Dublin Slate"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Caravel", "19CB"), null);
+  assert.equal(findOemGvwrLbs("2026", "Airstream", "Caravel", "16RB"), null);
+  assert.equal(findOemUvwLbs("2027", "Airstream", "Caravel", "16RB"), null);
+  assert.equal(findOemUvwLbs("2027", "Airstream", "Caravel", "20FB"), null);
+  assert.equal(findOemUvwLbs("2027", "Airstream", "Caravel", "22FB"), null);
+
+  // Isolation — Bambi keeps its own 16RB 3,500; shared 20FB/22FB 5,000 does not bleed.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Bambi", "16RB"), 3500);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Bambi", "20FB"), 5000);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Bambi", "22FB"), 5000);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Bambi", "16RB Dublin Slate"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "25FB"), 7600);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Flying Cloud", "25FB"), 7300);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Interstate", "24GT"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Atlas", "25MS"), null);
 });
 
 test("Audit E 2027 OEM GVWR pins: Altitude / Incline / Incline FS550", () => {
