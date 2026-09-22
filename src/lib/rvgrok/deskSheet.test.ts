@@ -242,6 +242,19 @@ test("2022 Lineage 31ZW GVWR / full report mounts the desk sheet", () => {
   assert.ok(sheet!.rows.some((r) => r.label === "GVWR"));
 });
 
+test("non-spec follow-up after a locked coach does not remount the desk", () => {
+  const lock = resolveCoachIdentity(
+    "2022 Lineage 31ZW GVWR / full report",
+    null,
+    "",
+  );
+  assert.ok(lock);
+  const q = "how many floorplans does that lineup have?";
+  assert.equal(looksLikeDeskSheetAsk(q), false);
+  assert.equal(shouldMountDeskSheet(q, lock), false);
+  assert.equal(resolveDeskSheet({ query: q, identity: lock, specs: null }), null);
+});
+
 test("misspelled but clear spec ask still mounts the desk", () => {
   const q = "whats the gvwr on the 2022 lineage 31zw";
   assert.equal(looksLikeDeskSheetAsk(q), true);
