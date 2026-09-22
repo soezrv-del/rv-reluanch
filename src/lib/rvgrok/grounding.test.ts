@@ -237,6 +237,8 @@ test("Live Voice instructions aim for accuracy but not gospel; gesture order unt
   assert.doesNotMatch(voice, /realtime\?model=grok-4\.7/);
   assert.match(voice, /Get as accurate as possible, but not gospel\./);
   assert.doesNotMatch(voice, /ACCURACY FIRST/);
+  assert.match(voice, /VISION \/ PHOTOS/);
+  assert.match(voice, /CAMERA:/);
   assert.match(voice, /never invent/i);
   assert.match(voice, /American Dream ≠ Tradition/);
   assert.match(voice, /Comfort Drive/);

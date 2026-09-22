@@ -124,8 +124,14 @@ test("system / voice / grounding instruction strings have zero lot vocabulary", 
   );
   assert.match(src("prompts.ts"), /Get as accurate as possible, but not gospel\./);
   assert.match(src("voice.ts"), /Get as accurate as possible, but not gospel\./);
+  assert.match(src("prompts.ts"), /VISION \/ PHOTOS/);
+  assert.match(src("prompts.ts"), /Describe the image first if they ask what is in frame/);
   assert.match(src("prompts.ts"), /IMAGE GENERATION/);
   assert.match(src("prompts.ts"), /generate_image/);
+  assert.match(src("voice.ts"), /VISION \/ PHOTOS/);
+  assert.match(src("voice.ts"), /CAMERA:/);
   assert.match(src("voice.ts"), /GROK_VOICES/);
   assert.match(src("voice.ts"), /LIVE_VOICE_KEY/);
+  assert.match(src("voice.ts"), /createPushToTalkRecognition/);
+  assert.match(src("voice.ts"), /getSpeechRecognitionCtor/);
 });
