@@ -66,7 +66,14 @@ import {
   type GrokStarter,
 } from "./GrokLanding";
 import { GrokAvatar } from "./GrokAvatar";
-import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
+import {
+  scrollFieldIntoVisibleArea,
+  useKeyboardInset,
+} from "@/lib/hooks/useKeyboardInset";
+import {
+  grokComposerKeyboardLift,
+  grokScrollKeyboardPad,
+} from "@/lib/rvgrok/keyboardSafe";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
 import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
@@ -153,6 +160,14 @@ export function RvGrokApp({
   const camStreamRef = useRef<MediaStream | null>(null);
   const lastLiveFrameAt = useRef(0);
   const kb = useKeyboardInset();
+  const composerLift = grokComposerKeyboardLift({
+    open: kb.open,
+    inset: kb.inset,
+    vvHeight: kb.vvHeight,
+    vvOffsetTop: kb.vvOffsetTop,
+    layoutHeight: typeof window !== "undefined" ? window.innerHeight : 0,
+  });
+  const scrollKbPad = grokScrollKeyboardPad(kb.open);
   const abortRef = useRef<AbortController | null>(null);
   const recognitionRef = useRef<ReturnType<
     typeof createPushToTalkRecognition
@@ -192,6 +207,24 @@ export function RvGrokApp({
       camStreamRef.current?.getTracks().forEach((t) => t.stop());
     };
   }, []);
+
+  useEffect(() => {
+    if (!kb.open && composerLift <= 0) return;
+    const root = listRef.current?.closest("[data-rvgrok-wingman]");
+    const active = document.activeElement;
+    if (!(active instanceof HTMLElement) || !root?.contains(active)) return;
+    const tag = active.tagName;
+    if (tag !== "TEXTAREA" && tag !== "INPUT") return;
+    const timers = [50, 220, 420].map((ms) =>
+      window.setTimeout(
+        () => scrollFieldIntoVisibleArea(active, kb.inset || composerLift),
+        ms,
+      ),
+    );
+    return () => {
+      for (const t of timers) window.clearTimeout(t);
+    };
+  }, [kb.open, kb.inset, kb.vvHeight, composerLift]);
 
   useEffect(() => {
     try {
@@ -1529,7 +1562,7 @@ export function RvGrokApp({
         data-app-scroll
         className="rv-scroll relative z-10 flex-1 overflow-y-auto px-3 sm:px-4"
         style={{
-          paddingBottom: kb.open ? 12 : undefined,
+          paddingBottom: scrollKbPad || undefined,
         }}
       >
         {embedded ? (
@@ -1545,10 +1578,14 @@ export function RvGrokApp({
       </div>
 
       <div
+        data-rvgrok-composer-dock=""
         className={cn(
           "relative z-20 shrink-0 px-3 py-2 sm:px-4",
           isLanding ? "hidden" : "border-t border-white/10",
         )}
+        style={{
+          paddingBottom: composerLift > 0 ? composerLift : undefined,
+        }}
       >
         {(isLoading ||
           messages.some((m) => m.streaming) ||
