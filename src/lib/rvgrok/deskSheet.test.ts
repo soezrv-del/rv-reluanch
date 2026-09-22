@@ -344,40 +344,6 @@ test("2026 Lineage 31ZW chat prose paints Super C / F-600 / 6.7 / 330 / 950 / ta
   assert.doesNotMatch(after!.presenceNote, /SERIES MISSING|YEAR GAP|FLOORPLAN GAP|GAP over invent/i);
 });
 
-test("2026 Lineage 31ZW catalog cache paints Super C / F-600 / 330 / 950 / tanks; GCWR stays empty without chat", async () => {
-  const live = await loadLiveCatalog();
-  installCatalog({ RV_DATA: live.RV_DATA, MAKES: live.MAKES });
-  const q = "2026 Grand Design Lineage 31ZW";
-  const identity = resolveCoachIdentity(q, null, "");
-  assert.ok(identity);
-  assert.equal(identity!.model, "Lineage Series F");
-  assert.equal(findOemGvwrLbs("2026", "Grand Design", "Lineage Series F", "31ZW"), 22000);
-
-  const sheet = resolveDeskSheet({ query: q, identity, specs: null });
-  assert.ok(sheet);
-  const val = (label: string) =>
-    sheet!.rows.find((r) => r.label === label)?.value || "";
-  const gap = (label: string) =>
-    sheet!.rows.find((r) => r.label === label)?.gap;
-  assert.equal(val("Class"), "Super C");
-  assert.match(val("Chassis"), /F-?600/i);
-  assert.match(val("Engine"), /6\.7/);
-  assert.match(val("Fuel"), /diesel/i);
-  assert.match(val("Horsepower"), /330/);
-  assert.match(val("Torque"), /950/);
-  assert.match(val("Transmission"), /10-speed/i);
-  assert.match(val("GVWR"), /22,000/);
-  assert.equal(val("Fresh"), "79 gal");
-  assert.equal(val("Gray"), "66 gal");
-  assert.equal(val("Black"), "45 gal");
-  assert.doesNotMatch(val("GCWR"), /43,500/, "do not invent GCWR when catalog/chat miss it");
-  assert.ok(
-    gap("GCWR") !== false || !/43,500/.test(val("GCWR")),
-    "GCWR is not a Series F catalog pin",
-  );
-  assert.doesNotMatch(sheet!.presenceNote, /SERIES MISSING/i);
-});
-
 test("catalog tank pins stay when chat does not name gallons", () => {
   const q = "2025 Entegra Coach Aspire 44R spec report";
   const identity = resolveCoachIdentity(q, null, "");

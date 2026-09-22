@@ -130,7 +130,7 @@ export function deskSheetIsTowable(
   }
   const make = resolveCatalogMake(identity.make || "");
   const model = identity.model
-    ? resolveCatalogModel(make, identity.model, identity.floorplan)
+    ? resolveCatalogModel(make, identity.model)
     : "";
   const index = make && model ? CATALOG_INDEX[make]?.[model] : null;
   return isTowableForTorqueRating(index?.type, index?.fuelType);

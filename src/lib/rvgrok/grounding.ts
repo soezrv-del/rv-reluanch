@@ -256,9 +256,9 @@ function pickField(
   return { value: null, trust: "empty" };
 }
 
-function specFor(make: string, model: string, floorplan = ""): RVSpec | null {
+function specFor(make: string, model: string): RVSpec | null {
   const catalogMake = resolveCatalogMake(make);
-  const catalogModel = resolveCatalogModel(catalogMake, model, floorplan);
+  const catalogModel = resolveCatalogModel(catalogMake, model);
   return peekCatalog()?.RV_DATA?.[catalogMake]?.[catalogModel] ?? null;
 }
 
@@ -276,11 +276,11 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
     model,
     floorplan,
   );
-  const spec = specFor(make, model, floorplan);
+  const spec = specFor(make, model);
   const snap = spec ? resolveYearSnapshot(spec, year, floorplan) : null;
   const index =
     CATALOG_INDEX[resolveCatalogMake(make)]?.[
-      resolveCatalogModel(make, model, floorplan)
+      resolveCatalogModel(make, model)
     ] ?? null;
 
   // Empty year row: do not leak another year's top-level engine/HP as locked.

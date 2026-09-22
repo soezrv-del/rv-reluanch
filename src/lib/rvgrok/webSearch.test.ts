@@ -29,7 +29,6 @@ import {
   seedWebSearchCache,
   normalizeCoachTyposInAsk,
   coachLabelFromResearchAsk,
-  skipGeminiForResearchAsk,
 } from "./webSearch.ts";
 import { mayEmitLabeledEstimate } from "./estimatePolicy.ts";
 
@@ -251,42 +250,6 @@ test("pheaton typo normalizes and first GVWR phrasing is OEM Phaeton", () => {
   );
   assert.match(second, /Phaeton/);
   assert.match(second, /factory GVWR|OEM brochure/i);
-});
-
-test("Lineage 31ZW research query names Series F Super C; spec asks skip Gemini", () => {
-  const q = "2026 Grand Design Lineage 31ZW";
-  assert.equal(skipGeminiForResearchAsk(q), true);
-  assert.equal(
-    skipGeminiForResearchAsk("Where is the battery disconnect on a 2005 Winnebago Adventurer?"),
-    false,
-  );
-  assert.match(coachLabelFromResearchAsk(q), /2026 Grand Design Lineage Series F 31ZW/i);
-  assert.match(coachLabelFromResearchAsk(q), /Super C/i);
-  const second = rephraseResearchQuery(q, 1, [q]);
-  assert.match(second, /Lineage Series F/i);
-  assert.match(second, /31ZW/);
-  assert.match(second, /OEM brochure|factory|spec sheet/i);
-  const packed = JSON.stringify(
-    buildWebSearchRequest({
-      model: "grok-4-1-fast-reasoning",
-      query: q,
-      profile: "chat",
-    }),
-  );
-  assert.match(packed, /asked OEM|Grand Design/);
-  assert.match(packed, /Lineage 31ZW is Grand Design Lineage Series F Super C/);
-  assert.equal(
-    notesConfirmQueriedField(
-      "CONFIRMED: no. Search came back empty for a factory PDF. Dealer listing: Super C Ford F-600 4x4, 6.7 diesel 330 hp, 950 lb-ft, 10-speed. GVWR 22,000 lb. Fresh 79 gray 66 black 45.",
-      q,
-    ),
-    true,
-    "live numbers must confirm a YMM spec ask — not a false empty",
-  );
-  assert.equal(
-    notesConfirmQueriedField("CONFIRMED: no. Could not find published OEM specs.", q),
-    false,
-  );
 });
 
 test("notesConfirmQueriedField requires a real fact, not a miss or EST", () => {

@@ -18,7 +18,7 @@ export function resolveFactsBrochure(
   const year = (identity.year || "").trim();
   const make = resolveCatalogMake(identity.make || "");
   const model = identity.model
-    ? resolveCatalogModel(make, identity.model, identity.floorplan)
+    ? resolveCatalogModel(make, identity.model)
     : "";
   if (!make || !model) return null;
   const spec = peekCatalog()?.RV_DATA?.[make]?.[model] ?? null;
