@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -27,6 +28,9 @@ type AccessContextValue = {
   requestOpen: boolean;
   openRequest: (reason?: string) => void;
   closeRequest: () => void;
+  adminListOpen: boolean;
+  openAdminList: () => void;
+  closeAdminList: () => void;
   /** Identity check only — unlocks iff already on the list. */
   identify: (phone: string) => Promise<AccessCheckResult>;
   /** If listed, run fn. Otherwise open the request sheet and return false. */
@@ -60,6 +64,9 @@ export function AccessProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const [requestReason, setRequestReason] = useState("");
+  const [adminListOpen, setAdminListOpen] = useState(false);
+  const adminListOpenRef = useRef(false);
+  adminListOpenRef.current = adminListOpen;
 
   const applyResult = useCallback((result: AccessCheckResult, raw: string) => {
     const cred = (result.phoneDigits || result.phoneE164 || raw).trim();
@@ -90,14 +97,25 @@ export function AccessProvider({ children }: { children: ReactNode }) {
     void identify(stored).catch(() => setStatus("browse"));
   }, [identify]);
 
-  const openRequest = useCallback((reason?: string) => {
-    setRequestReason(reason || "");
-    setRequestOpen(true);
-  }, []);
-
   const closeRequest = useCallback(() => {
     setRequestOpen(false);
     setRequestReason("");
+  }, []);
+
+  const closeAdminList = useCallback(() => {
+    setAdminListOpen(false);
+  }, []);
+
+  const openAdminList = useCallback(() => {
+    setRequestOpen(false);
+    setRequestReason("");
+    setAdminListOpen(true);
+  }, []);
+
+  const openRequest = useCallback((reason?: string) => {
+    if (adminListOpenRef.current) return;
+    setRequestReason(reason || "");
+    setRequestOpen(true);
   }, []);
 
   const allowed = status === "full" || status === "admin";
@@ -138,6 +156,9 @@ export function AccessProvider({ children }: { children: ReactNode }) {
       requestOpen,
       openRequest,
       closeRequest,
+      adminListOpen,
+      openAdminList,
+      closeAdminList,
       identify,
       guard,
     }),
@@ -150,6 +171,9 @@ export function AccessProvider({ children }: { children: ReactNode }) {
       requestOpen,
       openRequest,
       closeRequest,
+      adminListOpen,
+      openAdminList,
+      closeAdminList,
       identify,
       guard,
     ],

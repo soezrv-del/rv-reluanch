@@ -1,5 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Lock, Shield, Trash2, X } from "lucide-react";
+import {
+  ADMIN_PASSWORD_UNSET_CODE,
+  adminSheetBlockedMessage,
+  adminSheetView,
+} from "@/lib/access/adminSheet";
 import { HARD_ADMIN } from "@/lib/access/constants";
 import { adminFetch, adminLogin, clearAdminToken } from "@/lib/access/client";
 import { formatPhoneDisplay } from "@/lib/access/phone";
@@ -32,36 +37,97 @@ export function AdminWhitelistSheet({
 }) {
   const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [code, setCode] = useState<string | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [addPhone, setAddPhone] = useState("");
   const [addName, setAddName] = useState("");
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   const load = async () => {
-    const res = await adminFetch("/api/access/admin");
-    if (res.status === 401) {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await adminFetch("/api/access/admin");
+      const data = (await res.json()) as {
+        entries?: Entry[];
+        requests?: RequestRow[];
+        error?: string;
+        code?: string;
+        message?: string;
+      };
+      if (res.status === 401 || res.status === 503) {
+        setAuthed(false);
+        setCode(data.code || (res.status === 503 ? ADMIN_PASSWORD_UNSET_CODE : null));
+        setError(data.message || data.error || "");
+        return;
+      }
+      if (!res.ok) throw new Error(data.message || data.error || "Could not load the list.");
+      setEntries(data.entries ?? []);
+      setRequests(data.requests ?? []);
+      setAuthed(true);
+      setCode(null);
+    } catch (err) {
       setAuthed(false);
-      return;
+      setCode("load_failed");
+      setError(err instanceof Error ? err.message : "Could not load the list.");
+    } finally {
+      setLoading(false);
     }
-    const data = (await res.json()) as {
-      entries?: Entry[];
-      requests?: RequestRow[];
-      error?: string;
-    };
-    if (!res.ok) throw new Error(data.error || "Could not load the list.");
-    setEntries(data.entries ?? []);
-    setRequests(data.requests ?? []);
-    setAuthed(true);
   };
 
   useEffect(() => {
     if (!open) return;
-    void load().catch(() => setAuthed(false));
+    void load();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      onCloseRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    let closedByPop = false;
+    const prev = window.history.state;
+    const marker =
+      prev !== null && typeof prev === "object"
+        ? { ...prev, adminWhitelist: true }
+        : { adminWhitelist: true };
+    window.history.pushState(marker, "");
+    const onPop = () => {
+      closedByPop = true;
+      onCloseRef.current();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      const state = window.history.state;
+      if (
+        !closedByPop &&
+        state !== null &&
+        typeof state === "object" &&
+        "adminWhitelist" in state &&
+        Boolean((state as { adminWhitelist?: unknown }).adminWhitelist)
+      ) {
+        window.history.back();
+      }
+    };
   }, [open]);
 
   if (!open) return null;
+
+  const view = adminSheetView({ canOpen, authed, loading, code });
 
   const onLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +138,13 @@ export function AdminWhitelistSheet({
       setPassword("");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed.");
+      const message = err instanceof Error ? err.message : "Login failed.";
+      if (/WHITELIST_ADMIN_PASSWORD|not set/i.test(message)) {
+        setCode(ADMIN_PASSWORD_UNSET_CODE);
+        setError("");
+      } else {
+        setError(message);
+      }
     } finally {
       setBusy(false);
     }
@@ -91,8 +163,8 @@ export function AdminWhitelistSheet({
           name: addName,
         }),
       });
-      const data = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(data.error || "Could not add.");
+      const data = (await res.json()) as { error?: string; message?: string };
+      if (!res.ok) throw new Error(data.message || data.error || "Could not add.");
       setAddPhone("");
       setAddName("");
       await load();
@@ -111,8 +183,8 @@ export function AdminWhitelistSheet({
         method: "POST",
         body: JSON.stringify({ action: "remove", id }),
       });
-      const data = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(data.error || "Could not remove.");
+      const data = (await res.json()) as { error?: string; message?: string };
+      if (!res.ok) throw new Error(data.message || data.error || "Could not remove.");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not remove.");
@@ -135,8 +207,8 @@ export function AdminWhitelistSheet({
           name: row.name,
         }),
       });
-      const data = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(data.error || "Could not add.");
+      const data = (await res.json()) as { error?: string; message?: string };
+      if (!res.ok) throw new Error(data.message || data.error || "Could not add.");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not add.");
@@ -146,15 +218,23 @@ export function AdminWhitelistSheet({
   };
 
   return (
-    <div className="fixed inset-0 z-[120] flex flex-col bg-black/70 backdrop-blur-md">
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-        <h2 className="text-[16px] font-bold text-white">Access list</h2>
+    <div
+      data-admin-whitelist-sheet
+      data-admin-whitelist-view={view}
+      className="fixed inset-0 z-[140] isolate flex flex-col bg-black/70 backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="admin-whitelist-title"
+    >
+      <div className="flex items-center justify-between border-b border-white/10 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <h2 id="admin-whitelist-title" className="text-[16px] font-bold text-white">
+          Access list
+        </h2>
         <button
           type="button"
-          onClick={() => {
-            onClose();
-          }}
-          className="rounded-full p-2 text-white hover:bg-white/10"
+          data-admin-whitelist-close
+          onClick={() => onClose()}
+          className="flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 text-white hover:bg-white/10"
           aria-label="Close"
         >
           <X className="size-5" />
@@ -162,11 +242,28 @@ export function AdminWhitelistSheet({
       </div>
       <div data-app-scroll className="rv-scroll flex-1 overflow-y-auto px-4 py-4">
         <div className="mx-auto max-w-lg space-y-4">
-          {!canOpen ? (
-            <p className="text-[13px] leading-relaxed text-white/80">
-              Sign in with an admin number under Access first.
-            </p>
-          ) : !authed ? (
+          {view === "loading" ? (
+            <p className="text-[13px] leading-relaxed text-white/80">Opening…</p>
+          ) : view === "blocked" ? (
+            <div className="glass-prestige space-y-3 rounded-[1.25rem] p-4">
+              <p className="text-[15px] font-bold text-white">
+                You can close this screen.
+              </p>
+              <p className="text-[13px] leading-relaxed text-white/80">
+                {error && code !== ADMIN_PASSWORD_UNSET_CODE
+                  ? error
+                  : adminSheetBlockedMessage(code)}
+              </p>
+              <button
+                type="button"
+                data-admin-whitelist-close
+                onClick={() => onClose()}
+                className="w-full rounded-xl bg-blue py-2.5 text-[13px] font-bold text-white"
+              >
+                Close
+              </button>
+            </div>
+          ) : view === "password" ? (
             <form
               onSubmit={(e) => void onLogin(e)}
               className="glass-prestige space-y-3 rounded-[1.25rem] p-4"
@@ -197,6 +294,14 @@ export function AdminWhitelistSheet({
                 className="w-full rounded-xl bg-blue py-2.5 text-[13px] font-bold text-white disabled:opacity-60"
               >
                 {busy ? "Checking…" : "Open list"}
+              </button>
+              <button
+                type="button"
+                data-admin-whitelist-close
+                onClick={() => onClose()}
+                className="w-full rounded-xl border border-white/20 bg-white/5 py-2.5 text-[13px] font-bold text-white"
+              >
+                Close
               </button>
             </form>
           ) : (
@@ -336,7 +441,7 @@ export function AdminWhitelistSheet({
                 type="button"
                 onClick={() => {
                   clearAdminToken();
-                  setAuthed(false);
+                  void load();
                 }}
                 className="w-full rounded-xl border border-white/20 bg-white/5 py-2.5 text-[13px] font-bold text-white"
               >

@@ -58,11 +58,58 @@ test("admin CRUD is password-gated and separate from VITE_AUTH_ENABLED", () => {
   const admin = read("src/routes/api/access.admin.ts");
   assert.match(admin, /WHITELIST_ADMIN_PASSWORD/);
   assert.match(admin, /verifyAdminPassword/);
+  assert.match(admin, /authorizeAccessAdmin/);
   assert.match(admin, /action === "add"/);
   assert.match(admin, /action === "remove"/);
   const env = read(".grok/app-env.json");
   assert.match(env, /"VITE_AUTH_ENABLED": "false"/);
   assert.doesNotMatch(env, /"VITE_AUTH_ENABLED": "true"/);
+});
+
+test("hard-admin phone header can manage the Neon list; Close always clears overlay", () => {
+  const auth = read("src/lib/access/adminAuth.ts");
+  assert.match(auth, /isHardAdminPhone/);
+  assert.match(auth, /databaseUrlConfigured/);
+  assert.match(auth, /ADMIN_PASSWORD_UNSET_CODE/);
+  assert.match(auth, /WHITELIST_ADMIN_PASSWORD is not set/);
+  assert.doesNotMatch(auth, /isBetaSeedPhone/);
+  const sheetLogic = read("src/lib/access/adminSheet.ts");
+  assert.match(sheetLogic, /admin_password_unset/);
+  assert.match(sheetLogic, /adminSheetView/);
+
+  const client = read("src/lib/access/client.ts");
+  assert.match(client, /accessHeaders\(\{ "Content-Type": "application\/json" \}\)/);
+
+  const store = read("src/lib/access/store.ts");
+  assert.match(store, /insert into access_whitelist/);
+  assert.match(store, /export async function addWhitelistEntry/);
+
+  const sheet = read("src/components/access/AdminWhitelistSheet.tsx");
+  assert.match(sheet, /data-admin-whitelist-sheet/);
+  assert.match(sheet, /data-admin-whitelist-close/);
+  assert.match(sheet, /z-\[140\]/);
+  assert.match(sheet, /Escape/);
+  assert.match(sheet, /popstate/);
+  assert.match(sheet, /adminSheetView/);
+  assert.match(sheet, /ADMIN_PASSWORD_UNSET_CODE/);
+  assert.match(sheet, /onCloseRef\.current\(\)/);
+  assert.match(sheet, /onClick=\{\(\) => onClose\(\)\}/);
+
+  const more = read("src/components/access/AccessMoreSection.tsx");
+  assert.match(more, /openAdminList/);
+  assert.match(more, /closeAdminList/);
+
+  const provider = read("src/components/access/AccessProvider.tsx");
+  assert.match(provider, /openAdminList/);
+  assert.match(provider, /if \(adminListOpenRef\.current\) return/);
+  assert.match(provider, /setRequestOpen\(false\)/);
+
+  const request = read("src/components/access/RequestAccessSheet.tsx");
+  assert.match(request, /z-\[120\]/);
+  assert.ok(
+    sheet.indexOf("z-[140]") >= 0 && request.indexOf("z-[120]") >= 0,
+    "admin list must stack above research-unlock / request overlay",
+  );
 });
 
 test("NDA gate wraps the suite and does not grant functional access", () => {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { KeyRound, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
 import { useAccess } from "./AccessProvider";
 import { AdminWhitelistSheet } from "./AdminWhitelistSheet";
 
@@ -8,7 +8,6 @@ export function AccessMoreSection() {
   const [phone, setPhone] = useState(access.phone);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(false);
 
   const onIdentify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +82,7 @@ export function AccessMoreSection() {
           <div className="glass-prestige overflow-hidden rounded-[1.25rem]">
             <button
               type="button"
-              onClick={() => setAdminOpen(true)}
+              onClick={() => access.openAdminList()}
               className="flex w-full items-center gap-3 px-3.5 py-3.5 text-left transition hover:bg-white/5"
             >
               <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
@@ -94,18 +93,17 @@ export function AccessMoreSection() {
                   Manage access list
                 </span>
                 <span className="block text-[11px] text-white">
-                  Password required · add or remove numbers
+                  Add or remove approved numbers
                 </span>
               </span>
-              <KeyRound className="size-4 shrink-0 text-white" />
             </button>
           </div>
         </section>
       ) : null}
 
       <AdminWhitelistSheet
-        open={adminOpen}
-        onClose={() => setAdminOpen(false)}
+        open={access.adminListOpen}
+        onClose={access.closeAdminList}
         canOpen={access.isAdmin}
       />
     </>

@@ -124,16 +124,20 @@ export async function adminLogin(password: string): Promise<string> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "login", password }),
   });
-  const data = (await res.json()) as { token?: string; error?: string };
+  const data = (await res.json()) as {
+    token?: string;
+    error?: string;
+    message?: string;
+  };
   if (!res.ok || !data.token) {
-    throw new Error(data.error || "Admin login failed.");
+    throw new Error(data.message || data.error || "Admin login failed.");
   }
   storeAdminToken(data.token);
   return data.token;
 }
 
 function adminHeaders(): Headers {
-  const headers = new Headers({ "Content-Type": "application/json" });
+  const headers = accessHeaders({ "Content-Type": "application/json" });
   const token = readAdminToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
   return headers;
