@@ -160,6 +160,20 @@ test("access check and request short-circuit hard admin before getSql", () => {
   assert.match(requestApi, /status: result.unavailable \? 503 : 400/);
 });
 
+test("Production without DATABASE_URL must not boot PGLite on /var/task", () => {
+  const runtime = read("src/lib/dbRuntime.ts");
+  assert.match(runtime, /VERCEL/);
+  assert.match(runtime, /\/var\/task/);
+  assert.match(runtime, /AWS_LAMBDA_FUNCTION_NAME/);
+  assert.match(runtime, /pgliteRuntimeSupported/);
+  const db = read("src/lib/db.ts");
+  assert.match(db, /from "\.\/dbRuntime"/);
+  assert.match(db, /if \(!pgliteRuntimeSupported\(\)\) return Promise\.resolve\(\)/);
+  const store = read("src/lib/access/store.ts");
+  assert.match(store, /betaSeedAccessResult/);
+  assert.match(store, /Seeded testers never 503/);
+});
+
 test("http gate short-circuits hard admin and stays on rvgrok", () => {
   const gate = read("src/lib/access/httpGate.ts");
   assert.match(gate, /isHardAdminPhone/);

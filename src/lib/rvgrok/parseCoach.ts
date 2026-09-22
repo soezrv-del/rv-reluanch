@@ -95,9 +95,13 @@ export function extractFloorplanToken(text: string): string {
   if (!text) return "";
   const re = new RegExp(FLOORPLAN_TOKEN_RE.source, "g");
   for (const m of text.matchAll(re)) {
-    const token = normalizeFloorplanToken(m[1] || "");
+    let token = normalizeFloorplanToken(m[1] || "");
     if (!token) continue;
     if (isBudgetThousandsToken(token)) continue;
+    // Spoken "31W Z" — trailing single letter belongs on the code (31WZ).
+    const after = text.slice((m.index ?? 0) + m[0].length);
+    const glue = after.match(/^\s+([A-Za-z])\b/);
+    if (glue?.[1]) token = normalizeFloorplanToken(token + glue[1]);
     return token;
   }
   return "";

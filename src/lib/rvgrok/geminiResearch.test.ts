@@ -103,6 +103,48 @@ test("Gemini request prefers OEM / factory brochure / dealer, not PDF-only", () 
   );
 });
 
+test("spec / YMM asks skip Gemini and use xAI web_search", async () => {
+  clearWebSearchCache();
+  const urls: string[] = [];
+  const prior = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = fetchUrl(input);
+    urls.push(url);
+    assert.equal(isGeminiResearchUrl(url), false);
+    return jsonResponse(
+      xaiNotes(
+        "CONFIRMED: yes. Grand Design OEM brochure: Super C Ford F-600 4x4, 6.7 diesel 330 hp, 950 lb-ft, 10-speed. GVWR 22,000 lb. Fresh 79 gray 66 black 45.",
+      ),
+    );
+  }) as typeof fetch;
+  try {
+    const result = await fetchWebSearchNotes({
+      apiKey: "xai-test-key",
+      geminiApiKey: "AIza-should-not-run",
+      researchProvider: "auto",
+      query: "2026 Grand Design Lineage 31ZW",
+      timeoutMs: 5_000,
+      models: ["grok-4-1-fast-reasoning"],
+    });
+    assert.equal(result.ok, true);
+    assert.equal(urls.length, 1);
+    assert.match(urls[0] || "", /api\.x\.ai/);
+    if (result.ok) {
+      assert.match(result.model, /grok/);
+      assert.equal(result.confirmed, true);
+      assert.match(result.notes, /22,000/);
+    }
+    const injection = formatWebSearchInjection(result, {
+      query: "2026 Grand Design Lineage 31ZW",
+    });
+    assert.match(injection, /xAI web_search/);
+    assert.doesNotMatch(injection, /Gemini Google Search grounding/);
+  } finally {
+    globalThis.fetch = prior;
+    clearWebSearchCache();
+  }
+});
+
 test("Gemini success → notes used (xAI not called)", async () => {
   clearWebSearchCache();
   const urls: string[] = [];
@@ -113,7 +155,7 @@ test("Gemini success → notes used (xAI not called)", async () => {
     assert.equal(isGeminiResearchUrl(url), true);
     return jsonResponse(
       geminiNotes(
-        "CONFIRMED: yes. Tiffin OEM brochure lists GVWR 39,600 lb for the 2022 Phaeton 40IH.",
+        "CONFIRMED: yes. The battery disconnect is typically near the steps on a 2005 Adventurer — check the OEM owners manual.",
       ),
     );
   }) as typeof fetch;
@@ -122,7 +164,7 @@ test("Gemini success → notes used (xAI not called)", async () => {
       apiKey: "xai-should-not-run",
       geminiApiKey: "AIza-test",
       researchProvider: "auto",
-      query: "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
+      query: "Where is the battery disconnect on a 2005 Winnebago Adventurer?",
       timeoutMs: 5_000,
       models: ["grok-4-1-fast-reasoning"],
     });
@@ -132,7 +174,7 @@ test("Gemini success → notes used (xAI not called)", async () => {
     if (result.ok) {
       assert.match(result.model, /gemini/);
       assert.equal(result.confirmed, true);
-      assert.match(result.notes, /39,600/);
+      assert.match(result.notes, /battery disconnect/i);
     }
     const injection = formatWebSearchInjection(result);
     assert.match(injection, /Gemini Google Search grounding/);
@@ -167,7 +209,7 @@ test("Gemini fail/timeout → xAI fallback notes used", async () => {
       apiKey: "xai-test-key",
       geminiApiKey: "AIza-test",
       researchProvider: "gemini",
-      query: "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
+      query: "Where is the battery disconnect on a 2005 Winnebago Adventurer?",
       timeoutMs: 8_000,
       models: ["grok-4-1-fast-reasoning"],
     });

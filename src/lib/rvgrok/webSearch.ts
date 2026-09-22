@@ -4,11 +4,13 @@
  * catalog miss). Callers must not skip this path on a catalog miss.
  *
  * Provider chain (RVGROK_RESEARCH_PROVIDER, default auto):
- *   1. Gemini + Google Search grounding when GEMINI_API_KEY is set
- *   2. Existing xAI Responses `web_search` loop (fallback / no Gemini key)
+ *   1. Spec / year-make-model asks → xAI Responses `web_search` only
+ *      (David: standard Grok + web_search; not Gemini, not Live Voice budget)
+ *   2. Repair / other browse: Gemini + Google Search when GEMINI_API_KEY is set
+ *   3. Existing xAI Responses `web_search` loop (fallback / no Gemini key)
  *
  * Chat completions and Live Voice Realtime stay on xAI Grok. Gemini is
- * browse-only — never greetings, never a Grok replacement.
+ * browse-only — never greetings, never a Grok replacement, never spec SoT.
  *
  * Confirmed: Live Search `search_parameters` on chat completions is retired
  * (410 Gone). The xAI path is POST /v1/responses with { type: "web_search" }.
@@ -29,10 +31,15 @@ import {
   formatCatalogPinWinsSearchMiss,
   LOW_CONFIDENCE_EST_RULE,
 } from "./estimatePolicy.ts";
+import {
+  resolveCatalogMake,
+  resolveCatalogModel,
+} from "./coachIdentity.ts";
 import { parseCoachFromText } from "./parseCoach.ts";
 import {
   looksLikeLiveResearchQuestion,
   looksLikeMarketValueQuestion,
+  looksLikeNamedCoachProductQuestion,
   looksLikeRepairQuestion,
   looksLikeSpecQuestion,
   normalizeAskText,
@@ -281,6 +288,24 @@ const FIELD_PATTERNS: Array<[QueriedResearchField, RegExp]> = [
   ],
 ];
 
+/** Named coach / spec-sheet research — not a single GVWR/HP keyword. */
+const SPEC_SHEET_LABEL =
+  "GVWR GCWR engine horsepower torque chassis transmission holding tanks";
+const SPEC_SHEET_NOTE_RE =
+  /\b(gvwr|gcwr|hp|horsepower|engine|chassis|torque|diesel|super\s*c|fresh|gr[ae]y|black|gal(?:lon)?s?|f-?600|f-?550|power\s*stroke|10-speed)\b/i;
+
+/** Spec / YMM asks stay on xAI web_search. Repair may still use Gemini. */
+export function skipGeminiForResearchAsk(query: string): boolean {
+  const t = normalizeAskText(query);
+  if (looksLikeRepairQuestion(t) && !looksLikeSpecQuestion(t)) return false;
+  return looksLikeSpecQuestion(t) || looksLikeNamedCoachProductQuestion(t);
+}
+
+function isSpecSheetAsk(query: string): boolean {
+  const t = normalizeAskText(query);
+  return looksLikeNamedCoachProductQuestion(t) || looksLikeSpecQuestion(t);
+}
+
 const FIELD_LABEL: Record<QueriedResearchField, string> = {
   gvwr: "GVWR",
   uvw: "UVW",
@@ -367,6 +392,15 @@ export function notesConfirmQueriedField(notes: string, query: string): boolean 
     );
   }
   if (field === "generic") {
+    if (isSpecSheetAsk(query)) {
+      // YMM / spec-sheet: a live number + powertrain/weight/tank word
+      // confirms even when the model also wrote CONFIRMED: no (false empty).
+      return (
+        n.length >= 40 &&
+        NUMBER_RE.test(n) &&
+        SPEC_SHEET_NOTE_RE.test(n)
+      );
+    }
     if (MISS_NOTE_RE.test(n)) return false;
     return (
       n.length >= 40 &&
@@ -419,9 +453,17 @@ export function normalizeCoachTyposInAsk(query: string): string {
 /** Year / make / model / floorplan from the ask, after typo normalize. */
 export function coachLabelFromResearchAsk(query: string): string {
   const parsed = parseCoachFromText(normalizeCoachTyposInAsk(query));
-  return [parsed.year, parsed.make, parsed.model, parsed.floorplan]
+  const make = parsed.make ? resolveCatalogMake(parsed.make) : "";
+  const model = parsed.model
+    ? resolveCatalogModel(make || parsed.make, parsed.model, parsed.floorplan)
+    : parsed.model;
+  const parts = [parsed.year, make || parsed.make, model, parsed.floorplan]
     .filter(Boolean)
     .join(" ");
+  if (/lineage series f/i.test(model || "") && !/super\s*c/i.test(parts)) {
+    return `${parts} Super C`;
+  }
+  return parts;
 }
 
 /**
@@ -435,8 +477,9 @@ export function rephraseResearchQuery(
 ): string {
   const base = normalizeCoachTyposInAsk(original).trim();
   const field = inferQueriedField(base);
-  const label = FIELD_LABEL[field];
   const coach = coachLabelFromResearchAsk(base);
+  const label =
+    field === "generic" && coach ? SPEC_SHEET_LABEL : FIELD_LABEL[field];
   const used = new Set(previousQueries.map(normalizeQueryPhrase));
 
   const candidates: string[] = [];
@@ -591,14 +634,14 @@ export function buildResearchInstructions(opts: {
         : `This is attempt ${attempt} of ${maxAttempts}. Search with THIS query phrasing only.`;
   return [
     "Research ONE RV question for RVFAX. Return short RESEARCH NOTES only — no JSON.",
-    "Research loop: search the LIVE web first (OEM / factory brochure / dealer listing), then evaluate whether the results CONFIRM the asked fact (a specific year-matched number, location, procedure, listing band, or OEM pin). Prefer Tiffin, Newmar, Newmar Corp, factory PDF / brochure, and dealer listings over aggregator hedges like 'typically'. If they confirm, write CONFIRMED: yes and the fact plus related specs when found (engine / GCWR / transmission). If they do not confirm, write CONFIRMED: no and what was missing. Do not invent a labeled EST / typical class range / low confidence in these notes — never when a live source exists.",
+    "Research loop: search the LIVE web first (OEM / factory brochure / dealer listing), then evaluate whether the results CONFIRM the asked fact (a specific year-matched number, location, procedure, listing band, or OEM pin). Prefer the asked OEM / factory brochure / dealer listing (Grand Design, Tiffin, Newmar, factory PDF, dealer listings) over aggregator hedges like 'typically'. If they confirm, write CONFIRMED: yes and the fact plus related specs when found (class / chassis / engine / HP / torque / transmission / GVWR / GCWR / tanks). If they do not confirm, write CONFIRMED: no and what was missing. Do not invent a labeled EST / typical class range / low confidence in these notes — never when a live source exists.",
     priorLine,
     style === "gemini"
       ? "Search once with Google Search. Do not invent a second query loop here — the server falls back to xAI web_search if this miss/times out."
       : "Never repeat the same query. A later attempt will retry ONCE with a DIFFERENT query phrasing if this one times out or does not confirm.",
     lengthRule,
     "Match the ask:",
-    "- Specs/powertrain: search live OEM brochure / factory spec sheet / chassis sheet / dealer listing for THAT year + make + model + floorplan FIRST. Never answer from training data. Never invent horsepower as OEM fact (no silent 450). If a live source exists, quote that year-specific number — never EST / typical class range / low confidence. If not found, write CONFIRMED: no.",
+    "- Specs/powertrain: search live OEM brochure / factory spec sheet / chassis sheet / dealer listing for THAT year + make + model + floorplan FIRST (include the catalog series letter when the floorplan names it — Lineage 31ZW is Grand Design Lineage Series F Super C). Never answer from training data. Never invent horsepower as OEM fact (no silent 450). If a live source exists, quote that year-specific number — never EST / typical class range / low confidence. If not found, write CONFIRMED: no.",
     "- Market value / pricing: live nationwide ASKING prices this turn for THAT exact year + make + model AND two years older and two years newer (year ±2). Real public listings only (RV Trader / RVUSA / classifieds). Average those asks and return Low / Average / High. Never use a nightly competitor scrape, RVcountry competitor-latest, sample inventory CSV, frozen comps table, cached overnight scrape, NADA, J.D. Power, or any paid book. If you cannot find real listings this turn, write INSUFFICIENT — do not invent a band.",
     "- Troubleshooting / how-to / error codes / TSB / recall / install: likely symptoms, common OEM/forum/manual fixes, safety caveats. Cite uncertainty. Do not invent a campaign number, torque spec, part number, wiring color, sensor bypass, or a diagnosis you cannot support. Prefer OEM procedure / NHTSA. If none found, write UNKNOWN / no OEM procedure.",
     "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
@@ -897,8 +940,10 @@ export type FetchWebSearchNotesOpts = {
 };
 
 /**
- * Research chain: Gemini Google Search (when key + auto/gemini) then the
- * existing xAI web_search loop. No Gemini key → xAI only, same as today.
+ * Research chain: spec / YMM asks stay on xAI web_search (no Gemini).
+ * Other browse: Gemini Google Search (when key + auto/gemini) then the
+ * existing xAI web_search loop. Unconfirmed Gemini notes fall through.
+ * No Gemini key → xAI only, same as today.
  */
 export async function fetchWebSearchNotes(
   opts: FetchWebSearchNotesOpts,
@@ -919,10 +964,12 @@ export async function fetchWebSearchNotes(
 
   const profile = opts.profile ?? "chat";
   const budgetMs = opts.timeoutMs ?? CHAT_WEB_SEARCH_TIMEOUT_MS;
-  const provider = resolveResearchProvider({
-    provider: opts.researchProvider,
-    geminiApiKey: opts.geminiApiKey,
-  });
+  const provider = skipGeminiForResearchAsk(originalQuery)
+    ? "xai"
+    : resolveResearchProvider({
+        provider: opts.researchProvider,
+        geminiApiKey: opts.geminiApiKey,
+      });
   const started = Date.now();
 
   if (provider === "gemini") {
@@ -948,8 +995,11 @@ export async function fetchWebSearchNotes(
           queries: gemini.queries ?? [originalQuery],
           query: originalQuery,
         };
-        if (confirmed) writeWebSearchCache(key, result);
-        return result;
+        if (confirmed) {
+          writeWebSearchCache(key, result);
+          return result;
+        }
+        // Unconfirmed notes are a miss, not a finished search — try xAI.
       }
     }
   }

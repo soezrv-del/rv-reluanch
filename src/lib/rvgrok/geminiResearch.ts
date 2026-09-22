@@ -137,7 +137,7 @@ export function geminiResearchInstructions(opts: {
       : "CHAT: 4–8 short bullets. No essay. No URLs unless they uniquely identify a bulletin.";
   return [
     "Research ONE RV question for RVFAX. Return short RESEARCH NOTES only — no JSON.",
-    "Use the google_search tool. Search the LIVE web first. Prefer OEM / factory brochure / dealer listings (Tiffin, Newmar, Newmar Corp, factory PDF / brochure, dealer listings) over aggregator hedges like 'typically'. Open-web hits are allowed — not factory-PDF-only.",
+    "Use the google_search tool. Search the LIVE web first. Prefer the asked OEM / factory brochure / dealer listing (Grand Design, Tiffin, Newmar, factory PDF, dealer listings) over aggregator hedges like 'typically'. Open-web hits are allowed — not factory-PDF-only.",
     "Evaluate whether the results CONFIRM the asked fact (a specific year-matched number, location, procedure, listing band, or OEM pin). If they confirm, write CONFIRMED: yes and the fact plus related specs when found (engine / GCWR / transmission). If they do not confirm, write CONFIRMED: no and what was missing. Do not invent a labeled EST / typical class range / low confidence in these notes — never when a live source exists.",
     lengthRule,
     "Match the ask:",
