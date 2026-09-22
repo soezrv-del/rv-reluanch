@@ -20,6 +20,7 @@ import {
   claimsDeskSpecSheet,
   deskSheetIsTowable,
   formatLockedWeightsBlock,
+  looksLikeDeskSheetAsk,
   queryNamesYearMakeModel,
   resolveDeskSheet,
   shouldMountDeskSheet,
@@ -83,12 +84,15 @@ test("Dutch Star report after Ventana mounts Dutch Star sheet — not Ventana", 
 });
 
 test("speech may claim the desk only when the sheet is mounted", () => {
-  const id = resolveCoachIdentity("2018 Newmar Ventana 4369", null, "");
+  const id = resolveCoachIdentity("2018 Newmar Ventana 4369 spec report", null, "");
   assert.ok(id);
-  assert.equal(shouldMountDeskSheet("2018 Newmar Ventana 4369", id), true);
+  assert.equal(
+    shouldMountDeskSheet("2018 Newmar Ventana 4369 spec report", id),
+    true,
+  );
   const mounted = withDeskSheetSpeechRule(
     "CATALOG",
-    "2018 Newmar Ventana 4369",
+    "2018 Newmar Ventana 4369 spec report",
     id,
   );
   assert.match(mounted, /DESK SPEC SHEET MOUNTED/);
@@ -177,31 +181,26 @@ test("2019 Grand Design Solitude 310GK mounts desk sheet with floorplan; towable
   assert.ok(uvw?.gap, "Solitude 310GK UVW is GAP — no OEM pin");
 });
 
-test("bare year/make/model (no spec-report prompt) mounts the CARFAX desk sheet", () => {
+test("bare year/make/model (no spec-report prompt) does not mount the desk", () => {
   for (const q of [
     "2019 Grand Design Solitude 310GK",
     "2022 Newmar Dutch Star",
     "2025 Entegra Coach Aspire 44R",
   ]) {
     assert.equal(queryNamesYearMakeModel(q), true, q);
+    assert.equal(looksLikeDeskSheetAsk(q), false, q);
     const identity = resolveCoachIdentity(q, null, "");
     assert.ok(identity, q);
-    assert.equal(shouldMountDeskSheet(q, identity), true, q);
-    const sheet = resolveDeskSheet({ query: q, identity, specs: null });
-    assert.ok(sheet, q);
-    assert.match(sheet!.title, new RegExp(identity!.year));
-    assert.ok(sheet!.rows.some((r) => r.label === "Class"));
-    assert.ok(sheet!.rows.some((r) => r.label === "GVWR"));
-    assert.ok(sheet!.rows.some((r) => r.label === "UVW"));
-    assert.ok(sheet!.rows.some((r) => r.label === "Fuel"));
+    assert.equal(shouldMountDeskSheet(q, identity), false, q);
+    assert.equal(resolveDeskSheet({ query: q, identity, specs: null }), null, q);
   }
 
   const synthesized = resolveDeskSheet({
-    query: "2018 Newmar Ventana 4369",
+    query: "2018 Newmar Ventana 4369 spec report",
     identity: null,
     specs: null,
   });
-  assert.ok(synthesized, "Y/M/M/FP synthesizes identity when grounding missed");
+  assert.ok(synthesized, "Y/M/M/FP + spec ask synthesizes identity when grounding missed");
   assert.match(synthesized!.title, /2018 Newmar Ventana/);
   assert.equal(synthesized!.floorplan, "4369");
 
@@ -212,6 +211,50 @@ test("bare year/make/model (no spec-report prompt) mounts the CARFAX desk sheet"
     resolveDeskSheet({ query: "Match me to a coach", identity: null, specs: null }),
     null,
   );
+});
+
+test("lineup / series overview does not mount the desk sheet", () => {
+  for (const q of [
+    "Tell me about Grand Design's motorized Lineage lineup — how many floorplans?",
+    "What's the Grand Design Lineage series overview?",
+    "Grand Design Lineage — is that their motorized series?",
+    "Grand Design Lineage",
+  ]) {
+    assert.equal(looksLikeDeskSheetAsk(q), false, q);
+    const identity = resolveCoachIdentity(q, null, "");
+    assert.equal(shouldMountDeskSheet(q, identity), false, q);
+    assert.equal(resolveDeskSheet({ query: q, identity, specs: null }), null, q);
+    const speech = withDeskSheetSpeechRule("CATALOG", q, identity);
+    assert.match(speech, /DESK SPEC SHEET NOT MOUNTED/);
+  }
+});
+
+test("2022 Lineage 31ZW GVWR / full report mounts the desk sheet", () => {
+  const q = "2022 Lineage 31ZW GVWR / full report";
+  assert.equal(looksLikeDeskSheetAsk(q), true);
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  assert.match(identity!.model, /lineage/i);
+  assert.equal(shouldMountDeskSheet(q, identity), true);
+  const sheet = resolveDeskSheet({ query: q, identity, specs: null });
+  assert.ok(sheet);
+  assert.match(sheet!.title, /Lineage/i);
+  assert.ok(sheet!.rows.some((r) => r.label === "GVWR"));
+});
+
+test("misspelled but clear spec ask still mounts the desk", () => {
+  const q = "whats the gvwr on the 2022 lineage 31zw";
+  assert.equal(looksLikeDeskSheetAsk(q), true);
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  assert.equal(shouldMountDeskSheet(q, identity), true);
+  assert.ok(resolveDeskSheet({ query: q, identity, specs: null }));
+
+  const spek = "2022 lineage 31zw spek report";
+  assert.equal(looksLikeDeskSheetAsk(spek), true);
+  const spekId = resolveCoachIdentity(spek, null, "");
+  assert.ok(spekId);
+  assert.equal(shouldMountDeskSheet(spek, spekId), true);
 });
 
 test("desk sheet still renders with GAP rows when powertrain is thin", () => {
@@ -232,7 +275,7 @@ test("desk sheet still renders with GAP rows when powertrain is thin", () => {
 });
 
 test("last assistant spec block paints GVWR/UVW/fuel — never Confirm brochure over a spoken number", () => {
-  const q = "2019 Newmar Dutch Star 4369";
+  const q = "2019 Newmar Dutch Star 4369 spec report";
   const identity = resolveCoachIdentity(q, null, "");
   assert.ok(identity);
   const chat = `2019 Newmar Dutch Star 4369 — Class A diesel. Live notes put GVWR at 51,000 pounds, UVW around 40,000 to 40,700, 150-gallon fuel tank, 15,000-pound tow.`;
@@ -271,7 +314,7 @@ test("last assistant spec block paints GVWR/UVW/fuel — never Confirm brochure 
 });
 
 test("desk paints holding tanks from chat — never Confirm brochure over spoken gallons", () => {
-  const q = "2019 Newmar Dutch Star 4369";
+  const q = "2019 Newmar Dutch Star 4369 spec report";
   const identity = resolveCoachIdentity(q, null, "");
   assert.ok(identity);
   const chat =
@@ -303,7 +346,7 @@ test("desk paints holding tanks from chat — never Confirm brochure over spoken
 });
 
 test("2026 Lineage 31ZW chat prose paints Super C / F-600 / 6.7 / 330 / 950 / tanks and hides GAP lecture", () => {
-  const q = "2026 Grand Design Lineage 31ZW";
+  const q = "2026 Grand Design Lineage 31ZW spec report";
   const identity = resolveCoachIdentity(q, null, "");
   assert.ok(identity);
   assert.equal(identity!.year, "2026");
@@ -358,7 +401,7 @@ test("2026 Lineage Series F 31ZW pin tanks/fuel paint without live catalog — c
   assert.equal(tanks.fuelCapacityGal, 66.5);
   assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series F", "31ZW"), null);
 
-  const q = "2026 Grand Design Lineage 31ZW";
+  const q = "2026 Grand Design Lineage 31ZW spec report";
   const identity = resolveCoachIdentity(q, null, "");
   assert.ok(identity);
   assert.equal(identity!.model, "Lineage Series F");
@@ -399,7 +442,7 @@ test("2026 Lineage Series F 31ZW catalog tanks/fuel paint when chat only names G
   assert.equal(spec.fuelCapacityGal, 66.5);
   assert.equal(spec.uvwLbs, undefined, "no published UVW — do not invent");
 
-  const q = "2026 Grand Design Lineage 31ZW";
+  const q = "2026 Grand Design Lineage 31ZW spec report";
   const identity = resolveCoachIdentity(q, null, "");
   assert.ok(identity);
   assert.equal(identity!.year, "2026");
@@ -544,7 +587,7 @@ test("2022 Tiffin Phaeton 40IH: Grok desk paints the same Facts brochure snapsho
   assert.equal(brochure.uvwLbs, 33_500);
   assert.equal(brochure.cccLbs, 6_100);
 
-  const q = "2022 Tiffin Phaeton 40IH";
+  const q = "2022 Tiffin Phaeton 40IH spec report";
   const identity = resolveCoachIdentity(q, null, "");
   assert.ok(identity);
   assert.equal(identity!.year, "2022");
@@ -636,6 +679,8 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(app, /deskRevealAfterIndex/);
   assert.match(app, /data-rvgrok-desk-after-reply/);
   assert.match(src(root, "deskSheetPolicy.ts"), /queryNamesYearMakeModel/);
+  assert.match(src(root, "deskSheetPolicy.ts"), /looksLikeDeskSheetAsk/);
+  assert.match(src(root, "deskSheetPolicy.ts"), /looksLikeSpecQuestion/);
   assert.doesNotMatch(app, /2019 Grand Design Solitude 310GK/);
   assert.match(bubble, /DeskSpecSheet/);
   assert.match(bubble, /deskSheet/);
