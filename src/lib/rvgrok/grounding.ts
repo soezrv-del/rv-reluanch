@@ -40,7 +40,9 @@ import {
   looksLikeOriginQuestion,
 } from "./originStory.ts";
 import {
+  INCOMPLETE_COACH_IDENTITY_CUE,
   looksLikeCoachFactAsk,
+  looksLikeIncompleteCoachIdentityAsk,
   looksLikeInventoryOrCountQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeSpecQuestion,
@@ -581,6 +583,19 @@ export function buildChatGrounding(opts: {
 } {
   const webOpts = { agentMode: opts.agentMode };
   const repairMode = looksLikeRepairQuestion(opts.query);
+  if (looksLikeIncompleteCoachIdentityAsk(opts.query)) {
+    return {
+      identity: null,
+      specs: null,
+      block: withDeskSheetSpeechRule(
+        INCOMPLETE_COACH_IDENTITY_CUE,
+        opts.query,
+        null,
+      ),
+      needsWeb: false,
+      repairMode: false,
+    };
+  }
   const compareHits = looksLikeCoachCompareQuestion(opts.query)
     ? findComparableCatalogCoaches(opts.query)
     : [];
@@ -656,6 +671,9 @@ export function buildVoiceGrounding(opts: {
   facts?: ActiveCoach | null;
 }): string {
   const query = opts.query || "";
+  if (looksLikeIncompleteCoachIdentityAsk(query)) {
+    return withDeskSheetSpeechRule(INCOMPLETE_COACH_IDENTITY_CUE, query, null);
+  }
   const compareHits = looksLikeCoachCompareQuestion(query)
     ? findComparableCatalogCoaches(query)
     : [];

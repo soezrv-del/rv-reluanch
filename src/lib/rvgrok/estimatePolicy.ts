@@ -35,14 +35,14 @@ export const LABELED_ESTIMATE_RULE =
 
 /** Injection / speech line when live notes confirm, or search missed. */
 export const LOW_CONFIDENCE_EST_RULE =
-  "Never emit EST / typical class range / low confidence when live WEB RESEARCH notes confirm a fact. If search returned nothing after a retry, say so plainly — do not invent brochure numbers from training. If LOCKED WEIGHTS / VERIFIED CATALOG lists a non-GAP pin for the asked field, speak that OEM number now — never \"I don't have a factory GVWR\" / \"I won't invent that number.\" Do not write EST onto the desk.";
+  "Never emit EST / typical class range / low confidence when live WEB RESEARCH notes confirm a fact. If LOCKED WEIGHTS / VERIFIED CATALOG lists a non-GAP pin for the asked field, speak that OEM number FIRST — never lead with \"search timed out\" / \"returned nothing after a retry\" / \"I don't have a factory GVWR\" / \"I won't invent that number.\" If there is no catalog pin and search returned nothing after a retry, say so plainly — do not invent brochure numbers from training. Do not write EST onto the desk.";
 
 /**
  * Search timeout / empty notes do not unlock a refuse when Facts / catalog
  * already published the asked weight (David: Phaeton 40IH GVWR 39,600).
  */
 export const CATALOG_PIN_WINS_SEARCH_MISS =
-  "SEARCH MISS DOES NOT OVERRIDE A CATALOG PIN. If LOCKED WEIGHTS / VERIFIED CATALOG / the desk sheet lists a non-GAP OEM pin for the asked field (GVWR, UVW, CCC, …), speak that number even when live search times out or returns empty. You may say search failed. Never emit \"I don't have a factory GVWR\" / \"I won't invent that number\" when a VERIFIED pin is in context. Never EST when a catalog pin or live notes confirm.";
+  "SEARCH MISS DOES NOT OVERRIDE A CATALOG PIN. If LOCKED WEIGHTS / VERIFIED CATALOG / the desk sheet lists a non-GAP OEM pin for the asked field (GVWR, UVW, CCC, …), speak that number FIRST even when live search times out or returns empty. Do not lead with \"search timed out\" / \"returned nothing after a retry.\" Timeout is secondary if mentioned at all. Never emit \"I don't have a factory GVWR\" / \"I won't invent that number\" when a VERIFIED pin is in context. Never EST when a catalog pin or live notes confirm.";
 
 const VERIFIED_PIN_RE = /VERIFIED\s+(GVWR|UVW|GCWR|CCC|NCC)\s+(\d{4,6})/gi;
 
@@ -65,9 +65,14 @@ export function extractVerifiedPinsFromText(text: string): string[] {
 export function formatCatalogPinWinsSearchMiss(catalogBlock?: string): string {
   const pins = extractVerifiedPinsFromText(catalogBlock || "");
   if (pins.length) {
-    return `${CATALOG_PIN_WINS_SEARCH_MISS} VERIFIED pins still in context: ${pins.join(" / ")}. Speak those OEM numbers now.`;
+    return `${CATALOG_PIN_WINS_SEARCH_MISS} VERIFIED pins still in context: ${pins.join(" / ")}. Speak those OEM numbers FIRST.`;
   }
   return CATALOG_PIN_WINS_SEARCH_MISS;
+}
+
+/** True when a timeout/miss must lead with the catalog lock, not a lecture. */
+export function searchMissHasCatalogPins(catalogBlock?: string): boolean {
+  return extractVerifiedPinsFromText(catalogBlock || "").length > 0;
 }
 
 export type EstimateGateInput = {

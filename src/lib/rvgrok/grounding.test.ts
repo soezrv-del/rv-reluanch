@@ -281,7 +281,7 @@ test("web search model fallbacks are current Responses + web_search ids", () => 
   assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 36_000);
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(api, /executeWebResearch/);
-  assert.match(api, /CHAT_WEB_SEARCH_TIMEOUT_MS/);
+  assert.match(api, /researchTimeoutMs/);
   assert.match(api, /\["grok-4\.7"/);
   assert.doesNotMatch(api, /grok-4-1-fast/);
   assert.doesNotMatch(api, /VOICE_WEB_SEARCH/);
@@ -954,4 +954,24 @@ test("2025 Aspire 44R grounding injects VERIFIED GVWR 49000 — never teach I-do
     /GAP over invent; say "I don't have that\."/,
     "live voice must not teach blanket I-don't-have when pins exist",
   );
+});
+
+test("incomplete 'about a 2026' waits for identity — no search, no timeout lecture", () => {
+  const q = "What can you tell me about a 2026";
+  assert.equal(looksLikeNamedCoachProductQuestion(q), false);
+  assert.equal(needsWebFallback(null, q), false);
+  const grounded = buildChatGrounding({ query: q });
+  assert.equal(grounded.needsWeb, false);
+  assert.match(grounded.block, /INCOMPLETE COACH IDENTITY/);
+  assert.doesNotMatch(grounded.block, /WEB RESEARCH is required this turn/);
+  assert.doesNotMatch(
+    grounded.block,
+    /CATALOG GAP — no verified row is loaded/,
+  );
+  const voice = buildVoiceGrounding({ query: q });
+  assert.match(voice, /INCOMPLETE COACH IDENTITY/);
+  assert.doesNotMatch(voice, /CATALOG GAP — no verified row is loaded/);
+  const ymm = "On a 2026 Odyssey 24B made by Entegra";
+  assert.equal(looksLikeNamedCoachProductQuestion(ymm), true);
+  assert.equal(needsWebFallback(null, ymm), true);
 });

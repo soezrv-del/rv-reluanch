@@ -31,9 +31,10 @@ export const GEMINI_VOICE_RESEARCH_TIMEOUT_MS = 4_500;
 
 /**
  * Spec / report / CARFAX-style browse — chat-class window, not the
- * 10s / 4.5s talk-only first shot. David: 20–30s; 28s sits in the band.
+ * 10s / 4.5s talk-only first shot. 20–30s was the floor; 28s aborted
+ * full reports mid-research. 52s matches SPEC_REPORT (45–60s band).
  */
-export const GEMINI_SPEC_REPORT_TIMEOUT_MS = 28_000;
+export const GEMINI_SPEC_REPORT_TIMEOUT_MS = 52_000;
 
 export const GEMINI_GENERATE_HOST = "generativelanguage.googleapis.com";
 

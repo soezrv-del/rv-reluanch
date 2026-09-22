@@ -15,7 +15,11 @@ import {
   shouldSkipWebForOwnLot,
 } from "@/lib/rvgrok/ownLotInventory";
 import {
-  CHAT_WEB_SEARCH_TIMEOUT_MS,
+  formatCoachReportTimeoutReply,
+  looksLikeCoachReportAsk,
+} from "@/lib/rvgrok/coachReport";
+import {
+  researchTimeoutMs,
   WEB_SEARCH_MAX_TOOL_CALLS,
   formatWebSearchInjection,
 } from "@/lib/rvgrok/webSearch";
@@ -693,11 +697,29 @@ export const Route = createFileRoute("/api/rvgrok")({
             apiKey: process.env.XAI_API_KEY,
             query: lastPlain.slice(0, 400),
             catalogBlock: catalogContext,
-            timeoutMs: CHAT_WEB_SEARCH_TIMEOUT_MS,
+            timeoutMs: researchTimeoutMs("chat", lastPlain),
             profile: "chat",
             skipGate: true,
             maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
           });
+          const reportText = looksLikeCoachReportAsk(lastPlain)
+            ? formatCoachReportTimeoutReply({
+                notes: researched.ok ? researched.notes : "",
+                catalogBlock: catalogContext,
+                query: lastPlain,
+              })
+            : "";
+          if (reportText) {
+            return jsonToSseStream({
+              content: reportText,
+              model:
+                researched.ok && "model" in researched && researched.model
+                  ? researched.model
+                  : "catalog-pin",
+              agentMode,
+              upstream: "coach-report",
+            });
+          }
           webNotes = formatWebSearchInjection(researched, {
             query: lastPlain,
             catalogBlock: catalogContext,

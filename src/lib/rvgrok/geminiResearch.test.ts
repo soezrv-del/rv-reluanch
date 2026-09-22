@@ -81,7 +81,9 @@ test("resolveResearchProvider: auto/gemini/xai and missing key", () => {
   );
   assert.equal(GEMINI_CHAT_RESEARCH_TIMEOUT_MS, 10_000);
   assert.equal(GEMINI_VOICE_RESEARCH_TIMEOUT_MS, 4_500);
-  assert.equal(GEMINI_SPEC_REPORT_TIMEOUT_MS, 28_000);
+  assert.equal(GEMINI_SPEC_REPORT_TIMEOUT_MS, 52_000);
+  assert.ok(GEMINI_SPEC_REPORT_TIMEOUT_MS >= 45_000);
+  assert.ok(GEMINI_SPEC_REPORT_TIMEOUT_MS <= 60_000);
   assert.equal(GEMINI_RESEARCH_MODEL, "gemini-2.5-flash");
   assert.equal(
     geminiResearchTimeoutMs(
@@ -279,7 +281,7 @@ test("catalog pin-wins still spoken when Gemini + xAI both miss", async () => {
     });
     assert.match(injection, /WEB SEARCH NOT AVAILABLE/);
     assert.match(injection, /VERIFIED pins still in context: GVWR 39600/);
-    assert.match(injection, /Speak those OEM numbers now/);
+    assert.match(injection, /Speak those OEM numbers FIRST/);
     assert.doesNotMatch(injection, /You MAY give a labeled EST/);
     assert.match(formatCatalogPinWinsSearchMiss(locked), /GVWR 39600/);
     const gate = evaluateResearchQuality({

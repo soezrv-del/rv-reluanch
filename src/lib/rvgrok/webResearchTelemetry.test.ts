@@ -139,6 +139,42 @@ test("response headers expose kind and timing for monitors", () => {
   assert.equal(h["X-RvGrok-Research-Ok"], "false");
 });
 
+test("timeout with catalog pins still answers — does not abort empty", async () => {
+  const prior = globalThis.fetch;
+  globalThis.fetch = (async () => {
+    throw Object.assign(new Error("The operation was aborted due to timeout"), {
+      name: "TimeoutError",
+    });
+  }) as typeof fetch;
+  try {
+    const catalogBlock = [
+      "VERIFIED CATALOG / BROCHURE for 2021 American Coach American Dream 42Q:",
+      "- engine: Cummins L9  [catalog]",
+      "- class / type: Class A Diesel  [catalog]",
+      "LOCKED WEIGHTS (OEM pin — speak these; never claim GAP for a VERIFIED field):",
+      "- VERIFIED GVWR 47000 from OEM pin",
+    ].join("\n");
+    const body = await executeWebResearch({
+      query:
+        "Give me the full specs report for 2021 American Coach American Dream 42Q — GVWR UVW fuel tanks engine",
+      catalogBlock,
+      apiKey: "test-key",
+      timeoutMs: 50,
+      profile: "voice",
+      skipGate: true,
+      researchProvider: "xai",
+    });
+    assert.equal(body.ok, true, "timeout + pins must still return notes");
+    if (body.ok) {
+      assert.match(body.notes, /47,000|47000/);
+      assert.match(body.notes, /Cummins L9|Class A/i);
+      assert.equal(body.model, "catalog-pin");
+    }
+  } finally {
+    globalThis.fetch = prior;
+  }
+});
+
 test("voice route uses telemetry wrapper and monitor headers", () => {
   const api = readFileSync(
     join(root, "../../routes/api/rvgrok.web-research.ts"),

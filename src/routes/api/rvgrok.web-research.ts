@@ -4,11 +4,10 @@ import {
   executeWebResearch,
   webResearchJsonResponse,
 } from "@/lib/rvgrok/webResearchTelemetry";
-import { looksLikeCoachReportAsk } from "@/lib/rvgrok/coachReport";
+import { buildChatGrounding } from "@/lib/rvgrok/grounding";
 import {
-  SPEC_REPORT_RESEARCH_TIMEOUT_MS,
+  researchTimeoutMs,
   VOICE_WEB_SEARCH_MODELS,
-  VOICE_WEB_SEARCH_TIMEOUT_MS,
   WEB_SEARCH_MAX_TOOL_CALLS,
 } from "@/lib/rvgrok/webSearch";
 
@@ -45,14 +44,16 @@ async function handleResearch(request: Request): Promise<Response> {
     requestOrigin = "";
   }
 
+  const catalogFromBody =
+    typeof body.catalogContext === "string" ? body.catalogContext.trim() : "";
+  const catalogBlock =
+    catalogFromBody || buildChatGrounding({ query }).block || "";
+
   const researched = await executeWebResearch({
     query,
-    catalogBlock:
-      typeof body.catalogContext === "string" ? body.catalogContext : undefined,
+    catalogBlock,
     apiKey: process.env.XAI_API_KEY,
-    timeoutMs: looksLikeCoachReportAsk(query)
-      ? SPEC_REPORT_RESEARCH_TIMEOUT_MS
-      : VOICE_WEB_SEARCH_TIMEOUT_MS,
+    timeoutMs: researchTimeoutMs("voice", query),
     models: VOICE_WEB_SEARCH_MODELS,
     profile: "voice",
     requestOrigin,

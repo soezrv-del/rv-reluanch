@@ -7,6 +7,7 @@ import {
   looksLikeCasualNonResearch,
   looksLikeCatalogAnswerableCoachCompare,
   looksLikeCoachCompareQuestion,
+  looksLikeIncompleteCoachIdentityAsk,
   looksLikeLiveResearchQuestion,
   needsWebFallback,
 } from "./webIntent.ts";
@@ -215,6 +216,44 @@ test("spoken greeting and lifestyle questions do not fire voice web research", (
   );
 });
 
+test("year-only 'about a 2026' does not burn a failing search", () => {
+  const q = "What can you tell me about a 2026";
+  assert.equal(looksLikeIncompleteCoachIdentityAsk(q), true);
+  assert.equal(needsWebFallback(null, q), false);
+  assert.equal(decideVoiceWebResearch({ transcript: q }).action, "pass");
+  assert.equal(
+    decideVoiceWebResearch({
+      transcript: "On a 2026 Odyssey 24B made by Entegra",
+    }).action,
+    "research",
+  );
+});
+
+test("voice timeout with catalog pin leads with the lock — not a timeout lecture", () => {
+  const locked = [
+    "LOCKED WEIGHTS (OEM pin — speak these; never claim GAP for a VERIFIED field):",
+    "- VERIFIED GVWR 14500 from OEM pin",
+  ].join("\n");
+  const injection = formatVoiceWebSearchInjection(
+    {
+      ok: false,
+      reason: "The operation was aborted due to timeout",
+      confirmed: false,
+      attempts: 2,
+      exhausted: true,
+      query: "On a 2026 Odyssey 24B made by Entegra",
+    },
+    { catalogBlock: locked },
+  );
+  assert.match(injection, /VERIFIED CATALOG PINS|Speak those OEM numbers FIRST/i);
+  assert.match(injection, /14500|14,500/);
+  assert.doesNotMatch(injection, /Search returned nothing after a retry/);
+  assert.doesNotMatch(
+    injection,
+    /WEB SEARCH NOT AVAILABLE this turn[\s\S]*Say so plainly/,
+  );
+});
+
 test("voice timeout and failure injection never claims a lookup", () => {
   const timedOut = formatVoiceWebSearchInjection({
     ok: false,
@@ -276,8 +315,8 @@ test("voice research budget is 24s server / 25s client — OEM window, not 60s d
   assert.doesNotMatch(webSearch, /VOICE_WEB_SEARCH_TIMEOUT_MS = 10_000/);
 });
 
-test("spec / report voice sidecar uses 28s+1s client budget — not the 10s / 25s talk-only abort", () => {
-  assert.equal(SPEC_REPORT_RESEARCH_CLIENT_BUDGET_MS, 29_000);
+test("spec / report voice sidecar uses 52s+1s client budget — not the 10s / 25s talk-only abort", () => {
+  assert.equal(SPEC_REPORT_RESEARCH_CLIENT_BUDGET_MS, 53_000);
   assert.equal(
     voiceWebSearchClientBudgetMs(
       "Give me the spec report on the 2021 American Dream 42Q",
@@ -296,8 +335,8 @@ test("spec / report voice sidecar uses 28s+1s client budget — not the 10s / 25
     join(root, "../../routes/api/rvgrok.web-research.ts"),
     "utf8",
   );
-  assert.match(api, /SPEC_REPORT_RESEARCH_TIMEOUT_MS/);
-  assert.match(api, /looksLikeCoachReportAsk/);
+  assert.match(api, /researchTimeoutMs/);
+  assert.match(api, /buildChatGrounding/);
   const voiceWeb = src("voiceWeb.ts");
   assert.match(voiceWeb, /voiceWebSearchClientBudgetMs\(opts\.query\)/);
 });

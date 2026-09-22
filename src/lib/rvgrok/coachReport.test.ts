@@ -10,7 +10,9 @@ import {
   COACH_REPORT_CHAT_RULE,
   COACH_REPORT_SECTION_HEADINGS,
   formatCoachReportChat,
+  formatCatalogPinTimeoutNotes,
   formatCoachReportDraftInjection,
+  formatCoachReportTimeoutReply,
   formatCoachReportVoiceCue,
   looksLikeCoachReportAsk,
 } from "./coachReport.ts";
@@ -203,16 +205,18 @@ test("empty / miss notes do not invent a report", () => {
   );
 });
 
-test("spec / report timeouts are chat-class 28s — not Gemini 10s / voice 4.5s", () => {
-  assert.equal(SPEC_REPORT_RESEARCH_TIMEOUT_MS, 28_000);
-  assert.equal(GEMINI_SPEC_REPORT_TIMEOUT_MS, 28_000);
+test("spec / report timeouts are 45–60s — 28s was a floor that aborted mid-research", () => {
+  assert.equal(SPEC_REPORT_RESEARCH_TIMEOUT_MS, 52_000);
+  assert.equal(GEMINI_SPEC_REPORT_TIMEOUT_MS, 52_000);
+  assert.ok(SPEC_REPORT_RESEARCH_TIMEOUT_MS >= 45_000);
+  assert.ok(SPEC_REPORT_RESEARCH_TIMEOUT_MS <= 60_000);
   assert.equal(
     geminiResearchTimeoutMs("voice", "2021 American Coach American Dream 42Q spec report"),
-    28_000,
+    52_000,
   );
   assert.equal(
     geminiResearchTimeoutMs("chat", "What's the GVWR of a 2022 Tiffin Phaeton 40IH?"),
-    28_000,
+    52_000,
   );
 });
 
@@ -229,6 +233,28 @@ test("spec / YMM report asks do not skip the Gemini Google Search sidecar", () =
     ),
     false,
   );
+});
+
+test("timeout still answers from catalog pins — four-section, no invented UVW", () => {
+  const query =
+    "Give me the full specs report for 2021 American Coach American Dream 42Q — GVWR UVW fuel tanks engine";
+  const reply = formatCoachReportTimeoutReply({
+    notes: "",
+    catalogBlock: DREAM_CATALOG,
+    query,
+  });
+  assert.match(reply, /Chassis & powertrain|Cummins L9/i);
+  assert.match(reply, /Weights & capacity/);
+  assert.match(reply, /47,000|47000/);
+  assert.doesNotMatch(reply, /\bUVW:/);
+  assert.doesNotMatch(reply, /typical class range/i);
+  const pinNotes = formatCatalogPinTimeoutNotes({
+    catalogBlock: DREAM_CATALOG,
+    query,
+  });
+  assert.match(pinNotes, /catalog pin/i);
+  assert.match(pinNotes, /47,000|47000/);
+  assert.doesNotMatch(pinNotes, /timed out/i);
 });
 
 test("prompts and research sidecars teach the four-section report", () => {

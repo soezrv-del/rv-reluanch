@@ -231,9 +231,9 @@ test("search timeout + verified pin speaks the pin — no factory-GVWR refuse", 
     { query: q, catalogBlock: locked },
   );
   assert.match(injection, /WEB SEARCH NOT AVAILABLE/);
-  assert.match(injection, /Search returned nothing after a retry/);
+  assert.doesNotMatch(injection, /Search returned nothing after a retry/);
   assert.match(injection, /VERIFIED pins still in context: GVWR 39600/);
-  assert.match(injection, /Speak those OEM numbers now/);
+  assert.match(injection, /Speak those OEM numbers FIRST/);
   assert.doesNotMatch(injection, /You MAY give a labeled EST/);
   assert.match(LOW_CONFIDENCE_EST_RULE, /don't have a factory GVWR/);
 
