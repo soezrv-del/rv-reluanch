@@ -31,7 +31,17 @@ const DESK_WEIGHT_OR_SHEET_RE =
   /\b(gvwr|gcwr|uvw|ccc|ncc|hitch|payload|weight|spec|brochure|full\s+report|spe[ck]k?s?\s+report|spec\s+sheet|facts\s+(?:sheet|report)|holding\s+tanks?)\b/i;
 
 const LINEUP_OVERVIEW_RE =
-  /\b(line[- ]?up|series overview|how many floorplans|floorplans?\s+(?:does|are|has)|motorized (?:line[- ]?up|series))\b/i;
+  /\b(line[- ]?up|series overview|how many floorplans|floorplans?\s+(?:does|are|has)|motorized (?:line[- ]?up|series)|(?:what|which)\s+series\s+are\s+in|series\s+are\s+in)\b/i;
+
+const SERIES_IN_LINEUP_RE =
+  /\bseries\s+in\b.{0,80}\b(?:line[- ]?up|lineage|motorized)\b/i;
+
+/** Lineage / series-in-lineup overview — chat-only unless they also ask specs. */
+export function looksLikeLineupOverviewAsk(text: string): boolean {
+  const t = text || "";
+  if (!t.trim()) return false;
+  return LINEUP_OVERVIEW_RE.test(t) || SERIES_IN_LINEUP_RE.test(t);
+}
 
 export function claimsDeskSpecSheet(text: string): boolean {
   return DESK_CLAIM_RE.test(text || "");
@@ -66,7 +76,7 @@ export function looksLikeDeskSheetAsk(text: string): boolean {
     return false;
   }
   if (
-    LINEUP_OVERVIEW_RE.test(t) &&
+    looksLikeLineupOverviewAsk(t) &&
     !looksLikeSpecQuestion(t) &&
     !/\b(full\s+report|spe[ck]k?s?\s+report|spec\s+sheet)\b/i.test(t)
   ) {

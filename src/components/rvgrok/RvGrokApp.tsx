@@ -19,7 +19,6 @@ import { streamChat } from "@/lib/rvgrok/stream";
 import { GrokRealtimeSession } from "@/lib/rvgrok/realtime";
 import { buildChatGrounding, buildVoiceGrounding } from "@/lib/rvgrok/grounding";
 import {
-  claimsDeskSpecSheet,
   resolveDeskSheet,
   type DeskSheetPayload,
 } from "@/lib/rvgrok/deskSheet";
@@ -684,7 +683,7 @@ export function RvGrokApp({
                   agentSteps: [...liveSteps],
                   generatedImages: [...liveImages],
                   unverified,
-                  deskSheet: paintedDesk || m.deskSheet,
+                  deskSheet: paintedDesk || undefined,
                 }
               : m,
           );
@@ -1015,11 +1014,7 @@ export function RvGrokApp({
                       ...m,
                       content: text,
                       streaming: false,
-                      deskSheet:
-                        m.deskSheet ||
-                        (claimsDeskSpecSheet(text) ? sheet : null) ||
-                        sheet ||
-                        undefined,
+                      deskSheet: sheet || undefined,
                     }
                   : m,
               );
