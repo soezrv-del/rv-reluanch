@@ -75,6 +75,23 @@ test("spoken troubleshooting uses the same detector as chat and wants research",
   assert.equal(shouldSpeakVoiceResearchHold(ADVENTURER_Q), true);
 });
 
+test("first YMM / Lineage 31ZW spec ask researches with hold — catalog pin does not skip", () => {
+  const q = "2026 Grand Design Lineage 31ZW";
+  assert.equal(needsWebFallback(null, q), true);
+  assert.equal(needsWebFallback({ missingHard: false }, q), true);
+  const gap = decideVoiceWebResearch({ transcript: q, specs: null });
+  assert.equal(gap.action, "research");
+  if (gap.action === "research") assert.equal(gap.speakHold, true);
+  const pinned = decideVoiceWebResearch({
+    transcript: q,
+    specs: { missingHard: false },
+  });
+  assert.equal(pinned.action, "research", "catalog row must not skip first spec search");
+  if (pinned.action === "research") {
+    assert.equal(pinned.speakHold, true);
+  }
+});
+
 test("named coach about-ask researches even when catalog is locked", () => {
   const q = "I'd like to know about the 2027 Grand Design Lineage M series.";
   assert.equal(
@@ -374,4 +391,32 @@ test("voice research reuses webIntent — no second detector", () => {
   assert.match(realtime, /buildChatGrounding/);
   assert.match(realtime, /decideVoiceWebResearch/);
   assert.doesNotMatch(realtime, /LIVE_RESEARCH_RE/);
+});
+
+test("voice cancels VAD and decides search before awaiting catalog load", () => {
+  const realtime = src("realtime.ts");
+  const fnStart = realtime.indexOf("private async maybeEnrichWithWebResearch");
+  assert.ok(fnStart >= 0, "maybeEnrichWithWebResearch must exist");
+  const fn = realtime.slice(fnStart, fnStart + 4200);
+  const decideAt = fn.indexOf("decideVoiceWebResearch");
+  const ensureAt = fn.indexOf("ensureCatalogLoaded");
+  assert.ok(decideAt >= 0 && ensureAt >= 0);
+  assert.ok(
+    decideAt < ensureAt,
+    "decide search before kicking catalog load",
+  );
+  assert.doesNotMatch(
+    fn,
+    /await ensureCatalogLoaded\(\)/,
+    "#436 awaited catalog before VAD cancel — that skipped first-turn search",
+  );
+  const afterDecide = fn.slice(fn.indexOf('if (this.lastResearchTranscript'));
+  const cancelAt = afterDecide.indexOf("cancelAutoResponseForResearch");
+  const searchAt = afterDecide.indexOf("fetchVoiceWebResearchNotes");
+  const awaitCatalogAt = afterDecide.indexOf("await catalogReady");
+  assert.ok(cancelAt >= 0 && searchAt >= 0 && awaitCatalogAt >= 0);
+  assert.ok(
+    cancelAt < searchAt && searchAt < awaitCatalogAt,
+    "research path must cancel + start sidecar before await catalogReady",
+  );
 });
