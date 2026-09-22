@@ -33,6 +33,7 @@ import {
   researchIdentityFromParams,
   skipGeminiForResearchAsk,
   SPEC_REPORT_RESEARCH_TIMEOUT_MS,
+  researchTimeoutMs,
 } from "./webSearch.ts";
 import {
   looksLikeCoachFactAsk,
@@ -240,25 +241,44 @@ test("abort/timeout errors stop the model loop", () => {
 
 test("chat and voice routes pass the new timeout/profile", () => {
   const chat = readFileSync(join(root, "../../routes/api/rvgrok.ts"), "utf8");
+  // used below with voice — keep both route sources in this test
   const voice = readFileSync(
     join(root, "../../routes/api/rvgrok.web-research.ts"),
     "utf8",
   );
-  assert.match(chat, /CHAT_WEB_SEARCH_TIMEOUT_MS/);
+  assert.match(chat, /researchTimeoutMs/);
+  assert.match(chat, /formatCoachReportTimeoutReply/);
+  assert.match(chat, /upstream: "coach-report"/);
   assert.match(chat, /profile: "chat"/);
   assert.match(chat, /maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS/);
   assert.match(voice, /executeWebResearch/);
   assert.match(voice, /webResearchJsonResponse/);
   assert.match(voice, /maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS/);
-  assert.match(voice, /SPEC_REPORT_RESEARCH_TIMEOUT_MS/);
-  assert.match(voice, /looksLikeCoachReportAsk/);
+  assert.match(voice, /researchTimeoutMs/);
+  assert.match(voice, /buildChatGrounding/);
   assert.doesNotMatch(voice, /fetchWebSearchNotes/);
 });
 
-test("spec / report research uses 28s chat-class budget — not the 10s Gemini first-shot", () => {
-  assert.equal(SPEC_REPORT_RESEARCH_TIMEOUT_MS, 28_000);
-  assert.ok(SPEC_REPORT_RESEARCH_TIMEOUT_MS >= 20_000);
-  assert.ok(SPEC_REPORT_RESEARCH_TIMEOUT_MS <= 30_000);
+test("spec / report research uses 45–60s chat-class budget — 28s aborted mid-research", () => {
+  assert.equal(SPEC_REPORT_RESEARCH_TIMEOUT_MS, 52_000);
+  assert.ok(SPEC_REPORT_RESEARCH_TIMEOUT_MS >= 45_000);
+  assert.ok(SPEC_REPORT_RESEARCH_TIMEOUT_MS <= 60_000);
+  assert.ok(SPEC_REPORT_RESEARCH_TIMEOUT_MS > 28_000);
+  assert.equal(
+    researchTimeoutMs(
+      "voice",
+      "Give me the full specs report for 2021 American Coach American Dream 42Q — GVWR UVW fuel tanks engine",
+    ),
+    SPEC_REPORT_RESEARCH_TIMEOUT_MS,
+  );
+  assert.equal(
+    researchTimeoutMs("chat", "What's the GVWR of a 2022 Tiffin Phaeton 40IH?"),
+    SPEC_REPORT_RESEARCH_TIMEOUT_MS,
+  );
+  assert.equal(
+    researchTimeoutMs("voice", "check engine light reset Ford E450"),
+    VOICE_WEB_SEARCH_TIMEOUT_MS,
+  );
   assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 24_000, "talk-only voice stays 24s");
   assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 36_000);
   const specReq = buildWebSearchRequest({
@@ -616,9 +636,9 @@ test("first timeout retries once with a rephrased query then gives up without ES
       catalogBlock: locked,
     });
     assert.match(injection, /WEB SEARCH NOT AVAILABLE/);
-    assert.match(injection, /Search returned nothing after a retry/);
+    assert.doesNotMatch(injection, /Search returned nothing after a retry/);
     assert.match(injection, /VERIFIED pins still in context: GVWR 39600/);
-    assert.match(injection, /Speak those OEM numbers now/);
+    assert.match(injection, /Speak those OEM numbers FIRST/);
     assert.match(injection, /won't invent that number/);
     assert.doesNotMatch(injection, /You MAY give a labeled EST/);
     const gate = evaluateResearchQuality({

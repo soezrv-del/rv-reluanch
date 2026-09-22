@@ -17,12 +17,17 @@ import {
 } from "./ownLotInventory.ts";
 import {
   fetchWebSearchNotes,
+  isTimeoutFailureReason,
   readWebSearchCache,
   researchCacheKey,
   WEB_SEARCH_MAX_TOOL_CALLS,
   type WebSearchNotes,
   type WebSearchProfile,
 } from "./webSearch.ts";
+import {
+  formatCatalogPinTimeoutNotes,
+  looksLikeCoachReportAsk,
+} from "./coachReport.ts";
 
 export type WebResearchKind =
   | "success"
@@ -141,6 +146,37 @@ export function webResearchJsonResponse(
   });
 }
 
+/** Timeout / empty browse: still answer from catalog pins. Never invent. */
+function salvageCoachReportResearch(
+  result: WebSearchNotes,
+  catalogBlock: string | undefined,
+  query: string,
+): WebSearchNotes {
+  if (result.ok) return result;
+  if (/access required|research blocked/i.test(result.reason || "")) {
+    return result;
+  }
+  if (!looksLikeCoachReportAsk(query)) return result;
+  if (
+    !isTimeoutFailureReason(result.reason) &&
+    !/empty notes/i.test(result.reason || "")
+  ) {
+    return result;
+  }
+  const notes = formatCatalogPinTimeoutNotes({ catalogBlock, query });
+  if (!notes) return result;
+  return {
+    ok: true,
+    notes,
+    model: "catalog-pin",
+    confirmed: true,
+    attempts: result.attempts ?? 0,
+    exhausted: true,
+    queries: result.queries,
+    query,
+  };
+}
+
 function toApiBody(
   result: WebSearchNotes,
   meta: { kind: WebResearchKind; durationMs: number; cached?: boolean },
@@ -234,17 +270,21 @@ export async function executeWebResearch(
     return body;
   }
 
-  const result = await fetchWebSearchNotes({
-    apiKey: opts.apiKey,
-    query: query.slice(0, 400),
-    catalogBlock: opts.catalogBlock,
-    timeoutMs: opts.timeoutMs,
-    models: opts.models,
-    profile: opts.profile,
-    maxAttempts: opts.maxAttempts ?? WEB_SEARCH_MAX_TOOL_CALLS,
-    geminiApiKey: opts.geminiApiKey,
-    researchProvider: opts.researchProvider,
-  });
+  const result = salvageCoachReportResearch(
+    await fetchWebSearchNotes({
+      apiKey: opts.apiKey,
+      query: query.slice(0, 400),
+      catalogBlock: opts.catalogBlock,
+      timeoutMs: opts.timeoutMs,
+      models: opts.models,
+      profile: opts.profile,
+      maxAttempts: opts.maxAttempts ?? WEB_SEARCH_MAX_TOOL_CALLS,
+      geminiApiKey: opts.geminiApiKey,
+      researchProvider: opts.researchProvider,
+    }),
+    opts.catalogBlock,
+    query,
+  );
 
   const durationMs = Date.now() - t0;
   const kind = result.ok

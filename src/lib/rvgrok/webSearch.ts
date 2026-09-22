@@ -28,6 +28,7 @@
 import {
   formatCatalogPinWinsSearchMiss,
   LOW_CONFIDENCE_EST_RULE,
+  searchMissHasCatalogPins,
 } from "./estimatePolicy.ts";
 import {
   applyUniqueCatalogIdentity,
@@ -87,10 +88,13 @@ export const CHAT_WEB_SEARCH_TIMEOUT_MS = 36_000;
 
 /**
  * Spec / report / CARFAX-style sidecar budget (chat-class).
- * Live Voice talk-only stays on VOICE_WEB_SEARCH_TIMEOUT_MS; a specs ask
- * on voice must not abort at the old 10s Gemini first-shot.
+ *
+ * 20–30s was David's floor so a first Gemini/xAI shot could land — not a
+ * ceiling that aborts a full American Dream / Phaeton report mid-browse.
+ * 52s sits in the 45–60s band. Talk-only Live Voice stays on
+ * VOICE_WEB_SEARCH_TIMEOUT_MS (24s).
  */
-export const SPEC_REPORT_RESEARCH_TIMEOUT_MS = 28_000;
+export const SPEC_REPORT_RESEARCH_TIMEOUT_MS = 52_000;
 
 /**
  * Live Voice research wall-clock budget (server-side fetch timeout).
@@ -145,6 +149,19 @@ const WEB_SEARCH_CACHE_MAX = 80;
 const ERROR_SNIPPET_MAX = 200;
 
 export type WebSearchProfile = "chat" | "voice";
+
+/** Shared wall-clock: full spec/report asks get the 45–60s band. */
+export function researchTimeoutMs(
+  profile: WebSearchProfile,
+  query?: string,
+): number {
+  if (looksLikeCoachReportAsk(query || "")) {
+    return SPEC_REPORT_RESEARCH_TIMEOUT_MS;
+  }
+  return profile === "voice"
+    ? VOICE_WEB_SEARCH_TIMEOUT_MS
+    : CHAT_WEB_SEARCH_TIMEOUT_MS;
+}
 
 /** Coach field the research loop is trying to confirm. */
 export type QueriedResearchField =
@@ -888,13 +905,13 @@ export function formatWebSearchInjection(
       `Do not invent an OEM pin. ${pinRule}`,
     ].join(" ");
   }
-  const reportDraft =
-    result.ok && looksLikeCoachReportAsk(opts?.query || result.query || "")
-      ? formatCoachReportDraftInjection(result.notes, {
-          catalogBlock: opts?.catalogBlock,
-          query: opts?.query || result.query,
-        })
-      : "";
+  const reportQuery = opts?.query || result.query || "";
+  const reportDraft = looksLikeCoachReportAsk(reportQuery)
+    ? formatCoachReportDraftInjection(result.ok ? result.notes : "", {
+        catalogBlock: opts?.catalogBlock,
+        query: reportQuery,
+      })
+    : "";
   if (result.ok) {
     if (gate.confirmed) {
       return [
@@ -924,6 +941,16 @@ export function formatWebSearchInjection(
       result.notes.slice(0, 3500),
       "You have live web research this turn — do not claim you have no internet or cannot get online.",
       `Catalog lock still wins if it names a number. Research loop exhausted (${gate.attempts} genuine rephrased attempts, all unconfirmed). Use ONLY what these notes actually contain. ${LOW_CONFIDENCE_EST_RULE} Do not invent brochure numbers from training.`,
+      pinRule,
+      reportDraft,
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+  if (searchMissHasCatalogPins(opts?.catalogBlock) || reportDraft) {
+    return [
+      `WEB SEARCH NOT AVAILABLE this turn (${result.reason}).`,
+      "Do not invent HP, engine, chassis, fuel, a bulletin, or a campaign number as OEM fact.",
       pinRule,
       reportDraft,
     ]

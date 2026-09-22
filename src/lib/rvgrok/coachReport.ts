@@ -13,6 +13,7 @@ import {
   type ChatSpecFigures,
 } from "./chatSpecBlock.ts";
 import { parseCoachFromText } from "./parseCoach.ts";
+import { extractVerifiedPinsFromText } from "./estimatePolicy.ts";
 import {
   looksLikeCatalogAnswerableCoachCompare,
   looksLikeCasualNonResearch,
@@ -144,6 +145,20 @@ function titleFromQuery(query: string): string {
   return [parsed.year, parsed.make, parsed.model, parsed.floorplan]
     .filter(Boolean)
     .join(" ");
+}
+
+function figuresFromVerifiedPins(catalogBlock?: string): ChatSpecFigures {
+  const out: ChatSpecFigures = {};
+  for (const pin of extractVerifiedPinsFromText(catalogBlock || "")) {
+    const [label, lbs] = pin.split(" ");
+    const n = Number(lbs);
+    if (!label || !Number.isFinite(n) || n < 1_000) continue;
+    const formatted = `${Math.round(n).toLocaleString("en-US")} lb`;
+    if (label === "GVWR") out.gvwr = formatted;
+    if (label === "UVW") out.uvw = formatted;
+    if (label === "GCWR") out.gcwr = formatted;
+  }
+  return out;
 }
 
 function mergeFigures(
@@ -301,7 +316,10 @@ export function buildCoachReportFromNotes(opts: {
   const catalog = (opts.catalogBlock || "").trim();
   const title = titleFromQuery(opts.query || "") || "";
   const fromNotes = extractChatSpecFigures(notes);
-  const fromCatalog = extractChatSpecFigures(catalog);
+  const fromCatalog = mergeFigures(
+    extractChatSpecFigures(catalog),
+    figuresFromVerifiedPins(catalog),
+  );
   const figures = mergeFigures(fromNotes, fromCatalog);
 
   const sections: CoachReportSection[] = [];
@@ -377,4 +395,36 @@ export function formatCoachReportDraftInjection(
   const body = formatCoachReportChat(report);
   if (!body) return "";
   return `${COACH_REPORT_DRAFT_PREAMBLE}\n${body}`;
+}
+
+/**
+ * Timeout / empty browse: still write the four-section report from
+ * whatever live notes + catalog pins exist. GVWR pin wins. Never invent.
+ */
+export function formatCoachReportTimeoutReply(opts: {
+  notes?: string;
+  catalogBlock?: string;
+  query?: string;
+}): string {
+  return formatCoachReportChat(
+    buildCoachReportFromNotes({
+      notes: opts.notes || "",
+      catalogBlock: opts.catalogBlock,
+      query: opts.query,
+    }),
+  );
+}
+
+/** Catalog-pin notes when live search timed out — honest, no invented OEM. */
+export function formatCatalogPinTimeoutNotes(opts: {
+  catalogBlock?: string;
+  query?: string;
+}): string {
+  const body = formatCoachReportTimeoutReply({
+    notes: "",
+    catalogBlock: opts.catalogBlock,
+    query: opts.query,
+  });
+  if (!body) return "";
+  return `CONFIRMED: yes (catalog pin).\n${body}`;
 }

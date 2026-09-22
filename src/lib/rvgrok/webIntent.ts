@@ -210,6 +210,26 @@ export function looksLikeCoachFactAsk(text: string): boolean {
 }
 
 /**
+ * Year-only / "tell me about a 2026" — not enough identity to burn a
+ * search that times out and claims empty. Wait for make + model.
+ */
+export function looksLikeIncompleteCoachIdentityAsk(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim() || looksLikeCasualNonResearch(t)) return false;
+  if (looksLikeSpecQuestion(t)) return false;
+  if (looksLikeRepairQuestion(t)) return false;
+  if (looksLikeMarketValueQuestion(t)) return false;
+  if (looksLikeInventoryOrCountQuestion(t)) return false;
+  if (looksLikeLiveResearchQuestion(t)) return false;
+  const parsed = parseCoachFromText(t);
+  if (askNamesCoachIdentity(parsed)) return false;
+  return Boolean(parsed.year && !parsed.make && !parsed.model);
+}
+
+export const INCOMPLETE_COACH_IDENTITY_CUE =
+  "INCOMPLETE COACH IDENTITY (year only). Ask the make and model (and floorplan if they have it). Do not run or claim a web search. Do not say search timed out or returned nothing. Do not invent a coach or OEM numbers.";
+
+/**
  * Named coach ask — salesman shorthand counts. Year/make/model do not
  * all have to be present or spelled as the OEM string. "American Dream 42Q",
  * "Phaeton 40IH", "Lineage 31ZW" are product asks. Catalog miss or missing
@@ -281,6 +301,7 @@ export function needsWebFallback(
   if (looksLikeOriginQuestion(userText)) return false;
   if (looksLikeCarfaxQuestion(userText)) return false;
   if (looksLikeImageOnlyAsk(userText)) return false;
+  if (looksLikeIncompleteCoachIdentityAsk(userText)) return false;
   if (looksLikeLiveResearchQuestion(userText)) return true;
   if (looksLikeInventoryOrCountQuestion(userText)) return true;
   // Specs / GVWR / engine / pricing / YMM — search first, even on a lock.
