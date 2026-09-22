@@ -187,6 +187,14 @@ test("http gate short-circuits hard admin and stays on rvgrok", () => {
   assert.doesNotMatch(gate, /ACCESS_GATE_DISABLED/);
   const rvgrok = read("src/routes/api/rvgrok.ts");
   assert.match(rvgrok, /denyUnlessWhitelisted/);
+  const voiceWeb = read("src/lib/rvgrok/voiceWeb.ts");
+  assert.match(voiceWeb, /accessHeaders/);
+  assert.match(voiceWeb, /accessPhone/);
+  assert.match(voiceWeb, /access_required/);
+  const token = read("src/lib/rvgrok/voice.ts");
+  assert.match(token, /accessHeaders/);
+  const chat = read("src/lib/rvgrok/stream.ts");
+  assert.match(chat, /accessHeaders/);
 });
 
 test("founder KB stays Hansen; whitelist seed uses Hanson", () => {

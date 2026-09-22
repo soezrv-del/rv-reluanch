@@ -56,8 +56,16 @@ export {
 export const VOICE_WEB_SEARCH_CLIENT_BUDGET_MS =
   VOICE_WEB_SEARCH_TIMEOUT_MS + 1_000;
 
+/** Sidecar 403 `{ error: "access_required" }` — not an empty search. */
+export const VOICE_WEB_ACCESS_BLOCKED_REASON =
+  "voice web research blocked (access required)";
+
+export function isVoiceWebAccessBlocked(reason: string): boolean {
+  return /access required|research blocked/i.test(reason || "");
+}
+
 export const VOICE_RESEARCH_ANSWER_INSTRUCTIONS =
-  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Year / make / model reports synthesize live WEB RESEARCH (OEM / factory brochure / dealer first) plus the CATALOG / BROCHURE lock — never training data alone, never say not in listings because own-lot has no unit or only a sibling series. Use WEB RESEARCH notes if they are present and successful. Never claim search failed, timed out, or came back empty unless WEB RESEARCH NOTES or WEB SEARCH NOT AVAILABLE were injected this turn. If an OWN-LOT INVENTORY block is a hit, speak those lot counts, any listing prices / Low-Avg-High, and Matching units rows printed there — diesel is Class A Diesel + Class Super C (no fuel field); do not invent a VIN, unit, or price; never say the snapshot has no price data when prices are in the block; never say you can't pull specific units or that the snapshot doesn't break out a list when Matching units rows are present or Matched > 0 with prices. Catalog GAP does not apply to inventory / in-stock asks — never say catalog gap, never say check your own lot listing, never ask them to share a year. If Matched is 0, say none on our lot snapshot — never not in listings for a catalog-known coach, never swap a sibling series. If the block says UNAVAILABLE, say unavailable — never speak 0 as a stock count. If catalog is UNKNOWN / GAP on a specs ask (not inventory) or own-lot missed, use the browse notes — never EST / low confidence when live notes confirm a fact; if search returned nothing after a retry, say so plainly and do not invent brochure numbers from training. Do not stop at I don't know. Speak every VERIFIED LOCKED WEIGHTS number — never say you don't have a VERIFIED GVWR. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a nationwide market value ask (not our own-lot listing prices): speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample inventory CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
+  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Year / make / model reports synthesize live WEB RESEARCH (OEM / factory brochure / dealer first) plus the CATALOG / BROCHURE lock — never training data alone, never say not in listings because own-lot has no unit or only a sibling series. Use WEB RESEARCH notes if they are present and successful. Never claim search failed, timed out, or came back empty unless WEB RESEARCH NOTES or WEB SEARCH NOT AVAILABLE were injected this turn. If notes say access or research is blocked, say that — do not claim search came back empty. If an OWN-LOT INVENTORY block is a hit, speak those lot counts, any listing prices / Low-Avg-High, and Matching units rows printed there — diesel is Class A Diesel + Class Super C (no fuel field); do not invent a VIN, unit, or price; never say the snapshot has no price data when prices are in the block; never say you can't pull specific units or that the snapshot doesn't break out a list when Matching units rows are present or Matched > 0 with prices. Catalog GAP does not apply to inventory / in-stock asks — never say catalog gap, never say check your own lot listing, never ask them to share a year. If Matched is 0, say none on our lot snapshot — never not in listings for a catalog-known coach, never swap a sibling series. If the block says UNAVAILABLE, say unavailable — never speak 0 as a stock count. If catalog is UNKNOWN / GAP on a specs ask (not inventory) or own-lot missed, use the browse notes — never EST / low confidence when live notes confirm a fact; if search returned nothing after a retry, say so plainly and do not invent brochure numbers from training. Do not stop at I don't know. Speak every VERIFIED LOCKED WEIGHTS number — never say you don't have a VERIFIED GVWR. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a nationwide market value ask (not our own-lot listing prices): speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample inventory CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
 
 export type VoiceWebDecision =
   | { action: "pass" }
@@ -170,6 +178,15 @@ export function formatVoiceWebSearchInjection(
       estLine,
     ].join("\n");
   }
+  if (isVoiceWebAccessBlocked(result.reason)) {
+    return [
+      `WEB SEARCH NOT AVAILABLE this turn (${result.reason}).`,
+      "Do not claim you looked this up or browsed the web.",
+      "Do not claim search came back empty or returned nothing after a retry.",
+      "Say access or research is blocked.",
+      `Do not invent an OEM pin. ${formatCatalogPinWinsSearchMiss(opts?.catalogBlock)}`,
+    ].join(" ");
+  }
   const failEst = gate.exhausted
     ? `Search returned nothing after a retry. Say so plainly. ${LOW_CONFIDENCE_EST_RULE} Do not invent an OEM pin. ${formatCatalogPinWinsSearchMiss(opts?.catalogBlock)}`
     : `Do NOT give a labeled EST / typical class range — another rephrased search is required. Do not invent an OEM pin. ${formatCatalogPinWinsSearchMiss(opts?.catalogBlock)}`;
@@ -189,26 +206,55 @@ export function voiceInjectionClaimsLookedUp(injection: string): boolean {
   );
 }
 
+async function readAccessRequiredError(res: Response): Promise<boolean> {
+  try {
+    const data = (await res.clone().json()) as { error?: string };
+    return data?.error === "access_required";
+  } catch {
+    return false;
+  }
+}
+
 export async function fetchVoiceWebResearchNotes(opts: {
   query: string;
   catalogContext?: string;
   signal?: AbortSignal;
+  /** Session whitelist phone — same credential chat + token send. */
+  accessPhone?: string;
 }): Promise<WebSearchNotes> {
   try {
-    const { accessHeaders } = await import("@/lib/access/client");
-    const res = await fetch("/api/rvgrok/web-research", {
-      method: "POST",
-      headers: accessHeaders({
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      }),
-      body: JSON.stringify({
-        query: opts.query,
-        catalogContext: opts.catalogContext || undefined,
-      }),
-      signal:
-        opts.signal ?? AbortSignal.timeout(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS),
-    });
+    const { accessHeaders, readStoredPhone } = await import(
+      "@/lib/access/client"
+    );
+    const phone = (opts.accessPhone || readStoredPhone() || "").trim();
+    const post = (phoneForHeader: string) =>
+      fetch("/api/rvgrok/web-research", {
+        method: "POST",
+        headers: accessHeaders(
+          {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          phoneForHeader,
+        ),
+        body: JSON.stringify({
+          query: opts.query,
+          catalogContext: opts.catalogContext || undefined,
+        }),
+        signal:
+          opts.signal ?? AbortSignal.timeout(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS),
+      });
+
+    let res = await post(phone);
+    if (res.status === 403 && (await readAccessRequiredError(res))) {
+      const retryPhone = (phone || readStoredPhone() || "").trim();
+      if (retryPhone) {
+        res = await post(retryPhone);
+      }
+      if (!res.ok && (await readAccessRequiredError(res))) {
+        return { ok: false, reason: VOICE_WEB_ACCESS_BLOCKED_REASON };
+      }
+    }
     if (!res.ok) {
       return { ok: false, reason: `voice web research HTTP ${res.status}` };
     }

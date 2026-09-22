@@ -95,6 +95,7 @@ export class GrokRealtimeSession {
   private lastDeskIdentity: import("./coachIdentity").CoachIdentity | null =
     null;
   private lastDeskSpecs: Parameters<typeof resolveDeskSheet>[0]["specs"] = null;
+  private accessPhone: string;
 
   constructor(
     handlers: RealtimeHandlers,
@@ -103,6 +104,7 @@ export class GrokRealtimeSession {
       speed?: number;
       catalogContext?: string;
       facts?: ActiveCoach | null;
+      accessPhone?: string;
     },
   ) {
     this.handlers = handlers;
@@ -110,6 +112,7 @@ export class GrokRealtimeSession {
     this.speed = opts?.speed ?? 1;
     this.catalogContext = (opts?.catalogContext || "").trim();
     this.facts = opts?.facts ?? null;
+    this.accessPhone = (opts?.accessPhone || "").trim();
   }
 
   get isActive() {
@@ -882,6 +885,7 @@ export class GrokRealtimeSession {
       query: decision.query,
       catalogContext: decision.catalogBlock || this.catalogContext,
       signal: this.researchAbort.signal,
+      accessPhone: this.accessPhone,
     });
 
     if (catalogReady) {

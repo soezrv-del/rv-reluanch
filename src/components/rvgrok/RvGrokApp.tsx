@@ -1058,7 +1058,7 @@ export function RvGrokApp({
         },
       },
       selectedVoice,
-      { speed: playbackSpeed, catalogContext, facts },
+      { speed: playbackSpeed, catalogContext, facts, accessPhone: access?.phone },
     );
 
     realtimeRef.current = session;
@@ -1082,7 +1082,7 @@ export function RvGrokApp({
     } finally {
       startingLiveRef.current = false;
     }
-  }, [selectedVoice, scrollToBottom, reconnectAttempt, playbackSpeed]);
+  }, [selectedVoice, scrollToBottom, reconnectAttempt, playbackSpeed, access?.phone]);
 
   useEffect(() => {
     startLiveSessionRef.current = startLiveSession;
