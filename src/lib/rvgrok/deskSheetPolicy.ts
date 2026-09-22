@@ -6,6 +6,7 @@ import {
   askNamesCoachIdentity,
   type CoachIdentity,
 } from "./coachIdentity.ts";
+import { parseCoachFromText } from "./parseCoach.ts";
 import {
   looksLikeCasualNonResearch,
   looksLikeNamedCoachProductQuestion,
@@ -21,12 +22,22 @@ export function claimsDeskSpecSheet(text: string): boolean {
   return DESK_CLAIM_RE.test(text || "");
 }
 
+/** Year + make + model in the ask (floorplan optional). Default desk-sheet trigger. */
+export function queryNamesYearMakeModel(query: string): boolean {
+  const parsed = parseCoachFromText(query || "");
+  return Boolean(
+    parsed.year?.trim() && parsed.make?.trim() && parsed.model?.trim(),
+  );
+}
+
 export function shouldMountDeskSheet(
   query: string,
   identity: CoachIdentity | null | undefined,
 ): boolean {
-  if (!identity?.make?.trim() || !identity.model?.trim()) return false;
   const q = query || "";
+  // Naming year + make + model (optional floorplan) always opens the CARFAX desk.
+  if (queryNamesYearMakeModel(q)) return true;
+  if (!identity?.make?.trim() || !identity.model?.trim()) return false;
   if (looksLikeCasualNonResearch(q) && !askNamesCoachIdentity(identity)) {
     return false;
   }
@@ -54,9 +65,12 @@ export function withDeskSheetSpeechRule(
   query: string,
   identity: CoachIdentity | null | undefined,
 ): string {
-  const extra = shouldMountDeskSheet(query, identity)
-    ? formatDeskSheetMountedLine(identity!)
-    : DESK_SHEET_FORBIDDEN_LINE;
+  const extra =
+    shouldMountDeskSheet(query, identity) &&
+    identity?.make?.trim() &&
+    identity.model?.trim()
+      ? formatDeskSheetMountedLine(identity)
+      : DESK_SHEET_FORBIDDEN_LINE;
   const body = (block || "").trim();
   return body ? `${body}\n\n${extra}` : extra;
 }

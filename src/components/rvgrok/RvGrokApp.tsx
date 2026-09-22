@@ -73,12 +73,6 @@ import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
 
 const GROK_STARTERS: GrokStarter[] = [
   {
-    title: "2019 Grand Design Solitude 310GK",
-    line: "Fifth wheel · spec report",
-    prompt:
-      "Give me the spec report on the 2019 Grand Design Solitude 310GK. Name the year, make, model, and floorplan. Put the spec sheet on the desk. Do not invent weights or a dealer listing.",
-  },
-  {
     title: "Match me to a coach",
     line: "Budget, who travels, nights out",
     prompt:
@@ -1463,17 +1457,21 @@ export function RvGrokApp({
           <DeskSpecSheet sheet={reportSheet} />
         </div>
       ) : null}
-      {messages.map((m) => (
-        <MessageBubble
-          key={m.id}
-          message={{
-            ...m,
-            deskSheet: reportSheet ? undefined : m.deskSheet,
-          }}
-          onSpeak={handleSpeak}
-          speakingId={speakingId}
-        />
-      ))}
+      {messages.map((m) => {
+        // CARFAX desk is the written reply — do not also dump the assistant prose.
+        if (reportSheet && m.deskSheet) return null;
+        return (
+          <MessageBubble
+            key={m.id}
+            message={{
+              ...m,
+              deskSheet: reportSheet ? undefined : m.deskSheet,
+            }}
+            onSpeak={handleSpeak}
+            speakingId={speakingId}
+          />
+        );
+      })}
     </div>
   );
 
@@ -1481,7 +1479,7 @@ export function RvGrokApp({
     <GrokLanding
       status={wingmanStatus}
       speaking={realtimeStatus === "speaking" || Boolean(speakingId)}
-      lotChip={GROK_STARTERS[0] ?? null}
+      lotChip={null}
       starters={GROK_STARTERS}
       onChip={(prompt) => void sendMessage(prompt)}
       toolbar={wingmanToolbar}

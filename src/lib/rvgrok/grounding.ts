@@ -29,7 +29,7 @@ import {
   honestTorqueLabel,
   isAmbiguousCatalogValue,
 } from "../rv/catalogHonesty";
-import { catalogYearIsListed } from "./parseCoach";
+import { catalogYearIsListed, parseCoachFromText } from "./parseCoach";
 import type { RVSpec } from "../rv/rvTypes";
 import {
   formatCarfaxGroundingBlock,
@@ -112,18 +112,27 @@ function withDeskSheetSpeechRule(
 ): string {
   const extra =
     identity && shouldMountDeskSheetLocal(query, identity)
-      ? `DESK SPEC SHEET MOUNTED for ${[identity.year, identity.make, identity.model, identity.floorplan].filter(Boolean).join(" ")}. You may say exactly: "Spec sheet is on the desk." Speak THIS coach — never a prior series. Incomplete fields show as GAP on the sheet; do not invent UVW, GVWR, or torque. If a field is non-GAP on the sheet or VERIFIED in LOCKED WEIGHTS, speak that number — never claim you lack it.\n\n${formatLockedWeightsBlock(identity)}\n\nWRITTEN SPEC SHEET: the structured desk sheet already mounted is the only written sheet. Do not output a second markdown Spec Sheet, Weight ratings table, or GVWR/GCWR/UVW/NCC: GAP block that re-GAPs a VERIFIED field.`
+      ? `DESK SPEC SHEET MOUNTED for ${[identity.year, identity.make, identity.model, identity.floorplan].filter(Boolean).join(" ")}. You may say exactly: "Spec sheet is on the desk." Speak THIS coach — never a prior series. Incomplete fields show as GAP on the sheet; do not invent UVW, GVWR, or torque. If a field is non-GAP on the sheet or VERIFIED in LOCKED WEIGHTS, speak that number — never claim you lack it.\n\n${formatLockedWeightsBlock(identity)}\n\nWRITTEN SPEC SHEET: the structured CARFAX-style desk sheet already mounted is the written reply. Do not dump a prose spec report in chat. Do not output a second markdown Spec Sheet, Weight ratings table, or GVWR/GCWR/UVW/NCC: GAP block that re-GAPs a VERIFIED field.`
       : `DESK SPEC SHEET NOT MOUNTED. Never say the spec sheet / report is on the desk, or that a sheet is visible. Speak the answer only.`;
   const body = (block || "").trim();
   return body ? `${body}\n\n${extra}` : extra;
+}
+
+function queryNamesYearMakeModel(query: string): boolean {
+  const parsed = parseCoachFromText(query || "");
+  return Boolean(
+    parsed.year?.trim() && parsed.make?.trim() && parsed.model?.trim(),
+  );
 }
 
 function shouldMountDeskSheetLocal(
   query: string,
   identity: CoachIdentity,
 ): boolean {
-  if (!identity.make?.trim() || !identity.model?.trim()) return false;
   const q = query || "";
+  // Naming year + make + model (optional floorplan) always opens the CARFAX desk.
+  if (queryNamesYearMakeModel(q)) return true;
+  if (!identity.make?.trim() || !identity.model?.trim()) return false;
   if (looksLikeCasualNonResearch(q) && !askNamesCoachIdentity(identity)) {
     return false;
   }

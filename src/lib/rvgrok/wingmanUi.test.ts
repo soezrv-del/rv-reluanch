@@ -70,7 +70,15 @@ test("Live Voice entry and catalog desk resolve stay wired", () => {
   assert.match(sheet, /data-rvgrok-desk-sheet/);
   assert.match(sheet, /Spec report/);
   assert.match(app, /GROK_STARTERS/);
-  assert.match(app, /2019 Grand Design Solitude 310GK/);
+  assert.match(app, /Match me to a coach/);
+  assert.match(app, /Troubleshoot my RV/);
+  assert.doesNotMatch(
+    app,
+    /2019 Grand Design Solitude 310GK/,
+    "cold-open chips must not promo a specific coach",
+  );
+  assert.match(app, /lotChip=\{null\}/);
+  assert.match(app, /reportSheet && m\.deskSheet/);
 });
 
 test("Grok wingman does not touch DialaBot, Facts, Tow, or Lot stock", () => {
