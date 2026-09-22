@@ -18,10 +18,7 @@
  * never pretend a brochure or bulletin was fetched.
  */
 
-import {
-  mayEmitLabeledEstimate,
-  LOW_CONFIDENCE_EST_RULE,
-} from "./estimatePolicy.ts";
+import { LOW_CONFIDENCE_EST_RULE } from "./estimatePolicy.ts";
 import {
   looksLikeLiveResearchQuestion,
   looksLikeMarketValueQuestion,
@@ -43,7 +40,7 @@ export const WEB_SEARCH_MODELS = [
   "grok-4-1-fast-non-reasoning",
 ] as const;
 
-/** Chat: one primary attempt. HTTP errors may try the next id; timeouts do not stack. */
+/** Chat wall-clock budget for the whole research loop (search → retry). */
 export const CHAT_WEB_SEARCH_TIMEOUT_MS = 12_000;
 
 /**
@@ -70,6 +67,16 @@ export const WEB_SEARCH_TOOL_CALLS_PER_ATTEMPT = 1;
 
 /** Do not start another phrasing if the shared wall-clock budget is this thin. */
 export const WEB_SEARCH_MIN_RETRY_BUDGET_MS = 2_000;
+
+/**
+ * Hold this much of the shared budget for one rephrased retry so a
+ * first-attempt timeout cannot eat the whole turn (David: retry once
+ * before giving up — do not jump to EST / training).
+ */
+export const WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS = 4_500;
+
+/** At most one timeout retry (rephrased query) before an honest miss. */
+export const WEB_SEARCH_TIMEOUT_RETRIES = 1;
 
 /** Catalog lock only — drop the long GROUNDING_RULES essay. */
 export const WEB_SEARCH_CATALOG_MAX = 700;
@@ -165,6 +172,27 @@ export function isAbortLikeError(err: unknown): boolean {
   return /aborted due to timeout|operation was aborted|aborted|timeout/i.test(
     msg,
   );
+}
+
+export function isTimeoutFailureReason(reason: string): boolean {
+  return /aborted due to timeout|operation was aborted|timed out/i.test(
+    reason || "",
+  );
+}
+
+/** Cap this attempt so a later rephrase still has budget after a timeout. */
+export function perAttemptTimeoutMs(
+  remaining: number,
+  attemptIndex: number,
+  maxAttempts: number,
+): number {
+  const moreAfter = maxAttempts - attemptIndex - 1;
+  if (moreAfter <= 0) return Math.max(remaining, 1);
+  const reserve = Math.min(
+    WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS,
+    Math.max(WEB_SEARCH_MIN_RETRY_BUDGET_MS, Math.floor(remaining / 2)),
+  );
+  return Math.max(remaining - reserve, WEB_SEARCH_MIN_RETRY_BUDGET_MS);
 }
 
 /** Keep the powertrain lock lines; drop the long non-negotiable rules block. */
@@ -407,7 +435,10 @@ export function evaluateResearchQuality(opts: {
       reason: "confirmed",
     };
   }
-  const allowEstimate = mayEmitLabeledEstimate({ confirmed: false, exhausted });
+  // Live hit already returned above. Timeout / empty / miss: never EST
+  // from training — say so plainly after the retry. Catalog option-band
+  // EST is a separate catalog-lock path, not this gate.
+  const allowEstimate = false;
   let reason: ResearchQualityGate["reason"] = "unconfirmed";
   if (unavailable) reason = exhausted ? "exhausted" : "unavailable";
   else if (empty) reason = exhausted ? "exhausted" : "empty";
@@ -477,19 +508,19 @@ function researchInstructions(opts: {
     : `This is attempt ${attempt} of ${maxAttempts}. Search with THIS query phrasing only.`;
   return [
     "Research ONE RV question for RVFAX. Return short RESEARCH NOTES only — no JSON.",
-    "Research loop: search, then evaluate whether the results CONFIRM the asked fact (a specific number, location, procedure, listing band, or OEM pin). If they confirm, write CONFIRMED: yes and the fact. If they do not confirm, write CONFIRMED: no and what was missing. Do not invent a labeled EST / typical class range in these notes — the caller decides EST only after all rephrased attempts fail.",
+    "Research loop: search the LIVE web first (OEM / factory brochure / dealer listing), then evaluate whether the results CONFIRM the asked fact (a specific year-matched number, location, procedure, listing band, or OEM pin). Prefer Tiffin, Newmar, Newmar Corp, factory PDF / brochure, and dealer listings over aggregator hedges like 'typically'. If they confirm, write CONFIRMED: yes and the fact plus related specs when found (engine / GCWR / transmission). If they do not confirm, write CONFIRMED: no and what was missing. Do not invent a labeled EST / typical class range / low confidence in these notes — never when a live source exists.",
     priorLine,
-    "Never repeat the same query. A later attempt will retry with a DIFFERENT query phrasing if this one does not confirm.",
+    "Never repeat the same query. A later attempt will retry ONCE with a DIFFERENT query phrasing if this one times out or does not confirm.",
     lengthRule,
     "Match the ask:",
-    "- Specs/powertrain: OEM brochure / chassis sheet / door-sticker for THAT year + make + model + floorplan. Never invent horsepower as OEM fact (no silent 450). If not found, write CONFIRMED: no — never a labeled EST / typical class range as an OEM pin.",
+    "- Specs/powertrain: search live OEM brochure / factory spec sheet / chassis sheet / dealer listing for THAT year + make + model + floorplan FIRST. Never answer from training data. Never invent horsepower as OEM fact (no silent 450). If a live source exists, quote that year-specific number — never EST / typical class range / low confidence. If not found, write CONFIRMED: no.",
     "- Market value / pricing: live nationwide ASKING prices this turn for THAT exact year + make + model AND two years older and two years newer (year ±2). Real public listings only (RV Trader / RVUSA / classifieds). Average those asks and return Low / Average / High. Never use a nightly competitor scrape, RVcountry competitor-latest, sample inventory CSV, frozen comps table, cached overnight scrape, NADA, J.D. Power, or any paid book. If you cannot find real listings this turn, write INSUFFICIENT — do not invent a band.",
     "- Troubleshooting / how-to / error codes / TSB / recall / install: likely symptoms, common OEM/forum/manual fixes, safety caveats. Cite uncertainty. Do not invent a campaign number, torque spec, part number, wiring color, sensor bypass, or a diagnosis you cannot support. Prefer OEM procedure / NHTSA. If none found, write UNKNOWN / no OEM procedure.",
     "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
     "Floorplan letters are labels only — do not decode bunks or a half-bath from the code.",
     opts.catalog
       ? `Catalog lock (do not contradict these numbers). If this lock names engine / HP / class, the coach IS in the catalog — do not write "not in catalogs" or "wait for a brochure":\n${opts.catalog}`
-      : "No catalog row was available. Search OEM / RVUSA / brochure sources for THAT year + make + model. If the web does not confirm a number, write CONFIRMED: no — never a labeled EST / typical class range as an OEM pin. Do not tell the user to go check the OEM site instead of researching.",
+      : "No catalog row was available. Search OEM / factory brochure / dealer listings for THAT year + make + model FIRST. If the web does not confirm a number, write CONFIRMED: no — never a labeled EST / typical class range / low confidence, never a training-data year range. Do not tell the user to go check the OEM site instead of researching.",
   ].join("\n");
 }
 
@@ -588,10 +619,10 @@ export function formatWebSearchInjection(
         "WEB RESEARCH NOTES (xAI web_search — may be incomplete):",
         result.notes.slice(0, 3500),
         "You have live web research this turn — do not claim you have no internet or cannot get online.",
-        "Catalog lock still wins if it names a number. Notes CONFIRM the queried field — use that fact. Do not replace a confirmed fact with a labeled EST / typical class range.",
+        "Catalog lock still wins if it names a number. Notes CONFIRM the queried field — use that live OEM / brochure / dealer fact. Do not replace a confirmed fact with a labeled EST / typical class range / low confidence.",
       ].join("\n");
     }
-    if (!gate.allowEstimate) {
+    if (!gate.exhausted) {
       return [
         "WEB RESEARCH NOTES (xAI web_search — unconfirmed; do not EST yet):",
         result.notes.slice(0, 3500),
@@ -603,13 +634,13 @@ export function formatWebSearchInjection(
       "WEB RESEARCH NOTES (xAI web_search — unconfirmed after the research loop):",
       result.notes.slice(0, 3500),
       "You have live web research this turn — do not claim you have no internet or cannot get online.",
-      `Catalog lock still wins if it names a number. Research loop exhausted (${gate.attempts} genuine rephrased attempts, all unconfirmed). ${LOW_CONFIDENCE_EST_RULE}`,
+      `Catalog lock still wins if it names a number. Research loop exhausted (${gate.attempts} genuine rephrased attempts, all unconfirmed). Use ONLY what these notes actually contain. ${LOW_CONFIDENCE_EST_RULE} Do not invent brochure numbers from training.`,
     ].join("\n");
   }
-  if (!gate.allowEstimate) {
+  if (!gate.exhausted) {
     return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). Be honest that you could not browse. Do NOT give a labeled EST / typical class range — another rephrased search is required. Do not invent HP, engine, chassis, fuel, a bulletin, or a campaign number as OEM fact.`;
   }
-  return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). Be honest that you could not browse. Research loop exhausted (${gate.attempts} genuine rephrased attempts). ${LOW_CONFIDENCE_EST_RULE} Do not invent HP, engine, chassis, fuel, a bulletin, or a campaign number as OEM fact.`;
+  return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). Be honest that you could not browse. Search returned nothing after a retry. Say so plainly. ${LOW_CONFIDENCE_EST_RULE} Do not invent HP, engine, chassis, fuel, a bulletin, or a campaign number as OEM fact.`;
 }
 
 async function postResponses(opts: {
@@ -701,7 +732,7 @@ async function fetchOnePhrasing(opts: {
           reason: posted.reason,
           confirmed: false,
           attempts: opts.attempt,
-          exhausted: true,
+          exhausted: false,
           queries: [...opts.previousQueries, opts.query],
           query: opts.originalQuery,
         };
@@ -789,7 +820,7 @@ export async function fetchWebSearchNotes(opts: {
   const maxAttempts = opts.maxAttempts ?? WEB_SEARCH_MAX_TOOL_CALLS;
   const key = researchCacheKey(originalQuery, opts.catalogBlock);
   const cached = readWebSearchCache(key);
-  if (cached) {
+  if (cached?.ok) {
     const confirmed = notesConfirmQueriedField(cached.notes, originalQuery);
     return {
       ...cached,
@@ -807,6 +838,7 @@ export async function fetchWebSearchNotes(opts: {
   let lastModel = "";
   let lastOk = false;
   let abortReason: string | null = null;
+  let timeoutRetries = 0;
 
   for (let i = 0; i < maxAttempts; i++) {
     const remaining = budgetMs - (Date.now() - started);
@@ -826,7 +858,7 @@ export async function fetchWebSearchNotes(opts: {
       query: unique,
       originalQuery,
       catalogBlock: opts.catalogBlock,
-      timeoutMs: Math.max(remaining, 1),
+      timeoutMs: perAttemptTimeoutMs(remaining, i, maxAttempts),
       models,
       profile,
       attempt: i + 1,
@@ -835,13 +867,12 @@ export async function fetchWebSearchNotes(opts: {
     });
     queriesUsed.push(unique);
 
-    if (
-      !one.ok &&
-      /aborted due to timeout|operation was aborted|timed out/i.test(one.reason)
-    ) {
+    if (!one.ok && isTimeoutFailureReason(one.reason)) {
       abortReason = one.reason;
       lastFail = one.reason;
-      break;
+      if (timeoutRetries >= WEB_SEARCH_TIMEOUT_RETRIES) break;
+      timeoutRetries += 1;
+      continue;
     }
 
     if (one.ok) {

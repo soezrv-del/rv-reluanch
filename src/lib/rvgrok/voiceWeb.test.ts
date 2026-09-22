@@ -43,17 +43,24 @@ function src(name: string) {
 const ADVENTURER_Q =
   "I have a 2005 Winnebago Adventurer. I'm looking for the battery disconnect. Can you look into it and see if you can tell me where it is?";
 
-test("locked spec question matches chat: skip web when hard fields are present", () => {
+test("locked spec question matches chat: search first even when hard fields are present", () => {
   const q = "What engine and HP does a 2023 Entegra Vision have?";
   assert.equal(
     decideVoiceWebResearch({ transcript: q, specs: { missingHard: false } })
       .action,
-    "pass",
+    "research",
   );
   assert.equal(
     decideVoiceWebResearch({ transcript: q, specs: null }).action,
     "research",
   );
+  const held = decideVoiceWebResearch({
+    transcript: q,
+    specs: { missingHard: false },
+  });
+  if (held.action === "research") {
+    assert.equal(held.speakHold, true);
+  }
 });
 
 test("spoken troubleshooting uses the same detector as chat and wants research", () => {
@@ -68,7 +75,7 @@ test("spoken troubleshooting uses the same detector as chat and wants research",
   assert.equal(shouldSpeakVoiceResearchHold(ADVENTURER_Q), true);
 });
 
-test("named coach about-ask researches when catalog is missing", () => {
+test("named coach about-ask researches even when catalog is locked", () => {
   const q = "I'd like to know about the 2027 Grand Design Lineage M series.";
   assert.equal(
     decideVoiceWebResearch({ transcript: q, specs: null }).action,
@@ -79,7 +86,7 @@ test("named coach about-ask researches when catalog is missing", () => {
       transcript: q,
       specs: { missingHard: false },
     }).action,
-    "pass",
+    "research",
   );
 });
 

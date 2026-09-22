@@ -3,14 +3,19 @@
  * Spec-catalog-free (no rvData). Coach-vs-coach compare skip uses the
  * thin CATALOG_INDEX names in coachCompare.ts.
  *
- * Standing rule: browse whenever the answer is unknown / catalog GAP
+ * Standing rule: specs / GVWR / engine / pricing / year-make-model coach
+ * asks ALWAYS browse first — even when the catalog already has a pin.
+ * Training data is not an answer. Catalog lock may confirm a live number;
+ * it must not skip the search. Search is also required on a catalog GAP
  * (no row, UNKNOWN hard fields, missing OEM weight pin on a weight ask)
- * or own-lot missed — then answer this turn. Search is required on a
- * catalog miss — not optional. After notes, a labeled EST is allowed.
+ * or own-lot miss. After notes: use the live hit; never EST when a live
+ * OEM / brochure / dealer source exists. If search returns nothing, say
+ * so and retry once — do not invent brochure numbers from training.
  * Inventory / diesel-count / in-stock still trip this detector so voice+chat
  * can inject the own-lot snapshot; a *hit* skips public web, a miss browses.
  * Skip only hi / lifestyle / payment / image-only turns, and
- * catalog-answerable coach-vs-coach compares (both makes/models known).
+ * catalog-answerable coach-vs-coach compares that are not spec/price asks
+ * (both makes/models known).
  * Market value / pricing always browses (live nationwide asking, year ±2)
  * — catalog, nightly scrape, and competitor-latest are not price SoT.
  * Repair / forum / manual asks still browse even on a compare.
@@ -187,6 +192,20 @@ export function looksLikeLiveResearchQuestion(text: string): boolean {
 }
 
 /**
+ * Specs, GVWR, engine, pricing, or a clear year/make/model coach ask.
+ * These MUST run live web_search before the model finalizes — catalog
+ * lock does not skip the browse.
+ */
+export function looksLikeCoachFactAsk(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim() || looksLikeCasualNonResearch(t)) return false;
+  if (looksLikeSpecQuestion(t)) return true;
+  if (looksLikeMarketValueQuestion(t)) return true;
+  if (looksLikeNamedCoachProductQuestion(t)) return true;
+  return false;
+}
+
+/**
  * Named year/make/model (or about-this-coach phrasing). Catalog miss or
  * missing hard fields should browse — not invent a dealer dead-end.
  */
@@ -234,11 +253,13 @@ export function catalogGapNeedsWeb(
 }
 
 /**
- * Browse whenever the catalog cannot answer — unresolved coach, missing
- * hard fields / empty year row, unknown/GAP, or an ask the catalog never covers.
+ * Browse whenever the ask needs a live fact — specs / GVWR / engine /
+ * pricing / year-make-model, unresolved coach, missing hard fields,
+ * unknown/GAP, or an ask the catalog never covers.
  * Hi / lifestyle / payment / image-only stay offline.
- * Locked hard rows stay offline unless the ask is off-catalog / inventory /
- * live research (own-lot *hit* skips the actual browse in the API).
+ * Resolved hard row still browses for coach-fact asks. Catalog lock is
+ * injected so a "no catalog" web note cannot overwrite a pin
+ * (Lineage Series M, etc.). Own-lot *hit* skips the actual browse in the API.
  */
 export function needsWebFallback(
   specs: WebFallbackSpecs,
@@ -251,14 +272,14 @@ export function needsWebFallback(
   if (looksLikeImageOnlyAsk(userText)) return false;
   if (looksLikeLiveResearchQuestion(userText)) return true;
   if (looksLikeInventoryOrCountQuestion(userText)) return true;
+  // Specs / GVWR / engine / pricing / YMM — search first, even on a lock.
+  if (looksLikeCoachFactAsk(userText)) return true;
   // Both coaches identifiable — answer class / powertrain from catalog
-  // now. Do not stall for a web hold. Forum / repair already returned true.
+  // now. Do not stall for a web hold. Forum / repair / spec already returned.
   if (looksLikeCatalogAnswerableCoachCompare(userText)) return false;
   // Unknown / catalog GAP (no identity, UNKNOWN hard fields, missing
   // OEM weight pin on a weight ask) → search is required this turn.
   if (catalogGapNeedsWeb(specs, userText)) return true;
-  // Resolved hard row → do not browse. A "no catalog" web note must not
-  // overwrite a pin the catalog already answered (Lineage Series M, etc.).
   if (looksLikeOffCatalogQuestion(userText)) return true;
   if (
     opts?.agentMode &&

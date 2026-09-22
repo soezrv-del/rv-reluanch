@@ -9,6 +9,8 @@ import {
   VOICE_WEB_SEARCH_TIMEOUT_MS,
   WEB_SEARCH_MAX_TOOL_CALLS,
   WEB_SEARCH_MODELS,
+  WEB_SEARCH_TIMEOUT_RETRIES,
+  WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS,
   WEB_SEARCH_TOOL_CALLS_PER_ATTEMPT,
   buildWebSearchRequest,
   clipCatalogBlock,
@@ -17,7 +19,9 @@ import {
   fetchWebSearchNotes,
   formatWebSearchInjection,
   isAbortLikeError,
+  isTimeoutFailureReason,
   notesConfirmQueriedField,
+  perAttemptTimeoutMs,
   rephraseResearchQuery,
   researchCacheKey,
   seedWebSearchCache,
@@ -313,7 +317,7 @@ test("empty first search then confirming rephrased retry", async () => {
   }
 });
 
-test("N failed attempts unlock a labeled low-confidence EST", async () => {
+test("N failed attempts say so plainly — no EST from training", async () => {
   clearWebSearchCache();
   let calls = 0;
   const questions: string[] = [];
@@ -345,15 +349,15 @@ test("N failed attempts unlock a labeled low-confidence EST", async () => {
       result,
       query: "What's the GVWR on a 2019 XYZ Phantom?",
     });
-    assert.equal(gate.allowEstimate, true);
+    assert.equal(gate.allowEstimate, false);
     assert.equal(
       mayEmitLabeledEstimate({ confirmed: false, exhausted: true }),
       true,
     );
     const injection = formatWebSearchInjection(result);
-    assert.match(injection, /labeled EST \/ typical class range/);
-    assert.match(injection, /low confidence/);
     assert.match(injection, /Research loop exhausted/);
+    assert.match(injection, /do not invent brochure numbers from training/i);
+    assert.doesNotMatch(injection, /You MAY give a labeled EST/);
   } finally {
     globalThis.fetch = prior;
     clearWebSearchCache();
@@ -387,4 +391,134 @@ test("quality gate blocks EST before the loop is exhausted", () => {
   });
   assert.match(emptyBlocked, /WEB SEARCH NOT AVAILABLE/);
   assert.match(emptyBlocked, /Do NOT give a labeled EST/);
+});
+
+test("live OEM hit injection never labels EST / low confidence", () => {
+  const injection = formatWebSearchInjection({
+    ok: true,
+    notes:
+      "CONFIRMED: yes. Newmar Corp brochure for the 2022 Dutch Star 4369 lists GVWR 51,000 lb, Cummins, Allison, GCWR 67,000 lb.",
+    model: "grok-4-1-fast-reasoning",
+    confirmed: true,
+    attempts: 1,
+    exhausted: false,
+    query: "what's the gvwr of A Newmar Dutch Star 4369",
+  });
+  assert.match(injection, /CONFIRM the queried field/i);
+  assert.match(injection, /live OEM \/ brochure \/ dealer fact/i);
+  assert.doesNotMatch(injection, /You MAY give a labeled EST/);
+  assert.doesNotMatch(injection, /You MAY give a labeled EST \/ typical class range, low confidence/);
+  assert.equal(
+    notesConfirmQueriedField(
+      "CONFIRMED: yes. Newmar Corp brochure GVWR 51,000 lb.",
+      "what's the gvwr of A Newmar Dutch Star 4369",
+    ),
+    true,
+  );
+  const gate = evaluateResearchQuality({
+    result: {
+      ok: true,
+      notes: "CONFIRMED: yes. Newmar Corp brochure GVWR 51,000 lb.",
+      model: "grok-4-1-fast-reasoning",
+      confirmed: true,
+      exhausted: false,
+    },
+    query: "what's the gvwr of A Newmar Dutch Star 4369",
+  });
+  assert.equal(gate.confirmed, true);
+  assert.equal(gate.allowEstimate, false);
+});
+
+test("per-attempt timeout reserves budget for one retry", () => {
+  assert.equal(WEB_SEARCH_TIMEOUT_RETRIES, 1);
+  assert.ok(WEB_SEARCH_TIMEOUT_RETRY_RESERVE_MS >= 4_000);
+  const first = perAttemptTimeoutMs(12_000, 0, 3);
+  assert.ok(first < 12_000, "first attempt must not consume the whole budget");
+  assert.ok(first >= 2_000);
+  assert.equal(perAttemptTimeoutMs(4_000, 2, 3), 4_000);
+  assert.equal(isTimeoutFailureReason("The operation was aborted due to timeout"), true);
+  assert.equal(isTimeoutFailureReason("web search HTTP 400"), false);
+});
+
+test("first timeout retries once with a rephrased query then gives up without EST", async () => {
+  clearWebSearchCache();
+  const questions: string[] = [];
+  const prior = globalThis.fetch;
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    questions.push(questionFromBody(init));
+    throw Object.assign(new Error("The operation was aborted due to timeout"), {
+      name: "TimeoutError",
+    });
+  }) as typeof fetch;
+  try {
+    const result = await fetchWebSearchNotes({
+      apiKey: "test-key",
+      query: "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
+      timeoutMs: 8_000,
+      models: ["grok-4-1-fast-reasoning"],
+    });
+    assert.equal(result.ok, false);
+    assert.equal(questions.length, 2);
+    assert.notEqual(
+      questions[1]!.toLowerCase().replace(/\s+/g, " "),
+      questions[0]!.toLowerCase().replace(/\s+/g, " "),
+    );
+    if (!result.ok) {
+      assert.equal(result.attempts, 2);
+      assert.equal(result.exhausted, true);
+      assert.match(result.reason, /timeout|aborted/i);
+    }
+    const injection = formatWebSearchInjection(result);
+    assert.match(injection, /WEB SEARCH NOT AVAILABLE/);
+    assert.match(injection, /Search returned nothing after a retry/);
+    assert.doesNotMatch(injection, /You MAY give a labeled EST/);
+    const gate = evaluateResearchQuality({
+      result,
+      query: "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
+    });
+    assert.equal(gate.allowEstimate, false);
+  } finally {
+    globalThis.fetch = prior;
+    clearWebSearchCache();
+  }
+});
+
+test("timeout then confirming retry uses the live hit — no EST", async () => {
+  clearWebSearchCache();
+  const questions: string[] = [];
+  const prior = globalThis.fetch;
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    questions.push(questionFromBody(init));
+    if (questions.length === 1) {
+      throw Object.assign(new Error("The operation was aborted due to timeout"), {
+        name: "TimeoutError",
+      });
+    }
+    return jsonResponse({
+      output_text:
+        "CONFIRMED: yes. Tiffin OEM brochure for the 2022 Phaeton 40IH lists GVWR 39,600 lb.",
+    });
+  }) as typeof fetch;
+  try {
+    const result = await fetchWebSearchNotes({
+      apiKey: "test-key",
+      query: "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
+      timeoutMs: 8_000,
+      models: ["grok-4-1-fast-reasoning"],
+    });
+    assert.equal(result.ok, true);
+    assert.equal(questions.length, 2);
+    if (result.ok) {
+      assert.equal(result.confirmed, true);
+      assert.equal(result.exhausted, false);
+      assert.match(result.notes, /39,600/);
+    }
+    const injection = formatWebSearchInjection(result);
+    assert.match(injection, /CONFIRM the queried field/i);
+    assert.doesNotMatch(injection, /You MAY give a labeled EST/);
+    assert.doesNotMatch(injection, /low confidence — never as an OEM pin/);
+  } finally {
+    globalThis.fetch = prior;
+    clearWebSearchCache();
+  }
 });
