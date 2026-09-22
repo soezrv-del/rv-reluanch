@@ -685,9 +685,12 @@ export function normalizeCoachAsk(text: string): NormalizedCoachAsk {
   }
 
   // Brandless "2022 Dutch Star 4369" / last-mention series (Ventana → Dutch Star).
+  // Known series owns its make — Dutch Star is Newmar, never leftover Grand Design.
   const known = findKnownSeries(raw);
   if (known) {
-    if (!make) make = known.make;
+    if (!make || normName(make) !== normName(known.make)) {
+      make = known.make;
+    }
     if (!model) {
       model = known.model;
     } else if (

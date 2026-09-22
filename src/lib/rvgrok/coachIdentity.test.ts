@@ -12,6 +12,8 @@ import {
   askNamesCoachIdentity,
   formatCatalogPresenceNote,
   inspectCatalogPresence,
+  lastCompleteParseFromHistory,
+  lockIdentityTuple,
   namedCoachConflictsLock,
   resolveCatalogMake,
   resolveCatalogModel,
@@ -295,4 +297,77 @@ test("pheaton typo and year+model asks lock 2020 Tiffin Phaeton 40IH", () => {
     assert.equal(id!.model, "Phaeton", q);
     assert.match(id!.floorplan, /40ih/i, q);
   }
+});
+
+test("Dutch Star is Newmar only — never Grand Design + leftover 25FW / 2020", () => {
+  const typed = parseCoachFromText("2020 Grand Design Dutch Star 25fw");
+  assert.equal(typed.make, "Newmar");
+  assert.match(typed.model, /dutch star/i);
+  assert.doesNotMatch(typed.make, /Grand Design/i);
+
+  const locked = lockIdentityTuple({
+    year: "2020",
+    make: "Grand Design",
+    model: "Dutch Star",
+    floorplan: "25fw",
+    source: "message",
+  });
+  assert.equal(locked.make, "Newmar");
+  assert.equal(locked.model, "Dutch Star");
+
+  const frankensteinHistory = [
+    "2020 tiffin phaeton 40ih",
+    "2025 grand design lineage 25fw",
+    "what about the holding tanks",
+  ].join("\n");
+  const last = lastCompleteParseFromHistory(frankensteinHistory);
+  assert.ok(last);
+  assert.equal(last!.year, "2025");
+  assert.equal(last!.make, "Grand Design");
+  assert.match(last!.model, /lineage/i);
+  assert.match(last!.floorplan, /25fw/i);
+  assert.doesNotMatch(last!.model, /dutch star/i);
+
+  const followUp = resolveCoachIdentity(
+    "put the spec sheet on the desk",
+    LINEAGE_LOCK,
+    frankensteinHistory,
+  );
+  assert.ok(followUp);
+  assert.equal(followUp!.year, "2025");
+  assert.equal(followUp!.make, "Grand Design");
+  assert.match(followUp!.model, /lineage/i);
+  assert.match(followUp!.floorplan, /25fw/i);
+  assert.doesNotMatch(followUp!.model, /dutch star/i);
+  assert.doesNotMatch(followUp!.make + followUp!.model, /Grand DesignDutch Star|Grand Design Dutch Star/i);
+
+  const afterDutch = resolveCoachIdentity(
+    "what's the gvwr",
+    LINEAGE_LOCK,
+    `${frankensteinHistory}\ndutch star`,
+  );
+  assert.ok(afterDutch);
+  assert.equal(afterDutch!.make, "Newmar");
+  assert.match(afterDutch!.model, /dutch star/i);
+  assert.doesNotMatch(afterDutch!.make, /Grand Design/i);
+  assert.doesNotMatch(afterDutch!.floorplan, /25fw/i);
+  assert.notEqual(afterDutch!.year, "2020");
+
+  const mixedAsk = resolveCoachIdentity(
+    "2020 Grand Design Dutch Star 25fw",
+    LINEAGE_LOCK,
+    frankensteinHistory,
+  );
+  assert.ok(mixedAsk);
+  assert.equal(mixedAsk!.make, "Newmar");
+  assert.match(mixedAsk!.model, /dutch star/i);
+  assert.doesNotMatch(mixedAsk!.make, /Grand Design/i);
+
+  const ghostNote = formatCatalogPresenceNote({
+    status: "missing-series",
+    make: "Grand Design",
+    model: "Dutch Star",
+  });
+  assert.doesNotMatch(ghostNote, /Say the series is missing/i);
+  assert.doesNotMatch(ghostNote, /Do not substitute another series/i);
 });
