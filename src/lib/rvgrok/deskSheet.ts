@@ -47,6 +47,7 @@ export {
   DESK_SHEET_PHRASE,
   claimsDeskSpecSheet,
   formatDeskSheetMountedLine,
+  looksLikeDeskSheetAsk,
   queryNamesYearMakeModel,
   shouldMountDeskSheet,
 } from "./deskSheetPolicy.ts";

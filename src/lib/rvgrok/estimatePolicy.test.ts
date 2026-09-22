@@ -175,7 +175,7 @@ test("desk still matches Facts for 2022 Tiffin Phaeton 40IH weights", async () =
   assert.equal(brochure.gvwrLbs, 39_600);
   assert.equal(brochure.uvwLbs, 33_500);
 
-  const q = "2022 Tiffin Phaeton 40IH";
+  const q = "2022 Tiffin Phaeton 40IH spec report";
   const identity = resolveCoachIdentity(q, null, "");
   assert.ok(identity);
   const sheet = resolveDeskSheet({ query: q, identity, specs: null });

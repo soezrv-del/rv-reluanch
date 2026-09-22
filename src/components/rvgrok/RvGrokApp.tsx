@@ -564,6 +564,8 @@ export function RvGrokApp({
               m.id === assistantMsgId ? { ...m, deskSheet } : m,
             ),
           );
+        } else {
+          setLiveDeskSheet(null);
         }
 
         await streamChat({
@@ -667,6 +669,8 @@ export function RvGrokApp({
         });
         if (paintedDesk) {
           setLiveDeskSheet(paintedDesk);
+        } else {
+          setLiveDeskSheet(null);
         }
 
         setMessages((prev) => {
