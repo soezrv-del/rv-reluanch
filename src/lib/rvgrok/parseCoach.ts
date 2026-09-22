@@ -413,6 +413,10 @@ export const SERIES_MAKE_HINTS: ReadonlyArray<{
   { re: /\bbay\s+stars?\b/i, make: "Newmar", model: "Bay Star" },
   // Brandless / typo: "2020 pheaton 40ih" → Tiffin Phaeton (ea/ae swap).
   { re: /\bph[ae]{2}tons?\b/i, make: "Tiffin", model: "Phaeton" },
+  // Salesman shorthand: "American Dream 42Q" is American Coach — not a ghost.
+  { re: /\bamerican\s+dreams?\b/i, make: "American Coach", model: "American Dream" },
+  { re: /\bamerican\s+traditions?\b/i, make: "American Coach", model: "American Tradition" },
+  { re: /\bamerican\s+eagles?\b/i, make: "American Coach", model: "American Eagle" },
   // Grand Design Lineage is a real family (Series E/F/M/VT/VP). Bare
   // "Lineage" locks the make — never a ghost / SERIES MISSING.
   {

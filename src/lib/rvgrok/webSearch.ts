@@ -30,8 +30,14 @@ import {
   LOW_CONFIDENCE_EST_RULE,
 } from "./estimatePolicy.ts";
 import {
+  applyUniqueCatalogIdentity,
+  findUniqueCatalogCoachFromModel,
+  lockIdentityTuple,
+  namedCoachConflictsLock,
   resolveCatalogMake,
   resolveCatalogModel,
+  resolveCoachIdentity,
+  type CoachIdentity,
 } from "./coachIdentity.ts";
 import { parseCoachFromText } from "./parseCoach.ts";
 import {
@@ -433,40 +439,151 @@ export function notesConfirmQueriedField(notes: string, query: string): boolean 
   return false;
 }
 
-/** Common series typos that waste OEM search hits (David: pheaton). */
-export function normalizeCoachTyposInAsk(query: string): string {
-  return (query || "").replace(/\bpheaton\b/gi, "Phaeton");
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Year / make / model / floorplan from the ask, after typo normalize. */
-export function coachLabelFromResearchAsk(query: string): string {
-  const parsed = parseCoachFromText(normalizeCoachTyposInAsk(query));
-  const make = parsed.make ? resolveCatalogMake(parsed.make) : "";
-  const model = parsed.model
-    ? resolveCatalogModel(make || parsed.make, parsed.model, parsed.floorplan)
-    : parsed.model;
-  const parts = [parsed.year, make || parsed.make, model, parsed.floorplan]
+/** Catalog header line: "VERIFIED CATALOG / BROCHURE for 2022 Tiffin Phaeton 40IH". */
+export function coachPhraseFromCatalogBlock(catalogBlock?: string): string {
+  const raw = clipCatalogBlock(catalogBlock);
+  if (!raw) return "";
+  const m = raw.match(
+    /VERIFIED CATALOG(?: \/ BROCHURE)? for ([^(\n]+)/i,
+  );
+  return (m?.[1] || "").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Interpret the ask plus the catalog / identity the chat and voice APIs
+ * already send. Same-unit fill only — never merge Dutch Star onto Ventana
+ * or Dream onto Tradition.
+ */
+export function researchIdentityFromParams(
+  query: string,
+  catalogBlock?: string,
+): CoachIdentity | null {
+  const asked = normalizeCoachTyposInAsk(query);
+  const fromAsk = resolveCoachIdentity(asked, null, "");
+  const catalogPhrase = coachPhraseFromCatalogBlock(catalogBlock);
+  const fromCatalog = catalogPhrase
+    ? resolveCoachIdentity(catalogPhrase, null, "")
+    : null;
+  if (
+    fromAsk &&
+    fromCatalog &&
+    namedCoachConflictsLock(fromAsk, {
+      year: fromCatalog.year,
+      make: fromCatalog.make,
+      model: fromCatalog.model,
+      floorplan: fromCatalog.floorplan,
+      updatedAt: "",
+    })
+  ) {
+    return fromAsk;
+  }
+  if (fromAsk?.make && fromAsk?.model) return fromAsk;
+  if (fromAsk && fromCatalog) {
+    return lockIdentityTuple({
+      year: fromAsk.year || fromCatalog.year,
+      make: fromAsk.make || fromCatalog.make,
+      model: fromAsk.model || fromCatalog.model,
+      floorplan: fromAsk.floorplan || fromCatalog.floorplan,
+      source: "mixed",
+    });
+  }
+  return fromAsk || fromCatalog;
+}
+
+function formatResearchCoachLabel(id: {
+  year?: string;
+  make?: string;
+  model?: string;
+  floorplan?: string;
+}): string {
+  const parts = [id.year, id.make, id.model, id.floorplan]
     .filter(Boolean)
     .join(" ");
-  if (/lineage series f/i.test(model || "") && !/super\s*c/i.test(parts)) {
+  if (/lineage series f/i.test(id.model || "") && !/super\s*c/i.test(parts)) {
     return `${parts} Super C`;
   }
   return parts;
 }
 
 /**
+ * Common series typos and unique catalog misspellings (David: pheaton,
+ * Americn Dream). Unique hit only — do not invent a sibling series.
+ */
+export function normalizeCoachTyposInAsk(query: string): string {
+  let q = (query || "").replace(/\bpheaton\b/gi, "Phaeton");
+  const spoken = parseCoachFromText(q).model;
+  const unique = spoken ? findUniqueCatalogCoachFromModel(spoken) : null;
+  if (
+    unique?.model &&
+    spoken &&
+    unique.model.toLowerCase() !== spoken.toLowerCase()
+  ) {
+    q = q.replace(new RegExp(escapeRegExp(spoken), "ig"), unique.model);
+  }
+  return q;
+}
+
+/** Year / make / model / floorplan from the ask + catalog identity. */
+export function coachLabelFromResearchAsk(
+  query: string,
+  catalogBlock?: string,
+): string {
+  const id = researchIdentityFromParams(query, catalogBlock);
+  if (id && (id.make || id.model)) return formatResearchCoachLabel(id);
+  const parsed = applyUniqueCatalogIdentity(
+    normalizeCoachTyposInAsk(query),
+    parseCoachFromText(normalizeCoachTyposInAsk(query)),
+  );
+  const make = parsed.make ? resolveCatalogMake(parsed.make) : "";
+  const model = parsed.model
+    ? resolveCatalogModel(make || parsed.make, parsed.model, parsed.floorplan)
+    : parsed.model;
+  return formatResearchCoachLabel({
+    year: parsed.year,
+    make: make || parsed.make,
+    model,
+    floorplan: parsed.floorplan,
+  });
+}
+
+/**
+ * Put the resolved coach on the ask so live search is not limited to the
+ * raw (possibly misspelled / yearless) string.
+ */
+export function expandResearchAsk(
+  query: string,
+  catalogBlock?: string,
+): string {
+  const cleaned = normalizeCoachTyposInAsk(query).trim();
+  const label = coachLabelFromResearchAsk(cleaned, catalogBlock);
+  if (!label) return cleaned;
+  const nClean = normalizeQueryPhrase(cleaned);
+  const nLabel = normalizeQueryPhrase(label);
+  if (!nLabel || nClean.includes(nLabel)) return cleaned;
+  return `${cleaned} (${label})`;
+}
+
+/**
  * Next phrasing for the research loop. Attempt 0 is the original ask
- * (typos normalized). Later attempts must be a genuinely different query.
+ * (typos normalized + identity expanded). Later attempts must be a
+ * genuinely different query — including salesman shorthand and the
+ * catalog-lock coach the APIs already sent.
  */
 export function rephraseResearchQuery(
   original: string,
   attemptIndex: number,
   previousQueries: readonly string[] = [],
+  catalogBlock?: string,
 ): string {
-  const base = normalizeCoachTyposInAsk(original).trim();
-  const field = inferQueriedField(base);
+  const base = expandResearchAsk(original, catalogBlock).trim();
+  const field = inferQueriedField(original);
   const label = FIELD_LABEL[field];
-  const coach = coachLabelFromResearchAsk(base);
+  const coach = coachLabelFromResearchAsk(original, catalogBlock);
+  const id = researchIdentityFromParams(original, catalogBlock);
   const used = new Set(previousQueries.map(normalizeQueryPhrase));
 
   const candidates: string[] = [];
@@ -476,9 +593,25 @@ export function rephraseResearchQuery(
       `${coach} factory ${label} OEM brochure PDF manufacturer spec sheet`,
       `${coach} published ${label} dealer listing factory weights`,
     );
+    const short = [id?.make, id?.model, id?.floorplan].filter(Boolean).join(" ");
+    if (short && normalizeQueryPhrase(short) !== normalizeQueryPhrase(coach)) {
+      candidates.push(
+        `${short} factory ${label} OEM brochure PDF manufacturer spec sheet`,
+      );
+    }
     if (/\btiffin\b/i.test(coach)) {
       candidates.push(
         `${coach} factory ${label} Tiffin Motorhomes OEM brochure PDF spec sheet`,
+      );
+    }
+    if (/american coach|american dream/i.test(coach)) {
+      candidates.push(
+        `${coach} factory ${label} Fleetwood American Coach OEM brochure PDF spec sheet`,
+      );
+    }
+    if (/grand design|lineage/i.test(coach)) {
+      candidates.push(
+        `${coach} factory ${label} Grand Design OEM brochure PDF spec sheet`,
       );
     }
   }
@@ -621,21 +754,21 @@ export function buildResearchInstructions(opts: {
         : `This is attempt ${attempt} of ${maxAttempts}. Search with THIS query phrasing only.`;
   return [
     "Research ONE RV question for RVFAX. Return short RESEARCH NOTES only — no JSON.",
-    "Research loop: search the LIVE web first (OEM / factory brochure / dealer listing), then evaluate whether the results CONFIRM the asked fact (a specific year-matched number, location, procedure, listing band, or OEM pin). Prefer Tiffin, Newmar, Newmar Corp, factory PDF / brochure, and dealer listings over aggregator hedges like 'typically'. If they confirm, write CONFIRMED: yes and the fact plus related specs when found (engine / GCWR / transmission). If they do not confirm, write CONFIRMED: no and what was missing. Do not invent a labeled EST / typical class range / low confidence in these notes — never when a live source exists.",
+    "Research loop: search the LIVE web first (OEM / factory brochure / dealer listing), then evaluate whether the results CONFIRM the asked fact (a published number, location, procedure, listing band, or OEM pin for THIS coach). Salesman shorthand, misspellings, missing year, model-only, or floorplan-only are the same unit when identity is unambiguous — confirm those facts. Do not require every year/make/model/floorplan token to be spelled exactly as the OEM string. Never invent OEM numbers. Never merge incompatible tuples (Dutch Star is not Ventana; American Dream is not Tradition). Prefer Tiffin, Newmar, Newmar Corp, factory PDF / brochure, and dealer listings over aggregator hedges like 'typically'. If they confirm, write CONFIRMED: yes and the fact plus related specs when found (engine / GCWR / transmission). If they do not confirm, write CONFIRMED: no and what was missing. Do not invent a labeled EST / typical class range / low confidence in these notes — never when a live source exists.",
     priorLine,
     style === "gemini"
       ? "Search once with Google Search. Do not invent a second query loop here — the server falls back to xAI web_search if this miss/times out."
       : "Never repeat the same query. A later attempt will retry ONCE with a DIFFERENT query phrasing if this one times out or does not confirm.",
     lengthRule,
     "Match the ask:",
-    "- Specs/powertrain: search live OEM brochure / factory spec sheet / chassis sheet / dealer listing for THAT year + make + model + floorplan FIRST. Never answer from training data. Never invent horsepower as OEM fact (no silent 450). If a live source exists, quote that year-specific number — never EST / typical class range / low confidence. If not found, write CONFIRMED: no.",
-    "- Market value / pricing: live nationwide ASKING prices this turn for THAT exact year + make + model AND two years older and two years newer (year ±2). Real public listings only (RV Trader / RVUSA / classifieds). Average those asks and return Low / Average / High. Never use a nightly competitor scrape, RVcountry competitor-latest, sample inventory CSV, frozen comps table, cached overnight scrape, NADA, J.D. Power, or any paid book. If you cannot find real listings this turn, write INSUFFICIENT — do not invent a band.",
+    "- Specs/powertrain: search live OEM brochure / factory spec sheet / chassis sheet / dealer listing for THIS coach FIRST. Interpret the ask plus any catalog / identity lock — fill obvious brand/series (Phaeton → Tiffin, American Dream → American Coach, Lineage 31ZW → Grand Design Lineage Series F). Missing year: search the series + floorplan and quote a live year-specific number when the source names one. Never answer from training data. Never invent horsepower as OEM fact (no silent 450). If a live source exists for that unit, quote it — never EST / typical class range / low confidence. If not found, write CONFIRMED: no.",
+    "- Market value / pricing: live nationwide ASKING prices this turn for THIS coach. If a year is known, include that year AND two years older and two years newer (year ±2). If year is missing, search the named series / floorplan. Real public listings only (RV Trader / RVUSA / classifieds). Average those asks and return Low / Average / High. Never use a nightly competitor scrape, RVcountry competitor-latest, sample inventory CSV, frozen comps table, cached overnight scrape, NADA, J.D. Power, or any paid book. If you cannot find real listings this turn, write INSUFFICIENT — do not invent a band.",
     "- Troubleshooting / how-to / error codes / TSB / recall / install: likely symptoms, common OEM/forum/manual fixes, safety caveats. Cite uncertainty. Do not invent a campaign number, torque spec, part number, wiring color, sensor bypass, or a diagnosis you cannot support. Prefer OEM procedure / NHTSA. If none found, write UNKNOWN / no OEM procedure.",
     "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
     "Floorplan letters are labels only — do not decode bunks or a half-bath from the code.",
     opts.catalog
       ? `Catalog lock (do not contradict these numbers). If this lock names engine / HP / class, the coach IS in the catalog — do not write "not in catalogs" or "wait for a brochure":\n${opts.catalog}`
-      : "No catalog row was available. Search OEM / factory brochure / dealer listings for THAT year + make + model FIRST. If the web does not confirm a number, write CONFIRMED: no — never a labeled EST / typical class range / low confidence, never a training-data year range. Do not tell the user to go check the OEM site instead of researching.",
+      : "No catalog row was available. Search OEM / factory brochure / dealer listings for THIS coach FIRST (shorthand / misspelling / missing year OK when the unit is clear). If the web does not confirm a number, write CONFIRMED: no — never a labeled EST / typical class range / low confidence, never a training-data year range. Do not tell the user to go check the OEM site instead of researching.",
   ].join("\n");
 }
 
@@ -974,7 +1107,7 @@ export async function fetchWebSearchNotes(
       const geminiBudget = Math.min(budgetMs, geminiResearchTimeoutMs(profile));
       const gemini = await fetchGeminiResearchNotes({
         apiKey: geminiKey,
-        query: originalQuery,
+        query: expandResearchAsk(originalQuery, opts.catalogBlock),
         catalogBlock: opts.catalogBlock,
         timeoutMs: geminiBudget,
         profile,
@@ -1057,10 +1190,20 @@ export async function fetchXaiWebSearchNotes(
     const remaining = budgetMs - (Date.now() - started);
     if (i > 0 && remaining < WEB_SEARCH_MIN_RETRY_BUDGET_MS) break;
 
-    const phrasing = rephraseResearchQuery(originalQuery, i, queriesUsed);
+    const phrasing = rephraseResearchQuery(
+      originalQuery,
+      i,
+      queriesUsed,
+      opts.catalogBlock,
+    );
     const unique =
       queriesUsed.some((q) => normalizeQueryPhrase(q) === normalizeQueryPhrase(phrasing))
-        ? rephraseResearchQuery(originalQuery, i + queriesUsed.length, queriesUsed)
+        ? rephraseResearchQuery(
+            originalQuery,
+            i + queriesUsed.length,
+            queriesUsed,
+            opts.catalogBlock,
+          )
         : phrasing;
 
     const one = await fetchOnePhrasing({

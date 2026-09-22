@@ -765,6 +765,34 @@ test("David spec asks always require live search — even on a locked row", () =
   assert.equal(looksLikeCoachFactAsk("Is full-timing worth it?"), false);
 });
 
+test("salesman shorthand / misspellings still research when catalog is locked", () => {
+  const locked = { missingHard: false, missingOemWeightPin: false };
+  const shorthand = [
+    "American Dream 42Q",
+    "Phaeton 40IH",
+    "Lineage 31ZW",
+    "pheaton 40ih",
+    "Americn Dream 42Q",
+  ];
+  for (const q of shorthand) {
+    assert.equal(looksLikeNamedCoachProductQuestion(q), true, q);
+    assert.equal(looksLikeCoachFactAsk(q), true, q);
+    assert.equal(needsWebFallback(null, q), true, q);
+    assert.equal(
+      needsWebFallback(locked, q),
+      true,
+      `${q} must browse even with a catalog pin — do not require exact year+make+model`,
+    );
+    assert.equal(buildChatGrounding({ query: q }).needsWeb, true, q);
+  }
+  assert.equal(looksLikeNamedCoachProductQuestion("hi"), false);
+  assert.equal(
+    needsWebFallback(locked, "Compare the Allegro Bus to the American Dream."),
+    false,
+    "catalog-answerable compare still skips web",
+  );
+});
+
 test("catalog miss fires web without about-phrasing", () => {
   const tow =
     "What's the tow rating on a 2019 XYZ Phantom that's not in catalog?";
