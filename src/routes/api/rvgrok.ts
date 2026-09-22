@@ -9,12 +9,6 @@ import {
 } from "@/lib/rvgrok/grounding";
 import { parseCoachFromText } from "@/lib/rvgrok/parseCoach";
 import {
-  formatOwnLotBlock,
-  loadOwnLotSnapshot,
-  looksLikeOwnLotStockQuestion,
-  shouldSkipWebForOwnLot,
-} from "@/lib/rvgrok/ownLotInventory";
-import {
   formatCoachReportTimeoutReply,
   looksLikeCoachReportAsk,
 } from "@/lib/rvgrok/coachReport";
@@ -85,15 +79,10 @@ function withGrounding(
     feedbackContext?: string;
     catalogContext?: string;
     webNotes?: string;
-    ownLotNotes?: string;
   },
 ) {
   let out = appendGrounding(system, opts?.catalogContext);
   out = appendFeedback(out, opts?.feedbackContext);
-  const lot = (opts?.ownLotNotes || "").trim();
-  if (lot) {
-    out = `${out}\n\n═══════════════════════════════════════\nOWN-LOT INVENTORY (RV Country)\n═══════════════════════════════════════\n${lot}`;
-  }
   const web = (opts?.webNotes || "").trim();
   if (web) {
     out = `${out}\n\n═══════════════════════════════════════\nWEB RESEARCH\n═══════════════════════════════════════\n${web}`;
@@ -441,7 +430,6 @@ async function tryXaiDirect(
   feedbackContext?: string,
   catalogContext?: string,
   webNotes?: string,
-  ownLotNotes?: string,
 ): Promise<Response | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return null;
@@ -462,7 +450,7 @@ async function tryXaiDirect(
       (forceImageTool
         ? "\n\nThe user asked for a generated image. You MUST call the generate_image tool with a detailed visual prompt. Do not write a JSON tool call in your content."
         : ""),
-    { feedbackContext, catalogContext, webNotes, ownLotNotes },
+    { feedbackContext, catalogContext, webNotes },
   );
   const fullMessages: ChatMessage[] = [
     { role: "system", content: system },
@@ -496,7 +484,6 @@ async function tryCloudflareWorker(
   feedbackContext?: string,
   catalogContext?: string,
   webNotes?: string,
-  ownLotNotes?: string,
 ): Promise<Response | null> {
   const base = workerBase();
   const candidates = agentMode
@@ -520,7 +507,7 @@ async function tryCloudflareWorker(
               content: withGrounding(
                 (agentMode ? AGENT_SYSTEM_PROMPT : RV_SYSTEM_PROMPT) +
                   systemExtra,
-                { feedbackContext, catalogContext, webNotes, ownLotNotes },
+                { feedbackContext, catalogContext, webNotes },
               ),
             },
             ...messages,
@@ -669,27 +656,12 @@ export const Route = createFileRoute("/api/rvgrok")({
           ? serverGrounded.block || ""
           : serverGrounded.block || body.catalogContext || "";
 
-        let ownLotNotes: string | undefined;
-        let skipWebForLot = false;
-        if (looksLikeOwnLotStockQuestion(lastPlain)) {
-          let requestOrigin = "";
-          try {
-            requestOrigin = new URL(request.url).origin;
-          } catch {
-            requestOrigin = "";
-          }
-          const snapshot = await loadOwnLotSnapshot({ requestOrigin });
-          ownLotNotes = formatOwnLotBlock(snapshot, lastPlain);
-          skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
-        }
-
-        // Specs / GVWR / engine / pricing / YMM / catalog GAP / own-lot
-        // miss → MUST browse this turn. Locked identity still uses server
-        // needsWeb so a pin is confirmed by live notes, not overwritten.
+        // Specs / GVWR / engine / pricing / YMM / catalog GAP → MUST browse
+        // this turn. Locked identity still uses server needsWeb so a pin is
+        // confirmed by live notes, not overwritten.
         const wantsWebFallback =
-          !skipWebForLot &&
-          (serverGrounded.needsWeb ||
-            (!serverGrounded.identity && Boolean(body.wantsWebFallback)));
+          serverGrounded.needsWeb ||
+          (!serverGrounded.identity && Boolean(body.wantsWebFallback));
 
         let webNotes: string | undefined;
         if (wantsWebFallback) {
@@ -733,7 +705,6 @@ export const Route = createFileRoute("/api/rvgrok")({
           feedbackContext,
           catalogContext,
           webNotes,
-          ownLotNotes,
         );
         if (fromXai) return fromXai;
         const fromWorker = await tryCloudflareWorker(
@@ -742,7 +713,6 @@ export const Route = createFileRoute("/api/rvgrok")({
           feedbackContext,
           catalogContext,
           webNotes,
-          ownLotNotes,
         );
         if (fromWorker) return fromWorker;
 

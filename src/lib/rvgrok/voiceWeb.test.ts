@@ -33,6 +33,7 @@ import {
   VOICE_WEB_SEARCH_CLIENT_BUDGET_MS,
 } from "./voiceWeb.ts";
 import {
+  isForbiddenLotFirstDeflection,
   isForbiddenResearchHold,
   isForbiddenScopeNarrow,
   RV_GROK_SESSION_INTRO,
@@ -450,6 +451,18 @@ test("hold string is exactly give me one second — never Let me check that", ()
   assert.equal(isForbiddenScopeNarrow("that's not in my parameters"), true);
   assert.equal(isForbiddenScopeNarrow("that's not my scope"), true);
   assert.equal(isForbiddenScopeNarrow(RV_GROK_SESSION_INTRO), false);
+  assert.equal(
+    isForbiddenLotFirstDeflection(
+      "None of the 2025 Jayco Seneca 37K on our lot right now. Zero diesel units too.",
+    ),
+    true,
+  );
+  assert.equal(
+    isForbiddenLotFirstDeflection(
+      "The 2025 Jayco Seneca 37K is a Super C built on a Freightliner chassis.",
+    ),
+    false,
+  );
 });
 
 test("voice research reuses webIntent — no second detector", () => {

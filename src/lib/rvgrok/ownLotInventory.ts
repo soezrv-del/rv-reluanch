@@ -148,7 +148,7 @@ export function clearOwnLotCache(): void {
  * market-value comps (those stay on looksLikeMarketValueQuestion).
  */
 const OWN_LOT_LISTING_PRICE_RE =
-  /\b((?:show|include|have|with|see|need|want|any|should).{0,40}prices?|prices?\s+(?:too|data|as well|also|included|please)|(?:unit|listing|lot|inventory|stock|our)\s+prices?|prices?\s+(?:on|for|of|in|from)\b|(?:around|about|near|approx(?:imately)?|under|below|over|above|less\s+than|more\s+than|up\s+to)\s+\$?\s*\d|budget\b|\$\d|\d{2,3}\s*k\b|(?:around|about|near|approx(?:imately)?)\s+(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|one|two|three|four|five|six|seven|eight|nine|ten)\s+thousand|\b(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\s+thousand\s+dollars?)\b/i;
+  /\b((?:show|include|have|with|see|need|want|any|should).{0,40}prices?|prices?\s+(?:too|data|as well|also|included|please)|(?:unit|listing|lot|inventory|stock|our)\s+prices?|prices?\s+(?:on|for|of|in|from)\b|(?:around|about|near|approx(?:imately)?|under|below|over|above|less\s+than|more\s+than|up\s+to)\s+\$?\s*\d|budget\b|\$\d|(?:\$|around|about|near|approx(?:imately)?|under|below|over|above|up\s+to|budget)\s*\$?\s*\d{2,3}\s*k\b|(?:around|about|near|approx(?:imately)?)\s+(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|one|two|three|four|five|six|seven|eight|nine|ten)\s+thousand|\b(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\s+thousand\s+dollars?)\b/i;
 
 /** "list / deep dive / show me / which ones" — inject concrete rows, not counts only. */
 const OWN_LOT_UNIT_LIST_RE =
