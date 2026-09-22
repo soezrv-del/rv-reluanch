@@ -48,3 +48,9 @@ export function subscribeCatalogLoaded(fn: () => void): () => void {
   };
 }
 
+/** Install a catalog module (tests / load-live-catalog) without the dynamic import. */
+export function installCatalog(mod: CatalogModule): void {
+  loaded = mod;
+  notify();
+}
+

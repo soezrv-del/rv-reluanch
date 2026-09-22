@@ -2,11 +2,16 @@
  * Live Voice / chat desk spec sheet — CarFax-style card for the locked coach.
  *
  * Speech may say the sheet is on the desk only when we actually mount it.
- * Missing UVW / GVWR / torque stay GAP — never invent.
- * When findOem* has a number, speech and any written sheet must use it.
+ * When the live catalog is loaded, paint the same `buildBrochureSpecs`
+ * snapshot Facts (RvFAX) shows — not a stricter pin-only GAP path.
  */
 
-import { findOemGvwrLbs, findOemUvwLbs } from "../rv/floorplanSpecs.ts";
+import { CONFIRM_BROCHURE, type BrochureSpecs } from "../rv/brochureSpecs.ts";
+import {
+  findOemFloorplanSpec,
+  findOemGvwrLbs,
+  findOemUvwLbs,
+} from "../rv/floorplanSpecs.ts";
 import { isTowableForTorqueRating } from "../rv/torqueToWeight.ts";
 import {
   formatCatalogPresenceNote,
@@ -17,6 +22,7 @@ import {
   type CoachIdentity,
 } from "./coachIdentity.ts";
 import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
+import { resolveFactsBrochure } from "./factsBrochure.ts";
 import {
   claimsDeskSpecSheet,
   DESK_SHEET_FORBIDDEN_LINE,
@@ -149,6 +155,101 @@ function lbsLabel(n: number | null): DeskSheetRow {
   };
 }
 
+function isFactsEmpty(value: string): boolean {
+  return (
+    !value ||
+    value === "GAP" ||
+    value === "—" ||
+    value === "–" ||
+    value === CONFIRM_BROCHURE
+  );
+}
+
+/** Keep Facts' string (including "Confirm brochure") so both screens match. */
+function brochureRow(
+  label: string,
+  value: string | null | undefined,
+): DeskSheetRow {
+  const v = (value || "").trim();
+  if (!v || v === "GAP") {
+    return { label, value: "GAP", gap: true };
+  }
+  if (isFactsEmpty(v)) {
+    return { label, value: v, gap: true };
+  }
+  return { label, value: v, gap: false };
+}
+
+function motorBrochureRow(
+  label: string,
+  value: string | null | undefined,
+  towable: boolean,
+): DeskSheetRow {
+  const v = (value || "").trim();
+  if (towable && (isFactsEmpty(v) || /towable/i.test(v))) {
+    return { label, value: "N/A", gap: false };
+  }
+  return brochureRow(label, value);
+}
+
+function payloadFromFactsBrochure(
+  identity: CoachIdentity,
+  brochure: BrochureSpecs,
+  specs: SheetSpecs,
+): DeskSheetRow[] {
+  const towable = deskSheetIsTowable(identity, {
+    rvType: { value: brochure.type },
+    fuelType: { value: brochure.fuelType },
+  });
+  return [
+    brochureRow("Class", brochure.type || specs?.rvType?.value),
+    motorBrochureRow("Engine", brochure.engine, towable),
+    motorBrochureRow("Horsepower", brochure.horsepower, towable),
+    motorBrochureRow("Torque", brochure.torque, towable),
+    brochureRow("Chassis", brochure.chassis),
+    motorBrochureRow("Transmission", brochure.transmission, towable),
+    brochureRow("Fuel", brochure.fuelType),
+    brochureRow("Tow capacity", brochure.hitchOrPin),
+    brochureRow("Generator", brochure.generator),
+    brochureRow("A/C", brochure.acUnits),
+    brochureRow("Fuel capacity", brochure.fuelCapacity),
+    brochureRow("GVWR", brochure.gvwr),
+    brochureRow("UVW", brochure.uvw),
+    brochureRow("CCC", brochure.ccc),
+  ];
+}
+
+function publishedWeightLbs(
+  identity: CoachIdentity,
+  kind: "gvwr" | "uvw",
+): number | null {
+  const oem = findOemFloorplanSpec(
+    identity.year,
+    identity.make,
+    identity.model,
+    identity.floorplan,
+  );
+  if (kind === "gvwr") {
+    return (
+      oem?.gvwrLbs ??
+      findOemGvwrLbs(
+        identity.year,
+        identity.make,
+        identity.model,
+        identity.floorplan,
+      )
+    );
+  }
+  return (
+    findOemUvwLbs(
+      identity.year,
+      identity.make,
+      identity.model,
+      identity.floorplan,
+    ) ?? oem?.uvwLbs ?? null
+  );
+}
+
 export function buildDeskSheetPayload(
   identity: CoachIdentity,
   specs: SheetSpecs,
@@ -159,25 +260,25 @@ export function buildDeskSheetPayload(
     .filter(Boolean)
     .join(" ");
 
-  const gvwr = lbsLabel(
-    findOemGvwrLbs(identity.year, identity.make, identity.model, identity.floorplan),
-  );
-  const uvw = lbsLabel(
-    findOemUvwLbs(identity.year, identity.make, identity.model, identity.floorplan),
-  );
-
-  const towable = deskSheetIsTowable(identity, specs);
-  const rows: DeskSheetRow[] = [
-    rowFromField("Class", specs?.rvType),
-    motorRow("Engine", specs?.engine, towable),
-    motorRow("Horsepower", specs?.horsepower, towable),
-    motorRow("Torque", specs?.torque, towable),
-    rowFromField("Chassis", specs?.chassis),
-    motorRow("Transmission", specs?.transmission, towable),
-    rowFromField("Fuel", specs?.fuelType),
-    { label: "GVWR", value: gvwr.value, gap: gvwr.gap },
-    { label: "UVW", value: uvw.value, gap: uvw.gap },
-  ];
+  const brochure = resolveFactsBrochure(identity);
+  const rows: DeskSheetRow[] = brochure
+    ? payloadFromFactsBrochure(identity, brochure, specs)
+    : (() => {
+        const gvwr = lbsLabel(publishedWeightLbs(identity, "gvwr"));
+        const uvw = lbsLabel(publishedWeightLbs(identity, "uvw"));
+        const towable = deskSheetIsTowable(identity, specs);
+        return [
+          rowFromField("Class", specs?.rvType),
+          motorRow("Engine", specs?.engine, towable),
+          motorRow("Horsepower", specs?.horsepower, towable),
+          motorRow("Torque", specs?.torque, towable),
+          rowFromField("Chassis", specs?.chassis),
+          motorRow("Transmission", specs?.transmission, towable),
+          rowFromField("Fuel", specs?.fuelType),
+          { label: "GVWR", value: gvwr.value, gap: gvwr.gap },
+          { label: "UVW", value: uvw.value, gap: uvw.gap },
+        ];
+      })();
 
   const gaps = [
     ...rows.filter((r) => r.gap).map((r) => r.label),

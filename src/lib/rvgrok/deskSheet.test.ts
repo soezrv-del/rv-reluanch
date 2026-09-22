@@ -4,6 +4,9 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveCoachIdentity } from "./coachIdentity.ts";
+import { loadLiveCatalog } from "../../../scripts/load-live-catalog.mjs";
+import { buildBrochureSpecs } from "../rv/brochureSpecs.ts";
+import { installCatalog } from "../rv/catalogLoad.ts";
 import {
   findOemFloorplanSpec,
   findOemGvwrLbs,
@@ -277,6 +280,65 @@ Weight ratings GVWR/GCWR/UVW/NCC: GAP
   assert.equal(stripDuplicateMarkdownSpecSheet(spoken), spoken);
 });
 
+test("2022 Tiffin Phaeton 40IH: Grok desk paints the same Facts brochure snapshot", async () => {
+  const live = await loadLiveCatalog();
+  installCatalog({ RV_DATA: live.RV_DATA, MAKES: live.MAKES });
+  const spec = live.RV_DATA.Tiffin?.Phaeton;
+  assert.ok(spec, "expected Tiffin Phaeton in the live catalog");
+  const brochure = buildBrochureSpecs(spec, "2022", "Tiffin", "Phaeton", "40IH");
+
+  // Pin-only tables do not cover 2022 — that was the desk GAP bug.
+  assert.equal(findOemGvwrLbs("2022", "Tiffin", "Phaeton", "40IH"), null);
+  assert.equal(findOemUvwLbs("2022", "Tiffin", "Phaeton", "40IH"), null);
+  assert.equal(brochure.gvwrLbs, 39_600);
+  assert.equal(brochure.uvwLbs, 33_500);
+  assert.equal(brochure.cccLbs, 6_100);
+
+  const q = "2022 Tiffin Phaeton 40IH";
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  assert.equal(identity!.year, "2022");
+  assert.match(identity!.make, /tiffin/i);
+  assert.match(identity!.model, /phaeton/i);
+  assert.equal(identity!.floorplan, "40IH");
+
+  const sheet = resolveDeskSheet({ query: q, identity, specs: null });
+  assert.ok(sheet);
+  const val = (label: string) =>
+    sheet!.rows.find((r) => r.label === label)?.value;
+  const gap = (label: string) =>
+    sheet!.rows.find((r) => r.label === label)?.gap;
+
+  assert.equal(val("GVWR"), brochure.gvwr);
+  assert.equal(gap("GVWR"), false);
+  assert.equal(val("UVW"), brochure.uvw);
+  assert.equal(gap("UVW"), false);
+  assert.equal(val("CCC"), brochure.ccc);
+  assert.equal(val("Generator"), brochure.generator);
+  assert.equal(val("Fuel capacity"), brochure.fuelCapacity);
+  assert.equal(val("Tow capacity"), brochure.hitchOrPin);
+  assert.equal(val("A/C"), brochure.acUnits);
+  assert.equal(val("Engine"), brochure.engine);
+  assert.equal(val("Horsepower"), brochure.horsepower);
+  assert.equal(val("Torque"), brochure.torque);
+  assert.equal(val("Chassis"), brochure.chassis);
+  assert.equal(val("Class"), brochure.type);
+  assert.equal(val("Fuel"), brochure.fuelType);
+  assert.match(val("GVWR") || "", /39,?600/);
+  assert.match(val("UVW") || "", /33,?500/);
+  assert.match(val("CCC") || "", /6,?100/);
+  assert.match(val("Generator") || "", /Onan 10\.0 kW/i);
+  assert.match(val("Fuel capacity") || "", /100\s*gal/i);
+  assert.match(val("Tow capacity") || "", /10,?000/);
+
+  const locked = formatLockedWeightsBlock(identity!);
+  assert.match(locked, /VERIFIED GVWR 39600/);
+  assert.match(locked, /VERIFIED UVW 33500/);
+  assert.doesNotMatch(src(root, "factsBrochure.ts"), /[Dd]ialaBot/);
+  assert.match(src(root, "deskSheet.ts"), /resolveFactsBrochure/);
+  assert.match(src(root, "deskSheet.ts"), /buildBrochureSpecs/);
+});
+
 test("desk sheet is wired through chat, live voice, and speech policy", () => {
   const app = src(join(root, "../../components/rvgrok"), "RvGrokApp.tsx");
   const bubble = src(join(root, "../../components/rvgrok"), "MessageBubble.tsx");
@@ -305,6 +367,7 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(grounding, /VERIFIED GVWR/);
   assert.match(grounding, /Do not say you lack GVWR/);
   assert.match(src(root, "lockedWeights.ts"), /VERIFIED GVWR/);
+  assert.match(src(root, "lockedWeights.ts"), /resolveFactsBrochure/);
   assert.match(src(root, "liveVoice.ts"), /never say you don't have GVWR/i);
   assert.match(src(root, "voice.ts"), /LOCKED WEIGHTS/);
   assert.match(src(root, "speechPolicy.ts"), /LOCKED WEIGHTS/);
