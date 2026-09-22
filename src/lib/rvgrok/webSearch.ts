@@ -49,6 +49,11 @@ import {
   normalizeAskText,
 } from "./webIntent.ts";
 import {
+  coachReportResearchLengthRule,
+  formatCoachReportDraftInjection,
+  looksLikeCoachReportAsk,
+} from "./coachReport.ts";
+import {
   fetchGeminiResearchNotes,
   geminiResearchTimeoutMs,
   readGeminiApiKey,
@@ -79,6 +84,13 @@ export const WEB_SEARCH_MODELS = [
  * as the last raise. Not a fake pass, not 60s of silence.
  */
 export const CHAT_WEB_SEARCH_TIMEOUT_MS = 36_000;
+
+/**
+ * Spec / report / CARFAX-style sidecar budget (chat-class).
+ * Live Voice talk-only stays on VOICE_WEB_SEARCH_TIMEOUT_MS; a specs ask
+ * on voice must not abort at the old 10s Gemini first-shot.
+ */
+export const SPEC_REPORT_RESEARCH_TIMEOUT_MS = 28_000;
 
 /**
  * Live Voice research wall-clock budget (server-side fetch timeout).
@@ -295,18 +307,14 @@ const FIELD_PATTERNS: Array<[QueriedResearchField, RegExp]> = [
   ],
 ];
 
-/** Spec / YMM → xAI web_search only. Repair / “where is” may still use Gemini. */
-export function skipGeminiForResearchAsk(query: string): boolean {
-  const t = normalizeAskText(query);
-  if (looksLikeRepairQuestion(t)) return false;
-  // "Where is the battery disconnect on a 2005 Adventurer" is location, not a spec sheet.
-  if (
-    /\b(where(?:'s|\s+is)|how\s+do\s+i|how\s+to)\b/i.test(t) &&
-    !looksLikeSpecQuestion(t)
-  ) {
-    return false;
-  }
-  return looksLikeSpecQuestion(t) || looksLikeNamedCoachProductQuestion(t);
+/**
+ * Gemini Google Search is the preferred browse path whenever a key is set
+ * (RVGROK_RESEARCH_PROVIDER=auto). Spec / YMM / coach-report asks used to
+ * force xAI-only and skip the sidecar — that was the product-vision miss.
+ * Keep this hook so tests can still assert the Production path.
+ */
+export function skipGeminiForResearchAsk(_query: string): boolean {
+  return false;
 }
 
 const FIELD_LABEL: Record<QueriedResearchField, string> = {
@@ -737,9 +745,12 @@ export function buildResearchInstructions(opts: {
   maxAttempts?: number;
   previousQueries?: string[];
   style?: "xai-loop" | "gemini";
+  query?: string;
 }): string {
-  const lengthRule =
-    opts.profile === "voice"
+  const reportAsk = looksLikeCoachReportAsk(opts.query || "");
+  const lengthRule = reportAsk
+    ? coachReportResearchLengthRule(opts.profile)
+    : opts.profile === "voice"
       ? "VOICE: 1–3 spoken sentences. No bullets, no URLs, no markdown, no campaign numbers you cannot support."
       : "CHAT: 4–8 short bullets. No essay. No URLs unless they uniquely identify a bulletin.";
   const attempt = opts.attempt ?? 1;
@@ -761,7 +772,9 @@ export function buildResearchInstructions(opts: {
       : "Never repeat the same query. A later attempt will retry ONCE with a DIFFERENT query phrasing if this one times out or does not confirm.",
     lengthRule,
     "Match the ask:",
-    "- Specs/powertrain: search live OEM brochure / factory spec sheet / chassis sheet / dealer listing for THIS coach FIRST. Interpret the ask plus any catalog / identity lock — fill obvious brand/series (Phaeton → Tiffin, American Dream → American Coach, Lineage 31ZW → Grand Design Lineage Series F). Missing year: search the series + floorplan and quote a live year-specific number when the source names one. Never answer from training data. Never invent horsepower as OEM fact (no silent 450). If a live source exists for that unit, quote it — never EST / typical class range / low confidence. If not found, write CONFIRMED: no.",
+    reportAsk
+      ? "- Coach report / full specs: search live OEM brochure / factory spec sheet / chassis sheet / dealer listing for THIS coach FIRST. Interpret the ask plus any catalog / identity lock — fill obvious brand/series (Phaeton → Tiffin, American Dream → American Coach, Lineage 31ZW → Grand Design Lineage Series F). Missing year: search the series + floorplan. Collect Overview (what this floorplan is), Chassis & powertrain (chassis / engine / HP / torque / transmission / fuel), Weights & capacity (GVWR / UVW / tanks / fuel gallons when published), Layout & amenities (slides / sleeping / kitchen / suite / exterior only when a live source names them). Never invent a number or amenity. If a heading has no live fact, omit it and write CONFIRMED: no for that gap."
+      : "- Specs/powertrain: search live OEM brochure / factory spec sheet / chassis sheet / dealer listing for THIS coach FIRST. Interpret the ask plus any catalog / identity lock — fill obvious brand/series (Phaeton → Tiffin, American Dream → American Coach, Lineage 31ZW → Grand Design Lineage Series F). Missing year: search the series + floorplan and quote a live year-specific number when the source names one. Never answer from training data. Never invent horsepower as OEM fact (no silent 450). If a live source exists for that unit, quote it — never EST / typical class range / low confidence. If not found, write CONFIRMED: no.",
     "- Market value / pricing: live nationwide ASKING prices this turn for THIS coach. If a year is known, include that year AND two years older and two years newer (year ±2). If year is missing, search the named series / floorplan. Real public listings only (RV Trader / RVUSA / classifieds). Average those asks and return Low / Average / High. Never use a nightly competitor scrape, RVcountry competitor-latest, sample inventory CSV, frozen comps table, cached overnight scrape, NADA, J.D. Power, or any paid book. If you cannot find real listings this turn, write INSUFFICIENT — do not invent a band.",
     "- Troubleshooting / how-to / error codes / TSB / recall / install: likely symptoms, common OEM/forum/manual fixes, safety caveats. Cite uncertainty. Do not invent a campaign number, torque spec, part number, wiring color, sensor bypass, or a diagnosis you cannot support. Prefer OEM procedure / NHTSA. If none found, write UNKNOWN / no OEM procedure.",
     "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
@@ -796,6 +809,7 @@ export function buildWebSearchRequest(opts: {
     attempt: opts.attempt,
     maxAttempts: opts.maxAttempts,
     previousQueries: opts.previousQueries,
+    query: opts.query,
   });
 
   const body: Record<string, unknown> = {
@@ -874,6 +888,13 @@ export function formatWebSearchInjection(
       `Do not invent an OEM pin. ${pinRule}`,
     ].join(" ");
   }
+  const reportDraft =
+    result.ok && looksLikeCoachReportAsk(opts?.query || result.query || "")
+      ? formatCoachReportDraftInjection(result.notes, {
+          catalogBlock: opts?.catalogBlock,
+          query: opts?.query || result.query,
+        })
+      : "";
   if (result.ok) {
     if (gate.confirmed) {
       return [
@@ -881,7 +902,10 @@ export function formatWebSearchInjection(
         result.notes.slice(0, 3500),
         "You have live web research this turn — do not claim you have no internet or cannot get online.",
         "Catalog lock still wins if it names a number. Notes CONFIRM the queried field — use that live OEM / brochure / dealer fact. Do not replace a confirmed fact with a labeled EST / typical class range / low confidence.",
-      ].join("\n");
+        reportDraft,
+      ]
+        .filter(Boolean)
+        .join("\n");
     }
     if (!gate.exhausted) {
       return [
@@ -890,7 +914,10 @@ export function formatWebSearchInjection(
         "You have live web research this turn — do not claim you have no internet or cannot get online.",
         "Notes do not confirm the queried field. Do NOT give a labeled EST / typical class range. Another rephrased search is required.",
         pinRule,
-      ].join("\n");
+        reportDraft,
+      ]
+        .filter(Boolean)
+        .join("\n");
     }
     return [
       `WEB RESEARCH NOTES (${source} — unconfirmed after the research loop):`,
@@ -898,7 +925,10 @@ export function formatWebSearchInjection(
       "You have live web research this turn — do not claim you have no internet or cannot get online.",
       `Catalog lock still wins if it names a number. Research loop exhausted (${gate.attempts} genuine rephrased attempts, all unconfirmed). Use ONLY what these notes actually contain. ${LOW_CONFIDENCE_EST_RULE} Do not invent brochure numbers from training.`,
       pinRule,
-    ].join("\n");
+      reportDraft,
+    ]
+      .filter(Boolean)
+      .join("\n");
   }
   if (!gate.exhausted) {
     return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). Be honest that you could not browse. Do NOT give a labeled EST / typical class range — another rephrased search is required. Do not invent HP, engine, chassis, fuel, a bulletin, or a campaign number as OEM fact. ${pinRule}`;
@@ -1104,7 +1134,10 @@ export async function fetchWebSearchNotes(
   if (provider === "gemini") {
     const geminiKey = readGeminiApiKey(opts.geminiApiKey);
     if (geminiKey) {
-      const geminiBudget = Math.min(budgetMs, geminiResearchTimeoutMs(profile));
+      const geminiBudget = Math.min(
+        budgetMs,
+        geminiResearchTimeoutMs(profile, originalQuery),
+      );
       const gemini = await fetchGeminiResearchNotes({
         apiKey: geminiKey,
         query: expandResearchAsk(originalQuery, opts.catalogBlock),

@@ -12,6 +12,10 @@
  */
 
 import type { WebSearchNotes, WebSearchProfile } from "./webSearch.ts";
+import {
+  coachReportResearchLengthRule,
+  looksLikeCoachReportAsk,
+} from "./coachReport.ts";
 
 export const GEMINI_RESEARCH_MODEL = "gemini-2.5-flash";
 export const GEMINI_RESEARCH_MODELS = [
@@ -24,6 +28,12 @@ export const GEMINI_CHAT_RESEARCH_TIMEOUT_MS = 10_000;
 
 /** Voice first-shot budget — keep the spoken pause a phone lookup. */
 export const GEMINI_VOICE_RESEARCH_TIMEOUT_MS = 4_500;
+
+/**
+ * Spec / report / CARFAX-style browse — chat-class window, not the
+ * 10s / 4.5s talk-only first shot. David: 20–30s; 28s sits in the band.
+ */
+export const GEMINI_SPEC_REPORT_TIMEOUT_MS = 28_000;
 
 export const GEMINI_GENERATE_HOST = "generativelanguage.googleapis.com";
 
@@ -61,7 +71,13 @@ export function resolveResearchProvider(opts?: {
   return "xai";
 }
 
-export function geminiResearchTimeoutMs(profile: WebSearchProfile): number {
+export function geminiResearchTimeoutMs(
+  profile: WebSearchProfile,
+  query?: string,
+): number {
+  if (looksLikeCoachReportAsk(query || "")) {
+    return GEMINI_SPEC_REPORT_TIMEOUT_MS;
+  }
   return profile === "voice"
     ? GEMINI_VOICE_RESEARCH_TIMEOUT_MS
     : GEMINI_CHAT_RESEARCH_TIMEOUT_MS;
@@ -130,9 +146,12 @@ function isAbortLike(err: unknown): boolean {
 export function geminiResearchInstructions(opts: {
   catalog: string;
   profile: WebSearchProfile;
+  query?: string;
 }): string {
-  const lengthRule =
-    opts.profile === "voice"
+  const reportAsk = looksLikeCoachReportAsk(opts.query || "");
+  const lengthRule = reportAsk
+    ? coachReportResearchLengthRule(opts.profile)
+    : opts.profile === "voice"
       ? "VOICE: 1–3 spoken sentences. No bullets, no URLs, no markdown, no campaign numbers you cannot support."
       : "CHAT: 4–8 short bullets. No essay. No URLs unless they uniquely identify a bulletin.";
   return [
@@ -141,7 +160,9 @@ export function geminiResearchInstructions(opts: {
     "Evaluate whether the results CONFIRM the asked fact (a published number, location, procedure, listing band, or OEM pin for THIS coach). Salesman shorthand, misspellings, missing year, model-only, or floorplan-only are the same unit when identity is unambiguous — confirm those facts. Do not require every year/make/model/floorplan token to be spelled exactly as the OEM string. Never invent OEM numbers. Never merge incompatible tuples (Dutch Star is not Ventana; American Dream is not Tradition). If they confirm, write CONFIRMED: yes and the fact plus related specs when found (engine / GCWR / transmission). If they do not confirm, write CONFIRMED: no and what was missing. Do not invent a labeled EST / typical class range / low confidence in these notes — never when a live source exists.",
     lengthRule,
     "Match the ask:",
-    "- Specs/powertrain: search live OEM brochure / factory spec sheet / chassis sheet / dealer listing for THIS coach FIRST. Interpret the ask plus any catalog / identity lock — fill obvious brand/series (Phaeton → Tiffin, American Dream → American Coach, Lineage 31ZW → Grand Design Lineage Series F). Missing year: search the series + floorplan and quote a live year-specific number when the source names one. Never answer from training data. Never invent horsepower as OEM fact (no silent 450). If a live source exists for that unit, quote it — never EST / typical class range / low confidence. If not found, write CONFIRMED: no.",
+    reportAsk
+      ? "- Coach report / full specs: search live OEM brochure / factory spec sheet / chassis sheet / dealer listing for THIS coach FIRST. Interpret the ask plus any catalog / identity lock — fill obvious brand/series (Phaeton → Tiffin, American Dream → American Coach, Lineage 31ZW → Grand Design Lineage Series F). Missing year: search the series + floorplan. Collect Overview (what this floorplan is), Chassis & powertrain (chassis / engine / HP / torque / transmission / fuel), Weights & capacity (GVWR / UVW / tanks / fuel gallons when published), Layout & amenities (slides / sleeping / kitchen / suite / exterior only when a live source names them). Never invent a number or amenity. If a heading has no live fact, omit it and write CONFIRMED: no for that gap."
+      : "- Specs/powertrain: search live OEM brochure / factory spec sheet / chassis sheet / dealer listing for THIS coach FIRST. Interpret the ask plus any catalog / identity lock — fill obvious brand/series (Phaeton → Tiffin, American Dream → American Coach, Lineage 31ZW → Grand Design Lineage Series F). Missing year: search the series + floorplan and quote a live year-specific number when the source names one. Never answer from training data. Never invent horsepower as OEM fact (no silent 450). If a live source exists for that unit, quote it — never EST / typical class range / low confidence. If not found, write CONFIRMED: no.",
     "- Market value / pricing: live nationwide ASKING prices this turn for THIS coach. If a year is known, include that year AND two years older and two years newer (year ±2). If year is missing, search the named series / floorplan. Real public listings only (RV Trader / RVUSA / classifieds). Average those asks and return Low / Average / High. Never use a nightly competitor scrape, RVcountry competitor-latest, sample inventory CSV, frozen comps table, cached overnight scrape, NADA, J.D. Power, or any paid book. If you cannot find real listings this turn, write INSUFFICIENT — do not invent a band.",
     "- Troubleshooting / how-to / error codes / TSB / recall / install: likely symptoms, common OEM/forum/manual fixes, safety caveats. Cite uncertainty. Do not invent a campaign number, torque spec, part number, wiring color, sensor bypass, or a diagnosis you cannot support. Prefer OEM procedure / NHTSA. If none found, write UNKNOWN / no OEM procedure.",
     "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
@@ -161,7 +182,11 @@ export function buildGeminiResearchRequest(opts: {
   const catalog = clipCatalog(opts.catalogBlock);
   const profile = opts.profile ?? "chat";
   const extras = opts.extras !== false;
-  const instructions = geminiResearchInstructions({ catalog, profile });
+  const instructions = geminiResearchInstructions({
+    catalog,
+    profile,
+    query: opts.query,
+  });
 
   const body: Record<string, unknown> = {
     systemInstruction: {
@@ -177,9 +202,11 @@ export function buildGeminiResearchRequest(opts: {
   };
 
   if (extras) {
+    const reportAsk = looksLikeCoachReportAsk(opts.query);
     body.generationConfig = {
       temperature: 0.2,
-      maxOutputTokens: profile === "voice" ? 400 : 800,
+      maxOutputTokens:
+        profile === "voice" ? (reportAsk ? 700 : 400) : reportAsk ? 1600 : 800,
       // 2.5 Flash thinking adds seconds we cannot spend on a browse sidecar.
       thinkingConfig: { thinkingBudget: 0 },
     };

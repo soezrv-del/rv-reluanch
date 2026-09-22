@@ -75,7 +75,7 @@ export const LOCKED_WEIGHTS_SPEECH_RULE =
   "Never claim you lack a VERIFIED or non-GAP desk field. Speak every VERIFIED number (e.g. GVWR 49000). Do not say you lack GVWR when a VERIFIED GVWR line is present. Desk / SPEC REPORT stays on the Facts brochure snapshot — do not write EST onto the desk or re-GAP a Facts number. If a field is GAP on the desk, conversational answers may speak a labeled EST / typical class range after WEB RESEARCH — never as an OEM pin.";
 
 export const NO_DUPLICATE_MARKDOWN_SHEET =
-  "WRITTEN SPEC SHEET: the structured desk sheet already mounted is the only written sheet. Do not output a second markdown Spec Sheet, Weight ratings table, or GVWR/GCWR/UVW/NCC: GAP block that re-GAPs a VERIFIED field.";
+  "WRITTEN COACH REPORT: the chat bubble is the four-section rundown (Overview · Chassis & powertrain · Weights & capacity · Layout & amenities). The desk card copies those numbers. Do not output a second markdown Spec Sheet, Weight ratings table, or GVWR/GCWR/UVW/NCC: GAP block that re-GAPs a named or VERIFIED field.";
 
 export function formatLockedWeightsBlock(
   identity: Pick<CoachIdentity, "year" | "make" | "model" | "floorplan">,

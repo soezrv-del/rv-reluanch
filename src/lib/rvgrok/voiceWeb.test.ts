@@ -27,6 +27,8 @@ import {
   VOICE_RESEARCH_HOLD_INSTRUCTIONS,
   VOICE_RESEARCH_HOLD_PHRASE,
   VOICE_WEB_ACCESS_BLOCKED_REASON,
+  SPEC_REPORT_RESEARCH_CLIENT_BUDGET_MS,
+  voiceWebSearchClientBudgetMs,
   VOICE_WEB_SEARCH_CLIENT_BUDGET_MS,
 } from "./voiceWeb.ts";
 import {
@@ -272,6 +274,32 @@ test("voice research budget is 24s server / 25s client — OEM window, not 60s d
   assert.doesNotMatch(webSearch, /let me check that/i);
   assert.doesNotMatch(webSearch, /VOICE_WEB_SEARCH_TIMEOUT_MS = 7_000/);
   assert.doesNotMatch(webSearch, /VOICE_WEB_SEARCH_TIMEOUT_MS = 10_000/);
+});
+
+test("spec / report voice sidecar uses 28s+1s client budget — not the 10s / 25s talk-only abort", () => {
+  assert.equal(SPEC_REPORT_RESEARCH_CLIENT_BUDGET_MS, 29_000);
+  assert.equal(
+    voiceWebSearchClientBudgetMs(
+      "Give me the spec report on the 2021 American Dream 42Q",
+    ),
+    SPEC_REPORT_RESEARCH_CLIENT_BUDGET_MS,
+  );
+  assert.equal(
+    voiceWebSearchClientBudgetMs("What's the GVWR of a 2022 Tiffin Phaeton 40IH?"),
+    SPEC_REPORT_RESEARCH_CLIENT_BUDGET_MS,
+  );
+  assert.equal(
+    voiceWebSearchClientBudgetMs("check engine light reset Ford E450"),
+    VOICE_WEB_SEARCH_CLIENT_BUDGET_MS,
+  );
+  const api = readFileSync(
+    join(root, "../../routes/api/rvgrok.web-research.ts"),
+    "utf8",
+  );
+  assert.match(api, /SPEC_REPORT_RESEARCH_TIMEOUT_MS/);
+  assert.match(api, /looksLikeCoachReportAsk/);
+  const voiceWeb = src("voiceWeb.ts");
+  assert.match(voiceWeb, /voiceWebSearchClientBudgetMs\(opts\.query\)/);
 });
 
 test("client fetch timeout/abort falls back without claiming a lookup", async () => {

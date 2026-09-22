@@ -32,6 +32,7 @@ import {
   expandResearchAsk,
   researchIdentityFromParams,
   skipGeminiForResearchAsk,
+  SPEC_REPORT_RESEARCH_TIMEOUT_MS,
 } from "./webSearch.ts";
 import {
   looksLikeCoachFactAsk,
@@ -211,10 +212,10 @@ test("sidecar HTTP 403 injects WEB SEARCH NOT AVAILABLE — the spoken Live Voic
   assert.match(injection, /Search returned nothing after a retry/);
 });
 
-test("Lineage 31ZW spec asks skip Gemini and name Series F Super C", () => {
+test("Lineage 31ZW spec asks keep Gemini sidecar and name Series F Super C", () => {
   const q = "2026 Grand Design Lineage 31ZW";
-  assert.equal(skipGeminiForResearchAsk(q), true);
-  assert.equal(skipGeminiForResearchAsk("2026 Lineage 31W Z"), true);
+  assert.equal(skipGeminiForResearchAsk(q), false);
+  assert.equal(skipGeminiForResearchAsk("2026 Lineage 31W Z"), false);
   assert.equal(
     skipGeminiForResearchAsk(
       "Where is the battery disconnect on a 2005 Winnebago Adventurer?",
@@ -249,7 +250,25 @@ test("chat and voice routes pass the new timeout/profile", () => {
   assert.match(voice, /executeWebResearch/);
   assert.match(voice, /webResearchJsonResponse/);
   assert.match(voice, /maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS/);
+  assert.match(voice, /SPEC_REPORT_RESEARCH_TIMEOUT_MS/);
+  assert.match(voice, /looksLikeCoachReportAsk/);
   assert.doesNotMatch(voice, /fetchWebSearchNotes/);
+});
+
+test("spec / report research uses 28s chat-class budget — not the 10s Gemini first-shot", () => {
+  assert.equal(SPEC_REPORT_RESEARCH_TIMEOUT_MS, 28_000);
+  assert.ok(SPEC_REPORT_RESEARCH_TIMEOUT_MS >= 20_000);
+  assert.ok(SPEC_REPORT_RESEARCH_TIMEOUT_MS <= 30_000);
+  assert.equal(VOICE_WEB_SEARCH_TIMEOUT_MS, 24_000, "talk-only voice stays 24s");
+  assert.equal(CHAT_WEB_SEARCH_TIMEOUT_MS, 36_000);
+  const specReq = buildWebSearchRequest({
+    model: "grok-4.7",
+    query: "Give me the spec report on the 2021 American Dream 42Q",
+    profile: "chat",
+  });
+  const packed = JSON.stringify(specReq);
+  assert.match(packed, /Overview · Chassis & powertrain · Weights & capacity/);
+  assert.doesNotMatch(packed, /4–8 short bullets|4-8 short bullets/);
 });
 
 function jsonResponse(data: unknown, status = 200): Response {

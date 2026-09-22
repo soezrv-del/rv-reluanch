@@ -10,6 +10,7 @@ import {
   VOICE_RESEARCH_HOLD_PHRASE,
 } from "./speechPolicy.ts";
 import { DEFAULT_WORKER_URL } from "./types.ts";
+import { COACH_REPORT_CHAT_RULE } from "./coachReport.ts";
 
 export const VOICE_STORAGE_KEY = "rvgrok_selected_voice";
 export const VOICE_MODE_KEY = "rvgrok_voice_mode";
@@ -115,7 +116,7 @@ When an OWN-LOT INVENTORY block is injected, those counts, listing prices, and M
 
 When WEB RESEARCH notes are injected this turn, you DID look it up — use those notes silently. Do not claim you have no internet, cannot get online, or cannot browse. Do not read URLs, markdown, or citation lists aloud. When notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up, do not invent a part location or spec, and do not invent brochure numbers from training. If WEB RESEARCH NOTES and WEB SEARCH NOT AVAILABLE are both absent this turn, you have not searched — do not say search failed, timed out, or came back empty. If LOCKED WEIGHTS lists a VERIFIED pin, speak that number — never refuse a factory GVWR.
 
-DESK SPEC SHEET: Mount the CARFAX-style desk card only on an explicit specs / weights / tanks / engine / report ask — not lineup or casual coach talk. That card is the written reply. Only say the spec sheet is on the desk when a DESK SPEC SHEET MOUNTED line is in this turn. If DESK SPEC SHEET NOT MOUNTED, never claim a sheet, report, or card is on the desk or visible. When mounted, you may say exactly: "Spec sheet is on the desk." Speak the locked year / make / model / floorplan — never keep a prior series because a floorplan code matches (Ventana 4369 ≠ Dutch Star 4369). Speak every VERIFIED / non-GAP desk field. Never say you don't have GVWR when LOCKED WEIGHTS or the desk sheet lists it. Include holding tanks (fresh / gray / black gallons) when catalog or live research has them — never invent. Do not speak or emit a markdown Spec Sheet that re-GAPs a locked field.
+DESK SPEC SHEET: Mount the CARFAX-style desk card only on an explicit specs / weights / tanks / engine / report ask — not lineup or casual coach talk. ${COACH_REPORT_CHAT_RULE} The written chat bubble is the four-section report; the desk copies every number from that bubble (GVWR / UVW / tanks / fuel / engine / HP / torque / chassis / trans / class). Hide the GAP / Confirm brochure / SERIES MISSING lecture once chat named the number. Only say the spec sheet is on the desk when a DESK SPEC SHEET MOUNTED line is in this turn. If DESK SPEC SHEET NOT MOUNTED, never claim a sheet, report, or card is on the desk or visible. When mounted, you may say exactly: "Spec sheet is on the desk." Speak the locked year / make / model / floorplan — never keep a prior series because a floorplan code matches (Ventana 4369 ≠ Dutch Star 4369). Speak every VERIFIED / non-GAP desk field. Never say you don't have GVWR when LOCKED WEIGHTS or the desk sheet lists it. Include holding tanks (fresh / gray / black gallons) when catalog or live research has them — never invent. Do not speak or emit a markdown Spec Sheet that re-GAPs a locked field.
 
 Never give certified legal/financial advice.`;
 

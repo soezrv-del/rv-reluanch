@@ -322,6 +322,8 @@ test("last assistant spec block paints GVWR/UVW/fuel — never Confirm brochure 
   assert.doesNotMatch(val("Fuel capacity") || "", /100/);
   assert.doesNotMatch(after!.presenceNote, /SERIES MISSING/i);
   assert.doesNotMatch(after!.presenceNote, /Say the series is missing/i);
+  assert.equal(after!.presenceNote, "");
+  assert.equal(after!.gaps.length, 0, "hide GAP lecture once chat named a number");
   assert.match(src(root, "deskSheet.ts"), /chatSpecBlock/);
   assert.match(src(root, "chatSpecBlock.ts"), /last assistant/i);
 });
@@ -356,6 +358,8 @@ test("desk paints holding tanks from chat — never Confirm brochure over spoken
   assert.equal(val("Black"), "34 gal");
   assert.doesNotMatch(val("Fresh") || "", /Confirm brochure|GAP/i);
   assert.doesNotMatch(val("Gray") || "", /Confirm brochure|GAP/i);
+  assert.equal(after!.presenceNote, "");
+  assert.equal(after!.gaps.length, 0, "hide GAP lecture once chat named tank gallons");
 });
 
 test("2026 Lineage 31ZW chat prose paints Super C / F-600 / 6.7 / 330 / 950 / tanks and hides GAP lecture", () => {
