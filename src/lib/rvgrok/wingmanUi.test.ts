@@ -51,6 +51,7 @@ test("Grok tab landing is Lot wingman on Raidho — no family camping plate", ()
   assert.match(css, /\.grok-frost \{[\s\S]*?blur\(28px\)/);
   assert.match(css, /--color-grok-mic:\s*#e8893a/);
   assert.match(css, /--font-display:\s*"Fraunces"/);
+  assert.match(css, /html\.kb-open \[data-rvgrok-composer\]/);
   assert.doesNotMatch(css, /hero-camp|family camping|campfire photo/i);
 });
 

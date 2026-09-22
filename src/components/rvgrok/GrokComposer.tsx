@@ -1,6 +1,21 @@
-import type { KeyboardEvent, RefObject } from "react";
+import type { FocusEvent, KeyboardEvent, RefObject } from "react";
 import { Camera, Loader2, Mic, Radio, Send, Video, X } from "lucide-react";
+import { scrollFieldIntoVisibleArea } from "@/lib/hooks/useKeyboardInset";
 import { cn } from "@/lib/utils";
+
+function keepComposerFieldVisible(e: FocusEvent<HTMLTextAreaElement>) {
+  const el = e.currentTarget;
+  const kb =
+    Number.parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--kb-inset",
+      ) || "0",
+    ) || 0;
+  scrollFieldIntoVisibleArea(el, kb);
+  window.setTimeout(() => {
+    if (document.activeElement === el) scrollFieldIntoVisibleArea(el, kb);
+  }, 280);
+}
 
 export function GrokComposer({
   displayInput,
@@ -170,6 +185,7 @@ export function GrokComposer({
             onChange={(e) => {
               if (!isRecording) onChange(e.target.value);
             }}
+            onFocus={keepComposerFieldVisible}
             onKeyDown={onKeyDown}
             rows={1}
             maxLength={2000}
