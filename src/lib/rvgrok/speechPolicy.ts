@@ -9,7 +9,7 @@ import {
   CATALOG_MISS_MUST_SEARCH,
   ESTIMATE_STANDING_POLICY,
   LABELED_ESTIMATE_RULE,
-} from "./estimatePolicy";
+} from "./estimatePolicy.ts";
 
 /** Spoken once when Live Voice / a new Ask Grok thread starts. Never repeat. */
 export const RV_GROK_SESSION_INTRO =

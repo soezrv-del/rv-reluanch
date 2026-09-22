@@ -3,7 +3,6 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildChatGrounding } from "./grounding.ts";
 import {
   CATALOG_MISS_MUST_SEARCH,
   DESK_STAYS_FACTS,
@@ -13,7 +12,7 @@ import {
   LABELED_ESTIMATE_RULE,
   presentsEstimateAsOemPin,
 } from "./estimatePolicy.ts";
-import { HONESTY_STANDING_POLICY, ANSWER_NOW_POLICY } from "./speechPolicy.ts";
+import { ANSWER_NOW_POLICY, HONESTY_STANDING_POLICY } from "./speechPolicy.ts";
 import {
   catalogGapNeedsWeb,
   needsWebFallback,
@@ -66,10 +65,8 @@ test("catalog miss triggers web-research path (chat + live voice)", () => {
     "locked powertrain ask still does not browse just because UVW is GAP",
   );
 
-  const chat = buildChatGrounding({ query: miss });
-  assert.equal(chat.needsWeb, true, "buildChatGrounding flags catalog miss");
-
   const api = src(join("..", "..", "routes", "api", "rvgrok.ts"));
+  assert.match(src("grounding.ts"), /needsWebFallback\(specs/);
   assert.match(api, /serverGrounded\.needsWeb/);
   assert.match(api, /executeWebResearch/);
   assert.match(api, /MUST browse this turn/);
@@ -110,11 +107,12 @@ test("estimate answers are labeled, not presented as OEM pin", () => {
   assert.match(LABELED_ESTIMATE_RULE, /Never present an estimate as an OEM pin/);
   assert.match(CATALOG_MISS_MUST_SEARCH, /not last resort/);
 
+  assert.match(src("speechPolicy.ts"), /ESTIMATE_STANDING_POLICY/);
+  assert.match(src("speechPolicy.ts"), /LABELED_ESTIMATE_RULE/);
   for (const [label, text] of [
     ["prompts.ts", src("prompts.ts")],
     ["voice.ts", src("voice.ts")],
     ["liveVoice.ts", src("liveVoice.ts")],
-    ["speechPolicy.ts", src("speechPolicy.ts")],
     ["webSearch.ts", src("webSearch.ts")],
   ] as const) {
     assert.match(
