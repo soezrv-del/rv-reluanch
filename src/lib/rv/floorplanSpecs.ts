@@ -2229,20 +2229,30 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   // Thor ACE — 2026 ACE brochure spec table (same 29D/29G/30C/32B codes MY23–27).
   ...gvwrPins("thor", "ace", 2023, 2027, ["29D", "29G", "30C"], 18000),
   ...gvwrPins("thor", "ace", 2023, 2027, ["32B"], 22000),
-  // Thor Hurricane — 2026 Hurricane brochure table. 36H prints on that card; 35A (MY27) unprinted.
+  // Thor Hurricane — 2026 Hurricane brochure table. 36H prints on that card.
+  // 35A MY27: 2027 Thor Motor Coach Hurricane brochure (RVUSA) Gross Vehicle (GVWR); OEM thormotorcoach.com/hurricane MY27
   ...gvwrPins("thor", "hurricane", 2025, 2027, ["29L"], 18000),
   ...gvwrPins("thor", "hurricane", 2025, 2026, ["35G", "35R"], 22000),
   ...gvwrPins("thor", "hurricane", 2025, 2027, ["35J"], 22000),
   ...gvwrPins("thor", "hurricane", 2026, 2027, ["36H"], 24000),
+  ...gvwrPins("thor", "hurricane", 2027, 2027, ["35A"], 22000),
   // Thor Windsport — 2026 Windsport brochure table (no 36H on that card).
+  // 35A / 36H MY27: 2027 Thor Motor Coach Windsport brochure (RVUSA) Gross Vehicle (GVWR); OEM thormotorcoach.com/windsport MY27
   ...gvwrPins("thor", "windsport", 2025, 2027, ["29L"], 18000),
   ...gvwrPins("thor", "windsport", 2025, 2026, ["35G", "35R"], 22000),
   ...gvwrPins("thor", "windsport", 2025, 2027, ["35J"], 22000),
+  ...gvwrPins("thor", "windsport", 2027, 2027, ["35A"], 22000),
+  ...gvwrPins("thor", "windsport", 2027, 2027, ["36H"], 24000),
+  // Thor Aria — 2027 Thor Motor Coach Aria brochure (RVUSA) Gross Vehicle (GVWR); OEM thormotorcoach.com/aria MY27
+  ...gvwrPins("thor", "aria", 2027, 2027, ["3702", "3901", "4000"], 35320),
   // Thor Four Winds — 2026 Four Winds brochure Ford E-450 block only (skip Ford/Chevy dual-GVWR E-specs).
   ...gvwrPins("thor", "four winds", 2026, 2027, ["28Z", "29K", "31E", "31H"], 14500),
   // Thor Palazzo GT — 2026 Palazzo GT brochure spec table. Not bare Palazzo.
   ...gvwrPins("thor", "palazzo gt", 2024, 2026, ["33.5", "33.6"], 26000),
   ...gvwrPins("thor", "palazzo gt", 2024, 2026, ["37.4", "37.5"], 32350),
+  // Thor Palazzo (not GT) — 2027 Thor Motor Coach Palazzo brochure (RVUSA) Gross Vehicle (GVWR); OEM thormotorcoach.com/palazzo MY27
+  ...gvwrPins("thor", "palazzo", 2027, 2027, ["33.5", "33.6"], 26000),
+  ...gvwrPins("thor", "palazzo", 2027, 2027, ["37.4", "37.5"], 32350),
   // Thor Vegas — 2026 Vegas brochure spec table (OH 09/10/2025). 24.1 is E-350 12,500; others E-450 14,500.
   ...gvwrPins("thor", "vegas", 2026, 2027, ["24.1"], 12500),
   ...gvwrPins("thor", "vegas", 2026, 2027, ["26.1", "26.2", "28.1"], 14500),
@@ -2254,6 +2264,10 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   ...gvwrPins("thor", "quantum", 2026, 2027, ["LC28", "KW29", "LF31", "HS31"], 14500),
   // Thor Chateau Sprinter — 2026 Chateau Sprinter brochure: 24LT / 24LV US 12,125. Not gas Chateau.
   ...gvwrPins("thor", "chateau sprinter", 2026, 2027, ["24LT", "24LV"], 12125),
+  // Thor Chateau (gas) MY27 — OEM thormotorcoach.com/chateau MY27 floorplan GVWR (primary); 2027 brochure dual chassis noted but OEM single used
+  ...gvwrPins("thor", "chateau", 2027, 2027, ["19X", "19Z"], 11500),
+  ...gvwrPins("thor", "chateau", 2027, 2027, ["21Z", "22Z", "25Z"], 12500),
+  ...gvwrPins("thor", "chateau", 2027, 2027, ["28G", "28Z", "29K"], 14500),
   // Winnebago Vista — OEM 2025 Vista spec table.
   ...gvwrPins("winnebago", "vista", 2025, 2025, ["29V"], 18000),
   ...gvwrPins("winnebago", "vista", 2025, 2025, ["31B", "33K", "34R"], 22000),
