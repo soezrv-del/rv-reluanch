@@ -1,6 +1,7 @@
 /**
- * Optional xAI web search sidecar for chat when the turn needs live notes
- * (troubleshooting / OEM / forum / manual, or a missing hard spec).
+ * Required xAI web search sidecar when the catalog cannot answer
+ * (troubleshooting / OEM / forum / manual, missing hard spec, or a
+ * catalog miss). Callers must not skip this path on a catalog miss.
  *
  * Confirmed: Live Search `search_parameters` on chat completions is retired
  * (410 Gone). The working path is POST /v1/responses with { type: "web_search" }.
@@ -173,14 +174,14 @@ function researchInstructions(opts: {
     "Search ONCE, then write. Do not run a second search or browse extra pages.",
     lengthRule,
     "Match the ask:",
-    "- Specs/powertrain: OEM brochure / chassis sheet / door-sticker for THAT year + make + model + floorplan. Never invent horsepower (no silent 450). If not found, write UNKNOWN and what to verify.",
+    "- Specs/powertrain: OEM brochure / chassis sheet / door-sticker for THAT year + make + model + floorplan. Never invent horsepower as OEM fact (no silent 450). If not found, write a labeled EST / typical class range — never as an OEM pin.",
     "- Market value / pricing: live nationwide ASKING prices this turn for THAT exact year + make + model AND two years older and two years newer (year ±2). Real public listings only (RV Trader / RVUSA / classifieds). Average those asks and return Low / Average / High. Never use a nightly competitor scrape, RVcountry competitor-latest, sample inventory CSV, frozen comps table, cached overnight scrape, NADA, J.D. Power, or any paid book. If you cannot find real listings this turn, write INSUFFICIENT — do not invent a band.",
     "- Troubleshooting / how-to / error codes / TSB / recall / install: likely symptoms, common OEM/forum/manual fixes, safety caveats. Cite uncertainty. Do not invent a campaign number, torque spec, part number, wiring color, sensor bypass, or a diagnosis you cannot support. Prefer OEM procedure / NHTSA. If none found, write UNKNOWN / no OEM procedure.",
     "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
     "Floorplan letters are labels only — do not decode bunks or a half-bath from the code.",
     opts.catalog
       ? `Catalog lock (do not contradict these numbers). If this lock names engine / HP / class, the coach IS in the catalog — do not write "not in catalogs" or "wait for a brochure":\n${opts.catalog}`
-      : "No catalog row was available. Search OEM / RVUSA / brochure sources for THAT year + make + model. If the web does not confirm a number, say UNKNOWN. Do not tell the user to go check the OEM site instead of researching.",
+      : "No catalog row was available. Search OEM / RVUSA / brochure sources for THAT year + make + model. If the web does not confirm a number, write a labeled EST / typical class range — never as an OEM pin. Do not tell the user to go check the OEM site instead of researching.",
   ].join("\n");
 }
 
@@ -261,10 +262,10 @@ export function formatWebSearchInjection(result: WebSearchNotes): string {
       "WEB RESEARCH NOTES (xAI web_search — may be incomplete):",
       result.notes.slice(0, 3500),
       "You have live web research this turn — do not claim you have no internet or cannot get online.",
-      "Catalog lock still wins if it names a number. Use notes for troubleshooting / OEM / forum context. If notes do not confirm a fact, say unknown / EST.",
+      "Catalog lock still wins if it names a number. Use notes for troubleshooting / OEM / forum context. If notes do not confirm a fact, give a labeled EST / typical class range — never as an OEM pin.",
     ].join("\n");
   }
-  return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). Be honest that you could not browse. Give your best EST. and what to verify — do not invent HP, engine, chassis, fuel, a bulletin, or a campaign number.`;
+  return `WEB SEARCH NOT AVAILABLE this turn (${result.reason}). Be honest that you could not browse. Give a labeled EST / typical class range and what to verify — never present it as an OEM pin. Do not invent HP, engine, chassis, fuel, a bulletin, or a campaign number as OEM fact.`;
 }
 
 async function postResponses(opts: {

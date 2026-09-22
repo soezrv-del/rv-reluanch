@@ -274,7 +274,8 @@ test("generic asks and catalog compares do not speak a research hold", () => {
   assert.equal(shouldSpeakVoiceResearchHold(casualAsk), false);
   assert.equal(
     decideVoiceWebResearch({ transcript: casualAsk, specs: null }).action,
-    "pass",
+    "research",
+    "catalog miss must still run web-research even when the hold is off",
   );
 
   const inventory = "How many diesels do we have on the lot?";

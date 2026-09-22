@@ -3,11 +3,11 @@
  *
  * Detection is NOT forked: `decideVoiceWebResearch` calls `needsWebFallback`
  * from `webIntent.ts` (same function chat uses via `buildChatGrounding`).
- * The spoken hold is narrower than browse: only true last-resort research
- * (repair / market / off-catalog / named-coach or spec + catalog GAP)
- * speaks VOICE_RESEARCH_HOLD_PHRASE ("give me one second"). Catalog
- * compares, inventory/own-lot inject, and generic "what's a good Class A"
- * answers now — no stall.
+ * The spoken hold is narrower than browse: repair / market / off-catalog /
+ * named-coach or spec + catalog GAP speaks VOICE_RESEARCH_HOLD_PHRASE
+ * ("give me one second"). Catalog compares stay offline. Inventory /
+ * own-lot inject researches without a stall. Catalog miss still researches
+ * even when the hold is off — search is required, not optional.
  */
 
 import {
@@ -50,7 +50,7 @@ export const VOICE_WEB_SEARCH_CLIENT_BUDGET_MS =
   VOICE_WEB_SEARCH_TIMEOUT_MS + 1_000;
 
 export const VOICE_RESEARCH_ANSWER_INSTRUCTIONS =
-  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Year / make / model reports speak the CATALOG / BROCHURE lock ONLY — never say not in listings because own-lot has no unit or only a sibling series. Use WEB RESEARCH notes if they are present and successful. If an OWN-LOT INVENTORY block is a hit, speak those lot counts, any listing prices / Low-Avg-High, and Matching units rows printed there — diesel is Class A Diesel + Class Super C (no fuel field); do not invent a VIN, unit, or price; never say the snapshot has no price data when prices are in the block; never say you can't pull specific units or that the snapshot doesn't break out a list when Matching units rows are present or Matched > 0 with prices. Catalog GAP does not apply to inventory / in-stock asks — never say catalog gap, never say check your own lot listing, never ask them to share a year. If Matched is 0, say none on our lot snapshot — never not in listings for a catalog-known coach, never swap a sibling series. If the block says UNAVAILABLE, say unavailable — never speak 0 as a stock count. If catalog is UNKNOWN / GAP on a specs ask (not inventory) or own-lot missed, use the browse notes — do not guess, do not stop at I don't know. Speak every VERIFIED LOCKED WEIGHTS number — never say you don't have a VERIFIED GVWR. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a nationwide market value ask (not our own-lot listing prices): speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample inventory CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
+  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Year / make / model reports speak the CATALOG / BROCHURE lock ONLY — never say not in listings because own-lot has no unit or only a sibling series. Use WEB RESEARCH notes if they are present and successful. If an OWN-LOT INVENTORY block is a hit, speak those lot counts, any listing prices / Low-Avg-High, and Matching units rows printed there — diesel is Class A Diesel + Class Super C (no fuel field); do not invent a VIN, unit, or price; never say the snapshot has no price data when prices are in the block; never say you can't pull specific units or that the snapshot doesn't break out a list when Matching units rows are present or Matched > 0 with prices. Catalog GAP does not apply to inventory / in-stock asks — never say catalog gap, never say check your own lot listing, never ask them to share a year. If Matched is 0, say none on our lot snapshot — never not in listings for a catalog-known coach, never swap a sibling series. If the block says UNAVAILABLE, say unavailable — never speak 0 as a stock count. If catalog is UNKNOWN / GAP on a specs ask (not inventory) or own-lot missed, use the browse notes then speak a labeled EST / typical class range if still unpinned — never as an OEM pin. Do not stop at I don't know. Speak every VERIFIED LOCKED WEIGHTS number — never say you don't have a VERIFIED GVWR. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a nationwide market value ask (not our own-lot listing prices): speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample inventory CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
 
 export type VoiceWebDecision =
   | { action: "pass" }
@@ -82,7 +82,7 @@ export function shouldSpeakVoiceResearchHold(
   if (looksLikeLiveResearchQuestion(t)) return true;
   if (looksLikeCatalogAnswerableCoachCompare(t)) return false;
   if (looksLikeOffCatalogQuestion(t)) return true;
-  if (catalogGapNeedsWeb(specs ?? null)) {
+  if (catalogGapNeedsWeb(specs ?? null, t)) {
     if (looksLikeNamedCoachProductQuestion(t) || looksLikeSpecQuestion(t)) {
       return true;
     }
@@ -94,7 +94,7 @@ export function shouldSpeakVoiceResearchHold(
  * Same trigger as text chat: `needsWebFallback` from `webIntent.ts`.
  * Callers pass specs from `buildChatGrounding` when a coach is in context.
  * Greetings / lifestyle / payment stay on the catalog-only voice path.
- * Non-true-research asks (except inventory inject) pass — answer now.
+ * Catalog miss always researches — hold is optional, search is not.
  */
 export function decideVoiceWebResearch(opts: {
   transcript: string;
@@ -107,12 +107,8 @@ export function decideVoiceWebResearch(opts: {
     return { action: "pass" };
   }
   const speakHold = shouldSpeakVoiceResearchHold(transcript, opts.specs);
-  const inventory =
-    looksLikeInventoryOrCountQuestion(transcript) ||
-    looksLikeOwnLotStockQuestion(transcript);
-  if (!speakHold && !inventory) {
-    return { action: "pass" };
-  }
+  // Catalog miss / GAP / live research: always run the sidecar.
+  // Do not skip because the spoken hold is off.
   return {
     action: "research",
     query: transcript.slice(0, 400),
@@ -151,14 +147,14 @@ export function formatVoiceWebSearchInjection(result: WebSearchNotes): string {
       stripNotesForSpeech(result.notes),
       "Speak a short conversational answer. Do not claim you have no internet.",
       "Do not read URLs, markdown, or citation lists. Catalog lock still wins on numbers.",
-      "If notes do not confirm a fact, say you are not sure — do not invent a location or spec.",
+      "If notes do not confirm a fact, speak a labeled EST / typical class range — never as an OEM pin.",
     ].join("\n");
   }
   return [
     `WEB SEARCH NOT AVAILABLE this turn (${result.reason}).`,
     "Do not claim you looked this up or browsed the web.",
     "Do not assert a specific part location you do not have.",
-    "Speak a short honest catalog-only answer and what to verify. Do not invent.",
+    "Speak a short honest answer. If a coach field is still missing, give a labeled EST / typical class range — never as an OEM pin. Do not invent an OEM pin.",
   ].join(" ");
 }
 

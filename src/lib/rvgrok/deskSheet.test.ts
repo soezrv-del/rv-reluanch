@@ -363,9 +363,9 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(prompts, /LOCKED WEIGHTS/);
   assert.match(grounding, /withDeskSheetSpeechRule/);
   assert.match(grounding, /formatLockedWeightsBlock/);
-  assert.match(grounding, /findOemGvwrLbs/);
+  assert.match(grounding, /resolveLockedOemWeights/);
   assert.match(grounding, /VERIFIED GVWR/);
-  assert.match(grounding, /Do not say you lack GVWR/);
+  assert.match(grounding, /never say you don't have GVWR/i);
   assert.match(src(root, "lockedWeights.ts"), /VERIFIED GVWR/);
   assert.match(src(root, "lockedWeights.ts"), /resolveFactsBrochure/);
   assert.match(src(root, "liveVoice.ts"), /never say you don't have GVWR/i);

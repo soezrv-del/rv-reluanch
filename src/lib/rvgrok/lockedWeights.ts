@@ -67,12 +67,12 @@ export function formatLockedWeightLine(
   if (lbs != null && Number.isFinite(lbs) && lbs > 0) {
     return `- VERIFIED ${label} ${Math.round(lbs)} from OEM pin`;
   }
-  return `- ${label}: GAP — no OEM pin (do not invent)`;
+  return `- ${label}: GAP — no OEM pin. Conversational answer may give a labeled EST / typical class range after WEB RESEARCH — never as an OEM pin. Do not write EST onto the desk.`;
 }
 
 /** Standing rule injected whenever a desk sheet mounts or a catalog lock exists. */
 export const LOCKED_WEIGHTS_SPEECH_RULE =
-  "Never claim you lack a VERIFIED or non-GAP desk field. Speak every VERIFIED number (e.g. GVWR 49000). Do not say you lack GVWR when a VERIFIED GVWR line is present. UVW may stay GAP if there is no OEM UVW pin.";
+  "Never claim you lack a VERIFIED or non-GAP desk field. Speak every VERIFIED number (e.g. GVWR 49000). Do not say you lack GVWR when a VERIFIED GVWR line is present. Desk / SPEC REPORT stays on the Facts brochure snapshot — do not write EST onto the desk or re-GAP a Facts number. If a field is GAP on the desk, conversational answers may speak a labeled EST / typical class range after WEB RESEARCH — never as an OEM pin.";
 
 export const NO_DUPLICATE_MARKDOWN_SHEET =
   "WRITTEN SPEC SHEET: the structured desk sheet already mounted is the only written sheet. Do not output a second markdown Spec Sheet, Weight ratings table, or GVWR/GCWR/UVW/NCC: GAP block that re-GAPs a VERIFIED field.";

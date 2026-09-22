@@ -4,8 +4,9 @@
  * thin CATALOG_INDEX names in coachCompare.ts.
  *
  * Standing rule: browse whenever the answer is unknown / catalog GAP
- * (no row, UNKNOWN hard fields) or own-lot missed — then answer this turn.
- * Do not guess. Do not stop at "I don't know" if browse can help.
+ * (no row, UNKNOWN hard fields, missing OEM weight pin on a weight ask)
+ * or own-lot missed — then answer this turn. Search is required on a
+ * catalog miss — not optional. After notes, a labeled EST is allowed.
  * Inventory / diesel-count / in-stock still trip this detector so voice+chat
  * can inject the own-lot snapshot; a *hit* skips public web, a miss browses.
  * Skip only hi / lifestyle / payment / image-only turns, and
@@ -32,6 +33,10 @@ export {
 
 export type WebFallbackSpecs = {
   missingHard: boolean;
+  /** True when GVWR or UVW has no Facts / OEM published number. */
+  missingOemWeightPin?: boolean;
+  oemGvwrLbs?: number | null;
+  oemUvwLbs?: number | null;
 } | null;
 
 export type WebFallbackOpts = {
@@ -197,10 +202,35 @@ export function looksLikeNamedCoachProductQuestion(text: string): boolean {
   return PRODUCT_ABOUT_RE.test(t);
 }
 
-/** No catalog row, or hard fields still UNKNOWN / EST — browse, then answer. */
-export function catalogGapNeedsWeb(specs: WebFallbackSpecs): boolean {
+const WEIGHT_ASK_RE =
+  /\b(gvwr|gcwr|uvw|ncc|ccc|hitch|payload|weight)\b/i;
+
+function missingOemWeightPinOf(specs: WebFallbackSpecs): boolean {
   if (!specs) return true;
-  return specs.missingHard;
+  if (typeof specs.missingOemWeightPin === "boolean") {
+    return specs.missingOemWeightPin;
+  }
+  if ("oemGvwrLbs" in specs || "oemUvwLbs" in specs) {
+    return specs.oemGvwrLbs == null || specs.oemUvwLbs == null;
+  }
+  return false;
+}
+
+/** No catalog row, UNKNOWN hard fields, or a weight ask with no OEM pin. */
+export function catalogGapNeedsWeb(
+  specs: WebFallbackSpecs,
+  userText?: string,
+): boolean {
+  if (!specs) return true;
+  if (specs.missingHard) return true;
+  if (
+    missingOemWeightPinOf(specs) &&
+    userText &&
+    WEIGHT_ASK_RE.test(normalizeAskText(userText))
+  ) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -224,8 +254,9 @@ export function needsWebFallback(
   // Both coaches identifiable — answer class / powertrain from catalog
   // now. Do not stall for a web hold. Forum / repair already returned true.
   if (looksLikeCatalogAnswerableCoachCompare(userText)) return false;
-  // Unknown / catalog GAP (no identity, UNKNOWN hard fields) → search.
-  if (catalogGapNeedsWeb(specs)) return true;
+  // Unknown / catalog GAP (no identity, UNKNOWN hard fields, missing
+  // OEM weight pin on a weight ask) → search is required this turn.
+  if (catalogGapNeedsWeb(specs, userText)) return true;
   // Resolved hard row → do not browse. A "no catalog" web note must not
   // overwrite a pin the catalog already answered (Lineage Series M, etc.).
   if (looksLikeOffCatalogQuestion(userText)) return true;
