@@ -2229,20 +2229,32 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   // Thor ACE — 2026 ACE brochure spec table (same 29D/29G/30C/32B codes MY23–27).
   ...gvwrPins("thor", "ace", 2023, 2027, ["29D", "29G", "30C"], 18000),
   ...gvwrPins("thor", "ace", 2023, 2027, ["32B"], 22000),
-  // Thor Hurricane — 2026 Hurricane brochure table. 36H prints on that card; 35A (MY27) unprinted.
+  // Thor Hurricane — 2026 Hurricane brochure table. 36H prints on that card.
+  // 35A MY27: 2027 Thor Motor Coach Hurricane brochure (RVUSA) 29L/35A/35J/36H GVWR 18k/22k/22k/24k.
   ...gvwrPins("thor", "hurricane", 2025, 2027, ["29L"], 18000),
   ...gvwrPins("thor", "hurricane", 2025, 2026, ["35G", "35R"], 22000),
   ...gvwrPins("thor", "hurricane", 2025, 2027, ["35J"], 22000),
   ...gvwrPins("thor", "hurricane", 2026, 2027, ["36H"], 24000),
+  ...gvwrPins("thor", "hurricane", 2027, 2027, ["35A"], 22000),
   // Thor Windsport — 2026 Windsport brochure table (no 36H on that card).
+  // 35A / 36H MY27: 2027 Thor Motor Coach Windsport brochure (RVUSA) 29L/35A/35J/36H GVWR 18k/22k/22k/24k.
   ...gvwrPins("thor", "windsport", 2025, 2027, ["29L"], 18000),
   ...gvwrPins("thor", "windsport", 2025, 2026, ["35G", "35R"], 22000),
   ...gvwrPins("thor", "windsport", 2025, 2027, ["35J"], 22000),
+  ...gvwrPins("thor", "windsport", 2027, 2027, ["35A"], 22000),
+  ...gvwrPins("thor", "windsport", 2027, 2027, ["36H"], 24000),
+  // Thor Aria — 2027 Thor Motor Coach Aria brochure (RVUSA) 3702/3901/4000 GVWR 35,320.
+  ...gvwrPins("thor", "aria", 2027, 2027, ["3702", "3901", "4000"], 35320),
   // Thor Four Winds — 2026 Four Winds brochure Ford E-450 block only (skip Ford/Chevy dual-GVWR E-specs).
   ...gvwrPins("thor", "four winds", 2026, 2027, ["28Z", "29K", "31E", "31H"], 14500),
+  // Thor Four Winds Sprinter — OEM thormotorcoach.com/four-winds-sprinter MY27 24LT/24LV 12,125. Not gas Four Winds.
+  ...gvwrPins("thor", "four winds sprinter", 2027, 2027, ["24LT", "24LV"], 12125),
   // Thor Palazzo GT — 2026 Palazzo GT brochure spec table. Not bare Palazzo.
   ...gvwrPins("thor", "palazzo gt", 2024, 2026, ["33.5", "33.6"], 26000),
   ...gvwrPins("thor", "palazzo gt", 2024, 2026, ["37.4", "37.5"], 32350),
+  // Thor Palazzo (not GT) — 2027 Thor Motor Coach Palazzo brochure (RVUSA) 33.5/33.6 26,000; 37.4/37.5 32,350.
+  ...gvwrPins("thor", "palazzo", 2027, 2027, ["33.5", "33.6"], 26000),
+  ...gvwrPins("thor", "palazzo", 2027, 2027, ["37.4", "37.5"], 32350),
   // Thor Vegas — 2026 Vegas brochure spec table (OH 09/10/2025). 24.1 is E-350 12,500; others E-450 14,500.
   ...gvwrPins("thor", "vegas", 2026, 2027, ["24.1"], 12500),
   ...gvwrPins("thor", "vegas", 2026, 2027, ["26.1", "26.2", "28.1"], 14500),
@@ -2254,6 +2266,57 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   ...gvwrPins("thor", "quantum", 2026, 2027, ["LC28", "KW29", "LF31", "HS31"], 14500),
   // Thor Chateau Sprinter — 2026 Chateau Sprinter brochure: 24LT / 24LV US 12,125. Not gas Chateau.
   ...gvwrPins("thor", "chateau sprinter", 2026, 2027, ["24LT", "24LV"], 12125),
+  // Thor Chateau (gas) MY27 — 2027 Chateau brochure single-print Ford E-450 only (28Z/29K/31E/31H 14,500). Dual Ford/Chevy rows stay GAP.
+  ...gvwrPins("thor", "chateau", 2027, 2027, ["28Z", "29K", "31E", "31H"], 14500),
+  // Thor Compass AWD / Compass GO — 2027 Compass AWD brochure 23TW/24JG/24KB 11,000; OEM page 22MT is Compass GO.
+  ...gvwrPins("thor", "compass awd", 2027, 2027, ["23TW", "24JG", "24KB"], 11000),
+  ...gvwrPins("thor", "compass go", 2027, 2027, ["22MT"], 11000),
+  // Thor Echelon — OEM thormotorcoach.com/echelon MY27 Ford-only table. Not Echelon Sprinter.
+  ...gvwrPins("thor", "echelon", 2027, 2027, ["LC19", "LX19"], 11500),
+  ...gvwrPins("thor", "echelon", 2027, 2027, ["LC21", "LZ22", "LZ25", "LZ28"], 12500),
+  ...gvwrPins("thor", "echelon", 2027, 2027, ["LC28", "KW29", "LF31", "HS31"], 14500),
+  // Thor Gemini / Gemini TRIP — 2027 Gemini AWD brochure 23TW/24JG/24KB 11,000; OEM page 22MT is Gemini TRIP.
+  ...gvwrPins("thor", "gemini", 2027, 2027, ["23TW", "24JG", "24KB"], 11000),
+  ...gvwrPins("thor", "gemini trip", 2027, 2027, ["22MT"], 11000),
+  // Thor Inception / Inception HD — 2027 Inception brochure + OEM Inception HD page: 34XG/38DX/38FX/38XL 32,700.
+  ...gvwrPins("thor", "inception", 2027, 2027, ["34XG", "38DX", "38FX", "38XL"], 32700),
+  ...gvwrPins("thor", "inception hd", 2027, 2027, ["34XG", "38DX", "38FX", "38XL"], 32700),
+  // Thor Indigo / Luminate — 2027 Indigo + Luminate brochures MM30/AA35 22,000; HH36 24,000.
+  ...gvwrPins("thor", "indigo", 2027, 2027, ["MM30", "AA35"], 22000),
+  ...gvwrPins("thor", "indigo", 2027, 2027, ["HH36"], 24000),
+  ...gvwrPins("thor", "luminate", 2027, 2027, ["MM30", "AA35"], 22000),
+  ...gvwrPins("thor", "luminate", 2027, 2027, ["HH36"], 24000),
+  // Thor Magnitude / Omni — 2027 Magnitude + Omni brochures Z30/X32 19,500; L35/R36 22,000. Not Magnitude Grand / Omni Trail.
+  ...gvwrPins("thor", "magnitude", 2027, 2027, ["Z30", "X32"], 19500),
+  ...gvwrPins("thor", "magnitude", 2027, 2027, ["L35", "R36"], 22000),
+  ...gvwrPins("thor", "omni", 2027, 2027, ["Z30", "X32"], 19500),
+  ...gvwrPins("thor", "omni", 2027, 2027, ["L35", "R36"], 22000),
+  // Thor Outlaw Class A / Class C — OEM outlaw-class-a 38K/38M 26,000; outlaw-class-c 29J/29T 14,500.
+  ...gvwrPins("thor", "outlaw class a", 2027, 2027, ["38K", "38M"], 26000),
+  ...gvwrPins("thor", "outlaw class c", 2027, 2027, ["29J", "29T"], 14500),
+  // Thor Palladium / Talavera — 2027 Palladium brochure + OEM Talavera 1920/1930 9,500.
+  ...gvwrPins("thor", "palladium", 2027, 2027, ["1920", "1930"], 9500),
+  ...gvwrPins("thor", "talavera", 2027, 2027, ["1920", "1930"], 9500),
+  // Thor Pasadena / Pasadena SV — 2027 Pasadena brochure + OEM Pasadena SV: 34XG/38DX/38FX/38XL 32,700.
+  ...gvwrPins("thor", "pasadena", 2027, 2027, ["34XG", "38DX", "38FX", "38XL"], 32700),
+  ...gvwrPins("thor", "pasadena sv", 2027, 2027, ["34XG", "38DX", "38FX", "38XL"], 32700),
+  // Thor Resonate — 2027 Resonate brochure 29D/29G/30C 18,000; 32B 22,000. Twin of ACE.
+  ...gvwrPins("thor", "resonate", 2027, 2027, ["29D", "29G", "30C"], 18000),
+  ...gvwrPins("thor", "resonate", 2027, 2027, ["32B"], 22000),
+  // Thor Riviera — OEM thormotorcoach.com/riviera MY27 34SD 29,800; 38RB/39BH 32,350.
+  ...gvwrPins("thor", "riviera", 2027, 2027, ["34SD"], 29800),
+  ...gvwrPins("thor", "riviera", 2027, 2027, ["38RB", "39BH"], 32350),
+  // Thor Rize / Scope — OEM rize + scope MY27 18M/18Z 8,550. Not Rize Plus / Rize Sport / Scope Sport.
+  ...gvwrPins("thor", "rize", 2027, 2027, ["18M", "18Z"], 8550),
+  ...gvwrPins("thor", "scope", 2027, 2027, ["18M", "18Z"], 8550),
+  // Thor Sanctuary / Tranquility — 2027 Sanctuary + Tranquility brochures 19A/19M/19P 9,050; 24A 11,030.
+  ...gvwrPins("thor", "sanctuary", 2027, 2027, ["19A", "19M", "19P"], 9050),
+  ...gvwrPins("thor", "sanctuary", 2027, 2027, ["24A"], 11030),
+  ...gvwrPins("thor", "tranquility", 2027, 2027, ["19A", "19M", "19P"], 9050),
+  ...gvwrPins("thor", "tranquility", 2027, 2027, ["24A"], 11030),
+  // Thor Sequence / Tellaro — 2027 Sequence + Tellaro brochures 20L/20U/20Y 9,350. Not Sequence Sport / Tellaro Sport.
+  ...gvwrPins("thor", "sequence", 2027, 2027, ["20L", "20U", "20Y"], 9350),
+  ...gvwrPins("thor", "tellaro", 2027, 2027, ["20L", "20U", "20Y"], 9350),
   // Winnebago Vista — OEM 2025 Vista spec table.
   ...gvwrPins("winnebago", "vista", 2025, 2025, ["29V"], 18000),
   ...gvwrPins("winnebago", "vista", 2025, 2025, ["31B", "33K", "34R"], 22000),
@@ -2770,6 +2833,50 @@ function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
     return true;
   }
   if (modelIncludes === "palazzo" && modelNorm.includes("gt") && !modelIncludes.includes("gt")) {
+    return true;
+  }
+  if (modelIncludes === "inception" && modelNorm.includes("hd") && !modelIncludes.includes("hd")) {
+    return true;
+  }
+  if (modelIncludes === "pasadena" && modelNorm.includes("sv") && !modelIncludes.includes("sv")) {
+    return true;
+  }
+  if (modelIncludes === "gemini" && modelNorm.includes("trip") && !modelIncludes.includes("trip")) {
+    return true;
+  }
+  if (
+    modelIncludes === "rize" &&
+    (modelNorm.includes("plus") || modelNorm.includes("sport")) &&
+    !modelIncludes.includes("plus") &&
+    !modelIncludes.includes("sport")
+  ) {
+    return true;
+  }
+  if (modelIncludes === "scope" && modelNorm.includes("sport") && !modelIncludes.includes("sport")) {
+    return true;
+  }
+  if (modelIncludes === "sequence" && modelNorm.includes("sport") && !modelIncludes.includes("sport")) {
+    return true;
+  }
+  if (modelIncludes === "tellaro" && modelNorm.includes("sport") && !modelIncludes.includes("sport")) {
+    return true;
+  }
+  if (
+    modelIncludes === "magnitude" &&
+    (modelNorm.includes("grand") || modelNorm.includes("xg")) &&
+    !modelIncludes.includes("grand") &&
+    !modelIncludes.includes("xg")
+  ) {
+    return true;
+  }
+  if (modelIncludes === "omni" && modelNorm.includes("trail") && !modelIncludes.includes("trail")) {
+    return true;
+  }
+  if (
+    modelIncludes === "echelon" &&
+    modelNorm.includes("sprinter") &&
+    !modelIncludes.includes("sprinter")
+  ) {
     return true;
   }
   if (modelIncludes === "bay star" && modelNorm.includes("sport") && !modelIncludes.includes("sport")) {
