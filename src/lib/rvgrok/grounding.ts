@@ -40,7 +40,10 @@ import {
   looksLikeOriginQuestion,
 } from "./originStory.ts";
 import {
+  looksLikeCoachFactAsk,
   looksLikeInventoryOrCountQuestion,
+  looksLikeNamedCoachProductQuestion,
+  looksLikeSpecQuestion,
   needsWebFallback,
 } from "./webIntent.ts";
 import { shouldMountDeskSheet } from "./deskSheetPolicy.ts";
@@ -194,6 +197,22 @@ export const INVENTORY_CATALOG_GAP = INVENTORY_WINS_OVER_GAP;
 function isInventoryStockAsk(query: string): boolean {
   return looksLikeInventoryOrCountQuestion(query);
 }
+
+/** Unlocked Live Voice: demand a catalog row only on coach / spec / repair. */
+function unlockedVoiceNeedsCatalogGap(query: string): boolean {
+  const q = (query || "").trim();
+  if (!q) return false;
+  return (
+    looksLikeSpecQuestion(q) ||
+    looksLikeRepairQuestion(q) ||
+    looksLikeNamedCoachProductQuestion(q) ||
+    looksLikeCoachFactAsk(q)
+  );
+}
+
+/** Casual unlocked session — no standing "no verified row" scare. */
+const UNLOCKED_VOICE_SOFT =
+  "No coach is locked this turn. Answer casual asks normally. Specs / year-make-model still need WEB RESEARCH and the catalog when they name a unit — never invent OEM numbers.";
 
 export const COMPARE_GROUNDING_RULES = `COMPARE THIS TURN (catalog-answerable):
 - Answer both coaches from the VERIFIED CATALOG locks below in THIS turn.
@@ -665,7 +684,9 @@ export function buildVoiceGrounding(opts: {
   if (!identity) {
     const base = inventoryAsk
       ? INVENTORY_WINS_OVER_GAP
-      : "CATALOG GAP — no verified row is loaded. WEB RESEARCH is required this turn, then answer with a labeled EST / typical class range if still unpinned. Never present that as an OEM pin. Do not stop at I don't know.";
+      : unlockedVoiceNeedsCatalogGap(query)
+        ? "CATALOG GAP — no verified row is loaded. WEB RESEARCH is required this turn, then answer with a labeled EST / typical class range if still unpinned. Never present that as an OEM pin. Do not stop at I don't know."
+        : UNLOCKED_VOICE_SOFT;
     const body = repair ? `${base}\n\n${repair}` : base;
     return withDeskSheetSpeechRule(body, query, null);
   }

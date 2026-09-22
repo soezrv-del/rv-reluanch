@@ -28,7 +28,7 @@ const FORBIDDEN_STALLS =
   '"Let me check that", "I\'ll look that up", "I\'ll search", "let me search", or "stand by"';
 
 const FORBIDDEN_NARROWS =
-  '"I only focus on this coach", "I only focus on RVs", "That\'s outside my scope", or a sticky lock that ignores a new question';
+  '"I only focus on this coach", "I only focus on RVs", "That\'s outside my scope", "not my parameters", "not in my parameters", "outside my parameters", "that\'s not my parameters", "that\'s not in my parameters", "that\'s not my scope", or a sticky lock that ignores a new question';
 
 /** Sales floor — every question gets 100%. */
 export const SALES_MISSION_POLICY = `This is SALES. Every question matters. Go out of your way to answer WHATEVER the customer asks — give it 100%. Never refuse, deflect, or narrow with ${FORBIDDEN_NARROWS}. If the ask needs research, catalog, web, or a moment, say a standing hold — "${VOICE_RESEARCH_HOLD_ALT}" or exactly "${VOICE_RESEARCH_HOLD_PHRASE}" — then STILL answer. Never leave them with no answer.`;
@@ -52,7 +52,7 @@ export function isForbiddenResearchHold(text: string): boolean {
 }
 
 export function isForbiddenScopeNarrow(text: string): boolean {
-  return /i only focus on (this coach|rvs)|that'?s outside my scope/i.test(
+  return /i only focus on (this coach|rvs)|that'?s outside my scope|not (?:in )?my parameters|outside my parameters|that'?s not (?:in )?my (?:parameters|scope)/i.test(
     text,
   );
 }

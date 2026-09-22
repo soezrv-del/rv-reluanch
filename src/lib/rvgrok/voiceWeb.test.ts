@@ -404,6 +404,12 @@ test("hold string is exactly give me one second — never Let me check that", ()
   assert.equal(isForbiddenScopeNarrow("I only focus on this coach"), true);
   assert.equal(isForbiddenScopeNarrow("I only focus on RVs"), true);
   assert.equal(isForbiddenScopeNarrow("That's outside my scope"), true);
+  assert.equal(isForbiddenScopeNarrow("not my parameters"), true);
+  assert.equal(isForbiddenScopeNarrow("not in my parameters"), true);
+  assert.equal(isForbiddenScopeNarrow("outside my parameters"), true);
+  assert.equal(isForbiddenScopeNarrow("that's not my parameters"), true);
+  assert.equal(isForbiddenScopeNarrow("that's not in my parameters"), true);
+  assert.equal(isForbiddenScopeNarrow("that's not my scope"), true);
   assert.equal(isForbiddenScopeNarrow(RV_GROK_SESSION_INTRO), false);
 });
 
