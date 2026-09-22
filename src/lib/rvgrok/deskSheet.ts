@@ -13,6 +13,7 @@ import {
   inspectCatalogPresence,
   resolveCatalogMake,
   resolveCatalogModel,
+  resolveCoachIdentity,
   type CoachIdentity,
 } from "./coachIdentity.ts";
 import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
@@ -20,6 +21,7 @@ import {
   claimsDeskSpecSheet,
   DESK_SHEET_FORBIDDEN_LINE,
   formatDeskSheetMountedLine,
+  queryNamesYearMakeModel,
   shouldMountDeskSheet,
 } from "./deskSheetPolicy.ts";
 import {
@@ -32,6 +34,7 @@ export {
   DESK_SHEET_PHRASE,
   claimsDeskSpecSheet,
   formatDeskSheetMountedLine,
+  queryNamesYearMakeModel,
   shouldMountDeskSheet,
 } from "./deskSheetPolicy.ts";
 export {
@@ -48,13 +51,16 @@ export function withDeskSheetSpeechRule(
   query: string,
   identity: CoachIdentity | null | undefined,
 ): string {
-  const extra = shouldMountDeskSheet(query, identity)
-    ? [
-        formatDeskSheetMountedLine(identity!),
-        formatLockedWeightsBlock(identity!),
-        NO_DUPLICATE_MARKDOWN_SHEET,
-      ].join("\n\n")
-    : DESK_SHEET_FORBIDDEN_LINE;
+  const extra =
+    shouldMountDeskSheet(query, identity) &&
+    identity?.make?.trim() &&
+    identity.model?.trim()
+      ? [
+          formatDeskSheetMountedLine(identity),
+          formatLockedWeightsBlock(identity),
+          NO_DUPLICATE_MARKDOWN_SHEET,
+        ].join("\n\n")
+      : DESK_SHEET_FORBIDDEN_LINE;
   const body = (block || "").trim();
   return body ? `${body}\n\n${extra}` : extra;
 }
@@ -197,7 +203,12 @@ export function resolveDeskSheet(opts: {
   specs: SheetSpecs;
   spokenText?: string;
 }): DeskSheetPayload | null {
-  const { query, identity, specs, spokenText } = opts;
+  const { query, specs, spokenText } = opts;
+  const identity =
+    opts.identity ||
+    (queryNamesYearMakeModel(query)
+      ? resolveCoachIdentity(query, null, "")
+      : null);
   if (!identity) return null;
   if (
     shouldMountDeskSheet(query, identity) ||

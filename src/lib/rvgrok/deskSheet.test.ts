@@ -16,6 +16,7 @@ import {
   claimsDeskSpecSheet,
   deskSheetIsTowable,
   formatLockedWeightsBlock,
+  queryNamesYearMakeModel,
   resolveDeskSheet,
   shouldMountDeskSheet,
   stripDuplicateMarkdownSpecSheet,
@@ -171,6 +172,43 @@ test("2019 Grand Design Solitude 310GK mounts desk sheet with floorplan; towable
   assert.ok(uvw?.gap, "Solitude 310GK UVW is GAP — no OEM pin");
 });
 
+test("bare year/make/model (no spec-report prompt) mounts the CARFAX desk sheet", () => {
+  for (const q of [
+    "2019 Grand Design Solitude 310GK",
+    "2022 Newmar Dutch Star",
+    "2025 Entegra Coach Aspire 44R",
+  ]) {
+    assert.equal(queryNamesYearMakeModel(q), true, q);
+    const identity = resolveCoachIdentity(q, null, "");
+    assert.ok(identity, q);
+    assert.equal(shouldMountDeskSheet(q, identity), true, q);
+    const sheet = resolveDeskSheet({ query: q, identity, specs: null });
+    assert.ok(sheet, q);
+    assert.match(sheet!.title, new RegExp(identity!.year));
+    assert.ok(sheet!.rows.some((r) => r.label === "Class"));
+    assert.ok(sheet!.rows.some((r) => r.label === "GVWR"));
+    assert.ok(sheet!.rows.some((r) => r.label === "UVW"));
+    assert.ok(sheet!.rows.some((r) => r.label === "Fuel"));
+  }
+
+  const synthesized = resolveDeskSheet({
+    query: "2018 Newmar Ventana 4369",
+    identity: null,
+    specs: null,
+  });
+  assert.ok(synthesized, "Y/M/M/FP synthesizes identity when grounding missed");
+  assert.match(synthesized!.title, /2018 Newmar Ventana/);
+  assert.equal(synthesized!.floorplan, "4369");
+
+  assert.equal(queryNamesYearMakeModel("Match me to a coach"), false);
+  assert.equal(queryNamesYearMakeModel("Troubleshoot my RV"), false);
+  assert.equal(shouldMountDeskSheet("hi", null), false);
+  assert.equal(
+    resolveDeskSheet({ query: "Match me to a coach", identity: null, specs: null }),
+    null,
+  );
+});
+
 test("desk sheet still renders with GAP rows when powertrain is thin", () => {
   const id = {
     year: "2022",
@@ -250,6 +288,8 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(app, /onDeskSheet/);
   assert.match(app, /DeskSpecSheet/);
   assert.match(app, /liveDeskSheet/);
+  assert.match(src(root, "deskSheetPolicy.ts"), /queryNamesYearMakeModel/);
+  assert.doesNotMatch(app, /2019 Grand Design Solitude 310GK/);
   assert.match(bubble, /DeskSpecSheet/);
   assert.match(bubble, /deskSheet/);
   assert.match(bubble, /stripDuplicateMarkdownSpecSheet/);
