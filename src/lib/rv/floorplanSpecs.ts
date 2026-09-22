@@ -2458,6 +2458,35 @@ const OEM_GVWR_PINS: OemGvwrPin[] = [
   // code; findOemGvwrLbs is exact-match and does not strip Twin — leave GAP.
   ...gvwrPins("airstream", "classic", 2027, 2027, ["28RB"], 8800),
   ...gvwrPins("airstream", "classic", 2027, 2027, ["30RB", "33FB"], 10000),
+  // Airstream Bambi — 2027 RVUSA Bambi brochure compare + spec table
+  // (library.rvusa.com/brochure/2027-Airstream-Bambi). 16RB 3,500; 20FB 5,000;
+  // 22FB 5,000. Dublin Slate is décor, not a printed GVWR code — leave GAP.
+  ...gvwrPins("airstream", "bambi", 2027, 2027, ["16RB"], 3500),
+  ...gvwrPins("airstream", "bambi", 2027, 2027, ["20FB", "22FB"], 5000),
+  // Airstream Basecamp — 2027 RVUSA Basecamp brochure compare + spec table.
+  // Only 20X is printed (4,300). Brochure notes 16X discontinued MY2027; do
+  // not invent 16 / 16X / 20. Not Basecamp Xe.
+  ...gvwrPins("airstream", "basecamp", 2027, 2027, ["20X"], 4300),
+  // Airstream Flying Cloud — 2027 RVUSA Flying Cloud brochure compare + spec
+  // table. 23FB 6,000; 25FB 7,300; 27FB 7,600; 28RB 7,600; 30FB Bunk 8,800
+  // (catalog code exact). Twin / Dublin Slate stay GAP. Not 30FB / 30FB Office.
+  ...gvwrPins("airstream", "flying cloud", 2027, 2027, ["23FB"], 6000),
+  ...gvwrPins("airstream", "flying cloud", 2027, 2027, ["25FB"], 7300),
+  ...gvwrPins("airstream", "flying cloud", 2027, 2027, ["27FB", "28RB"], 7600),
+  ...gvwrPins("airstream", "flying cloud", 2027, 2027, ["30FB Bunk"], 8800),
+  // Airstream International — 2027 RVUSA International brochure compare + spec
+  // table. 23FB 6,000; 25FB 7,300; 27FB 7,600; 28RB 7,600; 30RB 8,800.
+  // Coastal Cove décor codes are not printed separately — leave GAP.
+  ...gvwrPins("airstream", "international", 2027, 2027, ["23FB"], 6000),
+  ...gvwrPins("airstream", "international", 2027, 2027, ["25FB"], 7300),
+  ...gvwrPins("airstream", "international", 2027, 2027, ["27FB", "28RB"], 7600),
+  ...gvwrPins("airstream", "international", 2027, 2027, ["30RB"], 8800),
+  // Airstream Globetrotter — 2027 RVUSA Globetrotter brochure compare + spec
+  // table. 25FB 7,300; 27FB 7,600; 30RB 8,800. Dublin Slate / Copenhagen
+  // Cream / London Grey / Barcelona Blue are décor — leave GAP.
+  ...gvwrPins("airstream", "globetrotter", 2027, 2027, ["25FB"], 7300),
+  ...gvwrPins("airstream", "globetrotter", 2027, 2027, ["27FB"], 7600),
+  ...gvwrPins("airstream", "globetrotter", 2027, 2027, ["30RB"], 8800),
 ];
 
 /** Pin count for coverage reports / tests. */
@@ -3174,6 +3203,10 @@ function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
   }
   // Cardinal is a single FR fifth-wheel line — do not match Cardinal Luxury / siblings.
   if (modelIncludes === "cardinal" && modelNorm.trim() !== "cardinal") {
+    return true;
+  }
+  // Basecamp 20X pin is the gas/off-road trailer — do not match Basecamp Xe.
+  if (modelIncludes === "basecamp" && modelNorm.includes("xe") && !modelIncludes.includes("xe")) {
     return true;
   }
   return false;

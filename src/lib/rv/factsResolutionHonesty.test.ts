@@ -393,11 +393,109 @@ test("Airstream MY2027: model GVWR stamps gone; brochure pins only exact codes",
   assert.match(cl30.brochure.gvwr, /10,?000/);
   assert.doesNotMatch(cl28.brochure.gvwr, /10,?000/);
 
-  // Sibling Airstream models — no bleed from these pins.
-  assert.equal(findOemGvwrLbs("2027", "Airstream", "Flying Cloud", "25FB"), null);
-  assert.equal(findOemGvwrLbs("2027", "Airstream", "International", "28RB"), null);
-  assert.equal(findOemGvwrLbs("2027", "Airstream", "Bambi", "16RB"), null);
-  assert.equal(findOemGvwrLbs("2027", "Airstream", "Globetrotter", "30RB"), null);
+  // Wave 1 siblings that stay unpinned (wave 2 pins Bambi / Flying Cloud separately).
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Caravel", "16RB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Interstate", "24GT"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Atlas", "25MS"), null);
+});
+
+test("Airstream MY2027 wave 2: printed brochure pins only; Twin / décor GAP", () => {
+  const bambi = RV_DATA.Airstream?.Bambi;
+  const basecamp = RV_DATA.Airstream?.Basecamp;
+  const flying = RV_DATA.Airstream?.["Flying Cloud"];
+  const intl = RV_DATA.Airstream?.International;
+  const globe = RV_DATA.Airstream?.Globetrotter;
+  assert.ok(bambi && basecamp && flying && intl && globe);
+  assert.equal(bambi.gvwrLbs, undefined);
+  assert.equal(basecamp.gvwrLbs, undefined);
+  assert.equal(flying.gvwrLbs, undefined);
+  assert.equal(intl.gvwrLbs, undefined);
+  assert.equal(globe.gvwrLbs, undefined);
+
+  // 2027 RVUSA Bambi brochure: 16RB 3,500; 20FB / 22FB 5,000. Dublin Slate GAP.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Bambi", "16RB"), 3500);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Bambi", "20FB"), 5000);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Bambi", "22FB"), 5000);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Bambi", "16RB Dublin Slate"), null);
+  assert.equal(findOemGvwrLbs("2026", "Airstream", "Bambi", "16RB"), null);
+  const b16 = factsFor("2027", "Airstream", "Bambi", "16RB");
+  const b22 = factsFor("2027", "Airstream", "Bambi", "22FB");
+  const bDublin = factsFor("2027", "Airstream", "Bambi", "16RB Dublin Slate");
+  assert.equal(b16.snap.gvwrLbs, undefined);
+  assert.equal(b16.brochure.gvwrLbs, 3500);
+  assert.equal(b22.brochure.gvwrLbs, 5000);
+  assert.equal(bDublin.brochure.gvwrLbs, null);
+  assert.match(b16.brochure.gvwr, /3,?500/);
+  assert.match(b22.brochure.gvwr, /5,?000/);
+  assert.doesNotMatch(b16.brochure.gvwr, /5,?000/);
+
+  // 2027 RVUSA Basecamp brochure: 20X 4,300 only. 16 / 16X / 20 / Xe GAP.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Basecamp", "20X"), 4300);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Basecamp", "16"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Basecamp", "16X"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Basecamp", "20"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Basecamp Xe", "20X"), null);
+  assert.equal(findOemGvwrLbs("2026", "Airstream", "Basecamp", "20X"), null);
+  const bc20x = factsFor("2027", "Airstream", "Basecamp", "20X");
+  const bc16x = factsFor("2027", "Airstream", "Basecamp", "16X");
+  assert.equal(bc20x.snap.gvwrLbs, undefined);
+  assert.equal(bc20x.brochure.gvwrLbs, 4300);
+  assert.equal(bc16x.brochure.gvwrLbs, null);
+  assert.match(bc20x.brochure.gvwr, /4,?300/);
+
+  // 2027 RVUSA Flying Cloud brochure. Twin / Dublin Slate / 30FB GAP.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Flying Cloud", "23FB"), 6000);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Flying Cloud", "25FB"), 7300);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Flying Cloud", "27FB"), 7600);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Flying Cloud", "28RB"), 7600);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Flying Cloud", "30FB Bunk"), 8800);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Flying Cloud", "25FB Twin"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Flying Cloud", "25FB Dublin Slate"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Flying Cloud", "30FB"), null);
+  assert.equal(findOemGvwrLbs("2026", "Airstream", "Flying Cloud", "25FB"), null);
+  const fc25 = factsFor("2027", "Airstream", "Flying Cloud", "25FB");
+  const fcBunk = factsFor("2027", "Airstream", "Flying Cloud", "30FB Bunk");
+  const fcTwin = factsFor("2027", "Airstream", "Flying Cloud", "25FB Twin");
+  assert.equal(fc25.snap.gvwrLbs, undefined);
+  assert.equal(fc25.brochure.gvwrLbs, 7300);
+  assert.equal(fcBunk.brochure.gvwrLbs, 8800);
+  assert.equal(fcTwin.brochure.gvwrLbs, null);
+  assert.match(fc25.brochure.gvwr, /7,?300/);
+  assert.match(fcBunk.brochure.gvwr, /8,?800/);
+  assert.doesNotMatch(fc25.brochure.gvwr, /8,?800|6,?000/);
+
+  // 2027 RVUSA International brochure. Coastal Cove GAP.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "International", "23FB"), 6000);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "International", "28RB"), 7600);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "International", "30RB"), 8800);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "International", "25FB Coastal Cove"), null);
+  assert.equal(findOemGvwrLbs("2026", "Airstream", "International", "28RB"), null);
+  const in28 = factsFor("2027", "Airstream", "International", "28RB");
+  const inCove = factsFor("2027", "Airstream", "International", "25FB Coastal Cove");
+  assert.equal(in28.snap.gvwrLbs, undefined);
+  assert.equal(in28.brochure.gvwrLbs, 7600);
+  assert.equal(inCove.brochure.gvwrLbs, null);
+  assert.match(in28.brochure.gvwr, /7,?600/);
+
+  // 2027 RVUSA Globetrotter brochure. Color / Dublin variants GAP.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Globetrotter", "25FB"), 7300);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Globetrotter", "27FB"), 7600);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Globetrotter", "30RB"), 8800);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Globetrotter", "25FB Dublin Slate"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Globetrotter", "27FB Copenhagen Cream"), null);
+  assert.equal(findOemGvwrLbs("2026", "Airstream", "Globetrotter", "30RB"), null);
+  const gt25 = factsFor("2027", "Airstream", "Globetrotter", "25FB");
+  const gtDublin = factsFor("2027", "Airstream", "Globetrotter", "25FB Dublin Slate");
+  assert.equal(gt25.snap.gvwrLbs, undefined);
+  assert.equal(gt25.brochure.gvwrLbs, 7300);
+  assert.equal(gtDublin.brochure.gvwrLbs, null);
+  assert.match(gt25.brochure.gvwr, /7,?300/);
+
+  // Wave 1 + Caravel isolation — no bleed, no invent onto luxury trim.
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "25FB"), 7600);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Classic", "28RB"), 8800);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Caravel", "16RB"), null);
+  assert.equal(findOemGvwrLbs("2027", "Airstream", "Caravel", "22FB"), null);
 });
 
 test("Audit E 2027 brochure path: Forest River Cardinal pins; 41DUB GAP", () => {
