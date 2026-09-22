@@ -113,7 +113,7 @@ test("Gemini success → notes used (xAI not called)", async () => {
     assert.equal(isGeminiResearchUrl(url), true);
     return jsonResponse(
       geminiNotes(
-        "CONFIRMED: yes. Tiffin OEM brochure lists GVWR 39,600 lb for the 2022 Phaeton 40IH.",
+        "CONFIRMED: yes. The battery disconnect is typically near the steps on a 2005 Adventurer — check the OEM owners manual.",
       ),
     );
   }) as typeof fetch;
@@ -122,7 +122,7 @@ test("Gemini success → notes used (xAI not called)", async () => {
       apiKey: "xai-should-not-run",
       geminiApiKey: "AIza-test",
       researchProvider: "auto",
-      query: "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
+      query: "Where is the battery disconnect on a 2005 Winnebago Adventurer?",
       timeoutMs: 5_000,
       models: ["grok-4-1-fast-reasoning"],
     });
@@ -132,7 +132,7 @@ test("Gemini success → notes used (xAI not called)", async () => {
     if (result.ok) {
       assert.match(result.model, /gemini/);
       assert.equal(result.confirmed, true);
-      assert.match(result.notes, /39,600/);
+      assert.match(result.notes, /battery disconnect/i);
     }
     const injection = formatWebSearchInjection(result);
     assert.match(injection, /Gemini Google Search grounding/);
@@ -167,7 +167,7 @@ test("Gemini fail/timeout → xAI fallback notes used", async () => {
       apiKey: "xai-test-key",
       geminiApiKey: "AIza-test",
       researchProvider: "gemini",
-      query: "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
+      query: "Where is the battery disconnect on a 2005 Winnebago Adventurer?",
       timeoutMs: 8_000,
       models: ["grok-4-1-fast-reasoning"],
     });

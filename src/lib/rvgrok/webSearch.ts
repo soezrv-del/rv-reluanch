@@ -286,10 +286,17 @@ const FIELD_PATTERNS: Array<[QueriedResearchField, RegExp]> = [
   ],
 ];
 
-/** Spec / YMM → xAI web_search only. Repair may still use Gemini browse. */
+/** Spec / YMM → xAI web_search only. Repair / “where is” may still use Gemini. */
 export function skipGeminiForResearchAsk(query: string): boolean {
   const t = normalizeAskText(query);
   if (looksLikeRepairQuestion(t)) return false;
+  // "Where is the battery disconnect on a 2005 Adventurer" is location, not a spec sheet.
+  if (
+    /\b(where(?:'s|\s+is)|how\s+do\s+i|how\s+to)\b/i.test(t) &&
+    !looksLikeSpecQuestion(t)
+  ) {
+    return false;
+  }
   return looksLikeSpecQuestion(t) || looksLikeNamedCoachProductQuestion(t);
 }
 
