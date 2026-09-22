@@ -1,6 +1,6 @@
-import { RV_GROK_ATTITUDE } from "./attitude";
-import { CARFAX_VS_RVFOX } from "./carfaxPositioning";
-import { ABOUT_RVFOX } from "./originStory";
+import { RV_GROK_ATTITUDE } from "./attitude.ts";
+import { CARFAX_VS_RVFOX } from "./carfaxPositioning.ts";
+import { ABOUT_RVFOX } from "./originStory.ts";
 import {
   ANSWER_NOW_POLICY,
   HONESTY_STANDING_POLICY,
@@ -8,8 +8,8 @@ import {
   SESSION_INTRO_POLICY,
   VOICE_RESEARCH_HOLD_ALT,
   VOICE_RESEARCH_HOLD_PHRASE,
-} from "./speechPolicy";
-import { DEFAULT_WORKER_URL } from "./types";
+} from "./speechPolicy.ts";
+import { DEFAULT_WORKER_URL } from "./types.ts";
 
 export const VOICE_STORAGE_KEY = "rvgrok_selected_voice";
 export const VOICE_MODE_KEY = "rvgrok_voice_mode";

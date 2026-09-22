@@ -16,8 +16,8 @@ import {
   RV_GROK_SESSION_INTRO,
   SALES_MISSION_POLICY,
   VOICE_SESSION_INTRO_INSTRUCTIONS,
-} from "./speechPolicy";
-import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS } from "./voice";
+} from "./speechPolicy.ts";
+import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS } from "./voice.ts";
 
 export type LiveVoicePrewarm = {
   audioCtx: AudioContext | null;
