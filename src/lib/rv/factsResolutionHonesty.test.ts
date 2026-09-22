@@ -400,6 +400,23 @@ test("Airstream MY2027: model GVWR stamps gone; brochure pins only exact codes",
   assert.equal(findOemGvwrLbs("2027", "Airstream", "Globetrotter", "30RB"), null);
 });
 
+test("Audit E 2027 brochure path: Forest River Cardinal pins; 41DUB GAP", () => {
+  const chill = factsFor("2027", "Forest River", "Cardinal", "32CHILL");
+  assert.equal(chill.brochure.gvwrLbs, 12188);
+  assert.equal(chill.brochure.uvwLbs, 9688);
+
+  const chef = factsFor("2027", "Forest River", "Cardinal", "33CHEF");
+  assert.equal(chef.brochure.gvwrLbs, 13885);
+  assert.equal(chef.brochure.uvwLbs, 10558);
+
+  const dub = factsFor("2027", "Forest River", "Cardinal", "41DUB");
+  assert.equal(dub.brochure.gvwrLbs, null);
+  assert.equal(dub.brochure.uvwLbs, null);
+
+  const fr3 = factsFor("2026", "Forest River", "FR3", "31DS");
+  assert.notEqual(fr3.brochure.gvwrLbs, 12188);
+});
+
 test("Lineage Series F: no series 22k stamp; 31ZW / 31ZW5 year-bands stay", () => {
   const spec = RV_DATA["Grand Design"]?.["Lineage Series F"];
   assert.ok(spec);
