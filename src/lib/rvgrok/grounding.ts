@@ -9,18 +9,18 @@
  * Chat answers must never be merged into the Facts verified cache.
  */
 
-import { CATALOG_INDEX } from "../rv/rvCatalogIndex";
-import { peekCatalog } from "../rv/catalogLoad";
-import { resolveYearSnapshot } from "../rv/brochureSpecs";
+import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
+import { peekCatalog } from "../rv/catalogLoad.ts";
+import { resolveYearSnapshot } from "../rv/brochureSpecs.ts";
 import {
   findPowertrainCorrection,
   type PowertrainCorrection,
-} from "../rv/powertrainCorrections";
+} from "../rv/powertrainCorrections.ts";
 import {
   findLocalSpecOverride,
   type LocalSpecOverride,
-} from "../rv/localSpecOverrides";
-import type { ActiveCoach } from "../rv/activeCoach";
+} from "../rv/localSpecOverrides.ts";
+import type { ActiveCoach } from "../rv/activeCoach.ts";
 import {
   engineOmitsLoneTorque,
   extractOptionHpClasses,
@@ -28,34 +28,34 @@ import {
   honestHorsepowerLabel,
   honestTorqueLabel,
   isAmbiguousCatalogValue,
-} from "../rv/catalogHonesty";
-import { catalogYearIsListed, parseCoachFromText } from "./parseCoach";
-import type { RVSpec } from "../rv/rvTypes";
+} from "../rv/catalogHonesty.ts";
+import { catalogYearIsListed, parseCoachFromText } from "./parseCoach.ts";
+import type { RVSpec } from "../rv/rvTypes.ts";
 import {
   formatCarfaxGroundingBlock,
   looksLikeCarfaxQuestion,
-} from "./carfaxPositioning";
+} from "./carfaxPositioning.ts";
 import {
   formatOriginGroundingBlock,
   looksLikeOriginQuestion,
-} from "./originStory";
+} from "./originStory.ts";
 import {
   looksLikeCasualNonResearch,
   looksLikeInventoryOrCountQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeSpecQuestion,
   needsWebFallback,
-} from "./webIntent";
+} from "./webIntent.ts";
 import {
   findComparableCatalogCoaches,
   looksLikeCoachCompareQuestion,
   type ComparableCatalogCoach,
-} from "./coachCompare";
+} from "./coachCompare.ts";
 import {
   formatRepairGroundingBlock,
   looksLikeRepairQuestion,
   repairCoachLockFromGrounded,
-} from "./repairMode";
+} from "./repairMode.ts";
 import {
   askNamesCoachIdentity,
   type CoachIdentity,
@@ -64,11 +64,11 @@ import {
   resolveCatalogMake,
   resolveCatalogModel,
   resolveCoachIdentity,
-} from "./coachIdentity";
+} from "./coachIdentity.ts";
 import {
   formatLockedWeightsBlock,
   resolveLockedOemWeights,
-} from "./lockedWeights";
+} from "./lockedWeights.ts";
 
 function withDeskSheetSpeechRule(
   block: string,
@@ -126,22 +126,22 @@ export {
   catalogGapNeedsWeb,
   needsWebFallback,
   normalizeAskText,
-} from "./webIntent";
-export { looksLikeCoachCompareQuestion } from "./parseCoach";
+} from "./webIntent.ts";
+export { looksLikeCoachCompareQuestion } from "./parseCoach.ts";
 export {
   looksLikeCarfaxQuestion,
   formatCarfaxGroundingBlock,
-} from "./carfaxPositioning";
+} from "./carfaxPositioning.ts";
 export {
   looksLikeOriginQuestion,
   formatOriginGroundingBlock,
-} from "./originStory";
+} from "./originStory.ts";
 export {
   findComparableCatalogCoaches,
   looksLikeForumOrManualCompare,
-} from "./coachCompare";
-export type { WebFallbackOpts, WebFallbackSpecs } from "./webIntent";
-export type { CoachIdentity } from "./coachIdentity";
+} from "./coachCompare.ts";
+export type { WebFallbackOpts, WebFallbackSpecs } from "./webIntent.ts";
+export type { CoachIdentity } from "./coachIdentity.ts";
 export {
   askNamesCoachIdentity,
   formatCatalogPresenceNote,
@@ -151,7 +151,7 @@ export {
   resolveCatalogModel,
   resolveCoachIdentity,
   yearFromSameSeriesHistory,
-} from "./coachIdentity";
+} from "./coachIdentity.ts";
 
 export type GroundedField = {
   value: string | null;
