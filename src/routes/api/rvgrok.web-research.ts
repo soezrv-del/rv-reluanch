@@ -51,6 +51,9 @@ async function handleResearch(request: Request): Promise<Response> {
     models: VOICE_WEB_SEARCH_MODELS,
     profile: "voice",
     requestOrigin,
+    // Live Voice already decided via needsWebFallback — do not re-gate
+    // with null specs and skip a catalog miss.
+    skipGate: true,
   });
 
   return webResearchJsonResponse(researched);

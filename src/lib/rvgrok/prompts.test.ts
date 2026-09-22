@@ -46,7 +46,8 @@ test("chat, agent, and voice prompts share David's answer-now / give me one seco
     /Answer immediately from catalog, injected notes, or already-known facts/,
   );
   assert.match(speech, /VOICE_RESEARCH_HOLD_PHRASE = "give me one second"/);
-  assert.match(speech, /Web search is last resort/);
+  assert.match(speech, /MUST run WEB RESEARCH this turn before answering/);
+  assert.doesNotMatch(speech, /Web search is last resort/);
   assert.match(
     speech,
     /I'm RV Grok — ask me anything\. Name a year, make, and model for the spec report/,
@@ -218,7 +219,9 @@ test("sales floor: answer whatever they ask — no scope-narrow or sticky lock",
   assert.match(speech, /sticky lock that ignores a new question/);
   assert.match(speech, /This might take a second to get that for you/);
   assert.match(speech, /VOICE_RESEARCH_HOLD_ALT/);
-  assert.match(speech, /GAP over invent/);
+  assert.match(speech, /labeled estimate/);
+  assert.match(speech, /typical class range/);
+  assert.doesNotMatch(speech, /GAP over invent/);
   assert.match(speech, /isForbiddenScopeNarrow/);
 
   for (const [label, text] of [

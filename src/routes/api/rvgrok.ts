@@ -677,8 +677,8 @@ export const Route = createFileRoute("/api/rvgrok")({
           skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
         }
 
-        // Unknown / catalog GAP / own-lot miss → browse. Locked identity
-        // still uses server needsWeb so a pin is not overwritten.
+        // Catalog miss / GAP / own-lot miss → MUST browse this turn.
+        // Locked identity still uses server needsWeb so a pin is not overwritten.
         const wantsWebFallback =
           !skipWebForLot &&
           (serverGrounded.needsWeb ||
