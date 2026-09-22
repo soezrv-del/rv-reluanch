@@ -124,11 +124,11 @@ function firstTankGallons(
   const label = tankLabelRe(kind);
   const patterns = [
     new RegExp(
-      `\\b${label}[^\\d\\n]{0,28}~?\\s*(\\d{1,3})(?![\\d,])(?:\\s*(?:to|[-–—])\\s*(\\d{1,3})(?![\\d,]))?(?:\\s*(?:gal(?:lon)?s?))?`,
+      `\\b${label}[^\\d\\n]{0,28}~?\\s*(\\d{1,3})(?!\\d)(?!,\\d)(?:\\s*(?:to|[-–—])\\s*(\\d{1,3})(?!\\d)(?!,\\d))?(?:\\s*(?:gal(?:lon)?s?))?`,
       "ig",
     ),
     new RegExp(
-      `(\\d{1,3})(?![\\d,])\\s*-?\\s*(?:gal(?:lon)?s?)?\\s+${label}`,
+      `(\\d{1,3})(?!\\d)(?!,\\d)\\s*-?\\s*(?:gal(?:lon)?s?)?\\s+${label}`,
       "ig",
     ),
   ];
