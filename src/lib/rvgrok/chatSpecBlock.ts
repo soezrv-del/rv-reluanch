@@ -340,16 +340,23 @@ function parseTorqueToken(raw: string): number | null {
   return Math.round(n);
 }
 
+const TORQUE_NUM_RE = "(?<![\\d,])(\\d{1,3},\\d{3}|\\d{2,4})(?![\\d,])";
+
 function firstTorque(text: string): string | null {
   const labeled = firstLabeledSnippet(text, /\btorque\b/i);
   if (labeled) {
-    const n = parseTorqueToken(labeled.match(/(\d{2,4}(?:,\d{3})?)/)?.[1] || "");
+    const n = parseTorqueToken(
+      labeled.match(new RegExp(TORQUE_NUM_RE))?.[1] || "",
+    );
     if (n != null) return `${n.toLocaleString("en-US")} lb-ft`;
   }
 
   const patterns = [
-    /(\d{2,4}(?:,\d{3})?)\s*(?:lb-?ft|pound-feet|pound feet)(?:\s+of\s+torque)?/i,
-    /\btorque\s*[:–—-]?\s*(\d{2,4}(?:,\d{3})?)/i,
+    new RegExp(
+      `${TORQUE_NUM_RE}\\s*(?:lb-?ft|pound-feet|pound feet)(?:\\s+of\\s+torque)?`,
+      "i",
+    ),
+    new RegExp(`\\btorque\\s*[:–—-]?\\s*${TORQUE_NUM_RE}`, "i"),
   ];
   for (const re of patterns) {
     const m = text.match(re);
