@@ -97,6 +97,8 @@ test("chat, agent, and voice prompts share David's answer-now / give me one seco
   assert.match(prompts, /UNKNOWN \/ CATALOG GAP/);
   assert.match(prompts, /I don't know/);
   assert.match(prompts, /Do not invent/);
+  assert.match(prompts, /holding tanks/);
+  assert.match(prompts, /fresh \/ gray \/ black/);
   assert.match(prompts, /REPAIR \/ DIAGNOSE/);
   assert.match(voice, /WEB RESEARCH notes/);
   assert.match(voice, /REPAIR PLAYBOOK/);

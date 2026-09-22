@@ -221,6 +221,9 @@ function payloadFromFactsBrochure(
     brochureRow("GVWR", brochure.gvwr),
     brochureRow("UVW", brochure.uvw),
     brochureRow("CCC", brochure.ccc),
+    brochureRow("Fresh", brochure.freshWater),
+    brochureRow("Gray", brochure.grayWater),
+    brochureRow("Black", brochure.blackWater),
   ];
 }
 
@@ -285,6 +288,9 @@ export function buildDeskSheetPayload(
           { label: "Fuel capacity", value: "GAP", gap: true },
           { label: "GVWR", value: gvwr.value, gap: gvwr.gap },
           { label: "UVW", value: uvw.value, gap: uvw.gap },
+          { label: "Fresh", value: "GAP", gap: true },
+          { label: "Gray", value: "GAP", gap: true },
+          { label: "Black", value: "GAP", gap: true },
         ];
       })();
 

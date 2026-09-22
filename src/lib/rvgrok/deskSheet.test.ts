@@ -269,6 +269,55 @@ test("last assistant spec block paints GVWR/UVW/fuel — never Confirm brochure 
   assert.match(src(root, "chatSpecBlock.ts"), /last assistant/i);
 });
 
+test("desk paints holding tanks from chat — never Confirm brochure over spoken gallons", () => {
+  const q = "2019 Newmar Dutch Star 4369";
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  const chat =
+    "2019 Newmar Dutch Star 4369. Holding tanks: fresh ~35, gray/black ~34.";
+
+  const before = resolveDeskSheet({ query: q, identity, specs: null });
+  assert.ok(before);
+  assert.ok(before!.rows.some((r) => r.label === "Fresh"));
+  assert.ok(before!.rows.some((r) => r.label === "Gray"));
+  assert.ok(before!.rows.some((r) => r.label === "Black"));
+
+  const after = resolveDeskSheet({
+    query: q,
+    identity,
+    specs: null,
+    chatSpecBlock: chat,
+  });
+  assert.ok(after);
+  const val = (label: string) =>
+    after!.rows.find((r) => r.label === label)?.value;
+  const gap = (label: string) =>
+    after!.rows.find((r) => r.label === label)?.gap;
+  assert.equal(val("Fresh"), "35 gal");
+  assert.equal(gap("Fresh"), false);
+  assert.equal(val("Gray"), "34 gal");
+  assert.equal(val("Black"), "34 gal");
+  assert.doesNotMatch(val("Fresh") || "", /Confirm brochure|GAP/i);
+  assert.doesNotMatch(val("Gray") || "", /Confirm brochure|GAP/i);
+});
+
+test("catalog tank pins stay when chat does not name gallons", () => {
+  const q = "2025 Entegra Coach Aspire 44R spec report";
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  const sheet = resolveDeskSheet({ query: q, identity, specs: null });
+  assert.ok(sheet);
+  const fresh = sheet!.rows.find((r) => r.label === "Fresh");
+  const gray = sheet!.rows.find((r) => r.label === "Gray");
+  const black = sheet!.rows.find((r) => r.label === "Black");
+  assert.ok(fresh);
+  assert.ok(gray);
+  assert.ok(black);
+  if (fresh && !fresh.gap && !/confirm brochure|gap/i.test(fresh.value)) {
+    assert.match(fresh.value, /\d+\s*gal/i);
+  }
+});
+
 test("no chat spec numbers → do not invent over a catalog miss", () => {
   const id = {
     year: "2022",
@@ -462,4 +511,9 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(src(root, "voice.ts"), /LOCKED WEIGHTS/);
   assert.match(src(root, "speechPolicy.ts"), /LOCKED WEIGHTS/);
   assert.doesNotMatch(src(root, "deskSheet.ts"), /[Dd]ialaBot/);
+  assert.match(src(root, "deskSheet.ts"), /brochureRow\("Fresh"/);
+  assert.match(src(root, "deskSheet.ts"), /brochureRow\("Gray"/);
+  assert.match(src(root, "deskSheet.ts"), /brochureRow\("Black"/);
+  assert.match(src(root, "chatSpecBlock.ts"), /firstTankGallons/);
+  assert.match(prompts, /holding tanks/);
 });
