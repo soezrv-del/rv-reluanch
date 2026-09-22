@@ -7,9 +7,26 @@ import {
   buildRealtimeSessionUpdate,
   REALTIME_SESSION_TOOLS,
 } from "./liveVoice.ts";
+import { buildVoiceGrounding } from "./grounding.ts";
 import { PCM_SAMPLE_RATE } from "./voice.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
+
+test("unlocked session.update does not inject standing CATALOG GAP", () => {
+  const standing = /CATALOG GAP — no verified row is loaded/;
+  const unlocked = buildRealtimeSessionUpdate("ara");
+  const unlockedSession = unlocked.session as { instructions: string };
+  assert.doesNotMatch(unlockedSession.instructions, standing);
+  const factsEmpty = buildRealtimeSessionUpdate(
+    "ara",
+    1,
+    buildVoiceGrounding({ facts: null }),
+  );
+  const factsSession = factsEmpty.session as { instructions: string };
+  assert.doesNotMatch(factsSession.instructions, standing);
+  assert.match(factsSession.instructions, /native web_search/);
+  assert.match(factsSession.instructions, /I'm RvGrok/);
+});
 
 test("session.update enables native web_search on the Realtime session", () => {
   const msg = buildRealtimeSessionUpdate("ara", 1.25);

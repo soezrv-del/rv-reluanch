@@ -118,6 +118,27 @@ test("fuzzy brand shape maps Tifin → Tiffin and keeps Integra as the alias fas
   assert.equal(parseCoachFromText("integrity check on the propane").make, "");
 });
 
+test("unlocked Live Voice grounding does not stand CATALOG GAP on casual asks", () => {
+  const standing = /CATALOG GAP — no verified row is loaded/;
+  assert.doesNotMatch(buildVoiceGrounding({ facts: null }), standing);
+  assert.doesNotMatch(buildVoiceGrounding({}), standing);
+  for (const q of ["hi", "tell me a joke", "what's the weather"]) {
+    assert.doesNotMatch(buildVoiceGrounding({ query: q }), standing, q);
+    assert.match(
+      buildVoiceGrounding({ query: q }),
+      /Answer casual asks normally/,
+      q,
+    );
+  }
+  const specMiss = buildVoiceGrounding({
+    query: "What's the typical GVWR and engine horsepower?",
+  });
+  assert.match(specMiss, standing);
+  const stockAsk = "look in my inventory for a M series 25FW";
+  assert.doesNotMatch(buildVoiceGrounding({ query: stockAsk }), standing);
+  assert.match(buildVoiceGrounding({ query: stockAsk }), /OWN-LOT INVENTORY/);
+});
+
 test("catalog GAP tells inventory asks to prefer own-lot over manufacturer", () => {
   const grounding = src(root, "grounding.ts");
   assert.match(grounding, /OWN-LOT INVENTORY is source-of-truth this turn/);
