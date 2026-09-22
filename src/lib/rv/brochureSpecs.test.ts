@@ -470,6 +470,7 @@ test("OEM UVW pins: sourced Newmar + Seneca + 39RK; demo coaches stay unpinned (
   assert.equal(findOemUvwLbs("2026", "Newmar", "Dutch Star", "4071"), 37550);
   assert.equal(findOemUvwLbs("2025", "Newmar", "Dutch Star", "4081"), 37700);
   assert.equal(findOemUvwLbs("2026", "Newmar", "Bay Star", "3114"), 20050);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "Bay Star", "3114"), 20050);
   assert.equal(findOemUvwLbs("2026", "Newmar", "Bay Star", "3626"), 22600);
   assert.equal(findOemUvwLbs("2025", "Newmar", "Canyon Star", "3947"), 25950);
   assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca", "37K"), 26000);
@@ -633,6 +634,11 @@ test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2026", "Newmar", "Canyon Star", "3947"), 32000);
   assert.equal(findOemGvwrLbs("2026", "Newmar", "Dutch Star", "4081"), 49000);
   assert.equal(findOemGvwrLbs("2026", "Newmar", "Dutch Star", "4369"), null);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Bay Star", "3639"), 26000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Bay Star", "3640"), 26000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Dutch Star", "3836"), 41000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Canyon Star", "3947"), 32000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Bay Star Sport", "2813"), 20500);
   assert.equal(findOemFloorplanSpec("2022", "Newmar", "Dutch Star", "4081")?.gvwrLbs, 44460);
 
   assert.equal(findOemGvwrLbs("2025", "Tiffin", "Open Road", "32FA"), 24000);
@@ -852,6 +858,66 @@ test("Thor MY27 OEM GVWR pins lock dated brochure / OEM singles (Catalog Audit F
   assert.equal(findOemGvwrLbs("2027", "Thor", "Quantum", "LZ22"), null);
   assert.equal(findOemGvwrLbs("2027", "Thor", "Delano", "24FB"), null);
   assert.equal(findOemGvwrLbs("2027", "Thor", "Tiburon", "24XL"), null);
+});
+
+test("Newmar MY27 OEM GVWR/UVW pins lock dated brochure singles (Catalog Audit F)", () => {
+  // Critical GVWR from 2027 Newmar / RVUSA brochure chassis tables.
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Bay Star", "3639"), 26000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Bay Star", "3640"), 26000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Dutch Star", "3836"), 41000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Canyon Star", "3947"), 32000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Bay Star Sport", "2813"), 20500);
+
+  // Representative GVWR — year-band extends + MY27-only singles.
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Bay Star Sport", "3014"), 22000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Bay Star Sport", "3225"), 22000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Dutch Star", "4081"), 49000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Essex", "4545"), 54000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Grand Star", "3444"), 35200);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "King Aire", "4531"), 54000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "London Aire", "4540"), 54000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Mountain Aire", "3823"), 54000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "New Aire", "3543"), 38600);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Northern Star", "3418"), 36500);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Northern Star", "3709"), 38000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Super Star", "3731"), 40000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Super Star", "4140"), 43000);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Supreme Aire", "3827"), 41000);
+
+  // Representative UVW.
+  assert.equal(findOemUvwLbs("2027", "Newmar", "Bay Star", "3114"), 20050);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "Bay Star", "3639"), 22700);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "Bay Star Sport", "2813"), 17650);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "Canyon Star", "3947"), 25950);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "Dutch Star", "3836"), 34700);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "Grand Star", "3444"), 25500);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "King Aire", "4531"), 49900);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "Mountain Aire", "4118"), 42700);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "Supreme Aire", "4129"), 37000);
+
+  // Dual-chassis Freightliner vs Spartan prints stay GAP — do not invent a single.
+  for (const fp of ["4311", "4325", "4340", "4345", "4369"] as const) {
+    assert.equal(findOemGvwrLbs("2027", "Newmar", "Dutch Star", fp), null);
+    assert.equal(findOemUvwLbs("2027", "Newmar", "Dutch Star", fp), null);
+  }
+  for (const fp of ["3512", "3809", "4037", "4340", "4345", "4369"] as const) {
+    assert.equal(findOemGvwrLbs("2027", "Newmar", "Ventana", fp), null);
+    assert.equal(findOemUvwLbs("2027", "Newmar", "Ventana", fp), null);
+  }
+
+  // Isolation / year-scope: Sport ≠ Bay Star; MY27-only rows do not invent 2026.
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Bay Star Sport", "3114"), null);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "Bay Star Sport", "3114"), null);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Bay Star", "2813"), null);
+  assert.equal(findOemGvwrLbs("2026", "Newmar", "Bay Star", "3639"), null);
+  assert.equal(findOemGvwrLbs("2026", "Newmar", "Essex", "4545"), null);
+  assert.equal(findOemUvwLbs("2026", "Newmar", "Canyon Star", "3947"), null);
+  assert.equal(findOemUvwLbs("2026", "Newmar", "Bay Star Sport", "2813"), null);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "Dutch Star", "4071"), null);
+  assert.equal(findOemGvwrLbs("2027", "Newmar", "King Aire", "4545"), null);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "New Aire", "3545"), null);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "Essex", "4545"), null);
+  assert.equal(findOemUvwLbs("2027", "Newmar", "London Aire", "4540"), null);
 });
 
 test("Audit B Phase 3+ length pins match dated brochures (44OH / 303RLS / 26DBH)", () => {
