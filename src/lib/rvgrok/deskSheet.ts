@@ -220,7 +220,11 @@ function payloadFromFactsBrochure(
     brochureRow("A/C", brochure.acUnits),
     brochureRow("Fuel capacity", brochure.fuelCapacity),
     brochureRow("GVWR", brochure.gvwr),
-    brochureRow("UVW", brochure.uvw),
+    // Published UVW only. GVWR-tier estimates stay off the desk — never invent.
+    brochureRow(
+      "UVW",
+      brochure.uvwLbs != null && !brochure.uvwEstimated ? brochure.uvw : null,
+    ),
     brochureRow("CCC", brochure.ccc),
     brochureRow("Fresh", brochure.freshWater),
     brochureRow("Gray", brochure.grayWater),

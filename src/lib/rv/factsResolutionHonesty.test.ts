@@ -648,6 +648,14 @@ test("Lineage Series F: no series 22k stamp; 31ZW / 31ZW5 year-bands stay", () =
   assert.equal(zw5.snap.gvwrLbs, 19_500);
   assert.equal(zw.brochure.gvwrLbs, 22_000);
   assert.equal(zw5.brochure.gvwrLbs, 19_500);
+  assert.equal(zw.snap.freshWater, 79);
+  assert.equal(zw.snap.grayWater, 66);
+  assert.equal(zw.snap.blackWater, 45);
+  assert.equal(zw.snap.fuelCapacityGal, 66.5);
+  assert.equal(zw.brochure.freshWater, "79 gal");
+  assert.equal(zw.brochure.grayWater, "66 gal");
+  assert.equal(zw.brochure.blackWater, "45 gal");
+  assert.equal(zw.brochure.uvwLbs, null);
 });
 
 test("resolution path is shared — no coach-specific Ambassador/Jayco/Thor invent", () => {

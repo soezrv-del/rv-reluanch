@@ -19,6 +19,7 @@ import {
 import type { ActiveCoach } from "../rv/activeCoach";
 import { buildChatGrounding, namedCoachConflictsLock } from "./grounding";
 import { parseCoachFromText } from "./parseCoach";
+import { ensureCatalogLoaded } from "../rv/catalogLoad";
 import {
   resolveDeskSheet,
   type DeskSheetPayload,
@@ -792,10 +793,23 @@ export class GrokRealtimeSession {
    * A series change (Ventana → Dutch Star) always cancels the stale lock reply.
    */
   private async maybeEnrichWithWebResearch(transcript: string) {
-    const grounded = buildChatGrounding({
+    let grounded = buildChatGrounding({
       query: transcript,
       facts: this.facts,
     });
+    // Chat already loads the live catalog before desk paint. Voice must too —
+    // otherwise peekCatalog() is empty and tanks/fuel hard-GAP on the pin path.
+    if (grounded.identity) {
+      try {
+        await ensureCatalogLoaded();
+      } catch {
+        /* pin + thin index still ground */
+      }
+      grounded = buildChatGrounding({
+        query: transcript,
+        facts: this.facts,
+      });
+    }
     const parsed = parseCoachFromText(transcript);
     const lockBroke = Boolean(
       grounded.identity && namedCoachConflictsLock(parsed, this.facts),

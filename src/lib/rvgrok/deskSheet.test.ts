@@ -344,6 +344,66 @@ test("2026 Lineage 31ZW chat prose paints Super C / F-600 / 6.7 / 330 / 950 / ta
   assert.doesNotMatch(after!.presenceNote, /SERIES MISSING|YEAR GAP|FLOORPLAN GAP|GAP over invent/i);
 });
 
+test("2026 Lineage Series F 31ZW catalog tanks/fuel paint when chat only names GVWR", async () => {
+  const live = await loadLiveCatalog();
+  installCatalog({ RV_DATA: live.RV_DATA, MAKES: live.MAKES });
+  const spec = live.RV_DATA["Grand Design"]?.["Lineage Series F"];
+  assert.ok(spec, "Series F catalog row exists");
+  assert.equal(spec.freshWater, 79);
+  assert.equal(spec.grayWater, 66);
+  assert.equal(spec.blackWater, 45);
+  assert.equal(spec.fuelCapacityGal, 66.5);
+  assert.equal(spec.uvwLbs, undefined, "no published UVW — do not invent");
+
+  const q = "2026 Grand Design Lineage 31ZW";
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  assert.equal(identity!.year, "2026");
+  assert.match(identity!.make, /grand design/i);
+  assert.equal(identity!.model, "Lineage Series F");
+  assert.equal(identity!.floorplan, "31ZW");
+
+  const brochure = buildBrochureSpecs(
+    spec,
+    "2026",
+    "Grand Design",
+    "Lineage Series F",
+    "31ZW",
+  );
+  assert.equal(brochure.freshWater, "79 gal");
+  assert.equal(brochure.grayWater, "66 gal");
+  assert.equal(brochure.blackWater, "45 gal");
+  assert.match(brochure.fuelCapacity, /67\s*gal/i);
+  assert.equal(brochure.uvwLbs, null);
+
+  const chat =
+    "The 2026 Grand Design Lineage 31ZW has a factory GVWR of 22,000 pounds. Search came back empty again.";
+  const sheet = resolveDeskSheet({
+    query: q,
+    identity,
+    specs: null,
+    chatSpecBlock: chat,
+  });
+  assert.ok(sheet);
+  const val = (label: string) =>
+    sheet!.rows.find((r) => r.label === label)?.value || "";
+  const gap = (label: string) =>
+    sheet!.rows.find((r) => r.label === label)?.gap;
+  assert.equal(val("Class"), "Super C");
+  assert.match(val("GVWR"), /22,000/);
+  assert.equal(gap("GVWR"), false);
+  assert.equal(val("Fresh"), "79 gal");
+  assert.equal(val("Gray"), "66 gal");
+  assert.equal(val("Black"), "45 gal");
+  assert.equal(gap("Fresh"), false);
+  assert.match(val("Fuel capacity"), /67\s*gal/i);
+  assert.equal(gap("Fuel capacity"), false);
+  assert.ok(gap("UVW"), "UVW stays GAP — catalog has no published UVW");
+  assert.equal(val("UVW"), "GAP");
+  assert.equal(sheet!.floorplan, "31ZW");
+  assert.match(sheet!.model, /lineage series f/i);
+});
+
 test("catalog tank pins stay when chat does not name gallons", () => {
   const q = "2025 Entegra Coach Aspire 44R spec report";
   const identity = resolveCoachIdentity(q, null, "");
@@ -557,6 +617,13 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(src(root, "deskSheet.ts"), /brochureRow\("Fresh"/);
   assert.match(src(root, "deskSheet.ts"), /brochureRow\("Gray"/);
   assert.match(src(root, "deskSheet.ts"), /brochureRow\("Black"/);
+  assert.match(src(root, "deskSheet.ts"), /uvwLbs != null && !brochure\.uvwEstimated/);
   assert.match(src(root, "chatSpecBlock.ts"), /firstTankGallons/);
   assert.match(prompts, /holding tanks/);
+  assert.match(realtime, /ensureCatalogLoaded/);
+  assert.match(app, /await ensureCatalogLoaded\(\)/);
+  assert.doesNotMatch(
+    app,
+    /if \(facts\?\.year && facts\.make && facts\.model\) \{\s*try \{\s*await ensureCatalogLoaded/,
+  );
 });

@@ -442,6 +442,15 @@ test("spoken 31W Z / 31WZ is the Lineage Super C 31ZW", () => {
   }
 });
 
+test("typed 312W is the Lineage Super C 31ZW", () => {
+  const q = "2026 Grand Design Lineage 312W";
+  const id = resolveCoachIdentity(q, null, "");
+  assert.ok(id);
+  assert.equal(id!.make, "Grand Design");
+  assert.equal(id!.model, "Lineage Series F");
+  assert.equal(id!.floorplan, "31ZW");
+});
+
 test("Lineage is Grand Design — never blank make or SERIES MISSING", () => {
   const dutchFacts = {
     year: "2019",

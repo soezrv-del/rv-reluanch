@@ -67,4 +67,5 @@ test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => 
   assert.match(realtime, /pushCatalogLockToSession[\s\S]*buildRealtimeSessionUpdate/);
   assert.match(realtime, /decideVoiceWebResearch/);
   assert.match(realtime, /formatVoiceWebSearchInjection/);
+  assert.match(realtime, /ensureCatalogLoaded/);
 });
