@@ -66,6 +66,7 @@ import {
   formatLockedWeightsBlock,
   resolveLockedOemWeights,
 } from "./lockedWeights.ts";
+import { COACH_REPORT_CHAT_RULE } from "./coachReport.ts";
 
 function withDeskSheetSpeechRule(
   block: string,
@@ -74,7 +75,7 @@ function withDeskSheetSpeechRule(
 ): string {
   const extra =
     identity && shouldMountDeskSheet(query, identity)
-      ? `DESK SPEC SHEET MOUNTED for ${[identity.year, identity.make, identity.model, identity.floorplan].filter(Boolean).join(" ")}. You may say exactly: "Spec sheet is on the desk." Speak THIS coach — never a prior series. Incomplete fields show as GAP on the sheet — do not write EST onto the desk or re-GAP a Facts number. Conversational answers may give a labeled EST / typical class range after WEB RESEARCH — never as an OEM pin. If a field is non-GAP on the sheet or VERIFIED in LOCKED WEIGHTS, speak that number — never claim you lack it.\n\n${formatLockedWeightsBlock(identity)}\n\nWRITTEN SPEC SHEET: the structured CARFAX-style desk sheet already mounted is the written reply. Do not dump a prose spec report in chat. Do not output a second markdown Spec Sheet, Weight ratings table, or GVWR/GCWR/UVW/NCC: GAP block that re-GAPs a VERIFIED field.`
+      ? `DESK SPEC SHEET MOUNTED for ${[identity.year, identity.make, identity.model, identity.floorplan].filter(Boolean).join(" ")}. You may say exactly: "Spec sheet is on the desk." Speak THIS coach — never a prior series. Incomplete fields show as GAP on the sheet — do not write EST onto the desk or re-GAP a Facts number. Conversational answers may give a labeled EST / typical class range after WEB RESEARCH — never as an OEM pin. If a field is non-GAP on the sheet or VERIFIED in LOCKED WEIGHTS, speak that number — never claim you lack it.\n\n${formatLockedWeightsBlock(identity)}\n\n${COACH_REPORT_CHAT_RULE} The desk card copies every number from that chat bubble. Do not output a second markdown Spec Sheet, Weight ratings table, or GVWR/GCWR/UVW/NCC: GAP block that re-GAPs a named or VERIFIED field.`
       : `DESK SPEC SHEET NOT MOUNTED. Never say the spec sheet / report is on the desk, or that a sheet is visible. Speak the answer only.`;
   const body = (block || "").trim();
   return body ? `${body}\n\n${extra}` : extra;

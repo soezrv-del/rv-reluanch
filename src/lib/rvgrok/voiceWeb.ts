@@ -31,8 +31,10 @@ import { looksLikeOwnLotStockQuestion } from "./ownLotInventory.ts";
 import {
   evaluateResearchQuality,
   type WebSearchNotes,
+  SPEC_REPORT_RESEARCH_TIMEOUT_MS,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
 } from "./webSearch.ts";
+import { looksLikeCoachReportAsk } from "./coachReport.ts";
 import {
   formatCatalogPinWinsSearchMiss,
   LOW_CONFIDENCE_EST_RULE,
@@ -62,6 +64,17 @@ export {
 /** Client abort slightly above the server voice budget so we receive an honest body. */
 export const VOICE_WEB_SEARCH_CLIENT_BUDGET_MS =
   VOICE_WEB_SEARCH_TIMEOUT_MS + 1_000;
+
+/** Spec / report sidecar — chat-class window, not the talk-only 25s client abort. */
+export const SPEC_REPORT_RESEARCH_CLIENT_BUDGET_MS =
+  SPEC_REPORT_RESEARCH_TIMEOUT_MS + 1_000;
+
+/** Talk-only stays short; a specs / report ask must not abort at the 10s / 25s window. */
+export function voiceWebSearchClientBudgetMs(query: string): number {
+  return looksLikeCoachReportAsk(query)
+    ? SPEC_REPORT_RESEARCH_CLIENT_BUDGET_MS
+    : VOICE_WEB_SEARCH_CLIENT_BUDGET_MS;
+}
 
 /** Sidecar 403 `{ error: "access_required" }` — not an empty search. */
 export const VOICE_WEB_ACCESS_BLOCKED_REASON = RESEARCH_ACCESS_BLOCKED_REASON;
@@ -235,7 +248,8 @@ export async function fetchVoiceWebResearchNotes(opts: {
           catalogContext: opts.catalogContext || undefined,
         }),
         signal:
-          opts.signal ?? AbortSignal.timeout(VOICE_WEB_SEARCH_CLIENT_BUDGET_MS),
+          opts.signal ??
+          AbortSignal.timeout(voiceWebSearchClientBudgetMs(opts.query)),
       });
 
     const res = await fetchWithResearchAccess(post, {

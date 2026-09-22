@@ -8,7 +8,9 @@ import {
   extractGeminiText,
   GEMINI_CHAT_RESEARCH_TIMEOUT_MS,
   GEMINI_RESEARCH_MODEL,
+  GEMINI_SPEC_REPORT_TIMEOUT_MS,
   GEMINI_VOICE_RESEARCH_TIMEOUT_MS,
+  geminiResearchTimeoutMs,
   isGeminiResearchUrl,
   readGeminiApiKey,
   readResearchProviderPref,
@@ -79,7 +81,30 @@ test("resolveResearchProvider: auto/gemini/xai and missing key", () => {
   );
   assert.equal(GEMINI_CHAT_RESEARCH_TIMEOUT_MS, 10_000);
   assert.equal(GEMINI_VOICE_RESEARCH_TIMEOUT_MS, 4_500);
+  assert.equal(GEMINI_SPEC_REPORT_TIMEOUT_MS, 28_000);
   assert.equal(GEMINI_RESEARCH_MODEL, "gemini-2.5-flash");
+  assert.equal(
+    geminiResearchTimeoutMs(
+      "chat",
+      "Give me the spec report on the 2021 American Dream 42Q",
+    ),
+    GEMINI_SPEC_REPORT_TIMEOUT_MS,
+  );
+  assert.equal(
+    geminiResearchTimeoutMs(
+      "voice",
+      "What's the GVWR of a 2022 Tiffin Phaeton 40IH?",
+    ),
+    GEMINI_SPEC_REPORT_TIMEOUT_MS,
+  );
+  assert.equal(
+    geminiResearchTimeoutMs("chat", "check engine light reset Ford E450"),
+    GEMINI_CHAT_RESEARCH_TIMEOUT_MS,
+  );
+  assert.equal(
+    geminiResearchTimeoutMs("voice", "check engine light reset Ford E450"),
+    GEMINI_VOICE_RESEARCH_TIMEOUT_MS,
+  );
 });
 
 test("Gemini request prefers OEM / factory brochure / dealer, not PDF-only", () => {

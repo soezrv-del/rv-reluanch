@@ -4,7 +4,9 @@ import {
   executeWebResearch,
   webResearchJsonResponse,
 } from "@/lib/rvgrok/webResearchTelemetry";
+import { looksLikeCoachReportAsk } from "@/lib/rvgrok/coachReport";
 import {
+  SPEC_REPORT_RESEARCH_TIMEOUT_MS,
   VOICE_WEB_SEARCH_MODELS,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
   WEB_SEARCH_MAX_TOOL_CALLS,
@@ -48,7 +50,9 @@ async function handleResearch(request: Request): Promise<Response> {
     catalogBlock:
       typeof body.catalogContext === "string" ? body.catalogContext : undefined,
     apiKey: process.env.XAI_API_KEY,
-    timeoutMs: VOICE_WEB_SEARCH_TIMEOUT_MS,
+    timeoutMs: looksLikeCoachReportAsk(query)
+      ? SPEC_REPORT_RESEARCH_TIMEOUT_MS
+      : VOICE_WEB_SEARCH_TIMEOUT_MS,
     models: VOICE_WEB_SEARCH_MODELS,
     profile: "voice",
     requestOrigin,

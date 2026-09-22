@@ -361,22 +361,22 @@ export function buildDeskSheetPayload(
     fillGapRowsFromOemTanks(catalogRows, identity),
     figures,
   );
+  const chatNamed = chatSpecHasNumber(figures);
   const chatCovered = chatSpecCoversPaintedFields(figures);
-  if (
-    chatCovered ||
-    (chatSpecHasNumber(figures) && /SERIES MISSING/i.test(presenceNote))
-  ) {
+  // Chat named a number → no SERIES MISSING / Confirm brochure / GAP lecture.
+  if (chatNamed || chatCovered) {
     presenceNote = "";
   }
 
-  // Lecture banner only when chat did not already name the painted fields.
-  const gaps = chatCovered
-    ? []
-    : [
-        ...rows.filter((r) => r.gap).map((r) => r.label),
-        ...(!identity.year ? ["Year"] : []),
-        ...(presenceNote ? ["Presence"] : []),
-      ];
+  // Lecture banner only when chat did not already name a number.
+  const gaps =
+    chatNamed || chatCovered
+      ? []
+      : [
+          ...rows.filter((r) => r.gap).map((r) => r.label),
+          ...(!identity.year ? ["Year"] : []),
+          ...(presenceNote ? ["Presence"] : []),
+        ];
 
   return {
     year: identity.year,
