@@ -6,6 +6,7 @@ import { parseCoachFromText } from "@/lib/rvgrok/answerFeedback";
 import { formatTime, cn } from "@/lib/utils";
 import { AgentBadge, AgentStepsCard } from "./AgentStepsCard";
 import { DeskSpecSheet } from "./DeskSpecSheet";
+import { GrokExtrasRail } from "./GrokExtrasRail";
 import { stripDuplicateMarkdownSpecSheet } from "@/lib/rvgrok/lockedWeights";
 
 function renderContent(text: string) {
@@ -333,6 +334,15 @@ export function MessageBubble({
         {message.deskSheet ? (
           <div className="mt-3" data-rvgrok-desk-after-reply="">
             <DeskSpecSheet sheet={message.deskSheet} />
+            <GrokExtrasRail
+              query={priorQuery || ""}
+              coach={{
+                year: message.deskSheet.year,
+                make: message.deskSheet.make,
+                model: message.deskSheet.model,
+                floorplan: message.deskSheet.floorplan,
+              }}
+            />
           </div>
         ) : null}
       </div>
