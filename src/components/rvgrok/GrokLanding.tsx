@@ -82,7 +82,10 @@ export function GrokLanding({
 
       <section className="grok-frost grok-landing-card relative flex flex-col items-center px-5 pb-5 pt-8 text-center sm:px-10 sm:pb-7 sm:pt-10">
         {toolbar ? (
-          <div className="absolute right-3 top-3 flex items-center gap-1">
+          <div
+            data-grok-top-chrome
+            className="absolute right-3 top-3 flex items-center gap-1"
+          >
             {toolbar}
           </div>
         ) : null}

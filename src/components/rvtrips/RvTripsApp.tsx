@@ -1240,7 +1240,7 @@ export function RvTripsApp() {
           data-trips-header
           className="relative z-40 isolate pointer-events-auto px-3 pb-2 sm:px-4"
         >
-          <div className="absolute right-2.5 top-2.5 z-[4] sm:right-3 sm:top-3">
+          <div className="premium-menu-corner absolute z-[4]">
             <PremiumMenuButton size="sm" />
           </div>
           <div className="min-w-0 pr-12">
