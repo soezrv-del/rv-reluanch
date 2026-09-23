@@ -659,6 +659,17 @@ const OWN_LOT_MODEL_JUNK = new Set([
   "my",
   "please",
   "thanks",
+  "look",
+  "looking",
+  "find",
+  "finding",
+  "search",
+  "searching",
+  "pull",
+  "pulling",
+  "check",
+  "checking",
+  "got",
 ]);
 
 /** Series letters parseCoach must keep (Lineage M). Not plural leftovers. */
@@ -1332,6 +1343,15 @@ function withLotSearchTitle(unit: OwnLotUnit): OwnLotUnit & { title: string } {
  * and parseCoach does not already have a make/model/class filter that
  * needs Integra→Entegra aliases. Brand/class/budget stays on unitMatchesFilter.
  */
+function isSearchVerbLeftover(value: string | undefined): boolean {
+  if (!value) return true;
+  const tokens = norm(value).split(/\s+/).filter(Boolean);
+  return (
+    tokens.length > 0 &&
+    tokens.every((t) => LOT_ASK_STOP.has(t) || OWN_LOT_MODEL_JUNK.has(t))
+  );
+}
+
 export function shouldUseLotPageSearch(
   query: string,
   filter: OwnLotFilter,
@@ -1339,8 +1359,8 @@ export function shouldUseLotPageSearch(
 ): boolean {
   if (!lotQuery.trim()) return false;
   if (
-    filter.make ||
-    filter.model ||
+    (filter.make && !isSearchVerbLeftover(filter.make)) ||
+    (filter.model && !isSearchVerbLeftover(filter.model)) ||
     filter.bodyType ||
     filter.dieselOnly ||
     filter.gasOnly ||
