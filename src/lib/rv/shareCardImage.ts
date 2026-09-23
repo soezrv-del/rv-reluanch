@@ -45,6 +45,34 @@ export function defaultShareCardContact(): ShareCardContact {
   };
 }
 
+/** Initials for the signature box — first letter of each whitespace token. */
+export function monogramFromDisplayName(name: string): string {
+  const letters = String(name ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("");
+  return letters ? letters.toUpperCase() : REPORT_CONTACT_MONOGRAM;
+}
+
+/**
+ * Signature on the share card. A signed-in access name (phone identity)
+ * replaces the dealer slot; empty / unsigned keeps the default contact.
+ */
+export function shareCardContactForSession(
+  signedInName?: string | null,
+): ShareCardContact {
+  const name = String(signedInName ?? "").trim();
+  if (!name) return defaultShareCardContact();
+  return {
+    monogram: monogramFromDisplayName(name),
+    kicker: REPORT_CONTACT_KICKER,
+    name,
+    phone: REPORT_CONTACT_PHONE,
+  };
+}
+
 /** Live preview card — same node the salesman sees above Share kit. */
 export function elementLooksLikeShareCard(el: Element | null): boolean {
   if (!el) return false;
@@ -701,6 +729,7 @@ export async function shareOrCopy(opts: {
 export function captureShareCardFile(
   _previewEl: Element | null,
   filename = SHARE_CARD_FILENAME,
+  contact: ShareCardContact = defaultShareCardContact(),
 ): File | null {
   if (typeof document === "undefined") return null;
   try {
@@ -709,7 +738,7 @@ export function captureShareCardFile(
     canvas.height = SHARE_CARD_HEIGHT;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return null;
-    paintShareSignatureCard(ctx);
+    paintShareSignatureCard(ctx, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT, contact);
     if (!canvasLooksPainted(ctx, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT)) {
       return null;
     }
