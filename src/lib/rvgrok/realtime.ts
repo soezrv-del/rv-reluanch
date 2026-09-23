@@ -134,6 +134,8 @@ export class GrokRealtimeSession {
   private userQuestionPending = false;
   /** We cancelled VAD to speak our own answer. Ignore that cancelled done. */
   private takeover = false;
+  /** The connect intro's response.done is not a user answer. */
+  private awaitingIntroDone = false;
 
   constructor(
     handlers: RealtimeHandlers,
@@ -182,6 +184,7 @@ export class GrokRealtimeSession {
     this.ackSettled = false;
     this.userQuestionPending = false;
     this.takeover = false;
+    this.awaitingIntroDone = false;
 
     this.handlers.onStatus("connecting", "Allow microphone if the phone asks…");
 
@@ -1012,10 +1015,12 @@ export class GrokRealtimeSession {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     this.introSpoken = true;
+    this.awaitingIntroDone = true;
     try {
       ws.send(JSON.stringify(buildSessionIntroResponse(this.visitorFirstName)));
     } catch {
       this.introSpoken = false;
+      this.awaitingIntroDone = false;
     }
   }
 
@@ -1254,9 +1259,14 @@ export class GrokRealtimeSession {
    * A cancelled VAD reply is not the answer — wait until we have spoken.
    */
   private settleAckTurn() {
+    // The connect intro is the first reply. Do not spend the question opener on it,
+    // even if the user already started talking before that reply finishes.
+    if (this.awaitingIntroDone && !this.ackState.taken) {
+      this.awaitingIntroDone = false;
+      return;
+    }
     if (this.ackSettled || !this.userQuestionPending) return;
     if (this.takeover && !this.ackState.taken) return;
-    // The one-time intro is not a user question.
     if (this.isBareSessionIntro(this.assistantText) && !this.ackState.taken) return;
     this.ackSettled = true;
     this.userQuestionPending = false;
