@@ -10,7 +10,7 @@ import {
  * POST /api/rvfax/spec-fallback
  *
  * Field-only scrape for empty catalog cells. Catalog stays SoT.
- * No Gemini. No whole-coach rewrite.
+ * Field-only scrape. No whole-coach rewrite.
  */
 
 export const Route = createFileRoute("/api/rvfax/spec-fallback")({

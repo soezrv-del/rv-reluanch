@@ -152,7 +152,7 @@ test("Facts and Grok both import the shared engine — DialaBot and pins stay ou
   assert.match(engine, /resolveSharedSpecPaint/);
   assert.match(desk, /specEngine/);
   assert.match(facts, /specEngine/);
-  assert.match(grok, /specEngine|fetchSpecFieldFallback|fallbackFills/);
+  assert.match(grok, /specEngine|fetchSpecFieldFallback|fallbackFills|resolveDeskSheetThenFallback/);
   assert.doesNotMatch(engine, /[Dd]ialaBot/);
   assert.doesNotMatch(fallback, /[Dd]ialaBot/);
   assert.doesNotMatch(engine, /OEM_UVW_PINS/);

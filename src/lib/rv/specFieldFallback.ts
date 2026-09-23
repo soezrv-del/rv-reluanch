@@ -9,7 +9,7 @@
  *   4. Official OEM brochure PDF
  *
  * Dry weight may paint as UVW with an asterisk + source URL. Never invent.
- * No Gemini. No new bots. DialaBot stays out.
+ * Field-only scrape. Existing bots stay out of this path.
  */
 
 export type SpecFieldKey =
