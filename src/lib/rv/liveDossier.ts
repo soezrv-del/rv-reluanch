@@ -89,6 +89,8 @@ export type CatalogCandidatePayload = {
   bandTo?: number | null;
   floorplan?: string | null;
   lengthFt?: string | null;
+  overallLength?: string | number | null;
+  length?: string | number | null;
   gvwr?: string | null;
   gvwrLbs?: number | null;
   uvw?: string | null;
@@ -97,6 +99,10 @@ export type CatalogCandidatePayload = {
   freshWater?: string | null;
   grayWater?: string | null;
   blackWater?: string | null;
+  freshWaterGal?: string | number | null;
+  grayWaterGal?: string | number | null;
+  blackWaterGal?: string | number | null;
+  torqueLbFt?: string | number | null;
 };
 
 export type LiveDossierResponse =

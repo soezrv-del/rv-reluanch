@@ -55,6 +55,10 @@ export type FactsCatalogCandidate = {
   bandTo?: number | null;
   floorplan?: string | null;
   lengthFt?: string | null;
+  /** LiveDossier / probe alias for lengthFt. */
+  overallLength?: string | number | null;
+  length?: string | number | null;
+  length_ft?: string | number | null;
   gvwr?: string | number | null;
   gvwrLbs?: number | null;
   uvw?: string | number | null;
@@ -64,6 +68,12 @@ export type FactsCatalogCandidate = {
   freshWater?: string | number | null;
   grayWater?: string | number | null;
   blackWater?: string | number | null;
+  /** Facts extract / probe often send *Gal keys, not brochure names. */
+  freshWaterGal?: string | number | null;
+  grayWaterGal?: string | number | null;
+  blackWaterGal?: string | number | null;
+  /** LiveDossier alias for torque. */
+  torqueLbFt?: string | number | null;
 };
 
 export type FactsResolvedPins = {
@@ -253,7 +263,10 @@ export function resolveFactsCatalogPins(opts: {
 
   const engine = firstPinText(pin?.engine, candidate?.engine);
   let horsepower = pinHp ?? parseHpValue(candidate?.horsepower);
-  let torqueLbFt = pinTorque ?? parseTorqueValue(candidate?.torque);
+  let torqueLbFt =
+    pinTorque ??
+    parseTorqueValue(candidate?.torque) ??
+    parseTorqueValue(candidate?.torqueLbFt);
   const chassis = firstPinText(pin?.chassis, candidate?.chassis);
   const transmission = firstPinText(pin?.transmission, candidate?.transmission);
   const fuelType = firstPinText(pin?.fuelType, candidate?.fuelType);
@@ -291,10 +304,28 @@ export function resolveFactsCatalogPins(opts: {
     uvwLbs: skipEstUvw
       ? firstWeight(oem?.uvwLbs) ?? null
       : firstWeight(oem?.uvwLbs, candidate?.uvwLbs, candidate?.uvw) ?? null,
-    lengthFt: firstPinText(oemLength, candidate?.lengthFt),
-    freshWaterGal: firstGal(oem?.freshWater, candidate?.freshWater),
-    grayWaterGal: firstGal(oem?.grayWater, candidate?.grayWater),
-    blackWaterGal: firstGal(oem?.blackWater, candidate?.blackWater),
+    lengthFt: firstPinText(
+      oemLength,
+      candidate?.lengthFt,
+      candidate?.overallLength,
+      candidate?.length,
+      candidate?.length_ft,
+    ),
+    freshWaterGal: firstGal(
+      oem?.freshWater,
+      candidate?.freshWater,
+      candidate?.freshWaterGal,
+    ),
+    grayWaterGal: firstGal(
+      oem?.grayWater,
+      candidate?.grayWater,
+      candidate?.grayWaterGal,
+    ),
+    blackWaterGal: firstGal(
+      oem?.blackWater,
+      candidate?.blackWater,
+      candidate?.blackWaterGal,
+    ),
     rvType: firstPinText(candidate?.type),
     sourcesNote: sources.length ? sources.join(" · ") : null,
   };

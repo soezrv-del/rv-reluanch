@@ -63,6 +63,10 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
   assert.match(helper, /planFactsDossierResearch/);
   assert.match(helper, /researchFactsSoftNotes/);
   assert.match(helper, /mergeSoftFieldsIntoDossier/);
+  assert.match(helper, /candidate\?\.freshWaterGal/);
+  assert.match(helper, /candidate\?\.grayWaterGal/);
+  assert.match(helper, /candidate\?\.blackWaterGal/);
+  assert.match(helper, /candidate\?\.overallLength/);
   assert.doesNotMatch(helper, /researchOrder\s*:/);
   assert.doesNotMatch(helper, /Give me the full specs report/);
   assert.doesNotMatch(helper, /SPEC_REPORT_RESEARCH_TIMEOUT_MS/);
@@ -81,6 +85,8 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
   assert.match(dossier, /catalog-pins/);
   assert.match(dossier, /grok-4\.7/);
   assert.match(dossier, /research\.skipped/);
+  assert.match(dossier, /skipLive: twoStep\.skipLive/);
+  assert.match(dossier, /gaps: twoStep\.gaps/);
   assert.doesNotMatch(dossier, /grok-3|grok-2-1212/);
   assert.doesNotMatch(dossier, /researchOrder\s*:/);
   assert.doesNotMatch(
@@ -338,6 +344,137 @@ test("brochure powertrain pins are not stomped by live research fields", () => {
   assert.match(live, /lockPowertrainFromCatalog !== false/);
   assert.match(cache, /export function applyPowertrainPin/);
   assert.match(live, /return applyPowertrainPin\(/);
+});
+
+test("catalogCandidate *Gal tank keys + complete pins skip hard browse", async () => {
+  const candidate: FactsCatalogCandidate = {
+    engine: "Acme SuperDuty 380HP",
+    horsepower: 380,
+    torque: "860 lb-ft",
+    chassis: "Freightliner M2",
+    transmission: "Allison 2500",
+    fuelType: "Diesel",
+    lengthFt: "36 ft",
+    gvwrLbs: 26000,
+    uvwLbs: 21000,
+    uvwEstimated: false,
+    freshWaterGal: 80,
+    grayWaterGal: 40,
+    blackWaterGal: 40,
+  };
+  const pins = resolveFactsCatalogPins({
+    year: "2018",
+    make: "Unknown Coachworks",
+    model: "Phantom",
+    floorplan: "32X",
+    candidate,
+  });
+  assert.equal(pins.freshWaterGal, 80);
+  assert.equal(pins.grayWaterGal, 40);
+  assert.equal(pins.blackWaterGal, 40);
+  const plan = planFactsDossierResearch({
+    year: "2018",
+    make: "Unknown Coachworks",
+    model: "Phantom",
+    floorplan: "32X",
+    candidate,
+  });
+  assert.equal(plan.skipLive, true);
+  assert.deepEqual(plan.gaps, []);
+  assert.equal(plan.query, null);
+
+  const calls: ExecuteWebResearchOpts[] = [];
+  const notes = await researchFactsDossierNotes({
+    year: "2018",
+    make: "Unknown Coachworks",
+    model: "Phantom",
+    floorplan: "32X",
+    candidate,
+    execute: async (opts) => {
+      calls.push(opts);
+      return {
+        ok: true,
+        notes: "hard should not run",
+        model: "grok-4.7",
+        kind: "success",
+        durationMs: 12,
+      };
+    },
+  });
+  assert.equal(calls.length, 0, "executeWebResearch must not run for hard gaps");
+  assert.ok(notes);
+  assert.equal(notes!.skipped, true);
+  assert.equal(notes!.model, "catalog-pin");
+});
+
+test("Dream probe without Gal/length aliases still gaps tanks + length", () => {
+  const plan = planFactsDossierResearch({
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+    candidate: {
+      engine: "Cummins X15 605HP",
+      horsepower: 605,
+      torqueLbFt: 1950,
+      chassis: "Spartan K3",
+      transmission: "Allison 4000 MH",
+      fuelType: "Diesel",
+      gvwrLbs: 54000,
+      uvwLbs: 42000,
+      uvwEstimated: false,
+    },
+  });
+  assert.deepEqual(plan.gaps, ["tanks", "length"]);
+  assert.equal(plan.skipLive, false);
+});
+
+test("Dream probe LiveDossier aliases (Gal + overallLength + torqueLbFt) skip hard browse", () => {
+  const before = planFactsDossierResearch({
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+    candidate: {
+      engine: "Cummins X15 605HP",
+      horsepower: 605,
+      torqueLbFt: 1950,
+      chassis: "Spartan K3",
+      transmission: "Allison 4000 MH",
+      fuelType: "Diesel",
+      overallLength: `44' 11"`,
+      gvwrLbs: 54000,
+      uvwLbs: 42000,
+      uvwEstimated: false,
+      freshWaterGal: 100,
+      grayWaterGal: 50,
+      blackWaterGal: 50,
+    },
+  });
+  assert.equal(before.skipLive, true);
+  assert.deepEqual(before.gaps, []);
+
+  const pins = resolveFactsCatalogPins({
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+    candidate: {
+      overallLength: `44' 11"`,
+      gvwrLbs: 54000,
+      uvwLbs: 42000,
+      uvwEstimated: false,
+      freshWaterGal: 100,
+      grayWaterGal: 50,
+      blackWaterGal: 50,
+    },
+  });
+  assert.equal(pins.lengthFt, `44' 11"`);
+  assert.equal(pins.freshWaterGal, 100);
+  assert.equal(pins.grayWaterGal, 50);
+  assert.equal(pins.blackWaterGal, 50);
+  assert.equal(pins.gvwrLbs, 54000);
+  assert.equal(pins.uvwLbs, 42000);
 });
 
 test("2023 American Dream 45A brochure pin plus complete weights skips hard browse", () => {
