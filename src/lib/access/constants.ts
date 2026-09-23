@@ -12,6 +12,10 @@ export const HARD_ADMIN = {
 } as const;
 
 export const ACCESS_PHONE_STORAGE_KEY = "rvfox_access_phone_v1";
+/** Device-local first name for welcome-back + RV Grok personalization. */
+export const ACCESS_NAME_STORAGE_KEY = "rvfox_access_first_name_v1";
+/** Session flag so the Grok welcome chip fires once, not on every tab remount. */
+export const ACCESS_WELCOME_SESSION_KEY = "rvfox_welcome_back_shown_v1";
 export const ACCESS_ADMIN_TOKEN_KEY = "rvfox_access_admin_token_v1";
 /** Device-local one-time NDA accept. Bump NDA_VERSION in ndaText.ts to re-prompt. */
 export const NDA_STORAGE_KEY = "rvfox_nda_accepted_v1";

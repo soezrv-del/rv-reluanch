@@ -98,6 +98,9 @@ test("hard-admin phone header can manage the Neon list; Close always clears over
   const more = read("src/components/access/AccessMoreSection.tsx");
   assert.match(more, /openAdminList/);
   assert.match(more, /closeAdminList/);
+  assert.match(more, /FIRST NAME/);
+  assert.match(more, /welcomeBackLine/);
+  assert.match(more, /access.identify\(phone, firstName\)/);
 
   const provider = read("src/components/access/AccessProvider.tsx");
   assert.match(provider, /openAdminList/);
@@ -106,6 +109,8 @@ test("hard-admin phone header can manage the Neon list; Close always clears over
 
   const request = read("src/components/access/RequestAccessSheet.tsx");
   assert.match(request, /z-\[120\]/);
+  assert.match(request, /FIRST NAME/);
+  assert.match(request, /onIdentify\(phone, name\)/);
   assert.ok(
     sheet.indexOf("z-[140]") >= 0 && request.indexOf("z-[120]") >= 0,
     "admin list must stack above research-unlock / request overlay",
@@ -252,8 +257,11 @@ test("http gate short-circuits hard admin and stays on rvgrok", () => {
   assert.match(sheet, /onIdentify/);
   assert.match(sheet, /Unlock with this number/);
   const provider = read("src/components/access/AccessProvider.tsx");
-  assert.match(provider, /if \(result.allowed && cred\) storePhone/);
+  assert.match(provider, /if \(result.allowed && cred\) storeApprovedIdentity/);
   assert.match(provider, /phoneDigits/);
+  assert.match(provider, /resolvePersonalFirstName/);
+  assert.match(provider, /readStoredFirstName/);
+  assert.match(provider, /identify: \(phone: string, firstName\?: string\)/);
   const realtime = read("src/lib/rvgrok/realtime.ts");
   assert.match(realtime, /setAccessPhone/);
 });

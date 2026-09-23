@@ -1,20 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Shield } from "lucide-react";
+import { welcomeBackLine } from "@/lib/access/identity";
 import { useAccess } from "./AccessProvider";
 import { AdminWhitelistSheet } from "./AdminWhitelistSheet";
 
 export function AccessMoreSection() {
   const access = useAccess();
+  const [firstName, setFirstName] = useState(access.name);
   const [phone, setPhone] = useState(access.phone);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const onIdentify = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (access.phone) setPhone(access.phone);
+    if (access.name) setFirstName(access.name);
+  }, [access.phone, access.name]);
+
+  const onIdentify = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     setBusy(true);
     try {
-      const result = await access.identify(phone);
+      const result = await access.identify(phone, firstName);
       if (!result.allowed) {
         setError(
           "This number is not on the list. Request access from a locked tool — that does not unlock the app.",
@@ -27,6 +34,8 @@ export function AccessMoreSection() {
     }
   };
 
+  const welcome = access.allowed ? welcomeBackLine(access.name) : "";
+
   return (
     <>
       <section>
@@ -37,13 +46,30 @@ export function AccessMoreSection() {
           onSubmit={(e) => void onIdentify(e)}
           className="glass-prestige space-y-3 rounded-[1.25rem] p-3.5"
         >
-          <p className="text-[12px] leading-relaxed text-white/70">
+          <p
+            data-access-welcome={welcome || undefined}
+            className="text-[12px] leading-relaxed text-white/70"
+          >
             {access.allowed
-              ? access.isAdmin
-                ? "Admin number recognized. Full access."
-                : "This number is on the approved list. Full access."
+              ? `${welcome ? `${welcome}. ` : ""}${
+                  access.isAdmin
+                    ? "Admin number recognized. Full access."
+                    : "This number is on the approved list. Full access."
+                }`
               : "Browse is open. Full tools need an approved number. Requesting access never unlocks you."}
           </p>
+          <label className="block">
+            <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">
+              FIRST NAME
+            </span>
+            <input
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold text-white outline-none"
+              autoComplete="given-name"
+              placeholder="First name"
+            />
+          </label>
           <label className="block">
             <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">
               YOUR PHONE

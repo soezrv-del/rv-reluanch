@@ -32,6 +32,7 @@ export function GrokLanding({
   toolbar,
   composer,
   hint,
+  welcomeBack,
 }: {
   status: string;
   speaking: boolean;
@@ -41,6 +42,8 @@ export function GrokLanding({
   toolbar?: ReactNode;
   composer: ReactNode;
   hint?: string;
+  /** UI-only welcome chip. Separate from the session identity heading. */
+  welcomeBack?: string;
 }) {
   return (
     <div
@@ -92,6 +95,15 @@ export function GrokLanding({
         <h1 className="grok-display mt-6 max-w-[18ch] text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-fg sm:text-[2.35rem]">
           I'm RvGrok
         </h1>
+
+        {welcomeBack ? (
+          <p
+            data-rvgrok-welcome=""
+            className="grok-chip mt-3 rounded-full px-3.5 py-1.5 text-[13px] font-semibold text-fg"
+          >
+            {welcomeBack}
+          </p>
+        ) : null}
 
         <div className="mt-7 w-full text-left">{composer}</div>
 

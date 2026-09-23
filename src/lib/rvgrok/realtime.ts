@@ -96,6 +96,7 @@ export class GrokRealtimeSession {
     null;
   private lastDeskSpecs: Parameters<typeof resolveDeskSheet>[0]["specs"] = null;
   private accessPhone: string;
+  private visitorFirstName: string;
 
   constructor(
     handlers: RealtimeHandlers,
@@ -105,6 +106,7 @@ export class GrokRealtimeSession {
       catalogContext?: string;
       facts?: ActiveCoach | null;
       accessPhone?: string;
+      visitorFirstName?: string;
     },
   ) {
     this.handlers = handlers;
@@ -113,11 +115,16 @@ export class GrokRealtimeSession {
     this.catalogContext = (opts?.catalogContext || "").trim();
     this.facts = opts?.facts ?? null;
     this.accessPhone = (opts?.accessPhone || "").trim();
+    this.visitorFirstName = (opts?.visitorFirstName || "").trim();
   }
 
   /** AccessProvider may hydrate after Live Voice is already connected. */
   setAccessPhone(phone?: string) {
     this.accessPhone = (phone || "").trim();
+  }
+
+  setVisitorFirstName(firstName?: string) {
+    this.visitorFirstName = (firstName || "").trim();
   }
 
   get isActive() {
@@ -168,6 +175,7 @@ export class GrokRealtimeSession {
           this.voiceId,
           this.speed,
           this.catalogContext,
+          this.visitorFirstName,
         ),
       ),
     );
@@ -747,7 +755,12 @@ export class GrokRealtimeSession {
     try {
       ws.send(
         JSON.stringify(
-          buildRealtimeSessionUpdate(this.voiceId, this.speed, text),
+          buildRealtimeSessionUpdate(
+            this.voiceId,
+            this.speed,
+            text,
+            this.visitorFirstName,
+          ),
         ),
       );
       ws.send(

@@ -11,10 +11,12 @@ import {
 import { ACCESS_REQUEST_EVENT } from "@/lib/access/constants";
 import {
   checkAccessPhone,
+  readStoredFirstName,
   readStoredPhone,
-  storePhone,
+  storeApprovedIdentity,
   type AccessCheckResult,
 } from "@/lib/access/client";
+import { resolvePersonalFirstName } from "@/lib/access/identity";
 import { RequestAccessSheet } from "./RequestAccessSheet";
 
 type AccessStatus = "unknown" | "checking" | "full" | "admin" | "browse";
@@ -31,8 +33,12 @@ type AccessContextValue = {
   adminListOpen: boolean;
   openAdminList: () => void;
   closeAdminList: () => void;
-  /** Identity check only — unlocks iff already on the list. */
-  identify: (phone: string) => Promise<AccessCheckResult>;
+  /**
+   * Identity check only — unlocks iff already on the list.
+   * Optional first name is stored locally for welcome-back / Grok; phone
+   * still drives the whitelist. Typed first name wins over list contact name.
+   */
+  identify: (phone: string, firstName?: string) => Promise<AccessCheckResult>;
   /** If listed, run fn. Otherwise open the request sheet and return false. */
   guard: (fn?: () => void, reason?: string) => boolean;
 };
@@ -68,21 +74,28 @@ export function AccessProvider({ children }: { children: ReactNode }) {
   const adminListOpenRef = useRef(false);
   adminListOpenRef.current = adminListOpen;
 
-  const applyResult = useCallback((result: AccessCheckResult, raw: string) => {
-    const cred = (result.phoneDigits || result.phoneE164 || raw).trim();
-    setPhone(cred);
-    setName(result.name);
-    setIsAdmin(result.isAdmin);
-    setStatus(statusFrom(result));
-    // Only persist an approved number — accessHeaders must be able to send it.
-    if (result.allowed && cred) storePhone(cred);
-  }, []);
+  const applyResult = useCallback(
+    (result: AccessCheckResult, raw: string, typedName?: string) => {
+      const cred = (result.phoneDigits || result.phoneE164 || raw).trim();
+      const first = result.allowed
+        ? resolvePersonalFirstName(typedName, result.name)
+        : "";
+      setPhone(cred);
+      setName(first);
+      setIsAdmin(result.isAdmin);
+      setStatus(statusFrom(result));
+      // Only persist an approved number — accessHeaders must be able to send it.
+      // Local first name is for welcome-back / Grok; admin list is not rewritten.
+      if (result.allowed && cred) storeApprovedIdentity(cred, first);
+    },
+    [],
+  );
 
   const identify = useCallback(
-    async (raw: string) => {
+    async (raw: string, firstName?: string) => {
       setStatus("checking");
       const result = await checkAccessPhone(raw);
-      applyResult(result, raw);
+      applyResult(result, raw, firstName);
       return result;
     },
     [applyResult],
@@ -94,7 +107,9 @@ export function AccessProvider({ children }: { children: ReactNode }) {
       setStatus("browse");
       return;
     }
-    void identify(stored).catch(() => setStatus("browse"));
+    void identify(stored, readStoredFirstName()).catch(() =>
+      setStatus("browse"),
+    );
   }, [identify]);
 
   const closeRequest = useCallback(() => {
@@ -188,6 +203,7 @@ export function AccessProvider({ children }: { children: ReactNode }) {
           onClose={closeRequest}
           reason={requestReason}
           defaultPhone={phone}
+          defaultName={name}
           onIdentify={identify}
         />
       </div>

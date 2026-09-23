@@ -55,6 +55,17 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.match(session.instructions, /CARFAX-style coach report/);
   assert.match(session.instructions, /give me one second/);
   assert.match(session.instructions, /I'm RvGrok/);
+  assert.doesNotMatch(session.instructions, /Their first name is/);
+});
+
+test("named visitor is a later-turn hook — intro line stays exact", () => {
+  const msg = buildRealtimeSessionUpdate("ara", 1, "", "David Hansen");
+  const session = msg.session as { instructions: string };
+  assert.match(session.instructions, /Their first name is David/);
+  assert.match(session.instructions, /only occasionally/);
+  assert.match(session.instructions, /Say exactly: I'm RvGrok/);
+  assert.doesNotMatch(session.instructions, /I'm RvGrok, David/);
+  assert.equal(session.instructions.includes(`I'm RvGrok, David`), false);
 });
 
 test("catalog lock session.update still ships voice, VAD, audio, and web_search", () => {
@@ -84,4 +95,6 @@ test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => 
   assert.match(realtime, /decideVoiceWebResearch/);
   assert.match(realtime, /formatVoiceWebSearchInjection/);
   assert.match(realtime, /ensureCatalogLoaded/);
+  assert.match(realtime, /visitorFirstName/);
+  assert.match(realtime, /setVisitorFirstName/);
 });

@@ -152,6 +152,8 @@ test("chips stay UI-only — no spoken post-reply prompts; intro stays I'm RvGro
   assert.match(speech, /Never repeat this intro on later turns/);
   assert.match(landing, /I'm RvGrok/);
   assert.equal((landing.match(/I'm RvGrok/g) || []).length, 1);
+  assert.match(landing, /data-rvgrok-welcome/);
+  assert.match(landing, /welcomeBack/);
 
   assert.doesNotMatch(prompts, /then offer to go deeper/);
   assert.doesNotMatch(prompts, /want me to go deeper/);

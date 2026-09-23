@@ -10,16 +10,18 @@ export function RequestAccessSheet({
   onClose,
   reason,
   defaultPhone,
+  defaultName,
   onIdentify,
 }: {
   open: boolean;
   onClose: () => void;
   reason?: string;
   defaultPhone?: string;
+  defaultName?: string;
   /** Identity check — stores an approved number so research can retry. */
-  onIdentify?: (phone: string) => Promise<AccessCheckResult>;
+  onIdentify?: (phone: string, firstName?: string) => Promise<AccessCheckResult>;
 }) {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(defaultName || "");
   const [phone, setPhone] = useState(defaultPhone || "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +39,7 @@ export function RequestAccessSheet({
     setBusy(true);
     try {
       if (onIdentify) {
-        const checked = await onIdentify(phone);
+        const checked = await onIdentify(phone, name);
         if (checked.allowed) {
           onClose();
           return;
@@ -46,7 +48,7 @@ export function RequestAccessSheet({
       const result = await submitAccessRequest({ name, phone });
       if (result.alreadyAdmin) {
         if (onIdentify) {
-          await onIdentify(phone).catch(() => undefined);
+          await onIdentify(phone, name).catch(() => undefined);
           onClose();
           return;
         }
@@ -97,7 +99,7 @@ export function RequestAccessSheet({
             </p>
             <p className="mt-2 text-[13px] leading-relaxed text-white/80">
               {reason ||
-                "Already on the list? Enter that number to unlock this device. Requesting a new number notifies David — it does not unlock anything."}
+                "Already on the list? Enter your first name and that number to unlock this device. Requesting a new number notifies David — it does not unlock anything."}
             </p>
           </div>
 
@@ -122,14 +124,15 @@ export function RequestAccessSheet({
             >
               <label className="block">
                 <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">
-                  NAME
+                  FIRST NAME
                 </span>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold text-white outline-none"
-                  autoComplete="name"
-                  placeholder="Your name"
+                  autoComplete="given-name"
+                  placeholder="First name"
+                  required
                 />
               </label>
               <label className="block">
