@@ -24,11 +24,22 @@ import {
   type CoachIdentity,
 } from "./coachIdentity.ts";
 import {
+  coachKnowledgeKeyEquals,
+  normalizeCoachKnowledgeKey,
+  type CoachKnowledgeKey,
+} from "./coachKnowledgeKey.ts";
+import {
   inferQueriedField,
   notesConfirmQueriedField,
   type QueriedResearchField,
   type WebSearchNotes,
 } from "./webSearch.ts";
+
+export {
+  coachKnowledgeKeyEquals,
+  normalizeCoachKnowledgeKey,
+  type CoachKnowledgeKey,
+};
 
 export const COACH_KNOWLEDGE_SCHEMA_VERSION = 1;
 
@@ -47,13 +58,6 @@ export type CoachKnowledgeField = {
 };
 
 export type CoachKnowledgeFields = Record<string, CoachKnowledgeField>;
-
-export type CoachKnowledgeKey = {
-  year: string;
-  make: string;
-  model: string;
-  floorplan: string;
-};
 
 export type CoachKnowledgeRecord = {
   key: CoachKnowledgeKey;
@@ -115,61 +119,6 @@ const POWERTRAIN_FIELDS = [
 
 const REJECT_VALUE_RE =
   /\b(EST\.?|typical class range|low confidence|UNAVAILABLE|WEB SEARCH NOT AVAILABLE|unknown|insufficient|confirmed:\s*no|n\/a|not (?:found|published)|could not find)\b/i;
-
-function keyPart(s: string): string {
-  return (s || "")
-    .toLowerCase()
-    .replace(/[_/,]+/g, " ")
-    .replace(/[\s-]+/g, " ")
-    .trim();
-}
-
-function yearPart(s: string): string {
-  const m = String(s || "").match(/\b(19|20)\d{2}\b/);
-  return m?.[0] || "";
-}
-
-/** Stable unique tuple. Dutch Star → Newmar. Floorplan may be empty. */
-export function normalizeCoachKnowledgeKey(
-  identity: Pick<CoachIdentity, "year" | "make" | "model" | "floorplan">,
-): CoachKnowledgeKey | null {
-  const locked = lockIdentityTuple({
-    year: yearPart(identity.year) || (identity.year || "").trim(),
-    make: resolveCatalogMake(identity.make || ""),
-    model: identity.model
-      ? resolveCatalogModel(
-          identity.make || "",
-          identity.model,
-          identity.floorplan || "",
-        )
-      : "",
-    floorplan: (identity.floorplan || "").trim(),
-    source: "message",
-  });
-  const year = yearPart(locked.year);
-  const make = keyPart(locked.make);
-  const model = keyPart(locked.model);
-  if (!year || !make || !model) return null;
-  return {
-    year,
-    make,
-    model,
-    floorplan: keyPart(locked.floorplan),
-  };
-}
-
-export function coachKnowledgeKeyEquals(
-  a: CoachKnowledgeKey | null | undefined,
-  b: CoachKnowledgeKey | null | undefined,
-): boolean {
-  if (!a || !b) return false;
-  return (
-    a.year === b.year &&
-    a.make === b.make &&
-    a.model === b.model &&
-    a.floorplan === b.floorplan
-  );
-}
 
 export function formatCoachKnowledgeLabel(key: CoachKnowledgeKey): string {
   return [key.year, key.make, key.model, key.floorplan]
