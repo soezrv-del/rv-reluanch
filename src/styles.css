@@ -7,7 +7,7 @@
    * SoT = Raidho sapphire / cobalt (David voice 2026-09-21).
    * App chrome + field are sapphire-navy, not Tiimo slate-lavender
    * (#372). Dock plate matches the Raidho mark ground exactly
-   * (#000000 sampled from public/assets/brand/raidho-r-mark.png)
+   * (#000000 sampled from public/assets/brand/raidho-r-mark-v2.png)
    * so the tab square disappears into the icon — not a contrasting
    * sapphire plate. Mark itself stays electric-blue + chrome/silver
    * on that black. One highlight.
@@ -924,7 +924,7 @@
 }
 
 /* Dock — Raidho mark ground (David voice 2026-09-21, binding).
- * Sampled #000000 from raidho-r-mark.png corners. Plate + nav +
+ * Sampled #000000 from raidho-r-mark-v2.png corners. Plate + nav +
  * safe-area are that hex so the tab square disappears into the
  * icon ground. No contrasting sapphire plate. One highlight:
  * 2px --color-sapphire top rule on the active tab. */
@@ -1518,7 +1518,7 @@
 /*
  * Suite + compare Raidho R watermark.
  * Full-viewport sapphire glyph; PNG black knocks out via screen blend.
- * Same seal as public/assets/brand/raidho-r-mark.png. No rune glow.
+ * Same seal as public/assets/brand/raidho-r-mark-v2.png. No rune glow.
  */
 .suite-raidho-field,
 .compare-raidho-field {

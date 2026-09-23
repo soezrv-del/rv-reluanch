@@ -54,10 +54,10 @@ test("Raidho sapphire mark sits behind suite, compare, GPS, and NDA", () => {
   const trips = read("../../components/rvtrips/RvTripsApp.tsx");
   const nda = read("../../components/access/NdaGate.tsx");
   const css = read("../../styles.css");
-  const mark = join(root, "../../../public/assets/brand/raidho-r-mark.png");
+  const mark = join(root, "../../../public/assets/brand/raidho-r-mark-v2.png");
 
-  assert.match(prestige, /\/assets\/brand\/raidho-r-mark\.png/);
-  assert.ok(existsSync(mark), "raidho-r-mark.png is in public/assets/brand");
+  assert.match(prestige, /\/assets\/brand\/raidho-r-mark-v2\.png/);
+  assert.ok(existsSync(mark), "raidho-r-mark-v2.png is in public/assets/brand");
 
   assert.match(suite, /export function SuiteRaidhoBackdrop/);
   assert.match(suite, /suite-raidho-mark/);
