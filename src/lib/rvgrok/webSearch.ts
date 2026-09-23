@@ -3,9 +3,10 @@
  * (troubleshooting / OEM / forum / manual, missing hard spec, or a
  * catalog miss). Callers must not skip this path on a catalog miss.
  *
- * Provider chain (RVGROK_RESEARCH_PROVIDER, default auto):
+ * Provider chain (admin override > RVGROK_RESEARCH_PROVIDER, default auto):
  *   1. Gemini + Google Search grounding when GEMINI_API_KEY is set
  *   2. Existing xAI Responses `web_search` loop (fallback / no Gemini key)
+ * Access-admin override (Neon) wins over env; unset override = today's auto.
  *
  * Chat completions and Live Voice Realtime stay on xAI Grok. Gemini is
  * browse-only — never greetings, never a Grok replacement.
@@ -1123,7 +1124,7 @@ export type FetchWebSearchNotesOpts = {
   maxAttempts?: number;
   /** Override process.env.GEMINI_API_KEY (tests). */
   geminiApiKey?: string;
-  /** Override RVGROK_RESEARCH_PROVIDER (auto | gemini | xai). */
+  /** Override RVGROK_RESEARCH_PROVIDER (auto | gemini | xai). Routes pass the persisted admin override here — never a visitor header. */
   researchProvider?: string;
 };
 

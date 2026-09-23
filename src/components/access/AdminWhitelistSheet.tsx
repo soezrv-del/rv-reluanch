@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Lock, Shield, Trash2, X } from "lucide-react";
+import { Lock, Search, Shield, Trash2, X } from "lucide-react";
 import {
   ADMIN_PASSWORD_UNSET_CODE,
   adminSheetBlockedMessage,
@@ -9,6 +9,10 @@ import { HARD_ADMIN } from "@/lib/access/constants";
 import { adminFetch, adminLogin, clearAdminToken } from "@/lib/access/client";
 import { formatPhoneDisplay } from "@/lib/access/phone";
 import { canRemoveWhitelistRow } from "@/lib/access/gate";
+import type {
+  ResearchProvider,
+  ResearchProviderStatus,
+} from "@/lib/rvgrok/geminiResearch";
 
 type Entry = {
   id: string;
@@ -45,6 +49,10 @@ export function AdminWhitelistSheet({
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [addPhone, setAddPhone] = useState("");
   const [addName, setAddName] = useState("");
+  const [research, setResearch] = useState<ResearchProviderStatus | null>(null);
+  const [researchBusy, setResearchBusy] = useState(false);
+  const [researchNote, setResearchNote] = useState("");
+  const [researchError, setResearchError] = useState("");
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
@@ -56,6 +64,7 @@ export function AdminWhitelistSheet({
       const data = (await res.json()) as {
         entries?: Entry[];
         requests?: RequestRow[];
+        researchProvider?: ResearchProviderStatus;
         error?: string;
         code?: string;
         message?: string;
@@ -69,6 +78,9 @@ export function AdminWhitelistSheet({
       if (!res.ok) throw new Error(data.message || data.error || "Could not load the list.");
       setEntries(data.entries ?? []);
       setRequests(data.requests ?? []);
+      setResearch(data.researchProvider ?? null);
+      setResearchNote("");
+      setResearchError("");
       setAuthed(true);
       setCode(null);
     } catch (err) {
@@ -193,6 +205,39 @@ export function AdminWhitelistSheet({
     }
   };
 
+  const onResearchProvider = async (provider: ResearchProvider) => {
+    setResearchError("");
+    setResearchNote("");
+    setResearchBusy(true);
+    try {
+      const res = await adminFetch("/api/access/admin", {
+        method: "PATCH",
+        body: JSON.stringify({ provider }),
+      });
+      const data = (await res.json()) as {
+        researchProvider?: ResearchProviderStatus;
+        error?: string;
+        message?: string;
+      };
+      if (!res.ok) {
+        throw new Error(data.message || data.error || "Could not save.");
+      }
+      if (data.researchProvider) setResearch(data.researchProvider);
+      const effective = data.researchProvider?.effective === "xai" ? "XAI" : "Gemini";
+      setResearchNote(
+        provider === "auto"
+          ? `Saved. Using deploy default — effective ${effective}.`
+          : `Saved. Research now uses ${effective}.`,
+      );
+    } catch (err) {
+      setResearchError(
+        err instanceof Error ? err.message : "Could not save the research provider.",
+      );
+    } finally {
+      setResearchBusy(false);
+    }
+  };
+
   const approve = async (row: RequestRow) => {
     setAddPhone(row.phoneE164);
     setAddName(row.name);
@@ -306,6 +351,90 @@ export function AdminWhitelistSheet({
             </form>
           ) : (
             <>
+              {research ? (
+                <section
+                  data-research-provider
+                  data-research-provider-override={research.override ?? "auto"}
+                  data-research-provider-effective={research.effective}
+                  className="glass-prestige space-y-3 rounded-[1.25rem] p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                      <Search className="size-4 text-amber" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold tracking-[0.16em] text-white/90">
+                        RESEARCH PROVIDER
+                      </p>
+                      <p className="mt-1 text-[13px] leading-relaxed text-white/80">
+                        Browse / research only. Chat personality and Live Voice
+                        stay on xAI Grok.
+                      </p>
+                    </div>
+                  </div>
+                  <p
+                    data-research-provider-effective-label
+                    className="text-[12px] font-semibold text-white"
+                  >
+                    Effective now:{" "}
+                    {research.effective === "xai"
+                      ? "XAI web_search"
+                      : "Gemini (Google Search)"}
+                    {research.override
+                      ? ` · override ${research.override === "xai" ? "XAI" : "Gemini"}`
+                      : " · deploy default"}
+                  </p>
+                  <div
+                    className="grid grid-cols-3 gap-2"
+                    role="group"
+                    aria-label="Research provider"
+                  >
+                    {(
+                      [
+                        ["gemini", "Gemini"],
+                        ["xai", "XAI"],
+                        ["auto", "Auto"],
+                      ] as const
+                    ).map(([value, label]) => {
+                      const selected = (research.override ?? "auto") === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          data-research-provider-option={value}
+                          aria-pressed={selected}
+                          disabled={researchBusy}
+                          onClick={() => void onResearchProvider(value)}
+                          className={`rounded-xl py-2.5 text-[12px] font-bold disabled:opacity-60 ${
+                            selected
+                              ? "bg-blue text-white"
+                              : "border border-white/20 bg-white/5 text-white"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {researchNote ? (
+                    <p
+                      data-research-provider-saved
+                      className="text-[12px] font-semibold text-white"
+                    >
+                      {researchNote}
+                    </p>
+                  ) : null}
+                  {researchError ? (
+                    <p
+                      data-research-provider-error
+                      className="text-[12px] font-semibold text-ruby"
+                    >
+                      {researchError}
+                    </p>
+                  ) : null}
+                </section>
+              ) : null}
+
               <form
                 onSubmit={(e) => void onAdd(e)}
                 className="glass-prestige space-y-3 rounded-[1.25rem] p-4"

@@ -12,8 +12,12 @@ import {
   GEMINI_VOICE_RESEARCH_TIMEOUT_MS,
   geminiResearchTimeoutMs,
   isGeminiResearchUrl,
+  parseForcedResearchProvider,
+  parseResearchProviderPref,
+  pickResearchProviderPref,
   readGeminiApiKey,
   readResearchProviderPref,
+  researchProviderStatus,
   resolveResearchProvider,
   researchNotesSourceLabel,
 } from "./geminiResearch.ts";
@@ -24,6 +28,7 @@ import {
   formatWebSearchInjection,
 } from "./webSearch.ts";
 import { executeWebResearch } from "./webResearchTelemetry.ts";
+import { setResearchProviderOverride } from "./researchProviderStore.ts";
 import { formatCatalogPinWinsSearchMiss } from "./estimatePolicy.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -79,6 +84,117 @@ test("resolveResearchProvider: auto/gemini/xai and missing key", () => {
     resolveResearchProvider({ provider: "xai", geminiApiKey: "AIza-test" }),
     "xai",
   );
+});
+
+test("research provider resolve order: override > env > auto", () => {
+  const prev = process.env.RVGROK_RESEARCH_PROVIDER;
+  delete process.env.RVGROK_RESEARCH_PROVIDER;
+  try {
+    assert.equal(parseResearchProviderPref("AUTO"), "auto");
+    assert.equal(parseResearchProviderPref("bogus"), null);
+    assert.equal(parseForcedResearchProvider("auto"), null);
+    assert.equal(parseForcedResearchProvider("xai"), "xai");
+
+    assert.equal(pickResearchProviderPref({}), "auto");
+    assert.equal(
+      pickResearchProviderPref({ override: "xai", env: "gemini" }),
+      "xai",
+      "admin override wins over env",
+    );
+    assert.equal(
+      pickResearchProviderPref({ override: "gemini", env: "xai" }),
+      "gemini",
+    );
+    assert.equal(
+      pickResearchProviderPref({ override: "auto", env: "xai" }),
+      "xai",
+      "auto clears override and falls through to env",
+    );
+    assert.equal(
+      pickResearchProviderPref({ override: null, env: "xai" }),
+      "xai",
+    );
+    assert.equal(
+      pickResearchProviderPref({ override: null, env: "auto" }),
+      "auto",
+    );
+    assert.equal(
+      pickResearchProviderPref({ override: "bogus", env: "gemini" }),
+      "gemini",
+    );
+
+    assert.equal(
+      resolveResearchProvider({
+        override: "xai",
+        geminiApiKey: "AIza-test",
+      }),
+      "xai",
+    );
+    assert.equal(
+      resolveResearchProvider({
+        override: "gemini",
+        geminiApiKey: "AIza-test",
+      }),
+      "gemini",
+    );
+    assert.equal(
+      resolveResearchProvider({
+        override: null,
+        geminiApiKey: "AIza-test",
+      }),
+      "gemini",
+      "unset override + key present = today's auto Gemini default",
+    );
+    assert.equal(
+      resolveResearchProvider({
+        provider: "auto",
+        override: "xai",
+        geminiApiKey: "AIza-test",
+      }),
+      "gemini",
+      "explicit caller/test provider still wins (do not let override hijack tests)",
+    );
+
+    process.env.RVGROK_RESEARCH_PROVIDER = "xai";
+    assert.equal(
+      resolveResearchProvider({ override: null, geminiApiKey: "AIza-test" }),
+      "xai",
+      "env is the fallback when no admin override",
+    );
+    assert.equal(
+      resolveResearchProvider({
+        override: "gemini",
+        geminiApiKey: "AIza-test",
+      }),
+      "gemini",
+      "admin Gemini override beats env xai",
+    );
+
+    const status = researchProviderStatus({
+      override: null,
+      env: "auto",
+      geminiApiKey: "AIza-test",
+    });
+    assert.equal(status.override, null);
+    assert.equal(status.env, "auto");
+    assert.equal(status.pref, "auto");
+    assert.equal(status.effective, "gemini");
+    assert.equal(status.geminiKeyPresent, true);
+
+    const forced = researchProviderStatus({
+      override: "xai",
+      env: "auto",
+      geminiApiKey: "AIza-test",
+    });
+    assert.equal(forced.pref, "xai");
+    assert.equal(forced.effective, "xai");
+  } finally {
+    if (prev === undefined) delete process.env.RVGROK_RESEARCH_PROVIDER;
+    else process.env.RVGROK_RESEARCH_PROVIDER = prev;
+  }
+});
+
+test("gemini research timeout constants stay in the production band", () => {
   assert.equal(GEMINI_CHAT_RESEARCH_TIMEOUT_MS, 10_000);
   assert.equal(GEMINI_VOICE_RESEARCH_TIMEOUT_MS, 4_500);
   assert.equal(GEMINI_SPEC_REPORT_TIMEOUT_MS, 52_000);
@@ -210,6 +326,43 @@ test("Gemini fail/timeout → xAI fallback notes used", async () => {
     globalThis.fetch = prior;
     clearWebSearchCache();
   }
+});
+
+test("admin override xai skips Gemini even when a key is set", async () => {
+  clearWebSearchCache();
+  const urls: string[] = [];
+  const prior = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = fetchUrl(input);
+    urls.push(url);
+    return jsonResponse(
+      xaiNotes(
+        "CONFIRMED: yes. OEM brochure lists GVWR 32,000 lb for the 2019 XYZ Phantom.",
+      ),
+    );
+  }) as typeof fetch;
+  try {
+    const result = await fetchWebSearchNotes({
+      apiKey: "xai-test-key",
+      geminiApiKey: "AIza-test",
+      researchProvider: "xai",
+      query: "What's the GVWR on a 2019 XYZ Phantom?",
+      timeoutMs: 5_000,
+      models: ["grok-4.7"],
+    });
+    assert.equal(result.ok, true);
+    assert.equal(urls.some(isGeminiResearchUrl), false);
+    assert.match(urls[0] || "", /api\.x\.ai/);
+  } finally {
+    globalThis.fetch = prior;
+    clearWebSearchCache();
+  }
+});
+
+test("setResearchProviderOverride rejects junk without a database", async () => {
+  const result = await setResearchProviderOverride("claude");
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.match(result.error, /gemini, xai, or auto/);
 });
 
 test("no Gemini key → xAI only (today's path)", async () => {

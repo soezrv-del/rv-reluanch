@@ -58,9 +58,12 @@ test("admin CRUD is password-gated and separate from VITE_AUTH_ENABLED", () => {
   const admin = read("src/routes/api/access.admin.ts");
   assert.match(admin, /WHITELIST_ADMIN_PASSWORD/);
   assert.match(admin, /verifyAdminPassword/);
-  assert.match(admin, /authorizeAccessAdmin/);
+  assert.match(admin, /denyAccessAdmin/);
   assert.match(admin, /action === "add"/);
   assert.match(admin, /action === "remove"/);
+  const http = read("src/lib/access/adminHttp.ts");
+  assert.match(http, /authorizeAccessAdmin/);
+  assert.match(http, /denyAccessAdmin/);
   const env = read(".grok/app-env.json");
   assert.match(env, /"VITE_AUTH_ENABLED": "false"/);
   assert.doesNotMatch(env, /"VITE_AUTH_ENABLED": "true"/);
@@ -273,4 +276,46 @@ test("founder KB stays Hansen; whitelist seed uses Hanson", () => {
   const constants = read("src/lib/access/constants.ts");
   assert.match(constants, /David Hanson/);
   assert.match(constants, /Founder KB \/ origin story stay "David Hansen"/);
+});
+
+test("research provider toggle is admin-only and server-persisted", () => {
+  const admin = read("src/routes/api/access.admin.ts");
+  assert.match(admin, /researchProvider/);
+  assert.match(admin, /setResearchProviderOverride/);
+  assert.match(admin, /getResearchProviderOverride/);
+  assert.match(admin, /PATCH:/);
+  assert.match(admin, /denyAccessAdmin/);
+  assert.match(admin, /action === "research-provider"/);
+  assert.doesNotMatch(admin, /localStorage/);
+
+  const store = read("src/lib/rvgrok/researchProviderStore.ts");
+  assert.match(store, /rvgrok_ops_settings/);
+  assert.match(store, /RESEARCH_PROVIDER_OVERRIDE_CACHE_TTL_MS/);
+  assert.match(store, /parseForcedResearchProvider/);
+  assert.doesNotMatch(store, /authMiddleware|requireUserId/);
+
+  const sheet = read("src/components/access/AdminWhitelistSheet.tsx");
+  assert.match(sheet, /data-research-provider/);
+  assert.match(sheet, /RESEARCH PROVIDER/);
+  assert.match(sheet, /method: "PATCH"/);
+  assert.match(sheet, /data-research-provider-option/);
+  assert.ok(
+    sheet.indexOf("data-research-provider") >
+      sheet.indexOf('view === "password"'),
+    "toggle lives in the authed list, not the password / visitor chrome",
+  );
+
+  const more = read("src/components/access/AccessMoreSection.tsx");
+  assert.doesNotMatch(more, /researchProvider|RESEARCH PROVIDER/);
+
+  const chat = read("src/routes/api/rvgrok.ts");
+  const voice = read("src/routes/api/rvgrok.web-research.ts");
+  assert.match(chat, /getResearchProviderOverride/);
+  assert.match(voice, /getResearchProviderOverride/);
+  assert.doesNotMatch(chat, /body\.researchProvider|x-research-provider/);
+  assert.doesNotMatch(voice, /body\.researchProvider|x-research-provider/);
+
+  const migration = read("migrations/0004_rvgrok_research_provider.sql");
+  assert.match(migration, /rvgrok_ops_settings/);
+  assert.doesNotMatch(migration, /user_id/);
 });
