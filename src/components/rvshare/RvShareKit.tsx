@@ -11,6 +11,11 @@ import {
   X,
 } from "lucide-react";
 import { useAccessOptional } from "@/components/access/AccessProvider";
+import {
+  readStoredFirstName,
+  readStoredPhone,
+} from "@/lib/access/client";
+import { ACCESS_PHONE_CHANGED_EVENT } from "@/lib/access/constants";
 import { cn } from "@/lib/utils";
 import {
   ratingFor,
@@ -39,11 +44,10 @@ import {
   DEFAULT_SHARE_MARKET_LINES,
   defaultMarketFor,
   defaultPaymentFor,
-  defaultShareCardContact,
   fetchShareImage,
   hydrateShareCoachResult,
   hasSelectedMarketLines,
-  shareCardContactForSession,
+  resolveFaxShareContact,
   kitStrengths,
   lifestyleImageFor,
   peekCachedShareImage,
@@ -331,12 +335,30 @@ export function RvShareKit({
 }) {
   const nav = useShellNavOptional();
   const access = useAccessOptional();
+  const [storedIdentity, setStoredIdentity] = useState(() => ({
+    name: typeof window === "undefined" ? "" : readStoredFirstName(),
+    phone: typeof window === "undefined" ? "" : readStoredPhone(),
+  }));
+
+  useEffect(() => {
+    const sync = () =>
+      setStoredIdentity({
+        name: readStoredFirstName(),
+        phone: readStoredPhone(),
+      });
+    sync();
+    window.addEventListener(ACCESS_PHONE_CHANGED_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(ACCESS_PHONE_CHANGED_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  const session = access ?? nav?.accessSession ?? null;
   const contact = useMemo(
-    () =>
-      access?.allowed
-        ? shareCardContactForSession(access.name, access.phone)
-        : defaultShareCardContact(),
-    [access?.allowed, access?.name, access?.phone],
+    () => resolveFaxShareContact(session, storedIdentity),
+    [session, storedIdentity],
   );
   const { ready: catalogReady } = useCatalogReady();
   const [include, setInclude] = useState<ShareInclude>(DEFAULT_SHARE_INCLUDE);
@@ -523,7 +545,7 @@ export function RvShareKit({
     return buildCoachKit({
       result: selected,
       include,
-      payment,
+      payment: include.payment ? payment : undefined,
       market: marketEdit,
       marketLines,
       strengths: strengthDraft,
@@ -1054,7 +1076,10 @@ export function RvShareKit({
                   );
                 })}
 
-                <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/10 bg-black/30 p-3 text-[11px] leading-relaxed text-white/85">
+                <pre
+                  data-fax-share-kit-text
+                  className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/10 bg-black/30 p-3 text-[11px] leading-relaxed text-white/85"
+                >
                   {kitText}
                 </pre>
 

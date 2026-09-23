@@ -155,9 +155,9 @@ test("share payload keeps a real card image file for Messages", () => {
 
 test("kit footer is a prepared-by signature", () => {
   assert.match(src, /defaultShareCardContact/);
-  assert.match(src, /contact\.kicker/);
-  assert.match(src, /contact\.name/);
-  assert.match(src, /contact\.phone/);
+  assert.match(src, /shareKitSignatureLines\(contact\)/);
+  assert.doesNotMatch(src, /REPORT_CONTACT_NAME/);
+  assert.doesNotMatch(src, /REPORT_CONTACT_PHONE/);
   const contact = readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), "reportContact.ts"),
     "utf8",

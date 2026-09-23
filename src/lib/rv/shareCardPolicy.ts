@@ -247,9 +247,26 @@ export function sharePaymentAfterTermDown<T extends SharePaymentTermDown>(
 /**
  * Honor the user's include flags as-is.
  * Unchecked extras stay off — no default Payment (or any other section).
+ * Returns a shallow copy so DEFAULT_SHARE_INCLUDE cannot be mutated later.
  */
 export function effectiveShareInclude(include: ShareInclude): ShareInclude {
-  return include;
+  return { ...include };
+}
+
+/**
+ * Payment lands in the kit / preview only when the user added it.
+ * A priced payment object alone is not enough — no placeholder line.
+ */
+export function shareIncludePayment(
+  include: ShareInclude,
+  payment?: { price: number } | null,
+): boolean {
+  return (
+    effectiveShareInclude(include).payment === true &&
+    !!payment &&
+    Number.isFinite(payment.price) &&
+    payment.price > 0
+  );
 }
 
 /** Customer-facing share must never leak catalog placeholder tags. */
