@@ -13,8 +13,8 @@ import { getSpec } from "@/lib/rv/catalog";
 import { ensureCatalogLoaded } from "@/lib/rv/catalogLoad";
 import { getMaintenanceSchedule } from "@/lib/rv/rvTypes";
 import {
+  extrasToOffer,
   GROK_EXTRA_PROMPTS,
-  grokExtrasForPrompt,
   type GrokExtraCoach,
   type GrokExtraKind,
 } from "@/lib/rvgrok/grokExtras";
@@ -402,11 +402,14 @@ function ShareExtra({ coach }: { coach: GrokExtraCoach }) {
 export function GrokExtrasRail({
   query,
   coach,
+  offerVoiceExtras = false,
 }: {
   query: string;
   coach: GrokExtraCoach | null | undefined;
+  /** Live Voice spec card — show the extras list as prompts, do not auto-load. */
+  offerVoiceExtras?: boolean;
 }) {
-  const kinds = grokExtrasForPrompt(query, coach);
+  const kinds = extrasToOffer({ query, coach, offerVoiceExtras });
   if (!kinds.length || !coach) return null;
   return (
     <div className="mt-3 space-y-2" data-grok-extras="">

@@ -19,14 +19,15 @@ import {
   type LiveVoicePrewarm,
 } from "./liveVoice";
 import type { ActiveCoach } from "../rv/activeCoach";
-import { buildChatGrounding, namedCoachConflictsLock } from "./grounding";
 import { parseCoachFromText } from "./parseCoach";
 import { ensureCatalogLoaded } from "../rv/catalogLoad";
 import {
+  looksLikeDeskSheetAsk,
   resolveDeskSheet,
   resolveDeskSheetThenFallback,
   type DeskSheetPayload,
 } from "./deskSheet";
+import { buildChatGrounding, namedCoachConflictsLock } from "./grounding";
 import { looksLikeRepairQuestion, REPAIR_VOICE_PLAYBOOK } from "./repairMode";
 import {
   decideVoiceWebResearch,
@@ -35,6 +36,11 @@ import {
   VOICE_RESEARCH_ANSWER_INSTRUCTIONS,
   VOICE_RESEARCH_HOLD_INSTRUCTIONS,
 } from "./voiceWeb";
+import {
+  formatVoiceSpecEngineSpeech,
+  VOICE_SPEC_ENGINE_INSTRUCTIONS,
+  withVoiceSpecExtras,
+} from "./voiceSpecTurn";
 
 export type RealtimeStatus =
   | "idle"
@@ -99,6 +105,16 @@ export class GrokRealtimeSession {
     null;
   private lastDeskSpecs: Parameters<typeof resolveDeskSheet>[0]["specs"] = null;
   private deskFallbackSeq = 0;
+  /** Bumps on each voice turn and on interrupt so a stale spec speech dies. */
+  private specTurnSeq = 0;
+  private pendingSpec: {
+    transcript: string;
+    grounded: ReturnType<typeof buildChatGrounding>;
+  } | null = null;
+  private pendingSpecSheet: Promise<DeskSheetPayload | null> | null = null;
+  private specEngineSpoken = false;
+  /** Engine already painted this turn — do not remount a memory snippet over it. */
+  private engineSheetPainted = false;
   private accessPhone: string;
   private visitorFirstName: string;
   private visitorMemory: string;
@@ -522,7 +538,7 @@ export class GrokRealtimeSession {
     }
     if (this.finishedAssistantOnce) return;
     this.finishedAssistantOnce = true;
-    if (text && this.lastDeskQuery) {
+    if (text && this.lastDeskQuery && !this.engineSheetPainted) {
       this.emitDeskSheet({
         query: this.lastDeskQuery,
         identity: this.lastDeskIdentity,
@@ -535,13 +551,15 @@ export class GrokRealtimeSession {
   }
 
   private emitDeskSheet(opts: Parameters<typeof resolveDeskSheet>[0]) {
-    const sheet = resolveDeskSheet(opts);
+    const sheet = withVoiceSpecExtras(resolveDeskSheet(opts), opts.query);
     this.handlers.onDeskSheet?.(sheet);
     const seq = ++this.deskFallbackSeq;
     if (!sheet) return;
     void resolveDeskSheetThenFallback(opts).then((next) => {
       if (seq !== this.deskFallbackSeq) return;
-      if (next) this.handlers.onDeskSheet?.(next);
+      if (next) {
+        this.handlers.onDeskSheet?.(withVoiceSpecExtras(next, opts.query));
+      }
     });
   }
 
@@ -835,6 +853,8 @@ export class GrokRealtimeSession {
    * from the notes (or honestly fall back if the lookup is slow or fails).
    * Do not stretch the hold toward 60s — a spoken miss is better than dead air.
    * True research speaks "give me one second"; everything else answers now.
+   * Spec / desk asks do not use that web snippet. After the catalog loads they
+   * speak resolveDeskSheetThenFallback (catalog, then empty-field fallback).
    * A series change (Ventana → Dutch Star) always cancels the stale lock reply.
    *
    * Search decision + VAD cancel + hold MUST run before `ensureCatalogLoaded`.
@@ -868,6 +888,11 @@ export class GrokRealtimeSession {
   }
 
   private async maybeEnrichWithWebResearch(transcript: string) {
+    const specSeq = ++this.specTurnSeq;
+    this.pendingSpec = null;
+    this.pendingSpecSheet = null;
+    this.specEngineSpoken = false;
+    this.engineSheetPainted = false;
     let grounded = buildChatGrounding({
       query: transcript,
       facts: this.facts,
@@ -893,6 +918,12 @@ export class GrokRealtimeSession {
           facts: this.facts,
         });
         lockBroke = this.applyVoiceGrounding(transcript, grounded);
+      }
+      if (looksLikeDeskSheetAsk(transcript)) {
+        this.cancelAutoResponseForResearch();
+        this.armSpecEngineTurn(transcript, grounded);
+        await this.speakFromSpecEngine(specSeq);
+        return;
       }
       if (lockBroke) {
         this.cancelAutoResponseForResearch();
@@ -938,6 +969,16 @@ export class GrokRealtimeSession {
         });
         this.applyVoiceGrounding(transcript, grounded);
       }
+    }
+
+    if (looksLikeDeskSheetAsk(transcript)) {
+      // Catalog is loaded. Speak the shared engine — not the web snippet.
+      this.armSpecEngineTurn(transcript, grounded);
+      this.researchAbort?.abort();
+      if (this.researchPhase !== "holding") {
+        await this.speakFromSpecEngine(specSeq);
+      }
+      return;
     }
 
     const result = await searchReady;
@@ -1008,6 +1049,14 @@ export class GrokRealtimeSession {
   }
 
   private finishResearchHoldIfNeeded(): boolean {
+    if (this.pendingSpec) {
+      const seq = this.specTurnSeq;
+      this.researchPhase = "answering";
+      void this.speakFromSpecEngine(seq);
+      this.assistantText = "";
+      this.finishedAssistantOnce = false;
+      return true;
+    }
     if (this.researchPhase !== "holding") return false;
     if (this.pendingResearchInjection) {
       this.researchPhase = "answering";
@@ -1059,10 +1108,88 @@ export class GrokRealtimeSession {
   }
 
   private resetResearchTurn() {
+    this.specTurnSeq += 1;
+    this.pendingSpec = null;
+    this.pendingSpecSheet = null;
     this.researchAbort?.abort();
     this.researchAbort = null;
     this.researchPhase = "idle";
     this.pendingResearchInjection = null;
+  }
+
+  /**
+   * Spec turns speak the shared engine (catalog, then fallback).
+   * The web-research snippet is not the answer.
+   */
+  private armSpecEngineTurn(
+    transcript: string,
+    grounded: ReturnType<typeof buildChatGrounding>,
+  ) {
+    this.pendingSpec = { transcript, grounded };
+    this.pendingSpecSheet = resolveDeskSheetThenFallback({
+      query: transcript,
+      identity: grounded.identity,
+      specs: grounded.specs,
+    });
+  }
+
+  private async speakFromSpecEngine(seq: number) {
+    if (seq !== this.specTurnSeq || this.specEngineSpoken) return;
+    this.specEngineSpoken = true;
+    const pending = this.pendingSpec;
+    const sheetPromise = this.pendingSpecSheet;
+    this.pendingSpec = null;
+    this.pendingSpecSheet = null;
+    if (!pending) return;
+    let sheet: DeskSheetPayload | null = null;
+    try {
+      sheet = await (sheetPromise ??
+        resolveDeskSheetThenFallback({
+          query: pending.transcript,
+          identity: pending.grounded.identity,
+          specs: pending.grounded.specs,
+        }));
+    } catch {
+      sheet = null;
+    }
+    if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
+    this.deskFallbackSeq += 1;
+    const tagged = withVoiceSpecExtras(sheet, pending.transcript);
+    this.handlers.onDeskSheet?.(tagged);
+    if (tagged) {
+      this.engineSheetPainted = true;
+      this.lastDeskQuery = pending.transcript;
+      this.lastDeskIdentity = pending.grounded.identity;
+      this.lastDeskSpecs = pending.grounded.specs;
+    }
+    this.researchPhase = "answering";
+    this.flushSpecEngineAnswer(
+      formatVoiceSpecEngineSpeech(tagged, pending.transcript),
+    );
+  }
+
+  private flushSpecEngineAnswer(script: string) {
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      this.researchPhase = "idle";
+      return;
+    }
+    this.suppressMic = true;
+    this.handlers.onStatus("thinking", "Answering…");
+    try {
+      ws.send(
+        JSON.stringify({
+          type: "response.create",
+          response: {
+            modalities: ["text", "audio"],
+            instructions: `${VOICE_SPEC_ENGINE_INSTRUCTIONS}\n\nSPEC ENGINE SCRIPT:\n${script}`,
+          },
+        }),
+      );
+    } catch {
+      this.researchPhase = "idle";
+      this.suppressMic = false;
+    }
   }
 
   /**

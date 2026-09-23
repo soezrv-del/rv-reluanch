@@ -5,8 +5,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   detectGrokExtraKinds,
+  extrasToOffer,
   grokExtrasForPrompt,
   shouldShowGrokExtra,
+  voiceSpecExtraPrompts,
 } from "./grokExtras.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -58,6 +60,24 @@ test("recalls / market / reviews / maintenance / VIN / share are prompt-gated", 
   );
 });
 
+test("voice spec card offers extras as prompts without a keyword", () => {
+  const q = "2026 Grand Design Lineage Series F 31ZW UVW dry weight";
+  assert.deepEqual(grokExtrasForPrompt(q, LINEAGE), []);
+  assert.deepEqual(voiceSpecExtraPrompts(LINEAGE), [
+    "nhtsa",
+    "market",
+    "video",
+    "reviews",
+    "maintenance",
+  ]);
+  assert.deepEqual(extrasToOffer({ query: q, coach: LINEAGE }), []);
+  assert.deepEqual(
+    extrasToOffer({ query: q, coach: LINEAGE, offerVoiceExtras: true }),
+    ["nhtsa", "market", "video", "reviews", "maintenance"],
+  );
+  assert.deepEqual(voiceSpecExtraPrompts({ year: "2026" }), []);
+});
+
 test("Facts still auto-loads extras; Grok mounts the prompt rail", () => {
   const facts = src("../../components/rvfax/RvDetail.tsx");
   const grok = src("../../components/rvgrok/RvGrokApp.tsx");
@@ -67,8 +87,11 @@ test("Facts still auto-loads extras; Grok mounts the prompt rail", () => {
   assert.match(facts, /getMaintenanceSchedule/);
   assert.match(facts, /getMockReviews/);
   assert.match(facts, /RvShareKit/);
-  assert.match(grok, /GrokExtrasRail|grokExtrasForPrompt/);
+  assert.match(grok, /GrokExtrasRail|grokExtrasForPrompt|offerVoiceExtras/);
   assert.match(bubble, /GrokExtrasRail/);
+  assert.match(bubble, /offerVoiceExtras/);
+  assert.match(src("../../components/rvgrok/GrokExtrasRail.tsx"), /extrasToOffer/);
+  assert.match(src("../../components/rvgrok/GrokExtrasRail.tsx"), /useState<Phase>\("prompt"\)/);
   assert.doesNotMatch(src("grokExtras.ts"), /[Gg]emini/);
   assert.doesNotMatch(src("grokExtras.ts"), /[Dd]ialaBot/);
 });
