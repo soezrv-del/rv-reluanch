@@ -6,9 +6,10 @@
 
 import type { DeskSheetPayload, DeskSheetRow } from "./deskSheet.ts";
 import { looksLikeDeskSheetAsk } from "./deskSheetPolicy.ts";
+import { prefixLiveVoiceAck } from "./voiceAck.ts";
 
 export const VOICE_SPEC_ENGINE_INSTRUCTIONS =
-  "Say exactly the SPEC ENGINE SCRIPT and then stop. Those numbers are the catalog and fallback chain for this turn. Do not add, replace, or estimate any spec from memory. Do not load NHTSA recalls, market value, videos, owner reviews, or a maintenance schedule. Those are on-screen prompts the user picks. If the script says a field was missed, say that and do not guess a number.";
+  "Say exactly the SPEC ENGINE SCRIPT and then stop. The script opens with a short acknowledgment — say that first, once, then the specs. Those numbers are the catalog and fallback chain for this turn. Do not add, replace, or estimate any spec from memory. Do not load NHTSA recalls, market value, videos, owner reviews, or a maintenance schedule. Those are on-screen prompts the user picks. If the script says a field was missed, say that and do not guess a number.";
 
 const EXTRAS_OFFER =
   "Spec sheet is on the desk. You can pick recalls, market value, videos, owner reviews, or maintenance. I won't load those until you choose.";
@@ -75,8 +76,17 @@ function rowSpeech(row: DeskSheetRow, query: string): string {
 /**
  * Exact words for a Live Voice spec turn. Empty / GAP stays a miss.
  * Does not invent a number the painted sheet does not contain.
+ * `ack` is spoken first; the catalog → fallback → extras chain follows.
  */
 export function formatVoiceSpecEngineSpeech(
+  sheet: DeskSheetPayload | null,
+  query: string,
+  ack?: string,
+): string {
+  return prefixLiveVoiceAck(voiceSpecEngineSpeechBody(sheet, query), ack || "");
+}
+
+function voiceSpecEngineSpeechBody(
   sheet: DeskSheetPayload | null,
   query: string,
 ): string {
