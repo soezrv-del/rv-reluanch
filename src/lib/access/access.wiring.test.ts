@@ -249,6 +249,8 @@ test("http gate short-circuits hard admin and stays on rvgrok", () => {
   assert.doesNotMatch(gate, /ACCESS_GATE_DISABLED/);
   const rvgrok = read("src/routes/api/rvgrok.ts");
   assert.match(rvgrok, /denyUnlessWhitelisted/);
+  const dossier = read("src/routes/api/rvfax.dossier.ts");
+  assert.match(dossier, /denyUnlessWhitelisted/);
   const voiceWeb = read("src/lib/rvgrok/voiceWeb.ts");
   assert.match(voiceWeb, /fetchWithResearchAccess/);
   assert.match(voiceWeb, /researchAccessHeaders/);
