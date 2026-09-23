@@ -118,8 +118,8 @@ export function dossierCacheKey(
   return `${year}|${make}|${model}|${floorplan || ""}`.toLowerCase();
 }
 
-/** Client timeout — keep year-band paint; do not blank the report */
-export const LIVE_DOSSIER_TIMEOUT_MS = 90_000;
+/** Client wait — 180s so gap browse + extract can finish; keep year-band paint. */
+export const LIVE_DOSSIER_TIMEOUT_MS = 180_000;
 
 /**
  * Instant paint helper — verified local cache from a prior live search.

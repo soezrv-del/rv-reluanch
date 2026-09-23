@@ -2,7 +2,7 @@
  * Facts live dossier — catalog / brochure pins first, internet only for gaps.
  *
  * Brochure catalog is the months-built SoT. Live browse runs only for hard
- * fields that are missing or not a real pin. Narrow query + short timeout.
+ * fields that are missing or not a real pin. Narrow query + dedicated timeout.
  * Soft-fail keeps catalog paint. Pins still win. No invented OEM numbers.
  *
  * Separate from the RV Grok Neon sidecar. Does not flip the Grok
@@ -20,11 +20,11 @@ import { findOemFloorplanSpec } from "./floorplanSpecs.ts";
 import type { LiveDossier } from "./liveDossier.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 
-/** Gap browse budget — never the 52s full-report SPEC_REPORT band. */
-export const FACTS_GAP_RESEARCH_TIMEOUT_MS = 22_000;
+/** Gap browse budget — Facts-only; stay under the 180s client wait so extract has room. */
+export const FACTS_GAP_RESEARCH_TIMEOUT_MS = 90_000;
 
-/** Soft narrative only — overview / issues / sentiment / market / sources. */
-export const FACTS_SOFT_RESEARCH_TIMEOUT_MS = 14_000;
+/** Soft narrative only — overview / issues / sentiment / market / sources. Cheaper than gap. */
+export const FACTS_SOFT_RESEARCH_TIMEOUT_MS = 20_000;
 
 export const FACTS_DOSSIER_HARD_FIELDS = [
   "engine",
