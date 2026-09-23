@@ -312,17 +312,24 @@ test("research provider toggle is admin-only and server-persisted", () => {
   assert.match(sheet, /data-admin-clear-memory/);
   assert.match(sheet, /Clear memory/);
   assert.ok(
-    sheet.indexOf("ResearchProviderCard") >
+    sheet.lastIndexOf("<ResearchProviderCard") >
       sheet.indexOf('view === "password"'),
     "toggle lives in the authed list, not the password / visitor chrome",
   );
 
   const more = read("src/components/access/AccessMoreSection.tsx");
   assert.match(more, /ResearchProviderCard/);
-  const adminMore = more.slice(more.indexOf("{access.isAdmin"));
-  assert.match(adminMore, /<ResearchProviderCard surface="more"/);
-  const beforeAdmin = more.slice(0, more.indexOf("{access.isAdmin"));
-  assert.doesNotMatch(beforeAdmin, /ResearchProviderCard|RESEARCH PROVIDER/);
+  const adminGate = more.indexOf("{access.isAdmin ? (");
+  assert.ok(adminGate > 0, "card is gated on access.isAdmin");
+  assert.match(
+    more.slice(adminGate),
+    /<ResearchProviderCard surface="more"/,
+  );
+  const identifyForm = more.slice(
+    more.indexOf("<form"),
+    more.indexOf("</form>"),
+  );
+  assert.doesNotMatch(identifyForm, /ResearchProviderCard|RESEARCH PROVIDER/);
 
   const chat = read("src/routes/api/rvgrok.ts");
   const voice = read("src/routes/api/rvgrok.web-research.ts");
