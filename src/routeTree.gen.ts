@@ -34,6 +34,7 @@ import { Route as ApiRvfaxCatalogResearchRouteImport } from './routes/api/rvfax.
 import { Route as ApiRvfaxCompareRouteImport } from './routes/api/rvfax.compare'
 import { Route as ApiRvfaxDossierRouteImport } from './routes/api/rvfax.dossier'
 import { Route as ApiRvfaxPublicCompsRouteImport } from './routes/api/rvfax.public-comps'
+import { Route as ApiRvfaxSpecFallbackRouteImport } from './routes/api/rvfax.spec-fallback'
 import { Route as ApiRvgrokMemoryRouteImport } from './routes/api/rvgrok.memory'
 import { Route as ApiRvgrokTokenRouteImport } from './routes/api/rvgrok.token'
 import { Route as ApiRvgrokWebResearchRouteImport } from './routes/api/rvgrok.web-research'
@@ -164,6 +165,11 @@ const ApiRvfaxPublicCompsRoute = ApiRvfaxPublicCompsRouteImport.update({
   path: '/rvfax/public-comps',
   getParentRoute: () => ApiRouteRoute,
 } as any)
+const ApiRvfaxSpecFallbackRoute = ApiRvfaxSpecFallbackRouteImport.update({
+  id: '/rvfax/spec-fallback',
+  path: '/rvfax/spec-fallback',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
 const ApiRvgrokMemoryRoute = ApiRvgrokMemoryRouteImport.update({
   id: '/memory',
   path: '/memory',
@@ -206,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/api/rvfax/compare': typeof ApiRvfaxCompareRoute
   '/api/rvfax/dossier': typeof ApiRvfaxDossierRoute
   '/api/rvfax/public-comps': typeof ApiRvfaxPublicCompsRoute
+  '/api/rvfax/spec-fallback': typeof ApiRvfaxSpecFallbackRoute
   '/api/rvgrok/memory': typeof ApiRvgrokMemoryRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
   '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
@@ -236,6 +243,7 @@ export interface FileRoutesByTo {
   '/api/rvfax/compare': typeof ApiRvfaxCompareRoute
   '/api/rvfax/dossier': typeof ApiRvfaxDossierRoute
   '/api/rvfax/public-comps': typeof ApiRvfaxPublicCompsRoute
+  '/api/rvfax/spec-fallback': typeof ApiRvfaxSpecFallbackRoute
   '/api/rvgrok/memory': typeof ApiRvgrokMemoryRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
   '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
@@ -267,6 +275,7 @@ export interface FileRoutesById {
   '/api/rvfax/compare': typeof ApiRvfaxCompareRoute
   '/api/rvfax/dossier': typeof ApiRvfaxDossierRoute
   '/api/rvfax/public-comps': typeof ApiRvfaxPublicCompsRoute
+  '/api/rvfax/spec-fallback': typeof ApiRvfaxSpecFallbackRoute
   '/api/rvgrok/memory': typeof ApiRvgrokMemoryRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
   '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
@@ -299,6 +308,7 @@ export interface FileRouteTypes {
     | '/api/rvfax/compare'
     | '/api/rvfax/dossier'
     | '/api/rvfax/public-comps'
+    | '/api/rvfax/spec-fallback'
     | '/api/rvgrok/memory'
     | '/api/rvgrok/token'
     | '/api/rvgrok/web-research'
@@ -329,6 +339,7 @@ export interface FileRouteTypes {
     | '/api/rvfax/compare'
     | '/api/rvfax/dossier'
     | '/api/rvfax/public-comps'
+    | '/api/rvfax/spec-fallback'
     | '/api/rvgrok/memory'
     | '/api/rvgrok/token'
     | '/api/rvgrok/web-research'
@@ -359,6 +370,7 @@ export interface FileRouteTypes {
     | '/api/rvfax/compare'
     | '/api/rvfax/dossier'
     | '/api/rvfax/public-comps'
+    | '/api/rvfax/spec-fallback'
     | '/api/rvgrok/memory'
     | '/api/rvgrok/token'
     | '/api/rvgrok/web-research'
@@ -547,6 +559,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRvfaxPublicCompsRouteImport
       parentRoute: typeof ApiRouteRoute
     }
+    '/api/rvfax/spec-fallback': {
+      id: '/api/rvfax/spec-fallback'
+      path: '/rvfax/spec-fallback'
+      fullPath: '/api/rvfax/spec-fallback'
+      preLoaderRoute: typeof ApiRvfaxSpecFallbackRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
     '/api/rvgrok/memory': {
       id: '/api/rvgrok/memory'
       path: '/memory'
@@ -610,6 +629,7 @@ interface ApiRouteRouteChildren {
   ApiRvfaxCompareRoute: typeof ApiRvfaxCompareRoute
   ApiRvfaxDossierRoute: typeof ApiRvfaxDossierRoute
   ApiRvfaxPublicCompsRoute: typeof ApiRvfaxPublicCompsRoute
+  ApiRvfaxSpecFallbackRoute: typeof ApiRvfaxSpecFallbackRoute
 }
 
 const ApiRouteRouteChildren: ApiRouteRouteChildren = {
@@ -635,6 +655,7 @@ const ApiRouteRouteChildren: ApiRouteRouteChildren = {
   ApiRvfaxCompareRoute: ApiRvfaxCompareRoute,
   ApiRvfaxDossierRoute: ApiRvfaxDossierRoute,
   ApiRvfaxPublicCompsRoute: ApiRvfaxPublicCompsRoute,
+  ApiRvfaxSpecFallbackRoute: ApiRvfaxSpecFallbackRoute,
 }
 
 const ApiRouteRouteWithChildren = ApiRouteRoute._addFileChildren(

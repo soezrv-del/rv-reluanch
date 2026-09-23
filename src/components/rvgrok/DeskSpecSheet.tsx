@@ -66,6 +66,16 @@ export function DeskSpecSheet({
                 >
                   {row.value}
                 </p>
+                {row.sourceUrl && !row.gap ? (
+                  <a
+                    href={row.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-0.5 block truncate text-[9px] font-medium text-muted underline"
+                  >
+                    Source
+                  </a>
+                ) : null}
               </div>
             ) : null,
           )}
@@ -125,11 +135,21 @@ export function DeskSpecSheet({
               </dt>
               <dd
                 className={cn(
-                  "text-right text-[13px] font-semibold",
+                  "min-w-0 text-right text-[13px] font-semibold",
                   row.gap ? "text-amber" : "text-fg",
                 )}
               >
-                {row.value}
+                <span>{row.value}</span>
+                {row.sourceUrl && !row.gap ? (
+                  <a
+                    href={row.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-0.5 block truncate text-[10px] font-medium text-muted underline"
+                  >
+                    Source
+                  </a>
+                ) : null}
               </dd>
             </div>
           ))}

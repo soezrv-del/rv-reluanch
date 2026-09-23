@@ -24,6 +24,7 @@ import { parseCoachFromText } from "./parseCoach";
 import { ensureCatalogLoaded } from "../rv/catalogLoad";
 import {
   resolveDeskSheet,
+  resolveDeskSheetThenFallback,
   type DeskSheetPayload,
 } from "./deskSheet";
 import { looksLikeRepairQuestion, REPAIR_VOICE_PLAYBOOK } from "./repairMode";
@@ -97,6 +98,7 @@ export class GrokRealtimeSession {
   private lastDeskIdentity: import("./coachIdentity").CoachIdentity | null =
     null;
   private lastDeskSpecs: Parameters<typeof resolveDeskSheet>[0]["specs"] = null;
+  private deskFallbackSeq = 0;
   private accessPhone: string;
   private visitorFirstName: string;
   private visitorMemory: string;
@@ -521,16 +523,26 @@ export class GrokRealtimeSession {
     if (this.finishedAssistantOnce) return;
     this.finishedAssistantOnce = true;
     if (text && this.lastDeskQuery) {
-      const painted = resolveDeskSheet({
+      this.emitDeskSheet({
         query: this.lastDeskQuery,
         identity: this.lastDeskIdentity,
         specs: this.lastDeskSpecs,
         spokenText: text,
         chatSpecBlock: text,
       });
-      this.handlers.onDeskSheet?.(painted);
     }
     if (text) this.handlers.onAssistantDone(text);
+  }
+
+  private emitDeskSheet(opts: Parameters<typeof resolveDeskSheet>[0]) {
+    const sheet = resolveDeskSheet(opts);
+    this.handlers.onDeskSheet?.(sheet);
+    const seq = ++this.deskFallbackSeq;
+    if (!sheet) return;
+    void resolveDeskSheetThenFallback(opts).then((next) => {
+      if (seq !== this.deskFallbackSeq) return;
+      if (next) this.handlers.onDeskSheet?.(next);
+    });
   }
 
   private beginSpeaking() {
@@ -844,12 +856,11 @@ export class GrokRealtimeSession {
     this.lastDeskQuery = transcript;
     this.lastDeskIdentity = grounded.identity;
     this.lastDeskSpecs = grounded.specs;
-    const sheet = resolveDeskSheet({
+    this.emitDeskSheet({
       query: transcript,
       identity: grounded.identity,
       specs: grounded.specs,
     });
-    this.handlers.onDeskSheet?.(sheet);
     if (lockBroke && grounded.block) {
       this.pushCatalogLockToSession(grounded.block);
     }
