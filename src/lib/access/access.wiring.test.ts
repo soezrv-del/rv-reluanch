@@ -299,21 +299,30 @@ test("research provider toggle is admin-only and server-persisted", () => {
   assert.match(store, /parseForcedResearchProvider/);
   assert.doesNotMatch(store, /authMiddleware|requireUserId/);
 
+  const card = read("src/components/access/ResearchProviderCard.tsx");
+  assert.match(card, /data-research-provider/);
+  assert.match(card, /RESEARCH PROVIDER/);
+  assert.match(card, /method: "PATCH"/);
+  assert.match(card, /data-research-provider-option/);
+  assert.match(card, /Effective now/);
+  assert.doesNotMatch(card, /localStorage/);
+
   const sheet = read("src/components/access/AdminWhitelistSheet.tsx");
-  assert.match(sheet, /data-research-provider/);
-  assert.match(sheet, /RESEARCH PROVIDER/);
-  assert.match(sheet, /method: "PATCH"/);
-  assert.match(sheet, /data-research-provider-option/);
+  assert.match(sheet, /ResearchProviderCard/);
   assert.match(sheet, /data-admin-clear-memory/);
   assert.match(sheet, /Clear memory/);
   assert.ok(
-    sheet.indexOf("data-research-provider") >
+    sheet.indexOf("ResearchProviderCard") >
       sheet.indexOf('view === "password"'),
     "toggle lives in the authed list, not the password / visitor chrome",
   );
 
   const more = read("src/components/access/AccessMoreSection.tsx");
-  assert.doesNotMatch(more, /researchProvider|RESEARCH PROVIDER/);
+  assert.match(more, /ResearchProviderCard/);
+  const adminMore = more.slice(more.indexOf("{access.isAdmin"));
+  assert.match(adminMore, /<ResearchProviderCard surface="more"/);
+  const beforeAdmin = more.slice(0, more.indexOf("{access.isAdmin"));
+  assert.doesNotMatch(beforeAdmin, /ResearchProviderCard|RESEARCH PROVIDER/);
 
   const chat = read("src/routes/api/rvgrok.ts");
   const voice = read("src/routes/api/rvgrok.web-research.ts");

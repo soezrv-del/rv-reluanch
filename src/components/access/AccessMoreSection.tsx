@@ -3,6 +3,7 @@ import { Shield } from "lucide-react";
 import { welcomeBackLine } from "@/lib/access/identity";
 import { useAccess } from "./AccessProvider";
 import { AdminWhitelistSheet } from "./AdminWhitelistSheet";
+import { ResearchProviderCard } from "./ResearchProviderCard";
 
 export function AccessMoreSection() {
   const access = useAccess();
@@ -104,27 +105,30 @@ export function AccessMoreSection() {
       </section>
 
       {access.isAdmin ? (
-        <section>
-          <div className="glass-prestige overflow-hidden rounded-[1.25rem]">
-            <button
-              type="button"
-              onClick={() => access.openAdminList()}
-              className="flex w-full items-center gap-3 px-3.5 py-3.5 text-left transition hover:bg-white/5"
-            >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
-                <Shield className="size-4 text-amber" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-bold text-white">
-                  Manage access list
+        <>
+          <section>
+            <div className="glass-prestige overflow-hidden rounded-[1.25rem]">
+              <button
+                type="button"
+                onClick={() => access.openAdminList()}
+                className="flex w-full items-center gap-3 px-3.5 py-3.5 text-left transition hover:bg-white/5"
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                  <Shield className="size-4 text-amber" />
                 </span>
-                <span className="block text-[11px] text-white">
-                  Add or remove approved numbers
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-bold text-white">
+                    Manage access list
+                  </span>
+                  <span className="block text-[11px] text-white">
+                    Add or remove approved numbers
+                  </span>
                 </span>
-              </span>
-            </button>
-          </div>
-        </section>
+              </button>
+            </div>
+          </section>
+          <ResearchProviderCard surface="more" />
+        </>
       ) : null}
 
       <AdminWhitelistSheet
