@@ -90,6 +90,13 @@ export type CatalogCandidatePayload = {
   floorplan?: string | null;
   lengthFt?: string | null;
   gvwr?: string | null;
+  gvwrLbs?: number | null;
+  uvw?: string | null;
+  uvwLbs?: number | null;
+  uvwEstimated?: boolean | null;
+  freshWater?: string | null;
+  grayWater?: string | null;
+  blackWater?: string | null;
 };
 
 export type LiveDossierResponse =

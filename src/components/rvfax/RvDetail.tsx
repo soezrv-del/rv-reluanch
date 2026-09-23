@@ -443,6 +443,13 @@ export function RvDetail({
       floorplan: floorplan || null,
       lengthFt: brochure.lengthFt,
       gvwr: brochure.gvwr,
+      gvwrLbs: brochure.gvwrLbs ?? null,
+      uvw: brochure.uvwEstimated ? null : brochure.uvw,
+      uvwLbs: brochure.uvwEstimated ? null : (brochure.uvwLbs ?? null),
+      uvwEstimated: brochure.uvwEstimated,
+      freshWater: brochure.freshWater,
+      grayWater: brochure.grayWater,
+      blackWater: brochure.blackWater,
     };
 
     fetchLiveDossier(
