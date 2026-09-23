@@ -413,3 +413,55 @@ test("research order toggle is admin-only and server-persisted", () => {
   assert.doesNotMatch(chat, /body\.researchOrder|x-research-order/);
   assert.doesNotMatch(voice, /body\.researchOrder|x-research-order/);
 });
+
+test("prompt lessons are admin-only and server-persisted", () => {
+  const admin = read("src/routes/api/access.admin.ts");
+  assert.match(admin, /promptLessons/);
+  assert.match(admin, /addPromptLesson/);
+  assert.match(admin, /deletePromptLesson/);
+  assert.match(admin, /action === "prompt-lesson-add"/);
+  assert.match(admin, /action === "prompt-lesson-delete"/);
+  assert.match(admin, /denyAccessAdmin/);
+  assert.doesNotMatch(admin, /localStorage/);
+
+  const store = read("src/lib/rvgrok/promptLessonsStore.ts");
+  assert.match(store, /rvgrok_ops_settings/);
+  assert.match(store, /prompt_lessons/);
+  assert.match(store, /PROMPT_LESSONS_CACHE_TTL_MS/);
+  assert.doesNotMatch(store, /authMiddleware|requireUserId/);
+  assert.doesNotMatch(store, /localStorage/);
+  assert.doesNotMatch(store, /dial_phonebook|bland|DialaBot/i);
+
+  const card = read("src/components/access/PromptLessonsCard.tsx");
+  assert.match(card, /data-prompt-lessons/);
+  assert.match(card, /STANDING LESSONS/);
+  assert.match(card, /prompt-lesson-add/);
+  assert.match(card, /prompt-lesson-delete/);
+  assert.doesNotMatch(card, /localStorage/);
+
+  const sheet = read("src/components/access/AdminWhitelistSheet.tsx");
+  assert.match(sheet, /PromptLessonsCard/);
+  assert.ok(
+    sheet.lastIndexOf("<PromptLessonsCard") >
+      sheet.indexOf('view === "password"'),
+    "lessons live in the authed list, not the password chrome",
+  );
+
+  const more = read("src/components/access/AccessMoreSection.tsx");
+  const adminGate = more.indexOf("{access.isAdmin ? (");
+  assert.ok(adminGate > 0, "lessons card is gated on access.isAdmin");
+  assert.match(more.slice(adminGate), /<PromptLessonsCard surface="more"/);
+  const identifyForm = more.slice(
+    more.indexOf("<form"),
+    more.indexOf("</form>"),
+  );
+  assert.doesNotMatch(identifyForm, /PromptLessonsCard|STANDING LESSONS/);
+
+  const chat = read("src/routes/api/rvgrok.ts");
+  const token = read("src/routes/api/rvgrok.token.ts");
+  assert.match(chat, /readStandingLessonsBlock/);
+  assert.match(chat, /injectStandingLessons/);
+  assert.match(token, /readStandingLessonsBlock/);
+  assert.match(token, /LESSONS_HEADER/);
+  assert.doesNotMatch(chat, /body\.promptLessons|x-prompt-lessons/);
+});

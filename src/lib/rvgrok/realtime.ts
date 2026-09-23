@@ -4,6 +4,7 @@ import {
   XAI_REALTIME_URL,
   base64ToArrayBuffer,
   fetchEphemeralToken,
+  takeTokenStandingLessons,
   takeTokenVisitorMemory,
   floatTo16BitPCM,
   resampleFloat32,
@@ -99,6 +100,7 @@ export class GrokRealtimeSession {
   private accessPhone: string;
   private visitorFirstName: string;
   private visitorMemory: string;
+  private standingLessons: string | undefined;
 
   constructor(
     handlers: RealtimeHandlers,
@@ -119,6 +121,7 @@ export class GrokRealtimeSession {
     this.accessPhone = (opts?.accessPhone || "").trim();
     this.visitorFirstName = (opts?.visitorFirstName || "").trim();
     this.visitorMemory = "";
+    this.standingLessons = undefined;
   }
 
   /** AccessProvider may hydrate after Live Voice is already connected. */
@@ -151,6 +154,7 @@ export class GrokRealtimeSession {
 
     const token = await fetchEphemeralToken();
     this.visitorMemory = takeTokenVisitorMemory();
+    this.standingLessons = takeTokenStandingLessons();
     if (this.closed || this.intentionalStop) return;
 
     const subprotocol = `xai-client-secret.${token}`;
@@ -181,6 +185,7 @@ export class GrokRealtimeSession {
           this.catalogContext,
           this.visitorFirstName,
           this.visitorMemory,
+          this.standingLessons,
         ),
       ),
     );
@@ -766,6 +771,7 @@ export class GrokRealtimeSession {
             text,
             this.visitorFirstName,
             this.visitorMemory,
+            this.standingLessons,
           ),
         ),
       );
