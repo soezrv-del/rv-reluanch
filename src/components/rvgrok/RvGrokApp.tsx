@@ -1537,6 +1537,7 @@ export function RvGrokApp({
       <GrokExtrasRail
         query={query}
         offerVoiceExtras={sheet.offerVoiceExtras}
+        voiceExtraStep={sheet.voiceExtraStep}
         coach={{
           year: sheet.year,
           make: sheet.make,

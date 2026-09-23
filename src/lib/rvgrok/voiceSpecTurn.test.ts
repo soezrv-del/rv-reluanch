@@ -6,7 +6,13 @@ import { fileURLToPath } from "node:url";
 import { resolveCoachIdentity } from "./coachIdentity.ts";
 import { resolveDeskSheet, type DeskSheetPayload } from "./deskSheet.ts";
 import {
+  classifyVoiceCoachDepth,
+  formatVoiceQuickOverview,
   formatVoiceSpecEngineSpeech,
+  isVoiceExtraNudge,
+  looksLikeVoiceCoachOrSpecAsk,
+  VOICE_COACH_CHOICE_LINE,
+  voiceExtraPromptLine,
   voiceSpecSourcePhrase,
   withVoiceSpecExtras,
 } from "./voiceSpecTurn.ts";
@@ -101,6 +107,36 @@ test("fallback pin names RV Guide and a catalog miss does not invent", () => {
   assert.doesNotMatch(formatVoiceSpecEngineSpeech(null, LINEAGE_Q), /\d{4,}/);
 });
 
+test("coach or spec ask is a choice, not a synopsis or an auto full report", () => {
+  assert.equal(
+    VOICE_COACH_CHOICE_LINE,
+    "Of course, right away — would you like a full report or a quick overview?",
+  );
+  assert.equal(classifyVoiceCoachDepth("full report"), "full");
+  assert.equal(classifyVoiceCoachDepth("a quick overview please"), "quick");
+  assert.equal(classifyVoiceCoachDepth("full report on the Lineage 31ZW"), null);
+  assert.equal(looksLikeVoiceCoachOrSpecAsk(LINEAGE_Q), true);
+  assert.equal(
+    looksLikeVoiceCoachOrSpecAsk("tell me about the 2026 Lineage 31ZW"),
+    true,
+  );
+  assert.equal(looksLikeVoiceCoachOrSpecAsk("hi"), false);
+  assert.equal(isVoiceExtraNudge("next"), true);
+  assert.equal(isVoiceExtraNudge(LINEAGE_Q), false);
+
+  const full = formatVoiceSpecEngineSpeech(lineageSheet(), LINEAGE_Q, "all");
+  assert.match(full, /18,186/);
+  assert.doesNotMatch(full, /You can pick recalls/);
+  assert.equal(voiceExtraPromptLine(lineageSheet(), 0), "Want NHTSA recalls?");
+  assert.equal(voiceExtraPromptLine(lineageSheet(), 99), null);
+
+  const quick = formatVoiceQuickOverview(lineageSheet());
+  assert.match(quick, /31ZW/);
+  assert.doesNotMatch(quick, /18,186/);
+  assert.doesNotMatch(quick, /Want NHTSA/);
+  assert.equal(withVoiceSpecExtras(lineageSheet(), "tell me about it", { force: true, step: 0 })?.voiceExtraStep, 0);
+});
+
 test("Live Voice spec turns go through the shared engine and skip the snippet reply", () => {
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   const fnStart = realtime.indexOf("private async maybeEnrichWithWebResearch");
@@ -118,6 +154,18 @@ test("Live Voice spec turns go through the shared engine and skip the snippet re
   assert.match(realtime, /formatVoiceSpecEngineSpeech/);
   assert.match(realtime, /VOICE_SPEC_ENGINE_INSTRUCTIONS/);
   assert.match(realtime, /offerVoiceExtras|withVoiceSpecExtras/);
+  assert.match(realtime, /routeVoiceOpening/);
+  assert.match(realtime, /VOICE_COACH_CHOICE_INSTRUCTIONS/);
+  assert.match(realtime, /formatVoiceQuickOverview/);
+  assert.match(realtime, /voiceExtraStep|voiceExtraPromptLine/);
+  const choiceAt = realtime.indexOf("routeVoiceOpening");
+  const speakAt = realtime.indexOf("speakFromSpecEngine");
+  assert.ok(choiceAt > 0 && choiceAt < speakAt);
+  assert.doesNotMatch(realtime, /Would you like a quick overview, or a full desk report/);
+  assert.doesNotMatch(
+    readFileSync(join(root, "voiceSpecTurn.ts"), "utf8"),
+    /Would you like a quick overview, or a full desk report/,
+  );
   assert.doesNotMatch(realtime, /[Dd]ialaBot/);
   assert.doesNotMatch(readFileSync(join(root, "voiceSpecTurn.ts"), "utf8"), /[Gg]emini/);
   assert.doesNotMatch(readFileSync(join(root, "grokExtras.ts"), "utf8"), /[Gg]emini/);
