@@ -61,6 +61,7 @@ export function readResearchProviderPref(explicit?: string): ResearchProvider {
  * gemini without a key → xAI (no crash, same as today).
  * xai → always the existing Responses web_search loop.
  */
+// Preview test: set RVGROK_RESEARCH_PROVIDER=xai on Vercel Preview only (Production stays auto).
 export function resolveResearchProvider(opts?: {
   provider?: string;
   geminiApiKey?: string;
