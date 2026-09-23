@@ -35,7 +35,9 @@ test("RvGrokApp defaults to page variant and gates suite chrome for embedded", (
   assert.match(app, /!embedded && !isLanding/);
   assert.match(app, /<HistoryPanel/);
   assert.match(app, /<VoicePanel/);
-  assert.match(app, /Ask RV Grok/);
+  assert.match(app, /<PremiumMenuButton/);
+  assert.match(app, /: "Ask RV Grok"/);
+  assert.doesNotMatch(app, /or name a year, make, and model/);
   assert.match(app, /GROK_STARTERS/);
   assert.match(app, /planGrokTabEntry/);
   assert.match(app, /onSeedConsumed/);

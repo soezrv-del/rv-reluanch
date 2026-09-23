@@ -36,7 +36,7 @@ test("Mark 5412858791 is a seeded tester with CSV name and notes", () => {
   }
 });
 
-test("David Hansen 702-266-5915 is seeded; Hanson 5918 is not", () => {
+test("David Hansen 702-266-5915 is seeded; hard-admin 5918 is not", () => {
   const hansen = findBetaSeed("702-266-5915");
   assert.ok(hansen);
   assert.equal(hansen.contactName, "David Hansen");

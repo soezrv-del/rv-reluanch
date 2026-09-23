@@ -1,10 +1,10 @@
 /**
- * Hard admin seed. Founder KB / origin story stay "David Hansen".
- * This whitelist row uses the name David stated for the seed: David Hanson.
+ * Hard admin seed. Same founder name as report contact + origin KB: David Hansen.
+ * Phone stays 702-266-5918 (beta CSV Hansen 5915 is a separate non-admin row).
  */
 export const HARD_ADMIN = {
-  id: "admin-david-hanson",
-  name: "David Hanson",
+  id: "admin-david-hansen",
+  name: "David Hansen",
   displayPhone: "702-266-5918",
   digits: "7022665918",
   e164: "+17022665918",

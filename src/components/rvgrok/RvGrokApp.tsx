@@ -80,6 +80,7 @@ import {
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
 import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
+import { PremiumMenuButton } from "@/components/shell/PremiumMenuButton";
 
 const GROK_STARTERS: GrokStarter[] = [
   {
@@ -111,7 +112,7 @@ export function RvGrokApp({
   /** Bumps on every Grok tab entry (dock tap included) so a remounted pane resets. */
   entryToken?: number;
   /**
-   * `page` (default) — Grok tab: suite backdrop, sapphire header, pull-to-reset.
+   * `page` (default) — Grok tab: suite backdrop, gold-trim chrome, pull-to-reset.
    * `embedded` — Ask Grok overlay mount: same chat stack, no suite-page chrome
    * and no History/Agent/Voice toolbar (overlay owns the one header).
    */
@@ -1417,7 +1418,7 @@ export function RvGrokApp({
       ? "Live continuous — just speak"
       : pendingImage
         ? "Ask about this photo…"
-        : "Ask RV Grok — or name a year, make, and model";
+        : "Ask RV Grok";
   const nextUnit = GROK_STARTERS.find(
     (s) => s.title !== reportSheet?.title,
   ) ?? GROK_STARTERS[0];
@@ -1483,6 +1484,7 @@ export function RvGrokApp({
           <Plus className="size-4" />
         </GrokToolbarButton>
       ) : null}
+      <PremiumMenuButton />
     </>
   ) : null;
 
@@ -1571,6 +1573,7 @@ export function RvGrokApp({
       className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden text-fg"
       data-rvgrok-variant={variant}
       data-rvgrok-wingman=""
+      data-page-accent={embedded ? undefined : "gold"}
       data-readable-cards=""
     >
       {!embedded && (

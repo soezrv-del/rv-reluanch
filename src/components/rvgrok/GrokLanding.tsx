@@ -170,14 +170,14 @@ export function GrokToolbarButton({
       onClick={onClick}
       className={cn(
         "relative flex size-10 items-center justify-center rounded-full border border-white/15 bg-black/25 text-fg transition hover:bg-white/10",
-        active && "border-sky-300/45 bg-sky-500/20",
+        active && "border-gold-border/60 bg-gold-dim text-gold-bright",
       )}
       aria-label={label}
       title={label}
     >
       {children}
       {badge ? (
-        <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-sky-500 text-[9px] font-bold text-white">
+        <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-gold text-[9px] font-bold text-ink-black">
           {badge}
         </span>
       ) : null}

@@ -90,6 +90,7 @@ export async function ensureAdminSeed(): Promise<void> {
       true
     )
     on conflict (phone_digits) do update set
+      id = excluded.id,
       phone_e164 = excluded.phone_e164,
       contact_name = excluded.contact_name,
       notes = excluded.notes,

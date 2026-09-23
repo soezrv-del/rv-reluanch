@@ -59,6 +59,7 @@ import { rvSafeNavigateChipLabel } from "@/lib/trips/coachProfile";
 import { decideTowHandoff } from "@/lib/trips/towHandoff";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
+import { PremiumMenuButton } from "@/components/shell/PremiumMenuButton";
 import {
   analyzeRouteRestrictions,
   saferAppliedNote,
@@ -150,8 +151,8 @@ type SheetId = "year" | "make" | "model" | "floorplan" | null;
 function dimSourceTag(source?: DimSource): { text: string; className: string } | null {
   if (source === "estimate") return { text: "estimate", className: "text-amber" };
   if (source === "brochure") return { text: "brochure", className: "text-emerald-300" };
-  if (source === "catalog") return { text: "catalog", className: "text-sky-200" };
-  if (source === "facts") return { text: "facts", className: "text-sky-200" };
+  if (source === "catalog") return { text: "catalog", className: "text-gold-bright" };
+  if (source === "facts") return { text: "facts", className: "text-gold-bright" };
   return null;
 }
 
@@ -1220,6 +1221,7 @@ export function RvTripsApp() {
     <div
       className="relative flex h-full flex-col overflow-hidden bg-bg text-white"
       data-trips-screen
+      data-page-accent="gold"
       data-trips-route-clean={
         routeStatus === "live" || navArmed ? "1" : undefined
       }
@@ -1237,8 +1239,11 @@ export function RvTripsApp() {
           data-trips-header
           className="relative z-40 isolate pointer-events-auto px-3 pb-2 sm:px-4"
         >
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold tracking-[0.18em] text-sky-100">
+          <div className="absolute right-2.5 top-2.5 z-[4] sm:right-3 sm:top-3">
+            <PremiumMenuButton size="sm" />
+          </div>
+          <div className="min-w-0 pr-12">
+            <p className="text-[10px] font-bold tracking-[0.18em] text-gold-bright">
               RvFOX
             </p>
             <h1 className="text-[22px] font-bold tracking-tight text-white">
@@ -1266,8 +1271,8 @@ export function RvTripsApp() {
               className={cn(
                 "inline-flex min-h-11 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide",
                 tool === "dumps"
-                  ? "border-sapphire/60 bg-sapphire/25 text-sky-100"
-                  : "border-sapphire/40 bg-sapphire/15 text-sapphire-glow",
+                  ? "border-gold/60 bg-gold-dim text-gold-bright"
+                  : "border-gold-border/50 bg-gold-dim/40 text-gold-bright",
               )}
             >
               <Droplets className="size-3" />
@@ -1281,7 +1286,7 @@ export function RvTripsApp() {
                   "inline-flex min-h-11 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wide",
                   locked
                     ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
-                    : "border-sky-400/40 bg-sky-500/15 text-sky-200",
+                    : "border-gold-border/50 bg-gold-dim text-gold-bright",
                 )}
               >
                 {locked ? <Lock className="size-3" /> : <Unlock className="size-3" />}
@@ -1492,7 +1497,7 @@ export function RvTripsApp() {
                     data-origin-chip
                   >
                     {locating || !originPlace ? (
-                      <Loader2 className="size-4 shrink-0 animate-spin text-sky-200" />
+                      <Loader2 className="size-4 shrink-0 animate-spin text-gold-bright" />
                     ) : (
                       <LocateFixed
                         className={cn(
@@ -1522,10 +1527,10 @@ export function RvTripsApp() {
                         className={cn(
                           "inline-flex min-h-11 items-center gap-1 rounded-full border px-3 py-2 text-[11px] font-bold transition",
                           locating
-                            ? "border-sky-300/40 bg-sky-500/20 text-sky-100"
+                            ? "border-gold-border/60 bg-gold-dim text-gold-bright"
                             : originIsDevice(originPlace)
                               ? "border-emerald-400/45 bg-emerald-500/20 text-emerald-100"
-                              : "border-white/20 bg-black/35 text-white/90 hover:border-sky-300/40 hover:bg-sky-500/15",
+                              : "border-white/20 bg-black/35 text-white/90 hover:border-gold-border/50 hover:bg-gold-dim",
                         )}
                         aria-label="Use my location as starting point"
                       >
@@ -2170,7 +2175,7 @@ export function RvTripsApp() {
             <section className="space-y-2.5">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="flex items-center gap-1.5 text-[12px] font-bold tracking-[0.12em] text-white">
-                  <Droplets className="size-3.5 text-sky-300" />
+                  <Droplets className="size-3.5 text-gold-bright" />
                   FREE SEWER DUMPS
                 </h2>
                 <button
@@ -2218,7 +2223,7 @@ export function RvTripsApp() {
                   className={cn(
                     "shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold",
                     !dumpState
-                      ? "border-sky-300/50 bg-sky-500/25 text-white"
+                      ? "border-gold-border/60 bg-gold-dim text-gold-bright"
                       : "border-white/20 bg-black/30 text-white/85",
                   )}
                 >
@@ -2232,7 +2237,7 @@ export function RvTripsApp() {
                     className={cn(
                       "shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold",
                       dumpState === st
-                        ? "border-sky-300/50 bg-sky-500/25 text-white"
+                        ? "border-gold-border/60 bg-gold-dim text-gold-bright"
                         : "border-white/20 bg-black/30 text-white/85",
                     )}
                   >
@@ -2274,12 +2279,12 @@ export function RvTripsApp() {
                     id={`dump-${d.id}`}
                     className={cn(
                       "glass-prestige space-y-2 rounded-[1.15rem] p-3.5",
-                      dumpFocusId === d.id && "ring-1 ring-sky-400/70",
+                      dumpFocusId === d.id && "ring-1 ring-gold/70",
                     )}
                     onClick={() => setDumpFocusId(d.id)}
                   >
                     <div className="flex items-start gap-3">
-                      <Droplets className="mt-0.5 size-5 shrink-0 text-sky-300" />
+                      <Droplets className="mt-0.5 size-5 shrink-0 text-gold-bright" />
                       <div className="min-w-0 flex-1">
                         <p className="text-[14px] font-bold leading-snug text-white">
                           {d.name}

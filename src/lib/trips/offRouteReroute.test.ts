@@ -380,7 +380,7 @@ test("Trips follow reroute stays on HERE Truck / OSRM — not Mapbox Directions"
   );
   assert.match(tools, /Dumps/);
   assert.match(tools, /data-trips-dumps-chip/);
-  assert.match(tools, /border-sapphire/);
+  assert.match(tools, /border-gold/);
   assert.doesNotMatch(tools, /Pack/);
   assert.match(tools, /Profile/);
   assert.doesNotMatch(tools, /pointer-events-none/);

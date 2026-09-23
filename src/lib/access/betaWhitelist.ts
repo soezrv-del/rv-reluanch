@@ -3,7 +3,7 @@ import { normalizePhone } from "./phone.ts";
 /**
  * Static beta allowlist seed from David's CSV (42 contacts).
  * Normalized to NANP digits + E.164. Does not include hard-admin
- * David Hanson 702-266-5918 — that stays HARD_ADMIN in constants.
+ * David Hansen 702-266-5918 — that stays HARD_ADMIN in constants.
  * David Hansen 702-266-5915 is a normal (non-admin) entry.
  */
 export type BetaSeedEntry = {
