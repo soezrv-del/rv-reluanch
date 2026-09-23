@@ -31,6 +31,7 @@ import {
   formatWebSearchInjection,
 } from "@/lib/rvgrok/webSearch";
 import { executeWebResearch } from "@/lib/rvgrok/webResearchTelemetry";
+import { getResearchOrderOverride } from "@/lib/rvgrok/researchOrderStore";
 import { getResearchProviderOverride } from "@/lib/rvgrok/researchProviderStore";
 import {
   GENERATE_IMAGE_TOOL,
@@ -756,6 +757,8 @@ export const Route = createFileRoute("/api/rvgrok")({
             // Server-persisted admin override (not a client header).
             researchProvider:
               (await getResearchProviderOverride()) ?? undefined,
+            researchOrder:
+              (await getResearchOrderOverride()) ?? undefined,
             identity: serverGrounded.identity,
           });
           const reportText = looksLikeCoachReportAsk(lastPlain)

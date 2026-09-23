@@ -36,11 +36,13 @@ import {
   type CoachKnowledgeWritePlan,
 } from "./coachKnowledge.ts";
 import type { CoachIdentity } from "./coachIdentity.ts";
+import { planCatalogFirstSkip } from "./researchOrder.ts";
 
 export type WebResearchKind =
   | "success"
   | "cache_hit"
   | "knowledge_hit"
+  | "catalog_hit"
   | "gated"
   | "timeout"
   | "missing_key"
@@ -75,6 +77,8 @@ export type ExecuteWebResearchOpts = {
   geminiApiKey?: string;
   /** Override RVGROK_RESEARCH_PROVIDER (auto | gemini | xai). */
   researchProvider?: string;
+  /** Access-admin research order (search-first default | catalog-first). */
+  researchOrder?: string;
   /** Desk lock from buildChatGrounding when the caller already resolved it. */
   identity?: CoachIdentity | null;
   /**
@@ -142,7 +146,7 @@ export function logWebResearchEvent(opts: {
     console.info(JSON.stringify(payload));
     return;
   }
-  if (opts.ok || opts.kind === "cache_hit") {
+  if (opts.ok || opts.kind === "cache_hit" || opts.kind === "catalog_hit") {
     console.info(JSON.stringify(payload));
     return;
   }
@@ -247,7 +251,9 @@ function toApiBody(
 ): WebResearchApiBody {
   if (result.ok) {
     const kind =
-      meta.kind === "knowledge_hit" || meta.kind === "cache_hit"
+      meta.kind === "knowledge_hit" ||
+      meta.kind === "cache_hit" ||
+      meta.kind === "catalog_hit"
         ? meta.kind
         : meta.cached
           ? "cache_hit"
@@ -371,6 +377,46 @@ export async function executeWebResearch(
       ok: true,
       query,
       model: "coach-knowledge",
+    });
+    return body;
+  }
+
+  let catalogPinNotes = "";
+  try {
+    const catalogSkip = planCatalogFirstSkip({
+      order: opts.researchOrder,
+      query,
+      catalogBlock: opts.catalogBlock,
+    });
+    if (catalogSkip.skipLive) {
+      catalogPinNotes =
+        formatCatalogPinTimeoutNotes({
+          catalogBlock: opts.catalogBlock,
+          query,
+        }) || catalogSkip.notes;
+    }
+  } catch {
+    catalogPinNotes = "";
+  }
+  if (catalogPinNotes) {
+    const durationMs = Date.now() - t0;
+    const hit: WebSearchNotes = {
+      ok: true,
+      notes: catalogPinNotes,
+      model: "catalog-pin",
+      confirmed: true,
+      attempts: 0,
+      exhausted: false,
+      query,
+    };
+    const body = toApiBody(hit, { kind: "catalog_hit", durationMs });
+    logWebResearchEvent({
+      kind: "catalog_hit",
+      profile: opts.profile,
+      durationMs,
+      ok: true,
+      query,
+      model: "catalog-pin",
     });
     return body;
   }

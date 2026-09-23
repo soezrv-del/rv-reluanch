@@ -353,3 +353,60 @@ test("research provider toggle is admin-only and server-persisted", () => {
   assert.match(migration, /rvgrok_ops_settings/);
   assert.doesNotMatch(migration, /user_id/);
 });
+
+test("research order toggle is admin-only and server-persisted", () => {
+  const admin = read("src/routes/api/access.admin.ts");
+  assert.match(admin, /researchOrder/);
+  assert.match(admin, /setResearchOrderOverride/);
+  assert.match(admin, /getResearchOrderOverride/);
+  assert.match(admin, /action === "research-order"/);
+  assert.match(admin, /denyAccessAdmin/);
+  assert.doesNotMatch(admin, /localStorage/);
+
+  const store = read("src/lib/rvgrok/researchOrderStore.ts");
+  assert.match(store, /rvgrok_ops_settings/);
+  assert.match(store, /research_order/);
+  assert.match(store, /RESEARCH_ORDER_OVERRIDE_CACHE_TTL_MS/);
+  assert.doesNotMatch(store, /authMiddleware|requireUserId|localStorage/);
+  assert.doesNotMatch(store, /dial_phonebook|bland|DialaBot/i);
+
+  const card = read("src/components/access/ResearchOrderCard.tsx");
+  assert.match(card, /data-research-order/);
+  assert.match(card, /RESEARCH ORDER/);
+  assert.match(card, /method: "PATCH"/);
+  assert.match(card, /data-research-order-option/);
+  assert.match(card, /Effective now/);
+  assert.match(card, /Search first/);
+  assert.match(card, /Catalog first/);
+  assert.doesNotMatch(card, /localStorage/);
+
+  const sheet = read("src/components/access/AdminWhitelistSheet.tsx");
+  assert.match(sheet, /ResearchOrderCard/);
+  assert.ok(
+    sheet.lastIndexOf("<ResearchOrderCard") >
+      sheet.indexOf('view === "password"'),
+    "order toggle lives in the authed list, not the password chrome",
+  );
+  assert.ok(
+    sheet.lastIndexOf("<ResearchOrderCard") >
+      sheet.lastIndexOf("<ResearchProviderCard"),
+    "order card sits next to the research provider card",
+  );
+
+  const more = read("src/components/access/AccessMoreSection.tsx");
+  const adminGate = more.indexOf("{access.isAdmin ? (");
+  assert.ok(adminGate > 0, "order card is gated on access.isAdmin");
+  assert.match(more.slice(adminGate), /<ResearchOrderCard surface="more"/);
+  const identifyForm = more.slice(
+    more.indexOf("<form"),
+    more.indexOf("</form>"),
+  );
+  assert.doesNotMatch(identifyForm, /ResearchOrderCard|RESEARCH ORDER/);
+
+  const chat = read("src/routes/api/rvgrok.ts");
+  const voice = read("src/routes/api/rvgrok.web-research.ts");
+  assert.match(chat, /getResearchOrderOverride/);
+  assert.match(voice, /getResearchOrderOverride/);
+  assert.doesNotMatch(chat, /body\.researchOrder|x-research-order/);
+  assert.doesNotMatch(voice, /body\.researchOrder|x-research-order/);
+});
