@@ -29,6 +29,8 @@ import {
   withDeskSheetSpeechRule,
 } from "./deskSheet.ts";
 import { extractChatSpecFigures } from "./chatSpecBlock.ts";
+import { parseSpecFieldsFromHtml } from "../rv/specFieldFallback.ts";
+import { RVGUIDE_2026_LINEAGE_31ZW_FIXTURE } from "../rv/specFieldFallback.test.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -349,7 +351,7 @@ test("desk sheet still renders with GAP rows when powertrain is thin", () => {
   );
 });
 
-test("last assistant spec block paints GVWR/UVW/fuel — never Confirm brochure over a spoken number", () => {
+test("shared engine owns GVWR/UVW/fuel — chat figures do not paint those rows", () => {
   const q = "2019 Newmar Dutch Star 4369 spec report";
   const identity = resolveCoachIdentity(q, null, "");
   assert.ok(identity);
@@ -376,21 +378,18 @@ test("last assistant spec block paints GVWR/UVW/fuel — never Confirm brochure 
     after!.rows.find((r) => r.label === label)?.value;
   const gap = (label: string) =>
     after!.rows.find((r) => r.label === label)?.gap;
-  assert.equal(gap("GVWR"), false);
-  assert.match(val("GVWR") || "", /51,000/);
-  assert.doesNotMatch(val("GVWR") || "", /Confirm brochure/i);
-  assert.match(val("UVW") || "", /40,000/);
-  assert.equal(val("Fuel capacity"), "150 gal");
-  assert.doesNotMatch(val("Fuel capacity") || "", /100/);
-  assert.doesNotMatch(after!.presenceNote, /SERIES MISSING/i);
-  assert.doesNotMatch(after!.presenceNote, /Say the series is missing/i);
-  assert.equal(after!.presenceNote, "");
-  assert.equal(after!.gaps.length, 0, "hide GAP lecture once chat named a number");
-  assert.match(src(root, "deskSheet.ts"), /chatSpecBlock/);
+  assert.ok(gap("GVWR") || /gap|confirm brochure/i.test(val("GVWR") || ""));
+  assert.doesNotMatch(val("GVWR") || "", /51,000/);
+  assert.ok(gap("UVW") || /gap|confirm brochure/i.test(val("UVW") || ""));
+  assert.doesNotMatch(val("UVW") || "", /40,000/);
+  assert.doesNotMatch(val("Fuel capacity") || "", /150/);
+  assert.match(val("Class") || "", /Class A/i);
+  assert.match(src(root, "deskSheet.ts"), /specEngine/);
+  assert.match(src(root, "deskSheet.ts"), /stripEngineOwnedChatFigures/);
   assert.match(src(root, "chatSpecBlock.ts"), /last assistant/i);
 });
 
-test("desk paints holding tanks from chat — never Confirm brochure over spoken gallons", () => {
+test("shared engine owns tanks — chat gallons do not paint Fresh/Gray/Black", () => {
   const q = "2019 Newmar Dutch Star 4369 spec report";
   const identity = resolveCoachIdentity(q, null, "");
   assert.ok(identity);
@@ -412,16 +411,9 @@ test("desk paints holding tanks from chat — never Confirm brochure over spoken
   assert.ok(after);
   const val = (label: string) =>
     after!.rows.find((r) => r.label === label)?.value;
-  const gap = (label: string) =>
-    after!.rows.find((r) => r.label === label)?.gap;
-  assert.equal(val("Fresh"), "35 gal");
-  assert.equal(gap("Fresh"), false);
-  assert.equal(val("Gray"), "34 gal");
-  assert.equal(val("Black"), "34 gal");
-  assert.doesNotMatch(val("Fresh") || "", /Confirm brochure|GAP/i);
-  assert.doesNotMatch(val("Gray") || "", /Confirm brochure|GAP/i);
-  assert.equal(after!.presenceNote, "");
-  assert.equal(after!.gaps.length, 0, "hide GAP lecture once chat named tank gallons");
+  assert.doesNotMatch(val("Fresh") || "", /^35\s*gal/i);
+  assert.doesNotMatch(val("Gray") || "", /^34\s*gal/i);
+  assert.doesNotMatch(val("Black") || "", /^34\s*gal/i);
 });
 
 test("2026 Lineage 31ZW chat prose paints Super C / F-600 / 6.7 / 330 / 950 / tanks and hides GAP lecture", () => {
@@ -508,6 +500,33 @@ test("2026 Lineage Series F 31ZW pin tanks/fuel paint without live catalog — c
   assert.equal(gap("Fuel capacity"), false);
   assert.ok(gap("UVW"), "no published UVW — do not invent");
   assert.equal(val("UVW"), "GAP");
+});
+
+test("shared fallback paints 2026 Lineage Series F 31ZW UVW 18,186 on the desk — no GAP", () => {
+  const q = "2026 Grand Design Lineage 31ZW spec report";
+  const identity = resolveCoachIdentity(q, null, "");
+  assert.ok(identity);
+  const url =
+    "https://www.rvguide.com/specs/grand-design/class-c/2026/lineage-series-f/31zw.html";
+  const fills = parseSpecFieldsFromHtml(RVGUIDE_2026_LINEAGE_31ZW_FIXTURE, {
+    source: "rvguide",
+    url,
+  });
+  const sheet = resolveDeskSheet({
+    query: q,
+    identity,
+    specs: null,
+    fallbackFills: fills,
+  });
+  assert.ok(sheet);
+  const uvw = sheet!.rows.find((r) => r.label === "UVW");
+  assert.equal(uvw?.gap, false);
+  assert.match(uvw?.value || "", /18,186/);
+  assert.match(uvw?.value || "", /\*/);
+  assert.doesNotMatch(uvw?.value || "", /Confirm brochure|GAP/i);
+  assert.equal(uvw?.sourceUrl, url);
+  assert.equal(sheet!.presenceNote, "");
+  assert.equal(sheet!.gaps.length, 0);
 });
 
 test("2026 Lineage Series F 31ZW catalog tanks/fuel paint when chat only names GVWR", async () => {
@@ -791,6 +810,7 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   const prompts = src(root, "prompts.ts");
   const grounding = src(root, "grounding.ts");
   assert.match(app, /resolveDeskSheet/);
+  assert.match(app, /resolveDeskSheetThenFallback/);
   assert.match(app, /onDeskSheet/);
   assert.match(app, /DeskSpecSheet/);
   assert.match(app, /liveDeskSheet/);
@@ -815,6 +835,7 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(bubble, /data-rvgrok-desk-after-reply/);
   assert.match(realtime, /onDeskSheet/);
   assert.match(realtime, /resolveDeskSheet/);
+  assert.match(realtime, /resolveDeskSheetThenFallback/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.match(grounding, /withDeskSheetSpeechRule/);

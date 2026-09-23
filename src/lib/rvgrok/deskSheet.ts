@@ -42,6 +42,15 @@ import {
   extractChatSpecFigures,
   paintChatSpecOntoRows,
 } from "./chatSpecBlock.ts";
+import {
+  applySharedPaintToRows,
+  emptyFieldsFromPaintedRows,
+  fetchSpecFieldFallback,
+  paintHasFallbackNumber,
+  resolveSharedSpecPaint,
+  stripEngineOwnedChatFigures,
+  type SpecFieldFill,
+} from "../rv/specEngine.ts";
 
 export {
   DESK_SHEET_FORBIDDEN_LINE,
@@ -85,6 +94,8 @@ export type DeskSheetRow = {
   label: string;
   value: string;
   gap: boolean;
+  asterisk?: boolean;
+  sourceUrl?: string;
 };
 
 export type DeskSheetPayload = {
@@ -310,6 +321,7 @@ export function buildDeskSheetPayload(
   identity: CoachIdentity,
   specs: SheetSpecs,
   chatSpecBlock = "",
+  fallbackFills: readonly SpecFieldFill[] = [],
 ): DeskSheetPayload {
   const presence = inspectCatalogPresence(identity);
   let presenceNote = formatCatalogPresenceNote(presence);
@@ -317,7 +329,9 @@ export function buildDeskSheetPayload(
     .filter(Boolean)
     .join(" ");
 
-  const figures = extractChatSpecFigures(chatSpecBlock);
+  const figures = stripEngineOwnedChatFigures(
+    extractChatSpecFigures(chatSpecBlock),
+  );
   const brochure = resolveFactsBrochure(identity);
   const catalogRows: DeskSheetRow[] = brochure
     ? payloadFromFactsBrochure(identity, brochure, specs)
@@ -358,21 +372,22 @@ export function buildDeskSheetPayload(
         ];
       })();
 
-  // Chat reply is source of truth. Catalog is cache. Empty only if both miss.
-  const rows = paintChatSpecOntoRows(
-    fillGapRowsFromOemTanks(catalogRows, identity),
-    figures,
+  // Shared engine owns weights / tanks / fuel. Chat still paints Class / engine.
+  const paint = resolveSharedSpecPaint(identity, fallbackFills);
+  const rows = applySharedPaintToRows(
+    paintChatSpecOntoRows(fillGapRowsFromOemTanks(catalogRows, identity), figures),
+    paint,
   );
   const chatNamed = chatSpecHasNumber(figures);
   const chatCovered = chatSpecCoversPaintedFields(figures);
-  // Chat named a number → no SERIES MISSING / Confirm brochure / GAP lecture.
-  if (chatNamed || chatCovered) {
+  const fallbackNamed = paintHasFallbackNumber(paint);
+  // Named number (catalog already on the row, chat Class/engine, or scrape) → no lecture.
+  if (chatNamed || chatCovered || fallbackNamed) {
     presenceNote = "";
   }
 
-  // Lecture banner only when chat did not already name a number.
   const gaps =
-    chatNamed || chatCovered
+    chatNamed || chatCovered || fallbackNamed
       ? []
       : [
           ...rows.filter((r) => r.gap).map((r) => r.label),
@@ -397,8 +412,10 @@ export function resolveDeskSheet(opts: {
   identity: CoachIdentity | null | undefined;
   specs: SheetSpecs;
   spokenText?: string;
-  /** Last assistant spec block — desk paints numbers from this reply only. */
+  /** Last assistant spec block — desk paints Class / engine from this reply. */
   chatSpecBlock?: string;
+  /** Field-only fallback fills from the shared spec engine. */
+  fallbackFills?: readonly SpecFieldFill[];
 }): DeskSheetPayload | null {
   const { query, specs, spokenText } = opts;
   const specBlock = opts.chatSpecBlock || spokenText || "";
@@ -420,7 +437,36 @@ export function resolveDeskSheet(opts: {
     shouldMountDeskSheet(query, identity) ||
     claimsDeskSpecSheet(spokenText || "")
   ) {
-    return buildDeskSheetPayload(identity, specs, specBlock);
+    return buildDeskSheetPayload(
+      identity,
+      specs,
+      specBlock,
+      opts.fallbackFills,
+    );
   }
   return null;
+}
+
+/** Paint catalog immediately, then remount empty fields from the shared fallback. */
+export async function resolveDeskSheetThenFallback(
+  opts: Parameters<typeof resolveDeskSheet>[0] & { rvClass?: string },
+  signal?: AbortSignal,
+): Promise<DeskSheetPayload | null> {
+  const first = resolveDeskSheet(opts);
+  if (!first) return null;
+  const empty = emptyFieldsFromPaintedRows(first.rows);
+  if (!empty.length) return first;
+  const fills = await fetchSpecFieldFallback(
+    {
+      year: first.year,
+      make: first.make,
+      model: first.model,
+      floorplan: first.floorplan,
+      empty,
+      rvClass: opts.rvClass,
+    },
+    signal,
+  );
+  if (!fills.length || signal?.aborted) return first;
+  return resolveDeskSheet({ ...opts, fallbackFills: fills }) ?? first;
 }

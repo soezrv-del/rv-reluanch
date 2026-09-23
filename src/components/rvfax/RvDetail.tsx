@@ -50,6 +50,14 @@ import {
 import { hasConcreteFloorplan } from "@/lib/rv/factsOpen";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import {
+  catalogSnapshotFromBrochure,
+  displayFromPainted,
+  emptySpecFields,
+  fetchSpecFieldFallback,
+  resolveSharedSpecPaint,
+  type SpecFieldFill,
+} from "@/lib/rv/specEngine";
+import {
   clearWeightField,
   findWeightOverride,
   saveWeightOverride,
@@ -211,6 +219,10 @@ export function RvDetail({
     ? String(coach.floorplan).trim()
     : "";
   const catalogMarket = estimateMarket(data, year, floorplan, { make, model });
+  const specIdentity = useMemo(
+    () => ({ year, make, model, floorplan }),
+    [year, make, model, floorplan],
+  );
   const [correctBump, setCorrectBump] = useState(0);
   const brochure = useMemo(
     () => buildBrochureSpecs(data, year, make, model, floorplan || ""),
@@ -304,6 +316,8 @@ export function RvDetail({
   const moreRef = useRef<HTMLDivElement | null>(null);
   const [saveFlash, setSaveFlash] = useState<string | null>(null);
   const wasSavedRef = useRef(saved);
+  const [specFills, setSpecFills] = useState<SpecFieldFill[]>([]);
+  const [specFallbackLoading, setSpecFallbackLoading] = useState(false);
 
   const pull = usePullToReset(scrollRef, onBack);
 
@@ -464,6 +478,46 @@ export function RvDetail({
         gaps: dossierGapPlan.gaps,
       }),
     [liveLoading, dossierGapPlan],
+  );
+
+  useEffect(() => {
+    if (!floorplan) {
+      setSpecFills([]);
+      setSpecFallbackLoading(false);
+      return;
+    }
+    const snap = catalogSnapshotFromBrochure(specIdentity, brochure);
+    const empty = emptySpecFields(snap);
+    if (!empty.length) {
+      setSpecFills([]);
+      setSpecFallbackLoading(false);
+      return;
+    }
+    const ctrl = new AbortController();
+    setSpecFallbackLoading(true);
+    fetchSpecFieldFallback(
+      {
+        year,
+        make,
+        model,
+        floorplan,
+        empty,
+        rvClass: data.type,
+      },
+      ctrl.signal,
+    ).then((fills) => {
+      if (ctrl.signal.aborted) return;
+      setSpecFills(fills);
+      setSpecFallbackLoading(false);
+    });
+    return () => {
+      ctrl.abort();
+    };
+  }, [year, make, model, floorplan, brochure, data.type, specIdentity]);
+
+  const sharedPaint = useMemo(
+    () => resolveSharedSpecPaint(specIdentity, specFills),
+    [specIdentity, specFills],
   );
 
   useEffect(() => {
@@ -710,11 +764,15 @@ export function RvDetail({
       computeTorqueToWeight({
         torqueLbFt: powertrainGuard.hard.torqueLbFt,
         torqueRaw: specs.torque,
-        uvwLbs: brochure.uvwLbs ?? live?.uvwLbs ?? null,
+        uvwLbs: sharedPaint.uvw.lbs ?? brochure.uvwLbs ?? live?.uvwLbs ?? null,
         // Display UVW may be the tiered estimate — never parse that as published.
-        uvwRaw: brochure.uvwEstimated ? null : specs.uvw,
+        uvwRaw: sharedPaint.uvw.gap
+          ? brochure.uvwEstimated
+            ? null
+            : specs.uvw
+          : sharedPaint.uvw.display,
         overrideUvwLbs: weightOverride?.uvwLbs ?? null,
-        gvwrLbs: brochure.gvwrLbs ?? live?.gvwrLbs ?? null,
+        gvwrLbs: sharedPaint.gvwr.lbs ?? brochure.gvwrLbs ?? live?.gvwrLbs ?? null,
         gvwrRaw: specs.gvwr,
         overrideGvwrLbs: weightOverride?.gvwrLbs ?? null,
         rvType: data.type,
@@ -725,7 +783,7 @@ export function RvDetail({
           specs.chassis ||
           data.chassis,
         engine: powertrainGuard.hard.engine || specs.engine,
-        cccLbs: brochure.cccLbs ?? live?.cccLbs ?? null,
+        cccLbs: sharedPaint.ccc.lbs ?? brochure.cccLbs ?? live?.cccLbs ?? null,
         cccRaw: specs.ccc,
       }),
     [
@@ -738,6 +796,11 @@ export function RvDetail({
       specs.ccc,
       specs.chassis,
       specs.engine,
+      sharedPaint.uvw.lbs,
+      sharedPaint.uvw.gap,
+      sharedPaint.uvw.display,
+      sharedPaint.gvwr.lbs,
+      sharedPaint.ccc.lbs,
       brochure.uvwLbs,
       brochure.uvwEstimated,
       brochure.gvwrLbs,
@@ -1597,11 +1660,33 @@ export function RvDetail({
             <SpecRow label="A/C" value={brochure.acUnits} />
             <SpecRow label="TIRES" value={brochure.tireSize} />
             <SpecRow label="HIGHWAY MPG" value={specs.mpgHighway} />
-            <SpecRow label="FUEL CAPACITY" value={specs.fuelCapacity} />
+            <SpecRow
+              label="FUEL CAPACITY"
+              value={displayFromPainted(
+                specs.fuelCapacity,
+                sharedPaint.fuelCapacity,
+              )}
+              sourceUrl={
+                !sharedPaint.fuelCapacity.gap &&
+                sharedPaint.fuelCapacity.sourceUrl &&
+                sharedPaint.fuelCapacity.source !== "catalog"
+                  ? sharedPaint.fuelCapacity.sourceUrl
+                  : undefined
+              }
+            />
             <WeightOverrideRow
               label="GVWR"
-              catalogValue={specs.gvwr}
-              catalogLbs={brochure.gvwrLbs ?? live?.gvwrLbs ?? null}
+              catalogValue={displayFromPainted(specs.gvwr, sharedPaint.gvwr)}
+              catalogLbs={
+                sharedPaint.gvwr.lbs ?? brochure.gvwrLbs ?? live?.gvwrLbs ?? null
+              }
+              sourceUrl={
+                !sharedPaint.gvwr.gap &&
+                sharedPaint.gvwr.sourceUrl &&
+                sharedPaint.gvwr.source !== "catalog"
+                  ? sharedPaint.gvwr.sourceUrl
+                  : undefined
+              }
               overrideLbs={weightOverride?.gvwrLbs ?? null}
               accent
               searching={factsDetailFieldSearching(
@@ -1630,9 +1715,15 @@ export function RvDetail({
             />
             <WeightOverrideRow
               label="UVW"
-              catalogValue={specs.uvw}
-              catalogLbs={brochure.uvwLbs ?? live?.uvwLbs ?? null}
+              catalogValue={displayFromPainted(
+                brochure.uvwEstimated ? "" : specs.uvw,
+                sharedPaint.uvw,
+              )}
+              catalogLbs={
+                sharedPaint.uvw.lbs ?? brochure.uvwLbs ?? live?.uvwLbs ?? null
+              }
               estimatedLbs={
+                !sharedPaint.uvw.gap ||
                 weightOverride?.uvwLbs != null ||
                 brochure.uvwLbs != null ||
                 live?.uvwLbs != null
@@ -1642,6 +1733,16 @@ export function RvDetail({
                       : null) ??
                     brochure.estimatedUvwLbs ??
                     null
+              }
+              sourceUrl={
+                !sharedPaint.uvw.gap &&
+                sharedPaint.uvw.sourceUrl &&
+                sharedPaint.uvw.source !== "catalog"
+                  ? sharedPaint.uvw.sourceUrl
+                  : undefined
+              }
+              searching={
+                specFallbackLoading && sharedPaint.uvw.gap
               }
               overrideLbs={weightOverride?.uvwLbs ?? null}
               disabled={!floorplan}
@@ -1662,7 +1763,14 @@ export function RvDetail({
             />
             <SpecRow
               label="CCC"
-              value={specs.ccc}
+              value={displayFromPainted(specs.ccc, sharedPaint.ccc)}
+              sourceUrl={
+                !sharedPaint.ccc.gap &&
+                sharedPaint.ccc.sourceUrl &&
+                sharedPaint.ccc.source !== "catalog"
+                  ? sharedPaint.ccc.sourceUrl
+                  : undefined
+              }
             />
             <SpecRow label="WARRANTY" value={specs.warranty} />
             {shellNav ? (
@@ -1677,9 +1785,39 @@ export function RvDetail({
               </button>
             ) : null}
 
-            <SpecRow label="FRESH WATER" value={specs.freshWater} />
-            <SpecRow label="GRAY WATER" value={specs.grayWater} />
-            <SpecRow label="BLACK WATER" value={specs.blackWater} />
+            <SpecRow
+              label="FRESH WATER"
+              value={displayFromPainted(specs.freshWater, sharedPaint.freshWater)}
+              sourceUrl={
+                !sharedPaint.freshWater.gap &&
+                sharedPaint.freshWater.sourceUrl &&
+                sharedPaint.freshWater.source !== "catalog"
+                  ? sharedPaint.freshWater.sourceUrl
+                  : undefined
+              }
+            />
+            <SpecRow
+              label="GRAY WATER"
+              value={displayFromPainted(specs.grayWater, sharedPaint.grayWater)}
+              sourceUrl={
+                !sharedPaint.grayWater.gap &&
+                sharedPaint.grayWater.sourceUrl &&
+                sharedPaint.grayWater.source !== "catalog"
+                  ? sharedPaint.grayWater.sourceUrl
+                  : undefined
+              }
+            />
+            <SpecRow
+              label="BLACK WATER"
+              value={displayFromPainted(specs.blackWater, sharedPaint.blackWater)}
+              sourceUrl={
+                !sharedPaint.blackWater.gap &&
+                sharedPaint.blackWater.sourceUrl &&
+                sharedPaint.blackWater.source !== "catalog"
+                  ? sharedPaint.blackWater.sourceUrl
+                  : undefined
+              }
+            />
 
             <details className="mt-5 border-t border-white/10 pt-3" data-no-export>
               <summary className="cursor-pointer list-none text-[11px] font-medium text-white/35">
@@ -2727,6 +2865,7 @@ function WeightOverrideRow({
   overrideLbs,
   accent,
   searching,
+  sourceUrl,
   disabled,
   onSave,
   onReset,
@@ -2738,6 +2877,7 @@ function WeightOverrideRow({
   overrideLbs?: number | null;
   accent?: boolean;
   searching?: boolean;
+  sourceUrl?: string;
   disabled?: boolean;
   onSave: (lbs: number) => void;
   onReset: () => void;
@@ -2826,6 +2966,16 @@ function WeightOverrideRow({
             Reset
           </button>
         ) : null}
+        {sourceUrl ? (
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-[10px] font-semibold text-white/55 underline"
+          >
+            Source
+          </a>
+        ) : null}
       </div>
     </div>
   );
@@ -2848,11 +2998,13 @@ function SpecRow({
   value,
   accent,
   searching,
+  sourceUrl,
 }: {
   label: string;
   value?: string | null;
   accent?: boolean;
   searching?: boolean;
+  sourceUrl?: string;
 }) {
   const powertrain =
     label === "HORSEPOWER" || label === "TORQUE" || label === "ENGINE";
@@ -2876,6 +3028,16 @@ function SpecRow({
         )}
       >
         {shown}
+        {sourceUrl ? (
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-[10px] font-semibold text-white/55 underline"
+          >
+            Source
+          </a>
+        ) : null}
         {searching ? <FactsGapSpinner field={label} /> : null}
       </span>
     </div>

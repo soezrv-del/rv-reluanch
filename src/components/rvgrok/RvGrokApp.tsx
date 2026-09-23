@@ -20,6 +20,7 @@ import { GrokRealtimeSession } from "@/lib/rvgrok/realtime";
 import { buildChatGrounding, buildVoiceGrounding } from "@/lib/rvgrok/grounding";
 import {
   resolveDeskSheet,
+  resolveDeskSheetThenFallback,
   type DeskSheetPayload,
 } from "@/lib/rvgrok/deskSheet";
 import {
@@ -559,17 +560,29 @@ export function RvGrokApp({
           extraText,
           agentMode,
         });
-        const deskSheet = resolveDeskSheet({
+        const deskOpts = {
           query: messageText,
           identity: grounded.identity,
           specs: grounded.specs,
-        });
+        };
+        const deskSheet = resolveDeskSheet(deskOpts);
         if (deskSheet) {
           setLiveDeskSheet(deskSheet);
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantMsgId ? { ...m, deskSheet } : m,
             ),
+          );
+          void resolveDeskSheetThenFallback(deskOpts, controller.signal).then(
+            (next) => {
+              if (!next || controller.signal.aborted) return;
+              setLiveDeskSheet(next);
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMsgId ? { ...m, deskSheet: next } : m,
+                ),
+              );
+            },
           );
         } else {
           setLiveDeskSheet(null);
@@ -668,19 +681,32 @@ export function RvGrokApp({
             ? "Agent completed research. No summary generated."
             : "Unable to generate a response. Please try again.");
 
-        // Chat reply is source of truth — remount desk from the spec block.
-        const paintedDesk = resolveDeskSheet({
+        // Shared engine remount — catalog first, then empty-field fallback.
+        const paintedOpts = {
           query: messageText,
           identity: grounded.identity,
           specs: grounded.specs,
           spokenText: finalContent,
           chatSpecBlock: finalContent,
-        });
+        };
+        const paintedDesk = resolveDeskSheet(paintedOpts);
         if (paintedDesk) {
           setLiveDeskSheet(paintedDesk);
         } else {
           setLiveDeskSheet(null);
         }
+        void resolveDeskSheetThenFallback(
+          paintedOpts,
+          controller.signal,
+        ).then((next) => {
+          if (!next || controller.signal.aborted) return;
+          setLiveDeskSheet(next);
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsgId ? { ...m, deskSheet: next } : m,
+            ),
+          );
+        });
 
         setMessages((prev) => {
           const updated = prev.map((m) =>
