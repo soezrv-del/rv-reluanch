@@ -459,12 +459,7 @@ export function resolveDeskSheet(opts: {
 
 /** Paint catalog immediately, then remount empty fields from the shared fallback. */
 export async function resolveDeskSheetThenFallback(
-  opts: Parameters<typeof resolveDeskSheet>[0] & {
-    rvClass?: string;
-    /** Live Voice: pin fallback fills into shared coach knowledge. */
-    pinCoachKnowledge?: boolean;
-    knowledgeQuery?: string;
-  },
+  opts: Parameters<typeof resolveDeskSheet>[0] & { rvClass?: string },
   signal?: AbortSignal,
 ): Promise<DeskSheetPayload | null> {
   const first = resolveDeskSheet(opts);
@@ -479,8 +474,6 @@ export async function resolveDeskSheetThenFallback(
       floorplan: first.floorplan,
       empty,
       rvClass: opts.rvClass,
-      pinCoachKnowledge: opts.pinCoachKnowledge,
-      knowledgeQuery: opts.knowledgeQuery ?? opts.query,
     },
     signal,
   );

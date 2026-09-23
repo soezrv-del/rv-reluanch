@@ -5,7 +5,6 @@ import {
   type SpecFieldFill,
   type SpecFieldKey,
 } from "@/lib/rv/specFieldFallback";
-import { persistSpecFallbackKnowledge } from "@/lib/rvgrok/webResearchTelemetry";
 
 /**
  * POST /api/rvfax/spec-fallback
@@ -25,9 +24,6 @@ export const Route = createFileRoute("/api/rvfax/spec-fallback")({
           floorplan?: string;
           empty?: SpecFieldKey[];
           rvClass?: string;
-          /** Live Voice desk only. Chat and Facts omit this. */
-          pinCoachKnowledge?: boolean;
-          knowledgeQuery?: string;
         } = {};
         try {
           body = (await request.json()) as typeof body;
@@ -59,20 +55,6 @@ export const Route = createFileRoute("/api/rvfax/spec-fallback")({
           empty,
           rvClass: body.rvClass,
         });
-        if (body.pinCoachKnowledge === true && fills.length) {
-          try {
-            await persistSpecFallbackKnowledge({
-              identity: { year, make, model, floorplan },
-              query:
-                typeof body.knowledgeQuery === "string"
-                  ? body.knowledgeQuery
-                  : "",
-              fills,
-            });
-          } catch {
-            /* fills still return — pin is fail-soft */
-          }
-        }
         return Response.json({ ok: true, fills });
       },
     },
