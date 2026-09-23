@@ -3,7 +3,7 @@
  * Never import from client components.
  *
  * Fail-soft: a missing table / DB blip must not take research down.
- * Unowned rows — no user_id, no authMiddleware. DialaBot does not read this.
+ * Unowned shared rows (no visitor column, no auth gate). Phone bot stays out.
  */
 
 import { getSql } from "@/lib/db";

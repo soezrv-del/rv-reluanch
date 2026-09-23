@@ -238,9 +238,15 @@ function toApiBody(
   meta: { kind: WebResearchKind; durationMs: number; cached?: boolean },
 ): WebResearchApiBody {
   if (result.ok) {
+    const kind =
+      meta.kind === "knowledge_hit" || meta.kind === "cache_hit"
+        ? meta.kind
+        : meta.cached
+          ? "cache_hit"
+          : "success";
     return {
       ...result,
-      kind: meta.cached ? "cache_hit" : "success",
+      kind,
       durationMs: meta.durationMs,
       ...(meta.cached ? { cached: true } : {}),
     };

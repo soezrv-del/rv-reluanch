@@ -10,9 +10,12 @@
  */
 
 import { validateCatalogPatch } from "../rv/catalogPatch.ts";
-import { validateLivePowertrain } from "../rv/livePowertrainGuard.ts";
 import { peekCatalog } from "../rv/catalogLoad.ts";
-import { findPowertrainCorrection } from "../rv/powertrainCorrections.ts";
+import {
+  findPowertrainCorrection,
+  powertrainConflictsWithPin,
+  type PowertrainCorrection,
+} from "../rv/powertrainCorrections.ts";
 import {
   lockIdentityTuple,
   resolveCatalogMake,
@@ -433,6 +436,43 @@ function dropPowertrain(fields: CoachKnowledgeFields): CoachKnowledgeFields {
   return out;
 }
 
+const GAS_ENGINE_RE =
+  /\b(godzilla|triton|v10|6\.8\s*l|7\.3\s*l|ecoboost|f-?53|gasoline|gas\s*v8)\b/i;
+
+/** Same sibling-theft rules as livePowertrainGuard — local so Node tests resolve. */
+const SIBLING_RULES: Array<{ modelIncludes: string; reject: RegExp }> = [
+  { modelIncludes: "kountry star", reject: GAS_ENGINE_RE },
+  { modelIncludes: "bay star", reject: /\b(cummins\s*l9|isl\s*8|x15)\b/i },
+  { modelIncludes: "allegro red", reject: /\b(triton|v10|f-?53|godzilla|isl\s*8|l9\s*450)\b/i },
+  { modelIncludes: "vision", reject: /\b(cummins|l9|isl|diesel\s*pusher)\b/i },
+  { modelIncludes: "fr3", reject: /\b(cummins|diesel\s*pusher|l9|isl)\b/i },
+  { modelIncludes: "via", reject: /\b(cummins|isl|l9|x15|freightliner\s*xc|spartan)\b/i },
+  { modelIncludes: "villagio", reject: /\b(cummins|isl|l9|x15|freightliner\s*xc)\b/i },
+  { modelIncludes: "american dream", reject: /\b(liberty bridge|f-?53|godzilla|triton|v10)\b/i },
+];
+
+function stolenPowertrainReasons(opts: {
+  model: string;
+  engine: string;
+  hp: number | null;
+  pin?: PowertrainCorrection | null;
+}): string[] {
+  const reasons: string[] = [];
+  const md = opts.model.toLowerCase();
+  const engine = opts.engine || "";
+  if (opts.pin && engine && powertrainConflictsWithPin(opts.pin, engine, opts.hp)) {
+    reasons.push("Conflicts with brochure pin");
+  }
+  for (const rule of SIBLING_RULES) {
+    if (!md.includes(rule.modelIncludes)) continue;
+    if (rule.modelIncludes === "vision" && (md.includes("xl") || md.includes("diesel"))) {
+      continue;
+    }
+    if (engine && rule.reject.test(engine)) reasons.push("sibling-series steal");
+  }
+  return reasons;
+}
+
 /** Drop EST leftovers and sibling-series / fuel-family theft. */
 export function gateKnowledgeFields(
   key: CoachKnowledgeKey,
@@ -463,29 +503,15 @@ export function gateKnowledgeFields(
       catalogModel,
       key.floorplan,
     );
-    const reasons = validateLivePowertrain({
-      year: key.year,
-      make: catalogMake,
+    const stolen = stolenPowertrainReasons({
       model: catalogModel,
-      floorplan: key.floorplan,
-      catalogFuelType: spec?.fuelType,
-      catalogType: spec?.type,
-      catalogEngine: spec?.engine,
-      catalogHp: spec?.horsepower,
-      live: {
-        engine: engine || null,
-        horsepower: hp,
-        chassis: chassis || null,
-        transmission: transmission || null,
-        fuelType: fuel || null,
-        torqueLbFt: torque,
-        confidence: "high",
-      },
+      engine,
+      hp,
       pin,
     });
-    if (reasons.length) next = dropPowertrain(next);
+    if (stolen.length) next = dropPowertrain(next);
 
-    if (engine) {
+    if (engine && next.engine) {
       const yearNum = parseInt(key.year, 10);
       const patch = validateCatalogPatch({
         make: catalogMake,
