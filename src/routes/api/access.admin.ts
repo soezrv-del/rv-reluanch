@@ -1,19 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  adminAuthFailureBody,
   ADMIN_PASSWORD_UNSET_CODE,
   ADMIN_PASSWORD_UNSET_MESSAGE,
-  authorizeAccessAdmin,
-  databaseUrlConfigured,
 } from "@/lib/access/adminAuth";
+import { denyAccessAdmin } from "@/lib/access/adminHttp";
 import {
   adminCookie,
   adminPasswordConfigured,
   clearAdminCookie,
   issueAdminToken,
-  readAdminToken,
   verifyAdminPassword,
-  verifyAdminToken,
 } from "@/lib/access/adminSession";
 import {
   addWhitelistEntry,
@@ -21,6 +17,11 @@ import {
   listWhitelist,
   removeWhitelistEntry,
 } from "@/lib/access/store";
+import { researchProviderStatus } from "@/lib/rvgrok/geminiResearch";
+import {
+  getResearchProviderOverride,
+  setResearchProviderOverride,
+} from "@/lib/rvgrok/researchProviderStore";
 
 type Body = {
   action?: string;
@@ -30,29 +31,47 @@ type Body = {
   notes?: string;
   isAdmin?: boolean;
   id?: string;
+  provider?: string;
 };
 
-function deny(request: Request) {
-  const auth = authorizeAccessAdmin(request, {
-    tokenValid: verifyAdminToken(readAdminToken(request)),
-    databaseUrl: databaseUrlConfigured(),
-    passwordConfigured: adminPasswordConfigured(),
-  });
-  if (auth.ok) return null;
-  return Response.json(adminAuthFailureBody(auth), { status: auth.status });
+async function researchProviderPayload() {
+  const override = await getResearchProviderOverride();
+  return researchProviderStatus({ override });
 }
 
 export const Route = createFileRoute("/api/access/admin")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const blocked = deny(request);
+        const blocked = denyAccessAdmin(request);
         if (blocked) return blocked;
-        const [entries, requests] = await Promise.all([
+        const [entries, requests, researchProvider] = await Promise.all([
           listWhitelist(),
           listAccessRequests(),
+          researchProviderPayload(),
         ]);
-        return Response.json({ entries, requests });
+        return Response.json({ entries, requests, researchProvider });
+      },
+      PATCH: async ({ request }) => {
+        const blocked = denyAccessAdmin(request);
+        if (blocked) return blocked;
+        let body: Body = {};
+        try {
+          body = (await request.json()) as Body;
+        } catch {
+          return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+        }
+        const saved = await setResearchProviderOverride(String(body.provider ?? ""));
+        if (!saved.ok) {
+          return Response.json(
+            { error: saved.error },
+            { status: saved.unavailable ? 503 : 400 },
+          );
+        }
+        return Response.json({
+          ok: true,
+          researchProvider: researchProviderStatus({ override: saved.override }),
+        });
       },
       POST: async ({ request }) => {
         let body: Body = {};
@@ -95,8 +114,24 @@ export const Route = createFileRoute("/api/access/admin")({
           );
         }
 
-        const blocked = deny(request);
+        const blocked = denyAccessAdmin(request);
         if (blocked) return blocked;
+
+        if (action === "research-provider") {
+          const saved = await setResearchProviderOverride(
+            String(body.provider ?? ""),
+          );
+          if (!saved.ok) {
+            return Response.json(
+              { error: saved.error },
+              { status: saved.unavailable ? 503 : 400 },
+            );
+          }
+          return Response.json({
+            ok: true,
+            researchProvider: researchProviderStatus({ override: saved.override }),
+          });
+        }
 
         if (action === "add") {
           const result = await addWhitelistEntry({

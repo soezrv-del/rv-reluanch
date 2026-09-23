@@ -19,6 +19,7 @@ import {
   formatWebSearchInjection,
 } from "@/lib/rvgrok/webSearch";
 import { executeWebResearch } from "@/lib/rvgrok/webResearchTelemetry";
+import { getResearchProviderOverride } from "@/lib/rvgrok/researchProviderStore";
 import {
   GENERATE_IMAGE_TOOL,
   generateImageFromPrompt,
@@ -684,6 +685,9 @@ export const Route = createFileRoute("/api/rvgrok")({
             profile: "chat",
             skipGate: true,
             maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
+            // Server-persisted admin override (not a client header).
+            researchProvider:
+              (await getResearchProviderOverride()) ?? undefined,
           });
           const reportText = looksLikeCoachReportAsk(lastPlain)
             ? formatCoachReportTimeoutReply({

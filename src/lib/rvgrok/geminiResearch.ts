@@ -42,10 +42,43 @@ const CATALOG_MAX = 700;
 const ERROR_SNIPPET_MAX = 200;
 
 export type ResearchProvider = "auto" | "gemini" | "xai";
+export type ForcedResearchProvider = "gemini" | "xai";
 export type ResolvedResearchProvider = "gemini" | "xai";
 
 export function readGeminiApiKey(explicit?: string): string {
   return (explicit ?? process.env.GEMINI_API_KEY ?? "").trim();
+}
+
+export function parseResearchProviderPref(
+  raw?: string | null,
+): ResearchProvider | null {
+  const v = (raw ?? "").trim().toLowerCase();
+  if (v === "auto" || v === "gemini" || v === "xai") return v;
+  return null;
+}
+
+export function parseForcedResearchProvider(
+  raw?: string | null,
+): ForcedResearchProvider | null {
+  const parsed = parseResearchProviderPref(raw);
+  return parsed === "gemini" || parsed === "xai" ? parsed : null;
+}
+
+/**
+ * Admin override (gemini|xai) wins, then env, then auto.
+ * `auto` / empty override means "no override" — env stays the fallback.
+ */
+export function pickResearchProviderPref(input?: {
+  override?: string | null;
+  env?: string | null;
+}): ResearchProvider {
+  const forced = parseForcedResearchProvider(input?.override);
+  if (forced) return forced;
+  const envRaw =
+    input && Object.prototype.hasOwnProperty.call(input, "env")
+      ? input.env
+      : process.env.RVGROK_RESEARCH_PROVIDER;
+  return parseResearchProviderPref(envRaw) ?? "auto";
 }
 
 export function readResearchProviderPref(explicit?: string): ResearchProvider {
@@ -60,16 +93,62 @@ export function readResearchProviderPref(explicit?: string): ResearchProvider {
  * auto → Gemini when a key is present, else xAI.
  * gemini without a key → xAI (no crash, same as today).
  * xai → always the existing Responses web_search loop.
+ *
+ * Resolve order: explicit `provider` (tests / callers) > persisted
+ * admin `override` (gemini|xai only) > env RVGROK_RESEARCH_PROVIDER > auto.
  */
 export function resolveResearchProvider(opts?: {
   provider?: string;
+  override?: string | null;
   geminiApiKey?: string;
 }): ResolvedResearchProvider {
-  const pref = readResearchProviderPref(opts?.provider);
+  const pref =
+    opts?.provider !== undefined
+      ? readResearchProviderPref(opts.provider)
+      : pickResearchProviderPref({ override: opts?.override });
   const key = readGeminiApiKey(opts?.geminiApiKey);
   if (pref === "xai") return "xai";
   if (key) return "gemini";
   return "xai";
+}
+
+export type ResearchProviderStatus = {
+  override: ForcedResearchProvider | null;
+  env: ResearchProvider;
+  pref: ResearchProvider;
+  effective: ResolvedResearchProvider;
+  geminiKeyPresent: boolean;
+};
+
+export function researchProviderStatus(input: {
+  override: ForcedResearchProvider | null;
+  env?: string | null;
+  geminiApiKey?: string;
+}): ResearchProviderStatus {
+  const env = pickResearchProviderPref({
+    override: null,
+    env:
+      input && Object.prototype.hasOwnProperty.call(input, "env")
+        ? input.env
+        : process.env.RVGROK_RESEARCH_PROVIDER,
+  });
+  const pref = pickResearchProviderPref({
+    override: input.override,
+    env:
+      input && Object.prototype.hasOwnProperty.call(input, "env")
+        ? input.env
+        : process.env.RVGROK_RESEARCH_PROVIDER,
+  });
+  return {
+    override: input.override,
+    env,
+    pref,
+    effective: resolveResearchProvider({
+      provider: pref,
+      geminiApiKey: input.geminiApiKey,
+    }),
+    geminiKeyPresent: Boolean(readGeminiApiKey(input.geminiApiKey)),
+  };
 }
 
 export function geminiResearchTimeoutMs(

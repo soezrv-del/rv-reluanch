@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
+import { getResearchProviderOverride } from "@/lib/rvgrok/researchProviderStore";
 import {
   executeWebResearch,
   webResearchJsonResponse,
@@ -61,6 +62,8 @@ async function handleResearch(request: Request): Promise<Response> {
     // with null specs and skip a catalog miss.
     skipGate: true,
     maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
+    // Server-persisted admin override (not a client header).
+    researchProvider: (await getResearchProviderOverride()) ?? undefined,
   });
 
   return webResearchJsonResponse(researched);
