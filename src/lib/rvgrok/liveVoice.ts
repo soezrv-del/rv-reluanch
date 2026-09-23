@@ -15,6 +15,7 @@ import {
   RV_GROK_SESSION_INTRO,
   VOICE_RESEARCH_HOLD_PHRASE,
   VOICE_SESSION_INTRO_INSTRUCTIONS,
+  visitorPersonalizationBlock,
 } from "./speechPolicy.ts";
 import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS } from "./voice.ts";
 
@@ -165,11 +166,14 @@ export function buildRealtimeSessionUpdate(
   voiceId: string,
   speed = 1,
   catalogContext?: string,
+  visitorFirstName?: string,
 ): Record<string, unknown> {
   const clamped = Math.min(1.5, Math.max(0.7, speed));
   const extra = (catalogContext || "").trim();
   const catalogBlock = extra ? `${extra}\n\n` : "";
-  const instructions = `${RV_VOICE_INSTRUCTIONS}\n\n${catalogBlock}This session has native web_search. Use it for coach facts. Short ear-friendly sentences. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${RV_GROK_SESSION_INTRO} Then listen. Never repeat this intro.`;
+  const personal = visitorPersonalizationBlock(visitorFirstName);
+  const personalBlock = personal ? `${personal}\n\n` : "";
+  const instructions = `${RV_VOICE_INSTRUCTIONS}\n\n${personalBlock}${catalogBlock}This session has native web_search. Use it for coach facts. Short ear-friendly sentences. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${RV_GROK_SESSION_INTRO} Then listen. Never repeat this intro.`;
   return {
     type: "session.update",
     session: {

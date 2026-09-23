@@ -133,6 +133,8 @@ export async function streamChat(opts: {
   wantsWebFallback?: boolean;
   /** AccessProvider / stored whitelist phone — same credential as Live Voice. */
   accessPhone?: string;
+  /** Approved first name — chat personalization only; never grants access. */
+  visitorFirstName?: string;
 }) {
   const { fetchWithResearchAccess, researchAccessHeaders } = await import(
     "../access/researchUnlock.ts"
@@ -143,6 +145,7 @@ export async function streamChat(opts: {
     feedbackContext: opts.feedbackContext || undefined,
     catalogContext: opts.catalogContext || undefined,
     wantsWebFallback: opts.wantsWebFallback || undefined,
+    visitorFirstName: opts.visitorFirstName || undefined,
   });
   const response = await fetchWithResearchAccess(
     (phone) =>

@@ -5,6 +5,7 @@
  * actually running, then still answer. Never "Let me check that."
  */
 
+import { normalizeFirstName } from "../access/identity.ts";
 import {
   CATALOG_MISS_MUST_SEARCH,
   CATALOG_PIN_WINS_SEARCH_MISS,
@@ -70,6 +71,16 @@ export const SESSION_INTRO_POLICY = `NEW SESSION: If there is no prior assistant
 export const VOICE_RESEARCH_HOLD_INSTRUCTIONS = `Say only this one short beat, then stop: ${VOICE_RESEARCH_HOLD_PHRASE}. Do not answer the question. Do not guess a location or spec.`;
 
 export const VOICE_SESSION_INTRO_INSTRUCTIONS = `Say only this one line, then stop and listen: ${RV_GROK_SESSION_INTRO} Do not add a second sentence. Do not answer a question yet.`;
+
+/**
+ * Optional standing hook — chat + Live Voice. Empty when no first name.
+ * Does not change the cold-open identity line.
+ */
+export function visitorPersonalizationBlock(firstName?: string): string {
+  const name = normalizeFirstName(firstName || "");
+  if (!name) return "";
+  return `VISITOR: Their first name is ${name}. Address them by first name naturally and only occasionally — a greeting or a beat later in the answer, not every sentence. Never change the cold-open greeting. Never append their name to that greeting.`;
+}
 
 export function isForbiddenResearchHold(text: string): boolean {
   return /let me check that|i'?ll look that up|stand by|let me search|i'?ll search/i.test(

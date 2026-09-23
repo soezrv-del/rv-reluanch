@@ -56,6 +56,7 @@ import {
 } from "@/lib/rvgrok/vision";
 import { planGrokTabEntry } from "@/lib/rvgrok/tabEntry";
 import { useAccessOptional } from "@/components/access/AccessProvider";
+import { takeSessionWelcome, welcomeBackLine } from "@/lib/access/identity";
 import { cn, uid } from "@/lib/utils";
 import { followUpChipsForThread } from "@/lib/rvgrok/followUpChips";
 import { MessageBubble } from "./MessageBubble";
@@ -118,6 +119,7 @@ export function RvGrokApp({
 } = {}) {
   const embedded = variant === "embedded";
   const access = useAccessOptional();
+  const [welcomeBack, setWelcomeBack] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -576,6 +578,8 @@ export function RvGrokApp({
           catalogContext: grounded.block || undefined,
           wantsWebFallback: grounded.needsWeb,
           accessPhone: access?.phone,
+          visitorFirstName:
+            access?.allowed && access.name ? access.name : undefined,
           handlers: {
             onModel: (m) => {
               setActiveModel(m);
@@ -1059,7 +1063,14 @@ export function RvGrokApp({
         },
       },
       selectedVoice,
-      { speed: playbackSpeed, catalogContext, facts, accessPhone: access?.phone },
+      {
+        speed: playbackSpeed,
+        catalogContext,
+        facts,
+        accessPhone: access?.phone,
+        visitorFirstName:
+          access?.allowed && access.name ? access.name : undefined,
+      },
     );
 
     realtimeRef.current = session;
@@ -1083,7 +1094,15 @@ export function RvGrokApp({
     } finally {
       startingLiveRef.current = false;
     }
-  }, [selectedVoice, scrollToBottom, reconnectAttempt, playbackSpeed, access?.phone]);
+  }, [
+    selectedVoice,
+    scrollToBottom,
+    reconnectAttempt,
+    playbackSpeed,
+    access?.phone,
+    access?.allowed,
+    access?.name,
+  ]);
 
   useEffect(() => {
     startLiveSessionRef.current = startLiveSession;
@@ -1091,7 +1110,17 @@ export function RvGrokApp({
 
   useEffect(() => {
     realtimeRef.current?.setAccessPhone(access?.phone);
-  }, [access?.phone]);
+    realtimeRef.current?.setVisitorFirstName(
+      access?.allowed && access.name ? access.name : "",
+    );
+  }, [access?.phone, access?.allowed, access?.name]);
+
+  useEffect(() => {
+    if (!access?.allowed || !access.name) return;
+    if (takeSessionWelcome(access.name)) {
+      setWelcomeBack(welcomeBackLine(access.name));
+    }
+  }, [access?.allowed, access?.name]);
 
   const setLiveVoiceArmed = useCallback(
     (on: boolean) => {
@@ -1531,6 +1560,7 @@ export function RvGrokApp({
             ? "Live Voice armed · tap mic"
             : undefined
       }
+      welcomeBack={welcomeBack || undefined}
     />
   ) : (
     thread

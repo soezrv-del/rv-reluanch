@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
 import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
+import { visitorPersonalizationBlock } from "@/lib/rvgrok/speechPolicy";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
 import {
   appendGrounding,
@@ -52,6 +53,7 @@ type Body = {
   feedbackContext?: string;
   catalogContext?: string;
   wantsWebFallback?: boolean;
+  visitorFirstName?: string;
 };
 
 function sseHeaders(extra?: Record<string, string>) {
@@ -79,9 +81,12 @@ function withGrounding(
     feedbackContext?: string;
     catalogContext?: string;
     webNotes?: string;
+    visitorFirstName?: string;
   },
 ) {
   let out = appendGrounding(system, opts?.catalogContext);
+  const personal = visitorPersonalizationBlock(opts?.visitorFirstName);
+  if (personal) out = `${out}\n\n${personal}`;
   out = appendFeedback(out, opts?.feedbackContext);
   const web = (opts?.webNotes || "").trim();
   if (web) {
@@ -430,6 +435,7 @@ async function tryXaiDirect(
   feedbackContext?: string,
   catalogContext?: string,
   webNotes?: string,
+  visitorFirstName?: string,
 ): Promise<Response | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return null;
@@ -450,7 +456,7 @@ async function tryXaiDirect(
       (forceImageTool
         ? "\n\nThe user asked for a generated image. You MUST call the generate_image tool with a detailed visual prompt. Do not write a JSON tool call in your content."
         : ""),
-    { feedbackContext, catalogContext, webNotes },
+    { feedbackContext, catalogContext, webNotes, visitorFirstName },
   );
   const fullMessages: ChatMessage[] = [
     { role: "system", content: system },
@@ -484,6 +490,7 @@ async function tryCloudflareWorker(
   feedbackContext?: string,
   catalogContext?: string,
   webNotes?: string,
+  visitorFirstName?: string,
 ): Promise<Response | null> {
   const base = workerBase();
   const candidates = agentMode
@@ -507,7 +514,7 @@ async function tryCloudflareWorker(
               content: withGrounding(
                 (agentMode ? AGENT_SYSTEM_PROMPT : RV_SYSTEM_PROMPT) +
                   systemExtra,
-                { feedbackContext, catalogContext, webNotes },
+                { feedbackContext, catalogContext, webNotes, visitorFirstName },
               ),
             },
             ...messages,
@@ -636,6 +643,10 @@ export const Route = createFileRoute("/api/rvgrok")({
 
         const agentMode = Boolean(body.agentMode);
         const feedbackContext = body.feedbackContext;
+        const visitorFirstName =
+          typeof body.visitorFirstName === "string"
+            ? body.visitorFirstName
+            : "";
         const lastUser = [...messages].reverse().find((m) => m.role === "user");
         const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
 
@@ -705,6 +716,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           feedbackContext,
           catalogContext,
           webNotes,
+          visitorFirstName,
         );
         if (fromXai) return fromXai;
         const fromWorker = await tryCloudflareWorker(
@@ -713,6 +725,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           feedbackContext,
           catalogContext,
           webNotes,
+          visitorFirstName,
         );
         if (fromWorker) return fromWorker;
 

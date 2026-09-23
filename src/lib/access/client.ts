@@ -1,9 +1,11 @@
 import {
   ACCESS_ADMIN_TOKEN_KEY,
+  ACCESS_NAME_STORAGE_KEY,
   ACCESS_PHONE_CHANGED_EVENT,
   ACCESS_PHONE_HEADER,
   ACCESS_PHONE_STORAGE_KEY,
 } from "./constants.ts";
+import { normalizeFirstName } from "./identity.ts";
 
 export type AccessCheckResult = {
   allowed: boolean;
@@ -42,6 +44,21 @@ export function storePhone(phone: string) {
       new CustomEvent(ACCESS_PHONE_CHANGED_EVENT, { detail: { phone } }),
     );
   }
+}
+
+export function readStoredFirstName(): string {
+  return normalizeFirstName(readStorage(ACCESS_NAME_STORAGE_KEY));
+}
+
+/** Persist or clear the local first name. Does not rewrite the admin list. */
+export function storeFirstName(name: string) {
+  writeStorage(ACCESS_NAME_STORAGE_KEY, normalizeFirstName(name));
+}
+
+/** Approved-device identity: phone still drives `x-access-phone`. */
+export function storeApprovedIdentity(phone: string, firstName: string) {
+  storePhone(phone);
+  storeFirstName(firstName);
 }
 
 export function readAdminToken(): string {

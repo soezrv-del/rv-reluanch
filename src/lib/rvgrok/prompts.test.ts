@@ -7,7 +7,7 @@ import {
   AGENT_SYSTEM_PROMPT,
   RV_SYSTEM_PROMPT,
 } from "./prompts.ts";
-import { RV_GROK_LEAN_CORE } from "./speechPolicy.ts";
+import { RV_GROK_LEAN_CORE, visitorPersonalizationBlock } from "./speechPolicy.ts";
 import { RV_VOICE_INSTRUCTIONS } from "./voice.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -121,6 +121,22 @@ test("standing prompts dropped the lecture stack", () => {
     assert.doesNotMatch(text, /HONESTY_STANDING_POLICY/, label);
     assert.doesNotMatch(text, /ANSWER_NOW_POLICY/, label);
   }
+});
+
+test("visitor personalization is a small hook and never rewrites I'm RvGrok", () => {
+  assert.equal(visitorPersonalizationBlock(""), "");
+  assert.equal(visitorPersonalizationBlock(undefined), "");
+  const block = visitorPersonalizationBlock("David Hansen");
+  assert.match(block, /Their first name is David/);
+  assert.match(block, /only occasionally/);
+  assert.doesNotMatch(block, /I'm RvGrok, David/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /VISITOR:/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /Their first name is/);
+  assert.match(src("speechPolicy.ts"), /RV_GROK_SESSION_INTRO = "I'm RvGrok"/);
+  assert.match(src("../../routes/api/rvgrok.ts"), /visitorFirstName/);
+  assert.match(src("../../routes/api/rvgrok.ts"), /visitorPersonalizationBlock/);
+  assert.match(src("stream.ts"), /visitorFirstName/);
+  assert.match(src("liveVoice.ts"), /visitorPersonalizationBlock/);
 });
 
 test("speechPolicy still owns intro, hold, and sales-mission detectors", () => {
