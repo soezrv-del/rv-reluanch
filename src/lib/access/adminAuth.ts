@@ -87,6 +87,10 @@ export function authorizeAccessAdmin(
   };
 }
 
+export function adminMayClearPhoneMemory(auth: AdminAuthResult): boolean {
+  return Boolean(auth.ok);
+}
+
 export function adminAuthFailureBody(auth: AdminAuthFail) {
   return {
     error: auth.error,

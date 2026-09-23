@@ -187,6 +187,32 @@ export function AdminWhitelistSheet({
     }
   };
 
+  const onClearMemory = async (phoneDigits: string, label: string) => {
+    const who = label || phoneDigits;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `Clear RV Grok memory for ${who}? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    setError("");
+    setBusy(true);
+    try {
+      const res = await adminFetch("/api/access/admin", {
+        method: "POST",
+        body: JSON.stringify({ action: "clear_memory", phone: phoneDigits }),
+      });
+      const data = (await res.json()) as { error?: string; message?: string };
+      if (!res.ok) throw new Error(data.message || data.error || "Could not clear memory.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not clear memory.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const onRemove = async (id: string) => {
     setError("");
     setBusy(true);
@@ -519,7 +545,7 @@ export function AdminWhitelistSheet({
                     return (
                       <div
                         key={row.id}
-                        className={`flex items-center gap-3 px-3.5 py-3 ${
+                        className={`flex flex-wrap items-center gap-2 px-3.5 py-3 sm:gap-3 ${
                           i > 0 ? "border-t border-white/10" : ""
                         }`}
                       >
@@ -546,6 +572,20 @@ export function AdminWhitelistSheet({
                               : ""}
                           </p>
                         </div>
+                        <button
+                          type="button"
+                          data-admin-clear-memory
+                          disabled={busy}
+                          onClick={() =>
+                            void onClearMemory(
+                              row.phoneDigits,
+                              row.contactName || formatPhoneDisplay(row.phoneDigits),
+                            )
+                          }
+                          className="shrink-0 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/85 disabled:opacity-60"
+                        >
+                          Clear memory
+                        </button>
                         {locked ? null : (
                           <button
                             type="button"

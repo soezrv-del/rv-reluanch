@@ -2,6 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
 import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
 import { visitorPersonalizationBlock } from "@/lib/rvgrok/speechPolicy";
+import {
+  loadVisitorMemoryBlockFromRequest,
+  memoryKeyFromRequest,
+  rememberAfterSseResponse,
+} from "@/lib/rvgrok/phoneMemoryStore";
+import type { MemoryTurn } from "@/lib/rvgrok/phoneMemory";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
 import {
   appendGrounding,
@@ -83,11 +89,14 @@ function withGrounding(
     catalogContext?: string;
     webNotes?: string;
     visitorFirstName?: string;
+    visitorMemory?: string;
   },
 ) {
   let out = appendGrounding(system, opts?.catalogContext);
   const personal = visitorPersonalizationBlock(opts?.visitorFirstName);
   if (personal) out = `${out}\n\n${personal}`;
+  const memory = (opts?.visitorMemory || "").trim();
+  if (memory) out = `${out}\n\n${memory}`;
   out = appendFeedback(out, opts?.feedbackContext);
   const web = (opts?.webNotes || "").trim();
   if (web) {
@@ -437,6 +446,7 @@ async function tryXaiDirect(
   catalogContext?: string,
   webNotes?: string,
   visitorFirstName?: string,
+  visitorMemory?: string,
 ): Promise<Response | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return null;
@@ -457,7 +467,7 @@ async function tryXaiDirect(
       (forceImageTool
         ? "\n\nThe user asked for a generated image. You MUST call the generate_image tool with a detailed visual prompt. Do not write a JSON tool call in your content."
         : ""),
-    { feedbackContext, catalogContext, webNotes, visitorFirstName },
+    { feedbackContext, catalogContext, webNotes, visitorFirstName, visitorMemory },
   );
   const fullMessages: ChatMessage[] = [
     { role: "system", content: system },
@@ -492,6 +502,7 @@ async function tryCloudflareWorker(
   catalogContext?: string,
   webNotes?: string,
   visitorFirstName?: string,
+  visitorMemory?: string,
 ): Promise<Response | null> {
   const base = workerBase();
   const candidates = agentMode
@@ -515,7 +526,13 @@ async function tryCloudflareWorker(
               content: withGrounding(
                 (agentMode ? AGENT_SYSTEM_PROMPT : RV_SYSTEM_PROMPT) +
                   systemExtra,
-                { feedbackContext, catalogContext, webNotes, visitorFirstName },
+                {
+                  feedbackContext,
+                  catalogContext,
+                  webNotes,
+                  visitorFirstName,
+                  visitorMemory,
+                },
               ),
             },
             ...messages,
@@ -648,8 +665,21 @@ export const Route = createFileRoute("/api/rvgrok")({
           typeof body.visitorFirstName === "string"
             ? body.visitorFirstName
             : "";
+        const phoneKey = memoryKeyFromRequest(request);
+        const visitorMemory = phoneKey
+          ? await loadVisitorMemoryBlockFromRequest(request)
+          : "";
         const lastUser = [...messages].reverse().find((m) => m.role === "user");
         const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
+        const memoryTurns: MemoryTurn[] = messages.map((m) => ({
+          role: m.role,
+          text: contentToPlain(m.content).slice(0, 800),
+        }));
+        const finish = (response: Response) =>
+          rememberAfterSseResponse(response, {
+            phoneDigits: phoneKey,
+            turns: memoryTurns,
+          });
 
         // Server re-grounds the latest ask so a phone/API probe without
         // client catalogContext still locks Lineage Series M (and friends).
@@ -697,15 +727,17 @@ export const Route = createFileRoute("/api/rvgrok")({
               })
             : "";
           if (reportText) {
-            return jsonToSseStream({
-              content: reportText,
-              model:
-                researched.ok && "model" in researched && researched.model
-                  ? researched.model
-                  : "catalog-pin",
-              agentMode,
-              upstream: "coach-report",
-            });
+            return finish(
+              jsonToSseStream({
+                content: reportText,
+                model:
+                  researched.ok && "model" in researched && researched.model
+                    ? researched.model
+                    : "catalog-pin",
+                agentMode,
+                upstream: "coach-report",
+              }),
+            );
           }
           webNotes = formatWebSearchInjection(researched, {
             query: lastPlain,
@@ -721,8 +753,9 @@ export const Route = createFileRoute("/api/rvgrok")({
           catalogContext,
           webNotes,
           visitorFirstName,
+          visitorMemory,
         );
-        if (fromXai) return fromXai;
+        if (fromXai) return finish(fromXai);
         const fromWorker = await tryCloudflareWorker(
           messages,
           agentMode,
@@ -730,10 +763,11 @@ export const Route = createFileRoute("/api/rvgrok")({
           catalogContext,
           webNotes,
           visitorFirstName,
+          visitorMemory,
         );
-        if (fromWorker) return fromWorker;
+        if (fromWorker) return finish(fromWorker);
 
-        return demoStream(messages, agentMode);
+        return finish(demoStream(messages, agentMode));
       },
     },
   },

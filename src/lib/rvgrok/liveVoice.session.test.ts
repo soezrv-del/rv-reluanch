@@ -68,6 +68,17 @@ test("named visitor is a later-turn hook — intro line stays exact", () => {
   assert.equal(session.instructions.includes(`I'm RvGrok, David`), false);
 });
 
+test("visitor memory is additive and does not change the spoken intro", () => {
+  const memory =
+    "VISITOR MEMORY (this unlocked phone only). Use silently for continuity. Never dump it in the greeting. Cold-open stays exactly I'm RvGrok.\nProfile: Prefers compact answers. Watching Newmar.";
+  const msg = buildRealtimeSessionUpdate("ara", 1, "", "David", memory);
+  const session = msg.session as { instructions: string };
+  assert.match(session.instructions, /VISITOR MEMORY/);
+  assert.match(session.instructions, /Prefers compact answers/);
+  assert.match(session.instructions, /Say exactly: I'm RvGrok/);
+  assert.doesNotMatch(session.instructions, /I'm RvGrok, David/);
+});
+
 test("catalog lock session.update still ships voice, VAD, audio, and web_search", () => {
   const lock = "VERIFIED CATALOG — 2022 Newmar Dutch Star 4369";
   const msg = buildRealtimeSessionUpdate("eve", 1, lock);
@@ -97,4 +108,6 @@ test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => 
   assert.match(realtime, /ensureCatalogLoaded/);
   assert.match(realtime, /visitorFirstName/);
   assert.match(realtime, /setVisitorFirstName/);
+  assert.match(realtime, /takeTokenVisitorMemory/);
+  assert.match(realtime, /visitorMemory/);
 });
