@@ -3,7 +3,7 @@
  *
  * Same rvgrok_ops_settings row store as the research-provider toggle.
  * Missing row / DB blip → search-first (today's Production path).
- * Never a visitor header or localStorage.
+ * Never a visitor header or client storage.
  */
 
 import { getSql } from "@/lib/db";

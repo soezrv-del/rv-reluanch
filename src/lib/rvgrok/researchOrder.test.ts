@@ -313,7 +313,8 @@ test("research order reuses ops settings; DialaBot and Facts cache stay out", ()
   assert.match(store, /rvgrok_ops_settings/);
   assert.match(store, /research_order/);
   assert.match(store, /RESEARCH_ORDER_OVERRIDE_CACHE_TTL_MS/);
-  assert.doesNotMatch(store, /authMiddleware|requireUserId|localStorage/);
+  assert.doesNotMatch(store, /authMiddleware|requireUserId/);
+  assert.doesNotMatch(store, /localStorage/);
   assert.doesNotMatch(store, /dial_phonebook|bland|DialaBot/i);
   assert.match(telemetry, /planCatalogFirstSkip/);
   assert.match(telemetry, /catalog_hit/);
