@@ -14,18 +14,24 @@ import {
 } from "@/lib/rv/promptRules";
 import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
 import { getResearchProviderOverride } from "@/lib/rvgrok/researchProviderStore";
-import { researchFactsDossierNotes } from "@/lib/rv/factsDossierResearch";
+import {
+  catalogPinsToLiveDossier,
+  pinsHaveHardFacts,
+  researchFactsDossierNotes,
+  resolveFactsCatalogPins,
+  type FactsCatalogCandidate,
+} from "@/lib/rv/factsDossierResearch";
 
 /**
  * POST /api/rvfax/dossier
- * Live internet research (same stack as RV Grok) → JSON extract.
- * Catalog paints instantly on the client; soft-fail keeps that paint.
+ * Catalog / brochure pins first. Live browse only for missing hard fields.
+ * Soft-fail keeps catalog paint. Pins still win.
  */
 
 const cache = new Map<string, { at: number; data: LiveDossier; model?: string }>();
 const TTL_MS = 6 * 60 * 60 * 1000;
 /** Bump when OEM ground-truth / prompt pipeline / pins change (Phase 4.4) */
-const CACHE_VER = "v24-web-research-notes";
+const CACHE_VER = "v25-catalog-first-gaps";
 
 /** JSON extract only — browse uses WEB_SEARCH_MODELS (grok-4.7). */
 const DOSSIER_MODELS = [
@@ -36,23 +42,9 @@ const DOSSIER_MODELS = [
 ] as const;
 
 const DOSSIER_PIPELINE = "web-research-then-extract";
+const CATALOG_PIPELINE = "catalog-pins";
 
-export type CatalogCandidate = {
-  engine?: string | null;
-  horsepower?: string | number | null;
-  torque?: string | null;
-  chassis?: string | null;
-  transmission?: string | null;
-  fuelType?: string | null;
-  type?: string | null;
-  dataSource?: string | null;
-  accuracyNote?: string | null;
-  bandFrom?: number | null;
-  bandTo?: number | null;
-  floorplan?: string | null;
-  lengthFt?: string | null;
-  gvwr?: string | null;
-};
+export type CatalogCandidate = FactsCatalogCandidate;
 
 const EXTRACT_SYSTEM = `You are Grok converting live WEB RESEARCH notes into an RVFAX Pro OEM dossier JSON.
 
@@ -184,7 +176,9 @@ function formatCandidateBlock(c: CatalogCandidate | undefined, year: string): st
   return `CATALOG CANDIDATE TRUTH for model year ${year} (${band}):
 ${fpLine}
 - length (catalog): ${c.lengthFt || "null"}
-- gvwr (catalog): ${c.gvwr || "null"}
+- gvwr (catalog): ${c.gvwrLbs ?? c.gvwr || "null"}
+- uvw (catalog): ${c.uvwEstimated ? "null (estimated — not a pin)" : c.uvwLbs ?? c.uvw || "null"}
+- fresh/gray/black (catalog): ${c.freshWater || "null"} / ${c.grayWater || "null"} / ${c.blackWater || "null"}
 - engine: ${c.engine || "null"}
 - horsepower: ${c.horsepower ?? "null"}
 - torque: ${c.torque || "null"}
@@ -332,9 +326,22 @@ async function callGrok(
   return callWorkerChat(system, user, DOSSIER_MODELS[0]);
 }
 
+type DossierBuild =
+  | {
+      kind: "catalog";
+      data: LiveDossier;
+      model: string;
+    }
+  | {
+      kind: "researched";
+      rawJson: string;
+      model: string;
+      research: string;
+    };
+
 /**
- * Internet research notes (RV Grok stack), then JSON extract.
- * Catalog candidate is a lock, never a reason to skip the browse.
+ * Catalog / brochure pins first. Browse only the missing hard fields.
+ * Skip the extract LLM when browse was skipped or notes are empty.
  */
 async function runTwoStepDossier(opts: {
   year: string;
@@ -342,7 +349,24 @@ async function runTwoStepDossier(opts: {
   model: string;
   floorplan: string;
   candidate?: CatalogCandidate;
-}): Promise<{ rawJson: string; model: string; research: string } | null> {
+}): Promise<DossierBuild | null> {
+  const yNum = parseInt(opts.year, 10) || 0;
+  const pins = resolveFactsCatalogPins({
+    year: opts.year,
+    make: opts.make,
+    model: opts.model,
+    floorplan: opts.floorplan,
+    candidate: opts.candidate,
+  });
+  const catalogData = () =>
+    catalogPinsToLiveDossier({
+      year: yNum,
+      make: opts.make,
+      model: opts.model,
+      floorplan: opts.floorplan,
+      pins,
+    });
+
   const coach = `${opts.year} ${opts.make} ${opts.model}${opts.floorplan ? ` floorplan ${opts.floorplan}` : " (NO FLOORPLAN SELECTED)"}`;
   const candidateBlock = formatCandidateBlock(opts.candidate, opts.year);
   const fpRule = opts.floorplan
@@ -354,15 +378,25 @@ async function runTwoStepDossier(opts: {
     make: opts.make,
     model: opts.model,
     floorplan: opts.floorplan,
+    candidate: opts.candidate,
     catalogBlock: candidateBlock,
     researchProvider: (await getResearchProviderOverride()) ?? undefined,
   });
-  if (!research?.text) return null;
+
+  if (!research || research.skipped || !research.text.trim()) {
+    if (research?.skipped || pinsHaveHardFacts(pins)) {
+      return { kind: "catalog", data: catalogData(), model: "catalog-pin" };
+    }
+    return null;
+  }
 
   const extractUser = `Coach: ${coach}
 ${fpRule}
 
 ${candidateBlock}
+
+MISSING / GAP FIELDS ONLY: ${(research.gaps || []).join(", ") || "none"}
+Do not replace catalog / brochure pins that already have a number.
 
 RESEARCH NOTES:
 ${research.text.slice(0, 6000)}
@@ -377,14 +411,19 @@ sourcesNote must include real OEM/chassis/listing-style cites from the notes.`;
     jsonMode: true,
   });
   if (!extracted?.text) {
-    // Fallback: single-shot JSON from research text alone
     const fallback = await callGrok(
       EXTRACT_SYSTEM,
       extractUser,
       { temperature: 0.1, jsonMode: false },
     );
-    if (!fallback?.text) return null;
+    if (!fallback?.text) {
+      if (pinsHaveHardFacts(pins)) {
+        return { kind: "catalog", data: catalogData(), model: research.model };
+      }
+      return null;
+    }
     return {
+      kind: "researched",
       rawJson: fallback.text,
       model: `${research.model}→${fallback.model}`,
       research: research.text,
@@ -392,6 +431,7 @@ sourcesNote must include real OEM/chassis/listing-style cites from the notes.`;
   }
 
   return {
+    kind: "researched",
     rawJson: extracted.text,
     model: `${research.model}→${extracted.model}`,
     research: research.text,
@@ -750,28 +790,36 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
             );
           }
 
-          let parsed = parseDossier(
-            twoStep.rawJson,
-            yNum,
-            make,
-            model,
-            floorplan,
-            twoStep.research,
-          );
+          let parsed: LiveDossier | null = null;
+          let pipeline = DOSSIER_PIPELINE;
+          if (twoStep.kind === "catalog") {
+            parsed = twoStep.data;
+            pipeline = CATALOG_PIPELINE;
+          } else {
+            parsed = parseDossier(
+              twoStep.rawJson,
+              yNum,
+              make,
+              model,
+              floorplan,
+              twoStep.research,
+            );
+          }
           if (!parsed) {
             return Response.json(
               {
                 error:
                   "Live dossier returned unreadable data — catalog year-band remains.",
-                meta: { model: twoStep.model, pipeline: DOSSIER_PIPELINE },
+                meta: { model: twoStep.model, pipeline },
               },
               { status: 502 },
             );
           }
 
+          parsed = applyOemGroundTruth(parsed);
           parsed = applyCatalogCandidateTruth(parsed, catalogCandidate);
           parsed = applyBrochurePin(parsed);
-          if (!hasRealSources(parsed.sourcesNote)) {
+          if (twoStep.kind !== "catalog" && !hasRealSources(parsed.sourcesNote)) {
             parsed = {
               ...parsed,
               sourcesNote: [
@@ -804,8 +852,9 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
             meta: {
               model: twoStep.model,
               cached: false,
-              pipeline: DOSSIER_PIPELINE,
+              pipeline,
               preferredModels: DOSSIER_MODELS,
+              skippedBrowse: twoStep.kind === "catalog",
             },
           });
         } catch (e) {
