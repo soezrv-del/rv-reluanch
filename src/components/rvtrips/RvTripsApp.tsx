@@ -1222,11 +1222,12 @@ export function RvTripsApp() {
       className="relative flex h-full flex-col overflow-hidden bg-bg text-white"
       data-trips-screen
       data-page-accent="gold"
+      data-raidho-only=""
       data-trips-route-clean={
         routeStatus === "live" || navArmed ? "1" : undefined
       }
     >
-      <SuiteRaidhoBackdrop />
+      <SuiteRaidhoBackdrop bleed />
 
       <div
         ref={scrollRef}

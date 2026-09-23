@@ -1587,9 +1587,10 @@ export function RvGrokApp({
       data-rvgrok-wingman=""
       data-page-accent={embedded ? undefined : "gold"}
       data-readable-cards=""
+      data-raidho-only=""
     >
       {!embedded && (
-        <SuiteRaidhoBackdrop className="grok-raidho-field" />
+        <SuiteRaidhoBackdrop bleed className="grok-raidho-field" />
       )}
 
       {!embedded && !isLanding ? (

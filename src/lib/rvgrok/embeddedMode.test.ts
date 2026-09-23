@@ -19,9 +19,8 @@ test("RvGrokApp defaults to page variant and gates suite chrome for embedded", (
   assert.match(app, /const embedded = variant === "embedded"/);
   assert.match(app, /data-rvgrok-variant=\{variant\}/);
 
-  assert.match(app, /!embedded && \(\s*<SuiteRaidhoBackdrop className="grok-raidho-field" \/>/);
+  assert.match(app, /!embedded && \(\s*<SuiteRaidhoBackdrop bleed className="grok-raidho-field" \/>/);
   assert.doesNotMatch(app, /ScrollSuiteHeader/);
-  assert.doesNotMatch(app, /SuiteRaidhoBackdrop bleed/);
   assert.match(
     app,
     /usePullToReset\(listRef, startNewChat, \{ enabled: !embedded \}\)/,

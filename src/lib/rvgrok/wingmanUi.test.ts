@@ -19,8 +19,8 @@ test("Grok tab landing is Lot wingman on Raidho — no family camping plate", ()
   const suite = read("../../components/shell/SuitePage.tsx");
 
   assert.match(app, /data-rvgrok-wingman=""/);
-  assert.match(app, /<SuiteRaidhoBackdrop className="grok-raidho-field" \/>/);
-  assert.doesNotMatch(app, /SuiteRaidhoBackdrop bleed/);
+  assert.match(app, /data-raidho-only=""/);
+  assert.match(app, /<SuiteRaidhoBackdrop bleed className="grok-raidho-field" \/>/);
   assert.doesNotMatch(app, /ScrollSuiteHeader/);
   assert.doesNotMatch(app, /SuiteBackdrop/);
   assert.doesNotMatch(app, /SHARED_PRESTIGE_BACKDROP|shared-prestige|hero-camp|family camping/i);
@@ -46,10 +46,10 @@ test("Grok tab landing is Lot wingman on Raidho — no family camping plate", ()
   assert.match(avatar, /icon-rvgrok\.png/);
 
   assert.match(css, /\[data-rvgrok-wingman\]/);
-  assert.match(css, /\[data-rvgrok-wingman\] \.suite-raidho-mark/);
-  assert.match(css, /\[data-rvgrok-wingman\] \.suite-raidho-field/);
-  assert.match(css, /BACKGROUND field behind frost/);
+  assert.match(css, /logo occupies the viewport/);
+  assert.match(css, /\[data-rvgrok-wingman\] \.suite-raidho-field,/);
   assert.match(css, /\[data-rvgrok-wingman\] \.sapphire-header \{[\s\S]*?display:\s*none/);
+  assert.doesNotMatch(css, /\[data-rvgrok-wingman\] \.suite-raidho-bleed,/);
   assert.match(
     css,
     /\[data-rvgrok-landing\] \{[\s\S]*?padding-top:\s*max\(0\.5rem,\s*env\(safe-area-inset-top/,
@@ -59,7 +59,6 @@ test("Grok tab landing is Lot wingman on Raidho — no family camping plate", ()
     /@media \(max-width: 639px\) \{[\s\S]*?\[data-rvgrok-landing\] \{[\s\S]*?padding-top:\s*max\(3\.25rem,\s*env\(safe-area-inset-top/,
   );
   assert.match(css, /\.grok-frost \{[\s\S]*?blur\(28px\)/);
-  assert.match(css, /\[data-rvgrok-wingman\] \.suite-raidho-field \{[\s\S]*?--color-gold/);
   assert.match(css, /\.grok-frost \{[\s\S]*?--color-gold-border/);
   assert.match(css, /--color-grok-mic:\s*#e8893a/);
   assert.match(css, /--font-display:\s*"Fraunces"/);
