@@ -192,7 +192,7 @@ export function buildRealtimeSessionUpdate(
   const intro = sessionIntroLine(visitorFirstName);
   const ackLine = liveVoiceAckSessionLine(ackPhrase || "");
   const ackBlock = ackLine ? `\n\n${ackLine}` : "";
-  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}This session has native web_search. Use it for coach facts. Short ear-friendly sentences. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.${ackBlock}`;
+  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}This session has native web_search. Use it for coach facts the catalog does not already pin. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.${ackBlock}`;
   return {
     type: "session.update",
     session: {

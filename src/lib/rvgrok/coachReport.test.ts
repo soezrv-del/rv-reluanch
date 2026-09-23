@@ -15,6 +15,8 @@ import {
   formatCoachReportTimeoutReply,
   formatCoachReportVoiceCue,
   looksLikeCoachReportAsk,
+  stripDeskGapFiller,
+  stripSpokenSourceTags,
 } from "./coachReport.ts";
 import {
   chatSpecCoversPaintedFields,
@@ -102,6 +104,8 @@ test("report-shape intent: YMM / full specs / CARFAX — not inventory, compare,
   );
   assert.match(COACH_REPORT_CHAT_RULE, /Overview/);
   assert.match(COACH_REPORT_CHAT_RULE, /never invent/i);
+  assert.match(COACH_REPORT_CHAT_RULE, /from the catalog/);
+  assert.match(COACH_REPORT_CHAT_RULE, /Mark missing once/);
   assert.match(coachReportResearchLengthRule("chat"), /Layout & amenities/);
   assert.match(coachReportResearchLengthRule("voice"), /2–4 ear-friendly|2-4 ear-friendly/);
 });
@@ -185,6 +189,29 @@ test("structured report text paints the desk and hides GAP lecture", () => {
   assert.equal(gap("UVW"), true);
 });
 
+test("coach report bubble drops per-line source tags and GAP filler", () => {
+  const tagged = formatCoachReportChat(
+    buildCoachReportFromNotes({
+      notes:
+        "The 2026 Entegra Coach Cornerstone 45B is a diesel pusher from the catalog. Engine: Cummins from the catalog. GVWR 54,000 pounds per the catalog.",
+      query: "2026 Entegra Coach Cornerstone 45B",
+    }),
+  );
+  assert.doesNotMatch(tagged, /from the catalog|per the catalog/i);
+  assert.match(tagged, /54,000|54000|Cornerstone/i);
+  assert.equal(
+    stripSpokenSourceTags("Torque is 1,850 lb-ft from the catalog. Horsepower is 605 per the catalog."),
+    "Torque is 1,850 lb-ft. Horsepower is 605.",
+  );
+  const gappy = stripDeskGapFiller(
+    "Cornerstone 45B is a diesel pusher.\nGVWR: GAP.\nUVW: Confirm brochure.\nTorque is 1,850 lb-ft.",
+  );
+  assert.match(gappy, /diesel pusher/);
+  assert.match(gappy, /1,850/);
+  assert.match(gappy, /Still missing fields are on the desk/);
+  assert.doesNotMatch(gappy, /\bGAP\b|Confirm brochure/i);
+});
+
 test("empty / miss notes do not invent a report", () => {
   const empty = buildCoachReportFromNotes({
     notes: "",
@@ -266,8 +293,8 @@ test("prompts and research sidecars teach the four-section report", () => {
   const speech = readFileSync(join(root, "speechPolicy.ts"), "utf8");
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
-  assert.match(speech, /CARFAX-style coach report/);
-  assert.match(speech, /Overview \/ Chassis & powertrain \/ Weights & capacity \/ Layout & amenities/);
+  assert.match(speech, /full report or a quick overview/);
+  assert.match(speech, /Empty beats invented/);
   for (const [label, text] of [
     ["grounding.ts", grounding],
     ["geminiResearch.ts", gemini],
@@ -290,5 +317,5 @@ test("prompts and research sidecars teach the four-section report", () => {
   );
   assert.doesNotMatch(voice, /That card is the written reply/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
-  assert.match(speech, /CARFAX-style coach report/);
+  assert.match(speech, /full report or a quick overview/);
 });

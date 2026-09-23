@@ -6,6 +6,7 @@
 import { shouldShowRvVideoPrompt } from "../rv/rvVideos.ts";
 
 export type GrokExtraKind =
+  | "ratings"
   | "video"
   | "nhtsa"
   | "market"
@@ -15,6 +16,7 @@ export type GrokExtraKind =
   | "share";
 
 export const GROK_EXTRA_KINDS: readonly GrokExtraKind[] = [
+  "ratings",
   "video",
   "nhtsa",
   "market",
@@ -33,6 +35,8 @@ export type GrokExtraCoach = {
 };
 
 const KIND_RE: Record<GrokExtraKind, RegExp> = {
+  ratings:
+    /\b(ratings?|torque[-\s]?to[-\s]?weight|customer satisfaction)\b/i,
   video:
     /\b(want a video|video(?:s)?|walkthrough|walk[- ]?thru|youtube|rv video library)\b/i,
   nhtsa: /\b(recalls?|nhtsa|complaints?|defects?|safety campaign)\b/i,
@@ -89,19 +93,19 @@ export function grokExtrasForPrompt(
 }
 
 /**
- * After a Live Voice spec card paints. Prompts only — the caller must
- * not fetch recalls, comps, videos, reviews, or the service list.
- * Spec-report wording alone does not unlock these in typed chat.
+ * After a Live Voice overview or full report. All five at once.
+ * The caller must not preload them. A pick opens only that card.
  */
 export const VOICE_SPEC_EXTRA_KINDS: readonly GrokExtraKind[] = [
-  "nhtsa",
+  "ratings",
   "market",
   "video",
-  "reviews",
+  "nhtsa",
   "maintenance",
-  "vin",
-  "share",
 ] as const;
+
+export const VOICE_EXTRAS_OFFER_LINE =
+  "I can also pull ratings, market value, a video, NHTSA safety, or maintenance. Which one do you want?";
 
 export function voiceSpecExtraPrompts(
   coach: GrokExtraCoach | null | undefined,
@@ -119,17 +123,19 @@ export function voiceSpecExtraPrompts(
   });
 }
 
-/** Named extras, plus the voice spec prompt list when the card asks for it. */
+/** Named extras, plus all five voice prompts when the card asks for them. */
 export function extrasToOffer(opts: {
   query: string;
   coach: GrokExtraCoach | null | undefined;
   offerVoiceExtras?: boolean;
-  /** When set, offer only this voice-extra index. Nothing loads. */
+  /** Ignored. The one-at-a-time drip is off; all five show together. */
   voiceExtraStep?: number;
+  /** Salesman picked one extra. Open only that card. */
+  voiceExtraPick?: GrokExtraKind;
 }): GrokExtraKind[] {
-  if (opts.offerVoiceExtras && typeof opts.voiceExtraStep === "number") {
-    const kind = voiceSpecExtraPrompts(opts.coach)[opts.voiceExtraStep];
-    return kind ? [kind] : [];
+  if (opts.voiceExtraPick) {
+    const allowed = voiceSpecExtraPrompts(opts.coach);
+    return allowed.includes(opts.voiceExtraPick) ? [opts.voiceExtraPick] : [];
   }
   const named = grokExtrasForPrompt(opts.query, opts.coach);
   if (!opts.offerVoiceExtras) return named;
@@ -148,6 +154,10 @@ export const GROK_EXTRA_PROMPTS: Record<
   GrokExtraKind,
   { title: string; body: string }
 > = {
+  ratings: {
+    title: "Want ratings?",
+    body: "Quality, reliability, and satisfaction from the catalog, plus torque-to-weight when both numbers exist. Missing stays GAP.",
+  },
   video: {
     title: "Want a video?",
     body: "Would you like a video from RV Video Library?",

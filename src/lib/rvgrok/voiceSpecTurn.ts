@@ -1,14 +1,20 @@
 /**
  * Live Voice spec turns speak from the shared spec engine.
  * Catalog first, then empty-field fallback. Never a memory snippet.
- * A coach or spec ask opens with the choice line. Full uses this engine.
- * Extras stay prompts — one at a time — the script does not load them.
+ * A coach or spec ask opens with the choice line unless they already
+ * chose full/report or short/quick/overview. Full uses this engine.
+ * After either length, offer all five extras at once. The script does not load them.
  */
 
 import type { DeskSheetPayload, DeskSheetRow } from "./deskSheet.ts";
 import { looksLikeDeskSheetAsk } from "./deskSheetPolicy.ts";
-import { looksLikeCoachReportAsk } from "./coachReport.ts";
-import { GROK_EXTRA_PROMPTS, voiceSpecExtraPrompts } from "./grokExtras.ts";
+import { looksLikeCoachReportAsk, stripSpokenSourceTags } from "./coachReport.ts";
+import {
+  GROK_EXTRA_PROMPTS,
+  VOICE_EXTRAS_OFFER_LINE,
+  voiceSpecExtraPrompts,
+  type GrokExtraKind,
+} from "./grokExtras.ts";
 import { prefixLiveVoiceAck } from "./voiceAck.ts";
 import {
   looksLikeNamedCoachProductQuestion,
@@ -26,8 +32,7 @@ export const VOICE_COACH_CHOICE_INSTRUCTIONS = `Say only this, then stop: ${VOIC
 
 export type VoiceCoachDepth = "full" | "quick";
 
-const EXTRAS_OFFER =
-  "Spec sheet is on the desk. You can pick recalls, market value, videos, owner reviews, or maintenance. I won't load those until you choose.";
+const EXTRAS_OFFER = VOICE_EXTRAS_OFFER_LINE;
 
 function coachLine(sheet: DeskSheetPayload): string {
   return [sheet.year, sheet.make, sheet.model, sheet.floorplan]
@@ -47,14 +52,13 @@ function isEmptyValue(value: string): boolean {
   );
 }
 
-/** Spoken source for a painted row. Catalog when the fallback chain did not fill it. */
-export function voiceSpecSourcePhrase(row: Pick<DeskSheetRow, "sourceUrl">): string {
-  const url = row.sourceUrl || "";
-  if (!url) return "from the catalog";
-  if (/brochure|\.pdf(?:\?|$)/i.test(url)) return "from the OEM brochure";
-  if (/rvusa\.com/i.test(url)) return "from RVUSA";
-  if (/rvguide\.com/i.test(url)) return "from RV Guide";
-  return "from dealer inventory";
+/**
+ * Spoken source tag for a painted row.
+ * Always empty: the desk pin holds provenance. Bubbles must not say
+ * "from the catalog" / "per the catalog" / brochure / dealer on each field.
+ */
+export function voiceSpecSourcePhrase(_row: Pick<DeskSheetRow, "sourceUrl">): string {
+  return "";
 }
 
 function speakValue(value: string): string {
@@ -79,13 +83,35 @@ function askedLabels(query: string): string[] {
   return labels;
 }
 
-function rowSpeech(row: DeskSheetRow, query: string): string {
+/** Full-report feature→benefit. Numbers stay the painted value; no invented specs. */
+function featureBenefit(label: string): string {
+  if (label === "Torque") return " That's hill power and pull off the line.";
+  if (label === "Horsepower") return " That's passing power.";
+  if (/tow/i.test(label)) return " That's what they can pull.";
+  if (label === "Fuel capacity" || label === "Fresh" || label === "Gray" || label === "Black") {
+    return " That means fewer stops.";
+  }
+  return "";
+}
+
+function rowSpeech(row: DeskSheetRow, query: string, withBenefit: boolean): string {
   const dry =
     row.label === "UVW" &&
     (row.asterisk || /\bdry\s+weight\b/i.test(query))
       ? " dry weight"
       : "";
-  return `${row.label}${dry} is ${speakValue(row.value)}, ${voiceSpecSourcePhrase(row)}.`;
+  const benefit = withBenefit ? featureBenefit(row.label) : "";
+  return stripSpokenSourceTags(
+    `${row.label}${dry} is ${speakValue(row.value)}.${benefit}`,
+  );
+}
+
+function missingOnce(labels: string[]): string | null {
+  const unique = [...new Set(labels.map((l) => l.trim()).filter(Boolean))];
+  if (!unique.length) return null;
+  if (unique.length === 1) return `${unique[0]} is still missing. I won't guess.`;
+  const last = unique[unique.length - 1];
+  return `Still missing: ${unique.slice(0, -1).join(", ")} and ${last}. I won't guess.`;
 }
 
 const CHOICE_FILLER =
@@ -99,18 +125,49 @@ export function classifyVoiceCoachDepth(text: string): VoiceCoachDepth | null {
   const t = normalizeAskText(text).trim();
   if (!t || t.length > 120) return null;
   const wantsFull =
-    /\bfull(?:\s+desk)?\s+report\b/i.test(t) || /^\s*full\s*[.!?]*$/i.test(t);
+    /\bfull(?:\s+desk)?\s+report\b/i.test(t) ||
+    /\breport\b/i.test(t) ||
+    /^\s*full\s*[.!?]*$/i.test(t);
   const wantsQuick =
-    /\bquick(?:\s+overview)?\b/i.test(t) || /^\s*overview\s*[.!?]*$/i.test(t);
+    /\b(short|quick)(?:\s+overview)?\b/i.test(t) ||
+    /\boverview\b/i.test(t);
   if (wantsFull === wantsQuick) return null;
   const rest = t
     .replace(/\bfull(?:\s+desk)?\s+report\b/gi, " ")
-    .replace(/\bquick(?:\s+overview)?\b/gi, " ")
-    .replace(/\b(overview|full|desk|report)\b/gi, " ")
+    .replace(/\b(short|quick)(?:\s+overview)?\b/gi, " ")
+    .replace(/\b(overview|full|desk|report|short|quick)\b/gi, " ")
     .replace(CHOICE_FILLER, " ")
     .replace(/[^a-z0-9]+/gi, "");
   if (rest.length > 0) return null;
   return wantsFull ? "full" : "quick";
+}
+
+/**
+ * Depth already named in this utterance, even with a coach in the same line.
+ * Both lengths at once is ambiguous — ask. Otherwise skip the choice line.
+ */
+export function voiceDepthAlreadyChosen(text: string): VoiceCoachDepth | null {
+  const t = normalizeAskText(text).trim();
+  if (!t) return null;
+  const wantsQuick = /\b(short|quick|overview)\b/i.test(t);
+  const wantsFull = /\b(full|report)\b/i.test(t);
+  if (wantsQuick === wantsFull) return null;
+  return wantsQuick ? "quick" : "full";
+}
+
+/** One of the five extras, and not a new coach ask. */
+export function classifyVoiceExtraPick(text: string): GrokExtraKind | null {
+  const t = normalizeAskText(text).trim();
+  if (!t || t.length > 80) return null;
+  if (looksLikeVoiceCoachOrSpecAsk(t)) return null;
+  const hits: GrokExtraKind[] = [];
+  if (/\bratings?\b|\btorque[-\s]?to[-\s]?weight\b/i.test(t)) hits.push("ratings");
+  if (/\bmarket(?:\s+value)?\b|\bworth\b/i.test(t)) hits.push("market");
+  if (/\bvideos?\b|\byoutube\b|\bwalkthrough\b/i.test(t)) hits.push("video");
+  if (/\bnhtsa\b|\brecalls?\b|\bsafety\b/i.test(t)) hits.push("nhtsa");
+  if (/\bmaintenance\b|\bservice\b/i.test(t)) hits.push("maintenance");
+  if (hits.length !== 1) return null;
+  return hits[0]!;
 }
 
 /** Coach or spec ask — the choice line comes before any report. */
@@ -179,44 +236,47 @@ function voiceSpecEngineSpeechBody(
     const painted = sheet.rows.filter(
       (r) => !r.gap && !isEmptyValue(r.value) && r.value !== "N/A",
     );
+    const missed = sheet.rows
+      .filter((r) => r.gap || isEmptyValue(r.value))
+      .map((r) => r.label);
     if (!painted.length) {
-      lines.push(
-        "Catalog and the fallback chain both missed the spec fields. I won't guess.",
-      );
+      lines.push("The spec fields are still missing. I won't guess.");
     } else {
-      for (const row of painted) lines.push(rowSpeech(row, query));
+      for (const row of painted) lines.push(rowSpeech(row, query, true));
+      const once = missingOnce(missed);
+      if (once) lines.push(once);
     }
-    return lines.join(" ");
+    lines.push(EXTRAS_OFFER);
+    return stripSpokenSourceTags(lines.join(" "));
   }
   const asked = askedLabels(query);
   if (asked.length) {
+    const missed: string[] = [];
     for (const label of asked) {
       const row = sheet.rows.find((r) => r.label === label);
       if (!row || row.gap || isEmptyValue(row.value)) {
-        lines.push(
-          `${label} is still missing after the catalog and the fallback chain. I won't guess.`,
-        );
+        missed.push(label);
         continue;
       }
-      lines.push(rowSpeech(row, query));
+      lines.push(rowSpeech(row, query, false));
     }
+    const once = missingOnce(missed);
+    if (once) lines.push(once);
   } else {
     const painted = sheet.rows.filter(
       (r) => !r.gap && !isEmptyValue(r.value) && r.value !== "N/A",
     );
     if (!painted.length) {
-      lines.push(
-        "Catalog and the fallback chain both missed the spec fields. I won't guess.",
-      );
+      lines.push("The spec fields are still missing. I won't guess.");
     } else {
-      for (const row of painted.slice(0, 8)) lines.push(rowSpeech(row, query));
+      for (const row of painted.slice(0, 8)) lines.push(rowSpeech(row, query, false));
       if (painted.length > 8) {
         lines.push("The rest of the spec sheet is on the desk.");
       }
     }
   }
   lines.push(EXTRAS_OFFER);
-  return lines.join(" ");
+  return stripSpokenSourceTags(lines.join(" "));
 }
 
 /** Quick overview — the catalog coach line only. No spec dump, no extras. */
@@ -227,20 +287,21 @@ export function formatVoiceQuickOverview(
     return "Catalog and the fallback chain both missed this coach. I won't guess a number.";
   }
   const coach = coachLine(sheet);
-  return coach
+  const line = coach
     ? `${coach}.`
     : "Catalog and the fallback chain both missed this coach. I won't guess a number.";
+  return `${line} ${EXTRAS_OFFER}`;
 }
 
 /** Live Voice spec cards offer extras. Chat sheets stay keyword-gated. */
 export function withVoiceSpecExtras<T extends DeskSheetPayload>(
   sheet: T | null,
   query: string,
-  opts?: { force?: boolean; step?: number },
+  opts?: { force?: boolean; step?: number; pick?: GrokExtraKind },
 ): T | null {
   if (!sheet) return sheet;
   if (!opts?.force && !looksLikeDeskSheetAsk(query)) return sheet;
   const next: T = { ...sheet, offerVoiceExtras: true };
-  if (typeof opts?.step === "number") next.voiceExtraStep = opts.step;
+  if (opts?.pick) next.voiceExtraPick = opts.pick;
   return next;
 }

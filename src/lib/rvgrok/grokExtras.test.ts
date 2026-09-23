@@ -64,18 +64,16 @@ test("voice spec card offers extras as prompts without a keyword", () => {
   const q = "2026 Grand Design Lineage Series F 31ZW UVW dry weight";
   assert.deepEqual(grokExtrasForPrompt(q, LINEAGE), []);
   assert.deepEqual(voiceSpecExtraPrompts(LINEAGE), [
-    "nhtsa",
+    "ratings",
     "market",
     "video",
-    "reviews",
+    "nhtsa",
     "maintenance",
-    "vin",
-    "share",
   ]);
   assert.deepEqual(extrasToOffer({ query: q, coach: LINEAGE }), []);
   assert.deepEqual(
     extrasToOffer({ query: q, coach: LINEAGE, offerVoiceExtras: true }),
-    ["nhtsa", "market", "video", "reviews", "maintenance", "vin", "share"],
+    ["ratings", "market", "video", "nhtsa", "maintenance"],
   );
   assert.deepEqual(
     extrasToOffer({
@@ -83,6 +81,15 @@ test("voice spec card offers extras as prompts without a keyword", () => {
       coach: LINEAGE,
       offerVoiceExtras: true,
       voiceExtraStep: 0,
+    }),
+    ["ratings", "market", "video", "nhtsa", "maintenance"],
+  );
+  assert.deepEqual(
+    extrasToOffer({
+      query: q,
+      coach: LINEAGE,
+      offerVoiceExtras: true,
+      voiceExtraPick: "nhtsa",
     }),
     ["nhtsa"],
   );

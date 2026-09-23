@@ -125,12 +125,61 @@ export function coachReportResearchLengthRule(
   return "CHAT COACH REPORT: labeled RESEARCH NOTES under Overview · Chassis & powertrain · Weights & capacity · Layout & amenities. Year-matched OEM / factory brochure / dealer facts only. No URLs unless they uniquely identify a bulletin. Never invent a number. Omit a heading when nothing was found.";
 }
 
-export const COACH_REPORT_CHAT_RULE = `EXPLICIT COACH REPORT / SPECS / CARFAX-STYLE / YEAR-MAKE-MODEL ASK: the written reply in the chat bubble is a structured four-section report — Overview · Chassis & powertrain · Weights & capacity · Layout & amenities. Salesman-readable. No markdown citation soup. Only facts from live WEB RESEARCH notes and catalog pins — never invent OEM numbers. Omit a heading when search+catalog did not name it. The desk card paints from this same chat block. Do not emit a second markdown Spec Sheet that re-GAPs a VERIFIED field.
+export const COACH_REPORT_CHAT_RULE = `EXPLICIT COACH REPORT / SPECS / CARFAX-STYLE / YEAR-MAKE-MODEL ASK: the written reply in the chat bubble is a structured four-section report — Overview · Chassis & powertrain · Weights & capacity · Layout & amenities. Salesman-readable. No markdown citation soup. Only facts from live WEB RESEARCH notes and catalog pins — never invent OEM numbers. Omit a heading when search+catalog did not name it. The desk card paints from this same chat block. Do not emit a second markdown Spec Sheet that re-GAPs a VERIFIED field. Never append "from the catalog," "per the catalog," or a source tag on each line — the desk and pins carry provenance. Name what is known. Mark missing once. Do not narrate GAP or Confirm brochure as filler when the desk already shows that state. On the full report, connect feature to benefit (torque is hill power, horsepower is passing power, tanks mean fewer stops).
 
 LIVE VOICE: speak a short ear-friendly summary (class, power, one weight). The structured report lives in the transcript and on the desk.`;
 
 export const COACH_REPORT_DRAFT_PREAMBLE =
   "COACH REPORT DRAFT (write this structure in chat; only these grounded facts — never invent; omit empty headings). The written chat reply IS this four-section report. The desk card paints from the same block. Live Voice: speak a short ear-friendly summary only.";
+
+/** Drop spoken/written source tags. Provenance stays on the desk pin, not the bubble. */
+const SPOKEN_SOURCE_TAG =
+  /(?:^|\s)(?:from|per|via|according to)\s+(?:the\s+|our\s+)?(?:verified\s+)?(?:catalog|oem brochure|rvusa|rv guide|dealer inventory)\b/gi;
+
+export function stripSpokenSourceTags(text: string): string {
+  if (!text) return text;
+  let out = text.replace(SPOKEN_SOURCE_TAG, " ");
+  out = out.replace(/[ \t]{2,}/g, " ");
+  out = out.replace(/\s+([,.;:!?])/g, "$1");
+  out = out.replace(/([,;:])\s*([,.;])/g, "$2");
+  out = out.replace(/^\s*[,;:]+\s*/g, "");
+  out = out.replace(/[ \t]+\n/g, "\n");
+  return out.trim();
+}
+
+function isGapFillerSentence(sentence: string): boolean {
+  const t = sentence.trim().replace(/^[-•*]\s*/, "");
+  if (!t || t.length > 140) return false;
+  if (
+    /^(?:[A-Za-z0-9][A-Za-z0-9 /&+.'()-]{0,48}?\s*[:—–-]\s*)?(?:GAP|Confirm brochure)\b/i.test(
+      t,
+    )
+  ) {
+    return true;
+  }
+  return /\b(?:is|shows?|reads?|says?)\s+(?:GAP|Confirm brochure)\b/i.test(t);
+}
+
+/** Desk already shows GAP / Confirm brochure. Bubble names that once, not per field. */
+export function stripDeskGapFiller(text: string): string {
+  if (!text) return text;
+  let dropped = 0;
+  const lines = text.split("\n").map((line) => {
+    const parts = line.split(/(?<=[.!?])\s+/);
+    const kept = parts.filter((part) => {
+      if (!isGapFillerSentence(part)) return true;
+      dropped += 1;
+      return false;
+    });
+    return kept.join(" ").replace(/\s{2,}/g, " ").trim();
+  });
+  let out = lines.filter((line, i, all) => line || (all[i - 1] && all[i + 1])).join("\n");
+  out = out.replace(/\n{3,}/g, "\n\n").trim();
+  if (dropped > 0 && !/still missing/i.test(out)) {
+    out = `${out}\n\nStill missing fields are on the desk.`.trim();
+  }
+  return out;
+}
 
 function cleanLine(raw: string): string {
   return String(raw || "")
@@ -351,7 +400,9 @@ export function formatCoachReportChat(report: CoachReport): string {
   for (const section of report.sections) {
     parts.push(section.heading);
     for (const line of section.lines) {
-      parts.push(`• ${line}`);
+      const spoken = stripSpokenSourceTags(line);
+      if (!spoken) continue;
+      parts.push(`• ${spoken}`);
     }
     parts.push("");
   }
@@ -376,7 +427,7 @@ export function formatCoachReportVoiceCue(report: CoachReport): string {
   const amenity = report.sections.find((s) => s.heading === "Layout & amenities")
     ?.lines[0];
   if (amenity) bits.push(`${amenity}.`);
-  return bits.join(" ").replace(/\s+/g, " ").trim();
+  return stripSpokenSourceTags(bits.join(" ").replace(/\s+/g, " "));
 }
 
 export function coachReportHasPaintedFigures(report: CoachReport): boolean {

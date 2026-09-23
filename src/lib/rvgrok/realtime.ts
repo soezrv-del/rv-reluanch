@@ -38,16 +38,16 @@ import {
 } from "./voiceWeb";
 import {
   classifyVoiceCoachDepth,
+  classifyVoiceExtraPick,
   formatVoiceQuickOverview,
   formatVoiceSpecEngineSpeech,
-  isVoiceExtraDecline,
-  isVoiceExtraNudge,
   looksLikeVoiceCoachOrSpecAsk,
   VOICE_COACH_CHOICE_INSTRUCTIONS,
   VOICE_SPEC_ENGINE_INSTRUCTIONS,
-  voiceExtraPromptLine,
+  voiceDepthAlreadyChosen,
   withVoiceSpecExtras,
 } from "./voiceSpecTurn";
+import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
 import {
   advanceLiveVoiceAck,
   createLiveVoiceAckState,
@@ -150,8 +150,8 @@ export class GrokRealtimeSession {
   private voiceChoiceTranscript: string | null = null;
   /** Set while replaying the stashed ask as full or quick. */
   private voiceDeliver: "full" | "quick" | null = null;
-  /** Index of the extra prompt just spoken. Null when not offering. */
-  private voiceExtraAt: number | null = null;
+  /** Extras were offered for the current coach. A named pick opens one card. */
+  private voiceExtrasOffered = false;
   private voiceExtraSheet: DeskSheetPayload | null = null;
   private voiceExtraQuery = "";
   private accessPhone: string;
@@ -1218,7 +1218,7 @@ export class GrokRealtimeSession {
     this.pendingResearchInjection = null;
     this.voiceChoiceTranscript = null;
     this.voiceDeliver = null;
-    this.voiceExtraAt = null;
+    this.voiceExtrasOffered = false;
     this.voiceExtraSheet = null;
     this.voiceExtraQuery = "";
   }
@@ -1269,26 +1269,14 @@ export class GrokRealtimeSession {
       }
     }
     if (
-      this.voiceExtraAt != null &&
-      isVoiceExtraNudge(transcript) &&
+      this.voiceExtrasOffered &&
       !looksLikeVoiceCoachOrSpecAsk(transcript)
     ) {
-      this.cancelAutoResponseForResearch();
-      if (isVoiceExtraDecline(transcript)) {
-        this.researchPhase = "answering";
-        const next = this.voiceExtraAt + 1;
-        if (voiceExtraPromptLine(this.voiceExtraSheet, next)) {
-          this.speakVoiceExtraStep(next);
-        } else {
-          this.voiceExtraAt = null;
-          this.researchPhase = "idle";
-          this.scheduleRearm();
-        }
-      } else {
-        this.researchPhase = "idle";
-        this.scheduleRearm();
+      const pick = classifyVoiceExtraPick(transcript);
+      if (pick) {
+        this.openPickedExtra(pick);
+        return true;
       }
-      return true;
     }
     if (this.voiceCachedSheet?.query && !this.voiceChoiceTranscript) {
       const depth = classifyVoiceCoachDepth(transcript);
@@ -1302,11 +1290,20 @@ export class GrokRealtimeSession {
       }
     }
     if (looksLikeVoiceCoachOrSpecAsk(transcript)) {
-      this.specTurnSeq += 1;
-      this.voiceChoiceTranscript = transcript;
-      this.voiceExtraAt = null;
+      const chosen = voiceDepthAlreadyChosen(transcript);
+      this.voiceExtrasOffered = false;
       this.voiceExtraSheet = null;
       this.voiceExtraQuery = "";
+      if (chosen) {
+        this.voiceChoiceTranscript = null;
+        this.voiceDeliver = chosen;
+        void this.maybeEnrichWithWebResearch(transcript).finally(() => {
+          this.voiceDeliver = null;
+        });
+        return true;
+      }
+      this.specTurnSeq += 1;
+      this.voiceChoiceTranscript = transcript;
       this.cancelAutoResponseForResearch();
       this.researchPhase = "answering";
       // The choice line already opens with "Of course, right away."
@@ -1348,24 +1345,41 @@ export class GrokRealtimeSession {
       this.handlers.onDeskSheet?.(withVoiceSpecExtras(sheet, transcript));
     }
     this.researchPhase = "answering";
+    this.offerVoiceExtras(sheet, transcript);
     this.flushSpecEngineAnswer(formatVoiceQuickOverview(sheet));
   }
 
-  private speakVoiceExtraStep(index: number) {
-    const sheet = this.voiceExtraSheet;
-    const line = voiceExtraPromptLine(sheet, index);
-    if (!sheet || !line) {
-      this.voiceExtraAt = null;
+  /** All five prompt cards. Nothing loads until they name one. */
+  private offerVoiceExtras(sheet: DeskSheetPayload | null, query: string) {
+    if (!sheet) {
+      this.voiceExtrasOffered = false;
+      this.voiceExtraSheet = null;
       return;
     }
-    this.voiceExtraAt = index;
+    this.voiceExtraSheet = sheet;
+    this.voiceExtraQuery = query;
+    this.voiceExtrasOffered = true;
+    this.handlers.onDeskSheet?.(
+      withVoiceSpecExtras(sheet, query, { force: true }),
+    );
+  }
+
+  /** Open the named card only. The other four stay closed. */
+  private openPickedExtra(kind: GrokExtraKind) {
+    const sheet = this.voiceExtraSheet;
+    if (!sheet) return;
+    this.cancelAutoResponseForResearch();
+    this.researchPhase = "answering";
     this.handlers.onDeskSheet?.(
       withVoiceSpecExtras(sheet, this.voiceExtraQuery, {
         force: true,
-        step: index,
+        pick: kind,
       }),
     );
-    this.flushExactSpeech(`Say exactly this, then stop: ${line}`);
+    const title = GROK_EXTRA_PROMPTS[kind].title.replace(/\?$/, "");
+    this.flushExactSpeech(
+      `Say exactly this, then stop: ${title}. Opening only that card.`,
+    );
   }
 
   private flushExactSpeech(instructions: string) {
@@ -1443,28 +1457,18 @@ export class GrokRealtimeSession {
     }
     this.deskFallbackSeq += 1;
     const full = this.voiceDeliver === "full";
-    let tagged = withVoiceSpecExtras(
-      sheet,
-      pending.transcript,
-      full ? { force: true, step: 0 } : undefined,
-    );
-    let script = formatVoiceSpecEngineSpeech(
+    const tagged = withVoiceSpecExtras(sheet, pending.transcript, {
+      force: true,
+    });
+    const script = formatVoiceSpecEngineSpeech(
       tagged,
       pending.transcript,
       full ? "all" : "asked",
     );
-    if (full && tagged) {
-      const line = voiceExtraPromptLine(tagged, 0);
-      if (line) {
-        script = `${script} ${line}`;
-        this.voiceExtraSheet = tagged;
-        this.voiceExtraQuery = pending.transcript;
-        this.voiceExtraAt = 0;
-      } else {
-        tagged = withVoiceSpecExtras(sheet, pending.transcript, { force: true });
-        this.voiceExtraAt = null;
-        this.voiceExtraSheet = null;
-      }
+    if (tagged) {
+      this.voiceExtraSheet = tagged;
+      this.voiceExtraQuery = pending.transcript;
+      this.voiceExtrasOffered = true;
     }
     this.handlers.onDeskSheet?.(tagged);
     if (tagged) {

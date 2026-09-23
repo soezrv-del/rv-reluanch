@@ -277,8 +277,8 @@ test("http gate short-circuits hard admin and stays on rvgrok", () => {
   const speech = read("src/lib/rvgrok/speechPolicy.ts");
   assert.match(speech, /visitorPersonalizationBlock/);
   assert.match(speech, /normalizeFirstName/);
-  assert.match(speech, /not every turn/);
-  assert.match(speech, /never as a mechanical prefix/);
+  assert.match(speech, /address them by/);
+  assert.match(speech, /Welcome them back by that first name once/);
   const realtime = read("src/lib/rvgrok/realtime.ts");
   assert.match(realtime, /setAccessPhone/);
 });

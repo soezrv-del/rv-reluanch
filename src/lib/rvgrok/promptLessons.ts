@@ -33,39 +33,23 @@ export type PromptLessonsStatus = {
   cap: number;
 };
 
-/** David's standing product lessons — code defaults; DB may override/disable. */
-export const DEFAULT_PROMPT_LESSONS: readonly PromptLesson[] = [
-  {
-    id: "greeting",
-    text: "After name+phone: cold-open exactly Hello, {first name}. I'm RvGrok only on first-ever / unnamed. Sparse name use after — never every turn.",
-    updatedAt: "2026-09-23T00:00:00.000Z",
-  },
-  {
-    id: "oem-pins",
-    text: "Never invent OEM numbers. Brochure/catalog pins beat guesses.",
-    updatedAt: "2026-09-23T00:00:00.000Z",
-  },
-  {
-    id: "no-lot-pitch",
-    text: "No lot-first or inventory sales pitch. Own-lot data is silent read-only when relevant.",
-    updatedAt: "2026-09-23T00:00:00.000Z",
-  },
-  {
-    id: "desk-on-ask",
-    text: "Spec report / desk cards only on real specs or CARFAX-style asks — not every coach mention.",
-    updatedAt: "2026-09-23T00:00:00.000Z",
-  },
-  {
-    id: "chips-not-spoken",
-    text: "Follow-up chips are fine. Do not speak post-intro nudges.",
-    updatedAt: "2026-09-23T00:00:00.000Z",
-  },
-  {
-    id: "honest-gaps",
-    text: "Prefer an honest gap over copying a sibling coach.",
-    updatedAt: "2026-09-23T00:00:00.000Z",
-  },
-];
+/**
+ * Standing prompt is RV_GROK_LEAN_CORE (David's verbatim).
+ * These defaults stay empty so the retired role / coach / extras bullets
+ * are not injected on top. Admin lessons can still be added.
+ * A saved overlay of the old ids is dropped in merge.
+ */
+export const DEFAULT_PROMPT_LESSONS: readonly PromptLesson[] = [];
+
+/** Old desk bullets. Stored copies must not come back on top of the verbatim. */
+export const RETIRED_PROMPT_LESSON_IDS: ReadonlySet<string> = new Set([
+  "greeting",
+  "oem-pins",
+  "no-lot-pitch",
+  "desk-on-ask",
+  "chips-not-spoken",
+  "honest-gaps",
+]);
 
 const DEFAULT_IDS = new Set(DEFAULT_PROMPT_LESSONS.map((l) => l.id));
 
@@ -168,6 +152,7 @@ export function mergePromptLessons(stored: readonly PromptLesson[]): PromptLesso
   for (const row of stored) {
     const parsed = parsePromptLesson(row);
     if (!parsed) continue;
+    if (RETIRED_PROMPT_LESSON_IDS.has(parsed.id)) continue;
     byId.set(parsed.id, { ...byId.get(parsed.id), ...parsed });
   }
   return [...byId.values()].filter((l) => !l.disabled && l.text);

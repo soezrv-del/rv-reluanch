@@ -7,11 +7,13 @@ import { resolveCoachIdentity } from "./coachIdentity.ts";
 import { resolveDeskSheet, type DeskSheetPayload } from "./deskSheet.ts";
 import {
   classifyVoiceCoachDepth,
+  classifyVoiceExtraPick,
   formatVoiceQuickOverview,
   formatVoiceSpecEngineSpeech,
   isVoiceExtraNudge,
   looksLikeVoiceCoachOrSpecAsk,
   VOICE_COACH_CHOICE_LINE,
+  voiceDepthAlreadyChosen,
   voiceExtraPromptLine,
   voiceSpecSourcePhrase,
   withVoiceSpecExtras,
@@ -60,7 +62,7 @@ test("Lineage 31ZW UVW speech uses the painted engine number, not a guess", () =
   assert.match(uvw?.value || "", /18,186/);
   const speech = formatVoiceSpecEngineSpeech(sheet, LINEAGE_Q);
   assert.match(speech, /18,186/);
-  assert.match(speech, /from the catalog/);
+  assert.doesNotMatch(speech, /from the catalog|per the catalog|from RV Guide|from the OEM brochure|from dealer inventory/i);
   assert.match(speech, /dry weight/i);
   assert.doesNotMatch(speech, /I won't guess/);
   const tagged = withVoiceSpecExtras(sheet, LINEAGE_Q);
@@ -68,27 +70,27 @@ test("Lineage 31ZW UVW speech uses the painted engine number, not a guess", () =
   assert.equal(withVoiceSpecExtras(sheet, "hi")?.offerVoiceExtras, undefined);
 });
 
-test("fallback pin names RV Guide and a catalog miss does not invent", () => {
+test("spec speech does not narrate a source tag, and a miss does not invent", () => {
   const speech = formatVoiceSpecEngineSpeech(lineageSheet(), LINEAGE_Q);
   assert.match(speech, /18,186/);
-  assert.match(speech, /from RV Guide/);
+  assert.doesNotMatch(speech, /from the catalog|per the catalog|from RV Guide/i);
   assert.equal(
     voiceSpecSourcePhrase({
       sourceUrl: "https://www.rvusa.com/rv-guide/2026-lineage-31zw",
     }),
-    "from RVUSA",
+    "",
   );
   assert.equal(
     voiceSpecSourcePhrase({
       sourceUrl: "https://dealer.example/inventory/lineage-31zw",
     }),
-    "from dealer inventory",
+    "",
   );
   assert.equal(
     voiceSpecSourcePhrase({
       sourceUrl: "http://library.rvusa.com/brochure/2026-Grand-Design-Lineage-Series-F.pdf",
     }),
-    "from the OEM brochure",
+    "",
   );
 
   const missed = formatVoiceSpecEngineSpeech(
@@ -117,7 +119,7 @@ test("spec speech says the ack first, then the catalog result, then extras", () 
   assert.match(speech, /^On it\. /);
   const ackAt = speech.indexOf("On it.");
   const numAt = speech.indexOf("18,186");
-  const extrasAt = speech.indexOf("Spec sheet is on the desk");
+  const extrasAt = speech.indexOf("ratings, market value");
   assert.ok(ackAt >= 0 && numAt > ackAt && extrasAt > numAt);
   const missed = formatVoiceSpecEngineSpeech(null, LINEAGE_Q, "asked", "Got it.");
   assert.match(missed, /^Got it\. Catalog and the fallback chain both missed/);
@@ -125,6 +127,7 @@ test("spec speech says the ack first, then the catalog result, then extras", () 
   const full = formatVoiceSpecEngineSpeech(lineageSheet(), LINEAGE_Q, "all", "Right away.");
   assert.match(full, /^Right away\. /);
   assert.match(full, /18,186/);
+  assert.match(full, /ratings, market value, a video, NHTSA safety, or maintenance/);
   assert.doesNotMatch(full, /You can pick recalls/);
 });
 
@@ -135,7 +138,25 @@ test("coach or spec ask is a choice, not a synopsis or an auto full report", () 
   );
   assert.equal(classifyVoiceCoachDepth("full report"), "full");
   assert.equal(classifyVoiceCoachDepth("a quick overview please"), "quick");
+  assert.equal(classifyVoiceCoachDepth("short"), "quick");
+  assert.equal(classifyVoiceCoachDepth("report"), "full");
   assert.equal(classifyVoiceCoachDepth("full report on the Lineage 31ZW"), null);
+  assert.equal(
+    voiceDepthAlreadyChosen("full report on the Lineage 31ZW"),
+    "full",
+  );
+  assert.equal(
+    voiceDepthAlreadyChosen("quick overview of the 2026 Lineage"),
+    "quick",
+  );
+  assert.equal(voiceDepthAlreadyChosen("short version of the 31ZW"), "quick");
+  assert.equal(voiceDepthAlreadyChosen("tell me about the 2026 Lineage 31ZW"), null);
+  assert.equal(classifyVoiceExtraPick("ratings"), "ratings");
+  assert.equal(classifyVoiceExtraPick("market value"), "market");
+  assert.equal(classifyVoiceExtraPick("NHTSA"), "nhtsa");
+  assert.equal(classifyVoiceExtraPick("maintenance"), "maintenance");
+  assert.equal(classifyVoiceExtraPick("video"), "video");
+  assert.equal(classifyVoiceExtraPick("ratings and market value"), null);
   assert.equal(looksLikeVoiceCoachOrSpecAsk(LINEAGE_Q), true);
   assert.equal(
     looksLikeVoiceCoachOrSpecAsk("tell me about the 2026 Lineage 31ZW"),
@@ -147,15 +168,38 @@ test("coach or spec ask is a choice, not a synopsis or an auto full report", () 
 
   const full = formatVoiceSpecEngineSpeech(lineageSheet(), LINEAGE_Q, "all");
   assert.match(full, /18,186/);
+  assert.match(full, /Which one do you want/);
+  const benefit = formatVoiceSpecEngineSpeech(
+    lineageSheet({
+      rows: [
+        { label: "Torque", value: "1,850 lb-ft", gap: false },
+        { label: "Horsepower", value: "605 hp", gap: false },
+        { label: "GVWR", value: "Confirm brochure", gap: true },
+        { label: "UVW", value: "GAP", gap: true },
+      ],
+    }),
+    "2026 Entegra Coach Cornerstone 45B",
+    "all",
+  );
+  assert.match(benefit, /hill power/);
+  assert.match(benefit, /passing power/);
+  assert.match(benefit, /Still missing: GVWR and UVW/);
+  assert.equal((benefit.match(/I won't guess/g) || []).length, 1);
+  assert.doesNotMatch(benefit, /from the catalog|per the catalog|Confirm brochure|\bGAP\b/i);
   assert.doesNotMatch(full, /You can pick recalls/);
-  assert.equal(voiceExtraPromptLine(lineageSheet(), 0), "Want NHTSA recalls?");
+  assert.equal(voiceExtraPromptLine(lineageSheet(), 0), "Want ratings?");
   assert.equal(voiceExtraPromptLine(lineageSheet(), 99), null);
 
   const quick = formatVoiceQuickOverview(lineageSheet());
   assert.match(quick, /31ZW/);
   assert.doesNotMatch(quick, /18,186/);
-  assert.doesNotMatch(quick, /Want NHTSA/);
-  assert.equal(withVoiceSpecExtras(lineageSheet(), "tell me about it", { force: true, step: 0 })?.voiceExtraStep, 0);
+  assert.match(quick, /ratings, market value, a video, NHTSA safety, or maintenance/);
+  const picked = withVoiceSpecExtras(lineageSheet(), "tell me about it", {
+    force: true,
+    pick: "market",
+  });
+  assert.equal(picked?.voiceExtraPick, "market");
+  assert.equal(picked?.offerVoiceExtras, true);
 });
 
 test("Live Voice spec turns go through the shared engine and skip the snippet reply", () => {
@@ -178,7 +222,7 @@ test("Live Voice spec turns go through the shared engine and skip the snippet re
   assert.match(realtime, /routeVoiceOpening/);
   assert.match(realtime, /VOICE_COACH_CHOICE_INSTRUCTIONS/);
   assert.match(realtime, /formatVoiceQuickOverview/);
-  assert.match(realtime, /voiceExtraStep|voiceExtraPromptLine/);
+  assert.match(realtime, /voiceExtraPick|classifyVoiceExtraPick|VOICE_EXTRAS_OFFER_LINE|offerVoiceExtras/);
   const choiceAt = realtime.indexOf("routeVoiceOpening");
   const speakAt = realtime.indexOf("speakFromSpecEngine");
   assert.ok(choiceAt > 0 && choiceAt < speakAt);

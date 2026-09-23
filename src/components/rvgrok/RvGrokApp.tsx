@@ -1538,6 +1538,7 @@ export function RvGrokApp({
         query={query}
         offerVoiceExtras={sheet.offerVoiceExtras}
         voiceExtraStep={sheet.voiceExtraStep}
+        voiceExtraPick={sheet.voiceExtraPick}
         coach={{
           year: sheet.year,
           make: sheet.make,
