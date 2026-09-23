@@ -107,6 +107,15 @@ test("bundled own-lot snapshot: empty search is the lot; no catalog bleed", () =
 
   const ghost = searchLotUnits(snap.units, "ZZZNOMATCH-CATALOG-BLEED");
   assert.equal(ghost.length, 0);
+
+  const floorplan = searchLotUnits(snap.units, "27A");
+  assert.ok(floorplan.length >= 1, "27A substring-matches 27ASE on the lot");
+  assert.ok(
+    floorplan.some(
+      (u) => /vision\s*se/i.test(`${u.model} ${u.title}`) && /27ase/i.test(u.trim),
+    ),
+    "27A hits include Vision SE 27ASE",
+  );
 });
 
 test("type chips come from the lot snapshot and filter without catalog bleed", () => {

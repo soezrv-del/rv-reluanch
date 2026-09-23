@@ -3,8 +3,9 @@
  *
  * Brochure catalog (`rvData`) is the default SoT for year/make/model reports.
  * The midnight own-lot scrape (source=own) is SoT only for explicit stock
- * asks ("do we have", on the lot, in stock, inventory, diesel count). Never
- * treat a coach designation as a lot miss.
+ * asks ("do we have", on the lot, in stock, inventory, diesel count) and
+ * lot *search* (look/find/search + floorplan/stock, bare "27A"). Never
+ * treat a coach designation or "tell me about" product report as a lot miss.
  *
  * File has no fuel field. Diesel ≈ body_type "Class A Diesel" + "Class Super C".
  * Listing prices are on the scrape (`price`, then price_current / price_hidden /
@@ -34,8 +35,10 @@ import {
   looksLikeInventoryOrCountQuestion,
   looksLikeMarketValueQuestion,
   looksLikeRepairQuestion,
+  looksLikeSpecQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
+import { searchLotUnits } from "../lot/lotSearch.ts";
 
 export const OWN_LOT_MODEL = "own-lot-inventory";
 
@@ -169,14 +172,141 @@ export function looksLikeOwnLotUnitListQuestion(text: string): boolean {
 const EXPLICIT_WE_HAVE_STOCK_RE =
   /\b(?:do|did|does)\s+we\s+have\b|\bhave\s+we\s+got\b|\bwe\s+have\s+any\b/i;
 
+/** look/find/search/pull/check — salesman lot search, not "look up" catalog. */
+const STRONG_LOT_SEARCH_RE =
+  /\b(?:look(?:ing)?\s+for|find(?:ing)?|search(?:ing)?(?:\s+for)?|pull(?:ing)?|check(?:ing)?)\b/i;
+
+/** Weaker "got/any" — only with a floorplan or stock token, not a bare brand. */
+const WEAK_LOT_SEARCH_RE = /\b(?:got|any)\b/i;
+
+const LOT_PLACE_CUE_RE =
+  /\b(?:on (?:the |our )?lot|inventor(?:y|ies)|in stock)\b/i;
+
+const PRODUCT_ABOUT_OR_REPORT_RE =
+  /\b((?:tell me |know |learn |hear )about|what about|how about|info(?:rmation)? (?:on|about|for)|details (?:on|about|for)|overview of|walk me through|break down|brief me on|give me a report|report on|looking (?:at|into|up))\b/i;
+
+const WEB_SEARCH_CUE_RE =
+  /\b(?:search(?:ing)?|look(?:ing)?)\s+(?:the\s+)?(?:web|online|forums?|internet)\b/i;
+
+const LOOK_UP_CATALOG_RE = /\blook(?:ing)?\s+up\b/i;
+
+/** 27A / 27ASE / 25FW — not a 4–7 digit stock #. */
+const BARE_FLOORPLAN_RE = /^\d{2,3}[A-Za-z]{1,4}$/;
+
+/** Lot-search stopwords stripped before sharing Lot's token AND-match. */
+const LOT_ASK_STOP = new Set([
+  "look",
+  "looking",
+  "looks",
+  "find",
+  "finding",
+  "search",
+  "searching",
+  "pull",
+  "pulling",
+  "check",
+  "checking",
+  "got",
+  "any",
+  "a",
+  "an",
+  "the",
+  "for",
+  "me",
+  "please",
+  "can",
+  "you",
+  "on",
+  "in",
+  "at",
+  "our",
+  "my",
+  "lot",
+  "inventory",
+  "do",
+  "we",
+  "have",
+  "has",
+  "is",
+  "are",
+  "there",
+  "to",
+  "know",
+  "if",
+  "i",
+  "need",
+]);
+
+export function isBareFloorplanCode(text: string): boolean {
+  const t = normalizeAskText(text)
+    .trim()
+    .replace(/[?!.,;:'"]+$/g, "");
+  if (!t) return false;
+  if (parseOwnLotStockNumber(t)) return false;
+  return BARE_FLOORPLAN_RE.test(t);
+}
+
+/**
+ * Remaining tokens after stripping search verbs / lot filler.
+ * "look for a 27A" → "27a" so Lot search matches the page box.
+ */
+export function lotSearchQueryFromAsk(text: string): string {
+  const cleaned = normalizeAskText(text).replace(/[?!.,;:]+/g, " ");
+  return cleaned
+    .toLowerCase()
+    .split(/[\s,/|]+/)
+    .map((t) => t.trim())
+    .filter((t) => t && !LOT_ASK_STOP.has(t))
+    .join(" ");
+}
+
+/**
+ * Lot/inventory *search* — look/find/search/pull/check/got/any + floorplan
+ * or coach tokens, "on the lot", or a bare floorplan code. Product / YMM /
+ * spec "tell me about" reports stay catalog-first (#449).
+ */
+export function looksLikeOwnLotSearchAsk(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim()) return false;
+  if (looksLikeSpecQuestion(t) && !LOT_PLACE_CUE_RE.test(t)) return false;
+  if (
+    PRODUCT_ABOUT_OR_REPORT_RE.test(t) &&
+    !LOT_PLACE_CUE_RE.test(t) &&
+    !STRONG_LOT_SEARCH_RE.test(t)
+  ) {
+    return false;
+  }
+  if (WEB_SEARCH_CUE_RE.test(t)) return false;
+  if (LOOK_UP_CATALOG_RE.test(t) && !LOT_PLACE_CUE_RE.test(t)) return false;
+
+  const stripped = t.trim().replace(/[?!.,;:'"]+$/g, "");
+  if (isBareFloorplanCode(stripped)) return true;
+
+  const hasFloorplanOrStock =
+    Boolean(extractFloorplanToken(t)) || Boolean(parseOwnLotStockNumber(t));
+  const parsed = parseCoachFromText(t);
+  const hasCoach = Boolean(parsed.make || parsed.model);
+
+  if (LOT_PLACE_CUE_RE.test(t) && (hasFloorplanOrStock || hasCoach)) {
+    return true;
+  }
+  if (STRONG_LOT_SEARCH_RE.test(t) && (hasFloorplanOrStock || hasCoach)) {
+    return true;
+  }
+  if (WEAK_LOT_SEARCH_RE.test(t) && hasFloorplanOrStock) return true;
+  return false;
+}
+
 export function looksLikeOwnLotStockQuestion(text: string): boolean {
   // Explicit stock only — "do we have" / on the lot / in stock / inventory /
-  // diesel count / stock # / lot listing prices. A year+make+model+floorplan
-  // designation is a CATALOG report, not an own-lot probe.
+  // diesel count / stock # / lot listing prices / lot search (look for 27A).
+  // A year+make+model+floorplan designation is a CATALOG report, not an
+  // own-lot probe.
   if (
     looksLikeInventoryOrCountQuestion(text) ||
     looksLikeOwnLotListingPriceQuestion(text) ||
-    Boolean(parseOwnLotStockNumber(text))
+    Boolean(parseOwnLotStockNumber(text)) ||
+    looksLikeOwnLotSearchAsk(text)
   ) {
     return true;
   }
@@ -1188,6 +1318,51 @@ export function formatOwnLotUnavailable(snapshot: OwnLotSnapshot): string {
     .join("\n");
 }
 
+function withLotSearchTitle(unit: OwnLotUnit): OwnLotUnit & { title: string } {
+  return {
+    ...unit,
+    title: [unit.year, unit.make, unit.model, unit.trim]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
+
+/**
+ * Use Lot's token AND-search when the ask is a search (look/find/27A)
+ * and parseCoach does not already have a make/model/class filter that
+ * needs Integra→Entegra aliases. Brand/class/budget stays on unitMatchesFilter.
+ */
+export function shouldUseLotPageSearch(
+  query: string,
+  filter: OwnLotFilter,
+  lotQuery: string,
+): boolean {
+  if (!lotQuery.trim()) return false;
+  if (
+    filter.make ||
+    filter.model ||
+    filter.bodyType ||
+    filter.dieselOnly ||
+    filter.gasOnly ||
+    filter.toyHauler ||
+    filter.stockNumber ||
+    filter.minPrice != null ||
+    filter.maxPrice != null ||
+    filter.aroundPrice != null
+  ) {
+    return false;
+  }
+  return looksLikeOwnLotSearchAsk(query) || Boolean(filter.trim);
+}
+
+function countsForMatchedUnits(
+  allUnits: OwnLotUnit[],
+  matched: OwnLotUnit[],
+): OwnLotCounts {
+  const inner = aggregateOwnLot(matched, {});
+  return { ...inner, total: allUnits.length, matched: matched.length };
+}
+
 export function formatOwnLotBlock(
   snapshot: OwnLotSnapshot,
   query: string,
@@ -1200,7 +1375,14 @@ export function formatOwnLotBlock(
     ...new Set(snapshot.units.map((u) => u.location).filter(Boolean)),
   ];
   const filter = parseOwnLotAsk(query, locations, snapshot.units);
-  const counts = aggregateOwnLot(snapshot.units, filter);
+  const lotQuery = lotSearchQueryFromAsk(query);
+  const useLotSearch = shouldUseLotPageSearch(query, filter, lotQuery);
+  const lotHits = useLotSearch
+    ? searchLotUnits(snapshot.units.map(withLotSearchTitle), lotQuery)
+    : [];
+  const counts = useLotSearch
+    ? countsForMatchedUnits(snapshot.units, lotHits)
+    : aggregateOwnLot(snapshot.units, filter);
   const asOf = snapshot.asOf || "unknown (no timestamp on file)";
   const dieselNote = snapshot.fuelFieldPresent
     ? "Fuel field is present on some rows — still prefer body_type Class A Diesel + Class Super C for diesel counts unless the ask names fuel."
@@ -1209,7 +1391,9 @@ export function formatOwnLotBlock(
   const lines = [
     `RV Country own-lot snapshot (source=${snapshot.source || "own"}, dealer=${snapshot.dealer || "RV Country"}). As of: ${asOf}.`,
     dieselNote,
-    `Lot total: ${counts.total} units. Filter: ${filterLabel(filter)}. Matched: ${counts.matched}.`,
+    `Lot total: ${counts.total} units. Filter: ${
+      useLotSearch ? `lot search "${lotQuery}"` : filterLabel(filter)
+    }. Matched: ${counts.matched}.`,
     `Diesel (Class A Diesel + Class Super C): ${counts.diesel}${
       Object.keys(counts.dieselByBodyType).length
         ? ` [${formatCountMap(counts.dieselByBodyType)}]`
@@ -1265,12 +1449,15 @@ export function formatOwnLotBlock(
     counts.matched > 0 &&
     (stockAsk ||
       listAsk ||
+      useLotSearch ||
       ((listingAsk || budgetFilter) &&
         (narrowIdentity || classFilter || budgetFilter)) ||
       (narrowIdentity && counts.matched <= MATCH_LIST_MAX));
 
   if (wantListings) {
-    const rows = queryOwnLotUnits(snapshot.units, filter, MATCH_LIST_MAX);
+    const rows = useLotSearch
+      ? lotHits.slice(0, MATCH_LIST_MAX)
+      : queryOwnLotUnits(snapshot.units, filter, MATCH_LIST_MAX);
     if (rows.length) {
       lines.push(
         `Matching units (from file only, ${rows.length} of ${counts.matched}; year/make/model/trim/stock/location/price):`,
