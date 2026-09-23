@@ -239,8 +239,8 @@ test("Live Voice instructions aim for accuracy but not gospel; gesture order unt
   assert.doesNotMatch(voice, /ACCURACY FIRST/);
   assert.match(voice, /CAMERA:/);
   assert.match(src(root, "speechPolicy.ts"), /Get as accurate as possible, but not gospel\./);
-  assert.match(src(root, "speechPolicy.ts"), /VISION \/ PHOTOS/);
-  assert.match(src(root, "speechPolicy.ts"), /Never invent OEM numbers/);
+  assert.match(src(root, "speechPolicy.ts"), /Empty beats invented/);
+  assert.match(src(root, "speechPolicy.ts"), /Never guess a number/);
   assert.doesNotMatch(voice, /You do not have a separate research step/);
   assert.match(live, /liveVoiceStartOrder/);
   assert.match(live, /gesture-capture/);
@@ -508,7 +508,7 @@ test("repair-mode playbook is wired through chat, voice, and browse", () => {
   assert.match(src(root, "grounding.ts"), /formatRepairGroundingBlock/);
   assert.match(src(root, "webIntent.ts"), /looksLikeRepairQuestion/);
   assert.match(src(root, "prompts.ts"), /RV_GROK_LEAN_CORE/);
-  assert.match(src(root, "speechPolicy.ts"), /jokes, repairs, payments/);
+  assert.match(src(root, "speechPolicy.ts"), /Answer any of it, anytime/);
   assert.match(src(root, "voice.ts"), /RV_GROK_LEAN_CORE/);
   assert.match(src(root, "webSearch.ts"), /torque spec, part number, wiring color/);
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
@@ -517,10 +517,9 @@ test("repair-mode playbook is wired through chat, voice, and browse", () => {
 
 test("system prompts never deflect to website / OEM / dealer — unconditional", () => {
   const speech = src(root, "speechPolicy.ts");
-  assert.match(speech, /check the website/);
-  assert.match(speech, /look it up yourself/);
-  assert.match(speech, /ask the dealer/);
-  assert.match(speech, /Never invent OEM numbers/);
+  assert.match(speech, /Empty beats invented/);
+  assert.match(speech, /Never guess a number/);
+  assert.match(speech, /do not invent/);
   assert.match(src(root, "prompts.ts"), /RV_GROK_LEAN_CORE/);
   assert.doesNotMatch(
     src(root, "prompts.ts"),

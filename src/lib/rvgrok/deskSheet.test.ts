@@ -853,7 +853,7 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(src(root, "deskSheet.ts"), /brochureRow\("Black"/);
   assert.match(src(root, "deskSheet.ts"), /uvwLbs != null && !brochure\.uvwEstimated/);
   assert.match(src(root, "chatSpecBlock.ts"), /firstTankGallons/);
-  assert.match(src(root, "speechPolicy.ts"), /GVWR\/UVW\/tanks when known/);
+  assert.match(src(root, "speechPolicy.ts"), /fuel, tanks, CCC/);
   assert.match(realtime, /ensureCatalogLoaded/);
   assert.match(app, /await ensureCatalogLoaded\(\)/);
   assert.doesNotMatch(

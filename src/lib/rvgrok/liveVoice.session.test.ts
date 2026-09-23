@@ -52,12 +52,13 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.equal(session.audio.output.format.rate, PCM_SAMPLE_RATE);
   assert.equal(session.audio.output.speed, 1.25);
   assert.match(session.instructions, /native web_search/);
-  assert.match(session.instructions, /sales-floor wingman/);
-  assert.match(session.instructions, /CARFAX-style coach report/);
+  assert.match(session.instructions, /ultimate sales assistant for RV salesmen/);
+  assert.match(session.instructions, /Empty beats invented/);
   assert.match(session.instructions, /give me one second/);
   assert.match(session.instructions, /I'm RvGrok/);
-  assert.match(session.instructions, /STANDING LESSONS \(desk SoT\)/);
-  assert.match(session.instructions, /Never invent OEM numbers/);
+  assert.doesNotMatch(session.instructions, /STANDING LESSONS \(desk SoT\)/);
+  assert.doesNotMatch(session.instructions, /sales-floor wingman/);
+  assert.doesNotMatch(session.instructions, /CARFAX-style coach report/);
   assert.doesNotMatch(session.instructions, /Their first name is/);
 });
 
@@ -65,9 +66,10 @@ test("named visitor cold-open is Hello, first name — not I'm RvGrok", () => {
   const msg = buildRealtimeSessionUpdate("ara", 1, "", "David Hansen");
   const session = msg.session as { instructions: string };
   assert.match(session.instructions, /Their first name is David/);
-  assert.match(session.instructions, /only occasionally/);
-  assert.match(session.instructions, /not every turn/);
-  assert.match(session.instructions, /never as a mechanical prefix/);
+  assert.match(session.instructions, /Welcome them back by that first name once/);
+  assert.match(session.instructions, /address them by David/);
+  assert.doesNotMatch(session.instructions, /only occasionally/);
+  assert.doesNotMatch(session.instructions, /not every turn/);
   assert.match(session.instructions, /Say exactly: Hello, David/);
   assert.doesNotMatch(session.instructions, /Say exactly: I'm RvGrok/);
   assert.doesNotMatch(session.instructions, /I'm RvGrok, David/);
@@ -87,9 +89,10 @@ test("visitor memory is additive and does not change the spoken intro", () => {
   assert.match(session.instructions, /VISITOR MEMORY/);
   assert.match(session.instructions, /Prefers compact answers/);
   assert.ok(
-    session.instructions.indexOf("STANDING LESSONS") <
+    session.instructions.indexOf("You are RV Grok") <
       session.instructions.indexOf("VISITOR MEMORY"),
   );
+  assert.doesNotMatch(session.instructions, /STANDING LESSONS/);
   assert.match(session.instructions, /Say exactly: Hello, David/);
   assert.doesNotMatch(session.instructions, /Say exactly: I'm RvGrok/);
   assert.doesNotMatch(session.instructions, /I'm RvGrok, David/);
@@ -115,17 +118,16 @@ test("catalog lock session.update still ships voice, VAD, audio, and web_search"
   assert.match(session.instructions, /native web_search/);
 });
 
-test("explicit empty standing lessons skip the block; omitted uses defaults", () => {
+test("standing lessons no longer stack the retired desk bullets", () => {
   const skipped = buildRealtimeSessionUpdate("ara", 1, "", "", "", "");
   const skippedSession = skipped.session as { instructions: string };
   assert.doesNotMatch(skippedSession.instructions, /STANDING LESSONS \(desk SoT\)/);
   const defaults = buildRealtimeSessionUpdate("ara");
   const defaultSession = defaults.session as { instructions: string };
-  assert.match(defaultSession.instructions, /STANDING LESSONS \(desk SoT\)/);
-  assert.ok(
-    defaultSession.instructions.indexOf("You are RV Grok") <
-      defaultSession.instructions.indexOf("STANDING LESSONS"),
-  );
+  assert.doesNotMatch(defaultSession.instructions, /STANDING LESSONS \(desk SoT\)/);
+  assert.doesNotMatch(defaultSession.instructions, /Sparse name use/);
+  assert.doesNotMatch(defaultSession.instructions, /CARFAX-style/);
+  assert.match(defaultSession.instructions, /ultimate sales assistant/);
 });
 
 test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => {

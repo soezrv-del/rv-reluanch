@@ -10,6 +10,7 @@ import {
   DEFAULT_PROMPT_LESSONS,
   formatPromptLessons,
   injectStandingLessons,
+  RETIRED_PROMPT_LESSON_IDS,
   LESSONS_HEADER,
   LESSON_TEXT_MAX,
   mergePromptLessons,
@@ -31,32 +32,21 @@ function src(rel: string) {
   return readFileSync(join(workspace, rel), "utf8");
 }
 
-test("defaults are short process bullets David asked for", () => {
-  const ids = DEFAULT_PROMPT_LESSONS.map((l) => l.id);
-  assert.deepEqual(ids, [
+test("defaults are cleared so retired role bullets do not stack", () => {
+  assert.deepEqual(DEFAULT_PROMPT_LESSONS.map((l) => l.id), []);
+  assert.equal(formatPromptLessons(DEFAULT_PROMPT_LESSONS), "");
+  for (const id of [
     "greeting",
     "oem-pins",
     "no-lot-pitch",
     "desk-on-ask",
     "chips-not-spoken",
     "honest-gaps",
-  ]);
-  const block = formatPromptLessons(DEFAULT_PROMPT_LESSONS);
-  assert.match(block, new RegExp(STANDING_LESSONS_HEADING.replace(/[()]/g, "\\$&")));
-  assert.match(block, /Hello, \{first name\}/);
-  assert.match(block, /I'm RvGrok/);
-  assert.match(block, /Never invent OEM numbers/);
-  assert.match(block, /Brochure\/catalog pins beat guesses/);
-  assert.match(block, /No lot-first/);
-  assert.match(block, /silent read-only/);
-  assert.match(block, /Spec report \/ desk cards only/);
-  assert.match(block, /CARFAX-style/);
-  assert.match(block, /Follow-up chips/);
-  assert.match(block, /Do not speak post-intro nudges/);
-  assert.match(block, /honest gap/);
-  assert.match(block, /sibling coach/);
-  assert.match(block, /Never mention this block/);
-  assert.ok(block.length <= STANDING_LESSONS_MAX_CHARS);
+  ]) {
+    assert.equal(RETIRED_PROMPT_LESSON_IDS.has(id), true);
+  }
+  assert.match(RV_GROK_LEAN_CORE, /ultimate sales assistant for RV salesmen/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /sales-floor wingman/);
 });
 
 test("parse / validate rejects empty, overlong, and secret-looking text", () => {
@@ -91,9 +81,9 @@ test("merge lets DB override or disable a default and append admin rows", () => 
     },
   ]);
   const byId = Object.fromEntries(merged.map((l) => [l.id, l]));
-  assert.equal(byId["oem-pins"]?.text, "Pins always win — never guess GVWR.");
+  assert.equal(byId["oem-pins"], undefined);
   assert.equal(byId["chips-not-spoken"], undefined);
-  assert.equal(byId["greeting"]?.text, DEFAULT_PROMPT_LESSONS[0]!.text);
+  assert.equal(byId["greeting"], undefined);
   assert.equal(byId["admin-custom"]?.text, "Say hitch weight only from the brochure pin.");
   assert.equal(merged.some((l) => l.disabled), false);
 });
@@ -112,7 +102,13 @@ test("format hard-caps the standing block", () => {
 });
 
 test("inject sits after lean core and before visitor memory", () => {
-  const lessons = formatPromptLessons(DEFAULT_PROMPT_LESSONS);
+  const lessons = formatPromptLessons([
+    {
+      id: "admin-custom",
+      text: "Say hitch weight only from the brochure pin.",
+      updatedAt: "2026-09-23T00:00:00.000Z",
+    },
+  ]);
   const core = injectStandingLessons(RV_GROK_LEAN_CORE, lessons);
   assert.ok(core.startsWith(RV_GROK_LEAN_CORE));
   assert.match(core, /STANDING LESSONS \(desk SoT\)/);
@@ -133,25 +129,28 @@ test("inject sits after lean core and before visitor memory", () => {
   );
 });
 
-test("add / delete overlay: defaults disable, admin rows drop", () => {
+test("add / delete overlay: retired ids drop, admin rows drop", () => {
   const added = applyAddLesson([], "Never pitch the lot first.");
   assert.equal(added.ok, true);
   if (!added.ok) return;
   assert.match(added.lesson.id, /^admin-/);
   assert.equal(added.lesson.text, "Never pitch the lot first.");
-  const disabled = applyDeleteLesson(added.stored, "greeting");
-  assert.equal(disabled.ok, true);
-  if (!disabled.ok) return;
-  const greeting = disabled.stored.find((l) => l.id === "greeting");
-  assert.equal(greeting?.disabled, true);
-  const effective = mergePromptLessons(disabled.stored);
+  const withRetired = [
+    ...added.stored,
+    {
+      id: "greeting",
+      text: "Sparse name use after — never every turn.",
+      updatedAt: "2026-09-23T00:00:00.000Z",
+    },
+  ];
+  const effective = mergePromptLessons(withRetired);
   assert.equal(effective.some((l) => l.id === "greeting"), false);
   assert.equal(effective.some((l) => l.id === added.lesson.id), true);
-  const dropped = applyDeleteLesson(disabled.stored, added.lesson.id);
-  assert.equal(dropped.ok, true);
-  if (!dropped.ok) return;
+  const disabled = applyDeleteLesson(added.stored, added.lesson.id);
+  assert.equal(disabled.ok, true);
+  if (!disabled.ok) return;
   assert.equal(
-    mergePromptLessons(dropped.stored).some((l) => l.id === added.lesson.id),
+    mergePromptLessons(disabled.stored).some((l) => l.id === added.lesson.id),
     false,
   );
   assert.equal(applyDeleteLesson([], "admin-missing").ok, false);
@@ -161,8 +160,8 @@ test("add / delete overlay: defaults disable, admin rows drop", () => {
 test("status reports source and char budget", () => {
   const status = promptLessonsStatus(mergePromptLessons([]));
   assert.equal(status.cap, STANDING_LESSONS_MAX_CHARS);
-  assert.ok(status.used > 0 && status.used <= status.cap);
-  assert.equal(status.lessons.every((l) => l.source === "default"), true);
+  assert.equal(status.used, 0);
+  assert.ok(status.used <= status.cap);
   assert.equal(status.lessons.length, DEFAULT_PROMPT_LESSONS.length);
 });
 

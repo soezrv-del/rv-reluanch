@@ -338,6 +338,7 @@ export function MessageBubble({
               query={priorQuery || ""}
               offerVoiceExtras={message.deskSheet.offerVoiceExtras}
               voiceExtraStep={message.deskSheet.voiceExtraStep}
+              voiceExtraPick={message.deskSheet.voiceExtraPick}
               coach={{
                 year: message.deskSheet.year,
                 make: message.deskSheet.make,

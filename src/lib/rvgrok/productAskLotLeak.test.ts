@@ -143,13 +143,8 @@ test("standing prompts have no lot coaching; lean core has no lot ban", () => {
     /ACCURACY_AIM_POLICY =\s*\n\s*"Get as accurate as possible, but not gospel\."/,
   );
   assert.match(speechFull, /Get as accurate as possible, but not gospel\./);
-  assert.match(speechFull, /VISION \/ PHOTOS/);
-  assert.match(
-    speechFull,
-    /Describe attached images when asked what's in frame/,
-  );
-  assert.match(speechFull, /IMAGE GENERATION/);
-  assert.match(speechFull, /generate_image/);
+  assert.match(speechFull, /Empty beats invented/);
+  assert.match(speechFull, /ultimate sales assistant for RV salesmen/);
   assert.match(src("voice.ts"), /RV_GROK_LEAN_CORE/);
   assert.match(src("voice.ts"), /CAMERA:/);
   assert.match(src("voice.ts"), /GROK_VOICES/);

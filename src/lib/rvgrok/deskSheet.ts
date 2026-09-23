@@ -14,6 +14,7 @@ import {
   findOemUvwLbs,
 } from "../rv/floorplanSpecs.ts";
 import { isTowableForTorqueRating } from "../rv/torqueToWeight.ts";
+import type { GrokExtraKind } from "./grokExtras.ts";
 import {
   formatCatalogPresenceNote,
   inspectCatalogPresence,
@@ -112,8 +113,10 @@ export type DeskSheetPayload = {
    * until the listener picks one. Chat leaves this unset.
    */
   offerVoiceExtras?: boolean;
-  /** Live Voice full report — rail shows this extras-list index only. */
+  /** Retired drip index. Ignored; the rail offers all five at once. */
   voiceExtraStep?: number;
+  /** Salesman picked one extra. The rail opens only this card. */
+  voiceExtraPick?: GrokExtraKind;
 };
 
 type SheetField = {

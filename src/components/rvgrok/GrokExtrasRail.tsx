@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { RvVideoLibraryCard } from "@/components/rvfax/RvVideoLibraryCard";
 import { fetchRecallsViaApi, type NhtsaRecall } from "@/lib/nhtsa/recalls";
@@ -9,6 +9,8 @@ import {
 } from "@/lib/rv/factsMarketBands";
 import { formatMoney } from "@/lib/rv/catalog";
 import { getMockReviews } from "@/lib/rv/rvReviews";
+import { mapReportRatings } from "@/lib/rv/reportRatings";
+import { fetchJdPowerPublicEstimate } from "@/lib/rv/jdPowerPublic";
 import { getSpec } from "@/lib/rv/catalog";
 import { ensureCatalogLoaded } from "@/lib/rv/catalogLoad";
 import { getMaintenanceSchedule } from "@/lib/rv/rvTypes";
@@ -77,7 +79,28 @@ function ExtraShell({
   );
 }
 
-function VideoExtra({ coach }: { coach: GrokExtraCoach }) {
+function VideoExtra({
+  coach,
+  promptFirst,
+  openNow,
+}: {
+  coach: GrokExtraCoach;
+  promptFirst?: boolean;
+  openNow?: boolean;
+}) {
+  const [phase, setPhase] = useState<Phase>(
+    openNow || !promptFirst ? "ready" : "prompt",
+  );
+  if (phase === "hidden") return null;
+  if (phase === "prompt") {
+    return (
+      <PromptCard
+        kind="video"
+        onYes={() => setPhase("ready")}
+        onNo={() => setPhase("hidden")}
+      />
+    );
+  }
   return (
     <RvVideoLibraryCard
       year={coach.year || ""}
@@ -89,8 +112,14 @@ function VideoExtra({ coach }: { coach: GrokExtraCoach }) {
   );
 }
 
-function NhtsaExtra({ coach }: { coach: GrokExtraCoach }) {
-  const [phase, setPhase] = useState<Phase>("prompt");
+function NhtsaExtra({
+  coach,
+  openNow,
+}: {
+  coach: GrokExtraCoach;
+  openNow?: boolean;
+}) {
+  const [phase, setPhase] = useState<Phase>(openNow ? "loading" : "prompt");
   const [rows, setRows] = useState<NhtsaRecall[]>([]);
   const [note, setNote] = useState("");
 
@@ -114,6 +143,12 @@ function NhtsaExtra({ coach }: { coach: GrokExtraCoach }) {
     );
     setPhase("ready");
   }
+
+  useEffect(() => {
+    if (openNow) void onYes();
+    // Named pick opens this card once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openNow]);
 
   if (phase === "hidden") return null;
   if (phase === "prompt") {
@@ -157,32 +192,58 @@ function NhtsaExtra({ coach }: { coach: GrokExtraCoach }) {
   );
 }
 
-function MarketExtra({ coach }: { coach: GrokExtraCoach }) {
-  const [phase, setPhase] = useState<Phase>("prompt");
+function MarketExtra({
+  coach,
+  openNow,
+}: {
+  coach: GrokExtraCoach;
+  openNow?: boolean;
+}) {
+  const [phase, setPhase] = useState<Phase>(openNow ? "loading" : "prompt");
   const [line, setLine] = useState("");
 
   async function onYes() {
     setPhase("loading");
-    const res = await fetchFactsMarketLive({
-      year: coach.year || "",
-      make: coach.make || "",
-      model: coach.model || "",
-      floorplan: coach.floorplan,
-    });
+    const [res, jd] = await Promise.all([
+      fetchFactsMarketLive({
+        year: coach.year || "",
+        make: coach.make || "",
+        model: coach.model || "",
+        floorplan: coach.floorplan,
+      }),
+      fetchJdPowerPublicEstimate({
+        year: coach.year || "",
+        make: coach.make || "",
+        model: coach.model || "",
+        floorplan: coach.floorplan,
+      }).catch(() => ({
+        ok: false as const,
+        reason: "J.D. Power lookup failed",
+        data: null,
+      })),
+    ]);
+    const jdLine = jd.ok
+      ? `J.D. Power average ${formatMoney(jd.data.averageRetail)}.`
+      : "J.D. Power: unavailable.";
     if (res.status === "ready") {
       const avg = factsMarketAverageUsd(res.comps);
       setLine(
         avg > 0
-          ? `Average ${formatMoney(avg)} from live comps.`
-          : "Live comps came back without an average.",
+          ? `${jdLine} Live listings average ${formatMoney(avg)}.`
+          : `${jdLine} Live listings came back without an average.`,
       );
     } else if (res.status === "error") {
-      setLine(res.error);
+      setLine(`${jdLine} Live listings: ${res.error}`);
     } else {
-      setLine("No live market band for this coach.");
+      setLine(`${jdLine} Live listings: unavailable.`);
     }
     setPhase("ready");
   }
+
+  useEffect(() => {
+    if (openNow) void onYes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openNow]);
 
   if (phase === "hidden") return null;
   if (phase === "prompt") {
@@ -203,6 +264,98 @@ function MarketExtra({ coach }: { coach: GrokExtraCoach }) {
         </p>
       ) : (
         <p className="mt-1 text-[12px] text-fg">{line}</p>
+      )}
+    </ExtraShell>
+  );
+}
+
+function RatingsExtra({
+  coach,
+  openNow,
+}: {
+  coach: GrokExtraCoach;
+  openNow?: boolean;
+}) {
+  const [phase, setPhase] = useState<Phase>(openNow ? "loading" : "prompt");
+  const [lines, setLines] = useState<string[]>([]);
+
+  async function onYes() {
+    setPhase("loading");
+    try {
+      await ensureCatalogLoaded();
+    } catch {
+      /* thin index may still have the spec */
+    }
+    const ratings = mapReportRatings({
+      make: coach.make,
+      model: coach.model,
+      year: coach.year,
+    });
+    const spec = getSpec(coach.make || "", coach.model || "");
+    const next: string[] = [];
+    const slot = (
+      label: string,
+      score: number | null | undefined,
+    ) => {
+      if (score == null || !Number.isFinite(score)) {
+        next.push(`${label}: GAP`);
+        return;
+      }
+      next.push(`${label}: ${score.toFixed(1)}`);
+    };
+    slot("Quality", ratings.quality.score);
+    slot("Reliability", ratings.reliability.score);
+    slot("Customer satisfaction", ratings.customerSatisfaction.score);
+    const torque = spec?.torqueLbFt;
+    const uvw = spec?.uvwLbs;
+    if (
+      typeof torque === "number" &&
+      torque > 0 &&
+      typeof uvw === "number" &&
+      uvw > 0
+    ) {
+      const ratio = torque / uvw;
+      next.push(
+        `Torque ÷ UVW: ${ratio.toFixed(4)} (${torque} lb-ft ÷ ${uvw.toLocaleString("en-US")} lb)`,
+      );
+    } else {
+      next.push("Torque ÷ UVW: GAP");
+    }
+    next.push("Torque ÷ dry weight: GAP");
+    setLines(next);
+    setPhase("ready");
+  }
+
+  useEffect(() => {
+    if (openNow) void onYes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openNow]);
+
+  if (phase === "hidden") return null;
+  if (phase === "prompt") {
+    return (
+      <PromptCard
+        kind="ratings"
+        onYes={() => void onYes()}
+        onNo={() => setPhase("hidden")}
+      />
+    );
+  }
+  return (
+    <ExtraShell kind="ratings">
+      <p className="text-[12px] font-semibold text-fg">Ratings</p>
+      {phase === "loading" ? (
+        <p className="mt-2 flex items-center gap-2 text-[12px] text-muted">
+          <Loader2 className="size-3.5 animate-spin" /> Loading catalog ratings
+        </p>
+      ) : (
+        <ul className="mt-2 space-y-1">
+          {lines.map((line) => (
+            <li key={line} className="text-[12px] text-fg">
+              {line}
+            </li>
+          ))}
+        </ul>
       )}
     </ExtraShell>
   );
@@ -246,8 +399,14 @@ function ReviewsExtra({ coach }: { coach: GrokExtraCoach }) {
   );
 }
 
-function MaintenanceExtra({ coach }: { coach: GrokExtraCoach }) {
-  const [phase, setPhase] = useState<Phase>("prompt");
+function MaintenanceExtra({
+  coach,
+  openNow,
+}: {
+  coach: GrokExtraCoach;
+  openNow?: boolean;
+}) {
+  const [phase, setPhase] = useState<Phase>(openNow ? "loading" : "prompt");
   const [lines, setLines] = useState<string[]>([]);
   const [note, setNote] = useState("");
 
@@ -270,6 +429,11 @@ function MaintenanceExtra({ coach }: { coach: GrokExtraCoach }) {
     setNote(`${items.length} tasks`);
     setPhase("ready");
   }
+
+  useEffect(() => {
+    if (openNow) void onYes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openNow]);
 
   if (phase === "hidden") return null;
   if (phase === "prompt") {
@@ -404,30 +568,51 @@ export function GrokExtrasRail({
   coach,
   offerVoiceExtras = false,
   voiceExtraStep,
+  voiceExtraPick,
 }: {
   query: string;
   coach: GrokExtraCoach | null | undefined;
-  /** Live Voice spec card — show the extras list as prompts, do not auto-load. */
+  /** Live Voice spec card — show all five extras as prompts, do not auto-load. */
   offerVoiceExtras?: boolean;
-  /** One prompt card. Unset shows the keyword-gated list. */
+  /** Retired drip index. Ignored. */
   voiceExtraStep?: number;
+  /** Named pick. Only this card mounts, and it opens. */
+  voiceExtraPick?: GrokExtraKind;
 }) {
   const kinds = extrasToOffer({
     query,
     coach,
     offerVoiceExtras,
     voiceExtraStep,
+    voiceExtraPick,
   });
   if (!kinds.length || !coach) return null;
+  const openNow = Boolean(voiceExtraPick);
   return (
     <div className="mt-3 space-y-2" data-grok-extras="">
       {kinds.map((kind) => {
-        if (kind === "video") return <VideoExtra key={kind} coach={coach} />;
-        if (kind === "nhtsa") return <NhtsaExtra key={kind} coach={coach} />;
-        if (kind === "market") return <MarketExtra key={kind} coach={coach} />;
+        if (kind === "ratings") {
+          return <RatingsExtra key={kind} coach={coach} openNow={openNow} />;
+        }
+        if (kind === "video") {
+          return (
+            <VideoExtra
+              key={kind}
+              coach={coach}
+              promptFirst={offerVoiceExtras && !openNow}
+              openNow={openNow}
+            />
+          );
+        }
+        if (kind === "nhtsa") {
+          return <NhtsaExtra key={kind} coach={coach} openNow={openNow} />;
+        }
+        if (kind === "market") {
+          return <MarketExtra key={kind} coach={coach} openNow={openNow} />;
+        }
         if (kind === "reviews") return <ReviewsExtra key={kind} coach={coach} />;
         if (kind === "maintenance") {
-          return <MaintenanceExtra key={kind} coach={coach} />;
+          return <MaintenanceExtra key={kind} coach={coach} openNow={openNow} />;
         }
         if (kind === "vin") return <VinExtra key={kind} />;
         return <ShareExtra key={kind} coach={coach} />;

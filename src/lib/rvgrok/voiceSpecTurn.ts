@@ -1,14 +1,20 @@
 /**
  * Live Voice spec turns speak from the shared spec engine.
  * Catalog first, then empty-field fallback. Never a memory snippet.
- * A coach or spec ask opens with the choice line. Full uses this engine.
- * Extras stay prompts — one at a time — the script does not load them.
+ * A coach or spec ask opens with the choice line unless they already
+ * chose full/report or short/quick/overview. Full uses this engine.
+ * After either length, offer all five extras at once. The script does not load them.
  */
 
 import type { DeskSheetPayload, DeskSheetRow } from "./deskSheet.ts";
 import { looksLikeDeskSheetAsk } from "./deskSheetPolicy.ts";
 import { looksLikeCoachReportAsk } from "./coachReport.ts";
-import { GROK_EXTRA_PROMPTS, voiceSpecExtraPrompts } from "./grokExtras.ts";
+import {
+  GROK_EXTRA_PROMPTS,
+  VOICE_EXTRAS_OFFER_LINE,
+  voiceSpecExtraPrompts,
+  type GrokExtraKind,
+} from "./grokExtras.ts";
 import { prefixLiveVoiceAck } from "./voiceAck.ts";
 import {
   looksLikeNamedCoachProductQuestion,
@@ -26,8 +32,7 @@ export const VOICE_COACH_CHOICE_INSTRUCTIONS = `Say only this, then stop: ${VOIC
 
 export type VoiceCoachDepth = "full" | "quick";
 
-const EXTRAS_OFFER =
-  "Spec sheet is on the desk. You can pick recalls, market value, videos, owner reviews, or maintenance. I won't load those until you choose.";
+const EXTRAS_OFFER = VOICE_EXTRAS_OFFER_LINE;
 
 function coachLine(sheet: DeskSheetPayload): string {
   return [sheet.year, sheet.make, sheet.model, sheet.floorplan]
@@ -99,18 +104,49 @@ export function classifyVoiceCoachDepth(text: string): VoiceCoachDepth | null {
   const t = normalizeAskText(text).trim();
   if (!t || t.length > 120) return null;
   const wantsFull =
-    /\bfull(?:\s+desk)?\s+report\b/i.test(t) || /^\s*full\s*[.!?]*$/i.test(t);
+    /\bfull(?:\s+desk)?\s+report\b/i.test(t) ||
+    /\breport\b/i.test(t) ||
+    /^\s*full\s*[.!?]*$/i.test(t);
   const wantsQuick =
-    /\bquick(?:\s+overview)?\b/i.test(t) || /^\s*overview\s*[.!?]*$/i.test(t);
+    /\b(short|quick)(?:\s+overview)?\b/i.test(t) ||
+    /\boverview\b/i.test(t);
   if (wantsFull === wantsQuick) return null;
   const rest = t
     .replace(/\bfull(?:\s+desk)?\s+report\b/gi, " ")
-    .replace(/\bquick(?:\s+overview)?\b/gi, " ")
-    .replace(/\b(overview|full|desk|report)\b/gi, " ")
+    .replace(/\b(short|quick)(?:\s+overview)?\b/gi, " ")
+    .replace(/\b(overview|full|desk|report|short|quick)\b/gi, " ")
     .replace(CHOICE_FILLER, " ")
     .replace(/[^a-z0-9]+/gi, "");
   if (rest.length > 0) return null;
   return wantsFull ? "full" : "quick";
+}
+
+/**
+ * Depth already named in this utterance, even with a coach in the same line.
+ * Both lengths at once is ambiguous — ask. Otherwise skip the choice line.
+ */
+export function voiceDepthAlreadyChosen(text: string): VoiceCoachDepth | null {
+  const t = normalizeAskText(text).trim();
+  if (!t) return null;
+  const wantsQuick = /\b(short|quick|overview)\b/i.test(t);
+  const wantsFull = /\b(full|report)\b/i.test(t);
+  if (wantsQuick === wantsFull) return null;
+  return wantsQuick ? "quick" : "full";
+}
+
+/** One of the five extras, and not a new coach ask. */
+export function classifyVoiceExtraPick(text: string): GrokExtraKind | null {
+  const t = normalizeAskText(text).trim();
+  if (!t || t.length > 80) return null;
+  if (looksLikeVoiceCoachOrSpecAsk(t)) return null;
+  const hits: GrokExtraKind[] = [];
+  if (/\bratings?\b|\btorque[-\s]?to[-\s]?weight\b/i.test(t)) hits.push("ratings");
+  if (/\bmarket(?:\s+value)?\b|\bworth\b/i.test(t)) hits.push("market");
+  if (/\bvideos?\b|\byoutube\b|\bwalkthrough\b/i.test(t)) hits.push("video");
+  if (/\bnhtsa\b|\brecalls?\b|\bsafety\b/i.test(t)) hits.push("nhtsa");
+  if (/\bmaintenance\b|\bservice\b/i.test(t)) hits.push("maintenance");
+  if (hits.length !== 1) return null;
+  return hits[0]!;
 }
 
 /** Coach or spec ask — the choice line comes before any report. */
@@ -186,6 +222,7 @@ function voiceSpecEngineSpeechBody(
     } else {
       for (const row of painted) lines.push(rowSpeech(row, query));
     }
+    lines.push(EXTRAS_OFFER);
     return lines.join(" ");
   }
   const asked = askedLabels(query);
@@ -227,20 +264,21 @@ export function formatVoiceQuickOverview(
     return "Catalog and the fallback chain both missed this coach. I won't guess a number.";
   }
   const coach = coachLine(sheet);
-  return coach
+  const line = coach
     ? `${coach}.`
     : "Catalog and the fallback chain both missed this coach. I won't guess a number.";
+  return `${line} ${EXTRAS_OFFER}`;
 }
 
 /** Live Voice spec cards offer extras. Chat sheets stay keyword-gated. */
 export function withVoiceSpecExtras<T extends DeskSheetPayload>(
   sheet: T | null,
   query: string,
-  opts?: { force?: boolean; step?: number },
+  opts?: { force?: boolean; step?: number; pick?: GrokExtraKind },
 ): T | null {
   if (!sheet) return sheet;
   if (!opts?.force && !looksLikeDeskSheetAsk(query)) return sheet;
   const next: T = { ...sheet, offerVoiceExtras: true };
-  if (typeof opts?.step === "number") next.voiceExtraStep = opts.step;
+  if (opts?.pick) next.voiceExtraPick = opts.pick;
   return next;
 }
