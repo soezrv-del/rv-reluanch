@@ -5,9 +5,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   fuzzyMatchCatalogName,
+  looksLikeFieldWordModelRename,
+  looksLikeSpecFieldFollowUp,
   matchCatalogModelName,
   parseCoachFromText,
 } from "./parseCoach.ts";
+import { findComparableCatalogCoaches } from "./coachCompare.ts";
 import {
   applyUniqueCatalogIdentity,
   askNamesCoachIdentity,
@@ -260,6 +263,9 @@ test("lock-break is wired through chat, voice, and the API stream", () => {
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(identity, /namedCoachConflictsLock/);
   assert.match(identity, /queryNamesCoach/);
+  assert.match(identity, /looksLikeSpecFieldFollowUp/);
+  assert.match(identity, /looksLikeFieldWordModelRename/);
+  assert.match(identity, /isCatalogFieldWordModel/);
   assert.match(grounding, /resolveCoachIdentity/);
   assert.match(grounding, /THIS turn's lock/);
   assert.match(app, /filter\(\(m\) => m\.role === "user"\)/);
@@ -568,4 +574,96 @@ test("unique catalog fill does not steal Dutch Star onto another make", () => {
   assert.equal(dutch!.make, "Newmar");
   assert.match(dutch!.model, /dutch star/i);
   assert.doesNotMatch(dutch!.make, /Grand Design|American Coach/i);
+});
+
+const LINEAGE_31ZW_LOCK = {
+  year: "2026",
+  make: "Grand Design",
+  model: "Lineage Series F",
+  floorplan: "31ZW",
+  updatedAt: "2026-01-01T00:00:00.000Z",
+};
+
+const TORQUE_TO_WEIGHT_ASKS = [
+  "You should add a torque to weight ratio when you have the GV, GCWR and torque to your report.",
+  "add a torque to weight ratio when you have GV, GCWR and torque",
+  "add a torque to weight ratio to your report",
+  "What's the torque to weight ratio?",
+];
+
+test("bare torque is a spec field — not Heartland Torque — unless they rename", () => {
+  for (const q of TORQUE_TO_WEIGHT_ASKS) {
+    assert.equal(looksLikeSpecFieldFollowUp(q), true, q);
+    assert.equal(looksLikeFieldWordModelRename(q), false, q);
+    const hits = findComparableCatalogCoaches(q);
+    assert.equal(
+      hits.some((h) => /torque/i.test(h.model) && /heartland/i.test(h.make)),
+      false,
+      q,
+    );
+    const filled = applyUniqueCatalogIdentity(q, parseCoachFromText(q));
+    assert.doesNotMatch(filled.make || "", /heartland/i, q);
+    assert.doesNotMatch(filled.model || "", /^torque$/i, q);
+  }
+
+  assert.equal(looksLikeFieldWordModelRename("Heartland Torque"), true);
+  assert.equal(looksLikeFieldWordModelRename("look up Torque toy hauler"), true);
+  assert.equal(looksLikeFieldWordModelRename("switch to the Heartland Torque"), true);
+  assert.equal(looksLikeSpecFieldFollowUp("Heartland Torque"), false);
+  assert.equal(findUniqueCatalogCoachFromModel("torque"), null);
+
+  const named = applyUniqueCatalogIdentity(
+    "Heartland Torque",
+    parseCoachFromText("Heartland Torque"),
+  );
+  assert.match(named.make, /heartland/i);
+  assert.match(named.model, /torque/i);
+
+  const lookup = applyUniqueCatalogIdentity(
+    "look up Torque toy hauler",
+    parseCoachFromText("look up Torque toy hauler"),
+  );
+  assert.match(lookup.make, /heartland/i);
+  assert.match(lookup.model, /torque/i);
+});
+
+test("locked Lineage 31ZW + torque-to-weight follow-up stays Lineage — not Heartland Torque", () => {
+  const history =
+    "Give me the spec report on the 2026 Grand Design Lineage 31ZW.\nVERIFIED CATALOG LOCK is 2026 Grand Design Lineage Series F 31ZW.\nCummins, 950 lb-ft of torque, GVWR and GCWR on the Super C.";
+
+  for (const q of TORQUE_TO_WEIGHT_ASKS) {
+    const parsed = parseCoachFromText(q);
+    assert.equal(askNamesCoachIdentity(parsed), false, q);
+    assert.equal(namedCoachConflictsLock(parsed, LINEAGE_31ZW_LOCK), false, q);
+
+    const id = resolveCoachIdentity(q, LINEAGE_31ZW_LOCK, history);
+    assert.ok(id, q);
+    assert.equal(id!.year, "2026", q);
+    assert.equal(id!.make, "Grand Design", q);
+    assert.equal(id!.model, "Lineage Series F", q);
+    assert.equal(id!.floorplan, "31ZW", q);
+    assert.equal(id!.source, "facts", q);
+    assert.doesNotMatch(id!.make, /heartland/i, q);
+    assert.doesNotMatch(id!.model, /^torque$/i, q);
+    assert.doesNotMatch(catalogLabel(id!), /Heartland/i, q);
+  }
+
+  const last = lastCompleteParseFromHistory(history);
+  assert.ok(last);
+  assert.match(last!.model, /lineage/i);
+  assert.doesNotMatch(last!.make || "", /heartland/i);
+  assert.doesNotMatch(last!.model || "", /^torque$/i);
+});
+
+test("Heartland Torque / Torque toy hauler still breaks a Lineage lock", () => {
+  const history =
+    "VERIFIED CATALOG LOCK is 2026 Grand Design Lineage Series F 31ZW.";
+  for (const q of ["Heartland Torque", "look up Torque toy hauler"]) {
+    const id = resolveCoachIdentity(q, LINEAGE_31ZW_LOCK, history);
+    assert.ok(id, q);
+    assert.match(id!.make, /heartland/i, q);
+    assert.match(id!.model, /torque/i, q);
+    assert.doesNotMatch(id!.model, /lineage/i, q);
+    assert.doesNotMatch(id!.floorplan, /31ZW/i, q);
+  }
 });

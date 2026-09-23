@@ -8,7 +8,11 @@
  */
 
 import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
-import { looksLikeCoachCompareQuestion } from "./parseCoach.ts";
+import {
+  isCatalogFieldWordModel,
+  looksLikeCoachCompareQuestion,
+  looksLikeFieldWordModelRename,
+} from "./parseCoach.ts";
 
 export { looksLikeCoachCompareQuestion } from "./parseCoach.ts";
 
@@ -123,6 +127,13 @@ export function findComparableCatalogCoaches(
   for (const entry of catalogEntries()) {
     const short = entry.norm.length < 5;
     if (short && !mentioned.some((m) => m.toLowerCase() === entry.make.toLowerCase())) {
+      continue;
+    }
+    // "torque" is Heartland Torque in the catalog — skip unless they rename.
+    if (
+      isCatalogFieldWordModel(entry.norm) &&
+      !looksLikeFieldWordModelRename(raw, entry.norm)
+    ) {
       continue;
     }
     let from = 0;

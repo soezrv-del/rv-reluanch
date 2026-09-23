@@ -969,3 +969,29 @@ test("incomplete 'about a 2026' waits for identity — no search, no timeout lec
   assert.equal(looksLikeNamedCoachProductQuestion(ymm), true);
   assert.equal(needsWebFallback(null, ymm), true);
 });
+
+test("chat + voice grounding keep Lineage 31ZW on a torque-to-weight follow-up", () => {
+  const q =
+    "add a torque to weight ratio when you have GV, GCWR and torque to your report";
+  const facts = {
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series F",
+    floorplan: "31ZW",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  };
+  const extra =
+    "2026 Grand Design Lineage 31ZW spec report. 950 lb-ft of torque.";
+  const chat = buildChatGrounding({ query: q, facts, extraText: extra });
+  assert.ok(chat.identity);
+  assert.equal(chat.identity!.make, "Grand Design");
+  assert.equal(chat.identity!.model, "Lineage Series F");
+  assert.equal(chat.identity!.floorplan, "31ZW");
+  assert.doesNotMatch(chat.identity!.make, /heartland/i);
+  assert.doesNotMatch(chat.identity!.model, /^torque$/i);
+  assert.doesNotMatch(chat.block || "", /Heartland Torque/i);
+
+  const voice = buildVoiceGrounding({ query: q, facts });
+  assert.match(voice, /Lineage Series F/i);
+  assert.doesNotMatch(voice, /Heartland Torque/i);
+});
