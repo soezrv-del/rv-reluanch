@@ -107,6 +107,27 @@ test("fallback pin names RV Guide and a catalog miss does not invent", () => {
   assert.doesNotMatch(formatVoiceSpecEngineSpeech(null, LINEAGE_Q), /\d{4,}/);
 });
 
+test("spec speech says the ack first, then the catalog result, then extras", () => {
+  const speech = formatVoiceSpecEngineSpeech(
+    lineageSheet(),
+    LINEAGE_Q,
+    "asked",
+    "On it.",
+  );
+  assert.match(speech, /^On it\. /);
+  const ackAt = speech.indexOf("On it.");
+  const numAt = speech.indexOf("18,186");
+  const extrasAt = speech.indexOf("Spec sheet is on the desk");
+  assert.ok(ackAt >= 0 && numAt > ackAt && extrasAt > numAt);
+  const missed = formatVoiceSpecEngineSpeech(null, LINEAGE_Q, "asked", "Got it.");
+  assert.match(missed, /^Got it\. Catalog and the fallback chain both missed/);
+  assert.match(missed, /I won't guess/);
+  const full = formatVoiceSpecEngineSpeech(lineageSheet(), LINEAGE_Q, "all", "Right away.");
+  assert.match(full, /^Right away\. /);
+  assert.match(full, /18,186/);
+  assert.doesNotMatch(full, /You can pick recalls/);
+});
+
 test("coach or spec ask is a choice, not a synopsis or an auto full report", () => {
   assert.equal(
     VOICE_COACH_CHOICE_LINE,
