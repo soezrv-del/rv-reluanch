@@ -19,7 +19,9 @@ import {
   orderShareImageFiles,
   paintShareSignatureCard,
   resetShareSession,
+  resolveFaxShareContact,
   shareCardContactForSession,
+  shareKitSignatureLines,
   shareDataAttempts,
   shareOrCopy,
   toShareData,
@@ -850,15 +852,22 @@ test("signed-out dealer contact is David Hansen; session builder never is", () =
 });
 
 test("Facts Share kit is a hard switch on access.allowed — name, phone, card", () => {
-  assert.match(ui, /useAccessOptional/);
-  assert.match(ui, /access\?\.allowed/);
-  assert.match(
-    ui,
-    /shareCardContactForSession\(access\.name,\s*access\.phone\)/,
+  const shell = readFileSync(
+    join(here, "../../components/shell/AppShell.tsx"),
+    "utf8",
   );
-  assert.match(ui, /defaultShareCardContact\(\)/);
+  assert.match(ui, /useAccessOptional/);
+  assert.match(ui, /resolveFaxShareContact\(session, storedIdentity\)/);
+  assert.match(ui, /access \?\? nav\?\.accessSession/);
+  assert.match(ui, /readStoredFirstName/);
+  assert.match(ui, /readStoredPhone/);
+  assert.match(shell, /accessSession:/);
+  assert.match(shell, /allowed: access\.allowed/);
+  assert.match(shell, /name: access\.name/);
+  assert.match(shell, /phone: access\.phone/);
   assert.match(ui, /data-fax-share-name/);
   assert.match(ui, /data-fax-share-phone/);
+  assert.match(ui, /data-fax-share-kit-text/);
   assert.match(ui, /data-report-signature="1"/);
   assert.match(ui, /captureShareCardFile\([\s\S]*contact/);
   assert.match(ui, /contact,/);
@@ -866,14 +875,65 @@ test("Facts Share kit is a hard switch on access.allowed — name, phone, card",
   assert.match(ui, /contact\.phone/);
   assert.match(ui, /tel:\$\{contact\.tel\}/);
   assert.match(kit, /opts\.contact \?\? defaultShareCardContact/);
-  assert.match(kit, /contact\.name/);
-  assert.match(kit, /contact\.phone/);
+  assert.match(kit, /shareKitSignatureLines\(contact\)/);
   assert.doesNotMatch(ui, /useCurrentUser/);
   assert.doesNotMatch(ui, /REPORT_CONTACT_NAME/);
   assert.doesNotMatch(ui, /REPORT_CONTACT_PHONE/);
   assert.doesNotMatch(ui, /REPORT_CONTACT_TEL/);
   assert.doesNotMatch(ui, /\bprefer\b|\btry\b|if available/i);
   assert.doesNotMatch(ui, /TowShareCard/);
+});
+
+test("resolveFaxShareContact hard-switch: Vern is not David Hansen", () => {
+  const vernAccess = {
+    allowed: true,
+    status: "full",
+    name: "Vern",
+    phone: "5412858791",
+  };
+  const vern = resolveFaxShareContact(vernAccess);
+  assert.equal(vern.name, "Vern");
+  assert.equal(vern.phone, "541-285-8791");
+  assert.equal(vern.tel, "+15412858791");
+  assert.notEqual(vern.name, REPORT_CONTACT_NAME);
+  assert.notEqual(vern.phone, REPORT_CONTACT_PHONE);
+  assert.doesNotMatch(vern.name, /David Hansen/);
+  assert.doesNotMatch(vern.phone, /702-266-5918/);
+
+  const kitLines = shareKitSignatureLines(vern);
+  const kitText = kitLines.join("\n");
+  assert.match(kitText, /PREPARED BY/);
+  assert.match(kitText, /^Vern$/m);
+  assert.match(kitText, /541-285-8791/);
+  assert.doesNotMatch(kitText, /David Hansen/);
+  assert.doesNotMatch(kitText, /702-266-5918/);
+
+  const signedOut = resolveFaxShareContact(null);
+  assert.equal(signedOut.name, REPORT_CONTACT_NAME);
+  assert.equal(signedOut.phone, REPORT_CONTACT_PHONE);
+
+  const browse = resolveFaxShareContact(
+    { allowed: false, status: "browse", name: "", phone: "" },
+    { name: "Vern", phone: "5412858791" },
+  );
+  assert.equal(browse.name, REPORT_CONTACT_NAME);
+  assert.equal(browse.phone, REPORT_CONTACT_PHONE);
+
+  const pendingStored = resolveFaxShareContact(
+    { allowed: false, status: "checking", name: "", phone: "" },
+    { name: "Vern", phone: "5412858791" },
+  );
+  assert.equal(pendingStored.name, "Vern");
+  assert.equal(pendingStored.phone, "541-285-8791");
+  assert.notEqual(pendingStored.name, REPORT_CONTACT_NAME);
+
+  const missingContext = resolveFaxShareContact(null, {
+    name: "Vern",
+    phone: "5412858791",
+  });
+  assert.equal(missingContext.name, "Vern");
+  assert.equal(missingContext.phone, "541-285-8791");
+  assert.notEqual(missingContext.name, REPORT_CONTACT_NAME);
 });
 
 test("share and dealer contact surfaces lock Hansen — never Hanson", () => {

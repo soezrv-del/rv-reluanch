@@ -24,6 +24,7 @@ import {
   defaultShareCardContact,
   hardenShareImageFileSync,
   isShareImageFile,
+  shareKitSignatureLines,
   type ShareCardContact,
 } from "./shareCardImage";
 import { getVerifiedDossier } from "./verifiedCatalogCache";
@@ -36,6 +37,7 @@ import {
   isSharePlaceholder,
   resolveShareNotes,
   resolveShareSummary,
+  shareIncludePayment,
   shareNotesLines,
   sharePowerLines,
   shareSummaryLines,
@@ -60,10 +62,12 @@ export {
   isShareImageFile,
   monogramFromDisplayName,
   orderShareImageFiles,
+  resolveFaxShareContact,
   resetShareSession,
   SHARE_CARD_FILENAME,
   SHARE_CARD_MIME,
   shareCardContactForSession,
+  shareKitSignatureLines,
   shareDataAttempts,
   shareOrCopy,
   toShareData,
@@ -110,6 +114,7 @@ export {
   RATE_UPDATED_FLASH_MS,
   resolveShareNotes,
   resolveShareSummary,
+  shareIncludePayment,
   SHARE_MARKET_LINE_DEFS,
   SHARE_MSRP_LINE_ID,
   isOfferedShareMarketLine,
@@ -560,7 +565,7 @@ export function buildCoachKit(opts: {
     }
   }
 
-  if (include.payment && payment && payment.price > 0) {
+  if (shareIncludePayment(include, payment) && payment) {
     const p = paymentBreakdown(payment);
     lines.push("");
     lines.push("PAYMENT (estimate)");
@@ -624,10 +629,7 @@ export function buildCoachKit(opts: {
 
   const contact = opts.contact ?? defaultShareCardContact();
   lines.push("");
-  lines.push("—");
-  lines.push(contact.kicker.toUpperCase());
-  lines.push(contact.name);
-  lines.push(contact.phone);
+  lines.push(...shareKitSignatureLines(contact));
   lines.push("RvFOX Pro · Know before you buy.");
   lines.push(SHARE_KIT_FOOTER);
   return lines.filter((line) => !isSharePlaceholder(line)).join("\n");

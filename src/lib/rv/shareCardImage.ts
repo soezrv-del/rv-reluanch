@@ -90,6 +90,45 @@ export function shareCardContactForSession(
   };
 }
 
+/** Phone-access snapshot the Facts kit can resolve without React context. */
+export type FaxShareAccess = {
+  allowed: boolean;
+  status?: string;
+  name: string;
+  phone: string;
+};
+
+/**
+ * Hard switch for all three Fax share surfaces (kit text, preview card, PNG).
+ *
+ * - `allowed` → session name + phone. Never Hansen.
+ * - Missing / still-hydrating context → persisted approved identity if any.
+ * - Explicit browse / signed-out → David Hansen / 702-266-5918 only.
+ */
+export function resolveFaxShareContact(
+  access: FaxShareAccess | null | undefined,
+  stored?: { name?: string; phone?: string } | null,
+): ShareCardContact {
+  if (access?.allowed) {
+    return shareCardContactForSession(access.name, access.phone);
+  }
+  const undecided =
+    !access ||
+    access.status === "unknown" ||
+    access.status === "checking";
+  const storedPhone = String(stored?.phone ?? "").trim();
+  const storedName = String(stored?.name ?? "").trim();
+  if (undecided && storedPhone) {
+    return shareCardContactForSession(storedName, storedPhone);
+  }
+  return defaultShareCardContact();
+}
+
+/** Kit footer — PREPARED BY / name / phone from the resolved contact. */
+export function shareKitSignatureLines(contact: ShareCardContact): string[] {
+  return ["—", contact.kicker.toUpperCase(), contact.name, contact.phone];
+}
+
 /** Live preview card — same node the salesman sees above Share kit. */
 export function elementLooksLikeShareCard(el: Element | null): boolean {
   if (!el) return false;

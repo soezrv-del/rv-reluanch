@@ -375,6 +375,12 @@ export function AppShell({
       towHandoff,
       openTowWithCoach,
       clearTowHandoff,
+      accessSession: {
+        allowed: access.allowed,
+        status: access.status,
+        name: access.name,
+        phone: access.phone,
+      },
     }),
     [
       tab,
@@ -397,6 +403,10 @@ export function AppShell({
       towHandoff,
       openTowWithCoach,
       clearTowHandoff,
+      access.allowed,
+      access.status,
+      access.name,
+      access.phone,
     ],
   );
 

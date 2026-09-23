@@ -48,6 +48,16 @@ export type ShellNavValue = {
   towHandoff: FactsTowHandoff | null;
   openTowWithCoach: (offer?: FactsTowHandoffOffer | null) => void;
   clearTowHandoff: () => void;
+  /**
+   * AppShell's phone-access session. Facts/Fax share reads this when the
+   * lazy chunk's AccessProvider context is missing (duplicate module).
+   */
+  accessSession?: {
+    allowed: boolean;
+    status: string;
+    name: string;
+    phone: string;
+  };
 };
 
 export const ShellNavContext = createContext<ShellNavValue | null>(null);

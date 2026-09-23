@@ -21,6 +21,7 @@ import {
   SHARE_MARKET_LINE_DEFS,
   SHARE_MSRP_LINE_ID,
   isOfferedShareMarketLine,
+  shareIncludePayment,
   shareNotesLines,
   sharePaymentAfterTermDown,
   sharePaymentPricePills,
@@ -76,6 +77,27 @@ test("any extra on does not force payment", () => {
   assert.equal(next.market, false);
   assert.equal(next.payment, false);
   assert.equal(next.rating, true);
+});
+
+const PRICED_PAYMENT = { price: 169000, downPct: 10, termMonths: 144, apr: 7.49 };
+
+test("payment-off omit — priced payment object is not a placeholder line", () => {
+  assert.equal(shareIncludePayment(DEFAULT_SHARE_INCLUDE, PRICED_PAYMENT), false);
+  assert.equal(
+    shareIncludePayment(DEFAULT_SHARE_INCLUDE, { price: 150000 }),
+    false,
+  );
+  assert.equal(shareIncludePayment(DEFAULT_SHARE_INCLUDE, null), false);
+  assert.equal(shareIncludePayment(DEFAULT_SHARE_INCLUDE, undefined), false);
+  const textWouldInclude = shareIncludePayment(
+    { ...DEFAULT_SHARE_INCLUDE, payment: true },
+    PRICED_PAYMENT,
+  );
+  assert.equal(textWouldInclude, true);
+  assert.equal(
+    shareIncludePayment({ ...DEFAULT_SHARE_INCLUDE, payment: true }, { price: 0 }),
+    false,
+  );
 });
 
 const SAMPLE_MARKET = {
@@ -165,12 +187,15 @@ test("share policy and preview never auto-include Payment", () => {
     ),
     "utf8",
   );
-  assert.match(src, /if \(include\.payment && payment && payment\.price > 0\)/);
+  assert.match(src, /shareIncludePayment\(include, payment\)/);
   assert.match(policy, /Honor the user's include flags as-is/);
+  assert.match(policy, /shareIncludePayment/);
   assert.doesNotMatch(policy, /payment:\s*true/);
   assert.doesNotMatch(ui, /Payment included/);
   assert.doesNotMatch(ui, /fallbackExtras/);
   assert.doesNotMatch(ui, /hasOptionalShareSections/);
+  assert.match(ui, /data-fax-share-kit-text/);
+  assert.match(ui, /payment: include\.payment \? payment : undefined/);
 });
 
 test("shared rating is the score only — no breakdown, summary, or notes", () => {
