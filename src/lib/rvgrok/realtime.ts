@@ -57,6 +57,12 @@ import {
   withLiveVoiceAckInstructions,
   type LiveVoiceAckState,
 } from "./voiceAck";
+import {
+  coachKnowledgeKeyEquals,
+  normalizeCoachKnowledgeKey,
+  type CoachKnowledgeKey,
+} from "./coachKnowledge";
+import type { CoachIdentity } from "./coachIdentity";
 
 export type RealtimeStatus =
   | "idle"
@@ -131,6 +137,15 @@ export class GrokRealtimeSession {
   private specEngineSpoken = false;
   /** Engine already painted this turn — do not remount a memory snippet over it. */
   private engineSheetPainted = false;
+  /**
+   * Sheet from the last successful voice desk resolve, keyed by coach.
+   * Full report reuses it so a second fallback cannot drop overview fills.
+   */
+  private voiceCachedSheet: {
+    key: CoachKnowledgeKey;
+    sheet: DeskSheetPayload;
+    query: string;
+  } | null = null;
   /** Coach/spec ask waiting for full vs quick. */
   private voiceChoiceTranscript: string | null = null;
   /** Set while replaying the stashed ask as full or quick. */
@@ -195,6 +210,7 @@ export class GrokRealtimeSession {
     this.suppressMic = false;
     this.finishedAssistantOnce = false;
     this.earlyPcm = [];
+    this.voiceCachedSheet = null;
     this.resetResearchTurn();
     this.introSpoken = false;
     this.ackState = createLiveVoiceAckState();
@@ -569,13 +585,22 @@ export class GrokRealtimeSession {
     if (this.finishedAssistantOnce) return;
     this.finishedAssistantOnce = true;
     if (text && this.lastDeskQuery && !this.engineSheetPainted) {
-      this.emitDeskSheet({
-        query: this.lastDeskQuery,
-        identity: this.lastDeskIdentity,
-        specs: this.lastDeskSpecs,
-        spokenText: text,
-        chatSpecBlock: text,
-      });
+      const cached = this.matchingVoiceCachedSheet(this.lastDeskIdentity);
+      if (cached) {
+        this.deskFallbackSeq += 1;
+        this.engineSheetPainted = true;
+        this.handlers.onDeskSheet?.(
+          withVoiceSpecExtras(cached, this.lastDeskQuery),
+        );
+      } else {
+        this.emitDeskSheet({
+          query: this.lastDeskQuery,
+          identity: this.lastDeskIdentity,
+          specs: this.lastDeskSpecs,
+          spokenText: text,
+          chatSpecBlock: text,
+        });
+      }
     }
     if (text) this.handlers.onAssistantDone(text);
   }
@@ -662,6 +687,7 @@ export class GrokRealtimeSession {
   }
 
   stop(opts?: { keepCapture?: boolean }) {
+    this.voiceCachedSheet = null;
     this.resetResearchTurn();
     this.intentionalStop = true;
     this.closed = true;
@@ -938,7 +964,6 @@ export class GrokRealtimeSession {
       this.pendingSpec = null;
       this.pendingSpecSheet = null;
       this.specEngineSpoken = false;
-      this.engineSheetPainted = false;
       this.cancelAutoResponseForResearch();
       await ensureCatalogLoaded().catch(() => null);
       if (this.closed || this.intentionalStop) return;
@@ -947,8 +972,15 @@ export class GrokRealtimeSession {
         query: transcript,
         facts: this.facts,
       });
-      this.applyVoiceGrounding(transcript, grounded);
-      this.armSpecEngineTurn(transcript, grounded);
+      const cached = this.matchingVoiceCachedSheet(grounded.identity);
+      if (!cached) this.engineSheetPainted = false;
+      this.applyVoiceGrounding(transcript, grounded, { paintDesk: !cached });
+      if (cached) {
+        this.pendingSpec = { transcript, grounded };
+        this.pendingSpecSheet = Promise.resolve(cached);
+      } else {
+        this.armSpecEngineTurn(transcript, grounded);
+      }
       await this.speakFromSpecEngine(specSeq);
       return;
     }
@@ -1191,6 +1223,34 @@ export class GrokRealtimeSession {
     this.voiceExtraQuery = "";
   }
 
+  private rememberVoiceCachedSheet(
+    identity: CoachIdentity | null | undefined,
+    sheet: DeskSheetPayload,
+    query: string,
+  ) {
+    const key = normalizeCoachKnowledgeKey(
+      identity?.make && identity.model
+        ? identity
+        : {
+            year: sheet.year,
+            make: sheet.make,
+            model: sheet.model,
+            floorplan: sheet.floorplan,
+          },
+    );
+    if (!key) return;
+    this.voiceCachedSheet = { key, sheet, query };
+  }
+
+  private matchingVoiceCachedSheet(
+    identity: CoachIdentity | null | undefined,
+  ): DeskSheetPayload | null {
+    if (!this.voiceCachedSheet || !identity) return null;
+    const key = normalizeCoachKnowledgeKey(identity);
+    if (!coachKnowledgeKeyEquals(key, this.voiceCachedSheet.key)) return null;
+    return this.voiceCachedSheet.sheet;
+  }
+
   /**
    * Coach or spec ask: choice line first. A later pick replays the ask.
    * Returns true when this utterance must not speak a report yet.
@@ -1230,6 +1290,17 @@ export class GrokRealtimeSession {
       }
       return true;
     }
+    if (this.voiceCachedSheet?.query && !this.voiceChoiceTranscript) {
+      const depth = classifyVoiceCoachDepth(transcript);
+      if (depth) {
+        const original = this.voiceCachedSheet.query;
+        this.voiceDeliver = depth;
+        void this.maybeEnrichWithWebResearch(original).finally(() => {
+          this.voiceDeliver = null;
+        });
+        return true;
+      }
+    }
     if (looksLikeVoiceCoachOrSpecAsk(transcript)) {
       this.specTurnSeq += 1;
       this.voiceChoiceTranscript = transcript;
@@ -1263,11 +1334,19 @@ export class GrokRealtimeSession {
         identity: grounded.identity,
         specs: grounded.specs,
         mountForVoiceReport: true,
+        pinCoachKnowledge: true,
+        knowledgeQuery: transcript,
       });
     } catch {
       sheet = null;
     }
     if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
+    if (sheet) {
+      this.rememberVoiceCachedSheet(grounded.identity, sheet, transcript);
+      this.deskFallbackSeq += 1;
+      this.engineSheetPainted = true;
+      this.handlers.onDeskSheet?.(withVoiceSpecExtras(sheet, transcript));
+    }
     this.researchPhase = "answering";
     this.flushSpecEngineAnswer(formatVoiceQuickOverview(sheet));
   }
@@ -1327,6 +1406,8 @@ export class GrokRealtimeSession {
       identity: grounded.identity,
       specs: grounded.specs,
       mountForVoiceReport: this.voiceDeliver === "full",
+      pinCoachKnowledge: true,
+      knowledgeQuery: transcript,
     });
   }
 
@@ -1346,11 +1427,20 @@ export class GrokRealtimeSession {
           identity: pending.grounded.identity,
           specs: pending.grounded.specs,
           mountForVoiceReport: this.voiceDeliver === "full",
+          pinCoachKnowledge: true,
+          knowledgeQuery: pending.transcript,
         }));
     } catch {
       sheet = null;
     }
     if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
+    if (sheet) {
+      this.rememberVoiceCachedSheet(
+        pending.grounded.identity,
+        sheet,
+        pending.transcript,
+      );
+    }
     this.deskFallbackSeq += 1;
     const full = this.voiceDeliver === "full";
     let tagged = withVoiceSpecExtras(

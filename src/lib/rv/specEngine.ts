@@ -417,6 +417,9 @@ export async function fetchSpecFieldFallback(
     floorplan: string;
     empty: readonly SpecFieldKey[];
     rvClass?: string;
+    /** Voice desk: server pins fills via planCoachKnowledgeWrite. */
+    pinCoachKnowledge?: boolean;
+    knowledgeQuery?: string;
   },
   signal?: AbortSignal,
 ): Promise<SpecFieldFill[]> {
@@ -436,6 +439,12 @@ export async function fetchSpecFieldFallback(
         floorplan: opts.floorplan,
         empty: opts.empty,
         rvClass: opts.rvClass,
+        ...(opts.pinCoachKnowledge
+          ? {
+              pinCoachKnowledge: true,
+              knowledgeQuery: opts.knowledgeQuery || "",
+            }
+          : {}),
       }),
       signal,
     });

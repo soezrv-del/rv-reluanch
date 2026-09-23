@@ -191,3 +191,39 @@ test("Live Voice spec turns go through the shared engine and skip the snippet re
   assert.doesNotMatch(readFileSync(join(root, "voiceSpecTurn.ts"), "utf8"), /[Gg]emini/);
   assert.doesNotMatch(readFileSync(join(root, "grokExtras.ts"), "utf8"), /[Gg]emini/);
 });
+
+test("overview sheet is reused for full report and voice fallback pins knowledge", () => {
+  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
+  const telemetry = readFileSync(join(root, "webResearchTelemetry.ts"), "utf8");
+  const route = readFileSync(
+    join(root, "../../routes/api/rvfax.spec-fallback.ts"),
+    "utf8",
+  );
+  assert.match(realtime, /voiceCachedSheet/);
+  assert.match(realtime, /rememberVoiceCachedSheet/);
+  assert.match(realtime, /matchingVoiceCachedSheet/);
+  assert.match(realtime, /pinCoachKnowledge:\s*true/);
+  const fullAt = realtime.indexOf('if (this.voiceDeliver === "full")');
+  const reuseAt = realtime.indexOf("matchingVoiceCachedSheet", fullAt);
+  const armAt = realtime.indexOf("this.armSpecEngineTurn", fullAt);
+  assert.ok(fullAt > 0 && reuseAt > fullAt && armAt > reuseAt);
+  assert.match(
+    realtime.slice(fullAt, armAt),
+    /paintDesk:\s*!cached/,
+  );
+  const routeFn = realtime.slice(
+    realtime.indexOf("private routeVoiceOpening"),
+    realtime.indexOf("private async deliverVoiceQuick"),
+  );
+  const cachedDeliver = routeFn.indexOf("this.voiceCachedSheet?.query");
+  const choiceOpen = routeFn.indexOf("this.voiceChoiceTranscript = transcript");
+  assert.ok(cachedDeliver > 0 && choiceOpen > cachedDeliver);
+  assert.match(routeFn, /VOICE_COACH_CHOICE_INSTRUCTIONS/);
+  assert.match(telemetry, /planSpecFallbackKnowledgeWrite/);
+  assert.match(telemetry, /planCoachKnowledgeWrite/);
+  assert.match(telemetry, /upsertCoachKnowledgePlan/);
+  assert.match(route, /persistSpecFallbackKnowledge/);
+  assert.match(route, /pinCoachKnowledge === true/);
+  assert.doesNotMatch(realtime, /[Gg]emini/);
+  assert.doesNotMatch(route, /[Dd]ialaBot/);
+});
