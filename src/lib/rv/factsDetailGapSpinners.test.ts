@@ -164,10 +164,11 @@ test("Facts detail wires planner + spinner; does not pull research sidecar", () 
   assert.doesNotMatch(detail, /placeholder=\{searching \? "" : published\}/);
   assert.doesNotMatch(
     detail,
-    /liveLoading \?\s*\(/,
+    /\{liveLoading \?\s*\(/,
     "no full-page / section loader gated on LIVE_DOSSIER",
   );
   assert.doesNotMatch(detail, /if \(liveLoading\) return/);
+  assert.doesNotMatch(detail, /liveLoading \|\| /);
   assert.match(
     detail,
     /Phase 3\.4: do NOT clear year-band catalog paint/,
