@@ -226,7 +226,7 @@ test("painted card matches the in-app signature (name + phone)", () => {
   assert.match(joined, /RvFOX · Powered by Grok/);
 });
 
-test("paintShareSignatureCard can sign with a session name", () => {
+test("paintShareSignatureCard signs with the session name and phone", () => {
   const texts: string[] = [];
   const ctx = {
     save() {},
@@ -254,12 +254,13 @@ test("paintShareSignatureCard can sign with a session name", () => {
     ctx as unknown as CanvasRenderingContext2D,
     SHARE_CARD_WIDTH,
     SHARE_CARD_HEIGHT,
-    shareCardContactForSession("Cheri"),
+    shareCardContactForSession("Vern", "5412858791"),
   );
   const joined = texts.join("");
-  assert.match(joined, /Cheri/);
+  assert.match(joined, /Vern/);
+  assert.match(joined, /541-285-8791/);
   assert.doesNotMatch(joined, new RegExp(REPORT_CONTACT_NAME));
-  assert.match(joined, new RegExp(REPORT_CONTACT_PHONE.replace(/-/g, "\\-")));
+  assert.doesNotMatch(joined, new RegExp(REPORT_CONTACT_PHONE.replace(/-/g, "\\-")));
 });
 
 test("live card node is the capture target — same preview, real file on send", () => {

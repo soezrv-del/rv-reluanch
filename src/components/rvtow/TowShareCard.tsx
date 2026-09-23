@@ -2,25 +2,24 @@ import { useRef, useState } from "react";
 import { Share2 } from "lucide-react";
 import { useAccessOptional } from "@/components/access/AccessProvider";
 import { hapticLight, hapticSuccess } from "@/lib/haptics";
-import {
-  REPORT_CONTACT_KICKER,
-  REPORT_CONTACT_TEL,
-} from "@/lib/rv/reportContact";
+import { REPORT_CONTACT_KICKER } from "@/lib/rv/reportContact";
 import {
   captureShareCardFile,
+  defaultShareCardContact,
   shareCardContactForSession,
   shareOrCopy,
 } from "@/lib/rv/shareCardImage";
 
 /**
- * Tow Share card — same PREPARED BY signature as Facts.
- * Name comes from phone-access session (`useAccess().name`), not Better Auth.
+ * Tow Share — hard switch on phone-access session (`useAccessOptional`).
+ * Signed in (`access.allowed`): name, phone, and card PNG are access.name
+ * and access.phone. Signed out: dealer signature only.
  */
 export function TowShareCard({ shareText }: { shareText: string }) {
   const access = useAccessOptional();
-  const signedInName =
-    access?.allowed && access.name ? access.name.trim() : "";
-  const contact = shareCardContactForSession(signedInName);
+  const contact = access?.allowed
+    ? shareCardContactForSession(access.name, access.phone)
+    : defaultShareCardContact();
   const shareCardRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -97,7 +96,8 @@ export function TowShareCard({ shareText }: { shareText: string }) {
                 {contact.name}
               </p>
               <a
-                href={`tel:${REPORT_CONTACT_TEL}`}
+                data-tow-share-phone
+                href={`tel:${contact.tel}`}
                 className="mt-1 inline-block min-h-7 text-[14px] font-bold text-[#0e4f8f] underline decoration-[#1d6fbf] underline-offset-4"
               >
                 {contact.phone}
