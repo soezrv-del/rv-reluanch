@@ -50,7 +50,7 @@ test("Trips iPhone chrome: RvFOX wordmark, island inset, profile below status ba
   assert.match(css, /safe-area-inset-top/);
   assert.match(css, /4\.25rem/);
   assert.match(css, /safe-area-inset-bottom/);
-  assert.match(css, /2\.75rem/);
+  assert.match(css, /2\.125rem/);
   assert.doesNotMatch(dock, /min\(10px/);
   assert.match(cap, /overlaysWebView:\s*true/);
 });

@@ -224,19 +224,6 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  @media (max-width: 639px) {
-    [data-app-scroll],
-    .rv-scroll {
-      scroll-padding-bottom: max(
-        5.5rem,
-        calc(
-          4.75rem + env(safe-area-inset-bottom, 0px) + 0.75rem +
-            var(--zoom-safe-bottom, 0px)
-        )
-      );
-    }
-  }
-
   /* iOS pull-to-refresh spinner — shared chrome, not per-page art */
   .ios-pull-spinner {
     width: 22px;
@@ -534,15 +521,9 @@
     font-size: 1.85rem !important;
     line-height: 1 !important;
   }
-  .bottom-tabs-nav,
-  [data-bottom-dock].bottom-tabs-nav {
+  .bottom-tabs-nav {
     padding-top: 0.2rem !important;
-    padding-bottom: max(
-      2.75rem,
-      calc(
-        env(safe-area-inset-bottom, 0px) + 0.75rem + var(--zoom-safe-bottom, 0px)
-      )
-    ) !important;
+    padding-bottom: max(2.125rem, env(safe-area-inset-bottom, 0px)) !important;
   }
   html.android-native .bottom-tabs-nav {
     padding-bottom: var(--dock-safe-bottom, 48px) !important;
@@ -966,19 +947,9 @@
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
 }
 @media (max-width: 639px) {
-  /*
-   * Home indicator ~34px, plus slack for Display Zoom / Larger Text.
-   * Floor 2.75rem when env() is 0; env() + 0.75rem when the inset is live.
-   * Android Capacitor keeps --dock-safe-bottom (html.android-native).
-   */
-  .bottom-tabs-nav,
-  [data-bottom-dock].bottom-tabs-nav {
-    padding-bottom: max(
-      2.75rem,
-      calc(
-        env(safe-area-inset-bottom, 0px) + 0.75rem + var(--zoom-safe-bottom, 0px)
-      )
-    );
+  /* Home indicator ~34px — keep tabs tappable when env() is 0. */
+  .bottom-tabs-nav {
+    padding-bottom: max(2.125rem, env(safe-area-inset-bottom, 0px));
   }
 }
 .bottom-tabs-dock {
@@ -1464,6 +1435,12 @@
   );
 }
 
+/* Landing ⋯ / History / Agent / Voice — extra slack inside the already-padded card. */
+[data-rvgrok-landing] [data-grok-top-chrome] {
+  top: max(0.75rem, calc(0.5rem + var(--zoom-safe-top, 0px)));
+  right: max(0.75rem, calc(env(safe-area-inset-right, 0px) + 0.5rem));
+}
+
 /* RvFACTS: keep catalog dropdowns close to the header */
 .rvfax-screen .sapphire-header {
   padding-bottom: 0.15rem;
@@ -1760,10 +1737,7 @@
  * Facts landing cascade chrome (#2 dock clear, #5 sun-readable Type·Year·Make).
  */
 .rvfax-screen[data-facts-landing] {
-  --facts-cascade-dock-clear: calc(
-    10.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem +
-      var(--zoom-safe-bottom, 0px)
-  );
+  --facts-cascade-dock-clear: calc(10.5rem + env(safe-area-inset-bottom, 0px));
 }
 .rvfax-screen[data-facts-landing] [data-facts-cascade-scroll] {
   scroll-padding-bottom: var(--facts-cascade-dock-clear);

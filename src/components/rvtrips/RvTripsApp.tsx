@@ -1305,7 +1305,7 @@ export function RvTripsApp() {
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-lg space-y-3 px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px)+0.75rem+var(--zoom-safe-bottom,0px))] pt-2 sm:px-4">
+        <div className="mx-auto w-full max-w-lg space-y-3 px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] pt-2 sm:px-4">
           {/* ── PROFILE ── */}
           {tool === "profile" ? (
             <section className="glass-prestige space-y-3 rounded-[1.25rem] p-3.5">

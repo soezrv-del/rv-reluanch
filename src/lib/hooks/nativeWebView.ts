@@ -51,7 +51,7 @@ export function readSafeBottomPx(): number {
 
 /**
  * Bottom padding for the tab dock (Android CSS `--dock-safe-bottom` only).
- * iOS/web chrome padding is CSS-owned (`.bottom-tabs-nav` env() + slack).
+ * iOS/web keep the existing tight inset — dock CSS is unchanged.
  * This iOS branch stays a tight unused cap — do not drive dock CSS with it.
  * Android must lift the dock out of the system nav / gesture dead zone
  * when CSS env(safe-area-inset-bottom) is 0 (common in emulator WebViews).
