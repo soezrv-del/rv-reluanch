@@ -2804,7 +2804,7 @@ function WeightOverrideRow({
           aria-busy={searching || undefined}
           disabled={disabled}
           value={draft}
-          placeholder={searching ? "" : published}
+          placeholder={published}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => {
@@ -2875,7 +2875,8 @@ function SpecRow({
           accent && "font-semibold",
         )}
       >
-        {searching ? <FactsGapSpinner field={label} /> : shown}
+        {shown}
+        {searching ? <FactsGapSpinner field={label} /> : null}
       </span>
     </div>
   );
