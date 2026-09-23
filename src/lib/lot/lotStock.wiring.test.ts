@@ -89,6 +89,7 @@ test("Lot stock is a suite page, not a dock tab and not RV Grok", () => {
   assert.doesNotMatch(css, /camp-scene/);
 
   assert.match(page, /\/inventory\/own-lot-latest\.json/);
+  assert.match(page, /lotSearch/);
   assert.doesNotMatch(page, /LOT_CAMP_SCENE|camp-scene/);
   assert.doesNotMatch(page, /ownLotInventory|from "\.\.\/rvgrok\/ownLotInventory/);
   assert.doesNotMatch(page, /rvData|from "@\/lib\/rv\/catalog"/);

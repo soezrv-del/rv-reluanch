@@ -19,7 +19,9 @@ import {
   isGasBodyType,
   loadOwnLotSnapshot,
   looksLikeOwnLotListingPriceQuestion,
+  looksLikeOwnLotSearchAsk,
   looksLikeOwnLotStockQuestion,
+  lotSearchQueryFromAsk,
   OWN_LOT_MODEL,
   OWN_LOT_PUBLIC_URL_PATH,
   ownLotHasHit,
@@ -44,6 +46,7 @@ import {
   type OwnLotSnapshot,
   type OwnLotUnit,
 } from "./ownLotInventory.ts";
+import { searchLotUnits } from "../lot/lotSearch.ts";
 import {
   COACH_BRANDS,
   consonantBrandShape,
@@ -510,6 +513,8 @@ test("in-app chat and voice research are wired; DialaBot stays out", () => {
   assert.match(src(".", "ownLotInventory.ts"), /DEFAULT_OWN_LOT_JSON_PATH/);
   assert.match(src(".", "ownLotInventory.ts"), /OWN_LOT_PUBLIC_URL_PATH/);
   assert.match(src(".", "ownLotInventory.ts"), /sameOriginOwnLotUrls/);
+  assert.match(src(".", "ownLotInventory.ts"), /from "\.\.\/lot\/lotSearch/);
+  assert.match(src(".", "ownLotInventory.ts"), /searchLotUnits/);
   assert.match(api, /requestOrigin/);
   assert.doesNotMatch(api, /[Dd]ialaBot/);
   assert.doesNotMatch(telemetry, /[Dd]ialaBot/);
@@ -1536,6 +1541,90 @@ const DAVID_INVENTORY_ASKS = [
   "Can you look in my inventory for a 27A Vision?",
   "I need to know if we have any Integras with a E Vision 27As in our inventory.",
 ];
+
+test("lot search asks (look/find/27A) open own-lot; product designations do not", () => {
+  const yes = [
+    "look for a 27A",
+    "find 27A",
+    "search 27A",
+    "27A on the lot",
+    "27A",
+    "do we have a 27A",
+  ];
+  for (const q of yes) {
+    assert.equal(looksLikeOwnLotStockQuestion(q), true, q);
+    assert.equal(looksLikeOwnLotSearchAsk(q) || /do we have/i.test(q), true, q);
+  }
+  assert.equal(lotSearchQueryFromAsk("look for a 27A"), "27a");
+  assert.equal(lotSearchQueryFromAsk("find 27A"), "27a");
+  assert.equal(lotSearchQueryFromAsk("27A on the lot"), "27a");
+
+  const no = [
+    "tell me about the Entegra Vision SE",
+    "M series 25FW",
+    "look up 2022 Dutch Star 4369",
+    "2022 Newmar Dutch Star 4369",
+  ];
+  for (const q of no) {
+    assert.equal(looksLikeOwnLotStockQuestion(q), false, q);
+    assert.equal(looksLikeOwnLotSearchAsk(q), false, q);
+  }
+});
+
+test("look for a 27A uses Lot search and lists Vision SE 27ASE", () => {
+  const units = [
+    ...VISION_27ASE_UNITS,
+    ...VISION_FAMILY_DECOYS,
+    ...ENTEGRA_FRESNO_UNITS,
+  ];
+  const hits = searchLotUnits(units, "27A");
+  assert.ok(hits.length >= 1);
+  assert.ok(
+    hits.some((u) => u.model === "Vision SE" && u.trim === "27ASE"),
+  );
+  assert.equal(
+    hits.filter((u) => u.trim === "27ASE").length,
+    3,
+  );
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units,
+  });
+  for (const ask of ["look for a 27A", "find 27A", "27A", "do we have a 27A"]) {
+    const block = formatOwnLotBlock(snapshot, ask);
+    assert.match(block, /Matched: 3/, ask);
+    assert.match(block, /stk 47034/, ask);
+    assert.match(block, /stk 47033/, ask);
+    assert.match(block, /stk 46222/, ask);
+    assert.match(block, /Vision SE/, ask);
+    assert.match(block, /Matching units/, ask);
+    assert.doesNotMatch(block, /stk E2411/, ask);
+    assert.doesNotMatch(block, /stk XL360/, ask);
+    assert.doesNotMatch(block, /UNAVAILABLE/, ask);
+  }
+
+  const empty = formatOwnLotBlock(snapshot, "look for a 99ZZ");
+  assert.match(empty, /Matched: 0/);
+  assert.match(empty, /do not have that coach on the lot/i);
+  assert.doesNotMatch(empty, /Matching units/);
+
+  const failed = formatOwnLotBlock(
+    {
+      ok: false,
+      reason: "missing",
+      asOf: "",
+      source: "own",
+      dealer: "RV Country",
+      fuelFieldPresent: false,
+      pathTried: DEFAULT_OWN_LOT_JSON_PATH,
+      units: [],
+    },
+    "look for a 27A",
+  );
+  assert.match(failed, /UNAVAILABLE/);
+  assert.doesNotMatch(failed, /Matched: 0/);
+});
 
 test("David inventory asks list the three 27ASE stocks even with catalog GAP speech", () => {
   assert.equal(extractFloorplanToken("E Vision 27As"), "27A");

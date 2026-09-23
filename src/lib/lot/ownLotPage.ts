@@ -2,7 +2,10 @@
  * Salesman Lot stock page — RV Country own-lot snapshot only.
  * Browser-safe: does not import RV Grok's Node own-lot loader.
  * Does not read the brochure catalog. Does not change RV Grok resolve.
+ * Token search lives in lotSearch.ts so Grok can share it.
  */
+
+import { searchLotUnits } from "./lotSearch.ts";
 
 export const LOT_SNAPSHOT_URL = "/inventory/own-lot-latest.json";
 export const LOT_GAP = "GAP";
@@ -237,44 +240,12 @@ export function lotUnitKey(unit: LotUnit, index: number): string {
   ].join("|");
 }
 
-const SEARCH_FIELDS = [
-  "year",
-  "make",
-  "model",
-  "trim",
-  "stock_number",
-  "body_type",
-  "location",
-  "vin",
-  "title",
-  "condition",
-  "lot_status",
-  "dealer",
-] as const;
-
-export function tokenizeLotQuery(query: string): string[] {
-  return query
-    .toLowerCase()
-    .split(/[\s,/|]+/)
-    .map((t) => t.trim())
-    .filter(Boolean);
-}
-
-export function lotUnitSearchText(unit: LotUnit): string {
-  return SEARCH_FIELDS.map((k) => String(unit[k] ?? ""))
-    .join(" ")
-    .toLowerCase();
-}
-
-/** Empty search returns the full lot. Tokens are AND-matched on own-lot fields. */
-export function searchLotUnits(units: LotUnit[], query: string): LotUnit[] {
-  const tokens = tokenizeLotQuery(query);
-  if (!tokens.length) return units;
-  return units.filter((unit) => {
-    const hay = lotUnitSearchText(unit);
-    return tokens.every((t) => hay.includes(t));
-  });
-}
+export {
+  lotUnitSearchText,
+  searchLotUnits,
+  tokenizeLotQuery,
+  type LotSearchable,
+} from "./lotSearch.ts";
 
 const TYPE_LABELS: Record<string, string> = {
   "Travel Trailer": "Travel trailer",

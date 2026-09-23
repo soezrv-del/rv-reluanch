@@ -49,6 +49,13 @@ test("Tell me about a 2025 Jayco Seneca 37K is a product ask, not inventory", ()
   assert.equal(shouldSkipWebForOwnLot(SENECA), false);
 });
 
+test("tell me about the Entegra Vision SE stays product — not a lot search", () => {
+  const q = "tell me about the Entegra Vision SE";
+  assert.equal(looksLikeOwnLotStockQuestion(q), false);
+  assert.equal(looksLikeInventoryOrCountQuestion(q), false);
+  assert.equal(looksLikeNamedCoachProductQuestion(q), true);
+});
+
 test("Seneca product turn grounding requires web/catalog and never lot-miss copy", () => {
   const chat = buildChatGrounding({ query: SENECA });
   assert.equal(chat.needsWeb, true);
