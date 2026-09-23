@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { RV_GROK_SESSION_INTRO } from "@/lib/rvgrok/speechPolicy";
 import { GrokAvatar } from "./GrokAvatar";
 
 export type GrokStarter = {
@@ -32,6 +33,7 @@ export function GrokLanding({
   toolbar,
   composer,
   hint,
+  greeting = RV_GROK_SESSION_INTRO,
   welcomeBack,
 }: {
   status: string;
@@ -42,7 +44,9 @@ export function GrokLanding({
   toolbar?: ReactNode;
   composer: ReactNode;
   hint?: string;
-  /** UI-only welcome chip. Separate from the session identity heading. */
+  /** Session heading. Hello, {name} after sign-in; I'm RvGrok before a name. */
+  greeting?: string;
+  /** UI-only welcome chip. Hidden when the heading is already Hello, {name}. */
   welcomeBack?: string;
 }) {
   return (
@@ -92,11 +96,14 @@ export function GrokLanding({
           <GrokStatusWord label={status} />
         </div>
 
-        <h1 className="grok-display mt-6 max-w-[18ch] text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-fg sm:text-[2.35rem]">
-          I'm RvGrok
+        <h1
+          data-rvgrok-greeting=""
+          className="grok-display mt-6 max-w-[18ch] text-[2rem] font-semibold leading-[1.12] tracking-[-0.03em] text-fg sm:text-[2.35rem]"
+        >
+          {greeting}
         </h1>
 
-        {welcomeBack ? (
+        {welcomeBack && greeting === RV_GROK_SESSION_INTRO ? (
           <p
             data-rvgrok-welcome=""
             className="grok-chip mt-3 rounded-full px-3.5 py-1.5 text-[13px] font-semibold text-fg"

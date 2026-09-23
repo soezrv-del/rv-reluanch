@@ -57,6 +57,10 @@ import {
 import { planGrokTabEntry } from "@/lib/rvgrok/tabEntry";
 import { useAccessOptional } from "@/components/access/AccessProvider";
 import { takeSessionWelcome, welcomeBackLine } from "@/lib/access/identity";
+import {
+  RV_GROK_SESSION_INTRO,
+  sessionIntroLine,
+} from "@/lib/rvgrok/speechPolicy";
 import { cn, uid } from "@/lib/utils";
 import { followUpChipsForThread } from "@/lib/rvgrok/followUpChips";
 import { MessageBubble } from "./MessageBubble";
@@ -1546,6 +1550,9 @@ export function RvGrokApp({
     </div>
   );
 
+  const visitorName = access?.allowed && access.name ? access.name : "";
+  const sessionGreeting = sessionIntroLine(visitorName);
+
   const startersOrThread = isLanding ? (
     <GrokLanding
       status={wingmanStatus}
@@ -1562,7 +1569,12 @@ export function RvGrokApp({
             ? "Live Voice armed · tap mic"
             : undefined
       }
-      welcomeBack={welcomeBack || undefined}
+      greeting={sessionGreeting}
+      welcomeBack={
+        sessionGreeting === RV_GROK_SESSION_INTRO
+          ? welcomeBack || undefined
+          : undefined
+      }
     />
   ) : (
     thread

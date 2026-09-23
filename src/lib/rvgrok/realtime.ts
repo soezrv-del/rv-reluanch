@@ -946,7 +946,7 @@ export class GrokRealtimeSession {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     this.introSpoken = true;
     try {
-      ws.send(JSON.stringify(buildSessionIntroResponse()));
+      ws.send(JSON.stringify(buildSessionIntroResponse(this.visitorFirstName)));
     } catch {
       this.introSpoken = false;
     }
