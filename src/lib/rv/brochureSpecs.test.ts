@@ -660,6 +660,12 @@ test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series F", "31ZW"), 22000);
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series F", "31ZW5"), 19500);
   assert.equal(findOemGvwrLbs("2025", "Grand Design", "Lineage Series E", "25FW"), null);
+  // 2026 Series F 31ZW dry weight / UVW consensus. Not 31ZW5 / not Series M / not other years.
+  assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series F", "31ZW"), 18186);
+  assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series F", "31ZW5"), null);
+  assert.equal(findOemUvwLbs("2025", "Grand Design", "Lineage Series F", "31ZW"), null);
+  assert.equal(findOemUvwLbs("2027", "Grand Design", "Lineage Series F", "31ZW"), null);
+  assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series M", "25FW"), null);
 
   // Airstream MY2027 RVUSA brochures — exact codes only. Do not open 2026.
   assert.equal(findOemGvwrLbs("2027", "Airstream", "Trade Wind", "23FB"), 6500);

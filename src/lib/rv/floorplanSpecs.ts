@@ -3117,6 +3117,19 @@ const OEM_UVW_PINS: OemUvwPin[] = [
     11638,
     "RVUSA 2027 Forest River Cardinal brochure.",
   ),
+
+  // Grand Design Lineage Series F 31ZW — OEM brochure omits UVW (GCWR/GVWR/tanks
+  // only). Pin the 2026 dry-weight / UVW dealer + spec consensus (18,186).
+  // Not 31ZW5 (F-550, GVWR 19,500). Not Series M / E. Not 18,148 (Clear Creek outlier).
+  ...uvwPins(
+    "grand design",
+    "lineage series f",
+    2026,
+    2026,
+    ["31ZW"],
+    18186,
+    "2026 Grand Design Lineage Series F 31ZW dry weight / UVW 18,186 — dealer + spec consensus. RVGuide 2026 Class C card: Dry Weight 18,186 / Payload 3,814 / Fuel 66.5 / Fresh 79 / Gray 66 / Black 45 / GVWR 22,000 (https://www.rvguide.com/specs/grand-design/class-c/2026/lineage-series-f/31zw.html). JD Power 2026 listing corroborates 18,186 (https://www.jdpower.com/rvs-for-sale/inventory/2026/grand-design/lineage-series-f/grand-bay-al/a7c5da6f-80ea-4a36-8198-884e07f0d529). OEM Lineage Series F brochure prints GCWR/GVWR/tanks and omits UVW (https://www.granddesignrv.com/motorized/lineage-series-f · http://library.rvusa.com/brochure/2026-Grand-Design-Lineage-Series-F.pdf). Clear Creek 18,148 is an outlier — do not pin. Not 31ZW5.",
+  ),
 ];
 
 /** Pin count for coverage reports / tests. */
@@ -3346,7 +3359,7 @@ type OemTankPin = {
 
 /**
  * Sourced holding-tank / fuel-cap pins. Catalog series + year-band SoT —
- * never invent gallons. UVW is not here (no published Series F UVW).
+ * never invent gallons. UVW lives in OEM_UVW_PINS (2026 31ZW dry-weight consensus).
  */
 const OEM_TANK_PINS: OemTankPin[] = [
   {
