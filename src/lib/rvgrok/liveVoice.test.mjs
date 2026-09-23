@@ -148,9 +148,9 @@ test("Live Voice session start introduces RV Grok once — not the old stall", (
   );
   assert.match(live, /buildSessionIntroResponse/);
   assert.match(live, /RV_GROK_SESSION_INTRO/);
-  assert.match(live, /sales-floor wingman/);
-  assert.match(live, /SALES_MISSION_POLICY/);
-  assert.match(live, /HONESTY_STANDING_POLICY/);
+  assert.match(policy, /sales-floor wingman/);
+  assert.match(policy, /SALES_MISSION_POLICY/);
+  assert.match(policy, /HONESTY_STANDING_POLICY/);
   assert.doesNotMatch(live, /redirect off-topic/);
   assert.doesNotMatch(live, /Not a search tool or general assistant/);
   assert.match(realtime, /maybeSpeakSessionIntro/);
@@ -182,6 +182,6 @@ test("liveVoice.ts session.update payload includes native web_search", () => {
   assert.match(live, /tools:\s*\[\s*\{\s*type:\s*"web_search"\s*\}\s*\]/);
   assert.match(live, /REALTIME_SESSION_TOOLS/);
   assert.match(live, /native web_search/);
-  assert.match(live, /say so and retry once/);
+  assert.match(live, /Say exactly: \$\{RV_GROK_SESSION_INTRO\}/);
   assert.doesNotMatch(live, /input_audio_transcription/);
 });
