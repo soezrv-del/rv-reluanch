@@ -9,7 +9,7 @@
  * Phase 4: cache only after pin+validation; refresh/clear controls.
  */
 
-import { researchAccessHeaders } from "@/lib/access/researchUnlock";
+import { researchAccessHeaders } from "../access/researchUnlock.ts";
 import {
   applyPowertrainPin,
   clearAllVerifiedDossiers,

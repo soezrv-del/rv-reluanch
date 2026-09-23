@@ -6,17 +6,16 @@
  * existing JSON extract. Soft-fail returns null so catalog paint stays.
  */
 
-import { getResearchProviderOverride } from "@/lib/rvgrok/researchProviderStore";
 import {
   executeWebResearch,
   type ExecuteWebResearchOpts,
   type WebResearchApiBody,
-} from "@/lib/rvgrok/webResearchTelemetry";
+} from "../rvgrok/webResearchTelemetry.ts";
 import {
   researchTimeoutMs,
   WEB_SEARCH_MAX_TOOL_CALLS,
   WEB_SEARCH_MODELS,
-} from "@/lib/rvgrok/webSearch";
+} from "../rvgrok/webSearch.ts";
 
 export type FactsDossierResearchNotes = {
   text: string;
@@ -34,7 +33,7 @@ export type ResearchFactsDossierNotesOpts = {
   execute?: (
     opts: ExecuteWebResearchOpts,
   ) => Promise<WebResearchApiBody>;
-  /** Tests inject; production reads the access-admin override. */
+  /** Access-admin override from the route (never a visitor header). */
   researchProvider?: string;
 };
 
@@ -61,10 +60,6 @@ export async function researchFactsDossierNotes(
 ): Promise<FactsDossierResearchNotes | null> {
   const query = factsDossierResearchQuery(opts);
   const execute = opts.execute ?? executeWebResearch;
-  const researchProvider =
-    opts.researchProvider !== undefined
-      ? opts.researchProvider
-      : ((await getResearchProviderOverride()) ?? undefined);
 
   const researched = await execute({
     query,
@@ -75,7 +70,7 @@ export async function researchFactsDossierNotes(
     profile: "chat",
     skipGate: true,
     maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
-    researchProvider,
+    researchProvider: opts.researchProvider,
   });
 
   if (!researched.ok || !researched.notes.trim()) return null;

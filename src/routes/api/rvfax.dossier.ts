@@ -13,6 +13,7 @@ import {
   sanitizeUnverifiedLayout,
 } from "@/lib/rv/promptRules";
 import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
+import { getResearchProviderOverride } from "@/lib/rvgrok/researchProviderStore";
 import { researchFactsDossierNotes } from "@/lib/rv/factsDossierResearch";
 
 /**
@@ -354,6 +355,7 @@ async function runTwoStepDossier(opts: {
     model: opts.model,
     floorplan: opts.floorplan,
     catalogBlock: candidateBlock,
+    researchProvider: (await getResearchProviderOverride()) ?? undefined,
   });
   if (!research?.text) return null;
 

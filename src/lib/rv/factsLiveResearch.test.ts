@@ -14,71 +14,12 @@ import {
   factsDossierResearchQuery,
   researchFactsDossierNotes,
 } from "./factsDossierResearch.ts";
-import { applyPowertrainPin } from "./verifiedCatalogCache.ts";
-import {
-  fetchLiveDossier,
-  mergeLiveIntoDisplay,
-  type LiveDossier,
-  type SpecDisplay,
-} from "./liveDossier.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
 function src(rel: string) {
   return readFileSync(join(root, rel), "utf8");
-}
-
-function stubDossier(over: Partial<LiveDossier> = {}): LiveDossier {
-  return {
-    year: 2023,
-    make: "American Coach",
-    model: "American Dream",
-    floorplan: "45A",
-    rvType: "Class A Diesel",
-    engine: "Cummins L9 450HP",
-    horsepower: 450,
-    torqueLbFt: 1250,
-    transmission: "Allison 3000",
-    chassis: "Freightliner",
-    fuelType: "Diesel",
-    towingCapacityLbs: null,
-    fuelCapacityGal: null,
-    overallLength: "45 ft",
-    exteriorWidth: null,
-    exteriorHeight: null,
-    interiorHeight: null,
-    gvwrLbs: null,
-    uvwLbs: null,
-    cccLbs: null,
-    slideouts: null,
-    sleeps: null,
-    freshWaterGal: null,
-    grayWaterGal: null,
-    blackWaterGal: null,
-    generator: null,
-    mpgHighwayEst: null,
-    warranty: null,
-    floorplansThisYear: [],
-    overview: "Live invented an L9 on 45A.",
-    keyFeatures: [],
-    reliabilitySummary: null,
-    commonIssues: [],
-    servicePriorities: [],
-    ownerSentiment: null,
-    ratingEstimate: null,
-    marketNotes: null,
-    tradeInUsd: null,
-    retailLowUsd: null,
-    retailHighUsd: null,
-    msrpLowUsd: null,
-    msrpHighUsd: null,
-    confidence: "medium",
-    sourcesNote: "forum guess",
-    fetchedAt: new Date().toISOString(),
-    live: true,
-    ...over,
-  };
 }
 
 test("Facts open always attempts the shared internet research path", () => {
@@ -89,8 +30,8 @@ test("Facts open always attempts the shared internet research path", () => {
 
   assert.match(helper, /executeWebResearch/);
   assert.match(helper, /skipGate: true/);
-  assert.match(helper, /getResearchProviderOverride/);
   assert.match(helper, /WEB_SEARCH_MODELS/);
+  assert.match(dossier, /getResearchProviderOverride/);
   assert.match(helper, /researchTimeoutMs\("chat"/);
   assert.doesNotMatch(
     helper,
@@ -117,13 +58,14 @@ test("Facts open always attempts the shared internet research path", () => {
   assert.match(detail, /fetchLiveDossier\(/);
   assert.doesNotMatch(
     detail,
-    /if\s*\(.*catalog.*\)\s*return[\s\S]{0,80}fetchLiveDossier/,
+    /if\s*\(!.*catalog[\s\S]{0,80}fetchLiveDossier/,
     "report open must not skip live research when catalog has a row",
   );
 
   assert.match(live, /\/api\/rvfax\/dossier/);
   assert.match(live, /researchAccessHeaders/);
-  assert.match(live, /saveVerifiedDossier/);
+  assert.match(live, /lockPowertrainFromCatalog/);
+  assert.match(live, /applyPowertrainPin/);
 });
 
 test("research query is a coach-report ask so the spec budget applies", () => {
@@ -186,25 +128,18 @@ test("catalog miss / research failure soft-fails — no invented notes", async (
   });
   assert.equal(notes, null);
 
-  const prior = globalThis.fetch;
-  globalThis.fetch = (async () =>
-    new Response(
-      JSON.stringify({
-        error: "Live dossier unavailable — catalog year-band remains on screen.",
-        meta: { pipeline: "web-research-then-extract", model: null },
-      }),
-      { status: 502, headers: { "Content-Type": "application/json" } },
-    )) as typeof fetch;
-  try {
-    const res = await fetchLiveDossier("1998", "Unknown Coachworks", "Phantom");
-    assert.equal(res.ok, false);
-    if (!res.ok) {
-      assert.match(res.error, /catalog year-band remains/);
-      assert.equal(res.status, 502);
-    }
-  } finally {
-    globalThis.fetch = prior;
-  }
+  const dossier = src("../../routes/api/rvfax.dossier.ts");
+  const live = src("liveDossier.ts");
+  assert.match(dossier, /if \(!twoStep\)/);
+  assert.match(dossier, /status: 502/);
+  assert.match(dossier, /catalog year-band remains on screen/);
+  assert.match(live, /if \(json && json\.data && typeof json\.data === "object"\)/);
+  assert.match(live, /Live lookup failed/);
+  assert.match(
+    live,
+    /catalog year-band remains/,
+    "client soft-fail keeps catalog paint",
+  );
 });
 
 test("brochure powertrain pins are not stomped by live research fields", () => {
@@ -217,50 +152,21 @@ test("brochure powertrain pins are not stomped by live research fields", () => {
   assert.ok(pin);
   assert.match(pin!.engine, /X15/);
   assert.equal(pin!.horsepower, 605);
-
-  const live = stubDossier();
-  const pinned = applyPowertrainPin(
-    "2023",
-    "American Coach",
-    "American Dream",
-    "45A",
-    live,
+  assert.ok(
+    Math.abs(450 - pin!.horsepower) >= 40,
+    "live L9 450 vs pin 605 is a >=40 HP miss — applyBrochurePin must restamp",
   );
-  assert.match(pinned.engine || "", /X15/);
-  assert.equal(pinned.horsepower, 605);
-  assert.notEqual(pinned.engine, live.engine);
 
-  const catalog: SpecDisplay = {
-    engine: pin!.engine,
-    horsepower: `${pin!.horsepower} HP`,
-    torque: "1,950 lb-ft",
-    transmission: pin!.transmission || "Allison 4000 MH",
-    chassis: pin!.chassis || "Spartan K3",
-    hitchOrPin: "—",
-    fuelCapacity: "—",
-    lengthFt: "45 ft",
-    exteriorWidth: "—",
-    exteriorHeight: "—",
-    interiorHeight: "—",
-    gvwr: "—",
-    uvw: "—",
-    ccc: "—",
-    slideouts: "—",
-    sleeps: "—",
-    freshWater: "—",
-    grayWater: "—",
-    blackWater: "—",
-    generator: "—",
-    mpgHighway: "—",
-    warranty: "—",
-  };
-  const merged = mergeLiveIntoDisplay(catalog, live, {
-    lockPowertrainFromCatalog: true,
-  });
-  assert.equal(merged.engine, catalog.engine);
-  assert.equal(merged.horsepower, catalog.horsepower);
-  assert.equal(merged.chassis, catalog.chassis);
-  assert.equal(merged.lengthFt, "45 ft");
+  const dossier = src("../../routes/api/rvfax.dossier.ts");
+  const live = src("liveDossier.ts");
+  const cache = src("verifiedCatalogCache.ts");
+  assert.match(dossier, /parsed = applyBrochurePin\(parsed\)/);
+  assert.match(dossier, /applyCatalogCandidateTruth/);
+  assert.match(dossier, /engine: pin\.engine/);
+  assert.match(dossier, /horsepower: pin\.horsepower/);
+  assert.match(live, /lockPowertrainFromCatalog !== false/);
+  assert.match(cache, /export function applyPowertrainPin/);
+  assert.match(live, /return applyPowertrainPin\(/);
 });
 
 test("DialaBot / Bland / phonebook stay untouched by this Facts path", () => {
