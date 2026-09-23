@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
 import type { LiveDossier } from "@/lib/rv/liveDossier";
 import {
@@ -8,30 +9,32 @@ import {
   powertrainConflictsWithPin,
 } from "@/lib/rv/powertrainCorrections";
 import {
-  FINDINGS_NOT_GUESSES_RULE,
   FLOORPLAN_CODE_RULE,
   sanitizeUnverifiedLayout,
 } from "@/lib/rv/promptRules";
 import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
+import { researchFactsDossierNotes } from "@/lib/rv/factsDossierResearch";
 
 /**
  * POST /api/rvfax/dossier
- * Phase 3: two-step Live (research notes → JSON), year-band candidate truth
- * injected, latest Grok models, soft fail keeps catalog paint on client.
+ * Live internet research (same stack as RV Grok) → JSON extract.
+ * Catalog paints instantly on the client; soft-fail keeps that paint.
  */
 
 const cache = new Map<string, { at: number; data: LiveDossier; model?: string }>();
 const TTL_MS = 6 * 60 * 60 * 1000;
 /** Bump when OEM ground-truth / prompt pipeline / pins change (Phase 4.4) */
-const CACHE_VER = "v23-catalog-hard-lock-ground";
+const CACHE_VER = "v24-web-research-notes";
 
-/** Prefer current Grok; fall through if a slug is unavailable */
+/** JSON extract only — browse uses WEB_SEARCH_MODELS (grok-4.7). */
 const DOSSIER_MODELS = [
+  "grok-4.7",
+  "grok-4.6",
   "grok-4-latest",
-  "grok-4",
-  "grok-3",
-  "grok-2-1212",
+  "grok-4.5",
 ] as const;
+
+const DOSSIER_PIPELINE = "web-research-then-extract";
 
 export type CatalogCandidate = {
   engine?: string | null;
@@ -50,28 +53,7 @@ export type CatalogCandidate = {
   gvwr?: string | null;
 };
 
-const RESEARCH_SYSTEM = `You are Grok researching one RV for RVFAX Pro.
-
-Task: produce concise RESEARCH NOTES (not JSON) for the EXACT coach identity:
-  YEAR + MAKE + MODEL + FLOORPLAN (floorplan is mandatory when provided).
-
-Rules:
-1. FLOORPLAN IS PART OF THE IDENTITY. If a floorplan code is given (e.g. 4037, 37BH, 24.1), every hard fact (engine, HP, torque, chassis, length, GVWR, tanks) must be for THAT plan — not the model line average.
-2. When floorplan is provided, do NOT answer with model-wide ranges like "34–44 ft" or "B6.7 or L9 360–450" unless the brochure truly lists both as options on that same plan. Prefer the single OEM package for that plan.
-3. Powertrain often splits by plan length/tag (e.g. Ventana 34–37 = B6.7 360; 40–43 = L9 400). Never paste a sibling floorplan's option.
-4. Prefer OEM brochure / chassis sheet / door-sticker style facts for that MY + plan.
-5. Never steal powertrain from a sibling model (Kountry Star ≠ Bay Star; Allegro RED ≠ Bus; Phaeton 37BH ≠ 44OH; Vegas ≠ ACE F53).
-6. If floorplan is MISSING, say so and keep powertrain as year-band model default with UNCERTAIN for plan-specific options — do not invent a floorplan.
-7. If unsure, say UNCERTAIN — do not invent horsepower (never invent 450).
-8. Include a SOURCES line with OEM-style cites.
-9. Keep under 400 words.
-10. ${FLOORPLAN_CODE_RULE}
-11. ${FINDINGS_NOT_GUESSES_RULE}
-12. Hard powertrain in these notes is never stored. Catalog year-band and brochure pins are cache truth.
-Never call a floorplan a bunkhouse, bath-and-a-half, front-kitchen, or bunks unless the brochure/listing TEXT you found says that. Codes like 37BH, 38K, 37L mean nothing by themselves.
-Sections: IDENTITY (year/make/model/floorplan), POWERTRAIN (this floorplan), DIMENSIONS/WEIGHTS (this floorplan), TANKS, MARKET, RELIABILITY, SOURCES.`;
-
-const EXTRACT_SYSTEM = `You are Grok converting RV research notes into an RVFAX Pro OEM dossier JSON.
+const EXTRACT_SYSTEM = `You are Grok converting live WEB RESEARCH notes into an RVFAX Pro OEM dossier JSON.
 
 OUTPUT RULE (absolute):
 Your entire reply must be ONE JSON object. No markdown fences. No preamble. First character = { last character = }.
@@ -350,7 +332,8 @@ async function callGrok(
 }
 
 /**
- * Phase 3.1 — research notes, then JSON extract.
+ * Internet research notes (RV Grok stack), then JSON extract.
+ * Catalog candidate is a lock, never a reason to skip the browse.
  */
 async function runTwoStepDossier(opts: {
   year: string;
@@ -365,20 +348,12 @@ async function runTwoStepDossier(opts: {
     ? `FLOORPLAN LOCK: Research ONLY floorplan "${opts.floorplan}". Length, GVWR, engine, and HP must match this plan. Do not average the whole model line.`
     : `NO FLOORPLAN: State that plan-specific options are unknown. Do not invent a floorplan or a single definitive length/HP package.`;
 
-  const researchUser = `Research this exact coach for RVFAX:
-${coach}
-
-${fpRule}
-
-${candidateBlock}
-
-Write RESEARCH NOTES with IDENTITY, POWERTRAIN (this floorplan), DIMENSIONS/WEIGHTS (this floorplan), TANKS, MARKET, RELIABILITY, and SOURCES.
-POWERTRAIN must match this model year AND floorplan (not a sibling plan or model). If candidate and research disagree, explain.
-${FLOORPLAN_CODE_RULE}
-Do not call it a bunkhouse or bath-and-a-half unless the OEM/listing text you found uses those words.`;
-
-  const research = await callGrok(RESEARCH_SYSTEM, researchUser, {
-    temperature: 0.1,
+  const research = await researchFactsDossierNotes({
+    year: opts.year,
+    make: opts.make,
+    model: opts.model,
+    floorplan: opts.floorplan,
+    catalogBlock: candidateBlock,
   });
   if (!research?.text) return null;
 
@@ -713,6 +688,8 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const denied = await denyUnlessWhitelisted(request);
+        if (denied) return denied;
         try {
           const body = (await request.json()) as {
             year?: string | number;
@@ -747,7 +724,7 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
               meta: {
                 model: hit.model || "cache",
                 cached: true,
-                pipeline: "phase3-two-step",
+                pipeline: DOSSIER_PIPELINE,
               },
             });
           }
@@ -765,7 +742,7 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
               {
                 error:
                   "Live dossier unavailable — catalog year-band remains on screen.",
-                meta: { pipeline: "phase3-two-step", model: null },
+                meta: { pipeline: DOSSIER_PIPELINE, model: null },
               },
               { status: 502 },
             );
@@ -784,7 +761,7 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
               {
                 error:
                   "Live dossier returned unreadable data — catalog year-band remains.",
-                meta: { model: twoStep.model, pipeline: "phase3-two-step" },
+                meta: { model: twoStep.model, pipeline: DOSSIER_PIPELINE },
               },
               { status: 502 },
             );
@@ -825,7 +802,7 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
             meta: {
               model: twoStep.model,
               cached: false,
-              pipeline: "phase3-two-step",
+              pipeline: DOSSIER_PIPELINE,
               preferredModels: DOSSIER_MODELS,
             },
           });

@@ -5,10 +5,11 @@
  * next open of the same coach is accurate immediately.
  *
  * Phase 1–2: year-true hard powertrain locked; Live cannot stomp.
- * Phase 3: catalog candidate injected; two-step research on server.
+ * Phase 3: catalog candidate injected; internet research then JSON extract.
  * Phase 4: cache only after pin+validation; refresh/clear controls.
  */
 
+import { researchAccessHeaders } from "@/lib/access/researchUnlock";
 import {
   applyPowertrainPin,
   clearAllVerifiedDossiers,
@@ -158,10 +159,10 @@ export async function fetchLiveDossier(
   try {
     const resp = await fetch("/api/rvfax/dossier", {
       method: "POST",
-      headers: {
+      headers: researchAccessHeaders({
         "Content-Type": "application/json",
         Accept: "application/json",
-      },
+      }),
       body: JSON.stringify({
         year: year.trim(),
         make: make.trim(),
