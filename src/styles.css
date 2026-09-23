@@ -501,7 +501,7 @@
 @media (max-height: 780px) {
   .sapphire-header {
     padding-top: max(
-      0.75rem,
+      3.25rem,
       calc(
         env(safe-area-inset-top, 0px) + 0.5rem + var(--zoom-safe-top, 0px)
       )
@@ -1416,6 +1416,15 @@
     calc(env(safe-area-inset-top, 0px) + 0.5rem + var(--zoom-safe-top, 0px))
   );
 }
+@media (max-width: 639px) {
+  /* Status bar / Dynamic Island floor when env() is 0 (WKWebView / zoom). */
+  .sapphire-header {
+    padding-top: max(
+      3.25rem,
+      calc(env(safe-area-inset-top, 0px) + 0.5rem + var(--zoom-safe-top, 0px))
+    );
+  }
+}
 
 /* Three-dot Premium control — viewport-relative corners (Trips / landing).
    Absolute `top` is the padding edge, so it must include safe-area + slack. */
@@ -1426,6 +1435,15 @@
   );
   right: max(0.625rem, calc(env(safe-area-inset-right, 0px) + 0.5rem));
 }
+@media (max-width: 639px) {
+  /* Same island floor as [data-trips-header] when env() is 0. */
+  .premium-menu-corner {
+    top: max(
+      3.25rem,
+      calc(env(safe-area-inset-top, 0px) + 0.5rem + var(--zoom-safe-top, 0px))
+    );
+  }
+}
 
 /* Grok thread chrome (sapphire header is display:none on wingman). */
 [data-grok-thread-chrome] {
@@ -1433,6 +1451,14 @@
     0.4rem,
     calc(env(safe-area-inset-top, 0px) + 0.45rem + var(--zoom-safe-top, 0px))
   );
+}
+@media (max-width: 639px) {
+  [data-grok-thread-chrome] {
+    padding-top: max(
+      3.25rem,
+      calc(env(safe-area-inset-top, 0px) + 0.45rem + var(--zoom-safe-top, 0px))
+    );
+  }
 }
 
 /* Landing ⋯ / History / Agent / Voice — extra slack inside the already-padded card. */

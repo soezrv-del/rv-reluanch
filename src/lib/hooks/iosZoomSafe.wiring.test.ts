@@ -33,6 +33,10 @@ test("sapphire header, trips ⋯, and Grok thread chrome add safe-area + slack",
     css,
     /\.sapphire-header \{[\s\S]*?calc\(env\(safe-area-inset-top, 0px\) \+ 0\.5rem \+ var\(--zoom-safe-top/,
   );
+  assert.match(
+    css,
+    /@media \(max-width: 639px\) \{[\s\S]*?\.sapphire-header \{[\s\S]*?3\.25rem/,
+  );
   assert.match(css, /\.premium-menu-corner \{[\s\S]*?safe-area-inset-top/);
   assert.match(css, /\[data-grok-thread-chrome\] \{[\s\S]*?safe-area-inset-top/);
 
