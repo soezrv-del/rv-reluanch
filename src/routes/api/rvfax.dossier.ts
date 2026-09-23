@@ -22,6 +22,8 @@ import {
   researchFactsDossierNotes,
   researchFactsSoftNotes,
   resolveFactsCatalogPins,
+  shouldServeFactsDossierCache,
+  shouldStoreFactsDossierCache,
   type FactsCatalogCandidate,
   type FactsHardField,
   type FactsSoftFields,
@@ -37,7 +39,7 @@ import {
 const cache = new Map<string, { at: number; data: LiveDossier; model?: string }>();
 const TTL_MS = 6 * 60 * 60 * 1000;
 /** Bump when OEM ground-truth / prompt pipeline / pins change (Phase 4.4) */
-const CACHE_VER = "v27-candidate-aliases";
+const CACHE_VER = "v28-gap-cache-bypass";
 
 /** JSON extract only — browse uses WEB_SEARCH_MODELS (grok-4.7). */
 const DOSSIER_MODELS = [
@@ -805,17 +807,21 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
           const key =
             `${CACHE_VER}|${year}|${make}|${model}|${floorplan}`.toLowerCase();
           const hit = cache.get(key);
-          if (hit && Date.now() - hit.at < TTL_MS) {
+          const cachedPlan = planFactsDossierResearch({
+            year,
+            make,
+            model,
+            floorplan,
+            candidate: catalogCandidate,
+          });
+          if (
+            hit &&
+            Date.now() - hit.at < TTL_MS &&
+            shouldServeFactsDossierCache(cachedPlan)
+          ) {
             let data = applyOemGroundTruth({ ...hit.data, cached: true });
             data = applyCatalogCandidateTruth(data, catalogCandidate);
             data = applyBrochurePin(data);
-            const cachedPlan = planFactsDossierResearch({
-              year,
-              make,
-              model,
-              floorplan,
-              candidate: catalogCandidate,
-            });
             return Response.json({
               data,
               meta: {
@@ -911,19 +917,33 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
             };
           }
 
-          cache.set(key, {
-            at: Date.now(),
-            data: {
-              ...parsed,
-              engine: null,
-              horsepower: null,
-              torqueLbFt: null,
-              chassis: null,
-              transmission: null,
-              fuelType: null,
-            },
-            model: twoStep.model,
-          });
+          const remainingHardGaps = planFactsDossierResearch({
+            year,
+            make,
+            model,
+            floorplan,
+            candidate: parsed,
+          }).gaps;
+          if (
+            shouldStoreFactsDossierCache({
+              skipLive: twoStep.skipLive,
+              remainingHardGaps,
+            })
+          ) {
+            cache.set(key, {
+              at: Date.now(),
+              data: {
+                ...parsed,
+                engine: null,
+                horsepower: null,
+                torqueLbFt: null,
+                chassis: null,
+                transmission: null,
+                fuelType: null,
+              },
+              model: twoStep.model,
+            });
+          }
 
           return Response.json({
             data: parsed,

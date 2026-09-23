@@ -561,6 +561,31 @@ export function planFactsDossierResearch(opts: {
   };
 }
 
+/**
+ * In-memory dossier cache is a final answer only when catalog pins are
+ * complete (`skipLive`). Hard gaps must fall through to gap browse.
+ */
+export function shouldServeFactsDossierCache(
+  plan: Pick<FactsDossierGapPlan, "skipLive">,
+): boolean {
+  return plan.skipLive === true;
+}
+
+/**
+ * Persist cache for complete-pin skips, or after browse leaves no hard gaps.
+ * Incomplete extracts must not pin a coach for the 6h TTL.
+ */
+export function shouldStoreFactsDossierCache(opts: {
+  skipLive: boolean;
+  remainingHardGaps?: readonly FactsHardField[];
+}): boolean {
+  if (opts.skipLive) return true;
+  return (
+    Array.isArray(opts.remainingHardGaps) &&
+    opts.remainingHardGaps.length === 0
+  );
+}
+
 export function catalogPinsToLiveDossier(opts: {
   year: number;
   make: string;
