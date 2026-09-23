@@ -5,11 +5,14 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   filterLotBrowse,
+  isFloorplanLikeLotToken,
+  lotFloorplanTokensAlign,
   lotPriceOrGap,
   lotTextOrGap,
   lotTypeChips,
   lotTypeFamily,
   lotUnitPhoto,
+  normalizeLotFloorplanToken,
   pillLotTypeLabel,
   parseLotSnapshotJson,
   searchLotUnits,
@@ -70,6 +73,68 @@ test("search narrows by year, make, model, stock, type, location", () => {
   assert.equal(searchLotUnits(sample.units, "Impression Fresno").length, 0);
 });
 
+const floorplanHitch = parseLotSnapshotJson([
+  {
+    year: 2026,
+    make: "Entegra Coach",
+    model: "Vision SE",
+    trim: "27ASE",
+    stock_number: "47034",
+    title: "2026 Entegra Coach Vision SE 27ASE",
+    body_type: "Class A",
+    location: "Fife WA",
+    dealer: "RV Country",
+    source: "own",
+  },
+  {
+    year: 2005,
+    make: "S&S",
+    model: "BITTERROOT",
+    trim: "9SL",
+    stock_number: "UCO9527A",
+    title: "2005 S&S BITTERROOT 9SL",
+    vin: "9SC9087",
+    body_type: "Truck Camper",
+    location: "Coburg OR",
+    dealer: "RV Country",
+    source: "own",
+  },
+]);
+
+test("floorplan 27A matches Vision SE 27ASE and does not hitch UCO9527A", () => {
+  assert.equal(normalizeLotFloorplanToken("27As"), "27a");
+  assert.equal(normalizeLotFloorplanToken("27A's"), "27a");
+  assert.equal(normalizeLotFloorplanToken("27ASE"), "27ase");
+  assert.equal(isFloorplanLikeLotToken("27A"), true);
+  assert.equal(isFloorplanLikeLotToken("27As"), true);
+  assert.equal(isFloorplanLikeLotToken("UCO9527A"), false);
+  assert.equal(isFloorplanLikeLotToken("47034"), false);
+  assert.equal(lotFloorplanTokensAlign("27A", "27ASE"), true);
+  assert.equal(lotFloorplanTokensAlign("27As", "27ASE"), true);
+  assert.equal(lotFloorplanTokensAlign("27A", "UCO9527A"), false);
+
+  for (const q of ["27A", "27a", "27As"]) {
+    const rows = searchLotUnits(floorplanHitch.units, q);
+    assert.deepEqual(
+      rows.map((u) => u.stock_number),
+      ["47034"],
+      q,
+    );
+    assert.ok(rows.every((u) => u.model === "Vision SE" && u.trim === "27ASE"), q);
+    assert.ok(!rows.some((u) => u.stock_number === "UCO9527A"), q);
+  }
+
+  const byStockAlpha = searchLotUnits(floorplanHitch.units, "UCO9527A");
+  assert.equal(byStockAlpha.length, 1);
+  assert.equal(byStockAlpha[0]?.stock_number, "UCO9527A");
+  assert.equal(byStockAlpha[0]?.model, "BITTERROOT");
+
+  const byStockNum = searchLotUnits(floorplanHitch.units, "47034");
+  assert.equal(byStockNum.length, 1);
+  assert.equal(byStockNum[0]?.stock_number, "47034");
+  assert.equal(byStockNum[0]?.trim, "27ASE");
+});
+
 test("missing fields stay GAP — never invent a price or stock", () => {
   assert.equal(lotPriceOrGap(null), "GAP");
   assert.equal(lotPriceOrGap(0), "GAP");
@@ -107,6 +172,25 @@ test("bundled own-lot snapshot: empty search is the lot; no catalog bleed", () =
 
   const ghost = searchLotUnits(snap.units, "ZZZNOMATCH-CATALOG-BLEED");
   assert.equal(ghost.length, 0);
+
+  const hitch = snap.units.find((u) => u.stock_number === "UCO9527A");
+  assert.ok(hitch, "production snapshot still has the Bitterroot stock hitch");
+  const visions = snap.units.filter(
+    (u) => /vision se/i.test(`${u.model} ${u.title}`) && /27ase/i.test(u.trim),
+  );
+  assert.ok(visions.some((u) => u.stock_number === "47034"));
+
+  for (const q of ["27A", "27As"]) {
+    const rows = searchLotUnits(snap.units, q);
+    assert.ok(rows.some((u) => u.stock_number === "47034"), q);
+    assert.ok(
+      rows.every((u) => /27a/i.test(`${u.trim} ${u.model} ${u.title}`)),
+      q,
+    );
+    assert.ok(!rows.some((u) => u.stock_number === "UCO9527A"), q);
+  }
+  assert.equal(searchLotUnits(snap.units, "UCO9527A")[0]?.model, "BITTERROOT");
+  assert.equal(searchLotUnits(snap.units, "47034")[0]?.trim, "27ASE");
 });
 
 test("type chips come from the lot snapshot and filter without catalog bleed", () => {

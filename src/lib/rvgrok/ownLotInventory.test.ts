@@ -1199,6 +1199,19 @@ const VISION_FAMILY_DECOYS: OwnLotUnit[] = [
   }),
 ];
 
+/** Stock contains "27A" — must not hitch a floorplan ask. */
+const STOCK_SUBSTRING_HITCH: OwnLotUnit = pricedUnit({
+  year: "2005",
+  make: "S&S",
+  model: "BITTERROOT",
+  trim: "9SL",
+  body_type: "Truck Camper",
+  location: "Coburg OR",
+  stock_number: "UCO9527A",
+  vin: "9SC9087",
+  price: 7995,
+});
+
 test("Integra alias + 27A trim match the three Vision SE 27ASE units", () => {
   assert.ok(!COACH_BRANDS.includes("Integra"), "Integra is an alias, not a brand");
   assert.ok(!COACH_BRANDS.includes("Integra Coach"));
@@ -1229,6 +1242,7 @@ test("Integra alias + 27A trim match the three Vision SE 27ASE units", () => {
   const units = [
     ...VISION_27ASE_UNITS,
     ...VISION_FAMILY_DECOYS,
+    STOCK_SUBSTRING_HITCH,
     ...ENTEGRA_FRESNO_UNITS,
   ];
   const locations = [
@@ -1267,7 +1281,15 @@ test("Integra alias + 27A trim match the three Vision SE 27ASE units", () => {
       ask,
     );
     assert.ok(rows.every((u) => u.model === "Vision SE" && u.trim === "27ASE"), ask);
-    assert.ok(!rows.some((u) => u.stock_number === "E2411" || u.stock_number === "XL360"), ask);
+    assert.ok(
+      !rows.some(
+        (u) =>
+          u.stock_number === "E2411" ||
+          u.stock_number === "XL360" ||
+          u.stock_number === "UCO9527A",
+      ),
+      ask,
+    );
 
     const block = formatOwnLotBlock(snapshot, ask);
     assert.match(block, /Matched: 3/, ask);
@@ -1276,6 +1298,7 @@ test("Integra alias + 27A trim match the three Vision SE 27ASE units", () => {
     assert.match(block, /stk 46222/, ask);
     assert.doesNotMatch(block, /stk E2411/, ask);
     assert.doesNotMatch(block, /stk XL360/, ask);
+    assert.doesNotMatch(block, /stk UCO9527A/, ask);
   }
 });
 
@@ -1555,6 +1578,7 @@ test("David inventory asks list the three 27ASE stocks even with catalog GAP spe
   const units = [
     ...VISION_27ASE_UNITS,
     ...VISION_FAMILY_DECOYS,
+    STOCK_SUBSTRING_HITCH,
     ...ENTEGRA_FRESNO_UNITS,
   ];
   const locations = [
@@ -1596,6 +1620,7 @@ test("David inventory asks list the three 27ASE stocks even with catalog GAP spe
     assert.match(block, /Never say check your own lot listing/, ask);
     assert.doesNotMatch(block, /stk E2411/, ask);
     assert.doesNotMatch(block, /stk XL360/, ask);
+    assert.doesNotMatch(block, /stk UCO9527A/, ask);
   }
 
   const grounding = src(".", "grounding.ts");
@@ -1616,6 +1641,59 @@ test("David inventory asks list the three 27ASE stocks even with catalog GAP spe
   }
   assert.doesNotMatch(grounding, /INVENTORY_WINS_OVER_GAP/);
   assert.doesNotMatch(grounding, /inventoryAsk/);
+});
+
+test("Grok 27A / 27As floorplan asks exclude stock hitch UCO9527A", () => {
+  const units = [
+    ...VISION_27ASE_UNITS,
+    ...VISION_FAMILY_DECOYS,
+    STOCK_SUBSTRING_HITCH,
+    ...ENTEGRA_FRESNO_UNITS,
+  ];
+  const locations = [...new Set(units.map((u) => u.location).filter(Boolean))];
+  const expected = ["46222", "47033", "47034"];
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units,
+  });
+
+  assert.equal(floorplanTokensAlign("27A", "27ASE"), true);
+  assert.equal(floorplanTokensAlign("27A", "UCO9527A"), false);
+  assert.equal(parseOwnLotStockNumber("27A"), undefined);
+  assert.equal(parseOwnLotStockNumber("27As"), undefined);
+  assert.equal(parseOwnLotStockNumber("UCO9527A"), "UCO9527A");
+  assert.equal(parseOwnLotStockNumber("47034"), "47034");
+
+  for (const ask of ["27A", "27As", "27a"]) {
+    const filter = parseOwnLotAsk(ask, locations, units);
+    assert.match(filter.trim || "", /27A/i, ask);
+    assert.equal(filter.stockNumber, undefined, ask);
+    const rows = queryOwnLotUnits(units, filter, 12);
+    assert.deepEqual(
+      rows.map((r) => r.stock_number).sort(),
+      expected,
+      ask,
+    );
+    assert.ok(rows.every((u) => u.model === "Vision SE" && u.trim === "27ASE"), ask);
+    assert.ok(!rows.some((u) => u.stock_number === "UCO9527A"), ask);
+    const block = formatOwnLotBlock(snapshot, ask);
+    assert.match(block, /Matched: 3/, ask);
+    assert.match(block, /stk 47034/, ask);
+    assert.doesNotMatch(block, /stk UCO9527A/, ask);
+  }
+
+  const hitchFilter = parseOwnLotAsk("UCO9527A", locations, units);
+  assert.equal(hitchFilter.stockNumber, "UCO9527A");
+  const hitchRows = queryOwnLotUnits(units, hitchFilter, 12);
+  assert.deepEqual(hitchRows.map((r) => r.stock_number), ["UCO9527A"]);
+  assert.equal(hitchRows[0]?.model, "BITTERROOT");
+
+  const visionStock = parseOwnLotAsk("47034", locations, units);
+  assert.equal(visionStock.stockNumber, "47034");
+  const visionRows = queryOwnLotUnits(units, visionStock, 12);
+  assert.deepEqual(visionRows.map((r) => r.stock_number), ["47034"]);
+  assert.equal(visionRows[0]?.trim, "27ASE");
 });
 
 test("catalog coach lookup is not an own-lot miss — Dutch Star 4369 reports from the big catalog", () => {

@@ -252,6 +252,12 @@ const SEARCH_FIELDS = [
   "dealer",
 ] as const;
 
+/** Title / model / trim / year / make — never stock_number or VIN. */
+const FLOORPLAN_SEARCH_FIELDS = ["title", "model", "trim", "year", "make"] as const;
+
+/** 27A, 27ASE, 45D, 318RL — spoken floorplan / trim, not a stock fragment. */
+const FLOORPLAN_LIKE_TOKEN_RE = /^\d{2,3}[a-z]{1,4}$/i;
+
 export function tokenizeLotQuery(query: string): string[] {
   return query
     .toLowerCase()
@@ -266,13 +272,71 @@ export function lotUnitSearchText(unit: LotUnit): string {
     .toLowerCase();
 }
 
-/** Empty search returns the full lot. Tokens are AND-matched on own-lot fields. */
+function compactLotToken(s: string): string {
+  return (s || "").toLowerCase().replace(/[\s#'’-]+/g, "");
+}
+
+/** Spoken plural "27As" / "27A's" → 27A. Leaves 27ASE / 29S alone. */
+export function normalizeLotFloorplanToken(token: string): string {
+  const t = compactLotToken(token);
+  if (/^\d{2,3}[a-z]s$/i.test(t) && !/se$/i.test(t)) return t.slice(0, -1);
+  return t;
+}
+
+export function isFloorplanLikeLotToken(token: string): boolean {
+  return FLOORPLAN_LIKE_TOKEN_RE.test(normalizeLotFloorplanToken(token));
+}
+
+/**
+ * 27A ↔ 27ASE: ask is a prefix of the unit token (or the reverse) and the
+ * leftover is trailing series letters only (SE, XL).
+ */
+export function lotFloorplanTokensAlign(ask: string, unitToken: string): boolean {
+  const a = normalizeLotFloorplanToken(ask);
+  const u = compactLotToken(unitToken);
+  if (!a || !u) return false;
+  if (a === u) return true;
+  if (u.startsWith(a) && /^[a-z]+$/.test(u.slice(a.length))) return true;
+  if (a.startsWith(u) && /^[a-z]+$/.test(a.slice(u.length))) return true;
+  return false;
+}
+
+function unitMatchesExactStockOrVin(unit: LotUnit, token: string): boolean {
+  const t = compactLotToken(token).replace(/^#/, "");
+  if (!t) return false;
+  const stock = compactLotToken(unit.stock_number).replace(/^#/, "");
+  const vin = compactLotToken(unit.vin);
+  return (stock.length > 0 && stock === t) || (vin.length > 0 && vin === t);
+}
+
+function unitMatchesFloorplanLikeToken(unit: LotUnit, token: string): boolean {
+  if (lotFloorplanTokensAlign(token, unit.trim)) return true;
+  if (lotFloorplanTokensAlign(token, `${unit.model} ${unit.trim}`)) return true;
+  const blob = FLOORPLAN_SEARCH_FIELDS.map((k) => String(unit[k] ?? "")).join(" ");
+  const parts = blob.split(/[^A-Za-z0-9]+/).filter(Boolean);
+  return parts.some((part) => lotFloorplanTokensAlign(token, part));
+}
+
+/**
+ * Empty search returns the full lot. Tokens are AND-matched on own-lot fields.
+ * Floorplan-like tokens (27A, 27ASE, 318RL) match title/model/trim/year/make
+ * with 27A ↔ 27ASE alignment — never as a loose substring of stock_number/VIN.
+ * Typing a full stock # or VIN still finds that unit.
+ */
 export function searchLotUnits(units: LotUnit[], query: string): LotUnit[] {
   const tokens = tokenizeLotQuery(query);
   if (!tokens.length) return units;
   return units.filter((unit) => {
     const hay = lotUnitSearchText(unit);
-    return tokens.every((t) => hay.includes(t));
+    return tokens.every((t) => {
+      if (isFloorplanLikeLotToken(t)) {
+        return (
+          unitMatchesFloorplanLikeToken(unit, t) ||
+          unitMatchesExactStockOrVin(unit, t)
+        );
+      }
+      return hay.includes(t);
+    });
   });
 }
 
