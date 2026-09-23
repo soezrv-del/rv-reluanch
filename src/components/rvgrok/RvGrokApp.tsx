@@ -18,6 +18,7 @@ import {
 import { streamChat } from "@/lib/rvgrok/stream";
 import { GrokRealtimeSession } from "@/lib/rvgrok/realtime";
 import { buildChatGrounding, buildVoiceGrounding } from "@/lib/rvgrok/grounding";
+import { parseCoachFromText } from "@/lib/rvgrok/parseCoach";
 import {
   resolveDeskSheet,
   resolveDeskSheetThenFallback,
@@ -28,6 +29,7 @@ import {
   shouldShowPendingLiveDesk,
 } from "@/lib/rvgrok/deskSheetLayout";
 import { DeskSpecSheet } from "./DeskSpecSheet";
+import { GrokExtrasRail } from "./GrokExtrasRail";
 import { formatFeedbackContext } from "@/lib/rvgrok/answerFeedback";
 import { readActiveCoach } from "@/lib/rv/activeCoach";
 import { ensureCatalogLoaded } from "@/lib/rv/catalogLoad";
@@ -1518,13 +1520,29 @@ export function RvGrokApp({
     </>
   ) : null;
 
-  const deskAfterReply = (sheet: DeskSheetPayload) => (
+  const priorUserAt = (index: number) => {
+    for (let i = index - 1; i >= 0; i--) {
+      if (messages[i]?.role === "user") return messages[i].content || "";
+    }
+    return "";
+  };
+
+  const deskAfterReply = (sheet: DeskSheetPayload, query: string) => (
     <div
       data-rvgrok-report=""
       data-rvgrok-desk-after-reply=""
       className="w-full"
     >
       <DeskSpecSheet sheet={sheet} />
+      <GrokExtrasRail
+        query={query}
+        coach={{
+          year: sheet.year,
+          make: sheet.make,
+          model: sheet.model,
+          floorplan: sheet.floorplan,
+        }}
+      />
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
@@ -1566,13 +1584,27 @@ export function RvGrokApp({
             }}
             onSpeak={handleSpeak}
             speakingId={speakingId}
+            priorQuery={priorUserAt(i)}
             suggestions={i === followUps.index ? followUps.chips : undefined}
             onSuggestion={(prompt) => void sendMessage(prompt)}
           />
-          {i === deskAfterIdx && m.deskSheet ? deskAfterReply(m.deskSheet) : null}
+          {i === deskAfterIdx && m.deskSheet
+            ? deskAfterReply(m.deskSheet, priorUserAt(i))
+            : m.role === "assistant" && !m.streaming
+              ? (
+                  <GrokExtrasRail
+                    query={priorUserAt(i)}
+                    coach={parseCoachFromText(
+                      `${priorUserAt(i)} ${m.content || ""}`,
+                    )}
+                  />
+                )
+              : null}
         </Fragment>
       ))}
-      {pendingLiveSheet ? deskAfterReply(pendingLiveSheet) : null}
+      {pendingLiveSheet
+        ? deskAfterReply(pendingLiveSheet, priorUserAt(messages.length))
+        : null}
     </div>
   );
 

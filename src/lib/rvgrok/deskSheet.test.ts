@@ -470,7 +470,7 @@ test("2026 Lineage Series F 31ZW pin tanks/fuel paint without live catalog — c
   assert.equal(tanks.grayWater, 66);
   assert.equal(tanks.blackWater, 45);
   assert.equal(tanks.fuelCapacityGal, 66.5);
-  assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series F", "31ZW"), null);
+  assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series F", "31ZW"), 18186);
 
   const q = "2026 Grand Design Lineage 31ZW spec report";
   const identity = resolveCoachIdentity(q, null, "");
@@ -498,8 +498,8 @@ test("2026 Lineage Series F 31ZW pin tanks/fuel paint without live catalog — c
   assert.match(val("Fuel capacity"), /67\s*gal/i);
   assert.equal(gap("Fresh"), false);
   assert.equal(gap("Fuel capacity"), false);
-  assert.ok(gap("UVW"), "no published UVW — do not invent");
-  assert.equal(val("UVW"), "GAP");
+  assert.equal(gap("UVW"), false);
+  assert.match(val("UVW"), /18,186/);
 });
 
 test("shared fallback paints 2026 Lineage Series F 31ZW UVW 18,186 on the desk — no GAP", () => {
@@ -559,7 +559,7 @@ test("2026 Lineage Series F 31ZW catalog tanks/fuel paint when chat only names G
   assert.equal(brochure.grayWater, "66 gal");
   assert.equal(brochure.blackWater, "45 gal");
   assert.match(brochure.fuelCapacity, /67\s*gal/i);
-  assert.equal(brochure.uvwLbs, null);
+  assert.equal(brochure.uvwLbs, 18186);
 
   const chat =
     "The 2026 Grand Design Lineage 31ZW has a factory GVWR of 22,000 pounds. Search came back empty again.";
@@ -583,8 +583,8 @@ test("2026 Lineage Series F 31ZW catalog tanks/fuel paint when chat only names G
   assert.equal(gap("Fresh"), false);
   assert.match(val("Fuel capacity"), /67\s*gal/i);
   assert.equal(gap("Fuel capacity"), false);
-  assert.ok(gap("UVW"), "UVW stays GAP — catalog has no published UVW");
-  assert.equal(val("UVW"), "GAP");
+  assert.equal(gap("UVW"), false);
+  assert.match(val("UVW"), /18,186/);
   assert.equal(sheet!.floorplan, "31ZW");
   assert.match(sheet!.model, /lineage series f/i);
 });

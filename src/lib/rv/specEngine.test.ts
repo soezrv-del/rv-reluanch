@@ -42,10 +42,10 @@ function lineageFills() {
   });
 }
 
-test("catalog misses Lineage 31ZW UVW — no pin in this branch", () => {
+test("catalog pin from #487 paints Lineage 31ZW UVW 18186", () => {
   assert.equal(
     findOemUvwLbs("2026", "Grand Design", "Lineage Series F", "31ZW"),
-    null,
+    18186,
   );
 });
 
