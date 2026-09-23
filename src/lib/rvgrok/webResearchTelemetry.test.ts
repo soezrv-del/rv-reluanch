@@ -154,6 +154,7 @@ test("timeout with catalog pins still answers — does not abort empty", async (
       "LOCKED WEIGHTS (OEM pin — speak these; never claim GAP for a VERIFIED field):",
       "- VERIFIED GVWR 47000 from OEM pin",
     ].join("\n");
+    let knowledgeWrites = 0;
     const body = await executeWebResearch({
       query:
         "Give me the full specs report for 2021 American Coach American Dream 42Q — GVWR UVW fuel tanks engine",
@@ -163,6 +164,11 @@ test("timeout with catalog pins still answers — does not abort empty", async (
       profile: "voice",
       skipGate: true,
       researchProvider: "xai",
+      knowledge: {
+        upsert: () => {
+          knowledgeWrites += 1;
+        },
+      },
     });
     assert.equal(body.ok, true, "timeout + pins must still return notes");
     if (body.ok) {
@@ -170,6 +176,7 @@ test("timeout with catalog pins still answers — does not abort empty", async (
       assert.match(body.notes, /Cummins L9|Class A/i);
       assert.equal(body.model, "catalog-pin");
     }
+    assert.equal(knowledgeWrites, 0, "catalog-pin salvage must not write the sidecar");
   } finally {
     globalThis.fetch = prior;
   }
