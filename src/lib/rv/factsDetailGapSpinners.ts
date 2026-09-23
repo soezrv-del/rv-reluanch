@@ -3,7 +3,9 @@
  *
  * Uses the same catalog-first gap plan as LIVE_DOSSIER browse.
  * Only GVWR / horsepower / torque spin, and only when that field is
- * still a catalog gap and live fetch is in flight.
+ * still a catalog gap and live fetch is in flight. The wheel sits
+ * beside the empty "—" / input — never replaces it, never gates
+ * catalog paint of the rest of the report.
  */
 
 import type { FactsHardField } from "./factsDossierGapPlan.ts";

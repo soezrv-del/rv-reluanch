@@ -147,6 +147,32 @@ test("Facts detail wires planner + spinner; does not pull research sidecar", () 
   assert.match(detail, /searching=\{factsDetailFieldSearching\(\s*"horsepower"/);
   assert.match(detail, /searching=\{factsDetailFieldSearching\(\s*"torque"/);
   assert.match(detail, /searching=\{factsDetailFieldSearching\(\s*"gvwr"/);
+  assert.match(
+    detail,
+    /\{shown\}\s*\{searching \? <FactsGapSpinner field=\{label\} \/> : null\}/,
+    "SpecRow keeps — / catalog value beside the wheel, never replaces it",
+  );
+  assert.doesNotMatch(
+    detail,
+    /searching \? <FactsGapSpinner field=\{label\} \/> : shown/,
+  );
+  assert.match(
+    detail,
+    /placeholder=\{published\}/,
+    "GVWR empty box keeps — while the wheel spins beside it",
+  );
+  assert.doesNotMatch(detail, /placeholder=\{searching \? "" : published\}/);
+  assert.doesNotMatch(
+    detail,
+    /liveLoading \?\s*\(/,
+    "no full-page / section loader gated on LIVE_DOSSIER",
+  );
+  assert.doesNotMatch(detail, /if \(liveLoading\) return/);
+  assert.match(
+    detail,
+    /Phase 3\.4: do NOT clear year-band catalog paint/,
+    "catalog brochure stays on screen while gap browse runs",
+  );
   assert.doesNotMatch(detail, /from "@\/lib\/rv\/factsDossierResearch"/);
   assert.doesNotMatch(
     styles,
