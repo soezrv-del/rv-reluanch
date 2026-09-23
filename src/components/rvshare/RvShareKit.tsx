@@ -40,7 +40,6 @@ import {
   defaultPaymentFor,
   fetchShareImage,
   hydrateShareCoachResult,
-  hasOptionalShareSections,
   hasSelectedMarketLines,
   kitStrengths,
   lifestyleImageFor,
@@ -513,7 +512,6 @@ export function RvShareKit({
     () => (selected ? brochureSummary(selected) : { pitch: "", features: [] }),
     [selected],
   );
-  const fallbackExtras = !hasOptionalShareSections(include);
   const marketNeedsPick = include.market && !hasSelectedMarketLines(marketLines);
 
   const kitText = useMemo(() => {
@@ -755,12 +753,6 @@ export function RvShareKit({
                       </ul>
                     ) : null}
                   </div>
-                ) : null}
-
-                {fallbackExtras ? (
-                  <p className="text-[11px] leading-relaxed text-white/50">
-                    Payment included.
-                  </p>
                 ) : null}
 
                 <SectionToggle

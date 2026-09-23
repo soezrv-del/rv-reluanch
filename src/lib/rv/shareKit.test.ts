@@ -47,15 +47,28 @@ test("default include is all extras off", () => {
   assert.equal("video" in DEFAULT_SHARE_INCLUDE, false);
 });
 
-test("zero extras falls back to payment only — no market dump", () => {
+test("unchecked extras stay off — no payment fallback", () => {
   const next = effectiveShareInclude(DEFAULT_SHARE_INCLUDE);
   assert.equal(next.market, false);
-  assert.equal(next.payment, true);
+  assert.equal(next.payment, false);
   assert.equal(next.rating, false);
   assert.equal(next.powertrain, false);
+  for (const v of Object.values(next)) {
+    assert.equal(v, false);
+  }
 });
 
-test("any extra on disables the payment fallback", () => {
+test("explicit payment on stays on; other extras stay off", () => {
+  const next = effectiveShareInclude({
+    ...DEFAULT_SHARE_INCLUDE,
+    payment: true,
+  });
+  assert.equal(next.payment, true);
+  assert.equal(next.market, false);
+  assert.equal(next.rating, false);
+});
+
+test("any extra on does not force payment", () => {
   const next = effectiveShareInclude({
     ...DEFAULT_SHARE_INCLUDE,
     rating: true,
@@ -138,6 +151,26 @@ test("kit writes Summary only when brochure highlights exist", () => {
   assert.doesNotMatch(src, /include\.video/);
   assert.doesNotMatch(src, /catalogPitch/);
   assert.doesNotMatch(src, /\["Catalog"/);
+});
+
+test("share policy and preview never auto-include Payment", () => {
+  const policy = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "shareCardPolicy.ts"),
+    "utf8",
+  );
+  const ui = readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../../components/rvshare/RvShareKit.tsx",
+    ),
+    "utf8",
+  );
+  assert.match(src, /if \(include\.payment && payment && payment\.price > 0\)/);
+  assert.match(policy, /Honor the user's include flags as-is/);
+  assert.doesNotMatch(policy, /payment:\s*true/);
+  assert.doesNotMatch(ui, /Payment included/);
+  assert.doesNotMatch(ui, /fallbackExtras/);
+  assert.doesNotMatch(ui, /hasOptionalShareSections/);
 });
 
 test("shared rating is the score only — no breakdown, summary, or notes", () => {
