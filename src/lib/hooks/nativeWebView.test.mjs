@@ -29,6 +29,20 @@ function isStationaryDockTap(dx, dy, slop = 20) {
   return Math.hypot(dx, dy) <= slop;
 }
 
+/**
+ * @param {{ ios: boolean, innerH: number, screenH: number, visualH?: number }} opts
+ */
+function computeIosZoomSafeSlackPx({ ios, innerH, screenH, visualH }) {
+  if (!ios) return { top: 0, bottom: 0 };
+  const layoutH = visualH && visualH > 0 ? visualH : innerH;
+  const sh = screenH > 0 ? screenH : layoutH;
+  if (!(layoutH > 0 && sh > 0)) return { top: 0, bottom: 0 };
+  const used = layoutH / sh;
+  const cramped = used <= 0.88 || layoutH <= 740;
+  if (!cramped) return { top: 0, bottom: 0 };
+  return { top: 10, bottom: 12 };
+}
+
 test("iOS / web keep the tight dock inset", () => {
   assert.equal(
     computeDockSafeBottomPx({
@@ -90,4 +104,36 @@ test("finger jitter still counts as a dock tap", () => {
   assert.equal(isStationaryDockTap(3, -4), true);
   assert.equal(isStationaryDockTap(19, 0), true);
   assert.equal(isStationaryDockTap(40, 2), false);
+});
+
+test("iOS zoom slack stays off on a full-height Plus", () => {
+  assert.deepEqual(
+    computeIosZoomSafeSlackPx({
+      ios: true,
+      innerH: 852,
+      screenH: 932,
+      visualH: 852,
+    }),
+    { top: 0, bottom: 0 },
+  );
+});
+
+test("iOS zoom slack adds pads when Display Zoom cramps the viewport", () => {
+  assert.deepEqual(
+    computeIosZoomSafeSlackPx({
+      ios: true,
+      innerH: 700,
+      screenH: 932,
+      visualH: 700,
+    }),
+    { top: 10, bottom: 12 },
+  );
+  assert.deepEqual(
+    computeIosZoomSafeSlackPx({
+      ios: false,
+      innerH: 700,
+      screenH: 932,
+    }),
+    { top: 0, bottom: 0 },
+  );
 });

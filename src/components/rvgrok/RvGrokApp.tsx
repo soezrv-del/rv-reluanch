@@ -1594,7 +1594,10 @@ export function RvGrokApp({
       )}
 
       {!embedded && !isLanding ? (
-        <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 py-1.5 sm:px-4">
+        <header
+          data-grok-thread-chrome
+          className="relative z-10 flex shrink-0 items-center gap-2 px-3 pb-1.5 sm:px-4"
+        >
           <p className="min-w-0 flex-1 truncate text-[12px] font-medium text-muted">
             {liveActive
               ? "Live Voice"

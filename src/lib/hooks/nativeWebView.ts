@@ -50,8 +50,9 @@ export function readSafeBottomPx(): number {
 }
 
 /**
- * Bottom padding for the tab dock.
- * iOS/web keep the existing tight inset (home-indicator taps still work).
+ * Bottom padding for the tab dock (Android CSS `--dock-safe-bottom` only).
+ * iOS/web chrome padding is CSS-owned (`.bottom-tabs-nav` env() + slack).
+ * This iOS branch stays a tight unused cap — do not drive dock CSS with it.
  * Android must lift the dock out of the system nav / gesture dead zone
  * when CSS env(safe-area-inset-bottom) is 0 (common in emulator WebViews).
  */
@@ -73,6 +74,43 @@ export function computeDockSafeBottomPx(opts: {
   return 48;
 }
 
+/** iPhone / iPod — Display Zoom slack is iOS-only. */
+export function isIosPhoneClient(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  if (/iPhone|iPod/.test(ua)) return true;
+  try {
+    if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios") {
+      return true;
+    }
+  } catch {
+    /* web / no bridge */
+  }
+  return false;
+}
+
+/**
+ * Extra iOS chrome slack when Display Zoom / Larger Text cramps the layout.
+ * Cheap: visual viewport (or innerHeight) vs screen.height. No native plugin.
+ * Leaves `--safe-top` / `--safe-bottom` as raw env() so tap-bias probes stay honest.
+ */
+export function computeIosZoomSafeSlackPx(opts: {
+  ios: boolean;
+  innerH: number;
+  screenH: number;
+  visualH?: number;
+}): { top: number; bottom: number } {
+  if (!opts.ios) return { top: 0, bottom: 0 };
+  const layoutH =
+    opts.visualH && opts.visualH > 0 ? opts.visualH : opts.innerH;
+  const screenH = opts.screenH > 0 ? opts.screenH : layoutH;
+  if (!(layoutH > 0 && screenH > 0)) return { top: 0, bottom: 0 };
+  const used = layoutH / screenH;
+  const cramped = used <= 0.88 || layoutH <= 740;
+  if (!cramped) return { top: 0, bottom: 0 };
+  return { top: 10, bottom: 12 };
+}
+
 /** Max pointer travel (px) that still counts as a dock tap, not a swipe. */
 export const DOCK_TAP_SLOP = 20;
 
@@ -84,32 +122,52 @@ export function isStationaryDockTap(
   return Math.hypot(dx, dy) <= slop;
 }
 
-/** Install --dock-safe-bottom + html.android-native for CSS. */
+/** Install --dock-safe-bottom (Android) + --zoom-safe-* (iOS) for CSS. */
 export function useDockSafeInset() {
   useEffect(() => {
     const apply = () => {
       const android = isAndroidNativeWebView();
       const root = document.documentElement;
       root.classList.toggle("android-native", android);
-      if (!android) {
-        root.style.removeProperty("--dock-safe-bottom");
+      if (android) {
+        root.style.removeProperty("--zoom-safe-top");
+        root.style.removeProperty("--zoom-safe-bottom");
+        const px = computeDockSafeBottomPx({
+          android: true,
+          cssSafe: readSafeBottomPx(),
+          innerH: window.innerHeight,
+          screenH: window.screen?.height ?? window.innerHeight,
+        });
+        root.style.setProperty("--dock-safe-bottom", `${px}px`);
         return;
       }
-      const px = computeDockSafeBottomPx({
-        android: true,
-        cssSafe: readSafeBottomPx(),
-        innerH: window.innerHeight,
-        screenH: window.screen?.height ?? window.innerHeight,
-      });
-      root.style.setProperty("--dock-safe-bottom", `${px}px`);
+      root.style.removeProperty("--dock-safe-bottom");
+      if (isIosPhoneClient()) {
+        const slack = computeIosZoomSafeSlackPx({
+          ios: true,
+          innerH: window.innerHeight,
+          screenH: window.screen?.height ?? window.innerHeight,
+          visualH: window.visualViewport?.height,
+        });
+        root.style.setProperty("--zoom-safe-top", `${slack.top}px`);
+        root.style.setProperty("--zoom-safe-bottom", `${slack.bottom}px`);
+      } else {
+        root.style.removeProperty("--zoom-safe-top");
+        root.style.removeProperty("--zoom-safe-bottom");
+      }
     };
     apply();
     window.addEventListener("resize", apply);
     window.addEventListener("orientationchange", apply);
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", apply);
     return () => {
       window.removeEventListener("resize", apply);
       window.removeEventListener("orientationchange", apply);
+      vv?.removeEventListener("resize", apply);
       document.documentElement.style.removeProperty("--dock-safe-bottom");
+      document.documentElement.style.removeProperty("--zoom-safe-top");
+      document.documentElement.style.removeProperty("--zoom-safe-bottom");
       document.documentElement.classList.remove("android-native");
     };
   }, []);
