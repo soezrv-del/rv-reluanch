@@ -63,6 +63,8 @@ test("named visitor is a later-turn hook — intro line stays exact", () => {
   const session = msg.session as { instructions: string };
   assert.match(session.instructions, /Their first name is David/);
   assert.match(session.instructions, /only occasionally/);
+  assert.match(session.instructions, /not every turn/);
+  assert.match(session.instructions, /never as a mechanical prefix/);
   assert.match(session.instructions, /Say exactly: I'm RvGrok/);
   assert.doesNotMatch(session.instructions, /I'm RvGrok, David/);
   assert.equal(session.instructions.includes(`I'm RvGrok, David`), false);

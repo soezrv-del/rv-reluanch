@@ -128,7 +128,10 @@ test("visitor personalization is a small hook and never rewrites I'm RvGrok", ()
   assert.equal(visitorPersonalizationBlock(undefined), "");
   const block = visitorPersonalizationBlock("David Hansen");
   assert.match(block, /Their first name is David/);
+  assert.match(block, /Greet with it once/);
   assert.match(block, /only occasionally/);
+  assert.match(block, /not every turn/);
+  assert.match(block, /never as a mechanical prefix/);
   assert.doesNotMatch(block, /I'm RvGrok, David/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /VISITOR:/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /Their first name is/);

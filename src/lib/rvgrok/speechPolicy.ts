@@ -74,12 +74,12 @@ export const VOICE_SESSION_INTRO_INSTRUCTIONS = `Say only this one line, then st
 
 /**
  * Optional standing hook — chat + Live Voice. Empty when no first name.
- * Does not change the cold-open identity line.
+ * Sparse warmth only: greet once, then rarely. Does not change I'm RvGrok.
  */
 export function visitorPersonalizationBlock(firstName?: string): string {
   const name = normalizeFirstName(firstName || "");
   if (!name) return "";
-  return `VISITOR: Their first name is ${name}. Address them by first name naturally and only occasionally — a greeting or a beat later in the answer, not every sentence. Never change the cold-open greeting. Never append their name to that greeting.`;
+  return `VISITOR: Their first name is ${name}. Greet with it once — welcome-back or the first conversational beat after the exact cold-open. Later, use it only occasionally for warmth — not every turn, never as a mechanical prefix on each reply. Never change the cold-open greeting. Never append their name to that greeting.`;
 }
 
 export function isForbiddenResearchHold(text: string): boolean {
