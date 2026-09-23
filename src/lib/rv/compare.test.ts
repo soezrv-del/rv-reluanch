@@ -98,11 +98,11 @@ test("Compare backdrop is the Raidho R mark, not the campfire lifestyle still", 
   );
   const prestige = readFileSync(join(root, "../../assets/prestige.ts"), "utf8");
   const css = readFileSync(join(root, "../../styles.css"), "utf8");
-  const mark = join(root, "../../../public/assets/brand/raidho-r-mark.png");
+  const mark = join(root, "../../../public/assets/brand/raidho-r-mark-v2.png");
 
   assert.match(prestige, /RAIDHO_R_MARK/);
-  assert.match(prestige, /\/assets\/brand\/raidho-r-mark\.png/);
-  assert.ok(existsSync(mark), "raidho-r-mark.png is in public/assets/brand");
+  assert.match(prestige, /\/assets\/brand\/raidho-r-mark-v2\.png/);
+  assert.ok(existsSync(mark), "raidho-r-mark-v2.png is in public/assets/brand");
 
   assert.match(compareUi, /<SuiteRaidhoBackdrop bleed \/>/);
   assert.match(compareUi, /data-compare-view/);

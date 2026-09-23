@@ -14,4 +14,4 @@ export const FACTS_LANDING_BACKDROP = "/assets/facts-landing-motorhome.jpg";
 export const TOW_LANDING_BACKDROP = "/assets/tow-landing-beach.jpg";
 
 /** Brand watermark — Raidho R (ᚱ), electric-blue fill + chrome/silver frame */
-export const RAIDHO_R_MARK = "/assets/brand/raidho-r-mark.png";
+export const RAIDHO_R_MARK = "/assets/brand/raidho-r-mark-v2.png";
