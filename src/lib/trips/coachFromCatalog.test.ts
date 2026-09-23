@@ -347,8 +347,8 @@ test("Profile labels brochure/catalog/estimate; Pack is gone; Dumps is a chip", 
     dumpsChip,
     /inline-flex min-h-11 items-center gap-1 rounded-full border px-2.5 py-1 text-\[10px\] font-bold tracking-wide/,
   );
-  assert.match(dumpsChip, /border-sapphire/);
-  assert.match(dumpsChip, /bg-sapphire/);
+  assert.match(dumpsChip, /border-gold/);
+  assert.match(dumpsChip, /bg-gold-dim/);
   assert.match(dumpsChip, /<Droplets/);
 });
 

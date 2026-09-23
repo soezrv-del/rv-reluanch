@@ -15,7 +15,9 @@ test("ensureAdminSeed stays admin-only; CSV lives in static seed + 0003", () => 
   const sql = read("migrations/0002_access_whitelist.sql");
   assert.match(sql, /7022665918/);
   assert.match(sql, /\+17022665918/);
-  assert.match(sql, /David Hanson/);
+  assert.match(sql, /David Hansen/);
+  assert.match(sql, /admin-david-hansen/);
+  assert.doesNotMatch(sql, /David Hanson|admin-david-hanson/);
   assert.match(sql, /is_admin/);
   assert.doesNotMatch(sql, /15412858791|5594861000|phone-whitelist-seed/);
   const store = read("src/lib/access/store.ts");
@@ -274,13 +276,17 @@ test("http gate short-circuits hard admin and stays on rvgrok", () => {
   assert.match(realtime, /setAccessPhone/);
 });
 
-test("founder KB stays Hansen; whitelist seed uses Hanson", () => {
+test("founder KB, reports, and hard-admin seed all use Hansen", () => {
   const origin = read("src/lib/rvgrok/originStory.ts");
+  const report = read("src/lib/rv/reportContact.ts");
+  const constants = read("src/lib/access/constants.ts");
   assert.match(origin, /David Hansen/);
   assert.doesNotMatch(origin, /David Hanson/);
-  const constants = read("src/lib/access/constants.ts");
-  assert.match(constants, /David Hanson/);
-  assert.match(constants, /Founder KB \/ origin story stay "David Hansen"/);
+  assert.match(report, /REPORT_CONTACT_NAME = "David Hansen"/);
+  assert.match(constants, /name: "David Hansen"/);
+  assert.match(constants, /id: "admin-david-hansen"/);
+  assert.match(constants, /702-266-5918/);
+  assert.doesNotMatch(constants, /David Hanson|admin-david-hanson/);
 });
 
 test("research provider toggle is admin-only and server-persisted", () => {

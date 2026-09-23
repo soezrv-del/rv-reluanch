@@ -1,4 +1,4 @@
--- Phone whitelist access gate. Seed is admin-only (David Hanson).
+-- Phone whitelist access gate. Seed is admin-only (David Hansen).
 -- Self-service requests live in access_requests and never unlock anyone.
 
 create table if not exists access_whitelist (
@@ -26,18 +26,19 @@ create index if not exists access_whitelist_admin_idx
 create index if not exists access_requests_status_idx
   on access_requests (status, created_at desc);
 
--- Hard admin. Founder KB stays Hansen; this row uses the seed name David Hanson.
+-- Hard admin. Founder KB + report contact + this row are all David Hansen.
 insert into access_whitelist (
   id, phone_digits, phone_e164, contact_name, notes, is_admin
 ) values (
-  'admin-david-hanson',
+  'admin-david-hansen',
   '7022665918',
   '+17022665918',
-  'David Hanson',
+  'David Hansen',
   'Hard admin seed — full access, can manage the list',
   true
 )
 on conflict (phone_digits) do update set
+  id = excluded.id,
   phone_e164 = excluded.phone_e164,
   contact_name = excluded.contact_name,
   notes = excluded.notes,

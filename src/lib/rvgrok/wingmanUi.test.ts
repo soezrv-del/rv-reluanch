@@ -36,6 +36,9 @@ test("Grok tab landing is Lot wingman on Raidho — no family camping plate", ()
   assert.match(landing, /data-rvgrok-landing/);
   assert.match(landing, /data-rvgrok-status/);
   assert.match(landing, /ON THE LOT/);
+  assert.match(app, /<PremiumMenuButton/);
+  assert.match(app, /: "Ask RV Grok"/);
+  assert.doesNotMatch(app, /or name a year, make, and model/);
   assert.match(composer, /data-rvgrok-mic/);
   assert.match(composer, /Start live voice/);
   assert.match(avatar, /icon-rvgrok\.png/);
@@ -54,6 +57,8 @@ test("Grok tab landing is Lot wingman on Raidho — no family camping plate", ()
     /@media \(max-width: 639px\) \{[\s\S]*?\[data-rvgrok-landing\] \{[\s\S]*?padding-top:\s*max\(3\.25rem,\s*env\(safe-area-inset-top/,
   );
   assert.match(css, /\.grok-frost \{[\s\S]*?blur\(28px\)/);
+  assert.match(css, /\[data-rvgrok-wingman\] \.suite-raidho-field \{[\s\S]*?--color-gold/);
+  assert.match(css, /\.grok-frost \{[\s\S]*?--color-gold-border/);
   assert.match(css, /--color-grok-mic:\s*#e8893a/);
   assert.match(css, /--font-display:\s*"Fraunces"/);
   assert.match(css, /html\.kb-open \[data-rvgrok-composer\]/);

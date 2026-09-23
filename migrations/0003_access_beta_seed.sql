@@ -1,5 +1,5 @@
 -- Static beta allowlist seed (42 CSV contacts).
--- Does not include hard-admin David Hanson 702-266-5918.
+-- Does not include hard-admin David Hansen 702-266-5918.
 -- On conflict, refresh name/notes only — never flip is_admin.
 
 insert into access_whitelist (

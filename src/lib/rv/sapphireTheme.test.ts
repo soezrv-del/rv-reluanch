@@ -109,14 +109,30 @@ test("Sold and Premium share sapphire accent + Raidho suite chrome — no dock S
 
 test("Grok tab uses Raidho as a background field, not a front brand plate", () => {
   const app = read("../../components/rvgrok/RvGrokApp.tsx");
+  const constants = read("../../components/shell/shellConstants.ts");
   const css = read("../../styles.css");
   assert.match(app, /<SuiteRaidhoBackdrop className="grok-raidho-field" \/>/);
   assert.doesNotMatch(app, /SuiteRaidhoBackdrop bleed/);
   assert.doesNotMatch(app, /ScrollSuiteHeader/);
   assert.doesNotMatch(app, /SuiteBackdrop/);
+  assert.match(constants, /rvgrok:\s*"gold"/);
+  assert.match(app, /data-page-accent=\{embedded \? undefined : "gold"\}/);
   assert.match(css, /\[data-rvgrok-wingman\] \.suite-raidho-mark/);
   assert.match(css, /\.grok-frost \{[\s\S]*?blur\(28px\)/);
+  assert.match(css, /\[data-rvgrok-wingman\] \.suite-raidho-field \{[\s\S]*?--color-gold/);
   assert.doesNotMatch(css, /DialaBot/);
+});
+
+test("RV GPS shares Grok black + gold trim tokens", () => {
+  const constants = read("../../components/shell/shellConstants.ts");
+  const trips = read("../../components/rvtrips/RvTripsApp.tsx");
+  const css = read("../../styles.css");
+  assert.match(constants, /rvtrips:\s*"gold"/);
+  assert.match(trips, /data-page-accent="gold"/);
+  assert.match(trips, /<PremiumMenuButton/);
+  assert.match(css, /\[data-trips-screen\] \.suite-raidho-field \{[\s\S]*?--color-gold/);
+  assert.match(css, /\[data-trips-screen\] \.glass-prestige[\s\S]*?--color-gold-border/);
+  assert.doesNotMatch(trips, /DialaBot/);
 });
 
 test("Facts, Tow, Cal, Sold, Premium, and coach detail are full-bleed Raidho — no leftover photo layer", () => {
