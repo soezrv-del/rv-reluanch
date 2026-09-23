@@ -16,22 +16,26 @@ import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
 import { getResearchProviderOverride } from "@/lib/rvgrok/researchProviderStore";
 import {
   catalogPinsToLiveDossier,
+  mergeSoftFieldsIntoDossier,
   pinsHaveHardFacts,
   researchFactsDossierNotes,
+  researchFactsSoftNotes,
   resolveFactsCatalogPins,
   type FactsCatalogCandidate,
+  type FactsSoftFields,
 } from "@/lib/rv/factsDossierResearch";
 
 /**
  * POST /api/rvfax/dossier
  * Catalog / brochure pins first. Live browse only for missing hard fields.
+ * Cheap soft-field pass for overview / issues / sentiment / market.
  * Soft-fail keeps catalog paint. Pins still win.
  */
 
 const cache = new Map<string, { at: number; data: LiveDossier; model?: string }>();
 const TTL_MS = 6 * 60 * 60 * 1000;
 /** Bump when OEM ground-truth / prompt pipeline / pins change (Phase 4.4) */
-const CACHE_VER = "v25-catalog-first-gaps";
+const CACHE_VER = "v26-catalog-soft-pass";
 
 /** JSON extract only — browse uses WEB_SEARCH_MODELS (grok-4.7). */
 const DOSSIER_MODELS = [
@@ -331,17 +335,20 @@ type DossierBuild =
       kind: "catalog";
       data: LiveDossier;
       model: string;
+      soft: FactsSoftFields | null;
     }
   | {
       kind: "researched";
       rawJson: string;
       model: string;
       research: string;
+      soft: FactsSoftFields | null;
     };
 
 /**
  * Catalog / brochure pins first. Browse only the missing hard fields.
- * Skip the extract LLM when browse was skipped or notes are empty.
+ * Soft narrative pass runs in parallel and never stomps hard pins.
+ * Skip the extract LLM when hard browse was skipped or notes are empty.
  */
 async function runTwoStepDossier(opts: {
   year: string;
@@ -373,19 +380,32 @@ async function runTwoStepDossier(opts: {
     ? `FLOORPLAN LOCK: Research ONLY floorplan "${opts.floorplan}". Length, GVWR, engine, and HP must match this plan. Do not average the whole model line.`
     : `NO FLOORPLAN: State that plan-specific options are unknown. Do not invent a floorplan or a single definitive length/HP package.`;
 
-  const research = await researchFactsDossierNotes({
+  const researchProvider = (await getResearchProviderOverride()) ?? undefined;
+  const shared = {
     year: opts.year,
     make: opts.make,
     model: opts.model,
     floorplan: opts.floorplan,
     candidate: opts.candidate,
     catalogBlock: candidateBlock,
-    researchProvider: (await getResearchProviderOverride()) ?? undefined,
-  });
+    researchProvider,
+  };
+  const [research, softNotes] = await Promise.all([
+    researchFactsDossierNotes(shared),
+    researchFactsSoftNotes(shared),
+  ]);
+  const soft = softNotes?.fields ?? null;
 
   if (!research || research.skipped || !research.text.trim()) {
     if (research?.skipped || pinsHaveHardFacts(pins)) {
-      return { kind: "catalog", data: catalogData(), model: "catalog-pin" };
+      return {
+        kind: "catalog",
+        data: catalogData(),
+        model: softNotes?.model
+          ? `catalog-pin+${softNotes.model}`
+          : "catalog-pin",
+        soft,
+      };
     }
     return null;
   }
@@ -418,7 +438,12 @@ sourcesNote must include real OEM/chassis/listing-style cites from the notes.`;
     );
     if (!fallback?.text) {
       if (pinsHaveHardFacts(pins)) {
-        return { kind: "catalog", data: catalogData(), model: research.model };
+        return {
+          kind: "catalog",
+          data: catalogData(),
+          model: research.model,
+          soft,
+        };
       }
       return null;
     }
@@ -427,6 +452,7 @@ sourcesNote must include real OEM/chassis/listing-style cites from the notes.`;
       rawJson: fallback.text,
       model: `${research.model}→${fallback.model}`,
       research: research.text,
+      soft,
     };
   }
 
@@ -435,6 +461,7 @@ sourcesNote must include real OEM/chassis/listing-style cites from the notes.`;
     rawJson: extracted.text,
     model: `${research.model}→${extracted.model}`,
     research: research.text,
+    soft,
   };
 }
 
@@ -819,6 +846,10 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
           parsed = applyOemGroundTruth(parsed);
           parsed = applyCatalogCandidateTruth(parsed, catalogCandidate);
           parsed = applyBrochurePin(parsed);
+          if (twoStep.soft) {
+            parsed = mergeSoftFieldsIntoDossier(parsed, twoStep.soft);
+            parsed = applyBrochurePin(parsed);
+          }
           if (twoStep.kind !== "catalog" && !hasRealSources(parsed.sourcesNote)) {
             parsed = {
               ...parsed,
@@ -855,6 +886,7 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
               pipeline,
               preferredModels: DOSSIER_MODELS,
               skippedBrowse: twoStep.kind === "catalog",
+              softPass: twoStep.soft ? "ok" : "empty",
             },
           });
         } catch (e) {

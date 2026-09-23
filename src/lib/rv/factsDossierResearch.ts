@@ -23,6 +23,9 @@ import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 /** Gap browse budget — never the 52s full-report SPEC_REPORT band. */
 export const FACTS_GAP_RESEARCH_TIMEOUT_MS = 22_000;
 
+/** Soft narrative only — overview / issues / sentiment / market / sources. */
+export const FACTS_SOFT_RESEARCH_TIMEOUT_MS = 14_000;
+
 export const FACTS_DOSSIER_HARD_FIELDS = [
   "engine",
   "horsepower",
@@ -93,6 +96,20 @@ export type FactsDossierResearchNotes = {
   skipped: boolean;
   gaps: FactsHardField[];
   pins: FactsResolvedPins;
+};
+
+export type FactsSoftFields = {
+  overview: string | null;
+  commonIssues: string[];
+  ownerSentiment: string | null;
+  marketNotes: string | null;
+  sourcesNote: string | null;
+};
+
+export type FactsSoftResearchNotes = {
+  text: string;
+  model: string;
+  fields: FactsSoftFields;
 };
 
 export type ResearchFactsDossierNotesOpts = {
@@ -351,6 +368,128 @@ export function factsDossierResearchQuery(input: {
   return `OEM published ${needed} for ${coach} only. Brochure / factory number. Do not gather overview, market, or reliability.`;
 }
 
+/** Soft-field query — no hardware words that trip the 52s report classifier. */
+export function factsDossierSoftQuery(input: {
+  year: string;
+  make: string;
+  model: string;
+  floorplan?: string;
+}): string {
+  const plan = (input.floorplan || "").trim();
+  const coach = `${input.year} ${input.make} ${input.model}${
+    plan ? ` ${plan}` : ""
+  }`.replace(/\s+/g, " ").trim();
+  return `Owner chatter and used-market notes for ${coach}. Labeled lines only: OVERVIEW / ISSUES / SENTIMENT / MARKET / SOURCES. Narrative only. No hardware numbers.`;
+}
+
+const SOFT_LABEL_RE =
+  /^(overview|issues?|common\s+issues?|sentiment|owner\s+sentiment|market|market\s+notes?|sources?)\s*:\s*/i;
+
+function nextSoftLabelIndex(lines: string[], from: number): number {
+  for (let i = from; i < lines.length; i++) {
+    if (SOFT_LABEL_RE.test(lines[i]!.trim())) return i;
+  }
+  return -1;
+}
+
+function splitSoftList(raw: string): string[] {
+  return raw
+    .split(/\n|;|•|\u2022|(?:^|\s)[-–]\s+/)
+    .map((s) => s.replace(/^[\s*•\-–]+/, "").trim())
+    .filter((s) => s.length >= 3)
+    .slice(0, 5);
+}
+
+function clipSoftLine(raw: string, max = 280): string | null {
+  const s = raw.replace(/\s+/g, " ").trim();
+  if (s.length < 8) return null;
+  return s.length > max ? `${s.slice(0, max - 1).trim()}…` : s;
+}
+
+/** Parse labeled soft notes. Unlabeled hardware dumps are ignored. */
+export function parseFactsSoftNotes(text: string): FactsSoftFields {
+  const empty: FactsSoftFields = {
+    overview: null,
+    commonIssues: [],
+    ownerSentiment: null,
+    marketNotes: null,
+    sourcesNote: null,
+  };
+  const raw = (text || "").trim();
+  if (!raw) return empty;
+
+  const lines = raw.split(/\n/);
+  const buckets: Record<string, string[]> = {
+    overview: [],
+    issues: [],
+    sentiment: [],
+    market: [],
+    sources: [],
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!.trim();
+    const m = line.match(SOFT_LABEL_RE);
+    if (!m) continue;
+    const key = m[1]!.toLowerCase();
+    const bucket = key.startsWith("issue")
+      ? "issues"
+      : key.includes("sentiment")
+        ? "sentiment"
+        : key.startsWith("market")
+          ? "market"
+          : key.startsWith("source")
+            ? "sources"
+            : "overview";
+    const rest = line.slice(m[0].length).trim();
+    const stop = nextSoftLabelIndex(lines, i + 1);
+    const block = [
+      rest,
+      ...lines
+        .slice(i + 1, stop === -1 ? undefined : stop)
+        .map((l) => l.trim()),
+    ]
+      .filter(Boolean)
+      .join("\n");
+    if (block) buckets[bucket]!.push(block);
+  }
+
+  return {
+    overview: clipSoftLine(buckets.overview.join(" ")),
+    commonIssues: splitSoftList(buckets.issues.join("\n")),
+    ownerSentiment: clipSoftLine(buckets.sentiment.join(" ")),
+    marketNotes: clipSoftLine(buckets.market.join(" ")),
+    sourcesNote: clipSoftLine(buckets.sources.join(" · "), 360),
+  };
+}
+
+export function mergeSoftFieldsIntoDossier(
+  d: LiveDossier,
+  soft: FactsSoftFields,
+): LiveDossier {
+  const sourcesNote = [d.sourcesNote, soft.sourcesNote]
+    .filter(Boolean)
+    .join(" · ");
+  return {
+    ...d,
+    overview: soft.overview || d.overview,
+    commonIssues: soft.commonIssues.length ? soft.commonIssues : d.commonIssues,
+    ownerSentiment: soft.ownerSentiment || d.ownerSentiment,
+    marketNotes: soft.marketNotes || d.marketNotes,
+    sourcesNote: sourcesNote || d.sourcesNote,
+  };
+}
+
+export function softFieldsHaveNarrative(soft: FactsSoftFields): boolean {
+  return Boolean(
+    soft.overview ||
+      soft.ownerSentiment ||
+      soft.marketNotes ||
+      soft.sourcesNote ||
+      soft.commonIssues.length,
+  );
+}
+
 export function planFactsDossierResearch(opts: {
   year: string;
   make: string;
@@ -518,5 +657,38 @@ export async function researchFactsDossierNotes(
     skipped: false,
     gaps: plan.gaps,
     pins,
+  };
+}
+
+/**
+ * Cheap soft-field pass. Never re-asks hard powertrain / weights.
+ * Fail / timeout → null; caller keeps catalog or gap-filled hard pins.
+ */
+export async function researchFactsSoftNotes(
+  opts: ResearchFactsDossierNotesOpts,
+): Promise<FactsSoftResearchNotes | null> {
+  const query = factsDossierSoftQuery(opts);
+  const execute = opts.execute ?? executeWebResearch;
+  const researched = await execute({
+    query,
+    catalogBlock: opts.catalogBlock,
+    apiKey: process.env.XAI_API_KEY,
+    timeoutMs: FACTS_SOFT_RESEARCH_TIMEOUT_MS,
+    models: WEB_SEARCH_MODELS,
+    profile: "chat",
+    skipGate: true,
+    maxAttempts: 1,
+    researchProvider: opts.researchProvider,
+  });
+
+  if (!researched.ok || !researched.notes.trim()) return null;
+  if (researched.model === "catalog-pin") return null;
+
+  const fields = parseFactsSoftNotes(researched.notes);
+  if (!softFieldsHaveNarrative(fields)) return null;
+  return {
+    text: researched.notes,
+    model: researched.model || "web-research",
+    fields,
   };
 }

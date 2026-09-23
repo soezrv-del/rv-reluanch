@@ -10,10 +10,15 @@ import {
 import type { ExecuteWebResearchOpts } from "../rvgrok/webResearchTelemetry.ts";
 import {
   FACTS_GAP_RESEARCH_TIMEOUT_MS,
+  FACTS_SOFT_RESEARCH_TIMEOUT_MS,
   catalogPinsToLiveDossier,
   factsDossierResearchQuery,
+  factsDossierSoftQuery,
+  mergeSoftFieldsIntoDossier,
+  parseFactsSoftNotes,
   planFactsDossierResearch,
   researchFactsDossierNotes,
+  researchFactsSoftNotes,
   resolveFactsCatalogPins,
   type FactsCatalogCandidate,
 } from "./factsDossierResearch.ts";
@@ -54,7 +59,10 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
   assert.match(helper, /skipGate: true/);
   assert.match(helper, /WEB_SEARCH_MODELS/);
   assert.match(helper, /FACTS_GAP_RESEARCH_TIMEOUT_MS = 22_000/);
+  assert.match(helper, /FACTS_SOFT_RESEARCH_TIMEOUT_MS = 14_000/);
   assert.match(helper, /planFactsDossierResearch/);
+  assert.match(helper, /researchFactsSoftNotes/);
+  assert.match(helper, /mergeSoftFieldsIntoDossier/);
   assert.doesNotMatch(helper, /researchOrder\s*:/);
   assert.doesNotMatch(helper, /Give me the full specs report/);
   assert.doesNotMatch(helper, /SPEC_REPORT_RESEARCH_TIMEOUT_MS/);
@@ -65,6 +73,9 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
 
   assert.match(dossier, /getResearchProviderOverride/);
   assert.match(dossier, /researchFactsDossierNotes/);
+  assert.match(dossier, /researchFactsSoftNotes/);
+  assert.match(dossier, /mergeSoftFieldsIntoDossier/);
+  assert.match(dossier, /Promise\.all/);
   assert.match(dossier, /denyUnlessWhitelisted/);
   assert.match(dossier, /web-research-then-extract/);
   assert.match(dossier, /catalog-pins/);
@@ -115,6 +126,9 @@ test("narrow gap query names only the missing field and avoids the 52s report bu
   assert.ok(FACTS_GAP_RESEARCH_TIMEOUT_MS < SPEC_REPORT_RESEARCH_TIMEOUT_MS);
   assert.ok(FACTS_GAP_RESEARCH_TIMEOUT_MS <= 24_000);
   assert.ok(FACTS_GAP_RESEARCH_TIMEOUT_MS >= 20_000);
+  assert.ok(FACTS_SOFT_RESEARCH_TIMEOUT_MS <= 15_000);
+  assert.ok(FACTS_SOFT_RESEARCH_TIMEOUT_MS <= 20_000);
+  assert.ok(FACTS_SOFT_RESEARCH_TIMEOUT_MS < FACTS_GAP_RESEARCH_TIMEOUT_MS);
   assert.deepEqual([...WEB_SEARCH_MODELS], ["grok-4.7"]);
 });
 
@@ -326,7 +340,7 @@ test("brochure powertrain pins are not stomped by live research fields", () => {
   assert.match(live, /return applyPowertrainPin\(/);
 });
 
-test("2023 American Dream 45A brochure pin plus complete weights skips browse", () => {
+test("2023 American Dream 45A brochure pin plus complete weights skips hard browse", () => {
   const plan = planFactsDossierResearch({
     year: "2023",
     make: "American Coach",
@@ -345,6 +359,132 @@ test("2023 American Dream 45A brochure pin plus complete weights skips browse", 
   assert.equal(plan.skipLive, true);
   assert.deepEqual(plan.gaps, []);
   assert.equal(plan.query, null);
+});
+
+test("soft query is narrative-only and avoids the 52s report budget", () => {
+  const query = factsDossierSoftQuery({
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+  });
+  assert.match(query, /OVERVIEW/);
+  assert.match(query, /ISSUES/);
+  assert.match(query, /SENTIMENT/);
+  assert.match(query, /MARKET/);
+  assert.match(query, /SOURCES/);
+  assert.doesNotMatch(query, /full specs report|spec sheet|carfax|coach report/i);
+  assert.doesNotMatch(
+    query,
+    /\b(engine|horsepower|\bhp\b|torque|chassis|transmission|gvwr|uvw|holding tanks|length|powertrain|brochure)\b/i,
+  );
+});
+
+test("complete pins → no hard browse; soft pass may still run", async () => {
+  const hardCalls: ExecuteWebResearchOpts[] = [];
+  const softCalls: ExecuteWebResearchOpts[] = [];
+  const hard = await researchFactsDossierNotes({
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+    candidate: COMPLETE_CANDIDATE,
+    execute: async (opts) => {
+      hardCalls.push(opts);
+      return {
+        ok: true,
+        notes: "hard should not run",
+        model: "grok-4.7",
+        kind: "success",
+        durationMs: 12,
+      };
+    },
+  });
+  const soft = await researchFactsSoftNotes({
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+    candidate: COMPLETE_CANDIDATE,
+    execute: async (opts) => {
+      softCalls.push(opts);
+      return {
+        ok: true,
+        notes:
+          "OVERVIEW: Flagship diesel pusher bath-and-a-half suite.\nISSUES: Aftertreatment; slide seals.\nSENTIMENT: Owners like the ride.\nMARKET: Used asks stay high.\nSOURCES: IRV2 owner thread.",
+        model: "grok-4.7",
+        kind: "success",
+        durationMs: 8,
+      };
+    },
+  });
+  assert.equal(hardCalls.length, 0);
+  assert.equal(hard!.skipped, true);
+  assert.equal(softCalls.length, 1);
+  assert.equal(softCalls[0]!.timeoutMs, FACTS_SOFT_RESEARCH_TIMEOUT_MS);
+  assert.equal(softCalls[0]!.maxAttempts, 1);
+  assert.equal(softCalls[0]!.researchOrder, undefined);
+  assert.match(softCalls[0]!.query, /OVERVIEW/);
+  assert.doesNotMatch(softCalls[0]!.query, /full specs report/);
+  assert.ok(soft);
+  assert.match(soft!.fields.overview || "", /Flagship diesel/);
+  assert.ok(soft!.fields.commonIssues.some((i) => /aftertreatment/i.test(i)));
+});
+
+test("soft fail leaves hard pins; merge never stomps powertrain", async () => {
+  const pins = resolveFactsCatalogPins({
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+    candidate: COMPLETE_CANDIDATE,
+  });
+  const base = catalogPinsToLiveDossier({
+    year: 2023,
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+    pins,
+  });
+  const softMiss = await researchFactsSoftNotes({
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+    candidate: COMPLETE_CANDIDATE,
+    execute: async () => ({
+      ok: false,
+      reason: "aborted due to timeout",
+      kind: "timeout",
+      durationMs: 14,
+    }),
+  });
+  assert.equal(softMiss, null);
+  assert.match(base.engine || "", /X15/);
+  assert.equal(base.horsepower, 605);
+  assert.equal(base.torqueLbFt, 1950);
+  assert.equal(base.overview, null);
+
+  const merged = mergeSoftFieldsIntoDossier(base, {
+    overview: "Cummins L9 450 is the only engine.",
+    commonIssues: ["DEF heater"],
+    ownerSentiment: "Loved.",
+    marketNotes: "Asks are firm.",
+    sourcesNote: "Forum note",
+  });
+  assert.match(merged.engine || "", /X15/);
+  assert.equal(merged.horsepower, 605);
+  assert.equal(merged.torqueLbFt, 1950);
+  assert.equal(merged.chassis, pins.chassis);
+  assert.equal(merged.gvwrLbs, 54000);
+  assert.match(merged.overview || "", /L9 450/);
+  assert.deepEqual(merged.commonIssues, ["DEF heater"]);
+
+  const parsed = parseFactsSoftNotes(
+    "OVERVIEW: Bath-and-a-half luxury coach.\nISSUES: Slide seals\nSENTIMENT: Strong\nMARKET: Thin sample\nSOURCES: Dealer listing",
+  );
+  assert.match(parsed.overview || "", /Bath-and-a-half/);
+  assert.deepEqual(parsed.commonIssues, ["Slide seals"]);
 });
 
 test("DialaBot / Bland / phonebook stay untouched by this Facts path", () => {
