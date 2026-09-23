@@ -3,6 +3,7 @@ import { Shield } from "lucide-react";
 import { welcomeBackLine } from "@/lib/access/identity";
 import { useAccess } from "./AccessProvider";
 import { AdminWhitelistSheet } from "./AdminWhitelistSheet";
+import { PromptLessonsCard } from "./PromptLessonsCard";
 import { ResearchOrderCard } from "./ResearchOrderCard";
 import { ResearchProviderCard } from "./ResearchProviderCard";
 
@@ -130,6 +131,7 @@ export function AccessMoreSection() {
           </section>
           <ResearchProviderCard surface="more" />
           <ResearchOrderCard surface="more" />
+          <PromptLessonsCard surface="more" />
         </>
       ) : null}
 

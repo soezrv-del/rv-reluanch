@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
 import { RV_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT } from "@/lib/rvgrok/prompts";
+import { injectStandingLessons } from "@/lib/rvgrok/promptLessons";
+import { readStandingLessonsBlock } from "@/lib/rvgrok/promptLessonsStore";
 import { visitorPersonalizationBlock } from "@/lib/rvgrok/speechPolicy";
 import {
   loadVisitorMemoryBlockFromRequest,
@@ -98,9 +100,11 @@ function withGrounding(
     ownLotNotes?: string;
     visitorFirstName?: string;
     visitorMemory?: string;
+    standingLessons?: string;
   },
 ) {
-  let out = appendGrounding(system, opts?.catalogContext);
+  let out = injectStandingLessons(system, opts?.standingLessons);
+  out = appendGrounding(out, opts?.catalogContext);
   const personal = visitorPersonalizationBlock(opts?.visitorFirstName);
   if (personal) out = `${out}\n\n${personal}`;
   const memory = (opts?.visitorMemory || "").trim();
@@ -460,6 +464,7 @@ async function tryXaiDirect(
   ownLotNotes?: string,
   visitorFirstName?: string,
   visitorMemory?: string,
+  standingLessons?: string,
 ): Promise<Response | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return null;
@@ -487,6 +492,7 @@ async function tryXaiDirect(
       ownLotNotes,
       visitorFirstName,
       visitorMemory,
+      standingLessons,
     },
   );
   const fullMessages: ChatMessage[] = [
@@ -524,6 +530,7 @@ async function tryCloudflareWorker(
   ownLotNotes?: string,
   visitorFirstName?: string,
   visitorMemory?: string,
+  standingLessons?: string,
 ): Promise<Response | null> {
   const base = workerBase();
   const candidates = agentMode
@@ -554,6 +561,7 @@ async function tryCloudflareWorker(
                   ownLotNotes,
                   visitorFirstName,
                   visitorMemory,
+                  standingLessons,
                 },
               ),
             },
@@ -688,9 +696,10 @@ export const Route = createFileRoute("/api/rvgrok")({
             ? body.visitorFirstName
             : "";
         const phoneKey = memoryKeyFromRequest(request);
-        const visitorMemory = phoneKey
-          ? await loadVisitorMemoryBlockFromRequest(request)
-          : "";
+        const [visitorMemory, standingLessons] = await Promise.all([
+          phoneKey ? loadVisitorMemoryBlockFromRequest(request) : "",
+          readStandingLessonsBlock(),
+        ]);
         const lastUser = [...messages].reverse().find((m) => m.role === "user");
         const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
         const memoryTurns: MemoryTurn[] = messages.map((m) => ({
@@ -797,6 +806,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           ownLotNotes,
           visitorFirstName,
           visitorMemory,
+          standingLessons,
         );
         if (fromXai) return finish(fromXai);
         const fromWorker = await tryCloudflareWorker(
@@ -808,6 +818,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           ownLotNotes,
           visitorFirstName,
           visitorMemory,
+          standingLessons,
         );
         if (fromWorker) return finish(fromWorker);
 

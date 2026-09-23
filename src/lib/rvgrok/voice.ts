@@ -1,6 +1,7 @@
 import { RV_GROK_LEAN_CORE } from "./speechPolicy.ts";
 import { DEFAULT_WORKER_URL } from "./types.ts";
 import { MEMORY_HEADER } from "./phoneMemory.ts";
+import { LESSONS_HEADER } from "./promptLessons.ts";
 
 export const VOICE_STORAGE_KEY = "rvgrok_selected_voice";
 export const VOICE_MODE_KEY = "rvgrok_voice_mode";
@@ -101,11 +102,24 @@ export function parseTokenPayload(data: {
  * then fall back to Cloudflare worker directly.
  */
 let lastTokenVisitorMemory = "";
+let lastTokenStandingLessons: { value: string } | null = null;
 
 /** Memory attached to the last same-origin token mint. Empty after take. */
 export function takeTokenVisitorMemory(): string {
   const value = lastTokenVisitorMemory;
   lastTokenVisitorMemory = "";
+  return value;
+}
+
+/**
+ * Standing lessons from the last same-origin token mint.
+ * `undefined` after take / when the header was missing (use code defaults).
+ * Empty string means the desk saved an empty block.
+ */
+export function takeTokenStandingLessons(): string | undefined {
+  if (!lastTokenStandingLessons) return undefined;
+  const value = lastTokenStandingLessons.value;
+  lastTokenStandingLessons = null;
   return value;
 }
 
@@ -144,6 +158,16 @@ export async function fetchEphemeralToken(
           lastTokenVisitorMemory = decodeURIComponent(encodedMemory);
         } catch {
           lastTokenVisitorMemory = "";
+        }
+      }
+      const encodedLessons = res.headers.get(LESSONS_HEADER);
+      if (encodedLessons != null) {
+        try {
+          lastTokenStandingLessons = {
+            value: decodeURIComponent(encodedLessons),
+          };
+        } catch {
+          lastTokenStandingLessons = { value: "" };
         }
       }
       const data = (await res.json()) as {

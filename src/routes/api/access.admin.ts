@@ -28,6 +28,11 @@ import {
   getResearchProviderOverride,
   setResearchProviderOverride,
 } from "@/lib/rvgrok/researchProviderStore";
+import {
+  addPromptLesson,
+  deletePromptLesson,
+  readPromptLessonsStatus,
+} from "@/lib/rvgrok/promptLessonsStore";
 
 type Body = {
   action?: string;
@@ -40,6 +45,7 @@ type Body = {
   provider?: string;
   researchOrder?: string;
   order?: string;
+  text?: string;
 };
 
 async function researchProviderPayload() {
@@ -58,18 +64,20 @@ export const Route = createFileRoute("/api/access/admin")({
       GET: async ({ request }) => {
         const blocked = denyAccessAdmin(request);
         if (blocked) return blocked;
-        const [entries, requests, researchProvider, researchOrder] =
+        const [entries, requests, researchProvider, researchOrder, promptLessons] =
           await Promise.all([
             listWhitelist(),
             listAccessRequests(),
             researchProviderPayload(),
             researchOrderPayload(),
+            readPromptLessonsStatus(),
           ]);
         return Response.json({
           entries,
           requests,
           researchProvider,
           researchOrder,
+          promptLessons,
         });
       },
       PATCH: async ({ request }) => {
@@ -168,6 +176,34 @@ export const Route = createFileRoute("/api/access/admin")({
             ok: true,
             researchOrder: researchOrderStatus({ override: saved.override }),
             researchProvider: await researchProviderPayload(),
+          });
+        }
+
+        if (action === "prompt-lesson-add") {
+          const saved = await addPromptLesson(String(body.text ?? ""));
+          if (!saved.ok) {
+            return Response.json(
+              { error: saved.error },
+              { status: saved.unavailable ? 503 : 400 },
+            );
+          }
+          return Response.json({
+            ok: true,
+            promptLessons: saved.status,
+          });
+        }
+
+        if (action === "prompt-lesson-delete") {
+          const saved = await deletePromptLesson(String(body.id ?? ""));
+          if (!saved.ok) {
+            return Response.json(
+              { error: saved.error },
+              { status: saved.unavailable ? 503 : 400 },
+            );
+          }
+          return Response.json({
+            ok: true,
+            promptLessons: saved.status,
           });
         }
 

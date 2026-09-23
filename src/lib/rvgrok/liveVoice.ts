@@ -12,6 +12,11 @@
  */
 
 import {
+  DEFAULT_PROMPT_LESSONS,
+  formatPromptLessons,
+  injectStandingLessons,
+} from "./promptLessons.ts";
+import {
   sessionIntroLine,
   VOICE_RESEARCH_HOLD_PHRASE,
   voiceSessionIntroInstructions,
@@ -168,6 +173,7 @@ export function buildRealtimeSessionUpdate(
   catalogContext?: string,
   visitorFirstName?: string,
   visitorMemory?: string,
+  standingLessons?: string,
 ): Record<string, unknown> {
   const clamped = Math.min(1.5, Math.max(0.7, speed));
   const extra = (catalogContext || "").trim();
@@ -176,8 +182,13 @@ export function buildRealtimeSessionUpdate(
   const personalBlock = personal ? `${personal}\n\n` : "";
   const memory = (visitorMemory || "").trim();
   const memoryBlock = memory ? `${memory}\n\n` : "";
+  const lessons =
+    standingLessons === undefined
+      ? formatPromptLessons(DEFAULT_PROMPT_LESSONS)
+      : standingLessons.trim();
+  const core = injectStandingLessons(RV_VOICE_INSTRUCTIONS, lessons);
   const intro = sessionIntroLine(visitorFirstName);
-  const instructions = `${RV_VOICE_INSTRUCTIONS}\n\n${personalBlock}${memoryBlock}${catalogBlock}This session has native web_search. Use it for coach facts. Short ear-friendly sentences. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.`;
+  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}This session has native web_search. Use it for coach facts. Short ear-friendly sentences. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.`;
   return {
     type: "session.update",
     session: {

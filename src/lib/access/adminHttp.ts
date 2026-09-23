@@ -9,7 +9,7 @@ import {
   verifyAdminToken,
 } from "./adminSession.ts";
 
-/** Shared gate for /api/access/admin, research-provider, and research-order writes. */
+/** Shared gate for /api/access/admin, research-provider, research-order, and prompt-lessons writes. */
 export function denyAccessAdmin(request: Request): Response | null {
   const auth = authorizeAccessAdmin(request, {
     tokenValid: verifyAdminToken(readAdminToken(request)),

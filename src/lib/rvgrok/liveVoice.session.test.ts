@@ -56,6 +56,8 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.match(session.instructions, /CARFAX-style coach report/);
   assert.match(session.instructions, /give me one second/);
   assert.match(session.instructions, /I'm RvGrok/);
+  assert.match(session.instructions, /STANDING LESSONS \(desk SoT\)/);
+  assert.match(session.instructions, /Never invent OEM numbers/);
   assert.doesNotMatch(session.instructions, /Their first name is/);
 });
 
@@ -84,6 +86,10 @@ test("visitor memory is additive and does not change the spoken intro", () => {
   const session = msg.session as { instructions: string };
   assert.match(session.instructions, /VISITOR MEMORY/);
   assert.match(session.instructions, /Prefers compact answers/);
+  assert.ok(
+    session.instructions.indexOf("STANDING LESSONS") <
+      session.instructions.indexOf("VISITOR MEMORY"),
+  );
   assert.match(session.instructions, /Say exactly: Hello, David/);
   assert.doesNotMatch(session.instructions, /Say exactly: I'm RvGrok/);
   assert.doesNotMatch(session.instructions, /I'm RvGrok, David/);
@@ -109,6 +115,19 @@ test("catalog lock session.update still ships voice, VAD, audio, and web_search"
   assert.match(session.instructions, /native web_search/);
 });
 
+test("explicit empty standing lessons skip the block; omitted uses defaults", () => {
+  const skipped = buildRealtimeSessionUpdate("ara", 1, "", "", "", "");
+  const skippedSession = skipped.session as { instructions: string };
+  assert.doesNotMatch(skippedSession.instructions, /STANDING LESSONS \(desk SoT\)/);
+  const defaults = buildRealtimeSessionUpdate("ara");
+  const defaultSession = defaults.session as { instructions: string };
+  assert.match(defaultSession.instructions, /STANDING LESSONS \(desk SoT\)/);
+  assert.ok(
+    defaultSession.instructions.indexOf("You are RV Grok") <
+      defaultSession.instructions.indexOf("STANDING LESSONS"),
+  );
+});
+
 test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => {
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   assert.match(realtime, /ws\.onopen[\s\S]*buildRealtimeSessionUpdate/);
@@ -120,5 +139,7 @@ test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => 
   assert.match(realtime, /setVisitorFirstName/);
   assert.match(realtime, /buildSessionIntroResponse\(this\.visitorFirstName\)/);
   assert.match(realtime, /takeTokenVisitorMemory/);
+  assert.match(realtime, /takeTokenStandingLessons/);
   assert.match(realtime, /visitorMemory/);
+  assert.match(realtime, /standingLessons/);
 });

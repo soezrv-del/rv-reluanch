@@ -3,6 +3,8 @@ import { denyUnlessWhitelisted, phoneFromRequest } from "@/lib/access/httpGate";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
 import { MEMORY_HEADER } from "@/lib/rvgrok/phoneMemory";
 import { loadVisitorMemoryBlock } from "@/lib/rvgrok/phoneMemoryStore";
+import { LESSONS_HEADER } from "@/lib/rvgrok/promptLessons";
+import { readStandingLessonsBlock } from "@/lib/rvgrok/promptLessonsStore";
 
 const XAI_CLIENT_SECRETS = "https://api.x.ai/v1/realtime/client_secrets";
 
@@ -101,13 +103,14 @@ async function mintEphemeralToken(method: "GET" | "POST") {
 }
 
 async function mintWithVisitorMemory(request: Request, method: "GET" | "POST") {
-  const [minted, memory] = await Promise.all([
+  const [minted, memory, lessons] = await Promise.all([
     mintEphemeralToken(method),
     loadVisitorMemoryBlock(phoneFromRequest(request)).catch(() => ""),
+    readStandingLessonsBlock().catch(() => ""),
   ]);
-  if (!memory) return minted;
   const headers = new Headers(minted.headers);
-  headers.set(MEMORY_HEADER, encodeURIComponent(memory));
+  if (memory) headers.set(MEMORY_HEADER, encodeURIComponent(memory));
+  headers.set(LESSONS_HEADER, encodeURIComponent(lessons));
   return new Response(minted.body, {
     status: minted.status,
     statusText: minted.statusText,
