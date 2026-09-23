@@ -655,7 +655,19 @@ test("Lineage Series F: no series 22k stamp; 31ZW / 31ZW5 year-bands stay", () =
   assert.equal(zw.brochure.freshWater, "79 gal");
   assert.equal(zw.brochure.grayWater, "66 gal");
   assert.equal(zw.brochure.blackWater, "45 gal");
-  assert.equal(zw.brochure.uvwLbs, null);
+  // 2026 31ZW dry weight / UVW — dealer + spec consensus. OEM brochure omits UVW.
+  // Payload (CCC) is GVWR − dry weight. Do not stamp 31ZW5 or other years.
+  assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series F", "31ZW"), 18186);
+  assert.equal(zw.brochure.uvwLbs, 18186);
+  assert.equal(zw.brochure.uvw, "18,186 lbs");
+  assert.equal(zw.brochure.uvwEstimated, false);
+  assert.equal(zw.brochure.cccLbs, 3814);
+  assert.equal(zw.brochure.ccc, "3,814 lbs");
+  assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series F", "31ZW5"), null);
+  assert.equal(zw5.brochure.uvwLbs, null);
+  assert.equal(findOemUvwLbs("2025", "Grand Design", "Lineage Series F", "31ZW"), null);
+  assert.equal(findOemUvwLbs("2027", "Grand Design", "Lineage Series F", "31ZW"), null);
+  assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series M", "25FW"), null);
 });
 
 test("resolution path is shared — no coach-specific Ambassador/Jayco/Thor invent", () => {
