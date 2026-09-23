@@ -20,6 +20,8 @@ import {
   researchFactsDossierNotes,
   researchFactsSoftNotes,
   resolveFactsCatalogPins,
+  shouldServeFactsDossierCache,
+  shouldStoreFactsDossierCache,
   type FactsCatalogCandidate,
 } from "./factsDossierResearch.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
@@ -87,6 +89,9 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
   assert.match(dossier, /research\.skipped/);
   assert.match(dossier, /skipLive: twoStep\.skipLive/);
   assert.match(dossier, /gaps: twoStep\.gaps/);
+  assert.match(dossier, /shouldServeFactsDossierCache\(cachedPlan\)/);
+  assert.match(dossier, /shouldStoreFactsDossierCache/);
+  assert.match(dossier, /v28-gap-cache-bypass/);
   assert.doesNotMatch(dossier, /grok-3|grok-2-1212/);
   assert.doesNotMatch(dossier, /researchOrder\s*:/);
   assert.doesNotMatch(
@@ -622,6 +627,123 @@ test("soft fail leaves hard pins; merge never stomps powertrain", async () => {
   );
   assert.match(parsed.overview || "", /Bath-and-a-half/);
   assert.deepEqual(parsed.commonIssues, ["Slide seals"]);
+});
+
+test("cache hit with complete pins still serves cache / skipLive true", async () => {
+  const plan = planFactsDossierResearch({
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+    candidate: COMPLETE_CANDIDATE,
+  });
+  assert.equal(plan.skipLive, true);
+  assert.deepEqual(plan.gaps, []);
+  assert.equal(shouldServeFactsDossierCache(plan), true);
+  assert.equal(shouldStoreFactsDossierCache({ skipLive: true }), true);
+
+  const calls: ExecuteWebResearchOpts[] = [];
+  const notes = await researchFactsDossierNotes({
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+    candidate: COMPLETE_CANDIDATE,
+    execute: async (opts) => {
+      calls.push(opts);
+      return {
+        ok: true,
+        notes: "complete pins must not browse",
+        model: "grok-4.7",
+        kind: "success",
+        durationMs: 4,
+      };
+    },
+  });
+  assert.equal(shouldServeFactsDossierCache(plan), true, "cache remains final");
+  assert.equal(calls.length, 0);
+  assert.equal(notes!.skipped, true);
+});
+
+test("cache hit with hard gaps must browse — not return stale cache as final", async () => {
+  const incomplete: FactsCatalogCandidate = {
+    engine: "Cummins X15 605HP",
+    horsepower: 605,
+    torque: "1950 lb-ft",
+    chassis: "Spartan K3",
+    transmission: "Allison 4000 MH",
+    fuelType: "Diesel",
+    type: "Class A Diesel",
+  };
+  const plan = planFactsDossierResearch({
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+    candidate: incomplete,
+  });
+  assert.ok(plan.gaps.includes("gvwr"));
+  assert.ok(plan.gaps.includes("uvw"));
+  assert.ok(plan.gaps.includes("tanks"));
+  assert.ok(plan.gaps.includes("length"));
+  assert.equal(plan.skipLive, false);
+  assert.equal(
+    shouldServeFactsDossierCache(plan),
+    false,
+    "stale cache must not be the final answer when hard gaps remain",
+  );
+  assert.equal(
+    shouldStoreFactsDossierCache({
+      skipLive: false,
+      remainingHardGaps: plan.gaps,
+    }),
+    false,
+  );
+  assert.equal(
+    shouldStoreFactsDossierCache({
+      skipLive: false,
+      remainingHardGaps: [],
+    }),
+    true,
+    "store after browse fills the last hard gaps",
+  );
+
+  const calls: ExecuteWebResearchOpts[] = [];
+  const notes = await researchFactsDossierNotes({
+    year: "2023",
+    make: "American Coach",
+    model: "American Dream",
+    floorplan: "45A",
+    candidate: incomplete,
+    execute: async (opts) => {
+      calls.push(opts);
+      return {
+        ok: true,
+        notes: "CONFIRMED: OEM GVWR 54000 UVW 42000 length 44'11 tanks 100/50/50.",
+        model: "grok-4.7",
+        kind: "success",
+        durationMs: 18,
+      };
+    },
+  });
+  assert.equal(calls.length, 1, "gap browse must run executeWebResearch");
+  assert.equal(calls[0]!.skipGate, true);
+  assert.match(calls[0]!.query, /GVWR|UVW|holding tanks|length/);
+  assert.ok(notes);
+  assert.equal(notes!.skipped, false);
+  assert.ok(notes!.gaps.includes("gvwr"));
+
+  const dossier = src("../../routes/api/rvfax.dossier.ts");
+  assert.match(
+    dossier,
+    /shouldServeFactsDossierCache\(cachedPlan\)/,
+    "route must gate cache return on skipLive, not hit alone",
+  );
+  assert.doesNotMatch(
+    dossier,
+    /if \(hit && Date\.now\(\) - hit\.at < TTL_MS\) \{\s*let data/,
+    "unconditional cache return is the production bug",
+  );
 });
 
 test("DialaBot / Bland / phonebook stay untouched by this Facts path", () => {
