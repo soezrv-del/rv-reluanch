@@ -182,7 +182,7 @@ test("guidance follow uses watchPosition; origin stays one-shot", () => {
   assert.match(ui, /data-rv-safe-chip/);
   assert.doesNotMatch(ui, /RVTRIPS_AMERICA_BACKDROP/);
   assert.doesNotMatch(ui, /SHARED_PRESTIGE_BACKDROP/);
-  assert.match(ui, /SuiteRaidhoBackdrop/);
+  assert.match(ui, /<SuiteRaidhoBackdrop bleed \/>/);
   assert.doesNotMatch(ui, /TRUTH_MARK_BACKDROP/);
   assert.doesNotMatch(ui, /MetalVerifiedTrue/);
   assert.match(ui, /follow=\{follow\.fix\}/);

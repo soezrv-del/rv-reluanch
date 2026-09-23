@@ -456,15 +456,14 @@ test("Trips nav UI has a speaker toggle and uses Web Speech Synthesis — no mic
   assert.match(chrome, /data-trips-navigating/);
   assert.match(chrome, /\[data-trips-screen\]/);
   assert.match(chrome, /\[data-trips-screen\] \.page-backdrop-bright/);
-  assert.match(chrome, /object-fit:\s*contain/);
-  assert.match(chrome, /object-position:\s*center center/);
+  assert.match(chrome, /\[data-trips-screen\] \.suite-raidho-field \{[\s\S]*?display:\s*none/);
   assert.match(chrome, /\[data-trips-route-clean\]/);
   assert.match(chrome, /data-suite-pane="rvtrips"/);
   assert.match(chrome, /backdrop-filter:\s*none/);
   assert.match(ui, /data-trips-route-clean/);
   assert.doesNotMatch(ui, /RVTRIPS_AMERICA_BACKDROP/);
   assert.doesNotMatch(ui, /SHARED_PRESTIGE_BACKDROP/);
-  assert.match(ui, /SuiteRaidhoBackdrop/);
+  assert.match(ui, /<SuiteRaidhoBackdrop bleed \/>/);
   assert.doesNotMatch(ui, /TRUTH_MARK_BACKDROP/);
   assert.doesNotMatch(ui, /MetalVerifiedTrue/);
   assert.match(speech, /u\.volume = 0\.72/);

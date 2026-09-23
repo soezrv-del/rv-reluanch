@@ -1549,7 +1549,8 @@
 }
 
 /*
- * Facts + Tow: logo only, full-bleed. No photo, field, scrim, or blend.
+ * Suite backscreen SoT (Facts #374): logo only, full-bleed.
+ * No photo, field, scrim, or blend — Grok / GPS included.
  */
 .suite-raidho-bleed {
   position: absolute;
@@ -1578,7 +1579,13 @@
 [data-sold-book] .suite-raidho-field,
 [data-premium-screen] .page-backdrop-bright,
 [data-premium-screen] .page-scrim-soft,
-[data-premium-screen] .suite-raidho-field {
+[data-premium-screen] .suite-raidho-field,
+[data-rvgrok-wingman] .page-backdrop-bright,
+[data-rvgrok-wingman] .page-scrim-soft,
+[data-rvgrok-wingman] .suite-raidho-field,
+[data-trips-screen] .page-backdrop-bright,
+[data-trips-screen] .page-scrim-soft,
+[data-trips-screen] .suite-raidho-field {
   display: none;
 }
 
@@ -1984,15 +1991,6 @@
   background: var(--color-ink-black);
   isolation: isolate;
 }
-[data-trips-screen] .suite-raidho-field {
-  background:
-    radial-gradient(
-      ellipse 92% 78% at 50% 46%,
-      color-mix(in srgb, var(--color-gold) 16%, transparent) 0%,
-      transparent 70%
-    ),
-    var(--color-ink-black);
-}
 [data-trips-screen] .glass-prestige,
 [data-trips-screen] .glass-prestige-deep,
 [data-trips-screen] .glass-prestige-gold,
@@ -2000,12 +1998,10 @@
 [data-trips-screen] .glass-surface {
   border-color: var(--color-gold-border);
 }
-[data-trips-screen] .page-backdrop-bright {
-  opacity: 0.28;
-  filter: none;
-  /* Portrait R + tagline: contain so object-cover cannot crop the mark. */
-  object-fit: contain;
-  object-position: center center;
+[data-trips-screen] .page-backdrop-bright,
+[data-trips-screen] .page-scrim-soft,
+[data-trips-screen] .suite-raidho-field {
+  display: none;
 }
 [data-trips-route-clean] [data-trips-decor],
 [data-trips-screen] [data-trips-decor] {
@@ -2293,35 +2289,16 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   isolation: isolate;
 }
 /*
- * Raidho R is a BACKGROUND field behind frost — not a front brand lockup,
- * header plate, or competing chrome. Field + screen-blend rune fill the
- * viewport; glass sits on top.
+ * Grok backscreen matches Facts (#374 bleed): logo occupies the viewport.
+ * No photo plate, field, or screen-blend. Gold stays on frost / chrome.
  */
 [data-rvgrok-wingman] .grok-raidho-field,
 [data-rvgrok-wingman] .suite-raidho-backdrop {
   z-index: 0;
 }
-[data-rvgrok-wingman] .suite-raidho-field {
-  background:
-    radial-gradient(
-      ellipse 92% 78% at 50% 46%,
-      color-mix(in srgb, var(--color-gold) 16%, transparent) 0%,
-      transparent 70%
-    ),
-    var(--color-ink-black);
-}
-[data-rvgrok-wingman] .suite-raidho-mark {
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  transform: translate(-50%, -50%) scale(2.2);
-  object-fit: contain;
-  opacity: 0.36;
-  mix-blend-mode: screen;
-}
-[data-rvgrok-wingman] .suite-raidho-bleed,
 [data-rvgrok-wingman] .page-backdrop-bright,
 [data-rvgrok-wingman] .page-scrim-soft,
+[data-rvgrok-wingman] .suite-raidho-field,
 [data-rvgrok-wingman] .sapphire-header {
   display: none;
 }
