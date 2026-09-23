@@ -65,10 +65,14 @@ test("lean core is David's verbatim standing prompt", () => {
     /ratings, market value, video, NHTSA safety, maintenance/,
   );
   assert.match(RV_GROK_LEAN_CORE, /open only that card/);
-  assert.match(RV_GROK_LEAN_CORE, /Catalog only; no invented coaches/);
+  assert.match(RV_GROK_LEAN_CORE, /no invented coaches/);
   assert.match(RV_GROK_LEAN_CORE, /start clean; do not pretend to remember/);
   assert.match(RV_GROK_LEAN_CORE, /welcome them back by first name once/);
   assert.match(RV_GROK_LEAN_CORE, /I'm RvGrok/);
+  assert.match(RV_GROK_LEAN_CORE, /Never append "from the catalog,"/);
+  assert.match(RV_GROK_LEAN_CORE, /do not narrate GAP or Confirm brochure as filler/);
+  assert.match(RV_GROK_LEAN_CORE, /Torque means hill power/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /Pin every verified field/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /sales-floor wingman/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /CARFAX-style coach report/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /only occasionally/);

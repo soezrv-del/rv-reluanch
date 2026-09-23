@@ -62,7 +62,7 @@ test("Lineage 31ZW UVW speech uses the painted engine number, not a guess", () =
   assert.match(uvw?.value || "", /18,186/);
   const speech = formatVoiceSpecEngineSpeech(sheet, LINEAGE_Q);
   assert.match(speech, /18,186/);
-  assert.match(speech, /from the catalog/);
+  assert.doesNotMatch(speech, /from the catalog|per the catalog|from RV Guide|from the OEM brochure|from dealer inventory/i);
   assert.match(speech, /dry weight/i);
   assert.doesNotMatch(speech, /I won't guess/);
   const tagged = withVoiceSpecExtras(sheet, LINEAGE_Q);
@@ -70,27 +70,27 @@ test("Lineage 31ZW UVW speech uses the painted engine number, not a guess", () =
   assert.equal(withVoiceSpecExtras(sheet, "hi")?.offerVoiceExtras, undefined);
 });
 
-test("fallback pin names RV Guide and a catalog miss does not invent", () => {
+test("spec speech does not narrate a source tag, and a miss does not invent", () => {
   const speech = formatVoiceSpecEngineSpeech(lineageSheet(), LINEAGE_Q);
   assert.match(speech, /18,186/);
-  assert.match(speech, /from RV Guide/);
+  assert.doesNotMatch(speech, /from the catalog|per the catalog|from RV Guide/i);
   assert.equal(
     voiceSpecSourcePhrase({
       sourceUrl: "https://www.rvusa.com/rv-guide/2026-lineage-31zw",
     }),
-    "from RVUSA",
+    "",
   );
   assert.equal(
     voiceSpecSourcePhrase({
       sourceUrl: "https://dealer.example/inventory/lineage-31zw",
     }),
-    "from dealer inventory",
+    "",
   );
   assert.equal(
     voiceSpecSourcePhrase({
       sourceUrl: "http://library.rvusa.com/brochure/2026-Grand-Design-Lineage-Series-F.pdf",
     }),
-    "from the OEM brochure",
+    "",
   );
 
   const missed = formatVoiceSpecEngineSpeech(
@@ -169,6 +169,23 @@ test("coach or spec ask is a choice, not a synopsis or an auto full report", () 
   const full = formatVoiceSpecEngineSpeech(lineageSheet(), LINEAGE_Q, "all");
   assert.match(full, /18,186/);
   assert.match(full, /Which one do you want/);
+  const benefit = formatVoiceSpecEngineSpeech(
+    lineageSheet({
+      rows: [
+        { label: "Torque", value: "1,850 lb-ft", gap: false },
+        { label: "Horsepower", value: "605 hp", gap: false },
+        { label: "GVWR", value: "Confirm brochure", gap: true },
+        { label: "UVW", value: "GAP", gap: true },
+      ],
+    }),
+    "2026 Entegra Coach Cornerstone 45B",
+    "all",
+  );
+  assert.match(benefit, /hill power/);
+  assert.match(benefit, /passing power/);
+  assert.match(benefit, /Still missing: GVWR and UVW/);
+  assert.equal((benefit.match(/I won't guess/g) || []).length, 1);
+  assert.doesNotMatch(benefit, /from the catalog|per the catalog|Confirm brochure|\bGAP\b/i);
   assert.doesNotMatch(full, /You can pick recalls/);
   assert.equal(voiceExtraPromptLine(lineageSheet(), 0), "Want ratings?");
   assert.equal(voiceExtraPromptLine(lineageSheet(), 99), null);

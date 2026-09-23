@@ -7,6 +7,7 @@ import { formatTime, cn } from "@/lib/utils";
 import { AgentBadge, AgentStepsCard } from "./AgentStepsCard";
 import { DeskSpecSheet } from "./DeskSpecSheet";
 import { GrokExtrasRail } from "./GrokExtrasRail";
+import { stripDeskGapFiller, stripSpokenSourceTags } from "@/lib/rvgrok/coachReport";
 import { stripDuplicateMarkdownSpecSheet } from "@/lib/rvgrok/lockedWeights";
 
 function renderContent(text: string) {
@@ -95,9 +96,12 @@ export function MessageBubble({
   const [savedNote, setSavedNote] = useState(false);
 
   const voted = message.feedback;
-  const displayContent = message.deskSheet
+  const rawContent = message.deskSheet
     ? stripDuplicateMarkdownSpecSheet(message.content || "")
     : message.content || "";
+  const displayContent = message.deskSheet
+    ? stripDeskGapFiller(stripSpokenSourceTags(rawContent))
+    : stripSpokenSourceTags(rawContent);
   const speakContent = displayContent;
 
   return (

@@ -8,7 +8,7 @@
 
 import type { DeskSheetPayload, DeskSheetRow } from "./deskSheet.ts";
 import { looksLikeDeskSheetAsk } from "./deskSheetPolicy.ts";
-import { looksLikeCoachReportAsk } from "./coachReport.ts";
+import { looksLikeCoachReportAsk, stripSpokenSourceTags } from "./coachReport.ts";
 import {
   GROK_EXTRA_PROMPTS,
   VOICE_EXTRAS_OFFER_LINE,
@@ -52,14 +52,13 @@ function isEmptyValue(value: string): boolean {
   );
 }
 
-/** Spoken source for a painted row. Catalog when the fallback chain did not fill it. */
-export function voiceSpecSourcePhrase(row: Pick<DeskSheetRow, "sourceUrl">): string {
-  const url = row.sourceUrl || "";
-  if (!url) return "from the catalog";
-  if (/brochure|\.pdf(?:\?|$)/i.test(url)) return "from the OEM brochure";
-  if (/rvusa\.com/i.test(url)) return "from RVUSA";
-  if (/rvguide\.com/i.test(url)) return "from RV Guide";
-  return "from dealer inventory";
+/**
+ * Spoken source tag for a painted row.
+ * Always empty: the desk pin holds provenance. Bubbles must not say
+ * "from the catalog" / "per the catalog" / brochure / dealer on each field.
+ */
+export function voiceSpecSourcePhrase(_row: Pick<DeskSheetRow, "sourceUrl">): string {
+  return "";
 }
 
 function speakValue(value: string): string {
@@ -84,13 +83,35 @@ function askedLabels(query: string): string[] {
   return labels;
 }
 
-function rowSpeech(row: DeskSheetRow, query: string): string {
+/** Full-report feature→benefit. Numbers stay the painted value; no invented specs. */
+function featureBenefit(label: string): string {
+  if (label === "Torque") return " That's hill power and pull off the line.";
+  if (label === "Horsepower") return " That's passing power.";
+  if (/tow/i.test(label)) return " That's what they can pull.";
+  if (label === "Fuel capacity" || label === "Fresh" || label === "Gray" || label === "Black") {
+    return " That means fewer stops.";
+  }
+  return "";
+}
+
+function rowSpeech(row: DeskSheetRow, query: string, withBenefit: boolean): string {
   const dry =
     row.label === "UVW" &&
     (row.asterisk || /\bdry\s+weight\b/i.test(query))
       ? " dry weight"
       : "";
-  return `${row.label}${dry} is ${speakValue(row.value)}, ${voiceSpecSourcePhrase(row)}.`;
+  const benefit = withBenefit ? featureBenefit(row.label) : "";
+  return stripSpokenSourceTags(
+    `${row.label}${dry} is ${speakValue(row.value)}.${benefit}`,
+  );
+}
+
+function missingOnce(labels: string[]): string | null {
+  const unique = [...new Set(labels.map((l) => l.trim()).filter(Boolean))];
+  if (!unique.length) return null;
+  if (unique.length === 1) return `${unique[0]} is still missing. I won't guess.`;
+  const last = unique[unique.length - 1];
+  return `Still missing: ${unique.slice(0, -1).join(", ")} and ${last}. I won't guess.`;
 }
 
 const CHOICE_FILLER =
@@ -215,45 +236,47 @@ function voiceSpecEngineSpeechBody(
     const painted = sheet.rows.filter(
       (r) => !r.gap && !isEmptyValue(r.value) && r.value !== "N/A",
     );
+    const missed = sheet.rows
+      .filter((r) => r.gap || isEmptyValue(r.value))
+      .map((r) => r.label);
     if (!painted.length) {
-      lines.push(
-        "Catalog and the fallback chain both missed the spec fields. I won't guess.",
-      );
+      lines.push("The spec fields are still missing. I won't guess.");
     } else {
-      for (const row of painted) lines.push(rowSpeech(row, query));
+      for (const row of painted) lines.push(rowSpeech(row, query, true));
+      const once = missingOnce(missed);
+      if (once) lines.push(once);
     }
     lines.push(EXTRAS_OFFER);
-    return lines.join(" ");
+    return stripSpokenSourceTags(lines.join(" "));
   }
   const asked = askedLabels(query);
   if (asked.length) {
+    const missed: string[] = [];
     for (const label of asked) {
       const row = sheet.rows.find((r) => r.label === label);
       if (!row || row.gap || isEmptyValue(row.value)) {
-        lines.push(
-          `${label} is still missing after the catalog and the fallback chain. I won't guess.`,
-        );
+        missed.push(label);
         continue;
       }
-      lines.push(rowSpeech(row, query));
+      lines.push(rowSpeech(row, query, false));
     }
+    const once = missingOnce(missed);
+    if (once) lines.push(once);
   } else {
     const painted = sheet.rows.filter(
       (r) => !r.gap && !isEmptyValue(r.value) && r.value !== "N/A",
     );
     if (!painted.length) {
-      lines.push(
-        "Catalog and the fallback chain both missed the spec fields. I won't guess.",
-      );
+      lines.push("The spec fields are still missing. I won't guess.");
     } else {
-      for (const row of painted.slice(0, 8)) lines.push(rowSpeech(row, query));
+      for (const row of painted.slice(0, 8)) lines.push(rowSpeech(row, query, false));
       if (painted.length > 8) {
         lines.push("The rest of the spec sheet is on the desk.");
       }
     }
   }
   lines.push(EXTRAS_OFFER);
-  return lines.join(" ");
+  return stripSpokenSourceTags(lines.join(" "));
 }
 
 /** Quick overview — the catalog coach line only. No spec dump, no extras. */
