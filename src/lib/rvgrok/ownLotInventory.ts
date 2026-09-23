@@ -26,6 +26,7 @@ import { fileURLToPath } from "node:url";
 import {
   extractFloorplanToken,
   normalizeCoachAsk,
+  normalizeFloorplanToken,
   parseCoachFromText,
   parseSeriesAlias,
   parseSpokenSeries,
@@ -193,7 +194,11 @@ const LOOK_UP_CATALOG_RE = /\blook(?:ing)?\s+up\b/i;
 /** 27A / 27ASE / 25FW — not a 4–7 digit stock #. */
 const BARE_FLOORPLAN_RE = /^\d{2,3}[A-Za-z]{1,4}$/;
 
-/** Lot-search stopwords stripped before sharing Lot's token AND-match. */
+/**
+ * Grok-only lot-ask stopwords. Stripped before Lot's token AND-match so
+ * salesman filler never becomes a required haystack token. Do not reuse
+ * on the Lot page search box — typed "stock" there is a real query.
+ */
 const LOT_ASK_STOP = new Set([
   "look",
   "looking",
@@ -223,6 +228,7 @@ const LOT_ASK_STOP = new Set([
   "my",
   "lot",
   "inventory",
+  "inventories",
   "do",
   "we",
   "have",
@@ -233,8 +239,92 @@ const LOT_ASK_STOP = new Set([
   "to",
   "know",
   "if",
+  "whether",
   "i",
   "need",
+  "see",
+  "seeing",
+  "seen",
+  "stock",
+  "stocks",
+  "stocking",
+  "show",
+  "shows",
+  "showing",
+  "hello",
+  "hi",
+  "hey",
+  "yeah",
+  "yes",
+  "yep",
+  "yup",
+  "yo",
+  "ok",
+  "okay",
+  "um",
+  "uh",
+  "thanks",
+  "thank",
+  "just",
+  "also",
+  "like",
+  "could",
+  "would",
+  "will",
+  "should",
+  "does",
+  "did",
+  "was",
+  "were",
+  "be",
+  "been",
+  "being",
+  "this",
+  "that",
+  "those",
+  "these",
+  "and",
+  "or",
+  "but",
+  "not",
+  "of",
+  "from",
+  "with",
+  "by",
+  "about",
+  "so",
+  "well",
+  "then",
+  "now",
+  "right",
+  "currently",
+  "current",
+  "available",
+  "unit",
+  "units",
+  "ones",
+  "some",
+  "them",
+  "they",
+  "it",
+  "its",
+  "your",
+  "what",
+  "which",
+  "where",
+  "when",
+  "how",
+  "many",
+  "here",
+  "near",
+  "coach",
+  "coaches",
+  "im",
+  "ive",
+  "youre",
+  "whats",
+  "s",
+  "es",
 ]);
 
 export function isBareFloorplanCode(text: string): boolean {
@@ -246,18 +336,42 @@ export function isBareFloorplanCode(text: string): boolean {
   return BARE_FLOORPLAN_RE.test(t);
 }
 
+function leftoverFloorplanQuery(tokens: string[]): string {
+  for (const raw of tokens) {
+    const normalized = normalizeFloorplanToken(raw);
+    if (!normalized) continue;
+    if (BARE_FLOORPLAN_RE.test(normalized)) return normalized.toLowerCase();
+  }
+  return "";
+}
+
 /**
  * Remaining tokens after stripping search verbs / lot filler.
  * "look for a 27A" → "27a" so Lot search matches the page box.
+ * A leftover floorplan (27As → 27A) is preferred so "27as stock" does
+ * not AND-fail against unit haystacks.
  */
 export function lotSearchQueryFromAsk(text: string): string {
-  const cleaned = normalizeAskText(text).replace(/[?!.,;:]+/g, " ");
-  return cleaned
+  const cleaned = normalizeAskText(text)
+    .replace(/['’]/g, "")
+    .replace(/[?!.,;:]+/g, " ");
+  const tokens = cleaned
     .toLowerCase()
     .split(/[\s,/|]+/)
     .map((t) => t.trim())
-    .filter((t) => t && !LOT_ASK_STOP.has(t))
-    .join(" ");
+    .filter((t) => t && !LOT_ASK_STOP.has(t));
+
+  const spokenFp = extractFloorplanToken(cleaned);
+  if (spokenFp) {
+    const compact = normalizeFloorplanToken(spokenFp).toLowerCase();
+    const leftoverHasFp = tokens.some((t) => {
+      const n = normalizeFloorplanToken(t).toLowerCase();
+      return Boolean(n) && (n === compact || n.startsWith(compact) || compact.startsWith(n));
+    });
+    if (leftoverHasFp) return compact;
+  }
+
+  return leftoverFloorplanQuery(tokens) || tokens.join(" ");
 }
 
 /**

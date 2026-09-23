@@ -515,6 +515,12 @@ test("in-app chat and voice research are wired; DialaBot stays out", () => {
   assert.match(src(".", "ownLotInventory.ts"), /sameOriginOwnLotUrls/);
   assert.match(src(".", "ownLotInventory.ts"), /from "\.\.\/lot\/lotSearch/);
   assert.match(src(".", "ownLotInventory.ts"), /searchLotUnits/);
+  assert.match(src(".", "ownLotInventory.ts"), /Grok-only lot-ask stopwords/);
+  assert.doesNotMatch(src("../lot", "lotSearch.ts"), /LOT_ASK_STOP/);
+  assert.doesNotMatch(
+    src("../lot", "ownLotPage.ts"),
+    /LOT_ASK_STOP|lotSearchQueryFromAsk/,
+  );
   assert.match(api, /requestOrigin/);
   assert.doesNotMatch(api, /[Dd]ialaBot/);
   assert.doesNotMatch(telemetry, /[Dd]ialaBot/);
@@ -1558,9 +1564,23 @@ test("lot search asks (look/find/27A) open own-lot; product designations do not"
   assert.equal(lotSearchQueryFromAsk("look for a 27A"), "27a");
   assert.equal(lotSearchQueryFromAsk("find 27A"), "27a");
   assert.equal(lotSearchQueryFromAsk("27A on the lot"), "27a");
+  assert.equal(
+    lotSearchQueryFromAsk("Can you see if you have any 27As in our stock?"),
+    "27a",
+  );
+  assert.equal(lotSearchQueryFromAsk("any 27As in our stock"), "27a");
+  assert.equal(
+    lotSearchQueryFromAsk(
+      "Hello, can you check to see if our inventory shows any 27A in inventory?",
+    ),
+    "27a",
+  );
+  assert.equal(lotSearchQueryFromAsk("27As"), "27a");
+  assert.equal(lotSearchQueryFromAsk("do we have any 27As"), "27a");
 
   const no = [
     "tell me about the Entegra Vision SE",
+    "tell me about Entegra Vision",
     "M series 25FW",
     "look up 2022 Dutch Star 4369",
     "2022 Newmar Dutch Star 4369",
@@ -1591,7 +1611,18 @@ test("look for a 27A uses Lot search and lists Vision SE 27ASE", () => {
     dealer: "RV Country",
     units,
   });
-  for (const ask of ["look for a 27A", "find 27A", "27A", "do we have a 27A"]) {
+  const davidLotAsks = [
+    "look for a 27A",
+    "find 27A",
+    "27A",
+    "do we have a 27A",
+    "Can you see if you have any 27As in our stock?",
+    "any 27As in our stock",
+    "Hello, can you check to see if our inventory shows any 27A in inventory?",
+    "27As",
+    "do we have any 27As",
+  ];
+  for (const ask of davidLotAsks) {
     const block = formatOwnLotBlock(snapshot, ask);
     assert.match(block, /Matched: 3/, ask);
     assert.match(block, /stk 47034/, ask);
@@ -1599,9 +1630,12 @@ test("look for a 27A uses Lot search and lists Vision SE 27ASE", () => {
     assert.match(block, /stk 46222/, ask);
     assert.match(block, /Vision SE/, ask);
     assert.match(block, /Matching units/, ask);
+    assert.match(block, /27ASE/, ask);
     assert.doesNotMatch(block, /stk E2411/, ask);
     assert.doesNotMatch(block, /stk XL360/, ask);
     assert.doesNotMatch(block, /UNAVAILABLE/, ask);
+    const visionSe = (block.match(/Vision SE/g) || []).length;
+    assert.ok(visionSe >= 3, `${ask} should list ≥3 Vision SE rows`);
   }
 
   const empty = formatOwnLotBlock(snapshot, "look for a 99ZZ");
