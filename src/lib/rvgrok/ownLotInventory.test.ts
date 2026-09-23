@@ -1543,6 +1543,18 @@ test("Tifin fuzzy brand (not Integra) matches Tiffin Phaeton 36L", () => {
   assert.doesNotMatch(block, /stk TF40Q/);
 });
 
+const HITCH_STOCK_27A: OwnLotUnit = pricedUnit({
+  year: "2005",
+  make: "S&S",
+  model: "BITTERROOT",
+  trim: "9SL",
+  body_type: "Truck Camper",
+  location: "Coburg OR",
+  stock_number: "UCO9527A",
+  vin: "9SC9087",
+  price: 7995,
+});
+
 const DAVID_INVENTORY_ASKS = [
   "Can you look in my inventory for a 27A Vision?",
   "I need to know if we have any Integras with a E Vision 27As in our inventory.",
@@ -1596,6 +1608,7 @@ test("look for a 27A uses Lot search and lists Vision SE 27ASE", () => {
     ...VISION_27ASE_UNITS,
     ...VISION_FAMILY_DECOYS,
     ...ENTEGRA_FRESNO_UNITS,
+    HITCH_STOCK_27A,
   ];
   const hits = searchLotUnits(units, "27A");
   assert.ok(hits.length >= 1);
@@ -1606,6 +1619,7 @@ test("look for a 27A uses Lot search and lists Vision SE 27ASE", () => {
     hits.filter((u) => u.trim === "27ASE").length,
     3,
   );
+  assert.ok(!hits.some((u) => u.stock_number === "UCO9527A"));
   const snapshot = snapshotFromJson({
     source: "own",
     dealer: "RV Country",
@@ -1634,6 +1648,7 @@ test("look for a 27A uses Lot search and lists Vision SE 27ASE", () => {
     assert.doesNotMatch(block, /stk E2411/, ask);
     assert.doesNotMatch(block, /stk XL360/, ask);
     assert.doesNotMatch(block, /UNAVAILABLE/, ask);
+    assert.doesNotMatch(block, /UCO9527A|BITTERROOT/, ask);
     const visionSe = (block.match(/Vision SE/g) || []).length;
     assert.ok(visionSe >= 3, `${ask} should list ≥3 Vision SE rows`);
   }
@@ -1660,6 +1675,56 @@ test("look for a 27A uses Lot search and lists Vision SE 27ASE", () => {
   assert.doesNotMatch(failed, /Matched: 0/);
 });
 
+test("Grok 27A / 27As match Vision SE 27ASE and do not hitch UCO9527A", () => {
+  const units = [...VISION_27ASE_UNITS, HITCH_STOCK_27A];
+  const locations = [
+    ...new Set(units.map((u) => u.location).filter(Boolean)),
+  ];
+  const snapshot = snapshotFromJson({
+    source: "own",
+    dealer: "RV Country",
+    units,
+  });
+  const expected = ["46222", "47033", "47034"];
+
+  for (const ask of ["27A", "27a", "27As"]) {
+    const filter = parseOwnLotAsk(ask, locations, units);
+    assert.match(filter.trim || "", /27A/i, ask);
+    assert.equal(filter.stockNumber, undefined, ask);
+    const rows = queryOwnLotUnits(units, filter, 12);
+    assert.deepEqual(
+      rows.map((r) => r.stock_number).sort(),
+      expected,
+      ask,
+    );
+    assert.ok(
+      rows.every((u) => u.model === "Vision SE" && u.trim === "27ASE"),
+      ask,
+    );
+    assert.ok(!rows.some((u) => u.stock_number === "UCO9527A"), ask);
+    const block = formatOwnLotBlock(snapshot, ask);
+    assert.match(block, /Matched: 3/, ask);
+    assert.match(block, /stk 47034/, ask);
+    assert.doesNotMatch(block, /UCO9527A|BITTERROOT/, ask);
+  }
+
+  const byStock = queryOwnLotUnits(
+    units,
+    parseOwnLotAsk("UCO9527A", locations, units),
+    12,
+  );
+  assert.equal(byStock.length, 1);
+  assert.equal(byStock[0]?.stock_number, "UCO9527A");
+
+  const byNum = queryOwnLotUnits(
+    units,
+    parseOwnLotAsk("47034", locations, units),
+    12,
+  );
+  assert.equal(byNum.length, 1);
+  assert.equal(byNum[0]?.trim, "27ASE");
+});
+
 test("David inventory asks list the three 27ASE stocks even with catalog GAP speech", () => {
   assert.equal(extractFloorplanToken("E Vision 27As"), "27A");
   assert.equal(extractFloorplanToken("27As"), "27A");
@@ -1679,6 +1744,7 @@ test("David inventory asks list the three 27ASE stocks even with catalog GAP spe
     ...VISION_27ASE_UNITS,
     ...VISION_FAMILY_DECOYS,
     ...ENTEGRA_FRESNO_UNITS,
+    HITCH_STOCK_27A,
   ];
   const locations = [
     ...new Set(units.map((u) => u.location).filter(Boolean)),
@@ -1719,6 +1785,7 @@ test("David inventory asks list the three 27ASE stocks even with catalog GAP spe
     assert.match(block, /Never say check your own lot listing/, ask);
     assert.doesNotMatch(block, /stk E2411/, ask);
     assert.doesNotMatch(block, /stk XL360/, ask);
+    assert.doesNotMatch(block, /UCO9527A|BITTERROOT/, ask);
   }
 
   const grounding = src(".", "grounding.ts");

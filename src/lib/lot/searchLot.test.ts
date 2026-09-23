@@ -15,6 +15,11 @@ import {
   searchLotUnits,
   tokenizeLotQuery,
 } from "./ownLotPage.ts";
+import {
+  floorplanTokensAlign,
+  isFloorplanLikeToken,
+  normalizeLotSearchToken,
+} from "./lotSearch.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -46,28 +51,94 @@ const sample = parseLotSnapshotJson([
     dealer: "RV Country",
     source: "own",
   },
+  {
+    year: 2026,
+    make: "Entegra Coach",
+    model: "Vision SE",
+    trim: "27ASE",
+    price: 109995,
+    stock_number: "47034",
+    body_type: "Class A",
+    location: "Fife WA",
+    vin: "1F65F5DNXS0A05266",
+    title: "2026 Entegra Coach Vision SE 27ASE",
+    dealer: "RV Country",
+    source: "own",
+  },
+  {
+    year: 2005,
+    make: "S&S",
+    model: "BITTERROOT",
+    trim: "9SL",
+    price: 7995,
+    stock_number: "UCO9527A",
+    body_type: "Truck Camper",
+    location: "Coburg OR",
+    vin: "9SC9087",
+    title: "2005 S&S BITTERROOT 9SL",
+    dealer: "RV Country",
+    source: "own",
+  },
 ]);
 
 test("empty search returns the full lot in snapshot order", () => {
   assert.equal(tokenizeLotQuery("   ").length, 0);
   const all = searchLotUnits(sample.units, "");
-  assert.equal(all.length, 2);
+  assert.equal(all.length, 4);
   assert.equal(all[0]?.stock_number, "47529");
   assert.equal(all[1]?.stock_number, "45282");
   assert.deepEqual(
     searchLotUnits(sample.units, "   ").map((u) => u.stock_number),
-    ["47529", "45282"],
+    ["47529", "45282", "47034", "UCO9527A"],
   );
 });
 
 test("search narrows by year, make, model, stock, type, location", () => {
   assert.equal(searchLotUnits(sample.units, "Impression").length, 1);
   assert.equal(searchLotUnits(sample.units, "47529")[0]?.model, "Impression");
-  assert.equal(searchLotUnits(sample.units, "2026 Entegra").length, 1);
-  assert.equal(searchLotUnits(sample.units, "fife").length, 1);
+  assert.equal(searchLotUnits(sample.units, "2026 Entegra").length, 2);
+  assert.equal(searchLotUnits(sample.units, "fife").length, 2);
   assert.equal(searchLotUnits(sample.units, "fifth wheel").length, 1);
-  assert.equal(searchLotUnits(sample.units, "Class A").length, 1);
+  assert.equal(searchLotUnits(sample.units, "Class A").length, 2);
   assert.equal(searchLotUnits(sample.units, "Impression Fresno").length, 0);
+});
+
+test("floorplan 27A / 27As match Vision SE 27ASE and do not hitch UCO9527A", () => {
+  assert.equal(normalizeLotSearchToken("27As"), "27a");
+  assert.equal(normalizeLotSearchToken("27A's"), "27a");
+  assert.equal(normalizeLotSearchToken("27ASE"), "27ase");
+  assert.equal(normalizeLotSearchToken("29S"), "29s");
+  assert.equal(isFloorplanLikeToken("27A"), true);
+  assert.equal(isFloorplanLikeToken("27As"), true);
+  assert.equal(isFloorplanLikeToken("UCO9527A"), false);
+  assert.equal(isFloorplanLikeToken("47034"), false);
+  assert.equal(floorplanTokensAlign("27A", "27ASE"), true);
+  assert.equal(floorplanTokensAlign("27ASE", "27A"), true);
+
+  for (const q of ["27A", "27a", "27As"]) {
+    const rows = searchLotUnits(sample.units, q);
+    assert.ok(
+      rows.some((u) => u.stock_number === "47034"),
+      q,
+    );
+    assert.ok(
+      rows.every((u) => u.model === "Vision SE" && u.trim === "27ASE"),
+      q,
+    );
+    assert.ok(
+      !rows.some((u) => u.stock_number === "UCO9527A"),
+      `${q} must not hitch stk UCO9527A`,
+    );
+  }
+
+  const byStock = searchLotUnits(sample.units, "UCO9527A");
+  assert.equal(byStock.length, 1);
+  assert.equal(byStock[0]?.stock_number, "UCO9527A");
+  assert.equal(searchLotUnits(sample.units, "uco9527a")[0]?.model, "BITTERROOT");
+
+  const byNum = searchLotUnits(sample.units, "47034");
+  assert.equal(byNum.length, 1);
+  assert.equal(byNum[0]?.trim, "27ASE");
 });
 
 test("missing fields stay GAP — never invent a price or stock", () => {
@@ -108,21 +179,30 @@ test("bundled own-lot snapshot: empty search is the lot; no catalog bleed", () =
   const ghost = searchLotUnits(snap.units, "ZZZNOMATCH-CATALOG-BLEED");
   assert.equal(ghost.length, 0);
 
-  const floorplan = searchLotUnits(snap.units, "27A");
-  assert.ok(floorplan.length >= 1, "27A substring-matches 27ASE on the lot");
-  assert.ok(
-    floorplan.some(
-      (u) => /vision\s*se/i.test(`${u.model} ${u.title}`) && /27ase/i.test(u.trim),
-    ),
-    "27A hits include Vision SE 27ASE",
-  );
+  for (const q of ["27A", "27a", "27As"]) {
+    const rows = searchLotUnits(snap.units, q);
+    assert.ok(
+      rows.some((u) => u.stock_number === "47034" && u.trim === "27ASE"),
+      q,
+    );
+    assert.ok(
+      !rows.some((u) => u.stock_number === "UCO9527A"),
+      `${q} must not hitch stk UCO9527A`,
+    );
+    assert.ok(
+      rows.every((u) => /27a/i.test(`${u.model} ${u.trim} ${u.title}`)),
+      q,
+    );
+  }
+  assert.equal(searchLotUnits(snap.units, "UCO9527A")[0]?.stock_number, "UCO9527A");
+  assert.equal(searchLotUnits(snap.units, "47034")[0]?.trim, "27ASE");
 });
 
 test("type chips come from the lot snapshot and filter without catalog bleed", () => {
   const chips = lotTypeChips(sample.units);
   assert.deepEqual(
-    chips.map((c) => c.type),
-    ["Class A Diesel", "Fifth Wheel"],
+    chips.map((c) => c.type).sort(),
+    ["Class A", "Class A Diesel", "Fifth Wheel", "Truck Camper"],
   );
   assert.equal(filterLotBrowse(sample.units, { type: "Fifth Wheel" }).length, 1);
   assert.equal(

@@ -241,7 +241,10 @@ export function lotUnitKey(unit: LotUnit, index: number): string {
 }
 
 export {
+  floorplanTokensAlign,
+  isFloorplanLikeToken,
   lotUnitSearchText,
+  normalizeLotSearchToken,
   searchLotUnits,
   tokenizeLotQuery,
   type LotSearchable,
