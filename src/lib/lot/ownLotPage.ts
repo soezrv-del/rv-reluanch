@@ -5,7 +5,24 @@
  * Token search lives in lotSearch.ts so Grok can share it.
  */
 
-import { searchLotUnits } from "./lotSearch.ts";
+import {
+  floorplanTokensAlign,
+  isFloorplanLikeToken,
+  lotUnitSearchText,
+  normalizeLotSearchToken,
+  searchLotUnits,
+  tokenizeLotQuery,
+} from "./lotSearch.ts";
+
+export {
+  floorplanTokensAlign,
+  isFloorplanLikeToken,
+  lotUnitSearchText,
+  normalizeLotSearchToken,
+  searchLotUnits,
+  tokenizeLotQuery,
+};
+export type { LotSearchable } from "./lotSearch.ts";
 
 export const LOT_SNAPSHOT_URL = "/inventory/own-lot-latest.json";
 export const LOT_GAP = "GAP";
@@ -239,13 +256,6 @@ export function lotUnitKey(unit: LotUnit, index: number): string {
     String(index),
   ].join("|");
 }
-
-export {
-  lotUnitSearchText,
-  searchLotUnits,
-  tokenizeLotQuery,
-  type LotSearchable,
-} from "./lotSearch.ts";
 
 const TYPE_LABELS: Record<string, string> = {
   "Travel Trailer": "Travel trailer",

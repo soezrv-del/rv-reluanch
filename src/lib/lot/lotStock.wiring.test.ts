@@ -94,15 +94,23 @@ test("Lot stock is a suite page, not a dock tab and not RV Grok", () => {
   assert.doesNotMatch(page, /ownLotInventory|from "\.\.\/rvgrok\/ownLotInventory/);
   assert.doesNotMatch(page, /rvData|from "@\/lib\/rv\/catalog"/);
   assert.doesNotMatch(page, /node:fs|createRequire|formatOwnLotBlock/);
+
+  const search = read("./lotSearch.ts");
+  assert.match(search, /FLOORPLAN_LIKE_TOKEN_RE/);
+  assert.match(search, /stock_number or VIN/);
+  assert.doesNotMatch(search, /DialaBot|dialabot|node:fs|createRequire/);
+  assert.doesNotMatch(search, /ownLotInventory|rvData|from "@\/lib\/rv\/catalog"/);
 });
 
 test("RV Grok prompts and DialaBot stay out of this page", () => {
   const prompts = read("../rvgrok/prompts.ts");
   const lot = read("../../components/lot/LotStockApp.tsx");
   const page = read("./ownLotPage.ts");
+  const search = read("./lotSearch.ts");
   assert.doesNotMatch(prompts, /OWN-LOT INVENTORY/);
   assert.doesNotMatch(lot, /SYSTEM_PROMPT|OWN-LOT INVENTORY block/);
   assert.doesNotMatch(page, /formatOwnLotBlock/);
   assert.doesNotMatch(lot, /DialaBot/);
   assert.doesNotMatch(page, /DialaBot/);
+  assert.doesNotMatch(search, /DialaBot/);
 });
