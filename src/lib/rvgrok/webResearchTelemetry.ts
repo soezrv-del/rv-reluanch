@@ -28,10 +28,19 @@ import {
   formatCatalogPinTimeoutNotes,
   looksLikeCoachReportAsk,
 } from "./coachReport.ts";
+import {
+  planCoachKnowledgeRead,
+  planCoachKnowledgeWrite,
+  resolveKnowledgeIdentity,
+  type CoachKnowledgeRecord,
+  type CoachKnowledgeWritePlan,
+} from "./coachKnowledge.ts";
+import type { CoachIdentity } from "./coachIdentity.ts";
 
 export type WebResearchKind =
   | "success"
   | "cache_hit"
+  | "knowledge_hit"
   | "gated"
   | "timeout"
   | "missing_key"
@@ -66,6 +75,20 @@ export type ExecuteWebResearchOpts = {
   geminiApiKey?: string;
   /** Override RVGROK_RESEARCH_PROVIDER (auto | gemini | xai). */
   researchProvider?: string;
+  /** Desk lock from buildChatGrounding when the caller already resolved it. */
+  identity?: CoachIdentity | null;
+  /**
+   * Test seam for the shared Neon sidecar. Production uses the store.
+   * node:test skips Neon unless these hooks are passed.
+   */
+  knowledge?: {
+    load?: (
+      identity: CoachIdentity,
+    ) => Promise<CoachKnowledgeRecord | null> | CoachKnowledgeRecord | null;
+    upsert?: (
+      plan: CoachKnowledgeWritePlan,
+    ) => Promise<unknown> | unknown;
+  };
 };
 
 const LOG_TAG = "rvgrok.web_research";
@@ -177,14 +200,61 @@ function salvageCoachReportResearch(
   };
 }
 
+async function loadSharedCoachKnowledge(
+  identity: CoachIdentity,
+  hooks?: ExecuteWebResearchOpts["knowledge"],
+): Promise<CoachKnowledgeRecord | null> {
+  if (hooks?.load) {
+    try {
+      return (await hooks.load(identity)) ?? null;
+    } catch {
+      return null;
+    }
+  }
+  if (process.env.NODE_TEST_CONTEXT) return null;
+  try {
+    const { loadCoachKnowledge } = await import("./coachKnowledgeStore.ts");
+    return await loadCoachKnowledge(identity);
+  } catch {
+    return null;
+  }
+}
+
+async function writeSharedCoachKnowledge(
+  plan: CoachKnowledgeWritePlan,
+  hooks?: ExecuteWebResearchOpts["knowledge"],
+): Promise<void> {
+  if (hooks?.upsert) {
+    try {
+      await hooks.upsert(plan);
+    } catch {
+      /* fail-soft */
+    }
+    return;
+  }
+  if (process.env.NODE_TEST_CONTEXT) return;
+  try {
+    const { upsertCoachKnowledgePlan } = await import("./coachKnowledgeStore.ts");
+    await upsertCoachKnowledgePlan(plan);
+  } catch {
+    /* fail-soft — research already succeeded */
+  }
+}
+
 function toApiBody(
   result: WebSearchNotes,
   meta: { kind: WebResearchKind; durationMs: number; cached?: boolean },
 ): WebResearchApiBody {
   if (result.ok) {
+    const kind =
+      meta.kind === "knowledge_hit" || meta.kind === "cache_hit"
+        ? meta.kind
+        : meta.cached
+          ? "cache_hit"
+          : "success";
     return {
       ...result,
-      kind: meta.cached ? "cache_hit" : "success",
+      kind,
       durationMs: meta.durationMs,
       ...(meta.cached ? { cached: true } : {}),
     };
@@ -270,11 +340,50 @@ export async function executeWebResearch(
     return body;
   }
 
+  const identity = resolveKnowledgeIdentity(
+    query,
+    opts.catalogBlock,
+    opts.identity,
+  );
+  const stored = identity
+    ? await loadSharedCoachKnowledge(identity, opts.knowledge)
+    : null;
+  const knowledgeRead = identity
+    ? planCoachKnowledgeRead({ identity, query, record: stored })
+    : null;
+
+  if (knowledgeRead?.skipLive && knowledgeRead.notes) {
+    const durationMs = Date.now() - t0;
+    const hit: WebSearchNotes = {
+      ok: true,
+      notes: knowledgeRead.notes,
+      model: "coach-knowledge",
+      confirmed: true,
+      attempts: 0,
+      exhausted: false,
+      query,
+    };
+    const body = toApiBody(hit, { kind: "knowledge_hit", durationMs });
+    logWebResearchEvent({
+      kind: "knowledge_hit",
+      profile: opts.profile,
+      durationMs,
+      ok: true,
+      query,
+      model: "coach-knowledge",
+    });
+    return body;
+  }
+
+  const catalogBlock = knowledgeRead?.catalogAddendum
+    ? [opts.catalogBlock, knowledgeRead.catalogAddendum].filter(Boolean).join("\n\n")
+    : opts.catalogBlock;
+
   const result = salvageCoachReportResearch(
     await fetchWebSearchNotes({
       apiKey: opts.apiKey,
       query: query.slice(0, 400),
-      catalogBlock: opts.catalogBlock,
+      catalogBlock,
       timeoutMs: opts.timeoutMs,
       models: opts.models,
       profile: opts.profile,
@@ -282,7 +391,7 @@ export async function executeWebResearch(
       geminiApiKey: opts.geminiApiKey,
       researchProvider: opts.researchProvider,
     }),
-    opts.catalogBlock,
+    catalogBlock,
     query,
   );
 
@@ -291,7 +400,23 @@ export async function executeWebResearch(
     ? "success"
     : classifyWebResearchFailure(result.reason);
 
-  const body = toApiBody(result, { kind, durationMs });
+  const mergedNotes =
+    result.ok && knowledgeRead?.notes
+      ? `${knowledgeRead.notes}\n---\n${result.notes}`
+      : null;
+  const body = toApiBody(
+    mergedNotes && result.ok ? { ...result, notes: mergedNotes } : result,
+    { kind, durationMs },
+  );
+
+  if (body.kind === "success" && result.ok && result.confirmed !== false) {
+    const write = planCoachKnowledgeWrite({
+      identity,
+      query,
+      result,
+    });
+    if (write) await writeSharedCoachKnowledge(write, opts.knowledge);
+  }
 
   logWebResearchEvent({
     kind: body.kind,

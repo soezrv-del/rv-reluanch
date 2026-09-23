@@ -47,8 +47,8 @@ async function handleResearch(request: Request): Promise<Response> {
 
   const catalogFromBody =
     typeof body.catalogContext === "string" ? body.catalogContext.trim() : "";
-  const catalogBlock =
-    catalogFromBody || buildChatGrounding({ query }).block || "";
+  const grounded = buildChatGrounding({ query });
+  const catalogBlock = catalogFromBody || grounded.block || "";
 
   const researched = await executeWebResearch({
     query,
@@ -64,6 +64,7 @@ async function handleResearch(request: Request): Promise<Response> {
     maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
     // Server-persisted admin override (not a client header).
     researchProvider: (await getResearchProviderOverride()) ?? undefined,
+    identity: grounded.identity,
   });
 
   return webResearchJsonResponse(researched);

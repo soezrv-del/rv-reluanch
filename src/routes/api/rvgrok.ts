@@ -756,6 +756,7 @@ export const Route = createFileRoute("/api/rvgrok")({
             // Server-persisted admin override (not a client header).
             researchProvider:
               (await getResearchProviderOverride()) ?? undefined,
+            identity: serverGrounded.identity,
           });
           const reportText = looksLikeCoachReportAsk(lastPlain)
             ? formatCoachReportTimeoutReply({
