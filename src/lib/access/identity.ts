@@ -1,5 +1,5 @@
 /**
- * First-name helpers for identify / welcome-back / RV Grok personalization.
+ * First-name helpers for identify / welcome-back / sparse RV Grok warmth.
  * Phone still drives the whitelist. A typed first name is stored locally
  * and is not written back to the admin list.
  */

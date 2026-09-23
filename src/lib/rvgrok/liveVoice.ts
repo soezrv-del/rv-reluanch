@@ -12,9 +12,9 @@
  */
 
 import {
-  RV_GROK_SESSION_INTRO,
+  sessionIntroLine,
   VOICE_RESEARCH_HOLD_PHRASE,
-  VOICE_SESSION_INTRO_INSTRUCTIONS,
+  voiceSessionIntroInstructions,
   visitorPersonalizationBlock,
 } from "./speechPolicy.ts";
 import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS } from "./voice.ts";
@@ -176,7 +176,8 @@ export function buildRealtimeSessionUpdate(
   const personalBlock = personal ? `${personal}\n\n` : "";
   const memory = (visitorMemory || "").trim();
   const memoryBlock = memory ? `${memory}\n\n` : "";
-  const instructions = `${RV_VOICE_INSTRUCTIONS}\n\n${personalBlock}${memoryBlock}${catalogBlock}This session has native web_search. Use it for coach facts. Short ear-friendly sentences. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${RV_GROK_SESSION_INTRO} Then listen. Never repeat this intro.`;
+  const intro = sessionIntroLine(visitorFirstName);
+  const instructions = `${RV_VOICE_INSTRUCTIONS}\n\n${personalBlock}${memoryBlock}${catalogBlock}This session has native web_search. Use it for coach facts. Short ear-friendly sentences. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.`;
   return {
     type: "session.update",
     session: {
@@ -203,12 +204,14 @@ export function buildRealtimeSessionUpdate(
 }
 
 /** First-turn Live Voice cue — spoken once when the session opens. */
-export function buildSessionIntroResponse(): Record<string, unknown> {
+export function buildSessionIntroResponse(
+  firstName?: string,
+): Record<string, unknown> {
   return {
     type: "response.create",
     response: {
       modalities: ["text", "audio"],
-      instructions: VOICE_SESSION_INTRO_INSTRUCTIONS,
+      instructions: voiceSessionIntroInstructions(firstName),
     },
   };
 }

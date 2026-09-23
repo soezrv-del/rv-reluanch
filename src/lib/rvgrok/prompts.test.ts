@@ -7,7 +7,11 @@ import {
   AGENT_SYSTEM_PROMPT,
   RV_SYSTEM_PROMPT,
 } from "./prompts.ts";
-import { RV_GROK_LEAN_CORE, visitorPersonalizationBlock } from "./speechPolicy.ts";
+import {
+  RV_GROK_LEAN_CORE,
+  sessionIntroLine,
+  visitorPersonalizationBlock,
+} from "./speechPolicy.ts";
 import { RV_VOICE_INSTRUCTIONS } from "./voice.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -60,7 +64,8 @@ test("lean core keeps identity, accuracy, coach report, and answer-anything", ()
   );
   assert.match(RV_GROK_LEAN_CORE, /go deep/);
   assert.match(RV_GROK_LEAN_CORE, /No narrowing scope/);
-  assert.match(RV_GROK_LEAN_CORE, /I'm RvGrok is the cold-open greeting only/);
+  assert.match(RV_GROK_LEAN_CORE, /Hello, \{first name\}/);
+  assert.match(RV_GROK_LEAN_CORE, /otherwise I'm RvGrok/);
   assert.match(RV_GROK_LEAN_CORE, /once per new session/);
 });
 
@@ -123,16 +128,24 @@ test("standing prompts dropped the lecture stack", () => {
   }
 });
 
-test("visitor personalization is a small hook and never rewrites I'm RvGrok", () => {
+test("visitor personalization is a small hook and named cold-open is Hello", () => {
+  assert.equal(sessionIntroLine(""), "I'm RvGrok");
+  assert.equal(sessionIntroLine(undefined), "I'm RvGrok");
+  assert.equal(sessionIntroLine("David Hansen"), "Hello, David");
   assert.equal(visitorPersonalizationBlock(""), "");
   assert.equal(visitorPersonalizationBlock(undefined), "");
   const block = visitorPersonalizationBlock("David Hansen");
   assert.match(block, /Their first name is David/);
+  assert.match(block, /Hello, David/);
+  assert.match(block, /Greet with it once/);
   assert.match(block, /only occasionally/);
+  assert.match(block, /not every turn/);
+  assert.match(block, /never as a mechanical prefix/);
   assert.doesNotMatch(block, /I'm RvGrok, David/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /VISITOR:/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /Their first name is/);
   assert.match(src("speechPolicy.ts"), /RV_GROK_SESSION_INTRO = "I'm RvGrok"/);
+  assert.match(src("speechPolicy.ts"), /sessionIntroLine/);
   assert.match(src("../../routes/api/rvgrok.ts"), /visitorFirstName/);
   assert.match(src("../../routes/api/rvgrok.ts"), /visitorPersonalizationBlock/);
   assert.match(src("../../routes/api/rvgrok.ts"), /loadVisitorMemoryBlockFromRequest/);

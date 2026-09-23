@@ -140,7 +140,7 @@ test("MessageBubble renders chips under actions; tap sends the label", () => {
   );
 });
 
-test("chips stay UI-only — no spoken post-reply prompts; intro stays I'm RvGrok once", () => {
+test("chips stay UI-only — no spoken post-reply prompts; intro is one line", () => {
   const prompts = src("prompts.ts");
   const speech = src("speechPolicy.ts");
   const landing = src("../../components/rvgrok/GrokLanding.tsx");
@@ -149,11 +149,15 @@ test("chips stay UI-only — no spoken post-reply prompts; intro stays I'm RvGro
   const app = src("../../components/rvgrok/RvGrokApp.tsx");
 
   assert.match(speech, /RV_GROK_SESSION_INTRO = "I'm RvGrok"/);
+  assert.match(speech, /sessionIntroLine/);
+  assert.match(speech, /Hello, \$\{name\}/);
   assert.match(speech, /Never repeat this intro on later turns/);
-  assert.match(landing, /I'm RvGrok/);
-  assert.equal((landing.match(/I'm RvGrok/g) || []).length, 1);
+  assert.match(landing, /RV_GROK_SESSION_INTRO/);
+  assert.match(landing, /data-rvgrok-greeting/);
   assert.match(landing, /data-rvgrok-welcome/);
   assert.match(landing, /welcomeBack/);
+  assert.match(app, /sessionIntroLine/);
+  assert.match(app, /sessionGreeting/);
 
   assert.doesNotMatch(prompts, /then offer to go deeper/);
   assert.doesNotMatch(prompts, /want me to go deeper/);

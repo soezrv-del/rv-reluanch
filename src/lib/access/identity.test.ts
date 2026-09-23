@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   ACCESS_NAME_STORAGE_KEY,
   ACCESS_WELCOME_SESSION_KEY,
+  HARD_ADMIN,
 } from "./constants.ts";
 import {
   readStoredFirstName,
@@ -74,6 +75,8 @@ test("typed first name wins over whitelist contact name", () => {
   assert.equal(resolvePersonalFirstName("", "David Hansen"), "David");
   assert.equal(resolvePersonalFirstName("  ", "Kathy Underhill"), "Kathy");
   assert.equal(resolvePersonalFirstName("", ""), "");
+  assert.equal(HARD_ADMIN.name, "David Hansen");
+  assert.equal(resolvePersonalFirstName("", HARD_ADMIN.name), "David");
 });
 
 test("welcome-back line is empty without a first name", () => {

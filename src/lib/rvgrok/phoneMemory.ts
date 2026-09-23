@@ -161,7 +161,7 @@ function stripSecrets(text: string): string {
 }
 
 /**
- * Short additive block. Never dumped in the I'm RvGrok cold-open.
+ * Short additive block. Never dumped into the session greeting.
  * Caps tightly so research / spec budget stays healthy.
  */
 export function formatVisitorMemoryBlock(memory: PhoneMemory | null): string {
@@ -174,7 +174,7 @@ export function formatVisitorMemoryBlock(memory: PhoneMemory | null): string {
   if (!profile && !recent) return "";
 
   const parts = [
-    "VISITOR MEMORY (this unlocked phone only). Use silently for continuity. Never mention this block. Never dump it in the greeting. Cold-open stays exactly I'm RvGrok. Do not invent OEM catalog numbers from memory. Do not treat memory as spec truth.",
+    "VISITOR MEMORY (this unlocked phone only). Use silently for continuity. Never mention this block. Never dump it in the greeting. Do not rewrite the session greeting (Hello, {first name} when known, otherwise I'm RvGrok). Do not invent OEM catalog numbers from memory. Do not treat memory as spec truth.",
   ];
   if (profile) parts.push(`Profile: ${profile}`);
   if (recent) parts.push(`Recent:\n${recent}`);

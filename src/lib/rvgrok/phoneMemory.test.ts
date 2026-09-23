@@ -237,6 +237,8 @@ test("lean core and first-name hook stay intact; memory is additive", () => {
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /profile_summary/);
   assert.doesNotMatch(visitorPersonalizationBlock("David"), /VISITOR MEMORY/);
   assert.match(visitorPersonalizationBlock("David"), /Their first name is David/);
+  assert.match(visitorPersonalizationBlock("David"), /not every turn/);
+  assert.match(visitorPersonalizationBlock("David"), /never as a mechanical prefix/);
 
   const api = src("src/routes/api/rvgrok.ts");
   assert.match(api, /loadVisitorMemoryBlockFromRequest/);

@@ -26,8 +26,10 @@ test("Grok tab landing is Lot wingman on Raidho — no family camping plate", ()
   assert.doesNotMatch(app, /SHARED_PRESTIGE_BACKDROP|shared-prestige|hero-camp|family camping/i);
   assert.match(suite, /export function SuiteRaidhoBackdrop/);
 
-  assert.match(landing, /I'm RvGrok/);
+  assert.match(landing, /data-rvgrok-greeting/);
+  assert.match(landing, /RV_GROK_SESSION_INTRO/);
   assert.match(landing, /data-rvgrok-welcome/);
+  assert.match(app, /sessionIntroLine/);
   assert.match(app, /welcomeBackLine/);
   assert.match(app, /visitorFirstName/);
   assert.doesNotMatch(landing, /ask me anything/);

@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   buildRealtimeSessionUpdate,
+  buildSessionIntroResponse,
   REALTIME_SESSION_TOOLS,
 } from "./liveVoice.ts";
 import { buildVoiceGrounding } from "./grounding.ts";
@@ -58,14 +59,22 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.doesNotMatch(session.instructions, /Their first name is/);
 });
 
-test("named visitor is a later-turn hook — intro line stays exact", () => {
+test("named visitor cold-open is Hello, first name — not I'm RvGrok", () => {
   const msg = buildRealtimeSessionUpdate("ara", 1, "", "David Hansen");
   const session = msg.session as { instructions: string };
   assert.match(session.instructions, /Their first name is David/);
   assert.match(session.instructions, /only occasionally/);
-  assert.match(session.instructions, /Say exactly: I'm RvGrok/);
+  assert.match(session.instructions, /not every turn/);
+  assert.match(session.instructions, /never as a mechanical prefix/);
+  assert.match(session.instructions, /Say exactly: Hello, David/);
+  assert.doesNotMatch(session.instructions, /Say exactly: I'm RvGrok/);
   assert.doesNotMatch(session.instructions, /I'm RvGrok, David/);
   assert.equal(session.instructions.includes(`I'm RvGrok, David`), false);
+  const cue = buildSessionIntroResponse("David Hansen") as {
+    response: { instructions: string };
+  };
+  assert.match(cue.response.instructions, /Hello, David/);
+  assert.doesNotMatch(cue.response.instructions, /I'm RvGrok/);
 });
 
 test("visitor memory is additive and does not change the spoken intro", () => {
@@ -75,7 +84,8 @@ test("visitor memory is additive and does not change the spoken intro", () => {
   const session = msg.session as { instructions: string };
   assert.match(session.instructions, /VISITOR MEMORY/);
   assert.match(session.instructions, /Prefers compact answers/);
-  assert.match(session.instructions, /Say exactly: I'm RvGrok/);
+  assert.match(session.instructions, /Say exactly: Hello, David/);
+  assert.doesNotMatch(session.instructions, /Say exactly: I'm RvGrok/);
   assert.doesNotMatch(session.instructions, /I'm RvGrok, David/);
 });
 
@@ -108,6 +118,7 @@ test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => 
   assert.match(realtime, /ensureCatalogLoaded/);
   assert.match(realtime, /visitorFirstName/);
   assert.match(realtime, /setVisitorFirstName/);
+  assert.match(realtime, /buildSessionIntroResponse\(this\.visitorFirstName\)/);
   assert.match(realtime, /takeTokenVisitorMemory/);
   assert.match(realtime, /visitorMemory/);
 });
