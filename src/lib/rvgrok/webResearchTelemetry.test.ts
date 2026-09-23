@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   classifyWebResearchFailure,
   executeWebResearch,
+  planSpecFallbackKnowledgeWrite,
   researchResponseHeaders,
 } from "./webResearchTelemetry.ts";
 import { clearWebSearchCache, seedWebSearchCache, researchCacheKey } from "./webSearch.ts";
@@ -180,6 +181,62 @@ test("timeout with catalog pins still answers — does not abort empty", async (
   } finally {
     globalThis.fetch = prior;
   }
+});
+
+test("voice spec-fallback fills plan the same coach-knowledge write", () => {
+  const identity = {
+    year: "2022",
+    make: "Newmar",
+    model: "Dutch Star",
+    floorplan: "4369",
+  };
+  const plan = planSpecFallbackKnowledgeWrite({
+    identity,
+    query: "tell me about the 2022 Newmar Dutch Star 4369",
+    fills: [
+      {
+        field: "gvwr",
+        value: 51000,
+        unit: "lbs",
+        sourceUrl: "https://www.rvguide.com/specs/newmar/dutch-star/4369",
+      },
+      {
+        field: "freshWater",
+        value: 72,
+        unit: "gal",
+        sourceUrl: "https://www.rvguide.com/specs/newmar/dutch-star/4369",
+      },
+      {
+        field: "fuelCapacity",
+        value: 100,
+        unit: "gal",
+        sourceUrl: "https://www.rvguide.com/specs/newmar/dutch-star/4369",
+      },
+    ],
+  });
+  assert.ok(plan);
+  assert.equal(plan!.key.make, "newmar");
+  assert.equal(plan!.key.floorplan, "4369");
+  assert.match(plan!.fields.gvwr?.value || "", /51,000|51000/);
+  assert.match(plan!.fields.tanks?.value || "", /fresh 72 gal/);
+  assert.equal(plan!.fields.fuel, undefined);
+  assert.ok(plan!.sources.some((s) => /rvguide\.com/.test(s)));
+
+  assert.equal(
+    planSpecFallbackKnowledgeWrite({
+      identity,
+      query: "gvwr",
+      fills: [
+        {
+          field: "fuelCapacity",
+          value: 100,
+          unit: "gal",
+          sourceUrl: "https://www.rvusa.com/x",
+        },
+      ],
+    }),
+    null,
+  );
 });
 
 test("voice route uses telemetry wrapper and monitor headers", () => {
