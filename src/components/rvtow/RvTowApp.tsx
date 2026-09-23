@@ -720,7 +720,11 @@ export function RvTowApp() {
       lines.push(`Max tow ${rating.maxTow.toLocaleString()} lbs`);
     }
     if (appliedOffer) {
-      lines.push(`Coach: ${formatActiveCoachChip(appliedOffer)}`);
+      const chip = [appliedOffer.year, appliedOffer.make, appliedOffer.model]
+        .filter(Boolean)
+        .join(" ");
+      const fp = appliedOffer.floorplan?.trim();
+      lines.push(`Coach: ${fp ? `${chip} · ${fp}` : chip}`);
     } else if (rvType) {
       lines.push(rvType);
     }
