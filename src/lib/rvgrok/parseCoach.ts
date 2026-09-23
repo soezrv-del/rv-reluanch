@@ -120,6 +120,106 @@ const WEAK_BRAND_WORDS = new Set([
   "intense",
 ]);
 
+/**
+ * Unique catalog series that are also spec-field words. A bare mention is
+ * the powertrain field — never Heartland Torque (or the next collision).
+ */
+export const CATALOG_FIELD_WORD_MODELS = new Set(["torque"]);
+
+const FIELD_WORD_PRODUCT_RE =
+  /toy\s*haulers?|fifth\s*wheels?|5th\s*wheels?|travel\s*trailers?|towables?/;
+
+export function isCatalogFieldWordModel(name: string): boolean {
+  return CATALOG_FIELD_WORD_MODELS.has(normName(name));
+}
+
+function fieldWordMentionRe(model: string): RegExp {
+  return new RegExp(`\\b${escapeBrandRe(normName(model))}\\b`, "i");
+}
+
+/** Adjacent "Heartland Torque" / "Torque toy hauler" — a real series rename. */
+function fieldWordHasMakeOrProductCue(text: string, model: string): boolean {
+  const n = escapeBrandRe(normName(model));
+  const brands = COACH_BRANDS.map(escapeBrandRe).join("|");
+  const t = text || "";
+  if (new RegExp(`\\b(?:${brands})\\s+${n}\\b`, "i").test(t)) return true;
+  if (new RegExp(`\\b${n}\\s+(?:by\\s+)?(?:${brands})\\b`, "i").test(t)) {
+    return true;
+  }
+  const product = FIELD_WORD_PRODUCT_RE.source;
+  if (new RegExp(`\\b${n}\\s+(?:${product})\\b`, "i").test(t)) return true;
+  if (new RegExp(`\\b(?:${product})\\s+${n}\\b`, "i").test(t)) return true;
+  return false;
+}
+
+/** "the torque" / "torque to weight" / GV+torque lists — the field, not the series. */
+function fieldLanguageAroundModel(text: string, model: string): boolean {
+  const n = escapeBrandRe(normName(model));
+  const t = text || "";
+  if (new RegExp(`\\b${n}\\s+to\\s+weight\\b`, "i").test(t)) return true;
+  if (new RegExp(`\\b(?:the|a|an|its|their)\\s+${n}\\b`, "i").test(t)) return true;
+  if (new RegExp(`\\badd\\s+(?:a\\s+|the\\s+)?${n}\\b`, "i").test(t)) return true;
+  if (
+    new RegExp(
+      `\\b${n}\\s+to\\s+(?:the\\s+|your\\s+)?(?:spec\\s+)?report\\b`,
+      "i",
+    ).test(t)
+  ) {
+    return true;
+  }
+  const field = `lb[\\s-]?ft|pound[\\s-]?feet|horsepower|\\bhp\\b|gvwr|gcwr|\\bgv\\b|engine|powertrain|ratio`;
+  if (new RegExp(`\\b(?:${field})\\b.{0,40}\\b${n}\\b`, "i").test(t)) {
+    return true;
+  }
+  if (new RegExp(`\\b${n}\\b.{0,40}\\b(?:${field})\\b`, "i").test(t)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * True when a field-word catalog name is a coach rename — Heartland Torque,
+ * "look up Torque toy hauler" — not "add a torque to weight ratio".
+ */
+export function looksLikeFieldWordModelRename(
+  text: string,
+  model = "torque",
+): boolean {
+  const raw = text || "";
+  const n = normName(model);
+  if (!n || !isCatalogFieldWordModel(n)) return false;
+  if (!fieldWordMentionRe(n).test(raw)) return false;
+  if (fieldWordHasMakeOrProductCue(raw, n)) return true;
+  if (fieldLanguageAroundModel(raw, n)) return false;
+  return /\b(?:look(?:ing)?\s+up|switch\s+to|report\s+on)\s+(?:the\s+|a\s+|an\s+)?torque\b/i.test(
+    raw,
+  );
+}
+
+/**
+ * Report follow-up: add a field / ratio / "when you have GV and torque".
+ * Keep the locked coach — do not remount onto a field-word series.
+ */
+export function looksLikeSpecFieldFollowUp(text: string): boolean {
+  const t = (text || "").trim();
+  if (!t) return false;
+  if (looksLikeFieldWordModelRename(t)) return false;
+  if (/\btorque\s+to\s+weight\b/i.test(t)) return true;
+  if (/\badd\b[\s\S]{0,80}\b(?:to|on)\s+(?:the\s+|your\s+)?(?:spec\s+)?report\b/i.test(t)) {
+    return true;
+  }
+  if (
+    /\bwhen\s+you\s+have\b/i.test(t) &&
+    /\b(gvwr|gcwr|\bgv\b|torque|horsepower|\bhp\b)\b/i.test(t)
+  ) {
+    return true;
+  }
+  if (/\bratio\b/i.test(t) && /\b(torque|gvwr|gcwr|weight)\b/i.test(t)) {
+    return true;
+  }
+  return false;
+}
+
 function lettersOnly(s: string): string {
   return (s || "").toLowerCase().replace(/[^a-z]/g, "");
 }

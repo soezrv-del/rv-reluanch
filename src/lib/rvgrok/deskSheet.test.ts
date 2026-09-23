@@ -711,6 +711,46 @@ test("2022 Tiffin Phaeton 40IH: Grok desk paints the same Facts brochure snapsho
   assert.match(src(root, "deskSheet.ts"), /buildBrochureSpecs/);
 });
 
+test("torque-to-weight follow-up remounts Lineage 31ZW — not Heartland Torque", () => {
+  const q =
+    "You should add a torque to weight ratio when you have the GV, GCWR and torque to your report.";
+  const lock = {
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series F",
+    floorplan: "31ZW",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  };
+  const history =
+    "Give me the spec report on the 2026 Grand Design Lineage 31ZW.\nVERIFIED CATALOG LOCK is 2026 Grand Design Lineage Series F 31ZW.";
+  const identity = resolveCoachIdentity(q, lock, history);
+  assert.ok(identity);
+  assert.equal(identity!.make, "Grand Design");
+  assert.equal(identity!.model, "Lineage Series F");
+  assert.equal(identity!.floorplan, "31ZW");
+  assert.doesNotMatch(identity!.make, /heartland/i);
+  assert.doesNotMatch(identity!.model, /^torque$/i);
+  assert.equal(shouldMountDeskSheet(q, identity), true);
+
+  const sheet = resolveDeskSheet({
+    query: q,
+    identity,
+    specs: null,
+  });
+  assert.ok(sheet);
+  assert.equal(sheet!.make, "Grand Design");
+  assert.match(sheet!.model, /lineage series f/i);
+  assert.equal(sheet!.floorplan, "31ZW");
+  assert.doesNotMatch(sheet!.title, /Heartland/i);
+  assert.doesNotMatch(sheet!.title, /\bTorque\b/);
+  assert.doesNotMatch(sheet!.presenceNote, /Heartland/i);
+
+  const mounted = withDeskSheetSpeechRule("CATALOG", q, identity);
+  assert.match(mounted, /DESK SPEC SHEET MOUNTED/);
+  assert.match(mounted, /Lineage Series F/i);
+  assert.doesNotMatch(mounted, /Heartland/i);
+});
+
 test("desk remount after Lineage history is not Grand Design Dutch Star", () => {
   const extra = [
     "2020 tiffin phaeton 40ih",

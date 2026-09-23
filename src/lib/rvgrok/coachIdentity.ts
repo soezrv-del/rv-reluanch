@@ -14,6 +14,9 @@ import {
   findKnownSeries,
   fuzzyMatchCatalogName,
   matchCatalogModelName,
+  isCatalogFieldWordModel,
+  looksLikeFieldWordModelRename,
+  looksLikeSpecFieldFollowUp,
   parseCoachFromText,
   seriesAliasEquals,
 } from "./parseCoach.ts";
@@ -200,6 +203,13 @@ export function findUniqueCatalogCoachFromModel(
 ): UniqueCatalogHit | null {
   const raw = (rawModel || "").trim();
   if (!raw) return null;
+  // Bare "torque" is the powertrain field, not Heartland Torque.
+  if (
+    isCatalogFieldWordModel(raw) &&
+    !looksLikeFieldWordModelRename(raw, raw)
+  ) {
+    return null;
+  }
   const { owner, names } = uniqueCatalogIndex();
   const uniqueNames = names.filter((n) => owner.get(norm(n)));
   const catalogName = matchCatalogModelName(raw, uniqueNames);
@@ -218,7 +228,11 @@ export function applyUniqueCatalogIdentity<
   T extends { year?: string; make?: string; model?: string; floorplan?: string },
 >(query: string, parsed: T): T {
   if ((parsed.make || "").trim() && (parsed.model || "").trim()) return parsed;
-  const hits = findComparableCatalogCoaches(query);
+  const hits = findComparableCatalogCoaches(query).filter(
+    (hit) =>
+      !isCatalogFieldWordModel(hit.model) ||
+      looksLikeFieldWordModelRename(query, hit.model),
+  );
   if (hits.length === 1) {
     const hit = hits[0]!;
     const make = (parsed.make || "").trim() || hit.make;
@@ -630,6 +644,16 @@ export function lastCompleteParseFromHistory(extraText: string): {
  * A newly named different coach breaks the sticky verified-catalog lock
  * even when the ask omits a year (Integra Vision after a Lineage lock).
  */
+function factsLockIdentity(facts: ActiveCoach): CoachIdentity {
+  return lockIdentityTuple({
+    year: facts.year || "",
+    make: resolveCatalogMake(facts.make),
+    model: facts.model,
+    floorplan: facts.floorplan || "",
+    source: "facts",
+  });
+}
+
 export function resolveCoachIdentity(
   query: string,
   facts?: ActiveCoach | null,
@@ -637,8 +661,33 @@ export function resolveCoachIdentity(
 ): CoachIdentity | null {
   // Current ask wins. History is last complete coach tuple — never a blob
   // that fills year / make / model / floorplan independently.
-  const fromQuery = applyUniqueCatalogIdentity(query, parseCoachFromText(query));
+  const fromQueryRaw = parseCoachFromText(query);
+  const lockOk = Boolean(facts?.make?.trim() && facts.model?.trim());
+
+  // Spec-field follow-up ("add a torque to weight ratio…") keeps the
+  // mounted coach. Bare field words must not remount Heartland Torque.
+  if (
+    lockOk &&
+    !looksLikeFieldWordModelRename(query) &&
+    (looksLikeSpecFieldFollowUp(query) ||
+      (isCatalogFieldWordModel(fromQueryRaw.model || "") &&
+        !fromQueryRaw.make?.trim()))
+  ) {
+    return factsLockIdentity(facts!);
+  }
+
+  const fromQuery = applyUniqueCatalogIdentity(query, fromQueryRaw);
   const queryNamesCoach = askNamesCoachIdentity(fromQuery);
+  const fieldWordUniqueSteal =
+    lockOk &&
+    queryNamesCoach &&
+    isCatalogFieldWordModel(fromQuery.model || "") &&
+    !looksLikeFieldWordModelRename(query) &&
+    !askNamesCoachIdentity(fromQueryRaw);
+  if (fieldWordUniqueSteal) {
+    return factsLockIdentity(facts!);
+  }
+
   const parsed = queryNamesCoach
     ? fromQuery
     : lastCompleteParseFromHistory(`${query}\n${extraText}`) || fromQuery;
