@@ -10,6 +10,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { useAccessOptional } from "@/components/access/AccessProvider";
 import { cn } from "@/lib/utils";
 import {
   ratingFor,
@@ -38,10 +39,11 @@ import {
   DEFAULT_SHARE_MARKET_LINES,
   defaultMarketFor,
   defaultPaymentFor,
+  defaultShareCardContact,
   fetchShareImage,
   hydrateShareCoachResult,
-  hasOptionalShareSections,
   hasSelectedMarketLines,
+  shareCardContactForSession,
   kitStrengths,
   lifestyleImageFor,
   peekCachedShareImage,
@@ -59,13 +61,6 @@ import {
   type ShareMarketLines,
   type SharePayment,
 } from "@/lib/rv/shareKit";
-import {
-  REPORT_CONTACT_KICKER,
-  REPORT_CONTACT_MONOGRAM,
-  REPORT_CONTACT_NAME,
-  REPORT_CONTACT_PHONE,
-  REPORT_CONTACT_TEL,
-} from "@/lib/rv/reportContact";
 import { LIFESTYLE_SHARE_URLS } from "@/assets/typeMedia";
 import {
   fetchRvVideos,
@@ -335,6 +330,14 @@ export function RvShareKit({
   onAskGrok?: () => void;
 }) {
   const nav = useShellNavOptional();
+  const access = useAccessOptional();
+  const contact = useMemo(
+    () =>
+      access?.allowed
+        ? shareCardContactForSession(access.name, access.phone)
+        : defaultShareCardContact(),
+    [access?.allowed, access?.name, access?.phone],
+  );
   const { ready: catalogReady } = useCatalogReady();
   const [include, setInclude] = useState<ShareInclude>(DEFAULT_SHARE_INCLUDE);
   const [payment, setPayment] = useState<SharePayment>({
@@ -454,8 +457,8 @@ export function RvShareKit({
       selected.data.chassis,
     );
     void fetchShareImage(url, `${slug}-lifestyle.jpg`);
-    captureShareCardFile(shareCardRef.current, `${slug}-card.png`);
-  }, [selected]);
+    captureShareCardFile(shareCardRef.current, `${slug}-card.png`, contact);
+  }, [selected, contact]);
 
   const priceOptions = useMemo(
     () => sharePaymentPricePills(marketEdit, formatMoney),
@@ -513,7 +516,6 @@ export function RvShareKit({
     () => (selected ? brochureSummary(selected) : { pitch: "", features: [] }),
     [selected],
   );
-  const fallbackExtras = !hasOptionalShareSections(include);
   const marketNeedsPick = include.market && !hasSelectedMarketLines(marketLines);
 
   const kitText = useMemo(() => {
@@ -528,6 +530,7 @@ export function RvShareKit({
       rating: ratingValue,
       summary,
       video: includeVideo ? shareVideo : null,
+      contact,
     });
   }, [
     selected,
@@ -540,6 +543,7 @@ export function RvShareKit({
     summary,
     includeVideo,
     shareVideo,
+    contact,
   ]);
 
   const loan = useMemo(() => paymentBreakdown(payment), [payment]);
@@ -593,6 +597,7 @@ export function RvShareKit({
     const cardFile = captureShareCardFile(
       shareCardRef.current,
       `${slug}-card.png`,
+      contact,
     );
     const payload = buildShareKitPayload({
       title: coachTitle(selected),
@@ -755,12 +760,6 @@ export function RvShareKit({
                       </ul>
                     ) : null}
                   </div>
-                ) : null}
-
-                {fallbackExtras ? (
-                  <p className="text-[11px] leading-relaxed text-white/50">
-                    Payment included.
-                  </p>
                 ) : null}
 
                 <SectionToggle
@@ -1071,20 +1070,24 @@ export function RvShareKit({
                         aria-hidden
                         className="flex size-12 shrink-0 items-center justify-center rounded-[10px] bg-[#0b1b33] text-[15px] font-black tracking-[0.08em] text-white"
                       >
-                        {REPORT_CONTACT_MONOGRAM}
+                        {contact.monogram}
                       </div>
                       <div className="min-w-0">
                         <p className="text-[9px] font-bold tracking-[0.2em] text-[#1d6fbf]">
-                          {REPORT_CONTACT_KICKER.toUpperCase()}
+                          {contact.kicker.toUpperCase()}
                         </p>
-                        <p className="text-[20px] font-black tracking-tight text-[#0b1220]">
-                          {REPORT_CONTACT_NAME}
+                        <p
+                          data-fax-share-name
+                          className="text-[20px] font-black tracking-tight text-[#0b1220]"
+                        >
+                          {contact.name}
                         </p>
                         <a
-                          href={`tel:${REPORT_CONTACT_TEL}`}
+                          data-fax-share-phone
+                          href={`tel:${contact.tel}`}
                           className="mt-1 inline-block min-h-7 text-[14px] font-bold text-[#0e4f8f] underline decoration-[#1d6fbf] underline-offset-4"
                         >
-                          {REPORT_CONTACT_PHONE}
+                          {contact.phone}
                         </a>
                       </div>
                     </div>
