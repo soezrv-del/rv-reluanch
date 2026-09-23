@@ -18,6 +18,7 @@ import {
   removeWhitelistEntry,
 } from "@/lib/access/store";
 import { researchProviderStatus } from "@/lib/rvgrok/geminiResearch";
+import { clearPhoneMemory } from "@/lib/rvgrok/phoneMemoryStore";
 import {
   getResearchProviderOverride,
   setResearchProviderOverride,
@@ -152,6 +153,24 @@ export const Route = createFileRoute("/api/access/admin")({
             return Response.json({ error: result.error }, { status: 400 });
           }
           return Response.json({ ok: true });
+        }
+
+        if (action === "clear_memory") {
+          let raw = String(body.phone ?? "");
+          if (!raw && body.id) {
+            const entries = await listWhitelist();
+            const row = entries.find((e) => e.id === body.id);
+            raw = row?.phoneDigits || "";
+          }
+          const result = await clearPhoneMemory(raw);
+          if (!result.ok) {
+            return Response.json({ error: result.error }, { status: 400 });
+          }
+          return Response.json({
+            ok: true,
+            cleared: true,
+            phoneDigits: result.phoneDigits,
+          });
         }
 
         return Response.json({ error: "Unknown action." }, { status: 400 });

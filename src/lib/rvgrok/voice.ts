@@ -1,5 +1,6 @@
 import { RV_GROK_LEAN_CORE } from "./speechPolicy.ts";
 import { DEFAULT_WORKER_URL } from "./types.ts";
+import { MEMORY_HEADER } from "./phoneMemory.ts";
 
 export const VOICE_STORAGE_KEY = "rvgrok_selected_voice";
 export const VOICE_MODE_KEY = "rvgrok_voice_mode";
@@ -99,6 +100,15 @@ export function parseTokenPayload(data: {
  * Prefer same-origin /api/rvgrok/token (avoids CORS / prod proxy issues),
  * then fall back to Cloudflare worker directly.
  */
+let lastTokenVisitorMemory = "";
+
+/** Memory attached to the last same-origin token mint. Empty after take. */
+export function takeTokenVisitorMemory(): string {
+  const value = lastTokenVisitorMemory;
+  lastTokenVisitorMemory = "";
+  return value;
+}
+
 export async function fetchEphemeralToken(
   signal?: AbortSignal,
 ): Promise<string> {
@@ -127,6 +137,14 @@ export async function fetchEphemeralToken(
         const text = await res.text().catch(() => "");
         lastErr = `Voice token failed (${res.status})${text ? `: ${text.slice(0, 120)}` : ""}`;
         continue;
+      }
+      const encodedMemory = res.headers.get(MEMORY_HEADER) || "";
+      if (encodedMemory) {
+        try {
+          lastTokenVisitorMemory = decodeURIComponent(encodedMemory);
+        } catch {
+          lastTokenVisitorMemory = "";
+        }
       }
       const data = (await res.json()) as {
         token?: string;

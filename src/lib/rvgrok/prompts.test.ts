@@ -135,6 +135,8 @@ test("visitor personalization is a small hook and never rewrites I'm RvGrok", ()
   assert.match(src("speechPolicy.ts"), /RV_GROK_SESSION_INTRO = "I'm RvGrok"/);
   assert.match(src("../../routes/api/rvgrok.ts"), /visitorFirstName/);
   assert.match(src("../../routes/api/rvgrok.ts"), /visitorPersonalizationBlock/);
+  assert.match(src("../../routes/api/rvgrok.ts"), /loadVisitorMemoryBlockFromRequest/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /VISITOR MEMORY/);
   assert.match(src("stream.ts"), /visitorFirstName/);
   assert.match(src("liveVoice.ts"), /visitorPersonalizationBlock/);
 });

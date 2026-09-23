@@ -61,6 +61,8 @@ test("admin CRUD is password-gated and separate from VITE_AUTH_ENABLED", () => {
   assert.match(admin, /denyAccessAdmin/);
   assert.match(admin, /action === "add"/);
   assert.match(admin, /action === "remove"/);
+  assert.match(admin, /action === "clear_memory"/);
+  assert.match(admin, /clearPhoneMemory/);
   const http = read("src/lib/access/adminHttp.ts");
   assert.match(http, /authorizeAccessAdmin/);
   assert.match(http, /denyAccessAdmin/);
@@ -97,6 +99,9 @@ test("hard-admin phone header can manage the Neon list; Close always clears over
   assert.match(sheet, /ADMIN_PASSWORD_UNSET_CODE/);
   assert.match(sheet, /onCloseRef\.current\(\)/);
   assert.match(sheet, /onClick=\{\(\) => onClose\(\)\}/);
+  assert.match(sheet, /data-admin-clear-memory/);
+  assert.match(sheet, /Clear RV Grok memory/);
+  assert.match(sheet, /action: "clear_memory"/);
 
   const more = read("src/components/access/AccessMoreSection.tsx");
   assert.match(more, /openAdminList/);
@@ -299,6 +304,8 @@ test("research provider toggle is admin-only and server-persisted", () => {
   assert.match(sheet, /RESEARCH PROVIDER/);
   assert.match(sheet, /method: "PATCH"/);
   assert.match(sheet, /data-research-provider-option/);
+  assert.match(sheet, /data-admin-clear-memory/);
+  assert.match(sheet, /Clear memory/);
   assert.ok(
     sheet.indexOf("data-research-provider") >
       sheet.indexOf('view === "password"'),

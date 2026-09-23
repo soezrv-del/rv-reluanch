@@ -172,10 +172,62 @@ export async function streamChat(opts: {
     throw new Error(detail);
   }
 
+  let assistantText = "";
   await consumeSseStream(
     response,
     opts.agentMode,
-    opts.handlers,
+    {
+      ...opts.handlers,
+      onDelta: (text) => {
+        assistantText += text;
+        opts.handlers.onDelta(text);
+      },
+    },
     opts.signal,
   );
+
+  schedulePhoneMemoryPing({
+    accessPhone: opts.accessPhone,
+    messages: opts.messages,
+    assistantText,
+  });
+}
+
+/** Fire-and-forget — never blocks the bubble. Unlocked phone only. */
+function schedulePhoneMemoryPing(opts: {
+  accessPhone?: string;
+  messages: HistoryMessage[];
+  assistantText: string;
+}) {
+  const phone = (opts.accessPhone || "").trim();
+  if (!phone) return;
+  void import("../access/researchUnlock.ts")
+    .then(({ researchAccessHeaders }) => {
+      const turns = opts.messages.map((m) => ({
+        role: m.role,
+        content:
+          typeof m.content === "string"
+            ? m.content.slice(0, 800)
+            : m.content
+                .map((p) => ("text" in p && p.text ? p.text : ""))
+                .join(" ")
+                .slice(0, 800),
+      }));
+      if (opts.assistantText.trim()) {
+        turns.push({
+          role: "assistant",
+          content: opts.assistantText.slice(0, 800),
+        });
+      }
+      return fetch("/api/rvgrok/memory", {
+        method: "POST",
+        headers: researchAccessHeaders(
+          { "Content-Type": "application/json" },
+          phone,
+        ),
+        body: JSON.stringify({ messages: turns }),
+        keepalive: true,
+      });
+    })
+    .catch(() => undefined);
 }

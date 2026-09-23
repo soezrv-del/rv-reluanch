@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
+import { denyUnlessWhitelisted, phoneFromRequest } from "@/lib/access/httpGate";
 import { DEFAULT_WORKER_URL } from "@/lib/rvgrok/types";
+import { MEMORY_HEADER } from "@/lib/rvgrok/phoneMemory";
+import { loadVisitorMemoryBlock } from "@/lib/rvgrok/phoneMemoryStore";
 
 const XAI_CLIENT_SECRETS = "https://api.x.ai/v1/realtime/client_secrets";
 
@@ -98,18 +100,33 @@ async function mintEphemeralToken(method: "GET" | "POST") {
   );
 }
 
+async function mintWithVisitorMemory(request: Request, method: "GET" | "POST") {
+  const [minted, memory] = await Promise.all([
+    mintEphemeralToken(method),
+    loadVisitorMemoryBlock(phoneFromRequest(request)).catch(() => ""),
+  ]);
+  if (!memory) return minted;
+  const headers = new Headers(minted.headers);
+  headers.set(MEMORY_HEADER, encodeURIComponent(memory));
+  return new Response(minted.body, {
+    status: minted.status,
+    statusText: minted.statusText,
+    headers,
+  });
+}
+
 export const Route = createFileRoute("/api/rvgrok/token")({
   server: {
     handlers: {
       GET: async ({ request }) => {
         const denied = await denyUnlessWhitelisted(request);
         if (denied) return denied;
-        return mintEphemeralToken("GET");
+        return mintWithVisitorMemory(request, "GET");
       },
       POST: async ({ request }) => {
         const denied = await denyUnlessWhitelisted(request);
         if (denied) return denied;
-        return mintEphemeralToken("POST");
+        return mintWithVisitorMemory(request, "POST");
       },
     },
   },
