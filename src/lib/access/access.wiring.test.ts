@@ -289,7 +289,9 @@ test("founder KB, reports, and hard-admin seed all use Hansen", () => {
   const constants = read("src/lib/access/constants.ts");
   assert.match(origin, /David Hansen/);
   assert.doesNotMatch(origin, /David Hanson/);
-  assert.match(report, /REPORT_CONTACT_NAME = "David Hansen"/);
+  assert.match(report, /REPORT_CONTACT_LAST = "Hansen"/);
+  assert.match(report, /David \$\{REPORT_CONTACT_LAST\}/);
+  assert.doesNotMatch(report, /Hanson/);
   assert.match(constants, /name: "David Hansen"/);
   assert.match(constants, /id: "admin-david-hansen"/);
   assert.match(constants, /702-266-5918/);

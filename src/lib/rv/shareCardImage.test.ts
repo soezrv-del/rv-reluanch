@@ -29,8 +29,10 @@ import {
   SHARE_CARD_WIDTH,
 } from "./shareCardImage.ts";
 import {
+  REPORT_CONTACT_LAST,
   REPORT_CONTACT_NAME,
   REPORT_CONTACT_PHONE,
+  REPORT_CONTACT_TEL,
 } from "./reportContact.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -226,7 +228,7 @@ test("painted card matches the in-app signature (name + phone)", () => {
   assert.match(joined, /RvFOX · Powered by Grok/);
 });
 
-test("paintShareSignatureCard can sign with a session name", () => {
+test("paintShareSignatureCard signs with the session name and phone", () => {
   const texts: string[] = [];
   const ctx = {
     save() {},
@@ -254,12 +256,13 @@ test("paintShareSignatureCard can sign with a session name", () => {
     ctx as unknown as CanvasRenderingContext2D,
     SHARE_CARD_WIDTH,
     SHARE_CARD_HEIGHT,
-    shareCardContactForSession("Cheri"),
+    shareCardContactForSession("Vern", "5412858791"),
   );
   const joined = texts.join("");
-  assert.match(joined, /Cheri/);
+  assert.match(joined, /Vern/);
+  assert.match(joined, /541-285-8791/);
   assert.doesNotMatch(joined, new RegExp(REPORT_CONTACT_NAME));
-  assert.match(joined, new RegExp(REPORT_CONTACT_PHONE.replace(/-/g, "\\-")));
+  assert.doesNotMatch(joined, new RegExp(REPORT_CONTACT_PHONE.replace(/-/g, "\\-")));
 });
 
 test("live card node is the capture target — same preview, real file on send", () => {
@@ -821,6 +824,96 @@ test("Share kit send recaptures the card and never disables after one send", () 
   assert.doesNotMatch(send, /if \(sending\) return/);
   assert.doesNotMatch(send, /disabled=\{sending/);
   assert.match(ui, /onClick=\{\(\) => void sendKit\(\)\}/);
+});
+
+test("signed-out dealer contact is David Hansen; session builder never is", () => {
+  const fallback = defaultShareCardContact();
+  assert.equal(REPORT_CONTACT_LAST, "Hansen");
+  assert.equal(REPORT_CONTACT_NAME, `David ${REPORT_CONTACT_LAST}`);
+  assert.equal(fallback.name, REPORT_CONTACT_NAME);
+  assert.equal(fallback.phone, REPORT_CONTACT_PHONE);
+  assert.equal(fallback.tel, REPORT_CONTACT_TEL);
+  assert.doesNotMatch(fallback.name, /Hanson/);
+
+  const emptySession = shareCardContactForSession("", "");
+  assert.equal(emptySession.name, "");
+  assert.equal(emptySession.phone, "");
+  assert.notEqual(emptySession.name, REPORT_CONTACT_NAME);
+  assert.notEqual(emptySession.phone, REPORT_CONTACT_PHONE);
+
+  const vern = shareCardContactForSession("Vern", "5412858791");
+  assert.equal(vern.name, "Vern");
+  assert.equal(vern.phone, "541-285-8791");
+  assert.equal(vern.tel, "+15412858791");
+  assert.notEqual(vern.name, REPORT_CONTACT_NAME);
+  assert.notEqual(vern.phone, REPORT_CONTACT_PHONE);
+});
+
+test("Facts Share kit is a hard switch on access.allowed — name, phone, card", () => {
+  assert.match(ui, /useAccessOptional/);
+  assert.match(ui, /access\?\.allowed/);
+  assert.match(
+    ui,
+    /shareCardContactForSession\(access\.name,\s*access\.phone\)/,
+  );
+  assert.match(ui, /defaultShareCardContact\(\)/);
+  assert.match(ui, /data-fax-share-name/);
+  assert.match(ui, /data-fax-share-phone/);
+  assert.match(ui, /data-report-signature="1"/);
+  assert.match(ui, /captureShareCardFile\([\s\S]*contact/);
+  assert.match(ui, /contact,/);
+  assert.match(ui, /contact\.name/);
+  assert.match(ui, /contact\.phone/);
+  assert.match(ui, /tel:\$\{contact\.tel\}/);
+  assert.match(kit, /opts\.contact \?\? defaultShareCardContact/);
+  assert.match(kit, /contact\.name/);
+  assert.match(kit, /contact\.phone/);
+  assert.doesNotMatch(ui, /useCurrentUser/);
+  assert.doesNotMatch(ui, /REPORT_CONTACT_NAME/);
+  assert.doesNotMatch(ui, /REPORT_CONTACT_PHONE/);
+  assert.doesNotMatch(ui, /REPORT_CONTACT_TEL/);
+  assert.doesNotMatch(ui, /\bprefer\b|\btry\b|if available/i);
+  assert.doesNotMatch(ui, /TowShareCard/);
+});
+
+test("share and dealer contact surfaces lock Hansen — never Hanson", () => {
+  const surfaces = [
+    join(here, "reportContact.ts"),
+    join(here, "shareCardImage.ts"),
+    join(here, "shareKit.ts"),
+    join(here, "exportReport.ts"),
+    join(here, "../../components/rvshare/RvShareKit.tsx"),
+    join(here, "../access/ndaText.ts"),
+  ];
+  for (const file of surfaces) {
+    const src = readFileSync(file, "utf8");
+    assert.doesNotMatch(
+      src,
+      /Hanson/,
+      `${file} must not misspell Hansen as Hanson`,
+    );
+    assert.doesNotMatch(src, /David Hanson/);
+  }
+  const report = readFileSync(join(here, "reportContact.ts"), "utf8");
+  assert.match(report, /REPORT_CONTACT_LAST = "Hansen"/);
+  assert.match(report, /David \$\{REPORT_CONTACT_LAST\}/);
+  assert.match(
+    readFileSync(join(here, "shareCardImage.ts"), "utf8"),
+    /name: REPORT_CONTACT_NAME/,
+  );
+  assert.match(
+    readFileSync(join(here, "exportReport.ts"), "utf8"),
+    /REPORT_CONTACT_NAME/,
+  );
+});
+
+test("Tow no longer mounts a Share card", () => {
+  const tow = readFileSync(
+    join(here, "../../components/rvtow/RvTowApp.tsx"),
+    "utf8",
+  );
+  assert.doesNotMatch(tow, /TowShareCard/);
+  assert.doesNotMatch(tow, /data-tow-share/);
 });
 
 test("elementLooksLikeShareCard requires the on-screen signature card", () => {

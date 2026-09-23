@@ -6,11 +6,13 @@
  * with image/png + a .png name so Web Share `files[]` is a real photo.
  */
 
+import { formatPhoneDisplay, normalizePhone } from "../access/phone.ts";
 import {
   REPORT_CONTACT_KICKER,
   REPORT_CONTACT_MONOGRAM,
   REPORT_CONTACT_NAME,
   REPORT_CONTACT_PHONE,
+  REPORT_CONTACT_TEL,
 } from "./reportContact.ts";
 
 export const SHARE_CARD_MIME = "image/png";
@@ -34,14 +36,17 @@ export type ShareCardContact = {
   kicker: string;
   name: string;
   phone: string;
+  tel: string;
 };
 
+/** Signed-out dealer signature only. Not used while a session is allowed. */
 export function defaultShareCardContact(): ShareCardContact {
   return {
     monogram: REPORT_CONTACT_MONOGRAM,
     kicker: REPORT_CONTACT_KICKER,
     name: REPORT_CONTACT_NAME,
     phone: REPORT_CONTACT_PHONE,
+    tel: REPORT_CONTACT_TEL,
   };
 }
 
@@ -56,20 +61,32 @@ export function monogramFromDisplayName(name: string): string {
   return letters ? letters.toUpperCase() : REPORT_CONTACT_MONOGRAM;
 }
 
+function shareCardPhoneFromSession(raw: string): { phone: string; tel: string } {
+  const trimmed = String(raw ?? "").trim();
+  const n = normalizePhone(trimmed);
+  if (n) {
+    return { phone: formatPhoneDisplay(n.digits), tel: n.e164 };
+  }
+  return { phone: trimmed, tel: trimmed };
+}
+
 /**
- * Signature on the share card. A signed-in access name (phone identity)
- * replaces the dealer slot; empty / unsigned keeps the default contact.
+ * Signed-in share identity. Hard switch at the caller: access.allowed
+ * uses this contact; signed-out uses defaultShareCardContact().
+ * This builder never returns the dealer name or dealer phone.
  */
 export function shareCardContactForSession(
-  signedInName?: string | null,
+  signedInName: string,
+  signedInPhone: string,
 ): ShareCardContact {
   const name = String(signedInName ?? "").trim();
-  if (!name) return defaultShareCardContact();
+  const { phone, tel } = shareCardPhoneFromSession(signedInPhone);
   return {
-    monogram: monogramFromDisplayName(name),
+    monogram: name ? monogramFromDisplayName(name) : "",
     kicker: REPORT_CONTACT_KICKER,
     name,
-    phone: REPORT_CONTACT_PHONE,
+    phone,
+    tel,
   };
 }
 
@@ -80,8 +97,8 @@ export function elementLooksLikeShareCard(el: Element | null): boolean {
   const text = (el.textContent || "").replace(/\s+/g, " ");
   return (
     marked &&
-    text.includes(REPORT_CONTACT_NAME) &&
-    text.includes(REPORT_CONTACT_PHONE)
+    text.includes(REPORT_CONTACT_KICKER) &&
+    /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(text)
   );
 }
 

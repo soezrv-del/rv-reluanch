@@ -19,7 +19,13 @@ import {
 } from "./rvCal";
 import { resolveShareHost } from "@/lib/og/shareHost";
 import { mediaForRvType } from "@/assets/typeMedia";
-import { REPORT_CONTACT_KICKER, REPORT_CONTACT_NAME, REPORT_CONTACT_PHONE } from "./reportContact";
+import {
+  coerceShareImageType,
+  defaultShareCardContact,
+  hardenShareImageFileSync,
+  isShareImageFile,
+  type ShareCardContact,
+} from "./shareCardImage";
 import { getVerifiedDossier } from "./verifiedCatalogCache";
 import {
   brochureSalesPitch,
@@ -38,11 +44,6 @@ import {
   type ShareSpecGroupId,
 } from "./shareCardPolicy";
 import { formatShareVideoBlock, type RvVideoHit } from "./rvVideos";
-import {
-  coerceShareImageType,
-  hardenShareImageFileSync,
-  isShareImageFile,
-} from "./shareCardImage";
 export {
   buildShareKitPayload,
   canShareSaysYes,
@@ -510,6 +511,8 @@ export function buildCoachKit(opts: {
   lookupCatalog?: ShareCatalogLookup;
   /** Real RV Video Library hit only — never invent a title or URL. */
   video?: Pick<RvVideoHit, "title" | "youtubeUrl"> | null;
+  /** Signed-in session or signed-out dealer. Defaults to dealer Hansen. */
+  contact?: ShareCardContact;
 }): string {
   const r = hydrateShareCoachResult(opts.result, opts.lookupCatalog);
   const { payment } = opts;
@@ -619,11 +622,12 @@ export function buildCoachKit(opts: {
     lines.push(...videoLines);
   }
 
+  const contact = opts.contact ?? defaultShareCardContact();
   lines.push("");
   lines.push("—");
-  lines.push(REPORT_CONTACT_KICKER.toUpperCase());
-  lines.push(REPORT_CONTACT_NAME);
-  lines.push(REPORT_CONTACT_PHONE);
+  lines.push(contact.kicker.toUpperCase());
+  lines.push(contact.name);
+  lines.push(contact.phone);
   lines.push("RvFOX Pro · Know before you buy.");
   lines.push(SHARE_KIT_FOOTER);
   return lines.filter((line) => !isSharePlaceholder(line)).join("\n");

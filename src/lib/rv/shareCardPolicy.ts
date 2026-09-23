@@ -244,10 +244,12 @@ export function sharePaymentAfterTermDown<T extends SharePaymentTermDown>(
   };
 }
 
-/** Zero extras → header + Payment. SUMMARY only if real brochure highlights exist. */
+/**
+ * Honor the user's include flags as-is.
+ * Unchecked extras stay off — no default Payment (or any other section).
+ */
 export function effectiveShareInclude(include: ShareInclude): ShareInclude {
-  if (hasOptionalShareSections(include)) return include;
-  return { ...include, payment: true };
+  return include;
 }
 
 /** Customer-facing share must never leak catalog placeholder tags. */
