@@ -1,6 +1,7 @@
 /**
  * Product / tell-me-about / YMM asks must never get lot-first answers.
- * RV Grok instructions have zero own-lot / inventory vocabulary.
+ * Standing prompts stay free of lot coaching. Own-lot snapshot is injected
+ * only on explicit stock asks (API + voice research), not product grounding.
  */
 
 import assert from "node:assert/strict";
@@ -16,6 +17,7 @@ import {
   needsWebFallback,
 } from "./webIntent.ts";
 import {
+  formatOwnLotInjection,
   looksLikeOwnLotStockQuestion,
   shouldSkipWebForOwnLot,
 } from "./ownLotInventory.ts";
@@ -37,14 +39,6 @@ const BAD_REPLY =
 
 const LOT_INSTRUCTION_RE =
   /OWN-LOT|own-lot|in stock|stock counts?|stock numbers?|Matched is 0|none on our lot|zero diesel|do we have|OWN-LOT INVENTORY/i;
-
-/** Lean core may name the lot-language ban. That is not own-lot machinery. */
-function stripLeanLotBan(text: string) {
-  return text.replace(
-    /No lot, inventory, stock, or "on our lot" language\. Ever\./g,
-    "",
-  );
-}
 
 test("Tell me about a 2025 Jayco Seneca 37K is a product ask, not inventory", () => {
   assert.equal(looksLikeInventoryOrCountQuestion(SENECA), false);
@@ -71,13 +65,17 @@ test("Seneca product turn grounding requires web/catalog and never lot-miss copy
   assert.doesNotMatch(voice, /OWN-LOT INVENTORY/);
 });
 
-test("Do we have a Seneca on the lot? still classifies as inventory, with no lot inject", () => {
+test("Do we have a Seneca on the lot? is inventory; snapshot data is readable", async () => {
   assert.equal(looksLikeOwnLotStockQuestion(LOT_ASK), true);
   assert.equal(looksLikeInventoryOrCountQuestion(LOT_ASK), true);
   const chat = buildChatGrounding({ query: LOT_ASK });
   assert.doesNotMatch(chat.block || "", /OWN-LOT INVENTORY/);
-  assert.doesNotMatch(chat.block || "", /say none of that coach is on our lot/i);
   assert.doesNotMatch(chat.block || "", /INVENTORY \/ IN-STOCK ASK/);
+  const notes = await formatOwnLotInjection(LOT_ASK);
+  assert.doesNotMatch(notes, /UNAVAILABLE/);
+  assert.match(notes, /source=own/);
+  assert.match(notes, /Lot total: [1-9]/);
+  assert.match(notes, /Seneca|Matched:/);
 });
 
 test("forbidden lot-first deflection matches the Seneca miss shape", () => {
@@ -94,7 +92,7 @@ test("forbidden lot-first deflection matches the Seneca miss shape", () => {
   assert.equal(isForbiddenScopeNarrow(BAD_REPLY), false);
 });
 
-test("system / voice / grounding instruction strings have zero lot vocabulary", () => {
+test("standing prompts have no lot coaching; lean core has no lot ban", () => {
   const prompts = src("prompts.ts");
   const voice = src("voice.ts");
   const speech = src("speechPolicy.ts").replace(
@@ -106,16 +104,14 @@ test("system / voice / grounding instruction strings have zero lot vocabulary", 
   const voiceWeb = src("voiceWeb.ts");
   const api = src("../../routes/api/rvgrok.ts");
 
-  for (const [label, raw] of [
+  for (const [label, text] of [
     ["prompts.ts", prompts],
     ["voice.ts", voice],
     ["speechPolicy.ts (minus detector)", speech],
     ["grounding.ts", grounding],
     ["liveVoice.ts", live],
     ["voiceWeb.ts", voiceWeb],
-    ["rvgrok.ts API", api],
   ] as const) {
-    const text = stripLeanLotBan(raw);
     assert.doesNotMatch(text, /OWN-LOT INVENTORY/, label);
     assert.doesNotMatch(text, /OWN-LOT STOCK/, label);
     assert.doesNotMatch(text, /on our lot/, label);
@@ -125,6 +121,14 @@ test("system / voice / grounding instruction strings have zero lot vocabulary", 
     assert.doesNotMatch(text, /ACCURACY FIRST/, label);
     assert.doesNotMatch(text, /DialaBot/, label);
   }
+
+  assert.doesNotMatch(
+    src("speechPolicy.ts"),
+    /No lot, inventory, stock, or "on our lot" language/,
+  );
+  assert.match(api, /loadOwnLotSnapshot/);
+  assert.match(api, /looksLikeOwnLotStockQuestion/);
+  assert.doesNotMatch(api, /[Dd]ialaBot/);
 
   const speechFull = src("speechPolicy.ts");
   assert.match(

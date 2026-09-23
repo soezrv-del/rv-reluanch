@@ -8,6 +8,14 @@
 
 import { needsWebFallback } from "./webIntent.ts";
 import {
+  formatOwnLotBlock,
+  loadOwnLotSnapshot,
+  looksLikeOwnLotStockQuestion,
+  OWN_LOT_MODEL,
+  shouldSkipWebForOwnLot,
+  type OwnLotSnapshot,
+} from "./ownLotInventory.ts";
+import {
   fetchWebSearchNotes,
   isTimeoutFailureReason,
   readWebSearchCache,
@@ -48,8 +56,8 @@ export type ExecuteWebResearchOpts = {
   profile: WebSearchProfile;
   /** When true, skip needsWebFallback and always attempt research. */
   skipGate?: boolean;
-  /** Unused this ship — own-lot must not feed chat/voice research. */
-  ownLotSnapshot?: unknown;
+  /** Caller-provided own-lot snapshot. When omitted, load on stock asks. */
+  ownLotSnapshot?: OwnLotSnapshot;
   /** Same-origin host for the deploy-bundled public snapshot. */
   requestOrigin?: string;
   /** Research-loop attempt cap. Defaults to WEB_SEARCH_MAX_TOOL_CALLS (2). */
@@ -197,6 +205,30 @@ export async function executeWebResearch(
 ): Promise<WebResearchApiBody> {
   const t0 = Date.now();
   const query = (opts.query || "").trim();
+
+  let ownLotSnapshot = opts.ownLotSnapshot;
+  if (!ownLotSnapshot && looksLikeOwnLotStockQuestion(query)) {
+    ownLotSnapshot = await loadOwnLotSnapshot({
+      requestOrigin: opts.requestOrigin,
+    });
+  }
+  if (shouldSkipWebForOwnLot(query, ownLotSnapshot)) {
+    const notes = formatOwnLotBlock(ownLotSnapshot!, query);
+    const durationMs = Date.now() - t0;
+    const body = toApiBody(
+      { ok: true, notes, model: OWN_LOT_MODEL },
+      { kind: "success", durationMs },
+    );
+    logWebResearchEvent({
+      kind: "success",
+      profile: opts.profile,
+      durationMs,
+      ok: true,
+      query,
+      model: OWN_LOT_MODEL,
+    });
+    return body;
+  }
 
   if (!opts.skipGate && !needsWebFallback(null, query)) {
     const durationMs = Date.now() - t0;

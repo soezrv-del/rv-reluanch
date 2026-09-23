@@ -467,9 +467,10 @@ test("own-lot hit short-circuits research; miss falls through to web", async () 
     profile: "chat",
     ownLotSnapshot: hit,
   });
-  assert.equal(researched.ok, false);
-  assert.equal(researched.kind, "missing_key");
-  assert.notEqual(researched.ok && "model" in researched ? researched.model : "", OWN_LOT_MODEL);
+  assert.equal(researched.ok, true);
+  assert.equal(researched.kind, "success");
+  assert.equal(researched.ok && "model" in researched ? researched.model : "", OWN_LOT_MODEL);
+  assert.match(researched.ok ? researched.notes : "", /Diesel \(Class A Diesel \+ Class Super C\): 3/);
 
   const miss = await executeWebResearch({
     query: "how many diesels do we have in stock?",
@@ -496,20 +497,20 @@ test("in-app chat and voice research are wired; DialaBot stays out", () => {
   const api = src("../../routes/api", "rvgrok.ts");
   const telemetry = src(".", "webResearchTelemetry.ts");
   const prompts = src(".", "prompts.ts");
-  assert.doesNotMatch(api, /loadOwnLotSnapshot/);
-  assert.doesNotMatch(api, /formatOwnLotBlock/);
+  assert.match(api, /loadOwnLotSnapshot/);
+  assert.match(api, /formatOwnLotBlock/);
   assert.doesNotMatch(api, /formatOwnLotSidecar/);
-  assert.doesNotMatch(api, /looksLikeOwnLotStockQuestion/);
-  assert.doesNotMatch(api, /shouldSkipWebForOwnLot/);
-  assert.doesNotMatch(api, /OWN-LOT INVENTORY \(RV Country\)/);
-  assert.doesNotMatch(telemetry, /shouldSkipWebForOwnLot/);
-  assert.doesNotMatch(telemetry, /OWN_LOT_MODEL/);
+  assert.match(api, /looksLikeOwnLotStockQuestion/);
+  assert.match(api, /shouldSkipWebForOwnLot/);
+  assert.match(api, /OWN-LOT INVENTORY \(RV Country\)/);
+  assert.match(telemetry, /shouldSkipWebForOwnLot/);
+  assert.match(telemetry, /OWN_LOT_MODEL/);
   assert.doesNotMatch(prompts, /OWN-LOT STOCK/);
   assert.doesNotMatch(prompts, /Never say the snapshot has no price data/);
   assert.match(src(".", "ownLotInventory.ts"), /DEFAULT_OWN_LOT_JSON_PATH/);
   assert.match(src(".", "ownLotInventory.ts"), /OWN_LOT_PUBLIC_URL_PATH/);
   assert.match(src(".", "ownLotInventory.ts"), /sameOriginOwnLotUrls/);
-  assert.doesNotMatch(api, /requestOrigin/);
+  assert.match(api, /requestOrigin/);
   assert.doesNotMatch(api, /[Dd]ialaBot/);
   assert.doesNotMatch(telemetry, /[Dd]ialaBot/);
 });
@@ -1679,7 +1680,7 @@ test("catalog coach lookup is not an own-lot miss — Dutch Star 4369 reports fr
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.doesNotMatch(prompts, /separate salesman page/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
-  assert.doesNotMatch(api, /looksLikeOwnLotStockQuestion\(lastPlain\)/);
+  assert.match(api, /looksLikeOwnLotStockQuestion\(lastPlain\)/);
   assert.doesNotMatch(api, /formatOwnLotSidecar/);
   assert.doesNotMatch(ownLot, /formatOwnLotSidecar/);
   assert.doesNotMatch(ownLot, /[Dd]ialaBot/);
