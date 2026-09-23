@@ -3,6 +3,7 @@ import { Shield } from "lucide-react";
 import { welcomeBackLine } from "@/lib/access/identity";
 import { useAccess } from "./AccessProvider";
 import { AdminWhitelistSheet } from "./AdminWhitelistSheet";
+import { ResearchProviderCard } from "./ResearchProviderCard";
 
 export function AccessMoreSection() {
   const access = useAccess();
@@ -42,65 +43,74 @@ export function AccessMoreSection() {
         <p className="mb-2 px-0.5 text-[10px] font-bold tracking-[0.16em] text-white/90">
           ACCESS
         </p>
-        <form
-          onSubmit={(e) => void onIdentify(e)}
-          className="glass-prestige space-y-3 rounded-[1.25rem] p-3.5"
-        >
-          <p
-            data-access-welcome={welcome || undefined}
-            className="text-[12px] leading-relaxed text-white/70"
+        <div className="space-y-3">
+          <form
+            onSubmit={(e) => void onIdentify(e)}
+            className="glass-prestige space-y-3 rounded-[1.25rem] p-3.5"
           >
-            {access.allowed
-              ? `${welcome ? `${welcome}. ` : ""}${
-                  access.isAdmin
-                    ? "Admin number recognized. Full access."
-                    : "This number is on the approved list. Full access."
-                }`
-              : "Browse is open. Full tools need an approved number. Requesting access never unlocks you."}
-          </p>
-          <label className="block">
-            <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">
-              FIRST NAME
-            </span>
-            <input
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold text-white outline-none"
-              autoComplete="given-name"
-              placeholder="First name"
+            <p
+              data-access-welcome={welcome || undefined}
+              className="text-[12px] leading-relaxed text-white/70"
+            >
+              {access.allowed
+                ? `${welcome ? `${welcome}. ` : ""}${
+                    access.isAdmin
+                      ? "Admin number recognized. Full access."
+                      : "This number is on the approved list. Full access."
+                  }`
+                : "Browse is open. Full tools need an approved number. Requesting access never unlocks you."}
+            </p>
+            <label className="block">
+              <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">
+                FIRST NAME
+              </span>
+              <input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold text-white outline-none"
+                autoComplete="given-name"
+                placeholder="First name"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">
+                YOUR PHONE
+              </span>
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold text-white outline-none"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="702-555-0100"
+              />
+            </label>
+            {error ? (
+              <p className="text-[12px] font-semibold text-ruby">{error}</p>
+            ) : null}
+            <button
+              type="submit"
+              disabled={busy}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue py-2.5 text-[13px] font-bold text-white disabled:opacity-60"
+            >
+              {busy ? "Checking…" : "Check this number"}
+            </button>
+            <button
+              type="button"
+              onClick={() => access.openRequest("Request a spot on the approved list.")}
+              className="w-full rounded-xl border border-white/20 bg-white/5 py-2.5 text-[13px] font-bold text-white"
+            >
+              Request access
+            </button>
+          </form>
+          {access.isAdmin ? (
+            <ResearchProviderCard
+              enabled
+              surface="more"
+              onNeedAdminLogin={access.openAdminList}
             />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-[9px] font-bold tracking-wide text-white">
-              YOUR PHONE
-            </span>
-            <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="glass-field w-full rounded-lg px-3 py-2.5 text-[15px] font-semibold text-white outline-none"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="702-555-0100"
-            />
-          </label>
-          {error ? (
-            <p className="text-[12px] font-semibold text-ruby">{error}</p>
           ) : null}
-          <button
-            type="submit"
-            disabled={busy}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue py-2.5 text-[13px] font-bold text-white disabled:opacity-60"
-          >
-            {busy ? "Checking…" : "Check this number"}
-          </button>
-          <button
-            type="button"
-            onClick={() => access.openRequest("Request a spot on the approved list.")}
-            className="w-full rounded-xl border border-white/20 bg-white/5 py-2.5 text-[13px] font-bold text-white"
-          >
-            Request access
-          </button>
-        </form>
+        </div>
       </section>
 
       {access.isAdmin ? (
