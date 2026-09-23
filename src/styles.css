@@ -248,6 +248,33 @@
     }
   }
 
+  /* Facts dossier — per-field gap browse. Steel ring, soft sapphire edge. */
+  .facts-gap-spinner {
+    display: inline-block;
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: 1.5px solid color-mix(in srgb, var(--color-ink-foam) 22%, transparent);
+    border-top-color: color-mix(
+      in srgb,
+      var(--color-sapphire-glow) 58%,
+      var(--color-ink-foam)
+    );
+    animation: facts-gap-spin 0.75s linear infinite;
+  }
+  @keyframes facts-gap-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .facts-gap-spinner {
+      animation: none;
+      opacity: 0.7;
+    }
+  }
+
   /* Adjacent-tab swipe — finger-follow on --swipe-dx, index on --swipe-i */
   .suite-swipe-viewport {
     --swipe-dx: 0px;

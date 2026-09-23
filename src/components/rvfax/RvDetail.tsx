@@ -82,6 +82,11 @@ import {
   refreshCoachDossierCache,
   type LiveDossier,
 } from "@/lib/rv/liveDossier";
+import { planFactsDossierResearch } from "@/lib/rv/factsDossierGapPlan";
+import {
+  factsDetailFieldSearching,
+  factsDetailSearchingFields,
+} from "@/lib/rv/factsDetailGapSpinners";
 import {
   CATALOG_ESTIMATE_LABEL,
   LOW_CONFIDENCE_LISTINGS_MESSAGE,
@@ -413,24 +418,9 @@ export function RvDetail({
     return () => ctrl.abort();
   }, [year, make, model]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const ctrl = new AbortController();
-    setLiveLoading(true);
-    setLiveError(null);
-
-    // Instant accurate paint if we've verified this coach before
-    const peek = peekVerifiedDossier(year, make, model, floorplan);
-    if (peek) {
-      setLive(peek);
-    } else {
-      // Phase 3.4: do NOT clear year-band catalog paint — leave live null
-      // so hard specs stay from brochure until Live succeeds
-      setLive(null);
-    }
-
-    // Phase 3.2 — inject year+floorplan brochure as candidate truth for dossier
-    const catalogCandidate = {
+  // Same candidate the dossier POST sends — gap planner must match browse.
+  const catalogCandidate = useMemo(
+    () => ({
       engine: brochure.engine,
       horsepower: brochure.horsepower,
       torque: brochure.torque,
@@ -450,7 +440,47 @@ export function RvDetail({
       freshWater: brochure.freshWater,
       grayWater: brochure.grayWater,
       blackWater: brochure.blackWater,
-    };
+    }),
+    [brochure, floorplan, data.fuelType, data.type],
+  );
+
+  const dossierGapPlan = useMemo(
+    () =>
+      planFactsDossierResearch({
+        year,
+        make,
+        model,
+        floorplan,
+        candidate: catalogCandidate,
+      }),
+    [year, make, model, floorplan, catalogCandidate],
+  );
+
+  const gapSearching = useMemo(
+    () =>
+      factsDetailSearchingFields({
+        liveLoading,
+        skipLive: dossierGapPlan.skipLive,
+        gaps: dossierGapPlan.gaps,
+      }),
+    [liveLoading, dossierGapPlan],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const ctrl = new AbortController();
+    setLiveLoading(true);
+    setLiveError(null);
+
+    // Instant accurate paint if we've verified this coach before
+    const peek = peekVerifiedDossier(year, make, model, floorplan);
+    if (peek) {
+      setLive(peek);
+    } else {
+      // Phase 3.4: do NOT clear year-band catalog paint — leave live null
+      // so hard specs stay from brochure until Live succeeds
+      setLive(null);
+    }
 
     fetchLiveDossier(
       year,
@@ -487,7 +517,7 @@ export function RvDetail({
       cancelled = true;
       ctrl.abort();
     };
-  }, [year, make, model, floorplan, liveRetry, brochure, data.fuelType, data.type]);
+  }, [year, make, model, floorplan, liveRetry, catalogCandidate]);
 
   // Market value is on-demand — user open / ask only. Do not prefetch.
   useEffect(() => {
@@ -1541,8 +1571,25 @@ export function RvDetail({
 
             <SpecRow label="FUEL" value={displayFuel} />
             <SpecRow label="ENGINE" value={specs.engine} accent />
-            <SpecRow label="HORSEPOWER" value={specs.horsepower} accent />
-            <SpecRow label="TORQUE" value={specs.torque} />
+            <SpecRow
+              label="HORSEPOWER"
+              value={specs.horsepower}
+              accent
+              searching={factsDetailFieldSearching(
+                "horsepower",
+                gapSearching,
+                specs.horsepower,
+              )}
+            />
+            <SpecRow
+              label="TORQUE"
+              value={specs.torque}
+              searching={factsDetailFieldSearching(
+                "torque",
+                gapSearching,
+                specs.torque,
+              )}
+            />
             <SpecRow label="TRANSMISSION" value={specs.transmission} />
             <SpecRow label="CHASSIS" value={specs.chassis} accent />
             <SpecRow label="TOW CAPACITY" value={specs.hitchOrPin} />
@@ -1557,6 +1604,14 @@ export function RvDetail({
               catalogLbs={brochure.gvwrLbs ?? live?.gvwrLbs ?? null}
               overrideLbs={weightOverride?.gvwrLbs ?? null}
               accent
+              searching={factsDetailFieldSearching(
+                "gvwr",
+                gapSearching,
+                weightOverride?.gvwrLbs ??
+                  brochure.gvwrLbs ??
+                  live?.gvwrLbs ??
+                  specs.gvwr,
+              )}
               disabled={!floorplan}
               onSave={(lbs) => {
                 saveWeightOverride({
@@ -2671,6 +2726,7 @@ function WeightOverrideRow({
   estimatedLbs,
   overrideLbs,
   accent,
+  searching,
   disabled,
   onSave,
   onReset,
@@ -2681,6 +2737,7 @@ function WeightOverrideRow({
   estimatedLbs?: number | null;
   overrideLbs?: number | null;
   accent?: boolean;
+  searching?: boolean;
   disabled?: boolean;
   onSave: (lbs: number) => void;
   onReset: () => void;
@@ -2739,13 +2796,15 @@ function WeightOverrideRow({
         ) : null}
       </span>
       <div className="flex min-w-0 items-center justify-end gap-2">
+        {searching ? <FactsGapSpinner field={label} /> : null}
         <input
           type="text"
           inputMode="numeric"
           aria-label={`${label} pounds${overrideLbs != null ? " (override)" : ""}`}
+          aria-busy={searching || undefined}
           disabled={disabled}
           value={draft}
-          placeholder={published}
+          placeholder={searching ? "" : published}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => {
@@ -2772,14 +2831,28 @@ function WeightOverrideRow({
   );
 }
 
+function FactsGapSpinner({ field }: { field: string }) {
+  return (
+    <span
+      role="status"
+      aria-label={`Searching ${field}`}
+      data-testid="facts-gap-spinner"
+      data-facts-gap-field={field.toLowerCase()}
+      className="facts-gap-spinner"
+    />
+  );
+}
+
 function SpecRow({
   label,
   value,
   accent,
+  searching,
 }: {
   label: string;
   value?: string | null;
   accent?: boolean;
+  searching?: boolean;
 }) {
   const powertrain =
     label === "HORSEPOWER" || label === "TORQUE" || label === "ENGINE";
@@ -2789,17 +2862,20 @@ function SpecRow({
       ? value
       : "—";
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-white/[0.07] py-2.5 last:border-0">
+    <div
+      className="flex items-baseline justify-between gap-4 border-b border-white/[0.07] py-2.5 last:border-0"
+      aria-busy={searching || undefined}
+    >
       <span className="text-[13px] font-medium uppercase tracking-[0.08em] text-white">
         {label}
       </span>
       <span
         className={cn(
-          "max-w-[60%] text-right text-[14px] font-medium tabular-nums leading-snug text-white",
+          "inline-flex max-w-[60%] items-center justify-end gap-2 text-right text-[14px] font-medium tabular-nums leading-snug text-white",
           accent && "font-semibold",
         )}
       >
-        {shown}
+        {searching ? <FactsGapSpinner field={label} /> : shown}
       </span>
     </div>
   );
