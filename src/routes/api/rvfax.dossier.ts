@@ -18,10 +18,12 @@ import {
   catalogPinsToLiveDossier,
   mergeSoftFieldsIntoDossier,
   pinsHaveHardFacts,
+  planFactsDossierResearch,
   researchFactsDossierNotes,
   researchFactsSoftNotes,
   resolveFactsCatalogPins,
   type FactsCatalogCandidate,
+  type FactsHardField,
   type FactsSoftFields,
 } from "@/lib/rv/factsDossierResearch";
 
@@ -35,7 +37,7 @@ import {
 const cache = new Map<string, { at: number; data: LiveDossier; model?: string }>();
 const TTL_MS = 6 * 60 * 60 * 1000;
 /** Bump when OEM ground-truth / prompt pipeline / pins change (Phase 4.4) */
-const CACHE_VER = "v26-catalog-soft-pass";
+const CACHE_VER = "v27-candidate-aliases";
 
 /** JSON extract only — browse uses WEB_SEARCH_MODELS (grok-4.7). */
 const DOSSIER_MODELS = [
@@ -179,13 +181,13 @@ function formatCandidateBlock(c: CatalogCandidate | undefined, year: string): st
     : `- floorplan: (not selected — do not invent a plan; keep model-year defaults)`;
   return `CATALOG CANDIDATE TRUTH for model year ${year} (${band}):
 ${fpLine}
-- length (catalog): ${c.lengthFt || "null"}
+- length (catalog): ${c.lengthFt || c.overallLength || c.length || c.length_ft || "null"}
 - gvwr (catalog): ${(c.gvwrLbs ?? c.gvwr) || "null"}
 - uvw (catalog): ${c.uvwEstimated ? "null (estimated — not a pin)" : (c.uvwLbs ?? c.uvw) || "null"}
-- fresh/gray/black (catalog): ${c.freshWater || "null"} / ${c.grayWater || "null"} / ${c.blackWater || "null"}
+- fresh/gray/black (catalog): ${c.freshWater ?? c.freshWaterGal ?? "null"} / ${c.grayWater ?? c.grayWaterGal ?? "null"} / ${c.blackWater ?? c.blackWaterGal ?? "null"}
 - engine: ${c.engine || "null"}
 - horsepower: ${c.horsepower ?? "null"}
-- torque: ${c.torque || "null"}
+- torque: ${c.torque ?? c.torqueLbFt ?? "null"}
 - chassis: ${c.chassis || "null"}
 - transmission: ${c.transmission || "null"}
 - fuelType: ${c.fuelType || "null"}
@@ -336,6 +338,8 @@ type DossierBuild =
       data: LiveDossier;
       model: string;
       soft: FactsSoftFields | null;
+      gaps: FactsHardField[];
+      skipLive: boolean;
     }
   | {
       kind: "researched";
@@ -343,6 +347,8 @@ type DossierBuild =
       model: string;
       research: string;
       soft: FactsSoftFields | null;
+      gaps: FactsHardField[];
+      skipLive: boolean;
     };
 
 /**
@@ -364,6 +370,13 @@ async function runTwoStepDossier(opts: {
     model: opts.model,
     floorplan: opts.floorplan,
     candidate: opts.candidate,
+  });
+  const plan = planFactsDossierResearch({
+    year: opts.year,
+    make: opts.make,
+    model: opts.model,
+    floorplan: opts.floorplan,
+    pins,
   });
   const catalogData = () =>
     catalogPinsToLiveDossier({
@@ -405,6 +418,8 @@ async function runTwoStepDossier(opts: {
           ? `catalog-pin+${softNotes.model}`
           : "catalog-pin",
         soft,
+        gaps: plan.gaps,
+        skipLive: plan.skipLive,
       };
     }
     return null;
@@ -443,6 +458,8 @@ sourcesNote must include real OEM/chassis/listing-style cites from the notes.`;
           data: catalogData(),
           model: research.model,
           soft,
+          gaps: plan.gaps,
+          skipLive: plan.skipLive,
         };
       }
       return null;
@@ -453,6 +470,8 @@ sourcesNote must include real OEM/chassis/listing-style cites from the notes.`;
       model: `${research.model}→${fallback.model}`,
       research: research.text,
       soft,
+      gaps: plan.gaps,
+      skipLive: plan.skipLive,
     };
   }
 
@@ -462,6 +481,8 @@ sourcesNote must include real OEM/chassis/listing-style cites from the notes.`;
     model: `${research.model}→${extracted.model}`,
     research: research.text,
     soft,
+    gaps: plan.gaps,
+    skipLive: plan.skipLive,
   };
 }
 
@@ -788,12 +809,21 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
             let data = applyOemGroundTruth({ ...hit.data, cached: true });
             data = applyCatalogCandidateTruth(data, catalogCandidate);
             data = applyBrochurePin(data);
+            const cachedPlan = planFactsDossierResearch({
+              year,
+              make,
+              model,
+              floorplan,
+              candidate: catalogCandidate,
+            });
             return Response.json({
               data,
               meta: {
                 model: hit.model || "cache",
                 cached: true,
                 pipeline: DOSSIER_PIPELINE,
+                skipLive: cachedPlan.skipLive,
+                gaps: cachedPlan.gaps,
               },
             });
           }
@@ -807,11 +837,23 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
           });
 
           if (!twoStep) {
+            const failPlan = planFactsDossierResearch({
+              year,
+              make,
+              model,
+              floorplan,
+              candidate: catalogCandidate,
+            });
             return Response.json(
               {
                 error:
                   "Live dossier unavailable — catalog year-band remains on screen.",
-                meta: { pipeline: DOSSIER_PIPELINE, model: null },
+                meta: {
+                  pipeline: DOSSIER_PIPELINE,
+                  model: null,
+                  skipLive: failPlan.skipLive,
+                  gaps: failPlan.gaps,
+                },
               },
               { status: 502 },
             );
@@ -837,7 +879,12 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
               {
                 error:
                   "Live dossier returned unreadable data — catalog year-band remains.",
-                meta: { model: twoStep.model, pipeline },
+                meta: {
+                  model: twoStep.model,
+                  pipeline,
+                  skipLive: twoStep.skipLive,
+                  gaps: twoStep.gaps,
+                },
               },
               { status: 502 },
             );
@@ -886,6 +933,8 @@ export const Route = createFileRoute("/api/rvfax/dossier")({
               pipeline,
               preferredModels: DOSSIER_MODELS,
               skippedBrowse: twoStep.kind === "catalog",
+              skipLive: twoStep.skipLive,
+              gaps: twoStep.gaps,
               softPass: twoStep.soft ? "ok" : "empty",
             },
           });
