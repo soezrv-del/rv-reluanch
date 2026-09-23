@@ -112,6 +112,8 @@ export type DeskSheetPayload = {
    * until the listener picks one. Chat leaves this unset.
    */
   offerVoiceExtras?: boolean;
+  /** Live Voice full report — rail shows this extras-list index only. */
+  voiceExtraStep?: number;
 };
 
 type SheetField = {
@@ -421,6 +423,8 @@ export function resolveDeskSheet(opts: {
   chatSpecBlock?: string;
   /** Field-only fallback fills from the shared spec engine. */
   fallbackFills?: readonly SpecFieldFill[];
+  /** Live Voice full report — mount from the locked coach even if the ask was not a desk phrase. */
+  mountForVoiceReport?: boolean;
 }): DeskSheetPayload | null {
   const { query, specs, spokenText } = opts;
   const specBlock = opts.chatSpecBlock || spokenText || "";
@@ -439,6 +443,7 @@ export function resolveDeskSheet(opts: {
     return null;
   }
   if (
+    opts.mountForVoiceReport ||
     shouldMountDeskSheet(query, identity) ||
     claimsDeskSpecSheet(spokenText || "")
   ) {

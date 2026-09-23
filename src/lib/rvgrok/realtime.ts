@@ -37,8 +37,15 @@ import {
   VOICE_RESEARCH_HOLD_INSTRUCTIONS,
 } from "./voiceWeb";
 import {
+  classifyVoiceCoachDepth,
+  formatVoiceQuickOverview,
   formatVoiceSpecEngineSpeech,
+  isVoiceExtraDecline,
+  isVoiceExtraNudge,
+  looksLikeVoiceCoachOrSpecAsk,
+  VOICE_COACH_CHOICE_INSTRUCTIONS,
   VOICE_SPEC_ENGINE_INSTRUCTIONS,
+  voiceExtraPromptLine,
   withVoiceSpecExtras,
 } from "./voiceSpecTurn";
 
@@ -115,6 +122,14 @@ export class GrokRealtimeSession {
   private specEngineSpoken = false;
   /** Engine already painted this turn — do not remount a memory snippet over it. */
   private engineSheetPainted = false;
+  /** Coach/spec ask waiting for full vs quick. */
+  private voiceChoiceTranscript: string | null = null;
+  /** Set while replaying the stashed ask as full or quick. */
+  private voiceDeliver: "full" | "quick" | null = null;
+  /** Index of the extra prompt just spoken. Null when not offering. */
+  private voiceExtraAt: number | null = null;
+  private voiceExtraSheet: DeskSheetPayload | null = null;
+  private voiceExtraQuery = "";
   private accessPhone: string;
   private visitorFirstName: string;
   private visitorMemory: string;
@@ -862,7 +877,11 @@ export class GrokRealtimeSession {
    * then answered "search empty" without the sidecar (no hold phrase). Catalog
    * pin may still paint the desk while search runs.
    */
-  private applyVoiceGrounding(transcript: string, grounded: ReturnType<typeof buildChatGrounding>) {
+  private applyVoiceGrounding(
+    transcript: string,
+    grounded: ReturnType<typeof buildChatGrounding>,
+    opts?: { paintDesk?: boolean },
+  ) {
     const parsed = parseCoachFromText(transcript);
     const lockBroke = Boolean(
       grounded.identity && namedCoachConflictsLock(parsed, this.facts),
@@ -876,11 +895,13 @@ export class GrokRealtimeSession {
     this.lastDeskQuery = transcript;
     this.lastDeskIdentity = grounded.identity;
     this.lastDeskSpecs = grounded.specs;
-    this.emitDeskSheet({
-      query: transcript,
-      identity: grounded.identity,
-      specs: grounded.specs,
-    });
+    if (opts?.paintDesk !== false) {
+      this.emitDeskSheet({
+        query: transcript,
+        identity: grounded.identity,
+        specs: grounded.specs,
+      });
+    }
     if (lockBroke && grounded.block) {
       this.pushCatalogLockToSession(grounded.block);
     }
@@ -888,6 +909,35 @@ export class GrokRealtimeSession {
   }
 
   private async maybeEnrichWithWebResearch(transcript: string) {
+    if (!this.voiceDeliver && this.routeVoiceOpening(transcript)) return;
+    if (this.voiceDeliver === "quick") {
+      const specSeq = ++this.specTurnSeq;
+      this.pendingSpec = null;
+      this.pendingSpecSheet = null;
+      this.specEngineSpoken = false;
+      this.engineSheetPainted = false;
+      await this.deliverVoiceQuick(specSeq, transcript);
+      return;
+    }
+    if (this.voiceDeliver === "full") {
+      const specSeq = ++this.specTurnSeq;
+      this.pendingSpec = null;
+      this.pendingSpecSheet = null;
+      this.specEngineSpoken = false;
+      this.engineSheetPainted = false;
+      this.cancelAutoResponseForResearch();
+      await ensureCatalogLoaded().catch(() => null);
+      if (this.closed || this.intentionalStop) return;
+      if (specSeq !== this.specTurnSeq) return;
+      const grounded = buildChatGrounding({
+        query: transcript,
+        facts: this.facts,
+      });
+      this.applyVoiceGrounding(transcript, grounded);
+      this.armSpecEngineTurn(transcript, grounded);
+      await this.speakFromSpecEngine(specSeq);
+      return;
+    }
     const specSeq = ++this.specTurnSeq;
     this.pendingSpec = null;
     this.pendingSpecSheet = null;
@@ -1115,6 +1165,131 @@ export class GrokRealtimeSession {
     this.researchAbort = null;
     this.researchPhase = "idle";
     this.pendingResearchInjection = null;
+    this.voiceChoiceTranscript = null;
+    this.voiceDeliver = null;
+    this.voiceExtraAt = null;
+    this.voiceExtraSheet = null;
+    this.voiceExtraQuery = "";
+  }
+
+  /**
+   * Coach or spec ask: choice line first. A later pick replays the ask.
+   * Returns true when this utterance must not speak a report yet.
+   */
+  private routeVoiceOpening(transcript: string): boolean {
+    if (this.voiceChoiceTranscript) {
+      const depth = classifyVoiceCoachDepth(transcript);
+      if (depth) {
+        const original = this.voiceChoiceTranscript;
+        this.voiceChoiceTranscript = null;
+        this.voiceDeliver = depth;
+        void this.maybeEnrichWithWebResearch(original).finally(() => {
+          this.voiceDeliver = null;
+        });
+        return true;
+      }
+    }
+    if (
+      this.voiceExtraAt != null &&
+      isVoiceExtraNudge(transcript) &&
+      !looksLikeVoiceCoachOrSpecAsk(transcript)
+    ) {
+      this.cancelAutoResponseForResearch();
+      if (isVoiceExtraDecline(transcript)) {
+        this.researchPhase = "answering";
+        const next = this.voiceExtraAt + 1;
+        if (voiceExtraPromptLine(this.voiceExtraSheet, next)) {
+          this.speakVoiceExtraStep(next);
+        } else {
+          this.voiceExtraAt = null;
+          this.researchPhase = "idle";
+          this.scheduleRearm();
+        }
+      } else {
+        this.researchPhase = "idle";
+        this.scheduleRearm();
+      }
+      return true;
+    }
+    if (looksLikeVoiceCoachOrSpecAsk(transcript)) {
+      this.specTurnSeq += 1;
+      this.voiceChoiceTranscript = transcript;
+      this.voiceExtraAt = null;
+      this.voiceExtraSheet = null;
+      this.voiceExtraQuery = "";
+      this.cancelAutoResponseForResearch();
+      this.researchPhase = "answering";
+      this.flushExactSpeech(VOICE_COACH_CHOICE_INSTRUCTIONS);
+      return true;
+    }
+    if (this.voiceChoiceTranscript) this.voiceChoiceTranscript = null;
+    return false;
+  }
+
+  private async deliverVoiceQuick(seq: number, transcript: string) {
+    this.cancelAutoResponseForResearch();
+    await ensureCatalogLoaded().catch(() => null);
+    if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
+    const grounded = buildChatGrounding({
+      query: transcript,
+      facts: this.facts,
+    });
+    this.applyVoiceGrounding(transcript, grounded, { paintDesk: false });
+    let sheet: DeskSheetPayload | null = null;
+    try {
+      sheet = await resolveDeskSheetThenFallback({
+        query: transcript,
+        identity: grounded.identity,
+        specs: grounded.specs,
+        mountForVoiceReport: true,
+      });
+    } catch {
+      sheet = null;
+    }
+    if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
+    this.researchPhase = "answering";
+    this.flushSpecEngineAnswer(formatVoiceQuickOverview(sheet));
+  }
+
+  private speakVoiceExtraStep(index: number) {
+    const sheet = this.voiceExtraSheet;
+    const line = voiceExtraPromptLine(sheet, index);
+    if (!sheet || !line) {
+      this.voiceExtraAt = null;
+      return;
+    }
+    this.voiceExtraAt = index;
+    this.handlers.onDeskSheet?.(
+      withVoiceSpecExtras(sheet, this.voiceExtraQuery, {
+        force: true,
+        step: index,
+      }),
+    );
+    this.flushExactSpeech(`Say exactly this, then stop: ${line}`);
+  }
+
+  private flushExactSpeech(instructions: string) {
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      this.researchPhase = "idle";
+      return;
+    }
+    this.suppressMic = true;
+    this.handlers.onStatus("thinking", "Answering…");
+    try {
+      ws.send(
+        JSON.stringify({
+          type: "response.create",
+          response: {
+            modalities: ["text", "audio"],
+            instructions,
+          },
+        }),
+      );
+    } catch {
+      this.researchPhase = "idle";
+      this.suppressMic = false;
+    }
   }
 
   /**
@@ -1130,6 +1305,7 @@ export class GrokRealtimeSession {
       query: transcript,
       identity: grounded.identity,
       specs: grounded.specs,
+      mountForVoiceReport: this.voiceDeliver === "full",
     });
   }
 
@@ -1148,13 +1324,37 @@ export class GrokRealtimeSession {
           query: pending.transcript,
           identity: pending.grounded.identity,
           specs: pending.grounded.specs,
+          mountForVoiceReport: this.voiceDeliver === "full",
         }));
     } catch {
       sheet = null;
     }
     if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
     this.deskFallbackSeq += 1;
-    const tagged = withVoiceSpecExtras(sheet, pending.transcript);
+    const full = this.voiceDeliver === "full";
+    let tagged = withVoiceSpecExtras(
+      sheet,
+      pending.transcript,
+      full ? { force: true, step: 0 } : undefined,
+    );
+    let script = formatVoiceSpecEngineSpeech(
+      tagged,
+      pending.transcript,
+      full ? "all" : "asked",
+    );
+    if (full && tagged) {
+      const line = voiceExtraPromptLine(tagged, 0);
+      if (line) {
+        script = `${script} ${line}`;
+        this.voiceExtraSheet = tagged;
+        this.voiceExtraQuery = pending.transcript;
+        this.voiceExtraAt = 0;
+      } else {
+        tagged = withVoiceSpecExtras(sheet, pending.transcript, { force: true });
+        this.voiceExtraAt = null;
+        this.voiceExtraSheet = null;
+      }
+    }
     this.handlers.onDeskSheet?.(tagged);
     if (tagged) {
       this.engineSheetPainted = true;
@@ -1163,9 +1363,7 @@ export class GrokRealtimeSession {
       this.lastDeskSpecs = pending.grounded.specs;
     }
     this.researchPhase = "answering";
-    this.flushSpecEngineAnswer(
-      formatVoiceSpecEngineSpeech(tagged, pending.transcript),
-    );
+    this.flushSpecEngineAnswer(script);
   }
 
   private flushSpecEngineAnswer(script: string) {
