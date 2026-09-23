@@ -53,6 +53,7 @@ const COMPLETE_CANDIDATE: FactsCatalogCandidate = {
 
 test("Facts wires catalog-first gap browse — not always-on full report", () => {
   const helper = src("factsDossierResearch.ts");
+  const gapPlan = src("factsDossierGapPlan.ts");
   const dossier = src("../../routes/api/rvfax.dossier.ts");
   const detail = src("../../components/rvfax/RvDetail.tsx");
   const live = src("liveDossier.ts");
@@ -63,12 +64,15 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
   assert.match(helper, /FACTS_GAP_RESEARCH_TIMEOUT_MS = 90_000/);
   assert.match(helper, /FACTS_SOFT_RESEARCH_TIMEOUT_MS = 20_000/);
   assert.match(helper, /planFactsDossierResearch/);
+  assert.match(helper, /from "\.\/factsDossierGapPlan\.ts"/);
   assert.match(helper, /researchFactsSoftNotes/);
   assert.match(helper, /mergeSoftFieldsIntoDossier/);
-  assert.match(helper, /candidate\?\.freshWaterGal/);
-  assert.match(helper, /candidate\?\.grayWaterGal/);
-  assert.match(helper, /candidate\?\.blackWaterGal/);
-  assert.match(helper, /candidate\?\.overallLength/);
+  assert.match(gapPlan, /candidate\?\.freshWaterGal/);
+  assert.match(gapPlan, /candidate\?\.grayWaterGal/);
+  assert.match(gapPlan, /candidate\?\.blackWaterGal/);
+  assert.match(gapPlan, /candidate\?\.overallLength/);
+  assert.match(gapPlan, /planFactsDossierResearch/);
+  assert.doesNotMatch(gapPlan, /executeWebResearch/);
   assert.doesNotMatch(helper, /researchOrder\s*:/);
   assert.doesNotMatch(helper, /Give me the full specs report/);
   assert.doesNotMatch(helper, /SPEC_REPORT_RESEARCH_TIMEOUT_MS/);
@@ -107,6 +111,9 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
 
   assert.match(detail, /fetchLiveDossier\(/);
   assert.match(detail, /uvwEstimated/);
+  assert.match(detail, /planFactsDossierResearch/);
+  assert.match(detail, /factsDetailSearchingFields/);
+  assert.match(detail, /facts-gap-spinner/);
   assert.doesNotMatch(
     detail,
     /if\s*\(!.*catalog[\s\S]{0,80}fetchLiveDossier/,
@@ -747,11 +754,15 @@ test("cache hit with hard gaps must browse — not return stale cache as final",
 
 test("DialaBot / Bland / phonebook stay untouched by this Facts path", () => {
   const helper = src("factsDossierResearch.ts");
+  const gapPlan = src("factsDossierGapPlan.ts");
+  const spinners = src("factsDetailGapSpinners.ts");
   const dossier = src("../../routes/api/rvfax.dossier.ts");
   const live = src("liveDossier.ts");
-  for (const text of [helper, dossier, live]) {
+  const detail = src("../../components/rvfax/RvDetail.tsx");
+  for (const text of [helper, gapPlan, spinners, dossier, live]) {
     assert.doesNotMatch(text, /dial_phonebook|DialaBot|bland/i);
     assert.doesNotMatch(text, /CHAT_MAY_WRITE_FACTS_CACHE/);
     assert.doesNotMatch(text, /researchOrder\s*:/);
   }
+  assert.doesNotMatch(detail, /dial_phonebook|DialaBot|bland/i);
 });
