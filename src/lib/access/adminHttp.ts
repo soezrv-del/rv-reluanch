@@ -2,12 +2,12 @@ import {
   adminAuthFailureBody,
   authorizeAccessAdmin,
   databaseUrlConfigured,
-} from "./adminAuth";
+} from "./adminAuth.ts";
 import {
   adminPasswordConfigured,
   readAdminToken,
   verifyAdminToken,
-} from "./adminSession";
+} from "./adminSession.ts";
 
 /** Shared gate for /api/access/admin and research-provider writes. */
 export function denyAccessAdmin(request: Request): Response | null {

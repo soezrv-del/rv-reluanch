@@ -28,7 +28,6 @@ import {
   formatWebSearchInjection,
 } from "./webSearch.ts";
 import { executeWebResearch } from "./webResearchTelemetry.ts";
-import { setResearchProviderOverride } from "./researchProviderStore.ts";
 import { formatCatalogPinWinsSearchMiss } from "./estimatePolicy.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -92,6 +91,7 @@ test("research provider resolve order: override > env > auto", () => {
   try {
     assert.equal(parseResearchProviderPref("AUTO"), "auto");
     assert.equal(parseResearchProviderPref("bogus"), null);
+    assert.equal(parseResearchProviderPref("claude"), null);
     assert.equal(parseForcedResearchProvider("auto"), null);
     assert.equal(parseForcedResearchProvider("xai"), "xai");
 
@@ -357,12 +357,6 @@ test("admin override xai skips Gemini even when a key is set", async () => {
     globalThis.fetch = prior;
     clearWebSearchCache();
   }
-});
-
-test("setResearchProviderOverride rejects junk without a database", async () => {
-  const result = await setResearchProviderOverride("claude");
-  assert.equal(result.ok, false);
-  if (!result.ok) assert.match(result.error, /gemini, xai, or auto/);
 });
 
 test("no Gemini key → xAI only (today's path)", async () => {

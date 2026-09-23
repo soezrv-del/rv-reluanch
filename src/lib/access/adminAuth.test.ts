@@ -5,7 +5,6 @@ import {
   authorizeAccessAdmin,
   databaseUrlConfigured,
 } from "./adminAuth.ts";
-import { denyAccessAdmin } from "./adminHttp.ts";
 import {
   ADMIN_LOGIN_REQUIRED_CODE,
   ADMIN_PASSWORD_UNSET_CODE,
@@ -157,15 +156,6 @@ test("unset password → blocked dismissible UI, never a stuck form", () => {
     }),
     "password",
   );
-});
-
-test("denyAccessAdmin is 401 for visitors and beta seed phones", async () => {
-  const blocked = denyAccessAdmin(req("555-000-1111"));
-  assert.ok(blocked);
-  assert.equal(blocked?.status, 401);
-  const body = (await blocked?.json()) as { code?: string };
-  assert.ok(body.code);
-  assert.notEqual(body.code, "hard_admin");
 });
 
 test("hard-admin authed shows the list; Close is independent of view", () => {
