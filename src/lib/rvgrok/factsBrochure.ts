@@ -1,11 +1,14 @@
 /**
  * Shared Facts brochure snapshot for RV Grok.
  *
- * Facts (RvFAX) paints `buildBrochureSpecs`. The desk and locked-weight
- * speech must use that same resolver — not a stricter pin-only path.
+ * Both surfaces import `resolveSharedSpecSync` — catalog / OEM pin first,
+ * same paint numbers. Do not keep a second Grok-only weight parser.
  */
-import { buildBrochureSpecs, type BrochureSpecs } from "../rv/brochureSpecs.ts";
-import { peekCatalog } from "../rv/catalogLoad.ts";
+import { type BrochureSpecs } from "../rv/brochureSpecs.ts";
+import {
+  applySharedSpecToBrochure,
+  resolveSharedSpecSync,
+} from "../rv/sharedSpec.ts";
 import {
   resolveCatalogMake,
   resolveCatalogModel,
@@ -21,13 +24,12 @@ export function resolveFactsBrochure(
     ? resolveCatalogModel(make, identity.model, identity.floorplan)
     : "";
   if (!make || !model) return null;
-  const spec = peekCatalog()?.RV_DATA?.[make]?.[model] ?? null;
-  if (!spec) return null;
-  return buildBrochureSpecs(
-    spec,
+  const snap = resolveSharedSpecSync({
     year,
     make,
     model,
-    identity.floorplan || "",
-  );
+    floorplan: identity.floorplan || "",
+  });
+  if (!snap.brochure) return null;
+  return applySharedSpecToBrochure(snap.brochure, snap);
 }

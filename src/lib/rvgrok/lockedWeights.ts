@@ -6,58 +6,35 @@
  * Never claim GAP / "I don't have GVWR" when Facts already shows a number.
  */
 
-import {
-  findOemFloorplanSpec,
-  findOemGvwrLbs,
-  findOemUvwLbs,
-} from "../rv/floorplanSpecs.ts";
 import type { CoachIdentity } from "./coachIdentity.ts";
-import { resolveFactsBrochure } from "./factsBrochure.ts";
+import { resolveSharedSpecSync } from "../rv/sharedSpec.ts";
+import {
+  resolveCatalogMake,
+  resolveCatalogModel,
+} from "./coachIdentity.ts";
 
 export type LockedOemWeights = {
   gvwrLbs: number | null;
   uvwLbs: number | null;
 };
 
-function publishedWeightsFromPins(
-  identity: Pick<CoachIdentity, "year" | "make" | "model" | "floorplan">,
-): LockedOemWeights {
-  const oem = findOemFloorplanSpec(
-    identity.year,
-    identity.make,
-    identity.model,
-    identity.floorplan,
-  );
-  return {
-    gvwrLbs:
-      oem?.gvwrLbs ??
-      findOemGvwrLbs(
-        identity.year,
-        identity.make,
-        identity.model,
-        identity.floorplan,
-      ),
-    uvwLbs:
-      findOemUvwLbs(
-        identity.year,
-        identity.make,
-        identity.model,
-        identity.floorplan,
-      ) ?? oem?.uvwLbs ?? null,
-  };
-}
-
 export function resolveLockedOemWeights(
   identity: Pick<CoachIdentity, "year" | "make" | "model" | "floorplan">,
 ): LockedOemWeights {
-  const brochure = resolveFactsBrochure(identity);
-  if (brochure) {
-    return {
-      gvwrLbs: brochure.gvwrLbs ?? null,
-      uvwLbs: brochure.uvwLbs ?? null,
-    };
-  }
-  return publishedWeightsFromPins(identity);
+  const make = resolveCatalogMake(identity.make || "");
+  const model = identity.model
+    ? resolveCatalogModel(make, identity.model, identity.floorplan)
+    : identity.model;
+  const snap = resolveSharedSpecSync({
+    year: identity.year,
+    make: make || identity.make,
+    model: model || identity.model,
+    floorplan: identity.floorplan,
+  });
+  return {
+    gvwrLbs: snap.gvwrLbs,
+    uvwLbs: snap.uvwEstimated ? null : snap.uvwLbs,
+  };
 }
 
 export function formatLockedWeightLine(

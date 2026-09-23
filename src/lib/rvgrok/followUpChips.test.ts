@@ -49,6 +49,17 @@ test("named coach without tanks/weights digs into tanks and a compare", () => {
   assert.doesNotMatch(text, /I'm RvGrok/);
 });
 
+test("named coach offers prompt-gated Facts extras like Want a video", () => {
+  const chips = buildFollowUpChips({
+    userText: "2026 Grand Design Lineage 31ZW spec report",
+    assistantText:
+      "Spec sheet is on the desk. GVWR is locked. I will not invent a listing price.",
+  });
+  const text = labels(chips).join(" | ");
+  assert.match(text, /Want NHTSA recalls|Want a market value|Want a video/i);
+  assert.doesNotMatch(text, /tell me more/i);
+});
+
 test("empty or error assistant replies get no chips", () => {
   assert.deepEqual(buildFollowUpChips({ userText: "hi", assistantText: "" }), []);
   assert.deepEqual(

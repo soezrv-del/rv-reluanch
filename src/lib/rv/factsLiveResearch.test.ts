@@ -65,6 +65,10 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
   assert.match(helper, /FACTS_SOFT_RESEARCH_TIMEOUT_MS = 20_000/);
   assert.match(helper, /planFactsDossierResearch/);
   assert.match(helper, /from "\.\/factsDossierGapPlan\.ts"/);
+  assert.match(helper, /resolveSharedSpec/);
+  assert.match(helper, /mergeSharedCapacity/);
+  assert.doesNotMatch(helper, /gemini|google.?genai/i);
+  assert.match(gapPlan, /findOemUvwPin/);
   assert.match(helper, /researchFactsSoftNotes/);
   assert.match(helper, /mergeSoftFieldsIntoDossier/);
   assert.match(gapPlan, /candidate\?\.freshWaterGal/);
@@ -749,6 +753,43 @@ test("cache hit with hard gaps must browse — not return stale cache as final",
     dossier,
     /if \(hit && Date\.now\(\) - hit\.at < TTL_MS\) \{\s*let data/,
     "unconditional cache return is the production bug",
+  );
+});
+
+test("2026 Lineage Series F 31ZW shared pin paints UVW 18186 — not a UVW gap", () => {
+  const pins = resolveFactsCatalogPins({
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series F",
+    floorplan: "31ZW",
+    candidate: {
+      type: "Super C",
+      gvwrLbs: 22000,
+      uvwEstimated: true,
+      freshWater: "79 gal",
+      grayWater: "66 gal",
+      blackWater: "45 gal",
+    },
+  });
+  assert.equal(pins.uvwLbs, 18186);
+  assert.equal(pins.gvwrLbs, 22000);
+  assert.equal(pins.freshWaterGal, 79);
+  const plan = planFactsDossierResearch({
+    year: "2026",
+    make: "Grand Design",
+    model: "Lineage Series F",
+    floorplan: "31ZW",
+    pins,
+  });
+  assert.equal(plan.gaps.includes("uvw"), false);
+  assert.equal(
+    resolveFactsCatalogPins({
+      year: "2026",
+      make: "Grand Design",
+      model: "Lineage Series F",
+      floorplan: "31ZW5",
+    }).uvwLbs,
+    null,
   );
 });
 

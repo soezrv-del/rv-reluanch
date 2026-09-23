@@ -81,7 +81,11 @@ test("chat numbers overwrite Confirm brochure; untouched rows stay", () => {
   assert.equal(rows.find((r) => r.label === "GVWR")?.gap, false);
   assert.match(rows.find((r) => r.label === "GVWR")?.value || "", /51,000/);
   assert.match(rows.find((r) => r.label === "UVW")?.value || "", /40,000/);
-  assert.equal(rows.find((r) => r.label === "Fuel capacity")?.value, "150 gal");
+  assert.equal(
+    rows.find((r) => r.label === "Fuel capacity")?.value,
+    "100 gal",
+    "catalog fuel stays — chat does not stomp a painted row",
+  );
   assert.equal(rows.find((r) => r.label === "CCC")?.value, "Confirm brochure");
   assert.match(rows.find((r) => r.label === "Class")?.value || "", /Class A/i);
   assert.match(rows.find((r) => r.label === "Engine")?.value || "", /Cummins L9/i);
@@ -109,7 +113,11 @@ test("chat tank gallons overwrite Confirm brochure / GAP on the desk rows", () =
     rows.find((r) => r.label === "Fresh")?.value || "",
     /Confirm brochure/i,
   );
-  assert.equal(rows.find((r) => r.label === "Fuel capacity")?.value, "150 gal");
+  assert.equal(
+    rows.find((r) => r.label === "Fuel capacity")?.value,
+    "100 gal",
+    "catalog fuel stays — chat fills GAP tanks only",
+  );
 });
 
 const LINEAGE_PROSE = `2026 Grand Design Lineage 31ZW is a Super C on a Ford F-600 4x4. 6.7-liter diesel putting out 330 horsepower and 950 pound-feet of torque, 10-speed. GVWR 22,000, GCWR 43,500. Holding tanks: fresh 79, gray 66, black 45.`;

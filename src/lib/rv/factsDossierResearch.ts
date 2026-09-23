@@ -24,6 +24,7 @@ import {
   type FactsHardField,
   type FactsResolvedPins,
 } from "./factsDossierGapPlan.ts";
+import { mergeSharedCapacity, resolveSharedSpec } from "./sharedSpec.ts";
 
 export {
   FACTS_DOSSIER_HARD_FIELDS,
@@ -298,7 +299,17 @@ export function catalogPinsToLiveDossier(opts: {
 export async function researchFactsDossierNotes(
   opts: ResearchFactsDossierNotesOpts,
 ): Promise<FactsDossierResearchNotes | null> {
-  const pins = resolveFactsCatalogPins(opts);
+  const catalogPins = resolveFactsCatalogPins(opts);
+  const snap = await resolveSharedSpec(
+    {
+      year: opts.year,
+      make: opts.make,
+      model: opts.model,
+      floorplan: opts.floorplan,
+    },
+    { rvType: catalogPins.rvType },
+  );
+  const pins = mergeSharedCapacity(catalogPins, snap);
   const plan = planFactsDossierResearch({
     year: opts.year,
     make: opts.make,

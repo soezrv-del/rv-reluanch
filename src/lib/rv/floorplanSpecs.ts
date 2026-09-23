@@ -3472,13 +3472,13 @@ export function findOemGvwrLbs(
   return best;
 }
 
-/** Published OEM UVW for a year/make/model/floorplan. Null → runtime tiered GVWR estimate when GVWR is known (do not invent mid×0.82). */
-export function findOemUvwLbs(
+/** Published OEM UVW pin (lbs + source). Null → no pin. */
+export function findOemUvwPin(
   year: string | number,
   make: string,
   model: string,
   floorplan: string,
-): number | null {
+): { uvwLbs: number; source: string } | null {
   if (!floorplan?.trim()) return null;
   const y = typeof year === "number" ? year : parseInt(String(year), 10);
   if (!Number.isFinite(y)) return null;
@@ -3486,7 +3486,7 @@ export function findOemUvwLbs(
   const md = model.toLowerCase();
   const fp = floorplan.trim().toUpperCase().replace(/\s+/g, "");
 
-  let best: number | null = null;
+  let best: OemUvwPin | null = null;
   let bestScore = -1;
   for (const row of OEM_UVW_PINS) {
     if (y < row.yearMin || y > row.yearMax) continue;
@@ -3498,10 +3498,20 @@ export function findOemUvwLbs(
     const score = row.modelIncludes.length * 10 + row.makeIncludes.length;
     if (score > bestScore) {
       bestScore = score;
-      best = row.uvwLbs;
+      best = row;
     }
   }
-  return best;
+  return best ? { uvwLbs: best.uvwLbs, source: best.source } : null;
+}
+
+/** Published OEM UVW for a year/make/model/floorplan. Null → runtime tiered GVWR estimate when GVWR is known (do not invent mid×0.82). */
+export function findOemUvwLbs(
+  year: string | number,
+  make: string,
+  model: string,
+  floorplan: string,
+): number | null {
+  return findOemUvwPin(year, make, model, floorplan)?.uvwLbs ?? null;
 }
 
 /** Weight estimate narrowed by floorplan length position in range.

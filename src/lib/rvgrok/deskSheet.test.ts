@@ -462,6 +462,8 @@ test("2026 Lineage 31ZW chat prose paints Super C / F-600 / 6.7 / 330 / 950 / ta
   assert.equal(val("Fresh"), "79 gal");
   assert.equal(val("Gray"), "66 gal");
   assert.equal(val("Black"), "45 gal");
+  assert.match(val("UVW"), /18,186/);
+  assert.equal(gap("UVW"), false);
   assert.equal(after!.presenceNote, "");
   assert.equal(after!.gaps.length, 0);
   assert.doesNotMatch(after!.presenceNote, /SERIES MISSING|YEAR GAP|FLOORPLAN GAP|GAP over invent/i);
@@ -478,7 +480,7 @@ test("2026 Lineage Series F 31ZW pin tanks/fuel paint without live catalog — c
   assert.equal(tanks.grayWater, 66);
   assert.equal(tanks.blackWater, 45);
   assert.equal(tanks.fuelCapacityGal, 66.5);
-  assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series F", "31ZW"), null);
+  assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series F", "31ZW"), 18186);
 
   const q = "2026 Grand Design Lineage 31ZW spec report";
   const identity = resolveCoachIdentity(q, null, "");
@@ -506,8 +508,8 @@ test("2026 Lineage Series F 31ZW pin tanks/fuel paint without live catalog — c
   assert.match(val("Fuel capacity"), /67\s*gal/i);
   assert.equal(gap("Fresh"), false);
   assert.equal(gap("Fuel capacity"), false);
-  assert.ok(gap("UVW"), "no published UVW — do not invent");
-  assert.equal(val("UVW"), "GAP");
+  assert.equal(gap("UVW"), false, "shared spec paints dry-weight UVW");
+  assert.match(val("UVW"), /18,186/);
 });
 
 test("2026 Lineage Series F 31ZW catalog tanks/fuel paint when chat only names GVWR", async () => {
@@ -540,7 +542,7 @@ test("2026 Lineage Series F 31ZW catalog tanks/fuel paint when chat only names G
   assert.equal(brochure.grayWater, "66 gal");
   assert.equal(brochure.blackWater, "45 gal");
   assert.match(brochure.fuelCapacity, /67\s*gal/i);
-  assert.equal(brochure.uvwLbs, null);
+  assert.equal(brochure.uvwLbs, 18186);
 
   const chat =
     "The 2026 Grand Design Lineage 31ZW has a factory GVWR of 22,000 pounds. Search came back empty again.";
@@ -564,8 +566,8 @@ test("2026 Lineage Series F 31ZW catalog tanks/fuel paint when chat only names G
   assert.equal(gap("Fresh"), false);
   assert.match(val("Fuel capacity"), /67\s*gal/i);
   assert.equal(gap("Fuel capacity"), false);
-  assert.ok(gap("UVW"), "UVW stays GAP — catalog has no published UVW");
-  assert.equal(val("UVW"), "GAP");
+  assert.equal(gap("UVW"), false, "shared spec paints dry-weight UVW on Grok");
+  assert.match(val("UVW"), /18,186/);
   assert.equal(sheet!.floorplan, "31ZW");
   assert.match(sheet!.model, /lineage series f/i);
 });
@@ -823,14 +825,14 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.match(grounding, /VERIFIED GVWR/);
   assert.match(grounding, /never say you don't have GVWR/i);
   assert.match(src(root, "lockedWeights.ts"), /VERIFIED GVWR/);
-  assert.match(src(root, "lockedWeights.ts"), /resolveFactsBrochure/);
+  assert.match(src(root, "lockedWeights.ts"), /resolveSharedSpecSync/);
   assert.match(src(root, "deskSheetPolicy.ts"), /DESK SPEC SHEET MOUNTED/);
   assert.match(src(root, "speechPolicy.ts"), /LOCKED WEIGHTS/);
   assert.doesNotMatch(src(root, "deskSheet.ts"), /[Dd]ialaBot/);
   assert.match(src(root, "deskSheet.ts"), /brochureRow\("Fresh"/);
   assert.match(src(root, "deskSheet.ts"), /brochureRow\("Gray"/);
   assert.match(src(root, "deskSheet.ts"), /brochureRow\("Black"/);
-  assert.match(src(root, "deskSheet.ts"), /uvwLbs != null && !brochure\.uvwEstimated/);
+  assert.match(src(root, "deskSheet.ts"), /paintSharedUvw/);
   assert.match(src(root, "chatSpecBlock.ts"), /firstTankGallons/);
   assert.match(src(root, "speechPolicy.ts"), /GVWR\/UVW\/tanks when known/);
   assert.match(realtime, /ensureCatalogLoaded/);

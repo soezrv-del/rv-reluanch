@@ -6,7 +6,12 @@
  */
 
 import { applyPublishedEngineTorque } from "./engineTorqueByVariant.ts";
-import { findOemFloorplanSpec } from "./floorplanSpecs.ts";
+import {
+  findOemFloorplanSpec,
+  findOemGvwrLbs,
+  findOemHoldingTanks,
+  findOemUvwPin,
+} from "./floorplanSpecs.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 
 export const FACTS_DOSSIER_HARD_FIELDS = [
@@ -201,6 +206,24 @@ export function resolveFactsCatalogPins(opts: {
     opts.model,
     opts.floorplan || "",
   );
+  const oemUvw = findOemUvwPin(
+    opts.year,
+    opts.make,
+    opts.model,
+    opts.floorplan || "",
+  );
+  const oemGvwr = findOemGvwrLbs(
+    opts.year,
+    opts.make,
+    opts.model,
+    opts.floorplan || "",
+  );
+  const tanks = findOemHoldingTanks(
+    opts.year,
+    opts.make,
+    opts.model,
+    opts.floorplan || "",
+  );
 
   const pinHp = pin && pin.horsepower > 0 ? pin.horsepower : null;
   const pinTorque = pin?.torqueLbFt != null && pin.torqueLbFt > 0
@@ -233,6 +256,7 @@ export function resolveFactsCatalogPins(opts: {
 
   const sources = [
     pin?.note,
+    oemUvw?.source,
     oem?.source || oem?.note,
     candidate?.accuracyNote,
     candidate?.dataSource ? `catalog ${candidate.dataSource}` : null,
@@ -246,10 +270,20 @@ export function resolveFactsCatalogPins(opts: {
     transmission,
     fuelType,
     gvwrLbs:
-      firstWeight(oem?.gvwrLbs, candidate?.gvwrLbs, candidate?.gvwr) ?? null,
+      firstWeight(
+        oem?.gvwrLbs,
+        oemGvwr,
+        candidate?.gvwrLbs,
+        candidate?.gvwr,
+      ) ?? null,
     uvwLbs: skipEstUvw
-      ? firstWeight(oem?.uvwLbs) ?? null
-      : firstWeight(oem?.uvwLbs, candidate?.uvwLbs, candidate?.uvw) ?? null,
+      ? firstWeight(oemUvw?.uvwLbs, oem?.uvwLbs) ?? null
+      : firstWeight(
+          oemUvw?.uvwLbs,
+          oem?.uvwLbs,
+          candidate?.uvwLbs,
+          candidate?.uvw,
+        ) ?? null,
     lengthFt: firstPinText(
       oemLength,
       candidate?.lengthFt,
@@ -258,16 +292,19 @@ export function resolveFactsCatalogPins(opts: {
       candidate?.length_ft,
     ),
     freshWaterGal: firstGal(
+      tanks.freshWater,
       oem?.freshWater,
       candidate?.freshWater,
       candidate?.freshWaterGal,
     ),
     grayWaterGal: firstGal(
+      tanks.grayWater,
       oem?.grayWater,
       candidate?.grayWater,
       candidate?.grayWaterGal,
     ),
     blackWaterGal: firstGal(
+      tanks.blackWater,
       oem?.blackWater,
       candidate?.blackWater,
       candidate?.blackWaterGal,

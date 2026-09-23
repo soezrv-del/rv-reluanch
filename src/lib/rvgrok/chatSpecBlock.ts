@@ -1,9 +1,8 @@
 /**
- * Last assistant spec block → desk numbers.
+ * Last assistant spec block → desk GAP fill only.
  *
- * Chat reply is source of truth. Catalog is a cache. Paint a desk field
- * only when the assistant already named that number. Never invent.
- * Source is the spoken/written Grok reply only.
+ * Shared spec / catalog paints first. Chat may fill a GAP row the catalog
+ * missed. Never invent, and never overwrite a painted catalog number.
  */
 
 export type ChatSpecFigures = {
@@ -497,7 +496,7 @@ export function chatSpecCoversPaintedFields(figures: ChatSpecFigures): boolean {
 export type ChatPaintRow = { label: string; value: string; gap: boolean };
 
 /**
- * Chat wins when it named the field. Catalog/cache stays when chat did not.
+ * Chat fills GAP only. Catalog / shared-spec paint already on the row wins.
  * Empty only if both miss.
  */
 export function paintChatSpecOntoRows<T extends ChatPaintRow>(
@@ -506,6 +505,7 @@ export function paintChatSpecOntoRows<T extends ChatPaintRow>(
 ): T[] {
   if (!chatSpecHasNumber(figures)) return rows;
   const painted = rows.map((row) => {
+    if (!row.gap) return row;
     for (const key of Object.keys(CHAT_SPEC_DESK_LABELS) as Array<
       keyof ChatSpecFigures
     >) {

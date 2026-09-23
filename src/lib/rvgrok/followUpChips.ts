@@ -69,7 +69,12 @@ type Topic =
   | "recall"
   | "lot"
   | "repair"
-  | "match";
+  | "match"
+  | "video"
+  | "reviews"
+  | "maintenance"
+  | "vin"
+  | "share";
 
 function detectTopics(text: string): Set<Topic> {
   const t = text || "";
@@ -111,7 +116,16 @@ function detectTopics(text: string): Set<Topic> {
   if (/\b(floorplan|layout|slide|bunk|king bed|bath)\b/i.test(t)) {
     topics.add("layout");
   }
-  if (/\brecall\b/i.test(t)) topics.add("recall");
+  if (/\brecall|nhtsa\b/i.test(t)) topics.add("recall");
+  if (/\b(video|youtube|walkthrough|want a video)\b/i.test(t)) {
+    topics.add("video");
+  }
+  if (/\b(owner reviews?|what owners say)\b/i.test(t)) topics.add("reviews");
+  if (/\b(maintenance schedule|service interval)\b/i.test(t)) {
+    topics.add("maintenance");
+  }
+  if (/\bvin\s*(decode|decoder|check)?\b/i.test(t)) topics.add("vin");
+  if (/\bshare kit\b/i.test(t)) topics.add("share");
   if (/\b(on the lot|in stock|inventory|do we have)\b/i.test(t)) {
     topics.add("lot");
   }
@@ -159,6 +173,20 @@ export function buildFollowUpChips(opts: {
   const year = parseCoachFromText(blob).year;
   const topics = detectTopics(blob);
   const out: FollowUpChip[] = [];
+
+  // Facts extras — one opt-in chip on spec-report turns (Want a video? pattern).
+  if (
+    named &&
+    topics.has("report") &&
+    !topics.has("recall") &&
+    !topics.has("video")
+  ) {
+    pushUnique(
+      out,
+      "extras-offer",
+      "Want NHTSA recalls, market value, or a video?",
+    );
+  }
 
   if (topics.has("chassis") || /\bdiesel pusher\b/i.test(blob)) {
     pushUnique(
@@ -250,6 +278,12 @@ export function buildFollowUpChips(opts: {
 
   if (topics.has("recall")) {
     pushUnique(out, "recall-next", "Which recalls matter on this chassis");
+  }
+  if (named && topics.has("recall") && !topics.has("reviews")) {
+    pushUnique(out, "extras-reviews", "Want owner reviews for this coach?");
+  }
+  if (named && topics.has("video") && !topics.has("share")) {
+    pushUnique(out, "extras-share", "Want a share kit for this coach?");
   }
 
   if (out.length < MIN) {

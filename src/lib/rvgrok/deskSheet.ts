@@ -8,11 +8,10 @@
 
 import { CONFIRM_BROCHURE, type BrochureSpecs } from "../rv/brochureSpecs.ts";
 import {
-  findOemFloorplanSpec,
-  findOemGvwrLbs,
-  findOemHoldingTanks,
-  findOemUvwLbs,
-} from "../rv/floorplanSpecs.ts";
+  paintSharedUvw,
+  resolveSharedSpecSync,
+  type SharedSpecSnapshot,
+} from "../rv/sharedSpec.ts";
 import { isTowableForTorqueRating } from "../rv/torqueToWeight.ts";
 import {
   formatCatalogPresenceNote,
@@ -213,11 +212,13 @@ function payloadFromFactsBrochure(
   identity: CoachIdentity,
   brochure: BrochureSpecs,
   specs: SheetSpecs,
+  snap: SharedSpecSnapshot,
 ): DeskSheetRow[] {
   const towable = deskSheetIsTowable(identity, {
     rvType: { value: brochure.type },
     fuelType: { value: brochure.fuelType },
   });
+  const uvwPaint = paintSharedUvw(snap);
   return [
     brochureRow("Class", brochure.type || specs?.rvType?.value),
     motorBrochureRow("Engine", brochure.engine, towable),
@@ -231,11 +232,11 @@ function payloadFromFactsBrochure(
     brochureRow("A/C", brochure.acUnits),
     brochureRow("Fuel capacity", brochure.fuelCapacity),
     brochureRow("GVWR", brochure.gvwr),
-    // Published UVW only. GVWR-tier estimates stay off the desk — never invent.
-    brochureRow(
-      "UVW",
-      brochure.uvwLbs != null && !brochure.uvwEstimated ? brochure.uvw : null,
-    ),
+    {
+      label: uvwPaint.label,
+      value: uvwPaint.gap ? "GAP" : uvwPaint.value,
+      gap: uvwPaint.gap,
+    },
     brochureRow("CCC", brochure.ccc),
     brochureRow("Fresh", brochure.freshWater),
     brochureRow("Gray", brochure.grayWater),
@@ -243,66 +244,47 @@ function payloadFromFactsBrochure(
   ];
 }
 
-function publishedWeightLbs(
-  identity: CoachIdentity,
-  kind: "gvwr" | "uvw",
-): number | null {
-  const oem = findOemFloorplanSpec(
-    identity.year,
-    identity.make,
-    identity.model,
-    identity.floorplan,
-  );
-  if (kind === "gvwr") {
-    return (
-      oem?.gvwrLbs ??
-      findOemGvwrLbs(
-        identity.year,
-        identity.make,
-        identity.model,
-        identity.floorplan,
-      )
-    );
-  }
-  return (
-    findOemUvwLbs(
-      identity.year,
-      identity.make,
-      identity.model,
-      identity.floorplan,
-    )     ?? oem?.uvwLbs ?? null
-  );
+function identitySnap(identity: CoachIdentity): SharedSpecSnapshot {
+  const make = resolveCatalogMake(identity.make || "");
+  const model = identity.model
+    ? resolveCatalogModel(make, identity.model, identity.floorplan)
+    : identity.model;
+  return resolveSharedSpecSync({
+    year: identity.year,
+    make: make || identity.make,
+    model: model || identity.model,
+    floorplan: identity.floorplan,
+  });
 }
 
-/** Catalog / OEM pin fills GAP rows chat did not name. Never invent. */
-function fillGapRowsFromOemTanks(
+function uvwDeskRow(snap: SharedSpecSnapshot): DeskSheetRow {
+  const paint = paintSharedUvw(snap);
+  return {
+    label: paint.label,
+    value: paint.gap ? "GAP" : paint.value,
+    gap: paint.gap,
+  };
+}
+
+/** Shared spec fills GAP rows chat did not name. Never invent. */
+function fillGapRowsFromSharedSpec(
   rows: DeskSheetRow[],
-  identity: CoachIdentity,
+  snap: SharedSpecSnapshot,
 ): DeskSheetRow[] {
-  const tanks = findOemHoldingTanks(
-    identity.year,
-    identity.make,
-    identity.model,
-    identity.floorplan,
-  );
-  const oem = findOemFloorplanSpec(
-    identity.year,
-    identity.make,
-    identity.model,
-    identity.floorplan,
-  );
   const byLabel: Record<string, DeskSheetRow> = {
-    "Fuel capacity": galLabel(tanks.fuelCapacityGal),
-    Fresh: galLabel(oem?.freshWater ?? tanks.freshWater),
-    Gray: galLabel(oem?.grayWater ?? tanks.grayWater),
-    Black: galLabel(oem?.blackWater ?? tanks.blackWater),
-    UVW: lbsLabel(publishedWeightLbs(identity, "uvw")),
+    "Fuel capacity": galLabel(snap.fuelCapacityGal),
+    Fresh: galLabel(snap.freshWaterGal),
+    Gray: galLabel(snap.grayWaterGal),
+    Black: galLabel(snap.blackWaterGal),
+    UVW: uvwDeskRow(snap),
+    GVWR: lbsLabel(snap.gvwrLbs),
+    CCC: lbsLabel(snap.cccLbs),
   };
   return rows.map((row) => {
     if (!row.gap) return row;
     const pinned = byLabel[row.label];
     if (!pinned || pinned.gap) return row;
-    return { ...row, value: pinned.value, gap: false };
+    return { ...row, value: pinned.value, gap: false, label: pinned.label || row.label };
   });
 }
 
@@ -319,27 +301,16 @@ export function buildDeskSheetPayload(
 
   const figures = extractChatSpecFigures(chatSpecBlock);
   const brochure = resolveFactsBrochure(identity);
+  const snap = identitySnap(identity);
   const catalogRows: DeskSheetRow[] = brochure
-    ? payloadFromFactsBrochure(identity, brochure, specs)
+    ? payloadFromFactsBrochure(identity, brochure, specs, snap)
     : (() => {
-        const gvwr = lbsLabel(publishedWeightLbs(identity, "gvwr"));
-        const uvw = lbsLabel(publishedWeightLbs(identity, "uvw"));
-        const tanks = findOemHoldingTanks(
-          identity.year,
-          identity.make,
-          identity.model,
-          identity.floorplan,
-        );
-        const oem = findOemFloorplanSpec(
-          identity.year,
-          identity.make,
-          identity.model,
-          identity.floorplan,
-        );
-        const fuel = galLabel(tanks.fuelCapacityGal);
-        const fresh = galLabel(oem?.freshWater ?? tanks.freshWater);
-        const gray = galLabel(oem?.grayWater ?? tanks.grayWater);
-        const black = galLabel(oem?.blackWater ?? tanks.blackWater);
+        const gvwr = lbsLabel(snap.gvwrLbs);
+        const uvw = uvwDeskRow(snap);
+        const fuel = galLabel(snap.fuelCapacityGal);
+        const fresh = galLabel(snap.freshWaterGal);
+        const gray = galLabel(snap.grayWaterGal);
+        const black = galLabel(snap.blackWaterGal);
         const towable = deskSheetIsTowable(identity, specs);
         return [
           rowFromField("Class", specs?.rvType),
@@ -351,16 +322,16 @@ export function buildDeskSheetPayload(
           rowFromField("Fuel", specs?.fuelType),
           { label: "Fuel capacity", value: fuel.value, gap: fuel.gap },
           { label: "GVWR", value: gvwr.value, gap: gvwr.gap },
-          { label: "UVW", value: uvw.value, gap: uvw.gap },
+          uvw,
           { label: "Fresh", value: fresh.value, gap: fresh.gap },
           { label: "Gray", value: gray.value, gap: gray.gap },
           { label: "Black", value: black.value, gap: black.gap },
         ];
       })();
 
-  // Chat reply is source of truth. Catalog is cache. Empty only if both miss.
+  // Shared spec first. Chat fills leftover GAP only.
   const rows = paintChatSpecOntoRows(
-    fillGapRowsFromOemTanks(catalogRows, identity),
+    fillGapRowsFromSharedSpec(catalogRows, snap),
     figures,
   );
   const chatNamed = chatSpecHasNumber(figures);

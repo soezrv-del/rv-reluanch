@@ -50,6 +50,10 @@ import {
 import { hasConcreteFloorplan } from "@/lib/rv/factsOpen";
 import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
 import {
+  applySharedSpecToBrochure,
+  resolveSharedSpecSync,
+} from "@/lib/rv/sharedSpec";
+import {
   clearWeightField,
   findWeightOverride,
   saveWeightOverride,
@@ -213,7 +217,16 @@ export function RvDetail({
   const catalogMarket = estimateMarket(data, year, floorplan, { make, model });
   const [correctBump, setCorrectBump] = useState(0);
   const brochure = useMemo(
-    () => buildBrochureSpecs(data, year, make, model, floorplan || ""),
+    () => {
+      const raw = buildBrochureSpecs(data, year, make, model, floorplan || "");
+      const snap = resolveSharedSpecSync({
+        year,
+        make,
+        model,
+        floorplan: floorplan || "",
+      });
+      return applySharedSpecToBrochure(raw, snap);
+    },
     // correctBump forces re-read of local overrides
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, year, make, model, floorplan, correctBump],

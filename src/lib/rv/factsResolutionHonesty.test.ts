@@ -676,6 +676,7 @@ test("resolution path is shared — no coach-specific Ambassador/Jayco/Thor inve
   const reviews = src("rvReviews.ts");
   const videos = src("rvVideos.ts");
   const detail = src("../../components/rvfax/RvDetail.tsx");
+  const shared = src("sharedSpec.ts");
   const api = src("../../routes/api/rv-videos.ts");
 
   assert.match(honesty, /export function isUnpinnedEngineLabel/);
@@ -694,6 +695,8 @@ test("resolution path is shared — no coach-specific Ambassador/Jayco/Thor inve
   assert.match(videos, /titleQualifiesForRvCoach/);
   assert.match(api, /rankRvVideos\(hits, query, make, model\)/);
   assert.match(detail, /ownerReviews\.length \?/);
+  assert.match(detail, /applySharedSpecToBrochure/);
+  assert.match(shared, /resolveSharedSpecSync/);
   assert.doesNotMatch(detail, /No sample notes for this brand/);
 
   assert.match(
