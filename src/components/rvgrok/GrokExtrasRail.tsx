@@ -403,13 +403,21 @@ export function GrokExtrasRail({
   query,
   coach,
   offerVoiceExtras = false,
+  voiceExtraStep,
 }: {
   query: string;
   coach: GrokExtraCoach | null | undefined;
   /** Live Voice spec card — show the extras list as prompts, do not auto-load. */
   offerVoiceExtras?: boolean;
+  /** One prompt card. Unset shows the keyword-gated list. */
+  voiceExtraStep?: number;
 }) {
-  const kinds = extrasToOffer({ query, coach, offerVoiceExtras });
+  const kinds = extrasToOffer({
+    query,
+    coach,
+    offerVoiceExtras,
+    voiceExtraStep,
+  });
   if (!kinds.length || !coach) return null;
   return (
     <div className="mt-3 space-y-2" data-grok-extras="">

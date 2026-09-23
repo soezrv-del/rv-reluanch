@@ -69,11 +69,22 @@ test("voice spec card offers extras as prompts without a keyword", () => {
     "video",
     "reviews",
     "maintenance",
+    "vin",
+    "share",
   ]);
   assert.deepEqual(extrasToOffer({ query: q, coach: LINEAGE }), []);
   assert.deepEqual(
     extrasToOffer({ query: q, coach: LINEAGE, offerVoiceExtras: true }),
-    ["nhtsa", "market", "video", "reviews", "maintenance"],
+    ["nhtsa", "market", "video", "reviews", "maintenance", "vin", "share"],
+  );
+  assert.deepEqual(
+    extrasToOffer({
+      query: q,
+      coach: LINEAGE,
+      offerVoiceExtras: true,
+      voiceExtraStep: 0,
+    }),
+    ["nhtsa"],
   );
   assert.deepEqual(voiceSpecExtraPrompts({ year: "2026" }), []);
 });

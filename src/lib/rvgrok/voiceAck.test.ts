@@ -9,6 +9,7 @@ import {
   LIVE_VOICE_ACK_POOL,
   advanceLiveVoiceAck,
   createLiveVoiceAckState,
+  disarmLiveVoiceAck,
   liveVoiceAckSessionLine,
   nextAckFromPool,
   prefixLiveVoiceAck,
@@ -109,14 +110,30 @@ test("session line pins the VAD opener and stays off the intro-only update", () 
   assert.doesNotMatch(plainSession.instructions, /LIVE VOICE ACKNOWLEDGMENT/);
 });
 
+test("choice line consumes Of course, right away so delivery does not repeat it", () => {
+  const state = createLiveVoiceAckState();
+  assert.equal(state.armed, "Of course, right away.");
+  disarmLiveVoiceAck(state, "Of course, right away.");
+  const delivered = takeLiveVoiceAck(state);
+  assert.equal(delivered, "Absolutely, one moment.");
+  assert.notEqual(delivered, "Of course, right away.");
+  disarmLiveVoiceAck(state, "Of course, right away.");
+  assert.equal(state.armed, "Absolutely, one moment.");
+});
+
 test("Live Voice answer paths prefix the shared ack; hold and intro do not", () => {
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   const live = readFileSync(join(root, "liveVoice.ts"), "utf8");
   const spec = readFileSync(join(root, "voiceSpecTurn.ts"), "utf8");
   const ack = readFileSync(join(root, "voiceAck.ts"), "utf8");
-  assert.match(
-    realtime,
-    /formatVoiceSpecEngineSpeech\(\s*tagged,\s*pending\.transcript,\s*takeLiveVoiceAck\(this\.ackState\),/,
+  assert.match(realtime, /prefixLiveVoiceAck\(script, takeLiveVoiceAck\(this\.ackState\)\)/);
+  assert.match(realtime, /VOICE_COACH_CHOICE_INSTRUCTIONS/);
+  assert.match(realtime, /disarmLiveVoiceAck\(this\.ackState, "Of course, right away\."\)/);
+  const choiceAt = realtime.indexOf("flushExactSpeech(VOICE_COACH_CHOICE_INSTRUCTIONS)");
+  assert.ok(choiceAt > 0);
+  assert.doesNotMatch(
+    realtime.slice(Math.max(0, choiceAt - 240), choiceAt + 80),
+    /this\.voiced\(/,
   );
   assert.ok((realtime.match(/this\.voiced\(/g) || []).length >= 4);
   assert.match(realtime, /private voiced\(base: string\)/);
@@ -134,6 +151,6 @@ test("Live Voice answer paths prefix the shared ack; hold and intro do not", () 
   assert.doesNotMatch(ack, /[Gg]emini|[Dd]ialaBot/);
   assert.doesNotMatch(spec, /[Gg]emini|[Dd]ialaBot/);
   assert.doesNotMatch(realtime, /[Dd]ialaBot/);
-  const speech = formatVoiceSpecEngineSpeech(null, "uvw", "On it.");
+  const speech = formatVoiceSpecEngineSpeech(null, "uvw", "asked", "On it.");
   assert.match(speech, /^On it\. /);
 });

@@ -99,6 +99,8 @@ export const VOICE_SPEC_EXTRA_KINDS: readonly GrokExtraKind[] = [
   "video",
   "reviews",
   "maintenance",
+  "vin",
+  "share",
 ] as const;
 
 export function voiceSpecExtraPrompts(
@@ -122,7 +124,13 @@ export function extrasToOffer(opts: {
   query: string;
   coach: GrokExtraCoach | null | undefined;
   offerVoiceExtras?: boolean;
+  /** When set, offer only this voice-extra index. Nothing loads. */
+  voiceExtraStep?: number;
 }): GrokExtraKind[] {
+  if (opts.offerVoiceExtras && typeof opts.voiceExtraStep === "number") {
+    const kind = voiceSpecExtraPrompts(opts.coach)[opts.voiceExtraStep];
+    return kind ? [kind] : [];
+  }
   const named = grokExtrasForPrompt(opts.query, opts.coach);
   if (!opts.offerVoiceExtras) return named;
   const voice = voiceSpecExtraPrompts(opts.coach);

@@ -74,6 +74,15 @@ export function takeLiveVoiceAck(state: LiveVoiceAckState): string {
   return state.armed;
 }
 
+/**
+ * The coach/spec choice line already opened with this pool phrase.
+ * Move off it so the report that follows does not say it again.
+ */
+export function disarmLiveVoiceAck(state: LiveVoiceAckState, phrase: string): void {
+  if (state.taken || state.armed !== phrase.trim()) return;
+  advanceLiveVoiceAck(state);
+}
+
 /** Arm the following phrase after this question's answer (or a barge-in). */
 export function advanceLiveVoiceAck(state: LiveVoiceAckState): string {
   if (state.queued) {
