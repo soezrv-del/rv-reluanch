@@ -9,6 +9,7 @@ import { HARD_ADMIN } from "@/lib/access/constants";
 import { adminFetch, adminLogin, clearAdminToken } from "@/lib/access/client";
 import { formatPhoneDisplay } from "@/lib/access/phone";
 import { canRemoveWhitelistRow } from "@/lib/access/gate";
+import { ResearchOrderCard } from "./ResearchOrderCard";
 import { ResearchProviderCard } from "./ResearchProviderCard";
 
 type Entry = {
@@ -334,6 +335,7 @@ export function AdminWhitelistSheet({
           ) : (
             <>
               <ResearchProviderCard surface="sheet" />
+              <ResearchOrderCard surface="sheet" />
 
               <form
                 onSubmit={(e) => void onAdd(e)}

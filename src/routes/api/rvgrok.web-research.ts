@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { denyUnlessWhitelisted } from "@/lib/access/httpGate";
+import { getResearchOrderOverride } from "@/lib/rvgrok/researchOrderStore";
 import { getResearchProviderOverride } from "@/lib/rvgrok/researchProviderStore";
 import {
   executeWebResearch,
@@ -64,6 +65,7 @@ async function handleResearch(request: Request): Promise<Response> {
     maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
     // Server-persisted admin override (not a client header).
     researchProvider: (await getResearchProviderOverride()) ?? undefined,
+    researchOrder: (await getResearchOrderOverride()) ?? undefined,
     identity: grounded.identity,
   });
 

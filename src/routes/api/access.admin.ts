@@ -19,6 +19,11 @@ import {
 } from "@/lib/access/store";
 import { researchProviderStatus } from "@/lib/rvgrok/geminiResearch";
 import { clearPhoneMemory } from "@/lib/rvgrok/phoneMemoryStore";
+import { researchOrderStatus } from "@/lib/rvgrok/researchOrder";
+import {
+  getResearchOrderOverride,
+  setResearchOrderOverride,
+} from "@/lib/rvgrok/researchOrderStore";
 import {
   getResearchProviderOverride,
   setResearchProviderOverride,
@@ -33,11 +38,18 @@ type Body = {
   isAdmin?: boolean;
   id?: string;
   provider?: string;
+  researchOrder?: string;
+  order?: string;
 };
 
 async function researchProviderPayload() {
   const override = await getResearchProviderOverride();
   return researchProviderStatus({ override });
+}
+
+async function researchOrderPayload() {
+  const override = await getResearchOrderOverride();
+  return researchOrderStatus({ override });
 }
 
 export const Route = createFileRoute("/api/access/admin")({
@@ -46,12 +58,19 @@ export const Route = createFileRoute("/api/access/admin")({
       GET: async ({ request }) => {
         const blocked = denyAccessAdmin(request);
         if (blocked) return blocked;
-        const [entries, requests, researchProvider] = await Promise.all([
-          listWhitelist(),
-          listAccessRequests(),
-          researchProviderPayload(),
-        ]);
-        return Response.json({ entries, requests, researchProvider });
+        const [entries, requests, researchProvider, researchOrder] =
+          await Promise.all([
+            listWhitelist(),
+            listAccessRequests(),
+            researchProviderPayload(),
+            researchOrderPayload(),
+          ]);
+        return Response.json({
+          entries,
+          requests,
+          researchProvider,
+          researchOrder,
+        });
       },
       PATCH: async ({ request }) => {
         const blocked = denyAccessAdmin(request);
@@ -61,6 +80,22 @@ export const Route = createFileRoute("/api/access/admin")({
           body = (await request.json()) as Body;
         } catch {
           return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+        }
+        if (body.researchOrder != null || body.order != null) {
+          const saved = await setResearchOrderOverride(
+            String(body.researchOrder ?? body.order ?? ""),
+          );
+          if (!saved.ok) {
+            return Response.json(
+              { error: saved.error },
+              { status: saved.unavailable ? 503 : 400 },
+            );
+          }
+          return Response.json({
+            ok: true,
+            researchOrder: researchOrderStatus({ override: saved.override }),
+            researchProvider: await researchProviderPayload(),
+          });
         }
         const saved = await setResearchProviderOverride(String(body.provider ?? ""));
         if (!saved.ok) {
@@ -72,6 +107,7 @@ export const Route = createFileRoute("/api/access/admin")({
         return Response.json({
           ok: true,
           researchProvider: researchProviderStatus({ override: saved.override }),
+          researchOrder: await researchOrderPayload(),
         });
       },
       POST: async ({ request }) => {
@@ -118,6 +154,23 @@ export const Route = createFileRoute("/api/access/admin")({
         const blocked = denyAccessAdmin(request);
         if (blocked) return blocked;
 
+        if (action === "research-order") {
+          const saved = await setResearchOrderOverride(
+            String(body.researchOrder ?? body.order ?? ""),
+          );
+          if (!saved.ok) {
+            return Response.json(
+              { error: saved.error },
+              { status: saved.unavailable ? 503 : 400 },
+            );
+          }
+          return Response.json({
+            ok: true,
+            researchOrder: researchOrderStatus({ override: saved.override }),
+            researchProvider: await researchProviderPayload(),
+          });
+        }
+
         if (action === "research-provider") {
           const saved = await setResearchProviderOverride(
             String(body.provider ?? ""),
@@ -131,6 +184,7 @@ export const Route = createFileRoute("/api/access/admin")({
           return Response.json({
             ok: true,
             researchProvider: researchProviderStatus({ override: saved.override }),
+            researchOrder: await researchOrderPayload(),
           });
         }
 
