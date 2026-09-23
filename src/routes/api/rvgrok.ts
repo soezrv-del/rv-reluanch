@@ -16,6 +16,12 @@ import {
 } from "@/lib/rvgrok/grounding";
 import { parseCoachFromText } from "@/lib/rvgrok/parseCoach";
 import {
+  formatOwnLotBlock,
+  loadOwnLotSnapshot,
+  looksLikeOwnLotStockQuestion,
+  shouldSkipWebForOwnLot,
+} from "@/lib/rvgrok/ownLotInventory";
+import {
   formatCoachReportTimeoutReply,
   looksLikeCoachReportAsk,
 } from "@/lib/rvgrok/coachReport";
@@ -88,6 +94,7 @@ function withGrounding(
     feedbackContext?: string;
     catalogContext?: string;
     webNotes?: string;
+    ownLotNotes?: string;
     visitorFirstName?: string;
     visitorMemory?: string;
   },
@@ -98,6 +105,10 @@ function withGrounding(
   const memory = (opts?.visitorMemory || "").trim();
   if (memory) out = `${out}\n\n${memory}`;
   out = appendFeedback(out, opts?.feedbackContext);
+  const lot = (opts?.ownLotNotes || "").trim();
+  if (lot) {
+    out = `${out}\n\n═══════════════════════════════════════\nOWN-LOT INVENTORY (RV Country)\n═══════════════════════════════════════\n${lot}`;
+  }
   const web = (opts?.webNotes || "").trim();
   if (web) {
     out = `${out}\n\n═══════════════════════════════════════\nWEB RESEARCH\n═══════════════════════════════════════\n${web}`;
@@ -445,6 +456,7 @@ async function tryXaiDirect(
   feedbackContext?: string,
   catalogContext?: string,
   webNotes?: string,
+  ownLotNotes?: string,
   visitorFirstName?: string,
   visitorMemory?: string,
 ): Promise<Response | null> {
@@ -467,7 +479,14 @@ async function tryXaiDirect(
       (forceImageTool
         ? "\n\nThe user asked for a generated image. You MUST call the generate_image tool with a detailed visual prompt. Do not write a JSON tool call in your content."
         : ""),
-    { feedbackContext, catalogContext, webNotes, visitorFirstName, visitorMemory },
+    {
+      feedbackContext,
+      catalogContext,
+      webNotes,
+      ownLotNotes,
+      visitorFirstName,
+      visitorMemory,
+    },
   );
   const fullMessages: ChatMessage[] = [
     { role: "system", content: system },
@@ -501,6 +520,7 @@ async function tryCloudflareWorker(
   feedbackContext?: string,
   catalogContext?: string,
   webNotes?: string,
+  ownLotNotes?: string,
   visitorFirstName?: string,
   visitorMemory?: string,
 ): Promise<Response | null> {
@@ -530,6 +550,7 @@ async function tryCloudflareWorker(
                   feedbackContext,
                   catalogContext,
                   webNotes,
+                  ownLotNotes,
                   visitorFirstName,
                   visitorMemory,
                 },
@@ -698,12 +719,28 @@ export const Route = createFileRoute("/api/rvgrok")({
           ? serverGrounded.block || ""
           : serverGrounded.block || body.catalogContext || "";
 
-        // Specs / GVWR / engine / pricing / YMM / catalog GAP → MUST browse
-        // this turn. Locked identity still uses server needsWeb so a pin is
-        // confirmed by live notes, not overwritten.
+        let requestOrigin = "";
+        try {
+          requestOrigin = new URL(request.url).origin;
+        } catch {
+          requestOrigin = "";
+        }
+
+        let ownLotNotes: string | undefined;
+        let skipWebForLot = false;
+        if (looksLikeOwnLotStockQuestion(lastPlain)) {
+          const snapshot = await loadOwnLotSnapshot({ requestOrigin });
+          ownLotNotes = formatOwnLotBlock(snapshot, lastPlain);
+          skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
+        }
+
+        // Specs / GVWR / engine / pricing / YMM / catalog GAP / own-lot
+        // miss → MUST browse this turn. Locked identity still uses server
+        // needsWeb so a pin is confirmed by live notes, not overwritten.
         const wantsWebFallback =
-          serverGrounded.needsWeb ||
-          (!serverGrounded.identity && Boolean(body.wantsWebFallback));
+          !skipWebForLot &&
+          (serverGrounded.needsWeb ||
+            (!serverGrounded.identity && Boolean(body.wantsWebFallback)));
 
         let webNotes: string | undefined;
         if (wantsWebFallback) {
@@ -714,6 +751,7 @@ export const Route = createFileRoute("/api/rvgrok")({
             timeoutMs: researchTimeoutMs("chat", lastPlain),
             profile: "chat",
             skipGate: true,
+            requestOrigin,
             maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
             // Server-persisted admin override (not a client header).
             researchProvider:
@@ -752,6 +790,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           feedbackContext,
           catalogContext,
           webNotes,
+          ownLotNotes,
           visitorFirstName,
           visitorMemory,
         );
@@ -762,6 +801,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           feedbackContext,
           catalogContext,
           webNotes,
+          ownLotNotes,
           visitorFirstName,
           visitorMemory,
         );

@@ -729,9 +729,9 @@ test("inventory / diesel count asks still trip the detector when catalog is lock
     "locked fuel/engine spec still must browse — search first",
   );
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
-  assert.doesNotMatch(api, /loadOwnLotSnapshot/);
-  assert.doesNotMatch(api, /shouldSkipWebForOwnLot/);
-  assert.doesNotMatch(api, /OWN-LOT INVENTORY/);
+  assert.match(api, /loadOwnLotSnapshot/);
+  assert.match(api, /shouldSkipWebForOwnLot/);
+  assert.match(api, /OWN-LOT INVENTORY/);
 });
 
 test("unknown / catalog GAP always browses — locked spec asks also browse", () => {
