@@ -222,7 +222,9 @@ test("RvTowApp salesman default: truck + coach + two numbers, More details colla
   assert.ok(truck >= 0 && truck < details, "truck picker sits above More details");
   assert.ok(coach >= 0 && coach < details, "coach picker sits above More details");
   assert.ok(answer >= 0 && answer < details, "max tow + pin sit above More details");
+  const share = src.indexOf("<TowShareCard");
   assert.ok(disclaimer > details, "one SuiteDisclaimer after More details");
+  assert.ok(share > details && share < disclaimer, "Tow Share sits above disclaimer");
   assert.equal(src.split("<SuiteDisclaimer").length - 1, 1);
   assert.match(src, /const \[detailsOpen, setDetailsOpen\] = useState\(false\)/);
   assert.match(src, /function AnswerHero/);

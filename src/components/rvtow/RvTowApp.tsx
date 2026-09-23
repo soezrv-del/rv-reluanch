@@ -61,6 +61,7 @@ import {
   type FactsTowHandoffOffer,
 } from "@/lib/tow/factsTowHandoff";
 import { inferTowKind, towCascadeReveal } from "@/lib/tow/towOpen";
+import { TowShareCard } from "@/components/rvtow/TowShareCard";
 
 
 const YEARS = Array.from({ length: 22 }, (_, i) => String(2026 - i)); // 2026 → 2005
@@ -711,6 +712,25 @@ export function RvTowApp() {
     appliedOffer,
   ]);
 
+  const shareText = useMemo(() => {
+    const who = [year || "—", make, model, trim].filter(Boolean).join(" ");
+    const lines = ["RvFOX Tow"];
+    if (who && who !== "—") lines.push(who);
+    if (hasVehicle && rating.maxTow) {
+      lines.push(`Max tow ${rating.maxTow.toLocaleString()} lbs`);
+    }
+    if (appliedOffer) {
+      const chip = [appliedOffer.year, appliedOffer.make, appliedOffer.model]
+        .filter(Boolean)
+        .join(" ");
+      const fp = appliedOffer.floorplan?.trim();
+      lines.push(`Coach: ${fp ? `${chip} · ${fp}` : chip}`);
+    } else if (rvType) {
+      lines.push(rvType);
+    }
+    return lines.join("\n");
+  }, [year, make, model, trim, hasVehicle, rating.maxTow, appliedOffer, rvType]);
+
   return (
     <SuitePage
       tab="rvtow"
@@ -1320,6 +1340,8 @@ export function RvTowApp() {
             </div>
           ) : null}
         </section>
+
+        <TowShareCard shareText={shareText} />
 
         <SuiteDisclaimer />
 

@@ -49,6 +49,7 @@ export {
   captureShareCardFile,
   coerceShareImageType,
   copyKit,
+  defaultShareCardContact,
   downloadShareFile,
   elementLooksLikeShareCard,
   freshShareImageFile,
@@ -56,15 +57,21 @@ export {
   hardenShareImageFileSync,
   isShareBusyError,
   isShareImageFile,
+  monogramFromDisplayName,
   orderShareImageFiles,
   resetShareSession,
   SHARE_CARD_FILENAME,
   SHARE_CARD_MIME,
+  shareCardContactForSession,
   shareDataAttempts,
   shareOrCopy,
   toShareData,
 } from "./shareCardImage";
-export type { ShareKitPayload, ShareOutcome } from "./shareCardImage";
+export type {
+  ShareCardContact,
+  ShareKitPayload,
+  ShareOutcome,
+} from "./shareCardImage";
 
 export type { ShareCatalogLookup } from "./shareCoachHydrate";
 

@@ -19,6 +19,7 @@ import {
   orderShareImageFiles,
   paintShareSignatureCard,
   resetShareSession,
+  shareCardContactForSession,
   shareDataAttempts,
   shareOrCopy,
   toShareData,
@@ -223,6 +224,42 @@ test("painted card matches the in-app signature (name + phone)", () => {
   assert.match(joined, /FOX/);
   assert.match(joined.replace(/\s+/g, ""), /KNOWBEFOREYOUBUY/);
   assert.match(joined, /RvFOX · Powered by Grok/);
+});
+
+test("paintShareSignatureCard can sign with a session name", () => {
+  const texts: string[] = [];
+  const ctx = {
+    save() {},
+    restore() {},
+    fillRect() {},
+    beginPath() {},
+    moveTo() {},
+    lineTo() {},
+    quadraticCurveTo() {},
+    arcTo() {},
+    closePath() {},
+    fill() {},
+    fillStyle: "",
+    font: "",
+    textAlign: "left",
+    textBaseline: "alphabetic",
+    fillText(text: string) {
+      texts.push(text);
+    },
+    measureText(text: string) {
+      return { width: String(text).length * 10 };
+    },
+  };
+  paintShareSignatureCard(
+    ctx as unknown as CanvasRenderingContext2D,
+    SHARE_CARD_WIDTH,
+    SHARE_CARD_HEIGHT,
+    shareCardContactForSession("Cheri"),
+  );
+  const joined = texts.join("");
+  assert.match(joined, /Cheri/);
+  assert.doesNotMatch(joined, new RegExp(REPORT_CONTACT_NAME));
+  assert.match(joined, new RegExp(REPORT_CONTACT_PHONE.replace(/-/g, "\\-")));
 });
 
 test("live card node is the capture target — same preview, real file on send", () => {
