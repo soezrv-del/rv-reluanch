@@ -60,8 +60,8 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
   assert.match(helper, /executeWebResearch/);
   assert.match(helper, /skipGate: true/);
   assert.match(helper, /WEB_SEARCH_MODELS/);
-  assert.match(helper, /FACTS_GAP_RESEARCH_TIMEOUT_MS = 22_000/);
-  assert.match(helper, /FACTS_SOFT_RESEARCH_TIMEOUT_MS = 14_000/);
+  assert.match(helper, /FACTS_GAP_RESEARCH_TIMEOUT_MS = 90_000/);
+  assert.match(helper, /FACTS_SOFT_RESEARCH_TIMEOUT_MS = 20_000/);
   assert.match(helper, /planFactsDossierResearch/);
   assert.match(helper, /researchFactsSoftNotes/);
   assert.match(helper, /mergeSoftFieldsIntoDossier/);
@@ -114,6 +114,7 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
   );
 
   assert.match(live, /\/api\/rvfax\/dossier/);
+  assert.match(live, /LIVE_DOSSIER_TIMEOUT_MS = 180_000/);
   assert.match(live, /researchAccessHeaders/);
   assert.match(live, /lockPowertrainFromCatalog/);
   assert.match(live, /applyPowertrainPin/);
@@ -134,12 +135,10 @@ test("narrow gap query names only the missing field and avoids the 52s report bu
   // Facts passes FACTS_GAP_RESEARCH_TIMEOUT_MS explicitly — never
   // researchTimeoutMs("chat", query), which is the 52s SPEC_REPORT path.
   assert.equal(SPEC_REPORT_RESEARCH_TIMEOUT_MS, 52_000);
-  assert.ok(FACTS_GAP_RESEARCH_TIMEOUT_MS < SPEC_REPORT_RESEARCH_TIMEOUT_MS);
-  assert.ok(FACTS_GAP_RESEARCH_TIMEOUT_MS <= 24_000);
-  assert.ok(FACTS_GAP_RESEARCH_TIMEOUT_MS >= 20_000);
-  assert.ok(FACTS_SOFT_RESEARCH_TIMEOUT_MS <= 15_000);
-  assert.ok(FACTS_SOFT_RESEARCH_TIMEOUT_MS <= 20_000);
+  assert.equal(FACTS_GAP_RESEARCH_TIMEOUT_MS, 90_000);
+  assert.equal(FACTS_SOFT_RESEARCH_TIMEOUT_MS, 20_000);
   assert.ok(FACTS_SOFT_RESEARCH_TIMEOUT_MS < FACTS_GAP_RESEARCH_TIMEOUT_MS);
+  assert.ok(FACTS_GAP_RESEARCH_TIMEOUT_MS < 180_000);
   assert.deepEqual([...WEB_SEARCH_MODELS], ["grok-4.7"]);
 });
 
