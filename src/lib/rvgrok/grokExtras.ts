@@ -88,6 +88,54 @@ export function grokExtrasForPrompt(
   );
 }
 
+/**
+ * After a Live Voice spec card paints. Prompts only — the caller must
+ * not fetch recalls, comps, videos, reviews, or the service list.
+ * Spec-report wording alone does not unlock these in typed chat.
+ */
+export const VOICE_SPEC_EXTRA_KINDS: readonly GrokExtraKind[] = [
+  "nhtsa",
+  "market",
+  "video",
+  "reviews",
+  "maintenance",
+] as const;
+
+export function voiceSpecExtraPrompts(
+  coach: GrokExtraCoach | null | undefined,
+): GrokExtraKind[] {
+  if (!hasLockedGrokCoach(coach)) return [];
+  return VOICE_SPEC_EXTRA_KINDS.filter((kind) => {
+    if (kind !== "video") return true;
+    return shouldShowRvVideoPrompt({
+      year: coach?.year,
+      make: coach?.make,
+      model: coach?.model,
+      floorplan: coach?.floorplan,
+      type: coach?.type,
+    });
+  });
+}
+
+/** Named extras, plus the voice spec prompt list when the card asks for it. */
+export function extrasToOffer(opts: {
+  query: string;
+  coach: GrokExtraCoach | null | undefined;
+  offerVoiceExtras?: boolean;
+}): GrokExtraKind[] {
+  const named = grokExtrasForPrompt(opts.query, opts.coach);
+  if (!opts.offerVoiceExtras) return named;
+  const voice = voiceSpecExtraPrompts(opts.coach);
+  const seen = new Set<GrokExtraKind>();
+  const out: GrokExtraKind[] = [];
+  for (const kind of [...voice, ...named]) {
+    if (seen.has(kind)) continue;
+    seen.add(kind);
+    out.push(kind);
+  }
+  return out;
+}
+
 export const GROK_EXTRA_PROMPTS: Record<
   GrokExtraKind,
   { title: string; body: string }

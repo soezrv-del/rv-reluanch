@@ -336,6 +336,7 @@ export function MessageBubble({
             <DeskSpecSheet sheet={message.deskSheet} />
             <GrokExtrasRail
               query={priorQuery || ""}
+              offerVoiceExtras={message.deskSheet.offerVoiceExtras}
               coach={{
                 year: message.deskSheet.year,
                 make: message.deskSheet.make,

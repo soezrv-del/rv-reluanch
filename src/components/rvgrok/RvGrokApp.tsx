@@ -1536,6 +1536,7 @@ export function RvGrokApp({
       <DeskSpecSheet sheet={sheet} />
       <GrokExtrasRail
         query={query}
+        offerVoiceExtras={sheet.offerVoiceExtras}
         coach={{
           year: sheet.year,
           make: sheet.make,

@@ -107,6 +107,11 @@ export type DeskSheetPayload = {
   rows: DeskSheetRow[];
   gaps: string[];
   presenceNote: string;
+  /**
+   * Live Voice spec turns only. Extras render as prompts; nothing loads
+   * until the listener picks one. Chat leaves this unset.
+   */
+  offerVoiceExtras?: boolean;
 };
 
 type SheetField = {
