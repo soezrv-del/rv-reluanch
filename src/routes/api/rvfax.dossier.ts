@@ -180,8 +180,8 @@ function formatCandidateBlock(c: CatalogCandidate | undefined, year: string): st
   return `CATALOG CANDIDATE TRUTH for model year ${year} (${band}):
 ${fpLine}
 - length (catalog): ${c.lengthFt || "null"}
-- gvwr (catalog): ${c.gvwrLbs ?? c.gvwr || "null"}
-- uvw (catalog): ${c.uvwEstimated ? "null (estimated — not a pin)" : c.uvwLbs ?? c.uvw || "null"}
+- gvwr (catalog): ${(c.gvwrLbs ?? c.gvwr) || "null"}
+- uvw (catalog): ${c.uvwEstimated ? "null (estimated — not a pin)" : (c.uvwLbs ?? c.uvw) || "null"}
 - fresh/gray/black (catalog): ${c.freshWater || "null"} / ${c.grayWater || "null"} / ${c.blackWater || "null"}
 - engine: ${c.engine || "null"}
 - horsepower: ${c.horsepower ?? "null"}
