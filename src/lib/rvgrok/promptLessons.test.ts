@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CHAT_MAY_WRITE_FACTS_CACHE } from "./grounding.ts";
+import { buildRealtimeSessionUpdate } from "./liveVoice.ts";
+import { absorbStandingLessonsHeader } from "./voice.ts";
 import {
   applyAddLesson,
   applyDeleteLesson,
@@ -127,6 +129,57 @@ test("inject sits after lean core and before visitor memory", () => {
     core,
     "second inject is idempotent",
   );
+});
+
+test("newly added admin lesson appears in chat and live voice prompts", () => {
+  const text = "Quote hitch weight only from the brochure pin.";
+  const added = applyAddLesson([], text);
+  assert.equal(added.ok, true);
+  if (!added.ok) return;
+  assert.match(added.lesson.id, /^admin-/);
+  const merged = mergePromptLessons(added.stored);
+  assert.equal(merged.some((l) => l.id === added.lesson.id), true);
+  const block = formatPromptLessons(merged);
+  assert.match(block, /STANDING LESSONS \(desk SoT\)/);
+  assert.match(block, /Quote hitch weight only from the brochure pin/);
+  // Chat /api/rvgrok withGrounding starts with injectStandingLessons(system, block).
+  const chatPrompt = injectStandingLessons(RV_GROK_LEAN_CORE, block);
+  assert.match(chatPrompt, /Quote hitch weight only from the brochure pin/);
+  assert.ok(chatPrompt.indexOf(RV_GROK_LEAN_CORE) < chatPrompt.indexOf(text));
+  const voice = buildRealtimeSessionUpdate("ara", 1, "", "", "", block);
+  const instructions = (voice.session as { instructions: string }).instructions;
+  assert.match(instructions, /STANDING LESSONS \(desk SoT\)/);
+  assert.match(instructions, /Quote hitch weight only from the brochure pin/);
+  assert.ok(instructions.indexOf("You are RV Grok") < instructions.indexOf(text));
+});
+
+test("worker token fallback keeps a same-origin lessons header", () => {
+  const block = formatPromptLessons([
+    {
+      id: "admin-fresh",
+      text: "Quote hitch weight only from the brochure pin.",
+      updatedAt: "2026-09-24T00:00:00.000Z",
+    },
+  ]);
+  const fromSameOrigin = absorbStandingLessonsHeader(
+    null,
+    encodeURIComponent(block),
+  );
+  assert.equal(fromSameOrigin?.value, block);
+  // Worker response has no x-rvgrok-lessons — must not wipe the Neon block.
+  const afterWorker = absorbStandingLessonsHeader(fromSameOrigin, null);
+  assert.equal(afterWorker?.value, block);
+  const voice = buildRealtimeSessionUpdate(
+    "ara",
+    1,
+    "",
+    "",
+    "",
+    afterWorker?.value,
+  );
+  const instructions = (voice.session as { instructions: string }).instructions;
+  assert.match(instructions, /Quote hitch weight only from the brochure pin/);
+  assert.equal(absorbStandingLessonsHeader(null, null), null);
 });
 
 test("add / delete overlay: retired ids drop, admin rows drop", () => {
