@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  mergeSpecFills,
   runSpecFieldFallback,
   SPEC_ENGINE_OWNED_FIELDS,
   type SpecFieldFill,
@@ -55,30 +54,11 @@ export const Route = createFileRoute("/api/rvfax/spec-fallback")({
           return Response.json({ ok: true, fills: [] as SpecFieldFill[] });
         }
 
-        const identity = { year, make, model, floorplan };
-        const scraped = await runSpecFieldFallback({
-          identity,
+        const fills = await runSpecFieldFallback({
+          identity: { year, make, model, floorplan },
           empty,
           rvClass: body.rvClass,
         });
-        const missing = empty.filter(
-          (field) => !scraped.some((fill) => fill.field === field),
-        );
-        let researched: SpecFieldFill[] = [];
-        if (missing.length) {
-          try {
-            const { researchRemainingSpecGaps } = await import(
-              "@/lib/rvgrok/specFieldGapResearch"
-            );
-            researched = await researchRemainingSpecGaps({
-              identity,
-              empty: missing,
-            });
-          } catch {
-            researched = [];
-          }
-        }
-        const fills = mergeSpecFills(scraped, researched);
         if (body.pinCoachKnowledge === true && fills.length) {
           try {
             await persistSpecFallbackKnowledge({

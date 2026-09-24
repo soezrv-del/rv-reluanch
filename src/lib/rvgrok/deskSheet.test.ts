@@ -967,31 +967,3 @@ test("any engine-owned GAP triggers heal and the Facts spinner, without blocking
     /await resolveDeskSheetThenFallback/,
   );
 });
-
-test("GVWR gap stays searching until spec fallback and live research settle", () => {
-  const fallback = src(root, "deskSheet.ts");
-  const fn = fallback.slice(
-    fallback.indexOf("export async function resolveDeskSheetThenFallback"),
-  );
-  const fetchAt = fn.indexOf("await fetchSpecFieldFallback");
-  assert.ok(fetchAt > 0, "heal awaits the shared fallback");
-  assert.doesNotMatch(
-    fn.slice(0, fetchAt),
-    /if \(!fills\.length\) return first/,
-    "an empty scrape must not clear searching before live research is awaited",
-  );
-  assert.match(fn, /if \(signal\?\.aborted\) return null/);
-  assert.doesNotMatch(fn, /if \(!fills\.length \|\| signal\?\.aborted\) return first/);
-  assert.match(fn, /settleDeskGapSearch/);
-  const settleAt = fn.indexOf("settleDeskGapSearch(painted)");
-  assert.ok(settleAt > fetchAt, "spinner clears only after the fallback returns");
-
-  const route = src(join(root, "../../routes/api"), "rvfax.spec-fallback.ts");
-  const scrapeAt = route.indexOf("await runSpecFieldFallback");
-  const liveAt = route.indexOf("researchRemainingSpecGaps");
-  const pinAt = route.indexOf("await persistSpecFallbackKnowledge");
-  assert.ok(scrapeAt > 0 && liveAt > scrapeAt && pinAt > liveAt);
-  assert.match(route, /await import\(\s*"@\/lib\/rvgrok\/specFieldGapResearch"\s*\)/);
-  assert.doesNotMatch(route, /from "@\/lib\/rvgrok\/webResearchTelemetry"/);
-  assert.match(route, /pinCoachKnowledge === true && fills\.length/);
-});

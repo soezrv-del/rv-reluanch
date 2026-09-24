@@ -8,7 +8,6 @@ import {
   runSpecFieldFallback,
   specClassSlug,
   specFallbackUrls,
-  specFillsFromConfirmedNotes,
   slugSpecToken,
   type SpecFieldFill,
 } from "./specFieldFallback.ts";
@@ -137,32 +136,6 @@ test("chain does not scrape fields the catalog already has", async () => {
     },
   });
   assert.deepEqual(fills, []);
-});
-
-test("unconfirmed or empty notes do not invent a GVWR", () => {
-  assert.deepEqual(
-    specFillsFromConfirmedNotes(
-      "CONFIRMED: no.\nGVWR is still a gap.",
-      ["gvwr"],
-      "https://example.com/miss",
-    ),
-    [],
-  );
-  assert.deepEqual(
-    specFillsFromConfirmedNotes("GVWR 54,000 lbs", ["gvwr"], "https://example.com/x"),
-    [],
-  );
-});
-
-test("confirmed notes fill only the requested GVWR gap", () => {
-  const fills = specFillsFromConfirmedNotes(
-    "CONFIRMED: yes.\nGVWR 54,000 lb.\nUVW 42,000 lb.",
-    ["gvwr"],
-    "https://www.entegra.com/cornerstone",
-  );
-  assert.equal(fills.length, 1);
-  assert.equal(fills[0]?.field, "gvwr");
-  assert.equal(fills[0]?.value, 54000);
 });
 
 test("fallback module stays field-only — no Gemini, no DialaBot, no pin table", () => {
