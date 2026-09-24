@@ -278,6 +278,30 @@ test("lock-break is wired through chat, voice, and the API stream", () => {
   assert.match(realtime, /onDeskSheet/);
 });
 
+test("longer lot series does not inherit the parent catalog model", () => {
+  assert.equal(
+    matchCatalogModelName("Hideout Mini", ["Hideout", "Springdale", "Springdale Mini"]),
+    "Hideout Mini",
+  );
+  assert.equal(
+    matchCatalogModelName("Conquest LE", ["Conquest", "Yellowstone"]),
+    "Conquest LE",
+  );
+  assert.equal(
+    matchCatalogModelName("Wildwood Heritage Glen Elite", ["Wildwood"]),
+    "Wildwood Heritage Glen Elite",
+  );
+  assert.equal(
+    matchCatalogModelName("Vision SE", ["Vision", "Vision SE", "Vision XL"]),
+    "Vision SE",
+  );
+  assert.equal(
+    matchCatalogModelName("Vision", ["Vision", "Vision SE", "Vision XL"]),
+    "Vision",
+  );
+  assert.equal(matchCatalogModelName("pheaton", ["Phaeton", "Allegro"]), "Phaeton");
+});
+
 test("pheaton typo and year+model asks lock 2020 Tiffin Phaeton 40IH", () => {
   assert.equal(
     fuzzyMatchCatalogName("pheaton", ["Phaeton", "Allegro", "Zephyr"]),

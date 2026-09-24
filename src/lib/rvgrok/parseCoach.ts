@@ -706,8 +706,17 @@ export function matchCatalogModelName(
 
   let best = rawModel.trim();
   let bestLen = -1;
+  let skippedLongerSeries = false;
   for (const name of list) {
     const nn = normName(name);
+    if (!nn) continue;
+    // "Hideout Mini" / "Conquest LE" / "Wildwood Heritage Glen Elite" are not
+    // the parent series. Inheriting Hideout or Wildwood paints the wrong tanks.
+    const askIsLongerSeries = n.startsWith(`${nn} `) && n.length > nn.length + 1;
+    if (askIsLongerSeries) {
+      skippedLongerSeries = true;
+      continue;
+    }
     if (nn.includes(n) || n.includes(nn)) {
       if (nn.length > bestLen) {
         best = name;
@@ -716,6 +725,7 @@ export function matchCatalogModelName(
     }
   }
   if (bestLen >= 0) return best;
+  if (skippedLongerSeries) return rawModel.trim();
 
   return fuzzyMatchCatalogName(rawModel, list) || rawModel.trim();
 }

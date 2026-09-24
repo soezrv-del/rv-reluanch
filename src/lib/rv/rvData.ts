@@ -15091,7 +15091,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2015": ["2250SLE","2500LE"],"2016": ["2250SLE","2500LE"],"2017": ["2250SLE","2500LE"],
         "2018": ["2250SLE","2500LE"],"2019": ["2250SLE","2500LE","2850LE"],
         "2020": ["2250SLE","2500LE","2850LE"],"2021": ["2250SLE","2500LE","2850LE"],
-        "2022": ["2250SLE","2500LE"],"2023": ["2250SLE","2500LE"],"2024": ["2250SLE","2500LE"],
+        "2022": ["2250SLE","2500LE"],"2023": ["2250SLE","2500LE"],
+        // In-stock Carson RV Show: 2024 Sunseeker LE 2150SLE #URD9620.
+        // 2150SLE is already a Sunseeker LE code (MY2025+). No new gallon row.
+        "2024": ["2150SLE","2250SLE","2500LE"],
         "2025": ["1950LE","2150SLE","2250SLE","2350LE","2550DSLE"],
         "2026": ["1950LE", "2150SLE", "2250SLE", "2350LE", "2530S", "2550DSLE", "2850SLE", "2950LE", "3250DSLE", "2300SLE", "2800SLE"],
         "2027": ["1950LE","2150SLE","2250SLE","2350LE","2530S","2550DSLE","2850SLE","2950LE","3250DSLE"]
@@ -37020,7 +37023,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["2900", "3100", "3500", "3700"],
         "2024": ["2900", "3100", "3500", "3700"],
         "2025": ["2900", "3100", "3500", "3700"],
-        "2026": ["3100", "3500", "3700"],
+        // In-stock Carson RV Show MY2026: 3200 #47410, 3420 #47247, 3600 #47076.
+        // Those codes are already on this model and on the MY2027 flyer. The
+        // narrowed 2026 card had dropped them. No new gallon row.
+        "2026": ["3100", "3200", "3420", "3500", "3600", "3700"],
         // OEM /Docs/Flyers/27/Z/2027-Brinkley-Model-Z-*-Floorplan-Flyer.pdf
         // RVUSA 2027 Model Z year page is an empty shell — dated flyers are SoT.
         "2027": ["2680", "2700", "2900", "3100", "3110", "3200", "3210", "3420", "3510", "3515", "3600", "3610"]
@@ -37145,7 +37151,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2023": ["3250", "3500", "3520", "3950", "3970", "4000"],
         "2024": ["3250", "3500", "3520", "3950", "3970", "4000", "4100", "4120"],
         "2025": ["3250", "3500", "3520", "3950", "3970", "4000", "4100", "4120"],
-        "2026": ["3250", "3500", "3520", "3950", "3970", "4100", "4120"],
+        // In-stock Carson RV Show MY2026: 4150 #46681, 4170 #47134.
+        // Codes already on this model and the MY2027 flyer. No new gallon row.
+        "2026": ["3250", "3500", "3520", "3950", "3970", "4100", "4120", "4150", "4170"],
         // OEM /Docs/Flyers/27/G/2027-Brinkley-Model-G-*-Floorplan-Flyer.pdf
         // RVUSA 2027 Model G year page is an empty shell — dated flyers are SoT.
         "2027": ["3250", "3520", "3950", "3970", "4100", "4120", "4150", "4155", "4170"]
