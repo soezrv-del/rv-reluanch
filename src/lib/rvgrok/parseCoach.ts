@@ -459,6 +459,18 @@ export function parseSpokenSeries(
 ): { family: string; code: string } | null {
   const t = normName(s);
   if (!t) return null;
+  // "by Entegra" / "by Integra" is a make phrase, never a series letter.
+  const seriesCodeStop = new Set(["by", "the", "and", "for", "made"]);
+  const accept = (
+    family: string,
+    code: string,
+  ): { family: string; code: string } | null => {
+    if (seriesCodeStop.has(code)) return null;
+    if (family === "by" || family === "entegra" || family === "integra") {
+      return null;
+    }
+    return { family, code };
+  };
   let m = t.match(/\b([a-z][a-z0-9]+)\s+series\s+([a-z]{1,3})\b/);
   if (m?.[1] && m[2] && !SERIES_FAMILY_STOP.has(m[1])) {
     return { family: m[1], code: m[2] };
@@ -472,14 +484,17 @@ export function parseSpokenSeries(
   m = t.match(/\b([a-z]{1,3})\s+series\b/);
   if (m?.[1]) return { family: "", code: m[1] };
   // "Lineage M 25FW" / "Vision SE 27A" — short code immediately before a floorplan.
+  // "Entegra by 45B" / "by Entegra 45B" is make phrasing, not a series code.
   m = t.match(/\b([a-z][a-z0-9]+)\s+([a-z]{1,3})(?=\s+\d{2,3}[a-z])/);
   if (m?.[1] && m[2] && !SERIES_FAMILY_STOP.has(m[1])) {
-    return { family: m[1], code: m[2] };
+    const hit = accept(m[1], m[2]);
+    if (hit) return hit;
   }
   // "E Vision 27As" — spoken SE letter before the family + floorplan.
   m = t.match(/\b([a-z]{1,3})\s+([a-z][a-z0-9]+)(?=\s+\d{2,3}[a-z])/);
   if (m?.[1] && m[2] && !SERIES_FAMILY_STOP.has(m[2])) {
-    return { family: m[2], code: m[1] };
+    const hit = accept(m[2], m[1]);
+    if (hit) return hit;
   }
   return null;
 }
@@ -715,6 +730,7 @@ function collectModelWords(after: string, floorplan: string): string {
     "the",
     "a",
     "an",
+    "by",
     "rv",
     "class",
     "diesel",
@@ -844,6 +860,8 @@ export function normalizeCoachAsk(text: string): NormalizedCoachAsk {
     }
   }
   if (/\bvisions?\b/i.test(model)) model = normalizeVisionSpeech(model);
+  // "by Entegra" / "by Integra" must never lock the model as "entegra by".
+  if (/^(?:entegra|integra)\s+by$/i.test(model)) model = "";
   // Entegra Vision is the catalog family — infer make when speech omitted it.
   if (!make && /^vision\b/i.test(model)) {
     make = "Entegra Coach";
