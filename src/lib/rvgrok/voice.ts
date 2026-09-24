@@ -112,8 +112,25 @@ export function takeTokenVisitorMemory(): string {
 }
 
 /**
- * Standing lessons from the last same-origin token mint.
- * `undefined` after take / when the header was missing (use code defaults).
+ * Keep a lessons header already seen. A missing header (Cloudflare worker
+ * fallback has none) must not wipe a same-origin block — that wipe made
+ * Live Voice treat lessons as undefined and skip Neon admin lessons.
+ */
+export function absorbStandingLessonsHeader(
+  current: { value: string } | null,
+  header: string | null,
+): { value: string } | null {
+  if (header == null) return current;
+  try {
+    return { value: decodeURIComponent(header) };
+  } catch {
+    return { value: "" };
+  }
+}
+
+/**
+ * Standing lessons from the last token attempt that sent the header.
+ * `undefined` after take / when no attempt sent the header (use code defaults).
  * Empty string means the desk saved an empty block.
  */
 export function takeTokenStandingLessons(): string | undefined {
@@ -147,6 +164,12 @@ export async function fetchEphemeralToken(
         body: attempt.method === "POST" ? JSON.stringify({}) : undefined,
         signal,
       });
+      // Read before the ok check. A 502 from /api/rvgrok/token still
+      // carries x-rvgrok-lessons; the worker fallback that wins next does not.
+      lastTokenStandingLessons = absorbStandingLessonsHeader(
+        lastTokenStandingLessons,
+        res.headers.get(LESSONS_HEADER),
+      );
       if (!res.ok) {
         const text = await res.text().catch(() => "");
         lastErr = `Voice token failed (${res.status})${text ? `: ${text.slice(0, 120)}` : ""}`;
@@ -158,16 +181,6 @@ export async function fetchEphemeralToken(
           lastTokenVisitorMemory = decodeURIComponent(encodedMemory);
         } catch {
           lastTokenVisitorMemory = "";
-        }
-      }
-      const encodedLessons = res.headers.get(LESSONS_HEADER);
-      if (encodedLessons != null) {
-        try {
-          lastTokenStandingLessons = {
-            value: decodeURIComponent(encodedLessons),
-          };
-        } catch {
-          lastTokenStandingLessons = { value: "" };
         }
       }
       const data = (await res.json()) as {
