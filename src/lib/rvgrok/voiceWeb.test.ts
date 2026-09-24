@@ -50,16 +50,16 @@ function src(name: string) {
 const ADVENTURER_Q =
   "I have a 2005 Winnebago Adventurer. I'm looking for the battery disconnect. Can you look into it and see if you can tell me where it is?";
 
-test("locked spec question matches chat: search first even when hard fields are present", () => {
+test("locked spec question answers now; a missing pin may still research", () => {
   const q = "What engine and HP does a 2023 Entegra Vision have?";
   assert.equal(
     decideVoiceWebResearch({ transcript: q, specs: { missingHard: false } })
       .action,
-    "research",
+    "pass",
   );
   assert.equal(
     decideVoiceWebResearch({ transcript: q, specs: null }).action,
-    "research",
+    "pass",
   );
   const held = decideVoiceWebResearch({
     transcript: q,
@@ -82,49 +82,56 @@ test("spoken troubleshooting uses the same detector as chat and wants research",
   assert.equal(shouldSpeakVoiceResearchHold(ADVENTURER_Q), true);
 });
 
-test("first YMM / Lineage 31ZW spec ask researches with hold — catalog pin does not skip", () => {
+test("named coach mention answers from memory — a pin does not force research", () => {
   const q = "2026 Grand Design Lineage 31ZW";
-  assert.equal(needsWebFallback(null, q), true);
-  assert.equal(needsWebFallback({ missingHard: false }, q), true);
-  const gap = decideVoiceWebResearch({ transcript: q, specs: null });
-  assert.equal(gap.action, "research");
-  if (gap.action === "research") assert.equal(gap.speakHold, true);
-  const pinned = decideVoiceWebResearch({
-    transcript: q,
-    specs: { missingHard: false },
-  });
-  assert.equal(pinned.action, "research", "catalog row must not skip first spec search");
-  if (pinned.action === "research") {
-    assert.equal(pinned.speakHold, true);
-  }
-});
-
-test("named coach about-ask researches even when catalog is locked", () => {
-  const q = "I'd like to know about the 2027 Grand Design Lineage M series.";
+  assert.equal(needsWebFallback(null, q), false);
+  assert.equal(needsWebFallback({ missingHard: false }, q), false);
   assert.equal(
     decideVoiceWebResearch({ transcript: q, specs: null }).action,
-    "research",
+    "pass",
   );
   assert.equal(
     decideVoiceWebResearch({
       transcript: q,
       specs: { missingHard: false },
     }).action,
-    "research",
+    "pass",
   );
 });
 
-test("catalog miss and fishing browse without about-phrasing", () => {
+test("named coach about-ask stays on memory even when catalog is locked", () => {
+  const q = "I'd like to know about the 2027 Grand Design Lineage M series.";
+  assert.equal(
+    decideVoiceWebResearch({ transcript: q, specs: null }).action,
+    "pass",
+  );
+  assert.equal(
+    decideVoiceWebResearch({
+      transcript: q,
+      specs: { missingHard: false },
+    }).action,
+    "pass",
+  );
+});
+
+test("catalog miss browses; fishing stays on memory", () => {
   assert.equal(
     decideVoiceWebResearch({
       transcript: "What's the tow rating on a 2019 XYZ Phantom?",
       specs: null,
     }).action,
-    "research",
+    "pass",
   );
   assert.equal(
     decideVoiceWebResearch({
       transcript: "Best fishing spots near Moab for an RV",
+      specs: { missingHard: false },
+    }).action,
+    "pass",
+  );
+  assert.equal(
+    decideVoiceWebResearch({
+      transcript: "What's the weather on the way to Moab?",
       specs: { missingHard: false },
     }).action,
     "research",
@@ -226,7 +233,13 @@ test("year-only 'about a 2026' does not burn a failing search", () => {
     decideVoiceWebResearch({
       transcript: "On a 2026 Odyssey 24B made by Entegra",
     }).action,
-    "research",
+    "pass",
+  );
+  assert.equal(
+    decideVoiceWebResearch({
+      transcript: "What's the hitch rating on a 2019 XYZ Phantom?",
+    }).action,
+    "pass",
   );
 });
 
@@ -370,8 +383,8 @@ test("generic asks and catalog compares do not speak a research hold", () => {
   assert.equal(shouldSpeakVoiceResearchHold(casualAsk), false);
   assert.equal(
     decideVoiceWebResearch({ transcript: casualAsk, specs: null }).action,
-    "research",
-    "catalog miss must still run web-research even when the hold is off",
+    "pass",
+    "a class recommendation is memory — no pre-speech browse",
   );
 
   const inventory = "How many diesels do we have on the lot?";
@@ -486,16 +499,16 @@ test("voice cancels VAD and decides search before awaiting catalog load", () => 
   const realtime = src("realtime.ts");
   const fnStart = realtime.indexOf("private async maybeEnrichWithWebResearch");
   assert.ok(fnStart >= 0, "maybeEnrichWithWebResearch must exist");
-  const fn = realtime.slice(fnStart, fnStart + 4200);
-  const decideAt = fn.indexOf("decideVoiceWebResearch");
-  const ensureAt = fn.indexOf("ensureCatalogLoaded");
+  const fn = realtime.slice(fnStart, fnStart + 8000);
+  const decideAt = fn.indexOf("const decision = decideVoiceWebResearch");
+  const ensureAt = fn.indexOf("ensureCatalogLoaded", decideAt);
   assert.ok(decideAt >= 0 && ensureAt >= 0);
   assert.ok(
     decideAt < ensureAt,
     "decide search before kicking catalog load",
   );
   assert.doesNotMatch(
-    fn,
+    fn.slice(decideAt, ensureAt + 40),
     /await ensureCatalogLoaded\(\)/,
     "#436 awaited catalog before VAD cancel — that skipped first-turn search",
   );

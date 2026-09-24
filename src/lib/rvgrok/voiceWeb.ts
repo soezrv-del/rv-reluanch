@@ -3,23 +3,19 @@
  *
  * Detection is NOT forked: `decideVoiceWebResearch` calls `needsWebFallback`
  * from `webIntent.ts` (same function chat uses via `buildChatGrounding`).
- * The spoken hold is narrower than browse: repair / market / off-catalog /
- * specs / GVWR / engine / pricing / year-make-model speak
- * VOICE_RESEARCH_HOLD_PHRASE ("give me one second") while live search runs.
- * Catalog compares without spec keywords stay offline. Spec asks and catalog miss
- * still research even when the hold is off — search is required, not optional.
+ * The spoken hold is narrower than browse: repair / market / live
+ * conditions / unpinned OEM specs speak VOICE_RESEARCH_HOLD_PHRASE
+ * ("give me one second") while live search runs. A catalog pin and
+ * memory-answerable coach talk stay offline — no hold, no scrape.
  */
 
 import {
   catalogGapNeedsWeb,
   looksLikeCatalogAnswerableCoachCompare,
   looksLikeCasualNonResearch,
-  looksLikeCoachFactAsk,
   looksLikeImageOnlyAsk,
   looksLikeInventoryOrCountQuestion,
   looksLikeLiveResearchQuestion,
-  looksLikeNamedCoachProductQuestion,
-  looksLikeOffCatalogQuestion,
   looksLikeCarfaxQuestion,
   looksLikeOriginQuestion,
   looksLikeSpecQuestion,
@@ -113,28 +109,24 @@ export function shouldSpeakVoiceResearchHold(
   if (looksLikeCasualNonResearch(t) || looksLikeImageOnlyAsk(t)) return false;
   if (looksLikeOriginQuestion(t)) return false;
   if (looksLikeCarfaxQuestion(t)) return false;
+  // Forum / repair / manual still hold even when both coaches are known.
+  if (looksLikeLiveResearchQuestion(t)) return true;
   if (looksLikeOwnLotStockQuestion(t) || looksLikeInventoryOrCountQuestion(t)) {
     return false;
   }
-  // Forum / repair / manual still hold even when both coaches are known.
-  if (looksLikeLiveResearchQuestion(t)) return true;
-  // Specs / GVWR / engine / pricing / YMM — hold while live search runs.
-  if (looksLikeCoachFactAsk(t)) return true;
-  if (looksLikeCatalogAnswerableCoachCompare(t)) return false;
-  if (looksLikeOffCatalogQuestion(t)) return true;
-  if (catalogGapNeedsWeb(specs ?? null, t)) {
-    if (looksLikeNamedCoachProductQuestion(t) || looksLikeSpecQuestion(t)) {
-      return true;
-    }
+  // Unpinned OEM specs hold while search runs. A lock does not hold.
+  if (looksLikeSpecQuestion(t) && catalogGapNeedsWeb(specs ?? null, t)) {
+    return true;
   }
+  if (looksLikeCatalogAnswerableCoachCompare(t)) return false;
   return false;
 }
 
 /**
  * Same trigger as text chat: `needsWebFallback` from `webIntent.ts`.
  * Callers pass specs from `buildChatGrounding` when a coach is in context.
- * Greetings / lifestyle / payment stay on the catalog-only voice path.
- * Catalog miss always researches — hold is optional, search is not.
+ * Greetings / lifestyle / payment / locked pins stay on the memory path.
+ * An unpinned OEM number still researches. Hold is optional.
  */
 export function decideVoiceWebResearch(opts: {
   transcript: string;
@@ -147,10 +139,8 @@ export function decideVoiceWebResearch(opts: {
     return { action: "pass" };
   }
   const speakHold = shouldSpeakVoiceResearchHold(transcript, opts.specs);
-  // Catalog miss / GAP / live research: always run the sidecar.
-  // Do not skip because the spoken hold is off.
-  // Do not skip because a catalog pin exists — first YMM/spec ask
-  // still researches (catalog may paint the desk while search runs).
+  // needsWebFallback already opted in. External asks always run the sidecar.
+  // A catalog pin never reaches here.
   return {
     action: "research",
     query: transcript.slice(0, 400),

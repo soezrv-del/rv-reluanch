@@ -85,8 +85,8 @@ test("repair intent stays off for specs, lifestyle, and system-name-only asks", 
   }
   assert.equal(
     needsWebFallback({ missingHard: false }, no[2]!),
-    true,
-    "Lineage M spec ask must search first even when catalog is locked",
+    false,
+    "locked Lineage M spec answers from the catalog pin — no pre-token browse",
   );
 });
 

@@ -45,7 +45,7 @@ test("Tell me about a 2025 Jayco Seneca 37K is a product ask, not inventory", ()
   assert.equal(looksLikeOwnLotStockQuestion(SENECA), false);
   assert.equal(looksLikeNamedCoachProductQuestion(SENECA), true);
   assert.equal(looksLikeCoachFactAsk(SENECA), true);
-  assert.equal(needsWebFallback(null, SENECA), true);
+  assert.equal(needsWebFallback(null, SENECA), false);
   assert.equal(shouldSkipWebForOwnLot(SENECA), false);
 });
 
@@ -58,7 +58,7 @@ test("tell me about the Entegra Vision SE stays product — not a lot search", (
 
 test("Seneca product turn grounding requires web/catalog and never lot-miss copy", () => {
   const chat = buildChatGrounding({ query: SENECA });
-  assert.equal(chat.needsWeb, true);
+  assert.equal(chat.needsWeb, false);
   assert.doesNotMatch(chat.block || "", /say none of that coach is on our lot/i);
   assert.doesNotMatch(chat.block || "", /on our lot/);
   assert.doesNotMatch(chat.block || "", /OWN-LOT INVENTORY/);

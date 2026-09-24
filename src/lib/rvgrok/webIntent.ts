@@ -3,21 +3,21 @@
  * Spec-catalog-free (no rvData). Coach-vs-coach compare skip uses the
  * thin CATALOG_INDEX names in coachCompare.ts.
  *
- * Standing rule: specs / GVWR / engine / pricing / year-make-model coach
- * asks ALWAYS browse first — even when the catalog already has a pin.
- * Training data is not an answer. Catalog lock may confirm a live number;
- * it must not skip the search. Search is also required on a catalog GAP
- * (no row, UNKNOWN hard fields, missing OEM weight pin on a weight ask)
- * or own-lot miss. After notes: use the live hit; never EST when a live
- * OEM / brochure / dealer source exists. If search returns nothing, say
- * so and retry once — do not invent brochure numbers from training.
+ * Memory first. The model answers from its own knowledge (and a catalog
+ * pin already in hand) before any browse. Catalog, search, and internet
+ * are fallbacks — not a step before the first token.
+ * Browse only when the ask needs something memory cannot honestly pin:
+ * repair / forum / manual / TSB, live market value, inventory counts,
+ * an OEM spec the catalog does not already pin (no row, UNKNOWN hard
+ * fields, missing OEM weight pin on a weight ask), or a live condition
+ * (weather, road closures). A locked pin does not wait on search.
+ * Do not invent OEM numbers. If search returns nothing, say so — never
+ * EST when a live OEM / brochure / dealer source exists.
  * Inventory / diesel-count / in-stock still trip this detector so voice+chat
  * can inject the own-lot snapshot; a *hit* skips public web, a miss browses.
- * Skip only hi / lifestyle / payment / image-only turns, and
- * catalog-answerable coach-vs-coach compares that are not spec/price asks
- * (both makes/models known).
- * Market value / pricing always browses (live nationwide asking, year ±2)
- * — catalog, nightly scrape, and competitor-latest are not price SoT.
+ * Skip hi / lifestyle / payment / image-only turns, named-coach small talk,
+ * and catalog-answerable coach-vs-coach compares.
+ * Market value / pricing always browses (live nationwide asking, year ±2).
  * Repair / forum / manual asks still browse even on a compare.
  */
 
@@ -85,9 +85,12 @@ const PRODUCT_ABOUT_RE =
 const IMAGE_ONLY_RE =
   /\b(draw|generate|illustrate|sketch|visualize|paint)\b/i;
 
-/** Places / conditions the catalog never stores — still browse when a coach is locked. */
+/** Places the catalog never stores. Model memory answers these; they do not block the first token. */
 const OFF_CATALOG_RE =
   /\b(fish(?:ing)?|campgrounds?|rv parks?|dump stations?|boondock(?:ing)?|national parks?|state parks?|lakes?|rivers?|piers?|hiking|trailheads?|weather|road closures?|propane stations?)\b/i;
+
+/** Live conditions memory cannot pin — weather and closures still browse. */
+const LIVE_CONDITION_RE = /\b(weather|road closures?)\b/i;
 
 /** Own-lot / diesel-count / in-stock — catalog has no inventory. */
 const INVENTORY_OR_COUNT_RE =
@@ -194,8 +197,8 @@ export function looksLikeLiveResearchQuestion(text: string): boolean {
 
 /**
  * Specs, GVWR, engine, pricing, or a clear year/make/model coach ask.
- * These MUST run live web_search before the model finalizes — catalog
- * lock does not skip the browse.
+ * Detection only. A locked catalog pin answers from memory; browse is
+ * for a catalog GAP on an OEM-number ask, not every coach mention.
  */
 export function looksLikeCoachFactAsk(text: string): boolean {
   const t = normalizeAskText(text);
@@ -266,7 +269,7 @@ function missingOemWeightPinOf(specs: WebFallbackSpecs): boolean {
   return false;
 }
 
-/** No catalog row, UNKNOWN hard fields, or a weight ask with no OEM pin. */
+/** No catalog row, unknown / catalog GAP, or a weight ask with no OEM pin. Chat does not block the first token on this. */
 export function catalogGapNeedsWeb(
   specs: WebFallbackSpecs,
   userText?: string,
@@ -283,14 +286,21 @@ export function catalogGapNeedsWeb(
   return false;
 }
 
+/** Weather / road closures — not fishing or parks, which memory can answer. */
+export function looksLikeLiveConditionQuestion(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim() || looksLikeCasualNonResearch(t)) return false;
+  return LIVE_CONDITION_RE.test(t);
+}
+
 /**
- * Browse whenever the ask needs a live fact — specs / GVWR / engine /
- * pricing / year-make-model, unresolved coach, missing hard fields,
- * unknown/GAP, or an ask the catalog never covers.
- * Hi / lifestyle / payment / image-only stay offline.
- * Resolved hard row still browses for coach-fact asks. Catalog lock is
- * injected so a "no catalog" web note cannot overwrite a pin
- * (Lineage Series M, etc.). Own-lot *hit* skips the actual browse in the API.
+ * Browse only when the ask needs an external fact memory cannot pin.
+ * Hi / lifestyle / payment / image-only / named-coach small talk stay
+ * offline and stream immediately. Coach and spec asks — pinned or not —
+ * also stream from memory and the catalog. Resolved hard row or a gap,
+ * they must not invent an OEM
+ * pin; they do not wait on search. Own-lot *hit* skips the browse in the API.
+ * Repair, market, inventory, and live conditions still browse.
  */
 export function needsWebFallback(
   specs: WebFallbackSpecs,
@@ -304,15 +314,10 @@ export function needsWebFallback(
   if (looksLikeIncompleteCoachIdentityAsk(userText)) return false;
   if (looksLikeLiveResearchQuestion(userText)) return true;
   if (looksLikeInventoryOrCountQuestion(userText)) return true;
-  // Specs / GVWR / engine / pricing / YMM — search first, even on a lock.
-  if (looksLikeCoachFactAsk(userText)) return true;
-  // Both coaches identifiable — answer class / powertrain from catalog
-  // now. Do not stall for a web hold. Forum / repair / spec already returned.
+  // Both coaches identifiable — answer from catalog now.
+  // Forum / repair already returned above.
   if (looksLikeCatalogAnswerableCoachCompare(userText)) return false;
-  // Unknown / catalog GAP (no identity, UNKNOWN hard fields, missing
-  // OEM weight pin on a weight ask) → search is required this turn.
-  if (catalogGapNeedsWeb(specs, userText)) return true;
-  if (looksLikeOffCatalogQuestion(userText)) return true;
+  if (looksLikeLiveConditionQuestion(userText)) return true;
   if (
     opts?.agentMode &&
     AGENT_EXTRA_LOOKUP_RE.test(normalizeAskText(userText))
