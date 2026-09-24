@@ -136,6 +136,16 @@ export function looksLikeExplicitVoiceReportAsk(text: string): boolean {
 }
 
 /**
+ * "tell me about [coach]" — a short coach turn.
+ * Distinct from "tell me everything about", which is an explicit report.
+ */
+export function looksLikeVoiceTellMeAboutAsk(text: string): boolean {
+  const t = normalizeAskText(text || "").trim();
+  if (!t || looksLikeExplicitVoiceReportAsk(t)) return false;
+  return /\btell me about\b/i.test(t);
+}
+
+/**
  * Field-only or meta follow-up, including a named coach plus one field.
  * "just the GVWR", "what's the GVWR", "the UVW", "why didn't you pull X".
  */
@@ -329,9 +339,13 @@ function voiceSpecEngineSpeechBody(
   return stripSpokenSourceTags(lines.join(" "));
 }
 
-/** Quick overview — the catalog coach line only. No spec dump, no extras. */
+/**
+ * Quick overview — the catalog coach line only. No spec dump.
+ * Extras are spoken only after an explicit report's quick overview.
+ */
 export function formatVoiceQuickOverview(
   sheet: DeskSheetPayload | null,
+  opts?: { offerExtras?: boolean },
 ): string {
   if (!sheet) {
     return "Catalog and the fallback chain both missed this coach. I won't guess a number.";
@@ -340,6 +354,7 @@ export function formatVoiceQuickOverview(
   const line = coach
     ? `${coach}.`
     : "Catalog and the fallback chain both missed this coach. I won't guess a number.";
+  if (!opts?.offerExtras) return line;
   return `${line} ${EXTRAS_OFFER}`;
 }
 

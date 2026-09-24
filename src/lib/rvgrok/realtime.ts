@@ -43,6 +43,7 @@ import {
   formatVoiceSpecEngineSpeech,
   looksLikeExplicitVoiceReportAsk,
   looksLikeVoiceCoachOrSpecAsk,
+  looksLikeVoiceTellMeAboutAsk,
   looksLikeVoiceFieldOrMetaAsk,
   shouldSpeakVoiceCoachChoice,
   VOICE_COACH_CHOICE_INSTRUCTIONS,
@@ -959,7 +960,7 @@ export class GrokRealtimeSession {
       this.pendingSpecSheet = null;
       this.specEngineSpoken = false;
       this.engineSheetPainted = false;
-      await this.deliverVoiceQuick(specSeq, transcript);
+      await this.deliverVoiceQuick(specSeq, transcript, { reportDelivery: true });
       return;
     }
     if (this.voiceDeliver === "full") {
@@ -993,7 +994,8 @@ export class GrokRealtimeSession {
     this.specEngineSpoken = false;
     this.engineSheetPainted = false;
     if (
-      looksLikeVoiceCoachOrSpecAsk(transcript) &&
+      (looksLikeVoiceCoachOrSpecAsk(transcript) ||
+        looksLikeVoiceTellMeAboutAsk(transcript)) &&
       !looksLikeExplicitVoiceReportAsk(transcript)
     ) {
       await ensureCatalogLoaded().catch(() => null);
@@ -1354,6 +1356,7 @@ export class GrokRealtimeSession {
    * Speak the catalog sheet now. Empty-field scrape runs beside speech
    * and remounts the desk when fills arrive — same as typed chat's
    * `void resolveDeskSheetThenFallback`.
+   * Extras ride that remount only after an explicit report delivery.
    */
   private speakCatalogThenFallback(
     seq: number,
@@ -1361,6 +1364,7 @@ export class GrokRealtimeSession {
     painted: DeskSheetPayload | null,
     opts: Parameters<typeof resolveDeskSheetThenFallback>[0],
     pending?: Promise<DeskSheetPayload | null> | null,
+    offerExtras = true,
   ): DeskSheetPayload | null {
     const later = pending ?? resolveDeskSheetThenFallback(opts);
     void later
@@ -1369,14 +1373,20 @@ export class GrokRealtimeSession {
           return;
         }
         this.handlers.onDeskSheet?.(
-          withVoiceSpecExtras(next, transcript, { force: true }),
+          offerExtras
+            ? withVoiceSpecExtras(next, transcript, { force: true })
+            : next,
         );
       })
       .catch(() => undefined);
     return painted;
   }
 
-  private async deliverVoiceQuick(seq: number, transcript: string) {
+  private async deliverVoiceQuick(
+    seq: number,
+    transcript: string,
+    opts?: { reportDelivery?: boolean },
+  ) {
     this.cancelAutoResponseForResearch();
     await ensureCatalogLoaded().catch(() => null);
     if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
@@ -1394,22 +1404,31 @@ export class GrokRealtimeSession {
       knowledgeQuery: transcript,
     };
     const painted = resolveDeskSheet(sheetOpts);
+    const reportDelivery = opts?.reportDelivery === true;
     const sheet = this.speakCatalogThenFallback(
       seq,
       transcript,
       painted,
       sheetOpts,
+      undefined,
+      reportDelivery,
     );
     if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
     if (sheet) {
       this.rememberVoiceCachedSheet(grounded.identity, sheet, transcript);
       this.deskFallbackSeq += 1;
       this.engineSheetPainted = true;
-      this.handlers.onDeskSheet?.(withVoiceSpecExtras(sheet, transcript));
+      this.handlers.onDeskSheet?.(
+        reportDelivery
+          ? withVoiceSpecExtras(sheet, transcript, { force: true })
+          : sheet,
+      );
     }
     this.researchPhase = "answering";
-    this.offerVoiceExtras(sheet, transcript);
-    this.flushSpecEngineAnswer(formatVoiceQuickOverview(sheet));
+    if (reportDelivery) this.offerVoiceExtras(sheet, transcript);
+    this.flushSpecEngineAnswer(
+      formatVoiceQuickOverview(sheet, { offerExtras: reportDelivery }),
+    );
   }
 
   /** All five prompt cards. Nothing loads until they name one. */

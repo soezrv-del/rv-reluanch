@@ -13,6 +13,7 @@ import {
   isVoiceExtraNudge,
   looksLikeExplicitVoiceReportAsk,
   looksLikeVoiceCoachOrSpecAsk,
+  looksLikeVoiceTellMeAboutAsk,
   looksLikeVoiceFieldOrMetaAsk,
   shouldSpeakVoiceCoachChoice,
   VOICE_COACH_CHOICE_LINE,
@@ -196,13 +197,63 @@ test("coach or spec ask is a choice, not a synopsis or an auto full report", () 
   const quick = formatVoiceQuickOverview(lineageSheet());
   assert.match(quick, /31ZW/);
   assert.doesNotMatch(quick, /18,186/);
-  assert.match(quick, /ratings, market value, a video, NHTSA safety, or maintenance/);
+  assert.doesNotMatch(quick, /ratings, market value/);
+  const quickReport = formatVoiceQuickOverview(lineageSheet(), {
+    offerExtras: true,
+  });
+  assert.match(
+    quickReport,
+    /ratings, market value, a video, NHTSA safety, or maintenance/,
+  );
   const picked = withVoiceSpecExtras(lineageSheet(), "tell me about it", {
     force: true,
     pick: "market",
   });
   assert.equal(picked?.voiceExtraPick, "market");
   assert.equal(picked?.offerVoiceExtras, true);
+});
+
+test("tell me about a coach is a short line and does not offer the five extras", () => {
+  const q = "tell me about the Cornerstone";
+  assert.equal(looksLikeVoiceTellMeAboutAsk(q), true);
+  assert.equal(looksLikeExplicitVoiceReportAsk(q), false);
+  assert.equal(looksLikeVoiceTellMeAboutAsk("tell me everything about the Cornerstone"), false);
+  assert.equal(looksLikeExplicitVoiceReportAsk("tell me everything about the Cornerstone"), true);
+  const short = formatVoiceQuickOverview(
+    lineageSheet({
+      year: "2026",
+      make: "Entegra Coach",
+      model: "Cornerstone",
+      floorplan: "45B",
+      title: "2026 Entegra Coach Cornerstone 45B",
+    }),
+  );
+  assert.match(short, /Cornerstone 45B/);
+  assert.doesNotMatch(short, /ratings|market value|NHTSA|maintenance|video/i);
+  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
+  const fn = realtime.slice(
+    realtime.indexOf("private async maybeEnrichWithWebResearch"),
+  );
+  assert.match(fn, /looksLikeVoiceTellMeAboutAsk\(transcript\)/);
+  assert.match(fn, /deliverVoiceQuick\(specSeq, transcript\);/);
+  assert.match(
+    fn,
+    /deliverVoiceQuick\(specSeq, transcript, \{ reportDelivery: true \}\)/,
+  );
+  const quickFn = realtime.slice(
+    realtime.indexOf("private async deliverVoiceQuick"),
+    realtime.indexOf("private offerVoiceExtras"),
+  );
+  assert.match(quickFn, /if \(reportDelivery\) this\.offerVoiceExtras/);
+  assert.match(quickFn, /offerExtras: reportDelivery/);
+  const catalogFirst = realtime.slice(
+    realtime.indexOf("private speakCatalogThenFallback"),
+    realtime.indexOf("private async deliverVoiceQuick"),
+  );
+  assert.match(catalogFirst, /resolveDeskSheetThenFallback/);
+  assert.match(catalogFirst, /offerExtras/);
+  assert.match(quickFn, /speakCatalogThenFallback\(/);
+  assert.match(quickFn, /reportDelivery,/);
 });
 
 test("choice line only for an explicit report ask with ambiguous length", () => {
