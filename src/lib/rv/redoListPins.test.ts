@@ -152,4 +152,54 @@ test("redo-list floorplans parse and do not inherit the wrong series tanks", asy
   assert.equal(hawk.gvwrLbs, 7250);
   assert.equal(hawk.uvw, "Confirm brochure");
   assert.equal(hawk.grayWater, "31 gal");
+
+  assert.equal(extractFloorplanToken("2026 Forest River r-Pod RP-197"), "RP-197");
+  assert.equal(
+    findOemHoldingTanks("2026", "Forest River", "r-Pod", "RP-197").freshWater,
+    40,
+  );
+  assert.equal(
+    findOemHoldingTanks("2026", "Forest River", "r-Pod", "RP190").grayWater,
+    30,
+  );
+
+  const xplor = RV_DATA["Grand Design"]["Transcend Xplor"];
+  const mkx = buildBrochureSpecs(xplor, "2026", "Grand Design", "Transcend Xplor", "20MKX");
+  assert.equal(mkx.freshWater, "56 gal");
+  assert.equal(mkx.grayWater, "39 gal");
+  assert.equal(mkx.blackWater, "39 gal");
+  assert.equal(mkx.uvwLbs, 5397);
+  const mkx2025 = buildBrochureSpecs(xplor, "2025", "Grand Design", "Transcend Xplor", "20MKX");
+  assert.equal(mkx2025.grayWater, "78 gal");
+  const bhx = buildBrochureSpecs(xplor, "2026", "Grand Design", "Transcend Xplor", "23BHX");
+  assert.equal(bhx.blackWater, "57 gal");
+  const mlx = buildBrochureSpecs(xplor, "2026", "Grand Design", "Transcend Xplor", "25MLX");
+  assert.equal(mlx.grayWater, "57 gal");
+  assert.equal(mlx.gvwr, "Confirm brochure");
+
+  const le = RV_DATA["Forest River"]["Sunseeker LE"];
+  const sle = buildBrochureSpecs(le, "2026", "Forest River", "Sunseeker LE", "2250SLE");
+  assert.equal(sle.freshWater, "35 gal");
+  assert.equal(sle.grayWater, "32 gal");
+  assert.equal(sle.blackWater, "27 gal");
+  assert.equal(sle.propane, "41 lb");
+  assert.equal(sle.gvwr, "Confirm brochure");
+  assert.equal(sle.fuelCapacity, "Confirm brochure");
+  const le2024 = buildBrochureSpecs(le, "2024", "Forest River", "Sunseeker LE", "2950LE");
+  assert.equal(le2024.grayWater, "32 gal");
+  const le2950 = buildBrochureSpecs(le, "2026", "Forest River", "Sunseeker LE", "2950LE");
+  assert.equal(le2950.grayWater, "39 gal");
+  assert.equal(le2950.gvwrLbs, 14500);
+  assert.equal(le2950.fuelCapacity, "Confirm brochure");
+
+  const rpod = RV_DATA["Forest River"]["r-Pod"];
+  const rp197 = buildBrochureSpecs(rpod, "2027", "Forest River", "r-Pod", "RP-197");
+  assert.equal(rp197.freshWater, "40 gal");
+  assert.equal(rp197.grayWater, "40 gal");
+  assert.equal(rp197.blackWater, "30 gal");
+  assert.equal(rp197.uvwLbs, 4054);
+  const rp171 = buildBrochureSpecs(rpod, "2026", "Forest River", "r-Pod", "RP-171");
+  assert.equal(rp171.uvwLbs, 2529);
+  assert.equal(rp171.gvwrLbs, 4029);
+  assert.equal(rp171.freshWater, "30 gal");
 });

@@ -69,7 +69,7 @@ function escapeBrandRe(s: string): string {
  * Skips $50k / 80k price leftovers — not alphanumeric FW codes (310GK).
  */
 const FLOORPLAN_TOKEN_RE =
-  /\b(\d{2,3}\s?[A-Za-z]{1,4}|[A-Za-z]{1,3}\d{2,3}[A-Za-z]?|(?!19[89]\d\b)(?!20[0-2]\d\b)\d{4}[A-Za-z]{0,6})\b/g;
+  /\b(\d{2,3}\s?[A-Za-z]{1,4}|[A-Za-z]{1,3}-?\d{2,3}[A-Za-z]{0,2}|(?!19[89]\d\b)(?!20[0-2]\d\b)\d{4}[A-Za-z]{0,6})\b/g;
 
 /** Model years — never treat these as a 4-digit floorplan. */
 export function isModelYearToken(token: string): boolean {

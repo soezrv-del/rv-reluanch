@@ -31,6 +31,8 @@ export type OemFloorplanSpec = {
   garageCapacityLbs?: number;
   rampPatioLbs?: number;
   fuelStationGal?: number;
+  /** Brochure fuel gallons. 0 means the sheet conflicts (dual chassis) — do not inherit the series tank. */
+  fuelCapacityGal?: number;
   axles?: string;
   tireSize?: string;
   sleeps?: number;
@@ -2921,6 +2923,624 @@ const OEM_FLOORPLAN_ROWS: Array<{
       source: "2027 General RV 210RL + 2026 Camping World 210RL + 2026 RV Guide propane",
     },
   },
+  // 2026 Grand Design Transcend brochure capacity table (fresh / gray / black).
+  // The series seed 56/78/39 is only some plans. Do not copy 2026 UVW onto 2025 or 2027.
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "transcend xplor",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "20MKX",
+    spec: {
+      lengthDisplay: `24' 11"`,
+      overallLengthIn: 299,
+      exteriorHeightIn: 132,
+      exteriorWidthIn: 96,
+      interiorHeightIn: 78,
+      uvwLbs: 5397,
+      gvwrLbs: 6995,
+      hitchLbs: 517,
+      freshWater: 56,
+      grayWater: 39,
+      blackWater: 39,
+      waterHeaterGal: 6,
+      note: "Not the 56/78/39 seed. 2027 dry weight is a different card (5,250 / hitch 490) and is not used here.",
+      source: "2026 Grand Design Transcend brochure + RV Guide / dealer 20MKX",
+    },
+  },
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "transcend xplor",
+    yearMin: 2027,
+    yearMax: 2027,
+    floorplan: "20MKX",
+    spec: {
+      lengthDisplay: `24' 11"`,
+      overallLengthIn: 299,
+      exteriorHeightIn: 132,
+      exteriorWidthIn: 96,
+      gvwrLbs: 0,
+      hitchLbs: 0,
+      freshWater: 56,
+      grayWater: 39,
+      blackWater: 39,
+      waterHeaterGal: 6,
+      note: "Tanks match the 2026 sheet. 2027 card prints GVWR 6,995 but dry weight 5,250 vs the 2026 brochure 5,397, so weights stay blank.",
+      source: "2027 Blue Compass Transcend Xplor 20MKX",
+    },
+  },
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "transcend xplor",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "23BHX",
+    spec: {
+      lengthDisplay: `26' 11"`,
+      overallLengthIn: 323,
+      exteriorHeightIn: 132,
+      exteriorWidthIn: 96,
+      interiorHeightIn: 78,
+      uvwLbs: 5580,
+      gvwrLbs: 6995,
+      hitchLbs: 550,
+      freshWater: 56,
+      grayWater: 78,
+      blackWater: 57,
+      waterHeaterGal: 6,
+      note: "Black is 57, not the series 39. 2026 brochure UVW 5,580. A weighed 2027 unit at 5,792 is not the brochure dry weight.",
+      source: "2026 Transcend brochure + 2026 RV Guide 23BHX",
+    },
+  },
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "transcend xplor",
+    yearMin: 2027,
+    yearMax: 2027,
+    floorplan: "23BHX",
+    spec: {
+      lengthDisplay: `26' 11"`,
+      overallLengthIn: 323,
+      exteriorHeightIn: 132,
+      exteriorWidthIn: 96,
+      gvwrLbs: 0,
+      hitchLbs: 550,
+      freshWater: 56,
+      grayWater: 78,
+      blackWater: 57,
+      waterHeaterGal: 6,
+      note: "Tanks and hitch match the 2026 brochure. GVWR 6,995 is on the card, but dry weight 5,792 vs brochure 5,580, so both weights stay blank rather than estimating UVW.",
+      source: "2027 Ansley Transcend Xplor 23BHX",
+    },
+  },
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "transcend xplor",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "25MLX",
+    spec: {
+      lengthDisplay: `29' 9"`,
+      overallLengthIn: 357,
+      exteriorHeightIn: 132,
+      exteriorWidthIn: 96,
+      uvwLbs: 6335,
+      gvwrLbs: 0,
+      hitchLbs: 630,
+      freshWater: 56,
+      grayWater: 57,
+      blackWater: 39,
+      note: "Gray is 57, not the series 78. GVWR is not on the brochure row.",
+      source: "2026 Grand Design Transcend brochure",
+    },
+  },
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "transcend xplor",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "22RBX",
+    spec: {
+      lengthDisplay: `26' 10"`,
+      overallLengthIn: 322,
+      exteriorHeightIn: 132,
+      exteriorWidthIn: 96,
+      uvwLbs: 5749,
+      gvwrLbs: 0,
+      hitchLbs: 573,
+      freshWater: 56,
+      grayWater: 68,
+      blackWater: 39,
+      note: "Gray is 68, not the series 78.",
+      source: "2026 Grand Design Transcend brochure",
+    },
+  },
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "transcend xplor",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "21RLX",
+    spec: {
+      lengthDisplay: `25' 10"`,
+      overallLengthIn: 310,
+      exteriorHeightIn: 132,
+      exteriorWidthIn: 96,
+      uvwLbs: 4978,
+      gvwrLbs: 0,
+      hitchLbs: 700,
+      freshWater: 56,
+      grayWater: 78,
+      blackWater: 39,
+      source: "2026 Grand Design Transcend brochure",
+    },
+  },
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "transcend xplor",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "19BHX",
+    spec: {
+      lengthDisplay: `26' 3"`,
+      overallLengthIn: 315,
+      exteriorHeightIn: 132,
+      exteriorWidthIn: 96,
+      uvwLbs: 4894,
+      gvwrLbs: 0,
+      hitchLbs: 782,
+      freshWater: 56,
+      grayWater: 78,
+      blackWater: 39,
+      source: "2026 Grand Design Transcend brochure",
+    },
+  },
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "transcend xplor",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "26RBX",
+    spec: {
+      lengthDisplay: `31' 6"`,
+      overallLengthIn: 378,
+      exteriorHeightIn: 132,
+      exteriorWidthIn: 96,
+      uvwLbs: 6147,
+      gvwrLbs: 0,
+      hitchLbs: 627,
+      freshWater: 56,
+      grayWater: 78,
+      blackWater: 39,
+      source: "2026 Grand Design Transcend brochure",
+    },
+  },
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "transcend xplor",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "27DBX",
+    spec: {
+      lengthDisplay: `31' 9"`,
+      overallLengthIn: 381,
+      exteriorHeightIn: 132,
+      exteriorWidthIn: 96,
+      uvwLbs: 6820,
+      gvwrLbs: 0,
+      hitchLbs: 714,
+      freshWater: 56,
+      grayWater: 78,
+      blackWater: 39,
+      source: "2026 Grand Design Transcend brochure",
+    },
+  },
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "transcend xplor",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "24BHX",
+    spec: {
+      lengthDisplay: `29' 11"`,
+      overallLengthIn: 359,
+      exteriorHeightIn: 132,
+      exteriorWidthIn: 96,
+      uvwLbs: 5756,
+      gvwrLbs: 0,
+      hitchLbs: 583,
+      freshWater: 56,
+      grayWater: 78,
+      blackWater: 39,
+      source: "2026 Grand Design Transcend brochure",
+    },
+  },
+  {
+    makeIncludes: "grand design",
+    modelIncludes: "transcend xplor",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "26BHX",
+    spec: {
+      lengthDisplay: `30' 11"`,
+      overallLengthIn: 371,
+      exteriorHeightIn: 132,
+      exteriorWidthIn: 96,
+      uvwLbs: 6505,
+      gvwrLbs: 0,
+      hitchLbs: 635,
+      freshWater: 56,
+      grayWater: 78,
+      blackWater: 39,
+      source: "2026 Grand Design Transcend brochure",
+    },
+  },
+  // Sunseeker LE floorplan pages. Series 44/32/32 is not these plans.
+  // Dual Chevy/Ford rows leave GVWR, fuel, and length blank when the two columns disagree.
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "sunseeker le",
+    yearMin: 2026,
+    yearMax: 2027,
+    floorplan: "2250SLE",
+    spec: {
+      lengthDisplay: `23' 10"–24' 4"`,
+      overallLengthIn: 0,
+      exteriorHeightIn: 135,
+      exteriorWidthIn: 101,
+      gvwrLbs: 0,
+      hitchLbs: 0,
+      freshWater: 35,
+      grayWater: 32,
+      blackWater: 27,
+      propaneLbs: 41,
+      waterHeaterGal: 6,
+      fuelCapacityGal: 0,
+      slideouts: 1,
+      note: "Chevy 12,300 / 57 gal / 24' 4\" vs Ford 12,500 / 55 gal / 23' 10\". Tanks and LP match on both.",
+      source: "forestriverinc.com Sunseeker 2250SLE 2026 and 2027",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "sunseeker le",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "2350LE",
+    spec: {
+      lengthDisplay: `24' 6"–25' 0"`,
+      overallLengthIn: 0,
+      exteriorHeightIn: 135,
+      exteriorWidthIn: 101,
+      gvwrLbs: 0,
+      hitchLbs: 0,
+      freshWater: 44,
+      grayWater: 39,
+      blackWater: 39,
+      propaneLbs: 41,
+      waterHeaterGal: 6,
+      fuelCapacityGal: 0,
+      note: "Not the 44/32/32 seed. Chevy 12,300 / 57 gal / 25' 0\" vs Ford 12,500 / 55 gal / 24' 6\".",
+      source: "forestriverinc.com 2026 Sunseeker 2350LE",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "sunseeker le",
+    yearMin: 2026,
+    yearMax: 2027,
+    floorplan: "2950LE",
+    spec: {
+      lengthDisplay: `29' 11"`,
+      overallLengthIn: 359,
+      exteriorHeightIn: 135,
+      exteriorWidthIn: 101,
+      gvwrLbs: 14500,
+      hitchLbs: 7500,
+      freshWater: 44,
+      grayWater: 39,
+      blackWater: 39,
+      waterHeaterGal: 6,
+      fuelCapacityGal: 0,
+      note: "E-450. Fuel and LP print TBD on the floorplan page, so they stay blank. Not the 44/32/32 seed. 2024 is not this sheet.",
+      source: "forestriverinc.com Sunseeker 2950LE 2026 and 2027",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "sunseeker le",
+    yearMin: 2026,
+    yearMax: 2027,
+    floorplan: "3250DSLE",
+    spec: {
+      lengthDisplay: `32' 3"`,
+      overallLengthIn: 387,
+      exteriorHeightIn: 135,
+      exteriorWidthIn: 101,
+      gvwrLbs: 14500,
+      hitchLbs: 7500,
+      freshWater: 44,
+      grayWater: 39,
+      blackWater: 39,
+      propaneLbs: 41,
+      waterHeaterGal: 6,
+      fuelCapacityGal: 55,
+      note: "Ford E-450. Not the 44/32/32 seed.",
+      source: "forestriverinc.com 2027 3250DSLE + 2026 RV Guide",
+    },
+  },
+  // 2026 r-pod brochure table. Body width is the printed width (often under 8 ft), not a 96 in default.
+  // GVWR only where the floorplan page prints it. CCC is not turned into a GVWR.
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "RP-171",
+    spec: {
+      lengthDisplay: `19' 0"`,
+      overallLengthIn: 228,
+      exteriorHeightIn: 118,
+      exteriorWidthIn: 77,
+      uvwLbs: 2529,
+      gvwrLbs: 4029,
+      hitchLbs: 360,
+      freshWater: 30,
+      grayWater: 30,
+      blackWater: 30,
+      note: "2026 brochure. Width 6' 5\" is the body, not 96 in. CCC 1,500 is printed. GVWR is the floorplan page.",
+      source: "2026 r-pod brochure + RV Guide RP-171",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "RP-190",
+    spec: {
+      lengthDisplay: `20' 4"`,
+      overallLengthIn: 244,
+      exteriorHeightIn: 118,
+      exteriorWidthIn: 77,
+      uvwLbs: 3049,
+      gvwrLbs: 4770,
+      hitchLbs: 370,
+      freshWater: 30,
+      grayWater: 30,
+      blackWater: 30,
+      note: "Width 6' 5\". CCC 1,721 printed. GVWR is the OEM floorplan page.",
+      source: "2026 r-pod brochure + forestriverinc.com RP-190",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "RP-180",
+    spec: {
+      lengthDisplay: `20' 0"`,
+      overallLengthIn: 240,
+      exteriorHeightIn: 118,
+      exteriorWidthIn: 77,
+      uvwLbs: 2974,
+      gvwrLbs: 0,
+      hitchLbs: 385,
+      freshWater: 30,
+      grayWater: 30,
+      blackWater: 30,
+      note: "CCC 1,811 is printed. GVWR is not on the brochure row.",
+      source: "2026 r-pod brochure",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "RP-185",
+    spec: {
+      lengthDisplay: `23' 1"`,
+      overallLengthIn: 277,
+      exteriorHeightIn: 124,
+      exteriorWidthIn: 96,
+      uvwLbs: 4089,
+      gvwrLbs: 0,
+      hitchLbs: 430,
+      freshWater: 30,
+      grayWater: 30,
+      blackWater: 30,
+      source: "2026 r-pod brochure",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "RP-192",
+    spec: {
+      lengthDisplay: `22' 2"`,
+      overallLengthIn: 266,
+      exteriorHeightIn: 124,
+      exteriorWidthIn: 88,
+      uvwLbs: 3649,
+      gvwrLbs: 0,
+      hitchLbs: 385,
+      freshWater: 30,
+      grayWater: 30,
+      blackWater: 30,
+      note: "Width 7' 4\".",
+      source: "2026 r-pod brochure",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "RP-194",
+    spec: {
+      lengthDisplay: `20' 6"`,
+      overallLengthIn: 246,
+      exteriorHeightIn: 124,
+      exteriorWidthIn: 88,
+      uvwLbs: 3404,
+      gvwrLbs: 4760,
+      hitchLbs: 360,
+      freshWater: 30,
+      grayWater: 30,
+      blackWater: 30,
+      note: "Brochure width is 7' 4\". The floorplan page's 96 in is not used.",
+      source: "2026 r-pod brochure + forestriverinc.com RP-194",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "RP-198",
+    spec: {
+      lengthDisplay: `25' 6"`,
+      overallLengthIn: 306,
+      exteriorHeightIn: 127,
+      exteriorWidthIn: 88,
+      uvwLbs: 4594,
+      gvwrLbs: 0,
+      hitchLbs: 475,
+      freshWater: 30,
+      grayWater: 30,
+      blackWater: 30,
+      source: "2026 r-pod brochure",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2026,
+    yearMax: 2027,
+    floorplan: "RP-197",
+    spec: {
+      lengthDisplay: `23' 0"`,
+      overallLengthIn: 276,
+      exteriorHeightIn: 129,
+      exteriorWidthIn: 96,
+      uvwLbs: 4054,
+      gvwrLbs: 5554,
+      hitchLbs: 470,
+      freshWater: 40,
+      grayWater: 40,
+      blackWater: 30,
+      note: "Not the r-pod 30/30/30 seed. 2027 floorplan page repeats the same weights and tanks.",
+      source: "2026 r-pod brochure + forestriverinc.com RP-197 2026 and 2027",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "RP-200",
+    spec: {
+      lengthDisplay: `25' 0"`,
+      overallLengthIn: 300,
+      exteriorHeightIn: 126,
+      exteriorWidthIn: 88,
+      uvwLbs: 4544,
+      gvwrLbs: 0,
+      hitchLbs: 585,
+      freshWater: 30,
+      grayWater: 30,
+      blackWater: 30,
+      source: "2026 r-pod brochure",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "RP-203",
+    spec: {
+      lengthDisplay: `25' 0"`,
+      overallLengthIn: 300,
+      exteriorHeightIn: 126,
+      exteriorWidthIn: 88,
+      uvwLbs: 4584,
+      gvwrLbs: 0,
+      hitchLbs: 635,
+      freshWater: 30,
+      grayWater: 30,
+      blackWater: 30,
+      note: "2026 sheet only. Do not use on the 2023 RP-203.",
+      source: "2026 r-pod brochure",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "RP-204",
+    spec: {
+      lengthDisplay: `25' 6"`,
+      overallLengthIn: 306,
+      exteriorHeightIn: 127,
+      exteriorWidthIn: 88,
+      uvwLbs: 4507,
+      gvwrLbs: 0,
+      hitchLbs: 575,
+      freshWater: 30,
+      grayWater: 60,
+      blackWater: 30,
+      note: "Gray is 60 on this plan only. Not the 30/30/30 seed.",
+      source: "2026 r-pod brochure",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2026,
+    yearMax: 2026,
+    floorplan: "RP-153",
+    spec: {
+      lengthDisplay: `17' 6"`,
+      overallLengthIn: 210,
+      exteriorHeightIn: 118,
+      exteriorWidthIn: 88,
+      uvwLbs: 3024,
+      gvwrLbs: 0,
+      hitchLbs: 290,
+      freshWater: 30,
+      grayWater: 30,
+      blackWater: 30,
+      note: "2026 sheet. The 2022 RP-153 is not this dry weight.",
+      source: "2026 r-pod brochure",
+    },
+  },
+  {
+    makeIncludes: "forest river",
+    modelIncludes: "r-pod",
+    yearMin: 2027,
+    yearMax: 2027,
+    floorplan: "RP-205",
+    spec: {
+      lengthDisplay: `25' 0"`,
+      overallLengthIn: 300,
+      exteriorHeightIn: 126,
+      exteriorWidthIn: 96,
+      uvwLbs: 4643,
+      gvwrLbs: 6143,
+      hitchLbs: 455,
+      freshWater: 40,
+      grayWater: 40,
+      blackWater: 30,
+      note: "Not the 30/30/30 seed. CCC 1,500 is printed on the OEM weight card.",
+      source: "forestriverinc.com RP-205 weight card + 2027 RV Wholesalers spec",
+    },
+  },
 ];
 
 // Duplicate Model T OEM rows for Model G (official OEM name)
@@ -2946,7 +3566,7 @@ export function findOemFloorplanSpec(
   if (!Number.isFinite(y)) return null;
   const mk = make.toLowerCase();
   const md = model.toLowerCase();
-  const fp = floorplan.trim().toUpperCase().replace(/\s+/g, "");
+  const fp = floorplan.trim().toUpperCase().replace(/[\s-]+/g, "");
 
   // Prefer the most specific modelIncludes match (longest string) so
   // "Discovery LXE" does not inherit base "Discovery" rows, etc.
@@ -3064,7 +3684,7 @@ export function findOemFloorplanSpec(
     ) {
       // allow half-ton / 5th specific rows (longer modelIncludes) to win via score
     }
-    const rowFp = row.floorplan.toUpperCase().replace(/\s+/g, "");
+    const rowFp = row.floorplan.toUpperCase().replace(/[\s-]+/g, "");
     if (rowFp !== fp) continue;
     const score = row.modelIncludes.length * 10 + row.makeIncludes.length;
     if (score > bestScore) {
@@ -5457,6 +6077,33 @@ const OEM_TANK_PINS: OemTankPin[] = [
   { makeIncludes: "forest river", modelIncludes: "rockwood signature travel trailer", yearMin: 2025, yearMax: 2025, floorplan: "8339FK", freshWater: 54, grayWater: 131, blackWater: 53 },
   { makeIncludes: "forest river", modelIncludes: "forester mbs", yearMin: 2018, yearMax: 2018, floorplan: "2401R", freshWater: 35, grayWater: 30, blackWater: 30, fuelCapacityGal: 26 },
   { makeIncludes: "keystone", modelIncludes: "hideout", yearMin: 2026, yearMax: 2027, floorplan: "210RL", freshWater: 45, grayWater: 39, blackWater: 39 },
+  { makeIncludes: "grand design", modelIncludes: "transcend xplor", yearMin: 2026, yearMax: 2027, floorplan: "20MKX", freshWater: 56, grayWater: 39, blackWater: 39 },
+  { makeIncludes: "grand design", modelIncludes: "transcend xplor", yearMin: 2026, yearMax: 2027, floorplan: "23BHX", freshWater: 56, grayWater: 78, blackWater: 57 },
+  { makeIncludes: "grand design", modelIncludes: "transcend xplor", yearMin: 2026, yearMax: 2026, floorplan: "25MLX", freshWater: 56, grayWater: 57, blackWater: 39 },
+  { makeIncludes: "grand design", modelIncludes: "transcend xplor", yearMin: 2026, yearMax: 2026, floorplan: "22RBX", freshWater: 56, grayWater: 68, blackWater: 39 },
+  { makeIncludes: "grand design", modelIncludes: "transcend xplor", yearMin: 2026, yearMax: 2026, floorplan: "21RLX", freshWater: 56, grayWater: 78, blackWater: 39 },
+  { makeIncludes: "grand design", modelIncludes: "transcend xplor", yearMin: 2026, yearMax: 2026, floorplan: "19BHX", freshWater: 56, grayWater: 78, blackWater: 39 },
+  { makeIncludes: "grand design", modelIncludes: "transcend xplor", yearMin: 2026, yearMax: 2026, floorplan: "26RBX", freshWater: 56, grayWater: 78, blackWater: 39 },
+  { makeIncludes: "grand design", modelIncludes: "transcend xplor", yearMin: 2026, yearMax: 2026, floorplan: "27DBX", freshWater: 56, grayWater: 78, blackWater: 39 },
+  { makeIncludes: "grand design", modelIncludes: "transcend xplor", yearMin: 2026, yearMax: 2026, floorplan: "24BHX", freshWater: 56, grayWater: 78, blackWater: 39 },
+  { makeIncludes: "grand design", modelIncludes: "transcend xplor", yearMin: 2026, yearMax: 2026, floorplan: "26BHX", freshWater: 56, grayWater: 78, blackWater: 39 },
+  { makeIncludes: "forest river", modelIncludes: "sunseeker le", yearMin: 2026, yearMax: 2027, floorplan: "2250SLE", freshWater: 35, grayWater: 32, blackWater: 27 },
+  { makeIncludes: "forest river", modelIncludes: "sunseeker le", yearMin: 2026, yearMax: 2026, floorplan: "2350LE", freshWater: 44, grayWater: 39, blackWater: 39 },
+  { makeIncludes: "forest river", modelIncludes: "sunseeker le", yearMin: 2026, yearMax: 2027, floorplan: "2950LE", freshWater: 44, grayWater: 39, blackWater: 39 },
+  { makeIncludes: "forest river", modelIncludes: "sunseeker le", yearMin: 2026, yearMax: 2027, floorplan: "3250DSLE", freshWater: 44, grayWater: 39, blackWater: 39, fuelCapacityGal: 55 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2026, yearMax: 2026, floorplan: "RP-171", freshWater: 30, grayWater: 30, blackWater: 30 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2026, yearMax: 2026, floorplan: "RP-190", freshWater: 30, grayWater: 30, blackWater: 30 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2026, yearMax: 2026, floorplan: "RP-180", freshWater: 30, grayWater: 30, blackWater: 30 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2026, yearMax: 2026, floorplan: "RP-185", freshWater: 30, grayWater: 30, blackWater: 30 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2026, yearMax: 2026, floorplan: "RP-192", freshWater: 30, grayWater: 30, blackWater: 30 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2026, yearMax: 2026, floorplan: "RP-194", freshWater: 30, grayWater: 30, blackWater: 30 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2026, yearMax: 2026, floorplan: "RP-198", freshWater: 30, grayWater: 30, blackWater: 30 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2026, yearMax: 2027, floorplan: "RP-197", freshWater: 40, grayWater: 40, blackWater: 30 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2026, yearMax: 2026, floorplan: "RP-200", freshWater: 30, grayWater: 30, blackWater: 30 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2026, yearMax: 2026, floorplan: "RP-203", freshWater: 30, grayWater: 30, blackWater: 30 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2026, yearMax: 2026, floorplan: "RP-204", freshWater: 30, grayWater: 60, blackWater: 30 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2026, yearMax: 2026, floorplan: "RP-153", freshWater: 30, grayWater: 30, blackWater: 30 },
+  { makeIncludes: "forest river", modelIncludes: "r-pod", yearMin: 2027, yearMax: 2027, floorplan: "RP-205", freshWater: 40, grayWater: 40, blackWater: 30 },
 ];
 
 export type OemHoldingTanks = {
@@ -5487,7 +6134,7 @@ export function findOemHoldingTanks(
   if (!Number.isFinite(y)) return emptyHoldingTanks();
   const mk = make.toLowerCase();
   const md = model.toLowerCase();
-  const fp = floorplan.trim().toUpperCase().replace(/\s+/g, "");
+  const fp = floorplan.trim().toUpperCase().replace(/[\s-]+/g, "");
 
   let best: OemTankPin | null = null;
   let bestScore = -1;
@@ -5496,7 +6143,7 @@ export function findOemHoldingTanks(
     if (!mk.includes(row.makeIncludes)) continue;
     if (!md.includes(row.modelIncludes)) continue;
     if (modelPinBlocked(row.modelIncludes, md)) continue;
-    const rowFp = row.floorplan.toUpperCase().replace(/\s+/g, "");
+    const rowFp = row.floorplan.toUpperCase().replace(/[\s-]+/g, "");
     if (rowFp !== fp) continue;
     const score = row.modelIncludes.length * 10 + row.makeIncludes.length;
     if (score > bestScore) {
@@ -5525,7 +6172,7 @@ export function findOemGvwrLbs(
   if (!Number.isFinite(y)) return null;
   const mk = make.toLowerCase();
   const md = model.toLowerCase();
-  const fp = floorplan.trim().toUpperCase().replace(/\s+/g, "");
+  const fp = floorplan.trim().toUpperCase().replace(/[\s-]+/g, "");
 
   let best: number | null = null;
   let bestScore = -1;
@@ -5534,7 +6181,7 @@ export function findOemGvwrLbs(
     if (!mk.includes(row.makeIncludes)) continue;
     if (!md.includes(row.modelIncludes)) continue;
     if (modelPinBlocked(row.modelIncludes, md)) continue;
-    const rowFp = row.floorplan.toUpperCase().replace(/\s+/g, "");
+    const rowFp = row.floorplan.toUpperCase().replace(/[\s-]+/g, "");
     if (rowFp !== fp) continue;
     const score = row.modelIncludes.length * 10 + row.makeIncludes.length;
     if (score > bestScore) {
@@ -5557,7 +6204,7 @@ export function findOemUvwLbs(
   if (!Number.isFinite(y)) return null;
   const mk = make.toLowerCase();
   const md = model.toLowerCase();
-  const fp = floorplan.trim().toUpperCase().replace(/\s+/g, "");
+  const fp = floorplan.trim().toUpperCase().replace(/[\s-]+/g, "");
 
   let best: number | null = null;
   let bestScore = -1;
@@ -5566,7 +6213,7 @@ export function findOemUvwLbs(
     if (!mk.includes(row.makeIncludes)) continue;
     if (!md.includes(row.modelIncludes)) continue;
     if (modelPinBlocked(row.modelIncludes, md)) continue;
-    const rowFp = row.floorplan.toUpperCase().replace(/\s+/g, "");
+    const rowFp = row.floorplan.toUpperCase().replace(/[\s-]+/g, "");
     if (rowFp !== fp) continue;
     const score = row.modelIncludes.length * 10 + row.makeIncludes.length;
     if (score > bestScore) {

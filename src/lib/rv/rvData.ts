@@ -16860,6 +16860,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2025": ["171", "180", "190", "193", "202", "RP-171", "RP-190", "RP-202"],
         // Dated 2026-Forest-River-R-Pod.pdf spec table (footer 10/25) + RVUSA m1641-y2026 (15 codes).
         "2026": ["RP-153", "RP-171", "RP-180", "RP-185", "RP-190", "RP-192", "RP-194", "RP-197", "RP-198", "RP-200", "RP-203", "RP-204", "RP-205", "RP-206", "RP-207"],
+        // OEM floorplan index still lists these in 2027 (forestriverinc.com). Weights are per year — 2026 UVW is not copied forward except RP-197, whose 2027 page repeats it.
+        "2027": ["RP-171", "RP-180", "RP-190", "RP-192", "RP-194", "RP-197", "RP-198", "RP-200", "RP-203", "RP-205", "RP-206", "RP-207", "RP-208"],
       },
       lengthRange: [
         16,
@@ -16889,7 +16891,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2010,
-      description: "Forest River r-Pod — iconic teardrop-style lightweight travel trailer. Dated RVUSA 2010–2014 + 2011 brochure. 2022 omitted (GAP). Dated 2026 flyer/RVUSA (15). 2027 omitted (GAP: R-Pod ends 2026 on the make page; Un-Mapped is a sibling family)."
+      description: "Forest River r-Pod — iconic teardrop-style lightweight travel trailer. Dated RVUSA 2010–2014 + 2011 brochure. 2022 omitted (GAP). 2026 brochure tanks are 30/30/30 except RP-197 (40/40/30) and RP-204 (30/60/30). 2027 RP-205 is 40/40/30. Do not copy one year's UVW onto another."
     },
 
     "Impression": {

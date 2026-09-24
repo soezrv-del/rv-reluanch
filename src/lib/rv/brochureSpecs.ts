@@ -609,9 +609,13 @@ export function buildBrochureSpecs(
   const pinnedFuel =
     tanks.fuelCapacityGal && tanks.fuelCapacityGal > 0
       ? tanks.fuelCapacityGal
-      : snap.fuelCapacityGal && snap.fuelCapacityGal > 0
-        ? snap.fuelCapacityGal
-        : 0;
+      : oem?.fuelCapacityGal && oem.fuelCapacityGal > 0
+        ? oem.fuelCapacityGal
+        : oem?.fuelCapacityGal === 0
+          ? 0
+          : snap.fuelCapacityGal && snap.fuelCapacityGal > 0
+            ? snap.fuelCapacityGal
+            : 0;
   const fuelGal = isTowable ? 0 : pinnedFuel;
 
   const range =
