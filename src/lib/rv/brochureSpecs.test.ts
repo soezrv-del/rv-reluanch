@@ -19,13 +19,14 @@ import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import {
   findOemFloorplanSpec,
   findOemGvwrLbs,
+  findOemHoldingTanks,
   findOemUvwLbs,
   oemGvwrPinCount,
   oemUvwPinCount,
   weightForFloorplan,
 } from "./floorplanSpecs.ts";
 import { computeTorqueToWeight } from "./torqueToWeight.ts";
-import { resolveYearSnapshot } from "./brochureSpecs.ts";
+import { resolveYearSnapshot, buildBrochureSpecs } from "./brochureSpecs.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
 import {
   isPlaceholderTankTrio,
@@ -257,7 +258,7 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   );
 
   const spec = src("brochureSpecs.ts");
-  assert.match(spec, /oem\?\.gvwrLbs \?\? findOemGvwrLbs/);
+  assert.match(spec, /oemGvwr \?\? findOemGvwrLbs/);
   assert.match(spec, /findOemUvwLbs\(year, make, model, floorplan\) \?\? oem\?\.uvwLbs \?\? snap\.uvwLbs/);
   assert.match(spec, /estimateUvwFromGvwr/);
   assert.doesNotMatch(spec, /UVW_ESTIMATE_LABEL/);
@@ -390,7 +391,7 @@ test("Tradition 42V/42Q brochure GVWR is 47,000 — not catalog weightRange mid"
   assert.equal(CATALOG_INDEX["American Coach"]?.["American Tradition"]?.years?.includes(2025), true);
 
   const spec = src("brochureSpecs.ts");
-  assert.match(spec, /oem\?\.gvwrLbs \?\? findOemGvwrLbs/);
+  assert.match(spec, /oemGvwr \?\? findOemGvwrLbs/);
 
   const ttw = computeTorqueToWeight({
     torqueLbFt: 1250,
@@ -1367,9 +1368,47 @@ test("Sunseeker / Classic / LE 2007–13 catalog GVWR stays GAP; no 14050 invent
   assert.doesNotMatch(leBlock, /14050/);
   assert.doesNotMatch(classicBlock, /yearStart:\s*2008,\s*gvwrLbs:\s*14500/);
   assert.match(leBlock, /brochure per-plan\/chassis — GAP/);
+  assert.match(leBlock, /2550DSLE/);
 
   const pins = src("floorplanSpecs.ts");
   assert.match(pins, /Mirada 35OS 22,000 is PIN_ONLY/);
+});
+
+test("2023 Sunseeker LE 2550DSLE tanks are brochure 44/33/32, not the series 44/32/32", async () => {
+  const { RV_DATA } = await loadLiveCatalog();
+  const le = RV_DATA["Forest River"]?.["Sunseeker LE"];
+  assert.ok(le);
+  assert.ok(le.floorplansByYear?.["2023"]?.includes("2550DSLE"));
+  assert.equal(le.grayWater, 32, "series average stays; floorplan pin wins");
+
+  const oem = findOemFloorplanSpec("2023", "Forest River", "Sunseeker LE", "2550DS LE");
+  assert.equal(oem?.freshWater, 44);
+  assert.equal(oem?.grayWater, 33);
+  assert.equal(oem?.blackWater, 32);
+  assert.equal(oem?.propaneLbs, 41);
+  assert.equal(oem?.waterHeaterGal, 6);
+  assert.equal(oem?.overallLengthIn, 29 * 12 + 4);
+
+  const tanks = findOemHoldingTanks("2023", "Forest River", "Sunseeker LE", "2550DSLE");
+  assert.equal(tanks.freshWater, 44);
+  assert.equal(tanks.grayWater, 33);
+  assert.equal(tanks.blackWater, 32);
+  assert.equal(tanks.fuelCapacityGal, 55);
+  assert.equal(
+    findOemHoldingTanks("2023", "Forest River", "Sunseeker", "2550DSLE").grayWater,
+    null,
+    "full-feature Sunseeker must not inherit the LE floorplan pin",
+  );
+
+  const sheet = buildBrochureSpecs(le, "2023", "Forest River", "Sunseeker LE", "2550DSLE");
+  assert.equal(sheet.freshWater, "44 gal");
+  assert.equal(sheet.grayWater, "33 gal");
+  assert.equal(sheet.blackWater, "32 gal");
+  assert.equal(sheet.propane, "41 lb");
+  assert.equal(sheet.waterHeater, "6 gal");
+  assert.equal(sheet.fuelCapacity, "55 gal");
+  assert.equal(sheet.lengthFt, `29' 4"`);
+  assert.equal(sheet.gvwrLbs, 14500);
 });
 
 test("brochureSpecs source no longer hash-seeds tanks, MPG, heater, construction, wheelbase, propane", () => {
@@ -1392,10 +1431,11 @@ test("brochureSpecs source no longer hash-seeds tanks, MPG, heater, construction
 
 test("seeded filler is gone: tanks / MPG / fuel / PDF-only fields say Confirm brochure", () => {
   const spec = src("brochureSpecs.ts");
-  assert.match(spec, /freshWater:\s*tankOrConfirm\(oem\?\.freshWater \?\? snap\.freshWater\)/);
-  assert.match(spec, /grayWater:\s*tankOrConfirm\(oem\?\.grayWater \?\? snap\.grayWater\)/);
-  assert.match(spec, /blackWater:\s*tankOrConfirm\(oem\?\.blackWater \?\? snap\.blackWater\)/);
-  assert.match(spec, /waterHeater:\s*CONFIRM_BROCHURE/);
+  assert.match(spec, /freshWater:\s*tankOrConfirm\(oem\?\.freshWater \?\? tanks\.freshWater \?\? snap\.freshWater\)/);
+  assert.match(spec, /grayWater:\s*tankOrConfirm\(oem\?\.grayWater \?\? tanks\.grayWater \?\? snap\.grayWater\)/);
+  assert.match(spec, /blackWater:\s*tankOrConfirm\(oem\?\.blackWater \?\? tanks\.blackWater \?\? snap\.blackWater\)/);
+  assert.match(spec, /waterHeater:\s*oem\?\.waterHeaterGal/);
+  assert.match(spec, /CONFIRM_BROCHURE/);
   assert.match(spec, /construction:\s*CONFIRM_BROCHURE/);
   assert.match(spec, /wheelbase:\s*isTowable \? "N\/A \(towable\)" : CONFIRM_BROCHURE/);
   assert.match(spec, /propane:\s*oem\?\.propaneLbs/);
@@ -4342,7 +4382,7 @@ test("Newmar 2010–2012 walk-back: OEM plans, no invented ghosts", () => {
   const ds = newmar.slice(ds0, newmar.indexOf('    "New Aire"'));
   assert.match(
     ds,
-    /"2011": \["3734", "4020T", "4034T", "4043T", "4086T", "4324", "4336", "4344", "4353", "4386"\]/,
+    /"2011": \["3734", "4020", "4020T", "4034T", "4043T", "4086T", "4324", "4336", "4344", "4353", "4386"\]/,
   );
   assert.match(
     ds,
@@ -13848,7 +13888,34 @@ test("Grand Design 2020–2026 OEM year-first floorplans + yearEnds", () => {
   assert.equal(gd["Lineage Series VP"]?.fuelType, "Gas");
   assert.equal(gd["Lineage Series VP"]?.years?.includes(2026), false);
   assert.equal(gd["Lineage Series VP"]?.years?.includes(2027), true);
-  assert.equal(gd.Serenova, undefined);
+  assert.equal(gd.Serenova?.yearStart, 2026);
+  assert.equal(gd.Serenova?.type, "Travel Trailer");
+  assert.equal(gd.Serenova?.fuelType, "N/A (towable)");
+  assert.equal(gd.Serenova?.years?.includes(2026), true);
+  assert.equal(gd.Serenova?.years?.includes(2025), false);
+  assert.equal(gd.Serenova?.years?.includes(2027), false);
+  assert.equal(findOemGvwrLbs("2026", "Grand Design", "Serenova", "160LG"), 5400);
+  assert.equal(findOemUvwLbs("2026", "Grand Design", "Serenova", "160LG"), 4436);
+  assert.equal(findOemGvwrLbs("2026", "Grand Design", "Serenova", "150HL"), 5400);
+  assert.equal(findOemUvwLbs("2026", "Grand Design", "Serenova", "150HL"), 4650);
+  assert.equal(findOemFloorplanSpec("2026", "Grand Design", "Serenova", "160LG")?.overallLengthIn, 242);
+  assert.equal(findOemFloorplanSpec("2026", "Grand Design", "Serenova", "150HL")?.sleeps, 2);
+  assert.equal(findOemFloorplanSpec("2026", "Grand Design", "Serenova", "160LG")?.sleeps, 4);
+  assert.equal(findOemGvwrLbs("2026", "Forest River", "Impression", "318RL"), 14120);
+  assert.equal(findOemUvwLbs("2026", "Forest River", "Impression", "318RL"), 11153);
+  assert.equal(findOemGvwrLbs("2025", "Forest River", "Impression", "318RL"), null);
+  assert.equal(findOemGvwrLbs("2027", "Forest River", "Impression", "318RL"), null);
+  assert.equal(findOemGvwrLbs("2026", "Forest River", "No Boundaries", "NB19.6"), 6145);
+  assert.equal(findOemGvwrLbs("2027", "Forest River", "No Boundaries", "NB19.6"), 6145);
+  assert.equal(findOemGvwrLbs("2022", "Forest River", "No Boundaries", "NB16.6"), null);
+  assert.equal(findOemGvwrLbs("2026", "Forest River", "Surveyor Legend", "19BHLE"), 5608);
+  assert.equal(findOemUvwLbs("2026", "East to West", "Alta", "2850KRL"), 6851);
+  assert.equal(findOemGvwrLbs("2026", "East to West", "Alta", "2850KRL"), null);
+  assert.equal(findOemUvwLbs("2025", "East to West", "Alta", "2850KRL"), null);
+  assert.equal(findOemGvwrLbs("2026", "Modern Buggy", "Hopper", "4"), 4400);
+  assert.equal(findOemUvwLbs("2026", "Modern Buggy", "Hopper", "4"), 3925);
+  assert.equal(findOemGvwrLbs("2027", "Modern Buggy", "Hopper", "4"), null);
+  assert.equal(findOemGvwrLbs("2026", "Modern Buggy", "Hopper 1", "4"), null);
   assert.equal(gd.Foundation, undefined);
   assert.equal(gd["Transcend Lite"], undefined);
 
@@ -14429,7 +14496,7 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(bul, /"16BHC"/);
   assert.doesNotMatch(bul, /"21BHCWE"/);
 
-  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf('    "Hideout Mini": {'));
+  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf("    Fuzion: {"));
   assert.match(hid, /"2027": \["210RL", "210RLWE", "212RKS", "212RKSWE", "230BH", "230BHWE", "234MLS", "234MLSWE", "250RBS", "250RBSWE", "262BHS", "262BHSWE"\]/);
   assert.match(hid, /yearStart:\s*2010/);
   assert.doesNotMatch(hid, /"2026":/);
@@ -14501,7 +14568,7 @@ test("Keystone P3 honesty: Bullet Classic + Springdale Mini/Max OEM 2027; empty 
   const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf('    "Bullet Classic": {'));
   assert.doesNotMatch(bxf, /"2017":|"2025":|"2026":/);
 
-  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf('    "Hideout Mini": {'));
+  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf("    Fuzion: {"));
   assert.doesNotMatch(hid, /"2010":|"2026":/);
 
   const chtt = k.slice(k.indexOf('    "Cougar Half-Ton Travel Trailer": {'), k.indexOf("    Bullet: {"));
@@ -16341,7 +16408,7 @@ test("Keystone MY2010 honesty: lock Avalanche/Bullet/Montana/Passport/Springdale
   const sprd = k.slice(k.indexOf("    Springdale: {"), k.indexOf('    "Springdale Mini"'));
   const alp = k.slice(k.indexOf("    Alpine: {"), k.indexOf('    "Alpine Avalanche Edition"'));
   const cfw = k.slice(k.indexOf('    "Cougar 5th Wheel": {'), k.indexOf('    "Cougar Sport"'));
-  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf('    "Hideout Mini": {'));
+  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf("    Fuzion: {"));
   const spr = k.slice(k.indexOf("    Sprinter: {"));
   const mhc = k.slice(k.indexOf('    "Montana High Country": {'), k.indexOf("    Cougar: {"));
 

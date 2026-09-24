@@ -7,6 +7,7 @@ import {
   findOemFloorplanSpec,
   findOemGvwrLbs,
   findOemUvwLbs,
+  findOemHoldingTanks,
 } from "./floorplanSpecs.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import {
@@ -489,6 +490,7 @@ export function buildBrochureSpecs(
 
   // Brochure-backed OEM floorplan (e.g. Brinkley 3950) beats digit heuristics
   const oem = findOemFloorplanSpec(year, make, model, floorplan);
+  const tanks = findOemHoldingTanks(year, make, model, floorplan);
 
   const fpLen = oem
     ? Math.round(oem.overallLengthIn / 12)
@@ -502,14 +504,16 @@ export function buildBrochureSpecs(
       });
   // Never interpolate catalog weightRange as this coach's GVWR.
   // Published OEM / year-band pin only — missing pin is Confirm brochure.
+  // gvwrLbs 0 means the table did not print one GVWR (dual chassis).
+  const oemGvwr = oem?.gvwrLbs && oem.gvwrLbs > 0 ? oem.gvwrLbs : undefined;
   const publishedGvwr =
-    oem?.gvwrLbs ?? findOemGvwrLbs(year, make, model, floorplan) ?? snap.gvwrLbs;
+    oemGvwr ?? findOemGvwrLbs(year, make, model, floorplan) ?? snap.gvwrLbs;
   const publishedUvw =
     findOemUvwLbs(year, make, model, floorplan) ?? oem?.uvwLbs ?? snap.uvwLbs;
   const gvwrMid = publishedGvwr ?? null;
   const uvw = publishedUvw;
   const ccc =
-    oem != null && oem.uvwLbs != null
+    oem != null && oem.uvwLbs != null && oem.gvwrLbs > 0
       ? Math.max(800, oem.gvwrLbs - oem.uvwLbs)
       : snap.cccLbs != null
         ? snap.cccLbs
@@ -522,22 +526,33 @@ export function buildBrochureSpecs(
       ? fpInches / 12
       : fpLen ?? (floorplan ? mid(spec.lengthRange) : mid(spec.lengthRange));
   const sprinterCoach = chassisLooksSprinter(spec.chassis, spec.engine);
+  const classWidth =
+    sprinterCoach || /class b/i.test(spec.type) ? 90.5 : 101.5;
   const widthIn =
-    oem?.exteriorWidthIn ??
-    snap.exteriorWidthIn ??
-    (sprinterCoach || /class b/i.test(spec.type) ? 90.5 : 101.5);
+    oem?.exteriorWidthIn && oem.exteriorWidthIn > 0
+      ? oem.exteriorWidthIn
+      : snap.exteriorWidthIn && snap.exteriorWidthIn > 0
+        ? snap.exteriorWidthIn
+        : oem
+          ? 0
+          : classWidth;
+  const classHeight = Math.round(
+    (/class b/i.test(spec.type)
+      ? 9.6
+      : sprinterCoach
+        ? 11.0
+        : /class a|super c/i.test(spec.type)
+          ? 12.75
+          : 11.5) * 12,
+  );
   const heightIn =
-    oem?.exteriorHeightIn ??
-    snap.exteriorHeightIn ??
-    Math.round(
-      (/class b/i.test(spec.type)
-        ? 9.6
-        : sprinterCoach
-          ? 11.0
-          : /class a|super c/i.test(spec.type)
-            ? 12.75
-            : 11.5) * 12,
-    );
+    oem?.exteriorHeightIn && oem.exteriorHeightIn > 0
+      ? oem.exteriorHeightIn
+      : snap.exteriorHeightIn && snap.exteriorHeightIn > 0
+        ? snap.exteriorHeightIn
+        : oem
+          ? 0
+          : classHeight;
   const intH =
     oem?.interiorHeightIn ??
     snap.ceilingHeight ??
@@ -583,16 +598,21 @@ export function buildBrochureSpecs(
   const hitch = oem?.hitchLbs
     ? oem.hitchLbs
     : isTowable
-      ? gvwrMid != null
-        ? gvwrMid * hitchPct
-        : 0
+      ? oem
+        ? 0
+        : gvwrMid != null
+          ? gvwrMid * hitchPct
+          : 0
       : towCap;
 
   const eco = economy(spec, snap.mpgHighwayEst);
-  const fuelGal =
-    !isTowable && snap.fuelCapacityGal && snap.fuelCapacityGal > 0
-      ? snap.fuelCapacityGal
-      : 0;
+  const pinnedFuel =
+    tanks.fuelCapacityGal && tanks.fuelCapacityGal > 0
+      ? tanks.fuelCapacityGal
+      : snap.fuelCapacityGal && snap.fuelCapacityGal > 0
+        ? snap.fuelCapacityGal
+        : 0;
+  const fuelGal = isTowable ? 0 : pinnedFuel;
 
   const range =
     eco.combined > 0 && fuelGal > 0
@@ -715,8 +735,8 @@ export function buildBrochureSpecs(
   return {
     lengthFt: lengthDisplay,
     lengthIn: lengthDisplay,
-    exteriorWidth: fmtInchesAsFtIn(widthIn),
-    exteriorHeight: fmtInchesAsFtIn(heightIn),
+    exteriorWidth: widthIn > 0 ? fmtInchesAsFtIn(widthIn) : CONFIRM_BROCHURE,
+    exteriorHeight: heightIn > 0 ? fmtInchesAsFtIn(heightIn) : CONFIRM_BROCHURE,
     interiorHeight: `${intH}" (${fmtFtIn(intH / 12)})`,
     wheelbase: isTowable ? "N/A (towable)" : CONFIRM_BROCHURE,
 
@@ -800,13 +820,15 @@ export function buildBrochureSpecs(
       ? `${spec.awningLength} ft power awning`
       : `${Math.max(12, Math.round(lenMid * 0.45))} ft (typ.)`,
 
-    freshWater: tankOrConfirm(oem?.freshWater ?? snap.freshWater),
-    grayWater: tankOrConfirm(oem?.grayWater ?? snap.grayWater),
-    blackWater: tankOrConfirm(oem?.blackWater ?? snap.blackWater),
+    freshWater: tankOrConfirm(oem?.freshWater ?? tanks.freshWater ?? snap.freshWater),
+    grayWater: tankOrConfirm(oem?.grayWater ?? tanks.grayWater ?? snap.grayWater),
+    blackWater: tankOrConfirm(oem?.blackWater ?? tanks.blackWater ?? snap.blackWater),
     propane: oem?.propaneLbs
       ? `${oem.propaneLbs} lb`
       : CONFIRM_BROCHURE,
-    waterHeater: CONFIRM_BROCHURE,
+    waterHeater: oem?.waterHeaterGal
+      ? `${oem.waterHeaterGal} gal`
+      : CONFIRM_BROCHURE,
 
     generator: honestGenerator({
       generator:

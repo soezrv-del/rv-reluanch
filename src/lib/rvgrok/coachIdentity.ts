@@ -49,6 +49,10 @@ const MAKE_ALIASES: Record<string, string> = {
   airstream: "Airstream",
   dynamax: "Dynamax",
   "grand design": "Grand Design",
+  ember: "Ember",
+  "ember rv": "Ember",
+  "east to west": "East to West",
+  "modern buggy": "Modern Buggy",
 };
 
 function norm(s: string | null | undefined): string {
@@ -129,6 +133,69 @@ function uniqueFamilySeriesForFloorplan(
   return hits.length === 1 ? hits[0]! : "";
 }
 
+/**
+ * LE-only Sunseeker codes. Bare "Sunseeker" + 2550DSLE is the LE, not the
+ * full-feature Sunseeker (whose tanks are 44/39/39). Classic shares other
+ * codes (3010DS) — those stay on the series the ask named.
+ */
+const SUNSEEKER_LE_ONLY_FLOORPLANS = new Set([
+  "1950le",
+  "2150sle",
+  "2250sle",
+  "2300sle",
+  "2350le",
+  "2350sle",
+  "2530s",
+  "2550dsle",
+  "2800sle",
+  "2850sle",
+  "2950le",
+  "3250dsle",
+]);
+
+function floorplanListedAnywhere(
+  spec: { floorplans?: readonly string[]; floorplansByYear?: Record<string, string[]> } | undefined,
+  floorplan: string,
+): boolean {
+  if (!spec) return false;
+  if (floorplanListed(spec.floorplans, floorplan)) return true;
+  return Object.values(spec.floorplansByYear || {}).some((list) =>
+    floorplanListed(list, floorplan),
+  );
+}
+
+/**
+ * Bare parent + a floorplan that exists on exactly one longer sibling
+ * ("Sunseeker" + 2550DSLE → Sunseeker LE). Already-specific series stay put.
+ */
+function uniqueChildSeriesForFloorplan(
+  make: string,
+  rawModel: string,
+  floorplan: string,
+): string {
+  const fp = compactFp(floorplan);
+  const parent = norm(rawModel);
+  if (!fp || !parent) return "";
+  const catalogMake = resolveCatalogMake(make);
+  const live = peekCatalog()?.RV_DATA?.[catalogMake] || {};
+  const parentKey =
+    live[rawModel] != null
+      ? rawModel
+      : Object.keys(live).find((name) => norm(name) === parent) || "";
+  if (parentKey && floorplanListedAnywhere(live[parentKey], floorplan)) return "";
+  const hits = Object.keys(live).filter((name) => {
+    const nn = norm(name);
+    if (nn === parent || !nn.startsWith(`${parent} `)) return false;
+    return floorplanListedAnywhere(live[name], floorplan);
+  });
+  if (hits.length === 1) return hits[0]!;
+  if (hits.length > 1) return "";
+  if (parent === "sunseeker" && SUNSEEKER_LE_ONLY_FLOORPLANS.has(fp)) {
+    return "Sunseeker LE";
+  }
+  return "";
+}
+
 /** Best catalog model name under a make. Floorplan disambiguates a family. */
 export function resolveCatalogModel(
   make: string,
@@ -142,11 +209,12 @@ export function resolveCatalogModel(
     ...Object.keys(live || {}),
     ...Object.keys(index || {}),
   ]);
-  const pinned = uniqueFamilySeriesForFloorplan(
-    catalogMake,
-    rawModel || matched,
-    floorplan,
-  );
+  const pinned =
+    uniqueFamilySeriesForFloorplan(
+      catalogMake,
+      rawModel || matched,
+      floorplan,
+    ) || uniqueChildSeriesForFloorplan(catalogMake, matched || rawModel, floorplan);
   return pinned || matched;
 }
 

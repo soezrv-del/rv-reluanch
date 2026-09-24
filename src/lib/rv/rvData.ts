@@ -489,8 +489,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2008": ["4018", "4081", "4369"],
         "2009": ["4018", "4081", "4369", "4311"],
         // No 2010 OEM Dutch Star brochure (archive jumps 2009 → 2011). Do not invent.
-        // Brochure 2011_Dutch_Star_Diesel: 3734 | 4020T | 4034T | 4043T | 4086T | 4324 | 4336 | 4344 | 4353 | 4386 — ISL 400 all (T suffix printed)
-        "2011": ["3734", "4020T", "4034T", "4043T", "4086T", "4324", "4336", "4344", "4353", "4386"],
+        // Brochure 2011_Dutch_Star_Diesel: 3734 | 4020T | 4034T | 4043T | 4086T | 4324 | 4336 | 4344 | 4353 | 4386 — ISL 400 all (T suffix printed). 4020 is the dealer alias for 4020T only.
+        "2011": ["3734", "4020", "4020T", "4034T", "4043T", "4086T", "4324", "4336", "4344", "4353", "4386"],
         // Brochure 2012_Dutch_Star_Diesel: 3734 | 3735 (ISL 400) / 4020 | 4062 | 4086 | 4324 | 4342 | 4346 | 4353 (ISL 450)
         "2012": ["3734", "3735", "4020", "4062", "4086", "4324", "4342", "4346", "4353"],
         // Brochure 2013_Dutch_Star_Diesel: 3734 | 3735 (ISL 400) / 4018 | 4038 | 4318 | 4324 | 4338 | 4344 | 4347 | 4353 (ISL 450)
@@ -3728,6 +3728,27 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     }
   },
   Thor: {
+    "Freedom Traveler": {
+      type: "Class A Gas",
+      floorplans: ["A24"],
+      floorplansByYear: {
+        "2025": ["A24"]
+      },
+      lengthRange: [25, 26],
+      weightRange: [11000, 12500],
+      slideouts: 1,
+      sleeps: 3,
+      msrpRange: [90000, 140000],
+      chassis: "Ford E-350",
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4.1,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 8000,
+      yearStart: 2025,
+      yearEnd: 2025,
+      description: "Thor Freedom Traveler A24. Two Camping World unit cards agree length 25' 8\" and tanks 42/40/30. The brand page said fresh 41 — not used. GVWR 12,500 and 8,000 lb tow rating are the brand page. Fuel cap is not printed. Tankless water heater."
+    },
     Tuscany: {
       type: "Class A Diesel",
       floorplans: ["3680", "4051", "4072", "4078", "38SQ", "40IX", "40DX", "40KQ", "40RX", "40WD", "40LX", "42HQ", "42RQ", "42FK", "42GX", "42WX", "44MT", "45AT", "45LT", "45NX", "40B", "40MX", "45BX", "45CA", "40RT", "45JA", "45MX"],
@@ -9753,6 +9774,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     "Freedom Express Ultra Lite": {
       type: "Travel Trailer",
       floorplans: [
+        "238BHS",
         "192RBS",
         "22MLS",
         "245RKS",
@@ -9770,6 +9792,8 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ],
       floorplansByYear: {
         // yearStart 2014 (RVUSA m6854 first available year). Older fby omitted this slice.
+        // 2021 238BHS is the in-stock Ultra Lite (RV Guide 50/35/35). Not the parent Freedom Express 40/30/30 seed.
+        "2021": ["238BHS"],
         // Dated RVUSA 2026 family page (m6854-y2026) outranks undated OEM card:
         // 192RBS | 22MLS | 245RKS | 252RBS | 258BHS | 259FKDS | 274RKS |
         // 288BHDS | 292BHDS | 320BHDS | 324RLDS | 326BHDS
@@ -15091,10 +15115,13 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2015": ["2250SLE","2500LE"],"2016": ["2250SLE","2500LE"],"2017": ["2250SLE","2500LE"],
         "2018": ["2250SLE","2500LE"],"2019": ["2250SLE","2500LE","2850LE"],
         "2020": ["2250SLE","2500LE","2850LE"],"2021": ["2250SLE","2500LE","2850LE"],
-        "2022": ["2250SLE","2500LE"],"2023": ["2250SLE","2500LE"],
+        // 2022–23 OEM Sunseeker brochure lists 2550DSLE (E-450). In-stock Carson
+        // RV Show: 2023 Sunseeker 2550DS LE #UPD9047B. Not the full-feature Sunseeker.
+        "2022": ["2250SLE","2500LE","2550DSLE"],"2023": ["2250SLE","2500LE","2550DSLE"],
         // In-stock Carson RV Show: 2024 Sunseeker LE 2150SLE #URD9620.
         // 2150SLE is already a Sunseeker LE code (MY2025+). No new gallon row.
-        "2024": ["2150SLE","2250SLE","2500LE"],
+        // 2550DSLE continues from the 2023 brochure into the 2025 lineup.
+        "2024": ["2150SLE","2250SLE","2500LE","2550DSLE"],
         "2025": ["1950LE","2150SLE","2250SLE","2350LE","2550DSLE"],
         "2026": ["1950LE", "2150SLE", "2250SLE", "2350LE", "2530S", "2550DSLE", "2850SLE", "2950LE", "3250DSLE", "2300SLE", "2800SLE"],
         "2027": ["1950LE","2150SLE","2250SLE","2350LE","2530S","2550DSLE","2850SLE","2950LE","3250DSLE"]
@@ -15181,6 +15208,30 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       generator: "Optional", awningLength: 12, ceilingHeight: 78, founded: 1996, warrantyYears: 1, yearStart: 2025, gvwrLbs: 9350, overallLengthIn: 280,
       description: "Forest River Sunseeker PM — ProMaster 2030RP ~23' 4\", GVWR 9,350. Gas V6, not 7.3.",
       powertrainByYear: [{ from: 2025, to: 2027, engine: "Ram 3.6L V6 Pentastar gas", horsepower: 276, torqueLbFt: 250, chassis: "Ram ProMaster", gvwrLbs: 9350 }],
+    },
+    "Forester MBS": {
+      type: "Class C",
+      floorplans: ["2401R"],
+      floorplansByYear: {
+        "2018": ["2401R"]
+      },
+      lengthRange: [24, 25],
+      weightRange: [9852, 11030],
+      slideouts: 1,
+      sleeps: 6,
+      msrpRange: [90000, 140000],
+      engine: "Mercedes-Benz 3.0L V6 turbodiesel",
+      horsepower: 188,
+      chassis: "Mercedes-Benz Sprinter",
+      fuelType: "Diesel",
+      recalls: 0,
+      rating: 4.3,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 4200,
+      ceilingHeight: 81,
+      yearStart: 2018,
+      yearEnd: 2018,
+      description: "Forest River Forester 2401R MBS — Mercedes Sprinter diesel, not the Ford gas Forester. JD and RV Guide: tanks 35/30/30, fuel 26.4 gal, GVWR 11,030, UVW 9,852, tow 4,200."
     },
     Forester: {
       type: "Class C",
@@ -15467,9 +15518,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Rockwood Signature": {
       type: "Fifth Wheel",
-      floorplans: ["281SRK", "290SFK", "301SRK", "401SFB", "402SFL", "403SDB", "404SRK", "405SBH", "R281RK", "R282RK", "R301RKS", "R331RL", "R361RLS", "R371RK", "R372RL", "R374DBH", "R375RL", "R376RK", "R378BH"],
+      floorplans: ["8291RK", "281SRK", "290SFK", "301SRK", "401SFB", "402SFL", "403SDB", "404SRK", "405SBH", "R281RK", "R282RK", "R301RKS", "R331RL", "R361RLS", "R371RK", "R372RL", "R374DBH", "R375RL", "R376RK", "R378BH"],
       floorplansByYear: {
-        // 2010–2024 omitted (GAP): 8289WS / 8311WS / 8329SS / 8335BSS were Ultra Lite TT copy-forward, not dated Signature FW.
+        // 2022 8291RK is the dated Signature fifth-wheel brochure plan. Other 2010–2024 codes stay off (Ultra Lite TT copy-forward).
+        "2022": ["8291RK"],
         // Dated RVUSA 2025 year page (m7527-y2025) — FW R-codes only. TT 8263MBR / 8264BHS / 8332SB / 8336BH / 8337RL / 8338DB / 8339FK stay off.
         "2025": ["R281RK", "R282RK", "R301RKS", "R331RL", "R361RLS", "R371RK", "R372RL", "R374DBH", "R375RL", "R376RK", "R378BH"],
         // Dated 2026-Forest-River-Rockwood-Signature.pdf FW spec table (p.15, CreationDate 2025-09-10):
@@ -15506,8 +15558,31 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       ceilingHeight: 80,
       founded: 1996,
       warrantyYears: 1,
+      yearStart: 2022,
+      description: "Forest River Rockwood Signature — mid/high fifth wheel. 2022 is 8291RK only. Other 2010–2024 codes stay off. Dated RVUSA MY2025 FW R-codes (11). Dated 2026 FW spec table (12). Dated RVUSA MY2027 FW-only (11; TT 8xxx stay off). 8339FK is Rockwood Signature Travel Trailer, not this key."
+    },
+    "Rockwood Signature Travel Trailer": {
+      type: "Travel Trailer",
+      floorplans: ["8339FK"],
+      floorplansByYear: {
+        "2025": ["8339FK"]
+      },
+      lengthRange: [36, 37],
+      weightRange: [9474, 11295],
+      slideouts: 3,
+      sleeps: 6,
+      msrpRange: [40000, 70000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 86,
       yearStart: 2025,
-      description: "Forest River Rockwood Signature — mid/high fifth wheel. 2010–2024 omitted (Ultra Lite TT ghosts). Dated RVUSA MY2025 FW R-codes (11). Dated 2026 FW spec table (12). Dated RVUSA MY2027 FW-only (11; TT 8xxx stay off). Pin weight varies — door sticker rules."
+      yearEnd: 2025,
+      description: "Rockwood Signature travel trailer 8339FK. Not the Signature fifth wheel. RV Guide and RV Wholesalers: tanks 54/131/53, UVW 9,474, GVWR 11,295, hitch 1,295, length 36' 10\"."
     },
     Columbus: {
       type: "Fifth Wheel",
@@ -16611,6 +16686,29 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2012,
       description: "Salem Hemisphere — step-up Salem travel trailer with more residential features than Cruise Lite."
     },
+    "Wildwood Heritage Glen Elite": {
+      type: "Fifth Wheel",
+      floorplans: ["36FL"],
+      floorplansByYear: {
+        "2022": ["36FL"]
+      },
+      lengthRange: [43, 44],
+      weightRange: [12624, 12624],
+      slideouts: 4,
+      sleeps: 6,
+      msrpRange: [50000, 80000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "king pin",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      cccLbs: 2876,
+      yearStart: 2022,
+      yearEnd: 2022,
+      description: "Wildwood Heritage Glen Elite 36FL (2022). RV Guide length 43' 9\", UVW 12,624, pin 2,120, payload 2,876, tanks 57/104/70. GVWR is not printed (not derived from UVW+payload)."
+    },
     Wildwood: {
       type: "Travel Trailer",
       floorplans: ["22ERAS", "22RBS", "24RBS", "250ZEN", "260ICE", "26DBHD", "26DBUD", "26DDSS", "26TBSS", "270ZEN", "27RE", "27RK", "27RKSS", "27RLHD", "27RLSS", "28DBUD", "28VIEW", "29FKBS", "29QBDS", "29RKSS", "29UD3", "29VBUD", "300ICE", "30KQBSS", "30QBSS", "31BKIS", "31KQBTS", "31QBTS", "320ICE", "32BHDS", "32RET", "33BHOK", "33TS", "36BHBS", "36VBAL", "36VBDS", "37BHSS2Q", "37REDS"],
@@ -16792,7 +16890,147 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 1,
       yearStart: 2010,
       description: "Forest River r-Pod — iconic teardrop-style lightweight travel trailer. Dated RVUSA 2010–2014 + 2011 brochure. 2022 omitted (GAP). Dated 2026 flyer/RVUSA (15). 2027 omitted (GAP: R-Pod ends 2026 on the make page; Un-Mapped is a sibling family)."
-    }
+    },
+
+    "Impression": {
+      type: "Fifth Wheel",
+      hitchType: "king pin",
+      floorplans: ["235RW", "242RD", "301ML", "315MB", "318RL", "318RLVIEW", "360MYR", "36BR3", "372DUO", "37MB2B", "44STAY"],
+      floorplansByYear: {
+        // 2025: RV Country in-stock trims only. Not a full OEM year card. Weights not pinned.
+        "2025": ["235RW", "318RLVIEW", "44STAY"],
+        // Current OEM floorplans table, fetched 2026-09-24 (forestriverinc.com/rvs/print/floorplans/impression).
+        // 318RL / 315MB / 36BR3 spec pages print GVWR. 2026 pages say dealer stock and link a separate 2027 version — 2027 weights stay GAP.
+        "2026": ["235RW", "242RD", "301ML", "315MB", "318RL", "360MYR", "36BR3", "372DUO", "37MB2B", "44STAY"],
+        // 2027 in-stock plans that are also on the current table. Do not copy the 2026 weight table forward.
+        "2027": ["301ML", "315MB", "318RL", "360MYR", "36BR3"]
+      },
+      lengthRange: [29, 44],
+      weightRange: [9995, 17370],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [60000, 120000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 78,
+      founded: 1996,
+      warrantyYears: 1,
+      yearStart: 2025,
+      description: "Forest River Impression — mid-profile fifth wheel. 2026 OEM floorplans table (fetched 2026-09-24) plus 315MB/318RL/36BR3 spec pages. 2025 list is in-stock trims only. 2027 plans listed from in-stock units; 2027 weights not copied from the 2026 dealer-stock pages. 318RLVIEW is a lot trim, not a separate OEM weights row."
+    },
+    "No Boundaries": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["NB16.6", "NB18.0", "NB18.2", "NB18.3", "NB18.7", "NB19.0", "NB19.2", "NB19.3", "NB19.4", "NB19.5", "NB19.6", "NB20.2", "NB20.3", "NB20.4", "NB20.5", "NB20.6", "NB20.7", "NB20.8", "NB20.9"],
+      floorplansByYear: {
+        // Used in-stock codes only. Not on the current OEM table — weights GAP. Do not copy 2026.
+        "2019": ["NB19.5"],
+        "2021": ["NB19.3"],
+        "2022": ["NB16.6"],
+        // Current OEM floorplans table, fetched 2026-09-24. Blank rows (NB18.8 / NB20.0 / NB21.0 / NB21.1) omitted.
+        "2026": ["NB18.0", "NB18.2", "NB18.3", "NB18.7", "NB19.0", "NB19.2", "NB19.3", "NB19.4", "NB19.6", "NB20.2", "NB20.3", "NB20.4", "NB20.5", "NB20.6", "NB20.7", "NB20.8", "NB20.9"]
+      },
+      lengthRange: [20, 33],
+      weightRange: [4910, 8253],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [25000, 55000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 78,
+      founded: 1996,
+      warrantyYears: 1,
+      yearStart: 2019,
+      description: "Forest River No Boundaries — off-grid travel trailer. 2026 OEM floorplans table (fetched 2026-09-24). NB19.6 standard weights also reprint on the 2027 floorplan page (not Beast Mode). 2019/2021/2022 codes are in-stock used units only — weights GAP."
+    },
+    "Surveyor Legend": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["19BHLE", "19MDBLE", "19RBLE", "19RKLE", "202RBLE", "203RKLE", "204MKLE", "205RKLE", "230MDLE", "242RDLE", "252RBLE", "260BHLE", "261RKLE", "265RBLE", "296QBLE", "303BHLE"],
+      floorplansByYear: {
+        // In-stock used / prior-year codes. Not pinned from the 2026 table.
+        "2022": ["203RKLE"],
+        "2025": ["204MKLE", "265RBLE"],
+        // Current OEM floorplans table, fetched 2026-09-24 (forestriverinc.com/rvs/print/floorplans/surveyor-legend). 19BHLE spec page prints GVWR 5,608.
+        "2026": ["19BHLE", "19MDBLE", "19RBLE", "19RKLE", "202RBLE", "204MKLE", "205RKLE", "230MDLE", "242RDLE", "252RBLE", "260BHLE", "261RKLE", "296QBLE", "303BHLE"]
+      },
+      lengthRange: [24, 38],
+      weightRange: [5608, 9578],
+      slideouts: 1,
+      sleeps: 6,
+      msrpRange: [25000, 55000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 78,
+      founded: 1996,
+      warrantyYears: 1,
+      yearStart: 2022,
+      description: "Forest River Surveyor Legend — half-ton travel trailer. 2026 OEM floorplans table (fetched 2026-09-24) and 19BHLE spec page. 2022 203RKLE and 2025 265RBLE are in-stock codes not on that table — weights GAP. Do not copy 2026 weights backward."
+    },
+    "Surveyor Camp Series": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["27CAMP", "29CAMP", "32CAMP"],
+      floorplansByYear: {
+        // 2026 Surveyor brochure names 27CAMP and 32CAMP. 29CAMP is in stock. Column alignment on that PDF was not clean enough to pin weights.
+        "2026": ["27CAMP", "29CAMP", "32CAMP"],
+        "2027": ["27CAMP", "29CAMP", "32CAMP"]
+      },
+      lengthRange: [33, 38],
+      weightRange: [0, 0],
+      slideouts: 1,
+      sleeps: 6,
+      msrpRange: [40000, 70000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 78,
+      founded: 1996,
+      warrantyYears: 1,
+      yearStart: 2026,
+      description: "Forest River Surveyor Camp Series. Floorplans from the 2026 Surveyor brochure names plus RV Country in-stock 29CAMP. Weights GAP — the brochure spec columns were not clean enough to pin GVWR/UVW. weightRange 0 so torque-to-weight does not invent a GVWR."
+    },
+    "Grand Surveyor": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["267RBSS", "268FKBS"],
+      floorplansByYear: {
+        "2025": ["268FKBS"],
+        "2026": ["267RBSS"],
+        "2027": ["267RBSS"]
+      },
+      lengthRange: [31, 39],
+      weightRange: [0, 0],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [45000, 80000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 78,
+      founded: 1996,
+      warrantyYears: 1,
+      yearStart: 2025,
+      description: "Forest River Grand Surveyor. In-stock plans only (267RBSS / 268FKBS). 2026 brochure text listed these codes but the extracted columns were not reliable enough to pin weights. weightRange 0 so torque-to-weight does not invent a GVWR."
+    },
   },
   Airstream: {
     Basecamp: {
@@ -18737,7 +18975,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // 210RL | 210RLWE | 212RKS | 212RKSWE | 230BH | 230BHWE | 234MLS | 234MLSWE | 250RBS | 250RBSWE | 262BHS | 262BHSWE
         // GAP MY2010 (research/keystone/LOT_DESK_2010.md) — captions Hideout West 2011.
         // yearStart 2010 — omit 2010–2026 fby (no invent / no copy-forward of 2027 codes).
-        // Hideout Max stays GAP. Hideout Mini is its own 2026 series.
+        // Mini / Max GAP — no extractable 2027 Mini/Max cards.
         "2027": ["210RL", "210RLWE", "212RKS", "212RKSWE", "230BH", "230BHWE", "234MLS", "234MLSWE", "250RBS", "250RBSWE", "262BHS", "262BHSWE"]
       },
       lengthRange: [25, 32],
@@ -19309,6 +19547,31 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     }
   },
   "Grand Design": {
+    "Serenova": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["150HL", "160LG"],
+      floorplansByYear: {
+        // OEM lineup table granddesignrv.com/travel-trailers/serenova (copyright 2026) plus 150HL / 160LG detail pages. No 2025 or 2027 card.
+        "2026": ["150HL", "160LG"]
+      },
+      lengthRange: [19, 21],
+      weightRange: [5400, 5400],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [64008, 65239],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.3,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 78,
+      founded: 2012,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Grand Design Serenova — compact travel trailer. OEM 2026 lineup: 150HL and 160LG only (granddesignrv.com/travel-trailers/serenova, copyright 2026). Both GVWR 5,400. Sleeps 2 on 150HL and 4 on 160LG — do not share one sleeps number. No 2027 card."
+    },
     Solitude: {
       type: "Fifth Wheel",
       floorplans: ["280RK", "300GK", "305RE", "310GK", "344GK", "345GK", "346FLS", "360RL", "365DEN", "366DEN", "370DV", "372WB", "373FB", "374TH", "375RE", "375RES", "376RD", "377MBS", "378MBS", "379FL", "379FLS", "380FL", "382WB", "384GK", "385GK", "388MBS", "390RK", "391DL", "414LJMJ", "417KB"],
@@ -22192,6 +22455,52 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     }
   },
   Jayco: {
+    "Jay Flight G2": {
+      type: "Travel Trailer",
+      floorplans: ["25RKS", "29RLS"],
+      floorplansByYear: {
+        "2011": ["25RKS", "29RLS"]
+      },
+      lengthRange: [28, 34],
+      weightRange: [6300, 6885],
+      slideouts: 1,
+      sleeps: 6,
+      msrpRange: [22000, 32000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.1,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 81,
+      yearStart: 2011,
+      yearEnd: 2011,
+      description: "Jayco Jay Flight G2. 2011 brochure table: 29RLS and 25RKS. Gray/black half-gallons are stored rounded. Not a later Jay Flight series."
+    },
+    "White Hawk": {
+      type: "Travel Trailer",
+      floorplans: ["23MRB"],
+      floorplansByYear: {
+        "2020": ["23MRB"]
+      },
+      lengthRange: [28, 29],
+      weightRange: [5385, 7250],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [41992, 41992],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 81,
+      yearStart: 2020,
+      yearEnd: 2020,
+      description: "Jayco White Hawk 23MRB. JD and RV Guide agree on length, tanks, hitch, and GVWR 7,250, but their dry weight 8,412 is above that GVWR so UVW stays blank. A Camping World card printed dry 5,385."
+    },
     Precept: {
       type: "Class A Gas",
       floorplans: ["29UM", "29UR", "29V", "31UL", "33U", "34B", "34G", "35S", "35UN", "35UP", "36A", "36C", "36T"],
@@ -28284,6 +28593,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2024,
       description: "Entegra Odyssey SE — Class C across Ford E-450 and Chevy chassis. OEM MY24: 22A / 22AF / 22C / 22CF / 27N / 27NF, Ford 7.3 325 / 450 and Chevy 6.6 Vortec 401 / 464 (option-band). MY26 brochure: 22-series + 29KF / 31FF (Ford only). MY27 adds 20LF / 20SF and reprints Chevy. No sourced MY23 / MY25 brochure — omit those years. Not bare Odyssey.",
       powertrainByYear: [
+        { from: 2027, to: 2027, floorplans: ["22CF"], engine: "Ford 7.3L V8 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-350", transmission: "TorqShift 6-speed automatic", fuelCapacityGal: 55, gvwrLbs: 12500, freshWater: 43.5, grayWater: 40, blackWater: 31, generator: "4,000W", notes: "2027 Odyssey SE 22CF only: Ford E-350 7.3 325/450, fuel 55, GVWR 12,500, tanks 43.5/40/31, generator 4,000W (RV Guide + Blue Compass). Do not copy onto 20LF. Chevy 401/464 stays an option band on the other plans." },
         { from: 2024, to: 2024, engine: "Ford 7.3L 325HP or Chevy 6.6L Vortec 401HP (by chassis)", horsepower: 0, chassis: "Ford E-450 or Chevy (by floorplan)", notes: "OEM MY24 Odyssey SE prints both Ford 325/450 and Chevy 401/464 — option band" },
         { from: 2026, to: 2026, engine: "Ford 7.3L V8 325HP", horsepower: 325, torqueLbFt: 450, chassis: "Ford E-350 / E-450 (by floorplan)", transmission: "TorqShift 6-speed automatic", notes: "OEM MY26 Odyssey SE: Ford 7.3 325 / 450 — do not invent Chevy HP for 2026" },
         { from: 2027, to: 2027, engine: "Ford 7.3L 325HP or Chevy 6.6L Vortec 401HP (by chassis)", horsepower: 0, chassis: "Ford E-350 / E-450 or Chevy (by floorplan)", notes: "OEM 2027 Odyssey SE prints both Ford 325/450 and Chevy 401/464 — option band" },
@@ -29875,7 +30185,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
   Heartland: {
     Bighorn: {
       type: "Fifth Wheel",
-      floorplans: ["3270RS", "3375SS", "3575SS", "3700FL", "3900FL", "3950MB", "3985QB", "4001QB"],
+      floorplans: ["3160ELITE", "3270RS", "3375SS", "3575SS", "3700FL", "3900FL", "3950MB", "3985QB", "4001QB"],
       floorplansByYear: {
         // LOCK research/heartland/LOT_DESK_2005_2009.md + CODES_2005_2009.json (EzMe pack)
         // library.rvusa.com/brochure/2008-Heartland-Bighorn.pdf
@@ -29892,7 +30202,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2016": ["3270RS", "3375SS", "3575SS", "3700FL", "3900FL", "3985QB", "4001QB"],
         "2017": ["3270RS", "3375SS", "3575SS", "3700FL", "3900FL", "3950MB", "3985QB", "4001QB"],
         "2018": ["3270RS", "3375SS", "3575SS", "3700FL", "3900FL", "3950MB", "3985QB", "4001QB"],
-        "2019": ["3270RS", "3375SS", "3575SS", "3700FL", "3900FL", "3950MB", "3985QB", "4001QB"],
+        "2019": ["3160ELITE", "3270RS", "3375SS", "3575SS", "3700FL", "3900FL", "3950MB", "3985QB", "4001QB"],
         "2020": ["3270RS", "3375SS", "3575SS", "3700FL", "3900FL", "3950MB", "3985QB", "4001QB"],
         "2021": ["3270RS", "3375SS", "3575SS", "3700FL", "3900FL", "3950MB", "3985QB", "4001QB"],
         "2022": ["3270RS", "3375SS", "3575SS", "3700FL", "3900FL", "3950MB", "3985QB", "4001QB"],
@@ -30044,10 +30354,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     "Big Country": {
       type: "Fifth Wheel",
-      floorplans: ["3150RL", "3500RL", "3560SS", "3702FL", "3902FL", "3000RD", "3155RLB", "3800BU", "4004SS"],
+      floorplans: ["3150RL", "3250TS", "3500RL", "3560SS", "3702FL", "3902FL", "3000RD", "3155RLB", "3800BU", "4004SS"],
       floorplansByYear: {
         "2010": ["3150RL", "3560SS", "3902FL"],
-        "2011": ["3150RL", "3560SS", "3902FL"],
+        "2011": ["3150RL", "3250TS", "3560SS", "3902FL"],
         "2012": ["3150RL", "3500RL", "3560SS", "3902FL"],
         "2013": ["3150RL", "3500RL", "3560SS", "3702FL", "3902FL"],
         "2014": ["3150RL", "3500RL", "3560SS", "3702FL", "3902FL"],
@@ -30376,6 +30686,29 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     }
   },
   Lance: {
+    "Lance 2285": {
+      type: "Travel Trailer",
+      floorplans: ["2285"],
+      floorplansByYear: {
+        "2016": ["2285"]
+      },
+      lengthRange: [27, 27],
+      weightRange: [4585, 4585],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [28000, 42000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.3,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 78,
+      yearStart: 2016,
+      yearEnd: 2016,
+      description: "Lance 2285 (2016). JD and RV Guide agree 45/90/45, UVW 4,585, GVWR 6,000, hitch 615, length 27'. An undated RV Life card (GVWR 6,400 / dry 4,930) is not used. Height with optional AC is not pinned."
+    },
     "Lance 2465": {
       type: "Travel Trailer",
       floorplans: ["2465"],
@@ -36568,7 +36901,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     },
     Nash: {
       type: "Travel Trailer",
-      floorplans: ["17K", "22H", "23D", "25G", "24B"],
+      floorplans: ["17K", "22H", "23D", "24M", "25G", "24B"],
       floorplansByYear: {
         "2005": ["17K", "22H"],
         "2006": ["17K", "22H"],
@@ -36587,7 +36920,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2019": ["17K", "22H", "23D", "25G", "24B"],
         "2020": ["17K", "22H", "23D", "25G", "24B"],
         "2021": ["17K", "22H", "23D", "25G", "24B"],
-        "2022": ["17K", "22H", "23D", "25G", "24B"],
+        "2022": ["17K", "22H", "23D", "24M", "25G", "24B"],
         "2023": ["17K", "22H", "23D", "25G", "24B"],
         "2024": ["17K", "22H", "23D", "25G", "24B"],
         "2025": ["17K", "22H", "23D", "25G", "24B"],
@@ -37063,7 +37396,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2025": ["2900", "3100", "3500", "3700"],
         // In-stock Carson RV Show MY2026: 3200 #47410, 3420 #47247, 3600 #47076.
         // Those codes are already on this model and on the MY2027 flyer. The
-        // narrowed 2026 card had dropped them. Gallon rows are OEM floorplan specs.
+        // narrowed 2026 card had dropped them. No new gallon row.
         "2026": ["3100", "3200", "3420", "3500", "3600", "3700"],
         // OEM /Docs/Flyers/27/Z/2027-Brinkley-Model-Z-*-Floorplan-Flyer.pdf
         // RVUSA 2027 Model Z year page is an empty shell — dated flyers are SoT.
@@ -37188,7 +37521,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2024": ["3250", "3500", "3520", "3950", "3970", "4000", "4100", "4120"],
         "2025": ["3250", "3500", "3520", "3950", "3970", "4000", "4100", "4120"],
         // In-stock Carson RV Show MY2026: 4150 #46681, 4170 #47134.
-        // Codes already on this model and the MY2027 flyer. Gallon rows are OEM floorplan specs.
+        // Codes already on this model and the MY2027 flyer. No new gallon row.
         "2026": ["3250", "3500", "3520", "3950", "3970", "4100", "4120", "4150", "4170"],
         // OEM /Docs/Flyers/27/G/2027-Brinkley-Model-G-*-Floorplan-Flyer.pdf
         // RVUSA 2027 Model G year page is an empty shell — dated flyers are SoT.
@@ -37446,6 +37779,27 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
     }
   },
   "Genesis Supreme": {
+    "Genesis Supreme": {
+      type: "Toy Hauler",
+      floorplans: ["28IKS", "2215SSXL", "2415CRXL", "2715FSXL"],
+      floorplansByYear: {
+        "2026": ["28IKS", "2215SSXL", "2415CRXL", "2715FSXL"],
+        "2027": ["28IKS", "2215SSXL", "2415CRXL", "2715FSXL"]
+      },
+      lengthRange: [27, 35],
+      weightRange: [6522, 14000],
+      slideouts: 1,
+      sleeps: 6,
+      msrpRange: [40000, 130000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      yearStart: 2026,
+      description: "Genesis Supreme toy haulers. 28IKS is the fifth-wheel toy hauler (sheet REV 1.18.23). 2215SSXL / 2415CRXL / 2715FSXL are bumper-pull XL plans (REV 1.1.24). 40-gal fuel station is an option, not pinned. Tanks are per floorplan — not copied across plans."
+    },
     Vortex: {
       type: "Toy Hauler",
       floorplans: ["2815V", "3215V", "3415V", "4015V", "2815TDC", "3016TDC", "3116TDC", "3417TDC"],
@@ -38519,6 +38873,28 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       yearStart: 2020,
       description: "Alliance Avenue — mid-profile luxury fifth wheel (value vs Paradigm). 32RLS is a volume search unit. All-Access and Avenue travel-trailer codes stay off this key."
     },
+    "Avenue Travel Trailer": {
+      type: "Travel Trailer",
+      floorplans: ["298RL"],
+      floorplansByYear: {
+        "2026": ["298RL"],
+        "2027": ["298RL"]
+      },
+      lengthRange: [34, 34],
+      weightRange: [8990, 10950],
+      slideouts: 2,
+      sleeps: 4,
+      msrpRange: [70000, 90000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4.6,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      yearStart: 2026,
+      description: "Alliance Avenue 298RL travel trailer. OEM page: length 34' 0\", height 11' 9\", dry 8,990, GVWR 10,950, hitch 925, tanks 71/106/53, 101\" wide. Not the Avenue fifth wheel (series tanks 74/74/46)."
+    },
     Valor: {
       type: "Toy Hauler",
       floorplans: [
@@ -39479,7 +39855,53 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       description: "The National RV Tropi-Cal was the company flagship diesel pusher — a Spartan-chassis coach with California-influenced styling and above-average interior appointments for its price tier. Well regarded by the full-timing community for livability and storage capacity."
     }
   },
+  "Sunset Park": {
+    "Sun Lite": {
+      type: "Toy Hauler",
+      floorplans: ["21TH"],
+      floorplansByYear: {
+        "2024": ["21TH"]
+      },
+      lengthRange: [21, 22],
+      weightRange: [3525, 3525],
+      slideouts: 0,
+      sleeps: 4,
+      msrpRange: [18000, 28000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      hitchType: "bumper-pull",
+      recalls: 0,
+      rating: 4,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      cccLbs: 3920,
+      ceilingHeight: 78,
+      yearStart: 2024,
+      yearEnd: 2024,
+      description: "Sunset Park Sun Lite 21TH. Dry 3,525, hitch 485, length 21' 10\", tanks 36/28/28, CCC 3,920 are the sunsettrailers table and General RV. GVWR is not pinned from dry+CCC. Propane is 2×20 lb."
+    }
+  },
   "Gulf Stream Coach": {
+    "Conquest LE": {
+      type: "Class C",
+      floorplans: ["6280LE"],
+      floorplansByYear: {
+        "2024": ["6280LE"]
+      },
+      lengthRange: [30, 30],
+      weightRange: [12300, 12500],
+      slideouts: 1,
+      sleeps: 8,
+      msrpRange: [141749, 141749],
+      fuelType: "Gas",
+      recalls: 0,
+      rating: 4,
+      image: RV_CARD_IMAGE,
+      ceilingHeight: 83,
+      yearStart: 2024,
+      yearEnd: 2024,
+      description: "Gulf Stream Conquest LE 6280LE is a Class C, not the older Conquest Class A. Ford E-350 GVWR 12,500 or Chevy 3500 GVWR 12,300 — no single GVWR pin. OEM + JD Ford tanks 31/38/31, tankless heater, LP 42 lb. Family RVing Chevy review printed fresh 37 and a 6-gal heater; not used. Fuel 55 vs 57 — not pinned. Dry weight 12,500 on the factory page equals the Ford GVWR and is not a UVW."
+    },
     Conquest: {
       type: "Class A Gas",
       floorplans: ["8317", "8325", "8361", "8369"],
@@ -41217,7 +41639,338 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         }
       ]
     },
-  }
+  },
+
+  "Ember": {
+    "E-Series": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["12FK", "12RK", "18FBE", "18RBE", "19ETS", "21FBE", "21RKE", "22ETS", "22MLQ", "24RLD", "25RUD", "26ETS"],
+      floorplansByYear: {
+        // emberrv.com/rvs/e-series/ current lineup (no model year printed). In-stock units are 2026. Dry Weight is not UVW — not pinned.
+        "2026": ["12FK", "12RK", "18FBE", "18RBE", "19ETS", "21FBE", "21RKE", "22ETS", "22MLQ", "24RLD", "25RUD", "26ETS"]
+      },
+      lengthRange: [16, 32],
+      weightRange: [0, 0],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [23270, 57184],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 78,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Ember E-Series travel trailer. OEM emberrv.com/rvs/e-series/ prints length, height, hitch, Dry Weight, sleeps, and MSRP. Dry Weight is not pinned as UVW. GVWR and tanks are not on that page — GAP. weightRange 0 so torque-to-weight does not treat dry weight as GVWR."
+    },
+    "Overland Series": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["190MSL", "191MSL", "201FBQ", "220MSL", "221MSL", "240TKR"],
+      floorplansByYear: {
+        // emberrv.com/rvs/overland-series/ current lineup. 2027 limited to the in-stock 201FBQ — do not copy the rest forward.
+        "2026": ["190MSL", "191MSL", "201FBQ", "220MSL", "221MSL", "240TKR"],
+        "2027": ["201FBQ"]
+      },
+      lengthRange: [23, 29],
+      weightRange: [0, 0],
+      slideouts: 1,
+      sleeps: 6,
+      msrpRange: [75972, 95434],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 78,
+      warrantyYears: 2,
+      yearStart: 2026,
+      description: "Ember Overland Series. OEM page prints length, height, hitch, Dry Weight, sleeps, MSRP. Dry Weight is not UVW. GVWR and tanks GAP. weightRange 0 so torque-to-weight does not invent GVWR."
+    },
+    "Touring Edition": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["21MRK", "26RB", "26MRB", "2200ETL", "2300MLL"],
+      floorplansByYear: {
+        // In-stock trims only. No OEM weights sheet in hand — do not copy E-Series or Overland numbers.
+        "2023": ["21MRK", "26RB"],
+        "2024": ["26MRB"],
+        "2027": ["2200ETL", "2300MLL"]
+      },
+      lengthRange: [20, 32],
+      weightRange: [0, 0],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [40000, 70000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 78,
+      warrantyYears: 2,
+      yearStart: 2023,
+      description: "Ember Touring Edition. In-stock floorplans only (2023 21MRK/26RB, 2024 26MRB, 2027 2200ETL/2300MLL). Weights GAP — no dated spec sheet pinned. weightRange 0 so torque-to-weight does not invent GVWR."
+    }
+  },
+  "East to West": {
+    "Alta": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["1600MRB-LE", "1800MBH-LE", "1900MMK", "2375KRK", "2400KTH", "2410KML", "2475KBH", "2600KRB", "2650KRD", "2775KFK", "2800KBH", "2850KRL", "2870KTH", "3010KBH", "3150KBH", "3175RK", "3250KXT"],
+      floorplansByYear: {
+        // 2025 in-stock trims only. Do not copy the 2026 UVW table backward.
+        "2025": ["1900MMK", "2475KBH", "2600KRB"],
+        // 2026 Alta floorplans table (easttowestrv.com/print/floorplans/alta). 1885RB row was blank — omitted from the year list but kept on the union so it is not a silent drop if a sheet returns.
+        "2026": ["1600MRB-LE", "1800MBH-LE", "1900MMK", "2375KRK", "2400KTH", "2410KML", "2475KBH", "2600KRB", "2650KRD", "2775KFK", "2800KBH", "2850KRL", "2870KTH", "3010KBH", "3150KBH", "3175RK", "3250KXT"]
+      },
+      lengthRange: [23, 39],
+      weightRange: [0, 0],
+      slideouts: 1,
+      sleeps: 6,
+      msrpRange: [30000, 80000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 81,
+      founded: 2019,
+      warrantyYears: 1,
+      yearStart: 2025,
+      description: "East to West Alta — laminated travel trailer (launched 2019). 2026 OEM floorplans table prints hitch, UVW, CCC, and length. GVWR is not printed on that table and is not derived. 2400KTH / 2870KTH are toy-hauler plans on this key. 2025 list is in-stock trims only. weightRange 0 so an unpinned plan does not score UVW as GVWR."
+    },
+    "Della Terra": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["292MK", "312BH"],
+      floorplansByYear: {
+        // In-stock only. 2020 weights not copied from later cards.
+        "2020": ["292MK"],
+        "2026": ["312BH"]
+      },
+      lengthRange: [28, 39],
+      weightRange: [0, 0],
+      slideouts: 1,
+      sleeps: 8,
+      msrpRange: [22000, 40000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 81,
+      founded: 2019,
+      warrantyYears: 1,
+      yearStart: 2020,
+      description: "East to West Della Terra. In-stock 2020 292MK and 2026 312BH only — not a full year matrix. 2026 312BH spec card (autotrader model-info) prints fresh 40 / gray 60 / black 30, sleeps 11, interior 81 in, length 38 ft. No GVWR or UVW on that card. weightRange 0.",
+      powertrainByYear: [
+        { from: 2026, to: 2026, floorplans: ["312BH"], freshWater: 40, grayWater: 60, blackWater: 30, sleeps: 11, overallLengthIn: 456, notes: "2026 Della Terra 312BH spec card: fresh 40 / gray 60 / black 30, sleeps 11, length 38 ft. GVWR and UVW not printed — not pinned." }
+      ]
+    },
+    "Ahara": {
+      type: "Fifth Wheel",
+      hitchType: "king pin",
+      floorplans: ["325RL"],
+      floorplansByYear: {
+        // In-stock plan. Riverside Camping Center 2026 Ahara guide (2025-09-28) also lists other plans; only 325RL is pinned here.
+        "2026": ["325RL"]
+      },
+      lengthRange: [35, 35],
+      weightRange: [15500, 15500],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [70000, 110000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 78,
+      founded: 2019,
+      warrantyYears: 1,
+      yearStart: 2026,
+      description: "East to West Ahara fifth wheel. 2026 325RL pin from the Riverside Camping Center 2026 Ahara floorplan table (published 2025-09-28): UVW 11,759, CCC 3,741, GVWR 15,500, pin 2,185, length 34' 9\". Other guide plans are not copied onto this key until an OEM table is in hand."
+    },
+    "Tandara": {
+      type: "Fifth Wheel",
+      hitchType: "king pin",
+      floorplans: ["235ML", "275BH", "295RL", "381FK", "387BH", "388LR", "389DS", "390FL"],
+      floorplansByYear: {
+        // OEM floorplans table easttowestrv.com/print/floorplans/tandara. 390FL detail page is titled 2026. GVWR not printed — UVW only.
+        "2026": ["235ML", "275BH", "295RL", "381FK", "387BH", "388LR", "389DS", "390FL"]
+      },
+      lengthRange: [28, 43],
+      weightRange: [0, 0],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [70000, 130000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 84,
+      founded: 2019,
+      warrantyYears: 1,
+      yearStart: 2026,
+      description: "East to West Tandara fifth wheel. 2026 OEM floorplans table prints hitch, UVW, CCC, and length. GVWR is not printed and is not derived. 390FL detail page also prints height 13' 4\", width 96\", fresh 64, gray 88, black 44. Not on the current RV Country lot; added so the line is not an empty brand hole."
+    }
+  },
+  "Modern Buggy": {
+    "Hopper": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["3", "4"],
+      floorplansByYear: {
+        "2026": ["3", "4"],
+        "2027": ["3", "4"]
+      },
+      lengthRange: [18, 24],
+      weightRange: [0, 0],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [22999, 28500],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      awningLength: 12,
+      ceilingHeight: 78,
+      warrantyYears: 1,
+      yearStart: 2026,
+      description: "Modern Buggy Hopper. Hopper 4 OEM page: weight 3,925 lb, length 23' 2\", sleeps 4. A 2026 General RV HOP4 sticker (VIN 72WBT2211T1001417) prints the same 3,925 dry and GVWR 4,400. Tanks disagree (editorial 77/35/35 vs that sticker 16/22/14) — tanks GAP. Hopper 3 weights GAP. 2027 weights not copied. Pin is floorplan 4, model year 2026 only. 200W solar is on the Hopper 4 feature sheet only — not a model-level pin."
+    },
+    "Hopper 1": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["Hopper 1"],
+      floorplansByYear: {
+        "2026": ["Hopper 1"],
+        "2027": ["Hopper 1"]
+      },
+      lengthRange: [14, 20],
+      weightRange: [0, 0],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [18000, 28000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 72,
+      warrantyYears: 1,
+      yearStart: 2026,
+      description: "Modern Buggy Hopper 1. In-stock 2026–2027. Weights GAP — do not copy Hopper 4. weightRange 0 so torque-to-weight does not invent GVWR."
+    },
+    "Hopper 2": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["Hopper 2"],
+      floorplansByYear: {
+        "2026": ["Hopper 2"],
+        "2027": ["Hopper 2"]
+      },
+      lengthRange: [16, 22],
+      weightRange: [0, 0],
+      slideouts: 0,
+      sleeps: 3,
+      msrpRange: [20000, 32000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 72,
+      warrantyYears: 1,
+      yearStart: 2026,
+      description: "Modern Buggy Hopper 2. In-stock 2026–2027. Weights GAP — do not copy Hopper 4. weightRange 0 so torque-to-weight does not invent GVWR."
+    },
+    "Big Buggy": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["130", "BB14", "BB16", "BB17"],
+      floorplansByYear: {
+        "2025": ["130"],
+        "2026": ["BB14", "BB16", "BB17"]
+      },
+      lengthRange: [13, 18],
+      weightRange: [0, 0],
+      slideouts: 0,
+      sleeps: 4,
+      msrpRange: [20000, 40000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 72,
+      warrantyYears: 1,
+      yearStart: 2025,
+      description: "Modern Buggy Big Buggy. In-stock plans only (2025 130, 2026 BB14/BB16/BB17). Weights GAP. weightRange 0 so torque-to-weight does not invent GVWR."
+    },
+    "Little Buggy": {
+      type: "Travel Trailer",
+      hitchType: "bumper-pull",
+      floorplans: ["10RK", "12LRK"],
+      floorplansByYear: {
+        "2027": ["10RK", "12LRK"]
+      },
+      lengthRange: [10, 14],
+      weightRange: [0, 0],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [15000, 28000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 72,
+      warrantyYears: 1,
+      yearStart: 2027,
+      description: "Modern Buggy Little Buggy. In-stock 2027 10RK / 12LRK only. Weights GAP. weightRange 0 so torque-to-weight does not invent GVWR."
+    },
+    "Truck Camper": {
+      type: "Truck Camper",
+      floorplans: ["TC9", "TC12", "TC14"],
+      floorplansByYear: {
+        "2025": ["TC9"],
+        "2026": ["TC9", "TC12", "TC14"]
+      },
+      lengthRange: [9, 15],
+      weightRange: [0, 0],
+      slideouts: 0,
+      sleeps: 2,
+      msrpRange: [15000, 35000],
+      chassis: "N/A (truck camper)",
+      fuelType: "N/A (truck camper)",
+      recalls: 0,
+      rating: 4.2,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      ceilingHeight: 72,
+      warrantyYears: 1,
+      yearStart: 2025,
+      description: "Modern Buggy truck camper. In-stock TC9 / TC12 / TC14. Weights GAP. weightRange 0 so torque-to-weight does not invent GVWR."
+    }
+  },
 
 };
 

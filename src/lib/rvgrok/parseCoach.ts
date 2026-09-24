@@ -1,6 +1,9 @@
 /** Shared year / make / model parse — no storage, safe for Node tests. */
 
 export const COACH_BRANDS = [
+  "Sunset Park",
+  "Gulf Stream",
+  "Genesis Supreme",
   "Leisure Travel Vans",
   "American Coach",
   "Entegra Coach",
@@ -66,7 +69,7 @@ function escapeBrandRe(s: string): string {
  * Skips $50k / 80k price leftovers — not alphanumeric FW codes (310GK).
  */
 const FLOORPLAN_TOKEN_RE =
-  /\b(\d{2,3}\s?[A-Za-z]{1,4}|[A-Za-z]{1,3}\d{2,3}[A-Za-z]?|(?!19[89]\d\b)(?!20[0-2]\d\b)\d{4}[A-Za-z]?)\b/g;
+  /\b(\d{2,3}\s?[A-Za-z]{1,4}|[A-Za-z]{1,3}\d{2,3}[A-Za-z]?|(?!19[89]\d\b)(?!20[0-2]\d\b)\d{4}[A-Za-z]{0,6})\b/g;
 
 /** Model years — never treat these as a 4-digit floorplan. */
 export function isModelYearToken(token: string): boolean {
@@ -93,15 +96,38 @@ export function isBudgetThousandsToken(token: string): boolean {
 
 export function extractFloorplanToken(text: string): string {
   if (!text) return "";
+  // "2550DS LE" is one plan code. Do not glue English ("4369 spec").
+  const notAPlanSuffix =
+    /^(ford|chevy|gas|diesel|the|and|for|with|have|has|gal|lbs|ft|spec|specs|report|reports|full|brochure|tanks?|fresh|gray|grey|black|water|class|coach|model|what|are|on|of|this|that|mbs)$/i;
+  const source = text.replace(
+    /\b(\d{4})\s*([A-Za-z]{1,6})(?:\s+([A-Za-z]{1,6}))?\b/g,
+    (full, digits: string, a: string, b?: string) => {
+      if (notAPlanSuffix.test(a)) return full;
+      if (b && notAPlanSuffix.test(b)) return `${digits}${a}`;
+      return `${digits}${a}${b || ""}`;
+    },
+  );
   const re = new RegExp(FLOORPLAN_TOKEN_RE.source, "g");
-  for (const m of text.matchAll(re)) {
+  for (const m of source.matchAll(re)) {
     let token = normalizeFloorplanToken(m[1] || "");
     if (!token) continue;
     if (isBudgetThousandsToken(token)) continue;
+    const suffix = token.replace(/^\d+/, "");
+    if (suffix && notAPlanSuffix.test(suffix)) {
+      token = token.slice(0, token.length - suffix.length);
+    }
+    if (!token) continue;
     // Spoken "31W Z" — trailing single letter belongs on the code (31WZ).
-    const after = text.slice((m.index ?? 0) + m[0].length);
+    // Do not glue "Ford" onto an already-complete suffix (2550DSLE Ford).
+    const after = source.slice((m.index ?? 0) + m[0].length);
     const glue = after.match(/^\s+([A-Za-z])\b/);
-    if (glue?.[1]) token = normalizeFloorplanToken(token + glue[1]);
+    if (
+      glue?.[1] &&
+      !/[A-Za-z]{2,}$/.test(token) &&
+      !notAPlanSuffix.test(glue[1])
+    ) {
+      token = normalizeFloorplanToken(token + glue[1]);
+    }
     return token;
   }
   return "";

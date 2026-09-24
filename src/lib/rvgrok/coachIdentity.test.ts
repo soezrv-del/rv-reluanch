@@ -457,6 +457,43 @@ test("2026 Grand Design Lineage 31ZW keys Lineage Series F — not a family ghos
   assert.doesNotMatch(dutch!.make, /Grand Design/i);
 });
 
+test("2023 Sunseeker 2550DS LE is Sunseeker LE, not full-feature Sunseeker", () => {
+  const parsed = parseCoachFromText("2023 Forest River Sunseeker 2550DS LE");
+  assert.equal(parsed.year, "2023");
+  assert.equal(parsed.make, "Forest River");
+  assert.match(parsed.model, /^sunseeker$/i);
+  assert.equal(parsed.floorplan.toUpperCase(), "2550DSLE");
+
+  assert.equal(
+    resolveCatalogModel("Forest River", "Sunseeker", "2550DSLE"),
+    "Sunseeker LE",
+  );
+  assert.equal(
+    resolveCatalogModel("Forest River", "Sunseeker", "2550DS LE"),
+    "Sunseeker LE",
+  );
+  assert.equal(
+    resolveCatalogModel("Forest River", "Sunseeker", "3010DS"),
+    "Sunseeker",
+    "shared full-feature code stays Sunseeker",
+  );
+  assert.equal(
+    resolveCatalogModel("Forest River", "Sunseeker Classic", "2550DSLE"),
+    "Sunseeker Classic",
+    "a named Classic ask is not retargeted",
+  );
+
+  const id = resolveCoachIdentity(
+    "what are the holding tanks on the 2023 Forest River Sunseeker 2550DS LE",
+    null,
+    "",
+  );
+  assert.ok(id);
+  assert.equal(id!.year, "2023");
+  assert.equal(id!.model, "Sunseeker LE");
+  assert.equal(id!.floorplan.toUpperCase(), "2550DSLE");
+});
+
 test("spoken 31W Z / 31WZ is the Lineage Super C 31ZW", () => {
   for (const q of [
     "2026 Grand Design Lineage 31W Z",
