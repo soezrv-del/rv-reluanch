@@ -14329,7 +14329,7 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
   assert.equal(idx.Avalanche?.years?.includes(2027), false);
   assert.equal(idx["Cougar Western Elevation"], undefined);
   assert.equal(idx["Passport Premium"], undefined);
-  assert.equal(idx["Hideout Mini"], undefined);
+  assert.deepEqual(idx["Hideout Mini"]?.years, [2026]);
   assert.equal(idx["Hideout Max"], undefined);
 
   const block = src("rvData.ts");
@@ -14429,7 +14429,7 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(bul, /"16BHC"/);
   assert.doesNotMatch(bul, /"21BHCWE"/);
 
-  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf("    Fuzion: {"));
+  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf('    "Hideout Mini": {'));
   assert.match(hid, /"2027": \["210RL", "210RLWE", "212RKS", "212RKSWE", "230BH", "230BHWE", "234MLS", "234MLSWE", "250RBS", "250RBSWE", "262BHS", "262BHSWE"\]/);
   assert.match(hid, /yearStart:\s*2010/);
   assert.doesNotMatch(hid, /"2026":/);
@@ -14474,7 +14474,7 @@ test("Keystone P3 honesty: Bullet Classic + Springdale Mini/Max OEM 2027; empty 
   assert.equal(idx.Cougar?.years?.includes(2027), false);
   assert.equal(idx.Bullet?.years?.includes(2027), false);
   assert.equal(idx.Passport?.years?.includes(2027), false);
-  assert.equal(idx["Hideout Mini"], undefined);
+  assert.deepEqual(idx["Hideout Mini"]?.years, [2026]);
   assert.equal(idx["Hideout Max"], undefined);
 
   const block = src("rvData.ts");
@@ -14501,7 +14501,7 @@ test("Keystone P3 honesty: Bullet Classic + Springdale Mini/Max OEM 2027; empty 
   const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf('    "Bullet Classic": {'));
   assert.doesNotMatch(bxf, /"2017":|"2025":|"2026":/);
 
-  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf("    Fuzion: {"));
+  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf('    "Hideout Mini": {'));
   assert.doesNotMatch(hid, /"2010":|"2026":/);
 
   const chtt = k.slice(k.indexOf('    "Cougar Half-Ton Travel Trailer": {'), k.indexOf("    Bullet: {"));
@@ -16341,7 +16341,7 @@ test("Keystone MY2010 honesty: lock Avalanche/Bullet/Montana/Passport/Springdale
   const sprd = k.slice(k.indexOf("    Springdale: {"), k.indexOf('    "Springdale Mini"'));
   const alp = k.slice(k.indexOf("    Alpine: {"), k.indexOf('    "Alpine Avalanche Edition"'));
   const cfw = k.slice(k.indexOf('    "Cougar 5th Wheel": {'), k.indexOf('    "Cougar Sport"'));
-  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf("    Fuzion: {"));
+  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf('    "Hideout Mini": {'));
   const spr = k.slice(k.indexOf("    Sprinter: {"));
   const mhc = k.slice(k.indexOf('    "Montana High Country": {'), k.indexOf("    Cougar: {"));
 

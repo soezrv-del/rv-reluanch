@@ -4945,7 +4945,6 @@ function main() {
         "Arcadia Super Lite",
         "Passport Premium",
         "Passport GT",
-        "Hideout Mini",
         "Hideout Max",
       ];
       for (const name of banned) {
@@ -5643,7 +5642,7 @@ function main() {
         fail("Keystone|Bullet MY2010 Nov 2009 Standard + Micro lock missing (LOT_DESK_2010)");
       }
 
-      const hid = slice("Hideout", "Fuzion");
+      const hid = slice("Hideout", "Hideout Mini");
       if (!/"2027": \["210RL", "210RLWE", "212RKS", "212RKSWE", "230BH", "230BHWE", "234MLS", "234MLSWE", "250RBS", "250RBSWE", "262BHS", "262BHSWE"\]/.test(hid)) {
         fail("Keystone|Hideout MY27 OEM plans missing");
       }
@@ -5655,6 +5654,14 @@ function main() {
       }
       if (/"120BT"/.test(hid) || /"29HAVEN"/.test(hid) || /"310XBR"/.test(hid)) {
         fail("Keystone|Hideout must not absorb Hideout Mini / Max codes (GAP this slice)");
+      }
+
+      const hmini = slice("Hideout Mini", "Fuzion");
+      if (!/"2026": \["166RB", "186SS", "195RBS"\]/.test(hmini)) {
+        fail("Keystone|Hideout Mini MY2026 Carson plans missing (166RB/186SS/195RBS)");
+      }
+      if (/"2027":/.test(hmini) || /freshWater:\s*40/.test(hmini)) {
+        fail("Keystone|Hideout Mini must not copy 2027 or Hideout 40/30/30");
       }
 
       const sprd = slice("Springdale", "Springdale Mini");

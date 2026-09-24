@@ -18737,7 +18737,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         // 210RL | 210RLWE | 212RKS | 212RKSWE | 230BH | 230BHWE | 234MLS | 234MLSWE | 250RBS | 250RBSWE | 262BHS | 262BHSWE
         // GAP MY2010 (research/keystone/LOT_DESK_2010.md) — captions Hideout West 2011.
         // yearStart 2010 — omit 2010–2026 fby (no invent / no copy-forward of 2027 codes).
-        // Mini / Max GAP — no extractable 2027 Mini/Max cards.
+        // Hideout Max stays GAP. Hideout Mini is its own 2026 series.
         "2027": ["210RL", "210RLWE", "212RKS", "212RKSWE", "230BH", "230BHWE", "234MLS", "234MLSWE", "250RBS", "250RBSWE", "262BHS", "262BHSWE"]
       },
       lengthRange: [25, 32],
@@ -18759,7 +18759,35 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       founded: 1996,
       warrantyYears: 1,
       yearStart: 2010,
-      description: "Keystone Hideout — current value travel trailer. yearStart 2010; older fby empty until walk-back. OEM 2027 card is 210RL through 262BHS including Western Edition twins. Mini / Max GAP this slice."
+      description: "Keystone Hideout — current value travel trailer. yearStart 2010; older fby empty until walk-back. OEM 2027 card is 210RL through 262BHS including Western Edition twins. Hideout Mini is a separate series."
+    },
+    "Hideout Mini": {
+      type: "Travel Trailer",
+      floorplans: ["166RB", "186SS", "195RBS"],
+      floorplansByYear: {
+        // Carson RV Show MY2026: 166RB #47275, 186SS #47085 and #46741, 195RBS #47301.
+        // Keystone Hideout Mini specs page: 166RB and 195RBS. 186SS is the 2026 RV Guide spec card.
+        // Do not copy Hideout 40/30/30 or the 28 ft length band onto these plans.
+        "2026": ["166RB", "186SS", "195RBS"]
+      },
+      lengthRange: [20, 24],
+      weightRange: [3090, 5100],
+      slideouts: 1,
+      sleeps: 4,
+      msrpRange: [19000, 28000],
+      chassis: "N/A (towable)",
+      fuelType: "N/A (towable)",
+      recalls: 0,
+      rating: 4.1,
+      image: RV_CARD_IMAGE,
+      towingCapacity: 0,
+      awningLength: 8,
+      ceilingHeight: 78,
+      founded: 1996,
+      warrantyYears: 1,
+      yearStart: 2026,
+      hitchType: "bumper-pull",
+      description: "Keystone Hideout Mini — single-axle comfort trailer, not the full-size Hideout. 2026 Carson plans 166RB / 186SS / 195RBS. Tanks and weights are per floorplan. Do not inherit Hideout 40/30/30."
     },
     Fuzion: {
       type: "Toy Hauler",
@@ -26111,7 +26139,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           freshWater: 100,
           grayWater: 62,
           blackWater: 41,
-          notes: "OEM MY16 Anthem year page (Wayback 2016-05-08): ISL 450 / 1,250 · Spartan Mountain Master raised rail · hitch 15k. Not L9. Do not stamp K2 backward. Tanks: 2016 Anthem brochure spec table — 42DEQ / 42RBQ / 44A / 44B / 44DLQ all 100 / 62 / 41. Do not read a tank count of 1 as gallons."
+          gvwrLbs: 49000,
+          fuelCapacityGal: 150,
+          notes: "OEM MY16 Anthem year page (Wayback 2016-05-08): ISL 450 / 1,250 · Spartan Mountain Master raised rail · hitch 15k. Not L9. Do not stamp K2 backward. Tanks: 2016 Anthem brochure spec table — 42DEQ / 42RBQ / 44A / 44B / 44DLQ all 100 / 62 / 41. GVWR 49,000 on that table. Fuel 150 gal is the JD Power 2016 44DLQ spec. Do not read a tank count of 1 as gallons."
         },
         {
           from: 2017,
@@ -26125,7 +26155,9 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           freshWater: 100,
           grayWater: 62,
           blackWater: 41,
-          notes: "OEM MY17 Anthem year page (Wayback 2017-06-06) + 2017 Entegra Coach lineup brochure: ISL 450 / 1,250 · Spartan K2 Mountain Master · hitch 15k. Not L9. Tanks: 2016 brochure table (44DLQ included) is 100 / 62 / 41. 2017 RV Tech review of the 44B prints fresh 100 / black 41 and gray 63 on that one plan. Not 1 gal — that figure is a tank count."
+          gvwrLbs: 49000,
+          fuelCapacityGal: 150,
+          notes: "OEM MY17 Anthem year page (Wayback 2017-06-06) + 2017 Entegra Coach lineup brochure: ISL 450 / 1,250 · Spartan K2 Mountain Master · hitch 15k. Not L9. Tanks: 2016 brochure table (44DLQ included) is 100 / 62 / 41. 2017 RV Tech review of the 44B prints fresh 100 / black 41, gray 63, GVWR 49,000, fuel 150. Not 1 gal — that figure is a tank count."
         },
         {
           from: 2018,
@@ -37031,7 +37063,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2025": ["2900", "3100", "3500", "3700"],
         // In-stock Carson RV Show MY2026: 3200 #47410, 3420 #47247, 3600 #47076.
         // Those codes are already on this model and on the MY2027 flyer. The
-        // narrowed 2026 card had dropped them. No new gallon row.
+        // narrowed 2026 card had dropped them. Gallon rows are OEM floorplan specs.
         "2026": ["3100", "3200", "3420", "3500", "3600", "3700"],
         // OEM /Docs/Flyers/27/Z/2027-Brinkley-Model-Z-*-Floorplan-Flyer.pdf
         // RVUSA 2027 Model Z year page is an empty shell — dated flyers are SoT.
@@ -37058,8 +37090,6 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       image: RV_CARD_IMAGE,
       towingCapacity: 0,
       freshWater: 75,
-      grayWater: 50,
-      blackWater: 50,
       generator: "Optional / prep",
       awningLength: 16,
       ceilingHeight: 82,
@@ -37067,7 +37097,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
       warrantyYears: 2,
       yearStart: 2022,
       hitchType: "king pin",
-      description: "Brinkley Model Z — premium fifth wheel. High build quality, residential feel. UVW/pin weight vary widely by floorplan — door sticker rules. Live Grok verifies exact brochure numbers."
+      description: "Brinkley Model Z — premium fifth wheel. Fresh is often 75 gal; 3600-class plans are 150. Gray and black are floorplan-specific — do not stamp 50/50. UVW and pin weight vary. Dated flyers rule."
     },
     "Model Z Air": {
       type: "Travel Trailer",
@@ -37158,7 +37188,7 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
         "2024": ["3250", "3500", "3520", "3950", "3970", "4000", "4100", "4120"],
         "2025": ["3250", "3500", "3520", "3950", "3970", "4000", "4100", "4120"],
         // In-stock Carson RV Show MY2026: 4150 #46681, 4170 #47134.
-        // Codes already on this model and the MY2027 flyer. No new gallon row.
+        // Codes already on this model and the MY2027 flyer. Gallon rows are OEM floorplan specs.
         "2026": ["3250", "3500", "3520", "3950", "3970", "4100", "4120", "4150", "4170"],
         // OEM /Docs/Flyers/27/G/2027-Brinkley-Model-G-*-Floorplan-Flyer.pdf
         // RVUSA 2027 Model G year page is an empty shell — dated flyers are SoT.
