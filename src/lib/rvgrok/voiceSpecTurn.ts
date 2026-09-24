@@ -125,27 +125,38 @@ const META_FIELD_RE =
   /\bwhy\b[\s\S]{0,80}\b(pull|didn'?t|did not|missing|isn'?t|wasn'?t|not (?:pull|get|have|show|there))\b/i;
 
 /**
- * Field-only or meta follow-up. Not a new coach, and not a full/quick pick.
+ * Explicit report asks only. Same set as the Coach knowledge trigger.
+ * 'full report,' 'tell me everything about,' 'specs on,' or 'CARFAX on.'
+ */
+const EXPLICIT_REPORT_RE =
+  /\bfull\s+report\b|\btell me everything about\b|\bspecs on\b|\bcarfax on\b/i;
+
+export function looksLikeExplicitVoiceReportAsk(text: string): boolean {
+  return EXPLICIT_REPORT_RE.test(normalizeAskText(text || ""));
+}
+
+/**
+ * Field-only or meta follow-up, including a named coach plus one field.
  * "just the GVWR", "what's the GVWR", "the UVW", "why didn't you pull X".
  */
 export function looksLikeVoiceFieldOrMetaAsk(text: string): boolean {
   const t = normalizeAskText(text).trim();
   if (!t) return false;
-  if (voiceDepthAlreadyChosen(t)) return false;
-  if (looksLikeNamedCoachProductQuestion(t)) return false;
+  if (looksLikeExplicitVoiceReportAsk(t)) return false;
+  if (voiceDepthAlreadyChosen(t) && !LIVE_FIELD_RE.test(t)) return false;
   if (META_FIELD_RE.test(t)) return true;
   return LIVE_FIELD_RE.test(t);
 }
 
 /**
- * Choice line only for a coach/spec ask that has not already picked a length
- * and is not a field/meta follow-up on a coach that is already locked.
+ * Choice line only for an explicit report ask whose length is still ambiguous.
+ * Bare coach mention, single-field, and locked field follow-ups do not ask.
  */
 export function shouldSpeakVoiceCoachChoice(opts: {
   transcript: string;
   coachLocked: boolean;
 }): boolean {
-  if (!looksLikeVoiceCoachOrSpecAsk(opts.transcript)) return false;
+  if (!looksLikeExplicitVoiceReportAsk(opts.transcript)) return false;
   if (voiceDepthAlreadyChosen(opts.transcript)) return false;
   if (opts.coachLocked && looksLikeVoiceFieldOrMetaAsk(opts.transcript)) {
     return false;

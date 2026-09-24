@@ -11,6 +11,7 @@ import {
   formatVoiceQuickOverview,
   formatVoiceSpecEngineSpeech,
   isVoiceExtraNudge,
+  looksLikeExplicitVoiceReportAsk,
   looksLikeVoiceCoachOrSpecAsk,
   looksLikeVoiceFieldOrMetaAsk,
   shouldSpeakVoiceCoachChoice,
@@ -204,34 +205,61 @@ test("coach or spec ask is a choice, not a synopsis or an auto full report", () 
   assert.equal(picked?.offerVoiceExtras, true);
 });
 
-test("locked coach field or meta ask skips the choice line", () => {
+test("choice line only for an explicit report ask with ambiguous length", () => {
   for (const q of [
     "just the GVWR",
     "why didn't you pull the GVWR",
     "why didn't you pull UVW",
     "what's the GVWR",
     "the UVW",
+    "what about the Cornerstone",
+    "tell me about the 2026 Lineage 31ZW",
   ]) {
-    assert.equal(looksLikeVoiceFieldOrMetaAsk(q), true, q);
+    assert.equal(looksLikeExplicitVoiceReportAsk(q), false, q);
     assert.equal(
       shouldSpeakVoiceCoachChoice({ transcript: q, coachLocked: true }),
       false,
       q,
     );
+    assert.equal(
+      shouldSpeakVoiceCoachChoice({ transcript: q, coachLocked: false }),
+      false,
+      q,
+    );
   }
+  for (const q of [
+    "just the GVWR",
+    "why didn't you pull the GVWR",
+    "what's the GVWR",
+    "the UVW",
+    "2026 Entegra Coach Cornerstone 45B GVWR",
+  ]) {
+    assert.equal(looksLikeVoiceFieldOrMetaAsk(q), true, q);
+  }
+  assert.equal(looksLikeExplicitVoiceReportAsk("tell me everything about the Cornerstone"), true);
+  assert.equal(looksLikeExplicitVoiceReportAsk("specs on the 45B"), true);
+  assert.equal(looksLikeExplicitVoiceReportAsk("CARFAX on the Cornerstone"), true);
+  assert.equal(looksLikeExplicitVoiceReportAsk("full report"), true);
   assert.equal(
     shouldSpeakVoiceCoachChoice({
-      transcript: "tell me about the 2026 Lineage 31ZW",
+      transcript: "tell me everything about the 2026 Lineage 31ZW",
+      coachLocked: false,
+    }),
+    true,
+  );
+  assert.equal(
+    shouldSpeakVoiceCoachChoice({
+      transcript: "specs on the Cornerstone 45B",
       coachLocked: true,
     }),
     true,
   );
   assert.equal(
     shouldSpeakVoiceCoachChoice({
-      transcript: "just the GVWR",
-      coachLocked: false,
+      transcript: "full report",
+      coachLocked: true,
     }),
-    true,
+    false,
   );
 });
 
@@ -333,16 +361,20 @@ test("overview sheet is reused for full report and voice fallback pins knowledge
   assert.ok(cachedDeliver > 0 && choiceOpen > cachedDeliver);
   assert.match(routeFn, /VOICE_COACH_CHOICE_INSTRUCTIONS/);
   assert.match(routeFn, /shouldSpeakVoiceCoachChoice/);
-  assert.match(routeFn, /looksLikeVoiceFieldOrMetaAsk/);
-  const fieldSkip = routeFn.indexOf("looksLikeVoiceFieldOrMetaAsk");
+  assert.match(routeFn, /looksLikeExplicitVoiceReportAsk/);
+  const fieldSkip = routeFn.indexOf("shouldSpeakVoiceCoachChoice");
   const choiceSpeak = routeFn.indexOf("VOICE_COACH_CHOICE_INSTRUCTIONS");
   assert.ok(fieldSkip > 0 && fieldSkip < choiceSpeak);
   assert.match(routeFn.slice(fieldSkip, choiceSpeak), /return false/);
   const fieldRun = realtime.indexOf(
-    "coachLocked && looksLikeVoiceFieldOrMetaAsk(transcript)",
+    "!looksLikeExplicitVoiceReportAsk(transcript)",
   );
   assert.ok(fieldRun > 0);
-  assert.match(realtime.slice(fieldRun, fieldRun + 800), /armSpecEngineTurn/);
+  assert.match(realtime.slice(fieldRun, fieldRun + 900), /armSpecEngineTurn/);
+  assert.match(
+    realtime.slice(fieldRun, fieldRun + 900),
+    /looksLikeVoiceFieldOrMetaAsk/,
+  );
   const arm = realtime.slice(
     realtime.indexOf("private armSpecEngineTurn"),
     realtime.indexOf("private async speakFromSpecEngine"),

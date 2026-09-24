@@ -41,6 +41,7 @@ import {
   classifyVoiceExtraPick,
   formatVoiceQuickOverview,
   formatVoiceSpecEngineSpeech,
+  looksLikeExplicitVoiceReportAsk,
   looksLikeVoiceCoachOrSpecAsk,
   looksLikeVoiceFieldOrMetaAsk,
   shouldSpeakVoiceCoachChoice,
@@ -991,10 +992,10 @@ export class GrokRealtimeSession {
     this.pendingSpecSheet = null;
     this.specEngineSpoken = false;
     this.engineSheetPainted = false;
-    const coachLocked = Boolean(
-      this.facts?.make?.trim() && this.facts?.model?.trim(),
-    );
-    if (coachLocked && looksLikeVoiceFieldOrMetaAsk(transcript)) {
+    if (
+      looksLikeVoiceCoachOrSpecAsk(transcript) &&
+      !looksLikeExplicitVoiceReportAsk(transcript)
+    ) {
       await ensureCatalogLoaded().catch(() => null);
       if (this.closed || this.intentionalStop || specSeq !== this.specTurnSeq) {
         return;
@@ -1005,8 +1006,15 @@ export class GrokRealtimeSession {
       });
       this.applyVoiceGrounding(transcript, grounded);
       this.cancelAutoResponseForResearch();
-      this.armSpecEngineTurn(transcript, grounded);
-      await this.speakFromSpecEngine(specSeq);
+      if (
+        looksLikeVoiceFieldOrMetaAsk(transcript) ||
+        looksLikeDeskSheetAsk(transcript)
+      ) {
+        this.armSpecEngineTurn(transcript, grounded);
+        await this.speakFromSpecEngine(specSeq);
+      } else {
+        await this.deliverVoiceQuick(specSeq, transcript);
+      }
       return;
     }
     let grounded = buildChatGrounding({
@@ -1317,20 +1325,17 @@ export class GrokRealtimeSession {
       const coachLocked = Boolean(
         this.facts?.make?.trim() && this.facts?.model?.trim(),
       );
-      if (
-        !shouldSpeakVoiceCoachChoice({ transcript, coachLocked }) &&
-        looksLikeVoiceFieldOrMetaAsk(transcript)
-      ) {
-        this.voiceChoiceTranscript = null;
-        return false;
-      }
-      if (chosen) {
+      if (looksLikeExplicitVoiceReportAsk(transcript) && chosen) {
         this.voiceChoiceTranscript = null;
         this.voiceDeliver = chosen;
         void this.maybeEnrichWithWebResearch(transcript).finally(() => {
           this.voiceDeliver = null;
         });
         return true;
+      }
+      if (!shouldSpeakVoiceCoachChoice({ transcript, coachLocked })) {
+        this.voiceChoiceTranscript = null;
+        return false;
       }
       this.specTurnSeq += 1;
       this.voiceChoiceTranscript = transcript;
