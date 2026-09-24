@@ -47,6 +47,7 @@ import {
   applySharedPaintToRows,
   emptyFieldsFromPaintedRows,
   fetchSpecFieldFallback,
+  isEngineOwnedDeskLabel,
   paintHasFallbackNumber,
   resolveSharedSpecPaint,
   stripEngineOwnedChatFigures,
@@ -98,6 +99,11 @@ export type DeskSheetRow = {
   gap: boolean;
   asterisk?: boolean;
   sourceUrl?: string;
+  /**
+   * Facts-style wheel beside this GAP while background heal is in flight.
+   * Cleared when the fill arrives or the scrape misses — never left spinning.
+   */
+  searching?: boolean;
 };
 
 export type DeskSheetPayload = {
@@ -447,13 +453,37 @@ function preferSpokenCoachIdentity(
   return identity;
 }
 
-/** SERIES MISSING or every spec row GAP — do not freeze; browse. */
+/**
+ * Browse when the shared engine still has work: SERIES MISSING, every row
+ * GAP, or any engine-owned empty/GAP (GVWR, UVW, tanks, fuel). A single
+ * gap is enough — do not wait for an all-GAP card.
+ */
 export function deskSheetNeedsLiveHeal(sheet: {
   presenceNote?: string;
-  rows: readonly { gap: boolean }[];
+  rows: readonly { label?: string; gap: boolean }[];
 }): boolean {
   if (/SERIES MISSING/i.test(sheet.presenceNote || "")) return true;
+  const labeled = sheet.rows.filter(
+    (row): row is { label: string; gap: boolean } =>
+      typeof row.label === "string",
+  );
+  if (emptyFieldsFromPaintedRows(labeled).length > 0) return true;
   return sheet.rows.length > 0 && sheet.rows.every((row) => row.gap);
+}
+
+/** Mark engine-owned GAP rows as searching. No-op when nothing will be browsed. */
+export function markDeskGapsSearching<T extends DeskSheetPayload>(
+  sheet: T | null,
+): T | null {
+  if (!sheet || !deskSheetNeedsLiveHeal(sheet)) return sheet;
+  return {
+    ...sheet,
+    rows: sheet.rows.map((row) =>
+      row.gap && isEngineOwnedDeskLabel(row.label)
+        ? { ...row, searching: true }
+        : { ...row, searching: false },
+    ),
+  };
 }
 
 export function resolveDeskSheet(opts: {

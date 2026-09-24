@@ -23,6 +23,7 @@ import { parseCoachFromText } from "./parseCoach";
 import { ensureCatalogLoaded } from "../rv/catalogLoad";
 import {
   looksLikeDeskSheetAsk,
+  markDeskGapsSearching,
   resolveDeskSheet,
   resolveDeskSheetThenFallback,
   type DeskSheetPayload,
@@ -610,7 +611,9 @@ export class GrokRealtimeSession {
   }
 
   private emitDeskSheet(opts: Parameters<typeof resolveDeskSheet>[0]) {
-    const sheet = withVoiceSpecExtras(resolveDeskSheet(opts), opts.query);
+    const sheet = markDeskGapsSearching(
+      withVoiceSpecExtras(resolveDeskSheet(opts), opts.query),
+    );
     this.handlers.onDeskSheet?.(sheet);
     const seq = ++this.deskFallbackSeq;
     if (!sheet) return;
@@ -1419,9 +1422,11 @@ export class GrokRealtimeSession {
       this.deskFallbackSeq += 1;
       this.engineSheetPainted = true;
       this.handlers.onDeskSheet?.(
-        reportDelivery
-          ? withVoiceSpecExtras(sheet, transcript, { force: true })
-          : sheet,
+        markDeskGapsSearching(
+          reportDelivery
+            ? withVoiceSpecExtras(sheet, transcript, { force: true })
+            : sheet,
+        ),
       );
     }
     this.researchPhase = "answering";
@@ -1442,7 +1447,9 @@ export class GrokRealtimeSession {
     this.voiceExtraQuery = query;
     this.voiceExtrasOffered = true;
     this.handlers.onDeskSheet?.(
-      withVoiceSpecExtras(sheet, query, { force: true }),
+      markDeskGapsSearching(
+        withVoiceSpecExtras(sheet, query, { force: true }),
+      ),
     );
   }
 
@@ -1558,7 +1565,7 @@ export class GrokRealtimeSession {
       this.voiceExtraQuery = pending.transcript;
       this.voiceExtrasOffered = true;
     }
-    this.handlers.onDeskSheet?.(tagged);
+    this.handlers.onDeskSheet?.(markDeskGapsSearching(tagged));
     if (tagged) {
       this.engineSheetPainted = true;
       this.lastDeskQuery = pending.transcript;

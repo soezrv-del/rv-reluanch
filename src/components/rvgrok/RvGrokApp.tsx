@@ -20,6 +20,7 @@ import { GrokRealtimeSession } from "@/lib/rvgrok/realtime";
 import { buildChatGrounding, buildVoiceGrounding } from "@/lib/rvgrok/grounding";
 import { parseCoachFromText } from "@/lib/rvgrok/parseCoach";
 import {
+  markDeskGapsSearching,
   resolveDeskSheet,
   resolveDeskSheetThenFallback,
   type DeskSheetPayload,
@@ -567,7 +568,7 @@ export function RvGrokApp({
           identity: grounded.identity,
           specs: grounded.specs,
         };
-        const deskSheet = resolveDeskSheet(deskOpts);
+        const deskSheet = markDeskGapsSearching(resolveDeskSheet(deskOpts));
         if (deskSheet) {
           setLiveDeskSheet(deskSheet);
           setMessages((prev) =>
@@ -691,7 +692,7 @@ export function RvGrokApp({
           spokenText: finalContent,
           chatSpecBlock: finalContent,
         };
-        const paintedDesk = resolveDeskSheet(paintedOpts);
+        const paintedDesk = markDeskGapsSearching(resolveDeskSheet(paintedOpts));
         if (paintedDesk) {
           setLiveDeskSheet(paintedDesk);
         } else {
