@@ -474,21 +474,3 @@ export function mergeSpecFills(
   }
   return out;
 }
-
-/**
- * Labeled numbers from a confirmed research note only.
- * Unconfirmed notes, catalog-pin skips, and GAP text yield nothing.
- */
-export function specFillsFromConfirmedNotes(
-  notes: string,
-  empty: readonly SpecFieldKey[],
-  sourceUrl: string,
-): SpecFieldFill[] {
-  const text = String(notes || "");
-  if (!/CONFIRMED:\s*yes/i.test(text)) return [];
-  const wanted = new Set(empty);
-  return parseSpecFieldsFromHtml(text, {
-    source: "dealer",
-    url: sourceUrl || "https://www.rvmax.app/research",
-  }).filter((fill) => wanted.has(fill.field));
-}
