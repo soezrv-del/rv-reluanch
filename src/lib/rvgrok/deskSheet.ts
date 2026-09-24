@@ -562,6 +562,18 @@ export async function resolveDeskSheetThenFallback(
     },
     signal,
   );
-  if (!fills.length || signal?.aborted) return first;
-  return resolveDeskSheet({ ...opts, fallbackFills: fills }) ?? first;
+  if (signal?.aborted) return null;
+  const painted =
+    (fills.length
+      ? resolveDeskSheet({ ...opts, fallbackFills: fills })
+      : first) ?? first;
+  return settleDeskGapSearch(painted);
+}
+
+/** Honest GAP or a filled value — spinner off only after the heal returns. */
+function settleDeskGapSearch<T extends DeskSheetPayload>(sheet: T): T {
+  return {
+    ...sheet,
+    rows: sheet.rows.map((row) => ({ ...row, searching: false })),
+  };
 }

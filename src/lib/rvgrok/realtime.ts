@@ -1066,6 +1066,8 @@ export class GrokRealtimeSession {
 
     if (looksLikeDeskSheetAsk(transcript)) {
       // Catalog is loaded. Speak the shared engine — not the web snippet.
+      // Gap fill stays on the spec-fallback request; this abort is only
+      // the unused voice sidecar.
       this.armSpecEngineTurn(transcript, grounded);
       this.researchAbort?.abort();
       if (this.researchPhase !== "holding") {
