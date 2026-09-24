@@ -19,6 +19,7 @@ import {
   buildDeskSheetPayload,
   claimsDeskSpecSheet,
   deskSheetNeedsLiveHeal,
+  markDeskGapsSearching,
   deskSheetIsTowable,
   formatLockedWeightsBlock,
   looksLikeDeskSheetAsk,
@@ -898,5 +899,71 @@ test("SERIES MISSING and all-GAP desk locks trigger fallback browse", () => {
   assert.doesNotMatch(
     fn.slice(0, fn.indexOf("fetchSpecFieldFallback")),
     /if \(!empty\.length\) return first/,
+  );
+});
+
+test("any engine-owned GAP triggers heal and the Facts spinner, without blocking first paint", () => {
+  const partial = {
+    presenceNote: "",
+    rows: [
+      { label: "Class", gap: false },
+      { label: "GVWR", value: "GAP", gap: true },
+      { label: "UVW", value: "18,000 lb", gap: false },
+      { label: "Fuel capacity", value: "100 gal", gap: false },
+    ],
+  };
+  assert.equal(deskSheetNeedsLiveHeal(partial), true);
+  assert.equal(
+    deskSheetNeedsLiveHeal({
+      presenceNote: "",
+      rows: [
+        { label: "Class", gap: true },
+        { label: "GVWR", gap: false },
+      ],
+    }),
+    false,
+    "a non-engine GAP does not browse by itself",
+  );
+
+  const marked = markDeskGapsSearching({
+    year: "2026",
+    make: "Entegra Coach",
+    model: "Cornerstone",
+    floorplan: "45B",
+    title: "2026 Entegra Coach Cornerstone 45B",
+    presenceNote: "",
+    gaps: ["GVWR"],
+    rows: partial.rows.map((row) => ({
+      label: row.label,
+      value: row.value || (row.gap ? "GAP" : "pinned"),
+      gap: row.gap,
+    })),
+  });
+  assert.equal(marked?.rows.find((row) => row.label === "GVWR")?.searching, true);
+  assert.equal(marked?.rows.find((row) => row.label === "UVW")?.searching, false);
+  assert.equal(marked?.rows.find((row) => row.label === "Class")?.searching, false);
+
+  const app = src(join(root, "../../components/rvgrok"), "RvGrokApp.tsx");
+  const deskUi = src(join(root, "../../components/rvgrok"), "DeskSpecSheet.tsx");
+  const realtime = src(root, "realtime.ts");
+  const chatApi = src(join(root, "../../routes/api"), "rvgrok.ts");
+  assert.match(deskUi, /facts-gap-spinner/);
+  assert.match(deskUi, /data-testid="facts-gap-spinner"/);
+  assert.match(app, /markDeskGapsSearching\(resolveDeskSheet/);
+  const voidAt = app.indexOf("void resolveDeskSheetThenFallback(deskOpts");
+  const streamAt = app.indexOf("await streamChat(", voidAt);
+  assert.ok(voidAt > 0 && streamAt > voidAt, "desk heal starts before the chat stream");
+  assert.match(realtime, /void later/);
+  assert.match(realtime, /markDeskGapsSearching/);
+  const speak = realtime.slice(
+    realtime.indexOf("private speakCatalogThenFallback"),
+    realtime.indexOf("private async deliverVoiceQuick"),
+  );
+  assert.match(speak, /void later/);
+  assert.doesNotMatch(speak, /await later/);
+  assert.match(chatApi, /Memory first/);
+  assert.doesNotMatch(
+    chatApi.slice(chatApi.indexOf("Memory first"), chatApi.indexOf("const fromXai")),
+    /await resolveDeskSheetThenFallback/,
   );
 });

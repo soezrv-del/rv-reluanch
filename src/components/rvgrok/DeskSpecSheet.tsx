@@ -3,6 +3,19 @@ import { cn } from "@/lib/utils";
 
 const PILL_LABELS = ["Class", "GVWR", "UVW", "Fuel"];
 
+/** Same wheel Facts uses beside a catalog gap — do not restyle. */
+function FactsGapSpinner({ field }: { field: string }) {
+  return (
+    <span
+      role="status"
+      aria-label={`Searching ${field}`}
+      data-testid="facts-gap-spinner"
+      data-facts-gap-field={field.toLowerCase()}
+      className="facts-gap-spinner"
+    />
+  );
+}
+
 export function DeskSpecSheet({
   sheet,
   className,
@@ -60,11 +73,12 @@ export function DeskSpecSheet({
                 </p>
                 <p
                   className={cn(
-                    "mt-1 truncate text-[13px] font-semibold",
+                    "mt-1 inline-flex max-w-full items-center justify-center gap-1.5 truncate text-[13px] font-semibold",
                     row.gap ? "text-amber" : "text-fg",
                   )}
                 >
-                  {row.value}
+                  <span className="truncate">{row.value}</span>
+                  {row.searching ? <FactsGapSpinner field={row.label} /> : null}
                 </p>
                 {row.sourceUrl && !row.gap ? (
                   <a
@@ -139,7 +153,10 @@ export function DeskSpecSheet({
                   row.gap ? "text-amber" : "text-fg",
                 )}
               >
-                <span>{row.value}</span>
+                <span className="inline-flex items-center justify-end gap-1.5">
+                  <span>{row.value}</span>
+                  {row.searching ? <FactsGapSpinner field={row.label} /> : null}
+                </span>
                 {row.sourceUrl && !row.gap ? (
                   <a
                     href={row.sourceUrl}
