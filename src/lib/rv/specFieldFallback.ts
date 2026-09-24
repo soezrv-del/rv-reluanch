@@ -81,6 +81,8 @@ const LBS_MIN = 2_000;
 const LBS_MAX = 60_000;
 const GAL_MIN = 1;
 const GAL_MAX = 300;
+/** A "1" next to fresh/gray/black is a tank count, not capacity. */
+const WATER_GAL_MIN = 8;
 
 const RVGUIDE_ORIGIN = "https://www.rvguide.com";
 const RVUSA_ORIGIN = "https://www.rvusa.com";
@@ -231,14 +233,23 @@ function firstLabeledNumber(
   text: string,
   label: RegExp,
   kind: "lbs" | "gal",
+  opts?: { min?: number },
 ): number | null {
-  const re = new RegExp(
-    `${label.source}[^\\d]{0,56}(\\d{1,3}(?:,\\d{3}){1,2}|\\d{1,5}(?:\\.\\d+)?)`,
-    "i",
-  );
-  const m = text.match(re);
-  if (!m?.[1]) return null;
-  return parseBoundedNumber(m[1], kind);
+  const min = opts?.min ?? (kind === "lbs" ? LBS_MIN : GAL_MIN);
+  const finder = new RegExp(label.source, "ig");
+  let hit: RegExpExecArray | null;
+  while ((hit = finder.exec(text))) {
+    const start = hit.index + hit[0].length;
+    const window = text.slice(start, start + 96);
+    const nums =
+      window.match(/\d{1,3}(?:,\d{3}){1,2}|\d{1,5}(?:\.\d+)?/g) || [];
+    for (const raw of nums) {
+      const n = parseBoundedNumber(raw, kind);
+      if (n == null || n < min) continue;
+      return n;
+    }
+  }
+  return null;
 }
 
 function pushFill(
@@ -321,6 +332,7 @@ export function parseSpecFieldsFromHtml(
       text,
       /\b(?:total\s+)?fresh(?:\s+water)?(?:\s+tank)?(?:\s+capacity)?\b/,
       "gal",
+      { min: WATER_GAL_MIN },
     ),
     "gal",
     meta,
@@ -332,6 +344,7 @@ export function parseSpecFieldsFromHtml(
       text,
       /\b(?:total\s+)?gr[ae]y(?:\s+water)?(?:\s+tank)?(?:\s+capacity)?\b/,
       "gal",
+      { min: WATER_GAL_MIN },
     ),
     "gal",
     meta,
@@ -343,6 +356,7 @@ export function parseSpecFieldsFromHtml(
       text,
       /\b(?:total\s+)?black(?:\s+water)?(?:\s+tank)?(?:\s+capacity)?\b/,
       "gal",
+      { min: WATER_GAL_MIN },
     ),
     "gal",
     meta,

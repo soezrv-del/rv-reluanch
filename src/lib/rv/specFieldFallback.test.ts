@@ -61,6 +61,34 @@ test("2026 Lineage 31ZW candidates include same-year RV Guide, not 2025 RVUSA", 
   );
 });
 
+test("tank count of 1 is not fresh/gray/black capacity", () => {
+  const fills = parseSpecFieldsFromHtml(
+    `
+      Number of Fresh Water Tanks: 1
+      Fresh Water Capacity (gal / L) 100 / 378.5
+      Gray Water Tanks: 1
+      Gray Water Capacity (gal / L) 62 / 234.7
+      Black Water Tanks: 1
+      Black Water Capacity: 41 gal
+      Fuel Capacity (gal / L) 150 / 567.8
+    `,
+    { source: "dealer", url: "https://www.jdpower.com/rvs/example" },
+  );
+  const byField = Object.fromEntries(fills.map((f) => [f.field, f.value]));
+  assert.equal(byField.freshWater, 100);
+  assert.equal(byField.grayWater, 62);
+  assert.equal(byField.blackWater, 41);
+  assert.equal(byField.fuelCapacity, 150);
+
+  const countOnly = parseSpecFieldsFromHtml(
+    "Fresh Water Tanks: 1. Gray Water Tanks: 1. Black Water Tanks: 1.",
+    { source: "rvusa", url: "https://www.rvusa.com/example" },
+  );
+  assert.equal(countOnly.find((f) => f.field === "freshWater"), undefined);
+  assert.equal(countOnly.find((f) => f.field === "grayWater"), undefined);
+  assert.equal(countOnly.find((f) => f.field === "blackWater"), undefined);
+});
+
 test("RV Guide fixture parses dry weight 18186 as UVW + tanks + fuel", () => {
   const fills = parseSpecFieldsFromHtml(RVGUIDE_2026_LINEAGE_31ZW_FIXTURE, {
     source: "rvguide",

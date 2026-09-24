@@ -26108,7 +26108,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Spartan Mountain Master Raised Rail",
           transmission: "Allison 3000 MH 6-speed",
           towingCapacity: 15000,
-          notes: "OEM MY16 Anthem year page (Wayback 2016-05-08): ISL 450 / 1,250 · Spartan Mountain Master raised rail · hitch 15k. Not L9. Do not stamp K2 backward."
+          freshWater: 100,
+          grayWater: 62,
+          blackWater: 41,
+          notes: "OEM MY16 Anthem year page (Wayback 2016-05-08): ISL 450 / 1,250 · Spartan Mountain Master raised rail · hitch 15k. Not L9. Do not stamp K2 backward. Tanks: 2016 Anthem brochure spec table — 42DEQ / 42RBQ / 44A / 44B / 44DLQ all 100 / 62 / 41. Do not read a tank count of 1 as gallons."
         },
         {
           from: 2017,
@@ -26119,7 +26122,10 @@ export const RV_DATA: Record<string, Record<string, RVSpec>> = {
           chassis: "Spartan K2 Mountain Master",
           transmission: "Allison 3000 MH 6-speed",
           towingCapacity: 15000,
-          notes: "OEM MY17 Anthem year page (Wayback 2017-06-06) + 2017 Entegra Coach lineup brochure: ISL 450 / 1,250 · Spartan K2 Mountain Master · hitch 15k. Not L9."
+          freshWater: 100,
+          grayWater: 62,
+          blackWater: 41,
+          notes: "OEM MY17 Anthem year page (Wayback 2017-06-06) + 2017 Entegra Coach lineup brochure: ISL 450 / 1,250 · Spartan K2 Mountain Master · hitch 15k. Not L9. Tanks: 2016 brochure table (44DLQ included) is 100 / 62 / 41. 2017 RV Tech review of the 44B prints fresh 100 / black 41 and gray 63 on that one plan. Not 1 gal — that figure is a tank count."
         },
         {
           from: 2018,
