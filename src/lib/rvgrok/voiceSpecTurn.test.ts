@@ -12,6 +12,8 @@ import {
   formatVoiceSpecEngineSpeech,
   isVoiceExtraNudge,
   looksLikeVoiceCoachOrSpecAsk,
+  looksLikeVoiceFieldOrMetaAsk,
+  shouldSpeakVoiceCoachChoice,
   VOICE_COACH_CHOICE_LINE,
   voiceDepthAlreadyChosen,
   voiceExtraPromptLine,
@@ -202,6 +204,73 @@ test("coach or spec ask is a choice, not a synopsis or an auto full report", () 
   assert.equal(picked?.offerVoiceExtras, true);
 });
 
+test("locked coach field or meta ask skips the choice line", () => {
+  for (const q of [
+    "just the GVWR",
+    "why didn't you pull the GVWR",
+    "why didn't you pull UVW",
+    "what's the GVWR",
+    "the UVW",
+  ]) {
+    assert.equal(looksLikeVoiceFieldOrMetaAsk(q), true, q);
+    assert.equal(
+      shouldSpeakVoiceCoachChoice({ transcript: q, coachLocked: true }),
+      false,
+      q,
+    );
+  }
+  assert.equal(
+    shouldSpeakVoiceCoachChoice({
+      transcript: "tell me about the 2026 Lineage 31ZW",
+      coachLocked: true,
+    }),
+    true,
+  );
+  assert.equal(
+    shouldSpeakVoiceCoachChoice({
+      transcript: "just the GVWR",
+      coachLocked: false,
+    }),
+    true,
+  );
+});
+
+test("speech refuses an unpainted GVWR and keeps benefit on painted facts", () => {
+  const corner = lineageSheet({
+    year: "2026",
+    make: "Entegra Coach",
+    model: "Cornerstone",
+    floorplan: "45B",
+    title: "2026 Entegra Coach Cornerstone 45B",
+    rows: [
+      { label: "GVWR", value: "Confirm brochure", gap: true },
+      { label: "UVW", value: "GAP", gap: true },
+      { label: "Fuel capacity", value: "GAP", gap: true },
+    ],
+    gaps: ["GVWR", "UVW", "Fuel capacity"],
+  });
+  const speech = formatVoiceSpecEngineSpeech(corner, "just the GVWR");
+  assert.match(speech, /GVWR is still missing/);
+  assert.match(speech, /checking live sources/);
+  assert.match(speech, /I won't guess/);
+  assert.doesNotMatch(speech, /54,?000/);
+  assert.doesNotMatch(speech, /\bpounds\b/);
+  assert.doesNotMatch(speech, /fewer stops|hill power|passing power/);
+
+  const painted = formatVoiceSpecEngineSpeech(
+    lineageSheet({
+      rows: [
+        { label: "GVWR", value: "54,000 lbs", gap: false },
+        { label: "Fuel capacity", value: "150 gal", gap: false },
+      ],
+    }),
+    "2026 Entegra Coach Cornerstone 45B",
+    "all",
+  );
+  assert.match(painted, /54,000/);
+  assert.match(painted, /fewer stops/);
+});
+
 test("Live Voice spec turns go through the shared engine and skip the snippet reply", () => {
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   const fnStart = realtime.indexOf("private async maybeEnrichWithWebResearch");
@@ -263,6 +332,24 @@ test("overview sheet is reused for full report and voice fallback pins knowledge
   const choiceOpen = routeFn.indexOf("this.voiceChoiceTranscript = transcript");
   assert.ok(cachedDeliver > 0 && choiceOpen > cachedDeliver);
   assert.match(routeFn, /VOICE_COACH_CHOICE_INSTRUCTIONS/);
+  assert.match(routeFn, /shouldSpeakVoiceCoachChoice/);
+  assert.match(routeFn, /looksLikeVoiceFieldOrMetaAsk/);
+  const fieldSkip = routeFn.indexOf("looksLikeVoiceFieldOrMetaAsk");
+  const choiceSpeak = routeFn.indexOf("VOICE_COACH_CHOICE_INSTRUCTIONS");
+  assert.ok(fieldSkip > 0 && fieldSkip < choiceSpeak);
+  assert.match(routeFn.slice(fieldSkip, choiceSpeak), /return false/);
+  const fieldRun = realtime.indexOf(
+    "coachLocked && looksLikeVoiceFieldOrMetaAsk(transcript)",
+  );
+  assert.ok(fieldRun > 0);
+  assert.match(realtime.slice(fieldRun, fieldRun + 800), /armSpecEngineTurn/);
+  const arm = realtime.slice(
+    realtime.indexOf("private armSpecEngineTurn"),
+    realtime.indexOf("private async speakFromSpecEngine"),
+  );
+  assert.match(arm, /resolveDeskSheetThenFallback/);
+  assert.match(arm, /pinCoachKnowledge:\s*true/);
+  assert.match(arm, /looksLikeVoiceFieldOrMetaAsk/);
   const knowledgeCode = knowledge.replace(/\/\*[\s\S]*?\*\//g, "");
   assert.match(knowledgeCode, /planSpecFallbackKnowledgeWrite/);
   assert.match(knowledgeCode, /planCoachKnowledgeWrite/);

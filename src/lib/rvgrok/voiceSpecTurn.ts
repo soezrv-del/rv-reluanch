@@ -22,7 +22,7 @@ import {
 } from "./webIntent.ts";
 
 export const VOICE_SPEC_ENGINE_INSTRUCTIONS =
-  "Say exactly the SPEC ENGINE SCRIPT and then stop. The script opens with a short acknowledgment — say that first, once, then the specs. Those numbers are the catalog and fallback chain for this turn. Do not add, replace, or estimate any spec from memory. Do not load NHTSA recalls, market value, videos, owner reviews, or a maintenance schedule. Those are on-screen prompts the user picks. If the script says a field was missed, say that and do not guess a number.";
+  "Say exactly the SPEC ENGINE SCRIPT and then stop. The script opens with a short acknowledgment — say that first, once, then the specs. Those numbers are the catalog and fallback chain for this turn. Do not add, replace, or estimate any spec from memory. Never speak a GVWR, UVW, CCC, fuel, fresh, gray, or black number unless that exact figure is in the script. If the script says a field is still missing or that you are checking live sources, say that and do not invent a number. Do not load NHTSA recalls, market value, videos, owner reviews, or a maintenance schedule. Those are on-screen prompts the user picks. Feature-to-benefit lines apply only to numbers in the script.";
 
 /** First spoken line on any Live Voice coach or spec ask. */
 export const VOICE_COACH_CHOICE_LINE =
@@ -109,9 +109,48 @@ function rowSpeech(row: DeskSheetRow, query: string, withBenefit: boolean): stri
 function missingOnce(labels: string[]): string | null {
   const unique = [...new Set(labels.map((l) => l.trim()).filter(Boolean))];
   if (!unique.length) return null;
-  if (unique.length === 1) return `${unique[0]} is still missing. I won't guess.`;
+  const checking = "I'm checking live sources.";
+  if (unique.length === 1) {
+    return `${unique[0]} is still missing. ${checking} I won't guess.`;
+  }
   const last = unique[unique.length - 1];
-  return `Still missing: ${unique.slice(0, -1).join(", ")} and ${last}. I won't guess.`;
+  return `Still missing: ${unique.slice(0, -1).join(", ")} and ${last}. ${checking} I won't guess.`;
+}
+
+const LIVE_FIELD_RE =
+  /\b(gvwr|uvw|ccc|ncc|payload|fuel|fresh|gr[ae]y|black|dry\s+weight|unloaded)\b/i;
+
+/** "Why didn't you pull GVWR" / "why isn't the UVW there". */
+const META_FIELD_RE =
+  /\bwhy\b[\s\S]{0,80}\b(pull|didn'?t|did not|missing|isn'?t|wasn'?t|not (?:pull|get|have|show|there))\b/i;
+
+/**
+ * Field-only or meta follow-up. Not a new coach, and not a full/quick pick.
+ * "just the GVWR", "what's the GVWR", "the UVW", "why didn't you pull X".
+ */
+export function looksLikeVoiceFieldOrMetaAsk(text: string): boolean {
+  const t = normalizeAskText(text).trim();
+  if (!t) return false;
+  if (voiceDepthAlreadyChosen(t)) return false;
+  if (looksLikeNamedCoachProductQuestion(t)) return false;
+  if (META_FIELD_RE.test(t)) return true;
+  return LIVE_FIELD_RE.test(t);
+}
+
+/**
+ * Choice line only for a coach/spec ask that has not already picked a length
+ * and is not a field/meta follow-up on a coach that is already locked.
+ */
+export function shouldSpeakVoiceCoachChoice(opts: {
+  transcript: string;
+  coachLocked: boolean;
+}): boolean {
+  if (!looksLikeVoiceCoachOrSpecAsk(opts.transcript)) return false;
+  if (voiceDepthAlreadyChosen(opts.transcript)) return false;
+  if (opts.coachLocked && looksLikeVoiceFieldOrMetaAsk(opts.transcript)) {
+    return false;
+  }
+  return true;
 }
 
 const CHOICE_FILLER =

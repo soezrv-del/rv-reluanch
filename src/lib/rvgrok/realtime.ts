@@ -42,6 +42,8 @@ import {
   formatVoiceQuickOverview,
   formatVoiceSpecEngineSpeech,
   looksLikeVoiceCoachOrSpecAsk,
+  looksLikeVoiceFieldOrMetaAsk,
+  shouldSpeakVoiceCoachChoice,
   VOICE_COACH_CHOICE_INSTRUCTIONS,
   VOICE_SPEC_ENGINE_INSTRUCTIONS,
   voiceDepthAlreadyChosen,
@@ -989,6 +991,24 @@ export class GrokRealtimeSession {
     this.pendingSpecSheet = null;
     this.specEngineSpoken = false;
     this.engineSheetPainted = false;
+    const coachLocked = Boolean(
+      this.facts?.make?.trim() && this.facts?.model?.trim(),
+    );
+    if (coachLocked && looksLikeVoiceFieldOrMetaAsk(transcript)) {
+      await ensureCatalogLoaded().catch(() => null);
+      if (this.closed || this.intentionalStop || specSeq !== this.specTurnSeq) {
+        return;
+      }
+      const grounded = buildChatGrounding({
+        query: transcript,
+        facts: this.facts,
+      });
+      this.applyVoiceGrounding(transcript, grounded);
+      this.cancelAutoResponseForResearch();
+      this.armSpecEngineTurn(transcript, grounded);
+      await this.speakFromSpecEngine(specSeq);
+      return;
+    }
     let grounded = buildChatGrounding({
       query: transcript,
       facts: this.facts,
@@ -1294,6 +1314,16 @@ export class GrokRealtimeSession {
       this.voiceExtrasOffered = false;
       this.voiceExtraSheet = null;
       this.voiceExtraQuery = "";
+      const coachLocked = Boolean(
+        this.facts?.make?.trim() && this.facts?.model?.trim(),
+      );
+      if (
+        !shouldSpeakVoiceCoachChoice({ transcript, coachLocked }) &&
+        looksLikeVoiceFieldOrMetaAsk(transcript)
+      ) {
+        this.voiceChoiceTranscript = null;
+        return false;
+      }
       if (chosen) {
         this.voiceChoiceTranscript = null;
         this.voiceDeliver = chosen;
@@ -1419,7 +1449,9 @@ export class GrokRealtimeSession {
       query: transcript,
       identity: grounded.identity,
       specs: grounded.specs,
-      mountForVoiceReport: this.voiceDeliver === "full",
+      mountForVoiceReport:
+        this.voiceDeliver === "full" ||
+        looksLikeVoiceFieldOrMetaAsk(transcript),
       pinCoachKnowledge: true,
       knowledgeQuery: transcript,
     });
@@ -1440,7 +1472,9 @@ export class GrokRealtimeSession {
           query: pending.transcript,
           identity: pending.grounded.identity,
           specs: pending.grounded.specs,
-          mountForVoiceReport: this.voiceDeliver === "full",
+          mountForVoiceReport:
+            this.voiceDeliver === "full" ||
+            looksLikeVoiceFieldOrMetaAsk(pending.transcript),
           pinCoachKnowledge: true,
           knowledgeQuery: pending.transcript,
         }));
