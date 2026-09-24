@@ -73,8 +73,8 @@ test("catalog miss triggers web-research path (chat + live voice)", () => {
       { missingHard: false, missingOemWeightPin: true },
       "What engine and HP does a 2023 Entegra Vision have?",
     ),
-    true,
-    "engine / HP spec ask must browse even when the catalog is locked",
+    false,
+    "locked engine / HP answers from the pin — browse only on a gap",
   );
   assert.equal(
     looksLikeCoachFactAsk("What engine and HP does a 2023 Entegra Vision have?"),

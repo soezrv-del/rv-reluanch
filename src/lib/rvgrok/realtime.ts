@@ -45,6 +45,7 @@ import {
   looksLikeVoiceCoachOrSpecAsk,
   looksLikeVoiceFieldOrMetaAsk,
   shouldSpeakVoiceCoachChoice,
+  voiceAskedFieldStillGap,
   VOICE_COACH_CHOICE_INSTRUCTIONS,
   VOICE_SPEC_ENGINE_INSTRUCTIONS,
   voiceDepthAlreadyChosen,
@@ -1350,6 +1351,37 @@ export class GrokRealtimeSession {
     return false;
   }
 
+  /**
+   * Catalog sheet is the first speech. The empty-field scrape runs in
+   * the background unless the asked OEM field is still a gap.
+   */
+  private async sheetForSpeech(
+    seq: number,
+    transcript: string,
+    painted: DeskSheetPayload | null,
+    opts: Parameters<typeof resolveDeskSheetThenFallback>[0],
+    pending?: Promise<DeskSheetPayload | null> | null,
+  ): Promise<DeskSheetPayload | null> {
+    const needsFill = voiceAskedFieldStillGap(transcript, painted?.rows);
+    const later = pending ?? resolveDeskSheetThenFallback(opts);
+    if (!needsFill) {
+      void later
+        .then((next) => {
+          if (!next || next === painted || seq !== this.specTurnSeq || this.closed) {
+            return;
+          }
+          this.handlers.onDeskSheet?.(withVoiceSpecExtras(next, transcript));
+        })
+        .catch(() => undefined);
+      return painted;
+    }
+    try {
+      return (await later) ?? painted;
+    } catch {
+      return painted;
+    }
+  }
+
   private async deliverVoiceQuick(seq: number, transcript: string) {
     this.cancelAutoResponseForResearch();
     await ensureCatalogLoaded().catch(() => null);
@@ -1359,19 +1391,16 @@ export class GrokRealtimeSession {
       facts: this.facts,
     });
     this.applyVoiceGrounding(transcript, grounded, { paintDesk: false });
-    let sheet: DeskSheetPayload | null = null;
-    try {
-      sheet = await resolveDeskSheetThenFallback({
-        query: transcript,
-        identity: grounded.identity,
-        specs: grounded.specs,
-        mountForVoiceReport: true,
-        pinCoachKnowledge: true,
-        knowledgeQuery: transcript,
-      });
-    } catch {
-      sheet = null;
-    }
+    const sheetOpts = {
+      query: transcript,
+      identity: grounded.identity,
+      specs: grounded.specs,
+      mountForVoiceReport: true,
+      pinCoachKnowledge: true,
+      knowledgeQuery: transcript,
+    };
+    const painted = resolveDeskSheet(sheetOpts);
+    const sheet = await this.sheetForSpeech(seq, transcript, painted, sheetOpts);
     if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
     if (sheet) {
       this.rememberVoiceCachedSheet(grounded.identity, sheet, transcript);
@@ -1470,22 +1499,24 @@ export class GrokRealtimeSession {
     this.pendingSpec = null;
     this.pendingSpecSheet = null;
     if (!pending) return;
-    let sheet: DeskSheetPayload | null = null;
-    try {
-      sheet = await (sheetPromise ??
-        resolveDeskSheetThenFallback({
-          query: pending.transcript,
-          identity: pending.grounded.identity,
-          specs: pending.grounded.specs,
-          mountForVoiceReport:
-            this.voiceDeliver === "full" ||
-            looksLikeVoiceFieldOrMetaAsk(pending.transcript),
-          pinCoachKnowledge: true,
-          knowledgeQuery: pending.transcript,
-        }));
-    } catch {
-      sheet = null;
-    }
+    const sheetOpts = {
+      query: pending.transcript,
+      identity: pending.grounded.identity,
+      specs: pending.grounded.specs,
+      mountForVoiceReport:
+        this.voiceDeliver === "full" ||
+        looksLikeVoiceFieldOrMetaAsk(pending.transcript),
+      pinCoachKnowledge: true,
+      knowledgeQuery: pending.transcript,
+    };
+    const painted = resolveDeskSheet(sheetOpts);
+    const sheet = await this.sheetForSpeech(
+      seq,
+      pending.transcript,
+      painted,
+      sheetOpts,
+      sheetPromise,
+    );
     if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
     if (sheet) {
       this.rememberVoiceCachedSheet(

@@ -744,9 +744,9 @@ export const Route = createFileRoute("/api/rvgrok")({
           skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
         }
 
-        // Specs / GVWR / engine / pricing / YMM / catalog GAP / own-lot
-        // miss → MUST browse this turn. Locked identity still uses server
-        // needsWeb so a pin is confirmed by live notes, not overwritten.
+        // Memory first. Browse only when needsWeb says the ask needs an
+        // external fact (repair, market, inventory, unpinned OEM number).
+        // A catalog pin and casual chat start the model without waiting.
         const wantsWebFallback =
           !skipWebForLot &&
           (serverGrounded.needsWeb ||

@@ -32,6 +32,7 @@ import {
   looksLikeMarketValueQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeOffCatalogQuestion,
+  looksLikeSpecQuestion,
   catalogGapNeedsWeb,
   needsWebFallback,
 } from "./webIntent.ts";
@@ -435,8 +436,8 @@ test("spec miss still wants web; locked Vision engine question also searches", (
       lockedSpec,
       "What engine and HP does a 2023 Entegra Vision have?",
     ),
-    true,
-    "spec ask must search first even when the catalog is locked",
+    false,
+    "locked spec answers from the catalog pin — no pre-token browse",
   );
 });
 
@@ -578,13 +579,13 @@ test("know about / what about a named coach wants web when catalog is missing", 
     "I'm afraid to ask this, but what about the 2026 Grand Design Lineage M series?";
   for (const q of [q2027, q2026]) {
     assert.equal(looksLikeNamedCoachProductQuestion(q), true, q);
-    assert.equal(needsWebFallback(null, q), true, q);
-    assert.equal(needsWebFallback({ missingHard: true }, q), true, q);
+    assert.equal(needsWebFallback(null, q), false, q);
+    assert.equal(needsWebFallback({ missingHard: true }, q), false, q);
   }
   assert.equal(
     needsWebFallback({ missingHard: false }, q2027),
-    true,
-    "year/make/model coach ask must search first even when the catalog is locked",
+    false,
+    "named coach about-ask answers from memory when the catalog is locked",
   );
   assert.equal(
     looksLikeNamedCoachProductQuestion("Is full-timing worth it?"),
@@ -648,13 +649,13 @@ function assertLineageSeriesMLock(
 
   assert.equal(
     needsWebFallback({ missingHard: false }, q),
-    true,
-    "year/make/model or spec ask must search first; catalog lock is injected so notes cannot invent a no-catalog story",
+    false,
+    "catalog lock answers now; search is not a pre-token step",
   );
   assert.equal(
     needsWebFallback({ missingHard: true }, q),
-    true,
-    "gaps still browse",
+    looksLikeSpecQuestion(q),
+    "OEM-number gaps still browse; about-asks stay on memory",
   );
 }
 
@@ -682,8 +683,8 @@ test("unresolved named coach about-ask still fires web instead of a dealer dead-
   assert.notEqual(model, "Lineage Series M");
   const pin = findPowertrainCorrection("2027", "Grand Design", model);
   assert.equal(pin, null);
-  assert.equal(needsWebFallback(null, q), true);
-  assert.equal(needsWebFallback({ missingHard: true }, q), true);
+  assert.equal(needsWebFallback(null, q), false);
+  assert.equal(needsWebFallback({ missingHard: true }, q), false);
   const grounding = src(root, "grounding.ts");
   assert.match(grounding, /WEB RESEARCH notes/i);
   assert.match(grounding, /never send the user to the OEM site/i);
@@ -724,8 +725,8 @@ test("inventory / diesel count asks still trip the detector when catalog is lock
       locked,
       "What engine and HP does a 2023 Entegra Vision have?",
     ),
-    true,
-    "locked fuel/engine spec still must browse — search first",
+    false,
+    "locked fuel/engine spec answers from the pin",
   );
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
   assert.match(api, /loadOwnLotSnapshot/);
@@ -755,8 +756,8 @@ test("unknown / catalog GAP always browses — locked spec asks also browse", ()
       { missingHard: false },
       "What engine and HP does a 2023 Entegra Vision have?",
     ),
-    true,
-    "locked spec ask still searches first",
+    false,
+    "locked spec ask answers from the pin",
   );
   assert.equal(needsWebFallback(null, "hi"), false);
   const intent = src(root, "webIntent.ts");
@@ -775,9 +776,12 @@ test("David spec asks always require live search — even on a locked row", () =
   ];
   for (const q of asks) {
     assert.equal(looksLikeCoachFactAsk(q), true, q);
-    assert.equal(needsWebFallback(null, q), true, q);
-    assert.equal(needsWebFallback(locked, q), true, q);
-    assert.equal(buildChatGrounding({ query: q }).needsWeb, true, q);
+    assert.equal(needsWebFallback(null, q), !looksLikeSpecQuestion(q) ? false : true, q);
+    assert.equal(
+      needsWebFallback(locked, q),
+      false,
+      `${q} uses the catalog pin — no pre-token browse`,
+    );
   }
   assert.equal(looksLikeCoachFactAsk("hi"), false);
   assert.equal(looksLikeCoachFactAsk("Is full-timing worth it?"), false);
@@ -795,13 +799,13 @@ test("salesman shorthand / misspellings still research when catalog is locked", 
   for (const q of shorthand) {
     assert.equal(looksLikeNamedCoachProductQuestion(q), true, q);
     assert.equal(looksLikeCoachFactAsk(q), true, q);
-    assert.equal(needsWebFallback(null, q), true, q);
+    assert.equal(needsWebFallback(null, q), false, q);
     assert.equal(
       needsWebFallback(locked, q),
-      true,
-      `${q} must browse even with a catalog pin — do not require exact year+make+model`,
+      false,
+      `${q} answers from memory and the pin — shorthand does not force browse`,
     );
-    assert.equal(buildChatGrounding({ query: q }).needsWeb, true, q);
+    assert.equal(buildChatGrounding({ query: q }).needsWeb, false, q);
   }
   assert.equal(looksLikeNamedCoachProductQuestion("hi"), false);
   assert.equal(
@@ -820,11 +824,11 @@ test("catalog miss fires web without about-phrasing", () => {
 
   const fish = "Best fishing spots near Moab for an RV";
   assert.equal(looksLikeOffCatalogQuestion(fish), true);
-  assert.equal(needsWebFallback(null, fish), true);
+  assert.equal(needsWebFallback(null, fish), false);
   assert.equal(
     needsWebFallback({ missingHard: false }, fish),
-    true,
-    "locked coach still browses fishing — catalog never has spots",
+    false,
+    "fishing is model memory — do not block the first token",
   );
 
   const eYears = CATALOG_INDEX["Grand Design"]?.["Lineage Series E"]?.years;
@@ -966,7 +970,7 @@ test("incomplete 'about a 2026' waits for identity — no search, no timeout lec
   assert.doesNotMatch(voice, /CATALOG GAP — no verified row is loaded/);
   const ymm = "On a 2026 Odyssey 24B made by Entegra";
   assert.equal(looksLikeNamedCoachProductQuestion(ymm), true);
-  assert.equal(needsWebFallback(null, ymm), true);
+  assert.equal(needsWebFallback(null, ymm), false);
 });
 
 test("chat + voice grounding keep Lineage 31ZW on a torque-to-weight follow-up", () => {

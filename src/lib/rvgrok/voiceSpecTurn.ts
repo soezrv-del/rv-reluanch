@@ -83,6 +83,20 @@ function askedLabels(query: string): string[] {
   return labels;
 }
 
+/**
+ * True only when this turn named an OEM field the catalog sheet still
+ * gaps. Overviews and pinned fields speak now; the empty-field scrape
+ * must not hold the first word.
+ */
+export function voiceAskedFieldStillGap(
+  query: string,
+  rows: readonly { label: string; gap: boolean }[] | null | undefined,
+): boolean {
+  const labels = askedLabels(query);
+  if (!labels.length || !rows?.length) return false;
+  return rows.some((row) => labels.includes(row.label) && row.gap);
+}
+
 /** Full-report feature→benefit. Numbers stay the painted value; no invented specs. */
 function featureBenefit(label: string): string {
   if (label === "Torque") return " That's hill power and pull off the line.";
