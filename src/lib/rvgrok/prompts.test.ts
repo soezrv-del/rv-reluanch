@@ -53,9 +53,8 @@ test("lean core is David's verbatim standing prompt", () => {
   );
   assert.match(
     RV_GROK_LEAN_CORE,
-    /Of course, right away — would you like a full report or a quick overview\?/,
+    /When asked about a coach, answer the question directly\. Deliver the full CARFAX-style report — Overview \/ Chassis & powertrain \/ Weights & capacity \/ Layout & amenities — only on an explicit report ask: 'full report,' 'tell me everything about,' 'specs on,' or 'CARFAX on\.' A bare coach mention or a single-field question gets a short answer only\./,
   );
-  assert.match(RV_GROK_LEAN_CORE, /Quick \/ short \/ overview/);
   assert.match(
     RV_GROK_LEAN_CORE,
     /offer all five extras at once/,
@@ -69,7 +68,6 @@ test("lean core is David's verbatim standing prompt", () => {
   assert.match(RV_GROK_LEAN_CORE, /start clean; do not pretend to remember/);
   assert.match(RV_GROK_LEAN_CORE, /welcome them back by first name once/);
   assert.match(RV_GROK_LEAN_CORE, /I'm RvGrok/);
-  assert.match(RV_GROK_LEAN_CORE, /Never append "from the catalog,"/);
   assert.match(RV_GROK_LEAN_CORE, /do not narrate GAP or Confirm brochure as filler/);
   assert.match(RV_GROK_LEAN_CORE, /Torque means hill power/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /Pin every verified field/);

@@ -41,7 +41,10 @@ import {
   classifyVoiceExtraPick,
   formatVoiceQuickOverview,
   formatVoiceSpecEngineSpeech,
+  looksLikeExplicitVoiceReportAsk,
   looksLikeVoiceCoachOrSpecAsk,
+  looksLikeVoiceFieldOrMetaAsk,
+  shouldSpeakVoiceCoachChoice,
   VOICE_COACH_CHOICE_INSTRUCTIONS,
   VOICE_SPEC_ENGINE_INSTRUCTIONS,
   voiceDepthAlreadyChosen,
@@ -989,6 +992,31 @@ export class GrokRealtimeSession {
     this.pendingSpecSheet = null;
     this.specEngineSpoken = false;
     this.engineSheetPainted = false;
+    if (
+      looksLikeVoiceCoachOrSpecAsk(transcript) &&
+      !looksLikeExplicitVoiceReportAsk(transcript)
+    ) {
+      await ensureCatalogLoaded().catch(() => null);
+      if (this.closed || this.intentionalStop || specSeq !== this.specTurnSeq) {
+        return;
+      }
+      const grounded = buildChatGrounding({
+        query: transcript,
+        facts: this.facts,
+      });
+      this.applyVoiceGrounding(transcript, grounded);
+      this.cancelAutoResponseForResearch();
+      if (
+        looksLikeVoiceFieldOrMetaAsk(transcript) ||
+        looksLikeDeskSheetAsk(transcript)
+      ) {
+        this.armSpecEngineTurn(transcript, grounded);
+        await this.speakFromSpecEngine(specSeq);
+      } else {
+        await this.deliverVoiceQuick(specSeq, transcript);
+      }
+      return;
+    }
     let grounded = buildChatGrounding({
       query: transcript,
       facts: this.facts,
@@ -1294,13 +1322,20 @@ export class GrokRealtimeSession {
       this.voiceExtrasOffered = false;
       this.voiceExtraSheet = null;
       this.voiceExtraQuery = "";
-      if (chosen) {
+      const coachLocked = Boolean(
+        this.facts?.make?.trim() && this.facts?.model?.trim(),
+      );
+      if (looksLikeExplicitVoiceReportAsk(transcript) && chosen) {
         this.voiceChoiceTranscript = null;
         this.voiceDeliver = chosen;
         void this.maybeEnrichWithWebResearch(transcript).finally(() => {
           this.voiceDeliver = null;
         });
         return true;
+      }
+      if (!shouldSpeakVoiceCoachChoice({ transcript, coachLocked })) {
+        this.voiceChoiceTranscript = null;
+        return false;
       }
       this.specTurnSeq += 1;
       this.voiceChoiceTranscript = transcript;
@@ -1419,7 +1454,9 @@ export class GrokRealtimeSession {
       query: transcript,
       identity: grounded.identity,
       specs: grounded.specs,
-      mountForVoiceReport: this.voiceDeliver === "full",
+      mountForVoiceReport:
+        this.voiceDeliver === "full" ||
+        looksLikeVoiceFieldOrMetaAsk(transcript),
       pinCoachKnowledge: true,
       knowledgeQuery: transcript,
     });
@@ -1440,7 +1477,9 @@ export class GrokRealtimeSession {
           query: pending.transcript,
           identity: pending.grounded.identity,
           specs: pending.grounded.specs,
-          mountForVoiceReport: this.voiceDeliver === "full",
+          mountForVoiceReport:
+            this.voiceDeliver === "full" ||
+            looksLikeVoiceFieldOrMetaAsk(pending.transcript),
           pinCoachKnowledge: true,
           knowledgeQuery: pending.transcript,
         }));
