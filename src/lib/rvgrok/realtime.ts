@@ -54,15 +54,6 @@ import {
 } from "./voiceSpecTurn";
 import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
 import {
-  advanceLiveVoiceAck,
-  createLiveVoiceAckState,
-  disarmLiveVoiceAck,
-  prefixLiveVoiceAck,
-  takeLiveVoiceAck,
-  withLiveVoiceAckInstructions,
-  type LiveVoiceAckState,
-} from "./voiceAck";
-import {
   coachKnowledgeKeyEquals,
   normalizeCoachKnowledgeKey,
   type CoachKnowledgeKey,
@@ -163,16 +154,6 @@ export class GrokRealtimeSession {
   private visitorFirstName: string;
   private visitorMemory: string;
   private standingLessons: string | undefined;
-  /** Rotating opener for the next user question. Never repeats twice in a row. */
-  private ackState: LiveVoiceAckState = createLiveVoiceAckState();
-  /** This question already advanced the pool (answer finished or barge-in). */
-  private ackSettled = false;
-  /** A user question is in flight — intro cues stay out of the rotation. */
-  private userQuestionPending = false;
-  /** We cancelled VAD to speak our own answer. Ignore that cancelled done. */
-  private takeover = false;
-  /** The connect intro's response.done is not a user answer. */
-  private awaitingIntroDone = false;
 
   constructor(
     handlers: RealtimeHandlers,
@@ -218,11 +199,6 @@ export class GrokRealtimeSession {
     this.voiceCachedSheet = null;
     this.resetResearchTurn();
     this.introSpoken = false;
-    this.ackState = createLiveVoiceAckState();
-    this.ackSettled = false;
-    this.userQuestionPending = false;
-    this.takeover = false;
-    this.awaitingIntroDone = false;
 
     this.handlers.onStatus("connecting", "Allow microphone if the phone asks…");
 
@@ -464,7 +440,6 @@ export class GrokRealtimeSession {
         );
         if (transcript) {
           this.handlers.onUserTranscript(transcript);
-          this.beginQuestion();
           void this.maybeEnrichWithWebResearch(transcript);
         }
         break;
@@ -538,7 +513,6 @@ export class GrokRealtimeSession {
           this.finishedAssistantOnce = false;
           break;
         }
-        this.settleAckTurn();
         this.scheduleRearm();
         this.assistantText = "";
         this.finishedAssistantOnce = false;
@@ -747,8 +721,6 @@ export class GrokRealtimeSession {
     if (!ws || ws.readyState !== WebSocket.OPEN) return false;
     if (!imageDataUrl.startsWith("data:image/")) return false;
 
-    this.beginQuestion();
-    this.takeover = true;
     this.prepareForSnapshot();
 
     const item = {
@@ -770,9 +742,8 @@ export class GrokRealtimeSession {
           type: "response.create",
           response: {
             modalities: ["text", "audio"],
-            instructions: this.voiced(
+            instructions:
               "CRITICAL: Ground your answer ONLY in the attached image. Open with what object/screen/panel/vehicle part is actually visible. Never describe a different coach or exterior if the photo is a close-up panel, label, or interior detail. Short, accurate, under ~25 seconds.",
-            ),
           },
         }),
       );
@@ -796,10 +767,6 @@ export class GrokRealtimeSession {
     const t = text.trim();
     if (!t) return false;
 
-    if (requestResponse) {
-      this.beginQuestion();
-      this.takeover = true;
-    }
     this.prepareForSnapshot();
 
     try {
@@ -826,10 +793,9 @@ export class GrokRealtimeSession {
             type: "response.create",
             response: {
               modalities: ["text", "audio"],
-              instructions: this.voiced(
+              instructions:
                 responseInstructions ||
-                  "Speak only about the camera photo described in the latest user message. Do not invent a different RV or scene.",
-              ),
+                "Speak only about the camera photo described in the latest user message. Do not invent a different RV or scene.",
             },
           }),
         );
@@ -897,9 +863,7 @@ export class GrokRealtimeSession {
           type: "response.create",
           response: {
             modalities: ["text", "audio"],
-            instructions: this.voiced(
-              `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nTHIS turn named a different series than the prior lock. Speak the new year / make / model / floorplan only. Never reuse the previous series because a floorplan code matches.\n${lock}`,
-            ),
+            instructions: `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nTHIS turn named a different series than the prior lock. Speak the new year / make / model / floorplan only. Never reuse the previous series because a floorplan code matches.\n${lock}`,
           },
         }),
       );
@@ -1132,17 +1096,14 @@ export class GrokRealtimeSession {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     this.introSpoken = true;
-    this.awaitingIntroDone = true;
     try {
       ws.send(JSON.stringify(buildSessionIntroResponse(this.visitorFirstName)));
     } catch {
       this.introSpoken = false;
-      this.awaitingIntroDone = false;
     }
   }
 
   private cancelAutoResponseForResearch() {
-    this.takeover = true;
     this.interruptPlayback();
     this.suppressMic = true;
     const ws = this.ws;
@@ -1227,11 +1188,9 @@ export class GrokRealtimeSession {
           type: "response.create",
           response: {
             modalities: ["text", "audio"],
-            instructions: this.voiced(
-              looksLikeRepairQuestion(this.lastResearchTranscript)
-                ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\n${REPAIR_VOICE_PLAYBOOK}`
-                : VOICE_RESEARCH_ANSWER_INSTRUCTIONS,
-            ),
+            instructions: looksLikeRepairQuestion(this.lastResearchTranscript)
+              ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\n${REPAIR_VOICE_PLAYBOOK}`
+              : VOICE_RESEARCH_ANSWER_INSTRUCTIONS,
           },
         }),
       );
@@ -1346,8 +1305,6 @@ export class GrokRealtimeSession {
       this.voiceChoiceTranscript = transcript;
       this.cancelAutoResponseForResearch();
       this.researchPhase = "answering";
-      // The choice line already opens with "Of course, right away."
-      disarmLiveVoiceAck(this.ackState, "Of course, right away.");
       this.flushExactSpeech(VOICE_COACH_CHOICE_INSTRUCTIONS);
       return true;
     }
@@ -1582,7 +1539,6 @@ export class GrokRealtimeSession {
       this.researchPhase = "idle";
       return;
     }
-    const spoken = prefixLiveVoiceAck(script, takeLiveVoiceAck(this.ackState));
     this.suppressMic = true;
     this.handlers.onStatus("thinking", "Answering…");
     try {
@@ -1591,7 +1547,7 @@ export class GrokRealtimeSession {
           type: "response.create",
           response: {
             modalities: ["text", "audio"],
-            instructions: `${VOICE_SPEC_ENGINE_INSTRUCTIONS}\n\nSPEC ENGINE SCRIPT:\n${spoken}`,
+            instructions: `${VOICE_SPEC_ENGINE_INSTRUCTIONS}\n\nSPEC ENGINE SCRIPT:\n${script}`,
           },
         }),
       );
@@ -1601,7 +1557,7 @@ export class GrokRealtimeSession {
     }
   }
 
-  /** Session instructions carry the armed opener for autonomous VAD replies. */
+  /** Push the current session instructions (catalog lock, visitor, lessons). */
   private sendSessionUpdate(catalogContext?: string) {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
@@ -1615,7 +1571,6 @@ export class GrokRealtimeSession {
             this.visitorFirstName,
             this.visitorMemory,
             this.standingLessons,
-            this.ackState.armed,
           ),
         ),
       );
@@ -1624,68 +1579,11 @@ export class GrokRealtimeSession {
     }
   }
 
-  /** One acknowledgment per user question, then the answer. */
-  private voiced(base: string): string {
-    return withLiveVoiceAckInstructions(base, takeLiveVoiceAck(this.ackState));
-  }
-
-  private beginQuestion() {
-    // Full/quick is the delivery of the choice already spoken. Don't skip
-    // the ack that delivery is about to use.
-    const deliveringChoice = Boolean(this.voiceChoiceTranscript);
-    if (
-      !deliveringChoice &&
-      !this.ackSettled &&
-      (this.ackState.taken || this.userQuestionPending)
-    ) {
-      advanceLiveVoiceAck(this.ackState);
-      this.sendSessionUpdate();
-    }
-    this.ackSettled = false;
-    this.userQuestionPending = true;
-    this.takeover = false;
-  }
-
-  /**
-   * The answer for this question is done. Arm a different phrase for the next one.
-   * A cancelled VAD reply is not the answer — wait until we have spoken.
-   */
-  private settleAckTurn() {
-    // The connect intro is the first reply. Do not spend the question opener on it,
-    // even if the user already started talking before that reply finishes.
-    if (this.awaitingIntroDone && !this.ackState.taken) {
-      this.awaitingIntroDone = false;
-      return;
-    }
-    if (this.ackSettled || !this.userQuestionPending) return;
-    if (this.takeover && !this.ackState.taken) return;
-    if (this.isBareSessionIntro(this.assistantText) && !this.ackState.taken) return;
-    this.ackSettled = true;
-    this.userQuestionPending = false;
-    this.takeover = false;
-    advanceLiveVoiceAck(this.ackState);
-    this.sendSessionUpdate();
-  }
-
-  /** Cold-open is one line. It must not burn the question acknowledgment. */
-  private isBareSessionIntro(text: string): boolean {
-    const t = text.replace(/\s+/g, " ").trim();
-    if (t === "I'm RvGrok") return true;
-    return /^Hello, [\p{L}']+$/u.test(t);
-  }
-
   /**
    * Barge-in: stop Grok mid-sentence, clear audio queue, open mic again.
    * Does NOT end the Live Voice session. Safe to call repeatedly.
    */
   interrupt(): boolean {
-    if (this.userQuestionPending && !this.ackSettled) {
-      advanceLiveVoiceAck(this.ackState);
-      this.ackSettled = true;
-      this.userQuestionPending = false;
-      this.takeover = false;
-      this.sendSessionUpdate();
-    }
     this.resetResearchTurn();
     const ws = this.ws;
     const wasLive = Boolean(ws && ws.readyState === WebSocket.OPEN);

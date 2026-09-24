@@ -15,18 +15,17 @@ import {
   voiceSpecExtraPrompts,
   type GrokExtraKind,
 } from "./grokExtras.ts";
-import { prefixLiveVoiceAck } from "./voiceAck.ts";
 import {
   looksLikeNamedCoachProductQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
 
 export const VOICE_SPEC_ENGINE_INSTRUCTIONS =
-  "Say exactly the SPEC ENGINE SCRIPT and then stop. The script opens with a short acknowledgment — say that first, once, then the specs. Those numbers are the catalog and fallback chain for this turn. Do not add, replace, or estimate any spec from memory. Never speak a GVWR, UVW, CCC, fuel, fresh, gray, or black number unless that exact figure is in the script. If the script says a field is still missing or that you are checking live sources, say that and do not invent a number. Do not load NHTSA recalls, market value, videos, owner reviews, or a maintenance schedule. Those are on-screen prompts the user picks. Feature-to-benefit lines apply only to numbers in the script.";
+  "Say exactly the SPEC ENGINE SCRIPT and then stop. Those numbers are the catalog and fallback chain for this turn. Do not add, replace, or estimate any spec from memory. Never speak a GVWR, UVW, CCC, fuel, fresh, gray, or black number unless that exact figure is in the script. If the script says a field is still missing or that you are checking live sources, say that and do not invent a number. Do not load NHTSA recalls, market value, videos, owner reviews, or a maintenance schedule. Those are on-screen prompts the user picks. Feature-to-benefit lines apply only to numbers in the script.";
 
 /** First spoken line on any Live Voice coach or spec ask. */
 export const VOICE_COACH_CHOICE_LINE =
-  "Of course, right away — would you like a full report or a quick overview?";
+  "Would you like a full report or a quick overview?";
 
 export const VOICE_COACH_CHOICE_INSTRUCTIONS = `Say only this, then stop: ${VOICE_COACH_CHOICE_LINE}`;
 
@@ -270,21 +269,11 @@ export function voiceExtraPromptLine(
  * Exact words for a Live Voice spec turn. Empty / GAP stays a miss.
  * Does not invent a number the painted sheet does not contain.
  * `all` is the full report: every painted spec, no bundled extras line.
- * `ack`, when passed, is spoken first, then that report.
  */
 export function formatVoiceSpecEngineSpeech(
   sheet: DeskSheetPayload | null,
   query: string,
   scope: "asked" | "all" = "asked",
-  ack?: string,
-): string {
-  return prefixLiveVoiceAck(voiceSpecEngineSpeechBody(sheet, query, scope), ack || "");
-}
-
-function voiceSpecEngineSpeechBody(
-  sheet: DeskSheetPayload | null,
-  query: string,
-  scope: "asked" | "all",
 ): string {
   if (!sheet) {
     return "Catalog and the fallback chain both missed this coach. I won't guess a number.";
