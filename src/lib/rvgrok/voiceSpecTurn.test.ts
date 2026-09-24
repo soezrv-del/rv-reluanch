@@ -113,24 +113,18 @@ test("spec speech does not narrate a source tag, and a miss does not invent", ()
   assert.doesNotMatch(formatVoiceSpecEngineSpeech(null, LINEAGE_Q), /\d{4,}/);
 });
 
-test("spec speech says the ack first, then the catalog result, then extras", () => {
-  const speech = formatVoiceSpecEngineSpeech(
-    lineageSheet(),
-    LINEAGE_Q,
-    "asked",
-    "On it.",
-  );
-  assert.match(speech, /^On it\. /);
-  const ackAt = speech.indexOf("On it.");
+test("spec speech starts with the catalog result, then extras — no ack opener", () => {
+  const speech = formatVoiceSpecEngineSpeech(lineageSheet(), LINEAGE_Q, "asked");
+  assert.doesNotMatch(speech, /^(On it|Got it|Right away|Sure thing|Of course)\b/);
   const numAt = speech.indexOf("18,186");
   const extrasAt = speech.indexOf("ratings, market value");
-  assert.ok(ackAt >= 0 && numAt > ackAt && extrasAt > numAt);
-  const missed = formatVoiceSpecEngineSpeech(null, LINEAGE_Q, "asked", "Got it.");
-  assert.match(missed, /^Got it\. Catalog and the fallback chain both missed/);
+  assert.ok(numAt >= 0 && extrasAt > numAt);
+  const missed = formatVoiceSpecEngineSpeech(null, LINEAGE_Q, "asked");
+  assert.match(missed, /^Catalog and the fallback chain both missed/);
   assert.match(missed, /I won't guess/);
-  const full = formatVoiceSpecEngineSpeech(lineageSheet(), LINEAGE_Q, "all", "Right away.");
-  assert.match(full, /^Right away\. /);
+  const full = formatVoiceSpecEngineSpeech(lineageSheet(), LINEAGE_Q, "all");
   assert.match(full, /18,186/);
+  assert.doesNotMatch(full, /^(On it|Right away|Sure thing)\b/);
   assert.match(full, /ratings, market value, a video, NHTSA safety, or maintenance/);
   assert.doesNotMatch(full, /You can pick recalls/);
 });
@@ -138,7 +132,7 @@ test("spec speech says the ack first, then the catalog result, then extras", () 
 test("coach or spec ask is a choice, not a synopsis or an auto full report", () => {
   assert.equal(
     VOICE_COACH_CHOICE_LINE,
-    "Of course, right away — would you like a full report or a quick overview?",
+    "Would you like a full report or a quick overview?",
   );
   assert.equal(classifyVoiceCoachDepth("full report"), "full");
   assert.equal(classifyVoiceCoachDepth("a quick overview please"), "quick");
@@ -378,6 +372,12 @@ test("Live Voice spec turns go through the shared engine and skip the snippet re
   assert.doesNotMatch(
     readFileSync(join(root, "voiceSpecTurn.ts"), "utf8"),
     /Would you like a quick overview, or a full desk report/,
+  );
+  assert.doesNotMatch(realtime, /prefixLiveVoiceAck|takeLiveVoiceAck|withLiveVoiceAckInstructions|LIVE VOICE ACKNOWLEDGMENT/);
+  assert.match(realtime, /VOICE_RESEARCH_HOLD_INSTRUCTIONS/);
+  assert.doesNotMatch(
+    readFileSync(join(root, "voiceSpecTurn.ts"), "utf8"),
+    /short acknowledgment/,
   );
   assert.doesNotMatch(realtime, /[Dd]ialaBot/);
   assert.doesNotMatch(readFileSync(join(root, "voiceSpecTurn.ts"), "utf8"), /[Gg]emini/);

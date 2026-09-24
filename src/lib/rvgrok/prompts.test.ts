@@ -78,8 +78,9 @@ test("lean core is David's verbatim standing prompt", () => {
 
 test("voice rules stay in the lean core; DialaBot stays out", () => {
   assert.match(RV_GROK_LEAN_CORE, /Voice:/);
-  assert.match(RV_GROK_LEAN_CORE, /rotating acknowledgment/);
-  assert.match(RV_GROK_LEAN_CORE, /never the same phrase twice in a row/);
+  assert.match(RV_GROK_LEAN_CORE, /Front-load the answer/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /rotating acknowledgment/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /never the same phrase twice in a row/);
 
   const voice = src("voice.ts");
   assert.match(voice, /CAMERA:/);

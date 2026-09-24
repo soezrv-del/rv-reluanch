@@ -55,6 +55,9 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.match(session.instructions, /ultimate sales assistant for RV salesmen/);
   assert.match(session.instructions, /Empty beats invented/);
   assert.match(session.instructions, /give me one second/);
+  assert.match(session.instructions, /only when research is actually running/);
+  assert.doesNotMatch(session.instructions, /LIVE VOICE ACKNOWLEDGMENT/);
+  assert.doesNotMatch(session.instructions, /rotating acknowledgment/);
   assert.match(session.instructions, /I'm RvGrok/);
   assert.doesNotMatch(session.instructions, /STANDING LESSONS \(desk SoT\)/);
   assert.doesNotMatch(session.instructions, /sales-floor wingman/);
