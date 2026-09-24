@@ -667,3 +667,24 @@ test("Heartland Torque / Torque toy hauler still breaks a Lineage lock", () => {
     assert.doesNotMatch(id!.floorplan, /31ZW/i, q);
   }
 });
+
+test("Integra Cornerstone 45B is Entegra Coach / Cornerstone — never model entegra by", () => {
+  for (const q of [
+    "Integra Cornerstone 45B",
+    "2026 Integra Cornerstone 45B",
+    "2026 Cornerstone by Integra 45B",
+    "2026 Cornerstone by Entegra 45B",
+    "Cornerstone by Entegra 45B",
+  ]) {
+    const parsed = parseCoachFromText(q);
+    assert.doesNotMatch(parsed.model, /^(?:entegra|integra)\s+by$/i, q);
+    const id = resolveCoachIdentity(q, null, "");
+    assert.ok(id, q);
+    assert.equal(id!.make, "Entegra Coach", q);
+    assert.equal(id!.model, "Cornerstone", q);
+    assert.match(id!.floorplan, /45B/i, q);
+    assert.doesNotMatch(id!.model, /^(?:entegra|integra)\s+by$/i, q);
+    const note = formatCatalogPresenceNote(inspectCatalogPresence(id!));
+    assert.doesNotMatch(note, /SERIES MISSING/i, q);
+  }
+});

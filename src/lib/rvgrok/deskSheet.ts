@@ -51,6 +51,7 @@ import {
   resolveSharedSpecPaint,
   stripEngineOwnedChatFigures,
   type SpecFieldFill,
+  type SpecFieldKey,
 } from "../rv/specEngine.ts";
 
 export {
@@ -417,6 +418,44 @@ export function buildDeskSheetPayload(
   };
 }
 
+const BY_MAKE_GARBAGE_MODEL = /^(?:entegra|integra)\s+by$/i;
+
+/**
+ * "by Entegra" / "by Integra" is not a series. Speech that named the real
+ * coach wins over that lock when the desk would otherwise say SERIES MISSING.
+ */
+function preferSpokenCoachIdentity(
+  identity: CoachIdentity | null,
+  spoken: string,
+): CoachIdentity | null {
+  const speech = spoken.trim() ? resolveCoachIdentity(spoken, null, "") : null;
+  if (!identity) return speech;
+  if (!speech?.model) return identity;
+  const garbage = BY_MAKE_GARBAGE_MODEL.test(identity.model.trim());
+  const queryMissing =
+    inspectCatalogPresence(identity).status === "missing-series";
+  const speechKnown =
+    inspectCatalogPresence(speech).status !== "missing-series";
+  if ((garbage || queryMissing) && speechKnown) {
+    return {
+      ...speech,
+      year: speech.year || identity.year,
+      make: speech.make || identity.make,
+      floorplan: speech.floorplan || identity.floorplan,
+    };
+  }
+  return identity;
+}
+
+/** SERIES MISSING or every spec row GAP — do not freeze; browse. */
+export function deskSheetNeedsLiveHeal(sheet: {
+  presenceNote?: string;
+  rows: readonly { gap: boolean }[];
+}): boolean {
+  if (/SERIES MISSING/i.test(sheet.presenceNote || "")) return true;
+  return sheet.rows.length > 0 && sheet.rows.every((row) => row.gap);
+}
+
 export function resolveDeskSheet(opts: {
   query: string;
   identity: CoachIdentity | null | undefined;
@@ -431,11 +470,13 @@ export function resolveDeskSheet(opts: {
 }): DeskSheetPayload | null {
   const { query, specs, spokenText } = opts;
   const specBlock = opts.chatSpecBlock || spokenText || "";
-  const identity =
+  const identity = preferSpokenCoachIdentity(
     opts.identity ||
-    (queryNamesYearMakeModel(query)
-      ? resolveCoachIdentity(query, null, "")
-      : null);
+      (queryNamesYearMakeModel(query)
+        ? resolveCoachIdentity(query, null, "")
+        : null),
+    opts.chatSpecBlock || spokenText || "",
+  );
   if (!identity) return null;
   // Lineup / series-in-lineup stays chat-only. Chat SoT + "on the desk"
   // speech must not remount a YEAR/FLOORPLAN GAP card.
@@ -473,14 +514,18 @@ export async function resolveDeskSheetThenFallback(
   const first = resolveDeskSheet(opts);
   if (!first) return null;
   const empty = emptyFieldsFromPaintedRows(first.rows);
-  if (!empty.length) return first;
+  const heal = deskSheetNeedsLiveHeal(first);
+  if (!empty.length && !heal) return first;
+  const fields: SpecFieldKey[] = empty.length
+    ? empty
+    : ["gvwr", "uvw", "fuelCapacity"];
   const fills = await fetchSpecFieldFallback(
     {
       year: first.year,
       make: first.make,
       model: first.model,
       floorplan: first.floorplan,
-      empty,
+      empty: fields,
       rvClass: opts.rvClass,
       pinCoachKnowledge: opts.pinCoachKnowledge,
       knowledgeQuery: opts.knowledgeQuery ?? opts.query,

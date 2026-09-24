@@ -18,6 +18,7 @@ import {
   DESK_SHEET_PHRASE,
   buildDeskSheetPayload,
   claimsDeskSpecSheet,
+  deskSheetNeedsLiveHeal,
   deskSheetIsTowable,
   formatLockedWeightsBlock,
   looksLikeDeskSheetAsk,
@@ -859,5 +860,43 @@ test("desk sheet is wired through chat, live voice, and speech policy", () => {
   assert.doesNotMatch(
     app,
     /if \(facts\?\.year && facts\.make && facts\.model\) \{\s*try \{\s*await ensureCatalogLoaded/,
+  );
+});
+
+test("SERIES MISSING and all-GAP desk locks trigger fallback browse", () => {
+  const garbage = {
+    year: "2026",
+    make: "Entegra Coach",
+    model: "entegra by",
+    floorplan: "45B",
+    source: "message" as const,
+  };
+  const frozen = buildDeskSheetPayload(garbage, null);
+  assert.match(frozen.presenceNote, /SERIES MISSING/i);
+  assert.ok(frozen.rows.length > 0);
+  assert.ok(frozen.rows.every((row) => row.gap));
+  assert.equal(deskSheetNeedsLiveHeal(frozen), true);
+
+  const healed = resolveDeskSheet({
+    query: "Put the spec sheet on the desk",
+    identity: garbage,
+    specs: null,
+    spokenText: "2026 Entegra Coach Cornerstone 45B",
+    chatSpecBlock: "2026 Entegra Coach Cornerstone 45B",
+  });
+  assert.ok(healed);
+  assert.equal(healed!.make, "Entegra Coach");
+  assert.equal(healed!.model, "Cornerstone");
+  assert.match(healed!.floorplan, /45B/i);
+  assert.doesNotMatch(healed!.model, /entegra by/i);
+  assert.doesNotMatch(healed!.presenceNote, /SERIES MISSING/i);
+
+  const fallback = src(root, "deskSheet.ts");
+  const fn = fallback.slice(fallback.indexOf("export async function resolveDeskSheetThenFallback"));
+  assert.match(fn, /deskSheetNeedsLiveHeal/);
+  assert.match(fn, /fetchSpecFieldFallback/);
+  assert.doesNotMatch(
+    fn.slice(0, fn.indexOf("fetchSpecFieldFallback")),
+    /if \(!empty\.length\) return first/,
   );
 });
