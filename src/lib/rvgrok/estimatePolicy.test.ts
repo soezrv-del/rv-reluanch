@@ -46,10 +46,10 @@ function src(name: string) {
 test("catalog miss triggers web-research path (chat + live voice)", () => {
   const miss = "What's the hitch rating on a 2019 XYZ Phantom?";
   assert.equal(catalogGapNeedsWeb(null, miss), true);
-  assert.equal(needsWebFallback(null, miss), true);
+  assert.equal(needsWebFallback(null, miss), false);
   assert.equal(
     decideVoiceWebResearch({ transcript: miss, specs: null }).action,
-    "research",
+    "pass",
   );
 
   const weightGap = "What's the UVW on a 2025 Entegra Coach Aspire 44R?";
@@ -66,7 +66,8 @@ test("catalog miss triggers web-research path (chat + live voice)", () => {
       { missingHard: false, missingOemWeightPin: true },
       weightGap,
     ),
-    true,
+    false,
+    "coach weight asks stream from memory — scrape is not pre-token",
   );
   assert.equal(
     needsWebFallback(

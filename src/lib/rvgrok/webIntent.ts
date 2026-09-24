@@ -269,7 +269,7 @@ function missingOemWeightPinOf(specs: WebFallbackSpecs): boolean {
   return false;
 }
 
-/** No catalog row, UNKNOWN hard fields, or a weight ask with no OEM pin. */
+/** No catalog row, unknown / catalog GAP, or a weight ask with no OEM pin. Chat does not block the first token on this. */
 export function catalogGapNeedsWeb(
   specs: WebFallbackSpecs,
   userText?: string,
@@ -296,10 +296,11 @@ export function looksLikeLiveConditionQuestion(text: string): boolean {
 /**
  * Browse only when the ask needs an external fact memory cannot pin.
  * Hi / lifestyle / payment / image-only / named-coach small talk stay
- * offline and stream immediately. Resolved hard row answers from the
- * catalog pin — it does not wait on search. OEM-number asks with no pin
- * (unknown / catalog GAP, missing OEM weight) still browse. Own-lot *hit*
- * skips the actual browse in the API.
+ * offline and stream immediately. Coach and spec asks — pinned or not —
+ * also stream from memory and the catalog. Resolved hard row or a gap,
+ * they must not invent an OEM
+ * pin; they do not wait on search. Own-lot *hit* skips the browse in the API.
+ * Repair, market, inventory, and live conditions still browse.
  */
 export function needsWebFallback(
   specs: WebFallbackSpecs,
@@ -316,13 +317,6 @@ export function needsWebFallback(
   // Both coaches identifiable — answer from catalog now.
   // Forum / repair already returned above.
   if (looksLikeCatalogAnswerableCoachCompare(userText)) return false;
-  // OEM number the catalog does not pin → browse. A lock answers now.
-  if (
-    looksLikeSpecQuestion(userText) &&
-    catalogGapNeedsWeb(specs, userText)
-  ) {
-    return true;
-  }
   if (looksLikeLiveConditionQuestion(userText)) return true;
   if (
     opts?.agentMode &&

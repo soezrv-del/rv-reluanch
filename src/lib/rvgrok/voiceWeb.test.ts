@@ -59,7 +59,7 @@ test("locked spec question answers now; a missing pin may still research", () =>
   );
   assert.equal(
     decideVoiceWebResearch({ transcript: q, specs: null }).action,
-    "research",
+    "pass",
   );
   const held = decideVoiceWebResearch({
     transcript: q,
@@ -120,7 +120,7 @@ test("catalog miss browses; fishing stays on memory", () => {
       transcript: "What's the tow rating on a 2019 XYZ Phantom?",
       specs: null,
     }).action,
-    "research",
+    "pass",
   );
   assert.equal(
     decideVoiceWebResearch({
@@ -239,7 +239,7 @@ test("year-only 'about a 2026' does not burn a failing search", () => {
     decideVoiceWebResearch({
       transcript: "What's the hitch rating on a 2019 XYZ Phantom?",
     }).action,
-    "research",
+    "pass",
   );
 });
 

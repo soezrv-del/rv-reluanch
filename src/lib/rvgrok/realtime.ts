@@ -45,7 +45,6 @@ import {
   looksLikeVoiceCoachOrSpecAsk,
   looksLikeVoiceFieldOrMetaAsk,
   shouldSpeakVoiceCoachChoice,
-  voiceAskedFieldStillGap,
   VOICE_COACH_CHOICE_INSTRUCTIONS,
   VOICE_SPEC_ENGINE_INSTRUCTIONS,
   voiceDepthAlreadyChosen,
@@ -1352,34 +1351,29 @@ export class GrokRealtimeSession {
   }
 
   /**
-   * Catalog sheet is the first speech. The empty-field scrape runs in
-   * the background unless the asked OEM field is still a gap.
+   * Speak the catalog sheet now. Empty-field scrape runs beside speech
+   * and remounts the desk when fills arrive — same as typed chat's
+   * `void resolveDeskSheetThenFallback`.
    */
-  private async sheetForSpeech(
+  private speakCatalogThenFallback(
     seq: number,
     transcript: string,
     painted: DeskSheetPayload | null,
     opts: Parameters<typeof resolveDeskSheetThenFallback>[0],
     pending?: Promise<DeskSheetPayload | null> | null,
-  ): Promise<DeskSheetPayload | null> {
-    const needsFill = voiceAskedFieldStillGap(transcript, painted?.rows);
+  ): DeskSheetPayload | null {
     const later = pending ?? resolveDeskSheetThenFallback(opts);
-    if (!needsFill) {
-      void later
-        .then((next) => {
-          if (!next || next === painted || seq !== this.specTurnSeq || this.closed) {
-            return;
-          }
-          this.handlers.onDeskSheet?.(withVoiceSpecExtras(next, transcript));
-        })
-        .catch(() => undefined);
-      return painted;
-    }
-    try {
-      return (await later) ?? painted;
-    } catch {
-      return painted;
-    }
+    void later
+      .then((next) => {
+        if (!next || next === painted || seq !== this.specTurnSeq || this.closed) {
+          return;
+        }
+        this.handlers.onDeskSheet?.(
+          withVoiceSpecExtras(next, transcript, { force: true }),
+        );
+      })
+      .catch(() => undefined);
+    return painted;
   }
 
   private async deliverVoiceQuick(seq: number, transcript: string) {
@@ -1400,7 +1394,12 @@ export class GrokRealtimeSession {
       knowledgeQuery: transcript,
     };
     const painted = resolveDeskSheet(sheetOpts);
-    const sheet = await this.sheetForSpeech(seq, transcript, painted, sheetOpts);
+    const sheet = this.speakCatalogThenFallback(
+      seq,
+      transcript,
+      painted,
+      sheetOpts,
+    );
     if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
     if (sheet) {
       this.rememberVoiceCachedSheet(grounded.identity, sheet, transcript);
@@ -1510,7 +1509,7 @@ export class GrokRealtimeSession {
       knowledgeQuery: pending.transcript,
     };
     const painted = resolveDeskSheet(sheetOpts);
-    const sheet = await this.sheetForSpeech(
+    const sheet = this.speakCatalogThenFallback(
       seq,
       pending.transcript,
       painted,

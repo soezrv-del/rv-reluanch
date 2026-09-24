@@ -455,6 +455,40 @@ async function runXaiWithTools(opts: {
   });
 }
 
+/**
+ * Text turns stream xAI tokens as OpenAI SSE
+ * (`choices[0].delta.content`, then `data: [DONE]`).
+ * Image generation stays on the non-stream tool loop.
+ */
+async function openXaiTokenStream(opts: {
+  apiKey: string;
+  model: string;
+  agentMode: boolean;
+  messages: ChatMessage[];
+}): Promise<Response | null> {
+  const resp = await fetch("https://api.x.ai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${opts.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: opts.model,
+      messages: opts.messages,
+      stream: true,
+      temperature: 0.2,
+    }),
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!resp.ok || !resp.body) return null;
+  return new Response(resp.body, {
+    headers: sseHeaders({
+      "X-Model-Used": opts.agentMode ? `${opts.model} · Agent` : opts.model,
+      "X-Upstream": "xai-direct",
+    }),
+  });
+}
+
 async function tryXaiDirect(
   messages: ChatMessage[],
   agentMode: boolean,
@@ -502,6 +536,15 @@ async function tryXaiDirect(
 
   for (const model of MODELS) {
     try {
+      if (!forceImageTool) {
+        const streamed = await openXaiTokenStream({
+          apiKey,
+          model,
+          agentMode,
+          messages: fullMessages,
+        });
+        if (streamed) return streamed;
+      }
       const result = await runXaiWithTools({
         apiKey,
         model,
@@ -744,9 +787,9 @@ export const Route = createFileRoute("/api/rvgrok")({
           skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
         }
 
-        // Memory first. Browse only when needsWeb says the ask needs an
-        // external fact (repair, market, inventory, unpinned OEM number).
-        // A catalog pin and casual chat start the model without waiting.
+        // Memory first. Await research only for a true external ask
+        // (repair, market, inventory, weather). Coach and spec asks stream
+        // from memory and the catalog without this hold.
         const wantsWebFallback =
           !skipWebForLot &&
           (serverGrounded.needsWeb ||
