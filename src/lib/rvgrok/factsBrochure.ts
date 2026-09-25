@@ -1,10 +1,11 @@
 /**
  * Shared Facts brochure snapshot for RV Grok.
  *
- * Facts (RvFAX) paints `buildBrochureSpecs`. The desk and locked-weight
- * speech must use that same resolver — not a stricter pin-only path.
+ * Facts paints brochure pins first, then agreeing RV Country lot numbers
+ * on empty cells. The desk and locked-weight speech use that same resolver.
  */
-import { buildBrochureSpecs, type BrochureSpecs } from "../rv/brochureSpecs.ts";
+import { buildFactsBrochureSpecs } from "../rv/factsSheet.ts";
+import type { BrochureSpecs } from "../rv/brochureSpecs.ts";
 import { peekCatalog } from "../rv/catalogLoad.ts";
 import {
   resolveCatalogMake,
@@ -23,7 +24,7 @@ export function resolveFactsBrochure(
   if (!make || !model) return null;
   const spec = peekCatalog()?.RV_DATA?.[make]?.[model] ?? null;
   if (!spec) return null;
-  return buildBrochureSpecs(
+  return buildFactsBrochureSpecs(
     spec,
     year,
     make,

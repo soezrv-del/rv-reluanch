@@ -11,6 +11,7 @@ import {
   type BrochureSpecs,
 } from "./brochureSpecs.ts";
 import { resolveFactsBrochure } from "../rvgrok/factsBrochure.ts";
+import { rejectImplausibleSpecFills } from "./specFillSanity.ts";
 import {
   SPEC_ENGINE_OWNED_FIELDS,
   SPEC_ENGINE_OWNED_LABELS,
@@ -234,7 +235,7 @@ export function applySpecFallback(
   snap: CatalogSpecSnapshot,
   fills: readonly SpecFieldFill[] = [],
 ): SharedSpecPaint {
-  const byField = fillByField(fills);
+  const byField = fillByField(rejectImplausibleSpecFills(fills));
 
   const pickLbs = (
     field: Extract<SpecFieldKey, "uvw" | "gvwr" | "ccc">,

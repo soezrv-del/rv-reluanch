@@ -48,7 +48,9 @@ import {
   mapReportRatings,
 } from "@/lib/rv/reportRatings";
 import { hasConcreteFloorplan } from "@/lib/rv/factsOpen";
-import { buildBrochureSpecs } from "@/lib/rv/brochureSpecs";
+import { buildFactsBrochureSpecs } from "@/lib/rv/factsSheet";
+import { fetchLotSnapshot } from "@/lib/lot/ownLotPage";
+import { registerLotCatalogUnits } from "@/lib/rv/lotCatalogUnits";
 import {
   catalogSnapshotFromBrochure,
   displayFromPainted,
@@ -224,13 +226,30 @@ export function RvDetail({
     [year, make, model, floorplan],
   );
   const [correctBump, setCorrectBump] = useState(0);
+  const [lotBump, setLotBump] = useState(0);
   const brochure = useMemo(
-    () => buildBrochureSpecs(data, year, make, model, floorplan || ""),
-    // correctBump forces re-read of local overrides
+    () => buildFactsBrochureSpecs(data, year, make, model, floorplan || ""),
+    // correctBump / lotBump re-read local overrides and lot snapshot fills
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, year, make, model, floorplan, correctBump],
+    [data, year, make, model, floorplan, correctBump, lotBump],
   );
   const maintenance = useMemo(() => getMaintenanceSchedule(data), [data]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchLotSnapshot()
+      .then((snap) => {
+        if (cancelled) return;
+        registerLotCatalogUnits(snap.units);
+        setLotBump((n) => n + 1);
+      })
+      .catch(() => {
+        /* seed still fills printed Coast rows */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const reportId = useMemo(
     () => buildReportId(year, make, model),
@@ -641,6 +660,7 @@ export function RvDetail({
       freshWater: brochure.freshWater,
       grayWater: brochure.grayWater,
       blackWater: brochure.blackWater,
+      propane: brochure.propane,
       generator: brochure.generator,
       mpgHighway: brochure.mpgHighway,
       warranty: brochure.warranty,
@@ -734,6 +754,7 @@ export function RvDetail({
         freshWater: catalogSpecs.freshWater || merged.freshWater,
         grayWater: catalogSpecs.grayWater || merged.grayWater,
         blackWater: catalogSpecs.blackWater || merged.blackWater,
+        propane: catalogSpecs.propane,
         garageLength: catalogSpecs.garageLength || merged.garageLength,
         garageWidth: catalogSpecs.garageWidth || merged.garageWidth,
         garageHeight: catalogSpecs.garageHeight || merged.garageHeight,
@@ -742,9 +763,10 @@ export function RvDetail({
         fuelStation: catalogSpecs.fuelStation || merged.fuelStation,
         garageFits: catalogSpecs.garageFits || merged.garageFits,
         isToyHauler: catalogSpecs.isToyHauler || merged.isToyHauler,
+        propane: catalogSpecs.propane,
       };
     }
-    return merged;
+    return { ...merged, propane: catalogSpecs.propane };
   }, [catalogSpecs, live, brochurePinned, powertrainGuard]);
 
   const displayRating = ratingMeta.score;
@@ -1817,6 +1839,10 @@ export function RvDetail({
                   ? sharedPaint.blackWater.sourceUrl
                   : undefined
               }
+            />
+            <SpecRow
+              label="PROPANE"
+              value={specs.propane}
             />
 
             <details className="mt-5 border-t border-white/10 pt-3" data-no-export>
