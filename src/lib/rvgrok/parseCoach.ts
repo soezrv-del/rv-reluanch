@@ -98,7 +98,7 @@ export function extractFloorplanToken(text: string): string {
   if (!text) return "";
   // "2550DS LE" is one plan code. Do not glue English ("4369 spec").
   const notAPlanSuffix =
-    /^(ford|chevy|gas|diesel|the|and|for|with|have|has|in|our|at|any|show|inventory|gal|lbs|ft|spec|specs|report|reports|full|brochure|tanks?|fresh|gray|grey|black|water|class|coach|model|what|are|on|of|this|that|mbs|ph[ae]{2}tons?|fayt[eo]ns?|faetons?|fatens?|paytons?|paitons?|phantoms?)$/i;
+    /^(ford|chevy|gas|diesel|the|and|for|with|have|has|in|our|at|any|show|inventory|gal|lbs|ft|spec|specs|report|reports|full|brochure|tanks?|fresh|gray|grey|black|water|class|coach|model|what|are|on|of|this|that|mbs|ph[ae]{2}tons?|fayt[eo]ns?|faetons?|fatens?|paytons?|paitons?|phantoms?|is|an|it|was|be|foot|feet|inch|inches)$/i;
   const source = text.replace(
     /\b(\d{4})\s*([A-Za-z]{1,6})(?:\s+([A-Za-z]{1,6}))?\b/g,
     (full, digits: string, a: string, b?: string) => {

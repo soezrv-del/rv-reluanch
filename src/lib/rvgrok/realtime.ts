@@ -30,6 +30,7 @@ import {
 } from "./deskSheet";
 import { buildChatGrounding, namedCoachConflictsLock } from "./grounding";
 import { looksLikeCompanyOrPlantAsk } from "./webIntent";
+import { looksLikeCoachReportAsk } from "./coachReport";
 import { looksLikeRepairQuestion, REPAIR_VOICE_PLAYBOOK } from "./repairMode";
 import {
   decideVoiceWebResearch,
@@ -46,6 +47,7 @@ import {
   looksLikeExplicitVoiceReportAsk,
   looksLikeVoiceCoachOrSpecAsk,
   looksLikeVoiceTellMeAboutAsk,
+  catalogQueryForFollowUp,
   looksLikeFloorplanOnlyPick,
   looksLikeVoiceFieldOrMetaAsk,
   shouldSpeakVoiceCoachChoice,
@@ -62,7 +64,7 @@ import {
   type CoachKnowledgeKey,
 } from "./coachKnowledgeKey";
 import type { CoachIdentity } from "./coachIdentity";
-import { missingIdentityFloorplans } from "./coachIdentity";
+import { missingIdentityFloorplans, askNamesCoachIdentity } from "./coachIdentity";
 import { getCoachFacts, formatChatSpecMissReply, isUnpinnedWeightReply, isWeightSpecAsk } from "./chatSpecBlock";
 
 export type RealtimeStatus =
@@ -155,6 +157,10 @@ export class GrokRealtimeSession {
   private voiceChoiceTranscript: string | null = null;
   /** Set while replaying the stashed ask as full or quick. */
   private voiceDeliver: "full" | "quick" | null = null;
+  /** Completed user lines, so "full specs" can find the coach already named. */
+  private recentUserTurns: string[] = [];
+  /** Coach she already spoke, when he never repeated the year/make/model. */
+  private recentCoachMentions: string[] = [];
   /** Extras were offered for the current coach. A named pick opens one card. */
   private voiceExtrasOffered = false;
   private voiceExtraSheet: DeskSheetPayload | null = null;
@@ -568,6 +574,7 @@ export class GrokRealtimeSession {
   }
 
   private emitAssistantDone(text: string) {
+    if (text) this.noteCoachMention(text);
     if (this.researchPhase === "holding" || this.researchPhase === "searching") {
       return;
     }
@@ -985,7 +992,45 @@ export class GrokRealtimeSession {
     return lockBroke;
   }
 
+  /** Keep a line that already names a coach so the next "full specs" can lock it. */
+  private noteCoachMention(text: string) {
+    if (!askNamesCoachIdentity(parseCoachFromText(text || ""))) return;
+    const clip = text.replace(/\s+/g, " ").trim().slice(0, 500);
+    if (!clip) return;
+    if (this.recentCoachMentions[this.recentCoachMentions.length - 1] === clip) {
+      return;
+    }
+    this.recentCoachMentions.push(clip);
+    if (this.recentCoachMentions.length > 6) this.recentCoachMentions.shift();
+  }
+
   private async maybeEnrichWithWebResearch(transcript: string) {
+    const spoken = transcript;
+    this.recentUserTurns.push(spoken);
+    if (this.recentUserTurns.length > 12) this.recentUserTurns.shift();
+    transcript = catalogQueryForFollowUp(
+      spoken,
+      this.recentUserTurns.slice(0, -1),
+      this.facts,
+      this.recentCoachMentions,
+    );
+    this.noteCoachMention(spoken);
+    const searchFollow =
+      /\b(search(?:\s+for)?\s+it|look\s+(?:it|that)\s+up|you need to search)\b/i.test(
+        spoken,
+      );
+    const reportFollow =
+      looksLikeCoachReportAsk(spoken) || looksLikeExplicitVoiceReportAsk(spoken);
+    if (searchFollow && transcript !== spoken) {
+      this.voiceDeliver = "full";
+    } else if (reportFollow && transcript !== spoken) {
+      this.voiceDeliver = this.voiceDeliver || "full";
+    } else if (
+      reportFollow &&
+      askNamesCoachIdentity(parseCoachFromText(spoken))
+    ) {
+      this.voiceDeliver = this.voiceDeliver || "full";
+    }
     this.handlers.onFloorplanChoices?.([]);
     if (!this.voiceDeliver && this.routeVoiceOpening(transcript)) return;
     if (this.voiceDeliver === "quick") {

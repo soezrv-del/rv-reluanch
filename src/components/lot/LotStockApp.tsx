@@ -8,6 +8,11 @@ import {
   fetchLotSnapshot,
   filterLotBrowse,
   lotPriceOrGap,
+  lotPropaneOrGap,
+  lotLengthOrGap,
+  lotLbsOrGap,
+  lotGalOrGap,
+  lotCountOrGap,
   lotTextOrGap,
   lotTypeChips,
   lotUnitKey,
@@ -319,6 +324,27 @@ function StatusCard({
   );
 }
 
+function printedLotSpecs(unit: LotUnit): { label: string; value: string }[] {
+  const rows: { label: string; value: string }[] = [];
+  const add = (label: string, value: string) => {
+    if (value && value !== "GAP") rows.push({ label, value });
+  };
+  add("Length", lotLengthOrGap(unit.length_ft));
+  add("Height", lotLengthOrGap(unit.height_ft));
+  add("Width", lotLengthOrGap(unit.width_ft));
+  add("Sleeps", lotCountOrGap(unit.sleeps));
+  add("Slides", lotCountOrGap(unit.slides));
+  add("GVWR", lotLbsOrGap(unit.gvwr));
+  add("Dry weight", lotLbsOrGap(unit.dry_weight));
+  add("Hitch", lotLbsOrGap(unit.hitch_weight));
+  add("Payload", lotLbsOrGap(unit.payload));
+  add("Fresh", lotGalOrGap(unit.fresh_gal));
+  add("Gray", lotGalOrGap(unit.gray_gal));
+  add("Black", lotGalOrGap(unit.black_gal));
+  add("Propane", lotPropaneOrGap(unit));
+  return rows;
+}
+
 function LotUnitCard({
   unit,
   featured,
@@ -420,6 +446,9 @@ function LotUnitCard({
               <Field label="Trim" value={trim} />
               <Field label="Price" value={price} />
               <Field label="VIN" value={lotTextOrGap(unit.vin)} />
+              {printedLotSpecs(unit).map((row) => (
+                <Field key={row.label} label={row.label} value={row.value} />
+              ))}
             </dl>
           ) : null}
         </div>

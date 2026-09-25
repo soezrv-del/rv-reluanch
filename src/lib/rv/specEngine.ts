@@ -15,6 +15,7 @@ import { rejectImplausibleSpecFills } from "./specFillSanity.ts";
 import {
   SPEC_ENGINE_OWNED_FIELDS,
   SPEC_ENGINE_OWNED_LABELS,
+  parsePropaneAmount,
   type SpecCoachIdentity,
   type SpecFallbackSource,
   type SpecFieldFill,
@@ -52,6 +53,9 @@ export type CatalogSpecSnapshot = {
   freshWater: number | null;
   grayWater: number | null;
   blackWater: number | null;
+  /** Printed propane only. One unit — never converted from the other. */
+  propaneLbs?: number | null;
+  propaneGal?: number | null;
   /** True when brochure UVW is a tiered estimate — treat as empty. */
   uvwEstimated: boolean;
 };
@@ -66,6 +70,7 @@ const ENGINE_LABEL: Record<SpecFieldKey, string> = {
   freshWater: "Fresh",
   grayWater: "Gray",
   blackWater: "Black",
+  propane: "Propane",
 };
 
 const SOURCE_LABEL: Record<SpecFallbackSource, string> = {
@@ -83,6 +88,16 @@ function positiveLbs(n: number | null | undefined): number | null {
 function positiveGal(n: number | null | undefined): number | null {
   if (n == null || !Number.isFinite(n) || n <= 0) return null;
   return Math.round(n * 10) / 10;
+}
+
+function parsePropaneCatalog(raw?: string | null): {
+  propaneLbs: number | null;
+  propaneGal: number | null;
+} {
+  const parsed = parsePropaneAmount(raw || "");
+  if (!parsed) return { propaneLbs: null, propaneGal: null };
+  if (parsed.unit === "lbs") return { propaneLbs: parsed.value, propaneGal: null };
+  return { propaneLbs: null, propaneGal: parsed.value };
 }
 
 function parseGalString(raw?: string | null): number | null {
@@ -136,6 +151,7 @@ export function catalogSnapshotFromBrochure(
     freshWater: parseGalString(brochure?.freshWater),
     grayWater: parseGalString(brochure?.grayWater),
     blackWater: parseGalString(brochure?.blackWater),
+    ...parsePropaneCatalog(brochure?.propane),
     uvwEstimated: brochure?.uvwEstimated === true,
   };
 }
@@ -158,6 +174,7 @@ export function emptySpecFields(
   if (snap.freshWater == null) empty.push("freshWater");
   if (snap.grayWater == null) empty.push("grayWater");
   if (snap.blackWater == null) empty.push("blackWater");
+  if (snap.propaneLbs == null && snap.propaneGal == null) empty.push("propane");
   return empty;
 }
 
@@ -277,6 +294,31 @@ export function applySpecFallback(
     return emptyPainted(field);
   };
 
+  const paintPropane = (): PaintedSpecField => {
+    if (snap.propaneLbs != null) {
+      return paintLbs("propane", snap.propaneLbs, { source: "catalog" });
+    }
+    if (snap.propaneGal != null) {
+      return paintGal("propane", snap.propaneGal, { source: "catalog" });
+    }
+    const fill = byField.propane;
+    if (fill?.unit === "lbs") {
+      return paintLbs("propane", fill.value, {
+        source: fill.source,
+        sourceUrl: fill.sourceUrl,
+        sourceLabel: SOURCE_LABEL[fill.source],
+      });
+    }
+    if (fill?.unit === "gal") {
+      return paintGal("propane", fill.value, {
+        source: fill.source,
+        sourceUrl: fill.sourceUrl,
+        sourceLabel: SOURCE_LABEL[fill.source],
+      });
+    }
+    return emptyPainted("propane");
+  };
+
   const gvwr = pickLbs("gvwr", snap.gvwrLbs);
   const uvw = pickLbs("uvw", snap.uvwLbs);
   let ccc = pickLbs("ccc", snap.cccLbs);
@@ -299,6 +341,7 @@ export function applySpecFallback(
     freshWater: pickGal("freshWater", snap.freshWater),
     grayWater: pickGal("grayWater", snap.grayWater),
     blackWater: pickGal("blackWater", snap.blackWater),
+    propane: paintPropane(),
   };
 }
 
@@ -382,6 +425,7 @@ export function stripEngineOwnedChatFigures<T extends Record<string, unknown>>(
   delete (out as { freshWater?: unknown }).freshWater;
   delete (out as { grayWater?: unknown }).grayWater;
   delete (out as { blackWater?: unknown }).blackWater;
+  delete (out as { propane?: unknown }).propane;
   return out;
 }
 
@@ -397,6 +441,7 @@ const LABEL_TO_FIELD: Record<string, SpecFieldKey> = {
   Fresh: "freshWater",
   Gray: "grayWater",
   Black: "blackWater",
+  Propane: "propane",
 };
 
 export function emptyFieldsFromPaintedRows(

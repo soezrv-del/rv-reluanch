@@ -22,6 +22,8 @@ export type OemFloorplanSpec = {
   grayWater?: number;
   blackWater?: number;
   propaneLbs?: number;
+  /** Published gallons only. Never convert from pounds. */
+  propaneGal?: number;
   /** Brochure water-heater gallons. Omit when the table does not print it. */
   waterHeaterGal?: number;
   garageLengthFt?: number;

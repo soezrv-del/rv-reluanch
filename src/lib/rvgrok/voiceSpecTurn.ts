@@ -20,9 +20,15 @@ import {
 import {
   looksLikeCompanyOrPlantAsk,
   looksLikeNamedCoachProductQuestion,
+  looksLikeSpecQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
 import { parseCoachFromText } from "./parseCoach.ts";
+import {
+  askNamesCoachIdentity,
+  resolveCoachIdentity,
+} from "./coachIdentity.ts";
+import type { ActiveCoach } from "../rv/activeCoach.ts";
 
 export const VOICE_SPEC_ENGINE_INSTRUCTIONS =
   "Say exactly the SPEC ENGINE SCRIPT and then stop. Those numbers are the catalog and fallback chain for this turn. Do not add, replace, or estimate any spec from memory. Never speak a GVWR, UVW, CCC, fuel, fresh, gray, or black number unless that exact figure is in the script. If the script says a field is still missing or that you are checking live sources, say that and do not invent a number. Do not load NHTSA recalls, market value, videos, owner reviews, or a maintenance schedule. Those are on-screen prompts the user picks. Feature-to-benefit lines apply only to numbers in the script.";
@@ -250,6 +256,92 @@ export function looksLikeVoiceCoachOrSpecAsk(text: string): boolean {
   if (looksLikeCoachReportAsk(t)) return true;
   if (looksLikeNamedCoachProductQuestion(t)) return true;
   return false;
+}
+
+const CATALOG_SEARCH_FOLLOW_RE =
+  /\b(search(?:\s+for)?\s+it|look\s+(?:it|that)\s+up|you need to search)\b/i;
+
+function coachLineFromIdentity(id: {
+  year?: string;
+  make?: string;
+  model?: string;
+  floorplan?: string;
+} | null): string | null {
+  if (!id?.make?.trim() || !id.model?.trim()) return null;
+  const line = [id.year, id.make, id.model, id.floorplan]
+    .map((part) => (part || "").trim())
+    .filter(Boolean)
+    .join(" ");
+  return line || null;
+}
+
+function newestCoachLine(
+  lines: readonly string[],
+  skip: string,
+): string | null {
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const prev = (lines[i] || "").trim();
+    if (!prev || prev === skip) continue;
+    const line = coachLineFromIdentity(resolveCoachIdentity(prev, null));
+    if (line) return line;
+  }
+  return null;
+}
+
+function factsCoachLine(facts?: ActiveCoach | null): string | null {
+  if (!facts?.make?.trim() || !facts.model?.trim()) return null;
+  const locked = resolveCoachIdentity("this coach", facts);
+  return (
+    coachLineFromIdentity(locked) ||
+    coachLineFromIdentity({
+      year: facts.year,
+      make: facts.make,
+      model: facts.model,
+      floorplan: facts.floorplan,
+    })
+  );
+}
+
+/**
+ * "Full specs" / "search for it" does not repeat the coach. Use the last
+ * user line, then the last thing she already named, then the Facts lock,
+ * so the catalog is the lookup — not a miss, and not a guessed chassis.
+ * A field ask keeps its field words. A line that already names a coach stays.
+ */
+export function catalogQueryForFollowUp(
+  transcript: string,
+  priorUserTurns: readonly string[],
+  facts?: ActiveCoach | null,
+  priorAssistantLines: readonly string[] = [],
+): string {
+  const parsed = parseCoachFromText(transcript);
+  if (askNamesCoachIdentity(parsed)) return transcript;
+  const searchFollow = CATALOG_SEARCH_FOLLOW_RE.test(transcript);
+  const sheetFollow =
+    looksLikeDeskSheetAsk(transcript) ||
+    /\b(?:full\s+specs?|spec(?:s|ification)?\s+report|spec\s*sheet|coach\s+report|rundown|brochure\s+spec)\b/i.test(
+      transcript,
+    );
+  const specFollow = looksLikeSpecQuestion(transcript);
+  if (!searchFollow && !sheetFollow && !specFollow) return transcript;
+
+  const coach =
+    newestCoachLine(priorUserTurns, transcript) ||
+    newestCoachLine(priorAssistantLines, transcript) ||
+    factsCoachLine(facts);
+
+  // Full specs / "search for it" is the coach already on the table.
+  if ((sheetFollow || searchFollow) && coach) return coach;
+
+  // A field ask keeps its words. Facts already lock the coach.
+  if (
+    facts?.make?.trim() &&
+    facts.model?.trim() &&
+    resolveCoachIdentity(transcript, facts)
+  ) {
+    return transcript;
+  }
+  return coach && specFollow ? `${coach} ${transcript}` : transcript;
 }
 
 /** Yes/no/next while extras are being offered. Not a new coach ask. */

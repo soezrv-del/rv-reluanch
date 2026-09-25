@@ -5,9 +5,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveCoachIdentity } from "./coachIdentity.ts";
 import { resolveDeskSheet, type DeskSheetPayload } from "./deskSheet.ts";
+import { ensureCatalogLoaded } from "../rv/catalogLoad.ts";
+import { buildChatGrounding } from "./grounding.ts";
 import {
   classifyVoiceCoachDepth,
   classifyVoiceExtraPick,
+  catalogQueryForFollowUp,
   formatChatSpecMissReply,
   formatVoiceQuickOverview,
   formatVoiceSpecEngineSpeech,
@@ -555,4 +558,68 @@ test("overview sheet is reused for full report and voice fallback pins knowledge
   assert.match(realtime, /from ["']\.\/coachKnowledgeKey["']/);
   assert.doesNotMatch(realtime, /[Gg]emini/);
   assert.doesNotMatch(route, /[Dd]ialaBot/);
+});
+
+test("full specs and search-for-it reuse the Ventana already named and speak the catalog pin", async () => {
+  await ensureCatalogLoaded();
+  const named = "2015 Newmar Ventana 3636";
+  const invented =
+    "The 2015 Newmar Ventana 3636 is a 36-foot 8-inch Class A diesel pusher on a Freightliner XC chassis with a 360-horsepower Cummins 6.7-liter ISB engine and Allison 6-speed automatic.";
+  const specs = catalogQueryForFollowUp("Yes, want the full specs.", [named]);
+  const search = catalogQueryForFollowUp("Do it. You need to search for it.", [
+    "Yes, want the full specs.",
+    named,
+  ]);
+  const fromHer = catalogQueryForFollowUp(
+    "Yes, want the full specs.",
+    [],
+    null,
+    [invented],
+  );
+  for (const query of [specs, search, fromHer]) {
+    const id = resolveCoachIdentity(query, null);
+    assert.equal(id?.year, "2015", query);
+    assert.equal(id?.make, "Newmar", query);
+    assert.equal(id?.model, "Ventana", query);
+    assert.equal(id?.floorplan, "3636", query);
+    const grounded = buildChatGrounding({ query, facts: null });
+    const sheet = resolveDeskSheet({
+      query,
+      identity: grounded.identity,
+      specs: grounded.specs,
+      mountForVoiceReport: true,
+    });
+    const speech = formatVoiceSpecEngineSpeech(sheet, query, "all");
+    assert.match(speech, /Cummins ISB 360HP/);
+    assert.match(speech, /Freightliner XCR/);
+    assert.match(speech, /Allison 3000 MH/);
+    assert.doesNotMatch(speech, /both missed/);
+    assert.doesNotMatch(speech, /Freightliner XC(?!R)/);
+    assert.doesNotMatch(speech, /6-speed/);
+    assert.doesNotMatch(speech, /36-foot/);
+  }
+  const facts = {
+    year: "2015",
+    make: "Newmar",
+    model: "Ventana",
+    floorplan: "3636",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  };
+  assert.equal(
+    catalogQueryForFollowUp("Do it. You need to search for it.", [], facts),
+    "2015 Newmar Ventana 3636",
+  );
+  assert.equal(
+    catalogQueryForFollowUp("what's the GVWR", [], facts),
+    "what's the GVWR",
+  );
+  assert.equal(catalogQueryForFollowUp("how's the weather", [named]), "how's the weather");
+  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
+  assert.match(realtime, /recentCoachMentions/);
+  assert.match(realtime, /noteCoachMention/);
+  const enrich = realtime.slice(
+    realtime.indexOf("private async maybeEnrichWithWebResearch"),
+  );
+  assert.match(enrich, /searchFollow && transcript !== spoken/);
+  assert.match(enrich, /this\.voiceDeliver = "full"/);
 });

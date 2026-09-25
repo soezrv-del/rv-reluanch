@@ -19,7 +19,8 @@ export type SpecFieldKey =
   | "fuelCapacity"
   | "freshWater"
   | "grayWater"
-  | "blackWater";
+  | "blackWater"
+  | "propane";
 
 export type SpecFallbackSource =
   | "rvusa"
@@ -64,6 +65,7 @@ export const SPEC_ENGINE_OWNED_FIELDS: readonly SpecFieldKey[] = [
   "freshWater",
   "grayWater",
   "blackWater",
+  "propane",
 ] as const;
 
 /** Desk / chat labels the shared engine owns — chat must not compete. */
@@ -75,6 +77,7 @@ export const SPEC_ENGINE_OWNED_LABELS: readonly string[] = [
   "Fresh",
   "Gray",
   "Black",
+  "Propane",
 ] as const;
 
 const LBS_MIN = 2_000;
@@ -83,6 +86,10 @@ const GAL_MIN = 1;
 const GAL_MAX = 300;
 /** A "1" next to fresh/gray/black is a tank count, not capacity. */
 const WATER_GAL_MIN = 8;
+const PROPANE_LBS_MIN = 5;
+const PROPANE_LBS_MAX = 200;
+const PROPANE_GAL_MIN = 1;
+const PROPANE_GAL_MAX = 80;
 
 const RVGUIDE_ORIGIN = "https://www.rvguide.com";
 const RVUSA_ORIGIN = "https://www.rvusa.com";
@@ -252,6 +259,65 @@ function firstLabeledNumber(
   return null;
 }
 
+const PROPANE_BLANK_RE = /confirm brochure|^[\u2014\u2013\-]$|^n\/?a\b/i;
+
+/**
+ * Published propane only. Keep the printed unit — never convert lb ↔ gal.
+ * Unlabeled numbers are rejected so a tank count cannot become capacity.
+ */
+export function parsePropaneAmount(
+  raw: string,
+): { value: number; unit: "lbs" | "gal" } | null {
+  const s = String(raw || "").replace(/,/g, " ").trim();
+  if (!s || PROPANE_BLANK_RE.test(s)) return null;
+
+  const multiLb = s.match(
+    /(\d+)\s*(?:x|×|\*)\s*(\d+(?:\.\d+)?)\s*(?:-)?\s*(?:lbs?|pounds?)\b/i,
+  );
+  if (multiLb) {
+    const n = Number(multiLb[1]) * Number(multiLb[2]);
+    if (n >= PROPANE_LBS_MIN && n <= PROPANE_LBS_MAX) {
+      return { value: Math.round(n), unit: "lbs" };
+    }
+  }
+
+  const lbAfter =
+    s.match(/(\d+(?:\.\d+)?)\s*(?:-)?\s*(?:lbs?|pounds?)\b/i) ||
+    s.match(/\(\s*(?:lbs?|pounds?)\s*\)\s*(\d+(?:\.\d+)?)/i);
+  if (lbAfter) {
+    const n = Number(lbAfter[1]);
+    if (n >= PROPANE_LBS_MIN && n <= PROPANE_LBS_MAX) {
+      return { value: Math.round(n), unit: "lbs" };
+    }
+  }
+
+  const galAfter =
+    s.match(/(\d+(?:\.\d+)?)\s*(?:-)?\s*(?:gal(?:lons?)?)\b/i) ||
+    s.match(/\(\s*(?:gal(?:lons?)?)\s*\)\s*(\d+(?:\.\d+)?)/i);
+  if (galAfter) {
+    const n = Number(galAfter[1]);
+    if (n >= PROPANE_GAL_MIN && n <= PROPANE_GAL_MAX) {
+      return { value: Math.round(n * 10) / 10, unit: "gal" };
+    }
+  }
+
+  return null;
+}
+
+function firstLabeledPropane(
+  text: string,
+): { value: number; unit: "lbs" | "gal" } | null {
+  const finder =
+    /\b(?:propane|lp[\s-]?gas|lpg)(?:\s+(?:tank|capacity|unit))*\b/gi;
+  let hit: RegExpExecArray | null;
+  while ((hit = finder.exec(text))) {
+    const window = text.slice(hit.index + hit[0].length, hit.index + hit[0].length + 96);
+    const parsed = parsePropaneAmount(window);
+    if (parsed) return parsed;
+  }
+  return parsePropaneAmount(text);
+}
+
 function pushFill(
   out: SpecFieldFill[],
   field: SpecFieldKey,
@@ -362,6 +428,11 @@ export function parseSpecFieldsFromHtml(
     meta,
   );
 
+  const propane = firstLabeledPropane(text);
+  if (propane) {
+    pushFill(out, "propane", propane.value, propane.unit, meta);
+  }
+
   return out;
 }
 
@@ -373,7 +444,7 @@ export function parseSpecFieldsFromPdf(
   const ascii = String(binary || "")
     .replace(/[^\x09\x0a\x0d\x20-\x7e]/g, " ")
     .replace(/\s+/g, " ");
-  if (!/\b(dry\s+weight|uvw|gvwr|fresh|fuel\s+capacity)\b/i.test(ascii)) {
+  if (!/\b(dry\s+weight|uvw|gvwr|fresh|fuel\s+capacity|propane|lp[\s-]?gas)\b/i.test(ascii)) {
     return [];
   }
   return parseSpecFieldsFromHtml(ascii, meta);

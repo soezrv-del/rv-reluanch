@@ -6,7 +6,7 @@
  * snapshot Facts (RvFAX) shows — not a stricter pin-only GAP path.
  */
 
-import { CONFIRM_BROCHURE, type BrochureSpecs } from "../rv/brochureSpecs.ts";
+import { CONFIRM_BROCHURE, formatPropane, type BrochureSpecs } from "../rv/brochureSpecs.ts";
 import {
   findOemFloorplanSpec,
   findOemGvwrLbs,
@@ -268,6 +268,7 @@ function payloadFromFactsBrochure(
     brochureRow("Fresh", brochure.freshWater),
     brochureRow("Gray", brochure.grayWater),
     brochureRow("Black", brochure.blackWater),
+    brochureRow("Propane", brochure.propane),
   ];
 }
 
@@ -324,6 +325,7 @@ function fillGapRowsFromOemTanks(
     Fresh: galLabel(oem?.freshWater ?? tanks.freshWater),
     Gray: galLabel(oem?.grayWater ?? tanks.grayWater),
     Black: galLabel(oem?.blackWater ?? tanks.blackWater),
+    Propane: brochureRow("Propane", formatPropane(oem)),
     UVW: lbsLabel(publishedWeightLbs(identity, "uvw")),
   };
   return rows.map((row) => {
@@ -386,6 +388,7 @@ export function buildDeskSheetPayload(
           { label: "Fresh", value: fresh.value, gap: fresh.gap },
           { label: "Gray", value: gray.value, gap: gray.gap },
           { label: "Black", value: black.value, gap: black.gap },
+          brochureRow("Propane", formatPropane(oem)),
         ];
       })();
 

@@ -417,6 +417,20 @@ function tankOrConfirm(n?: number | null): string {
   return n != null && n > 0 ? fmtGal(n) : CONFIRM_BROCHURE;
 }
 
+/** Published propane only. Pounds if printed, else gallons. Never convert. */
+export function formatPropane(
+  oem: { propaneLbs?: number | null; propaneGal?: number | null } | null | undefined,
+): string {
+  const lbs = oem?.propaneLbs;
+  if (lbs != null && lbs > 0) return `${Math.round(lbs)} lb`;
+  const gal = oem?.propaneGal;
+  if (gal != null && gal > 0) {
+    const shown = Number.isInteger(gal) ? String(gal) : String(Math.round(gal * 10) / 10);
+    return `${shown} gal`;
+  }
+  return CONFIRM_BROCHURE;
+}
+
 function transmissionFor(
   spec: RVSpec,
   diesel: boolean,
@@ -827,9 +841,7 @@ export function buildBrochureSpecs(
     freshWater: tankOrConfirm(oem?.freshWater ?? tanks.freshWater ?? snap.freshWater),
     grayWater: tankOrConfirm(oem?.grayWater ?? tanks.grayWater ?? snap.grayWater),
     blackWater: tankOrConfirm(oem?.blackWater ?? tanks.blackWater ?? snap.blackWater),
-    propane: oem?.propaneLbs
-      ? `${oem.propaneLbs} lb`
-      : CONFIRM_BROCHURE,
+    propane: formatPropane(oem),
     waterHeater: oem?.waterHeaterGal
       ? `${oem.waterHeaterGal} gal`
       : CONFIRM_BROCHURE,
