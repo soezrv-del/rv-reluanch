@@ -31,7 +31,7 @@ import {
   formatLockedWeightsBlock,
 } from "./lockedWeights.ts";
 import { resolveCoachIdentity } from "./coachIdentity.ts";
-import { resolveDeskSheet } from "./deskSheet.ts";
+import { buildDeskSheetPayload, resolveDeskSheet } from "./deskSheet.ts";
 import { formatWebSearchInjection } from "./webSearch.ts";
 import { buildBrochureSpecs } from "../rv/brochureSpecs.ts";
 import { installCatalog, peekCatalog } from "../rv/catalogLoad.ts";
@@ -236,8 +236,13 @@ test("search timeout + verified pin speaks the pin — no factory-GVWR refuse", 
   assert.doesNotMatch(injection, /You MAY give a labeled EST/);
   assert.match(LOW_CONFIDENCE_EST_RULE, /don't have a factory GVWR/);
 
-  const sheet = resolveDeskSheet({ query: q, identity, specs: null });
+  assert.equal(
+    resolveDeskSheet({ query: q, identity, specs: null }),
+    null,
+    "a GVWR question is an overview — the desk stays closed",
+  );
+  const sheet = buildDeskSheetPayload(identity!, null);
   assert.ok(sheet);
-  assert.match(sheet!.rows.find((r) => r.label === "GVWR")?.value || "", /39,?600/);
-  assert.doesNotMatch(sheet!.rows.find((r) => r.label === "GVWR")?.value || "", /\bEST\b/);
+  assert.match(sheet.rows.find((r) => r.label === "GVWR")?.value || "", /39,?600/);
+  assert.doesNotMatch(sheet.rows.find((r) => r.label === "GVWR")?.value || "", /\bEST\b/);
 });

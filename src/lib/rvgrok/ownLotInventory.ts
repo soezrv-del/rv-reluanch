@@ -17,30 +17,46 @@
  * When URL is unset, Vercel/serverless tries the deploy-bundled public file
  * (createRequire / fileURL / cwd) then same-origin /inventory/own-lot-latest.json
  * BEFORE failing. A failed snapshot is UNAVAILABLE — never a stock count of 0.
+ *
+ * Disk and createRequire stay inside the loaders. Ask detection lives in ownLotAsk.ts.
+ * Grok-only lot-ask stopwords are not used by the Lot page search box.
  */
 
-import { readFile, stat } from "node:fs/promises";
-import { createRequire } from "node:module";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   extractFloorplanToken,
-  isYearBrandFloorplanToken,
+  isBudgetThousandsToken,
+  fuzzyMatchCatalogName,
   normalizeCoachAsk,
-  normalizeFloorplanToken,
   parseCoachFromText,
   parseSeriesAlias,
   parseSpokenSeries,
   seriesAliasEquals,
 } from "./parseCoach.ts";
 import {
-  looksLikeInventoryOrCountQuestion,
   looksLikeMarketValueQuestion,
   looksLikeRepairQuestion,
-  looksLikeSpecQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
+import {
+  LOT_ASK_STOP,
+  looksLikeOwnLotListingPriceQuestion,
+  looksLikeOwnLotSearchAsk,
+  looksLikeOwnLotStockQuestion,
+  looksLikeOwnLotUnitListQuestion,
+  lotSearchQueryFromAsk,
+  parseOwnLotStockNumber,
+} from "./ownLotAsk.ts";
 import { searchLotUnits } from "../lot/lotSearch.ts";
+
+export {
+  isBareFloorplanCode,
+  looksLikeOwnLotListingPriceQuestion,
+  looksLikeOwnLotSearchAsk,
+  looksLikeOwnLotStockQuestion,
+  looksLikeOwnLotUnitListQuestion,
+  lotSearchQueryFromAsk,
+  parseOwnLotStockNumber,
+} from "./ownLotAsk.ts";
 
 export const OWN_LOT_MODEL = "own-lot-inventory";
 
@@ -148,298 +164,6 @@ export function clearOwnLotCache(): void {
   cache.clear();
 }
 
-/**
- * Own-lot listing prices / budget / "show prices too" — not nationwide
- * market-value comps (those stay on looksLikeMarketValueQuestion).
- */
-const OWN_LOT_LISTING_PRICE_RE =
-  /\b((?:show|include|have|with|see|need|want|any|should).{0,40}prices?|prices?\s+(?:too|data|as well|also|included|please)|(?:unit|listing|lot|inventory|stock|our)\s+prices?|prices?\s+(?:on|for|of|in|from)\b|(?:around|about|near|approx(?:imately)?|under|below|over|above|less\s+than|more\s+than|up\s+to)\s+\$?\s*\d|budget\b|\$\d|(?:\$|around|about|near|approx(?:imately)?|under|below|over|above|up\s+to|budget)\s*\$?\s*\d{2,3}\s*k\b|(?:around|about|near|approx(?:imately)?)\s+(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|one|two|three|four|five|six|seven|eight|nine|ten)\s+thousand|\b(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\s+thousand\s+dollars?)\b/i;
-
-/** "list / deep dive / show me / which ones" — inject concrete rows, not counts only. */
-const OWN_LOT_UNIT_LIST_RE =
-  /\b(list(?:ing|s)?|deep[- ]?dive|show\s+me|which\s+ones|specific\s+units?|name\s+them|what\s+units|pull\s+(?:me\s+)?(?:a\s+|the\s+)?(?:specific\s+)?(?:units?|list)|look(?:\s+\w+){0,6}\s+in(?:\s+(?:my|our|the))?\s+inventory|(?:do|did|does)\s+we\s+have|any\s+\w[\w\s]{0,40}\bin(?:ventory)?\b)\b/i;
-
-export function looksLikeOwnLotListingPriceQuestion(text: string): boolean {
-  const t = normalizeAskText(text);
-  if (!t.trim()) return false;
-  return OWN_LOT_LISTING_PRICE_RE.test(t);
-}
-
-export function looksLikeOwnLotUnitListQuestion(text: string): boolean {
-  const t = normalizeAskText(text);
-  if (!t.trim()) return false;
-  return OWN_LOT_UNIT_LIST_RE.test(t);
-}
-
-const EXPLICIT_WE_HAVE_STOCK_RE =
-  /\b(?:do|did|does)\s+we\s+have\b|\bhave\s+we\s+got\b|\bwe\s+have\s+any\b/i;
-
-/** look/find/search/pull/check — salesman lot search, not "look up" catalog. */
-const STRONG_LOT_SEARCH_RE =
-  /\b(?:look(?:ing)?\s+for|find(?:ing)?|search(?:ing)?(?:\s+for)?|pull(?:ing)?|check(?:ing)?)\b/i;
-
-/** Weaker "got/any" — only with a floorplan or stock token, not a bare brand. */
-const WEAK_LOT_SEARCH_RE = /\b(?:got|any)\b/i;
-
-const LOT_PLACE_CUE_RE =
-  /\b(?:on (?:the |our )?lot|inventor(?:y|ies)|in stock)\b/i;
-
-const PRODUCT_ABOUT_OR_REPORT_RE =
-  /\b((?:tell me |know |learn |hear )about|what about|how about|info(?:rmation)? (?:on|about|for)|details (?:on|about|for)|overview of|walk me through|break down|brief me on|give me a report|report on|looking (?:at|into|up))\b/i;
-
-const WEB_SEARCH_CUE_RE =
-  /\b(?:search(?:ing)?|look(?:ing)?)\s+(?:the\s+)?(?:web|online|forums?|internet)\b/i;
-
-const LOOK_UP_CATALOG_RE = /\blook(?:ing)?\s+up\b/i;
-
-/** Follow-up after a show/lot miss — stay on OUR snapshot, never other dealers. */
-const LOT_CONTINUATION_RE =
-  /\b(?:any of (?:them|'em|those)|match(?:es)? a |(?:on|from) our lot|our lot)\b/i;
-
-/** 27A / 27ASE / 25FW — not a 4–7 digit stock #. */
-const BARE_FLOORPLAN_RE = /^\d{2,3}[A-Za-z]{1,4}$/;
-
-/**
- * Grok-only lot-ask stopwords. Stripped before Lot's token AND-match so
- * salesman filler never becomes a required haystack token. Do not reuse
- * on the Lot page search box — typed "stock" there is a real query.
- */
-const LOT_ASK_STOP = new Set([
-  "look",
-  "looking",
-  "looks",
-  "find",
-  "finding",
-  "search",
-  "searching",
-  "pull",
-  "pulling",
-  "check",
-  "checking",
-  "got",
-  "any",
-  "able",
-  "match",
-  "matches",
-  "matching",
-  "period",
-  "em",
-  "a",
-  "an",
-  "the",
-  "for",
-  "me",
-  "please",
-  "can",
-  "you",
-  "on",
-  "in",
-  "at",
-  "our",
-  "my",
-  "lot",
-  "inventory",
-  "inventories",
-  "do",
-  "we",
-  "have",
-  "has",
-  "is",
-  "are",
-  "there",
-  "to",
-  "know",
-  "if",
-  "whether",
-  "i",
-  "need",
-  "see",
-  "seeing",
-  "seen",
-  "stock",
-  "stocks",
-  "stocking",
-  "show",
-  "shows",
-  "showing",
-  "hello",
-  "hi",
-  "hey",
-  "yeah",
-  "yes",
-  "yep",
-  "yup",
-  "yo",
-  "ok",
-  "okay",
-  "um",
-  "uh",
-  "thanks",
-  "thank",
-  "just",
-  "also",
-  "like",
-  "could",
-  "would",
-  "will",
-  "should",
-  "does",
-  "did",
-  "was",
-  "were",
-  "be",
-  "been",
-  "being",
-  "this",
-  "that",
-  "those",
-  "these",
-  "and",
-  "or",
-  "but",
-  "not",
-  "of",
-  "from",
-  "with",
-  "by",
-  "about",
-  "so",
-  "well",
-  "then",
-  "now",
-  "right",
-  "currently",
-  "current",
-  "available",
-  "unit",
-  "units",
-  "ones",
-  "some",
-  "them",
-  "they",
-  "it",
-  "its",
-  "your",
-  "what",
-  "which",
-  "where",
-  "when",
-  "how",
-  "many",
-  "here",
-  "near",
-  "coach",
-  "coaches",
-  "im",
-  "ive",
-  "youre",
-  "whats",
-  "s",
-  "es",
-]);
-
-export function isBareFloorplanCode(text: string): boolean {
-  const t = normalizeAskText(text)
-    .trim()
-    .replace(/[?!.,;:'"]+$/g, "");
-  if (!t) return false;
-  if (parseOwnLotStockNumber(t)) return false;
-  return BARE_FLOORPLAN_RE.test(t);
-}
-
-function leftoverFloorplanQuery(tokens: string[]): string {
-  for (const raw of tokens) {
-    const normalized = normalizeFloorplanToken(raw);
-    if (!normalized) continue;
-    if (BARE_FLOORPLAN_RE.test(normalized)) return normalized.toLowerCase();
-  }
-  return "";
-}
-
-/**
- * Remaining tokens after stripping search verbs / lot filler.
- * "look for a 27A" → "27a" so Lot search matches the page box.
- * A leftover floorplan (27As → 27A) is preferred so "27as stock" does
- * not AND-fail against unit haystacks.
- */
-export function lotSearchQueryFromAsk(text: string): string {
-  const cleaned = normalizeAskText(text)
-    .replace(/['’]/g, "")
-    .replace(/[?!.,;:]+/g, " ");
-  const tokens = cleaned
-    .toLowerCase()
-    .split(/[\s,/|]+/)
-    .map((t) => t.trim())
-    .filter((t) => t && !LOT_ASK_STOP.has(t));
-
-  const spokenFp = extractFloorplanToken(cleaned);
-  if (spokenFp) {
-    const compact = normalizeFloorplanToken(spokenFp).toLowerCase();
-    const leftoverHasFp = tokens.some((t) => {
-      const n = normalizeFloorplanToken(t).toLowerCase();
-      return Boolean(n) && (n === compact || n.startsWith(compact) || compact.startsWith(n));
-    });
-    if (leftoverHasFp) return compact;
-  }
-
-  return leftoverFloorplanQuery(tokens) || tokens.join(" ");
-}
-
-/**
- * Lot/inventory *search* — look/find/search/pull/check/got/any + floorplan
- * or coach tokens, "on the lot", or a bare floorplan code. Product / YMM /
- * spec "tell me about" reports stay catalog-first (#449).
- */
-export function looksLikeOwnLotSearchAsk(text: string): boolean {
-  const t = normalizeAskText(text);
-  if (!t.trim()) return false;
-  if (looksLikeSpecQuestion(t) && !LOT_PLACE_CUE_RE.test(t)) return false;
-  if (
-    PRODUCT_ABOUT_OR_REPORT_RE.test(t) &&
-    !LOT_PLACE_CUE_RE.test(t) &&
-    !STRONG_LOT_SEARCH_RE.test(t)
-  ) {
-    return false;
-  }
-  if (WEB_SEARCH_CUE_RE.test(t)) return false;
-  if (LOOK_UP_CATALOG_RE.test(t) && !LOT_PLACE_CUE_RE.test(t)) return false;
-
-  const stripped = t.trim().replace(/[?!.,;:'"]+$/g, "");
-  if (isBareFloorplanCode(stripped)) return true;
-
-  const hasFloorplanOrStock =
-    Boolean(extractFloorplanToken(t)) || Boolean(parseOwnLotStockNumber(t));
-  const parsed = parseCoachFromText(t);
-  const hasCoach = Boolean(parsed.make || parsed.model);
-
-  if (LOT_PLACE_CUE_RE.test(t) && (hasFloorplanOrStock || hasCoach)) {
-    return true;
-  }
-  if (STRONG_LOT_SEARCH_RE.test(t) && (hasFloorplanOrStock || hasCoach)) {
-    return true;
-  }
-  if (WEAK_LOT_SEARCH_RE.test(t) && hasFloorplanOrStock) return true;
-  if (LOT_CONTINUATION_RE.test(t) && (hasCoach || hasFloorplanOrStock)) {
-    return true;
-  }
-  return false;
-}
-
-export function looksLikeOwnLotStockQuestion(text: string): boolean {
-  // Explicit stock only — "do we have" / on the lot / in stock / inventory /
-  // diesel count / stock # / lot listing prices / lot search (look for 27A).
-  // A year+make+model+floorplan designation is a CATALOG report, not an
-  // own-lot probe.
-  if (
-    looksLikeInventoryOrCountQuestion(text) ||
-    looksLikeOwnLotListingPriceQuestion(text) ||
-    Boolean(parseOwnLotStockNumber(text)) ||
-    looksLikeOwnLotSearchAsk(text)
-  ) {
-    return true;
-  }
-  return EXPLICIT_WE_HAVE_STOCK_RE.test(normalizeAskText(text));
-}
 
 /** Snapshot loaded with units — we can answer lot counts from the file. */
 export function ownLotHasHit(snapshot: OwnLotSnapshot | null | undefined): boolean {
@@ -798,32 +522,13 @@ const OWN_LOT_MODEL_JUNK = new Set([
   "check",
   "checking",
   "got",
+  "diesel",
+  "diesels",
+  "around",
 ]);
 
 /** Series letters parseCoach must keep (Lineage M). Not plural leftovers. */
 const OWN_LOT_SERIES_LETTER = /^[mef]$/;
-
-function isYearToken(raw: string): boolean {
-  return /^(?:19[89]\d|20[0-2]\d)$/.test(raw.trim());
-}
-
-/**
- * Stock # from the ask. "45282", "stock number 45282", "stk #45282".
- * Does not treat a model year as a stock number.
- */
-export function parseOwnLotStockNumber(text: string): string | undefined {
-  const t = normalizeAskText(text);
-  if (!t.trim()) return undefined;
-  const explicit = t.match(
-    /\b(?:stock(?:\s*(?:#|number|no\.?|num))?|stk)\s*[:#-]?\s*([A-Za-z0-9-]{3,12})\b/i,
-  );
-  if (explicit?.[1] && !isYearToken(explicit[1])) return explicit[1];
-  const hashed = t.match(/#\s*([A-Za-z0-9-]{3,12})\b/);
-  if (hashed?.[1] && !isYearToken(hashed[1])) return hashed[1];
-  const bare = t.trim().match(/^#?\s*([A-Za-z]{0,4}\d{4,7}[A-Za-z]{0,3})\s*$/);
-  if (bare?.[1] && !isYearToken(bare[1])) return bare[1];
-  return undefined;
-}
 
 function locationTokenSet(locations: string[]): Set<string> {
   const out = new Set<string>();
@@ -870,6 +575,56 @@ export function looksLikeGhostOwnLotModel(model: string): boolean {
 function lotHasModel(units: OwnLotUnit[], model: string): boolean {
   if (!norm(model) || !units.length) return false;
   return units.some((u) => unitModelMatchesAsk(u, model));
+}
+
+/**
+ * Live-voice hears Phaeton as Faten / Fayton / Phantom. Only rewrite when
+ * the lot actually has a Phaeton and no row uses the spoken word as a model.
+ */
+const PHAETON_SPEECH_RE =
+  /^(?:ph[ae]{2}tons?|fayt[eo]ns?|faetons?|fatens?|paytons?|paitons?|phantoms?)$/;
+
+const PHAETON_SPEECH_ASK_RE =
+  /\b(ph[ae]{2}tons?|fayt[eo]ns?|faetons?|fatens?|paytons?|paitons?|phantoms?)\b/;
+
+function lotHasPhaeton(units: OwnLotUnit[]): boolean {
+  return units.some((u) => /\bphaetons?\b/i.test(u.model));
+}
+
+function spokenWordIsOnLot(units: OwnLotUnit[], spoken: string): boolean {
+  const n = norm(spoken);
+  if (!n) return false;
+  return units.some((u) => {
+    const blob = norm(`${u.model} ${u.trim}`);
+    return blob === n || blob.includes(n);
+  });
+}
+
+/** "fatens" with no brand still means the Phaeton that is actually on the lot. */
+export function phaetonSpeechInAsk(text: string, units: OwnLotUnit[]): boolean {
+  const m = norm(text).match(PHAETON_SPEECH_ASK_RE);
+  if (!m?.[1] || !lotHasPhaeton(units)) return false;
+  return !spokenWordIsOnLot(units, m[1]);
+}
+
+export function canonicalOwnLotModel(
+  model: string,
+  units: OwnLotUnit[],
+): string {
+  const n = norm(model);
+  if (!n) return "";
+  if (!units.length || lotHasModel(units, n)) return n;
+  if (PHAETON_SPEECH_RE.test(n)) {
+    const hasPhaeton = units.some((u) => /\bphaetons?\b/i.test(u.model));
+    const literal = units.some((u) => {
+      const blob = norm(`${u.model} ${u.trim}`);
+      return blob === n || blob.includes(n);
+    });
+    if (hasPhaeton && !literal) return "phaeton";
+  }
+  const names = [...new Set(units.map((u) => u.model).filter(Boolean))];
+  const fuzzy = fuzzyMatchCatalogName(n, names);
+  return fuzzy ? norm(fuzzy) : n;
 }
 
 /**
@@ -928,17 +683,24 @@ export function parseOwnLotAsk(
         ? `${normalized.seriesFamily} ${normalized.seriesCode}`
         : `${normalized.seriesCode} series`
       : "");
-  const model = sanitizeOwnLotParsedModel(spokenModel, locations, {
-    make: parsed.make,
+  let model = canonicalOwnLotModel(
+    sanitizeOwnLotParsedModel(spokenModel, locations, {
+      make: parsed.make,
+      units,
+    }) || "",
     units,
-  });
+  );
+  if ((!model || !lotHasModel(units, model)) && phaetonSpeechInAsk(t, units)) {
+    model = "phaeton";
+  }
   if (model) filter.model = model;
+  if (model === "phaeton" && !filter.make) filter.make = "Tiffin";
   const trim =
     (parsed.floorplan || normalized.floorplan || "").replace(/\s+/g, "") ||
     extractFloorplanToken(t);
   if (
     trim &&
-    !isYearBrandFloorplanToken(trim) &&
+    !isBudgetThousandsToken(trim) &&
     (filter.make ||
       filter.model ||
       parsed.make ||
@@ -1424,6 +1186,20 @@ function formatPriceBandMap(
     .join("; ");
 }
 
+function voiceCoachLockLine(unit: OwnLotUnit): string {
+  return `VOICE COACH LOCK: ${unit.year || ""} | ${unit.make || ""} | ${unit.model || ""} | ${unit.trim || ""}`;
+}
+
+function appendSingleUnitLock(
+  lines: string[],
+  rows: OwnLotUnit[],
+  matched: number,
+) {
+  if (matched === 1 && rows.length === 1) {
+    lines.push(voiceCoachLockLine(rows[0]!));
+  }
+}
+
 function formatUnitListing(unit: OwnLotUnit): string {
   const id = unit.stock_number ? `stk ${unit.stock_number}` : "stk unknown";
   const price =
@@ -1548,91 +1324,7 @@ export function formatOwnLotBlock(
         ? ` [${formatCountMap(counts.dieselByBodyType)}]`
         : ""
     }.`,
-    `By body_type: ${formatCountMap(counts.byBodyType)}.`,
-    `By make: ${formatCountMap(counts.byMake)}.`,
-    `By location: ${formatCountMap(counts.byLocation)}.`,
   ];
-
-  if (counts.priceBand && counts.priced > 0) {
-    lines.push(
-      `Listing prices (dealer asks on this snapshot — price, else price_current / price_hidden / price_lowest / price_msrp): ${formatOwnLotPriceBand(counts.priceBand)}.`,
-      `By location prices: ${formatPriceBandMap(counts.priceByLocation)}.`,
-      `By body_type prices: ${formatPriceBandMap(counts.priceByBodyType)}.`,
-      "Listing prices ARE in this snapshot. Never say it has no price data, that prices have not come through, or that the snapshot only has counts. Quote only prices printed here — do not invent a price.",
-    );
-  } else {
-    lines.push(
-      "No priced units in this matched set (price / price_current / price_hidden / price_lowest / price_msrp missing or ≤ 0). Do not invent a price.",
-    );
-  }
-
-  lines.push(
-    "Answer from these counts and listing prices. Never invent a VIN, stock number, unit, or price that is not in this snapshot. Brochure catalog is not lot stock. Own-lot listing prices are what WE ask on the lot — not nationwide market-value comps.",
-    "This is an explicit inventory / in-stock ask only. Year/make/model reports use the big brochure catalog — not this block. Catalog GAP does not apply to stock counts. Never say catalog gap. Never say check your own lot listing. Never ask them to share a year for inventory.",
-    "Never substitute a sibling series because a floorplan code matches (Dutch Star 4369 ≠ Ventana 4369). Never say a catalog-known coach is not in listings.",
-  );
-
-  if (counts.matched === 0) {
-    const elsewhere =
-      filter.location && (filter.make || filter.model || filter.year || filter.trim)
-        ? snapshot.units.filter((u) =>
-            unitMatchesFilter(u, { ...filter, location: undefined }),
-          )
-        : [];
-    const elsewhereIds = new Set(elsewhere.map((u) => u.stock_number));
-    const otherYears =
-      filter.location && filter.model
-        ? snapshot.units.filter(
-            (u) =>
-              !elsewhereIds.has(u.stock_number) &&
-              unitMatchesFilter(u, {
-                make: filter.make,
-                model: filter.model,
-              }),
-          )
-        : [];
-    const atShow =
-      filter.location && filter.make
-        ? snapshot.units.filter((u) =>
-            unitMatchesFilter(u, {
-              make: filter.make,
-              location: filter.location,
-            }),
-          )
-        : [];
-    if (elsewhere.length || otherYears.length || atShow.length) {
-      lines.push(
-        `LOCATION MISS at ${filter.location}: zero units match ${filterLabel(
-          filter,
-        )}. Matched 0 is only at that place. Do NOT say the whole lot of ${counts.total} has none of this coach. Do not jump to other dealers.`,
-      );
-      if (elsewhere.length) {
-        lines.push(
-          `Same coach elsewhere on OUR lots (${elsewhere.length}):`,
-          ...elsewhere.slice(0, MATCH_LIST_MAX).map(formatUnitListing),
-        );
-      }
-      if (otherYears.length) {
-        lines.push(
-          `Other years of the same series on OUR lots (${otherYears.length}):`,
-          ...otherYears.slice(0, MATCH_LIST_MAX).map(formatUnitListing),
-        );
-      }
-      if (atShow.length) {
-        lines.push(
-          `At ${filter.location} we do have these ${filter.make} units (${atShow.length}):`,
-          ...atShow.slice(0, MATCH_LIST_MAX).map(formatUnitListing),
-        );
-      }
-      lines.push(
-        "Name those units. A show miss is not an empty company. Stay on this snapshot. Never say none of our units are that series when rows are listed above.",
-      );
-    } else {
-      lines.push(
-        "No own-lot hit for this exact series. Say we do not have that coach on the lot snapshot this turn — briefly. Do not say it is missing from the catalog or not in listings. Do not mention catalog gap. Do not send them to check their own lot listing. Do not swap in a sibling series that shares the floorplan code.",
-      );
-    }
-  }
 
   const listingAsk = looksLikeOwnLotListingPriceQuestion(query);
   const listAsk = looksLikeOwnLotUnitListQuestion(query);
@@ -1659,6 +1351,8 @@ export function formatOwnLotBlock(
         (narrowIdentity || classFilter || budgetFilter)) ||
       (narrowIdentity && counts.matched <= MATCH_LIST_MAX));
 
+  // Unit rows go next to the count. A later voice trim must still see the
+  // stock number — policy paragraphs used to push them past the cut.
   if (wantListings) {
     const rows = useLotSearch
       ? lotHits.slice(0, MATCH_LIST_MAX)
@@ -1667,8 +1361,9 @@ export function formatOwnLotBlock(
       lines.push(
         `Matching units (from file only, ${rows.length} of ${counts.matched}; year/make/model/trim/stock/location/price):`,
         ...rows.map(formatUnitListing),
-        "Specific units ARE listed above. Never say you cannot pull specific units, that the snapshot does not break out a list or count, or that you cannot list units when these rows are present (or when Matched > 0 with listing prices).",
+        "Specific units ARE listed above. If a unit line is printed, that coach IS on this lot. Never say it is missing, and never say you cannot pull specific units.",
       );
+      appendSingleUnitLock(lines, rows, counts.matched);
     }
   } else if (
     (listingAsk || listAsk || budgetFilter) &&
@@ -1681,8 +1376,39 @@ export function formatOwnLotBlock(
         ...rows.map(formatUnitListing),
         "Specific units ARE listed above. Never say you cannot pull specific units or that the snapshot does not break out a list.",
       );
+      appendSingleUnitLock(lines, rows, counts.matched);
     }
+  } else if (counts.matched === 0) {
+    lines.push(
+      "No own-lot hit for this exact series. Say we do not have that coach on the lot snapshot this turn — briefly. Do not say it is missing from the catalog or not in listings. Do not mention catalog gap. Do not send them to check their own lot listing. Do not swap in a sibling series that shares the floorplan code.",
+    );
   }
+
+  lines.push(
+    `By body_type: ${formatCountMap(counts.byBodyType)}.`,
+    `By make: ${formatCountMap(counts.byMake)}.`,
+    `By location: ${formatCountMap(counts.byLocation)}.`,
+  );
+
+  if (counts.priceBand && counts.priced > 0) {
+    lines.push(
+      `Listing prices (dealer asks on this snapshot — price, else price_current / price_hidden / price_lowest / price_msrp): ${formatOwnLotPriceBand(counts.priceBand)}.`,
+      `By location prices: ${formatPriceBandMap(counts.priceByLocation)}.`,
+      `By body_type prices: ${formatPriceBandMap(counts.priceByBodyType)}.`,
+      "Listing prices ARE in this snapshot. Never say it has no price data, that prices have not come through, or that the snapshot only has counts. Quote only prices printed here — do not invent a price.",
+    );
+  } else {
+    lines.push(
+      "No priced units in this matched set (price / price_current / price_hidden / price_lowest / price_msrp missing or ≤ 0). Do not invent a price.",
+    );
+  }
+
+  lines.push(
+    "Answer from these counts and listing prices. Never invent a VIN, stock number, unit, or price that is not in this snapshot. Brochure catalog is not lot stock. Own-lot listing prices are what WE ask on the lot — not nationwide market-value comps.",
+    "This is an explicit inventory / in-stock ask only. Year/make/model reports use the big brochure catalog — not this block. Catalog GAP does not apply to stock counts. Never say catalog gap. Never say check your own lot listing. Never ask them to share a year for inventory.",
+    "Never substitute a sibling series because a floorplan code matches (Dutch Star 4369 ≠ Ventana 4369). Never say a catalog-known coach is not in listings.",
+    "Speak the Lot total above. Do not replace it with a website total or an older scrape.",
+  );
 
   return lines.join("\n");
 }
@@ -1698,16 +1424,34 @@ function ownLotPath(): string {
   );
 }
 
+function pathJoin(...parts: string[]): string {
+  return parts
+    .map((part, index) => {
+      const trimmed =
+        index === 0 ? part.replace(/[/\\]+$/g, "") : part.replace(/^[/\\]+|[/\\]+$/g, "");
+      return trimmed;
+    })
+    .filter((part, index) => index === 0 || part.length > 0)
+    .join("/");
+}
+
+function fileUrlToPath(spec: string): string {
+  const url = new URL(spec, import.meta.url);
+  let pathname = decodeURIComponent(url.pathname);
+  if (/^\/[A-Za-z]:\//.test(pathname)) pathname = pathname.slice(1);
+  return pathname;
+}
+
 export function ownLotPublicFileCandidates(): string[] {
   const out: string[] = [];
   try {
-    out.push(fileURLToPath(new URL(OWN_LOT_MODULE_PUBLIC_SPEC, import.meta.url)));
+    out.push(fileUrlToPath(OWN_LOT_MODULE_PUBLIC_SPEC));
   } catch {
     // ignore invalid URL resolution in odd bundles
   }
   const cwd = process.cwd();
-  out.push(join(cwd, OWN_LOT_BUNDLED_RELATIVE));
-  out.push(join(cwd, OWN_LOT_PUBLIC_URL_PATH.replace(/^\//, "")));
+  out.push(pathJoin(cwd, OWN_LOT_BUNDLED_RELATIVE));
+  out.push(pathJoin(cwd, OWN_LOT_PUBLIC_URL_PATH.replace(/^\//, "")));
   return [...new Set(out.filter(Boolean))];
 }
 
@@ -1747,6 +1491,7 @@ function snapshotIfPopulated(snapshot: OwnLotSnapshot): OwnLotSnapshot | null {
 async function readJsonOrCsvFile(
   jsonPath: string,
 ): Promise<{ text: string; asOf: string; kind: "json" | "csv"; path: string }> {
+  const { readFile, stat } = await import("node:fs/promises");
   try {
     const [text, st] = await Promise.all([
       readFile(jsonPath, "utf8"),
@@ -1819,9 +1564,18 @@ async function readOwnLotFile(path: string): Promise<OwnLotSnapshot> {
     unavailableSnapshot("Own-lot file had no units.", file.path);
 }
 
-function tryRequireBundledPublic(): OwnLotSnapshot | null {
+async function tryRequireBundledPublic(): Promise<OwnLotSnapshot | null> {
   try {
+    const { createRequire } = await import("node:module");
     const require = createRequire(import.meta.url);
+    // Vite/SSR keeps the first JSON it required. A refreshed
+    // public/inventory file must not stay stuck at the old unit count.
+    try {
+      const resolved = require.resolve(OWN_LOT_MODULE_PUBLIC_SPEC);
+      delete require.cache[resolved];
+    } catch {
+      // resolve can fail in some bundles; require below still tries
+    }
     const json = require(OWN_LOT_MODULE_PUBLIC_SPEC) as unknown;
     const snapshot = snapshotFromJson(json, {
       pathTried: `require:${OWN_LOT_MODULE_PUBLIC_SPEC}`,
@@ -1835,6 +1589,56 @@ function tryRequireBundledPublic(): OwnLotSnapshot | null {
 function remember(cacheKey: string, snapshot: OwnLotSnapshot, mtimeMs = Date.now()): OwnLotSnapshot {
   cache.set(cacheKey, { at: Date.now(), mtimeMs, snapshot });
   return snapshot;
+}
+
+async function fileMtimeMs(path: string): Promise<number | null> {
+  try {
+    const { stat } = await import("node:fs/promises");
+    const st = await stat(path);
+    return st.mtimeMs;
+  } catch {
+    return null;
+  }
+}
+
+/** Larger own-lot snapshot wins over a stale smaller file. Same size: newer mtime. */
+export function pickRicherOwnLot<T extends { units: number; mtime: number }>(
+  rows: T[],
+): T | null {
+  let best: T | null = null;
+  for (const row of rows) {
+    if (
+      !best ||
+      row.units > best.units ||
+      (row.units === best.units && row.mtime > best.mtime)
+    ) {
+      best = row;
+    }
+  }
+  return best;
+}
+
+/** Larger readable snapshot among disk candidates. Public file beats a stale smaller require(). */
+async function readBestOwnLotFile(
+  paths: string[],
+): Promise<{ snapshot: OwnLotSnapshot; mtime: number } | null> {
+  const found: Array<{ units: number; mtime: number; snapshot: OwnLotSnapshot }> = [];
+  const seen = new Set<string>();
+  for (const path of paths) {
+    if (!path || seen.has(path)) continue;
+    seen.add(path);
+    const mtime = await fileMtimeMs(path);
+    if (mtime == null) continue;
+    try {
+      const snapshot = await readOwnLotFile(path);
+      if (!snapshot.ok || snapshot.units.length === 0) continue;
+      found.push({ units: snapshot.units.length, mtime, snapshot });
+    } catch {
+      // unreadable candidate — try the next path
+    }
+  }
+  const best = pickRicherOwnLot(found);
+  return best ? { snapshot: best.snapshot, mtime: best.mtime } : null;
 }
 
 export async function loadOwnLotSnapshot(opts?: {
@@ -1859,9 +1663,22 @@ export async function loadOwnLotSnapshot(opts?: {
     : explicitPath
       ? `path:${explicitPath}`
       : "default";
+  const diskPaths = explicitPath
+    ? [explicitPath]
+    : [path, ...ownLotPublicFileCandidates()];
   const hit = cache.get(cacheKey);
   if (hit && Date.now() - hit.at < OWN_LOT_CACHE_TTL_MS) {
-    return hit.snapshot;
+    let stale = false;
+    if (!url && !opts?.skipFiles) {
+      for (const candidate of diskPaths) {
+        const mtime = await fileMtimeMs(candidate);
+        if (mtime != null && mtime > hit.mtimeMs + 1) {
+          stale = true;
+          break;
+        }
+      }
+    }
+    if (!stale) return hit.snapshot;
   }
 
   // Exclusive override — do not mix with the public fallback.
@@ -1890,33 +1707,14 @@ export async function loadOwnLotSnapshot(opts?: {
       }
     }
 
-    try {
-      const snapshot = await readOwnLotFile(path);
-      if (snapshot.ok) {
-        return remember(cacheKey, snapshot, Date.parse(snapshot.asOf) || Date.now());
-      }
-      tried.push(snapshot.pathTried || path);
-    } catch (e) {
-      const reason = e instanceof Error ? e.message : "own-lot file unreadable";
-      tried.push(`${path} (${reason})`);
-    }
+    // Larger own-lot snapshot wins — a stale smaller file must not hide
+    // the public snapshot the Lot page is showing.
+    const best = await readBestOwnLotFile(diskPaths);
+    if (best) return remember(cacheKey, best.snapshot, best.mtime);
+    tried.push(diskPaths.join(" | ") || path);
 
-    const required = tryRequireBundledPublic();
+    const required = await tryRequireBundledPublic();
     if (required) return remember(cacheKey, required);
-
-    for (const candidate of ownLotPublicFileCandidates()) {
-      if (candidate === path) continue;
-      try {
-        const snapshot = await readOwnLotFile(candidate);
-        if (snapshot.ok) {
-          return remember(cacheKey, snapshot, Date.parse(snapshot.asOf) || Date.now());
-        }
-        tried.push(snapshot.pathTried || candidate);
-      } catch (e) {
-        const reason = e instanceof Error ? e.message : "unreadable";
-        tried.push(`${candidate} (${reason})`);
-      }
-    }
   } else {
     tried.push("files skipped");
   }

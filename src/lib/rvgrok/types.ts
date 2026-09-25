@@ -26,6 +26,8 @@ export interface Message {
   unverified?: boolean;
   /** CarFax-style desk spec sheet for this turn's locked coach. */
   deskSheet?: import("./deskSheet").DeskSheetPayload;
+  /** Floorplan codes shown on screen. Not spoken. */
+  floorplanChoices?: string[];
 }
 
 export interface ChatSession {

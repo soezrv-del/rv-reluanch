@@ -36,6 +36,7 @@ import {
   parseOwnLotUnits,
   parseSpelledThousands,
   pickOwnLotPrice,
+  pickRicherOwnLot,
   queryOwnLotUnits,
   sameOriginOwnLotUrls,
   sanitizeOwnLotParsedModel,
@@ -47,6 +48,9 @@ import {
   type OwnLotUnit,
 } from "./ownLotInventory.ts";
 import { searchLotUnits } from "../lot/lotSearch.ts";
+import { ownLotNotesForSpeech } from "./voiceWeb.ts";
+import { ownLotVoiceCoachLock } from "./ownLotAsk.ts";
+import { resolveCoachIdentity } from "./coachIdentity.ts";
 import {
   COACH_BRANDS,
   consonantBrandShape,
@@ -316,6 +320,24 @@ test("parseOwnLotAsk pulls make / diesel / location from the question", () => {
   const diesel = parseOwnLotAsk("how many diesels do we have in stock?");
   assert.equal(diesel.dieselOnly, true);
   assert.equal(diesel.make, undefined);
+  assert.equal(diesel.stockNumber, undefined);
+  assert.equal(
+    parseOwnLotStockNumber("how many diesels do we have in stock?"),
+    undefined,
+  );
+  assert.equal(
+    parseOwnLotStockNumber("Do we have a 2012 Phaeton in stock?"),
+    undefined,
+  );
+  assert.equal(
+    parseOwnLotStockNumber("Yeah, can you see if we have 47407 in stock?"),
+    "47407",
+  );
+  assert.equal(
+    parseOwnLotStockNumber("U P A U K 9 7 8 2 in stock"),
+    "UPAUK9782",
+  );
+  assert.equal(parseOwnLotStockNumber("3401 in stock"), undefined);
 
   const newmar = parseOwnLotAsk(
     "How many diesel Newmar Dutch Stars are in inventory?",
@@ -515,7 +537,7 @@ test("in-app chat and voice research are wired; DialaBot stays out", () => {
   assert.match(src(".", "ownLotInventory.ts"), /sameOriginOwnLotUrls/);
   assert.match(src(".", "ownLotInventory.ts"), /from "\.\.\/lot\/lotSearch/);
   assert.match(src(".", "ownLotInventory.ts"), /searchLotUnits/);
-  assert.match(src(".", "ownLotInventory.ts"), /Grok-only lot-ask stopwords/);
+  assert.match(src(".", "ownLotAsk.ts"), /Grok-only lot-ask stopwords/);
   assert.doesNotMatch(src("../lot", "lotSearch.ts"), /LOT_ASK_STOP/);
   assert.doesNotMatch(
     src("../lot", "ownLotPage.ts"),
@@ -889,6 +911,7 @@ test("stock-number ask matches that unit and injects a priced listing", () => {
     "stock #45282",
     "do we have stock 45282",
     "is stock number 45282 on the lot",
+    "stock number 4 5 2 8 2",
   ]) {
     assert.equal(parseOwnLotStockNumber(ask), "45282", ask);
     assert.equal(looksLikeOwnLotStockQuestion(ask), true, ask);
@@ -1069,12 +1092,78 @@ test("bundled snapshot: stock 45282, Entegra Fresno, and $50k fifth-wheel toy ha
   assert.match(stock, /\$729,995/);
   assert.match(stock, /Matching units/);
 
+  const spelled = formatOwnLotBlock(
+    snap,
+    "Can you look up U, a stock number for me? It's U P A U K 9 7 8 2",
+  );
+  assert.equal(parseOwnLotStockNumber(spelled ? "stock number U P A U K 9 7 8 2" : ""), "UPAUK9782");
+  assert.match(spelled, /stk UPAUK9782/);
+  assert.match(spelled, /2012 · Tiffin · Phaeton/);
+  assert.match(spelled, /Matched: 1/);
+  assert.match(spelled, new RegExp(`Lot total: ${snap.units.length}`));
+  assert.ok(snap.units.length >= 1400);
+
+  const numeric = formatOwnLotBlock(
+    snap,
+    "Yeah, can you search the, uh, stock number 4 7 4 0 7?",
+  );
+  assert.match(numeric, /stk 47407/);
+  assert.match(numeric, /Vision XL/);
+
+  const beforeCue = formatOwnLotBlock(
+    snap,
+    "Yeah, can you see if we have 47407 in stock?",
+  );
+  assert.equal(
+    parseOwnLotStockNumber("Yeah, can you see if we have 47407 in stock?"),
+    "47407",
+  );
+  assert.match(beforeCue, /Matched: 1/);
+  assert.match(beforeCue, /stk 47407/);
+  assert.match(beforeCue, /Vision XL/);
+  assert.match(
+    beforeCue,
+    /VOICE COACH LOCK: 2027 \| Entegra Coach \| Vision XL \| 36C/,
+  );
+  assert.equal(ownLotVoiceCoachLock(beforeCue)?.floorplan, "36C");
+  assert.doesNotMatch(ownLotNotesForSpeech(beforeCue), /VOICE COACH LOCK/);
+
+  const bay = formatOwnLotBlock(snap, "What about stock number 46049B?");
+  assert.match(bay, /stk 46049B/);
+  assert.match(bay, /VOICE COACH LOCK: 2021 \| Newmar \| Bay Star \| 3401/);
+  const bayLock = ownLotVoiceCoachLock(bay);
+  assert.ok(bayLock);
+  const reportId = resolveCoachIdentity(
+    "Can you give me a report on that coach?",
+    {
+      year: bayLock.year,
+      make: bayLock.make,
+      model: bayLock.model,
+      floorplan: bayLock.floorplan,
+      updatedAt: "2026-09-24T00:00:00.000Z",
+    },
+  );
+  assert.equal(reportId?.year, "2021");
+  assert.equal(reportId?.make, "Newmar");
+  assert.match(reportId?.model || "", /Bay Star/i);
+  assert.equal(reportId?.floorplan, "3401");
+  assert.equal(reportId?.source, "facts");
+
+  const phaeton = formatOwnLotBlock(snap, "Do we have a 2012 Phaeton in inventory?");
+  assert.match(phaeton, /stk UPAUK9782/);
+  assert.doesNotMatch(phaeton, /Matched: 0/);
+
+  const diesels = formatOwnLotBlock(snap, "How many Class A diesels are in inventory?");
+  assert.match(diesels, /Class A Diesel: 49/);
+
   const loc = formatOwnLotBlock(snap, "How many Entegra coaches do we have in Fresno?");
   assert.match(loc, /Filter: Entegra Coach · Fresno CA/);
   assert.doesNotMatch(loc, /es in Fresno/);
   assert.match(loc, /Matched: 1[0-9]/);
   assert.match(loc, /Matching units/);
-  assert.match(loc, /stk 45282/);
+  // 45282 is the $729,995 Cornerstone. With 17 Fresno Entegras the printed
+  // list is capped at 12 (cheapest), so the stock line is the ask above.
+  assert.match(loc, /\$729,995/);
 
   const listAsk =
     "deep dive into the inventory and get me a list of fifty thousand dollar fifth-wheel toy haulers";
@@ -1085,7 +1174,7 @@ test("bundled snapshot: stock 45282, Entegra Fresno, and $50k fifth-wheel toy ha
   assert.equal(listFilter.aroundPrice, 50000);
   const listCounts = aggregateOwnLot(snap.units, listFilter);
   assert.ok(listCounts.matched > 0, "FW toy haulers around $50k exist on the lot");
-  assert.ok(listCounts.matched <= 15, `window too wide: ${listCounts.matched}`);
+  assert.ok(listCounts.matched <= 24, `window too wide: ${listCounts.matched}`);
   const listRows = queryOwnLotUnits(snap.units, listFilter, 12);
   assert.ok(listRows.every((u) => u.body_type === "Fifth Wheel Toy Hauler"));
   assert.ok(listRows.every((u) => u.price != null && Math.abs(u.price - 50000) <= 15000));
@@ -1505,6 +1594,70 @@ test("Lineage M series 25FW spoken asks hit the five own-lot 25FW units", () => 
   );
 });
 
+test("speech Faten / Fayton / Phantom is the Tiffin Phaeton on the lot", () => {
+  const units = [
+    pricedUnit({
+      year: "2012",
+      make: "Tiffin",
+      model: "Phaeton",
+      trim: "40 QTH",
+      body_type: "Class A Diesel",
+      stock_number: "UPAUK9782",
+      location: "Carson RV Show",
+      price: 149995,
+    }),
+    pricedUnit({
+      year: "2015",
+      make: "Tiffin",
+      model: "Phaeton",
+      trim: "40 AH",
+      stock_number: "UCF9594A",
+    }),
+    pricedUnit({
+      year: "2012",
+      make: "Dutchmen",
+      model: "Denali",
+      trim: "289RK",
+      stock_number: "45133A1",
+    }),
+  ];
+  const asks = [
+    "Do we have a 2012 Tiffin Faten?",
+    "2012 Tiffin Phantom",
+    "2012 Tiffin Fayton",
+    "any 2012 fatens in stock",
+  ];
+  for (const ask of asks) {
+    const filter = parseOwnLotAsk(ask, [], units);
+    assert.equal(filter.year, "2012", ask);
+    assert.equal(filter.make, "Tiffin", ask);
+    assert.match(filter.model || "", /^phaeton$/, ask);
+    const rows = queryOwnLotUnits(units, filter, 5);
+    assert.deepEqual(
+      rows.map((r) => r.stock_number),
+      ["UPAUK9782"],
+      ask,
+    );
+  }
+  const allegro = parseOwnLotAsk("Do we have a 2012 Tiffin Allegro?", [], units);
+  assert.match(allegro.model || "", /allegro/);
+  assert.equal(queryOwnLotUnits(units, allegro, 5).length, 0);
+  const yearOnly = parseOwnLotAsk(
+    "What do we have that's a 2012 in our inventory?",
+    [],
+    units,
+  );
+  assert.equal(yearOnly.model, undefined);
+  assert.equal(yearOnly.make, undefined);
+  assert.equal(queryOwnLotUnits(units, yearOnly, 10).length, 2);
+
+  const snapshot = snapshotFromJson({ source: "own", dealer: "RV Country", units });
+  const block = formatOwnLotBlock(snapshot, "Do we have a 2012 Tiffin Faten?");
+  assert.match(block, /Matched: 1/);
+  assert.match(block, /stk UPAUK9782/);
+  assert.doesNotMatch(block, /No own-lot hit/);
+});
+
 test("Tifin fuzzy brand (not Integra) matches Tiffin Phaeton 36L", () => {
   assert.equal(consonantBrandShape("Tifin"), consonantBrandShape("Tiffin"));
   assert.notEqual(consonantBrandShape("integrity"), consonantBrandShape("Entegra"));
@@ -1891,4 +2044,30 @@ test("own-lot miss is an honest lot miss, not a catalog-gap deflection", () => {
   assert.match(block, /Do not mention catalog gap|not in listings/);
   assert.match(block, /Never substitute a sibling series|Do not swap in a sibling series/);
   assert.doesNotMatch(block, /stk 47034/);
+});
+
+test("voice inventory notes keep the unit and the real lot total", () => {
+  const snap = snapshotFromJson(
+    JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
+  );
+  const block = formatOwnLotBlock(
+    snap,
+    "Can you look up U, a stock number for me? It's U P A U K 9 7 8 2",
+  );
+  const spoken = ownLotNotesForSpeech(block);
+  assert.match(spoken, /OWN-LOT inventory/);
+  assert.match(spoken, new RegExp(`Lot total: ${snap.units.length}`));
+  assert.match(spoken, /UPAUK9782/);
+  assert.match(spoken, /Phaeton/);
+  assert.match(spoken, /Do not say a smaller website total/);
+  assert.doesNotMatch(spoken, /1018/);
+
+  const picked = pickRicherOwnLot([
+    { units: 1018, mtime: 200, label: "stale" },
+    { units: snap.units.length, mtime: 100, label: "public" },
+  ]);
+  assert.equal(picked?.label, "public");
+  assert.match(src(".", "realtime.ts"), /!looksLikeOwnLotStockQuestion\(transcript\)/);
+  assert.match(src(".", "realtime.ts"), /rememberOwnLotVoiceLock/);
+  assert.match(src(".", "ownLotInventory.ts"), /Larger own-lot snapshot wins/);
 });

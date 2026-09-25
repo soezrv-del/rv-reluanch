@@ -64,16 +64,23 @@ test("Dutch Star report after Ventana mounts Dutch Star sheet — not Ventana", 
   assert.doesNotMatch(identity!.model, /ventana/i);
   assert.equal(identity!.year, "2022");
   assert.equal(identity!.floorplan, "4369");
-  assert.equal(shouldMountDeskSheet(q, identity), true);
+  assert.equal(shouldMountDeskSheet(q, identity), false);
+  assert.equal(
+    resolveDeskSheet({ query: q, identity, specs: null }),
+    null,
+    "look up is an overview, not a full report",
+  );
 
-  const mounted = withDeskSheetSpeechRule("CATALOG", q, identity);
+  const reportQ = "full report on the 2022 Dutch Star 4369";
+  assert.equal(shouldMountDeskSheet(reportQ, identity), true);
+  const mounted = withDeskSheetSpeechRule("CATALOG", reportQ, identity);
   assert.match(mounted, /DESK SPEC SHEET MOUNTED/);
   assert.match(mounted, /Dutch Star/i);
   assert.doesNotMatch(mounted, /DESK SPEC SHEET NOT MOUNTED/);
   assert.doesNotMatch(mounted, /Ventana/i);
 
   const sheet = resolveDeskSheet({
-    query: q,
+    query: reportQ,
     identity,
     specs: null,
   });
@@ -111,7 +118,7 @@ test("speech may claim the desk only when the sheet is mounted", () => {
   assert.equal(shouldMountDeskSheet("hi", null), false);
 });
 
-test("spoken desk claim still mounts a sheet so speech never lies", () => {
+test("spoken desk claim does not mount a sheet the user did not request", () => {
   const id = resolveCoachIdentity("2018 Newmar Ventana 4369", null, "");
   assert.ok(id);
   const sheet = resolveDeskSheet({
@@ -120,8 +127,7 @@ test("spoken desk claim still mounts a sheet so speech never lies", () => {
     specs: null,
     spokenText: "Spec sheet is on the desk.",
   });
-  assert.ok(sheet);
-  assert.match(sheet!.title, /Ventana/);
+  assert.equal(sheet, null);
 });
 
 test("2019 Grand Design Solitude 310GK mounts desk sheet with floorplan; towable motors N/A", () => {
@@ -276,23 +282,32 @@ test("live FAIL: What series are in Grand Design's motorized Lineage lineup? doe
   assert.match(speech, /DESK SPEC SHEET NOT MOUNTED/);
 });
 
-test("explicit spec report / GVWR still mounts the desk after lineup gate", () => {
+test("a single spec is an overview — only a full report mounts the desk", () => {
+  const gvwr = "American Dream 42Q GVWR";
+  assert.equal(looksLikeDeskSheetAsk(gvwr), false);
+  assert.equal(looksLikeDeskSheetAsk("2012 Tiffin Phaeton"), false);
+  assert.equal(
+    looksLikeDeskSheetAsk("tell me everything about the 2012 Tiffin Phaeton"),
+    true,
+  );
+  assert.equal(looksLikeDeskSheetAsk("specs on the 2012 Tiffin Phaeton"), true);
+  const gvwrId = resolveCoachIdentity(gvwr, null, "");
+  assert.ok(gvwrId);
+  assert.equal(shouldMountDeskSheet(gvwr, gvwrId), false);
+  assert.equal(resolveDeskSheet({ query: gvwr, identity: gvwrId, specs: null }), null);
+
   const full =
     "full specs report for 2021 American Coach American Dream 42Q — GVWR UVW fuel tanks engine";
-  const short = "American Dream 42Q GVWR";
-  for (const q of [full, short]) {
-    assert.equal(looksLikeLineupOverviewAsk(q), false, q);
-    assert.equal(looksLikeDeskSheetAsk(q), true, q);
-    const identity = resolveCoachIdentity(q, null, "");
-    assert.ok(identity, q);
-    assert.match(identity!.make, /american coach/i);
-    assert.match(identity!.model, /american dream/i);
-    assert.equal(shouldMountDeskSheet(q, identity), true, q);
-    const sheet = resolveDeskSheet({ query: q, identity, specs: null });
-    assert.ok(sheet, q);
-    assert.match(sheet!.title, /American Dream/i);
-    assert.ok(sheet!.rows.some((r) => r.label === "GVWR"));
-  }
+  assert.equal(looksLikeDeskSheetAsk(full), true);
+  const identity = resolveCoachIdentity(full, null, "");
+  assert.ok(identity);
+  assert.match(identity!.make, /american coach/i);
+  assert.match(identity!.model, /american dream/i);
+  assert.equal(shouldMountDeskSheet(full, identity), true);
+  const sheet = resolveDeskSheet({ query: full, identity, specs: null });
+  assert.ok(sheet);
+  assert.match(sheet!.title, /American Dream/i);
+  assert.ok(sheet!.rows.some((r) => r.label === "GVWR"));
 });
 
 test("2022 Lineage 31ZW GVWR / full report mounts the desk sheet", () => {
@@ -321,13 +336,13 @@ test("non-spec follow-up after a locked coach does not remount the desk", () => 
   assert.equal(resolveDeskSheet({ query: q, identity: lock, specs: null }), null);
 });
 
-test("misspelled but clear spec ask still mounts the desk", () => {
+test("misspelled but clear spec report still mounts the desk", () => {
   const q = "whats the gvwr on the 2022 lineage 31zw";
-  assert.equal(looksLikeDeskSheetAsk(q), true);
+  assert.equal(looksLikeDeskSheetAsk(q), false);
   const identity = resolveCoachIdentity(q, null, "");
   assert.ok(identity);
-  assert.equal(shouldMountDeskSheet(q, identity), true);
-  assert.ok(resolveDeskSheet({ query: q, identity, specs: null }));
+  assert.equal(shouldMountDeskSheet(q, identity), false);
+  assert.equal(resolveDeskSheet({ query: q, identity, specs: null }), null);
 
   const spek = "2022 lineage 31zw spek report";
   assert.equal(looksLikeDeskSheetAsk(spek), true);
@@ -751,25 +766,12 @@ test("torque-to-weight follow-up remounts Lineage 31ZW — not Heartland Torque"
   assert.equal(identity!.floorplan, "31ZW");
   assert.doesNotMatch(identity!.make, /heartland/i);
   assert.doesNotMatch(identity!.model, /^torque$/i);
-  assert.equal(shouldMountDeskSheet(q, identity), true);
-
-  const sheet = resolveDeskSheet({
-    query: q,
-    identity,
-    specs: null,
-  });
-  assert.ok(sheet);
-  assert.equal(sheet!.make, "Grand Design");
-  assert.match(sheet!.model, /lineage series f/i);
-  assert.equal(sheet!.floorplan, "31ZW");
-  assert.doesNotMatch(sheet!.title, /Heartland/i);
-  assert.doesNotMatch(sheet!.title, /\bTorque\b/);
-  assert.doesNotMatch(sheet!.presenceNote, /Heartland/i);
-
-  const mounted = withDeskSheetSpeechRule("CATALOG", q, identity);
-  assert.match(mounted, /DESK SPEC SHEET MOUNTED/);
-  assert.match(mounted, /Lineage Series F/i);
-  assert.doesNotMatch(mounted, /Heartland/i);
+  assert.equal(shouldMountDeskSheet(q, identity), false);
+  assert.equal(
+    resolveDeskSheet({ query: q, identity, specs: null }),
+    null,
+    "adding a field to a report is not a new full report",
+  );
 });
 
 test("desk remount after Lineage history is not Grand Design Dutch Star", () => {

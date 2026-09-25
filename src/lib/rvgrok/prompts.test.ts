@@ -43,42 +43,28 @@ test("chat, agent, and voice share David's lean standing core", () => {
 test("lean core is David's verbatim standing prompt", () => {
   assert.match(
     RV_GROK_LEAN_CORE,
-    /You are RV Grok, the ultimate sales assistant for RV salesmen/,
+    /the assistant in an experienced RV salesman's pocket/,
   );
-  assert.match(RV_GROK_LEAN_CORE, /Empty beats invented/);
-  assert.match(RV_GROK_LEAN_CORE, /Never guess a number/);
+  assert.match(RV_GROK_LEAN_CORE, /You are RV Grok/);
+  assert.match(RV_GROK_LEAN_CORE, /You also answer the rest of what he asks/);
   assert.match(
     RV_GROK_LEAN_CORE,
-    /Never invent market values, listing averages, ratings, or torque-to-weight/,
+    /Never invent GVWR, UVW, payload, hitch weight, price, tank sizes, or a recall/,
   );
-  assert.match(
-    RV_GROK_LEAN_CORE,
-    /When asked about a coach, answer the question directly\. Deliver the full CARFAX-style report — Overview \/ Chassis & powertrain \/ Weights & capacity \/ Layout & amenities — only on an explicit report ask: 'full report,' 'tell me everything about,' 'specs on,' or 'CARFAX on\.' A bare coach mention or a single-field question gets a short answer only\./,
-  );
-  assert.match(
-    RV_GROK_LEAN_CORE,
-    /offer all five extras at once/,
-  );
-  assert.match(
-    RV_GROK_LEAN_CORE,
-    /ratings, market value, video, NHTSA safety, maintenance/,
-  );
-  assert.match(RV_GROK_LEAN_CORE, /open only that card/);
-  assert.match(RV_GROK_LEAN_CORE, /no invented coaches/);
-  assert.match(RV_GROK_LEAN_CORE, /start clean; do not pretend to remember/);
-  assert.match(RV_GROK_LEAN_CORE, /welcome them back by first name once/);
-  assert.match(RV_GROK_LEAN_CORE, /I'm RvGrok/);
-  assert.match(RV_GROK_LEAN_CORE, /do not narrate GAP or Confirm brochure as filler/);
-  assert.match(RV_GROK_LEAN_CORE, /Torque means hill power/);
+  assert.match(RV_GROK_LEAN_CORE, /the catalog pin in this turn wins/);
+  assert.match(RV_GROK_LEAN_CORE, /not a menu/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /Pin every verified field/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /sales-floor wingman/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /CARFAX-style coach report/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /only occasionally/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /If Matched is 0/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /on our lot/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /say that last part again/);
 });
 
 test("voice rules stay in the lean core; DialaBot stays out", () => {
-  assert.match(RV_GROK_LEAN_CORE, /Voice:/);
-  assert.match(RV_GROK_LEAN_CORE, /Front-load the answer/);
+  assert.match(RV_GROK_LEAN_CORE, /one natural follow-up/);
+  assert.match(RV_GROK_LEAN_CORE, /No hype/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /rotating acknowledgment/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /never the same phrase twice in a row/);
 
@@ -93,14 +79,20 @@ test("voice rules stay in the lean core; DialaBot stays out", () => {
   for (const [label, text] of [
     ["prompts.ts", src("prompts.ts")],
     ["voice.ts", voice],
-    ["speechPolicy.ts", src("speechPolicy.ts")],
     ["liveVoice.ts", src("liveVoice.ts")],
   ] as const) {
     assert.doesNotMatch(text, /DialaBot/, `${label} does not mention DialaBot`);
     assert.doesNotMatch(text, /OWN-LOT STOCK/, `${label} has no own-lot stock block`);
-    assert.doesNotMatch(text, /OWN-LOT INVENTORY/, `${label} has no own-lot inventory block`);
+    assert.doesNotMatch(text, /OWN-LOT INVENTORY/, `${label} has no pasted own-lot card`);
     assert.doesNotMatch(text, /ACCURACY FIRST/, `${label} dropped ACCURACY FIRST`);
   }
+  const speechFile = src("speechPolicy.ts");
+  assert.doesNotMatch(speechFile, /DialaBot/);
+  assert.doesNotMatch(speechFile, /OWN-LOT STOCK/);
+  assert.doesNotMatch(speechFile, /ACCURACY FIRST/);
+  assert.doesNotMatch(speechFile, /If Matched is 0/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /on our lot/);
+  assert.doesNotMatch(speechFile, /OWN-LOT INVENTORY/);
 });
 
 test("standing prompts dropped the lecture stack", () => {
@@ -232,7 +224,7 @@ test("sales floor: no scope-narrow or general-assistant refuse", () => {
     );
   }
 
-  assert.match(RV_GROK_LEAN_CORE, /Answer any of it, anytime/);
+  assert.match(RV_GROK_LEAN_CORE, /Do not turn a factory, brand, or campground question into a year-make-model demand/);
   assert.match(src("voiceWeb.ts"), /give me one second/);
   assert.doesNotMatch(src("voiceWeb.ts"), /Let me check that/);
 });

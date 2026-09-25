@@ -472,9 +472,9 @@ export function deskSheetNeedsLiveHeal(sheet: {
 }
 
 /** Mark engine-owned GAP rows as searching. No-op when nothing will be browsed. */
-export function markDeskGapsSearching<T extends DeskSheetPayload>(
-  sheet: T | null,
-): T | null {
+export function markDeskGapsSearching(
+  sheet: DeskSheetPayload | null,
+): DeskSheetPayload | null {
   if (!sheet || !deskSheetNeedsLiveHeal(sheet)) return sheet;
   return {
     ...sheet,
@@ -508,19 +508,20 @@ export function resolveDeskSheet(opts: {
     opts.chatSpecBlock || spokenText || "",
   );
   if (!identity) return null;
-  // Lineup / series-in-lineup stays chat-only. Chat SoT + "on the desk"
-  // speech must not remount a YEAR/FLOORPLAN GAP card.
+  // A code the catalog does not list is not a floorplan. Ask which one.
+  // Do not mount a sheet titled with the unrecognized token.
+  if (inspectCatalogPresence(identity).status === "floorplan-gap") {
+    return null;
+  }
+  // Lineup / series-in-lineup stays chat-only. Saying "on the desk"
+  // does not mount a card the user did not ask for.
   if (
     looksLikeLineupOverviewAsk(query) &&
     !shouldMountDeskSheet(query, identity)
   ) {
     return null;
   }
-  if (
-    opts.mountForVoiceReport ||
-    shouldMountDeskSheet(query, identity) ||
-    claimsDeskSpecSheet(spokenText || "")
-  ) {
+  if (opts.mountForVoiceReport || shouldMountDeskSheet(query, identity)) {
     return buildDeskSheetPayload(
       identity,
       specs,

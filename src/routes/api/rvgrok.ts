@@ -15,18 +15,37 @@ import {
   appendGrounding,
   askNamesCoachIdentity,
   buildChatGrounding,
+  lookupGroundedSpecs,
 } from "@/lib/rvgrok/grounding";
-import { parseCoachFromText } from "@/lib/rvgrok/parseCoach";
 import {
-  formatOwnLotBlock,
-  loadOwnLotSnapshot,
-  looksLikeOwnLotStockQuestion,
-  shouldSkipWebForOwnLot,
-} from "@/lib/rvgrok/ownLotInventory";
+  looksLikeCoachCompareQuestion,
+  parseCoachFromText,
+} from "@/lib/rvgrok/parseCoach";
 import {
   formatCoachReportTimeoutReply,
   looksLikeCoachReportAsk,
 } from "@/lib/rvgrok/coachReport";
+import {
+  looksLikeMarketValueQuestion,
+  looksLikeSpecQuestion,
+} from "@/lib/rvgrok/webIntent";
+import {
+  formatOwnLotBlock,
+  loadOwnLotSnapshot,
+  looksLikeOwnLotStockQuestion,
+  ownLotIsUnavailable,
+  parseOwnLotAsk,
+  queryOwnLotUnits,
+  shouldSkipWebForOwnLot,
+} from "@/lib/rvgrok/ownLotInventory";
+import { looksLikeDeskSheetAsk } from "@/lib/rvgrok/deskSheetPolicy";
+import {
+  formatChatSpecMissReply,
+  getCoachFacts,
+  isUnpinnedWeightReply,
+  isWeightSpecAsk,
+  type CoachFactsToolResult,
+} from "@/lib/rvgrok/chatSpecBlock";
 import {
   researchTimeoutMs,
   WEB_SEARCH_MAX_TOOL_CALLS,
@@ -41,6 +60,16 @@ import {
   parseGenerateImagePromptFromContent,
   wantsGeneratedImage,
 } from "@/lib/rvgrok/imageGen";
+import {
+  parseTalkMode,
+  requiredToolForAsk,
+  type TalkMode,
+} from "@/lib/rvgrok/chatTools";
+import { evaluateTowMatch } from "@/lib/tow/towMatch";
+import { computeLoan } from "@/lib/rv/rvCal";
+import { parseCreditBand, type CreditBand } from "@/lib/rv/lendersCatalog";
+import { resolveLendersResponse } from "@/lib/rv/rateApiLenders";
+import { givesTradeInTaxCredit, lookupTaxByZip } from "@/lib/rv/zipTax";
 
 /**
  * POST /api/rvgrok
@@ -70,6 +99,8 @@ type Body = {
   catalogContext?: string;
   wantsWebFallback?: boolean;
   visitorFirstName?: string;
+  /** Lot is the default. Coach only when the UI says so. */
+  mode?: TalkMode;
 };
 
 function sseHeaders(extra?: Record<string, string>) {
@@ -78,6 +109,24 @@ function sseHeaders(extra?: Record<string, string>) {
     "Cache-Control": "no-cache, no-transform",
     Connection: "keep-alive",
     ...extra,
+  };
+}
+
+function answerSampling(text: string): { temperature: number; max_tokens: number } {
+  const specTurn =
+    isWeightSpecAsk(text) ||
+    looksLikeSpecQuestion(text) ||
+    looksLikeMarketValueQuestion(text) ||
+    looksLikeCoachReportAsk(text) ||
+    /\b(recalls?|nhtsa)\b/i.test(text);
+  const long =
+    looksLikeCoachReportAsk(text) ||
+    looksLikeDeskSheetAsk(text) ||
+    looksLikeCoachCompareQuestion(text) ||
+    /\b(go deep|deep cut|walkthrough)\b/i.test(text);
+  return {
+    temperature: specTurn ? 0.2 : 0.7,
+    max_tokens: long ? 1800 : 700,
   };
 }
 
@@ -101,9 +150,11 @@ function withGrounding(
     visitorFirstName?: string;
     visitorMemory?: string;
     standingLessons?: string;
+    mode?: TalkMode;
   },
 ) {
   let out = injectStandingLessons(system, opts?.standingLessons);
+  out = `${out}\n\nMODE: ${parseTalkMode(opts?.mode)}`;
   out = appendGrounding(out, opts?.catalogContext);
   const personal = visitorPersonalizationBlock(opts?.visitorFirstName);
   if (personal) out = `${out}\n\n${personal}`;
@@ -127,6 +178,17 @@ function workerBase() {
     process.env.VITE_CLOUDFLARE_WORKER_URL ||
     DEFAULT_WORKER_URL
   ).replace(/\/$/, "");
+}
+
+function floorplanAlreadyInThread(text: string): string {
+  let floorplan = "";
+  for (const chunk of text.split(/\n+/)) {
+    const parsed = parseCoachFromText(chunk);
+    if (!parsed.floorplan) continue;
+    if (!parsed.make && !parsed.model) floorplan = parsed.floorplan;
+    else if (parsed.model) floorplan = parsed.floorplan;
+  }
+  return floorplan;
 }
 
 function contentToPlain(content: string | ContentPart[]): string {
@@ -194,55 +256,6 @@ function jsonToSseStream(opts: {
         for (const ev of opts.prelude) send(ev);
       }
 
-      if (opts.agentMode && opts.upstream !== "xai-direct") {
-        send({ type: "agent_start", model: opts.model });
-        const steps = [
-          {
-            step: 1,
-            tool: "analyze_photo",
-            input: { summary: "Reading attached image" },
-            result: JSON.stringify({ status: "parsed" }),
-          },
-          {
-            step: 2,
-            tool: "analyze_requirements",
-            input: { summary: "Parsing search criteria" },
-            result: JSON.stringify({ status: "parsed" }),
-          },
-          {
-            step: 3,
-            tool: "search_rv_models",
-            input: { source: "market" },
-            result: JSON.stringify({ status: "searched" }),
-          },
-          {
-            step: 4,
-            tool: "get_model_details",
-            input: { source: "specs" },
-            result: JSON.stringify({ status: "loaded" }),
-          },
-        ];
-        for (const s of steps) {
-          send({
-            type: "step",
-            step: s.step,
-            tool: s.tool,
-            input: s.input,
-            status: "running",
-          });
-          await sleep(180);
-          send({
-            type: "step",
-            step: s.step,
-            tool: s.tool,
-            input: s.input,
-            result: s.result,
-            status: "done",
-          });
-          await sleep(60);
-        }
-      }
-
       const text =
         opts.content ||
         "No response content returned from the AI upstream.";
@@ -283,12 +296,340 @@ type ChatCompletionMessage = {
   tool_calls?: ToolCall[];
 };
 
+const toolFn = (
+  name: string,
+  description: string,
+  properties: Record<string, unknown>,
+  required: string[] = [],
+) => ({
+  type: "function" as const,
+  function: {
+    name,
+    description,
+    parameters: { type: "object", properties, required },
+  },
+});
+
+const XAI_CHAT_TOOLS = [
+  GENERATE_IMAGE_TOOL,
+  toolFn(
+    "get_coach_facts",
+    "Catalog lock for a year, make, model, and floorplan. Specs and weights. Does not check recalls.",
+    {
+      year: { type: "string" },
+      make: { type: "string" },
+      model: { type: "string" },
+      floorplan: { type: "string" },
+    },
+  ),
+  toolFn(
+    "check_recalls",
+    "NHTSA campaigns for a year, make, and model.",
+    {
+      year: { type: "string" },
+      make: { type: "string" },
+      model: { type: "string" },
+    },
+    ["year", "make", "model"],
+  ),
+  toolFn(
+    "search_listings",
+    "Live asking prices for a year, make, model, and ZIP.",
+    {
+      year: { type: "string" },
+      make: { type: "string" },
+      model: { type: "string" },
+      zip: { type: "string" },
+      radius: { type: "string" },
+    },
+    ["make", "model", "zip"],
+  ),
+  toolFn(
+    "estimate_payment",
+    "Payment estimate from price, ZIP, term, and credit band. An estimate, not a loan offer.",
+    {
+      price: { type: "number" },
+      zip: { type: "string" },
+      term_months: { type: "number" },
+      credit: { type: "string" },
+      down_payment: { type: "number" },
+    },
+    ["price"],
+  ),
+  toolFn(
+    "check_tow",
+    "Truck max tow, payload, and hitch against trailer GVWR. Does not invent a missing rating.",
+    {
+      trailer_gvwr_lb: { type: "number" },
+      truck_max_tow_lb: { type: "number" },
+      truck_payload_lb: { type: "number" },
+      truck_gcwr_lb: { type: "number" },
+      hitch_lb: { type: "number" },
+      rv_type: { type: "string" },
+      bed: { type: "string" },
+    },
+  ),
+  toolFn(
+    "get_own_lot",
+    "RV Country lot snapshot. Only for an explicit stock ask or a stock number.",
+    { query: { type: "string" } },
+  ),
+];
+
+function toolNum(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const n = Number(value.replace(/[$,\s]/g, ""));
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+function toolStr(value: unknown): string {
+  return typeof value === "string"
+    ? value.trim()
+    : value == null
+      ? ""
+      : String(value).trim();
+}
+
+function coachArgs(args: Record<string, unknown>, userText: string) {
+  const hinted = [
+    toolStr(args.year),
+    toolStr(args.make),
+    toolStr(args.model),
+    toolStr(args.floorplan),
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const parsed = parseCoachFromText(`${hinted} ${userText}`.trim());
+  return {
+    year: toolStr(args.year) || parsed.year,
+    make: toolStr(args.make) || parsed.make,
+    model: toolStr(args.model) || parsed.model,
+    floorplan: toolStr(args.floorplan) || parsed.floorplan,
+  };
+}
+
+async function fetchOwnJson(
+  requestOrigin: string | undefined,
+  path: string,
+  params: Record<string, string>,
+): Promise<Record<string, unknown>> {
+  const origin = (requestOrigin || "").replace(/\/$/, "");
+  if (!origin) return { ok: false, error: "request origin missing" };
+  const url = new URL(path, origin);
+  for (const [key, value] of Object.entries(params)) {
+    if (value) url.searchParams.set(key, value);
+  }
+  try {
+    const resp = await fetch(url, { signal: AbortSignal.timeout(20_000) });
+    const body = (await resp.json().catch(() => null)) as unknown;
+    if (!resp.ok) {
+      const err =
+        body && typeof body === "object" && "error" in body
+          ? String((body as { error?: unknown }).error || "")
+          : "";
+      return { ok: false, error: err || `${path} failed`, status: resp.status };
+    }
+    if (!body || typeof body !== "object") {
+      return { ok: false, error: `${path} returned no JSON` };
+    }
+    return { ok: true, ...(body as Record<string, unknown>) };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : `${path} failed`,
+    };
+  }
+}
+
+async function runRegisteredTool(
+  name: string,
+  args: Record<string, unknown>,
+  ctx: { userText: string; requestOrigin?: string },
+): Promise<Record<string, unknown>> {
+  if (name === "get_coach_facts") {
+    const id = coachArgs(args, ctx.userText);
+    return getCoachFacts(id);
+  }
+
+  if (name === "check_recalls") {
+    const id = coachArgs(args, ctx.userText);
+    if (!/^\d{4}$/.test(id.year) || !id.make || !id.model) {
+      return {
+        ok: false,
+        error: "year, make, and model required",
+        missing: ["year", "make", "model"].filter(
+          (k) => !id[k as "year" | "make" | "model"],
+        ),
+      };
+    }
+    return fetchOwnJson(ctx.requestOrigin, "/api/nhtsa/recalls", {
+      year: id.year,
+      make: id.make,
+      model: id.model,
+    });
+  }
+
+  if (name === "search_listings") {
+    const id = coachArgs(args, ctx.userText);
+    const zip = toolStr(args.zip).replace(/\D/g, "").slice(0, 5);
+    if (!id.make || !id.model || !zip) {
+      return {
+        ok: false,
+        error: "make, model, and zip required",
+        missing: [
+          !id.make ? "make" : "",
+          !id.model ? "model" : "",
+          !zip ? "zip" : "",
+        ].filter(Boolean),
+      };
+    }
+    return fetchOwnJson(ctx.requestOrigin, "/api/marketcheck/search", {
+      year: id.year,
+      make: id.make,
+      model: id.model,
+      zip,
+      radius: toolStr(args.radius),
+    });
+  }
+
+  if (name === "estimate_payment") {
+    const price = toolNum(args.price);
+    if (price == null || price <= 0) {
+      return { ok: false, estimate: false, missing: ["price"], error: "price required" };
+    }
+    const term = toolNum(args.term_months) ?? 240;
+    const down = toolNum(args.down_payment) ?? 0;
+    const credit = parseCreditBand(toolStr(args.credit) || null) as CreditBand;
+    const zip = toolStr(args.zip);
+    const tax = zip ? lookupTaxByZip(zip) : null;
+    const lenders = await resolveLendersResponse({
+      amount: price,
+      termMonths: term,
+      credit,
+      zip: zip || undefined,
+    });
+    const quote =
+      lenders.lenders.find((row) => row.eligible) ?? lenders.lenders[0] ?? null;
+    const apr = quote?.estimatedApr ?? 0;
+    const loan = computeLoan({
+      price,
+      downPayment: down,
+      apr,
+      termMonths: term,
+      taxRate: tax?.taxRate ?? 0,
+      registrationFees: tax?.registrationFees ?? 0,
+      applyTradeInTaxCredit: tax ? givesTradeInTaxCredit(tax.abbr) : true,
+    });
+    return {
+      ok: true,
+      estimate: true,
+      not_a_loan_offer: true,
+      price,
+      down_payment: down,
+      term_months: term,
+      term_assumed: toolNum(args.term_months) == null,
+      credit,
+      monthly_usd: Math.round(loan.monthlyPayment),
+      amount_financed: Math.round(loan.amountFinanced),
+      tax_amount: loan.taxAmount,
+      tax_rate: tax?.taxRate ?? null,
+      tax_state: tax?.abbr ?? null,
+      tax_unverified: !tax,
+      apr,
+      apr_source: lenders.source,
+      lender: quote?.name ?? null,
+    };
+  }
+
+  if (name === "check_tow") {
+    const gvwr = toolNum(args.trailer_gvwr_lb);
+    const maxTow = toolNum(args.truck_max_tow_lb);
+    const payload = toolNum(args.truck_payload_lb);
+    const missing = [
+      gvwr == null || gvwr <= 0 ? "gvwr" : "",
+      maxTow == null || maxTow <= 0 ? "max_tow" : "",
+      payload == null || payload <= 0 ? "payload" : "",
+    ].filter(Boolean);
+    if (missing.length) return { ok: false, missing };
+    const gcwr = toolNum(args.truck_gcwr_lb);
+    const verdict = evaluateTowMatch({
+      hasVehicle: true,
+      rvType: toolStr(args.rv_type) || "Travel Trailer",
+      gvwrLbs: gvwr!,
+      hitchLbs: toolNum(args.hitch_lb) ?? undefined,
+      maxTow: maxTow!,
+      payload: payload!,
+      gcwr: gcwr != null && gcwr > 0 ? gcwr : 0,
+      bed: toolStr(args.bed) || undefined,
+    });
+    return {
+      ok: true,
+      tow_ok: verdict.towOk,
+      hitch_ok: verdict.hitchOk,
+      hitch_skipped: verdict.hitchSkipped,
+      gcwr_ok: verdict.gcwrOk,
+      gcwr_skipped: verdict.gcwrSkipped,
+      overall_ok: verdict.overallOk,
+      hitch_lb: verdict.hitchLoad,
+      hitch_kind: verdict.hitchKind,
+      hitch_estimated: verdict.hitchEstimated,
+      checks: verdict.checks.map((c) => ({
+        id: c.id,
+        level: c.level,
+        title: c.title,
+      })),
+    };
+  }
+
+  if (name === "get_own_lot") {
+    const snapshot = await loadOwnLotSnapshot({ requestOrigin: ctx.requestOrigin });
+    if (!snapshot.ok || ownLotIsUnavailable(snapshot)) {
+      return {
+        ok: false,
+        error: snapshot.reason || "lot snapshot unavailable",
+      };
+    }
+    const query = toolStr(args.query) || ctx.userText;
+    const filter = parseOwnLotAsk(
+      query,
+      snapshot.units.map((u) => u.location),
+      snapshot.units,
+    );
+    const rows = queryOwnLotUnits(snapshot.units, filter, 8);
+    return {
+      ok: true,
+      source: "own",
+      dealer: snapshot.dealer || "RV Country",
+      lot_total: snapshot.units.length,
+      matched: rows.length,
+      units: rows.map((u) => ({
+        year: u.year,
+        make: u.make,
+        model: u.model,
+        trim: u.trim,
+        stock_number: u.stock_number,
+        price: u.price,
+        location: u.location,
+        body_type: u.body_type,
+      })),
+    };
+  }
+
+  return { ok: false, error: `unknown tool ${name}` };
+}
+
 async function runXaiWithTools(opts: {
   apiKey: string;
   model: string;
   agentMode: boolean;
   messages: ChatMessage[];
   forceImageTool: boolean;
+  requiredTool: string | null;
+  userText: string;
+  requestOrigin?: string;
 }): Promise<Response | null> {
   const working: Array<Record<string, unknown>> = opts.messages.map((m) => ({
     role: m.role,
@@ -298,8 +639,17 @@ async function runXaiWithTools(opts: {
   let stepNo = 0;
   let lastContent = "";
   let imageCount = 0;
+  console.info(
+    `[rvgrok] tool-loop ${opts.model} ${opts.requiredTool || "auto"}`,
+  );
 
   for (let round = 0; round < 3; round++) {
+    const forced =
+      round === 0 && imageCount === 0
+        ? opts.forceImageTool
+          ? "generate_image"
+          : opts.requiredTool
+        : null;
     const resp = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -309,16 +659,13 @@ async function runXaiWithTools(opts: {
       body: JSON.stringify({
         model: opts.model,
         messages: working,
-        tools: [GENERATE_IMAGE_TOOL],
+        tools: XAI_CHAT_TOOLS,
         tool_choice:
-          opts.forceImageTool && round === 0 && imageCount === 0
-            ? {
-                type: "function",
-                function: { name: "generate_image" },
-              }
+          forced === "generate_image"
+            ? { type: "function", function: { name: "generate_image" } }
             : "auto",
         stream: false,
-        temperature: 0.2,
+        ...answerSampling(opts.userText),
       }),
       signal: AbortSignal.timeout(60_000),
     });
@@ -355,6 +702,20 @@ async function runXaiWithTools(opts: {
         ];
       }
     }
+    if (
+      !toolCalls.length &&
+      round === 0 &&
+      forced &&
+      forced !== "generate_image"
+    ) {
+      toolCalls = [
+        {
+          id: `call-required-${round}`,
+          type: "function",
+          function: { name: forced, arguments: "{}" },
+        },
+      ];
+    }
     if (toolCalls.length) {
       working.push({
         role: "assistant",
@@ -363,15 +724,17 @@ async function runXaiWithTools(opts: {
       });
       for (const call of toolCalls) {
         const name = call.function?.name || "";
-        let args: { prompt?: string } = {};
+        let args: Record<string, unknown> = {};
         try {
-          args = JSON.parse(call.function?.arguments || "{}") as {
-            prompt?: string;
-          };
+          args = JSON.parse(call.function?.arguments || "{}") as Record<
+            string,
+            unknown
+          >;
         } catch {
           args = {};
         }
         stepNo += 1;
+        console.info(`[rvgrok] tool ${name}`, JSON.stringify(args).slice(0, 240));
         if (name === "generate_image") {
           if (imageCount >= 2) {
             working.push({
@@ -416,22 +779,39 @@ async function runXaiWithTools(opts: {
               img.ok
                 ? {
                     ok: true,
-                    url: img.format === "b64"
-                      ? "data-url (already shown to the user)"
-                      : img.url,
+                    url:
+                      img.format === "b64"
+                        ? "data-url (already shown to the user)"
+                        : img.url,
                     format: img.format,
                   }
                 : img,
             ),
           });
         } else {
+          prelude.push({
+            type: "step",
+            step: stepNo,
+            tool: name,
+            input: args,
+            status: "running",
+          });
+          const result = await runRegisteredTool(name, args, {
+            userText: opts.userText,
+            requestOrigin: opts.requestOrigin,
+          });
+          prelude.push({
+            type: "step",
+            step: stepNo,
+            tool: name,
+            input: args,
+            result: JSON.stringify(result),
+            status: "done",
+          });
           working.push({
             role: "tool",
             tool_call_id: call.id,
-            content: JSON.stringify({
-              ok: false,
-              error: `unknown tool ${name}`,
-            }),
+            content: JSON.stringify(result),
           });
         }
       }
@@ -455,40 +835,6 @@ async function runXaiWithTools(opts: {
   });
 }
 
-/**
- * Text turns stream xAI tokens as OpenAI SSE
- * (`choices[0].delta.content`, then `data: [DONE]`).
- * Image generation stays on the non-stream tool loop.
- */
-async function openXaiTokenStream(opts: {
-  apiKey: string;
-  model: string;
-  agentMode: boolean;
-  messages: ChatMessage[];
-}): Promise<Response | null> {
-  const resp = await fetch("https://api.x.ai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${opts.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: opts.model,
-      messages: opts.messages,
-      stream: true,
-      temperature: 0.2,
-    }),
-    signal: AbortSignal.timeout(60_000),
-  });
-  if (!resp.ok || !resp.body) return null;
-  return new Response(resp.body, {
-    headers: sseHeaders({
-      "X-Model-Used": opts.agentMode ? `${opts.model} · Agent` : opts.model,
-      "X-Upstream": "xai-direct",
-    }),
-  });
-}
-
 async function tryXaiDirect(
   messages: ChatMessage[],
   agentMode: boolean,
@@ -499,6 +845,8 @@ async function tryXaiDirect(
   visitorFirstName?: string,
   visitorMemory?: string,
   standingLessons?: string,
+  mode?: TalkMode,
+  requestOrigin?: string,
 ): Promise<Response | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return null;
@@ -507,6 +855,7 @@ async function tryXaiDirect(
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
   const forceImageTool = wantsGeneratedImage(lastPlain);
+  const requiredTool = forceImageTool ? null : requiredToolForAsk(lastPlain);
   const MODELS = vision
     ? ["grok-4.7", "grok-4.6", "grok-4.5", "grok-4-latest", "grok-2-vision-1212", "grok-3"]
     : ["grok-4.7", "grok-4.6", "grok-4-latest", "grok-4.5", "grok-3"];
@@ -527,6 +876,7 @@ async function tryXaiDirect(
       visitorFirstName,
       visitorMemory,
       standingLessons,
+      mode,
     },
   );
   const fullMessages: ChatMessage[] = [
@@ -536,21 +886,15 @@ async function tryXaiDirect(
 
   for (const model of MODELS) {
     try {
-      if (!forceImageTool) {
-        const streamed = await openXaiTokenStream({
-          apiKey,
-          model,
-          agentMode,
-          messages: fullMessages,
-        });
-        if (streamed) return streamed;
-      }
       const result = await runXaiWithTools({
         apiKey,
         model,
         agentMode,
         messages: fullMessages,
         forceImageTool,
+        requiredTool,
+        userText: lastPlain,
+        requestOrigin,
       });
       if (result) return result;
     } catch {
@@ -574,6 +918,7 @@ async function tryCloudflareWorker(
   visitorFirstName?: string,
   visitorMemory?: string,
   standingLessons?: string,
+  mode?: TalkMode,
 ): Promise<Response | null> {
   const base = workerBase();
   const candidates = agentMode
@@ -605,6 +950,7 @@ async function tryCloudflareWorker(
                   visitorFirstName,
                   visitorMemory,
                   standingLessons,
+                  mode,
                 },
               ),
             },
@@ -733,6 +1079,7 @@ export const Route = createFileRoute("/api/rvgrok")({
         }
 
         const agentMode = Boolean(body.agentMode);
+        const talkMode = parseTalkMode(body.mode);
         const feedbackContext = body.feedbackContext;
         const visitorFirstName =
           typeof body.visitorFirstName === "string"
@@ -761,16 +1108,110 @@ export const Route = createFileRoute("/api/rvgrok")({
         // catalog lock is injected so notes cannot invent a "not in catalog"
         // story. If this turn names a different coach, do not keep a stale
         // client Lineage (etc.) lock from a previous Facts / session coach.
+        const priorUserText = messages
+          .filter((m) => m.role === "user")
+          .map((m) => contentToPlain(m.content))
+          .join("\n");
         const serverGrounded = buildChatGrounding({
           query: lastPlain,
+          extraText: priorUserText,
           agentMode,
         });
+        const threadFloorplan = floorplanAlreadyInThread(priorUserText);
+        if (
+          serverGrounded.identity &&
+          !serverGrounded.identity.floorplan &&
+          threadFloorplan
+        ) {
+          serverGrounded.identity = {
+            ...serverGrounded.identity,
+            floorplan: threadFloorplan,
+            source: "mixed",
+          };
+        }
         const lastNamesCoach = askNamesCoachIdentity(
           parseCoachFromText(lastPlain),
         );
         const catalogContext = lastNamesCoach
           ? serverGrounded.block || ""
           : serverGrounded.block || body.catalogContext || "";
+
+        const specWeightAsk = isWeightSpecAsk(lastPlain);
+        if (
+          specWeightAsk &&
+          serverGrounded.identity?.make &&
+          serverGrounded.identity.model
+        ) {
+          const tool = await runRegisteredTool(
+            "get_coach_facts",
+            {
+              year: serverGrounded.identity.year,
+              make: serverGrounded.identity.make,
+              model: serverGrounded.identity.model,
+              floorplan: serverGrounded.identity.floorplan,
+            },
+            { userText: priorUserText || lastPlain },
+          );
+          const reply = formatChatSpecMissReply({
+            query: lastPlain,
+            year: serverGrounded.identity.year,
+            make: serverGrounded.identity.make,
+            model: serverGrounded.identity.model,
+            floorplan:
+              serverGrounded.identity.floorplan ||
+              (typeof tool.floorplan === "string" ? tool.floorplan : ""),
+            tool: tool as CoachFactsToolResult,
+          });
+          if (reply && !isUnpinnedWeightReply(reply)) {
+            return finish(
+              jsonToSseStream({
+                content: reply,
+                model: "catalog-pin",
+                agentMode,
+                upstream: "coach-facts",
+              }),
+            );
+          }
+          if (reply && serverGrounded.identity?.floorplan) {
+            const researched = await executeWebResearch({
+              apiKey: process.env.XAI_API_KEY,
+              query: lastPlain.slice(0, 400),
+              catalogBlock: catalogContext,
+              timeoutMs: researchTimeoutMs("chat", lastPlain),
+              profile: "chat",
+              skipGate: true,
+              requestOrigin: (() => {
+                try {
+                  return new URL(request.url).origin;
+                } catch {
+                  return "";
+                }
+              })(),
+              maxAttempts: WEB_SEARCH_MAX_TOOL_CALLS,
+              researchProvider:
+                (await getResearchProviderOverride()) ?? undefined,
+              researchOrder: (await getResearchOrderOverride()) ?? undefined,
+              identity: serverGrounded.identity,
+            });
+            const researchedReply = formatChatSpecMissReply({
+              query: lastPlain,
+              year: serverGrounded.identity.year,
+              make: serverGrounded.identity.make,
+              model: serverGrounded.identity.model,
+              floorplan: serverGrounded.identity.floorplan,
+              tool: tool as CoachFactsToolResult,
+              researchNotes: researched.ok ? researched.notes : "",
+            });
+            return finish(
+              jsonToSseStream({
+                content: researchedReply || reply,
+                model: "web-research",
+                agentMode,
+                upstream: "web-research",
+              }),
+            );
+          }
+        }
 
         let requestOrigin = "";
         try {
@@ -813,7 +1254,7 @@ export const Route = createFileRoute("/api/rvgrok")({
               (await getResearchOrderOverride()) ?? undefined,
             identity: serverGrounded.identity,
           });
-          const reportText = looksLikeCoachReportAsk(lastPlain)
+          const reportText = looksLikeDeskSheetAsk(lastPlain)
             ? formatCoachReportTimeoutReply({
                 notes: researched.ok ? researched.notes : "",
                 catalogBlock: catalogContext,
@@ -850,6 +1291,8 @@ export const Route = createFileRoute("/api/rvgrok")({
           visitorFirstName,
           visitorMemory,
           standingLessons,
+          talkMode,
+          requestOrigin,
         );
         if (fromXai) return finish(fromXai);
         const fromWorker = await tryCloudflareWorker(
@@ -862,6 +1305,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           visitorFirstName,
           visitorMemory,
           standingLessons,
+          talkMode,
         );
         if (fromWorker) return finish(fromWorker);
 

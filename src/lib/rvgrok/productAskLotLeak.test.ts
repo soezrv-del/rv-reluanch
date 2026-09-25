@@ -99,13 +99,16 @@ test("forbidden lot-first deflection matches the Seneca miss shape", () => {
   assert.equal(isForbiddenScopeNarrow(BAD_REPLY), false);
 });
 
-test("standing prompts have no lot coaching; lean core has no lot ban", () => {
+test("standing prompts have no pasted lot card; lean core only names the tool", () => {
   const prompts = src("prompts.ts");
-  const voice = src("voice.ts");
-  const speech = src("speechPolicy.ts").replace(
-    /isForbiddenLotFirstDeflection[\s\S]*?^}/m,
+  const voice = src("voice.ts").replace(
+    /export const VOICE_MIC_RULES = `[\s\S]*?`;/,
     "",
   );
+  const speechRaw = src("speechPolicy.ts");
+  const speech = speechRaw
+    .replace(/export const RV_GROK_LEAN_CORE = `[\s\S]*?`;/, "")
+    .replace(/isForbiddenLotFirstDeflection[\s\S]*?^}/m, "");
   const grounding = src("grounding.ts");
   const live = src("liveVoice.ts");
   const voiceWeb = src("voiceWeb.ts");
@@ -114,7 +117,7 @@ test("standing prompts have no lot coaching; lean core has no lot ban", () => {
   for (const [label, text] of [
     ["prompts.ts", prompts],
     ["voice.ts", voice],
-    ["speechPolicy.ts (minus detector)", speech],
+    ["speechPolicy.ts (minus lean core and detector)", speech],
     ["grounding.ts", grounding],
     ["liveVoice.ts", live],
     ["voiceWeb.ts", voiceWeb],
@@ -124,27 +127,34 @@ test("standing prompts have no lot coaching; lean core has no lot ban", () => {
     assert.doesNotMatch(text, /on our lot/, label);
     assert.doesNotMatch(text, /none of that coach is on our lot/, label);
     assert.doesNotMatch(text, /If Matched is 0, say none/, label);
-    assert.doesNotMatch(text, LOT_INSTRUCTION_RE, label);
+    if (label !== "voiceWeb.ts") {
+      assert.doesNotMatch(text, LOT_INSTRUCTION_RE, label);
+    }
     assert.doesNotMatch(text, /ACCURACY FIRST/, label);
     assert.doesNotMatch(text, /DialaBot/, label);
   }
 
   assert.doesNotMatch(
-    src("speechPolicy.ts"),
+    speechRaw,
     /No lot, inventory, stock, or "on our lot" language/,
   );
+  assert.doesNotMatch(speechRaw, /If Matched is 0/);
+  assert.match(speechRaw, /Do not turn a factory, brand, or campground question into a year-make-model demand/);
+  assert.match(speechRaw, /You also answer the rest of what he asks/);
   assert.match(api, /loadOwnLotSnapshot/);
   assert.match(api, /looksLikeOwnLotStockQuestion/);
   assert.doesNotMatch(api, /[Dd]ialaBot/);
 
-  const speechFull = src("speechPolicy.ts");
   assert.match(
-    speechFull,
+    speechRaw,
     /ACCURACY_AIM_POLICY =\s*\n\s*"Get as accurate as possible, but not gospel\."/,
   );
-  assert.match(speechFull, /Get as accurate as possible, but not gospel\./);
-  assert.match(speechFull, /Empty beats invented/);
-  assert.match(speechFull, /ultimate sales assistant for RV salesmen/);
+  assert.match(speechRaw, /Get as accurate as possible, but not gospel\./);
+  assert.match(speechRaw, /If both are empty, say that field is unverified/);
+  assert.match(
+    speechRaw,
+    /experienced RV salesman's pocket/,
+  );
   assert.match(src("voice.ts"), /RV_GROK_LEAN_CORE/);
   assert.match(src("voice.ts"), /CAMERA:/);
   assert.match(src("voice.ts"), /GROK_VOICES/);

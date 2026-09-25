@@ -52,13 +52,19 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.equal(session.audio.output.format.rate, PCM_SAMPLE_RATE);
   assert.equal(session.audio.output.speed, 1.25);
   assert.match(session.instructions, /native web_search/);
-  assert.match(session.instructions, /ultimate sales assistant for RV salesmen/);
-  assert.match(session.instructions, /Empty beats invented/);
+  assert.match(
+    session.instructions,
+    /experienced RV salesman's pocket/,
+  );
+  assert.match(session.instructions, /the catalog pin in this turn wins/);
   assert.match(session.instructions, /give me one second/);
   assert.match(session.instructions, /only when research is actually running/);
   assert.doesNotMatch(session.instructions, /LIVE VOICE ACKNOWLEDGMENT/);
   assert.doesNotMatch(session.instructions, /rotating acknowledgment/);
   assert.match(session.instructions, /I'm RvGrok/);
+  const introAt = session.instructions.indexOf("Never repeat this intro.");
+  const micAt = session.instructions.indexOf("say that last part again");
+  assert.ok(micAt > introAt, "mic rules stay at the end of the voice prompt");
   assert.doesNotMatch(session.instructions, /STANDING LESSONS \(desk SoT\)/);
   assert.doesNotMatch(session.instructions, /sales-floor wingman/);
   assert.doesNotMatch(session.instructions, /CARFAX-style coach report/);
@@ -130,7 +136,7 @@ test("standing lessons no longer stack the retired desk bullets", () => {
   assert.doesNotMatch(defaultSession.instructions, /STANDING LESSONS \(desk SoT\)/);
   assert.doesNotMatch(defaultSession.instructions, /Sparse name use/);
   assert.doesNotMatch(defaultSession.instructions, /CARFAX-style/);
-  assert.match(defaultSession.instructions, /ultimate sales assistant/);
+  assert.match(defaultSession.instructions, /experienced RV salesman's pocket/);
 });
 
 test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => {

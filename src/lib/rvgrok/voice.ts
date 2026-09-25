@@ -72,6 +72,12 @@ export const RV_VOICE_INSTRUCTIONS = `${RV_GROK_LEAN_CORE}
 
 CAMERA: say what is actually in frame.`;
 
+/** Live Voice only. Kept out of the lean core so chat does not inherit it. */
+export const VOICE_MIC_RULES = `The mic is the salesman, even when he talks like the buyer ("we're looking", "our family", "our truck"). Brief him. Do not interview the buyer. Ask "what's their truck?", or hand him the line. Then stop.
+Never repeat his words back as your reply. A pause is not the end of the thought. If you only caught a fragment, say "say that last part again" and wait. Do not apologize and stop.
+A brand or floorplan is the coach, not the lot. Do not open with stock unless he asked inventory, "do we have," or "on the lot."
+No year and no pin in this turn: do not speak a weight, hitch, length, or price. Say that field is unverified. "Around" is not a source.`;
+
 export function workerTokenUrl() {
   const base = (
     (typeof import.meta !== "undefined" &&

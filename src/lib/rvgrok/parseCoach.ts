@@ -87,64 +87,6 @@ export function normalizeFloorplanToken(token: string): string {
 }
 
 /**
- * Live Voice digit runs: "4 0 4 4" / "40 44" → 4044.
- * Does not collapse a spoken year ("20 16" stays split).
- */
-export function collapseSpokenFloorplanDigits(text: string): string {
-  if (!text) return "";
-  let out = text.replace(/\b(\d)\s+(\d)\s+(\d)\s+(\d)\b/g, "$1$2$3$4");
-  out = out.replace(/\b(\d{2})\s+(\d{2})\b/g, (full, a: string, b: string) => {
-    const joined = `${a}${b}`;
-    if (isModelYearToken(joined)) return full;
-    return joined;
-  });
-  return out;
-}
-
-/**
- * Year glued to a brand / series ("2016Thor", "2012Tiffin", "2016Ventana").
- * Never a floorplan.
- */
-export function isYearBrandFloorplanToken(token: string): boolean {
-  const t = (token || "").replace(/\s+/g, "");
-  const m = t.match(/^(19[89]\d|20[0-2]\d)([A-Za-z]{2,})$/);
-  if (!m?.[2]) return false;
-  const suffix = m[2].toLowerCase();
-  for (const brand of COACH_BRANDS) {
-    const compact = brand.replace(/\s+/g, "").toLowerCase();
-    const first = (brand.split(/\s+/)[0] || "").toLowerCase();
-    if (suffix === compact || suffix === first) return true;
-    if (compact.startsWith(suffix) && suffix.length >= 4) return true;
-  }
-  return YEAR_BRAND_SERIES_SUFFIX.has(suffix);
-}
-
-const YEAR_BRAND_SERIES_SUFFIX = new Set([
-  "ventana",
-  "phaeton",
-  "anthem",
-  "allegro",
-  "dutch",
-  "bay",
-  "mountain",
-  "london",
-  "canyon",
-  "lineage",
-  "vision",
-  "sunseeker",
-  "conquest",
-  "hideout",
-  "xplor",
-  "transcend",
-  "cornerstone",
-  "odyssey",
-  "aspire",
-  "reata",
-  "openroad",
-  "open",
-]);
-
-/**
  * $50k / 80k asking-price leftovers. 310GK / 25TK stay floorplans.
  * Only a bare thousands suffix (digits + k) is skipped — not GK / TK codes.
  */
@@ -154,16 +96,19 @@ export function isBudgetThousandsToken(token: string): boolean {
 
 export function extractFloorplanToken(text: string): string {
   if (!text) return "";
-  const collapsed = collapseSpokenFloorplanDigits(text);
-  // "2550DS LE" is one plan code. Do not glue English or a year+brand
-  // ("2016 Thor", "2016 Ventana", "4369 spec").
+  // "2550DS LE" is one plan code. Do not glue English ("4369 spec").
   const notAPlanSuffix =
-    /^(ford|chevy|gas|diesel|the|and|for|with|have|has|gal|lbs|ft|spec|specs|report|reports|full|brochure|tanks?|fresh|gray|grey|black|water|class|coach|model|what|are|on|of|this|that|mbs|thor|tiffin|newmar|jayco|winnebago|entegra|fleetwood|keystone|heartland|coachmen|airstream|brinkley|alliance|ventana|phaeton|anthem|allegro|dutch|lineage|vision|sunseeker)$/i;
-  const source = collapsed.replace(
+    /^(ford|chevy|gas|diesel|the|and|for|with|have|has|in|our|at|any|show|inventory|gal|lbs|ft|spec|specs|report|reports|full|brochure|tanks?|fresh|gray|grey|black|water|class|coach|model|what|are|on|of|this|that|mbs|ph[ae]{2}tons?|fayt[eo]ns?|faetons?|fatens?|paytons?|paitons?|phantoms?)$/i;
+  const source = text.replace(
     /\b(\d{4})\s*([A-Za-z]{1,6})(?:\s+([A-Za-z]{1,6}))?\b/g,
     (full, digits: string, a: string, b?: string) => {
-      if (isModelYearToken(digits)) return full;
-      if (notAPlanSuffix.test(a) || isYearBrandFloorplanToken(`${digits}${a}`)) {
+      if (notAPlanSuffix.test(a)) return full;
+      const brandWord = a.toLowerCase();
+      if (
+        COACH_BRANDS.some((brand) =>
+          brand.toLowerCase().split(/\s+/).includes(brandWord),
+        )
+      ) {
         return full;
       }
       if (b && notAPlanSuffix.test(b)) return `${digits}${a}`;
@@ -174,15 +119,17 @@ export function extractFloorplanToken(text: string): string {
   for (const m of source.matchAll(re)) {
     let token = normalizeFloorplanToken(m[1] || "");
     if (!token) continue;
-    if (isBudgetThousandsToken(token)) continue;
-    if (isYearBrandFloorplanToken(token) || isModelYearToken(token)) continue;
+    if (
+      isBudgetThousandsToken(token) &&
+      /\$|\b(?:thousand|asking|price|priced|cost)\b/i.test(text)
+    ) {
+      continue;
+    }
     const suffix = token.replace(/^\d+/, "");
     if (suffix && notAPlanSuffix.test(suffix)) {
       token = token.slice(0, token.length - suffix.length);
     }
-    if (!token || isYearBrandFloorplanToken(token) || isModelYearToken(token)) {
-      continue;
-    }
+    if (!token) continue;
     // Spoken "31W Z" — trailing single letter belongs on the code (31WZ).
     // Do not glue "Ford" onto an already-complete suffix (2550DSLE Ford).
     const after = source.slice((m.index ?? 0) + m[0].length);
@@ -796,8 +743,7 @@ export function matchCatalogModelName(
     return rawModel.trim();
   }
 
-  let best = rawModel.trim();
-  let bestLen = -1;
+  const contained: string[] = [];
   let skippedLongerSeries = false;
   for (const name of list) {
     const nn = normName(name);
@@ -809,14 +755,11 @@ export function matchCatalogModelName(
       skippedLongerSeries = true;
       continue;
     }
-    if (nn.includes(n) || n.includes(nn)) {
-      if (nn.length > bestLen) {
-        best = name;
-        bestLen = nn.length;
-      }
-    }
+    if (nn.includes(n) || n.includes(nn)) contained.push(name);
   }
-  if (bestLen >= 0) return best;
+  if (contained.length === 1) return contained[0]!;
+  // "Winds" is Four Winds, Windsport, and Majestic. Do not pick the longest.
+  if (contained.length > 1) return rawModel.trim();
   if (skippedLongerSeries) return rawModel.trim();
 
   return fuzzyMatchCatalogName(rawModel, list) || rawModel.trim();
@@ -917,7 +860,7 @@ function collectModelWords(after: string, floorplan: string): string {
  * ("M series 25FW", "Lineage M 25FW").
  */
 export function normalizeCoachAsk(text: string): NormalizedCoachAsk {
-  const raw = collapseSpokenFloorplanDigits(text || "");
+  const raw = text || "";
   const yearM = raw.match(/\b(19[89]\d|20[0-2]\d)\b/);
   const year = yearM?.[1] ?? "";
   const lower = raw.toLowerCase();

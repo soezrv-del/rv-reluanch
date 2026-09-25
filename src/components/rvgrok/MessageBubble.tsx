@@ -65,6 +65,7 @@ export function MessageBubble({
   onFeedback,
   suggestions,
   onSuggestion,
+  onFloorplanChoice,
 }: {
   message: Message;
   onSpeak?: (id: string, text: string) => void;
@@ -73,6 +74,7 @@ export function MessageBubble({
   onFeedback?: (messageId: string, payload: GrokFeedbackPayload) => void;
   suggestions?: FollowUpChip[];
   onSuggestion?: (prompt: string) => void;
+  onFloorplanChoice?: (code: string) => void;
 }) {
   const isUser = message.role === "user";
   const hasAgentSteps = !isUser && (message.agentSteps?.length ?? 0) > 0;
@@ -353,6 +355,25 @@ export function MessageBubble({
           </div>
         ) : null}
       </div>
+
+      {!isUser && message.floorplanChoices && message.floorplanChoices.length > 0 ? (
+        <div
+          data-rvgrok-floorplans=""
+          className="mt-1.5 flex flex-wrap gap-1.5 px-0.5"
+        >
+          {message.floorplanChoices.map((code) => (
+            <button
+              key={code}
+              type="button"
+              data-rvgrok-floorplan={code}
+              onClick={() => onFloorplanChoice?.(code)}
+              className="min-h-9 rounded-full border border-white/15 bg-white/10 px-3 text-[13px] font-semibold tabular-nums text-white"
+            >
+              {code}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {!isUser && suggestions && suggestions.length > 0 ? (
         <div

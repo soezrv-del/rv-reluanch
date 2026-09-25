@@ -33,7 +33,7 @@ export function getRVData(): Record<string, Record<string, RVSpec>> {
  */
 export function ensureCatalogLoaded(): Promise<CatalogModule> {
   if (loaded) return Promise.resolve(loaded);
-  pending ??= import("./rvData").then((m) => {
+  pending ??= import("./rvData.ts").then((m) => {
     loaded = { RV_DATA: m.RV_DATA, MAKES: m.MAKES };
     notify();
     return loaded;

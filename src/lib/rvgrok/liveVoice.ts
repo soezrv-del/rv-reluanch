@@ -22,7 +22,7 @@ import {
   voiceSessionIntroInstructions,
   visitorPersonalizationBlock,
 } from "./speechPolicy.ts";
-import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS } from "./voice.ts";
+import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_MIC_RULES } from "./voice.ts";
 
 export type LiveVoicePrewarm = {
   audioCtx: AudioContext | null;
@@ -188,7 +188,7 @@ export function buildRealtimeSessionUpdate(
       : standingLessons.trim();
   const core = injectStandingLessons(RV_VOICE_INSTRUCTIONS, lessons);
   const intro = sessionIntroLine(visitorFirstName);
-  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}This session has native web_search. Use it for coach facts the catalog does not already pin. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.`;
+  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search. Use it for coach facts the catalog does not already pin, not to override an injected lot snapshot. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}`;
   return {
     type: "session.update",
     session: {

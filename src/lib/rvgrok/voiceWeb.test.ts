@@ -11,6 +11,7 @@ import {
   looksLikeLiveResearchQuestion,
   needsWebFallback,
 } from "./webIntent.ts";
+import { looksLikeOwnLotStockQuestion } from "./ownLotAsk.ts";
 import {
   VOICE_WEB_SEARCH_MODELS,
   VOICE_WEB_SEARCH_TIMEOUT_MS,
@@ -419,6 +420,40 @@ test("generic asks and catalog compares do not speak a research hold", () => {
     assert.equal(decided.action, "research", q);
     if (decided.action === "research") assert.equal(decided.speakHold, false, q);
   }
+
+  const phaeton = "Do we have a 2012 Tiffin Phaeton?";
+  assert.equal(looksLikeOwnLotStockQuestion(phaeton), true);
+  assert.equal(needsWebFallback(null, phaeton), false);
+  const phaetonDecision = decideVoiceWebResearch({
+    transcript: phaeton,
+    specs: null,
+  });
+  assert.equal(phaetonDecision.action, "research");
+  if (phaetonDecision.action === "research") {
+    assert.equal(phaetonDecision.speakHold, false);
+  }
+  for (const q of [
+    "Can you see if we have a 2012 Tiffin Phaeton?",
+    "Do you see a 2012 Tiffin Phaeton?",
+    "See if we have a 2012 Tiffin Phaeton",
+    "Do you have a 2012 Tiffin Phaeton?",
+  ]) {
+    assert.equal(looksLikeOwnLotStockQuestion(q), true, q);
+    const decided = decideVoiceWebResearch({ transcript: q, specs: null });
+    assert.equal(decided.action, "research", q);
+    if (decided.action === "research") assert.equal(decided.speakHold, false, q);
+  }
+  assert.equal(
+    looksLikeOwnLotStockQuestion("2022 Newmar Dutch Star 4369"),
+    false,
+  );
+  assert.equal(
+    decideVoiceWebResearch({
+      transcript: "2022 Newmar Dutch Star 4369",
+      specs: null,
+    }).action,
+    "pass",
+  );
 
   assert.equal(shouldSpeakVoiceResearchHold(COMPARE_Q), false);
 });

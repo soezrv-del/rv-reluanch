@@ -9,6 +9,8 @@
 import type { DeskSheetPayload, DeskSheetRow } from "./deskSheet.ts";
 import { looksLikeDeskSheetAsk } from "./deskSheetPolicy.ts";
 import { looksLikeCoachReportAsk, stripSpokenSourceTags } from "./coachReport.ts";
+import { formatChatSpecMissReply, mappedWeightFields } from "./chatSpecBlock.ts";
+export { formatChatSpecMissReply };
 import {
   GROK_EXTRA_PROMPTS,
   VOICE_EXTRAS_OFFER_LINE,
@@ -16,9 +18,11 @@ import {
   type GrokExtraKind,
 } from "./grokExtras.ts";
 import {
+  looksLikeCompanyOrPlantAsk,
   looksLikeNamedCoachProductQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
+import { parseCoachFromText } from "./parseCoach.ts";
 
 export const VOICE_SPEC_ENGINE_INSTRUCTIONS =
   "Say exactly the SPEC ENGINE SCRIPT and then stop. Those numbers are the catalog and fallback chain for this turn. Do not add, replace, or estimate any spec from memory. Never speak a GVWR, UVW, CCC, fuel, fresh, gray, or black number unless that exact figure is in the script. If the script says a field is still missing or that you are checking live sources, say that and do not invent a number. Do not load NHTSA recalls, market value, videos, owner reviews, or a maintenance schedule. Those are on-screen prompts the user picks. Feature-to-benefit lines apply only to numbers in the script.";
@@ -68,9 +72,7 @@ function speakValue(value: string): string {
 }
 
 function askedLabels(query: string): string[] {
-  const labels: string[] = [];
-  if (/\b(uvw|dry\s+weight|unloaded)\b/i.test(query)) labels.push("UVW");
-  if (/\bgvwr\b/i.test(query)) labels.push("GVWR");
+  const labels: string[] = [...mappedWeightFields(query)];
   if (/\bccc\b|\bncc\b|\bpayload\b/i.test(query)) labels.push("CCC");
   if (/\bfuel\b/i.test(query)) labels.push("Fuel capacity");
   if (/\bfresh\b/i.test(query)) labels.push("Fresh");
@@ -117,7 +119,7 @@ function missingOnce(labels: string[]): string | null {
 }
 
 const LIVE_FIELD_RE =
-  /\b(gvwr|uvw|ccc|ncc|payload|fuel|fresh|gr[ae]y|black|dry\s+weight|unloaded)\b/i;
+  /\b(gvwr?|tvwr|gross\s+vehicle\s+weight|uvw|ccc|ncc|payload|fuel|fresh|gr[ae]y|black|dry\s+weight|unloaded)\b/i;
 
 /** "Why didn't you pull GVWR" / "why isn't the UVW there". */
 const META_FIELD_RE =
@@ -141,7 +143,17 @@ export function looksLikeExplicitVoiceReportAsk(text: string): boolean {
 export function looksLikeVoiceTellMeAboutAsk(text: string): boolean {
   const t = normalizeAskText(text || "").trim();
   if (!t || looksLikeExplicitVoiceReportAsk(t)) return false;
-  return /\btell me about\b/i.test(t);
+  if (looksLikeCompanyOrPlantAsk(t)) return false;
+  return /\b(?:tell me|know|learn|hear) about\b/i.test(t);
+}
+
+/** "The 35K" / "35K" after a series is already locked. Not a new coach name. */
+export function looksLikeFloorplanOnlyPick(text: string): boolean {
+  const t = normalizeAskText(text || "").trim();
+  if (!t || t.length > 32 || looksLikeExplicitVoiceReportAsk(t)) return false;
+  const parsed = parseCoachFromText(t);
+  if (!parsed.floorplan) return false;
+  return !parsed.year && !parsed.make && !parsed.model;
 }
 
 /**
@@ -233,6 +245,7 @@ export function classifyVoiceExtraPick(text: string): GrokExtraKind | null {
 export function looksLikeVoiceCoachOrSpecAsk(text: string): boolean {
   const t = text || "";
   if (!t.trim()) return false;
+  if (looksLikeCompanyOrPlantAsk(t)) return false;
   if (looksLikeDeskSheetAsk(t)) return true;
   if (looksLikeCoachReportAsk(t)) return true;
   if (looksLikeNamedCoachProductQuestion(t)) return true;
@@ -266,9 +279,9 @@ export function voiceExtraPromptLine(
 }
 
 /**
- * Exact words for a Live Voice spec turn. Empty / GAP stays a miss.
- * Does not invent a number the painted sheet does not contain.
- * `all` is the full report: every painted spec, no bundled extras line.
+ * Exact words for a Live Voice spec turn. A weight ask calls get_coach_facts
+ * (via formatChatSpecMissReply) before any "still missing" sentence.
+ * Extras only on an explicit full report.
  */
 export function formatVoiceSpecEngineSpeech(
   sheet: DeskSheetPayload | null,
@@ -299,6 +312,17 @@ export function formatVoiceSpecEngineSpeech(
     return stripSpokenSourceTags(lines.join(" "));
   }
   const asked = askedLabels(query);
+  const weightAsk = asked.some((label) => label === "GVWR" || label === "UVW");
+  if (weightAsk) {
+    const reply = formatChatSpecMissReply({
+      query,
+      year: sheet.year,
+      make: sheet.make,
+      model: sheet.model,
+      floorplan: sheet.floorplan,
+    });
+    if (reply) return stripSpokenSourceTags(reply);
+  }
   if (asked.length) {
     const missed: string[] = [];
     for (const label of asked) {
@@ -324,7 +348,6 @@ export function formatVoiceSpecEngineSpeech(
       }
     }
   }
-  lines.push(EXTRAS_OFFER);
   return stripSpokenSourceTags(lines.join(" "));
 }
 
@@ -343,8 +366,25 @@ export function formatVoiceQuickOverview(
   const line = coach
     ? `${coach}.`
     : "Catalog and the fallback chain both missed this coach. I won't guess a number.";
-  if (!opts?.offerExtras) return line;
+  if (!opts?.offerExtras) {
+    const clip = shortCoachClip(sheet);
+    return clip ? `${line} ${clip}` : line;
+  }
   return `${line} ${EXTRAS_OFFER}`;
+}
+
+/** Two locked facts. Not a report. */
+function shortCoachClip(sheet: DeskSheetPayload): string {
+  const bits: string[] = [];
+  for (const label of ["Engine", "Chassis"]) {
+    const row = sheet.rows.find(
+      (r) => r.label === label && !r.gap && r.value && r.value !== "N/A",
+    );
+    if (!row) continue;
+    bits.push(`${label} is ${row.value.replace(/\*$/, "").trim()}.`);
+    if (bits.length === 2) break;
+  }
+  return bits.join(" ");
 }
 
 /** Live Voice spec cards offer extras. Chat sheets stay keyword-gated. */

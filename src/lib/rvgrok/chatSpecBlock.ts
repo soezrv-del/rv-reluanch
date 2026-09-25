@@ -6,6 +6,9 @@
  * Source is the spoken/written Grok reply only.
  */
 
+import { lookupGroundedSpecs } from "./grounding.ts";
+import { parseCoachFromText } from "./parseCoach.ts";
+
 export type ChatSpecFigures = {
   rvClass?: string;
   engine?: string;
@@ -525,4 +528,247 @@ export function paintChatSpecOntoRows<T extends ChatPaintRow>(
     painted.push({ label, value: next, gap: false } as T);
   }
   return painted;
+}
+
+export type CoachFactsToolResult = {
+  ok: boolean;
+  year: string | null;
+  make: string | null;
+  model: string | null;
+  floorplan: string | null;
+  gvwr_lb: number | null;
+  uvw_lb: number | null;
+  engine: string | null;
+  engine_source: string | null;
+  horsepower: string | null;
+  torque: string | null;
+  chassis: string | null;
+  fuel: string | null;
+  class: string | null;
+  source: string;
+  equipment_recalls_checked: false;
+  error?: string;
+  missing?: string[];
+};
+
+/** Same payload the get_coach_facts tool returns. Call this before any miss line. */
+export function getCoachFacts(identity: {
+  year?: string;
+  make?: string;
+  model?: string;
+  floorplan?: string;
+}): CoachFactsToolResult {
+  const year = (identity.year || "").trim();
+  const make = (identity.make || "").trim();
+  const model = (identity.model || "").trim();
+  const floorplan = (identity.floorplan || "").trim();
+  if (!make && !model) {
+    return {
+      ok: false,
+      year: year || null,
+      make: null,
+      model: null,
+      floorplan: floorplan || null,
+      gvwr_lb: null,
+      uvw_lb: null,
+      engine: null,
+      engine_source: null,
+      horsepower: null,
+      torque: null,
+      chassis: null,
+      fuel: null,
+      class: null,
+      source: "unverified",
+      equipment_recalls_checked: false,
+      error: "make and model required",
+      missing: ["make", "model"],
+    };
+  }
+  const specs = lookupGroundedSpecs({
+    year,
+    make,
+    model,
+    floorplan,
+    source: "facts",
+  });
+  return {
+    ok: true,
+    year: year || null,
+    make: make || null,
+    model: model || null,
+    floorplan: floorplan || null,
+    gvwr_lb: specs.oemGvwrLbs,
+    uvw_lb: specs.oemUvwLbs,
+    engine: specs.engine.value,
+    engine_source: specs.engine.trust,
+    horsepower: specs.horsepower.value,
+    torque: specs.torque.value,
+    chassis: specs.chassis.value,
+    fuel: specs.fuelType.value,
+    class: specs.rvType.value,
+    source:
+      specs.oemGvwrLbs != null || specs.oemUvwLbs != null
+        ? "catalog_pin"
+        : specs.hasHardLock
+          ? "catalog_lock"
+          : "unverified",
+    equipment_recalls_checked: false,
+  };
+}
+
+function askedWeightLabels(query: string): Array<"GVWR" | "UVW"> {
+  return mappedWeightFields(query);
+}
+
+/** Spoken spec words → the field get_coach_facts should answer. */
+export function mappedWeightFields(query: string): Array<"GVWR" | "UVW"> {
+  const labels: Array<"GVWR" | "UVW"> = [];
+  if (/\b(?:uvw|dry\s+weight|unloaded)\b/i.test(query)) labels.push("UVW");
+  if (/\b(?:gvwr?|tvwr|gross\s+vehicle\s+weight)\b/i.test(query)) labels.push("GVWR");
+  return labels;
+}
+
+export function isWeightSpecAsk(text: string): boolean {
+  return mappedWeightFields(text).length > 0;
+}
+
+function pounds(lbs: number): string {
+  return Math.round(lbs).toLocaleString("en-US");
+}
+
+/** Last floorplan the salesman already named. Empty when the thread has none. */
+export function floorplanFromUserThread(text: string): string {
+  let floorplan = "";
+  for (const chunk of (text || "").split(/\n+/)) {
+    const parsed = parseCoachFromText(chunk);
+    if (!parsed.floorplan) continue;
+    if (!parsed.make && !parsed.model) floorplan = parsed.floorplan;
+    else if (parsed.model) floorplan = parsed.floorplan;
+  }
+  return floorplan;
+}
+
+/**
+ * Spec miss copy. get_coach_facts runs before any "still missing" sentence.
+ * A pinned field is spoken. Floorplan is requested only when the thread has none.
+ * No ratings / market / video / NHTSA / maintenance menu — that follows a full report.
+ */
+export function formatChatSpecMissReply(opts: {
+  query: string;
+  year?: string;
+  make?: string;
+  model?: string;
+  floorplan?: string;
+  tool?: CoachFactsToolResult | null;
+  /** Live WEB RESEARCH notes. Absent means the sidecar has not run. */
+  researchNotes?: string | null;
+}): string | null {
+  const floorplan = (opts.floorplan || opts.tool?.floorplan || "").trim();
+  const year = (opts.year || opts.tool?.year || "").trim();
+  const make = (opts.make || opts.tool?.make || "").trim();
+  const model = (opts.model || opts.tool?.model || "").trim();
+  const asked = askedWeightLabels(opts.query);
+  if (!asked.length || !year || !make || !model) return null;
+  const coach = [year, make, model, floorplan].filter(Boolean).join(" ");
+  if (!floorplan) return `${coach}. Which floorplan?`;
+
+  const tool =
+    opts.tool ??
+    getCoachFacts({ year, make, model, floorplan });
+  const specs = lookupGroundedSpecs({
+    year,
+    make,
+    model,
+    floorplan,
+    source: "facts",
+  });
+  const lines: string[] = [];
+  const missed: string[] = [];
+  for (const label of asked) {
+    const fromTool = label === "GVWR" ? tool.gvwr_lb : tool.uvw_lb;
+    const fromLookup = label === "GVWR" ? specs.oemGvwrLbs : specs.oemUvwLbs;
+    const lbs =
+      fromLookup != null && fromLookup > 0
+        ? fromLookup
+        : fromTool != null && fromTool > 0
+          ? fromTool
+          : null;
+    if (lbs == null) {
+      const fromNotes = brochureFigureFromNotes(opts.researchNotes, label);
+      if (fromNotes) {
+        lines.push(
+          brochureFigureSpeech({
+            label,
+            figure: fromNotes,
+            year,
+            model,
+          }),
+        );
+        continue;
+      }
+      missed.push(label);
+      continue;
+    }
+    const dry =
+      label === "UVW" && /\bdry\s+weight\b/i.test(opts.query) ? " dry weight" : "";
+    lines.push(`${label}${dry} is ${pounds(lbs)} pounds.`);
+  }
+  if (!lines.length && !missed.length) return null;
+  const coachName = [year, model, floorplan].filter(Boolean).join(" ");
+  const miss = missed
+    .map((label) => `${coachName} has no ${label} pin.`)
+    .join(" ");
+  return [coach ? `${coach}.` : "", ...lines, miss].filter(Boolean).join(" ");
+}
+
+/** True when the only answer is an empty pin and research has not filled it. */
+export function isUnpinnedWeightReply(reply: string | null): boolean {
+  if (!reply) return false;
+  return /has no [A-Z]+ pin\./.test(reply) && !/\bpounds\b/.test(reply);
+}
+
+function brochureFigureFromNotes(
+  notes: string | null | undefined,
+  label: "GVWR" | "UVW",
+): { lbs: number; notes: string } | null {
+  const raw = (notes || "").trim();
+  if (!raw) return null;
+  const word =
+    label === "GVWR" ? "gvwr|gross\\s+vehicle\\s+weight" : "uvw|dry\\s+weight|unloaded";
+  const num = "(\\d{1,3}(?:,\\d{3})+|\\d{4,6})";
+  const patterns = [
+    new RegExp(`(?:${word})[^\\d\\n]{0,32}${num}`, "i"),
+    new RegExp(`${num}\\s*(?:lb|lbs|pounds|#)?[^\\n]{0,32}(?:${word})`, "i"),
+  ];
+  for (const re of patterns) {
+    const match = raw.match(re);
+    if (!match) continue;
+    const lbs = Number(match[1].replace(/,/g, ""));
+    if (lbs >= 1000 && lbs <= 100000) return { lbs, notes: raw };
+  }
+  return null;
+}
+
+function brochureFigureSpeech(opts: {
+  label: "GVWR" | "UVW";
+  figure: { lbs: number; notes: string };
+  year: string;
+  model: string;
+}): string {
+  const notes = opts.figure.notes;
+  const freight = /\bfreightliner\b/i.test(notes);
+  const tag = /\btag[-\s]?axle\b/i.test(notes);
+  const chassis = freight && tag ? " Freightliner tag-axle." : freight ? " Freightliner." : "";
+  const brochure = notes.match(/\b(20\d{2}\s+[^.\n]{0,48}?brochure)\b/i);
+  const source = brochure
+    ? `the ${brochure[1].replace(/\s+/g, " ").trim()}`
+    : /\bbrochure\b/i.test(notes)
+      ? `the ${[opts.year, opts.model, "brochure"].filter(Boolean).join(" ")}`
+      : /\blisting\b/i.test(notes)
+        ? "a listing"
+        : "web research";
+  const kind = /\blisting\b/i.test(notes) && !/\bbrochure\b/i.test(notes)
+    ? "listing figure"
+    : "brochure figure";
+  return `${opts.label} is ${pounds(opts.figure.lbs)} pounds.${chassis} That's a ${kind}, not a catalog pin. From ${source}.`;
 }

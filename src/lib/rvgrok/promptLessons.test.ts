@@ -47,7 +47,10 @@ test("defaults are cleared so retired role bullets do not stack", () => {
   ]) {
     assert.equal(RETIRED_PROMPT_LESSON_IDS.has(id), true);
   }
-  assert.match(RV_GROK_LEAN_CORE, /ultimate sales assistant for RV salesmen/);
+  assert.match(
+    RV_GROK_LEAN_CORE,
+    /experienced RV salesman's pocket/,
+  );
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /sales-floor wingman/);
 });
 

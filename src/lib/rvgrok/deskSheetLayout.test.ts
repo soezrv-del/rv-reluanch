@@ -82,14 +82,14 @@ test("pending Live Voice desk sits after the thread, never as a header", () => {
   );
 });
 
-test("chat UI mounts the desk after the reply, not above the thread", () => {
+test("a full report stays on its reply, never as a thread footer", () => {
   const app = src("../../components/rvgrok/RvGrokApp.tsx");
   const bubble = src("../../components/rvgrok/MessageBubble.tsx");
 
   assert.match(app, /deskRevealAfterIndex/);
-  assert.match(app, /shouldShowPendingLiveDesk/);
   assert.match(app, /data-rvgrok-desk-after-reply/);
   assert.match(app, /DeskSpecSheet/);
+  assert.doesNotMatch(app, /pendingLiveSheet/);
   assert.doesNotMatch(
     app,
     /CARFAX desk is the written reply/,
@@ -99,22 +99,15 @@ test("chat UI mounts the desk after the reply, not above the thread", () => {
 
   const threadStart = app.indexOf("const thread =");
   const mapIdx = app.indexOf("messages.map", threadStart);
-  const afterReplyIdx = app.indexOf(
-    "i === deskAfterIdx && m.deskSheet ? deskAfterReply",
-    threadStart,
-  );
-  const pendingIdx = app.indexOf(
-    "pendingLiveSheet ? deskAfterReply",
-    threadStart,
-  );
+  const afterReplyIdx = app.indexOf("deskAfterReply", mapIdx);
   assert.ok(threadStart > 0 && mapIdx > threadStart, "thread still maps messages");
   assert.ok(
     afterReplyIdx > mapIdx,
-    "desk card must render after each relevant bubble, not as a thread header",
+    "desk card must render after the reply that asked, not as a thread header or footer",
   );
-  assert.ok(
-    pendingIdx > afterReplyIdx,
-    "Live Voice pending desk follows the thread, never precedes it",
+  assert.match(
+    app.slice(mapIdx, afterReplyIdx),
+    /i === deskAfterIdx && m\.deskSheet/,
   );
 
   const contentIdx = bubble.indexOf("renderContent(displayContent)");

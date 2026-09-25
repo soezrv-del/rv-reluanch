@@ -51,7 +51,7 @@ export type WebFallbackOpts = {
 };
 
 const SPEC_QUESTION_RE =
-  /\b(hp|horsepower|engine|chassis|torque|transmission|fuel|gvwr|gcwr|uvw|ccc|tow|hitch|mpg|length|weight|spec|brochure|powertrain|godzilla|cummins|f-?53|holding\s+tanks?|fresh\s+water|gr[ae]y\s+(?:water|tank)|black\s+(?:water|tank))\b/i;
+  /\b(hp|horsepower|engine|chassis|torque|transmission|fuel|gvwr?|tvwr|gross\s+vehicle\s+weight|gcwr|uvw|ccc|tow|hitch|mpg|length|weight|spec|brochure|powertrain|godzilla|cummins|f-?53|holding\s+tanks?|fresh\s+water|gr[ae]y\s+(?:water|tank)|black\s+(?:water|tank))\b/i;
 
 const LIVE_RESEARCH_RE =
   /\b(troubleshoot(?:ing)?|diagnos(?:e|is|ing)|problems?|issues?|errors?|codes?|alarm|fault|dtc|check[- ]engine|tsb|bulletins?|won'?t\s+start|will\s+not\s+start|doesn'?t\s+start|leaking|leaks?|repair|fix(?:es|ing)?|how\s+do\s+i|how\s+to|why\s+is|why\s+won'?t|why\s+does(?:n'?t)?|what\s+should\s+i\s+(?:check|do|try|inspect)|what(?:'s|\s+is)\s+wrong|manual|owners?\s+manual|service\s+manual|recall|nhtsa|install(?:ing|ation)?|wiring|wires?|fuse|breaker|batter(?:y|ies)|propane|lp\s?gas|lpg|slides?|slide[- ]out|jacks?|level(?:ing|ers?)|generator|genset|inverter|converter|starlink|awning|water\s+heater|furnace|air\s+cond(?:itioner)?|refrigerator|fridge|toilet|black\s+tank|gray\s+tank|fresh\s+water|water\s+pump|short(?:ed|ing)?|overheat(?:ing)?|not\s+working|stopped\s+working|won'?t\s+(?:retract|extend|open|close|work|reset)|will\s+not\s+(?:retract|extend|open|close|work)|stuck|jammed|look(?:\s+(?:this|it))?\s+up|look\s+up|search(?:\s+(?:the\s+)?(?:web|online|forums?))|web\s+search|research|owners?\s+forums?|what\s+do\s+owners|irv2|reddit|common\s+(?:fix|cause|issue|problem)|known\s+(?:issue|problem|recall)|latest\s+(?:tsb|bulletin|recall|fix|firmware))\b/i;
@@ -94,7 +94,7 @@ const LIVE_CONDITION_RE = /\b(weather|road closures?)\b/i;
 
 /** Own-lot / diesel-count / in-stock — catalog has no inventory. */
 const INVENTORY_OR_COUNT_RE =
-  /\b(inventor(?:y|ies)|in stock|on (?:the |our )?lot|on hand|units? available|our (?:lot|inventory|stock)|diesel counts?|(?:how many|count of)\s+(?:\w+\s+){0,8}(?:diesels?|gas|coaches?|units?|rvs?|pushers?|motorhomes?|class\s*a|super\s*c?s?|are there|in stock|on (?:the )?lot|do we have)|(?:look|check|search|pull|find)\s+(?:\w+\s+){0,6}in(?:\s+(?:my|our|the))?\s+inventory|(?:stock(?:\s*(?:#|number|no\.?|num))?|stk)\s*[:#-]?\s*[A-Za-z0-9-]{3,12})\b/i;
+  /\b(inventor(?:y|ies)|in stock|on (?:the |our )?lot|on hand|units? available|our (?:lot|inventory|stock)|diesel counts?|(?:how many|count of)\s+(?:\w+\s+){0,8}(?:diesels?|gas|coaches?|units?|rvs?|pushers?|motorhomes?|class\s*a|super\s*c?s?|are there|in stock|on (?:the )?lot|do we have)|(?:look|check|search|pull|find)\s+(?:\w+\s+){0,6}in(?:\s+(?:my|our|the))?\s+inventory|(?:stock(?:\s*(?:#|number|no\.?|num))?|stk)\s*[:#-]?\s*[A-Za-z0-9-]{3,12}|stock\s+(?:number|#|no\.?))\b/i;
 
 /** Bare lot stock # ("45282") — not a model year. */
 const BARE_STOCK_NUMBER_RE = /^\s*#?\s*([A-Za-z]{0,4}\d{4,7}[A-Za-z]{0,3})\s*$/;
@@ -233,6 +233,40 @@ export const INCOMPLETE_COACH_IDENTITY_CUE =
   "INCOMPLETE COACH IDENTITY (year only). Ask the make and model (and floorplan if they have it). Do not run or claim a web search. Do not say search timed out or returned nothing. Do not invent a coach or OEM numbers.";
 
 /**
+ * Company, plant, or brand opinion. Not a coach, and not "factory GVWR".
+ * "Grand Design motorhome factory" is the Middlebury plant.
+ */
+export function looksLikeCompanyOrPlantAsk(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!t.trim()) return false;
+  if (
+    /\bfactory\s+(?:gvwr|uvw|gcwr|ncc|ccc|spec|brochure|weight|pin|number|sheet|hp|horsepower|installed|option|options|warranty|direct|order)\b/i.test(
+      t,
+    )
+  ) {
+    return false;
+  }
+  if (
+    /\b(?:factories|factory|plants?|assembly\s+plant|manufacturing\s+(?:plant|campus)|factory\s+tour|headquarters|\bhq\b|parent\s+company|who\s+owns)\b/i.test(
+      t,
+    )
+  ) {
+    return true;
+  }
+  if (
+    /\bwhat\s+do\s+you\s+think\s+of\s+(?:them|the\s+(?:brand|company|builder|manufacturer))\b/i.test(
+      t,
+    )
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export const COMPANY_PLANT_CUE =
+  "COMPANY / PLANT ASK. This is not a coach and it is not a missing floorplan. Do not ask for a year, make, model, or floorplan. Do not say you need the year, the make, and the model. Do not describe a class, a floorplan, or a spec sheet unless he named a coach. Answer the question in full. Do not stop after the factory's name. Name the plant and what it builds, where it is, and whatever he asked. Use WEB RESEARCH notes when they are in this turn. If they are not, still answer from what you know.";
+
+/**
  * Named coach ask — salesman shorthand counts. Year/make/model do not
  * all have to be present or spelled as the OEM string. "American Dream 42Q",
  * "Phaeton 40IH", "Lineage 31ZW" are product asks. Catalog miss or missing
@@ -245,6 +279,7 @@ export const INCOMPLETE_COACH_IDENTITY_CUE =
 export function looksLikeNamedCoachProductQuestion(text: string): boolean {
   const t = normalizeAskText(text);
   if (!t.trim() || looksLikeCasualNonResearch(t)) return false;
+  if (looksLikeCompanyOrPlantAsk(t)) return false;
   const parsed = parseCoachFromText(t);
   // Model+floorplan / make+model / year+make — do not require "tell me about"
   // or a complete year+make+model tuple.
@@ -256,7 +291,7 @@ export function looksLikeNamedCoachProductQuestion(text: string): boolean {
 }
 
 const WEIGHT_ASK_RE =
-  /\b(gvwr|gcwr|uvw|ncc|ccc|hitch|payload|weight)\b/i;
+  /\b(gvwr?|tvwr|gross\s+vehicle\s+weight|gcwr|uvw|ncc|ccc|hitch|payload|weight)\b/i;
 
 function missingOemWeightPinOf(specs: WebFallbackSpecs): boolean {
   if (!specs) return true;
@@ -308,6 +343,7 @@ export function needsWebFallback(
   opts?: WebFallbackOpts,
 ): boolean {
   if (looksLikeCasualNonResearch(userText)) return false;
+  if (looksLikeCompanyOrPlantAsk(userText)) return true;
   if (looksLikeOriginQuestion(userText)) return false;
   if (looksLikeCarfaxQuestion(userText)) return false;
   if (looksLikeImageOnlyAsk(userText)) return false;

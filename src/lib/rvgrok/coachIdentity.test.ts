@@ -19,6 +19,8 @@ import {
   inspectCatalogPresence,
   lastCompleteParseFromHistory,
   lockIdentityTuple,
+  missingIdentityAsk,
+  missingIdentityFloorplans,
   namedCoachConflictsLock,
   sanitizePresenceNote,
   resolveCatalogMake,
@@ -248,6 +250,28 @@ test("catalog presence is honest: Dutch Star is not a missing Ventana", () => {
   assert.doesNotMatch(vent.model, /dutch star/i);
 });
 
+test("bare 4041 sticks on a locked 2016 Ventana and a UVW follow-up keeps it", () => {
+  const facts = {
+    year: "2016",
+    make: "Newmar",
+    model: "Ventana",
+    floorplan: "",
+    updatedAt: "2016-01-01T00:00:00.000Z",
+  };
+  const picked = resolveCoachIdentity("4041", facts, "GVWR on a 2016 Ventana");
+  assert.ok(picked);
+  assert.equal(picked!.year, "2016");
+  assert.match(picked!.model, /ventana/i);
+  assert.equal(picked!.floorplan, "4041");
+  const uvw = resolveCoachIdentity("Can you find the UVW?", {
+    ...facts,
+    floorplan: "4041",
+  });
+  assert.ok(uvw);
+  assert.equal(uvw!.floorplan, "4041");
+  assert.match(uvw!.model, /ventana/i);
+});
+
 test("Ventana follow-up without renaming keeps the Ventana lock", () => {
   const hp = resolveCoachIdentity("What's the HP on this coach?", VENTANA_LOCK);
   assert.ok(hp);
@@ -298,6 +322,14 @@ test("longer lot series does not inherit the parent catalog model", () => {
   assert.equal(
     matchCatalogModelName("Vision", ["Vision", "Vision SE", "Vision XL"]),
     "Vision",
+  );
+  assert.equal(
+    matchCatalogModelName("Winds", [
+      "Four Winds",
+      "Four Winds Majestic",
+      "Windsport",
+    ]),
+    "Winds",
   );
   assert.equal(matchCatalogModelName("pheaton", ["Phaeton", "Allegro"]), "Phaeton");
 });
@@ -748,4 +780,103 @@ test("Integra Cornerstone 45B is Entegra Coach / Cornerstone — never model ent
     const note = formatCatalogPresenceNote(inspectCatalogPresence(id!));
     assert.doesNotMatch(note, /SERIES MISSING/i, q);
   }
+});
+
+test("a code the catalog does not list is not a floorplan — ask which one", async () => {
+  const { ensureCatalogLoaded } = await import("../rv/catalogLoad.ts");
+  const { resolveDeskSheet } = await import("./deskSheet.ts");
+  await ensureCatalogLoaded();
+  const fake = {
+    year: "2016",
+    make: "Newmar",
+    model: "Ventana",
+    floorplan: "2016um",
+  };
+  const presence = inspectCatalogPresence(fake);
+  assert.equal(presence.status, "floorplan-gap");
+  const note = formatCatalogPresenceNote(presence);
+  assert.match(note, /Ask which floorplan they mean/);
+  assert.match(note, /3427/);
+  assert.match(note, /and others/);
+  assert.doesNotMatch(note, /FLOORPLAN GAP/);
+  const sheet = resolveDeskSheet({
+    query: "Can you give me a full report?",
+    identity: { ...fake, source: "message" },
+    specs: null,
+    mountForVoiceReport: true,
+  });
+  assert.equal(sheet, null);
+  const real = inspectCatalogPresence({
+    year: "2016",
+    make: "Newmar",
+    model: "Ventana LE",
+    floorplan: "4044",
+  });
+  assert.equal(real.status, "exact");
+});
+
+test("a correction to 2020 Thor Winds drops the previous coach and does not pick Majestic", async () => {
+  const { ensureCatalogLoaded } = await import("../rv/catalogLoad.ts");
+  await ensureCatalogLoaded();
+  const facts = {
+    year: "2024",
+    make: "Winnebago",
+    model: "View",
+    floorplan: "28Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  };
+  const id = resolveCoachIdentity(
+    "I didn't say that at all. I said 2020 Thor Winds.",
+    facts,
+    "",
+  );
+  assert.ok(id);
+  assert.equal(id!.year, "2020");
+  assert.equal(id!.make, "Thor");
+  assert.notEqual(id!.model, "Four Winds Majestic");
+  assert.notEqual(id!.model, "View");
+  const ask = missingIdentityAsk(id!);
+  assert.match(ask, /Which series/);
+  assert.match(ask, /Four Winds/);
+  assert.match(ask, /Windsport/);
+  assert.doesNotMatch(ask, /Majestic/);
+  const next = resolveCoachIdentity("2024 Four Winds", facts, "");
+  assert.equal(next?.year, "2024");
+  assert.equal(next?.model, "Four Winds");
+});
+
+test("locked year make and model with no floorplan lists that year's plans", async () => {
+  const { ensureCatalogLoaded } = await import("../rv/catalogLoad.ts");
+  await ensureCatalogLoaded();
+  const ask = missingIdentityAsk({
+    year: "2016",
+    make: "Newmar",
+    model: "Ventana",
+  });
+  assert.equal(ask, "Which floorplan?");
+  const plans = missingIdentityFloorplans({
+    year: "2016",
+    make: "Newmar",
+    model: "Ventana",
+  });
+  assert.ok(plans.includes("4369"));
+  assert.ok(plans.length > 1);
+  assert.equal(
+    missingIdentityAsk({
+      year: "2016",
+      make: "Newmar",
+      model: "Ventana",
+      floorplan: "4369",
+    }),
+    "",
+  );
+  assert.deepEqual(
+    missingIdentityFloorplans({
+      year: "2016",
+      make: "Newmar",
+      model: "Ventana",
+      floorplan: "4369",
+    }),
+    [],
+  );
 });

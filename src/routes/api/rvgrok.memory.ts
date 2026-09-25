@@ -5,6 +5,11 @@ import {
   applyMemoryUpdate,
   memoryKeyFromRequest,
 } from "@/lib/rvgrok/phoneMemoryStore";
+import { queuePendingPromptLesson } from "@/lib/rvgrok/promptLessonsStore";
+import {
+  lessonFromCorrection,
+  userLinesForMemory,
+} from "@/lib/rvgrok/sessionLearn";
 
 /**
  * POST /api/rvgrok/memory
@@ -14,6 +19,7 @@ import {
  */
 
 type Body = {
+  source?: string;
   messages?: Array<{ role?: string; content?: string }>;
 };
 
@@ -36,12 +42,25 @@ export const Route = createFileRoute("/api/rvgrok/memory")({
           return Response.json({ error: "Invalid JSON body" }, { status: 400 });
         }
 
-        const turns: MemoryTurn[] = (body.messages || [])
+        const raw: MemoryTurn[] = (body.messages || [])
           .filter((m) => m && (m.role === "user" || m.role === "assistant"))
           .map((m) => ({
             role: String(m.role),
             text: String(m.content || "").slice(0, 800),
           }));
+        const voice = body.source === "voice";
+        const turns: MemoryTurn[] = voice
+          ? userLinesForMemory(
+              raw.filter((t) => t.role === "user").map((t) => t.text),
+            ).map((text) => ({ role: "user", text }))
+          : raw;
+
+        if (voice) {
+          for (const turn of turns) {
+            const lesson = lessonFromCorrection(turn.text);
+            if (lesson) await queuePendingPromptLesson(lesson);
+          }
+        }
 
         const saved = await applyMemoryUpdate({ phoneDigits, turns });
         return Response.json({
