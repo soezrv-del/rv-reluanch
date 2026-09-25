@@ -16,9 +16,11 @@ import {
   upsertSession,
 } from "@/lib/rvgrok/history";
 import { streamChat } from "@/lib/rvgrok/stream";
+import { userLinesForMemory } from "@/lib/rvgrok/sessionLearn";
 import { GrokRealtimeSession } from "@/lib/rvgrok/realtime";
+import { missingIdentityFloorplans } from "@/lib/rvgrok/coachIdentity";
+import { floorplanFromUserThread } from "@/lib/rvgrok/chatSpecBlock";
 import { buildChatGrounding, buildVoiceGrounding } from "@/lib/rvgrok/grounding";
-import { parseCoachFromText } from "@/lib/rvgrok/parseCoach";
 import {
   markDeskGapsSearching,
   resolveDeskSheet,
@@ -27,7 +29,6 @@ import {
 } from "@/lib/rvgrok/deskSheet";
 import {
   deskRevealAfterIndex,
-  shouldShowPendingLiveDesk,
 } from "@/lib/rvgrok/deskSheetLayout";
 import { DeskSpecSheet } from "./DeskSpecSheet";
 import { GrokExtrasRail } from "./GrokExtrasRail";
@@ -41,6 +42,7 @@ import {
   classifyLiveVoiceError,
   type LiveVoicePrewarm,
 } from "@/lib/rvgrok/liveVoice";
+import { resolveResearchPhone } from "@/lib/access/researchUnlock";
 import {
   DEFAULT_VOICE,
   LIVE_VOICE_KEY,
@@ -66,7 +68,7 @@ import {
   sessionIntroLine,
 } from "@/lib/rvgrok/speechPolicy";
 import { cn, uid } from "@/lib/utils";
-import { followUpChipsForThread } from "@/lib/rvgrok/followUpChips";
+import { followUpChipsForThread, type FollowUpChip } from "@/lib/rvgrok/followUpChips";
 import { MessageBubble } from "./MessageBubble";
 import { HistoryPanel } from "./HistoryPanel";
 import { VoicePanel } from "./VoicePanel";
@@ -158,9 +160,6 @@ export function RvGrokApp({
     "environment",
   );
   const [keepShowing, setKeepShowing] = useState(false);
-  const [liveDeskSheet, setLiveDeskSheet] = useState<DeskSheetPayload | null>(
-    null,
-  );
   const [frameBusy, setFrameBusy] = useState(false);
   const [lastSentFrame, setLastSentFrame] = useState<string | null>(null);
 
@@ -190,6 +189,8 @@ export function RvGrokApp({
   const liveUserMsgId = useRef<string | null>(null);
   const liveAsstMsgId = useRef<string | null>(null);
   const liveDeskSheetRef = useRef<DeskSheetPayload | null>(null);
+  const liveFloorplansRef = useRef<string[]>([]);
+  const liveDeskThisTurnRef = useRef(false);
   const voiceModeRef = useRef(voiceMode);
   const liveVoiceRef = useRef(liveVoice);
   const liveCamRef = useRef(false);
@@ -197,6 +198,8 @@ export function RvGrokApp({
   const sendGenRef = useRef(0);
   const sessionsRef = useRef(sessions);
   const messagesRef = useRef(messages);
+  const voiceLearnRef = useRef<string[]>([]);
+  const accessPhoneRef = useRef(access?.phone || "");
   const sessionIdRef = useRef(sessionId);
   const startingLiveRef = useRef(false);
   const continuousLoopRef = useRef(false);
@@ -300,7 +303,32 @@ export function RvGrokApp({
     }
   };
 
+  const flushVoiceLearn = useCallback(() => {
+    const lines = userLinesForMemory(voiceLearnRef.current);
+    voiceLearnRef.current = [];
+    if (!lines.length) return;
+    const phone = resolveResearchPhone(accessPhoneRef.current);
+    if (!phone) return;
+    void import("@/lib/access/researchUnlock")
+      .then(({ researchAccessHeaders }) =>
+        fetch("/api/rvgrok/memory", {
+          method: "POST",
+          headers: researchAccessHeaders(
+            { "Content-Type": "application/json" },
+            phone,
+          ),
+          body: JSON.stringify({
+            source: "voice",
+            messages: lines.map((content) => ({ role: "user", content })),
+          }),
+          keepalive: true,
+        }),
+      )
+      .catch(() => undefined);
+  }, []);
+
   const stopLiveSession = useCallback((opts?: { disarm?: boolean }) => {
+    flushVoiceLearn();
     startingLiveRef.current = false;
     realtimeRef.current?.stop();
     realtimeRef.current = null;
@@ -323,9 +351,10 @@ export function RvGrokApp({
     liveCamRef.current = false;
       liveCamRef.current = false;
     }
-  }, []);
+  }, [flushVoiceLearn]);
 
   const startNewChat = useCallback(() => {
+    flushVoiceLearn();
     abortRef.current?.abort();
     recognitionRef.current?.abort();
     realtimeRef.current?.stop();
@@ -354,9 +383,8 @@ export function RvGrokApp({
     if (liveVideoRef.current) liveVideoRef.current.srcObject = null;
     setLiveCam(false);
     liveCamRef.current = false;
-    setLiveDeskSheet(null);
     liveDeskSheetRef.current = null;
-  }, []);
+  }, [flushVoiceLearn]);
 
   const pull = usePullToReset(listRef, startNewChat, { enabled: !embedded });
 
@@ -563,23 +591,37 @@ export function RvGrokApp({
           extraText,
           agentMode,
         });
+        const threadFp = floorplanFromUserThread(extraText);
+        const identity =
+          grounded.identity && !grounded.identity.floorplan && threadFp
+            ? { ...grounded.identity, floorplan: threadFp, source: "mixed" as const }
+            : grounded.identity;
         const deskOpts = {
           query: messageText,
-          identity: grounded.identity,
+          identity,
           specs: grounded.specs,
         };
         const deskSheet = markDeskGapsSearching(resolveDeskSheet(deskOpts));
-        if (deskSheet) {
-          setLiveDeskSheet(deskSheet);
+        const floorplanChoices = identity
+          ? missingIdentityFloorplans(identity)
+          : [];
+        if (deskSheet || floorplanChoices.length) {
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === assistantMsgId ? { ...m, deskSheet } : m,
+              m.id === assistantMsgId
+                ? {
+                    ...m,
+                    deskSheet: deskSheet || m.deskSheet,
+                    floorplanChoices: floorplanChoices.length
+                      ? floorplanChoices
+                      : m.floorplanChoices,
+                  }
+                : m,
             ),
           );
           void resolveDeskSheetThenFallback(deskOpts, controller.signal).then(
             (next) => {
               if (!next || controller.signal.aborted) return;
-              setLiveDeskSheet(next);
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === assistantMsgId ? { ...m, deskSheet: next } : m,
@@ -587,8 +629,6 @@ export function RvGrokApp({
               );
             },
           );
-        } else {
-          setLiveDeskSheet(null);
         }
 
         await streamChat({
@@ -693,17 +733,11 @@ export function RvGrokApp({
           chatSpecBlock: finalContent,
         };
         const paintedDesk = markDeskGapsSearching(resolveDeskSheet(paintedOpts));
-        if (paintedDesk) {
-          setLiveDeskSheet(paintedDesk);
-        } else {
-          setLiveDeskSheet(null);
-        }
         void resolveDeskSheetThenFallback(
           paintedOpts,
           controller.signal,
         ).then((next) => {
           if (!next || controller.signal.aborted) return;
-          setLiveDeskSheet(next);
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantMsgId ? { ...m, deskSheet: next } : m,
@@ -961,18 +995,42 @@ export function RvGrokApp({
           setRealtimeDetail(detail ?? null);
         },
         onDeskSheet: (sheet) => {
+          liveDeskThisTurnRef.current = Boolean(sheet);
           liveDeskSheetRef.current = sheet;
-          setLiveDeskSheet(sheet);
           const asstId = liveAsstMsgId.current;
-          if (asstId && sheet) {
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === asstId ? { ...m, deskSheet: sheet } : m,
-              ),
-            );
-          }
+          if (!asstId) return;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === asstId
+                ? { ...m, deskSheet: sheet || undefined }
+                : m,
+            ),
+          );
+        },
+        onFloorplanChoices: (codes) => {
+          liveFloorplansRef.current = codes;
+          const asstId = liveAsstMsgId.current;
+          if (!asstId) return;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === asstId
+                ? {
+                    ...m,
+                    floorplanChoices: codes.length ? codes : undefined,
+                  }
+                : m,
+            ),
+          );
+        },
+        onUserTurnDone: (text) => {
+          const t = text.replace(/\s+/g, " ").trim();
+          if (!t) return;
+          const prev = voiceLearnRef.current;
+          if (prev[prev.length - 1] === t) return;
+          voiceLearnRef.current = [...prev, t];
         },
         onUserTranscript: (text) => {
+          liveDeskThisTurnRef.current = false;
           const uidMsg = liveUserMsgId.current;
           if (uidMsg) {
             setMessages((prev) =>
@@ -1017,6 +1075,9 @@ export function RvGrokApp({
                   content: text,
                   streaming: true,
                   timestamp: new Date(),
+                  floorplanChoices: liveFloorplansRef.current.length
+                    ? liveFloorplansRef.current
+                    : undefined,
                 },
               ]);
             } else {
@@ -1028,6 +1089,9 @@ export function RvGrokApp({
                   content: text,
                   streaming: true,
                   timestamp: new Date(),
+                  floorplanChoices: liveFloorplansRef.current.length
+                    ? liveFloorplansRef.current
+                    : undefined,
                 },
               ]);
             }
@@ -1046,7 +1110,9 @@ export function RvGrokApp({
           const asstId = liveAsstMsgId.current;
           if (asstId) {
             setMessages((prev) => {
-              const sheet = liveDeskSheetRef.current;
+              const sheet = liveDeskThisTurnRef.current
+                ? liveDeskSheetRef.current
+                : null;
               const updated = prev.map((m) =>
                 m.id === asstId
                   ? {
@@ -1054,6 +1120,9 @@ export function RvGrokApp({
                       content: text,
                       streaming: false,
                       deskSheet: sheet || undefined,
+                      floorplanChoices: liveFloorplansRef.current.length
+                        ? liveFloorplansRef.current
+                        : m.floorplanChoices,
                     }
                   : m,
               );
@@ -1360,6 +1429,9 @@ export function RvGrokApp({
     sessionsRef.current = sessions;
   }, [sessions]);
   useEffect(() => {
+    accessPhoneRef.current = access?.phone || "";
+  }, [access?.phone]);
+  useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
   useEffect(() => {
@@ -1426,16 +1498,11 @@ export function RvGrokApp({
     !liveActive;
 
   const followUps = liveActive
-    ? { index: -1, chips: [] as const }
+    ? { index: -1, chips: [] as FollowUpChip[] }
     : followUpChipsForThread(messages);
   const deskAfterIdx = deskRevealAfterIndex(messages);
-  const pendingLiveSheet = shouldShowPendingLiveDesk(messages, liveDeskSheet)
-    ? liveDeskSheet
-    : null;
   const reportSheet =
-    (deskAfterIdx >= 0 ? messages[deskAfterIdx].deskSheet : null) ||
-    pendingLiveSheet ||
-    null;
+    deskAfterIdx >= 0 ? messages[deskAfterIdx]?.deskSheet ?? null : null;
 
   const wingmanStatus = grokStatusLabel({
     liveActive,
@@ -1589,26 +1656,34 @@ export function RvGrokApp({
             onSpeak={handleSpeak}
             speakingId={speakingId}
             priorQuery={priorUserAt(i)}
-            suggestions={i === followUps.index ? followUps.chips : undefined}
+            suggestions={
+              i === followUps.index && !m.floorplanChoices?.length
+                ? followUps.chips
+                : undefined
+            }
             onSuggestion={(prompt) => void sendMessage(prompt)}
+            onFloorplanChoice={(code) => {
+              const live = realtimeRef.current;
+              if (live?.isActive && live.chooseFloorplan(code)) {
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: uid("u-fp"),
+                    role: "user",
+                    content: code,
+                    timestamp: new Date(),
+                  },
+                ]);
+                return;
+              }
+              void sendMessage(code);
+            }}
           />
           {i === deskAfterIdx && m.deskSheet
             ? deskAfterReply(m.deskSheet, priorUserAt(i))
-            : m.role === "assistant" && !m.streaming
-              ? (
-                  <GrokExtrasRail
-                    query={priorUserAt(i)}
-                    coach={parseCoachFromText(
-                      `${priorUserAt(i)} ${m.content || ""}`,
-                    )}
-                  />
-                )
-              : null}
+            : null}
         </Fragment>
       ))}
-      {pendingLiveSheet
-        ? deskAfterReply(pendingLiveSheet, priorUserAt(messages.length))
-        : null}
     </div>
   );
 
@@ -1705,6 +1780,27 @@ export function RvGrokApp({
           paddingBottom: composerLift > 0 ? composerLift : undefined,
         }}
       >
+        {(realtimeStatus === "speaking" ||
+          /speaking|finishing reply/i.test(realtimeDetail || "")) &&
+        liveActive ? (
+          <button
+            type="button"
+            onClick={() => {
+              realtimeRef.current?.interrupt();
+            }}
+            className="mb-2 flex w-full items-center gap-2 rounded-[var(--radius-md)] border border-amber-200/50 bg-amber-500/30 px-3 py-2.5 text-left"
+          >
+            <span className="flex size-7 items-center justify-center rounded-md bg-amber-500 text-black">
+              <Square className="size-3.5 fill-current" />
+            </span>
+            <span className="flex-1 text-[13px] font-semibold text-fg">
+              Interrupt — stop her, keep listening
+            </span>
+            <span className="text-[11px] font-bold tracking-wide text-amber-100">
+              CUT
+            </span>
+          </button>
+        ) : null}
         {(isLoading ||
           messages.some((m) => m.streaming) ||
           isRecording ||
@@ -1862,7 +1958,6 @@ export function RvGrokApp({
         onClose={() => setHistoryOpen(false)}
         onLoad={(s) => {
           setSessionId(s.id);
-          setLiveDeskSheet(null);
           liveDeskSheetRef.current = null;
           setMessages(
             (s.messages ?? []).map((m) => ({

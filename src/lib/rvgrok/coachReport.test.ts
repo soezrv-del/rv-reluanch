@@ -291,10 +291,11 @@ test("prompts and research sidecars teach the four-section report", () => {
   const web = readFileSync(join(root, "webSearch.ts"), "utf8");
   const voice = readFileSync(join(root, "voice.ts"), "utf8");
   const speech = readFileSync(join(root, "speechPolicy.ts"), "utf8");
+  const voiceTurn = readFileSync(join(root, "voiceSpecTurn.ts"), "utf8");
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
-  assert.match(speech, /full report or a quick overview/);
-  assert.match(speech, /Empty beats invented/);
+  assert.match(voiceTurn, /full report or a quick overview/);
+  assert.match(speech, /If both are empty, say that field is unverified/);
   for (const [label, text] of [
     ["grounding.ts", grounding],
     ["geminiResearch.ts", gemini],
@@ -317,5 +318,5 @@ test("prompts and research sidecars teach the four-section report", () => {
   );
   assert.doesNotMatch(voice, /That card is the written reply/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
-  assert.match(speech, /full report or a quick overview/);
+  assert.match(voiceTurn, /full report or a quick overview/);
 });

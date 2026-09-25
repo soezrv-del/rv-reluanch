@@ -29,6 +29,7 @@ import {
   type DeskSheetPayload,
 } from "./deskSheet";
 import { buildChatGrounding, namedCoachConflictsLock } from "./grounding";
+import { looksLikeCompanyOrPlantAsk } from "./webIntent";
 import { looksLikeRepairQuestion, REPAIR_VOICE_PLAYBOOK } from "./repairMode";
 import {
   decideVoiceWebResearch,
@@ -45,6 +46,7 @@ import {
   looksLikeExplicitVoiceReportAsk,
   looksLikeVoiceCoachOrSpecAsk,
   looksLikeVoiceTellMeAboutAsk,
+  looksLikeFloorplanOnlyPick,
   looksLikeVoiceFieldOrMetaAsk,
   shouldSpeakVoiceCoachChoice,
   VOICE_COACH_CHOICE_INSTRUCTIONS,
@@ -52,6 +54,7 @@ import {
   voiceDepthAlreadyChosen,
   withVoiceSpecExtras,
 } from "./voiceSpecTurn";
+import { looksLikeOwnLotStockQuestion, ownLotVoiceCoachLock } from "./ownLotAsk";
 import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
 import {
   coachKnowledgeKeyEquals,
@@ -59,6 +62,8 @@ import {
   type CoachKnowledgeKey,
 } from "./coachKnowledgeKey";
 import type { CoachIdentity } from "./coachIdentity";
+import { missingIdentityFloorplans } from "./coachIdentity";
+import { getCoachFacts, formatChatSpecMissReply, isUnpinnedWeightReply, isWeightSpecAsk } from "./chatSpecBlock";
 
 export type RealtimeStatus =
   | "idle"
@@ -71,6 +76,8 @@ export type RealtimeStatus =
 export type RealtimeHandlers = {
   onStatus: (s: RealtimeStatus, detail?: string) => void;
   onUserTranscript: (text: string) => void;
+  /** Final user utterance only. Partials stay on onUserTranscript. */
+  onUserTurnDone?: (text: string) => void;
   onAssistantDelta: (text: string) => void;
   onAssistantDone: (text: string) => void;
   onError: (message: string) => void;
@@ -78,6 +85,8 @@ export type RealtimeHandlers = {
   onDisconnected?: (reason: string) => void;
   /** CarFax-style desk sheet for the coach this turn — or null to hide. */
   onDeskSheet?: (sheet: DeskSheetPayload | null) => void;
+  /** Floorplan codes to show on screen. Spoken line stays "Which floorplan?" */
+  onFloorplanChoices?: (codes: string[]) => void;
 };
 
 /**
@@ -440,6 +449,7 @@ export class GrokRealtimeSession {
         );
         if (transcript) {
           this.handlers.onUserTranscript(transcript);
+          this.handlers.onUserTurnDone?.(transcript);
           void this.maybeEnrichWithWebResearch(transcript);
         }
         break;
@@ -568,8 +578,9 @@ export class GrokRealtimeSession {
       if (cached) {
         this.deskFallbackSeq += 1;
         this.engineSheetPainted = true;
-        this.handlers.onDeskSheet?.(
+        this.publishDeskSheet(
           withVoiceSpecExtras(cached, this.lastDeskQuery),
+          this.lastDeskQuery,
         );
       } else {
         this.emitDeskSheet({
@@ -584,17 +595,33 @@ export class GrokRealtimeSession {
     if (text) this.handlers.onAssistantDone(text);
   }
 
+  private publishDeskSheet(
+    sheet: DeskSheetPayload | null,
+    query: string,
+  ) {
+    const visual =
+      Boolean(sheet) &&
+      this.voiceDeliver !== "quick" &&
+      (looksLikeDeskSheetAsk(query) || this.voiceDeliver === "full");
+    this.handlers.onDeskSheet?.(visual ? sheet : null);
+  }
+
   private emitDeskSheet(opts: Parameters<typeof resolveDeskSheet>[0]) {
     const sheet = markDeskGapsSearching(
       withVoiceSpecExtras(resolveDeskSheet(opts), opts.query),
     );
-    this.handlers.onDeskSheet?.(sheet);
+    this.publishDeskSheet(sheet, opts.query);
     const seq = ++this.deskFallbackSeq;
     if (!sheet) return;
     void resolveDeskSheetThenFallback(opts).then((next) => {
       if (seq !== this.deskFallbackSeq) return;
-      if (next) {
-        this.handlers.onDeskSheet?.(withVoiceSpecExtras(next, opts.query));
+      if (!next) return;
+      const visual = withVoiceSpecExtras(next, opts.query);
+      if (
+        this.voiceDeliver !== "quick" &&
+        (looksLikeDeskSheetAsk(opts.query) || this.voiceDeliver === "full")
+      ) {
+        this.handlers.onDeskSheet?.(visual);
       }
     });
   }
@@ -755,12 +782,40 @@ export class GrokRealtimeSession {
   }
 
   /**
+   * Salesman tapped a floorplan chip. Lock it and answer from the catalog.
+   * Do not let the model invent a weight before get_coach_facts.
+   */
+  chooseFloorplan(code: string): boolean {
+    const fp = code.trim();
+    if (!fp) return false;
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+    if (!this.facts?.make?.trim() || !this.facts.model?.trim()) return false;
+    this.facts = {
+      ...this.facts,
+      floorplan: fp,
+      updatedAt: new Date().toISOString(),
+    };
+    this.handlers.onFloorplanChoices?.([]);
+    const prior = (this.lastDeskQuery || "").trim();
+    const transcript = prior ? `${prior} ${fp}` : fp;
+    const specSeq = ++this.specTurnSeq;
+    this.pendingSpec = null;
+    this.pendingSpecSheet = null;
+    this.specEngineSpoken = false;
+    this.engineSheetPainted = false;
+    void this.answerFloorplanPick(specSeq, transcript);
+    return true;
+  }
+
+  /**
    * Inject plain text into the live session (vision-first live photo path).
    */
   injectUserNote(
     text: string,
     requestResponse = true,
     responseInstructions?: string,
+    statusDetail = "Photo ready — responding…",
   ): boolean {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) return false;
@@ -782,7 +837,7 @@ export class GrokRealtimeSession {
       );
       if (requestResponse) {
         this.suppressMic = true;
-        this.handlers.onStatus("thinking", "Photo ready — responding…");
+        this.handlers.onStatus("thinking", statusDetail);
         try {
           ws.send(JSON.stringify({ type: "response.cancel" }));
         } catch {
@@ -902,6 +957,17 @@ export class GrokRealtimeSession {
       this.facts = this.factsFromIdentity(grounded.identity);
     } else if (grounded.identity && grounded.block) {
       this.catalogContext = grounded.block;
+      if (
+        this.facts &&
+        grounded.identity.floorplan &&
+        grounded.identity.floorplan !== this.facts.floorplan
+      ) {
+        this.facts = {
+          ...this.facts,
+          floorplan: grounded.identity.floorplan,
+          updatedAt: new Date().toISOString(),
+        };
+      }
     }
     this.lastDeskQuery = transcript;
     this.lastDeskIdentity = grounded.identity;
@@ -920,6 +986,7 @@ export class GrokRealtimeSession {
   }
 
   private async maybeEnrichWithWebResearch(transcript: string) {
+    this.handlers.onFloorplanChoices?.([]);
     if (!this.voiceDeliver && this.routeVoiceOpening(transcript)) return;
     if (this.voiceDeliver === "quick") {
       const specSeq = ++this.specTurnSeq;
@@ -927,7 +994,9 @@ export class GrokRealtimeSession {
       this.pendingSpecSheet = null;
       this.specEngineSpoken = false;
       this.engineSheetPainted = false;
-      await this.deliverVoiceQuick(specSeq, transcript, { reportDelivery: true });
+      await this.deliverVoiceQuick(specSeq, transcript, {
+        offerSpokenExtras: true,
+      });
       return;
     }
     if (this.voiceDeliver === "full") {
@@ -961,8 +1030,11 @@ export class GrokRealtimeSession {
     this.specEngineSpoken = false;
     this.engineSheetPainted = false;
     if (
+      !looksLikeOwnLotStockQuestion(transcript) &&
       (looksLikeVoiceCoachOrSpecAsk(transcript) ||
-        looksLikeVoiceTellMeAboutAsk(transcript)) &&
+        looksLikeVoiceTellMeAboutAsk(transcript) ||
+        (looksLikeFloorplanOnlyPick(transcript) &&
+          Boolean(this.facts?.model?.trim()))) &&
       !looksLikeExplicitVoiceReportAsk(transcript)
     ) {
       await ensureCatalogLoaded().catch(() => null);
@@ -976,6 +1048,7 @@ export class GrokRealtimeSession {
       this.applyVoiceGrounding(transcript, grounded);
       this.cancelAutoResponseForResearch();
       if (
+        isWeightSpecAsk(transcript) ||
         looksLikeVoiceFieldOrMetaAsk(transcript) ||
         looksLikeDeskSheetAsk(transcript)
       ) {
@@ -1018,7 +1091,7 @@ export class GrokRealtimeSession {
         await this.speakFromSpecEngine(specSeq);
         return;
       }
-      if (lockBroke) {
+      if (lockBroke && !looksLikeCompanyOrPlantAsk(transcript)) {
         this.cancelAutoResponseForResearch();
         this.flushLockBreakAnswer(grounded.block);
       }
@@ -1078,6 +1151,7 @@ export class GrokRealtimeSession {
 
     if (this.closed || this.intentionalStop) return;
     if (this.researchAbort.signal.aborted) return;
+    this.rememberOwnLotVoiceLock(result.ok ? result.notes : "");
 
     const injection = formatVoiceWebSearchInjection(result, {
       catalogBlock: grounded.block || decision.catalogBlock || this.catalogContext,
@@ -1164,6 +1238,19 @@ export class GrokRealtimeSession {
     return true;
   }
 
+  /**
+   * A stock hit that names exactly one unit is the coach for the next
+   * "report on that coach". The report ask has no year/make/model of its own.
+   */
+  private rememberOwnLotVoiceLock(notes: string) {
+    const lock = ownLotVoiceCoachLock(notes);
+    if (!lock) return;
+    const facts = this.factsFromIdentity(lock);
+    if (!facts) return;
+    this.facts = facts;
+    this.lastDeskIdentity = { ...lock, source: "facts" };
+  }
+
   private flushResearchAnswer(injection: string) {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) {
@@ -1172,6 +1259,8 @@ export class GrokRealtimeSession {
     }
     this.suppressMic = true;
     this.handlers.onStatus("thinking", "Answering…");
+    const inventoryTurn = /OWN-LOT inventory/.test(injection);
+    const plantTurn = looksLikeCompanyOrPlantAsk(this.lastResearchTranscript);
     try {
       ws.send(
         JSON.stringify({
@@ -1188,9 +1277,13 @@ export class GrokRealtimeSession {
           type: "response.create",
           response: {
             modalities: ["text", "audio"],
-            instructions: looksLikeRepairQuestion(this.lastResearchTranscript)
-              ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\n${REPAIR_VOICE_PLAYBOOK}`
-              : VOICE_RESEARCH_ANSWER_INSTRUCTIONS,
+            instructions: inventoryTurn
+              ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis turn is OWN-LOT inventory. Speak the Lot total and any listed unit (year, make, model, stock, location, price). That unit is on our lot. Do not say a smaller count. Do not web-search over this snapshot.`
+              : plantTurn
+                ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis is a factory or company question, not a coach. Answer it in full. Do not stop after the factory's name. Do not ask for a year, make, model, or floorplan.`
+                : looksLikeRepairQuestion(this.lastResearchTranscript)
+                  ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\n${REPAIR_VOICE_PLAYBOOK}`
+                  : VOICE_RESEARCH_ANSWER_INSTRUCTIONS,
           },
         }),
       );
@@ -1332,20 +1425,37 @@ export class GrokRealtimeSession {
         if (!next || next === painted || seq !== this.specTurnSeq || this.closed) {
           return;
         }
-        this.handlers.onDeskSheet?.(
+        this.publishDeskSheet(
           offerExtras
             ? withVoiceSpecExtras(next, transcript, { force: true })
             : next,
+          transcript,
         );
       })
       .catch(() => undefined);
     return painted;
   }
 
+  private publishFloorplanChoices(
+    identity: {
+      year?: string;
+      make?: string;
+      model?: string;
+      floorplan?: string;
+    } | null,
+  ) {
+    if (!identity) {
+      this.handlers.onFloorplanChoices?.([]);
+      return;
+    }
+    const codes = missingIdentityFloorplans(identity);
+    this.handlers.onFloorplanChoices?.(codes);
+  }
+
   private async deliverVoiceQuick(
     seq: number,
     transcript: string,
-    opts?: { reportDelivery?: boolean },
+    opts?: { reportDelivery?: boolean; offerSpokenExtras?: boolean },
   ) {
     this.cancelAutoResponseForResearch();
     await ensureCatalogLoaded().catch(() => null);
@@ -1378,18 +1488,22 @@ export class GrokRealtimeSession {
       this.rememberVoiceCachedSheet(grounded.identity, sheet, transcript);
       this.deskFallbackSeq += 1;
       this.engineSheetPainted = true;
-      this.handlers.onDeskSheet?.(
+      this.publishDeskSheet(
         markDeskGapsSearching(
           reportDelivery
             ? withVoiceSpecExtras(sheet, transcript, { force: true })
             : sheet,
         ),
+        transcript,
       );
     }
     this.researchPhase = "answering";
     if (reportDelivery) this.offerVoiceExtras(sheet, transcript);
+    this.publishFloorplanChoices(grounded.identity);
     this.flushSpecEngineAnswer(
-      formatVoiceQuickOverview(sheet, { offerExtras: reportDelivery }),
+      formatVoiceQuickOverview(sheet, {
+        offerExtras: reportDelivery || opts?.offerSpokenExtras === true,
+      }),
     );
   }
 
@@ -1403,10 +1517,11 @@ export class GrokRealtimeSession {
     this.voiceExtraSheet = sheet;
     this.voiceExtraQuery = query;
     this.voiceExtrasOffered = true;
-    this.handlers.onDeskSheet?.(
+    this.publishDeskSheet(
       markDeskGapsSearching(
         withVoiceSpecExtras(sheet, query, { force: true }),
       ),
+      query,
     );
   }
 
@@ -1416,11 +1531,12 @@ export class GrokRealtimeSession {
     if (!sheet) return;
     this.cancelAutoResponseForResearch();
     this.researchPhase = "answering";
-    this.handlers.onDeskSheet?.(
+    this.publishDeskSheet(
       withVoiceSpecExtras(sheet, this.voiceExtraQuery, {
         force: true,
         pick: kind,
       }),
+      this.voiceExtraQuery,
     );
     const title = GROK_EXTRA_PROMPTS[kind].title.replace(/\?$/, "");
     this.flushExactSpeech(
@@ -1467,6 +1583,7 @@ export class GrokRealtimeSession {
       specs: grounded.specs,
       mountForVoiceReport:
         this.voiceDeliver === "full" ||
+        looksLikeDeskSheetAsk(transcript) ||
         looksLikeVoiceFieldOrMetaAsk(transcript),
       pinCoachKnowledge: true,
       knowledgeQuery: transcript,
@@ -1487,6 +1604,7 @@ export class GrokRealtimeSession {
       specs: pending.grounded.specs,
       mountForVoiceReport:
         this.voiceDeliver === "full" ||
+        looksLikeDeskSheetAsk(pending.transcript) ||
         looksLikeVoiceFieldOrMetaAsk(pending.transcript),
       pinCoachKnowledge: true,
       knowledgeQuery: pending.transcript,
@@ -1500,6 +1618,51 @@ export class GrokRealtimeSession {
       sheetPromise,
     );
     if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
+    const weightLine = isWeightSpecAsk(pending.transcript)
+      ? formatChatSpecMissReply({
+          query: pending.transcript,
+          year: pending.grounded.identity?.year || this.facts?.year,
+          make: pending.grounded.identity?.make || this.facts?.make,
+          model: pending.grounded.identity?.model || this.facts?.model,
+          floorplan:
+            pending.grounded.identity?.floorplan || this.facts?.floorplan,
+        })
+      : null;
+    if (weightLine && !isUnpinnedWeightReply(weightLine)) {
+      this.voiceExtrasOffered = false;
+      this.voiceExtraSheet = null;
+      const identity = pending.grounded.identity;
+      if (identity?.floorplan) this.handlers.onFloorplanChoices?.([]);
+      else this.publishFloorplanChoices(identity);
+      this.researchPhase = "answering";
+      this.flushSpecEngineAnswer(weightLine);
+      return;
+    }
+    if (weightLine && isUnpinnedWeightReply(weightLine)) {
+      const identity = pending.grounded.identity;
+      this.handlers.onStatus("thinking", "Researching…");
+      const result = await fetchVoiceWebResearchNotes({
+        query: pending.transcript,
+        catalogContext: pending.grounded.block,
+        signal: this.researchAbort?.signal,
+        accessPhone: this.accessPhone,
+      }).catch(() => null);
+      if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
+      const researched = formatChatSpecMissReply({
+        query: pending.transcript,
+        year: identity?.year || this.facts?.year,
+        make: identity?.make || this.facts?.make,
+        model: identity?.model || this.facts?.model,
+        floorplan: identity?.floorplan || this.facts?.floorplan,
+        researchNotes: result?.ok ? result.notes : "",
+      });
+      this.voiceExtrasOffered = false;
+      this.voiceExtraSheet = null;
+      if (identity?.floorplan) this.handlers.onFloorplanChoices?.([]);
+      this.researchPhase = "answering";
+      this.flushSpecEngineAnswer(researched || weightLine);
+      return;
+    }
     if (sheet) {
       this.rememberVoiceCachedSheet(
         pending.grounded.identity,
@@ -1508,27 +1671,102 @@ export class GrokRealtimeSession {
       );
     }
     this.deskFallbackSeq += 1;
-    const full = this.voiceDeliver === "full";
+    const showDesk =
+      this.voiceDeliver === "full" ||
+      looksLikeDeskSheetAsk(pending.transcript);
     const tagged = withVoiceSpecExtras(sheet, pending.transcript, {
-      force: true,
+      force: showDesk,
     });
     const script = formatVoiceSpecEngineSpeech(
       tagged,
       pending.transcript,
-      full ? "all" : "asked",
+      showDesk ? "all" : "asked",
     );
-    if (tagged) {
+    if (tagged && showDesk) {
       this.voiceExtraSheet = tagged;
       this.voiceExtraQuery = pending.transcript;
       this.voiceExtrasOffered = true;
+    } else {
+      this.voiceExtrasOffered = false;
+      this.voiceExtraSheet = null;
     }
-    this.handlers.onDeskSheet?.(markDeskGapsSearching(tagged));
+    this.publishDeskSheet(markDeskGapsSearching(tagged), pending.transcript);
     if (tagged) {
       this.engineSheetPainted = true;
       this.lastDeskQuery = pending.transcript;
       this.lastDeskIdentity = pending.grounded.identity;
       this.lastDeskSpecs = pending.grounded.specs;
     }
+    this.researchPhase = "answering";
+    this.publishFloorplanChoices(pending.grounded.identity);
+    this.flushSpecEngineAnswer(script);
+  }
+
+  private async answerFloorplanPick(seq: number, transcript: string) {
+    this.cancelAutoResponseForResearch();
+    await ensureCatalogLoaded().catch(() => null);
+    if (this.closed || this.intentionalStop || seq !== this.specTurnSeq) return;
+    const fp = (this.facts?.floorplan || "").trim();
+    const grounded = buildChatGrounding({
+      query: transcript,
+      facts: this.facts,
+    });
+    const base = grounded.identity;
+    const identity = {
+      year: this.facts?.year || base?.year || "",
+      make: this.facts?.make || base?.make || "",
+      model: this.facts?.model || base?.model || "",
+      floorplan: fp || base?.floorplan || "",
+      source: "facts" as const,
+    };
+    if (identity.make && identity.model) {
+      this.facts = {
+        year: identity.year,
+        make: identity.make,
+        model: identity.model,
+        floorplan: identity.floorplan,
+        updatedAt: new Date().toISOString(),
+      };
+    }
+    this.applyVoiceGrounding(transcript, {
+      ...grounded,
+      identity,
+    });
+    const tool = getCoachFacts(identity);
+    const uvw = /\b(uvw|dry\s+weight|unloaded)\b/i.test(transcript);
+    const label = uvw ? "UVW" : "GVWR";
+    const lbs = uvw ? tool.uvw_lb : tool.gvwr_lb;
+    const name = [identity.year, identity.model, identity.floorplan]
+      .filter(Boolean)
+      .join(" ");
+    let script =
+      lbs != null && lbs > 0
+        ? `${name}. ${label} is ${Math.round(lbs).toLocaleString("en-US")} pounds.`
+        : "";
+    if (!script) {
+      this.handlers.onStatus("thinking", "Researching…");
+      const result = await fetchVoiceWebResearchNotes({
+        query: [identity.year, identity.make, identity.model, identity.floorplan, label]
+          .filter(Boolean)
+          .join(" "),
+        catalogContext: grounded.block,
+        accessPhone: this.accessPhone,
+      }).catch(() => null);
+      if (this.closed || this.intentionalStop || seq !== this.specTurnSeq) return;
+      script =
+        formatChatSpecMissReply({
+          query: label,
+          year: identity.year,
+          make: identity.make,
+          model: identity.model,
+          floorplan: identity.floorplan,
+          researchNotes: result?.ok ? result.notes : "",
+        }) || `${name} has no ${label} pin.`;
+    }
+    this.specEngineSpoken = true;
+    this.pendingSpec = null;
+    this.pendingSpecSheet = null;
+    this.handlers.onFloorplanChoices?.([]);
     this.researchPhase = "answering";
     this.flushSpecEngineAnswer(script);
   }

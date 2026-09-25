@@ -8,12 +8,14 @@ import { resolveDeskSheet, type DeskSheetPayload } from "./deskSheet.ts";
 import {
   classifyVoiceCoachDepth,
   classifyVoiceExtraPick,
+  formatChatSpecMissReply,
   formatVoiceQuickOverview,
   formatVoiceSpecEngineSpeech,
   isVoiceExtraNudge,
   looksLikeExplicitVoiceReportAsk,
   looksLikeVoiceCoachOrSpecAsk,
   looksLikeVoiceTellMeAboutAsk,
+  looksLikeFloorplanOnlyPick,
   looksLikeVoiceFieldOrMetaAsk,
   shouldSpeakVoiceCoachChoice,
   VOICE_COACH_CHOICE_LINE,
@@ -59,6 +61,7 @@ test("Lineage 31ZW UVW speech uses the painted engine number, not a guess", () =
     query: LINEAGE_Q,
     identity,
     specs: null,
+    mountForVoiceReport: true,
   });
   assert.ok(sheet);
   const uvw = sheet!.rows.find((r) => r.label === "UVW");
@@ -69,8 +72,9 @@ test("Lineage 31ZW UVW speech uses the painted engine number, not a guess", () =
   assert.doesNotMatch(speech, /from the catalog|per the catalog|from RV Guide|from the OEM brochure|from dealer inventory/i);
   assert.match(speech, /dry weight/i);
   assert.doesNotMatch(speech, /I won't guess/);
-  const tagged = withVoiceSpecExtras(sheet, LINEAGE_Q);
+  const tagged = withVoiceSpecExtras(sheet, "full report on the 2026 Lineage 31ZW");
   assert.equal(tagged?.offerVoiceExtras, true);
+  assert.equal(withVoiceSpecExtras(sheet, LINEAGE_Q)?.offerVoiceExtras, undefined);
   assert.equal(withVoiceSpecExtras(sheet, "hi")?.offerVoiceExtras, undefined);
 });
 
@@ -99,13 +103,18 @@ test("spec speech does not narrate a source tag, and a miss does not invent", ()
 
   const missed = formatVoiceSpecEngineSpeech(
     lineageSheet({
+      year: "2016",
+      make: "Newmar",
+      model: "Ventana",
+      floorplan: "3436",
       rows: [{ label: "UVW", value: "GAP", gap: true }],
       gaps: ["UVW"],
     }),
-    LINEAGE_Q,
+    "2016 Newmar Ventana 3436 UVW",
   );
-  assert.match(missed, /I won't guess/);
-  assert.doesNotMatch(missed, /18,186/);
+  assert.match(missed, /has no UVW pin/);
+  assert.doesNotMatch(missed, /still missing|ratings, market value/);
+  assert.doesNotMatch(missed, /18,186|34,100/);
   assert.match(
     formatVoiceSpecEngineSpeech(null, LINEAGE_Q),
     /both missed/,
@@ -116,9 +125,8 @@ test("spec speech does not narrate a source tag, and a miss does not invent", ()
 test("spec speech starts with the catalog result, then extras — no ack opener", () => {
   const speech = formatVoiceSpecEngineSpeech(lineageSheet(), LINEAGE_Q, "asked");
   assert.doesNotMatch(speech, /^(On it|Got it|Right away|Sure thing|Of course)\b/);
-  const numAt = speech.indexOf("18,186");
-  const extrasAt = speech.indexOf("ratings, market value");
-  assert.ok(numAt >= 0 && extrasAt > numAt);
+  assert.match(speech, /18,186/);
+  assert.doesNotMatch(speech, /ratings, market value/);
   const missed = formatVoiceSpecEngineSpeech(null, LINEAGE_Q, "asked");
   assert.match(missed, /^Catalog and the fallback chain both missed/);
   assert.match(missed, /I won't guess/);
@@ -207,6 +215,16 @@ test("coach or spec ask is a choice, not a synopsis or an auto full report", () 
   assert.equal(picked?.offerVoiceExtras, true);
 });
 
+test("know-about is a short coach ask, and a bare floorplan is only a pick", () => {
+  assert.equal(
+    looksLikeVoiceTellMeAboutAsk("I'd like to know about a 2020 Bounder"),
+    true,
+  );
+  assert.equal(looksLikeVoiceTellMeAboutAsk("tell me everything about the Bounder"), false);
+  assert.equal(looksLikeFloorplanOnlyPick("The 35K"), true);
+  assert.equal(looksLikeFloorplanOnlyPick("2020 Fleetwood Bounder 35K"), false);
+});
+
 test("tell me about a coach is a short line and does not offer the five extras", () => {
   const q = "tell me about the Cornerstone";
   assert.equal(looksLikeVoiceTellMeAboutAsk(q), true);
@@ -224,22 +242,36 @@ test("tell me about a coach is a short line and does not offer the five extras",
   );
   assert.match(short, /Cornerstone 45B/);
   assert.doesNotMatch(short, /ratings|market value|NHTSA|maintenance|video/i);
+  const bare = formatVoiceQuickOverview(
+    lineageSheet({
+      year: "2016",
+      make: "Newmar",
+      model: "Ventana",
+      floorplan: "",
+      title: "2016 Newmar Ventana",
+    }),
+  );
+  assert.match(bare, /2016 Newmar Ventana/);
+  assert.doesNotMatch(bare, /Which floorplan/);
+  assert.doesNotMatch(bare, /I won't guess/);
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
   const fn = realtime.slice(
     realtime.indexOf("private async maybeEnrichWithWebResearch"),
   );
   assert.match(fn, /looksLikeVoiceTellMeAboutAsk\(transcript\)/);
   assert.match(fn, /deliverVoiceQuick\(specSeq, transcript\);/);
-  assert.match(
+  assert.doesNotMatch(
     fn,
     /deliverVoiceQuick\(specSeq, transcript, \{ reportDelivery: true \}\)/,
   );
+  assert.match(fn, /offerSpokenExtras: true/);
   const quickFn = realtime.slice(
     realtime.indexOf("private async deliverVoiceQuick"),
     realtime.indexOf("private offerVoiceExtras"),
   );
   assert.match(quickFn, /if \(reportDelivery\) this\.offerVoiceExtras/);
   assert.match(quickFn, /offerExtras: reportDelivery/);
+  assert.match(quickFn, /offerSpokenExtras/);
   const catalogFirst = realtime.slice(
     realtime.indexOf("private speakCatalogThenFallback"),
     realtime.indexOf("private async deliverVoiceQuick"),
@@ -323,9 +355,8 @@ test("speech refuses an unpainted GVWR and keeps benefit on painted facts", () =
     gaps: ["GVWR", "UVW", "Fuel capacity"],
   });
   const speech = formatVoiceSpecEngineSpeech(corner, "just the GVWR");
-  assert.match(speech, /GVWR is still missing/);
-  assert.match(speech, /checking live sources/);
-  assert.match(speech, /I won't guess/);
+  assert.match(speech, /has no GVWR pin/);
+  assert.doesNotMatch(speech, /still missing|checking live sources|ratings, market value/);
   assert.doesNotMatch(speech, /54,?000/);
   assert.doesNotMatch(speech, /\bpounds\b/);
   assert.doesNotMatch(speech, /fewer stops|hill power|passing power/);
@@ -342,6 +373,84 @@ test("speech refuses an unpainted GVWR and keeps benefit on painted facts", () =
   );
   assert.match(painted, /54,000/);
   assert.match(painted, /fewer stops/);
+});
+
+test("2016 Ventana 4041 UVW speaks 34,100 before any miss line", () => {
+  const speech = formatChatSpecMissReply({
+    query: "Can you find the UVW?",
+    year: "2016",
+    make: "Newmar",
+    model: "Ventana",
+    floorplan: "4041",
+  });
+  assert.ok(speech);
+  assert.match(speech!, /has no UVW pin/);
+  assert.doesNotMatch(speech!, /still missing|Which floorplan|ratings, market value/);
+  const gvwr = formatChatSpecMissReply({
+    query: "GVWR on the 4041",
+    year: "2016",
+    make: "Newmar",
+    model: "Ventana",
+    floorplan: "4041",
+  });
+  assert.match(gvwr || "", /has no GVWR pin/);
+  assert.doesNotMatch(gvwr || "", /still missing|ratings, market value/);
+  const voiced = formatVoiceSpecEngineSpeech(
+    lineageSheet({
+      year: "2016",
+      make: "Newmar",
+      model: "Ventana",
+      floorplan: "4041",
+      title: "2016 Newmar Ventana 4041",
+      rows: [{ label: "UVW", value: "GAP", gap: true }],
+      gaps: ["UVW"],
+    }),
+    "Can you find the UVW?",
+  );
+  assert.match(voiced, /has no UVW pin|GAP/);
+  assert.doesNotMatch(voiced, /still missing|Which floorplan|ratings, market value/);
+});
+
+test("GVW is a GVWR ask and the 2020 Bounder 35K pin is spoken", () => {
+  assert.equal(looksLikeVoiceFieldOrMetaAsk("what is the GVW"), true);
+  const speech = formatChatSpecMissReply({
+    query: "what is the GVW",
+    year: "2020",
+    make: "Fleetwood",
+    model: "Bounder",
+    floorplan: "35K",
+  });
+  assert.equal(
+    speech,
+    "2020 Fleetwood Bounder 35K. 2020 Bounder 35K has no GVWR pin.",
+  );
+});
+
+test("empty Dutch Star pin speaks a brochure figure from research, not a catalog pin", () => {
+  const bare = formatChatSpecMissReply({
+    query: "GVWR",
+    year: "2020",
+    make: "Newmar",
+    model: "Dutch Star",
+    floorplan: "4369",
+  });
+  assert.match(bare || "", /has no GVWR pin/);
+  assert.doesNotMatch(bare || "", /51,000/);
+  const speech = formatChatSpecMissReply({
+    query: "what is the GVWR",
+    year: "2020",
+    make: "Newmar",
+    model: "Dutch Star",
+    floorplan: "4369",
+    researchNotes:
+      "2020 Dutch Star brochure. Floorplan 4369 GVWR 51,000 lb. Freightliner tag-axle.",
+  });
+  assert.match(speech || "", /2020 Newmar Dutch Star 4369/);
+  assert.match(speech || "", /GVWR is 51,000 pounds/);
+  assert.match(speech || "", /Freightliner tag-axle/);
+  assert.match(speech || "", /brochure figure, not a catalog pin/);
+  assert.match(speech || "", /From the 2020 Dutch Star brochure/);
+  assert.doesNotMatch(speech || "", /has no GVWR pin/);
 });
 
 test("Live Voice spec turns go through the shared engine and skip the snippet reply", () => {

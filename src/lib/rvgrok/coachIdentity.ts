@@ -407,6 +407,88 @@ export type CatalogPresence =
     }
   | { status: "missing-series"; make: string; model: string };
 
+function seriesChoicesForFragment(
+  make: string,
+  model: string,
+  year: string,
+): string[] {
+  const live = peekCatalog()?.RV_DATA?.[resolveCatalogMake(make)];
+  if (!live) return [];
+  const n = norm(model);
+  if (n.length < 4) return [];
+  const hits = Object.keys(live).filter((name) => {
+    const nn = norm(name);
+    if (!nn || nn === n) return false;
+    return nn.includes(n) || n.includes(nn);
+  });
+  if (hits.length < 2) return [];
+  if (!year) return hits;
+  return hits.filter((name) => {
+    const byYear = live[name]?.floorplansByYear?.[year];
+    return Boolean(byYear?.length);
+  });
+}
+
+/** Same year rule as getFloorplansForYear: a year row, or nothing. Never the all-years list. */
+function catalogFloorplansFor(
+  year: string,
+  make: string,
+  model: string,
+): string[] {
+  const live =
+    peekCatalog()?.RV_DATA?.[make]?.[model] ??
+    peekCatalog()?.RV_DATA?.[resolveCatalogMake(make)]?.[model];
+  if (!live || !year.trim()) return [];
+  const byYear = live.floorplansByYear;
+  if (!byYear || !Object.keys(byYear).length) return [];
+  const row = byYear[year] ?? byYear[String(parseInt(year, 10))];
+  return row?.length ? [...row] : [];
+}
+
+/**
+ * Floorplans for a locked year / make / model. Empty when a floorplan
+ * is already chosen or the series is not locked. Screen only — never spoken.
+ */
+export function missingIdentityFloorplans(identity: {
+  year?: string;
+  make?: string;
+  model?: string;
+  floorplan?: string;
+}): string[] {
+  const year = (identity.year || "").trim();
+  const make = (identity.make || "").trim();
+  const model = (identity.model || "").trim();
+  const floorplan = (identity.floorplan || "").trim();
+  if (floorplan || !year || !make || !model) return [];
+  return catalogFloorplansFor(year, make, model);
+}
+
+/**
+ * Spoken ask only. The floorplan codes stay on screen.
+ */
+export function missingIdentityAsk(identity: {
+  year?: string;
+  make?: string;
+  model?: string;
+  floorplan?: string;
+}): string {
+  const year = (identity.year || "").trim();
+  const make = (identity.make || "").trim();
+  const model = (identity.model || "").trim();
+  const floorplan = (identity.floorplan || "").trim();
+  if (floorplan) return "";
+  const have = [year, make, model].filter(Boolean).join(" ");
+  if (!year || !make || !model) {
+    if (!have) return "";
+    return `${have}. I need the year, the make, and the model before I can give real details. Which one?`;
+  }
+  const series = seriesChoicesForFragment(make, model, year);
+  if (series.length > 1) {
+    return `${have}. Which series? ${series.join(", ")}.`;
+  }
+  return "Which floorplan?";
+}
+
 function floorplanListed(
   listed: readonly string[] | undefined,
   floorplan: string,
@@ -548,6 +630,11 @@ export function inspectCatalogPresence(
     if (floorplanListed(live?.floorplans, floorplan)) {
       return { status: "exact", year, make, model, floorplan };
     }
+    // The series has a floorplan list and this token is not on it.
+    // It is not a floorplan — ask, don't lock the code.
+    if (live?.floorplans?.length) {
+      return { status: "floorplan-gap", year, make, model, floorplan };
+    }
   }
 
   return { status: "year-series", year, make, model, floorplan };
@@ -563,8 +650,18 @@ function formatCatalogPresenceNoteRaw(presence: CatalogPresence): string {
       return "";
     case "year-series":
       return "";
-    case "floorplan-gap":
-      return `FLOORPLAN GAP — ${presence.year} ${presence.make} ${presence.model} is in the catalog; ${presence.floorplan} is not listed for that year.`;
+    case "floorplan-gap": {
+      const plans = catalogFloorplansFor(
+        presence.year,
+        presence.make,
+        presence.model,
+      );
+      const shown = plans.slice(0, 8);
+      const list = shown.length
+        ? ` Catalog floorplans include ${shown.join(", ")}${plans.length > shown.length ? ", and others" : ""}.`
+        : "";
+      return `${presence.floorplan} is not a catalog floorplan for ${presence.year} ${presence.make} ${presence.model}. Ask which floorplan they mean.${list}`;
+    }
     case "series":
       return `YEAR MISSING — ${presence.make} ${presence.model} is in the catalog.`;
     case "missing-year":
@@ -731,6 +828,22 @@ export function resolveCoachIdentity(
   // that fills year / make / model / floorplan independently.
   const fromQueryRaw = parseCoachFromText(query);
   const lockOk = Boolean(facts?.make?.trim() && facts.model?.trim());
+  const bareFloorplan = (fromQueryRaw.floorplan || "").trim();
+  if (
+    lockOk &&
+    bareFloorplan &&
+    !fromQueryRaw.year &&
+    !fromQueryRaw.make &&
+    !fromQueryRaw.model
+  ) {
+    return lockIdentityTuple({
+      year: facts!.year || "",
+      make: resolveCatalogMake(facts!.make),
+      model: facts!.model,
+      floorplan: bareFloorplan,
+      source: "mixed",
+    });
+  }
 
   // Spec-field follow-up ("add a torque to weight ratio…") keeps the
   // mounted coach. Bare field words must not remount Heartland Torque.

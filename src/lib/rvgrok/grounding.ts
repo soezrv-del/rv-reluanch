@@ -41,7 +41,9 @@ import {
 } from "./originStory.ts";
 import {
   INCOMPLETE_COACH_IDENTITY_CUE,
+  COMPANY_PLANT_CUE,
   looksLikeCoachFactAsk,
+  looksLikeCompanyOrPlantAsk,
   looksLikeIncompleteCoachIdentityAsk,
   looksLikeInventoryOrCountQuestion,
   looksLikeNamedCoachProductQuestion,
@@ -81,7 +83,7 @@ function withDeskSheetSpeechRule(
   const extra =
     identity && shouldMountDeskSheet(query, identity)
       ? `DESK SPEC SHEET MOUNTED for ${[identity.year, identity.make, identity.model, identity.floorplan].filter(Boolean).join(" ")}. You may say exactly: "Spec sheet is on the desk." Speak THIS coach — never a prior series. Incomplete fields show as GAP on the sheet — do not write EST onto the desk or re-GAP a Facts number. Conversational answers may give a labeled EST / typical class range after WEB RESEARCH — never as an OEM pin. If a field is non-GAP on the sheet or VERIFIED in LOCKED WEIGHTS, speak that number — never claim you lack it.\n\n${formatLockedWeightsBlock(identity)}\n\n${COACH_REPORT_CHAT_RULE} The desk card copies every number from that chat bubble. Do not output a second markdown Spec Sheet, Weight ratings table, or GVWR/GCWR/UVW/NCC: GAP block that re-GAPs a named or VERIFIED field.`
-      : `DESK SPEC SHEET NOT MOUNTED. Never say the spec sheet / report is on the desk, or that a sheet is visible. Speak the answer only.`;
+      : `DESK SPEC SHEET NOT MOUNTED. Never say the spec sheet / report is on the desk, or that a sheet is visible. Speak the answer. A follow-up on the same thread is fine.`;
   const body = (block || "").trim();
   return body ? `${body}\n\n${extra}` : extra;
 }
@@ -448,12 +450,16 @@ function line(label: string, f: GroundedField): string {
 /** Block injected into chat / voice instructions. */
 export function formatCatalogGroundingBlock(specs: GroundedSpecs): string {
   const id = specs.identity;
-  const coach = [id.year, id.make, id.model, id.floorplan]
+  const presence = inspectCatalogPresence(id);
+  const presenceNote = formatCatalogPresenceNote(presence);
+  const coach = [
+    id.year,
+    id.make,
+    id.model,
+    presence.status === "floorplan-gap" ? "" : id.floorplan,
+  ]
     .filter(Boolean)
     .join(" ");
-  const presenceNote = formatCatalogPresenceNote(
-    inspectCatalogPresence(id),
-  );
   const lockLine = presenceNote
     ? presenceNote
     : specs.hasHardLock
@@ -478,6 +484,10 @@ export function formatCatalogGroundingBlock(specs: GroundedSpecs): string {
 }
 
 export function formatVoiceCatalogAddendum(specs: GroundedSpecs): string {
+  const presence = inspectCatalogPresence(specs.identity);
+  if (presence.status === "floorplan-gap") {
+    return `\n\n${formatCatalogGroundingBlock(specs)}\nAsk one clarifying question. Do not read specs or mount a sheet until they name a floorplan the catalog lists.`;
+  }
   const speak =
     "Speak those locked numbers and every VERIFIED LOCKED WEIGHTS field. If a field is UNKNOWN / CATALOG GAP and not VERIFIED, use WEB RESEARCH notes then speak a labeled EST / typical class range — never as an OEM pin. Never say you don't have a VERIFIED GVWR.";
   return `\n\n${formatCatalogGroundingBlock(specs)}\n${speak}`;
@@ -562,6 +572,15 @@ export function buildChatGrounding(opts: {
 } {
   const webOpts = { agentMode: opts.agentMode };
   const repairMode = looksLikeRepairQuestion(opts.query);
+  if (looksLikeCompanyOrPlantAsk(opts.query)) {
+    return {
+      identity: null,
+      specs: null,
+      block: COMPANY_PLANT_CUE,
+      needsWeb: true,
+      repairMode: false,
+    };
+  }
   if (looksLikeIncompleteCoachIdentityAsk(opts.query)) {
     return {
       identity: null,
@@ -647,6 +666,7 @@ export function buildVoiceGrounding(opts: {
   facts?: ActiveCoach | null;
 }): string {
   const query = opts.query || "";
+  if (looksLikeCompanyOrPlantAsk(query)) return COMPANY_PLANT_CUE;
   if (looksLikeIncompleteCoachIdentityAsk(query)) {
     return withDeskSheetSpeechRule(INCOMPLETE_COACH_IDENTITY_CUE, query, null);
   }

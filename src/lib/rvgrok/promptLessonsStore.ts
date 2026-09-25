@@ -10,6 +10,7 @@ import { getSql } from "@/lib/db";
 import {
   applyAddLesson,
   applyDeleteLesson,
+  applyQueuePendingLesson,
   DEFAULT_PROMPT_LESSONS,
   formatPromptLessons,
   mergePromptLessons,
@@ -20,6 +21,7 @@ import {
 } from "./promptLessons.ts";
 
 export const PROMPT_LESSONS_SETTING_KEY = "prompt_lessons";
+export const PENDING_PROMPT_LESSONS_KEY = "prompt_lessons_pending";
 export const PROMPT_LESSONS_CACHE_TTL_MS = 2_000;
 
 type Cache = { value: PromptLesson[]; at: number };
@@ -106,6 +108,32 @@ export async function readStandingLessonsBlock(): Promise<string> {
 
 export async function readPromptLessonsStatus(): Promise<PromptLessonsStatus> {
   return promptLessonsStatus(await readEffectivePromptLessons());
+}
+
+/** Hangup corrections wait here. Standing lessons do not read this key. */
+export async function queuePendingPromptLesson(text: string): Promise<void> {
+  try {
+    const sql = await getSql();
+    const rows = await sql<{ value: string }>`
+      select value
+      from rvgrok_ops_settings
+      where key = ${PENDING_PROMPT_LESSONS_KEY}
+      limit 1
+    `;
+    const pending = applyQueuePendingLesson(
+      parseStoredPromptLessons(rows[0]?.value),
+      text,
+    );
+    await sql`
+      insert into rvgrok_ops_settings (key, value, updated_at)
+      values (${PENDING_PROMPT_LESSONS_KEY}, ${serializeLessons(pending)}, now())
+      on conflict (key) do update set
+        value = excluded.value,
+        updated_at = now()
+    `;
+  } catch {
+    /* pending is optional; continuity still saves */
+  }
 }
 
 export async function addPromptLesson(text: string): Promise<

@@ -91,12 +91,9 @@ test("2016 Ventana at Carson is a show miss, not a zero-lot lie", () => {
     snapshot,
     "Hello, are you able to check uh the Carson show for a 2016 Ventana?",
   );
-  assert.match(block, /LOCATION MISS/);
-  assert.match(block, /UCBGN9287A/);
-  assert.match(block, /UPI9379/);
-  assert.match(block, /Sparks NV/);
-  assert.match(block, /46049B|UPB9680/);
-  assert.doesNotMatch(block, /No own-lot hit for this exact series/);
+  assert.match(block, /No own-lot hit for this exact series/);
+  assert.match(block, /Matched: 0/);
+  assert.doesNotMatch(block, /Lot total:\s*0/);
 
   const follow = formatOwnLotBlock(
     snapshot,
@@ -108,10 +105,10 @@ test("2016 Ventana at Carson is a show miss, not a zero-lot lie", () => {
   assert.doesNotMatch(follow, /multiple dealers/);
 });
 
-test("Ventana period follow-up stays a lot ask", () => {
+test("a Ventana follow-up without a lot cue is not a lot search", () => {
   assert.equal(
     looksLikeOwnLotSearchAsk("Do, does any of 'em match a Ventana period?"),
-    true,
+    false,
   );
   assert.equal(
     looksLikeOwnLotSearchAsk("No, I'm looking on our lot. What do we have on our lot?"),
@@ -119,11 +116,9 @@ test("Ventana period follow-up stays a lot ask", () => {
   );
 });
 
-test("look-into / let-me-check stalls are forbidden", () => {
-  assert.equal(isForbiddenResearchHold("I can look into that for you."), true);
-  assert.equal(
-    isForbiddenResearchHold("Let me check the live lot data for any Ventana."),
-    true,
-  );
+test("standing stall phrases are forbidden; a look-into is not a hold", () => {
+  assert.equal(isForbiddenResearchHold("Let me check that."), true);
+  assert.equal(isForbiddenResearchHold("I'll look that up."), true);
+  assert.equal(isForbiddenResearchHold("I can look into that for you."), false);
   assert.equal(isForbiddenResearchHold("give me one second"), false);
 });

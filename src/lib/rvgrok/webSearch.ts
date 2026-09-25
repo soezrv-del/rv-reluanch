@@ -55,6 +55,7 @@ import {
   formatCoachReportDraftInjection,
   looksLikeCoachReportAsk,
 } from "./coachReport.ts";
+import { looksLikeDeskSheetAsk } from "./deskSheetPolicy.ts";
 import {
   fetchGeminiResearchNotes,
   geminiResearchTimeoutMs,
@@ -907,7 +908,7 @@ export function formatWebSearchInjection(
     ].join(" ");
   }
   const reportQuery = opts?.query || result.query || "";
-  const reportDraft = looksLikeCoachReportAsk(reportQuery)
+  const reportDraft = looksLikeDeskSheetAsk(reportQuery)
     ? formatCoachReportDraftInjection(result.ok ? result.notes : "", {
         catalogBlock: opts?.catalogBlock,
         query: reportQuery,

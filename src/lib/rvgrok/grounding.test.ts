@@ -239,8 +239,8 @@ test("Live Voice instructions aim for accuracy but not gospel; gesture order unt
   assert.doesNotMatch(voice, /ACCURACY FIRST/);
   assert.match(voice, /CAMERA:/);
   assert.match(src(root, "speechPolicy.ts"), /Get as accurate as possible, but not gospel\./);
-  assert.match(src(root, "speechPolicy.ts"), /Empty beats invented/);
-  assert.match(src(root, "speechPolicy.ts"), /Never guess a number/);
+  assert.match(src(root, "speechPolicy.ts"), /If both are empty, say that field is unverified/);
+  assert.match(src(root, "speechPolicy.ts"), /Never invent GVWR/);
   assert.doesNotMatch(voice, /You do not have a separate research step/);
   assert.match(live, /liveVoiceStartOrder/);
   assert.match(live, /gesture-capture/);
@@ -508,7 +508,7 @@ test("repair-mode playbook is wired through chat, voice, and browse", () => {
   assert.match(src(root, "grounding.ts"), /formatRepairGroundingBlock/);
   assert.match(src(root, "webIntent.ts"), /looksLikeRepairQuestion/);
   assert.match(src(root, "prompts.ts"), /RV_GROK_LEAN_CORE/);
-  assert.match(src(root, "speechPolicy.ts"), /Answer any of it, anytime/);
+  assert.match(src(root, "speechPolicy.ts"), /You also answer the rest of what he asks/);
   assert.match(src(root, "voice.ts"), /RV_GROK_LEAN_CORE/);
   assert.match(src(root, "webSearch.ts"), /torque spec, part number, wiring color/);
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
@@ -517,9 +517,9 @@ test("repair-mode playbook is wired through chat, voice, and browse", () => {
 
 test("system prompts never deflect to website / OEM / dealer — unconditional", () => {
   const speech = src(root, "speechPolicy.ts");
-  assert.match(speech, /Empty beats invented/);
-  assert.match(speech, /Never guess a number/);
-  assert.match(speech, /do not invent/);
+  assert.match(speech, /If both are empty, say that field is unverified/);
+  assert.match(speech, /Never invent GVWR/);
+  assert.match(speech, /the catalog pin in this turn wins/);
   assert.match(src(root, "prompts.ts"), /RV_GROK_LEAN_CORE/);
   assert.doesNotMatch(
     src(root, "prompts.ts"),
@@ -970,6 +970,31 @@ test("incomplete 'about a 2026' waits for identity — no search, no timeout lec
   const ymm = "On a 2026 Odyssey 24B made by Entegra";
   assert.equal(looksLikeNamedCoachProductQuestion(ymm), true);
   assert.equal(needsWebFallback(null, ymm), false);
+});
+
+test("a factory ask is the plant, not a coach missing a year", () => {
+  const q = "Grand Design motorhome factory";
+  assert.equal(looksLikeNamedCoachProductQuestion(q), false);
+  assert.equal(needsWebFallback(null, q), true);
+  const grounded = buildChatGrounding({ query: q });
+  assert.equal(grounded.identity, null);
+  assert.equal(grounded.needsWeb, true);
+  assert.match(grounded.block, /COMPANY \/ PLANT ASK/);
+  assert.doesNotMatch(grounded.block, /I need the year, the make, and the model/);
+  assert.doesNotMatch(grounded.block, /Class C/);
+  assert.equal(
+    needsWebFallback(null, "What's the factory GVWR of a 2020 Tiffin Phaeton 40IH?"),
+    false,
+  );
+  const voice = buildVoiceGrounding({ query: "what do you think of them" });
+  assert.match(voice, /Name the plant and what it builds/);
+  assert.match(voice, /Do not stop after the factory's name/);
+  assert.doesNotMatch(voice, /I need the year/);
+  const haxton = "What can you tell me about the Haxton factory?";
+  const haxtonGrounded = buildChatGrounding({ query: haxton });
+  assert.equal(haxtonGrounded.identity, null);
+  assert.match(haxtonGrounded.block, /Do not stop after the factory's name/);
+  assert.equal(looksLikeNamedCoachProductQuestion(haxton), false);
 });
 
 test("chat + voice grounding keep Lineage 31ZW on a torque-to-weight follow-up", () => {

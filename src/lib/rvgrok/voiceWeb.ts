@@ -1,12 +1,12 @@
 /**
  * Live Voice rendering of the shared chat web-research path.
  *
- * Detection is NOT forked: `decideVoiceWebResearch` calls `needsWebFallback`
- * from `webIntent.ts` (same function chat uses via `buildChatGrounding`).
- * The spoken hold is narrower than browse: repair / market / live
- * conditions / unpinned OEM specs speak VOICE_RESEARCH_HOLD_PHRASE
- * ("give me one second") while live search runs. A catalog pin and
- * memory-answerable coach talk stay offline — no hold, no scrape.
+ * Detection follows `needsWebFallback` plus own-lot stock asks. "Do we
+ * have a 2012 Phaeton?" is stock but not an inventory-count phrase, so
+ * the lot snapshot must still load. The spoken hold is narrower than
+ * browse: repair / market / live conditions / unpinned OEM specs speak
+ * VOICE_RESEARCH_HOLD_PHRASE ("give me one second") while live search
+ * runs. A catalog pin and memory-answerable coach talk stay offline.
  */
 
 import {
@@ -22,7 +22,13 @@ import {
   needsWebFallback,
   type WebFallbackSpecs,
 } from "./webIntent.ts";
-import { looksLikeOwnLotStockQuestion } from "./ownLotInventory.ts";
+import {
+  isOwnLotResearchNotes,
+  looksLikeOwnLotStockQuestion,
+  ownLotNotesForSpeech,
+} from "./ownLotAsk.ts";
+
+export { isOwnLotResearchNotes, ownLotNotesForSpeech };
 import {
   evaluateResearchQuality,
   type WebSearchNotes,
@@ -135,7 +141,13 @@ export function decideVoiceWebResearch(opts: {
 }): VoiceWebDecision {
   const transcript = (opts.transcript || "").trim();
   if (!transcript) return { action: "pass" };
-  if (!needsWebFallback(opts.specs ?? null, transcript)) {
+  // "Do we have a 2012 Tiffin Phaeton?" is an own-lot ask but not an
+  // inventory/count phrase, so needsWebFallback stays false and voice
+  // used to answer from memory. Lot questions must still load the snapshot.
+  const ownLot =
+    looksLikeOwnLotStockQuestion(transcript) ||
+    looksLikeInventoryOrCountQuestion(transcript);
+  if (!ownLot && !needsWebFallback(opts.specs ?? null, transcript)) {
     return { action: "pass" };
   }
   const speakHold = shouldSpeakVoiceResearchHold(transcript, opts.specs);
@@ -167,6 +179,9 @@ export function formatVoiceWebSearchInjection(
   result: WebSearchNotes,
   opts?: { catalogBlock?: string },
 ): string {
+  if (result.ok && isOwnLotResearchNotes(result.notes || "")) {
+    return ownLotNotesForSpeech(result.notes);
+  }
   const gate = evaluateResearchQuality({ result, query: result.query });
   if (result.ok) {
     const estLine = gate.confirmed

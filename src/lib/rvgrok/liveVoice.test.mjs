@@ -148,7 +148,7 @@ test("Live Voice session start introduces RV Grok once — not the old stall", (
   );
   assert.match(live, /buildSessionIntroResponse/);
   assert.match(live, /sessionIntroLine/);
-  assert.match(policy, /ultimate sales assistant for RV salesmen/);
+  assert.match(policy, /This is SALES\. Every question matters/);
   assert.match(policy, /SALES_MISSION_POLICY/);
   assert.match(policy, /HONESTY_STANDING_POLICY/);
   assert.doesNotMatch(live, /redirect off-topic/);

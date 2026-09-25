@@ -227,6 +227,23 @@ export function applyAddLesson(
   return { ok: true, stored: [...stored, lesson], lesson };
 }
 
+/** Pending desk lessons. Not injected. Duplicate text is a no-op. Cap 12. */
+export function applyQueuePendingLesson(
+  pending: readonly PromptLesson[],
+  text: string,
+  now = new Date().toISOString(),
+): PromptLesson[] {
+  const parsed = parseLessonText(text);
+  if (!parsed) return [...pending];
+  if (pending.some((l) => !l.disabled && l.text === parsed)) return [...pending];
+  const lesson: PromptLesson = {
+    id: newAdminLessonId(),
+    text: parsed,
+    updatedAt: now,
+  };
+  return [...pending, lesson].slice(-12);
+}
+
 export function applyDeleteLesson(
   stored: readonly PromptLesson[],
   rawId: string,
