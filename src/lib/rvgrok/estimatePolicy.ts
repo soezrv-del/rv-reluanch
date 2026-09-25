@@ -12,11 +12,11 @@ export const CATALOG_MISS_MUST_SEARCH =
   "When the catalog / OEM pin does not have the answer, you MUST run WEB RESEARCH this turn before answering — not optional, not last resort.";
 
 /**
- * Specs / GVWR / engine / pricing / year-make-model: live search first,
- * even when the catalog already has a pin. Training data is not an answer.
+ * Specs / GVWR / engine / pricing / year-make-model: live source or catalog
+ * pin first. Living knowledge may brief a miss. Never mint a factory number.
  */
 export const SPEC_ASK_MUST_SEARCH =
-  "When the user asks for specs, GVWR, engine, horsepower, chassis, or pricing on any coach — or names a year, make, and model — you MUST run live WEB RESEARCH this turn BEFORE answering. Prefer OEM / factory brochure / dealer listings. Never answer from training data alone. Catalog lock may confirm a live number; it must not skip the search.";
+  "Hard specs (GVWR, UVW, engine, tanks, asking price): live source or catalog pin first. If both are empty, say so. You may still brief the coach from what you know — living, known issues, how it sells — without minting a factory number. Run WEB RESEARCH this turn when the asked number is not already pinned.";
 
 /**
  * Fake-empty ban: do not say search failed unless this turn actually ran it.
@@ -31,11 +31,11 @@ export const SEARCH_CLAIM_HONESTY =
  * exists. Never invent brochure numbers from training.
  */
 export const LABELED_ESTIMATE_RULE =
-  "Never EST after a single miss. Never EST / typical class range / low confidence when live OEM / brochure / dealer notes confirm a fact. If search returns nothing after a retry, say so plainly — do not invent brochure numbers from training. If LOCKED WEIGHTS / VERIFIED CATALOG lists a non-GAP pin for the asked field, speak that OEM number — never refuse a factory GVWR. Never present an estimate as an OEM pin or brochure fact. Catalog option-band fields may still be marked EST / estimate / typical class range (not a single locked number). Never silent-invent a number as fact.";
+  "Never present a ballpark as an OEM pin or brochure fact. Never EST / typical class range / low confidence when live OEM / brochure / dealer notes confirm a fact. Catalog pin and live notes win. Chat and voice may give a labeled ballpark beside a miss. Never write EST onto the desk. If LOCKED WEIGHTS / VERIFIED CATALOG lists a non-GAP pin for the asked field, speak that OEM number — never refuse a factory GVWR. Catalog option-band fields may still be marked EST / estimate / typical class range (not a single locked number). Never silent-invent a number as fact.";
 
 /** Injection / speech line when live notes confirm, or search missed. */
 export const LOW_CONFIDENCE_EST_RULE =
-  "Never emit EST / typical class range / low confidence when live WEB RESEARCH notes confirm a fact. If LOCKED WEIGHTS / VERIFIED CATALOG lists a non-GAP pin for the asked field, speak that OEM number FIRST — never lead with \"search timed out\" / \"returned nothing after a retry\" / \"I don't have a factory GVWR\" / \"I won't invent that number.\" If there is no catalog pin and search returned nothing after a retry, say so plainly — do not invent brochure numbers from training. Do not write EST onto the desk.";
+  "Never emit EST / typical class range / low confidence when live WEB RESEARCH notes confirm a fact. If LOCKED WEIGHTS / VERIFIED CATALOG lists a non-GAP pin for the asked field, speak that OEM number FIRST — never lead with \"search timed out\" / \"returned nothing after a retry\" / \"I don't have a factory GVWR\" / \"I won't invent that number.\" If there is no catalog pin and search returned nothing after a retry, say so once, then brief from what you know. Do not write EST onto the desk.";
 
 /**
  * Search timeout / empty notes do not unlock a refuse when Facts / catalog

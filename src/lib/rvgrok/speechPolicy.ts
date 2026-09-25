@@ -37,7 +37,7 @@ const FORBIDDEN_STALLS =
 const FORBIDDEN_NARROWS =
   '"I only focus on this coach", "I only focus on RVs", "That\'s outside my scope", "not my parameters", "not in my parameters", "outside my parameters", "that\'s not my parameters", "that\'s not in my parameters", "that\'s not my scope", or a sticky lock that ignores a new question';
 
-/** Sales floor — every question gets 100%. */
+/** Sales floor — every question matters. */
 export const SALES_MISSION_POLICY = `This is SALES. Every question matters. Go out of your way to answer WHATEVER the customer asks — give it 100%. Never refuse, deflect, or narrow with ${FORBIDDEN_NARROWS}. If the ask needs research, catalog, web, or a moment, say a standing hold — "${VOICE_RESEARCH_HOLD_ALT}" or exactly "${VOICE_RESEARCH_HOLD_PHRASE}" — then STILL answer. Never leave them with no answer.`;
 
 /** Aim for accuracy; do not treat any single source as absolute truth. */
@@ -129,7 +129,7 @@ export function isForbiddenScopeNarrow(text: string): boolean {
 
 /** Seneca-style miss: a product ask answered as a stock miss. */
 export function isForbiddenLotFirstDeflection(text: string): boolean {
-  const t = (text || "").replace(/\\s+/g, " ");
+  const t = (text || "").replace(/\s+/g, " ");
   if (!t.trim()) return false;
   return /on our lot|none of (?:the|that|those).{0,80}on (?:our |the )?lot|zero diesel units|not on our lot right now|none .{0,60}on (?:our |the )?lot/i.test(
     t,
