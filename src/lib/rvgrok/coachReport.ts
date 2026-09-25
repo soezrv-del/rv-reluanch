@@ -111,6 +111,13 @@ export function looksLikeCoachReportAsk(text: string): boolean {
   }
   if (REPORT_PHRASE_RE.test(t)) return true;
   if (looksLikeSpecQuestion(t)) return true;
+  // "Details on" is a brief. Full report only on explicit specs / CARFAX / rundown.
+  if (
+    /\bdetails\s+(?:on|about|for)\b/i.test(t) &&
+    !/\b(full\s+report|spe[ck]k?s?\s+report|carfax)\b/i.test(t)
+  ) {
+    return false;
+  }
   if (looksLikeNamedCoachProductQuestion(t)) return true;
   return false;
 }

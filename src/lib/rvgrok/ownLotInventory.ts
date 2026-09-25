@@ -25,6 +25,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   extractFloorplanToken,
+  isYearBrandFloorplanToken,
   normalizeCoachAsk,
   normalizeFloorplanToken,
   parseCoachFromText,
@@ -191,6 +192,10 @@ const WEB_SEARCH_CUE_RE =
 
 const LOOK_UP_CATALOG_RE = /\blook(?:ing)?\s+up\b/i;
 
+/** Follow-up after a show/lot miss — stay on OUR snapshot, never other dealers. */
+const LOT_CONTINUATION_RE =
+  /\b(?:any of (?:them|'em|those)|match(?:es)? a |(?:on|from) our lot|our lot)\b/i;
+
 /** 27A / 27ASE / 25FW — not a 4–7 digit stock #. */
 const BARE_FLOORPLAN_RE = /^\d{2,3}[A-Za-z]{1,4}$/;
 
@@ -213,6 +218,12 @@ const LOT_ASK_STOP = new Set([
   "checking",
   "got",
   "any",
+  "able",
+  "match",
+  "matches",
+  "matching",
+  "period",
+  "em",
   "a",
   "an",
   "the",
@@ -408,6 +419,9 @@ export function looksLikeOwnLotSearchAsk(text: string): boolean {
     return true;
   }
   if (WEAK_LOT_SEARCH_RE.test(t) && hasFloorplanOrStock) return true;
+  if (LOT_CONTINUATION_RE.test(t) && (hasCoach || hasFloorplanOrStock)) {
+    return true;
+  }
   return false;
 }
 
@@ -924,6 +938,7 @@ export function parseOwnLotAsk(
     extractFloorplanToken(t);
   if (
     trim &&
+    !isYearBrandFloorplanToken(trim) &&
     (filter.make ||
       filter.model ||
       parsed.make ||
@@ -1558,9 +1573,65 @@ export function formatOwnLotBlock(
   );
 
   if (counts.matched === 0) {
-    lines.push(
-      "No own-lot hit for this exact series. Say we do not have that coach on the lot snapshot this turn — briefly. Do not say it is missing from the catalog or not in listings. Do not mention catalog gap. Do not send them to check their own lot listing. Do not swap in a sibling series that shares the floorplan code.",
-    );
+    const elsewhere =
+      filter.location && (filter.make || filter.model || filter.year || filter.trim)
+        ? snapshot.units.filter((u) =>
+            unitMatchesFilter(u, { ...filter, location: undefined }),
+          )
+        : [];
+    const elsewhereIds = new Set(elsewhere.map((u) => u.stock_number));
+    const otherYears =
+      filter.location && filter.model
+        ? snapshot.units.filter(
+            (u) =>
+              !elsewhereIds.has(u.stock_number) &&
+              unitMatchesFilter(u, {
+                make: filter.make,
+                model: filter.model,
+              }),
+          )
+        : [];
+    const atShow =
+      filter.location && filter.make
+        ? snapshot.units.filter((u) =>
+            unitMatchesFilter(u, {
+              make: filter.make,
+              location: filter.location,
+            }),
+          )
+        : [];
+    if (elsewhere.length || otherYears.length || atShow.length) {
+      lines.push(
+        `LOCATION MISS at ${filter.location}: zero units match ${filterLabel(
+          filter,
+        )}. Matched 0 is only at that place. Do NOT say the whole lot of ${counts.total} has none of this coach. Do not jump to other dealers.`,
+      );
+      if (elsewhere.length) {
+        lines.push(
+          `Same coach elsewhere on OUR lots (${elsewhere.length}):`,
+          ...elsewhere.slice(0, MATCH_LIST_MAX).map(formatUnitListing),
+        );
+      }
+      if (otherYears.length) {
+        lines.push(
+          `Other years of the same series on OUR lots (${otherYears.length}):`,
+          ...otherYears.slice(0, MATCH_LIST_MAX).map(formatUnitListing),
+        );
+      }
+      if (atShow.length) {
+        lines.push(
+          `At ${filter.location} we do have these ${filter.make} units (${atShow.length}):`,
+          ...atShow.slice(0, MATCH_LIST_MAX).map(formatUnitListing),
+        );
+      }
+      lines.push(
+        "Name those units. A show miss is not an empty company. Stay on this snapshot. Never say none of our units are that series when rows are listed above.",
+      );
+    } else {
+      lines.push(
+        "No own-lot hit for this exact series. Say we do not have that coach on the lot snapshot this turn — briefly. Do not say it is missing from the catalog or not in listings. Do not mention catalog gap. Do not send them to check their own lot listing. Do not swap in a sibling series that shares the floorplan code.",
+      );
+    }
   }
 
   const listingAsk = looksLikeOwnLotListingPriceQuestion(query);

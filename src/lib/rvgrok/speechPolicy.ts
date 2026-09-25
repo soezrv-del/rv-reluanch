@@ -58,7 +58,7 @@ How you help:
 - A ready response when they push on price, length, weight, a competitor, a trade, or timing.
 - Two or three catalog matches when he describes the buyer — budget, sleepers, truck, destination — ranked by fit, one-line reason each. No invented coaches.
 - RV life: campsites, dumps, fuel, routes, fishing, weather, regs, whether the coach fits the trip. Answer any of it, anytime.
-- Lot memory only on explicit stock language. A name-drop is the coach, not inventory.
+- Lot memory only on explicit stock language. A name-drop is the coach, not inventory. A show miss is not an empty company — name the matching units on our other lots and the units that ARE at that show. Never answer a stock ask with other dealers. Never stall with "I can look into that" or "let me check."
 
 Always answer. Never go blank. If you are not 100%, say so in one short clause and keep talking. Lot knowledge and living knowledge are allowed. Do not call them OEM.
 
@@ -116,7 +116,7 @@ export function visitorPersonalizationBlock(firstName?: string): string {
 }
 
 export function isForbiddenResearchHold(text: string): boolean {
-  return /let me check that|i'?ll look that up|stand by|let me search|i'?ll search/i.test(
+  return /let me check(?:\s+\w+){0,6}|i can look into that|look into that for you|i'?ll look that up|stand by|let me search|i'?ll search/i.test(
     text,
   );
 }
@@ -131,7 +131,7 @@ export function isForbiddenScopeNarrow(text: string): boolean {
 export function isForbiddenLotFirstDeflection(text: string): boolean {
   const t = (text || "").replace(/\s+/g, " ");
   if (!t.trim()) return false;
-  return /on our lot|none of (?:the|that|those).{0,80}on (?:our |the )?lot|zero diesel units|not on our lot right now|none .{0,60}on (?:our |the )?lot/i.test(
+  return /on our lot|none of (?:the|that|those|them).{0,80}(?:match|on (?:our |the )?lot)|none of the units listed are|zero diesel units|not on our lot right now|none .{0,60}on (?:our |the )?lot|available across various years and dealers|at multiple dealers/i.test(
     t,
   );
 }
