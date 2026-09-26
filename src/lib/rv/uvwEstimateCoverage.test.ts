@@ -29,9 +29,10 @@ test("39RK Family RVing pin stays 39,237 and is not the diesel-pusher estimate",
     rvType: "Class A Diesel",
     chassis: "Spartan",
   });
-  assert.equal(ttw.weightLb, 39_237);
+  assert.equal(ttw.weightLb, 47_000);
+  assert.equal(ttw.uvwLb, 39_237);
   assert.equal(ttw.weightEstimated, false);
-  assert.equal(ttw.weightBasis, "UVW");
+  assert.equal(ttw.weightBasis, "GVWR");
 });
 
 test("Anthem 44R / Precept 31UL / Alante / Open Road 34PA use the tiered formula", () => {
@@ -45,9 +46,8 @@ test("Anthem 44R / Precept 31UL / Alante / Open Road 34PA use the tiered formula
   });
   assert.equal(anthem.estimatedUvwLbs, 43_400);
   assert.equal(anthem.tier, "diesel-pusher");
-  // Class A Diesel R*=38.2 on 1250/43400 → ~7.80 (was 7.11 on the global curve).
-  assert.equal(anthem.score, null);
-  assert.equal(anthem.gap, true);
+  assert.equal(anthem.gap, false);
+  assert.equal(anthem.color, "yellow");
 
   assert.equal(findOemUvwLbs("2025", "Jayco", "Precept", "31UL"), null);
   assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "31UL"), 22_000);
@@ -59,9 +59,8 @@ test("Anthem 44R / Precept 31UL / Alante / Open Road 34PA use the tiered formula
   });
   assert.equal(precept.estimatedUvwLbs, 18_000);
   assert.equal(precept.tier, "gas-20k-24k");
-  // Class A Gas R*=28.9 on GVWR−1800 20,200: 468/20200 → ~8.09.
-  assert.equal(precept.score, null);
-  assert.equal(precept.gap, true);
+  assert.equal(precept.gap, false);
+  assert.equal(precept.color, "red");
 
   const alante = scoreEstimatedTtw({
     torqueLbFt: 468,

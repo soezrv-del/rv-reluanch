@@ -1,43 +1,36 @@
 /**
- * Torque-to-weight rating for the Facts report Ratings section.
+ * Torque rating for the Facts Ratings bar.
  *
- * Weight metric — dry weight / UVW only. Gross vehicle weight is not
- * the score. Never invent UVW from GVWR or from mid×0.82. GAP if
- * torque is missing or no published UVW remains. Prefer numeric
- * powertrainGuard / brochure hard torque when present; else parse
- * specs.torque. Torque is lb-ft only — never horsepower.
+ * Weight is a published GVWR only. UVW never scores. Do not estimate
+ * UVW from GVWR to force a color. Do not score Class A gas as
+ * GVWR − 1800. Do not use dry-weight champion ratios or the old
+ * global breakpoint curve.
  *
  * Active weight (first hit wins):
- *   1. Manual UVW override
- *   2. Published / pinned UVW (oem pin, brochure-true OEM floorplan,
- *      catalog snap)
- *   3. GAP — GVWR, a GVWR range, and a GVWR-derived estimate do not score
+ *   1. Salesman GVWR override
+ *   2. Published gvwrLbs
+ *   3. parseGvwrLb — a two-number band uses the high end
+ * Missing torque or GVWR is GAP. Do not invent either number.
  *
- * Ratio: r = (torqueLbFt / uvwLb) * 1000  →  lb-ft per 1,000 lb of UVW
+ * Ratio: r = (torqueLbFt / gvwrLbs) * 1000  →  lb-ft per 1,000 lb GVWR
+ * weightBasis = "GVWR"
+ * weightEstimated = false
  *
- * Four motorized coach types each score against their own champion ratio
- * R* (the 10.0 ceiling). Same piecewise shape as the global envelope;
- * thresholds scale by R-star over 45 (global high breakpoint was 45):
- *   t1 = 0.222 * R*     → [1, 2)
- *   t2 = 0.378 * R*     → [3, 4)
- *   t3 = 0.622 * R*     → [4.0, 6.5)
- *   t4 = R*             → [7.0, 9.3) then 10.0 at/above champion
+ * Color is on that ratio, not a dry-weight score:
+ *   green   r >= 28
+ *   yellow  22 <= r < 28
+ *   red     r < 22
  *
- * Champions, dry weight / UVW:
- *   Class A Diesel  American Dream 45A X15     R* = 38.2
- *   Class A Gas     Jayco Alante 27A           R* = 28.9
- *   Super C         Grand Design Lineage F 31ZW R* = 52.2  (950 / 18,186)
- *   Class C         Forest River Sunseeker TS  R* = 38.6
+ * Score matches those colors:
+ *   score = clamp(6 + (r - 22) / 3, 1, 10)
+ *   22 is 6.0 (yellow starts). 28 is 8.0 (green starts). 34 is 10.0.
+ *   Under 22 stays under 6 and is red.
  *
- * Class B / unknown motorized: GLOBAL curve (unscaled 10/17/28/45,
- * including 8.75 + (r−45)/5 above 45). Towables stay N/A.
+ * Towables stay N/A. A Class C toy hauler is still rateable. A fifth
+ * wheel, travel trailer, truck camper, or Hideout is not.
  *
- * Bar color (score, not ratio). The Facts bar grows from the left.
- *   red     score < 6.0
- *   yellow  6.0 ≤ score < 8.0
- *   green   score ≥ 8.0
- * 800 lb-ft / 26,000 lb UVW on the Super C curve is yellow.
- * Lineage F 31ZW at 950 / 18,186 is 10 / green.
+ * Tiered UVW helpers below are for the spec sheet only. This rating
+ * does not call them.
  */
 
 export type TorqueBarColor = "red" | "yellow" | "green";
@@ -163,64 +156,13 @@ export type TorqueToWeightResult = {
   na: boolean;
 };
 
-/** Per-type TTW envelope. `global` is the unscaled 10/17/28/45 fallback. */
+/** Coach class label only. The 1–10 score does not change by class. */
 export type TorqueScoreFormula =
   | "class-a-diesel"
   | "class-a-gas"
   | "super-c"
   | "class-c"
   | "global";
-
-/**
- * Locked champion ratios R* (lb-ft per 1,000 lb scored weight).
- * Super C R* is the 2026 Lineage Series F 31ZW dry weight:
- * 950 lb-ft / 18,186 lb UVW. Other ceilings stay on UVW too.
- * Scale thresholds by R-star over 45 from the global 10/17/28/45 breakpoints.
- */
-export const TORQUE_SCORE_CHAMPIONS = {
-  "class-a-diesel": 38.2,
-  "class-a-gas": 28.9,
-  "super-c": 52.2,
-  "class-c": 38.6,
-} as const satisfies Record<Exclude<TorqueScoreFormula, "global">, number>;
-
-/** Global (Class B / unknown) breakpoints — do not scale these. */
-export const GLOBAL_TORQUE_BREAKPOINTS = {
-  t1: 10,
-  t2: 17,
-  t3: 28,
-  t4: 45,
-} as const;
-
-const THRESHOLD_T1 = 0.222;
-const THRESHOLD_T2 = 0.378;
-const THRESHOLD_T3 = 0.622;
-
-export type TorqueScoreThresholds = {
-  t1: number;
-  t2: number;
-  t3: number;
-  t4: number;
-};
-
-/** Scaled breakpoints for a champion ratio. t4 = R* (score 10.0). */
-export function torqueScoreThresholds(
-  championRatio: number,
-): TorqueScoreThresholds {
-  return {
-    t1: THRESHOLD_T1 * championRatio,
-    t2: THRESHOLD_T2 * championRatio,
-    t3: THRESHOLD_T3 * championRatio,
-    t4: championRatio,
-  };
-}
-
-export function thresholdsForFormula(
-  formula: TorqueScoreFormula,
-): TorqueScoreThresholds {
-  if (formula === "global") return { ...GLOBAL_TORQUE_BREAKPOINTS };
-  return torqueScoreThresholds(TORQUE_SCORE_CHAMPIONS[formula]);
-}
 
 /**
  * Pick the per-type envelope.
@@ -278,8 +220,8 @@ function clampScore(n: number): number {
 }
 
 /**
- * Class A Gas scored pounds: GVWR − 1800. Null when GVWR is missing
- * or the remainder is not > 0 (GAP).
+ * Retired from the rating. GVWR − 1800 is not a scored weight.
+ * Kept so older callers can still ask; computeTorqueToWeight ignores it.
  */
 export function classAGasScoredWeightLb(
   gvwrLb: number | null | undefined,
@@ -542,10 +484,12 @@ export function dryWeightBarFill(ratio: number): number {
   return Math.min(100, Math.max(0, (ratio / TTW_TOP_RATIO) * 100));
 }
 
+/**
+ * Ratings color. `ratio` is lb-ft per 1,000 lb GVWR, not torque/UVW.
+ * Do not paint 0.04 / 0.0132 dry-weight thresholds.
+ */
 export function dryWeightBarColor(ratio: number): TorqueBarColor {
-  if (ratio >= 0.04) return "green";
-  if (ratio <= 0.0132) return "red";
-  return "yellow";
+  return colorFromGvwrRatio(ratio) ?? "red";
 }
 
 export function formatDryWeightRatio(
@@ -570,37 +514,32 @@ export function isTowableForTorqueRating(
   if (/class\s*[abc]|super\s*c|motorhome|diesel\s*pusher/.test(t)) {
     return false;
   }
-  return /travel\s*trailer|fifth\s*wheel|5th\s*wheel|toy\s*hauler|truck\s*camper|pop-?up|teardrop|\btowable\b/.test(
+  return /travel\s*trailer|fifth\s*wheel|5th\s*wheel|toy\s*hauler|truck\s*camper|pop-?up|teardrop|\btowable\b|\bhideout\b/.test(
     t,
   );
 }
 
 /**
- * Continuous 1–10 from r = (lb-ft / weight) × 1000.
- * Default `global` envelope: <10 → 1–2; 10–17 → 3–4; 17–28 → 5–6;
- * 28–45 → 7–8; 45+ → 9–10 (8.75 + (r−45)/5).
- * Typed formulas use the same interior slopes on scaled t1..t4, and
- * score 10.0 at/above the champion ratio R*.
+ * 1–10 from r = (lb-ft / GVWR) × 1000.
+ * score = clamp(6 + (r - 22) / 3, 1, 10)
+ * 22 → 6.0, 28 → 8.0, 34 → 10.0. Class does not move the number.
  */
 export function scoreFromTorqueToWeightRatio(
   ratio: number | null | undefined,
-  formula: TorqueScoreFormula = "global",
+  _formula?: TorqueScoreFormula,
 ): number | null {
   if (ratio == null || !Number.isFinite(ratio) || ratio < 0) return null;
-  const { t1, t2, t3, t4 } = thresholdsForFormula(formula);
-  if (ratio < t1) return clampScore(1 + ratio / t1);
-  if (ratio < t2) return clampScore(3 + (ratio - t1) / (t2 - t1));
-  if (ratio < t3) return clampScore(4 + ((ratio - t2) / (t3 - t2)) * 2.5);
-  if (formula !== "global") {
-    // Locked R* is one-decimal. Lineage 950/18186 = 52.24 vs 52.2.
-    // Treat ±0.05 as 10.0.
-    if (ratio + 0.05 >= t4) return 10;
-  }
-  if (ratio < t4) return clampScore(7 + ((ratio - t3) / (t4 - t3)) * 2.3);
-  if (formula === "global") {
-    return clampScore(8.75 + (ratio - t4) / 5);
-  }
-  return 10;
+  return clampScore(6 + (ratio - 22) / 3);
+}
+
+/** Green ≥ 28, yellow [22, 28), red < 22. Same bands as the score. */
+export function colorFromGvwrRatio(
+  ratio: number | null | undefined,
+): TorqueBarColor | null {
+  if (ratio == null || !Number.isFinite(ratio)) return null;
+  if (ratio >= 28) return "green";
+  if (ratio >= 22) return "yellow";
+  return "red";
 }
 
 export function barColorFromScore(
@@ -642,8 +581,8 @@ export type ResolvedTorqueWeight = {
 };
 
 /**
- * Pick the TTW weight: override UVW, else published UVW. GVWR never
- * scores. Callers must not pass a GVWR-derived estimate as published UVW.
+ * Pick the rating weight: salesman GVWR, else published gvwrLbs, else
+ * parseGvwrLb. UVW is recorded and never scored. No UVW estimate.
  */
 export function resolveTorqueWeight(
   input: TorqueToWeightInput,
@@ -651,18 +590,17 @@ export function resolveTorqueWeight(
   const overrideUvw = positiveInt(input.overrideUvwLbs ?? 0);
   const publishedUvw =
     positiveInt(input.uvwLbs ?? 0) ?? parseUvwLb(input.uvwRaw);
-  const overrideGvwr = positiveInt(input.overrideGvwrLbs ?? 0);
-  const publishedGvwr =
-    positiveInt(input.gvwrLbs ?? 0) ??
-    parseGvwrLb(input.gvwrRaw) ??
-    parseGvwrLb(input.weightRange);
-  const gvwrLb = overrideGvwr ?? publishedGvwr;
   const uvwLb = overrideUvw ?? publishedUvw;
+  const overrideGvwr = positiveInt(input.overrideGvwrLbs ?? 0);
+  const publishedGvwr = positiveInt(input.gvwrLbs ?? 0);
+  const parsedGvwr =
+    parseGvwrLb(input.gvwrRaw) ?? parseGvwrLb(input.weightRange);
+  const gvwrLb = overrideGvwr ?? publishedGvwr ?? parsedGvwr;
 
-  if (uvwLb == null) {
+  if (gvwrLb == null) {
     return {
       uvwLb,
-      gvwrLb,
+      gvwrLb: null,
       weightLb: null,
       weightBasis: null,
       weightOverridden: false,
@@ -674,9 +612,9 @@ export function resolveTorqueWeight(
   return {
     uvwLb,
     gvwrLb,
-    weightLb: uvwLb,
-    weightBasis: "UVW",
-    weightOverridden: overrideUvw != null,
+    weightLb: gvwrLb,
+    weightBasis: "GVWR",
+    weightOverridden: overrideGvwr != null,
     weightEstimated: false,
     thinCcc: false,
     uvwEstimateTier: null,
@@ -697,24 +635,23 @@ export function computeTorqueToWeight(
       ? torqueToWeightRatio(torqueLbFt, resolved.weightLb)
       : null;
   const formula = resolveTorqueScoreFormula(input);
-  // One scale for every motorhome: torque ÷ catalog dry weight.
-  // Class is recorded, but it does not move the number.
-  const score = scoreFromTorqueToWeightRatio(ratio, "global");
+  const score = scoreFromTorqueToWeightRatio(ratio);
+  const scored = score != null;
   return {
     torqueLbFt,
     uvwLb: resolved.uvwLb,
     gvwrLb: resolved.gvwrLb,
-    weightLb: resolved.weightLb,
-    weightBasis: resolved.weightBasis,
-    weightOverridden: resolved.weightOverridden,
-    weightEstimated: resolved.weightEstimated,
-    thinCcc: resolved.thinCcc,
-    uvwEstimateTier: resolved.uvwEstimateTier,
+    weightLb: scored ? resolved.weightLb : null,
+    weightBasis: scored ? resolved.weightBasis : null,
+    weightOverridden: scored ? resolved.weightOverridden : false,
+    weightEstimated: false,
+    thinCcc: false,
+    uvwEstimateTier: null,
     ratio,
     score,
-    color: barColorFromScore(score),
-    formula: score == null ? null : formula,
-    gap: score == null,
+    color: colorFromGvwrRatio(ratio),
+    formula: scored ? formula : null,
+    gap: !scored,
     na: false,
   };
 }

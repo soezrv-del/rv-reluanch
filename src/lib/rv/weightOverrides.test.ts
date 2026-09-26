@@ -60,7 +60,7 @@ test("save / find / clear UVW and GVWR independently", () => {
   assert.equal(findWeightOverride(2025, "Jayco", "Precept", "31UL"), null);
 });
 
-test("class-a-gas: salesman UVW override edits display UVW, not TTW weight", () => {
+test("UVW override does not change the GVWR torque score", () => {
   const scored = computeTorqueToWeight({
     torqueLbFt: 468,
     uvwLbs: 18_040,
@@ -68,17 +68,18 @@ test("class-a-gas: salesman UVW override edits display UVW, not TTW weight", () 
     overrideUvwLbs: 17_000,
     rvType: "Class A Gas",
   });
-  assert.equal(scored.weightBasis, "UVW");
-  assert.equal(scored.weightOverridden, true);
-  assert.equal(scored.weightLb, 17_000);
+  assert.equal(scored.weightBasis, "GVWR");
+  assert.equal(scored.weightOverridden, false);
+  assert.equal(scored.weightLb, 22_000);
   assert.equal(scored.uvwLb, 17_000);
+  assert.equal(scored.weightEstimated, false);
   assert.equal(
     formatTorqueToWeightScore(scored),
     `${scored.score?.toFixed(1)}/10`,
   );
 });
 
-test("UVW scores; a GVWR override does not replace dry weight", () => {
+test("salesman GVWR override scores; UVW does not replace it", () => {
   const gvwrOverride = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrLbs: 24_000,
@@ -86,18 +87,20 @@ test("UVW scores; a GVWR override does not replace dry weight", () => {
     rvType: "Class A Gas",
     chassis: "Ford F-53",
   });
-  assert.equal(gvwrOverride.weightLb, null);
-  assert.equal(gvwrOverride.gap, true);
+  assert.equal(gvwrOverride.weightLb, 22_000);
+  assert.equal(gvwrOverride.weightBasis, "GVWR");
+  assert.equal(gvwrOverride.weightOverridden, true);
+  assert.equal(gvwrOverride.gap, false);
   assert.equal(gvwrOverride.gvwrLb, 22_000);
 
-  const uvwWins = computeTorqueToWeight({
+  const uvwDoesNotWin = computeTorqueToWeight({
     torqueLbFt: 468,
     uvwLbs: 18_000,
     gvwrLbs: 24_000,
     overrideGvwrLbs: 22_000,
     rvType: "Class A Gas",
   });
-  assert.equal(uvwWins.weightBasis, "UVW");
-  assert.equal(uvwWins.weightLb, 18_000);
-  assert.equal(uvwWins.uvwLb, 18_000);
+  assert.equal(uvwDoesNotWin.weightBasis, "GVWR");
+  assert.equal(uvwDoesNotWin.weightLb, 22_000);
+  assert.equal(uvwDoesNotWin.uvwLb, 18_000);
 });

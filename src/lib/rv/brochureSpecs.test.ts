@@ -184,7 +184,7 @@ test("Discovery OEM rows keep brochure GVWR and omit invented UVW", () => {
   assert.doesNotMatch(floorplanSrc, /uvwLbs:\s*25200/);
   assert.doesNotMatch(floorplanSrc, /uvwLbs:\s*25800/);
 
-  // Before: invented 25,500 UVW scored as published → ~8.2.
+  // Invented UVW must not score. Published GVWR does.
   const before = computeTorqueToWeight({
     torqueLbFt: 800,
     uvwLbs: 25_500,
@@ -193,14 +193,14 @@ test("Discovery OEM rows keep brochure GVWR and omit invented UVW", () => {
     chassis: "Freightliner XC",
     fuelType: "Diesel",
   });
-  assert.equal(before.weightBasis, "UVW");
-  assert.equal(before.weightLb, 25_500);
-  assert.ok(
-    before.score != null && Math.abs(before.score - 8.2) <= 0.15,
-    `before score ${before.score}`,
-  );
+  assert.equal(before.weightBasis, "GVWR");
+  assert.equal(before.weightLb, 33_400);
+  assert.equal(before.uvwLb, 25_500);
+  assert.equal(before.weightEstimated, false);
+  assert.equal(before.ratio!.toFixed(1), "24.0");
+  assert.equal(before.color, "yellow");
 
-  // After: no published UVW → diesel-pusher UVW_EST 0.835×33,400 ≈ 27,900 → ~7.8.
+  // GVWR only — same pounds. Do not estimate UVW (~27,900) to force a color.
   const after = computeTorqueToWeight({
     torqueLbFt: 800,
     gvwrLbs: 33_400,
@@ -208,17 +208,12 @@ test("Discovery OEM rows keep brochure GVWR and omit invented UVW", () => {
     chassis: "Freightliner XC",
     fuelType: "Diesel",
   });
-  assert.equal(after.weightBasis, "UVW_EST");
-  assert.equal(after.weightEstimated, true);
-  assert.equal(after.weightLb, 27_900);
-  assert.ok(
-    after.score != null && after.score >= 7.0 && after.score < 8.0,
-    `after score ${after.score} should be 7.0–7.8, not the old 8.2`,
-  );
-  assert.ok(
-    after.score != null && Math.abs(after.score - 7.8) <= 0.15,
-    `after score ${after.score} should be ~7.8 on UVW_EST`,
-  );
+  assert.equal(after.weightBasis, "GVWR");
+  assert.equal(after.weightEstimated, false);
+  assert.equal(after.weightLb, 33_400);
+  assert.notEqual(after.weightLb, 27_900);
+  assert.equal(after.score, before.score);
+  assert.equal(after.color, "yellow");
 });
 
 test("brochure / listing weight basis is published UVW then tiered estimate — mid×0.82 never wins", () => {
@@ -267,7 +262,7 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   assert.doesNotMatch(spec, /estimated via tiered GVWR formula/);
   assert.match(spec, /uvwLbs: uvw \?\? null/);
 
-  // Callers must not pass mid×0.82 as uvwRaw. GVWR-only now estimates UVW.
+  // Callers must not pass mid×0.82 as uvwRaw. Rating scores published GVWR.
   const ttw31 = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrRaw: "22,000 lbs",
@@ -275,10 +270,12 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     chassis: "Ford F-53",
   });
   assert.equal(ttw31.weightBasis, "GVWR");
-  assert.equal(ttw31.weightLb, 20200);
-  assert.equal(ttw31.uvwLb, 18000);
-  // Class A Gas (R*=28.9) on GVWR−1800 20,200: 468/20200 → ~8.09.
-  assert.ok(ttw31.score != null && Math.abs(ttw31.score - 8.09) <= 0.15);
+  assert.equal(ttw31.weightLb, 22000);
+  assert.equal(ttw31.weightEstimated, false);
+  assert.equal(ttw31.uvwLb, null);
+  assert.equal(ttw31.ratio!.toFixed(1), "21.3");
+  assert.equal(ttw31.color, "red");
+  assert.notEqual(ttw31.weightLb, 20200);
 
   const ttw36 = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -287,10 +284,11 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     chassis: "Ford F-53",
   });
   assert.equal(ttw36.weightBasis, "GVWR");
-  assert.equal(ttw36.weightLb, 22200);
-  assert.equal(ttw36.uvwLb, 19700);
-  // Class A Gas (R*=28.9) on GVWR−1800 22,200: 468/22200 → ~7.65.
-  assert.ok(ttw36.score != null && Math.abs(ttw36.score - 7.65) <= 0.15);
+  assert.equal(ttw36.weightLb, 24000);
+  assert.equal(ttw36.weightEstimated, false);
+  assert.equal(ttw36.ratio!.toFixed(1), "19.5");
+  assert.equal(ttw36.color, "red");
+  assert.notEqual(ttw36.weightLb, 22200);
 
   const ttwPublishedUvw = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -298,8 +296,10 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     gvwrLbs: 31_000,
     rvType: "Class C",
   });
-  assert.equal(ttwPublishedUvw.weightBasis, "UVW");
-  assert.equal(ttwPublishedUvw.weightLb, 24_820);
+  assert.equal(ttwPublishedUvw.weightBasis, "GVWR");
+  assert.equal(ttwPublishedUvw.weightLb, 31_000);
+  assert.equal(ttwPublishedUvw.uvwLb, 24_820);
+  assert.equal(ttwPublishedUvw.weightEstimated, false);
 
   const ttwVxl = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -307,20 +307,21 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     gvwrRaw: "24,000 lbs",
     rvType: "Class A Gas",
   });
-  assert.equal(ttwVxl.weightLb, 22200);
+  assert.equal(ttwVxl.weightLb, 24000);
   assert.equal(ttwVxl.weightBasis, "GVWR");
-  assert.equal(ttwVxl.uvwLb, 19700);
-  assert.notEqual(ttwVxl.uvwLb, 24000);
+  assert.equal(ttwVxl.weightEstimated, false);
+  assert.equal(ttwVxl.uvwLb, null);
 
-  // Range-only listing (no oem/snap pin): TTW uses HIGH end, not mid/low.
+  // Range-only listing (no oem/snap pin): TTW uses HIGH end of GVWR.
   const ttwRange = computeTorqueToWeight({
     torqueLbFt: 1250,
     gvwrRaw: "39,500–44,005 lbs",
     rvType: "Class A Diesel",
   });
   assert.equal(ttwRange.gvwrLb, 44005);
-  assert.equal(ttwRange.weightLb, 36700);
-  assert.equal(ttwRange.weightBasis, "UVW_EST");
+  assert.equal(ttwRange.weightLb, 44005);
+  assert.equal(ttwRange.weightBasis, "GVWR");
+  assert.equal(ttwRange.weightEstimated, false);
   // Published pin still beats the catalog/display band.
   const ttwPin = computeTorqueToWeight({
     torqueLbFt: 1250,
@@ -329,7 +330,8 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
     rvType: "Class A Gas",
   });
   assert.equal(ttwPin.gvwrLb, 22000);
-  assert.equal(ttwPin.weightLb, 20200);
+  assert.equal(ttwPin.weightLb, 22000);
+  assert.equal(ttwPin.weightEstimated, false);
 });
 
 test("Tradition 42V/42Q brochure GVWR is 47,000 — not catalog weightRange mid", () => {
@@ -400,9 +402,10 @@ test("Tradition 42V/42Q brochure GVWR is 47,000 — not catalog weightRange mid"
     gvwrRaw: "47,000 lbs",
     rvType: "Class A Diesel",
   });
-  assert.equal(ttw.weightBasis, "UVW_EST");
+  assert.equal(ttw.weightBasis, "GVWR");
   assert.equal(ttw.gvwrLb, 47000);
-  assert.equal(ttw.weightLb, 39200);
+  assert.equal(ttw.weightLb, 47000);
+  assert.equal(ttw.weightEstimated, false);
 });
 
 test("Anthem 44R/37K brochure GVWR pins beat catalog weightRange mid", () => {
@@ -450,9 +453,11 @@ test("Anthem 44R/37K brochure GVWR pins beat catalog weightRange mid", () => {
     weightRange: [42000, 52000],
     rvType: "Class A Diesel",
   });
-  assert.equal(ttw44.weightBasis, "UVW_EST");
+  assert.equal(ttw44.weightBasis, "GVWR");
   assert.equal(ttw44.gvwrLb, 52000);
-  assert.equal(ttw44.weightLb, 43400);
+  assert.equal(ttw44.weightLb, 52000);
+  assert.equal(ttw44.weightEstimated, false);
+  assert.notEqual(ttw44.weightLb, 43400);
 
   const ttw37 = computeTorqueToWeight({
     torqueLbFt: 1250,
@@ -462,7 +467,8 @@ test("Anthem 44R/37K brochure GVWR pins beat catalog weightRange mid", () => {
     rvType: "Class A Diesel",
   });
   assert.equal(ttw37.gvwrLb, 44000);
-  assert.equal(ttw37.weightLb, 36700);
+  assert.equal(ttw37.weightLb, 44000);
+  assert.equal(ttw37.weightEstimated, false);
   assert.notEqual(ttw37.weightLb, interpolated37.mid);
 });
 

@@ -11,7 +11,7 @@ import { loadLiveCatalog } from "../../../scripts/load-live-catalog.mjs";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-test("catalog helper lists published torque+GVWR; scores #358 weight; champions ~10.0", async () => {
+test("catalog helper lists published torque+GVWR and scores that GVWR", async () => {
   const { RV_DATA } = await loadLiveCatalog();
   const report = listCatalogTorqueToWeightScores(RV_DATA);
 
@@ -46,13 +46,19 @@ test("catalog helper lists published torque+GVWR; scores #358 weight; champions 
       /grand design/i.test(r.make) &&
       /lineage series f/i.test(r.model) &&
       r.torqueLbFt === 950 &&
-      r.floorplan === "31ZW" &&
-      r.weightLb === 18_186,
+      r.floorplan === "31ZW",
   );
-  assert.ok(lineage, "Lineage Series F 31ZW scores its 18,186 lb UVW");
+  assert.ok(lineage, "Lineage Series F 31ZW scores its published GVWR");
   assert.equal(lineage.formula, "super-c");
-  assert.equal(lineage.weightBasis, "UVW");
-  assert.ok(Math.abs(lineage.score - 10) <= 0.05, `Lineage score ${lineage.score}`);
+  assert.equal(lineage.weightBasis, "GVWR");
+  assert.equal(lineage.weightLb, lineage.gvwrLbs);
+  assert.ok(lineage.weightLb !== 18_186, "UVW 18,186 must not be the scored weight");
+  const ratio = (lineage.torqueLbFt / lineage.gvwrLbs) * 1000;
+  assert.ok(Math.abs(lineage.ratio - ratio) < 0.05);
+  assert.equal(
+    lineage.color,
+    ratio >= 28 ? "green" : ratio >= 22 ? "yellow" : "red",
+  );
 
   const seneca = report.scored.filter(
     (r) => /jayco/i.test(r.make) && /^seneca$/i.test(r.model),
