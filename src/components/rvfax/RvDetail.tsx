@@ -49,7 +49,6 @@ import {
 } from "@/lib/rv/reportRatings";
 import { hasConcreteFloorplan } from "@/lib/rv/factsOpen";
 import { buildFactsBrochureSpecs } from "@/lib/rv/factsSheet";
-import { lotRecordFilledField } from "@/lib/rv/lotFactsFallback";
 import { fetchLotSnapshot } from "@/lib/lot/ownLotPage";
 import { registerLotCatalogUnits } from "@/lib/rv/lotCatalogUnits";
 import {
@@ -738,7 +737,6 @@ export function RvDetail({
       live?.live ? live : null,
       {
         lockPowertrainFromCatalog: true,
-        lockLengthFromLot: lotRecordFilledField(brochure.accuracyNote, "LENGTH"),
         hardOverride,
       },
     );
@@ -769,7 +767,7 @@ export function RvDetail({
       };
     }
     return { ...merged, propane: catalogSpecs.propane };
-  }, [brochure, catalogSpecs, live, brochurePinned, powertrainGuard]);
+  }, [catalogSpecs, live, brochurePinned, powertrainGuard]);
 
   const displayRating = ratingMeta.score;
 
@@ -1969,8 +1967,9 @@ export function RvDetail({
                 ) : (
                   <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
                     <div
-                      className="h-2 w-[7.5rem] overflow-hidden rounded-full bg-white/12 sm:w-[9.5rem]"
+                      className="flex h-2 w-[7.5rem] justify-end overflow-hidden rounded-full bg-white/12 sm:w-[9.5rem]"
                       data-testid="facts-tqwt-bar"
+                      data-fill="right-to-left"
                       role="meter"
                       aria-label={`Torque-to-Weight ${formatTorqueToWeightScore(torqueToWeight)}`}
                       aria-valuemin={1}

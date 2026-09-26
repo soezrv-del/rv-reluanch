@@ -285,7 +285,7 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assertNear(p36.ratio, 21.08, 0.05);
   assertNear(p36.score, 7.65);
   assert.equal(p36.formula, "class-a-gas");
-  assert.equal(p36.color, "green");
+  assert.equal(p36.color, "yellow");
 
   // Seneca Super C — Freightliner uses diesel-pusher UVW, Super C curve.
   const seneca = computeTorqueToWeight({
@@ -301,7 +301,7 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assertNear(seneca.ratio, 30.89, 0.05);
   assertNear(seneca.score, 7.57);
   assert.equal(seneca.formula, "super-c");
-  assert.equal(seneca.color, "green");
+  assert.equal(seneca.color, "yellow");
 
   // Same numbers typed Class A Diesel (ISB on Class A).
   const senecaDiesel = computeTorqueToWeight({
@@ -382,16 +382,17 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assert.equal(isb.weightBasis, "UVW_EST");
   assertNear(isb.ratio, 27.89, 0.05);
   assertNear(isb.score, 7.66);
-  assert.equal(isb.color, "green");
+  assert.equal(isb.color, "yellow");
 });
 
-test("bar color: red < 6.0, yellow [6.0, 7.5), green ≥ 7.5", () => {
+test("bar color: red < 6.0, yellow [6.0, 8.0), green ≥ 8.0", () => {
   assert.equal(barColorFromScore(5.99), "red");
   assert.equal(barColorFromScore(6.0), "yellow");
   assert.equal(barColorFromScore(7.0), "yellow");
   assert.equal(barColorFromScore(7.4), "yellow");
   assert.equal(barColorFromScore(7.49), "yellow");
-  assert.equal(barColorFromScore(7.5), "green");
+  assert.equal(barColorFromScore(7.5), "yellow");
+  assert.equal(barColorFromScore(7.99), "yellow");
   assert.equal(barColorFromScore(8.0), "green");
   assert.equal(barColorFromScore(null), null);
 });
@@ -667,7 +668,7 @@ test("Anthem 44R sample: 52,000 × 0.835 → 43,400 at 1,250 lb-ft", () => {
   assert.equal(anthem.weightEstimated, true);
   assertNear(anthem.ratio, 28.80, 0.02);
   assertNear(anthem.score, 7.80);
-  assert.equal(anthem.color, "green");
+  assert.equal(anthem.color, "yellow");
   assert.equal(formatTorqueWeightBasisChip(anthem), null);
 });
 
@@ -744,7 +745,7 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", (
   assert.match(src, /HIGH end/);
   assert.doesNotMatch(src, /Math\.min\(nums\[0]!, nums\[1]!\)/);
   assert.match(src, /score < 6/);
-  assert.match(src, /score < 7\.5/);
+  assert.match(src, /score < 8/);
   assert.match(src, /Class B \/ unknown motorized: GLOBAL/);
   assert.match(src, /t4 = R\*/);
   assert.match(src, /0\.222 \* R\*/);
@@ -761,12 +762,14 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", (
   assert.match(detail, /Torque-to-Weight/);
   assert.match(detail, /formatTorqueToWeightScore/);
   assert.match(detail, /data-testid="facts-tqwt-bar"/);
+  assert.match(detail, /data-fill="right-to-left"/);
+  assert.match(detail, /justify-end/);
   assert.match(detail, /score \/ 10/);
   assert.match(detail, /overrideUvwLbs:\s*weightOverride\?\.uvwLbs/);
   assert.match(detail, /overrideGvwrLbs:\s*weightOverride\?\.gvwrLbs/);
   assert.match(detail, /WeightOverrideRow/);
   assert.match(detail, /estimatedLbs/);
-  assert.match(detail, /uvwRaw:\s*brochure\.uvwEstimated \? null : specs\.uvw/);
+  assert.match(detail, /uvwRaw:[\s\S]{0,160}brochure\.uvwEstimated/);
   assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
   assert.match(detail, /chassis:\s*powertrainGuard\.hard\.chassis/);
   assert.match(detail, /engine:\s*powertrainGuard\.hard\.engine/);

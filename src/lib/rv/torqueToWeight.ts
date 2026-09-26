@@ -59,10 +59,12 @@
  * GVWR) except class-a-gas, which scores GVWR − 1800. 2022 Dream 39RK
  * stays pinned 39,237 (not estimated).
  *
- * Bar color (score, not ratio) — unchanged bands:
+ * Bar color (score, not ratio). The Facts bar grows from the right.
  *   red     score < 6.0
- *   yellow  6.0 ≤ score < 7.5
- *   green   score ≥ 7.5
+ *   yellow  6.0 ≤ score < 8.0
+ *   green   score ≥ 8.0
+ * 800 lb-ft / 26,000 lb on the Super C curve (~7.5) stays yellow.
+ * Lineage F 31ZW at the Super C champion stays 10 / green.
  */
 
 export type TorqueBarColor = "red" | "yellow" | "green";
@@ -609,7 +611,7 @@ export function barColorFromScore(
 ): TorqueBarColor | null {
   if (score == null || !Number.isFinite(score)) return null;
   if (score < 6) return "red";
-  if (score < 7.5) return "yellow";
+  if (score < 8) return "yellow";
   return "green";
 }
 
