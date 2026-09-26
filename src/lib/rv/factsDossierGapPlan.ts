@@ -321,7 +321,7 @@ const GAP_QUERY_LABEL: Record<FactsHardField, string> = {
   transmission: "transmission",
   fuel: "fuel type",
   gvwr: "GVWR",
-  uvw: "UVW",
+  uvw: "average dry weight (UVW / unloaded vehicle weight, not GVWR)",
   tanks: "holding tanks",
   length: "length",
 };
@@ -346,7 +346,11 @@ export function factsDossierResearchQuery(input: {
     ? input.gaps
     : FACTS_DOSSIER_HARD_FIELDS;
   const needed = gaps.map((g) => GAP_QUERY_LABEL[g]).join(", ");
-  return `Write the coach report you would give a salesman who asked you directly about ${coach}. Search the live web. Sections: Overview, Chassis and powertrain, Weights and capacity, Layout and amenities, owner issues, sentiment, and market notes. These fields are still empty and must be filled when a brochure, factory sheet, or dealer listing prints them: ${needed}. Do not replace a number the catalog already pinned. Year-matched OEM or factory figures only. No invented numbers. Label sources.`;
+  const dry =
+    gaps.includes("uvw")
+      ? " When dry weight is missing, search the web for an average published UVW for this year and floorplan. That figure is only for the power-to-weight bar. It is not a certified scale weight and it is not GVWR."
+      : "";
+  return `Write the coach report you would give a salesman who asked you directly about ${coach}. Search the live web. Sections: Overview, Chassis and powertrain, Weights and capacity, Layout and amenities, owner issues, sentiment, and market notes. These fields are still empty and must be filled when a brochure, factory sheet, dealer listing, or published spec page names them: ${needed}. Do not replace a number the catalog already pinned.${dry} Label sources.`;
 }
 
 export function planFactsDossierResearch(opts: {
