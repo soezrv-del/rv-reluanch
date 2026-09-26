@@ -95,7 +95,11 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
   assert.match(css, /\.bottom-tab-label \{[\s\S]*?font-weight:\s*700/);
   assert.match(css, /letter-spacing:\s*var\(--dock-label-track\)/);
   assert.match(css, /border-top:\s*2px solid transparent/);
-  assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
+  assert.match(
+    css,
+    /\.bottom-tab-active-dot \{[\s\S]*?background:\s*var\(--color-sapphire\)/,
+  );
+  assert.doesNotMatch(css, /border-top-color:\s*var\(--color-sapphire\)/);
   assert.doesNotMatch(tabs, /metal-hammered/);
   assert.match(launch, /metal-hammered-face/);
   assert.doesNotMatch(css, /linear-gradient\(\s*162deg/);
@@ -141,7 +145,11 @@ test("dock plate and safe-area fill match Raidho R black ground", () => {
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?backdrop-filter:\s*none/);
   assert.match(css, /--dock-label-color:\s*#f3f5f8/);
   assert.match(css, /--dock-label-color-active:\s*#ffffff/);
-  assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
+  assert.match(
+    css,
+    /\.bottom-tab-active-dot \{[\s\S]*?background:\s*var\(--color-sapphire\)/,
+  );
+  assert.doesNotMatch(css, /border-top-color:\s*var\(--color-sapphire\)/);
   assert.doesNotMatch(css, /background:\s*rgba\(15, 23, 42, 0\.55\)/);
   assert.doesNotMatch(tabs, /DialaBot/);
   assert.doesNotMatch(shell, /DialaBot/);
@@ -162,7 +170,11 @@ test("dock labels are bright solid type — no metal gradient", () => {
     css,
     /\.bottom-tab-btn\.is-active \.bottom-tab-label[\s\S]*?color:\s*var\(--dock-label-color-active\)/,
   );
-  assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
+  assert.match(
+    css,
+    /\.bottom-tab-active-dot \{[\s\S]*?background:\s*var\(--color-sapphire\)/,
+  );
+  assert.doesNotMatch(css, /border-top-color:\s*var\(--color-sapphire\)/);
 
   const labelBlock = css.match(
     /\/\* Dock labels[\s\S]*?\.bottom-tab-btn\.bottom-tab-live \{/,

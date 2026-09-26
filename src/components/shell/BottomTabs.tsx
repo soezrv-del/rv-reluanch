@@ -1,4 +1,5 @@
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
+import { Calculator, ClipboardCheck, Map, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import {
@@ -31,30 +32,64 @@ const TABS: {
   { id: "rvlot", label: "Lot", short: "Lot" },
 ];
 
-function DockLabel({
-  text,
-  className,
-}: {
-  text: string;
+type DockTabId = (typeof TABS)[number]["id"];
+
+type GlyphProps = {
   className?: string;
-}) {
+  strokeWidth?: number | string;
+  "aria-hidden"?: boolean | "true" | "false";
+};
+
+/**
+ * Side-profile pickup: cab with windows, open bed, two wheels.
+ * 24×24, stroke currentColor, round caps/joins, no fill.
+ */
+function PickupIcon({
+  className,
+  strokeWidth = 2,
+  "aria-hidden": ariaHidden = true,
+}: GlyphProps) {
   return (
-    <span
-      className={cn(
-        "bottom-tab-label pointer-events-none max-w-full text-center uppercase leading-none whitespace-nowrap",
-        className,
-      )}
-      data-label={text}
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden={ariaHidden}
     >
-      {text}
-    </span>
+      <path d="M2.5 15.5V11h7.25V8h4.6L18 12h3.5v3.5" />
+      <path d="M10.6 11.15V9.15h2.4v2z" />
+      <path d="M13.4 9.15H14.5L16.3 11.15h-2.9z" />
+      <circle cx="6.25" cy="16.5" r="2" />
+      <circle cx="17.6" cy="16.5" r="2" />
+    </svg>
   );
+}
+
+const DOCK_ICONS: Record<
+  Exclude<DockTabId, "rvgrok">,
+  (props: GlyphProps) => ReactNode
+> = {
+  rvfax: ClipboardCheck,
+  rvcal: Calculator,
+  rvtow: PickupIcon,
+  rvtrips: Map,
+  rvlot: Store,
+};
+
+function DockIcon({ id }: { id: DockTabId }) {
+  if (id === "rvgrok") return null;
+  const Icon = DOCK_ICONS[id];
+  return <Icon className="bottom-tab-icon" strokeWidth={2} aria-hidden />;
 }
 
 /**
  * Dock blends into the Raidho mark ground (#000000) so the tab
- * square disappears. One highlight: 2px --color-sapphire top rule
- * on the active tab.
+ * square disappears. Icons only. One highlight: a small
+ * --color-sapphire dot under the active tab.
  *
  * Android WebView: do NOT put pointer-events-none on this nav. Parent
  * none + child auto + backdrop-filter fails hit-testing on Chromium
@@ -95,7 +130,7 @@ export function BottomTabs({
         className="bottom-tabs-dock pointer-events-auto relative isolate mx-auto grid w-full max-w-lg grid-cols-6 items-stretch gap-0 overflow-hidden rounded-[16px] p-1"
         style={{ touchAction: "manipulation" }}
       >
-        {TABS.map(({ id, label, short }) => {
+        {TABS.map(({ id, label }) => {
           const active = tab === id;
           const isLive = id === "rvgrok";
           return (
@@ -127,23 +162,26 @@ export function BottomTabs({
               aria-label={label}
               title={label}
               className={cn(
-                "bottom-tab-btn group relative z-[3] flex min-h-[48px] w-full min-w-0 items-center justify-center rounded-none px-0.5 py-2 sm:min-h-[52px]",
+                "bottom-tab-btn group relative z-[3] flex min-h-11 w-full min-w-0 flex-col items-center justify-center gap-1 rounded-none px-0.5 py-1",
                 "transition-[transform,opacity] duration-200 ease-out",
                 "pointer-events-auto active:scale-[0.94] touch-manipulation select-none",
                 isLive && "bottom-tab-live",
                 active && "is-active",
               )}
             >
-              {isLive ? (
-                /* Live slot: Einstein icon only — no Grok / Live / RvGROK text. */
-                <img
-                  src="/assets/brand/icon-rvgrok.png"
-                  alt=""
-                  className="bottom-tab-einstein"
-                />
-              ) : (
-                <DockLabel text={short} />
-              )}
+              <span className="bottom-tab-glyph">
+                {isLive ? (
+                  /* Live slot: Einstein icon only — no Grok / Live / RvGROK text. */
+                  <img
+                    src="/assets/brand/icon-rvgrok.png"
+                    alt=""
+                    className="bottom-tab-einstein"
+                  />
+                ) : (
+                  <DockIcon id={id} />
+                )}
+              </span>
+              <span className="bottom-tab-active-dot" aria-hidden="true" />
             </button>
           );
         })}

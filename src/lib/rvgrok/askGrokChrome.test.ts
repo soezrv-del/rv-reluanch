@@ -78,7 +78,7 @@ test("dock is not keyed on overlay open or kb.open", () => {
   assert.match(shell, /enabled: swipeArmed,/);
 });
 
-test("Grok dock tab uses the same Einstein asset as RvGrok; other tabs are icon-free", () => {
+test("Grok dock tab uses the same Einstein asset as RvGrok; other tabs are glyphs", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const bubble = read("../../components/rvgrok/MessageBubble.tsx");
   const css = read("../../styles.css");
@@ -98,8 +98,21 @@ test("Grok dock tab uses the same Einstein asset as RvGrok; other tabs are icon-
   );
   assert.match(
     tabs,
-    /isLive \? \([\s\S]*bottom-tab-einstein[\s\S]*\) : \([\s\S]*<DockLabel/,
+    /isLive \? \([\s\S]*bottom-tab-einstein[\s\S]*\) : \([\s\S]*<DockIcon/,
   );
+  assert.match(
+    tabs,
+    /import \{ Calculator, ClipboardCheck, Map, Store \} from "lucide-react"/,
+  );
+  assert.match(tabs, /function PickupIcon/);
+  assert.match(tabs, /viewBox="0 0 24 24"/);
+  assert.match(tabs, /stroke="currentColor"/);
+  assert.match(tabs, /strokeWidth=\{2\}/);
+  assert.match(tabs, /strokeLinecap="round"/);
+  assert.match(tabs, /strokeLinejoin="round"/);
+  assert.match(tabs, /fill="none"/);
+  assert.equal((tabs.match(/<circle\b/g) || []).length, 2);
+  assert.doesNotMatch(tabs, /MapPin|Warehouse|\bTruck\b|<DockLabel/);
   assert.doesNotMatch(tabs, /bottom-tab-live flex-col/);
   const liveBranch = tabs.match(/isLive \? \([\s\S]*?\) : \(/)?.[0];
   assert.ok(liveBranch, "Live tab is a dedicated Einstein branch");

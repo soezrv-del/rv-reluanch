@@ -41,7 +41,11 @@ test("dock plate matches Raidho mark ground so the tab square disappears", () =>
   assert.match(css, /border:\s*1px solid var\(--dock-surface\)/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?box-shadow:\s*none/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?backdrop-filter:\s*none/);
-  assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
+  assert.match(
+    css,
+    /\.bottom-tab-active-dot \{[\s\S]*?background:\s*var\(--color-sapphire\)/,
+  );
+  assert.doesNotMatch(css, /border-top-color:\s*var\(--color-sapphire\)/);
   assert.match(tabs, /Raidho mark ground/);
   assert.doesNotMatch(css, /\.bottom-tab-indicator-sapphire/);
   assert.doesNotMatch(css, /0 0 16px rgba\(110, 190, 255, 0\.45\)/);

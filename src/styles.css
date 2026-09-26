@@ -963,7 +963,7 @@
  * Sampled #000000 from raidho-r-mark-v2.png corners. Plate + nav +
  * safe-area are that hex so the tab square disappears into the
  * icon ground. No contrasting sapphire plate. One highlight:
- * 2px --color-sapphire top rule on the active tab. */
+ * a small --color-sapphire dot under the active icon. */
 .bottom-tabs-nav,
 [data-bottom-dock] {
   background: var(--dock-surface);
@@ -991,10 +991,36 @@
   background: transparent;
   border-top: 2px solid transparent;
 }
-.bottom-tab-btn.is-active,
-.bottom-tab-btn[aria-current="page"] {
+.bottom-tab-glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: var(--dock-icon-size);
+  flex: none;
+}
+.bottom-tab-icon {
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  color: var(--dock-label-color-active);
+  opacity: 0.72;
+}
+.bottom-tab-btn.is-active .bottom-tab-icon,
+.bottom-tab-btn[aria-current="page"] .bottom-tab-icon {
+  opacity: 1;
+}
+.bottom-tab-active-dot {
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 999px;
   background: transparent;
-  border-top-color: var(--color-sapphire);
+  flex: none;
+  pointer-events: none;
+}
+.bottom-tab-btn.is-active .bottom-tab-active-dot,
+.bottom-tab-btn[aria-current="page"] .bottom-tab-active-dot {
+  background: var(--color-sapphire);
 }
 /* Single sheen only — header chrome, not the dock plate */
 .bottom-tabs-shine {
@@ -1321,6 +1347,13 @@
   display: block;
 }
 @media (orientation: landscape) and (max-height: 520px) {
+  .bottom-tab-glyph {
+    height: 2.75rem;
+  }
+  .bottom-tab-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
   .bottom-tab-einstein {
     width: 2.75rem;
     height: 2.75rem;
