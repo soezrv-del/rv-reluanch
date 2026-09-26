@@ -3,8 +3,10 @@
  *
  * Unflagged lot numbers paint holes only (blank or "Confirm brochure").
  * Catalog digit heuristics may also be replaced when dataSource is
- * catalog/estimated. A field flagged `overridesCatalog` ranks above the
- * OEM / brochure value for that coach and field. dataSource is left as
+ * catalog/estimated. A field flagged `overridesCatalog` replaces a filled
+ * cell. fillBrochureHolesFromLot drops that flag for an OEM pin, OEM
+ * floorplan row, or brochure value only when the record's precedence is
+ * factoryFirst. Omitted precedence stays lot-wins. dataSource is left as
  * the brochure sheet had it — the lot tag is appended, never relabeled OEM.
  * 0 / null / tank-count values stay blank.
  * Never convert lb ↔ gal. Never invent a class average.
@@ -14,6 +16,44 @@ import { CONFIRM_BROCHURE, type BrochureSpecs } from "./brochureSpecs.ts";
 import type { LotOverrideField } from "./lotCatalogSeed.ts";
 
 export const LOT_FACTS_SOURCE = "RV Country lot unit record";
+
+/** True when this Facts note records a lot fill for one painted label. */
+export function lotRecordFilledField(
+  accuracyNote: string | null | undefined,
+  label: string,
+): boolean {
+  const match = (accuracyNote || "").match(/RV Country lot unit record \(([^)]*)\)/);
+  if (!match) return false;
+  return match[1]!.split(",").some((part) => part.trim() === label);
+}
+
+function looksLikeLengthRange(value: string | null | undefined): boolean {
+  if (!value) return false;
+  return (
+    /\d\s*[-–—]\s*\d/.test(value) ||
+    /\bto\b/i.test(value) ||
+    /\b(span|range|varies)\b/i.test(value)
+  );
+}
+
+/**
+ * Live dossier length vs the sheet. A lot-filled length stays.
+ * A specific live string such as "43.6 inches" still replaces a catalog
+ * length that the lot did not fill.
+ */
+export function displayLengthWithLotLock(
+  seedLength: string | null | undefined,
+  liveLength: string | null | undefined,
+  lockLengthFromLot: boolean,
+): string {
+  const seed = (seedLength || "").trim();
+  const seedSpecific = seed.length > 0 && seed !== "—" && !looksLikeLengthRange(seed);
+  const live = (liveLength || "").trim();
+  if (lockLengthFromLot && seedSpecific) return seed;
+  if (live && looksLikeLengthRange(live) && seedSpecific) return seed;
+  if (live && !looksLikeLengthRange(live)) return live;
+  return seed;
+}
 
 /** Tank counts on dealer HTML (1–4) must never be treated as gallons or pounds. */
 const TANK_COUNT_MAX = 4;
@@ -39,6 +79,10 @@ export type LotPublishedSpecs = {
   stockNumber?: string | null;
   /** Published keys whose lot number replaces a filled catalog cell. */
   overrides?: Partial<Record<LotPublishedKey, true>>;
+  /**
+   * factoryFirst drops OEM-overlapping flags. Omitted means lotWins.
+   */
+  precedence?: "factoryFirst" | "lotWins";
 };
 
 type LotPublishedKey =
@@ -223,6 +267,8 @@ export function lotPublishedFromRow(
   );
   const propaneGal = pickNum(row, ["propane_gal", "propaneGal"], "capacity");
   const overrides = publishedOverrides(row);
+  const precedence =
+    row.precedence === "factoryFirst" || row.precedence === "lotWins" ? row.precedence : undefined;
   return {
     gvwrLbs: pickNum(row, ["gvwr", "gvwr_lbs", "gvwrLbs"], "weight"),
     dryWeightLbs: pickNum(row, ["dry_weight", "dryWeight", "uvw", "uvw_lbs", "uvwLbs"], "weight"),
@@ -259,6 +305,7 @@ export function lotPublishedFromRow(
     fuelType: pickText(row, ["fuel_type", "fuelType", "fuel"]),
     stockNumber: pickText(row, ["stock_number", "stockNumber", "stock"]),
     ...(overrides ? { overrides } : {}),
+    ...(precedence ? { precedence } : {}),
   };
 }
 

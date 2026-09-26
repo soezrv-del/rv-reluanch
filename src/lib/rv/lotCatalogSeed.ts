@@ -21,6 +21,12 @@ export type LotOverrideField =
   | "propane_lbs"
   | "propane_gal";
 
+/**
+ * lotWins (the default when omitted) lets a flagged lot value replace OEM.
+ * factoryFirst lets that flag replace series seeds and estimates only.
+ */
+export type LotPrecedence = "factoryFirst" | "lotWins";
+
 export type LotCatalogSeedRow = {
   year: number;
   make: string;
@@ -44,10 +50,17 @@ export type LotCatalogSeedRow = {
   propane_gal?: number;
   source: "RV Country lot unit record";
   /**
-   * Fields where the lot number replaces a catalog / OEM / brochure value
-   * for this exact year + model + floorplan. Unflagged fields fill holes only.
+   * Fields where the lot number replaces the catalog value for this exact
+   * year + model + floorplan. Unflagged fields fill holes only.
+   * On a factoryFirst record the resolver drops the flag when that field
+   * already has an OEM pin, OEM floorplan row, or brochure value.
    */
   overridesCatalog?: Partial<Record<LotOverrideField, true>>;
+  /**
+   * Omitted means lotWins, so existing records keep a flagged lot value
+   * over OEM. Set factoryFirst on a make that should not.
+   */
+  precedence?: LotPrecedence;
   /** Agreeing own-lot rows for the numbers on this record. */
   sourceNote?: string;
 };

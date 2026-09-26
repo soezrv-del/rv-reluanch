@@ -49,6 +49,7 @@ import {
 } from "@/lib/rv/reportRatings";
 import { hasConcreteFloorplan } from "@/lib/rv/factsOpen";
 import { buildFactsBrochureSpecs } from "@/lib/rv/factsSheet";
+import { lotRecordFilledField } from "@/lib/rv/lotFactsFallback";
 import { fetchLotSnapshot } from "@/lib/lot/ownLotPage";
 import { registerLotCatalogUnits } from "@/lib/rv/lotCatalogUnits";
 import {
@@ -737,6 +738,7 @@ export function RvDetail({
       live?.live ? live : null,
       {
         lockPowertrainFromCatalog: true,
+        lockLengthFromLot: lotRecordFilledField(brochure.accuracyNote, "LENGTH"),
         hardOverride,
       },
     );
@@ -767,7 +769,7 @@ export function RvDetail({
       };
     }
     return { ...merged, propane: catalogSpecs.propane };
-  }, [catalogSpecs, live, brochurePinned, powertrainGuard]);
+  }, [brochure, catalogSpecs, live, brochurePinned, powertrainGuard]);
 
   const displayRating = ratingMeta.score;
 
