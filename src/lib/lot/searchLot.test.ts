@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   filterLotBrowse,
   lotPriceOrGap,
+  lotLookupRows,
   lotTextOrGap,
   lotTypeChips,
   lotTypeFamily,
@@ -139,6 +140,81 @@ test("floorplan 27A / 27As match Vision SE 27ASE and do not hitch UCO9527A", () 
   const byNum = searchLotUnits(sample.units, "47034");
   assert.equal(byNum.length, 1);
   assert.equal(byNum[0]?.trim, "27ASE");
+});
+
+test("lot lookup shows every printed scrape field and does not invent blanks", () => {
+  const snap = parseLotSnapshotJson([
+    {
+      year: 2022,
+      make: "Tiffin",
+      model: "Allegro Red 360",
+      trim: "33 AA",
+      stock_number: "UPF9963",
+      condition: "Used",
+      lot_status: "Available",
+      location: "Fresno CA",
+      mileage: 6870,
+      price: 229995,
+      gvwr: 37320,
+      engine: "Cummins / I6 Diesel Pusher",
+      chassis_brand: "Freightliner",
+      fuel_type: "Regular Diesel",
+      raw: {
+        attributes: {
+          Wheelbase: "16.5 ft | 198 in",
+          GVWR: "37320 lbs",
+          Engine: "Cummins / I6 Diesel Pusher",
+        },
+        flags: ["King Bed"],
+      },
+    },
+    {
+      year: 2026,
+      make: "New",
+      model: "Coach",
+      stock_number: "N1",
+      condition: "New",
+      mileage: 0,
+    },
+    {
+      year: 2020,
+      make: "Used",
+      model: "Zero",
+      stock_number: "U0",
+      condition: "Used",
+      mileage: 0,
+    },
+  ]);
+  const unit = snap.units[0]!;
+  assert.equal(unit.printed.mileage, "6,870 mi");
+  assert.equal(unit.printed.gvwr, "37320 lbs");
+  assert.equal(unit.printed.wheelbase, "16.5 ft | 198 in");
+  assert.equal(unit.printed.engine, "Cummins / I6 Diesel Pusher");
+  assert.equal(unit.printed.chassis_brand, "Freightliner");
+  assert.equal(unit.printed.fuel_type, "Regular Diesel");
+  assert.equal(unit.printed.flags, "King Bed");
+  assert.equal(unit.printed.payload, undefined);
+  assert.equal(unit.printed.dry_weight, undefined);
+  assert.equal(unit.printed.hitch_weight, undefined);
+  assert.equal(unit.printed.photo, undefined);
+
+  const rows = Object.fromEntries(
+    lotLookupRows(unit).map((row) => [row.key, row.value]),
+  );
+  assert.equal(rows.mileage, "6,870 mi");
+  assert.equal(rows.wheelbase, "16.5 ft | 198 in");
+  assert.equal(rows.gvwr, "37320 lbs");
+  assert.equal(rows.engine, "Cummins / I6 Diesel Pusher");
+  assert.equal(rows.chassis_brand, "Freightliner");
+  assert.equal(rows.lot_status, "Available");
+  assert.equal(rows.year, undefined);
+  assert.equal(rows.make, undefined);
+  assert.equal(rows.price, undefined);
+  assert.equal(rows.payload, undefined);
+
+  assert.equal(snap.units[1]?.printed.mileage, undefined);
+  assert.ok(!lotLookupRows(snap.units[1]!).some((row) => row.key === "mileage"));
+  assert.equal(snap.units[2]?.printed.mileage, "0 mi");
 });
 
 test("missing fields stay GAP — never invent a price or stock", () => {

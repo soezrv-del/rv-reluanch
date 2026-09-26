@@ -73,6 +73,8 @@ export type LotUnit = {
   engine: string;
   chassis: string;
   fuel_type: string;
+  /** Every non-empty printed scrape field. Blank keys are absent. */
+  printed: Record<string, string>;
 };
 
 export type LotSnapshotView = {
@@ -167,6 +169,109 @@ function pickPrice(row: Record<string, unknown>): number | null {
 
 function formatUsd(n: number): string {
   return `$${Math.round(n).toLocaleString("en-US")}`;
+}
+
+const UNPRINTED_LOT_KEYS = new Set([
+  "photo",
+  "floorplan_image",
+  "image",
+  "images",
+  "raw",
+]);
+
+function lotScrapeKey(key: string): string {
+  return key.trim().toLowerCase().replace(/[\s-]+/g, "_");
+}
+
+/** Mileage prints as "6,870 mi". 0 on a new unit is not an odometer. */
+function formatLotMileage(value: unknown, condition: string): string | null {
+  const n =
+    typeof value === "number"
+      ? value
+      : Number(String(value ?? "").replace(/,/g, "").trim());
+  if (!Number.isFinite(n) || n < 0) return null;
+  if (n === 0 && !/\bused\b/i.test(condition)) return null;
+  return `${Math.round(n).toLocaleString("en-US")} mi`;
+}
+
+function formatLotPrintedField(
+  key: string,
+  value: unknown,
+  condition: string,
+): string | null {
+  const k = lotScrapeKey(key);
+  if (!k || UNPRINTED_LOT_KEYS.has(k)) return null;
+  if (value == null) return null;
+  if (typeof value === "boolean") return value ? "yes" : null;
+  if (k === "mileage" || k === "odometer" || k === "miles") {
+    return formatLotMileage(value, condition);
+  }
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || value === 0) return null;
+    if (/^price/.test(k)) return formatUsd(value);
+    if (Number.isInteger(value)) return value.toLocaleString("en-US");
+    return String(Math.round(value * 100) / 100);
+  }
+  const s = String(value).trim();
+  if (!s) return null;
+  if ((k === "mileage" || k === "odometer" || k === "miles") && s === "0") {
+    return formatLotMileage(0, condition);
+  }
+  return s;
+}
+
+/**
+ * Every non-empty printed key on the scrape row, including raw attributes.
+ * Does not invent a key the row left blank. Does not read the brochure catalog.
+ */
+function printedLotFields(row: Record<string, unknown>): Record<string, string> {
+  const condition = pickStr(row, "condition");
+  const out: Record<string, string> = {};
+  const put = (key: string, value: unknown) => {
+    const name = key.trim();
+    if (!name) return;
+    const formatted = formatLotPrintedField(name, value, condition);
+    if (!formatted) return;
+    out[lotScrapeKey(name)] = formatted;
+  };
+  for (const [key, value] of Object.entries(row)) {
+    if (lotScrapeKey(key) === "raw" && value && typeof value === "object") {
+      const raw = value as Record<string, unknown>;
+      const attrs = raw.attributes;
+      if (attrs && typeof attrs === "object" && !Array.isArray(attrs)) {
+        for (const [attr, attrValue] of Object.entries(
+          attrs as Record<string, unknown>,
+        )) {
+          put(attr, attrValue);
+        }
+      }
+      if (Array.isArray(raw.flags) && raw.flags.length) {
+        put(
+          "flags",
+          raw.flags
+            .map((flag) => asText(flag))
+            .filter(Boolean)
+            .join(", "),
+        );
+      }
+      continue;
+    }
+    if (Array.isArray(value)) {
+      if (value.length && value.every((item) => typeof item !== "object")) {
+        put(
+          key,
+          value
+            .map((item) => asText(item))
+            .filter(Boolean)
+            .join(", "),
+        );
+      }
+      continue;
+    }
+    if (value && typeof value === "object") continue;
+    put(key, value);
+  }
+  return out;
 }
 
 function firstImageUrl(value: unknown): string {
@@ -337,6 +442,7 @@ function rowToLotUnit(row: Record<string, unknown>): LotUnit {
     engine: pickStr(row, "engine"),
     chassis: pickStr(row, "chassis", "chassis_brand"),
     fuel_type: pickStr(row, "fuel_type", "fuel"),
+    printed: printedLotFields(row),
   };
   if (!unit.title) unit.title = composedTitle(unit);
   return unit;
@@ -436,6 +542,89 @@ export function lotSpecLine(unit: LotUnit): string {
   const gvwr = lotLbsOrGap(unit.gvwr);
   if (gvwr !== LOT_GAP) parts.push(`GVWR ${gvwr}`);
   return parts.join(" · ");
+}
+
+/** Already painted on the closed card. The open lookup shows the rest. */
+const LOT_CARD_HEAD_KEYS = new Set([
+  "year",
+  "make",
+  "model",
+  "trim",
+  "body_type",
+  "location",
+  "stock_number",
+  "stock",
+  "price",
+  "condition",
+  "vin",
+  "title",
+  "photo",
+  "source",
+  "dealer",
+]);
+
+const LOT_FIELD_LABELS: Record<string, string> = {
+  mileage: "Mileage",
+  lot_status: "Status",
+  gvwr: "GVWR",
+  dry_weight: "Dry weight",
+  hitch_weight: "Hitch",
+  payload: "Payload",
+  vehicle_body_length: "Length",
+  vehicle_body_height: "Height",
+  vehicle_body_width: "Width",
+  length_ft: "Length",
+  height_ft: "Height",
+  width_ft: "Width",
+  max_sleeping_count: "Sleeps",
+  sleeps: "Sleeps",
+  number_of_slideouts: "Slides",
+  slides: "Slides",
+  total_fresh_water_tank_capacity: "Fresh",
+  fresh_gal: "Fresh",
+  total_gray_water_tank_capacity: "Gray",
+  gray_gal: "Gray",
+  total_black_water_tank_capacity: "Black",
+  black_gal: "Black",
+  propane_lbs: "Propane",
+  propane_gal: "Propane",
+  engine: "Engine",
+  chassis: "Chassis",
+  chassis_brand: "Chassis",
+  fuel_type: "Fuel",
+  horsepower: "Horsepower",
+  torque: "Torque",
+  wheelbase: "Wheelbase",
+  transmission: "Transmission",
+  fuel_tank_capacity: "Fuel tank",
+  air_conditioning_btu: "A/C",
+  towing_capacity: "Towing",
+  price_msrp: "MSRP",
+  price_current: "Current price",
+  price_hidden: "Hidden price",
+  price_lowest: "Lowest price",
+  url: "Listing",
+  flags: "Flags",
+};
+
+function lotFieldLabel(key: string): string {
+  const known = LOT_FIELD_LABELS[key];
+  if (known) return known;
+  return key
+    .replace(/[_]+/g, " ")
+    .replace(/\b[a-z]/g, (ch) => ch.toUpperCase());
+}
+
+/** Printed scrape fields for the open lot card. Head fields stay on the card. */
+export function lotLookupRows(
+  unit: LotUnit,
+): { key: string; label: string; value: string }[] {
+  const rows: { key: string; label: string; value: string }[] = [];
+  for (const [key, value] of Object.entries(unit.printed ?? {})) {
+    if (!value || LOT_CARD_HEAD_KEYS.has(key)) continue;
+    rows.push({ key, label: lotFieldLabel(key), value });
+  }
+  return rows;
 }
 
 /** Snapshot photo only — listing page URLs are not images. */
