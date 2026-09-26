@@ -19,11 +19,12 @@ import {
 } from "./grokExtras.ts";
 import {
   looksLikeCompanyOrPlantAsk,
+  looksLikeInventoryOrCountQuestion,
   looksLikeNamedCoachProductQuestion,
   looksLikeSpecQuestion,
   normalizeAskText,
 } from "./webIntent.ts";
-import { parseCoachFromText } from "./parseCoach.ts";
+import { looksLikeLengthMeasureAsk, parseCoachFromText } from "./parseCoach.ts";
 import {
   askNamesCoachIdentity,
   resolveCoachIdentity,
@@ -252,10 +253,33 @@ export function looksLikeVoiceCoachOrSpecAsk(text: string): boolean {
   const t = text || "";
   if (!t.trim()) return false;
   if (looksLikeCompanyOrPlantAsk(t)) return false;
+  // Length-band lot asks stay on the lot. No spec card, no extras.
+  if (looksLikeLengthMeasureAsk(t) && looksLikeLengthBandLotAsk(t)) {
+    return false;
+  }
   if (looksLikeDeskSheetAsk(t)) return true;
   if (looksLikeCoachReportAsk(t)) return true;
   if (looksLikeNamedCoachProductQuestion(t)) return true;
   return false;
+}
+
+/** Inventory / in stock / how many / diesels — not a "specs on" report. */
+function looksLikeLengthBandLotAsk(text: string): boolean {
+  if (
+    looksLikeDeskSheetAsk(text) &&
+    !looksLikeInventoryOrCountQuestion(text) &&
+    !/\b(?:how many|do we have|in stock|on (?:the |our )?lot|inventor(?:y|ies)|of them)\b/i.test(
+      text,
+    )
+  ) {
+    return false;
+  }
+  return (
+    looksLikeInventoryOrCountQuestion(text) ||
+    /\b(?:inventor(?:y|ies)|in stock|on (?:the |our )?lot|how many|do we have|diesels?|pushers?|of them)\b/i.test(
+      text,
+    )
+  );
 }
 
 const CATALOG_SEARCH_FOLLOW_RE =

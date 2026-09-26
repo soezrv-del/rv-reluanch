@@ -26,11 +26,13 @@ import {
   extractFloorplanToken,
   isBudgetThousandsToken,
   fuzzyMatchCatalogName,
+  looksLikeLengthMeasureAsk,
   normalizeCoachAsk,
   parseCoachFromText,
   parseSeriesAlias,
   parseSpokenSeries,
   seriesAliasEquals,
+  stripLengthMeasures,
 } from "./parseCoach.ts";
 import {
   looksLikeMarketValueQuestion,
@@ -102,6 +104,8 @@ export type OwnLotUnit = {
   dealer: string;
   /** Dealer listing price from the scrape. Null when every price field is missing or ≤ 0. */
   price: number | null;
+  /** Printed length in feet. Null when the sheet has no length. Never a floorplan. */
+  lengthFt: number | null;
 };
 
 export type OwnLotFilter = {
@@ -121,6 +125,13 @@ export type OwnLotFilter = {
   minPrice?: number;
   maxPrice?: number;
   aroundPrice?: number;
+  /** Printed-length cap. Inclusive only when maxLengthInclusive is true. */
+  maxLengthFt?: number;
+  maxLengthInclusive?: boolean;
+  /** Printed length must be greater than this. */
+  minLengthFt?: number;
+  /** "36-foot" band [N, N+1). */
+  aroundLengthFt?: number;
 };
 
 export type OwnLotPriceBand = {
@@ -249,6 +260,129 @@ export function pickOwnLotPrice(row: Record<string, unknown>): number | null {
   return null;
 }
 
+const PRINTED_LENGTH_KEYS = [
+  "length_ft",
+  "vehicle_body_length",
+  "overall_length",
+  "exterior_length",
+  "body_length",
+  "vehicle_length",
+  "length",
+] as const;
+
+/** 35' 7" → 35 + 7/12. A bare number above 80 is inches. No print stays null. */
+function parsePrintedFeet(value: unknown): number | null {
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || value <= 0) return null;
+    return value > 80 ? value / 12 : value;
+  }
+  if (typeof value !== "string") return null;
+  const raw = value.trim();
+  if (!raw) return null;
+  const feetInches = raw.match(
+    /^(\d{1,2}(?:\.\d+)?)\s*(?:'|′|ft|feet|foot)\s*(\d{1,2}(?:\.\d+)?)?\s*(?:"|″|in(?:ch(?:es)?)?)?$/i,
+  );
+  if (feetInches) {
+    const feet = Number(feetInches[1]);
+    const inches = feetInches[2] ? Number(feetInches[2]) : 0;
+    if (!Number.isFinite(feet) || feet <= 0 || !Number.isFinite(inches)) return null;
+    return feet + inches / 12;
+  }
+  const cleaned = raw.replace(/,/g, "");
+  if (!/^\d+(?:\.\d+)?$/.test(cleaned)) return null;
+  const n = Number(cleaned);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n > 80 ? n / 12 : n;
+}
+
+/** Printed length only. Never trim, floorplan, or a guessed foot. */
+export function pickPrintedLengthFt(row: Record<string, unknown>): number | null {
+  const lower = lowerKeyMap(row);
+  for (const k of PRINTED_LENGTH_KEYS) {
+    const n = parsePrintedFeet(lower[k]);
+    if (n != null) return n;
+  }
+  return null;
+}
+
+export function parseOwnLotLength(
+  text: string,
+): Pick<
+  OwnLotFilter,
+  "maxLengthFt" | "maxLengthInclusive" | "minLengthFt" | "aroundLengthFt"
+> {
+  const t = normalizeAskText(text);
+  const under = t.match(
+    /\b(?:under|below|less\s+than)\s+(\d{1,2}(?:\.\d+)?)\s*(?:-\s*)?(?:feet|foot|ft)\b/i,
+  );
+  if (under?.[1]) {
+    return { maxLengthFt: Number(under[1]), maxLengthInclusive: false };
+  }
+  const upTo = t.match(
+    /\b(?:up\s+to|max(?:imum)?|at\s+most|no\s+more\s+than)\s+(\d{1,2}(?:\.\d+)?)\s*(?:-\s*)?(?:feet|foot|ft)\b/i,
+  );
+  if (upTo?.[1]) {
+    return { maxLengthFt: Number(upTo[1]), maxLengthInclusive: true };
+  }
+  const over = t.match(
+    /\b(?:over|above|more\s+than)\s+(\d{1,2}(?:\.\d+)?)\s*(?:-\s*)?(?:feet|foot|ft)\b/i,
+  );
+  if (over?.[1]) return { minLengthFt: Number(over[1]) };
+  const around = t.match(
+    /\b(?:around|about)\s+(\d{1,2}(?:\.\d+)?)\s*(?:-\s*)?(?:feet|foot|ft)\b/i,
+  );
+  if (around?.[1]) return { aroundLengthFt: Number(around[1]) };
+  const bare = t.match(
+    /\b(\d{1,2}(?:\.\d+)?)\s*(?:-\s*)?(?:feet|foot|ft)\b/i,
+  );
+  if (bare?.[1]) return { aroundLengthFt: Number(bare[1]) };
+  return {};
+}
+
+function hasLengthBound(filter: OwnLotFilter): boolean {
+  return (
+    filter.maxLengthFt != null ||
+    filter.minLengthFt != null ||
+    filter.aroundLengthFt != null
+  );
+}
+
+function withoutLength(filter: OwnLotFilter): OwnLotFilter {
+  const next = { ...filter };
+  delete next.maxLengthFt;
+  delete next.maxLengthInclusive;
+  delete next.minLengthFt;
+  delete next.aroundLengthFt;
+  return next;
+}
+
+function feetText(n: number): string {
+  return Number.isInteger(n) ? String(n) : String(n);
+}
+
+/** Length clause only. "under 40 feet" is exactly `length < 40 ft`. */
+export function lengthFilterClause(filter: OwnLotFilter): string {
+  if (
+    filter.maxLengthFt != null &&
+    filter.minLengthFt == null &&
+    filter.aroundLengthFt == null
+  ) {
+    const op = filter.maxLengthInclusive ? "<=" : "<";
+    return `length ${op} ${feetText(filter.maxLengthFt)} ft`;
+  }
+  if (
+    filter.minLengthFt != null &&
+    filter.maxLengthFt == null &&
+    filter.aroundLengthFt == null
+  ) {
+    return `length > ${feetText(filter.minLengthFt)} ft`;
+  }
+  if (filter.aroundLengthFt != null) {
+    return `around ${feetText(filter.aroundLengthFt)} ft`;
+  }
+  return "";
+}
+
 export function formatOwnLotUsd(n: number): string {
   return `$${Math.round(n).toLocaleString("en-US")}`;
 }
@@ -313,6 +447,7 @@ export function rowToUnit(row: Record<string, unknown>): OwnLotUnit {
     source: pickStr(row, "source") || "own",
     dealer: pickStr(row, "dealer") || "RV Country",
     price: pickOwnLotPrice(row),
+    lengthFt: pickPrintedLengthFt(row),
   };
 }
 
@@ -671,11 +806,22 @@ export function parseOwnLotAsk(
   units: OwnLotUnit[] = [],
 ): OwnLotFilter {
   const t = normalizeAskText(text);
-  const parsed = parseCoachFromText(t);
-  const normalized = normalizeCoachAsk(t);
+  const stripped = stripLengthMeasures(t);
+  const parsed = parseCoachFromText(stripped);
+  const normalized = normalizeCoachAsk(stripped);
   const filter: OwnLotFilter = {};
   if (parsed.year) filter.year = parsed.year;
   if (parsed.make) filter.make = parsed.make;
+  // "coaches" is the whole lot. It is not the Coachmen brand.
+  // A spoken "Coachmen" stays.
+  if (
+    filter.make &&
+    /^coachmen$/i.test(filter.make) &&
+    /\bcoaches\b/i.test(t) &&
+    !/\bcoachmen\b/i.test(t)
+  ) {
+    delete filter.make;
+  }
   const spokenModel =
     parsed.model ||
     (normalized.seriesCode
@@ -690,14 +836,14 @@ export function parseOwnLotAsk(
     }) || "",
     units,
   );
-  if ((!model || !lotHasModel(units, model)) && phaetonSpeechInAsk(t, units)) {
+  if ((!model || !lotHasModel(units, model)) && phaetonSpeechInAsk(stripped, units)) {
     model = "phaeton";
   }
   if (model) filter.model = model;
   if (model === "phaeton" && !filter.make) filter.make = "Tiffin";
   const trim =
     (parsed.floorplan || normalized.floorplan || "").replace(/\s+/g, "") ||
-    extractFloorplanToken(t);
+    extractFloorplanToken(stripped);
   if (
     trim &&
     !isBudgetThousandsToken(trim) &&
@@ -708,6 +854,22 @@ export function parseOwnLotAsk(
       parsed.floorplan)
   ) {
     filter.trim = trim;
+  }
+
+  const length = parseOwnLotLength(t);
+  if (length.maxLengthFt != null) filter.maxLengthFt = length.maxLengthFt;
+  if (length.maxLengthInclusive != null) {
+    filter.maxLengthInclusive = length.maxLengthInclusive;
+  }
+  if (length.minLengthFt != null) filter.minLengthFt = length.minLengthFt;
+  if (length.aroundLengthFt != null) filter.aroundLengthFt = length.aroundLengthFt;
+  if (
+    looksLikeLengthMeasureAsk(t) &&
+    filter.model &&
+    units.length > 0 &&
+    !lotHasModel(units, filter.model)
+  ) {
+    delete filter.model;
   }
 
   const stockNumber = parseOwnLotStockNumber(t);
@@ -741,7 +903,7 @@ export function parseOwnLotAsk(
   const fromList = matchLocationFromAsk(t, locations);
   if (fromList) filter.location = fromList;
 
-  const budget = parseOwnLotBudget(t);
+  const budget = parseOwnLotBudget(stripped);
   if (budget.minPrice != null) filter.minPrice = budget.minPrice;
   if (budget.maxPrice != null) filter.maxPrice = budget.maxPrice;
   if (budget.aroundPrice != null) filter.aroundPrice = budget.aroundPrice;
@@ -1040,6 +1202,27 @@ export function unitMatchesFilter(
       return false;
     }
   }
+  if (hasLengthBound(filter)) {
+    if (unit.lengthFt == null) return false;
+    if (filter.aroundLengthFt != null) {
+      if (
+        unit.lengthFt < filter.aroundLengthFt ||
+        unit.lengthFt >= filter.aroundLengthFt + 1
+      ) {
+        return false;
+      }
+    }
+    if (filter.maxLengthFt != null) {
+      if (filter.maxLengthInclusive) {
+        if (unit.lengthFt > filter.maxLengthFt) return false;
+      } else if (!(unit.lengthFt < filter.maxLengthFt)) {
+        return false;
+      }
+    }
+    if (filter.minLengthFt != null && !(unit.lengthFt > filter.minLengthFt)) {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -1171,6 +1354,7 @@ function filterLabel(filter: OwnLotFilter): string {
       : "",
     filter.minPrice != null ? `over ${formatOwnLotUsd(filter.minPrice)}` : "",
     filter.maxPrice != null ? `under ${formatOwnLotUsd(filter.maxPrice)}` : "",
+    lengthFilterClause(filter),
   ].filter(Boolean);
   return bits.length ? bits.join(" · ") : "all units";
 }
@@ -1273,7 +1457,8 @@ export function shouldUseLotPageSearch(
     filter.stockNumber ||
     filter.minPrice != null ||
     filter.maxPrice != null ||
-    filter.aroundPrice != null
+    filter.aroundPrice != null ||
+    hasLengthBound(filter)
   ) {
     return false;
   }
@@ -1300,6 +1485,19 @@ export function formatOwnLotBlock(
     ...new Set(snapshot.units.map((u) => u.location).filter(Boolean)),
   ];
   const filter = parseOwnLotAsk(query, locations, snapshot.units);
+  let active = filter;
+  let lengthCutoff = "";
+  if (hasLengthBound(filter)) {
+    const classFilter = withoutLength(filter);
+    const classRows = snapshot.units.filter((u) =>
+      unitMatchesFilter(u, classFilter),
+    );
+    if (!classRows.some((u) => u.lengthFt != null)) {
+      const asked = lengthFilterClause(filter);
+      lengthCutoff = `LENGTH CUTOFF NOT ON FILE. Asked ${asked}. No matched row has length_ft or vehicle_body_length. Do not say 0 diesels. Do not invent feet.`;
+      active = classFilter;
+    }
+  }
   const lotQuery = lotSearchQueryFromAsk(query);
   const useLotSearch = shouldUseLotPageSearch(query, filter, lotQuery);
   const lotHits = useLotSearch
@@ -1307,7 +1505,7 @@ export function formatOwnLotBlock(
     : [];
   const counts = useLotSearch
     ? countsForMatchedUnits(snapshot.units, lotHits)
-    : aggregateOwnLot(snapshot.units, filter);
+    : aggregateOwnLot(snapshot.units, active);
   const asOf = snapshot.asOf || "unknown (no timestamp on file)";
   const dieselNote = snapshot.fuelFieldPresent
     ? "Fuel field is present on some rows — still prefer body_type Class A Diesel + Class Super C for diesel counts unless the ask names fuel."
@@ -1317,7 +1515,9 @@ export function formatOwnLotBlock(
     `RV Country own-lot snapshot (source=${snapshot.source || "own"}, dealer=${snapshot.dealer || "RV Country"}). As of: ${asOf}.`,
     dieselNote,
     `Lot total: ${counts.total} units. Filter: ${
-      useLotSearch ? `lot search "${lotQuery}"` : filterLabel(filter)
+      useLotSearch
+        ? `lot search "${lotQuery}"`
+        : filterLabel(lengthCutoff ? active : filter)
     }. Matched: ${counts.matched}.`,
     `Diesel (Class A Diesel + Class Super C): ${counts.diesel}${
       Object.keys(counts.dieselByBodyType).length
@@ -1325,6 +1525,7 @@ export function formatOwnLotBlock(
         : ""
     }.`,
   ];
+  if (lengthCutoff) lines.push(lengthCutoff);
 
   const listingAsk = looksLikeOwnLotListingPriceQuestion(query);
   const listAsk = looksLikeOwnLotUnitListQuestion(query);
@@ -1356,7 +1557,7 @@ export function formatOwnLotBlock(
   if (wantListings) {
     const rows = useLotSearch
       ? lotHits.slice(0, MATCH_LIST_MAX)
-      : queryOwnLotUnits(snapshot.units, filter, MATCH_LIST_MAX);
+      : queryOwnLotUnits(snapshot.units, active, MATCH_LIST_MAX);
     if (rows.length) {
       lines.push(
         `Matching units (from file only, ${rows.length} of ${counts.matched}; year/make/model/trim/stock/location/price):`,
@@ -1369,7 +1570,7 @@ export function formatOwnLotBlock(
     (listingAsk || listAsk || budgetFilter) &&
     counts.matched > MATCH_LIST_MAX
   ) {
-    const rows = queryOwnLotUnits(snapshot.units, filter, MATCH_LIST_MAX);
+    const rows = queryOwnLotUnits(snapshot.units, active, MATCH_LIST_MAX);
     if (rows.length) {
       lines.push(
         `Matching units (from file only, first ${rows.length} of ${counts.matched}; year/make/model/trim/stock/location/price):`,
@@ -1378,7 +1579,7 @@ export function formatOwnLotBlock(
       );
       appendSingleUnitLock(lines, rows, counts.matched);
     }
-  } else if (counts.matched === 0) {
+  } else if (counts.matched === 0 && !lengthCutoff) {
     lines.push(
       "No own-lot hit for this exact series. Say we do not have that coach on the lot snapshot this turn — briefly. Do not say it is missing from the catalog or not in listings. Do not mention catalog gap. Do not send them to check their own lot listing. Do not swap in a sibling series that shares the floorplan code.",
     );

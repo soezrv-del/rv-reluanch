@@ -94,12 +94,25 @@ export function isBudgetThousandsToken(token: string): boolean {
   return /^\d{2,4}k$/i.test((token || "").replace(/\s+/g, ""));
 }
 
+const LENGTH_MEASURE_RE =
+  /\b(?:(?:under|below|less\s+than|over|above|more\s+than|at\s+least|up\s+to|max(?:imum)?|at\s+most|no\s+more\s+than|around|about)\s+)?\d{1,2}(?:\.\d+)?\s*(?:-\s*)?(?:feet|foot|ft)\b/gi;
+
+export function looksLikeLengthMeasureAsk(text: string): boolean {
+  return /\b\d{1,2}(?:\.\d+)?\s*(?:-\s*)?(?:feet|foot|ft)\b/i.test(text || "");
+}
+
+export function stripLengthMeasures(text: string): string {
+  return (text || "").replace(LENGTH_MEASURE_RE, " ");
+}
+
 export function extractFloorplanToken(text: string): string {
   if (!text) return "";
+  const asked = stripLengthMeasures(text);
+  if (!asked.trim()) return "";
   // "2550DS LE" is one plan code. Do not glue English ("4369 spec").
   const notAPlanSuffix =
-    /^(ford|chevy|gas|diesel|the|and|for|with|have|has|in|our|at|any|show|inventory|gal|lbs|ft|spec|specs|report|reports|full|brochure|tanks?|fresh|gray|grey|black|water|class|coach|model|what|are|on|of|this|that|mbs|ph[ae]{2}tons?|fayt[eo]ns?|faetons?|fatens?|paytons?|paitons?|phantoms?|is|an|it|was|be|foot|feet|inch|inches)$/i;
-  const source = text.replace(
+    /^(ford|chevy|gas|diesel|the|and|for|with|have|has|in|our|at|any|show|inventory|gal|lbs|ft|feet|foot|spec|specs|report|reports|full|brochure|tanks?|fresh|gray|grey|black|water|class|coach|model|what|are|on|of|this|that|mbs|ph[ae]{2}tons?|fayt[eo]ns?|faetons?|fatens?|paytons?|paitons?|phantoms?|is|an|it|was|be|inch|inches)$/i;
+  const source = asked.replace(
     /\b(\d{4})\s*([A-Za-z]{1,6})(?:\s+([A-Za-z]{1,6}))?\b/g,
     (full, digits: string, a: string, b?: string) => {
       if (notAPlanSuffix.test(a)) return full;
