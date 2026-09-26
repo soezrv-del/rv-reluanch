@@ -212,7 +212,6 @@ test("Raidho tinted glass sits on the shared backdrop, no blur, taps pass throug
     1,
     "one veil element, reused by both backdrop components",
   );
-  assert.match(suite, /saturate\(0\.5\) brightness\(0\.5\)/);
   assert.doesNotMatch(suite, /RAIDHO_FROST_FILTER = "blur/);
   assert.equal(
     suite.split("suite-raidho-stack").length - 1,
@@ -230,21 +229,21 @@ test("Raidho tinted glass sits on the shared backdrop, no blur, taps pass throug
   assert.match(css, /\.suite-raidho-frost \{[\s\S]*?height:\s*100dvh/);
   assert.match(css, /\.suite-raidho-frost \{[\s\S]*?pointer-events:\s*none/);
   assert.match(css, /\.suite-raidho-frost \{[\s\S]*?z-index:\s*2/);
+  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?background:\s*#000000/);
   assert.match(
     css,
     /\.suite-swipe-viewport:not\(\[data-swipe-dragging="1"\]\):not\(\[data-swipe-busy="1"\]\)\s+\.suite-swipe-pane\[data-pane-active\] \{[\s\S]*?transform:\s*none/,
   );
   assert.match(
     css,
-    /\.suite-raidho-bleed,\s*\.suite-raidho-mark,\s*\.compare-raidho-mark \{[\s\S]*?filter:\s*saturate\(0\.5\) brightness\(0\.5\)/,
+    /\.suite-raidho-bleed,\s*\.suite-raidho-mark,\s*\.compare-raidho-mark \{[\s\S]*?visibility:\s*hidden/,
   );
-  assert.match(css, /@supports \(filter: saturate\(0\.5\)\)/);
-  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?background:\s*rgba\(0, 0, 0, 0\.42\)/);
-  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?background:\s*rgba\(0, 0, 0, 0\.2\)/);
   assert.match(
     css,
-    /@media \(prefers-reduced-transparency: reduce\) \{[\s\S]*?filter:\s*none/,
+    /@supports \(\(backdrop-filter: brightness\(1\)\) or \(-webkit-backdrop-filter: brightness\(1\)\)\) \{[\s\S]*?\.suite-raidho-frost \{[\s\S]*?background:\s*#000000/,
   );
+  assert.doesNotMatch(css, /\.suite-raidho-frost \{[^}]*rgba\(0, 0, 0, 0\.2\)/);
+  assert.doesNotMatch(css, /\.suite-raidho-frost \{[^}]*rgba\(0, 0, 0, 0\.42\)/);
   assert.match(css, /\.grok-thread-glass \{[\s\S]*?background:\s*transparent/);
   assert.match(
     css,

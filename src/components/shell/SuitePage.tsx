@@ -15,10 +15,8 @@ import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 
 /**
- * One tinted-glass veil above the mark. No blur — the R stays sharp.
- * Darken and desaturate live on the logo image (see .suite-raidho-bleed),
- * so chrome above this layer cannot reveal an untinted R. This element
- * is only the see-through black overlay.
+ * Opaque cover above the mark. The glyph is hidden in CSS; this layer is
+ * solid black so no header, tab bar, or inset can show the R.
  */
 export const RAIDHO_FROST_FILTER = "saturate(0.5) brightness(0.5)";
 

@@ -1722,13 +1722,11 @@
 }
 
 /*
- * One tinted-glass veil on the Raidho mark itself.
- * The saturate/brightness lives on the logo image, so a header, tab bar,
- * or pane can never reveal an untinted copy of the R. The frost element
- * is the same see-through black overlay, fixed to the viewport (vw/vh,
- * then svh, then dvh) so it still covers safe areas and odd aspect ratios.
- * isolation keeps this z-index under the cards. pointer-events stay off.
- * Solid 0.42 black is the fallback and the reduced-transparency path.
+ * Opaque cover over the Raidho mark. The glyph is not painted, and the
+ * veil is solid black in every path (including @supports backdrop-filter),
+ * fixed to the viewport so zoom, safe areas, and odd aspect ratios cannot
+ * leave a sliver of the R. isolation keeps this under the cards.
+ * pointer-events stay off so controls above it still work.
  */
 .suite-raidho-stack {
   position: absolute;
@@ -1739,14 +1737,15 @@
 .suite-raidho-bleed,
 .suite-raidho-mark,
 .compare-raidho-mark {
-  filter: none;
+  visibility: hidden;
+  opacity: 0;
 }
 .suite-raidho-frost {
   position: fixed;
   inset: 0;
   width: 100vw;
   /* vh, then svh, then dvh — last supported value wins, so mobile
-     browser toolbars don't leave an untinted strip. */
+     browser toolbars don't leave a gap. */
   height: 100vh;
   height: 100svh;
   height: 100dvh;
@@ -1754,7 +1753,8 @@
   max-height: none;
   z-index: 2;
   pointer-events: none;
-  background: rgba(0, 0, 0, 0.42);
+  opacity: 1;
+  background: #000000;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
@@ -1772,34 +1772,30 @@
   will-change: auto;
   contain: none;
 }
-@supports (filter: saturate(0.5)) {
-  .suite-raidho-bleed,
-  .suite-raidho-mark,
-  .compare-raidho-mark {
-    filter: saturate(0.5) brightness(0.5);
-  }
+@supports ((backdrop-filter: brightness(1)) or (-webkit-backdrop-filter: brightness(1))) {
   .suite-raidho-frost {
-    background: rgba(0, 0, 0, 0.2);
+    background: #000000;
+    opacity: 1;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }
 @media (prefers-reduced-transparency: reduce) {
   .suite-raidho-bleed,
   .suite-raidho-mark,
   .compare-raidho-mark {
-    filter: none;
+    visibility: hidden;
+    opacity: 0;
   }
   .suite-raidho-frost {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    background: rgba(0, 0, 0, 0.42);
+    background: #000000;
+    opacity: 1;
   }
 }
 
-/*
- * Live Chat. The logo already carries the tint, including under the
- * thread header. Don't stack a second veil on the scroller. Assistant
- * bubbles blur the mark; they must not saturate it back to full blue.
- */
+/* Live Chat must not paint a second, see-through sample of the mark. */
 .grok-thread-glass {
   background: transparent;
 }
