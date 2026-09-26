@@ -476,6 +476,9 @@ export function RvDetail({
       freshWater: brochure.freshWater,
       grayWater: brochure.grayWater,
       blackWater: brochure.blackWater,
+      ccc: brochure.ccc,
+      propane: brochure.propane,
+      mpgHighway: brochure.mpgHighway,
     }),
     [brochure, floorplan, data.fuelType, data.type],
   );
@@ -1707,7 +1710,11 @@ export function RvDetail({
             <SpecRow label="GENERATOR" value={brochure.generator} />
             <SpecRow label="A/C" value={brochure.acUnits} />
             <SpecRow label="TIRES" value={brochure.tireSize} />
-            <SpecRow label="HIGHWAY MPG" value={specs.mpgHighway} />
+            <SpecRow
+              label="HIGHWAY MPG"
+              value={specs.mpgHighway}
+              searching={liveLoading && /confirm brochure/i.test(specs.mpgHighway || "")}
+            />
             <SpecRow
               label="FUEL CAPACITY"
               value={displayFromPainted(
@@ -1778,9 +1785,7 @@ export function RvDetail({
                   ? sharedPaint.uvw.sourceUrl
                   : undefined
               }
-              searching={
-                specFallbackLoading && sharedPaint.uvw.gap
-              }
+              searching={liveLoading && dossierGapPlan.gaps.includes("uvw")}
               overrideLbs={weightOverride?.uvwLbs ?? null}
               disabled={!floorplan}
               onSave={(lbs) => {
@@ -1800,6 +1805,7 @@ export function RvDetail({
             />
             <SpecRow
               label="CCC"
+              searching={liveLoading && /confirm brochure/i.test(specs.ccc || "")}
               value={displayFromPainted(specs.ccc, sharedPaint.ccc)}
               sourceUrl={
                 !sharedPaint.ccc.gap &&
@@ -1858,6 +1864,7 @@ export function RvDetail({
             <SpecRow
               label="PROPANE"
               value={specs.propane}
+              searching={liveLoading && /confirm brochure/i.test(specs.propane || "")}
             />
 
             <details className="mt-5 border-t border-white/10 pt-3" data-no-export>
