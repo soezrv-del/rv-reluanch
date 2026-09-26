@@ -58,6 +58,7 @@ import {
   looksLikeCoachDesignationAsk,
   looksLikeLengthMeasureAsk,
   parseCoachFromText,
+  stripLengthMeasures,
 } from "./parseCoach.ts";
 import { executeWebResearch } from "./webResearchTelemetry.ts";
 
@@ -2269,4 +2270,104 @@ test("30-foot Class As at the Carson RV show is a lot ask for the two coaches", 
   assert.equal(kept.aroundLengthFt, 30);
   assert.equal(kept.location, "Carson RV Show");
   assert.equal(queryOwnLotUnits(snap.units, kept, 10).length, 2);
+});
+
+test("around-30 Class A gas variants stay on the same lot units", () => {
+  const snap = snapshotFromJson(
+    JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
+  );
+  const locations = [...new Set(snap.units.map((u) => u.location).filter(Boolean))];
+  const stocks = (ask: string) =>
+    queryOwnLotUnits(snap.units, parseOwnLotAsk(ask, locations, snap.units), 80)
+      .map((u) => u.stock_number)
+      .sort();
+  const baseAsk = "around 30 foot Class A gas";
+  const base = stocks(baseAsk);
+  assert.ok(base.length > 0, "canonical ask matches lot units");
+  for (const ask of [
+    "30 ft Class A gas",
+    "30' Class A gas",
+    "30′ Class A gas",
+    "thirty foot Class A gas",
+    "around 30 foot Class A gasser",
+    "Ford F-53 chassis gas around 30 foot Class A",
+    "around 30 foot Class A gas, diesel pusher excluded",
+    "around 30 foot Class A gas not a diesel pusher",
+  ]) {
+    assert.deepEqual(stocks(ask), base, ask);
+  }
+
+  const ford = parseOwnLotAsk(
+    "Ford F-53 chassis gas around 30 foot Class A",
+    locations,
+    snap.units,
+  );
+  assert.equal(ford.trim, undefined);
+  assert.equal(ford.model, undefined);
+  assert.equal(ford.gasOnly, true);
+  assert.equal(ford.aroundLengthFt, 30);
+  assert.equal(extractFloorplanToken("Ford F-53 chassis gas around 30 foot Class A"), "");
+
+  const rangeAsk = "29-31 ft Class A gas";
+  const range = parseOwnLotAsk(rangeAsk, locations, snap.units);
+  assert.equal(range.aroundLengthFt, undefined);
+  assert.equal(range.minLengthFt, 29);
+  assert.equal(range.minLengthInclusive, true);
+  assert.equal(range.maxLengthFt, 31);
+  assert.equal(range.maxLengthInclusive, true);
+  assert.equal(range.gasOnly, true);
+  const rangeIds = stocks(rangeAsk);
+  assert.ok(rangeIds.length > 0);
+  assert.ok(rangeIds.length < base.length);
+  assert.ok(rangeIds.every((id) => base.includes(id)));
+  assert.equal(stripLengthMeasures("29-31 ft Class A gas").replace(/\s+/g, " ").trim(), "Class A gas");
+  assert.equal(looksLikeLengthMeasureAsk("thirty foot Class A"), true);
+  assert.equal(looksLikeLengthMeasureAsk("30' Class A gas"), true);
+  assert.equal(looksLikeOwnLotStockQuestion("thirty foot Class As at the Carson RV show"), true);
+
+  const atLeast = parseOwnLotAsk("at least 30 feet Class A gas");
+  assert.equal(atLeast.minLengthFt, 30);
+  assert.equal(atLeast.minLengthInclusive, true);
+  assert.equal(atLeast.aroundLengthFt, undefined);
+  const under = parseOwnLotAsk("diesels under 40 feet");
+  assert.equal(under.maxLengthFt, 40);
+  assert.equal(under.maxLengthInclusive, false);
+  assert.equal(under.dieselOnly, true);
+  assert.equal(under.gasOnly, undefined);
+
+  const band: OwnLotUnit[] = [
+    pricedUnit({
+      stock_number: "GAS30",
+      body_type: "Class A",
+      trim: "29S",
+      lengthFt: 30.2,
+    }),
+    pricedUnit({
+      stock_number: "PUSHER",
+      body_type: "Class A Diesel",
+      trim: "31ZW",
+      lengthFt: 31,
+    }),
+  ];
+  for (const ask of [
+    "around 30 foot Class A gas",
+    "around 30 foot Class A gasser",
+    "30' Class A gas",
+    "thirty foot Class A gas",
+    "Ford F-53 chassis gas around 30 foot Class A",
+    "around 30 foot Class A gas not a diesel pusher",
+    "around 30 foot Class A gas, diesel pusher excluded",
+  ]) {
+    assert.deepEqual(
+      queryOwnLotUnits(band, parseOwnLotAsk(ask), 10).map((u) => u.stock_number),
+      ["GAS30"],
+      ask,
+    );
+  }
+  assert.deepEqual(
+    queryOwnLotUnits(band, parseOwnLotAsk("diesels under 40 feet"), 10).map(
+      (u) => u.stock_number,
+    ),
+    ["PUSHER"],
+  );
 });

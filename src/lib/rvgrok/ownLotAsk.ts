@@ -306,12 +306,75 @@ function isLotClarification(text: string): boolean {
   return /\b(?:i meant|meant to say)\b/i.test(normalizeAskText(text));
 }
 
+/** Gas word on an ask or a body label. "gasser" / "gasoline" count; F-53 does not. */
+export const GAS_WORD_RE = /\bgas(?:oline|ser)?s?\b/i;
+
+const DIESEL_WORD_RE = /\b(?:diesels?|pushers?)\b/i;
+const F53_CHASSIS_RE = /\bf[\s-]?53\b/i;
+
+/**
+ * "not a diesel pusher" / "diesel pusher excluded" is a rejection, not a
+ * diesel ask. Drop those spans before looking for a positive diesel cue.
+ */
+function withoutDieselExclusions(text: string): string {
+  return text
+    .replace(
+      /\b(?:not|no|without|exclude|excluding|except)\b[^.]{0,48}?\b(?:diesel(?:\s+pushers?)?|diesels?|pushers?)\b/gi,
+      " ",
+    )
+    .replace(/\b(?:diesels?|pushers?)\b[^.]{0,24}?\bexcluded\b/gi, " ");
+}
+
+function mentionsRvClass(text: string): boolean {
+  return /\bclass\s*[abc]s?\b/i.test(text || "");
+}
+
+/**
+ * One ask-side class and fuel read. Row labels stay on isGasBodyType /
+ * isDieselBodyType — those describe the scrape, not the sentence.
+ */
+export function parseAskedClassAndFuel(text: string): {
+  bodyType?: string;
+  gasOnly?: boolean;
+  dieselOnly?: boolean;
+  toyHauler?: boolean;
+} {
+  const t = text || "";
+  const gas = GAS_WORD_RE.test(t) || F53_CHASSIS_RE.test(t);
+  const dieselPositive = DIESEL_WORD_RE.test(withoutDieselExclusions(t));
+  const fuel: { gasOnly?: boolean; dieselOnly?: boolean } = {};
+  if (dieselPositive) fuel.dieselOnly = true;
+  else if (gas) fuel.gasOnly = true;
+
+  const toyHauler = /\btoy[- ]?haul(?:er|ers)?\b/i.test(t);
+  const fifthWheel = /\bfifth[- ]?wheels?\b/i.test(t);
+  const travelTrailer = /\btravel\s+trailers?\b/i.test(t);
+
+  let bodyType: string | undefined;
+  if (/\bsuper\s*c\b/i.test(t)) bodyType = "Class Super C";
+  else if (/\bclass\s*a\s*diesel\b/i.test(t)) bodyType = "Class A Diesel";
+  else if (/\bclass\s*a\s*gas(?:oline|ser)?s?\b/i.test(t)) bodyType = "Class A Gas";
+  else if (/\bclass\s*as?\b/i.test(t)) bodyType = "Class A";
+  else if (/\bclass\s*b\b/i.test(t)) bodyType = "Class B";
+  else if (/\bclass\s*c\b/i.test(t)) bodyType = "Class C";
+  else if (fifthWheel && toyHauler) bodyType = "Fifth Wheel Toy Hauler";
+  else if (fifthWheel) bodyType = "Fifth Wheel";
+  else if (travelTrailer && toyHauler) bodyType = "Travel Trailer Toy Hauler";
+  else if (travelTrailer) bodyType = "Travel Trailer";
+
+  return {
+    ...fuel,
+    ...(bodyType ? { bodyType } : {}),
+    ...(toyHauler && !fifthWheel && !travelTrailer ? { toyHauler: true } : {}),
+  };
+}
+
 /** "30-foot Class As at the Carson RV show" is the lot even without "in stock". */
 export function looksLikeSizedLotAsk(text: string): boolean {
   if (!looksLikeLengthMeasureAsk(text)) return false;
   const t = normalizeAskText(text);
   return (
-    /\bclass\s*[abc]s?\b/i.test(t) ||
+    mentionsRvClass(t) ||
     /\brv\s+show\b/i.test(t) ||
     /\b(?:in stock|on (?:the |our )?lot|inventor)/i.test(t)
   );
