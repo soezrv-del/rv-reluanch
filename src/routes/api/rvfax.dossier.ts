@@ -13,6 +13,7 @@ import {
   sanitizeUnverifiedLayout,
 } from "@/lib/rv/promptRules";
 import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
+import { dryWeightLbsFromNotes } from "@/lib/rv/factsDossierGapPlan";
 
 import {
   catalogPinsToLiveDossier,
@@ -783,6 +784,10 @@ function parseDossier(
       live: true,
     };
 
+    if (d.uvwLbs == null && researchNotes) {
+      const fromNotes = dryWeightLbsFromNotes(researchNotes);
+      if (fromNotes != null && fromNotes !== d.gvwrLbs) d.uvwLbs = fromNotes;
+    }
     d = applyOemGroundTruth(d);
     return d;
   } catch {

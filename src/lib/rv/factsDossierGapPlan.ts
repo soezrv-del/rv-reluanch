@@ -353,6 +353,22 @@ export function factsDossierResearchQuery(input: {
   return `Write the coach report you would give a salesman who asked you directly about ${coach}. Search the live web. Sections: Overview, Chassis and powertrain, Weights and capacity, Layout and amenities, owner issues, sentiment, and market notes. These fields are still empty and must be filled when a brochure, factory sheet, dealer listing, or published spec page names them: ${needed}. Do not replace a number the catalog already pinned.${dry} Label sources.`;
 }
 
+/** Average published dry weight from research notes, when JSON omitted it. */
+export function dryWeightLbsFromNotes(notes: string): number | null {
+  const text = notes || "";
+  const patterns = [
+    /(?:dry weight|unloaded vehicle weight|\buvw\b)[^\d]{0,32}([\d,]{4,6})/i,
+    /([\d,]{4,6})\s*(?:lb|lbs|pounds)\b[^\n]{0,40}(?:dry weight|unloaded vehicle weight|\buvw\b)/i,
+  ];
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (!m?.[1]) continue;
+    const n = Number(m[1].replace(/,/g, ""));
+    if (Number.isFinite(n) && n >= 4_000 && n <= 60_000) return Math.round(n);
+  }
+  return null;
+}
+
 export function planFactsDossierResearch(opts: {
   year: string;
   make: string;

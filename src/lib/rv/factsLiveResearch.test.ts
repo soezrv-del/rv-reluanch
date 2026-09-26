@@ -24,6 +24,7 @@ import {
   shouldStoreFactsDossierCache,
   type FactsCatalogCandidate,
 } from "./factsDossierResearch.ts";
+import { dryWeightLbsFromNotes } from "./factsDossierGapPlan.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -276,6 +277,11 @@ test("estimated UVW is not a pin — still a UVW gap", () => {
   assert.ok(plan.gaps.includes("uvw"));
   assert.match(plan.query || "", /average published UVW/);
   assert.match(plan.query || "", /not GVWR/);
+  assert.equal(
+    dryWeightLbsFromNotes("Published dry weight is 36,200 lbs. GVWR 44,000."),
+    36200,
+  );
+  assert.equal(dryWeightLbsFromNotes("GVWR 44,000 lbs only"), null);
 });
 
 test("catalog miss / research failure soft-fails — no invented notes", async () => {
