@@ -19,6 +19,7 @@ import {
   type PromptLesson,
   type PromptLessonsStatus,
 } from "./promptLessons.ts";
+import { applyVoiceLesson, type VoiceLessonDraft } from "./voiceLesson.ts";
 
 export const PROMPT_LESSONS_SETTING_KEY = "prompt_lessons";
 export const PENDING_PROMPT_LESSONS_KEY = "prompt_lessons_pending";
@@ -156,4 +157,21 @@ export async function deletePromptLesson(id: string): Promise<
   const saved = await setStoredPromptLessons(planned.stored);
   if (!saved.ok) return saved;
   return { ok: true, status: promptLessonsStatus(mergePromptLessons(saved.stored)) };
+}
+
+/**
+ * Write one standing voice lesson into the injected store.
+ * Same id replaces the older line. Returns the block the next token sends.
+ */
+export async function upsertVoiceLesson(draft: VoiceLessonDraft): Promise<string> {
+  try {
+    const stored = await getStoredPromptLessons();
+    const next = applyVoiceLesson(stored, draft);
+    if (!next) return formatPromptLessons(mergePromptLessons(stored));
+    const saved = await setStoredPromptLessons(next);
+    const overlay = saved.ok ? saved.stored : stored;
+    return formatPromptLessons(mergePromptLessons(overlay));
+  } catch {
+    return "";
+  }
 }

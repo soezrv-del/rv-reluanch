@@ -71,6 +71,7 @@ import {
 import type { CoachIdentity } from "./coachIdentity";
 import { missingIdentityFloorplans, askNamesCoachIdentity } from "./coachIdentity";
 import { getCoachFacts, formatChatSpecMissReply, isUnpinnedWeightReply, isWeightSpecAsk } from "./chatSpecBlock";
+import { appendStandingLessonLine, lessonFromVoiceTurn } from "./voiceLesson";
 
 export type RealtimeStatus =
   | "idle"
@@ -133,6 +134,8 @@ export class GrokRealtimeSession {
     "idle";
   private pendingResearchInjection: string | null = null;
   private lastResearchTranscript = "";
+  /** Lot snapshot from the last voice answer, so a correction can see the row. */
+  private lastLessonLotNotes = "";
   private introSpoken = false;
   private lastDeskQuery = "";
   private lastDeskIdentity: import("./coachIdentity").CoachIdentity | null =
@@ -609,6 +612,51 @@ export class GrokRealtimeSession {
       }
     }
     if (text) this.handlers.onAssistantDone(text);
+    if (text) this.noteVoiceLesson(text);
+  }
+
+  /** Write a standing rule after she answers, then put it on the next turn. */
+  private noteVoiceLesson(assistantText: string) {
+    const userText = this.recentUserTurns[this.recentUserTurns.length - 1] || "";
+    const lotNotes = this.lastLessonLotNotes;
+    const lesson = lessonFromVoiceTurn({ userText, assistantText, lotNotes });
+    if (!lesson) return;
+    const next = appendStandingLessonLine(this.standingLessons || "", lesson.text);
+    if (next !== (this.standingLessons || "")) {
+      this.standingLessons = next;
+      this.sendSessionUpdate();
+    }
+    const phone = this.accessPhone;
+    void import("../access/researchUnlock.ts")
+      .then(({ researchAccessHeaders }) =>
+        fetch("/api/rvgrok/memory", {
+          method: "POST",
+          headers: researchAccessHeaders(
+            { "Content-Type": "application/json" },
+            phone,
+          ),
+          keepalive: true,
+          body: JSON.stringify({
+            source: "voice",
+            lotNotes: lotNotes.slice(0, 12000),
+            messages: [
+              { role: "user", content: userText.slice(0, 800) },
+              { role: "assistant", content: assistantText.slice(0, 800) },
+            ],
+          }),
+        }),
+      )
+      .then(async (res) => {
+        if (!res?.ok) return;
+        const data = (await res.json().catch(() => null)) as {
+          lessons?: unknown;
+        } | null;
+        if (!data || typeof data.lessons !== "string" || !data.lessons.trim()) return;
+        if (this.closed) return;
+        this.standingLessons = data.lessons;
+        this.sendSessionUpdate();
+      })
+      .catch(() => undefined);
   }
 
   private publishDeskSheet(
@@ -1326,6 +1374,7 @@ export class GrokRealtimeSession {
     this.suppressMic = true;
     this.handlers.onStatus("thinking", "Answering…");
     const inventoryTurn = /OWN-LOT inventory/.test(injection);
+    if (inventoryTurn) this.lastLessonLotNotes = injection;
     const plantTurn = looksLikeCompanyOrPlantAsk(this.lastResearchTranscript);
     try {
       ws.send(

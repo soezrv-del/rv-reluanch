@@ -5,11 +5,12 @@ import {
   applyMemoryUpdate,
   memoryKeyFromRequest,
 } from "@/lib/rvgrok/phoneMemoryStore";
-import { queuePendingPromptLesson } from "@/lib/rvgrok/promptLessonsStore";
+import { queuePendingPromptLesson, upsertVoiceLesson } from "@/lib/rvgrok/promptLessonsStore";
 import {
   lessonFromCorrection,
   userLinesForMemory,
 } from "@/lib/rvgrok/sessionLearn";
+import { lessonFromVoiceTurn } from "@/lib/rvgrok/voiceLesson";
 
 /**
  * POST /api/rvgrok/memory
@@ -20,6 +21,7 @@ import {
 
 type Body = {
   source?: string;
+  lotNotes?: string;
   messages?: Array<{ role?: string; content?: string }>;
 };
 
@@ -31,9 +33,6 @@ export const Route = createFileRoute("/api/rvgrok/memory")({
         if (denied) return denied;
 
         const phoneDigits = memoryKeyFromRequest(request);
-        if (!phoneDigits) {
-          return Response.json({ ok: false, skipped: true }, { status: 200 });
-        }
 
         let body: Body = {};
         try {
@@ -49,6 +48,29 @@ export const Route = createFileRoute("/api/rvgrok/memory")({
             text: String(m.content || "").slice(0, 800),
           }));
         const voice = body.source === "voice";
+        let lessons = "";
+        if (voice) {
+          const lesson = lessonFromVoiceTurn({
+            userText: raw
+              .filter((turn) => turn.role === "user")
+              .map((turn) => turn.text)
+              .join("\n"),
+            assistantText: raw
+              .filter((turn) => turn.role === "assistant")
+              .map((turn) => turn.text)
+              .join("\n"),
+            lotNotes: String(body.lotNotes || "").slice(0, 12000),
+          });
+          if (lesson) lessons = await upsertVoiceLesson(lesson);
+        }
+
+        if (!phoneDigits) {
+          return Response.json(
+            { ok: Boolean(lessons), skipped: !lessons, lessons },
+            { status: 200 },
+          );
+        }
+
         const turns: MemoryTurn[] = voice
           ? userLinesForMemory(
               raw.filter((t) => t.role === "user").map((t) => t.text),
@@ -66,6 +88,7 @@ export const Route = createFileRoute("/api/rvgrok/memory")({
         return Response.json({
           ok: true,
           updated: Boolean(saved),
+          lessons,
         });
       },
     },
