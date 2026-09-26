@@ -65,6 +65,7 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
   assert.match(helper, /FACTS_SOFT_RESEARCH_TIMEOUT_MS = 20_000/);
   assert.match(helper, /planFactsDossierResearch/);
   assert.match(helper, /from "\.\/factsDossierGapPlan\.ts"/);
+  assert.match(helper, /researchProvider: "xai"/);
   assert.match(helper, /researchFactsSoftNotes/);
   assert.match(helper, /mergeSoftFieldsIntoDossier/);
   assert.match(gapPlan, /candidate\?\.freshWaterGal/);
@@ -81,11 +82,12 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
     /coachKnowledge|loadCoachKnowledge|planCoachKnowledgeWrite/,
   );
 
-  assert.match(dossier, /getResearchProviderOverride/);
   assert.match(dossier, /researchFactsDossierNotes/);
-  assert.match(dossier, /researchFactsSoftNotes/);
+  assert.match(dossier, /parseFactsSoftNotes/);
+  assert.match(dossier, /if \(plan\.skipLive\)/);
   assert.match(dossier, /mergeSoftFieldsIntoDossier/);
-  assert.match(dossier, /Promise\.all/);
+  assert.doesNotMatch(dossier, /researchFactsSoftNotes/);
+  assert.doesNotMatch(dossier, /Promise\.all\(\[/);
   assert.match(dossier, /denyUnlessWhitelisted/);
   assert.match(dossier, /web-research-then-extract/);
   assert.match(dossier, /catalog-pins/);
@@ -127,7 +129,7 @@ test("Facts wires catalog-first gap browse — not always-on full report", () =>
   assert.match(live, /applyPowertrainPin/);
 });
 
-test("narrow gap query names only the missing field and avoids the 52s report budget", () => {
+test("gap query is a full coach report and still names only the empty field", () => {
   const query = factsDossierResearchQuery({
     year: "2023",
     make: "American Coach",
@@ -137,8 +139,9 @@ test("narrow gap query names only the missing field and avoids the 52s report bu
   });
   assert.match(query, /torque/i);
   assert.match(query, /2023 American Coach American Dream 45A/);
-  assert.doesNotMatch(query, /full specs report/);
-  assert.doesNotMatch(query, /spec sheet|carfax|coach report/i);
+  assert.match(query, /coach report/i);
+  assert.match(query, /Overview/i);
+  assert.doesNotMatch(query, /Give me the full specs report/);
   // Facts passes FACTS_GAP_RESEARCH_TIMEOUT_MS explicitly — never
   // researchTimeoutMs("chat", query), which is the 52s SPEC_REPORT path.
   assert.equal(SPEC_REPORT_RESEARCH_TIMEOUT_MS, 52_000);
@@ -207,8 +210,8 @@ test("missing torque only → narrow query mentions torque; other pins stay", as
   assert.deepEqual(plan.gaps, ["torque"]);
   assert.equal(plan.skipLive, false);
   assert.match(plan.query || "", /torque/i);
-  assert.doesNotMatch(plan.query || "", /full specs report/);
-  assert.doesNotMatch(plan.query || "", /GVWR|UVW|holding tanks|engine/i);
+  assert.match(plan.query || "", /coach report/i);
+  assert.doesNotMatch(plan.query || "", /Give me the full specs report/);
 
   const notes = await researchFactsDossierNotes({
     year: "2018",
@@ -234,7 +237,8 @@ test("missing torque only → narrow query mentions torque; other pins stay", as
   assert.equal(calls[0]!.maxAttempts, 1);
   assert.equal(calls[0]!.researchOrder, undefined);
   assert.match(calls[0]!.query, /torque/i);
-  assert.doesNotMatch(calls[0]!.query, /full specs report/);
+  assert.equal(calls[0]!.researchProvider, "xai");
+  assert.match(calls[0]!.query, /coach report/i);
   assert.ok(notes);
   assert.equal(notes!.skipped, false);
   assert.deepEqual(notes!.gaps, ["torque"]);
@@ -528,7 +532,7 @@ test("soft query is narrative-only and avoids the 52s report budget", () => {
   );
 });
 
-test("complete pins → no hard browse; soft pass may still run", async () => {
+test("complete pins → no hard browse; a separate soft search is not required", async () => {
   const hardCalls: ExecuteWebResearchOpts[] = [];
   const softCalls: ExecuteWebResearchOpts[] = [];
   const hard = await researchFactsDossierNotes({

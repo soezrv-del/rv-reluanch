@@ -326,7 +326,11 @@ const GAP_QUERY_LABEL: Record<FactsHardField, string> = {
   length: "length",
 };
 
-/** Narrow query — avoid the 52s coach-report research budget. */
+/**
+ * One xAI web search for a Facts pull that still has holes.
+ * Same report a direct Grok ask would write. Named gaps must be filled
+ * from a printed source. Catalog pins are not replaced.
+ */
 export function factsDossierResearchQuery(input: {
   year: string;
   make: string;
@@ -342,7 +346,7 @@ export function factsDossierResearchQuery(input: {
     ? input.gaps
     : FACTS_DOSSIER_HARD_FIELDS;
   const needed = gaps.map((g) => GAP_QUERY_LABEL[g]).join(", ");
-  return `OEM published ${needed} for ${coach} only. Brochure / factory number. Do not gather overview, market, or reliability.`;
+  return `Write the coach report you would give a salesman who asked you directly about ${coach}. Search the live web. Sections: Overview, Chassis and powertrain, Weights and capacity, Layout and amenities, owner issues, sentiment, and market notes. These fields are still empty and must be filled when a brochure, factory sheet, or dealer listing prints them: ${needed}. Do not replace a number the catalog already pinned. Year-matched OEM or factory figures only. No invented numbers. Label sources.`;
 }
 
 export function planFactsDossierResearch(opts: {

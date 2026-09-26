@@ -13,14 +13,15 @@ import {
   sanitizeUnverifiedLayout,
 } from "@/lib/rv/promptRules";
 import { findOemFloorplanSpec } from "@/lib/rv/floorplanSpecs";
-import { getResearchProviderOverride } from "@/lib/rvgrok/researchProviderStore";
+
 import {
   catalogPinsToLiveDossier,
   mergeSoftFieldsIntoDossier,
   pinsHaveHardFacts,
   planFactsDossierResearch,
+  parseFactsSoftNotes,
   researchFactsDossierNotes,
-  researchFactsSoftNotes,
+  softFieldsHaveNarrative,
   resolveFactsCatalogPins,
   shouldServeFactsDossierCache,
   shouldStoreFactsDossierCache,
@@ -31,9 +32,9 @@ import {
 
 /**
  * POST /api/rvfax/dossier
- * Catalog / brochure pins first. Live browse only for missing hard fields.
- * Cheap soft-field pass for overview / issues / sentiment / market.
- * Soft-fail keeps catalog paint. Pins still win.
+ * Catalog / brochure pins first. One xAI web search only when a hard
+ * field is still empty, and that search writes the full report.
+ * No gaps means no xAI call. Soft-fail keeps catalog paint. Pins still win.
  */
 
 const cache = new Map<string, { at: number; data: LiveDossier; model?: string }>();
@@ -354,9 +355,9 @@ type DossierBuild =
     };
 
 /**
- * Catalog / brochure pins first. Browse only the missing hard fields.
- * Soft narrative pass runs in parallel and never stomps hard pins.
- * Skip the extract LLM when hard browse was skipped or notes are empty.
+ * Catalog / brochure pins first. One xAI web search only when a hard
+ * field is still empty. That search is the full report. No gaps, no call.
+ * Skip the extract LLM when the browse was skipped or notes are empty.
  */
 async function runTwoStepDossier(opts: {
   year: string;
@@ -395,30 +396,35 @@ async function runTwoStepDossier(opts: {
     ? `FLOORPLAN LOCK: Research ONLY floorplan "${opts.floorplan}". Length, GVWR, engine, and HP must match this plan. Do not average the whole model line.`
     : `NO FLOORPLAN: State that plan-specific options are unknown. Do not invent a floorplan or a single definitive length/HP package.`;
 
-  const researchProvider = (await getResearchProviderOverride()) ?? undefined;
-  const shared = {
+  if (plan.skipLive) {
+    return {
+      kind: "catalog",
+      data: catalogData(),
+      model: "catalog-pin",
+      soft: null,
+      gaps: [],
+      skipLive: true,
+    };
+  }
+
+  const research = await researchFactsDossierNotes({
     year: opts.year,
     make: opts.make,
     model: opts.model,
     floorplan: opts.floorplan,
     candidate: opts.candidate,
     catalogBlock: candidateBlock,
-    researchProvider,
-  };
-  const [research, softNotes] = await Promise.all([
-    researchFactsDossierNotes(shared),
-    researchFactsSoftNotes(shared),
-  ]);
-  const soft = softNotes?.fields ?? null;
+  });
+  const parsedSoft = research?.text ? parseFactsSoftNotes(research.text) : null;
+  const soft =
+    parsedSoft && softFieldsHaveNarrative(parsedSoft) ? parsedSoft : null;
 
   if (!research || research.skipped || !research.text.trim()) {
     if (research?.skipped || pinsHaveHardFacts(pins)) {
       return {
         kind: "catalog",
         data: catalogData(),
-        model: softNotes?.model
-          ? `catalog-pin+${softNotes.model}`
-          : "catalog-pin",
+        model: research?.model || "catalog-pin",
         soft,
         gaps: plan.gaps,
         skipLive: plan.skipLive,

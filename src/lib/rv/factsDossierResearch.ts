@@ -1,9 +1,9 @@
 /**
  * Facts live dossier — catalog / brochure pins first, internet only for gaps.
  *
- * Brochure catalog is the months-built SoT. Live browse runs only for hard
- * fields that are missing or not a real pin. Narrow query + dedicated timeout.
- * Soft-fail keeps catalog paint. Pins still win. No invented OEM numbers.
+ * Brochure catalog is the months-built SoT. One xAI web_search runs only
+ * when a hard field is still empty, and that search writes the full report.
+ * No gaps means no xAI call. Pins still win. No invented OEM numbers.
  *
  * Separate from the RV Grok Neon sidecar. Does not flip the Grok
  * access-admin search-first / catalog-first toggle.
@@ -327,7 +327,8 @@ export async function researchFactsDossierNotes(
     profile: "chat",
     skipGate: true,
     maxAttempts: 1,
-    researchProvider: opts.researchProvider,
+    // Facts backup is the xAI key. Do not spend a Gemini call first.
+    researchProvider: "xai",
   });
 
   if (!researched.ok || !researched.notes.trim()) {
