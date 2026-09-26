@@ -3,8 +3,10 @@
  *
  * Unflagged lot numbers paint holes only (blank or "Confirm brochure").
  * Catalog digit heuristics may also be replaced when dataSource is
- * catalog/estimated. A field flagged `overridesCatalog` ranks above the
- * OEM / brochure value for that coach and field. dataSource is left as
+ * catalog/estimated. A field flagged `overridesCatalog` replaces a filled
+ * cell. fillBrochureHolesFromLot drops that flag for an OEM pin, OEM
+ * floorplan row, or brochure value only when the record's precedence is
+ * factoryFirst. Omitted precedence stays lot-wins. dataSource is left as
  * the brochure sheet had it — the lot tag is appended, never relabeled OEM.
  * 0 / null / tank-count values stay blank.
  * Never convert lb ↔ gal. Never invent a class average.
@@ -77,6 +79,10 @@ export type LotPublishedSpecs = {
   stockNumber?: string | null;
   /** Published keys whose lot number replaces a filled catalog cell. */
   overrides?: Partial<Record<LotPublishedKey, true>>;
+  /**
+   * factoryFirst drops OEM-overlapping flags. Omitted means lotWins.
+   */
+  precedence?: "factoryFirst" | "lotWins";
 };
 
 type LotPublishedKey =
@@ -261,6 +267,8 @@ export function lotPublishedFromRow(
   );
   const propaneGal = pickNum(row, ["propane_gal", "propaneGal"], "capacity");
   const overrides = publishedOverrides(row);
+  const precedence =
+    row.precedence === "factoryFirst" || row.precedence === "lotWins" ? row.precedence : undefined;
   return {
     gvwrLbs: pickNum(row, ["gvwr", "gvwr_lbs", "gvwrLbs"], "weight"),
     dryWeightLbs: pickNum(row, ["dry_weight", "dryWeight", "uvw", "uvw_lbs", "uvwLbs"], "weight"),
@@ -297,6 +305,7 @@ export function lotPublishedFromRow(
     fuelType: pickText(row, ["fuel_type", "fuelType", "fuel"]),
     stockNumber: pickText(row, ["stock_number", "stockNumber", "stock"]),
     ...(overrides ? { overrides } : {}),
+    ...(precedence ? { precedence } : {}),
   };
 }
 

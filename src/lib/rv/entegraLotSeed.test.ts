@@ -8,7 +8,7 @@ import { installCatalog } from "./catalogLoad.ts";
 import { buildBrochureSpecs } from "./brochureSpecs.ts";
 import { buildFactsBrochureSpecs } from "./factsSheet.ts";
 import { ENTEGRA_LOT_SEED } from "./entegraLotSeed.ts";
-import { lengthIsSeriesRangeFallback } from "./lotCatalogFill.ts";
+import { fillBrochureHolesFromLot, lengthIsSeriesRangeFallback } from "./lotCatalogFill.ts";
 import { displayLengthWithLotLock, lotRecordFilledField } from "./lotFactsFallback.ts";
 import { findOemGvwrLbs } from "./floorplanSpecs.ts";
 import { resolveFactsBrochure } from "../rvgrok/factsBrochure.ts";
@@ -36,6 +36,7 @@ test("Anthem lot seed is one record per coach and stays inside the Anthem family
     assert.match(seeded.sourceNote, /2026-09-25/);
     assert.match(seeded.sourceNote, /id \d+/);
     assert.match(seeded.sourceNote, /stock /);
+    assert.equal(seeded.precedence, "factoryFirst");
   }
 });
 
@@ -123,6 +124,45 @@ test("2025 Anthem 37K GVWR stays on the 2024–2025 OEM pin, not the lot 41,000"
   });
   assert.ok(desk);
   assert.equal(desk.gvwrLbs, 44000);
+
+  const before = buildBrochureSpecs(anthem, "2025", "Entegra Coach", "Anthem", "37K");
+  assert.equal(before.sleeps, "6");
+  const flaggedRow = {
+    year: 2025,
+    make: "Entegra Coach",
+    model: "Anthem",
+    trim: "37K",
+    gvwr: 41000,
+    vehicle_body_length: 38.17,
+    max_sleeping_count: 8,
+    overridesCatalog: { gvwr: true, vehicle_body_length: true, max_sleeping_count: true },
+    precedence: "factoryFirst" as const,
+  };
+  const flagged = fillBrochureHolesFromLot(
+    before,
+    [flaggedRow],
+    2025,
+    "Entegra Coach",
+    "Anthem",
+    "37K",
+  );
+  assert.equal(flagged.specs.gvwrLbs, 44000);
+  assert.match(flagged.specs.gvwr, /44,000/);
+  assert.ok(!flagged.filled.includes("GVWR"));
+  assert.match(flagged.specs.lengthFt, /38' 2"/);
+  assert.ok(flagged.filled.includes("LENGTH"));
+  assert.equal(flagged.specs.sleeps, "8");
+  assert.ok(flagged.filled.includes("SLEEPS"));
+
+  const lotWins = fillBrochureHolesFromLot(
+    before,
+    [{ ...flaggedRow, precedence: "lotWins" as const }],
+    2025,
+    "Entegra Coach",
+    "Anthem",
+    "37K",
+  );
+  assert.equal(lotWins.specs.gvwrLbs, 41000);
 });
 
 test("a live dossier length of 43.6 inches does not replace the lot length", () => {

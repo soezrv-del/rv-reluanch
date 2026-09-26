@@ -6,9 +6,14 @@
  * numbers fill holes only. A field flagged overridesCatalog replaces the
  * catalog value when any matching record flags it and the others agree on
  * that number or omit the field. Disagreeing records leave the catalog
- * value. A length that is only the floorplan-digit estimate, or only the
- * series lengthRange fallback, is a hole when the lot printed a length.
- * Tank counts 1–4 never become gallons or pounds. Never convert lb ↔ gal.
+ * value. Records omit precedence and stay lot-wins, so a flag can replace
+ * an OEM pin. A record set to factoryFirst drops that flag when the same
+ * field already has an OEM pin, OEM floorplan row, or brochure value; the
+ * flag still beats a series seed, the series lengthRange fallback, and a
+ * digit estimate. A length that is only the floorplan-digit estimate, or
+ * only the series lengthRange fallback, is a hole when the lot printed a
+ * length. Tank counts 1–4 never become gallons or pounds. Never convert
+ * lb ↔ gal.
  */
 
 import { floorplanTokensAlign } from "../lot/lotSearch.ts";
@@ -16,6 +21,9 @@ import { CONFIRM_BROCHURE, type BrochureSpecs } from "./brochureSpecs.ts";
 import { peekCatalog } from "./catalogLoad.ts";
 import {
   findOemFloorplanSpec,
+  findOemGvwrLbs,
+  findOemHoldingTanks,
+  findOemUvwLbs,
   lengthFtFromFloorplan,
   overallInchesFromFloorplan,
 } from "./floorplanSpecs.ts";
@@ -169,6 +177,10 @@ export function agreeingLotSpecs(
     }
   }
   if (Object.keys(overrides).length) out.overrides = overrides;
+  const votes = rows
+    .map((row) => row.precedence)
+    .filter((vote): vote is "factoryFirst" | "lotWins" => vote === "factoryFirst" || vote === "lotWins");
+  if (votes.includes("factoryFirst") && !votes.includes("lotWins")) out.precedence = "factoryFirst";
   return any ? out : null;
 }
 
@@ -251,6 +263,73 @@ export function lengthIsSeriesRangeFallback(
   return false;
 }
 
+type LotOverrideKey = keyof NonNullable<LotPublishedSpecs["overrides"]>;
+
+/**
+ * Fields an OEM pin, OEM floorplan row, or brochure value already publishes
+ * for this coach. A flagged lot override must not replace these.
+ * Series seeds, lengthRange fallbacks, and digit estimates are not listed.
+ */
+export function oemProtectedLotFields(
+  year: string | number,
+  make: string,
+  model: string,
+  floorplan: string,
+): Set<LotOverrideKey> {
+  const blocked = new Set<LotOverrideKey>();
+  const oem = findOemFloorplanSpec(year, make, model, floorplan);
+  if (oem) {
+    if (oem.overallLengthIn > 0) blocked.add("lengthFt");
+    if (oem.exteriorHeightIn > 0) blocked.add("heightFt");
+    if (oem.exteriorWidthIn > 0) blocked.add("widthFt");
+    if (oem.uvwLbs != null && oem.uvwLbs > 0) blocked.add("dryWeightLbs");
+    if (oem.gvwrLbs > 0) blocked.add("gvwrLbs");
+    if (oem.hitchLbs > 0) blocked.add("hitchLbs");
+    if (oem.freshWater != null && oem.freshWater > 0) blocked.add("freshGal");
+    if (oem.grayWater != null && oem.grayWater > 0) blocked.add("grayGal");
+    if (oem.blackWater != null && oem.blackWater > 0) blocked.add("blackGal");
+    if (oem.propaneLbs != null && oem.propaneLbs > 0) blocked.add("propaneLbs");
+    if (oem.propaneGal != null && oem.propaneGal > 0) blocked.add("propaneGal");
+    if (oem.sleeps != null && oem.sleeps > 0) blocked.add("sleeps");
+    if (oem.slideouts != null) blocked.add("slides");
+  }
+  if (findOemGvwrLbs(year, make, model, floorplan) != null) blocked.add("gvwrLbs");
+  if (findOemUvwLbs(year, make, model, floorplan) != null) blocked.add("dryWeightLbs");
+  const tanks = findOemHoldingTanks(year, make, model, floorplan);
+  if (tanks.freshWater != null && tanks.freshWater > 0) blocked.add("freshGal");
+  if (tanks.grayWater != null && tanks.grayWater > 0) blocked.add("grayGal");
+  if (tanks.blackWater != null && tanks.blackWater > 0) blocked.add("blackGal");
+  return blocked;
+}
+
+/**
+ * Drop flags that would paint over an OEM pin, floorplan row, or brochure
+ * value. Only factoryFirst records. Omitted precedence stays lot-wins.
+ */
+export function lotSpecsWithoutOemOverrides(
+  lot: LotPublishedSpecs | null,
+  year: string | number,
+  make: string,
+  model: string,
+  floorplan: string,
+): LotPublishedSpecs | null {
+  if (!lot?.overrides || lot.precedence !== "factoryFirst") return lot;
+  const blocked = oemProtectedLotFields(year, make, model, floorplan);
+  if (!blocked.size) return lot;
+  const overrides: NonNullable<LotPublishedSpecs["overrides"]> = { ...lot.overrides };
+  let dropped = false;
+  for (const key of Object.keys(overrides) as LotOverrideKey[]) {
+    if (!blocked.has(key)) continue;
+    delete overrides[key];
+    dropped = true;
+  }
+  if (!dropped) return lot;
+  const next: LotPublishedSpecs = { ...lot };
+  if (Object.keys(overrides).length) next.overrides = overrides;
+  else delete next.overrides;
+  return next;
+}
+
 function sheetWithEstimateHoles(
   specs: BrochureSpecs,
   year: string | number,
@@ -278,7 +357,12 @@ function sheetWithEstimateHoles(
   return next;
 }
 
-/** Apply agreeing lot numbers onto a brochure sheet. Flagged overrides win. */
+/**
+ * Apply agreeing lot numbers onto a brochure sheet.
+ * Flagged overrides beat series seeds and estimates.
+ * On a factoryFirst record they do not beat an OEM pin, floorplan row,
+ * or brochure value. Omitted precedence stays lot-wins.
+ */
 export function fillBrochureHolesFromLot(
   specs: BrochureSpecs,
   units: Array<LotCoachIdentity & Record<string, unknown>>,
@@ -287,7 +371,8 @@ export function fillBrochureHolesFromLot(
   model: string,
   floorplan: string,
 ): LotFactsMerge {
-  const lot = lotSpecsForCoach(units, year, make, model, floorplan);
+  const agreed = lotSpecsForCoach(units, year, make, model, floorplan);
+  const lot = lotSpecsWithoutOemOverrides(agreed, year, make, model, floorplan);
   return applyLotSpecsToBrochure(
     sheetWithEstimateHoles(specs, year, make, model, floorplan, lot),
     lot,

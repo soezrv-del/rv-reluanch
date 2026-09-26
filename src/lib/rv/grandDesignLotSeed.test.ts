@@ -19,7 +19,7 @@ import { findWeightOverride } from "./weightOverrides.ts";
 import { resolveFactsBrochure } from "../rvgrok/factsBrochure.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
-const FLOORPLAN_SPECS_SHA256 = "1e76f60bd11994000bcbfde616b71f3f800fdecd52a896f316ea87af323387dc";
+const FLOORPLAN_SPECS_SHA256 = "de1ff4df6eb9a4cbdbe6f42664fad38034635101e93aecd43cd3fe8b95301a3d";
 
 const catalog = await loadLiveCatalog();
 installCatalog({ RV_DATA: catalog.RV_DATA, MAKES: catalog.MAKES });
@@ -383,4 +383,40 @@ test("every stored Imagine number still paints a hole, and the lot tag is not OE
     if (seeded.number_of_slideouts != null)
       assert.ok(merged.filled.includes("SLIDES"), seeded.title);
   }
+});
+
+test("the 13 Imagine OEM-override fields still resolve to the lot", () => {
+  const spec = gd.Imagine!;
+  const check = (
+    year: number,
+    trim: string,
+    expect: {
+      gvwrLbs?: number;
+      uvwLbs?: number;
+      hitch?: RegExp;
+      fresh?: RegExp;
+      length?: RegExp;
+    },
+  ) => {
+    const seeded = row(year, "Imagine", trim);
+    assert.ok(seeded);
+    assert.equal(seeded.precedence, undefined, `${year} ${trim}`);
+    const merged = fillBrochureHolesFromLot(
+      buildBrochureSpecs(spec, String(year), "Grand Design", "Imagine", trim),
+      [seeded],
+      year,
+      "Grand Design",
+      "Imagine",
+      trim,
+    );
+    if (expect.gvwrLbs != null) assert.equal(merged.specs.gvwrLbs, expect.gvwrLbs, `${year} ${trim} GVWR`);
+    if (expect.uvwLbs != null) assert.equal(merged.specs.uvwLbs, expect.uvwLbs, `${year} ${trim} UVW`);
+    if (expect.hitch) assert.match(merged.specs.hitchOrPin, expect.hitch, `${year} ${trim} hitch`);
+    if (expect.fresh) assert.match(merged.specs.freshWater, expect.fresh, `${year} ${trim} fresh`);
+    if (expect.length) assert.match(merged.specs.lengthFt, expect.length, `${year} ${trim} length`);
+  };
+  check(2025, "2670MK", { gvwrLbs: 8495, uvwLbs: 6845, hitch: /690/, fresh: /52/ });
+  check(2026, "2500RL", { gvwrLbs: 7850, uvwLbs: 6623, hitch: /581/ });
+  check(2026, "2670MK", { hitch: /690/, length: /32' 3"/ });
+  check(2026, "2800BH", { gvwrLbs: 8495, uvwLbs: 6386, hitch: /604/, fresh: /52/ });
 });
