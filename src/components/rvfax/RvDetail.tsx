@@ -786,13 +786,8 @@ export function RvDetail({
       computeTorqueToWeight({
         torqueLbFt: powertrainGuard.hard.torqueLbFt,
         torqueRaw: specs.torque,
-        uvwLbs: sharedPaint.uvw.lbs ?? brochure.uvwLbs ?? live?.uvwLbs ?? null,
-        // Display UVW may be the tiered estimate — never parse that as published.
-        uvwRaw: sharedPaint.uvw.gap
-          ? brochure.uvwEstimated
-            ? null
-            : specs.uvw
-          : sharedPaint.uvw.display,
+        uvwLbs: weightOverride?.uvwLbs ?? live?.uvwLbs ?? null,
+        uvwRaw: null,
         overrideUvwLbs: weightOverride?.uvwLbs ?? null,
         gvwrLbs: sharedPaint.gvwr.lbs ?? brochure.gvwrLbs ?? live?.gvwrLbs ?? null,
         gvwrRaw: specs.gvwr,
