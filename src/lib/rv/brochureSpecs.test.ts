@@ -21,6 +21,7 @@ import {
   findOemGvwrLbs,
   findOemHoldingTanks,
   findOemUvwLbs,
+  listOemUvwPins,
   oemGvwrPinCount,
   oemUvwPinCount,
   weightForFloorplan,
@@ -293,12 +294,12 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
 
   const ttwPublishedUvw = computeTorqueToWeight({
     torqueLbFt: 468,
-    uvwLbs: findOemUvwLbs("2025", "Jayco", "Seneca", "37K") ?? 26_000,
+    uvwLbs: findOemUvwLbs("2025", "Jayco", "Seneca", "37K") ?? 24_820,
     gvwrLbs: 31_000,
     rvType: "Class C",
   });
   assert.equal(ttwPublishedUvw.weightBasis, "UVW");
-  assert.equal(ttwPublishedUvw.weightLb, 26_000);
+  assert.equal(ttwPublishedUvw.weightLb, 24_820);
 
   const ttwVxl = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -474,9 +475,44 @@ test("OEM UVW pins: sourced Newmar + Seneca + 39RK; demo coaches stay unpinned (
   assert.equal(findOemUvwLbs("2027", "Newmar", "Bay Star", "3114"), 20050);
   assert.equal(findOemUvwLbs("2026", "Newmar", "Bay Star", "3626"), 22600);
   assert.equal(findOemUvwLbs("2025", "Newmar", "Canyon Star", "3947"), 25950);
-  assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca", "37K"), 26000);
+  assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca", "37K"), 24820);
+  assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca Super C", "37K"), 24820);
+  assert.equal(findOemUvwLbs("2021", "Jayco", "Seneca", "37K"), 26000);
+  assert.equal(findOemUvwLbs("2024", "Jayco", "Seneca", "37K"), 26000);
+  assert.equal(findOemUvwLbs("2026", "Jayco", "Seneca", "37K"), 26000);
+  assert.equal(findOemUvwLbs("2027", "Jayco", "Seneca", "37K"), 26000);
+  const seneca37kPins = listOemUvwPins().filter(
+    (p) =>
+      p.makeIncludes === "jayco" &&
+      p.modelIncludes === "seneca" &&
+      p.floorplan === "37K",
+  );
+  assert.deepEqual(
+    seneca37kPins.map((p) => [p.yearMin, p.yearMax, p.uvwLbs]),
+    [
+      [2021, 2024, 26000],
+      [2025, 2025, 24820],
+      [2026, 2027, 26000],
+    ],
+  );
   assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca", "37L"), 26200);
   assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca", "37M"), 26500);
+  assert.equal(findOemFloorplanSpec("2025", "Jayco", "Seneca", "37K")?.uvwLbs, 26000);
+  assert.equal(findOemFloorplanSpec("2025", "Entegra", "Accolade", "37K")?.uvwLbs, 26000);
+  assert.equal(findOemUvwLbs("2025", "Entegra", "Accolade", "37K"), null);
+  const seneca37k2025 = listOemUvwPins().find(
+    (p) =>
+      p.makeIncludes === "jayco" &&
+      p.modelIncludes === "seneca" &&
+      p.floorplan === "37K" &&
+      p.yearMin === 2025 &&
+      p.yearMax === 2025,
+  );
+  assert.equal(seneca37k2025?.uvwLbs, 24820);
+  assert.match(
+    seneca37k2025?.source ?? "",
+    /owner-reported weigh-in ~24,820 lb \(web\); Jayco publishes no UVW for MY2025/,
+  );
   // Isolation — Bay Star Sport must not inherit Bay Star UVW.
   assert.equal(findOemUvwLbs("2026", "Newmar", "Bay Star Sport", "3225"), null);
   // Honest search: Entegra / Jayco Precept / American Coach brochures omit UVW.
@@ -502,6 +538,27 @@ test("OEM UVW pins: sourced Newmar + Seneca + 39RK; demo coaches stay unpinned (
   // Unprinted year stays GAP.
   assert.equal(findOemUvwLbs("2024", "Newmar", "Dutch Star", "3836"), null);
   assert.equal(findOemUvwLbs("2026", "Newmar", "Canyon Star", "3947"), null);
+});
+
+test("2025 Jayco Seneca 37K Facts UVW is the owner-reported pin, not the shared 26,000 row", async () => {
+  const { RV_DATA } = await loadLiveCatalog();
+  const seneca = RV_DATA.Jayco?.Seneca;
+  assert.ok(seneca);
+  const y2025 = buildBrochureSpecs(seneca, "2025", "Jayco", "Seneca", "37K");
+  assert.equal(y2025.uvwLbs, 24820);
+  assert.match(y2025.uvw, /24,?820/);
+  const y2024 = buildBrochureSpecs(seneca, "2024", "Jayco", "Seneca", "37K");
+  assert.equal(y2024.uvwLbs, 26000);
+  const superC = RV_DATA.Jayco?.["Seneca Super C"];
+  assert.ok(superC);
+  assert.equal(
+    buildBrochureSpecs(superC, "2025", "Jayco", "Seneca Super C", "37K").uvwLbs,
+    24820,
+  );
+  assert.equal(
+    buildBrochureSpecs(superC, "2026", "Jayco", "Seneca Super C", "37K").uvwLbs,
+    26000,
+  );
 });
 
 test("high-volume motorhome GVWR pins stay floorplan-true and isolated", () => {
