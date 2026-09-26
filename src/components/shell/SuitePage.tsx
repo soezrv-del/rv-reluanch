@@ -14,9 +14,23 @@ import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 
-/** One frost veil — sits above the mark, inside the backdrop stack. */
+/**
+ * One frost veil above the mark. The filter is inline so both the standard
+ * property and the WebKit prefix survive CSS minification (it otherwise
+ * keeps only -webkit-backdrop-filter).
+ */
+const RAIDHO_FROST_FILTER = "blur(20px) saturate(0.58) brightness(0.86)";
+
 function RaidhoFrostVeil() {
-  return <div className="suite-raidho-frost" />;
+  return (
+    <div
+      className="suite-raidho-frost"
+      style={{
+        backdropFilter: RAIDHO_FROST_FILTER,
+        WebkitBackdropFilter: RAIDHO_FROST_FILTER,
+      }}
+    />
+  );
 }
 
 /** Full-viewport Raidho R watermark — same seal as compare, suite-wide. */

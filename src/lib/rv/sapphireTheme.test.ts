@@ -212,6 +212,12 @@ test("Raidho frost veil sits on the shared backdrop, one blur, taps pass through
     1,
     "one frost element, reused by both backdrop components",
   );
+  assert.match(suite, /backdropFilter: RAIDHO_FROST_FILTER/);
+  assert.match(suite, /WebkitBackdropFilter: RAIDHO_FROST_FILTER/);
+  assert.match(
+    suite,
+    /blur\(20px\) saturate\(0\.58\) brightness\(0\.86\)/,
+  );
   assert.equal(
     suite.split("suite-raidho-stack").length - 1,
     2,
@@ -224,11 +230,11 @@ test("Raidho frost veil sits on the shared backdrop, one blur, taps pass through
   assert.match(css, /\.suite-raidho-frost \{[\s\S]*?z-index:\s*2/);
   assert.match(
     css,
-    /\.suite-raidho-frost \{[\s\S]*?backdrop-filter:\s*blur\(16px\) saturate\(0\.68\) brightness\(0\.9\)/,
+    /\.suite-raidho-frost \{[\s\S]*?backdrop-filter:\s*blur\(20px\) saturate\(0\.58\) brightness\(0\.86\)/,
   );
   assert.match(
     css,
-    /\.suite-raidho-frost \{[\s\S]*?-webkit-backdrop-filter:\s*blur\(16px\) saturate\(0\.68\) brightness\(0\.9\)/,
+    /\.suite-raidho-frost \{[\s\S]*?-webkit-backdrop-filter:\s*blur\(20px\) saturate\(0\.58\) brightness\(0\.86\)/,
   );
   assert.match(
     css,

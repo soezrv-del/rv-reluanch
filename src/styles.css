@@ -1742,9 +1742,9 @@
 }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .suite-raidho-frost {
-    background: rgba(226, 236, 255, 0.16);
-    backdrop-filter: blur(16px) saturate(0.68) brightness(0.9);
-    -webkit-backdrop-filter: blur(16px) saturate(0.68) brightness(0.9);
+    background: rgba(214, 226, 248, 0.3);
+    backdrop-filter: blur(20px) saturate(0.58) brightness(0.86);
+    -webkit-backdrop-filter: blur(20px) saturate(0.58) brightness(0.86);
   }
 }
 @media (prefers-reduced-transparency: reduce) {
