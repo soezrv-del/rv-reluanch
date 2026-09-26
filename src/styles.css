@@ -1722,19 +1722,24 @@
 }
 
 /*
- * One tinted-glass veil between the Raidho mark and the floating cards.
- * Smoky black, no blur: the R stays sharp, dimmer, and less saturated.
- * isolation keeps this z-index inside the backdrop so the veil cannot
- * cover cards or the tab bar. The veil itself is position:fixed and
- * sized to the viewport so zoom and odd aspect ratios can't clip it.
- * pointer-events stay off either way.
- * Solid black smoke is the fallback where backdrop-filter is unavailable.
+ * One tinted-glass veil on the Raidho mark itself.
+ * The saturate/brightness lives on the logo image, so a header, tab bar,
+ * or pane can never reveal an untinted copy of the R. The frost element
+ * is the same see-through black overlay, fixed to the viewport (vw/vh,
+ * then svh, then dvh) so it still covers safe areas and odd aspect ratios.
+ * isolation keeps this z-index under the cards. pointer-events stay off.
+ * Solid 0.42 black is the fallback and the reduced-transparency path.
  */
 .suite-raidho-stack {
   position: absolute;
   inset: 0;
   isolation: isolate;
   pointer-events: none;
+}
+.suite-raidho-bleed,
+.suite-raidho-mark,
+.compare-raidho-mark {
+  filter: none;
 }
 .suite-raidho-frost {
   position: fixed;
@@ -1750,6 +1755,8 @@
   z-index: 2;
   pointer-events: none;
   background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 /*
  * Swipe panes are a containing block (transform, will-change, contain:paint)
@@ -1765,14 +1772,22 @@
   will-change: auto;
   contain: none;
 }
-@supports ((backdrop-filter: brightness(1)) or (-webkit-backdrop-filter: brightness(1))) {
+@supports (filter: saturate(0.5)) {
+  .suite-raidho-bleed,
+  .suite-raidho-mark,
+  .compare-raidho-mark {
+    filter: saturate(0.5) brightness(0.5);
+  }
   .suite-raidho-frost {
     background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: saturate(0.5) brightness(0.5);
-    -webkit-backdrop-filter: saturate(0.5) brightness(0.5);
   }
 }
 @media (prefers-reduced-transparency: reduce) {
+  .suite-raidho-bleed,
+  .suite-raidho-mark,
+  .compare-raidho-mark {
+    filter: none;
+  }
   .suite-raidho-frost {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -1781,26 +1796,12 @@
 }
 
 /*
- * Live Chat thread. Bubbles use their own backdrop-filter, which samples
- * the sharp Raidho mark through the shared veil and re-saturates it.
- * This scroller is the backdrop those bubbles see: same tint, no blur.
+ * Live Chat. The logo already carries the tint, including under the
+ * thread header. Don't stack a second veil on the scroller. Assistant
+ * bubbles blur the mark; they must not saturate it back to full blue.
  */
 .grok-thread-glass {
-  background: rgba(0, 0, 0, 0.42);
-}
-@supports ((backdrop-filter: brightness(1)) or (-webkit-backdrop-filter: brightness(1))) {
-  .grok-thread-glass {
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: saturate(0.5) brightness(0.5);
-    -webkit-backdrop-filter: saturate(0.5) brightness(0.5);
-  }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .grok-thread-glass {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: rgba(0, 0, 0, 0.42);
-  }
+  background: transparent;
 }
 
 /*
@@ -2518,6 +2519,11 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   backdrop-filter: blur(28px) saturate(1.7);
   -webkit-backdrop-filter: blur(28px) saturate(1.7);
   border-color: var(--color-gold-border);
+}
+/* Logo is already tinted. Bubbles may blur it, not saturate the blue back. */
+[data-readable-cards][data-rvgrok-wingman] .grok-thread-glass .grok-frost {
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
 }
 /* Cold-open hero — sapphire header is display:none on the wingman tab, so
  * this owns the notch. Mirror .bottom-tabs-nav: env() + mobile floor when

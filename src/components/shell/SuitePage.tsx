@@ -16,22 +16,14 @@ import { usePullToReset } from "@/lib/hooks/usePullToReset";
 
 /**
  * One tinted-glass veil above the mark. No blur — the R stays sharp.
- * Darken and desaturate only, so the black ground stays black.
- * Inline so both the standard property and the WebKit prefix survive CSS
- * minification (it otherwise keeps only -webkit-backdrop-filter).
+ * Darken and desaturate live on the logo image (see .suite-raidho-bleed),
+ * so chrome above this layer cannot reveal an untinted R. This element
+ * is only the see-through black overlay.
  */
 export const RAIDHO_FROST_FILTER = "saturate(0.5) brightness(0.5)";
 
 function RaidhoFrostVeil() {
-  return (
-    <div
-      className="suite-raidho-frost"
-      style={{
-        backdropFilter: RAIDHO_FROST_FILTER,
-        WebkitBackdropFilter: RAIDHO_FROST_FILTER,
-      }}
-    />
-  );
+  return <div className="suite-raidho-frost" />;
 }
 
 /** Full-viewport Raidho R watermark — same seal as compare, suite-wide. */
