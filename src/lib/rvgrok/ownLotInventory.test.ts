@@ -38,6 +38,7 @@ import {
   pickOwnLotPrice,
   pickRicherOwnLot,
   queryOwnLotUnits,
+  rowToUnit,
   sameOriginOwnLotUrls,
   sanitizeOwnLotParsedModel,
   shouldSkipWebForOwnLot,
@@ -2270,3 +2271,116 @@ test("30-foot Class As at the Carson RV show is a lot ask for the two coaches", 
   assert.equal(kept.location, "Carson RV Show");
   assert.equal(queryOwnLotUnits(snap.units, kept, 10).length, 2);
 });
+
+test("a stock ask speaks every printed scrape field and does not invent blanks", () => {
+  const row = {
+    year: 2022,
+    make: "Tiffin",
+    model: "Allegro Red 360",
+    trim: "33 AA",
+    title: "2022 Tiffin Allegro Red 360 33 AA",
+    body_type: "Class A",
+    location: "Fresno CA",
+    stock_number: "UPF9963",
+    condition: "Used",
+    lot_status: "Available",
+    mileage: 6870,
+    vin: "4UZACGFC6NCNR3841",
+    url: "https://rvcountry.com/inventory/2022-tiffin-allegro-red-360-upf9963",
+    price: 229995,
+    price_msrp: 249995,
+    gvwr: 37320,
+    vehicle_body_length: 35.17,
+    engine: "Cummins / I6 Diesel Pusher",
+    chassis_brand: "Freightliner",
+    fuel_type: "Regular Diesel",
+    total_fresh_water_tank_capacity: 90,
+    photo: "https://example.test/photo.jpg",
+    raw: {
+      attributes: { Wheelbase: "16.5 ft | 198 in" },
+    },
+  };
+  const unit = rowToUnit(row);
+  assert.equal(unit.printed?.mileage, "6,870 mi");
+  assert.equal(unit.printed?.condition, "Used");
+  assert.equal(unit.printed?.lot_status, "Available");
+  assert.equal(unit.printed?.chassis_brand, "Freightliner");
+  assert.equal(unit.printed?.engine, "Cummins / I6 Diesel Pusher");
+  assert.equal(unit.printed?.fuel_type, "Regular Diesel");
+  assert.equal(unit.printed?.gvwr, "37,320");
+  assert.equal(unit.printed?.wheelbase, "16.5 ft | 198 in");
+  assert.equal(unit.printed?.payload, undefined);
+  assert.equal(unit.printed?.hitch_weight, undefined);
+  assert.equal(unit.printed?.propane_gal, undefined);
+  assert.equal(unit.printed?.dry_weight, undefined);
+  assert.equal(unit.printed?.photo, undefined);
+
+  const fresh = rowToUnit({
+    ...row,
+    stock_number: "NEW0",
+    condition: "New",
+    mileage: 0,
+  });
+  assert.equal(fresh.printed?.mileage, undefined);
+
+  const usedZero = rowToUnit({
+    ...row,
+    stock_number: "USED0",
+    condition: "Used",
+    mileage: 0,
+  });
+  assert.equal(usedZero.printed?.mileage, "0 mi");
+
+  assert.equal(parseOwnLotStockNumber("how many miles on UPF9963"), "UPF9963");
+  assert.equal(looksLikeOwnLotStockQuestion("how many miles on UPF9963"), true);
+  assert.equal(
+    looksLikeOwnLotStockQuestion("How many slides does a 2023 Dream have?"),
+    false,
+  );
+  assert.equal(
+    lotQueryForFollowUp("how many miles does it have", ["stock number UPF9963"]),
+    "stock number UPF9963. how many miles does it have",
+  );
+
+  const block = formatOwnLotBlock(
+    snapshotFromJson({ source: "own", dealer: "RV Country", units: [row] }),
+    "how many miles on UPF9963",
+  );
+  assert.match(block, /Matched: 1/);
+  assert.match(block, /stk UPF9963/);
+  assert.match(block, /2022 · Tiffin · Allegro Red 360/);
+  assert.match(block, /Fresno CA/);
+  assert.match(block, /mileage: 6,870 mi/);
+  assert.match(block, /condition: Used/);
+  assert.match(block, /lot_status: Available/);
+  assert.match(block, /engine: Cummins \/ I6 Diesel Pusher/);
+  assert.match(block, /chassis_brand: Freightliner/);
+  assert.match(block, /SCRAPE ROW WINS/);
+  assert.match(block, /not in any online listings/);
+  assert.doesNotMatch(block, /do not have that coach/i);
+  assert.doesNotMatch(block, /payload:/i);
+  assert.doesNotMatch(block, /hitch_weight:/i);
+  assert.doesNotMatch(block, /propane_gal:/i);
+  assert.doesNotMatch(block, /example\.test\/photo/);
+
+  const spoken = ownLotNotesForSpeech(block);
+  assert.match(spoken, /^SCRAPE ROW WINS/);
+  assert.match(spoken, /mileage: 6,870 mi/);
+  assert.match(spoken, /stk UPF9963/);
+  assert.match(spoken, /odometer is not on the row/);
+
+  const ask = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "ownLotAsk.ts"), "utf8");
+  assert.match(ask, /export function looksLikeOwnLotStockQuestion/);
+  assert.match(ask, /export function parseOwnLotStockNumber/);
+  assert.match(ask, /export function lotSearchQueryFromAsk/);
+  assert.match(ask, /export const OWN_LOT_SCRAPE_IN_FRONT/);
+  assert.doesNotMatch(ask, /RESTORE_FROM_LOCAL_TMP_OWNLOTASK/);
+
+  const voice = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "realtime.ts"), "utf8");
+  const lockAt = voice.indexOf("OWN_LOT_SCRAPE_IN_FRONT");
+  const afterLock = voice.indexOf("VOICE_RESEARCH_ANSWER_INSTRUCTIONS", lockAt);
+  assert.ok(lockAt >= 0 && afterLock > lockAt);
+  assert.doesNotMatch(voice, /year, make, model, stock, location, price/);
+  assert.match(voice, /Every printed field on that unit line is yours to answer from/);
+});
+

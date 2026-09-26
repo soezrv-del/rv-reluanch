@@ -59,6 +59,7 @@ import {
 import {
   looksLikeOwnLotStockQuestion,
   lotQueryForFollowUp,
+  OWN_LOT_SCRAPE_IN_FRONT,
   ownLotVoiceCoachLock,
 } from "./ownLotAsk";
 import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
@@ -1343,7 +1344,7 @@ export class GrokRealtimeSession {
           response: {
             modalities: ["text", "audio"],
             instructions: inventoryTurn
-              ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis turn is OWN-LOT inventory. Speak the Lot total and any listed unit (year, make, model, stock, location, price). That unit is on our lot. Do not say a smaller count. Do not web-search over this snapshot. If a floorplan breakdown is printed, say it once and do not recount. Do not keep a store from an earlier turn unless that store is on a unit line.`
+              ? `${OWN_LOT_SCRAPE_IN_FRONT}\n\n${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis turn is OWN-LOT inventory. Speak the Lot total and any listed unit. Every printed field on that unit line is yours to answer from. That unit is on our lot. Do not say a smaller count. Do not web-search over this snapshot. If a floorplan breakdown is printed, say it once and do not recount. Do not keep a store from an earlier turn unless that store is on a unit line.`
               : plantTurn
                 ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis is a factory or company question, not a coach. Answer it in full. Do not stop after the factory's name. Do not ask for a year, make, model, or floorplan.`
                 : looksLikeRepairQuestion(this.lastResearchTranscript)

@@ -161,13 +161,14 @@ function withGrounding(
   const memory = (opts?.visitorMemory || "").trim();
   if (memory) out = `${out}\n\n${memory}`;
   out = appendFeedback(out, opts?.feedbackContext);
-  const lot = (opts?.ownLotNotes || "").trim();
-  if (lot) {
-    out = `${out}\n\n═══════════════════════════════════════\nOWN-LOT INVENTORY (RV Country)\n═══════════════════════════════════════\n${lot}`;
-  }
   const web = (opts?.webNotes || "").trim();
   if (web) {
     out = `${out}\n\n═══════════════════════════════════════\nWEB RESEARCH\n═══════════════════════════════════════\n${web}`;
+  }
+  // Lot scrape sits last so a web note cannot talk over a printed row.
+  const lot = (opts?.ownLotNotes || "").trim();
+  if (lot) {
+    out = `${out}\n\n═══════════════════════════════════════\nOWN-LOT INVENTORY (RV Country)\n═══════════════════════════════════════\n${lot}`;
   }
   return out;
 }

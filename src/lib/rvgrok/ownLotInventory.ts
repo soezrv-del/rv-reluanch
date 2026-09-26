@@ -46,6 +46,7 @@ import {
   looksLikeOwnLotStockQuestion,
   looksLikeOwnLotUnitListQuestion,
   lotSearchQueryFromAsk,
+  OWN_LOT_SCRAPE_IN_FRONT,
   parseOwnLotStockNumber,
 } from "./ownLotAsk.ts";
 import { searchLotUnits } from "../lot/lotSearch.ts";
@@ -106,6 +107,11 @@ export type OwnLotUnit = {
   price: number | null;
   /** Printed length in feet. Null when the sheet has no length. Never a floorplan. */
   lengthFt: number | null;
+  /**
+   * Every non-empty field on the scrape row. Voice reads this.
+   * A blank key is absent. Nothing here is filled from a brochure.
+   */
+  printed?: Record<string, string>;
 };
 
 export type OwnLotFilter = {
@@ -460,7 +466,105 @@ export function isGasBodyType(bodyType: string): boolean {
   return n === "class a";
 }
 
+/** Image URLs are not specs. They stay off the spoken line. */
+const UNSPOKEN_SCRAPE_KEYS = new Set([
+  "photo",
+  "floorplan_image",
+  "image",
+  "images",
+  "raw",
+]);
+
+function scrapeKey(key: string): string {
+  return key.trim().toLowerCase().replace(/[\s-]+/g, "_");
+}
+
+/** Mileage prints as "6,870 mi". 0 on a new unit is not an odometer. */
+function formatMileage(value: unknown, condition: string): string | null {
+  const n =
+    typeof value === "number"
+      ? value
+      : Number(String(value ?? "").replace(/,/g, "").trim());
+  if (!Number.isFinite(n) || n < 0) return null;
+  if (n === 0 && !/\bused\b/i.test(condition)) return null;
+  return `${Math.round(n).toLocaleString("en-US")} mi`;
+}
+
+function formatPrintedField(
+  key: string,
+  value: unknown,
+  condition: string,
+): string | null {
+  const k = scrapeKey(key);
+  if (!k || UNSPOKEN_SCRAPE_KEYS.has(k)) return null;
+  if (value == null) return null;
+  if (typeof value === "boolean") return value ? "yes" : null;
+  if (k === "mileage" || k === "odometer" || k === "miles") {
+    return formatMileage(value, condition);
+  }
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || value === 0) return null;
+    if (/^price/.test(k)) return formatOwnLotUsd(value);
+    if (Number.isInteger(value)) return value.toLocaleString("en-US");
+    return String(Math.round(value * 100) / 100);
+  }
+  const s = String(value).trim();
+  if (!s) return null;
+  if ((k === "mileage" || k === "odometer" || k === "miles") && s === "0") {
+    return formatMileage(0, condition);
+  }
+  return s;
+}
+
+/**
+ * Every non-empty printed key on the scrape row, including raw attributes.
+ * Does not invent a key the row left blank.
+ */
+export function printedScrapeFields(
+  row: Record<string, unknown>,
+): Record<string, string> {
+  const condition = pickStr(row, "condition");
+  const out: Record<string, string> = {};
+  const put = (key: string, value: unknown) => {
+    const name = key.trim();
+    if (!name) return;
+    const formatted = formatPrintedField(name, value, condition);
+    if (!formatted) return;
+    out[scrapeKey(name)] = formatted;
+  };
+  for (const [key, value] of Object.entries(row)) {
+    if (scrapeKey(key) === "raw" && value && typeof value === "object") {
+      const raw = value as Record<string, unknown>;
+      const attrs = raw.attributes;
+      if (attrs && typeof attrs === "object" && !Array.isArray(attrs)) {
+        for (const [attr, attrValue] of Object.entries(
+          attrs as Record<string, unknown>,
+        )) {
+          put(attr, attrValue);
+        }
+      }
+      if (Array.isArray(raw.flags) && raw.flags.length) {
+        put(
+          "flags",
+          raw.flags.filter((flag) => str(flag)).map((flag) => str(flag)).join(", "),
+        );
+      }
+      continue;
+    }
+    if (Array.isArray(value)) {
+      if (value.length && value.every((item) => typeof item !== "object")) {
+        put(key, value.map((item) => str(item)).filter(Boolean).join(", "));
+      }
+      continue;
+    }
+    if (value && typeof value === "object") continue;
+    put(key, value);
+  }
+  return out;
+}
+
 export function rowToUnit(row: Record<string, unknown>): OwnLotUnit {
+  const printed = printedScrapeFields(row);
   return {
     year: pickStr(row, "year", "model_year", "my"),
     make: pickStr(row, "make", "brand", "manufacturer"),
@@ -489,6 +593,7 @@ export function rowToUnit(row: Record<string, unknown>): OwnLotUnit {
     dealer: pickStr(row, "dealer") || "RV Country",
     price: pickOwnLotPrice(row),
     lengthFt: pickPrintedLengthFt(row),
+    printed,
   };
 }
 
@@ -1441,6 +1546,22 @@ function formatUnitListing(unit: OwnLotUnit): string {
           const fromPlan = floorplanLengthFt(unit.trim);
           return fromPlan != null ? `floorplan ${fromPlan} ft` : "";
         })();
+  const shown = new Set([
+    "year",
+    "make",
+    "model",
+    "trim",
+    "body_type",
+    "location",
+    "stock_number",
+    "stock",
+    "source",
+    "dealer",
+    "price",
+  ]);
+  const extras = Object.entries(unit.printed || {})
+    .filter(([key]) => !shown.has(key))
+    .map(([key, value]) => `${key}: ${value}`);
   return `- ${[
     unit.year,
     unit.make,
@@ -1451,6 +1572,7 @@ function formatUnitListing(unit: OwnLotUnit): string {
     unit.location,
     id,
     price,
+    ...extras,
   ]
     .filter(Boolean)
     .join(" · ")}`;
@@ -1643,7 +1765,8 @@ export function formatOwnLotBlock(
       : queryOwnLotUnits(snapshot.units, active, listCap);
     if (rows.length) {
       lines.push(
-        `Matching units (from file only, ${rows.length} of ${counts.matched}; year/make/model/trim/stock/location/price):`,
+        `Matching units (from file only, ${rows.length} of ${counts.matched}; every non-empty scrape field):`,
+        OWN_LOT_SCRAPE_IN_FRONT,
         ...rows.map(formatUnitListing),
         "Specific units ARE listed above. If a unit line is printed, that coach IS on this lot. Never say it is missing, and never say you cannot pull specific units.",
       );
@@ -1656,7 +1779,8 @@ export function formatOwnLotBlock(
     const rows = queryOwnLotUnits(snapshot.units, active, MATCH_LIST_MAX);
     if (rows.length) {
       lines.push(
-        `Matching units (from file only, first ${rows.length} of ${counts.matched}; year/make/model/trim/stock/location/price):`,
+        `Matching units (from file only, first ${rows.length} of ${counts.matched}; every non-empty scrape field):`,
+        OWN_LOT_SCRAPE_IN_FRONT,
         ...rows.map(formatUnitListing),
         "Specific units ARE listed above. Never say you cannot pull specific units or that the snapshot does not break out a list.",
       );
