@@ -20,7 +20,7 @@ import { usePullToReset } from "@/lib/hooks/usePullToReset";
  * Inline so both the standard property and the WebKit prefix survive CSS
  * minification (it otherwise keeps only -webkit-backdrop-filter).
  */
-const RAIDHO_FROST_FILTER = "saturate(0.5) brightness(0.5)";
+export const RAIDHO_FROST_FILTER = "saturate(0.5) brightness(0.5)";
 
 function RaidhoFrostVeil() {
   return (

@@ -239,6 +239,21 @@ test("Raidho tinted glass sits on the shared backdrop, no blur, taps pass throug
     /@supports \(\(backdrop-filter: brightness\(1\)\) or \(-webkit-backdrop-filter: brightness\(1\)\)\)/,
   );
   assert.match(css, /\.suite-raidho-frost \{[\s\S]*?background:\s*rgba\(0, 0, 0, 0\.42\)/);
+  assert.match(css, /\.grok-thread-glass \{[\s\S]*?background:\s*rgba\(0, 0, 0, 0\.42\)/);
+  assert.match(
+    css,
+    /\.grok-thread-glass \{[\s\S]*?backdrop-filter:\s*saturate\(0\.5\) brightness\(0\.5\)/,
+  );
+  assert.match(
+    css,
+    /\.grok-thread-glass \{[\s\S]*?-webkit-backdrop-filter:\s*saturate\(0\.5\) brightness\(0\.5\)/,
+  );
+  assert.doesNotMatch(css, /\.grok-thread-glass \{[^}]*backdrop-filter:\s*blur/);
+  const grok = read("../../components/rvgrok/RvGrokApp.tsx");
+  assert.match(grok, /grok-thread-glass/);
+  assert.match(grok, /backdropFilter: RAIDHO_FROST_FILTER/);
+  assert.match(grok, /WebkitBackdropFilter: RAIDHO_FROST_FILTER/);
+  assert.match(grok, /!embedded && !isLanding && "grok-thread-glass"/);
   assert.doesNotMatch(css, /rgba\(214, 226, 248/);
   assert.doesNotMatch(css, /DialaBot/);
 });

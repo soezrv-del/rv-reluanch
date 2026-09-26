@@ -1757,6 +1757,29 @@
 }
 
 /*
+ * Live Chat thread. Bubbles use their own backdrop-filter, which samples
+ * the sharp Raidho mark through the shared veil and re-saturates it.
+ * This scroller is the backdrop those bubbles see: same tint, no blur.
+ */
+.grok-thread-glass {
+  background: rgba(0, 0, 0, 0.42);
+}
+@supports ((backdrop-filter: brightness(1)) or (-webkit-backdrop-filter: brightness(1))) {
+  .grok-thread-glass {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: saturate(0.5) brightness(0.5);
+    -webkit-backdrop-filter: saturate(0.5) brightness(0.5);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .grok-thread-glass {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(0, 0, 0, 0.42);
+  }
+}
+
+/*
  * Thick sapphire frost — Facts search, Cal, Tow, coach detail, Sold, Premium.
  * Overrides the readable-cards solid plate so the Raidho field shows through.
  */

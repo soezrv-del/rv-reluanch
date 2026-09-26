@@ -89,7 +89,10 @@ import {
 } from "@/lib/rvgrok/keyboardSafe";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
-import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
+import {
+  RAIDHO_FROST_FILTER,
+  SuiteRaidhoBackdrop,
+} from "@/components/shell/SuitePage";
 import { PremiumMenuButton } from "@/components/shell/PremiumMenuButton";
 
 const GROK_STARTERS: GrokStarter[] = [
@@ -1753,9 +1756,21 @@ export function RvGrokApp({
       <div
         ref={listRef}
         data-app-scroll
-        className="rv-scroll relative z-10 flex-1 overflow-y-auto px-3 sm:px-4"
+        className={cn(
+          "rv-scroll relative z-10 flex-1 overflow-y-auto px-3 sm:px-4",
+          !embedded && !isLanding && "grok-thread-glass",
+        )}
         style={{
           paddingBottom: scrollKbPad || undefined,
+          // Same tint as the shared veil. Inline so the minifier cannot drop
+          // the unprefixed backdrop-filter. Message bubbles sample this
+          // scroller, not the sharp mark underneath the veil.
+          ...(!embedded && !isLanding
+            ? {
+                backdropFilter: RAIDHO_FROST_FILTER,
+                WebkitBackdropFilter: RAIDHO_FROST_FILTER,
+              }
+            : {}),
         }}
       >
         {embedded ? (
