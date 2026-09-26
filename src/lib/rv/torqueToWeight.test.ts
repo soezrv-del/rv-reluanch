@@ -758,10 +758,12 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", (
     join(root, "../../components/rvfax/RvDetail.tsx"),
     "utf8",
   );
-  assert.match(detail, /Torque-to-Weight/);
-  assert.match(detail, /formatTorqueToWeightScore/);
-  assert.match(detail, /data-testid="facts-tqwt-bar"/);
-  assert.match(detail, /score \/ 10/);
+  assert.doesNotMatch(detail, /Torque-to-Weight/);
+  assert.doesNotMatch(detail, /formatTorqueToWeightScore/);
+  assert.doesNotMatch(detail, /data-testid="facts-tqwt-bar"/);
+  assert.doesNotMatch(detail, /score \/ 10/);
+  assert.match(detail, /Torque-to-weight/);
+  assert.match(detail, /computeTorqueToWeight/);
   assert.match(detail, /overrideUvwLbs:\s*weightOverride\?\.uvwLbs/);
   assert.match(detail, /overrideGvwrLbs:\s*weightOverride\?\.gvwrLbs/);
   assert.match(detail, /WeightOverrideRow/);

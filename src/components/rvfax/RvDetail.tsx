@@ -38,10 +38,7 @@ import {
   getRatingMetadata,
   ratingStars,
 } from "@/lib/rv/ratingSystem";
-import {
-  formatTorqueToWeightScore,
-  computeTorqueToWeight,
-} from "@/lib/rv/torqueToWeight";
+import { computeTorqueToWeight } from "@/lib/rv/torqueToWeight";
 import {
   TORQUE_WEIGHT_RATING_WEIGHT_LABEL,
   formatTorqueWeightRatingRatio,
@@ -912,17 +909,6 @@ export function RvDetail({
       caption: reportRatings.customerSatisfaction.caption,
     },
   ];
-
-  const torqueBarPct =
-    torqueToWeight.score == null
-      ? 0
-      : (torqueToWeight.score / 10) * 100;
-  const torqueBarColor =
-    torqueToWeight.color === "red"
-      ? "var(--color-ruby)"
-      : torqueToWeight.color === "yellow"
-        ? "var(--color-amber)"
-        : "var(--color-green)";
 
   const ownerReviews = useMemo(
     () => getMockReviews(make, model, displayRating),
@@ -1998,39 +1984,6 @@ export function RvDetail({
                   )}
                 </li>
               ))}
-              <li className="flex items-center justify-between gap-3 py-3 last:pb-0">
-                <span className="min-w-0 shrink-0 text-[14px] font-medium text-white">
-                  Torque-to-Weight
-                </span>
-                {torqueToWeight.score == null ? (
-                  <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
-                    {formatTorqueToWeightScore(torqueToWeight)}
-                  </span>
-                ) : (
-                  <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
-                    <div
-                      className="h-2 w-[7.5rem] overflow-hidden rounded-full bg-white/12 sm:w-[9.5rem]"
-                      data-testid="facts-tqwt-bar"
-                      role="meter"
-                      aria-label={`Torque-to-Weight ${formatTorqueToWeightScore(torqueToWeight)}`}
-                      aria-valuemin={1}
-                      aria-valuemax={10}
-                      aria-valuenow={Number(torqueToWeight.score.toFixed(1))}
-                    >
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${torqueBarPct}%`,
-                          backgroundColor: torqueBarColor,
-                        }}
-                      />
-                    </div>
-                    <span className="shrink-0 text-[13px] font-semibold tabular-nums text-white">
-                      {formatTorqueToWeightScore(torqueToWeight)}
-                    </span>
-                  </div>
-                )}
-              </li>
               <li
                 className="flex items-center justify-between gap-3 py-3 last:pb-0"
                 data-testid="facts-torque-weight-rating"

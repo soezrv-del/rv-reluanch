@@ -135,6 +135,14 @@ test("helper stays import-free and Facts paints one UVW / dry weight row", () =>
   assert.match(detail, /data-testid="facts-torque-weight-rating"/);
   assert.match(detail, /data-testid="facts-torque-weight-rating-bar"/);
   assert.match(detail, /torqueWeightRating\.gap \?/);
+  assert.match(detail, />\s*Torque-to-weight\s*</);
+  const ratingsBlock = detail.slice(
+    detail.indexOf('data-testid="facts-ratings"'),
+    detail.indexOf("data-facts-market-value"),
+  );
+  assert.doesNotMatch(ratingsBlock, /Torque-to-Weight/);
+  assert.doesNotMatch(ratingsBlock, /facts-tqwt-bar/);
+  assert.doesNotMatch(detail, /formatTorqueToWeightScore/);
   assert.doesNotMatch(
     detail.slice(
       detail.indexOf('data-testid="facts-torque-weight-rating"'),
