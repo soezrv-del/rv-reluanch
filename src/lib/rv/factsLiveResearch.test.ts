@@ -173,12 +173,11 @@ test("full catalog pin → no executeWebResearch", async () => {
       };
     },
   });
-  assert.equal(calls.length, 0);
+  assert.equal(calls.length, 1);
+  assert.match(calls[0]!.query, /dry weight/i);
   assert.ok(notes);
-  assert.equal(notes!.skipped, true);
-  assert.equal(notes!.model, "catalog-pin");
-  assert.equal(notes!.text, "");
-  assert.deepEqual(notes!.gaps, []);
+  assert.equal(notes!.skipped, false);
+  assert.deepEqual(notes!.gaps, ["uvw"]);
   assert.match(notes!.pins.engine || "", /X15/);
   assert.equal(notes!.pins.horsepower, 605);
   assert.equal(notes!.pins.torqueLbFt, 1950);
@@ -207,7 +206,7 @@ test("missing torque only → narrow query mentions torque; other pins stay", as
     floorplan: "32X",
     candidate,
   });
-  assert.deepEqual(plan.gaps, ["torque"]);
+  assert.deepEqual(plan.gaps, ["torque", "uvw"]);
   assert.equal(plan.skipLive, false);
   assert.match(plan.query || "", /torque/i);
   assert.match(plan.query || "", /coach report/i);
@@ -241,7 +240,7 @@ test("missing torque only → narrow query mentions torque; other pins stay", as
   assert.match(calls[0]!.query, /coach report/i);
   assert.ok(notes);
   assert.equal(notes!.skipped, false);
-  assert.deepEqual(notes!.gaps, ["torque"]);
+  assert.deepEqual(notes!.gaps, ["torque", "uvw"]);
   assert.equal(notes!.pins.engine, "Acme SuperDuty 380HP");
   assert.equal(notes!.pins.horsepower, 380);
   assert.equal(notes!.pins.torqueLbFt, null);
@@ -394,9 +393,9 @@ test("catalogCandidate *Gal tank keys + complete pins skip hard browse", async (
     floorplan: "32X",
     candidate,
   });
-  assert.equal(plan.skipLive, true);
-  assert.deepEqual(plan.gaps, []);
-  assert.equal(plan.query, null);
+  assert.equal(plan.skipLive, false);
+  assert.deepEqual(plan.gaps, ["uvw"]);
+  assert.match(plan.query || "", /dry weight/i);
 
   const calls: ExecuteWebResearchOpts[] = [];
   const notes = await researchFactsDossierNotes({
@@ -416,10 +415,11 @@ test("catalogCandidate *Gal tank keys + complete pins skip hard browse", async (
       };
     },
   });
-  assert.equal(calls.length, 0, "executeWebResearch must not run for hard gaps");
+  assert.equal(calls.length, 1);
+  assert.match(calls[0]!.query, /dry weight/i);
   assert.ok(notes);
-  assert.equal(notes!.skipped, true);
-  assert.equal(notes!.model, "catalog-pin");
+  assert.equal(notes!.skipped, false);
+  assert.deepEqual(notes!.gaps, ["uvw"]);
 });
 
 test("Dream probe without Gal/length aliases still gaps tanks + length", () => {
@@ -440,7 +440,7 @@ test("Dream probe without Gal/length aliases still gaps tanks + length", () => {
       uvwEstimated: false,
     },
   });
-  assert.deepEqual(plan.gaps, ["tanks", "length"]);
+  assert.deepEqual(plan.gaps, ["uvw", "tanks", "length"]);
   assert.equal(plan.skipLive, false);
 });
 
@@ -466,8 +466,8 @@ test("Dream probe LiveDossier aliases (Gal + overallLength + torqueLbFt) skip ha
       blackWaterGal: 50,
     },
   });
-  assert.equal(before.skipLive, true);
-  assert.deepEqual(before.gaps, []);
+  assert.equal(before.skipLive, false);
+  assert.deepEqual(before.gaps, ["uvw"]);
 
   const pins = resolveFactsCatalogPins({
     year: "2023",
@@ -508,9 +508,9 @@ test("2023 American Dream 45A brochure pin plus complete weights skips hard brow
       fuelType: "Diesel",
     },
   });
-  assert.equal(plan.skipLive, true);
-  assert.deepEqual(plan.gaps, []);
-  assert.equal(plan.query, null);
+  assert.equal(plan.skipLive, false);
+  assert.deepEqual(plan.gaps, ["uvw"]);
+  assert.match(plan.query || "", /dry weight/i);
 });
 
 test("soft query is narrative-only and avoids the 52s report budget", () => {
@@ -570,8 +570,9 @@ test("complete pins → no hard browse; a separate soft search is not required",
       };
     },
   });
-  assert.equal(hardCalls.length, 0);
-  assert.equal(hard!.skipped, true);
+  assert.equal(hardCalls.length, 1);
+  assert.match(hardCalls[0]!.query, /dry weight/i);
+  assert.equal(hard!.skipped, false);
   assert.equal(softCalls.length, 1);
   assert.equal(softCalls[0]!.timeoutMs, FACTS_SOFT_RESEARCH_TIMEOUT_MS);
   assert.equal(softCalls[0]!.maxAttempts, 1);
@@ -647,9 +648,9 @@ test("cache hit with complete pins still serves cache / skipLive true", async ()
     floorplan: "45A",
     candidate: COMPLETE_CANDIDATE,
   });
-  assert.equal(plan.skipLive, true);
-  assert.deepEqual(plan.gaps, []);
-  assert.equal(shouldServeFactsDossierCache(plan), true);
+  assert.equal(plan.skipLive, false);
+  assert.deepEqual(plan.gaps, ["uvw"]);
+  assert.equal(shouldServeFactsDossierCache(plan), false);
   assert.equal(shouldStoreFactsDossierCache({ skipLive: true }), true);
 
   const calls: ExecuteWebResearchOpts[] = [];
@@ -670,9 +671,10 @@ test("cache hit with complete pins still serves cache / skipLive true", async ()
       };
     },
   });
-  assert.equal(shouldServeFactsDossierCache(plan), true, "cache remains final");
-  assert.equal(calls.length, 0);
-  assert.equal(notes!.skipped, true);
+  assert.equal(shouldServeFactsDossierCache(plan), false);
+  assert.equal(calls.length, 1);
+  assert.match(calls[0]!.query, /dry weight/i);
+  assert.equal(notes!.skipped, false);
 });
 
 test("cache hit with hard gaps must browse — not return stale cache as final", async () => {

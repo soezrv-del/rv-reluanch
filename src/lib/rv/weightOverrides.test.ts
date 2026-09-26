@@ -68,9 +68,9 @@ test("class-a-gas: salesman UVW override edits display UVW, not TTW weight", () 
     overrideUvwLbs: 17_000,
     rvType: "Class A Gas",
   });
-  assert.equal(scored.weightBasis, "GVWR");
-  assert.equal(scored.weightOverridden, false);
-  assert.equal(scored.weightLb, 20_200);
+  assert.equal(scored.weightBasis, "UVW");
+  assert.equal(scored.weightOverridden, true);
+  assert.equal(scored.weightLb, 17_000);
   assert.equal(scored.uvwLb, 17_000);
   assert.equal(
     formatTorqueToWeightScore(scored),
@@ -78,7 +78,7 @@ test("class-a-gas: salesman UVW override edits display UVW, not TTW weight", () 
   );
 });
 
-test("class-a-gas: override GVWR feeds GVWR−1800; published UVW does not win", () => {
+test("UVW scores; a GVWR override does not replace dry weight", () => {
   const gvwrOverride = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrLbs: 24_000,
@@ -86,23 +86,18 @@ test("class-a-gas: override GVWR feeds GVWR−1800; published UVW does not win",
     rvType: "Class A Gas",
     chassis: "Ford F-53",
   });
-  assert.equal(gvwrOverride.weightBasis, "GVWR");
-  assert.equal(gvwrOverride.weightEstimated, false);
-  assert.equal(gvwrOverride.weightOverridden, true);
-  assert.equal(gvwrOverride.weightLb, 20_200);
+  assert.equal(gvwrOverride.weightLb, null);
+  assert.equal(gvwrOverride.gap, true);
   assert.equal(gvwrOverride.gvwrLb, 22_000);
-  assert.equal(gvwrOverride.uvwLb, 18_000);
 
-  const uvwDoesNotWin = computeTorqueToWeight({
+  const uvwWins = computeTorqueToWeight({
     torqueLbFt: 468,
     uvwLbs: 18_000,
     gvwrLbs: 24_000,
     overrideGvwrLbs: 22_000,
     rvType: "Class A Gas",
   });
-  assert.equal(uvwDoesNotWin.weightBasis, "GVWR");
-  assert.equal(uvwDoesNotWin.weightOverridden, true);
-  assert.equal(uvwDoesNotWin.weightEstimated, false);
-  assert.equal(uvwDoesNotWin.weightLb, 20_200);
-  assert.equal(uvwDoesNotWin.uvwLb, 18_000);
+  assert.equal(uvwWins.weightBasis, "UVW");
+  assert.equal(uvwWins.weightLb, 18_000);
+  assert.equal(uvwWins.uvwLb, 18_000);
 });

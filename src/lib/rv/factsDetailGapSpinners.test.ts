@@ -120,7 +120,8 @@ test("gap planner + spinner share one catalog-first plan", () => {
       blackWater: "50 gal",
     },
   });
-  assert.equal(complete.skipLive, true);
+  assert.equal(complete.skipLive, false);
+  assert.deepEqual(complete.gaps, ["uvw"]);
   assert.equal(
     factsDetailSearchingFields({
       liveLoading: true,
@@ -128,7 +129,6 @@ test("gap planner + spinner share one catalog-first plan", () => {
       gaps: complete.gaps,
     }).size,
     0,
-    "complete pins: soft pass may still run; named hardware stays static",
   );
 });
 
@@ -149,7 +149,7 @@ test("Facts detail wires planner + spinner; does not pull research sidecar", () 
   assert.match(detail, /searching=\{factsDetailFieldSearching\(\s*"gvwr"/);
   assert.match(
     detail,
-    /\{shown\}\s*\{searching \? <FactsGapSpinner field=\{label\} \/> : null\}/,
+    /\{shown\}[\s\S]{0,400}\{searching \? <FactsGapSpinner field=\{label\} \/> : null\}/,
     "SpecRow keeps — / catalog value beside the wheel, never replaces it",
   );
   assert.doesNotMatch(
