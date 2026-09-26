@@ -1722,10 +1722,11 @@
 }
 
 /*
- * One frost veil between the Raidho mark and the floating cards.
+ * One tinted-glass veil between the Raidho mark and the floating cards.
+ * Smoky black, no blur: the R stays sharp, dimmer, and less saturated.
  * isolation keeps this z-index inside the backdrop so the veil cannot
  * cover cards or the tab bar. pointer-events stay off either way.
- * Solid tint is the fallback where backdrop-filter is unavailable.
+ * Solid black smoke is the fallback where backdrop-filter is unavailable.
  */
 .suite-raidho-stack {
   position: absolute;
@@ -1738,20 +1739,20 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background: rgba(6, 16, 40, 0.46);
+  background: rgba(0, 0, 0, 0.42);
 }
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+@supports ((backdrop-filter: brightness(1)) or (-webkit-backdrop-filter: brightness(1))) {
   .suite-raidho-frost {
-    background: rgba(214, 226, 248, 0.3);
-    backdrop-filter: blur(20px) saturate(0.58) brightness(0.86);
-    -webkit-backdrop-filter: blur(20px) saturate(0.58) brightness(0.86);
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: saturate(0.5) brightness(0.5);
+    -webkit-backdrop-filter: saturate(0.5) brightness(0.5);
   }
 }
 @media (prefers-reduced-transparency: reduce) {
   .suite-raidho-frost {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    background: rgba(6, 16, 40, 0.46);
+    background: rgba(0, 0, 0, 0.42);
   }
 }
 

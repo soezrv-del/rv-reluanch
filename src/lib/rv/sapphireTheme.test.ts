@@ -202,7 +202,7 @@ test("Facts RV Search, RV Cal, RV Tow, and coach detail share thick sapphire fro
   assert.doesNotMatch(css, /DialaBot/);
 });
 
-test("Raidho frost veil sits on the shared backdrop, one blur, taps pass through", () => {
+test("Raidho tinted glass sits on the shared backdrop, no blur, taps pass through", () => {
   const suite = read("../../components/shell/SuitePage.tsx");
   const css = read("../../styles.css");
 
@@ -210,14 +210,12 @@ test("Raidho frost veil sits on the shared backdrop, one blur, taps pass through
   assert.equal(
     suite.split('className="suite-raidho-frost"').length - 1,
     1,
-    "one frost element, reused by both backdrop components",
+    "one veil element, reused by both backdrop components",
   );
   assert.match(suite, /backdropFilter: RAIDHO_FROST_FILTER/);
   assert.match(suite, /WebkitBackdropFilter: RAIDHO_FROST_FILTER/);
-  assert.match(
-    suite,
-    /blur\(20px\) saturate\(0\.58\) brightness\(0\.86\)/,
-  );
+  assert.match(suite, /saturate\(0\.5\) brightness\(0\.5\)/);
+  assert.doesNotMatch(suite, /RAIDHO_FROST_FILTER = "blur/);
   assert.equal(
     suite.split("suite-raidho-stack").length - 1,
     2,
@@ -230,15 +228,17 @@ test("Raidho frost veil sits on the shared backdrop, one blur, taps pass through
   assert.match(css, /\.suite-raidho-frost \{[\s\S]*?z-index:\s*2/);
   assert.match(
     css,
-    /\.suite-raidho-frost \{[\s\S]*?backdrop-filter:\s*blur\(20px\) saturate\(0\.58\) brightness\(0\.86\)/,
+    /\.suite-raidho-frost \{[\s\S]*?backdrop-filter:\s*saturate\(0\.5\) brightness\(0\.5\)/,
   );
   assert.match(
     css,
-    /\.suite-raidho-frost \{[\s\S]*?-webkit-backdrop-filter:\s*blur\(20px\) saturate\(0\.58\) brightness\(0\.86\)/,
+    /\.suite-raidho-frost \{[\s\S]*?-webkit-backdrop-filter:\s*saturate\(0\.5\) brightness\(0\.5\)/,
   );
   assert.match(
     css,
-    /@supports \(\(backdrop-filter: blur\(1px\)\) or \(-webkit-backdrop-filter: blur\(1px\)\)\)/,
+    /@supports \(\(backdrop-filter: brightness\(1\)\) or \(-webkit-backdrop-filter: brightness\(1\)\)\)/,
   );
+  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?background:\s*rgba\(0, 0, 0, 0\.42\)/);
+  assert.doesNotMatch(css, /rgba\(214, 226, 248/);
   assert.doesNotMatch(css, /DialaBot/);
 });

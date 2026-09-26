@@ -15,11 +15,12 @@ import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 
 /**
- * One frost veil above the mark. The filter is inline so both the standard
- * property and the WebKit prefix survive CSS minification (it otherwise
- * keeps only -webkit-backdrop-filter).
+ * One tinted-glass veil above the mark. No blur — the R stays sharp.
+ * Darken and desaturate only, so the black ground stays black.
+ * Inline so both the standard property and the WebKit prefix survive CSS
+ * minification (it otherwise keeps only -webkit-backdrop-filter).
  */
-const RAIDHO_FROST_FILTER = "blur(20px) saturate(0.58) brightness(0.86)";
+const RAIDHO_FROST_FILTER = "saturate(0.5) brightness(0.5)";
 
 function RaidhoFrostVeil() {
   return (
