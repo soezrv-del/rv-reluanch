@@ -94,7 +94,7 @@ export function isBudgetThousandsToken(token: string): boolean {
   return /^\d{2,4}k$/i.test((token || "").replace(/\s+/g, ""));
 }
 
-const LENGTH_UNIT = "(?:feet|footers|footer|foot|ft)";
+const LENGTH_UNIT = "(?:feet|foots|footers|footer|foot|ft)";
 const LENGTH_MEASURE_RE = new RegExp(
   `\\b(?:(?:under|below|less\\s+than|over|above|more\\s+than|at\\s+least|up\\s+to|max(?:imum)?|at\\s+most|no\\s+more\\s+than|around|about)\\s+)?\\d{1,2}(?:\\.\\d+)?\\s*(?:-\\s*)?${LENGTH_UNIT}\\b`,
   "gi",

@@ -56,6 +56,7 @@ import {
   consonantBrandShape,
   extractFloorplanToken,
   looksLikeCoachDesignationAsk,
+  looksLikeLengthMeasureAsk,
   parseCoachFromText,
 } from "./parseCoach.ts";
 import { executeWebResearch } from "./webResearchTelemetry.ts";
@@ -2239,4 +2240,33 @@ test("how many of them at Carson keeps the 30-foot Class A filter", () => {
   assert.match(spokenMiss, /No 29S at Carson RV Show/);
   assert.match(spokenMiss, /27ASE/);
   assert.match(spokenMiss, /stk 47033/);
+});
+
+test("30-foot Class As at the Carson RV show is a lot ask for the two coaches", () => {
+  const first =
+    "Hello, can you tell me how many 30-foot Class As we had at the, uh, Carson RV show?";
+  const second =
+    "No, I'm sorry. I meant, in our inventory at this, uh, Carson RV show, how many 30-foots do we have?";
+  assert.equal(looksLikeOwnLotStockQuestion(first), true);
+  assert.equal(looksLikeLengthMeasureAsk(second), true);
+  const snap = snapshotFromJson(
+    JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
+  );
+  const locations = [...new Set(snap.units.map((u) => u.location).filter(Boolean))];
+  const direct = parseOwnLotAsk(first, locations, snap.units);
+  assert.equal(direct.location, "Carson RV Show");
+  assert.equal(direct.bodyType, "Class A");
+  assert.equal(direct.aroundLengthFt, 30);
+  assert.deepEqual(
+    queryOwnLotUnits(snap.units, direct, 10).map((u) => u.stock_number).sort(),
+    ["47033", "URD9710"],
+  );
+  const expanded = lotQueryForFollowUp(second, [first]);
+  assert.match(expanded || "", /Class As/);
+  assert.match(expanded || "", /30-foots/);
+  const kept = parseOwnLotAsk(expanded || "", locations, snap.units);
+  assert.equal(kept.bodyType, "Class A");
+  assert.equal(kept.aroundLengthFt, 30);
+  assert.equal(kept.location, "Carson RV Show");
+  assert.equal(queryOwnLotUnits(snap.units, kept, 10).length, 2);
 });

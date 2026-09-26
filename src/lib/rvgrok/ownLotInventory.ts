@@ -322,7 +322,7 @@ export function pickPrintedLengthFt(row: Record<string, unknown>): number | null
 
 /** "around 30" / "30-foot" / "30-footers" → 28 through 32, inclusive. */
 export const NOMINAL_LENGTH_SPAN_FT = 2;
-const LENGTH_UNIT_RE = "(?:feet|footers|footer|foot|ft)";
+const LENGTH_UNIT_RE = "(?:feet|foots|footers|footer|foot|ft)";
 
 export function nominalLengthBand(center: number): { min: number; max: number } {
   return {

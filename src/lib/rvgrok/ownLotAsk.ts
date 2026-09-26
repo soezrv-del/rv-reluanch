@@ -302,6 +302,32 @@ function isThemLotFollow(text: string): boolean {
   return LOT_THEM_RE.test(t) && /\bhow many\b/i.test(t);
 }
 
+function isLotClarification(text: string): boolean {
+  return /\b(?:i meant|meant to say)\b/i.test(normalizeAskText(text));
+}
+
+/** "30-foot Class As at the Carson RV show" is the lot even without "in stock". */
+export function looksLikeSizedLotAsk(text: string): boolean {
+  if (!looksLikeLengthMeasureAsk(text)) return false;
+  const t = normalizeAskText(text);
+  return (
+    /\bclass\s*[abc]s?\b/i.test(t) ||
+    /\brv\s+show\b/i.test(t) ||
+    /\b(?:in stock|on (?:the |our )?lot|inventor)/i.test(t)
+  );
+}
+
+function stitchPriorLot(spoken: string, priorUserTurns: readonly string[]): string | null {
+  const bits = priorUserTurns.filter(
+    (prev) =>
+      looksLikeOwnLotStockQuestion(prev) ||
+      looksLikeSizedLotAsk(prev) ||
+      looksLikeLengthMeasureAsk(prev),
+  );
+  if (!bits.length) return null;
+  return `${bits.join(". ")}. ${spoken}`;
+}
+
 function priorShowPhrase(priorUserTurns: readonly string[]): string | null {
   for (let i = priorUserTurns.length - 1; i >= 0; i--) {
     const m = (priorUserTurns[i] || "").match(
@@ -339,13 +365,8 @@ export function lotQueryForFollowUp(
   priorUserTurns: readonly string[],
 ): string | null {
   const t = normalizeAskText(spoken).trim();
-  if (isThemLotFollow(t)) {
-    const bits = priorUserTurns.filter(
-      (prev) =>
-        looksLikeOwnLotStockQuestion(prev) || looksLikeLengthMeasureAsk(prev),
-    );
-    if (!bits.length) return null;
-    return `${bits.join(". ")}. ${spoken}`;
+  if (isThemLotFollow(t) || isLotClarification(t)) {
+    return stitchPriorLot(spoken, priorUserTurns);
   }
   if (
     looksLikeLotFloorplanFollowUp(t) &&
@@ -380,6 +401,7 @@ export function looksLikeOwnLotStockQuestion(text: string): boolean {
   // own-lot probe. "What about the 29S Entegra Vision?" is the exception:
   // a named floorplan follow-up stays on the lot.
   if (looksLikeLotFloorplanFollowUp(text)) return true;
+  if (looksLikeSizedLotAsk(text)) return true;
   if (
     looksLikeInventoryOrCountQuestion(text) ||
     looksLikeOwnLotListingPriceQuestion(text) ||
