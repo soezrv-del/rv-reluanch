@@ -793,6 +793,7 @@ export function RvDetail({
           weightOverride?.uvwLbs ??
           (sharedPaint.uvw.gap ? null : sharedPaint.uvw.lbs) ??
           (brochure.uvwEstimated ? null : brochure.uvwLbs) ??
+          live?.uvwLbs ??
           null,
         uvwRaw:
           sharedPaint.uvw.gap || brochure.uvwEstimated ? null : specs.uvw,
