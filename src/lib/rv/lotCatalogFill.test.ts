@@ -98,6 +98,66 @@ test("46553 Reflection 337RLS fills empty brochure holes from the lot record", (
   assert.equal(merged.specs.propane, "60 lb");
 });
 
+test("a flagged lot field overrides that catalog value and leaves sibling fields", () => {
+  const sheet = blankSheet();
+  sheet.gvwr = "15,000 lbs";
+  sheet.gvwrLbs = 15000;
+  sheet.propane = "40 lb";
+  sheet.dataSource = "oem-year";
+  const units = [
+    {
+      year: 2026,
+      make: "Grand Design",
+      model: "Reflection",
+      trim: "337RLS",
+      gvwr: 13995,
+      propane_lbs: 60,
+      overridesCatalog: { gvwr: true },
+    },
+  ];
+  const merged = fillBrochureHolesFromLot(
+    sheet,
+    units,
+    2026,
+    "Grand Design",
+    "Reflection",
+    "337RLS",
+  );
+  assert.equal(merged.specs.gvwrLbs, 13995);
+  assert.match(merged.specs.gvwr, /13,995/);
+  assert.equal(merged.specs.propane, "40 lb");
+  assert.ok(merged.filled.includes("GVWR"));
+  assert.ok(!merged.filled.includes("PROPANE"));
+  assert.equal(merged.specs.dataSource, "oem-year");
+});
+
+test("a flagged override does not change another coach", () => {
+  const sheet = blankSheet();
+  sheet.gvwr = "11,995 lbs";
+  sheet.gvwrLbs = 11995;
+  sheet.dataSource = "oem-year";
+  const units = [
+    {
+      year: 2026,
+      make: "Grand Design",
+      model: "Reflection",
+      trim: "337RLS",
+      gvwr: 13995,
+      overridesCatalog: { gvwr: true },
+    },
+  ];
+  const merged = fillBrochureHolesFromLot(
+    sheet,
+    units,
+    2026,
+    "Grand Design",
+    "Reflection",
+    "303RLS",
+  );
+  assert.equal(merged.specs.gvwrLbs, 11995);
+  assert.equal(merged.filled.length, 0);
+});
+
 test("OEM pin wins over the lot number", () => {
   const sheet = blankSheet();
   sheet.propane = "40 lb";
