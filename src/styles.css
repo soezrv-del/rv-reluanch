@@ -1722,6 +1722,23 @@
 }
 
 /*
+ * See-through tint on the Raidho mark only. The filter is on the logo
+ * image, so every painted part of the R is dimmed — including under the
+ * header, tab bar, and edges — and nothing else is covered or darkened.
+ */
+.suite-raidho-stack {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  pointer-events: none;
+}
+.suite-raidho-bleed,
+.suite-raidho-mark,
+.compare-raidho-mark {
+  filter: saturate(0.5) brightness(0.5);
+}
+
+/*
  * Thick sapphire frost — Facts search, Cal, Tow, coach detail, Sold, Premium.
  * Overrides the readable-cards solid plate so the Raidho field shows through.
  */

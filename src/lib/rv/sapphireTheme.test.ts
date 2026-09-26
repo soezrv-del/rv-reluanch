@@ -201,3 +201,40 @@ test("Facts RV Search, RV Cal, RV Tow, and coach detail share thick sapphire fro
   );
   assert.doesNotMatch(css, /DialaBot/);
 });
+
+test("Raidho tinted glass sits on the shared backdrop, no blur, taps pass through", () => {
+  const suite = read("../../components/shell/SuitePage.tsx");
+  const css = read("../../styles.css");
+  const grok = read("../../components/rvgrok/RvGrokApp.tsx");
+
+  assert.match(suite, /saturate\(0\.5\) brightness\(0\.5\)/);
+  assert.doesNotMatch(suite, /RAIDHO_FROST_FILTER = "blur/);
+  assert.doesNotMatch(suite, /RaidhoFrostVeil/);
+  assert.doesNotMatch(suite, /suite-raidho-frost/);
+  assert.equal(
+    suite.split("suite-raidho-stack").length - 1,
+    2,
+    "logo and photo backdrops both wrap the mark",
+  );
+  assert.match(css, /\.suite-raidho-stack \{[\s\S]*?isolation:\s*isolate/);
+  assert.match(css, /\.suite-raidho-stack \{[\s\S]*?pointer-events:\s*none/);
+  assert.match(
+    css,
+    /\.suite-raidho-bleed,\s*\.suite-raidho-mark,\s*\.compare-raidho-mark \{[\s\S]*?filter:\s*saturate\(0\.5\) brightness\(0\.5\)/,
+  );
+  assert.doesNotMatch(
+    css,
+    /\.suite-raidho-bleed,\s*\.suite-raidho-mark,\s*\.compare-raidho-mark \{[^}]*visibility:\s*hidden/,
+  );
+  assert.doesNotMatch(css, /\.suite-raidho-frost/);
+  assert.doesNotMatch(css, /background:\s*#000000/);
+  assert.doesNotMatch(css, /grok-thread-glass/);
+  assert.doesNotMatch(grok, /grok-thread-glass/);
+  assert.doesNotMatch(grok, /backdropFilter: RAIDHO_FROST_FILTER/);
+  assert.match(
+    grok,
+    /className="rv-scroll relative z-10 flex-1 overflow-y-auto px-3 sm:px-4"/,
+  );
+  assert.doesNotMatch(css, /rgba\(214, 226, 248/);
+  assert.doesNotMatch(css, /DialaBot/);
+});
