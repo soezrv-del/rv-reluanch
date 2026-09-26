@@ -75,7 +75,10 @@ test("rvCAL shares the Facts search thick frost — not a solid black plate", ()
   assert.match(suite, /data-cal-screen=\{tab === "rvcal"/);
   assert.match(src, /raidhoOnly/);
   assert.match(css, /\[data-readable-cards\]\[data-cal-screen\] \.glass-prestige/);
-  assert.match(css, /backdrop-filter:\s*blur\(28px\) saturate\(1\.7\)/);
+  assert.match(
+    css,
+    /-webkit-backdrop-filter:\s*blur\(40px\) saturate\(1\.45\);\s*backdrop-filter:\s*blur\(40px\) saturate\(1\.45\)/,
+  );
 });
 
 test("rvCAL header drops the ZIP/lender subtitle and keeps the verified mark", () => {

@@ -99,7 +99,10 @@ test("Tow landing is full-bleed Raidho only — no beach photo", () => {
   assert.match(page, /raidhoOnly/);
   assert.match(page, /SuiteRaidhoBackdrop bleed/);
   assert.match(css, /\[data-readable-cards\]\[data-tow-landing\] \.glass-prestige/);
-  assert.match(css, /backdrop-filter:\s*blur\(28px\) saturate\(1\.7\)/);
+  assert.match(
+    css,
+    /-webkit-backdrop-filter:\s*blur\(40px\) saturate\(1\.45\);\s*backdrop-filter:\s*blur\(40px\) saturate\(1\.45\)/,
+  );
 });
 
 test("Tow landing source-lock: no preset chips; toggle-first; trim-gated AnswerHero", () => {

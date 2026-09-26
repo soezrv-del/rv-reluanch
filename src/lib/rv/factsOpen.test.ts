@@ -671,7 +671,10 @@ test("Facts landing is full-bleed Raidho only — no showroom photo", () => {
   assert.match(fax, /facts-cascade-core/);
   assert.match(css, /\.facts-cascade-core/);
   assert.match(css, /\[data-readable-cards\] \[data-rv-search-card\]\.glass-prestige/);
-  assert.match(css, /backdrop-filter:\s*blur\(28px\)/);
+  assert.match(
+    css,
+    /-webkit-backdrop-filter:\s*blur\(40px\) saturate\(1\.45\);\s*backdrop-filter:\s*blur\(40px\) saturate\(1\.45\)/,
+  );
   assert.match(
     fax,
     /label="Type"[\s\S]*?placeholder="Optional"[\s\S]*?label="Year"/,
