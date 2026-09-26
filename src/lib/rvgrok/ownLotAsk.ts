@@ -8,6 +8,7 @@
 
 import {
   extractFloorplanToken,
+  looksLikeLengthMeasureAsk,
   normalizeFloorplanToken,
   parseCoachFromText,
 } from "./parseCoach.ts";
@@ -287,10 +288,28 @@ export function looksLikeOwnLotSearchAsk(text: string): boolean {
  */
 export function looksLikeLotFloorplanFollowUp(text: string): boolean {
   const t = normalizeAskText(text);
-  if (!/\b(?:what|how)\s+about\b/i.test(t)) return false;
   if (looksLikeSpecQuestion(t)) return false;
   const parsed = parseCoachFromText(t);
-  return Boolean(parsed.floorplan && (parsed.make || parsed.model));
+  if (!(parsed.floorplan && (parsed.make || parsed.model))) return false;
+  if (/\b(?:what|how)\s+about\b/i.test(t)) return true;
+  return /\b(?:missing|where(?:'s| is)|that(?:'s| is) there|on the show)\b/i.test(t);
+}
+
+const LOT_THEM_RE = /\b(?:them|those|these|'em|’em)\b/i;
+
+function isThemLotFollow(text: string): boolean {
+  const t = normalizeAskText(text);
+  return LOT_THEM_RE.test(t) && /\bhow many\b/i.test(t);
+}
+
+function priorShowPhrase(priorUserTurns: readonly string[]): string | null {
+  for (let i = priorUserTurns.length - 1; i >= 0; i--) {
+    const m = (priorUserTurns[i] || "").match(
+      /\bat\s+the\s+[A-Za-z0-9'’. -]{0,40}?\bshow\b/i,
+    );
+    if (m) return m[0];
+  }
+  return null;
 }
 
 const LOT_YES_RE =
@@ -320,6 +339,22 @@ export function lotQueryForFollowUp(
   priorUserTurns: readonly string[],
 ): string | null {
   const t = normalizeAskText(spoken).trim();
+  if (isThemLotFollow(t)) {
+    const bits = priorUserTurns.filter(
+      (prev) =>
+        looksLikeOwnLotStockQuestion(prev) || looksLikeLengthMeasureAsk(prev),
+    );
+    if (!bits.length) return null;
+    return `${bits.join(". ")}. ${spoken}`;
+  }
+  if (
+    looksLikeLotFloorplanFollowUp(t) &&
+    /\b(?:there|that show|the show)\b/i.test(t) &&
+    !/\bshow\b/i.test(t)
+  ) {
+    const show = priorShowPhrase(priorUserTurns);
+    if (show) return `${spoken} ${show}`;
+  }
   if (LOT_MODEL_FOLLOW_RE.test(t)) {
     for (let i = priorUserTurns.length - 1; i >= 0; i--) {
       const prev = priorUserTurns[i] || "";
@@ -561,6 +596,15 @@ export function ownLotNotesForSpeech(notes: string): string {
       .split("\n")
       .map((line) => line.trim())
       .find((line) => line.startsWith("Floorplan breakdown")) || "";
+  const placeNotes = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(
+      (line) =>
+        /^No \S+ at /.test(line) ||
+        /\bis on the lot at:/.test(line) ||
+        /different floorplan/.test(line),
+    );
   const units = text
     .split("\n")
     .map((line) => line.trim())
@@ -570,6 +614,7 @@ export function ownLotNotesForSpeech(notes: string): string {
     "OWN-LOT inventory (our lot snapshot this turn — not a website count):",
     total,
     breakdown,
+    ...placeNotes,
     ...units,
     "If a unit line is printed, that coach IS on this lot. Never say it is missing.",
     "Stores on these lines are the locations. Do not keep a store from an earlier turn if it is not on a line.",

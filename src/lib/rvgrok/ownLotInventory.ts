@@ -1663,9 +1663,48 @@ export function formatOwnLotBlock(
       appendSingleUnitLock(lines, rows, counts.matched);
     }
   } else if (counts.matched === 0 && !lengthCutoff) {
-    lines.push(
-      "No own-lot hit for this exact series. Say we do not have that coach on the lot snapshot this turn — briefly. Do not say it is missing from the catalog or not in listings. Do not mention catalog gap. Do not send them to check their own lot listing. Do not swap in a sibling series that shares the floorplan code.",
-    );
+    const sameAtStore =
+      filter.location && filter.trim && (filter.make || filter.model)
+        ? queryOwnLotUnits(
+            snapshot.units,
+            { ...active, trim: undefined },
+            6,
+          )
+        : [];
+    const trimElsewhere =
+      filter.location && filter.trim
+        ? queryOwnLotUnits(
+            snapshot.units,
+            { ...active, location: undefined },
+            8,
+          )
+        : [];
+    if (sameAtStore.length || trimElsewhere.length) {
+      if (sameAtStore.length) {
+        lines.push(
+          `No ${filter.trim} at ${filter.location}. Same make and model at that store, different floorplan: ${sameAtStore
+            .map((unit) =>
+              [unit.model, unit.trim, unit.stock_number ? `stk ${unit.stock_number}` : ""]
+                .filter(Boolean)
+                .join(" "),
+            )
+            .join("; ")}. Do not rename that floorplan.`,
+        );
+      }
+      if (trimElsewhere.length) {
+        lines.push(
+          `${filter.trim} is on the lot at: ${trimElsewhere
+            .map((unit) =>
+              `${unit.location || "unknown store"} stk ${unit.stock_number || "unknown"}`,
+            )
+            .join("; ")}. Do not say the floorplan is missing from the lot.`,
+        );
+      }
+    } else {
+      lines.push(
+        "No own-lot hit for this exact series. Say we do not have that coach on the lot snapshot this turn — briefly. Do not say it is missing from the catalog or not in listings. Do not mention catalog gap. Do not send them to check their own lot listing. Do not swap in a sibling series that shares the floorplan code.",
+      );
+    }
   }
 
   lines.push(

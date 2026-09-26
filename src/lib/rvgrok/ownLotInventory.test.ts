@@ -2201,3 +2201,42 @@ test("what about the 29S Vision searches the full lot, and yeah does not stay on
   assert.match(all, /Vision XL 36C × 2/);
   assert.match(all, /Vision XL 31UL × 1/);
 });
+
+test("how many of them at Carson keeps the 30-foot Class A filter", () => {
+  const first = "I'm looking to see if we have any 30-foot Class As.";
+  const second = "How many of them are at the Carson RV show?";
+  const expanded = lotQueryForFollowUp(second, [first]);
+  assert.ok(expanded);
+  assert.match(expanded || "", /30-foot Class As/);
+  assert.match(expanded || "", /Carson RV show/i);
+  const snap = snapshotFromJson(
+    JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
+  );
+  const locations = [...new Set(snap.units.map((u) => u.location).filter(Boolean))];
+  const filter = parseOwnLotAsk(expanded || "", locations, snap.units);
+  assert.equal(filter.location, "Carson RV Show");
+  assert.equal(filter.bodyType, "Class A");
+  assert.equal(filter.aroundLengthFt, 30);
+  const rows = queryOwnLotUnits(snap.units, filter, 10);
+  assert.deepEqual(
+    rows.map((u) => u.stock_number).sort(),
+    ["47033", "URD9710"],
+  );
+
+  const there = lotQueryForFollowUp(
+    "No, but I'm just wondering why you're missing the 29S. That's Integra Vision that's there.",
+    [first, second],
+  );
+  assert.match(there || "", /29S/);
+  assert.match(there || "", /Carson/i);
+  const miss = formatOwnLotBlock(snap, there || "");
+  assert.match(miss, /No 29S at Carson RV Show/);
+  assert.match(miss, /27ASE/);
+  assert.match(miss, /stk 47033/);
+  assert.match(miss, /Fresno CA stk UPD9835|stk UPD9835/);
+  assert.doesNotMatch(miss, /do not have that coach on the lot/i);
+  const spokenMiss = ownLotNotesForSpeech(miss);
+  assert.match(spokenMiss, /No 29S at Carson RV Show/);
+  assert.match(spokenMiss, /27ASE/);
+  assert.match(spokenMiss, /stk 47033/);
+});
