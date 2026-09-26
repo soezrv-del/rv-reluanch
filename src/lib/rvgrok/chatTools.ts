@@ -18,10 +18,8 @@ import { wantsGeneratedImage } from "./imageGen.ts";
 import {
   loadOwnLotSnapshot,
   looksLikeOwnLotStockQuestion,
-  ownLotIsUnavailable,
-  parseOwnLotAsk,
-  queryOwnLotUnits,
 } from "./ownLotInventory.ts";
+import { ownLotToolResult } from "./ownLotChatTool.ts";
 import { evaluateTowMatch } from "../tow/towMatch.ts";
 import { computeLoan } from "../rv/rvCal.ts";
 import { parseCreditBand, type CreditBand } from "../rv/lendersCatalog.ts";
@@ -110,7 +108,7 @@ export const RV_GROK_TOOLS = [
   ),
   fn(
     "get_own_lot",
-    "RV Country lot snapshot. Only for an explicit stock ask or a stock number. A coach name alone is not this tool.",
+    "RV Country lot snapshot. Only for an explicit stock ask or a stock number. A coach name alone is not this tool. Returns every match; matched is the full count. Each unit is year|make|model|trim|stock|price|location|body.",
     {
       query: { type: "string" },
     },
@@ -476,37 +474,8 @@ async function getOwnLot(
   requestOrigin?: string,
 ) {
   const snapshot = await loadOwnLotSnapshot({ requestOrigin });
-  if (!snapshot.ok || ownLotIsUnavailable(snapshot)) {
-    return {
-      ok: false,
-      unavailable: true,
-      reason: snapshot.reason || "lot snapshot unavailable",
-    };
-  }
   const query = str(args.query) || userText;
-  const filter = parseOwnLotAsk(
-    query,
-    snapshot.units.map((u) => u.location),
-    snapshot.units,
-  );
-  const rows = queryOwnLotUnits(snapshot.units, filter, 8);
-  return {
-    ok: true,
-    source: "own",
-    dealer: snapshot.dealer || "RV Country",
-    lot_total: snapshot.units.length,
-    matched: rows.length,
-    units: rows.map((u) => ({
-      year: u.year,
-      make: u.make,
-      model: u.model,
-      trim: u.trim,
-      stock_number: u.stock_number,
-      price: u.price,
-      location: u.location,
-      body_type: u.body_type,
-    })),
-  };
+  return ownLotToolResult(snapshot, query);
 }
 
 export async function executeRvGrokTool(
