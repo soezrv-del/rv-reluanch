@@ -1990,7 +1990,7 @@ export function RvDetail({
               >
                 <div className="min-w-0">
                   <span className="text-[14px] font-medium text-white">
-                    Torque-to-weight
+                    Power-to-weight
                   </span>
                   <p className="mt-0.5 text-[11px] leading-snug text-white/45">
                     {TORQUE_WEIGHT_RATING_WEIGHT_LABEL}{" "}
@@ -2012,7 +2012,7 @@ export function RvDetail({
                       className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/12"
                       data-testid="facts-torque-weight-rating-bar"
                       role="meter"
-                      aria-label={`Torque-to-weight ${formatTorqueWeightRatingRatio(torqueWeightRating)}`}
+                      aria-label={`Power-to-weight ${formatTorqueWeightRatingRatio(torqueWeightRating)}`}
                       aria-valuemin={0}
                       aria-valuemax={1}
                       aria-valuenow={torqueWeightRating.fill ?? 0}

@@ -314,7 +314,7 @@ test("Vehicle specifications card is gated on a concrete floorplan", () => {
   assert.match(detail, /label:\s*"Quality"/);
   assert.match(detail, /label:\s*"Reliability"/);
   assert.match(detail, /label:\s*"Customer satisfaction"/);
-  assert.match(detail, /Torque-to-weight/);
+  assert.match(detail, /Power-to-weight/);
   assert.doesNotMatch(detail, /Torque-to-Weight/);
 });
 

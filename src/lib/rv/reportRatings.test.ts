@@ -131,7 +131,7 @@ test("Facts Ratings section wires owner reviews and does not invent from live/wa
   assert.match(detail, /label:\s*"Quality"/);
   assert.match(detail, /label:\s*"Reliability"/);
   assert.match(detail, /label:\s*"Customer satisfaction"/);
-  assert.match(detail, /Torque-to-weight/);
+  assert.match(detail, /Power-to-weight/);
   assert.doesNotMatch(detail, /Torque-to-Weight/);
   assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
   assert.match(detail, /overrideUvwLbs/);

@@ -762,7 +762,7 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", (
   assert.doesNotMatch(detail, /formatTorqueToWeightScore/);
   assert.doesNotMatch(detail, /data-testid="facts-tqwt-bar"/);
   assert.doesNotMatch(detail, /score \/ 10/);
-  assert.match(detail, /Torque-to-weight/);
+  assert.match(detail, /Power-to-weight/);
   assert.match(detail, /computeTorqueToWeight/);
   assert.match(detail, /overrideUvwLbs:\s*weightOverride\?\.uvwLbs/);
   assert.match(detail, /overrideGvwrLbs:\s*weightOverride\?\.gvwrLbs/);
