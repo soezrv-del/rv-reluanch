@@ -10,7 +10,7 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("Lot stock is a suite page, not a dock tab and not RV Grok", () => {
+test("Lot stock is the last dock tab and not RV Grok", () => {
   const tabs = read("../../components/shell/BottomTabs.tsx");
   const constants = read("../../components/shell/shellConstants.ts");
   const shell = read("../../components/shell/AppShell.tsx");
@@ -20,26 +20,26 @@ test("Lot stock is a suite page, not a dock tab and not RV Grok", () => {
   const route = read("../../routes/lot.tsx");
 
   assert.match(tabs, /\| "rvlot"/);
-  assert.doesNotMatch(tabs, /id: "rvlot"/);
+  assert.match(tabs, /id: "rvlot", label: "Lot", short: "Lot"/);
+  assert.match(tabs, /grid-cols-6/);
   assert.match(
     tabs,
-    /Exclude<AppTab, "more" \| "rvshare" \| "rvsold" \| "rvlot">/,
+    /Exclude<AppTab, "more" \| "rvshare" \| "rvsold">/,
   );
 
   assert.match(
     constants,
-    /TAB_ORDER = \[\s*"rvfax",\s*"rvcal",\s*"rvgrok",\s*"rvtow",\s*"rvtrips",\s*\]/,
+    /TAB_ORDER = \[\s*"rvfax",\s*"rvcal",\s*"rvgrok",\s*"rvtow",\s*"rvtrips",\s*"rvlot",\s*\]/,
   );
-  assert.doesNotMatch(constants, /TAB_ORDER = \[[^\]]*rvlot/);
   assert.match(constants, /title: "LOT"/);
 
-  assert.match(more, /title="Lot stock"/);
-  assert.match(more, /onNavigate\?\.\("rvlot"\)/);
-  assert.match(more, /RV Country in-stock/);
+  assert.doesNotMatch(more, /title="Lot stock"/);
+  assert.doesNotMatch(more, /onNavigate\?\.\("rvlot"\)/);
+  assert.match(more, /Open it from the Lot tab/);
 
   assert.match(shell, /LotStockApp/);
   assert.match(shell, /initialTab = "rvgrok"/);
-  assert.match(shell, /tab === "rvlot"/);
+  assert.match(shell, /id === "rvlot"/);
   assert.match(shell, /<LotStockApp \/>/);
 
   assert.match(route, /createFileRoute\("\/lot"\)/);

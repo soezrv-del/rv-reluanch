@@ -17,9 +17,9 @@ export type AppTab =
   | "rvlot"
   | "more";
 
-/** Dock tabs only — Share is inline on Facts; Sold, Lot stock, and Premium live in ⋯ */
+/** Dock tabs only — Share is inline on Facts; Sold and Premium live in ⋯ */
 const TABS: {
-  id: Exclude<AppTab, "more" | "rvshare" | "rvsold" | "rvlot">;
+  id: Exclude<AppTab, "more" | "rvshare" | "rvsold">;
   label: string;
   short: string;
 }[] = [
@@ -28,6 +28,7 @@ const TABS: {
   { id: "rvgrok", label: "RvGROK", short: "Grok" },
   { id: "rvtow", label: "RvTOW", short: "Tow" },
   { id: "rvtrips", label: "RV GPS", short: "RV GPS" },
+  { id: "rvlot", label: "Lot", short: "Lot" },
 ];
 
 function DockLabel({
@@ -40,7 +41,7 @@ function DockLabel({
   return (
     <span
       className={cn(
-        "bottom-tab-label pointer-events-none text-center uppercase leading-none",
+        "bottom-tab-label pointer-events-none max-w-full text-center uppercase leading-none whitespace-nowrap",
         className,
       )}
       data-label={text}
@@ -57,7 +58,7 @@ function DockLabel({
  *
  * Android WebView: do NOT put pointer-events-none on this nav. Parent
  * none + child auto + backdrop-filter fails hit-testing on Chromium
- * WebView, so Facts/Cal/Tow/Trips/Grok never fire. iOS still uses
+ * WebView, so Facts/Cal/Tow/Trips/Grok/Lot never fire. iOS still uses
  * onClick only (no extra pointer path).
  */
 export function BottomTabs({
@@ -91,7 +92,7 @@ export function BottomTabs({
       }}
     >
       <div
-        className="bottom-tabs-dock pointer-events-auto relative isolate mx-auto grid w-full max-w-lg grid-cols-5 items-stretch gap-0 overflow-hidden rounded-[16px] p-1"
+        className="bottom-tabs-dock pointer-events-auto relative isolate mx-auto grid w-full max-w-lg grid-cols-6 items-stretch gap-0 overflow-hidden rounded-[16px] p-1"
         style={{ touchAction: "manipulation" }}
       >
         {TABS.map(({ id, label, short }) => {
@@ -126,7 +127,7 @@ export function BottomTabs({
               aria-label={label}
               title={label}
               className={cn(
-                "bottom-tab-btn group relative z-[3] flex min-h-[48px] w-full items-center justify-center rounded-none px-0.5 py-2 sm:min-h-[52px]",
+                "bottom-tab-btn group relative z-[3] flex min-h-[48px] w-full min-w-0 items-center justify-center rounded-none px-0.5 py-2 sm:min-h-[52px]",
                 "transition-[transform,opacity] duration-200 ease-out",
                 "pointer-events-auto active:scale-[0.94] touch-manipulation select-none",
                 isLive && "bottom-tab-live",
