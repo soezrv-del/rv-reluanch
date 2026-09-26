@@ -1295,6 +1295,21 @@
   padding-top: 0.1rem;
   padding-bottom: 0.1rem;
 }
+/* Six dock labels: FACTS and RV GPS stay fully visible on a ~360px phone. */
+@media (max-width: 639px) {
+  .bottom-tabs-nav {
+    padding-left: 0.375rem;
+    padding-right: 0.375rem;
+  }
+  .bottom-tabs-dock {
+    padding-left: 0.15rem;
+    padding-right: 0.15rem;
+  }
+  .bottom-tab-label {
+    font-size: clamp(0.68rem, 2.9vw, var(--dock-label-size));
+    letter-spacing: 0;
+  }
+}
 .bottom-tab-einstein {
   width: var(--dock-icon-size);
   height: var(--dock-icon-size);

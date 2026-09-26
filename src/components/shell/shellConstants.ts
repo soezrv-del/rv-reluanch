@@ -1,15 +1,16 @@
 import type { AppTab } from "./BottomTabs";
 
-/** Dock + swipe order — Facts home, Grok centered. Share is not a dock tab. */
+/** Dock + swipe order — Facts, Cal, Grok, Tow, RV GPS, then Lot. Share is not a dock tab. */
 export const TAB_ORDER = [
   "rvfax",
   "rvcal",
   "rvgrok",
   "rvtow",
   "rvtrips",
+  "rvlot",
 ] as const satisfies readonly AppTab[];
 
-/** Dock + swipe — five tools. Sold lives in Premium, never a dock square. */
+/** Dock + swipe — six tools. Sold lives in Premium, never a dock square. */
 export function dockTabOrder(_pro?: boolean): readonly AppTab[] {
   return TAB_ORDER;
 }

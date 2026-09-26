@@ -16,7 +16,6 @@ import {
   Star,
   FileText,
   Volume2,
-  Warehouse,
   X,
   CircleDollarSign,
 } from "lucide-react";
@@ -223,12 +222,6 @@ export function MoreApp({
               TOOLS
             </p>
             <div className="glass-prestige overflow-hidden rounded-[1.25rem]">
-              <RowLink
-                icon={<Warehouse className="size-4 text-accent" />}
-                title="Lot stock"
-                sub="RV Country in-stock — scroll and search our lot"
-                onClick={() => onNavigate?.("rvlot")}
-              />
               <RowLink
                 icon={<Volume2 className="size-4 text-ruby" />}
                 title="RvGrok Voice Settings"
@@ -621,6 +614,7 @@ const SHEETS: Record<
       "RvCal — Purchase price slider, ZIP tax, credit bands (650–800+), and credit-aware lenders.",
       "RvTow — Truck/SUV catalog + NHTSA VIN decode for tow capacity checks.",
       "RV GPS — Lock your coach profile, enter addresses, route with OSRM, find free sewer dumps, and only see restrictions that match the path.",
+      "Lot — RV Country coaches in stock. Open it from the Lot tab.",
       "Swipe left/right between tabs. Scroll up to hide header & footer chrome on iPhone.",
     ],
   },

@@ -55,16 +55,17 @@ test("VITE_RVFOX_PRO true/false maps to a tier when TIER is unset", () => {
   assert.equal(resolveRvfoxTier({ envPro: "false" }), "consumer");
 });
 
-test("consumer and pro dock stay five tabs — Sold is Premium-only", () => {
-  const five = [
+test("consumer and pro dock stay six tabs — Sold is Premium-only", () => {
+  const six = [
     "rvfax",
     "rvcal",
     "rvgrok",
     "rvtow",
     "rvtrips",
+    "rvlot",
   ];
-  assert.deepEqual(dockTabOrder(false), five);
-  assert.deepEqual(dockTabOrder(true), five);
+  assert.deepEqual(dockTabOrder(false), six);
+  assert.deepEqual(dockTabOrder(true), six);
 });
 
 test("Facts / More gate Sold to isProfessionalTier — dock has no Sold square", () => {
@@ -105,8 +106,8 @@ test("Facts / More gate Sold to isProfessionalTier — dock has no Sold square",
   assert.doesNotMatch(dock, /formatSoldDockMoney/);
   assert.doesNotMatch(dock, /formatSoldDockAria/);
   assert.doesNotMatch(dock, /formatSoldMoney/);
-  assert.match(dock, /grid-cols-5/);
-  assert.doesNotMatch(dock, /grid-cols-6/);
+  assert.match(dock, /grid-cols-6/);
+  assert.doesNotMatch(dock, /grid-cols-5/);
   assert.match(shell, /SoldBookApp/);
   assert.match(shell, /show\("rvsold"\)/);
   assert.match(shell, /dockTabOrder/);
