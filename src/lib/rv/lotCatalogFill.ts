@@ -4,9 +4,10 @@
  * Year + make + model + floorplan only. Units must agree on a printed number.
  * One 337RLS does not become a Reflection class average. Unflagged lot
  * numbers fill holes only. A field flagged overridesCatalog replaces the
- * catalog value for that coach and field. A length that is only the
- * floorplan-digit estimate is a hole. Tank counts 1–4 never become gallons
- * or pounds. Never convert lb ↔ gal.
+ * catalog value when any matching record flags it and the others agree on
+ * that number or omit the field. Disagreeing records leave the catalog
+ * value. A length that is only the floorplan-digit estimate is a hole.
+ * Tank counts 1–4 never become gallons or pounds. Never convert lb ↔ gal.
  */
 
 import { floorplanTokensAlign } from "../lot/lotSearch.ts";
@@ -152,7 +153,9 @@ export function agreeingLotSpecs(
         const value = row[key] as number | null | undefined;
         return value != null && rounded(value) === n;
       });
-      if (contributors.length > 0 && contributors.every((row) => row.overrides?.[key] === true)) {
+      // Any flagged record wins when the others agree or omit the field.
+      // A genuine disagreement already returned null from agreeNumber.
+      if (contributors.some((row) => row.overrides?.[key] === true)) {
         overrides[key] = true;
       }
     }

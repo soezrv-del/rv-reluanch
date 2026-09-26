@@ -144,6 +144,50 @@ test("2019 Imagine 2800BH lot numbers paint holes on Facts and on the Grok desk"
   assert.equal(desk.dataSource, facts.dataSource);
 });
 
+test("2026 Imagine 2500RL and 2800BH keep lot numbers after the own-lot file merges", () => {
+  const lot = JSON.parse(
+    readFileSync(join(root, "../../../public/inventory/own-lot-latest.json"), "utf8"),
+  ) as Array<Record<string, unknown>>;
+  const units = [...getLotCatalogUnits(), ...lot];
+  const spec = gd.Imagine!;
+
+  const rlBefore = buildBrochureSpecs(spec, "2026", "Grand Design", "Imagine", "2500RL");
+  const rl = fillBrochureHolesFromLot(
+    rlBefore,
+    units,
+    2026,
+    "Grand Design",
+    "Imagine",
+    "2500RL",
+  );
+  assert.equal(rl.specs.gvwrLbs, 7850);
+  assert.match(rl.specs.gvwr, /7,850/);
+  assert.equal(rl.specs.uvwLbs, 6623);
+  assert.match(rl.specs.uvw, /6,623/);
+  assert.match(rl.specs.hitchOrPin, /581/);
+  assert.equal(rl.specs.sleeps, "6");
+  assert.match(rl.specs.accuracyNote, new RegExp(LOT_FACTS_SOURCE));
+  assert.equal(rl.specs.dataSource, rlBefore.dataSource);
+
+  const bhBefore = buildBrochureSpecs(spec, "2026", "Grand Design", "Imagine", "2800BH");
+  const bh = fillBrochureHolesFromLot(
+    bhBefore,
+    units,
+    2026,
+    "Grand Design",
+    "Imagine",
+    "2800BH",
+  );
+  assert.equal(bh.specs.gvwrLbs, 8495);
+  assert.match(bh.specs.gvwr, /8,495/);
+  assert.equal(bh.specs.uvwLbs, 6386);
+  assert.match(bh.specs.uvw, /6,386/);
+  assert.match(bh.specs.hitchOrPin, /604/);
+  assert.match(bh.specs.freshWater, /52/);
+  assert.match(bh.specs.accuracyNote, new RegExp(LOT_FACTS_SOURCE));
+  assert.equal(bh.specs.dataSource, bhBefore.dataSource);
+});
+
 test("flagged lot value overrides the OEM pin on 2026 Imagine 2800BH only", () => {
   const seeded = row(2026, "Imagine", "2800BH");
   assert.ok(seeded);
