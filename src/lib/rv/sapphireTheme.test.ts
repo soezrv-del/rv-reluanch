@@ -224,8 +224,18 @@ test("Raidho tinted glass sits on the shared backdrop, no blur, taps pass throug
   assert.equal(suite.split("<RaidhoFrostVeil />").length - 1, 2);
   assert.match(css, /\.suite-raidho-stack \{[\s\S]*?isolation:\s*isolate/);
   assert.match(css, /\.suite-raidho-stack \{[\s\S]*?pointer-events:\s*none/);
+  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?position:\s*fixed/);
+  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?inset:\s*0/);
+  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?width:\s*100vw/);
+  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?height:\s*100vh/);
+  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?height:\s*100svh/);
+  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?height:\s*100dvh/);
   assert.match(css, /\.suite-raidho-frost \{[\s\S]*?pointer-events:\s*none/);
   assert.match(css, /\.suite-raidho-frost \{[\s\S]*?z-index:\s*2/);
+  assert.match(
+    css,
+    /\.suite-swipe-viewport:not\(\[data-swipe-dragging="1"\]\):not\(\[data-swipe-busy="1"\]\)\s+\.suite-swipe-pane\[data-pane-active\] \{[\s\S]*?transform:\s*none/,
+  );
   assert.match(
     css,
     /\.suite-raidho-frost \{[\s\S]*?backdrop-filter:\s*saturate\(0\.5\) brightness\(0\.5\)/,

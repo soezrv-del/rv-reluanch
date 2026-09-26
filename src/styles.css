@@ -1725,7 +1725,9 @@
  * One tinted-glass veil between the Raidho mark and the floating cards.
  * Smoky black, no blur: the R stays sharp, dimmer, and less saturated.
  * isolation keeps this z-index inside the backdrop so the veil cannot
- * cover cards or the tab bar. pointer-events stay off either way.
+ * cover cards or the tab bar. The veil itself is position:fixed and
+ * sized to the viewport so zoom and odd aspect ratios can't clip it.
+ * pointer-events stay off either way.
  * Solid black smoke is the fallback where backdrop-filter is unavailable.
  */
 .suite-raidho-stack {
@@ -1735,11 +1737,33 @@
   pointer-events: none;
 }
 .suite-raidho-frost {
-  position: absolute;
+  position: fixed;
   inset: 0;
+  width: 100vw;
+  /* vh, then svh, then dvh — last supported value wins, so mobile
+     browser toolbars don't leave an untinted strip. */
+  height: 100vh;
+  height: 100svh;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
   z-index: 2;
   pointer-events: none;
   background: rgba(0, 0, 0, 0.42);
+}
+/*
+ * Swipe panes are a containing block (transform, will-change, contain:paint)
+ * and would clip a fixed veil to the pane. At rest the active pane must not
+ * be one, so the veil sizes to the viewport. Dragging still translates.
+ */
+.suite-swipe-viewport {
+  contain: none;
+}
+.suite-swipe-viewport:not([data-swipe-dragging="1"]):not([data-swipe-busy="1"])
+  .suite-swipe-pane[data-pane-active] {
+  transform: none;
+  will-change: auto;
+  contain: none;
 }
 @supports ((backdrop-filter: brightness(1)) or (-webkit-backdrop-filter: brightness(1))) {
   .suite-raidho-frost {
