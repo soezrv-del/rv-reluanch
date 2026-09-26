@@ -5045,9 +5045,26 @@ const OEM_UVW_PINS: OemUvwPin[] = [
     "2027 Newmar Supreme Aire brochure chassis UVW (RVUSA library)",
   ),
 
+  // 2025 Seneca 37K only. Jayco publishes no UVW for MY2025 (page confirms
+  // GVWR 31,000 / GCWR 43,000). Owner-reported weigh-in stands in for TTW.
+  // Equal pin scores keep the first match, so this year row must stay ahead
+  // of the 2021–2027 26,000 pin. Other years, 37L/37M, and Accolade stay put.
+  // https://www.sporttruckrv.com/Pre-Owned-Inventory-2021-Jayco-Motorhome-Seneca-37K-Seneca-Chandler-18286144
+  // https://www.jayco.com/rvs/class-c-motorhomes/2025-seneca/37k/
+  ...uvwPins(
+    "jayco",
+    "seneca",
+    2025,
+    2025,
+    ["37K"],
+    24820,
+    "owner-reported weigh-in ~24,820 lb (web); Jayco publishes no UVW for MY2025. https://www.sporttruckrv.com/Pre-Owned-Inventory-2021-Jayco-Motorhome-Seneca-37K-Seneca-Chandler-18286144 https://www.jayco.com/rvs/class-c-motorhomes/2025-seneca/37k/",
+  ),
+
   // Jayco Seneca Super C — restates in-repo OEM floorplan UVW so the TTW
   // pin table owns the number. 2025–2026 Jayco Seneca brochure prints
   // GVWR 31,000 only (no UVW column). Do not invent a new figure.
+  // 2025 37K is the year-specific pin above; this row still covers 2021–2024 and 2026–2027.
   ...uvwPins(
     "jayco",
     "seneca",
