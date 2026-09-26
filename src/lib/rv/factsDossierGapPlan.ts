@@ -348,7 +348,7 @@ export function factsDossierResearchQuery(input: {
   const needed = gaps.map((g) => GAP_QUERY_LABEL[g]).join(", ");
   const dry =
     gaps.includes("uvw")
-      ? " When dry weight is missing, search the web for an average published UVW for this year and floorplan. That figure is only for the power-to-weight bar. It is not a certified scale weight and it is not GVWR."
+      ? " When dry weight is missing, search the web for an average published UVW for this year and floorplan. That figure is only for the power-to-weight bar. It is not a certified scale weight and it is not GVWR. Also fill CCC and propane from a published spec page when the catalog is blank."
       : "";
   return `Write the coach report you would give a salesman who asked you directly about ${coach}. Search the live web. Sections: Overview, Chassis and powertrain, Weights and capacity, Layout and amenities, owner issues, sentiment, and market notes. These fields are still empty and must be filled when a brochure, factory sheet, dealer listing, or published spec page names them: ${needed}. Do not replace a number the catalog already pinned.${dry} Label sources.`;
 }

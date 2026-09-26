@@ -10,7 +10,6 @@
  */
 
 import { researchAccessHeaders } from "../access/researchUnlock.ts";
-import { displayLengthWithLotLock } from "./lotFactsFallback.ts";
 import {
   applyPowertrainPin,
   clearAllVerifiedDossiers,
@@ -41,6 +40,7 @@ export type LiveDossier = {
   gvwrLbs: number | null;
   uvwLbs: number | null;
   cccLbs: number | null;
+  propaneLbs?: number | null;
   slideouts: number | null;
   sleeps: number | null;
   freshWaterGal: number | null;
@@ -294,6 +294,7 @@ export type SpecDisplay = {
   generator: string;
   mpgHighway: string;
   warranty: string;
+  propane?: string;
   isToyHauler?: boolean;
   garageLength?: string;
   garageWidth?: string;
@@ -329,6 +330,7 @@ function emptySpecDisplay(_pending: boolean): SpecDisplay {
     generator: dash,
     mpgHighway: dash,
     warranty: dash,
+    propane: dash,
     isToyHauler: false,
     garageLength: dash,
     garageWidth: dash,
@@ -357,11 +359,6 @@ export function mergeLiveIntoDisplay(
     pending?: boolean;
     /** Default true — year-true catalog powertrain cannot be stomped */
     lockPowertrainFromCatalog?: boolean;
-    /**
-     * Lot-record length already painted this coach. Live overallLength
-     * (including a feet-as-inches dossier string) must not replace it.
-     */
-    lockLengthFromLot?: boolean;
     /** Optional pre-resolved hard fields (from resolveHardPowertrain) */
     hardOverride?: {
       engine?: string | null;
@@ -396,11 +393,25 @@ export function mergeLiveIntoDisplay(
   const s = (v: string | null | undefined) =>
     v && String(v).trim() ? String(v).trim() : null;
 
-  const lengthFt = displayLengthWithLotLock(
-    seed.lengthFt,
-    s(live.overallLength),
-    opts?.lockLengthFromLot === true,
-  );
+  const looksLikeLengthRange = (v: string | null | undefined) => {
+    if (!v) return false;
+    return (
+      /\d\s*[-–—]\s*\d/.test(v) ||
+      /\bto\b/i.test(v) ||
+      /\b(span|range|varies)\b/i.test(v)
+    );
+  };
+  const seedLengthIsSpecific =
+    !!seed.lengthFt &&
+    seed.lengthFt !== "—" &&
+    !looksLikeLengthRange(seed.lengthFt);
+  const liveLength = s(live.overallLength);
+  const lengthFt =
+    liveLength && looksLikeLengthRange(liveLength) && seedLengthIsSpecific
+      ? seed.lengthFt
+      : liveLength && !looksLikeLengthRange(liveLength)
+        ? liveLength
+        : seed.lengthFt;
 
   const soft: SpecDisplay = {
     engine: seed.engine,
@@ -434,6 +445,10 @@ export function mergeLiveIntoDisplay(
         ? String(live.mpgHighwayEst)
         : seed.mpgHighway,
     warranty: s(live.warranty) ?? seed.warranty,
+    propane:
+      live.propaneLbs != null && live.propaneLbs > 0
+        ? `${Math.round(live.propaneLbs)} lb`
+        : seed.propane,
     isToyHauler: seed.isToyHauler,
     garageLength: seed.garageLength,
     garageWidth: seed.garageWidth,

@@ -751,6 +751,7 @@ function parseDossier(
         "unloadedWeight",
       ),
       cccLbs: num("cccLbs", "ccc"),
+      propaneLbs: num("propaneLbs", "propane", "propaneCapacity"),
       slideouts: num("slideouts", "slides", "slideoutsCount"),
       sleeps: num("sleeps"),
       freshWaterGal: num("freshWaterGal", "fresh_water", "freshWater"),
