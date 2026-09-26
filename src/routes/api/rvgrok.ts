@@ -33,9 +33,6 @@ import {
   formatOwnLotBlock,
   loadOwnLotSnapshot,
   looksLikeOwnLotStockQuestion,
-  ownLotIsUnavailable,
-  parseOwnLotAsk,
-  queryOwnLotUnits,
   shouldSkipWebForOwnLot,
 } from "@/lib/rvgrok/ownLotInventory";
 import { looksLikeDeskSheetAsk } from "@/lib/rvgrok/deskSheetPolicy";
@@ -61,6 +58,7 @@ import {
   wantsGeneratedImage,
 } from "@/lib/rvgrok/imageGen";
 import {
+  executeRvGrokTool,
   parseTalkMode,
   requiredToolForAsk,
   type TalkMode,
@@ -371,7 +369,7 @@ const XAI_CHAT_TOOLS = [
   ),
   toolFn(
     "get_own_lot",
-    "RV Country lot snapshot. Only for an explicit stock ask or a stock number.",
+    "RV Country lot snapshot. Only for an explicit stock ask or a stock number. Returns every match; matched is the full count. Each unit is year|make|model|trim|stock|price|location|body.",
     { query: { type: "string" } },
   ),
 ];
@@ -585,37 +583,7 @@ async function runRegisteredTool(
   }
 
   if (name === "get_own_lot") {
-    const snapshot = await loadOwnLotSnapshot({ requestOrigin: ctx.requestOrigin });
-    if (!snapshot.ok || ownLotIsUnavailable(snapshot)) {
-      return {
-        ok: false,
-        error: snapshot.reason || "lot snapshot unavailable",
-      };
-    }
-    const query = toolStr(args.query) || ctx.userText;
-    const filter = parseOwnLotAsk(
-      query,
-      snapshot.units.map((u) => u.location),
-      snapshot.units,
-    );
-    const rows = queryOwnLotUnits(snapshot.units, filter, 8);
-    return {
-      ok: true,
-      source: "own",
-      dealer: snapshot.dealer || "RV Country",
-      lot_total: snapshot.units.length,
-      matched: rows.length,
-      units: rows.map((u) => ({
-        year: u.year,
-        make: u.make,
-        model: u.model,
-        trim: u.trim,
-        stock_number: u.stock_number,
-        price: u.price,
-        location: u.location,
-        body_type: u.body_type,
-      })),
-    };
+    return executeRvGrokTool(name, args, ctx);
   }
 
   return { ok: false, error: `unknown tool ${name}` };
