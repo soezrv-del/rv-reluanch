@@ -766,7 +766,10 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", (
   assert.match(detail, /overrideGvwrLbs:\s*weightOverride\?\.gvwrLbs/);
   assert.match(detail, /WeightOverrideRow/);
   assert.match(detail, /estimatedLbs/);
-  assert.match(detail, /uvwRaw:\s*brochure\.uvwEstimated \? null : specs\.uvw/);
+  assert.match(
+    detail,
+    /uvwRaw:[\s\S]{0,120}brochure\.uvwEstimated\s*\?\s*null\s*:\s*specs\.uvw/,
+  );
   assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
   assert.match(detail, /chassis:\s*powertrainGuard\.hard\.chassis/);
   assert.match(detail, /engine:\s*powertrainGuard\.hard\.engine/);

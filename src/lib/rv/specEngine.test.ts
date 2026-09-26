@@ -49,7 +49,7 @@ test("catalog pin from #487 paints Lineage 31ZW UVW 18186", () => {
   );
 });
 
-test("empty-catalog fallback paints Lineage 31ZW UVW 18186 with asterisk + URL", () => {
+test("empty-catalog fallback leaves UVW GAP when the page only prints dry weight", () => {
   const spec = peekCatalog()?.RV_DATA?.["Grand Design"]?.["Lineage Series F"];
   const brochure = spec
     ? buildBrochureSpecs(
@@ -70,23 +70,20 @@ test("empty-catalog fallback paints Lineage 31ZW UVW 18186 with asterisk + URL",
   assert.ok(emptySpecFields(snap).includes("uvw"));
 
   const paint = applySpecFallback(snap, lineageFills());
-  assert.equal(paint.uvw.lbs, 18186);
-  assert.equal(paint.uvw.gap, false);
-  assert.equal(paint.uvw.asterisk, true);
-  assert.match(paint.uvw.display, /18,186/);
-  assert.match(paint.uvw.display, /\*/);
-  assert.doesNotMatch(paint.uvw.display, /Confirm brochure|GAP/i);
-  assert.equal(paint.uvw.source, "rvguide");
-  assert.equal(paint.uvw.sourceUrl, RVGUIDE_31ZW_URL);
+  assert.equal(paint.uvw.lbs, null);
+  assert.equal(paint.uvw.gap, true);
+  assert.equal(paint.uvw.asterisk, false);
+  assert.equal(paint.uvw.display, "GAP");
   assert.equal(paintHasFallbackNumber(paint), true);
   assert.equal(paint.ccc.lbs, 3814);
   assert.equal(paint.ccc.gap, false);
 });
 
-test("shared paint path — Facts snapshot and desk rows both show 18186", () => {
+test("shared paint path leaves UVW GAP when the scrape only has dry weight", () => {
   const paint = resolveSharedSpecPaint(LINEAGE, lineageFills());
-  assert.equal(paint.uvw.lbs, 18186);
-  assert.equal(paint.uvw.gap, false);
+  assert.equal(paint.uvw.lbs, null);
+  assert.equal(paint.uvw.gap, true);
+  assert.equal(paint.uvw.display, "GAP");
 
   const rows = applySharedPaintToRows(
     [
@@ -98,10 +95,8 @@ test("shared paint path — Facts snapshot and desk rows both show 18186", () =>
     paint,
   );
   const uvw = rows.find((r) => r.label === "UVW");
-  assert.equal(uvw?.gap, false);
-  assert.match(uvw?.value || "", /18,186/);
-  assert.equal(uvw?.asterisk, true);
-  assert.equal(uvw?.sourceUrl, RVGUIDE_31ZW_URL);
+  assert.equal(uvw?.gap, true);
+  assert.equal(uvw?.value, "GAP");
   assert.equal(rows.find((r) => r.label === "Engine")?.value, "Ford 6.7L");
 });
 

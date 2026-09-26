@@ -19,7 +19,7 @@ import { findWeightOverride } from "./weightOverrides.ts";
 import { resolveFactsBrochure } from "../rvgrok/factsBrochure.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
-const FLOORPLAN_SPECS_SHA256 = "1e76f60bd11994000bcbfde616b71f3f800fdecd52a896f316ea87af323387dc";
+const FLOORPLAN_SPECS_SHA256 = "6291b1042c8c1fc3b20b547a55474d74264443980cc6bbc668b2a1b359515173";
 
 const catalog = await loadLiveCatalog();
 installCatalog({ RV_DATA: catalog.RV_DATA, MAKES: catalog.MAKES });

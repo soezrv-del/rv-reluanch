@@ -566,6 +566,9 @@ test("Audit E 2027 brochure path: Jayco Seneca Super C pins; XT GAP", () => {
   assert.equal(j.brochure.gvwrLbs, 31000);
   assert.equal(k.brochure.gvwrLbs, 31000);
   assert.equal(j.brochure.uvwLbs, null);
+  assert.equal(j.brochure.uvw, "GAP");
+  assert.equal(j.brochure.uvwEstimated, false);
+  assert.equal(j.brochure.estimatedUvwLbs ?? null, null);
   assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Super C", "33J"), 31000);
   assert.equal(findOemGvwrLbs("2027", "Jayco", "Seneca Super C", "37K"), 31000);
   assert.equal(findOemFloorplanSpec("2027", "Jayco", "Seneca Super C", "33J")?.gvwrLbs, 31000);

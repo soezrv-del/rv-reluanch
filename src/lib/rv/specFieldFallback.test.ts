@@ -89,7 +89,7 @@ test("tank count of 1 is not fresh/gray/black capacity", () => {
   assert.equal(countOnly.find((f) => f.field === "blackWater"), undefined);
 });
 
-test("RV Guide fixture parses dry weight 18186 as UVW + tanks + fuel", () => {
+test("RV Guide fixture keeps dry weight off UVW and still reads tanks + fuel", () => {
   const fills = parseSpecFieldsFromHtml(RVGUIDE_2026_LINEAGE_31ZW_FIXTURE, {
     source: "rvguide",
     url: RVGUIDE_31ZW_URL,
@@ -98,10 +98,7 @@ test("RV Guide fixture parses dry weight 18186 as UVW + tanks + fuel", () => {
     string,
     SpecFieldFill
   >;
-  assert.equal(byField.uvw?.value, 18186);
-  assert.equal(byField.uvw?.asDryWeight, true);
-  assert.equal(byField.uvw?.source, "rvguide");
-  assert.equal(byField.uvw?.sourceUrl, RVGUIDE_31ZW_URL);
+  assert.equal(byField.uvw, undefined);
   assert.equal(byField.gvwr?.value, 22000);
   assert.equal(byField.ccc?.value, 3814);
   assert.equal(byField.fuelCapacity?.value, 66.5);
@@ -128,7 +125,7 @@ test("printed UVW wins over dry weight; EST / missing stay empty", () => {
   );
 });
 
-test("empty-field chain fills UVW from RV Guide after RVUSA miss", async () => {
+test("empty-field chain does not paint dry weight as UVW", async () => {
   const fills = await runSpecFieldFallback({
     identity: LINEAGE_31ZW,
     empty: ["uvw"],
@@ -147,11 +144,7 @@ test("empty-field chain fills UVW from RV Guide after RVUSA miss", async () => {
       return { ok: false, text: "", url };
     },
   });
-  assert.equal(fills.length, 1);
-  assert.equal(fills[0]?.field, "uvw");
-  assert.equal(fills[0]?.value, 18186);
-  assert.equal(fills[0]?.asDryWeight, true);
-  assert.equal(fills[0]?.source, "rvguide");
+  assert.deepEqual(fills, []);
 });
 
 test("chain does not scrape fields the catalog already has", async () => {

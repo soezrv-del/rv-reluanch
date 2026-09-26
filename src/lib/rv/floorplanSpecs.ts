@@ -16,6 +16,16 @@ export type OemFloorplanSpec = {
   interiorHeightIn?: number;
   /** Brochure / sticker UVW only. Omit when the table prints GVWR and not UVW. */
   uvwLbs?: number;
+  /** Printed dry weight. Not UVW — leave UVW blank when only dry weight is known. */
+  dryWeightLbs?: number;
+  /** Cargo / CCC pounds when printed. Never GVWR minus an estimated UVW. */
+  cargoLbs?: number;
+  /** Research fill marked this row low-confidence. */
+  lowConfidence?: boolean;
+  /** Source label written by the research fill (oem, owner-reported, dealer, other). */
+  sourceLabel?: string;
+  /** Page the filled value came from. */
+  sourceUrl?: string;
   gvwrLbs: number;
   hitchLbs: number;
   freshWater?: number;
@@ -4661,6 +4671,10 @@ type OemUvwPin = {
   uvwLbs: number;
   /** Brochure / OEM / dealer URL or note — required, never invented. */
   source: string;
+  /** Research fill marked this pin low-confidence. */
+  lowConfidence?: boolean;
+  sourceLabel?: string;
+  sourceUrl?: string;
 };
 
 function uvwPins(
@@ -5778,6 +5792,9 @@ export type OemUvwPinRow = {
   floorplan: string;
   uvwLbs: number;
   source: string;
+  lowConfidence?: boolean;
+  sourceLabel?: string;
+  sourceUrl?: string;
 };
 
 /** Brochure / sticker UVW pins. Never overwrite these with the tiered GVWR estimate. */
@@ -5785,7 +5802,7 @@ export function listOemUvwPins(): readonly OemUvwPinRow[] {
   return OEM_UVW_PINS;
 }
 
-function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
+export function modelPinBlocked(modelIncludes: string, modelNorm: string): boolean {
   if (
     modelIncludes === "vision" &&
     (modelNorm.includes("xl") || modelNorm.includes("se")) &&
@@ -6215,13 +6232,13 @@ export function findOemGvwrLbs(
   return best;
 }
 
-/** Published OEM UVW for a year/make/model/floorplan. Null → runtime tiered GVWR estimate when GVWR is known (do not invent mid×0.82). */
-export function findOemUvwLbs(
+/** Published OEM UVW pin for a year/make/model/floorplan. Null → GAP (do not estimate). */
+export function findOemUvwPin(
   year: string | number,
   make: string,
   model: string,
   floorplan: string,
-): number | null {
+): OemUvwPinRow | null {
   if (!floorplan?.trim()) return null;
   const y = typeof year === "number" ? year : parseInt(String(year), 10);
   if (!Number.isFinite(y)) return null;
@@ -6229,7 +6246,7 @@ export function findOemUvwLbs(
   const md = model.toLowerCase();
   const fp = floorplan.trim().toUpperCase().replace(/[\s-]+/g, "");
 
-  let best: number | null = null;
+  let best: OemUvwPinRow | null = null;
   let bestScore = -1;
   for (const row of OEM_UVW_PINS) {
     if (y < row.yearMin || y > row.yearMax) continue;
@@ -6241,21 +6258,32 @@ export function findOemUvwLbs(
     const score = row.modelIncludes.length * 10 + row.makeIncludes.length;
     if (score > bestScore) {
       bestScore = score;
-      best = row.uvwLbs;
+      best = row;
     }
   }
   return best;
 }
 
-/** Weight estimate narrowed by floorplan length position in range.
- *  `uvwEst` (mid×0.82) is a CCC heuristic only — never the TTW / listing basis.
+/** Published OEM UVW for a year/make/model/floorplan. Null → GAP (do not invent). */
+export function findOemUvwLbs(
+  year: string | number,
+  make: string,
+  model: string,
+  floorplan: string,
+): number | null {
+  return findOemUvwPin(year, make, model, floorplan)?.uvwLbs ?? null;
+}
+
+/** Length-positioned catalog weight band for trip routing.
+ *  Not a UVW. The old `uvwEst` (mid×0.82) is removed — missing UVW stays GAP.
+ *  never the TTW / listing basis.
  */
 export function weightForFloorplan(
   floorplan: string | undefined,
   weightRange: [number, number],
   lengthRange: [number, number],
   opts?: { make?: string; model?: string },
-): { gvwr: string; uvwEst: number; cccEst: number; mid: number } {
+): { gvwr: string; mid: number } {
   const [wLo, wHi] = weightRange;
   const midDefault = (wLo + wHi) / 2;
   const len = lengthFtFromFloorplan(floorplan, lengthRange, opts);
@@ -6271,21 +6299,40 @@ export function weightForFloorplan(
   if (len != null) {
     const lo = Math.round((mid * 0.94) / 100) * 100;
     const hi = Math.round((mid * 1.06) / 100) * 100;
-    const uvw = Math.round(mid * 0.82);
-    const ccc = Math.max(800, Math.round(mid - uvw));
     return {
       gvwr: `${lo.toLocaleString()}–${hi.toLocaleString()} lbs`,
-      uvwEst: uvw,
-      cccEst: ccc,
       mid,
     };
   }
-  const uvw = Math.round(midDefault * 0.82);
-  const ccc = Math.max(800, Math.round(midDefault - uvw));
   return {
     gvwr: `${wLo.toLocaleString()}–${wHi.toLocaleString()} lbs`,
-    uvwEst: uvw,
-    cccEst: ccc,
     mid: midDefault,
   };
+}
+
+/** Floorplan spec rows, including year ranges and the Model G copies. */
+export function listOemFloorplanRows(): readonly {
+  makeIncludes: string;
+  modelIncludes: string;
+  yearMin: number;
+  yearMax: number;
+  floorplan: string;
+  spec: OemFloorplanSpec;
+}[] {
+  return OEM_FLOORPLAN_ROWS;
+}
+
+/** Holding-tank pins, including year ranges. */
+export function listOemTankPins(): readonly {
+  makeIncludes: string;
+  modelIncludes: string;
+  yearMin: number;
+  yearMax: number;
+  floorplan: string;
+  freshWater?: number;
+  grayWater?: number;
+  blackWater?: number;
+  fuelCapacityGal?: number;
+}[] {
+  return OEM_TANK_PINS;
 }

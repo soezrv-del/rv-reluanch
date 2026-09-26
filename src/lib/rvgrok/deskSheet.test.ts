@@ -519,7 +519,7 @@ test("2026 Lineage Series F 31ZW pin tanks/fuel paint without live catalog â€” c
   assert.match(val("UVW"), /18,186/);
 });
 
-test("shared fallback paints 2026 Lineage Series F 31ZW UVW 18,186 on the desk â€” no GAP", () => {
+test("catalog pin paints 2026 Lineage Series F 31ZW UVW 18,186 â€” dry weight is not UVW", () => {
   const q = "2026 Grand Design Lineage 31ZW spec report";
   const identity = resolveCoachIdentity(q, null, "");
   assert.ok(identity);
@@ -529,6 +529,7 @@ test("shared fallback paints 2026 Lineage Series F 31ZW UVW 18,186 on the desk â
     source: "rvguide",
     url,
   });
+  assert.equal(fills.find((f) => f.field === "uvw"), undefined);
   const sheet = resolveDeskSheet({
     query: q,
     identity,
@@ -539,9 +540,9 @@ test("shared fallback paints 2026 Lineage Series F 31ZW UVW 18,186 on the desk â
   const uvw = sheet!.rows.find((r) => r.label === "UVW");
   assert.equal(uvw?.gap, false);
   assert.match(uvw?.value || "", /18,186/);
-  assert.match(uvw?.value || "", /\*/);
+  assert.doesNotMatch(uvw?.value || "", /\*/);
   assert.doesNotMatch(uvw?.value || "", /Confirm brochure|GAP/i);
-  assert.equal(uvw?.sourceUrl, url);
+  assert.equal(uvw?.sourceUrl, undefined);
   assert.equal(sheet!.presenceNote, "");
   assert.equal(sheet!.gaps.length, 0);
 });

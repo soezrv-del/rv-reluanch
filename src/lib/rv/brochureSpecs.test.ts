@@ -221,12 +221,14 @@ test("Discovery OEM rows keep brochure GVWR and omit invented UVW", () => {
   );
 });
 
-test("brochure / listing weight basis is published UVW then tiered estimate — mid×0.82 never wins", () => {
+test("brochure / listing weight basis is published UVW — mid×0.82 never wins", () => {
   const spec = src("brochureSpecs.ts");
   assert.match(spec, /findOemGvwrLbs/);
-  assert.match(spec, /findOemUvwLbs/);
+  assert.match(spec, /findOemUvwPin/);
+  assert.doesNotMatch(spec, /estimateUvwFromGvwr/);
   assert.match(spec, /publishedGvwr/);
   assert.match(spec, /publishedUvw/);
+  assert.match(spec, /uvw: uvw != null \? fmtLbs\(uvw\) : "GAP"/);
   assert.doesNotMatch(spec, /oem\?\.uvwLbs \?\? snap\.uvwLbs \?\? w\.uvwEst/);
   assert.match(src("floorplanSpecs.ts"), /findOemGvwrLbs/);
   assert.match(src("floorplanSpecs.ts"), /findOemUvwLbs/);
@@ -260,8 +262,9 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
 
   const spec = src("brochureSpecs.ts");
   assert.match(spec, /oemGvwr \?\? findOemGvwrLbs/);
-  assert.match(spec, /findOemUvwLbs\(year, make, model, floorplan\) \?\? oem\?\.uvwLbs \?\? snap\.uvwLbs/);
-  assert.match(spec, /estimateUvwFromGvwr/);
+  assert.match(spec, /uvwPin\?\.uvwLbs \?\? oem\?\.uvwLbs \?\? snap\.uvwLbs/);
+  assert.doesNotMatch(spec, /estimateUvwFromGvwr/);
+  assert.match(spec, /uvw: uvw != null \? fmtLbs\(uvw\) : "GAP"/);
   assert.doesNotMatch(spec, /UVW_ESTIMATE_LABEL/);
   assert.doesNotMatch(spec, /THIN_CCC_FLAG/);
   assert.doesNotMatch(spec, /estimated via tiered GVWR formula/);
@@ -1495,7 +1498,8 @@ test("seeded filler is gone: tanks / MPG / fuel / PDF-only fields say Confirm br
   assert.match(spec, /CONFIRM_BROCHURE/);
   assert.match(spec, /construction:\s*CONFIRM_BROCHURE/);
   assert.match(spec, /wheelbase:\s*isTowable \? "N\/A \(towable\)" : CONFIRM_BROCHURE/);
-  assert.match(spec, /propane:\s*oem\?\.propaneLbs/);
+  assert.match(spec, /propane:\s*formatPropane\(oem\)/);
+  assert.match(spec, /oem\?\.propaneLbs/);
   assert.match(spec, /: CONFIRM_BROCHURE/);
   assert.match(spec, /mpgCity:[\s\S]*?CONFIRM_BROCHURE/);
   assert.match(spec, /mpgHighway:[\s\S]*?CONFIRM_BROCHURE/);
@@ -14553,7 +14557,7 @@ test("Keystone MY2027 OEM year-first floorplans + yearEnds", () => {
   assert.doesNotMatch(bul, /"16BHC"/);
   assert.doesNotMatch(bul, /"21BHCWE"/);
 
-  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf("    Fuzion: {"));
+  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf('    "Hideout Mini": {'));
   assert.match(hid, /"2027": \["210RL", "210RLWE", "212RKS", "212RKSWE", "230BH", "230BHWE", "234MLS", "234MLSWE", "250RBS", "250RBSWE", "262BHS", "262BHSWE"\]/);
   assert.match(hid, /yearStart:\s*2010/);
   assert.doesNotMatch(hid, /"2026":/);
@@ -14625,7 +14629,7 @@ test("Keystone P3 honesty: Bullet Classic + Springdale Mini/Max OEM 2027; empty 
   const bxf = k.slice(k.indexOf('    "Bullet Crossfire": {'), k.indexOf('    "Bullet Classic": {'));
   assert.doesNotMatch(bxf, /"2017":|"2025":|"2026":/);
 
-  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf("    Fuzion: {"));
+  const hid = k.slice(k.indexOf("    Hideout: {"), k.indexOf('    "Hideout Mini": {'));
   assert.doesNotMatch(hid, /"2010":|"2026":/);
 
   const chtt = k.slice(k.indexOf('    "Cougar Half-Ton Travel Trailer": {'), k.indexOf("    Bullet: {"));
@@ -17889,7 +17893,7 @@ test("Forest River thin-line honesty: dated 2010–2014 + tip years (Micro/Mini/
     "36VBDS",
   ]);
 
-  const rpod = slice("r-Pod", "ZZZ");
+  const rpod = slice("r-Pod", "Impression");
   assert.match(rpod, /yearStart:\s*2010/);
   assert.deepEqual(yearPlans(rpod, 2009), []);
   assert.deepEqual(yearPlans(rpod, 2010), [
@@ -17972,7 +17976,21 @@ test("Forest River thin-line honesty: dated 2010–2014 + tip years (Micro/Mini/
     "RP-207",
   ]);
   assert.equal(yearPlans(rpod, 2026).includes("22RB"), false);
-  assert.deepEqual(yearPlans(rpod, 2027), []);
+  assert.deepEqual(yearPlans(rpod, 2027), [
+    "RP-171",
+    "RP-180",
+    "RP-190",
+    "RP-192",
+    "RP-194",
+    "RP-197",
+    "RP-198",
+    "RP-200",
+    "RP-203",
+    "RP-205",
+    "RP-206",
+    "RP-207",
+    "RP-208",
+  ]);
 
   assert.equal(CATALOG_INDEX["Forest River"]?.["Rockwood Mini Lite"]?.years?.includes(2013), true);
   assert.equal(CATALOG_INDEX["Forest River"]?.["Rockwood Mini Lite"]?.years?.includes(2014), false);
@@ -17983,7 +18001,7 @@ test("Forest River thin-line honesty: dated 2010–2014 + tip years (Micro/Mini/
   assert.equal(CATALOG_INDEX["Forest River"]?.Wildwood?.years?.includes(2013), false);
   assert.equal(CATALOG_INDEX["Forest River"]?.["r-Pod"]?.years?.includes(2010), true);
   assert.equal(CATALOG_INDEX["Forest River"]?.["r-Pod"]?.years?.includes(2022), false);
-  assert.equal(CATALOG_INDEX["Forest River"]?.["r-Pod"]?.years?.includes(2027), false);
+  assert.equal(CATALOG_INDEX["Forest River"]?.["r-Pod"]?.years?.includes(2027), true);
 });
 
 test("Holiday Rambler MY2027 OEM+PDF floorplans + GAP living lines", () => {

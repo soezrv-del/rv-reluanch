@@ -103,7 +103,7 @@ export function isFactsGap(value: string | number | null | undefined): boolean {
   if (value == null) return true;
   if (typeof value === "number") return !Number.isFinite(value) || value <= 0;
   const t = value.trim();
-  return !t || t === CONFIRM_BROCHURE;
+  return !t || t === CONFIRM_BROCHURE || t === "GAP" || t === "—";
 }
 
 function catalogGuess(specs: BrochureSpecs): boolean {

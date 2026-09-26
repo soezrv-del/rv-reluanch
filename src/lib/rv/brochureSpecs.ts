@@ -6,8 +6,8 @@ import {
   formatInchesAsFtIn,
   findOemFloorplanSpec,
   findOemGvwrLbs,
-  findOemUvwLbs,
   findOemHoldingTanks,
+  findOemUvwPin,
 } from "./floorplanSpecs.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
 import {
@@ -34,7 +34,6 @@ import {
   parseHp,
 } from "./catalogHonesty.ts";
 import { resolveHonestTanks } from "./placeholderTanks.ts";
-import { estimateUvwFromGvwrDetailed } from "./torqueToWeight.ts";
 
 export { parseHp } from "./catalogHonesty.ts";
 export {
@@ -56,10 +55,14 @@ export interface BrochureSpecs {
   /** Published / pinned pounds when known — never mid×0.82. */
   gvwrLbs?: number | null;
   uvwLbs?: number | null;
-  /** Runtime tiered-GVWR stand-in when published UVW is missing. */
+  /** Always null. Tiered GVWR stand-ins are not UVW. */
   estimatedUvwLbs?: number | null;
-  /** True when `uvw` is the tiered estimate, not an OEM / sticker pin. */
+  /** Always false. A missing UVW is GAP, not an estimate. */
   uvwEstimated?: boolean;
+  /** True when the sourced UVW was marked low-confidence by a research fill. */
+  uvwLowConfidence?: boolean;
+  /** Source URL stored next to a filled UVW, when the catalog has one. */
+  uvwSourceUrl?: string | null;
   /** True when a 20–24k gas estimate has CCC/OCCC/NCC under 3,000 lb. */
   thinCcc?: boolean;
   /** Numeric CCC / OCCC / NCC when known. */
@@ -117,6 +120,11 @@ export const CONFIRM_BROCHURE = "Confirm brochure";
 
 function mid([a, b]: [number, number]) {
   return (a + b) / 2;
+}
+
+function firstHttpUrl(raw: string | null | undefined): string | null {
+  const m = String(raw || "").match(/https?:\/\/[^\s)]+/i);
+  return m ? m[0] : null;
 }
 
 function fmtLbs(n: number) {
@@ -522,8 +530,8 @@ export function buildBrochureSpecs(
   const oemGvwr = oem?.gvwrLbs && oem.gvwrLbs > 0 ? oem.gvwrLbs : undefined;
   const publishedGvwr =
     oemGvwr ?? findOemGvwrLbs(year, make, model, floorplan) ?? snap.gvwrLbs;
-  const publishedUvw =
-    findOemUvwLbs(year, make, model, floorplan) ?? oem?.uvwLbs ?? snap.uvwLbs;
+  const uvwPin = findOemUvwPin(year, make, model, floorplan);
+  const publishedUvw = uvwPin?.uvwLbs ?? oem?.uvwLbs ?? snap.uvwLbs;
   const gvwrMid = publishedGvwr ?? null;
   const uvw = publishedUvw;
   const ccc =
@@ -739,16 +747,10 @@ export function buildBrochureSpecs(
     .filter(Boolean)
     .join(" · ");
 
-  const estimated = !isTowable && uvw == null
-    ? estimateUvwFromGvwrDetailed(publishedGvwr, {
-        chassis: snap.chassis ?? spec.chassis,
-        fuelType: resolvedFuel,
-        rvType: resolvedType,
-        cccLbs: ccc,
-      })
-    : null;
-  const estimatedUvwLbs = estimated?.uvwLbs ?? null;
-  const thinCcc = estimated?.thinCcc ?? false;
+  const uvwSourceUrl =
+    (typeof oem?.sourceUrl === "string" && oem.sourceUrl) ||
+    firstHttpUrl(uvwPin?.source) ||
+    null;
 
   return {
     lengthFt: lengthDisplay,
@@ -760,16 +762,14 @@ export function buildBrochureSpecs(
 
     gvwr: gvwrDisplay,
     gvwrLbs: publishedGvwr ?? null,
-    uvw:
-      uvw != null
-        ? fmtLbs(uvw)
-        : estimatedUvwLbs != null
-          ? fmtLbs(estimatedUvwLbs)
-          : CONFIRM_BROCHURE,
+    uvw: uvw != null ? fmtLbs(uvw) : "GAP",
     uvwLbs: uvw ?? null,
-    estimatedUvwLbs,
-    uvwEstimated: estimatedUvwLbs != null,
-    thinCcc,
+    estimatedUvwLbs: null,
+    uvwEstimated: false,
+    uvwLowConfidence:
+      uvw != null && (uvwPin?.lowConfidence === true || oem?.lowConfidence === true),
+    uvwSourceUrl,
+    thinCcc: false,
     cccLbs: ccc,
     ccc: ccc != null ? fmtLbs(ccc) : CONFIRM_BROCHURE,
     gcwr: isTowable

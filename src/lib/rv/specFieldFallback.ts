@@ -8,7 +8,7 @@
  *   3. Dealer listings (RVTrader / dealer sites)
  *   4. Official OEM brochure PDF
  *
- * Dry weight may paint as UVW with an asterisk + source URL. Never invent.
+ * Dry weight stays a dry-weight reading. It does not fill UVW. Never invent.
  * Field-only scrape. Existing bots stay out of this path.
  */
 
@@ -340,7 +340,7 @@ function pushFill(
 
 /**
  * Extract labeled capacity / weight fields only. Never invent.
- * Dry weight fills UVW when UVW is not printed.
+ * Dry weight is not UVW. A page that prints only dry weight leaves UVW empty.
  */
 export function parseSpecFieldsFromHtml(
   html: string,
@@ -355,11 +355,8 @@ export function parseSpecFieldsFromHtml(
     /\b(?:uvw|unloaded\s+(?:vehicle\s+)?weight|unloaded\s+wt)\b/,
     "lbs",
   );
-  const dry = firstLabeledNumber(text, /\bdry\s+weight\b/, "lbs");
   if (uvw != null) {
     pushFill(out, "uvw", uvw, "lbs", meta);
-  } else if (dry != null) {
-    pushFill(out, "uvw", dry, "lbs", meta, { asDryWeight: true });
   }
 
   pushFill(

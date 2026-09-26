@@ -1737,25 +1737,24 @@ export function RvDetail({
             />
             <WeightOverrideRow
               label="UVW"
-              catalogValue={displayFromPainted(
-                brochure.uvwEstimated ? "" : specs.uvw,
-                sharedPaint.uvw,
-              )}
+              catalogValue={
+                (sharedPaint.uvw.lbs ?? brochure.uvwLbs ?? live?.uvwLbs) != null
+                  ? displayFromPainted(
+                      brochure.uvwEstimated ? "" : specs.uvw,
+                      sharedPaint.uvw,
+                    )
+                  : "GAP"
+              }
               catalogLbs={
                 sharedPaint.uvw.lbs ?? brochure.uvwLbs ?? live?.uvwLbs ?? null
               }
-              estimatedLbs={
-                !sharedPaint.uvw.gap ||
-                weightOverride?.uvwLbs != null ||
-                brochure.uvwLbs != null ||
-                live?.uvwLbs != null
-                  ? null
-                  : (torqueToWeight.weightEstimated
-                      ? torqueToWeight.weightLb
-                      : null) ??
-                    brochure.estimatedUvwLbs ??
-                    null
+              badge={
+                brochure.uvwLowConfidence &&
+                (sharedPaint.uvw.lbs ?? brochure.uvwLbs ?? live?.uvwLbs) != null
+                  ? "Low confidence"
+                  : undefined
               }
+              estimatedLbs={null}
               sourceUrl={
                 !sharedPaint.uvw.gap &&
                 sharedPaint.uvw.sourceUrl &&
@@ -2888,6 +2887,7 @@ function WeightOverrideRow({
   catalogValue,
   catalogLbs,
   estimatedLbs,
+  badge,
   overrideLbs,
   accent,
   searching,
@@ -2900,6 +2900,7 @@ function WeightOverrideRow({
   catalogValue?: string | null;
   catalogLbs?: number | null;
   estimatedLbs?: number | null;
+  badge?: string;
   overrideLbs?: number | null;
   accent?: boolean;
   searching?: boolean;
@@ -2958,6 +2959,14 @@ function WeightOverrideRow({
             data-testid={`facts-weight-${label.toLowerCase()}-override`}
           >
             Override
+          </span>
+        ) : null}
+        {badge ? (
+          <span
+            className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/80"
+            data-testid={`facts-weight-${label.toLowerCase()}-flag`}
+          >
+            {badge}
           </span>
         ) : null}
       </span>
