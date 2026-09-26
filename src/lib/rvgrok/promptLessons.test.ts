@@ -49,7 +49,7 @@ test("defaults are cleared so retired role bullets do not stack", () => {
   }
   assert.match(
     RV_GROK_LEAN_CORE,
-    /experienced RV salesman's pocket/,
+    /You talk directly with the person in front of you/,
   );
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /sales-floor wingman/);
 });

@@ -508,7 +508,7 @@ test("repair-mode playbook is wired through chat, voice, and browse", () => {
   assert.match(src(root, "grounding.ts"), /formatRepairGroundingBlock/);
   assert.match(src(root, "webIntent.ts"), /looksLikeRepairQuestion/);
   assert.match(src(root, "prompts.ts"), /RV_GROK_LEAN_CORE/);
-  assert.match(src(root, "speechPolicy.ts"), /You also answer the rest of what he asks/);
+  assert.match(src(root, "speechPolicy.ts"), /You also answer whatever else they ask/);
   assert.match(src(root, "voice.ts"), /RV_GROK_LEAN_CORE/);
   assert.match(src(root, "webSearch.ts"), /torque spec, part number, wiring color/);
   const api = src(join(root, "../../routes/api"), "rvgrok.ts");
