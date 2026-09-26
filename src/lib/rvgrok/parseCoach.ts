@@ -1,5 +1,14 @@
 /** Shared year / make / model parse — no storage, safe for Node tests. */
 
+import { stripLengthMeasures } from "./lengthAsk.ts";
+
+export {
+  parseLengthAsk as parseLengthMeasure,
+  looksLikeLengthMeasureAsk,
+  stripLengthMeasures,
+} from "./lengthAsk.ts";
+export type { LengthMeasure } from "./lengthAsk.ts";
+
 export const COACH_BRANDS = [
   "Sunset Park",
   "Gulf Stream",
@@ -95,127 +104,20 @@ export function isBudgetThousandsToken(token: string): boolean {
 }
 
 /**
- * One length grammar for lot asks. Strip and parse both use it, so
- * "29-31 ft" cannot be stripped as "31 ft" and parsed as a different band.
- * Spoken "thirty", 30', and 30-footers are the same measure.
+ * 150k / 50k are prices. 35K / 38K are floorplans unless a budget word
+ * is attached ("under 35k"). A 2-digit K in the coach-length range stays.
  */
-const LENGTH_UNIT_WORD = "(?:feet|foots|footers|footer|foot|ft)";
-const LENGTH_UNIT = `(?:${LENGTH_UNIT_WORD}\\b|['′’])`;
-const SPELLED_LENGTH =
-  "(?:twenty|thirty|forty)(?:[\\s-](?:one|two|three|four|five|six|seven|eight|nine))?|eighteen|nineteen";
-const LENGTH_NUMBER_SRC = `(?:\\d{1,2}(?:\\.\\d+)?|${SPELLED_LENGTH})`;
-const LENGTH_QUALIFIER_SRC =
-  "under|below|less\\s+than|over|above|more\\s+than|at\\s+least|up\\s+to|max(?:imum)?|at\\s+most|no\\s+more\\s+than|around|about";
-const LENGTH_MEASURE_SRC =
-  `\\b(?:${LENGTH_QUALIFIER_SRC})\\s+${LENGTH_NUMBER_SRC}(?:\\s*(?:-|to)\\s*${LENGTH_NUMBER_SRC})?\\s*(?:-\\s*)?${LENGTH_UNIT}` +
-  `|\\b${LENGTH_NUMBER_SRC}\\s*(?:-|to)\\s*${LENGTH_NUMBER_SRC}\\s*(?:-\\s*)?${LENGTH_UNIT}` +
-  `|\\b${LENGTH_NUMBER_SRC}\\s*(?:-\\s*)?${LENGTH_UNIT}`;
-
-const LENGTH_RANGE_RE = new RegExp(
-  `\\b(${LENGTH_NUMBER_SRC})\\s*(?:-|to)\\s*(${LENGTH_NUMBER_SRC})\\s*(?:-\\s*)?${LENGTH_UNIT}`,
-  "i",
-);
-const LENGTH_QUALIFIED_RE = new RegExp(
-  `\\b(${LENGTH_QUALIFIER_SRC})\\s+(${LENGTH_NUMBER_SRC})\\s*(?:-\\s*)?${LENGTH_UNIT}`,
-  "i",
-);
-const LENGTH_BARE_RE = new RegExp(
-  `\\b(${LENGTH_NUMBER_SRC})\\s*(?:-\\s*)?${LENGTH_UNIT}`,
-  "i",
-);
-
-const SPELLED_LENGTH_TENS: Record<string, number> = {
-  twenty: 20,
-  thirty: 30,
-  forty: 40,
-};
-const SPELLED_LENGTH_ONES: Record<string, number> = {
-  one: 1,
-  two: 2,
-  three: 3,
-  four: 4,
-  five: 5,
-  six: 6,
-  seven: 7,
-  eight: 8,
-  nine: 9,
-};
-
-export type LengthMeasure =
-  | { kind: "max"; feet: number; inclusive: boolean }
-  | { kind: "min"; feet: number; inclusive: boolean }
-  | { kind: "around"; feet: number }
-  | { kind: "between"; min: number; max: number };
-
-function lengthNumber(raw: string): number | null {
-  const t = raw.toLowerCase().replace(/-/g, " ").replace(/\s+/g, " ").trim();
-  if (!t) return null;
-  if (/^\d{1,2}(?:\.\d+)?$/.test(t)) {
-    const n = Number(t);
-    return Number.isFinite(n) ? n : null;
+function isBudgetThousandsAsk(token: string, text: string): boolean {
+  if (!isBudgetThousandsToken(token)) return false;
+  if (/\$|\b(?:thousand|asking|price|priced|cost)\b/i.test(text)) return true;
+  const n = Number(token.replace(/k$/i, ""));
+  if (n >= 18 && n <= 45 && String(n).length === 2) {
+    return new RegExp(
+      `\\b(?:under|below|over|above|around|about|near|at\\s+least|up\\s+to)\\s+\\$?\\s*${n}\\s*k\\b`,
+      "i",
+    ).test(text);
   }
-  if (t === "eighteen") return 18;
-  if (t === "nineteen") return 19;
-  if (SPELLED_LENGTH_TENS[t] != null) return SPELLED_LENGTH_TENS[t]!;
-  const parts = t.split(" ");
-  if (
-    parts.length === 2 &&
-    SPELLED_LENGTH_TENS[parts[0]!] != null &&
-    SPELLED_LENGTH_ONES[parts[1]!] != null
-  ) {
-    return SPELLED_LENGTH_TENS[parts[0]!]! + SPELLED_LENGTH_ONES[parts[1]!]!;
-  }
-  return null;
-}
-
-/** First length phrase in the ask. "under 40" stays a cap; "30-foot" is a size class. */
-export function parseLengthMeasure(text: string): LengthMeasure | null {
-  const t = text || "";
-  const range = t.match(LENGTH_RANGE_RE);
-  if (range?.[1] && range[2]) {
-    const min = lengthNumber(range[1]);
-    const max = lengthNumber(range[2]);
-    if (min != null && max != null && min < max && min >= 15 && max <= 50) {
-      return { kind: "between", min, max };
-    }
-  }
-  const qualified = t.match(LENGTH_QUALIFIED_RE);
-  if (qualified?.[1] && qualified[2]) {
-    const feet = lengthNumber(qualified[2]);
-    if (feet == null) return null;
-    const q = qualified[1].toLowerCase().replace(/\s+/g, " ");
-    if (q === "under" || q === "below" || q === "less than") {
-      return { kind: "max", feet, inclusive: false };
-    }
-    if (
-      q === "up to" ||
-      q === "max" ||
-      q === "maximum" ||
-      q === "at most" ||
-      q === "no more than"
-    ) {
-      return { kind: "max", feet, inclusive: true };
-    }
-    if (q === "over" || q === "above" || q === "more than") {
-      return { kind: "min", feet, inclusive: false };
-    }
-    if (q === "at least") return { kind: "min", feet, inclusive: true };
-    return { kind: "around", feet };
-  }
-  const bare = t.match(LENGTH_BARE_RE);
-  if (bare?.[1]) {
-    const feet = lengthNumber(bare[1]);
-    if (feet != null) return { kind: "around", feet };
-  }
-  return null;
-}
-
-export function looksLikeLengthMeasureAsk(text: string): boolean {
-  return new RegExp(LENGTH_MEASURE_SRC, "i").test(text || "");
-}
-
-export function stripLengthMeasures(text: string): string {
-  return (text || "").replace(new RegExp(LENGTH_MEASURE_SRC, "gi"), " ");
+  return true;
 }
 
 export function extractFloorplanToken(text: string): string {
@@ -224,7 +126,7 @@ export function extractFloorplanToken(text: string): string {
   if (!asked.trim()) return "";
   // "2550DS LE" is one plan code. Do not glue English ("4369 spec").
   const notAPlanSuffix =
-    /^(ford|chevy|gas|diesel|the|and|for|with|have|has|in|our|at|any|show|inventory|gal|lbs|ft|feet|foot|spec|specs|report|reports|full|brochure|tanks?|fresh|gray|grey|black|water|class|coach|model|what|are|on|of|this|that|mbs|ph[ae]{2}tons?|fayt[eo]ns?|faetons?|fatens?|paytons?|paitons?|phantoms?|is|an|it|was|be|inch|inches)$/i;
+    /^(ford|chevy|gas|diesel|gasser|gassers|the|and|for|with|have|has|in|our|at|any|show|inventory|gal|lbs|ft|feet|foot|spec|specs|report|reports|full|brochure|tanks?|fresh|gray|grey|black|water|class|coach|model|what|are|on|of|this|that|mbs|ph[ae]{2}tons?|fayt[eo]ns?|faetons?|fatens?|paytons?|paitons?|phantoms?|is|an|it|was|be|inch|inches|between|longer|under|over|plus|non)$/i;
   const source = asked.replace(
     /\b(\d{4})\s*([A-Za-z]{1,6})(?:\s+([A-Za-z]{1,6}))?\b/g,
     (full, digits: string, a: string, b?: string) => {
@@ -245,17 +147,12 @@ export function extractFloorplanToken(text: string): string {
   for (const m of source.matchAll(re)) {
     let token = normalizeFloorplanToken(m[1] || "");
     if (!token) continue;
-    if (
-      isBudgetThousandsToken(token) &&
-      /\$|\b(?:thousand|asking|price|priced|cost)\b/i.test(text)
-    ) {
-      continue;
-    }
+    if (isBudgetThousandsAsk(token, text)) continue;
     const suffix = token.replace(/^\d+/, "");
     if (suffix && notAPlanSuffix.test(suffix)) {
       token = token.slice(0, token.length - suffix.length);
     }
-    if (!token) continue;
+    if (!token || /^\d{1,3}$/.test(token)) continue;
     // Ford F-53 is a gas chassis, not a floorplan. "F-53" used to zero the lot.
     if (/^f53$/i.test(token.replace(/-/g, ""))) continue;
     // Spoken "31W Z" — trailing single letter belongs on the code (31WZ).

@@ -128,7 +128,7 @@ const FIXTURE_UNITS: OwnLotUnit[] = [
     make: "Entegra Coach",
     model: "Vision",
     trim: "29S",
-    body_type: "Class A Gas",
+    body_type: "Class A",
     location: "Harrisburg",
     stock_number: "E2411",
     vin: "",
@@ -281,7 +281,11 @@ test("diesel proxy is Class A Diesel + Class Super C only — no invented fuel",
   assert.equal(isDieselBodyType("Fifth Wheel"), false);
   assert.equal(isGasBodyType("Class A Gas"), true);
   assert.equal(isGasBodyType("Class A"), true);
+  assert.equal(isGasBodyType("Class C"), true);
+  assert.equal(isGasBodyType("Class B"), true);
+  assert.equal(isGasBodyType("Fifth Wheel"), false);
   assert.equal(isGasBodyType("Class A Diesel"), false);
+  assert.equal(isGasBodyType("Class Super C"), false);
 });
 
 test("count aggregation by body_type / make / location", () => {
@@ -808,18 +812,31 @@ test("own-lot and prompt text cannot claim no price data when prices exist", () 
   assert.doesNotMatch(emptyPrices, /Listing prices ARE in this snapshot/);
 });
 
+function fixtureSnap(units: OwnLotUnit[]): OwnLotSnapshot {
+  return {
+    ok: true,
+    asOf: "",
+    source: "own",
+    dealer: "RV Country",
+    fuelFieldPresent: false,
+    pathTried: "",
+    units,
+  };
+}
+
 function pricedUnit(partial: Partial<OwnLotUnit> & Pick<OwnLotUnit, "stock_number">): OwnLotUnit {
   return {
     year: "2026",
     make: "Entegra Coach",
     model: "Vision",
     trim: "29S",
-    body_type: "Class A Gas",
+    body_type: "Class A",
     location: "Fresno CA",
     vin: "",
     source: "own",
     dealer: "RV Country",
     price: 189000,
+    lengthFt: null,
     ...partial,
   };
 }
@@ -1252,7 +1269,7 @@ const VISION_27ASE_UNITS: OwnLotUnit[] = [
     make: "Entegra Coach",
     model: "Vision SE",
     trim: "27ASE",
-    body_type: "Class A Gas",
+    body_type: "Class A",
     location: "Fife WA",
     stock_number: "47034",
     price: 109995,
@@ -1262,7 +1279,7 @@ const VISION_27ASE_UNITS: OwnLotUnit[] = [
     make: "Entegra Coach",
     model: "Vision SE",
     trim: "27ASE",
-    body_type: "Class A Gas",
+    body_type: "Class A",
     location: "Sparks NV",
     stock_number: "47033",
     price: 118190,
@@ -1272,7 +1289,7 @@ const VISION_27ASE_UNITS: OwnLotUnit[] = [
     make: "Entegra Coach",
     model: "Vision SE",
     trim: "27ASE",
-    body_type: "Class A Gas",
+    body_type: "Class A",
     location: "Sparks NV",
     stock_number: "46222",
     price: 180436,
@@ -1285,7 +1302,7 @@ const VISION_FAMILY_DECOYS: OwnLotUnit[] = [
     make: "Entegra Coach",
     model: "Vision",
     trim: "29S",
-    body_type: "Class A Gas",
+    body_type: "Class A",
     location: "Harrisburg",
     stock_number: "E2411",
     price: 189000,
@@ -1295,7 +1312,7 @@ const VISION_FAMILY_DECOYS: OwnLotUnit[] = [
     make: "Entegra Coach",
     model: "Vision XL",
     trim: "36C",
-    body_type: "Class A Gas",
+    body_type: "Class A",
     location: "Fife WA",
     stock_number: "XL360",
     price: 199000,
@@ -2050,9 +2067,25 @@ test("own-lot miss is an honest lot miss, not a catalog-gap deflection", () => {
 });
 
 test("voice inventory notes keep the unit and the real lot total", () => {
-  const snap = snapshotFromJson(
-    JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
-  );
+  const snap = fixtureSnap([
+    pricedUnit({
+      year: "2012",
+      make: "Tiffin",
+      model: "Phaeton",
+      trim: "40 QBH",
+      body_type: "Class A Diesel",
+      location: "Fresno CA",
+      stock_number: "UPAUK9782",
+      price: 89995,
+      lengthFt: 40.5,
+    }),
+    pricedUnit({
+      stock_number: "OTHER",
+      model: "Vision",
+      trim: "29S",
+      lengthFt: 31.33,
+    }),
+  ]);
   const block = formatOwnLotBlock(
     snap,
     "Can you look up U, a stock number for me? It's U P A U K 9 7 8 2",
@@ -2067,7 +2100,7 @@ test("voice inventory notes keep the unit and the real lot total", () => {
 
   const picked = pickRicherOwnLot([
     { units: 1018, mtime: 200, label: "stale" },
-    { units: snap.units.length, mtime: 100, label: "public" },
+    { units: 1466, mtime: 100, label: "public" },
   ]);
   assert.equal(picked?.label, "public");
   assert.match(src(".", "realtime.ts"), /!looksLikeOwnLotStockQuestion\(transcript\)/);
@@ -2079,7 +2112,7 @@ test("around 30-foot Class A gas is 28–32, including a blank floorplan foot", 
   const ask = parseOwnLotAsk("what we have around 30 foot in a Class A gas");
   assert.equal(ask.aroundLengthFt, 30);
   assert.equal(ask.gasOnly, true);
-  assert.equal(ask.bodyType, "Class A Gas");
+  assert.equal(ask.bodyType, "Class A");
   assert.equal(parseOwnLotAsk("what 30-footers we have in our inventory").aroundLengthFt, 30);
   assert.equal(parseOwnLotAsk("just 30-foot Class As").bodyType, "Class A");
   assert.equal(parseOwnLotAsk("diesels under 40 feet").maxLengthFt, 40);
@@ -2158,6 +2191,49 @@ test("around 30-foot Class A gas is 28–32, including a blank floorplan foot", 
   assert.doesNotMatch(block, /stk BIG/);
 });
 
+const VISION_LOT_UNITS: OwnLotUnit[] = [
+  ...["UPD9835", "47593", "47591", "47592"].map((stock_number) =>
+    pricedUnit({
+      stock_number,
+      model: "Vision",
+      trim: "29S",
+      location: "Fresno CA",
+      lengthFt: 31.33,
+    }),
+  ),
+  ...["46222", "47034", "47033"].map((stock_number) =>
+    pricedUnit({
+      stock_number,
+      model: "Vision SE",
+      trim: "27ASE",
+      location: "Fife WA",
+      lengthFt: 29.92,
+    }),
+  ),
+  ...["XL34A", "XL34B"].map((stock_number) =>
+    pricedUnit({
+      stock_number,
+      model: "Vision XL",
+      trim: "34G",
+      lengthFt: 36.5,
+    }),
+  ),
+  ...["XL36A", "XL36B"].map((stock_number) =>
+    pricedUnit({
+      stock_number,
+      model: "Vision XL",
+      trim: "36C",
+      lengthFt: 38.83,
+    }),
+  ),
+  pricedUnit({
+    stock_number: "XL31",
+    model: "Vision XL",
+    trim: "31UL",
+    lengthFt: 2.75,
+  }),
+];
+
 test("what about the 29S Vision searches the full lot, and yeah does not stay on Carson", () => {
   const about = "What about the 29S uh Entegra Vision?";
   assert.equal(looksLikeOwnLotStockQuestion(about), true);
@@ -2181,9 +2257,7 @@ test("what about the 29S Vision searches the full lot, and yeah does not stay on
     "How many Entegra Visions do we have in stock?",
   );
 
-  const snap = snapshotFromJson(
-    JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
-  );
+  const snap = fixtureSnap(VISION_LOT_UNITS);
   const block = formatOwnLotBlock(snap, about);
   assert.match(block, /Floorplan breakdown \(say once, do not recount\): Vision 29S × 4/);
   assert.match(block, /stk UPD9835/);
@@ -2204,6 +2278,43 @@ test("what about the 29S Vision searches the full lot, and yeah does not stay on
   assert.match(all, /Vision XL 31UL × 1/);
 });
 
+const CARSON_CLASS_A_UNITS: OwnLotUnit[] = [
+  pricedUnit({
+    year: "2026",
+    make: "Entegra Coach",
+    model: "Vision SE",
+    trim: "27ASE",
+    location: "Carson RV Show",
+    stock_number: "47033",
+    lengthFt: 29.92,
+  }),
+  pricedUnit({
+    year: "2026",
+    make: "Forest River",
+    model: "FR3",
+    trim: "30DS",
+    location: "Carson RV Show",
+    stock_number: "URD9710",
+    lengthFt: 31.92,
+  }),
+  pricedUnit({
+    make: "Entegra Coach",
+    model: "Vision",
+    trim: "29S",
+    location: "Fresno CA",
+    stock_number: "UPD9835",
+    lengthFt: 31.33,
+  }),
+  pricedUnit({
+    make: "Entegra Coach",
+    model: "Vision XL",
+    trim: "36C",
+    location: "Carson RV Show",
+    stock_number: "TOO-LONG",
+    lengthFt: 38.83,
+  }),
+];
+
 test("how many of them at Carson keeps the 30-foot Class A filter", () => {
   const first = "I'm looking to see if we have any 30-foot Class As.";
   const second = "How many of them are at the Carson RV show?";
@@ -2211,9 +2322,7 @@ test("how many of them at Carson keeps the 30-foot Class A filter", () => {
   assert.ok(expanded);
   assert.match(expanded || "", /30-foot Class As/);
   assert.match(expanded || "", /Carson RV show/i);
-  const snap = snapshotFromJson(
-    JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
-  );
+  const snap = fixtureSnap(CARSON_CLASS_A_UNITS);
   const locations = [...new Set(snap.units.map((u) => u.location).filter(Boolean))];
   const filter = parseOwnLotAsk(expanded || "", locations, snap.units);
   assert.equal(filter.location, "Carson RV Show");
@@ -2250,9 +2359,7 @@ test("30-foot Class As at the Carson RV show is a lot ask for the two coaches", 
     "No, I'm sorry. I meant, in our inventory at this, uh, Carson RV show, how many 30-foots do we have?";
   assert.equal(looksLikeOwnLotStockQuestion(first), true);
   assert.equal(looksLikeLengthMeasureAsk(second), true);
-  const snap = snapshotFromJson(
-    JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
-  );
+  const snap = fixtureSnap(CARSON_CLASS_A_UNITS);
   const locations = [...new Set(snap.units.map((u) => u.location).filter(Boolean))];
   const direct = parseOwnLotAsk(first, locations, snap.units);
   assert.equal(direct.location, "Carson RV Show");
@@ -2277,13 +2384,13 @@ test("around-30 Class A gas variants stay on the same lot units", () => {
     JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
   );
   const locations = [...new Set(snap.units.map((u) => u.location).filter(Boolean))];
-  const stocks = (ask: string) =>
-    queryOwnLotUnits(snap.units, parseOwnLotAsk(ask, locations, snap.units), 80)
+  const stocks = (ask: string, limit = 80) =>
+    queryOwnLotUnits(snap.units, parseOwnLotAsk(ask, locations, snap.units), limit)
       .map((u) => u.stock_number)
       .sort();
   const baseAsk = "around 30 foot Class A gas";
   const base = stocks(baseAsk);
-  assert.ok(base.length > 0, "canonical ask matches lot units");
+  assert.equal(base.length, 21, "canonical ask stays the 28–32 gas Class A set");
   for (const ask of [
     "30 ft Class A gas",
     "30' Class A gas",
@@ -2293,9 +2400,28 @@ test("around-30 Class A gas variants stay on the same lot units", () => {
     "Ford F-53 chassis gas around 30 foot Class A",
     "around 30 foot Class A gas, diesel pusher excluded",
     "around 30 foot Class A gas not a diesel pusher",
+    "non-diesel Class A around 30 foot",
+    "not a diesel Class A around 30 foot",
+    "between 28 and 32 feet Class A gas",
   ]) {
     assert.deepEqual(stocks(ask), base, ask);
   }
+  const gasClassA = stocks("gas Class A", snap.units.length);
+  const diesels = stocks("diesels", snap.units.length);
+  for (const stock of ["UCZ9922", "UPAUH9951", "UPZ9959", "UCO9965", "UPD9234A"]) {
+    assert.equal(gasClassA.includes(stock), false, `${stock} is a diesel series labeled Class A`);
+    assert.equal(diesels.includes(stock), true, stock);
+  }
+  const classC = snap.units.filter((u) => u.body_type === "Class C");
+  assert.ok(classC.length > 100);
+  assert.equal(
+    aggregateOwnLot(snap.units, parseOwnLotAsk("gas class c", locations, snap.units)).matched,
+    classC.length,
+  );
+  assert.equal(
+    aggregateOwnLot(snap.units, parseOwnLotAsk("class c gas", locations, snap.units)).matched,
+    classC.length,
+  );
 
   const ford = parseOwnLotAsk(
     "Ford F-53 chassis gas around 30 foot Class A",
