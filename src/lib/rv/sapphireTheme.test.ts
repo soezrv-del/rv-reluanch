@@ -174,6 +174,12 @@ test("Facts, Tow, Cal, Sold, Premium, Grok, GPS, and coach detail are full-bleed
   assert.match(suite, /raidhoOnly \? \([\s\S]*SuiteRaidhoBackdrop bleed/);
   assert.match(css, /\.suite-raidho-bleed \{[\s\S]*?object-fit:\s*cover/);
   assert.match(css, /\.suite-raidho-bleed \{[\s\S]*?mix-blend-mode:\s*normal/);
+  assert.match(
+    css,
+    /\.suite-raidho-bleed \{[^}]*opacity:\s*1;[^}]*filter:\s*brightness\(0\.55\) saturate\(0\.68\)/,
+  );
+  assert.doesNotMatch(css, /\.suite-raidho-bleed \{[^}]*blur\(/);
+  assert.doesNotMatch(suite, /data-raidho-veil|raidho-frost-veil|suite-raidho-veil/);
   assert.match(css, /\[data-coach-detail\] \.page-backdrop-bright/);
   assert.match(css, /\[data-cal-screen\] \.page-backdrop-bright/);
   assert.doesNotMatch(css, /DialaBot/);
