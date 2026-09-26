@@ -1758,12 +1758,14 @@
 [data-readable-cards][data-compare-view] .glass-surface {
   background: linear-gradient(
     160deg,
-    rgba(255, 255, 255, 0.2) 0%,
-    rgba(22, 72, 200, 0.18) 38%,
-    rgba(6, 18, 40, 0.42) 100%
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(22, 72, 200, 0.22) 8%,
+    rgba(6, 14, 32, 0.78) 55%,
+    rgba(6, 14, 32, 0.86) 100%
   );
-  backdrop-filter: blur(28px) saturate(1.7);
-  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  /* WebKit prefix first: LightningCSS drops unprefixed backdrop-filter when it follows. */
+  -webkit-backdrop-filter: blur(40px) saturate(1.45);
+  backdrop-filter: blur(40px) saturate(1.45);
   border-color: rgba(255, 255, 255, 0.34);
 }
 
@@ -1772,12 +1774,14 @@
 [data-compare-view] .rvfax-report-chrome {
   background: linear-gradient(
     160deg,
-    rgba(255, 255, 255, 0.16) 0%,
-    rgba(22, 72, 200, 0.16) 40%,
-    rgba(6, 18, 40, 0.34) 100%
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(22, 72, 200, 0.22) 8%,
+    rgba(6, 14, 32, 0.78) 55%,
+    rgba(6, 14, 32, 0.86) 100%
   );
-  backdrop-filter: blur(28px) saturate(1.7);
-  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  /* WebKit prefix first: LightningCSS drops unprefixed backdrop-filter when it follows. */
+  -webkit-backdrop-filter: blur(40px) saturate(1.45);
+  backdrop-filter: blur(40px) saturate(1.45);
 }
 [data-rv-search-card] .facts-cascade-core {
   background: transparent;

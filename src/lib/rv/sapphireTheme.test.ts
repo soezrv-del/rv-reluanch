@@ -194,7 +194,14 @@ test("Facts RV Search, RV Cal, RV Tow, and coach detail share thick sapphire fro
   assert.match(css, /\[data-readable-cards\]\[data-cal-screen\] \.glass-prestige/);
   assert.match(css, /\[data-readable-cards\]\[data-tow-landing\] \.glass-prestige/);
   assert.match(css, /\[data-readable-cards\]\[data-coach-detail\] \.glass-prestige/);
-  assert.match(css, /backdrop-filter:\s*blur\(28px\) saturate\(1\.7\)/);
+  assert.match(
+    css,
+    /Thick sapphire frost[\s\S]*?-webkit-backdrop-filter:\s*blur\(40px\) saturate\(1\.45\);\s*backdrop-filter:\s*blur\(40px\) saturate\(1\.45\)/,
+  );
+  assert.match(
+    css,
+    /Thick sapphire frost[\s\S]*?rgba\(255,\s*255,\s*255,\s*0\.1\)[\s\S]*?rgba\(22,\s*72,\s*200,\s*0\.22\)[\s\S]*?rgba\(6,\s*14,\s*32,\s*0\.78\)[\s\S]*?rgba\(6,\s*14,\s*32,\s*0\.86\)/,
+  );
   assert.doesNotMatch(
     css,
     /\[data-readable-cards\]\[data-tow-landing\][\s\S]*?background:\s*#0a101c/,
