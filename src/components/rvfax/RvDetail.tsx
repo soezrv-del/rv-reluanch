@@ -1967,9 +1967,9 @@ export function RvDetail({
                 ) : (
                   <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
                     <div
-                      className="flex h-2 w-[7.5rem] justify-end overflow-hidden rounded-full bg-white/12 sm:w-[9.5rem]"
+                      className="h-2 w-[7.5rem] overflow-hidden rounded-full bg-white/12 sm:w-[9.5rem]"
                       data-testid="facts-tqwt-bar"
-                      data-fill="right-to-left"
+                      data-fill="left-to-right"
                       role="meter"
                       aria-label={`Torque-to-Weight ${formatTorqueToWeightScore(torqueToWeight)}`}
                       aria-valuemin={1}

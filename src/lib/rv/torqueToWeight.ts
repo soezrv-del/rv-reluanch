@@ -59,7 +59,7 @@
  * GVWR) except class-a-gas, which scores GVWR − 1800. 2022 Dream 39RK
  * stays pinned 39,237 (not estimated).
  *
- * Bar color (score, not ratio). The Facts bar grows from the right.
+ * Bar color (score, not ratio). The Facts bar grows from the left.
  *   red     score < 6.0
  *   yellow  6.0 ≤ score < 8.0
  *   green   score ≥ 8.0
