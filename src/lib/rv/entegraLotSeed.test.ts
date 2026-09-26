@@ -21,14 +21,16 @@ installCatalog({ RV_DATA: catalog.RV_DATA, MAKES: catalog.MAKES });
 const anthem = catalog.RV_DATA["Entegra Coach"].Anthem as RVSpec;
 
 function row(year: number, trim: string) {
-  return ENTEGRA_LOT_SEED.find((r) => r.year === year && r.trim === trim);
+  return ENTEGRA_LOT_SEED.find((r) => r.model === "Anthem" && r.year === year && r.trim === trim);
 }
 
+const anthemSeed = ENTEGRA_LOT_SEED.filter((r) => r.model === "Anthem");
+
 test("Anthem lot seed is one record per coach and stays inside the Anthem family", () => {
-  assert.equal(ENTEGRA_LOT_SEED.length, 2);
-  const keys = ENTEGRA_LOT_SEED.map((r) => `${r.year}|${r.model}|${r.trim}`);
+  assert.equal(anthemSeed.length, 2);
+  const keys = anthemSeed.map((r) => `${r.year}|${r.model}|${r.trim}`);
   assert.equal(new Set(keys).size, keys.length);
-  for (const seeded of ENTEGRA_LOT_SEED) {
+  for (const seeded of anthemSeed) {
     assert.equal(seeded.make, "Entegra Coach");
     assert.equal(seeded.model, "Anthem");
     assert.equal(seeded.source, "RV Country lot unit record");
@@ -46,7 +48,7 @@ test("every Anthem fill still matches the 2026-09-25 lot row it cites", () => {
   ) as Array<Record<string, unknown>>;
   const byId = new Map(lot.map((unit) => [String(unit.id), unit]));
   const fields = ["vehicle_body_length", "max_sleeping_count"] as const;
-  for (const seeded of ENTEGRA_LOT_SEED) {
+  for (const seeded of anthemSeed) {
     const cites = [...seeded.sourceNote.matchAll(/id (\d+) \/ stock (\S+?)(?=;| ·|$)/g)];
     assert.equal(cites.length, 1, seeded.title);
     const cite = cites[0]!;
