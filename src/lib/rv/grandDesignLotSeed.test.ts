@@ -38,7 +38,7 @@ test("floorplanSpecs.ts is unchanged by the Imagine lot-record pilot", () => {
 });
 
 test("Imagine lot seed is one record per year + model + floorplan, tagged as a lot record", () => {
-  assert.equal(GRAND_DESIGN_LOT_SEED.length, 27);
+  assert.equal(GRAND_DESIGN_LOT_SEED.length, 31);
   const keys = GRAND_DESIGN_LOT_SEED.map((r) => `${r.year}|${r.model}|${r.trim}`);
   assert.equal(new Set(keys).size, keys.length);
   let filled = 0;
@@ -60,11 +60,13 @@ test("Imagine lot seed is one record per year + model + floorplan, tagged as a l
       r.total_gray_water_tank_capacity,
       r.total_black_water_tank_capacity,
       r.propane_lbs,
+      r.max_sleeping_count,
+      r.number_of_slideouts,
     ]) {
       if (n != null) filled += 1;
     }
   }
-  assert.equal(filled, 172);
+  assert.equal(filled, 249);
   const multi = row(2026, "Imagine", "2700BS");
   assert.ok(multi);
   assert.match(multi.stock_number, /46146/);
@@ -90,9 +92,11 @@ test("every Imagine fill still matches the 2026-09-25 lot row it cites", () => {
     "total_fresh_water_tank_capacity",
     "total_gray_water_tank_capacity",
     "total_black_water_tank_capacity",
+    "max_sleeping_count",
+    "number_of_slideouts",
   ] as const;
   for (const seeded of GRAND_DESIGN_LOT_SEED) {
-    const cites = [...seeded.sourceNote.matchAll(/id (\d+) \/ stock (\S+?)(?:;|$)/g)];
+    const cites = [...seeded.sourceNote.matchAll(/id (\d+) \/ stock (\S+?)(?=;| ·|$)/g)];
     assert.ok(cites.length > 0, seeded.title);
     for (const cite of cites) {
       const unit = byId.get(cite[1]!);
@@ -140,25 +144,49 @@ test("2019 Imagine 2800BH lot numbers paint holes on Facts and on the Grok desk"
   assert.equal(desk.dataSource, facts.dataSource);
 });
 
-test("OEM pin beats a lot record on 2026 Imagine 2800BH", () => {
-  assert.equal(row(2026, "Imagine", "2800BH"), undefined);
+test("flagged lot value overrides the OEM pin on 2026 Imagine 2800BH only", () => {
+  const seeded = row(2026, "Imagine", "2800BH");
+  assert.ok(seeded);
+  assert.equal(seeded.overridesCatalog?.gvwr, true);
+  assert.equal(seeded.gvwr, 8495);
+  assert.match(seeded.sourceNote, /id 38275 \/ stock 45788/);
+  assert.match(seeded.sourceNote, /2026-09-25/);
+  assert.match(
+    seeded.sourceNote,
+    /8,495 lb replaces 10,195 lb \(OEM: Grand Design Imagine 2800BH product page\)/,
+  );
+
   const spec = gd.Imagine!;
   const before = buildBrochureSpecs(spec, "2026", "Grand Design", "Imagine", "2800BH");
   assert.equal(before.gvwrLbs, 10195);
+  assert.equal(before.propane, "40 lb");
   const merged = fillBrochureHolesFromLot(
     before,
-    getLotCatalogUnits(),
+    [seeded],
     2026,
     "Grand Design",
     "Imagine",
     "2800BH",
   );
-  assert.equal(merged.specs.gvwrLbs, 10195);
-  assert.match(merged.specs.gvwr, /10,195/);
-  assert.ok(!merged.filled.includes("GVWR"));
-  assert.ok(!merged.filled.includes("UVW"));
-  assert.ok(!merged.filled.includes("HITCH"));
-  assert.ok(!merged.filled.includes("FRESH WATER"));
+  assert.equal(merged.specs.gvwrLbs, 8495);
+  assert.match(merged.specs.gvwr, /8,495/);
+  assert.ok(merged.filled.includes("GVWR"));
+  assert.equal(merged.specs.propane, "40 lb");
+  assert.ok(!merged.filled.includes("PROPANE"));
+  assert.equal(merged.specs.dataSource, before.dataSource);
+  assert.match(merged.specs.accuracyNote, new RegExp(LOT_FACTS_SOURCE));
+
+  const other = buildBrochureSpecs(spec, "2026", "Grand Design", "Imagine", "2500RL");
+  const otherMerged = fillBrochureHolesFromLot(
+    other,
+    [seeded],
+    2026,
+    "Grand Design",
+    "Imagine",
+    "2500RL",
+  );
+  assert.equal(otherMerged.specs.gvwrLbs, other.gvwrLbs);
+  assert.ok(!otherMerged.filled.includes("GVWR"));
 });
 
 test("override files do not cover Imagine 2800BH, and a sheet that already has the number is not rewritten", () => {
@@ -204,15 +232,16 @@ test("override files do not cover Imagine 2800BH, and a sheet that already has t
   assert.ok(!gap.filled.includes("GVWR"));
 });
 
-test("series-seed gray conflict stays GAP and is not stored on the 2019 Imagine 2800BH", () => {
+test("flagged lot gray overrides the series seed on 2019 Imagine 2800BH", () => {
   const seeded = row(2019, "Imagine", "2800BH");
   assert.ok(seeded);
-  assert.equal(seeded.total_gray_water_tank_capacity, undefined);
-  assert.equal(seeded.total_fresh_water_tank_capacity, undefined);
-  assert.equal(seeded.total_black_water_tank_capacity, undefined);
+  assert.equal(seeded.total_gray_water_tank_capacity, 76);
+  assert.equal(seeded.overridesCatalog?.total_gray_water_tank_capacity, true);
+  assert.match(seeded.sourceNote, /Gray 76 gal replaces 39 gal \(rvData series seed\)/);
 
   const spec = gd.Imagine!;
   const before = buildBrochureSpecs(spec, "2019", "Grand Design", "Imagine", "2800BH");
+  assert.match(before.grayWater, /39/);
   const merged = fillBrochureHolesFromLot(
     before,
     [seeded],
@@ -221,9 +250,51 @@ test("series-seed gray conflict stays GAP and is not stored on the 2019 Imagine 
     "Imagine",
     "2800BH",
   );
-  assert.ok(!merged.filled.includes("GRAY WATER"));
-  assert.doesNotMatch(merged.specs.grayWater, /76/);
-  assert.equal(merged.specs.grayWater, before.grayWater);
+  assert.ok(merged.filled.includes("GRAY WATER"));
+  assert.match(merged.specs.grayWater, /76/);
+  assert.equal(merged.specs.dataSource, before.dataSource);
+});
+
+test("a floorplan-digit length is a hole an unflagged lot length fills", () => {
+  const spec = gd.Imagine!;
+  const before = buildBrochureSpecs(spec, "2019", "Grand Design", "Imagine", "2800BH");
+  assert.match(before.lengthFt, /28'/);
+  const estimated = { ...before, dataSource: "oem-year" as const };
+  const unit = {
+    year: 2019,
+    make: "Grand Design",
+    model: "Imagine",
+    trim: "2800BH",
+    vehicle_body_length: 32,
+  };
+  const merged = fillBrochureHolesFromLot(
+    estimated,
+    [unit],
+    2019,
+    "Grand Design",
+    "Imagine",
+    "2800BH",
+  );
+  assert.match(merged.specs.lengthFt, /32'/);
+  assert.ok(merged.filled.includes("LENGTH"));
+  assert.equal(merged.specs.dataSource, "oem-year");
+
+  const measured = {
+    ...before,
+    dataSource: "oem-year" as const,
+    lengthFt: `34' 0"`,
+    lengthIn: `34' 0"`,
+  };
+  const held = fillBrochureHolesFromLot(
+    measured,
+    [unit],
+    2019,
+    "Grand Design",
+    "Imagine",
+    "2800BH",
+  );
+  assert.match(held.specs.lengthFt, /34'/);
+  assert.ok(!held.filled.includes("LENGTH"));
 });
 
 test("every stored Imagine number still paints a hole, and the lot tag is not OEM", () => {
@@ -263,5 +334,9 @@ test("every stored Imagine number still paints a hole, and the lot tag is not OE
       assert.ok(merged.filled.includes("BLACK WATER"), seeded.title);
     }
     if (seeded.propane_lbs != null) assert.ok(merged.filled.includes("PROPANE"), seeded.title);
+    if (seeded.max_sleeping_count != null)
+      assert.ok(merged.filled.includes("SLEEPS"), seeded.title);
+    if (seeded.number_of_slideouts != null)
+      assert.ok(merged.filled.includes("SLIDES"), seeded.title);
   }
 });

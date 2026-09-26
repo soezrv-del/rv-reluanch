@@ -4,6 +4,23 @@
  * the unit record printed lb or gal.
  */
 
+/** Printed lot fields that may be flagged to outrank the catalog on one coach. */
+export type LotOverrideField =
+  | "gvwr"
+  | "dry_weight"
+  | "hitch_weight"
+  | "payload"
+  | "vehicle_body_length"
+  | "vehicle_body_height"
+  | "vehicle_body_width"
+  | "max_sleeping_count"
+  | "number_of_slideouts"
+  | "total_fresh_water_tank_capacity"
+  | "total_gray_water_tank_capacity"
+  | "total_black_water_tank_capacity"
+  | "propane_lbs"
+  | "propane_gal";
+
 export type LotCatalogSeedRow = {
   year: number;
   make: string;
@@ -26,6 +43,11 @@ export type LotCatalogSeedRow = {
   propane_lbs?: number;
   propane_gal?: number;
   source: "RV Country lot unit record";
+  /**
+   * Fields where the lot number replaces a catalog / OEM / brochure value
+   * for this exact year + model + floorplan. Unflagged fields fill holes only.
+   */
+  overridesCatalog?: Partial<Record<LotOverrideField, true>>;
   /** Agreeing own-lot rows for the numbers on this record. */
   sourceNote?: string;
 };
