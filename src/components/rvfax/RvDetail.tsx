@@ -39,8 +39,11 @@ import {
   ratingStars,
 } from "@/lib/rv/ratingSystem";
 import {
-  formatTorqueToWeightScore,
   computeTorqueToWeight,
+  dryWeightBarColor,
+  dryWeightBarFill,
+  dryWeightRatio,
+  formatDryWeightRatio,
 } from "@/lib/rv/torqueToWeight";
 import {
   OWNER_REVIEW_FOOTER,
@@ -786,8 +789,13 @@ export function RvDetail({
       computeTorqueToWeight({
         torqueLbFt: powertrainGuard.hard.torqueLbFt,
         torqueRaw: specs.torque,
-        uvwLbs: weightOverride?.uvwLbs ?? live?.uvwLbs ?? null,
-        uvwRaw: null,
+        uvwLbs:
+          weightOverride?.uvwLbs ??
+          (sharedPaint.uvw.gap ? null : sharedPaint.uvw.lbs) ??
+          (brochure.uvwEstimated ? null : brochure.uvwLbs) ??
+          null,
+        uvwRaw:
+          sharedPaint.uvw.gap || brochure.uvwEstimated ? null : specs.uvw,
         overrideUvwLbs: weightOverride?.uvwLbs ?? null,
         gvwrLbs: sharedPaint.gvwr.lbs ?? brochure.gvwrLbs ?? live?.gvwrLbs ?? null,
         gvwrRaw: specs.gvwr,
@@ -866,16 +874,22 @@ export function RvDetail({
     },
   ];
 
-  const torqueBarPct =
-    torqueToWeight.score == null
-      ? 0
-      : (torqueToWeight.score / 10) * 100;
+  const dryRatio = dryWeightRatio(
+    torqueToWeight.torqueLbFt,
+    torqueToWeight.weightLb,
+  );
+  const torqueBarPct = dryRatio == null ? 0 : dryWeightBarFill(dryRatio);
+  const dryColor = dryRatio == null ? null : dryWeightBarColor(dryRatio);
   const torqueBarColor =
-    torqueToWeight.color === "red"
+    dryColor === "red"
       ? "var(--color-ruby)"
-      : torqueToWeight.color === "yellow"
+      : dryColor === "yellow"
         ? "var(--color-amber)"
         : "var(--color-green)";
+  const dryRatioLabel =
+    torqueToWeight.na
+      ? "N/A"
+      : formatDryWeightRatio(torqueToWeight.torqueLbFt, torqueToWeight.weightLb);
 
   const ownerReviews = useMemo(
     () => getMockReviews(make, model, displayRating),
@@ -1953,11 +1967,11 @@ export function RvDetail({
               ))}
               <li className="flex items-center justify-between gap-3 py-3 last:pb-0">
                 <span className="min-w-0 shrink-0 text-[14px] font-medium text-white">
-                  Torque-to-Weight
+                  UVW / dry weight
                 </span>
-                {torqueToWeight.score == null ? (
+                {dryRatio == null ? (
                   <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
-                    {formatTorqueToWeightScore(torqueToWeight)}
+                    {dryRatioLabel}
                   </span>
                 ) : (
                   <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
@@ -1966,10 +1980,10 @@ export function RvDetail({
                       data-testid="facts-tqwt-bar"
                       data-fill="left-to-right"
                       role="meter"
-                      aria-label={`Torque-to-Weight ${formatTorqueToWeightScore(torqueToWeight)}`}
-                      aria-valuemin={1}
-                      aria-valuemax={10}
-                      aria-valuenow={Number(torqueToWeight.score.toFixed(1))}
+                      aria-label={`Torque divided by UVW ${dryRatioLabel}`}
+                      aria-valuemin={0}
+                      aria-valuemax={950 / 18000}
+                      aria-valuenow={dryRatio}
                     >
                       <div
                         className="h-full rounded-full"
@@ -1980,7 +1994,7 @@ export function RvDetail({
                       />
                     </div>
                     <span className="shrink-0 text-[13px] font-semibold tabular-nums text-white">
-                      {formatTorqueToWeightScore(torqueToWeight)}
+                      {dryRatioLabel}
                     </span>
                   </div>
                 )}
