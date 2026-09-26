@@ -49,7 +49,7 @@ import {
 } from "./ownLotInventory.ts";
 import { searchLotUnits } from "../lot/lotSearch.ts";
 import { ownLotNotesForSpeech } from "./voiceWeb.ts";
-import { ownLotVoiceCoachLock } from "./ownLotAsk.ts";
+import { lotQueryForFollowUp, ownLotVoiceCoachLock } from "./ownLotAsk.ts";
 import { resolveCoachIdentity } from "./coachIdentity.ts";
 import {
   COACH_BRANDS,
@@ -2154,4 +2154,50 @@ test("around 30-foot Class A gas is 28–32, including a blank floorplan foot", 
   assert.doesNotMatch(block, /stk BLANK36/);
   assert.doesNotMatch(block, /stk DIESEL/);
   assert.doesNotMatch(block, /stk BIG/);
+});
+
+test("what about the 29S Vision searches the full lot, and yeah does not stay on Carson", () => {
+  const about = "What about the 29S uh Entegra Vision?";
+  assert.equal(looksLikeOwnLotStockQuestion(about), true);
+  assert.equal(
+    looksLikeOwnLotStockQuestion("tell me about the Entegra Vision SE"),
+    false,
+  );
+  const prior = [
+    "if we have any 30-foot Class As in at the Carson show",
+    about,
+  ];
+  assert.equal(
+    lotQueryForFollowUp("Yeah.", prior),
+    "do we have Entegra Vision 29S in stock",
+  );
+  assert.equal(
+    lotQueryForFollowUp("What are the models of those twelve?", [
+      ...prior,
+      "How many Entegra Visions do we have in stock?",
+    ]),
+    "How many Entegra Visions do we have in stock?",
+  );
+
+  const snap = snapshotFromJson(
+    JSON.parse(readFileSync(join(process.cwd(), "public/inventory/own-lot-latest.json"), "utf8")),
+  );
+  const block = formatOwnLotBlock(snap, about);
+  assert.match(block, /Floorplan breakdown \(say once, do not recount\): Vision 29S × 4/);
+  assert.match(block, /stk UPD9835/);
+  assert.match(block, /stk 47593/);
+  assert.match(block, /stk 47591/);
+  assert.match(block, /stk 47592/);
+  assert.doesNotMatch(block, /Carson RV Show/);
+  const spoken = ownLotNotesForSpeech(block);
+  assert.match(spoken, /Vision 29S × 4/);
+  assert.match(spoken, /Do not keep a store from an earlier turn/);
+  assert.match(spoken, /say that count once/);
+
+  const all = formatOwnLotBlock(snap, "How many Entegra Visions do we have in stock?");
+  assert.match(all, /Vision 29S × 4/);
+  assert.match(all, /Vision SE 27ASE × 3/);
+  assert.match(all, /Vision XL 34G × 2/);
+  assert.match(all, /Vision XL 36C × 2/);
+  assert.match(all, /Vision XL 31UL × 1/);
 });

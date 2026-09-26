@@ -1578,6 +1578,27 @@ export function formatOwnLotBlock(
     }.`,
   ];
   if (lengthCutoff) lines.push(lengthCutoff);
+  if (
+    (filter.make || filter.model || filter.trim) &&
+    counts.matched > 0 &&
+    counts.matched <= 24
+  ) {
+    const named = queryOwnLotUnits(snapshot.units, active, counts.matched);
+    const byPlan: Record<string, number> = {};
+    for (const unit of named) {
+      const key = [unit.model, unit.trim].filter(Boolean).join(" ") || "(no trim)";
+      byPlan[key] = (byPlan[key] || 0) + 1;
+    }
+    const tally = Object.entries(byPlan)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([key, n]) => `${key} × ${n}`)
+      .join("; ");
+    if (tally) {
+      lines.push(
+        `Floorplan breakdown (say once, do not recount): ${tally}.`,
+      );
+    }
+  }
   if (active.aroundLengthFt != null) {
     const band = nominalLengthBand(active.aroundLengthFt);
     lines.push(

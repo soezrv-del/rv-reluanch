@@ -56,7 +56,11 @@ import {
   voiceDepthAlreadyChosen,
   withVoiceSpecExtras,
 } from "./voiceSpecTurn";
-import { looksLikeOwnLotStockQuestion, ownLotVoiceCoachLock } from "./ownLotAsk";
+import {
+  looksLikeOwnLotStockQuestion,
+  lotQueryForFollowUp,
+  ownLotVoiceCoachLock,
+} from "./ownLotAsk";
 import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
 import {
   coachKnowledgeKeyEquals,
@@ -1012,12 +1016,15 @@ export class GrokRealtimeSession {
     const spoken = transcript;
     this.recentUserTurns.push(spoken);
     if (this.recentUserTurns.length > 12) this.recentUserTurns.shift();
+    const priorTurns = this.recentUserTurns.slice(0, -1);
     transcript = catalogQueryForFollowUp(
       spoken,
-      this.recentUserTurns.slice(0, -1),
+      priorTurns,
       this.facts,
       this.recentCoachMentions,
     );
+    const lotFollow = lotQueryForFollowUp(spoken, priorTurns);
+    if (lotFollow) transcript = lotFollow;
     this.noteCoachMention(spoken);
     const searchFollow =
       /\b(search(?:\s+for)?\s+it|look\s+(?:it|that)\s+up|you need to search)\b/i.test(
@@ -1336,7 +1343,7 @@ export class GrokRealtimeSession {
           response: {
             modalities: ["text", "audio"],
             instructions: inventoryTurn
-              ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis turn is OWN-LOT inventory. Speak the Lot total and any listed unit (year, make, model, stock, location, price). That unit is on our lot. Do not say a smaller count. Do not web-search over this snapshot.`
+              ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis turn is OWN-LOT inventory. Speak the Lot total and any listed unit (year, make, model, stock, location, price). That unit is on our lot. Do not say a smaller count. Do not web-search over this snapshot. If a floorplan breakdown is printed, say it once and do not recount. Do not keep a store from an earlier turn unless that store is on a unit line.`
               : plantTurn
                 ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis is a factory or company question, not a coach. Answer it in full. Do not stop after the factory's name. Do not ask for a year, make, model, or floorplan.`
                 : looksLikeRepairQuestion(this.lastResearchTranscript)

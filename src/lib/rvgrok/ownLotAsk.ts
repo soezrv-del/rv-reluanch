@@ -281,11 +281,70 @@ export function looksLikeOwnLotSearchAsk(text: string): boolean {
   return false;
 }
 
+/**
+ * "What about the 29S Entegra Vision?" mid-inventory is the lot, not a
+ * catalog report. "Tell me about" without a floorplan stays a product ask.
+ */
+export function looksLikeLotFloorplanFollowUp(text: string): boolean {
+  const t = normalizeAskText(text);
+  if (!/\b(?:what|how)\s+about\b/i.test(t)) return false;
+  if (looksLikeSpecQuestion(t)) return false;
+  const parsed = parseCoachFromText(t);
+  return Boolean(parsed.floorplan && (parsed.make || parsed.model));
+}
+
+const LOT_YES_RE =
+  /^(?:yeah|yes|yep|yup|sure|ok|okay|please|do that|go ahead|check(?: the full lot)?|full lot|the full lot)[.!\s]*$/i;
+
+const LOT_MODEL_FOLLOW_RE =
+  /\b(?:what are the models|which models|what models|models of those|floorplans of those)\b/i;
+
+function coachStockAsk(text: string): string | null {
+  const parsed = parseCoachFromText(text);
+  if (!((parsed.floorplan && (parsed.make || parsed.model)) || (parsed.make && parsed.model))) {
+    return null;
+  }
+  const coach = [parsed.year, parsed.make, parsed.model, parsed.floorplan]
+    .filter(Boolean)
+    .join(" ");
+  return coach ? `do we have ${coach} in stock` : null;
+}
+
+/**
+ * "Yeah" after "what about the 29S" searches that coach on the full lot.
+ * "What are the models of those twelve?" repeats the last make/model stock ask.
+ * A store from the earlier turn is not copied onto this query.
+ */
+export function lotQueryForFollowUp(
+  spoken: string,
+  priorUserTurns: readonly string[],
+): string | null {
+  const t = normalizeAskText(spoken).trim();
+  if (LOT_MODEL_FOLLOW_RE.test(t)) {
+    for (let i = priorUserTurns.length - 1; i >= 0; i--) {
+      const prev = priorUserTurns[i] || "";
+      const parsed = parseCoachFromText(prev);
+      if (looksLikeOwnLotStockQuestion(prev) && (parsed.make || parsed.model)) {
+        return prev;
+      }
+    }
+    return null;
+  }
+  if (!LOT_YES_RE.test(t)) return null;
+  for (let i = priorUserTurns.length - 1; i >= 0; i--) {
+    const rebuilt = coachStockAsk(priorUserTurns[i] || "");
+    if (rebuilt) return rebuilt;
+  }
+  return null;
+}
+
 export function looksLikeOwnLotStockQuestion(text: string): boolean {
   // Explicit stock only — "do we have" / on the lot / in stock / inventory /
   // diesel count / stock # / lot listing prices / lot search (look for 27A).
   // A year+make+model+floorplan designation is a CATALOG report, not an
-  // own-lot probe.
+  // own-lot probe. "What about the 29S Entegra Vision?" is the exception:
+  // a named floorplan follow-up stays on the lot.
+  if (looksLikeLotFloorplanFollowUp(text)) return true;
   if (
     looksLikeInventoryOrCountQuestion(text) ||
     looksLikeOwnLotListingPriceQuestion(text) ||
@@ -497,6 +556,11 @@ export function ownLotVoiceCoachLock(notes: string): {
 export function ownLotNotesForSpeech(notes: string): string {
   const text = notes || "";
   const total = text.match(/Lot total:[^\n]*/i)?.[0]?.trim() ?? "";
+  const breakdown =
+    text
+      .split("\n")
+      .map((line) => line.trim())
+      .find((line) => line.startsWith("Floorplan breakdown")) || "";
   const units = text
     .split("\n")
     .map((line) => line.trim())
@@ -505,8 +569,11 @@ export function ownLotNotesForSpeech(notes: string): string {
   return [
     "OWN-LOT inventory (our lot snapshot this turn — not a website count):",
     total,
+    breakdown,
     ...units,
     "If a unit line is printed, that coach IS on this lot. Never say it is missing.",
+    "Stores on these lines are the locations. Do not keep a store from an earlier turn if it is not on a line.",
+    "If a floorplan breakdown is printed, say that count once. Do not give a second count.",
     "Speak the Lot total above. Do not say a smaller website total or an older scrape.",
   ]
     .filter(Boolean)
