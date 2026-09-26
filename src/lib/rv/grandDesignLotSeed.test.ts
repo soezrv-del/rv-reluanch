@@ -119,7 +119,7 @@ test("2019 Imagine 2800BH lot numbers paint holes on Facts and on the Grok desk"
   const spec = gd.Imagine!;
   const before = buildBrochureSpecs(spec, "2019", "Grand Design", "Imagine", "2800BH");
   assert.equal(before.gvwr, CONFIRM_BROCHURE);
-  assert.equal(before.propane, CONFIRM_BROCHURE);
+  assert.equal(before.propane, "");
   assert.notEqual(before.dataSource, "oem-year");
 
   const facts = buildFactsBrochureSpecs(spec, "2019", "Grand Design", "Imagine", "2800BH");

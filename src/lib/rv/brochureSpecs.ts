@@ -115,6 +115,26 @@ export interface BrochureSpecs {
 /** Honest stand-in when a field has no OEM / catalog pin — never hash-invented. */
 export const CONFIRM_BROCHURE = "Confirm brochure";
 
+/** A missing sheet line is blank. Never send the reader to a brochure. */
+export function paintOrBlank(value: string | null | undefined): string {
+  const t = (value || "").trim();
+  if (!t || t === CONFIRM_BROCHURE || /confirm brochure/i.test(t)) return "";
+  if (/confirm (?:door|floor) sticker/i.test(t)) return "";
+  return t;
+}
+
+/** Propane is not a diesel field. Highway MPG is not a motorhome field. */
+export function motorhomeOmits(specs: {
+  type?: string;
+  fuelType?: string;
+}): { propane: boolean; mpg: boolean } {
+  const motorhome = /class\s*[abc]|diesel|motorhome|super\s*c/i.test(
+    `${specs.type || ""} ${specs.fuelType || ""}`,
+  );
+  const diesel = /diesel/i.test(specs.fuelType || "");
+  return { propane: diesel, mpg: motorhome };
+}
+
 function mid([a, b]: [number, number]) {
   return (a + b) / 2;
 }
@@ -749,6 +769,10 @@ export function buildBrochureSpecs(
     : null;
   const estimatedUvwLbs = estimated?.uvwLbs ?? null;
   const thinCcc = estimated?.thinCcc ?? false;
+  const omits = motorhomeOmits({
+    type: resolvedType,
+    fuelType: resolvedFuel,
+  });
 
   return {
     lengthFt: lengthDisplay,
@@ -765,13 +789,13 @@ export function buildBrochureSpecs(
         ? fmtLbs(uvw)
         : estimatedUvwLbs != null
           ? fmtLbs(estimatedUvwLbs)
-          : CONFIRM_BROCHURE,
+          : "",
     uvwLbs: uvw ?? null,
     estimatedUvwLbs,
     uvwEstimated: estimatedUvwLbs != null,
     thinCcc,
     cccLbs: ccc,
-    ccc: ccc != null ? fmtLbs(ccc) : CONFIRM_BROCHURE,
+    ccc: paintOrBlank(ccc != null ? fmtLbs(ccc) : ""),
     gcwr: isTowable
       ? "Set by tow vehicle"
       : gvwrMid != null
@@ -813,7 +837,9 @@ export function buildBrochureSpecs(
       (isTowable ? "Towable frame" : "Manufacturer chassis"),
 
     mpgCity: eco.city ? `${eco.city}` : isTowable ? "—" : CONFIRM_BROCHURE,
-    mpgHighway: eco.hwy ? `${eco.hwy}` : isTowable ? "—" : CONFIRM_BROCHURE,
+    mpgHighway: omits.mpg
+      ? ""
+      : paintOrBlank(eco.hwy ? `${eco.hwy}` : isTowable ? "—" : CONFIRM_BROCHURE),
     mpgCombined: eco.combined
       ? `${eco.combined}`
       : isTowable
@@ -841,7 +867,7 @@ export function buildBrochureSpecs(
     freshWater: tankOrConfirm(oem?.freshWater ?? tanks.freshWater ?? snap.freshWater),
     grayWater: tankOrConfirm(oem?.grayWater ?? tanks.grayWater ?? snap.grayWater),
     blackWater: tankOrConfirm(oem?.blackWater ?? tanks.blackWater ?? snap.blackWater),
-    propane: formatPropane(oem),
+    propane: omits.propane ? "" : paintOrBlank(formatPropane(oem)),
     waterHeater: oem?.waterHeaterGal
       ? `${oem.waterHeaterGal} gal`
       : CONFIRM_BROCHURE,
@@ -860,12 +886,14 @@ export function buildBrochureSpecs(
       type: spec.type,
     }),
     electricalService: electrical,
-    acUnits: honestAcUnits({
-      oem: snap.acUnits,
-      type: spec.type,
-      lengthFt: lenMid,
-      chassis: snap.chassis ?? spec.chassis,
-    }),
+    acUnits: paintOrBlank(
+      honestAcUnits({
+        oem: snap.acUnits,
+        type: spec.type,
+        lengthFt: lenMid,
+        chassis: snap.chassis ?? spec.chassis,
+      }),
+    ),
     furnaceBtu:
       /class c/i.test(spec.type) && !/super/i.test(spec.type)
         ? "30,000 BTU (typ. — confirm brochure)"
@@ -889,11 +917,13 @@ export function buildBrochureSpecs(
           : /class c/i.test(spec.type) && !/super/i.test(spec.type)
             ? "Steer + dual rear (no tag)"
             : "Tag axle (when equipped)",
-    tireSize: honestTireSize({
-      oem: oem?.tireSize,
-      type: spec.type,
-      chassis: snap.chassis ?? spec.chassis,
-    }),
+    tireSize: paintOrBlank(
+      honestTireSize({
+        oem: oem?.tireSize,
+        type: spec.type,
+        chassis: snap.chassis ?? spec.chassis,
+      }),
+    ),
 
     type: resolvedType,
     warranty: spec.warrantyYears

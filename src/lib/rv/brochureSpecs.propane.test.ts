@@ -18,7 +18,7 @@ test("formatPropane prints published lb or gal and never invents", () => {
   assert.match(file, /propaneGal/);
   assert.match(file, /\$\{Math\.round\(lbs\)\} lb/);
   assert.match(file, /return CONFIRM_BROCHURE/);
-  assert.match(file, /propane: formatPropane\(oem\)/);
+  assert.match(file, /paintOrBlank\(formatPropane\(oem\)\)/);
   assert.doesNotMatch(file, /class-average propane|typical propane|32 gal \/\//i);
   assert.doesNotMatch(file, /lbs\s*\*\s*4\.2|\/\s*4\.2/);
 });

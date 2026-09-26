@@ -58,6 +58,7 @@ export type FactsCatalogCandidate = {
   /** LiveDossier alias for torque. */
   torqueLbFt?: string | number | null;
   ccc?: string | number | null;
+  cccLbs?: number | null;
   propane?: string | number | null;
   mpgHighway?: string | number | null;
 };
@@ -65,25 +66,100 @@ export type FactsCatalogCandidate = {
 const HOLE_RE =
   /confirm brochure|^gap$|^—$|^-$|^–$|^n\/?a$|^tbd$|^unknown$/i;
 
+const DIESEL_PUSHER_RE = /class\s*a\s*diesel|diesel\s*pusher|anthem|spartan/i;
+
+export function coachIsDieselPusher(
+  coach: { type?: string; fuelType?: string; model?: string },
+  fuelType?: string | null,
+): boolean {
+  return (
+    DIESEL_PUSHER_RE.test(
+      `${coach.type || ""} ${coach.fuelType || ""} ${coach.model || ""}`,
+    ) || /diesel/i.test(fuelType || coach.fuelType || "")
+  );
+}
+
+function isFactsGap(value: string | number | null | undefined): boolean {
+  if (value == null) return true;
+  if (typeof value === "number") return !Number.isFinite(value);
+  const t = String(value).trim();
+  return !t || HOLE_RE.test(t);
+}
+
+/**
+ * Sheet holes worth a live search.
+ * UVW and CCC stay real holes. Propane is not a diesel-pusher hole.
+ * Highway MPG is not a motorhome field — never search it.
+ */
+export function fieldsToSearch(
+  specs: {
+    uvw?: string | null;
+    uvwLbs?: number | null;
+    ccc?: string | null;
+    cccLbs?: number | null;
+    propane?: string | null;
+    fuelType?: string | null;
+  },
+  coach: { type?: string; fuelType?: string; model?: string },
+): string[] {
+  const dieselPusher = coachIsDieselPusher(coach, specs.fuelType);
+  const holes: string[] = [];
+  if (isFactsGap(specs.uvw) || specs.uvwLbs == null) holes.push("UVW");
+  if (isFactsGap(specs.ccc) || specs.cccLbs == null) holes.push("CCC");
+  if (!dieselPusher && isFactsGap(specs.propane)) holes.push("propane");
+  return holes;
+}
+
 /** Sheet lines the catalog left blank. Absent keys are not holes. */
 export function visibleSpecHoles(
   candidate?: FactsCatalogCandidate | null,
+  coach?: { type?: string; fuelType?: string; model?: string },
 ): string[] {
   if (!candidate) return [];
-  const holes: string[] = [];
-  const check = (
-    key: "ccc" | "propane" | "mpgHighway",
-    label: string,
-  ) => {
-    if (!Object.prototype.hasOwnProperty.call(candidate, key)) return;
-    const value = candidate[key];
-    const s = value == null ? "" : String(value).trim();
-    if (!s || HOLE_RE.test(s)) holes.push(label);
+  const present = (key: string) =>
+    Object.prototype.hasOwnProperty.call(candidate, key);
+  const filled = "kept";
+  // A printed display with no *Lbs key is still a number. Null pounds
+  // only counts when the sheet line itself is blank.
+  const poundsIfShown = (
+    valueKey: "uvw" | "ccc",
+    lbsKey: "uvwLbs" | "cccLbs",
+  ): number | null => {
+    if (!present(valueKey) && !present(lbsKey)) return 1;
+    const lbs = candidate[lbsKey];
+    if (present(lbsKey) && lbs != null) return lbs;
+    const raw = present(valueKey) ? candidate[valueKey] : filled;
+    return isFactsGap(raw) ? null : 1;
   };
-  check("ccc", "CCC");
-  check("propane", "propane");
-  check("mpgHighway", "highway MPG");
-  return holes;
+  return fieldsToSearch(
+    {
+      uvw: present("uvw")
+        ? candidate.uvw == null
+          ? ""
+          : String(candidate.uvw)
+        : filled,
+      uvwLbs: poundsIfShown("uvw", "uvwLbs"),
+      ccc: present("ccc")
+        ? candidate.ccc == null
+          ? ""
+          : String(candidate.ccc)
+        : filled,
+      cccLbs: poundsIfShown("ccc", "cccLbs"),
+      propane: present("propane")
+        ? candidate.propane == null
+          ? ""
+          : String(candidate.propane)
+        : filled,
+      fuelType: candidate.fuelType == null ? "" : String(candidate.fuelType),
+    },
+    {
+      type: coach?.type || candidate.type || "",
+      fuelType:
+        coach?.fuelType ||
+        (candidate.fuelType == null ? "" : String(candidate.fuelType)),
+      model: coach?.model || "",
+    },
+  );
 }
 
 export type FactsResolvedPins = {
@@ -370,19 +446,24 @@ export function factsDossierResearchQuery(input: {
   const coach = `${input.year} ${input.make} ${input.model}${
     plan ? ` ${plan}` : ""
   }`.replace(/\s+/g, " ").trim();
-  const gaps = input.gaps?.length
-    ? input.gaps
-    : FACTS_DOSSIER_HARD_FIELDS;
+  const gaps = input.gaps ?? FACTS_DOSSIER_HARD_FIELDS;
   const needed = gaps.map((g) => GAP_QUERY_LABEL[g]).join(", ");
-  const holes = input.holes ?? [];
+  const holes = (input.holes ?? []).filter((hole) => {
+    if (/highway mpg/i.test(hole)) return false;
+    if (/propane/i.test(hole) && DIESEL_PUSHER_RE.test(coach)) return false;
+    return true;
+  });
   const dry =
-    gaps.includes("uvw") || holes.length
-      ? " When dry weight is missing, search the web for an average published UVW for this year and floorplan. That figure is only for the power-to-weight bar. It is not a certified scale weight and it is not GVWR. Also fill CCC, propane, and highway MPG from a published spec page when the catalog says confirm brochure."
+    gaps.includes("uvw") || holes.includes("UVW") || holes.includes("CCC")
+      ? " When dry weight is missing, search the web for an average published UVW for this year and floorplan. That figure is only for the power-to-weight bar. It is not a certified scale weight and it is not GVWR. Search CCC the same way when that line is blank. If no printed number is found, leave the field blank."
       : "";
   const holeLine = holes.length
     ? ` Sheet lines still blank: ${holes.join(", ")}.`
     : "";
-  return `Write the coach report you would give a salesman who asked you directly about ${coach}. Search the live web. Sections: Overview, Chassis and powertrain, Weights and capacity, Layout and amenities, owner issues, sentiment, and market notes. These fields are still empty and must be filled when a brochure, factory sheet, dealer listing, or published spec page names them: ${needed}.${holeLine} Do not replace a number the catalog already pinned.${dry} Label sources.`;
+  const neededLine = needed
+    ? ` These fields are still empty and must be filled when a factory sheet, dealer listing, or published spec page names them: ${needed}.`
+    : "";
+  return `Write the coach report you would give a salesman who asked you directly about ${coach}. Search the live web. Sections: Overview, Chassis and powertrain, Weights and capacity, Layout and amenities, owner issues, sentiment, and market notes.${neededLine}${holeLine} Do not replace a number the catalog already pinned.${dry} If a field has no printed number, leave it blank. Never send the reader to a brochure. Label sources.`;
 }
 
 /** Average published dry weight from research notes, when JSON omitted it. */
@@ -424,7 +505,11 @@ export function planFactsDossierResearch(opts: {
     if (fieldPresent(field, pins)) present.push(field);
     else gaps.push(field);
   }
-  const holes = visibleSpecHoles(opts.candidate);
+  const holes = visibleSpecHoles(opts.candidate, {
+    type: opts.candidate?.type,
+    fuelType: opts.candidate?.fuelType == null ? "" : String(opts.candidate.fuelType),
+    model: opts.model,
+  });
   const skipLive = gaps.length === 0 && holes.length === 0;
   return {
     present,

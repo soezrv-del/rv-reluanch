@@ -52,6 +52,7 @@ import {
 } from "@/lib/rv/reportRatings";
 import { hasConcreteFloorplan } from "@/lib/rv/factsOpen";
 import { buildFactsBrochureSpecs } from "@/lib/rv/factsSheet";
+import { motorhomeOmits } from "@/lib/rv/brochureSpecs";
 import { fetchLotSnapshot } from "@/lib/lot/ownLotPage";
 import { registerLotCatalogUnits } from "@/lib/rv/lotCatalogUnits";
 import {
@@ -790,6 +791,11 @@ export function RvDetail({
       propane: keepReal(catalogSpecs.propane, merged.propane),
     };
   }, [catalogSpecs, live, brochurePinned, powertrainGuard]);
+
+  const sheetOmits = motorhomeOmits({
+    type: data.type || specs.type,
+    fuelType: specs.fuelType || data.fuelType,
+  });
 
   const displayRating = ratingMeta.score;
 
@@ -1708,13 +1714,15 @@ export function RvDetail({
             <SpecRow label="CHASSIS" value={specs.chassis} accent />
             <SpecRow label="TOW CAPACITY" value={specs.hitchOrPin} />
             <SpecRow label="GENERATOR" value={brochure.generator} />
-            <SpecRow label="A/C" value={brochure.acUnits} />
-            <SpecRow label="TIRES" value={brochure.tireSize} />
-            <SpecRow
-              label="HIGHWAY MPG"
-              value={specs.mpgHighway}
-              searching={liveLoading && /confirm brochure/i.test(specs.mpgHighway || "")}
-            />
+            {quietSheet(brochure.acUnits) ? (
+              <SpecRow label="A/C" value={quietSheet(brochure.acUnits)} />
+            ) : null}
+            {quietSheet(brochure.tireSize) ? (
+              <SpecRow label="TIRES" value={quietSheet(brochure.tireSize)} />
+            ) : null}
+            {!sheetOmits.mpg && quietSheet(specs.mpgHighway) ? (
+              <SpecRow label="HIGHWAY MPG" value={quietSheet(specs.mpgHighway)} />
+            ) : null}
             <SpecRow
               label="FUEL CAPACITY"
               value={displayFromPainted(
@@ -1770,9 +1778,11 @@ export function RvDetail({
             />
             <WeightOverrideRow
               label="UVW"
-              catalogValue={displayFromPainted(
-                brochure.uvwEstimated ? "" : specs.uvw,
-                sharedPaint.uvw,
+              catalogValue={quietSheet(
+                displayFromPainted(
+                  brochure.uvwEstimated ? "" : specs.uvw,
+                  sharedPaint.uvw,
+                ),
               )}
               catalogLbs={
                 sharedPaint.uvw.lbs ?? brochure.uvwLbs ?? live?.uvwLbs ?? null
@@ -1805,8 +1815,11 @@ export function RvDetail({
             />
             <SpecRow
               label="CCC"
-              searching={liveLoading && /confirm brochure/i.test(specs.ccc || "")}
-              value={displayFromPainted(specs.ccc, sharedPaint.ccc)}
+              searching={
+                liveLoading &&
+                !quietSheet(displayFromPainted(specs.ccc, sharedPaint.ccc))
+              }
+              value={quietSheet(displayFromPainted(specs.ccc, sharedPaint.ccc))}
               sourceUrl={
                 !sharedPaint.ccc.gap &&
                 sharedPaint.ccc.sourceUrl &&
@@ -1861,11 +1874,9 @@ export function RvDetail({
                   : undefined
               }
             />
-            <SpecRow
-              label="PROPANE"
-              value={specs.propane}
-              searching={liveLoading && /confirm brochure/i.test(specs.propane || "")}
-            />
+            {!sheetOmits.propane && quietSheet(specs.propane) ? (
+              <SpecRow label="PROPANE" value={specs.propane} />
+            ) : null}
 
             <details className="mt-5 border-t border-white/10 pt-3" data-no-export>
               <summary className="cursor-pointer list-none text-[11px] font-medium text-white/35">
@@ -3040,6 +3051,15 @@ function FactsGapSpinner({ field }: { field: string }) {
       className="facts-gap-spinner"
     />
   );
+}
+
+function quietSheet(value?: string | null): string {
+  const t = (value || "").trim();
+  if (!t || t === "—" || t === "-" || t === "–") return "";
+  if (/confirm brochure/i.test(t)) return "";
+  if (/confirm (?:door|floor) sticker/i.test(t)) return "";
+  if (/typ\.\s*[—–-]\s*confirm/i.test(t)) return "";
+  return t;
 }
 
 function SpecRow({

@@ -351,7 +351,7 @@ function sheetWithEstimateHoles(
     next.hitchOrPin = CONFIRM_BROCHURE;
   }
   if (next.uvwEstimated) {
-    next.uvw = CONFIRM_BROCHURE;
+    next.uvw = "";
     next.uvwLbs = null;
   }
   return next;

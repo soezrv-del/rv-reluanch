@@ -150,7 +150,7 @@ test("redo-list floorplans parse and do not inherit the wrong series tanks", asy
     "23MRB",
   );
   assert.equal(hawk.gvwrLbs, 7250);
-  assert.equal(hawk.uvw, "Confirm brochure");
+  assert.equal(hawk.uvw, "");
   assert.equal(hawk.grayWater, "31 gal");
 
   assert.equal(extractFloorplanToken("2026 Forest River r-Pod RP-197"), "RP-197");
