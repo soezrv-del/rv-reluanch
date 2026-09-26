@@ -57,7 +57,34 @@ export type FactsCatalogCandidate = {
   blackWaterGal?: string | number | null;
   /** LiveDossier alias for torque. */
   torqueLbFt?: string | number | null;
+  ccc?: string | number | null;
+  propane?: string | number | null;
+  mpgHighway?: string | number | null;
 };
+
+const HOLE_RE =
+  /confirm brochure|^gap$|^—$|^-$|^–$|^n\/?a$|^tbd$|^unknown$/i;
+
+/** Sheet lines the catalog left blank. Absent keys are not holes. */
+export function visibleSpecHoles(
+  candidate?: FactsCatalogCandidate | null,
+): string[] {
+  if (!candidate) return [];
+  const holes: string[] = [];
+  const check = (
+    key: "ccc" | "propane" | "mpgHighway",
+    label: string,
+  ) => {
+    if (!Object.prototype.hasOwnProperty.call(candidate, key)) return;
+    const value = candidate[key];
+    const s = value == null ? "" : String(value).trim();
+    if (!s || HOLE_RE.test(s)) holes.push(label);
+  };
+  check("ccc", "CCC");
+  check("propane", "propane");
+  check("mpgHighway", "highway MPG");
+  return holes;
+}
 
 export type FactsResolvedPins = {
   engine: string | null;
@@ -337,6 +364,7 @@ export function factsDossierResearchQuery(input: {
   model: string;
   floorplan?: string;
   gaps?: readonly FactsHardField[];
+  holes?: readonly string[];
 }): string {
   const plan = (input.floorplan || "").trim();
   const coach = `${input.year} ${input.make} ${input.model}${
@@ -346,11 +374,15 @@ export function factsDossierResearchQuery(input: {
     ? input.gaps
     : FACTS_DOSSIER_HARD_FIELDS;
   const needed = gaps.map((g) => GAP_QUERY_LABEL[g]).join(", ");
+  const holes = input.holes ?? [];
   const dry =
-    gaps.includes("uvw")
-      ? " When dry weight is missing, search the web for an average published UVW for this year and floorplan. That figure is only for the power-to-weight bar. It is not a certified scale weight and it is not GVWR. Also fill CCC and propane from a published spec page when the catalog is blank."
+    gaps.includes("uvw") || holes.length
+      ? " When dry weight is missing, search the web for an average published UVW for this year and floorplan. That figure is only for the power-to-weight bar. It is not a certified scale weight and it is not GVWR. Also fill CCC, propane, and highway MPG from a published spec page when the catalog says confirm brochure."
       : "";
-  return `Write the coach report you would give a salesman who asked you directly about ${coach}. Search the live web. Sections: Overview, Chassis and powertrain, Weights and capacity, Layout and amenities, owner issues, sentiment, and market notes. These fields are still empty and must be filled when a brochure, factory sheet, dealer listing, or published spec page names them: ${needed}. Do not replace a number the catalog already pinned.${dry} Label sources.`;
+  const holeLine = holes.length
+    ? ` Sheet lines still blank: ${holes.join(", ")}.`
+    : "";
+  return `Write the coach report you would give a salesman who asked you directly about ${coach}. Search the live web. Sections: Overview, Chassis and powertrain, Weights and capacity, Layout and amenities, owner issues, sentiment, and market notes. These fields are still empty and must be filled when a brochure, factory sheet, dealer listing, or published spec page names them: ${needed}.${holeLine} Do not replace a number the catalog already pinned.${dry} Label sources.`;
 }
 
 /** Average published dry weight from research notes, when JSON omitted it. */
@@ -392,7 +424,8 @@ export function planFactsDossierResearch(opts: {
     if (fieldPresent(field, pins)) present.push(field);
     else gaps.push(field);
   }
-  const skipLive = gaps.length === 0;
+  const holes = visibleSpecHoles(opts.candidate);
+  const skipLive = gaps.length === 0 && holes.length === 0;
   return {
     present,
     gaps,
@@ -405,6 +438,7 @@ export function planFactsDossierResearch(opts: {
           model: opts.model,
           floorplan: opts.floorplan,
           gaps,
+          holes,
         }),
   };
 }

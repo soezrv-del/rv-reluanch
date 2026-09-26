@@ -543,7 +543,7 @@ export function dryWeightBarFill(ratio: number): number {
 }
 
 export function dryWeightBarColor(ratio: number): TorqueBarColor {
-  if (ratio >= TTW_TOP_RATIO) return "green";
+  if (ratio >= 0.04) return "green";
   if (ratio <= 0.0132) return "red";
   return "yellow";
 }

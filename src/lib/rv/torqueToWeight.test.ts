@@ -50,10 +50,11 @@ test("dry-weight bar: 950/18000 is full green, 0.0396 is about 75% yellow, 0.013
   assert.equal(dryWeightBarColor(top), "green");
   assert.equal(dryWeightBarFill(top), 100);
   assert.equal(formatDryWeightRatio(950, 18_000), "0.0528");
+  assert.equal(dryWeightBarColor(0.04), "green");
+  assert.equal(dryWeightBarColor(0.0399), "yellow");
 
-  const yellow = 0.0396;
-  assert.equal(dryWeightBarColor(yellow), "yellow");
-  assert.ok(Math.abs(dryWeightBarFill(yellow) - 75) < 1);
+  assert.equal(dryWeightBarColor(0.0396), "yellow");
+  assert.ok(Math.abs(dryWeightBarFill(0.0396) - 75) < 1);
 
   const red = 0.0132;
   assert.equal(dryWeightBarColor(red), "red");
