@@ -1642,6 +1642,8 @@
 /*
  * Suite backscreen SoT (Facts #374): logo only, full-bleed.
  * No photo, field, scrim, or blend — Grok / GPS included.
+ * Dim the glyph in place. Opacity stays 1 so the PNG's #000
+ * ground stays black. No veil, no blur — the R stays sharp.
  */
 .suite-raidho-bleed {
   position: absolute;
@@ -1651,6 +1653,8 @@
   object-fit: cover;
   object-position: center;
   opacity: 1;
+  filter: brightness(0.55) saturate(0.68);
+  -webkit-filter: brightness(0.55) saturate(0.68);
   mix-blend-mode: normal;
 }
 .rvfax-screen[data-facts-landing] .page-backdrop-bright,
@@ -1718,6 +1722,8 @@
   object-fit: cover;
   object-position: center;
   opacity: 1;
+  filter: brightness(0.55) saturate(0.68);
+  -webkit-filter: brightness(0.55) saturate(0.68);
   mix-blend-mode: normal;
 }
 
