@@ -278,6 +278,7 @@ test("diesel proxy is Class A Diesel + Class Super C only — no invented fuel",
   assert.equal(isDieselBodyType("Class A"), false);
   assert.equal(isDieselBodyType("Fifth Wheel"), false);
   assert.equal(isGasBodyType("Class A Gas"), true);
+  assert.equal(isGasBodyType("Class A"), true);
   assert.equal(isGasBodyType("Class A Diesel"), false);
 });
 
@@ -2070,4 +2071,87 @@ test("voice inventory notes keep the unit and the real lot total", () => {
   assert.match(src(".", "realtime.ts"), /!looksLikeOwnLotStockQuestion\(transcript\)/);
   assert.match(src(".", "realtime.ts"), /rememberOwnLotVoiceLock/);
   assert.match(src(".", "ownLotInventory.ts"), /Larger own-lot snapshot wins/);
+});
+
+test("around 30-foot Class A gas is 28–32, including a blank floorplan foot", () => {
+  const ask = parseOwnLotAsk("what we have around 30 foot in a Class A gas");
+  assert.equal(ask.aroundLengthFt, 30);
+  assert.equal(ask.gasOnly, true);
+  assert.equal(ask.bodyType, "Class A Gas");
+  assert.equal(parseOwnLotAsk("what 30-footers we have in our inventory").aroundLengthFt, 30);
+  assert.equal(parseOwnLotAsk("just 30-foot Class As").bodyType, "Class A");
+  assert.equal(parseOwnLotAsk("diesels under 40 feet").maxLengthFt, 40);
+  assert.equal(parseOwnLotAsk("diesels under 40 feet").aroundLengthFt, undefined);
+
+  const units: OwnLotUnit[] = [
+    pricedUnit({
+      stock_number: "NEAR",
+      body_type: "Class A",
+      trim: "27ASE",
+      lengthFt: 29.92,
+      location: "Carson RV Show",
+    }),
+    pricedUnit({
+      stock_number: "LONG",
+      body_type: "Class A",
+      trim: "30DS",
+      lengthFt: 31.92,
+      location: "Carson RV Show",
+    }),
+    pricedUnit({
+      stock_number: "EXACT30",
+      body_type: "Class A",
+      trim: "29D",
+      lengthFt: 30.75,
+    }),
+    pricedUnit({
+      stock_number: "BLANK29",
+      body_type: "Class A",
+      trim: "29M",
+      lengthFt: null,
+    }),
+    pricedUnit({
+      stock_number: "BLANK36",
+      body_type: "Class A",
+      trim: "36A",
+      lengthFt: null,
+    }),
+    pricedUnit({
+      stock_number: "DIESEL",
+      body_type: "Class A Diesel",
+      trim: "31ZW",
+      lengthFt: 31,
+    }),
+    pricedUnit({
+      stock_number: "BIG",
+      body_type: "Class A",
+      trim: "40IH",
+      lengthFt: 40,
+    }),
+  ];
+  const matched = queryOwnLotUnits(units, ask, 20).map((u) => u.stock_number);
+  assert.deepEqual(matched.sort(), ["BLANK29", "EXACT30", "LONG", "NEAR"]);
+
+  const under = queryOwnLotUnits(units, parseOwnLotAsk("diesels under 40 feet"), 20);
+  assert.deepEqual(under.map((u) => u.stock_number), ["DIESEL"]);
+
+  const block = formatOwnLotBlock(
+    {
+      ok: true,
+      asOf: "",
+      source: "own",
+      dealer: "RV Country",
+      fuelFieldPresent: false,
+      pathTried: "",
+      units,
+    },
+    "around 30 foot Class A gas",
+  );
+  assert.match(block, /around 30 ft \(28–32\)/);
+  assert.match(block, /stk NEAR/);
+  assert.match(block, /stk BLANK29/);
+  assert.match(block, /floorplan 29 ft/);
+  assert.doesNotMatch(block, /stk BLANK36/);
+  assert.doesNotMatch(block, /stk DIESEL/);
+  assert.doesNotMatch(block, /stk BIG/);
 });

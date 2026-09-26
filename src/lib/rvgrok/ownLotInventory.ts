@@ -130,7 +130,10 @@ export type OwnLotFilter = {
   maxLengthInclusive?: boolean;
   /** Printed length must be greater than this. */
   minLengthFt?: number;
-  /** "36-foot" band [N, N+1). */
+  /**
+   * Spoken size class. "around 30" / "30-foot" / "30-footers" is
+   * [N-2, N+2] feet, not the single foot [N, N+1).
+   */
   aroundLengthFt?: number;
 };
 
@@ -295,6 +298,18 @@ function parsePrintedFeet(value: unknown): number | null {
   return n > 80 ? n / 12 : n;
 }
 
+/**
+ * Floorplan foot when the sheet left length blank: 29S, 29M, 29D, 30DS, 28A.
+ * Printed length still wins. 27ASE is 27, not a 30. Letter-first codes (A24) stay blank.
+ */
+export function floorplanLengthFt(trim: string): number | null {
+  const m = (trim || "").trim().match(/^(\d{2})(?!\d)/);
+  if (!m) return null;
+  const n = Number(m[1]);
+  if (!Number.isInteger(n) || n < 18 || n > 45) return null;
+  return n;
+}
+
 /** Printed length only. Never trim, floorplan, or a guessed foot. */
 export function pickPrintedLengthFt(row: Record<string, unknown>): number | null {
   const lower = lowerKeyMap(row);
@@ -305,6 +320,17 @@ export function pickPrintedLengthFt(row: Record<string, unknown>): number | null
   return null;
 }
 
+/** "around 30" / "30-foot" / "30-footers" → 28 through 32, inclusive. */
+export const NOMINAL_LENGTH_SPAN_FT = 2;
+const LENGTH_UNIT_RE = "(?:feet|footers|footer|foot|ft)";
+
+export function nominalLengthBand(center: number): { min: number; max: number } {
+  return {
+    min: center - NOMINAL_LENGTH_SPAN_FT,
+    max: center + NOMINAL_LENGTH_SPAN_FT,
+  };
+}
+
 export function parseOwnLotLength(
   text: string,
 ): Pick<
@@ -313,27 +339,39 @@ export function parseOwnLotLength(
 > {
   const t = normalizeAskText(text);
   const under = t.match(
-    /\b(?:under|below|less\s+than)\s+(\d{1,2}(?:\.\d+)?)\s*(?:-\s*)?(?:feet|foot|ft)\b/i,
+    new RegExp(
+      `\\b(?:under|below|less\\s+than)\\s+(\\d{1,2}(?:\\.\\d+)?)\\s*(?:-\\s*)?${LENGTH_UNIT_RE}\\b`,
+      "i",
+    ),
   );
   if (under?.[1]) {
     return { maxLengthFt: Number(under[1]), maxLengthInclusive: false };
   }
   const upTo = t.match(
-    /\b(?:up\s+to|max(?:imum)?|at\s+most|no\s+more\s+than)\s+(\d{1,2}(?:\.\d+)?)\s*(?:-\s*)?(?:feet|foot|ft)\b/i,
+    new RegExp(
+      `\\b(?:up\\s+to|max(?:imum)?|at\\s+most|no\\s+more\\s+than)\\s+(\\d{1,2}(?:\\.\\d+)?)\\s*(?:-\\s*)?${LENGTH_UNIT_RE}\\b`,
+      "i",
+    ),
   );
   if (upTo?.[1]) {
     return { maxLengthFt: Number(upTo[1]), maxLengthInclusive: true };
   }
   const over = t.match(
-    /\b(?:over|above|more\s+than)\s+(\d{1,2}(?:\.\d+)?)\s*(?:-\s*)?(?:feet|foot|ft)\b/i,
+    new RegExp(
+      `\\b(?:over|above|more\\s+than)\\s+(\\d{1,2}(?:\\.\\d+)?)\\s*(?:-\\s*)?${LENGTH_UNIT_RE}\\b`,
+      "i",
+    ),
   );
   if (over?.[1]) return { minLengthFt: Number(over[1]) };
   const around = t.match(
-    /\b(?:around|about)\s+(\d{1,2}(?:\.\d+)?)\s*(?:-\s*)?(?:feet|foot|ft)\b/i,
+    new RegExp(
+      `\\b(?:around|about)\\s+(\\d{1,2}(?:\\.\\d+)?)\\s*(?:-\\s*)?${LENGTH_UNIT_RE}\\b`,
+      "i",
+    ),
   );
   if (around?.[1]) return { aroundLengthFt: Number(around[1]) };
   const bare = t.match(
-    /\b(\d{1,2}(?:\.\d+)?)\s*(?:-\s*)?(?:feet|foot|ft)\b/i,
+    new RegExp(`\\b(\\d{1,2}(?:\\.\\d+)?)\\s*(?:-\\s*)?${LENGTH_UNIT_RE}\\b`, "i"),
   );
   if (bare?.[1]) return { aroundLengthFt: Number(bare[1]) };
   return {};
@@ -378,7 +416,8 @@ export function lengthFilterClause(filter: OwnLotFilter): string {
     return `length > ${feetText(filter.minLengthFt)} ft`;
   }
   if (filter.aroundLengthFt != null) {
-    return `around ${feetText(filter.aroundLengthFt)} ft`;
+    const band = nominalLengthBand(filter.aroundLengthFt);
+    return `around ${feetText(filter.aroundLengthFt)} ft (${feetText(band.min)}–${feetText(band.max)})`;
   }
   return "";
 }
@@ -416,7 +455,9 @@ export function isDieselBodyType(bodyType: string): boolean {
 export function isGasBodyType(bodyType: string): boolean {
   const n = norm(bodyType);
   if (!n || isDieselBodyType(n)) return false;
-  return /\bgas\b/.test(n);
+  if (/\bgas\b/.test(n)) return true;
+  // RV Country prints a gas Class A as "Class A". Diesel is "Class A Diesel".
+  return n === "class a";
 }
 
 export function rowToUnit(row: Record<string, unknown>): OwnLotUnit {
@@ -887,6 +928,7 @@ export function parseOwnLotAsk(
   if (/\bsuper\s*c\b/i.test(t)) filter.bodyType = "Class Super C";
   else if (/\bclass\s*a\s*diesel\b/i.test(t)) filter.bodyType = "Class A Diesel";
   else if (/\bclass\s*a\s*gas\b/i.test(t)) filter.bodyType = "Class A Gas";
+  else if (/\bclass\s*as?\b/i.test(t)) filter.bodyType = "Class A";
   else if (/\bclass\s*b\b/i.test(t)) filter.bodyType = "Class B";
   else if (/\bclass\s*c\b/i.test(t) && !/\bsuper\s*c\b/i.test(t)) {
     filter.bodyType = "Class C";
@@ -1203,23 +1245,25 @@ export function unitMatchesFilter(
     }
   }
   if (hasLengthBound(filter)) {
-    if (unit.lengthFt == null) return false;
+    const printed = unit.lengthFt;
+    const fromPlan =
+      printed == null && filter.aroundLengthFt != null
+        ? floorplanLengthFt(unit.trim)
+        : null;
+    const lengthFt = printed != null ? printed : fromPlan;
+    if (lengthFt == null) return false;
     if (filter.aroundLengthFt != null) {
-      if (
-        unit.lengthFt < filter.aroundLengthFt ||
-        unit.lengthFt >= filter.aroundLengthFt + 1
-      ) {
-        return false;
-      }
+      const band = nominalLengthBand(filter.aroundLengthFt);
+      if (lengthFt < band.min || lengthFt > band.max) return false;
     }
     if (filter.maxLengthFt != null) {
       if (filter.maxLengthInclusive) {
-        if (unit.lengthFt > filter.maxLengthFt) return false;
-      } else if (!(unit.lengthFt < filter.maxLengthFt)) {
+        if (lengthFt > filter.maxLengthFt) return false;
+      } else if (!(lengthFt < filter.maxLengthFt)) {
         return false;
       }
     }
-    if (filter.minLengthFt != null && !(unit.lengthFt > filter.minLengthFt)) {
+    if (filter.minLengthFt != null && !(lengthFt > filter.minLengthFt)) {
       return false;
     }
   }
@@ -1390,11 +1434,19 @@ function formatUnitListing(unit: OwnLotUnit): string {
     unit.price != null && unit.price > 0
       ? formatOwnLotUsd(unit.price)
       : "price not on row";
+  const length =
+    unit.lengthFt != null
+      ? `${feetText(Math.round(unit.lengthFt * 10) / 10)} ft`
+      : (() => {
+          const fromPlan = floorplanLengthFt(unit.trim);
+          return fromPlan != null ? `floorplan ${fromPlan} ft` : "";
+        })();
   return `- ${[
     unit.year,
     unit.make,
     unit.model,
     unit.trim,
+    length,
     unit.body_type,
     unit.location,
     id,
@@ -1526,6 +1578,12 @@ export function formatOwnLotBlock(
     }.`,
   ];
   if (lengthCutoff) lines.push(lengthCutoff);
+  if (active.aroundLengthFt != null) {
+    const band = nominalLengthBand(active.aroundLengthFt);
+    lines.push(
+      `Size class around ${feetText(active.aroundLengthFt)} ft is ${feetText(band.min)}–${feetText(band.max)} ft inclusive. A printed length in that band counts. If length_ft and vehicle_body_length are blank, the floorplan number is the foot (29S, 29M, 29D, 30DS, 28A). Do not drop those rows. A printed length still wins over the floorplan.`,
+    );
+  }
 
   const listingAsk = looksLikeOwnLotListingPriceQuestion(query);
   const listAsk = looksLikeOwnLotUnitListQuestion(query);
@@ -1543,11 +1601,15 @@ export function formatOwnLotBlock(
       filter.bodyType ||
       filter.toyHauler,
   );
+  const lengthClassList =
+    hasLengthBound(active) && (classFilter || Boolean(active.aroundLengthFt));
+  const listCap = lengthClassList ? 24 : MATCH_LIST_MAX;
   const wantListings =
     counts.matched > 0 &&
     (stockAsk ||
       listAsk ||
       useLotSearch ||
+      lengthClassList ||
       ((listingAsk || budgetFilter) &&
         (narrowIdentity || classFilter || budgetFilter)) ||
       (narrowIdentity && counts.matched <= MATCH_LIST_MAX));
@@ -1556,8 +1618,8 @@ export function formatOwnLotBlock(
   // stock number — policy paragraphs used to push them past the cut.
   if (wantListings) {
     const rows = useLotSearch
-      ? lotHits.slice(0, MATCH_LIST_MAX)
-      : queryOwnLotUnits(snapshot.units, active, MATCH_LIST_MAX);
+      ? lotHits.slice(0, listCap)
+      : queryOwnLotUnits(snapshot.units, active, listCap);
     if (rows.length) {
       lines.push(
         `Matching units (from file only, ${rows.length} of ${counts.matched}; year/make/model/trim/stock/location/price):`,
