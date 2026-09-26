@@ -14,15 +14,8 @@ import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 
-/**
- * Opaque cover above the mark. The glyph is hidden in CSS; this layer is
- * solid black so no header, tab bar, or inset can show the R.
- */
+/** See-through tint on the Raidho mark only. See .suite-raidho-bleed. */
 export const RAIDHO_FROST_FILTER = "saturate(0.5) brightness(0.5)";
-
-function RaidhoFrostVeil() {
-  return <div className="suite-raidho-frost" />;
-}
 
 /** Full-viewport Raidho R watermark — same seal as compare, suite-wide. */
 export function SuiteRaidhoBackdrop({
@@ -49,7 +42,6 @@ export function SuiteRaidhoBackdrop({
           alt=""
           className={bleed ? "suite-raidho-bleed" : "suite-raidho-mark"}
         />
-        <RaidhoFrostVeil />
       </div>
     </div>
   );
@@ -83,7 +75,6 @@ export function SuiteBackdrop({
         <div className="suite-raidho-field" />
         <div className="page-scrim-soft" />
         <img src={RAIDHO_R_MARK} alt="" className="suite-raidho-mark" />
-        <RaidhoFrostVeil />
       </div>
     </div>
   );

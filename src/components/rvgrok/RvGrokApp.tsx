@@ -1753,10 +1753,7 @@ export function RvGrokApp({
       <div
         ref={listRef}
         data-app-scroll
-        className={cn(
-          "rv-scroll relative z-10 flex-1 overflow-y-auto px-3 sm:px-4",
-          !embedded && !isLanding && "grok-thread-glass",
-        )}
+        className="rv-scroll relative z-10 flex-1 overflow-y-auto px-3 sm:px-4"
         style={{
           paddingBottom: scrollKbPad || undefined,
         }}

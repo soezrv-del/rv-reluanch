@@ -205,58 +205,36 @@ test("Facts RV Search, RV Cal, RV Tow, and coach detail share thick sapphire fro
 test("Raidho tinted glass sits on the shared backdrop, no blur, taps pass through", () => {
   const suite = read("../../components/shell/SuitePage.tsx");
   const css = read("../../styles.css");
+  const grok = read("../../components/rvgrok/RvGrokApp.tsx");
 
-  assert.match(suite, /function RaidhoFrostVeil/);
-  assert.equal(
-    suite.split('className="suite-raidho-frost"').length - 1,
-    1,
-    "one veil element, reused by both backdrop components",
-  );
+  assert.match(suite, /saturate\(0\.5\) brightness\(0\.5\)/);
   assert.doesNotMatch(suite, /RAIDHO_FROST_FILTER = "blur/);
+  assert.doesNotMatch(suite, /RaidhoFrostVeil/);
+  assert.doesNotMatch(suite, /suite-raidho-frost/);
   assert.equal(
     suite.split("suite-raidho-stack").length - 1,
     2,
-    "logo and photo backdrops both wrap the mark in the frost stack",
+    "logo and photo backdrops both wrap the mark",
   );
-  assert.equal(suite.split("<RaidhoFrostVeil />").length - 1, 2);
   assert.match(css, /\.suite-raidho-stack \{[\s\S]*?isolation:\s*isolate/);
   assert.match(css, /\.suite-raidho-stack \{[\s\S]*?pointer-events:\s*none/);
-  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?position:\s*fixed/);
-  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?inset:\s*0/);
-  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?width:\s*100vw/);
-  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?height:\s*100vh/);
-  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?height:\s*100svh/);
-  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?height:\s*100dvh/);
-  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?pointer-events:\s*none/);
-  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?z-index:\s*2/);
-  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?background:\s*#000000/);
   assert.match(
     css,
-    /\.suite-swipe-viewport:not\(\[data-swipe-dragging="1"\]\):not\(\[data-swipe-busy="1"\]\)\s+\.suite-swipe-pane\[data-pane-active\] \{[\s\S]*?transform:\s*none/,
-  );
-  assert.match(
-    css,
-    /\.suite-raidho-bleed,\s*\.suite-raidho-mark,\s*\.compare-raidho-mark \{[\s\S]*?visibility:\s*hidden/,
-  );
-  assert.match(
-    css,
-    /@supports \(\(backdrop-filter: brightness\(1\)\) or \(-webkit-backdrop-filter: brightness\(1\)\)\) \{[\s\S]*?\.suite-raidho-frost \{[\s\S]*?background:\s*#000000/,
-  );
-  assert.doesNotMatch(css, /\.suite-raidho-frost \{[^}]*rgba\(0, 0, 0, 0\.2\)/);
-  assert.doesNotMatch(css, /\.suite-raidho-frost \{[^}]*rgba\(0, 0, 0, 0\.42\)/);
-  assert.match(css, /\.grok-thread-glass \{[\s\S]*?background:\s*transparent/);
-  assert.match(
-    css,
-    /\[data-readable-cards\]\[data-rvgrok-wingman\] \.grok-thread-glass \.grok-frost \{[\s\S]*?backdrop-filter:\s*blur\(28px\)/,
+    /\.suite-raidho-bleed,\s*\.suite-raidho-mark,\s*\.compare-raidho-mark \{[\s\S]*?filter:\s*saturate\(0\.5\) brightness\(0\.5\)/,
   );
   assert.doesNotMatch(
     css,
-    /\[data-readable-cards\]\[data-rvgrok-wingman\] \.grok-thread-glass \.grok-frost \{[^}]*saturate/,
+    /\.suite-raidho-bleed,\s*\.suite-raidho-mark,\s*\.compare-raidho-mark \{[^}]*visibility:\s*hidden/,
   );
-  const grok = read("../../components/rvgrok/RvGrokApp.tsx");
-  assert.match(grok, /grok-thread-glass/);
-  assert.match(grok, /!embedded && !isLanding && "grok-thread-glass"/);
+  assert.doesNotMatch(css, /\.suite-raidho-frost/);
+  assert.doesNotMatch(css, /background:\s*#000000/);
+  assert.doesNotMatch(css, /grok-thread-glass/);
+  assert.doesNotMatch(grok, /grok-thread-glass/);
   assert.doesNotMatch(grok, /backdropFilter: RAIDHO_FROST_FILTER/);
+  assert.match(
+    grok,
+    /className="rv-scroll relative z-10 flex-1 overflow-y-auto px-3 sm:px-4"/,
+  );
   assert.doesNotMatch(css, /rgba\(214, 226, 248/);
   assert.doesNotMatch(css, /DialaBot/);
 });

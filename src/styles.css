@@ -1722,11 +1722,9 @@
 }
 
 /*
- * Opaque cover over the Raidho mark. The glyph is not painted, and the
- * veil is solid black in every path (including @supports backdrop-filter),
- * fixed to the viewport so zoom, safe areas, and odd aspect ratios cannot
- * leave a sliver of the R. isolation keeps this under the cards.
- * pointer-events stay off so controls above it still work.
+ * See-through tint on the Raidho mark only. The filter is on the logo
+ * image, so every painted part of the R is dimmed — including under the
+ * header, tab bar, and edges — and nothing else is covered or darkened.
  */
 .suite-raidho-stack {
   position: absolute;
@@ -1737,67 +1735,7 @@
 .suite-raidho-bleed,
 .suite-raidho-mark,
 .compare-raidho-mark {
-  visibility: hidden;
-  opacity: 0;
-}
-.suite-raidho-frost {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  /* vh, then svh, then dvh — last supported value wins, so mobile
-     browser toolbars don't leave a gap. */
-  height: 100vh;
-  height: 100svh;
-  height: 100dvh;
-  max-width: none;
-  max-height: none;
-  z-index: 2;
-  pointer-events: none;
-  opacity: 1;
-  background: #000000;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-/*
- * Swipe panes are a containing block (transform, will-change, contain:paint)
- * and would clip a fixed veil to the pane. At rest the active pane must not
- * be one, so the veil sizes to the viewport. Dragging still translates.
- */
-.suite-swipe-viewport {
-  contain: none;
-}
-.suite-swipe-viewport:not([data-swipe-dragging="1"]):not([data-swipe-busy="1"])
-  .suite-swipe-pane[data-pane-active] {
-  transform: none;
-  will-change: auto;
-  contain: none;
-}
-@supports ((backdrop-filter: brightness(1)) or (-webkit-backdrop-filter: brightness(1))) {
-  .suite-raidho-frost {
-    background: #000000;
-    opacity: 1;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .suite-raidho-bleed,
-  .suite-raidho-mark,
-  .compare-raidho-mark {
-    visibility: hidden;
-    opacity: 0;
-  }
-  .suite-raidho-frost {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: #000000;
-    opacity: 1;
-  }
-}
-
-/* Live Chat must not paint a second, see-through sample of the mark. */
-.grok-thread-glass {
-  background: transparent;
+  filter: saturate(0.5) brightness(0.5);
 }
 
 /*
@@ -2515,11 +2453,6 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   backdrop-filter: blur(28px) saturate(1.7);
   -webkit-backdrop-filter: blur(28px) saturate(1.7);
   border-color: var(--color-gold-border);
-}
-/* Logo is already tinted. Bubbles may blur it, not saturate the blue back. */
-[data-readable-cards][data-rvgrok-wingman] .grok-thread-glass .grok-frost {
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
 }
 /* Cold-open hero — sapphire header is display:none on the wingman tab, so
  * this owns the notch. Mirror .bottom-tabs-nav: env() + mobile floor when
