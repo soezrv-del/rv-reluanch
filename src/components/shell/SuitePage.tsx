@@ -14,6 +14,11 @@ import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 
+/** One frost veil — sits above the mark, inside the backdrop stack. */
+function RaidhoFrostVeil() {
+  return <div className="suite-raidho-frost" />;
+}
+
 /** Full-viewport Raidho R watermark — same seal as compare, suite-wide. */
 export function SuiteRaidhoBackdrop({
   className,
@@ -32,12 +37,15 @@ export function SuiteRaidhoBackdrop({
       aria-hidden
       data-raidho-bleed={bleed ? "" : undefined}
     >
-      {bleed ? null : <div className="suite-raidho-field" />}
-      <img
-        src={RAIDHO_R_MARK}
-        alt=""
-        className={bleed ? "suite-raidho-bleed" : "suite-raidho-mark"}
-      />
+      <div className="suite-raidho-stack">
+        {bleed ? null : <div className="suite-raidho-field" />}
+        <img
+          src={RAIDHO_R_MARK}
+          alt=""
+          className={bleed ? "suite-raidho-bleed" : "suite-raidho-mark"}
+        />
+        <RaidhoFrostVeil />
+      </div>
     </div>
   );
 }
@@ -60,15 +68,18 @@ export function SuiteBackdrop({
       )}
       aria-hidden
     >
-      <img
-        src={src}
-        alt=""
-        className="page-backdrop-bright absolute inset-0 size-full object-cover"
-        style={{ objectPosition }}
-      />
-      <div className="suite-raidho-field" />
-      <div className="page-scrim-soft" />
-      <img src={RAIDHO_R_MARK} alt="" className="suite-raidho-mark" />
+      <div className="suite-raidho-stack">
+        <img
+          src={src}
+          alt=""
+          className="page-backdrop-bright absolute inset-0 size-full object-cover"
+          style={{ objectPosition }}
+        />
+        <div className="suite-raidho-field" />
+        <div className="page-scrim-soft" />
+        <img src={RAIDHO_R_MARK} alt="" className="suite-raidho-mark" />
+        <RaidhoFrostVeil />
+      </div>
     </div>
   );
 }

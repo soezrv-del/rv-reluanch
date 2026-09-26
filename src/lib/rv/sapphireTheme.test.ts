@@ -201,3 +201,38 @@ test("Facts RV Search, RV Cal, RV Tow, and coach detail share thick sapphire fro
   );
   assert.doesNotMatch(css, /DialaBot/);
 });
+
+test("Raidho frost veil sits on the shared backdrop, one blur, taps pass through", () => {
+  const suite = read("../../components/shell/SuitePage.tsx");
+  const css = read("../../styles.css");
+
+  assert.match(suite, /function RaidhoFrostVeil/);
+  assert.equal(
+    suite.split('className="suite-raidho-frost"').length - 1,
+    1,
+    "one frost element, reused by both backdrop components",
+  );
+  assert.equal(
+    suite.split("suite-raidho-stack").length - 1,
+    2,
+    "logo and photo backdrops both wrap the mark in the frost stack",
+  );
+  assert.equal(suite.split("<RaidhoFrostVeil />").length - 1, 2);
+  assert.match(css, /\.suite-raidho-stack \{[\s\S]*?isolation:\s*isolate/);
+  assert.match(css, /\.suite-raidho-stack \{[\s\S]*?pointer-events:\s*none/);
+  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?pointer-events:\s*none/);
+  assert.match(css, /\.suite-raidho-frost \{[\s\S]*?z-index:\s*2/);
+  assert.match(
+    css,
+    /\.suite-raidho-frost \{[\s\S]*?backdrop-filter:\s*blur\(16px\) saturate\(0\.68\) brightness\(0\.9\)/,
+  );
+  assert.match(
+    css,
+    /\.suite-raidho-frost \{[\s\S]*?-webkit-backdrop-filter:\s*blur\(16px\) saturate\(0\.68\) brightness\(0\.9\)/,
+  );
+  assert.match(
+    css,
+    /@supports \(\(backdrop-filter: blur\(1px\)\) or \(-webkit-backdrop-filter: blur\(1px\)\)\)/,
+  );
+  assert.doesNotMatch(css, /DialaBot/);
+});

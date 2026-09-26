@@ -1722,6 +1722,40 @@
 }
 
 /*
+ * One frost veil between the Raidho mark and the floating cards.
+ * isolation keeps this z-index inside the backdrop so the veil cannot
+ * cover cards or the tab bar. pointer-events stay off either way.
+ * Solid tint is the fallback where backdrop-filter is unavailable.
+ */
+.suite-raidho-stack {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  pointer-events: none;
+}
+.suite-raidho-frost {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: rgba(6, 16, 40, 0.46);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .suite-raidho-frost {
+    background: rgba(226, 236, 255, 0.16);
+    backdrop-filter: blur(16px) saturate(0.68) brightness(0.9);
+    -webkit-backdrop-filter: blur(16px) saturate(0.68) brightness(0.9);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .suite-raidho-frost {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(6, 16, 40, 0.46);
+  }
+}
+
+/*
  * Thick sapphire frost — Facts search, Cal, Tow, coach detail, Sold, Premium.
  * Overrides the readable-cards solid plate so the Raidho field shows through.
  */
