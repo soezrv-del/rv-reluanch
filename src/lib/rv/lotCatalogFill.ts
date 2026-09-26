@@ -6,7 +6,8 @@
  * numbers fill holes only. A field flagged overridesCatalog replaces the
  * catalog value when any matching record flags it and the others agree on
  * that number or omit the field. Disagreeing records leave the catalog
- * value. A length that is only the floorplan-digit estimate is a hole.
+ * value. A length that is only the floorplan-digit estimate, or only the
+ * series lengthRange fallback, is a hole when the lot printed a length.
  * Tank counts 1–4 never become gallons or pounds. Never convert lb ↔ gal.
  */
 
@@ -221,15 +222,49 @@ export function lengthIsFloorplanDigitEstimate(
   return false;
 }
 
+/**
+ * Series lengthRange used as this coach's length, with no OEM overall.
+ * The Anthem 37K case is the [42, 45] midpoint rendered as 43' 6".
+ * A real OEM overall length is not this hole. Floorplan-digit estimates
+ * are handled separately.
+ */
+export function lengthIsSeriesRangeFallback(
+  specs: BrochureSpecs,
+  year: string | number,
+  make: string,
+  model: string,
+  floorplan: string,
+): boolean {
+  const shown = displayedLengthFt(specs.lengthFt);
+  if (shown == null || !floorplan.trim()) return false;
+  const spec = peekCatalog()?.RV_DATA?.[make]?.[model];
+  if (!spec?.lengthRange) return false;
+  const oem = findOemFloorplanSpec(year, make, model, floorplan);
+  if (oem?.overallLengthIn && oem.overallLengthIn > 0) return false;
+  const digitFt = lengthFtFromFloorplan(floorplan, spec.lengthRange, { make, model });
+  if (digitFt != null) return false;
+  const [lo, hi] = spec.lengthRange;
+  if (lo === hi) return Math.abs(shown - lo) < 0.08;
+  const midIn = Math.round(((lo + hi) / 2) * 12);
+  if (Math.abs(shown * 12 - midIn) <= 1.5) return true;
+  if (Math.abs(shown - lo) < 0.08 || Math.abs(shown - hi) < 0.08) return true;
+  return false;
+}
+
 function sheetWithEstimateHoles(
   specs: BrochureSpecs,
   year: string | number,
   make: string,
   model: string,
   floorplan: string,
+  lot: LotPublishedSpecs | null,
 ): BrochureSpecs {
   const next: BrochureSpecs = { ...specs };
-  if (lengthIsFloorplanDigitEstimate(next, year, make, model, floorplan)) {
+  const digitHole = lengthIsFloorplanDigitEstimate(next, year, make, model, floorplan);
+  const rangeHole =
+    lot?.lengthFt != null &&
+    lengthIsSeriesRangeFallback(next, year, make, model, floorplan);
+  if (digitHole || rangeHole) {
     next.lengthFt = CONFIRM_BROCHURE;
     next.lengthIn = CONFIRM_BROCHURE;
   }
@@ -252,8 +287,9 @@ export function fillBrochureHolesFromLot(
   model: string,
   floorplan: string,
 ): LotFactsMerge {
+  const lot = lotSpecsForCoach(units, year, make, model, floorplan);
   return applyLotSpecsToBrochure(
-    sheetWithEstimateHoles(specs, year, make, model, floorplan),
-    lotSpecsForCoach(units, year, make, model, floorplan),
+    sheetWithEstimateHoles(specs, year, make, model, floorplan, lot),
+    lot,
   );
 }

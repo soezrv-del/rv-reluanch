@@ -10,6 +10,7 @@
  */
 
 import { researchAccessHeaders } from "../access/researchUnlock.ts";
+import { displayLengthWithLotLock } from "./lotFactsFallback.ts";
 import {
   applyPowertrainPin,
   clearAllVerifiedDossiers,
@@ -356,6 +357,11 @@ export function mergeLiveIntoDisplay(
     pending?: boolean;
     /** Default true — year-true catalog powertrain cannot be stomped */
     lockPowertrainFromCatalog?: boolean;
+    /**
+     * Lot-record length already painted this coach. Live overallLength
+     * (including a feet-as-inches dossier string) must not replace it.
+     */
+    lockLengthFromLot?: boolean;
     /** Optional pre-resolved hard fields (from resolveHardPowertrain) */
     hardOverride?: {
       engine?: string | null;
@@ -390,25 +396,11 @@ export function mergeLiveIntoDisplay(
   const s = (v: string | null | undefined) =>
     v && String(v).trim() ? String(v).trim() : null;
 
-  const looksLikeLengthRange = (v: string | null | undefined) => {
-    if (!v) return false;
-    return (
-      /\d\s*[-–—]\s*\d/.test(v) ||
-      /\bto\b/i.test(v) ||
-      /\b(span|range|varies)\b/i.test(v)
-    );
-  };
-  const seedLengthIsSpecific =
-    !!seed.lengthFt &&
-    seed.lengthFt !== "—" &&
-    !looksLikeLengthRange(seed.lengthFt);
-  const liveLength = s(live.overallLength);
-  const lengthFt =
-    liveLength && looksLikeLengthRange(liveLength) && seedLengthIsSpecific
-      ? seed.lengthFt
-      : liveLength && !looksLikeLengthRange(liveLength)
-        ? liveLength
-        : seed.lengthFt;
+  const lengthFt = displayLengthWithLotLock(
+    seed.lengthFt,
+    s(live.overallLength),
+    opts?.lockLengthFromLot === true,
+  );
 
   const soft: SpecDisplay = {
     engine: seed.engine,

@@ -3,6 +3,7 @@
  * Seed is always on. Runtime snapshot can register richer Coast rows.
  */
 
+import { ENTEGRA_LOT_SEED } from "./entegraLotSeed.ts";
 import { GRAND_DESIGN_LOT_SEED } from "./grandDesignLotSeed.ts";
 import { LOT_CATALOG_SEED } from "./lotCatalogSeed.ts";
 import type { LotCoachIdentity } from "./lotCatalogFill.ts";
@@ -16,6 +17,6 @@ export function registerLotCatalogUnits(
 }
 
 export function getLotCatalogUnits(): Array<LotCoachIdentity & Record<string, unknown>> {
-  const seed = [...LOT_CATALOG_SEED, ...GRAND_DESIGN_LOT_SEED];
+  const seed = [...LOT_CATALOG_SEED, ...GRAND_DESIGN_LOT_SEED, ...ENTEGRA_LOT_SEED];
   return extra.length ? [...seed, ...extra] : seed;
 }

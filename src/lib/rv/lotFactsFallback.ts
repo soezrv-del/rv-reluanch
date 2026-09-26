@@ -15,6 +15,44 @@ import type { LotOverrideField } from "./lotCatalogSeed.ts";
 
 export const LOT_FACTS_SOURCE = "RV Country lot unit record";
 
+/** True when this Facts note records a lot fill for one painted label. */
+export function lotRecordFilledField(
+  accuracyNote: string | null | undefined,
+  label: string,
+): boolean {
+  const match = (accuracyNote || "").match(/RV Country lot unit record \(([^)]*)\)/);
+  if (!match) return false;
+  return match[1]!.split(",").some((part) => part.trim() === label);
+}
+
+function looksLikeLengthRange(value: string | null | undefined): boolean {
+  if (!value) return false;
+  return (
+    /\d\s*[-–—]\s*\d/.test(value) ||
+    /\bto\b/i.test(value) ||
+    /\b(span|range|varies)\b/i.test(value)
+  );
+}
+
+/**
+ * Live dossier length vs the sheet. A lot-filled length stays.
+ * A specific live string such as "43.6 inches" still replaces a catalog
+ * length that the lot did not fill.
+ */
+export function displayLengthWithLotLock(
+  seedLength: string | null | undefined,
+  liveLength: string | null | undefined,
+  lockLengthFromLot: boolean,
+): string {
+  const seed = (seedLength || "").trim();
+  const seedSpecific = seed.length > 0 && seed !== "—" && !looksLikeLengthRange(seed);
+  const live = (liveLength || "").trim();
+  if (lockLengthFromLot && seedSpecific) return seed;
+  if (live && looksLikeLengthRange(live) && seedSpecific) return seed;
+  if (live && !looksLikeLengthRange(live)) return live;
+  return seed;
+}
+
 /** Tank counts on dealer HTML (1–4) must never be treated as gallons or pounds. */
 const TANK_COUNT_MAX = 4;
 
