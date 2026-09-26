@@ -48,7 +48,15 @@ import {
   mapReportRatings,
 } from "@/lib/rv/reportRatings";
 import { hasConcreteFloorplan } from "@/lib/rv/factsOpen";
-import { buildFactsBrochureSpecs } from "@/lib/rv/factsSheet";
+import {
+  applyFactsWebWeightStep,
+  buildFactsBrochureSpecs,
+  factsWeightGapsAfterLotAndCatalog,
+} from "@/lib/rv/factsSheet";
+import {
+  formatWebWeightLbs,
+  type WebWeightFill,
+} from "@/lib/rv/webWeightFill";
 import { fetchLotSnapshot } from "@/lib/lot/ownLotPage";
 import { registerLotCatalogUnits } from "@/lib/rv/lotCatalogUnits";
 import {
@@ -337,6 +345,7 @@ export function RvDetail({
   const wasSavedRef = useRef(saved);
   const [specFills, setSpecFills] = useState<SpecFieldFill[]>([]);
   const [specFallbackLoading, setSpecFallbackLoading] = useState(false);
+  const [webWeightFills, setWebWeightFills] = useState<WebWeightFill[]>([]);
 
   const pull = usePullToReset(scrollRef, onBack);
 
@@ -534,10 +543,62 @@ export function RvDetail({
     };
   }, [year, make, model, floorplan, brochure, data.type, specIdentity]);
 
+  // Weight step 3. Sheet paints GAP immediately; this request never blocks it.
+  useEffect(() => {
+    if (!floorplan) {
+      setWebWeightFills([]);
+      return;
+    }
+    const fields = factsWeightGapsAfterLotAndCatalog(brochure);
+    if (!fields.length) {
+      setWebWeightFills([]);
+      return;
+    }
+    const ctrl = new AbortController();
+    void fetch("/api/rvfax/web-weight", {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        year,
+        make,
+        model,
+        floorplan,
+        rvType: data.type,
+        fields,
+        gvwrLbs: brochure.gvwrLbs ?? null,
+      }),
+      signal: ctrl.signal,
+    })
+      .then(async (resp) => {
+        if (!resp.ok) return { fills: [] as WebWeightFill[] };
+        return (await resp.json()) as { fills?: WebWeightFill[] };
+      })
+      .then((json) => {
+        if (ctrl.signal.aborted) return;
+        setWebWeightFills(Array.isArray(json.fills) ? json.fills : []);
+      })
+      .catch(() => {
+        if (ctrl.signal.aborted) return;
+        setWebWeightFills([]);
+      });
+    return () => ctrl.abort();
+  }, [year, make, model, floorplan, data.type, brochure]);
+
   const sharedPaint = useMemo(
     () => resolveSharedSpecPaint(specIdentity, specFills),
     [specIdentity, specFills],
   );
+
+  const webWeightApplied = useMemo(
+    () => applyFactsWebWeightStep(brochure, webWeightFills),
+    [brochure, webWeightFills],
+  );
+  const webWeightFor = (field: WebWeightFill["field"]) =>
+    webWeightApplied.find((row) => row.field === field) ?? null;
 
   useEffect(() => {
     let cancelled = false;
@@ -1677,7 +1738,16 @@ export function RvDetail({
             />
             <SpecRow label="TRANSMISSION" value={specs.transmission} />
             <SpecRow label="CHASSIS" value={specs.chassis} accent />
-            <SpecRow label="TOW CAPACITY" value={specs.hitchOrPin} />
+            <SpecRow
+              label="TOW CAPACITY"
+              value={
+                webWeightFor("hitch")
+                  ? formatWebWeightLbs(webWeightFor("hitch")!.lbs)
+                  : specs.hitchOrPin
+              }
+              origin={webWeightFor("hitch")?.origin}
+              sourceUrl={webWeightFor("hitch")?.sourceUrl}
+            />
             <SpecRow label="GENERATOR" value={brochure.generator} />
             <SpecRow label="A/C" value={brochure.acUnits} />
             <SpecRow label="TIRES" value={brochure.tireSize} />
@@ -1710,6 +1780,14 @@ export function RvDetail({
                   : undefined
               }
               overrideLbs={weightOverride?.gvwrLbs ?? null}
+              webFill={
+                sharedPaint.gvwr.gap &&
+                brochure.gvwrLbs == null &&
+                live?.gvwrLbs == null &&
+                weightOverride?.gvwrLbs == null
+                  ? webWeightFor("gvwr")
+                  : null
+              }
               accent
               searching={factsDetailFieldSearching(
                 "gvwr",
@@ -1764,7 +1842,22 @@ export function RvDetail({
                   : undefined
               }
               searching={
-                specFallbackLoading && sharedPaint.uvw.gap
+                specFallbackLoading &&
+                sharedPaint.uvw.gap &&
+                !(
+                  (brochure.uvwEstimated || brochure.uvwLbs == null) &&
+                  live?.uvwLbs == null &&
+                  weightOverride?.uvwLbs == null &&
+                  webWeightFor("uvw")
+                )
+              }
+              webFill={
+                sharedPaint.uvw.gap &&
+                (brochure.uvwEstimated || brochure.uvwLbs == null) &&
+                live?.uvwLbs == null &&
+                weightOverride?.uvwLbs == null
+                  ? webWeightFor("uvw")
+                  : null
               }
               overrideLbs={weightOverride?.uvwLbs ?? null}
               disabled={!floorplan}
@@ -1784,14 +1877,35 @@ export function RvDetail({
               }}
             />
             <SpecRow
+              label="GCWR"
+              value={
+                webWeightFor("gcwr")
+                  ? formatWebWeightLbs(webWeightFor("gcwr")!.lbs)
+                  : "—"
+              }
+              origin={webWeightFor("gcwr")?.origin}
+              sourceUrl={webWeightFor("gcwr")?.sourceUrl}
+            />
+            <SpecRow
               label="CCC"
-              value={displayFromPainted(specs.ccc, sharedPaint.ccc)}
-              sourceUrl={
-                !sharedPaint.ccc.gap &&
-                sharedPaint.ccc.sourceUrl &&
-                sharedPaint.ccc.source !== "catalog"
-                  ? sharedPaint.ccc.sourceUrl
+              value={
+                sharedPaint.ccc.gap && brochure.cccLbs == null && webWeightFor("ccc")
+                  ? formatWebWeightLbs(webWeightFor("ccc")!.lbs)
+                  : displayFromPainted(specs.ccc, sharedPaint.ccc)
+              }
+              origin={
+                sharedPaint.ccc.gap && brochure.cccLbs == null
+                  ? webWeightFor("ccc")?.origin
                   : undefined
+              }
+              sourceUrl={
+                sharedPaint.ccc.gap && brochure.cccLbs == null && webWeightFor("ccc")
+                  ? webWeightFor("ccc")?.sourceUrl
+                  : !sharedPaint.ccc.gap &&
+                      sharedPaint.ccc.sourceUrl &&
+                      sharedPaint.ccc.source !== "catalog"
+                    ? sharedPaint.ccc.sourceUrl
+                    : undefined
               }
             />
             <SpecRow label="WARRANTY" value={specs.warranty} />
@@ -2889,6 +3003,7 @@ function WeightOverrideRow({
   catalogLbs,
   estimatedLbs,
   overrideLbs,
+  webFill,
   accent,
   searching,
   sourceUrl,
@@ -2901,6 +3016,7 @@ function WeightOverrideRow({
   catalogLbs?: number | null;
   estimatedLbs?: number | null;
   overrideLbs?: number | null;
+  webFill?: WebWeightFill | null;
   accent?: boolean;
   searching?: boolean;
   sourceUrl?: string;
@@ -2908,7 +3024,10 @@ function WeightOverrideRow({
   onSave: (lbs: number) => void;
   onReset: () => void;
 }) {
-  const displayLbs = overrideLbs ?? catalogLbs ?? estimatedLbs ?? null;
+  const showWeb = overrideLbs == null && catalogLbs == null && webFill != null;
+  const displayLbs =
+    overrideLbs ?? catalogLbs ?? (showWeb ? webFill?.lbs ?? null : null) ?? estimatedLbs ?? null;
+  const linkedSource = showWeb ? webFill?.sourceUrl : sourceUrl;
   const published =
     overrideLbs != null
       ? formatOverrideLbs(overrideLbs)
@@ -2942,6 +3061,7 @@ function WeightOverrideRow({
     ) {
       return;
     }
+    if (showWeb && webFill && Math.round(n) === webFill.lbs) return;
     onSave(Math.round(n));
   };
 
@@ -2961,7 +3081,15 @@ function WeightOverrideRow({
           </span>
         ) : null}
       </span>
-      <div className="flex min-w-0 items-center justify-end gap-2">
+      <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
+        {showWeb ? (
+          <span
+            data-testid={`facts-weight-${label.toLowerCase()}-origin`}
+            className="rounded-full border border-sky-300/45 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-sky-100"
+          >
+            {webFill?.origin}
+          </span>
+        ) : null}
         {searching ? <FactsGapSpinner field={label} /> : null}
         <input
           type="text"
@@ -2992,11 +3120,14 @@ function WeightOverrideRow({
             Reset
           </button>
         ) : null}
-        {sourceUrl ? (
+        {linkedSource ? (
           <a
-            href={sourceUrl}
+            href={linkedSource}
             target="_blank"
             rel="noreferrer"
+            data-testid={
+              showWeb ? `facts-weight-${label.toLowerCase()}-source` : undefined
+            }
             className="text-[10px] font-semibold text-white/55 underline"
           >
             Source
@@ -3025,12 +3156,14 @@ function SpecRow({
   accent,
   searching,
   sourceUrl,
+  origin,
 }: {
   label: string;
   value?: string | null;
   accent?: boolean;
   searching?: boolean;
   sourceUrl?: string;
+  origin?: WebWeightFill["origin"];
 }) {
   const powertrain =
     label === "HORSEPOWER" || label === "TORQUE" || label === "ENGINE";
@@ -3053,6 +3186,14 @@ function SpecRow({
           accent && "font-semibold",
         )}
       >
+        {origin ? (
+          <span
+            data-testid={`facts-spec-${label.toLowerCase().replace(/\s+/g, "-")}-origin`}
+            className="rounded-full border border-sky-300/45 bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-sky-100"
+          >
+            {origin}
+          </span>
+        ) : null}
         {shown}
         {sourceUrl ? (
           <a

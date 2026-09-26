@@ -243,7 +243,11 @@ function sheetWithEstimateHoles(
   return next;
 }
 
-/** Apply agreeing lot numbers onto a brochure sheet. Flagged overrides win. */
+/**
+ * Apply agreeing lot numbers onto a brochure sheet. Flagged overrides win.
+ * The next weight step is applyFactsWebWeightStep — it only fills cells
+ * this function left empty, and it never writes the catalog.
+ */
 export function fillBrochureHolesFromLot(
   specs: BrochureSpecs,
   units: Array<LotCoachIdentity & Record<string, unknown>>,
