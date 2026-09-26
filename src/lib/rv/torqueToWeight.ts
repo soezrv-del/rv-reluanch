@@ -525,6 +525,38 @@ export function torqueToWeightRatio(
   return (torqueLbFt / weightLb) * 1000;
 }
 
+/** 950 lb-ft ÷ 18,000 lb UVW. The bar is full at this ratio. */
+export const TTW_TOP_RATIO = 950 / 18_000;
+
+/** torque lb-ft ÷ UVW lbs. Not per-thousand. */
+export function dryWeightRatio(
+  torqueLbFt: number | null | undefined,
+  uvwLb: number | null | undefined,
+): number | null {
+  if (torqueLbFt == null || uvwLb == null) return null;
+  if (!(torqueLbFt > 0) || !(uvwLb > 0)) return null;
+  return torqueLbFt / uvwLb;
+}
+
+export function dryWeightBarFill(ratio: number): number {
+  return Math.min(100, Math.max(0, (ratio / TTW_TOP_RATIO) * 100));
+}
+
+export function dryWeightBarColor(ratio: number): TorqueBarColor {
+  if (ratio >= TTW_TOP_RATIO) return "green";
+  if (ratio <= 0.0132) return "red";
+  return "yellow";
+}
+
+export function formatDryWeightRatio(
+  torqueLbFt: number | null | undefined,
+  uvwLb: number | null | undefined,
+): string {
+  const ratio = dryWeightRatio(torqueLbFt, uvwLb);
+  if (ratio == null) return "GAP";
+  return ratio.toFixed(4);
+}
+
 /**
  * Towables have no coach engine torque. Motorized Class C toy haulers
  * stay rateable; a bare "Toy Hauler" / fifth wheel / TT is N/A.

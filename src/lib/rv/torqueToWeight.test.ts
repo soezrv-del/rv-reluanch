@@ -11,9 +11,13 @@ import {
   barColorFromScore,
   classAGasScoredWeightLb,
   computeTorqueToWeight,
+  dryWeightBarColor,
+  dryWeightBarFill,
+  dryWeightRatio,
   estimateUvwFromGvwr,
   estimateUvwFromGvwrDetailed,
   estimateUvwFromGvwrFlat835,
+  formatDryWeightRatio,
   formatTorqueToWeightScore,
   formatTorqueWeightBasisChip,
   isDieselPusherForUvwEstimate,
@@ -38,6 +42,26 @@ function assertNear(actual: number | null, expected: number, tol = 0.15) {
     `expected ${expected} ±${tol}, got ${actual}`,
   );
 }
+
+test("dry-weight bar: 950/18000 is full green, 0.0396 is about 75% yellow, 0.0132 is about 25% red", () => {
+  const top = dryWeightRatio(950, 18_000);
+  assert.ok(top != null);
+  assert.ok(Math.abs(top - 0.0528) < 0.0001);
+  assert.equal(dryWeightBarColor(top), "green");
+  assert.equal(dryWeightBarFill(top), 100);
+  assert.equal(formatDryWeightRatio(950, 18_000), "0.0528");
+
+  const yellow = 0.0396;
+  assert.equal(dryWeightBarColor(yellow), "yellow");
+  assert.ok(Math.abs(dryWeightBarFill(yellow) - 75) < 1);
+
+  const red = 0.0132;
+  assert.equal(dryWeightBarColor(red), "red");
+  assert.ok(Math.abs(dryWeightBarFill(red) - 25) < 1);
+
+  assert.equal(formatDryWeightRatio(null, 18_000), "GAP");
+  assert.equal(formatDryWeightRatio(950, null), "GAP");
+});
 
 test("ratio is lb-ft per 1,000 lb weight (never HP)", () => {
   assert.equal(torqueToWeightRatio(468, 24_000), 19.5);
@@ -786,12 +810,12 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", (
     join(root, "../../components/rvfax/RvDetail.tsx"),
     "utf8",
   );
-  assert.match(detail, /Torque-to-Weight/);
-  assert.match(detail, /formatTorqueToWeightScore/);
+  assert.match(detail, /UVW \/ dry weight/);
+  assert.match(detail, /formatDryWeightRatio/);
   assert.match(detail, /data-testid="facts-tqwt-bar"/);
   assert.match(detail, /data-fill="left-to-right"/);
   assert.doesNotMatch(detail, /data-fill="right-to-left"/);
-  assert.match(detail, /score \/ 10/);
+  assert.match(detail, /950 \/ 18000/);
   assert.match(detail, /overrideUvwLbs:\s*weightOverride\?\.uvwLbs/);
   assert.match(detail, /overrideGvwrLbs:\s*weightOverride\?\.gvwrLbs/);
   assert.match(detail, /WeightOverrideRow/);
