@@ -155,8 +155,12 @@ export class GrokRealtimeSession {
   } | null = null;
   /** Coach/spec ask waiting for full vs quick. */
   private voiceChoiceTranscript: string | null = null;
-  /** Set while replaying the stashed ask as full or quick. */
-  private voiceDeliver: "full" | "quick" | null = null;
+  /**
+   * Live Voice talks in the bubble. It does not mount the spec report.
+   * That card was opening on lot questions ("under 40 foot") and staying
+   * quiet when a real report was asked. Leave it off.
+   */
+  private readonly voiceSpecReport = false;
   /** Completed user lines, so "full specs" can find the coach already named. */
   private recentUserTurns: string[] = [];
   /** Coach she already spoke, when he never repeated the year/make/model. */
@@ -1020,7 +1024,9 @@ export class GrokRealtimeSession {
         spoken,
       );
     const reportFollow =
-      looksLikeCoachReportAsk(spoken) || looksLikeExplicitVoiceReportAsk(spoken);
+      this.voiceSpecReport &&
+      (looksLikeCoachReportAsk(spoken) ||
+        looksLikeExplicitVoiceReportAsk(spoken));
     if (searchFollow && transcript !== spoken) {
       this.voiceDeliver = "full";
     } else if (reportFollow && transcript !== spoken) {
@@ -1032,8 +1038,14 @@ export class GrokRealtimeSession {
       this.voiceDeliver = this.voiceDeliver || "full";
     }
     this.handlers.onFloorplanChoices?.([]);
-    if (!this.voiceDeliver && this.routeVoiceOpening(transcript)) return;
-    if (this.voiceDeliver === "quick") {
+    if (
+      this.voiceSpecReport &&
+      !this.voiceDeliver &&
+      this.routeVoiceOpening(transcript)
+    ) {
+      return;
+    }
+    if (this.voiceSpecReport && this.voiceDeliver === "quick") {
       const specSeq = ++this.specTurnSeq;
       this.pendingSpec = null;
       this.pendingSpecSheet = null;
@@ -1044,7 +1056,7 @@ export class GrokRealtimeSession {
       });
       return;
     }
-    if (this.voiceDeliver === "full") {
+    if (this.voiceSpecReport && this.voiceDeliver === "full") {
       const specSeq = ++this.specTurnSeq;
       this.pendingSpec = null;
       this.pendingSpecSheet = null;
@@ -1075,6 +1087,7 @@ export class GrokRealtimeSession {
     this.specEngineSpoken = false;
     this.engineSheetPainted = false;
     if (
+      this.voiceSpecReport &&
       !looksLikeOwnLotStockQuestion(transcript) &&
       (looksLikeVoiceCoachOrSpecAsk(transcript) ||
         looksLikeVoiceTellMeAboutAsk(transcript) ||
@@ -1130,7 +1143,7 @@ export class GrokRealtimeSession {
         });
         lockBroke = this.applyVoiceGrounding(transcript, grounded);
       }
-      if (looksLikeDeskSheetAsk(transcript)) {
+      if (this.voiceSpecReport && looksLikeDeskSheetAsk(transcript)) {
         this.cancelAutoResponseForResearch();
         this.armSpecEngineTurn(transcript, grounded);
         await this.speakFromSpecEngine(specSeq);
@@ -1182,7 +1195,7 @@ export class GrokRealtimeSession {
       }
     }
 
-    if (looksLikeDeskSheetAsk(transcript)) {
+    if (this.voiceSpecReport && looksLikeDeskSheetAsk(transcript)) {
       // Catalog is loaded. Speak the shared engine — not the web snippet.
       this.armSpecEngineTurn(transcript, grounded);
       this.researchAbort?.abort();
@@ -1386,6 +1399,7 @@ export class GrokRealtimeSession {
    * Returns true when this utterance must not speak a report yet.
    */
   private routeVoiceOpening(transcript: string): boolean {
+    if (!this.voiceSpecReport) return false;
     if (this.voiceChoiceTranscript) {
       const depth = classifyVoiceCoachDepth(transcript);
       if (depth) {
