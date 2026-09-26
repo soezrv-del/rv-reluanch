@@ -43,6 +43,12 @@ import {
   computeTorqueToWeight,
 } from "@/lib/rv/torqueToWeight";
 import {
+  TORQUE_WEIGHT_RATING_WEIGHT_LABEL,
+  formatTorqueWeightRatingRatio,
+  formatTorqueWeightRatingWeight,
+  rateTorqueToWeight,
+} from "@/lib/rv/torqueWeightRating";
+import {
   OWNER_REVIEW_FOOTER,
   formatOwnerReviewScore,
   mapReportRatings,
@@ -838,6 +844,42 @@ export function RvDetail({
       data.chassis,
     ],
   );
+
+  const torqueWeightRating = useMemo(() => {
+    const overrideUvw =
+      weightOverride?.uvwLbs != null && weightOverride.uvwLbs > 0
+        ? weightOverride.uvwLbs
+        : null;
+    const paintedUvw =
+      !sharedPaint.uvw.gap &&
+      sharedPaint.uvw.lbs != null &&
+      sharedPaint.uvw.lbs > 0
+        ? sharedPaint.uvw.lbs
+        : null;
+    const brochureUvw =
+      !brochure.uvwEstimated &&
+      brochure.uvwLbs != null &&
+      brochure.uvwLbs > 0
+        ? brochure.uvwLbs
+        : null;
+    const dryWeight =
+      overrideUvw == null && sharedPaint.uvw.asterisk ? paintedUvw : null;
+    return rateTorqueToWeight({
+      torqueLbFt: powertrainGuard.hard.torqueLbFt,
+      uvwLbs:
+        overrideUvw ??
+        (sharedPaint.uvw.asterisk ? null : paintedUvw ?? brochureUvw),
+      dryWeightLbs: dryWeight,
+    });
+  }, [
+    powertrainGuard.hard.torqueLbFt,
+    weightOverride?.uvwLbs,
+    sharedPaint.uvw.lbs,
+    sharedPaint.uvw.gap,
+    sharedPaint.uvw.asterisk,
+    brochure.uvwLbs,
+    brochure.uvwEstimated,
+  ]);
 
   const reportRatings = useMemo(
     () => mapReportRatings({ make, model, year }),
@@ -1985,6 +2027,54 @@ export function RvDetail({
                     </div>
                     <span className="shrink-0 text-[13px] font-semibold tabular-nums text-white">
                       {formatTorqueToWeightScore(torqueToWeight)}
+                    </span>
+                  </div>
+                )}
+              </li>
+              <li
+                className="flex items-center justify-between gap-3 py-3 last:pb-0"
+                data-testid="facts-torque-weight-rating"
+              >
+                <div className="min-w-0">
+                  <span className="text-[14px] font-medium text-white">
+                    Torque-to-weight
+                  </span>
+                  <p className="mt-0.5 text-[11px] leading-snug text-white/45">
+                    {TORQUE_WEIGHT_RATING_WEIGHT_LABEL}{" "}
+                    <span
+                      className="tabular-nums text-white/70"
+                      data-testid="facts-torque-weight-rating-weight"
+                    >
+                      {formatTorqueWeightRatingWeight(torqueWeightRating)}
+                    </span>
+                  </p>
+                </div>
+                {torqueWeightRating.gap ? (
+                  <span className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                    GAP
+                  </span>
+                ) : (
+                  <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
+                    <div
+                      className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/12"
+                      data-testid="facts-torque-weight-rating-bar"
+                      role="meter"
+                      aria-label={`Torque-to-weight ${formatTorqueWeightRatingRatio(torqueWeightRating)}`}
+                      aria-valuemin={0}
+                      aria-valuemax={1}
+                      aria-valuenow={torqueWeightRating.fill ?? 0}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${(torqueWeightRating.fill ?? 0) * 100}%`,
+                          backgroundColor:
+                            torqueWeightRating.color ?? "transparent",
+                        }}
+                      />
+                    </div>
+                    <span className="shrink-0 text-[13px] font-semibold tabular-nums text-white">
+                      {formatTorqueWeightRatingRatio(torqueWeightRating)}
                     </span>
                   </div>
                 )}
