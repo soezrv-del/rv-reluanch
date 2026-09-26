@@ -477,9 +477,24 @@ test("OEM UVW pins: sourced Newmar + Seneca + 39RK; demo coaches stay unpinned (
   assert.equal(findOemUvwLbs("2025", "Newmar", "Canyon Star", "3947"), 25950);
   assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca", "37K"), 24820);
   assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca Super C", "37K"), 24820);
+  assert.equal(findOemUvwLbs("2021", "Jayco", "Seneca", "37K"), 26000);
   assert.equal(findOemUvwLbs("2024", "Jayco", "Seneca", "37K"), 26000);
   assert.equal(findOemUvwLbs("2026", "Jayco", "Seneca", "37K"), 26000);
   assert.equal(findOemUvwLbs("2027", "Jayco", "Seneca", "37K"), 26000);
+  const seneca37kPins = listOemUvwPins().filter(
+    (p) =>
+      p.makeIncludes === "jayco" &&
+      p.modelIncludes === "seneca" &&
+      p.floorplan === "37K",
+  );
+  assert.deepEqual(
+    seneca37kPins.map((p) => [p.yearMin, p.yearMax, p.uvwLbs]),
+    [
+      [2021, 2024, 26000],
+      [2025, 2025, 24820],
+      [2026, 2027, 26000],
+    ],
+  );
   assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca", "37L"), 26200);
   assert.equal(findOemUvwLbs("2025", "Jayco", "Seneca", "37M"), 26500);
   assert.equal(findOemFloorplanSpec("2025", "Jayco", "Seneca", "37K")?.uvwLbs, 26000);
