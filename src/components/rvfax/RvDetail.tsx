@@ -1770,18 +1770,7 @@ export function RvDetail({
               catalogLbs={
                 sharedPaint.uvw.lbs ?? brochure.uvwLbs ?? live?.uvwLbs ?? null
               }
-              estimatedLbs={
-                !sharedPaint.uvw.gap ||
-                weightOverride?.uvwLbs != null ||
-                brochure.uvwLbs != null ||
-                live?.uvwLbs != null
-                  ? null
-                  : (torqueToWeight.weightEstimated
-                      ? torqueToWeight.weightLb
-                      : null) ??
-                    brochure.estimatedUvwLbs ??
-                    null
-              }
+              estimatedLbs={null}
               sourceUrl={
                 !sharedPaint.uvw.gap &&
                 sharedPaint.uvw.sourceUrl &&
