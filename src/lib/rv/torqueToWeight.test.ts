@@ -121,7 +121,7 @@ test("GVWR alone does not score; UVW does", () => {
   assert.equal(seneca.weightLb, 26_000);
   assert.equal(seneca.weightBasis, "UVW");
   assertNear(seneca.ratio, 30.77, 0.05);
-  assertNear(seneca.score, 6.17, 0.05);
+  assertNear(seneca.score, 7.37, 0.05);
   assert.equal(seneca.color, "yellow");
 
   const lineage = computeTorqueToWeight({
@@ -231,7 +231,7 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assert.equal(dream.weightBasis, "UVW");
   assert.equal(dream.weightLb, 42_600);
   assertNear(dream.ratio, 45.77, 0.05);
-  assertNear(dream.score, 10.0, 0.05);
+  assertNear(dream.score, 8.9, 0.05);
   assert.equal(dream.formula, "class-a-diesel");
   assert.equal(dream.color, "green");
 
@@ -246,9 +246,9 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assert.equal(alante.weightLb, 16_200);
   assert.equal(alante.uvwLb, 16_200);
   assertNear(alante.ratio, 28.89, 0.02);
-  assertNear(alante.score, 10.0, 0.05);
+  assertNear(alante.score, 7.12, 0.05);
   assert.equal(alante.formula, "class-a-gas");
-  assert.equal(alante.color, "green");
+  assert.equal(alante.color, "yellow");
 
   const lineage = computeTorqueToWeight({
     torqueLbFt: 950,
@@ -276,7 +276,7 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assert.equal(sunseeker.weightBasis, "UVW");
   assert.equal(sunseeker.weightLb, 9_100);
   assertNear(sunseeker.ratio, 43.96, 0.05);
-  assertNear(sunseeker.score, 10.0, 0.05);
+  assertNear(sunseeker.score, 9.16, 0.05);
   assert.equal(sunseeker.formula, "class-c");
   assert.equal(sunseeker.color, "green");
 
@@ -294,10 +294,10 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assert.equal(p31.uvwLb, 20_200);
   assert.equal(p31.uvwEstimateTier, null);
   assertNear(p31.ratio, 23.17, 0.05);
-  assertNear(p31.score, 8.09);
-  assert.ok((p31.score ?? 0) < 10, `Precept must sit below the Alante R* ceiling`);
+  assertNear(p31.score, 5.4, 0.05);
+  assert.ok((p31.score ?? 0) < 10);
   assert.equal(p31.formula, "class-a-gas");
-  assert.equal(p31.color, "green");
+  assert.equal(p31.color, "red");
 
   const p36 = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -310,9 +310,9 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assert.equal(p36.weightBasis, "UVW");
   assert.equal(p36.uvwLb, 22_200);
   assertNear(p36.ratio, 21.08, 0.05);
-  assertNear(p36.score, 7.65);
+  assertNear(p36.score, 4.93, 0.05);
   assert.equal(p36.formula, "class-a-gas");
-  assert.equal(p36.color, "yellow");
+  assert.equal(p36.color, "red");
 
   // Seneca Super C — Freightliner uses diesel-pusher UVW, Super C curve.
   const seneca = computeTorqueToWeight({
@@ -327,7 +327,7 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assert.equal(seneca.weightBasis, "UVW");
   assert.equal(seneca.weightLb, 26_000);
   assertNear(seneca.ratio, 30.77, 0.05);
-  assertNear(seneca.score, 6.17, 0.05);
+  assertNear(seneca.score, 7.37, 0.05);
   assert.equal(seneca.formula, "super-c");
   assert.equal(seneca.color, "yellow");
 
@@ -341,7 +341,7 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   });
   assert.equal(senecaDiesel.formula, "class-a-diesel");
   assert.equal(senecaDiesel.weightLb, 25_900);
-  assertNear(senecaDiesel.score, 8.14);
+  assertNear(senecaDiesel.score, 7.39, 0.05);
 
   // Greyhawk — Class C E-450, 14,500 × 0.88 → 12,800.
   const greyhawk = computeTorqueToWeight({
@@ -354,9 +354,9 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assert.equal(greyhawk.weightLb, 12_800);
   assert.equal(greyhawk.weightBasis, "UVW");
   assertNear(greyhawk.ratio, 35.16, 0.05);
-  assertNear(greyhawk.score, 8.76);
+  assertNear(greyhawk.score, 7.97, 0.05);
   assert.equal(greyhawk.formula, "class-c");
-  assert.equal(greyhawk.color, "green");
+  assert.equal(greyhawk.color, "yellow");
 
   const cornerstone = computeTorqueToWeight({
     torqueLbFt: 1950,
@@ -367,7 +367,7 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assert.equal(cornerstone.weightLb, 45_100);
   assert.equal(cornerstone.weightBasis, "UVW");
   assertNear(cornerstone.ratio, 43.24, 0.05);
-  assertNear(cornerstone.score, 10.0);
+  assertNear(cornerstone.score, 9.06, 0.05);
   assert.equal(cornerstone.color, "green");
 
   const d1250 = computeTorqueToWeight({
@@ -379,7 +379,7 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assert.equal(d1250.weightLb, 26_700);
   assert.equal(d1250.weightBasis, "UVW");
   assertNear(d1250.ratio, 46.82, 0.05);
-  assertNear(d1250.score, 10.0);
+  assertNear(d1250.score, 9.11, 0.05);
   assert.equal(d1250.color, "green");
 
   const d1950 = computeTorqueToWeight({
@@ -416,7 +416,7 @@ test("champions land at 10.0 on the #358 weight; peers use the matching type for
   assert.equal(isb.weightLb, 25_100);
   assert.equal(isb.weightBasis, "UVW");
   assertNear(isb.ratio, 27.89, 0.05);
-  assertNear(isb.score, 7.66);
+  assertNear(isb.score, 6.47, 0.05);
   assert.equal(isb.color, "yellow");
 });
 
@@ -457,7 +457,7 @@ test("UVW preferred over GVWR except class-a-gas; GAP if torque and both weights
   assert.equal(unloadedRaw.weightBasis, "UVW");
   assert.equal(unloadedRaw.weightLb, 18_000);
   assert.equal(unloadedRaw.uvwLb, 18_000);
-  assertNear(unloadedRaw.score, 8.69, 0.05);
+  assertNear(unloadedRaw.score, 6.05, 0.05);
 
   const gvwrOnly = computeTorqueToWeight({
     torqueLbFt: 800,
@@ -670,8 +670,8 @@ test("2022 American Dream 39RK stays pinned 39,237 — not re-estimated", () => 
   assert.equal(pinned.weightBasis, "UVW");
   assert.equal(pinned.weightEstimated, false);
   assertNear(pinned.ratio, 31.86, 0.02);
-  assertNear(pinned.score, 8.29);
-  assert.equal(pinned.color, "green");
+  assertNear(pinned.score, 7.52, 0.05);
+  assert.equal(pinned.color, "yellow");
   assert.equal(formatTorqueWeightBasisChip(pinned), null);
 
   const wouldEstimate = estimateUvwFromGvwr(47_000, {
@@ -694,7 +694,7 @@ test("Anthem 44R sample: 52,000 × 0.835 → 43,400 at 1,250 lb-ft", () => {
   assert.equal(anthem.weightBasis, "UVW");
   assert.equal(anthem.weightEstimated, false);
   assertNear(anthem.ratio, 28.80, 0.02);
-  assertNear(anthem.score, 7.80);
+  assertNear(anthem.score, 7.11, 0.05);
   assert.equal(anthem.color, "yellow");
   assert.equal(formatTorqueWeightBasisChip(anthem), null);
 });
@@ -734,9 +734,9 @@ test("2023 Phaeton 40IH: option-band pin still scores published L9 380 / 1,150 o
   assert.equal(ttw.weightBasis, "UVW");
   assert.equal(ttw.formula, "class-a-diesel");
   assertNear(ttw.ratio, 34.33, 0.02);
-  assertNear(ttw.score, 8.68);
-  assert.equal(ttw.color, "green");
-  assert.equal(formatTorqueToWeightScore(ttw), "8.7/10");
+  assertNear(ttw.score, 7.86, 0.05);
+  assert.equal(ttw.color, "yellow");
+  assert.equal(formatTorqueToWeightScore(ttw), "7.9/10");
   assert.equal(formatTorqueWeightBasisChip(ttw), null);
 
   // True L9/X15 option-band with no published pin torque stays GAP.
@@ -796,7 +796,7 @@ test("Facts Ratings: Torque-to-Weight bar + X/10 only; other rows keep stars", (
   assert.match(detail, /overrideGvwrLbs:\s*weightOverride\?\.gvwrLbs/);
   assert.match(detail, /WeightOverrideRow/);
   assert.match(detail, /estimatedLbs/);
-  assert.match(detail, /uvwLbs:\s*weightOverride\?\.uvwLbs \?\? live\?\.uvwLbs/);
+  assert.match(detail, /sharedPaint\.uvw\.lbs/);
   assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
   assert.match(detail, /chassis:\s*powertrainGuard\.hard\.chassis/);
   assert.match(detail, /engine:\s*powertrainGuard\.hard\.engine/);

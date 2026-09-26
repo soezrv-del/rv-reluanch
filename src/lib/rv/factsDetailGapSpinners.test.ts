@@ -120,8 +120,7 @@ test("gap planner + spinner share one catalog-first plan", () => {
       blackWater: "50 gal",
     },
   });
-  assert.equal(complete.skipLive, false);
-  assert.deepEqual(complete.gaps, ["uvw"]);
+  assert.equal(complete.skipLive, true);
   assert.equal(
     factsDetailSearchingFields({
       liveLoading: true,
@@ -129,6 +128,7 @@ test("gap planner + spinner share one catalog-first plan", () => {
       gaps: complete.gaps,
     }).size,
     0,
+    "complete pins: soft pass may still run; named hardware stays static",
   );
 });
 

@@ -186,7 +186,7 @@ function formatCandidateBlock(c: CatalogCandidate | undefined, year: string): st
 ${fpLine}
 - length (catalog): ${c.lengthFt || c.overallLength || c.length || c.length_ft || "null"}
 - gvwr (catalog): ${(c.gvwrLbs ?? c.gvwr) || "null"}
-- uvw: search the web for dry weight / unloaded vehicle weight. Do not copy a catalog pin. Do not use GVWR.
+- uvw (catalog): ${c.uvwEstimated ? "null (estimated — not a pin)" : (c.uvwLbs ?? c.uvw) || "null"}
 - fresh/gray/black (catalog): ${c.freshWater ?? c.freshWaterGal ?? "null"} / ${c.grayWater ?? c.grayWaterGal ?? "null"} / ${c.blackWater ?? c.blackWaterGal ?? "null"}
 - engine: ${c.engine || "null"}
 - horsepower: ${c.horsepower ?? "null"}

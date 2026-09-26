@@ -665,7 +665,9 @@ export function computeTorqueToWeight(
       ? torqueToWeightRatio(torqueLbFt, resolved.weightLb)
       : null;
   const formula = resolveTorqueScoreFormula(input);
-  const score = scoreFromTorqueToWeightRatio(ratio, formula);
+  // One scale for every motorhome: torque ÷ catalog dry weight.
+  // Class is recorded, but it does not move the number.
+  const score = scoreFromTorqueToWeightRatio(ratio, "global");
   return {
     torqueLbFt,
     uvwLb: resolved.uvwLb,
