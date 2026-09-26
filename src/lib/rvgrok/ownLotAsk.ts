@@ -18,6 +18,8 @@ import {
   normalizeAskText,
 } from "./webIntent.ts";
 
+export { parseAskedClassAndFuel } from "./fuelClass.ts";
+
 /**
  * Own-lot listing prices / budget / "show prices too" — not nationwide
  * market-value comps (those stay on looksLikeMarketValueQuestion).
@@ -306,12 +308,16 @@ function isLotClarification(text: string): boolean {
   return /\b(?:i meant|meant to say)\b/i.test(normalizeAskText(text));
 }
 
+function mentionsRvClass(text: string): boolean {
+  return /\bclass\s*[abc]s?\b/i.test(text || "");
+}
+
 /** "30-foot Class As at the Carson RV show" is the lot even without "in stock". */
 export function looksLikeSizedLotAsk(text: string): boolean {
   if (!looksLikeLengthMeasureAsk(text)) return false;
   const t = normalizeAskText(text);
   return (
-    /\bclass\s*[abc]s?\b/i.test(t) ||
+    mentionsRvClass(t) ||
     /\brv\s+show\b/i.test(t) ||
     /\b(?:in stock|on (?:the |our )?lot|inventor)/i.test(t)
   );

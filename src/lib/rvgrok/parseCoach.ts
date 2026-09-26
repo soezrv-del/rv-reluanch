@@ -1,5 +1,14 @@
 /** Shared year / make / model parse — no storage, safe for Node tests. */
 
+import { stripLengthMeasures } from "./lengthAsk.ts";
+
+export {
+  parseLengthAsk as parseLengthMeasure,
+  looksLikeLengthMeasureAsk,
+  stripLengthMeasures,
+} from "./lengthAsk.ts";
+export type { LengthMeasure } from "./lengthAsk.ts";
+
 export const COACH_BRANDS = [
   "Sunset Park",
   "Gulf Stream",
@@ -94,21 +103,21 @@ export function isBudgetThousandsToken(token: string): boolean {
   return /^\d{2,4}k$/i.test((token || "").replace(/\s+/g, ""));
 }
 
-const LENGTH_UNIT = "(?:feet|foots|footers|footer|foot|ft)";
-const LENGTH_MEASURE_RE = new RegExp(
-  `\\b(?:(?:under|below|less\\s+than|over|above|more\\s+than|at\\s+least|up\\s+to|max(?:imum)?|at\\s+most|no\\s+more\\s+than|around|about)\\s+)?\\d{1,2}(?:\\.\\d+)?\\s*(?:-\\s*)?${LENGTH_UNIT}\\b`,
-  "gi",
-);
-
-export function looksLikeLengthMeasureAsk(text: string): boolean {
-  return new RegExp(
-    `\\b\\d{1,2}(?:\\.\\d+)?\\s*(?:-\\s*)?${LENGTH_UNIT}\\b`,
-    "i",
-  ).test(text || "");
-}
-
-export function stripLengthMeasures(text: string): string {
-  return (text || "").replace(LENGTH_MEASURE_RE, " ");
+/**
+ * 150k / 50k are prices. 35K / 38K are floorplans unless a budget word
+ * is attached ("under 35k"). A 2-digit K in the coach-length range stays.
+ */
+function isBudgetThousandsAsk(token: string, text: string): boolean {
+  if (!isBudgetThousandsToken(token)) return false;
+  if (/\$|\b(?:thousand|asking|price|priced|cost)\b/i.test(text)) return true;
+  const n = Number(token.replace(/k$/i, ""));
+  if (n >= 18 && n <= 45 && String(n).length === 2) {
+    return new RegExp(
+      `\\b(?:under|below|over|above|around|about|near|at\\s+least|up\\s+to)\\s+\\$?\\s*${n}\\s*k\\b`,
+      "i",
+    ).test(text);
+  }
+  return true;
 }
 
 export function extractFloorplanToken(text: string): string {
@@ -117,7 +126,7 @@ export function extractFloorplanToken(text: string): string {
   if (!asked.trim()) return "";
   // "2550DS LE" is one plan code. Do not glue English ("4369 spec").
   const notAPlanSuffix =
-    /^(ford|chevy|gas|diesel|the|and|for|with|have|has|in|our|at|any|show|inventory|gal|lbs|ft|feet|foot|spec|specs|report|reports|full|brochure|tanks?|fresh|gray|grey|black|water|class|coach|model|what|are|on|of|this|that|mbs|ph[ae]{2}tons?|fayt[eo]ns?|faetons?|fatens?|paytons?|paitons?|phantoms?|is|an|it|was|be|inch|inches)$/i;
+    /^(ford|chevy|gas|diesel|gasser|gassers|the|and|for|with|have|has|in|our|at|any|show|inventory|gal|lbs|ft|feet|foot|spec|specs|report|reports|full|brochure|tanks?|fresh|gray|grey|black|water|class|coach|model|what|are|on|of|this|that|mbs|ph[ae]{2}tons?|fayt[eo]ns?|faetons?|fatens?|paytons?|paitons?|phantoms?|is|an|it|was|be|inch|inches|between|longer|under|over|plus|non)$/i;
   const source = asked.replace(
     /\b(\d{4})\s*([A-Za-z]{1,6})(?:\s+([A-Za-z]{1,6}))?\b/g,
     (full, digits: string, a: string, b?: string) => {
@@ -138,17 +147,14 @@ export function extractFloorplanToken(text: string): string {
   for (const m of source.matchAll(re)) {
     let token = normalizeFloorplanToken(m[1] || "");
     if (!token) continue;
-    if (
-      isBudgetThousandsToken(token) &&
-      /\$|\b(?:thousand|asking|price|priced|cost)\b/i.test(text)
-    ) {
-      continue;
-    }
+    if (isBudgetThousandsAsk(token, text)) continue;
     const suffix = token.replace(/^\d+/, "");
     if (suffix && notAPlanSuffix.test(suffix)) {
       token = token.slice(0, token.length - suffix.length);
     }
-    if (!token) continue;
+    if (!token || /^\d{1,3}$/.test(token)) continue;
+    // Ford F-53 is a gas chassis, not a floorplan. "F-53" used to zero the lot.
+    if (/^f53$/i.test(token.replace(/-/g, ""))) continue;
     // Spoken "31W Z" — trailing single letter belongs on the code (31WZ).
     // Do not glue "Ford" onto an already-complete suffix (2550DSLE Ford).
     const after = source.slice((m.index ?? 0) + m[0].length);

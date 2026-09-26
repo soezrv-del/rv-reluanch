@@ -7,7 +7,9 @@
  * lot *search* (look/find/search + floorplan/stock, bare "27A"). Never
  * treat a coach designation or "tell me about" product report as a lot miss.
  *
- * File has no fuel field. Diesel ≈ body_type "Class A Diesel" + "Class Super C".
+ * File has no fuel field. Diesel ≈ body_type "Class A Diesel" + "Class Super C",
+ * plus a plain "Class A" row in a known diesel series (Mountain Aire,
+ * Allegro Bus, Ventana, Discovery).
  * Listing prices are on the scrape (`price`, then price_current / price_hidden /
  * price_lowest / price_msrp). Grounding must pass those through — never tell
  * the model the snapshot has no price data when priced units exist.
@@ -35,6 +37,13 @@ import {
   stripLengthMeasures,
 } from "./parseCoach.ts";
 import {
+  floorplanLengthFt,
+  lengthAllowsFloorplanFallback,
+  nominalLengthBand,
+  parseLengthAsk,
+} from "./lengthAsk.ts";
+import { parseAskedClassAndFuel, unitIsDiesel, unitIsGas } from "./fuelClass.ts";
+import {
   looksLikeMarketValueQuestion,
   looksLikeRepairQuestion,
   normalizeAskText,
@@ -59,6 +68,13 @@ export {
   lotSearchQueryFromAsk,
   parseOwnLotStockNumber,
 } from "./ownLotAsk.ts";
+export {
+  DIESEL_BODY_TYPES,
+  isDieselBodyType,
+  isGasBodyType,
+  unitIsDiesel,
+  unitIsGas,
+} from "./fuelClass.ts";
 
 export const OWN_LOT_MODEL = "own-lot-inventory";
 
@@ -71,9 +87,6 @@ export const OWN_LOT_BUNDLED_RELATIVE = "public/inventory/own-lot-latest.json";
 /** Relative to this module — createRequire / fileURL resolve it in-repo. */
 export const OWN_LOT_MODULE_PUBLIC_SPEC =
   "../../../public/inventory/own-lot-latest.json";
-
-/** body_type labels that count as diesel when the scrape has no fuel field. */
-export const DIESEL_BODY_TYPES = ["Class A Diesel", "Class Super C"] as const;
 
 export const OWN_LOT_CACHE_TTL_MS = 5 * 60 * 1000;
 const MATCH_LIST_MAX = 12;
@@ -128,8 +141,9 @@ export type OwnLotFilter = {
   /** Printed-length cap. Inclusive only when maxLengthInclusive is true. */
   maxLengthFt?: number;
   maxLengthInclusive?: boolean;
-  /** Printed length must be greater than this. */
+  /** Printed length must be greater than this, or ≥ when minLengthInclusive. */
   minLengthFt?: number;
+  minLengthInclusive?: boolean;
   /**
    * Spoken size class. "around 30" / "30-foot" / "30-footers" is
    * [N-2, N+2] feet, not the single foot [N, N+1).
@@ -298,20 +312,8 @@ function parsePrintedFeet(value: unknown): number | null {
   return n > 80 ? n / 12 : n;
 }
 
-/**
- * Floorplan foot when the sheet left length blank: 29S, 29M, 29D, 30DS, 28A.
- * Printed length still wins. 27ASE is 27, not a 30. Letter-first codes (A24) stay blank.
- */
-export function floorplanLengthFt(trim: string): number | null {
-  const m = (trim || "").trim().match(/^(\d{2})(?!\d)/);
-  if (!m) return null;
-  const n = Number(m[1]);
-  if (!Number.isInteger(n) || n < 18 || n > 45) return null;
-  return n;
-}
-
 /** Printed length only. Never trim, floorplan, or a guessed foot. */
-export function pickPrintedLengthFt(row: Record<string, unknown>): number | null {
+function pickPrintedLengthFt(row: Record<string, unknown>): number | null {
   const lower = lowerKeyMap(row);
   for (const k of PRINTED_LENGTH_KEYS) {
     const n = parsePrintedFeet(lower[k]);
@@ -320,61 +322,33 @@ export function pickPrintedLengthFt(row: Record<string, unknown>): number | null
   return null;
 }
 
-/** "around 30" / "30-foot" / "30-footers" → 28 through 32, inclusive. */
-export const NOMINAL_LENGTH_SPAN_FT = 2;
-const LENGTH_UNIT_RE = "(?:feet|foots|footers|footer|foot|ft)";
-
-export function nominalLengthBand(center: number): { min: number; max: number } {
-  return {
-    min: center - NOMINAL_LENGTH_SPAN_FT,
-    max: center + NOMINAL_LENGTH_SPAN_FT,
-  };
-}
-
-export function parseOwnLotLength(
+function parseOwnLotLength(
   text: string,
 ): Pick<
   OwnLotFilter,
-  "maxLengthFt" | "maxLengthInclusive" | "minLengthFt" | "aroundLengthFt"
+  | "maxLengthFt"
+  | "maxLengthInclusive"
+  | "minLengthFt"
+  | "minLengthInclusive"
+  | "aroundLengthFt"
 > {
-  const t = normalizeAskText(text);
-  const under = t.match(
-    new RegExp(
-      `\\b(?:under|below|less\\s+than)\\s+(\\d{1,2}(?:\\.\\d+)?)\\s*(?:-\\s*)?${LENGTH_UNIT_RE}\\b`,
-      "i",
-    ),
-  );
-  if (under?.[1]) {
-    return { maxLengthFt: Number(under[1]), maxLengthInclusive: false };
+  const measure = parseLengthAsk(normalizeAskText(text));
+  if (!measure) return {};
+  if (measure.kind === "max") {
+    return { maxLengthFt: measure.feet, maxLengthInclusive: measure.inclusive };
   }
-  const upTo = t.match(
-    new RegExp(
-      `\\b(?:up\\s+to|max(?:imum)?|at\\s+most|no\\s+more\\s+than)\\s+(\\d{1,2}(?:\\.\\d+)?)\\s*(?:-\\s*)?${LENGTH_UNIT_RE}\\b`,
-      "i",
-    ),
-  );
-  if (upTo?.[1]) {
-    return { maxLengthFt: Number(upTo[1]), maxLengthInclusive: true };
+  if (measure.kind === "min") {
+    return measure.inclusive
+      ? { minLengthFt: measure.feet, minLengthInclusive: true }
+      : { minLengthFt: measure.feet };
   }
-  const over = t.match(
-    new RegExp(
-      `\\b(?:over|above|more\\s+than)\\s+(\\d{1,2}(?:\\.\\d+)?)\\s*(?:-\\s*)?${LENGTH_UNIT_RE}\\b`,
-      "i",
-    ),
-  );
-  if (over?.[1]) return { minLengthFt: Number(over[1]) };
-  const around = t.match(
-    new RegExp(
-      `\\b(?:around|about)\\s+(\\d{1,2}(?:\\.\\d+)?)\\s*(?:-\\s*)?${LENGTH_UNIT_RE}\\b`,
-      "i",
-    ),
-  );
-  if (around?.[1]) return { aroundLengthFt: Number(around[1]) };
-  const bare = t.match(
-    new RegExp(`\\b(\\d{1,2}(?:\\.\\d+)?)\\s*(?:-\\s*)?${LENGTH_UNIT_RE}\\b`, "i"),
-  );
-  if (bare?.[1]) return { aroundLengthFt: Number(bare[1]) };
-  return {};
+  if (measure.kind === "around") return { aroundLengthFt: measure.feet };
+  return {
+    minLengthFt: measure.min,
+    minLengthInclusive: true,
+    maxLengthFt: measure.max,
+    maxLengthInclusive: true,
+  };
 }
 
 function hasLengthBound(filter: OwnLotFilter): boolean {
@@ -390,16 +364,26 @@ function withoutLength(filter: OwnLotFilter): OwnLotFilter {
   delete next.maxLengthFt;
   delete next.maxLengthInclusive;
   delete next.minLengthFt;
+  delete next.minLengthInclusive;
   delete next.aroundLengthFt;
   return next;
 }
 
 function feetText(n: number): string {
-  return Number.isInteger(n) ? String(n) : String(n);
+  return String(n);
 }
 
 /** Length clause only. "under 40 feet" is exactly `length < 40 ft`. */
-export function lengthFilterClause(filter: OwnLotFilter): string {
+function lengthFilterClause(filter: OwnLotFilter): string {
+  if (
+    filter.minLengthFt != null &&
+    filter.maxLengthFt != null &&
+    filter.aroundLengthFt == null
+  ) {
+    const minOp = filter.minLengthInclusive ? ">=" : ">";
+    const maxOp = filter.maxLengthInclusive ? "<=" : "<";
+    return `length ${minOp} ${feetText(filter.minLengthFt)} ft and ${maxOp} ${feetText(filter.maxLengthFt)} ft`;
+  }
   if (
     filter.maxLengthFt != null &&
     filter.minLengthFt == null &&
@@ -413,7 +397,8 @@ export function lengthFilterClause(filter: OwnLotFilter): string {
     filter.maxLengthFt == null &&
     filter.aroundLengthFt == null
   ) {
-    return `length > ${feetText(filter.minLengthFt)} ft`;
+    const op = filter.minLengthInclusive ? ">=" : ">";
+    return `length ${op} ${feetText(filter.minLengthFt)} ft`;
   }
   if (filter.aroundLengthFt != null) {
     const band = nominalLengthBand(filter.aroundLengthFt);
@@ -441,23 +426,6 @@ function priceBandFrom(prices: number[]): OwnLotPriceBand | null {
 
 function aroundPriceWindow(around: number): number {
   return Math.max(AROUND_PRICE_MIN_WINDOW, around * AROUND_PRICE_PCT);
-}
-
-export function isDieselBodyType(bodyType: string): boolean {
-  const n = norm(bodyType);
-  if (!n) return false;
-  if (n === "class a diesel" || n === "class super c") return true;
-  if (/^class\s*a\s*[-/]?\s*diesel/.test(n)) return true;
-  if (/^class\s*super\s*c\b/.test(n)) return true;
-  return false;
-}
-
-export function isGasBodyType(bodyType: string): boolean {
-  const n = norm(bodyType);
-  if (!n || isDieselBodyType(n)) return false;
-  if (/\bgas\b/.test(n)) return true;
-  // RV Country prints a gas Class A as "Class A". Diesel is "Class A Diesel".
-  return n === "class a";
 }
 
 export function rowToUnit(row: Record<string, unknown>): OwnLotUnit {
@@ -701,6 +669,30 @@ const OWN_LOT_MODEL_JUNK = new Set([
   "diesel",
   "diesels",
   "around",
+  "chassis",
+  "ford",
+  "gasser",
+  "gassers",
+  "gasoline",
+  "pusher",
+  "pushers",
+  "excluded",
+  "under",
+  "over",
+  "below",
+  "above",
+  "between",
+  "longer",
+  "inch",
+  "inches",
+  "least",
+  "non",
+  "not",
+  "than",
+  "non-diesel",
+  "nondiesel",
+  "and",
+  "to",
 ]);
 
 /** Series letters parseCoach must keep (Lineage M). Not plural leftovers. */
@@ -841,6 +833,20 @@ function unitLooksLikeToyHauler(unit: OwnLotUnit): boolean {
   );
 }
 
+/** "under 150k" / "over 50k" is a budget, not a model or a floorplan. */
+function stripBudgetPhrases(text: string): string {
+  return text
+    .replace(
+      /\b(?:under|below|less\s+than|over|above|more\s+than|at\s+least|up\s+to|max(?:imum)?|around|about|near)\s+\$?\s*\d{1,3}(?:,\d{3})+(?:\.\d+)?\b/gi,
+      " ",
+    )
+    .replace(
+      /\b(?:under|below|less\s+than|over|above|more\s+than|at\s+least|up\s+to|max(?:imum)?|around|about|near)\s+\$?\s*\d+(?:\.\d+)?\s*k\b/gi,
+      " ",
+    )
+    .replace(/\$\s*\d[\d,]*(?:\.\d+)?\s*k?\b/gi, " ");
+}
+
 export function parseOwnLotAsk(
   text: string,
   locations: string[] = [],
@@ -848,8 +854,9 @@ export function parseOwnLotAsk(
 ): OwnLotFilter {
   const t = normalizeAskText(text);
   const stripped = stripLengthMeasures(t);
-  const parsed = parseCoachFromText(stripped);
-  const normalized = normalizeCoachAsk(stripped);
+  const coachText = stripBudgetPhrases(stripped);
+  const parsed = parseCoachFromText(coachText);
+  const normalized = normalizeCoachAsk(coachText);
   const filter: OwnLotFilter = {};
   if (parsed.year) filter.year = parsed.year;
   if (parsed.make) filter.make = parsed.make;
@@ -877,14 +884,14 @@ export function parseOwnLotAsk(
     }) || "",
     units,
   );
-  if ((!model || !lotHasModel(units, model)) && phaetonSpeechInAsk(stripped, units)) {
+  if ((!model || !lotHasModel(units, model)) && phaetonSpeechInAsk(coachText, units)) {
     model = "phaeton";
   }
   if (model) filter.model = model;
   if (model === "phaeton" && !filter.make) filter.make = "Tiffin";
   const trim =
     (parsed.floorplan || normalized.floorplan || "").replace(/\s+/g, "") ||
-    extractFloorplanToken(stripped);
+    extractFloorplanToken(coachText);
   if (
     trim &&
     !isBudgetThousandsToken(trim) &&
@@ -903,6 +910,7 @@ export function parseOwnLotAsk(
     filter.maxLengthInclusive = length.maxLengthInclusive;
   }
   if (length.minLengthFt != null) filter.minLengthFt = length.minLengthFt;
+  if (length.minLengthInclusive) filter.minLengthInclusive = true;
   if (length.aroundLengthFt != null) filter.aroundLengthFt = length.aroundLengthFt;
   if (
     looksLikeLengthMeasureAsk(t) &&
@@ -916,31 +924,11 @@ export function parseOwnLotAsk(
   const stockNumber = parseOwnLotStockNumber(t);
   if (stockNumber) filter.stockNumber = stockNumber;
 
-  if (/\b(diesels?|pusher|pushers)\b/i.test(t)) filter.dieselOnly = true;
-  if (/\bgas\b/i.test(t) && !filter.dieselOnly) filter.gasOnly = true;
-
-  const toyHauler = /\btoy[- ]?haul(?:er|ers)?\b/i.test(t);
-  const fifthWheel = /\bfifth[- ]?wheels?\b/i.test(t);
-  const travelTrailer = /\btravel\s+trailers?\b/i.test(t);
-  // Snapshot body_type is distinct: "Fifth Wheel" ≠ "Fifth Wheel Toy Hauler".
-  if (toyHauler && !fifthWheel && !travelTrailer) filter.toyHauler = true;
-
-  if (/\bsuper\s*c\b/i.test(t)) filter.bodyType = "Class Super C";
-  else if (/\bclass\s*a\s*diesel\b/i.test(t)) filter.bodyType = "Class A Diesel";
-  else if (/\bclass\s*a\s*gas\b/i.test(t)) filter.bodyType = "Class A Gas";
-  else if (/\bclass\s*as?\b/i.test(t)) filter.bodyType = "Class A";
-  else if (/\bclass\s*b\b/i.test(t)) filter.bodyType = "Class B";
-  else if (/\bclass\s*c\b/i.test(t) && !/\bsuper\s*c\b/i.test(t)) {
-    filter.bodyType = "Class C";
-  } else if (fifthWheel && toyHauler) {
-    filter.bodyType = "Fifth Wheel Toy Hauler";
-  } else if (fifthWheel) {
-    filter.bodyType = "Fifth Wheel";
-  } else if (travelTrailer && toyHauler) {
-    filter.bodyType = "Travel Trailer Toy Hauler";
-  } else if (travelTrailer) {
-    filter.bodyType = "Travel Trailer";
-  }
+  const asked = parseAskedClassAndFuel(t);
+  if (asked.dieselOnly) filter.dieselOnly = true;
+  if (asked.gasOnly) filter.gasOnly = true;
+  if (asked.toyHauler) filter.toyHauler = true;
+  if (asked.bodyType) filter.bodyType = asked.bodyType;
 
   const fromList = matchLocationFromAsk(t, locations);
   if (fromList) filter.location = fromList;
@@ -1222,8 +1210,8 @@ export function unitMatchesFilter(
     const fl = norm(filter.location);
     if (!ul || (!ul.includes(fl) && !fl.includes(ul))) return false;
   }
-  if (filter.dieselOnly && !isDieselBodyType(unit.body_type)) return false;
-  if (filter.gasOnly && !isGasBodyType(unit.body_type)) return false;
+  if (filter.dieselOnly && !unitIsDiesel(unit)) return false;
+  if (filter.gasOnly && !unitIsGas(unit)) return false;
   if (filter.bodyType && !bodyTypeMatches(unit.body_type, filter.bodyType)) {
     return false;
   }
@@ -1247,7 +1235,7 @@ export function unitMatchesFilter(
   if (hasLengthBound(filter)) {
     const printed = unit.lengthFt;
     const fromPlan =
-      printed == null && filter.aroundLengthFt != null
+      printed == null && lengthAllowsFloorplanFallback(filter)
         ? floorplanLengthFt(unit.trim)
         : null;
     const lengthFt = printed != null ? printed : fromPlan;
@@ -1263,8 +1251,12 @@ export function unitMatchesFilter(
         return false;
       }
     }
-    if (filter.minLengthFt != null && !(lengthFt > filter.minLengthFt)) {
-      return false;
+    if (filter.minLengthFt != null) {
+      if (filter.minLengthInclusive) {
+        if (lengthFt < filter.minLengthFt) return false;
+      } else if (!(lengthFt > filter.minLengthFt)) {
+        return false;
+      }
     }
   }
   return true;
@@ -1330,7 +1322,7 @@ export function aggregateOwnLot(
       pushPrice(pricesByBodyType, u.body_type, u.price);
       pushPrice(pricesByLocation, u.location, u.price);
     }
-    if (isDieselBodyType(u.body_type)) {
+    if (unitIsDiesel(u)) {
       diesel += 1;
       tally(dieselByBodyType, u.body_type || "Class A Diesel");
     }
@@ -1561,7 +1553,7 @@ export function formatOwnLotBlock(
   const asOf = snapshot.asOf || "unknown (no timestamp on file)";
   const dieselNote = snapshot.fuelFieldPresent
     ? "Fuel field is present on some rows — still prefer body_type Class A Diesel + Class Super C for diesel counts unless the ask names fuel."
-    : 'No fuel field on this scrape. Diesel count = body_type "Class A Diesel" + "Class Super C" only. Do not invent a fuel type.';
+    : 'No fuel field on this scrape. Diesel count = body_type "Class A Diesel" + "Class Super C", plus a Class A row in a known diesel series (Mountain Aire, Allegro Bus, Ventana, Discovery). Do not invent a fuel type for any other row.';
 
   const lines = [
     `RV Country own-lot snapshot (source=${snapshot.source || "own"}, dealer=${snapshot.dealer || "RV Country"}). As of: ${asOf}.`,
@@ -1602,7 +1594,16 @@ export function formatOwnLotBlock(
   if (active.aroundLengthFt != null) {
     const band = nominalLengthBand(active.aroundLengthFt);
     lines.push(
-      `Size class around ${feetText(active.aroundLengthFt)} ft is ${feetText(band.min)}–${feetText(band.max)} ft inclusive. A printed length in that band counts. If length_ft and vehicle_body_length are blank, the floorplan number is the foot (29S, 29M, 29D, 30DS, 28A). Do not drop those rows. A printed length still wins over the floorplan.`,
+      `Size class around ${feetText(active.aroundLengthFt)} ft is ${feetText(band.min)}–${feetText(band.max)} ft inclusive. A printed length in that band counts. If length_ft and vehicle_body_length are blank, the floorplan number is the foot (29S, 29M, 29D, 30DS, 28A, 32V) and uses that same band. Do not drop those rows. A printed length still wins over the floorplan.`,
+    );
+  }
+  if (
+    active.aroundLengthFt == null &&
+    (active.minLengthFt != null || active.maxLengthFt != null) &&
+    !(active.minLengthFt != null && active.maxLengthFt != null)
+  ) {
+    lines.push(
+      "Under/over length uses the printed length only. A blank length does not borrow the floorplan number.",
     );
   }
 
