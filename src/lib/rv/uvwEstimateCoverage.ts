@@ -214,7 +214,7 @@ export function scoreEstimatedTtw(opts: {
     fuelType: opts.fuelType,
     cccLbs: opts.cccLbs,
   };
-  const estimatedUvwLbs = estimateUvwFromGvwr(opts.gvwrLbs, hint);
+  const detail = estimateUvwFromGvwrDetailed(opts.gvwrLbs, hint);
   const ttw = computeTorqueToWeight({
     torqueLbFt: opts.torqueLbFt,
     gvwrLbs: opts.gvwrLbs,
@@ -224,12 +224,12 @@ export function scoreEstimatedTtw(opts: {
     cccLbs: opts.cccLbs,
   });
   return {
-    estimatedUvwLbs,
+    estimatedUvwLbs: detail?.uvwLbs ?? null,
     score: ttw.score,
     color: ttw.color,
     gap: ttw.gap,
-    thinCcc: ttw.thinCcc,
-    tier: ttw.uvwEstimateTier,
+    thinCcc: detail?.thinCcc ?? false,
+    tier: detail?.tier ?? null,
   };
 }
 

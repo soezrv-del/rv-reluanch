@@ -299,7 +299,8 @@ export function fieldPresent(
     case "gvwr":
       return pins.gvwrLbs != null && pins.gvwrLbs > 0;
     case "uvw":
-      return pins.uvwLbs != null && pins.uvwLbs > 0;
+      // Dry weight for the torque bar comes from web search, not a catalog pin.
+      return false;
     case "tanks":
       return (
         (pins.freshWaterGal != null && pins.freshWaterGal > 0) ||
@@ -321,7 +322,7 @@ const GAP_QUERY_LABEL: Record<FactsHardField, string> = {
   transmission: "transmission",
   fuel: "fuel type",
   gvwr: "GVWR",
-  uvw: "UVW",
+  uvw: "dry weight (UVW / unloaded vehicle weight, not GVWR)",
   tanks: "holding tanks",
   length: "length",
 };
