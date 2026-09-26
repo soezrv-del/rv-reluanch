@@ -456,30 +456,18 @@ test("empty Dutch Star pin speaks a brochure figure from research, not a catalog
   assert.doesNotMatch(speech || "", /has no GVWR pin/);
 });
 
-test("Live Voice spec turns go through the shared engine and skip the snippet reply", () => {
+test("Live Voice does not mount the spec report", () => {
   const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
+  assert.match(realtime, /private readonly voiceSpecReport = false/);
+  assert.match(realtime, /this\.voiceSpecReport &&/);
+  assert.match(
+    realtime,
+    /if \(!this\.voiceSpecReport\) return false;/,
+  );
   const fnStart = realtime.indexOf("private async maybeEnrichWithWebResearch");
   const fn = realtime.slice(fnStart);
-  const specAt = fn.indexOf("if (looksLikeDeskSheetAsk(transcript))");
-  const researchSpec = fn.indexOf(
-    "if (looksLikeDeskSheetAsk(transcript))",
-    specAt + 1,
-  );
-  const flushAt = fn.indexOf("this.flushResearchAnswer(injection)");
-  assert.ok(specAt > 0 && researchSpec > specAt);
-  assert.ok(researchSpec < flushAt, "spec engine returns before the snippet flush");
+  assert.match(fn, /this\.voiceSpecReport &&/);
   assert.match(fn, /speakFromSpecEngine/);
-  assert.match(fn, /resolveDeskSheetThenFallback/);
-  assert.match(realtime, /formatVoiceSpecEngineSpeech/);
-  assert.match(realtime, /VOICE_SPEC_ENGINE_INSTRUCTIONS/);
-  assert.match(realtime, /offerVoiceExtras|withVoiceSpecExtras/);
-  assert.match(realtime, /routeVoiceOpening/);
-  assert.match(realtime, /VOICE_COACH_CHOICE_INSTRUCTIONS/);
-  assert.match(realtime, /formatVoiceQuickOverview/);
-  assert.match(realtime, /voiceExtraPick|classifyVoiceExtraPick|VOICE_EXTRAS_OFFER_LINE|offerVoiceExtras/);
-  const choiceAt = realtime.indexOf("routeVoiceOpening");
-  const speakAt = realtime.indexOf("speakFromSpecEngine");
-  assert.ok(choiceAt > 0 && choiceAt < speakAt);
   assert.doesNotMatch(realtime, /Would you like a quick overview, or a full desk report/);
   assert.doesNotMatch(
     readFileSync(join(root, "voiceSpecTurn.ts"), "utf8"),
@@ -507,14 +495,9 @@ test("overview sheet is reused for full report and voice fallback pins knowledge
   assert.match(realtime, /rememberVoiceCachedSheet/);
   assert.match(realtime, /matchingVoiceCachedSheet/);
   assert.match(realtime, /pinCoachKnowledge:\s*true/);
-  const fullAt = realtime.indexOf('if (this.voiceDeliver === "full")');
-  const reuseAt = realtime.indexOf("matchingVoiceCachedSheet", fullAt);
-  const armAt = realtime.indexOf("this.armSpecEngineTurn", fullAt);
-  assert.ok(fullAt > 0 && reuseAt > fullAt && armAt > reuseAt);
-  assert.match(
-    realtime.slice(fullAt, armAt),
-    /paintDesk:\s*!cached/,
-  );
+  assert.match(realtime, /voiceSpecReport = false/);
+  const fullAt = realtime.indexOf('this.voiceSpecReport && this.voiceDeliver === "full"');
+  assert.ok(fullAt > 0);
   const routeFn = realtime.slice(
     realtime.indexOf("private routeVoiceOpening"),
     realtime.indexOf("private async deliverVoiceQuick"),
