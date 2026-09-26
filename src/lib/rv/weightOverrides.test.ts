@@ -60,7 +60,7 @@ test("save / find / clear UVW and GVWR independently", () => {
   assert.equal(findWeightOverride(2025, "Jayco", "Precept", "31UL"), null);
 });
 
-test("UVW override does not change the GVWR torque score", () => {
+test("UVW override scores; it is not ignored for GVWR", () => {
   const scored = computeTorqueToWeight({
     torqueLbFt: 468,
     uvwLbs: 18_040,
@@ -68,9 +68,9 @@ test("UVW override does not change the GVWR torque score", () => {
     overrideUvwLbs: 17_000,
     rvType: "Class A Gas",
   });
-  assert.equal(scored.weightBasis, "GVWR");
-  assert.equal(scored.weightOverridden, false);
-  assert.equal(scored.weightLb, 22_000);
+  assert.equal(scored.weightBasis, "UVW");
+  assert.equal(scored.weightOverridden, true);
+  assert.equal(scored.weightLb, 17_000);
   assert.equal(scored.uvwLb, 17_000);
   assert.equal(scored.weightEstimated, false);
   assert.equal(
@@ -79,7 +79,7 @@ test("UVW override does not change the GVWR torque score", () => {
   );
 });
 
-test("salesman GVWR override scores; UVW does not replace it", () => {
+test("salesman GVWR override scores only when UVW is missing", () => {
   const gvwrOverride = computeTorqueToWeight({
     torqueLbFt: 468,
     gvwrLbs: 24_000,
@@ -93,14 +93,16 @@ test("salesman GVWR override scores; UVW does not replace it", () => {
   assert.equal(gvwrOverride.gap, false);
   assert.equal(gvwrOverride.gvwrLb, 22_000);
 
-  const uvwDoesNotWin = computeTorqueToWeight({
+  const uvwWins = computeTorqueToWeight({
     torqueLbFt: 468,
     uvwLbs: 18_000,
     gvwrLbs: 24_000,
     overrideGvwrLbs: 22_000,
     rvType: "Class A Gas",
   });
-  assert.equal(uvwDoesNotWin.weightBasis, "GVWR");
-  assert.equal(uvwDoesNotWin.weightLb, 22_000);
-  assert.equal(uvwDoesNotWin.uvwLb, 18_000);
+  assert.equal(uvwWins.weightBasis, "UVW");
+  assert.equal(uvwWins.weightLb, 18_000);
+  assert.equal(uvwWins.uvwLb, 18_000);
+  assert.equal(uvwWins.gvwrLb, 22_000);
+  assert.equal(uvwWins.weightOverridden, false);
 });

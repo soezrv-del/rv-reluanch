@@ -3,6 +3,7 @@ import test from "node:test";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { findOemUvwLbs } from "./floorplanSpecs.ts";
 import {
   formatCatalogTorqueScoreMarkdown,
   listCatalogTorqueToWeightScores,
@@ -11,7 +12,7 @@ import { loadLiveCatalog } from "../../../scripts/load-live-catalog.mjs";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-test("catalog helper lists published torque+GVWR and scores that GVWR", async () => {
+test("catalog helper scores published UVW, else published GVWR", async () => {
   const { RV_DATA } = await loadLiveCatalog();
   const report = listCatalogTorqueToWeightScores(RV_DATA);
 
@@ -41,23 +42,40 @@ test("catalog helper lists published torque+GVWR and scores that GVWR", async ()
     "Dream 45A must not score the Eagle-bleed 51k pin",
   );
 
+  const lineageUvw = findOemUvwLbs(
+    "2026",
+    "Grand Design",
+    "Lineage Series F",
+    "31ZW",
+  );
+  assert.equal(lineageUvw, 18_186);
   const lineage = report.scored.find(
     (r) =>
       /grand design/i.test(r.make) &&
       /lineage series f/i.test(r.model) &&
       r.torqueLbFt === 950 &&
-      r.floorplan === "31ZW",
+      r.floorplan === "31ZW" &&
+      r.weightBasis === "UVW",
   );
-  assert.ok(lineage, "Lineage Series F 31ZW scores its published GVWR");
+  assert.ok(lineage, "Lineage Series F 31ZW scores its published UVW");
   assert.equal(lineage.formula, "super-c");
-  assert.equal(lineage.weightBasis, "GVWR");
-  assert.equal(lineage.weightLb, lineage.gvwrLbs);
-  assert.ok(lineage.weightLb !== 18_186, "UVW 18,186 must not be the scored weight");
-  const ratio = (lineage.torqueLbFt / lineage.gvwrLbs) * 1000;
-  assert.ok(Math.abs(lineage.ratio - ratio) < 0.05);
+  assert.equal(lineage.weightLb, lineageUvw);
+  assert.notEqual(lineage.weightLb, lineage.gvwrLbs);
+  const uvwRatio = (lineage.torqueLbFt / lineage.weightLb) * 1000;
+  assert.ok(Math.abs(lineage.ratio - uvwRatio) < 0.05);
   assert.equal(
     lineage.color,
-    ratio >= 28 ? "green" : ratio >= 22 ? "yellow" : "red",
+    lineage.score >= 8 ? "green" : lineage.score >= 6 ? "yellow" : "red",
+  );
+
+  const gvwrOnly = report.scored.find((r) => r.weightBasis === "GVWR");
+  assert.ok(gvwrOnly, "a row with no printed UVW falls back to GVWR");
+  assert.equal(gvwrOnly.weightLb, gvwrOnly.gvwrLbs);
+  const gvwrRatio = (gvwrOnly.torqueLbFt / gvwrOnly.gvwrLbs) * 1000;
+  assert.ok(Math.abs(gvwrOnly.ratio - gvwrRatio) < 0.05);
+  assert.equal(
+    gvwrOnly.color,
+    gvwrOnly.score >= 8 ? "green" : gvwrOnly.score >= 6 ? "yellow" : "red",
   );
 
   const seneca = report.scored.filter(

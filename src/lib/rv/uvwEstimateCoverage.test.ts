@@ -29,10 +29,13 @@ test("39RK Family RVing pin stays 39,237 and is not the diesel-pusher estimate",
     rvType: "Class A Diesel",
     chassis: "Spartan",
   });
-  assert.equal(ttw.weightLb, 47_000);
+  assert.equal(ttw.weightLb, 39_237);
   assert.equal(ttw.uvwLb, 39_237);
+  assert.equal(ttw.gvwrLb, 47_000);
   assert.equal(ttw.weightEstimated, false);
-  assert.equal(ttw.weightBasis, "GVWR");
+  assert.equal(ttw.weightBasis, "UVW");
+  assert.notEqual(ttw.weightLb, 39_200);
+  assert.notEqual(ttw.weightLb, 47_000);
 });
 
 test("Anthem 44R / Precept 31UL / Alante / Open Road 34PA use the tiered formula", () => {

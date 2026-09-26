@@ -184,8 +184,8 @@ test("Discovery OEM rows keep brochure GVWR and omit invented UVW", () => {
   assert.doesNotMatch(floorplanSrc, /uvwLbs:\s*25200/);
   assert.doesNotMatch(floorplanSrc, /uvwLbs:\s*25800/);
 
-  // Invented UVW must not score. Published GVWR does.
-  const before = computeTorqueToWeight({
+  // A supplied UVW scores. Omitting it falls back to GVWR and does not estimate ~27,900.
+  const withUvw = computeTorqueToWeight({
     torqueLbFt: 800,
     uvwLbs: 25_500,
     gvwrLbs: 33_400,
@@ -193,27 +193,25 @@ test("Discovery OEM rows keep brochure GVWR and omit invented UVW", () => {
     chassis: "Freightliner XC",
     fuelType: "Diesel",
   });
-  assert.equal(before.weightBasis, "GVWR");
-  assert.equal(before.weightLb, 33_400);
-  assert.equal(before.uvwLb, 25_500);
-  assert.equal(before.weightEstimated, false);
-  assert.equal(before.ratio!.toFixed(1), "24.0");
-  assert.equal(before.color, "yellow");
+  assert.equal(withUvw.weightBasis, "UVW");
+  assert.equal(withUvw.weightLb, 25_500);
+  assert.equal(withUvw.uvwLb, 25_500);
+  assert.equal(withUvw.weightEstimated, false);
 
-  // GVWR only — same pounds. Do not estimate UVW (~27,900) to force a color.
-  const after = computeTorqueToWeight({
+  const gvwrOnly = computeTorqueToWeight({
     torqueLbFt: 800,
     gvwrLbs: 33_400,
     rvType: "Class A Diesel",
     chassis: "Freightliner XC",
     fuelType: "Diesel",
   });
-  assert.equal(after.weightBasis, "GVWR");
-  assert.equal(after.weightEstimated, false);
-  assert.equal(after.weightLb, 33_400);
-  assert.notEqual(after.weightLb, 27_900);
-  assert.equal(after.score, before.score);
-  assert.equal(after.color, "yellow");
+  assert.equal(gvwrOnly.weightBasis, "GVWR");
+  assert.equal(gvwrOnly.weightEstimated, false);
+  assert.equal(gvwrOnly.weightLb, 33_400);
+  assert.notEqual(gvwrOnly.weightLb, 27_900);
+  assert.notEqual(gvwrOnly.score, withUvw.score);
+  assert.equal(gvwrOnly.ratio!.toFixed(1), "24.0");
+  assert.equal(gvwrOnly.color, "yellow");
 });
 
 test("brochure / listing weight basis is published UVW then tiered estimate — mid×0.82 never wins", () => {
@@ -290,16 +288,19 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   assert.equal(ttw36.color, "red");
   assert.notEqual(ttw36.weightLb, 22200);
 
+  const senecaUvw = findOemUvwLbs("2025", "Jayco", "Seneca", "37K");
+  assert.equal(senecaUvw, 24_820);
   const ttwPublishedUvw = computeTorqueToWeight({
     torqueLbFt: 468,
-    uvwLbs: findOemUvwLbs("2025", "Jayco", "Seneca", "37K") ?? 24_820,
+    uvwLbs: senecaUvw,
     gvwrLbs: 31_000,
     rvType: "Class C",
   });
-  assert.equal(ttwPublishedUvw.weightBasis, "GVWR");
-  assert.equal(ttwPublishedUvw.weightLb, 31_000);
+  assert.equal(ttwPublishedUvw.weightBasis, "UVW");
+  assert.equal(ttwPublishedUvw.weightLb, 24_820);
   assert.equal(ttwPublishedUvw.uvwLb, 24_820);
   assert.equal(ttwPublishedUvw.weightEstimated, false);
+  assert.notEqual(ttwPublishedUvw.weightLb, 31_000);
 
   const ttwVxl = computeTorqueToWeight({
     torqueLbFt: 468,

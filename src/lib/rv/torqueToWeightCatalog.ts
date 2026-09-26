@@ -3,11 +3,12 @@
  *
  * Inventory still requires published numeric torque + published numeric
  * GVWR (series, year-band, or OEM floorplan pin). Never invent from
- * weightRange mid / HP. Towables are N/A. Motorized missing either
- * field is GAP.
+ * weightRange mid / HP. Towables are N/A. Motorized missing torque or
+ * GVWR is GAP.
  *
- * Scoring uses published GVWR only: lb-ft per 1,000 lb. UVW does not
- * score. Do not estimate UVW and do not subtract 1,800 from Class A gas.
+ * Scoring prefers a published UVW on that same row. GVWR is the fallback
+ * when that UVW is missing. Do not estimate UVW and do not subtract
+ * 1,800 from Class A gas. The two denominators use different cutoffs.
  */
 
 import { findOemGvwrLbs, findOemUvwLbs } from "./floorplanSpecs.ts";
@@ -28,7 +29,7 @@ export type CatalogTorqueScoreRow = {
   formula: TorqueScoreFormula;
   torqueLbFt: number;
   gvwrLbs: number;
-  /** Pounds actually scored — published GVWR, never UVW. */
+  /** Pounds actually scored — published UVW when that row has one, else GVWR. */
   weightLb: number;
   weightBasis: TorqueWeightBasis;
   ratio: number;
@@ -118,8 +119,8 @@ function torqueForYear(spec: RVSpec, year: number, floorplan?: string): number |
   return positive(spec.torqueLbFt);
 }
 
-function rowKey(row: Pick<CatalogTorqueScoreRow, "make" | "model" | "torqueLbFt" | "gvwrLbs" | "formula">): string {
-  return [row.make, row.model, row.formula, row.torqueLbFt, row.gvwrLbs].join("|");
+function rowKey(row: Pick<CatalogTorqueScoreRow, "make" | "model" | "torqueLbFt" | "gvwrLbs" | "formula" | "floorplan">): string {
+  return [row.make, row.model, row.formula, row.torqueLbFt, row.gvwrLbs, row.floorplan ?? ""].join("|");
 }
 
 function scoreRow(
@@ -140,9 +141,11 @@ function scoreRow(
     uvwLbs?: number | null;
   },
 ): CatalogTorqueScoreRow | null {
+  const publishedUvw =
+    extras && "uvwLbs" in extras ? extras.uvwLbs ?? null : spec.uvwLbs ?? null;
   const result = computeTorqueToWeight({
     torqueLbFt,
-    uvwLbs: extras?.uvwLbs ?? spec.uvwLbs ?? null,
+    uvwLbs: publishedUvw,
     gvwrLbs,
     rvType: extras?.type ?? spec.type,
     fuelType: extras?.fuel ?? spec.fuelType,
@@ -198,7 +201,14 @@ export function listCatalogTorqueToWeightScores(
   const push = (row: CatalogTorqueScoreRow | null) => {
     if (!row) return;
     const key = rowKey(row);
-    if (seen.has(key)) return;
+    if (seen.has(key)) {
+      const idx = scored.findIndex((r) => rowKey(r) === key);
+      const prev = idx >= 0 ? scored[idx] : undefined;
+      if (prev && prev.weightBasis !== "UVW" && row.weightBasis === "UVW") {
+        scored[idx] = row;
+      }
+      return;
+    }
     seen.add(key);
     scored.push(row);
   };
@@ -241,6 +251,7 @@ export function listCatalogTorqueToWeightScores(
               fuel: band.fuelType ?? spec.fuelType,
               chassis: band.chassis ?? spec.chassis,
               engine: band.engine ?? spec.engine,
+              uvwLbs: null,
             }),
           );
         }
@@ -265,7 +276,7 @@ export function listCatalogTorqueToWeightScores(
               yearFrom: year,
               yearTo: year,
               floorplan: fp,
-              uvwLbs: findOemUvwLbs(year, make, model, fp) ?? spec.uvwLbs ?? null,
+              uvwLbs: findOemUvwLbs(year, make, model, fp),
             }),
           );
         }
@@ -344,7 +355,7 @@ export function formatCatalogTorqueScoreMarkdown(
   const lines: string[] = [
     "# Per-type torque-to-weight catalog scores",
     "",
-    "Published torque + published GVWR. The score is lb-ft per 1,000 lb of GVWR. UVW does not score. Missing torque or GVWR is GAP. Towables are N/A.",
+    "Published torque + published GVWR. A published UVW on that row scores instead, on its own cutoff. Missing dry weight falls back to GVWR. Do not estimate UVW. Missing torque or GVWR is GAP. Towables are N/A.",
     "",
     `| Formula | Models with both fields |`,
     `|---------|-------------------------|`,

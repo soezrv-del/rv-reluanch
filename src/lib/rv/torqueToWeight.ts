@@ -1,30 +1,35 @@
 /**
  * Torque rating for the Facts Ratings bar.
  *
- * Weight is a published GVWR only. UVW never scores. Do not estimate
- * UVW from GVWR to force a color. Do not score Class A gas as
- * GVWR − 1800. Do not use dry-weight champion ratios or the old
- * global breakpoint curve.
+ * Prefer dry weight. Fall back to GVWR only when dry weight is missing.
+ * A short Class C and a long Class C on the same chassis share torque
+ * and GVWR; printed UVW is what separates them.
+ *
+ * Do not invent UVW from GVWR. Do not use the tiered factors or the
+ * Class A gas GVWR − 1800 scored weight. UVW_EST is not a score.
+ * weightEstimated = false either way.
  *
  * Active weight (first hit wins):
- *   1. Salesman GVWR override
- *   2. Published gvwrLbs
- *   3. parseGvwrLb — a two-number band uses the high end
- * Missing torque or GVWR is GAP. Do not invent either number.
+ *   1. Salesman UVW override
+ *   2. Published / pinned UVW (uvwLbs, then parseUvwLb)
+ *   3. If no UVW: salesman GVWR override, then published gvwrLbs,
+ *      then parseGvwrLb. A two-number band uses the high end.
+ *   4. If neither: GAP. Do not estimate either number.
  *
- * Ratio: r = (torqueLbFt / gvwrLbs) * 1000  →  lb-ft per 1,000 lb GVWR
- * weightBasis = "GVWR"
- * weightEstimated = false
+ * Ratio: r = (torqueLbFt / weightLb) * 1000
+ * weightBasis = "UVW" when dry weight scored.
+ * weightBasis = "GVWR" when the fallback scored.
  *
- * Color is on that ratio, not a dry-weight score:
- *   green   r >= 28
- *   yellow  22 <= r < 28
- *   red     r < 22
+ * Two color scales. Do not put a GVWR ratio on the UVW ruler.
+ * Color comes from the score: red under 6, yellow from 6 up to 8,
+ * green at 8 and up.
  *
- * Score matches those colors:
- *   score = clamp(6 + (r - 22) / 3, 1, 10)
- *   22 is 6.0 (yellow starts). 28 is 8.0 (green starts). 34 is 10.0.
- *   Under 22 stays under 6 and is red.
+ * UVW: green ratio >= 40, yellow ratio >= 32 and under 40, red below.
+ *      score = clamp(6 + (ratio - 32) / 4, 1, 10)
+ *      32 is 6.0. 40 is 8.0. 48 is 10.0.
+ * GVWR: green ratio >= 28, yellow ratio >= 22 and under 28, red below.
+ *       score = clamp(6 + (ratio - 22) / 3, 1, 10)
+ *       22 is 6.0. 28 is 8.0. 34 is 10.0.
  *
  * Towables stay N/A. A Class C toy hauler is still rateable. A fifth
  * wheel, travel trailer, truck camper, or Hideout is not.
@@ -134,7 +139,7 @@ export type TorqueToWeightResult = {
   gvwrLb: number | null;
   /** Pounds used for the score. Null on GAP / N/A. */
   weightLb: number | null;
-  /** "UVW", "UVW_EST", or "GVWR" when scored. Null on GAP / N/A. */
+  /** "UVW" when dry weight scored, "GVWR" on the fallback. Null on GAP / N/A. */
   weightBasis: TorqueWeightBasis | null;
   /** True when the active weight came from a manual override. */
   weightOverridden: boolean;
@@ -485,11 +490,11 @@ export function dryWeightBarFill(ratio: number): number {
 }
 
 /**
- * Ratings color. `ratio` is lb-ft per 1,000 lb GVWR, not torque/UVW.
- * Do not paint 0.04 / 0.0132 dry-weight thresholds.
+ * Not used by the Ratings bar. UVW scale only — do not pass a GVWR ratio,
+ * and do not paint 0.04 / 0.0132 thresholds.
  */
 export function dryWeightBarColor(ratio: number): TorqueBarColor {
-  return colorFromGvwrRatio(ratio) ?? "red";
+  return barColorFromScore(scoreFromTorqueToWeightRatio(ratio, "UVW")) ?? "red";
 }
 
 export function formatDryWeightRatio(
@@ -520,15 +525,18 @@ export function isTowableForTorqueRating(
 }
 
 /**
- * 1–10 from r = (lb-ft / GVWR) × 1000.
- * score = clamp(6 + (r - 22) / 3, 1, 10)
- * 22 → 6.0, 28 → 8.0, 34 → 10.0. Class does not move the number.
+ * 1–10 on the scale of the weight that scored.
+ * UVW:  clamp(6 + (ratio - 32) / 4, 1, 10) — 32 → 6.0, 40 → 8.0, 48 → 10.0
+ * GVWR: clamp(6 + (ratio - 22) / 3, 1, 10) — 22 → 6.0, 28 → 8.0, 34 → 10.0
+ * Class does not move the number. A missing basis uses the GVWR scale
+ * only so a GVWR ratio is never painted on the UVW ruler.
  */
 export function scoreFromTorqueToWeightRatio(
   ratio: number | null | undefined,
-  _formula?: TorqueScoreFormula,
+  basis?: TorqueWeightBasis | null,
 ): number | null {
   if (ratio == null || !Number.isFinite(ratio) || ratio < 0) return null;
+  if (basis === "UVW") return clampScore(6 + (ratio - 32) / 4);
   return clampScore(6 + (ratio - 22) / 3);
 }
 
@@ -581,8 +589,8 @@ export type ResolvedTorqueWeight = {
 };
 
 /**
- * Pick the rating weight: salesman GVWR, else published gvwrLbs, else
- * parseGvwrLb. UVW is recorded and never scored. No UVW estimate.
+ * Pick the rating weight. Printed UVW wins. GVWR is only the fallback.
+ * No UVW estimate.
  */
 export function resolveTorqueWeight(
   input: TorqueToWeightInput,
@@ -597,9 +605,21 @@ export function resolveTorqueWeight(
     parseGvwrLb(input.gvwrRaw) ?? parseGvwrLb(input.weightRange);
   const gvwrLb = overrideGvwr ?? publishedGvwr ?? parsedGvwr;
 
-  if (gvwrLb == null) {
+  if (uvwLb != null) {
     return {
       uvwLb,
+      gvwrLb,
+      weightLb: uvwLb,
+      weightBasis: "UVW",
+      weightOverridden: overrideUvw != null,
+      weightEstimated: false,
+      thinCcc: false,
+      uvwEstimateTier: null,
+    };
+  }
+  if (gvwrLb == null) {
+    return {
+      uvwLb: null,
       gvwrLb: null,
       weightLb: null,
       weightBasis: null,
@@ -610,7 +630,7 @@ export function resolveTorqueWeight(
     };
   }
   return {
-    uvwLb,
+    uvwLb: null,
     gvwrLb,
     weightLb: gvwrLb,
     weightBasis: "GVWR",
@@ -635,7 +655,7 @@ export function computeTorqueToWeight(
       ? torqueToWeightRatio(torqueLbFt, resolved.weightLb)
       : null;
   const formula = resolveTorqueScoreFormula(input);
-  const score = scoreFromTorqueToWeightRatio(ratio);
+  const score = scoreFromTorqueToWeightRatio(ratio, resolved.weightBasis);
   const scored = score != null;
   return {
     torqueLbFt,
@@ -649,7 +669,7 @@ export function computeTorqueToWeight(
     uvwEstimateTier: null,
     ratio,
     score,
-    color: colorFromGvwrRatio(ratio),
+    color: barColorFromScore(score),
     formula: scored ? formula : null,
     gap: !scored,
     na: false,
@@ -667,12 +687,12 @@ export function formatTorqueToWeightScore(
   return `${result.score.toFixed(1)}/10`;
 }
 
-/**
- * Retired from UI — weight basis / estimate method is internal.
- * Kept so existing call sites can stay null-safe.
- */
+/** "Torque / UVW" or "Torque / GVWR". Null on GAP / N/A — never an estimate label. */
 export function formatTorqueWeightBasisChip(
-  _result: TorqueToWeightResult,
+  result: TorqueToWeightResult,
 ): string | null {
+  if (result.na || result.gap || result.weightBasis == null) return null;
+  if (result.weightBasis === "UVW") return "Torque / UVW";
+  if (result.weightBasis === "GVWR") return "Torque / GVWR";
   return null;
 }

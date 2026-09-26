@@ -40,6 +40,7 @@ import {
 } from "@/lib/rv/ratingSystem";
 import {
   computeTorqueToWeight,
+  formatTorqueWeightBasisChip,
 } from "@/lib/rv/torqueToWeight";
 import {
   OWNER_REVIEW_FOOTER,
@@ -911,6 +912,8 @@ export function RvDetail({
     : torqueToWeight.gap || torqueToWeight.ratio == null
       ? "GAP"
       : torqueToWeight.ratio.toFixed(1);
+  const torqueChip = formatTorqueWeightBasisChip(torqueToWeight) ?? "Torque";
+  const torqueAriaMax = torqueToWeight.weightBasis === "UVW" ? 48 : 34;
 
   const ownerReviews = useMemo(
     () => getMockReviews(make, model, displayRating),
@@ -1986,7 +1989,7 @@ export function RvDetail({
               ))}
               <li className="flex items-center justify-between gap-3 py-3 last:pb-0">
                 <span className="min-w-0 shrink-0 text-[14px] font-medium text-white">
-                  Torque / GVWR
+                  {torqueChip}
                 </span>
                 {torqueToWeight.gap || torqueToWeight.na ? (
                   <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/40">
@@ -1999,9 +2002,9 @@ export function RvDetail({
                       data-testid="facts-tqwt-bar"
                       data-fill="left-to-right"
                       role="meter"
-                      aria-label={`Torque per 1,000 lb GVWR ${torqueRatioLabel}`}
+                      aria-label={`${torqueChip} ${torqueRatioLabel}`}
                       aria-valuemin={0}
-                      aria-valuemax={34}
+                      aria-valuemax={torqueAriaMax}
                       aria-valuenow={torqueToWeight.ratio ?? 0}
                     >
                       <div
