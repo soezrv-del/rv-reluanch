@@ -26,6 +26,8 @@ export type LotCatalogSeedRow = {
   propane_lbs?: number;
   propane_gal?: number;
   source: "RV Country lot unit record";
+  /** Agreeing own-lot rows for the numbers on this record. */
+  sourceNote?: string;
 };
 
 export const LOT_CATALOG_SEED: LotCatalogSeedRow[] = [
