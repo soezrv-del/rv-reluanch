@@ -47,7 +47,7 @@ test("Imagine lot seed is one record per year + model + floorplan, tagged as a l
     assert.ok(r.model.startsWith("Imagine"));
     assert.equal(r.source, "RV Country lot unit record");
     assert.match(r.sourceNote, /public\/inventory\/own-lot-latest\.json/);
-    assert.match(r.sourceNote, /2026-09-24/);
+    assert.match(r.sourceNote, /2026-09-25/);
     assert.match(r.sourceNote, /id \d+/);
     assert.match(r.sourceNote, /stock /);
     for (const n of [
@@ -73,6 +73,42 @@ test("Imagine lot seed is one record per year + model + floorplan, tagged as a l
   assert.match(multi.sourceNote, /46146/);
   assert.match(multi.sourceNote, /46149/);
   assert.match(multi.sourceNote, /47183/);
+});
+
+test("every Imagine fill still matches the 2026-09-25 lot row it cites", () => {
+  const lot = JSON.parse(
+    readFileSync(join(root, "../../../public/inventory/own-lot-latest.json"), "utf8"),
+  ) as Array<Record<string, unknown>>;
+  const byId = new Map(lot.map((unit) => [String(unit.id), unit]));
+  const fields = [
+    "gvwr",
+    "dry_weight",
+    "hitch_weight",
+    "payload",
+    "vehicle_body_length",
+    "propane_lbs",
+    "total_fresh_water_tank_capacity",
+    "total_gray_water_tank_capacity",
+    "total_black_water_tank_capacity",
+  ] as const;
+  for (const seeded of GRAND_DESIGN_LOT_SEED) {
+    const cites = [...seeded.sourceNote.matchAll(/id (\d+) \/ stock (\S+?)(?:;|$)/g)];
+    assert.ok(cites.length > 0, seeded.title);
+    for (const cite of cites) {
+      const unit = byId.get(cite[1]!);
+      assert.ok(unit, `${seeded.title} missing id ${cite[1]}`);
+      assert.equal(String(unit.stock_number), cite[2], seeded.title);
+      assert.equal(unit.year, seeded.year, seeded.title);
+      assert.equal(unit.model, seeded.model, seeded.title);
+      assert.equal(unit.trim, seeded.trim, seeded.title);
+      assert.match(String(unit.scraped_at), /^2026-09-25/, seeded.title);
+      for (const field of fields) {
+        const stored = seeded[field];
+        if (stored == null) continue;
+        assert.equal(Number(unit[field]), stored, `${seeded.title} ${field}`);
+      }
+    }
+  }
 });
 
 test("2019 Imagine 2800BH lot numbers paint holes on Facts and on the Grok desk", () => {

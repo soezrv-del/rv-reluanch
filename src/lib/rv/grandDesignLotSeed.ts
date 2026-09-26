@@ -1,6 +1,6 @@
 /**
  * Grand Design Imagine lot-record fills from the RV Country scrape
- * dated 2026-09-24 (public/inventory/own-lot-latest.json).
+ * dated 2026-09-25 (public/inventory/own-lot-latest.json).
  *
  * Pilot slice: Imagine, Imagine AIM, and Imagine XLS only.
  * One row per year + model + floorplan. Not an OEM brochure pin.
@@ -29,7 +29,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Propane (lb) · id 216875 / stock 47686A",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Propane (lb) · id 216875 / stock 47686A",
   },
   {
     year: 2022,
@@ -46,7 +46,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, CCC/payload, Length (ft), Propane (lb) · id 175476 / stock 42875A",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, CCC/payload, Length (ft), Propane (lb) · id 175476 / stock 42875A",
   },
   {
     year: 2025,
@@ -62,7 +62,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Propane (lb) · id 216327 / stock 46147A",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Propane (lb) · id 216327 / stock 46147A",
   },
   {
     year: 2026,
@@ -79,7 +79,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, CCC/payload, Length (ft), Propane (lb) · id 38148 / stock 45458; id 38153 / stock 45459",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, CCC/payload, Length (ft), Propane (lb) · id 38148 / stock 45458; id 38153 / stock 45459",
   },
   {
     year: 2026,
@@ -96,7 +96,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, CCC/payload, Length (ft), Propane (lb) · id 95103 / stock 46314",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, CCC/payload, Length (ft), Propane (lb) · id 95103 / stock 46314",
   },
   {
     year: 2026,
@@ -112,7 +112,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Propane (lb) · id 150540 / stock 47437; id 150552 / stock 47449",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Propane (lb) · id 150540 / stock 47437; id 150552 / stock 47449",
   },
   {
     year: 2026,
@@ -127,7 +127,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     vehicle_body_length: 31.67,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft) · id 90258 / stock 46146; id 90280 / stock 46149; id 128526 / stock 47183",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft) · id 90258 / stock 46146; id 90280 / stock 46149; id 128526 / stock 47183",
   },
   {
     year: 2026,
@@ -142,7 +142,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     vehicle_body_length: 32.25,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft) · id 128524 / stock 47184; id 177852 / stock 47552",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft) · id 128524 / stock 47184; id 177852 / stock 47552",
   },
   {
     year: 2026,
@@ -158,7 +158,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Propane (lb) · id 99332 / stock 46558; id 130326 / stock 47261",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Propane (lb) · id 99332 / stock 46558; id 130326 / stock 47261",
   },
   {
     year: 2026,
@@ -174,7 +174,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Propane (lb) · id 99752 / stock 46585",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Propane (lb) · id 99752 / stock 46585",
   },
   {
     year: 2027,
@@ -190,7 +190,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Propane (lb) · id 178487 / stock 47563",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Propane (lb) · id 178487 / stock 47563",
   },
   // Imagine AIM
   {
@@ -206,7 +206,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     vehicle_body_length: 19.67,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft) · id 150507 / stock 47418",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft) · id 150507 / stock 47418",
   },
   {
     year: 2026,
@@ -221,7 +221,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     vehicle_body_length: 19.67,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft) · id 120641 / stock 47072",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft) · id 120641 / stock 47072",
   },
   {
     year: 2026,
@@ -236,7 +236,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     vehicle_body_length: 22,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft) · id 120643 / stock 47073; id 150508 / stock 47419; id 150537 / stock 47434",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft) · id 120643 / stock 47073; id 150508 / stock 47419; id 150537 / stock 47434",
   },
   // Imagine XLS
   {
@@ -257,7 +257,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, CCC/payload, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 211095 / stock UCO9924",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, CCC/payload, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 211095 / stock UCO9924",
   },
   {
     year: 2022,
@@ -277,7 +277,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, CCC/payload, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 218923 / stock 47690A1",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, CCC/payload, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 218923 / stock 47690A1",
   },
   {
     year: 2022,
@@ -297,7 +297,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, CCC/payload, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 175425 / stock 47165A",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, CCC/payload, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 175425 / stock 47165A",
   },
   {
     year: 2025,
@@ -316,7 +316,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 37959 / stock 45497",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 37959 / stock 45497",
   },
   {
     year: 2025,
@@ -335,7 +335,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 37950 / stock 45495",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 37950 / stock 45495",
   },
   {
     year: 2026,
@@ -353,7 +353,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 130329 / stock 47264; id 150551 / stock 47448",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 130329 / stock 47264; id 150551 / stock 47448",
   },
   {
     year: 2026,
@@ -371,7 +371,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     total_black_water_tank_capacity: 37,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal) · id 93163 / stock 46240; id 150538 / stock 47435",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal) · id 93163 / stock 46240; id 150538 / stock 47435",
   },
   {
     year: 2026,
@@ -390,7 +390,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 95109 / stock 46317",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 95109 / stock 46317",
   },
   {
     year: 2026,
@@ -409,7 +409,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 38079 / stock 45444",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 38079 / stock 45444",
   },
   {
     year: 2026,
@@ -427,7 +427,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     total_black_water_tank_capacity: 37,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal) · id 130330 / stock 47262; id 99335 / stock 46561; id 98173 / stock 46454",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal) · id 130330 / stock 47262; id 99335 / stock 46561; id 98173 / stock 46454",
   },
   {
     year: 2027,
@@ -446,7 +446,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 150539 / stock 47436",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 150539 / stock 47436",
   },
   {
     year: 2027,
@@ -465,7 +465,7 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 178493 / stock 47569; id 178495 / stock 47570; id 150544 / stock 47441",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 178493 / stock 47569; id 178495 / stock 47570; id 150544 / stock 47441",
   },
   {
     year: 2027,
@@ -484,6 +484,6 @@ export const GRAND_DESIGN_LOT_SEED: GrandDesignLotSeedRow[] = [
     propane_lbs: 40,
     source: "RV Country lot unit record",
     sourceNote:
-      "public/inventory/own-lot-latest.json · scraped 2026-09-24 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 214460 / stock 47859",
+      "public/inventory/own-lot-latest.json · scraped 2026-09-25 · GVWR, UVW/dry, Hitch/pin, Length (ft), Fresh (gal), Gray (gal), Black (gal), Propane (lb) · id 214460 / stock 47859",
   },
 ];
