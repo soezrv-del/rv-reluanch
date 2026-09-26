@@ -54,7 +54,7 @@ test("session.update enables native web_search on the Realtime session", () => {
   assert.match(session.instructions, /native web_search/);
   assert.match(
     session.instructions,
-    /experienced RV salesman's pocket/,
+    /You talk directly with the person in front of you/,
   );
   assert.match(session.instructions, /the catalog pin in this turn wins/);
   assert.match(session.instructions, /give me one second/);
@@ -136,7 +136,13 @@ test("standing lessons no longer stack the retired desk bullets", () => {
   assert.doesNotMatch(defaultSession.instructions, /STANDING LESSONS \(desk SoT\)/);
   assert.doesNotMatch(defaultSession.instructions, /Sparse name use/);
   assert.doesNotMatch(defaultSession.instructions, /CARFAX-style/);
-  assert.match(defaultSession.instructions, /experienced RV salesman's pocket/);
+  assert.match(
+    defaultSession.instructions,
+    /You talk directly with the person in front of you/,
+  );
+  assert.doesNotMatch(defaultSession.instructions, /The mic is the salesman/);
+  assert.doesNotMatch(defaultSession.instructions, /Brief him/);
+  assert.doesNotMatch(defaultSession.instructions, /hand him the line/);
 });
 
 test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => {

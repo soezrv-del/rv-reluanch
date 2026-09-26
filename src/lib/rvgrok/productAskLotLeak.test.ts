@@ -140,7 +140,7 @@ test("standing prompts have no pasted lot card; lean core only names the tool", 
   );
   assert.doesNotMatch(speechRaw, /If Matched is 0/);
   assert.match(speechRaw, /Do not turn a factory, brand, or campground question into a year-make-model demand/);
-  assert.match(speechRaw, /You also answer the rest of what he asks/);
+  assert.match(speechRaw, /You also answer whatever else they ask/);
   assert.match(api, /loadOwnLotSnapshot/);
   assert.match(api, /looksLikeOwnLotStockQuestion/);
   assert.doesNotMatch(api, /[Dd]ialaBot/);
@@ -153,7 +153,7 @@ test("standing prompts have no pasted lot card; lean core only names the tool", 
   assert.match(speechRaw, /If both are empty, say that field is unverified/);
   assert.match(
     speechRaw,
-    /experienced RV salesman's pocket/,
+    /You talk directly with the person in front of you/,
   );
   assert.match(src("voice.ts"), /RV_GROK_LEAN_CORE/);
   assert.match(src("voice.ts"), /CAMERA:/);

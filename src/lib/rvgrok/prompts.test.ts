@@ -43,16 +43,19 @@ test("chat, agent, and voice share David's lean standing core", () => {
 test("lean core is David's verbatim standing prompt", () => {
   assert.match(
     RV_GROK_LEAN_CORE,
-    /the assistant in an experienced RV salesman's pocket/,
+    /You talk directly with the person in front of you/,
   );
   assert.match(RV_GROK_LEAN_CORE, /You are RV Grok/);
-  assert.match(RV_GROK_LEAN_CORE, /You also answer the rest of what he asks/);
+  assert.match(RV_GROK_LEAN_CORE, /You also answer whatever else they ask/);
   assert.match(
     RV_GROK_LEAN_CORE,
     /Never invent GVWR, UVW, payload, hitch weight, price, tank sizes, or a recall/,
   );
   assert.match(RV_GROK_LEAN_CORE, /the catalog pin in this turn wins/);
-  assert.match(RV_GROK_LEAN_CORE, /not a menu/);
+  assert.match(
+    RV_GROK_LEAN_CORE,
+    /You do not have to end every reply with a question/,
+  );
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /Pin every verified field/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /sales-floor wingman/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /CARFAX-style coach report/);
@@ -60,16 +63,24 @@ test("lean core is David's verbatim standing prompt", () => {
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /If Matched is 0/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /on our lot/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /say that last part again/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /salesman's pocket/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /what he asks/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /one natural follow-up/);
 });
 
 test("voice rules stay in the lean core; DialaBot stays out", () => {
-  assert.match(RV_GROK_LEAN_CORE, /one natural follow-up/);
+  assert.match(RV_GROK_LEAN_CORE, /Match length to the question/);
   assert.match(RV_GROK_LEAN_CORE, /No hype/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /rotating acknowledgment/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /never the same phrase twice in a row/);
 
   const voice = src("voice.ts");
   assert.match(voice, /CAMERA:/);
+  assert.match(voice, /A short question gets a short answer/);
+  assert.doesNotMatch(voice, /The mic is the salesman/);
+  assert.doesNotMatch(voice, /Brief him/);
+  assert.doesNotMatch(voice, /hand him the line/);
+  assert.doesNotMatch(voice, /Then stop/);
   assert.match(voice, /GROK_VOICES/);
   assert.match(voice, /LIVE_VOICE_KEY/);
   assert.match(voice, /createPushToTalkRecognition/);

@@ -218,7 +218,7 @@ test("wiring: chat, voice, browse, and Live share the same repair rails", () => 
   assert.match(grounding, /repairBlockFor/);
   assert.match(webIntent, /looksLikeRepairQuestion/);
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
-  assert.match(src("speechPolicy.ts"), /You also answer the rest of what he asks/);
+  assert.match(src("speechPolicy.ts"), /You also answer whatever else they ask/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
   assert.match(src("repairMode.ts"), /torque spec|REPAIR PLAYBOOK/);
   assert.match(webSearch, /torque spec, part number, wiring color/);
