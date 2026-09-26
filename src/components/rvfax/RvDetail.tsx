@@ -744,32 +744,48 @@ export function RvDetail({
       },
     );
 
+    const keepReal = (
+      catalog: string | null | undefined,
+      searched: string | null | undefined,
+    ) => {
+      const gap =
+        /^(?:confirm brochure|gap|n\/?a|tbd|unknown|null|—|-|–)?$/i;
+      const c = (catalog ?? "").trim();
+      const s = (searched ?? "").trim();
+      if (s && (!c || gap.test(c))) return s;
+      return c || s;
+    };
     if (brochurePinned) {
       return {
         ...merged,
-        lengthFt: catalogSpecs.lengthFt || merged.lengthFt,
-        exteriorWidth: catalogSpecs.exteriorWidth || merged.exteriorWidth,
-        exteriorHeight: catalogSpecs.exteriorHeight || merged.exteriorHeight,
-        interiorHeight: catalogSpecs.interiorHeight || merged.interiorHeight,
-        gvwr: catalogSpecs.gvwr || merged.gvwr,
-        uvw: catalogSpecs.uvw || merged.uvw,
-        ccc: catalogSpecs.ccc || merged.ccc,
-        freshWater: catalogSpecs.freshWater || merged.freshWater,
-        grayWater: catalogSpecs.grayWater || merged.grayWater,
-        blackWater: catalogSpecs.blackWater || merged.blackWater,
-        propane: catalogSpecs.propane,
-        garageLength: catalogSpecs.garageLength || merged.garageLength,
-        garageWidth: catalogSpecs.garageWidth || merged.garageWidth,
-        garageHeight: catalogSpecs.garageHeight || merged.garageHeight,
-        garageCapacity: catalogSpecs.garageCapacity || merged.garageCapacity,
-        rampWidth: catalogSpecs.rampWidth || merged.rampWidth,
-        fuelStation: catalogSpecs.fuelStation || merged.fuelStation,
-        garageFits: catalogSpecs.garageFits || merged.garageFits,
+        lengthFt: keepReal(catalogSpecs.lengthFt, merged.lengthFt),
+        exteriorWidth: keepReal(catalogSpecs.exteriorWidth, merged.exteriorWidth),
+        exteriorHeight: keepReal(catalogSpecs.exteriorHeight, merged.exteriorHeight),
+        interiorHeight: keepReal(catalogSpecs.interiorHeight, merged.interiorHeight),
+        gvwr: keepReal(catalogSpecs.gvwr, merged.gvwr),
+        uvw: keepReal(catalogSpecs.uvw, merged.uvw),
+        ccc: keepReal(catalogSpecs.ccc, merged.ccc),
+        freshWater: keepReal(catalogSpecs.freshWater, merged.freshWater),
+        grayWater: keepReal(catalogSpecs.grayWater, merged.grayWater),
+        blackWater: keepReal(catalogSpecs.blackWater, merged.blackWater),
+        propane: keepReal(catalogSpecs.propane, merged.propane),
+        generator: keepReal(catalogSpecs.generator, merged.generator),
+        mpgHighway: keepReal(catalogSpecs.mpgHighway, merged.mpgHighway),
+        warranty: keepReal(catalogSpecs.warranty, merged.warranty),
+        garageLength: keepReal(catalogSpecs.garageLength, merged.garageLength),
+        garageWidth: keepReal(catalogSpecs.garageWidth, merged.garageWidth),
+        garageHeight: keepReal(catalogSpecs.garageHeight, merged.garageHeight),
+        garageCapacity: keepReal(catalogSpecs.garageCapacity, merged.garageCapacity),
+        rampWidth: keepReal(catalogSpecs.rampWidth, merged.rampWidth),
+        fuelStation: keepReal(catalogSpecs.fuelStation, merged.fuelStation),
+        garageFits: keepReal(catalogSpecs.garageFits, merged.garageFits),
         isToyHauler: catalogSpecs.isToyHauler || merged.isToyHauler,
-        propane: catalogSpecs.propane,
       };
     }
-    return { ...merged, propane: catalogSpecs.propane };
+    return {
+      ...merged,
+      propane: keepReal(catalogSpecs.propane, merged.propane),
+    };
   }, [catalogSpecs, live, brochurePinned, powertrainGuard]);
 
   const displayRating = ratingMeta.score;
