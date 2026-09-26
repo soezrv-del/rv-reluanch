@@ -198,7 +198,7 @@ test("337RLS numbers do not become a Reflection class average", () => {
   assert.equal(merged.specs.propane, CONFIRM_BROCHURE);
 });
 
-test("a flagged lot value still overrides when an agreeing own-lot unit has no flag", () => {
+test("lot wins when one record is marked override and the others agree", () => {
   const sheet = blankSheet();
   sheet.gvwr = "7,995 lbs";
   sheet.gvwrLbs = 7995;
@@ -235,14 +235,6 @@ test("a flagged lot value still overrides when an agreeing own-lot unit has no f
       hitch_weight: 581,
       max_sleeping_count: 6,
     },
-    {
-      year: 2026,
-      make: "Grand Design",
-      model: "Imagine",
-      trim: "2500RL",
-      stock_number: "47322-partial",
-      gvwr: 7850,
-    },
   ];
   const agreed = agreeingLotSpecs(units);
   assert.equal(agreed?.gvwrLbs, 7850);
@@ -264,6 +256,172 @@ test("a flagged lot value still overrides when an agreeing own-lot unit has no f
   assert.equal(merged.specs.sleeps, "6");
   assert.match(merged.specs.accuracyNote, /RV Country lot unit record/);
   assert.equal(merged.specs.dataSource, "oem-year");
+});
+
+test("lot wins when one record is marked override and the others are blank / omit the field", () => {
+  const sheet = blankSheet();
+  sheet.gvwr = "7,995 lbs";
+  sheet.gvwrLbs = 7995;
+  sheet.uvw = "6,495 lbs";
+  sheet.uvwLbs = 6495;
+  sheet.dataSource = "oem-year";
+  const units = [
+    {
+      year: 2026,
+      make: "Grand Design",
+      model: "Imagine",
+      trim: "2500RL",
+      gvwr: 7850,
+      dry_weight: 6623,
+      overridesCatalog: { gvwr: true, dry_weight: true },
+    },
+    {
+      year: 2026,
+      make: "Grand Design",
+      model: "Imagine",
+      trim: "2500RL",
+    },
+    {
+      year: 2026,
+      make: "Grand Design",
+      model: "Imagine",
+      trim: "2500RL",
+      gvwr: null,
+      dry_weight: null,
+    },
+  ];
+  const agreed = agreeingLotSpecs(units);
+  assert.equal(agreed?.gvwrLbs, 7850);
+  assert.equal(agreed?.dryWeightLbs, 6623);
+  assert.equal(agreed?.overrides?.gvwrLbs, true);
+  assert.equal(agreed?.overrides?.dryWeightLbs, true);
+  const merged = fillBrochureHolesFromLot(
+    sheet,
+    units,
+    2026,
+    "Grand Design",
+    "Imagine",
+    "2500RL",
+  );
+  assert.equal(merged.specs.gvwrLbs, 7850);
+  assert.match(merged.specs.gvwr, /7,850/);
+  assert.equal(merged.specs.uvwLbs, 6623);
+  assert.match(merged.specs.uvw, /6,623/);
+  assert.match(merged.specs.accuracyNote, /RV Country lot unit record/);
+  assert.equal(merged.specs.dataSource, "oem-year");
+});
+
+test("catalog still wins when no matching record is marked override (even if the lot value differs)", () => {
+  const sheet = blankSheet();
+  sheet.gvwr = "7,995 lbs";
+  sheet.gvwrLbs = 7995;
+  sheet.uvw = "6,495 lbs";
+  sheet.uvwLbs = 6495;
+  sheet.dataSource = "oem-year";
+  const units = [
+    {
+      year: 2026,
+      make: "Grand Design",
+      model: "Imagine",
+      trim: "2500RL",
+      gvwr: 7850,
+      dry_weight: 6623,
+    },
+    {
+      year: 2026,
+      make: "Grand Design",
+      model: "Imagine",
+      trim: "2500RL",
+      gvwr: 7850,
+      dry_weight: 6623,
+    },
+  ];
+  const agreed = agreeingLotSpecs(units);
+  assert.equal(agreed?.gvwrLbs, 7850);
+  assert.equal(agreed?.overrides?.gvwrLbs, undefined);
+  assert.equal(agreed?.overrides?.dryWeightLbs, undefined);
+  const merged = fillBrochureHolesFromLot(
+    sheet,
+    units,
+    2026,
+    "Grand Design",
+    "Imagine",
+    "2500RL",
+  );
+  assert.equal(merged.specs.gvwr, "7,995 lbs");
+  assert.equal(merged.specs.gvwrLbs, 7995);
+  assert.equal(merged.specs.uvw, "6,495 lbs");
+  assert.equal(merged.specs.uvwLbs, 6495);
+  assert.ok(!merged.filled.includes("GVWR"));
+  assert.ok(!merged.filled.includes("UVW"));
+  assert.doesNotMatch(merged.specs.accuracyNote, /RV Country lot unit record/);
+  assert.equal(merged.specs.dataSource, "oem-year");
+});
+
+test("a blank lot value never erases a real catalog number (with and without an override marker)", () => {
+  const sheet = blankSheet();
+  sheet.gvwr = "7,995 lbs";
+  sheet.gvwrLbs = 7995;
+  sheet.uvw = "6,495 lbs";
+  sheet.uvwLbs = 6495;
+  sheet.dataSource = "oem-year";
+  const identity = {
+    year: 2026,
+    make: "Grand Design",
+    model: "Imagine",
+    trim: "2500RL",
+  };
+  const without = fillBrochureHolesFromLot(
+    sheet,
+    [
+      { ...identity, gvwr: null, dry_weight: "" },
+      { ...identity, gvwr: 0 },
+      { ...identity },
+    ],
+    2026,
+    "Grand Design",
+    "Imagine",
+    "2500RL",
+  );
+  assert.equal(without.specs.gvwr, "7,995 lbs");
+  assert.equal(without.specs.gvwrLbs, 7995);
+  assert.equal(without.specs.uvw, "6,495 lbs");
+  assert.equal(without.specs.uvwLbs, 6495);
+  assert.ok(!without.filled.includes("GVWR"));
+  assert.ok(!without.filled.includes("UVW"));
+  assert.equal(agreeingLotSpecs([
+    { ...identity, gvwr: null, dry_weight: "" },
+    { ...identity },
+  ])?.gvwrLbs ?? null, null);
+
+  const withMarker = fillBrochureHolesFromLot(
+    sheet,
+    [
+      {
+        ...identity,
+        gvwr: null,
+        dry_weight: "",
+        overridesCatalog: { gvwr: true, dry_weight: true },
+      },
+      {
+        ...identity,
+        gvwr: 0,
+        overridesCatalog: { gvwr: true },
+      },
+    ],
+    2026,
+    "Grand Design",
+    "Imagine",
+    "2500RL",
+  );
+  assert.equal(withMarker.specs.gvwr, "7,995 lbs");
+  assert.equal(withMarker.specs.gvwrLbs, 7995);
+  assert.equal(withMarker.specs.uvw, "6,495 lbs");
+  assert.equal(withMarker.specs.uvwLbs, 6495);
+  assert.ok(!withMarker.filled.includes("GVWR"));
+  assert.ok(!withMarker.filled.includes("UVW"));
+  assert.doesNotMatch(withMarker.specs.accuracyNote, /RV Country lot unit record/);
+  assert.equal(withMarker.specs.dataSource, "oem-year");
 });
 
 test("a genuine lot conflict keeps the catalog value and does not invent a gap", () => {
