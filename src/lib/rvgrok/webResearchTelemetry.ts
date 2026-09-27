@@ -8,6 +8,11 @@
 
 import { needsWebFallback } from "./webIntent.ts";
 import {
+  factsSpecRequestsWebSearch,
+  isFactsScreen,
+  activeScreenFromContext,
+} from "./factsScreenPolicy.ts";
+import {
   formatOwnLotBlock,
   loadOwnLotSnapshot,
   looksLikeOwnLotStockQuestion,
@@ -71,6 +76,8 @@ export type ExecuteWebResearchOpts = {
   ownLotSnapshot?: OwnLotSnapshot;
   /** Same-origin host for the deploy-bundled public snapshot. */
   requestOrigin?: string;
+  /** Active screen name, or a catalog block that starts with ACTIVE SCREEN. */
+  screen?: string;
   /** Research-loop attempt cap. Defaults to WEB_SEARCH_MAX_TOOL_CALLS (2). */
   maxAttempts?: number;
   /** Override process.env.GEMINI_API_KEY (tests). */
@@ -281,14 +288,21 @@ export async function executeWebResearch(
 ): Promise<WebResearchApiBody> {
   const t0 = Date.now();
   const query = (opts.query || "").trim();
+  const screen = (
+    opts.screen ||
+    activeScreenFromContext(opts.catalogBlock) ||
+    ""
+  ).trim();
+  const factsSpec =
+    isFactsScreen(screen) && factsSpecRequestsWebSearch(screen, query);
 
   let ownLotSnapshot = opts.ownLotSnapshot;
-  if (!ownLotSnapshot && looksLikeOwnLotStockQuestion(query)) {
+  if (!factsSpec && !ownLotSnapshot && looksLikeOwnLotStockQuestion(query)) {
     ownLotSnapshot = await loadOwnLotSnapshot({
       requestOrigin: opts.requestOrigin,
     });
   }
-  if (shouldSkipWebForOwnLot(query, ownLotSnapshot)) {
+  if (!factsSpec && shouldSkipWebForOwnLot(query, ownLotSnapshot)) {
     const notes = formatOwnLotBlock(ownLotSnapshot!, query);
     const durationMs = Date.now() - t0;
     const body = toApiBody(
@@ -306,7 +320,7 @@ export async function executeWebResearch(
     return body;
   }
 
-  if (!opts.skipGate && !needsWebFallback(null, query)) {
+  if (!factsSpec && !opts.skipGate && !needsWebFallback(null, query)) {
     const durationMs = Date.now() - t0;
     const body: WebResearchApiBody = {
       ok: false,

@@ -222,7 +222,7 @@ test("wiring: chat, voice, browse, and Live share the same repair rails", () => 
   assert.match(voice, /RV_GROK_LEAN_CORE/);
   assert.match(src("repairMode.ts"), /torque spec|REPAIR PLAYBOOK/);
   assert.match(webSearch, /torque spec, part number, wiring color/);
-  assert.match(webSearch, /no OEM procedure/);
+  assert.match(webSearch, /no OEM procedure is published/);
   assert.match(voiceWeb, /REPAIR PLAYBOOK|Not a certified RV tech/);
   assert.match(realtime, /REPAIR_VOICE_PLAYBOOK/);
   assert.match(realtime, /looksLikeRepairQuestion/);

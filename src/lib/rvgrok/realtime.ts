@@ -1228,6 +1228,7 @@ export class GrokRealtimeSession {
       transcript,
       specs: grounded.specs,
       catalogBlock: grounded.block || this.catalogContext,
+      screen: this.screenAtAsk,
     });
     const catalogReady =
       grounded.identity || decision.action === "research"
@@ -1282,6 +1283,7 @@ export class GrokRealtimeSession {
       catalogContext: decision.catalogBlock || this.catalogContext,
       signal: this.researchAbort.signal,
       accessPhone: this.accessPhone,
+      screen: this.screenAtAsk,
     });
 
     if (catalogReady) {
@@ -1806,6 +1808,7 @@ export class GrokRealtimeSession {
         catalogContext: pending.grounded.block,
         signal: this.researchAbort?.signal,
         accessPhone: this.accessPhone,
+        screen: this.screenAtAsk,
       }).catch(() => null);
       if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
       const researched = formatChatSpecMissReply({
@@ -1911,6 +1914,7 @@ export class GrokRealtimeSession {
           .join(" "),
         catalogContext: grounded.block,
         accessPhone: this.accessPhone,
+        screen: this.screenAtAsk,
       }).catch(() => null);
       if (this.closed || this.intentionalStop || seq !== this.specTurnSeq) return;
       script =

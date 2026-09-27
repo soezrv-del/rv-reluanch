@@ -38,6 +38,10 @@ import {
   queryOwnLotUnits,
   shouldSkipWebForOwnLot,
 } from "@/lib/rvgrok/ownLotInventory";
+import {
+  activeScreenFromContext,
+  factsSpecRequestsWebSearch,
+} from "@/lib/rvgrok/factsScreenPolicy";
 import { looksLikeDeskSheetAsk } from "@/lib/rvgrok/deskSheetPolicy";
 import {
   formatChatSpecMissReply,
@@ -372,7 +376,7 @@ const XAI_CHAT_TOOLS = [
   ),
   toolFn(
     "get_own_lot",
-    "RV Country lot snapshot. Only for an explicit stock ask or a stock number.",
+    "RV Country lot snapshot for stock, counts, and stock numbers. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
     { query: { type: "string" } },
   ),
 ];
@@ -1136,9 +1140,12 @@ export const Route = createFileRoute("/api/rvgrok")({
         const catalogContext = lastNamesCoach
           ? serverGrounded.block || ""
           : serverGrounded.block || body.catalogContext || "";
+        const screen = activeScreenFromContext(body.catalogContext);
+        const factsSpec = factsSpecRequestsWebSearch(screen, lastPlain);
 
         const specWeightAsk = isWeightSpecAsk(lastPlain);
         if (
+          !factsSpec &&
           specWeightAsk &&
           serverGrounded.identity?.make &&
           serverGrounded.identity.model
@@ -1226,16 +1233,18 @@ export const Route = createFileRoute("/api/rvgrok")({
         if (looksLikeOwnLotStockQuestion(lastPlain)) {
           const snapshot = await loadOwnLotSnapshot({ requestOrigin });
           ownLotNotes = formatOwnLotBlock(snapshot, lastPlain);
-          skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
+          // A Facts spec still searches the web. The lot block stays in context.
+          skipWebForLot = factsSpec
+            ? false
+            : shouldSkipWebForOwnLot(lastPlain, snapshot);
         }
 
-        // Memory first. Await research only for a true external ask
-        // (repair, market, inventory, weather). Coach and spec asks stream
-        // from memory and the catalog without this hold.
+        // Memory first on other screens. Rv Facts spec turns always search.
         const wantsWebFallback =
-          !skipWebForLot &&
-          (serverGrounded.needsWeb ||
-            (!serverGrounded.identity && Boolean(body.wantsWebFallback)));
+          factsSpec ||
+          (!skipWebForLot &&
+            (serverGrounded.needsWeb ||
+              (!serverGrounded.identity && Boolean(body.wantsWebFallback))));
 
         let webNotes: string | undefined;
         if (wantsWebFallback) {
@@ -1254,6 +1263,7 @@ export const Route = createFileRoute("/api/rvgrok")({
             researchOrder:
               (await getResearchOrderOverride()) ?? undefined,
             identity: serverGrounded.identity,
+            screen,
           });
           const reportText = looksLikeDeskSheetAsk(lastPlain)
             ? formatCoachReportTimeoutReply({
@@ -1282,6 +1292,7 @@ export const Route = createFileRoute("/api/rvgrok")({
         }
 
         // xAI first when the key is present so generate_image (and vision) work.
+        // Facts keeps the normal tool list, including the lot snapshot.
         const fromXai = await tryXaiDirect(
           messages,
           agentMode,

@@ -24,6 +24,7 @@ import {
 type Body = {
   query?: string;
   catalogContext?: string;
+  screen?: string;
 };
 
 async function handleResearch(request: Request): Promise<Response> {
@@ -67,6 +68,7 @@ async function handleResearch(request: Request): Promise<Response> {
     researchProvider: (await getResearchProviderOverride()) ?? undefined,
     researchOrder: (await getResearchOrderOverride()) ?? undefined,
     identity: grounded.identity,
+    screen: typeof body.screen === "string" ? body.screen : "",
   });
 
   return webResearchJsonResponse(researched);

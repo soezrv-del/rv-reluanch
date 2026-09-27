@@ -394,8 +394,8 @@ async function runTwoStepDossier(opts: {
   const coach = `${opts.year} ${opts.make} ${opts.model}${opts.floorplan ? ` floorplan ${opts.floorplan}` : " (NO FLOORPLAN SELECTED)"}`;
   const candidateBlock = formatCandidateBlock(opts.candidate, opts.year);
   const fpRule = opts.floorplan
-    ? `FLOORPLAN LOCK: Research ONLY floorplan "${opts.floorplan}". Length, GVWR, engine, and HP must match this plan. Do not average the whole model line.`
-    : `NO FLOORPLAN: State that plan-specific options are unknown. Do not invent a floorplan or a single definitive length/HP package.`;
+    ? `FLOORPLAN LOCK: Research floorplan "${opts.floorplan}" first. A saved pin for this plan is the best available answer. If none, use the closest saved pin for this model and year, otherwise web search. Aim for 85 to 90 percent accuracy. Do not present another floorplan's number as this plan. Do not average the model line. Keep the model year and fuel type (gas vs diesel).`
+    : `NO FLOORPLAN: No plan is selected. Use the closest saved pin for this model, otherwise web search. Aim for 85 to 90 percent accuracy. Do not invent a floorplan code.`;
 
   if (plan.skipLive) {
     return {
