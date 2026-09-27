@@ -97,6 +97,36 @@ export function HomeScreen({
       <div className="showroom-hero-beam" aria-hidden />
       <div className="showroom-hero-wash" aria-hidden />
       <SpotlightPhoto className="showroom-coach" alt={SHOWROOM_SPOTLIGHT.alt} />
+      <svg
+        className="showroom-hero-glint"
+        viewBox="0 0 796 423"
+        preserveAspectRatio="xMidYMax meet"
+        aria-hidden
+      >
+        <defs>
+          <filter
+            id="showroom-roof-glint"
+            x="-6%"
+            y="-10%"
+            width="112%"
+            height="124%"
+            colorInterpolationFilters="sRGB"
+          >
+            <feMorphology in="SourceAlpha" operator="erode" radius="4" result="inset" />
+            <feMorphology in="SourceAlpha" operator="erode" radius="20" result="deep" />
+            <feComposite in="inset" in2="deep" operator="out" result="band" />
+            <feGaussianBlur in="band" stdDeviation="2.4" result="soft" />
+            <feFlood floodColor="#ffffff" floodOpacity="0.46" result="wash" />
+            <feComposite in="wash" in2="soft" operator="in" />
+          </filter>
+        </defs>
+        <image
+          href={SHOWROOM_SPOTLIGHT.image}
+          width="796"
+          height="423"
+          filter="url(#showroom-roof-glint)"
+        />
+      </svg>
       <div className="showroom-hero-pool" aria-hidden />
     </>
   );

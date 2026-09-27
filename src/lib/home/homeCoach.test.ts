@@ -308,10 +308,14 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.doesNotMatch(css, /showroom-coach-fallback|showroom-reflect|showroom-contact|showroom-hero picture/);
   assert.match(css, /\.showroom-hero-beam \{/);
   assert.match(css, /\.showroom-hero-pool \{/);
+  assert.match(css, /\.showroom-hero-glint \{/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.alt/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.image/);
   assert.match(home, /showroom-hero-beam/);
   assert.match(home, /showroom-hero-pool/);
+  assert.match(home, /showroom-hero-glint/);
+  assert.match(home, /showroom-roof-glint/);
+  assert.match(home, /preserveAspectRatio="xMidYMax meet"/);
   assert.doesNotMatch(home, /spotlightJpegPath|showroom-reflect|showroom-contact/);
   assert.doesNotMatch(coach, /spotlightJpegPath|2026-entegra-cornerstone\.jpg/);
   assert.match(home, /spotlightLotUnit\(listed\)/);
