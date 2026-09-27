@@ -69,10 +69,10 @@ Swiping the page (not the pill row) moves between tools in this order: Rv Facts,
 RV GPS has no pill. Reach it by swiping the page, from Premium (RV GPS), or from "Use for trip alerts" on Tow Guide.`;
 
 const GUIDES: Record<string, string> = {
-  Home: `Home is the showroom floor. The spotlight is locked to the stocked 2026 Entegra Cornerstone, lot stock 45282. The photo is the studio shot. Price and specs come from the lot snapshot, not from typed card text.
-- When that stock (or its VIN) is on the lot, the placard reads the big number "on the lot", then the lot title (year, make, model, floorplan — the stocked unit reads 2026 Entegra Cornerstone 45D), then price, stock number, location, condition, and length · GVWR.
+  Home: `Home is the showroom floor. The spotlight is locked to the stocked 2026 Entegra Cornerstone, lot stock 45282. The photo is the studio shot. Price and stock number come from the lot snapshot, not from typed card text.
+- When that stock (or its VIN) is on the lot, the placard is three lines: the model number (Cornerstone 45D), the price, and the stock number (Stock 45282). Year, make, the lot count, location, condition, and length stay off the placard.
 - Tapping the photo or the placard opens that unit in Lot Inventory, on its lot card. It does not open Rv Facts.
-- If that stock number and VIN leave the lot, the photo stays and the card falls back to "2026 Entegra Cornerstone", with no price or specs left behind. The photo is not a button in that case.
+- If that stock number and VIN leave the lot, the photo stays and the card falls back to "Cornerstone", with no price or stock left behind. The photo is not a button in that case.
 - "Newest arrivals" is a row of up to six recent lot units, each with a photo (or a covered-coach drawing when the unit has no photo) and a price. When the row overflows it auto-loops. Touch or drag pauses it, and it resumes a few seconds after release. Reduced motion leaves a still row he can swipe. If the cards already fit, it does not loop. Tapping one opens Lot Inventory already searched to that unit, with its card open.
 Next step: tap the spotlight coach, tap a newest arrival, or tap a pill (Lot Inventory to browse, Rv Facts to look up a coach).`,
 

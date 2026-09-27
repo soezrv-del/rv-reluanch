@@ -2663,8 +2663,7 @@ html.kb-open [data-rvgrok-composer-dock] {
   color: var(--color-showroom-ink);
 }
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  .showroom-word,
-  .showroom-count {
+  .showroom-word {
     background: linear-gradient(180deg, #ffffff 0%, #f1f4f9 45%, #c5cedb 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -2765,53 +2764,35 @@ button.showroom-placard {
   z-index: 1;
   margin: 0.85rem 1.25rem 0;
   border-radius: 1.5rem;
-  padding: 0.7rem 1.25rem 1rem;
+  padding: 1.15rem 1.35rem 1.2rem;
   text-align: center;
 }
-.showroom-count {
-  font-size: 5.5rem;
-  line-height: 0.92;
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
+.showroom-spotmodel {
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  overflow-wrap: break-word;
   color: var(--color-showroom-ink);
 }
-.showroom-onlot {
-  margin-top: 0.15rem;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: #dbe2ee;
-}
-.showroom-coachline {
-  margin-top: 0.45rem;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  line-height: 1.35;
-  color: var(--color-showroom-muted);
-}
-.showroom-coachline b {
-  color: #e6ebf3;
-  font-weight: 600;
-}
-.showroom-spotfacts {
-  display: flex;
-  flex-direction: column;
-  gap: 0.18rem;
-  margin-top: 0.55rem;
-}
 .showroom-spotprice {
-  font-size: 1.35rem;
+  margin-top: 0.35rem;
+  font-size: 1.125rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  line-height: 1.3;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
   color: #ffffff;
 }
-.showroom-spotmeta {
-  font-size: 0.84rem;
+.showroom-spotstock {
+  margin-top: 0.28rem;
+  font-size: 0.8125rem;
   font-weight: 600;
+  letter-spacing: 0.04em;
   line-height: 1.35;
-  color: #c5cedb;
+  overflow-wrap: break-word;
+  color: var(--color-showroom-muted);
 }
 .showroom-arrivals {
   position: relative;
@@ -3052,10 +3033,5 @@ button.showroom-placard {
   .showroom-arrival,
   .showroom-brand {
     transition: none;
-  }
-}
-@supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  .showroom-count {
-    color: transparent;
   }
 }

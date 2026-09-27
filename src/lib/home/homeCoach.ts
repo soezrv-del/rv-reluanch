@@ -1,13 +1,11 @@
 /**
  * Home: one fixed spotlight coach, then newest lot arrivals under it.
- * Spotlight art is a committed asset. The card's price and specs are read
- * from the lot snapshot for `stockNumber` (or `vin`). Arrival cards and the
- * Lot listing keep each unit's own dealer photo.
+ * Spotlight art is a committed asset. The placard reads model number, price,
+ * and stock number from the lot snapshot for `stockNumber` (or `vin`).
+ * Arrival cards and the Lot listing keep each unit's own dealer photo.
  */
 import {
   LOT_GAP,
-  lotLbsOrGap,
-  lotLengthOrGap,
   lotPriceOrGap,
   lotTextOrGap,
   type LotUnit,
@@ -22,7 +20,7 @@ function recency(unit: LotUnit): [number, number] {
 /**
  * Locked showroom spotlight. The art is Entegra's factory cutout of the
  * coach, trimmed to the silhouette. `stockNumber` / `vin` point at the lot
- * unit; price and specs are not stored here.
+ * unit. Model, price, and stock are read from that unit; they are not stored here.
  */
 export const SHOWROOM_SPOTLIGHT = {
   year: "2026",
@@ -42,12 +40,6 @@ export type SpotlightIdentity = {
   vin: string;
 };
 
-export function spotlightLabel(
-  spot: { year: string; make: string; series: string } = SHOWROOM_SPOTLIGHT,
-): string {
-  return [spot.year, spot.make, spot.series].filter(Boolean).join(" ");
-}
-
 /** Lot unit for the spotlight, by stock number, then VIN. */
 export function spotlightLotUnit(
   units: LotUnit[],
@@ -63,63 +55,37 @@ export function spotlightLotUnit(
   return units.find((unit) => unit.vin.trim().toUpperCase() === vin) ?? null;
 }
 
-function spotlightDisplayMake(unitMake: string, spotMake: string): string {
-  const raw = unitMake.trim();
-  const display = spotMake.trim();
-  if (!raw) return display;
-  if (!display) return raw;
-  const name = raw.toLowerCase();
-  const wanted = display.toLowerCase();
-  if (name === wanted || name.startsWith(`${wanted} `)) return display;
-  return raw;
-}
-
-/** Year, display make, model, and floorplan from the lot unit. */
-export function spotlightUnitTitle(
-  unit: LotUnit,
-  spot: Pick<SpotlightIdentity, "year" | "make" | "series"> = SHOWROOM_SPOTLIGHT,
-): string {
-  const year = unit.year.trim() || spot.year;
-  const make = spotlightDisplayMake(unit.make, spot.make);
-  const model = unit.model.trim() || spot.series;
+/** Model and floorplan only. Year and make stay off the placard. */
+function spotlightModelNumber(unit: LotUnit, series: string): string {
+  const model = unit.model.trim() || series.trim();
   const trim = unit.trim.trim();
   const trimInModel =
     trim.length > 0 && model.toLowerCase().includes(trim.toLowerCase());
-  return [year, make, model, trimInModel ? "" : trim].filter(Boolean).join(" ");
+  return [model, trimInModel ? "" : trim].filter(Boolean).join(" ");
 }
 
 export type SpotlightSpecs = {
-  title: string;
+  model: string;
   price: string;
   stock: string;
-  location: string;
-  condition: string;
-  length: string;
-  gvwr: string;
-  measure: string;
 };
 
 function shown(value: string): string {
   return value && value !== LOT_GAP ? value : "";
 }
 
-/** Card lines from the lot record. Empty strings are fields the lot left blank. */
+/**
+ * Placard lines from the lot record. Empty price or stock means that line
+ * is omitted. Model falls back to the spotlight series when the unit has none.
+ */
 export function spotlightSpecs(
   unit: LotUnit,
-  spot: Pick<SpotlightIdentity, "year" | "make" | "series"> = SHOWROOM_SPOTLIGHT,
+  spot: Pick<SpotlightIdentity, "series"> = SHOWROOM_SPOTLIGHT,
 ): SpotlightSpecs {
-  const length = shown(lotLengthOrGap(unit.length_ft));
-  const gvwr = shown(lotLbsOrGap(unit.gvwr));
-  const measure = [length, gvwr ? `GVWR ${gvwr}` : ""].filter(Boolean).join(" · ");
   return {
-    title: spotlightUnitTitle(unit, spot),
+    model: spotlightModelNumber(unit, spot.series),
     price: shown(lotPriceOrGap(unit.price)),
     stock: shown(lotTextOrGap(unit.stock_number)),
-    location: shown(lotTextOrGap(unit.location)),
-    condition: shown(lotTextOrGap(unit.condition)),
-    length,
-    gvwr,
-    measure,
   };
 }
 

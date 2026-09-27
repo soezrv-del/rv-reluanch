@@ -17,35 +17,9 @@ import {
   lotArrivalQuery,
   requestLotUnit,
   showroomUnitLabel,
-  spotlightLabel,
   spotlightLotUnit,
   spotlightSpecs,
 } from "@/lib/home/homeCoach";
-
-function useCountUp(target: number | null): number | null {
-  const [value, setValue] = useState<number | null>(null);
-  useEffect(() => {
-    if (target == null) return;
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
-    if (reduce || target === 0) {
-      setValue(target);
-      return;
-    }
-    let raf = 0;
-    const start = performance.now();
-    const dur = 700;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / dur);
-      setValue(Math.round(target * (1 - (1 - t) ** 3)));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target]);
-  return value;
-}
 
 function SpotlightPhoto({
   className,
@@ -84,8 +58,7 @@ export function HomeScreen({
   const arrivals = useMemo(() => arrivalsForHome(listed), [listed]);
   const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
   const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
-  const title = specs?.title || spotlightLabel();
-  const count = useCountUp(units ? units.length : null);
+  const model = specs?.model || SHOWROOM_SPOTLIGHT.series;
   const openSpot = () => {
     if (!spotUnit) return;
     requestLotUnit(lotArrivalQuery(spotUnit));
@@ -102,29 +75,10 @@ export function HomeScreen({
 
   const placard = (
     <>
-      <p data-home-count className="showroom-count">
-        {count == null ? "" : count.toLocaleString("en-US")}
-      </p>
-      <p className="showroom-onlot">on the lot</p>
-      <p className="showroom-coachline">
-        <b>{title}</b>
-      </p>
-      {specs ? (
-        <div data-home-spotlight-specs className="showroom-spotfacts">
-          {specs.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
-          {specs.stock ? (
-            <p className="showroom-spotmeta">Stock #{specs.stock}</p>
-          ) : null}
-          {specs.location ? (
-            <p className="showroom-spotmeta">{specs.location}</p>
-          ) : null}
-          {specs.condition ? (
-            <p className="showroom-spotmeta">{specs.condition}</p>
-          ) : null}
-          {specs.measure ? (
-            <p className="showroom-spotmeta">{specs.measure}</p>
-          ) : null}
-        </div>
+      <p className="showroom-spotmodel">{model}</p>
+      {specs?.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
+      {specs?.stock ? (
+        <p className="showroom-spotstock">Stock {specs.stock}</p>
       ) : null}
     </>
   );
