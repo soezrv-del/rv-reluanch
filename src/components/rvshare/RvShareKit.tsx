@@ -45,7 +45,6 @@ import {
   resolveFaxShareContact,
   kitStrengths,
   lifestyleImageFor,
-  prefetchShareImages,
   paymentBreakdown,
   RATE_UPDATED_FLASH,
   RATE_UPDATED_FLASH_MS,
@@ -61,7 +60,6 @@ import {
 } from "@/lib/rv/shareKit";
 import { buildFactsShareReport } from "@/lib/rv/shareReport";
 import { shareReportLink, shareReportPdfFile } from "@/lib/rv/shareReportSend";
-import { LIFESTYLE_SHARE_URLS } from "@/assets/typeMedia";
 import {
   fetchRvVideos,
   peekRvVideoSession,
@@ -381,14 +379,9 @@ export function RvShareKit({
   const [rateUpdated, setRateUpdated] = useState(false);
   const rateFlashTimer = useRef<number | null>(null);
   const statusTimer = useRef<number | null>(null);
-  const shareCardRef = useRef<HTMLDivElement>(null);
   const shareRootRef = useRef<HTMLElement>(null);
   const [includeVideo, setIncludeVideo] = useState(false);
   const [videoTick, setVideoTick] = useState(0);
-
-  useEffect(() => {
-    prefetchShareImages(LIFESTYLE_SHARE_URLS);
-  }, []);
 
   const selected = useMemo(
     () => hydrateShareCoachResult(result),
@@ -465,16 +458,6 @@ export function RvShareKit({
       ),
     );
   }, [selected, include.payment, include.rating, payment, strengthsLocked, ratingValue]);
-
-  useEffect(() => {
-    if (!selected) return;
-    const url = lifestyleImageFor(
-      selected.data.type,
-      selected.data.fuelType,
-      selected.data.chassis,
-    );
-    prefetchShareImages([url]);
-  }, [selected]);
 
   const priceOptions = useMemo(
     () => sharePaymentPricePills(marketEdit, formatMoney),
@@ -1015,7 +998,6 @@ export function RvShareKit({
                 })}
 
                 <div
-                  ref={shareCardRef}
                   data-report-signature="1"
                   className="flex aspect-[16/9] flex-col overflow-hidden rounded-[var(--radius-lg)] border border-white/20 bg-[#f4f8fc]"
                 >

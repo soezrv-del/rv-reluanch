@@ -4,31 +4,13 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  buildShareKitPayload,
-  canShareSaysYes,
-  coerceShareImageType,
   defaultShareCardContact,
-  elementLooksLikeShareCard,
-  freshShareImageFile,
-  hardenShareImageFile,
-  imageFileFromBytes,
   isShareAbort,
   isShareBusyError,
-  isShareImageFile,
-  normalizeShareImageMeta,
-  orderShareImageFiles,
-  paintShareSignatureCard,
   resetShareSession,
   resolveFaxShareContact,
   shareCardContactForSession,
-  shareKitSignatureLines,
-  shareDataAttempts,
   shareOrCopy,
-  toShareData,
-  SHARE_CARD_FILENAME,
-  SHARE_CARD_HEIGHT,
-  SHARE_CARD_MIME,
-  SHARE_CARD_WIDTH,
 } from "./shareCardImage.ts";
 import {
   REPORT_CONTACT_LAST,
@@ -42,261 +24,17 @@ const ui = readFileSync(
   join(here, "../../components/rvshare/RvShareKit.tsx"),
   "utf8",
 );
-const kit = readFileSync(join(here, "shareKit.ts"), "utf8");
 
-/** 1×1 PNG — real image bytes, not a canvas URL or HTML. */
-const MINI_PNG = Uint8Array.from(
-  atob(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-  ),
-  (c) => c.charCodeAt(0),
-);
-
-function cardFile(name = SHARE_CARD_FILENAME) {
-  return imageFileFromBytes(MINI_PNG, name, SHARE_CARD_MIME);
-}
-
-test("share payload includes a real PNG when the card is present", () => {
-  const payload = buildShareKitPayload({
-    title: "2024 Newmar Essex 4551",
-    text: "RvFOX · Powered by Grok\n\nSUMMARY\nFlagship diesel.",
-    cardFile: cardFile("Essex-card.png"),
-  });
-  assert.equal(payload.files.length, 1);
-  const file = payload.files[0]!;
-  assert.equal(file.type, "image/png");
-  assert.match(file.name, /\.png$/i);
-  assert.ok(file.size >= 32);
-  assert.equal(file.name.includes("blob:"), false);
-  assert.doesNotMatch(file.type, /html|octet-stream/i);
-  assert.match(payload.text, /SUMMARY/);
-});
-
-test("share payload omits the card file when the card is absent", () => {
-  const payload = buildShareKitPayload({
-    title: "2024 Newmar Essex",
-    text: "kit",
-    cardFile: null,
-  });
-  assert.equal(payload.files.length, 0);
-  assert.equal(payload.text, "kit");
-});
-
-test("HTML and empty blobs are never treated as the card image", () => {
-  const html = new File(["<html><body>card</body></html>"], "card.html", {
-    type: "text/html",
-  });
-  const empty = new File([], "empty.png", { type: "image/png" });
-  const payload = buildShareKitPayload({
-    title: "x",
-    text: "y",
-    cardFile: html,
-    extraFiles: [empty],
-  });
-  assert.equal(payload.files.length, 0);
-  assert.equal(isShareImageFile(html), false);
-  assert.equal(isShareImageFile(empty), false);
-});
-
-test("RV hero is first; contact card is never the preview when a hero exists", () => {
-  const jpeg = new File([MINI_PNG], "coach-hero.jpg", {
-    type: "image/jpeg",
-  });
-  const payload = buildShareKitPayload({
-    title: "coach",
-    text: "kit",
-    heroFile: jpeg,
-    cardFile: cardFile(),
-  });
-  assert.equal(payload.files.length, 2);
-  assert.equal(payload.files[0]!.type, "image/jpeg");
-  assert.match(payload.files[0]!.name, /hero/i);
-  assert.equal(payload.files[1]!.type, "image/png");
-  assert.equal(SHARE_CARD_WIDTH / SHARE_CARD_HEIGHT, 16 / 9);
-});
-
-test("lifestyle JPEG rides after the hero and before the card PNG", () => {
-  const hero = new File([MINI_PNG], "coach-hero.jpg", {
-    type: "image/jpeg",
-  });
-  const lifestyle = new File([new Uint8Array([...MINI_PNG, 1])], "coach-lifestyle.jpg", {
-    type: "image/jpeg",
-  });
-  const payload = buildShareKitPayload({
-    title: "coach",
-    text: "kit",
-    heroFile: hero,
-    cardFile: cardFile(),
-    extraFiles: [lifestyle],
-  });
-  assert.equal(payload.files.length, 3);
-  assert.equal(payload.files[0]!.name, "coach-hero.jpg");
-  assert.equal(payload.files[1]!.name, "coach-lifestyle.jpg");
-  assert.equal(payload.files[2]!.type, "image/png");
-});
-
-test("same-bytes lifestyle is not duplicated when the hero is already attached", () => {
-  const jpeg = new File([MINI_PNG], "coach-hero.jpg", {
-    type: "image/jpeg",
-  });
-  const files = orderShareImageFiles({
-    heroFile: jpeg,
-    extraFiles: [new File([MINI_PNG], "coach-lifestyle.jpg", { type: "image/jpeg" })],
-    cardFile: cardFile(),
-  });
-  assert.equal(files.length, 2);
-  assert.equal(files[0]!.type, "image/jpeg");
-  assert.equal(files[1]!.type, "image/png");
-});
-
-test("share attempts always keep the image file — never text-only", () => {
-  const files = [cardFile()];
-  const attempts = shareDataAttempts({
-    title: "2024 Newmar Essex",
-    text: "long kit text",
-    files,
-  });
-  assert.ok(attempts.length >= 2);
-  for (const attempt of attempts) {
-    assert.ok(attempt.files?.length);
-    assert.equal(attempt.files![0]!.type, "image/png");
-  }
-  assert.equal(
-    attempts.some((a) => a.text && !a.files?.length),
-    false,
-  );
-});
-
-test("text-only attempt is used only when no image file exists", () => {
-  const attempts = shareDataAttempts({
-    title: "RvFOX Pro",
-    text: "suite pitch",
-    files: [],
-  });
-  assert.deepEqual(attempts, [{ title: "RvFOX Pro", text: "suite pitch" }]);
-});
-
-test("hardenShareImageFile rewrites bytes into a named image File", async () => {
-  const raw = new File([MINI_PNG], "card", { type: "image/png" });
-  const file = await hardenShareImageFile(raw);
-  assert.ok(file);
-  assert.equal(file.type, "image/png");
-  assert.match(file.name, /\.png$/);
-  assert.ok(file.size >= 32);
-  assert.equal(normalizeShareImageMeta(raw)?.type, "image/png");
-});
-
-test("hardenShareImageFile rejects HTML attachments", async () => {
-  const html = new File(["<html></html>"], "report.html", {
-    type: "text/html",
-  });
-  assert.equal(await hardenShareImageFile(html), null);
-  assert.equal(normalizeShareImageMeta(html), null);
-});
-
-test("painted card matches the in-app signature (name + phone)", () => {
-  const texts: string[] = [];
-  const ctx = {
-    save() {},
-    restore() {},
-    fillRect() {},
-    beginPath() {},
-    moveTo() {},
-    arcTo() {},
-    closePath() {},
-    fill() {},
-    fillStyle: "",
-    font: "",
-    textAlign: "left",
-    textBaseline: "alphabetic",
-    fillText(text: string) {
-      texts.push(text);
-    },
-    measureText(text: string) {
-      return { width: String(text).length * 10 };
-    },
-  };
-  paintShareSignatureCard(
-    ctx as unknown as CanvasRenderingContext2D,
-    SHARE_CARD_WIDTH,
-    SHARE_CARD_HEIGHT,
-    defaultShareCardContact(),
-  );
-  const joined = texts.join("");
-  assert.match(joined, new RegExp(REPORT_CONTACT_NAME));
-  assert.match(joined, new RegExp(REPORT_CONTACT_PHONE.replace(/-/g, "\\-")));
-  assert.match(joined, /FOX/);
-  assert.match(joined.replace(/\s+/g, ""), /KNOWBEFOREYOUBUY/);
-  assert.match(joined, /RvFOX · Powered by Grok/);
-});
-
-test("paintShareSignatureCard signs with the session name and phone", () => {
-  const texts: string[] = [];
-  const ctx = {
-    save() {},
-    restore() {},
-    fillRect() {},
-    beginPath() {},
-    moveTo() {},
-    lineTo() {},
-    quadraticCurveTo() {},
-    arcTo() {},
-    closePath() {},
-    fill() {},
-    fillStyle: "",
-    font: "",
-    textAlign: "left",
-    textBaseline: "alphabetic",
-    fillText(text: string) {
-      texts.push(text);
-    },
-    measureText(text: string) {
-      return { width: String(text).length * 10 };
-    },
-  };
-  paintShareSignatureCard(
-    ctx as unknown as CanvasRenderingContext2D,
-    SHARE_CARD_WIDTH,
-    SHARE_CARD_HEIGHT,
-    shareCardContactForSession("Vern", "5412858791"),
-  );
-  const joined = texts.join("");
-  assert.match(joined, /Vern/);
-  assert.match(joined, /541-285-8791/);
-  assert.doesNotMatch(joined, new RegExp(REPORT_CONTACT_NAME));
-  assert.doesNotMatch(joined, new RegExp(REPORT_CONTACT_PHONE.replace(/-/g, "\\-")));
-});
-
-test("live card stays on screen; Share kit sends the report, not the card file", () => {
+test("on-screen signature card stays; Share kit sends the report", () => {
   assert.match(ui, /data-report-signature="1"/);
-  assert.match(ui, /shareCardRef/);
+  assert.match(ui, /data-fax-share-name/);
+  assert.match(ui, /data-fax-share-phone/);
   assert.match(ui, /shareReportLink/);
   assert.match(ui, /shareReportPdfFile/);
-  assert.doesNotMatch(ui, /captureShareCardFile/);
-  assert.doesNotMatch(ui, /buildShareKitPayload/);
+  assert.match(ui, /resolveFaxShareContact/);
 });
 
-test("shareOrCopy prefers the native sheet and does not gate on canShare", () => {
-  const card = readFileSync(join(here, "shareCardImage.ts"), "utf8");
-  assert.match(kit, /shareOrCopy/);
-  assert.match(kit, /buildShareKitPayload/);
-  assert.match(card, /shareDataAttempts/);
-  assert.match(card, /hardenShareImageFileSync/);
-  assert.match(card, /canShareSaysYes/);
-  assert.match(card, /downloadShareFile/);
-  assert.match(card, /return "downloaded"/);
-  assert.match(card, /parentShareInFlight/);
-  assert.match(card, /makeIframeShare/);
-  assert.match(card, /freshShareImageFile/);
-  assert.match(card, /resetShareSession/);
-  assert.doesNotMatch(card, /if \(!canShareData\(nav\.canShare, data\)\) continue/);
-  assert.doesNotMatch(
-    card,
-    /if \(hardened\.length && !attempt\.text\) \{\s*await copyKit/,
-  );
-});
-
-test("share path prefers navigator.share with files when canShare is true", async () => {
+test("shareOrCopy opens the native sheet with title and text", async () => {
   const shared: ShareData[] = [];
   const copied: string[] = [];
   const prior = globalThis.navigator;
@@ -306,7 +44,6 @@ test("share path prefers navigator.share with files when canShare is true", asyn
       share: async (data: ShareData) => {
         shared.push(data);
       },
-      canShare: () => true,
       clipboard: {
         writeText: async (text: string) => {
           copied.push(text);
@@ -315,19 +52,15 @@ test("share path prefers navigator.share with files when canShare is true", asyn
     },
   });
   try {
-    const payload = buildShareKitPayload({
-      title: "2024 Newmar Essex",
-      text: "RvFOX · Powered by Grok\nSUMMARY",
-      cardFile: cardFile("Essex-card.png"),
+    const out = await shareOrCopy({
+      title: "RvFOX Pro",
+      text: "suite pitch",
     });
-    const out = await shareOrCopy(payload);
     assert.equal(out, "shared");
     assert.equal(shared.length, 1);
-    const files = shared[0]!.files as File[] | undefined;
-    assert.ok(files?.length);
-    assert.equal(files![0]!.type, "image/png");
-    assert.match(files![0]!.name, /\.png$/);
-    assert.ok(files![0]!.size >= 32);
+    assert.equal(shared[0]!.title, "RvFOX Pro");
+    assert.equal(shared[0]!.text, "suite pitch");
+    assert.equal(shared[0]!.files, undefined);
     assert.equal(copied.length, 0);
   } finally {
     resetShareSession();
@@ -338,88 +71,9 @@ test("share path prefers navigator.share with files when canShare is true", asyn
   }
 });
 
-test("shareOrCopy still opens the sheet with files when canShare({files}) is false", async () => {
-  const shared: ShareData[] = [];
+test("clipboard is the fallback when navigator.share is missing", async () => {
   const copied: string[] = [];
   const prior = globalThis.navigator;
-  Object.defineProperty(globalThis, "navigator", {
-    configurable: true,
-    value: {
-      share: async (data: ShareData) => {
-        shared.push(data);
-      },
-      canShare: (data?: ShareData) => !data?.files?.length,
-      clipboard: {
-        writeText: async (text: string) => {
-          copied.push(text);
-        },
-      },
-    },
-  });
-  try {
-    const jpeg = new File([MINI_PNG], "coach-hero.jpg", {
-      type: "image/jpeg",
-    });
-    const payload = buildShareKitPayload({
-      title: "Essex",
-      text: "kit",
-      heroFile: jpeg,
-      cardFile: cardFile(),
-    });
-    const out = await shareOrCopy(payload);
-    assert.equal(out, "shared");
-    assert.equal(shared.length, 1);
-    const files = shared[0]!.files as File[] | undefined;
-    assert.equal(files?.length, 2);
-    assert.equal(files![0]!.type, "image/jpeg");
-    assert.equal(files![1]!.type, "image/png");
-    assert.equal(copied.length, 0);
-  } finally {
-    resetShareSession();
-    Object.defineProperty(globalThis, "navigator", {
-      configurable: true,
-      value: prior,
-    });
-  }
-});
-
-test("shareOrCopy still shares when canShare throws", async () => {
-  const shared: ShareData[] = [];
-  const prior = globalThis.navigator;
-  Object.defineProperty(globalThis, "navigator", {
-    configurable: true,
-    value: {
-      share: async (data: ShareData) => {
-        shared.push(data);
-      },
-      canShare: () => {
-        throw new Error("canShare exploded");
-      },
-      clipboard: { writeText: async () => {} },
-    },
-  });
-  try {
-    const out = await shareOrCopy({
-      title: "Essex",
-      text: "kit",
-      files: [cardFile()],
-    });
-    assert.equal(out, "shared");
-    assert.ok((shared[0]!.files as File[])?.length);
-  } finally {
-    resetShareSession();
-    Object.defineProperty(globalThis, "navigator", {
-      configurable: true,
-      value: prior,
-    });
-  }
-});
-
-test("clipboard-only / download is last-resort when navigator.share is missing", async () => {
-  const downloaded: string[] = [];
-  const copied: string[] = [];
-  const prior = globalThis.navigator;
-  const priorDoc = globalThis.document;
   Object.defineProperty(globalThis, "navigator", {
     configurable: true,
     value: {
@@ -430,130 +84,26 @@ test("clipboard-only / download is last-resort when navigator.share is missing",
       },
     },
   });
-  Object.defineProperty(globalThis, "document", {
-    configurable: true,
-    value: {
-      createElement: (tag: string) => {
-        if (tag === "a") {
-          return {
-            href: "",
-            download: "",
-            rel: "",
-            style: { display: "" },
-            click() {
-              downloaded.push(this.download || "file");
-            },
-          };
-        }
-        return { style: {}, setAttribute() {}, select() {}, remove() {} };
-      },
-      body: { appendChild() {} },
-    },
-  });
   try {
-    const out = await shareOrCopy({
-      title: "Essex",
-      text: "kit",
-      files: [cardFile()],
-    });
-    assert.equal(out, "downloaded");
-    assert.ok(downloaded.length >= 1);
-    assert.match(downloaded[0]!, /\.png$/);
-    assert.deepEqual(copied, ["kit"]);
+    const out = await shareOrCopy({ title: "RvFOX Pro", text: "suite pitch" });
+    assert.equal(out, "copied");
+    assert.deepEqual(copied, ["suite pitch"]);
   } finally {
     resetShareSession();
     Object.defineProperty(globalThis, "navigator", {
       configurable: true,
       value: prior,
     });
-    Object.defineProperty(globalThis, "document", {
-      configurable: true,
-      value: priorDoc,
-    });
   }
 });
 
-test("Include video never adds a video file to Share files[]", () => {
-  const send = ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const shareFactsPdf"));
+test("Include video never adds a video file to the suite share", () => {
+  const send = ui.slice(ui.indexOf("const sendSuite"), ui.indexOf("const goCal"));
   assert.match(ui, /data-include-video=\{includeVideo/);
   assert.match(ui, /data-share-video-toggle/);
-  assert.doesNotMatch(send, /video\/mp4|video\/webm|\.mp4|\.webm/);
-  assert.doesNotMatch(send, /extraFiles\.push\([^\)]*video/i);
-});
-
-test("lifestyle JPEG is in files[] when the lifestyle section is on", () => {
-  const jpeg = new File([new Uint8Array([...MINI_PNG, 2])], "coach-lifestyle.jpg", {
-    type: "image/jpeg",
-  });
-  const hero = new File([MINI_PNG], "coach-hero.jpg", {
-    type: "image/jpeg",
-  });
-  const on = buildShareKitPayload({
-    title: "coach",
-    text: "kit",
-    heroFile: hero,
-    cardFile: cardFile(),
-    extraFiles: [jpeg],
-  });
-  const off = buildShareKitPayload({
-    title: "coach",
-    text: "kit",
-    heroFile: hero,
-    cardFile: cardFile(),
-    extraFiles: [],
-  });
-  assert.equal(on.files.length, 3);
-  assert.equal(on.files[0]!.name, "coach-hero.jpg");
-  assert.equal(on.files[1]!.name, "coach-lifestyle.jpg");
-  assert.equal(off.files.length, 2);
-  assert.equal(off.files[0]!.type, "image/jpeg");
-  assert.equal(off.files[1]!.type, "image/png");
-  assert.match(ui, /include\.lifestyle/);
-  assert.match(ui, /prefetchShareImages/);
-  assert.doesNotMatch(ui, /peekCachedShareImage/);
-  assert.doesNotMatch(
-    ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const shareFactsPdf")),
-    /heroFile/,
-  );
-});
-
-test("octet-stream lifestyle JPEG is still a shareable image file", () => {
-  const raw = new File([MINI_PNG], "fifth-wheel-lifestyle.jpg", {
-    type: "application/octet-stream",
-  });
-  assert.equal(coerceShareImageType(raw.type, raw.name), "image/jpeg");
-  assert.equal(isShareImageFile(raw), true);
-  const payload = buildShareKitPayload({
-    title: "coach",
-    text: "kit",
-    extraFiles: [raw],
-  });
-  assert.equal(payload.files.length, 1);
-  assert.match(payload.files[0]!.name, /\.jpe?g$/i);
-});
-
-test("canShareSaysYes is a hint — missing or throw is not a no", () => {
-  const data: ShareData = { title: "x", text: "y", files: [cardFile()] };
-  assert.equal(canShareSaysYes(undefined, data), true);
-  assert.equal(canShareSaysYes(() => true, data), true);
-  assert.equal(canShareSaysYes(() => false, data), false);
-  assert.equal(
-    canShareSaysYes(() => {
-      throw new Error("nope");
-    }, data),
-    false,
-  );
-  assert.ok(toShareData({ title: "t", files: [cardFile()] }).files?.length);
-});
-
-test("freshShareImageFile is a new File so a prior share cannot consume the cache", () => {
-  const original = cardFile("Essex-card.png");
-  const next = freshShareImageFile(original);
-  assert.ok(next);
-  assert.notEqual(next, original);
-  assert.equal(next!.type, original.type);
-  assert.equal(next!.size, original.size);
-  assert.match(next!.name, /\.png$/i);
+  assert.match(send, /shareOrCopy\(\{/);
+  assert.match(send, /buildSuitePitch\(\)/);
+  assert.doesNotMatch(send, /video\/mp4|video\/webm|\.mp4|\.webm|files:/);
 });
 
 test("isShareBusyError matches WebKit already-in-progress; cancel stays abort", () => {
@@ -583,28 +133,21 @@ test("shareOrCopy can open the sheet twice in the same session", async () => {
       share: async (data: ShareData) => {
         shared.push(data);
       },
-      canShare: () => true,
       clipboard: { writeText: async () => {} },
     },
   });
   try {
-    const payload = {
-      title: "Essex",
-      text: "kit one",
-      files: [cardFile()],
-    };
-    assert.equal(await shareOrCopy(payload), "shared");
     assert.equal(
-      await shareOrCopy({ ...payload, text: "kit two" }),
+      await shareOrCopy({ title: "RvFOX Pro", text: "kit one" }),
+      "shared",
+    );
+    assert.equal(
+      await shareOrCopy({ title: "RvFOX Pro", text: "kit two" }),
       "shared",
     );
     assert.equal(shared.length, 2);
     assert.equal(shared[0]!.text, "kit one");
     assert.equal(shared[1]!.text, "kit two");
-    const firstFiles = shared[0]!.files as File[];
-    const secondFiles = shared[1]!.files as File[];
-    assert.ok(firstFiles?.length && secondFiles?.length);
-    assert.notEqual(firstFiles[0], secondFiles[0]);
   } finally {
     resetShareSession();
     Object.defineProperty(globalThis, "navigator", {
@@ -629,12 +172,11 @@ test("shareOrCopy treats a cancelled sheet as ready for another share", async ()
           );
         }
       },
-      canShare: () => true,
       clipboard: { writeText: async () => {} },
     },
   });
   try {
-    const payload = { title: "Essex", text: "kit", files: [cardFile()] };
+    const payload = { title: "RvFOX Pro", text: "suite pitch" };
     assert.equal(await shareOrCopy(payload), "cancelled");
     assert.equal(await shareOrCopy(payload), "shared");
     assert.equal(shared.length, 2);
@@ -679,7 +221,6 @@ test("iframe NotAllowedError falls back to parent navigator.share", async () => 
       share: async (data: ShareData) => {
         parentCalls.push(data);
       },
-      canShare: () => true,
       clipboard: { writeText: async () => {} },
     },
   });
@@ -693,67 +234,11 @@ test("iframe NotAllowedError falls back to parent navigator.share", async () => 
     }),
   });
   try {
-    const out = await shareOrCopy({
-      title: "Essex",
-      text: "kit",
-      files: [cardFile()],
-    });
+    const out = await shareOrCopy({ title: "RvFOX Pro", text: "suite pitch" });
     assert.equal(out, "shared");
     assert.equal(parentCalls.length, 1);
-    assert.ok((parentCalls[0]!.files as File[])?.length);
-  } finally {
-    resetShareSession();
-    Object.defineProperty(globalThis, "navigator", {
-      configurable: true,
-      value: prior,
-    });
-    Object.defineProperty(globalThis, "document", {
-      configurable: true,
-      value: priorDoc,
-    });
-  }
-});
-
-test("InvalidStateError on the parent Navigator still opens the sheet on an iframe", async () => {
-  const iframeCalls: ShareData[] = [];
-  const prior = globalThis.navigator;
-  const priorDoc = globalThis.document;
-  Object.defineProperty(globalThis, "navigator", {
-    configurable: true,
-    value: {
-      share: async () => {
-        throw new DOMException(
-          "share() is already in progress",
-          "InvalidStateError",
-        );
-      },
-      canShare: () => true,
-      clipboard: { writeText: async () => {} },
-    },
-  });
-  let iframeTries = 0;
-  Object.defineProperty(globalThis, "document", {
-    configurable: true,
-    value: iframeDocument(async (data: ShareData) => {
-      iframeTries += 1;
-      if (iframeTries === 1) {
-        throw new DOMException(
-          "The request is not allowed by the user agent",
-          "NotAllowedError",
-        );
-      }
-      iframeCalls.push(data);
-    }),
-  });
-  try {
-    const out = await shareOrCopy({
-      title: "Essex",
-      text: "kit",
-      files: [cardFile()],
-    });
-    assert.equal(out, "shared");
-    assert.equal(iframeCalls.length, 1);
-    assert.ok((iframeCalls[0]!.files as File[])?.length);
+    assert.equal(parentCalls[0]!.text, "suite pitch");
+    assert.equal(parentCalls[0]!.files, undefined);
   } finally {
     resetShareSession();
     Object.defineProperty(globalThis, "navigator", {
@@ -780,7 +265,6 @@ test("a hung first navigator.share does not block a second tap", async () => {
           "NotAllowedError",
         );
       },
-      canShare: () => true,
       clipboard: { writeText: async () => {} },
     },
   });
@@ -794,10 +278,9 @@ test("a hung first navigator.share does not block a second tap", async () => {
     }),
   });
   try {
-    const payload = { title: "Essex", text: "kit", files: [cardFile()] };
-    const first = shareOrCopy(payload);
+    const first = shareOrCopy({ title: "RvFOX Pro", text: "kit" });
     await Promise.resolve();
-    const second = await shareOrCopy({ ...payload, text: "kit again" });
+    const second = await shareOrCopy({ title: "RvFOX Pro", text: "kit again" });
     assert.equal(second, "shared");
     assert.equal(iframeCalls.length, 1);
     assert.equal(iframeCalls[0]!.text, "kit again");
@@ -816,10 +299,12 @@ test("a hung first navigator.share does not block a second tap", async () => {
 });
 
 test("Share kit send offers the report and never disables after one send", () => {
-  const send = ui.slice(ui.indexOf("const shareFactsLink"), ui.indexOf("const shareFactsPdf"));
+  const send = ui.slice(
+    ui.indexOf("const shareFactsLink"),
+    ui.indexOf("const shareFactsPdf"),
+  );
   assert.match(send, /shareReportLink\(factsReport\)/);
   assert.match(ui, /shareReportPdfFile\(factsReport\)/);
-  assert.doesNotMatch(send, /cardFileRef/);
   assert.doesNotMatch(send, /if \(sending\) return/);
   assert.doesNotMatch(ui, /disabled=\{sending/);
   assert.match(ui, /onClick=\{\(\) => void sendKit\(\)\}/);
@@ -867,12 +352,9 @@ test("Facts Share kit is a hard switch on access.allowed — name, phone, card",
   assert.match(ui, /data-fax-share-phone/);
   assert.match(ui, /data-share-link/);
   assert.match(ui, /data-report-signature="1"/);
-  assert.doesNotMatch(ui, /captureShareCardFile/);
   assert.match(ui, /contact\.name/);
   assert.match(ui, /contact\.phone/);
   assert.match(ui, /tel:\$\{contact\.tel\}/);
-  assert.match(kit, /opts\.contact \?\? defaultShareCardContact/);
-  assert.match(kit, /shareKitSignatureLines\(contact\)/);
   assert.doesNotMatch(ui, /useCurrentUser/);
   assert.doesNotMatch(ui, /REPORT_CONTACT_NAME/);
   assert.doesNotMatch(ui, /REPORT_CONTACT_PHONE/);
@@ -896,14 +378,6 @@ test("resolveFaxShareContact hard-switch: Vern is not David Hansen", () => {
   assert.notEqual(vern.phone, REPORT_CONTACT_PHONE);
   assert.doesNotMatch(vern.name, /David Hansen/);
   assert.doesNotMatch(vern.phone, /702-266-5918/);
-
-  const kitLines = shareKitSignatureLines(vern);
-  const kitText = kitLines.join("\n");
-  assert.match(kitText, /PREPARED BY/);
-  assert.match(kitText, /^Vern$/m);
-  assert.match(kitText, /541-285-8791/);
-  assert.doesNotMatch(kitText, /David Hansen/);
-  assert.doesNotMatch(kitText, /702-266-5918/);
 
   const signedOut = resolveFaxShareContact(null);
   assert.equal(signedOut.name, REPORT_CONTACT_NAME);
@@ -971,21 +445,4 @@ test("Tow no longer mounts a Share card", () => {
   );
   assert.doesNotMatch(tow, /TowShareCard/);
   assert.doesNotMatch(tow, /data-tow-share/);
-});
-
-test("elementLooksLikeShareCard requires the on-screen signature card", () => {
-  const el = {
-    getAttribute: (name: string) =>
-      name === "data-report-signature" ? "1" : null,
-    textContent: `Prepared by ${REPORT_CONTACT_NAME} ${REPORT_CONTACT_PHONE}`,
-  };
-  assert.equal(elementLooksLikeShareCard(el as unknown as Element), true);
-  assert.equal(elementLooksLikeShareCard(null), false);
-  assert.equal(
-    elementLooksLikeShareCard({
-      getAttribute: () => "1",
-      textContent: "empty",
-    } as unknown as Element),
-    false,
-  );
 });

@@ -331,8 +331,6 @@ export function youtubeWatchUrl(videoId: string): string {
   return `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
 }
 
-const YT_WATCH_RE = /^https:\/\/www\.youtube\.com\/watch\?v=/i;
-
 /** Same-session cache so Want a video? and Share kit share one lookup. */
 const videoSession = new Map<string, RvVideosResponse>();
 const videoInflight = new Map<string, Promise<RvVideosResponse>>();
@@ -386,20 +384,6 @@ function rememberRvVideoSession(
   if (!data.ok && data.error === "cancelled") return;
   videoSession.set(rvVideoSessionKey(coach), data);
   emitRvVideoSession();
-}
-
-/**
- * Brochure-kit VIDEO block. Title + watch URL only.
- * Rejects anything that is not a YouTube watch link — never a file path.
- */
-export function formatShareVideoBlock(
-  video?: { title?: string | null; youtubeUrl?: string | null } | null,
-): string[] {
-  const title = clean(video?.title);
-  const url = clean(video?.youtubeUrl);
-  if (!title || !url) return [];
-  if (!YT_WATCH_RE.test(url)) return [];
-  return ["VIDEO", title, url];
 }
 
 /** Client → /api/rv-videos. After Want a video? or when Share kit is on screen. */

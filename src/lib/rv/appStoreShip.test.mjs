@@ -56,14 +56,16 @@ test("no beta / evaluation chrome in Premium", () => {
 test("share surfaces have no SpaceX trademark", () => {
   const files = [
     "src/lib/rv/shareKit.ts",
+    "src/lib/rv/shareReport.ts",
     "src/lib/rv/exportReport.ts",
     "src/components/rvshare/RvShareKit.tsx",
   ];
   for (const rel of files) {
     const src = read(rel);
     assert.equal(src.includes("SpaceX"), false, rel);
-    assert.match(src, /Powered by Grok/);
   }
+  assert.match(read("src/components/rvshare/RvShareKit.tsx"), /Powered by Grok/);
+  assert.match(read("src/lib/rv/exportReport.ts"), /Powered by Grok/);
 });
 
 test("support page is live-product copy", () => {

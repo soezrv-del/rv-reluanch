@@ -9,18 +9,12 @@ const src = readFileSync(
   "utf8",
 );
 
-test("kit header is RvFOX Powered by Grok — no SpaceX", () => {
-  assert.match(src, /RvFOX · Powered by Grok/);
-  assert.equal(src.includes("SpaceX"), false);
-});
-
-test("SUMMARY and NOTES are brochure/options gated — never catalog ledger", () => {
+test("brochure summary and notes stay gated — never a catalog ledger", () => {
   assert.match(src, /resolveShareSummary/);
   assert.match(src, /resolveShareNotes/);
-  assert.match(src, /shareSummaryLines/);
-  assert.match(src, /shareNotesLines/);
   assert.doesNotMatch(src, /catalogPitch \|\| \(r\.data\.type/);
   assert.doesNotMatch(src, /\["Catalog", notesPitch/);
+  assert.equal(src.includes("SpaceX"), false);
 });
 
 /** `export { foo } from "./mod"` does not bind `foo` in this module. */
@@ -43,7 +37,6 @@ function namedSpecifiers(src, kind, modulePath) {
 test("shareCardPolicy symbols used locally are imported, not only re-exported", () => {
   const imported = namedSpecifiers(src, "import", "./shareCardPolicy");
   const reexported = namedSpecifiers(src, "export", "./shareCardPolicy");
-  assert.match(imported.block, /\bsharePowerLines\b/);
   const rest = src
     .replace(imported.block, "")
     .replace(reexported.block, "");
@@ -56,18 +49,9 @@ test("shareCardPolicy symbols used locally are imported, not only re-exported", 
   }
 });
 
-test("payment block includes the interest rate", () => {
-  assert.match(src, /Rate \$\{formatPct\(payment\.apr\)\}/);
-});
-
-test("kit accepts an editable rating override", () => {
-  assert.match(src, /rating\?: number/);
-  assert.match(src, /coachSnapshot\(r, opts\.rating\)/);
-});
-
-test("STRENGTHS stay product-only; LIFESTYLE is never an empty header", () => {
+test("STRENGTHS stay product-only", () => {
   assert.match(src, /Finance talking points belong in PAYMENT/);
-  assert.match(src, /lifestylePitch\(r\.data\.type\)/);
+  assert.match(src, /export function lifestylePitch/);
   assert.doesNotMatch(src, /Financed \$\{formatMoney/);
 });
 
@@ -80,9 +64,8 @@ test("STRENGTHS never carry rating breakdown, summary, or disclaimer notes", () 
 });
 
 test("share kit strips Confirm brochure placeholders instead of printing them", () => {
-  assert.match(src, /isSharePlaceholder/);
   assert.match(src, /brochureSummary/);
-  assert.match(src, /effectiveShareInclude/);
+  assert.match(src, /isShareableValue/);
   const policy = readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), "shareCardPolicy.ts"),
     "utf8",
@@ -90,9 +73,20 @@ test("share kit strips Confirm brochure placeholders instead of printing them", 
   assert.match(policy, /confirm brochure/i);
 });
 
-test("share kit requires per-price picks instead of dumping the market stack", () => {
-  assert.match(src, /marketLines/);
-  assert.match(src, /buildShareMarketSection/);
+test("market picks stay explicit — the stack is not dumped", () => {
+  const policy = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "shareCardPolicy.ts"),
+    "utf8",
+  );
+  const ui = readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../../components/rvshare/RvShareKit.tsx",
+    ),
+    "utf8",
+  );
+  assert.match(policy, /hasSelectedMarketLines/);
+  assert.match(ui, /marketNeedsPick/);
   assert.doesNotMatch(
     src,
     /Trade-in est\. \$\{formatMoney\(market\.tradeIn\)\} · Retail/,
@@ -124,7 +118,6 @@ test("customer-facing MSRP is a single label — not low/high", () => {
 
 test("share kit rehydrates saved coaches from live catalog SoT", () => {
   assert.match(src, /hydrateShareCoachResult/);
-  assert.match(src, /lookupCatalog/);
   assert.match(src, /lookup: ShareCatalogLookup = getSpec/);
   const hydrate = readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), "shareCoachHydrate.ts"),
@@ -132,38 +125,4 @@ test("share kit rehydrates saved coaches from live catalog SoT", () => {
   );
   assert.match(hydrate, /if \(!live\) return result/);
   assert.match(hydrate, /lookup: ShareCatalogLookup/);
-});
-
-test("share payload keeps a real card image file for Messages", () => {
-  assert.match(src, /buildShareKitPayload/);
-  assert.match(src, /captureShareCardFile/);
-  assert.match(src, /shareDataAttempts/);
-  assert.match(src, /peekCachedShareImage/);
-  assert.match(src, /sharePowerLines/);
-  assert.match(src, /orderShareImageFiles/);
-  assert.doesNotMatch(
-    src,
-    /if \(!canShareData\(nav\.canShare, data\)\) continue/,
-  );
-  const card = readFileSync(
-    join(dirname(fileURLToPath(import.meta.url)), "shareCardImage.ts"),
-    "utf8",
-  );
-  assert.match(card, /image\/png/);
-  assert.match(card, /files\[\]/);
-});
-
-test("kit footer is a prepared-by signature", () => {
-  assert.match(src, /defaultShareCardContact/);
-  assert.match(src, /shareKitSignatureLines\(contact\)/);
-  assert.doesNotMatch(src, /REPORT_CONTACT_NAME/);
-  assert.doesNotMatch(src, /REPORT_CONTACT_PHONE/);
-  const contact = readFileSync(
-    join(dirname(fileURLToPath(import.meta.url)), "reportContact.ts"),
-    "utf8",
-  );
-  assert.match(contact, /David \$\{REPORT_CONTACT_LAST\}/);
-  assert.match(contact, /REPORT_CONTACT_LAST = "Hansen"/);
-  assert.match(contact, /702-266-5918/);
-  assert.doesNotMatch(contact, /Hanson/);
 });

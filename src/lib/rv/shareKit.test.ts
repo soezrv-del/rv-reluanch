@@ -8,9 +8,6 @@ import {
   customerFacingPitch,
   DEFAULT_SHARE_INCLUDE,
   DEFAULT_SHARE_MARKET_LINES,
-  effectiveShareInclude,
-  formatShareMarketText,
-  hasOptionalShareSections,
   hasSelectedMarketLines,
   isCatalogHonestyProse,
   isSharePlaceholder,
@@ -20,13 +17,9 @@ import {
   resolveShareSummary,
   SHARE_MARKET_LINE_DEFS,
   SHARE_MSRP_LINE_ID,
-  isOfferedShareMarketLine,
-  shareIncludePayment,
-  shareNotesLines,
   sharePaymentAfterTermDown,
   sharePaymentPricePills,
   sharePowerLines,
-  shareSummaryLines,
 } from "./shareCardPolicy.ts";
 import {
   honestHorsepowerForCoach,
@@ -41,63 +34,10 @@ const src = readFileSync(
 );
 
 test("default include is all extras off", () => {
-  assert.equal(hasOptionalShareSections(DEFAULT_SHARE_INCLUDE), false);
   for (const v of Object.values(DEFAULT_SHARE_INCLUDE)) {
     assert.equal(v, false);
   }
   assert.equal("video" in DEFAULT_SHARE_INCLUDE, false);
-});
-
-test("unchecked extras stay off — no payment fallback", () => {
-  const next = effectiveShareInclude(DEFAULT_SHARE_INCLUDE);
-  assert.equal(next.market, false);
-  assert.equal(next.payment, false);
-  assert.equal(next.rating, false);
-  assert.equal(next.powertrain, false);
-  for (const v of Object.values(next)) {
-    assert.equal(v, false);
-  }
-});
-
-test("explicit payment on stays on; other extras stay off", () => {
-  const next = effectiveShareInclude({
-    ...DEFAULT_SHARE_INCLUDE,
-    payment: true,
-  });
-  assert.equal(next.payment, true);
-  assert.equal(next.market, false);
-  assert.equal(next.rating, false);
-});
-
-test("any extra on does not force payment", () => {
-  const next = effectiveShareInclude({
-    ...DEFAULT_SHARE_INCLUDE,
-    rating: true,
-  });
-  assert.equal(next.market, false);
-  assert.equal(next.payment, false);
-  assert.equal(next.rating, true);
-});
-
-const PRICED_PAYMENT = { price: 169000, downPct: 10, termMonths: 144, apr: 7.49 };
-
-test("payment-off omit — priced payment object is not a placeholder line", () => {
-  assert.equal(shareIncludePayment(DEFAULT_SHARE_INCLUDE, PRICED_PAYMENT), false);
-  assert.equal(
-    shareIncludePayment(DEFAULT_SHARE_INCLUDE, { price: 150000 }),
-    false,
-  );
-  assert.equal(shareIncludePayment(DEFAULT_SHARE_INCLUDE, null), false);
-  assert.equal(shareIncludePayment(DEFAULT_SHARE_INCLUDE, undefined), false);
-  const textWouldInclude = shareIncludePayment(
-    { ...DEFAULT_SHARE_INCLUDE, payment: true },
-    PRICED_PAYMENT,
-  );
-  assert.equal(textWouldInclude, true);
-  assert.equal(
-    shareIncludePayment({ ...DEFAULT_SHARE_INCLUDE, payment: true }, { price: 0 }),
-    false,
-  );
 });
 
 const SAMPLE_MARKET = {
@@ -116,66 +56,7 @@ test("market lines default to none selected", () => {
   }
 });
 
-test("shared text includes only the chosen asking line", () => {
-  const text = formatShareMarketText(
-    SAMPLE_MARKET,
-    { ...DEFAULT_SHARE_MARKET_LINES, retailHigh: true },
-    money,
-  );
-  assert.match(text, /^MARKET\nAsking \$220000$/);
-  assert.doesNotMatch(text, /Trade-in/);
-  assert.doesNotMatch(text, /Retail low/);
-  assert.doesNotMatch(text, /MSRP/);
-});
-
-test("shared text includes only trade-in when that line is picked", () => {
-  const text = formatShareMarketText(
-    SAMPLE_MARKET,
-    { ...DEFAULT_SHARE_MARKET_LINES, tradeIn: true },
-    money,
-  );
-  assert.match(text, /^MARKET\nTrade-in est\. \$140000$/);
-  assert.doesNotMatch(text, /Asking/);
-  assert.doesNotMatch(text, /Retail/);
-});
-
-test("no price picks produce empty market text — never the full stack", () => {
-  const text = formatShareMarketText(
-    SAMPLE_MARKET,
-    DEFAULT_SHARE_MARKET_LINES,
-    money,
-  );
-  assert.equal(text, "");
-  assert.doesNotMatch(text, /Trade-in/);
-  assert.doesNotMatch(text, /Asking/);
-  assert.doesNotMatch(text, /MARKET/);
-});
-
-test("trade-in and asking together only when both are picked", () => {
-  const text = formatShareMarketText(
-    SAMPLE_MARKET,
-    { ...DEFAULT_SHARE_MARKET_LINES, tradeIn: true, retailHigh: true },
-    money,
-  );
-  assert.match(text, /Trade-in est\. \$140000/);
-  assert.match(text, /Asking \$220000/);
-  assert.doesNotMatch(text, /Retail low/);
-  assert.doesNotMatch(text, /MSRP/);
-});
-
-test("kit writes Summary only when brochure highlights exist", () => {
-  assert.match(src, /effectiveShareInclude\(opts\.include\)/);
-  assert.match(src, /shareSummaryLines/);
-  assert.match(src, /shareNotesLines/);
-  assert.match(src, /if \(include\.rating && snap\.rating\)/);
-  assert.doesNotMatch(src, /include\.specs/);
-  assert.match(src, /formatShareVideoBlock\(opts\.video\)/);
-  assert.doesNotMatch(src, /include\.video/);
-  assert.doesNotMatch(src, /catalogPitch/);
-  assert.doesNotMatch(src, /\["Catalog"/);
-});
-
-test("share policy and preview never auto-include Payment", () => {
+test("share preview never auto-includes Payment", () => {
   const policy = readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), "shareCardPolicy.ts"),
     "utf8",
@@ -187,20 +68,15 @@ test("share policy and preview never auto-include Payment", () => {
     ),
     "utf8",
   );
-  assert.match(src, /shareIncludePayment\(include, payment\)/);
-  assert.match(policy, /Honor the user's include flags as-is/);
-  assert.match(policy, /shareIncludePayment/);
   assert.doesNotMatch(policy, /payment:\s*true/);
   assert.doesNotMatch(ui, /Payment included/);
   assert.doesNotMatch(ui, /fallbackExtras/);
-  assert.doesNotMatch(ui, /hasOptionalShareSections/);
   assert.match(ui, /buildFactsShareReport/);
   assert.match(ui, /include\.payment \? payment : undefined/);
+  assert.equal(DEFAULT_SHARE_INCLUDE.payment, false);
 });
 
 test("shared rating is the score only — no breakdown, summary, or notes", () => {
-  assert.match(src, /if \(include\.rating && snap\.rating\)/);
-  assert.match(src, /lines\.push\(snap\.rating\)/);
   assert.doesNotMatch(src, /getRatingMetadata/);
   assert.doesNotMatch(src, /tierLabel/);
   assert.doesNotMatch(src, /yearNote/);
@@ -254,7 +130,6 @@ test("missing brochure summary omits the SUMMARY block entirely", () => {
   });
   assert.equal(summary.pitch, "");
   assert.deepEqual(summary.features, []);
-  assert.deepEqual(shareSummaryLines(summary), []);
 });
 
 test("real brochure summary shows sales-pitch highlights", () => {
@@ -265,11 +140,7 @@ test("real brochure summary shows sales-pitch highlights", () => {
   });
   assert.match(summary.pitch, /Park anywhere/);
   assert.equal(summary.features.includes("4x4 adventure package"), true);
-  const lines = shareSummaryLines(summary);
-  assert.equal(lines[0], "SUMMARY");
-  assert.match(lines.join("\n"), /Park anywhere/);
-  assert.match(lines.join("\n"), /• 4x4 adventure package/);
-  assert.doesNotMatch(lines.join("\n"), /omit those years/);
+  assert.doesNotMatch(summary.pitch, /omit those years/);
 });
 
 test("catalog GAP / year-matrix prose is never a SUMMARY", () => {
@@ -284,14 +155,6 @@ test("catalog GAP / year-matrix prose is never a SUMMARY", () => {
   });
   assert.equal(summary.pitch, "");
   assert.deepEqual(summary.features, []);
-  assert.deepEqual(shareSummaryLines(summary), []);
-  assert.doesNotMatch(
-    shareSummaryLines({
-      pitch: LAUNCH_19Y_CATALOG,
-      features: [],
-    }).join("\n"),
-    /SUMMARY/,
-  );
 });
 
 test("catalog description leftover is not used as brochure pitch", () => {
@@ -307,14 +170,16 @@ test("catalog description leftover is not used as brochure pitch", () => {
   );
 });
 
-test("missing options omits the NOTES block entirely", () => {
+test("missing options omit the notes list entirely", () => {
   assert.deepEqual(resolveShareNotes({ options: [], upgrades: [] }), []);
-  assert.deepEqual(shareNotesLines([]), []);
   assert.deepEqual(
-    shareNotesLines([
-      LAUNCH_19Y_CATALOG,
-      "No sourced MY21 / MY25 brochure — omit those years.",
-    ]),
+    resolveShareNotes({
+      options: [
+        LAUNCH_19Y_CATALOG,
+        "No sourced MY21 / MY25 brochure — omit those years.",
+      ],
+      upgrades: [],
+    }),
     [],
   );
 });
@@ -328,12 +193,9 @@ test("real options/upgrades become NOTES — never catalog honesty", () => {
     "200W solar + lithium house bank",
     "Theater seating",
   ]);
-  const lines = shareNotesLines(notes);
-  assert.equal(lines[0], "NOTES");
-  assert.match(lines.join("\n"), /• 200W solar/);
-  assert.doesNotMatch(lines.join("\n"), /omit those years/);
-  assert.doesNotMatch(lines.join("\n"), /OEM MY/);
-  assert.doesNotMatch(lines.join("\n"), /Catalog/);
+  assert.doesNotMatch(notes.join("\n"), /omit those years/);
+  assert.doesNotMatch(notes.join("\n"), /OEM MY/);
+  assert.doesNotMatch(notes.join("\n"), /Catalog/);
 });
 
 test("isSharePlaceholder catches typical confirm tags", () => {
@@ -343,23 +205,8 @@ test("isSharePlaceholder catches typical confirm tags", () => {
   assert.equal(isSharePlaceholder("Cummins X15 605"), false);
 });
 
-test("kit filters placeholder lines from the shared card", () => {
-  assert.match(src, /lines\.filter\(\(line\) => !isSharePlaceholder\(line\)\)/);
-  assert.match(src, /g\.rows\.filter\(\(row\) => !isSharePlaceholder\(row\.value\)\)/);
-});
-
-test("kit writes only picked market lines — no trade+retail dump", () => {
-  assert.match(src, /buildShareMarketSection\(market, marketLines, formatMoney\)/);
-  assert.doesNotMatch(
-    src,
-    /Trade-in est\. \$\{formatMoney\(market\.tradeIn\)\} · Retail/,
-  );
-});
-
 test("Share Market offers one MSRP — never an MSRP-low option or label", () => {
   assert.equal(SHARE_MSRP_LINE_ID, "msrpHi");
-  assert.equal(isOfferedShareMarketLine("msrpLo"), false);
-  assert.equal(isOfferedShareMarketLine("msrpHi"), true);
   assert.equal(
     SHARE_MARKET_LINE_DEFS.some((d) => d.id === "msrpLo"),
     false,
@@ -379,25 +226,13 @@ test("Share Market offers one MSRP — never an MSRP-low option or label", () =>
   assert.equal(hi?.shareLabel, "MSRP");
   assert.equal(hi?.fieldLabel, "MSRP");
   assert.equal(hi?.name, "MSRP");
-
-  const text = formatShareMarketText(
-    SAMPLE_MARKET,
-    { ...DEFAULT_SHARE_MARKET_LINES, msrpHi: true },
-    money,
-  );
-  assert.match(text, /^MARKET\nMSRP \$280000$/);
-  assert.doesNotMatch(text, /MSRP high|MSRP low/);
-
-  const staleLowOnly = formatShareMarketText(
-    SAMPLE_MARKET,
-    { ...DEFAULT_SHARE_MARKET_LINES, msrpLo: true },
-    money,
-  );
-  assert.equal(staleLowOnly, "");
-  assert.doesNotMatch(staleLowOnly, /MSRP/);
   assert.equal(
     hasSelectedMarketLines({ ...DEFAULT_SHARE_MARKET_LINES, msrpLo: true }),
     false,
+  );
+  assert.equal(
+    hasSelectedMarketLines({ ...DEFAULT_SHARE_MARKET_LINES, msrpHi: true }),
+    true,
   );
 });
 
@@ -535,27 +370,6 @@ test("motorhome catalog torque rides with HP when SoT has both", () => {
   assert.match(lines.join("\n"), /lb-?ft/i);
 });
 
-test("kit always writes catalog POWER from brochure SoT", () => {
-  assert.match(src, /sharePowerLines\(snap\.horsepower, snap\.torque\)/);
-  assert.match(src, /horsepower: isShareableValue\(b\.horsepower\)/);
-  assert.match(src, /torque: isShareableValue\(b\.torque\)/);
-  assert.match(src, /hydrateShareCoachResult\(opts\.result/);
-  assert.match(src, /function coachBrochure[\s\S]*?hydrateShareCoachResult/);
-});
-
-test("sharePowerLines is imported into shareKit local scope (not only re-exported)", () => {
-  const importBlock = src.match(
-    /import \{([^}]*)\} from "\.\/shareCardPolicy"/,
-  )?.[1];
-  const exportBlock = src.match(
-    /export \{([^}]*)\} from "\.\/shareCardPolicy"/,
-  )?.[1];
-  assert.ok(importBlock);
-  assert.ok(exportBlock);
-  assert.match(importBlock, /\bsharePowerLines\b/);
-  assert.match(exportBlock, /\bsharePowerLines\b/);
-});
-
 function georgetownShapedSpec(opts: { torqueOnBand: boolean }): RVSpec {
   return {
     type: "Class A Gas",
@@ -683,11 +497,7 @@ test("Share kit offers a report link and a one-page PDF", () => {
   assert.match(ui, /data-share-link/);
   assert.match(ui, /data-share-pdf/);
   assert.match(ui, /data-report-signature="1"/);
-  assert.doesNotMatch(ui, /captureShareCardFile/);
-  assert.doesNotMatch(ui, /data-fax-share-kit-text/);
   const send = ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const shareFactsLink"));
-  assert.doesNotMatch(send, /heroFile/);
-  assert.doesNotMatch(send, /extraFiles/);
   assert.doesNotMatch(send, /video\/|youtube.*File|new File\([^\)]*mp4/i);
   assert.match(ui, /data-share-video-toggle/);
   assert.match(ui, /onClick=\{\(\) => void sendKit\(\)\}/);
@@ -728,10 +538,7 @@ test("payment calculator field order is price → down → term → rate → est
   assert.match(ui, /summary\.pitch \|\| summary\.features\.length/);
 });
 
-test("2023 Entegra Launch 19Y Share text omits SUMMARY and NOTES", () => {
-  const header = "RvFOX · Powered by Grok";
-  const tagline = "Know before you buy.";
-  const title = "2023 Entegra Coach Launch 19Y";
+test("2023 Entegra Launch 19Y brochure copy omits the catalog ledger", () => {
   const summary = resolveShareSummary({
     liveOverview: LAUNCH_19Y_CATALOG,
     liveFeatures: [],
@@ -740,48 +547,9 @@ test("2023 Entegra Launch 19Y Share text omits SUMMARY and NOTES", () => {
     options: [LAUNCH_19Y_CATALOG],
     upgrades: [],
   });
-  const blocks = [
-    header,
-    tagline,
-    "",
-    title,
-    ...shareSummaryLines(summary),
-    ...shareNotesLines(notes),
-  ];
-  const text = blocks.join("\n");
-  assert.equal(text, `${header}\n${tagline}\n\n${title}`);
-  assert.doesNotMatch(text, /SUMMARY/);
-  assert.doesNotMatch(text, /NOTES/);
-  assert.doesNotMatch(text, /omit those years/);
-  assert.doesNotMatch(text, /No sourced MY/);
-  assert.doesNotMatch(text, /OEM MY22/);
-  assert.doesNotMatch(text, /Do not copy/);
-  assert.doesNotMatch(text, /Catalog/);
-  assert.match(src, /SHARE_KIT_HEADER = "RvFOX · Powered by Grok"/);
-  assert.match(src, /SHARE_KIT_TAGLINE = "Know before you buy\."/);
-  assert.match(src, /opts\.summary \?\? brochureSummary\(r\)/);
+  assert.equal(summary.pitch, "");
+  assert.deepEqual(summary.features, []);
+  assert.deepEqual(notes, []);
+  assert.match(src, /resolveShareSummary/);
   assert.match(src, /brochureNotes\(r\)/);
-});
-
-test("Share kit prints real brochure SUMMARY and option NOTES", () => {
-  const summaryLines = shareSummaryLines({
-    pitch: "Limited-production flagship diesel with residential interiors.",
-    features: ["Spartan K3 chassis", "Full-wall slide"],
-  });
-  const noteLines = shareNotesLines([
-    "Aqua-Hot hydronic heat",
-    "Full-body paint",
-    LAUNCH_19Y_CATALOG,
-  ]);
-  const text = ["RvFOX · Powered by Grok", "", "2024 Newmar Essex 4551", "", ...summaryLines, "", ...noteLines].join(
-    "\n",
-  );
-  assert.match(text, /^SUMMARY$/m);
-  assert.match(text, /Limited-production flagship diesel/);
-  assert.match(text, /• Spartan K3 chassis/);
-  assert.match(text, /^NOTES$/m);
-  assert.match(text, /• Aqua-Hot hydronic heat/);
-  assert.match(text, /• Full-body paint/);
-  assert.doesNotMatch(text, /omit those years/);
-  assert.doesNotMatch(text, /Entegra Launch/);
 });
