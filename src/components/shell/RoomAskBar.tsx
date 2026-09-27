@@ -32,6 +32,13 @@ export function RoomAskBar({
     onOpen("rvgrok");
   };
 
+  const openRoom = (id: AppTab) => {
+    if (id === "rvfax") onOpen("rvfax");
+    else if (id === "rvcal") onOpen("rvcal");
+    else if (id === "rvtow") onOpen("rvtow");
+    else if (id === "rvlot") onOpen("rvlot");
+  };
+
   return (
     <div
       data-room-ask
@@ -48,7 +55,7 @@ export function RoomAskBar({
             type="button"
             data-room-chip={chip.id}
             aria-pressed={tab === chip.id}
-            onClick={() => onOpen(chip.id)}
+            onClick={() => openRoom(chip.id)}
             className="grok-chip inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-[13px] font-semibold whitespace-nowrap text-fg"
           >
             {chip.label}

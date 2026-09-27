@@ -49,7 +49,11 @@ test("ask bar sits above the dock and does not repeat the dock rooms", () => {
   assert.match(chips, /id: "rvlot", label: "Lot Inventory"/);
   assert.equal((chips.match(/id: "/g) || []).length, 4);
   assert.doesNotMatch(chips, /rvtrips|RV GPS|Tanks|Payment/);
-  assert.match(bar, /onOpen\(chip\.id\)/);
+  assert.match(bar, /onOpen\("rvfax"\)/);
+  assert.match(bar, /onOpen\("rvcal"\)/);
+  assert.match(bar, /onOpen\("rvtow"\)/);
+  assert.match(bar, /onOpen\("rvlot"\)/);
+  assert.match(bar, /openRoom\(chip\.id\)/);
   assert.match(bar, /roomAskMic\(\)/);
   assert.match(bar, /roomAskSend\(q\)/);
   assert.match(bar, /onOpen\("rvgrok"\)/);
