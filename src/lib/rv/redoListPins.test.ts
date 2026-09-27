@@ -57,7 +57,11 @@ test("redo-list floorplans parse and do not inherit the wrong series tanks", asy
   assert.equal(conquestSheet.blackWater, "31 gal");
   assert.equal(conquestSheet.propane, "42 lb");
   assert.equal(conquestSheet.lengthFt, `30' 0"`);
-  assert.equal(conquestSheet.gvwr, "Confirm brochure");
+  assert.equal(
+    conquestSheet.gvwr,
+    "Series 12,300–12,500 lbs · confirm sticker",
+  );
+  assert.equal(conquestSheet.gvwrLbs, null);
   assert.equal(conquestSheet.fuelCapacity, "Confirm brochure");
   assert.equal(
     findOemFloorplanSpec("2024", "Gulf Stream Coach", "Conquest", "6280LE"),
@@ -175,7 +179,8 @@ test("redo-list floorplans parse and do not inherit the wrong series tanks", asy
   assert.equal(bhx.blackWater, "57 gal");
   const mlx = buildBrochureSpecs(xplor, "2026", "Grand Design", "Transcend Xplor", "25MLX");
   assert.equal(mlx.grayWater, "57 gal");
-  assert.equal(mlx.gvwr, "Confirm brochure");
+  assert.equal(mlx.gvwr, "Series 4,500–7,200 lbs · confirm sticker");
+  assert.equal(mlx.gvwrLbs, null);
 
   const le = RV_DATA["Forest River"]["Sunseeker LE"];
   const sle = buildBrochureSpecs(le, "2026", "Forest River", "Sunseeker LE", "2250SLE");
@@ -183,7 +188,8 @@ test("redo-list floorplans parse and do not inherit the wrong series tanks", asy
   assert.equal(sle.grayWater, "32 gal");
   assert.equal(sle.blackWater, "27 gal");
   assert.equal(sle.propane, "41 lb");
-  assert.equal(sle.gvwr, "Confirm brochure");
+  assert.equal(sle.gvwr, "Series 10,500–14,500 lbs · confirm sticker");
+  assert.equal(sle.gvwrLbs, null);
   assert.equal(sle.fuelCapacity, "Confirm brochure");
   const le2024 = buildBrochureSpecs(le, "2024", "Forest River", "Sunseeker LE", "2950LE");
   assert.equal(le2024.grayWater, "32 gal");

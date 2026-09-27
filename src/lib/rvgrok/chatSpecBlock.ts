@@ -6,6 +6,7 @@
  * Source is the spoken/written Grok reply only.
  */
 
+import { isSeriesGvwrEstimate } from "../rv/torqueToWeight.ts";
 import { lookupGroundedSpecs } from "./grounding.ts";
 import { parseCoachFromText } from "./parseCoach.ts";
 
@@ -704,6 +705,10 @@ export function formatChatSpecMissReply(opts: {
             model,
           }),
         );
+        continue;
+      }
+      if (label === "GVWR" && isSeriesGvwrEstimate(specs.weightBand)) {
+        lines.push(`${specs.weightBand}. Not a published pin.`);
         continue;
       }
       missed.push(label);

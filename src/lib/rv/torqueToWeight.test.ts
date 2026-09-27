@@ -235,6 +235,10 @@ test("a two-number GVWR band scores the high end only when UVW is missing", () =
   assert.equal(parseGvwrLb([39_500, 44_005]), 44005);
   assert.equal(parseGvwrLb("47,000 lbs GVWR"), 47000);
   assert.equal(parseGvwrLb("18,000 lbs UVW"), null);
+  assert.equal(
+    parseGvwrLb("Series 12,000–16,000 lbs · confirm sticker"),
+    null,
+  );
 
   const band = computeTorqueToWeight({
     torqueLbFt: 1250,

@@ -10,6 +10,7 @@ import {
   CONFIRM_BROCHURE,
   type BrochureSpecs,
 } from "./brochureSpecs.ts";
+import { isSeriesGvwrEstimate } from "./torqueToWeight.ts";
 import { resolveFactsBrochure } from "../rvgrok/factsBrochure.ts";
 import { rejectImplausibleSpecFills } from "./specFillSanity.ts";
 import {
@@ -126,7 +127,8 @@ export function isSpecGapDisplay(value?: string | null): boolean {
     s === "—" ||
     s === "–" ||
     s === CONFIRM_BROCHURE ||
-    /confirm brochure/i.test(s)
+    /confirm brochure/i.test(s) ||
+    isSeriesGvwrEstimate(s)
   );
 }
 
@@ -382,6 +384,7 @@ export function applySharedPaintToRows<T extends SharedPaintRow>(
   return rows.map((row) => {
     const next = byLabel.get(row.label);
     if (!next || next.gap) return row;
+    if (isSeriesGvwrEstimate(row.value)) return row;
     if (
       !row.gap &&
       (next.source === "catalog" || next.source === "oem-pin")
@@ -404,6 +407,9 @@ export function displayFromPainted(
   painted: PaintedSpecField,
 ): string {
   const cur = String(current || "").trim();
+  // Series span is the GVWR display when no published pin exists.
+  // A scraped fill must not replace it or blank it.
+  if (isSeriesGvwrEstimate(cur)) return cur;
   if (painted.gap) return cur;
   if (
     cur &&

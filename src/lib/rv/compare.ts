@@ -7,6 +7,7 @@ import {
 } from "./catalog";
 import { hydrateShareCoachResult } from "./shareCoachHydrate";
 import { buildBrochureSpecs } from "./brochureSpecs";
+import { isSeriesGvwrEstimate } from "./torqueToWeight";
 import { findOemFloorplanSpec } from "./floorplanSpecs";
 import { unverifiedLayoutLabel } from "./promptRules";
 import { estimateMarket, formatMoney, ratingFor } from "./catalog";
@@ -602,7 +603,9 @@ export function buildCompareReport(
       "neutral",
       colsWithRating.map((c) => ({
         display: c.brochure.gvwr,
-        raw: parseRangeMid(c.brochure.gvwr),
+        raw: isSeriesGvwrEstimate(c.brochure.gvwr)
+          ? null
+          : parseRangeMid(c.brochure.gvwr),
       })),
     ),
     row(

@@ -33,7 +33,7 @@ export function factsDetailSearchingFields(opts: {
   );
 }
 
-/** True only when the catalog gap is still empty on screen. */
+/** True only when that field is still blank on screen. A series GVWR span counts as shown. */
 export function factsDetailFieldSearching(
   field: FactsDetailSpinField,
   searching: ReadonlySet<FactsDetailSpinField>,

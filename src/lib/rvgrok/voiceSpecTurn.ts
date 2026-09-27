@@ -9,6 +9,7 @@
 import type { DeskSheetPayload, DeskSheetRow } from "./deskSheet.ts";
 import { looksLikeDeskSheetAsk } from "./deskSheetPolicy.ts";
 import { looksLikeCoachReportAsk, stripSpokenSourceTags } from "./coachReport.ts";
+import { isSeriesGvwrEstimate } from "../rv/torqueToWeight.ts";
 import { formatChatSpecMissReply, mappedWeightFields } from "./chatSpecBlock.ts";
 export { formatChatSpecMissReply };
 import {
@@ -60,6 +61,12 @@ function isEmptyValue(value: string): boolean {
     s === "-" ||
     /confirm brochure/i.test(s)
   );
+}
+
+/** A labeled series GVWR is on screen even though it is not an OEM pin. */
+function rowShown(row: { gap: boolean; value: string }): boolean {
+  if (isSeriesGvwrEstimate(row.value)) return true;
+  return !row.gap && !isEmptyValue(row.value) && row.value !== "N/A";
 }
 
 /**
@@ -411,11 +418,9 @@ export function formatVoiceSpecEngineSpeech(
   const coach = coachLine(sheet);
   if (coach) lines.push(`${coach}.`);
   if (scope === "all") {
-    const painted = sheet.rows.filter(
-      (r) => !r.gap && !isEmptyValue(r.value) && r.value !== "N/A",
-    );
+    const painted = sheet.rows.filter((r) => rowShown(r));
     const missed = sheet.rows
-      .filter((r) => r.gap || isEmptyValue(r.value))
+      .filter((r) => !rowShown(r))
       .map((r) => r.label);
     if (!painted.length) {
       lines.push("The spec fields are still missing. I won't guess.");
@@ -443,7 +448,7 @@ export function formatVoiceSpecEngineSpeech(
     const missed: string[] = [];
     for (const label of asked) {
       const row = sheet.rows.find((r) => r.label === label);
-      if (!row || row.gap || isEmptyValue(row.value)) {
+      if (!row || !rowShown(row)) {
         missed.push(label);
         continue;
       }
@@ -452,9 +457,7 @@ export function formatVoiceSpecEngineSpeech(
     const once = missingOnce(missed);
     if (once) lines.push(once);
   } else {
-    const painted = sheet.rows.filter(
-      (r) => !r.gap && !isEmptyValue(r.value) && r.value !== "N/A",
-    );
+    const painted = sheet.rows.filter((r) => rowShown(r));
     if (!painted.length) {
       lines.push("The spec fields are still missing. I won't guess.");
     } else {

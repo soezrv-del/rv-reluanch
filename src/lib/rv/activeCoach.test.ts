@@ -92,6 +92,10 @@ test("parseWeightLbs reads brochure strings and ranges", () => {
   assert.equal(parseWeightLbs("48000–58000 lbs"), 53000);
   assert.equal(parseWeightLbs(49900), 49900);
   assert.equal(parseWeightLbs("—"), undefined);
+  assert.equal(
+    parseWeightLbs("Series 12,000–16,000 lbs · confirm sticker"),
+    undefined,
+  );
 });
 
 test("snapshotActiveCoach packs report retail + GVWR for Cal/Tow", () => {

@@ -27,7 +27,11 @@ import {
   weightForFloorplan,
 } from "./floorplanSpecs.ts";
 import { computeTorqueToWeight } from "./torqueToWeight.ts";
-import { resolveYearSnapshot, buildBrochureSpecs } from "./brochureSpecs.ts";
+import {
+  resolveYearSnapshot,
+  buildBrochureSpecs,
+  formatSeriesGvwr,
+} from "./brochureSpecs.ts";
 import { CATALOG_INDEX } from "./rvCatalogIndex.ts";
 import {
   isPlaceholderTankTrio,
@@ -333,6 +337,20 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   assert.equal(ttwPin.gvwrLb, 22000);
   assert.equal(ttwPin.weightLb, 22000);
   assert.equal(ttwPin.weightEstimated, false);
+});
+
+test("series GVWR label is the model span, not a ±6% floorplan band", () => {
+  assert.equal(
+    formatSeriesGvwr([12000, 16000]),
+    "Series 12,000–16,000 lbs · confirm sticker",
+  );
+  assert.equal(formatSeriesGvwr([16000, 12000]), "Series 12,000–16,000 lbs · confirm sticker");
+  assert.equal(formatSeriesGvwr([0, 0]), null);
+  assert.equal(formatSeriesGvwr([12000, 12000]), null);
+  assert.equal(formatSeriesGvwr([0, 16000]), null);
+  const spec = src("brochureSpecs.ts");
+  assert.match(spec, /Never interpolate catalog weightRange/);
+  assert.doesNotMatch(spec, /weightForFloorplan/);
 });
 
 test("Tradition 42V/42Q brochure GVWR is 47,000 — not catalog weightRange mid", () => {

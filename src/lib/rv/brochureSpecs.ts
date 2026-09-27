@@ -36,6 +36,8 @@ import {
 import { resolveHonestTanks } from "./placeholderTanks.ts";
 import { estimateUvwFromGvwrDetailed } from "./torqueToWeight.ts";
 
+export { isSeriesGvwrEstimate } from "./torqueToWeight.ts";
+
 export { parseHp } from "./catalogHonesty.ts";
 export {
   isPlaceholderTankTrio,
@@ -140,7 +142,23 @@ function mid([a, b]: [number, number]) {
 }
 
 function fmtLbs(n: number) {
-  return `${Math.round(n).toLocaleString()} lbs`;
+  return `${Math.round(n).toLocaleString("en-US")} lbs`;
+}
+
+/**
+ * Model-level GVWR span for the Facts line only.
+ * Not a floorplan pin and not the old ±6% length band.
+ * Returns null when the catalog range is missing, zero, or a single point.
+ */
+export function formatSeriesGvwr(
+  weightRange: readonly [number, number] | null | undefined,
+): string | null {
+  if (!weightRange) return null;
+  const lo = Math.round(Math.min(weightRange[0], weightRange[1]));
+  const hi = Math.round(Math.max(weightRange[0], weightRange[1]));
+  if (!(lo > 0) || !(hi > lo)) return null;
+  const fmt = (n: number) => n.toLocaleString("en-US");
+  return `Series ${fmt(lo)}–${fmt(hi)} lbs · confirm sticker`;
 }
 
 function fmtGal(n: number) {
@@ -537,7 +555,9 @@ export function buildBrochureSpecs(
         type: spec.type,
       });
   // Never interpolate catalog weightRange as this coach's GVWR.
-  // Published OEM / year-band pin only — missing pin is Confirm brochure.
+  // Published OEM / year-band pin only. A nonzero model span may show as a
+  // labeled series estimate. That string is display-only: gvwrLbs / gvwrMid
+  // stay on the published pin so CCC, hitch, GCWR, and UVW do not read it.
   // gvwrLbs 0 means the table did not print one GVWR (dual chassis).
   const oemGvwr = oem?.gvwrLbs && oem.gvwrLbs > 0 ? oem.gvwrLbs : undefined;
   const publishedGvwr =
@@ -689,7 +709,9 @@ export function buildBrochureSpecs(
             ? fmtInchesAsFtIn(spec.lengthRange[0] * 12)
             : `${spec.lengthRange[0]}–${spec.lengthRange[1]} ft`;
 
-  const gvwrDisplay = publishedGvwr ? fmtLbs(publishedGvwr) : CONFIRM_BROCHURE;
+  const gvwrDisplay = publishedGvwr
+    ? fmtLbs(publishedGvwr)
+    : (formatSeriesGvwr(spec.weightRange) ?? CONFIRM_BROCHURE);
 
   // Exact pin only. Dual-family / class / by-year blends → Confirm brochure.
   const honestEngine = honestEngineLabel(snap.engine);

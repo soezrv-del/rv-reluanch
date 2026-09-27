@@ -12,6 +12,7 @@ import {
   findOemUvwLbs,
 } from "../rv/floorplanSpecs.ts";
 import type { CoachIdentity } from "./coachIdentity.ts";
+import { isSeriesGvwrEstimate } from "../rv/torqueToWeight.ts";
 import { resolveFactsBrochure } from "./factsBrochure.ts";
 
 export type LockedOemWeights = {
@@ -63,9 +64,13 @@ export function resolveLockedOemWeights(
 export function formatLockedWeightLine(
   label: "GVWR" | "UVW",
   lbs: number | null,
+  seriesEstimate?: string | null,
 ): string {
   if (lbs != null && Number.isFinite(lbs) && lbs > 0) {
     return `- VERIFIED ${label} ${Math.round(lbs)} from OEM pin`;
+  }
+  if (seriesEstimate && isSeriesGvwrEstimate(seriesEstimate)) {
+    return `- ${label}: GAP — no OEM pin. ${seriesEstimate}. Not a published GVWR. Do not use it for CCC, hitch, or GCWR.`;
   }
   return `- ${label}: GAP — no OEM pin. Conversational answer may give a labeled EST / typical class range after WEB RESEARCH — never as an OEM pin. Do not write EST onto the desk.`;
 }
@@ -81,9 +86,14 @@ export function formatLockedWeightsBlock(
   identity: Pick<CoachIdentity, "year" | "make" | "model" | "floorplan">,
 ): string {
   const w = resolveLockedOemWeights(identity);
+  const brochure = resolveFactsBrochure(identity);
+  const seriesGvwr =
+    (w.gvwrLbs == null || w.gvwrLbs <= 0) && isSeriesGvwrEstimate(brochure?.gvwr)
+      ? brochure?.gvwr
+      : null;
   return [
     "LOCKED WEIGHTS (OEM pin — speak these; never claim GAP for a VERIFIED field):",
-    formatLockedWeightLine("GVWR", w.gvwrLbs),
+    formatLockedWeightLine("GVWR", w.gvwrLbs, seriesGvwr),
     formatLockedWeightLine("UVW", w.uvwLbs),
     LOCKED_WEIGHTS_SPEECH_RULE,
   ].join("\n");
