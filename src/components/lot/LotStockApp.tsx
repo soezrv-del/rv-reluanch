@@ -18,6 +18,7 @@ import {
   type LotSnapshotView,
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
+import { LOT_UNIT_OPEN_EVENT, takePendingLotQuery } from "@/lib/home/homeCoach";
 
 const PAGE_SIZE = 48;
 
@@ -30,6 +31,7 @@ export function LotStockApp() {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [limit, setLimit] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const wantOpen = useRef("");
 
   const load = () => {
     setError(null);
@@ -50,6 +52,19 @@ export function LotStockApp() {
     load();
   }, []);
 
+  useEffect(() => {
+    const pull = () => {
+      const query = takePendingLotQuery();
+      if (!query) return;
+      wantOpen.current = query;
+      setType("");
+      setQuery(query);
+    };
+    pull();
+    window.addEventListener(LOT_UNIT_OPEN_EVENT, pull);
+    return () => window.removeEventListener(LOT_UNIT_OPEN_EVENT, pull);
+  }, []);
+
   const chips = useMemo(() => lotTypeChips(snap?.units ?? []), [snap]);
   const filtered = useMemo(
     () => filterLotBrowse(snap?.units ?? [], { query, type }),
@@ -58,8 +73,16 @@ export function LotStockApp() {
 
   useEffect(() => {
     setLimit(PAGE_SIZE);
-    setOpenKey(null);
+    if (!wantOpen.current) setOpenKey(null);
   }, [query, type]);
+
+  useEffect(() => {
+    const wanted = wantOpen.current;
+    if (!wanted || !snap) return;
+    const hit = filterLotBrowse(snap.units, { query: wanted })[0];
+    setOpenKey(hit ? lotUnitKey(hit, 0) : null);
+    wantOpen.current = "";
+  }, [query, type, snap]);
 
   useEffect(() => {
     const el = sentinelRef.current;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -10,6 +10,7 @@ import {
   Map as MapIcon,
   MessageSquare,
   Route,
+  ScanLine,
   Search,
   Share2,
   Shield,
@@ -43,6 +44,10 @@ import {
   speakWithBrowserTts,
   stopBrowserTts,
 } from "@/lib/rvgrok/voice";
+
+const VinDecoder = lazy(() =>
+  import("@/components/rvfax/VinDecoder").then((m) => ({ default: m.VinDecoder })),
+);
 
 type SheetId = "help" | "privacy" | "terms" | null;
 
@@ -84,6 +89,7 @@ export function MoreApp({
   const [recallArmed, setRecallArmed] = useState(false);
 
   const [voiceOpen, setVoiceOpen] = useState(false);
+  const [vinOpen, setVinOpen] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState(DEFAULT_VOICE);
   const [voiceMode, setVoiceMode] = useState(false);
   const [liveVoice, setLiveVoice] = useState(false);
@@ -233,6 +239,12 @@ export function MoreApp({
                 title="Ask RvGrok"
                 sub="Voice · chat · coach intel"
                 onClick={() => onNavigate?.("rvgrok")}
+              />
+              <RowLink
+                icon={<ScanLine className="size-4 text-sky-200" />}
+                title="VIN Decoder"
+                sub="Scan or type a VIN · NHTSA decode"
+                onClick={() => setVinOpen(true)}
               />
               <RowLink
                 icon={<Landmark className="size-4 text-green" />}
@@ -501,6 +513,11 @@ export function MoreApp({
         onPreview={handlePreview}
         previewingId={previewingId}
       />
+      {vinOpen ? (
+        <Suspense fallback={null}>
+          <VinDecoder open={vinOpen} onClose={() => setVinOpen(false)} />
+        </Suspense>
+      ) : null}
     </>
   );
 }

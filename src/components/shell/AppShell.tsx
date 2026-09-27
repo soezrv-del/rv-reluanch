@@ -10,7 +10,10 @@ import {
   type ErrorInfo,
   type ReactNode,
 } from "react";
-import { BottomTabs, type AppTab } from "./BottomTabs";
+import { type AppTab } from "./BottomTabs";
+import { RoomAskBar } from "./RoomAskBar";
+import { SuiteBrand } from "./SuiteBrand";
+import { HomeScreen } from "./HomeScreen";
 import { dockTabOrder, PAGE_ACCENT } from "./shellConstants";
 import { useAccess } from "@/components/access/AccessProvider";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
@@ -43,6 +46,7 @@ import {
   clearGrokSeedOnDockTap,
   grokSeedFromAskHandoff,
 } from "@/lib/rvgrok/tabEntry";
+import { screenNameForTab, setActiveScreen } from "@/lib/rvgrok/screenContext";
 
 /**
  * Code-split suite tools — tools load only when visited.
@@ -141,6 +145,7 @@ export function AppShell({
 }) {
   const access = useAccess();
   const [tab, setTab] = useState<AppTab>(initialTab);
+  const [homeOpen, setHomeOpen] = useState(initialTab === "rvgrok");
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
   const [grokEntryToken, setGrokEntryToken] = useState(0);
   const [calSeed, setCalSeed] = useState<CalSeed | null>(null);
@@ -155,9 +160,12 @@ export function AppShell({
   const [factsMarketToken, setFactsMarketToken] = useState(0);
   const launchOpen = false;
   const suiteReady = true;
-  const [visited, setVisited] = useState<Set<AppTab>>(
-    () => new Set<AppTab>([initialTab]),
-  );
+  const [visited, setVisited] = useState<Set<AppTab>>(() => {
+    const next = new Set<AppTab>([initialTab]);
+    // Ask bar talks to this pane from every room, including /lot.
+    next.add("rvgrok");
+    return next;
+  });
   const mainRef = useRef<HTMLElement | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
   const calTokenRef = useRef(0);
@@ -292,6 +300,7 @@ export function AppShell({
 
   const onTabChange = useCallback(
     (next: AppTab) => {
+      setHomeOpen(false);
       // Hidden Grok composer can keep focus after a swipe — that sticks
       // html.kb-open and used to unmount the dock on re-entry.
       blurSuiteFocus();
@@ -308,6 +317,7 @@ export function AppShell({
       if (next === "rvsold" && !isProfessionalTier()) return;
       if (next === "rvgrok") {
         // Dock tap / swipe / More — never restore a leftover Ask-Grok seed.
+        // The open thread stays; only a Facts Ask Grok seed starts fresh.
         setGrokSeed(clearGrokSeedOnDockTap());
         setGrokEntryToken((n) => n + 1);
       }
@@ -318,10 +328,14 @@ export function AppShell({
     [markVisited, openFactsShare, openFactsPicker, requestCleanCal],
   );
 
+  useEffect(() => {
+    setActiveScreen(screenNameForTab(tab, homeOpen));
+  }, [tab, homeOpen]);
+
   const isPro = isProfessionalTier();
   const dockOrder = useMemo(() => dockTabOrder(isPro), [isPro]);
   const swipeIndex = Math.max(0, dockOrder.indexOf(tab));
-  const swipeArmed = !launchOpen && dockOrder.includes(tab);
+  const swipeArmed = !launchOpen && !homeOpen && dockOrder.includes(tab);
 
   useEffect(() => {
     const openSold = () => {
@@ -347,11 +361,6 @@ export function AppShell({
     enabled: swipeArmed,
     onPeek: peekTab,
   });
-
-  // Do NOT key this on kb.open: a focused composer in a hidden Grok pane
-  // used to leave hideDock true after leaving Grok (dock gone on re-entry).
-  // Keyboard still fades the dock via html.kb-open CSS.
-  const hideDock = launchOpen;
 
   const nav = useMemo(
     () => ({
@@ -422,11 +431,18 @@ export function AppShell({
           overscrollBehavior: "none",
         }}
       >
+        <SuiteBrand onHome={() => setHomeOpen(true)} />
         <main
           ref={mainRef}
           className="suite-swipe-viewport relative min-h-0 flex-1 overflow-hidden"
           aria-hidden={launchOpen}
         >
+          {homeOpen ? (
+            <HomeScreen
+              coach={activeCoach}
+              onOpenLot={() => onTabChange("rvlot")}
+            />
+          ) : null}
           {dockOrder.map((id, i) => {
             if (!show(id)) return null;
             return (
@@ -502,15 +518,7 @@ export function AppShell({
           ) : null}
         </main>
 
-        {!hideDock ? (
-          <div
-            className="relative z-[80] shrink-0 isolate pointer-events-auto"
-            data-bottom-dock
-            data-no-swipe
-          >
-            <BottomTabs tab={tab} onChange={onTabChange} />
-          </div>
-        ) : null}
+        <RoomAskBar tab={tab} homeOpen={homeOpen} onOpen={onTabChange} />
       </div>
     </ShellNavProvider>
   );

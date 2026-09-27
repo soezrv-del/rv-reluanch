@@ -15,21 +15,21 @@ function read(rel: string) {
   return readFileSync(join(root, rel), "utf8");
 }
 
-test("dock / empty entry always resets and never seeds", () => {
+test("dock / empty entry keeps the chat and never seeds", () => {
   assert.deepEqual(planGrokTabEntry(undefined), {
-    resetVisibleChat: true,
+    resetVisibleChat: false,
     seed: null,
   });
   assert.deepEqual(planGrokTabEntry(null), {
-    resetVisibleChat: true,
+    resetVisibleChat: false,
     seed: null,
   });
   assert.deepEqual(planGrokTabEntry(""), {
-    resetVisibleChat: true,
+    resetVisibleChat: false,
     seed: null,
   });
   assert.deepEqual(planGrokTabEntry("   "), {
-    resetVisibleChat: true,
+    resetVisibleChat: false,
     seed: null,
   });
   assert.equal(clearGrokSeedOnDockTap(), undefined);

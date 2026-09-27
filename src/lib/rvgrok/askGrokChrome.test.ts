@@ -69,11 +69,12 @@ test("Facts Ask Grok seeds the Grok tab; dock tap stays a clean page", () => {
   assert.doesNotMatch(tabs, /short: "LIVE!"/);
 });
 
-test("dock is not keyed on overlay open or kb.open", () => {
+test("old bottom dock is not mounted and keyboard does not gate the shell", () => {
   const shell = read("../../components/shell/AppShell.tsx");
-  assert.match(shell, /hideDock = launchOpen/);
+  assert.doesNotMatch(shell, /<BottomTabs/);
+  assert.doesNotMatch(shell, /data-bottom-dock/);
+  assert.doesNotMatch(shell, /hideDock/);
   assert.doesNotMatch(shell, /askGrokOpen/);
-  assert.doesNotMatch(shell, /hideDock = launchOpen \|\| kb\.open/);
   assert.match(shell, /blurSuiteFocus/);
   assert.match(shell, /enabled: swipeArmed,/);
 });

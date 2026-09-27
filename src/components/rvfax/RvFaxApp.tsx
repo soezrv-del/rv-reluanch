@@ -20,7 +20,6 @@ import {
   Heart,
   Loader2,
   Ruler,
-  ScanLine,
   Search,
   Sparkles,
   Trash2,
@@ -100,10 +99,6 @@ const RvDetail = lazy(() =>
 const RvCompare = lazy(() =>
   import("./RvCompare").then((m) => ({ default: m.RvCompare })),
 );
-const VinDecoder = lazy(() =>
-  import("./VinDecoder").then((m) => ({ default: m.VinDecoder })),
-);
-
 function PanelFallback() {
   return (
     <div className="flex h-full items-center justify-center bg-bg">
@@ -168,7 +163,6 @@ export function RvFaxApp({
   const [detail, setDetail] = useState<RVResult | null>(null);
   const [shareFocusToken, setShareFocusToken] = useState(0);
   const [marketFocusToken, setMarketFocusToken] = useState(0);
-  const [vinOpen, setVinOpen] = useState(false);
   const [comparePick, setComparePick] = useState<RVResult[]>([]);
   const { ready: catalogReady, gen: catalogGen } = useCatalogReady();
   const [compareOpen, setCompareOpen] = useState(false);
@@ -192,7 +186,6 @@ export function RvFaxApp({
     setResults([]);
     setHasSearched(false);
     setDetail(null);
-    setVinOpen(false);
     setComparePick([]);
     setCompareOpen(false);
     setSuggestions([]);
@@ -340,7 +333,6 @@ export function RvFaxApp({
     if (!factsShareToken) return;
     let cancelled = false;
     setCompareOpen(false);
-    setVinOpen(false);
 
     const focusShare = (r?: RVResult, pickerFp?: string | null) => {
       if (cancelled) return;
@@ -382,7 +374,6 @@ export function RvFaxApp({
     if (!factsMarketToken) return;
     let cancelled = false;
     setCompareOpen(false);
-    setVinOpen(false);
 
     const focusMarket = (r?: RVResult, pickerFp?: string | null) => {
       if (cancelled) return;
@@ -1270,24 +1261,6 @@ export function RvFaxApp({
             </section>
           ) : null}
 
-          {/* VIN last */}
-          <button
-            type="button"
-            onClick={() => setVinOpen(true)}
-            className="glass-prestige-gold flex w-full min-h-[52px] items-center gap-3 rounded-[var(--radius-xl)] px-4 py-3 text-left transition hover:border-gold/70 active:scale-[0.99]"
-          >
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-white/15 bg-blue text-white shadow-[0_0_18px_rgba(77,166,255,0.35)]">
-              <ScanLine className="size-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-bold text-white">VIN Decoder</p>
-              <p className="text-[11px] text-white">
-                Scan or type a VIN · NHTSA decode
-              </p>
-            </div>
-            <ChevronDown className="size-4 -rotate-90 text-white" />
-          </button>
-
           <SuiteDisclaimer className="pb-2" />
         </div>
         </PullRefreshLayer>
@@ -1377,11 +1350,6 @@ export function RvFaxApp({
         onClose={() => setSheet(null)}
       />
 
-      {vinOpen ? (
-        <Suspense fallback={null}>
-          <VinDecoder open={vinOpen} onClose={() => setVinOpen(false)} />
-        </Suspense>
-      ) : null}
       {peerSheet}
     </div>
   );
