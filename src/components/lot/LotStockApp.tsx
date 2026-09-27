@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CoveredCoach } from "@/components/shell/CoveredCoach";
+import { RAIDHO_R_MARK } from "@/assets/prestige";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
@@ -18,11 +18,7 @@ import {
   type LotSnapshotView,
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
-import {
-  LOT_UNIT_OPEN_EVENT,
-  coverVariant,
-  takePendingLotQuery,
-} from "@/lib/home/homeCoach";
+import { LOT_UNIT_OPEN_EVENT, takePendingLotQuery } from "@/lib/home/homeCoach";
 
 const PAGE_SIZE = 48;
 
@@ -398,11 +394,11 @@ function LotUnitCard({
               onError={() => setFailedSrc(photo)}
             />
           ) : (
-            <span className="lot-cover" data-lot-photo="cover">
-              <CoveredCoach
-                variant={coverVariant(unit)}
-                className="lot-cover-art"
-                preserveAspectRatio="xMidYMid meet"
+            <span className="lot-mark" data-lot-photo="raidho">
+              <img
+                src={RAIDHO_R_MARK}
+                alt=""
+                className="lot-mark-art"
               />
             </span>
           )}

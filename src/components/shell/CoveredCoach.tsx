@@ -41,26 +41,16 @@ const DRAPES = [
   },
 ] as const;
 
-export function CoveredCoach({
-  variant,
-  className = "h-20 w-full",
-  preserveAspectRatio,
-}: {
-  variant: 0 | 1 | 2;
-  className?: string;
-  /** Omitted on Home so that card keeps the pre-lot default (meet). */
-  preserveAspectRatio?: "xMidYMid meet";
-}) {
+export function CoveredCoach({ variant }: { variant: 0 | 1 | 2 }) {
   const drape = DRAPES[variant];
   const glowId = useId().replace(/:/g, "");
 
   return (
     <svg
       viewBox="0 0 144 80"
-      preserveAspectRatio={preserveAspectRatio}
       role="img"
       aria-label="Photo coming soon"
-      className={className}
+      className="h-20 w-full"
       data-covered-coach={variant}
     >
       <defs>
