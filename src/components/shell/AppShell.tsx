@@ -425,13 +425,25 @@ export function AppShell({
     <ShellNavProvider value={nav}>
       <div
         ref={shellRef}
-        className="app-shell relative flex h-full min-h-0 w-full flex-col overflow-hidden overscroll-none bg-bg text-fg"
+        className="app-shell showroom-app relative flex h-full min-h-0 w-full flex-col overflow-hidden overscroll-none text-fg"
+        data-home-open={homeOpen ? "" : undefined}
         data-page-accent={PAGE_ACCENT[tab] ?? "sapphire"}
         style={{
           overscrollBehavior: "none",
         }}
       >
-        <SuiteBrand onHome={() => setHomeOpen(true)} />
+        <div className="showroom-stage" aria-hidden>
+          <div className="showroom-ambient" />
+          {homeOpen ? (
+            <>
+              <div className="showroom-spot" />
+              <div className="showroom-spot-src" />
+              <div className="showroom-spot-pool" />
+            </>
+          ) : null}
+          <div className="showroom-grain" />
+        </div>
+        <SuiteBrand onHome={() => setHomeOpen(true)} showMenu={homeOpen} />
         <main
           ref={mainRef}
           className="suite-swipe-viewport relative min-h-0 flex-1 overflow-hidden"

@@ -53,8 +53,12 @@ test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   const chips = bar.match(/const ROOM_CHIPS[\s\S]*?\];/)?.[0] ?? "";
   assert.match(
     chips,
-    /id: "rvfax", label: "Rv Facts"[\s\S]*id: "rvcal", label: "Calculator"[\s\S]*id: "rvtow", label: "Tow Guide"[\s\S]*id: "rvlot", label: "Lot Inventory"/,
+    /id: "rvfax", label: "Rv Facts"[\s\S]*id: "rvlot", label: "Lot Inventory"[\s\S]*id: "rvcal", label: "Calculator"[\s\S]*id: "rvtow", label: "Tow Guide"/,
   );
+  assert.match(chips, /icon: Truck/);
+  const askAt = bar.indexOf("data-room-ask-bar");
+  const tabsAt = bar.indexOf("data-room-tabs");
+  assert.ok(askAt !== -1 && tabsAt > askAt, "ask pill sits above the pill tabs");
   assert.equal((chips.match(/id: "/g) || []).length, 4);
   assert.doesNotMatch(chips, /rvtrips|RV GPS|Tanks|Payment|Diesels|36-foot/);
   const grok = read("../../components/rvgrok/RvGrokApp.tsx");

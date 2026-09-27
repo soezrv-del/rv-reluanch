@@ -5,7 +5,7 @@ import {
   type RefObject,
 } from "react";
 import { cn } from "@/lib/utils";
-import { RAIDHO_R_MARK, SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
+import { SHARED_PRESTIGE_BACKDROP } from "@/assets/prestige";
 import type { AppTab } from "./BottomTabs";
 import { ScrollSuiteHeader } from "./ScrollChrome";
 import { ActiveCoachChip } from "./ActiveCoachChip";
@@ -14,30 +14,30 @@ import { useAdaptiveGlass } from "@/lib/hooks/useAdaptiveGlass";
 import { useKeyboardInset } from "@/lib/hooks/useKeyboardInset";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 
-/** Full-viewport Raidho R watermark — same seal as compare, suite-wide. */
+/**
+ * Plain showroom backdrop — near-black, one soft blue glow, faint grain.
+ * The giant Raidho R is not a page background.
+ */
 export function SuiteRaidhoBackdrop({
   className,
   bleed,
 }: {
   className?: string;
-  /** Logo only, full-bleed — no photo, field, or scrim. */
+  /** Kept so existing call sites stay mounted. No logo image. */
   bleed?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "suite-raidho-backdrop pointer-events-none absolute inset-0 overflow-hidden",
+        "showroom-plain pointer-events-none absolute inset-0 overflow-hidden",
         className,
       )}
       aria-hidden
+      data-showroom-plain=""
       data-raidho-bleed={bleed ? "" : undefined}
     >
-      {bleed ? null : <div className="suite-raidho-field" />}
-      <img
-        src={RAIDHO_R_MARK}
-        alt=""
-        className={bleed ? "suite-raidho-bleed" : "suite-raidho-mark"}
-      />
+      <div className="showroom-ambient" />
+      <div className="showroom-grain" />
     </div>
   );
 }
@@ -66,9 +66,7 @@ export function SuiteBackdrop({
         className="page-backdrop-bright absolute inset-0 size-full object-cover"
         style={{ objectPosition }}
       />
-      <div className="suite-raidho-field" />
       <div className="page-scrim-soft" />
-      <img src={RAIDHO_R_MARK} alt="" className="suite-raidho-mark" />
     </div>
   );
 }
@@ -149,7 +147,7 @@ export function SuitePage({
   return (
     <div
       className={cn(
-        "relative flex h-full min-h-0 flex-col overflow-hidden bg-bg text-white",
+        "showroom-page relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent text-white",
         usePhotoGlass && "adaptive-glass",
         className,
       )}

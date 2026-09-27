@@ -7,10 +7,13 @@ import { lotUnitPhoto, type LotUnit } from "../lot/ownLotPage.ts";
 import type { ActiveCoach } from "../rv/activeCoach.ts";
 import {
   NEWEST_ARRIVALS,
+  arrivalsForHome,
   coverVariant,
   newestArrivals,
   newestLotUnit,
+  pickShowroomStage,
   resolveHomeCoach,
+  showroomUnitLabel,
 } from "./homeCoach.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -204,12 +207,13 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   const brand = readFileSync(join(root, "../../components/shell/SuiteBrand.tsx"), "utf8");
   const mark = join(root, "../../../public/assets/brand/raidho-shell-mark.png");
   assert.ok(existsSync(mark), "owner mark asset");
-  assert.match(shell, /<SuiteBrand onHome=\{\(\) => setHomeOpen\(true\)\} \/>/);
+  assert.match(shell, /<SuiteBrand onHome=\{\(\) => setHomeOpen\(true\)\} showMenu=\{homeOpen\} \/>/);
   assert.match(brand, /aria-label="Home"/);
   assert.match(shell, /homeOpen/);
   assert.match(shell, /initialTab = "rvgrok"/);
   assert.match(home, /resolveHomeCoach/);
-  assert.match(home, /newestArrivals/);
+  assert.match(home, /arrivalsForHome/);
+  assert.match(home, /pickShowroomStage/);
   assert.match(home, /CoveredCoach/);
   assert.match(home, /coverVariant/);
   const cover = readFileSync(join(root, "../../components/shell/CoveredCoach.tsx"), "utf8");
@@ -227,4 +231,51 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(brand, /RvFOX/);
   assert.doesNotMatch(home, /unsplash|placeholder|stock|allegro/i);
   assert.doesNotMatch(shell, /RvFaxApp\.tsx|LotStockApp\.tsx|RvCalApp\.tsx|RvTowApp\.tsx/);
+
+  const suite = readFileSync(join(root, "../../components/shell/SuitePage.tsx"), "utf8");
+  const bar = readFileSync(join(root, "../../components/shell/RoomAskBar.tsx"), "utf8");
+  assert.match(suite, /data-showroom-plain/);
+  assert.doesNotMatch(suite, /RAIDHO_R_MARK/);
+  assert.doesNotMatch(suite, /suite-raidho-bleed/);
+  assert.doesNotMatch(suite, /raidho-r-mark/);
+  assert.match(bar, /What's up\?/);
+  assert.match(bar, /roomAskMic\(\)/);
+  const chips = bar.match(/const ROOM_CHIPS[\s\S]*?\];/)?.[0] ?? "";
+  assert.match(
+    chips,
+    /Rv Facts[\s\S]*Lot Inventory[\s\S]*Calculator[\s\S]*Tow Guide/,
+  );
+});
+
+test("spotlight label matches the photographed unit, and that unit is not the first arrival", () => {
+  const older = unit({
+    title: "Older",
+    year: "2024",
+    make: "Thor",
+    model: "Compass",
+    trim: "23TW",
+    photo: "https://cdn.example/compass.jpg",
+    price: 119995,
+    stock_number: "A",
+    printed: { received_date: "2026-09-01", id: "1" },
+  });
+  const hero = unit({
+    title: "2026 Holiday Rambler Admiral 29M",
+    year: "2026",
+    make: "Holiday Rambler",
+    model: "Admiral",
+    trim: "29M",
+    photo: "https://cdn.example/admiral.webp",
+    price: 164995,
+    stock_number: "B",
+    printed: { received_date: "2026-09-22", id: "9" },
+  });
+  const stage = pickShowroomStage(null, [older, hero]);
+  assert.equal(stage.photo, "https://cdn.example/admiral.webp");
+  assert.equal(stage.name, showroomUnitLabel(hero));
+  assert.equal(stage.name, "2026 Holiday Rambler Admiral 29M");
+  assert.equal(stage.price, 164995);
+  const arrivals = arrivalsForHome([older, hero], stage.unit);
+  assert.equal(arrivals[0]?.stock_number, "A");
+  assert.ok(arrivals.every((row) => row.stock_number !== "B"));
 });
