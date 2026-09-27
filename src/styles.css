@@ -2680,6 +2680,17 @@ html.kb-open [data-rvgrok-composer-dock] {
   width: min(22rem, 92%);
   margin: 0.75rem auto 0;
 }
+button.showroom-hero {
+  display: block;
+}
+.showroom-hero picture {
+  display: block;
+  width: 100%;
+}
+button.showroom-placard {
+  display: block;
+  width: calc(100% - 2.5rem);
+}
 .showroom-coach {
   position: relative;
   z-index: 2;
@@ -2688,16 +2699,6 @@ html.kb-open [data-rvgrok-composer-dock] {
   height: 11.5rem;
   object-fit: contain;
   object-position: center bottom;
-}
-.showroom-coach-fallback {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  height: 11.5rem;
-}
-.showroom-coach-fallback svg {
-  height: 7.5rem;
-  width: auto;
 }
 .showroom-contact {
   position: absolute;
@@ -2786,6 +2787,25 @@ html.kb-open [data-rvgrok-composer-dock] {
   color: #e6ebf3;
   font-weight: 600;
 }
+.showroom-spotfacts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  margin-top: 0.55rem;
+}
+.showroom-spotprice {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+}
+.showroom-spotmeta {
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #c5cedb;
+}
 .showroom-arrivals {
   position: relative;
   z-index: 1;
@@ -2823,6 +2843,19 @@ html.kb-open [data-rvgrok-composer-dock] {
 }
 .showroom-arrivals .showroom-rail {
   padding: 0 1.25rem 0.25rem;
+}
+.showroom-arrival-set {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: 0.625rem;
+}
+.showroom-arrivals .showroom-rail[data-arrival-loop="on"] {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+.showroom-arrivals .showroom-rail[data-arrival-loop="on"] .showroom-arrival {
+  scroll-snap-align: none;
 }
 .showroom-arrival {
   display: flex;
@@ -2946,18 +2979,8 @@ html.kb-open [data-rvgrok-composer-dock] {
     0 0 0 2px rgba(255, 255, 255, 0.72);
 }
 .showroom-pills {
-  scroll-snap-type: none;
-  scroll-behavior: auto;
-  padding: 0.15rem 0 0.2rem 1.1rem;
-}
-.showroom-pill-set {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.625rem;
-}
-.showroom-pills .showroom-tab {
-  scroll-snap-align: none;
+  scroll-snap-type: x proximity;
+  padding: 0.15rem 1.1rem 0.2rem;
 }
 .showroom-tab {
   display: inline-flex;

@@ -4,15 +4,11 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  nextPillScroll,
-  PILL_LOOP_PX_PER_SEC,
-  PILL_LOOP_RESUME_MS,
   publishRoomVoice,
   registerRoomAsk,
   roomAskMic,
   roomAskSend,
   roomVoicePhaseFromStatus,
-  shouldLoopPills,
   subscribeRoomVoice,
 } from "./roomAsk.ts";
 import { readActiveScreen, setActiveScreen } from "./screenContext.ts";
@@ -86,27 +82,14 @@ test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   assert.match(more, /label="RV GPS"/);
   assert.doesNotMatch(more, /title="RV GPS"/);
   assert.match(more, /title="VIN Decoder"/);
-  assert.match(bar, /data-room-chip-set="duplicate"/);
-  assert.match(bar, /aria-hidden="true"/);
-  assert.match(bar, /tabIndex=\{mirror \? -1 : undefined\}/);
-  assert.match(bar, /prefers-reduced-motion: reduce/);
-  assert.match(bar, /shouldLoopPills/);
-  assert.match(bar, /nextPillScroll/);
-  assert.match(bar, /PILL_LOOP_RESUME_MS/);
   assert.match(bar, /else if \(id === "rvgrok"\) onOpen\("rvgrok"\)/);
-});
-
-test("pill row loops only when it overflows and motion is allowed", () => {
-  assert.equal(shouldLoopPills({ reducedMotion: true, overflows: true }), false);
-  assert.equal(shouldLoopPills({ reducedMotion: false, overflows: false }), false);
-  assert.equal(shouldLoopPills({ reducedMotion: true, overflows: false }), false);
-  assert.equal(shouldLoopPills({ reducedMotion: false, overflows: true }), true);
-  assert.ok(PILL_LOOP_PX_PER_SEC >= 30 && PILL_LOOP_PX_PER_SEC <= 40);
-  assert.equal(PILL_LOOP_RESUME_MS, 3000);
-  assert.equal(nextPillScroll(80, 100, 30), 10);
-  assert.equal(nextPillScroll(0, 100, 100), 0);
-  assert.equal(nextPillScroll(10, 0, 5), 10);
-  assert.equal(nextPillScroll(40, 100, 250), 90);
+  assert.match(bar, /className="showroom-rail showroom-pills"/);
+  assert.equal((bar.match(/ROOM_CHIPS\.map/g) || []).length, 1);
+  assert.doesNotMatch(bar, /data-pill-loop|data-room-chip-set|showroom-pill-set/);
+  assert.doesNotMatch(bar, /requestAnimationFrame|nextPillScroll|shouldLoopPills|PILL_LOOP/);
+  assert.doesNotMatch(bar, /aria-hidden="true"/);
+  const ask = read("./roomAsk.ts");
+  assert.doesNotMatch(ask, /nextPillScroll|shouldLoopPills|PILL_LOOP|nextSeamlessScroll/);
 });
 
 test("top-of-page Live chip is gone; in-content Ask Grok stays", () => {
