@@ -4,8 +4,6 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  lotLbsOrGap,
-  lotLengthOrGap,
   lotPriceOrGap,
   lotTextOrGap,
   parseLotSnapshotJson,
@@ -17,7 +15,6 @@ import {
   arrivalsForHome,
   coverVariant,
   newestArrivals,
-  spotlightLabel,
   spotlightLotUnit,
   spotlightSpecs,
 } from "./homeCoach.ts";
@@ -148,7 +145,7 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(shell, /homeOpen/);
   assert.match(shell, /initialTab = "rvgrok"/);
   assert.match(home, /SHOWROOM_SPOTLIGHT/);
-  assert.match(home, /spotlightLabel\(\)/);
+  assert.match(home, /SHOWROOM_SPOTLIGHT\.series/);
   assert.match(home, /arrivalsForHome\(listed\)/);
   assert.doesNotMatch(home, /resolveHomeCoach|pickShowroomStage|newestLotUnit/);
   assert.match(home, /CoveredCoach/);
@@ -201,7 +198,6 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
       alt: "2026 Entegra Cornerstone",
     },
   );
-  assert.equal(spotlightLabel(), "2026 Entegra Cornerstone");
   const cutout = join(
     root,
     "../../../public/assets/showroom/2026-entegra-cornerstone-cutout.webp",
@@ -228,17 +224,14 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.equal(stocked.stock_number, "45282");
   assert.equal(stocked.vin, "4UZFCTFG3TCWE7168");
   const specs = spotlightSpecs(stocked);
-  assert.equal(specs.title, "2026 Entegra Cornerstone 45D");
+  assert.deepEqual(Object.keys(specs).sort(), ["model", "price", "stock"]);
+  assert.equal(specs.model, "Cornerstone 45D");
   assert.equal(specs.price, lotPriceOrGap(stocked.price));
   assert.equal(specs.stock, lotTextOrGap(stocked.stock_number));
-  assert.equal(specs.location, lotTextOrGap(stocked.location));
-  assert.equal(specs.condition, lotTextOrGap(stocked.condition));
-  assert.equal(specs.length, lotLengthOrGap(stocked.length_ft));
-  assert.equal(specs.gvwr, lotLbsOrGap(stocked.gvwr));
-  assert.equal(specs.measure, `${specs.length} · GVWR ${specs.gvwr}`);
   assert.equal(specs.price, "$729,995");
-  assert.equal(specs.location, "Fresno CA");
-  assert.equal(specs.condition, "New");
+  assert.equal(specs.stock, "45282");
+  assert.equal(specs.model.includes(stocked.year), false);
+  assert.equal(/\bEntegra\b/.test(specs.model), false);
   assert.notEqual(stocked.photo, SHOWROOM_SPOTLIGHT.image);
 
   const byVin = spotlightLotUnit(
@@ -264,10 +257,22 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
     model: "Cornerstone",
   });
   const emptySpecs = spotlightSpecs(blank);
-  assert.equal(emptySpecs.title, "2026 Entegra Cornerstone");
+  assert.equal(emptySpecs.model, "Cornerstone");
   assert.equal(emptySpecs.price, "");
-  assert.equal(emptySpecs.location, "");
-  assert.equal(emptySpecs.measure, "");
+  assert.equal(emptySpecs.stock, "45282");
+  const noPriceOrStock = spotlightSpecs(
+    unit({
+      year: "2026",
+      make: "Entegra Coach",
+      model: "Cornerstone 45D",
+      trim: "45D",
+      price: null,
+      stock_number: "",
+    }),
+  );
+  assert.equal(noPriceOrStock.model, "Cornerstone 45D");
+  assert.equal(noPriceOrStock.price, "");
+  assert.equal(noPriceOrStock.stock, "");
 
   const older = unit({
     title: "Older",
@@ -294,7 +299,7 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   const arrivals = arrivalsForHome([older, newest]);
   assert.equal(arrivals[0]?.stock_number, "B");
   assert.equal(arrivals[1]?.stock_number, "A");
-  assert.equal(spotlightLabel(), "2026 Entegra Cornerstone");
+  assert.equal(SHOWROOM_SPOTLIGHT.series, "Cornerstone");
 
   const coach = readFileSync(join(root, "./homeCoach.ts"), "utf8");
   const home = readFileSync(join(root, "../../components/shell/HomeScreen.tsx"), "utf8");
@@ -309,6 +314,13 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.doesNotMatch(home, /showroom-hero-wash|showroom-hero-glint|showroom-roof-glint|feMorphology|feFlood|preserveAspectRatio/);
   assert.match(css, /\.showroom-hero-beam \{/);
   assert.match(css, /\.showroom-hero-pool \{/);
+  assert.doesNotMatch(
+    css,
+    /\.showroom-count|\.showroom-onlot|\.showroom-coachline|\.showroom-spotfacts|\.showroom-spotmeta/,
+  );
+  assert.match(css, /\.showroom-spotmodel \{/);
+  assert.match(css, /\.showroom-spotprice \{/);
+  assert.match(css, /\.showroom-spotstock \{/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.alt/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.image/);
   assert.match(home, /showroom-hero-beam/);
@@ -318,8 +330,11 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.match(home, /spotlightLotUnit\(listed\)/);
   assert.match(home, /spotlightSpecs\(spotUnit\)/);
   assert.match(home, /requestLotUnit\(lotArrivalQuery\(spotUnit\)\)/);
-  assert.match(home, /data-home-spotlight-specs/);
+  assert.match(home, /showroom-spotmodel/);
+  assert.match(home, /Stock \{specs\.stock\}/);
+  assert.doesNotMatch(home, /Stock #|showroom-count|showroom-onlot|showroom-coachline|showroom-spotfacts|showroom-spotmeta|useCountUp|spotlightLabel|data-home-count|data-home-spotlight-specs/);
   assert.match(home, /Newest arrivals/);
+  assert.match(home, /showroom-arrival-name/);
   assert.doesNotMatch(home, /requestSpotlightFacts|onOpenFacts|729995|54000|44\.92/);
   assert.doesNotMatch(home, /horsepower|engine/i);
   assert.doesNotMatch(fax, /takePendingSpotlightFacts|SPOTLIGHT_FACTS/);
