@@ -9,7 +9,6 @@
  */
 
 import type { FactsHardField } from "./factsDossierGapPlan.ts";
-import { isSeriesGvwrEstimate } from "./torqueToWeight.ts";
 
 export const FACTS_DETAIL_SPIN_FIELDS = [
   "gvwr",
@@ -34,7 +33,7 @@ export function factsDetailSearchingFields(opts: {
   );
 }
 
-/** True only when the catalog gap is still empty on screen. */
+/** True only when that field is still blank on screen. A series GVWR span counts as shown. */
 export function factsDetailFieldSearching(
   field: FactsDetailSpinField,
   searching: ReadonlySet<FactsDetailSpinField>,
@@ -43,5 +42,5 @@ export function factsDetailFieldSearching(
   if (!searching.has(field)) return false;
   if (displayed == null) return true;
   const s = String(displayed).trim();
-  return !s || EMPTY_DISPLAY_RE.test(s) || isSeriesGvwrEstimate(s);
+  return !s || EMPTY_DISPLAY_RE.test(s);
 }
