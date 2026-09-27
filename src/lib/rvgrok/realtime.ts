@@ -29,7 +29,17 @@ import {
   type DeskSheetPayload,
 } from "./deskSheet";
 import { buildChatGrounding, namedCoachConflictsLock } from "./grounding";
-import { onActiveScreenChange, withActiveScreen } from "./screenContext";
+import { onActiveScreenChange } from "./screenContext";
+import {
+  SCREEN_CALLOUT_DEBOUNCE_MS,
+  initialScreenCalloutState,
+  planCalloutDelivery,
+  reduceScreenCallout,
+  screenCalloutSpeechInstructions,
+  type ScreenCalloutEvent,
+  type ScreenCalloutState,
+} from "./screenGuides";
+import { liveVoiceOutputFor } from "./voiceOutput";
 import { looksLikeCompanyOrPlantAsk } from "./webIntent";
 import { looksLikeCoachReportAsk } from "./coachReport";
 import { looksLikeRepairQuestion, REPAIR_VOICE_PLAYBOOK } from "./repairMode";
@@ -129,6 +139,11 @@ export class GrokRealtimeSession {
   /** Screen captured at mic press. A later room chip replaces it. */
   private screenAtAsk: string;
   private unsubScreen: (() => void) | null = null;
+  private callout: ScreenCalloutState = initialScreenCalloutState();
+  private calloutTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Callout that waited for the intro, a closed socket, or the current reply. */
+  private unsentCallout: string | null = null;
+  private introFinished = false;
   private facts: ActiveCoach | null;
   private rearmTimer: ReturnType<typeof setTimeout> | null = null;
   private earlyPcm: ArrayBuffer[] = [];
@@ -207,6 +222,7 @@ export class GrokRealtimeSession {
       if (!name || name === this.screenAtAsk) return;
       this.screenAtAsk = name;
       this.sendSessionUpdate();
+      this.pushCallout({ type: "navigate", screen: name, now: Date.now() });
     });
     this.facts = opts?.facts ?? null;
     this.accessPhone = (opts?.accessPhone || "").trim();
@@ -458,10 +474,12 @@ export class GrokRealtimeSession {
 
       case "input_audio_buffer.speech_started":
         this.handlers.onStatus("listening", "Hearing you…");
+        this.pushCallout({ type: "user-start" });
         break;
 
       case "input_audio_buffer.speech_stopped":
         this.handlers.onStatus("thinking", "Processing…");
+        this.pushCallout({ type: "user-stop" });
         break;
 
       case "conversation.item.input_audio_transcription.updated": {
@@ -552,6 +570,7 @@ export class GrokRealtimeSession {
           this.finishedAssistantOnce = false;
           break;
         }
+        if (this.introSpoken) this.introFinished = true;
         this.scheduleRearm();
         this.assistantText = "";
         this.finishedAssistantOnce = false;
@@ -563,8 +582,11 @@ export class GrokRealtimeSession {
           // Expected: we cancelled the VAD auto-reply to run web research.
           break;
         }
+        if (this.introSpoken) this.introFinished = true;
         this.interruptPlayback();
         this.suppressMic = false;
+        this.flushQueuedCallout();
+        this.pushCallout({ type: "reply-done", now: Date.now() });
         this.handlers.onStatus(
           "listening",
           "Interrupted — listening… speak or 📷",
@@ -728,6 +750,9 @@ export class GrokRealtimeSession {
       this.rearmTimer = null;
       if (this.closed || this.intentionalStop) return;
       this.suppressMic = false;
+      if (this.introSpoken) this.introFinished = true;
+      this.flushQueuedCallout();
+      this.pushCallout({ type: "reply-done", now: Date.now() });
       this.handlers.onStatus(
         "listening",
         "Listening continuously — your turn",
@@ -754,7 +779,8 @@ export class GrokRealtimeSession {
 
       const src = ctx.createBufferSource();
       src.buffer = buffer;
-      src.connect(ctx.destination);
+      const output = liveVoiceOutputFor(ctx);
+      src.connect(output.gain);
 
       const now = ctx.currentTime;
       const startAt = Math.max(now + 0.02, this.nextPlayTime);
@@ -772,6 +798,11 @@ export class GrokRealtimeSession {
   stop(opts?: { keepCapture?: boolean }) {
     this.unsubScreen?.();
     this.unsubScreen = null;
+    if (this.calloutTimer) {
+      clearTimeout(this.calloutTimer);
+      this.calloutTimer = null;
+    }
+    this.unsentCallout = null;
     this.voiceCachedSheet = null;
     this.resetResearchTurn();
     this.intentionalStop = true;
@@ -1924,7 +1955,77 @@ export class GrokRealtimeSession {
     }
   }
 
-  /** Push the current session instructions (catalog lock, visitor, lessons). */
+  /**
+   * Route-change hook from the shell. Updates instructions immediately and
+   * schedules one spoken line after the debounce.
+   */
+  private pushCallout(event: ScreenCalloutEvent) {
+    const result = reduceScreenCallout(this.callout, event);
+    this.callout = result.state;
+    if (event.type === "navigate") this.armCalloutTimer();
+    if (result.speak) this.speakScreenCallout(result.speak);
+  }
+
+  private armCalloutTimer() {
+    if (this.calloutTimer) clearTimeout(this.calloutTimer);
+    this.calloutTimer = null;
+    if (!this.callout.pending) return;
+    const wait = Math.max(
+      0,
+      SCREEN_CALLOUT_DEBOUNCE_MS - (Date.now() - this.callout.pendingAt),
+    );
+    this.calloutTimer = setTimeout(() => {
+      this.calloutTimer = null;
+      if (this.closed || this.intentionalStop) return;
+      this.pushCallout({ type: "tick", now: Date.now() });
+    }, wait);
+  }
+
+  private speakScreenCallout(line: string) {
+    if (this.callout.userSpeaking || this.closed || this.intentionalStop) {
+      this.unsentCallout = line;
+      return;
+    }
+    if (!this.introFinished) {
+      this.unsentCallout = line;
+      return;
+    }
+    // Never cut off a reply already in progress. Flush speaks it on reply-done.
+    const plan = planCalloutDelivery(line, this.suppressMic);
+    if (!plan.speakNow) {
+      this.unsentCallout = plan.queued;
+      return;
+    }
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      this.unsentCallout = plan.speakNow;
+      return;
+    }
+    this.unsentCallout = null;
+    try {
+      ws.send(
+        JSON.stringify({
+          type: "response.create",
+          response: {
+            modalities: ["text", "audio"],
+            instructions: screenCalloutSpeechInstructions(plan.speakNow),
+          },
+        }),
+      );
+    } catch {
+      this.unsentCallout = plan.speakNow;
+    }
+  }
+
+  private flushQueuedCallout() {
+    if (!this.unsentCallout || !this.introFinished) return;
+    if (this.callout.userSpeaking) return;
+    const line = this.unsentCallout;
+    this.unsentCallout = null;
+    this.speakScreenCallout(line);
+  }
+
+  /** Push the current session instructions (catalog lock, visitor, lessons, screen). */
   private sendSessionUpdate(catalogContext?: string) {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
@@ -1934,13 +2035,11 @@ export class GrokRealtimeSession {
           buildRealtimeSessionUpdate(
             this.voiceId,
             this.speed,
-            withActiveScreen(
-              catalogContext ?? this.catalogContext,
-              this.screenAtAsk || undefined,
-            ),
+            catalogContext ?? this.catalogContext,
             this.visitorFirstName,
             this.visitorMemory,
             this.standingLessons,
+            this.screenAtAsk || undefined,
           ),
         ),
       );

@@ -154,3 +154,28 @@ test("onopen / lock-refresh path still calls buildRealtimeSessionUpdate", () => 
   assert.match(realtime, /visitorMemory/);
   assert.match(realtime, /standingLessons/);
 });
+
+test("session.update injects the active screen guide and forbids a blind-screen excuse", () => {
+  const msg = buildRealtimeSessionUpdate(
+    "ara",
+    1,
+    "PIN GVWR 39600",
+    "",
+    "",
+    undefined,
+    "Lot",
+  );
+  const instructions = (msg.session as { instructions: string }).instructions;
+  assert.match(instructions, /APP SCREEN AWARENESS/);
+  assert.match(instructions, /Never say you can't see his screen/);
+  assert.match(instructions, /ACTIVE SCREEN: Lot/);
+  assert.match(instructions, /FEATURED REPORT/);
+  assert.match(instructions, /PIN GVWR 39600/);
+  assert.doesNotMatch(instructions, /DID YOU MEAN\?/);
+  assert.doesNotMatch(instructions, /You cannot see the screen/);
+  assert.doesNotMatch(instructions, /I can't see the screen/);
+  const bare = buildRealtimeSessionUpdate("ara");
+  const bareText = (bare.session as { instructions: string }).instructions;
+  assert.match(bareText, /APP SCREEN AWARENESS/);
+  assert.doesNotMatch(bareText, /SCREEN GUIDE:/);
+});

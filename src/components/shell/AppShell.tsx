@@ -511,7 +511,10 @@ export function AppShell({
             <div className={tab === "more" ? TAB_PANE_ON : "hidden"}>
               <Suspense fallback={<SuiteFallback />}>
                 <SuiteErrorBoundary name="More">
-                  <MoreApp onNavigate={onTabChange} />
+                  <MoreApp
+                    onNavigate={onTabChange}
+                    active={tab === "more" && !homeOpen}
+                  />
                 </SuiteErrorBoundary>
               </Suspense>
             </div>

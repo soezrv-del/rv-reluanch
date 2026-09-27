@@ -22,6 +22,12 @@ import {
   voiceSessionIntroInstructions,
   visitorPersonalizationBlock,
 } from "./speechPolicy.ts";
+import {
+  SCREEN_GUIDE_PREAMBLE,
+  formatScreenContext,
+  stripScreenContext,
+} from "./screenGuides.ts";
+import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
 import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_MIC_RULES } from "./voice.ts";
 
 export type LiveVoicePrewarm = {
@@ -87,9 +93,12 @@ export function beginLiveVoiceFromUserGesture(): LiveVoicePrewarm {
   let streamPromise: Promise<MediaStream> | null = null;
   let error: Error | null = null;
 
+  preferIosLoudspeaker();
+
   const existing = getRetainedLiveCapture();
   if (existing) {
     if (existing.ctx.state === "suspended") void existing.ctx.resume();
+    liveVoiceOutputFor(existing.ctx);
     return {
       audioCtx: existing.ctx,
       streamPromise: Promise.resolve(existing.stream),
@@ -103,6 +112,7 @@ export function beginLiveVoiceFromUserGesture(): LiveVoicePrewarm {
     if (AC) {
       audioCtx = new AC();
       if (audioCtx.state === "suspended") void audioCtx.resume();
+      liveVoiceOutputFor(audioCtx);
     }
   } catch (e) {
     error = e instanceof Error ? e : new Error(String(e));
@@ -153,8 +163,9 @@ export function releaseLiveCapture() {
       /* */
     }
   });
-  if (cap?.ctx && cap.ctx.state !== "closed") {
-    void cap.ctx.close();
+  if (cap?.ctx) {
+    releaseLiveVoiceOutput(cap.ctx);
+    if (cap.ctx.state !== "closed") void cap.ctx.close();
   }
 }
 
@@ -174,9 +185,10 @@ export function buildRealtimeSessionUpdate(
   visitorFirstName?: string,
   visitorMemory?: string,
   standingLessons?: string,
+  activeScreen?: string,
 ): Record<string, unknown> {
   const clamped = Math.min(1.5, Math.max(0.7, speed));
-  const extra = (catalogContext || "").trim();
+  const extra = stripScreenContext(catalogContext || "");
   const catalogBlock = extra ? `${extra}\n\n` : "";
   const personal = visitorPersonalizationBlock(visitorFirstName);
   const personalBlock = personal ? `${personal}\n\n` : "";
@@ -188,7 +200,11 @@ export function buildRealtimeSessionUpdate(
       : standingLessons.trim();
   const core = injectStandingLessons(RV_VOICE_INSTRUCTIONS, lessons);
   const intro = sessionIntroLine(visitorFirstName);
-  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search. Use it for coach facts the catalog does not already pin, not to override an injected lot snapshot. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}`;
+  const screen = (activeScreen || "").trim();
+  const screenSection = screen
+    ? `${SCREEN_GUIDE_PREAMBLE}\n\n${formatScreenContext(screen)}`
+    : SCREEN_GUIDE_PREAMBLE;
+  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search. Use it for coach facts the catalog does not already pin, not to override an injected lot snapshot. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
   return {
     type: "session.update",
     session: {
