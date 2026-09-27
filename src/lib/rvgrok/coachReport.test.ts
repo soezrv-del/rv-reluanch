@@ -295,7 +295,7 @@ test("prompts and research sidecars teach the four-section report", () => {
   assert.match(prompts, /RV_GROK_LEAN_CORE/);
   assert.match(voice, /RV_GROK_LEAN_CORE/);
   assert.match(voiceTurn, /full report or a quick overview/);
-  assert.match(speech, /If both are empty, say that field is unverified/);
+  assert.match(speech, /closest saved pin when one exists/);
   for (const [label, text] of [
     ["grounding.ts", grounding],
     ["geminiResearch.ts", gemini],

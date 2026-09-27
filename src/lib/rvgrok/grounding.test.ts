@@ -239,7 +239,7 @@ test("Live Voice instructions aim for accuracy but not gospel; gesture order unt
   assert.doesNotMatch(voice, /ACCURACY FIRST/);
   assert.match(voice, /CAMERA:/);
   assert.match(src(root, "speechPolicy.ts"), /Get as accurate as possible, but not gospel\./);
-  assert.match(src(root, "speechPolicy.ts"), /If both are empty, say that field is unverified/);
+  assert.match(src(root, "speechPolicy.ts"), /closest saved pin when one exists/);
   assert.match(src(root, "speechPolicy.ts"), /Never invent GVWR/);
   assert.doesNotMatch(voice, /You do not have a separate research step/);
   assert.match(live, /liveVoiceStartOrder/);
@@ -517,9 +517,9 @@ test("repair-mode playbook is wired through chat, voice, and browse", () => {
 
 test("system prompts never deflect to website / OEM / dealer — unconditional", () => {
   const speech = src(root, "speechPolicy.ts");
-  assert.match(speech, /If both are empty, say that field is unverified/);
+  assert.match(speech, /closest saved pin when one exists/);
   assert.match(speech, /Never invent GVWR/);
-  assert.match(speech, /the catalog pin in this turn wins/);
+  assert.doesNotMatch(speech, /the catalog pin in this turn wins/);
   assert.match(src(root, "prompts.ts"), /RV_GROK_LEAN_CORE/);
   assert.doesNotMatch(
     src(root, "prompts.ts"),

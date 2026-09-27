@@ -51,7 +51,8 @@ test("lean core is David's verbatim standing prompt", () => {
     RV_GROK_LEAN_CORE,
     /Never invent GVWR, UVW, payload, hitch weight, price, tank sizes, or a recall/,
   );
-  assert.match(RV_GROK_LEAN_CORE, /the catalog pin in this turn wins/);
+  assert.match(RV_GROK_LEAN_CORE, /closest saved pin when one exists/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /the catalog pin in this turn wins/);
   assert.match(RV_GROK_LEAN_CORE, /not a menu/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /Pin every verified field/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /sales-floor wingman/);

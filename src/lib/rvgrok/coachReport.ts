@@ -450,7 +450,7 @@ export function formatCoachReportDraftInjection(
 
 /**
  * Timeout / empty browse: still write the four-section report from
- * whatever live notes + catalog pins exist. GVWR pin wins. Never invent.
+ * whatever live notes + catalog pins exist. A saved GVWR pin is the best available answer. Never invent.
  */
 export function formatCoachReportTimeoutReply(opts: {
   notes?: string;

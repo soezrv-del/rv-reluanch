@@ -208,7 +208,7 @@ export function formatVoiceWebSearchInjection(
       "WEB RESEARCH NOTES (live this turn — you DID look this up):",
       stripNotesForSpeech(result.notes),
       "Speak a short conversational answer. Do not claim you have no internet.",
-      "Do not read URLs, markdown, or citation lists. Catalog lock still wins on numbers.",
+      "Do not read URLs, markdown, or citation lists. A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise use these web notes. Never skip the answer because the match is not perfectly exact.",
       estLine,
     ].join("\n");
   }

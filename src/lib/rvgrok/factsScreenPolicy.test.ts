@@ -112,9 +112,9 @@ test("Facts voice searches for specs; the session prompt matches the other scree
     "",
     "Lot",
   ).session as { instructions: string };
-  assert.match(facts.instructions, /not to override an injected lot snapshot/);
-  assert.match(lot.instructions, /not to override an injected lot snapshot/);
-  assert.match(facts.instructions, /If both are empty, say that field is unverified/);
+  assert.match(facts.instructions, /override an injected lot snapshot/);
+  assert.match(lot.instructions, /override an injected lot snapshot/);
+  assert.match(facts.instructions, /closest saved pin when one exists/);
   const decision = decideVoiceWebResearch({
     transcript: SPEC,
     screen: "Facts",
@@ -139,9 +139,11 @@ test("Facts voice searches for specs; the session prompt matches the other scree
 });
 
 test("Facts spec wiring searches and keeps the lot tool; core prompt and model ids stay", () => {
-  assert.match(GROUNDING_RULES, /source-of-truth for engine/);
-  assert.match(VOICE_MIC_RULES, /do not speak a weight/i);
-  assert.match(RV_GROK_LEAN_CORE, /If both are empty, say that field is unverified/);
+  assert.match(GROUNDING_RULES, /closest saved pin when one exists/);
+  assert.match(VOICE_MIC_RULES, /closest saved pin when one exists/);
+  assert.match(RV_GROK_LEAN_CORE, /closest saved pin when one exists/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /the catalog pin in this turn wins/);
+  assert.doesNotMatch(VOICE_MIC_RULES, /do not speak a weight/i);
   const api = readFileSync(join(root, "../../routes/api/rvgrok.ts"), "utf8");
   assert.match(api, /factsSpecRequestsWebSearch/);
   assert.match(api, /skipWebForLot = factsSpec/);
@@ -162,7 +164,8 @@ test("Facts spec wiring searches and keeps the lot tool; core prompt and model i
   const live = readFileSync(join(root, "liveVoice.ts"), "utf8");
   assert.doesNotMatch(live, /applyFactsDelivery|voiceBrowseLine/);
   const speech = readFileSync(join(root, "speechPolicy.ts"), "utf8");
-  assert.match(speech, /If both are empty, say that field is unverified/);
+  assert.match(speech, /closest saved pin when one exists/);
+  assert.doesNotMatch(speech, /say that field is unverified/);
   const policy = readFileSync(join(root, "factsScreenPolicy.ts"), "utf8");
   assert.doesNotMatch(policy, /factsChatTools|factsStockCheckAllowed|classifyFactsTurn/);
 });

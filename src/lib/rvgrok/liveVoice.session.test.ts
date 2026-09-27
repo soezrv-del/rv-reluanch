@@ -56,7 +56,8 @@ test("session.update enables native web_search on the Realtime session", () => {
     session.instructions,
     /experienced RV salesman's pocket/,
   );
-  assert.match(session.instructions, /the catalog pin in this turn wins/);
+  assert.match(session.instructions, /closest saved pin when one exists/);
+  assert.doesNotMatch(session.instructions, /the catalog pin in this turn wins/);
   assert.match(session.instructions, /give me one second/);
   assert.match(session.instructions, /only when research is actually running/);
   assert.doesNotMatch(session.instructions, /LIVE VOICE ACKNOWLEDGMENT/);

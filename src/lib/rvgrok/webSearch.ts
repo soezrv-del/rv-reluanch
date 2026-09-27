@@ -920,7 +920,7 @@ export function formatWebSearchInjection(
         `WEB RESEARCH NOTES (${source} — may be incomplete):`,
         result.notes.slice(0, 3500),
         "You have live web research this turn — do not claim you have no internet or cannot get online.",
-        "Catalog lock still wins if it names a number. Notes CONFIRM the queried field — use that live OEM / brochure / dealer fact. Do not replace a confirmed fact with a labeled EST / typical class range / low confidence.",
+        "A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise use these web notes. Notes CONFIRM the queried field — use that live OEM / brochure / dealer fact. Do not replace a confirmed fact with a labeled EST / typical class range / low confidence.",
         reportDraft,
       ]
         .filter(Boolean)
@@ -942,7 +942,7 @@ export function formatWebSearchInjection(
       `WEB RESEARCH NOTES (${source} — unconfirmed after the research loop):`,
       result.notes.slice(0, 3500),
       "You have live web research this turn — do not claim you have no internet or cannot get online.",
-      `Catalog lock still wins if it names a number. Research loop exhausted (${gate.attempts} genuine rephrased attempts, all unconfirmed). Use ONLY what these notes actually contain. ${LOW_CONFIDENCE_EST_RULE} Do not invent brochure numbers from training.`,
+      `A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise use these web notes. Research loop exhausted (${gate.attempts} genuine rephrased attempts, all unconfirmed). Use ONLY what these notes actually contain. ${LOW_CONFIDENCE_EST_RULE} Do not invent brochure numbers from training.`,
       pinRule,
       reportDraft,
     ]
