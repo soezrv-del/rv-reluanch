@@ -313,6 +313,100 @@ test("lot details drop source and website and do not repeat header facts", () =>
   assert.equal(otherKeys.has("engine_type"), true);
 });
 
+test("back-office scrape fields stay on the unit and stay off the details grid", () => {
+  const snap = parseLotSnapshotJson([
+    {
+      year: 2026,
+      make: "Entegra Coach",
+      model: "Cornerstone",
+      trim: "45D",
+      stock_number: "45282",
+      price: 729995,
+      gvwr: 54000,
+      "Scraped At": "2026-09-25T19:23:55-07:00",
+      ID: 37829,
+      "Detail-Fetched": true,
+      "Image Count": 34,
+      "Lot Code": "PEF",
+      "Received Date": "2025-07-03",
+      "Location Phone": "559-486-1000",
+      "On Special": true,
+      "Paint Swatch File Name": "cornerstone-red.png",
+    },
+  ]);
+  const unit = snap.units[0]!;
+  assert.equal(unit.printed.scraped_at, "2026-09-25T19:23:55-07:00");
+  assert.equal(unit.printed.id, "37,829");
+  assert.equal(unit.printed.detail_fetched, "yes");
+  assert.equal(unit.printed.image_count, "34");
+  assert.equal(unit.printed.lot_code, "PEF");
+  assert.equal(unit.printed.received_date, "2025-07-03");
+  assert.equal(unit.printed.location_phone, "559-486-1000");
+  assert.equal(unit.printed.on_special, "yes");
+  assert.equal(unit.printed.paint_swatch_file_name, "cornerstone-red.png");
+  assert.equal(unit.printed.gvwr, "54,000");
+
+  const rows = lotLookupRows(unit);
+  const keys = rows.map((row) => row.key);
+  const labels = rows.map((row) => row.label);
+  for (const gone of [
+    "scraped_at",
+    "id",
+    "detail_fetched",
+    "image_count",
+    "lot_code",
+    "received_date",
+    "location_phone",
+    "on_special",
+    "paint_swatch_file_name",
+  ]) {
+    assert.equal(keys.includes(gone), false, gone);
+  }
+  for (const label of [
+    "Scraped At",
+    "Id",
+    "Detail Fetched",
+    "Image Count",
+    "Lot Code",
+    "Received Date",
+    "Location Phone",
+    "On Special",
+    "Paint Swatch File Name",
+  ]) {
+    assert.equal(labels.includes(label), false, label);
+  }
+  assert.equal(keys.includes("gvwr"), true);
+
+  const live = parseLotSnapshotJson(
+    JSON.parse(
+      readFileSync(
+        join(root, "../../../public/inventory/own-lot-latest.json"),
+        "utf8",
+      ),
+    ),
+  );
+  const stock = live.units.find((unit) => unit.stock_number === "45282");
+  assert.ok(stock);
+  assert.ok(stock.printed.received_date);
+  assert.ok(stock.printed.id);
+  const liveLabels = new Set(lotLookupRows(stock).map((row) => row.label));
+  for (const label of [
+    "Scraped At",
+    "Id",
+    "Detail Fetched",
+    "Image Count",
+    "Lot Code",
+    "Received Date",
+    "Location Phone",
+    "On Special",
+    "Paint Swatch File Name",
+  ]) {
+    assert.equal(liveLabels.has(label), false, label);
+  }
+  assert.equal(liveLabels.has("GVWR"), true);
+  assert.equal(liveLabels.has("Length"), true);
+});
+
 test("missing fields stay GAP — never invent a price or stock", () => {
   assert.equal(lotPriceOrGap(null), "GAP");
   assert.equal(lotPriceOrGap(0), "GAP");

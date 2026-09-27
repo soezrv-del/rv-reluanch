@@ -582,6 +582,26 @@ const LOT_PROVENANCE_LABELS = new Set([
   "listing",
 ]);
 
+/**
+ * Back-office bookkeeping. Hidden from the details grid in any spelling.
+ * The printed values stay on the unit for search, arrivals, and voice.
+ */
+const LOT_BACK_OFFICE_KEYS = new Set([
+  "scrapedat",
+  "id",
+  "detailfetched",
+  "imagecount",
+  "lotcode",
+  "receiveddate",
+  "locationphone",
+  "onspecial",
+  "paintswatchfilename",
+]);
+
+function isBackOfficeKey(key: string): boolean {
+  return LOT_BACK_OFFICE_KEYS.has(key.toLowerCase().replace(/[^a-z0-9]/g, ""));
+}
+
 /** City and state restate the Location pill when that pill already has text. */
 const LOT_LOCATION_SPLIT_KEYS = new Set(["location_city", "location_state"]);
 
@@ -732,7 +752,7 @@ export function lotLookupRows(unit: LotUnit): LotLookupRow[] {
   const locationShown = unit.location.trim().length > 0;
   const rows: LotLookupRow[] = [];
   for (const [key, value] of Object.entries(unit.printed ?? {})) {
-    if (!value || LOT_CARD_HEAD_KEYS.has(key)) continue;
+    if (!value || LOT_CARD_HEAD_KEYS.has(key) || isBackOfficeKey(key)) continue;
     const label = lotFieldLabel(key);
     if (isProvenanceRow(key, label)) continue;
     if (locationShown && LOT_LOCATION_SPLIT_KEYS.has(key)) continue;
