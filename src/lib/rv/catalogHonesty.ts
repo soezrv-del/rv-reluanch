@@ -102,6 +102,7 @@ export function isExactEnginePin(
 ): boolean {
   const e = (engine || "").trim();
   if (!e || e === "—") return false;
+  if (/smallest in series/i.test(e)) return false;
   if (isInventPolicyProse(e)) return false;
   if (isUnpinnedEngineLabel(e)) return false;
   if (isAmbiguousCatalogValue(e)) return false;
@@ -277,6 +278,7 @@ export function honestHorsepowerLabel(opts: {
   horsepower?: string | number | null;
 }): string | null {
   const engine = (opts.engine || "").trim();
+  if (/smallest in series/i.test(engine)) return null;
   // Dual-family / class / by-year blend is not a pin — never "320 / 350 HP".
   // Brochure L9 450 std / X15 605 opt is not unpinned; that stays below.
   if (isUnpinnedEngineLabel(engine)) {
@@ -316,6 +318,7 @@ export function honestTorqueLabel(opts: {
   torqueLbFt?: string | number | null;
 }): string | null {
   const engine = (opts.engine || "").trim();
+  if (/smallest in series/i.test(engine)) return null;
   if (isUnpinnedEngineLabel(engine) || engineOmitsLoneTorque(engine)) {
     return null;
   }
@@ -356,12 +359,123 @@ export function parseHp(engine?: string, hp?: number): string {
   return formatFactsHorsepower({ engine, horsepower: hp });
 }
 
+const FAMILY_LITERS: Record<string, number> = {
+  b67: 6.7,
+  l9: 8.9,
+  isl: 8.9,
+  x12: 11.8,
+  x15: 15,
+  godzilla: 7.3,
+  v10: 6.8,
+  v8_62: 6.2,
+  powerstroke: 6.7,
+  duramax: 6.6,
+  mercedes: 3.0,
+};
+
+function makeInEngine(text: string): string {
+  if (/cummins/i.test(text)) return "Cummins";
+  if (/mercedes/i.test(text)) return "Mercedes-Benz";
+  if (/\bford\b/i.test(text)) return "Ford";
+  if (/chevy|chevrolet/i.test(text)) return "Chevy";
+  if (/workhorse/i.test(text)) return "Workhorse";
+  return "";
+}
+
+function litersWritten(text: string): number | null {
+  const m = text.match(/(\d(?:\.\d)?)\s*L\b/i);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return n > 0 && n < 20 ? n : null;
+}
+
+function lowestHpIn(text: string): number | null {
+  const nums = [...extractOptionHpClasses(text)];
+  const range = text.match(/(\d{2,4})\s*[–—-]\s*(\d{2,4})/);
+  if (range) {
+    for (const raw of [range[1], range[2]]) {
+      const n = parseInt(raw || "", 10);
+      if (n >= 150 && n <= 800) nums.push(n);
+    }
+  }
+  if (!nums.length) return null;
+  return Math.min(...nums);
+}
+
+/**
+ * Smallest engine named in a dual-family / by-year / option-band catalog
+ * label. Lowest horsepower, then lowest displacement. Null when the
+ * string is one engine, an exact pin, or has no catalog options to pick.
+ * Display only — callers must not lock HP or torque from the result.
+ */
+export function formatSmallestSeriesEngine(
+  engine: string | null | undefined,
+): string | null {
+  const e = (engine || "").trim();
+  if (!e || isExactEnginePin(e)) return null;
+  if (!isUnpinnedEngineLabel(e) && !isAmbiguousCatalogValue(e)) return null;
+
+  const parts = e
+    .split(/\s*(?:\/|\bor\b)\s*/i)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  type Row = { liters: number; hp: number | null; make: string };
+  const rows: Row[] = [];
+  const seen = new Set<string>();
+  const push = (key: string, liters: number, hp: number | null, make: string) => {
+    if (seen.has(key)) return;
+    seen.add(key);
+    rows.push({ liters, hp, make });
+  };
+
+  for (const part of parts.length ? parts : [e]) {
+    const families = extractEngineFamilies(part);
+    const hp = lowestHpIn(part);
+    const written = litersWritten(part);
+    const make = makeInEngine(part) || makeInEngine(e);
+    if (families.length) {
+      for (const id of families) {
+        const liters = FAMILY_LITERS[id] ?? written;
+        if (liters == null) continue;
+        push(id, liters, families.length === 1 ? hp : lowestHpIn(part), make);
+      }
+    } else if (written != null) {
+      push(`L${written}`, written, hp, make);
+    }
+  }
+
+  if (rows.length < 2) return null;
+
+  const withHp = rows.filter((r) => r.hp != null);
+  const distinctHp = new Set(withHp.map((r) => r.hp));
+  let best: Row;
+  if (withHp.length === rows.length && distinctHp.size >= 2) {
+    best = [...rows].sort((a, b) => a.hp! - b.hp! || a.liters - b.liters)[0]!;
+  } else {
+    const minHp = withHp.length
+      ? Math.min(...withHp.map((r) => r.hp!))
+      : null;
+    const smallest = [...rows].sort((a, b) => a.liters - b.liters)[0]!;
+    best =
+      smallest.hp == null && minHp != null
+        ? { ...smallest, hp: minHp }
+        : smallest;
+  }
+
+  const liters =
+    Number.isInteger(best.liters) ? `${best.liters}L` : `${best.liters}L`;
+  const make = best.make ? `${best.make} ` : "";
+  const hp = best.hp != null ? ` ${best.hp} hp` : "";
+  return `${make}${liters}${hp} · smallest in series · confirm`;
+}
+
 export function honestEngineLabel(engine: string | null | undefined): {
   text: string | null;
   locked: boolean;
 } {
   const e = (engine || "").trim();
   if (!e || e === "—") return { text: null, locked: false };
+  if (/smallest in series/i.test(e)) return { text: null, locked: false };
   // Dual-family / class / era / by-year blends are not this coach.
   // Brochure option-band strings are also not a single locked pin.
   if (isUnpinnedEngineLabel(e) || isAmbiguousCatalogValue(e)) {

@@ -111,7 +111,7 @@ export type TorqueToWeightInput = {
   /**
    * Display / specs.gvwr string (commas + units stripped), or a [lo,hi]
    * band. Two-number ranges use the HIGH end for TTW only.
-   * A "Series … confirm sticker" span is display-only and parses as null.
+   * A smallest-in-series or "confirm sticker" label is display-only and parses as null.
    */
   gvwrRaw?: string | number | readonly [number, number] | null;
   /**
@@ -432,12 +432,23 @@ export function parseCccLb(
  * uses **Math.max(lo, hi)** — the high end — so the score is not
  * inflated. Three-or-more numbers stay GAP. A single published figure
  * ("47000") is unchanged. A labeled series estimate
- * ("Series 12,000–16,000 lbs · confirm sticker") is display-only → null.
+ * ("22,000 lbs · smallest in series · confirm sticker", a one-value
+ * "12,000 lbs · confirm sticker", or the older "Series …" span)
+ * is display-only → null.
  * Callers still prefer oem / findOem / snap / live numeric pins over this parse.
  */
-/** Facts model-span label. Not a published GVWR for TTW, tow, or CCC. */
+/** Facts series GVWR label. Not a published GVWR for TTW, tow, or CCC. */
 export function isSeriesGvwrEstimate(value: string | null | undefined): boolean {
-  return /^series\b/i.test(String(value ?? "").trim());
+  const s = String(value ?? "").trim();
+  if (!s) return false;
+  if (/^series\b/i.test(s)) return true;
+  return /\blbs\b/i.test(s) && /smallest in series|confirm sticker/i.test(s);
+}
+
+/** Facts smallest-engine label. Not a locked powertrain pin. */
+export function isSeriesEngineEstimate(value: string | null | undefined): boolean {
+  const s = String(value ?? "").trim();
+  return /smallest in series/i.test(s) && !/\blbs\b/i.test(s);
 }
 
 export function parseGvwrLb(
@@ -462,7 +473,8 @@ export function parseGvwrLb(
     EMPTY.test(s) ||
     /^n\/a\b/i.test(s) ||
     /\buvw\b|\bunloaded\b/i.test(s) ||
-    isSeriesGvwrEstimate(s)
+    isSeriesGvwrEstimate(s) ||
+    isSeriesEngineEstimate(s)
   ) {
     return null;
   }

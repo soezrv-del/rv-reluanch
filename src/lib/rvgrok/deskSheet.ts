@@ -14,6 +14,7 @@ import {
   findOemUvwLbs,
 } from "../rv/floorplanSpecs.ts";
 import {
+  isSeriesEngineEstimate,
   isSeriesGvwrEstimate,
   isTowableForTorqueRating,
 } from "../rv/torqueToWeight.ts";
@@ -210,7 +211,8 @@ function isFactsEmpty(value: string): boolean {
     value === "—" ||
     value === "–" ||
     value === CONFIRM_BROCHURE ||
-    isSeriesGvwrEstimate(value)
+    isSeriesGvwrEstimate(value) ||
+    isSeriesEngineEstimate(value)
   );
 }
 

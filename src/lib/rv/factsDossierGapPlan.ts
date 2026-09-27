@@ -8,6 +8,10 @@
 import { applyPublishedEngineTorque } from "./engineTorqueByVariant.ts";
 import { findOemFloorplanSpec } from "./floorplanSpecs.ts";
 import { findPowertrainCorrection } from "./powertrainCorrections.ts";
+import {
+  isSeriesEngineEstimate,
+  isSeriesGvwrEstimate,
+} from "./torqueToWeight.ts";
 
 export const FACTS_DOSSIER_HARD_FIELDS = [
   "engine",
@@ -211,6 +215,7 @@ function parsePositiveNumber(
   }
   const s = String(v).replace(/,/g, "");
   if (PLACEHOLDER_RE.test(s) || RANGE_RE.test(s)) return null;
+  if (isSeriesGvwrEstimate(s) || isSeriesEngineEstimate(s)) return null;
   const m = s.match(/(\d+(?:\.\d+)?)/);
   if (!m) return null;
   const n = Number(m[1]);
@@ -251,6 +256,7 @@ function isRealPinText(v: string | number | null | undefined): boolean {
   if (isTowableNa(s)) return true;
   if (PLACEHOLDER_RE.test(s)) return false;
   if (RANGE_RE.test(s)) return false;
+  if (isSeriesGvwrEstimate(s) || isSeriesEngineEstimate(s)) return false;
   return s.length >= 2;
 }
 

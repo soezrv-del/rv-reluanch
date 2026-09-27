@@ -11,7 +11,10 @@
 
 import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
 import { peekCatalog } from "../rv/catalogLoad.ts";
-import { formatSeriesGvwr, resolveYearSnapshot } from "../rv/brochureSpecs.ts";
+import {
+  formatSeriesGvwr,
+  resolveYearSnapshot,
+} from "../rv/brochureSpecs.ts";
 import {
   findPowertrainCorrection,
   type PowertrainCorrection,
@@ -24,6 +27,7 @@ import type { ActiveCoach } from "../rv/activeCoach.ts";
 import {
   engineOmitsLoneTorque,
   extractOptionHpClasses,
+  formatSmallestSeriesEngine,
   honestEngineLabel,
   honestHorsepowerLabel,
   honestTorqueLabel,
@@ -272,8 +276,9 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
       catalogYearIsListed(year, index?.years),
   );
   const oemWeights = resolveLockedOemWeights(identity);
-  // Exact published pin wins. Otherwise the model span, labeled as a series
-  // estimate. Never a bare weightRange mid, and never oemGvwrLbs.
+  // Exact published pin wins. Otherwise the low end of the model span,
+  // labeled smallest in series. Never a bare weightRange mid, and never
+  // oemGvwrLbs.
   const weightBand =
     oemWeights.gvwrLbs && oemWeights.gvwrLbs > 0
       ? `${oemWeights.gvwrLbs.toLocaleString("en-US")} lbs GVWR`
@@ -312,13 +317,19 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
     };
   }
 
+  const yearBandEngine = snap?.band?.engine || null;
+  // A year band that is not itself a pin must not inherit the model's
+  // other-year engine. The smallest catalog option in that band may show.
   const rawEngine =
     local?.engine ||
     pin?.engine ||
     snap?.engine ||
-    spec?.engine ||
+    (yearBandEngine ? null : spec?.engine) ||
     null;
   const engineLabel = honestEngineLabel(rawEngine);
+  const seriesEngine = engineLabel.text
+    ? null
+    : formatSmallestSeriesEngine(yearBandEngine);
   const sotHp =
     pin && pin.horsepower > 0
       ? pin.horsepower
@@ -335,14 +346,16 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
   const engine = pickField(
     { value: local?.engine, trust: "local" },
     {
-      value: engineLabel.text,
+      value: engineLabel.text ?? seriesEngine,
       trust: engineLabel.locked
         ? pin?.engine
           ? "pin"
           : "catalog"
-        : engineAmbiguous || engineLabel.text
+        : seriesEngine
           ? "est"
-          : "empty",
+          : engineAmbiguous || engineLabel.text
+            ? "est"
+            : "empty",
     },
   );
   // Dual-rating engines (Dream L9/X15) are EST. A catalog number on a
