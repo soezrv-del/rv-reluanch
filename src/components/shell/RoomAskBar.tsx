@@ -99,19 +99,26 @@ export function RoomAskBar({
     if (!scroller) return;
     let raf = 0;
     let last = 0;
+    // Keep the position here. Reading scrollLeft back each frame rounds
+    // subpixel steps up to 1px and runs the row too fast.
+    let pos = scroller.scrollLeft;
+    let wasPaused = pausedRef.current;
     const frame = (now: number) => {
       if (!last) last = now;
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const set = setRef.current;
       const dup = dupRef.current;
-      if (!pausedRef.current && set && dup) {
+      if (pausedRef.current) {
+        wasPaused = true;
+      } else if (set && dup) {
+        if (wasPaused) {
+          pos = scroller.scrollLeft;
+          wasPaused = false;
+        }
         const distance = dup.offsetLeft - set.offsetLeft;
-        scroller.scrollLeft = nextPillScroll(
-          scroller.scrollLeft,
-          distance,
-          PILL_LOOP_PX_PER_SEC * dt,
-        );
+        pos = nextPillScroll(pos, distance, PILL_LOOP_PX_PER_SEC * dt);
+        scroller.scrollLeft = pos;
       }
       raf = requestAnimationFrame(frame);
     };
