@@ -2695,42 +2695,24 @@ button.showroom-placard {
   display: block;
   width: calc(100% - 2.5rem);
 }
-/* Soft cone behind the cutout, plus a faint screen wash on the roof.
-   Both stay inside the hero so they cannot cover the logo or the placard. */
+/* Soft cone behind the cutout. Inset past the blur so overflow never
+   clips a bright edge into a rectangle above the roof. */
 .showroom-hero-beam {
   position: absolute;
   z-index: 1;
-  left: 6%;
-  right: 6%;
-  top: 0;
-  height: 74%;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgba(236, 243, 255, 0.78) 0%,
-    rgba(206, 222, 255, 0.32) 38%,
-    rgba(206, 222, 255, 0.08) 68%,
-    rgba(206, 222, 255, 0) 100%
-  );
-  clip-path: polygon(32% 0%, 68% 0%, 100% 100%, 0% 100%);
-  filter: blur(10px);
-}
-.showroom-hero-wash {
-  position: absolute;
-  z-index: 3;
-  left: 12%;
-  right: 12%;
-  top: 0;
+  left: 18%;
+  right: 18%;
+  top: 1.15rem;
   height: 58%;
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.2) 0%,
-    rgba(214, 226, 255, 0.05) 55%,
-    rgba(214, 226, 255, 0) 100%
+    rgba(236, 243, 255, 0) 0%,
+    rgba(226, 236, 255, 0.5) 28%,
+    rgba(206, 222, 255, 0.16) 58%,
+    rgba(206, 222, 255, 0) 100%
   );
-  clip-path: polygon(28% 0%, 72% 0%, 92% 100%, 8% 100%);
-  mix-blend-mode: screen;
+  clip-path: polygon(34% 0%, 66% 0%, 100% 100%, 0% 100%);
   filter: blur(8px);
 }
 .showroom-coach {
@@ -2744,9 +2726,8 @@ button.showroom-placard {
   background: transparent;
   border: 0;
 }
-/* Soft specular on the roof panel. The SVG uses the same cutout and the
-   same contain / bottom alignment as .showroom-coach, then keeps only a
-   blurred band inset from the silhouette. The mask fades it below the roof. */
+/* Thin specular streak on the roof edge. Same box and bottom alignment as
+   the cutout, so the stroke stays on the roofline. */
 .showroom-hero-glint {
   position: absolute;
   z-index: 4;
@@ -2757,22 +2738,21 @@ button.showroom-placard {
   height: 11.5rem;
   pointer-events: none;
   mix-blend-mode: screen;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 36%, transparent 50%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 36%, transparent 50%);
+  opacity: 0.55;
 }
 .showroom-hero-pool {
   position: absolute;
   z-index: 1;
-  left: 10%;
-  right: 10%;
-  bottom: 0.15rem;
-  height: 2rem;
+  left: 0;
+  right: 0;
+  bottom: 0.35rem;
+  height: 2.6rem;
   pointer-events: none;
   background: radial-gradient(
-    ellipse 100% 58% at 50% 55%,
-    rgba(222, 232, 255, 0.42) 0%,
-    rgba(190, 210, 255, 0.16) 46%,
-    transparent 74%
+    ellipse 42% 36% at 50% 58%,
+    rgba(222, 232, 255, 0.4) 0%,
+    rgba(196, 214, 255, 0.14) 42%,
+    transparent 68%
   );
 }
 .showroom-card {
