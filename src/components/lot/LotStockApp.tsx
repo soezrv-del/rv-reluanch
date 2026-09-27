@@ -401,7 +401,8 @@ function LotUnitCard({
             <span className="lot-cover" data-lot-photo="cover">
               <CoveredCoach
                 variant={coverVariant(unit)}
-                className="h-full w-full"
+                className="lot-cover-art"
+                preserveAspectRatio="xMidYMid meet"
               />
             </span>
           )}

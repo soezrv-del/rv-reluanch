@@ -2303,8 +2303,20 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
 .lot-cover {
   position: absolute;
   inset: 0;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
+}
+.lot-well > .lot-cover {
+  z-index: 0;
+}
+.lot-cover-art {
+  height: 76%;
+  width: auto;
+  max-width: 88%;
+  aspect-ratio: 144 / 80;
+  object-fit: contain;
 }
 .lot-well.is-featured {
   min-height: 8.25rem;

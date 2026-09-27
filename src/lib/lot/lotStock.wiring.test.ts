@@ -116,8 +116,17 @@ test("a lot unit with no photo uses the covered coach and a real photo stays", (
   assert.match(lot, /data-lot-photo="cover"/);
   assert.match(lot, /<CoveredCoach/);
   assert.match(lot, /variant=\{coverVariant\(unit\)\}/);
+  assert.match(lot, /className="lot-cover-art"/);
+  assert.match(lot, /preserveAspectRatio="xMidYMid meet"/);
   assert.match(home, /export function coverVariant/);
   assert.match(cover, /aria-label="Photo coming soon"/);
+  assert.doesNotMatch(cover, /slice/);
+  const homeScreen = read("../../components/shell/HomeScreen.tsx");
+  assert.match(homeScreen, /<CoveredCoach variant=\{coverVariant\(unit\)\} \/>/);
+  assert.doesNotMatch(homeScreen, /preserveAspectRatio/);
+  const css = read("../../styles.css");
+  assert.match(css, /\.lot-cover-art[\s\S]*height:\s*76%/);
+  assert.match(css, /\.lot-cover-art[\s\S]*object-fit:\s*contain/);
   assert.doesNotMatch(lot, /unit\.photo\s*=/);
   assert.doesNotMatch(lot, /RAIDHO_R_MARK/);
 });
