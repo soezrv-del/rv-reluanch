@@ -33,6 +33,7 @@ import { onActiveScreenChange } from "./screenContext";
 import {
   SCREEN_CALLOUT_DEBOUNCE_MS,
   initialScreenCalloutState,
+  planCalloutDelivery,
   reduceScreenCallout,
   screenCalloutSpeechInstructions,
   type ScreenCalloutEvent,
@@ -140,11 +141,9 @@ export class GrokRealtimeSession {
   private unsubScreen: (() => void) | null = null;
   private callout: ScreenCalloutState = initialScreenCalloutState();
   private calloutTimer: ReturnType<typeof setTimeout> | null = null;
-  /** Callout that waited for the intro (or a closed socket) before speaking. */
+  /** Callout that waited for the intro, a closed socket, or the current reply. */
   private unsentCallout: string | null = null;
   private introFinished = false;
-  /** True while response.cancel belongs to a screen callout, not research. */
-  private calloutOwnsCancel = false;
   private facts: ActiveCoach | null;
   private rearmTimer: ReturnType<typeof setTimeout> | null = null;
   private earlyPcm: ArrayBuffer[] = [];
@@ -579,10 +578,6 @@ export class GrokRealtimeSession {
 
       case "response.cancelled":
       case "response.cancel":
-        if (this.calloutOwnsCancel) {
-          this.calloutOwnsCancel = false;
-          break;
-        }
         if (this.researchPhase !== "idle") {
           // Expected: we cancelled the VAD auto-reply to run web research.
           break;
@@ -1995,31 +1990,30 @@ export class GrokRealtimeSession {
       this.unsentCallout = line;
       return;
     }
+    // Never cut off a reply already in progress. Flush speaks it on reply-done.
+    const plan = planCalloutDelivery(line, this.suppressMic);
+    if (!plan.speakNow) {
+      this.unsentCallout = plan.queued;
+      return;
+    }
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) {
-      this.unsentCallout = line;
+      this.unsentCallout = plan.speakNow;
       return;
     }
     this.unsentCallout = null;
     try {
-      if (this.suppressMic) {
-        this.calloutOwnsCancel = true;
-        ws.send(JSON.stringify({ type: "response.cancel" }));
-        this.interruptPlayback();
-        this.suppressMic = false;
-      }
       ws.send(
         JSON.stringify({
           type: "response.create",
           response: {
             modalities: ["text", "audio"],
-            instructions: screenCalloutSpeechInstructions(line),
+            instructions: screenCalloutSpeechInstructions(plan.speakNow),
           },
         }),
       );
     } catch {
-      this.calloutOwnsCancel = false;
-      this.unsentCallout = line;
+      this.unsentCallout = plan.speakNow;
     }
   }
 

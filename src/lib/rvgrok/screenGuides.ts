@@ -232,6 +232,19 @@ export function formatScreenContext(screen: string): string {
   return `SCREEN CONTEXT START\n${lines.join("\n\n")}\nSCREEN CONTEXT END`;
 }
 
+/**
+ * How to deliver a callout that has already passed the debounce.
+ * An assistant reply already playing is never cancelled; the line waits
+ * in the queue until reply-done flushes it.
+ */
+export function planCalloutDelivery(
+  line: string,
+  assistantSpeaking: boolean,
+): { speakNow: string | null; queued: string | null; cancel: false } {
+  if (assistantSpeaking) return { speakNow: null, queued: line, cancel: false };
+  return { speakNow: line, queued: null, cancel: false };
+}
+
 /** Spoken callout: one line, then stop. Does not invite a second sentence. */
 export function screenCalloutSpeechInstructions(line: string): string {
   return `SCREEN CALLOUT. Say exactly this one line, then stop. Do not answer a question. Do not add a second sentence. Do not say you cannot see the screen.\n${line}`;

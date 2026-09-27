@@ -11,6 +11,7 @@ import {
   SCREEN_GUIDE_PREAMBLE,
   SCREEN_SHARED,
   initialScreenCalloutState,
+  planCalloutDelivery,
   reduceScreenCallout,
   screenCalloutLine,
   screenGuideFor,
@@ -128,6 +129,62 @@ test("the same screen is not called out twice in a row", () => {
   state = step(back.state, { type: "navigate", screen: "Facts", now: 5000 }).state;
   const next = step(state, { type: "tick", now: 6500 });
   assert.match(next.speak || "", /^Rv Facts\./);
+});
+
+test("navigate during an assistant reply does not cancel; callout speaks after reply-done", () => {
+  let state = initialScreenCalloutState();
+  let queued: string | null = null;
+  const spoken: string[] = [];
+
+  const deliver = (line: string | null, assistantSpeaking: boolean) => {
+    if (!line) return;
+    const plan = planCalloutDelivery(line, assistantSpeaking);
+    assert.equal(plan.cancel, false);
+    queued = plan.queued;
+    if (plan.speakNow) spoken.push(plan.speakNow);
+  };
+
+  state = step(state, { type: "navigate", screen: "Cal", now: 0 }).state;
+  state = step(state, { type: "navigate", screen: "Tow", now: 400 }).state;
+  const ready = step(state, { type: "tick", now: 1900 });
+  deliver(ready.speak, true);
+  assert.deepEqual(spoken, []);
+  assert.match(queued || "", /^Tow Guide\./);
+  assert.doesNotMatch(queued || "", /Calculator/);
+
+  const stillPlaying = step(ready.state, { type: "tick", now: 2000 });
+  deliver(stillPlaying.speak, true);
+  assert.deepEqual(spoken, []);
+
+  const settled = step(stillPlaying.state, { type: "reply-done", now: 2100 });
+  assert.equal(settled.speak, null);
+  const flushed = planCalloutDelivery(queued || "", false);
+  assert.equal(flushed.cancel, false);
+  assert.equal(flushed.queued, null);
+  assert.match(flushed.speakNow || "", /^Tow Guide\./);
+  queued = null;
+  if (flushed.speakNow) spoken.push(flushed.speakNow);
+  assert.deepEqual(spoken, [flushed.speakNow]);
+
+  const repeat = planCalloutDelivery("Tow Guide. Pick the truck, then replace the default RV GVWR with the real sticker.", false);
+  const again = step(settled.state, { type: "navigate", screen: "Tow", now: 2200 }).state;
+  const second = step(again, { type: "tick", now: 3700 });
+  assert.equal(second.speak, null);
+  assert.equal(repeat.cancel, false);
+});
+
+test("speakScreenCallout queues through the reply and never cancels it", () => {
+  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
+  const speak = realtime.slice(
+    realtime.indexOf("private speakScreenCallout"),
+    realtime.indexOf("private flushQueuedCallout"),
+  );
+  assert.ok(speak.includes("planCalloutDelivery"));
+  assert.match(speak, /this\.suppressMic/);
+  assert.doesNotMatch(speak, /response\.cancel/);
+  assert.doesNotMatch(speak, /interruptPlayback/);
+  assert.doesNotMatch(realtime, /calloutOwnsCancel/);
+  assert.match(realtime, /this\.flushQueuedCallout\(\)/);
 });
 
 test("a callout waits out the user's speech and the reply to it", () => {
