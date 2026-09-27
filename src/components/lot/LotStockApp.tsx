@@ -18,6 +18,15 @@ import {
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
 import { LOT_UNIT_OPEN_EVENT, takePendingLotQuery } from "@/lib/home/homeCoach";
+import { ScreenShareButton } from "@/components/share/ScreenShareButton";
+import {
+  bootSearchQuery,
+  buildLotUnitShare,
+  lotUnitMatchesShareId,
+  lotUnitSharePhoto,
+  readLotUnitParam,
+  shareOrigin,
+} from "@/lib/share/screenShare";
 
 const PAGE_SIZE = 48;
 
@@ -116,6 +125,44 @@ export function LotStockApp() {
         ? `${shown} of ${total} shown`
         : `${total} shown`;
 
+  const lotDeepId = useRef(readLotUnitParam(bootSearchQuery()));
+  useEffect(() => {
+    const id = lotDeepId.current;
+    if (!id || !snap) return;
+    const idx = snap.units.findIndex((unit) =>
+      lotUnitMatchesShareId(unit, id),
+    );
+    lotDeepId.current = null;
+    if (idx < 0) return;
+    setType("");
+    setQuery("");
+    setLimit((n) => Math.max(n, idx + 1));
+    setOpenKey(lotUnitKey(snap.units[idx]!, idx));
+  }, [snap]);
+
+  const openUnit = useMemo(() => {
+    if (!openKey) return null;
+    const idx = filtered.findIndex(
+      (unit, i) => lotUnitKey(unit, i) === openKey,
+    );
+    return idx >= 0 ? filtered[idx]! : null;
+  }, [filtered, openKey]);
+
+  const lotShare = useMemo(
+    () => (openUnit ? buildLotUnitShare(openUnit, shareOrigin()) : null),
+    [openUnit],
+  );
+
+  useEffect(() => {
+    if (!openKey) return;
+    const timer = window.setTimeout(() => {
+      document
+        .querySelector(`[data-lot-key="${CSS.escape(openKey)}"]`)
+        ?.scrollIntoView({ block: "nearest" });
+    }, 60);
+    return () => window.clearTimeout(timer);
+  }, [openKey]);
+
   return (
     <SuitePage
       tab="rvlot"
@@ -124,6 +171,18 @@ export function LotStockApp() {
       onPullReset={load}
       pullLabel="Release to refresh lot"
       noSwipeScroll
+      overlays={
+        lotShare ? (
+          <div className="relative z-20 px-4 pb-3 pt-1">
+            <ScreenShareButton
+              title={lotShare.title}
+              text={lotShare.text}
+              url={lotShare.url}
+              photoUrl={openUnit ? lotUnitSharePhoto(openUnit) : null}
+            />
+          </div>
+        ) : null
+      }
     >
       <div
         className="mx-auto w-full max-w-3xl space-y-3 px-4 pb-12 pt-2 sm:px-6"
@@ -230,6 +289,7 @@ export function LotStockApp() {
                 <LotUnitCard
                   unit={featured}
                   featured
+                  cardKey={featuredKey}
                   open={openKey === featuredKey}
                   onToggle={() =>
                     setOpenKey((cur) =>
@@ -261,6 +321,7 @@ export function LotStockApp() {
                       <li key={key}>
                         <LotUnitCard
                           unit={unit}
+                          cardKey={key}
                           open={openKey === key}
                           onToggle={() =>
                             setOpenKey((cur) =>
@@ -345,11 +406,13 @@ function StatusCard({
 function LotUnitCard({
   unit,
   featured,
+  cardKey,
   open,
   onToggle,
 }: {
   unit: LotUnit;
   featured?: boolean;
+  cardKey: string;
   open: boolean;
   onToggle: () => void;
 }) {
@@ -368,7 +431,7 @@ function LotUnitCard({
   const photo = photoUrl && failedSrc !== photoUrl ? photoUrl : null;
 
   return (
-    <article>
+    <article data-lot-key={cardKey}>
       <button
         type="button"
         onClick={onToggle}

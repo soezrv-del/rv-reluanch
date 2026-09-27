@@ -47,6 +47,10 @@ import {
   grokSeedFromAskHandoff,
 } from "@/lib/rvgrok/tabEntry";
 import { screenNameForTab, setActiveScreen } from "@/lib/rvgrok/screenContext";
+import {
+  bootSearchQuery,
+  readFactsShareSearch,
+} from "@/lib/share/screenShare";
 
 /**
  * Code-split suite tools — tools load only when visited.
@@ -183,6 +187,14 @@ export function AppShell({
       return n;
     });
   }, []);
+
+  // Shared Facts link: open the report tab without the dock's clean-search reset.
+  useEffect(() => {
+    if (!readFactsShareSearch(bootSearchQuery())) return;
+    setHomeOpen(false);
+    setTab("rvfax");
+    markVisited("rvfax");
+  }, [markVisited]);
 
   // Hide native Capacitor splash immediately — no in-app video gate.
   useEffect(() => {

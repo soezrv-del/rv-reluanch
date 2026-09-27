@@ -158,7 +158,14 @@ import {
   medianListingPrice,
   yearRangeFromCenter,
 } from "@/lib/marketcheck/yearRange";
+import { ScreenShareButton } from "@/components/share/ScreenShareButton";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
+import {
+  buildFactsShare,
+  shareOrigin,
+  weightShareValue,
+  type ShareLine,
+} from "@/lib/share/screenShare";
 import { usePullToReset } from "@/lib/hooks/usePullToReset";
 import { PullRefreshLayer } from "@/components/shell/PullResetHint";
 import { SuiteRaidhoBackdrop } from "@/components/shell/SuitePage";
@@ -1309,6 +1316,148 @@ export function RvDetail({
     }
   };
 
+  const specsOpen = hasConcreteFloorplan(floorplan);
+  const shareDoc = useMemo(() => {
+    const gvwrCatalog = displayFromPainted(specs.gvwr, sharedPaint.gvwr);
+    const gvwrLbs =
+      sharedPaint.gvwr.lbs ?? brochure.gvwrLbs ?? live?.gvwrLbs ?? null;
+    const uvwCatalog = quietSheet(
+      displayFromPainted(
+        brochure.uvwEstimated ? "" : specs.uvw,
+        sharedPaint.uvw,
+      ),
+    );
+    const uvwLbs =
+      sharedPaint.uvw.lbs ?? brochure.uvwLbs ?? live?.uvwLbs ?? null;
+    const ac = quietSheet(brochure.acUnits);
+    const tires = quietSheet(brochure.tireSize);
+    const mpg = quietSheet(specs.mpgHighway);
+    const propane = quietSheet(specs.propane);
+    const specsRows: ShareLine[] = [
+      { label: "LENGTH", value: specs.lengthFt },
+      { label: "WIDTH", value: specs.exteriorWidth },
+      { label: "HEIGHT", value: specs.exteriorHeight },
+      { label: "CEILING", value: specs.interiorHeight },
+      { label: "SLIDEOUTS", value: specs.slideouts },
+      { label: "SLEEPS", value: specs.sleeps },
+    ];
+    if (specs.isToyHauler) {
+      specsRows.push(
+        { label: "GARAGE DEPTH", value: specs.garageLength },
+        { label: "GARAGE WIDTH", value: specs.garageWidth },
+        { label: "GARAGE HEIGHT", value: specs.garageHeight },
+        { label: "RAMP DOOR", value: specs.rampWidth },
+        { label: "CARGO RATING", value: specs.garageCapacity },
+        { label: "FITS", value: specs.garageFits },
+        { label: "FUEL STATION", value: specs.fuelStation },
+      );
+    }
+    specsRows.push(
+      { label: "FUEL", value: displayFuel },
+      { label: "ENGINE", value: omitInventPolicyProse(specs.engine) },
+      { label: "HORSEPOWER", value: omitInventPolicyProse(specs.horsepower) },
+      { label: "TORQUE", value: omitInventPolicyProse(specs.torque) },
+      { label: "TRANSMISSION", value: specs.transmission },
+      { label: "CHASSIS", value: specs.chassis },
+      { label: "TOW CAPACITY", value: specs.hitchOrPin },
+      { label: "GENERATOR", value: brochure.generator },
+    );
+    if (ac) specsRows.push({ label: "A/C", value: ac });
+    if (tires) specsRows.push({ label: "TIRES", value: tires });
+    if (!sheetOmits.mpg && mpg) specsRows.push({ label: "HIGHWAY MPG", value: mpg });
+    specsRows.push({
+      label: "FUEL CAPACITY",
+      value: displayFromPainted(specs.fuelCapacity, sharedPaint.fuelCapacity),
+    });
+    specsRows.push({
+      label: "GVWR",
+      value: weightShareValue({
+        overrideLbs: weightOverride?.gvwrLbs ?? null,
+        catalogValue: gvwrCatalog,
+        seriesEstimate:
+          weightOverride?.gvwrLbs == null &&
+          (gvwrLbs == null || gvwrLbs <= 0) &&
+          isSeriesGvwrEstimate(gvwrCatalog),
+      }),
+    });
+    specsRows.push({
+      label: "UVW",
+      value: weightShareValue({
+        overrideLbs: weightOverride?.uvwLbs ?? null,
+        catalogValue: uvwCatalog,
+        seriesEstimate:
+          weightOverride?.uvwLbs == null &&
+          (uvwLbs == null || uvwLbs <= 0) &&
+          isSeriesGvwrEstimate(uvwCatalog),
+      }),
+    });
+    specsRows.push(
+      {
+        label: "CCC",
+        value: quietSheet(displayFromPainted(specs.ccc, sharedPaint.ccc)),
+      },
+      { label: "WARRANTY", value: specs.warranty },
+      {
+        label: "FRESH WATER",
+        value: displayFromPainted(specs.freshWater, sharedPaint.freshWater),
+      },
+      {
+        label: "GRAY WATER",
+        value: displayFromPainted(specs.grayWater, sharedPaint.grayWater),
+      },
+      {
+        label: "BLACK WATER",
+        value: displayFromPainted(specs.blackWater, sharedPaint.blackWater),
+      },
+    );
+    if (!sheetOmits.propane && propane) {
+      specsRows.push({ label: "PROPANE", value: specs.propane });
+    }
+    const overview: ShareLine[] = [
+      { label: "LENGTH", value: specs.lengthFt },
+      specs.isToyHauler
+        ? {
+            label: "GARAGE",
+            value:
+              specs.garageLength && !/varies/i.test(specs.garageLength)
+                ? specs.garageLength.replace(/\s*deep$/i, "")
+                : "See specs",
+          }
+        : { label: "SLIDEOUTS", value: specs.slideouts },
+      { label: "SLEEPS", value: specs.sleeps },
+    ];
+    return buildFactsShare({
+      year,
+      make,
+      model,
+      floorplan,
+      className: displayType,
+      rating: Number.isFinite(displayRating) ? displayRating.toFixed(1) : null,
+      specsOpen,
+      overview,
+      specs: specsRows,
+      powerToWeight: { label: torqueChip, value: torqueRatioLabel },
+      origin: shareOrigin(),
+    });
+  }, [
+    year,
+    make,
+    model,
+    floorplan,
+    specsOpen,
+    specs,
+    brochure,
+    sharedPaint,
+    live,
+    sheetOmits,
+    displayFuel,
+    displayType,
+    displayRating,
+    weightOverride,
+    torqueChip,
+    torqueRatioLabel,
+  ]);
+
   return (
     <div
       className="rvfax-screen relative flex h-full flex-col overflow-hidden bg-bg text-white"
@@ -1322,7 +1471,7 @@ export function RvDetail({
         ref={scrollRef}
         data-app-scroll
         data-rvfax-scroll
-        className="rv-scroll relative z-10 h-full overflow-y-auto overscroll-y-contain"
+        className="rv-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
       >
         <PullRefreshLayer state={pull} label="Release to go back">
         {/* Sticky under the iPhone clock / Dynamic Island */}
@@ -2799,6 +2948,14 @@ export function RvDetail({
           <SuiteDisclaimer className="pb-6" />
         </div>
         </PullRefreshLayer>
+      </div>
+
+      <div className="relative z-20 shrink-0 px-4 pb-3 pt-2">
+        <ScreenShareButton
+          title={shareDoc.title}
+          text={shareDoc.text}
+          url={shareDoc.url}
+        />
       </div>
 
       {correctOpen ? (

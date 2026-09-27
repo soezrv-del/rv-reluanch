@@ -92,6 +92,10 @@ import {
   type SoldDeal,
 } from "@/lib/rv/soldDeals";
 import { SoldPrompt } from "./SoldPrompt";
+import {
+  bootSearchQuery,
+  readFactsShareSearch,
+} from "@/lib/share/screenShare";
 
 const RvDetail = lazy(() =>
   import("./RvDetail").then((m) => ({ default: m.RvDetail })),
@@ -410,6 +414,44 @@ export function RvFaxApp({
       cancelled = true;
     };
   }, [factsMarketToken, openFactsUnit, nav?.activeCoach]);
+
+  const openFactsUnitRef = useRef(openFactsUnit);
+  openFactsUnitRef.current = openFactsUnit;
+  const applySelRef = useRef(applySel);
+  applySelRef.current = applySel;
+
+  // Cold load of /?facts= opens this report. Captured before the router
+  // can drop the query. Does not touch the floorplan dropdown.
+  useEffect(() => {
+    const sel = readFactsShareSearch(bootSearchQuery());
+    if (!sel) return;
+    let cancelled = false;
+    void (async () => {
+      await ensureCatalogLoaded();
+      if (cancelled) return;
+      const found = searchCatalog({
+        year: sel.year,
+        make: sel.make,
+        model: sel.model,
+        floorplan: sel.floorplan || undefined,
+      });
+      const hit =
+        found.find((r) => (r.floorplan || "") === (sel.floorplan || "")) ??
+        found[0];
+      if (hit) openFactsUnitRef.current(hit, sel.floorplan);
+      else {
+        applySelRef.current({
+          year: sel.year,
+          make: sel.make,
+          model: sel.model,
+          floorplan: sel.floorplan,
+        });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const yearsForEra = useMemo(() => {
     const e = YEAR_ERAS.find((x) => x.id === era) ?? YEAR_ERAS[0]!;
