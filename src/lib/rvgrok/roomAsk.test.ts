@@ -43,12 +43,17 @@ test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   assert.doesNotMatch(shell, /data-bottom-dock/);
 
   const chips = bar.match(/const ROOM_CHIPS[\s\S]*?\];/)?.[0] ?? "";
-  assert.match(chips, /id: "rvfax", label: "Facts"/);
-  assert.match(chips, /id: "rvlot", label: "Lot"/);
-  assert.match(chips, /id: "rvcal", label: "Cal"/);
-  assert.match(chips, /id: "rvtow", label: "Tow"/);
+  assert.match(
+    chips,
+    /id: "rvfax", label: "Rv Facts"[\s\S]*id: "rvcal", label: "Calculator"[\s\S]*id: "rvtow", label: "Tow Guide"[\s\S]*id: "rvlot", label: "Lot Inventory"/,
+  );
   assert.equal((chips.match(/id: "/g) || []).length, 4);
-  assert.doesNotMatch(chips, /rvtrips|RV GPS|Tanks|Payment|Grok/);
+  assert.doesNotMatch(chips, /rvtrips|RV GPS|Tanks|Payment|Diesels|36-foot/);
+  const grok = read("../../components/rvgrok/RvGrokApp.tsx");
+  const landing = read("../../components/rvgrok/GrokLanding.tsx");
+  assert.match(grok, /starters=\{\[\]\}/);
+  assert.doesNotMatch(grok, /starters=\{GROK_STARTERS\}/);
+  assert.match(landing, /starters\.length > 0/);
   assert.match(bar, /!homeOpen && tab === chip\.id/);
   assert.match(bar, /min-h-11/);
   assert.match(bar, /onOpen\("rvfax"\)/);

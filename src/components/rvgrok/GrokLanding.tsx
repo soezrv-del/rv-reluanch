@@ -119,7 +119,7 @@ export function GrokLanding({
 
         {hint ? (
           <p className="mt-3 text-[12px] text-muted">{hint}</p>
-        ) : (
+        ) : starters.length > 0 ? (
           <div className="grok-starters mt-4 w-full">
             <div className="grok-starters-list flex flex-wrap justify-center gap-2">
               {starters.map((s) => (
@@ -137,7 +137,7 @@ export function GrokLanding({
               ))}
             </div>
           </div>
-        )}
+        ) : null}
       </section>
     </div>
   );

@@ -3,12 +3,12 @@ import { Mic } from "lucide-react";
 import type { AppTab } from "./BottomTabs";
 import { roomAskMic, roomAskSend } from "@/lib/rvgrok/roomAsk";
 
-/** Room tab bar. Facts, Lot, Cal, Tow only. RV GPS stays in Premium. */
+/** One chip row above the ask box. RV GPS stays in Premium. */
 const ROOM_CHIPS: { id: AppTab; label: string }[] = [
-  { id: "rvfax", label: "Facts" },
-  { id: "rvlot", label: "Lot" },
-  { id: "rvcal", label: "Cal" },
-  { id: "rvtow", label: "Tow" },
+  { id: "rvfax", label: "Rv Facts" },
+  { id: "rvcal", label: "Calculator" },
+  { id: "rvtow", label: "Tow Guide" },
+  { id: "rvlot", label: "Lot Inventory" },
 ];
 
 /**

@@ -1708,7 +1708,7 @@ export function RvGrokApp({
       status={wingmanStatus}
       speaking={realtimeStatus === "speaking" || Boolean(speakingId)}
       lotChip={null}
-      starters={GROK_STARTERS}
+      starters={[]}
       onChip={(prompt) => void sendMessage(prompt)}
       toolbar={wingmanToolbar}
       composer={composer}
