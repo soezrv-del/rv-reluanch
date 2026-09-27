@@ -65,7 +65,10 @@ test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   assert.match(bar, /roomAskSend\(q\)/);
   assert.match(bar, /onOpen\("rvgrok"\)/);
   assert.match(bar, /aria-label="Start live voice"/);
+  assert.match(bar, /const hidePinnedAsk = !homeOpen && tab === "rvgrok"/);
+  assert.match(bar, /hidePinnedAsk \? null/);
   assert.match(more, /title="RV GPS"/);
+  assert.match(more, /title="VIN Decoder"/);
 });
 
 test("typed asks and the mic use the mounted RV Grok chat", () => {
@@ -82,6 +85,7 @@ test("typed asks and the mic use the mounted RV Grok chat", () => {
 test("Premium menu lists RV GPS with the other suite tools", () => {
   const more = read("../../components/more/MoreApp.tsx");
   assert.match(more, /title="RV GPS"/);
+  assert.match(more, /title="VIN Decoder"/);
   assert.match(more, /onClick=\{\(\) => onNavigate\?\.\("rvtrips"\)\}/);
   assert.match(more, /title="RvGrok Voice Settings"/);
   assert.doesNotMatch(more, /onNavigate\?\.\("rvlot"\)/);

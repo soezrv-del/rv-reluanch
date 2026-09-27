@@ -651,8 +651,10 @@ test("Facts landing is full-bleed Raidho only — no showroom photo", () => {
   assert.match(css, /\.suite-raidho-bleed/);
   assert.doesNotMatch(css, /\.rvfax-screen\[data-facts-landing\]\[data-readable-cards\] \.page-backdrop-bright/);
   assert.match(fax, /RV Search/);
-  assert.match(fax, /VIN Decoder/);
-  assert.match(fax, /Scan or type a VIN · NHTSA decode/);
+  assert.doesNotMatch(fax, /setVinOpen/);
+  const more = readFileSync(join(root, "../../components/more/MoreApp.tsx"), "utf8");
+  assert.match(more, /title="VIN Decoder"/);
+  assert.match(more, /Scan or type a VIN · NHTSA decode/);
 
   // #2 — Model / Floorplan clear the dock (scroll pad + stage scroll-margin)
   assert.match(fax, /data-facts-cascade-scroll/);

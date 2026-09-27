@@ -431,7 +431,7 @@ export function AppShell({
           overscrollBehavior: "none",
         }}
       >
-        <SuiteBrand />
+        <SuiteBrand onHome={() => setHomeOpen(true)} />
         <main
           ref={mainRef}
           className="suite-swipe-viewport relative min-h-0 flex-1 overflow-hidden"

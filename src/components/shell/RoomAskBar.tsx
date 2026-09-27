@@ -25,6 +25,7 @@ export function RoomAskBar({
   onOpen: (tab: AppTab) => void;
 }) {
   const [draft, setDraft] = useState("");
+  const hidePinnedAsk = !homeOpen && tab === "rvgrok";
 
   const send = () => {
     const q = draft.trim();
@@ -74,6 +75,7 @@ export function RoomAskBar({
           );
         })}
       </div>
+      {hidePinnedAsk ? null : (
       <form
         data-room-ask-bar
         className="mx-auto flex w-full max-w-lg pb-1"
@@ -107,6 +109,7 @@ export function RoomAskBar({
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 }

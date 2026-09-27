@@ -126,7 +126,8 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   const brand = readFileSync(join(root, "../../components/shell/SuiteBrand.tsx"), "utf8");
   const mark = join(root, "../../../public/assets/brand/raidho-shell-mark.png");
   assert.ok(existsSync(mark), "owner mark asset");
-  assert.match(shell, /<SuiteBrand \/>/);
+  assert.match(shell, /<SuiteBrand onHome=\{\(\) => setHomeOpen\(true\)\} \/>/);
+  assert.match(brand, /aria-label="Home"/);
   assert.match(shell, /homeOpen/);
   assert.match(shell, /initialTab = "rvgrok"/);
   assert.match(home, /resolveHomeCoach/);
