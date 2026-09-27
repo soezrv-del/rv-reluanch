@@ -96,42 +96,6 @@ export function HomeScreen({
     <>
       <div className="showroom-hero-beam" aria-hidden />
       <SpotlightPhoto className="showroom-coach" alt={SHOWROOM_SPOTLIGHT.alt} />
-      <svg
-        className="showroom-hero-glint"
-        viewBox="0 0 788 416"
-        preserveAspectRatio="xMidYMax meet"
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id="showroom-roof-glint"
-            gradientUnits="userSpaceOnUse"
-            x1="63"
-            y1="80"
-            x2="693"
-            y2="40"
-          >
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
-            <stop offset="32%" stopColor="#ffffff" stopOpacity="0.18" />
-            <stop offset="58%" stopColor="#ffffff" stopOpacity="0.72" />
-            <stop offset="68%" stopColor="#ffffff" stopOpacity="1" />
-            <stop offset="82%" stopColor="#ffffff" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-          </linearGradient>
-          <filter id="showroom-roof-glint-soft" x="-3%" y="-40%" width="106%" height="180%">
-            <feGaussianBlur stdDeviation="0.8" />
-          </filter>
-        </defs>
-        <path
-          d="M 63 139.5 L 73 138 L 83 135 L 93 131.7 L 103 128.3 L 113 124.7 L 123 121.3 L 133 118 L 143 114.7 L 153 111.3 L 163 108 L 173 105 L 183 101.7 L 193 98.3 L 203 95 L 213 92 L 223 89 L 233 85.7 L 243 82.3 L 253 79 L 263 76 L 273 73 L 283 70 L 293 67 L 303 63.7 L 313 60.3 L 323 56.7 L 333 53.3 L 343 49.7 L 353 46.3 L 363 43 L 373 39.7 L 383 36 L 393 32.3 L 403 29 L 413 25.7 L 423 22 L 433 18.3 L 443 15.3 L 453 13 L 463 11 L 473 9.7 L 483 8.7 L 493 8.7 L 503 9 L 513 10 L 523 11.3 L 533 13 L 543 15 L 553 16.7 L 563 18 L 573 19.3 L 583 21.3 L 593 24 L 603 27 L 613 30.3 L 623 34 L 633 38.3 L 643 43 L 653 48.7 L 663 55.7 L 673 64 L 683 74 L 693 79"
-          fill="none"
-          stroke="url(#showroom-roof-glint)"
-          strokeWidth="7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          filter="url(#showroom-roof-glint-soft)"
-        />
-      </svg>
       <div className="showroom-hero-pool" aria-hidden />
     </>
   );

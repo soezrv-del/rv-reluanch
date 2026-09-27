@@ -20,8 +20,8 @@ function recency(unit: LotUnit): [number, number] {
 }
 
 /**
- * Locked showroom spotlight. The art is a transparent cutout of the studio
- * shot — the coach only, no backdrop. `stockNumber` / `vin` point at the lot
+ * Locked showroom spotlight. The art is Entegra's factory cutout of the
+ * coach, trimmed to the silhouette. `stockNumber` / `vin` point at the lot
  * unit; price and specs are not stored here.
  */
 export const SHOWROOM_SPOTLIGHT = {
