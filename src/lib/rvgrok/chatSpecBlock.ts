@@ -6,6 +6,7 @@
  * Source is the spoken/written Grok reply only.
  */
 
+import { isSeriesGvwrEstimate } from "../rv/torqueToWeight.ts";
 import { lookupGroundedSpecs } from "./grounding.ts";
 import { parseCoachFromText } from "./parseCoach.ts";
 
@@ -110,7 +111,7 @@ function firstFuelGallons(text: string): string | null {
   const patterns = [
     /(\d{2,3})\s*-\s*gallon\s+fuel(?:\s+tank)?/i,
     /(\d{2,3})\s*gallon\s+fuel(?:\s+tank)?/i,
-    /fuel(?:\s+tank|\s+capacity)[^.\n\d]{0,28}(\d{2,3})\s*(?:gal(?:lon)?s?)?/i,
+    /fuel(?:\s+tank|\s+capacity)[^\.\n\d]{0,28}(\d{2,3})\s*(?:gal(?:lon)?s?)?/i,
   ];
   for (const re of patterns) {
     const m = text.match(re);
@@ -706,6 +707,10 @@ export function formatChatSpecMissReply(opts: {
         );
         continue;
       }
+      if (label === "GVWR" && isSeriesGvwrEstimate(specs.weightBand)) {
+        lines.push(`${specs.weightBand}. Not a published pin.`);
+        continue;
+      }
       missed.push(label);
       continue;
     }
@@ -759,7 +764,7 @@ function brochureFigureSpeech(opts: {
   const freight = /\bfreightliner\b/i.test(notes);
   const tag = /\btag[-\s]?axle\b/i.test(notes);
   const chassis = freight && tag ? " Freightliner tag-axle." : freight ? " Freightliner." : "";
-  const brochure = notes.match(/\b(20\d{2}\s+[^.\n]{0,48}?brochure)\b/i);
+  const brochure = notes.match(/\b(20\d{2}\s+[^\.\n]{0,48}?brochure)\b/i);
   const source = brochure
     ? `the ${brochure[1].replace(/\s+/g, " ").trim()}`
     : /\bbrochure\b/i.test(notes)
