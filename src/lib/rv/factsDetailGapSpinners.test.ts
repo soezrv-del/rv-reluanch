@@ -70,8 +70,12 @@ test("only gapped named fields spin while live fetch is in flight", () => {
       gvwrSearching,
       "Series 18,000–26,000 lbs · confirm sticker",
     ),
+    false,
+    "a series span is already on screen",
+  );
+  assert.equal(
+    factsDetailFieldSearching("gvwr", gvwrSearching, "Confirm brochure"),
     true,
-    "a series span is still a catalog gap while live search runs",
   );
   assert.equal(
     factsDetailFieldSearching("gvwr", gvwrSearching, "22,000 lbs"),
