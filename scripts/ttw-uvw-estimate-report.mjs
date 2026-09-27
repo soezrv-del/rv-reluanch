@@ -12,6 +12,7 @@ import {
   listEstimatedUvwFromGvwrPins,
 } from "../src/lib/rv/uvwEstimateCoverage.ts";
 import {
+  barColorFromScore,
   computeTorqueToWeight,
   estimateUvwFromGvwrDetailed,
   estimateUvwFromGvwrFlat835,
@@ -100,8 +101,7 @@ function scoreAtWeight(torqueLbFt, weightLb) {
   const score = scoreFromTorqueToWeightRatio(ratio);
   return {
     score,
-    color:
-      score == null ? null : score < 6 ? "red" : score < 7.5 ? "yellow" : "green",
+    color: barColorFromScore(score),
   };
 }
 
