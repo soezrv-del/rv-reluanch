@@ -50,7 +50,7 @@ test("Anthem 44R / Precept 31UL / Alante / Open Road 34PA use the tiered formula
   assert.equal(anthem.estimatedUvwLbs, 43_400);
   assert.equal(anthem.tier, "diesel-pusher");
   assert.equal(anthem.gap, false);
-  assert.equal(anthem.color, "green");
+  assert.equal(anthem.color, "yellow");
 
   assert.equal(findOemUvwLbs("2025", "Jayco", "Precept", "31UL"), null);
   assert.equal(findOemGvwrLbs("2025", "Jayco", "Precept", "31UL"), 22_000);
@@ -63,7 +63,7 @@ test("Anthem 44R / Precept 31UL / Alante / Open Road 34PA use the tiered formula
   assert.equal(precept.estimatedUvwLbs, 18_000);
   assert.equal(precept.tier, "gas-20k-24k");
   assert.equal(precept.gap, false);
-  assert.equal(precept.color, "green");
+  assert.equal(precept.color, "yellow");
 
   const alante = scoreEstimatedTtw({
     torqueLbFt: 468,

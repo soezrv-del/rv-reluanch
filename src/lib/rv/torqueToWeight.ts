@@ -21,15 +21,15 @@
  * weightBasis = "GVWR" when the fallback scored.
  *
  * Two color scales. Do not put a GVWR ratio on the UVW ruler.
- * Color comes from the score: red under 2, yellow from 2 up to 5,
- * green at 5 and up.
+ * Color comes from the score: red under 2, yellow from 2 up to 7,
+ * green at 7 and up.
  *
- * UVW: green ratio >= 28, yellow ratio >= 16 and under 28, red below.
+ * UVW: green ratio >= 36, yellow ratio >= 16 and under 36, red below.
  *      score = clamp(6 + (ratio - 32) / 4, 1, 10)
- *      16 is 2.0. 28 is 5.0. 32 is 6.0. 40 is 8.0. 48 is 10.0.
- * GVWR: green ratio >= 19, yellow ratio >= 10 and under 19, red below.
+ *      16 is 2.0. 36 is 7.0. 32 is 6.0. 40 is 8.0. 48 is 10.0.
+ * GVWR: green ratio >= 25, yellow ratio >= 10 and under 25, red below.
  *       score = clamp(6 + (ratio - 22) / 3, 1, 10)
- *       10 is 2.0. 19 is 5.0. 22 is 6.0. 28 is 8.0. 34 is 10.0.
+ *       10 is 2.0. 25 is 7.0. 22 is 6.0. 28 is 8.0. 34 is 10.0.
  *
  * Towables stay N/A. A Class C toy hauler is still rateable. A fifth
  * wheel, travel trailer, truck camper, or Hideout is not.
@@ -565,22 +565,23 @@ export function scoreFromTorqueToWeightRatio(
   return clampScore(6 + (ratio - 22) / 3);
 }
 
-/** Green ≥ 19, yellow [10, 19), red < 10. Score 2 is ratio 10; score 5 is ratio 19. */
+/** Green ≥ 25, yellow [10, 25), red < 10. Score 2 is ratio 10; score 7 is ratio 25. */
 export function colorFromGvwrRatio(
   ratio: number | null | undefined,
 ): TorqueBarColor | null {
   if (ratio == null || !Number.isFinite(ratio)) return null;
-  if (ratio >= 19) return "green";
+  if (ratio >= 25) return "green";
   if (ratio >= 10) return "yellow";
   return "red";
 }
 
+/** Red under 2, yellow from 2 up to 7, green at 7 and up. */
 export function barColorFromScore(
   score: number | null | undefined,
 ): TorqueBarColor | null {
   if (score == null || !Number.isFinite(score)) return null;
   if (score < 2) return "red";
-  if (score < 5) return "yellow";
+  if (score < 7) return "yellow";
   return "green";
 }
 

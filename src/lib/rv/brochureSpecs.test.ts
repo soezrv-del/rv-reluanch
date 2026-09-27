@@ -215,7 +215,7 @@ test("Discovery OEM rows keep brochure GVWR and omit invented UVW", () => {
   assert.notEqual(gvwrOnly.weightLb, 27_900);
   assert.notEqual(gvwrOnly.score, withUvw.score);
   assert.equal(gvwrOnly.ratio!.toFixed(1), "24.0");
-  assert.equal(gvwrOnly.color, "green");
+  assert.equal(gvwrOnly.color, "yellow");
 });
 
 test("brochure / listing weight basis is published UVW then tiered estimate — mid×0.82 never wins", () => {
@@ -276,7 +276,7 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   assert.equal(ttw31.weightEstimated, false);
   assert.equal(ttw31.uvwLb, null);
   assert.equal(ttw31.ratio!.toFixed(1), "21.3");
-  assert.equal(ttw31.color, "green");
+  assert.equal(ttw31.color, "yellow");
   assert.notEqual(ttw31.weightLb, 20200);
 
   const ttw36 = computeTorqueToWeight({
@@ -289,7 +289,7 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   assert.equal(ttw36.weightLb, 24000);
   assert.equal(ttw36.weightEstimated, false);
   assert.equal(ttw36.ratio!.toFixed(1), "19.5");
-  assert.equal(ttw36.color, "green");
+  assert.equal(ttw36.color, "yellow");
   assert.notEqual(ttw36.weightLb, 22200);
 
   const senecaUvw = findOemUvwLbs("2025", "Jayco", "Seneca", "37K");
