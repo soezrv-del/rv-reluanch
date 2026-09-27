@@ -3,8 +3,7 @@ import test from "node:test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { lotUnitPhoto, type LotUnit } from "../lot/ownLotPage.ts";
-import type { ActiveCoach } from "../rv/activeCoach.ts";
+import type { LotUnit } from "../lot/ownLotPage.ts";
 import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
 import {
   NEWEST_ARRIVALS,
@@ -12,9 +11,7 @@ import {
   arrivalsForHome,
   coverVariant,
   newestArrivals,
-  newestLotUnit,
   requestSpotlightFacts,
-  resolveHomeCoach,
   spotlightFactsTarget,
   spotlightJpegPath,
   spotlightLabel,
@@ -63,20 +60,6 @@ function unit(partial: Partial<LotUnit> & { printed?: Record<string, string> }):
     ...partial,
   };
 }
-
-test("newest lot unit follows received_date, not file order", () => {
-  const older = unit({
-    title: "Older",
-    printed: { received_date: "2026-04-30", id: "900" },
-  });
-  const newer = unit({
-    title: "Newer",
-    model: "Phaeton",
-    printed: { received_date: "2026-09-16", id: "12" },
-  });
-  assert.equal(newestLotUnit([older, newer])?.title, "Newer");
-  assert.equal(newestLotUnit([newer, older])?.title, "Newer");
-});
 
 test("newest arrivals follow received_date, newest first, and stop at the limit", () => {
   const early = unit({
@@ -150,62 +133,6 @@ test("covered coach variant is stable and rotates from stock, vin, and id", () =
   assert.notEqual(coverVariant(onlyId), coverVariant(otherId));
 });
 
-test("home photo is a real lot image, or the name stands alone", () => {
-  const pdf = unit({
-    photo: "https://dealer.example/inventory.pdf",
-    printed: { received_date: "2026-09-01", id: "1" },
-  });
-  assert.equal(lotUnitPhoto(pdf), null);
-  const noPhoto = resolveHomeCoach(null, [pdf]);
-  assert.equal(noPhoto?.photo, null);
-  assert.equal(noPhoto?.name, "2026 Tiffin Allegro 33AA");
-
-  const jpg = unit({
-    photo: "https://cdn.example/coach.jpg",
-    price: 229995,
-    printed: { received_date: "2026-09-20", id: "2" },
-  });
-  const hero = resolveHomeCoach(null, [pdf, jpg]);
-  assert.equal(hero?.photo, "https://cdn.example/coach.jpg");
-  assert.equal(hero?.price, 229995);
-});
-
-test("last lookup wins over the newest unit, without inventing a photo", () => {
-  const active: ActiveCoach = {
-    year: "2024",
-    make: "Newmar",
-    model: "Dutch Star",
-    floorplan: "4081",
-    price: 450000,
-    updatedAt: "2026-09-01T00:00:00.000Z",
-  };
-  const other = unit({
-    year: "2027",
-    make: "Thor",
-    model: "Inception",
-    title: "2027 Thor Inception",
-    photo: "https://cdn.example/other.jpg",
-    printed: { received_date: "2026-09-20", id: "9" },
-  });
-  const hero = resolveHomeCoach(active, [other]);
-  assert.equal(hero?.name, "2024 Newmar Dutch Star · 4081");
-  assert.equal(hero?.photo, null);
-  assert.equal(hero?.price, 450000);
-
-  const matched = unit({
-    year: "2024",
-    make: "Newmar",
-    model: "Dutch Star",
-    trim: "4081",
-    photo: "https://cdn.example/dutch.jpg",
-    price: 10,
-    printed: { received_date: "2026-01-01", id: "3" },
-  });
-  const withPhoto = resolveHomeCoach(active, [other, matched]);
-  assert.equal(withPhoto?.photo, "https://cdn.example/dutch.jpg");
-  assert.equal(withPhoto?.price, 450000);
-});
-
 test("shell shows the owner mark on every screen and Home uses lot data", () => {
   const shell = readFileSync(join(root, "../../components/shell/AppShell.tsx"), "utf8");
   const home = readFileSync(join(root, "../../components/shell/HomeScreen.tsx"), "utf8");
@@ -218,8 +145,8 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(shell, /initialTab = "rvgrok"/);
   assert.match(home, /SHOWROOM_SPOTLIGHT/);
   assert.match(home, /spotlightLabel\(\)/);
-  assert.match(home, /arrivalsForHome\(listed, null\)/);
-  assert.doesNotMatch(home, /resolveHomeCoach|pickShowroomStage/);
+  assert.match(home, /arrivalsForHome\(listed\)/);
+  assert.doesNotMatch(home, /resolveHomeCoach|pickShowroomStage|newestLotUnit/);
   assert.match(home, /CoveredCoach/);
   assert.match(home, /coverVariant/);
   const cover = readFileSync(join(root, "../../components/shell/CoveredCoach.tsx"), "utf8");
@@ -306,25 +233,31 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
     printed: { received_date: "2026-09-01", id: "1" },
   });
   const newest = unit({
-    title: "2026 Holiday Rambler Admiral 29M",
-    year: "2026",
-    make: "Holiday Rambler",
-    model: "Admiral",
-    trim: "29M",
-    photo: "https://cdn.example/admiral.webp",
-    price: 164995,
+    title: "Newest arrival",
+    year: "2027",
+    make: "Thor",
+    model: "Inception",
+    trim: "",
+    photo: "https://cdn.example/newest.jpg",
+    price: 189995,
     stock_number: "B",
     printed: { received_date: "2026-09-22", id: "9" },
   });
-  const arrivals = arrivalsForHome([older, newest], null);
+  const arrivals = arrivalsForHome([older, newest]);
   assert.equal(arrivals[0]?.stock_number, "B");
   assert.equal(arrivals[1]?.stock_number, "A");
   assert.equal(spotlightLabel(), "2026 Entegra Cornerstone");
 
+  const coach = readFileSync(join(root, "./homeCoach.ts"), "utf8");
   const home = readFileSync(join(root, "../../components/shell/HomeScreen.tsx"), "utf8");
   const fax = readFileSync(join(root, "../../components/rvfax/RvFaxApp.tsx"), "utf8");
   const shell = readFileSync(join(root, "../../components/shell/AppShell.tsx"), "utf8");
   const css = readFileSync(join(root, "../../styles.css"), "utf8");
+  assert.doesNotMatch(
+    coach,
+    /pickShowroomStage|resolveHomeCoach|newestLotUnit|sameLotUnit|ShowroomStage|arrivalLabel/,
+  );
+  assert.doesNotMatch(css, /showroom-coach-fallback/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.alt/);
   assert.match(home, /type="image\/webp"/);
   assert.match(home, /spotlightJpegPath\(\)/);

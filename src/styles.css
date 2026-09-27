@@ -2700,16 +2700,6 @@ button.showroom-placard {
   object-fit: contain;
   object-position: center bottom;
 }
-.showroom-coach-fallback {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  height: 11.5rem;
-}
-.showroom-coach-fallback svg {
-  height: 7.5rem;
-  width: auto;
-}
 .showroom-contact {
   position: absolute;
   z-index: 2;

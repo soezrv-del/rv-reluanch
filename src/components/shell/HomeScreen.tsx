@@ -86,7 +86,7 @@ export function HomeScreen({
   }, []);
 
   const listed = units ?? EMPTY_UNITS;
-  const arrivals = useMemo(() => arrivalsForHome(listed, null), [listed]);
+  const arrivals = useMemo(() => arrivalsForHome(listed), [listed]);
   const count = useCountUp(units ? units.length : null);
   const name = spotlightLabel();
   const facts = spotlightFactsTarget(SHOWROOM_SPOTLIGHT, CATALOG_INDEX);
