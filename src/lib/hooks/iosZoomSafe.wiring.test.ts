@@ -22,28 +22,28 @@ test("iOS top chrome adds safe-area + slack; bottom dock floor stays 2.125rem", 
   assert.match(hook, /isIosPhoneClient/);
 });
 
-test("sapphire header, trips ⋯, and Grok thread chrome add safe-area + slack", () => {
+test("page heroes sit under the logo; the showroom header owns the top inset", () => {
   const css = read("../../styles.css");
   const header = read("../../components/shell/SapphireHeader.tsx");
   const trips = read("../../components/rvtrips/RvTripsApp.tsx");
   const grok = read("../../components/rvgrok/RvGrokApp.tsx");
   const landing = read("../../components/rvgrok/GrokLanding.tsx");
 
-  assert.match(
-    css,
-    /\.sapphire-header \{[\s\S]*?calc\(env\(safe-area-inset-top, 0px\) \+ 0\.5rem \+ var\(--zoom-safe-top/,
-  );
-  assert.match(
-    css,
-    /@media \(max-width: 639px\) \{[\s\S]*?\.sapphire-header \{[\s\S]*?3\.25rem/,
-  );
-  assert.match(css, /\.premium-menu-corner \{[\s\S]*?safe-area-inset-top/);
-  assert.match(css, /\[data-grok-thread-chrome\] \{[\s\S]*?safe-area-inset-top/);
+  const sapphire = [...css.matchAll(/\.sapphire-header \{[^}]+\}/g)].map((m) => m[0]);
+  assert.ok(sapphire.length >= 1, "sapphire header padding rules");
+  for (const block of sapphire) {
+    assert.doesNotMatch(block, /safe-area-inset-top/);
+    assert.doesNotMatch(block, /3\.25rem/);
+  }
+  assert.match(css, /\.sapphire-header \{[^}]*padding-top:\s*0\.75rem/);
+  assert.doesNotMatch(css, /\.premium-menu-corner \{[^}]*safe-area-inset-top/);
+  assert.match(css, /\.premium-menu-corner \{[^}]*top:\s*0;/);
+  assert.doesNotMatch(css, /\[data-grok-thread-chrome\] \{[^}]*safe-area-inset-top/);
+  assert.match(css, /\[data-grok-thread-chrome\] \{[^}]*padding-top:\s*0\.75rem/);
 
   assert.match(header, /<PremiumMenuButton size="sm"/);
   assert.match(trips, /premium-menu-corner/);
-  assert.match(trips, /5\.5rem\+env\(safe-area-inset-bottom,0px\)/);
-  assert.doesNotMatch(trips, /5\.5rem\+env\(safe-area-inset-bottom,0px\)\+0\.75rem/);
+  assert.match(trips, /data-trips-header/);
   assert.match(grok, /data-grok-thread-chrome/);
   assert.match(landing, /data-grok-top-chrome/);
   assert.match(css, /\[data-rvgrok-landing\] \[data-grok-top-chrome\]/);

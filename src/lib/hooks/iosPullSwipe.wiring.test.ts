@@ -47,8 +47,10 @@ test("Trips iPhone chrome: RvFOX wordmark, island inset, profile below status ba
     "title + coach sit above tools / PROFILE LOCKED",
   );
   assert.match(css, /\[data-trips-header\]/);
-  assert.match(css, /safe-area-inset-top/);
-  assert.match(css, /4\.25rem/);
+  assert.match(css, /\[data-trips-header\] \{[^}]*padding-top:\s*0\.75rem/);
+  assert.doesNotMatch(css, /\[data-trips-header\] \{[^}]*safe-area-inset-top/);
+  assert.doesNotMatch(css, /\[data-trips-header\] \{[^}]*4\.25rem/);
+  assert.match(css, /\.showroom-header \{[\s\S]*?safe-area-inset-top/);
   assert.match(css, /safe-area-inset-bottom/);
   assert.match(css, /2\.125rem/);
   assert.doesNotMatch(dock, /min\(10px/);
