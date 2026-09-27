@@ -175,7 +175,7 @@ export const HARD_POWERTRAIN_FIELDS = [
 /** Chat / thumbs-up answers are never a Facts cache source. */
 export const CHAT_MAY_WRITE_FACTS_CACHE = false;
 
-export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
+export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (closest saved pin, not a perfect match):
 - The CATALOG / BROCHURE block in this request is THIS turn's lock. If the user named a different year / make / model / floorplan, this block is that coach — never keep narrating a prior session coach as still locked.
 - Series change clears the prior lock. Dutch Star is not Ventana because both use 4369. Use the closest saved year, make, model, and floorplan. Never skip the answer because the match is not perfectly exact. Never substitute a sibling series.
 - DEFAULT COACH REPORT: year / make / model / floorplan, specs, power, payload, spoken rundown, and desk sheet ground on this CATALOG / BROCHURE lock plus live WEB RESEARCH (the big motorhome catalog toward 2000+). If the coach exists here — e.g. 2022 Newmar Dutch Star 4369 — report THAT coach. Never substitute a sibling series (Ventana 4369 ≠ Dutch Star 4369).

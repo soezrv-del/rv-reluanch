@@ -156,7 +156,7 @@ export const GROK_EXTRA_PROMPTS: Record<
 > = {
   ratings: {
     title: "Want ratings?",
-    body: "Quality, reliability, and satisfaction from the catalog, plus the power to weight when both numbers exist. Missing stays GAP.",
+    body: "Quality, reliability, and satisfaction, plus power to weight when both numbers exist. A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Aim for 85 to 90 percent accuracy. Do not leave the rating unanswered because it is not perfect.",
   },
   video: {
     title: "Want a video?",

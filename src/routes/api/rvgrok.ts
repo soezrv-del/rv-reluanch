@@ -376,7 +376,7 @@ const XAI_CHAT_TOOLS = [
   ),
   toolFn(
     "get_own_lot",
-    "RV Country lot snapshot. Only for an explicit stock ask or a stock number.",
+    "RV Country lot snapshot for stock, counts, and stock numbers. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
     { query: { type: "string" } },
   ),
 ];
