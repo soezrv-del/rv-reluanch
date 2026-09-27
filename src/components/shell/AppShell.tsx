@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { BottomTabs, type AppTab } from "./BottomTabs";
+import { RoomAskBar } from "./RoomAskBar";
 import { dockTabOrder, PAGE_ACCENT } from "./shellConstants";
 import { useAccess } from "@/components/access/AccessProvider";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
@@ -155,9 +156,12 @@ export function AppShell({
   const [factsMarketToken, setFactsMarketToken] = useState(0);
   const launchOpen = false;
   const suiteReady = true;
-  const [visited, setVisited] = useState<Set<AppTab>>(
-    () => new Set<AppTab>([initialTab]),
-  );
+  const [visited, setVisited] = useState<Set<AppTab>>(() => {
+    const next = new Set<AppTab>([initialTab]);
+    // Ask bar talks to this pane from every room, including /lot.
+    next.add("rvgrok");
+    return next;
+  });
   const mainRef = useRef<HTMLElement | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
   const calTokenRef = useRef(0);
@@ -308,6 +312,7 @@ export function AppShell({
       if (next === "rvsold" && !isProfessionalTier()) return;
       if (next === "rvgrok") {
         // Dock tap / swipe / More — never restore a leftover Ask-Grok seed.
+        // The open thread stays; only a Facts Ask Grok seed starts fresh.
         setGrokSeed(clearGrokSeedOnDockTap());
         setGrokEntryToken((n) => n + 1);
       }
@@ -501,6 +506,8 @@ export function AppShell({
             </div>
           ) : null}
         </main>
+
+        <RoomAskBar tab={tab} onOpen={onTabChange} />
 
         {!hideDock ? (
           <div

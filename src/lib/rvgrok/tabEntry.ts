@@ -1,26 +1,27 @@
 /**
- * Visible-chat isolation for the Grok dock tab.
+ * Visible-chat rules for the Grok pane.
  *
- * The Grok pane stays mounted after the first visit. Dock / swipe / More
- * entry must wipe the *active* composer + message list so a leftover chat
- * never reappears. History storage is untouched.
+ * The pane stays mounted after the first visit. Dock / swipe / chips / More
+ * keep the open conversation — a room switch must not wipe it. History
+ * storage is untouched.
  *
- * The only allowed prefill is a one-shot Facts "Ask Grok" seed. Cal / Tow /
+ * The only fresh thread is a one-shot Facts "Ask Grok" seed. Cal / Tow /
  * Trips handoffs must not write this seed.
  */
 
 export type GrokTabEntry = {
-  /** Always clear the in-memory composer + message list on tab entry. */
-  resetVisibleChat: true;
-  /** Trimmed Ask-Grok seed, or null for the empty starters surface. */
+  /** True only for a Facts Ask Grok seed. Room switches keep the thread. */
+  resetVisibleChat: boolean;
+  /** Trimmed Ask-Grok seed, or null when the open thread should stay. */
   seed: string | null;
 };
 
 export function planGrokTabEntry(seedPrompt?: string | null): GrokTabEntry {
   const seed = typeof seedPrompt === "string" ? seedPrompt.trim() : "";
+  const hasSeed = seed.length > 0;
   return {
-    resetVisibleChat: true,
-    seed: seed.length > 0 ? seed : null,
+    resetVisibleChat: hasSeed,
+    seed: hasSeed ? seed : null,
   };
 }
 

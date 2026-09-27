@@ -235,6 +235,12 @@ export function MoreApp({
                 onClick={() => onNavigate?.("rvgrok")}
               />
               <RowLink
+                icon={<Route className="size-4 text-emerald-400" />}
+                title="RV GPS"
+                sub="Campgrounds · dumps · coach routing"
+                onClick={() => onNavigate?.("rvtrips")}
+              />
+              <RowLink
                 icon={<Landmark className="size-4 text-green" />}
                 title="RvCal financing"
                 sub="Payment · ZIP tax · lenders"

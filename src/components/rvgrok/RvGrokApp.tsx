@@ -61,6 +61,7 @@ import {
   startVideoFramePump,
 } from "@/lib/rvgrok/vision";
 import { planGrokTabEntry } from "@/lib/rvgrok/tabEntry";
+import { registerRoomAsk } from "@/lib/rvgrok/roomAsk";
 import { useAccessOptional } from "@/components/access/AccessProvider";
 import { takeSessionWelcome, welcomeBackLine } from "@/lib/access/identity";
 import {
@@ -214,6 +215,7 @@ export function RvGrokApp({
     (prewarm?: LiveVoicePrewarm | null) => Promise<void>
   >(async () => {});
   const startPushToTalkRef = useRef<() => void>(() => {});
+  const roomMicRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     return () => {
@@ -1386,6 +1388,17 @@ export function RvGrokApp({
     // Always activate Live Voice from the mic — capture starts in this tap.
     setLiveVoiceArmed(true);
   };
+  roomMicRef.current = handleMicPress;
+
+  useEffect(() => {
+    registerRoomAsk({
+      send: (text) => {
+        void sendMessageRef.current(text);
+      },
+      mic: () => roomMicRef.current(),
+    });
+    return () => registerRoomAsk(null);
+  }, []);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -1399,20 +1412,19 @@ export function RvGrokApp({
   );
 
   useEffect(() => {
-    if (!active) {
-      startNewChat();
-      return;
-    }
+    // Another room is on screen. The pane stays mounted; keep the thread.
+    if (!active) return;
 
     let handled = entryHandledRef.current;
-    if (!handled || handled.token !== entryToken) {
-      const plan = planGrokTabEntry(seedPrompt);
-      handled = { token: entryToken, seed: plan.seed };
-      entryHandledRef.current = handled;
-      if (plan.seed) onSeedConsumed?.();
-    }
+    if (handled && handled.token === entryToken) return;
 
-    startNewChat();
+    const plan = planGrokTabEntry(seedPrompt);
+    handled = { token: entryToken, seed: plan.seed };
+    entryHandledRef.current = handled;
+    if (plan.seed) onSeedConsumed?.();
+
+    // Facts Ask Grok is the only fresh thread. Room switches have no seed.
+    if (plan.resetVisibleChat) startNewChat();
     if (!handled.seed) return;
 
     const seed = handled.seed;
