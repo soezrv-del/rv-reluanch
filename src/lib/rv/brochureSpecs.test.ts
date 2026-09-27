@@ -339,14 +339,17 @@ test("Vision XL 36A/36C and Precept floorplan GVWR pins feed TTW; UVW stays hone
   assert.equal(ttwPin.weightEstimated, false);
 });
 
-test("series GVWR label is the model span, not a ±6% floorplan band", () => {
+test("series GVWR label is the low end, not a ±6% floorplan band", () => {
   assert.equal(
     formatSeriesGvwr([12000, 16000]),
-    "Series 12,000–16,000 lbs · confirm sticker",
+    "12,000 lbs · smallest in series · confirm sticker",
   );
-  assert.equal(formatSeriesGvwr([16000, 12000]), "Series 12,000–16,000 lbs · confirm sticker");
+  assert.equal(
+    formatSeriesGvwr([16000, 12000]),
+    "12,000 lbs · smallest in series · confirm sticker",
+  );
   assert.equal(formatSeriesGvwr([0, 0]), null);
-  assert.equal(formatSeriesGvwr([12000, 12000]), null);
+  assert.equal(formatSeriesGvwr([12000, 12000]), "12,000 lbs · confirm sticker");
   assert.equal(formatSeriesGvwr([0, 16000]), null);
   const spec = src("brochureSpecs.ts");
   assert.match(spec, /Never interpolate catalog weightRange/);

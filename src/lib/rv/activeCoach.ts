@@ -11,7 +11,7 @@
  * Not a Facts cache. Chat answers never write here.
  */
 
-import { isSeriesGvwrEstimate } from "./torqueToWeight.ts";
+import { isSeriesEngineEstimate, isSeriesGvwrEstimate } from "./torqueToWeight.ts";
 
 export type ActiveCoach = {
   year: string;
@@ -167,8 +167,8 @@ export function formatActiveCoachChip(
 export function parseWeightLbs(value?: string | number | null): number | undefined {
   if (typeof value === "number") return cleanLbs(value);
   if (!value) return undefined;
-  // Series span is a Facts label, not a hitch / tow GVWR.
-  if (isSeriesGvwrEstimate(value)) return undefined;
+  // Series GVWR / smallest-engine labels are not a hitch or tow pin.
+  if (isSeriesGvwrEstimate(value) || isSeriesEngineEstimate(value)) return undefined;
   const nums = String(value)
     .replace(/,/g, "")
     .match(/\d+/g);

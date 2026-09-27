@@ -708,7 +708,10 @@ export function formatChatSpecMissReply(opts: {
         continue;
       }
       if (label === "GVWR" && isSeriesGvwrEstimate(specs.weightBand)) {
-        lines.push(`${specs.weightBand}. Not a published pin.`);
+        const bigger = /smallest in series/i.test(specs.weightBand || "")
+          ? " That's the smallest in the series. Ask if you want a bigger floorplan."
+          : "";
+        lines.push(`${specs.weightBand}. Not a published pin.${bigger}`);
         continue;
       }
       missed.push(label);

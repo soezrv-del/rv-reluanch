@@ -14,7 +14,11 @@ import {
   pickPowertrainBand,
   resolveYearSnapshot,
 } from "./brochureSpecs.ts";
-import { computeTorqueToWeight, parseGvwrLb } from "./torqueToWeight.ts";
+import {
+  computeTorqueToWeight,
+  isSeriesEngineEstimate,
+  parseGvwrLb,
+} from "./torqueToWeight.ts";
 import { parseWeightLbs } from "./activeCoach.ts";
 import { offerFromFactsReport } from "../tow/factsTowHandoff.ts";
 import { ensureCatalogLoaded } from "./catalogLoad.ts";
@@ -23,6 +27,7 @@ import { formatLockedWeightsBlock } from "../rvgrok/lockedWeights.ts";
 import { formatChatSpecMissReply } from "../rvgrok/chatSpecBlock.ts";
 import { extractVerifiedPinsFromText } from "../rvgrok/estimatePolicy.ts";
 import {
+  formatSmallestSeriesEngine,
   honestEngineLabel,
   honestHorsepowerLabel,
   honestTorqueLabel,
@@ -130,21 +135,29 @@ test("2023 Holiday Rambler Ambassador 40B: invent-forward + dual-band → GAP, n
   assert.equal(snap.yearTruePowertrain, false);
   assert.equal(snap.engine, undefined);
   assert.equal(snap.horsepower, undefined);
-  assert.equal(brochure.engine, CONFIRM_BROCHURE);
+  assert.equal(
+    brochure.engine,
+    "Cummins 6.7L · smallest in series · confirm",
+  );
   assert.equal(brochure.horsepower, "—");
   assert.equal(brochure.torque, "—");
   assert.equal(
     brochure.gvwr,
-    "Series 34,000–42,000 lbs · confirm sticker",
+    "34,000 lbs · smallest in series · confirm sticker",
   );
   assert.equal(brochure.gvwrLbs, null);
+  assert.equal(isSeriesEngineEstimate(brochure.engine), true);
+  assert.equal(isExactEnginePin(brochure.engine), false);
+  assert.equal(honestEngineLabel(brochure.engine).locked, false);
+  assert.equal(honestHorsepowerLabel({ engine: brochure.engine }), null);
   assert.doesNotMatch(brochure.engine, /L9\s*\/\s*B6\.7|B6\.7\s*\/\s*L9/i);
   assert.doesNotMatch(brochure.uvw, /34,?000|42,?000/);
   // Last dated OEM cards (2015–2016 38DBT/38FST ISB 340/700, GVWR 28k) are
-  // not this 2023 40B — do not invent that pin forward.
-  assert.doesNotMatch(brochure.engine, /ISB|6\.7|340/);
-  assert.doesNotMatch(brochure.horsepower, /340/);
-  assert.doesNotMatch(brochure.gvwr, /28,?000/);
+  // not this 2023 40B — do not invent that pin forward. The 6.7L label is
+  // the smaller family already named on the 2020–2026 catalog band.
+  assert.doesNotMatch(brochure.engine, /ISB|\b340\b/);
+  assert.doesNotMatch(brochure.horsepower, /340|380/);
+  assert.doesNotMatch(brochure.gvwr, /28,?000|42,?000/);
   assert.doesNotMatch(brochure.lengthFt, /38DBT|38FST/i);
   assert.match(brochure.accuracyNote, /confirm brochure/i);
   assert.doesNotMatch(brochure.accuracyNote, /Year-true OEM facts/);
@@ -215,9 +228,15 @@ test("2023 Thor ACE 29D: exact year pin + OEM GVWR stay; 2021 option-band GAPs",
 
   const optionYear = factsFor("2021", "Thor", "ACE", "29.5");
   assert.equal(optionYear.snap.yearTruePowertrain, false);
-  assert.equal(optionYear.brochure.engine, CONFIRM_BROCHURE);
+  assert.equal(optionYear.snap.horsepower, undefined);
+  assert.equal(
+    optionYear.brochure.engine,
+    "Ford 6.8L 320 hp · smallest in series · confirm",
+  );
   assert.equal(optionYear.brochure.horsepower, "—");
-  assert.doesNotMatch(optionYear.brochure.engine, /320|350|V10/);
+  assert.equal(optionYear.brochure.torque, "—");
+  assert.equal(isExactEnginePin(optionYear.brochure.engine), false);
+  assert.doesNotMatch(optionYear.brochure.engine, /350|7\.3|Godzilla/);
 });
 
 test("yearEnd / last-exact-pin clamp is shared — later FBY cannot steal a pin", () => {
@@ -303,7 +322,7 @@ test("Fleetwood Fortis: 26k model stamp is GCWR misread — GAP; KEEP siblings",
   assert.equal(fortis.brochure.gvwrLbs, null);
   assert.equal(
     fortis.brochure.gvwr,
-    "Series 18,000–26,000 lbs · confirm sticker",
+    "18,000 lbs · smallest in series · confirm sticker",
   );
   assert.doesNotMatch(fortis.brochure.gvwr, /^26,?000/);
   assert.deepEqual(fortis.spec.weightRange, [18000, 26000]);
@@ -688,7 +707,7 @@ test("series GVWR span is display-only and does not move calculations", async ()
   assert.equal(shown.brochure.gvwrLbs, null);
   assert.equal(
     shown.brochure.gvwr,
-    "Series 18,000–26,000 lbs · confirm sticker",
+    "18,000 lbs · smallest in series · confirm sticker",
   );
 
   const blank = buildBrochureSpecs(
@@ -752,7 +771,7 @@ test("series GVWR span is display-only and does not move calculations", async ()
   assert.equal(grounded.oemGvwrLbs, null);
   assert.equal(
     grounded.weightBand,
-    "Series 18,000–26,000 lbs · confirm sticker",
+    "18,000 lbs · smallest in series · confirm sticker",
   );
   const locked = formatLockedWeightsBlock({
     year: "2026",
@@ -761,8 +780,9 @@ test("series GVWR span is display-only and does not move calculations", async ()
     floorplan: "32RW",
   });
   assert.match(locked, /GAP — no OEM pin/);
-  assert.match(locked, /Series 18,000–26,000 lbs · confirm sticker/);
+  assert.match(locked, /18,000 lbs · smallest in series · confirm sticker/);
   assert.match(locked, /Not a published GVWR/);
+  assert.match(locked, /bigger floorplan/);
   assert.deepEqual(extractVerifiedPinsFromText(locked), []);
   const spoken = formatChatSpecMissReply({
     query: "GVWR",
@@ -771,14 +791,74 @@ test("series GVWR span is display-only and does not move calculations", async ()
     model: "Fortis",
     floorplan: "32RW",
   });
-  assert.match(spoken || "", /Series 18,000–26,000 lbs · confirm sticker/);
+  assert.match(spoken || "", /18,000 lbs · smallest in series · confirm sticker/);
   assert.match(spoken || "", /Not a published pin/);
+  assert.match(spoken || "", /bigger floorplan/);
   assert.doesNotMatch(spoken || "", /has no GVWR pin/);
 
   const pinned = factsFor("2023", "Jayco", "Precept", "31UL");
   assert.equal(pinned.brochure.gvwr, "22,000 lbs");
   assert.equal(pinned.brochure.gvwrLbs, 22_000);
-  assert.doesNotMatch(pinned.brochure.gvwr, /^Series/);
+  assert.doesNotMatch(pinned.brochure.gvwr, /smallest in series|^Series/);
+  assert.doesNotMatch(pinned.brochure.engine, /smallest in series/);
+});
+
+test("smallest-in-series engine is display-only and does not lock powertrain", async () => {
+  await ensureCatalogLoaded();
+  assert.equal(
+    formatSmallestSeriesEngine("Cummins B6.7 / L9 360–450HP"),
+    "Cummins 6.7L 360 hp · smallest in series · confirm",
+  );
+  assert.equal(
+    formatSmallestSeriesEngine("Cummins L9 450 std / X15 605 opt"),
+    "Cummins 8.9L 450 hp · smallest in series · confirm",
+  );
+  assert.equal(formatSmallestSeriesEngine("Cummins ISL 380HP class"), null);
+  assert.equal(
+    formatSmallestSeriesEngine("Ford 7.3L V8 Godzilla 335HP"),
+    null,
+  );
+
+  const shown = factsFor("2023", "Holiday Rambler", "Ambassador", "40B");
+  assert.equal(shown.snap.engine, undefined);
+  assert.equal(shown.snap.horsepower, undefined);
+  assert.equal(shown.snap.yearTruePowertrain, false);
+  assert.equal(shown.brochure.horsepower, "—");
+  assert.equal(shown.brochure.torque, "—");
+  assert.equal(parseGvwrLb(shown.brochure.engine), null);
+  assert.equal(parseWeightLbs(shown.brochure.engine), undefined);
+  assert.equal(isSeriesEngineEstimate(shown.brochure.engine), true);
+
+  const rated = computeTorqueToWeight({
+    torqueLbFt: null,
+    gvwrRaw: shown.brochure.gvwr,
+    gvwrLbs: null,
+    rvType: shown.spec.type,
+    fuelType: shown.spec.fuelType,
+  });
+  const blank = computeTorqueToWeight({
+    torqueLbFt: null,
+    gvwrRaw: CONFIRM_BROCHURE,
+    gvwrLbs: null,
+    rvType: shown.spec.type,
+    fuelType: shown.spec.fuelType,
+  });
+  assert.equal(rated.gvwrLb, blank.gvwrLb);
+  assert.equal(rated.gap, blank.gap);
+
+  const grounded = lookupGroundedSpecs({
+    year: "2023",
+    make: "Holiday Rambler",
+    model: "Ambassador",
+    floorplan: "40B",
+    source: "facts",
+  });
+  assert.equal(
+    grounded.engine.value,
+    "Cummins 6.7L · smallest in series · confirm",
+  );
+  assert.notEqual(grounded.engine.trust, "pin");
+  assert.equal(grounded.oemGvwrLbs, null);
 });
 
 test("resolution path is shared — no coach-specific Ambassador/Jayco/Thor invent", () => {

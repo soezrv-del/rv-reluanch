@@ -9,7 +9,10 @@
 import type { DeskSheetPayload, DeskSheetRow } from "./deskSheet.ts";
 import { looksLikeDeskSheetAsk } from "./deskSheetPolicy.ts";
 import { looksLikeCoachReportAsk, stripSpokenSourceTags } from "./coachReport.ts";
-import { isSeriesGvwrEstimate } from "../rv/torqueToWeight.ts";
+import {
+  isSeriesEngineEstimate,
+  isSeriesGvwrEstimate,
+} from "../rv/torqueToWeight.ts";
 import { formatChatSpecMissReply, mappedWeightFields } from "./chatSpecBlock.ts";
 export { formatChatSpecMissReply };
 import {
@@ -63,9 +66,11 @@ function isEmptyValue(value: string): boolean {
   );
 }
 
-/** A labeled series GVWR is on screen even though it is not an OEM pin. */
+/** A labeled series GVWR or engine is on screen even though it is not a pin. */
 function rowShown(row: { gap: boolean; value: string }): boolean {
-  if (isSeriesGvwrEstimate(row.value)) return true;
+  if (isSeriesGvwrEstimate(row.value) || isSeriesEngineEstimate(row.value)) {
+    return true;
+  }
   return !row.gap && !isEmptyValue(row.value) && row.value !== "N/A";
 }
 
@@ -116,8 +121,11 @@ function rowSpeech(row: DeskSheetRow, query: string, withBenefit: boolean): stri
       ? " dry weight"
       : "";
   const benefit = withBenefit ? featureBenefit(row.label) : "";
+  const bigger = /smallest in series/i.test(row.value)
+    ? " That's the smallest in the series. Ask if you want a bigger floorplan."
+    : "";
   return stripSpokenSourceTags(
-    `${row.label}${dry} is ${speakValue(row.value)}.${benefit}`,
+    `${row.label}${dry} is ${speakValue(row.value)}.${benefit}${bigger}`,
   );
 }
 
@@ -246,7 +254,13 @@ export function classifyVoiceExtraPick(text: string): GrokExtraKind | null {
   if (!t || t.length > 80) return null;
   if (looksLikeVoiceCoachOrSpecAsk(t)) return null;
   const hits: GrokExtraKind[] = [];
-  if (/\bratings?\b|\btorque[-\s]?to[-\s]?weight\b/i.test(t)) hits.push("ratings");
+  if (
+    /\bratings?\b|\btorque[-\s]?to[-\s]?weight\b|\bpower\s+to\s+weight\b/i.test(
+      t,
+    )
+  ) {
+    hits.push("ratings");
+  }
   if (/\bmarket(?:\s+value)?\b|\bworth\b/i.test(t)) hits.push("market");
   if (/\bvideos?\b|\byoutube\b|\bwalkthrough\b/i.test(t)) hits.push("video");
   if (/\bnhtsa\b|\brecalls?\b|\bsafety\b/i.test(t)) hits.push("nhtsa");

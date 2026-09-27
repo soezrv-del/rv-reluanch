@@ -70,7 +70,10 @@ export function formatLockedWeightLine(
     return `- VERIFIED ${label} ${Math.round(lbs)} from OEM pin`;
   }
   if (seriesEstimate && isSeriesGvwrEstimate(seriesEstimate)) {
-    return `- ${label}: GAP — no OEM pin. ${seriesEstimate}. Not a published GVWR. Do not use it for CCC, hitch, or GCWR.`;
+    const bigger = /smallest in series/i.test(seriesEstimate)
+      ? " That's the smallest in the series. A bigger floorplan can be higher."
+      : "";
+    return `- ${label}: GAP — no OEM pin. ${seriesEstimate}. Not a published GVWR. Do not use it for CCC, hitch, or GCWR.${bigger}`;
   }
   return `- ${label}: GAP — no OEM pin. Conversational answer may give a labeled EST / typical class range after WEB RESEARCH — never as an OEM pin. Do not write EST onto the desk.`;
 }

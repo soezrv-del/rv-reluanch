@@ -68,7 +68,7 @@ test("only gapped named fields spin while live fetch is in flight", () => {
     factsDetailFieldSearching(
       "gvwr",
       gvwrSearching,
-      "Series 18,000–26,000 lbs · confirm sticker",
+      "18,000 lbs · smallest in series · confirm sticker",
     ),
     false,
     "a series span is already on screen",

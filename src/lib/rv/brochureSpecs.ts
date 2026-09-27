@@ -21,6 +21,7 @@ import {
 import {
   honestAcUnits,
   honestElectricalService,
+  formatSmallestSeriesEngine,
   honestEngineLabel,
   honestGenerator,
   honestHorsepowerForCoach,
@@ -146,9 +147,10 @@ function fmtLbs(n: number) {
 }
 
 /**
- * Model-level GVWR span for the Facts line only.
+ * Smallest model GVWR for the Facts line only.
  * Not a floorplan pin and not the old ±6% length band.
- * Returns null when the catalog range is missing, zero, or a single point.
+ * A real span shows the low end. A single catalog value shows that
+ * number. Missing or zero stays null (caller says Confirm brochure).
  */
 export function formatSeriesGvwr(
   weightRange: readonly [number, number] | null | undefined,
@@ -156,9 +158,10 @@ export function formatSeriesGvwr(
   if (!weightRange) return null;
   const lo = Math.round(Math.min(weightRange[0], weightRange[1]));
   const hi = Math.round(Math.max(weightRange[0], weightRange[1]));
-  if (!(lo > 0) || !(hi > lo)) return null;
-  const fmt = (n: number) => n.toLocaleString("en-US");
-  return `Series ${fmt(lo)}–${fmt(hi)} lbs · confirm sticker`;
+  if (!(lo > 0) || !(hi >= lo)) return null;
+  const n = lo.toLocaleString("en-US");
+  if (lo === hi) return `${n} lbs · confirm sticker`;
+  return `${n} lbs · smallest in series · confirm sticker`;
 }
 
 function fmtGal(n: number) {
@@ -555,9 +558,10 @@ export function buildBrochureSpecs(
         type: spec.type,
       });
   // Never interpolate catalog weightRange as this coach's GVWR.
-  // Published OEM / year-band pin only. A nonzero model span may show as a
-  // labeled series estimate. That string is display-only: gvwrLbs / gvwrMid
-  // stay on the published pin so CCC, hitch, GCWR, and UVW do not read it.
+  // Published OEM / year-band pin only. Otherwise the low end of the model
+  // span may show, labeled smallest in series. That string is display-only:
+  // gvwrLbs / gvwrMid stay on the published pin so CCC, hitch, GCWR, and
+  // UVW do not read it.
   // gvwrLbs 0 means the table did not print one GVWR (dual chassis).
   const oemGvwr = oem?.gvwrLbs && oem.gvwrLbs > 0 ? oem.gvwrLbs : undefined;
   const publishedGvwr =
@@ -713,11 +717,16 @@ export function buildBrochureSpecs(
     ? fmtLbs(publishedGvwr)
     : (formatSeriesGvwr(spec.weightRange) ?? CONFIRM_BROCHURE);
 
-  // Exact pin only. Dual-family / class / by-year blends → Confirm brochure.
+  // Exact pin only. A dual-family / by-year / option-band label for this
+  // year may show the smallest catalog engine. That string is display-only:
+  // it does not lock HP, torque, or yearTruePowertrain. A stolen exact pin
+  // (invent-forward / past yearEnd) stays Confirm brochure.
   const honestEngine = honestEngineLabel(snap.engine);
   let engineLabel = isTowable
     ? "N/A (towable)"
-    : honestEngine.text ?? CONFIRM_BROCHURE;
+    : honestEngine.text ??
+      formatSmallestSeriesEngine(snap.band?.engine) ??
+      CONFIRM_BROCHURE;
   if (engineLabel.includes("(or prior") && parseInt(year, 10) >= 2021) {
     engineLabel = engineLabel.replace(/\s*\(or prior[^)]*\)/i, "").trim();
   }

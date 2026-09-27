@@ -41,6 +41,7 @@ import {
 import {
   computeTorqueToWeight,
   formatTorqueWeightBasisChip,
+  isSeriesEngineEstimate,
   isSeriesGvwrEstimate,
 } from "@/lib/rv/torqueToWeight";
 import {
@@ -765,6 +766,9 @@ export function RvDetail({
         exteriorHeight: keepReal(catalogSpecs.exteriorHeight, merged.exteriorHeight),
         interiorHeight: keepReal(catalogSpecs.interiorHeight, merged.interiorHeight),
         gvwr: keepReal(catalogSpecs.gvwr, merged.gvwr),
+        engine: isSeriesEngineEstimate(catalogSpecs.engine)
+          ? catalogSpecs.engine || merged.engine
+          : merged.engine,
         uvw: keepReal(catalogSpecs.uvw, merged.uvw),
         ccc: keepReal(catalogSpecs.ccc, merged.ccc),
         freshWater: keepReal(catalogSpecs.freshWater, merged.freshWater),
@@ -786,11 +790,15 @@ export function RvDetail({
     }
     return {
       ...merged,
-      // A series span is the GVWR display when no published pin exists.
-      // Live may fill Confirm brochure. It does not replace the span.
+      // Smallest-in-series labels stay on screen when no published pin exists.
+      // Live may fill Confirm brochure. It does not replace the label.
+      // A lot exact number still paints over it before this merge.
       gvwr: isSeriesGvwrEstimate(catalogSpecs.gvwr)
         ? catalogSpecs.gvwr || merged.gvwr
         : merged.gvwr,
+      engine: isSeriesEngineEstimate(catalogSpecs.engine)
+        ? catalogSpecs.engine || merged.engine
+        : merged.engine,
       propane: keepReal(catalogSpecs.propane, merged.propane),
     };
   }, [catalogSpecs, live, brochurePinned, powertrainGuard]);
@@ -918,7 +926,8 @@ export function RvDetail({
     : torqueToWeight.gap || torqueToWeight.ratio == null
       ? "GAP"
       : torqueToWeight.ratio.toFixed(1);
-  const torqueChip = formatTorqueWeightBasisChip(torqueToWeight) ?? "Torque";
+  const torqueChip =
+    formatTorqueWeightBasisChip(torqueToWeight) ?? "Power to weight";
   const torqueAriaMax = torqueToWeight.weightBasis === "UVW" ? 48 : 34;
 
   const ownerReviews = useMemo(

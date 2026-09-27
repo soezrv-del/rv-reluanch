@@ -13,7 +13,7 @@
  */
 
 import { CONFIRM_BROCHURE, type BrochureSpecs } from "./brochureSpecs.ts";
-import { isSeriesGvwrEstimate } from "./torqueToWeight.ts";
+import { isSeriesEngineEstimate, isSeriesGvwrEstimate } from "./torqueToWeight.ts";
 import type { LotOverrideField } from "./lotCatalogSeed.ts";
 
 export const LOT_FACTS_SOURCE = "RV Country lot unit record";
@@ -148,7 +148,12 @@ export function isFactsGap(value: string | number | null | undefined): boolean {
   if (value == null) return true;
   if (typeof value === "number") return !Number.isFinite(value) || value <= 0;
   const t = value.trim();
-  return !t || t === CONFIRM_BROCHURE || isSeriesGvwrEstimate(t);
+  return (
+    !t ||
+    t === CONFIRM_BROCHURE ||
+    isSeriesGvwrEstimate(t) ||
+    isSeriesEngineEstimate(t)
+  );
 }
 
 function catalogGuess(specs: BrochureSpecs): boolean {

@@ -96,6 +96,15 @@ test("parseWeightLbs reads brochure strings and ranges", () => {
     parseWeightLbs("Series 12,000–16,000 lbs · confirm sticker"),
     undefined,
   );
+  assert.equal(
+    parseWeightLbs("22,000 lbs · smallest in series · confirm sticker"),
+    undefined,
+  );
+  assert.equal(parseWeightLbs("12,000 lbs · confirm sticker"), undefined);
+  assert.equal(
+    parseWeightLbs("Cummins 6.7L 360 hp · smallest in series · confirm"),
+    undefined,
+  );
 });
 
 test("snapshotActiveCoach packs report retail + GVWR for Cal/Tow", () => {
