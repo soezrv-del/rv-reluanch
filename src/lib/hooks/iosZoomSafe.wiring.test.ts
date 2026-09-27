@@ -50,3 +50,25 @@ test("sapphire header, trips ⋯, and Grok thread chrome add safe-area + slack",
   assert.doesNotMatch(css, /DialaBot/);
   assert.doesNotMatch(header, /DialaBot/);
 });
+
+test("showroom header clears the status bar; parents do not add the inset again", () => {
+  const css = read("../../styles.css");
+  const brand = read("../../components/shell/SuiteBrand.tsx");
+  const shell = read("../../components/shell/AppShell.tsx");
+
+  assert.match(brand, /className="showroom-header"/);
+  assert.match(brand, /data-suite-header/);
+  assert.match(shell, /<SuiteBrand /);
+  assert.match(
+    css,
+    /\.showroom-header \{[\s\S]*?padding:\s*calc\(env\(safe-area-inset-top, 0px\) \+ 0\.55rem \+ var\(--zoom-safe-top, 0px\)\)/,
+  );
+  assert.doesNotMatch(
+    css,
+    /\.app-shell \{[^}]*padding-top:[^;]*safe-area-inset-top/,
+  );
+  assert.doesNotMatch(
+    css,
+    /\.showroom-app \{[^}]*padding-top:[^;]*safe-area-inset-top/,
+  );
+});
