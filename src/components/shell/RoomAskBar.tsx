@@ -3,15 +3,20 @@ import { Mic } from "lucide-react";
 import type { AppTab } from "./BottomTabs";
 import { roomAskMic, roomAskSend } from "@/lib/rvgrok/roomAsk";
 
-/** Questions for the open RV Grok thread. Not stats. */
-const QUICK_ASKS = ["Tanks", "Payment", "Diesels under 40", "36-foot"] as const;
+/** One row. These open the existing rooms. */
+const ROOM_CHIPS: { id: AppTab; label: string }[] = [
+  { id: "rvfax", label: "Rv Facts" },
+  { id: "rvcal", label: "Calculator" },
+  { id: "rvtow", label: "Tow Guide" },
+  { id: "rvlot", label: "Lot Inventory" },
+];
 
 /**
- * Shared ask bar on every room, directly above the existing dock.
- * Room names live only in that dock. Mic starts Live Voice.
+ * Shared ask bar. Mic starts Live Voice.
  * A typed ask is appended to the open RV Grok thread.
  */
 export function RoomAskBar({
+  tab,
   onOpen,
 }: {
   tab: AppTab;
@@ -27,11 +32,6 @@ export function RoomAskBar({
     onOpen("rvgrok");
   };
 
-  const ask = (q: string) => {
-    roomAskSend(q);
-    onOpen("rvgrok");
-  };
-
   return (
     <div
       data-room-ask
@@ -39,18 +39,19 @@ export function RoomAskBar({
       className="relative z-[70] shrink-0 bg-black px-3 pt-2 pb-2"
     >
       <div
-        data-quick-asks
+        data-room-chips
         className="mx-auto flex w-full max-w-lg gap-2 overflow-x-auto pb-2"
       >
-        {QUICK_ASKS.map((q) => (
+        {ROOM_CHIPS.map((chip) => (
           <button
-            key={q}
+            key={chip.id}
             type="button"
-            data-quick-ask={q}
-            onClick={() => ask(q)}
+            data-room-chip={chip.id}
+            aria-pressed={tab === chip.id}
+            onClick={() => onOpen(chip.id)}
             className="grok-chip inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-[13px] font-semibold whitespace-nowrap text-fg"
           >
-            {q}
+            {chip.label}
           </button>
         ))}
       </div>

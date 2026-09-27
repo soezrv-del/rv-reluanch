@@ -517,7 +517,7 @@ export function AppShell({
 
         {!hideDock ? (
           <div
-            className="relative z-[80] shrink-0 isolate pointer-events-auto"
+            className="relative z-[80] hidden shrink-0 isolate pointer-events-auto"
             data-bottom-dock
             data-no-swipe
           >

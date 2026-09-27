@@ -42,14 +42,23 @@ test("ask bar sits above the dock and does not repeat the dock rooms", () => {
   const dockAt = shell.indexOf("data-bottom-dock");
   assert.ok(askAt > 0 && dockAt > askAt, "ask bar is above the dock");
 
-  assert.doesNotMatch(bar, /ROOM_CHIPS|data-room-chips|data-room-chip/);
-  assert.doesNotMatch(bar, /Facts|Cal|Tow|Lot/);
+  const chips = bar.match(/const ROOM_CHIPS[\s\S]*?\];/)?.[0] ?? "";
+  assert.match(chips, /id: "rvfax", label: "Rv Facts"/);
+  assert.match(chips, /id: "rvcal", label: "Calculator"/);
+  assert.match(chips, /id: "rvtow", label: "Tow Guide"/);
+  assert.match(chips, /id: "rvlot", label: "Lot Inventory"/);
+  assert.equal((chips.match(/id: "/g) || []).length, 4);
+  assert.doesNotMatch(chips, /rvtrips|RV GPS|Tanks|Payment/);
+  assert.match(bar, /onOpen\(chip\.id\)/);
   assert.match(bar, /roomAskMic\(\)/);
   assert.match(bar, /roomAskSend\(q\)/);
   assert.match(bar, /onOpen\("rvgrok"\)/);
   assert.match(bar, /aria-label="Start live voice"/);
   assert.match(bar, /placeholder="Ask about this coach"/);
-  assert.match(bar, /data-quick-ask=\{q\}/);
+  assert.match(
+    shell,
+    /className="relative z-\[80\] hidden shrink-0 isolate pointer-events-auto"[\s\S]*?data-bottom-dock/,
+  );
 
   assert.match(tabs, /grid-cols-6/);
   assert.match(tabs, /id: "rvtrips", label: "RV GPS"/);
