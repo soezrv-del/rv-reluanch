@@ -1,8 +1,17 @@
 /**
  * Home: one fixed spotlight coach, then newest lot arrivals under it.
- * Spotlight art is a committed asset. Arrival cards use lot photos.
+ * Spotlight art is a committed asset. The card's price and specs are read
+ * from the lot snapshot for `stockNumber` (or `vin`). Arrival cards and the
+ * Lot listing keep each unit's own dealer photo.
  */
-import type { LotUnit } from "../lot/ownLotPage.ts";
+import {
+  LOT_GAP,
+  lotLbsOrGap,
+  lotLengthOrGap,
+  lotPriceOrGap,
+  lotTextOrGap,
+  type LotUnit,
+} from "../lot/ownLotPage.ts";
 
 function recency(unit: LotUnit): [number, number] {
   const date = Date.parse(unit.printed.received_date ?? "");
@@ -11,9 +20,8 @@ function recency(unit: LotUnit): [number, number] {
 }
 
 /**
- * Locked showroom spotlight. Swap this object to change the hero.
- * `make` is the card name ("Entegra"); Facts resolves it to the catalog make.
- * No price, GVWR, length, or engine — those stay on the Facts report.
+ * Locked showroom spotlight. The photo is David's studio shot.
+ * `stockNumber` / `vin` point at the lot unit; price and specs are not stored here.
  */
 export const SHOWROOM_SPOTLIGHT = {
   year: "2026",
@@ -21,7 +29,17 @@ export const SHOWROOM_SPOTLIGHT = {
   series: "Cornerstone",
   image: "/assets/showroom/2026-entegra-cornerstone.webp",
   alt: "2026 Entegra Cornerstone",
+  stockNumber: "45282",
+  vin: "4UZFCTFG3TCWE7168",
 } as const;
+
+export type SpotlightIdentity = {
+  year: string;
+  make: string;
+  series: string;
+  stockNumber: string;
+  vin: string;
+};
 
 export function spotlightLabel(
   spot: { year: string; make: string; series: string } = SHOWROOM_SPOTLIGHT,
@@ -29,55 +47,84 @@ export function spotlightLabel(
   return [spot.year, spot.make, spot.series].filter(Boolean).join(" ");
 }
 
+/** Lot unit for the spotlight, by stock number, then VIN. */
+export function spotlightLotUnit(
+  units: LotUnit[],
+  spot: Pick<SpotlightIdentity, "stockNumber" | "vin"> = SHOWROOM_SPOTLIGHT,
+): LotUnit | null {
+  const stock = spot.stockNumber.trim();
+  if (stock) {
+    const byStock = units.find((unit) => unit.stock_number.trim() === stock);
+    if (byStock) return byStock;
+  }
+  const vin = spot.vin.trim().toUpperCase();
+  if (!vin) return null;
+  return units.find((unit) => unit.vin.trim().toUpperCase() === vin) ?? null;
+}
+
+function spotlightDisplayMake(unitMake: string, spotMake: string): string {
+  const raw = unitMake.trim();
+  const display = spotMake.trim();
+  if (!raw) return display;
+  if (!display) return raw;
+  const name = raw.toLowerCase();
+  const wanted = display.toLowerCase();
+  if (name === wanted || name.startsWith(`${wanted} `)) return display;
+  return raw;
+}
+
+/** Year, display make, model, and floorplan from the lot unit. */
+export function spotlightUnitTitle(
+  unit: LotUnit,
+  spot: Pick<SpotlightIdentity, "year" | "make" | "series"> = SHOWROOM_SPOTLIGHT,
+): string {
+  const year = unit.year.trim() || spot.year;
+  const make = spotlightDisplayMake(unit.make, spot.make);
+  const model = unit.model.trim() || spot.series;
+  const trim = unit.trim.trim();
+  const trimInModel =
+    trim.length > 0 && model.toLowerCase().includes(trim.toLowerCase());
+  return [year, make, model, trimInModel ? "" : trim].filter(Boolean).join(" ");
+}
+
+export type SpotlightSpecs = {
+  title: string;
+  price: string;
+  stock: string;
+  location: string;
+  condition: string;
+  length: string;
+  gvwr: string;
+  measure: string;
+};
+
+function shown(value: string): string {
+  return value && value !== LOT_GAP ? value : "";
+}
+
+/** Card lines from the lot record. Empty strings are fields the lot left blank. */
+export function spotlightSpecs(
+  unit: LotUnit,
+  spot: Pick<SpotlightIdentity, "year" | "make" | "series"> = SHOWROOM_SPOTLIGHT,
+): SpotlightSpecs {
+  const length = shown(lotLengthOrGap(unit.length_ft));
+  const gvwr = shown(lotLbsOrGap(unit.gvwr));
+  const measure = [length, gvwr ? `GVWR ${gvwr}` : ""].filter(Boolean).join(" · ");
+  return {
+    title: spotlightUnitTitle(unit, spot),
+    price: shown(lotPriceOrGap(unit.price)),
+    stock: shown(lotTextOrGap(unit.stock_number)),
+    location: shown(lotTextOrGap(unit.location)),
+    condition: shown(lotTextOrGap(unit.condition)),
+    length,
+    gvwr,
+    measure,
+  };
+}
+
 /** JPEG sibling of the webp hero, used as the picture fallback. */
 export function spotlightJpegPath(image = SHOWROOM_SPOTLIGHT.image): string {
   return image.replace(/\.webp$/i, ".jpg");
-}
-
-export type SpotlightFacts = {
-  year: string;
-  make: string;
-  model: string;
-};
-
-type SpotlightIndex = Record<string, Record<string, { years?: number[] } | undefined>>;
-
-/** Catalog year + make + series, or null when that coach is not listed. */
-export function spotlightFactsTarget(
-  spot: { year: string; make: string; series: string } = SHOWROOM_SPOTLIGHT,
-  index: SpotlightIndex,
-): SpotlightFacts | null {
-  const raw = spot.make.trim();
-  const wanted = raw.toLowerCase();
-  const make = index[raw]
-    ? raw
-    : Object.keys(index).find((key) => {
-        const name = key.toLowerCase();
-        return name === wanted || name.startsWith(`${wanted} `);
-      });
-  if (!make) return null;
-  const spec = index[make]?.[spot.series];
-  if (!spec) return null;
-  const year = Number(spot.year);
-  if (!Number.isFinite(year) || !spec.years?.includes(year)) return null;
-  return { year: spot.year, make, model: spot.series };
-}
-
-export const SPOTLIGHT_FACTS_EVENT = "rvfox-open-spotlight-facts";
-
-let pendingSpotlightFacts: SpotlightFacts | null = null;
-
-export function requestSpotlightFacts(target: SpotlightFacts): void {
-  pendingSpotlightFacts = target;
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event(SPOTLIGHT_FACTS_EVENT));
-  }
-}
-
-export function takePendingSpotlightFacts(): SpotlightFacts | null {
-  const target = pendingSpotlightFacts;
-  pendingSpotlightFacts = null;
-  return target;
 }
 
 /** How many recent lot arrivals Home shows under the hero. */

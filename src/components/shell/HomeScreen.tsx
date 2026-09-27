@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchLotSnapshot, lotUnitPhoto, type LotUnit } from "@/lib/lot/ownLotPage";
-import { CATALOG_INDEX } from "@/lib/rv/rvCatalogIndex";
 import { CoveredCoach } from "@/components/shell/CoveredCoach";
 import {
   SEAMLESS_LOOP_PX_PER_SEC,
@@ -17,11 +16,11 @@ import {
   formatHomePrice,
   lotArrivalQuery,
   requestLotUnit,
-  requestSpotlightFacts,
   showroomUnitLabel,
-  spotlightFactsTarget,
   spotlightJpegPath,
   spotlightLabel,
+  spotlightLotUnit,
+  spotlightSpecs,
 } from "@/lib/home/homeCoach";
 
 function useCountUp(target: number | null): number | null {
@@ -70,10 +69,8 @@ function SpotlightPhoto({
 
 export function HomeScreen({
   onOpenLot,
-  onOpenFacts,
 }: {
   onOpenLot: () => void;
-  onOpenFacts: () => void;
 }) {
   const [units, setUnits] = useState<LotUnit[] | null>(null);
 
@@ -93,13 +90,14 @@ export function HomeScreen({
 
   const listed = units ?? EMPTY_UNITS;
   const arrivals = useMemo(() => arrivalsForHome(listed), [listed]);
+  const spotUnit = useMemo(() => spotlightLotUnit(listed), [listed]);
+  const specs = spotUnit ? spotlightSpecs(spotUnit) : null;
+  const title = specs?.title || spotlightLabel();
   const count = useCountUp(units ? units.length : null);
-  const name = spotlightLabel();
-  const facts = spotlightFactsTarget(SHOWROOM_SPOTLIGHT, CATALOG_INDEX);
-  const openFacts = () => {
-    if (!facts) return;
-    requestSpotlightFacts(facts);
-    onOpenFacts();
+  const openSpot = () => {
+    if (!spotUnit) return;
+    requestLotUnit(lotArrivalQuery(spotUnit));
+    onOpenLot();
   };
 
   const hero = (
@@ -120,8 +118,25 @@ export function HomeScreen({
       </p>
       <p className="showroom-onlot">on the lot</p>
       <p className="showroom-coachline">
-        <b>{name}</b>
+        <b>{title}</b>
       </p>
+      {specs ? (
+        <div data-home-spotlight-specs className="showroom-spotfacts">
+          {specs.price ? <p className="showroom-spotprice">{specs.price}</p> : null}
+          {specs.stock ? (
+            <p className="showroom-spotmeta">Stock #{specs.stock}</p>
+          ) : null}
+          {specs.location ? (
+            <p className="showroom-spotmeta">{specs.location}</p>
+          ) : null}
+          {specs.condition ? (
+            <p className="showroom-spotmeta">{specs.condition}</p>
+          ) : null}
+          {specs.measure ? (
+            <p className="showroom-spotmeta">{specs.measure}</p>
+          ) : null}
+        </div>
+      ) : null}
     </>
   );
 
@@ -132,20 +147,20 @@ export function HomeScreen({
       data-no-swipe
       className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
     >
-      {facts ? (
-        <button type="button" className="showroom-hero" onClick={openFacts}>
+      {spotUnit ? (
+        <button type="button" className="showroom-hero" onClick={openSpot}>
           {hero}
         </button>
       ) : (
         <div className="showroom-hero">{hero}</div>
       )}
 
-      {facts ? (
+      {spotUnit ? (
         <button
           type="button"
           className="showroom-placard showroom-card"
           data-home-placard
-          onClick={openFacts}
+          onClick={openSpot}
         >
           {placard}
         </button>

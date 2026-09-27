@@ -3,19 +3,24 @@ import test from "node:test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { LotUnit } from "../lot/ownLotPage.ts";
-import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
+import {
+  lotLbsOrGap,
+  lotLengthOrGap,
+  lotPriceOrGap,
+  lotTextOrGap,
+  parseLotSnapshotJson,
+  type LotUnit,
+} from "../lot/ownLotPage.ts";
 import {
   NEWEST_ARRIVALS,
   SHOWROOM_SPOTLIGHT,
   arrivalsForHome,
   coverVariant,
   newestArrivals,
-  requestSpotlightFacts,
-  spotlightFactsTarget,
   spotlightJpegPath,
   spotlightLabel,
-  takePendingSpotlightFacts,
+  spotlightLotUnit,
+  spotlightSpecs,
 } from "./homeCoach.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -162,7 +167,7 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(home, /prefers-reduced-motion/);
   assert.match(brand, /\/assets\/brand\/raidho-shell-mark\.png/);
   assert.match(brand, /RvFOX/);
-  assert.doesNotMatch(home, /unsplash|placeholder|stock|allegro/i);
+  assert.doesNotMatch(home, /unsplash|placeholder|allegro/i);
   assert.doesNotMatch(shell, /RvFaxApp\.tsx|LotStockApp\.tsx|RvCalApp\.tsx|RvTowApp\.tsx/);
 
   const suite = readFileSync(join(root, "../../components/shell/SuitePage.tsx"), "utf8");
@@ -208,18 +213,58 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   assert.ok(
     existsSync(join(root, "../../../public/assets/showroom/2026-entegra-cornerstone.jpg")),
   );
-  assert.deepEqual(spotlightFactsTarget(SHOWROOM_SPOTLIGHT, CATALOG_INDEX), {
-    year: "2026",
+  assert.equal(SHOWROOM_SPOTLIGHT.stockNumber, "45282");
+  assert.equal(SHOWROOM_SPOTLIGHT.vin, "4UZFCTFG3TCWE7168");
+  const snap = parseLotSnapshotJson(
+    JSON.parse(
+      readFileSync(join(root, "../../../public/inventory/own-lot-latest.json"), "utf8"),
+    ),
+  );
+  const stocked = spotlightLotUnit(snap.units);
+  assert.ok(stocked, "spotlight stock number is in the lot snapshot");
+  assert.equal(stocked.stock_number, "45282");
+  assert.equal(stocked.vin, "4UZFCTFG3TCWE7168");
+  const specs = spotlightSpecs(stocked);
+  assert.equal(specs.title, "2026 Entegra Cornerstone 45D");
+  assert.equal(specs.price, lotPriceOrGap(stocked.price));
+  assert.equal(specs.stock, lotTextOrGap(stocked.stock_number));
+  assert.equal(specs.location, lotTextOrGap(stocked.location));
+  assert.equal(specs.condition, lotTextOrGap(stocked.condition));
+  assert.equal(specs.length, lotLengthOrGap(stocked.length_ft));
+  assert.equal(specs.gvwr, lotLbsOrGap(stocked.gvwr));
+  assert.equal(specs.measure, `${specs.length} · GVWR ${specs.gvwr}`);
+  assert.equal(specs.price, "$729,995");
+  assert.equal(specs.location, "Fresno CA");
+  assert.equal(specs.condition, "New");
+  assert.notEqual(stocked.photo, SHOWROOM_SPOTLIGHT.image);
+
+  const byVin = spotlightLotUnit(
+    [unit({ stock_number: "nope", vin: "4uzfctfg3tcwe7168", make: "Entegra Coach", model: "Cornerstone", trim: "45D" })],
+    { ...SHOWROOM_SPOTLIGHT, stockNumber: "missing" },
+  );
+  assert.equal(byVin?.trim, "45D");
+  const byStock = spotlightLotUnit([
+    unit({ stock_number: "other", vin: SHOWROOM_SPOTLIGHT.vin, trim: "VIN" }),
+    unit({ stock_number: "45282", vin: "DIFFERENT", trim: "STOCK" }),
+  ]);
+  assert.equal(byStock?.trim, "STOCK");
+  assert.equal(spotlightLotUnit([unit({ stock_number: "1", vin: "X" })]), null);
+  const blank = unit({
+    stock_number: "45282",
+    price: null,
+    location: "",
+    condition: "",
+    length_ft: null,
+    gvwr: null,
+    trim: "",
     make: "Entegra Coach",
     model: "Cornerstone",
   });
-  assert.equal(
-    spotlightFactsTarget(
-      { ...SHOWROOM_SPOTLIGHT, series: "Not A Series" },
-      CATALOG_INDEX,
-    ),
-    null,
-  );
+  const emptySpecs = spotlightSpecs(blank);
+  assert.equal(emptySpecs.title, "2026 Entegra Cornerstone");
+  assert.equal(emptySpecs.price, "");
+  assert.equal(emptySpecs.location, "");
+  assert.equal(emptySpecs.measure, "");
 
   const older = unit({
     title: "Older",
@@ -259,33 +304,24 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
   );
   assert.doesNotMatch(css, /showroom-coach-fallback/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.alt/);
+  assert.match(home, /SHOWROOM_SPOTLIGHT\.image/);
   assert.match(home, /type="image\/webp"/);
   assert.match(home, /spotlightJpegPath\(\)/);
-  assert.match(home, /requestSpotlightFacts\(facts\)/);
+  assert.match(home, /spotlightLotUnit\(listed\)/);
+  assert.match(home, /spotlightSpecs\(spotUnit\)/);
+  assert.match(home, /requestLotUnit\(lotArrivalQuery\(spotUnit\)\)/);
+  assert.match(home, /data-home-spotlight-specs/);
   assert.match(home, /Newest arrivals/);
-  assert.doesNotMatch(home, /gvwr|horsepower|engine/i);
-  assert.match(fax, /takePendingSpotlightFacts/);
-  assert.match(shell, /onOpenFacts=\{openSpotlightFacts\}/);
-  assert.match(shell, /const openSpotlightFacts = useCallback/);
-  assert.doesNotMatch(
-    shell.slice(shell.indexOf("const openSpotlightFacts")),
-    /setFactsPickerToken/,
-  );
+  assert.doesNotMatch(home, /requestSpotlightFacts|onOpenFacts|729995|54000|44\.92/);
+  assert.doesNotMatch(home, /horsepower|engine/i);
+  assert.doesNotMatch(fax, /takePendingSpotlightFacts|SPOTLIGHT_FACTS/);
+  assert.doesNotMatch(shell, /openSpotlightFacts|onOpenFacts/);
+  assert.doesNotMatch(coach, /spotlightFactsTarget|requestSpotlightFacts/);
   assert.match(css, /\.showroom-hero \{[^}]*margin:\s*0\.75rem auto 0;/);
   assert.match(
     css,
     /\.showroom-header \{[^}]*env\(safe-area-inset-top, 0px\)/,
   );
-
-  requestSpotlightFacts({
-    year: "2026",
-    make: "Entegra Coach",
-    model: "Cornerstone",
-  });
-  assert.deepEqual(takePendingSpotlightFacts(), {
-    year: "2026",
-    make: "Entegra Coach",
-    model: "Cornerstone",
-  });
-  assert.equal(takePendingSpotlightFacts(), null);
+  const heroPhoto = home.slice(home.indexOf("function SpotlightPhoto"), home.indexOf("export function HomeScreen"));
+  assert.doesNotMatch(heroPhoto, /lotUnitPhoto|unit\.photo/);
 });

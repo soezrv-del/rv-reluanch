@@ -69,10 +69,6 @@ import { PullRefreshLayer } from "@/components/shell/PullResetHint";
 import { ActiveCoachChip } from "@/components/shell/ActiveCoachChip";
 import { SuiteDisclaimer } from "@/components/shell/SuiteDisclaimer";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
-import {
-  SPOTLIGHT_FACTS_EVENT,
-  takePendingSpotlightFacts,
-} from "@/lib/home/homeCoach";
 import { SelectSheet } from "./SelectSheet";
 import { writeActiveCoach } from "@/lib/rv/activeCoach";
 import {
@@ -521,26 +517,6 @@ export function RvFaxApp({
     },
     [saved, openFactsUnit],
   );
-
-  useEffect(() => {
-    const open = () => {
-      const req = takePendingSpotlightFacts();
-      if (!req) return;
-      const sel = {
-        year: req.year,
-        make: req.make,
-        model: req.model,
-        floorplan: "",
-        rvType: "",
-      };
-      applySel(sel);
-      setCompareOpen(false);
-      runSearchNow(sel);
-    };
-    open();
-    window.addEventListener(SPOTLIGHT_FACTS_EVENT, open);
-    return () => window.removeEventListener(SPOTLIGHT_FACTS_EVENT, open);
-  }, [applySel, runSearchNow]);
 
   const runSearch = useCallback(() => {
     runSearchNow({ year, make, model, floorplan, rvType });
