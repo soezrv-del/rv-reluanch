@@ -150,7 +150,8 @@ test("standing prompts have no pasted lot card; lean core only names the tool", 
     /ACCURACY_AIM_POLICY =\s*\n\s*"Get as accurate as possible, but not gospel\."/,
   );
   assert.match(speechRaw, /Get as accurate as possible, but not gospel\./);
-  assert.match(speechRaw, /If both are empty, say that field is unverified/);
+  assert.match(speechRaw, /closest saved pin when one exists/);
+  assert.doesNotMatch(speechRaw, /say that field is unverified/);
   assert.match(
     speechRaw,
     /experienced RV salesman's pocket/,

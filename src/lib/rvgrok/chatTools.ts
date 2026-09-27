@@ -110,7 +110,7 @@ export const RV_GROK_TOOLS = [
   ),
   fn(
     "get_own_lot",
-    "RV Country lot snapshot. Only for an explicit stock ask or a stock number. A coach name alone is not this tool.",
+    "RV Country lot snapshot for stock, counts, and stock numbers. Specs use the closest saved pin or web search. Do not treat a lot row as an OEM spec.",
     {
       query: { type: "string" },
     },

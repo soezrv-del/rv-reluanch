@@ -36,7 +36,7 @@ import {
 import type { ActiveCoach } from "../rv/activeCoach.ts";
 
 export const VOICE_SPEC_ENGINE_INSTRUCTIONS =
-  "Say exactly the SPEC ENGINE SCRIPT and then stop. Those numbers are the catalog and fallback chain for this turn. Do not add, replace, or estimate any spec from memory. Never speak a GVWR, UVW, CCC, fuel, fresh, gray, or black number unless that exact figure is in the script. If the script says a field is still missing or that you are checking live sources, say that and do not invent a number. Do not load NHTSA recalls, market value, videos, owner reviews, or a maintenance schedule. Those are on-screen prompts the user picks. Feature-to-benefit lines apply only to numbers in the script.";
+  "Speak the SPEC ENGINE SCRIPT. A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Aim for 85 to 90 percent accuracy, not perfection. Never refuse, stall, or skip a spec because the match is not perfect. Do not invent a number from memory. Do not load NHTSA recalls, market value, videos, owner reviews, or a maintenance schedule. Those are on-screen prompts the user picks. Feature-to-benefit lines apply only to numbers you are actually giving.";
 
 /** First spoken line on any Live Voice coach or spec ask. */
 export const VOICE_COACH_CHOICE_LINE =

@@ -7,6 +7,8 @@ import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { nitro } from "nitro/vite";
 // @ts-expect-error JS plugin alongside the TS vite config
+import { reportOgPlugin } from "./scripts/report-og-plugin.mjs";
+// @ts-expect-error JS plugin alongside the TS vite config
 import { grokPwaPlugin } from "./scripts/grok-pwa-plugin.mjs";
 // @ts-expect-error JS plugin alongside the TS vite config
 import { appEnvPlugin } from "./scripts/app-env-plugin.mjs";
@@ -170,6 +172,9 @@ export default defineConfig(({ command, isPreview }) => ({
     authPopupPlugin(),
     // Dev-only /__app-env, read by scripts/check-auth-invariant.mjs.
     appEnvPlugin(),
+    // Report OG wrap must register before the PWA injector so it
+    // rewrites the tags that injector just wrote.
+    reportOgPlugin(),
     // PWA head + ?install=1 tutorial page; runs before Start/Nitro.
     grokPwaPlugin(),
     tailwindcss(),
@@ -182,6 +187,19 @@ export default defineConfig(({ command, isPreview }) => ({
             // manifest + head-tag middleware). Nitro v3 defaults serverDir to
             // false, so removing this silently unwires /?install=1 on deploys.
             serverDir: "./server",
+            rolldownConfig: {
+              output: {
+                codeSplitting: {
+                  groups: [
+                    {
+                      name: "rolldown-runtime",
+                      test: /rolldown[/\\]runtime|rolldown-runtime/,
+                      priority: 100,
+                    },
+                  ],
+                },
+              },
+            },
           }),
         ]
       : []),

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -51,7 +51,8 @@ test("lean core is David's verbatim standing prompt", () => {
     RV_GROK_LEAN_CORE,
     /Never invent GVWR, UVW, payload, hitch weight, price, tank sizes, or a recall/,
   );
-  assert.match(RV_GROK_LEAN_CORE, /the catalog pin in this turn wins/);
+  assert.match(RV_GROK_LEAN_CORE, /closest saved pin when one exists/);
+  assert.doesNotMatch(RV_GROK_LEAN_CORE, /the catalog pin in this turn wins/);
   assert.match(RV_GROK_LEAN_CORE, /not a menu/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /Pin every verified field/);
   assert.doesNotMatch(RV_GROK_LEAN_CORE, /sales-floor wingman/);
@@ -227,4 +228,25 @@ test("sales floor: no scope-narrow or general-assistant refuse", () => {
   assert.match(RV_GROK_LEAN_CORE, /Do not turn a factory, brand, or campground question into a year-make-model demand/);
   assert.match(src("voiceWeb.ts"), /give me one second/);
   assert.doesNotMatch(src("voiceWeb.ts"), /Let me check that/);
+});
+
+test("no Grok prompt string contains perfectly exact, exact pin, or exact live fact", () => {
+  const banned = [/perfectly exact/i, /exact pin/i, /exact live fact/i];
+  const files = readdirSync(root)
+    .filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"))
+    .map((name) => name);
+  files.push(
+    "../rv/promptRules.ts",
+    "../../routes/api/rvgrok.ts",
+    "../../routes/api/rvfax.dossier.ts",
+  );
+  for (const file of files) {
+    const text = src(file);
+    for (const phrase of banned) {
+      assert.doesNotMatch(text, phrase, `${file} contains ${phrase}`);
+    }
+  }
+  assert.match(src("screenGuides.ts"), /exactly as written/);
+  assert.match(src("liveVoice.ts"), /Say exactly:/);
+  assert.match(src("webSearch.ts"), /spelled exactly as the OEM string/);
 });

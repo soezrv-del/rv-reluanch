@@ -6,11 +6,13 @@
  * Memory first. The model answers from its own knowledge (and a catalog
  * pin already in hand) before any browse. Catalog, search, and internet
  * are fallbacks — not a step before the first token.
- * Browse only when the ask needs something memory cannot honestly pin:
- * repair / forum / manual / TSB, live market value, inventory counts,
- * an OEM spec the catalog does not already pin (no row, UNKNOWN hard
- * fields, missing OEM weight pin on a weight ask), or a live condition
- * (weather, road closures). A locked pin does not wait on search.
+ * Rv Facts spec and info asks do not use this gate. They always search.
+ * A saved pin is the best available answer there, not a reason to skip.
+ * On other screens, browse only when the ask needs something memory
+ * cannot honestly pin: repair / forum / manual / TSB, live market value,
+ * inventory counts, an OEM spec with no row, UNKNOWN hard fields, or a
+ * missing OEM weight pin, or a live condition (weather, road closures).
+ * On those screens a locked pin does not wait on search.
  * Do not invent OEM numbers. If search returns nothing, say so — never
  * EST when a live OEM / brochure / dealer source exists.
  * Inventory / diesel-count / in-stock still trip this detector so voice+chat
