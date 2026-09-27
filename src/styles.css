@@ -2676,20 +2676,62 @@ html.kb-open [data-rvgrok-composer-dock] {
 }
 .showroom-hero {
   position: relative;
+  isolation: isolate;
   z-index: 1;
+  flex-shrink: 0;
   width: min(22rem, 92%);
+  min-height: calc(11.5rem + 0.7rem);
   margin: 0.75rem auto 0;
+  overflow: hidden;
+  padding-bottom: 0.7rem;
 }
 button.showroom-hero {
   display: block;
-}
-.showroom-hero picture {
-  display: block;
-  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
 }
 button.showroom-placard {
   display: block;
   width: calc(100% - 2.5rem);
+}
+/* Soft cone behind the cutout, plus a faint screen wash on the roof.
+   Both stay inside the hero so they cannot cover the logo or the placard. */
+.showroom-hero-beam {
+  position: absolute;
+  z-index: 1;
+  left: 6%;
+  right: 6%;
+  top: 0;
+  height: 74%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(236, 243, 255, 0.78) 0%,
+    rgba(206, 222, 255, 0.32) 38%,
+    rgba(206, 222, 255, 0.08) 68%,
+    rgba(206, 222, 255, 0) 100%
+  );
+  clip-path: polygon(32% 0%, 68% 0%, 100% 100%, 0% 100%);
+  filter: blur(10px);
+}
+.showroom-hero-wash {
+  position: absolute;
+  z-index: 3;
+  left: 12%;
+  right: 12%;
+  top: 0;
+  height: 58%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(214, 226, 255, 0.05) 55%,
+    rgba(214, 226, 255, 0) 100%
+  );
+  clip-path: polygon(28% 0%, 72% 0%, 92% 100%, 8% 100%);
+  mix-blend-mode: screen;
+  filter: blur(8px);
 }
 .showroom-coach {
   position: relative;
@@ -2699,45 +2741,23 @@ button.showroom-placard {
   height: 11.5rem;
   object-fit: contain;
   object-position: center bottom;
+  background: transparent;
+  border: 0;
 }
-.showroom-contact {
+.showroom-hero-pool {
   position: absolute;
-  z-index: 2;
-  left: 16%;
-  right: 12%;
-  bottom: 1.55rem;
-  height: 0.9rem;
-  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.8), transparent 72%);
-}
-.showroom-floor {
-  position: relative;
-  z-index: 3;
-  height: 1px;
-  margin-top: -1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(190, 210, 255, 0.22) 25%,
-    rgba(220, 232, 255, 0.4) 50%,
-    rgba(190, 210, 255, 0.22) 75%,
-    transparent
-  );
-}
-.showroom-reflect-clip {
-  height: 1.35rem;
-  overflow: hidden;
+  z-index: 1;
+  left: 10%;
+  right: 10%;
+  bottom: 0.15rem;
+  height: 2rem;
   pointer-events: none;
-}
-.showroom-reflect {
-  display: block;
-  width: 100%;
-  height: 11.5rem;
-  object-fit: contain;
-  object-position: center bottom;
-  transform: scaleY(-1);
-  opacity: 0.18;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 22%);
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 22%);
+  background: radial-gradient(
+    ellipse 100% 58% at 50% 55%,
+    rgba(222, 232, 255, 0.42) 0%,
+    rgba(190, 210, 255, 0.16) 46%,
+    transparent 74%
+  );
 }
 .showroom-card {
   background: var(--color-showroom-glass);

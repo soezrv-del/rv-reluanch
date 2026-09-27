@@ -17,7 +17,6 @@ import {
   lotArrivalQuery,
   requestLotUnit,
   showroomUnitLabel,
-  spotlightJpegPath,
   spotlightLabel,
   spotlightLotUnit,
   spotlightSpecs,
@@ -56,14 +55,7 @@ function SpotlightPhoto({
   alt: string;
 }) {
   return (
-    <picture>
-      <source srcSet={SHOWROOM_SPOTLIGHT.image} type="image/webp" />
-      <img
-        src={spotlightJpegPath()}
-        alt={alt}
-        className={className}
-      />
-    </picture>
+    <img src={SHOWROOM_SPOTLIGHT.image} alt={alt} className={className} />
   );
 }
 
@@ -102,12 +94,10 @@ export function HomeScreen({
 
   const hero = (
     <>
+      <div className="showroom-hero-beam" aria-hidden />
+      <div className="showroom-hero-wash" aria-hidden />
       <SpotlightPhoto className="showroom-coach" alt={SHOWROOM_SPOTLIGHT.alt} />
-      <div className="showroom-contact" aria-hidden />
-      <div className="showroom-floor" aria-hidden />
-      <div className="showroom-reflect-clip" aria-hidden>
-        <SpotlightPhoto className="showroom-reflect" alt="" />
-      </div>
+      <div className="showroom-hero-pool" aria-hidden />
     </>
   );
 
