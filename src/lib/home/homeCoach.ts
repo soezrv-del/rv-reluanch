@@ -132,6 +132,92 @@ export function formatHomePrice(price: number | null): string {
   return `$${price.toLocaleString("en-US")}`;
 }
 
+/** Year, make, model, and floorplan — the line under the lot count. */
+export function showroomUnitLabel(unit: LotUnit): string {
+  const year = unit.year.trim();
+  const make = unit.make.trim();
+  const model = unit.model.trim();
+  const trim = unit.trim.trim();
+  const trimInModel =
+    trim.length > 0 && model.toLowerCase().includes(trim.toLowerCase());
+  const parts = [year, make, model, trimInModel ? "" : trim].filter(Boolean);
+  return parts.join(" ") || lotCoachName(unit);
+}
+
+export function sameLotUnit(a: LotUnit, b: LotUnit): boolean {
+  const stock = a.stock_number.trim();
+  if (stock && stock === b.stock_number.trim()) return true;
+  const vin = a.vin.trim();
+  if (vin && vin === b.vin.trim()) return true;
+  const id = String(a.printed.id ?? "").trim();
+  if (id && id === String(b.printed.id ?? "").trim()) return true;
+  return false;
+}
+
+export type ShowroomStage = {
+  name: string;
+  price: number | null;
+  photo: string | null;
+  unit: LotUnit | null;
+};
+
+/**
+ * Spotlight coach: the last lookup when that unit has a lot photo,
+ * otherwise the newest own-lot unit that has a real photo.
+ * The label is always that unit's year / make / model.
+ */
+export function pickShowroomStage(
+  active: ActiveCoach | null,
+  units: LotUnit[],
+): ShowroomStage {
+  const resolved = resolveHomeCoach(active, units);
+  if (active) {
+    const matches = units.filter((unit) => sameCoach(unit, active));
+    const withPhoto = matches.find((unit) => lotUnitPhoto(unit));
+    if (withPhoto) {
+      return {
+        name: showroomUnitLabel(withPhoto),
+        price: positivePrice(withPhoto.price) ?? resolved?.price ?? null,
+        photo: lotUnitPhoto(withPhoto),
+        unit: withPhoto,
+      };
+    }
+  }
+  const photographed = newestArrivals(units, units.length).find((unit) =>
+    lotUnitPhoto(unit),
+  );
+  if (photographed) {
+    return {
+      name: showroomUnitLabel(photographed),
+      price: positivePrice(photographed.price),
+      photo: lotUnitPhoto(photographed),
+      unit: photographed,
+    };
+  }
+  const newest = newestLotUnit(units);
+  if (newest) {
+    return {
+      name: showroomUnitLabel(newest),
+      price: positivePrice(newest.price),
+      photo: null,
+      unit: newest,
+    };
+  }
+  return {
+    name: resolved?.name ?? "",
+    price: resolved?.price ?? null,
+    photo: resolved?.photo ?? null,
+    unit: null,
+  };
+}
+
+/** Newest arrivals, skipping the coach already standing in the spotlight. */
+export function arrivalsForHome(units: LotUnit[], hero: LotUnit | null): LotUnit[] {
+  const rows = newestArrivals(units, NEWEST_ARRIVALS + (hero ? 1 : 0));
+  const next = hero ? rows.filter((unit) => !sameLotUnit(unit, hero)) : rows;
+  return next.slice(0, NEWEST_ARRIVALS);
+}
+
 export function resolveHomeCoach(
   active: ActiveCoach | null,
   units: LotUnit[],

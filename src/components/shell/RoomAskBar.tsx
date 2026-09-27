@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Mic, Radio } from "lucide-react";
+import { Calculator, FileText, LayoutGrid, Mic, Radio, Truck } from "lucide-react";
 import type { AppTab } from "./BottomTabs";
 import {
   roomAskMic,
@@ -9,16 +9,20 @@ import {
 } from "@/lib/rvgrok/roomAsk";
 import { markAskBarGrokEntry } from "@/lib/rvgrok/screenContext";
 
-/** One chip row above the ask box. RV GPS stays in Premium. */
-const ROOM_CHIPS: { id: AppTab; label: string }[] = [
-  { id: "rvfax", label: "Rv Facts" },
-  { id: "rvcal", label: "Calculator" },
-  { id: "rvtow", label: "Tow Guide" },
-  { id: "rvlot", label: "Lot Inventory" },
+/** Floating pill tabs. RV GPS stays in Premium. */
+const ROOM_CHIPS: {
+  id: AppTab;
+  label: string;
+  icon: typeof FileText;
+}[] = [
+  { id: "rvfax", label: "Rv Facts", icon: FileText },
+  { id: "rvlot", label: "Lot Inventory", icon: LayoutGrid },
+  { id: "rvcal", label: "Calculator", icon: Calculator },
+  { id: "rvtow", label: "Tow Guide", icon: Truck },
 ];
 
 /**
- * Shared ask bar. Mic starts Live Voice.
+ * Shared ask bar. Mic starts Live Voice on the current screen.
  * A typed ask is appended to the open RV Grok thread.
  */
 export function RoomAskBar({
@@ -54,17 +58,64 @@ export function RoomAskBar({
   };
 
   return (
-    <div
-      data-room-ask
-      data-no-swipe
-      className="relative z-[70] shrink-0 bg-black px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]"
-    >
-      <div
-        data-room-tabs
-        className="mx-auto flex w-full max-w-lg gap-2 overflow-x-auto pb-2"
-      >
+    <div data-room-ask data-no-swipe className="showroom-dock">
+      {hidePinnedAsk ? null : (
+        <form
+          data-room-ask-bar
+          className="showroom-ask-row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send();
+          }}
+        >
+          <div className="showroom-ask showroom-float">
+            <input
+              data-room-ask-input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="What's up?"
+              aria-label="What's up?"
+              enterKeyHint="send"
+            />
+            {live ? (
+              <span data-room-voice={voice} className="showroom-live">
+                {voice === "speaking" ? "Speaking" : "Listening"}
+              </span>
+            ) : null}
+            <button
+              type="button"
+              data-room-ask-mic
+              className={
+                "showroom-mic" +
+                (live ? " is-live" : "") +
+                (voice === "speaking" ? " is-armed" : "")
+              }
+              aria-pressed={live}
+              aria-label={
+                voice === "speaking"
+                  ? "Speaking, tap to stop"
+                  : live
+                    ? "Listening, tap to stop"
+                    : "Start live voice"
+              }
+              title={live ? "Stop Live Voice" : "Start Live Voice"}
+              onClick={() => {
+                roomAskMic();
+              }}
+            >
+              {live ? (
+                <Radio className="size-5" aria-hidden />
+              ) : (
+                <Mic className="size-5" aria-hidden />
+              )}
+            </button>
+          </div>
+        </form>
+      )}
+      <div data-room-tabs className="showroom-rail showroom-pills">
         {ROOM_CHIPS.map((chip) => {
           const active = !homeOpen && tab === chip.id;
+          const Icon = chip.icon;
           return (
             <button
               key={chip.id}
@@ -74,75 +125,19 @@ export function RoomAskBar({
               aria-pressed={active}
               aria-current={active ? "page" : undefined}
               onClick={() => openRoom(chip.id)}
-              className={
-                "inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-[13px] font-semibold whitespace-nowrap " +
-                (active
-                  ? "bg-white/15 text-fg ring-1 ring-white/45"
-                  : "grok-chip text-fg")
-              }
+              className="showroom-tab showroom-float min-h-11"
             >
+              <Icon
+                className="showroom-tab-icon"
+                aria-hidden
+                strokeWidth={1.6}
+                fill="currentColor"
+              />
               {chip.label}
             </button>
           );
         })}
       </div>
-      {hidePinnedAsk ? null : (
-      <form
-        data-room-ask-bar
-        className="mx-auto flex w-full max-w-lg pb-1"
-        onSubmit={(e) => {
-          e.preventDefault();
-          send();
-        }}
-      >
-        <div className="grok-composer-pill flex min-h-12 min-w-0 flex-1 items-center gap-1 rounded-full px-3">
-          <input
-            data-room-ask-input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Ask about this coach"
-            aria-label="Ask about this coach"
-            enterKeyHint="send"
-            className="min-w-0 flex-1 bg-transparent py-2 text-[15px] text-fg outline-none placeholder:text-muted"
-          />
-          {live ? (
-            <span
-              data-room-voice={voice}
-              className="shrink-0 text-[11px] font-semibold tracking-wide text-gold"
-            >
-              {voice === "speaking" ? "Speaking" : "Listening"}
-            </span>
-          ) : null}
-          <button
-            type="button"
-            data-room-ask-mic
-            className={
-              "grok-mic-btn flex size-11 shrink-0 items-center justify-center rounded-full" +
-              (live ? " is-live" : "") +
-              (voice === "speaking" ? " is-armed" : "")
-            }
-            aria-pressed={live}
-            aria-label={
-              voice === "speaking"
-                ? "Speaking, tap to stop"
-                : live
-                  ? "Listening, tap to stop"
-                  : "Start live voice"
-            }
-            title={live ? "Stop Live Voice" : "Start Live Voice"}
-            onClick={() => {
-              roomAskMic();
-            }}
-          >
-            {live ? (
-              <Radio className="size-5 animate-pulse" aria-hidden />
-            ) : (
-              <Mic className="size-5" aria-hidden />
-            )}
-          </button>
-        </div>
-      </form>
-      )}
     </div>
   );
 }

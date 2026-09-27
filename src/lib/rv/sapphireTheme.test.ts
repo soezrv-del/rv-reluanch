@@ -60,8 +60,9 @@ test("Raidho sapphire mark sits behind suite, compare, GPS, and NDA", () => {
   assert.ok(existsSync(mark), "raidho-r-mark-v2.png is in public/assets/brand");
 
   assert.match(suite, /export function SuiteRaidhoBackdrop/);
-  assert.match(suite, /suite-raidho-mark/);
-  assert.match(suite, /RAIDHO_R_MARK/);
+  assert.match(suite, /data-showroom-plain/);
+  assert.doesNotMatch(suite, /RAIDHO_R_MARK/);
+  assert.doesNotMatch(suite, /suite-raidho-bleed/);
   assert.match(compare, /<SuiteRaidhoBackdrop bleed \/>/);
   assert.match(trips, /<SuiteRaidhoBackdrop bleed \/>/);
   assert.doesNotMatch(trips, /TRUTH_MARK_BACKDROP/);
