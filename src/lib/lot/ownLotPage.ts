@@ -544,7 +544,7 @@ export function lotSpecLine(unit: LotUnit): string {
   return parts.join(" · ");
 }
 
-/** Already painted on the closed card. The open lookup shows the rest. */
+/** Already painted on the card. The open lookup shows the rest once. */
 const LOT_CARD_HEAD_KEYS = new Set([
   "year",
   "make",
@@ -559,9 +559,93 @@ const LOT_CARD_HEAD_KEYS = new Set([
   "vin",
   "title",
   "photo",
-  "source",
   "dealer",
 ]);
+
+/**
+ * Scrape provenance and the dealer website. Not coach facts.
+ * `url` paints as Listing; `source_page` paints as Source Page.
+ */
+const LOT_PROVENANCE_KEYS = new Set([
+  "source",
+  "source_page",
+  "url",
+  "website",
+  "listing_url",
+  "vdp_url",
+]);
+
+const LOT_PROVENANCE_LABELS = new Set([
+  "source",
+  "website",
+  "source page",
+  "listing",
+]);
+
+/** City and state restate the Location pill when that pill already has text. */
+const LOT_LOCATION_SPLIT_KEYS = new Set(["location_city", "location_state"]);
+
+/** Extra price columns that often reprint the photo price. */
+const LOT_ASKING_PRICE_KEYS = new Set([
+  "price_current",
+  "price_lowest",
+  "price_hidden",
+]);
+
+/**
+ * Same measurement stored under two scrape keys. The first key wins when
+ * the printed values are the same fact. Different values both stay.
+ */
+const LOT_SAME_FACT_GROUPS: readonly (readonly string[])[] = [
+  ["air_conditioning_btu", "air_conditioning_(btu)"],
+  ["heater_btu", "heater_(btu)"],
+  ["payload", "standard_payload", "max_payload"],
+  ["dry_weight", "unloaded_vehicle_weight"],
+  ["total_fresh_water_tank_capacity", "fresh_water_tank_capacity", "fresh_gal"],
+  ["total_gray_water_tank_capacity", "gray_gal"],
+  ["total_black_water_tank_capacity", "black_gal"],
+  ["wheelbase", "wheel_base"],
+  ["chassis", "chassis_brand"],
+  ["engine", "engine_type"],
+  ["hitch_weight", "tongue_weight", "dry_hitch_weight"],
+  ["transmission", "transmission_type"],
+];
+
+const FACT_UNIT_WORDS = new Set([
+  "lb",
+  "lbs",
+  "gal",
+  "gals",
+  "btu",
+  "btus",
+  "mi",
+  "in",
+  "ft",
+  "gpm",
+  "amp",
+  "amps",
+  "hp",
+  "rpm",
+  "psi",
+]);
+
+/** Same number and words, ignoring commas and unit words like lb or gal. */
+function samePrintedFact(a: string, b: string): boolean {
+  const signature = (value: string) => {
+    const cleaned = value.toLowerCase().replace(/,/g, "");
+    const nums = cleaned.match(/\d+(?:\.\d+)?/g) ?? [];
+    const words = cleaned
+      .replace(/[^a-z]+/g, " ")
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word && !FACT_UNIT_WORDS.has(word));
+    if (!nums.length && !words.length) return "";
+    return `${nums.join(",")}|${words.join(" ")}`;
+  };
+  const left = signature(a);
+  const right = signature(b);
+  return Boolean(left) && left === right;
+}
 
 const LOT_FIELD_LABELS: Record<string, string> = {
   mileage: "Mileage",
@@ -603,7 +687,6 @@ const LOT_FIELD_LABELS: Record<string, string> = {
   price_current: "Current price",
   price_hidden: "Hidden price",
   price_lowest: "Lowest price",
-  url: "Listing",
   flags: "Flags",
 };
 
@@ -615,16 +698,54 @@ function lotFieldLabel(key: string): string {
     .replace(/\b[a-z]/g, (ch) => ch.toUpperCase());
 }
 
-/** Printed scrape fields for the open lot card. Head fields stay on the card. */
-export function lotLookupRows(
-  unit: LotUnit,
-): { key: string; label: string; value: string }[] {
-  const rows: { key: string; label: string; value: string }[] = [];
+type LotLookupRow = { key: string; label: string; value: string };
+
+function isProvenanceRow(key: string, label: string): boolean {
+  if (LOT_PROVENANCE_KEYS.has(key)) return true;
+  return LOT_PROVENANCE_LABELS.has(label.trim().toLowerCase());
+}
+
+function dropSameFactDuplicates(rows: LotLookupRow[]): LotLookupRow[] {
+  const byKey = new Map(rows.map((row) => [row.key, row]));
+  const drop = new Set<string>();
+  for (const group of LOT_SAME_FACT_GROUPS) {
+    const present = group
+      .map((key) => byKey.get(key))
+      .filter((row): row is LotLookupRow => Boolean(row));
+    const keeper = present[0];
+    if (!keeper) continue;
+    for (const row of present.slice(1)) {
+      if (samePrintedFact(keeper.value, row.value)) drop.add(row.key);
+    }
+  }
+  if (!drop.size) return rows;
+  return rows.filter((row) => !drop.has(row.key));
+}
+
+/**
+ * Printed scrape fields for the open lot card.
+ * Header facts stay on the card. Source and the dealer website stay off.
+ * A second scrape key for the same fact is dropped; a different value stays.
+ */
+export function lotLookupRows(unit: LotUnit): LotLookupRow[] {
+  const asking = lotPriceOrGap(unit.price);
+  const locationShown = unit.location.trim().length > 0;
+  const rows: LotLookupRow[] = [];
   for (const [key, value] of Object.entries(unit.printed ?? {})) {
     if (!value || LOT_CARD_HEAD_KEYS.has(key)) continue;
-    rows.push({ key, label: lotFieldLabel(key), value });
+    const label = lotFieldLabel(key);
+    if (isProvenanceRow(key, label)) continue;
+    if (locationShown && LOT_LOCATION_SPLIT_KEYS.has(key)) continue;
+    if (
+      LOT_ASKING_PRICE_KEYS.has(key) &&
+      asking !== LOT_GAP &&
+      value === asking
+    ) {
+      continue;
+    }
+    rows.push({ key, label, value });
   }
-  return rows;
+  return dropSameFactDuplicates(rows);
 }
 
 /** Snapshot photo only — listing page URLs are not images. */
@@ -685,29 +806,6 @@ export function shortLotTypeLabel(type: string): string {
   const t = type.trim();
   if (!t) return LOT_GAP;
   return TYPE_LABELS[t] ?? t;
-}
-
-const PILL_TYPE_LABELS: Record<string, string> = {
-  "Travel Trailer": "TT",
-  "Fifth Wheel": "FW",
-  "Class A Diesel": "Diesel",
-  "Class Super C": "Super C",
-  "Class A": "A",
-  "Class B": "B",
-  "Class C": "C",
-  "Fifth Wheel Toy Hauler": "FW toy",
-  "Travel Trailer Toy Hauler": "TT toy",
-  "Destination Trailer": "Destination",
-  "Truck Camper": "Camper",
-  Popup: "Popup",
-  "Popup Trailer": "Popup",
-  "Expandable Trailer": "Exp",
-};
-
-export function pillLotTypeLabel(type: string): string {
-  const t = type.trim();
-  if (!t) return LOT_GAP;
-  return PILL_TYPE_LABELS[t] ?? shortLotTypeLabel(t);
 }
 
 /** Visual family for lot chrome only — never a catalog class list. */

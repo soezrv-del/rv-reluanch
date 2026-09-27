@@ -13,7 +13,6 @@ import {
   lotTypeChips,
   lotUnitKey,
   lotUnitPhoto,
-  pillLotTypeLabel,
   shortLotTypeLabel,
   type LotSnapshotView,
   type LotUnit,
@@ -432,21 +431,14 @@ function LotUnitCard({
         <div className="space-y-2.5 px-4 py-3">
           <p className="truncate text-[13px] text-white/75">
             {trim === "GAP" ? "Trim GAP" : trim}
-            {stock !== "GAP" ? ` · #${stock}` : ""}
           </p>
           <dl className="lot-pills">
             <Pill label="Stock" value={stock} />
             <Pill label="Location" value={location} />
-            <Pill label="Type" value={pillLotTypeLabel(unit.body_type)} />
             <Pill label="Condition" value={condition} />
           </dl>
           {open ? (
             <dl className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-white/15 pt-3 text-[12px]">
-              <Field label="Year" value={year} />
-              <Field label="Make" value={lotTextOrGap(unit.make)} />
-              <Field label="Model" value={lotTextOrGap(unit.model)} />
-              <Field label="Trim" value={trim} />
-              <Field label="Price" value={price} />
               <Field label="VIN" value={lotTextOrGap(unit.vin)} />
               {lotLookupRows(unit).map((row) => (
                 <Field key={row.key} label={row.label} value={row.value} />

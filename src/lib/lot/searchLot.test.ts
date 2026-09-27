@@ -11,7 +11,7 @@ import {
   lotTypeChips,
   lotTypeFamily,
   lotUnitPhoto,
-  pillLotTypeLabel,
+  shortLotTypeLabel,
   parseLotSnapshotJson,
   searchLotUnits,
   tokenizeLotQuery,
@@ -217,6 +217,102 @@ test("lot lookup shows every printed scrape field and does not invent blanks", (
   assert.equal(snap.units[2]?.printed.mileage, "0 mi");
 });
 
+test("lot details drop source and website and do not repeat header facts", () => {
+  const snap = parseLotSnapshotJson([
+    {
+      year: 2026,
+      make: "Entegra Coach",
+      model: "Cornerstone",
+      trim: "45D",
+      stock_number: "45282",
+      price: 729995,
+      price_current: 729995,
+      price_lowest: 729995,
+      price_msrp: 1124963,
+      vin: "4UZFCTFG3TCWE7168",
+      location: "Fresno CA",
+      location_city: "Fresno",
+      location_state: "CA",
+      source: "own",
+      source_page: "https://rvcountry.com/class-a-diesel",
+      url: "https://rvcountry.com/inventory/2026-entegra-coach-cornerstone-45282",
+      website: "https://rvcountry.com/",
+      gvwr: 54000,
+      vehicle_body_length: 44.92,
+      engine: "Cummins",
+      chassis_brand: "Freightliner",
+      heater_btu: 35000,
+      raw: {
+        attributes: {
+          "Heater (Btu)": "35000",
+          GVWR: "54,000 lbs",
+          Engine: "Cummins",
+        },
+      },
+    },
+    {
+      year: 2024,
+      make: "Tiffin",
+      model: "Allegro",
+      trim: "32",
+      stock_number: "LOW",
+      price: 164995,
+      price_lowest: 169995,
+      price_msrp: 169995,
+      hitch_weight: 5000,
+      tongue_weight: 226,
+      propane_lbs: 105,
+      propane_gal: 24.8,
+      engine: "Cummins / In-Line",
+      engine_type: "Cummins B6.7L",
+    },
+  ]);
+
+  const corner = lotLookupRows(snap.units[0]!);
+  const keys = new Set(corner.map((row) => row.key));
+  const labels = new Set(corner.map((row) => row.label));
+  for (const gone of [
+    "source",
+    "source_page",
+    "url",
+    "website",
+    "year",
+    "make",
+    "model",
+    "trim",
+    "price",
+    "price_current",
+    "price_lowest",
+    "location_city",
+    "location_state",
+    "vin",
+    "stock_number",
+    "heater_(btu)",
+  ]) {
+    assert.equal(keys.has(gone), false, gone);
+  }
+  for (const label of ["Source", "Website", "Source Page", "Listing"]) {
+    assert.equal(labels.has(label), false, label);
+  }
+  assert.equal(keys.has("price_msrp"), true);
+  assert.equal(keys.has("gvwr"), true);
+  assert.equal(keys.has("vehicle_body_length"), true);
+  assert.equal(keys.has("engine"), true);
+  assert.equal(keys.has("chassis_brand"), true);
+  assert.equal(keys.has("heater_btu"), true);
+
+  const other = lotLookupRows(snap.units[1]!);
+  const otherKeys = new Set(other.map((row) => row.key));
+  assert.equal(otherKeys.has("price_lowest"), true);
+  assert.equal(otherKeys.has("price_msrp"), true);
+  assert.equal(otherKeys.has("hitch_weight"), true);
+  assert.equal(otherKeys.has("tongue_weight"), true);
+  assert.equal(otherKeys.has("propane_lbs"), true);
+  assert.equal(otherKeys.has("propane_gal"), true);
+  assert.equal(otherKeys.has("engine"), true);
+  assert.equal(otherKeys.has("engine_type"), true);
+});
+
 test("missing fields stay GAP — never invent a price or stock", () => {
   assert.equal(lotPriceOrGap(null), "GAP");
   assert.equal(lotPriceOrGap(0), "GAP");
@@ -310,8 +406,8 @@ test("type chips come from the lot snapshot and filter without catalog bleed", (
   assert.equal(lotTypeFamily("Class Super C"), "c");
   assert.equal(lotTypeFamily("Fifth Wheel Toy Hauler"), "toy");
   assert.equal(lotTypeFamily("Travel Trailer"), "tt");
-  assert.equal(pillLotTypeLabel("Fifth Wheel"), "FW");
-  assert.equal(pillLotTypeLabel("Travel Trailer"), "TT");
+  assert.equal(shortLotTypeLabel("Fifth Wheel"), "Fifth wheel");
+  assert.equal(shortLotTypeLabel("Class A Diesel"), "Diesel");
   assert.equal(lotUnitPhoto(sample.units[0]!), null);
   assert.equal(
     lotUnitPhoto({
