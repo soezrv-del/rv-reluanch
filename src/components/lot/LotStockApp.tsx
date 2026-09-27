@@ -364,7 +364,9 @@ function LotUnitCard({
   const year = lotTextOrGap(unit.year);
   const trim = lotTextOrGap(unit.trim);
   const condition = lotTextOrGap(unit.condition);
-  const photo = lotUnitPhoto(unit);
+  const photoUrl = lotUnitPhoto(unit);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const photo = photoUrl && failedSrc !== photoUrl ? photoUrl : null;
 
   return (
     <article>
@@ -389,14 +391,16 @@ function LotUnitCard({
               alt=""
               className="lot-photo"
               data-lot-photo="unit"
+              onError={() => setFailedSrc(photo)}
             />
           ) : (
-            <img
-              src={RAIDHO_R_MARK}
-              alt=""
-              className="lot-well-mark"
-              data-lot-photo="raidho"
-            />
+            <span className="lot-mark" data-lot-photo="raidho">
+              <img
+                src={RAIDHO_R_MARK}
+                alt=""
+                className="lot-mark-art"
+              />
+            </span>
           )}
           <span className="absolute left-3 top-3 rounded-full bg-sapphire px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
             {shortLotTypeLabel(unit.body_type)}

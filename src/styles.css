@@ -2300,17 +2300,26 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
     ),
     rgb(6, 12, 22);
 }
-.lot-well-mark {
+.lot-mark {
   position: absolute;
-  left: 50%;
-  top: 42%;
-  width: min(7.5rem, 36%);
-  height: min(9rem, 56%);
-  transform: translate(-50%, -50%);
-  object-fit: contain;
-  opacity: 0.22;
-  mix-blend-mode: screen;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #07090d;
   pointer-events: none;
+}
+.lot-well > .lot-mark {
+  z-index: 0;
+}
+.lot-mark-art {
+  height: 45%;
+  width: auto;
+  max-width: 70%;
+  object-fit: contain;
+  /* Mark file is white on black. Screen drops the plate; opacity keeps the rune quiet. */
+  opacity: 0.36;
+  mix-blend-mode: screen;
 }
 .lot-well.is-featured {
   min-height: 8.25rem;

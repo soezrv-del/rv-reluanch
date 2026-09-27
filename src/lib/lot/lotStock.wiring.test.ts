@@ -52,6 +52,7 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.match(lot, /lot-stock-screen/);
   assert.match(lot, /glass-prestige/);
   assert.match(lot, /RAIDHO_R_MARK/);
+  assert.doesNotMatch(lot, /CoveredCoach/);
   assert.match(lot, /data-lot-stock/);
   assert.match(lot, /data-lot-search/);
   assert.match(lot, /data-lot-chips/);
@@ -100,6 +101,29 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.match(search, /stock_number or VIN/);
   assert.doesNotMatch(search, /DialaBot|dialabot|node:fs|createRequire/);
   assert.doesNotMatch(search, /ownLotInventory|rvData|from "@\/lib\/rv\/catalog"/);
+});
+
+test("a lot unit with no photo shows the Raidho mark and a real photo stays", () => {
+  const lot = read("../../components/lot/LotStockApp.tsx");
+  const cover = read("../../components/shell/CoveredCoach.tsx");
+  const homeScreen = read("../../components/shell/HomeScreen.tsx");
+  const css = read("../../styles.css");
+
+  assert.match(lot, /const photoUrl = lotUnitPhoto\(unit\)/);
+  assert.match(lot, /failedSrc !== photoUrl \? photoUrl : null/);
+  assert.match(lot, /data-lot-photo="unit"/);
+  assert.match(lot, /onError=\{\(\) => setFailedSrc\(photo\)\}/);
+  assert.match(lot, /data-lot-photo="raidho"/);
+  assert.match(lot, /src=\{RAIDHO_R_MARK\}/);
+  assert.match(lot, /className="lot-mark-art"/);
+  assert.doesNotMatch(lot, /CoveredCoach|coverVariant/);
+  assert.doesNotMatch(lot, /unit\.photo\s*=/);
+  assert.match(css, /\.lot-mark-art[\s\S]*height:\s*45%/);
+  assert.match(css, /\.lot-mark-art[\s\S]*object-fit:\s*contain/);
+  assert.match(css, /\.lot-mark-art[\s\S]*opacity:\s*0\.36/);
+  assert.match(homeScreen, /<CoveredCoach variant=\{coverVariant\(unit\)\} \/>/);
+  assert.match(cover, /className="h-20 w-full"/);
+  assert.doesNotMatch(cover, /preserveAspectRatio|className\?:/);
 });
 
 test("RV Grok prompts and DialaBot stay out of this page", () => {
