@@ -555,7 +555,7 @@ test("system prompts never deflect to website / OEM / dealer — unconditional",
     grounding,
     /never the whole answer when research notes are present/,
   );
-  assert.match(grounding, /IS in the verified catalog/);
+  assert.match(grounding, /Do not say the coach is not in the catalog and stop/);
   assert.match(src(root, "coachIdentity.ts"), /fromQuery/);
   assert.match(src(root, "coachIdentity.ts"), /namedCoachConflictsLock/);
   assert.match(src(root, "coachIdentity.ts"), /askNamesCoachIdentity/);

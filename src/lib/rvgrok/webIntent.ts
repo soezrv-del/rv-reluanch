@@ -11,6 +11,8 @@
  * an OEM spec the catalog does not already pin (no row, UNKNOWN hard
  * fields, missing OEM weight pin on a weight ask), or a live condition
  * (weather, road closures). A locked pin does not wait on search.
+ * Rv Facts spec and info asks are the exception: factsScreenPolicy forces
+ * a live web search and does not use this gate.
  * Do not invent OEM numbers. If search returns nothing, say so — never
  * EST when a live OEM / brochure / dealer source exists.
  * Inventory / diesel-count / in-stock still trip this detector so voice+chat

@@ -30,6 +30,7 @@ import {
   looksLikeSpecQuestion,
 } from "@/lib/rvgrok/webIntent";
 import {
+  formatFactsStockBlock,
   formatOwnLotBlock,
   loadOwnLotSnapshot,
   looksLikeOwnLotStockQuestion,
@@ -38,6 +39,16 @@ import {
   queryOwnLotUnits,
   shouldSkipWebForOwnLot,
 } from "@/lib/rvgrok/ownLotInventory";
+import { lotQueryForFollowUp } from "@/lib/rvgrok/ownLotAsk";
+import {
+  activeScreenFromContext,
+  classifyFactsTurn,
+  FACTS_SPEC_INSTRUCTION,
+  FACTS_STOCK_INSTRUCTION,
+  factsChatTools,
+  factsRequiredTool,
+  isFactsScreen,
+} from "@/lib/rvgrok/factsScreenPolicy";
 import { looksLikeDeskSheetAsk } from "@/lib/rvgrok/deskSheetPolicy";
 import {
   formatChatSpecMissReply,
@@ -151,6 +162,7 @@ function withGrounding(
     visitorMemory?: string;
     standingLessons?: string;
     mode?: TalkMode;
+    factsNote?: string;
   },
 ) {
   let out = injectStandingLessons(system, opts?.standingLessons);
@@ -170,6 +182,8 @@ function withGrounding(
   if (lot) {
     out = `${out}\n\n═══════════════════════════════════════\nOWN-LOT INVENTORY (RV Country)\n═══════════════════════════════════════\n${lot}`;
   }
+  const factsNote = (opts?.factsNote || "").trim();
+  if (factsNote) out = `${out}\n\n${factsNote}`;
   return out;
 }
 
@@ -347,7 +361,7 @@ const XAI_CHAT_TOOLS = [
   ),
   toolFn(
     "estimate_payment",
-    "Payment estimate from price, ZIP, term, and credit band. An estimate, not a loan offer.",
+    "Payment estimate from price, ZIP, term, and credit band. An estimate, not a loan offer. Do not pass a web-found number.",
     {
       price: { type: "number" },
       zip: { type: "string" },
@@ -631,6 +645,7 @@ async function runXaiWithTools(opts: {
   requiredTool: string | null;
   userText: string;
   requestOrigin?: string;
+  tools?: typeof XAI_CHAT_TOOLS;
 }): Promise<Response | null> {
   const working: Array<Record<string, unknown>> = opts.messages.map((m) => ({
     role: m.role,
@@ -660,7 +675,7 @@ async function runXaiWithTools(opts: {
       body: JSON.stringify({
         model: opts.model,
         messages: working,
-        tools: XAI_CHAT_TOOLS,
+        tools: opts.tools ?? XAI_CHAT_TOOLS,
         tool_choice:
           forced === "generate_image"
             ? { type: "function", function: { name: "generate_image" } }
@@ -848,6 +863,11 @@ async function tryXaiDirect(
   standingLessons?: string,
   mode?: TalkMode,
   requestOrigin?: string,
+  turn?: {
+    tools?: typeof XAI_CHAT_TOOLS;
+    requiredTool?: string | null;
+    factsNote?: string;
+  },
 ): Promise<Response | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return null;
@@ -856,7 +876,11 @@ async function tryXaiDirect(
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
   const forceImageTool = wantsGeneratedImage(lastPlain);
-  const requiredTool = forceImageTool ? null : requiredToolForAsk(lastPlain);
+  const requiredTool = forceImageTool
+    ? null
+    : turn
+      ? (turn.requiredTool ?? null)
+      : requiredToolForAsk(lastPlain);
   const MODELS = vision
     ? ["grok-4.7", "grok-4.6", "grok-4.5", "grok-4-latest", "grok-2-vision-1212", "grok-3"]
     : ["grok-4.7", "grok-4.6", "grok-4-latest", "grok-4.5", "grok-3"];
@@ -878,6 +902,7 @@ async function tryXaiDirect(
       visitorMemory,
       standingLessons,
       mode,
+      factsNote: turn?.factsNote,
     },
   );
   const fullMessages: ChatMessage[] = [
@@ -896,6 +921,7 @@ async function tryXaiDirect(
         requiredTool,
         userText: lastPlain,
         requestOrigin,
+        tools: turn?.tools,
       });
       if (result) return result;
     } catch {
@@ -920,6 +946,7 @@ async function tryCloudflareWorker(
   visitorMemory?: string,
   standingLessons?: string,
   mode?: TalkMode,
+  factsNote?: string,
 ): Promise<Response | null> {
   const base = workerBase();
   const candidates = agentMode
@@ -952,6 +979,7 @@ async function tryCloudflareWorker(
                   visitorMemory,
                   standingLessons,
                   mode,
+                  factsNote,
                 },
               ),
             },
@@ -1136,9 +1164,16 @@ export const Route = createFileRoute("/api/rvgrok")({
         const catalogContext = lastNamesCoach
           ? serverGrounded.block || ""
           : serverGrounded.block || body.catalogContext || "";
+        const userTexts = messages
+          .filter((m) => m.role === "user")
+          .map((m) => contentToPlain(m.content));
+        const priorUserTexts = userTexts.slice(0, -1);
+        const screen = activeScreenFromContext(body.catalogContext);
+        const factsTurn = classifyFactsTurn(screen, lastPlain, priorUserTexts);
 
         const specWeightAsk = isWeightSpecAsk(lastPlain);
         if (
+          factsTurn !== "spec" &&
           specWeightAsk &&
           serverGrounded.identity?.make &&
           serverGrounded.identity.model
@@ -1223,19 +1258,30 @@ export const Route = createFileRoute("/api/rvgrok")({
 
         let ownLotNotes: string | undefined;
         let skipWebForLot = false;
-        if (looksLikeOwnLotStockQuestion(lastPlain)) {
+        const stockQuery =
+          factsTurn === "stock"
+            ? lotQueryForFollowUp(lastPlain, priorUserTexts) || lastPlain
+            : lastPlain;
+        if (
+          factsTurn === "stock" ||
+          (!isFactsScreen(screen) && looksLikeOwnLotStockQuestion(lastPlain))
+        ) {
           const snapshot = await loadOwnLotSnapshot({ requestOrigin });
-          ownLotNotes = formatOwnLotBlock(snapshot, lastPlain);
-          skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
+          if (factsTurn === "stock") {
+            ownLotNotes = formatFactsStockBlock(snapshot, stockQuery);
+            skipWebForLot = true;
+          } else {
+            ownLotNotes = formatOwnLotBlock(snapshot, lastPlain);
+            skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
+          }
         }
 
-        // Memory first. Await research only for a true external ask
-        // (repair, market, inventory, weather). Coach and spec asks stream
-        // from memory and the catalog without this hold.
+        // Memory first on other screens. Rv Facts spec turns always search.
         const wantsWebFallback =
-          !skipWebForLot &&
-          (serverGrounded.needsWeb ||
-            (!serverGrounded.identity && Boolean(body.wantsWebFallback)));
+          factsTurn === "spec" ||
+          (!skipWebForLot &&
+            (serverGrounded.needsWeb ||
+              (!serverGrounded.identity && Boolean(body.wantsWebFallback))));
 
         let webNotes: string | undefined;
         if (wantsWebFallback) {
@@ -1254,6 +1300,9 @@ export const Route = createFileRoute("/api/rvgrok")({
             researchOrder:
               (await getResearchOrderOverride()) ?? undefined,
             identity: serverGrounded.identity,
+            screen,
+            skipOwnLot: factsTurn === "spec",
+            priorUserTexts,
           });
           const reportText = looksLikeDeskSheetAsk(lastPlain)
             ? formatCoachReportTimeoutReply({
@@ -1281,6 +1330,19 @@ export const Route = createFileRoute("/api/rvgrok")({
           });
         }
 
+        const factsNote =
+          factsTurn === "spec"
+            ? FACTS_SPEC_INSTRUCTION
+            : factsTurn === "stock"
+              ? FACTS_STOCK_INSTRUCTION
+              : undefined;
+        const chatTools = factsChatTools(XAI_CHAT_TOOLS, screen, factsTurn);
+        const requiredTool = factsRequiredTool(
+          requiredToolForAsk(lastPlain),
+          factsTurn,
+          screen,
+        );
+
         // xAI first when the key is present so generate_image (and vision) work.
         const fromXai = await tryXaiDirect(
           messages,
@@ -1294,6 +1356,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           standingLessons,
           talkMode,
           requestOrigin,
+          { tools: chatTools, requiredTool, factsNote },
         );
         if (fromXai) return finish(fromXai);
         const fromWorker = await tryCloudflareWorker(
@@ -1307,6 +1370,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           visitorMemory,
           standingLessons,
           talkMode,
+          factsNote,
         );
         if (fromWorker) return finish(fromWorker);
 

@@ -23,6 +23,11 @@ import {
   type WebFallbackSpecs,
 } from "./webIntent.ts";
 import {
+  factsSpecRequestsWebSearch,
+  factsStockCheckAllowed,
+  isFactsScreen,
+} from "./factsScreenPolicy.ts";
+import {
   isOwnLotResearchNotes,
   looksLikeOwnLotStockQuestion,
   ownLotNotesForSpeech,
@@ -91,7 +96,7 @@ export function isVoiceWebAccessBlocked(reason: string): boolean {
 }
 
 export const VOICE_RESEARCH_ANSWER_INSTRUCTIONS =
-  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Year / make / model reports synthesize live WEB RESEARCH (OEM / factory brochure / dealer first) plus the CATALOG / BROCHURE lock — never training data alone. Use WEB RESEARCH notes if they are present and successful. Never claim search failed, timed out, or came back empty unless WEB RESEARCH NOTES or WEB SEARCH NOT AVAILABLE were injected this turn. If notes say access or research is blocked, say that — do not claim search came back empty. If catalog is UNKNOWN / GAP on a specs ask, use the browse notes — never EST / low confidence when live notes confirm a fact; if a VERIFIED catalog pin is in context, speak those OEM numbers FIRST and do not lead with search timed out or returned nothing after a retry; if there is no pin and search returned nothing after a retry, say so plainly and do not invent brochure numbers from training. Do not stop at I don't know. Speak every VERIFIED LOCKED WEIGHTS number — never say you don't have a VERIFIED GVWR. Never read a URL, markdown, or citation list. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a nationwide market value ask: speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample listings CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
+  "Answer the user's last spoken question now. Spoken only — short, conversational, under 20 seconds. Year / make / model reports synthesize live WEB RESEARCH (OEM / factory brochure / dealer first) plus the CATALOG / BROCHURE lock — never training data alone. Use WEB RESEARCH notes if they are present and successful. Never claim search failed, timed out, or came back empty unless WEB RESEARCH NOTES or WEB SEARCH NOT AVAILABLE were injected this turn. If notes say access or research is blocked, say that — do not claim search came back empty. If catalog is UNKNOWN / GAP on a specs ask, use the browse notes — never EST / low confidence when live notes confirm a fact; if a VERIFIED catalog pin is in context, speak those OEM numbers FIRST and do not lead with search timed out or returned nothing after a retry; if there is no pin and search returned nothing after a retry, say so plainly and do not invent brochure numbers from training. Do not stop at I don't know. Speak every VERIFIED LOCKED WEIGHTS number — never say you don't have a VERIFIED GVWR. Name the site for a web-found number. Do not read a full URL, markdown, or a citation list. An exact pinned Facts value wins. Do not use a web-found number for payment, CCC, hitch, or tow math. If notes say WEB SEARCH NOT AVAILABLE, do not claim you looked it up and do not invent a part location. If this is a nationwide market value ask: speak Low / Average / High from live nationwide asking prices (year ±2). Never quote a nightly scrape, RVcountry competitor-latest, sample listings CSV, or a stale comps table. If this is a repair / diagnose ask (or a REPAIR PLAYBOOK is in context): symptoms → uncertain causes → safety (LP, 120V, CO, brakes, tires, structure) → DIY vs pro. Not a certified RV tech. Never invent a torque spec, part number, wiring color, or sensor bypass.";
 
 export type VoiceWebDecision =
   | { action: "pass" }
@@ -138,15 +143,37 @@ export function decideVoiceWebResearch(opts: {
   transcript: string;
   specs?: WebFallbackSpecs;
   catalogBlock?: string;
+  screen?: string;
+  priorUserTexts?: readonly string[];
 }): VoiceWebDecision {
   const transcript = (opts.transcript || "").trim();
   if (!transcript) return { action: "pass" };
+  const screen = (opts.screen || "").trim();
+  const prior = opts.priorUserTexts || [];
+  if (isFactsScreen(screen) && factsSpecRequestsWebSearch(screen, transcript, prior)) {
+    return {
+      action: "research",
+      query: transcript.slice(0, 400),
+      catalogBlock: (opts.catalogBlock || "").trim(),
+      speakHold: shouldSpeakVoiceResearchHold(transcript, opts.specs),
+    };
+  }
+  if (isFactsScreen(screen) && factsStockCheckAllowed(transcript, prior)) {
+    return {
+      action: "research",
+      query: transcript.slice(0, 400),
+      catalogBlock: (opts.catalogBlock || "").trim(),
+      speakHold: false,
+    };
+  }
   // "Do we have a 2012 Tiffin Phaeton?" is an own-lot ask but not an
   // inventory/count phrase, so needsWebFallback stays false and voice
   // used to answer from memory. Lot questions must still load the snapshot.
+  // Rv Facts spec turns already returned above and do not take this path.
   const ownLot =
-    looksLikeOwnLotStockQuestion(transcript) ||
-    looksLikeInventoryOrCountQuestion(transcript);
+    !isFactsScreen(screen) &&
+    (looksLikeOwnLotStockQuestion(transcript) ||
+      looksLikeInventoryOrCountQuestion(transcript));
   if (!ownLot && !needsWebFallback(opts.specs ?? null, transcript)) {
     return { action: "pass" };
   }
@@ -179,6 +206,9 @@ export function formatVoiceWebSearchInjection(
   result: WebSearchNotes,
   opts?: { catalogBlock?: string },
 ): string {
+  if (result.ok && /FACTS STOCK CHECK/.test(result.notes || "")) {
+    return result.notes;
+  }
   if (result.ok && isOwnLotResearchNotes(result.notes || "")) {
     return ownLotNotesForSpeech(result.notes);
   }
@@ -193,7 +223,7 @@ export function formatVoiceWebSearchInjection(
       "WEB RESEARCH NOTES (live this turn — you DID look this up):",
       stripNotesForSpeech(result.notes),
       "Speak a short conversational answer. Do not claim you have no internet.",
-      "Do not read URLs, markdown, or citation lists. Catalog lock still wins on numbers.",
+      "Name the site. Do not read a full URL or a citation list. An exact pinned Facts value still wins. A web-found number is never for payment, CCC, hitch, or tow math.",
       estLine,
     ].join("\n");
   }
@@ -255,6 +285,8 @@ export async function fetchVoiceWebResearchNotes(opts: {
   signal?: AbortSignal;
   /** Session whitelist phone — same credential chat + token send. */
   accessPhone?: string;
+  screen?: string;
+  priorUserTexts?: readonly string[];
 }): Promise<WebSearchNotes> {
   try {
     const post = (phoneForHeader: string) =>
@@ -270,6 +302,8 @@ export async function fetchVoiceWebResearchNotes(opts: {
         body: JSON.stringify({
           query: opts.query,
           catalogContext: opts.catalogContext || undefined,
+          screen: opts.screen || undefined,
+          priorUserTexts: opts.priorUserTexts,
         }),
         signal:
           opts.signal ??

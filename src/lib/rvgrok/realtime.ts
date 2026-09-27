@@ -73,6 +73,11 @@ import {
   OWN_LOT_SCRAPE_IN_FRONT,
   ownLotVoiceCoachLock,
 } from "./ownLotAsk";
+import {
+  classifyFactsTurn,
+  FACTS_STOCK_INSTRUCTION,
+  isFactsScreen,
+} from "./factsScreenPolicy";
 import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
 import {
   coachKnowledgeKeyEquals,
@@ -1110,14 +1115,17 @@ export class GrokRealtimeSession {
     this.recentUserTurns.push(spoken);
     if (this.recentUserTurns.length > 12) this.recentUserTurns.shift();
     const priorTurns = this.recentUserTurns.slice(0, -1);
+    const factsTurn = classifyFactsTurn(this.screenAtAsk, spoken, priorTurns);
     transcript = catalogQueryForFollowUp(
       spoken,
       priorTurns,
       this.facts,
       this.recentCoachMentions,
     );
-    const lotFollow = lotQueryForFollowUp(spoken, priorTurns);
-    if (lotFollow) transcript = lotFollow;
+    if (!isFactsScreen(this.screenAtAsk) || factsTurn === "stock") {
+      const lotFollow = lotQueryForFollowUp(spoken, priorTurns);
+      if (lotFollow) transcript = lotFollow;
+    }
     this.noteCoachMention(spoken);
     const searchFollow =
       /\b(search(?:\s+for)?\s+it|look\s+(?:it|that)\s+up|you need to search)\b/i.test(
@@ -1228,6 +1236,8 @@ export class GrokRealtimeSession {
       transcript,
       specs: grounded.specs,
       catalogBlock: grounded.block || this.catalogContext,
+      screen: this.screenAtAsk,
+      priorUserTexts: priorTurns,
     });
     const catalogReady =
       grounded.identity || decision.action === "research"
@@ -1282,6 +1292,8 @@ export class GrokRealtimeSession {
       catalogContext: decision.catalogBlock || this.catalogContext,
       signal: this.researchAbort.signal,
       accessPhone: this.accessPhone,
+      screen: this.screenAtAsk,
+      priorUserTexts: priorTurns,
     });
 
     if (catalogReady) {
@@ -1417,7 +1429,9 @@ export class GrokRealtimeSession {
     }
     this.suppressMic = true;
     this.handlers.onStatus("thinking", "Answering…");
-    const inventoryTurn = /OWN-LOT inventory/.test(injection);
+    const factsStockTurn = /FACTS STOCK CHECK/.test(injection);
+    const inventoryTurn =
+      !factsStockTurn && /OWN-LOT inventory/.test(injection);
     if (inventoryTurn) this.lastLessonLotNotes = injection;
     const plantTurn = looksLikeCompanyOrPlantAsk(this.lastResearchTranscript);
     try {
@@ -1436,7 +1450,9 @@ export class GrokRealtimeSession {
           type: "response.create",
           response: {
             modalities: ["text", "audio"],
-            instructions: inventoryTurn
+            instructions: factsStockTurn
+              ? `${FACTS_STOCK_INSTRUCTION}\n\n${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}`
+              : inventoryTurn
               ? `${OWN_LOT_SCRAPE_IN_FRONT}\n\n${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis turn is OWN-LOT inventory. Speak the Lot total and any listed unit. Every printed field on that unit line is yours to answer from. That unit is on our lot. Do not say a smaller count. Do not web-search over this snapshot. If a floorplan breakdown is printed, say it once and do not recount. Do not keep a store from an earlier turn unless that store is on a unit line.`
               : plantTurn
                 ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis is a factory or company question, not a coach. Answer it in full. Do not stop after the factory's name. Do not ask for a year, make, model, or floorplan.`
@@ -1806,6 +1822,7 @@ export class GrokRealtimeSession {
         catalogContext: pending.grounded.block,
         signal: this.researchAbort?.signal,
         accessPhone: this.accessPhone,
+        screen: this.screenAtAsk,
       }).catch(() => null);
       if (seq !== this.specTurnSeq || this.closed || this.intentionalStop) return;
       const researched = formatChatSpecMissReply({
@@ -1911,6 +1928,7 @@ export class GrokRealtimeSession {
           .join(" "),
         catalogContext: grounded.block,
         accessPhone: this.accessPhone,
+        screen: this.screenAtAsk,
       }).catch(() => null);
       if (this.closed || this.intentionalStop || seq !== this.specTurnSeq) return;
       script =
