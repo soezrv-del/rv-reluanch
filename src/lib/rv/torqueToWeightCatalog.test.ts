@@ -65,7 +65,7 @@ test("catalog helper scores published UVW, else published GVWR", async () => {
   assert.ok(Math.abs(lineage.ratio - uvwRatio) < 0.05);
   assert.equal(
     lineage.color,
-    lineage.score >= 8 ? "green" : lineage.score >= 6 ? "yellow" : "red",
+    lineage.score >= 5 ? "green" : lineage.score >= 2 ? "yellow" : "red",
   );
 
   const gvwrOnly = report.scored.find((r) => r.weightBasis === "GVWR");
@@ -75,7 +75,7 @@ test("catalog helper scores published UVW, else published GVWR", async () => {
   assert.ok(Math.abs(gvwrOnly.ratio - gvwrRatio) < 0.05);
   assert.equal(
     gvwrOnly.color,
-    gvwrOnly.score >= 8 ? "green" : gvwrOnly.score >= 6 ? "yellow" : "red",
+    gvwrOnly.score >= 5 ? "green" : gvwrOnly.score >= 2 ? "yellow" : "red",
   );
 
   const seneca = report.scored.filter(

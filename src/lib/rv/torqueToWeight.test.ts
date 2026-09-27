@@ -52,23 +52,57 @@ test("two scales: UVW 32/40/48 and GVWR 22/28/34", () => {
   assert.equal(scoreFromTorqueToWeightRatio(null, "UVW"), null);
   assert.equal(scoreFromTorqueToWeightRatio(-1, "GVWR"), null);
 
-  // 36 is yellow on the UVW ruler and green on the GVWR ruler.
-  const uvw36 = scoreFromTorqueToWeightRatio(36, "UVW");
-  const gvwr36 = scoreFromTorqueToWeightRatio(36, "GVWR");
-  assert.equal(barColorFromScore(uvw36), "yellow");
-  assert.equal(barColorFromScore(gvwr36), "green");
-  assert.notEqual(barColorFromScore(uvw36), colorFromGvwrRatio(36));
+  // 20 is yellow on the UVW ruler (score 3) and green on the GVWR ruler (score ~5.3).
+  const uvw20 = scoreFromTorqueToWeightRatio(20, "UVW");
+  const gvwr20 = scoreFromTorqueToWeightRatio(20, "GVWR");
+  assert.equal(barColorFromScore(uvw20), "yellow");
+  assert.equal(barColorFromScore(gvwr20), "green");
+  assert.equal(colorFromGvwrRatio(20), "green");
+  assert.notEqual(barColorFromScore(uvw20), colorFromGvwrRatio(20));
 
-  assert.equal(barColorFromScore(5.99), "red");
-  assert.equal(barColorFromScore(6.0), "yellow");
-  assert.equal(barColorFromScore(7.99), "yellow");
-  assert.equal(barColorFromScore(8.0), "green");
+  assert.equal(barColorFromScore(1.99), "red");
+  assert.equal(barColorFromScore(2), "yellow");
+  assert.equal(barColorFromScore(4.99), "yellow");
+  assert.equal(barColorFromScore(5), "green");
 
   assert.equal(dryWeightBarColor(47.4), "green");
-  assert.equal(dryWeightBarColor(36), "yellow");
-  assert.equal(dryWeightBarColor(31.9), "red");
+  assert.equal(dryWeightBarColor(28), "green");
+  assert.equal(dryWeightBarColor(16), "yellow");
+  assert.equal(dryWeightBarColor(15.9), "red");
   assert.equal(dryWeightBarColor(0.04), "red");
   assert.equal(dryWeightBarColor(0.0132), "red");
+});
+
+test("color bands follow score 2 and score 5 on each ruler", () => {
+  const gvwrBands = [
+    [9.9, "red"],
+    [10, "yellow"],
+    [18.9, "yellow"],
+    [19, "green"],
+  ] as const;
+  for (const [ratio, color] of gvwrBands) {
+    assert.equal(colorFromGvwrRatio(ratio), color, `GVWR ratio ${ratio}`);
+    assert.equal(
+      barColorFromScore(scoreFromTorqueToWeightRatio(ratio, "GVWR")),
+      color,
+      `GVWR score color at ratio ${ratio}`,
+    );
+  }
+
+  const uvwBands = [
+    [15.9, "red"],
+    [16, "yellow"],
+    [27.9, "yellow"],
+    [28, "green"],
+  ] as const;
+  for (const [ratio, color] of uvwBands) {
+    assert.equal(
+      barColorFromScore(scoreFromTorqueToWeightRatio(ratio, "UVW")),
+      color,
+      `UVW ratio ${ratio}`,
+    );
+    assert.equal(dryWeightBarColor(ratio), color, `UVW dry bar ${ratio}`);
+  }
 });
 
 test("same torque and GVWR do not tie when UVW differs", () => {
@@ -95,7 +129,7 @@ test("same torque and GVWR do not tie when UVW differs", () => {
   assert.equal(short.ratio!.toFixed(1), "47.4");
   assert.equal(long.ratio!.toFixed(1), "36.0");
   assert.equal(short.color, "green");
-  assert.equal(long.color, "yellow");
+  assert.equal(long.color, "green");
   assert.notEqual(short.score, long.score);
   assert.equal(formatTorqueWeightBasisChip(short), "Power to weight");
   assert.equal(formatTorqueWeightBasisChip(long), "Power to weight");
@@ -147,7 +181,7 @@ test("GVWR fallback and printed UVW use different chips", () => {
   assert.equal(uvw.gvwrLb, 41_000);
   assert.equal(uvw.weightEstimated, false);
   assert.equal(uvw.ratio!.toFixed(1), "37.9");
-  assert.equal(uvw.color, "yellow");
+  assert.equal(uvw.color, "green");
   assert.notEqual(uvw.score, gvwr.score);
   assert.equal(formatTorqueWeightBasisChip(uvw), "Power to weight");
 
@@ -159,7 +193,7 @@ test("GVWR fallback and printed UVW use different chips", () => {
   });
   assert.equal(fr3.weightBasis, "GVWR");
   assert.equal(fr3.ratio!.toFixed(1), "21.3");
-  assert.equal(fr3.color, "red");
+  assert.equal(fr3.color, "green");
   assert.ok((fr3.score ?? 10) < 6);
   assert.equal(formatTorqueWeightBasisChip(fr3), "Power to weight");
 });
@@ -395,7 +429,7 @@ test("published UVW pin scores; an option-band with no torque stays GAP", () => 
   assert.equal(ttw.weightBasis, "UVW");
   assert.equal(ttw.weightEstimated, false);
   assert.equal(ttw.ratio!.toFixed(1), "34.3");
-  assert.equal(ttw.color, "yellow");
+  assert.equal(ttw.color, "green");
   assert.equal(formatTorqueWeightBasisChip(ttw), "Power to weight");
 
   const bus = findPowertrainCorrection("2023", "Tiffin", "Allegro Bus", "45OPP");
@@ -456,10 +490,10 @@ test("Facts Ratings bar names the weight that scored and does not use the 0.04 s
   assert.match(src, /weightEstimated = false/);
   assert.match(src, /6 \+ \(ratio - 32\) \/ 4/);
   assert.match(src, /6 \+ \(ratio - 22\) \/ 3/);
-  assert.match(src, /ratio >= 40/);
-  assert.match(src, /ratio >= 32/);
   assert.match(src, /ratio >= 28/);
-  assert.match(src, /ratio >= 22/);
+  assert.match(src, /ratio >= 16/);
+  assert.match(src, /ratio >= 19/);
+  assert.match(src, /ratio >= 10/);
   assert.match(src, /"Power to weight"/);
   assert.doesNotMatch(src, /Power to weight ratio/);
   assert.doesNotMatch(src, /Torque \/ UVW/);

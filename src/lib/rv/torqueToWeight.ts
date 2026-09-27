@@ -21,15 +21,15 @@
  * weightBasis = "GVWR" when the fallback scored.
  *
  * Two color scales. Do not put a GVWR ratio on the UVW ruler.
- * Color comes from the score: red under 6, yellow from 6 up to 8,
- * green at 8 and up.
+ * Color comes from the score: red under 2, yellow from 2 up to 5,
+ * green at 5 and up.
  *
- * UVW: green ratio >= 40, yellow ratio >= 32 and under 40, red below.
+ * UVW: green ratio >= 28, yellow ratio >= 16 and under 28, red below.
  *      score = clamp(6 + (ratio - 32) / 4, 1, 10)
- *      32 is 6.0. 40 is 8.0. 48 is 10.0.
- * GVWR: green ratio >= 28, yellow ratio >= 22 and under 28, red below.
+ *      16 is 2.0. 28 is 5.0. 32 is 6.0. 40 is 8.0. 48 is 10.0.
+ * GVWR: green ratio >= 19, yellow ratio >= 10 and under 19, red below.
  *       score = clamp(6 + (ratio - 22) / 3, 1, 10)
- *       22 is 6.0. 28 is 8.0. 34 is 10.0.
+ *       10 is 2.0. 19 is 5.0. 22 is 6.0. 28 is 8.0. 34 is 10.0.
  *
  * Towables stay N/A. A Class C toy hauler is still rateable. A fifth
  * wheel, travel trailer, truck camper, or Hideout is not.
@@ -565,13 +565,13 @@ export function scoreFromTorqueToWeightRatio(
   return clampScore(6 + (ratio - 22) / 3);
 }
 
-/** Green ≥ 28, yellow [22, 28), red < 22. Same bands as the score. */
+/** Green ≥ 19, yellow [10, 19), red < 10. Score 2 is ratio 10; score 5 is ratio 19. */
 export function colorFromGvwrRatio(
   ratio: number | null | undefined,
 ): TorqueBarColor | null {
   if (ratio == null || !Number.isFinite(ratio)) return null;
-  if (ratio >= 28) return "green";
-  if (ratio >= 22) return "yellow";
+  if (ratio >= 19) return "green";
+  if (ratio >= 10) return "yellow";
   return "red";
 }
 
@@ -579,8 +579,8 @@ export function barColorFromScore(
   score: number | null | undefined,
 ): TorqueBarColor | null {
   if (score == null || !Number.isFinite(score)) return null;
-  if (score < 6) return "red";
-  if (score < 8) return "yellow";
+  if (score < 2) return "red";
+  if (score < 5) return "yellow";
   return "green";
 }
 
