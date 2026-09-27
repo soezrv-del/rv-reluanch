@@ -55,6 +55,61 @@ export function newestLotUnit(units: LotUnit[]): LotUnit | null {
   return best;
 }
 
+/** How many recent lot arrivals Home shows under the hero. */
+export const NEWEST_ARRIVALS = 6;
+
+/** Newest received_date first. Same clock as newestLotUnit. Capped. */
+export function newestArrivals(
+  units: LotUnit[],
+  limit = NEWEST_ARRIVALS,
+): LotUnit[] {
+  const n = Math.max(0, Math.floor(limit));
+  return [...units]
+    .sort((a, b) => {
+      const ka = recency(a);
+      const kb = recency(b);
+      if (kb[0] !== ka[0]) return kb[0] - ka[0];
+      return kb[1] - ka[1];
+    })
+    .slice(0, n);
+}
+
+export function arrivalLabel(unit: LotUnit): string {
+  const parts = [unit.year, unit.make, unit.model]
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return parts.join(" ") || lotCoachName(unit);
+}
+
+/** Search text that finds this unit on the existing lot page. */
+export function lotArrivalQuery(unit: LotUnit): string {
+  const stock = unit.stock_number.trim();
+  if (stock) return stock;
+  const vin = unit.vin.trim();
+  if (vin) return vin;
+  return [unit.year, unit.make, unit.model, unit.trim]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(" ");
+}
+
+export const LOT_UNIT_OPEN_EVENT = "rvfox-open-lot-unit";
+
+let pendingLotQuery = "";
+
+export function requestLotUnit(query: string): void {
+  pendingLotQuery = query.trim();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(LOT_UNIT_OPEN_EVENT));
+  }
+}
+
+export function takePendingLotQuery(): string {
+  const query = pendingLotQuery;
+  pendingLotQuery = "";
+  return query;
+}
+
 export function lotCoachName(unit: LotUnit): string {
   const title = unit.title.trim();
   if (title) return title;

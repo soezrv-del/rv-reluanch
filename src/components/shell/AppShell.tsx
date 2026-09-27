@@ -437,7 +437,12 @@ export function AppShell({
           className="suite-swipe-viewport relative min-h-0 flex-1 overflow-hidden"
           aria-hidden={launchOpen}
         >
-          {homeOpen ? <HomeScreen coach={activeCoach} /> : null}
+          {homeOpen ? (
+            <HomeScreen
+              coach={activeCoach}
+              onOpenLot={() => onTabChange("rvlot")}
+            />
+          ) : null}
           {dockOrder.map((id, i) => {
             if (!show(id)) return null;
             return (

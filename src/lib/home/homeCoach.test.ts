@@ -5,7 +5,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { lotUnitPhoto, type LotUnit } from "../lot/ownLotPage.ts";
 import type { ActiveCoach } from "../rv/activeCoach.ts";
-import { newestLotUnit, resolveHomeCoach } from "./homeCoach.ts";
+import {
+  NEWEST_ARRIVALS,
+  newestArrivals,
+  newestLotUnit,
+  resolveHomeCoach,
+} from "./homeCoach.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -62,6 +67,43 @@ test("newest lot unit follows received_date, not file order", () => {
   });
   assert.equal(newestLotUnit([older, newer])?.title, "Newer");
   assert.equal(newestLotUnit([newer, older])?.title, "Newer");
+});
+
+test("newest arrivals follow received_date, newest first, and stop at the limit", () => {
+  const early = unit({
+    title: "Early",
+    printed: { received_date: "2026-01-02", id: "1" },
+  });
+  const mid = unit({
+    title: "Mid",
+    printed: { received_date: "2026-06-01", id: "2" },
+  });
+  const midLaterId = unit({
+    title: "MidLater",
+    printed: { received_date: "2026-06-01", id: "9" },
+  });
+  const late = unit({
+    title: "Late",
+    printed: { received_date: "2026-09-16", id: "3" },
+  });
+  assert.deepEqual(
+    newestArrivals([early, mid, midLaterId, late], 3).map((row) => row.title),
+    ["Late", "MidLater", "Mid"],
+  );
+  const many = Array.from({ length: 10 }, (_, i) =>
+    unit({
+      title: `U${i}`,
+      printed: {
+        received_date: `2026-03-${String(i + 1).padStart(2, "0")}`,
+        id: String(i),
+      },
+    }),
+  );
+  const capped = newestArrivals(many);
+  assert.equal(NEWEST_ARRIVALS, 6);
+  assert.equal(capped.length, 6);
+  assert.equal(capped[0]?.title, "U9");
+  assert.equal(capped[5]?.title, "U4");
 });
 
 test("home photo is a real lot image, or the name stands alone", () => {
@@ -131,7 +173,14 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(shell, /homeOpen/);
   assert.match(shell, /initialTab = "rvgrok"/);
   assert.match(home, /resolveHomeCoach/);
+  assert.match(home, /newestArrivals/);
+  assert.match(home, /data-home-arrivals/);
+  assert.match(home, /overflow-x-auto/);
+  assert.match(home, /overflow-y-auto/);
+  assert.match(home, /requestLotUnit/);
   assert.match(home, /fetchLotSnapshot/);
+  const lot = readFileSync(join(root, "../../components/lot/LotStockApp.tsx"), "utf8");
+  assert.match(lot, /takePendingLotQuery/);
   assert.match(home, /prefers-reduced-motion/);
   assert.match(brand, /\/assets\/brand\/raidho-shell-mark\.png/);
   assert.match(brand, /RvFOX/);
