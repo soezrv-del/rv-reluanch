@@ -1,0 +1,152 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { screenNameForTab } from "./screenContext.ts";
+import {
+  GUIDE_SCREEN_IDS,
+  SCREEN_CALLOUT,
+  SCREEN_CALLOUT_DEBOUNCE_MS,
+  SCREEN_GUIDE_PREAMBLE,
+  SCREEN_SHARED,
+  initialScreenCalloutState,
+  reduceScreenCallout,
+  screenCalloutLine,
+  screenGuideFor,
+  spokenScreenName,
+  type ScreenCalloutState,
+} from "./screenGuides.ts";
+
+const root = dirname(fileURLToPath(import.meta.url));
+
+const ROUTES: Array<[string, boolean, string]> = [
+  ["rvgrok", true, "Home"],
+  ["rvfax", false, "Facts"],
+  ["rvcal", false, "Cal"],
+  ["rvtow", false, "Tow"],
+  ["rvlot", false, "Lot"],
+  ["rvtrips", false, "RV GPS"],
+  ["rvgrok", false, "Grok"],
+  ["more", false, "Premium"],
+  ["rvsold", false, "Sold"],
+];
+
+test("every suite route and the VIN Decoder have a guide and a one-line callout", () => {
+  assert.equal(SCREEN_CALLOUT_DEBOUNCE_MS, 1500);
+  const covered = new Set<string>(GUIDE_SCREEN_IDS);
+  for (const [tab, home, expected] of ROUTES) {
+    assert.equal(screenNameForTab(tab, home), expected);
+    assert.ok(covered.has(expected), expected);
+  }
+  assert.ok(covered.has("VIN Decoder"));
+  for (const id of GUIDE_SCREEN_IDS) {
+    const guide = screenGuideFor(id);
+    const line = screenCalloutLine(id);
+    assert.ok(guide && guide.length > 80, id);
+    assert.ok(line && line.length > 10, id);
+    assert.equal(line.includes("\n"), false, id);
+    assert.ok(spokenScreenName(id).length > 0, id);
+    assert.equal(SCREEN_CALLOUT[id], line, id);
+  }
+  assert.equal(screenGuideFor("Share"), null);
+  assert.equal(screenNameForTab("rvshare", false), "Share");
+});
+
+test("guides match the current showroom, pills, and labels", () => {
+  const home = screenGuideFor("Home") || "";
+  const shared = SCREEN_SHARED;
+  const all = GUIDE_SCREEN_IDS.map((id) => screenGuideFor(id) || "").join("\n");
+  assert.match(home, /2026 Entegra Cornerstone/);
+  assert.match(home, /45282/);
+  assert.match(home, /45D/);
+  assert.match(home, /Newest arrivals/);
+  assert.match(home, /auto-loops/);
+  assert.match(home, /Lot Inventory/);
+  assert.doesNotMatch(home, /last looked-up|newest lot unit|isn't a button/);
+  assert.match(shared, /What's up\?/);
+  assert.match(shared, /Rv Facts, Lot Inventory, Calculator, RV Grok, and Tow Guide/);
+  assert.match(shared, /does not auto-scroll/);
+  assert.match(shared, /Rv Facts, Calculator, RV Grok, Tow Guide, RV GPS, Lot Inventory/);
+  assert.match(screenGuideFor("Facts") || "", /Power to weight/);
+  assert.match(screenGuideFor("Facts") || "", /smallest in series/);
+  assert.match(screenGuideFor("Facts") || "", /Share kit/);
+  assert.doesNotMatch(all, /Send kit/);
+  assert.doesNotMatch(all, /series range/);
+  assert.doesNotMatch(all, /Ask about this coach/);
+  assert.match(screenGuideFor("Premium") || "", /NHTSA\.gov — Official Recalls/);
+  assert.match(screenGuideFor("VIN Decoder") || "", /Decode the chassis VIN on motorhomes/);
+  assert.match(SCREEN_GUIDE_PREAMBLE, /Never say you can't see his screen/);
+  assert.doesNotMatch(SCREEN_GUIDE_PREAMBLE, /You cannot see the screen/);
+  assert.doesNotMatch(all, /You cannot see the screen|I can't see the screen/);
+});
+
+test("VIN Decoder is its own screen while Premium is open", () => {
+  const more = readFileSync(
+    join(root, "../../components/more/MoreApp.tsx"),
+    "utf8",
+  );
+  assert.match(
+    more,
+    /setActiveScreen\(vinOpen \? VIN_DECODER_SCREEN : "Premium"\)/,
+  );
+});
+
+function step(
+  state: ScreenCalloutState,
+  event: Parameters<typeof reduceScreenCallout>[1],
+): ReturnType<typeof reduceScreenCallout> {
+  return reduceScreenCallout(state, event);
+}
+
+test("rapid tab switches speak only the final screen", () => {
+  let state = initialScreenCalloutState();
+  state = step(state, { type: "navigate", screen: "Facts", now: 0 }).state;
+  state = step(state, { type: "navigate", screen: "Tow", now: 400 }).state;
+  state = step(state, { type: "navigate", screen: "Lot", now: 800 }).state;
+  const early = step(state, { type: "tick", now: 2299 });
+  assert.equal(early.speak, null);
+  const landed = step(early.state, { type: "tick", now: 2300 });
+  assert.match(landed.speak || "", /^Lot Inventory\./);
+  assert.doesNotMatch(landed.speak || "", /Rv Facts|Tow Guide/);
+});
+
+test("the same screen is not called out twice in a row", () => {
+  let state = initialScreenCalloutState();
+  state = step(state, { type: "navigate", screen: "Lot", now: 0 }).state;
+  const first = step(state, { type: "tick", now: 1500 });
+  assert.match(first.speak || "", /Lot Inventory/);
+  const again = step(
+    step(first.state, { type: "navigate", screen: "Lot", now: 1600 }).state,
+    { type: "tick", now: 3100 },
+  );
+  assert.equal(again.speak, null);
+  state = step(again.state, { type: "navigate", screen: "Tow", now: 3200 }).state;
+  state = step(state, { type: "navigate", screen: "Lot", now: 3400 }).state;
+  const back = step(state, { type: "tick", now: 4900 });
+  assert.equal(back.speak, null);
+  state = step(back.state, { type: "navigate", screen: "Facts", now: 5000 }).state;
+  const next = step(state, { type: "tick", now: 6500 });
+  assert.match(next.speak || "", /^Rv Facts\./);
+});
+
+test("a callout waits out the user's speech and the reply to it", () => {
+  let state = initialScreenCalloutState();
+  state = step(state, { type: "navigate", screen: "Home", now: 0 }).state;
+  state = step(state, { type: "user-start" }).state;
+  const during = step(state, { type: "tick", now: 2000 });
+  assert.equal(during.speak, null);
+  const stopped = step(during.state, { type: "user-stop" });
+  assert.equal(stopped.speak, null);
+  const stillTalking = step(stopped.state, { type: "user-start" });
+  const interrupted = step(stillTalking.state, {
+    type: "reply-done",
+    now: 2500,
+  });
+  assert.equal(interrupted.speak, null);
+  const quiet = step(interrupted.state, { type: "user-stop" });
+  const after = step(quiet.state, { type: "reply-done", now: 3000 });
+  assert.match(after.speak || "", /^Home\./);
+  const again = step(after.state, { type: "reply-done", now: 4000 });
+  assert.equal(again.speak, null);
+});

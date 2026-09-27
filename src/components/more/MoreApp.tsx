@@ -34,6 +34,8 @@ import {
 import { NhtsaRecallsPanel } from "@/components/nhtsa/NhtsaRecallsPanel";
 import { AccessMoreSection } from "@/components/access/AccessMoreSection";
 import { VoicePanel } from "@/components/rvgrok/VoicePanel";
+import { VIN_DECODER_SCREEN } from "@/lib/rvgrok/screenGuides";
+import { setActiveScreen } from "@/lib/rvgrok/screenContext";
 import type { GrokVoice } from "@/lib/rvgrok/voice";
 import {
   DEFAULT_VOICE,
@@ -78,8 +80,11 @@ function countGrokChats(): number {
 
 export function MoreApp({
   onNavigate,
+  active = true,
 }: {
   onNavigate?: (tab: AppTab) => void;
+  /** False while Premium is kept mounted under another tab. */
+  active?: boolean;
 }) {
   const [sheet, setSheet] = useState<SheetId>(null);
   const [refreshTick, setRefreshTick] = useState(0);
@@ -90,6 +95,11 @@ export function MoreApp({
 
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [vinOpen, setVinOpen] = useState(false);
+
+  useEffect(() => {
+    if (!active) return;
+    setActiveScreen(vinOpen ? VIN_DECODER_SCREEN : "Premium");
+  }, [active, vinOpen]);
   const [selectedVoice, setSelectedVoice] = useState(DEFAULT_VOICE);
   const [voiceMode, setVoiceMode] = useState(false);
   const [liveVoice, setLiveVoice] = useState(false);

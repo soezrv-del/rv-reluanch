@@ -3,8 +3,8 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { screenGuideFor } from "./screenGuides.ts";
 import {
-  SCREEN_GUIDANCE,
   markAskBarGrokEntry,
   onActiveScreenChange,
   readActiveScreen,
@@ -26,7 +26,7 @@ test("a screen switch is attached to the next ask, not the visible message", () 
     catalogContext: withActiveScreen("PIN GVWR 39600"),
   };
   assert.match(onFacts.catalogContext || "", /ACTIVE SCREEN: Facts/);
-  assert.ok((onFacts.catalogContext || "").includes(SCREEN_GUIDANCE.Facts));
+  assert.ok((onFacts.catalogContext || "").includes(screenGuideFor("Facts") || ""));
 
   setActiveScreen("Tow");
   const onTow = {
@@ -38,29 +38,31 @@ test("a screen switch is attached to the next ask, not the visible message", () 
   assert.doesNotMatch(onTow.messages[0].content, /ACTIVE SCREEN/);
   assert.doesNotMatch(onTow.messages[0].content, /towing capacity/);
   assert.match(onTow.catalogContext || "", /ACTIVE SCREEN: Tow/);
-  assert.ok((onTow.catalogContext || "").includes(SCREEN_GUIDANCE.Tow));
+  assert.ok((onTow.catalogContext || "").includes(screenGuideFor("Tow") || ""));
   assert.match(onTow.catalogContext || "", /PIN GVWR 39600/);
   assert.doesNotMatch(onTow.catalogContext || "", /ACTIVE SCREEN: Facts/);
-  assert.ok(!(onTow.catalogContext || "").includes(SCREEN_GUIDANCE.Facts));
+  assert.ok(!(onTow.catalogContext || "").includes("DID YOU MEAN?"));
   assert.equal((onTow.catalogContext || "").match(/ACTIVE SCREEN:/g)?.length, 1);
   setActiveScreen("");
 });
 
-test("only the active screen's guidance is attached, and each line stays short", () => {
-  for (const [name, guidance] of Object.entries(SCREEN_GUIDANCE)) {
-    assert.ok(guidance.length > 0 && guidance.length <= 200, name);
-    assert.equal(guidance.includes("\n"), false, name);
+test("only the active screen's guide is attached", () => {
+  for (const name of ["Home", "Facts", "Cal", "Tow", "Lot", "RV GPS", "Grok", "Premium", "Sold"]) {
+    const guidance = screenGuideFor(name) || "";
+    assert.ok(guidance.length > 80, name);
     setActiveScreen(name);
     const ctx = withActiveScreen("PIN GVWR 39600") || "";
-    assert.ok(ctx.includes(`ACTIVE SCREEN: ${name}. ${guidance}`), name);
+    assert.match(ctx, new RegExp(`ACTIVE SCREEN: ${name}\\.`), name);
+    assert.ok(ctx.includes(guidance), name);
     assert.equal(ctx.match(/ACTIVE SCREEN:/g)?.length, 1, name);
+    assert.equal(ctx.match(/SCREEN CONTEXT START/g)?.length, 1, name);
   }
   setActiveScreen("Cal");
   const onCal = withActiveScreen("PIN") || "";
   setActiveScreen("Lot");
   const onLot = withActiveScreen(onCal) || "";
-  assert.ok(onLot.includes(SCREEN_GUIDANCE.Lot));
-  assert.ok(!onLot.includes(SCREEN_GUIDANCE.Cal));
+  assert.ok(onLot.includes(screenGuideFor("Lot") || ""));
+  assert.ok(!onLot.includes("TARGET /MO"));
   setActiveScreen("");
 });
 
@@ -106,7 +108,7 @@ test("a coach ask keeps the screen from before the catalog await", async () => {
   setActiveScreen("Grok");
   const typed = withActiveScreen("2026 Holiday Rambler Admiral 29M", askedFrom) || "";
   assert.match(typed, /ACTIVE SCREEN: Tow/);
-  assert.match(typed, /towing capacity/);
+  assert.match(typed, /RV GVWR \(lbs\)/);
   assert.doesNotMatch(typed, /ACTIVE SCREEN: Grok/);
   assert.equal(typed.match(/ACTIVE SCREEN:/g)?.length, 1);
 
@@ -136,7 +138,7 @@ test("a chip change during Live Voice updates the screen, and the ask bar openin
   assert.deepEqual(seen, ["Tow", "Cal"]);
   const ctx = withActiveScreen(withActiveScreen("PIN", "Tow"), "Cal") || "";
   assert.match(ctx, /ACTIVE SCREEN: Cal/);
-  assert.match(ctx, /ZIP and credit score/);
+  assert.match(ctx, /TARGET \/MO/);
   assert.doesNotMatch(ctx, /ACTIVE SCREEN: Tow/);
   assert.doesNotMatch(ctx, /ACTIVE SCREEN: Grok/);
   assert.equal(ctx.match(/ACTIVE SCREEN:/g)?.length, 1);
@@ -144,8 +146,12 @@ test("a chip change during Live Voice updates the screen, and the ask bar openin
   const voice = read("./realtime.ts");
   const bar = read("../../components/shell/RoomAskBar.tsx");
   assert.match(voice, /onActiveScreenChange\(\(name\) => \{/);
+  assert.equal((voice.match(/onActiveScreenChange\(/g) || []).length, 1);
   assert.match(voice, /this\.screenAtAsk = name/);
   assert.match(voice, /this\.sendSessionUpdate\(\)/);
+  assert.match(voice, /type: "navigate"/);
+  assert.match(voice, /type: "user-start"/);
+  assert.match(voice, /type: "reply-done"/);
   assert.match(bar, /markAskBarGrokEntry\(\);\s*onOpen\("rvgrok"\)/);
   off();
   setActiveScreen("");
