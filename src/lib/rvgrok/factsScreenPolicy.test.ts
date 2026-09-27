@@ -9,17 +9,9 @@ import { buildRealtimeSessionUpdate } from "./liveVoice.ts";
 import { buildWebSearchRequest } from "./webSearch.ts";
 import { decideVoiceWebResearch } from "./voiceWeb.ts";
 import { executeWebResearch } from "./webResearchTelemetry.ts";
-import {
-  formatFactsStockBlock,
-  snapshotFromJson,
-} from "./ownLotInventory.ts";
+import { snapshotFromJson } from "./ownLotInventory.ts";
 import { RV_GROK_LEAN_CORE } from "./speechPolicy.ts";
-import {
-  classifyFactsTurn,
-  factsChatTools,
-  factsSpecRequestsWebSearch,
-  factsStockCheckAllowed,
-} from "./factsScreenPolicy.ts";
+import { factsSpecRequestsWebSearch } from "./factsScreenPolicy.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -27,6 +19,7 @@ const SPEC = "What's the GVWR on a 2022 Newmar Dutch Star 4369?";
 const STOCK = "do we have a 2025 Newmar Dutch Star in stock";
 const SPEC_AND_STOCK =
   "What's the GVWR on a 2022 Newmar Dutch Star, and do we have one in stock?";
+const INFO = "Tell me about a 2022 Newmar Dutch Star 4369";
 
 const snap = snapshotFromJson({
   source: "own",
@@ -46,36 +39,17 @@ const snap = snapshotFromJson({
   ],
 });
 
-test("Facts spec tools omit the lot tool; Lot and stock checks keep it", () => {
-  const tools = [
-    { function: { name: "get_own_lot" } },
-    { function: { name: "get_coach_facts" } },
-  ];
-  assert.deepEqual(
-    factsChatTools(tools, "Facts", "spec").map((tool) => tool.function.name),
-    ["get_coach_facts"],
-  );
-  assert.equal(factsChatTools(tools, "Facts", "passthrough").length, 1);
-  assert.equal(factsChatTools(tools, "Facts", "stock").length, 2);
-  assert.equal(factsChatTools(tools, "Lot", "spec").length, 2);
-});
-
-test("stock check waits for yes or an explicit stock ask", () => {
-  assert.equal(factsStockCheckAllowed(SPEC, []), false);
-  assert.equal(factsStockCheckAllowed("yes", []), false);
-  assert.equal(factsStockCheckAllowed("yes", [SPEC]), true);
-  assert.equal(classifyFactsTurn("Facts", SPEC, []), "spec");
-  assert.equal(classifyFactsTurn("Facts", "yes", [SPEC]), "stock");
-  assert.equal(classifyFactsTurn("Facts", STOCK, []), "stock");
-  assert.equal(classifyFactsTurn("Facts", SPEC_AND_STOCK, []), "spec");
-  assert.equal(classifyFactsTurn("Lot", SPEC, []), "passthrough");
-  assert.equal(factsSpecRequestsWebSearch("Facts", SPEC, []), true);
-  assert.equal(factsSpecRequestsWebSearch("Lot", SPEC, []), false);
-  assert.equal(factsSpecRequestsWebSearch("Facts", "yes", [SPEC]), false);
+test("Facts spec and info asks request a web search; a pure stock ask does not", () => {
+  assert.equal(factsSpecRequestsWebSearch("Facts", SPEC), true);
+  assert.equal(factsSpecRequestsWebSearch("Facts", INFO), true);
+  assert.equal(factsSpecRequestsWebSearch("Facts", SPEC_AND_STOCK), true);
+  assert.equal(factsSpecRequestsWebSearch("Facts", STOCK), false);
+  assert.equal(factsSpecRequestsWebSearch("Facts", "yes"), false);
+  assert.equal(factsSpecRequestsWebSearch("Lot", SPEC), false);
+  assert.equal(factsSpecRequestsWebSearch("Lot", SPEC_AND_STOCK), false);
 });
 
 test("Facts spec path requests a real web_search tool", () => {
-  assert.equal(factsSpecRequestsWebSearch("Facts", SPEC, []), true);
   const body = buildWebSearchRequest({
     model: "grok-4.7",
     query: SPEC,
@@ -95,18 +69,31 @@ test("Facts spec research is not replaced by the lot snapshot", async () => {
   });
   assert.equal(body.kind, "missing_key");
   assert.equal(body.ok, false);
+
+  const mixed = await executeWebResearch({
+    query: SPEC_AND_STOCK,
+    apiKey: undefined,
+    timeoutMs: 50,
+    profile: "chat",
+    screen: "Facts",
+    ownLotSnapshot: snap,
+  });
+  assert.equal(mixed.kind, "missing_key");
+  assert.equal(mixed.ok, false);
+
+  const stock = await executeWebResearch({
+    query: STOCK,
+    apiKey: undefined,
+    timeoutMs: 50,
+    profile: "chat",
+    screen: "Facts",
+    ownLotSnapshot: snap,
+  });
+  assert.equal(stock.ok, true);
+  assert.match(stock.notes || "", /N2401/);
 });
 
-test("Facts stock check reports stock only", () => {
-  const notes = formatFactsStockBlock(snap, STOCK);
-  assert.match(notes, /FACTS STOCK CHECK/);
-  assert.match(notes, /N2401/);
-  assert.match(notes, /Wilsonville/);
-  assert.match(notes, /\$389,000/);
-  assert.doesNotMatch(notes, /length_ft|SCRAPE ROW|OWN-LOT inventory|43 ft/i);
-});
-
-test("Facts voice searches the web; the session prompt matches the other screens", () => {
+test("Facts voice searches for specs; the session prompt matches the other screens", () => {
   const facts = buildRealtimeSessionUpdate(
     "ara",
     1,
@@ -133,25 +120,38 @@ test("Facts voice searches the web; the session prompt matches the other screens
     screen: "Facts",
   });
   assert.equal(decision.action, "research");
-  const stock = decideVoiceWebResearch({
-    transcript: "yes",
+  const mixed = decideVoiceWebResearch({
+    transcript: SPEC_AND_STOCK,
     screen: "Facts",
-    priorUserTexts: [SPEC],
+  });
+  assert.equal(mixed.action, "research");
+  const stock = decideVoiceWebResearch({
+    transcript: STOCK,
+    screen: "Facts",
   });
   assert.equal(stock.action, "research");
   assert.equal(stock.speakHold, false);
+  const yes = decideVoiceWebResearch({
+    transcript: "yes",
+    screen: "Facts",
+  });
+  assert.equal(yes.action, "pass");
 });
 
-test("Facts spec wiring searches and drops the lot tool; core prompt and model ids stay", () => {
+test("Facts spec wiring searches and keeps the lot tool; core prompt and model ids stay", () => {
   assert.match(GROUNDING_RULES, /source-of-truth for engine/);
   assert.match(VOICE_MIC_RULES, /do not speak a weight/i);
   assert.match(RV_GROK_LEAN_CORE, /If both are empty, say that field is unverified/);
   const api = readFileSync(join(root, "../../routes/api/rvgrok.ts"), "utf8");
-  assert.match(api, /factsTurn !== "spec"/);
-  assert.match(api, /formatFactsStockBlock/);
-  assert.match(api, /skipOwnLot: factsTurn === "spec"/);
+  assert.match(api, /factsSpecRequestsWebSearch/);
+  assert.match(api, /skipWebForLot = factsSpec/);
   assert.match(api, /looksLikeOwnLotStockQuestion/);
-  assert.match(api, /factsChatTools\(XAI_CHAT_TOOLS, screen, factsTurn\)/);
+  assert.match(api, /formatOwnLotBlock/);
+  assert.match(
+    api,
+    /toolFn\(\s*"get_own_lot"/,
+  );
+  assert.doesNotMatch(api, /factsChatTools|factsRequiredTool|formatFactsStockBlock|factsStockCheckAllowed|classifyFactsTurn|FACTS STOCK CHECK/);
   assert.doesNotMatch(api, /factsDelivery|applyFactsDelivery|FACTS_SPEC_INSTRUCTION/);
   assert.match(
     api,
@@ -163,4 +163,6 @@ test("Facts spec wiring searches and drops the lot tool; core prompt and model i
   assert.doesNotMatch(live, /applyFactsDelivery|voiceBrowseLine/);
   const speech = readFileSync(join(root, "speechPolicy.ts"), "utf8");
   assert.match(speech, /If both are empty, say that field is unverified/);
+  const policy = readFileSync(join(root, "factsScreenPolicy.ts"), "utf8");
+  assert.doesNotMatch(policy, /factsChatTools|factsStockCheckAllowed|classifyFactsTurn/);
 });

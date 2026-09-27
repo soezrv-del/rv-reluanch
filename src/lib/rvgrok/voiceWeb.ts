@@ -24,7 +24,6 @@ import {
 } from "./webIntent.ts";
 import {
   factsSpecRequestsWebSearch,
-  factsStockCheckAllowed,
   isFactsScreen,
 } from "./factsScreenPolicy.ts";
 import {
@@ -144,13 +143,11 @@ export function decideVoiceWebResearch(opts: {
   specs?: WebFallbackSpecs;
   catalogBlock?: string;
   screen?: string;
-  priorUserTexts?: readonly string[];
 }): VoiceWebDecision {
   const transcript = (opts.transcript || "").trim();
   if (!transcript) return { action: "pass" };
   const screen = (opts.screen || "").trim();
-  const prior = opts.priorUserTexts || [];
-  if (isFactsScreen(screen) && factsSpecRequestsWebSearch(screen, transcript, prior)) {
+  if (isFactsScreen(screen) && factsSpecRequestsWebSearch(screen, transcript)) {
     return {
       action: "research",
       query: transcript.slice(0, 400),
@@ -158,22 +155,13 @@ export function decideVoiceWebResearch(opts: {
       speakHold: shouldSpeakVoiceResearchHold(transcript, opts.specs),
     };
   }
-  if (isFactsScreen(screen) && factsStockCheckAllowed(transcript, prior)) {
-    return {
-      action: "research",
-      query: transcript.slice(0, 400),
-      catalogBlock: (opts.catalogBlock || "").trim(),
-      speakHold: false,
-    };
-  }
   // "Do we have a 2012 Tiffin Phaeton?" is an own-lot ask but not an
   // inventory/count phrase, so needsWebFallback stays false and voice
   // used to answer from memory. Lot questions must still load the snapshot.
-  // Rv Facts spec turns already returned above and do not take this path.
+  // A Facts spec ask already returned above, so the lot does not replace it.
   const ownLot =
-    !isFactsScreen(screen) &&
-    (looksLikeOwnLotStockQuestion(transcript) ||
-      looksLikeInventoryOrCountQuestion(transcript));
+    looksLikeOwnLotStockQuestion(transcript) ||
+    looksLikeInventoryOrCountQuestion(transcript);
   if (!ownLot && !needsWebFallback(opts.specs ?? null, transcript)) {
     return { action: "pass" };
   }
@@ -206,9 +194,6 @@ export function formatVoiceWebSearchInjection(
   result: WebSearchNotes,
   opts?: { catalogBlock?: string },
 ): string {
-  if (result.ok && /FACTS STOCK CHECK/.test(result.notes || "")) {
-    return result.notes;
-  }
   if (result.ok && isOwnLotResearchNotes(result.notes || "")) {
     return ownLotNotesForSpeech(result.notes);
   }
@@ -286,7 +271,6 @@ export async function fetchVoiceWebResearchNotes(opts: {
   /** Session whitelist phone — same credential chat + token send. */
   accessPhone?: string;
   screen?: string;
-  priorUserTexts?: readonly string[];
 }): Promise<WebSearchNotes> {
   try {
     const post = (phoneForHeader: string) =>
@@ -303,7 +287,6 @@ export async function fetchVoiceWebResearchNotes(opts: {
           query: opts.query,
           catalogContext: opts.catalogContext || undefined,
           screen: opts.screen || undefined,
-          priorUserTexts: opts.priorUserTexts,
         }),
         signal:
           opts.signal ??

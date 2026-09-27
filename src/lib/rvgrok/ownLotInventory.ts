@@ -2179,47 +2179,6 @@ export async function loadOwnLotSnapshot(opts?: {
   );
 }
 
-/**
- * Stock-only reply for an Rv Facts follow-up. No length, extras, or
- * scrape-wins language — those are spec fields.
- */
-export function formatFactsStockBlock(
-  snapshot: OwnLotSnapshot,
-  query: string,
-): string {
-  if (ownLotIsUnavailable(snapshot)) {
-    return "FACTS STOCK CHECK.\nLot snapshot unavailable.";
-  }
-  const locations = [
-    ...new Set(snapshot.units.map((u) => u.location).filter(Boolean)),
-  ];
-  const filter = parseOwnLotAsk(query, locations, snapshot.units);
-  const matched = queryOwnLotUnits(snapshot.units, filter, 8);
-  const lines = ["FACTS STOCK CHECK.", `Matched: ${matched.length}.`];
-  if (!matched.length) {
-    lines.push("None of that coach is on the lot snapshot this turn.");
-  } else {
-    for (const unit of matched) {
-      const price =
-        unit.price != null && unit.price > 0 ? formatOwnLotUsd(unit.price) : "";
-      lines.push(
-        [
-          unit.year,
-          unit.make,
-          unit.model,
-          unit.trim,
-          unit.stock_number ? `stock ${unit.stock_number}` : "",
-          unit.location,
-          price,
-        ]
-          .filter(Boolean)
-          .join(" · "),
-      );
-    }
-  }
-  return lines.join("\n");
-}
-
 /** Grounding block for chat / voice. Loads the latest file unless a snapshot is passed. */
 export async function formatOwnLotInjection(
   query: string,

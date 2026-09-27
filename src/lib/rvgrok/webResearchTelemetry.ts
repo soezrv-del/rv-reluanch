@@ -9,12 +9,10 @@
 import { needsWebFallback } from "./webIntent.ts";
 import {
   factsSpecRequestsWebSearch,
-  factsStockCheckAllowed,
   isFactsScreen,
   activeScreenFromContext,
 } from "./factsScreenPolicy.ts";
 import {
-  formatFactsStockBlock,
   formatOwnLotBlock,
   loadOwnLotSnapshot,
   looksLikeOwnLotStockQuestion,
@@ -80,10 +78,6 @@ export type ExecuteWebResearchOpts = {
   requestOrigin?: string;
   /** Active screen name, or a catalog block that starts with ACTIVE SCREEN. */
   screen?: string;
-  /** Facts spec turns must not be replaced by an own-lot snapshot. */
-  skipOwnLot?: boolean;
-  /** Earlier user turns, so a bare "yes" can be a Facts stock check. */
-  priorUserTexts?: readonly string[];
   /** Research-loop attempt cap. Defaults to WEB_SEARCH_MAX_TOOL_CALLS (2). */
   maxAttempts?: number;
   /** Override process.env.GEMINI_API_KEY (tests). */
@@ -299,42 +293,14 @@ export async function executeWebResearch(
     activeScreenFromContext(opts.catalogBlock) ||
     ""
   ).trim();
-  const prior = opts.priorUserTexts || [];
   const factsSpec =
-    Boolean(opts.skipOwnLot) ||
-    (isFactsScreen(screen) &&
-      factsSpecRequestsWebSearch(screen, query, prior));
-  const factsStock =
-    !factsSpec &&
-    isFactsScreen(screen) &&
-    factsStockCheckAllowed(query, prior);
+    isFactsScreen(screen) && factsSpecRequestsWebSearch(screen, query);
 
   let ownLotSnapshot = opts.ownLotSnapshot;
-  if (
-    !factsSpec &&
-    !ownLotSnapshot &&
-    (factsStock || looksLikeOwnLotStockQuestion(query))
-  ) {
+  if (!factsSpec && !ownLotSnapshot && looksLikeOwnLotStockQuestion(query)) {
     ownLotSnapshot = await loadOwnLotSnapshot({
       requestOrigin: opts.requestOrigin,
     });
-  }
-  if (factsStock && ownLotSnapshot) {
-    const notes = formatFactsStockBlock(ownLotSnapshot, query);
-    const durationMs = Date.now() - t0;
-    const body = toApiBody(
-      { ok: true, notes, model: OWN_LOT_MODEL },
-      { kind: "success", durationMs },
-    );
-    logWebResearchEvent({
-      kind: "success",
-      profile: opts.profile,
-      durationMs,
-      ok: true,
-      query,
-      model: OWN_LOT_MODEL,
-    });
-    return body;
   }
   if (!factsSpec && shouldSkipWebForOwnLot(query, ownLotSnapshot)) {
     const notes = formatOwnLotBlock(ownLotSnapshot!, query);

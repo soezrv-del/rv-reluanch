@@ -25,7 +25,6 @@ type Body = {
   query?: string;
   catalogContext?: string;
   screen?: string;
-  priorUserTexts?: string[];
 };
 
 async function handleResearch(request: Request): Promise<Response> {
@@ -70,9 +69,6 @@ async function handleResearch(request: Request): Promise<Response> {
     researchOrder: (await getResearchOrderOverride()) ?? undefined,
     identity: grounded.identity,
     screen: typeof body.screen === "string" ? body.screen : "",
-    priorUserTexts: Array.isArray(body.priorUserTexts)
-      ? body.priorUserTexts.filter((line) => typeof line === "string")
-      : [],
   });
 
   return webResearchJsonResponse(researched);

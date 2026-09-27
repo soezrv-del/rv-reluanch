@@ -30,7 +30,6 @@ import {
   looksLikeSpecQuestion,
 } from "@/lib/rvgrok/webIntent";
 import {
-  formatFactsStockBlock,
   formatOwnLotBlock,
   loadOwnLotSnapshot,
   looksLikeOwnLotStockQuestion,
@@ -39,13 +38,9 @@ import {
   queryOwnLotUnits,
   shouldSkipWebForOwnLot,
 } from "@/lib/rvgrok/ownLotInventory";
-import { lotQueryForFollowUp } from "@/lib/rvgrok/ownLotAsk";
 import {
   activeScreenFromContext,
-  classifyFactsTurn,
-  factsChatTools,
-  factsRequiredTool,
-  isFactsScreen,
+  factsSpecRequestsWebSearch,
 } from "@/lib/rvgrok/factsScreenPolicy";
 import { looksLikeDeskSheetAsk } from "@/lib/rvgrok/deskSheetPolicy";
 import {
@@ -640,7 +635,6 @@ async function runXaiWithTools(opts: {
   requiredTool: string | null;
   userText: string;
   requestOrigin?: string;
-  tools?: typeof XAI_CHAT_TOOLS;
 }): Promise<Response | null> {
   const working: Array<Record<string, unknown>> = opts.messages.map((m) => ({
     role: m.role,
@@ -670,7 +664,7 @@ async function runXaiWithTools(opts: {
       body: JSON.stringify({
         model: opts.model,
         messages: working,
-        tools: opts.tools ?? XAI_CHAT_TOOLS,
+        tools: XAI_CHAT_TOOLS,
         tool_choice:
           forced === "generate_image"
             ? { type: "function", function: { name: "generate_image" } }
@@ -858,10 +852,6 @@ async function tryXaiDirect(
   standingLessons?: string,
   mode?: TalkMode,
   requestOrigin?: string,
-  turn?: {
-    tools?: typeof XAI_CHAT_TOOLS;
-    requiredTool?: string | null;
-  },
 ): Promise<Response | null> {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return null;
@@ -870,11 +860,7 @@ async function tryXaiDirect(
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   const lastPlain = lastUser ? contentToPlain(lastUser.content) : "";
   const forceImageTool = wantsGeneratedImage(lastPlain);
-  const requiredTool = forceImageTool
-    ? null
-    : turn
-      ? (turn.requiredTool ?? null)
-      : requiredToolForAsk(lastPlain);
+  const requiredTool = forceImageTool ? null : requiredToolForAsk(lastPlain);
   const MODELS = vision
     ? ["grok-4.7", "grok-4.6", "grok-4.5", "grok-4-latest", "grok-2-vision-1212", "grok-3"]
     : ["grok-4.7", "grok-4.6", "grok-4-latest", "grok-4.5", "grok-3"];
@@ -914,7 +900,6 @@ async function tryXaiDirect(
         requiredTool,
         userText: lastPlain,
         requestOrigin,
-        tools: turn?.tools,
       });
       if (result) return result;
     } catch {
@@ -1155,16 +1140,12 @@ export const Route = createFileRoute("/api/rvgrok")({
         const catalogContext = lastNamesCoach
           ? serverGrounded.block || ""
           : serverGrounded.block || body.catalogContext || "";
-        const userTexts = messages
-          .filter((m) => m.role === "user")
-          .map((m) => contentToPlain(m.content));
-        const priorUserTexts = userTexts.slice(0, -1);
         const screen = activeScreenFromContext(body.catalogContext);
-        const factsTurn = classifyFactsTurn(screen, lastPlain, priorUserTexts);
+        const factsSpec = factsSpecRequestsWebSearch(screen, lastPlain);
 
         const specWeightAsk = isWeightSpecAsk(lastPlain);
         if (
-          factsTurn !== "spec" &&
+          !factsSpec &&
           specWeightAsk &&
           serverGrounded.identity?.make &&
           serverGrounded.identity.model
@@ -1249,27 +1230,18 @@ export const Route = createFileRoute("/api/rvgrok")({
 
         let ownLotNotes: string | undefined;
         let skipWebForLot = false;
-        const stockQuery =
-          factsTurn === "stock"
-            ? lotQueryForFollowUp(lastPlain, priorUserTexts) || lastPlain
-            : lastPlain;
-        if (
-          factsTurn === "stock" ||
-          (!isFactsScreen(screen) && looksLikeOwnLotStockQuestion(lastPlain))
-        ) {
+        if (looksLikeOwnLotStockQuestion(lastPlain)) {
           const snapshot = await loadOwnLotSnapshot({ requestOrigin });
-          if (factsTurn === "stock") {
-            ownLotNotes = formatFactsStockBlock(snapshot, stockQuery);
-            skipWebForLot = true;
-          } else {
-            ownLotNotes = formatOwnLotBlock(snapshot, lastPlain);
-            skipWebForLot = shouldSkipWebForOwnLot(lastPlain, snapshot);
-          }
+          ownLotNotes = formatOwnLotBlock(snapshot, lastPlain);
+          // A Facts spec still searches the web. The lot block stays in context.
+          skipWebForLot = factsSpec
+            ? false
+            : shouldSkipWebForOwnLot(lastPlain, snapshot);
         }
 
         // Memory first on other screens. Rv Facts spec turns always search.
         const wantsWebFallback =
-          factsTurn === "spec" ||
+          factsSpec ||
           (!skipWebForLot &&
             (serverGrounded.needsWeb ||
               (!serverGrounded.identity && Boolean(body.wantsWebFallback))));
@@ -1292,8 +1264,6 @@ export const Route = createFileRoute("/api/rvgrok")({
               (await getResearchOrderOverride()) ?? undefined,
             identity: serverGrounded.identity,
             screen,
-            skipOwnLot: factsTurn === "spec",
-            priorUserTexts,
           });
           const reportText = looksLikeDeskSheetAsk(lastPlain)
             ? formatCoachReportTimeoutReply({
@@ -1321,14 +1291,8 @@ export const Route = createFileRoute("/api/rvgrok")({
           });
         }
 
-        const chatTools = factsChatTools(XAI_CHAT_TOOLS, screen, factsTurn);
-        const requiredTool = factsRequiredTool(
-          requiredToolForAsk(lastPlain),
-          factsTurn,
-          screen,
-        );
-
         // xAI first when the key is present so generate_image (and vision) work.
+        // Facts keeps the normal tool list, including the lot snapshot.
         const fromXai = await tryXaiDirect(
           messages,
           agentMode,
@@ -1341,7 +1305,6 @@ export const Route = createFileRoute("/api/rvgrok")({
           standingLessons,
           talkMode,
           requestOrigin,
-          { tools: chatTools, requiredTool },
         );
         if (fromXai) return finish(fromXai);
         const fromWorker = await tryCloudflareWorker(

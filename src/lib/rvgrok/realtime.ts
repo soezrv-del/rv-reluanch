@@ -73,7 +73,6 @@ import {
   OWN_LOT_SCRAPE_IN_FRONT,
   ownLotVoiceCoachLock,
 } from "./ownLotAsk";
-import { classifyFactsTurn, isFactsScreen } from "./factsScreenPolicy";
 import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
 import {
   coachKnowledgeKeyEquals,
@@ -1111,17 +1110,14 @@ export class GrokRealtimeSession {
     this.recentUserTurns.push(spoken);
     if (this.recentUserTurns.length > 12) this.recentUserTurns.shift();
     const priorTurns = this.recentUserTurns.slice(0, -1);
-    const factsTurn = classifyFactsTurn(this.screenAtAsk, spoken, priorTurns);
     transcript = catalogQueryForFollowUp(
       spoken,
       priorTurns,
       this.facts,
       this.recentCoachMentions,
     );
-    if (!isFactsScreen(this.screenAtAsk) || factsTurn === "stock") {
-      const lotFollow = lotQueryForFollowUp(spoken, priorTurns);
-      if (lotFollow) transcript = lotFollow;
-    }
+    const lotFollow = lotQueryForFollowUp(spoken, priorTurns);
+    if (lotFollow) transcript = lotFollow;
     this.noteCoachMention(spoken);
     const searchFollow =
       /\b(search(?:\s+for)?\s+it|look\s+(?:it|that)\s+up|you need to search)\b/i.test(
@@ -1233,7 +1229,6 @@ export class GrokRealtimeSession {
       specs: grounded.specs,
       catalogBlock: grounded.block || this.catalogContext,
       screen: this.screenAtAsk,
-      priorUserTexts: priorTurns,
     });
     const catalogReady =
       grounded.identity || decision.action === "research"
@@ -1289,7 +1284,6 @@ export class GrokRealtimeSession {
       signal: this.researchAbort.signal,
       accessPhone: this.accessPhone,
       screen: this.screenAtAsk,
-      priorUserTexts: priorTurns,
     });
 
     if (catalogReady) {
@@ -1425,9 +1419,7 @@ export class GrokRealtimeSession {
     }
     this.suppressMic = true;
     this.handlers.onStatus("thinking", "Answering…");
-    const factsStockTurn = /FACTS STOCK CHECK/.test(injection);
-    const inventoryTurn =
-      !factsStockTurn && /OWN-LOT inventory/.test(injection);
+    const inventoryTurn = /OWN-LOT inventory/.test(injection);
     if (inventoryTurn) this.lastLessonLotNotes = injection;
     const plantTurn = looksLikeCompanyOrPlantAsk(this.lastResearchTranscript);
     try {
