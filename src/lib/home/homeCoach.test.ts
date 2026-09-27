@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -17,7 +17,6 @@ import {
   arrivalsForHome,
   coverVariant,
   newestArrivals,
-  spotlightJpegPath,
   spotlightLabel,
   spotlightLotUnit,
   spotlightSpecs,
@@ -198,20 +197,24 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
       year: "2026",
       make: "Entegra",
       series: "Cornerstone",
-      image: "/assets/showroom/2026-entegra-cornerstone.webp",
+      image: "/assets/showroom/2026-entegra-cornerstone-cutout.webp",
       alt: "2026 Entegra Cornerstone",
     },
   );
   assert.equal(spotlightLabel(), "2026 Entegra Cornerstone");
+  const cutout = join(
+    root,
+    "../../../public/assets/showroom/2026-entegra-cornerstone-cutout.webp",
+  );
+  assert.ok(existsSync(cutout));
+  assert.ok(statSync(cutout).size < 200 * 1024, "cutout webp stays under 200KB");
   assert.equal(
-    spotlightJpegPath(),
-    "/assets/showroom/2026-entegra-cornerstone.jpg",
-  );
-  assert.ok(
     existsSync(join(root, "../../../public/assets/showroom/2026-entegra-cornerstone.webp")),
+    false,
   );
-  assert.ok(
+  assert.equal(
     existsSync(join(root, "../../../public/assets/showroom/2026-entegra-cornerstone.jpg")),
+    false,
   );
   assert.equal(SHOWROOM_SPOTLIGHT.stockNumber, "45282");
   assert.equal(SHOWROOM_SPOTLIGHT.vin, "4UZFCTFG3TCWE7168");
@@ -302,11 +305,16 @@ test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-f
     coach,
     /pickShowroomStage|resolveHomeCoach|newestLotUnit|sameLotUnit|ShowroomStage|arrivalLabel/,
   );
-  assert.doesNotMatch(css, /showroom-coach-fallback/);
+  assert.doesNotMatch(css, /showroom-coach-fallback|showroom-reflect|showroom-contact|showroom-hero picture|showroom-hero-wash|showroom-hero-glint/);
+  assert.doesNotMatch(home, /showroom-hero-wash|showroom-hero-glint|showroom-roof-glint|feMorphology|feFlood|preserveAspectRatio/);
+  assert.match(css, /\.showroom-hero-beam \{/);
+  assert.match(css, /\.showroom-hero-pool \{/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.alt/);
   assert.match(home, /SHOWROOM_SPOTLIGHT\.image/);
-  assert.match(home, /type="image\/webp"/);
-  assert.match(home, /spotlightJpegPath\(\)/);
+  assert.match(home, /showroom-hero-beam/);
+  assert.match(home, /showroom-hero-pool/);
+  assert.doesNotMatch(home, /spotlightJpegPath|showroom-reflect|showroom-contact/);
+  assert.doesNotMatch(coach, /spotlightJpegPath|2026-entegra-cornerstone\.jpg/);
   assert.match(home, /spotlightLotUnit\(listed\)/);
   assert.match(home, /spotlightSpecs\(spotUnit\)/);
   assert.match(home, /requestLotUnit\(lotArrivalQuery\(spotUnit\)\)/);

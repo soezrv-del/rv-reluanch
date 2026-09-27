@@ -20,14 +20,15 @@ function recency(unit: LotUnit): [number, number] {
 }
 
 /**
- * Locked showroom spotlight. The photo is David's studio shot.
- * `stockNumber` / `vin` point at the lot unit; price and specs are not stored here.
+ * Locked showroom spotlight. The art is Entegra's factory cutout of the
+ * coach, trimmed to the silhouette. `stockNumber` / `vin` point at the lot
+ * unit; price and specs are not stored here.
  */
 export const SHOWROOM_SPOTLIGHT = {
   year: "2026",
   make: "Entegra",
   series: "Cornerstone",
-  image: "/assets/showroom/2026-entegra-cornerstone.webp",
+  image: "/assets/showroom/2026-entegra-cornerstone-cutout.webp",
   alt: "2026 Entegra Cornerstone",
   stockNumber: "45282",
   vin: "4UZFCTFG3TCWE7168",
@@ -120,11 +121,6 @@ export function spotlightSpecs(
     gvwr,
     measure,
   };
-}
-
-/** JPEG sibling of the webp hero, used as the picture fallback. */
-export function spotlightJpegPath(image = SHOWROOM_SPOTLIGHT.image): string {
-  return image.replace(/\.webp$/i, ".jpg");
 }
 
 /** How many recent lot arrivals Home shows under the hero. */
