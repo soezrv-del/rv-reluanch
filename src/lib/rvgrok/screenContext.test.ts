@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  SCREEN_GUIDANCE,
   screenNameForTab,
   setActiveScreen,
   withActiveScreen,
@@ -22,6 +23,7 @@ test("a screen switch is attached to the next ask, not the visible message", () 
     catalogContext: withActiveScreen("PIN GVWR 39600"),
   };
   assert.match(onFacts.catalogContext || "", /ACTIVE SCREEN: Facts/);
+  assert.ok((onFacts.catalogContext || "").includes(SCREEN_GUIDANCE.Facts));
 
   setActiveScreen("Tow");
   const onTow = {
@@ -31,9 +33,31 @@ test("a screen switch is attached to the next ask, not the visible message", () 
 
   assert.equal(onTow.messages[0].content, "what's the payment?");
   assert.doesNotMatch(onTow.messages[0].content, /ACTIVE SCREEN/);
+  assert.doesNotMatch(onTow.messages[0].content, /towing capacity/);
   assert.match(onTow.catalogContext || "", /ACTIVE SCREEN: Tow/);
+  assert.ok((onTow.catalogContext || "").includes(SCREEN_GUIDANCE.Tow));
   assert.match(onTow.catalogContext || "", /PIN GVWR 39600/);
   assert.doesNotMatch(onTow.catalogContext || "", /ACTIVE SCREEN: Facts/);
+  assert.ok(!(onTow.catalogContext || "").includes(SCREEN_GUIDANCE.Facts));
+  assert.equal((onTow.catalogContext || "").match(/ACTIVE SCREEN:/g)?.length, 1);
+  setActiveScreen("");
+});
+
+test("only the active screen's guidance is attached, and each line stays short", () => {
+  for (const [name, guidance] of Object.entries(SCREEN_GUIDANCE)) {
+    assert.ok(guidance.length > 0 && guidance.length <= 200, name);
+    assert.equal(guidance.includes("\n"), false, name);
+    setActiveScreen(name);
+    const ctx = withActiveScreen("PIN GVWR 39600") || "";
+    assert.ok(ctx.includes(`ACTIVE SCREEN: ${name}. ${guidance}`), name);
+    assert.equal(ctx.match(/ACTIVE SCREEN:/g)?.length, 1, name);
+  }
+  setActiveScreen("Cal");
+  const onCal = withActiveScreen("PIN") || "";
+  setActiveScreen("Lot");
+  const onLot = withActiveScreen(onCal) || "";
+  assert.ok(onLot.includes(SCREEN_GUIDANCE.Lot));
+  assert.ok(!onLot.includes(SCREEN_GUIDANCE.Cal));
   setActiveScreen("");
 });
 
