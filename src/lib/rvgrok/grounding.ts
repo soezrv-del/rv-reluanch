@@ -11,7 +11,7 @@
 
 import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
 import { peekCatalog } from "../rv/catalogLoad.ts";
-import { resolveYearSnapshot } from "../rv/brochureSpecs.ts";
+import { formatSeriesGvwr, resolveYearSnapshot } from "../rv/brochureSpecs.ts";
 import {
   findPowertrainCorrection,
   type PowertrainCorrection,
@@ -272,10 +272,12 @@ export function lookupGroundedSpecs(identity: CoachIdentity): GroundedSpecs {
       catalogYearIsListed(year, index?.years),
   );
   const oemWeights = resolveLockedOemWeights(identity);
+  // Exact published pin wins. Otherwise the model span, labeled as a series
+  // estimate. Never a bare weightRange mid, and never oemGvwrLbs.
   const weightBand =
     oemWeights.gvwrLbs && oemWeights.gvwrLbs > 0
       ? `${oemWeights.gvwrLbs.toLocaleString("en-US")} lbs GVWR`
-      : null;
+      : formatSeriesGvwr(spec?.weightRange);
 
   if (!hasYearRow) {
     const empty = field(null, "empty");
