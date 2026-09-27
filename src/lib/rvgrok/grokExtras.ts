@@ -36,7 +36,7 @@ export type GrokExtraCoach = {
 
 const KIND_RE: Record<GrokExtraKind, RegExp> = {
   ratings:
-    /\b(ratings?|torque[-\s]?to[-\s]?weight|customer satisfaction)\b/i,
+    /\b(ratings?|torque[-\s]?to[-\s]?weight|power\s+to\s+weight|customer satisfaction)\b/i,
   video:
     /\b(want a video|video(?:s)?|walkthrough|walk[- ]?thru|youtube|rv video library)\b/i,
   nhtsa: /\b(recalls?|nhtsa|complaints?|defects?|safety campaign)\b/i,
@@ -156,7 +156,7 @@ export const GROK_EXTRA_PROMPTS: Record<
 > = {
   ratings: {
     title: "Want ratings?",
-    body: "Quality, reliability, and satisfaction from the catalog, plus torque-to-weight when both numbers exist. Missing stays GAP.",
+    body: "Quality, reliability, and satisfaction from the catalog, plus the power to weight when both numbers exist. Missing stays GAP.",
   },
   video: {
     title: "Want a video?",

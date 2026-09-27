@@ -254,7 +254,13 @@ export function classifyVoiceExtraPick(text: string): GrokExtraKind | null {
   if (!t || t.length > 80) return null;
   if (looksLikeVoiceCoachOrSpecAsk(t)) return null;
   const hits: GrokExtraKind[] = [];
-  if (/\bratings?\b|\btorque[-\s]?to[-\s]?weight\b/i.test(t)) hits.push("ratings");
+  if (
+    /\bratings?\b|\btorque[-\s]?to[-\s]?weight\b|\bpower\s+to\s+weight\b/i.test(
+      t,
+    )
+  ) {
+    hits.push("ratings");
+  }
   if (/\bmarket(?:\s+value)?\b|\bworth\b/i.test(t)) hits.push("market");
   if (/\bvideos?\b|\byoutube\b|\bwalkthrough\b/i.test(t)) hits.push("video");
   if (/\bnhtsa\b|\brecalls?\b|\bsafety\b/i.test(t)) hits.push("nhtsa");

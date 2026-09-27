@@ -262,7 +262,7 @@ export function looksLikeSpecFieldFollowUp(text: string): boolean {
   const t = (text || "").trim();
   if (!t) return false;
   if (looksLikeFieldWordModelRename(t)) return false;
-  if (/\btorque\s+to\s+weight\b/i.test(t)) return true;
+  if (/\b(?:torque|power)\s+to\s+weight\b/i.test(t)) return true;
   if (/\badd\b[\s\S]{0,80}\b(?:to|on)\s+(?:the\s+|your\s+)?(?:spec\s+)?report\b/i.test(t)) {
     return true;
   }

@@ -97,8 +97,8 @@ test("same torque and GVWR do not tie when UVW differs", () => {
   assert.equal(short.color, "green");
   assert.equal(long.color, "yellow");
   assert.notEqual(short.score, long.score);
-  assert.equal(formatTorqueWeightBasisChip(short), "Torque / UVW");
-  assert.equal(formatTorqueWeightBasisChip(long), "Torque / UVW");
+  assert.equal(formatTorqueWeightBasisChip(short), "Power to weight");
+  assert.equal(formatTorqueWeightBasisChip(long), "Power to weight");
 
   const shortFallback = computeTorqueToWeight({
     torqueLbFt: 450,
@@ -119,7 +119,7 @@ test("same torque and GVWR do not tie when UVW differs", () => {
   assert.equal(longFallback.ratio!.toFixed(1), "31.0");
   assert.equal(shortFallback.color, "green");
   assert.equal(shortFallback.score, longFallback.score);
-  assert.equal(formatTorqueWeightBasisChip(shortFallback), "Torque / GVWR");
+  assert.equal(formatTorqueWeightBasisChip(shortFallback), "Power to weight");
 });
 
 test("GVWR fallback and printed UVW use different chips", () => {
@@ -133,7 +133,7 @@ test("GVWR fallback and printed UVW use different chips", () => {
   assert.equal(gvwr.weightEstimated, false);
   assert.equal(gvwr.ratio!.toFixed(1), "30.5");
   assert.equal(gvwr.color, "green");
-  assert.equal(formatTorqueWeightBasisChip(gvwr), "Torque / GVWR");
+  assert.equal(formatTorqueWeightBasisChip(gvwr), "Power to weight");
 
   const uvw = computeTorqueToWeight({
     torqueLbFt: 1250,
@@ -149,7 +149,7 @@ test("GVWR fallback and printed UVW use different chips", () => {
   assert.equal(uvw.ratio!.toFixed(1), "37.9");
   assert.equal(uvw.color, "yellow");
   assert.notEqual(uvw.score, gvwr.score);
-  assert.equal(formatTorqueWeightBasisChip(uvw), "Torque / UVW");
+  assert.equal(formatTorqueWeightBasisChip(uvw), "Power to weight");
 
   const fr3 = computeTorqueToWeight({
     torqueLbFt: 468,
@@ -161,7 +161,7 @@ test("GVWR fallback and printed UVW use different chips", () => {
   assert.equal(fr3.ratio!.toFixed(1), "21.3");
   assert.equal(fr3.color, "red");
   assert.ok((fr3.score ?? 10) < 6);
-  assert.equal(formatTorqueWeightBasisChip(fr3), "Torque / GVWR");
+  assert.equal(formatTorqueWeightBasisChip(fr3), "Power to weight");
 });
 
 test("missing torque or both weights is GAP; do not estimate UVW", () => {
@@ -258,7 +258,7 @@ test("a two-number GVWR band scores the high end only when UVW is missing", () =
   assert.equal(band.weightBasis, "GVWR");
   assert.equal(band.weightEstimated, false);
   assert.equal(band.gap, false);
-  assert.equal(formatTorqueWeightBasisChip(band), "Torque / GVWR");
+  assert.equal(formatTorqueWeightBasisChip(band), "Power to weight");
 
   const pinWins = computeTorqueToWeight({
     torqueLbFt: 1250,
@@ -272,7 +272,7 @@ test("a two-number GVWR band scores the high end only when UVW is missing", () =
   assert.equal(pinWins.uvwLb, 39_200);
   assert.equal(pinWins.weightLb, 39_200);
   assert.equal(pinWins.weightBasis, "UVW");
-  assert.equal(formatTorqueWeightBasisChip(pinWins), "Torque / UVW");
+  assert.equal(formatTorqueWeightBasisChip(pinWins), "Power to weight");
 });
 
 test("Hideout and other towables are N/A; Class C toy hauler still rates", () => {
@@ -313,7 +313,7 @@ test("Hideout and other towables are N/A; Class C toy hauler still rates", () =>
   assert.equal(classCToy.weightBasis, "UVW");
   assert.equal(classCToy.weightLb, 9_500);
   assert.equal(classCToy.gap, false);
-  assert.equal(formatTorqueWeightBasisChip(classCToy), "Torque / UVW");
+  assert.equal(formatTorqueWeightBasisChip(classCToy), "Power to weight");
 });
 
 test("ratio is lb-ft per 1,000 lb of the weight used, never horsepower", () => {
@@ -396,7 +396,7 @@ test("published UVW pin scores; an option-band with no torque stays GAP", () => 
   assert.equal(ttw.weightEstimated, false);
   assert.equal(ttw.ratio!.toFixed(1), "34.3");
   assert.equal(ttw.color, "yellow");
-  assert.equal(formatTorqueWeightBasisChip(ttw), "Torque / UVW");
+  assert.equal(formatTorqueWeightBasisChip(ttw), "Power to weight");
 
   const bus = findPowertrainCorrection("2023", "Tiffin", "Allegro Bus", "45OPP");
   assert.ok(bus);
@@ -460,8 +460,10 @@ test("Facts Ratings bar names the weight that scored and does not use the 0.04 s
   assert.match(src, /ratio >= 32/);
   assert.match(src, /ratio >= 28/);
   assert.match(src, /ratio >= 22/);
-  assert.match(src, /Torque \/ UVW/);
-  assert.match(src, /Torque \/ GVWR/);
+  assert.match(src, /"Power to weight"/);
+  assert.doesNotMatch(src, /Power to weight ratio/);
+  assert.doesNotMatch(src, /Torque \/ UVW/);
+  assert.doesNotMatch(src, /Torque \/ GVWR/);
   assert.match(src, /Math\.max\(nums\[0]!, nums\[1]!\)/);
   assert.doesNotMatch(src, /UVW never scores/);
   assert.doesNotMatch(src, /TORQUE_SCORE_CHAMPIONS/);

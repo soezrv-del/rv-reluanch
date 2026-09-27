@@ -131,7 +131,7 @@ test("Facts Ratings section wires owner reviews and does not invent from live/wa
   assert.match(detail, /label:\s*"Quality"/);
   assert.match(detail, /label:\s*"Reliability"/);
   assert.match(detail, /label:\s*"Customer satisfaction"/);
-  assert.match(detail, /Torque-to-Weight/);
+  assert.match(detail, /Power to weight/);
   assert.match(detail, /gvwrRaw:\s*specs\.gvwr/);
   assert.match(detail, /overrideUvwLbs/);
   assert.match(detail, /OWNER_REVIEW_FOOTER/);
@@ -150,7 +150,7 @@ test("Facts Ratings section wires owner reviews and does not invent from live/wa
   assert.doesNotMatch(ratingsBlock, /Consumer Reports/);
   assert.doesNotMatch(ratingsBlock, /Dealer support index/);
   assert.doesNotMatch(ratingsBlock, /n≥15 brand|n≥8 model|RV Insider snapshot/);
-  assert.doesNotMatch(ratingsBlock, /Torque-to-Weight is separate hard math/);
+  assert.doesNotMatch(ratingsBlock, /Power to weight is separate hard math/);
 
   const reportSrc = readFileSync(join(root, "reportRatings.ts"), "utf8");
   assert.match(reportSrc, /getRatingMetadata/);

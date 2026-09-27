@@ -712,12 +712,16 @@ export function formatTorqueToWeightScore(
   return `${result.score.toFixed(1)}/10`;
 }
 
-/** "Torque / UVW" or "Torque / GVWR". Null on GAP / N/A — never an estimate label. */
+/** Facts Ratings name for this row. The number is still torque ÷ weight. */
+export const POWER_TO_WEIGHT_LABEL = "Power to weight";
+
+/** Shown on the Facts Ratings row. Null on GAP / N/A — never an estimate label. */
 export function formatTorqueWeightBasisChip(
   result: TorqueToWeightResult,
 ): string | null {
   if (result.na || result.gap || result.weightBasis == null) return null;
-  if (result.weightBasis === "UVW") return "Torque / UVW";
-  if (result.weightBasis === "GVWR") return "Torque / GVWR";
+  if (result.weightBasis === "UVW" || result.weightBasis === "GVWR") {
+    return POWER_TO_WEIGHT_LABEL;
+  }
   return null;
 }

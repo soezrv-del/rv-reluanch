@@ -926,7 +926,8 @@ export function RvDetail({
     : torqueToWeight.gap || torqueToWeight.ratio == null
       ? "GAP"
       : torqueToWeight.ratio.toFixed(1);
-  const torqueChip = formatTorqueWeightBasisChip(torqueToWeight) ?? "Torque";
+  const torqueChip =
+    formatTorqueWeightBasisChip(torqueToWeight) ?? "Power to weight";
   const torqueAriaMax = torqueToWeight.weightBasis === "UVW" ? 48 : 34;
 
   const ownerReviews = useMemo(

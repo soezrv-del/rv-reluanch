@@ -316,12 +316,12 @@ function RatingsExtra({
     ) {
       const ratio = torque / uvw;
       next.push(
-        `Torque ÷ UVW: ${ratio.toFixed(4)} (${torque} lb-ft ÷ ${uvw.toLocaleString("en-US")} lb)`,
+        `Power to weight: ${ratio.toFixed(4)} (${torque} lb-ft ÷ ${uvw.toLocaleString("en-US")} lb)`,
       );
     } else {
-      next.push("Torque ÷ UVW: GAP");
+      next.push("Power to weight: GAP");
     }
-    next.push("Torque ÷ dry weight: GAP");
+    next.push("Power to weight (dry weight): GAP");
     setLines(next);
     setPhase("ready");
   }
