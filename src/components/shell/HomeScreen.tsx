@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchLotSnapshot, lotUnitPhoto, type LotUnit } from "@/lib/lot/ownLotPage";
 import type { ActiveCoach } from "@/lib/rv/activeCoach";
+import { CoveredCoach } from "@/components/shell/CoveredCoach";
 import {
   arrivalLabel,
+  coverVariant,
   formatHomePrice,
   lotArrivalQuery,
   newestArrivals,
@@ -152,12 +154,19 @@ function ArrivalCard({
           onError={() => setOk(false)}
         />
       ) : (
-        <span className="block h-16 w-full bg-surface-2" aria-hidden />
+        <span className="relative block h-20 w-full">
+          <CoveredCoach variant={coverVariant(unit)} />
+          <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-1 text-[11px] font-semibold leading-tight text-fg line-clamp-2">
+            {name}
+          </span>
+        </span>
       )}
       <span className="flex min-h-11 flex-col justify-center px-2.5 py-2">
-        <span className="line-clamp-2 text-[13px] font-medium leading-snug text-fg">
-          {name}
-        </span>
+        {photo ? (
+          <span className="line-clamp-2 text-[13px] font-medium leading-snug text-fg">
+            {name}
+          </span>
+        ) : null}
         {amount ? (
           <span className="mt-0.5 text-[12px] text-muted">{amount}</span>
         ) : null}

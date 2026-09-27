@@ -93,6 +93,17 @@ export function lotArrivalQuery(unit: LotUnit): string {
     .join(" ");
 }
 
+/** Which covered-coach drawing to use when a unit has no photo. Stable per unit. */
+export function coverVariant(unit: LotUnit): 0 | 1 | 2 {
+  const key = `${unit.stock_number}|${unit.vin}|${unit.printed.id ?? ""}`;
+  let hash = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    hash ^= key.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return ((hash >>> 0) % 3) as 0 | 1 | 2;
+}
+
 export const LOT_UNIT_OPEN_EVENT = "rvfox-open-lot-unit";
 
 let pendingLotQuery = "";

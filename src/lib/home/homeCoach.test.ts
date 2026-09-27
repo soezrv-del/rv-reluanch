@@ -7,6 +7,7 @@ import { lotUnitPhoto, type LotUnit } from "../lot/ownLotPage.ts";
 import type { ActiveCoach } from "../rv/activeCoach.ts";
 import {
   NEWEST_ARRIVALS,
+  coverVariant,
   newestArrivals,
   newestLotUnit,
   resolveHomeCoach,
@@ -106,6 +107,41 @@ test("newest arrivals follow received_date, newest first, and stop at the limit"
   assert.equal(capped[5]?.title, "U4");
 });
 
+test("covered coach variant is stable and rotates from stock, vin, and id", () => {
+  const base = unit({
+    stock_number: "UPO9968",
+    vin: "1FDRU8PG5TKA51981",
+    printed: { id: "168635" },
+  });
+  assert.equal(coverVariant(base), coverVariant(base));
+  assert.equal(coverVariant(base), coverVariant({ ...base }));
+  const seen = new Set<number>();
+  for (let i = 0; i < 40; i++) {
+    seen.add(
+      coverVariant(
+        unit({
+          stock_number: `S${i}`,
+          vin: `V${i}`,
+          printed: { id: String(1000 + i) },
+        }),
+      ),
+    );
+  }
+  assert.deepEqual([...seen].sort(), [0, 1, 2]);
+  const onlyId = unit({
+    stock_number: "",
+    vin: "",
+    printed: { id: "42" },
+  });
+  const otherId = unit({
+    stock_number: "",
+    vin: "",
+    printed: { id: "43" },
+  });
+  assert.equal(coverVariant(onlyId), coverVariant(onlyId));
+  assert.notEqual(coverVariant(onlyId), coverVariant(otherId));
+});
+
 test("home photo is a real lot image, or the name stands alone", () => {
   const pdf = unit({
     photo: "https://dealer.example/inventory.pdf",
@@ -174,6 +210,11 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(shell, /initialTab = "rvgrok"/);
   assert.match(home, /resolveHomeCoach/);
   assert.match(home, /newestArrivals/);
+  assert.match(home, /CoveredCoach/);
+  assert.match(home, /coverVariant/);
+  const cover = readFileSync(join(root, "../../components/shell/CoveredCoach.tsx"), "utf8");
+  assert.match(cover, /aria-label="Photo coming soon"/);
+  assert.match(cover, /data-covered-coach/);
   assert.match(home, /data-home-arrivals/);
   assert.match(home, /overflow-x-auto/);
   assert.match(home, /overflow-y-auto/);
