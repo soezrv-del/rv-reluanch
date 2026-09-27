@@ -17,6 +17,11 @@ import {
 import { computeTorqueToWeight, parseGvwrLb } from "./torqueToWeight.ts";
 import { parseWeightLbs } from "./activeCoach.ts";
 import { offerFromFactsReport } from "../tow/factsTowHandoff.ts";
+import { ensureCatalogLoaded } from "./catalogLoad.ts";
+import { lookupGroundedSpecs } from "../rvgrok/grounding.ts";
+import { formatLockedWeightsBlock } from "../rvgrok/lockedWeights.ts";
+import { formatChatSpecMissReply } from "../rvgrok/chatSpecBlock.ts";
+import { extractVerifiedPinsFromText } from "../rvgrok/estimatePolicy.ts";
 import {
   honestEngineLabel,
   honestHorsepowerLabel,
@@ -678,7 +683,7 @@ test("Lineage Series F: no series 22k stamp; 31ZW / 31ZW5 year-bands stay", () =
   assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series M", "25FW"), null);
 });
 
-test("series GVWR span is display-only and does not move calculations", () => {
+test("series GVWR span is display-only and does not move calculations", async () => {
   const shown = factsFor("2026", "Fleetwood", "Fortis", "32RW");
   assert.equal(shown.brochure.gvwrLbs, null);
   assert.equal(
@@ -735,6 +740,40 @@ test("series GVWR span is display-only and does not move calculations", () => {
     });
   assert.equal(offer(shown.brochure.gvwr)?.gvwrLbs, undefined);
   assert.equal(offer(CONFIRM_BROCHURE)?.gvwrLbs, undefined);
+
+  await ensureCatalogLoaded();
+  const grounded = lookupGroundedSpecs({
+    year: "2026",
+    make: "Fleetwood",
+    model: "Fortis",
+    floorplan: "32RW",
+    source: "facts",
+  });
+  assert.equal(grounded.oemGvwrLbs, null);
+  assert.equal(
+    grounded.weightBand,
+    "Series 18,000–26,000 lbs · confirm sticker",
+  );
+  const locked = formatLockedWeightsBlock({
+    year: "2026",
+    make: "Fleetwood",
+    model: "Fortis",
+    floorplan: "32RW",
+  });
+  assert.match(locked, /GAP — no OEM pin/);
+  assert.match(locked, /Series 18,000–26,000 lbs · confirm sticker/);
+  assert.match(locked, /Not a published GVWR/);
+  assert.deepEqual(extractVerifiedPinsFromText(locked), []);
+  const spoken = formatChatSpecMissReply({
+    query: "GVWR",
+    year: "2026",
+    make: "Fleetwood",
+    model: "Fortis",
+    floorplan: "32RW",
+  });
+  assert.match(spoken || "", /Series 18,000–26,000 lbs · confirm sticker/);
+  assert.match(spoken || "", /Not a published pin/);
+  assert.doesNotMatch(spoken || "", /has no GVWR pin/);
 
   const pinned = factsFor("2023", "Jayco", "Precept", "31UL");
   assert.equal(pinned.brochure.gvwr, "22,000 lbs");
