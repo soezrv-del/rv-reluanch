@@ -7,7 +7,6 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import {
@@ -401,17 +400,19 @@ export function SelectSheet({
 
   const sheet = (
     <div
-      className="select-sheet-root fixed inset-x-0 top-0 z-[80] flex items-end justify-center px-3 sm:items-center sm:px-4"
+      className="select-sheet-root fixed inset-x-0 z-[80] flex min-h-0 flex-col items-center px-3"
       data-no-pull-reset=""
       data-no-swipe=""
       style={{
-        height: kb.vvHeight > 0 ? `${kb.vvHeight}px` : "100dvh",
-        top: kb.vvOffsetTop > 0 ? kb.vvOffsetTop : 0,
-        paddingTop: "max(0.75rem, env(safe-area-inset-top))",
+        // vvHeight is the screen even when the keyboard is closed. Using it
+        // as the sheet height overflows the Facts pane above the dock, and
+        // the clipped tail cannot be scrolled into view.
+        top: kb.open && kb.vvOffsetTop > 0 ? kb.vvOffsetTop : 0,
+        bottom: kb.open ? "auto" : 0,
+        height: kb.open && kb.vvHeight > 0 ? `${kb.vvHeight}px` : "auto",
+        paddingTop: "0.75rem",
         paddingBottom:
-          kbPad > 0
-            ? `max(0.75rem, ${kbPad + 12}px)`
-            : "max(0.75rem, env(safe-area-inset-bottom, 0px))",
+          kbPad > 0 ? `max(0.75rem, ${kbPad + 12}px)` : "0.75rem",
       }}
     >
       <button
@@ -423,14 +424,13 @@ export function SelectSheet({
       />
 
       <div
-        className="select-sheet-panel sheet-rise glass-prestige-deep relative z-10 flex w-full max-w-md flex-col overflow-hidden rounded-[1.35rem] border border-white/30 shadow-[0_20px_60px_rgba(0,0,0,0.55)] sm:rounded-[1.5rem]"
+        className="select-sheet-panel glass-prestige-deep relative z-10 flex min-h-0 w-full max-w-md flex-1 flex-col overflow-hidden rounded-[1.35rem] border border-white/30 shadow-[0_20px_60px_rgba(0,0,0,0.55)] sm:rounded-[1.5rem]"
         style={{
-          maxHeight:
-            kbPad > 0
-              ? `min(72dvh, calc(var(--vv-height, 100dvh) - ${kbPad + 48}px))`
-              : "calc(100dvh - max(0.75rem, env(safe-area-inset-top)) - max(0.75rem, env(safe-area-inset-bottom)))",
-          minHeight: kbPad > 0 ? "min(40dvh, 320px)" : "min(48dvh, 420px)",
-          transform: `translate3d(0, ${dragY}px, 0)`,
+          maxHeight: kbPad > 0 ? `calc(100% - ${kbPad}px)` : "100%",
+          transform:
+            dragging || exiting || dragY !== 0
+              ? `translate3d(0, ${dragY}px, 0)`
+              : undefined,
           opacity: exiting ? Math.max(0.15, 1 - dismissProgress) : 1,
           transition:
             dragging || exiting
@@ -722,8 +722,5 @@ export function SelectSheet({
     </div>
   );
 
-  if (typeof document === "undefined") return sheet;
-  // Portal to the document. A transformed Facts pane clips position:fixed,
-  // which cut off the tail of a long floorplan list.
-  return createPortal(sheet, document.body);
+  return sheet;
 }

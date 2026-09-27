@@ -665,7 +665,10 @@ test("Facts landing is full-bleed Raidho only — no showroom photo", () => {
   assert.match(css, /--facts-cascade-dock-clear/);
   assert.match(css, /scroll-padding-bottom: var\(--facts-cascade-dock-clear\)/);
   assert.match(css, /scroll-margin-bottom: var\(--facts-cascade-dock-clear\)/);
-  assert.match(sheet, /7\.25rem \+ env\(safe-area-inset-bottom/);
+  assert.match(sheet, /data-sheet-list/);
+  assert.match(sheet, /overflow-y-auto/);
+  assert.doesNotMatch(sheet, /100dvh/);
+  assert.doesNotMatch(sheet, /7\.25rem/);
 
   // #5 — Type · Year · Make sit in the frosted RV Search card; Type stays Optional
   assert.match(fax, /data-rv-search-card/);

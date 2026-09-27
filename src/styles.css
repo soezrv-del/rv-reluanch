@@ -518,10 +518,6 @@
   .landscape-content {
     max-width: 48rem !important;
   }
-
-  .select-sheet-panel {
-    max-height: 88dvh !important;
-  }
 }
 
 @media (orientation: landscape) and (min-width: 740px) and (min-height: 420px) {
@@ -1798,18 +1794,8 @@
   border-radius: 0.35rem;
 }
 
-/* Sheet spring present */
-@keyframes sheet-rise {
-  from { transform: translateY(12%); opacity: 0.85; }
-  to { transform: translateY(0); opacity: 1; }
-}
-.sheet-rise {
-  animation: sheet-rise 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .live-flash { animation: none; }
-  .sheet-rise { animation: none; }
 }
 
 /* ─── RvFACTS guided cascade stepper ─── */

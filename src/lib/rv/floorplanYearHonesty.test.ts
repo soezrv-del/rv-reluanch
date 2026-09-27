@@ -315,3 +315,22 @@ test("Facts floorplan options equal the catalog year row, including lists longer
   assert.deepEqual(resolveFactsFloorplanOptions(redhawk), redhawk);
   assert.ok(redhawk.length > 8);
 });
+
+test("floorplan sheet list is the scrollport above the dock", () => {
+  const sheet = readFileSync(
+    join(root, "../../components/rvfax/SelectSheet.tsx"),
+    "utf8",
+  );
+  const css = readFileSync(join(root, "../../styles.css"), "utf8");
+  assert.match(sheet, /data-sheet-list/);
+  assert.match(sheet, /overflow-y-auto/);
+  assert.match(sheet, /touchAction: "pan-y"/);
+  assert.match(sheet, /min-h-0 flex-1/);
+  assert.doesNotMatch(sheet, /100dvh/);
+  assert.doesNotMatch(sheet, /70dvh/);
+  assert.doesNotMatch(sheet, /7\.25rem/);
+  assert.doesNotMatch(sheet, /createPortal/);
+  assert.doesNotMatch(sheet, /sheet-rise/);
+  assert.doesNotMatch(css, /@keyframes sheet-rise/);
+  assert.doesNotMatch(css, /\.select-sheet-panel \{\s*max-height: 88dvh/);
+});
