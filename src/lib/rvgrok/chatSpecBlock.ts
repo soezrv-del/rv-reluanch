@@ -764,8 +764,7 @@ function brochureFigureSpeech(opts: {
   const freight = /\bfreightliner\b/i.test(notes);
   const tag = /\btag[-\s]?axle\b/i.test(notes);
   const chassis = freight && tag ? " Freightliner tag-axle." : freight ? " Freightliner." : "";
-  const brochure = notes.match(/\b(20\d{2}\s+[^.
-]{0,48}?brochure)\b/i);
+  const brochure = notes.match(/\b(20\d{2}\s+[^.\n]{0,48}?brochure)\b/i);
   const source = brochure
     ? `the ${brochure[1].replace(/\s+/g, " ").trim()}`
     : /\bbrochure\b/i.test(notes)
