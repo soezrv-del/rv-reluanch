@@ -61,7 +61,11 @@ import {
   startVideoFramePump,
 } from "@/lib/rvgrok/vision";
 import { planGrokTabEntry } from "@/lib/rvgrok/tabEntry";
-import { registerRoomAsk } from "@/lib/rvgrok/roomAsk";
+import {
+  publishRoomVoice,
+  registerRoomAsk,
+  roomVoicePhaseFromStatus,
+} from "@/lib/rvgrok/roomAsk";
 import { readActiveScreen, withActiveScreen } from "@/lib/rvgrok/screenContext";
 import { useAccessOptional } from "@/components/access/AccessProvider";
 import { takeSessionWelcome, welcomeBackLine } from "@/lib/access/identity";
@@ -1420,7 +1424,14 @@ export function RvGrokApp({
   );
 
   useEffect(() => {
-    // Another room is on screen. The pane stays mounted; keep the thread.
+    publishRoomVoice(roomVoicePhaseFromStatus(realtimeStatus));
+  }, [realtimeStatus]);
+
+  useEffect(() => () => publishRoomVoice("idle"), []);
+
+  useEffect(() => {
+    // Another room is on screen. The pane stays mounted; keep the thread
+    // and any Live Voice session. Do not stop the call when this pane hides.
     if (!active) return;
 
     let handled = entryHandledRef.current;

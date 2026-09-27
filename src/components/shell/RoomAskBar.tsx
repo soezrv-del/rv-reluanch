@@ -1,7 +1,12 @@
-import { useState } from "react";
-import { Mic } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Mic, Radio } from "lucide-react";
 import type { AppTab } from "./BottomTabs";
-import { roomAskMic, roomAskSend } from "@/lib/rvgrok/roomAsk";
+import {
+  roomAskMic,
+  roomAskSend,
+  subscribeRoomVoice,
+  type RoomVoicePhase,
+} from "@/lib/rvgrok/roomAsk";
 import { markAskBarGrokEntry } from "@/lib/rvgrok/screenContext";
 
 /** One chip row above the ask box. RV GPS stays in Premium. */
@@ -26,7 +31,11 @@ export function RoomAskBar({
   onOpen: (tab: AppTab) => void;
 }) {
   const [draft, setDraft] = useState("");
+  const [voice, setVoice] = useState<RoomVoicePhase>("idle");
   const hidePinnedAsk = !homeOpen && tab === "rvgrok";
+  const live = voice !== "idle";
+
+  useEffect(() => subscribeRoomVoice(setVoice), []);
 
   const send = () => {
     const q = draft.trim();
@@ -96,19 +105,40 @@ export function RoomAskBar({
             enterKeyHint="send"
             className="min-w-0 flex-1 bg-transparent py-2 text-[15px] text-fg outline-none placeholder:text-muted"
           />
+          {live ? (
+            <span
+              data-room-voice={voice}
+              className="shrink-0 text-[11px] font-semibold tracking-wide text-gold"
+            >
+              {voice === "speaking" ? "Speaking" : "Listening"}
+            </span>
+          ) : null}
           <button
             type="button"
             data-room-ask-mic
-            className="grok-mic-btn flex size-11 shrink-0 items-center justify-center rounded-full"
-            aria-label="Start live voice"
-            title="Start Live Voice"
+            className={
+              "grok-mic-btn flex size-11 shrink-0 items-center justify-center rounded-full" +
+              (live ? " is-live" : "") +
+              (voice === "speaking" ? " is-armed" : "")
+            }
+            aria-pressed={live}
+            aria-label={
+              voice === "speaking"
+                ? "Speaking, tap to stop"
+                : live
+                  ? "Listening, tap to stop"
+                  : "Start live voice"
+            }
+            title={live ? "Stop Live Voice" : "Start Live Voice"}
             onClick={() => {
               roomAskMic();
-              markAskBarGrokEntry();
-              onOpen("rvgrok");
             }}
           >
-            <Mic className="size-5" aria-hidden />
+            {live ? (
+              <Radio className="size-5 animate-pulse" aria-hidden />
+            ) : (
+              <Mic className="size-5" aria-hidden />
+            )}
           </button>
         </div>
       </form>
