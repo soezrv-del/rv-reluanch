@@ -28,7 +28,7 @@ import {
   stripScreenContext,
 } from "./screenGuides.ts";
 import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
-import { voiceBrowseLine } from "./factsScreenPolicy.ts";
+import { applyFactsDelivery, isFactsScreen, voiceBrowseLine } from "./factsScreenPolicy.ts";
 import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_MIC_RULES } from "./voice.ts";
 
 export type LiveVoicePrewarm = {
@@ -205,7 +205,10 @@ export function buildRealtimeSessionUpdate(
   const screenSection = screen
     ? `${SCREEN_GUIDE_PREAMBLE}\n\n${formatScreenContext(screen)}`
     : SCREEN_GUIDE_PREAMBLE;
-  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}${voiceBrowseLine(screen)} Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
+  const assembled = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}${voiceBrowseLine(screen)} Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
+  const instructions = isFactsScreen(screen)
+    ? applyFactsDelivery(assembled)
+    : assembled;
   return {
     type: "session.update",
     session: {

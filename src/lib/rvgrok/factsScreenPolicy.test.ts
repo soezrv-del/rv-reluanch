@@ -3,8 +3,8 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { GROUNDING_RULES } from "./grounding.ts";
-import { VOICE_MIC_RULES } from "./voice.ts";
+import { GROUNDING_RULES, UNKNOWN_POWERTRAIN_LINE } from "./grounding.ts";
+import { VOICE_MIC_RULES, XAI_REALTIME_URL } from "./voice.ts";
 import { buildRealtimeSessionUpdate } from "./liveVoice.ts";
 import { buildWebSearchRequest } from "./webSearch.ts";
 import { decideVoiceWebResearch } from "./voiceWeb.ts";
@@ -13,7 +13,9 @@ import {
   formatFactsStockBlock,
   snapshotFromJson,
 } from "./ownLotInventory.ts";
+import { RV_SYSTEM_PROMPT } from "./prompts.ts";
 import {
+  applyFactsDelivery,
   FACTS_SPEC_INSTRUCTION,
   classifyFactsTurn,
   factsChatTools,
@@ -59,7 +61,7 @@ test("Facts spec tools omit the lot tool; Lot and stock checks keep it", () => {
   assert.equal(factsChatTools(tools, "Facts", "stock").length, 2);
   assert.equal(factsChatTools(tools, "Lot", "spec").length, 2);
   assert.doesNotMatch(FACTS_SPEC_INSTRUCTION, /OWN-LOT INVENTORY/);
-  assert.match(FACTS_SPEC_INSTRUCTION, /live web research/);
+  assert.match(FACTS_SPEC_INSTRUCTION, /live web search/);
   assert.match(FACTS_SPEC_INSTRUCTION, /exact pinned Facts value wins/i);
 });
 
@@ -119,8 +121,9 @@ test("Facts voice session searches; Lot still speaks an injected snapshot", () =
     "",
     "Facts",
   ).session as { instructions: string };
-  assert.match(facts.instructions, /native web_search/);
-  assert.match(facts.instructions, /exact pin wins/i);
+  assert.match(facts.instructions, /live web search/);
+  assert.match(facts.instructions, /exact pinned Facts value wins/i);
+  assert.doesNotMatch(facts.instructions, /say that field is unverified/);
   assert.doesNotMatch(
     facts.instructions,
     /not to override an injected lot snapshot/,
@@ -154,4 +157,61 @@ test("catalog is not the only spec source, and a web number is not a pin", () =>
   assert.match(api, /formatFactsStockBlock/);
   assert.match(api, /skipOwnLot: factsTurn === "spec"/);
   assert.match(api, /looksLikeOwnLotStockQuestion/);
+});
+
+const HEDGE =
+  /not in (?:our |the )?catalogs?|\bcatalog gap\b|couldn'?t find|could not find|\bunverified\b|say so plainly|i don't know|search timed out|returned nothing|labeled est|typical class range|low confidence/i;
+
+test("Facts chat and Live Voice prompts search the web and do not hedge", () => {
+  const inherited = `${RV_SYSTEM_PROMPT}\n\n${GROUNDING_RULES}\n\n${UNKNOWN_POWERTRAIN_LINE}\n\n${FACTS_SPEC_INSTRUCTION}`;
+  const chat = applyFactsDelivery(inherited);
+  assert.doesNotMatch(chat, HEDGE);
+  assert.match(chat, /Always run a live web search/);
+  assert.match(chat, /exact pinned Facts value wins/i);
+  assert.match(chat, /per the Entegra brochure/);
+  assert.match(chat, /per rvguide\.com/);
+  assert.match(chat, /Never invent or guess a number/);
+  assert.match(chat, /door sticker or the dealer/);
+  assert.match(chat, /Want me to check if we have one in stock\?/);
+  assert.match(chat, /Do not use lot inventory/);
+
+  const voice = (
+    buildRealtimeSessionUpdate(
+      "ara",
+      1,
+      UNKNOWN_POWERTRAIN_LINE,
+      "",
+      "",
+      "",
+      "Facts",
+    ).session as { instructions: string }
+  ).instructions;
+  assert.doesNotMatch(voice, HEDGE);
+  assert.match(voice, /Always run a live web search/);
+  assert.match(voice, /per rvguide\.com/);
+  assert.match(voice, /door sticker or the dealer/);
+
+  const lot = (
+    buildRealtimeSessionUpdate("ara", 1, "", "", "", "", "Lot").session as {
+      instructions: string;
+    }
+  ).instructions;
+  assert.match(lot, /say that field is unverified/);
+
+  const api = readFileSync(join(root, "../../routes/api/rvgrok.ts"), "utf8");
+  assert.match(
+    api,
+    /model: isFactsScreen\(screen\) \? WEB_SEARCH_MODELS\[0\]/,
+  );
+  assert.match(api, /factsDelivery: isFactsScreen\(screen\)/);
+  const realtime = readFileSync(join(root, "realtime.ts"), "utf8");
+  assert.match(realtime, /factsSpecTurn[\s\S]{0,800}FACTS_SPEC_INSTRUCTION/);
+  assert.equal(
+    readFileSync(join(root, "webSearch.ts"), "utf8").includes(
+      'export const WEB_SEARCH_MODELS = [\n  "grok-4.7",\n] as const;',
+    ),
+    true,
+  );
+  assert.match(XAI_REALTIME_URL, /model=grok-voice-latest/);
+  assert.doesNotMatch(XAI_REALTIME_URL, /grok-4\.7/);
 });

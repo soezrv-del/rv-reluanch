@@ -42,6 +42,7 @@ import {
 import { lotQueryForFollowUp } from "@/lib/rvgrok/ownLotAsk";
 import {
   activeScreenFromContext,
+  applyFactsDelivery,
   classifyFactsTurn,
   FACTS_SPEC_INSTRUCTION,
   FACTS_STOCK_INSTRUCTION,
@@ -61,6 +62,7 @@ import {
   researchTimeoutMs,
   WEB_SEARCH_MAX_TOOL_CALLS,
   formatWebSearchInjection,
+  WEB_SEARCH_MODELS,
 } from "@/lib/rvgrok/webSearch";
 import { executeWebResearch } from "@/lib/rvgrok/webResearchTelemetry";
 import { getResearchOrderOverride } from "@/lib/rvgrok/researchOrderStore";
@@ -163,6 +165,7 @@ function withGrounding(
     standingLessons?: string;
     mode?: TalkMode;
     factsNote?: string;
+    factsDelivery?: boolean;
   },
 ) {
   let out = injectStandingLessons(system, opts?.standingLessons);
@@ -184,6 +187,7 @@ function withGrounding(
   }
   const factsNote = (opts?.factsNote || "").trim();
   if (factsNote) out = `${out}\n\n${factsNote}`;
+  if (opts?.factsDelivery) out = applyFactsDelivery(out);
   return out;
 }
 
@@ -867,6 +871,9 @@ async function tryXaiDirect(
     tools?: typeof XAI_CHAT_TOOLS;
     requiredTool?: string | null;
     factsNote?: string;
+    /** Facts chat uses this id alone. Other screens keep the fallback list. */
+    model?: string;
+    factsDelivery?: boolean;
   },
 ): Promise<Response | null> {
   const apiKey = process.env.XAI_API_KEY;
@@ -881,9 +888,11 @@ async function tryXaiDirect(
     : turn
       ? (turn.requiredTool ?? null)
       : requiredToolForAsk(lastPlain);
-  const MODELS = vision
-    ? ["grok-4.7", "grok-4.6", "grok-4.5", "grok-4-latest", "grok-2-vision-1212", "grok-3"]
-    : ["grok-4.7", "grok-4.6", "grok-4-latest", "grok-4.5", "grok-3"];
+  const MODELS = turn?.model
+    ? [turn.model]
+    : vision
+      ? ["grok-4.7", "grok-4.6", "grok-4.5", "grok-4-latest", "grok-2-vision-1212", "grok-3"]
+      : ["grok-4.7", "grok-4.6", "grok-4-latest", "grok-4.5", "grok-3"];
 
   const system = withGrounding(
     (agentMode ? AGENT_SYSTEM_PROMPT : RV_SYSTEM_PROMPT) +
@@ -903,6 +912,7 @@ async function tryXaiDirect(
       standingLessons,
       mode,
       factsNote: turn?.factsNote,
+      factsDelivery: Boolean(turn?.factsDelivery),
     },
   );
   const fullMessages: ChatMessage[] = [
@@ -947,6 +957,7 @@ async function tryCloudflareWorker(
   standingLessons?: string,
   mode?: TalkMode,
   factsNote?: string,
+  factsDelivery?: boolean,
 ): Promise<Response | null> {
   const base = workerBase();
   const candidates = agentMode
@@ -980,6 +991,7 @@ async function tryCloudflareWorker(
                   standingLessons,
                   mode,
                   factsNote,
+                  factsDelivery,
                 },
               ),
             },
@@ -1328,6 +1340,7 @@ export const Route = createFileRoute("/api/rvgrok")({
             query: lastPlain,
             catalogBlock: catalogContext,
           });
+          if (factsTurn === "spec") webNotes = applyFactsDelivery(webNotes);
         }
 
         const factsNote =
@@ -1356,7 +1369,13 @@ export const Route = createFileRoute("/api/rvgrok")({
           standingLessons,
           talkMode,
           requestOrigin,
-          { tools: chatTools, requiredTool, factsNote },
+          {
+            tools: chatTools,
+            requiredTool,
+            factsNote,
+            model: isFactsScreen(screen) ? WEB_SEARCH_MODELS[0] : undefined,
+            factsDelivery: isFactsScreen(screen),
+          },
         );
         if (fromXai) return finish(fromXai);
         const fromWorker = await tryCloudflareWorker(
@@ -1371,6 +1390,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           standingLessons,
           talkMode,
           factsNote,
+          isFactsScreen(screen),
         );
         if (fromWorker) return finish(fromWorker);
 
