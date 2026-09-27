@@ -61,6 +61,11 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.match(lot, /data-lot-count/);
   assert.match(lot, /FEATURED REPORT/);
   assert.match(lot, /data-lot-pill/);
+  assert.match(lot, /label="VIN"/);
+  assert.match(lot, /label="Stock"/);
+  assert.doesNotMatch(lot, /label="Year"|label="Make"|label="Model"|label="Trim"|label="Price"/);
+  assert.doesNotMatch(lot, /pillLotTypeLabel|#\$\{stock\}|Source Page|>Website</);
+  assert.doesNotMatch(page, /pillLotTypeLabel|url: "Listing"/);
   assert.match(lot, /data-lot-scene/);
   assert.match(lot, /data-lot-photo/);
   assert.doesNotMatch(lot, /LOT_CAMP_SCENE|camp-scene|family camping/i);
