@@ -3,12 +3,12 @@ import { Mic } from "lucide-react";
 import type { AppTab } from "./BottomTabs";
 import { roomAskMic, roomAskSend } from "@/lib/rvgrok/roomAsk";
 
-/** One row. These open the existing rooms. */
+/** Room tab bar. Facts, Lot, Cal, Tow only. RV GPS stays in Premium. */
 const ROOM_CHIPS: { id: AppTab; label: string }[] = [
-  { id: "rvfax", label: "Rv Facts" },
-  { id: "rvcal", label: "Calculator" },
-  { id: "rvtow", label: "Tow Guide" },
-  { id: "rvlot", label: "Lot Inventory" },
+  { id: "rvfax", label: "Facts" },
+  { id: "rvlot", label: "Lot" },
+  { id: "rvcal", label: "Cal" },
+  { id: "rvtow", label: "Tow" },
 ];
 
 /**
@@ -17,9 +17,11 @@ const ROOM_CHIPS: { id: AppTab; label: string }[] = [
  */
 export function RoomAskBar({
   tab,
+  homeOpen = false,
   onOpen,
 }: {
   tab: AppTab;
+  homeOpen?: boolean;
   onOpen: (tab: AppTab) => void;
 }) {
   const [draft, setDraft] = useState("");
@@ -43,24 +45,34 @@ export function RoomAskBar({
     <div
       data-room-ask
       data-no-swipe
-      className="relative z-[70] shrink-0 bg-black px-3 pt-2 pb-2"
+      className="relative z-[70] shrink-0 bg-black px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]"
     >
       <div
-        data-room-chips
+        data-room-tabs
         className="mx-auto flex w-full max-w-lg gap-2 overflow-x-auto pb-2"
       >
-        {ROOM_CHIPS.map((chip) => (
-          <button
-            key={chip.id}
-            type="button"
-            data-room-chip={chip.id}
-            aria-pressed={tab === chip.id}
-            onClick={() => openRoom(chip.id)}
-            className="grok-chip inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-[13px] font-semibold whitespace-nowrap text-fg"
-          >
-            {chip.label}
-          </button>
-        ))}
+        {ROOM_CHIPS.map((chip) => {
+          const active = !homeOpen && tab === chip.id;
+          return (
+            <button
+              key={chip.id}
+              type="button"
+              data-room-chip={chip.id}
+              data-room-tab={chip.id}
+              aria-pressed={active}
+              aria-current={active ? "page" : undefined}
+              onClick={() => openRoom(chip.id)}
+              className={
+                "inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-[13px] font-semibold whitespace-nowrap " +
+                (active
+                  ? "bg-white/15 text-fg ring-1 ring-white/45"
+                  : "grok-chip text-fg")
+              }
+            >
+              {chip.label}
+            </button>
+          );
+        })}
       </div>
       <form
         data-room-ask-bar

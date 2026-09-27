@@ -30,25 +30,27 @@ test("room ask bridge calls the registered Grok handlers", () => {
   assert.equal(roomAskMic(), false);
 });
 
-test("ask bar sits above the dock and does not repeat the dock rooms", () => {
+test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   const bar = read("../../components/shell/RoomAskBar.tsx");
-  const tabs = read("../../components/shell/BottomTabs.tsx");
+  const more = read("../../components/more/MoreApp.tsx");
 
-  assert.match(shell, /<RoomAskBar tab=\{tab\} onOpen=\{onTabChange\} \/>/);
-  assert.match(shell, /<BottomTabs tab=\{tab\} onChange=\{onTabChange\} \/>/);
-  assert.match(shell, /data-bottom-dock/);
-  const askAt = shell.indexOf("<RoomAskBar");
-  const dockAt = shell.indexOf("data-bottom-dock");
-  assert.ok(askAt > 0 && dockAt > askAt, "ask bar is above the dock");
+  assert.match(
+    shell,
+    /<RoomAskBar tab=\{tab\} homeOpen=\{homeOpen\} onOpen=\{onTabChange\} \/>/,
+  );
+  assert.doesNotMatch(shell, /<BottomTabs/);
+  assert.doesNotMatch(shell, /data-bottom-dock/);
 
   const chips = bar.match(/const ROOM_CHIPS[\s\S]*?\];/)?.[0] ?? "";
-  assert.match(chips, /id: "rvfax", label: "Rv Facts"/);
-  assert.match(chips, /id: "rvcal", label: "Calculator"/);
-  assert.match(chips, /id: "rvtow", label: "Tow Guide"/);
-  assert.match(chips, /id: "rvlot", label: "Lot Inventory"/);
+  assert.match(chips, /id: "rvfax", label: "Facts"/);
+  assert.match(chips, /id: "rvlot", label: "Lot"/);
+  assert.match(chips, /id: "rvcal", label: "Cal"/);
+  assert.match(chips, /id: "rvtow", label: "Tow"/);
   assert.equal((chips.match(/id: "/g) || []).length, 4);
-  assert.doesNotMatch(chips, /rvtrips|RV GPS|Tanks|Payment/);
+  assert.doesNotMatch(chips, /rvtrips|RV GPS|Tanks|Payment|Grok/);
+  assert.match(bar, /!homeOpen && tab === chip\.id/);
+  assert.match(bar, /min-h-11/);
   assert.match(bar, /onOpen\("rvfax"\)/);
   assert.match(bar, /onOpen\("rvcal"\)/);
   assert.match(bar, /onOpen\("rvtow"\)/);
@@ -58,14 +60,7 @@ test("ask bar sits above the dock and does not repeat the dock rooms", () => {
   assert.match(bar, /roomAskSend\(q\)/);
   assert.match(bar, /onOpen\("rvgrok"\)/);
   assert.match(bar, /aria-label="Start live voice"/);
-  assert.match(bar, /placeholder="Ask about this coach"/);
-  assert.match(
-    shell,
-    /className="relative z-\[80\] hidden shrink-0 isolate pointer-events-auto"[\s\S]*?data-bottom-dock/,
-  );
-
-  assert.match(tabs, /grid-cols-6/);
-  assert.match(tabs, /id: "rvtrips", label: "RV GPS"/);
+  assert.match(more, /title="RV GPS"/);
 });
 
 test("typed asks and the mic use the mounted RV Grok chat", () => {

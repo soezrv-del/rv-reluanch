@@ -1809,7 +1809,7 @@
  * Facts landing cascade chrome (#2 dock clear, #5 sun-readable Type·Year·Make).
  */
 .rvfax-screen[data-facts-landing] {
-  --facts-cascade-dock-clear: calc(10.5rem + env(safe-area-inset-bottom, 0px));
+  --facts-cascade-dock-clear: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 }
 .rvfax-screen[data-facts-landing] [data-facts-cascade-scroll] {
   scroll-padding-bottom: var(--facts-cascade-dock-clear);

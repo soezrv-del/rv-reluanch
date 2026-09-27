@@ -10,7 +10,7 @@ import {
   type ErrorInfo,
   type ReactNode,
 } from "react";
-import { BottomTabs, type AppTab } from "./BottomTabs";
+import { type AppTab } from "./BottomTabs";
 import { RoomAskBar } from "./RoomAskBar";
 import { SuiteBrand } from "./SuiteBrand";
 import { HomeScreen } from "./HomeScreen";
@@ -362,11 +362,6 @@ export function AppShell({
     onPeek: peekTab,
   });
 
-  // Do NOT key this on kb.open: a focused composer in a hidden Grok pane
-  // used to leave hideDock true after leaving Grok (dock gone on re-entry).
-  // Keyboard still fades the dock via html.kb-open CSS.
-  const hideDock = launchOpen;
-
   const nav = useMemo(
     () => ({
       tab,
@@ -518,17 +513,7 @@ export function AppShell({
           ) : null}
         </main>
 
-        <RoomAskBar tab={tab} onOpen={onTabChange} />
-
-        {!hideDock ? (
-          <div
-            className="relative z-[80] hidden shrink-0 isolate pointer-events-auto"
-            data-bottom-dock
-            data-no-swipe
-          >
-            <BottomTabs tab={tab} onChange={onTabChange} />
-          </div>
-        ) : null}
+        <RoomAskBar tab={tab} homeOpen={homeOpen} onOpen={onTabChange} />
       </div>
     </ShellNavProvider>
   );
