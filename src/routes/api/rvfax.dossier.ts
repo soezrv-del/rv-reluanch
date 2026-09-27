@@ -702,11 +702,12 @@ function parseDossier(
       const s = String(v).trim();
       return s || null;
     };
-    const arr = (k: string) => {
+    const list = (k: string) => {
       const v = j[k];
       if (!Array.isArray(v)) return [] as string[];
-      return v.map((x) => String(x)).filter(Boolean).slice(0, 8);
+      return v.map((x) => String(x)).filter(Boolean);
     };
+    const arr = (k: string) => list(k).slice(0, 8);
     const conf = String(j.confidence || "medium").toLowerCase();
     const confidence =
       conf === "high" || conf === "low" ? conf : ("medium" as const);
@@ -761,7 +762,7 @@ function parseDossier(
       generator: str("generator"),
       mpgHighwayEst: num("mpgHighwayEst", "mpg", "highwayMpg"),
       warranty: str("warranty"),
-      floorplansThisYear: arr("floorplansThisYear"),
+      floorplansThisYear: list("floorplansThisYear"),
       overview: str("overview"),
       keyFeatures: (() => {
         const a = arr("keyFeatures");

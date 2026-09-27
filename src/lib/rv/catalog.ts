@@ -15,6 +15,7 @@ import {
   peekCatalog,
 } from "./catalogLoad";
 import { useCatalogReady } from "./useCatalogReady";
+import { resolveFactsFloorplanOptions } from "./floorplanOptions";
 import {
   CLASSIC_BRANDS,
   RV_CARD_IMAGE,
@@ -402,7 +403,7 @@ export function getFloorplansForYear(
 ): string[] {
   const spec = catalogMap()[make]?.[model];
   if (!spec) return [];
-  return floorplansForYearFromSpec(year, spec);
+  return resolveFactsFloorplanOptions(floorplansForYearFromSpec(year, spec));
 }
 
 /** Years with at least one sourced floorplan code for this model. */
@@ -506,22 +507,16 @@ export function relatedModelsWithFloorplansInYear(
 /**
  * Floorplans to show under “Floorplans this year”.
  * Requires a selected year. Empty year → [] so the union is never labeled current.
- * Catalog year scope wins; never substitutes aggregate or live when the year row is empty.
+ * The catalog year row is the full option list.
  */
 export function floorplansForSelectedYear(
   year: string,
   make: string,
   model: string,
-  live?: { live?: boolean; floorplansThisYear?: string[] } | null,
 ): string[] {
   const y = parseInt(year, 10);
   if (!year || !Number.isFinite(y)) return [];
-  const catalog = getFloorplansForYear(year, make, model);
-  if (!catalog.length) return [];
-  if (live?.live && live.floorplansThisYear?.length) {
-    return live.floorplansThisYear;
-  }
-  return catalog;
+  return getFloorplansForYear(year, make, model);
 }
 
 /** OEM years a floorplan code appears in `floorplansByYear` (empty if unknown). */

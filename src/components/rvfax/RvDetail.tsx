@@ -1102,8 +1102,8 @@ export function RvDetail({
   );
 
   const floorplansShown = useMemo(
-    () => floorplansForSelectedYear(year, make, model, live),
-    [year, make, model, live],
+    () => floorplansForSelectedYear(year, make, model),
+    [year, make, model],
   );
 
   const sourcedYears = useMemo(
