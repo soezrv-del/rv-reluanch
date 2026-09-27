@@ -2680,6 +2680,17 @@ html.kb-open [data-rvgrok-composer-dock] {
   width: min(22rem, 92%);
   margin: 0.75rem auto 0;
 }
+button.showroom-hero {
+  display: block;
+}
+.showroom-hero picture {
+  display: block;
+  width: 100%;
+}
+button.showroom-placard {
+  display: block;
+  width: calc(100% - 2.5rem);
+}
 .showroom-coach {
   position: relative;
   z-index: 2;

@@ -283,6 +283,14 @@ export function AppShell({
     markVisited("rvfax");
   }, [markVisited]);
 
+  /** Spotlight card → Facts for that series. Does not reset the picker. */
+  const openSpotlightFacts = useCallback(() => {
+    blurSuiteFocus();
+    setHomeOpen(false);
+    setTab("rvfax");
+    markVisited("rvfax");
+  }, [markVisited]);
+
   const openFactsShare = useCallback(() => {
     if (!access.guard(undefined, "Share is limited to the approved list.")) {
       return;
@@ -451,8 +459,8 @@ export function AppShell({
         >
           {homeOpen ? (
             <HomeScreen
-              coach={activeCoach}
               onOpenLot={() => onTabChange("rvlot")}
+              onOpenFacts={openSpotlightFacts}
             />
           ) : null}
           {dockOrder.map((id, i) => {

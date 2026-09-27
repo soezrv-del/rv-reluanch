@@ -1,6 +1,7 @@
 /**
- * Home hero: last Facts lookup, otherwise the newest lot-sheet unit.
- * Photos come only from lotUnitPhoto — never a stock or generated image.
+ * Home: one fixed spotlight coach, then newest lot arrivals under it.
+ * Spotlight art is a committed asset. Arrival photos come only from
+ * lotUnitPhoto — never a stock or generated image.
  */
 import { lotUnitPhoto, type LotUnit } from "../lot/ownLotPage.ts";
 import {
@@ -53,6 +54,76 @@ export function newestLotUnit(units: LotUnit[]): LotUnit | null {
     }
   }
   return best;
+}
+
+/**
+ * Locked showroom spotlight. Swap this object to change the hero.
+ * `make` is the card name ("Entegra"); Facts resolves it to the catalog make.
+ * No price, GVWR, length, or engine — those stay on the Facts report.
+ */
+export const SHOWROOM_SPOTLIGHT = {
+  year: "2026",
+  make: "Entegra",
+  series: "Cornerstone",
+  image: "/assets/showroom/2026-entegra-cornerstone.webp",
+  alt: "2026 Entegra Cornerstone",
+} as const;
+
+export function spotlightLabel(
+  spot: { year: string; make: string; series: string } = SHOWROOM_SPOTLIGHT,
+): string {
+  return [spot.year, spot.make, spot.series].filter(Boolean).join(" ");
+}
+
+/** JPEG sibling of the webp hero, used as the picture fallback. */
+export function spotlightJpegPath(image = SHOWROOM_SPOTLIGHT.image): string {
+  return image.replace(/\.webp$/i, ".jpg");
+}
+
+export type SpotlightFacts = {
+  year: string;
+  make: string;
+  model: string;
+};
+
+type SpotlightIndex = Record<string, Record<string, { years?: number[] } | undefined>>;
+
+/** Catalog year + make + series, or null when that coach is not listed. */
+export function spotlightFactsTarget(
+  spot: { year: string; make: string; series: string } = SHOWROOM_SPOTLIGHT,
+  index: SpotlightIndex,
+): SpotlightFacts | null {
+  const raw = spot.make.trim();
+  const wanted = raw.toLowerCase();
+  const make = index[raw]
+    ? raw
+    : Object.keys(index).find((key) => {
+        const name = key.toLowerCase();
+        return name === wanted || name.startsWith(`${wanted} `);
+      });
+  if (!make) return null;
+  const spec = index[make]?.[spot.series];
+  if (!spec) return null;
+  const year = Number(spot.year);
+  if (!Number.isFinite(year) || !spec.years?.includes(year)) return null;
+  return { year: spot.year, make, model: spot.series };
+}
+
+export const SPOTLIGHT_FACTS_EVENT = "rvfox-open-spotlight-facts";
+
+let pendingSpotlightFacts: SpotlightFacts | null = null;
+
+export function requestSpotlightFacts(target: SpotlightFacts): void {
+  pendingSpotlightFacts = target;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(SPOTLIGHT_FACTS_EVENT));
+  }
+}
+
+export function takePendingSpotlightFacts(): SpotlightFacts | null {
+  const target = pendingSpotlightFacts;
+  pendingSpotlightFacts = null;
+  return target;
 }
 
 /** How many recent lot arrivals Home shows under the hero. */

@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchLotSnapshot, lotUnitPhoto, type LotUnit } from "@/lib/lot/ownLotPage";
-import type { ActiveCoach } from "@/lib/rv/activeCoach";
+import { CATALOG_INDEX } from "@/lib/rv/rvCatalogIndex";
 import { CoveredCoach } from "@/components/shell/CoveredCoach";
 
 const EMPTY_UNITS: LotUnit[] = [];
 import {
+  SHOWROOM_SPOTLIGHT,
   arrivalsForHome,
   coverVariant,
   formatHomePrice,
   lotArrivalQuery,
-  pickShowroomStage,
   requestLotUnit,
-  resolveHomeCoach,
+  requestSpotlightFacts,
   showroomUnitLabel,
+  spotlightFactsTarget,
+  spotlightJpegPath,
+  spotlightLabel,
 } from "@/lib/home/homeCoach";
 
 function useCountUp(target: number | null): number | null {
@@ -40,15 +43,33 @@ function useCountUp(target: number | null): number | null {
   return value;
 }
 
-export function HomeScreen({
-  coach,
-  onOpenLot,
+function SpotlightPhoto({
+  className,
+  alt,
 }: {
-  coach: ActiveCoach | null;
+  className: string;
+  alt: string;
+}) {
+  return (
+    <picture>
+      <source srcSet={SHOWROOM_SPOTLIGHT.image} type="image/webp" />
+      <img
+        src={spotlightJpegPath()}
+        alt={alt}
+        className={className}
+      />
+    </picture>
+  );
+}
+
+export function HomeScreen({
+  onOpenLot,
+  onOpenFacts,
+}: {
   onOpenLot: () => void;
+  onOpenFacts: () => void;
 }) {
   const [units, setUnits] = useState<LotUnit[] | null>(null);
-  const [photoOk, setPhotoOk] = useState(true);
 
   useEffect(() => {
     let cancel = false;
@@ -65,22 +86,38 @@ export function HomeScreen({
   }, []);
 
   const listed = units ?? EMPTY_UNITS;
-  const fallback = useMemo(
-    () => resolveHomeCoach(coach, listed),
-    [coach, listed],
-  );
-  const stage = useMemo(() => pickShowroomStage(coach, listed), [coach, listed]);
-  useEffect(() => {
-    setPhotoOk(true);
-  }, [stage.photo]);
-  const arrivals = useMemo(
-    () => arrivalsForHome(listed, stage.unit),
-    [listed, stage.unit],
-  );
+  const arrivals = useMemo(() => arrivalsForHome(listed, null), [listed]);
   const count = useCountUp(units ? units.length : null);
-  const name = stage.name || fallback?.name || "";
-  const price = formatHomePrice(stage.price ?? fallback?.price ?? null);
-  const photo = stage.photo && photoOk ? stage.photo : null;
+  const name = spotlightLabel();
+  const facts = spotlightFactsTarget(SHOWROOM_SPOTLIGHT, CATALOG_INDEX);
+  const openFacts = () => {
+    if (!facts) return;
+    requestSpotlightFacts(facts);
+    onOpenFacts();
+  };
+
+  const hero = (
+    <>
+      <SpotlightPhoto className="showroom-coach" alt={SHOWROOM_SPOTLIGHT.alt} />
+      <div className="showroom-contact" aria-hidden />
+      <div className="showroom-floor" aria-hidden />
+      <div className="showroom-reflect-clip" aria-hidden>
+        <SpotlightPhoto className="showroom-reflect" alt="" />
+      </div>
+    </>
+  );
+
+  const placard = (
+    <>
+      <p data-home-count className="showroom-count">
+        {count == null ? "" : count.toLocaleString("en-US")}
+      </p>
+      <p className="showroom-onlot">on the lot</p>
+      <p className="showroom-coachline">
+        <b>{name}</b>
+      </p>
+    </>
+  );
 
   return (
     <div
@@ -89,39 +126,28 @@ export function HomeScreen({
       data-no-swipe
       className="showroom-home absolute inset-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto"
     >
-      <div className="showroom-hero">
-        {photo ? (
-          <>
-            <img src={photo} alt="" className="showroom-coach" onError={() => setPhotoOk(false)} />
-            <div className="showroom-contact" aria-hidden />
-            <div className="showroom-floor" aria-hidden />
-            <div className="showroom-reflect-clip" aria-hidden>
-              <img src={photo} alt="" className="showroom-reflect" />
-            </div>
-          </>
-        ) : (
-          <div className="showroom-coach-fallback">
-            {stage.unit ? (
-              <CoveredCoach variant={coverVariant(stage.unit)} />
-            ) : (
-              <p className="showroom-coachline">{units ? name : ""}</p>
-            )}
-          </div>
-        )}
-      </div>
+      {facts ? (
+        <button type="button" className="showroom-hero" onClick={openFacts}>
+          {hero}
+        </button>
+      ) : (
+        <div className="showroom-hero">{hero}</div>
+      )}
 
-      <section className="showroom-placard showroom-card" data-home-placard>
-        <p data-home-count className="showroom-count">
-          {count == null ? "" : count.toLocaleString("en-US")}
-        </p>
-        <p className="showroom-onlot">on the lot</p>
-        {name ? (
-          <p className="showroom-coachline">
-            <b>{name}</b>
-            {price ? <span> · {price}</span> : null}
-          </p>
-        ) : null}
-      </section>
+      {facts ? (
+        <button
+          type="button"
+          className="showroom-placard showroom-card"
+          data-home-placard
+          onClick={openFacts}
+        >
+          {placard}
+        </button>
+      ) : (
+        <section className="showroom-placard showroom-card" data-home-placard>
+          {placard}
+        </section>
+      )}
 
       {arrivals.length > 0 ? (
         <section data-home-arrivals className="showroom-arrivals">

@@ -5,15 +5,20 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { lotUnitPhoto, type LotUnit } from "../lot/ownLotPage.ts";
 import type { ActiveCoach } from "../rv/activeCoach.ts";
+import { CATALOG_INDEX } from "../rv/rvCatalogIndex.ts";
 import {
   NEWEST_ARRIVALS,
+  SHOWROOM_SPOTLIGHT,
   arrivalsForHome,
   coverVariant,
   newestArrivals,
   newestLotUnit,
-  pickShowroomStage,
+  requestSpotlightFacts,
   resolveHomeCoach,
-  showroomUnitLabel,
+  spotlightFactsTarget,
+  spotlightJpegPath,
+  spotlightLabel,
+  takePendingSpotlightFacts,
 } from "./homeCoach.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -211,9 +216,10 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   assert.match(brand, /aria-label="Home"/);
   assert.match(shell, /homeOpen/);
   assert.match(shell, /initialTab = "rvgrok"/);
-  assert.match(home, /resolveHomeCoach/);
-  assert.match(home, /arrivalsForHome/);
-  assert.match(home, /pickShowroomStage/);
+  assert.match(home, /SHOWROOM_SPOTLIGHT/);
+  assert.match(home, /spotlightLabel\(\)/);
+  assert.match(home, /arrivalsForHome\(listed, null\)/);
+  assert.doesNotMatch(home, /resolveHomeCoach|pickShowroomStage/);
   assert.match(home, /CoveredCoach/);
   assert.match(home, /coverVariant/);
   const cover = readFileSync(join(root, "../../components/shell/CoveredCoach.tsx"), "utf8");
@@ -247,7 +253,47 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   );
 });
 
-test("spotlight label matches the photographed unit, and that unit is not the first arrival", () => {
+test("spotlight is the fixed 2026 Entegra Cornerstone and arrivals stay newest-first", () => {
+  assert.deepEqual(
+    {
+      year: SHOWROOM_SPOTLIGHT.year,
+      make: SHOWROOM_SPOTLIGHT.make,
+      series: SHOWROOM_SPOTLIGHT.series,
+      image: SHOWROOM_SPOTLIGHT.image,
+      alt: SHOWROOM_SPOTLIGHT.alt,
+    },
+    {
+      year: "2026",
+      make: "Entegra",
+      series: "Cornerstone",
+      image: "/assets/showroom/2026-entegra-cornerstone.webp",
+      alt: "2026 Entegra Cornerstone",
+    },
+  );
+  assert.equal(spotlightLabel(), "2026 Entegra Cornerstone");
+  assert.equal(
+    spotlightJpegPath(),
+    "/assets/showroom/2026-entegra-cornerstone.jpg",
+  );
+  assert.ok(
+    existsSync(join(root, "../../../public/assets/showroom/2026-entegra-cornerstone.webp")),
+  );
+  assert.ok(
+    existsSync(join(root, "../../../public/assets/showroom/2026-entegra-cornerstone.jpg")),
+  );
+  assert.deepEqual(spotlightFactsTarget(SHOWROOM_SPOTLIGHT, CATALOG_INDEX), {
+    year: "2026",
+    make: "Entegra Coach",
+    model: "Cornerstone",
+  });
+  assert.equal(
+    spotlightFactsTarget(
+      { ...SHOWROOM_SPOTLIGHT, series: "Not A Series" },
+      CATALOG_INDEX,
+    ),
+    null,
+  );
+
   const older = unit({
     title: "Older",
     year: "2024",
@@ -259,7 +305,7 @@ test("spotlight label matches the photographed unit, and that unit is not the fi
     stock_number: "A",
     printed: { received_date: "2026-09-01", id: "1" },
   });
-  const hero = unit({
+  const newest = unit({
     title: "2026 Holiday Rambler Admiral 29M",
     year: "2026",
     make: "Holiday Rambler",
@@ -270,12 +316,43 @@ test("spotlight label matches the photographed unit, and that unit is not the fi
     stock_number: "B",
     printed: { received_date: "2026-09-22", id: "9" },
   });
-  const stage = pickShowroomStage(null, [older, hero]);
-  assert.equal(stage.photo, "https://cdn.example/admiral.webp");
-  assert.equal(stage.name, showroomUnitLabel(hero));
-  assert.equal(stage.name, "2026 Holiday Rambler Admiral 29M");
-  assert.equal(stage.price, 164995);
-  const arrivals = arrivalsForHome([older, hero], stage.unit);
-  assert.equal(arrivals[0]?.stock_number, "A");
-  assert.ok(arrivals.every((row) => row.stock_number !== "B"));
+  const arrivals = arrivalsForHome([older, newest], null);
+  assert.equal(arrivals[0]?.stock_number, "B");
+  assert.equal(arrivals[1]?.stock_number, "A");
+  assert.equal(spotlightLabel(), "2026 Entegra Cornerstone");
+
+  const home = readFileSync(join(root, "../../components/shell/HomeScreen.tsx"), "utf8");
+  const fax = readFileSync(join(root, "../../components/rvfax/RvFaxApp.tsx"), "utf8");
+  const shell = readFileSync(join(root, "../../components/shell/AppShell.tsx"), "utf8");
+  const css = readFileSync(join(root, "../../styles.css"), "utf8");
+  assert.match(home, /SHOWROOM_SPOTLIGHT\.alt/);
+  assert.match(home, /type="image\/webp"/);
+  assert.match(home, /spotlightJpegPath\(\)/);
+  assert.match(home, /requestSpotlightFacts\(facts\)/);
+  assert.match(home, /Newest arrivals/);
+  assert.doesNotMatch(home, /gvwr|horsepower|engine/i);
+  assert.match(fax, /takePendingSpotlightFacts/);
+  assert.match(shell, /onOpenFacts=\{openSpotlightFacts\}/);
+  assert.match(shell, /const openSpotlightFacts = useCallback/);
+  assert.doesNotMatch(
+    shell.slice(shell.indexOf("const openSpotlightFacts")),
+    /setFactsPickerToken/,
+  );
+  assert.match(css, /\.showroom-hero \{[^}]*margin:\s*0\.75rem auto 0;/);
+  assert.match(
+    css,
+    /\.showroom-header \{[^}]*env\(safe-area-inset-top, 0px\)/,
+  );
+
+  requestSpotlightFacts({
+    year: "2026",
+    make: "Entegra Coach",
+    model: "Cornerstone",
+  });
+  assert.deepEqual(takePendingSpotlightFacts(), {
+    year: "2026",
+    make: "Entegra Coach",
+    model: "Cornerstone",
+  });
+  assert.equal(takePendingSpotlightFacts(), null);
 });
