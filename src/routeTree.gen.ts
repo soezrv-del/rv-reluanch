@@ -21,6 +21,7 @@ import { Route as ApiMapTilesRouteImport } from './routes/api/map-tiles'
 import { Route as ApiOsrmRouteImport } from './routes/api/osrm'
 import { Route as ApiRvVideosRouteImport } from './routes/api/rv-videos'
 import { Route as ApiRvgrokRouteImport } from './routes/api/rvgrok'
+import { Route as ReportFactsRouteImport } from './routes/report/facts'
 import { Route as ApiAccessAdminRouteImport } from './routes/api/access.admin'
 import { Route as ApiAccessCheckRouteImport } from './routes/api/access.check'
 import { Route as ApiAccessRequestRouteImport } from './routes/api/access.request'
@@ -30,6 +31,7 @@ import { Route as ApiMarketcheckListingRouteImport } from './routes/api/marketch
 import { Route as ApiMarketcheckSearchRouteImport } from './routes/api/marketcheck.search'
 import { Route as ApiNhtsaRecallsRouteImport } from './routes/api/nhtsa.recalls'
 import { Route as ApiNhtsaVinRouteImport } from './routes/api/nhtsa.vin'
+import { Route as ApiOgReportRouteImport } from './routes/api/og.report'
 import { Route as ApiRvfaxCatalogResearchRouteImport } from './routes/api/rvfax.catalog-research'
 import { Route as ApiRvfaxCompareRouteImport } from './routes/api/rvfax.compare'
 import { Route as ApiRvfaxDossierRouteImport } from './routes/api/rvfax.dossier'
@@ -38,6 +40,7 @@ import { Route as ApiRvfaxSpecFallbackRouteImport } from './routes/api/rvfax.spe
 import { Route as ApiRvgrokMemoryRouteImport } from './routes/api/rvgrok.memory'
 import { Route as ApiRvgrokTokenRouteImport } from './routes/api/rvgrok.token'
 import { Route as ApiRvgrokWebResearchRouteImport } from './routes/api/rvgrok.web-research'
+import { Route as ReportUnitIdRouteImport } from './routes/report/unit/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -99,6 +102,11 @@ const ApiRvgrokRoute = ApiRvgrokRouteImport.update({
   path: '/rvgrok',
   getParentRoute: () => ApiRouteRoute,
 } as any)
+const ReportFactsRoute = ReportFactsRouteImport.update({
+  id: '/report/facts',
+  path: '/report/facts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAccessAdminRoute = ApiAccessAdminRouteImport.update({
   id: '/access/admin',
   path: '/access/admin',
@@ -145,6 +153,11 @@ const ApiNhtsaVinRoute = ApiNhtsaVinRouteImport.update({
   path: '/nhtsa/vin',
   getParentRoute: () => ApiRouteRoute,
 } as any)
+const ApiOgReportRoute = ApiOgReportRouteImport.update({
+  id: '/og/report',
+  path: '/og/report',
+  getParentRoute: () => ApiRouteRoute,
+} as any)
 const ApiRvfaxCatalogResearchRoute = ApiRvfaxCatalogResearchRouteImport.update({
   id: '/rvfax/catalog-research',
   path: '/rvfax/catalog-research',
@@ -185,6 +198,11 @@ const ApiRvgrokWebResearchRoute = ApiRvgrokWebResearchRouteImport.update({
   path: '/web-research',
   getParentRoute: () => ApiRvgrokRoute,
 } as any)
+const ReportUnitIdRoute = ReportUnitIdRouteImport.update({
+  id: '/report/unit/$id',
+  path: '/report/unit/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -199,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/report/facts': typeof ReportFactsRoute
   '/api/access/admin': typeof ApiAccessAdminRoute
   '/api/access/check': typeof ApiAccessCheckRoute
   '/api/access/request': typeof ApiAccessRequestRoute
@@ -208,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
   '/api/nhtsa/recalls': typeof ApiNhtsaRecallsRoute
   '/api/nhtsa/vin': typeof ApiNhtsaVinRoute
+  '/api/og/report': typeof ApiOgReportRoute
   '/api/rvfax/catalog-research': typeof ApiRvfaxCatalogResearchRoute
   '/api/rvfax/compare': typeof ApiRvfaxCompareRoute
   '/api/rvfax/dossier': typeof ApiRvfaxDossierRoute
@@ -216,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/api/rvgrok/memory': typeof ApiRvgrokMemoryRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
   '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
+  '/report/unit/$id': typeof ReportUnitIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -230,6 +251,7 @@ export interface FileRoutesByTo {
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/report/facts': typeof ReportFactsRoute
   '/api/access/admin': typeof ApiAccessAdminRoute
   '/api/access/check': typeof ApiAccessCheckRoute
   '/api/access/request': typeof ApiAccessRequestRoute
@@ -239,6 +261,7 @@ export interface FileRoutesByTo {
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
   '/api/nhtsa/recalls': typeof ApiNhtsaRecallsRoute
   '/api/nhtsa/vin': typeof ApiNhtsaVinRoute
+  '/api/og/report': typeof ApiOgReportRoute
   '/api/rvfax/catalog-research': typeof ApiRvfaxCatalogResearchRoute
   '/api/rvfax/compare': typeof ApiRvfaxCompareRoute
   '/api/rvfax/dossier': typeof ApiRvfaxDossierRoute
@@ -247,6 +270,7 @@ export interface FileRoutesByTo {
   '/api/rvgrok/memory': typeof ApiRvgrokMemoryRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
   '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
+  '/report/unit/$id': typeof ReportUnitIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -262,6 +286,7 @@ export interface FileRoutesById {
   '/api/osrm': typeof ApiOsrmRoute
   '/api/rv-videos': typeof ApiRvVideosRoute
   '/api/rvgrok': typeof ApiRvgrokRouteWithChildren
+  '/report/facts': typeof ReportFactsRoute
   '/api/access/admin': typeof ApiAccessAdminRoute
   '/api/access/check': typeof ApiAccessCheckRoute
   '/api/access/request': typeof ApiAccessRequestRoute
@@ -271,6 +296,7 @@ export interface FileRoutesById {
   '/api/marketcheck/search': typeof ApiMarketcheckSearchRoute
   '/api/nhtsa/recalls': typeof ApiNhtsaRecallsRoute
   '/api/nhtsa/vin': typeof ApiNhtsaVinRoute
+  '/api/og/report': typeof ApiOgReportRoute
   '/api/rvfax/catalog-research': typeof ApiRvfaxCatalogResearchRoute
   '/api/rvfax/compare': typeof ApiRvfaxCompareRoute
   '/api/rvfax/dossier': typeof ApiRvfaxDossierRoute
@@ -279,6 +305,7 @@ export interface FileRoutesById {
   '/api/rvgrok/memory': typeof ApiRvgrokMemoryRoute
   '/api/rvgrok/token': typeof ApiRvgrokTokenRoute
   '/api/rvgrok/web-research': typeof ApiRvgrokWebResearchRoute
+  '/report/unit/$id': typeof ReportUnitIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -295,6 +322,7 @@ export interface FileRouteTypes {
     | '/api/osrm'
     | '/api/rv-videos'
     | '/api/rvgrok'
+    | '/report/facts'
     | '/api/access/admin'
     | '/api/access/check'
     | '/api/access/request'
@@ -304,6 +332,7 @@ export interface FileRouteTypes {
     | '/api/marketcheck/search'
     | '/api/nhtsa/recalls'
     | '/api/nhtsa/vin'
+    | '/api/og/report'
     | '/api/rvfax/catalog-research'
     | '/api/rvfax/compare'
     | '/api/rvfax/dossier'
@@ -312,6 +341,7 @@ export interface FileRouteTypes {
     | '/api/rvgrok/memory'
     | '/api/rvgrok/token'
     | '/api/rvgrok/web-research'
+    | '/report/unit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -326,6 +356,7 @@ export interface FileRouteTypes {
     | '/api/osrm'
     | '/api/rv-videos'
     | '/api/rvgrok'
+    | '/report/facts'
     | '/api/access/admin'
     | '/api/access/check'
     | '/api/access/request'
@@ -335,6 +366,7 @@ export interface FileRouteTypes {
     | '/api/marketcheck/search'
     | '/api/nhtsa/recalls'
     | '/api/nhtsa/vin'
+    | '/api/og/report'
     | '/api/rvfax/catalog-research'
     | '/api/rvfax/compare'
     | '/api/rvfax/dossier'
@@ -343,6 +375,7 @@ export interface FileRouteTypes {
     | '/api/rvgrok/memory'
     | '/api/rvgrok/token'
     | '/api/rvgrok/web-research'
+    | '/report/unit/$id'
   id:
     | '__root__'
     | '/'
@@ -357,6 +390,7 @@ export interface FileRouteTypes {
     | '/api/osrm'
     | '/api/rv-videos'
     | '/api/rvgrok'
+    | '/report/facts'
     | '/api/access/admin'
     | '/api/access/check'
     | '/api/access/request'
@@ -366,6 +400,7 @@ export interface FileRouteTypes {
     | '/api/marketcheck/search'
     | '/api/nhtsa/recalls'
     | '/api/nhtsa/vin'
+    | '/api/og/report'
     | '/api/rvfax/catalog-research'
     | '/api/rvfax/compare'
     | '/api/rvfax/dossier'
@@ -374,12 +409,15 @@ export interface FileRouteTypes {
     | '/api/rvgrok/memory'
     | '/api/rvgrok/token'
     | '/api/rvgrok/web-research'
+    | '/report/unit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiRouteRoute: typeof ApiRouteRouteWithChildren
   LotRoute: typeof LotRoute
+  ReportFactsRoute: typeof ReportFactsRoute
+  ReportUnitIdRoute: typeof ReportUnitIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -468,6 +506,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRvgrokRouteImport
       parentRoute: typeof ApiRouteRoute
     }
+    '/report/facts': {
+      id: '/report/facts'
+      path: '/report/facts'
+      fullPath: '/report/facts'
+      preLoaderRoute: typeof ReportFactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/access/admin': {
       id: '/api/access/admin'
       path: '/access/admin'
@@ -531,6 +576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNhtsaVinRouteImport
       parentRoute: typeof ApiRouteRoute
     }
+    '/api/og/report': {
+      id: '/api/og/report'
+      path: '/og/report'
+      fullPath: '/api/og/report'
+      preLoaderRoute: typeof ApiOgReportRouteImport
+      parentRoute: typeof ApiRouteRoute
+    }
     '/api/rvfax/catalog-research': {
       id: '/api/rvfax/catalog-research'
       path: '/rvfax/catalog-research'
@@ -587,6 +639,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRvgrokWebResearchRouteImport
       parentRoute: typeof ApiRvgrokRoute
     }
+    '/report/unit/$id': {
+      id: '/report/unit/$id'
+      path: '/report/unit/$id'
+      fullPath: '/report/unit/$id'
+      preLoaderRoute: typeof ReportUnitIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -625,6 +684,7 @@ interface ApiRouteRouteChildren {
   ApiMarketcheckSearchRoute: typeof ApiMarketcheckSearchRoute
   ApiNhtsaRecallsRoute: typeof ApiNhtsaRecallsRoute
   ApiNhtsaVinRoute: typeof ApiNhtsaVinRoute
+  ApiOgReportRoute: typeof ApiOgReportRoute
   ApiRvfaxCatalogResearchRoute: typeof ApiRvfaxCatalogResearchRoute
   ApiRvfaxCompareRoute: typeof ApiRvfaxCompareRoute
   ApiRvfaxDossierRoute: typeof ApiRvfaxDossierRoute
@@ -651,6 +711,7 @@ const ApiRouteRouteChildren: ApiRouteRouteChildren = {
   ApiMarketcheckSearchRoute: ApiMarketcheckSearchRoute,
   ApiNhtsaRecallsRoute: ApiNhtsaRecallsRoute,
   ApiNhtsaVinRoute: ApiNhtsaVinRoute,
+  ApiOgReportRoute: ApiOgReportRoute,
   ApiRvfaxCatalogResearchRoute: ApiRvfaxCatalogResearchRoute,
   ApiRvfaxCompareRoute: ApiRvfaxCompareRoute,
   ApiRvfaxDossierRoute: ApiRvfaxDossierRoute,
@@ -666,6 +727,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiRouteRoute: ApiRouteRouteWithChildren,
   LotRoute: LotRoute,
+  ReportFactsRoute: ReportFactsRoute,
+  ReportUnitIdRoute: ReportUnitIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

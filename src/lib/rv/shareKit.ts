@@ -1,82 +1,27 @@
 /**
- * RvSHARE send-kit — lot-staff / buyer text cards.
- * Native share when the OS sheet is available; clipboard otherwise.
+ * RvSHARE kit — on-screen brochure cards plus the suite text sheet.
+ * The coach report itself is a link and a one-page PDF.
  */
 
 import type { RVResult } from "./catalog";
-import { estimateMarket, getSpec, ratingFor } from "./catalog";
+import { estimateMarket, getSpec } from "./catalog";
 import { buildBrochureSpecs, type BrochureSpecs } from "./brochureSpecs";
 import {
   hydrateSavedCoachList as hydrateSavedCoachListFromLookup,
   hydrateShareCoachResult as hydrateShareCoachFromLookup,
   type ShareCatalogLookup,
 } from "./shareCoachHydrate";
-import {
-  computeLoan,
-  defaultAprForTerm,
-  formatMoney,
-  formatPct,
-} from "./rvCal";
+import { computeLoan, defaultAprForTerm } from "./rvCal";
 import { resolveShareHost } from "@/lib/og/shareHost";
 import { mediaForRvType } from "@/assets/typeMedia";
-import {
-  coerceShareImageType,
-  defaultShareCardContact,
-  hardenShareImageFileSync,
-  isShareImageFile,
-  shareKitSignatureLines,
-  type ShareCardContact,
-} from "./shareCardImage";
 import { getVerifiedDossier } from "./verifiedCatalogCache";
 import {
-  brochureSalesPitch,
-  buildShareMarketSection,
-  DEFAULT_SHARE_MARKET_LINES,
-  effectiveShareInclude,
   isShareableValue,
-  isSharePlaceholder,
   resolveShareNotes,
   resolveShareSummary,
-  shareIncludePayment,
-  shareNotesLines,
-  sharePowerLines,
-  shareSummaryLines,
-  type ShareInclude,
-  type ShareMarketLines,
   type ShareSpecGroupId,
 } from "./shareCardPolicy";
-import { formatShareVideoBlock, type RvVideoHit } from "./rvVideos";
-export {
-  buildShareKitPayload,
-  canShareSaysYes,
-  captureShareCardFile,
-  coerceShareImageType,
-  copyKit,
-  defaultShareCardContact,
-  downloadShareFile,
-  elementLooksLikeShareCard,
-  freshShareImageFile,
-  hardenShareImageFile,
-  hardenShareImageFileSync,
-  isShareBusyError,
-  isShareImageFile,
-  monogramFromDisplayName,
-  orderShareImageFiles,
-  resolveFaxShareContact,
-  resetShareSession,
-  SHARE_CARD_FILENAME,
-  SHARE_CARD_MIME,
-  shareCardContactForSession,
-  shareKitSignatureLines,
-  shareDataAttempts,
-  shareOrCopy,
-  toShareData,
-} from "./shareCardImage";
-export type {
-  ShareCardContact,
-  ShareKitPayload,
-  ShareOutcome,
-} from "./shareCardImage";
+export { resolveFaxShareContact, shareOrCopy } from "./shareCardImage";
 
 export type { ShareCatalogLookup } from "./shareCoachHydrate";
 
@@ -97,39 +42,17 @@ export function hydrateSavedCoachList(
 }
 
 export {
-  brochureSalesPitch,
-  buildShareMarketSection,
-  customerFacingPitch,
   DEFAULT_SHARE_INCLUDE,
   DEFAULT_SHARE_MARKET_LINES,
-  effectiveShareInclude,
-  formatShareMarketText,
-  hasOptionalShareSections,
   hasSelectedMarketLines,
-  isCatalogHonestyProse,
-  isShareableValue,
-  isSharePlaceholder,
-  OPTIONAL_SHARE_KEYS,
   RATE_UPDATED_FLASH,
   RATE_UPDATED_FLASH_MS,
-  resolveShareNotes,
-  resolveShareSummary,
-  shareIncludePayment,
   SHARE_MARKET_LINE_DEFS,
-  SHARE_MSRP_LINE_ID,
-  isOfferedShareMarketLine,
-  shareNotesLines,
   sharePaymentAfterTermDown,
   sharePaymentPricePills,
   sharePowerLines,
-  shareSummaryLines,
 } from "./shareCardPolicy";
-export type {
-  ShareInclude,
-  ShareMarketLineId,
-  ShareMarketLines,
-  ShareSpecGroupId,
-} from "./shareCardPolicy";
+export type { ShareInclude, ShareMarketLines } from "./shareCardPolicy";
 
 export const SAVED_UNITS_KEY = "rvfax_saved_v1";
 export const SAVED_UNITS_EVENT = "rvfax-saved-changed";
@@ -149,11 +72,6 @@ export type ShareMarket = {
   msrpHi: number;
 };
 
-export const SHARE_KIT_HEADER = "RvFOX · Powered by Grok";
-export const SHARE_KIT_TAGLINE = "Know before you buy.";
-export const SHARE_KIT_FOOTER =
-  "Confirm door sticker, PPI, and lender.";
-
 export function loadSavedUnits(): RVResult[] {
   try {
     const raw = localStorage.getItem(SAVED_UNITS_KEY);
@@ -164,11 +82,6 @@ export function loadSavedUnits(): RVResult[] {
   } catch {
     return [];
   }
-}
-
-export function coachTitle(r: RVResult): string {
-  const base = [r.year, r.make, r.model].filter(Boolean).join(" ");
-  return r.floorplan ? `${base} ${r.floorplan}` : base;
 }
 
 export function lifestylePitch(type?: string): string {
@@ -284,7 +197,7 @@ export function brochureSummary(r: RVResult): BrochureSummary {
  * Options / upgrades only. Catalog description and honesty notes are not NOTES.
  * Missing options → empty (callers omit the NOTES block).
  */
-export function brochureNotes(r: RVResult): string[] {
+function brochureNotes(r: RVResult): string[] {
   r = hydrateShareCoachResult(r);
   const live = liveShareCopy(r);
   return resolveShareNotes({
@@ -456,34 +369,6 @@ export function kitStrengths(
   return out;
 }
 
-export function coachSnapshot(
-  r: RVResult,
-  ratingOverride?: number,
-): {
-  type: string;
-  rating: string;
-  sleeps: string;
-  length: string;
-  horsepower: string;
-  torque: string;
-} {
-  r = hydrateShareCoachResult(r);
-  const b = coachBrochure(r);
-  const catalog = ratingFor(r.make, r.model, r.year);
-  const rating =
-    ratingOverride != null && Number.isFinite(ratingOverride) && ratingOverride > 0
-      ? ratingOverride
-      : catalog;
-  return {
-    type: r.data.type || "",
-    rating: Number.isFinite(rating) && rating > 0 ? `★ ${rating.toFixed(1)}` : "",
-    sleeps: b.sleeps || (r.data.sleeps ? String(r.data.sleeps) : ""),
-    length: b.lengthFt || "",
-    horsepower: isShareableValue(b.horsepower) ? b.horsepower.trim() : "",
-    torque: isShareableValue(b.torque) ? b.torque.trim() : "",
-  };
-}
-
 export function paymentBreakdown(payment: SharePayment) {
   const down = Math.round((payment.price * payment.downPct) / 100);
   const loan = computeLoan({
@@ -504,137 +389,6 @@ export function paymentBreakdown(payment: SharePayment) {
   };
 }
 
-export function buildCoachKit(opts: {
-  result: RVResult;
-  include: ShareInclude;
-  payment?: SharePayment;
-  market?: ShareMarket;
-  marketLines?: ShareMarketLines;
-  strengths?: string[];
-  rating?: number;
-  summary?: BrochureSummary;
-  lookupCatalog?: ShareCatalogLookup;
-  /** Real RV Video Library hit only — never invent a title or URL. */
-  video?: Pick<RvVideoHit, "title" | "youtubeUrl"> | null;
-  /** Signed-in session or signed-out dealer. Defaults to dealer Hansen. */
-  contact?: ShareCardContact;
-}): string {
-  const r = hydrateShareCoachResult(opts.result, opts.lookupCatalog);
-  const { payment } = opts;
-  const include = effectiveShareInclude(opts.include);
-  const lines: string[] = [];
-  const title = coachTitle(r);
-  const market = opts.market ?? defaultMarketFor(r);
-  const marketLines = opts.marketLines ?? DEFAULT_SHARE_MARKET_LINES;
-  const snap = coachSnapshot(r, opts.rating);
-  const summary = opts.summary ?? brochureSummary(r);
-
-  lines.push(SHARE_KIT_HEADER);
-  lines.push(SHARE_KIT_TAGLINE);
-  lines.push("");
-  lines.push(title);
-
-  const summaryLines = shareSummaryLines({
-    pitch: brochureSalesPitch(summary.pitch),
-    features: summary.features
-      .map((f) => brochureSalesPitch(f))
-      .filter(Boolean),
-  });
-  if (summaryLines.length) {
-    lines.push("");
-    lines.push(...summaryLines);
-  }
-
-  if (include.rating && snap.rating) {
-    lines.push("");
-    lines.push("RATING");
-    lines.push(snap.rating);
-  }
-
-  const power = sharePowerLines(snap.horsepower, snap.torque);
-  if (power.length) {
-    lines.push("");
-    lines.push(...power);
-  }
-
-  if (include.market) {
-    const marketBlock = buildShareMarketSection(market, marketLines, formatMoney);
-    if (marketBlock.length) {
-      lines.push("");
-      lines.push(...marketBlock);
-    }
-  }
-
-  if (shareIncludePayment(include, payment) && payment) {
-    const p = paymentBreakdown(payment);
-    lines.push("");
-    lines.push("PAYMENT (estimate)");
-    lines.push(`Price ${formatMoney(payment.price)}`);
-    if (Number.isFinite(payment.apr) && payment.apr > 0) {
-      lines.push(`Rate ${formatPct(payment.apr)}`);
-    }
-    lines.push(`≈ ${formatMoney(p.monthly)} / mo`);
-    lines.push("Not a lender quote — confirm in RvCAL with ZIP tax.");
-  }
-
-  if (include.lifestyle) {
-    lines.push("");
-    lines.push("LIFESTYLE");
-    lines.push(lifestylePitch(r.data.type));
-  }
-
-  if (include.strengths) {
-    const items =
-      opts.strengths ??
-      kitStrengths(
-        r,
-        include.payment ? payment : undefined,
-        opts.rating,
-        include.rating,
-      );
-    const clean = items
-      .map((s) => s.trim())
-      .filter((s) => s && !isSharePlaceholder(s));
-    if (clean.length) {
-      lines.push("");
-      lines.push("STRENGTHS");
-      for (const item of clean) lines.push(`• ${item}`);
-    }
-  }
-
-  const groups = brochureSpecGroups(r);
-  for (const g of groups) {
-    if (!include[g.id]) continue;
-    if (g.id === "notes") {
-      const noteLines = shareNotesLines(g.rows.map((row) => row.value));
-      if (!noteLines.length) continue;
-      lines.push("");
-      lines.push(...noteLines);
-      continue;
-    }
-    const rows = g.rows.filter((row) => !isSharePlaceholder(row.value));
-    if (!rows.length) continue;
-    lines.push("");
-    lines.push(g.title);
-    for (const row of rows) {
-      lines.push(`${row.label}: ${row.value}`);
-    }
-  }
-
-  const videoLines = formatShareVideoBlock(opts.video);
-  if (videoLines.length) {
-    lines.push("");
-    lines.push(...videoLines);
-  }
-
-  const contact = opts.contact ?? defaultShareCardContact();
-  lines.push("");
-  lines.push(...shareKitSignatureLines(contact));
-  lines.push("RvFOX Pro · Know before you buy.");
-  lines.push(SHARE_KIT_FOOTER);
-  return lines.filter((line) => !isSharePlaceholder(line)).join("\n");
-}
-
 export function buildSuitePitch(): string {
   const host = resolveShareHost();
   const lines = [
@@ -645,65 +399,4 @@ export function buildSuitePitch(): string {
   ];
   if (host) lines.push("", `https://${host}`);
   return lines.join("\n");
-}
-
-type CachedShareImage = { bytes: Uint8Array; name: string; type: string };
-
-const shareImageCache = new Map<string, CachedShareImage>();
-
-function fileFromCachedImage(hit: CachedShareImage): File | null {
-  const copy = new Uint8Array(hit.bytes.byteLength);
-  copy.set(hit.bytes);
-  return hardenShareImageFileSync(
-    new File([copy], hit.name, {
-      type: hit.type,
-      lastModified: Date.now(),
-    }),
-  );
-}
-
-export function peekCachedShareImage(url: string): File | null {
-  const hit = shareImageCache.get(url);
-  if (!hit) return null;
-  return fileFromCachedImage(hit);
-}
-
-export function prefetchShareImages(urls: string[]): void {
-  for (const url of urls) {
-    if (shareImageCache.has(url)) continue;
-    const base = (url.split("?")[0] || "").split("/").pop() || "lifestyle.jpg";
-    void fetchShareImage(url, base);
-  }
-}
-
-export async function fetchShareImage(
-  url: string,
-  filename: string,
-): Promise<File | null> {
-  const cached = shareImageCache.get(url);
-  if (cached) return fileFromCachedImage(cached);
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    const type =
-      coerceShareImageType(blob.type, filename) ||
-      coerceShareImageType(blob.type, url);
-    if (!type) return null;
-    const name = /\.(png|jpe?g|webp)$/i.test(filename)
-      ? filename
-      : `${filename}.${type === "image/jpeg" ? "jpg" : type === "image/webp" ? "webp" : "png"}`;
-    const buf = new Uint8Array(await blob.arrayBuffer());
-    if (buf.byteLength < 32) return null;
-    const file = hardenShareImageFileSync(
-      new File([buf], name, { type, lastModified: Date.now() }),
-    );
-    if (!file || !isShareImageFile(file)) return null;
-    const bytes = new Uint8Array(buf.byteLength);
-    bytes.set(buf);
-    shareImageCache.set(url, { bytes, name: file.name, type: file.type });
-    return fileFromCachedImage(shareImageCache.get(url)!);
-  } catch {
-    return null;
-  }
 }

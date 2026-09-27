@@ -43,14 +43,6 @@ export const DEFAULT_SHARE_INCLUDE: ShareInclude = {
   garage: false,
 };
 
-export const OPTIONAL_SHARE_KEYS = Object.keys(
-  DEFAULT_SHARE_INCLUDE,
-) as (keyof ShareInclude)[];
-
-export function hasOptionalShareSections(include: ShareInclude): boolean {
-  return OPTIONAL_SHARE_KEYS.some((k) => include[k]);
-}
-
 /**
  * Price lines the salesman can opt into after Market is on.
  * Default all OFF — force an intentional pick (never dump the stack).
@@ -116,11 +108,6 @@ export const DEFAULT_SHARE_MARKET_LINES: ShareMarketLines = {
   msrpHi: false,
 };
 
-/** Stale payloads may still carry `msrpLo`; it is never an offered line. */
-export function isOfferedShareMarketLine(id: string): id is ShareMarketLineId {
-  return SHARE_MARKET_LINE_DEFS.some((d) => d.id === id);
-}
-
 export function hasSelectedMarketLines(
   lines?: ShareMarketLines | Record<string, boolean> | null,
 ): boolean {
@@ -128,40 +115,8 @@ export function hasSelectedMarketLines(
   return SHARE_MARKET_LINE_DEFS.some((d) => Boolean(lines[d.id]));
 }
 
-export function selectedShareMarketEntries(
-  market: ShareMarketAmounts,
-  lines?: ShareMarketLines | Record<string, boolean> | null,
-): { id: ShareMarketLineId; shareLabel: string; amount: number }[] {
-  if (!lines) return [];
-  return SHARE_MARKET_LINE_DEFS.filter((d) => {
-    if (!isOfferedShareMarketLine(d.id)) return false;
-    return (
-      Boolean(lines[d.id]) &&
-      Number.isFinite(market[d.id]) &&
-      market[d.id] > 0
-    );
-  }).map((d) => ({
-    id: d.id,
-    shareLabel: d.shareLabel,
-    amount: market[d.id],
-  }));
-}
-
-/** Shared-card MARKET block — empty when nothing was picked (no dump). */
-export function buildShareMarketSection(
-  market: ShareMarketAmounts,
-  lines: ShareMarketLines | Record<string, boolean> | undefined,
-  money: (n: number) => string,
-): string[] {
-  const rows = selectedShareMarketEntries(market, lines).map(
-    (e) => `${e.shareLabel} ${money(e.amount)}`,
-  );
-  if (!rows.length) return [];
-  return ["MARKET", ...rows];
-}
-
 /**
- * Compact POWER lines for the shared kit — Facts/catalog SoT only.
+ * Compact POWER lines for the on-screen kit — Facts/catalog SoT only.
  * Never invent; omit the block when both HP and torque are missing
  * or are placeholders ("—", N/A, Confirm brochure, varies).
  */
@@ -174,14 +129,6 @@ export function sharePowerLines(
   if (isShareableValue(torque)) rows.push(String(torque).trim());
   if (!rows.length) return [];
   return ["POWER", ...rows];
-}
-
-export function formatShareMarketText(
-  market: ShareMarketAmounts,
-  lines: ShareMarketLines | Record<string, boolean> | undefined,
-  money: (n: number) => string,
-): string {
-  return buildShareMarketSection(market, lines, money).join("\n");
 }
 
 /**
@@ -242,31 +189,6 @@ export function sharePaymentAfterTermDown<T extends SharePaymentTermDown>(
     next: { ...payment, downPct, termMonths, apr: nextApr },
     autoRateChanged: nextApr !== payment.apr,
   };
-}
-
-/**
- * Honor the user's include flags as-is.
- * Unchecked extras stay off — no default Payment (or any other section).
- * Returns a shallow copy so DEFAULT_SHARE_INCLUDE cannot be mutated later.
- */
-export function effectiveShareInclude(include: ShareInclude): ShareInclude {
-  return { ...include };
-}
-
-/**
- * Payment lands in the kit / preview only when the user added it.
- * A priced payment object alone is not enough — no placeholder line.
- */
-export function shareIncludePayment(
-  include: ShareInclude,
-  payment?: { price: number } | null,
-): boolean {
-  return (
-    effectiveShareInclude(include).payment === true &&
-    !!payment &&
-    Number.isFinite(payment.price) &&
-    payment.price > 0
-  );
 }
 
 /** Customer-facing share must never leak catalog placeholder tags. */
@@ -348,18 +270,6 @@ export function resolveShareSummary(input: {
   return { pitch, features };
 }
 
-export function shareSummaryLines(summary: ShareBrochureSummary): string[] {
-  const gated = resolveShareSummary({
-    liveOverview: summary.pitch,
-    liveFeatures: summary.features,
-  });
-  if (!gated.pitch && !gated.features.length) return [];
-  const lines = ["SUMMARY"];
-  if (gated.pitch) lines.push(gated.pitch);
-  for (const feature of gated.features) lines.push(`• ${feature}`);
-  return lines;
-}
-
 /** Options / upgrades only. Catalog honesty and empty lists omit NOTES. */
 export function resolveShareNotes(input: {
   options?: string[] | null;
@@ -376,10 +286,4 @@ export function resolveShareNotes(input: {
     out.push(item);
   }
   return out;
-}
-
-export function shareNotesLines(notes: string[]): string[] {
-  const items = resolveShareNotes({ options: notes });
-  if (!items.length) return [];
-  return ["NOTES", ...items.map((n) => `• ${n}`)];
 }

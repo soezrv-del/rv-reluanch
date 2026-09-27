@@ -10,7 +10,6 @@ import {
   clearRvVideoSession,
   EMPTY_MATCH_MESSAGE,
   fetchRvVideos,
-  formatShareVideoBlock,
   isRvVideoLibraryYear,
   LOOKUP_FAILED_MESSAGE,
   MISSING_KEY_MESSAGE,
@@ -352,41 +351,13 @@ test("Facts report only fetches videos after opt-in; key stays server-side", () 
   assert.match(kit, /shouldShowRvVideoPrompt/);
   assert.match(kit, /data-share-video-toggle/);
   assert.match(kit, /INCLUDE VIDEO/);
-  assert.match(kit, /includeVideo \? shareVideo : null/);
+  assert.match(kit, /data-include-video=\{includeVideo/);
+  assert.match(kit, /shareVideo\.title/);
+  assert.match(kit, /shareVideo\.youtubeUrl/);
   assert.doesNotMatch(kit, /MISSING_KEY_MESSAGE/);
   assert.doesNotMatch(kit, /not configured/);
   assert.doesNotMatch(kit, /video\/mp4|video\/webm|new File\([^\)]*video/i);
-  assert.match(share, /formatShareVideoBlock\(opts\.video\)/);
   assert.doesNotMatch(share, /include\.video/);
-});
-
-test("Share kit video block is a YouTube title + watch URL — never a file", () => {
-  assert.deepEqual(
-    formatShareVideoBlock({
-      title: "2023 Tiffin Allegro Bus 45OPP walkthrough",
-      youtubeUrl: "https://www.youtube.com/watch?v=abc123",
-    }),
-    [
-      "VIDEO",
-      "2023 Tiffin Allegro Bus 45OPP walkthrough",
-      "https://www.youtube.com/watch?v=abc123",
-    ],
-  );
-  assert.deepEqual(formatShareVideoBlock(null), []);
-  assert.deepEqual(
-    formatShareVideoBlock({
-      title: "Walkthrough",
-      youtubeUrl: "/tmp/walkthrough.mp4",
-    }),
-    [],
-  );
-  assert.deepEqual(
-    formatShareVideoBlock({
-      title: "",
-      youtubeUrl: "https://www.youtube.com/watch?v=abc123",
-    }),
-    [],
-  );
 });
 
 test("session cache surfaces one watch-link hit and stays silent without a match", async () => {

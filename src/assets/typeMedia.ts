@@ -1,4 +1,4 @@
-/** Lifestyle stills by RV class — public URLs so Share can attach the same file. */
+/** Lifestyle stills by RV class — shown on the Facts kit card. */
 
 const LIFESTYLE = {
   fifthWheel: "/assets/lifestyle/fifth-wheel.jpg",
@@ -10,9 +10,6 @@ const LIFESTYLE = {
   classADiesel: "/assets/lifestyle/class-a-diesel.jpg",
   classAGas: "/assets/lifestyle/class-a-gas.jpg?v=f53-busfront",
 } as const;
-
-/** Public lifestyle stills — prefetch so Share tap does not await a fetch. */
-export const LIFESTYLE_SHARE_URLS: string[] = Object.values(LIFESTYLE);
 
 /** Fallback card media when type unknown */
 export const RV_CARD_MEDIA = LIFESTYLE.classADiesel;
