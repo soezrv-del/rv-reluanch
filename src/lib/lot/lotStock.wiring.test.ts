@@ -20,16 +20,13 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   const route = read("../../routes/lot.tsx");
 
   assert.match(tabs, /\| "rvlot"/);
-  assert.match(tabs, /id: "rvlot", label: "Lot", short: "Lot"/);
-  assert.match(tabs, /grid-cols-6/);
-  assert.match(
-    tabs,
-    /Exclude<AppTab, "more" \| "rvshare" \| "rvsold">/,
-  );
+  assert.match(tabs, /id: "rvlot", label: "Lot"/);
+  assert.match(tabs, /grid-cols-4/);
+  assert.doesNotMatch(tabs, /id: "rvgrok"|id: "rvtrips"/);
 
   assert.match(
     constants,
-    /TAB_ORDER = \[\s*"rvfax",\s*"rvcal",\s*"rvgrok",\s*"rvtow",\s*"rvtrips",\s*"rvlot",\s*\]/,
+    /TAB_ORDER = \[\s*"rvfax",\s*"rvcal",\s*"rvtow",\s*"rvlot",\s*\]/,
   );
   assert.match(constants, /title: "LOT"/);
 
@@ -37,10 +34,11 @@ test("Lot stock is the last dock tab and not RV Grok", () => {
   assert.doesNotMatch(more, /onNavigate\?\.\("rvlot"\)/);
   assert.match(more, /Open it from the Lot tab/);
 
-  assert.match(shell, /LotStockApp/);
-  assert.match(shell, /initialTab = "rvgrok"/);
+  assert.match(shell, /LotRoom/);
+  assert.match(shell, /fetchLotSnapshot/);
+  assert.match(shell, /initialTab = "home"/);
   assert.match(shell, /id === "rvlot"/);
-  assert.match(shell, /<LotStockApp \/>/);
+  assert.doesNotMatch(shell, /<LotStockApp/);
 
   assert.match(route, /createFileRoute\("\/lot"\)/);
   assert.match(route, /initialTab="rvlot"/);

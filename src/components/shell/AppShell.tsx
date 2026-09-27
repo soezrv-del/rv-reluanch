@@ -33,7 +33,6 @@ import {
   type ActiveCoachInput,
 } from "@/lib/rv/activeCoach";
 import { normalizeCalHandoff } from "@/lib/rv/calHandoff";
-import { useSwipeTabs } from "@/lib/hooks/useSwipeTabs";
 import {
   useFocusScrollIntoView,
   useKeyboardInset,
@@ -43,10 +42,28 @@ import {
   clearGrokSeedOnDockTap,
   grokSeedFromAskHandoff,
 } from "@/lib/rvgrok/tabEntry";
+import {
+  fetchLotSnapshot,
+  filterLotBrowse,
+  type LotSnapshotView,
+  type LotUnit,
+} from "@/lib/lot/ownLotPage";
+import {
+  APR_PRESETS,
+  DOWN_PRESETS,
+  TERM_PRESETS,
+} from "@/lib/rv/rvCal";
+import { FoxAsk, FoxChips, FoxMark, type FoxChip } from "./fox/FoxFrame";
+import { CalRoom, FactsRoom, HomeRoom, LotRoom } from "./fox/Rooms";
+import {
+  filterLotUnits,
+  matchDeskUnit,
+  type LotFilter,
+} from "./fox/foxData";
 
 /**
  * Code-split suite tools — tools load only when visited.
- * Cold open lands on RV Grok; no splash / chooser gate.
+ * Cold open lands on Home. Grok is the ask box, not a dock room.
  */
 const RvFaxApp = lazy(() =>
   import("@/components/rvfax/RvFaxApp").then((m) => ({ default: m.RvFaxApp })),
@@ -56,9 +73,6 @@ const RvGrokApp = lazy(() =>
 );
 const RvTowApp = lazy(() =>
   import("@/components/rvtow/RvTowApp").then((m) => ({ default: m.RvTowApp })),
-);
-const RvCalApp = lazy(() =>
-  import("@/components/rvcal/RvCalApp").then((m) => ({ default: m.RvCalApp })),
 );
 const RvTripsApp = lazy(() =>
   import("@/components/rvtrips/RvTripsApp").then((m) => ({
@@ -73,20 +87,10 @@ const SoldBookApp = lazy(() =>
     default: m.SoldBookApp,
   })),
 );
-const LotStockApp = lazy(() =>
-  import("@/components/lot/LotStockApp").then((m) => ({
-    default: m.LotStockApp,
-  })),
-);
-
-const TAB_PANE_ON =
-  "absolute inset-0 flex min-h-0 flex-col overflow-hidden";
-
-const SWIPE_PANE = "suite-swipe-pane";
 
 function SuiteFallback() {
   return (
-    <div className="flex h-full items-center justify-center bg-bg">
+    <div className="flex h-full items-center justify-center bg-black">
       <div className="h-8 w-8 animate-pulse rounded-full bg-white/10" />
     </div>
   );
@@ -109,7 +113,7 @@ class SuiteErrorBoundary extends Component<
   render() {
     if (this.state.err) {
       return (
-        <div className="flex h-full flex-col items-center justify-center gap-3 bg-bg px-6 text-center">
+        <div className="flex h-full flex-col items-center justify-center gap-3 bg-black px-6 text-center">
           <p className="text-[15px] font-bold text-white">
             {this.props.name} hit a snag
           </p>
@@ -118,7 +122,7 @@ class SuiteErrorBoundary extends Component<
           </p>
           <button
             type="button"
-            className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[12px] font-bold text-white"
+            className="rounded-full bg-white/10 px-4 py-2 text-[12px] font-bold text-white"
             onClick={() => this.setState({ err: null })}
           >
             Try again
@@ -134,13 +138,24 @@ class SuiteErrorBoundary extends Component<
   }
 }
 
+function askPlaceholder(tab: AppTab, catalogOpen: boolean): string {
+  if (catalogOpen) return "Ask about this coach";
+  if (tab === "rvcal") return "Ask about the payment.";
+  if (tab === "rvtow") return "Ask about the tow.";
+  if (tab === "rvlot") return "Stock # or length";
+  if (tab === "rvtrips") return "Ask about the route.";
+  if (tab === "rvfax") return "Ask about this coach";
+  return "Ask about this coach";
+}
+
 export function AppShell({
-  initialTab = "rvgrok",
+  initialTab = "home",
 }: {
   initialTab?: AppTab;
 }) {
   const access = useAccess();
   const [tab, setTab] = useState<AppTab>(initialTab);
+  const [catalogOpen, setCatalogOpen] = useState(false);
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
   const [grokEntryToken, setGrokEntryToken] = useState(0);
   const [calSeed, setCalSeed] = useState<CalSeed | null>(null);
@@ -154,15 +169,26 @@ export function AppShell({
   const [factsShareToken, setFactsShareToken] = useState(0);
   const [factsMarketToken, setFactsMarketToken] = useState(0);
   const launchOpen = false;
+  const hideDock = launchOpen;
   const suiteReady = true;
   const [visited, setVisited] = useState<Set<AppTab>>(
     () => new Set<AppTab>([initialTab]),
   );
-  const mainRef = useRef<HTMLElement | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
   const calTokenRef = useRef(0);
   const tripsTokenRef = useRef(0);
   const towTokenRef = useRef(0);
+  const [snap, setSnap] = useState<LotSnapshotView | null>(null);
+  const [snapError, setSnapError] = useState<string | null>(null);
+  const [desk, setDesk] = useState<LotUnit | null>(null);
+  const [lotFilter, setLotFilter] = useState<LotFilter>("all");
+  const [lotQuery, setLotQuery] = useState("");
+  const [askText, setAskText] = useState("");
+  const [calPrice, setCalPrice] = useState(0);
+  const [downPct, setDownPct] = useState<number | null>(null);
+  const [termMonths, setTermMonths] = useState<number | null>(null);
+  const [apr, setApr] = useState<number | null>(null);
+  const [calEdit, setCalEdit] = useState<null | "down" | "term" | "rate">(null);
   useKeyboardInset();
   useFocusScrollIntoView(true);
   useDockSafeInset();
@@ -176,7 +202,28 @@ export function AppShell({
     });
   }, []);
 
-  // Hide native Capacitor splash immediately — no in-app video gate.
+  useEffect(() => {
+    let cancel = false;
+    void fetchLotSnapshot()
+      .then((next) => {
+        if (!cancel) setSnap(next);
+      })
+      .catch((err: unknown) => {
+        if (cancel) return;
+        setSnapError(
+          err instanceof Error ? err.message : "Lot snapshot unavailable",
+        );
+      });
+    return () => {
+      cancel = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!snap) return;
+    setDesk((cur) => cur ?? matchDeskUnit(snap.units, activeCoach));
+  }, [snap, activeCoach]);
+
   useEffect(() => {
     void import("@capacitor/splash-screen")
       .then((m) => m.SplashScreen.hide({ fadeOutDuration: 200 }))
@@ -194,12 +241,13 @@ export function AppShell({
     if (el instanceof HTMLElement && el !== document.body) el.blur();
   };
 
-  /** Facts Ask Grok — seed the Grok tab. Dock tap still opens a clean chat. */
+  /** Facts Ask Grok — seed the Grok conversation. The dock has no Grok tab. */
   const openGrok = (prompt?: string) => {
     if (!access.guard(undefined, "Ask Grok is limited to the approved list.")) {
       return;
     }
     blurSuiteFocus();
+    setCatalogOpen(false);
     setGrokSeed(grokSeedFromAskHandoff(prompt));
     setGrokEntryToken((n) => n + 1);
     setTab("rvgrok");
@@ -211,11 +259,24 @@ export function AppShell({
     setCalCleanToken((n) => n + 1);
   }, []);
 
+  const resetCalFields = useCallback(() => {
+    setCalPrice(0);
+    setDownPct(null);
+    setTermMonths(null);
+    setApr(null);
+    setCalEdit(null);
+  }, []);
+
+  const applyCalPrice = useCallback((next: number) => {
+    setCalPrice(next);
+  }, []);
+
   const openCalWithPrice = useCallback(
     (price: number, label?: string) => {
       const payload = normalizeCalHandoff({ price, label });
       if (!payload) {
         requestCleanCal();
+        setCatalogOpen(false);
         setTab("rvcal");
         markVisited("rvcal");
         return;
@@ -225,6 +286,7 @@ export function AppShell({
         ...payload,
         token: calTokenRef.current,
       });
+      setCatalogOpen(false);
       setTab("rvcal");
       markVisited("rvcal");
     },
@@ -240,6 +302,7 @@ export function AppShell({
         token: tripsTokenRef.current,
         offer: offer ?? null,
       });
+      setCatalogOpen(false);
       setTab("rvtrips");
       markVisited("rvtrips");
     },
@@ -248,7 +311,7 @@ export function AppShell({
 
   const clearTripsHandoff = useCallback(() => setTripsHandoff(null), []);
 
-  /** Facts “Check tow” only — dock / swipe / launchpad must not set this. */
+  /** Facts “Check tow” only — dock / menu must not set this. */
   const openTowWithCoach = useCallback(
     (offer?: FactsTowHandoffOffer | null) => {
       towTokenRef.current += 1;
@@ -256,6 +319,7 @@ export function AppShell({
         token: towTokenRef.current,
         offer: normalizeFactsTowOffer(offer ?? null),
       });
+      setCatalogOpen(false);
       setTab("rvtow");
       markVisited("rvtow");
     },
@@ -271,6 +335,7 @@ export function AppShell({
 
   const openFactsPicker = useCallback(() => {
     setFactsPickerToken((n) => n + 1);
+    setCatalogOpen(true);
     setTab("rvfax");
     markVisited("rvfax");
   }, [markVisited]);
@@ -280,34 +345,33 @@ export function AppShell({
       return;
     }
     setFactsShareToken((n) => n + 1);
+    setCatalogOpen(true);
     setTab("rvfax");
     markVisited("rvfax");
   }, [access, markVisited]);
 
   const openFactsMarket = useCallback(() => {
     setFactsMarketToken((n) => n + 1);
+    setCatalogOpen(true);
     setTab("rvfax");
     markVisited("rvfax");
   }, [markVisited]);
 
   const onTabChange = useCallback(
     (next: AppTab) => {
-      // Hidden Grok composer can keep focus after a swipe — that sticks
-      // html.kb-open and used to unmount the dock on re-entry.
       blurSuiteFocus();
       if (next === "rvshare") {
         openFactsShare();
         return;
       }
-      // Dock / swipe / More → Facts always lands on clean catalog search.
-      // Chip “change” uses the same openFactsPicker token.
+      setCatalogOpen(false);
       if (next === "rvfax") {
-        openFactsPicker();
+        setTab("rvfax");
+        markVisited("rvfax");
         return;
       }
       if (next === "rvsold" && !isProfessionalTier()) return;
       if (next === "rvgrok") {
-        // Dock tap / swipe / More — never restore a leftover Ask-Grok seed.
         setGrokSeed(clearGrokSeedOnDockTap());
         setGrokEntryToken((n) => n + 1);
       }
@@ -315,13 +379,11 @@ export function AppShell({
       markVisited(next);
       if (next === "rvcal") requestCleanCal();
     },
-    [markVisited, openFactsShare, openFactsPicker, requestCleanCal],
+    [markVisited, openFactsShare, requestCleanCal],
   );
 
   const isPro = isProfessionalTier();
   const dockOrder = useMemo(() => dockTabOrder(isPro), [isPro]);
-  const swipeIndex = Math.max(0, dockOrder.indexOf(tab));
-  const swipeArmed = !launchOpen && dockOrder.includes(tab);
 
   useEffect(() => {
     const openSold = () => {
@@ -332,185 +394,319 @@ export function AppShell({
     return () => window.removeEventListener(OPEN_SOLD_EVENT, openSold);
   }, [onTabChange]);
 
-  const peekTab = useCallback((next: AppTab) => {
-    markVisited(next);
-  }, [markVisited]);
+  const units = snap?.units ?? [];
 
-  useSwipeTabs({
-    order: dockOrder,
-    active: tab,
-    onChange: onTabChange,
-    // Suite panes only — never the dock. Ancestor capture listeners on
-    // the shell eat Android WebView clicks on Facts/Cal/Tow/Trips/Grok.
-    targetRef: mainRef,
-    threshold: 24,
-    enabled: swipeArmed,
-    onPeek: peekTab,
-  });
-
-  // Do NOT key this on kb.open: a focused composer in a hidden Grok pane
-  // used to leave hideDock true after leaving Grok (dock gone on re-entry).
-  // Keyboard still fades the dock via html.kb-open CSS.
-  const hideDock = launchOpen;
-
-  const nav = useMemo(
-    () => ({
-      tab,
-      setTab: onTabChange,
-      calSeed,
-      calCleanToken,
-      openCalWithPrice,
-      clearCalSeed,
-      activeCoach,
-      setActiveCoach,
-      openFactsPicker,
-      factsPickerToken,
-      openFactsShare,
-      factsShareToken,
-      openFactsMarket,
-      factsMarketToken,
-      tripsHandoff,
-      openTripsProfile,
-      clearTripsHandoff,
-      towHandoff,
-      openTowWithCoach,
-      clearTowHandoff,
-      accessSession: {
-        allowed: access.allowed,
-        status: access.status,
-        name: access.name,
-        phone: access.phone,
-      },
-    }),
-    [
-      tab,
-      onTabChange,
-      calSeed,
-      calCleanToken,
-      openCalWithPrice,
-      clearCalSeed,
-      activeCoach,
-      setActiveCoach,
-      openFactsPicker,
-      factsPickerToken,
-      openFactsShare,
-      factsShareToken,
-      openFactsMarket,
-      factsMarketToken,
-      tripsHandoff,
-      openTripsProfile,
-      clearTripsHandoff,
-      towHandoff,
-      openTowWithCoach,
-      clearTowHandoff,
-      access.allowed,
-      access.status,
-      access.name,
-      access.phone,
-    ],
+  const lockUnit = useCallback(
+    (unit: LotUnit) => {
+      setDesk(unit);
+      setActiveCoach({
+        year: unit.year,
+        make: unit.make,
+        model: unit.model,
+        floorplan: unit.trim,
+        rvType: unit.body_type || undefined,
+        price:
+          unit.price != null && unit.price > 0
+            ? Math.round(unit.price)
+            : undefined,
+      });
+      setCatalogOpen(false);
+      setTab("rvfax");
+      markVisited("rvfax");
+    },
+    [markVisited, setActiveCoach],
   );
 
-  const show = (id: AppTab) => suiteReady && visited.has(id);
+  const openPayment = useCallback(() => {
+    if (desk?.price != null && desk.price > 0) {
+      const label = [desk.year, desk.make, desk.model, desk.trim]
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .join(" ");
+      openCalWithPrice(desk.price, label);
+      return;
+    }
+    onTabChange("rvcal");
+  }, [desk, onTabChange, openCalWithPrice]);
+
+  const applyLotFilter = useCallback(
+    (next: LotFilter) => {
+      setLotFilter(next);
+      setLotQuery("");
+      onTabChange("rvlot");
+    },
+    [onTabChange],
+  );
+
+  const listed = useMemo(() => {
+    const searched = filterLotBrowse(units, { query: lotQuery });
+    return filterLotUnits(searched, lotFilter, desk?.location ?? "");
+  }, [units, lotQuery, lotFilter, desk]);
+
+  const chips: FoxChip[] = useMemo(() => {
+    if (tab === "rvcal" && !catalogOpen && calEdit === "down") {
+      return DOWN_PRESETS.map((pct) => ({
+        id: `down-${pct}`,
+        label: `${pct}%`,
+        on: downPct === pct,
+        onClick: () => {
+          setDownPct(pct);
+          setCalEdit(null);
+        },
+      }));
+    }
+    if (tab === "rvcal" && !catalogOpen && calEdit === "term") {
+      return TERM_PRESETS.map((term) => ({
+        id: `term-${term.months}`,
+        label: term.label,
+        on: termMonths === term.months,
+        onClick: () => {
+          setTermMonths(term.months);
+          setCalEdit(null);
+        },
+      }));
+    }
+    if (tab === "rvcal" && !catalogOpen && calEdit === "rate") {
+      return APR_PRESETS.map((rate) => ({
+        id: `rate-${rate}`,
+        label: `${rate}%`,
+        on: apr === rate,
+        onClick: () => {
+          setApr(rate);
+          setCalEdit(null);
+        },
+      }));
+    }
+    if (tab === "rvcal" && !catalogOpen) {
+      return [
+        { id: "down", label: "Down", on: downPct != null, onClick: () => setCalEdit("down") },
+        { id: "term", label: "Term", on: termMonths != null, onClick: () => setCalEdit("term") },
+        { id: "rate", label: "Rate", on: apr != null, onClick: () => setCalEdit("rate") },
+      ];
+    }
+    if (tab === "rvlot" && !catalogOpen) {
+      return [
+        {
+          id: "diesel-under-40",
+          label: "Diesels under 40",
+          on: lotFilter === "diesel-under-40",
+          onClick: () => applyLotFilter("diesel-under-40"),
+        },
+        {
+          id: "ft-36",
+          label: "36-footers",
+          on: lotFilter === "ft-36",
+          onClick: () => applyLotFilter("ft-36"),
+        },
+        {
+          id: "this-store",
+          label: "This store",
+          on: lotFilter === "this-store",
+          onClick: () => applyLotFilter("this-store"),
+        },
+        {
+          id: "all",
+          label: "All",
+          on: lotFilter === "all",
+          onClick: () => applyLotFilter("all"),
+        },
+      ];
+    }
+    if (tab === "rvtow" && !catalogOpen) {
+      return [
+        {
+          id: "this-coach",
+          label: "This coach",
+          onClick: () => onTabChange("rvfax"),
+        },
+      ];
+    }
+    if ((tab === "home" || tab === "rvfax") && !catalogOpen) {
+      return [
+        { id: "tanks", label: "Tanks", onClick: () => onTabChange("rvfax") },
+        { id: "payment", label: "Payment", onClick: openPayment },
+        {
+          id: "diesel-under-40",
+          label: "Diesels under 40",
+          onClick: () => applyLotFilter("diesel-under-40"),
+        },
+        {
+          id: "ft-36",
+          label: "36-footers",
+          onClick: () => applyLotFilter("ft-36"),
+        },
+      ];
+    }
+    return [
+      { id: "home", label: "Home", onClick: () => onTabChange("home") },
+    ];
+  }, [
+    tab,
+    catalogOpen,
+    calEdit,
+    downPct,
+    termMonths,
+    apr,
+    lotFilter,
+    applyLotFilter,
+    onTabChange,
+    openPayment,
+  ]);
+
+  const askValue = tab === "rvlot" && !catalogOpen ? lotQuery : askText;
+  const setAskValue = (value: string) => {
+    if (tab === "rvlot" && !catalogOpen) setLotQuery(value);
+    else setAskText(value);
+  };
+
+  const show = (pane: AppTab) => suiteReady && visited.has(pane);
+  const id = tab;
+  const legacyPane =
+    catalogOpen ||
+    id === "rvgrok" ||
+    id === "rvtow" ||
+    id === "rvtrips" ||
+    id === "more" ||
+    id === "rvsold";
 
   return (
-    <ShellNavProvider value={nav}>
+    <ShellNavProvider
+      value={{
+        tab,
+        setTab: onTabChange,
+        calSeed,
+        calCleanToken,
+        openCalWithPrice,
+        clearCalSeed,
+        activeCoach,
+        setActiveCoach,
+        openFactsPicker,
+        factsPickerToken,
+        openFactsShare,
+        factsShareToken,
+        openFactsMarket,
+        factsMarketToken,
+        tripsHandoff,
+        openTripsProfile,
+        clearTripsHandoff,
+        towHandoff,
+        openTowWithCoach,
+        clearTowHandoff,
+        accessSession: {
+          allowed: access.allowed,
+          status: access.status,
+          name: access.name,
+          phone: access.phone,
+        },
+      }}
+    >
       <div
         ref={shellRef}
-        className="app-shell relative flex h-full min-h-0 w-full flex-col overflow-hidden overscroll-none bg-bg text-fg"
+        className="fox-shell app-shell relative flex h-full min-h-0 w-full flex-col overflow-hidden overscroll-none text-white"
+        data-fox-shell
         data-page-accent={PAGE_ACCENT[tab] ?? "sapphire"}
-        style={{
-          overscrollBehavior: "none",
-        }}
+        data-dock-order={dockOrder.join(",")}
+        style={{ overscrollBehavior: "none" }}
       >
+        <FoxMark
+          onHome={() => onTabChange("home")}
+          onGps={() => onTabChange("rvtrips")}
+          onCatalog={openFactsPicker}
+          onPremium={() => onTabChange("more")}
+        />
         <main
-          ref={mainRef}
-          className="suite-swipe-viewport relative min-h-0 flex-1 overflow-hidden"
-          aria-hidden={launchOpen}
+          className={legacyPane ? "fox-main is-legacy" : "fox-main"}
         >
-          {dockOrder.map((id, i) => {
-            if (!show(id)) return null;
-            return (
-              <div
-                key={id}
-                className={SWIPE_PANE}
-                data-suite-pane={id}
-                data-pane-active={id === tab ? "" : undefined}
-                data-pane-offset={i - swipeIndex}
-                style={{
-                  ["--pane-shift" as string]: `${(i - swipeIndex) * 100}%`,
-                  pointerEvents: id === tab ? "auto" : "none",
-                }}
-              >
-                <Suspense fallback={<SuiteFallback />}>
-                  <SuiteErrorBoundary
-                    name={
-                      id === "rvfax"
-                        ? "RvFACTS"
-                        : id === "rvcal"
-                          ? "RvCAL"
-                          : id === "rvgrok"
-                            ? "RvGROK"
-                            : id === "rvtow"
-                              ? "RvTOW"
-                              : id === "rvtrips"
-                                ? "RV GPS"
-                                : id === "rvlot"
-                                  ? "Lot stock"
-                                  : "Suite"
-                    }
-                  >
-                    {id === "rvfax" ? (
-                      <RvFaxApp onOpenGrok={openGrok} />
-                    ) : id === "rvcal" ? (
-                      <RvCalApp />
-                    ) : id === "rvgrok" ? (
-                      <RvGrokApp
-                        active={tab === "rvgrok" && !launchOpen}
-                        entryToken={grokEntryToken}
-                        seedPrompt={grokSeed}
-                        onSeedConsumed={() => setGrokSeed(undefined)}
-                      />
-                    ) : id === "rvtow" ? (
-                      <RvTowApp />
-                    ) : id === "rvtrips" ? (
-                      <RvTripsApp />
-                    ) : id === "rvlot" ? (
-                      <LotStockApp />
-                    ) : null}
-                  </SuiteErrorBoundary>
-                </Suspense>
-              </div>
-            );
-          })}
-          {show("more") ? (
-            <div className={tab === "more" ? TAB_PANE_ON : "hidden"}>
+          {id === "rvgrok" ? (
+            <RvGrokApp
+              active={tab === "rvgrok" && !launchOpen}
+              entryToken={grokEntryToken}
+              seedPrompt={grokSeed}
+              onSeedConsumed={() => setGrokSeed(undefined)}
+            />
+          ) : catalogOpen ? (
+            <Suspense fallback={<SuiteFallback />}>
+              <SuiteErrorBoundary name="RvFACTS">
+                <RvFaxApp onOpenGrok={openGrok} />
+              </SuiteErrorBoundary>
+            </Suspense>
+          ) : id === "home" ? (
+            <HomeRoom
+              active={tab === "home"}
+              total={snap ? snap.units.length : null}
+              desk={desk}
+              failed={Boolean(snapError) && !snap}
+            />
+          ) : id === "rvfax" ? (
+            <FactsRoom desk={desk} />
+          ) : id === "rvcal" ? (
+            <CalRoom
+              active={tab === "rvcal"}
+              price={calPrice}
+              downPct={downPct}
+              termMonths={termMonths}
+              apr={apr}
+              onReset={resetCalFields}
+              onApply={applyCalPrice}
+            />
+          ) : id === "rvtow" ? (
+            show("rvtow") ? (
+              <Suspense fallback={<SuiteFallback />}>
+                <SuiteErrorBoundary name="RvTOW">
+                  <RvTowApp />
+                </SuiteErrorBoundary>
+              </Suspense>
+            ) : null
+          ) : id === "rvlot" ? (
+            <LotRoom
+              rows={listed}
+              filter={lotFilter}
+              totalKnown={Boolean(snap)}
+              failed={Boolean(snapError) && !snap}
+              onOpen={lockUnit}
+            />
+          ) : id === "rvtrips" ? (
+            show("rvtrips") ? (
+              <Suspense fallback={<SuiteFallback />}>
+                <SuiteErrorBoundary name="RV GPS">
+                  <RvTripsApp />
+                </SuiteErrorBoundary>
+              </Suspense>
+            ) : null
+          ) : id === "more" ? (
+            show("more") ? (
               <Suspense fallback={<SuiteFallback />}>
                 <SuiteErrorBoundary name="More">
                   <MoreApp onNavigate={onTabChange} />
                 </SuiteErrorBoundary>
               </Suspense>
-            </div>
-          ) : null}
-          {show("rvsold") && isPro ? (
-            <div className={tab === "rvsold" ? TAB_PANE_ON : "hidden"}>
-              <Suspense fallback={<SuiteFallback />}>
-                <SuiteErrorBoundary name="Sold">
-                  <SoldBookApp />
-                </SuiteErrorBoundary>
-              </Suspense>
-            </div>
+            ) : null
+          ) : id === "rvsold" && show("rvsold") && isPro ? (
+            <Suspense fallback={<SuiteFallback />}>
+              <SuiteErrorBoundary name="Sold">
+                <SoldBookApp />
+              </SuiteErrorBoundary>
+            </Suspense>
           ) : null}
         </main>
-
-        {!hideDock ? (
-          <div
-            className="relative z-[80] shrink-0 isolate pointer-events-auto"
-            data-bottom-dock
-            data-no-swipe
-          >
-            <BottomTabs tab={tab} onChange={onTabChange} />
-          </div>
-        ) : null}
+        <div className="fox-foot" data-fox-chips data-no-swipe>
+          <FoxChips chips={chips} />
+          <FoxAsk
+            placeholder={askPlaceholder(tab, catalogOpen)}
+            value={askValue}
+            onChange={setAskValue}
+            onSubmit={(value) => openGrok(value)}
+          />
+          {!hideDock ? (
+            <div
+              className="relative z-[80] shrink-0 isolate pointer-events-auto"
+              data-bottom-dock
+              data-no-swipe
+            >
+              <BottomTabs tab={tab} onChange={onTabChange} />
+            </div>
+          ) : null}
+        </div>
       </div>
     </ShellNavProvider>
   );

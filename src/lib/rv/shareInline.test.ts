@@ -49,25 +49,17 @@ test("Share launch / More deep-link to Facts — no dock tab, no standalone pane
 
   assert.match(tabs, /\| "rvshare"/);
   assert.doesNotMatch(tabs, /id: "rvshare"/);
-  assert.match(tabs, /grid-cols-6/);
-  assert.match(tabs, /bottom-tabs-dock/);
-  assert.match(tabs, /rounded-\[16px\]/);
+  assert.match(tabs, /grid-cols-4/);
   assert.doesNotMatch(tabs, /bottom-tabs-frost/);
   assert.doesNotMatch(tabs, /bottom-tab-indicator/);
-  const dockIds = [...tabs.matchAll(/id: "(rvfax|rvcal|rvtow|rvtrips|rvgrok|rvlot)"/g)].map(
+  assert.doesNotMatch(tabs, /id: "rvgrok"|id: "rvtrips"/);
+  const dockIds = [...tabs.matchAll(/id: "(rvfax|rvcal|rvtow|rvlot)"/g)].map(
     (m) => m[1],
   );
-  assert.deepEqual(dockIds, [
-    "rvfax",
-    "rvcal",
-    "rvgrok",
-    "rvtow",
-    "rvtrips",
-    "rvlot",
-  ]);
+  assert.deepEqual(dockIds, ["rvfax", "rvcal", "rvtow", "rvlot"]);
   assert.match(
     constants,
-    /TAB_ORDER = \[\s*"rvfax",\s*"rvcal",\s*"rvgrok",\s*"rvtow",\s*"rvtrips",\s*"rvlot",\s*\]/,
+    /TAB_ORDER = \[\s*"rvfax",\s*"rvcal",\s*"rvtow",\s*"rvlot",\s*\]/,
   );
   assert.doesNotMatch(constants, /TAB_ORDER = \[[^\]]*rvshare/);
   assert.doesNotMatch(launch, /id: "rvshare"/);

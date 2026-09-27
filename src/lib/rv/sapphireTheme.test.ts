@@ -42,7 +42,8 @@ test("dock plate matches Raidho mark ground so the tab square disappears", () =>
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?box-shadow:\s*none/);
   assert.match(css, /\.bottom-tabs-dock \{[\s\S]*?backdrop-filter:\s*none/);
   assert.match(css, /border-top-color:\s*var\(--color-sapphire\)/);
-  assert.match(tabs, /Raidho mark ground/);
+  assert.match(tabs, /Flat black strip/);
+  assert.match(tabs, /No icons, no dock pill/);
   assert.doesNotMatch(css, /\.bottom-tab-indicator-sapphire/);
   assert.doesNotMatch(css, /0 0 16px rgba\(110, 190, 255, 0\.45\)/);
 });
@@ -99,8 +100,8 @@ test("Sold and Premium share sapphire accent + Raidho suite chrome — no dock S
   assert.match(more, /raidhoOnly/);
   assert.match(more, /onNavigate\?\.\("rvsold"\)/);
   assert.doesNotMatch(dock, /id: "rvsold"/);
-  assert.match(dock, /grid-cols-6/);
-  assert.doesNotMatch(dock, /grid-cols-5/);
+  assert.match(dock, /grid-cols-4/);
+  assert.doesNotMatch(dock, /grid-cols-6/);
   assert.match(shell, /show\("rvsold"\) && isPro/);
   assert.match(css, /\[data-sold-book\] \.suite-raidho-field/);
   assert.match(css, /\[data-premium-screen\] \.suite-raidho-field/);

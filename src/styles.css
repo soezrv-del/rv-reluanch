@@ -2599,3 +2599,286 @@ html.kb-open [data-rvgrok-composer-dock] {
     animation: none;
   }
 }
+
+/* RvFOX phone chrome — black, one sans, blue only in the Raidho mark. */
+.fox-shell {
+  --fox-bg: #000;
+  --fox-fg: #fff;
+  --fox-muted: rgba(255, 255, 255, 0.55);
+  --fox-faint: rgba(255, 255, 255, 0.38);
+  --fox-chip: #1c1c1e;
+  --fox-chip-on: #2c2c2e;
+  --fox-ask: #141414;
+  --fox-line: rgba(255, 255, 255, 0.14);
+  background: var(--fox-bg);
+  color: var(--fox-fg);
+  font-family: var(--font-sans);
+  text-transform: none;
+}
+.fox-shell .suite-raidho-backdrop,
+.fox-shell .grok-raidho-field,
+.fox-shell .premium-menu-btn,
+.fox-shell .premium-menu-corner,
+.fox-shell .sapphire-header {
+  display: none;
+}
+/* Trips keeps its tools. The suite title would be a second RvFOX. */
+.fox-shell [data-trips-header] > .min-w-0 {
+  display: none;
+}
+.fox-mark {
+  position: relative;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: max(0.65rem, env(safe-area-inset-top, 0px)) 1.15rem 0.35rem;
+}
+.fox-mark-btn {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+.fox-mark-btn img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+}
+.fox-word {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--fox-fg);
+  font: 600 1.35rem/1 var(--font-sans);
+  letter-spacing: 0;
+}
+.fox-menu {
+  position: absolute;
+  top: calc(100% - 0.2rem);
+  left: 0.85rem;
+  z-index: 50;
+  min-width: 11rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem;
+  background: #0a0a0a;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+.fox-menu button {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--fox-fg);
+  font: 500 1rem/1 var(--font-sans);
+  text-align: left;
+  padding: 0 0.85rem;
+}
+.fox-main {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.fox-main.is-legacy {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.fox-main.is-legacy > * {
+  min-height: 0;
+  flex: 1;
+}
+.fox-room {
+  padding: 0.25rem 1.25rem 1.5rem;
+}
+.fox-void {
+  height: 8vh;
+}
+.fox-coach {
+  display: block;
+  width: 100%;
+  max-height: 34vh;
+  object-fit: contain;
+  object-position: center;
+  background: transparent;
+}
+.fox-kicker,
+.fox-whisper {
+  margin: 0.15rem 0 0;
+  color: var(--fox-muted);
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+.fox-kicker {
+  margin-bottom: 0.15rem;
+  font-size: 0.95rem;
+}
+.fox-hero {
+  margin: 0.35rem 0 0;
+  color: var(--fox-fg);
+  font-size: clamp(3.4rem, 16vw, 5.4rem);
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+.fox-rows {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+.fox-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--fox-fg);
+  font-size: 1.35rem;
+  line-height: 1.3;
+}
+.fox-row-btn,
+.fox-price {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: right;
+  min-height: 44px;
+}
+.fox-price {
+  width: 8rem;
+}
+.fox-estimate {
+  margin-top: 2rem;
+  color: var(--fox-faint);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+.fox-list {
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.fox-lot-row {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--fox-line);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 0.9rem 0 1rem;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 4.6rem;
+}
+.fox-lot-stock {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+.fox-lot-meta,
+.fox-lot-miles {
+  margin: 0.15rem 0 0;
+  color: var(--fox-muted);
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+.fox-foot {
+  position: relative;
+  z-index: 30;
+  background: var(--fox-bg);
+  padding-top: 0.35rem;
+}
+.fox-chips {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  touch-action: pan-x;
+  padding: 0.35rem 1.15rem 0.45rem;
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 1.6rem), transparent);
+}
+.fox-chips::-webkit-scrollbar {
+  display: none;
+}
+.fox-chip {
+  flex: 0 0 auto;
+  border: 0;
+  background: var(--fox-chip);
+  color: var(--fox-fg);
+  border-radius: 999px;
+  min-height: 40px;
+  padding: 0.45rem 0.95rem;
+  font: 500 0.95rem/1 var(--font-sans);
+}
+.fox-chip.is-on {
+  background: var(--fox-chip-on);
+}
+.fox-ask {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.15rem 0.85rem 0.45rem;
+  min-height: 48px;
+  padding: 0 0.35rem 0 0.95rem;
+  background: var(--fox-ask);
+  border-radius: 14px;
+}
+.fox-ask input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--fox-fg);
+  font: 400 1rem/1.2 var(--font-sans);
+  outline: none;
+}
+.fox-ask input::placeholder {
+  color: var(--fox-faint);
+}
+.fox-mic {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: #c7c7cc;
+}
+.fox-shell .fox-dock,
+.fox-shell .bottom-tabs-nav {
+  background: #000;
+}
+.fox-dock-row {
+  background: #000;
+}
+.fox-shell .bottom-tab-btn,
+.fox-shell .bottom-tab-btn.is-active,
+.fox-shell .bottom-tab-btn[aria-current="page"] {
+  border: 0;
+  border-top-color: transparent;
+  background: transparent;
+  border-radius: 0;
+}
+.fox-dock-label {
+  color: var(--fox-faint);
+  font: 500 1.05rem/1 var(--font-sans);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.fox-tab.is-active .fox-dock-label {
+  color: #fff;
+  font-weight: 600;
+}

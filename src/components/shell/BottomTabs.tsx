@@ -7,6 +7,7 @@ import {
 } from "@/lib/hooks/nativeWebView";
 
 export type AppTab =
+  | "home"
   | "rvgrok"
   | "rvfax"
   | "rvcal"
@@ -17,49 +18,22 @@ export type AppTab =
   | "rvlot"
   | "more";
 
-/** Dock tabs only — Share is inline on Facts; Sold and Premium live in ⋯ */
-const TABS: {
-  id: Exclude<AppTab, "more" | "rvshare" | "rvsold">;
-  label: string;
-  short: string;
-}[] = [
-  { id: "rvfax", label: "RvFACTS", short: "Facts" },
-  { id: "rvcal", label: "RvCAL", short: "Cal" },
-  { id: "rvgrok", label: "RvGROK", short: "Grok" },
-  { id: "rvtow", label: "RvTOW", short: "Tow" },
-  { id: "rvtrips", label: "RV GPS", short: "RV GPS" },
-  { id: "rvlot", label: "Lot", short: "Lot" },
+/** Dock rooms only. Home is not a square. Grok is the ask box. RV GPS is the mark menu. */
+type DockTab = "rvfax" | "rvcal" | "rvtow" | "rvlot";
+const TABS: { id: DockTab; label: string }[] = [
+  { id: "rvfax", label: "Facts" },
+  { id: "rvcal", label: "Cal" },
+  { id: "rvtow", label: "Tow" },
+  { id: "rvlot", label: "Lot" },
 ];
 
-function DockLabel({
-  text,
-  className,
-}: {
-  text: string;
-  className?: string;
-}) {
-  return (
-    <span
-      className={cn(
-        "bottom-tab-label pointer-events-none max-w-full text-center uppercase leading-none whitespace-nowrap",
-        className,
-      )}
-      data-label={text}
-    >
-      {text}
-    </span>
-  );
-}
-
 /**
- * Dock blends into the Raidho mark ground (#000000) so the tab
- * square disappears. One highlight: 2px --color-sapphire top rule
- * on the active tab.
+ * Flat black strip. Facts, Cal, Tow, Lot — that order, always.
+ * Active label turns white. No icons, no dock pill.
  *
  * Android WebView: do NOT put pointer-events-none on this nav. Parent
  * none + child auto + backdrop-filter fails hit-testing on Chromium
- * WebView, so Facts/Cal/Tow/Trips/Grok/Lot never fire. iOS still uses
- * onClick only (no extra pointer path).
+ * WebView. iOS still uses onClick only.
  */
 export function BottomTabs({
   tab,
@@ -81,23 +55,18 @@ export function BottomTabs({
 
   return (
     <nav
-      className="bottom-tabs-nav pointer-events-auto relative z-[80] w-full px-3 pt-1 sm:px-4"
+      className="bottom-tabs-nav fox-dock pointer-events-auto relative z-[80] w-full"
       data-bottom-dock
       data-no-swipe
       data-active-tab={tab}
-      style={{
-        // Bottom inset lives in CSS (.bottom-tabs-nav) so env() + the
-        // phone fallback floor win. html.android-native uses --dock-safe-bottom.
-        touchAction: "manipulation",
-      }}
+      style={{ touchAction: "manipulation" }}
     >
       <div
-        className="bottom-tabs-dock pointer-events-auto relative isolate mx-auto grid w-full max-w-lg grid-cols-6 items-stretch gap-0 overflow-hidden rounded-[16px] p-1"
+        className="fox-dock-row pointer-events-auto relative isolate mx-auto grid w-full max-w-lg grid-cols-4 items-stretch"
         style={{ touchAction: "manipulation" }}
       >
-        {TABS.map(({ id, label, short }) => {
+        {TABS.map(({ id, label }) => {
           const active = tab === id;
-          const isLive = id === "rvgrok";
           return (
             <button
               key={id}
@@ -125,25 +94,12 @@ export function BottomTabs({
               }}
               aria-current={active ? "page" : undefined}
               aria-label={label}
-              title={label}
               className={cn(
-                "bottom-tab-btn group relative z-[3] flex min-h-[48px] w-full min-w-0 items-center justify-center rounded-none px-0.5 py-2 sm:min-h-[52px]",
-                "transition-[transform,opacity] duration-200 ease-out",
-                "pointer-events-auto active:scale-[0.94] touch-manipulation select-none",
-                isLive && "bottom-tab-live",
+                "bottom-tab-btn fox-tab pointer-events-auto min-h-12 touch-manipulation select-none",
                 active && "is-active",
               )}
             >
-              {isLive ? (
-                /* Live slot: Einstein icon only — no Grok / Live / RvGROK text. */
-                <img
-                  src="/assets/brand/icon-rvgrok.png"
-                  alt=""
-                  className="bottom-tab-einstein"
-                />
-              ) : (
-                <DockLabel text={short} />
-              )}
+              <span className="fox-dock-label">{label}</span>
             </button>
           );
         })}

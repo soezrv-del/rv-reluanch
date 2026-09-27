@@ -1,22 +1,22 @@
 import type { AppTab } from "./BottomTabs";
 
-/** Dock + swipe order — Facts, Cal, Grok, Tow, RV GPS, then Lot. Share is not a dock tab. */
+/** Dock order — Facts, Cal, Tow, Lot. Home is the cold open, not a tab.
+ *  Grok is the ask box. RV GPS lives in the mark menu. Share is not a dock tab. */
 export const TAB_ORDER = [
   "rvfax",
   "rvcal",
-  "rvgrok",
   "rvtow",
-  "rvtrips",
   "rvlot",
 ] as const satisfies readonly AppTab[];
 
-/** Dock + swipe — six tools. Sold lives in Premium, never a dock square. */
+/** Four rooms. Sold lives in Premium, never a dock square. */
 export function dockTabOrder(_pro?: boolean): readonly AppTab[] {
   return TAB_ORDER;
 }
 
 /** One hero accent per page — premium color discipline */
 export const PAGE_ACCENT: Record<AppTab, "sapphire" | "ruby" | "gold"> = {
+  home: "sapphire",
   rvfax: "sapphire",
   rvcal: "sapphire",
 
@@ -34,6 +34,10 @@ export const PAGE_COPY: Record<
   AppTab,
   { title: string; line: string; badge?: string }
 > = {
+  home: {
+    title: "RvFOX",
+    line: "The coach on the desk, and the lot behind it.",
+  },
   rvgrok: {
     title: "RvGROK",
     line: "Name the year, make, and model — spec reports on the lot.",

@@ -685,7 +685,7 @@ test("Facts landing is full-bleed Raidho only — no showroom photo", () => {
   );
 });
 
-test("dock Facts tab always opens clean search via openFactsPicker", () => {
+test("dock Facts tab is the painted room; catalog search stays on the picker", () => {
   const shell = readFileSync(
     join(root, "../../components/shell/AppShell.tsx"),
     "utf8",
@@ -699,7 +699,9 @@ test("dock Facts tab always opens clean search via openFactsPicker", () => {
   );
   assert.ok(onTab, "onTabChange present");
   assert.match(onTab[0], /next === "rvfax"/);
-  assert.match(onTab[0], /openFactsPicker/);
+  assert.doesNotMatch(onTab[0], /openFactsPicker/);
+  assert.match(shell, /const openFactsPicker = useCallback/);
+  assert.match(shell, /setCatalogOpen\(true\)/);
   assert.doesNotMatch(onTab[0], /openCalWithPrice/);
   assert.doesNotMatch(onTab[0], /openGrok/);
   assert.doesNotMatch(onTab[0], /openTowWithCoach/);

@@ -55,17 +55,11 @@ test("Trips iPhone chrome: RvFOX wordmark, island inset, profile below status ba
   assert.match(cap, /overlaysWebView:\s*true/);
 });
 
-test("shell swipe strip follows the finger", () => {
+test("shell does not swipe between rooms; chips scroll instead", () => {
   const shell = read("../../components/shell/AppShell.tsx");
-  const css = read("../../styles.css");
-  assert.match(shell, /suite-swipe-viewport/);
-  assert.match(shell, /onPeek/);
-  assert.match(shell, /--pane-shift/);
-  assert.match(shell, /data-pane-active/);
-  assert.match(shell, /data-pane-offset/);
-  assert.match(css, /--swipe-dx/);
-  assert.match(css, /cubic-bezier\(0\.32, 0\.72, 0, 1\)/);
-  assert.match(css, /contain:\s*paint/);
-  assert.match(css, /data-pane-active/);
-  assert.match(css, /data-swipe-busy/);
+  assert.doesNotMatch(shell, /useSwipeTabs/);
+  assert.doesNotMatch(shell, /suite-swipe-viewport/);
+  assert.doesNotMatch(shell, /--pane-shift/);
+  assert.match(shell, /data-fox-chips/);
+  assert.match(shell, /FoxChips/);
 });
