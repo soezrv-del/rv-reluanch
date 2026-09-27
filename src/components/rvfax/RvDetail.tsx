@@ -41,6 +41,7 @@ import {
 import {
   computeTorqueToWeight,
   formatTorqueWeightBasisChip,
+  isSeriesGvwrEstimate,
 } from "@/lib/rv/torqueToWeight";
 import {
   OWNER_REVIEW_FOOTER,
@@ -2941,14 +2942,20 @@ function WeightOverrideRow({
   onReset: () => void;
 }) {
   const displayLbs = overrideLbs ?? catalogLbs ?? estimatedLbs ?? null;
+  const seriesEstimate =
+    overrideLbs == null &&
+    (catalogLbs == null || catalogLbs <= 0) &&
+    isSeriesGvwrEstimate(catalogValue);
   const published =
     overrideLbs != null
       ? formatOverrideLbs(overrideLbs)
-      : catalogValue && String(catalogValue).trim()
-        ? catalogValue
-        : estimatedLbs != null
-          ? formatOverrideLbs(estimatedLbs)
-          : "—";
+      : seriesEstimate
+        ? "Sticker lbs"
+        : catalogValue && String(catalogValue).trim()
+          ? catalogValue
+          : estimatedLbs != null
+            ? formatOverrideLbs(estimatedLbs)
+            : "—";
   const [draft, setDraft] = useState(
     displayLbs != null ? String(displayLbs) : "",
   );
@@ -2979,9 +2986,10 @@ function WeightOverrideRow({
 
   return (
     <div
-      className="flex items-center justify-between gap-3 border-b border-white/[0.07] py-2.5 last:border-0"
+      className="border-b border-white/[0.07] py-2.5 last:border-0"
       data-testid={`facts-weight-${label.toLowerCase()}`}
     >
+      <div className="flex items-center justify-between gap-3">
       <span className="flex min-w-0 items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-white">
         {label}
         {overrideLbs != null ? (
@@ -3035,6 +3043,15 @@ function WeightOverrideRow({
           </a>
         ) : null}
       </div>
+      </div>
+      {seriesEstimate ? (
+        <p
+          className="mt-1.5 text-right text-[13px] font-medium leading-snug text-white"
+          data-testid={`facts-weight-${label.toLowerCase()}-series`}
+        >
+          {catalogValue}
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -9,6 +9,7 @@
  */
 
 import type { FactsHardField } from "./factsDossierGapPlan.ts";
+import { isSeriesGvwrEstimate } from "./torqueToWeight.ts";
 
 export const FACTS_DETAIL_SPIN_FIELDS = [
   "gvwr",
@@ -42,5 +43,5 @@ export function factsDetailFieldSearching(
   if (!searching.has(field)) return false;
   if (displayed == null) return true;
   const s = String(displayed).trim();
-  return !s || EMPTY_DISPLAY_RE.test(s);
+  return !s || EMPTY_DISPLAY_RE.test(s) || isSeriesGvwrEstimate(s);
 }

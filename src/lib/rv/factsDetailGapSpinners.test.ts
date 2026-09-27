@@ -59,6 +59,24 @@ test("only gapped named fields spin while live fetch is in flight", () => {
   );
   assert.equal(factsDetailFieldSearching("torque", searching, "—"), false);
   assert.equal(factsDetailFieldSearching("gvwr", searching, "—"), false);
+  const gvwrSearching = factsDetailSearchingFields({
+    liveLoading: true,
+    skipLive: false,
+    gaps: ["gvwr"],
+  });
+  assert.equal(
+    factsDetailFieldSearching(
+      "gvwr",
+      gvwrSearching,
+      "Series 18,000–26,000 lbs · confirm sticker",
+    ),
+    true,
+    "a series span is still a catalog gap while live search runs",
+  );
+  assert.equal(
+    factsDetailFieldSearching("gvwr", gvwrSearching, "22,000 lbs"),
+    false,
+  );
 });
 
 test("gap planner + spinner share one catalog-first plan", () => {

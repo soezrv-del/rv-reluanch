@@ -14,6 +14,9 @@ import {
   pickPowertrainBand,
   resolveYearSnapshot,
 } from "./brochureSpecs.ts";
+import { computeTorqueToWeight, parseGvwrLb } from "./torqueToWeight.ts";
+import { parseWeightLbs } from "./activeCoach.ts";
+import { offerFromFactsReport } from "../tow/factsTowHandoff.ts";
 import {
   honestEngineLabel,
   honestHorsepowerLabel,
@@ -125,10 +128,12 @@ test("2023 Holiday Rambler Ambassador 40B: invent-forward + dual-band → GAP, n
   assert.equal(brochure.engine, CONFIRM_BROCHURE);
   assert.equal(brochure.horsepower, "—");
   assert.equal(brochure.torque, "—");
-  assert.equal(brochure.gvwr, CONFIRM_BROCHURE);
+  assert.equal(
+    brochure.gvwr,
+    "Series 34,000–42,000 lbs · confirm sticker",
+  );
   assert.equal(brochure.gvwrLbs, null);
   assert.doesNotMatch(brochure.engine, /L9\s*\/\s*B6\.7|B6\.7\s*\/\s*L9/i);
-  assert.doesNotMatch(brochure.gvwr, /34,?000|42,?000|34–42|34-42/);
   assert.doesNotMatch(brochure.uvw, /34,?000|42,?000/);
   // Last dated OEM cards (2015–2016 38DBT/38FST ISB 340/700, GVWR 28k) are
   // not this 2023 40B — do not invent that pin forward.
@@ -291,8 +296,11 @@ test("Fleetwood Fortis: 26k model stamp is GCWR misread — GAP; KEEP siblings",
   assert.equal(fortis.spec.gvwrLbs, undefined);
   assert.equal(fortis.snap.gvwrLbs, undefined);
   assert.equal(fortis.brochure.gvwrLbs, null);
-  assert.equal(fortis.brochure.gvwr, CONFIRM_BROCHURE);
-  assert.doesNotMatch(fortis.brochure.gvwr, /26,?000/);
+  assert.equal(
+    fortis.brochure.gvwr,
+    "Series 18,000–26,000 lbs · confirm sticker",
+  );
+  assert.doesNotMatch(fortis.brochure.gvwr, /^26,?000/);
   assert.deepEqual(fortis.spec.weightRange, [18000, 26000]);
 
   // Audit E KEEP — do not clear these stamps in this batch.
@@ -670,6 +678,70 @@ test("Lineage Series F: no series 22k stamp; 31ZW / 31ZW5 year-bands stay", () =
   assert.equal(findOemUvwLbs("2026", "Grand Design", "Lineage Series M", "25FW"), null);
 });
 
+test("series GVWR span is display-only and does not move calculations", () => {
+  const shown = factsFor("2026", "Fleetwood", "Fortis", "32RW");
+  assert.equal(shown.brochure.gvwrLbs, null);
+  assert.equal(
+    shown.brochure.gvwr,
+    "Series 18,000–26,000 lbs · confirm sticker",
+  );
+
+  const blank = buildBrochureSpecs(
+    { ...shown.spec, weightRange: [0, 0] },
+    "2026",
+    "Fleetwood",
+    "Fortis",
+    "32RW",
+  );
+  assert.equal(blank.gvwr, CONFIRM_BROCHURE);
+  assert.equal(blank.gvwrLbs, shown.brochure.gvwrLbs);
+  assert.equal(blank.ccc, shown.brochure.ccc);
+  assert.equal(blank.cccLbs, shown.brochure.cccLbs);
+  assert.equal(blank.gcwr, shown.brochure.gcwr);
+  assert.equal(blank.hitchOrPin, shown.brochure.hitchOrPin);
+  assert.equal(blank.uvw, shown.brochure.uvw);
+  assert.equal(blank.uvwLbs, shown.brochure.uvwLbs);
+  assert.equal(blank.estimatedUvwLbs, shown.brochure.estimatedUvwLbs);
+  assert.equal(blank.uvwEstimated, shown.brochure.uvwEstimated);
+  assert.equal(blank.axles, shown.brochure.axles);
+
+  const rated = (gvwrRaw: string) =>
+    computeTorqueToWeight({
+      torqueLbFt: 468,
+      gvwrRaw,
+      gvwrLbs: null,
+      rvType: shown.spec.type,
+      fuelType: shown.spec.fuelType,
+    });
+  const seriesScore = rated(shown.brochure.gvwr);
+  const confirmScore = rated(CONFIRM_BROCHURE);
+  assert.equal(parseGvwrLb(shown.brochure.gvwr), null);
+  assert.equal(parseGvwrLb("39,500–44,005 lbs"), 44005);
+  assert.equal(seriesScore.gvwrLb, confirmScore.gvwrLb);
+  assert.equal(seriesScore.weightLb, confirmScore.weightLb);
+  assert.equal(seriesScore.weightBasis, confirmScore.weightBasis);
+  assert.equal(seriesScore.gap, confirmScore.gap);
+  assert.equal(parseWeightLbs(shown.brochure.gvwr), undefined);
+  assert.equal(parseWeightLbs("48,000–58,000 lbs"), 53000);
+
+  const offer = (gvwr: string) =>
+    offerFromFactsReport({
+      year: "2026",
+      make: "Fleetwood",
+      model: "Fortis",
+      floorplan: "32RW",
+      rvType: shown.spec.type,
+      gvwr,
+    });
+  assert.equal(offer(shown.brochure.gvwr)?.gvwrLbs, undefined);
+  assert.equal(offer(CONFIRM_BROCHURE)?.gvwrLbs, undefined);
+
+  const pinned = factsFor("2023", "Jayco", "Precept", "31UL");
+  assert.equal(pinned.brochure.gvwr, "22,000 lbs");
+  assert.equal(pinned.brochure.gvwrLbs, 22_000);
+  assert.doesNotMatch(pinned.brochure.gvwr, /^Series/);
+});
+
 test("resolution path is shared — no coach-specific Ambassador/Jayco/Thor invent", () => {
   const honesty = src("catalogHonesty.ts");
   const brochure = src("brochureSpecs.ts");
@@ -688,6 +760,8 @@ test("resolution path is shared — no coach-specific Ambassador/Jayco/Thor inve
   assert.match(brochure, /honestEngineLabel/);
   assert.match(brochure, /No in-year band → GAP/);
   assert.match(brochure, /Never interpolate catalog weightRange/);
+  assert.match(brochure, /formatSeriesGvwr\(spec\.weightRange\)/);
+  assert.doesNotMatch(brochure, /weightForFloorplan/);
   assert.match(reviews, /reviewMentionsModel/);
   const getMock = reviews.slice(reviews.indexOf("export function getMockReviews"));
   assert.match(getMock, /reviewMentionsModel\(r, model\)/);

@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadLiveCatalog } from "../../../scripts/load-live-catalog.mjs";
 import { installCatalog } from "./catalogLoad.ts";
-import { buildBrochureSpecs, CONFIRM_BROCHURE } from "./brochureSpecs.ts";
+import { buildBrochureSpecs } from "./brochureSpecs.ts";
 import { buildFactsBrochureSpecs } from "./factsSheet.ts";
 import { GRAND_DESIGN_LOT_SEED } from "./grandDesignLotSeed.ts";
 import { fillBrochureHolesFromLot } from "./lotCatalogFill.ts";
@@ -118,12 +118,14 @@ test("every Imagine fill still matches the 2026-09-25 lot row it cites", () => {
 test("2019 Imagine 2800BH lot numbers paint holes on Facts and on the Grok desk", () => {
   const spec = gd.Imagine!;
   const before = buildBrochureSpecs(spec, "2019", "Grand Design", "Imagine", "2800BH");
-  assert.equal(before.gvwr, CONFIRM_BROCHURE);
+  assert.equal(before.gvwrLbs, null);
+  assert.equal(before.gvwr, "Series 4,500–9,000 lbs · confirm sticker");
   assert.equal(before.propane, "");
   assert.notEqual(before.dataSource, "oem-year");
 
   const facts = buildFactsBrochureSpecs(spec, "2019", "Grand Design", "Imagine", "2800BH");
   assert.equal(facts.gvwrLbs, 7995);
+  assert.equal(facts.gvwr, "7,995 lbs");
   assert.equal(facts.uvwLbs, 6195);
   assert.match(facts.hitchOrPin, /604/);
   assert.equal(facts.propane, "40 lb");

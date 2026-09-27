@@ -111,6 +111,7 @@ export type TorqueToWeightInput = {
   /**
    * Display / specs.gvwr string (commas + units stripped), or a [lo,hi]
    * band. Two-number ranges use the HIGH end for TTW only.
+   * A "Series … confirm sticker" span is display-only and parses as null.
    */
   gvwrRaw?: string | number | readonly [number, number] | null;
   /**
@@ -430,9 +431,15 @@ export function parseCccLb(
  * A two-number range ("39500-44005", "39,500–44,005 lbs", or [lo,hi])
  * uses **Math.max(lo, hi)** — the high end — so the score is not
  * inflated. Three-or-more numbers stay GAP. A single published figure
- * ("47000") is unchanged. Callers still prefer oem / findOem / snap /
- * live numeric pins over this parse.
+ * ("47000") is unchanged. A labeled series estimate
+ * ("Series 12,000–16,000 lbs · confirm sticker") is display-only → null.
+ * Callers still prefer oem / findOem / snap / live numeric pins over this parse.
  */
+/** Facts model-span label. Not a published GVWR for TTW, tow, or CCC. */
+export function isSeriesGvwrEstimate(value: string | null | undefined): boolean {
+  return /^series\b/i.test(String(value ?? "").trim());
+}
+
 export function parseGvwrLb(
   raw: string | number | readonly [number, number] | null | undefined,
 ): number | null {
@@ -450,7 +457,13 @@ export function parseGvwrLb(
   }
   if (typeof raw !== "string") return null;
   const s = raw.trim();
-  if (!s || EMPTY.test(s) || /^n\/a\b/i.test(s) || /\buvw\b|\bunloaded\b/i.test(s)) {
+  if (
+    !s ||
+    EMPTY.test(s) ||
+    /^n\/a\b/i.test(s) ||
+    /\buvw\b|\bunloaded\b/i.test(s) ||
+    isSeriesGvwrEstimate(s)
+  ) {
     return null;
   }
 

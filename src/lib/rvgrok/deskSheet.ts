@@ -13,7 +13,10 @@ import {
   findOemHoldingTanks,
   findOemUvwLbs,
 } from "../rv/floorplanSpecs.ts";
-import { isTowableForTorqueRating } from "../rv/torqueToWeight.ts";
+import {
+  isSeriesGvwrEstimate,
+  isTowableForTorqueRating,
+} from "../rv/torqueToWeight.ts";
 import type { GrokExtraKind } from "./grokExtras.ts";
 import {
   formatCatalogPresenceNote,
@@ -206,7 +209,8 @@ function isFactsEmpty(value: string): boolean {
     value === "GAP" ||
     value === "—" ||
     value === "–" ||
-    value === CONFIRM_BROCHURE
+    value === CONFIRM_BROCHURE ||
+    isSeriesGvwrEstimate(value)
   );
 }
 

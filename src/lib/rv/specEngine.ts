@@ -10,6 +10,7 @@ import {
   CONFIRM_BROCHURE,
   type BrochureSpecs,
 } from "./brochureSpecs.ts";
+import { isSeriesGvwrEstimate } from "./torqueToWeight.ts";
 import { resolveFactsBrochure } from "../rvgrok/factsBrochure.ts";
 import { rejectImplausibleSpecFills } from "./specFillSanity.ts";
 import {
@@ -126,7 +127,8 @@ export function isSpecGapDisplay(value?: string | null): boolean {
     s === "—" ||
     s === "–" ||
     s === CONFIRM_BROCHURE ||
-    /confirm brochure/i.test(s)
+    /confirm brochure/i.test(s) ||
+    isSeriesGvwrEstimate(s)
   );
 }
 
