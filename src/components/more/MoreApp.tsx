@@ -241,12 +241,6 @@ export function MoreApp({
                 onClick={() => onNavigate?.("rvgrok")}
               />
               <RowLink
-                icon={<Route className="size-4 text-emerald-400" />}
-                title="RV GPS"
-                sub="Campgrounds · dumps · coach routing"
-                onClick={() => onNavigate?.("rvtrips")}
-              />
-              <RowLink
                 icon={<ScanLine className="size-4 text-sky-200" />}
                 title="VIN Decoder"
                 sub="Scan or type a VIN · NHTSA decode"
