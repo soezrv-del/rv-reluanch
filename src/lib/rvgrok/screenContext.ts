@@ -52,9 +52,16 @@ export function readActiveScreen(): string {
   return activeScreen;
 }
 
-/** Catalog/system context for one ask. Previous screen lines are replaced. */
-export function withActiveScreen(catalogContext?: string): string | undefined {
-  const screen = activeScreen.trim();
+/**
+ * Catalog/system context for one ask. Previous screen lines are replaced.
+ * `screenAtAsk` is the screen captured when the user sent the ask. Later
+ * tab changes must not replace it.
+ */
+export function withActiveScreen(
+  catalogContext?: string,
+  screenAtAsk?: string,
+): string | undefined {
+  const screen = (screenAtAsk !== undefined ? screenAtAsk : activeScreen).trim();
   const base = (catalogContext || "").replace(SCREEN_LINE, "").trim();
   if (!screen) return base || undefined;
   const guidance = SCREEN_GUIDANCE[screen];

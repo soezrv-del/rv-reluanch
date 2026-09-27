@@ -126,6 +126,8 @@ export class GrokRealtimeSession {
   private voiceId: string;
   private speed: number;
   private catalogContext: string;
+  /** Screen captured at mic press. Session updates keep this, not a later tab. */
+  private screenAtAsk: string;
   private facts: ActiveCoach | null;
   private rearmTimer: ReturnType<typeof setTimeout> | null = null;
   private earlyPcm: ArrayBuffer[] = [];
@@ -189,6 +191,7 @@ export class GrokRealtimeSession {
     opts?: {
       speed?: number;
       catalogContext?: string;
+      screenAtAsk?: string;
       facts?: ActiveCoach | null;
       accessPhone?: string;
       visitorFirstName?: string;
@@ -198,6 +201,7 @@ export class GrokRealtimeSession {
     this.voiceId = voiceId;
     this.speed = opts?.speed ?? 1;
     this.catalogContext = (opts?.catalogContext || "").trim();
+    this.screenAtAsk = (opts?.screenAtAsk || "").trim();
     this.facts = opts?.facts ?? null;
     this.accessPhone = (opts?.accessPhone || "").trim();
     this.visitorFirstName = (opts?.visitorFirstName || "").trim();
@@ -1922,7 +1926,10 @@ export class GrokRealtimeSession {
           buildRealtimeSessionUpdate(
             this.voiceId,
             this.speed,
-            withActiveScreen(catalogContext ?? this.catalogContext),
+            withActiveScreen(
+              catalogContext ?? this.catalogContext,
+              this.screenAtAsk || undefined,
+            ),
             this.visitorFirstName,
             this.visitorMemory,
             this.standingLessons,

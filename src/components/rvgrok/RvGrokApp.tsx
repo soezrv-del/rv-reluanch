@@ -62,7 +62,7 @@ import {
 } from "@/lib/rvgrok/vision";
 import { planGrokTabEntry } from "@/lib/rvgrok/tabEntry";
 import { registerRoomAsk } from "@/lib/rvgrok/roomAsk";
-import { withActiveScreen } from "@/lib/rvgrok/screenContext";
+import { readActiveScreen, withActiveScreen } from "@/lib/rvgrok/screenContext";
 import { useAccessOptional } from "@/components/access/AccessProvider";
 import { takeSessionWelcome, welcomeBackLine } from "@/lib/access/identity";
 import {
@@ -213,8 +213,10 @@ export function RvGrokApp({
     ) => Promise<void>
   >(async () => {});
   const startLiveSessionRef = useRef<
-    (prewarm?: LiveVoicePrewarm | null) => Promise<void>
+    (prewarm?: LiveVoicePrewarm | null, reuseScreen?: boolean) => Promise<void>
   >(async () => {});
+  /** Screen the mic was pressed on. Live Voice keeps it for the session. */
+  const askedFromScreenRef = useRef("");
   const startPushToTalkRef = useRef<() => void>(() => {});
   const roomMicRef = useRef<() => void>(() => {});
 
@@ -481,6 +483,7 @@ export function RvGrokApp({
 
   const sendMessage = useCallback(
     async (text?: string, opts?: { fromVoice?: boolean; image?: string; liveFrame?: boolean }) => {
+      const askedFromScreen = readActiveScreen();
       if (
         access &&
         !access.guard(undefined, "Ask Grok is limited to the approved list.")
@@ -639,7 +642,7 @@ export function RvGrokApp({
           agentMode,
           signal: controller.signal,
           feedbackContext: formatFeedbackContext(messageText) || undefined,
-          catalogContext: withActiveScreen(grounded.block || undefined),
+          catalogContext: withActiveScreen(grounded.block || undefined, askedFromScreen),
           wantsWebFallback: grounded.needsWeb,
           accessPhone: access?.phone,
           visitorFirstName:
@@ -958,7 +961,9 @@ export function RvGrokApp({
     }
   }, []);
 
-  const startLiveSession = useCallback(async (prewarm?: LiveVoicePrewarm | null) => {
+  const startLiveSession = useCallback(async (prewarm?: LiveVoicePrewarm | null, reuseScreen?: boolean) => {
+    if (!reuseScreen) askedFromScreenRef.current = readActiveScreen();
+    const screenAtAsk = askedFromScreenRef.current;
     if (startingLiveRef.current) return;
     if (realtimeRef.current?.isActive) return;
 
@@ -1159,7 +1164,7 @@ export function RvGrokApp({
             setReconnectAttempt((n) => n + 1);
             window.setTimeout(() => {
               if (liveVoiceRef.current) {
-                void startLiveSessionRef.current();
+                void startLiveSessionRef.current(undefined, true);
               }
             }, 900);
           } else {
@@ -1172,6 +1177,7 @@ export function RvGrokApp({
       {
         speed: playbackSpeed,
         catalogContext,
+        screenAtAsk,
         facts,
         accessPhone: access?.phone,
         visitorFirstName:
@@ -1194,7 +1200,7 @@ export function RvGrokApp({
         setLiveVoice(false);
       } else if (liveVoiceRef.current && reconnectAttempt < 2) {
         window.setTimeout(() => {
-          if (liveVoiceRef.current) void startLiveSessionRef.current();
+          if (liveVoiceRef.current) void startLiveSessionRef.current(undefined, true);
         }, 1200);
       }
     } finally {
@@ -1371,6 +1377,7 @@ export function RvGrokApp({
    * (Push-to-talk "Voice Mode" stays available from Settings.)
    */
   const handleMicPress = () => {
+    askedFromScreenRef.current = readActiveScreen();
     const isLive =
       realtimeStatus === "connecting" ||
       realtimeStatus === "listening" ||

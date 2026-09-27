@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   SCREEN_GUIDANCE,
+  readActiveScreen,
   screenNameForTab,
   setActiveScreen,
   withActiveScreen,
@@ -82,8 +83,38 @@ test("shell records the screen and chat plus Live Voice attach it", () => {
     shell.match(/setActiveScreen\(screenNameForTab\(tab, homeOpen\)\)/)?.[0] || "",
     /roomAskSend|sendMessage/,
   );
-  assert.match(app, /catalogContext: withActiveScreen\(grounded\.block \|\| undefined\)/);
+  assert.match(
+    app,
+    /catalogContext: withActiveScreen\(grounded\.block \|\| undefined, askedFromScreen\)/,
+  );
+  assert.match(app, /const askedFromScreen = readActiveScreen\(\)/);
+  const mic = app.slice(app.indexOf("const handleMicPress"));
+  const snap = mic.indexOf("askedFromScreenRef.current = readActiveScreen()");
+  const arm = mic.indexOf("setLiveVoiceArmed(true)");
+  assert.ok(snap >= 0 && arm > snap, "mic press snapshots the screen before Live Voice");
   assert.match(app, /content: messageText \|\| \(image \? "Analyze this RV photo" : ""\)/);
-  assert.match(voice, /withActiveScreen\(catalogContext \?\? this\.catalogContext\)/);
+  assert.match(voice, /this\.screenAtAsk \|\| undefined/);
+  setActiveScreen("");
+});
+
+test("a coach ask keeps the screen from before the catalog await", async () => {
+  setActiveScreen("Tow");
+  const askedFrom = readActiveScreen();
+  await Promise.resolve();
+  setActiveScreen("Grok");
+  const typed = withActiveScreen("2026 Holiday Rambler Admiral 29M", askedFrom) || "";
+  assert.match(typed, /ACTIVE SCREEN: Tow/);
+  assert.match(typed, /towing capacity/);
+  assert.doesNotMatch(typed, /ACTIVE SCREEN: Grok/);
+  assert.equal(typed.match(/ACTIVE SCREEN:/g)?.length, 1);
+
+  setActiveScreen("Tow");
+  const voiceFrom = readActiveScreen();
+  await Promise.resolve();
+  setActiveScreen("Grok");
+  const voice = withActiveScreen("PIN GVWR 39600", voiceFrom) || "";
+  assert.match(voice, /ACTIVE SCREEN: Tow/);
+  assert.doesNotMatch(voice, /ACTIVE SCREEN: Grok/);
+  assert.equal(voice.match(/ACTIVE SCREEN:/g)?.length, 1);
   setActiveScreen("");
 });
