@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchLotSnapshot, lotUnitPhoto, type LotUnit } from "@/lib/lot/ownLotPage";
 import { CATALOG_INDEX } from "@/lib/rv/rvCatalogIndex";
 import { CoveredCoach } from "@/components/shell/CoveredCoach";
+import {
+  SEAMLESS_LOOP_PX_PER_SEC,
+  SEAMLESS_LOOP_RESUME_MS,
+  nextSeamlessScroll,
+  shouldSeamlessLoop,
+} from "@/lib/home/seamlessLoop";
 
 const EMPTY_UNITS: LotUnit[] = [];
 import {
@@ -150,35 +156,183 @@ export function HomeScreen({
       )}
 
       {arrivals.length > 0 ? (
-        <section data-home-arrivals className="showroom-arrivals">
-          <p className="showroom-kicker">
-            <i className="showroom-kicker-dot" aria-hidden />
-            Newest arrivals
-          </p>
-          <div className="showroom-rail overflow-x-auto">
-            {arrivals.map((unit, index) => (
-              <ArrivalCard
-                key={`${unit.printed.id ?? ""}-${unit.vin}-${index}`}
-                unit={unit}
-                onOpen={() => {
-                  requestLotUnit(lotArrivalQuery(unit));
-                  onOpenLot();
-                }}
-              />
-            ))}
-          </div>
-        </section>
+        <NewestArrivals
+          arrivals={arrivals}
+          onOpenUnit={(unit) => {
+            requestLotUnit(lotArrivalQuery(unit));
+            onOpenLot();
+          }}
+        />
       ) : null}
     </div>
+  );
+}
+
+function NewestArrivals({
+  arrivals,
+  onOpenUnit,
+}: {
+  arrivals: LotUnit[];
+  onOpenUnit: (unit: LotUnit) => void;
+}) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const setRef = useRef<HTMLDivElement>(null);
+  const dupRef = useRef<HTMLDivElement>(null);
+  const pausedRef = useRef(false);
+  const heldRef = useRef(false);
+  const resumeTimer = useRef(0);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const loop = shouldSeamlessLoop({ reducedMotion, overflows });
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setReducedMotion(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    const set = setRef.current;
+    if (!scroller || !set) return;
+    const measure = () => {
+      const styles = getComputedStyle(scroller);
+      const pad =
+        (Number.parseFloat(styles.paddingLeft) || 0) +
+        (Number.parseFloat(styles.paddingRight) || 0);
+      const next = set.offsetWidth > scroller.clientWidth - pad + 1;
+      setOverflows(next);
+      if (!shouldSeamlessLoop({ reducedMotion, overflows: next })) {
+        scroller.scrollLeft = 0;
+      }
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(scroller);
+    observer.observe(set);
+    return () => observer.disconnect();
+  }, [reducedMotion, loop, arrivals]);
+
+  useEffect(() => {
+    if (!loop) return;
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    let raf = 0;
+    let last = 0;
+    // Keep the position here. Reading scrollLeft back each frame rounds
+    // subpixel steps up to 1px and runs the strip too fast.
+    let pos = scroller.scrollLeft;
+    let wasPaused = pausedRef.current;
+    const frame = (now: number) => {
+      if (!last) last = now;
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const set = setRef.current;
+      const dup = dupRef.current;
+      if (pausedRef.current) {
+        wasPaused = true;
+      } else if (set && dup) {
+        if (wasPaused) {
+          pos = scroller.scrollLeft;
+          wasPaused = false;
+        }
+        const distance = dup.offsetLeft - set.offsetLeft;
+        pos = nextSeamlessScroll(pos, distance, SEAMLESS_LOOP_PX_PER_SEC * dt);
+        scroller.scrollLeft = pos;
+      }
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, [loop]);
+
+  useEffect(() => {
+    const release = () => {
+      if (!heldRef.current) return;
+      heldRef.current = false;
+      window.clearTimeout(resumeTimer.current);
+      resumeTimer.current = window.setTimeout(() => {
+        pausedRef.current = false;
+      }, SEAMLESS_LOOP_RESUME_MS);
+    };
+    window.addEventListener("pointerup", release);
+    window.addEventListener("pointercancel", release);
+    return () => {
+      window.removeEventListener("pointerup", release);
+      window.removeEventListener("pointercancel", release);
+      window.clearTimeout(resumeTimer.current);
+    };
+  }, []);
+
+  const holdRow = () => {
+    heldRef.current = true;
+    pausedRef.current = true;
+    window.clearTimeout(resumeTimer.current);
+  };
+
+  const pauseThenResume = () => {
+    pausedRef.current = true;
+    window.clearTimeout(resumeTimer.current);
+    resumeTimer.current = window.setTimeout(() => {
+      if (!heldRef.current) pausedRef.current = false;
+    }, SEAMLESS_LOOP_RESUME_MS);
+  };
+
+  const cards = (mirror: boolean) =>
+    arrivals.map((unit, index) => (
+      <ArrivalCard
+        key={`${unit.printed.id ?? ""}-${unit.vin}-${index}`}
+        unit={unit}
+        mirror={mirror}
+        onOpen={() => onOpenUnit(unit)}
+      />
+    ));
+
+  return (
+    <section data-home-arrivals className="showroom-arrivals">
+      <p className="showroom-kicker">
+        <i className="showroom-kicker-dot" aria-hidden />
+        Newest arrivals
+      </p>
+      <div
+        ref={scrollerRef}
+        data-arrival-loop={loop ? "on" : "off"}
+        className="showroom-rail overflow-x-auto"
+        onPointerDown={holdRow}
+        onWheel={pauseThenResume}
+      >
+        <div
+          ref={setRef}
+          className="showroom-arrival-set"
+          data-arrival-set="primary"
+        >
+          {cards(false)}
+        </div>
+        {loop ? (
+          <div
+            ref={dupRef}
+            className="showroom-arrival-set"
+            data-arrival-set="duplicate"
+            aria-hidden="true"
+          >
+            {cards(true)}
+          </div>
+        ) : null}
+      </div>
+    </section>
   );
 }
 
 function ArrivalCard({
   unit,
   onOpen,
+  mirror = false,
 }: {
   unit: LotUnit;
   onOpen: () => void;
+  mirror?: boolean;
 }) {
   const [ok, setOk] = useState(true);
   const photo = ok ? lotUnitPhoto(unit) : null;
@@ -189,7 +343,12 @@ function ArrivalCard({
       : "";
 
   return (
-    <button type="button" onClick={onOpen} className="showroom-arrival showroom-card">
+    <button
+      type="button"
+      tabIndex={mirror ? -1 : undefined}
+      onClick={onOpen}
+      className="showroom-arrival showroom-card"
+    >
       {photo ? (
         <span className="showroom-arrival-photo">
           <img src={photo} alt="" onError={() => setOk(false)} />

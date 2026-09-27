@@ -2825,6 +2825,19 @@ button.showroom-placard {
 .showroom-arrivals .showroom-rail {
   padding: 0 1.25rem 0.25rem;
 }
+.showroom-arrival-set {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: 0.625rem;
+}
+.showroom-arrivals .showroom-rail[data-arrival-loop="on"] {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+.showroom-arrivals .showroom-rail[data-arrival-loop="on"] .showroom-arrival {
+  scroll-snap-align: none;
+}
 .showroom-arrival {
   display: flex;
   width: 10.25rem;
@@ -2947,18 +2960,8 @@ button.showroom-placard {
     0 0 0 2px rgba(255, 255, 255, 0.72);
 }
 .showroom-pills {
-  scroll-snap-type: none;
-  scroll-behavior: auto;
-  padding: 0.15rem 0 0.2rem 1.1rem;
-}
-.showroom-pill-set {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.625rem;
-}
-.showroom-pills .showroom-tab {
-  scroll-snap-align: none;
+  scroll-snap-type: x proximity;
+  padding: 0.15rem 1.1rem 0.2rem;
 }
 .showroom-tab {
   display: inline-flex;
