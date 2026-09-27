@@ -3,7 +3,15 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { registerRoomAsk, roomAskMic, roomAskSend } from "./roomAsk.ts";
+import {
+  publishRoomVoice,
+  registerRoomAsk,
+  roomAskMic,
+  roomAskSend,
+  roomVoicePhaseFromStatus,
+  subscribeRoomVoice,
+} from "./roomAsk.ts";
+import { readActiveScreen, setActiveScreen } from "./screenContext.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -64,12 +72,58 @@ test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   assert.match(bar, /roomAskMic\(\)/);
   assert.match(bar, /roomAskSend\(q\)/);
   assert.match(bar, /onOpen\("rvgrok"\)/);
-  assert.match(bar, /aria-label="Start live voice"/);
+  assert.match(bar, /"Start live voice"/);
   assert.match(bar, /const hidePinnedAsk = !homeOpen && tab === "rvgrok"/);
   assert.match(bar, /hidePinnedAsk \? null/);
   assert.match(more, /label="RV GPS"/);
   assert.doesNotMatch(more, /title="RV GPS"/);
   assert.match(more, /title="VIN Decoder"/);
+});
+
+test("mic press on Tow does not open Grok and does call the bridge mic", () => {
+  const bar = read("../../components/shell/RoomAskBar.tsx");
+  const mic = bar.match(/data-room-ask-mic[\s\S]*?<\/button>/)?.[0] ?? "";
+  assert.match(mic, /roomAskMic\(\)/);
+  assert.doesNotMatch(mic, /onOpen\(/);
+  assert.doesNotMatch(mic, /markAskBarGrokEntry/);
+  assert.match(bar, /markAskBarGrokEntry\(\);\s*onOpen\("rvgrok"\)/);
+
+  const app = read("../../components/rvgrok/RvGrokApp.tsx");
+  const hidden = app.match(/if \(!active\) return;[\s\S]{0,500}/)?.[0] ?? "";
+  assert.match(hidden, /if \(!active\) return;/);
+  assert.doesNotMatch(hidden, /stopLiveSession/);
+  assert.match(app, /publishRoomVoice\(roomVoicePhaseFromStatus\(realtimeStatus\)\)/);
+
+  setActiveScreen("Tow");
+  let mics = 0;
+  registerRoomAsk({
+    send: () => {
+      throw new Error("send");
+    },
+    mic: () => {
+      mics += 1;
+    },
+  });
+  assert.equal(roomAskMic(), true);
+  assert.equal(mics, 1);
+  assert.equal(readActiveScreen(), "Tow");
+  registerRoomAsk(null);
+  setActiveScreen("");
+});
+
+test("ask bar voice phase follows the live session", () => {
+  assert.equal(roomVoicePhaseFromStatus("connecting"), "listening");
+  assert.equal(roomVoicePhaseFromStatus("listening"), "listening");
+  assert.equal(roomVoicePhaseFromStatus("thinking"), "listening");
+  assert.equal(roomVoicePhaseFromStatus("speaking"), "speaking");
+  assert.equal(roomVoicePhaseFromStatus("idle"), "idle");
+  const seen: string[] = [];
+  const off = subscribeRoomVoice((phase) => seen.push(phase));
+  publishRoomVoice("listening");
+  publishRoomVoice("speaking");
+  off();
+  publishRoomVoice("idle");
+  assert.deepEqual(seen, ["idle", "listening", "speaking"]);
 });
 
 test("typed asks and the mic use the mounted RV Grok chat", () => {
