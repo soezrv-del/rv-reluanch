@@ -3011,7 +3011,18 @@ html.kb-open [data-rvgrok-composer-dock] {
     0 0 0 2px rgba(255, 255, 255, 0.72);
 }
 .showroom-pills {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
   padding: 0.15rem 0 0.2rem 1.1rem;
+}
+.showroom-pill-set {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.625rem;
+}
+.showroom-pills .showroom-tab {
+  scroll-snap-align: none;
 }
 .showroom-tab {
   display: inline-flex;

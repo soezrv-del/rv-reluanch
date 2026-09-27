@@ -4,11 +4,15 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  nextPillScroll,
+  PILL_LOOP_PX_PER_SEC,
+  PILL_LOOP_RESUME_MS,
   publishRoomVoice,
   registerRoomAsk,
   roomAskMic,
   roomAskSend,
   roomVoicePhaseFromStatus,
+  shouldLoopPills,
   subscribeRoomVoice,
 } from "./roomAsk.ts";
 import { readActiveScreen, setActiveScreen } from "./screenContext.ts";
@@ -53,13 +57,13 @@ test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   const chips = bar.match(/const ROOM_CHIPS[\s\S]*?\];/)?.[0] ?? "";
   assert.match(
     chips,
-    /id: "rvfax", label: "Rv Facts"[\s\S]*id: "rvlot", label: "Lot Inventory"[\s\S]*id: "rvcal", label: "Calculator"[\s\S]*id: "rvtow", label: "Tow Guide"/,
+    /id: "rvfax", label: "Rv Facts"[\s\S]*id: "rvlot", label: "Lot Inventory"[\s\S]*id: "rvcal", label: "Calculator"[\s\S]*id: "rvgrok", label: "RV Grok"[\s\S]*id: "rvtow", label: "Tow Guide"/,
   );
   assert.match(chips, /icon: Truck/);
   const askAt = bar.indexOf("data-room-ask-bar");
   const tabsAt = bar.indexOf("data-room-tabs");
   assert.ok(askAt !== -1 && tabsAt > askAt, "ask pill sits above the pill tabs");
-  assert.equal((chips.match(/id: "/g) || []).length, 4);
+  assert.equal((chips.match(/id: "/g) || []).length, 5);
   assert.doesNotMatch(chips, /rvtrips|RV GPS|Tanks|Payment|Diesels|36-foot/);
   const grok = read("../../components/rvgrok/RvGrokApp.tsx");
   const landing = read("../../components/rvgrok/GrokLanding.tsx");
@@ -82,6 +86,49 @@ test("room tabs sit above the ask bar and the old dock is not mounted", () => {
   assert.match(more, /label="RV GPS"/);
   assert.doesNotMatch(more, /title="RV GPS"/);
   assert.match(more, /title="VIN Decoder"/);
+  assert.match(bar, /data-room-chip-set="duplicate"/);
+  assert.match(bar, /aria-hidden="true"/);
+  assert.match(bar, /tabIndex=\{mirror \? -1 : undefined\}/);
+  assert.match(bar, /prefers-reduced-motion: reduce/);
+  assert.match(bar, /shouldLoopPills/);
+  assert.match(bar, /nextPillScroll/);
+  assert.match(bar, /PILL_LOOP_RESUME_MS/);
+  assert.match(bar, /else if \(id === "rvgrok"\) onOpen\("rvgrok"\)/);
+});
+
+test("pill row loops only when it overflows and motion is allowed", () => {
+  assert.equal(shouldLoopPills({ reducedMotion: true, overflows: true }), false);
+  assert.equal(shouldLoopPills({ reducedMotion: false, overflows: false }), false);
+  assert.equal(shouldLoopPills({ reducedMotion: true, overflows: false }), false);
+  assert.equal(shouldLoopPills({ reducedMotion: false, overflows: true }), true);
+  assert.ok(PILL_LOOP_PX_PER_SEC >= 30 && PILL_LOOP_PX_PER_SEC <= 40);
+  assert.equal(PILL_LOOP_RESUME_MS, 3000);
+  assert.equal(nextPillScroll(80, 100, 30), 10);
+  assert.equal(nextPillScroll(0, 100, 100), 0);
+  assert.equal(nextPillScroll(10, 0, 5), 10);
+  assert.equal(nextPillScroll(40, 100, 250), 90);
+});
+
+test("top-of-page Live chip is gone; in-content Ask Grok stays", () => {
+  const constants = read("../../components/shell/shellConstants.ts");
+  const brand = read("../../components/shell/SuiteBrand.tsx");
+  const shell = read("../../components/shell/AppShell.tsx");
+  const fax = read("../../components/rvfax/RvFaxApp.tsx");
+  const detail = read("../../components/rvfax/RvDetail.tsx");
+  const header = read("../../components/shell/SapphireHeader.tsx");
+
+  assert.doesNotMatch(constants, /badge:\s*"LIVE"/);
+  assert.doesNotMatch(brand, /Grok|Live Voice/);
+  assert.doesNotMatch(shell, /Live Voice|Ask Grok button|>Grok</);
+  assert.doesNotMatch(header, /Live Voice|Ask Grok|>Grok</);
+  const factsTop = fax.slice(
+    fax.indexOf("data-facts-landing"),
+    fax.indexOf("Know before you buy"),
+  );
+  assert.ok(factsTop.length > 0, "facts landing header slice");
+  assert.doesNotMatch(factsTop, /Grok|Live Voice|Ask Grok|>LIVE</);
+  assert.match(detail, /Ask Grok/);
+  assert.match(fax, />\s*RvGrok\s*</);
 });
 
 test("mic press on Tow does not open Grok and does call the bridge mic", () => {
