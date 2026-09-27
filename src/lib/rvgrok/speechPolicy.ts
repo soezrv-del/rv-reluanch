@@ -49,7 +49,7 @@ export const ACCURACY_AIM_POLICY =
  * 85 to 90 percent, not a perfect match before answering.
  */
 export const SAVED_PIN_ANSWER =
-  "A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Aim for 85 to 90 percent accuracy, not perfection. Never refuse, stall, or skip answering because a match is not perfectly exact.";
+  "A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Aim for 85 to 90 percent accuracy, not perfection. Never refuse, stall, or skip answering because the match is not perfect.";
 
 /**
  * Standing model-facing prompt — chat, agent, and voice share this.

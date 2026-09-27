@@ -36,7 +36,7 @@ import {
 import type { ActiveCoach } from "../rv/activeCoach.ts";
 
 export const VOICE_SPEC_ENGINE_INSTRUCTIONS =
-  "Speak the SPEC ENGINE SCRIPT. A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Aim for 85 to 90 percent accuracy, not perfection. Never refuse, stall, or skip a spec because the match is not perfectly exact. Do not invent a number from memory. Do not load NHTSA recalls, market value, videos, owner reviews, or a maintenance schedule. Those are on-screen prompts the user picks. Feature-to-benefit lines apply only to numbers you are actually giving.";
+  "Speak the SPEC ENGINE SCRIPT. A saved pin is the best available answer. Use the closest saved pin when one exists, and otherwise answer from web search. Aim for 85 to 90 percent accuracy, not perfection. Never refuse, stall, or skip a spec because the match is not perfect. Do not invent a number from memory. Do not load NHTSA recalls, market value, videos, owner reviews, or a maintenance schedule. Those are on-screen prompts the user picks. Feature-to-benefit lines apply only to numbers you are actually giving.";
 
 /** First spoken line on any Live Voice coach or spec ask. */
 export const VOICE_COACH_CHOICE_LINE =
