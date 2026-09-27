@@ -5,6 +5,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   SCREEN_GUIDANCE,
+  markAskBarGrokEntry,
+  onActiveScreenChange,
   readActiveScreen,
   screenNameForTab,
   setActiveScreen,
@@ -116,5 +118,35 @@ test("a coach ask keeps the screen from before the catalog await", async () => {
   assert.match(voice, /ACTIVE SCREEN: Tow/);
   assert.doesNotMatch(voice, /ACTIVE SCREEN: Grok/);
   assert.equal(voice.match(/ACTIVE SCREEN:/g)?.length, 1);
+  setActiveScreen("");
+});
+
+test("a chip change during Live Voice updates the screen, and the ask bar opening Grok does not", () => {
+  const seen: string[] = [];
+  const off = onActiveScreenChange((name) => seen.push(name));
+  setActiveScreen("Tow");
+  assert.deepEqual(seen, ["Tow"]);
+
+  markAskBarGrokEntry();
+  setActiveScreen("Grok");
+  assert.equal(readActiveScreen(), "Grok");
+  assert.deepEqual(seen, ["Tow"]);
+
+  setActiveScreen("Cal");
+  assert.deepEqual(seen, ["Tow", "Cal"]);
+  const ctx = withActiveScreen(withActiveScreen("PIN", "Tow"), "Cal") || "";
+  assert.match(ctx, /ACTIVE SCREEN: Cal/);
+  assert.match(ctx, /ZIP and credit score/);
+  assert.doesNotMatch(ctx, /ACTIVE SCREEN: Tow/);
+  assert.doesNotMatch(ctx, /ACTIVE SCREEN: Grok/);
+  assert.equal(ctx.match(/ACTIVE SCREEN:/g)?.length, 1);
+
+  const voice = read("./realtime.ts");
+  const bar = read("../../components/shell/RoomAskBar.tsx");
+  assert.match(voice, /onActiveScreenChange\(\(name\) => \{/);
+  assert.match(voice, /this\.screenAtAsk = name/);
+  assert.match(voice, /this\.sendSessionUpdate\(\)/);
+  assert.match(bar, /markAskBarGrokEntry\(\);\s*onOpen\("rvgrok"\)/);
+  off();
   setActiveScreen("");
 });

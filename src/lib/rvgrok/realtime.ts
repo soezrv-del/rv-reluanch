@@ -29,7 +29,7 @@ import {
   type DeskSheetPayload,
 } from "./deskSheet";
 import { buildChatGrounding, namedCoachConflictsLock } from "./grounding";
-import { withActiveScreen } from "./screenContext";
+import { onActiveScreenChange, withActiveScreen } from "./screenContext";
 import { looksLikeCompanyOrPlantAsk } from "./webIntent";
 import { looksLikeCoachReportAsk } from "./coachReport";
 import { looksLikeRepairQuestion, REPAIR_VOICE_PLAYBOOK } from "./repairMode";
@@ -126,8 +126,9 @@ export class GrokRealtimeSession {
   private voiceId: string;
   private speed: number;
   private catalogContext: string;
-  /** Screen captured at mic press. Session updates keep this, not a later tab. */
+  /** Screen captured at mic press. A later room chip replaces it. */
   private screenAtAsk: string;
+  private unsubScreen: (() => void) | null = null;
   private facts: ActiveCoach | null;
   private rearmTimer: ReturnType<typeof setTimeout> | null = null;
   private earlyPcm: ArrayBuffer[] = [];
@@ -202,6 +203,11 @@ export class GrokRealtimeSession {
     this.speed = opts?.speed ?? 1;
     this.catalogContext = (opts?.catalogContext || "").trim();
     this.screenAtAsk = (opts?.screenAtAsk || "").trim();
+    this.unsubScreen = onActiveScreenChange((name) => {
+      if (!name || name === this.screenAtAsk) return;
+      this.screenAtAsk = name;
+      this.sendSessionUpdate();
+    });
     this.facts = opts?.facts ?? null;
     this.accessPhone = (opts?.accessPhone || "").trim();
     this.visitorFirstName = (opts?.visitorFirstName || "").trim();
@@ -764,6 +770,8 @@ export class GrokRealtimeSession {
   }
 
   stop(opts?: { keepCapture?: boolean }) {
+    this.unsubScreen?.();
+    this.unsubScreen = null;
     this.voiceCachedSheet = null;
     this.resetResearchTurn();
     this.intentionalStop = true;

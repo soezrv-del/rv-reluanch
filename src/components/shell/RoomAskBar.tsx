@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Mic } from "lucide-react";
 import type { AppTab } from "./BottomTabs";
 import { roomAskMic, roomAskSend } from "@/lib/rvgrok/roomAsk";
+import { markAskBarGrokEntry } from "@/lib/rvgrok/screenContext";
 
 /** One chip row above the ask box. RV GPS stays in Premium. */
 const ROOM_CHIPS: { id: AppTab; label: string }[] = [
@@ -32,6 +33,7 @@ export function RoomAskBar({
     if (!q) return;
     setDraft("");
     roomAskSend(q);
+    markAskBarGrokEntry();
     onOpen("rvgrok");
   };
 
@@ -102,6 +104,7 @@ export function RoomAskBar({
             title="Start Live Voice"
             onClick={() => {
               roomAskMic();
+              markAskBarGrokEntry();
               onOpen("rvgrok");
             }}
           >

@@ -38,14 +38,35 @@ export const SCREEN_GUIDANCE: Record<string, string> = {
 };
 
 let activeScreen = "";
+let askBarGrokEntry = false;
+const screenListeners = new Set<(name: string) => void>();
 
 export function screenNameForTab(tab: string, homeOpen: boolean): string {
   if (homeOpen) return "Home";
   return TAB_SCREEN[tab] || "Grok";
 }
 
+/** Ask-bar send/mic opens Grok. That hop is not a room change. */
+export function markAskBarGrokEntry(): void {
+  askBarGrokEntry = true;
+}
+
+/** Fires when the screen changes, except the ask bar opening Grok. */
+export function onActiveScreenChange(listener: (name: string) => void): () => void {
+  screenListeners.add(listener);
+  return () => {
+    screenListeners.delete(listener);
+  };
+}
+
 export function setActiveScreen(name: string): void {
-  activeScreen = name.trim();
+  const next = name.trim();
+  const fromAskBar = askBarGrokEntry && next === "Grok";
+  askBarGrokEntry = false;
+  if (next === activeScreen) return;
+  activeScreen = next;
+  if (fromAskBar) return;
+  for (const listener of screenListeners) listener(next);
 }
 
 export function readActiveScreen(): string {
