@@ -7,6 +7,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { hapticLight } from "@/lib/haptics";
 import {
@@ -398,7 +399,7 @@ export function SelectSheet({
   const kbPad =
     kb.open || keyboardOn ? Math.max(kb.inset, keyboardOn ? 12 : 0) : 0;
 
-  return (
+  const sheet = (
     <div
       className="select-sheet-root fixed inset-x-0 top-0 z-[80] flex items-end justify-center px-3 sm:items-center sm:px-4"
       data-no-pull-reset=""
@@ -410,7 +411,7 @@ export function SelectSheet({
         paddingBottom:
           kbPad > 0
             ? `max(0.75rem, ${kbPad + 12}px)`
-            : "calc(7.25rem + env(safe-area-inset-bottom, 0px))",
+            : "max(0.75rem, env(safe-area-inset-bottom, 0px))",
       }}
     >
       <button
@@ -427,7 +428,7 @@ export function SelectSheet({
           maxHeight:
             kbPad > 0
               ? `min(72dvh, calc(var(--vv-height, 100dvh) - ${kbPad + 48}px))`
-              : "min(70dvh, calc(100dvh - 8rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)))",
+              : "calc(100dvh - max(0.75rem, env(safe-area-inset-top)) - max(0.75rem, env(safe-area-inset-bottom)))",
           minHeight: kbPad > 0 ? "min(40dvh, 320px)" : "min(48dvh, 420px)",
           transform: `translate3d(0, ${dragY}px, 0)`,
           opacity: exiting ? Math.max(0.15, 1 - dismissProgress) : 1,
@@ -720,4 +721,9 @@ export function SelectSheet({
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") return sheet;
+  // Portal to the document. A transformed Facts pane clips position:fixed,
+  // which cut off the tail of a long floorplan list.
+  return createPortal(sheet, document.body);
 }

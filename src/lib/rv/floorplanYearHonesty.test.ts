@@ -3,9 +3,11 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadLiveCatalog } from "../../../scripts/load-live-catalog.mjs";
 import { cascadeFromResult } from "./factsOpen.ts";
+import { resolveFactsFloorplanOptions } from "./floorplanOptions.ts";
 import { toggleSavedUnit } from "./savedUnits.ts";
-import type { CatalogIndexSpec } from "./rvTypes.ts";
+import type { CatalogIndexSpec, RVSpec } from "./rvTypes.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -40,16 +42,10 @@ function floorplansForYearFromSpec(
 function floorplansForSelectedYearFromSpec(
   year: string,
   spec: CatalogIndexSpec,
-  live?: { live?: boolean; floorplansThisYear?: string[] } | null,
 ): string[] {
   const y = parseInt(year, 10);
   if (!year || !Number.isFinite(y)) return [];
-  const catalog = floorplansForYearFromSpec(year, spec);
-  if (!catalog.length) return [];
-  if (live?.live && live.floorplansThisYear?.length) {
-    return live.floorplansThisYear;
-  }
-  return catalog;
+  return resolveFactsFloorplanOptions(floorplansForYearFromSpec(year, spec));
 }
 
 function floorplanAvailableInYearFromSpec(
@@ -138,24 +134,16 @@ test("floorplansForYearFromSpec: no year returns the historical union", () => {
   );
 });
 
-test("floorplansForSelectedYear: empty catalog year ignores live floorplansThisYear", () => {
-  assert.deepEqual(
-    floorplansForSelectedYearFromSpec("2026", catalinaLikeSpec, {
-      live: true,
-      floorplansThisYear: ["243RBS", "283RKS"],
-    }),
-    [],
+test("floorplansForSelectedYear: empty catalog year ignores a live floorplan list", () => {
+  assert.deepEqual(floorplansForSelectedYearFromSpec("2026", catalinaLikeSpec), []);
+  assert.notDeepEqual(
+    floorplansForSelectedYearFromSpec("2026", catalinaLikeSpec),
+    ["243RBS", "283RKS"],
   );
 });
 
 test("floorplansForSelectedYear: no year is never a current-year lineup", () => {
-  assert.deepEqual(
-    floorplansForSelectedYearFromSpec("", catalinaLikeSpec, {
-      live: true,
-      floorplansThisYear: catalinaLikeSpec.floorplans,
-    }),
-    [],
-  );
+  assert.deepEqual(floorplansForSelectedYearFromSpec("", catalinaLikeSpec), []);
 });
 
 test("saved-unit path: opening a 2026 coach must not substitute aggregate floorplans", () => {
@@ -190,7 +178,6 @@ test("saved-unit path: opening a 2026 coach must not substitute aggregate floorp
   const shown = floorplansForSelectedYearFromSpec(
     cascade.year,
     catalinaLikeSpec,
-    { live: true, floorplansThisYear: wrongAggregateFallback },
   );
   assert.deepEqual(shown, []);
   assert.notDeepEqual(shown, wrongAggregateFallback);
@@ -277,12 +264,12 @@ test("floorplan picker copy does not imply currency on a no-year browse", () => 
   );
   assert.doesNotMatch(fax, /layouts for this year/);
   assert.doesNotMatch(fax, /Available for this coach/);
-  assert.match(fax, /not a current-year lineup/);
-  assert.match(fax, /yearsForFloorplanCode/);
+  assert.match(fax, /Floorplans · \$\{model\} · all years/);
+  assert.doesNotMatch(fax, /yearsForFloorplanCode/);
   assert.match(fax, /loadSavedUnits\(\)/);
   assert.match(
     fax,
-    /applySel\(cascadeFromResult\(r\)\);\s*setDetail\(hydrateShareCoachResult\(r\)\)/,
+    /applySel\(sel\);\s*setDetail\(hydrateShareCoachResult\(unit\)\)/,
   );
 });
 
@@ -290,4 +277,41 @@ test("suggest.ts offers catalog alternatives for parent models missing a year li
   const suggestSrc = readFileSync(join(root, "suggest.ts"), "utf8");
   assert.match(suggestSrc, /suggestCatalogAlternatives/);
   assert.match(suggestSrc, /relatedModelsWithFloorplansInYear/);
+});
+
+const liveCatalog = await loadLiveCatalog();
+
+function yearRow(make: string, model: string, year: string): string[] {
+  const spec = liveCatalog.RV_DATA[make]?.[model] as RVSpec | undefined;
+  const row = spec?.floorplansByYear?.[year];
+  assert.ok(row?.length, `${year} ${make} ${model} has a catalog year row`);
+  return [...row!];
+}
+
+test("Facts floorplan options equal the catalog year row, including lists longer than 8", () => {
+  const catalogSrc = readFileSync(join(root, "catalog.ts"), "utf8");
+  assert.doesNotMatch(catalogSrc, /live\.floorplansThisYear/);
+  const dossier = readFileSync(
+    join(root, "../../routes/api/rvfax.dossier.ts"),
+    "utf8",
+  );
+  assert.match(dossier, /floorplansThisYear: list\("floorplansThisYear"\)/);
+  assert.doesNotMatch(dossier, /floorplansThisYear: arr\(/);
+
+  const admiral = yearRow("Holiday Rambler", "Admiral", "2026");
+  const imagine = yearRow("Grand Design", "Imagine", "2026");
+  assert.ok(admiral.length > 0 && admiral.length <= 8);
+  assert.ok(imagine.length > 8, "Imagine 2026 is the combo an 8-cap used to cut");
+
+  assert.deepEqual(resolveFactsFloorplanOptions(admiral), admiral);
+  assert.deepEqual(resolveFactsFloorplanOptions(imagine), imagine);
+  assert.notDeepEqual(resolveFactsFloorplanOptions(imagine), imagine.slice(0, 8));
+
+  const cornerstone = yearRow("Entegra Coach", "Cornerstone", "2026");
+  const allegro = yearRow("Tiffin", "Allegro", "2017");
+  const redhawk = yearRow("Jayco", "Redhawk SE", "2027");
+  assert.deepEqual(resolveFactsFloorplanOptions(cornerstone), cornerstone);
+  assert.deepEqual(resolveFactsFloorplanOptions(allegro), allegro);
+  assert.deepEqual(resolveFactsFloorplanOptions(redhawk), redhawk);
+  assert.ok(redhawk.length > 8);
 });
