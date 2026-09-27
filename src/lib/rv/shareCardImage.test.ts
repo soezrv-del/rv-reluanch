@@ -267,16 +267,13 @@ test("paintShareSignatureCard signs with the session name and phone", () => {
   assert.doesNotMatch(joined, new RegExp(REPORT_CONTACT_PHONE.replace(/-/g, "\\-")));
 });
 
-test("live card node is the capture target — same preview, real file on send", () => {
+test("live card stays on screen; Share kit sends the report, not the card file", () => {
   assert.match(ui, /data-report-signature="1"/);
   assert.match(ui, /shareCardRef/);
-  assert.match(ui, /captureShareCardFile/);
-  assert.match(ui, /buildShareKitPayload/);
-  assert.match(ui, /cardFile/);
-  assert.doesNotMatch(
-    ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const copyOnly")),
-    /files: files\.length \? files : undefined/,
-  );
+  assert.match(ui, /shareReportLink/);
+  assert.match(ui, /shareReportPdfFile/);
+  assert.doesNotMatch(ui, /captureShareCardFile/);
+  assert.doesNotMatch(ui, /buildShareKitPayload/);
 });
 
 test("shareOrCopy prefers the native sheet and does not gate on canShare", () => {
@@ -477,8 +474,8 @@ test("clipboard-only / download is last-resort when navigator.share is missing",
 });
 
 test("Include video never adds a video file to Share files[]", () => {
-  const send = ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const copyOnly"));
-  assert.match(ui, /includeVideo \? shareVideo : null/);
+  const send = ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const shareFactsPdf"));
+  assert.match(ui, /data-include-video=\{includeVideo/);
   assert.match(ui, /data-share-video-toggle/);
   assert.doesNotMatch(send, /video\/mp4|video\/webm|\.mp4|\.webm/);
   assert.doesNotMatch(send, /extraFiles\.push\([^\)]*video/i);
@@ -512,11 +509,10 @@ test("lifestyle JPEG is in files[] when the lifestyle section is on", () => {
   assert.equal(off.files[0]!.type, "image/jpeg");
   assert.equal(off.files[1]!.type, "image/png");
   assert.match(ui, /include\.lifestyle/);
-  assert.match(ui, /peekCachedShareImage/);
   assert.match(ui, /prefetchShareImages/);
-  assert.match(ui, /heroFile/);
-  assert.match(
-    ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const copyOnly")),
+  assert.doesNotMatch(ui, /peekCachedShareImage/);
+  assert.doesNotMatch(
+    ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const shareFactsPdf")),
     /heroFile/,
   );
 });
@@ -819,13 +815,15 @@ test("a hung first navigator.share does not block a second tap", async () => {
   }
 });
 
-test("Share kit send recaptures the card and never disables after one send", () => {
-  const send = ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const copyOnly"));
-  assert.match(send, /captureShareCardFile\(\s*shareCardRef\.current/);
+test("Share kit send offers the report and never disables after one send", () => {
+  const send = ui.slice(ui.indexOf("const shareFactsLink"), ui.indexOf("const shareFactsPdf"));
+  assert.match(send, /shareReportLink\(factsReport\)/);
+  assert.match(ui, /shareReportPdfFile\(factsReport\)/);
   assert.doesNotMatch(send, /cardFileRef/);
   assert.doesNotMatch(send, /if \(sending\) return/);
-  assert.doesNotMatch(send, /disabled=\{sending/);
+  assert.doesNotMatch(ui, /disabled=\{sending/);
   assert.match(ui, /onClick=\{\(\) => void sendKit\(\)\}/);
+  assert.match(ui, /if \(out === "aborted"\) return/);
 });
 
 test("signed-out dealer contact is David Hansen; session builder never is", () => {
@@ -867,10 +865,9 @@ test("Facts Share kit is a hard switch on access.allowed — name, phone, card",
   assert.match(shell, /phone: access\.phone/);
   assert.match(ui, /data-fax-share-name/);
   assert.match(ui, /data-fax-share-phone/);
-  assert.match(ui, /data-fax-share-kit-text/);
+  assert.match(ui, /data-share-link/);
   assert.match(ui, /data-report-signature="1"/);
-  assert.match(ui, /captureShareCardFile\([\s\S]*contact/);
-  assert.match(ui, /contact,/);
+  assert.doesNotMatch(ui, /captureShareCardFile/);
   assert.match(ui, /contact\.name/);
   assert.match(ui, /contact\.phone/);
   assert.match(ui, /tel:\$\{contact\.tel\}/);

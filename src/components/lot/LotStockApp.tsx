@@ -18,6 +18,8 @@ import {
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
 import { LOT_UNIT_OPEN_EVENT, takePendingLotQuery } from "@/lib/home/homeCoach";
+import { ReportShareButton } from "@/components/report/ReportShareButton";
+import { buildUnitShareReport } from "@/lib/rv/shareReport";
 
 const PAGE_SIZE = 48;
 
@@ -447,6 +449,11 @@ function LotUnitCard({
           ) : null}
         </div>
       </button>
+      {open ? (
+        <div className="lot-share-dock">
+          <ReportShareButton report={buildUnitShareReport(unit)} />
+        </div>
+      ) : null}
     </article>
   );
 }

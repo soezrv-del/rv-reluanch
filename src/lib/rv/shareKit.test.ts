@@ -194,8 +194,8 @@ test("share policy and preview never auto-include Payment", () => {
   assert.doesNotMatch(ui, /Payment included/);
   assert.doesNotMatch(ui, /fallbackExtras/);
   assert.doesNotMatch(ui, /hasOptionalShareSections/);
-  assert.match(ui, /data-fax-share-kit-text/);
-  assert.match(ui, /payment: include\.payment \? payment : undefined/);
+  assert.match(ui, /buildFactsShareReport/);
+  assert.match(ui, /include\.payment \? payment : undefined/);
 });
 
 test("shared rating is the score only — no breakdown, summary, or notes", () => {
@@ -668,7 +668,7 @@ test("custom / missing catalog coach keeps saved data for kit POWER", () => {
   assert.doesNotMatch(power.join("\n"), /lb-?ft/i);
 });
 
-test("Share kit send attaches the bottom card as a PNG file", () => {
+test("Share kit offers a report link and a one-page PDF", () => {
   const ui = readFileSync(
     join(
       dirname(fileURLToPath(import.meta.url)),
@@ -676,27 +676,21 @@ test("Share kit send attaches the bottom card as a PNG file", () => {
     ),
     "utf8",
   );
-  assert.match(src, /buildShareKitPayload/);
-  assert.match(src, /captureShareCardFile/);
-  assert.match(src, /shareOrCopy/);
   assert.match(ui, /hydrateShareCoachResult\(result\)/);
-  assert.match(ui, /captureShareCardFile\(\s*shareCardRef\.current/);
-  assert.match(ui, /buildShareKitPayload\(\{/);
-  assert.match(ui, /cardFile/);
+  assert.match(ui, /buildFactsShareReport/);
+  assert.match(ui, /shareReportLink\(factsReport\)/);
+  assert.match(ui, /shareReportPdfFile\(factsReport\)/);
+  assert.match(ui, /data-share-link/);
+  assert.match(ui, /data-share-pdf/);
   assert.match(ui, /data-report-signature="1"/);
-  assert.match(ui, /aspect-\[16\/9\]/);
-  const send = ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const copyOnly"));
-  assert.match(send, /include\.lifestyle/);
-  assert.match(send, /peekCachedShareImage/);
-  assert.match(send, /heroFile/);
-  assert.match(send, /extraFiles/);
-  assert.doesNotMatch(send, /await fetchShareImage/);
-  assert.doesNotMatch(send, /await captureShareCardFile/);
-  assert.doesNotMatch(send, /cardFileRef/);
-  assert.doesNotMatch(src, /shareImageCache\.set\(url, file\)/);
+  assert.doesNotMatch(ui, /captureShareCardFile/);
+  assert.doesNotMatch(ui, /data-fax-share-kit-text/);
+  const send = ui.slice(ui.indexOf("const sendKit"), ui.indexOf("const shareFactsLink"));
+  assert.doesNotMatch(send, /heroFile/);
+  assert.doesNotMatch(send, /extraFiles/);
   assert.doesNotMatch(send, /video\/|youtube.*File|new File\([^\)]*mp4/i);
   assert.match(ui, /data-share-video-toggle/);
-  assert.match(ui, /includeVideo \? shareVideo : null/);
+  assert.match(ui, /onClick=\{\(\) => void sendKit\(\)\}/);
 });
 
 test("payment calculator field order is price → down → term → rate → est", () => {

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ChevronDown,
-  Copy,
+  FileText,
   Landmark,
+  Link2,
   MessageCircle,
   Minus,
   Plus,
@@ -31,26 +32,19 @@ import {
 import { hapticLight, hapticSuccess } from "@/lib/haptics";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
-  buildCoachKit,
-  buildShareKitPayload,
   buildSuitePitch,
   brochureSpecGroups,
-  coachTitle,
-  copyKit,
   brochureSummary,
-  captureShareCardFile,
   lifestylePitch,
   DEFAULT_SHARE_INCLUDE,
   DEFAULT_SHARE_MARKET_LINES,
   defaultMarketFor,
   defaultPaymentFor,
-  fetchShareImage,
   hydrateShareCoachResult,
   hasSelectedMarketLines,
   resolveFaxShareContact,
   kitStrengths,
   lifestyleImageFor,
-  peekCachedShareImage,
   prefetchShareImages,
   paymentBreakdown,
   RATE_UPDATED_FLASH,
@@ -65,6 +59,8 @@ import {
   type ShareMarketLines,
   type SharePayment,
 } from "@/lib/rv/shareKit";
+import { buildFactsShareReport } from "@/lib/rv/shareReport";
+import { shareReportLink, shareReportPdfFile } from "@/lib/rv/shareReportSend";
 import { LIFESTYLE_SHARE_URLS } from "@/assets/typeMedia";
 import {
   fetchRvVideos,
@@ -472,15 +468,13 @@ export function RvShareKit({
 
   useEffect(() => {
     if (!selected) return;
-    const slug = coachTitle(selected).replace(/[^\w.-]+/g, "_") || "RvFOX";
     const url = lifestyleImageFor(
       selected.data.type,
       selected.data.fuelType,
       selected.data.chassis,
     );
-    void fetchShareImage(url, `${slug}-lifestyle.jpg`);
-    captureShareCardFile(shareCardRef.current, `${slug}-card.png`, contact);
-  }, [selected, contact]);
+    prefetchShareImages([url]);
+  }, [selected]);
 
   const priceOptions = useMemo(
     () => sharePaymentPricePills(marketEdit, formatMoney),
@@ -540,33 +534,16 @@ export function RvShareKit({
   );
   const marketNeedsPick = include.market && !hasSelectedMarketLines(marketLines);
 
-  const kitText = useMemo(() => {
-    if (!selected) return "";
-    return buildCoachKit({
-      result: selected,
-      include,
-      payment: include.payment ? payment : undefined,
-      market: marketEdit,
-      marketLines,
-      strengths: strengthDraft,
-      rating: ratingValue,
-      summary,
-      video: includeVideo ? shareVideo : null,
-      contact,
+  const factsReport = useMemo(() => {
+    if (!selected) return null;
+    return buildFactsShareReport({
+      year: selected.year,
+      make: selected.make,
+      series: selected.model,
+      floorplan: selected.floorplan,
+      spec: selected.data,
     });
-  }, [
-    selected,
-    include,
-    payment,
-    marketEdit,
-    marketLines,
-    strengthDraft,
-    ratingValue,
-    summary,
-    includeVideo,
-    shareVideo,
-    contact,
-  ]);
+  }, [selected]);
 
   const loan = useMemo(() => paymentBreakdown(payment), [payment]);
 
@@ -588,80 +565,41 @@ export function RvShareKit({
     }
   };
 
-  const sendKit = async () => {
-    if (!selected || !kitText) return;
-    if (marketNeedsPick) {
-      flash("Pick which prices to share");
-      return;
-    }
-    flash(null);
+  const [offerShare, setOfferShare] = useState(false);
+
+  const sendKit = () => {
+    if (!selected || !factsReport) return;
     void hapticLight();
-    const slug = coachTitle(selected).replace(/[^\w.-]+/g, "_") || "RvFOX";
-    const heroUrl = lifestyleImageFor(
-      selected.data.type,
-      selected.data.fuelType,
-      selected.data.chassis,
-    );
-    const heroImg = peekCachedShareImage(heroUrl);
-    const heroFile = heroImg
-      ? new File([heroImg], `${slug}-hero.jpg`, {
-          type: heroImg.type || "image/jpeg",
-        })
-      : null;
-    const extraFiles: File[] = [];
-    if (include.lifestyle && heroImg) {
-      extraFiles.push(
-        new File([heroImg], `${slug}-lifestyle.jpg`, {
-          type: heroImg.type || "image/jpeg",
-        }),
-      );
-    }
-    const cardFile = captureShareCardFile(
-      shareCardRef.current,
-      `${slug}-card.png`,
-      contact,
-    );
-    const payload = buildShareKitPayload({
-      title: coachTitle(selected),
-      text: kitText,
-      heroFile,
-      cardFile,
-      extraFiles,
-    });
-    const out = await shareOrCopy({
-      title: payload.title,
-      text: payload.text,
-      files: payload.files.length ? payload.files : undefined,
-    });
-    if (out === "shared") {
-      hapticSuccess();
-      flash("Sent");
-    } else if (out === "downloaded") {
-      hapticSuccess();
-      flash("Image saved · text copied");
-    } else if (out === "copied") {
+    setOfferShare((open) => !open);
+  };
+
+  const shareFactsLink = async () => {
+    if (!factsReport) return;
+    const out = await shareReportLink(factsReport);
+    if (out === "aborted") return;
+    if (out === "copied") {
       hapticSuccess();
       flash("Copied");
-    } else if (out === "cancelled") {
-      flash("Cancelled");
+    } else if (out === "shared") {
+      hapticSuccess();
+      flash("Sent");
     } else {
       flash("Couldn’t share");
     }
   };
 
-  const copyOnly = async () => {
-    if (!kitText) return;
-    if (marketNeedsPick) {
-      flash("Pick which prices to share");
-      return;
-    }
-    void hapticLight();
-    const out = await copyKit(kitText);
-    if (out === "copied") {
+  const shareFactsPdf = async () => {
+    if (!factsReport) return;
+    const out = await shareReportPdfFile(factsReport);
+    if (out === "aborted") return;
+    if (out === "downloaded") {
       hapticSuccess();
-      flash("Copied");
+      flash("PDF saved");
+    } else if (out === "shared") {
+      hapticSuccess();
+      flash("Sent");
     } else {
-      flash("Couldn’t copy");
+      flash("Couldn’t share");
     }
   };
 
@@ -1076,13 +1014,6 @@ export function RvShareKit({
                   );
                 })}
 
-                <pre
-                  data-fax-share-kit-text
-                  className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/10 bg-black/30 p-3 text-[11px] leading-relaxed text-white/85"
-                >
-                  {kitText}
-                </pre>
-
                 <div
                   ref={shareCardRef}
                   data-report-signature="1"
@@ -1135,20 +1066,35 @@ export function RvShareKit({
                   <button
                     type="button"
                     onClick={() => void sendKit()}
+                    aria-expanded={offerShare}
                     className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-full bg-blue px-4 py-2.5 text-[13px] font-bold text-white"
                   >
                     <Share2 className="size-4" />
                     Share kit
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => void copyOnly()}
-                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-4 py-2.5 text-[13px] font-bold text-white"
-                  >
-                    <Copy className="size-4" />
-                    Copy
-                  </button>
                 </div>
+                {offerShare ? (
+                  <div className="flex flex-wrap gap-2" role="group" aria-label="Share report">
+                    <button
+                      type="button"
+                      data-share-link
+                      onClick={() => void shareFactsLink()}
+                      className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-4 py-2.5 text-[13px] font-bold text-white"
+                    >
+                      <Link2 className="size-4" />
+                      Share link
+                    </button>
+                    <button
+                      type="button"
+                      data-share-pdf
+                      onClick={() => void shareFactsPdf()}
+                      className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-4 py-2.5 text-[13px] font-bold text-white"
+                    >
+                      <FileText className="size-4" />
+                      Share PDF
+                    </button>
+                  </div>
+                ) : null}
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
