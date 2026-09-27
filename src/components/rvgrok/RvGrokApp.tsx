@@ -62,6 +62,7 @@ import {
 } from "@/lib/rvgrok/vision";
 import { planGrokTabEntry } from "@/lib/rvgrok/tabEntry";
 import { registerRoomAsk } from "@/lib/rvgrok/roomAsk";
+import { withActiveScreen } from "@/lib/rvgrok/screenContext";
 import { useAccessOptional } from "@/components/access/AccessProvider";
 import { takeSessionWelcome, welcomeBackLine } from "@/lib/access/identity";
 import {
@@ -638,7 +639,7 @@ export function RvGrokApp({
           agentMode,
           signal: controller.signal,
           feedbackContext: formatFeedbackContext(messageText) || undefined,
-          catalogContext: grounded.block || undefined,
+          catalogContext: withActiveScreen(grounded.block || undefined),
           wantsWebFallback: grounded.needsWeb,
           accessPhone: access?.phone,
           visitorFirstName:

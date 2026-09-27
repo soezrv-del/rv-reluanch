@@ -29,6 +29,7 @@ import {
   type DeskSheetPayload,
 } from "./deskSheet";
 import { buildChatGrounding, namedCoachConflictsLock } from "./grounding";
+import { withActiveScreen } from "./screenContext";
 import { looksLikeCompanyOrPlantAsk } from "./webIntent";
 import { looksLikeCoachReportAsk } from "./coachReport";
 import { looksLikeRepairQuestion, REPAIR_VOICE_PLAYBOOK } from "./repairMode";
@@ -1921,7 +1922,7 @@ export class GrokRealtimeSession {
           buildRealtimeSessionUpdate(
             this.voiceId,
             this.speed,
-            catalogContext ?? this.catalogContext,
+            withActiveScreen(catalogContext ?? this.catalogContext),
             this.visitorFirstName,
             this.visitorMemory,
             this.standingLessons,

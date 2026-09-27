@@ -46,6 +46,7 @@ import {
   clearGrokSeedOnDockTap,
   grokSeedFromAskHandoff,
 } from "@/lib/rvgrok/tabEntry";
+import { screenNameForTab, setActiveScreen } from "@/lib/rvgrok/screenContext";
 
 /**
  * Code-split suite tools — tools load only when visited.
@@ -326,6 +327,10 @@ export function AppShell({
     },
     [markVisited, openFactsShare, openFactsPicker, requestCleanCal],
   );
+
+  useEffect(() => {
+    setActiveScreen(screenNameForTab(tab, homeOpen));
+  }, [tab, homeOpen]);
 
   const isPro = isProfessionalTier();
   const dockOrder = useMemo(() => dockTabOrder(isPro), [isPro]);
