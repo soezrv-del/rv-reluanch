@@ -243,7 +243,7 @@ test("shell shows the owner mark on every screen and Home uses lot data", () => 
   const chips = bar.match(/const ROOM_CHIPS[\s\S]*?\];/)?.[0] ?? "";
   assert.match(
     chips,
-    /Rv Facts[\s\S]*Lot Inventory[\s\S]*Calculator[\s\S]*Tow Guide/,
+    /Rv Facts[\s\S]*Lot Inventory[\s\S]*Calculator[\s\S]*RV Grok[\s\S]*Tow Guide/,
   );
 });
 

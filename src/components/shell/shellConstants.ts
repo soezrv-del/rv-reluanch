@@ -42,22 +42,18 @@ export const PAGE_COPY: Record<
   rvfax: {
     title: "RvFACTS",
     line: "Get specs, market value, ratings, NHTSA recalls, and more.",
-    badge: "LIVE",
   },
   rvcal: {
     title: "RvCAL",
     line: "",
-    badge: "LIVE",
   },
   rvtow: {
     title: "RvTOW",
     line: "Truck · SUV · VIN decode for safe tow math.",
-    badge: "LIVE",
   },
   rvtrips: {
     title: "RV GPS",
     line: "RV GPS with campgrounds, dump stations, and more.",
-    badge: "LIVE",
   },
   rvshare: {
     title: "RvSHARE",

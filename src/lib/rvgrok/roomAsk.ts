@@ -50,6 +50,39 @@ export function publishRoomVoice(phase: RoomVoicePhase): void {
   for (const listener of voiceListeners) listener(phase);
 }
 
+/** Pill-row auto-scroll. Slow enough to read, fast enough to reveal Tow Guide. */
+export const PILL_LOOP_PX_PER_SEC = 36;
+
+/** Resume the loop this long after the finger or pointer lets go. */
+export const PILL_LOOP_RESUME_MS = 3000;
+
+/** One direction, only when the chips overflow and motion is allowed. */
+export function shouldLoopPills(opts: {
+  reducedMotion: boolean;
+  overflows: boolean;
+}): boolean {
+  return !opts.reducedMotion && opts.overflows;
+}
+
+/**
+ * Advance scroll by `deltaPx` and wrap once the first chip copy has
+ * fully passed, so the duplicate sits where the first copy started.
+ */
+export function nextPillScroll(
+  scrollLeft: number,
+  distance: number,
+  deltaPx: number,
+): number {
+  if (!(distance > 0) || !(deltaPx > 0) || !Number.isFinite(scrollLeft)) {
+    return scrollLeft;
+  }
+  let next = scrollLeft + deltaPx;
+  if (next >= distance) {
+    next -= Math.floor(next / distance) * distance;
+  }
+  return next;
+}
+
 export function subscribeRoomVoice(
   listener: (phase: RoomVoicePhase) => void,
 ): () => void {

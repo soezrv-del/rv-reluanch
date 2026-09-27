@@ -462,7 +462,7 @@
   }
 
   .sapphire-header {
-    padding-top: max(0.15rem, env(safe-area-inset-top, 0px)) !important;
+    padding-top: 0.75rem !important;
     padding-bottom: 0.2rem !important;
   }
 
@@ -534,12 +534,7 @@
 /* Short portrait — phone + Grok preview iframe */
 @media (max-height: 780px) {
   .sapphire-header {
-    padding-top: max(
-      3.25rem,
-      calc(
-        env(safe-area-inset-top, 0px) + 0.5rem + var(--zoom-safe-top, 0px)
-      )
-    ) !important;
+    padding-top: 0.75rem !important;
     padding-bottom: 0.35rem !important;
   }
   .sapphire-header-inner {
@@ -1456,58 +1451,21 @@
   filter: drop-shadow(0 0 12px rgba(201, 184, 150, 0.35));
 }
 
-/* Suite sapphire banner — CSS env owns the notch (Capacitor contentInset never).
-   Extra 0.5rem + --zoom-safe-top keeps the ⋯ clear of Dynamic Island when
-   Display Zoom / Larger Text grows the header. */
+/* Gap under the showroom logo. The status-bar inset lives on .showroom-header
+   only, so this is a small pad and not a second notch. */
 .sapphire-header {
-  padding-top: max(
-    0.75rem,
-    calc(env(safe-area-inset-top, 0px) + 0.5rem + var(--zoom-safe-top, 0px))
-  );
-}
-@media (max-width: 639px) {
-  /* Status bar / Dynamic Island floor when env() is 0 (WKWebView / zoom). */
-  .sapphire-header {
-    padding-top: max(
-      3.25rem,
-      calc(env(safe-area-inset-top, 0px) + 0.5rem + var(--zoom-safe-top, 0px))
-    );
-  }
+  padding-top: 0.75rem;
 }
 
-/* Three-dot Premium control — viewport-relative corners (Trips / landing).
-   Absolute `top` is the padding edge, so it must include safe-area + slack. */
+/* Trips ⋯ sits in the page header, already below the showroom logo. */
 .premium-menu-corner {
-  top: max(
-    0.625rem,
-    calc(env(safe-area-inset-top, 0px) + 0.5rem + var(--zoom-safe-top, 0px))
-  );
+  top: 0;
   right: max(0.625rem, calc(env(safe-area-inset-right, 0px) + 0.5rem));
 }
-@media (max-width: 639px) {
-  /* Same island floor as [data-trips-header] when env() is 0. */
-  .premium-menu-corner {
-    top: max(
-      3.25rem,
-      calc(env(safe-area-inset-top, 0px) + 0.5rem + var(--zoom-safe-top, 0px))
-    );
-  }
-}
 
-/* Grok thread chrome (sapphire header is display:none on wingman). */
+/* Grok thread sits under the showroom logo. The logo row owns the notch. */
 [data-grok-thread-chrome] {
-  padding-top: max(
-    0.4rem,
-    calc(env(safe-area-inset-top, 0px) + 0.45rem + var(--zoom-safe-top, 0px))
-  );
-}
-@media (max-width: 639px) {
-  [data-grok-thread-chrome] {
-    padding-top: max(
-      3.25rem,
-      calc(env(safe-area-inset-top, 0px) + 0.45rem + var(--zoom-safe-top, 0px))
-    );
-  }
+  padding-top: 0.75rem;
 }
 
 /* Landing ⋯ / History / Agent / Voice — extra slack inside the already-padded card. */
@@ -1528,14 +1486,13 @@
   margin-top: 0.35rem;
 }
 
-/* Vehicle History Report chrome — clear iPhone clock / Dynamic Island
-   even when env(safe-area-inset-top) is 0 (in-app preview webview). */
+/* Report bar sits under the showroom logo, which already clears the island. */
 .rvfax-report-chrome {
-  padding-top: max(4.5rem, calc(env(safe-area-inset-top, 0px) + 1rem));
+  padding-top: 0.5rem;
 }
 @media (min-width: 640px) {
   .rvfax-report-chrome {
-    padding-top: max(0.65rem, calc(env(safe-area-inset-top, 0px) + 0.35rem));
+    padding-top: 0.65rem;
   }
 }
 
@@ -2171,21 +2128,9 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   opacity: 0.9;
 }
 
-/* Trips title + coach sit below the island / clock — not in the status-bar row.
-   Floor holds when env(safe-area-inset-top) is 0 (WKWebView / in-app preview). */
+/* RV GPS title sits under the showroom logo. Do not pad the notch again. */
 [data-trips-header] {
-  padding-top: max(
-    0.5rem,
-    calc(env(safe-area-inset-top, 0px) + 0.4rem + var(--zoom-safe-top, 0px))
-  );
-}
-@media (max-width: 639px) {
-  [data-trips-header] {
-    padding-top: max(
-      4.25rem,
-      calc(env(safe-area-inset-top, 0px) + 0.75rem + var(--zoom-safe-top, 0px))
-    );
-  }
+  padding-top: 0.75rem;
 }
 
 [data-route-basemap] {
@@ -2472,23 +2417,9 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
   -webkit-backdrop-filter: blur(28px) saturate(1.7);
   border-color: var(--color-gold-border);
 }
-/* Cold-open hero — sapphire header is display:none on the wingman tab, so
- * this owns the notch. Mirror .bottom-tabs-nav: env() + mobile floor when
- * env(safe-area-inset-top) is 0 (WKWebView / in-app preview). */
+/* Grok landing sits under the showroom logo. The logo row owns the notch. */
 [data-rvgrok-landing] {
-  padding-top: max(
-    0.5rem,
-    calc(env(safe-area-inset-top, 0px) + var(--zoom-safe-top, 0px))
-  );
-}
-@media (max-width: 639px) {
-  /* Status bar / Dynamic Island ~47–59px — keep avatar + ⋯ below the clock. */
-  [data-rvgrok-landing] {
-    padding-top: max(
-      3.25rem,
-      calc(env(safe-area-inset-top, 0px) + 0.5rem + var(--zoom-safe-top, 0px))
-    );
-  }
+  padding-top: 0.75rem;
 }
 .grok-landing-card {
   border-radius: 2rem;
@@ -2715,7 +2646,7 @@ html.kb-open [data-rvgrok-composer-dock] {
 }
 .showroom-brand {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 0.55rem;
   min-height: 2.75rem;
   background: transparent;
@@ -2747,7 +2678,7 @@ html.kb-open [data-rvgrok-composer-dock] {
   position: relative;
   z-index: 1;
   width: min(22rem, 92%);
-  margin: 0.35rem auto 0;
+  margin: 0.75rem auto 0;
 }
 .showroom-coach {
   position: relative;
@@ -3015,7 +2946,18 @@ html.kb-open [data-rvgrok-composer-dock] {
     0 0 0 2px rgba(255, 255, 255, 0.72);
 }
 .showroom-pills {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
   padding: 0.15rem 0 0.2rem 1.1rem;
+}
+.showroom-pill-set {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.625rem;
+}
+.showroom-pills .showroom-tab {
+  scroll-snap-align: none;
 }
 .showroom-tab {
   display: inline-flex;
