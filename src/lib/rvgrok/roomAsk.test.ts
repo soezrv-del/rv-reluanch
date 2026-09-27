@@ -30,7 +30,7 @@ test("room ask bridge calls the registered Grok handlers", () => {
   assert.equal(roomAskMic(), false);
 });
 
-test("ask bar sits above the dock and only chips Facts, Lot, Cal, Tow", () => {
+test("ask bar sits above the dock and does not repeat the dock rooms", () => {
   const shell = read("../../components/shell/AppShell.tsx");
   const bar = read("../../components/shell/RoomAskBar.tsx");
   const tabs = read("../../components/shell/BottomTabs.tsx");
@@ -42,21 +42,13 @@ test("ask bar sits above the dock and only chips Facts, Lot, Cal, Tow", () => {
   const dockAt = shell.indexOf("data-bottom-dock");
   assert.ok(askAt > 0 && dockAt > askAt, "ask bar is above the dock");
 
-  const chips = bar.match(/const ROOM_CHIPS[\s\S]*?\];/)?.[0] ?? "";
-  assert.match(chips, /id: "rvfax", label: "Facts"/);
-  assert.match(chips, /id: "rvlot", label: "Lot"/);
-  assert.match(chips, /id: "rvcal", label: "Cal"/);
-  assert.match(chips, /id: "rvtow", label: "Tow"/);
-  assert.doesNotMatch(chips, /rvtrips|rvgrok|RV GPS|Grok/);
-  assert.equal((chips.match(/id: "/g) || []).length, 4);
+  assert.doesNotMatch(bar, /ROOM_CHIPS|data-room-chips|data-room-chip/);
+  assert.doesNotMatch(bar, /Facts|Cal|Tow|Lot/);
   assert.match(bar, /roomAskMic\(\)/);
   assert.match(bar, /roomAskSend\(q\)/);
   assert.match(bar, /onOpen\("rvgrok"\)/);
   assert.match(bar, /aria-label="Start live voice"/);
   assert.match(bar, /placeholder="Ask about this coach"/);
-  const formAt = bar.indexOf("data-room-ask-bar");
-  const linksAt = bar.indexOf("data-room-chips");
-  assert.ok(formAt > 0 && linksAt > formAt, "room links sit under the ask box");
   assert.match(bar, /data-quick-ask=\{q\}/);
 
   assert.match(tabs, /grid-cols-6/);

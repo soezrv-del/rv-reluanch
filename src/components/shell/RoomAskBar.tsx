@@ -6,20 +6,12 @@ import { roomAskMic, roomAskSend } from "@/lib/rvgrok/roomAsk";
 /** Questions for the open RV Grok thread. Not stats. */
 const QUICK_ASKS = ["Tanks", "Payment", "Diesels under 40", "36-foot"] as const;
 
-/** Facts, Cal, Tow, Lot only. RV GPS stays in the Premium menu. */
-const ROOM_CHIPS: { id: AppTab; label: string }[] = [
-  { id: "rvfax", label: "Facts" },
-  { id: "rvcal", label: "Cal" },
-  { id: "rvtow", label: "Tow" },
-  { id: "rvlot", label: "Lot" },
-];
-
 /**
  * Shared ask bar on every room, directly above the existing dock.
- * Mic starts Live Voice. A typed ask is appended to the open RV Grok thread.
+ * Room names live only in that dock. Mic starts Live Voice.
+ * A typed ask is appended to the open RV Grok thread.
  */
 export function RoomAskBar({
-  tab,
   onOpen,
 }: {
   tab: AppTab;
@@ -44,7 +36,7 @@ export function RoomAskBar({
     <div
       data-room-ask
       data-no-swipe
-      className="relative z-[70] shrink-0 bg-black px-3 pt-2"
+      className="relative z-[70] shrink-0 bg-black px-3 pt-2 pb-2"
     >
       <div
         data-quick-asks
@@ -95,23 +87,6 @@ export function RoomAskBar({
           </button>
         </div>
       </form>
-      <div
-        data-room-chips
-        className="mx-auto flex w-full max-w-lg items-center justify-between px-1 pb-2"
-      >
-        {ROOM_CHIPS.map((chip) => (
-          <button
-            key={chip.id}
-            type="button"
-            data-room-chip={chip.id}
-            aria-pressed={tab === chip.id}
-            onClick={() => onOpen(chip.id)}
-            className="inline-flex min-h-11 items-center px-2 text-[15px] font-medium text-fg"
-          >
-            {chip.label}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
