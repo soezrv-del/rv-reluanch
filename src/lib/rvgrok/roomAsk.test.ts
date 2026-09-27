@@ -53,6 +53,11 @@ test("ask bar sits above the dock and only chips Facts, Lot, Cal, Tow", () => {
   assert.match(bar, /roomAskSend\(q\)/);
   assert.match(bar, /onOpen\("rvgrok"\)/);
   assert.match(bar, /aria-label="Start live voice"/);
+  assert.match(bar, /placeholder="Ask about this coach"/);
+  const formAt = bar.indexOf("data-room-ask-bar");
+  const linksAt = bar.indexOf("data-room-chips");
+  assert.ok(formAt > 0 && linksAt > formAt, "room links sit under the ask box");
+  assert.match(bar, /data-quick-ask=\{q\}/);
 
   assert.match(tabs, /grid-cols-6/);
   assert.match(tabs, /id: "rvtrips", label: "RV GPS"/);

@@ -12,6 +12,8 @@ import {
 } from "react";
 import { BottomTabs, type AppTab } from "./BottomTabs";
 import { RoomAskBar } from "./RoomAskBar";
+import { SuiteBrand } from "./SuiteBrand";
+import { HomeScreen } from "./HomeScreen";
 import { dockTabOrder, PAGE_ACCENT } from "./shellConstants";
 import { useAccess } from "@/components/access/AccessProvider";
 import { isProfessionalTier } from "@/lib/rv/proEntitlement";
@@ -142,6 +144,7 @@ export function AppShell({
 }) {
   const access = useAccess();
   const [tab, setTab] = useState<AppTab>(initialTab);
+  const [homeOpen, setHomeOpen] = useState(initialTab === "rvgrok");
   const [grokSeed, setGrokSeed] = useState<string | undefined>();
   const [grokEntryToken, setGrokEntryToken] = useState(0);
   const [calSeed, setCalSeed] = useState<CalSeed | null>(null);
@@ -296,6 +299,7 @@ export function AppShell({
 
   const onTabChange = useCallback(
     (next: AppTab) => {
+      setHomeOpen(false);
       // Hidden Grok composer can keep focus after a swipe — that sticks
       // html.kb-open and used to unmount the dock on re-entry.
       blurSuiteFocus();
@@ -326,7 +330,7 @@ export function AppShell({
   const isPro = isProfessionalTier();
   const dockOrder = useMemo(() => dockTabOrder(isPro), [isPro]);
   const swipeIndex = Math.max(0, dockOrder.indexOf(tab));
-  const swipeArmed = !launchOpen && dockOrder.includes(tab);
+  const swipeArmed = !launchOpen && !homeOpen && dockOrder.includes(tab);
 
   useEffect(() => {
     const openSold = () => {
@@ -427,11 +431,13 @@ export function AppShell({
           overscrollBehavior: "none",
         }}
       >
+        <SuiteBrand />
         <main
           ref={mainRef}
           className="suite-swipe-viewport relative min-h-0 flex-1 overflow-hidden"
           aria-hidden={launchOpen}
         >
+          {homeOpen ? <HomeScreen coach={activeCoach} /> : null}
           {dockOrder.map((id, i) => {
             if (!show(id)) return null;
             return (
