@@ -2300,16 +2300,10 @@ html[data-trips-navigating] [data-bottom-dock]:hover {
     ),
     rgb(6, 12, 22);
 }
-.lot-well-mark {
+.lot-cover {
   position: absolute;
-  left: 50%;
-  top: 42%;
-  width: min(7.5rem, 36%);
-  height: min(9rem, 56%);
-  transform: translate(-50%, -50%);
-  object-fit: contain;
-  opacity: 0.22;
-  mix-blend-mode: screen;
+  inset: 0;
+  display: block;
   pointer-events: none;
 }
 .lot-well.is-featured {

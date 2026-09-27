@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { RAIDHO_R_MARK } from "@/assets/prestige";
+import { CoveredCoach } from "@/components/shell/CoveredCoach";
 import { SuitePage } from "@/components/shell/SuitePage";
 import { useShellNavOptional } from "@/components/shell/ShellNavContext";
 import {
@@ -18,7 +18,11 @@ import {
   type LotSnapshotView,
   type LotUnit,
 } from "@/lib/lot/ownLotPage";
-import { LOT_UNIT_OPEN_EVENT, takePendingLotQuery } from "@/lib/home/homeCoach";
+import {
+  LOT_UNIT_OPEN_EVENT,
+  coverVariant,
+  takePendingLotQuery,
+} from "@/lib/home/homeCoach";
 
 const PAGE_SIZE = 48;
 
@@ -364,7 +368,9 @@ function LotUnitCard({
   const year = lotTextOrGap(unit.year);
   const trim = lotTextOrGap(unit.trim);
   const condition = lotTextOrGap(unit.condition);
-  const photo = lotUnitPhoto(unit);
+  const photoUrl = lotUnitPhoto(unit);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const photo = photoUrl && failedSrc !== photoUrl ? photoUrl : null;
 
   return (
     <article>
@@ -389,14 +395,15 @@ function LotUnitCard({
               alt=""
               className="lot-photo"
               data-lot-photo="unit"
+              onError={() => setFailedSrc(photo)}
             />
           ) : (
-            <img
-              src={RAIDHO_R_MARK}
-              alt=""
-              className="lot-well-mark"
-              data-lot-photo="raidho"
-            />
+            <span className="lot-cover" data-lot-photo="cover">
+              <CoveredCoach
+                variant={coverVariant(unit)}
+                className="h-full w-full"
+              />
+            </span>
           )}
           <span className="absolute left-3 top-3 rounded-full bg-sapphire px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
             {shortLotTypeLabel(unit.body_type)}

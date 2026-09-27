@@ -41,16 +41,23 @@ const DRAPES = [
   },
 ] as const;
 
-export function CoveredCoach({ variant }: { variant: 0 | 1 | 2 }) {
+export function CoveredCoach({
+  variant,
+  className = "h-20 w-full",
+}: {
+  variant: 0 | 1 | 2;
+  className?: string;
+}) {
   const drape = DRAPES[variant];
   const glowId = useId().replace(/:/g, "");
 
   return (
     <svg
       viewBox="0 0 144 80"
+      preserveAspectRatio="xMidYMid slice"
       role="img"
       aria-label="Photo coming soon"
-      className="h-20 w-full"
+      className={className}
       data-covered-coach={variant}
     >
       <defs>
