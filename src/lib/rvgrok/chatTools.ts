@@ -85,7 +85,7 @@ export const RV_GROK_TOOLS = [
   ),
   fn(
     "estimate_payment",
-    "Payment estimate from price, ZIP, term, and credit band. An estimate, not a loan offer. Do not pass a web-found number.",
+    "Payment estimate from price, ZIP, term, and credit band. An estimate, not a loan offer.",
     {
       price: { type: "number" },
       zip: { type: "string" },

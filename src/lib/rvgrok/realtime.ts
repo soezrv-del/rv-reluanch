@@ -73,13 +73,7 @@ import {
   OWN_LOT_SCRAPE_IN_FRONT,
   ownLotVoiceCoachLock,
 } from "./ownLotAsk";
-import {
-  applyFactsDelivery,
-  classifyFactsTurn,
-  FACTS_SPEC_INSTRUCTION,
-  FACTS_STOCK_INSTRUCTION,
-  isFactsScreen,
-} from "./factsScreenPolicy";
+import { classifyFactsTurn, isFactsScreen } from "./factsScreenPolicy";
 import { GROK_EXTRA_PROMPTS, type GrokExtraKind } from "./grokExtras";
 import {
   coachKnowledgeKeyEquals,
@@ -1325,11 +1319,9 @@ export class GrokRealtimeSession {
     if (this.researchAbort.signal.aborted) return;
     this.rememberOwnLotVoiceLock(result.ok ? result.notes : "");
 
-    const rawInjection = formatVoiceWebSearchInjection(result, {
+    const injection = formatVoiceWebSearchInjection(result, {
       catalogBlock: grounded.block || decision.catalogBlock || this.catalogContext,
     });
-    const injection =
-      factsTurn === "spec" ? applyFactsDelivery(rawInjection) : rawInjection;
     if (this.researchPhase === "holding") {
       this.pendingResearchInjection = injection;
       return;
@@ -1434,16 +1426,8 @@ export class GrokRealtimeSession {
     this.suppressMic = true;
     this.handlers.onStatus("thinking", "Answering…");
     const factsStockTurn = /FACTS STOCK CHECK/.test(injection);
-    const factsSpecTurn =
-      !factsStockTurn &&
-      isFactsScreen(this.screenAtAsk) &&
-      classifyFactsTurn(
-        this.screenAtAsk,
-        this.lastResearchTranscript,
-        this.recentUserTurns.slice(0, -1),
-      ) === "spec";
     const inventoryTurn =
-      !factsStockTurn && !factsSpecTurn && /OWN-LOT inventory/.test(injection);
+      !factsStockTurn && /OWN-LOT inventory/.test(injection);
     if (inventoryTurn) this.lastLessonLotNotes = injection;
     const plantTurn = looksLikeCompanyOrPlantAsk(this.lastResearchTranscript);
     try {
@@ -1462,11 +1446,7 @@ export class GrokRealtimeSession {
           type: "response.create",
           response: {
             modalities: ["text", "audio"],
-            instructions: factsStockTurn
-              ? `${FACTS_STOCK_INSTRUCTION}\n\n${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}`
-              : factsSpecTurn
-                ? FACTS_SPEC_INSTRUCTION
-              : inventoryTurn
+            instructions: inventoryTurn
               ? `${OWN_LOT_SCRAPE_IN_FRONT}\n\n${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis turn is OWN-LOT inventory. Speak the Lot total and any listed unit. Every printed field on that unit line is yours to answer from. That unit is on our lot. Do not say a smaller count. Do not web-search over this snapshot. If a floorplan breakdown is printed, say it once and do not recount. Do not keep a store from an earlier turn unless that store is on a unit line.`
               : plantTurn
                 ? `${VOICE_RESEARCH_ANSWER_INSTRUCTIONS}\n\nThis is a factory or company question, not a coach. Answer it in full. Do not stop after the factory's name. Do not ask for a year, make, model, or floorplan.`

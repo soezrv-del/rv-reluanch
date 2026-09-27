@@ -42,10 +42,7 @@ import {
 import { lotQueryForFollowUp } from "@/lib/rvgrok/ownLotAsk";
 import {
   activeScreenFromContext,
-  applyFactsDelivery,
   classifyFactsTurn,
-  FACTS_SPEC_INSTRUCTION,
-  FACTS_STOCK_INSTRUCTION,
   factsChatTools,
   factsRequiredTool,
   isFactsScreen,
@@ -62,7 +59,6 @@ import {
   researchTimeoutMs,
   WEB_SEARCH_MAX_TOOL_CALLS,
   formatWebSearchInjection,
-  WEB_SEARCH_MODELS,
 } from "@/lib/rvgrok/webSearch";
 import { executeWebResearch } from "@/lib/rvgrok/webResearchTelemetry";
 import { getResearchOrderOverride } from "@/lib/rvgrok/researchOrderStore";
@@ -164,8 +160,6 @@ function withGrounding(
     visitorMemory?: string;
     standingLessons?: string;
     mode?: TalkMode;
-    factsNote?: string;
-    factsDelivery?: boolean;
   },
 ) {
   let out = injectStandingLessons(system, opts?.standingLessons);
@@ -185,9 +179,6 @@ function withGrounding(
   if (lot) {
     out = `${out}\n\n═══════════════════════════════════════\nOWN-LOT INVENTORY (RV Country)\n═══════════════════════════════════════\n${lot}`;
   }
-  const factsNote = (opts?.factsNote || "").trim();
-  if (factsNote) out = `${out}\n\n${factsNote}`;
-  if (opts?.factsDelivery) out = applyFactsDelivery(out);
   return out;
 }
 
@@ -365,7 +356,7 @@ const XAI_CHAT_TOOLS = [
   ),
   toolFn(
     "estimate_payment",
-    "Payment estimate from price, ZIP, term, and credit band. An estimate, not a loan offer. Do not pass a web-found number.",
+    "Payment estimate from price, ZIP, term, and credit band. An estimate, not a loan offer.",
     {
       price: { type: "number" },
       zip: { type: "string" },
@@ -870,10 +861,6 @@ async function tryXaiDirect(
   turn?: {
     tools?: typeof XAI_CHAT_TOOLS;
     requiredTool?: string | null;
-    factsNote?: string;
-    /** Facts chat uses this id alone. Other screens keep the fallback list. */
-    model?: string;
-    factsDelivery?: boolean;
   },
 ): Promise<Response | null> {
   const apiKey = process.env.XAI_API_KEY;
@@ -888,11 +875,9 @@ async function tryXaiDirect(
     : turn
       ? (turn.requiredTool ?? null)
       : requiredToolForAsk(lastPlain);
-  const MODELS = turn?.model
-    ? [turn.model]
-    : vision
-      ? ["grok-4.7", "grok-4.6", "grok-4.5", "grok-4-latest", "grok-2-vision-1212", "grok-3"]
-      : ["grok-4.7", "grok-4.6", "grok-4-latest", "grok-4.5", "grok-3"];
+  const MODELS = vision
+    ? ["grok-4.7", "grok-4.6", "grok-4.5", "grok-4-latest", "grok-2-vision-1212", "grok-3"]
+    : ["grok-4.7", "grok-4.6", "grok-4-latest", "grok-4.5", "grok-3"];
 
   const system = withGrounding(
     (agentMode ? AGENT_SYSTEM_PROMPT : RV_SYSTEM_PROMPT) +
@@ -911,8 +896,6 @@ async function tryXaiDirect(
       visitorMemory,
       standingLessons,
       mode,
-      factsNote: turn?.factsNote,
-      factsDelivery: Boolean(turn?.factsDelivery),
     },
   );
   const fullMessages: ChatMessage[] = [
@@ -956,8 +939,6 @@ async function tryCloudflareWorker(
   visitorMemory?: string,
   standingLessons?: string,
   mode?: TalkMode,
-  factsNote?: string,
-  factsDelivery?: boolean,
 ): Promise<Response | null> {
   const base = workerBase();
   const candidates = agentMode
@@ -990,8 +971,6 @@ async function tryCloudflareWorker(
                   visitorMemory,
                   standingLessons,
                   mode,
-                  factsNote,
-                  factsDelivery,
                 },
               ),
             },
@@ -1340,15 +1319,8 @@ export const Route = createFileRoute("/api/rvgrok")({
             query: lastPlain,
             catalogBlock: catalogContext,
           });
-          if (factsTurn === "spec") webNotes = applyFactsDelivery(webNotes);
         }
 
-        const factsNote =
-          factsTurn === "spec"
-            ? FACTS_SPEC_INSTRUCTION
-            : factsTurn === "stock"
-              ? FACTS_STOCK_INSTRUCTION
-              : undefined;
         const chatTools = factsChatTools(XAI_CHAT_TOOLS, screen, factsTurn);
         const requiredTool = factsRequiredTool(
           requiredToolForAsk(lastPlain),
@@ -1369,13 +1341,7 @@ export const Route = createFileRoute("/api/rvgrok")({
           standingLessons,
           talkMode,
           requestOrigin,
-          {
-            tools: chatTools,
-            requiredTool,
-            factsNote,
-            model: isFactsScreen(screen) ? WEB_SEARCH_MODELS[0] : undefined,
-            factsDelivery: isFactsScreen(screen),
-          },
+          { tools: chatTools, requiredTool },
         );
         if (fromXai) return finish(fromXai);
         const fromWorker = await tryCloudflareWorker(
@@ -1389,8 +1355,6 @@ export const Route = createFileRoute("/api/rvgrok")({
           visitorMemory,
           standingLessons,
           talkMode,
-          factsNote,
-          isFactsScreen(screen),
         );
         if (fromWorker) return finish(fromWorker);
 

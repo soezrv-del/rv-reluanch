@@ -2188,20 +2188,14 @@ export function formatFactsStockBlock(
   query: string,
 ): string {
   if (ownLotIsUnavailable(snapshot)) {
-    return [
-      "FACTS STOCK CHECK.",
-      "Lot snapshot is unavailable this turn. Say the stock check could not run. Do not invent a count. Do not answer specs.",
-    ].join(" ");
+    return "FACTS STOCK CHECK.\nLot snapshot unavailable.";
   }
   const locations = [
     ...new Set(snapshot.units.map((u) => u.location).filter(Boolean)),
   ];
   const filter = parseOwnLotAsk(query, locations, snapshot.units);
   const matched = queryOwnLotUnits(snapshot.units, filter, 8);
-  const lines = [
-    "FACTS STOCK CHECK. Stock only. Do not answer GVWR, engine, tanks, length, or other specs from these rows.",
-    `Matched: ${matched.length}.`,
-  ];
+  const lines = ["FACTS STOCK CHECK.", `Matched: ${matched.length}.`];
   if (!matched.length) {
     lines.push("None of that coach is on the lot snapshot this turn.");
   } else {

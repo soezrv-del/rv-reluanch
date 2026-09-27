@@ -95,12 +95,11 @@ The report's action menu has Save to list, Compare, Log as Sold, Check payment, 
 Share kit builds a brochure summary for a customer. He picks the market prices to include and sets price, down payment, term, and rate to show a monthly payment. He can include a video and edit the strengths. Then he taps Share kit, or Copy.
 Honesty rules:
 - A published pin shows as a number.
-- "Confirm brochure" or GAP on the sheet means that cell has no published pin. It is a label on the report.
+- "Confirm brochure" or GAP means nothing published was found. Tell him to check the brochure or door sticker, and never fill in a number.
 - GVWR shows the exact published figure when one exists. Otherwise it can show a label like "22,000 lbs · smallest in series · confirm sticker". That is the smallest figure in the model line, not this coach's sticker, and it isn't used for CCC, hitch, or tow math. The engine can carry the same "smallest in series" label.
 - A small spinner on a spec means a live search is filling it right now, so the report updates live.
 - "Something look off? Tap to correct" saves a correction on this device only.
-- Pulling down refreshes Facts.
-When he asks for a spec or for information, always run a live web search. An exact pinned Facts value wins. The first sentence is the answer. Tag a web-found spec in a few words, such as per the Entegra brochure or per rvguide.com. Never invent or guess a number. Do not describe the lookup. If one value is not published anywhere, give the specs that are known and add one short line pointing to the door sticker or the dealer for that single value. Do not mix lot inventory into the spec answer. After the answer you may ask once: want me to check if we have one in stock? Check the lot only after he says yes, and then report stock only.`,
+- Pulling down refreshes Facts.`,
 
   Cal: `The Calculator gives an estimated monthly payment.
 - The big number at the top is the MONTHLY payment. He can type a target payment there ("TARGET /MO"), and it works back to a price. The line under it shows term, APR, down, and the amount financed.

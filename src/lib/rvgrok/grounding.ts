@@ -179,12 +179,12 @@ export const GROUNDING_RULES = `VERIFIED CATALOG LOCK (non-negotiable):
 - The CATALOG / BROCHURE block in this request is THIS turn's lock. If the user named a different year / make / model / floorplan, this block is that coach — never keep narrating a prior session coach as still locked.
 - Series change clears the prior lock. Dutch Star is not Ventana because both use 4369. Prefer exact year + make + model + floorplan. If a field is missing, say which field (year vs series) — never substitute a sibling series.
 - DEFAULT COACH REPORT: year / make / model / floorplan, specs, power, payload, spoken rundown, and desk sheet ground on this CATALOG / BROCHURE lock plus live WEB RESEARCH (the big motorhome catalog toward 2000+). If the coach exists here — e.g. 2022 Newmar Dutch Star 4369 — report THAT coach. Never substitute a sibling series (Ventana 4369 ≠ Dutch Star 4369).
-- Specs always get a live web search. The catalog block and pinned Facts values are sources among the web notes, not the only source. An exact pinned Facts value wins. Name the site or URL for a web-found number. A web-found number is for the answer only and is never used for payment, CCC, hitch, or tow math.
+- The CATALOG / BROCHURE block in this request is source-of-truth for engine, horsepower, chassis, transmission, and fuel.
 - Specs / GVWR / engine / pricing: live WEB RESEARCH runs this turn even when this lock has numbers. Prefer OEM / factory brochure / dealer listing. Catalog lock still wins if it names a number. Never answer from training data alone. Never say EST / low confidence when live notes confirm a fact. If search returns nothing after a retry, say so plainly — then still speak every VERIFIED / non-GAP catalog pin. Do not invent brochure numbers from training. Never refuse a factory GVWR when LOCKED WEIGHTS names one.
 - LOCKED WEIGHTS / VERIFIED GVWR (OEM pin / Facts brochure) is source-of-truth for that floorplan's GVWR. Speak the number. Never say you don't have GVWR, never GAP a VERIFIED field. Desk / SPEC REPORT stays on the Facts snapshot — do not write EST onto the desk. If UVW (or another field) is GAP, conversational answers may give a labeled EST / typical class range after WEB RESEARCH — never as an OEM pin. Never EST when live notes confirm the number.
 - If a field has a number or name, USE THAT EXACT VALUE. Do not substitute a sibling model, a later year, or a silent typical HP (never invent 450 as fact).
 - If a field is marked UNKNOWN, you MUST use WEB RESEARCH notes this turn, then YOU answer with a labeled EST if still unpinned. Never send them to a brochure, door sticker, dealer, or website. Never say "check the website", "look it up yourself", or "go check the OEM site".
-- Do not invent a "no catalog data — check the OEM site" dead-end. Specs always use live web research. An exact pinned Facts value wins. Do not say the coach is not in the catalog and stop. Never invent HP, engine, chassis, or fuel. Never send the user to the OEM site, a website, or a dealer as the answer.
+- Do not invent a "no catalog data — check the OEM site" dead-end. If this block names locked numbers, the coach IS in the catalog — never say it is missing, not in catalogs, or to wait for a brochure. Answer from locked numbers and/or WEB RESEARCH notes. Never invent HP, engine, chassis, or fuel. Never send the user to the OEM site, a website, or a dealer as the answer.
 - WEB RESEARCH notes must not override a locked catalog row or invent a fifth-wheel / towable class when this block names a motorized class.
 - Floorplan letters (BH, K, L, FS, …) are labels only — never decode bunks or a half-bath from the code.
 - Entegra Vision = gas Ford F-53 / 7.3 Godzilla — not diesel.
@@ -210,8 +210,8 @@ function unlockedVoiceNeedsCatalogGap(query: string): boolean {
 const UNLOCKED_VOICE_SOFT =
   "No coach is locked this turn. Answer casual asks normally. Specs / year-make-model still need WEB RESEARCH and the catalog when they name a unit — never invent OEM numbers.";
 
-export const COMPARE_GROUNDING_RULES = `COMPARE THIS TURN:
-- Answer both coaches from live web research when this turn has it, and from the VERIFIED CATALOG locks below. An exact pinned Facts value wins. The catalog is not the only source.
+export const COMPARE_GROUNDING_RULES = `COMPARE THIS TURN (catalog-answerable):
+- Answer both coaches from the VERIFIED CATALOG locks below in THIS turn.
 - Lead with class and powertrain. Answer now — no stall, no "give me one second," no "Let me check that."
 - Do not silent-invent HP, engine, chassis, or fuel as OEM fact. UNKNOWN / CATALOG GAP: WEB RESEARCH this turn, then a labeled EST / typical class range.
 - NEVER send the user to a website, OEM site, or dealer as the answer.`;
@@ -478,7 +478,7 @@ export function formatCatalogGroundingBlock(specs: GroundedSpecs): string {
   const lockLine = presenceNote
     ? presenceNote
     : specs.hasHardLock
-      ? "An exact pinned Facts value above wins. Always use live web research for specs this turn. The catalog is one source among the web notes, not the only source. Do not say the coach is not in the catalog and stop. If a line is still empty after the web notes, a labeled EST / typical class range is allowed and is never an OEM pin. Never stop at I don't know."
+      ? "This coach IS in the verified catalog. Use the locked numbers above. Do not say it is missing, not in catalogs, or to wait for a brochure. If a line is UNKNOWN / CATALOG GAP, WEB RESEARCH is required this turn — then a labeled EST / typical class range if still unpinned. Never present that as an OEM pin. Never stop at I don't know."
       : "CATALOG GAP — no locked numbers for this identity. WEB RESEARCH is required this turn, then answer with a labeled EST / typical class range if still unpinned. Never present that as an OEM pin. Do not stop at I don't know. Never send the user to the OEM site, a website, or a dealer as the answer.";
   return [
     `VERIFIED CATALOG / BROCHURE for ${coach} (source: ${id.source}):`,

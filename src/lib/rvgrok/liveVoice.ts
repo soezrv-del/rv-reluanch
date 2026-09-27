@@ -28,7 +28,6 @@ import {
   stripScreenContext,
 } from "./screenGuides.ts";
 import { liveVoiceOutputFor, preferIosLoudspeaker, releaseLiveVoiceOutput } from "./voiceOutput.ts";
-import { applyFactsDelivery, isFactsScreen, voiceBrowseLine } from "./factsScreenPolicy.ts";
 import { PCM_SAMPLE_RATE, RV_VOICE_INSTRUCTIONS, VOICE_MIC_RULES } from "./voice.ts";
 
 export type LiveVoicePrewarm = {
@@ -205,10 +204,7 @@ export function buildRealtimeSessionUpdate(
   const screenSection = screen
     ? `${SCREEN_GUIDE_PREAMBLE}\n\n${formatScreenContext(screen)}`
     : SCREEN_GUIDE_PREAMBLE;
-  const assembled = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}${voiceBrowseLine(screen)} Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
-  const instructions = isFactsScreen(screen)
-    ? applyFactsDelivery(assembled)
-    : assembled;
+  const instructions = `${core}\n\n${personalBlock}${memoryBlock}${catalogBlock}When a turn injects a lot snapshot, speak that total. Never replace it with a website count. This session has native web_search. Use it for coach facts the catalog does not already pin, not to override an injected lot snapshot. Hold with "${VOICE_RESEARCH_HOLD_PHRASE}" only when research is actually running, then still answer.\n\nSESSION START: You will be cued once to introduce yourself. Say exactly: ${intro} Then listen. Never repeat this intro.\n\n${VOICE_MIC_RULES}\n\n${screenSection}`;
   return {
     type: "session.update",
     session: {

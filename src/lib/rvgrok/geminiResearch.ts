@@ -232,8 +232,8 @@ export function geminiResearchInstructions(opts: {
   const lengthRule = reportAsk
     ? coachReportResearchLengthRule(opts.profile)
     : opts.profile === "voice"
-      ? "VOICE: 1–3 spoken sentences. No bullets, no markdown, no campaign numbers you cannot support. Name the site for each web-found number. Do not spell the URL."
-      : "CHAT: 4–8 short bullets. No essay. Put the site name or URL on each web-found number.";
+      ? "VOICE: 1–3 spoken sentences. No bullets, no URLs, no markdown, no campaign numbers you cannot support."
+      : "CHAT: 4–8 short bullets. No essay. No URLs unless they uniquely identify a bulletin.";
   return [
     "Research ONE RV question for RVFAX. Return short RESEARCH NOTES only — no JSON.",
     "Use the google_search tool. Search the LIVE web first. Prefer OEM / factory brochure / dealer listings (Tiffin, Newmar, Newmar Corp, factory PDF / brochure, dealer listings) over aggregator hedges like 'typically'. Open-web hits are allowed — not factory-PDF-only.",
@@ -248,7 +248,7 @@ export function geminiResearchInstructions(opts: {
     "Never steal powertrain from a sibling model. Entegra Vision is gas F-53 Godzilla, not diesel.",
     "Floorplan letters are labels only — do not decode bunks or a half-bath from the code.",
     opts.catalog
-      ? `Catalog lock is one source among the live web results. An exact pinned number wins if the web disagrees. Do not write "not in catalogs" and stop. Name the site or URL for each confirmed number:\n${opts.catalog}`
+      ? `Catalog lock (do not contradict these numbers). If this lock names engine / HP / class, the coach IS in the catalog — do not write "not in catalogs" or "wait for a brochure":\n${opts.catalog}`
       : "No catalog row was available. Search OEM / factory brochure / dealer listings for THIS coach FIRST (shorthand / misspelling / missing year OK when the unit is clear). If the web does not confirm a number, write CONFIRMED: no — never a labeled EST / typical class range / low confidence, never a training-data year range. Do not tell the user to go check the OEM site instead of researching.",
   ].join("\n");
 }
