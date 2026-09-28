@@ -422,6 +422,45 @@ test("unit share title stays clear of the photo", async () => {
   }
 });
 
+function pdfPlacedText(doc: PDFDocument, pageIndex: number): Array<{ text: string; y: number }> {
+  const page = doc.getPages()[pageIndex];
+  if (!page) return [];
+  const contents = page.node.Contents();
+  const streams: PDFStream[] = [];
+  if (contents instanceof PDFArray) {
+    for (let i = 0; i < contents.size(); i += 1) {
+      const obj = doc.context.lookup(contents.get(i));
+      if (obj instanceof PDFStream) streams.push(obj);
+    }
+  } else if (contents instanceof PDFStream) {
+    streams.push(contents);
+  }
+  const raw = streams
+    .map((stream) => {
+      const decoded =
+        stream instanceof PDFRawStream ? decodePDFRawStream(stream).decode() : stream.getContents();
+      return Buffer.from(decoded).toString("latin1");
+    })
+    .join("\n");
+  const placed: Array<{ text: string; y: number }> = [];
+  for (const chunk of raw.split("BT")) {
+    const end = chunk.indexOf("ET");
+    const body = end >= 0 ? chunk.slice(0, end) : chunk;
+    const td = [...body.matchAll(/([0-9.+\-]+)\s+([0-9.+\-]+)\s+Td/g)].at(-1);
+    const tm = [
+      ...body.matchAll(
+        /([0-9.+\-]+)\s+([0-9.+\-]+)\s+([0-9.+\-]+)\s+([0-9.+\-]+)\s+([0-9.+\-]+)\s+([0-9.+\-]+)\s+Tm/g,
+      ),
+    ].at(-1);
+    const y = td ? Number(td[2]) : tm ? Number(tm[6]) : null;
+    if (y == null || Number.isNaN(y)) continue;
+    const text = decodePdfHex(body);
+    if (!text.trim()) continue;
+    placed.push({ text: text.replace(/\n/g, ""), y });
+  }
+  return placed;
+}
+
 function pdfLiterals(doc: PDFDocument): string {
   const page = doc.getPages()[0];
   if (!page) return "";
@@ -518,6 +557,103 @@ function paeth(left: number, up: number, upLeft: number): number {
   if (du <= dul) return up;
   return upLeft;
 }
+
+test("PDF rows stay above the footer url on every page", async () => {
+  const rows = Array.from({ length: 80 }, (_, index) => ({
+    label: index === 79 ? "Sofa Material" : `Spec ${index + 1}`,
+    value: index === 79 ? "Vinyl" : `Value ${index + 1}`,
+  }));
+  const bytes = await buildShareReportPdf({
+    kind: "unit",
+    title: "2027 Long Coach Example 40Z",
+    eyebrow: "Vehicle report",
+    generatedLabel: "September 27, 2026",
+    photoUrl: null,
+    headlines: [
+      { label: "Price", value: "$100,000" },
+      { label: "Stock number", value: "1" },
+    ],
+    sections: [{ title: "Details", rows }],
+    sources: null,
+    path: "/report/unit/1",
+    shareTitle: "2027 Long Coach Example 40Z",
+    shareText: "2027 Long Coach Example 40Z — RvFAX vehicle report",
+    footerNote: "Specs should be confirmed on the unit sticker.",
+    siteLabel: "rvmax.app",
+    siteUrl: "https://rvmax.app",
+  });
+  const doc = await PDFDocument.load(bytes);
+  assert.ok(doc.getPageCount() >= 2);
+  for (let pageIndex = 0; pageIndex < doc.getPageCount(); pageIndex += 1) {
+    const placed = pdfPlacedText(doc, pageIndex);
+    const url = placed.find((item) => item.text.includes("rvmax.app"));
+    assert.ok(url, `page ${pageIndex} missing footer url`);
+    const body = placed.filter(
+      (item) => !item.text.includes("rvmax.app") && !item.text.includes("unit sticker"),
+    );
+    for (const item of body) {
+      assert.ok(
+        item.y >= url.y + 30,
+        `page ${pageIndex} "${item.text}" at ${item.y} overlaps ${url.text} at ${url.y}`,
+      );
+    }
+    const joined = placed.map((item) => item.text).join("");
+    assert.equal(joined.includes("rvmax.appSofa"), false);
+  }
+  const all = Array.from({ length: doc.getPageCount() }, (_, index) =>
+    pdfPlacedText(doc, index).map((item) => item.text).join("\n"),
+  ).join("\n");
+  assert.ok(all.includes("Sofa Material"));
+  assert.ok(all.includes("Vinyl"));
+});
+
+test("a long feature list prints in full above the footer", async () => {
+  const items = Array.from({ length: 28 }, (_, index) => `Feature Item ${index + 1}`);
+  const included = items.join(" · ");
+  const rows = [
+    ...Array.from({ length: 70 }, (_, index) => ({
+      label: `Spec ${index + 1}`,
+      value: `Value ${index + 1}`,
+    })),
+    { label: "Included", value: included },
+  ];
+  const bytes = await buildShareReportPdf({
+    kind: "unit",
+    title: "2027 Long Coach Example 40Z",
+    eyebrow: "Vehicle report",
+    generatedLabel: "September 27, 2026",
+    photoUrl: null,
+    headlines: [
+      { label: "Price", value: "$100,000" },
+      { label: "Stock number", value: "1" },
+    ],
+    sections: [{ title: "Features", rows }],
+    sources: null,
+    path: "/report/unit/1",
+    shareTitle: "2027 Long Coach Example 40Z",
+    shareText: "2027 Long Coach Example 40Z — RvFAX vehicle report",
+    footerNote: "Specs should be confirmed on the unit sticker.",
+    siteLabel: "rvmax.app",
+    siteUrl: "https://rvmax.app",
+  });
+  const doc = await PDFDocument.load(bytes);
+  assert.ok(doc.getPageCount() >= 2);
+  const all: string[] = [];
+  for (let pageIndex = 0; pageIndex < doc.getPageCount(); pageIndex += 1) {
+    const placed = pdfPlacedText(doc, pageIndex);
+    const url = placed.find((item) => item.text.includes("rvmax.app"));
+    assert.ok(url, `page ${pageIndex} missing footer url`);
+    for (const item of placed) {
+      if (item.text.includes("rvmax.app") || item.text.includes("unit sticker")) continue;
+      assert.ok(item.y >= url.y + 30, `"${item.text}" at ${item.y}`);
+      assert.equal(item.text.includes("…"), false);
+    }
+    all.push(...placed.map((item) => item.text));
+  }
+  const joined = all.join(" ");
+  for (const item of items) assert.ok(joined.includes(item), item);
+  assert.ok(all.filter((text) => text === "Included").length >= 1);
+});
 
 test("a long share report still prints as one PDF page", async () => {
   const rows = Array.from({ length: 36 }, (_, index) => ({

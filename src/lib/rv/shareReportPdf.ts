@@ -3,6 +3,10 @@ import { REPORT_MARK_URL, splitHeadlineNote, type ShareReport } from "./shareRep
 const PAGE_W = 612;
 const PAGE_H = 792;
 const MARGIN = 36;
+/** Note and URL sit in this band. Body baselines stay at or above it. */
+const FOOTER_NOTE_Y = 42;
+const FOOTER_URL_Y = 26;
+const BODY_FLOOR = 72;
 const SAPPHIRE = { r: 10 / 255, g: 42 / 255, b: 138 / 255 };
 const INK = { r: 20 / 255, g: 32 / 255, b: 51 / 255 };
 const MUTED = { r: 90 / 255, g: 102 / 255, b: 120 / 255 };
@@ -80,8 +84,74 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
     })),
   ]);
 
-  const draw = () => {
-    page.drawRectangle({
+  const contentWidth = PAGE_W - MARGIN * 2;
+  const headlineCol = report.headlines.length
+    ? contentWidth / report.headlines.length
+    : contentWidth;
+  const headlineParts = report.headlines.map((item) => ({
+    label: item.label,
+    ...splitHeadlineNote(item.value),
+  }));
+  const headlineNotes = headlineParts.map((part) =>
+    part.note ? layoutNote(part.note, font, headlineCol - 8) : null,
+  );
+  const noteSize = headlineNotes.find((note) => note)?.size ?? 7;
+  const noteLines = Math.max(0, ...headlineNotes.map((note) => note?.lines.length ?? 0));
+  const headlineBlock = report.headlines.length ? headlineDrop(noteLines, noteSize) : 26;
+  const sourceLayout = report.sources
+    ? layoutWrapped(report.sources, font, 7, contentWidth, 2, 6)
+    : null;
+  const footer = sourceClearance(sourceLayout);
+  const fitted = fitOnePage(rows, Boolean(photo), headlineBlock, footer);
+
+  const paintFooter = (target: typeof page) => {
+    target.drawText(report.footerNote, {
+      x: MARGIN,
+      y: FOOTER_NOTE_Y,
+      size: 8,
+      font,
+      color: rgb(MUTED.r, MUTED.g, MUTED.b),
+    });
+    target.drawText(report.siteUrl, {
+      x: MARGIN,
+      y: FOOTER_URL_Y,
+      size: 8,
+      font: bold,
+      color: rgb(SAPPHIRE.r, SAPPHIRE.g, SAPPHIRE.b),
+    });
+  };
+
+  const paintSource = (target: typeof page) => {
+    if (!sourceLayout || sourceLayout.lines.length === 0) return;
+    const lineH = sourceLayout.size + 2.5;
+    const top = FOOTER_NOTE_Y + 16 + (sourceLayout.lines.length - 1) * lineH;
+    sourceLayout.lines.forEach((line, index) => {
+      target.drawText(line, {
+        x: MARGIN,
+        y: top - index * lineH,
+        size: sourceLayout.size,
+        font,
+        color: rgb(MUTED.r, MUTED.g, MUTED.b),
+      });
+    });
+  };
+
+  const openPage = (continued: boolean) => {
+    const target = continued ? pdf.addPage([PAGE_W, PAGE_H]) : page;
+    paintFooter(target);
+    if (continued) {
+      const titleSize = 12;
+      target.drawText(clip(report.title, bold, titleSize, contentWidth), {
+        x: MARGIN,
+        y: PAGE_H - 40,
+        size: titleSize,
+        font: bold,
+        color: rgb(INK.r, INK.g, INK.b),
+      });
+      return { target, y: PAGE_H - 64 };
+    }
+
+    target.drawRectangle({
       x: 0,
       y: PAGE_H - 78,
       width: PAGE_W,
@@ -91,7 +161,7 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
     let x = MARGIN;
     if (logo) {
       const mark = 52;
-      page.drawImage(logo, {
+      target.drawImage(logo, {
         x,
         y: PAGE_H - 78 + (78 - mark) / 2,
         width: mark,
@@ -99,14 +169,14 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
       });
       x += mark + 12;
     }
-    page.drawText("RvFAX", {
+    target.drawText("RvFAX", {
       x,
       y: PAGE_H - 40,
       size: 18,
       font: bold,
       color: rgb(1, 1, 1),
     });
-    page.drawText(report.eyebrow, {
+    target.drawText(report.eyebrow, {
       x,
       y: PAGE_H - 58,
       size: 9,
@@ -115,7 +185,7 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
     });
     const date = report.generatedLabel;
     const dateW = font.widthOfTextAtSize(date, 9);
-    page.drawText(date, {
+    target.drawText(date, {
       x: PAGE_W - MARGIN - dateW,
       y: PAGE_H - 46,
       size: 9,
@@ -123,28 +193,9 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
       color: rgb(0.82, 0.88, 1),
     });
 
-    const contentWidth = PAGE_W - MARGIN * 2;
-    const headlineCol = report.headlines.length
-      ? contentWidth / report.headlines.length
-      : contentWidth;
-    const headlineParts = report.headlines.map((item) => ({
-      label: item.label,
-      ...splitHeadlineNote(item.value),
-    }));
-    const headlineNotes = headlineParts.map((part) =>
-      part.note ? layoutNote(part.note, font, headlineCol - 8) : null,
-    );
-    const noteSize = headlineNotes.find((note) => note)?.size ?? 7;
-    const noteLines = Math.max(0, ...headlineNotes.map((note) => note?.lines.length ?? 0));
-    const headlineBlock = report.headlines.length ? headlineDrop(noteLines, noteSize) : 26;
-    const sourceLayout = report.sources
-      ? layoutWrapped(report.sources, font, 7, contentWidth, 2, 6)
-      : null;
-    const footer = sourceClearance(sourceLayout);
-    const fitted = fitOnePage(rows.length, Boolean(photo), headlineBlock, footer);
     let y = PAGE_H - 96;
     const titleSize = report.title.length > 42 ? 13 : 15;
-    page.drawText(clip(report.title, bold, titleSize, contentWidth), {
+    target.drawText(clip(report.title, bold, titleSize, contentWidth), {
       x: MARGIN,
       y,
       size: titleSize,
@@ -157,14 +208,14 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
       const headSize = fitted.size < 8 ? 9 : 10;
       headlineParts.forEach((item, i) => {
         const hx = MARGIN + headlineCol * i;
-        page.drawText(item.label.toUpperCase(), {
+        target.drawText(item.label.toUpperCase(), {
           x: hx,
           y,
           size: 7,
           font: bold,
           color: rgb(MUTED.r, MUTED.g, MUTED.b),
         });
-        page.drawText(clip(item.value, bold, headSize, headlineCol - 8), {
+        target.drawText(clip(item.value, bold, headSize, headlineCol - 8), {
           x: hx,
           y: y - 12,
           size: headSize,
@@ -174,7 +225,7 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
         const note = headlineNotes[i];
         if (!note) return;
         note.lines.forEach((line, lineIndex) => {
-          page.drawText(line, {
+          target.drawText(line, {
             x: hx,
             y: y - 24 - lineIndex * (note.size + 2),
             size: note.size,
@@ -191,88 +242,91 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
       const scale = Math.min(maxW / photo.width, fitted.photoH / photo.height, 1);
       const w = photo.width * scale;
       const h = photo.height * scale;
-      page.drawImage(photo, { x: MARGIN, y: y - h, width: w, height: h });
+      target.drawImage(photo, { x: MARGIN, y: y - h, width: w, height: h });
       y -= h + 8;
     }
+    return { target, y };
+  };
 
-    const rowH = fitted.size + 3.2;
-    for (const item of rows) {
-      if (item.kind === "head") {
-        y -= 2;
-        page.drawText(item.text.toUpperCase(), {
-          x: MARGIN,
-          y,
-          size: fitted.size,
-          font: bold,
-          color: rgb(SAPPHIRE.r, SAPPHIRE.g, SAPPHIRE.b),
-        });
-        y -= rowH;
-        continue;
-      }
-      page.drawText(clip(item.label, font, fitted.size, 250), {
+  let current = openPage(false);
+  const rowH = fitted.size + 3.2;
+  const placeLine = (kind: "head" | "row") => {
+    const step = itemAdvance(kind, rowH);
+    const broke = current.y - step.baselineDrop < footer;
+    if (broke) current = openPage(true);
+    current.y -= step.baselineDrop;
+    return broke;
+  };
+  for (const item of rows) {
+    if (item.kind === "head") {
+      placeLine("head");
+      current.target.drawText(item.text.toUpperCase(), {
         x: MARGIN,
-        y,
+        y: current.y,
         size: fitted.size,
-        font,
-        color: rgb(MUTED.r, MUTED.g, MUTED.b),
+        font: bold,
+        color: rgb(SAPPHIRE.r, SAPPHIRE.g, SAPPHIRE.b),
       });
-      const value = clip(item.value, bold, fitted.size, 250);
+      current.y -= itemAdvance("head", rowH).after - itemAdvance("head", rowH).baselineDrop;
+      continue;
+    }
+    const labelW = font.widthOfTextAtSize(item.label, fitted.size);
+    const valueWidth = Math.max(120, contentWidth - labelW - 18);
+    const lines = wrapPdfValue(item.value, bold, fitted.size, valueWidth);
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+      const broke = placeLine("row");
+      if (lineIndex === 0 || broke) {
+        current.target.drawText(clip(item.label, font, fitted.size, 250), {
+          x: MARGIN,
+          y: current.y,
+          size: fitted.size,
+          font,
+          color: rgb(MUTED.r, MUTED.g, MUTED.b),
+        });
+      }
+      const value = lines[lineIndex] ?? "";
       const vw = bold.widthOfTextAtSize(value, fitted.size);
-      page.drawText(value, {
+      current.target.drawText(value, {
         x: PAGE_W - MARGIN - vw,
-        y,
+        y: current.y,
         size: fitted.size,
         font: bold,
         color: rgb(INK.r, INK.g, INK.b),
       });
-      y -= rowH;
+      const step = itemAdvance("row", rowH);
+      current.y -= step.after - step.baselineDrop;
     }
+  }
+  paintSource(current.target);
 
-    page.drawText(report.footerNote, {
-      x: MARGIN,
-      y: 36,
-      size: 8,
-      font,
-      color: rgb(MUTED.r, MUTED.g, MUTED.b),
-    });
-    page.drawText(report.siteUrl, {
-      x: MARGIN,
-      y: 24,
-      size: 8,
-      font: bold,
-      color: rgb(SAPPHIRE.r, SAPPHIRE.g, SAPPHIRE.b),
-    });
-    if (sourceLayout && y >= footer) {
-      const lineH = sourceLayout.size + 2.5;
-      const top = 50 + (sourceLayout.lines.length - 1) * lineH;
-      sourceLayout.lines.forEach((line, index) => {
-        page.drawText(line, {
-          x: MARGIN,
-          y: top - index * lineH,
-          size: sourceLayout.size,
-          font,
-          color: rgb(MUTED.r, MUTED.g, MUTED.b),
-        });
-      });
-    }
-  };
-
-  draw();
   return pdf.save();
 }
 
-/** Shrink the photo and type until every row fits above the footer. */
+/** Baseline drop before the line, then the full step to the next line. */
+function itemAdvance(kind: "head" | "row", rowH: number): { baselineDrop: number; after: number } {
+  if (kind === "head") return { baselineDrop: 2, after: 2 + rowH };
+  return { baselineDrop: 0, after: rowH };
+}
+
+type FitRow = { kind: "head" | "row" };
+
+/** Shrink the photo and type so a normal report stays on one page, above the footer. */
 function fitOnePage(
-  rowCount: number,
+  rows: readonly FitRow[],
   hasPhoto: boolean,
   headlineBlock: number,
   footer: number,
 ): { size: number; photoH: number } {
   const fits = (size: number, photoH: number) => {
-    let y = PAGE_H - 96 - 18;
-    y -= headlineBlock;
+    let y = PAGE_H - 96 - 18 - headlineBlock;
     if (photoH > 0) y -= photoH + 8;
-    return y - rowCount * (size + 3.2) >= footer;
+    const rowH = size + 3.2;
+    for (const item of rows) {
+      const step = itemAdvance(item.kind, rowH);
+      if (y - step.baselineDrop < footer) return false;
+      y -= step.after;
+    }
+    return true;
   };
   let size = 9;
   let photoH = hasPhoto ? 108 : 0;
@@ -345,12 +399,50 @@ function packWords(
   return lines;
 }
 
-/** Body text must stop above a one- or two-line source note. */
+/** Body text must stop above the footer note, URL, and any source lines. */
 function sourceClearance(layout: Wrapped | null): number {
-  if (!layout || layout.lines.length === 0) return 56;
+  if (!layout || layout.lines.length === 0) return BODY_FLOOR;
   const lineH = layout.size + 2.5;
-  const top = 50 + (layout.lines.length - 1) * lineH;
-  return Math.max(56, top + layout.size + 8);
+  const top = FOOTER_NOTE_Y + 16 + (layout.lines.length - 1) * lineH;
+  return Math.max(BODY_FLOOR, top + layout.size + 10);
+}
+
+/** Full value, wrapped beside the label. Short values stay one line. */
+function wrapPdfValue(
+  text: string,
+  font: PdfFont,
+  size: number,
+  maxWidth: number,
+): string[] {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (!clean) return [""];
+  if (font.widthOfTextAtSize(clean, size) <= maxWidth) return [clean];
+  const lines: string[] = [];
+  let current = "";
+  const push = (token: string) => {
+    const trial = current ? `${current} ${token}` : token;
+    if (font.widthOfTextAtSize(trial, size) <= maxWidth) {
+      current = trial;
+      return;
+    }
+    if (current) lines.push(current);
+    current = token;
+  };
+  for (const word of clean.split(" ")) {
+    if (font.widthOfTextAtSize(word, size) <= maxWidth) {
+      push(word);
+      continue;
+    }
+    let rest = word;
+    while (rest) {
+      let take = rest.length;
+      while (take > 1 && font.widthOfTextAtSize(rest.slice(0, take), size) > maxWidth) take -= 1;
+      push(rest.slice(0, take));
+      rest = rest.slice(take);
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length ? lines : [clean];
 }
 
 function clip(

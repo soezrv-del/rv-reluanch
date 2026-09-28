@@ -3284,6 +3284,8 @@ body:has(.report-page) {
   text-align: right;
   font-weight: 650;
   font-size: 0.95rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .report-sources,
