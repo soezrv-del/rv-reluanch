@@ -46,7 +46,7 @@ import {
   clearGrokSeedOnDockTap,
   grokSeedFromAskHandoff,
 } from "@/lib/rvgrok/tabEntry";
-import { screenNameForTab, setActiveScreen } from "@/lib/rvgrok/screenContext";
+import { onRouteChange } from "@/lib/rvgrok/screenContext";
 
 /**
  * Code-split suite tools — tools load only when visited.
@@ -329,7 +329,7 @@ export function AppShell({
   );
 
   useEffect(() => {
-    setActiveScreen(screenNameForTab(tab, homeOpen));
+    onRouteChange(tab, homeOpen);
   }, [tab, homeOpen]);
 
   const isPro = isProfessionalTier();

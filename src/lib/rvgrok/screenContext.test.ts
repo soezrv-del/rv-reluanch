@@ -3,11 +3,14 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { screenGuideFor } from "./screenGuides.ts";
+import { screenCalloutLine, screenGuideFor } from "./screenGuides.ts";
 import {
+  isRoutedChatScreen,
   markAskBarGrokEntry,
   onActiveScreenChange,
+  onRouteChange,
   readActiveScreen,
+  routeScreenChatNote,
   screenNameForTab,
   setActiveScreen,
   withActiveScreen,
@@ -69,9 +72,9 @@ test("only the active screen's guide is attached", () => {
 test("home and the suite tabs map to screen names", () => {
   assert.equal(screenNameForTab("rvgrok", true), "Home");
   assert.equal(screenNameForTab("rvfax", false), "Facts");
-  assert.equal(screenNameForTab("rvcal", false), "Cal");
-  assert.equal(screenNameForTab("rvtow", false), "Tow");
-  assert.equal(screenNameForTab("rvlot", false), "Lot");
+  assert.equal(screenNameForTab("rvcal", false), "CAL");
+  assert.equal(screenNameForTab("rvtow", false), "TOW");
+  assert.equal(screenNameForTab("rvlot", false), "LOT");
   assert.equal(screenNameForTab("rvtrips", false), "RV GPS");
   assert.equal(screenNameForTab("rvgrok", false), "Grok");
   assert.equal(screenNameForTab("more", false), "Premium");
@@ -82,9 +85,13 @@ test("shell records the screen and chat plus Live Voice attach it", () => {
   const app = read("../../components/rvgrok/RvGrokApp.tsx");
   const voice = read("./realtime.ts");
 
-  assert.match(shell, /setActiveScreen\(screenNameForTab\(tab, homeOpen\)\)/);
+  assert.match(shell, /onRouteChange\(tab, homeOpen\)/);
+  assert.match(
+    read("./screenContext.ts"),
+    /setActiveScreen\(screenNameForTab\(tab, homeOpen\)\)/,
+  );
   assert.doesNotMatch(
-    shell.match(/setActiveScreen\(screenNameForTab\(tab, homeOpen\)\)/)?.[0] || "",
+    shell.match(/onRouteChange\(tab, homeOpen\)/)?.[0] || "",
     /roomAskSend|sendMessage/,
   );
   assert.match(
@@ -145,10 +152,29 @@ test("a chip change during Live Voice updates the screen, and the ask bar openin
 
   const voice = read("./realtime.ts");
   const bar = read("../../components/shell/RoomAskBar.tsx");
+  const listener = voice.slice(
+    voice.indexOf("onActiveScreenChange((name) => {"),
+    voice.indexOf("this.facts = opts?.facts"),
+  );
   assert.match(voice, /onActiveScreenChange\(\(name\) => \{/);
   assert.equal((voice.match(/onActiveScreenChange\(/g) || []).length, 1);
   assert.match(voice, /this\.screenAtAsk = name/);
-  assert.match(voice, /this\.sendSessionUpdate\(\)/);
+  assert.match(listener, /sendRouteScreenItem\(name\)/);
+  assert.ok(
+    listener.indexOf("sendRouteScreenItem(name)") <
+      listener.indexOf("this.sendSessionUpdate()"),
+    "screen name is in the thread before the session update",
+  );
+  assert.ok(
+    listener.indexOf("this.sendSessionUpdate()") <
+      listener.indexOf('type: "navigate"'),
+    "session update is queued before the spoken callout",
+  );
+  const start = voice.slice(voice.indexOf("ws.binaryType"), voice.indexOf("if (this.catalogContext)"));
+  assert.ok(
+    start.indexOf("sendRouteScreenItem") < start.indexOf("sendSessionUpdate"),
+    "opening a session pushes the screen before the intro reply",
+  );
   assert.match(voice, /type: "navigate"/);
   assert.match(voice, /type: "user-start"/);
   assert.match(voice, /type: "reply-done"/);
@@ -156,3 +182,62 @@ test("a chip change during Live Voice updates the screen, and the ask bar openin
   off();
   setActiveScreen("");
 });
+
+test("route changes to Facts, CAL, TOW, and LOT push that name before the next reply", () => {
+  const seen: string[] = [];
+  const off = onActiveScreenChange((name) => seen.push(name));
+
+  onRouteChange("rvfax", false);
+  onRouteChange("rvcal", false);
+  onRouteChange("rvtow", false);
+  onRouteChange("rvlot", false);
+  assert.deepEqual(seen, ["Facts", "CAL", "TOW", "LOT"]);
+
+  const rooms: Array<[string, string, RegExp]> = [
+    ["rvfax", "Facts", /DID YOU MEAN\?/],
+    ["rvcal", "Cal", /TARGET \/MO/],
+    ["rvtow", "Tow", /RV GVWR \(lbs\)/],
+    ["rvlot", "Lot", /FEATURED REPORT/],
+  ];
+  for (const [tab, guide, cue] of rooms) {
+    onRouteChange(tab, false);
+    const name = readActiveScreen();
+    assert.equal(isRoutedChatScreen(name), true, name);
+    const ctx = withActiveScreen("PIN GVWR 39600") || "";
+    assert.match(ctx, new RegExp(`ACTIVE SCREEN: ${name}\\.`), name);
+    assert.match(ctx, new RegExp(`Spoken name: ${screenGuideSpoken(guide)}`), name);
+    assert.ok(ctx.includes(screenGuideFor(guide) || ""), name);
+    assert.match(ctx, cue, name);
+    assert.equal(ctx.match(/ACTIVE SCREEN:/g)?.length, 1, name);
+    const note = routeScreenChatNote(name);
+    assert.match(note, new RegExp(`ACTIVE SCREEN: ${name}\\.`));
+    assert.match(note, /Do not answer this note/);
+    assert.doesNotMatch(note, /What's up\?/);
+    const spoken = screenCalloutLine(name) || "";
+    assert.match(spoken, new RegExp(`^${screenGuideSpoken(guide).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\.`));
+  }
+
+  onRouteChange("rvgrok", true);
+  assert.equal(readActiveScreen(), "Home");
+  assert.equal(isRoutedChatScreen("Home"), false);
+  assert.equal(isRoutedChatScreen("Grok"), false);
+
+  const bar = read("../../components/shell/RoomAskBar.tsx");
+  const chips = bar.match(/const ROOM_CHIPS[\s\S]*?\];/)?.[0] ?? "";
+  assert.match(chips, /label: "Rv Facts"/);
+  assert.match(chips, /label: "Calculator"/);
+  assert.match(chips, /label: "Tow Guide"/);
+  assert.match(chips, /label: "Lot Inventory"/);
+  assert.doesNotMatch(chips, /label: "CAL"|label: "TOW"|label: "LOT"|label: "facts"/);
+
+  off();
+  setActiveScreen("");
+});
+
+function screenGuideSpoken(guide: string): string {
+  if (guide === "Facts") return "Rv Facts";
+  if (guide === "Cal") return "Calculator";
+  if (guide === "Tow") return "Tow Guide";
+  if (guide === "Lot") return "Lot Inventory";
+  return guide;
+}

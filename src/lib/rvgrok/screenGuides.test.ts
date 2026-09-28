@@ -13,6 +13,7 @@ import {
   initialScreenCalloutState,
   planCalloutDelivery,
   reduceScreenCallout,
+  canonicalScreenId,
   screenCalloutLine,
   screenGuideFor,
   spokenScreenName,
@@ -24,9 +25,9 @@ const root = dirname(fileURLToPath(import.meta.url));
 const ROUTES: Array<[string, boolean, string]> = [
   ["rvgrok", true, "Home"],
   ["rvfax", false, "Facts"],
-  ["rvcal", false, "Cal"],
-  ["rvtow", false, "Tow"],
-  ["rvlot", false, "Lot"],
+  ["rvcal", false, "CAL"],
+  ["rvtow", false, "TOW"],
+  ["rvlot", false, "LOT"],
   ["rvtrips", false, "RV GPS"],
   ["rvgrok", false, "Grok"],
   ["more", false, "Premium"],
@@ -38,7 +39,7 @@ test("every suite route and the VIN Decoder have a guide and a one-line callout"
   const covered = new Set<string>(GUIDE_SCREEN_IDS);
   for (const [tab, home, expected] of ROUTES) {
     assert.equal(screenNameForTab(tab, home), expected);
-    assert.ok(covered.has(expected), expected);
+    assert.ok(covered.has(canonicalScreenId(expected)), expected);
   }
   assert.ok(covered.has("VIN Decoder"));
   for (const id of GUIDE_SCREEN_IDS) {
