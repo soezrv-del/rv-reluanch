@@ -23,6 +23,8 @@ import {
 } from "../lot/ownLotPage.ts";
 
 export const REPORT_SITE_URL = "https://rvmax.app";
+/** Chrome sapphire R on a white rounded tile. Readable on the sapphire header. */
+export const REPORT_MARK_URL = "/assets/brand/rvfax-mark.png";
 export const REPORT_SITE_LABEL = "rvmax.app";
 export const REPORT_FOOTER_NOTE =
   "Specs should be confirmed on the unit sticker.";

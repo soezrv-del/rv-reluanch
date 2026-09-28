@@ -1,6 +1,4 @@
-import type { ShareReport } from "@/lib/rv/shareReport";
-
-const LOGO = "/assets/brand/icon-rvfax.png";
+import { REPORT_MARK_URL, type ShareReport } from "@/lib/rv/shareReport";
 
 export function ShareReportPage({
   report,
@@ -14,7 +12,7 @@ export function ShareReportPage({
   return (
     <main className="report-page" data-report-page data-report-ready={report ? "1" : undefined}>
       <header className="report-band">
-        <img src={LOGO} alt="RvFAX" className="report-logo" />
+        <img src={REPORT_MARK_URL} alt="RvFAX" className="report-logo" />
         <div className="min-w-0 flex-1">
           <p className="report-brand">RvFAX</p>
           <p className="report-eyebrow">{report?.eyebrow ?? "Vehicle report"}</p>

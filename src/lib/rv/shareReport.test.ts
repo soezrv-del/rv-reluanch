@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { PDFDocument } from "pdf-lib";
 import type { RVSpec } from "./rvTypes.ts";
@@ -13,6 +16,7 @@ import {
   findLotUnit,
   isOmittedReportValue,
   plainQueryText,
+  REPORT_MARK_URL,
   reportYear,
   unitReportPath,
 } from "./shareReport.ts";
@@ -282,6 +286,22 @@ test("facts year is a number so share URLs and titles are not JSON-quoted", () =
   assert.match(report.path, /year=2026/);
   assert.doesNotMatch(report.path, /%22/);
   assert.equal(report.shareTitle, report.title);
+});
+
+test("share report surfaces use the chrome RvFAX mark", () => {
+  assert.equal(REPORT_MARK_URL, "/assets/brand/rvfax-mark.png");
+  const here = dirname(fileURLToPath(import.meta.url));
+  const root = join(here, "../../..");
+  const files = [
+    join(here, "shareReportPdf.ts"),
+    join(here, "reportOgImage.ts"),
+    join(root, "src/components/report/ShareReportPage.tsx"),
+  ];
+  for (const file of files) {
+    const src = readFileSync(file, "utf8");
+    assert.match(src, /REPORT_MARK_URL/);
+    assert.doesNotMatch(src, /icon-rvfax\.png/);
+  }
 });
 
 test("a long share report still prints as one PDF page", async () => {

@@ -2,7 +2,7 @@ import { createRequire } from "node:module";
 import { readFile } from "node:fs/promises";
 import { initWasm, Resvg } from "@resvg/resvg-wasm";
 import { loadReportForUrl } from "./reportRequestMeta.ts";
-import type { ShareReport } from "./shareReport.ts";
+import { REPORT_MARK_URL, type ShareReport } from "./shareReport.ts";
 import regularFont from "../../../public/fonts/Geist-Regular.ttf?inline";
 import semiboldFont from "../../../public/fonts/Geist-SemiBold.ttf?inline";
 
@@ -93,7 +93,7 @@ function cardSvg(report: ShareReport, logo: string | null, photo: string | null)
     })
     .join("");
   const logoImg = logo
-    ? `<image href="${logo}" x="48" y="38" width="72" height="72" preserveAspectRatio="xMidYMid slice"/>`
+    ? `<image href="${logo}" x="40" y="32" width="84" height="84" preserveAspectRatio="xMidYMid meet"/>`
     : "";
   const brandX = logo ? 140 : 48;
   const photoImg = photo
@@ -124,7 +124,7 @@ export async function renderReportOg(request: Request): Promise<Response> {
   const report = await loadReportForUrl(url);
   if (!report) return new Response("Report not found", { status: 404 });
   await ensureWasm();
-  const logo = await dataUrl(new URL("/assets/brand/icon-rvfax.png", url.origin).href);
+  const logo = await dataUrl(new URL(REPORT_MARK_URL, url.origin).href);
   const photo = report.photoUrl
     ? await dataUrl(
         /^https?:\/\//i.test(report.photoUrl)

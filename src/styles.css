@@ -3051,9 +3051,8 @@ body:has(.report-page) {
 .report-logo {
   width: 2.75rem;
   height: 2.75rem;
-  border-radius: 0.55rem;
-  background: #fff;
-  object-fit: cover;
+  object-fit: contain;
+  background: transparent;
 }
 
 .report-brand {

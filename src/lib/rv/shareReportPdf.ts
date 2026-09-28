@@ -1,4 +1,4 @@
-import type { ShareReport } from "./shareReport.ts";
+import { REPORT_MARK_URL, type ShareReport } from "./shareReport.ts";
 
 const PAGE_W = 612;
 const PAGE_H = 792;
@@ -32,7 +32,7 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
-  const logoBytes = await fetchBytes(absoluteAsset("/assets/brand/icon-rvfax.png"));
+  const logoBytes = await fetchBytes(absoluteAsset(REPORT_MARK_URL));
   let logo: Awaited<ReturnType<typeof pdf.embedPng>> | null = null;
   if (logoBytes) {
     try {
@@ -87,8 +87,14 @@ export async function buildShareReportPdf(report: ShareReport): Promise<Uint8Arr
     });
     let x = MARGIN;
     if (logo) {
-      page.drawImage(logo, { x, y: PAGE_H - 62, width: 46, height: 46 });
-      x += 56;
+      const mark = 52;
+      page.drawImage(logo, {
+        x,
+        y: PAGE_H - 78 + (78 - mark) / 2,
+        width: mark,
+        height: mark,
+      });
+      x += mark + 12;
     }
     page.drawText("RvFAX", {
       x,
